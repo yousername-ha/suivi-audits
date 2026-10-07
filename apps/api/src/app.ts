@@ -13,6 +13,7 @@ import { eventRoutes } from './routes/events.js';
 import { importRoutes } from './routes/import.js';
 import { legacyRoutes } from './routes/legacy.js';
 import { settingsRoutes } from './routes/settings.js';
+import { affichageRoutes } from './routes/affichage.js';
 import type { Services } from './services.js';
 
 // Messages de validation en français.
@@ -53,6 +54,7 @@ export function allRoutes(): RouteDef[] {
     ...legacyRoutes,
     ...importRoutes,
     ...settingsRoutes,
+    ...affichageRoutes,
   );
   return list;
 }

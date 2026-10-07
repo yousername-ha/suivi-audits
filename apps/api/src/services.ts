@@ -8,6 +8,7 @@ import { LegacyStore } from './legacy/store.js';
 import { Bus, Presence } from './realtime.js';
 import { Vault } from './security/crypto.js';
 import { Settings } from './settings.js';
+import { Walls } from './walls.js';
 
 export function createServices(cfg: Config, log: Logger) {
   const db = new Db(cfg.db, log);
@@ -21,6 +22,7 @@ export function createServices(cfg: Config, log: Logger) {
     db,
     vault,
     settings,
+    walls: new Walls(cfg, db),
     auth: new Auth(cfg, db, vault, () => settings.get('securite')),
     bus,
     presence: new Presence(db, bus),
@@ -32,6 +34,7 @@ export function createServices(cfg: Config, log: Logger) {
       mfaBySession: limiter(8, 10 * 60e3),
       setupByIp: limiter(10, 15 * 60e3),
       presence: limiter(30, 60e3),
+      wallActivation: limiter(10, 15 * 60e3),
     },
   };
 }

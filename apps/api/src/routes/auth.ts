@@ -42,6 +42,7 @@ export function meOut(svc: Services, s: Session | null): MeOutT {
           expiresAt: s.user.expiresAt,
         }
       : null,
+    preferences: s && svc.auth.stage(s) === 'ok' ? s.user.preferences : null,
     permissions: s && svc.auth.stage(s) === 'ok' ? s.user.rights.list() : [],
     mfaRequired: svc.cfg.mfaRequired,
     passwordMinLength: svc.settings.get('securite').passwordMinLength,

@@ -1,5 +1,14 @@
 /* Sessions, authentification (mot de passe + TOTP), jeton d'installation initiale. */
-import { effectivePermissions, Rights, type AccessStage, type Permission, type SettingsValues } from '@suivi/shared';
+import {
+  DEFAULT_PREFERENCES,
+  effectivePermissions,
+  Preferences as PreferencesSchema,
+  Rights,
+  type AccessStage,
+  type Permission,
+  type Preferences,
+  type SettingsValues,
+} from '@suivi/shared';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { Config } from './config.js';
 import type { Client, Db } from './db/db.js';
@@ -27,6 +36,7 @@ export interface SessionUser {
   /** Droits effectifs, recalculés à chaque requête. */
   rights: Rights;
   expiresAt: string | null;
+  preferences: Preferences;
   totpEnabled: boolean;
   mustChangePassword: boolean;
 }
@@ -154,11 +164,12 @@ export class Auth {
       display_name: string;
       disabled: boolean;
       expires_at: Date | null;
+      preferences: unknown;
       totp_enabled: boolean;
       must_change_password: boolean;
     }>(
       `SELECT s.id_hash, s.csrf, s.mfa_ok, s.last_seen_at, u.id, u.username, u.display_name, u.disabled, u.expires_at,
-              u.totp_enabled, u.must_change_password
+              u.preferences, u.totp_enabled, u.must_change_password
          FROM sessions s JOIN users u ON u.id = s.user_id
         WHERE s.id_hash = $1 AND s.expires_at > now() AND s.last_seen_at > now() - make_interval(mins => $2)`,
       [h, this.policy().sessionIdleMinutes],
@@ -179,6 +190,7 @@ export class Auth {
         roles: [...new Set(grants.map((g) => g.roleName))],
         rights: new Rights(effectivePermissions(grants).keys()),
         expiresAt: r.expires_at ? new Date(r.expires_at).toISOString() : null,
+        preferences: PreferencesSchema.safeParse(r.preferences).data ?? DEFAULT_PREFERENCES,
         totpEnabled: r.totp_enabled,
         mustChangePassword: r.must_change_password,
       },

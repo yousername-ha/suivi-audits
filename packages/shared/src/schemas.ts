@@ -2,6 +2,7 @@
 import { z } from 'zod';
 import { ACTIONS, ALL_PERMISSIONS, MODULES, type Permission } from './permissions.js';
 import { PRESENCE_HEARTBEAT_MS } from './events.js';
+import { Preferences as PreferencesSchema } from './affichage.js';
 
 export const USERNAME_RE = /^[a-zA-Z0-9._@-]{2,64}$/;
 export const CLASSIFICATIONS = ['public', 'interne', 'restreint', 'confidentiel'] as const;
@@ -81,6 +82,8 @@ export const MeOut = z.object({
     theme: z.enum(['auto', 'clair', 'sombre']),
     densite: z.enum(['compacte', 'normale', 'confortable']),
   }),
+  /** Préférences d'affichage de la personne (null avant la connexion). */
+  preferences: PreferencesSchema.nullable(),
   version: z.string(),
 });
 export type MeOut = z.infer<typeof MeOut>;

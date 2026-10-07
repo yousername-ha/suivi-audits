@@ -140,7 +140,12 @@ describe('migration d’une base v2 existante, sans perte', () => {
     const applied = (await t.svc.db.q<{ name: string }>('SELECT name FROM schema_migrations ORDER BY name')).rows.map(
       (r) => r.name,
     );
-    expect(applied).toEqual(['001_init.sql', '002_v3_fondations.sql', '003_droits.sql']);
+    expect(applied).toEqual([
+      '001_init.sql',
+      '002_v3_fondations.sql',
+      '003_droits.sql',
+      '004_affichage_et_ecrans_muraux.sql',
+    ]);
     // Rôles v2 repris : admin → Administrateur, rw → Contributeur, ro → Lecteur ; colonne users.role supprimée.
     const mapped = await t.svc.db.q<{ username: string; role_id: string }>(
       'SELECT u.username, ur.role_id FROM users u JOIN user_roles ur ON ur.user_id = u.id ORDER BY u.username',

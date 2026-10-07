@@ -7,18 +7,22 @@ import type { Session } from '../auth.js';
 import type { Config } from '../config.js';
 import { safeEqual } from '../security/crypto.js';
 import type { Services } from '../services.js';
+import type { WallSession } from '../walls.js';
 import { HttpError } from './errors.js';
 import { sameOrigin } from './security.js';
 
 type Method = 'GET' | 'HEAD' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 /** public : sans session ; session : session ouverte à n'importe quelle étape ; auth : session complète
-    (compte personnel) ; metier : au moins un module métier lisible ; « module:action » : permission exigée. */
-export type Access = 'public' | 'session' | 'auth' | 'metier' | Permission;
+    (compte personnel) ; metier : au moins un module métier lisible ; mur : « metier » ou écran mural activé
+    (vue /mur, lecture seule) ; « module:action » : permission exigée. */
+export type Access = 'public' | 'session' | 'auth' | 'metier' | 'mur' | Permission;
 
 export interface Ctx<B = unknown, Q = unknown, P = unknown> {
   req: FastifyRequest;
   reply: FastifyReply;
   s: Session | null;
+  /** Écran mural (accès « mur » sans session nominative). */
+  wall: WallSession | null;
   ip: string;
   body: B;
   query: Q;
@@ -68,6 +72,7 @@ export function registerRoutes(app: FastifyInstance, svc: Services, defs: RouteD
           throw new HttpError(429, 'Trop de requêtes. Réessayez dans une minute.');
         }
         const s = await svc.auth.load(req);
+        let wall: WallSession | null = null;
         if (UNSAFE.has(req.method)) {
           if (!sameOrigin(req, svc.cfg)) throw new HttpError(403, 'Origine refusée.');
           if (d.csrf !== false) {
@@ -78,13 +83,22 @@ export function registerRoutes(app: FastifyInstance, svc: Services, defs: RouteD
         }
         if (d.access === 'session') {
           if (!s) throw new HttpError(401, 'Session expirée. Reconnectez-vous.', { stage: 'anon' });
+        } else if (d.access === 'mur') {
+          // Session nominative avec lecture métier, sinon écran mural activé (cookie dédié), sinon refus.
+          if (!(s && svc.auth.stage(s) === 'ok' && s.user.rights.canReadAnyBusiness())) {
+            wall = await svc.walls.load(req);
+            if (!wall) {
+              if (s && svc.auth.stage(s) === 'ok') svc.auth.requireBusinessRead(s);
+              throw new HttpError(401, 'Écran non autorisé : activez-le depuis l’administration.', { stage: 'anon' });
+            }
+          }
         } else if (d.access === 'auth') svc.auth.requireAuth(s);
         else if (d.access === 'metier') svc.auth.requireBusinessRead(s);
         else if (d.access !== 'public') svc.auth.requirePermission(s, d.access);
         const body = d.raw ? req.body : d.body ? d.body.parse(req.body ?? {}) : undefined;
         const query = d.query ? d.query.parse(req.query ?? {}) : undefined;
         const params = d.params ? d.params.parse(req.params ?? {}) : undefined;
-        const out = await d.handler({ req, reply, s, ip: req.ip, body, query, params, svc });
+        const out = await d.handler({ req, reply, s, wall, ip: req.ip, body, query, params, svc });
         if (reply.sent) return reply;
         if (out === undefined) return reply.code(204).send();
         return reply.code(d.status ?? 200).send(out);

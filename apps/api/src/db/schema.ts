@@ -44,6 +44,26 @@ export const users = pgTable('users', {
   updatedAt: tstz('updated_at').notNull().defaultNow(),
   version: integer('version').notNull().default(1),
   expiresAt: tstz('expires_at'),
+  preferences: jsonb('preferences').notNull().default({}),
+});
+
+/* ---------------------------------------------------------------- Écrans muraux (migration 004) */
+export const wallScreens = pgTable('wall_screens', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  modules: text('modules').array().notNull(),
+  activationHash: bytea('activation_hash'),
+  activationExpires: tstz('activation_expires'),
+  deviceHash: bytea('device_hash').unique(),
+  activatedAt: tstz('activated_at'),
+  expiresAt: tstz('expires_at').notNull(),
+  revokedAt: tstz('revoked_at'),
+  revokedBy: text('revoked_by'),
+  lastSeenAt: tstz('last_seen_at'),
+  lastIp: inet('last_ip'),
+  version: integer('version').notNull().default(1),
+  createdBy: text('created_by').notNull(),
+  createdAt: tstz('created_at').notNull().defaultNow(),
 });
 
 /* ---------------------------------------------------------------- Droits (migration 003) */

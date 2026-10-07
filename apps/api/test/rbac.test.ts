@@ -32,7 +32,7 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
     const methods = (Array.isArray(d.method) ? d.method : [d.method]).filter((m) => m !== 'HEAD');
     return methods.map((m) => ({ method: m, url: d.url, access: d.access, raw: !!d.raw }));
   });
-  const guarded = routes.filter((r) => isPermission(r.access) || r.access === 'metier');
+  const guarded = routes.filter((r) => isPermission(r.access) || r.access === 'metier' || r.access === 'mur');
 
   /** Seules routes sans permission métier : authentification, compte personnel, temps réel, pages et fichiers statiques. */
   const UNGUARDED = new Set([
@@ -60,11 +60,14 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
     'GET /legacy/shim.js',
     'GET /legacy/lib/:file',
     'GET /api/settings/logo',
+    'GET /api/account/preferences',
+    'PUT /api/account/preferences',
+    'POST /api/mur/activer',
   ]);
 
   it('toute route hors de la liste explicite exige une permission (ou un module métier lisible)', () => {
     const unexpected = routes
-      .filter((r) => !isPermission(r.access) && r.access !== 'metier')
+      .filter((r) => !isPermission(r.access) && r.access !== 'metier' && r.access !== 'mur')
       .map((r) => `${r.method} ${r.url}`)
       .filter((k) => !UNGUARDED.has(k));
     expect(unexpected).toEqual([]);
@@ -86,10 +89,11 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
     };
     const failures: string[] = [];
     for (const r of guarded) {
-      const required: Permission[] = r.access === 'metier' ? ['audit:lire'] : [r.access as Permission];
+      const required: Permission[] =
+        r.access === 'metier' || r.access === 'mur' ? ['audit:lire'] : [r.access as Permission];
       // Sans la permission (toutes les autres accordées ; pour « metier », aucune lecture métier).
       await setPerms(
-        r.access === 'metier'
+        r.access === 'metier' || r.access === 'mur'
           ? ALL_PERMISSIONS.filter(
               (p) =>
                 !/^(audit|ecarts|plan_audit|pilotage|fournisseurs|conformite|ia|crrc|investissements|incidents):lire$/.test(
@@ -103,9 +107,11 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
         failures.push(`${r.method} ${r.url} sans ${required.join()} : ${denied.statusCode}`);
       // Avec la seule permission requise : jamais refusé pour cette permission-là.
       await setPerms(required);
+      // Flux SSE : la réponse ne se termine pas, l'accord n'est pas vérifié ici (le refus l'est).
+      if (r.url.endsWith('/events')) continue;
       const allowed = await call(r);
       const body = allowed.headers['content-type']?.toString().includes('json') ? allowed.json() : {};
-      if (allowed.statusCode === 403 && (body.permission === r.access || r.access === 'metier'))
+      if (allowed.statusCode === 403 && (body.permission === r.access || r.access === 'metier' || r.access === 'mur'))
         failures.push(`${r.method} ${r.url} avec ${required.join()} : refusé`);
     }
     expect(failures).toEqual([]);
