@@ -32,15 +32,16 @@ export interface Session {
   user: SessionUser;
 }
 
-export function parseCookies(header: string | undefined): Record<string, string> {
-  const out: Record<string, string> = {};
+/** Cookies de la requête. Map : un nom choisi par le client (« __proto__ »…) ne touche jamais un objet. */
+export function parseCookies(header: string | undefined): Map<string, string> {
+  const out = new Map<string, string>();
   for (const part of String(header || '').split(';')) {
     const i = part.indexOf('=');
     if (i < 0) continue;
     const k = part.slice(0, i).trim();
-    if (k in out) continue;
+    if (out.has(k)) continue;
     try {
-      out[k] = decodeURIComponent(part.slice(i + 1).trim());
+      out.set(k, decodeURIComponent(part.slice(i + 1).trim()));
     } catch {
       /* cookie mal encodé : ignoré */
     }
@@ -115,7 +116,7 @@ export class Auth {
 
   sessionToken(req: FastifyRequest): string | null {
     const c = parseCookies(req.headers.cookie);
-    const tok = c[COOKIE_SECURE] || c[COOKIE_PLAIN];
+    const tok = c.get(COOKIE_SECURE) || c.get(COOKIE_PLAIN);
     return tok && tok.length <= 100 ? tok : null;
   }
 

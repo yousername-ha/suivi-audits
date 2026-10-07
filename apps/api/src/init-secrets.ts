@@ -43,10 +43,13 @@ fs.chmodSync(DIR, 0o711);
 let created = 0;
 for (const s of SECRETS) {
   const f = path.join(DIR, s.name);
-  if (!fs.existsSync(f)) {
+  try {
+    // « wx » : création exclusive, un secret existant n'est jamais remplacé.
     fs.writeFileSync(f, s.gen() + '\n', { mode: 0o400, flag: 'wx' });
     created++;
     console.log(`secret créé : ${s.name}`);
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code !== 'EEXIST') throw e;
   }
   fs.chownSync(f, s.uid, s.gid);
   fs.chmodSync(f, s.mode);
@@ -54,16 +57,27 @@ for (const s of SECRETS) {
 // Volumes du frontal web (certificats, autorité interne) : propriété de l'utilisateur « caddy » de l'image web.
 const WEB_UID = parseInt(process.env.WEB_UID || '1001', 10);
 let fixed = 0;
-const own = (p: string) => {
-  const st = fs.lstatSync(p);
-  if (st.uid !== WEB_UID || st.gid !== WEB_UID) {
-    fs.lchownSync(p, WEB_UID, WEB_UID);
-    fixed++;
+// lchown ne suit pas les liens symboliques ; le parcours n'utilise que les types renvoyés par readdir.
+const own = (dir: string) => {
+  fs.lchownSync(dir, WEB_UID, WEB_UID);
+  fixed++;
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const p = path.join(dir, e.name);
+    if (e.isDirectory()) own(p);
+    else {
+      fs.lchownSync(p, WEB_UID, WEB_UID);
+      fixed++;
+    }
   }
-  if (st.isDirectory()) for (const e of fs.readdirSync(p)) own(path.join(p, e));
 };
-for (const d of (process.env.CADDY_DIRS || '').split(',').filter(Boolean)) if (fs.existsSync(d)) own(d);
-if (fixed) console.log(`frontal web : propriété de ${fixed} fichier(s) attribuée à l'uid ${WEB_UID}.`);
+for (const d of (process.env.CADDY_DIRS || '').split(',').filter(Boolean)) {
+  try {
+    own(d);
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code !== 'ENOENT') throw e;
+  }
+}
+if (fixed) console.log(`frontal web : ${fixed} fichier(s) attribué(s) à l'uid ${WEB_UID}.`);
 
 console.log(
   created
