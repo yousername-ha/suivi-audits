@@ -23,8 +23,11 @@ services:
     command: ['node', 'dist/init-secrets.js']
     environment:
       SECRETS_DIR: /secrets
+      CADDY_DIRS: /caddy/data,/caddy/config
     volumes:
       - secrets:/secrets
+      - caddy_data:/caddy/data
+      - caddy_config:/caddy/config
     network_mode: none
     read_only: true
     cap_drop: [ALL]

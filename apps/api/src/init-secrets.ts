@@ -3,7 +3,8 @@
    Droits minimaux par consommateur :
      db_superuser_password  -> postgres seul          (0400, uid 70)
      db_app_password        -> postgres + application (0440, uid 70, gid 1000)
-     doc_master_key         -> application seule      (0400, uid 1000) */
+     doc_master_key         -> application seule      (0400, uid 1000)
+   Remet aussi au frontal (uid 1001) la propriété de ses volumes (CADDY_DIRS) : en v2, Caddy tournait en root. */
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -50,6 +51,20 @@ for (const s of SECRETS) {
   fs.chownSync(f, s.uid, s.gid);
   fs.chmodSync(f, s.mode);
 }
+// Volumes du frontal web (certificats, autorité interne) : propriété de l'utilisateur « caddy » de l'image web.
+const WEB_UID = parseInt(process.env.WEB_UID || '1001', 10);
+let fixed = 0;
+const own = (p: string) => {
+  const st = fs.lstatSync(p);
+  if (st.uid !== WEB_UID || st.gid !== WEB_UID) {
+    fs.lchownSync(p, WEB_UID, WEB_UID);
+    fixed++;
+  }
+  if (st.isDirectory()) for (const e of fs.readdirSync(p)) own(path.join(p, e));
+};
+for (const d of (process.env.CADDY_DIRS || '').split(',').filter(Boolean)) if (fs.existsSync(d)) own(d);
+if (fixed) console.log(`frontal web : propriété de ${fixed} fichier(s) attribuée à l'uid ${WEB_UID}.`);
+
 console.log(
   created
     ? `${created} secret(s) généré(s). Pensez à les inclure dans vos sauvegardes (scripts/backup.sh).`
