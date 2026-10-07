@@ -21,6 +21,7 @@ Refonte en cours : la nouvelle application (v3) reprend module par module l'outi
 - Toute nouvelle route : déclarer le niveau d'accès dans `route()`, journaliser les actions sensibles, valider les entrées et les sorties (zod). Modification d'enregistrement : `If-Match` et `version` (412 seulement si cet enregistrement a changé).
 - Pas de nouvelle dépendance sans justification dans une ADR (`docs/adr/0009-dependances-et-versions.md`).
 - **Toute PR qui touche l'installation, la configuration, la mise à jour ou l'exploitation met à jour `docs/INSTALLATION.md` dans la même PR.** Le guide est rejoué par le job CI « guide » : chaque bloc ```` ```bash ```` porte un marqueur `<!-- ci: run | skip — raison | instead: commande -->` (voir `scripts/ci/guide-extraire.mjs`).
+- Exigences fonctionnelles : `docs/BACKLOG-FONCTIONNEL.md`. Citer leur identifiant (`CRRC-01`, `INV-02`, `INC-03`…) dans chaque commit et chaque PR qui les traite.
 - Conventional Commits en français ; CHANGELOG tenu à jour ; versionnage sémantique (étiquette `vX.Y.Z` = publication GHCR).
 - Travailler sur une branche et ouvrir une pull request ; ne jamais pousser ni fusionner directement sur `main`.
 
