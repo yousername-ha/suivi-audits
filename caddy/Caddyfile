@@ -1,6 +1,8 @@
 # Frontal HTTPS (Caddy 2). Variables : SITE_ADDRESS, CADDY_TLS (voir .env).
 {
 	admin off
+	# Conteneur en lecture seule : ne pas tenter d'installer la racine interne dans le magasin de confiance.
+	skip_install_trust
 	servers {
 		protocols h1 h2
 	}
