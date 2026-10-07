@@ -45,13 +45,21 @@ sudo cp .env.example .env
 sudo nano .env                     # SITE_ADDRESS, CADDY_TLS (au minimum)
 sudo docker compose build
 sudo docker compose up -d
-sudo docker compose logs app | grep -A3 JETON
+sudo docker compose exec app setup-token     # jeton d'installation, date d'expiration et URL /setup
 ```
 
-1. Ouvrir `https://<SITE_ADDRESS>/setup`.
-2. Saisir le **jeton d'installation** affiché dans les journaux. Il est à usage unique et valable 24 h, et un nouveau jeton est émis à chaque démarrage tant qu'aucun administrateur n'existe.
+1. Ouvrir `https://<SITE_ADDRESS>/setup`. L'encadré **Récupérer le jeton** rappelle les commandes, copiables d'un clic.
+2. Saisir le **jeton d'installation**, au format `XXXXX-XXXXX-XXXXX-XXXXX` (par exemple `K7QM2-XH9PD-4TNRW-B8FZC`). Minuscules, espaces et tirets sont acceptés, et le champ se met en forme pendant la saisie. Le jeton ne contient jamais 0, 1, I, L ni O.
 3. Créer le compte administrateur, puis scanner le QR code avec une application d'authentification (Microsoft Authenticator, FreeOTP, Aegis…).
 4. Dans **Administration → Comptes**, créer les autres comptes. Un mot de passe temporaire est affiché une seule fois ; chaque utilisateur le change et active sa double authentification à la première connexion.
+
+**Le jeton d'installation**
+- Il est **à usage unique** et **valable 24 h**. Seule son empreinte (scrypt) est stockée en base.
+- Il compte 20 caractères tirés d'un alphabet de 31 symboles sans caractères ambigus, soit environ 99 bits d'entropie. Les tentatives sont limitées à 10 par adresse IP et par quart d'heure.
+- Il est émis au premier démarrage et affiché en clair dans les journaux du conteneur : `docker compose logs app | grep -A3 JETON`.
+- `docker compose exec app setup-token` (ou `docker compose exec app node src/cli.js setup-token`) émet un nouveau jeton et **annule le précédent**. La commande fonctionne tant qu'aucun administrateur n'existe.
+- Les erreurs de saisie sont explicites : jeton invalide (ou remplacé par un plus récent), expiré, ou déjà utilisé.
+- Une fois l'administrateur créé, `/setup` redirige vers `/login`. Pour créer un administrateur de secours (perte de tous les accès), lancer `docker compose exec app setup-token --recovery`.
 
 Au premier démarrage, la base est initialisée **sans données** (`app/seed/state.json`) : seuls les référentiels sont chargés (ISO 27001, Annexe A, HDS, ReCyF, guide de préparation, clausier). Pour reprendre des données existantes, importer une sauvegarde JSON depuis l'outil (Paramètres → Importer) ou utiliser `scripts/restore.sh`.
 
@@ -118,7 +126,7 @@ docker compose exec app node src/cli.js users        # comptes
 docker compose exec app node src/cli.js reset-password <compte>
 docker compose exec app node src/cli.js reset-mfa <compte>     # téléphone perdu
 docker compose exec app node src/cli.js unlock <compte>
-docker compose exec app node src/cli.js setup-token --recovery # administrateur de secours (perte de tous les accès admin)
+docker compose exec app setup-token --recovery               # administrateur de secours (perte de tous les accès admin)
 ```
 
 ### Sauvegarde et restauration

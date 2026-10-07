@@ -6,7 +6,7 @@ Outil interne du GCS Normand'e-Santé (RSSI). Interface et documentation **en fr
 - `docker-compose.yml` : `proxy` (Caddy 2, HTTPS, seul service exposé) → `app` (Node 24, dépendance unique `pg`) → `db` (PostgreSQL 17-alpine).
   `init` : service ponctuel (root, sans réseau) qui génère les secrets dans le volume `secrets` (`app/src/init-secrets.js`).
   Réseaux `edge` et `backend` internes (aucune sortie Internet pour app et db).
-- `app/src/` : serveur HTTP sans framework (`server.js` routage et pages, `api.js` routes, `auth.js` sessions/MFA/jeton d'installation,
+- `app/src/` : serveur HTTP sans framework (`server.js` routage et pages, `api.js` routes, `auth.js` sessions/MFA/jeton d'installation (`setup-token.js` : format et vérification),
   `security.js` scrypt/TOTP/AES-256-GCM, `files.js` contrôle des dépôts et ClamAV, `db.js` pool et migrations, `cli.js` exploitation).
 - `app/src/migrations/NNN_*.sql` : appliquées automatiquement au démarrage (table `schema_migrations`). Ne jamais modifier une migration publiée : en ajouter une nouvelle.
 - `app/web/` : pages connexion, installation, compte, administration, documents. CSP stricte : **aucun script ni style en ligne**, aucun attribut `style=`.
@@ -25,7 +25,9 @@ Outil interne du GCS Normand'e-Santé (RSSI). Interface et documentation **en fr
 ```bash
 cp .env.example .env && sed -i 's/^SITE_ADDRESS=.*/SITE_ADDRESS=localhost/' .env
 docker compose build && docker compose up -d
-docker compose logs app | grep -A3 JETON          # jeton d'installation → https://localhost/setup
+docker compose exec app setup-token               # nouveau jeton d'installation → https://localhost/setup
+docker compose logs app | grep -A3 JETON          # jeton émis au démarrage (en clair dans les journaux)
+cd app && npm test                                 # tests unitaires (node:test, sans base)
 docker compose exec app node src/cli.js users
 docker compose down -v                             # remise à zéro complète (supprime les volumes)
 ```
