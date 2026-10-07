@@ -77,11 +77,15 @@ export class FileRejected extends Error {
 /** Valide le fichier ; renvoie { filename, ext, mime } ou lève une erreur explicite. */
 export function validateFile(filename: string, buf: Buffer) {
   const name = cleanFilename(filename);
-  if (MACRO_EXT.test(name)) throw new FileRejected('Documents à macros refusés (docm, xlsm, pptm…). Enregistrez une version sans macro.');
+  if (MACRO_EXT.test(name))
+    throw new FileRejected('Documents à macros refusés (docm, xlsm, pptm…). Enregistrez une version sans macro.');
   const m = name.match(/\.([a-z0-9]{1,6})$/i);
   const ext = m ? (m[1] as string).toLowerCase() : '';
   const t = FILE_TYPES[ext];
-  if (!t) throw new FileRejected(`Type de fichier non autorisé (.${ext || '?'}). Types acceptés : ${Object.keys(FILE_TYPES).join(', ')}.`);
+  if (!t)
+    throw new FileRejected(
+      `Type de fichier non autorisé (.${ext || '?'}). Types acceptés : ${Object.keys(FILE_TYPES).join(', ')}.`,
+    );
   if (!buf.length) throw new FileRejected('Fichier vide.');
   if (!sigOk(t.sig, buf)) throw new FileRejected(`Le contenu ne correspond pas à un fichier .${ext}.`);
   return { filename: name, ext, mime: t.mime };
@@ -103,7 +107,11 @@ export function scanFile(cfg: Config, buf: Buffer): Promise<'sain' | 'non_analys
     };
     const fail = () => {
       s.destroy();
-      done(() => (av.required ? reject(new FileRejected('Analyse antivirale indisponible : dépôt refusé.')) : resolve('non_analysé')));
+      done(() =>
+        av.required
+          ? reject(new FileRejected('Analyse antivirale indisponible : dépôt refusé.'))
+          : resolve('non_analysé'),
+      );
     };
     s.setTimeout(60000, fail);
     s.on('error', fail);

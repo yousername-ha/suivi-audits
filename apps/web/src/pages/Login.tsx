@@ -1,5 +1,17 @@
 /* Connexion : mot de passe, puis double authentification (code TOTP), enrôlement TOTP, changement de mot de passe imposé. */
-import { Alert, Button, Card, Group, PasswordInput, PinInput, Stack, Stepper, Text, TextInput, Title } from '@mantine/core';
+import {
+  Alert,
+  Button,
+  Card,
+  Group,
+  PasswordInput,
+  PinInput,
+  Stack,
+  Stepper,
+  Text,
+  TextInput,
+  Title,
+} from '@mantine/core';
 import { useQuery } from '@tanstack/react-query';
 import qrcode from 'qrcode-generator';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
@@ -45,7 +57,11 @@ export function LoginPage() {
   const next = safeNext(params.get('next'));
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const setup = useQuery({ queryKey: ['setup'], queryFn: () => get<{ needed: boolean; adminExists: boolean }>('/api/setup'), enabled: me.stage === 'anon' });
+  const setup = useQuery({
+    queryKey: ['setup'],
+    queryFn: () => get<{ needed: boolean; adminExists: boolean }>('/api/setup'),
+    enabled: me.stage === 'anon',
+  });
 
   useEffect(() => {
     if (me.stage === 'ok') nav(next, { replace: true });
@@ -84,13 +100,30 @@ export function LoginPage() {
     </Button>
   );
 
-  if (me.stage === 'mfa') return <MfaForm busy={busy} err={err} restart={restart} onCode={(code) => run(() => post('/api/auth/mfa', { code }))} />;
+  if (me.stage === 'mfa')
+    return (
+      <MfaForm busy={busy} err={err} restart={restart} onCode={(code) => run(() => post('/api/auth/mfa', { code }))} />
+    );
   if (me.stage === 'enroll') return <EnrollForm busy={busy} err={err} restart={restart} run={run} />;
   if (me.stage === 'password') return <PasswordForm busy={busy} err={err} run={run} minLen={me.passwordMinLength} />;
-  return <PasswordLogin busy={busy} err={err} onLogin={(username, password) => run(() => post('/api/auth/login', { username, password }))} />;
+  return (
+    <PasswordLogin
+      busy={busy}
+      err={err}
+      onLogin={(username, password) => run(() => post('/api/auth/login', { username, password }))}
+    />
+  );
 }
 
-function PasswordLogin({ busy, err, onLogin }: { busy: boolean; err: ReactNode; onLogin: (u: string, p: string) => void }) {
+function PasswordLogin({
+  busy,
+  err,
+  onLogin,
+}: {
+  busy: boolean;
+  err: ReactNode;
+  onLogin: (u: string, p: string) => void;
+}) {
   const [u, setU] = useState('');
   const [p, setP] = useState('');
   return (
@@ -102,8 +135,21 @@ function PasswordLogin({ busy, err, onLogin }: { busy: boolean; err: ReactNode; 
         }}
       >
         <Stack>
-          <TextInput label="Identifiant" autoComplete="username" required autoFocus value={u} onChange={(e) => setU(e.currentTarget.value)} />
-          <PasswordInput label="Mot de passe" autoComplete="current-password" required value={p} onChange={(e) => setP(e.currentTarget.value)} />
+          <TextInput
+            label="Identifiant"
+            autoComplete="username"
+            required
+            autoFocus
+            value={u}
+            onChange={(e) => setU(e.currentTarget.value)}
+          />
+          <PasswordInput
+            label="Mot de passe"
+            autoComplete="current-password"
+            required
+            value={p}
+            onChange={(e) => setP(e.currentTarget.value)}
+          />
           {err}
           <Button type="submit" loading={busy} fullWidth>
             Se connecter
@@ -141,7 +187,17 @@ function CodeInput({ onComplete, busy }: { onComplete: (c: string) => void; busy
   );
 }
 
-function MfaForm({ busy, err, restart, onCode }: { busy: boolean; err: ReactNode; restart: ReactNode; onCode: (c: string) => void }) {
+function MfaForm({
+  busy,
+  err,
+  restart,
+  onCode,
+}: {
+  busy: boolean;
+  err: ReactNode;
+  restart: ReactNode;
+  onCode: (c: string) => void;
+}) {
   return (
     <AuthCard title="Double authentification" step={2}>
       <Text size="sm" c="dimmed">
@@ -150,15 +206,25 @@ function MfaForm({ busy, err, restart, onCode }: { busy: boolean; err: ReactNode
       <CodeInput onComplete={onCode} busy={busy} />
       {err}
       <Text size="xs" c="dimmed">
-        Code refusé : vérifiez que l’heure du téléphone est automatique. Téléphone perdu : un administrateur peut réinitialiser votre
-        double authentification.
+        Code refusé : vérifiez que l’heure du téléphone est automatique. Téléphone perdu : un administrateur peut
+        réinitialiser votre double authentification.
       </Text>
       {restart}
     </AuthCard>
   );
 }
 
-function EnrollForm({ busy, err, restart, run }: { busy: boolean; err: ReactNode; restart: ReactNode; run: (fn: () => Promise<unknown>) => void }) {
+function EnrollForm({
+  busy,
+  err,
+  restart,
+  run,
+}: {
+  busy: boolean;
+  err: ReactNode;
+  restart: ReactNode;
+  run: (fn: () => Promise<unknown>) => void;
+}) {
   const [data, setData] = useState<{ secret: string; uri: string } | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   useEffect(() => {
@@ -197,7 +263,17 @@ function EnrollForm({ busy, err, restart, run }: { busy: boolean; err: ReactNode
   );
 }
 
-function PasswordForm({ busy, err, run, minLen }: { busy: boolean; err: ReactNode; run: (fn: () => Promise<unknown>) => void; minLen: number }) {
+function PasswordForm({
+  busy,
+  err,
+  run,
+  minLen,
+}: {
+  busy: boolean;
+  err: ReactNode;
+  run: (fn: () => Promise<unknown>) => void;
+  minLen: number;
+}) {
   const [f, setF] = useState({ current: '', next: '', confirm: '' });
   const [local, setLocal] = useState<string | null>(null);
   return (
@@ -214,7 +290,13 @@ function PasswordForm({ busy, err, run, minLen }: { busy: boolean; err: ReactNod
         }}
       >
         <Stack>
-          <PasswordInput label="Mot de passe temporaire" autoComplete="current-password" required value={f.current} onChange={(e) => setF({ ...f, current: e.currentTarget.value })} />
+          <PasswordInput
+            label="Mot de passe temporaire"
+            autoComplete="current-password"
+            required
+            value={f.current}
+            onChange={(e) => setF({ ...f, current: e.currentTarget.value })}
+          />
           <PasswordInput
             label="Nouveau mot de passe"
             description={`Au moins ${minLen} caractères et 3 types parmi minuscules, majuscules, chiffres, symboles.`}
@@ -223,7 +305,13 @@ function PasswordForm({ busy, err, run, minLen }: { busy: boolean; err: ReactNod
             value={f.next}
             onChange={(e) => setF({ ...f, next: e.currentTarget.value })}
           />
-          <PasswordInput label="Confirmation" autoComplete="new-password" required value={f.confirm} onChange={(e) => setF({ ...f, confirm: e.currentTarget.value })} />
+          <PasswordInput
+            label="Confirmation"
+            autoComplete="new-password"
+            required
+            value={f.confirm}
+            onChange={(e) => setF({ ...f, confirm: e.currentTarget.value })}
+          />
           {local && <Alert color="red">{local}</Alert>}
           {err}
           <Button type="submit" loading={busy}>

@@ -14,7 +14,7 @@ import { z } from 'zod';
 import type { Session } from '../auth.js';
 import type { Client } from '../db/db.js';
 import { links } from '../db/schema.js';
-import { FileRejected, scanFile, validateFile } from '../files.js';
+import { scanFile, validateFile, type FileRejected } from '../files.js';
 import { conflict, requireIfMatch, setEtag } from '../http/concurrency.js';
 import { HttpError } from '../http/errors.js';
 import { route, type Ctx } from '../http/route.js';
@@ -59,16 +59,30 @@ async function receiveFile(ctx: Ctx<Buffer, unknown, unknown>) {
   try {
     scan = await scanFile(svc.cfg, buf);
   } catch (e) {
-    await svc.db.audit(s.user, ip, (e as FileRejected).infected ? 'document.malware_blocked' : 'document.scan_unavailable', info.filename, {
-      message: (e as Error).message,
-    });
+    await svc.db.audit(
+      s.user,
+      ip,
+      (e as FileRejected).infected ? 'document.malware_blocked' : 'document.scan_unavailable',
+      info.filename,
+      {
+        message: (e as Error).message,
+      },
+    );
     throw new HttpError(422, (e as Error).message);
   }
   return { ...info, buf, scan, sha: sha256hex(buf) };
 }
 type ReceivedFile = Awaited<ReturnType<typeof receiveFile>>;
 
-async function insertVersion(svc: Services, c: Client, docId: string, version: number, f: ReceivedFile, user: string, comment: string) {
+async function insertVersion(
+  svc: Services,
+  c: Client,
+  docId: string,
+  version: number,
+  f: ReceivedFile,
+  user: string,
+  comment: string,
+) {
   const e = svc.vault.encrypt(f.buf, `doc:${docId}:${version}`);
   await c.query(
     `INSERT INTO document_versions(document_id, version, filename, mime, size, sha256, key_id, iv, auth_tag, content, scan_status, uploaded_by, comment)
@@ -108,7 +122,10 @@ async function download(ctx: Ctx<unknown, { v?: string; inline?: string }, { id:
   if (!row || (row.deleted_at && s.user.role === 'ro')) throw new HttpError(404, 'Document introuvable.');
   let plain: Buffer;
   try {
-    plain = svc.vault.decrypt({ iv: row.iv, tag: row.auth_tag, content: row.content, keyId: row.key_id }, `doc:${params.id}:${row.version}`);
+    plain = svc.vault.decrypt(
+      { iv: row.iv, tag: row.auth_tag, content: row.content, keyId: row.key_id },
+      `doc:${params.id}:${row.version}`,
+    );
   } catch (e) {
     svc.log.error({ id: params.id, version: row.version, err: (e as Error).message }, 'document decrypt failed');
     throw new HttpError(500, 'Le document ne peut pas être déchiffré (clé maître différente ?).');
@@ -121,7 +138,10 @@ async function download(ctx: Ctx<unknown, { v?: string; inline?: string }, { id:
     .header('Content-Security-Policy', CSP_FILE)
     .header('Content-Type', row.mime)
     .header('Cache-Control', 'private, no-store')
-    .header('Content-Disposition', `${inline ? 'inline' : 'attachment'}; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(row.filename)}`)
+    .header(
+      'Content-Disposition',
+      `${inline ? 'inline' : 'attachment'}; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(row.filename)}`,
+    )
     .header('X-Document-SHA256', row.sha256);
   return reply.send(plain);
 }
@@ -152,7 +172,8 @@ export const documentRoutes = [
     query: DocumentQuery,
     response: z.array(DocumentOut),
     handler: async ({ svc, s, query }) => {
-      if (query.trash === '1' && (s as Session).user.role === 'ro') throw new HttpError(403, 'Droits insuffisants (lecture seule).');
+      if (query.trash === '1' && (s as Session).user.role === 'ro')
+        throw new HttpError(403, 'Droits insuffisants (lecture seule).');
       const where = [query.trash === '1' ? 'd.deleted_at IS NOT NULL' : 'd.deleted_at IS NULL'];
       const args: unknown[] = [];
       if (query.ref) {
@@ -166,9 +187,12 @@ export const documentRoutes = [
       if (query.q) {
         args.push(like(query.q));
         const n = `$${args.length}`;
-        where.push(`(d.title ILIKE ${n} OR d.description ILIKE ${n} OR v.filename ILIKE ${n} OR array_to_string(d.refs,' ') ILIKE ${n} OR array_to_string(d.tags,' ') ILIKE ${n})`);
+        where.push(
+          `(d.title ILIKE ${n} OR d.description ILIKE ${n} OR v.filename ILIKE ${n} OR array_to_string(d.refs,' ') ILIKE ${n} OR array_to_string(d.tags,' ') ILIKE ${n})`,
+        );
       }
-      return (await svc.db.q(`${DOC_SELECT} WHERE ${where.join(' AND ')} ORDER BY d.updated_at DESC LIMIT 1000`, args)).rows;
+      return (await svc.db.q(`${DOC_SELECT} WHERE ${where.join(' AND ')} ORDER BY d.updated_at DESC LIMIT 1000`, args))
+        .rows;
     },
   }),
   route({
@@ -207,13 +231,26 @@ export const documentRoutes = [
           await c.query<{ id: string }>(
             `INSERT INTO documents(title, description, category, refs, tags, classification, current_version, created_by, updated_by)
              VALUES ($1,$2,$3,$4,$5,$6,1,$7,$7) RETURNING id`,
-            [meta.title || f.filename.replace(/\.[^.]+$/, ''), meta.description || '', meta.category || '', meta.refs || [], meta.tags || [], meta.classification || 'interne', by],
+            [
+              meta.title || f.filename.replace(/\.[^.]+$/, ''),
+              meta.description || '',
+              meta.category || '',
+              meta.refs || [],
+              meta.tags || [],
+              meta.classification || 'interne',
+              by,
+            ],
           )
         ).rows[0]!;
         await insertVersion(svc, c, d.id, 1, f, by, '');
         return d;
       }, by);
-      await svc.db.audit(s.user, ip, 'document.create', doc.id, { filename: f.filename, size: f.buf.length, sha256: f.sha, scan: f.scan });
+      await svc.db.audit(s.user, ip, 'document.create', doc.id, {
+        filename: f.filename,
+        size: f.buf.length,
+        sha256: f.sha,
+        scan: f.scan,
+      });
       const out = (await docById(svc, doc.id))!;
       setEtag(reply, out.version);
       return out;
@@ -257,15 +294,15 @@ export const documentRoutes = [
         if (cur.version !== expected) throw conflict(cur);
         if (!keys.length) return cur;
         const sets = keys.map((k, i) => `${k} = $${i + 3}`).join(', ');
-        const r = await c.query(`UPDATE documents SET ${sets}, version = version + 1, updated_by = $2, updated_at = now() WHERE id = $1 AND version = ${expected}`, [
-          params.id,
-          sess.user.username,
-          ...keys.map((k) => body[k]),
-        ]);
+        const r = await c.query(
+          `UPDATE documents SET ${sets}, version = version + 1, updated_by = $2, updated_at = now() WHERE id = $1 AND version = ${expected}`,
+          [params.id, sess.user.username, ...keys.map((k) => body[k])],
+        );
         if (!r.rowCount) throw conflict((await docById(svc, params.id, c))!);
         return (await docById(svc, params.id, c))!;
       }, sess.user.username);
-      if (keys.length) await svc.db.audit(sess.user, ip, 'document.update', params.id, { fields: keys, version: out.version });
+      if (keys.length)
+        await svc.db.audit(sess.user, ip, 'document.update', params.id, { fields: keys, version: out.version });
       setEtag(reply, out.version);
       return out;
     },
@@ -287,12 +324,19 @@ export const documentRoutes = [
       const f = await receiveFile(ctx as unknown as Ctx<Buffer>);
       let comment = '';
       try {
-        comment = decodeURIComponent(String(req.headers['x-comment'] || '')).trim().slice(0, 500);
+        comment = decodeURIComponent(String(req.headers['x-comment'] || ''))
+          .trim()
+          .slice(0, 500);
       } catch {
         /* commentaire ignoré s'il est mal encodé */
       }
       const r = await svc.db.tx(async (c) => {
-        const d = (await c.query<{ current_version: number; deleted_at: Date | null }>('SELECT current_version, deleted_at FROM documents WHERE id=$1 FOR UPDATE', [params.id])).rows[0];
+        const d = (
+          await c.query<{ current_version: number; deleted_at: Date | null }>(
+            'SELECT current_version, deleted_at FROM documents WHERE id=$1 FOR UPDATE',
+            [params.id],
+          )
+        ).rows[0];
         if (!d || d.deleted_at) throw new HttpError(404, 'Document introuvable.');
         const nv = d.current_version + 1;
         await insertVersion(svc, c, params.id, nv, f, s.user.username, comment);
@@ -302,7 +346,12 @@ export const documentRoutes = [
         );
         return { version: nv, documentVersion: u.rows[0]!.version };
       }, s.user.username);
-      await svc.db.audit(s.user, ip, 'document.version', params.id, { version: r.version, filename: f.filename, sha256: f.sha, scan: f.scan });
+      await svc.db.audit(s.user, ip, 'document.version', params.id, {
+        version: r.version,
+        filename: f.filename,
+        sha256: f.sha,
+        scan: f.scan,
+      });
       return r;
     },
   }),
@@ -322,10 +371,19 @@ export const documentRoutes = [
         (c) =>
           purge
             ? c.query('DELETE FROM documents WHERE id=$1 AND deleted_at IS NOT NULL', [params.id])
-            : c.query('UPDATE documents SET deleted_at=now(), deleted_by=$2, version = version + 1 WHERE id=$1 AND deleted_at IS NULL', [params.id, sess.user.username]),
+            : c.query(
+                'UPDATE documents SET deleted_at=now(), deleted_by=$2, version = version + 1 WHERE id=$1 AND deleted_at IS NULL',
+                [params.id, sess.user.username],
+              ),
         sess.user.username,
       );
-      if (!r.rowCount) throw new HttpError(404, purge ? 'Seul un document déjà dans la corbeille peut être supprimé définitivement.' : 'Document introuvable.');
+      if (!r.rowCount)
+        throw new HttpError(
+          404,
+          purge
+            ? 'Seul un document déjà dans la corbeille peut être supprimé définitivement.'
+            : 'Document introuvable.',
+        );
       await svc.db.audit(sess.user, ip, purge ? 'document.purge' : 'document.delete', params.id);
       return undefined;
     },
@@ -341,10 +399,10 @@ export const documentRoutes = [
       const sess = s as Session;
       const r = await svc.db.tx(
         (c) =>
-          c.query('UPDATE documents SET deleted_at=NULL, deleted_by=NULL, version = version + 1, updated_by=$2, updated_at=now() WHERE id=$1 AND deleted_at IS NOT NULL', [
-            params.id,
-            sess.user.username,
-          ]),
+          c.query(
+            'UPDATE documents SET deleted_at=NULL, deleted_by=NULL, version = version + 1, updated_by=$2, updated_at=now() WHERE id=$1 AND deleted_at IS NOT NULL',
+            [params.id, sess.user.username],
+          ),
         sess.user.username,
       );
       if (!r.rowCount) throw new HttpError(404, 'Document introuvable.');
@@ -393,7 +451,12 @@ export const documentRoutes = [
           sql`(${links.title} ILIKE ${q} OR ${links.url} ILIKE ${q} OR ${links.description} ILIKE ${q} OR array_to_string(${links.refs},' ') ILIKE ${q} OR array_to_string(${links.tags},' ') ILIKE ${q})`,
         );
       }
-      const rows = await svc.db.orm.select().from(links).where(and(...conds)).orderBy(desc(links.updatedAt)).limit(1000);
+      const rows = await svc.db.orm
+        .select()
+        .from(links)
+        .where(and(...conds))
+        .orderBy(desc(links.updatedAt))
+        .limit(1000);
       return rows.map(linkOut);
     },
   }),
@@ -443,7 +506,10 @@ export const documentRoutes = [
       const sess = s as Session;
       const fields = Object.keys(body);
       const row = await svc.db.tx(async (_c, orm) => {
-        const [cur] = await orm.select().from(links).where(and(eq(links.id, params.id), isNull(links.deletedAt)));
+        const [cur] = await orm
+          .select()
+          .from(links)
+          .where(and(eq(links.id, params.id), isNull(links.deletedAt)));
         if (!cur) throw new HttpError(404, 'Lien introuvable.');
         if (cur.version !== expected) throw conflict(linkOut(cur));
         if (!fields.length) return cur;
@@ -469,7 +535,11 @@ export const documentRoutes = [
     handler: async ({ svc, s, ip, params }) => {
       const sess = s as Session;
       const r = await svc.db.tx(
-        (c) => c.query('UPDATE links SET deleted_at=now(), deleted_by=$2, version = version + 1 WHERE id=$1 AND deleted_at IS NULL', [params.id, sess.user.username]),
+        (c) =>
+          c.query(
+            'UPDATE links SET deleted_at=now(), deleted_by=$2, version = version + 1 WHERE id=$1 AND deleted_at IS NULL',
+            [params.id, sess.user.username],
+          ),
         sess.user.username,
       );
       if (!r.rowCount) throw new HttpError(404, 'Lien introuvable.');

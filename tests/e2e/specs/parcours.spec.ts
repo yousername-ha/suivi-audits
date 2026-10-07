@@ -30,7 +30,9 @@ async function loginUI(page: Page, username: string, password: string, secret: s
   await expect(page.getByRole('heading', { name: /^Bonjour/ })).toBeVisible();
 }
 
-test('installation : jeton, création de l’administrateur, activation de la double authentification', async ({ browser }) => {
+test('installation : jeton, création de l’administrateur, activation de la double authentification', async ({
+  browser,
+}) => {
   const { page, problems } = await newPage(browser);
   await page.goto('/');
   await expect(page).toHaveURL(/\/setup$/);
@@ -52,7 +54,10 @@ test('installation : jeton, création de l’administrateur, activation de la do
 
   await expect(page.getByRole('heading', { name: 'Activer la double authentification' })).toBeVisible();
   await expect(page.getByRole('img', { name: /QR code/ })).toBeVisible();
-  adminSecret = (await page.getByText(/^Saisie manuelle/).locator('span').textContent())!.replace(/\s/g, '');
+  adminSecret = (await page
+    .getByText(/^Saisie manuelle/)
+    .locator('span')
+    .textContent())!.replace(/\s/g, '');
   await page.getByLabel('Chiffre 1 sur 6').click();
   await page.keyboard.type(totp(adminSecret));
   markTotpUsed(adminSecret);
@@ -129,18 +134,29 @@ test('temps réel : deux navigateurs, présence et mise à jour sans rechargemen
   const a = await newPage(browser);
   await loginUI(a.page, ADMIN, PASSWORD, adminSecret);
   const csrfA = await csrfOf(a.page.request);
-  const created = await a.page.request.post('/api/admin/users', { data: { username: 'redacteur', displayName: 'Rédactrice', role: 'rw' }, headers: { 'x-csrf-token': csrfA } });
+  const created = await a.page.request.post('/api/admin/users', {
+    data: { username: 'redacteur', displayName: 'Rédactrice', role: 'rw' },
+    headers: { 'x-csrf-token': csrfA },
+  });
   const temp = (await created.json()).temporaryPassword as string;
 
   const b = await newPage(browser);
   const rb = b.page.request;
   await rb.post('/api/auth/login', { data: { username: 'redacteur', password: temp } });
   let csrfB = await csrfOf(rb);
-  const begin = await (await rb.post('/api/account/totp/begin', { data: {}, headers: { 'x-csrf-token': csrfB } })).json();
-  await rb.post('/api/account/totp/confirm', { data: { code: totp(begin.secret) }, headers: { 'x-csrf-token': csrfB } });
+  const begin = await (
+    await rb.post('/api/account/totp/begin', { data: {}, headers: { 'x-csrf-token': csrfB } })
+  ).json();
+  await rb.post('/api/account/totp/confirm', {
+    data: { code: totp(begin.secret) },
+    headers: { 'x-csrf-token': csrfB },
+  });
   markTotpUsed(begin.secret);
   csrfB = await csrfOf(rb);
-  await rb.post('/api/account/password', { data: { current: temp, next: PASSWORD }, headers: { 'x-csrf-token': csrfB } });
+  await rb.post('/api/account/password', {
+    data: { current: temp, next: PASSWORD },
+    headers: { 'x-csrf-token': csrfB },
+  });
   await apiLogin(rb, 'redacteur', PASSWORD, begin.secret);
 
   // B consulte les liens ; A les consulte aussi : chacun voit la présence de l'autre.
@@ -163,7 +179,12 @@ test('temps réel : deux navigateurs, présence et mise à jour sans rechargemen
 });
 
 test('interface utilisable au téléphone : menu repliable', async ({ browser }) => {
-  const ctx = await browser.newContext({ ignoreHTTPSErrors: true, viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  const ctx = await browser.newContext({
+    ignoreHTTPSErrors: true,
+    viewport: { width: 390, height: 844 },
+    isMobile: true,
+    hasTouch: true,
+  });
   const page = await ctx.newPage();
   const problems = watchPage(page);
   await loginUI(page, ADMIN, PASSWORD, adminSecret);

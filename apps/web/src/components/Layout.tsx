@@ -1,7 +1,19 @@
 /* Mise en page : barre supérieure, navigation (tiroir sur téléphone), indicateur temps réel.
    Mise en page en CSS statique (app.css) : AppShell de Mantine injecte des balises <style>, interdites par la CSP. */
 import { ROLE_LABELS } from '@suivi/shared';
-import { Anchor, Badge, Burger, Button, Drawer, Group, NavLink, Stack, Text, Tooltip, useMantineColorScheme } from '@mantine/core';
+import {
+  Anchor,
+  Badge,
+  Burger,
+  Button,
+  Drawer,
+  Group,
+  NavLink,
+  Stack,
+  Text,
+  Tooltip,
+  useMantineColorScheme,
+} from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
@@ -39,10 +51,19 @@ export function Layout({ children }: { children: ReactNode }) {
         {items.map(([to, label]) => (
           <NavLink key={to} component={Link} to={to} label={label} active={active(to)} onClick={close} />
         ))}
-        <NavLink component="a" href="/legacy/" label="Outil de suivi (ancienne interface)" description="Modules pas encore repris" />
+        <NavLink
+          component="a"
+          href="/legacy/"
+          label="Outil de suivi (ancienne interface)"
+          description="Modules pas encore repris"
+        />
       </Stack>
       <Stack mt="xl" gap={4}>
-        <Button variant="subtle" size="xs" onClick={() => setColorScheme(colorScheme === 'dark' ? 'light' : colorScheme === 'light' ? 'auto' : 'dark')}>
+        <Button
+          variant="subtle"
+          size="xs"
+          onClick={() => setColorScheme(colorScheme === 'dark' ? 'light' : colorScheme === 'light' ? 'auto' : 'dark')}
+        >
           Thème : {colorScheme === 'auto' ? 'automatique' : colorScheme === 'dark' ? 'sombre' : 'clair'}
         </Button>
         <Text size="xs" c="dimmed" ta="center">
@@ -70,7 +91,11 @@ export function Layout({ children }: { children: ReactNode }) {
             </Anchor>
           </Group>
           <Group gap="xs" wrap="nowrap">
-            <Tooltip label={live.connected ? 'Mises à jour en temps réel actives' : 'Temps réel déconnecté : reconnexion en cours'}>
+            <Tooltip
+              label={
+                live.connected ? 'Mises à jour en temps réel actives' : 'Temps réel déconnecté : reconnexion en cours'
+              }
+            >
               <Badge color={live.connected ? 'teal' : 'gray'} variant="dot" visibleFrom="xs">
                 {live.connected ? 'En direct' : 'Hors ligne'}
               </Badge>

@@ -20,8 +20,9 @@ describe('outil historique : schéma 15', () => {
     const start = html.indexOf('const LID_LISTS=');
     const end = html.indexOf('function migrate15(s)');
     expect(start).toBeGreaterThan(0);
-    // eslint-disable-next-line @typescript-eslint/no-implied-eval
-    const legacyIds = new Function(html.slice(start, end) + '; return legacyIds;')() as (s: unknown) => Record<string, unknown>;
+    const legacyIds = new Function(html.slice(start, end) + '; return legacyIds;')() as (
+      s: unknown,
+    ) => Record<string, unknown>;
     const f = JSON.parse(readFileSync(path.join(root, 'tests/fixtures/legacy-fixture.json'), 'utf8'));
     const a = legacyIds(structuredClone(f));
     a.schema = 15;

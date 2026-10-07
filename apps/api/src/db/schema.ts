@@ -98,7 +98,9 @@ export const importBatches = pgTable('import_batches', {
   afterState: jsonb('after_state').notNull(),
   stateVersionBefore: integer('state_version_before'),
   stateVersionAfter: integer('state_version_after'),
-  status: text('status', { enum: ['applied', 'undone'] }).notNull().default('applied'),
+  status: text('status', { enum: ['applied', 'undone'] })
+    .notNull()
+    .default('applied'),
   undoneAt: tstz('undone_at'),
   undoneBy: text('undone_by'),
   version: integer('version').notNull().default(1),
@@ -111,7 +113,9 @@ export const appState = pgTable('app_state', {
   sha256: text('sha256').notNull(),
   updatedAt: tstz('updated_at').notNull().defaultNow(),
   updatedBy: text('updated_by').notNull().default(''),
-  importBatchId: bigint('import_batch_id', { mode: 'number' }).references(() => importBatches.id, { onDelete: 'set null' }),
+  importBatchId: bigint('import_batch_id', { mode: 'number' }).references(() => importBatches.id, {
+    onDelete: 'set null',
+  }),
 });
 
 export const stateHistory = pgTable('state_history', {
@@ -121,14 +125,18 @@ export const stateHistory = pgTable('state_history', {
   updatedAt: tstz('updated_at').notNull(),
   updatedBy: text('updated_by').notNull(),
   note: text('note').notNull().default(''),
-  importBatchId: bigint('import_batch_id', { mode: 'number' }).references(() => importBatches.id, { onDelete: 'set null' }),
+  importBatchId: bigint('import_batch_id', { mode: 'number' }).references(() => importBatches.id, {
+    onDelete: 'set null',
+  }),
 });
 
 /** Colonnes communes à toutes les tables métier (concurrence et traçabilité de l'import legacy). */
 const businessColumns = () => ({
   version: integer('version').notNull().default(1),
   legacyId: text('legacy_id'),
-  importBatchId: bigint('import_batch_id', { mode: 'number' }).references(() => importBatches.id, { onDelete: 'set null' }),
+  importBatchId: bigint('import_batch_id', { mode: 'number' }).references(() => importBatches.id, {
+    onDelete: 'set null',
+  }),
   extra: jsonb('extra').notNull().default({}),
 });
 

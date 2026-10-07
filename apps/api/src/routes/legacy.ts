@@ -14,7 +14,11 @@ import type { Services } from '../services.js';
 
 /** Contrôle minimal d'un état legacy reçu de /legacy (identique à la v2). */
 export const validLegacyState = (o: unknown): o is JsonObject =>
-  isObject(o as Json) && (o as JsonObject).v === 1 && Array.isArray((o as JsonObject).items) && Array.isArray((o as JsonObject).findings) && Array.isArray((o as JsonObject).years);
+  isObject(o as Json) &&
+  (o as JsonObject).v === 1 &&
+  Array.isArray((o as JsonObject).items) &&
+  Array.isArray((o as JsonObject).findings) &&
+  Array.isArray((o as JsonObject).years);
 
 const SHIM_FILE = path.join(APP_ROOT, 'legacy-shim', 'shim.js');
 let INDEX_CACHE: { dir: string; html: string } | null = null;
@@ -24,10 +28,15 @@ export function buildLegacyIndex(dir: string): string {
   if (INDEX_CACHE?.dir === dir) return INDEX_CACHE.html;
   let h = readFileSync(path.join(dir, 'index.html'), 'utf8');
   h = h.replace(/<link[^>]+fonts\.(googleapis|gstatic)\.com[^>]*>\s*/g, '');
-  h = h.replace(/<script([^>]*)src="https:\/\/cdnjs\.cloudflare\.com\/ajax\/libs\/xlsx\/[^"]*\/xlsx\.full\.min\.js"/, '<script$1src="lib/xlsx.full.min.js"');
+  h = h.replace(
+    /<script([^>]*)src="https:\/\/cdnjs\.cloudflare\.com\/ajax\/libs\/xlsx\/[^"]*\/xlsx\.full\.min\.js"/,
+    '<script$1src="lib/xlsx.full.min.js"',
+  );
   h = h.replace("const LIB_MODE='cdn';", "const LIB_MODE='local';");
   const tag = '\n<!--SUIVI-CFG--><script src="shim.js"></script>';
-  h = /<meta charset="utf-8">/i.test(h) ? h.replace(/<meta charset="utf-8">/i, (m) => m + tag) : h.replace(/<head>/i, (m) => m + tag);
+  h = /<meta charset="utf-8">/i.test(h)
+    ? h.replace(/<meta charset="utf-8">/i, (m) => m + tag)
+    : h.replace(/<head>/i, (m) => m + tag);
   INDEX_CACHE = { dir, html: h };
   return h;
 }
@@ -38,7 +47,11 @@ async function legacyState(svc: Services) {
   return r;
 }
 
-const LIB_TYPES: Record<string, string> = { '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.map': 'application/json' };
+const LIB_TYPES: Record<string, string> = {
+  '.js': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.map': 'application/json',
+};
 
 export const legacyRoutes = [
   route({
@@ -49,7 +62,10 @@ export const legacyRoutes = [
     access: 'any',
     handler: async ({ svc, reply }) => {
       const r = await legacyState(svc);
-      reply.header('ETag', `"v${r.version}"`).header('Cache-Control', 'no-store').header('Content-Type', 'application/json; charset=utf-8');
+      reply
+        .header('ETag', `"v${r.version}"`)
+        .header('Cache-Control', 'no-store')
+        .header('Content-Type', 'application/json; charset=utf-8');
       return reply.send(JSON.stringify(r.data));
     },
   }),
@@ -62,7 +78,10 @@ export const legacyRoutes = [
     hidden: true,
     handler: async ({ svc, reply }) => {
       const r = await legacyState(svc);
-      reply.header('ETag', `"v${r.version}"`).header('Cache-Control', 'no-store').header('Content-Type', 'application/json; charset=utf-8');
+      reply
+        .header('ETag', `"v${r.version}"`)
+        .header('Cache-Control', 'no-store')
+        .header('Content-Type', 'application/json; charset=utf-8');
       return reply.send(JSON.stringify(r.data));
     },
   }),
@@ -114,14 +133,27 @@ export const legacyRoutes = [
     handler: async ({ svc }) => {
       const r = await svc.legacy.recompose();
       const d = (r?.data ?? {}) as Record<string, JsonObject[] | undefined>;
-      const code = (it: JsonObject) => (it.ref === 'A' ? `A.${String(it.num)}` : it.ref === 'HDS' ? `HDS ${String(it.num)}` : String(it.num));
+      const code = (it: JsonObject) =>
+        it.ref === 'A' ? `A.${String(it.num)}` : it.ref === 'HDS' ? `HDS ${String(it.num)}` : String(it.num);
       const out: { ref: string; label: string; kind: string }[] = [];
       for (const it of d.items ?? [])
-        out.push({ ref: code(it), label: String(it.title ?? ''), kind: 'Mesure ' + (it.ref === 'A' ? 'Annexe A' : it.ref === 'HDS' ? 'HDS' : 'ISO 27001') });
-      for (const f of d.findings ?? []) out.push({ ref: String(f.id), label: String(f.text ?? ''), kind: `Écart ${String(f.source ?? '')} ${String(f.year ?? '')}`.trim() });
-      for (const p of d.processes ?? []) out.push({ ref: String(p.id), label: String(p.name ?? ''), kind: 'Processus' });
-      for (const s of d.suppliers ?? []) out.push({ ref: String(s.id), label: String(s.name ?? ''), kind: 'Fournisseur' });
-      for (const o of d.objectives ?? []) if (o && o.id) out.push({ ref: String(o.id), label: String(o.name ?? o.title ?? ''), kind: 'Objectif' });
+        out.push({
+          ref: code(it),
+          label: String(it.title ?? ''),
+          kind: 'Mesure ' + (it.ref === 'A' ? 'Annexe A' : it.ref === 'HDS' ? 'HDS' : 'ISO 27001'),
+        });
+      for (const f of d.findings ?? [])
+        out.push({
+          ref: String(f.id),
+          label: String(f.text ?? ''),
+          kind: `Écart ${String(f.source ?? '')} ${String(f.year ?? '')}`.trim(),
+        });
+      for (const p of d.processes ?? [])
+        out.push({ ref: String(p.id), label: String(p.name ?? ''), kind: 'Processus' });
+      for (const s of d.suppliers ?? [])
+        out.push({ ref: String(s.id), label: String(s.name ?? ''), kind: 'Fournisseur' });
+      for (const o of d.objectives ?? [])
+        if (o && o.id) out.push({ ref: String(o.id), label: String(o.name ?? o.title ?? ''), kind: 'Objectif' });
       return out;
     },
   }),
@@ -155,8 +187,14 @@ export const legacyRoutes = [
         csrf: sess.csrf,
         takenOver: svc.legacy.takenOver().map((k) => ({ key: k, label: moduleLabel(k) })),
       }).replace(/</g, '\\u003c');
-      const html = buildLegacyIndex(svc.cfg.legacyDir).replace('<!--SUIVI-CFG-->', `<script>window.__SUIVI=${cfgJs};</script>`);
-      reply.header('Content-Security-Policy', CSP_LEGACY).header('Cache-Control', 'no-store').header('Content-Type', 'text/html; charset=utf-8');
+      const html = buildLegacyIndex(svc.cfg.legacyDir).replace(
+        '<!--SUIVI-CFG-->',
+        `<script>window.__SUIVI=${cfgJs};</script>`,
+      );
+      reply
+        .header('Content-Security-Policy', CSP_LEGACY)
+        .header('Cache-Control', 'no-store')
+        .header('Content-Type', 'text/html; charset=utf-8');
       return reply.send(html);
     },
   }),
@@ -198,7 +236,9 @@ export const legacyRoutes = [
       } catch {
         throw new HttpError(404, 'Introuvable.');
       }
-      reply.header('Content-Type', LIB_TYPES[path.extname(file)] || 'application/octet-stream').header('Cache-Control', 'public, max-age=3600');
+      reply
+        .header('Content-Type', LIB_TYPES[path.extname(file)] || 'application/octet-stream')
+        .header('Cache-Control', 'public, max-age=3600');
       return reply.send(await readFile(file));
     },
   }),

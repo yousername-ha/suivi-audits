@@ -3,7 +3,12 @@
 import crypto from 'node:crypto';
 import { promisify } from 'node:util';
 
-const scrypt = promisify(crypto.scrypt) as (pw: string, salt: Buffer, len: number, opts: crypto.ScryptOptions) => Promise<Buffer>;
+const scrypt = promisify(crypto.scrypt) as (
+  pw: string,
+  salt: Buffer,
+  len: number,
+  opts: crypto.ScryptOptions,
+) => Promise<Buffer>;
 const SCRYPT = { N: 2 ** 16, r: 8, p: 2, maxmem: 128 * 1024 * 1024 }; // 64 Mio, paramètres OWASP
 
 export async function hashPassword(pw: string): Promise<string> {
@@ -39,7 +44,8 @@ export function passwordProblems(pw: unknown, minLen: number, ctx: string[] = []
   if (s.length > 256) p.push('256 caractères au maximum');
   const classes = [/[a-z]/, /[A-Z]/, /[0-9]/, /[^A-Za-z0-9]/].filter((r) => r.test(s)).length;
   if (classes < 3) p.push('au moins 3 types de caractères parmi minuscules, majuscules, chiffres, symboles');
-  for (const c of ctx) if (c && c.length >= 3 && s.toLowerCase().includes(c.toLowerCase())) p.push("ne pas contenir l'identifiant");
+  for (const c of ctx)
+    if (c && c.length >= 3 && s.toLowerCase().includes(c.toLowerCase())) p.push("ne pas contenir l'identifiant");
   return p;
 }
 
@@ -135,7 +141,8 @@ export class Vault {
     return { iv, tag: c.getAuthTag(), content, keyId: this.keyId };
   }
   decrypt({ iv, tag, content, keyId }: Sealed, aad = ''): Buffer {
-    if (keyId && keyId !== this.keyId) throw new Error('Clé de chiffrement différente de celle utilisée pour ce contenu.');
+    if (keyId && keyId !== this.keyId)
+      throw new Error('Clé de chiffrement différente de celle utilisée pour ce contenu.');
     const d = crypto.createDecipheriv('aes-256-gcm', this.#key, iv);
     if (aad) d.setAAD(Buffer.from(aad));
     d.setAuthTag(tag);

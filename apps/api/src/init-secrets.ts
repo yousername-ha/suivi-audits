@@ -14,9 +14,27 @@ const APP_UID = parseInt(process.env.APP_UID || '1000', 10);
 const APP_GID = parseInt(process.env.APP_GID || '1000', 10);
 
 const SECRETS = [
-  { name: 'db_superuser_password', gen: () => crypto.randomBytes(32).toString('base64url'), uid: PG_UID, gid: PG_UID, mode: 0o400 },
-  { name: 'db_app_password', gen: () => crypto.randomBytes(32).toString('base64url'), uid: PG_UID, gid: APP_GID, mode: 0o440 },
-  { name: 'doc_master_key', gen: () => crypto.randomBytes(32).toString('base64'), uid: APP_UID, gid: APP_GID, mode: 0o400 },
+  {
+    name: 'db_superuser_password',
+    gen: () => crypto.randomBytes(32).toString('base64url'),
+    uid: PG_UID,
+    gid: PG_UID,
+    mode: 0o400,
+  },
+  {
+    name: 'db_app_password',
+    gen: () => crypto.randomBytes(32).toString('base64url'),
+    uid: PG_UID,
+    gid: APP_GID,
+    mode: 0o440,
+  },
+  {
+    name: 'doc_master_key',
+    gen: () => crypto.randomBytes(32).toString('base64'),
+    uid: APP_UID,
+    gid: APP_GID,
+    mode: 0o400,
+  },
 ];
 
 fs.mkdirSync(DIR, { recursive: true });

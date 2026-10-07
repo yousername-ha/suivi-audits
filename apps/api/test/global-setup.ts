@@ -13,7 +13,8 @@ export default async function setup() {
     );
   }
   const exists = await c.query('SELECT 1 FROM pg_roles WHERE rolname=$1', [APP_ROLE]);
-  if (!exists.rowCount) await c.query(`CREATE ROLE ${APP_ROLE} LOGIN PASSWORD '${APP_ROLE_PASSWORD}' NOSUPERUSER NOCREATEDB NOCREATEROLE`);
+  if (!exists.rowCount)
+    await c.query(`CREATE ROLE ${APP_ROLE} LOGIN PASSWORD '${APP_ROLE_PASSWORD}' NOSUPERUSER NOCREATEDB NOCREATEROLE`);
   // Nettoyage des bases laissées par une exécution interrompue.
   const old = await c.query<{ datname: string }>("SELECT datname FROM pg_database WHERE datname LIKE 'suivi_t_%'");
   for (const r of old.rows) await c.query(`DROP DATABASE IF EXISTS "${r.datname}" WITH (FORCE)`);

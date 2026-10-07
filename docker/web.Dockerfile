@@ -26,7 +26,7 @@ RUN apk upgrade --no-cache \
  && mkdir -p /data /config && chown -R caddy:caddy /data /config \
  # Copie du binaire SANS sa capacité de fichier cap_net_bind_service : inutile sur les ports 8080/8443,
  # et incompatible avec cap_drop: ALL (exécution refusée).
- && cp /usr/bin/caddy /usr/local/bin/caddy && chmod 0555 /usr/local/bin/caddy
+ && cp /usr/bin/caddy /usr/local/bin/caddy && chmod 0555 /usr/local/bin/caddy && rm /usr/bin/caddy
 COPY docker/Caddyfile /etc/caddy/Caddyfile
 COPY --from=build /src/apps/web/dist /srv
 RUN chown -R root:root /srv /etc/caddy && chmod -R a-w,a+rX /srv /etc/caddy

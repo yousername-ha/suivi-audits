@@ -12,7 +12,10 @@ const KEYS: Record<string, string[][]> = {
   document_versions: [['document'], ['documents']],
   links: [['links'], ['categories']],
   users: [['admin', 'users'], ME_KEY as unknown as string[]],
-  sessions: [['admin', 'sessions'], ['account', 'sessions']],
+  sessions: [
+    ['admin', 'sessions'],
+    ['account', 'sessions'],
+  ],
   settings: [['setup']],
   legacy_state: [['refs'], ['admin', 'versions'], ['admin', 'info']],
   import_batches: [['admin', 'imports']],
@@ -93,5 +96,7 @@ export function usePresence(resource: string | null, mode: PresenceMode = 'view'
 export function usePresenceOn(prefix: string) {
   const { presence } = useLive();
   const me = useMe();
-  return presence.filter((p) => (p.resource === prefix || p.resource.startsWith(prefix + '/')) && p.username !== me.user?.username);
+  return presence.filter(
+    (p) => (p.resource === prefix || p.resource.startsWith(prefix + '/')) && p.username !== me.user?.username,
+  );
 }

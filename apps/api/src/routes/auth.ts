@@ -70,16 +70,31 @@ export const authRoutes = [
       }
       const r = await svc.auth.checkLogin(username, body.password);
       if (!r.ok) {
-        await svc.db.audit(r.user ? { id: r.user.id, username: r.user.username } : { username }, ip, 'auth.login_failed', '', { reason: r.reason });
+        await svc.db.audit(
+          r.user ? { id: r.user.id, username: r.user.username } : { username },
+          ip,
+          'auth.login_failed',
+          '',
+          { reason: r.reason },
+        );
         if (r.reason === 'locked' || r.reason === 'locked_now') {
-          throw new HttpError(423, 'Compte temporairement verrouillé après plusieurs échecs. Réessayez plus tard ou contactez un administrateur.');
+          throw new HttpError(
+            423,
+            'Compte temporairement verrouillé après plusieurs échecs. Réessayez plus tard ou contactez un administrateur.',
+          );
         }
         throw new HttpError(401, 'Identifiant ou mot de passe incorrect.');
       }
       if (s) await svc.auth.destroy(s.sid);
       await svc.auth.create(req, reply, r.user.id, false);
       await svc.db.audit({ id: r.user.id, username: r.user.username }, ip, 'auth.password_ok');
-      return { stage: stageAfter(svc, { totpEnabled: r.user.totp_enabled, mustChangePassword: r.user.must_change_password }, false) };
+      return {
+        stage: stageAfter(
+          svc,
+          { totpEnabled: r.user.totp_enabled, mustChangePassword: r.user.must_change_password },
+          false,
+        ),
+      };
     },
   }),
   route({
@@ -92,7 +107,8 @@ export const authRoutes = [
     response: StageOut,
     handler: async ({ svc, req, reply, s, ip, body }) => {
       const sess = s as Session;
-      if (!svc.limits.mfaBySession(sess.sid.toString('hex'))) throw new HttpError(429, 'Trop de tentatives. Reconnectez-vous.');
+      if (!svc.limits.mfaBySession(sess.sid.toString('hex')))
+        throw new HttpError(429, 'Trop de tentatives. Reconnectez-vous.');
       if (!(await svc.auth.checkTotp(sess.user.id, body.code))) {
         await svc.db.audit(sess.user, ip, 'auth.mfa_failed');
         throw new HttpError(401, 'Code incorrect ou déjà utilisé.');
@@ -187,18 +203,22 @@ export const authRoutes = [
     handler: async ({ svc, s, ip, body }) => {
       const sess = s as Session;
       if (!['ok', 'password'].includes(svc.auth.stage(sess))) throw new HttpError(403, 'Authentification incomplète.');
-      const u = (await svc.db.one<{ username: string; password_hash: string }>('SELECT username, password_hash FROM users WHERE id=$1', [sess.user.id]))!;
+      const u = (await svc.db.one<{ username: string; password_hash: string }>(
+        'SELECT username, password_hash FROM users WHERE id=$1',
+        [sess.user.id],
+      ))!;
       if (!(await verifyPassword(body.current, u.password_hash))) {
         await svc.db.audit(sess.user, ip, 'account.password_failed');
         throw new HttpError(401, 'Mot de passe actuel incorrect.');
       }
       checkPassword(svc, body.next, u.username);
-      if (await verifyPassword(body.next, u.password_hash)) throw new HttpError(422, "Le nouveau mot de passe doit être différent de l'actuel.");
+      if (await verifyPassword(body.next, u.password_hash))
+        throw new HttpError(422, "Le nouveau mot de passe doit être différent de l'actuel.");
       await svc.db.tx(async (c) => {
-        await c.query('UPDATE users SET password_hash=$2, must_change_password=false, password_changed_at=now(), updated_at=now() WHERE id=$1', [
-          sess.user.id,
-          await hashPassword(body.next),
-        ]);
+        await c.query(
+          'UPDATE users SET password_hash=$2, must_change_password=false, password_changed_at=now(), updated_at=now() WHERE id=$1',
+          [sess.user.id, await hashPassword(body.next)],
+        );
         await svc.auth.destroyUserSessions(sess.user.id, sess.sid, c);
       }, sess.user.username);
       await svc.db.audit(sess.user, ip, 'account.password_changed');
@@ -218,11 +238,17 @@ export const authRoutes = [
       const st = svc.auth.stage(sess);
       if (!['ok', 'enroll'].includes(st)) throw new HttpError(403, 'Authentification incomplète.');
       if (st === 'ok' && sess.user.totpEnabled) {
-        const u = (await svc.db.one<{ password_hash: string }>('SELECT password_hash FROM users WHERE id=$1', [sess.user.id]))!;
-        if (!(await verifyPassword(body.password || '', u.password_hash))) throw new HttpError(401, 'Mot de passe incorrect.');
+        const u = (await svc.db.one<{ password_hash: string }>('SELECT password_hash FROM users WHERE id=$1', [
+          sess.user.id,
+        ]))!;
+        if (!(await verifyPassword(body.password || '', u.password_hash)))
+          throw new HttpError(401, 'Mot de passe incorrect.');
       }
       const key = crypto.randomBytes(20);
-      await svc.db.q('UPDATE users SET totp_pending=$2 WHERE id=$1', [sess.user.id, svc.vault.sealSmall(key, 'totp:' + sess.user.id)]);
+      await svc.db.q('UPDATE users SET totp_pending=$2 WHERE id=$1', [
+        sess.user.id,
+        svc.vault.sealSmall(key, 'totp:' + sess.user.id),
+      ]);
       const secret = base32(key);
       const label = encodeURIComponent(`${svc.cfg.appName}:${sess.user.username}`);
       const uri = `otpauth://totp/${label}?secret=${secret}&issuer=${encodeURIComponent(svc.cfg.orgName)}&algorithm=SHA1&digits=6&period=30`;
@@ -240,13 +266,18 @@ export const authRoutes = [
     handler: async ({ svc, req, reply, s, ip, body }) => {
       const sess = s as Session;
       if (!['ok', 'enroll'].includes(svc.auth.stage(sess))) throw new HttpError(403, 'Authentification incomplète.');
-      const u = await svc.db.one<{ totp_pending: Buffer | null }>('SELECT totp_pending FROM users WHERE id=$1', [sess.user.id]);
+      const u = await svc.db.one<{ totp_pending: Buffer | null }>('SELECT totp_pending FROM users WHERE id=$1', [
+        sess.user.id,
+      ]);
       if (!u || !u.totp_pending) throw new HttpError(409, 'Aucun enrôlement en cours.');
       const key = svc.vault.openSmall(u.totp_pending, 'totp:' + sess.user.id);
       const step = verifyTotp(key, body.code, 0);
       if (!step) throw new HttpError(401, "Code incorrect. Vérifiez l'heure du téléphone et réessayez.");
       await svc.db.tx(async (c) => {
-        await c.query('UPDATE users SET totp_secret=totp_pending, totp_pending=NULL, totp_enabled=true, totp_last_step=$2, updated_at=now() WHERE id=$1', [sess.user.id, step]);
+        await c.query(
+          'UPDATE users SET totp_secret=totp_pending, totp_pending=NULL, totp_enabled=true, totp_last_step=$2, updated_at=now() WHERE id=$1',
+          [sess.user.id, step],
+        );
         await svc.auth.destroyUserSessions(sess.user.id, null, c);
       }, sess.user.username);
       await svc.auth.create(req, reply, sess.user.id, true);
@@ -264,9 +295,14 @@ export const authRoutes = [
     handler: async ({ svc, s, ip, body }) => {
       const sess = s as Session;
       if (svc.cfg.mfaRequired) throw new HttpError(403, 'La double authentification est obligatoire sur ce serveur.');
-      const u = (await svc.db.one<{ password_hash: string }>('SELECT password_hash FROM users WHERE id=$1', [sess.user.id]))!;
-      if (!(await verifyPassword(body.password || '', u.password_hash))) throw new HttpError(401, 'Mot de passe incorrect.');
-      await svc.db.q('UPDATE users SET totp_secret=NULL, totp_pending=NULL, totp_enabled=false WHERE id=$1', [sess.user.id]);
+      const u = (await svc.db.one<{ password_hash: string }>('SELECT password_hash FROM users WHERE id=$1', [
+        sess.user.id,
+      ]))!;
+      if (!(await verifyPassword(body.password || '', u.password_hash)))
+        throw new HttpError(401, 'Mot de passe incorrect.');
+      await svc.db.q('UPDATE users SET totp_secret=NULL, totp_pending=NULL, totp_enabled=false WHERE id=$1', [
+        sess.user.id,
+      ]);
       await svc.db.audit(sess.user, ip, 'account.mfa_disabled');
       return undefined;
     },
@@ -277,7 +313,16 @@ export const authRoutes = [
     summary: 'Mes sessions ouvertes',
     tags: ['Compte'],
     access: 'any',
-    response: z.array(z.object({ id: z.string(), ip: z.string().nullable(), user_agent: z.string(), created_at: z.string(), last_seen_at: z.string(), current: z.boolean() })),
+    response: z.array(
+      z.object({
+        id: z.string(),
+        ip: z.string().nullable(),
+        user_agent: z.string(),
+        created_at: z.string(),
+        last_seen_at: z.string(),
+        current: z.boolean(),
+      }),
+    ),
     handler: async ({ svc, s }) => {
       const sess = s as Session;
       const r = await svc.db.q<{ id: string }>(

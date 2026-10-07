@@ -7,7 +7,10 @@ let a: Agent, b: Agent;
 
 const PDF = Buffer.from('%PDF-1.4\n% test\n1 0 obj << >> endobj\ntrailer << >>\n%%EOF\n');
 const upload = (ag: Agent, name: string, buf: Buffer, meta: object = {}) =>
-  ag.req('POST', '/api/documents', { body: buf, headers: { 'x-file-name': encodeURIComponent(name), 'x-meta': encodeURIComponent(JSON.stringify(meta)) } });
+  ag.req('POST', '/api/documents', {
+    body: buf,
+    headers: { 'x-file-name': encodeURIComponent(name), 'x-meta': encodeURIComponent(JSON.stringify(meta)) },
+  });
 
 beforeAll(async () => {
   t = await createTestApp();
@@ -21,12 +24,23 @@ afterAll(() => t.close());
 
 describe('documents : dépôt, chiffrement, intégrité', () => {
   it('dépose, chiffre en base et restitue à l’identique', async () => {
-    const r = await upload(a, 'Politique de sécurité.pdf', PDF, { refs: 'A.5.1, ISO-4.1', classification: 'restreint' });
+    const r = await upload(a, 'Politique de sécurité.pdf', PDF, {
+      refs: 'A.5.1, ISO-4.1',
+      classification: 'restreint',
+    });
     expect(r.statusCode).toBe(201);
     const d = r.json();
-    expect(d).toMatchObject({ title: 'Politique de sécurité', refs: ['A.5.1', 'ISO-4.1'], classification: 'restreint', version: 1, current_version: 1 });
+    expect(d).toMatchObject({
+      title: 'Politique de sécurité',
+      refs: ['A.5.1', 'ISO-4.1'],
+      classification: 'restreint',
+      version: 1,
+      current_version: 1,
+    });
     expect(r.headers.etag).toBe('"1"');
-    const raw = await t.svc.db.one<{ content: Buffer }>('SELECT content FROM document_versions WHERE document_id=$1', [d.id]);
+    const raw = await t.svc.db.one<{ content: Buffer }>('SELECT content FROM document_versions WHERE document_id=$1', [
+      d.id,
+    ]);
     expect(raw!.content.includes(Buffer.from('%PDF'))).toBe(false);
     const dl = await (await login(t, ro)).get(`/api/documents/${d.id}/download`);
     expect(dl.statusCode).toBe(200);
@@ -58,7 +72,10 @@ describe('documents : dépôt, chiffrement, intégrité', () => {
 
   it('nouvelle version : incrémente la version du document', async () => {
     const d = (await upload(a, 'v.txt', Buffer.from('v1'))).json();
-    const r = await a.req('POST', `/api/documents/${d.id}/versions`, { body: Buffer.from('v2'), headers: { 'x-file-name': 'v.txt', 'x-comment': 'mise%20%C3%A0%20jour' } });
+    const r = await a.req('POST', `/api/documents/${d.id}/versions`, {
+      body: Buffer.from('v2'),
+      headers: { 'x-file-name': 'v.txt', 'x-comment': 'mise%20%C3%A0%20jour' },
+    });
     expect(r.json()).toEqual({ version: 2, documentVersion: 2 });
     const full = (await a.get(`/api/documents/${d.id}`)).json();
     expect(full.versions.map((v: { version: number; comment: string }) => [v.version, v.comment])).toEqual([
@@ -83,14 +100,18 @@ describe('concurrence par enregistrement (If-Match)', () => {
     expect(ok.statusCode).toBe(200);
     expect(ok.headers.etag).toBe('"2"');
     // b modifie un AUTRE document avec sa version : aucun conflit.
-    expect((await b.patch(`/api/documents/${d2.id}`, { title: 'modifié par b' }, { 'if-match': '"1"' })).statusCode).toBe(200);
+    expect(
+      (await b.patch(`/api/documents/${d2.id}`, { title: 'modifié par b' }, { 'if-match': '"1"' })).statusCode,
+    ).toBe(200);
     // b modifie d1 avec la version périmée : 412 et version courante renvoyée.
     const ko = await b.patch(`/api/documents/${d1.id}`, { title: 'écrasement' }, { 'if-match': '"1"' });
     expect(ko.statusCode).toBe(412);
     expect(ko.json().current).toMatchObject({ id: d1.id, version: 2, title: 'modifié par a', updated_by: 'redacteur' });
     expect(ko.json().error).toMatch(/modifié par redacteur/);
     // Avec la version courante, la modification passe.
-    expect((await b.patch(`/api/documents/${d1.id}`, { title: 'après rechargement' }, { 'if-match': '"2"' })).statusCode).toBe(200);
+    expect(
+      (await b.patch(`/api/documents/${d1.id}`, { title: 'après rechargement' }, { 'if-match': '"2"' })).statusCode,
+    ).toBe(200);
   });
 
   it('liens : même contrôle', async () => {
@@ -106,7 +127,9 @@ describe('concurrence par enregistrement (If-Match)', () => {
     const u = await makeUser(t, 'cible', 'ro');
     const v = (await b.get(`/api/admin/users/${u.id}`)).headers.etag as string;
     expect((await b.patch(`/api/admin/users/${u.id}`, { displayName: 'Un' }, { 'if-match': v })).statusCode).toBe(200);
-    expect((await b.patch(`/api/admin/users/${u.id}`, { displayName: 'Deux' }, { 'if-match': v })).statusCode).toBe(412);
+    expect((await b.patch(`/api/admin/users/${u.id}`, { displayName: 'Deux' }, { 'if-match': v })).statusCode).toBe(
+      412,
+    );
   });
 
   it('refuse une adresse de lien invalide', async () => {

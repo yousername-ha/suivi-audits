@@ -16,7 +16,5 @@ export default defineConfig({
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
-  projects: [
-    { name: 'ordinateur', use: { ...devices['Desktop Chrome'] } },
-  ],
+  projects: [{ name: 'ordinateur', use: { ...devices['Desktop Chrome'] } }],
 });

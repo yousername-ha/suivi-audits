@@ -13,7 +13,16 @@ async function main() {
   await svc.bus.start();
   const app = await buildApp(svc);
   await app.listen({ port: cfg.port, host: cfg.host });
-  log.info({ port: cfg.port, mfaRequired: cfg.mfaRequired, clamav: !!cfg.clamav, keyId: svc.vault.keyId, version: cfg.version }, 'listening');
+  log.info(
+    {
+      port: cfg.port,
+      mfaRequired: cfg.mfaRequired,
+      clamav: !!cfg.clamav,
+      keyId: svc.vault.keyId,
+      version: cfg.version,
+    },
+    'listening',
+  );
 
   let stopping = false;
   const stop = async () => {

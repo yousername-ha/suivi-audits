@@ -1,5 +1,19 @@
 /* Administration : comptes, sessions, journal d'audit, versions, import legacy, système. */
-import { Alert, Badge, Button, Card, Group, Modal, Select, Stack, Table, Tabs, Text, TextInput, Title } from '@mantine/core';
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Group,
+  Modal,
+  Select,
+  Stack,
+  Table,
+  Tabs,
+  Text,
+  TextInput,
+  Title,
+} from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { ROLE_LABELS, ROLES, type Role, type UserOut } from '@suivi/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -68,7 +82,9 @@ function Users() {
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ['admin', 'users'], queryFn: () => get<UserOut[]>('/api/admin/users') });
   const [secret, setSecret] = useState<{ title: string; value: string } | null>(null);
-  const [creating, setCreating] = useState<{ username: string; displayName: string; email: string; role: Role } | null>(null);
+  const [creating, setCreating] = useState<{ username: string; displayName: string; email: string; role: Role } | null>(
+    null,
+  );
   const [editing, setEditing] = useState<UserOut | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const refresh = () => qc.invalidateQueries({ queryKey: ['admin', 'users'] });
@@ -85,7 +101,9 @@ function Users() {
   return (
     <Stack>
       <Group>
-        <Button onClick={() => setCreating({ username: '', displayName: '', email: '', role: 'ro' })}>Nouveau compte</Button>
+        <Button onClick={() => setCreating({ username: '', displayName: '', email: '', role: 'ro' })}>
+          Nouveau compte
+        </Button>
       </Group>
       <ErrorAlert error={q.error} />
       <Card withBorder p={0}>
@@ -134,8 +152,14 @@ function Users() {
                           message={`Générer un mot de passe temporaire pour ${u.username} ? Ses sessions seront fermées.`}
                           onConfirm={() =>
                             act(async () => {
-                              const r = await api<{ temporaryPassword: string }>('POST', `/api/admin/users/${u.id}/reset-password`);
-                              setSecret({ title: `Mot de passe temporaire de ${u.username}`, value: r.temporaryPassword });
+                              const r = await api<{ temporaryPassword: string }>(
+                                'POST',
+                                `/api/admin/users/${u.id}/reset-password`,
+                              );
+                              setSecret({
+                                title: `Mot de passe temporaire de ${u.username}`,
+                                value: r.temporaryPassword,
+                              });
                             })
                           }
                         >
@@ -146,17 +170,40 @@ function Users() {
                           variant="light"
                           color="orange"
                           message={`Réinitialiser la double authentification de ${u.username} (téléphone perdu) ? Il devra la reconfigurer.`}
-                          onConfirm={() => act(() => api('POST', `/api/admin/users/${u.id}/reset-mfa`), 'Double authentification réinitialisée.')}
+                          onConfirm={() =>
+                            act(
+                              () => api('POST', `/api/admin/users/${u.id}/reset-mfa`),
+                              'Double authentification réinitialisée.',
+                            )
+                          }
                         >
                           TOTP
                         </ConfirmButton>
                         {locked && (
-                          <Button size="compact-sm" variant="light" onClick={() => act(() => api('PATCH', `/api/admin/users/${u.id}`, { body: { unlock: true }, ifMatch: u.version }), 'Compte déverrouillé.')}>
+                          <Button
+                            size="compact-sm"
+                            variant="light"
+                            onClick={() =>
+                              act(
+                                () =>
+                                  api('PATCH', `/api/admin/users/${u.id}`, {
+                                    body: { unlock: true },
+                                    ifMatch: u.version,
+                                  }),
+                                'Compte déverrouillé.',
+                              )
+                            }
+                          >
                             Déverrouiller
                           </Button>
                         )}
                         {u.id !== me.user?.id && (
-                          <ConfirmButton size="compact-sm" variant="light" message={`Supprimer définitivement le compte ${u.username} ?`} onConfirm={() => act(() => api('DELETE', `/api/admin/users/${u.id}`), 'Compte supprimé.')}>
+                          <ConfirmButton
+                            size="compact-sm"
+                            variant="light"
+                            message={`Supprimer définitivement le compte ${u.username} ?`}
+                            onConfirm={() => act(() => api('DELETE', `/api/admin/users/${u.id}`), 'Compte supprimé.')}
+                          >
                             Supprimer
                           </ConfirmButton>
                         )}
@@ -174,10 +221,30 @@ function Users() {
         {creating && (
           <Stack>
             {err && <Alert color="red">{err}</Alert>}
-            <TextInput label="Identifiant" required value={creating.username} onChange={(e) => setCreating({ ...creating, username: e.currentTarget.value })} />
-            <TextInput label="Nom affiché" value={creating.displayName} onChange={(e) => setCreating({ ...creating, displayName: e.currentTarget.value })} />
-            <TextInput label="Adresse e-mail" type="email" value={creating.email} onChange={(e) => setCreating({ ...creating, email: e.currentTarget.value })} />
-            <Select label="Rôle" data={roleOptions} value={creating.role} onChange={(v) => v && setCreating({ ...creating, role: v as Role })} allowDeselect={false} />
+            <TextInput
+              label="Identifiant"
+              required
+              value={creating.username}
+              onChange={(e) => setCreating({ ...creating, username: e.currentTarget.value })}
+            />
+            <TextInput
+              label="Nom affiché"
+              value={creating.displayName}
+              onChange={(e) => setCreating({ ...creating, displayName: e.currentTarget.value })}
+            />
+            <TextInput
+              label="Adresse e-mail"
+              type="email"
+              value={creating.email}
+              onChange={(e) => setCreating({ ...creating, email: e.currentTarget.value })}
+            />
+            <Select
+              label="Rôle"
+              data={roleOptions}
+              value={creating.role}
+              onChange={(v) => v && setCreating({ ...creating, role: v as Role })}
+              allowDeselect={false}
+            />
             <Group justify="flex-end">
               <Button
                 onClick={async () => {
@@ -202,20 +269,44 @@ function Users() {
       <Modal opened={!!editing} onClose={() => setEditing(null)} title={`Modifier ${editing?.username ?? ''}`} centered>
         {editing && <EditUser user={editing} onDone={() => (setEditing(null), void refresh())} />}
       </Modal>
-      <SecretModal title={secret?.title ?? ''} intro="Mot de passe temporaire :" secret={secret?.value ?? null} onClose={() => setSecret(null)} />
+      <SecretModal
+        title={secret?.title ?? ''}
+        intro="Mot de passe temporaire :"
+        secret={secret?.value ?? null}
+        onClose={() => setSecret(null)}
+      />
     </Stack>
   );
 }
 
 function EditUser({ user, onDone }: { user: UserOut; onDone: () => void }) {
-  const [f, setF] = useState({ displayName: user.display_name, email: user.email, role: user.role, disabled: user.disabled });
+  const [f, setF] = useState({
+    displayName: user.display_name,
+    email: user.email,
+    role: user.role,
+    disabled: user.disabled,
+  });
   const [err, setErr] = useState<string | null>(null);
   return (
     <Stack>
       {err && <Alert color="red">{err}</Alert>}
-      <TextInput label="Nom affiché" value={f.displayName} onChange={(e) => setF({ ...f, displayName: e.currentTarget.value })} />
-      <TextInput label="Adresse e-mail" value={f.email} onChange={(e) => setF({ ...f, email: e.currentTarget.value })} />
-      <Select label="Rôle" data={roleOptions} value={f.role} onChange={(v) => v && setF({ ...f, role: v as Role })} allowDeselect={false} />
+      <TextInput
+        label="Nom affiché"
+        value={f.displayName}
+        onChange={(e) => setF({ ...f, displayName: e.currentTarget.value })}
+      />
+      <TextInput
+        label="Adresse e-mail"
+        value={f.email}
+        onChange={(e) => setF({ ...f, email: e.currentTarget.value })}
+      />
+      <Select
+        label="Rôle"
+        data={roleOptions}
+        value={f.role}
+        onChange={(v) => v && setF({ ...f, role: v as Role })}
+        allowDeselect={false}
+      />
       <Select
         label="État"
         data={[
@@ -234,7 +325,11 @@ function EditUser({ user, onDone }: { user: UserOut; onDone: () => void }) {
               notifications.show({ color: 'teal', message: 'Compte modifié.' });
               onDone();
             } catch (e) {
-              setErr(e instanceof ApiError && e.status === 412 ? `${e.message} Fermez cette fenêtre pour recharger.` : errorMessage(e));
+              setErr(
+                e instanceof ApiError && e.status === 412
+                  ? `${e.message} Fermez cette fenêtre pour recharger.`
+                  : errorMessage(e),
+              );
             }
           }}
         >
@@ -277,14 +372,28 @@ function Sessions() {
             {(q.data ?? []).map((s) => (
               <Table.Tr key={s.id}>
                 <Table.Td>
-                  {s.username} {s.current && <Badge size="xs">vous</Badge>} {!s.mfa_ok && <Badge size="xs" color="orange">TOTP non validé</Badge>}
+                  {s.username} {s.current && <Badge size="xs">vous</Badge>}{' '}
+                  {!s.mfa_ok && (
+                    <Badge size="xs" color="orange">
+                      TOTP non validé
+                    </Badge>
+                  )}
                 </Table.Td>
                 <Table.Td>{s.user_agent.slice(0, 60)}</Table.Td>
                 <Table.Td className="mono">{s.ip}</Table.Td>
                 <Table.Td className="nowrap">{fmtDate(s.last_seen_at)}</Table.Td>
                 <Table.Td>
                   {!s.current && (
-                    <Button size="compact-sm" variant="light" color="red" onClick={() => api('DELETE', `/api/admin/sessions/${s.id}`).then(() => qc.invalidateQueries({ queryKey: ['admin', 'sessions'] }))}>
+                    <Button
+                      size="compact-sm"
+                      variant="light"
+                      color="red"
+                      onClick={() =>
+                        api('DELETE', `/api/admin/sessions/${s.id}`).then(() =>
+                          qc.invalidateQueries({ queryKey: ['admin', 'sessions'] }),
+                        )
+                      }
+                    >
                       Fermer
                     </Button>
                   )}
@@ -311,7 +420,10 @@ interface AuditRow {
 function Audit() {
   const [q, setQ] = useState('');
   const [applied, setApplied] = useState('');
-  const r = useQuery({ queryKey: ['admin', 'audit', applied], queryFn: () => get<AuditRow[]>(`/api/admin/audit?limit=300${applied ? `&q=${encodeURIComponent(applied)}` : ''}`) });
+  const r = useQuery({
+    queryKey: ['admin', 'audit', applied],
+    queryFn: () => get<AuditRow[]>(`/api/admin/audit?limit=300${applied ? `&q=${encodeURIComponent(applied)}` : ''}`),
+  });
   return (
     <Stack>
       <Group align="flex-end">
@@ -322,13 +434,21 @@ function Audit() {
           }}
         >
           <Group align="flex-end">
-            <TextInput label="Rechercher" placeholder="compte, action, cible, IP" value={q} onChange={(e) => setQ(e.currentTarget.value)} />
+            <TextInput
+              label="Rechercher"
+              placeholder="compte, action, cible, IP"
+              value={q}
+              onChange={(e) => setQ(e.currentTarget.value)}
+            />
             <Button type="submit" variant="default">
               Filtrer
             </Button>
           </Group>
         </form>
-        <Button variant="light" onClick={() => download(`/api/admin/audit?format=csv${applied ? `&q=${encodeURIComponent(applied)}` : ''}`)}>
+        <Button
+          variant="light"
+          onClick={() => download(`/api/admin/audit?format=csv${applied ? `&q=${encodeURIComponent(applied)}` : ''}`)}
+        >
           Exporter en CSV
         </Button>
       </Group>
@@ -383,7 +503,8 @@ function Versions() {
   return (
     <Stack>
       <Text size="sm" c="dimmed">
-        Historique des enregistrements de l’outil de suivi (ancienne interface). Une restauration crée une nouvelle version.
+        Historique des enregistrements de l’outil de suivi (ancienne interface). Une restauration crée une nouvelle
+        version.
       </Text>
       <ErrorAlert error={q.error} />
       <Card withBorder p={0}>
@@ -411,7 +532,11 @@ function Versions() {
                   </Table.Td>
                   <Table.Td>
                     <Group gap={4} wrap="nowrap">
-                      <Button size="compact-sm" variant="default" onClick={() => download(`/api/admin/versions/${v.version}`)}>
+                      <Button
+                        size="compact-sm"
+                        variant="default"
+                        onClick={() => download(`/api/admin/versions/${v.version}`)}
+                      >
                         Télécharger
                       </Button>
                       <ConfirmButton

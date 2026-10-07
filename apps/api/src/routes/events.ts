@@ -34,7 +34,11 @@ export const eventRoutes = [
       };
       // Le navigateur se reconnecte seul après 3 s ; à la reconnexion, le client recharge ses données.
       res.write('retry: 3000\n\n');
-      send('hello', { user: sess.user.username, role: sess.user.role, presence: svc.presence.visibleTo(sess.user.role) });
+      send('hello', {
+        user: sess.user.username,
+        role: sess.user.role,
+        presence: svc.presence.visibleTo(sess.user.role),
+      });
 
       const onChange = (e: ChangeEvent) => {
         if (canReceive(sess.user.role, e.entity)) send('change', e);
@@ -88,7 +92,8 @@ export const eventRoutes = [
     handler: async ({ svc, s, body }) => {
       const sess = s as Session;
       if (!svc.limits.presence(body.client)) throw new HttpError(429, 'Trop de requêtes.');
-      if (body.resource.startsWith('admin') && sess.user.role !== 'admin') throw new HttpError(403, 'Réservé aux administrateurs.');
+      if (body.resource.startsWith('admin') && sess.user.role !== 'admin')
+        throw new HttpError(403, 'Réservé aux administrateurs.');
       await svc.presence.publish('set', {
         client: body.client,
         username: sess.user.username,

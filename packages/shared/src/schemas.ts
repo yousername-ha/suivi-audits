@@ -15,15 +15,13 @@ export const CLASSIFICATION_LABELS: Record<(typeof CLASSIFICATIONS)[number], str
 const text = (max: number) => z.string().trim().max(max);
 /** Liste de chaînes : tableau ou texte séparé par des virgules, dédoublonnée et bornée. */
 const strList = (maxItems: number, max: number) =>
-  z
-    .union([z.array(z.string()), z.string()])
-    .transform((v) =>
-      (Array.isArray(v) ? v : v.split(','))
-        .map((x) => x.trim().slice(0, max))
-        .filter(Boolean)
-        .filter((x, i, a) => a.indexOf(x) === i)
-        .slice(0, maxItems),
-    );
+  z.union([z.array(z.string()), z.string()]).transform((v) =>
+    (Array.isArray(v) ? v : v.split(','))
+      .map((x) => x.trim().slice(0, max))
+      .filter(Boolean)
+      .filter((x, i, a) => a.indexOf(x) === i)
+      .slice(0, maxItems),
+  );
 
 export const Username = z
   .string()
@@ -35,7 +33,12 @@ export const Uuid = z.uuid();
 
 /* ---------------------------------------------------------------- Authentification */
 export const LoginBody = z.object({ username: text(64).min(1), password: z.string().min(1).max(256) });
-export const MfaBody = z.object({ code: z.string().trim().regex(/^\d{6}$/, 'Code à 6 chiffres attendu.') });
+export const MfaBody = z.object({
+  code: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, 'Code à 6 chiffres attendu.'),
+});
 export const SetupBody = z.object({
   token: z.string().max(100),
   username: Username,

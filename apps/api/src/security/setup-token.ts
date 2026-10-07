@@ -31,7 +31,11 @@ export async function makeSetupTokenRecord(tok: string, reason: string, now = Da
 }
 
 /** « expired » et « used » ne sont révélés qu'à qui présente le bon jeton. */
-export async function checkSetupToken(input: unknown, rec: SetupTokenRecord | null | undefined, now = Date.now()): Promise<SetupTokenStatus> {
+export async function checkSetupToken(
+  input: unknown,
+  rec: SetupTokenRecord | null | undefined,
+  now = Date.now(),
+): Promise<SetupTokenStatus> {
   if (!rec || !rec.hash) return 'none';
   const tok = normalizeSetupToken(input);
   if (!tok) {

@@ -41,7 +41,7 @@ function readUpload(buf: unknown) {
   if (!Buffer.isBuffer(buf) || !buf.length) throw new HttpError(422, 'Fichier vide ou illisible.');
   let raw: unknown;
   try {
-    raw = JSON.parse(buf.toString('utf8').replace(/^﻿/, ''));
+    raw = JSON.parse(buf.toString('utf8').replace(/^\uFEFF/, ''));
   } catch {
     throw new HttpError(422, "Le fichier n'est pas un JSON valide.");
   }
@@ -53,9 +53,19 @@ function readUpload(buf: unknown) {
   }
 }
 
-function plan(current: JsonObject | null, file: ReturnType<typeof readUpload>, mode: z.infer<typeof ImportMode>, module?: string) {
+function plan(
+  current: JsonObject | null,
+  file: ReturnType<typeof readUpload>,
+  mode: z.infer<typeof ImportMode>,
+  module?: string,
+) {
   try {
-    return planImport(current, file.data, { mode, module: module ?? null, sourceSchema: file.schema, envelope: !!file.envelope });
+    return planImport(current, file.data, {
+      mode,
+      module: module ?? null,
+      sourceSchema: file.schema,
+      envelope: !!file.envelope,
+    });
   } catch (e) {
     if (e instanceof LegacyFileError) throw new HttpError(422, e.message, { details: e.details });
     throw e;
@@ -77,7 +87,14 @@ const snapshot = (state: JsonObject | null, keys: string[]): Snapshot => {
 };
 
 /** Écrit les modules donnés : tables pour les modules repris, app_state pour les autres. */
-async function writeModules(svc: Services, c: Client, values: Snapshot, user: Session['user'], note: string, batchId: number) {
+async function writeModules(
+  svc: Services,
+  c: Client,
+  values: Snapshot,
+  user: Session['user'],
+  note: string,
+  batchId: number,
+) {
   const cur = await svc.legacy.row(c);
   const data: JsonObject = { ...(cur?.data ?? {}) };
   for (const [k, v] of Object.entries(values.values)) {
@@ -130,9 +147,13 @@ export const importRoutes = [
       const sess = s as Session;
       const buf = body as unknown as Buffer;
       const sha = sha256hex(buf);
-      if (sha !== query.sha256) throw new HttpError(409, 'Le fichier diffère de celui qui a été simulé : relancez la simulation.');
+      if (sha !== query.sha256)
+        throw new HttpError(409, 'Le fichier diffère de celui qui a été simulé : relancez la simulation.');
       if (query.mode === 'replace' && query.confirm !== query.module) {
-        throw new HttpError(422, `Confirmation requise : ressaisissez le nom du module (« ${query.module ?? ''} ») pour le remplacer.`);
+        throw new HttpError(
+          422,
+          `Confirmation requise : ressaisissez le nom du module (« ${query.module ?? ''} ») pour le remplacer.`,
+        );
       }
       const file = readUpload(buf);
       const filename = fileName(req);
@@ -145,7 +166,10 @@ export const importRoutes = [
         const id = (await c.query<{ id: number }>("SELECT nextval('import_batches_id_seq')::int AS id")).rows[0]!.id;
         // Sauvegarde : la version courante est conservée dans l'historique (protégée de la fusion des versions).
         if (before) {
-          await c.query("UPDATE state_history SET note = $2 WHERE version = $1 AND note = ''", [before.version, `Sauvegarde avant l'import n°${id}`]);
+          await c.query("UPDATE state_history SET note = $2 WHERE version = $1 AND note = ''", [
+            before.version,
+            `Sauvegarde avant l'import n°${id}`,
+          ]);
         }
         const keys = [...report.affected, 'schema'];
         const beforeSnap = snapshot(before?.data ?? null, keys);
@@ -155,13 +179,51 @@ export const importRoutes = [
           `INSERT INTO import_batches(id, created_by, filename, size, sha256, source_schema, envelope, mode, module, modules, report,
              raw_key_id, raw_iv, raw_tag, raw_content, before_state, after_state, state_version_before)
            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)`,
-          [id, sess.user.username, filename, buf.length, sha, file.schema, !!file.envelope, query.mode, query.module ?? null, report.affected, report,
-            enc.keyId, enc.iv, enc.tag, enc.content, beforeSnap, afterSnap, before?.version ?? null],
+          [
+            id,
+            sess.user.username,
+            filename,
+            buf.length,
+            sha,
+            file.schema,
+            !!file.envelope,
+            query.mode,
+            query.module ?? null,
+            report.affected,
+            report,
+            enc.keyId,
+            enc.iv,
+            enc.tag,
+            enc.content,
+            beforeSnap,
+            afterSnap,
+            before?.version ?? null,
+          ],
         );
-        const saved = await writeModules(svc, c, afterSnap, sess.user, `Import n°${id} (${query.mode}${query.module ? ' : ' + query.module : ''})`, id);
+        const saved = await writeModules(
+          svc,
+          c,
+          afterSnap,
+          sess.user,
+          `Import n°${id} (${query.mode}${query.module ? ' : ' + query.module : ''})`,
+          id,
+        );
         const version = saved.conflict ? null : saved.version;
         await c.query('UPDATE import_batches SET state_version_after=$2 WHERE id=$1', [id, version]);
-        await svc.db.audit(sess.user, ip, 'import.apply', `import:${id}`, { mode: query.mode, module: query.module ?? null, sha256: sha, modules: report.affected, totals: report.totals }, c);
+        await svc.db.audit(
+          sess.user,
+          ip,
+          'import.apply',
+          `import:${id}`,
+          {
+            mode: query.mode,
+            module: query.module ?? null,
+            sha256: sha,
+            modules: report.affected,
+            totals: report.totals,
+          },
+          c,
+        );
         return { id, version, report };
       }, sess.user.username);
       return { batch: out.id, stateVersion: out.version, report: out.report };
@@ -173,7 +235,8 @@ export const importRoutes = [
     summary: 'Historique des imports',
     tags: ['Import legacy'],
     access: 'admin',
-    handler: async ({ svc }) => (await svc.db.q(`SELECT ${batchSummary} FROM import_batches ORDER BY id DESC LIMIT 200`)).rows,
+    handler: async ({ svc }) =>
+      (await svc.db.q(`SELECT ${batchSummary} FROM import_batches ORDER BY id DESC LIMIT 200`)).rows,
   }),
   route({
     method: 'GET',
@@ -196,12 +259,21 @@ export const importRoutes = [
     access: 'admin',
     params: BatchParams,
     handler: async ({ svc, s, ip, params, reply }) => {
-      const r = await svc.db.one<{ filename: string; sha256: string; raw_key_id: string; raw_iv: Buffer; raw_tag: Buffer; raw_content: Buffer }>(
-        'SELECT filename, sha256, raw_key_id, raw_iv, raw_tag, raw_content FROM import_batches WHERE id=$1',
-        [params.id],
-      );
+      const r = await svc.db.one<{
+        filename: string;
+        sha256: string;
+        raw_key_id: string;
+        raw_iv: Buffer;
+        raw_tag: Buffer;
+        raw_content: Buffer;
+      }>('SELECT filename, sha256, raw_key_id, raw_iv, raw_tag, raw_content FROM import_batches WHERE id=$1', [
+        params.id,
+      ]);
       if (!r) throw new HttpError(404, 'Import introuvable.');
-      const plain = svc.vault.decrypt({ iv: r.raw_iv, tag: r.raw_tag, content: r.raw_content, keyId: r.raw_key_id }, `import:${params.id}`);
+      const plain = svc.vault.decrypt(
+        { iv: r.raw_iv, tag: r.raw_tag, content: r.raw_content, keyId: r.raw_key_id },
+        `import:${params.id}`,
+      );
       if (sha256hex(plain) !== r.sha256) throw new HttpError(500, "Échec du contrôle d'intégrité du fichier importé.");
       await svc.db.audit((s as Session).user, ip, 'import.file_download', `import:${params.id}`);
       reply
@@ -236,7 +308,11 @@ export const importRoutes = [
           return !deepEqual(cur[k] as Json | undefined, expected);
         });
         if (changed.length) {
-          throw new HttpError(409, `Annulation impossible : ${changed.map(moduleLabel).join(', ')} modifié(s) depuis l'import.`, { reason: 'changed_since', modules: changed });
+          throw new HttpError(
+            409,
+            `Annulation impossible : ${changed.map(moduleLabel).join(', ')} modifié(s) depuis l'import.`,
+            { reason: 'changed_since', modules: changed },
+          );
         }
         const keys = [...b.modules, 'schema'];
         const restore: Snapshot = { values: {}, absent: [] };
@@ -244,8 +320,18 @@ export const importRoutes = [
           if (k in b.before_state.values) restore.values[k] = b.before_state.values[k] as Json;
           else if (b.before_state.absent.includes(k)) restore.absent.push(k);
         }
-        const saved = await writeModules(svc, c, restore, sess.user, `Annulation de l'import n°${params.id}`, params.id);
-        await c.query("UPDATE import_batches SET status='undone', undone_at=now(), undone_by=$2, version = version + 1 WHERE id=$1", [params.id, sess.user.username]);
+        const saved = await writeModules(
+          svc,
+          c,
+          restore,
+          sess.user,
+          `Annulation de l'import n°${params.id}`,
+          params.id,
+        );
+        await c.query(
+          "UPDATE import_batches SET status='undone', undone_at=now(), undone_by=$2, version = version + 1 WHERE id=$1",
+          [params.id, sess.user.username],
+        );
         await svc.db.audit(sess.user, ip, 'import.undo', `import:${params.id}`, { modules: b.modules }, c);
         return { stateVersion: saved.conflict ? null : saved.version };
       }, sess.user.username);
@@ -276,7 +362,10 @@ export const importRoutes = [
       reply
         .header('Content-Type', 'application/json; charset=utf-8')
         .header('Cache-Control', 'no-store')
-        .header('Content-Disposition', `attachment; filename="suivi-audits-legacy-${env.exportedAt.slice(0, 10).replace(/-/g, '')}.json"`);
+        .header(
+          'Content-Disposition',
+          `attachment; filename="suivi-audits-legacy-${env.exportedAt.slice(0, 10).replace(/-/g, '')}.json"`,
+        );
       return reply.send(JSON.stringify(env));
     },
   }),

@@ -1,4 +1,4 @@
-# Intégration continue : contrôles statiques, puis démarrage complet de la pile Docker.
+# Intégration continue : qualité, tests, images, sécurité (Trivy, SBOM), pile complète et tests de bout en bout.
 name: CI
 
 on:
@@ -14,32 +14,36 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
-jobs:
-  controles:
-    name: Contrôles statiques
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    defaults:
-      run:
-        working-directory: app
-    steps:
-      - uses: actions/checkout@v4
+env:
+  TRIVY_IMAGE: aquasec/trivy:0.75.0
 
-      - uses: actions/setup-node@v4
+jobs:
+  qualite:
+    name: Qualité (lint, format, typage, contrôles)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 24
-
-      - name: Installation des dépendances
-        run: npm ci --no-audit --no-fund
-
-      - name: Tests unitaires (jeton d'installation)
-        run: npm test
-
-      - name: Syntaxe JavaScript (src/ et web/assets/)
-        run: |
-          set -e
-          for f in $(find src web/assets -name '*.js'); do node --check "$f"; done
-
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: ESLint
+        run: pnpm lint
+      - name: Prettier
+        run: pnpm format:check
+      - name: Typage TypeScript (strict)
+        run: pnpm typecheck
+      - name: Construction (paquet partagé, API, interface)
+        run: pnpm build
+      - name: OpenAPI
+        run: pnpm --filter @suivi/api openapi "$GITHUB_WORKSPACE/openapi.json"
+      - uses: actions/upload-artifact@v5
+        with:
+          name: openapi
+          path: openapi.json
       - name: État initial vide (aucune donnée réelle)
         run: |
           node -e '
@@ -50,16 +54,14 @@ jobs:
               }
               if (s.schema !== 14) throw new Error(label + " : schema attendu 14, trouvé " + s.schema);
             };
-            check("seed/state.json", JSON.parse(fs.readFileSync("seed/state.json", "utf8")));
-            const h = fs.readFileSync("public/index.html", "utf8");
+            check("apps/api/seed/state.json", JSON.parse(fs.readFileSync("apps/api/seed/state.json", "utf8")));
+            const h = fs.readFileSync("app/public/index.html", "utf8");
             const m = h.match(/<script type="application\/json" id="seed">([\s\S]*?)<\/script>/);
-            if (!m) throw new Error("bloc <script id=\"seed\"> introuvable dans public/index.html");
-            check("public/index.html", JSON.parse(m[1]));
+            if (!m) throw new Error("bloc <script id=\"seed\"> introuvable dans app/public/index.html");
+            check("app/public/index.html", JSON.parse(m[1]));
             console.log("État initial vide : OK");
           '
-
       - name: Aucun secret ni .env versionné
-        working-directory: .
         run: |
           if git ls-files | grep -E '(^|/)\.env($|\.)' | grep -v '^\.env\.example$'; then
             echo "::error::Fichier .env versionné"; exit 1
@@ -71,114 +73,140 @@ jobs:
             echo "::error::Clé privée dans le dépôt"; exit 1
           fi
 
-  docker:
-    name: Démarrage de la pile Docker
+  tests:
+    name: Tests (Vitest, PostgreSQL 17)
     runs-on: ubuntu-latest
-    needs: controles
     timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_PASSWORD: test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      TEST_PG_HOST: 127.0.0.1
+      TEST_PG_PORT: '5432'
+      TEST_PG_USER: postgres
+      TEST_PG_PASSWORD: test
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Paquet partagé (jeton, format legacy, couverture du contrat, parité avec l'outil historique)
+        run: pnpm --filter @suivi/shared test
+      - name: API (sécurité, concurrence, migrations v2 vers v3, import legacy, temps réel)
+        run: pnpm --filter @suivi/api test
 
-      - name: Configuration
+  pile:
+    name: Images, sécurité et pile complète (Playwright)
+    runs-on: ubuntu-latest
+    needs: [qualite, tests]
+    timeout-minutes: 40
+    env:
+      APP_VERSION: ci
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Construction des images
+        run: docker compose -f docker-compose.yml -f docker-compose.build.yml build --pull
+
+      - name: Cache de la base de vulnérabilités Trivy
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/trivy
+          key: trivy-${{ github.run_id }}
+          restore-keys: trivy-
+
+      - name: Trivy — images (échec sur CRITICAL)
+        run: |
+          set -e
+          trivy() { docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$HOME/.cache/trivy:/root/.cache/trivy" -v "$PWD:/work" -w /work "$TRIVY_IMAGE" "$@"; }
+          for img in api web; do
+            trivy image --scanners vuln --severity CRITICAL --ignore-unfixed --exit-code 1 --no-progress "ghcr.io/yousername-ha/suivi-audits-$img:ci"
+            trivy image --scanners vuln --severity HIGH,CRITICAL --format table --no-progress "ghcr.io/yousername-ha/suivi-audits-$img:ci"
+          done
+
+      - name: Trivy — dépendances du dépôt (échec sur CRITICAL)
+        run: docker run --rm -v "$HOME/.cache/trivy:/root/.cache/trivy" -v "$PWD:/work" -w /work "$TRIVY_IMAGE" fs --scanners vuln --severity CRITICAL --exit-code 1 --no-progress .
+
+      - name: SBOM CycloneDX (dépôt et images)
+        run: |
+          set -e
+          mkdir -p sbom
+          trivy() { docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$HOME/.cache/trivy:/root/.cache/trivy" -v "$PWD:/work" -w /work "$TRIVY_IMAGE" "$@"; }
+          trivy fs --format cyclonedx --output sbom/depot.cdx.json .
+          for img in api web; do trivy image --format cyclonedx --output "sbom/suivi-audits-$img.cdx.json" "ghcr.io/yousername-ha/suivi-audits-$img:ci"; done
+          sudo chown -R "$USER" sbom
+      - uses: actions/upload-artifact@v5
+        with:
+          name: sbom-cyclonedx
+          path: sbom/
+
+      - name: Démarrage de la pile
         run: |
           cp .env.example .env
-          sed -i 's/^SITE_ADDRESS=.*/SITE_ADDRESS=localhost/' .env
-          docker compose config -q
-
-      - name: Construction
-        run: docker compose build --pull
-
-      - name: Démarrage
-        run: docker compose up -d
-
-      - name: init terminé (code 0), db et app « healthy »
-        run: |
+          sed -i 's/^SITE_ADDRESS=.*/SITE_ADDRESS=localhost/; s/^APP_VERSION=.*/APP_VERSION=ci/' .env
+          docker compose up -d
           for i in $(seq 1 60); do
-            db=$(docker inspect -f '{{.State.Health.Status}}' "$(docker compose ps -q db)" 2>/dev/null || true)
-            app=$(docker inspect -f '{{.State.Health.Status}}' "$(docker compose ps -q app)" 2>/dev/null || true)
-            echo "essai $i : db=$db app=$app"
-            [ "$db" = healthy ] && [ "$app" = healthy ] && break
-            sleep 5
+            st=$(docker inspect -f '{{.State.Health.Status}}' "$(docker compose ps -q app)" 2>/dev/null || true)
+            [ "$st" = healthy ] && break
+            sleep 3
           done
-          code=$(docker inspect -f '{{.State.ExitCode}}' "$(docker compose ps -aq init)")
-          echo "init : code de sortie $code"
-          [ "$code" = 0 ]
-          [ "$db" = healthy ] && [ "$app" = healthy ]
+          [ "$(docker inspect -f '{{.State.ExitCode}}' "$(docker compose ps -aq init)")" = 0 ]
+          [ "$(docker inspect -f '{{.State.Health.Status}}' "$(docker compose ps -q db)")" = healthy ]
+          [ "$st" = healthy ]
+          for i in $(seq 1 30); do curl -skf https://localhost/healthz && break; sleep 2; done
+          echo
+          docker compose ps
 
       - name: Masquage des jetons dans les journaux de la CI
-        # Le jeton reste affiché en clair dans « docker compose logs app » sur le serveur ;
-        # seul l'affichage dans les journaux GitHub Actions est masqué.
+        # Sur le serveur, le jeton reste affiché en clair dans « docker compose logs app ».
         run: |
           tok=$(docker compose logs --no-log-prefix app | grep -oE '[A-Z2-9]{5}(-[A-Z2-9]{5}){3}' | head -1)
-          [ -n "$tok" ] || { echo "::error::Jeton du premier démarrage introuvable dans les journaux de app"; exit 1; }
+          [ -n "$tok" ] || { echo "::error::Jeton du premier démarrage introuvable"; exit 1; }
           echo "::add-mask::$tok"
-          echo "FIRST_TOKEN=$tok" >> "$GITHUB_ENV"
 
-      - name: HTTPS, redirection et jeton d'installation
+      - name: Contrôles HTTP (HTTPS, redirection, CSP, conteneurs non root)
         run: |
           set -e
-          for i in $(seq 1 30); do
-            curl -skf https://localhost/healthz && break
-            sleep 2
-          done
-          echo
           test "$(curl -sk https://localhost/healthz)" = ok
-          loc=$(curl -sk -o /dev/null -w '%{http_code} %{redirect_url}' https://localhost/)
-          echo "/ -> $loc"
-          [ "$loc" = "302 https://localhost/login" ]
-          test "$(curl -sk -o /dev/null -w '%{http_code}' https://localhost/login)" = 200
-          test "$(curl -sk -o /dev/null -w '%{http_code}' https://localhost/setup)" = 200
-          docker compose logs app | grep -q "JETON D'INSTALLATION"
-          echo "Jeton d'installation présent dans les journaux de app"
+          test "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' http://localhost/setup)" = "308 https://localhost/setup"
+          curl -skI https://localhost/ | grep -i "^content-security-policy: default-src 'self'; script-src 'self'; style-src 'self'"
+          test "$(curl -sk -o /dev/null -w '%{http_code}' https://localhost/api/events)" = 401
+          test "$(docker compose exec -T app id -u)" = 1000
+          test "$(docker compose exec -T web id -u)" = 1001
 
-      - name: Installation complète avec setup-token
-        run: |
-          set -e
-          post() { curl -sk -o /tmp/resp.json -w '%{http_code}' -H 'Origin: https://localhost' -H 'Content-Type: application/json' -X POST https://localhost/api/setup -d "$1"; }
-          body() { printf '{"token":"%s","username":"%s","displayName":"Administrateur CI","email":"","password":"%s"}' "$1" "$2" "$PW"; }
-          PW="Ci-$(openssl rand -hex 12)-Aa1!"
-          echo "::add-mask::$PW"
+      - run: pnpm install --frozen-lockfile --filter @suivi/e2e
+      - name: Navigateur Playwright
+        run: pnpm --filter @suivi/e2e exec playwright install --with-deps chromium
+      - name: Tests de bout en bout
+        env:
+          E2E_STACK_DIR: ${{ github.workspace }}
+          E2E_TOKEN_CMD: docker compose exec -T app setup-token
+        run: pnpm --filter @suivi/e2e test
+      - uses: actions/upload-artifact@v5
+        if: failure()
+        with:
+          name: playwright-report
+          path: tests/e2e/playwright-report/
 
-          # Raccourci et commande complète : nouveau jeton, avec expiration et URL /setup
-          out=$(docker compose exec -T app setup-token)
-          TOK=$(printf '%s\n' "$out" | grep -oE '[A-Z2-9]{5}(-[A-Z2-9]{5}){3}' | head -1)
-          [ -n "$TOK" ] || { echo "::error::setup-token n'a pas affiché de jeton"; exit 1; }
-          echo "::add-mask::$TOK"
-          printf '%s\n' "$out" | grep -q "Expire le"
-          printf '%s\n' "$out" | grep -q "https://localhost/setup"
-          echo "setup-token : jeton, date d'expiration et URL affichés"
-
-          # Le jeton du premier démarrage est annulé par le nouveau
-          code=$(post "$(body "$FIRST_TOKEN" admin)")
-          echo "ancien jeton -> $code $(cat /tmp/resp.json)"
-          [ "$code" = 401 ]
-          grep -q '"reason":"invalid"' /tmp/resp.json
-
-          # Création de l'administrateur, jeton saisi en minuscules avec des espaces
-          LOOSE=$(printf '%s' "$TOK" | tr 'A-Z-' 'a-z ')
-          code=$(post "$(body "$LOOSE" admin)")
-          echo "création de l'administrateur -> $code"
-          [ "$code" = 201 ]
-
-          # /setup redirige désormais vers /login
-          loc=$(curl -sk -o /dev/null -w '%{http_code} %{redirect_url}' https://localhost/setup)
-          echo "/setup -> $loc"
-          [ "$loc" = "302 https://localhost/login" ]
-
-          # Second appel refusé (jeton déjà utilisé)
-          code=$(post "$(body "$TOK" admin2)")
-          echo "second appel -> $code $(cat /tmp/resp.json)"
-          [ "$code" = 409 ]
-          grep -q '"reason":"used"' /tmp/resp.json
-
-          # Sans --recovery, setup-token est refusé une fois l'administrateur créé
-          if docker compose exec -T app node src/cli.js setup-token; then echo "::error::setup-token accepté alors qu'un administrateur existe"; exit 1; fi
-          docker compose exec -T app node src/cli.js users
-
+      - name: Droits du cache Trivy (sauvegarde du cache)
+        if: always()
+        run: sudo chown -R "$USER" "$HOME/.cache/trivy" 2>/dev/null || true
       - name: Journaux
         if: always()
-        run: docker compose logs --no-color init db app proxy
-
+        run: docker compose logs --no-color init db app web | grep -vE '"msg":"(incoming request|request completed)"' | tail -400
       - name: Arrêt
         if: always()
         run: docker compose down -v

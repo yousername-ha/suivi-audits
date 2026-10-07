@@ -42,7 +42,10 @@ export class Db {
   q<R extends pg.QueryResultRow = Record<string, unknown>>(text: string, params?: unknown[]) {
     return this.pool.query<R>(text, params);
   }
-  async one<R extends pg.QueryResultRow = Record<string, unknown>>(text: string, params?: unknown[]): Promise<R | null> {
+  async one<R extends pg.QueryResultRow = Record<string, unknown>>(
+    text: string,
+    params?: unknown[],
+  ): Promise<R | null> {
     const r = await this.pool.query<R>(text, params);
     return r.rows[0] ?? null;
   }
@@ -71,7 +74,10 @@ export class Db {
         return;
       } catch (e) {
         if (i === tries) throw e;
-        this.log.info({ attempt: i, err: (e as { code?: string }).code || (e as Error).message }, 'waiting for database');
+        this.log.info(
+          { attempt: i, err: (e as { code?: string }).code || (e as Error).message },
+          'waiting for database',
+        );
         await new Promise((r) => setTimeout(r, delayMs));
       }
     }
@@ -79,7 +85,9 @@ export class Db {
 
   /** Migrations SQL versionnées (migrations/NNN_*.sql), table schema_migrations commune avec la v2. */
   async migrate(dir = MIGRATIONS_DIR): Promise<string[]> {
-    await this.q('CREATE TABLE IF NOT EXISTS schema_migrations (name text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())');
+    await this.q(
+      'CREATE TABLE IF NOT EXISTS schema_migrations (name text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())',
+    );
     const files = readdirSync(dir)
       .filter((f) => /^\d+_.*\.sql$/.test(f))
       .sort();
@@ -102,7 +110,14 @@ export class Db {
   }
 
   /** Journal d'audit en ajout seul (déclencheur audit_log_immutable). Une erreur d'écriture est journalisée, jamais silencieuse. */
-  async audit(who: Partial<Actor> | null, ip: string | null, action: string, target = '', details: Record<string, unknown> = {}, c?: Client): Promise<void> {
+  async audit(
+    who: Partial<Actor> | null,
+    ip: string | null,
+    action: string,
+    target = '',
+    details: Record<string, unknown> = {},
+    c?: Client,
+  ): Promise<void> {
     try {
       await (c ?? this.pool).query(
         'INSERT INTO audit_log(user_id, username, ip, action, target, details) VALUES ($1,$2,$3,$4,$5,$6)',

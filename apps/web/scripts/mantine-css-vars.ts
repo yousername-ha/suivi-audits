@@ -28,7 +28,11 @@ const css =
   '\n' +
   convertCssVariables(vars) +
   '\n' +
-  convertCssVariables({ variables: {}, dark: { '--mantine-color-scheme': 'dark' }, light: { '--mantine-color-scheme': 'light' } }) +
+  convertCssVariables({
+    variables: {},
+    dark: { '--mantine-color-scheme': 'dark' },
+    light: { '--mantine-color-scheme': 'light' },
+  }) +
   '\n';
 const out = path.join(path.dirname(fileURLToPath(import.meta.url)), '../src/generated/mantine-vars.css');
 mkdirSync(path.dirname(out), { recursive: true });

@@ -24,7 +24,12 @@ export function CopyCommand({ command }: { command: string }) {
       <code>{command}</code>
       <CopyButton value={command}>
         {({ copied, copy }) => (
-          <Button size="compact-sm" variant={copied ? 'filled' : 'default'} onClick={copy} aria-label={`Copier : ${command}`}>
+          <Button
+            size="compact-sm"
+            variant={copied ? 'filled' : 'default'}
+            onClick={copy}
+            aria-label={`Copier : ${command}`}
+          >
             {copied ? 'Copié' : 'Copier'}
           </Button>
         )}
@@ -67,7 +72,17 @@ export function PresenceBar({ resource }: { resource: string }) {
 }
 
 /** Secret affiché une seule fois (mot de passe temporaire). */
-export function SecretModal({ title, intro, secret, onClose }: { title: string; intro: string; secret: string | null; onClose: () => void }) {
+export function SecretModal({
+  title,
+  intro,
+  secret,
+  onClose,
+}: {
+  title: string;
+  intro: string;
+  secret: string | null;
+  onClose: () => void;
+}) {
   return (
     <Modal opened={!!secret} onClose={onClose} title={title} centered>
       <Stack>
@@ -76,11 +91,17 @@ export function SecretModal({ title, intro, secret, onClose }: { title: string; 
           {secret}
         </div>
         <Alert color="orange">
-          Ce mot de passe n’est affiché qu’une fois. Transmettez-le par un canal séparé (de vive voix, SMS) ; il devra être changé à la
-          première connexion.
+          Ce mot de passe n’est affiché qu’une fois. Transmettez-le par un canal séparé (de vive voix, SMS) ; il devra
+          être changé à la première connexion.
         </Alert>
         <Group justify="flex-end">
-          <CopyButton value={secret ?? ''}>{({ copied, copy }) => <Button variant="default" onClick={copy}>{copied ? 'Copié' : 'Copier'}</Button>}</CopyButton>
+          <CopyButton value={secret ?? ''}>
+            {({ copied, copy }) => (
+              <Button variant="default" onClick={copy}>
+                {copied ? 'Copié' : 'Copier'}
+              </Button>
+            )}
+          </CopyButton>
           <Button onClick={onClose}>Fermer</Button>
         </Group>
       </Stack>

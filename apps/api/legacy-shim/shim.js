@@ -11,7 +11,7 @@
   var STATE_URL = '/api/legacy/state';
   var etag = null;
 
-  try { localStorage.setItem('suivi-audits-smsi:ro', CFG.role === 'ro' ? '1' : '0'); } catch (e) {}
+  try { localStorage.setItem('suivi-audits-smsi:ro', CFG.role === 'ro' ? '1' : '0'); } catch (e) { /* stockage local indisponible : sans effet */ }
 
   function err(code, msg) { var e = new Error(msg || code); e.code = code; return e; }
   var ready = fetch(STATE_URL, { method: 'HEAD', cache: 'no-store', credentials: 'same-origin' })
@@ -48,7 +48,7 @@
     b.appendChild(bar);
   }
   function closeBanner() { var b = document.getElementById('sv-banner'); if (b) b.remove(); }
-  function reloadServer() { try { localStorage.removeItem(KEY); } catch (e) {} location.reload(); }
+  function reloadServer() { try { localStorage.removeItem(KEY); } catch (e) { /* stockage local indisponible : sans effet */ } location.reload(); }
 
   async function put(content, force) {
     await ready;
@@ -58,7 +58,7 @@
     try { r = await fetch(STATE_URL, { method: 'PUT', headers: h, body: content, credentials: 'same-origin', cache: 'no-store' }); }
     catch (e) { throw err('upstream_error'); }
     if (r.ok) { etag = r.headers.get('ETag') || etag; closeBanner(); return; }
-    var j = {}; try { j = await r.json(); } catch (e) {}
+    var j = {}; try { j = await r.json(); } catch (e) { /* stockage local indisponible : sans effet */ }
     if (r.status === 401) {
       banner('Votre session a expiré. Vos modifications sont conservées dans ce navigateur : reconnectez-vous puis utilisez « Enregistrer en ligne ».', [
         { label: 'Se reconnecter', primary: true, href: '/login?next=/legacy/' }]);

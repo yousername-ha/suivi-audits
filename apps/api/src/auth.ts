@@ -49,7 +49,10 @@ export function parseCookies(header: string | undefined): Record<string, string>
 }
 
 /** Étape d'accès : 'ok' | 'mfa' (code TOTP à saisir) | 'enroll' (TOTP à configurer) | 'password' (changement imposé). */
-export function accessStage(s: Pick<Session, 'mfaOk'> & { user: Pick<SessionUser, 'totpEnabled' | 'mustChangePassword'> } | null, mfaRequired: boolean): AccessStage {
+export function accessStage(
+  s: (Pick<Session, 'mfaOk'> & { user: Pick<SessionUser, 'totpEnabled' | 'mustChangePassword'> }) | null,
+  mfaRequired: boolean,
+): AccessStage {
   if (!s) return 'anon';
   if (s.user.totpEnabled && !s.mfaOk) return 'mfa';
   if (!s.user.totpEnabled && mfaRequired) return 'enroll';
@@ -74,7 +77,10 @@ export class Auth {
     const st = this.stage(s);
     if (st !== 'ok') throw new HttpError(403, 'Authentification incomplète.', { stage: st });
     if (!roleSatisfies(s.user.role, need)) {
-      throw new HttpError(403, need === 'admin' ? 'Réservé aux administrateurs.' : 'Droits insuffisants (lecture seule).');
+      throw new HttpError(
+        403,
+        need === 'admin' ? 'Réservé aux administrateurs.' : 'Droits insuffisants (lecture seule).',
+      );
     }
     return s;
   }
@@ -160,10 +166,16 @@ export class Auth {
     await this.db.q('DELETE FROM sessions WHERE id_hash = $1', [sid]);
   }
   async destroyUserSessions(userId: string, exceptSid?: Buffer | null, c?: Client) {
-    await (c ?? this.db.pool).query('DELETE FROM sessions WHERE user_id = $1 AND ($2::bytea IS NULL OR id_hash <> $2)', [userId, exceptSid ?? null]);
+    await (c ?? this.db.pool).query(
+      'DELETE FROM sessions WHERE user_id = $1 AND ($2::bytea IS NULL OR id_hash <> $2)',
+      [userId, exceptSid ?? null],
+    );
   }
   purgeExpired() {
-    return this.db.q('DELETE FROM sessions WHERE expires_at < now() OR last_seen_at < now() - make_interval(mins => $1)', [this.cfg.session.idleMinutes]);
+    return this.db.q(
+      'DELETE FROM sessions WHERE expires_at < now() OR last_seen_at < now() - make_interval(mins => $1)',
+      [this.cfg.session.idleMinutes],
+    );
   }
 
   /* ---------------------------------------------------------------- Mot de passe (verrouillage progressif) */
@@ -190,11 +202,17 @@ export class Auth {
       const n = u.failed_logins + 1;
       const t = this.cfg.lockout.threshold;
       const lock = n >= t ? new Date(Date.now() + this.cfg.lockout.minutes * 60e3 * Math.min(8, 2 ** (n - t))) : null;
-      await this.db.q('UPDATE users SET failed_logins = $2, locked_until = COALESCE($3, locked_until) WHERE id = $1', [u.id, n, lock]);
+      await this.db.q('UPDATE users SET failed_logins = $2, locked_until = COALESCE($3, locked_until) WHERE id = $1', [
+        u.id,
+        n,
+        lock,
+      ]);
       return { ok: false as const, reason: lock ? ('locked_now' as const) : ('bad_password' as const), user: u };
     }
     if (u.disabled) return { ok: false as const, reason: 'disabled' as const, user: u };
-    await this.db.q('UPDATE users SET failed_logins = 0, locked_until = NULL, last_login_at = now() WHERE id = $1', [u.id]);
+    await this.db.q('UPDATE users SET failed_logins = 0, locked_until = NULL, last_login_at = now() WHERE id = $1', [
+      u.id,
+    ]);
     return { ok: true as const, user: u };
   }
 
@@ -208,7 +226,10 @@ export class Auth {
     const key = this.vault.openSmall(u.totp_secret, 'totp:' + u.id);
     const step = verifyTotp(key, code, Number(u.totp_last_step));
     if (!step) return false;
-    const r = await this.db.q('UPDATE users SET totp_last_step = $2 WHERE id = $1 AND totp_last_step < $2', [u.id, step]);
+    const r = await this.db.q('UPDATE users SET totp_last_step = $2 WHERE id = $1 AND totp_last_step < $2', [
+      u.id,
+      step,
+    ]);
     return r.rowCount === 1;
   }
 
@@ -234,7 +255,9 @@ export class Auth {
       [rec],
     );
     await this.db.audit(null, null, 'setup.token_issued', '', { reason, expires: rec.expires });
-    const expiry = new Date(rec.expires).toLocaleString('fr-FR', { timeZone: 'UTC', dateStyle: 'full', timeStyle: 'short' }) + ' UTC';
+    const expiry =
+      new Date(rec.expires).toLocaleString('fr-FR', { timeZone: 'UTC', dateStyle: 'full', timeStyle: 'short' }) +
+      ' UTC';
     const line = '='.repeat(72);
     out(
       `\n${line}\n  JETON D'INSTALLATION (usage unique, valable 24 h)\n\n    ${tok}\n\n` +
@@ -247,11 +270,15 @@ export class Auth {
 
   /** Vérifie et consomme le jeton dans la transaction « c » (le jeton est marqué utilisé, jamais supprimé). */
   async consumeSetupToken(tok: unknown, c: Client) {
-    const r = await c.query<{ value: SetupTokenRecord }>("SELECT value FROM settings WHERE key = 'setup_token' FOR UPDATE");
+    const r = await c.query<{ value: SetupTokenRecord }>(
+      "SELECT value FROM settings WHERE key = 'setup_token' FOR UPDATE",
+    );
     const rec = r.rows[0]?.value ?? null;
     const status = await checkSetupToken(tok, rec);
     if (status === 'ok') {
-      await c.query("UPDATE settings SET value = value || jsonb_build_object('usedAt', now()), updated_at = now() WHERE key = 'setup_token'");
+      await c.query(
+        "UPDATE settings SET value = value || jsonb_build_object('usedAt', now()), updated_at = now() WHERE key = 'setup_token'",
+      );
     }
     return { status, reason: rec?.reason ?? null };
   }

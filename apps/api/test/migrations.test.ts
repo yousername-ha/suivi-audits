@@ -2,7 +2,8 @@ import crypto from 'node:crypto';
 import { copyFileSync, mkdtempSync, readFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { getTableConfig } from 'drizzle-orm/pg-core';
+import { is } from 'drizzle-orm';
+import { getTableConfig, PgTable } from 'drizzle-orm/pg-core';
 import { afterAll, describe, expect, it } from 'vitest';
 import { Db, MIGRATIONS_DIR } from '../src/db/db.js';
 import * as schema from '../src/db/schema.js';
@@ -20,7 +21,7 @@ describe('schéma', () => {
   it('le schéma Drizzle correspond exactement à la base migrée', async () => {
     const t = await createTestApp();
     opened.push(t);
-    const tables = Object.values(schema).filter((v): v is Parameters<typeof getTableConfig>[0] => typeof v === 'object' && v !== null && Symbol.for('drizzle:IsDrizzleTable') in v);
+    const tables = (Object.values(schema) as unknown[]).filter((v): v is PgTable => is(v, PgTable));
     expect(tables.length).toBeGreaterThanOrEqual(11);
     for (const tbl of tables) {
       const cfg = getTableConfig(tbl);
@@ -38,11 +39,17 @@ describe('schéma', () => {
   it('chaque table métier porte version, legacy_id (unique), import_batch_id et extra', async () => {
     const t = opened[0]!;
     for (const name of ['documents', 'links']) {
-      const cols = (await t.svc.db.q<{ column_name: string }>("SELECT column_name FROM information_schema.columns WHERE table_name=$1", [name])).rows.map(
-        (c) => c.column_name,
-      );
+      const cols = (
+        await t.svc.db.q<{ column_name: string }>(
+          'SELECT column_name FROM information_schema.columns WHERE table_name=$1',
+          [name],
+        )
+      ).rows.map((c) => c.column_name);
       expect(cols).toEqual(expect.arrayContaining(['version', 'legacy_id', 'import_batch_id', 'extra']));
-      const idx = await t.svc.db.one<{ indexdef: string }>("SELECT indexdef FROM pg_indexes WHERE tablename=$1 AND indexname=$2", [name, `${name}_legacy_id`]);
+      const idx = await t.svc.db.one<{ indexdef: string }>(
+        'SELECT indexdef FROM pg_indexes WHERE tablename=$1 AND indexname=$2',
+        [name, `${name}_legacy_id`],
+      );
       expect(idx!.indexdef).toMatch(/UNIQUE/);
     }
   });
@@ -52,7 +59,9 @@ describe('schéma', () => {
   });
 
   it('les migrations ne requièrent pas de superutilisateur', async () => {
-    const r = await opened[0]!.svc.db.one<{ rolsuper: boolean }>('SELECT rolsuper FROM pg_roles WHERE rolname = current_user');
+    const r = await opened[0]!.svc.db.one<{ rolsuper: boolean }>(
+      'SELECT rolsuper FROM pg_roles WHERE rolname = current_user',
+    );
     expect(r!.rolsuper).toBe(false);
   });
 
@@ -67,7 +76,18 @@ describe('migration d’une base v2 existante, sans perte', () => {
     // 1. Base v2 : uniquement 001_init.sql, comme l'application v2 la laissait.
     const dbName = await createDatabase();
     const log = createLogger('silent');
-    const v2 = new Db({ host: PG.host, port: PG.port, database: dbName, user: APP_ROLE, password: APP_ROLE_PASSWORD, ssl: false, max: 2 }, log);
+    const v2 = new Db(
+      {
+        host: PG.host,
+        port: PG.port,
+        database: dbName,
+        user: APP_ROLE,
+        password: APP_ROLE_PASSWORD,
+        ssl: false,
+        max: 2,
+      },
+      log,
+    );
     const onlyV2 = mkdtempSync(path.join(os.tmpdir(), 'v2-'));
     copyFileSync(path.join(MIGRATIONS_DIR, '001_init.sql'), path.join(onlyV2, '001_init.sql'));
     expect(await v2.migrate(onlyV2)).toEqual(['001_init.sql']);
@@ -76,23 +96,37 @@ describe('migration d’une base v2 existante, sans perte', () => {
     const masterKey = crypto.randomBytes(32).toString('base64');
     const vault = new Vault(masterKey);
     const totpKey = crypto.randomBytes(20);
-    const uid = (await v2.one<{ id: string }>("INSERT INTO users(username, display_name, role, password_hash, totp_enabled) VALUES ('rssi','RSSI','admin',$1,true) RETURNING id", [await hashPassword(PASSWORD)]))!.id;
+    const uid = (await v2.one<{ id: string }>(
+      "INSERT INTO users(username, display_name, role, password_hash, totp_enabled) VALUES ('rssi','RSSI','admin',$1,true) RETURNING id",
+      [await hashPassword(PASSWORD)],
+    ))!.id;
     await v2.q('UPDATE users SET totp_secret=$2 WHERE id=$1', [uid, vault.sealSmall(totpKey, 'totp:' + uid)]);
     const file = Buffer.from('Contenu de la politique v2');
-    const docId = (await v2.one<{ id: string }>("INSERT INTO documents(title, refs, current_version, created_by, updated_by) VALUES ('Politique v2', '{A.5.1}', 1, 'rssi', 'rssi') RETURNING id"))!.id;
+    const docId = (await v2.one<{ id: string }>(
+      "INSERT INTO documents(title, refs, current_version, created_by, updated_by) VALUES ('Politique v2', '{A.5.1}', 1, 'rssi', 'rssi') RETURNING id",
+    ))!.id;
     const e = vault.encrypt(file, `doc:${docId}:1`);
     await v2.q(
       `INSERT INTO document_versions(document_id, version, filename, mime, size, sha256, key_id, iv, auth_tag, content, uploaded_by)
        VALUES ($1,1,'politique.txt','text/plain',$2,$3,$4,$5,$6,$7,'rssi')`,
       [docId, file.length, sha256hex(file), e.keyId, e.iv, e.tag, e.content],
     );
-    await v2.q("INSERT INTO links(title, url, created_by, updated_by) VALUES ('Intranet', 'https://intranet.invalid', 'rssi', 'rssi')");
+    await v2.q(
+      "INSERT INTO links(title, url, created_by, updated_by) VALUES ('Intranet', 'https://intranet.invalid', 'rssi', 'rssi')",
+    );
     const state = JSON.parse(readFileSync(path.join(REPO, 'apps/api/seed/state.json'), 'utf8'));
-    state.findings = [{ id: 'ID-001', source: 'AFNOR', year: 2026, type: 'NC min', status: 'Ouvert', text: 'Écart de test', items: [] }];
+    state.findings = [
+      { id: 'ID-001', source: 'AFNOR', year: 2026, type: 'NC min', status: 'Ouvert', text: 'Écart de test', items: [] },
+    ];
     await v2.q("INSERT INTO app_state(id, version, data, sha256, updated_by) VALUES (1, 7, $1, 'x', 'rssi')", [state]);
-    await v2.q("INSERT INTO state_history(version, data, sha256, updated_at, updated_by) VALUES (6, $1, 'x', now(), 'rssi'), (7, $1, 'x', now(), 'rssi')", [state]);
+    await v2.q(
+      "INSERT INTO state_history(version, data, sha256, updated_at, updated_by) VALUES (6, $1, 'x', now(), 'rssi'), (7, $1, 'x', now(), 'rssi')",
+      [state],
+    );
     await v2.q("INSERT INTO audit_log(username, action) VALUES ('rssi', 'auth.login'), ('rssi', 'state.write')");
-    const before = await v2.one<Record<string, number>>(`SELECT (SELECT count(*) FROM users)::int u, (SELECT count(*) FROM documents)::int d,
+    const before = await v2.one<
+      Record<string, number>
+    >(`SELECT (SELECT count(*) FROM users)::int u, (SELECT count(*) FROM documents)::int d,
       (SELECT count(*) FROM document_versions)::int dv, (SELECT count(*) FROM links)::int l, (SELECT count(*) FROM state_history)::int h,
       (SELECT count(*) FROM audit_log)::int a`);
     await v2.end();
@@ -100,9 +134,13 @@ describe('migration d’une base v2 existante, sans perte', () => {
     // 3. Démarrage de la v3 sur cette base : migrations 002+ appliquées automatiquement.
     const t = await createTestApp({ DOC_MASTER_KEY: masterKey }, { dbName });
     opened.push(t);
-    const applied = (await t.svc.db.q<{ name: string }>('SELECT name FROM schema_migrations ORDER BY name')).rows.map((r) => r.name);
+    const applied = (await t.svc.db.q<{ name: string }>('SELECT name FROM schema_migrations ORDER BY name')).rows.map(
+      (r) => r.name,
+    );
     expect(applied).toEqual(['001_init.sql', '002_v3_fondations.sql']);
-    const after = await t.svc.db.one<Record<string, number>>(`SELECT (SELECT count(*) FROM users)::int u, (SELECT count(*) FROM documents)::int d,
+    const after = await t.svc.db.one<
+      Record<string, number>
+    >(`SELECT (SELECT count(*) FROM users)::int u, (SELECT count(*) FROM documents)::int d,
       (SELECT count(*) FROM document_versions)::int dv, (SELECT count(*) FROM links)::int l, (SELECT count(*) FROM state_history)::int h,
       (SELECT count(*) FROM audit_log)::int a`);
     expect(after).toEqual(before);
@@ -110,9 +148,13 @@ describe('migration d’une base v2 existante, sans perte', () => {
 
     // 4. Tout reste utilisable : connexion (mot de passe et TOTP v2), document déchiffré, état servi à /legacy.
     const a = new Agent(t);
-    expect((await a.post('/api/auth/login', { username: 'rssi', password: PASSWORD })).json()).toEqual({ stage: 'mfa' });
+    expect((await a.post('/api/auth/login', { username: 'rssi', password: PASSWORD })).json()).toEqual({
+      stage: 'mfa',
+    });
     await a.me();
-    expect((await a.post('/api/auth/mfa', { code: hotp(totpKey, Math.floor(Date.now() / 30000)) })).json()).toEqual({ stage: 'ok' });
+    expect((await a.post('/api/auth/mfa', { code: hotp(totpKey, Math.floor(Date.now() / 30000)) })).json()).toEqual({
+      stage: 'ok',
+    });
     await a.me();
     const dl = await a.get(`/api/documents/${docId}/download`);
     expect(dl.statusCode).toBe(200);

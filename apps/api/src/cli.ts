@@ -32,7 +32,10 @@ async function main() {
   const svc = createServices(loadConfig(), createLogger('warn'));
   const SYS = { username: 'cli' };
   const user = async (name?: string) => {
-    const u = await svc.db.one<{ id: string; username: string }>('SELECT id, username FROM users WHERE lower(username)=lower($1)', [name || '']);
+    const u = await svc.db.one<{ id: string; username: string }>(
+      'SELECT id, username FROM users WHERE lower(username)=lower($1)',
+      [name || ''],
+    );
     if (!u) {
       console.error(`Compte inconnu : ${name ?? ''}`);
       process.exit(1);
@@ -42,7 +45,14 @@ async function main() {
   await svc.db.waitReady(5);
   switch (cmd) {
     case 'users': {
-      const r = await svc.db.q<{ username: string; role: string; disabled: boolean; totp_enabled: boolean; locked_until: Date | null; last_login_at: Date | null }>(
+      const r = await svc.db.q<{
+        username: string;
+        role: string;
+        disabled: boolean;
+        totp_enabled: boolean;
+        locked_until: Date | null;
+        last_login_at: Date | null;
+      }>(
         'SELECT username, role, disabled, totp_enabled, locked_until, last_login_at FROM users ORDER BY lower(username)',
       );
       console.table(
@@ -70,10 +80,10 @@ async function main() {
       const u = await user(arg);
       const pw = tempPassword();
       await svc.db.tx(async (c) => {
-        await c.query('UPDATE users SET password_hash=$2, must_change_password=true, failed_logins=0, locked_until=NULL, version=version+1 WHERE id=$1', [
-          u.id,
-          await hashPassword(pw),
-        ]);
+        await c.query(
+          'UPDATE users SET password_hash=$2, must_change_password=true, failed_logins=0, locked_until=NULL, version=version+1 WHERE id=$1',
+          [u.id, await hashPassword(pw)],
+        );
         await svc.auth.destroyUserSessions(u.id, null, c);
       }, 'cli');
       await svc.db.audit(SYS, null, 'cli.user_password_reset', u.username);
@@ -83,11 +93,16 @@ async function main() {
     case 'reset-mfa': {
       const u = await user(arg);
       await svc.db.tx(async (c) => {
-        await c.query('UPDATE users SET totp_secret=NULL, totp_pending=NULL, totp_enabled=false, version=version+1 WHERE id=$1', [u.id]);
+        await c.query(
+          'UPDATE users SET totp_secret=NULL, totp_pending=NULL, totp_enabled=false, version=version+1 WHERE id=$1',
+          [u.id],
+        );
         await svc.auth.destroyUserSessions(u.id, null, c);
       }, 'cli');
       await svc.db.audit(SYS, null, 'cli.user_mfa_reset', u.username);
-      console.log(`Double authentification réinitialisée pour ${u.username} (nouvel enrôlement à la prochaine connexion).`);
+      console.log(
+        `Double authentification réinitialisée pour ${u.username} (nouvel enrôlement à la prochaine connexion).`,
+      );
       break;
     }
     case 'unlock': {

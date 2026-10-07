@@ -34,7 +34,8 @@ export function errorHandler(log: Logger) {
     const code = (err as FastifyError).code;
     const known = code ? FASTIFY_MESSAGES[code] : undefined;
     if (known) return reply.code(known[0]).send({ error: known[1] });
-    if (err instanceof SyntaxError || code === 'FST_ERR_CTP_INVALID_JSON_BODY') return reply.code(400).send({ error: 'JSON invalide.' });
+    if (err instanceof SyntaxError || code === 'FST_ERR_CTP_INVALID_JSON_BODY')
+      return reply.code(400).send({ error: 'JSON invalide.' });
     const status = (err as FastifyError).statusCode;
     if (status && status >= 400 && status < 500) return reply.code(status).send({ error: 'Requête invalide.' });
     log.error({ err: err.stack || String(err), path: req.url }, 'request failed');

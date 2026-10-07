@@ -24,7 +24,8 @@ import { parseContract, render } from '../scripts/gen-contract.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '../../..');
-const fixture = (): JsonObject => JSON.parse(readFileSync(path.join(root, 'tests/fixtures/legacy-fixture.json'), 'utf8'));
+const fixture = (): JsonObject =>
+  JSON.parse(readFileSync(path.join(root, 'tests/fixtures/legacy-fixture.json'), 'utf8'));
 const seed = (): JsonObject => JSON.parse(readFileSync(path.join(root, 'apps/api/seed/state.json'), 'utf8'));
 const sha = (s: string) => createHash('sha256').update(s).digest('hex');
 
@@ -58,7 +59,8 @@ describe('schéma 15', () => {
     expect(schema15Problems(a)).toEqual([]);
     expect(schema15Problems(f).length).toBeGreaterThan(0);
     for (const { path: p, prefix } of ID_LISTS) {
-      for (const l of listsAt(a, p)) for (const el of l) expect((el as { id: string }).id.startsWith(prefix)).toBe(true);
+      for (const l of listsAt(a, p))
+        for (const el of l) expect((el as { id: string }).id.startsWith(prefix)).toBe(true);
     }
     expect((a.roles as JsonObject[])[0]!.id).toBe('RO-001');
     expect(Object.keys((a.roles as JsonObject[])[0]!)[0]).toBe('id');
@@ -81,7 +83,15 @@ describe('lecture d’un fichier legacy', () => {
 
   it('accepte l’enveloppe et vérifie son empreinte', () => {
     const data = migrateToSchema15(fixture());
-    const env = { format: 'suivi-audits-legacy', formatVersion: 1, schema: 15, exportedAt: '2026-10-07T00:00:00Z', appVersion: 't', sha256: sha(JSON.stringify(data)), data };
+    const env = {
+      format: 'suivi-audits-legacy',
+      formatVersion: 1,
+      schema: 15,
+      exportedAt: '2026-10-07T00:00:00Z',
+      appVersion: 't',
+      sha256: sha(JSON.stringify(data)),
+      data,
+    };
     expect(readLegacyFile(env, sha).schema).toBe(15);
     expect(() => readLegacyFile({ ...env, sha256: '0'.repeat(64) }, sha)).toThrow(/empreinte/);
   });
@@ -119,7 +129,9 @@ describe('planification d’un import', () => {
   });
 
   it('Initialiser est refusé sur une base qui contient des données', () => {
-    expect(() => planImport(fixture(), fixture(), { mode: 'init', sourceSchema: 14, envelope: false })).toThrow(/base vide/);
+    expect(() => planImport(fixture(), fixture(), { mode: 'init', sourceSchema: 14, envelope: false })).toThrow(
+      /base vide/,
+    );
   });
 
   it('Fusionner crée et met à jour sans rien supprimer', () => {
@@ -143,7 +155,12 @@ describe('planification d’un import', () => {
     const inc = structuredClone(cur);
     (inc.findings as JsonObject[]).splice(0, 1);
     (inc.processes as JsonObject[]).splice(0, 1);
-    const { next, report } = planImport(cur, inc, { mode: 'replace', module: 'findings', sourceSchema: 15, envelope: false });
+    const { next, report } = planImport(cur, inc, {
+      mode: 'replace',
+      module: 'findings',
+      sourceSchema: 15,
+      envelope: false,
+    });
     expect((next.findings as JsonObject[]).length).toBe((cur.findings as JsonObject[]).length - 1);
     expect(next.processes).toEqual(cur.processes);
     expect(report.modules.map((m) => m.module)).toEqual(['findings']);
@@ -153,8 +170,12 @@ describe('planification d’un import', () => {
   it('Remplacer exige un module présent et non technique', () => {
     const f = fixture();
     expect(() => planImport(f, f, { mode: 'replace', sourceSchema: 14, envelope: false })).toThrow(/Choisissez/);
-    expect(() => planImport(f, f, { mode: 'replace', module: 'schema', sourceSchema: 14, envelope: false })).toThrow(/technique/);
-    expect(() => planImport(f, f, { mode: 'replace', module: 'nope', sourceSchema: 14, envelope: false })).toThrow(/absent/);
+    expect(() => planImport(f, f, { mode: 'replace', module: 'schema', sourceSchema: 14, envelope: false })).toThrow(
+      /technique/,
+    );
+    expect(() => planImport(f, f, { mode: 'replace', module: 'nope', sourceSchema: 14, envelope: false })).toThrow(
+      /absent/,
+    );
   });
 
   it('signale les références cassées', () => {

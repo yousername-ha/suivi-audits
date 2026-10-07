@@ -8,9 +8,13 @@ export function requireIfMatch(req: FastifyRequest): number {
   const raw = String(req.headers['if-match'] ?? '').trim();
   const m = /^(?:W\/)?"?(\d+)"?$/.exec(raw);
   if (!m) {
-    throw new HttpError(428, 'Version attendue manquante (en-tête If-Match) : rechargez l’élément avant de le modifier.', {
-      reason: 'precondition_required',
-    });
+    throw new HttpError(
+      428,
+      'Version attendue manquante (en-tête If-Match) : rechargez l’élément avant de le modifier.',
+      {
+        reason: 'precondition_required',
+      },
+    );
   }
   return parseInt(m[1] as string, 10);
 }

@@ -23,7 +23,10 @@ export interface TestApp {
   close(): Promise<void>;
 }
 
-export async function createTestApp(env: Record<string, string> = {}, opts: { migrate?: boolean; dbName?: string } = {}): Promise<TestApp> {
+export async function createTestApp(
+  env: Record<string, string> = {},
+  opts: { migrate?: boolean; dbName?: string } = {},
+): Promise<TestApp> {
   const dbName = opts.dbName ?? (await createDatabase());
   const cfg = loadConfig({
     DB_HOST: PG.host,
@@ -67,11 +70,20 @@ export class Agent {
     readonly origin: string | null = ORIGIN,
   ) {}
 
-  async req(method: InjectOptions['method'], url: string, opts: { json?: unknown; body?: Buffer | string; headers?: Record<string, string>; csrf?: boolean } = {}) {
-    const headers: Record<string, string> = { 'x-forwarded-proto': 'https', host: 'suivi.test', ...(opts.headers ?? {}) };
+  async req(
+    method: InjectOptions['method'],
+    url: string,
+    opts: { json?: unknown; body?: Buffer | string; headers?: Record<string, string>; csrf?: boolean } = {},
+  ) {
+    const headers: Record<string, string> = {
+      'x-forwarded-proto': 'https',
+      host: 'suivi.test',
+      ...(opts.headers ?? {}),
+    };
     if (this.origin && !['GET', 'HEAD'].includes(String(method))) headers.origin ??= this.origin;
     if (this.cookies.size) headers.cookie = [...this.cookies].map(([k, v]) => `${k}=${v}`).join('; ');
-    if (this.csrf && opts.csrf !== false && !['GET', 'HEAD'].includes(String(method))) headers['x-csrf-token'] ??= this.csrf;
+    if (this.csrf && opts.csrf !== false && !['GET', 'HEAD'].includes(String(method)))
+      headers['x-csrf-token'] ??= this.csrf;
     let payload: string | Buffer | undefined;
     if (opts.json !== undefined) {
       payload = JSON.stringify(opts.json);
@@ -96,7 +108,8 @@ export class Agent {
     }
   }
   get = (url: string, headers?: Record<string, string>) => this.req('GET', url, { headers });
-  post = (url: string, json?: unknown, headers?: Record<string, string>) => this.req('POST', url, { json: json ?? {}, headers });
+  post = (url: string, json?: unknown, headers?: Record<string, string>) =>
+    this.req('POST', url, { json: json ?? {}, headers });
   put = (url: string, json?: unknown, headers?: Record<string, string>) => this.req('PUT', url, { json, headers });
   patch = (url: string, json?: unknown, headers?: Record<string, string>) => this.req('PATCH', url, { json, headers });
   del = (url: string, headers?: Record<string, string>) => this.req('DELETE', url, { headers });
@@ -117,7 +130,12 @@ export interface TestUser {
 }
 
 /** Crée un compte avec TOTP déjà activé (mot de passe PASSWORD). */
-export async function makeUser(t: TestApp, username: string, role: TestUser['role'], o: { totp?: boolean; mustChange?: boolean } = {}): Promise<TestUser> {
+export async function makeUser(
+  t: TestApp,
+  username: string,
+  role: TestUser['role'],
+  o: { totp?: boolean; mustChange?: boolean } = {},
+): Promise<TestUser> {
   const key = crypto.randomBytes(20);
   const r = await t.svc.db.one<{ id: string }>(
     'INSERT INTO users(username, display_name, role, password_hash, must_change_password) VALUES ($1,$2,$3,$4,$5) RETURNING id',
@@ -125,14 +143,19 @@ export async function makeUser(t: TestApp, username: string, role: TestUser['rol
   );
   const id = r!.id;
   if (o.totp !== false) {
-    await t.svc.db.q('UPDATE users SET totp_secret=$2, totp_enabled=true WHERE id=$1', [id, t.svc.vault.sealSmall(key, 'totp:' + id)]);
+    await t.svc.db.q('UPDATE users SET totp_secret=$2, totp_enabled=true WHERE id=$1', [
+      id,
+      t.svc.vault.sealSmall(key, 'totp:' + id),
+    ]);
   }
   return { id, username, role, key };
 }
 
 /** Code TOTP valide et non encore utilisé (anti-rejeu : pas strictement supérieur au dernier accepté). */
 export async function nextCode(t: TestApp, u: TestUser): Promise<string> {
-  const last = Number((await t.svc.db.one<{ s: string }>('SELECT totp_last_step::text AS s FROM users WHERE id=$1', [u.id]))!.s);
+  const last = Number(
+    (await t.svc.db.one<{ s: string }>('SELECT totp_last_step::text AS s FROM users WHERE id=$1', [u.id]))!.s,
+  );
   const cur = Math.floor(Date.now() / 30000);
   const step = [cur - 1, cur, cur + 1].find((s) => s > last);
   if (step === undefined) {
