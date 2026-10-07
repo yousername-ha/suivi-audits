@@ -1,6 +1,6 @@
 /* Outil historique servi sous /legacy pendant la migration progressive, et son état. */
 import { readFileSync } from 'node:fs';
-import { readFile, stat } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { RefOut } from '@suivi/shared';
 import { isObject, LEGACY_MODULES, moduleLabel, type Json, type JsonObject } from '@suivi/shared/legacy';
@@ -231,15 +231,17 @@ export const legacyRoutes = [
       const base = path.join(svc.cfg.legacyDir, 'lib');
       const file = path.normalize(path.join(base, params.file));
       if (!file.startsWith(base + path.sep)) throw new HttpError(404, 'Introuvable.');
+      // Lecture directe, sans vérification préalable : un dossier ou un fichier absent donne une erreur, donc 404.
+      let content: Buffer;
       try {
-        if (!(await stat(file)).isFile()) throw new Error('not a file');
+        content = await readFile(file);
       } catch {
         throw new HttpError(404, 'Introuvable.');
       }
       reply
         .header('Content-Type', LIB_TYPES[path.extname(file)] || 'application/octet-stream')
         .header('Cache-Control', 'public, max-age=3600');
-      return reply.send(await readFile(file));
+      return reply.send(content);
     },
   }),
 ];
