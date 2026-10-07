@@ -127,7 +127,7 @@ export function UsersPanel() {
                       </Text>
                     </Table.Td>
                     <Table.Td>
-                      <Group gap={4}>
+                      <Group gap="2xs">
                         {u.roles.map((r) => (
                           <Badge key={r.id} variant="light">
                             {r.name}
@@ -142,7 +142,7 @@ export function UsersPanel() {
                       </Group>
                     </Table.Td>
                     <Table.Td>
-                      <Group gap={4}>
+                      <Group gap="2xs">
                         {u.groups.map((g) => (
                           <Badge key={g.id} variant="outline">
                             {g.name}
@@ -151,7 +151,7 @@ export function UsersPanel() {
                       </Group>
                     </Table.Td>
                     <Table.Td>
-                      <Group gap={4}>
+                      <Group gap="2xs">
                         {u.disabled && <Badge color="gray">désactivé</Badge>}
                         {u.expires_at && (
                           <Badge color={isExpired(u.expires_at) ? 'red' : 'violet'} variant="light">
@@ -166,7 +166,7 @@ export function UsersPanel() {
                     </Table.Td>
                     <Table.Td className="nowrap">{fmtDate(u.last_login_at)}</Table.Td>
                     <Table.Td>
-                      <Group gap={4} wrap="nowrap">
+                      <Group gap="2xs" wrap="nowrap">
                         <Button size="compact-sm" variant="default" onClick={() => setRightsOf(u)}>
                           Droits effectifs
                         </Button>
@@ -465,7 +465,7 @@ function EffectiveRights({ userId }: { userId: string }) {
         cell={(p) => {
           const o = by.get(p);
           return o ? (
-            <Tooltip label={o.map(origin).join(' · ')} multiline w={280}>
+            <Tooltip label={o.map(origin).join(' · ')} multiline w="var(--suivi-champ-m)">
               <Badge color={o.some((x) => x.via.kind === 'direct') ? 'suivi' : 'violet'} variant="light">
                 {o.some((x) => x.via.kind === 'direct') ? 'direct' : 'groupe'}
               </Badge>
@@ -574,7 +574,7 @@ export function GroupsPanel() {
                     )}
                   </Table.Td>
                   <Table.Td>
-                    <Group gap={4}>
+                    <Group gap="2xs">
                       {g.roles.map((r) => (
                         <Badge key={r.id} variant="light">
                           {r.name}
@@ -588,7 +588,7 @@ export function GroupsPanel() {
                     </Text>
                   </Table.Td>
                   <Table.Td>
-                    <Group gap={4} wrap="nowrap">
+                    <Group gap="2xs" wrap="nowrap">
                       {admin && (
                         <Button size="compact-sm" variant="default" onClick={() => setEdit({ group: g })}>
                           Modifier
@@ -730,7 +730,7 @@ export function RolesPanel() {
                       {r.description}
                     </Text>
                   </Table.Td>
-                  <Table.Td>
+                  <Table.Td className="nowrap">
                     <Badge variant={r.system ? 'filled' : 'light'} color={r.system ? 'suivi' : 'violet'}>
                       {r.system ? 'prédéfini' : 'personnalisé'}
                     </Badge>
@@ -739,7 +739,7 @@ export function RolesPanel() {
                     {r.users} compte(s), {r.groups} groupe(s)
                   </Table.Td>
                   <Table.Td>
-                    <Group gap={4} wrap="nowrap">
+                    <Group gap="2xs" wrap="nowrap">
                       <Button size="compact-sm" variant="default" onClick={() => setMatrix(r)}>
                         {r.system || !admin ? 'Voir la matrice' : 'Modifier la matrice'}
                       </Button>

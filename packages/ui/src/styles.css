@@ -1,0 +1,241 @@
+/* Charte graphique — styles statiques (CSP « style-src 'self' » : aucun style injecté).
+   Couleurs : variables --suivi-* et --mantine-* générées depuis tokens.ts (mantine-vars.css). */
+
+:root {
+  --suivi-entete-h: 3.75rem;
+  --suivi-nav-l: 15.5rem;
+  --suivi-largeur-formulaire: 45rem; /* formulaires simples : 720 px */
+  --suivi-largeur-lecture: 75ch; /* textes : environ 75 caractères par ligne */
+  --suivi-champ-s: 12.5rem;
+  --suivi-champ-m: 16.25rem;
+  --suivi-champ-l: 26.25rem;
+  --suivi-marque: 1.875rem;
+  --suivi-qr: 12.5rem;
+  --suivi-trait-l: 1px;
+}
+
+body {
+  background: var(--suivi-fond-page);
+  color: var(--mantine-color-text);
+  font-family: var(--mantine-font-family);
+}
+
+/* Chiffres tabulaires : colonnes de nombres alignées. */
+table,
+.chiffres {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------- Coquille de l'application */
+.shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.shell-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: var(--suivi-entete-h);
+  flex: none;
+  background: var(--suivi-surface);
+  border-bottom: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+}
+.shell-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr;
+}
+.shell-nav {
+  display: none;
+}
+.shell-nav-inner {
+  display: flex;
+  flex-direction: column;
+}
+.shell-main {
+  min-width: 0;
+  padding: var(--mantine-spacing-md);
+}
+@media (min-width: 48em) {
+  .shell-body {
+    grid-template-columns: var(--suivi-nav-l) 1fr;
+  }
+  .shell-nav {
+    display: block;
+    padding: var(--mantine-spacing-sm);
+    border-right: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+    background: var(--suivi-surface);
+  }
+  .shell-nav-inner {
+    position: sticky;
+    top: calc(var(--suivi-entete-h) + var(--mantine-spacing-sm));
+  }
+  .shell-main {
+    padding: var(--mantine-spacing-lg);
+  }
+}
+.brand-mark {
+  width: var(--suivi-marque);
+  height: var(--suivi-marque);
+  border-radius: var(--mantine-radius-sm);
+  display: inline-grid;
+  place-items: center;
+  font-weight: 700;
+  color: var(--suivi-marque-texte);
+  background: var(--suivi-marque-fond);
+}
+
+/* ---------------------------------------------------------------- Pages */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-md);
+  width: 100%;
+}
+.page--formulaire {
+  max-width: var(--suivi-largeur-formulaire);
+}
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-sm);
+}
+.page-header__titre {
+  min-width: 0;
+}
+.lecture {
+  max-width: var(--suivi-largeur-lecture);
+}
+.formulaire {
+  max-width: var(--suivi-largeur-formulaire);
+}
+
+/* ---------------------------------------------------------------- Tableaux */
+.data-table {
+  padding: 0;
+  overflow: hidden;
+}
+.table-wrap {
+  overflow-x: auto;
+}
+.data-table thead th {
+  background: var(--suivi-surface);
+}
+.nowrap {
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------- Sections de formulaire */
+.form-section__pied {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--mantine-spacing-sm);
+  border-top: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  padding-top: var(--mantine-spacing-sm);
+}
+
+/* ---------------------------------------------------------------- Largeurs de champs */
+.champ-s {
+  width: var(--suivi-champ-s);
+  max-width: 100%;
+}
+.champ-m {
+  width: var(--suivi-champ-m);
+  max-width: 100%;
+}
+.champ-l {
+  width: var(--suivi-champ-l);
+  max-width: 100%;
+}
+
+/* ---------------------------------------------------------------- Divers */
+.mono {
+  font-family: var(--mantine-font-family-monospace);
+}
+.pre {
+  white-space: pre-wrap;
+  font-family: var(--mantine-font-family-monospace);
+  font-size: var(--mantine-font-size-xs);
+  max-height: 20rem;
+  overflow: auto;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------- Page à sections (Paramètres) */
+.settings {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--mantine-spacing-md);
+  align-items: start;
+}
+.settings-nav {
+  display: none;
+}
+.settings-content {
+  min-width: 0;
+}
+@media (min-width: 64em) {
+  .settings {
+    grid-template-columns: var(--suivi-nav-l) minmax(0, 1fr);
+  }
+  .settings-nav {
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: calc(var(--suivi-entete-h) + var(--mantine-spacing-md));
+    padding: var(--mantine-spacing-xs);
+    background: var(--suivi-surface);
+    border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+    border-radius: var(--mantine-radius-lg);
+  }
+  .settings-select {
+    display: none;
+  }
+  .settings-content {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+}
+.settings-logo {
+  max-width: var(--suivi-champ-s);
+  max-height: 6rem;
+}
+
+/* ---------------------------------------------------------------- Densité (Paramètres > Apparence, préférences) */
+html[data-densite='compacte'] {
+  --mantine-spacing-xs: 0.375rem;
+  --mantine-spacing-sm: 0.5rem;
+  --mantine-spacing-md: 0.75rem;
+  --mantine-spacing-lg: 1rem;
+}
+html[data-densite='confortable'] {
+  --mantine-spacing-xs: 0.625rem;
+  --mantine-spacing-sm: 1rem;
+  --mantine-spacing-md: 1.25rem;
+  --mantine-spacing-lg: 2rem;
+}
+
+/* Une puce d'état n'est jamais tronquée dans une cellule étroite. */
+.mantine-Badge-root {
+  flex-shrink: 0;
+  overflow: visible;
+}
+.mantine-Badge-label {
+  overflow: visible;
+}

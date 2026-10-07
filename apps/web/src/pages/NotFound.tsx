@@ -20,7 +20,7 @@ export function ErrorPage() {
   const err = useRouteError();
   return (
     <Center h="100vh" p="md">
-      <Stack align="center" maw={560}>
+      <Stack align="center" className="lecture">
         <Title order={1}>Une erreur est survenue</Title>
         <Text c="dimmed" ta="center">
           L’affichage de cette page a échoué. Rechargez la page ; si le problème persiste, transmettez ce message à

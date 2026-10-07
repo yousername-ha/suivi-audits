@@ -9,10 +9,12 @@ RUN npm install -g pnpm@10.34.6 --no-audit --no-fund
 WORKDIR /src
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc tsconfig.base.json ./
 COPY packages/shared/package.json packages/shared/
+COPY packages/ui/package.json packages/ui/
 COPY apps/api/package.json apps/api/
 COPY apps/web/package.json apps/web/
 RUN pnpm install --frozen-lockfile --filter "@suivi/web..." --ignore-scripts
 COPY packages/shared packages/shared
+COPY packages/ui packages/ui
 COPY apps/web apps/web
 RUN pnpm --filter @suivi/web build
 

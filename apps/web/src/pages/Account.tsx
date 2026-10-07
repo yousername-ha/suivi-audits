@@ -22,7 +22,7 @@ export function AccountPage() {
   const me = useMe();
   usePresence('account');
   return (
-    <Stack maw={900} mx="auto">
+    <Stack className="page">
       <Title order={1}>Mon compte</Title>
       <Text c="dimmed">
         {me.user?.displayName} ({me.user?.username})
@@ -65,7 +65,7 @@ function PasswordCard({ minLen }: { minLen: number }) {
           }
         }}
       >
-        <Stack maw={420}>
+        <Stack className="formulaire">
           <PasswordInput
             label="Mot de passe actuel"
             autoComplete="current-password"
@@ -121,7 +121,7 @@ function TotpCard() {
         demandé).
       </Text>
       {!data ? (
-        <Stack maw={420}>
+        <Stack className="formulaire">
           <PasswordInput
             label="Mot de passe"
             value={pw}
@@ -144,7 +144,7 @@ function TotpCard() {
           </Button>
         </Stack>
       ) : (
-        <Stack maw={420}>
+        <Stack className="formulaire">
           {img && (
             <div className="qr">
               <img src={img} alt="QR code de configuration" />

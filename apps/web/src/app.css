@@ -1,90 +1,32 @@
-/* Styles propres à l'application (aucun style en ligne : CSP « style-src 'self' »). */
-body {
-  background: var(--mantine-color-body);
-}
+/* Styles propres à certains écrans. Charte, coquille et jetons : packages/ui/src/styles.css.
+   Aucune couleur ni aucun espacement codé en dur ici : uniquement des variables du thème. */
 .app-main {
-  background: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-8));
-}
-/* Mise en page générale (remplace AppShell, qui injecte des styles en ligne). */
-.shell {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-.shell-header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  height: 60px;
-  flex: none;
-  background: var(--mantine-color-body);
-  border-bottom: 1px solid var(--mantine-color-default-border);
-}
-.shell-body {
-  flex: 1;
-  display: grid;
-  grid-template-columns: 1fr;
-}
-.shell-nav {
-  display: none;
-}
-.shell-nav-inner {
-  display: flex;
-  flex-direction: column;
-}
-.shell-main {
-  min-width: 0;
-  padding: var(--mantine-spacing-md);
-}
-@media (min-width: 48em) {
-  .shell-body {
-    grid-template-columns: 250px 1fr;
-  }
-  .shell-nav {
-    display: block;
-    padding: var(--mantine-spacing-sm);
-    border-right: 1px solid var(--mantine-color-default-border);
-    background: var(--mantine-color-body);
-  }
-  .shell-nav-inner {
-    position: sticky;
-    top: 72px;
-  }
-}
-.brand-mark {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  display: inline-grid;
-  place-items: center;
-  font-weight: 700;
-  color: #fff;
-  background: var(--mantine-color-suivi-8);
+  background: var(--suivi-fond-page);
 }
 .auth-wrap {
   min-height: 100vh;
   display: grid;
   place-items: center;
-  padding: 24px 16px;
-  background: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-8));
+  padding: var(--mantine-spacing-lg) var(--mantine-spacing-md);
+  background: var(--suivi-fond-page);
 }
 .auth-card {
-  width: min(480px, 100%);
+  width: min(var(--suivi-largeur-formulaire), 100%);
 }
 .token-input input {
   font-family: var(--mantine-font-family-monospace);
-  font-size: 18px;
+  font-size: var(--mantine-font-size-lg);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 .cmd {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 6px 6px 10px;
-  border: 1px solid var(--mantine-color-default-border);
+  gap: var(--mantine-spacing-xs);
+  padding: var(--mantine-spacing-2xs) var(--mantine-spacing-2xs) var(--mantine-spacing-2xs) var(--mantine-spacing-xs);
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
   border-radius: var(--mantine-radius-sm);
-  background: var(--mantine-color-body);
+  background: var(--suivi-surface);
 }
 .cmd code {
   flex: 1;
@@ -92,15 +34,15 @@ body {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   font-family: var(--mantine-font-family-monospace);
-  font-size: 13px;
+  font-size: var(--mantine-font-size-sm);
   user-select: all;
 }
 .secret {
   font-family: var(--mantine-font-family-monospace);
-  font-size: 17px;
+  font-size: var(--mantine-font-size-lg);
   letter-spacing: 0.04em;
-  padding: 10px 12px;
-  border: 1px dashed var(--mantine-color-default-border);
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  border: var(--suivi-trait-l) dashed var(--mantine-color-default-border);
   border-radius: var(--mantine-radius-sm);
   word-break: break-all;
   user-select: all;
@@ -108,20 +50,16 @@ body {
 .qr {
   display: flex;
   justify-content: center;
-  padding: 12px;
-  background: #fff;
+  padding: var(--mantine-spacing-sm);
+  background: var(--suivi-qr-fond);
   border-radius: var(--mantine-radius-md);
 }
 .qr img {
-  width: 200px;
-  height: 200px;
+  width: var(--suivi-qr);
+  height: var(--suivi-qr);
   image-rendering: pixelated;
 }
-.grid-2 {
-  display: grid;
-  gap: var(--mantine-spacing-md);
-  grid-template-columns: 1fr;
-}
+.grid-2,
 .grid-3 {
   display: grid;
   gap: var(--mantine-spacing-md);
@@ -134,30 +72,6 @@ body {
   .grid-3 {
     grid-template-columns: repeat(3, 1fr);
   }
-}
-.table-wrap {
-  overflow-x: auto;
-}
-.nowrap {
-  white-space: nowrap;
-}
-.mono {
-  font-family: var(--mantine-font-family-monospace);
-}
-.pre {
-  white-space: pre-wrap;
-  font-family: var(--mantine-font-family-monospace);
-  font-size: 12px;
-  max-height: 320px;
-  overflow: auto;
-}
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
 }
 
 /* Matrice des droits (modules × actions) */

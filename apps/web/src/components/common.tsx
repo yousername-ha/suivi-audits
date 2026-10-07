@@ -1,22 +1,12 @@
 /* Composants communs : erreur, commande copiable, présence, secret affiché une fois, dates. */
 import { Alert, Avatar, Button, CopyButton, Group, Modal, Stack, Text, Tooltip } from '@mantine/core';
 import type { PresenceEntry } from '@suivi/shared';
-import { useState, type ReactNode } from 'react';
 import { usePresenceOn } from '../realtime';
 
 export const fmtDate = (d: string | null | undefined) =>
   d ? new Date(d).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' }) : '';
 export const fmtSize = (n: number | null | undefined) =>
   n == null ? '' : n < 1024 ? `${n} o` : n < 1048576 ? `${(n / 1024).toFixed(0)} Ko` : `${(n / 1048576).toFixed(1)} Mo`;
-
-export function ErrorAlert({ error, title = 'Erreur' }: { error: unknown; title?: string }) {
-  if (!error) return null;
-  return (
-    <Alert color="red" title={title} role="alert">
-      {error instanceof Error ? error.message : String(error)}
-    </Alert>
-  );
-}
 
 export function CopyCommand({ command }: { command: string }) {
   return (
@@ -54,7 +44,7 @@ export function PresenceBar({ resource }: { resource: string }) {
   for (const p of others) if (!byUser.has(p.username) || p.mode === 'edit') byUser.set(p.username, p);
   const list = [...byUser.values()];
   return (
-    <Group gap="xs" aria-live="polite">
+    <Group gap="xs" aria-live="polite" className="presence-bar">
       <Avatar.Group>
         {list.slice(0, 5).map((p) => (
           <Tooltip key={p.username} label={`${p.name} ${p.mode === 'edit' ? 'modifie' : 'consulte'}`}>
@@ -109,47 +99,5 @@ export function SecretModal({
   );
 }
 
-/** Bouton qui demande confirmation avant une action risquée. */
-export function ConfirmButton({
-  children,
-  message,
-  onConfirm,
-  color = 'red',
-  ...rest
-}: {
-  children: ReactNode;
-  message: string;
-  onConfirm: () => unknown;
-  color?: string;
-  size?: string;
-  variant?: string;
-  disabled?: boolean;
-}) {
-  const [open, setOpen] = useState(false);
-  return (
-    <>
-      <Button color={color} onClick={() => setOpen(true)} {...rest}>
-        {children}
-      </Button>
-      <Modal opened={open} onClose={() => setOpen(false)} title="Confirmation" centered>
-        <Stack>
-          <Text>{message}</Text>
-          <Group justify="flex-end">
-            <Button variant="default" onClick={() => setOpen(false)}>
-              Annuler
-            </Button>
-            <Button
-              color={color}
-              onClick={async () => {
-                setOpen(false);
-                await onConfirm();
-              }}
-            >
-              Confirmer
-            </Button>
-          </Group>
-        </Stack>
-      </Modal>
-    </>
-  );
-}
+/* Composants de la charte (packages/ui), réexportés pour les écrans existants. */
+export { ConfirmButton, ErrorAlert } from '@suivi/ui';

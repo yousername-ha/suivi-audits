@@ -153,7 +153,7 @@ export function ImportPanel() {
               reset();
             }}
           >
-            <Stack gap={6} mt={6}>
+            <Stack gap="xs" mt="xs">
               {IMPORT_MODES.map((m) => (
                 <Radio key={m} value={m} label={IMPORT_MODE_LABELS[m]} />
               ))}
@@ -169,7 +169,7 @@ export function ImportPanel() {
                 reset();
               }}
               searchable
-              w={420}
+              className="champ-l"
             />
           )}
           <Button
@@ -282,7 +282,7 @@ export function ImportPanel() {
                     )}
                   </Table.Td>
                   <Table.Td>
-                    <Group gap={4} wrap="nowrap">
+                    <Group gap="2xs" wrap="nowrap">
                       <Button
                         size="compact-sm"
                         variant="default"
