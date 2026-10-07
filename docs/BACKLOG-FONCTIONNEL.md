@@ -149,9 +149,46 @@
 
 ---
 
+## 5. Exploitation — données sur le serveur et mises à jour  *(phase 0, chantier 9 quinquies)*
+
+Spécification détaillée : [specs/EXPL-donnees-et-mises-a-jour.md](specs/EXPL-donnees-et-mises-a-jour.md) (demande du RSSI du 08/10/2026).
+
+- **EXPL-01** — Toutes les données dans un dossier du serveur (`DATA_DIR`, par défaut `/srv/suivi-audits/donnees`), en montages bind avec les bons propriétaires et droits ; plus aucun volume nommé ; données intactes après suppression des conteneurs, des images ou `docker compose down -v` (test CI).
+- **EXPL-02** — Script de passage des volumes nommés vers `DATA_DIR` (sauvegarde préalable, copie avec droits, contrôles, bascule) ; anciens volumes conservés jusqu'à confirmation ; idempotent ; testé en CI.
+- **EXPL-03** — Script `scripts/mettre-a-jour.sh` : contrôles, notes de mise à jour, sauvegarde chiffrée obligatoire, signature des images, migrations sous verrou, contrôle de santé, retour arrière automatique (avec restauration si la base a été migrée), rapport et journal d'audit ; mode `--verifier`.
+- **EXPL-04** — Compatibilité entre versions : migrations en avant uniquement, changements destructifs en deux versions, `GET /api/version`, test CI de montée depuis la dernière version publiée avec retour arrière simulé.
+- **EXPL-05** — Administration > Système : version, historique des mises à jour, dernière sauvegarde (alerte au-delà de 48 h), espace disque, bandeau « nouvelle version disponible » alimenté par un script planifié sur le serveur (aucune installation automatique).
+- **EXPL-06** — L'outil historique fait partie de l'image : mis à jour par une version publiée, jamais par copie sur le serveur.
+- **EXPL-07** — Publication d'une version : images signées, SBOM, page de release avec un paragraphe « Notes de mise à jour » obligatoire.
+- **EXPL-08** — Sauvegarde et restauration lisent `DATA_DIR`, recréent les dossiers avec les bons droits et écrivent un rapport dans `DATA_DIR/etat/`.
+- **EXPL-09** — Guide d'installation : création de `DATA_DIR`, mise à jour par script, retour arrière, passage depuis les volumes nommés, sauvegarde externalisée ; rejoué en CI, mise à jour comprise.
+
+---
+
+## 6. Cartographie du SMSI  *(chantier « Cartographie », après 9 quinquies)*
+
+Spécification détaillée : [cartographie/SPEC-CARTOGRAPHIE-V3.md](cartographie/SPEC-CARTOGRAPHIE-V3.md) ; recette : [cartographie/RECETTE.md](cartographie/RECETTE.md) ; référence de comportement : le module bêta de l'outil historique validé le 08/10/2026 (`cartographie/reference-beta-legacy/`).
+
+- **CARTO-01** — Module de droits `cartographie` (lire, modifier, supprimer, exporter, administrer) ; lecture seule réelle ; objets filtrés selon les droits de leur module d'origine.
+- **CARTO-02** — Source des objets par adaptateur (état legacy recomposé, puis tables des modules repris), `objectRef` stables, relations métier dérivées.
+- **CARTO-03** — Tables `maps` et `map_versions`, disposition validée par `MapLayoutSchema` (zod).
+- **CARTO-04** — API (`/api/carto/...`) avec `If-Match` et 412, temps réel SSE, présence, journal d'audit.
+- **CARTO-05** — Génération assistée (vue contexte, vue processus), dispositions en fonctions pures, confirmation au-delà de 80 objets, refus au-delà de 400.
+- **CARTO-06** — Canevas SVG sans nouvelle dépendance : zoom, panoramique, aperçu, recherche, préréglages, filtres ISO 27001 / HDS, légende.
+- **CARTO-07** — Mode édition : déplacer, redimensionner, relier, masquer, retirer, annuler et rétablir (60 niveaux), enregistrement explicite, conflit 412.
+- **CARTO-08** — Synchronisation : bandeaux « nouveaux objets » et « objets indisponibles », jamais d'ajout ni de déplacement automatique.
+- **CARTO-09** — Ajout depuis la plateforme (seul, dépendances directes, tous les objets liés), placement sans chevauchement.
+- **CARTO-10** — Fiche détaillée (inspecteur) par type d'objet et de relation, avec liens vers les écrans des modules.
+- **CARTO-11** — Versions nommées (20 au plus par carte), restauration, suppression.
+- **CARTO-12** — Nature des enjeux (interne / externe) déduite et corrigeable.
+- **CARTO-13** — Exports PNG, SVG, PDF A3, JSON, avec titre, date et légende ; journalisés.
+- **CARTO-14** — Reprise de `S.maps` par l'import legacy (mapper « maps ») ; `/legacy` en lecture seule pour la cartographie une fois reprise.
+
+---
+
 ## Critères d'acceptation communs
 - Respect de la charte graphique et de l'adaptation à tous les écrans (sections 9 ter et 9 quater du prompt de la phase 0).
-- Droits RBAC appliqués à chaque nouveau module : CRRC, Prospection, Incidents, PCA/PRA, Événements.
+- Droits RBAC appliqués à chaque nouveau module : CRRC, Prospection, Incidents, PCA/PRA, Événements, Cartographie.
 - Import legacy :
   - reprise des données CRRC existantes (offres, établissements, statuts convertis vers CRRC-03), des investissements et des incidents ;
   - conversion du suivi par ressource vers le statut unique, documentée dans `MAPPING-LEGACY.md`.

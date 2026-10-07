@@ -22,6 +22,20 @@ Les exigences fonctionnelles détaillées sont dans [BACKLOG-FONCTIONNEL.md](BAC
 - [x] **9 bis — Gestion des droits (RBAC)** ([ADR 0010](adr/0010-droits-rbac.md)) : permissions module × action déclarées dans `packages/shared` ; rôles prédéfinis (Administrateur, RSSI, Contributeur, Lecteur, Auditeur externe) et personnalisés ; groupes ; garde `requirePermission` sur chaque route et filtrage du temps réel ; écrans Utilisateurs, Groupes, Rôles, droits effectifs, export de la revue des accès (ISO 27001 A.5.18) ; garde-fous et migration des comptes v2.
 - [x] **9 ter — Charte graphique et page Paramètres** ([ADR 0011](adr/0011-charte-graphique-et-parametres.md)) : `packages/ui` (thème Mantine clair et sombre, WCAG AA, composants communs) ; page Paramètres pleine largeur par sections, chacune avec son enregistrement et sa permission ; captures de référence.
 - [x] **9 quater — Adaptation à tous les écrans** (du téléphone au 4K, [ADR 0012](adr/0012-adaptation-ecrans-et-ecran-mural.md)) : points de rupture et container queries, grilles auto-fill, maître-détail, tableaux configurables, typographie fluide, préférences « Taille d'affichage » et « Densité » enregistrées sur le serveur ; mode **écran mural** (`/mur`) ; tests de largeur utile et d'absence de défilement horizontal.
+- [ ] **9 quinquies — Données sur le serveur et mises à jour** ([spécification](specs/EXPL-donnees-et-mises-a-jour.md)) :
+  - `EXPL-01` toutes les données dans `DATA_DIR` (montages bind, plus de volumes nommés), intactes après `docker compose down -v` ;
+  - `EXPL-02` passage des volumes nommés vers `DATA_DIR`, anciens volumes conservés jusqu'à confirmation ;
+  - `EXPL-03` script `mettre-a-jour.sh` (sauvegarde obligatoire, signature des images, santé, retour arrière automatique, rapport) ;
+  - `EXPL-04` compatibilité des données entre versions, `GET /api/version`, test CI de montée de version avec retour arrière ;
+  - `EXPL-05` Administration > Système : version, historique des mises à jour, dernière sauvegarde, espace disque, nouvelle version disponible ;
+  - `EXPL-06` à `EXPL-09` outil historique dans l'image, notes de mise à jour dans chaque version, sauvegarde et restauration sur `DATA_DIR`, guide rejoué en CI avec une mise à jour.
+
+## Cartographie du SMSI (après 9 quinquies)
+
+Éditeur de cartes piloté par les données de la plateforme (vue contexte, vue processus), reprise du module bêta validé dans l'outil historique ([spécification](cartographie/SPEC-CARTOGRAPHIE-V3.md), [recette](cartographie/RECETTE.md)).
+- [ ] `CARTO-01` module de droits `cartographie` ; `CARTO-02` objets lus par adaptateur (état legacy, puis tables) ; `CARTO-03` tables `maps` et `map_versions` ; `CARTO-04` API, temps réel et présence.
+- [ ] `CARTO-05` génération assistée ; `CARTO-06` canevas SVG (zoom, recherche, préréglages, filtres) ; `CARTO-07` mode édition ; `CARTO-08` synchronisation ; `CARTO-09` ajout depuis la plateforme ; `CARTO-10` fiche détaillée.
+- [ ] `CARTO-11` versions ; `CARTO-12` nature des enjeux ; `CARTO-13` exports PNG, SVG, PDF, JSON ; `CARTO-14` reprise legacy de `S.maps` et transition.
 
 ## Phase 1 — Audit
 
@@ -44,7 +58,7 @@ Modules repris : `dda`, `processes`, `objectives`, `indicators`, `suppliers`, `a
 
 ## Phase 3 — Conformité étendue, risques et crise
 
-Modules repris : `frameworks` (ReCyF et autres), `appGaps`, `ai`, `crrc`, `invest`, `incidents`, `crisis`, `swots`, `interested`, `scope`, `plans`, `supEvals`.
+Modules repris : `frameworks` (ReCyF et autres), `appGaps`, `ai`, `crrc`, `invest`, `incidents`, `crisis`, `swots`, `interested`, `scope`, `plans`, `supEvals`. La cartographie passe alors de l'état legacy aux tables pour ces objets, sans changer les cartes (`CARTO-02`), et la nature des enjeux devient un champ de l'enjeu (`CARTO-12`).
 - ReCyF et analyse d'écarts (GAP) multi-référentiels.
 - IA : registre des systèmes, évaluations, plan, politiques.
 - **CRRC** :
