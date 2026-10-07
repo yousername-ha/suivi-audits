@@ -1,5 +1,5 @@
 /* Sessions, authentification (mot de passe + TOTP), jeton d'installation initiale. */
-import { effectivePermissions, Rights, type AccessStage, type Permission } from '@suivi/shared';
+import { effectivePermissions, Rights, type AccessStage, type Permission, type SettingsValues } from '@suivi/shared';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { Config } from './config.js';
 import type { Client, Db } from './db/db.js';
@@ -71,6 +71,8 @@ export class Auth {
     private readonly cfg: Config,
     private readonly db: Db,
     private readonly vault: Vault,
+    /** Politique de sécurité courante (page Paramètres, section Sécurité). */
+    private readonly policy: () => SettingsValues['securite'],
   ) {}
 
   stage(s: Session | null): AccessStage {
@@ -121,7 +123,7 @@ export class Auth {
   async create(req: FastifyRequest, reply: FastifyReply, userId: string, mfaOk: boolean, c?: Client): Promise<string> {
     const tok = token(32);
     const csrf = token(24);
-    const exp = new Date(Date.now() + this.cfg.session.maxHours * 3600e3);
+    const exp = new Date(Date.now() + this.policy().sessionMaxHours * 3600e3);
     await (c ?? this.db.pool).query(
       'INSERT INTO sessions(id_hash, user_id, csrf, mfa_ok, ip, user_agent, expires_at) VALUES ($1,$2,$3,$4,$5,$6,$7)',
       [sha256(tok), userId, csrf, mfaOk, req.ip || null, String(req.headers['user-agent'] || '').slice(0, 300), exp],
@@ -159,7 +161,7 @@ export class Auth {
               u.totp_enabled, u.must_change_password
          FROM sessions s JOIN users u ON u.id = s.user_id
         WHERE s.id_hash = $1 AND s.expires_at > now() AND s.last_seen_at > now() - make_interval(mins => $2)`,
-      [h, this.cfg.session.idleMinutes],
+      [h, this.policy().sessionIdleMinutes],
     );
     if (!r || r.disabled || (r.expires_at && new Date(r.expires_at) <= new Date())) return null;
     const grants = await loadGrants(this.db.pool, r.id);
@@ -194,7 +196,7 @@ export class Auth {
   purgeExpired() {
     return this.db.q(
       'DELETE FROM sessions WHERE expires_at < now() OR last_seen_at < now() - make_interval(mins => $1)',
-      [this.cfg.session.idleMinutes],
+      [this.policy().sessionIdleMinutes],
     );
   }
 
@@ -221,8 +223,8 @@ export class Auth {
     }
     if (!(await verifyPassword(password, u.password_hash))) {
       const n = u.failed_logins + 1;
-      const t = this.cfg.lockout.threshold;
-      const lock = n >= t ? new Date(Date.now() + this.cfg.lockout.minutes * 60e3 * Math.min(8, 2 ** (n - t))) : null;
+      const { lockoutThreshold: t, lockoutMinutes } = this.policy();
+      const lock = n >= t ? new Date(Date.now() + lockoutMinutes * 60e3 * Math.min(8, 2 ** (n - t))) : null;
       await this.db.q('UPDATE users SET failed_logins = $2, locked_until = COALESCE($3, locked_until) WHERE id = $1', [
         u.id,
         n,
