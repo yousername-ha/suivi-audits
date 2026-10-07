@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router';
 import { get } from '../api';
 import { useLive, usePresence } from '../realtime';
-import { useMe } from '../session';
+import { canAdminArea, canReadBusiness, useCan, useMe } from '../session';
 
 interface LegacyModule {
   key: string;
@@ -23,11 +23,13 @@ const resourceLabel = (r: string) => RESOURCE_LABELS.find(([re]) => re.test(r))?
 
 export function HomePage() {
   const me = useMe();
+  const can = useCan();
   usePresence('home');
   const { presence } = useLive();
   const modules = useQuery({
     queryKey: ['legacy', 'modules'],
     queryFn: () => get<LegacyModule[]>('/api/legacy/modules'),
+    enabled: canReadBusiness(can),
   });
   const byPhase = new Map<number, LegacyModule[]>();
   for (const m of modules.data ?? []) if (m.phase > 0) byPhase.set(m.phase, [...(byPhase.get(m.phase) ?? []), m]);
@@ -37,34 +39,38 @@ export function HomePage() {
     <Stack maw={1100} mx="auto">
       <Title order={1}>Bonjour {me.user?.displayName || me.user?.username}</Title>
       <div className="grid-3">
-        <Card withBorder>
-          <Stack gap="xs">
-            <Title order={2} size="h4">
-              Outil de suivi
-            </Title>
-            <Text size="sm" c="dimmed">
-              Mesures, écarts, plan d’audit, pilotage… dans l’interface historique, en attendant la reprise de chaque
-              module.
-            </Text>
-            <Button component="a" href="/legacy/">
-              Ouvrir l’outil de suivi
-            </Button>
-          </Stack>
-        </Card>
-        <Card withBorder>
-          <Stack gap="xs">
-            <Title order={2} size="h4">
-              Documents et liens
-            </Title>
-            <Text size="sm" c="dimmed">
-              Preuves et documents chiffrés, versions, liens vers les partages réseau.
-            </Text>
-            <Button component={Link} to="/documents" variant="light">
-              Voir les documents
-            </Button>
-          </Stack>
-        </Card>
-        {me.user?.role === 'admin' && (
+        {canReadBusiness(can) && (
+          <Card withBorder>
+            <Stack gap="xs">
+              <Title order={2} size="h4">
+                Outil de suivi
+              </Title>
+              <Text size="sm" c="dimmed">
+                Mesures, écarts, plan d’audit, pilotage… dans l’interface historique, en attendant la reprise de chaque
+                module.
+              </Text>
+              <Button component="a" href="/legacy/">
+                Ouvrir l’outil de suivi
+              </Button>
+            </Stack>
+          </Card>
+        )}
+        {can('documents', 'lire') && (
+          <Card withBorder>
+            <Stack gap="xs">
+              <Title order={2} size="h4">
+                Documents et liens
+              </Title>
+              <Text size="sm" c="dimmed">
+                Preuves et documents chiffrés, versions, liens vers les partages réseau.
+              </Text>
+              <Button component={Link} to="/documents" variant="light">
+                Voir les documents
+              </Button>
+            </Stack>
+          </Card>
+        )}
+        {canAdminArea(can) && (
           <Card withBorder>
             <Stack gap="xs">
               <Title order={2} size="h4">

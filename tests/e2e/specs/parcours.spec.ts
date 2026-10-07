@@ -135,7 +135,7 @@ test('temps réel : deux navigateurs, présence et mise à jour sans rechargemen
   await loginUI(a.page, ADMIN, PASSWORD, adminSecret);
   const csrfA = await csrfOf(a.page.request);
   const created = await a.page.request.post('/api/admin/users', {
-    data: { username: 'redacteur', displayName: 'Rédactrice', role: 'rw' },
+    data: { username: 'redacteur', displayName: 'Rédactrice', roles: [{ roleId: 'contributeur' }] },
     headers: { 'x-csrf-token': csrfA },
   });
   const temp = (await created.json()).temporaryPassword as string;
@@ -174,6 +174,112 @@ test('temps réel : deux navigateurs, présence et mise à jour sans rechargemen
   await a.page.getByRole('button', { name: 'Enregistrer' }).click();
   await expect(b.page.getByRole('link', { name: 'Politiques internes' })).toBeVisible();
 
+  expect(a.problems).toEqual([]);
+  expect(b.problems).toEqual([]);
+});
+
+/** Prépare un compte créé par l'administrateur (mot de passe personnel, TOTP) et ouvre sa session. */
+async function prepareAccount(browser: Browser, username: string, temp: string) {
+  const b = await newPage(browser);
+  const rb = b.page.request;
+  await rb.post('/api/auth/login', { data: { username, password: temp } });
+  let csrf = await csrfOf(rb);
+  const begin = await (
+    await rb.post('/api/account/totp/begin', { data: {}, headers: { 'x-csrf-token': csrf } })
+  ).json();
+  await rb.post('/api/account/totp/confirm', { data: { code: totp(begin.secret) }, headers: { 'x-csrf-token': csrf } });
+  markTotpUsed(begin.secret);
+  csrf = await csrfOf(rb);
+  await rb.post('/api/account/password', {
+    data: { current: temp, next: PASSWORD },
+    headers: { 'x-csrf-token': csrf },
+  });
+  await apiLogin(rb, username, PASSWORD, begin.secret);
+  return { ...b, secret: begin.secret as string };
+}
+
+test('droits : groupe, rôle personnalisé, refus puis accord', async ({ browser }) => {
+  const a = await newPage(browser);
+  await loginUI(a.page, ADMIN, PASSWORD, adminSecret);
+  // Compte sans rôle direct, créé par l'API puis préparé.
+  const created = await a.page.request.post('/api/admin/users', {
+    data: { username: 'lectrice', displayName: 'Lectrice', roles: [] },
+    headers: { 'x-csrf-token': await csrfOf(a.page.request) },
+  });
+  const temp = (await created.json()).temporaryPassword as string;
+
+  // 1. Création d'un groupe portant le rôle Lecteur, avec la lectrice comme membre (interface).
+  await a.page.goto('/admin/groups');
+  await a.page.getByRole('button', { name: 'Nouveau groupe' }).click();
+  const dlg = a.page.getByRole('dialog');
+  await dlg.getByRole('textbox', { name: 'Nom', exact: true }).fill('Équipe de lecture');
+  await dlg.getByRole('textbox', { name: 'Rôles portés par le groupe' }).click();
+  await a.page.getByRole('option', { name: 'Lecteur', exact: true }).click();
+  await dlg.getByRole('textbox', { name: 'Nom', exact: true }).click(); // referme la liste
+  await dlg.getByRole('textbox', { name: 'Membres' }).click();
+  await a.page.getByRole('option', { name: /Lectrice/ }).click();
+  await dlg.getByRole('textbox', { name: 'Nom', exact: true }).click();
+  await dlg.getByRole('button', { name: 'Créer' }).click();
+  await expect(a.page.getByRole('cell', { name: /Équipe de lecture/ })).toBeVisible();
+
+  // 2. La lectrice consulte les documents, mais ne peut pas ajouter de lien (refus du serveur, bouton absent).
+  const b = await prepareAccount(browser, 'lectrice', temp);
+  await b.page.goto('/documents');
+  await b.page.getByRole('tab', { name: 'Liens' }).click();
+  await expect(b.page.getByRole('button', { name: 'Ajouter un lien' })).toHaveCount(0);
+  const refused = await b.page.request.post('/api/links', {
+    data: { url: 'https://exemple.invalid/refus' },
+    headers: { 'x-csrf-token': await csrfOf(b.page.request) },
+  });
+  expect(refused.status()).toBe(403);
+  expect((await refused.json()).error).toMatch(/Droits insuffisants/);
+  await b.page.goto('/admin');
+  await expect(b.page).toHaveURL(/\/$/);
+
+  // 3. Rôle personnalisé : duplication de Lecteur, ajout de « Documents et liens : Créer et modifier ».
+  await a.page.goto('/admin/roles');
+  await a.page
+    .getByRole('row', { name: /Lecteur Lecture seule/ })
+    .getByRole('button', { name: 'Dupliquer' })
+    .click();
+  await a.page.getByRole('dialog').getByRole('textbox', { name: 'Nom du nouveau rôle' }).fill('Lecteur et liens');
+  await a.page.getByRole('button', { name: 'Créer le rôle' }).click();
+  await a.page.getByRole('checkbox', { name: 'Documents et liens : Créer et modifier' }).check();
+  await a.page.getByRole('button', { name: 'Enregistrer la matrice' }).click();
+  await expect(a.page.getByRole('cell', { name: /Lecteur et liens/ })).toBeVisible();
+
+  // 4. Le groupe porte désormais ce rôle : la session de la lectrice est coupée ; après reconnexion, l'ajout passe.
+  await a.page.goto('/admin/groups');
+  await a.page
+    .getByRole('row', { name: /Équipe de lecture/ })
+    .getByRole('button', { name: 'Modifier' })
+    .click();
+  const dlg2 = a.page.getByRole('dialog');
+  await dlg2.getByRole('textbox', { name: 'Rôles portés par le groupe' }).click();
+  await a.page.getByRole('option', { name: 'Lecteur et liens' }).click();
+  await dlg2.getByRole('textbox', { name: 'Nom', exact: true }).click();
+  await dlg2.getByRole('button', { name: 'Enregistrer' }).click();
+  await expect(a.page.getByRole('cell', { name: /Lecteur et liens/ })).toBeVisible();
+  expect((await (await b.page.request.get('/api/auth/me')).json()).stage).toBe('anon');
+  await apiLogin(b.page.request, 'lectrice', PASSWORD, b.secret);
+  const ok = await b.page.request.post('/api/links', {
+    data: { url: 'https://exemple.invalid/accord', title: 'Lien autorisé' },
+    headers: { 'x-csrf-token': await csrfOf(b.page.request) },
+  });
+  expect(ok.status()).toBe(201);
+
+  // 5. Droits effectifs : l'origine (groupe) est affichée.
+  await a.page.goto('/admin/users');
+  await a.page
+    .getByRole('row', { name: /lectrice/ })
+    .getByRole('button', { name: 'Droits effectifs' })
+    .click();
+  await expect(
+    a.page
+      .getByRole('dialog')
+      .getByText(/Lecteur et liens \(groupe Équipe de lecture\)/)
+      .first(),
+  ).toBeVisible();
   expect(a.problems).toEqual([]);
   expect(b.problems).toEqual([]);
 });

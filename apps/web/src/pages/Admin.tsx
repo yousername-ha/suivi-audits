@@ -1,42 +1,33 @@
-/* Administration : comptes, sessions, journal d'audit, versions, import legacy, système. */
-import {
-  Alert,
-  Badge,
-  Button,
-  Card,
-  Group,
-  Modal,
-  Select,
-  Stack,
-  Table,
-  Tabs,
-  Text,
-  TextInput,
-  Title,
-} from '@mantine/core';
+/* Administration : utilisateurs, groupes, rôles, sessions, journal d'audit, versions, import legacy, système.
+   Chaque onglet n'apparaît qu'avec la permission correspondante (le serveur contrôle chaque appel). */
+import { Badge, Button, Card, Group, Stack, Table, Tabs, Text, TextInput, Title } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { ROLE_LABELS, ROLES, type Role, type UserOut } from '@suivi/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { api, ApiError, download, errorMessage, get } from '../api';
-import { ConfirmButton, ErrorAlert, fmtDate, PresenceBar, SecretModal } from '../components/common';
+import { api, download, errorMessage, get } from '../api';
+import { ConfirmButton, ErrorAlert, fmtDate, PresenceBar } from '../components/common';
 import { usePresence } from '../realtime';
-import { useMe } from '../session';
+import { useCan } from '../session';
+import { GroupsPanel, RolesPanel, UsersPanel } from './AdminAccess';
 import { ImportPanel } from './AdminImport';
 
 const TABS = [
-  ['users', 'Comptes'],
-  ['sessions', 'Sessions'],
-  ['audit', 'Journal'],
-  ['versions', 'Versions'],
-  ['import', 'Import des données legacy'],
-  ['system', 'Système'],
+  ['users', 'Utilisateurs', 'administration'],
+  ['groups', 'Groupes', 'administration'],
+  ['roles', 'Rôles', 'administration'],
+  ['sessions', 'Sessions', 'administration'],
+  ['audit', 'Journal', 'administration'],
+  ['versions', 'Versions', 'administration'],
+  ['import', 'Import des données legacy', 'import_export'],
+  ['system', 'Système', 'administration'],
 ] as const;
-const roleOptions = ROLES.map((r) => ({ value: r, label: ROLE_LABELS[r] }));
 
 export function AdminPage() {
-  const { tab = 'users' } = useParams();
+  const can = useCan();
+  const tabs = TABS.filter(([, , m]) => can(m, 'lire'));
+  const params = useParams();
+  const tab = tabs.some(([k]) => k === params.tab) ? params.tab! : (tabs[0]?.[0] ?? 'users');
   const nav = useNavigate();
   usePresence(`admin/${tab}`);
   return (
@@ -47,14 +38,20 @@ export function AdminPage() {
       </Group>
       <Tabs value={tab} onChange={(v) => nav(`/admin/${v}`)} keepMounted={false}>
         <Tabs.List>
-          {TABS.map(([k, l]) => (
+          {tabs.map(([k, l]) => (
             <Tabs.Tab key={k} value={k}>
               {l}
             </Tabs.Tab>
           ))}
         </Tabs.List>
         <Tabs.Panel value="users" pt="md">
-          <Users />
+          <UsersPanel />
+        </Tabs.Panel>
+        <Tabs.Panel value="groups" pt="md">
+          <GroupsPanel />
+        </Tabs.Panel>
+        <Tabs.Panel value="roles" pt="md">
+          <RolesPanel />
         </Tabs.Panel>
         <Tabs.Panel value="sessions" pt="md">
           <Sessions />
@@ -72,270 +69,6 @@ export function AdminPage() {
           <System />
         </Tabs.Panel>
       </Tabs>
-    </Stack>
-  );
-}
-
-/* ---------------------------------------------------------------- Comptes */
-function Users() {
-  const me = useMe();
-  const qc = useQueryClient();
-  const q = useQuery({ queryKey: ['admin', 'users'], queryFn: () => get<UserOut[]>('/api/admin/users') });
-  const [secret, setSecret] = useState<{ title: string; value: string } | null>(null);
-  const [creating, setCreating] = useState<{ username: string; displayName: string; email: string; role: Role } | null>(
-    null,
-  );
-  const [editing, setEditing] = useState<UserOut | null>(null);
-  const [err, setErr] = useState<string | null>(null);
-  const refresh = () => qc.invalidateQueries({ queryKey: ['admin', 'users'] });
-  const act = async (fn: () => Promise<unknown>, msg?: string) => {
-    try {
-      await fn();
-      if (msg) notifications.show({ color: 'teal', message: msg });
-      await refresh();
-    } catch (e) {
-      notifications.show({ color: 'red', message: errorMessage(e) });
-    }
-  };
-
-  return (
-    <Stack>
-      <Group>
-        <Button onClick={() => setCreating({ username: '', displayName: '', email: '', role: 'ro' })}>
-          Nouveau compte
-        </Button>
-      </Group>
-      <ErrorAlert error={q.error} />
-      <Card withBorder p={0}>
-        <div className="table-wrap">
-          <Table>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Compte</Table.Th>
-                <Table.Th>Rôle</Table.Th>
-                <Table.Th>État</Table.Th>
-                <Table.Th>Dernière connexion</Table.Th>
-                <Table.Th>Actions</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {(q.data ?? []).map((u) => {
-                const locked = !!(u.locked_until && new Date(u.locked_until) > new Date());
-                return (
-                  <Table.Tr key={u.id}>
-                    <Table.Td>
-                      <Text fw={600}>{u.display_name}</Text>
-                      <Text size="xs" c="dimmed">
-                        {u.username} {u.email && `· ${u.email}`}
-                      </Text>
-                    </Table.Td>
-                    <Table.Td>{ROLE_LABELS[u.role]}</Table.Td>
-                    <Table.Td>
-                      <Group gap={4}>
-                        {u.disabled && <Badge color="gray">désactivé</Badge>}
-                        {locked && <Badge color="red">verrouillé</Badge>}
-                        {!u.totp_enabled && <Badge color="orange">TOTP à configurer</Badge>}
-                        {u.must_change_password && <Badge color="yellow">mot de passe temporaire</Badge>}
-                        {u.sessions > 0 && <Badge variant="light">{u.sessions} session(s)</Badge>}
-                      </Group>
-                    </Table.Td>
-                    <Table.Td className="nowrap">{fmtDate(u.last_login_at)}</Table.Td>
-                    <Table.Td>
-                      <Group gap={4} wrap="nowrap">
-                        <Button size="compact-sm" variant="default" onClick={() => setEditing(u)}>
-                          Modifier
-                        </Button>
-                        <ConfirmButton
-                          size="compact-sm"
-                          variant="light"
-                          color="orange"
-                          message={`Générer un mot de passe temporaire pour ${u.username} ? Ses sessions seront fermées.`}
-                          onConfirm={() =>
-                            act(async () => {
-                              const r = await api<{ temporaryPassword: string }>(
-                                'POST',
-                                `/api/admin/users/${u.id}/reset-password`,
-                              );
-                              setSecret({
-                                title: `Mot de passe temporaire de ${u.username}`,
-                                value: r.temporaryPassword,
-                              });
-                            })
-                          }
-                        >
-                          Mot de passe
-                        </ConfirmButton>
-                        <ConfirmButton
-                          size="compact-sm"
-                          variant="light"
-                          color="orange"
-                          message={`Réinitialiser la double authentification de ${u.username} (téléphone perdu) ? Il devra la reconfigurer.`}
-                          onConfirm={() =>
-                            act(
-                              () => api('POST', `/api/admin/users/${u.id}/reset-mfa`),
-                              'Double authentification réinitialisée.',
-                            )
-                          }
-                        >
-                          TOTP
-                        </ConfirmButton>
-                        {locked && (
-                          <Button
-                            size="compact-sm"
-                            variant="light"
-                            onClick={() =>
-                              act(
-                                () =>
-                                  api('PATCH', `/api/admin/users/${u.id}`, {
-                                    body: { unlock: true },
-                                    ifMatch: u.version,
-                                  }),
-                                'Compte déverrouillé.',
-                              )
-                            }
-                          >
-                            Déverrouiller
-                          </Button>
-                        )}
-                        {u.id !== me.user?.id && (
-                          <ConfirmButton
-                            size="compact-sm"
-                            variant="light"
-                            message={`Supprimer définitivement le compte ${u.username} ?`}
-                            onConfirm={() => act(() => api('DELETE', `/api/admin/users/${u.id}`), 'Compte supprimé.')}
-                          >
-                            Supprimer
-                          </ConfirmButton>
-                        )}
-                      </Group>
-                    </Table.Td>
-                  </Table.Tr>
-                );
-              })}
-            </Table.Tbody>
-          </Table>
-        </div>
-      </Card>
-
-      <Modal opened={!!creating} onClose={() => setCreating(null)} title="Nouveau compte" centered>
-        {creating && (
-          <Stack>
-            {err && <Alert color="red">{err}</Alert>}
-            <TextInput
-              label="Identifiant"
-              required
-              value={creating.username}
-              onChange={(e) => setCreating({ ...creating, username: e.currentTarget.value })}
-            />
-            <TextInput
-              label="Nom affiché"
-              value={creating.displayName}
-              onChange={(e) => setCreating({ ...creating, displayName: e.currentTarget.value })}
-            />
-            <TextInput
-              label="Adresse e-mail"
-              type="email"
-              value={creating.email}
-              onChange={(e) => setCreating({ ...creating, email: e.currentTarget.value })}
-            />
-            <Select
-              label="Rôle"
-              data={roleOptions}
-              value={creating.role}
-              onChange={(v) => v && setCreating({ ...creating, role: v as Role })}
-              allowDeselect={false}
-            />
-            <Group justify="flex-end">
-              <Button
-                onClick={async () => {
-                  setErr(null);
-                  try {
-                    const r = await api<{ temporaryPassword: string }>('POST', '/api/admin/users', { body: creating });
-                    setSecret({ title: `Compte ${creating.username} créé`, value: r.temporaryPassword });
-                    setCreating(null);
-                    await refresh();
-                  } catch (e) {
-                    setErr(errorMessage(e));
-                  }
-                }}
-              >
-                Créer
-              </Button>
-            </Group>
-          </Stack>
-        )}
-      </Modal>
-
-      <Modal opened={!!editing} onClose={() => setEditing(null)} title={`Modifier ${editing?.username ?? ''}`} centered>
-        {editing && <EditUser user={editing} onDone={() => (setEditing(null), void refresh())} />}
-      </Modal>
-      <SecretModal
-        title={secret?.title ?? ''}
-        intro="Mot de passe temporaire :"
-        secret={secret?.value ?? null}
-        onClose={() => setSecret(null)}
-      />
-    </Stack>
-  );
-}
-
-function EditUser({ user, onDone }: { user: UserOut; onDone: () => void }) {
-  const [f, setF] = useState({
-    displayName: user.display_name,
-    email: user.email,
-    role: user.role,
-    disabled: user.disabled,
-  });
-  const [err, setErr] = useState<string | null>(null);
-  return (
-    <Stack>
-      {err && <Alert color="red">{err}</Alert>}
-      <TextInput
-        label="Nom affiché"
-        value={f.displayName}
-        onChange={(e) => setF({ ...f, displayName: e.currentTarget.value })}
-      />
-      <TextInput
-        label="Adresse e-mail"
-        value={f.email}
-        onChange={(e) => setF({ ...f, email: e.currentTarget.value })}
-      />
-      <Select
-        label="Rôle"
-        data={roleOptions}
-        value={f.role}
-        onChange={(v) => v && setF({ ...f, role: v as Role })}
-        allowDeselect={false}
-      />
-      <Select
-        label="État"
-        data={[
-          { value: 'active', label: 'Actif' },
-          { value: 'disabled', label: 'Désactivé' },
-        ]}
-        value={f.disabled ? 'disabled' : 'active'}
-        onChange={(v) => setF({ ...f, disabled: v === 'disabled' })}
-        allowDeselect={false}
-      />
-      <Group justify="flex-end">
-        <Button
-          onClick={async () => {
-            try {
-              await api('PATCH', `/api/admin/users/${user.id}`, { body: f, ifMatch: user.version });
-              notifications.show({ color: 'teal', message: 'Compte modifié.' });
-              onDone();
-            } catch (e) {
-              setErr(
-                e instanceof ApiError && e.status === 412
-                  ? `${e.message} Fermez cette fenêtre pour recharger.`
-                  : errorMessage(e),
-              );
-            }
-          }}
-        >
-          Enregistrer
-        </Button>
-      </Group>
     </Stack>
   );
 }

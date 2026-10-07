@@ -159,3 +159,16 @@ body {
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+
+/* Matrice des droits (modules × actions) */
+.matrix th,
+.matrix td {
+  white-space: nowrap;
+}
+.matrix .center {
+  text-align: center;
+}
+.matrix .matrix-check {
+  display: inline-flex;
+  justify-content: center;
+}

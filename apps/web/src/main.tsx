@@ -18,7 +18,7 @@ import { LoginPage } from './pages/Login';
 import { ErrorPage, NotFoundPage } from './pages/NotFound';
 import { SetupPage } from './pages/Setup';
 import { RealtimeProvider } from './realtime';
-import { SessionProvider, useMe } from './session';
+import { canAdminArea, SessionProvider, useCan, useMe } from './session';
 import { themeOverride } from './theme';
 
 const queryClient = new QueryClient({
@@ -31,13 +31,15 @@ const queryClient = new QueryClient({
   },
 });
 
-/** Accès réservé aux sessions complètes (double authentification faite), éventuellement aux administrateurs. */
+/** Accès réservé aux sessions complètes (double authentification faite), éventuellement à l'administration.
+    Confort d'affichage seulement : chaque appel reste contrôlé par le serveur. */
 function RequireAuth({ admin = false }: { admin?: boolean }) {
   const me = useMe();
   const loc = useLocation();
+  const can = useCan();
   if (me.stage !== 'ok')
     return <Navigate to={`/login?next=${encodeURIComponent(loc.pathname + loc.search)}`} replace />;
-  if (admin && me.user?.role !== 'admin') return <Navigate to="/" replace />;
+  if (admin && !canAdminArea(can)) return <Navigate to="/" replace />;
   return (
     <RealtimeProvider>
       <Layout>
