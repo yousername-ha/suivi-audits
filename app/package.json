@@ -9,7 +9,8 @@
     "node": ">=22"
   },
   "scripts": {
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "test": "node --test"
   },
   "dependencies": {
     "pg": "8.23.1"

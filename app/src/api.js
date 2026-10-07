@@ -5,6 +5,7 @@ const db = require('./db');
 const sec = require('./security');
 const files = require('./files');
 const auth = require('./auth');
+const setupToken = require('./setup-token');
 const log = require('./log');
 const { HttpError, json, readJson, readBody, limiter, CSP_FILE } = require('./http');
 
@@ -73,24 +74,32 @@ async function logout(c) {
 }
 
 /* ================================================================ Installation */
-async function setupStatus(c) { json(c.res, 200, { needed: await auth.setupPending(), adminExists: await auth.adminExists() }); }
+async function setupStatus(c) {
+  const adminExists = await auth.adminExists();
+  const pending = await auth.setupPending();
+  json(c.res, 200, { needed: pending || !adminExists, pending, adminExists });
+}
+const SETUP_HTTP = { invalid: 401, expired: 410, used: 409, none: 410 };
 async function setup(c) {
-  if (!setupByIp(c.ip)) throw new HttpError(429, 'Trop de tentatives.');
+  if (!setupByIp(c.ip)) throw new HttpError(429, 'Trop de tentatives. Réessayez dans 15 minutes.');
   const b = await readJson(c.req);
   const username = str(b.username, 64);
   if (!USERNAME_RE.test(username)) throw new HttpError(422, 'Identifiant invalide (2 à 64 caractères : lettres, chiffres, . _ - @).');
   checkPassword(b.password, username);
   const hash = await sec.hashPassword(b.password);
-  const user = await db.tx(async (t) => {
-    const r = await t.query("SELECT value FROM settings WHERE key = 'setup_token' FOR UPDATE");
-    const recovery = r.rows[0] && r.rows[0].value.reason === 'recovery';
-    if (!(await auth.consumeSetupToken(b.token, t))) return null;
-    if (!recovery && (await t.query("SELECT 1 FROM users WHERE role='admin'")).rowCount) throw new HttpError(409, 'Un administrateur existe déjà.');
+  const res = await db.tx(async (t) => {
+    const k = await auth.consumeSetupToken(b.token, t);
+    if (k.status !== 'ok') return k;
+    if (k.reason !== 'recovery' && (await t.query("SELECT 1 FROM users WHERE role='admin'")).rowCount) throw new HttpError(409, 'Un administrateur existe déjà.');
     const u = await t.query('INSERT INTO users(username, display_name, email, role, password_hash) VALUES ($1,$2,$3,$4,$5) RETURNING *',
       [username, str(b.displayName, 120) || username, str(b.email, 200), 'admin', hash]);
-    return u.rows[0];
+    return { status: 'ok', user: u.rows[0] };
   }).catch((e) => { if (e.code === '23505') throw new HttpError(409, 'Cet identifiant existe déjà.'); throw e; });
-  if (!user) { await db.audit({ username }, c.ip, 'setup.failed'); throw new HttpError(401, "Jeton d'installation invalide ou expiré."); }
+  if (res.status !== 'ok') {
+    await db.audit({ username }, c.ip, 'setup.failed', '', { reason: res.status });
+    throw new HttpError(SETUP_HTTP[res.status] || 401, setupToken.MESSAGES[res.status] || setupToken.MESSAGES.invalid, { reason: res.status });
+  }
+  const user = res.user;
   await db.audit({ id: user.id, username }, c.ip, 'setup.admin_created');
   await auth.createSession(c.req, c.res, user, false);
   json(c.res, 201, { stage: auth.accessStage({ user: { totpEnabled: false }, mfaOk: false }) });

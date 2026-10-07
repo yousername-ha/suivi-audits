@@ -4,6 +4,7 @@ const cfg = require('./config');
 const db = require('./db');
 const sec = require('./security');
 const log = require('./log');
+const setupToken = require('./setup-token');
 const { HttpError, parseCookies, isHttps, clientIp } = require('./http');
 
 const COOKIE_SECURE = '__Host-suivi_sid';
@@ -99,29 +100,36 @@ async function checkTotp(userId, code) {
 /* ---------------- Jeton d'installation ---------------- */
 async function adminExists() { return !!(await db.one("SELECT 1 FROM users WHERE role = 'admin' AND NOT disabled LIMIT 1")); }
 
+const fmtExpiry = (iso) => new Date(iso).toLocaleString('fr-FR', { timeZone: 'UTC', dateStyle: 'full', timeStyle: 'short' }) + ' UTC';
+
+/** Émet un nouveau jeton (le précédent est annulé), le journalise dans l'audit et l'affiche sur la sortie standard. */
 async function issueSetupToken(reason) {
-  const tok = sec.token(24);
-  const hash = await sec.hashPassword(tok);
-  const exp = new Date(Date.now() + 24 * 3600e3).toISOString();
-  await db.q(`INSERT INTO settings(key, value) VALUES ('setup_token', $1) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`,
-    [{ hash, expires: exp, reason }]);
-  await db.audit(null, null, 'setup.token_issued', '', { reason, expires: exp });
+  const tok = setupToken.generate();
+  const rec = await setupToken.makeRecord(tok, reason);
+  await db.q(`INSERT INTO settings(key, value) VALUES ('setup_token', $1) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`, [rec]);
+  await db.audit(null, null, 'setup.token_issued', '', { reason, expires: rec.expires });
   const line = '='.repeat(72);
-  process.stdout.write(`\n${line}\n  JETON D'INSTALLATION (usage unique, valable 24 h)\n\n    ${tok}\n\n  Ouvrir ${cfg.publicUrl || 'https://<serveur>'}/setup et le saisir pour créer le compte administrateur.\n${line}\n\n`);
-  return tok;
+  process.stdout.write(`\n${line}\n  JETON D'INSTALLATION (usage unique, valable 24 h)\n\n    ${tok}\n\n` +
+    `  Expire le : ${fmtExpiry(rec.expires)}\n` +
+    `  Ouvrir ${cfg.publicUrl || 'https://<serveur>'}/setup et le saisir pour créer le compte administrateur.\n` +
+    `  Nouveau jeton (annule le précédent) : docker compose exec app setup-token\n${line}\n\n`);
+  return { token: tok, expires: rec.expires };
 }
+/** Vérifie et consomme le jeton dans la transaction « client ». Renvoie { status, reason }. */
 async function consumeSetupToken(tok, client) {
   const r = await client.query("SELECT value FROM settings WHERE key = 'setup_token' FOR UPDATE");
-  const v = r.rows[0] && r.rows[0].value;
-  if (!v || new Date(v.expires) < new Date()) return false;
-  if (!(await sec.verifyPassword(String(tok || '').trim(), v.hash))) return false;
-  await client.query("DELETE FROM settings WHERE key = 'setup_token'");
-  return true;
+  const rec = r.rows[0] && r.rows[0].value;
+  const status = await setupToken.check(tok, rec);
+  if (status === 'ok') {
+    await client.query("UPDATE settings SET value = value || jsonb_build_object('usedAt', now()), updated_at = now() WHERE key = 'setup_token'");
+  }
+  return { status, reason: rec && rec.reason };
 }
-async function setupPending() {
+async function setupRecord() {
   const r = await db.one("SELECT value FROM settings WHERE key = 'setup_token'");
-  return !!(r && new Date(r.value.expires) > new Date());
+  return r && r.value;
 }
+async function setupPending() { return setupToken.pending(await setupRecord()); }
 
 /** Middleware d'autorisation. need: 'any' (session complète) | 'rw' | 'admin'. */
 function requireRole(s, need) {

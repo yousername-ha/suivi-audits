@@ -73,7 +73,8 @@ async function handle(req, res) {
     return H.text(res, 200, APP_INDEX.replace('<!--SUIVI-CFG-->', `<script>window.__SUIVI=${cfgJs};</script>`), 'text/html; charset=utf-8');
   }
   if (req.method === 'GET' && PAGES[p]) {
-    if (p === '/setup' && !(await auth.setupPending())) return H.redirect(res, '/login');
+    // Installation : tant qu'aucun administrateur n'existe (même si le jeton a expiré), ou jeton de secours en cours.
+    if (p === '/setup' && (await auth.adminExists()) && !(await auth.setupPending())) return H.redirect(res, '/login');
     if (['/account', '/admin', '/documents'].includes(p) && stage !== 'ok') return H.redirect(res, '/login?next=' + encodeURIComponent(p));
     if (p === '/admin' && s.user.role !== 'admin') return H.redirect(res, '/');
     return H.text(res, 200, PAGE_CACHE[p], 'text/html; charset=utf-8');
