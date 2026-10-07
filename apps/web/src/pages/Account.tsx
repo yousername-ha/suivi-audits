@@ -1,5 +1,19 @@
-/* Mon compte : mot de passe, double authentification, sessions ouvertes. */
-import { Alert, Badge, Button, Card, PasswordInput, PinInput, Stack, Table, Text, Title } from '@mantine/core';
+/* Mon compte : affichage (taille, densité, thème), mot de passe, double authentification, sessions ouvertes. */
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  PasswordInput,
+  PinInput,
+  SegmentedControl,
+  Select,
+  Stack,
+  Table,
+  Text,
+  Title,
+} from '@mantine/core';
+import { TAILLE_LABELS, TAILLES, type Preferences } from '@suivi/shared';
 import { notifications } from '@mantine/notifications';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import qrcode from 'qrcode-generator';
@@ -7,7 +21,7 @@ import { useState } from 'react';
 import { errorMessage, get, post } from '../api';
 import { ErrorAlert, fmtDate } from '../components/common';
 import { usePresence } from '../realtime';
-import { useMe, useRefreshMe } from '../session';
+import { useMe, usePreferences, useRefreshMe } from '../session';
 
 interface MySession {
   id: string;
@@ -27,10 +41,80 @@ export function AccountPage() {
       <Text c="dimmed">
         {me.user?.displayName} ({me.user?.username})
       </Text>
+      <AffichageCard />
       <PasswordCard minLen={me.passwordMinLength} />
       <TotpCard />
       <SessionsCard />
     </Stack>
+  );
+}
+
+const DENSITES = [
+  { value: 'organisation', label: 'Organisation' },
+  { value: 'compacte', label: 'Compacte' },
+  { value: 'normale', label: 'Normale' },
+  { value: 'confortable', label: 'Confortable' },
+];
+const THEMES = [
+  { value: 'organisation', label: 'Organisation' },
+  { value: 'auto', label: 'Système' },
+  { value: 'clair', label: 'Clair' },
+  { value: 'sombre', label: 'Sombre' },
+];
+
+/** Préférences d'affichage : enregistrées sur le serveur, appliquées sur tous les appareils de la personne. */
+function AffichageCard() {
+  const { prefs, save } = usePreferences();
+  const [err, setErr] = useState<string | null>(null);
+  const set = (patch: Partial<Preferences>) => {
+    setErr(null);
+    save(patch).catch((e: unknown) => setErr(errorMessage(e)));
+  };
+  return (
+    <Card withBorder>
+      <Title order={2} size="h4" mb="xs">
+        Affichage
+      </Title>
+      <Text size="sm" c="dimmed" mb="sm" className="lecture">
+        Enregistré sur le serveur : vos choix s’appliquent sur tous vos appareils. Le zoom du navigateur et la mise à
+        l’échelle du système restent pris en compte.
+      </Text>
+      <Stack className="formulaire">
+        <Select
+          label="Taille d’affichage"
+          description="« Automatique » agrandit le texte sur les très grands écrans (au-delà de 2560 px)."
+          data={TAILLES.map((t) => ({ value: t, label: TAILLE_LABELS[t] }))}
+          value={prefs.taille}
+          allowDeselect={false}
+          onChange={(v) => v && set({ taille: v as Preferences['taille'] })}
+        />
+        <div>
+          <Text size="sm" fw={500} mb="2xs" id="densite-label">
+            Densité
+          </Text>
+          <SegmentedControl
+            aria-labelledby="densite-label"
+            fullWidth
+            data={DENSITES}
+            value={prefs.densite}
+            onChange={(v) => set({ densite: v as Preferences['densite'] })}
+          />
+        </div>
+        <div>
+          <Text size="sm" fw={500} mb="2xs" id="theme-label">
+            Thème
+          </Text>
+          <SegmentedControl
+            aria-labelledby="theme-label"
+            fullWidth
+            data={THEMES}
+            value={prefs.theme}
+            onChange={(v) => set({ theme: v as Preferences['theme'] })}
+          />
+        </div>
+        {err && <Alert color="red">{err}</Alert>}
+      </Stack>
+    </Card>
   );
 }
 

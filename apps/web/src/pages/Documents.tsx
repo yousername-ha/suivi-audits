@@ -1,4 +1,6 @@
-/* Documents (chiffrés, versionnés) et liens, avec rattachements, présence et contrôle de concurrence. */
+/* Documents (chiffrés, versionnés) et liens, avec rattachements, présence et contrôle de concurrence.
+   Liste et fiche : tiroir sur petit écran ; côte à côte à partir de 1440 px ; troisième panneau (versions,
+   rattachements) à partir de 2560 px. */
 import {
   Alert,
   Anchor,
@@ -30,12 +32,15 @@ import {
   type LinkOut,
 } from '@suivi/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMediaQuery } from '@mantine/hooks';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { api, ApiError, download, errorMessage, get } from '../api';
 import { ConfirmButton, ErrorAlert, fmtDate, fmtSize, PresenceBar } from '../components/common';
+import { useColonnes, type Colonne } from '../components/Colonnes';
 import { usePresence } from '../realtime';
 import { useCan } from '../session';
+import { DataTable } from '@suivi/ui';
 
 interface Ref {
   ref: string;
@@ -57,40 +62,85 @@ export function DocumentsPage() {
   const nav = useNavigate();
   const [tab, setTab] = useState<string | null>('docs');
   usePresence(id ? `documents/${id}` : 'documents');
+  const large = useMediaQuery('(min-width: 90em)');
+  const ultra = useMediaQuery('(min-width: 160em)');
+  const close = () => nav('/documents');
+  const detail = (annexe: boolean) =>
+    id && (
+      <DocumentDetail
+        key={id}
+        id={id}
+        canWrite={canWrite}
+        isAdmin={can('documents', 'administrer')}
+        onClose={close}
+        annexe={annexe}
+      />
+    );
   return (
     <Stack className="page">
       <Group justify="space-between">
         <Title order={1}>Documents et liens</Title>
         <PresenceBar resource="documents" />
       </Group>
-      <Tabs value={tab} onChange={setTab}>
-        <Tabs.List>
-          <Tabs.Tab value="docs">Documents</Tabs.Tab>
-          <Tabs.Tab value="links">Liens</Tabs.Tab>
-        </Tabs.List>
-        <Tabs.Panel value="docs" pt="md">
-          <DocumentList canWrite={canWrite} onOpen={(d) => nav(`/documents/${d}`)} />
-        </Tabs.Panel>
-        <Tabs.Panel value="links" pt="md">
-          <LinkList canWrite={canWrite} />
-        </Tabs.Panel>
-      </Tabs>
-      <Drawer opened={!!id} onClose={() => nav('/documents')} position="right" size="lg" title="Fiche du document">
-        {id && (
-          <DocumentDetail
-            id={id}
-            canWrite={canWrite}
-            isAdmin={can('documents', 'administrer')}
-            onClose={() => nav('/documents')}
-          />
+      <div className={id && large ? 'maitre-detail maitre-detail--ouvert' : 'maitre-detail'}>
+        <Tabs value={tab} onChange={setTab}>
+          <Tabs.List>
+            <Tabs.Tab value="docs">Documents</Tabs.Tab>
+            <Tabs.Tab value="links">Liens</Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="docs" pt="md">
+            <DocumentList canWrite={canWrite} selected={id} onOpen={(d) => nav(`/documents/${d}`)} />
+          </Tabs.Panel>
+          <Tabs.Panel value="links" pt="md">
+            <LinkList canWrite={canWrite} />
+          </Tabs.Panel>
+        </Tabs>
+        {id && large && (
+          <aside className="maitre-detail__fiche" aria-label="Fiche du document">
+            <Card withBorder>
+              <Group justify="space-between" mb="xs">
+                <Text fw={600}>Fiche du document</Text>
+                <Button variant="subtle" size="xs" onClick={close}>
+                  Fermer
+                </Button>
+              </Group>
+              {detail(!!ultra)}
+            </Card>
+          </aside>
         )}
+        {id && ultra && (
+          <aside className="maitre-detail__annexe" aria-label="Versions et rattachements">
+            <DocumentAnnexe id={id} />
+          </aside>
+        )}
+      </div>
+      <Drawer opened={!!id && !large} onClose={close} position="right" size="lg" title="Fiche du document">
+        {id && !large && detail(false)}
       </Drawer>
     </Stack>
   );
 }
 
 /* ---------------------------------------------------------------- Liste et dépôt */
-function DocumentList({ canWrite, onOpen }: { canWrite: boolean; onOpen: (id: string) => void }) {
+const COLONNES_DOCS: Colonne[] = [
+  { cle: 'titre', libelle: 'Titre', priorite: 1, fixe: true },
+  { cle: 'rattachements', libelle: 'Rattachements', priorite: 1 },
+  { cle: 'classification', libelle: 'Classification', priorite: 2 },
+  { cle: 'categorie', libelle: 'Catégorie', priorite: 3 },
+  { cle: 'taille', libelle: 'Taille et version', priorite: 3 },
+  { cle: 'modifie', libelle: 'Modifié', priorite: 1 },
+];
+
+function DocumentList({
+  canWrite,
+  onOpen,
+  selected,
+}: {
+  canWrite: boolean;
+  onOpen: (id: string) => void;
+  selected?: string;
+}) {
+  const { cls, selecteur } = useColonnes('documents', COLONNES_DOCS);
   const canDelete = useCan()('documents', 'supprimer');
   const qc = useQueryClient();
   const [q, setQ] = useState('');
@@ -163,61 +213,70 @@ function DocumentList({ canWrite, onOpen }: { canWrite: boolean; onOpen: (id: st
             )}
           </FileButton>
         )}
+        <div className="pousse-droite">{selecteur}</div>
       </Group>
       <ErrorAlert error={list.error} />
-      <Card withBorder p={0}>
-        <div className="table-wrap">
-          <Table highlightOnHover>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Titre</Table.Th>
-                <Table.Th>Rattachements</Table.Th>
-                <Table.Th>Classification</Table.Th>
-                <Table.Th>Modifié</Table.Th>
+      <DataTable label="Documents">
+        <Table highlightOnHover>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Titre</Table.Th>
+              <Table.Th className={cls('rattachements')}>Rattachements</Table.Th>
+              <Table.Th className={cls('classification')}>Classification</Table.Th>
+              <Table.Th className={cls('categorie')}>Catégorie</Table.Th>
+              <Table.Th className={cls('taille')}>Taille</Table.Th>
+              <Table.Th className={cls('modifie')}>Modifié</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {(list.data ?? []).map((d) => (
+              <Table.Tr
+                key={d.id}
+                aria-selected={d.id === selected}
+                className={d.id === selected ? 'ligne-choisie' : undefined}
+              >
+                <Table.Td>
+                  <Anchor component="button" type="button" onClick={() => onOpen(d.id)} fw={600}>
+                    {d.title}
+                  </Anchor>
+                  <Text size="xs" c="dimmed">
+                    {d.filename} · {fmtSize(d.size)} · v{d.current_version}
+                  </Text>
+                </Table.Td>
+                <Table.Td className={cls('rattachements')}>
+                  <Group gap="2xs">
+                    {d.refs.slice(0, 6).map((r) => (
+                      <Badge key={r} variant="light" size="sm">
+                        {r}
+                      </Badge>
+                    ))}
+                  </Group>
+                </Table.Td>
+                <Table.Td className={cls('classification')}>{CLASSIFICATION_LABELS[d.classification]}</Table.Td>
+                <Table.Td className={cls('categorie')}>{d.category}</Table.Td>
+                <Table.Td className={[cls('taille'), 'nowrap'].filter(Boolean).join(' ')}>
+                  {fmtSize(d.size)} · v{d.current_version}
+                </Table.Td>
+                <Table.Td className={[cls('modifie'), 'nowrap'].filter(Boolean).join(' ')}>
+                  <span className="horodatage">{fmtDate(d.updated_at)}</span>
+                  <Text size="xs" c="dimmed">
+                    {d.updated_by}
+                  </Text>
+                </Table.Td>
               </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {(list.data ?? []).map((d) => (
-                <Table.Tr key={d.id}>
-                  <Table.Td>
-                    <Anchor component="button" type="button" onClick={() => onOpen(d.id)} fw={600}>
-                      {d.title}
-                    </Anchor>
-                    <Text size="xs" c="dimmed">
-                      {d.filename} · {fmtSize(d.size)} · v{d.current_version}
-                    </Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <Group gap="2xs">
-                      {d.refs.slice(0, 6).map((r) => (
-                        <Badge key={r} variant="light" size="sm">
-                          {r}
-                        </Badge>
-                      ))}
-                    </Group>
-                  </Table.Td>
-                  <Table.Td>{CLASSIFICATION_LABELS[d.classification]}</Table.Td>
-                  <Table.Td className="nowrap">
-                    {fmtDate(d.updated_at)}
-                    <Text size="xs" c="dimmed">
-                      {d.updated_by}
-                    </Text>
-                  </Table.Td>
-                </Table.Tr>
-              ))}
-              {list.data && !list.data.length && (
-                <Table.Tr>
-                  <Table.Td colSpan={4}>
-                    <Text c="dimmed" ta="center" py="md">
-                      Aucun document.
-                    </Text>
-                  </Table.Td>
-                </Table.Tr>
-              )}
-            </Table.Tbody>
-          </Table>
-        </div>
-      </Card>
+            ))}
+            {list.data && !list.data.length && (
+              <Table.Tr>
+                <Table.Td colSpan={6}>
+                  <Text c="dimmed" ta="center" py="md">
+                    Aucun document.
+                  </Text>
+                </Table.Td>
+              </Table.Tr>
+            )}
+          </Table.Tbody>
+        </Table>
+      </DataTable>
     </Stack>
   );
 }
@@ -228,11 +287,14 @@ function DocumentDetail({
   canWrite,
   isAdmin,
   onClose,
+  annexe = false,
 }: {
   id: string;
   canWrite: boolean;
   isAdmin: boolean;
   onClose: () => void;
+  /** Versions affichées dans le troisième panneau (très grands écrans). */
+  annexe?: boolean;
 }) {
   const canDelete = useCan()('documents', 'supprimer');
   const qc = useQueryClient();
@@ -320,7 +382,7 @@ function DocumentDetail({
           </Group>
           <Text size="sm" c="dimmed">
             {CLASSIFICATION_LABELS[d.classification]} · {d.category || 'sans catégorie'} · modifié le{' '}
-            {fmtDate(d.updated_at)} par {d.updated_by}
+            <span className="horodatage">{fmtDate(d.updated_at)}</span> par {d.updated_by}
           </Text>
           <Text size="xs" c="dimmed" className="mono">
             SHA-256 : {d.sha256}
@@ -401,38 +463,14 @@ function DocumentDetail({
         </Stack>
       )}
 
-      <Title order={3} size="h5" mt="md">
-        Versions
-      </Title>
-      <div className="table-wrap">
-        <Table>
-          <Table.Tbody>
-            {d.versions.map((v) => (
-              <Table.Tr key={v.version}>
-                <Table.Td>v{v.version}</Table.Td>
-                <Table.Td>
-                  <Anchor
-                    component="button"
-                    type="button"
-                    onClick={() => download(`/api/documents/${id}/download?v=${v.version}`)}
-                  >
-                    {v.filename}
-                  </Anchor>
-                  <Text size="xs" c="dimmed">
-                    {fmtSize(v.size)} · {v.scan_status} {v.comment && `· ${v.comment}`}
-                  </Text>
-                </Table.Td>
-                <Table.Td className="nowrap">
-                  {fmtDate(v.uploaded_at)}
-                  <Text size="xs" c="dimmed">
-                    {v.uploaded_by}
-                  </Text>
-                </Table.Td>
-              </Table.Tr>
-            ))}
-          </Table.Tbody>
-        </Table>
-      </div>
+      {!annexe && (
+        <>
+          <Title order={3} size="h5" mt="md">
+            Versions
+          </Title>
+          <VersionsTable d={d} />
+        </>
+      )}
       {canWrite && !d.deleted_at && (
         <FileButton
           onChange={(f) =>
@@ -486,6 +524,79 @@ function DocumentDetail({
           )}
         </Group>
       )}
+    </Stack>
+  );
+}
+
+function VersionsTable({ d }: { d: DocumentDetailOut }) {
+  const id = d.id;
+  return (
+    <div className="table-wrap">
+      <Table>
+        <Table.Tbody>
+          {d.versions.map((v) => (
+            <Table.Tr key={v.version}>
+              <Table.Td>v{v.version}</Table.Td>
+              <Table.Td>
+                <Anchor
+                  component="button"
+                  type="button"
+                  onClick={() => download(`/api/documents/${id}/download?v=${v.version}`)}
+                >
+                  {v.filename}
+                </Anchor>
+                <Text size="xs" c="dimmed">
+                  {fmtSize(v.size)} · {v.scan_status} {v.comment && `· ${v.comment}`}
+                </Text>
+              </Table.Td>
+              <Table.Td className="nowrap">
+                <span className="horodatage">{fmtDate(v.uploaded_at)}</span>
+                <Text size="xs" c="dimmed">
+                  {v.uploaded_by}
+                </Text>
+              </Table.Td>
+            </Table.Tr>
+          ))}
+        </Table.Tbody>
+      </Table>
+    </div>
+  );
+}
+
+/** Troisième panneau (très grands écrans) : historique des versions et rattachements du document. */
+function DocumentAnnexe({ id }: { id: string }) {
+  const q = useQuery({ queryKey: ['document', id], queryFn: () => get<DocumentDetailOut>(`/api/documents/${id}`) });
+  const d = q.data;
+  if (!d) return null;
+  return (
+    <Stack>
+      <Card withBorder>
+        <Title order={2} size="h5" mb="xs">
+          Historique des versions
+        </Title>
+        <VersionsTable d={d} />
+      </Card>
+      <Card withBorder>
+        <Title order={2} size="h5" mb="xs">
+          Rattachements
+        </Title>
+        {d.refs.length ? (
+          <Group gap="2xs">
+            {d.refs.map((r) => (
+              <Badge key={r} variant="light">
+                {r}
+              </Badge>
+            ))}
+          </Group>
+        ) : (
+          <Text size="sm" c="dimmed">
+            Aucun rattachement.
+          </Text>
+        )}
+        <Text size="sm" c="dimmed" mt="sm">
+          Créé le <span className="horodatage">{fmtDate(d.created_at)}</span> par {d.created_by}.
+        </Text>
+      </Card>
     </Stack>
   );
 }

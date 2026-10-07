@@ -6,12 +6,60 @@
   --suivi-nav-l: 15.5rem;
   --suivi-largeur-formulaire: 45rem; /* formulaires simples : 720 px */
   --suivi-largeur-lecture: 75ch; /* textes : environ 75 caractères par ligne */
+  --suivi-champ-xs: 8rem;
   --suivi-champ-s: 12.5rem;
   --suivi-champ-m: 16.25rem;
   --suivi-champ-l: 26.25rem;
   --suivi-marque: 1.875rem;
   --suivi-qr: 12.5rem;
   --suivi-trait-l: 1px;
+  --suivi-nav-repliee: 4.25rem;
+  --suivi-marge-page: clamp(0.75rem, 0.5rem + 1vw, 2.5rem);
+  --suivi-carte-min: 24rem; /* cartes de tableau de bord : 320 à 480 px environ */
+  --suivi-fiche-l: clamp(26rem, 32vw, 48rem);
+  --suivi-panneau-l: clamp(20rem, 22vw, 34rem);
+  --suivi-echelle: 1;
+}
+
+/* ---------------------------------------------------------------- Taille d'affichage et typographie fluide
+   Base fluide bornée (15 à 17 px selon la largeur), multipliée par la taille d'affichage choisie.
+   « Automatique » : agrandissement progressif au-delà de 2560 px (lisible à 2 m sur un écran de 55 pouces). */
+html {
+  font-size: calc(clamp(93.75%, 87.5% + 0.2vw, 106.25%) * var(--suivi-echelle));
+}
+/* Écran mural : texte agrandi d'un quart en plus de la taille d'affichage. */
+html[data-mur] {
+  font-size: calc(clamp(93.75%, 87.5% + 0.2vw, 106.25%) * var(--suivi-echelle) * 1.25);
+}
+html[data-taille='90'] {
+  --suivi-echelle: 0.9;
+}
+html[data-taille='100'] {
+  --suivi-echelle: 1;
+}
+html[data-taille='115'] {
+  --suivi-echelle: 1.15;
+}
+html[data-taille='130'] {
+  --suivi-echelle: 1.3;
+}
+html[data-taille='150'] {
+  --suivi-echelle: 1.5;
+}
+@media (min-width: 160em) {
+  html[data-taille='auto'] {
+    --suivi-echelle: 1.15;
+  }
+}
+@media (min-width: 200em) {
+  html[data-taille='auto'] {
+    --suivi-echelle: 1.3;
+  }
+}
+@media (min-width: 240em) {
+  html[data-taille='auto'] {
+    --suivi-echelle: 1.5;
+  }
 }
 
 body {
@@ -26,7 +74,8 @@ table,
   font-variant-numeric: tabular-nums;
 }
 
-/* ---------------------------------------------------------------- Coquille de l'application */
+/* ---------------------------------------------------------------- Coquille de l'application
+   Téléphone (< 36em) : menu en tiroir. Tablette (36 à 64em) : menu replié en icônes. Bureau (≥ 64em) : menu déplié. */
 .shell {
   min-height: 100vh;
   display: flex;
@@ -44,7 +93,7 @@ table,
 .shell-body {
   flex: 1;
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
 }
 .shell-nav {
   display: none;
@@ -55,15 +104,24 @@ table,
 }
 .shell-main {
   min-width: 0;
-  padding: var(--mantine-spacing-md);
+  padding: var(--suivi-marge-page);
 }
-@media (min-width: 48em) {
+.nav-icone {
+  display: inline-flex;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+.nav-icone svg {
+  width: 100%;
+  height: 100%;
+}
+@media (min-width: 36em) {
   .shell-body {
-    grid-template-columns: var(--suivi-nav-l) 1fr;
+    grid-template-columns: var(--suivi-nav-repliee) minmax(0, 1fr);
   }
   .shell-nav {
     display: block;
-    padding: var(--mantine-spacing-sm);
+    padding: var(--mantine-spacing-xs);
     border-right: var(--suivi-trait-l) solid var(--mantine-color-default-border);
     background: var(--suivi-surface);
   }
@@ -71,8 +129,44 @@ table,
     position: sticky;
     top: calc(var(--suivi-entete-h) + var(--mantine-spacing-sm));
   }
-  .shell-main {
-    padding: var(--mantine-spacing-lg);
+  /* Menu replié : icônes seules (libellés lus par les lecteurs d'écran et affichés au survol). */
+  .shell-nav .nav-libelle,
+  .shell-nav .nav-annexe {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .shell-nav .mantine-NavLink-root {
+    justify-content: center;
+  }
+  .shell-nav .mantine-NavLink-section {
+    margin: 0;
+  }
+}
+@media (min-width: 64em) {
+  .shell-body {
+    grid-template-columns: var(--suivi-nav-l) minmax(0, 1fr);
+  }
+  .shell-nav {
+    padding: var(--mantine-spacing-sm);
+  }
+  .shell-nav .nav-libelle,
+  .shell-nav .nav-annexe {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+  .shell-nav .mantine-NavLink-root {
+    justify-content: flex-start;
+  }
+  .shell-nav .mantine-NavLink-section {
+    margin-inline-end: var(--mantine-spacing-sm);
   }
 }
 .brand-mark {
@@ -140,6 +234,10 @@ table,
 }
 
 /* ---------------------------------------------------------------- Largeurs de champs */
+.champ-xs {
+  width: var(--suivi-champ-xs);
+  max-width: 100%;
+}
 .champ-s {
   width: var(--suivi-champ-s);
   max-width: 100%;
@@ -238,4 +336,186 @@ html[data-densite='confortable'] {
 }
 .mantine-Badge-label {
   overflow: visible;
+}
+
+/* ---------------------------------------------------------------- Grilles
+   Tableaux de bord : on ajoute des colonnes au lieu d'élargir les cartes. */
+.grille-cartes {
+  display: grid;
+  gap: var(--mantine-spacing-md);
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--suivi-carte-min), 100%), 1fr));
+  align-items: start;
+}
+.carte-large {
+  grid-column: 1 / -1;
+}
+/* Formulaires longs : 1 colonne, puis 2 ou 3 selon la largeur de leur conteneur. */
+.grille-formulaire {
+  container-type: inline-size;
+}
+.grille-formulaire .grille-formulaire__champs {
+  display: grid;
+  gap: var(--mantine-spacing-md);
+  grid-template-columns: minmax(0, 1fr);
+}
+@container (min-width: 40rem) {
+  .grille-formulaire .grille-formulaire__champs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@container (min-width: 72rem) {
+  .grille-formulaire .grille-formulaire__champs {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ---------------------------------------------------------------- Liste et fiche (maître-détail)
+   Large (≥ 90em) : liste et fiche côte à côte. Ultra (≥ 160em) : troisième panneau (historique, éléments liés). */
+.maitre-detail {
+  display: grid;
+  gap: var(--mantine-spacing-md);
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+.maitre-detail__fiche,
+.maitre-detail__annexe {
+  display: none;
+}
+@media (min-width: 90em) {
+  .maitre-detail--ouvert {
+    grid-template-columns: minmax(0, 1fr) var(--suivi-fiche-l);
+  }
+  .maitre-detail--ouvert .maitre-detail__fiche {
+    display: block;
+    position: sticky;
+    top: calc(var(--suivi-entete-h) + var(--mantine-spacing-md));
+    max-height: calc(100vh - var(--suivi-entete-h) - 2 * var(--mantine-spacing-md));
+    overflow: auto;
+  }
+}
+@media (min-width: 160em) {
+  .maitre-detail--ouvert {
+    grid-template-columns: minmax(0, 1fr) var(--suivi-fiche-l) var(--suivi-panneau-l);
+  }
+  .maitre-detail--ouvert .maitre-detail__annexe {
+    display: block;
+    position: sticky;
+    top: calc(var(--suivi-entete-h) + var(--mantine-spacing-md));
+  }
+}
+
+/* ---------------------------------------------------------------- Tableaux : en-têtes et première colonne figés,
+   colonnes supplémentaires affichées selon la largeur disponible (requêtes de conteneur). */
+.data-table {
+  container-type: inline-size;
+}
+.data-table .table-wrap {
+  max-height: min(75vh, 60rem);
+  overflow: auto;
+}
+.data-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+.data-table tbody td:first-child,
+.data-table thead th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--suivi-surface);
+}
+.data-table thead th:first-child {
+  z-index: 3;
+}
+.col-p2,
+.col-p3 {
+  display: none;
+}
+@container (min-width: 48rem) {
+  .col-p2 {
+    display: table-cell;
+  }
+}
+@container (min-width: 80rem) {
+  .col-p3 {
+    display: table-cell;
+  }
+}
+/* Colonnes choisies explicitement par la personne : toujours affichées ; les autres sont masquées. */
+.col-choisie {
+  display: table-cell;
+}
+.col-masquee {
+  display: none;
+}
+
+/* ---------------------------------------------------------------- Réglages du système */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+@media (prefers-contrast: more) {
+  :root {
+    --mantine-color-dimmed: var(--mantine-color-text);
+    --mantine-color-default-border: var(--mantine-color-text);
+    --suivi-trait-l: 2px;
+  }
+}
+@media (forced-colors: active) {
+  .brand-mark,
+  .mantine-Badge-root {
+    border: 1px solid CanvasText;
+  }
+}
+
+/* ---------------------------------------------------------------- Chiffres clés (tableau de bord) */
+.chiffre-cle {
+  min-width: 6rem;
+}
+.chiffre-cle__valeur {
+  font-size: var(--suivi-chiffre-taille, 2rem);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+/* ---------------------------------------------------------------- Écran mural (/mur)
+   Plein écran, sans menu, texte agrandi (lisible à distance), aucune action de modification. */
+.mur {
+  --suivi-chiffre-taille: 3.25rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-lg);
+  padding: var(--suivi-marge-page);
+  background: var(--suivi-fond-page);
+}
+.mur-entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-md);
+}
+.mur-message {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: var(--suivi-marge-page);
+  background: var(--suivi-fond-page);
+  text-align: center;
+}
+
+/* Liste avec fiche ouverte : ligne sélectionnée mise en évidence. */
+.ligne-choisie > td {
+  background: var(--mantine-primary-color-light);
+}
+.pousse-droite {
+  margin-left: auto;
 }

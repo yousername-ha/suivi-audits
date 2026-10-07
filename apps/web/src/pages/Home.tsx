@@ -1,8 +1,11 @@
-/* Accueil : accès aux modules, activité en cours, état de la migration de l'outil historique. */
+/* Accueil : tableau de bord (synthèse selon les droits), accès aux modules, activité en cours,
+   état de la reprise de l'outil historique. Une seule grille de cartes : plus de colonnes sur les grands écrans. */
 import { Anchor, Badge, Button, Card, Group, Stack, Table, Text, Title } from '@mantine/core';
+import { ErrorAlert, Page, PageHeader } from '@suivi/ui';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router';
 import { get } from '../api';
+import { SyntheseCartes, type SyntheseApi } from '../components/Synthese';
 import { useLive, usePresence } from '../realtime';
 import { canAdminArea, canReadBusiness, useCan, useMe } from '../session';
 
@@ -31,63 +34,64 @@ export function HomePage() {
     queryFn: () => get<LegacyModule[]>('/api/legacy/modules'),
     enabled: canReadBusiness(can),
   });
+  const synthese = useQuery({
+    queryKey: ['synthese'],
+    queryFn: () => get<SyntheseApi>('/api/mur/synthese'),
+    enabled: canReadBusiness(can),
+  });
   const byPhase = new Map<number, LegacyModule[]>();
   for (const m of modules.data ?? []) if (m.phase > 0) byPhase.set(m.phase, [...(byPhase.get(m.phase) ?? []), m]);
   const online = [...new Map(presence.map((p) => [p.username, p])).values()];
 
-  return (
-    <Stack className="page">
-      <Title order={1}>Bonjour {me.user?.displayName || me.user?.username}</Title>
-      <div className="grid-3">
-        {canReadBusiness(can) && (
-          <Card withBorder>
-            <Stack gap="xs">
-              <Title order={2} size="h4">
-                Outil de suivi
-              </Title>
-              <Text size="sm" c="dimmed">
-                Mesures, écarts, plan d’audit, pilotage… dans l’interface historique, en attendant la reprise de chaque
-                module.
-              </Text>
-              <Button component="a" href="/legacy/">
-                Ouvrir l’outil de suivi
-              </Button>
-            </Stack>
-          </Card>
-        )}
-        {can('documents', 'lire') && (
-          <Card withBorder>
-            <Stack gap="xs">
-              <Title order={2} size="h4">
-                Documents et liens
-              </Title>
-              <Text size="sm" c="dimmed">
-                Preuves et documents chiffrés, versions, liens vers les partages réseau.
-              </Text>
-              <Button component={Link} to="/documents" variant="light">
-                Voir les documents
-              </Button>
-            </Stack>
-          </Card>
-        )}
-        {canAdminArea(can) && (
-          <Card withBorder>
-            <Stack gap="xs">
-              <Title order={2} size="h4">
-                Administration
-              </Title>
-              <Text size="sm" c="dimmed">
-                Comptes, sessions, journal d’audit, versions, import des données de l’ancien outil.
-              </Text>
-              <Button component={Link} to="/admin" variant="light">
-                Administrer
-              </Button>
-            </Stack>
-          </Card>
-        )}
-      </div>
-
-      <Card withBorder>
+  const acces = (
+    <>
+      {canReadBusiness(can) && (
+        <Card withBorder>
+          <Stack gap="xs">
+            <Title order={2} size="h4">
+              Outil de suivi
+            </Title>
+            <Text size="sm" c="dimmed">
+              Mesures, écarts, plan d’audit, pilotage… dans l’interface historique, en attendant la reprise de chaque
+              module.
+            </Text>
+            <Button component="a" href="/legacy/">
+              Ouvrir l’outil de suivi
+            </Button>
+          </Stack>
+        </Card>
+      )}
+      {can('documents', 'lire') && (
+        <Card withBorder>
+          <Stack gap="xs">
+            <Title order={2} size="h4">
+              Documents et liens
+            </Title>
+            <Text size="sm" c="dimmed">
+              Preuves et documents chiffrés, versions, liens vers les partages réseau.
+            </Text>
+            <Button component={Link} to="/documents" variant="light">
+              Voir les documents
+            </Button>
+          </Stack>
+        </Card>
+      )}
+      {canAdminArea(can) && (
+        <Card withBorder>
+          <Stack gap="xs">
+            <Title order={2} size="h4">
+              Administration
+            </Title>
+            <Text size="sm" c="dimmed">
+              Comptes, sessions, journal d’audit, versions, import des données de l’ancien outil.
+            </Text>
+            <Button component={Link} to="/admin" variant="light">
+              Administrer
+            </Button>
+          </Stack>
+        </Card>
+      )}
+      <Card withBorder className="presence-liste">
         <Title order={2} size="h4" mb="xs">
           En ce moment
         </Title>
@@ -106,7 +110,7 @@ export function HomePage() {
         )}
       </Card>
 
-      <Card withBorder>
+      <Card withBorder className="carte-large">
         <Title order={2} size="h4" mb="xs">
           Reprise des modules de l’outil historique
         </Title>
@@ -150,6 +154,21 @@ export function HomePage() {
           </Table>
         </div>
       </Card>
-    </Stack>
+    </>
+  );
+
+  return (
+    <Page>
+      <PageHeader
+        title={`Bonjour ${me.user?.displayName || me.user?.username}`}
+        description={synthese.data ? `Tableau de bord — ${synthese.data.organisation}` : undefined}
+      />
+      {synthese.error && <ErrorAlert error={synthese.error} />}
+      {synthese.data ? (
+        <SyntheseCartes s={synthese.data} extra={acces} />
+      ) : (
+        <div className="grille-cartes">{acces}</div>
+      )}
+    </Page>
   );
 }

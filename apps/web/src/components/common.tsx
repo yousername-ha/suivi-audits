@@ -61,17 +61,19 @@ export function PresenceBar({ resource }: { resource: string }) {
   );
 }
 
-/** Secret affiché une seule fois (mot de passe temporaire). */
+/** Secret affiché une seule fois (mot de passe temporaire, lien d'activation d'un écran mural). */
 export function SecretModal({
   title,
   intro,
   secret,
   onClose,
+  warning = 'Ce mot de passe n’est affiché qu’une fois. Transmettez-le par un canal séparé (de vive voix, SMS) ; il devra être changé à la première connexion.',
 }: {
   title: string;
   intro: string;
   secret: string | null;
   onClose: () => void;
+  warning?: string;
 }) {
   return (
     <Modal opened={!!secret} onClose={onClose} title={title} centered>
@@ -80,10 +82,7 @@ export function SecretModal({
         <div className="secret" data-testid="secret">
           {secret}
         </div>
-        <Alert color="orange">
-          Ce mot de passe n’est affiché qu’une fois. Transmettez-le par un canal séparé (de vive voix, SMS) ; il devra
-          être changé à la première connexion.
-        </Alert>
+        <Alert color="orange">{warning}</Alert>
         <Group justify="flex-end">
           <CopyButton value={secret ?? ''}>
             {({ copied, copy }) => (

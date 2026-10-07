@@ -1,5 +1,6 @@
-/* Mise en page : barre supérieure, navigation (tiroir sur téléphone), indicateur temps réel.
-   Mise en page en CSS statique (app.css) : AppShell de Mantine injecte des balises <style>, interdites par la CSP. */
+/* Mise en page : barre supérieure, navigation, indicateur temps réel, préférences d'affichage.
+   Téléphone : menu en tiroir ; tablette : menu replié en icônes ; bureau : menu déplié (packages/ui/src/styles.css).
+   AppShell de Mantine n'est pas utilisé : il injecte des balises <style>, interdites par la CSP. */
 import {
   Anchor,
   Badge,
@@ -13,15 +14,44 @@ import {
   Tooltip,
   useMantineColorScheme,
 } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
+import { useDisclosure, useMediaQuery } from '@mantine/hooks';
+import {
+  IconeAccueil,
+  IconeAdministration,
+  IconeCompte,
+  IconeDocuments,
+  IconeHistorique,
+  IconeMur,
+  IconeParametres,
+  IconeTheme,
+} from '@suivi/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { api, setCsrf } from '../api';
 import { useLive } from '../realtime';
-import { canAdminArea, canReadBusiness, ME_KEY, useCan, useMe } from '../session';
+import { canAdminArea, canReadBusiness, ME_KEY, useCan, useMe, usePreferences } from '../session';
 
-const THEME_CHOISI = 'suivi-theme-choisi';
+const SCHEME = { auto: 'auto', clair: 'light', sombre: 'dark' } as const;
+const THEME_SUIVANT = { clair: 'sombre', sombre: 'auto', auto: 'clair' } as const;
+const THEME_LIBELLE = { clair: 'clair', sombre: 'sombre', auto: 'automatique' } as const;
+
+/** Applique taille d'affichage, densité et thème : préférences de la personne, sinon valeurs de l'organisation. */
+function useAffichage() {
+  const me = useMe();
+  const { prefs } = usePreferences();
+  // keepTransitions : sinon Mantine injecte une balise <style> (refusée par la CSP) à chaque changement de thème.
+  const { colorScheme, setColorScheme } = useMantineColorScheme({ keepTransitions: true });
+  const theme = prefs.theme === 'organisation' ? me.appearance.theme : prefs.theme;
+  const densite = prefs.densite === 'organisation' ? me.appearance.densite : prefs.densite;
+  useEffect(() => {
+    const html = document.documentElement;
+    html.dataset.taille = prefs.taille;
+    html.dataset.densite = densite;
+    if (colorScheme !== SCHEME[theme]) setColorScheme(SCHEME[theme]);
+  }, [prefs.taille, densite, theme, colorScheme, setColorScheme]);
+  return theme;
+}
 
 export function Layout({ children }: { children: ReactNode }) {
   const me = useMe();
@@ -30,29 +60,18 @@ export function Layout({ children }: { children: ReactNode }) {
   const nav = useNavigate();
   const qc = useQueryClient();
   const live = useLive();
-  const { colorScheme, setColorScheme } = useMantineColorScheme();
-  // Apparence par défaut de l'organisation (Paramètres), tant que la personne n'a pas choisi la sienne.
-  const orgTheme = { auto: 'auto', clair: 'light', sombre: 'dark' }[me.appearance.theme] as 'auto' | 'light' | 'dark';
-  useEffect(() => {
-    let chosen = false;
-    try {
-      chosen = localStorage.getItem(THEME_CHOISI) === '1';
-    } catch {
-      /* stockage local indisponible : thème de l'organisation */
-    }
-    if (!chosen && colorScheme !== orgTheme) setColorScheme(orgTheme);
-    document.documentElement.dataset.densite = me.appearance.densite;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orgTheme, me.appearance.densite]);
   const can = useCan();
-  const items: [string, string][] = [
-    ['/', 'Accueil'],
-    ...(can('documents', 'lire') ? ([['/documents', 'Documents et liens']] as [string, string][]) : []),
-    ['/account', 'Mon compte'],
-    ...(can('parametres', 'lire') ? ([['/parametres', 'Paramètres']] as [string, string][]) : []),
-    ...(canAdminArea(can) ? ([['/admin', 'Administration']] as [string, string][]) : []),
-  ];
-  const legacy = canReadBusiness(can);
+  const { save } = usePreferences();
+  const theme = useAffichage();
+  const tablette = useMediaQuery('(min-width: 36em) and (max-width: 63.99em)');
+
+  type Item = [string, string, () => ReactNode];
+  const items: Item[] = [['/', 'Accueil', IconeAccueil]];
+  if (can('documents', 'lire')) items.push(['/documents', 'Documents et liens', IconeDocuments]);
+  items.push(['/account', 'Mon compte', IconeCompte]);
+  if (can('parametres', 'lire')) items.push(['/parametres', 'Paramètres', IconeParametres]);
+  if (canAdminArea(can)) items.push(['/admin', 'Administration', IconeAdministration]);
+  if (canReadBusiness(can)) items.push(['/mur', 'Écran mural', IconeMur]);
   const active = (to: string) => (to === '/' ? loc.pathname === '/' : loc.pathname.startsWith(to));
   const logout = async () => {
     await api('POST', '/api/auth/logout').catch(() => {});
@@ -61,38 +80,54 @@ export function Layout({ children }: { children: ReactNode }) {
     await qc.invalidateQueries({ queryKey: ME_KEY });
     nav('/login');
   };
+  const withTip = (label: string, node: ReactNode) => (
+    <Tooltip key={label} label={label} position="right" disabled={!tablette}>
+      <div>{node}</div>
+    </Tooltip>
+  );
 
   const navigation = (
     <nav aria-label="Navigation principale" className="shell-nav-inner">
       <Stack gap="2xs">
-        {items.map(([to, label]) => (
-          <NavLink key={to} component={Link} to={to} label={label} active={active(to)} onClick={close} />
-        ))}
-        {legacy && (
-          <NavLink
-            component="a"
-            href="/legacy/"
-            label="Outil de suivi (ancienne interface)"
-            description="Modules pas encore repris"
-          />
+        {items.map(([to, label, Icon]) =>
+          withTip(
+            label,
+            <NavLink
+              component={Link}
+              to={to}
+              label={<span className="nav-libelle">{label}</span>}
+              leftSection={<Icon />}
+              active={active(to)}
+              onClick={close}
+            />,
+          ),
         )}
+        {canReadBusiness(can) &&
+          withTip(
+            'Outil de suivi (ancienne interface)',
+            <NavLink
+              component="a"
+              href="/legacy/"
+              leftSection={<IconeHistorique />}
+              label={<span className="nav-libelle">Outil de suivi (ancienne interface)</span>}
+              description={<span className="nav-annexe">Modules pas encore repris</span>}
+            />,
+          )}
       </Stack>
       <Stack mt="xl" gap="2xs">
-        <Button
-          variant="subtle"
-          size="xs"
-          onClick={() => {
-            try {
-              localStorage.setItem(THEME_CHOISI, '1');
-            } catch {
-              /* stockage local indisponible : choix limité à cette page */
-            }
-            setColorScheme(colorScheme === 'dark' ? 'light' : colorScheme === 'light' ? 'auto' : 'dark');
-          }}
-        >
-          Thème : {colorScheme === 'auto' ? 'automatique' : colorScheme === 'dark' ? 'sombre' : 'clair'}
-        </Button>
-        <Text size="xs" c="dimmed" ta="center" className="app-version">
+        {withTip(
+          `Thème : ${THEME_LIBELLE[theme]}`,
+          <Button
+            variant="subtle"
+            size="xs"
+            fullWidth
+            leftSection={<IconeTheme />}
+            onClick={() => void save({ theme: THEME_SUIVANT[theme] })}
+          >
+            <span className="nav-libelle">Thème : {THEME_LIBELLE[theme]}</span>
+          </Button>,
+        )}
+        <Text size="xs" c="dimmed" ta="center" className="app-version nav-annexe">
           Version {me.version}
         </Text>
       </Stack>
@@ -104,7 +139,7 @@ export function Layout({ children }: { children: ReactNode }) {
       <header className="shell-header">
         <Group h="100%" px="md" justify="space-between" wrap="nowrap">
           <Group gap="sm" wrap="nowrap">
-            <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" aria-label="Ouvrir le menu" />
+            <Burger opened={opened} onClick={toggle} hiddenFrom="xs" size="sm" aria-label="Ouvrir le menu" />
             <Anchor component={Link} to="/" underline="never" c="inherit">
               <Group gap="xs" wrap="nowrap">
                 <span className="brand-mark" aria-hidden="true">
@@ -142,7 +177,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <aside className="shell-nav">{navigation}</aside>
         <main className="shell-main app-main">{children}</main>
       </div>
-      <Drawer opened={opened} onClose={close} title="Menu" size="xs" hiddenFrom="sm">
+      <Drawer opened={opened} onClose={close} title="Menu" size="xs" hiddenFrom="xs">
         {navigation}
       </Drawer>
     </div>

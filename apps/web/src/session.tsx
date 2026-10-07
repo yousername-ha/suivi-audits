@@ -1,8 +1,15 @@
 /* Session courante : étape d'accès, utilisateur, jeton CSRF. */
-import { BUSINESS_MODULES, type Action, type MeOut, type Module } from '@suivi/shared';
+import {
+  BUSINESS_MODULES,
+  DEFAULT_PREFERENCES,
+  type Action,
+  type MeOut,
+  type Module,
+  type Preferences,
+} from '@suivi/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createContext, useContext, type ReactNode } from 'react';
-import { get, setCsrf } from './api';
+import { api, get, setCsrf } from './api';
 
 export const ME_KEY = ['me'] as const;
 
@@ -49,3 +56,16 @@ export const canAdminArea = (can: (m: Module, a: Action) => boolean) =>
 
 /** Au moins un module métier lisible : accès à l'outil historique. */
 export const canReadBusiness = (can: (m: Module, a: Action) => boolean) => BUSINESS_MODULES.some((m) => can(m, 'lire'));
+
+/** Préférences d'affichage de la personne (enregistrées sur le serveur, communes à tous ses appareils). */
+export function usePreferences() {
+  const me = useMe();
+  const qc = useQueryClient();
+  const prefs = me.preferences ?? DEFAULT_PREFERENCES;
+  const save = async (patch: Partial<Preferences>) => {
+    const next = { ...prefs, ...patch };
+    qc.setQueryData<MeOut>(ME_KEY, (m) => (m ? { ...m, preferences: next } : m));
+    await api('PUT', '/api/account/preferences', { body: next });
+  };
+  return { prefs, save };
+}

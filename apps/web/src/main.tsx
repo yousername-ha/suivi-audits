@@ -16,6 +16,7 @@ import { AdminPage } from './pages/Admin';
 import { DocumentsPage } from './pages/Documents';
 import { HomePage } from './pages/Home';
 import { LoginPage } from './pages/Login';
+import { MurActiverPage, MurPage } from './pages/Mur';
 import { ErrorPage, NotFoundPage } from './pages/NotFound';
 import { SettingsPage } from './pages/Settings';
 import { SetupPage } from './pages/Setup';
@@ -54,6 +55,9 @@ function RequireAuth({ admin = false }: { admin?: boolean }) {
 const router = createBrowserRouter([
   { path: '/setup', element: <SetupPage />, errorElement: <ErrorPage /> },
   { path: '/login', element: <LoginPage />, errorElement: <ErrorPage /> },
+  // Écran mural : hors coquille (sans menu), accessible avec une session ou un appareil activé.
+  { path: '/mur', element: <MurPage />, errorElement: <ErrorPage /> },
+  { path: '/mur/activer', element: <MurActiverPage />, errorElement: <ErrorPage /> },
   {
     element: <RequireAuth />,
     errorElement: <ErrorPage />,

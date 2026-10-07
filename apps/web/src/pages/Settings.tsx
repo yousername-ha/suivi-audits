@@ -82,7 +82,7 @@ export function SettingsPage() {
           onChange={(v) => v && go(v as SettingsSection)}
           allowDeselect={false}
         />
-        <div className="settings-content">
+        <div className="settings-content grille-formulaire">
           <SectionLoader key={current} section={current} onDirty={setDirty} />
         </div>
       </div>
@@ -259,7 +259,7 @@ const SECTIONS: Record<SettingsSection, (p: P) => ReactNode> = {
     </Stack>
   ),
   notifications: (p) => (
-    <div className="grid-2">
+    <div className="grille-formulaire__champs">
       <Num p={p} k="echeancesJours" label="Alerte avant une échéance (jours)" min={0} max={365} />
       <Num p={p} k="conventionJours" label="Alerte avant l’échéance d’une convention (jours)" min={0} max={365} />
       <Switch
@@ -289,7 +289,7 @@ const SECTIONS: Record<SettingsSection, (p: P) => ReactNode> = {
       ) : (
         <StatusChip etat="succes">Prochain test de restauration : {str(p.info.prochainTest)}</StatusChip>
       )}
-      <div className="grid-2">
+      <div className="grille-formulaire__champs">
         <Text2 p={p} k="emplacement" label="Emplacement des sauvegardes sur le serveur" />
         <Text2 p={p} k="dernierTestRestauration" label="Date du dernier test de restauration" type="date" />
         <Num p={p} k="frequenceTestMois" label="Fréquence des tests de restauration (mois)" min={1} max={36} />
@@ -302,7 +302,7 @@ const SECTIONS: Record<SettingsSection, (p: P) => ReactNode> = {
   ),
   securite: (p) => (
     <Stack>
-      <div className="grid-2">
+      <div className="grille-formulaire__champs">
         <Num
           p={p}
           k="passwordMinLength"
@@ -341,7 +341,7 @@ function General({ p }: { p: P }) {
   };
   return (
     <Stack>
-      <div className="grid-2">
+      <div className="grille-formulaire__champs">
         <Text2 p={p} k="appName" label="Nom de l’application" />
         <Text2 p={p} k="orgName" label="Organisation" />
         <Text2 p={p} k="rssi" label="RSSI (nom ou fonction)" />
@@ -430,7 +430,7 @@ function Cycle({ p }: { p: P }) {
         disabled={p.ro}
       />
       {years.length > 0 && (
-        <div className="grid-2">
+        <div className="grille-formulaire__champs">
           {years.map((y) => (
             <TextInput
               key={y}
@@ -443,7 +443,7 @@ function Cycle({ p }: { p: P }) {
           ))}
         </div>
       )}
-      <div className="grid-2">
+      <div className="grille-formulaire__champs">
         <Select
           label="Année du prochain audit"
           data={years.map(String)}
@@ -486,7 +486,7 @@ function Referentiels({ p }: { p: P }) {
           ))}
         </Table.Tbody>
       </Table>
-      <div className="grid-2">
+      <div className="grille-formulaire__champs">
         <Select
           label="Référentiel complémentaire actif"
           data={comp.map((c) => c.nom)}

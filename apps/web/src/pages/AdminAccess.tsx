@@ -36,7 +36,9 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { api, ApiError, download, errorMessage, get } from '../api';
 import { ConfirmButton, ErrorAlert, fmtDate, SecretModal } from '../components/common';
+import { useColonnes, type Colonne } from '../components/Colonnes';
 import { useCan, useMe } from '../session';
+import { DataTable } from '@suivi/ui';
 
 const useRoles = () => useQuery({ queryKey: ['admin', 'roles'], queryFn: () => get<RoleOut[]>('/api/admin/roles') });
 const useGroups = () =>
@@ -73,7 +75,17 @@ interface UserForm {
   disabled: boolean;
 }
 
+const COLONNES_COMPTES: Colonne[] = [
+  { cle: 'compte', libelle: 'Compte', priorite: 1, fixe: true },
+  { cle: 'roles', libelle: 'Rôles', priorite: 1 },
+  { cle: 'groupes', libelle: 'Groupes', priorite: 2 },
+  { cle: 'etat', libelle: 'État', priorite: 1 },
+  { cle: 'connexion', libelle: 'Dernière connexion', priorite: 3 },
+  { cle: 'actions', libelle: 'Actions', priorite: 1, fixe: true },
+];
+
 export function UsersPanel() {
+  const { cls, selecteur } = useColonnes('comptes', COLONNES_COMPTES);
   const me = useMe();
   const can = useCan();
   const q = useUsers();
@@ -86,7 +98,10 @@ export function UsersPanel() {
   return (
     <Stack>
       <Group justify="space-between">
-        <Group>{admin && <Button onClick={() => setForm({ user: null })}>Nouveau compte</Button>}</Group>
+        <Group>
+          {admin && <Button onClick={() => setForm({ user: null })}>Nouveau compte</Button>}
+          {selecteur}
+        </Group>
         {can('administration', 'exporter') && (
           <Group gap="xs">
             <Text size="sm" c="dimmed">
@@ -102,152 +117,150 @@ export function UsersPanel() {
         )}
       </Group>
       <ErrorAlert error={q.error} />
-      <Card withBorder p={0}>
-        <div className="table-wrap">
-          <Table>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Compte</Table.Th>
-                <Table.Th>Rôles</Table.Th>
-                <Table.Th>Groupes</Table.Th>
-                <Table.Th>État</Table.Th>
-                <Table.Th>Dernière connexion</Table.Th>
-                <Table.Th>Actions</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {(q.data ?? []).map((u) => {
-                const locked = !!(u.locked_until && new Date(u.locked_until) > new Date());
-                return (
-                  <Table.Tr key={u.id}>
-                    <Table.Td>
-                      <Text fw={600}>{u.display_name}</Text>
-                      <Text size="xs" c="dimmed">
-                        {u.username} {u.email && `· ${u.email}`}
-                      </Text>
-                    </Table.Td>
-                    <Table.Td>
-                      <Group gap="2xs">
-                        {u.roles.map((r) => (
-                          <Badge key={r.id} variant="light">
-                            {r.name}
-                            {r.modules ? ` (${r.modules.length} module${r.modules.length > 1 ? 's' : ''})` : ''}
-                          </Badge>
-                        ))}
-                        {!u.roles.length && (
-                          <Text size="xs" c="dimmed">
-                            aucun rôle direct
-                          </Text>
-                        )}
-                      </Group>
-                    </Table.Td>
-                    <Table.Td>
-                      <Group gap="2xs">
-                        {u.groups.map((g) => (
-                          <Badge key={g.id} variant="outline">
-                            {g.name}
-                          </Badge>
-                        ))}
-                      </Group>
-                    </Table.Td>
-                    <Table.Td>
-                      <Group gap="2xs">
-                        {u.disabled && <Badge color="gray">désactivé</Badge>}
-                        {u.expires_at && (
-                          <Badge color={isExpired(u.expires_at) ? 'red' : 'violet'} variant="light">
-                            {isExpired(u.expires_at) ? 'expiré' : 'expire le'} {u.expires_at.slice(0, 10)}
-                          </Badge>
-                        )}
-                        {locked && <Badge color="red">verrouillé</Badge>}
-                        {!u.totp_enabled && <Badge color="orange">TOTP à configurer</Badge>}
-                        {u.must_change_password && <Badge color="yellow">mot de passe temporaire</Badge>}
-                        {u.sessions > 0 && <Badge variant="light">{u.sessions} session(s)</Badge>}
-                      </Group>
-                    </Table.Td>
-                    <Table.Td className="nowrap">{fmtDate(u.last_login_at)}</Table.Td>
-                    <Table.Td>
-                      <Group gap="2xs" wrap="nowrap">
-                        <Button size="compact-sm" variant="default" onClick={() => setRightsOf(u)}>
-                          Droits effectifs
-                        </Button>
-                        {admin && (
-                          <>
-                            <Button size="compact-sm" variant="default" onClick={() => setForm({ user: u })}>
-                              Modifier
-                            </Button>
-                            <ConfirmButton
-                              size="compact-sm"
-                              variant="light"
-                              color="orange"
-                              message={`Générer un mot de passe temporaire pour ${u.username} ? Ses sessions seront fermées.`}
-                              onConfirm={() =>
-                                act(async () => {
-                                  const r = await api<{ temporaryPassword: string }>(
-                                    'POST',
-                                    `/api/admin/users/${u.id}/reset-password`,
-                                  );
-                                  setSecret({
-                                    title: `Mot de passe temporaire de ${u.username}`,
-                                    value: r.temporaryPassword,
-                                  });
-                                })
-                              }
-                            >
-                              Mot de passe
-                            </ConfirmButton>
-                            <ConfirmButton
-                              size="compact-sm"
-                              variant="light"
-                              color="orange"
-                              message={`Réinitialiser la double authentification de ${u.username} (téléphone perdu) ? Il devra la reconfigurer.`}
-                              onConfirm={() =>
-                                act(
-                                  () => api('POST', `/api/admin/users/${u.id}/reset-mfa`),
-                                  'Double authentification réinitialisée.',
-                                )
-                              }
-                            >
-                              TOTP
-                            </ConfirmButton>
-                            {locked && (
-                              <Button
-                                size="compact-sm"
-                                variant="light"
-                                onClick={() =>
-                                  act(
-                                    () =>
-                                      api('PATCH', `/api/admin/users/${u.id}`, {
-                                        body: { unlock: true },
-                                        ifMatch: u.version,
-                                      }),
-                                    'Compte déverrouillé.',
-                                  )
-                                }
-                              >
-                                Déverrouiller
-                              </Button>
-                            )}
-                          </>
-                        )}
-                        {can('administration', 'supprimer') && u.id !== me.user?.id && (
+      <DataTable label="Comptes">
+        <Table>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Compte</Table.Th>
+              <Table.Th className={cls('roles')}>Rôles</Table.Th>
+              <Table.Th className={cls('groupes')}>Groupes</Table.Th>
+              <Table.Th className={cls('etat')}>État</Table.Th>
+              <Table.Th className={cls('connexion')}>Dernière connexion</Table.Th>
+              <Table.Th>Actions</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {(q.data ?? []).map((u) => {
+              const locked = !!(u.locked_until && new Date(u.locked_until) > new Date());
+              return (
+                <Table.Tr key={u.id}>
+                  <Table.Td>
+                    <Text fw={600}>{u.display_name}</Text>
+                    <Text size="xs" c="dimmed">
+                      {u.username} {u.email && `· ${u.email}`}
+                    </Text>
+                  </Table.Td>
+                  <Table.Td className={cls('roles')}>
+                    <Group gap="2xs">
+                      {u.roles.map((r) => (
+                        <Badge key={r.id} variant="light">
+                          {r.name}
+                          {r.modules ? ` (${r.modules.length} module${r.modules.length > 1 ? 's' : ''})` : ''}
+                        </Badge>
+                      ))}
+                      {!u.roles.length && (
+                        <Text size="xs" c="dimmed">
+                          aucun rôle direct
+                        </Text>
+                      )}
+                    </Group>
+                  </Table.Td>
+                  <Table.Td className={cls('groupes')}>
+                    <Group gap="2xs">
+                      {u.groups.map((g) => (
+                        <Badge key={g.id} variant="outline">
+                          {g.name}
+                        </Badge>
+                      ))}
+                    </Group>
+                  </Table.Td>
+                  <Table.Td className={cls('etat')}>
+                    <Group gap="2xs">
+                      {u.disabled && <Badge color="gray">désactivé</Badge>}
+                      {u.expires_at && (
+                        <Badge color={isExpired(u.expires_at) ? 'red' : 'violet'} variant="light">
+                          {isExpired(u.expires_at) ? 'expiré' : 'expire le'} {u.expires_at.slice(0, 10)}
+                        </Badge>
+                      )}
+                      {locked && <Badge color="red">verrouillé</Badge>}
+                      {!u.totp_enabled && <Badge color="orange">TOTP à configurer</Badge>}
+                      {u.must_change_password && <Badge color="yellow">mot de passe temporaire</Badge>}
+                      {u.sessions > 0 && <Badge variant="light">{u.sessions} session(s)</Badge>}
+                    </Group>
+                  </Table.Td>
+                  <Table.Td className={`${cls('connexion') ?? ''} nowrap`}>{fmtDate(u.last_login_at)}</Table.Td>
+                  <Table.Td>
+                    <Group gap="2xs" wrap="nowrap">
+                      <Button size="compact-sm" variant="default" onClick={() => setRightsOf(u)}>
+                        Droits effectifs
+                      </Button>
+                      {admin && (
+                        <>
+                          <Button size="compact-sm" variant="default" onClick={() => setForm({ user: u })}>
+                            Modifier
+                          </Button>
                           <ConfirmButton
                             size="compact-sm"
                             variant="light"
-                            message={`Supprimer définitivement le compte ${u.username} ?`}
-                            onConfirm={() => act(() => api('DELETE', `/api/admin/users/${u.id}`), 'Compte supprimé.')}
+                            color="orange"
+                            message={`Générer un mot de passe temporaire pour ${u.username} ? Ses sessions seront fermées.`}
+                            onConfirm={() =>
+                              act(async () => {
+                                const r = await api<{ temporaryPassword: string }>(
+                                  'POST',
+                                  `/api/admin/users/${u.id}/reset-password`,
+                                );
+                                setSecret({
+                                  title: `Mot de passe temporaire de ${u.username}`,
+                                  value: r.temporaryPassword,
+                                });
+                              })
+                            }
                           >
-                            Supprimer
+                            Mot de passe
                           </ConfirmButton>
-                        )}
-                      </Group>
-                    </Table.Td>
-                  </Table.Tr>
-                );
-              })}
-            </Table.Tbody>
-          </Table>
-        </div>
-      </Card>
+                          <ConfirmButton
+                            size="compact-sm"
+                            variant="light"
+                            color="orange"
+                            message={`Réinitialiser la double authentification de ${u.username} (téléphone perdu) ? Il devra la reconfigurer.`}
+                            onConfirm={() =>
+                              act(
+                                () => api('POST', `/api/admin/users/${u.id}/reset-mfa`),
+                                'Double authentification réinitialisée.',
+                              )
+                            }
+                          >
+                            TOTP
+                          </ConfirmButton>
+                          {locked && (
+                            <Button
+                              size="compact-sm"
+                              variant="light"
+                              onClick={() =>
+                                act(
+                                  () =>
+                                    api('PATCH', `/api/admin/users/${u.id}`, {
+                                      body: { unlock: true },
+                                      ifMatch: u.version,
+                                    }),
+                                  'Compte déverrouillé.',
+                                )
+                              }
+                            >
+                              Déverrouiller
+                            </Button>
+                          )}
+                        </>
+                      )}
+                      {can('administration', 'supprimer') && u.id !== me.user?.id && (
+                        <ConfirmButton
+                          size="compact-sm"
+                          variant="light"
+                          message={`Supprimer définitivement le compte ${u.username} ?`}
+                          onConfirm={() => act(() => api('DELETE', `/api/admin/users/${u.id}`), 'Compte supprimé.')}
+                        >
+                          Supprimer
+                        </ConfirmButton>
+                      )}
+                    </Group>
+                  </Table.Td>
+                </Table.Tr>
+              );
+            })}
+          </Table.Tbody>
+        </Table>
+      </DataTable>
 
       <Modal
         opened={!!form}

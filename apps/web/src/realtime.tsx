@@ -16,8 +16,11 @@ const KEYS: Record<string, string[][]> = {
     ['admin', 'sessions'],
     ['account', 'sessions'],
   ],
-  settings: [['setup']],
-  legacy_state: [['refs'], ['admin', 'versions'], ['admin', 'info']],
+  settings: [['setup'], ['synthese'], ['settings']],
+  legacy_state: [['refs'], ['admin', 'versions'], ['admin', 'info'], ['synthese']],
+  wall_screens: [['admin', 'murs']],
+  groups: [['admin']],
+  roles: [['admin']],
   import_batches: [['admin', 'imports']],
 };
 

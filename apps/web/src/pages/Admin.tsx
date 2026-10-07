@@ -11,6 +11,7 @@ import { usePresence } from '../realtime';
 import { useCan } from '../session';
 import { GroupsPanel, RolesPanel, UsersPanel } from './AdminAccess';
 import { ImportPanel } from './AdminImport';
+import { MursPanel } from './AdminMurs';
 
 const TABS = [
   ['users', 'Utilisateurs', 'administration'],
@@ -19,6 +20,7 @@ const TABS = [
   ['sessions', 'Sessions', 'administration'],
   ['audit', 'Journal', 'administration'],
   ['versions', 'Versions', 'administration'],
+  ['murs', 'Écrans muraux', 'administration'],
   ['import', 'Import des données legacy', 'import_export'],
   ['system', 'Système', 'administration'],
 ] as const;
@@ -61,6 +63,9 @@ export function AdminPage() {
         </Tabs.Panel>
         <Tabs.Panel value="versions" pt="md">
           <Versions />
+        </Tabs.Panel>
+        <Tabs.Panel value="murs" pt="md">
+          <MursPanel />
         </Tabs.Panel>
         <Tabs.Panel value="import" pt="md">
           <ImportPanel />
