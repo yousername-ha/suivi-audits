@@ -276,3 +276,19 @@ describe('OpenAPI', () => {
     expect(doc.paths['/api/auth/login'].post.requestBody).toBeTruthy();
   });
 });
+
+describe('limite globale de débit', () => {
+  it('au-delà de RATE_LIMIT_PER_MINUTE requêtes par minute et par IP : 429, sans lecture de session', async () => {
+    const t2 = await createTestApp({ RATE_LIMIT_PER_MINUTE: '5' });
+    try {
+      const codes: number[] = [];
+      for (let i = 0; i < 7; i++) codes.push((await t2.app.inject({ method: 'GET', url: '/api/auth/me' })).statusCode);
+      expect(codes.slice(0, 5).every((c) => c === 200)).toBe(true);
+      const last = await t2.app.inject({ method: 'GET', url: '/api/auth/me' });
+      expect(last.statusCode).toBe(429);
+      expect(last.headers['retry-after']).toBe('60');
+    } finally {
+      await t2.close();
+    }
+  });
+});

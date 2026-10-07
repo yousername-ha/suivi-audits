@@ -43,6 +43,8 @@ export function loadConfig(env: Env = process.env) {
     mfaRequired: bool(env.MFA_REQUIRED, true),
     passwordMinLength: int(env.PASSWORD_MIN_LENGTH, 12),
     lockout: { threshold: int(env.LOCKOUT_THRESHOLD, 5), minutes: int(env.LOCKOUT_MINUTES, 15) },
+    /** Requêtes par minute et par adresse IP, toutes routes confondues (protection contre l'épuisement). */
+    rateLimitPerMinute: int(env.RATE_LIMIT_PER_MINUTE, 1200),
     maxStateMb: int(env.MAX_STATE_MB, 20),
     maxUploadMb: int(env.MAX_UPLOAD_MB, 50),
     maxImportMb: int(env.MAX_IMPORT_MB, 50),

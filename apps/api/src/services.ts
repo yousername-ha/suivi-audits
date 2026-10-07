@@ -22,6 +22,7 @@ export function createServices(cfg: Config, log: Logger) {
     presence: new Presence(db, bus),
     legacy: new LegacyStore(cfg, db),
     limits: {
+      global: limiter(cfg.rateLimitPerMinute, 60e3),
       loginByIp: limiter(20, 15 * 60e3),
       loginByUser: limiter(10, 15 * 60e3),
       mfaBySession: limiter(8, 10 * 60e3),

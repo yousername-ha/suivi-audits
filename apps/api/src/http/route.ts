@@ -62,6 +62,11 @@ export function registerRoutes(app: FastifyInstance, svc: Services, defs: RouteD
       url: d.url,
       ...(d.bodyLimit ? { bodyLimit: typeof d.bodyLimit === 'function' ? d.bodyLimit(svc.cfg) : d.bodyLimit } : {}),
       handler: async (req, reply) => {
+        // Limite globale par adresse IP, avant toute lecture en base (session, droits) : toutes les routes passent ici.
+        if (!svc.limits.global(req.ip)) {
+          reply.header('Retry-After', '60');
+          throw new HttpError(429, 'Trop de requêtes. Réessayez dans une minute.');
+        }
         const s = await svc.auth.load(req);
         if (UNSAFE.has(req.method)) {
           if (!sameOrigin(req, svc.cfg)) throw new HttpError(403, 'Origine refusée.');
