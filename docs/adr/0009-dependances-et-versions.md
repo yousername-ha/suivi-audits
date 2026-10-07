@@ -22,7 +22,7 @@ Règle du projet : aucune nouvelle dépendance sans justification. La v2 n'avait
 
 Outils de développement : TypeScript, ESLint et typescript-eslint, Prettier, Vitest, Playwright, tsx, Vite et `@vitejs/plugin-react`, types Node, pg et React.
 
-Il n'y a **aucune** extension Fastify (cookies, CORS, swagger, multipart) : leur rôle est assuré par quelques fonctions du projet, testées.
+Il n'y a **aucune** extension Fastify (cookies, CORS, swagger, multipart) : leur rôle est assuré par quelques fonctions du projet, testées. De même, l'export Excel (revue des accès) est produit sans bibliothèque (`apps/api/src/export/tabular.ts`).
 
 ## Décision : versions
 Le projet utilise les **dernières versions des lignes majeures éprouvées** plutôt que les toutes dernières majeures, sorties récemment :

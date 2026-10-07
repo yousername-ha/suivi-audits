@@ -491,17 +491,35 @@ Le fichier `racine-suivi-audits.crt` est alors dans votre dossier **Télécharge
 
 ## 9. Créer les comptes des utilisateurs
 
-1. Dans l'application, ouvrez **Administration** dans le menu, puis l'onglet **Comptes**, et cliquez sur **Nouveau compte**.
-2. Saisissez l'**Identifiant** et le **Nom affiché**, puis choisissez le **Rôle** :
+Les droits se gèrent dans **Administration**, onglets **Utilisateurs**, **Groupes** et **Rôles**. Un compte reçoit des **rôles**, soit directement, soit par les **groupes** dont il est membre. Ses droits sont la somme des deux.
 
-   | Rôle | Pour qui | Droits |
-   |---|---|---|
-   | **Administrateur** | 2 personnes au plus | Tout, plus les comptes, les sessions, le journal, les versions, l'import |
-   | **Lecture et écriture** | RSSI, RSSI adjoint | Consulter et modifier le suivi, les documents et les liens |
-   | **Lecture seule** | Alternant, auditeur | Consulter et télécharger, sans rien modifier |
+**9.1 Les rôles prédéfinis** (ni modifiables ni supprimables) :
 
-3. Cliquez sur **Créer**. Un **mot de passe temporaire** s'affiche **une seule fois**. Transmettez-le à la personne par un canal séparé (de vive voix, SMS), **jamais dans le même message que l'adresse du site**.
-4. À sa première connexion, la personne choisit son propre mot de passe, puis active sa double authentification.
+| Rôle | Pour qui | Droits |
+|---|---|---|
+| **Administrateur** | 2 personnes au plus | Tout, y compris les comptes, groupes, rôles, sessions et le journal |
+| **RSSI** | RSSI, RSSI adjoint | Tout, sauf l'administration technique (comptes, groupes, rôles, sessions, journal) |
+| **Contributeur** | Pilotes de processus, référents | Consulter et modifier les modules métier, les documents et les liens (pas de suppression) |
+| **Lecteur** | Alternant, direction | Consulter et télécharger, sans rien modifier |
+| **Auditeur externe** | Auditeur de certification | Consulter les seuls modules choisis ; **date d'expiration obligatoire** |
+
+Pour un besoin particulier, onglet **Rôles** : **Dupliquer** un rôle proche, puis cochez ou décochez les cases de sa matrice (modules × actions : lire, créer et modifier, supprimer, exporter, administrer) et cliquez sur **Enregistrer la matrice**.
+
+**9.2 Créer un compte :**
+1. Onglet **Utilisateurs**, bouton **Nouveau compte**.
+2. Saisissez l'**Identifiant** et le **Nom affiché**, puis choisissez un ou plusieurs **Rôles** et, si besoin, des **Groupes**.
+3. Pour un prestataire ou un auditeur, renseignez la **Date d'expiration du compte** : le compte est désactivé automatiquement ce jour-là. Pour le rôle **Auditeur externe**, choisissez aussi les **modules ouverts** (lecture seule).
+4. Cliquez sur **Créer**. Un **mot de passe temporaire** s'affiche **une seule fois**. Transmettez-le à la personne par un canal séparé (de vive voix, SMS), **jamais dans le même message que l'adresse du site**.
+5. À sa première connexion, la personne choisit son propre mot de passe, puis active sa double authentification.
+
+**9.3 Groupes** (onglet **Groupes**) : un groupe porte un ou plusieurs rôles, accordés à tous ses membres. Exemple : un groupe « Pilotes de processus » avec le rôle Contributeur.
+
+**9.4 Garde-fous**, appliqués par le serveur :
+- il reste toujours au moins un administrateur actif **sans date d'expiration** ;
+- personne ne peut modifier ses propres droits : demandez à un autre administrateur ;
+- toute modification de droits est tracée dans le **Journal** (avant et après) et ferme les sessions des personnes concernées.
+
+**9.5 Revue des accès** (ISO 27001, mesure A.5.18) : onglet **Utilisateurs**, boutons **Excel** ou **CSV** de la revue des accès. Le fichier liste chaque compte, ses groupes, ses rôles, ses droits effectifs, sa dernière connexion et son expiration. Le bouton **Droits effectifs** d'un compte montre l'origine de chaque droit (rôle direct ou groupe). Faites cette revue au moins une fois par an, et archivez le fichier.
 
 <!-- ci: exec: NODE_EXTRA_CA_CERTS=/opt/suivi-audits/racine-suivi-audits.crt node "$GITHUB_WORKSPACE/scripts/ci/guide-api.mjs" compte https://<nom_dns> -->
 
@@ -712,7 +730,7 @@ sudo docker compose logs --tail 100 init db app web
 
 Si vous demandez de l'aide, joignez ces deux sorties. Elles ne contiennent aucun mot de passe, mais **elles peuvent contenir le jeton d'installation** s'il n'a pas encore été utilisé : dans ce cas, générez-en un nouveau après (étape 8.1).
 
-**Commandes d'exploitation** : `sudo docker compose exec app suivi help` les liste toutes. `sudo docker compose exec app suivi users` affiche les comptes, leur rôle et leur état.
+**Commandes d'exploitation** : `sudo docker compose exec app suivi help` les liste toutes. `sudo docker compose exec app suivi users` affiche les comptes, leurs rôles directs, leur état et leur date d'expiration.
 
 | Symptôme | Cause probable | Solution |
 |---|---|---|
@@ -732,9 +750,12 @@ Si vous demandez de l'aide, joignez ces deux sorties. Elles ne contiennent aucun
 | Code de double authentification toujours refusé | Heure du téléphone ou du serveur décalée | Serveur : étape 2.3. Téléphone : régler la date et l'heure en mode automatique |
 | Téléphone perdu ou changé | — | `sudo docker compose exec app suivi reset-mfa <identifiant>`. La personne reconfigure sa double authentification à la connexion suivante |
 | Compte verrouillé après plusieurs erreurs | Protection contre les attaques par essais successifs | Attendre 15 minutes, ou `sudo docker compose exec app suivi unlock <identifiant>` |
-| Mot de passe oublié | — | **Administration**, **Comptes**, bouton **Mot de passe** sur la ligne du compte (affiche un mot de passe temporaire). Ou : `sudo docker compose exec app suivi reset-password <identifiant>` (affiche un mot de passe temporaire) |
+| Mot de passe oublié | — | **Administration**, **Utilisateurs**, bouton **Mot de passe** sur la ligne du compte (affiche un mot de passe temporaire). Ou : `sudo docker compose exec app suivi reset-password <identifiant>` (affiche un mot de passe temporaire) |
 | Plus aucun administrateur ne peut se connecter | Téléphones perdus, départ… | `sudo docker compose exec app setup-token --recovery`, puis `https://<nom_dns>/setup` pour créer un administrateur de secours |
 | « Module géré dans la nouvelle interface » dans l'ancien outil | Ce module a été repris par la nouvelle interface | Normal : modifier ces données dans la nouvelle interface |
+| « Droits insuffisants : vous ne pouvez pas … » | Le rôle de la personne ne comprend pas cette action | **Administration**, **Utilisateurs**, bouton **Droits effectifs** du compte, puis ajouter le rôle ou le groupe adapté |
+| Un compte n'arrive plus à se connecter à une date précise | Date d'expiration atteinte : compte désactivé automatiquement | **Administration**, **Utilisateurs**, **Modifier** : nouvelle date d'expiration et état « Actif » |
+| « Impossible : il doit rester au moins un administrateur actif » | Garde-fou : la modification retirerait le dernier administrateur permanent | Donner d'abord le rôle Administrateur (sans date d'expiration) à une autre personne |
 
 ---
 

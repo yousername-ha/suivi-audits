@@ -31,7 +31,7 @@ Ce document décrit l'architecture cible et l'état livré en **phase 0** (fonda
 |---|---|---|
 | `init` | `ghcr.io/yousername-ha/suivi-audits-api` | Génère les secrets manquants (volume `secrets`), fixe leurs droits, remet au frontal la propriété de ses volumes. S'arrête. |
 | `db` | `postgres:17-alpine` | Base unique. Aucun port publié. |
-| `app` | `ghcr.io/yousername-ha/suivi-audits-api` | API, outil historique sous `/legacy`, commandes d'exploitation (`setup-token`, `suivi`). |
+| `app` | `ghcr.io/yousername-ha/suivi-audits-api` | API, outil historique sous `/legacy`, commandes d'exploitation (`setup-token`, `suivi`). Désactive aussi les comptes arrivés à expiration. |
 | `web` | `ghcr.io/yousername-ha/suivi-audits-web` | Caddy : TLS, en-têtes de sécurité, interface compilée, reverse proxy vers `app`. Seul service exposé. |
 | `clamav` | `clamav/clamav` | Facultatif (`--profile antivirus`). |
 
@@ -53,7 +53,13 @@ docs/             architecture, feuille de route, ADR, installation, format lega
 
 ## 3. API
 
-- **Déclaration unique des routes** (`apps/api/src/http/route.ts`). Chaque route déclare son niveau d'accès (`public`, `session`, `any`, `rw`, `admin`), son exigence CSRF, ses schémas zod (corps, paramètres, réponse) et sa limite de taille. Le même point applique les contrôles et génère l'OpenAPI 3.1 (`/api/openapi.json`, publié en artefact de CI).
+- **Déclaration unique des routes** (`apps/api/src/http/route.ts`). Chaque route déclare :
+  - son accès : `public`, `session`, `auth` (compte personnel), `metier` (au moins un module métier lisible) ou une **permission `module:action`** ([ADR 0010](adr/0010-droits-rbac.md)) ;
+  - son exigence CSRF ;
+  - ses schémas zod (corps, paramètres, réponse) ;
+  - sa limite de taille.
+
+  Le même point applique les contrôles (`requirePermission`) et génère l'OpenAPI 3.1 (`/api/openapi.json`, publié en artefact de CI).
 - **Journaux** pino au format JSON (adaptés à un SIEM), avec masquage des cookies, des mots de passe, des codes et des jetons.
 - **Commandes d'exploitation** : `docker compose exec app suivi <commande>` (`users`, `setup-token`, `reset-password`, `reset-mfa`, `unlock`, `disable`, `enable`, `sessions-purge`, `migrate`), et le raccourci `docker compose exec app setup-token`.
 
@@ -65,7 +71,8 @@ Routes livrées en phase 0 :
 | Authentification | `GET /api/auth/me`, `POST /api/auth/login`, `/api/auth/mfa`, `/api/auth/logout` |
 | Compte | mot de passe, enrôlement et désactivation TOTP, sessions |
 | Documents et liens | `/api/documents` (versions, téléchargement `/d/…`), `/api/links` ; `PATCH` avec `If-Match` |
-| Administration | comptes, sessions, journal d'audit, versions de l'état, système |
+| Droits | comptes, groupes, rôles (matrice), droits effectifs avec leur origine, revue des accès CSV et Excel |
+| Administration | sessions, journal d'audit, versions de l'état, système |
 | Import legacy | simulation, application, historique, fichier source, annulation, export au schéma 15 |
 | Temps réel | `GET /api/events` (SSE), `POST /api/presence` |
 | Outil historique | `/legacy/`, `/api/legacy/state`, `/api/legacy/modules`, `/api/refs` |
@@ -78,6 +85,7 @@ Routes livrées en phase 0 :
   - `import_batches` : traçabilité des imports (fichier source chiffré, rapport, états avant et après, annulation) ;
   - sur les tables métier : `version` (concurrence), `legacy_id`, `import_batch_id` et `extra` (champs legacy non repris, conservés) ;
   - les déclencheurs `suivi_notify()` (temps réel).
+- `003_droits.sql` crée les rôles, les groupes et les attributions (`roles`, `groups`, `group_roles`, `user_groups`, `user_roles` avec portée), ajoute l'expiration des comptes et reprend les rôles v2 ([ADR 0010](adr/0010-droits-rbac.md)).
 - Le **journal d'audit** est en ajout seul : un déclencheur refuse `UPDATE` et `DELETE`.
 - Les données de l'outil historique vivent dans `app_state.data` (document JSON versionné, historique dans `state_history`) jusqu'à la reprise de chaque module en tables normalisées (phases 1 à 3, [ADR 0007](adr/0007-transition-legacy.md)).
 
@@ -95,7 +103,7 @@ Routes livrées en phase 0 :
 | Prise de contrôle à l'installation | Pas de mot de passe par défaut : **jeton d'installation** à usage unique (24 h, ≈ 99 bits, seule son empreinte est stockée), émis au démarrage ou par `docker compose exec app setup-token` (accès au serveur requis) |
 | Vol de session | Cookie `__Host-suivi_sid` (`Secure`, `HttpOnly`, `SameSite=Strict`, `Path=/`), identifiant aléatoire dont seule l'empreinte est stockée, expiration d'inactivité (30 min) et absolue (10 h), rotation à l'authentification, révocation par l'utilisateur ou l'administrateur |
 | CSRF | Jeton CSRF lié à la session (`X-CSRF-Token`) **et** contrôle d'origine (`Origin`, `Referer`, `Sec-Fetch-Site`) sur toute requête modifiante |
-| Élévation de privilèges | Rôles `admin`, `rw`, `ro` appliqués par le serveur à chaque route (déclaration obligatoire, testée). Le flux temps réel est filtré par rôle |
+| Élévation de privilèges | Permissions `module:action` exigées par le serveur sur chaque route, relues à chaque requête. Le test `rbac.test.ts` vérifie chaque route contre la matrice. Rôles prédéfinis immuables (déclencheur). Il reste toujours un administrateur permanent. Personne ne modifie ses propres droits. Toute modification est journalisée avant/après et coupe les sessions concernées. Comptes à expiration désactivés automatiquement. Temps réel et outil historique filtrés par module |
 | Injection de script (XSS) | CSP stricte sur l'interface : `default-src 'self'; script-src 'self'; style-src 'self'`, aucun script ni style en ligne (vérifié par Playwright). Fichiers téléchargés servis avec `Content-Disposition: attachment`, `nosniff` et une CSP `sandbox`. L'outil historique a sa propre CSP, sans origine externe |
 | Fichiers malveillants | Liste blanche d'extensions et de types, vérification des signatures (« magic bytes »), limite de taille, analyse ClamAV facultative (obligatoire si `CLAMAV_REQUIRED=true`) |
 | Fuite de documents | Chiffrement AES-256-GCM par document, avec une clé dérivée de la clé maître (volume `secrets`, jamais en base). Données associées liées à l'identifiant du document |
