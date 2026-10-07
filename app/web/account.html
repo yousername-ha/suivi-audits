@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mon compte — Suivi des audits SMSI</title>
+<link rel="stylesheet" href="/assets/app.css">
+<script src="/assets/common.js" defer></script>
+<script src="/assets/qrcode.js" defer></script>
+<script src="/assets/account.js" defer></script>
+</head>
+<body>
+<main class="wrap">
+  <div class="head"><div><h1>Mon compte</h1><p id="who"></p></div></div>
+  <div class="stack">
+    <section class="card">
+      <h2>Mot de passe</h2>
+      <p id="pwInfo"></p>
+      <form id="f-pw" class="grid3" autocomplete="on">
+        <input type="text" name="username" autocomplete="username" hidden>
+        <label class="fld">Mot de passe actuel<input name="current" type="password" autocomplete="current-password" required></label>
+        <label class="fld">Nouveau mot de passe<input name="next" type="password" autocomplete="new-password" required></label>
+        <label class="fld">Confirmation<input name="confirm" type="password" autocomplete="new-password" required></label>
+        <div class="alert err full" hidden></div>
+        <div class="full"><button class="btn primary" type="submit">Changer le mot de passe</button></div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Double authentification</h2>
+      <p id="mfaInfo"></p>
+      <div class="row"><button class="btn" id="mfaRenew" type="button">Changer d'appareil</button><button class="btn danger" id="mfaOff" type="button" hidden>Désactiver</button></div>
+      <div id="mfaEnroll" hidden class="stack">
+        <div class="grid2">
+          <div class="qr" id="qr"></div>
+          <form id="f-mfa" class="stack" autocomplete="off">
+            <p class="muted small">Scannez le QR code avec la nouvelle application, puis saisissez le code affiché. L'ancien appareil cessera de fonctionner.</p>
+            <div class="secret" id="totpSecret"></div>
+            <label class="fld">Code de vérification<input name="code" class="otp" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" required></label>
+            <div class="alert err" hidden></div>
+            <div class="row"><button class="btn primary" type="submit">Activer ce nouvel appareil</button><button class="btn ghost" type="button" id="mfaCancel">Annuler</button></div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="row"><h2>Sessions ouvertes</h2><button class="btn sm right" id="revokeOthers" type="button">Fermer les autres sessions</button></div>
+      <p>Une session expire après une période d'inactivité ou une durée maximale.</p>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Ouverte le</th><th>Dernière activité</th><th>Adresse IP</th><th class="hide-sm">Navigateur</th></tr></thead><tbody id="sessions"></tbody></table></div>
+    </section>
+  </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Documents et liens — Suivi des audits SMSI</title>
+<link rel="stylesheet" href="/assets/app.css">
+<script src="/assets/common.js" defer></script>
+<script src="/assets/documents.js" defer></script>
+</head>
+<body>
+<main class="wrap">
+  <div class="head">
+    <div><h1>Documents et liens</h1><p>Preuves, procédures, rapports et liens rattachés aux mesures, écarts, processus et fournisseurs.</p></div>
+    <div class="row"><button class="btn" id="addLink" type="button" data-rw>Ajouter un lien</button><button class="btn primary" id="addDoc" type="button" data-rw>Déposer des documents</button></div>
+  </div>
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" data-tab="docs" aria-selected="true">Documents<span class="n" id="nDocs"></span></button>
+    <button class="tab" role="tab" data-tab="links">Liens<span class="n" id="nLinks"></span></button>
+    <button class="tab" role="tab" data-tab="trash" data-rw>Corbeille</button>
+  </div>
+  <div class="toolbar">
+    <input class="inp search" id="q" type="search" placeholder="Rechercher : titre, fichier, rattachement, mot-clé…">
+    <select class="inp" id="fRef"><option value="">Tous les rattachements</option></select>
+    <select class="inp" id="fCat"><option value="">Toutes les catégories</option></select>
+  </div>
+  <div class="tbl-wrap" id="listWrap"></div>
+</main>
+
+<!-- Dépôt -->
+<dialog id="dlgUp" class="wide">
+  <form id="f-up">
+    <div class="dlg-h"><h2>Déposer des documents</h2></div>
+    <div class="dlg-b">
+      <label class="drop" id="drop"><input type="file" id="files" multiple hidden><span>Glissez des fichiers ici ou <u>parcourez</u></span><br><span class="small" id="upTypes"></span></label>
+      <ul class="flist" id="upList"></ul>
+      <div class="grid2">
+        <div class="fld span2">Rattachements (mesures, écarts, processus, fournisseurs)<div id="upRefs"></div></div>
+        <label class="fld">Catégorie<input name="category" list="cats" maxlength="80" placeholder="Preuve, Procédure, Rapport d'audit…"></label>
+        <label class="fld">Classification<select name="classification"><option value="interne">Interne</option><option value="restreint">Diffusion restreinte</option><option value="confidentiel">Confidentiel</option><option value="public">Public</option></select></label>
+        <label class="fld span2">Mots-clés<input name="tags" maxlength="400" placeholder="séparés par des virgules"></label>
+        <label class="fld span2">Description<textarea name="description" maxlength="4000"></textarea></label>
+      </div>
+      <div class="alert err" hidden></div>
+    </div>
+    <div class="dlg-f"><button class="btn" type="button" data-close>Fermer</button><button class="btn primary" type="submit" id="upGo">Déposer</button></div>
+  </form>
+</dialog>
+
+<!-- Fiche document -->
+<dialog id="dlgDoc" class="wide">
+  <form id="f-doc">
+    <div class="dlg-h"><h2 id="docT"></h2></div>
+    <div class="dlg-b">
+      <div class="row" id="docActions"></div>
+      <div class="grid2">
+        <label class="fld span2">Titre<input name="title" maxlength="200" required></label>
+        <div class="fld span2">Rattachements<div id="docRefs"></div></div>
+        <label class="fld">Catégorie<input name="category" list="cats" maxlength="80"></label>
+        <label class="fld">Classification<select name="classification"><option value="interne">Interne</option><option value="restreint">Diffusion restreinte</option><option value="confidentiel">Confidentiel</option><option value="public">Public</option></select></label>
+        <label class="fld span2">Mots-clés<input name="tags" maxlength="400"></label>
+        <label class="fld span2">Description<textarea name="description" maxlength="4000"></textarea></label>
+      </div>
+      <h3 class="small muted">Versions</h3>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Version</th><th>Fichier</th><th class="hide-sm">Déposé</th><th class="hide-sm">Empreinte SHA-256</th><th></th></tr></thead><tbody id="docVers"></tbody></table></div>
+      <div class="row" data-rw><input type="file" id="verFile" hidden><button class="btn" type="button" id="verAdd">Nouvelle version…</button><input class="inp" id="verComment" placeholder="Commentaire de version (facultatif)" maxlength="500"></div>
+      <div class="alert err" hidden></div>
+    </div>
+    <div class="dlg-f"><button class="btn danger" type="button" id="docDel" data-rw>Mettre à la corbeille</button><span class="right"></span><button class="btn" type="button" data-close>Fermer</button><button class="btn primary" type="submit" data-rw>Enregistrer</button></div>
+  </form>
+</dialog>
+
+<!-- Lien -->
+<dialog id="dlgLink">
+  <form id="f-link">
+    <div class="dlg-h"><h2 id="linkT">Ajouter un lien</h2></div>
+    <div class="dlg-b">
+      <label class="fld">Adresse<input name="url" required maxlength="2000" placeholder="https://… · file://… · \\serveur\partage\…"></label>
+      <label class="fld">Titre<input name="title" maxlength="200"></label>
+      <div class="fld">Rattachements<div id="linkRefs"></div></div>
+      <label class="fld">Catégorie<input name="category" list="cats" maxlength="80"></label>
+      <label class="fld">Mots-clés<input name="tags" maxlength="400"></label>
+      <label class="fld">Description<textarea name="description" maxlength="4000"></textarea></label>
+      <div class="alert err" hidden></div>
+    </div>
+    <div class="dlg-f"><button class="btn danger" type="button" id="linkDel" hidden>Supprimer</button><span class="right"></span><button class="btn" type="button" data-close>Fermer</button><button class="btn primary" type="submit" data-rw>Enregistrer</button></div>
+  </form>
+</dialog>
+<datalist id="cats"></datalist>
+</body>
+</html>
