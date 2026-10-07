@@ -15,7 +15,7 @@
     "lint": "eslint . --max-warnings 0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "pnpm -r run test",
+    "test": "pnpm -r --filter @suivi/shared --filter @suivi/api --filter @suivi/web run test",
     "dev": "docker compose -f docker-compose.dev.yml up"
   },
   "devDependencies": {
