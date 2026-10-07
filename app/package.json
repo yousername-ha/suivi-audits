@@ -1,0 +1,17 @@
+{
+  "name": "suivi-audits-smsi",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Suivi des audits SMSI ISO 27001 / HDS — GCS Normand'e-Santé",
+  "license": "UNLICENSED",
+  "main": "src/server.js",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "pg": "8.23.1"
+  }
+}
