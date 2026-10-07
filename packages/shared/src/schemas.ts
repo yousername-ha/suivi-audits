@@ -76,6 +76,11 @@ export const MeOut = z.object({
   passwordMinLength: z.number(),
   appName: z.string(),
   orgName: z.string(),
+  /** Apparence par défaut de l'organisation (page Paramètres). */
+  appearance: z.object({
+    theme: z.enum(['auto', 'clair', 'sombre']),
+    densite: z.enum(['compacte', 'normale', 'confortable']),
+  }),
   version: z.string(),
 });
 export type MeOut = z.infer<typeof MeOut>;

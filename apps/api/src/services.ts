@@ -7,20 +7,24 @@ import { limiter } from './http/security.js';
 import { LegacyStore } from './legacy/store.js';
 import { Bus, Presence } from './realtime.js';
 import { Vault } from './security/crypto.js';
+import { Settings } from './settings.js';
 
 export function createServices(cfg: Config, log: Logger) {
   const db = new Db(cfg.db, log);
   const vault = new Vault(cfg.masterKey);
   const bus = new Bus(cfg.db, log);
+  const legacy = new LegacyStore(cfg, db);
+  const settings = new Settings(cfg, db, legacy);
   return {
     cfg,
     log,
     db,
     vault,
-    auth: new Auth(cfg, db, vault),
+    settings,
+    auth: new Auth(cfg, db, vault, () => settings.get('securite')),
     bus,
     presence: new Presence(db, bus),
-    legacy: new LegacyStore(cfg, db),
+    legacy,
     limits: {
       global: limiter(cfg.rateLimitPerMinute, 60e3),
       loginByIp: limiter(20, 15 * 60e3),

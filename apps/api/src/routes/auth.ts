@@ -23,7 +23,7 @@ import { base32, hashPassword, passwordProblems, verifyPassword, verifyTotp } fr
 import type { Services } from '../services.js';
 
 export function checkPassword(svc: Services, pw: unknown, username: string) {
-  const p = passwordProblems(pw, svc.cfg.passwordMinLength, [username]);
+  const p = passwordProblems(pw, svc.settings.get('securite').passwordMinLength, [username]);
   if (p.length) throw new HttpError(422, 'Mot de passe trop faible : ' + p.join(', ') + '.');
 }
 
@@ -44,9 +44,10 @@ export function meOut(svc: Services, s: Session | null): MeOutT {
       : null,
     permissions: s && svc.auth.stage(s) === 'ok' ? s.user.rights.list() : [],
     mfaRequired: svc.cfg.mfaRequired,
-    passwordMinLength: svc.cfg.passwordMinLength,
-    appName: svc.cfg.appName,
-    orgName: svc.cfg.orgName,
+    passwordMinLength: svc.settings.get('securite').passwordMinLength,
+    appName: svc.settings.get('general').appName,
+    orgName: svc.settings.get('general').orgName,
+    appearance: svc.settings.get('apparence'),
     version: svc.cfg.version,
   };
 }
@@ -263,8 +264,8 @@ export const authRoutes = [
         svc.vault.sealSmall(key, 'totp:' + sess.user.id),
       ]);
       const secret = base32(key);
-      const label = encodeURIComponent(`${svc.cfg.appName}:${sess.user.username}`);
-      const uri = `otpauth://totp/${label}?secret=${secret}&issuer=${encodeURIComponent(svc.cfg.orgName)}&algorithm=SHA1&digits=6&period=30`;
+      const label = encodeURIComponent(`${svc.settings.get('general').appName}:${sess.user.username}`);
+      const uri = `otpauth://totp/${label}?secret=${secret}&issuer=${encodeURIComponent(svc.settings.get('general').orgName)}&algorithm=SHA1&digits=6&period=30`;
       return { secret, uri };
     },
   }),

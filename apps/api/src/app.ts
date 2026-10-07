@@ -12,6 +12,7 @@ import { documentRoutes } from './routes/documents.js';
 import { eventRoutes } from './routes/events.js';
 import { importRoutes } from './routes/import.js';
 import { legacyRoutes } from './routes/legacy.js';
+import { settingsRoutes } from './routes/settings.js';
 import type { Services } from './services.js';
 
 // Messages de validation en français.
@@ -51,6 +52,7 @@ export function allRoutes(): RouteDef[] {
     ...eventRoutes,
     ...legacyRoutes,
     ...importRoutes,
+    ...settingsRoutes,
   );
   return list;
 }
@@ -74,6 +76,11 @@ export async function buildApp(svc: Services): Promise<FastifyInstance> {
   app.setErrorHandler(errorHandler(svc.log));
   app.setNotFoundHandler((_req, reply) => reply.code(404).send({ error: 'Introuvable.' }));
   registerRoutes(app, svc, allRoutes());
+  // Paramètres modifiés (ici ou par une autre instance) : rechargement du cache.
+  const onSettings = (e: { entity: string }) => {
+    if (e.entity === 'settings') svc.settings.load().catch(() => {});
+  };
+  svc.bus.on('change', onSettings);
   // Purge des sessions expirées.
   const purge = setInterval(() => svc.auth.purgeExpired().catch(() => {}), 10 * 60e3);
   purge.unref();
@@ -86,6 +93,7 @@ export async function buildApp(svc: Services): Promise<FastifyInstance> {
   const expiry = setInterval(expire, 5 * 60e3);
   expiry.unref();
   app.addHook('onClose', async () => {
+    svc.bus.off('change', onSettings);
     clearInterval(purge);
     clearInterval(expiry);
   });

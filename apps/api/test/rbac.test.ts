@@ -59,6 +59,7 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
     'GET /legacy/index.html',
     'GET /legacy/shim.js',
     'GET /legacy/lib/:file',
+    'GET /api/settings/logo',
   ]);
 
   it('toute route hors de la liste explicite exige une permission (ou un module métier lisible)', () => {
