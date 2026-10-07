@@ -54,12 +54,15 @@ Tests de bout en bout, sur la pile Docker construite localement :
 ```bash
 cp .env.example .env && sed -i 's/^SITE_ADDRESS=.*/SITE_ADDRESS=localhost/; s/^APP_VERSION=.*/APP_VERSION=local/' .env
 docker compose -f docker-compose.yml -f docker-compose.build.yml build && docker compose up -d
-pnpm --filter @suivi/e2e exec playwright install chromium
-pnpm --filter @suivi/e2e test
+./tests/e2e/run-in-container.sh                     # conteneur Playwright officiel (rendu identique à la CI)
 docker compose down -v
 ```
 
 Rejouer le guide d'installation (comme la CI) : `node scripts/ci/guide-extraire.mjs docs/INSTALLATION.md nom_dns=localhost version=ci` produit le script exécuté par le job « guide ». Chaque bloc ```` ```bash ```` du guide doit porter un marqueur `<!-- ci: run -->`, `<!-- ci: skip — raison -->` ou `<!-- ci: instead: commande -->` (voir l'en-tête du script).
+
+## Charte graphique et captures de référence
+- Couleurs, espacements, rayons et largeurs viennent de `packages/ui` (ADR 0011). Le test `apps/web/test/charte.test.ts` refuse toute valeur codée en dur dans l'interface.
+- Les pages Paramètres et Administration sont comparées à des captures de référence (1440, 768 et 390 px, clair et sombre), dans `tests/e2e/specs/__captures__/`. Après une évolution visuelle voulue : `./tests/e2e/run-in-container.sh --update-snapshots`, puis relire les images modifiées dans la PR.
 
 ## Ajouter une route d'API
 1. La déclarer avec `route()` (`apps/api/src/http/route.ts`) : niveau d'accès (`any`, `rw`, `admin`…), schémas zod d'entrée et de sortie (dans `packages/shared` s'ils servent à l'interface).

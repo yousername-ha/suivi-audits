@@ -40,7 +40,8 @@ Volumes : `pgdata` (base), `secrets` (mots de passe de la base, clé maître des
 ## 2. Dépôt (monorepo pnpm)
 
 ```
-packages/shared   schémas zod partagés (API ⇄ interface), rôles, jeton d'installation,
+packages/ui       charte graphique : jetons, thème Mantine clair et sombre, styles statiques, composants communs
+packages/shared   schémas zod partagés (API ⇄ interface), droits, paramètres, jeton d'installation,
                   format legacy : lecture, schéma 15, contrat, planification d'import (fonctions pures)
 apps/api          API Fastify : src/ (routes, auth, sécurité, temps réel, legacy), migrations/ (SQL), test/ (Vitest + PostgreSQL)
 apps/web          interface React + Vite + Mantine (CSP stricte)
@@ -72,6 +73,7 @@ Routes livrées en phase 0 :
 | Compte | mot de passe, enrôlement et désactivation TOTP, sessions |
 | Documents et liens | `/api/documents` (versions, téléchargement `/d/…`), `/api/links` ; `PATCH` avec `If-Match` |
 | Droits | comptes, groupes, rôles (matrice), droits effectifs avec leur origine, revue des accès CSV et Excel |
+| Paramètres | huit sections versionnées (`/api/settings/:section`), logo de l'organisation |
 | Administration | sessions, journal d'audit, versions de l'état, système |
 | Import legacy | simulation, application, historique, fichier source, annulation, export au schéma 15 |
 | Temps réel | `GET /api/events` (SSE), `POST /api/presence` |

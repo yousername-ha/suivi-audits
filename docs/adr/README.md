@@ -14,3 +14,4 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0008](0008-images-ghcr-cosign-caddy-non-root.md) | Images GHCR signées (cosign), frontal Caddy sans privilège | Acceptée |
 | [0009](0009-dependances-et-versions.md) | Dépendances retenues et lignes de versions | Acceptée |
 | [0010](0010-droits-rbac.md) | Droits : utilisateurs, groupes, rôles (RBAC) | Acceptée |
+| [0011](0011-charte-graphique-et-parametres.md) | Charte graphique unique (packages/ui) et page Paramètres | Acceptée |
