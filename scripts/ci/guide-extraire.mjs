@@ -39,8 +39,10 @@ let section = '';
 let pending = null; // { kind, arg, line }
 let blocks = 0;
 
+// Citation shell sûre : entre apostrophes, chaque apostrophe devient '\''.
+const sq = (s) => `'${s.replace(/'/g, "'\\''")}'`;
 const emit = (title, body) => {
-  out.push(`echo "::group::${title.replace(/"/g, '\\"')}"`, ...body, 'echo "::endgroup::"', '');
+  out.push(`echo ${sq(`::group::${title}`)}`, ...body, 'echo "::endgroup::"', '');
 };
 
 for (let i = 0; i < lines.length; i++) {

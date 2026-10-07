@@ -59,7 +59,8 @@ jobs:
                   const where = loc ? `file=${loc.artifactLocation.uri},line=${loc.region?.startLine || 1}` : "";
                   const level = sev >= 7 ? "error" : "warning";
                   if (sev >= 7) high++;
-                  console.log(`::${level} ${where}::CodeQL ${res.ruleId} (gravité ${sev || "n/a"}) : ${res.message.text.replace(/\n/g, " ")}`);
+                  const at = loc ? ` [${loc.artifactLocation.uri}:${loc.region?.startLine || 1}]` : "";
+                  console.log(`::${level} ${where}::CodeQL ${res.ruleId} (gravité ${sev || "n/a"})${at} : ${res.message.text.replace(/\n/g, " ")}`);
                 }
               }
             }
