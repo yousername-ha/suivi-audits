@@ -97,7 +97,12 @@ export class Presence extends EventEmitter {
     if (!m || !m.entry || typeof m.entry.client !== 'string') return;
     const before = JSON.stringify(this.list());
     if (m.op === 'leave') this.entries.delete(m.entry.client);
-    else this.entries.set(m.entry.client, { ...m.entry, expires: Date.now() + PRESENCE_TTL_MS });
+    else {
+      // Le renouvellement d'une même présence conserve son heure de début.
+      const prev = this.entries.get(m.entry.client);
+      const since = prev && prev.resource === m.entry.resource && prev.mode === m.entry.mode ? prev.since : m.entry.since;
+      this.entries.set(m.entry.client, { ...m.entry, since, expires: Date.now() + PRESENCE_TTL_MS });
+    }
     if (JSON.stringify(this.list()) !== before) this.emit('update');
   }
   private sweep() {
