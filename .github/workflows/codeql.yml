@@ -1,4 +1,6 @@
 # Analyse statique de sécurité (CodeQL) du code JavaScript et TypeScript.
+# Le dépôt est privé, sans « code scanning » activé : les résultats ne sont pas envoyés à GitHub mais publiés en
+# artefact SARIF, et le job échoue sur toute alerte de gravité élevée ou critique (security-severity >= 7).
 name: CodeQL
 
 on:
@@ -33,3 +35,34 @@ jobs:
       - uses: github/codeql-action/analyze@v4
         with:
           category: '/language:javascript-typescript'
+          upload: never
+          output: codeql-sarif
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: codeql-sarif
+          path: codeql-sarif/
+      - name: Alertes (échec si gravité élevée ou critique)
+        run: |
+          node -e '
+            const fs = require("fs");
+            let high = 0, total = 0;
+            for (const f of fs.readdirSync("codeql-sarif").filter((f) => f.endsWith(".sarif"))) {
+              for (const run of JSON.parse(fs.readFileSync("codeql-sarif/" + f, "utf8")).runs) {
+                const rules = new Map();
+                for (const r of [run.tool.driver, ...(run.tool.extensions || [])].flatMap((c) => c.rules || [])) rules.set(r.id, r);
+                for (const res of run.results || []) {
+                  total++;
+                  const rule = rules.get(res.ruleId) || {};
+                  const sev = parseFloat((rule.properties || {})["security-severity"] || "0");
+                  const loc = res.locations?.[0]?.physicalLocation;
+                  const where = loc ? `file=${loc.artifactLocation.uri},line=${loc.region?.startLine || 1}` : "";
+                  const level = sev >= 7 ? "error" : "warning";
+                  if (sev >= 7) high++;
+                  console.log(`::${level} ${where}::CodeQL ${res.ruleId} (gravité ${sev || "n/a"}) : ${res.message.text.replace(/\n/g, " ")}`);
+                }
+              }
+            }
+            console.log(`${total} alerte(s), dont ${high} de gravité élevée ou critique.`);
+            if (high) process.exit(1);
+          '
