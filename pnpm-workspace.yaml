@@ -1,5 +1,6 @@
 packages:
   - packages/*
   - apps/*
+  - tests/e2e
 onlyBuiltDependencies:
   - esbuild

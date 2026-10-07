@@ -17,7 +17,7 @@ cat "$WORK/INFO" 2>/dev/null || true
 printf "Cette opération REMPLACE les données et les secrets actuels. Taper RESTAURER pour continuer : "
 read -r OK; [ "$OK" = "RESTAURER" ] || { echo "Abandon."; exit 1; }
 
-docker compose stop app proxy
+docker compose stop app web
 # 1. Secrets (doivent correspondre aux documents chiffrés de la sauvegarde)
 docker compose run --rm --no-deps -T --user 0:0 init sh -c 'rm -f /secrets/* && tar xzf - -C /secrets' < "$WORK/secrets.tgz"
 docker compose run --rm --no-deps init   # réapplique les droits
