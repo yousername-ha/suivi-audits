@@ -3,6 +3,9 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './specs',
+  // Captures de référence sans suffixe de plateforme : elles sont produites et comparées dans le même conteneur
+  // (mcr.microsoft.com/playwright, voir run-in-container.sh).
+  snapshotPathTemplate: '{testDir}/__captures__/{arg}{ext}',
   fullyParallel: false,
   workers: 1,
   timeout: 60_000,
