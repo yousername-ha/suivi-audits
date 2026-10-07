@@ -210,3 +210,37 @@ jobs:
       - name: Arrêt
         if: always()
         run: docker compose down -v
+
+  guide:
+    name: Guide d'installation (rejoué sur un runner Ubuntu vierge)
+    # Rejoue docs/INSTALLATION.md : préparation, installation de Docker, configuration, démarrage, administrateur
+    # créé par l'API, compte utilisateur, import de la fixture legacy, sauvegarde, restauration et mise à jour.
+    # Échoue si une commande du guide échoue, si un bloc n'est pas marqué, ou si un résultat attendu n'est pas obtenu.
+    runs-on: ubuntu-24.04
+    needs: [qualite]
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+      - name: Runner vierge (désinstallation de Docker préinstallé)
+        run: |
+          sudo systemctl stop docker.socket docker containerd 2>/dev/null || true
+          pkgs=$(dpkg-query -W -f='${Package}\n' | grep -E '^(docker|moby|containerd|runc|podman-docker)' || true)
+          [ -z "$pkgs" ] || sudo apt-get purge -y $pkgs
+          sudo rm -rf /var/lib/docker /var/lib/containerd /etc/docker /etc/apt/sources.list.d/docker* /etc/apt/keyrings/docker* /usr/share/keyrings/docker*
+          if command -v docker; then echo "::error::Docker est encore présent"; exit 1; fi
+      - name: Extraction des commandes du guide
+        run: |
+          node scripts/ci/guide-extraire.mjs docs/INSTALLATION.md nom_dns=localhost version=ci > "$RUNNER_TEMP/guide.sh"
+          cp "$RUNNER_TEMP/guide.sh" guide.sh
+      - uses: actions/upload-artifact@v5
+        with:
+          name: guide-script
+          path: guide.sh
+      - name: Rejeu du guide
+        run: bash "$RUNNER_TEMP/guide.sh"
+      - name: Journaux
+        if: failure()
+        run: cd /opt/suivi-audits && sudo docker compose logs --no-color init db app web | tail -300
+      - name: Arrêt
+        if: always()
+        run: if [ -d /opt/suivi-audits ]; then cd /opt/suivi-audits && sudo docker compose down -v || true; fi
