@@ -13,7 +13,7 @@ Application web auto-hébergée de pilotage du SMSI du GCS Normand'e-Santé (RSS
 | | |
 |---|---|
 | **Interface** | React, en français, accessible et utilisable au téléphone ; mise à jour en temps réel entre utilisateurs, avec indication de présence |
-| **Sécurité** | Comptes nominatifs, **double authentification TOTP obligatoire**, jeton d'installation à usage unique (aucun mot de passe par défaut), rôles, CSRF, journal d'audit en ajout seul, documents chiffrés en AES-256-GCM, CSP stricte |
+| **Sécurité** | Comptes nominatifs, **double authentification TOTP obligatoire**, jeton d'installation à usage unique (aucun mot de passe par défaut), droits par module (rôles, groupes, revue des accès), CSRF, journal d'audit en ajout seul, documents chiffrés en AES-256-GCM, CSP stricte |
 | **Données** | PostgreSQL 17, un enregistrement par élément (concurrence par enregistrement), historique et sauvegardes chiffrées |
 | **Déploiement** | Docker Compose : images signées publiées sur GHCR, conteneurs non root en lecture seule, seul le frontal HTTPS (Caddy) est exposé |
 
@@ -22,13 +22,19 @@ Application web auto-hébergée de pilotage du SMSI du GCS Normand'e-Santé (RSS
                                                         └─▶ clamav (facultatif)
 ```
 
-## Rôles
+## Droits
 
-| Rôle | Suivi | Documents et liens | Administration |
-|---|---|---|---|
-| Administrateur | lecture et écriture | lecture, écriture, suppression définitive | comptes, sessions, journal, versions, import, système |
-| Lecture et écriture (RSSI, adjoint) | lecture et écriture | lecture et écriture | — |
-| Lecture seule (alternant, auditeur) | lecture seule, imposée par le serveur | consultation et téléchargement | — |
+Les droits sont des permissions **module × action** (lire, créer et modifier, supprimer, exporter, administrer). Ils sont regroupés en **rôles**, attribués directement ou par des **groupes**, et contrôlés par le serveur sur chaque requête ([ADR 0010](docs/adr/0010-droits-rbac.md)).
+
+| Rôle prédéfini | Droits |
+|---|---|
+| Administrateur | tout, y compris comptes, groupes, rôles, sessions, journal |
+| RSSI | tout, sauf l'administration technique |
+| Contributeur | lire et modifier les modules métier, les documents et les liens |
+| Lecteur | lecture seule |
+| Auditeur externe | lecture des modules choisis, compte à date d'expiration obligatoire |
+
+Pour un besoin particulier, on crée des rôles personnalisés par duplication, puis on les ajuste dans une matrice. La revue des accès (ISO 27001 A.5.18) s'exporte en Excel et en CSV.
 
 ## Installation et exploitation (résumé)
 

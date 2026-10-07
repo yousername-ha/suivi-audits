@@ -17,8 +17,8 @@ Refonte en cours : la nouvelle application (v3) reprend module par module l'outi
 
 ## Règles
 - **Aucune donnée réelle dans le dépôt** (écarts, fournisseurs, processus, noms de personnes…), aucun secret, pas de `.env`.
-- Sécurité non négociable : TOTP obligatoire avec anti-rejeu, cookie `__Host-` SameSite=Strict, jeton CSRF et contrôle d'origine sur toute requête modifiante, journal d'audit en ajout seul (`db.audit`), conteneurs en lecture seule, `cap_drop: ALL`.
-- Toute nouvelle route : déclarer le niveau d'accès dans `route()`, journaliser les actions sensibles, valider les entrées et les sorties (zod). Modification d'enregistrement : `If-Match` et `version` (412 seulement si cet enregistrement a changé).
+- Sécurité non négociable : droits vérifiés par le serveur à chaque requête (RBAC), TOTP obligatoire avec anti-rejeu, cookie `__Host-` SameSite=Strict, jeton CSRF et contrôle d'origine sur toute requête modifiante, journal d'audit en ajout seul (`db.audit`), conteneurs en lecture seule, `cap_drop: ALL`.
+- Toute nouvelle route : déclarer sa permission `module:action` dans `route()` (liste unique : `packages/shared/src/permissions.ts`, ADR 0010), journaliser les actions sensibles, valider les entrées et les sorties (zod). Une route sans permission doit être ajoutée à la liste explicite de `apps/api/test/rbac.test.ts`. Modification d'enregistrement : `If-Match` et `version` (412 seulement si cet enregistrement a changé).
 - Pas de nouvelle dépendance sans justification dans une ADR (`docs/adr/0009-dependances-et-versions.md`).
 - **Toute PR qui touche l'installation, la configuration, la mise à jour ou l'exploitation met à jour `docs/INSTALLATION.md` dans la même PR.** Le guide est rejoué par le job CI « guide » : chaque bloc ```` ```bash ```` porte un marqueur `<!-- ci: run | skip — raison | instead: commande -->` (voir `scripts/ci/guide-extraire.mjs`).
 - Exigences fonctionnelles : `docs/BACKLOG-FONCTIONNEL.md`. Citer leur identifiant (`CRRC-01`, `INV-02`, `INC-03`…) dans chaque commit et chaque PR qui les traite.

@@ -4,6 +4,25 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ## [Non publié]
 
+### Ajouté
+- Gestion des droits (RBAC, chantier 9 bis, ADR 0010) :
+  - permissions module × action, déclarées dans `packages/shared` ;
+  - rôles prédéfinis (Administrateur, RSSI, Contributeur, Lecteur, Auditeur externe) et rôles personnalisés créés par duplication, avec une matrice éditable ;
+  - groupes ; droits effectifs affichés avec leur origine ; expiration des comptes ;
+  - export de la revue des accès en CSV et Excel (ISO 27001 A.5.18) ;
+  - écrans Utilisateurs, Groupes et Rôles.
+- Garde-fous :
+  - au moins un administrateur permanent ;
+  - interdiction de modifier ses propres droits ;
+  - journal avant/après ;
+  - coupure des sessions concernées ;
+  - désactivation automatique des comptes expirés.
+- Documentation : `docs/BACKLOG-FONCTIONNEL.md`, et feuille de route complétée (exigences `CRRC-01` à `CRRC-04`, `INV-01`, `INV-02`, `INC-01` à `INC-03`).
+
+### Modifié
+- Migration `003_droits.sql` : `admin` devient Administrateur, `rw` devient Contributeur, `ro` devient Lecteur. Un ancien compte « lecture et écriture » ne peut plus supprimer de document ni de lien : lui attribuer le rôle RSSI si nécessaire.
+- L'outil historique filtre les modules selon les droits : les modules non lisibles sont masqués, et les modifications non autorisées sont refusées.
+
 ## [3.0.0] — Phase 0 : fondations
 
 Nouvelle architecture. La mise à jour depuis la v2 conserve la base, les secrets et les certificats : voir `docs/INSTALLATION.md`, étape 12.3.
