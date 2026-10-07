@@ -1,0 +1,128 @@
+# Intégration continue : contrôles statiques, puis démarrage complet de la pile Docker.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  controles:
+    name: Contrôles statiques
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Installation des dépendances
+        run: npm ci --no-audit --no-fund
+
+      - name: Syntaxe JavaScript (src/ et web/assets/)
+        run: |
+          set -e
+          for f in $(find src web/assets -name '*.js'); do node --check "$f"; done
+
+      - name: État initial vide (aucune donnée réelle)
+        run: |
+          node -e '
+            const fs = require("fs");
+            const check = (label, s) => {
+              for (const k of ["findings", "suppliers", "processes"]) {
+                if (!Array.isArray(s[k]) || s[k].length) throw new Error(label + " : " + k + " doit être un tableau vide");
+              }
+              if (s.schema !== 14) throw new Error(label + " : schema attendu 14, trouvé " + s.schema);
+            };
+            check("seed/state.json", JSON.parse(fs.readFileSync("seed/state.json", "utf8")));
+            const h = fs.readFileSync("public/index.html", "utf8");
+            const m = h.match(/<script type="application\/json" id="seed">([\s\S]*?)<\/script>/);
+            if (!m) throw new Error("bloc <script id=\"seed\"> introuvable dans public/index.html");
+            check("public/index.html", JSON.parse(m[1]));
+            console.log("État initial vide : OK");
+          '
+
+      - name: Aucun secret ni .env versionné
+        working-directory: .
+        run: |
+          if git ls-files | grep -E '(^|/)\.env($|\.)' | grep -v '^\.env\.example$'; then
+            echo "::error::Fichier .env versionné"; exit 1
+          fi
+          if git ls-files | grep -E '\.(pem|key|p12|pfx)$'; then
+            echo "::error::Certificat ou clé privée versionné"; exit 1
+          fi
+          if git grep -nIE 'BEGIN [A-Z ]*PRIVATE KEY' -- . ':!app/public/lib'; then
+            echo "::error::Clé privée dans le dépôt"; exit 1
+          fi
+
+  docker:
+    name: Démarrage de la pile Docker
+    runs-on: ubuntu-latest
+    needs: controles
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configuration
+        run: |
+          cp .env.example .env
+          sed -i 's/^SITE_ADDRESS=.*/SITE_ADDRESS=localhost/' .env
+          docker compose config -q
+
+      - name: Construction
+        run: docker compose build --pull
+
+      - name: Démarrage
+        run: docker compose up -d
+
+      - name: init terminé (code 0), db et app « healthy »
+        run: |
+          for i in $(seq 1 60); do
+            db=$(docker inspect -f '{{.State.Health.Status}}' "$(docker compose ps -q db)" 2>/dev/null || true)
+            app=$(docker inspect -f '{{.State.Health.Status}}' "$(docker compose ps -q app)" 2>/dev/null || true)
+            echo "essai $i : db=$db app=$app"
+            [ "$db" = healthy ] && [ "$app" = healthy ] && break
+            sleep 5
+          done
+          code=$(docker inspect -f '{{.State.ExitCode}}' "$(docker compose ps -aq init)")
+          echo "init : code de sortie $code"
+          [ "$code" = 0 ]
+          [ "$db" = healthy ] && [ "$app" = healthy ]
+
+      - name: HTTPS, redirection et jeton d'installation
+        run: |
+          set -e
+          for i in $(seq 1 30); do
+            curl -skf https://localhost/healthz && break
+            sleep 2
+          done
+          echo
+          test "$(curl -sk https://localhost/healthz)" = ok
+          loc=$(curl -sk -o /dev/null -w '%{http_code} %{redirect_url}' https://localhost/)
+          echo "/ -> $loc"
+          [ "$loc" = "302 https://localhost/login" ]
+          test "$(curl -sk -o /dev/null -w '%{http_code}' https://localhost/login)" = 200
+          test "$(curl -sk -o /dev/null -w '%{http_code}' https://localhost/setup)" = 200
+          docker compose logs app | grep -q "JETON D'INSTALLATION"
+          echo "Jeton d'installation présent dans les journaux de app"
+
+      - name: Journaux
+        if: always()
+        run: docker compose logs --no-color init db app proxy | sed -E 's/^(app-1 +\| +)[A-Za-z0-9_-]{20,}$/\1<jeton masqué>/'
+
+      - name: Arrêt
+        if: always()
+        run: docker compose down -v

@@ -32,4 +32,4 @@ docker compose down -v                             # remise à zéro complète (
 Sans Docker : PostgreSQL local + `SECRETS_DIR=<dossier> DB_HOST=127.0.0.1 COOKIE_SECURE=false node src/server.js` (voir `init-secrets.js` pour générer les secrets).
 
 ## Points à surveiller
-Le premier démarrage avec les images officielles (`postgres:17-alpine` en `read_only`, capacités ajoutées, lecture des secrets par l'uid 70) n'a été validé que par la CI : en cas d'échec, lire `docker compose logs init db app`.
+Le premier démarrage avec les images officielles (`postgres:17-alpine` en `read_only`, capacités ajoutées, lecture des secrets par les uid 70 et 1000) est vérifié par la CI (`.github/workflows/ci.yml`, job « Démarrage de la pile Docker »). En cas d'échec, lire `docker compose logs init db app`.
