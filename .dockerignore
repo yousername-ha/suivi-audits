@@ -1,9 +1,17 @@
-# Seuls app/ est copié dans l'image ; exclure le reste du contexte de construction.
+# Contexte de construction des images : sources nécessaires uniquement.
 .git
 .github
 .env
 .env.*
+!.env.example
 certs
 backups
 **/node_modules
+**/dist
+**/coverage
+**/playwright-report
+**/test-results
+apps/web/src/generated
+tests/e2e
+docs
 *.md
