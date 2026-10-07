@@ -15,11 +15,13 @@ import {
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { useQueryClient } from '@tanstack/react-query';
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { api, setCsrf } from '../api';
 import { useLive } from '../realtime';
 import { canAdminArea, canReadBusiness, ME_KEY, useCan, useMe } from '../session';
+
+const THEME_CHOISI = 'suivi-theme-choisi';
 
 export function Layout({ children }: { children: ReactNode }) {
   const me = useMe();
@@ -29,11 +31,25 @@ export function Layout({ children }: { children: ReactNode }) {
   const qc = useQueryClient();
   const live = useLive();
   const { colorScheme, setColorScheme } = useMantineColorScheme();
+  // Apparence par défaut de l'organisation (Paramètres), tant que la personne n'a pas choisi la sienne.
+  const orgTheme = { auto: 'auto', clair: 'light', sombre: 'dark' }[me.appearance.theme] as 'auto' | 'light' | 'dark';
+  useEffect(() => {
+    let chosen = false;
+    try {
+      chosen = localStorage.getItem(THEME_CHOISI) === '1';
+    } catch {
+      /* stockage local indisponible : thème de l'organisation */
+    }
+    if (!chosen && colorScheme !== orgTheme) setColorScheme(orgTheme);
+    document.documentElement.dataset.densite = me.appearance.densite;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orgTheme, me.appearance.densite]);
   const can = useCan();
   const items: [string, string][] = [
     ['/', 'Accueil'],
     ...(can('documents', 'lire') ? ([['/documents', 'Documents et liens']] as [string, string][]) : []),
     ['/account', 'Mon compte'],
+    ...(can('parametres', 'lire') ? ([['/parametres', 'Paramètres']] as [string, string][]) : []),
     ...(canAdminArea(can) ? ([['/admin', 'Administration']] as [string, string][]) : []),
   ];
   const legacy = canReadBusiness(can);
@@ -48,7 +64,7 @@ export function Layout({ children }: { children: ReactNode }) {
 
   const navigation = (
     <nav aria-label="Navigation principale" className="shell-nav-inner">
-      <Stack gap={4}>
+      <Stack gap="2xs">
         {items.map(([to, label]) => (
           <NavLink key={to} component={Link} to={to} label={label} active={active(to)} onClick={close} />
         ))}
@@ -61,15 +77,22 @@ export function Layout({ children }: { children: ReactNode }) {
           />
         )}
       </Stack>
-      <Stack mt="xl" gap={4}>
+      <Stack mt="xl" gap="2xs">
         <Button
           variant="subtle"
           size="xs"
-          onClick={() => setColorScheme(colorScheme === 'dark' ? 'light' : colorScheme === 'light' ? 'auto' : 'dark')}
+          onClick={() => {
+            try {
+              localStorage.setItem(THEME_CHOISI, '1');
+            } catch {
+              /* stockage local indisponible : choix limité à cette page */
+            }
+            setColorScheme(colorScheme === 'dark' ? 'light' : colorScheme === 'light' ? 'auto' : 'dark');
+          }}
         >
           Thème : {colorScheme === 'auto' ? 'automatique' : colorScheme === 'dark' ? 'sombre' : 'clair'}
         </Button>
-        <Text size="xs" c="dimmed" ta="center">
+        <Text size="xs" c="dimmed" ta="center" className="app-version">
           Version {me.version}
         </Text>
       </Stack>
@@ -83,7 +106,7 @@ export function Layout({ children }: { children: ReactNode }) {
           <Group gap="sm" wrap="nowrap">
             <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" aria-label="Ouvrir le menu" />
             <Anchor component={Link} to="/" underline="never" c="inherit">
-              <Group gap={10} wrap="nowrap">
+              <Group gap="xs" wrap="nowrap">
                 <span className="brand-mark" aria-hidden="true">
                   S
                 </span>
@@ -99,7 +122,7 @@ export function Layout({ children }: { children: ReactNode }) {
                 live.connected ? 'Mises à jour en temps réel actives' : 'Temps réel déconnecté : reconnexion en cours'
               }
             >
-              <Badge color={live.connected ? 'teal' : 'gray'} variant="dot" visibleFrom="xs">
+              <Badge color={live.connected ? 'teal' : 'gray'} variant="dot" visibleFrom="xs" className="live-badge">
                 {live.connected ? 'En direct' : 'Hors ligne'}
               </Badge>
             </Tooltip>

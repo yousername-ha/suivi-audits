@@ -36,7 +36,7 @@ export function HomePage() {
   const online = [...new Map(presence.map((p) => [p.username, p])).values()];
 
   return (
-    <Stack maw={1100} mx="auto">
+    <Stack className="page">
       <Title order={1}>Bonjour {me.user?.displayName || me.user?.username}</Title>
       <div className="grid-3">
         {canReadBusiness(can) && (
@@ -92,7 +92,7 @@ export function HomePage() {
           En ce moment
         </Title>
         {online.length ? (
-          <Stack gap={4}>
+          <Stack gap="2xs">
             {online.map((p) => (
               <Text size="sm" key={p.username}>
                 <b>{p.name}</b> {p.mode === 'edit' ? 'modifie' : 'consulte'} {resourceLabel(p.resource)}
@@ -131,7 +131,7 @@ export function HomePage() {
                 <Table.Tr key={phase}>
                   <Table.Td className="nowrap">Phase {phase}</Table.Td>
                   <Table.Td>
-                    <Group gap={6}>
+                    <Group gap="xs">
                       {list.map((m) => (
                         <Badge
                           key={m.key}

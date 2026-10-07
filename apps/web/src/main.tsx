@@ -1,6 +1,7 @@
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
 import './generated/mantine-vars.css';
+import '@suivi/ui/styles.css';
 import './app.css';
 import { Center, Loader, MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
@@ -16,10 +17,11 @@ import { DocumentsPage } from './pages/Documents';
 import { HomePage } from './pages/Home';
 import { LoginPage } from './pages/Login';
 import { ErrorPage, NotFoundPage } from './pages/NotFound';
+import { SettingsPage } from './pages/Settings';
 import { SetupPage } from './pages/Setup';
 import { RealtimeProvider } from './realtime';
 import { canAdminArea, SessionProvider, useCan, useMe } from './session';
-import { themeOverride } from './theme';
+import { theme } from '@suivi/ui/theme';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -60,6 +62,7 @@ const router = createBrowserRouter([
       { path: '/documents', element: <DocumentsPage /> },
       { path: '/documents/:id', element: <DocumentsPage /> },
       { path: '/account', element: <AccountPage /> },
+      { path: '/parametres/:section?', element: <SettingsPage /> },
     ],
   },
   {
@@ -79,7 +82,7 @@ const loading = (
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     {/* Aucune balise <style> injectée (CSP stricte) : variables et classes dans src/generated/mantine-vars.css. */}
-    <MantineProvider theme={themeOverride} defaultColorScheme="auto" withCssVariables={false} withGlobalClasses={false}>
+    <MantineProvider theme={theme} defaultColorScheme="auto" withCssVariables={false} withGlobalClasses={false}>
       <Notifications position="top-right" />
       <QueryClientProvider client={queryClient}>
         <SessionProvider fallback={loading}>

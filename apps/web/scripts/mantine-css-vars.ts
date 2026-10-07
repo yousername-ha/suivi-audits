@@ -5,11 +5,11 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { convertCssVariables, defaultCssVariablesResolver, DEFAULT_THEME, mergeMantineTheme } from '@mantine/core';
-import { themeOverride } from '../src/theme.ts';
+import { convertCssVariables, DEFAULT_THEME, mergeMantineTheme } from '@mantine/core';
+import { cssVariablesResolver, theme as charte } from '@suivi/ui/theme';
 
-const theme = mergeMantineTheme(DEFAULT_THEME, themeOverride);
-const vars = defaultCssVariablesResolver(theme);
+const theme = mergeMantineTheme(DEFAULT_THEME, charte);
+const vars = cssVariablesResolver(theme);
 // Même calcul que MantineClasses (@mantine/core) : une règle par point de rupture.
 const em = (px: number) => `${px / 16}em`;
 const pxOf = (v: string) => (v.includes('px') ? parseFloat(v) : parseFloat(v) * 16);

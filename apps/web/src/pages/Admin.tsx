@@ -31,7 +31,7 @@ export function AdminPage() {
   const nav = useNavigate();
   usePresence(`admin/${tab}`);
   return (
-    <Stack maw={1200} mx="auto">
+    <Stack className="page">
       <Group justify="space-between">
         <Title order={1}>Administration</Title>
         <PresenceBar resource="admin" />
@@ -264,7 +264,7 @@ function Versions() {
                     {v.items} mesures, {v.findings} écarts
                   </Table.Td>
                   <Table.Td>
-                    <Group gap={4} wrap="nowrap">
+                    <Group gap="2xs" wrap="nowrap">
                       <Button
                         size="compact-sm"
                         variant="default"

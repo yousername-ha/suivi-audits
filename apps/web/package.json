@@ -16,6 +16,7 @@
     "@mantine/hooks": "8.3.18",
     "@mantine/notifications": "8.3.18",
     "@suivi/shared": "workspace:*",
+    "@suivi/ui": "workspace:*",
     "@tanstack/react-query": "5.104.1",
     "qrcode-generator": "1.5.2",
     "react": "19.3.0",

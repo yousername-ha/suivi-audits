@@ -58,7 +58,7 @@ export function DocumentsPage() {
   const [tab, setTab] = useState<string | null>('docs');
   usePresence(id ? `documents/${id}` : 'documents');
   return (
-    <Stack maw={1200} mx="auto">
+    <Stack className="page">
       <Group justify="space-between">
         <Title order={1}>Documents et liens</Title>
         <PresenceBar resource="documents" />
@@ -133,9 +133,16 @@ function DocumentList({ canWrite, onOpen }: { canWrite: boolean; onOpen: (id: st
           placeholder="Titre, fichier, rattachement…"
           value={q}
           onChange={(e) => setQ(e.currentTarget.value)}
-          w={260}
+          className="champ-m"
         />
-        <Select label="Catégorie" data={cats.data ?? []} value={category} onChange={setCategory} clearable w={200} />
+        <Select
+          label="Catégorie"
+          data={cats.data ?? []}
+          value={category}
+          onChange={setCategory}
+          clearable
+          className="champ-s"
+        />
         {canDelete && (
           <SegmentedControl
             value={trash}
@@ -181,7 +188,7 @@ function DocumentList({ canWrite, onOpen }: { canWrite: boolean; onOpen: (id: st
                     </Text>
                   </Table.Td>
                   <Table.Td>
-                    <Group gap={4}>
+                    <Group gap="2xs">
                       {d.refs.slice(0, 6).map((r) => (
                         <Badge key={r} variant="light" size="sm">
                           {r}
@@ -299,7 +306,7 @@ function DocumentDetail({
             {d.title}
           </Title>
           {d.description && <Text className="pre">{d.description}</Text>}
-          <Group gap={4}>
+          <Group gap="2xs">
             {d.refs.map((r) => (
               <Badge key={r} variant="light">
                 {r}
@@ -525,7 +532,7 @@ function LinkList({ canWrite }: { canWrite: boolean }) {
   return (
     <Stack>
       <Group align="flex-end">
-        <TextInput label="Rechercher" value={q} onChange={(e) => setQ(e.currentTarget.value)} w={260} />
+        <TextInput label="Rechercher" value={q} onChange={(e) => setQ(e.currentTarget.value)} className="champ-m" />
         {canWrite && <Button onClick={() => setEdit({ refs: [], tags: [] })}>Ajouter un lien</Button>}
       </Group>
       <ErrorAlert error={list.error} />
@@ -544,7 +551,7 @@ function LinkList({ canWrite }: { canWrite: boolean }) {
                     </Text>
                   </Table.Td>
                   <Table.Td>
-                    <Group gap={4}>
+                    <Group gap="2xs">
                       {l.refs.map((r) => (
                         <Badge key={r} variant="light" size="sm">
                           {r}
@@ -554,7 +561,7 @@ function LinkList({ canWrite }: { canWrite: boolean }) {
                   </Table.Td>
                   <Table.Td className="nowrap">
                     {canWrite && (
-                      <Group gap={4}>
+                      <Group gap="2xs">
                         <Button size="compact-sm" variant="default" onClick={() => setEdit({ ...l })}>
                           Modifier
                         </Button>

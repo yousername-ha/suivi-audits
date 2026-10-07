@@ -26,7 +26,7 @@ function AuthCard({ title, step, children }: { title: string; step: number; chil
     <main className="auth-wrap">
       <Card className="auth-card" withBorder padding="xl" radius="lg">
         <Stack>
-          <Group gap={10}>
+          <Group gap="xs">
             <span className="brand-mark" aria-hidden="true">
               S
             </span>
