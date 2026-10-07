@@ -77,6 +77,7 @@ Routes livrées en phase 0 :
 | Administration | sessions, journal d'audit, versions de l'état, système |
 | Import legacy | simulation, application, historique, fichier source, annulation, export au schéma 15 |
 | Temps réel | `GET /api/events` (SSE), `POST /api/presence` |
+| Affichage | préférences par personne (`/api/account/preferences`) ; écrans muraux (`/api/admin/murs`, `POST /api/mur/activer`) ; synthèse et flux de la vue `/mur` (`/api/mur/synthese`, `/api/mur/events`) |
 | Outil historique | `/legacy/`, `/api/legacy/state`, `/api/legacy/modules`, `/api/refs` |
 
 ## 4. Données

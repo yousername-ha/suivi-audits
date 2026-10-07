@@ -14,6 +14,7 @@ Refonte en cours : la nouvelle application (v3) reprend module par module l'outi
 - `app/public/index.html` : outil historique (fichier unique, ~3 Mo, schéma 15). Il est servi sous `/legacy` avec `apps/api/legacy-shim/shim.js`, qui remplace `window.claude`. Ne pas le réécrire ; toute modification fait l'objet d'un commit séparé (mise à jour via `scripts/update-ui.sh`).
 - `apps/api/seed/state.json` et le bloc `<script id="seed">` de `index.html` : état **vide** (référentiels seulement, `schema` 14).
 - Charte graphique : `packages/ui` (jetons, thème clair et sombre, composants `Page`, `PageHeader`, `DataTable`, `FormSection`, `StatusChip`…), ADR 0011. **Aucune couleur ni aucun espacement codé en dur** dans `apps/web` (vérifié par `apps/web/test/charte.test.ts`). Contrastes WCAG AA vérifiés par `packages/ui/test/contraste.test.ts`.
+- Tous les écrans (ADR 0012) : grilles `grille-cartes`, `maitre-detail`, `grille-formulaire`, colonnes par priorité (`col-p2`, `col-p3`) et `useColonnes` ; préférences d'affichage par personne côté serveur. Écran mural `/mur` : accès `mur` (session ou appareil activé), lecture seule.
 - Interface : CSP stricte, **aucun script ni style en ligne**, pas d'attribut `style=` dans le HTML. Avec Mantine : pas d'`AppShell`, `lockScroll={false}`, pas de props de style « responsives » (ADR 0006). Playwright échoue sur toute violation de CSP.
 
 ## Règles

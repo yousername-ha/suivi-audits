@@ -523,6 +523,17 @@ Pour un besoin particulier, onglet **Rôles** : **Dupliquer** un rôle proche, p
 
 **9.6 Revue des accès** (ISO 27001, mesure A.5.18) : onglet **Utilisateurs**, boutons **Excel** ou **CSV** de la revue des accès. Le fichier liste chaque compte, ses groupes, ses rôles, ses droits effectifs, sa dernière connexion et son expiration. Le bouton **Droits effectifs** d'un compte montre l'origine de chaque droit (rôle direct ou groupe). Faites cette revue au moins une fois par an, et archivez le fichier.
 
+**9.7 Affichage** : chaque personne règle sa **Taille d'affichage**, sa **Densité** et son **Thème** dans **Mon compte**, section **Affichage**. Ces choix sont enregistrés sur le serveur et suivent la personne sur tous ses appareils. Les valeurs par défaut de l'organisation se règlent dans **Paramètres**, section **Apparence**.
+
+**9.8 Écran mural** (grand écran de salle de réunion, tableau de bord permanent, sans compte nominatif) :
+1. Sur l'ordinateur relié à l'écran, installez le certificat racine (étape 8.3) et ouvrez le navigateur.
+2. Depuis votre poste : **Administration**, onglet **Écrans muraux**. Saisissez un **Nom** (par exemple « Salle de réunion »), la **Durée de validité** (180 jours par défaut, 365 au plus) et les **Modules affichés**, puis cliquez sur **Créer le lien d'activation**.
+3. Le lien s'affiche **une seule fois** ; il est valable **24 heures** et ne sert qu'une fois. Ouvrez-le dans le navigateur de l'écran mural (copiez-le par un support interne, jamais par courriel externe).
+4. L'écran affiche le tableau de bord. Bouton **Plein écran** (ou touche F11) ; **Rotation** fait défiler les vues toutes les 30 secondes. L'adresse `https://<nom_dns>/mur?rotation=30` peut servir de page d'accueil du navigateur de l'écran.
+5. Pour couper l'écran : bouton **Révoquer** sur sa ligne. L'écran affiche « Écran non autorisé » en moins d'une minute. À l'expiration, recréez un écran.
+
+Une personne connectée (même avec le seul rôle **Lecteur**) peut aussi ouvrir **Écran mural** depuis le menu.
+
 <!-- ci: exec: NODE_EXTRA_CA_CERTS=/opt/suivi-audits/racine-suivi-audits.crt node "$GITHUB_WORKSPACE/scripts/ci/guide-api.mjs" compte https://<nom_dns> -->
 
 ---
@@ -758,6 +769,8 @@ Si vous demandez de l'aide, joignez ces deux sorties. Elles ne contiennent aucun
 | « Droits insuffisants : vous ne pouvez pas … » | Le rôle de la personne ne comprend pas cette action | **Administration**, **Utilisateurs**, bouton **Droits effectifs** du compte, puis ajouter le rôle ou le groupe adapté |
 | « Trop de requêtes. Réessayez dans une minute. » pour plusieurs personnes à la fois | Limite de débit par adresse IP atteinte : de nombreux postes sortent par une même adresse (traduction d'adresses, proxy) | Relever `RATE_LIMIT_PER_MINUTE` dans `.env` (par exemple 5000), puis `sudo docker compose up -d` |
 | Un compte n'arrive plus à se connecter à une date précise | Date d'expiration atteinte : compte désactivé automatiquement | **Administration**, **Utilisateurs**, **Modifier** : nouvelle date d'expiration et état « Actif » |
+| L'écran mural affiche « Écran non autorisé » | Écran révoqué ou expiré, ou cookies effacés par le navigateur de l'écran | Créer un nouveau lien d'activation (étape 9.8) ; vérifier que le navigateur de l'écran conserve les cookies |
+| « Code d'activation invalide, expiré ou déjà utilisé » | Lien de plus de 24 h, déjà ouvert une fois, ou copié incomplètement | Révoquer l'écran en attente, puis créer un nouveau lien (étape 9.8) |
 | « Impossible : il doit rester au moins un administrateur actif » | Garde-fou : la modification retirerait le dernier administrateur permanent | Donner d'abord le rôle Administrateur (sans date d'expiration) à une autre personne |
 
 ---

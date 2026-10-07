@@ -15,3 +15,4 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0009](0009-dependances-et-versions.md) | Dépendances retenues et lignes de versions | Acceptée |
 | [0010](0010-droits-rbac.md) | Droits : utilisateurs, groupes, rôles (RBAC) | Acceptée |
 | [0011](0011-charte-graphique-et-parametres.md) | Charte graphique unique (packages/ui) et page Paramètres | Acceptée |
+| [0012](0012-adaptation-ecrans-et-ecran-mural.md) | Adaptation à tous les écrans, préférences d'affichage et écran mural | Acceptée |

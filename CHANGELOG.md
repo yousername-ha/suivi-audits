@@ -28,12 +28,22 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
   - politique de sécurité réglable dans des bornes non négociables ;
   - logo de l'organisation.
 - Captures de référence Playwright (Paramètres et Administration, 3 largeurs, clair et sombre), produites dans le conteneur Playwright officiel.
+- Adaptation à tous les écrans, du téléphone au 55 pouces 4K (chantier 9 quater, ADR 0012) :
+  - menu en tiroir au téléphone, en icônes sur tablette, déplié sur ordinateur ; typographie fluide ;
+  - tableau de bord en grille de cartes (synthèse des écarts, échéances, plan d'audit, mesures), qui ajoute des colonnes sur les grands écrans ;
+  - documents : liste et fiche côte à côte à partir de 1440 px, troisième panneau (versions, rattachements) à partir de 2560 px ;
+  - tableaux : colonnes secondaires selon la largeur, sélecteur de colonnes mémorisé ; formulaires longs sur 2 ou 3 colonnes ;
+  - préférences « Taille d'affichage », « Densité » et thème, enregistrées sur le serveur (Mon compte > Affichage).
+- Écran mural (`/mur`) : tableau de bord plein écran en temps réel, rotation entre vues, lecture seule ; appareils activés par un lien à usage unique (Administration > Écrans muraux), révocables.
+- Captures de référence de 390 à 3840 px ; tests de largeur utilisée (2560 et 3840 px) et d'absence de défilement horizontal (390 px).
 - Documentation : `docs/BACKLOG-FONCTIONNEL.md`, et feuille de route complétée (exigences `CRRC-01` à `CRRC-04`, `INV-01`, `INV-02`, `INC-01` à `INC-03`).
 
 ### Sécurité
 - Limite de débit globale par adresse IP sur toutes les routes (`RATE_LIMIT_PER_MINUTE`, 1200 par défaut), appliquée avant toute lecture en base.
 
 ### Modifié
+- Migration `004_affichage_et_ecrans_muraux.sql` : préférences d'affichage par personne (`users.preferences`) et table `wall_screens`.
+- Le choix de thème du bouton du menu est enregistré sur le serveur (et non plus dans le navigateur).
 - Migration `003_droits.sql` : `admin` devient Administrateur, `rw` devient Contributeur, `ro` devient Lecteur. Un ancien compte « lecture et écriture » ne peut plus supprimer de document ni de lien : lui attribuer le rôle RSSI si nécessaire.
 - L'outil historique filtre les modules selon les droits : les modules non lisibles sont masqués, et les modifications non autorisées sont refusées.
 

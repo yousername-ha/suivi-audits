@@ -62,7 +62,7 @@ Rejouer le guide d'installation (comme la CI) : `node scripts/ci/guide-extraire.
 
 ## Charte graphique et captures de référence
 - Couleurs, espacements, rayons et largeurs viennent de `packages/ui` (ADR 0011). Le test `apps/web/test/charte.test.ts` refuse toute valeur codée en dur dans l'interface.
-- Les pages Paramètres et Administration sont comparées à des captures de référence (1440, 768 et 390 px, clair et sombre), dans `tests/e2e/specs/__captures__/`. Après une évolution visuelle voulue : `./tests/e2e/run-in-container.sh --update-snapshots`, puis relire les images modifiées dans la PR.
+- Les pages Paramètres et Administration sont comparées à des captures de référence (1440, 768 et 390 px, clair et sombre), ainsi que le tableau de bord, une liste avec sa fiche, l'administration et les Paramètres de 390 à 3840 px (ADR 0012), dans `tests/e2e/specs/__captures__/`. Les éléments variables (dates, présence) portent les classes `horodatage` ou `presence-liste`, masquées dans les captures. Après une évolution visuelle voulue : `./tests/e2e/run-in-container.sh --update-snapshots`, puis relire les images modifiées dans la PR.
 
 ## Ajouter une route d'API
 1. La déclarer avec `route()` (`apps/api/src/http/route.ts`) : niveau d'accès (`any`, `rw`, `admin`…), schémas zod d'entrée et de sortie (dans `packages/shared` s'ils servent à l'interface).

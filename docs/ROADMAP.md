@@ -21,7 +21,7 @@ Les exigences fonctionnelles détaillées sont dans [BACKLOG-FONCTIONNEL.md](BAC
 - [x] Guide d'installation pour débutant, rejoué en CI.
 - [x] **9 bis — Gestion des droits (RBAC)** ([ADR 0010](adr/0010-droits-rbac.md)) : permissions module × action déclarées dans `packages/shared` ; rôles prédéfinis (Administrateur, RSSI, Contributeur, Lecteur, Auditeur externe) et personnalisés ; groupes ; garde `requirePermission` sur chaque route et filtrage du temps réel ; écrans Utilisateurs, Groupes, Rôles, droits effectifs, export de la revue des accès (ISO 27001 A.5.18) ; garde-fous et migration des comptes v2.
 - [x] **9 ter — Charte graphique et page Paramètres** ([ADR 0011](adr/0011-charte-graphique-et-parametres.md)) : `packages/ui` (thème Mantine clair et sombre, WCAG AA, composants communs) ; page Paramètres pleine largeur par sections, chacune avec son enregistrement et sa permission ; captures de référence.
-- [ ] **9 quater — Adaptation à tous les écrans** (du téléphone au 4K) : points de rupture et container queries, grilles auto-fill, maître-détail, tableaux configurables, typographie fluide, préférences « Taille d'affichage » et « Densité » enregistrées sur le serveur ; mode **écran mural** (`/mur`) ; tests de largeur utile et d'absence de défilement horizontal.
+- [x] **9 quater — Adaptation à tous les écrans** (du téléphone au 4K, [ADR 0012](adr/0012-adaptation-ecrans-et-ecran-mural.md)) : points de rupture et container queries, grilles auto-fill, maître-détail, tableaux configurables, typographie fluide, préférences « Taille d'affichage » et « Densité » enregistrées sur le serveur ; mode **écran mural** (`/mur`) ; tests de largeur utile et d'absence de défilement horizontal.
 
 ## Phase 1 — Audit
 
