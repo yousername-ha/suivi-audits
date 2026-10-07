@@ -116,7 +116,7 @@ export class Agent {
 
   async me() {
     const r = await this.get('/api/auth/me');
-    const j = r.json() as { csrf: string | null; stage: string };
+    const j = r.json() as { csrf: string | null; stage: string; permissions: string[] };
     this.csrf = j.csrf;
     return j;
   }
@@ -125,30 +125,40 @@ export class Agent {
 export interface TestUser {
   id: string;
   username: string;
-  role: 'admin' | 'rw' | 'ro';
+  role: string;
   key: Buffer;
 }
 
-/** Crée un compte avec TOTP déjà activé (mot de passe PASSWORD). */
+/** Raccourcis des rôles v2 (même correspondance que la migration 003). */
+const V2: Record<string, string> = { admin: 'administrateur', rw: 'contributeur', ro: 'lecteur' };
+
+/** Crée un compte avec TOTP déjà activé (mot de passe PASSWORD). « role » : rôle v2 (admin, rw, ro), identifiant
+    de rôle (prédéfini ou personnalisé) ou null (aucun rôle direct). */
 export async function makeUser(
   t: TestApp,
   username: string,
-  role: TestUser['role'],
-  o: { totp?: boolean; mustChange?: boolean } = {},
+  role: string | null,
+  o: { totp?: boolean; mustChange?: boolean; modules?: string[]; expiresAt?: Date | null } = {},
 ): Promise<TestUser> {
   const key = crypto.randomBytes(20);
   const r = await t.svc.db.one<{ id: string }>(
-    'INSERT INTO users(username, display_name, role, password_hash, must_change_password) VALUES ($1,$2,$3,$4,$5) RETURNING id',
-    [username, `Nom ${username}`, role, await hashPassword(PASSWORD), !!o.mustChange],
+    'INSERT INTO users(username, display_name, password_hash, must_change_password, expires_at) VALUES ($1,$2,$3,$4,$5) RETURNING id',
+    [username, `Nom ${username}`, await hashPassword(PASSWORD), !!o.mustChange, o.expiresAt ?? null],
   );
   const id = r!.id;
+  if (role)
+    await t.svc.db.q('INSERT INTO user_roles(user_id, role_id, modules) VALUES ($1, $2, $3)', [
+      id,
+      V2[role] ?? role,
+      o.modules ?? null,
+    ]);
   if (o.totp !== false) {
     await t.svc.db.q('UPDATE users SET totp_secret=$2, totp_enabled=true WHERE id=$1', [
       id,
       t.svc.vault.sealSmall(key, 'totp:' + id),
     ]);
   }
-  return { id, username, role, key };
+  return { id, username, role: role ?? '', key };
 }
 
 /** Code TOTP valide et non encore utilisé (anti-rejeu : pas strictement supérieur au dernier accepté). */

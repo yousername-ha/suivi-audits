@@ -157,11 +157,16 @@ describe('rôles', () => {
     expect((await a.get('/api/admin/users')).statusCode).toBe(200);
   });
 
-  it('le dernier administrateur actif ne peut pas être rétrogradé', async () => {
+  it('un administrateur ne peut pas modifier ses propres droits', async () => {
     const a = await login(t, admin);
     const u = await a.get(`/api/admin/users/${admin.id}`);
-    const r = await a.patch(`/api/admin/users/${admin.id}`, { role: 'rw' }, { 'if-match': u.headers.etag as string });
-    expect(r.statusCode).toBe(409);
+    const r = await a.patch(
+      `/api/admin/users/${admin.id}`,
+      { roles: [{ roleId: 'contributeur' }] },
+      { 'if-match': u.headers.etag as string },
+    );
+    expect(r.statusCode).toBe(403);
+    expect(r.json().error).toMatch(/propres droits/);
   });
 });
 
@@ -265,8 +270,9 @@ describe('OpenAPI', () => {
     const a = await login(t, rw);
     const doc = (await a.get('/api/openapi.json')).json();
     expect(doc.openapi).toBe('3.1.0');
-    expect(doc.paths['/api/documents/{id}'].patch['x-access']).toBe('rw');
-    expect(doc.paths['/api/admin/import/simulate'].post['x-access']).toBe('admin');
+    expect(doc.paths['/api/documents/{id}'].patch['x-access']).toBe('documents:modifier');
+    expect(doc.paths['/api/admin/import/simulate'].post['x-access']).toBe('import_export:modifier');
+    expect(doc.paths['/api/admin/roles/{id}'].patch['x-access']).toBe('administration:administrer');
     expect(doc.paths['/api/auth/login'].post.requestBody).toBeTruthy();
   });
 });

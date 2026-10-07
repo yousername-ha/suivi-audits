@@ -61,12 +61,15 @@ describe('documents : dépôt, chiffrement, intégrité', () => {
     expect((await a.get(`/api/documents/${d.id}/download`)).statusCode).toBe(500);
   });
 
-  it('corbeille : restauration par un rédacteur, purge réservée aux administrateurs', async () => {
+  it('corbeille : suppression, restauration et purge selon les droits (supprimer, administrer)', async () => {
     const d = (await upload(a, 'corbeille.txt', Buffer.from('x'))).json();
-    expect((await a.del(`/api/documents/${d.id}`)).statusCode).toBe(204);
-    expect((await a.del(`/api/documents/${d.id}?purge=1`)).statusCode).toBe(403);
-    expect((await a.post(`/api/documents/${d.id}/restore`)).statusCode).toBe(204);
-    expect((await a.del(`/api/documents/${d.id}`)).statusCode).toBe(204);
+    // Contributeur : lire et modifier, pas supprimer.
+    expect((await a.del(`/api/documents/${d.id}`)).statusCode).toBe(403);
+    const rssi = await login(t, await makeUser(t, 'rssi-docs', 'rssi'));
+    expect((await rssi.del(`/api/documents/${d.id}`)).statusCode).toBe(204);
+    expect((await a.post(`/api/documents/${d.id}/restore`)).statusCode).toBe(403);
+    expect((await rssi.post(`/api/documents/${d.id}/restore`)).statusCode).toBe(204);
+    expect((await rssi.del(`/api/documents/${d.id}`)).statusCode).toBe(204);
     expect((await b.del(`/api/documents/${d.id}?purge=1`)).statusCode).toBe(204);
   });
 

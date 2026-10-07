@@ -1,6 +1,6 @@
 /* Schémas zod des échanges API (validation côté serveur, types côté interface, documentation OpenAPI). */
 import { z } from 'zod';
-import { ROLES } from './roles.js';
+import { ACTIONS, ALL_PERMISSIONS, MODULES, type Permission } from './permissions.js';
 import { PRESENCE_HEARTBEAT_MS } from './events.js';
 
 export const USERNAME_RE = /^[a-zA-Z0-9._@-]{2,64}$/;
@@ -28,7 +28,12 @@ export const Username = z
   .trim()
   .regex(USERNAME_RE, 'Identifiant invalide (2 à 64 caractères : lettres, chiffres, . _ - @).');
 export const Email = z.union([z.literal(''), z.email('Adresse e-mail invalide.').max(200)]);
-export const RoleSchema = z.enum(ROLES);
+export const ModuleSchema = z.enum(MODULES);
+export const ActionSchema = z.enum(ACTIONS);
+export const PermissionSchema = z.enum(ALL_PERMISSIONS as [Permission, ...Permission[]]);
+export const RoleId = z.string().regex(/^[a-z][a-z0-9_]{1,62}$/, 'Identifiant de rôle invalide.');
+/** Date d'expiration de compte : date ISO (AAAA-MM-JJ ou horodatage), ou null pour aucune. */
+export const ExpiresAt = z.union([z.iso.date(), z.iso.datetime({ offset: true })]).nullable();
 export const Uuid = z.uuid();
 
 /* ---------------------------------------------------------------- Authentification */
@@ -59,11 +64,14 @@ export const MeOut = z.object({
       id: z.string(),
       username: z.string(),
       displayName: z.string(),
-      role: RoleSchema,
       totpEnabled: z.boolean(),
       mustChangePassword: z.boolean(),
+      roles: z.array(z.string()),
+      expiresAt: z.string().nullable(),
     })
     .nullable(),
+  /** Droits effectifs (module:action) ; l'interface s'en sert pour masquer ce qui n'est pas permis. */
+  permissions: z.array(PermissionSchema),
   mfaRequired: z.boolean(),
   passwordMinLength: z.number(),
   appName: z.string(),
@@ -76,27 +84,38 @@ export const SetupStatusOut = z.object({ needed: z.boolean(), pending: z.boolean
 export const TotpBeginOut = z.object({ secret: z.string(), uri: z.string() });
 export const ErrorOut = z.object({ error: z.string() }).catchall(z.unknown());
 
-/* ---------------------------------------------------------------- Administration des comptes */
+/* ---------------------------------------------------------------- Droits : comptes, groupes, rôles */
+export const RoleAssignment = z.object({
+  roleId: RoleId,
+  /** Portée (modules) : obligatoire pour l'auditeur externe, ignorée sinon. */
+  modules: z.array(ModuleSchema).max(MODULES.length).nullable().optional(),
+});
+export type RoleAssignment = z.infer<typeof RoleAssignment>;
+
 export const UserCreateBody = z.object({
   username: Username,
   displayName: text(120).optional(),
   email: Email.optional(),
-  role: RoleSchema,
+  roles: z.array(RoleAssignment).max(50).default([]),
+  groups: z.array(z.uuid()).max(100).default([]),
+  expiresAt: ExpiresAt.optional(),
 });
 export const UserPatchBody = z.object({
   displayName: text(120).optional(),
   email: Email.optional(),
-  role: RoleSchema.optional(),
   disabled: z.boolean().optional(),
   unlock: z.boolean().optional(),
+  expiresAt: ExpiresAt.optional(),
+  roles: z.array(RoleAssignment).max(50).optional(),
+  groups: z.array(z.uuid()).max(100).optional(),
 });
 export const UserOut = z.object({
   id: z.string(),
   username: z.string(),
   display_name: z.string(),
   email: z.string(),
-  role: RoleSchema,
   disabled: z.boolean(),
+  expires_at: z.string().nullable(),
   totp_enabled: z.boolean(),
   must_change_password: z.boolean(),
   failed_logins: z.number(),
@@ -105,8 +124,67 @@ export const UserOut = z.object({
   created_at: z.string(),
   sessions: z.number(),
   version: z.number(),
+  roles: z.array(z.object({ id: z.string(), name: z.string(), modules: z.array(z.string()).nullable() })),
+  groups: z.array(z.object({ id: z.string(), name: z.string() })),
 });
 export type UserOut = z.infer<typeof UserOut>;
+
+export const GroupBody = z.object({
+  name: text(80).min(1, 'Nom obligatoire.'),
+  description: text(500).optional(),
+  roles: z.array(RoleId).max(50).default([]),
+  members: z.array(z.uuid()).max(1000).default([]),
+});
+export const GroupPatchBody = GroupBody.partial();
+export const GroupOut = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string(),
+  version: z.number(),
+  roles: z.array(z.object({ id: z.string(), name: z.string() })),
+  members: z.array(z.object({ id: z.string(), username: z.string(), display_name: z.string() })),
+});
+export type GroupOut = z.infer<typeof GroupOut>;
+
+/** Création d'un rôle personnalisé : toujours par duplication d'un rôle existant. */
+export const RoleCreateBody = z.object({
+  from: RoleId,
+  name: text(80).min(1, 'Nom obligatoire.'),
+  description: text(500).optional(),
+});
+export const RolePatchBody = z.object({
+  name: text(80).min(1).optional(),
+  description: text(500).optional(),
+  permissions: z.array(PermissionSchema).max(ALL_PERMISSIONS.length).optional(),
+});
+export const RoleOut = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string(),
+  system: z.boolean(),
+  scoped: z.boolean(),
+  based_on: z.string().nullable(),
+  permissions: z.array(PermissionSchema),
+  version: z.number(),
+  users: z.number(),
+  groups: z.number(),
+});
+export type RoleOut = z.infer<typeof RoleOut>;
+
+const Via = z.union([
+  z.object({ kind: z.literal('direct') }),
+  z.object({ kind: z.literal('group'), groupId: z.string(), groupName: z.string() }),
+]);
+export const EffectiveRightsOut = z.object({
+  user: z.object({ id: z.string(), username: z.string(), display_name: z.string() }),
+  permissions: z.array(
+    z.object({
+      permission: PermissionSchema,
+      origins: z.array(z.object({ roleId: z.string(), roleName: z.string(), via: Via })),
+    }),
+  ),
+});
+export type EffectiveRightsOut = z.infer<typeof EffectiveRightsOut>;
 export const TempPasswordOut = z.object({ temporaryPassword: z.string() });
 
 /* ---------------------------------------------------------------- Documents et liens */

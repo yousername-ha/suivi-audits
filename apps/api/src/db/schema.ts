@@ -29,7 +29,6 @@ export const users = pgTable('users', {
   username: text('username').notNull(),
   displayName: text('display_name').notNull().default(''),
   email: text('email').notNull().default(''),
-  role: text('role', { enum: ['admin', 'rw', 'ro'] }).notNull(),
   passwordHash: text('password_hash').notNull(),
   mustChangePassword: boolean('must_change_password').notNull().default(false),
   totpSecret: bytea('totp_secret'),
@@ -44,7 +43,70 @@ export const users = pgTable('users', {
   createdAt: tstz('created_at').notNull().defaultNow(),
   updatedAt: tstz('updated_at').notNull().defaultNow(),
   version: integer('version').notNull().default(1),
+  expiresAt: tstz('expires_at'),
 });
+
+/* ---------------------------------------------------------------- Droits (migration 003) */
+export const roles = pgTable('roles', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  description: text('description').notNull().default(''),
+  system: boolean('system').notNull().default(false),
+  permissions: text('permissions').array().notNull().default([]),
+  basedOn: text('based_on'),
+  version: integer('version').notNull().default(1),
+  createdBy: text('created_by').notNull().default(''),
+  updatedBy: text('updated_by').notNull().default(''),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  updatedAt: tstz('updated_at').notNull().defaultNow(),
+});
+export const groups = pgTable('groups', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  description: text('description').notNull().default(''),
+  version: integer('version').notNull().default(1),
+  createdBy: text('created_by').notNull().default(''),
+  updatedBy: text('updated_by').notNull().default(''),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  updatedAt: tstz('updated_at').notNull().defaultNow(),
+});
+export const groupRoles = pgTable(
+  'group_roles',
+  {
+    groupId: uuid('group_id')
+      .notNull()
+      .references(() => groups.id, { onDelete: 'cascade' }),
+    roleId: text('role_id')
+      .notNull()
+      .references(() => roles.id, { onDelete: 'cascade' }),
+  },
+  (t) => [primaryKey({ columns: [t.groupId, t.roleId] })],
+);
+export const userGroups = pgTable(
+  'user_groups',
+  {
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    groupId: uuid('group_id')
+      .notNull()
+      .references(() => groups.id, { onDelete: 'cascade' }),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.groupId] })],
+);
+export const userRoles = pgTable(
+  'user_roles',
+  {
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    roleId: text('role_id')
+      .notNull()
+      .references(() => roles.id, { onDelete: 'cascade' }),
+    modules: text('modules').array(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.roleId] })],
+);
 
 export const sessions = pgTable('sessions', {
   idHash: bytea('id_hash').primaryKey(),

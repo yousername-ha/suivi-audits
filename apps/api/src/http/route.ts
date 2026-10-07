@@ -1,6 +1,6 @@
 /* Définition déclarative des routes : contrôle d'accès, protection CSRF, validation zod et documentation OpenAPI
    à partir d'une seule description. Toute route passe par ici : aucune route ne peut oublier un contrôle. */
-import { type Need } from '@suivi/shared';
+import { type Permission } from '@suivi/shared';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z, type ZodType } from 'zod';
 import type { Session } from '../auth.js';
@@ -11,8 +11,9 @@ import { HttpError } from './errors.js';
 import { sameOrigin } from './security.js';
 
 type Method = 'GET' | 'HEAD' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
-/** public : sans session ; session : session ouverte à n'importe quelle étape ; any/rw/admin : accès complet et rôle. */
-export type Access = 'public' | 'session' | Need;
+/** public : sans session ; session : session ouverte à n'importe quelle étape ; auth : session complète
+    (compte personnel) ; metier : au moins un module métier lisible ; « module:action » : permission exigée. */
+export type Access = 'public' | 'session' | 'auth' | 'metier' | Permission;
 
 export interface Ctx<B = unknown, Q = unknown, P = unknown> {
   req: FastifyRequest;
@@ -72,7 +73,9 @@ export function registerRoutes(app: FastifyInstance, svc: Services, defs: RouteD
         }
         if (d.access === 'session') {
           if (!s) throw new HttpError(401, 'Session expirée. Reconnectez-vous.', { stage: 'anon' });
-        } else if (d.access !== 'public') svc.auth.require(s, d.access);
+        } else if (d.access === 'auth') svc.auth.requireAuth(s);
+        else if (d.access === 'metier') svc.auth.requireBusinessRead(s);
+        else if (d.access !== 'public') svc.auth.requirePermission(s, d.access);
         const body = d.raw ? req.body : d.body ? d.body.parse(req.body ?? {}) : undefined;
         const query = d.query ? d.query.parse(req.query ?? {}) : undefined;
         const params = d.params ? d.params.parse(req.params ?? {}) : undefined;

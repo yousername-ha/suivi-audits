@@ -2,7 +2,7 @@
    Une connexion dédiée, reconnectée automatiquement ; la présence transite aussi par PostgreSQL, ce qui permet
    plusieurs instances d'API derrière le même frontal. */
 import { EventEmitter } from 'node:events';
-import { ENTITIES, PRESENCE_TTL_MS, type ChangeEvent, type PresenceEntry } from '@suivi/shared';
+import { ENTITIES, PRESENCE_TTL_MS, type ChangeEvent, type PresenceEntry, type Rights } from '@suivi/shared';
 import pg from 'pg';
 import type { Logger } from 'pino';
 import type { Config } from './config.js';
@@ -118,8 +118,10 @@ export class Presence extends EventEmitter {
       .sort((a, b) => a.resource.localeCompare(b.resource) || a.username.localeCompare(b.username));
   }
   /** Présence visible selon le rôle : l'activité dans l'administration n'est visible que des administrateurs. */
-  visibleTo(role: string): PresenceEntry[] {
-    return this.list().filter((e) => role === 'admin' || !e.resource.startsWith('admin'));
+  /** Présence visible : celle de l'administration seulement pour qui peut la consulter. */
+  visibleTo(rights: Rights): PresenceEntry[] {
+    const admin = rights.can('administration', 'lire');
+    return this.list().filter((e) => admin || !e.resource.startsWith('admin'));
   }
   async publish(op: 'set' | 'leave', entry: PresenceEntry) {
     await this.db.q('SELECT pg_notify($1, $2)', ['suivi_presence', JSON.stringify({ op, entry })]);

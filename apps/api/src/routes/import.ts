@@ -22,6 +22,7 @@ import type { Client } from '../db/db.js';
 import { HttpError } from '../http/errors.js';
 import { route } from '../http/route.js';
 import { sha256hex } from '../security/crypto.js';
+import { assertLegacyKeys } from '../rights.js';
 import type { Services } from '../services.js';
 
 const SimulateQuery = z.object({ mode: ImportMode, module: z.string().max(40).optional() });
@@ -116,7 +117,7 @@ export const importRoutes = [
     url: '/api/admin/import/simulate',
     summary: 'Simulation d’un import legacy : validation et rapport par module, AUCUNE écriture en base',
     tags: ['Import legacy'],
-    access: 'admin',
+    access: 'import_export:modifier',
     raw: true,
     bodyLimit: importLimit,
     query: SimulateQuery,
@@ -138,7 +139,7 @@ export const importRoutes = [
     url: '/api/admin/import/apply',
     summary: 'Application d’un import simulé (transaction, sauvegarde préalable, traçabilité, temps réel)',
     tags: ['Import legacy'],
-    access: 'admin',
+    access: 'import_export:modifier',
     raw: true,
     bodyLimit: importLimit,
     query: ImportApplyQuery,
@@ -149,6 +150,7 @@ export const importRoutes = [
       const sha = sha256hex(buf);
       if (sha !== query.sha256)
         throw new HttpError(409, 'Le fichier diffère de celui qui a été simulé : relancez la simulation.');
+      if (query.mode === 'replace') svc.auth.requirePermission(sess, 'import_export:supprimer');
       if (query.mode === 'replace' && query.confirm !== query.module) {
         throw new HttpError(
           422,
@@ -163,6 +165,9 @@ export const importRoutes = [
         const before = await svc.legacy.recompose(c);
         const { next, report } = plan(before?.data ?? null, file, query.mode, query.module);
         if (!report.affected.length) throw new HttpError(422, 'Ce fichier ne modifie aucune donnée : rien à importer.');
+        // L'import écrit dans les modules métier : il faut aussi les droits sur chacun d'eux.
+        assertLegacyKeys(sess.user.rights, report.affected, 'modifier');
+        if (query.mode === 'replace') assertLegacyKeys(sess.user.rights, report.affected, 'supprimer');
         const id = (await c.query<{ id: number }>("SELECT nextval('import_batches_id_seq')::int AS id")).rows[0]!.id;
         // Sauvegarde : la version courante est conservée dans l'historique (protégée de la fusion des versions).
         if (before) {
@@ -234,7 +239,7 @@ export const importRoutes = [
     url: '/api/admin/import',
     summary: 'Historique des imports',
     tags: ['Import legacy'],
-    access: 'admin',
+    access: 'import_export:lire',
     handler: async ({ svc }) =>
       (await svc.db.q(`SELECT ${batchSummary} FROM import_batches ORDER BY id DESC LIMIT 200`)).rows,
   }),
@@ -243,7 +248,7 @@ export const importRoutes = [
     url: '/api/admin/import/:id',
     summary: 'Détail d’un import (rapport complet)',
     tags: ['Import legacy'],
-    access: 'admin',
+    access: 'import_export:lire',
     params: BatchParams,
     handler: async ({ svc, params }) => {
       const r = await svc.db.one(`SELECT ${batchSummary}, report FROM import_batches WHERE id=$1`, [params.id]);
@@ -256,7 +261,7 @@ export const importRoutes = [
     url: '/api/admin/import/:id/file',
     summary: 'Fichier brut d’un import (déchiffré)',
     tags: ['Import legacy'],
-    access: 'admin',
+    access: 'import_export:exporter',
     params: BatchParams,
     handler: async ({ svc, s, ip, params, reply }) => {
       const r = await svc.db.one<{
@@ -275,6 +280,15 @@ export const importRoutes = [
         `import:${params.id}`,
       );
       if (sha256hex(plain) !== r.sha256) throw new HttpError(500, "Échec du contrôle d'intégrité du fichier importé.");
+      // Le fichier source contient des données métier : droit d'exporter chacun de ses modules.
+      let parsed: Record<string, unknown> = {};
+      try {
+        const o = JSON.parse(plain.toString('utf8')) as Record<string, unknown>;
+        parsed = (o && typeof o.data === 'object' && o.format ? o.data : o) as Record<string, unknown>;
+      } catch {
+        /* fichier refusé à l'import : déjà sans contenu exploitable */
+      }
+      assertLegacyKeys((s as Session).user.rights, Object.keys(parsed ?? {}), 'exporter');
       await svc.db.audit((s as Session).user, ip, 'import.file_download', `import:${params.id}`);
       reply
         .header('Content-Type', 'application/json; charset=utf-8')
@@ -288,7 +302,7 @@ export const importRoutes = [
     url: '/api/admin/import/:id/undo',
     summary: 'Annulation d’un import (si aucune modification ultérieure n’a touché les mêmes modules)',
     tags: ['Import legacy'],
-    access: 'admin',
+    access: 'import_export:modifier',
     params: BatchParams,
     handler: async ({ svc, s, ip, params }) => {
       const sess = s as Session;
@@ -307,6 +321,7 @@ export const importRoutes = [
           const expected = k in b.after_state.values ? b.after_state.values[k] : undefined;
           return !deepEqual(cur[k] as Json | undefined, expected);
         });
+        assertLegacyKeys(sess.user.rights, b.modules, 'modifier');
         if (changed.length) {
           throw new HttpError(
             409,
@@ -343,10 +358,12 @@ export const importRoutes = [
     url: '/api/admin/export/legacy',
     summary: 'Export au format legacy (enveloppe, schéma 15), relisible par l’outil historique',
     tags: ['Import legacy'],
-    access: 'admin',
+    access: 'import_export:exporter',
     handler: async ({ svc, s, ip, reply }) => {
       const r = await svc.legacy.recompose();
       if (!r) throw new HttpError(404, 'Aucune donnée.');
+      // Export complet : il faut le droit d'exporter chacun des modules qu'il contient.
+      assertLegacyKeys((s as Session).user.rights, Object.keys(r.data), 'exporter');
       const data = migrateToSchema15(r.data);
       const json = JSON.stringify(data);
       const env = {

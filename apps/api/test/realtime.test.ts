@@ -86,13 +86,13 @@ describe('temps réel (SSE, LISTEN/NOTIFY)', () => {
     s.close();
   });
 
-  it('filtre selon le rôle : les événements des comptes ne vont qu’aux administrateurs', async () => {
+  it('filtre selon les droits : les événements des comptes ne vont qu’à l’administration', async () => {
     const roStream = openStream(await login(t, ro));
     const adminAgent = await login(t, admin);
     const adStream = openStream(adminAgent);
     await Promise.all([roStream.ready, adStream.ready]);
     await Promise.all([roStream.waitFor((e) => e.event === 'hello'), adStream.waitFor((e) => e.event === 'hello')]);
-    await adminAgent.post('/api/admin/users', { username: 'nouveau', role: 'ro' });
+    await adminAgent.post('/api/admin/users', { username: 'nouveau', roles: [{ roleId: 'lecteur' }] });
     expect(
       await adStream.waitFor((e) => e.event === 'change' && (e.data as { entity: string }).entity === 'users'),
     ).toBeTruthy();
