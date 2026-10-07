@@ -326,7 +326,7 @@ nano se pilote **uniquement au clavier** (la souris ne déplace pas le curseur) 
 2. Effacez `suivi-audits.example.local` avec la touche **Retour arrière** (⌫), puis tapez votre nom DNS. La ligne devient par exemple `SITE_ADDRESS=suivi-audits.mondomaine.local`.
 3. Descendez à la ligne `APP_VERSION=` et remplacez le numéro par la version choisie à l'étape 5.3, sans le « v ».
 4. Laissez `CADDY_TLS=internal` pour l'instant (voir 6.4), ainsi que toutes les autres lignes.
-5. Enregistrez : **Ctrl + O**, puis **Entrée**. En bas s'affiche `[ Wrote 46 lines ]` (le nombre peut varier).
+5. Enregistrez : **Ctrl + O**, puis **Entrée**. En bas s'affiche `[ Wrote 47 lines ]` (le nombre peut varier).
 6. Quittez : **Ctrl + X**.
 
 **6.3 Protéger le fichier**, puis vérifier les deux valeurs :
@@ -519,7 +519,9 @@ Pour un besoin particulier, onglet **Rôles** : **Dupliquer** un rôle proche, p
 - personne ne peut modifier ses propres droits : demandez à un autre administrateur ;
 - toute modification de droits est tracée dans le **Journal** (avant et après) et ferme les sessions des personnes concernées.
 
-**9.5 Revue des accès** (ISO 27001, mesure A.5.18) : onglet **Utilisateurs**, boutons **Excel** ou **CSV** de la revue des accès. Le fichier liste chaque compte, ses groupes, ses rôles, ses droits effectifs, sa dernière connexion et son expiration. Le bouton **Droits effectifs** d'un compte montre l'origine de chaque droit (rôle direct ou groupe). Faites cette revue au moins une fois par an, et archivez le fichier.
+**9.5 Paramètres** : menu **Paramètres**. Renseignez au moins la section **Général** (nom de l'organisation, logo, coordonnées). La section **Sécurité** règle la longueur minimale des mots de passe, la durée des sessions et le verrouillage, dans des bornes que l'application impose ; la double authentification reste toujours obligatoire. Les valeurs du fichier `.env` (`SESSION_…`, `PASSWORD_MIN_LENGTH`, `LOCKOUT_…`) ne servent que tant que cette section n'a pas été enregistrée.
+
+**9.6 Revue des accès** (ISO 27001, mesure A.5.18) : onglet **Utilisateurs**, boutons **Excel** ou **CSV** de la revue des accès. Le fichier liste chaque compte, ses groupes, ses rôles, ses droits effectifs, sa dernière connexion et son expiration. Le bouton **Droits effectifs** d'un compte montre l'origine de chaque droit (rôle direct ou groupe). Faites cette revue au moins une fois par an, et archivez le fichier.
 
 <!-- ci: exec: NODE_EXTRA_CA_CERTS=/opt/suivi-audits/racine-suivi-audits.crt node "$GITHUB_WORKSPACE/scripts/ci/guide-api.mjs" compte https://<nom_dns> -->
 
@@ -619,7 +621,7 @@ Repérez le nom exact du fichier `.tar.enc` affiché à l'étape 11.2, puis :
 sudo BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass ./scripts/restore.sh /srv/sauvegardes/suivi-audits/<fichier>.tar.enc
 ```
 Le script vérifie l'empreinte (`… .tar.enc: OK`), affiche la date de la sauvegarde, puis demande de taper `RESTAURER` (en majuscules) suivi d'**Entrée**.
-**Résultat attendu** : la dernière ligne est `Restauration terminée.` Attendez une minute et vérifiez les états (étape 7.3), puis connectez-vous : vos comptes et vos données sont présents.
+**Résultat attendu** : la dernière ligne est `Restauration terminée.` Attendez une minute et vérifiez les états (étape 7.3), puis connectez-vous : vos comptes et vos données sont présents. Notez la date de ce test dans **Paramètres**, section **Sauvegardes** : l'application signale quand le prochain test est dû.
 
 <!-- ci: exec: "$GITHUB_WORKSPACE/scripts/ci/guide-attendre.sh" -->
 <!-- ci: exec: NODE_EXTRA_CA_CERTS=/opt/suivi-audits/racine-suivi-audits.crt node "$GITHUB_WORKSPACE/scripts/ci/guide-api.mjs" verifier https://<nom_dns> -->

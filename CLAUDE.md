@@ -13,6 +13,7 @@ Refonte en cours : la nouvelle application (v3) reprend module par module l'outi
 - `docker-compose.yml` (production, images GHCR `${APP_VERSION}`) : `init` (secrets, droits des volumes, sans réseau) → `db` (PostgreSQL 17) → `app` (API, uid 1000) → `web` (Caddy uid 1001, seul service exposé, sert l'interface). Réseaux `edge` et `backend` internes. `docker-compose.build.yml` construit les images en local ; `docker-compose.dev.yml` sert au développement.
 - `app/public/index.html` : outil historique (fichier unique, ~3 Mo, schéma 15). Il est servi sous `/legacy` avec `apps/api/legacy-shim/shim.js`, qui remplace `window.claude`. Ne pas le réécrire ; toute modification fait l'objet d'un commit séparé (mise à jour via `scripts/update-ui.sh`).
 - `apps/api/seed/state.json` et le bloc `<script id="seed">` de `index.html` : état **vide** (référentiels seulement, `schema` 14).
+- Charte graphique : `packages/ui` (jetons, thème clair et sombre, composants `Page`, `PageHeader`, `DataTable`, `FormSection`, `StatusChip`…), ADR 0011. **Aucune couleur ni aucun espacement codé en dur** dans `apps/web` (vérifié par `apps/web/test/charte.test.ts`). Contrastes WCAG AA vérifiés par `packages/ui/test/contraste.test.ts`.
 - Interface : CSP stricte, **aucun script ni style en ligne**, pas d'attribut `style=` dans le HTML. Avec Mantine : pas d'`AppShell`, `lockScroll={false}`, pas de props de style « responsives » (ADR 0006). Playwright échoue sur toute violation de CSP.
 
 ## Règles
@@ -38,7 +39,8 @@ pnpm dev                                            # docker-compose.dev.yml : h
 cp .env.example .env && sed -i 's/^SITE_ADDRESS=.*/SITE_ADDRESS=localhost/; s/^APP_VERSION=.*/APP_VERSION=local/' .env
 docker compose -f docker-compose.yml -f docker-compose.build.yml build && docker compose up -d
 docker compose exec app setup-token                 # jeton d'installation → https://localhost/setup
-pnpm --filter @suivi/e2e test
+./tests/e2e/run-in-container.sh                     # Playwright dans le conteneur officiel (captures de référence)
+./tests/e2e/run-in-container.sh --update-snapshots  # après une évolution visuelle voulue : relire les captures
 docker compose exec app suivi users                 # commandes d'exploitation : suivi help
 docker compose down -v                              # remise à zéro complète (supprime les volumes)
 node scripts/ci/guide-extraire.mjs docs/INSTALLATION.md nom_dns=localhost version=ci   # script du job « guide »

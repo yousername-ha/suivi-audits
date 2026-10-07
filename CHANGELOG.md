@@ -17,6 +17,17 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
   - journal avant/après ;
   - coupure des sessions concernées ;
   - désactivation automatique des comptes expirés.
+- Charte graphique unique (`packages/ui`, chantier 9 ter, ADR 0011) :
+  - identité de l'outil historique ;
+  - mode clair et mode sombre ;
+  - contrastes WCAG AA vérifiés ;
+  - composants communs ;
+  - aucune valeur codée en dur dans l'interface (test).
+- Page Paramètres pleine largeur :
+  - huit sections (Général, Cycle d'audit, Référentiels, Apparence, Notifications, Import et export, Sauvegardes, Sécurité), chacune avec son enregistrement, son contrôle de version et son journal ;
+  - politique de sécurité réglable dans des bornes non négociables ;
+  - logo de l'organisation.
+- Captures de référence Playwright (Paramètres et Administration, 3 largeurs, clair et sombre), produites dans le conteneur Playwright officiel.
 - Documentation : `docs/BACKLOG-FONCTIONNEL.md`, et feuille de route complétée (exigences `CRRC-01` à `CRRC-04`, `INV-01`, `INV-02`, `INC-01` à `INC-03`).
 
 ### Sécurité
