@@ -1,0 +1,29 @@
+{
+  "name": "@suivi/api",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "description": "API du suivi des audits SMSI (Fastify, PostgreSQL)",
+  "scripts": {
+    "dev": "tsx watch --conditions=source src/server.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "openapi": "tsx --conditions=source src/openapi-cli.ts",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "@suivi/shared": "workspace:*",
+    "drizzle-orm": "0.44.7",
+    "fastify": "5.12.5",
+    "pg": "8.23.1",
+    "pino": "10.4.0",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.1",
+    "@types/pg": "8.23.1",
+    "tsx": "4.23.15",
+    "vitest": "3.2.7"
+  }
+}
