@@ -32,6 +32,9 @@ jobs:
       - name: Installation des dépendances
         run: npm ci --no-audit --no-fund
 
+      - name: Tests unitaires (jeton d'installation)
+        run: npm test
+
       - name: Syntaxe JavaScript (src/ et web/assets/)
         run: |
           set -e
@@ -102,6 +105,15 @@ jobs:
           [ "$code" = 0 ]
           [ "$db" = healthy ] && [ "$app" = healthy ]
 
+      - name: Masquage des jetons dans les journaux de la CI
+        # Le jeton reste affiché en clair dans « docker compose logs app » sur le serveur ;
+        # seul l'affichage dans les journaux GitHub Actions est masqué.
+        run: |
+          tok=$(docker compose logs --no-log-prefix app | grep -oE '[A-Z2-9]{5}(-[A-Z2-9]{5}){3}' | head -1)
+          [ -n "$tok" ] || { echo "::error::Jeton du premier démarrage introuvable dans les journaux de app"; exit 1; }
+          echo "::add-mask::$tok"
+          echo "FIRST_TOKEN=$tok" >> "$GITHUB_ENV"
+
       - name: HTTPS, redirection et jeton d'installation
         run: |
           set -e
@@ -119,9 +131,53 @@ jobs:
           docker compose logs app | grep -q "JETON D'INSTALLATION"
           echo "Jeton d'installation présent dans les journaux de app"
 
+      - name: Installation complète avec setup-token
+        run: |
+          set -e
+          post() { curl -sk -o /tmp/resp.json -w '%{http_code}' -H 'Origin: https://localhost' -H 'Content-Type: application/json' -X POST https://localhost/api/setup -d "$1"; }
+          body() { printf '{"token":"%s","username":"%s","displayName":"Administrateur CI","email":"","password":"%s"}' "$1" "$2" "$PW"; }
+          PW="Ci-$(openssl rand -hex 12)-Aa1!"
+          echo "::add-mask::$PW"
+
+          # Raccourci et commande complète : nouveau jeton, avec expiration et URL /setup
+          out=$(docker compose exec -T app setup-token)
+          TOK=$(printf '%s\n' "$out" | grep -oE '[A-Z2-9]{5}(-[A-Z2-9]{5}){3}' | head -1)
+          [ -n "$TOK" ] || { echo "::error::setup-token n'a pas affiché de jeton"; exit 1; }
+          echo "::add-mask::$TOK"
+          printf '%s\n' "$out" | grep -q "Expire le"
+          printf '%s\n' "$out" | grep -q "https://localhost/setup"
+          echo "setup-token : jeton, date d'expiration et URL affichés"
+
+          # Le jeton du premier démarrage est annulé par le nouveau
+          code=$(post "$(body "$FIRST_TOKEN" admin)")
+          echo "ancien jeton -> $code $(cat /tmp/resp.json)"
+          [ "$code" = 401 ]
+          grep -q '"reason":"invalid"' /tmp/resp.json
+
+          # Création de l'administrateur, jeton saisi en minuscules avec des espaces
+          LOOSE=$(printf '%s' "$TOK" | tr 'A-Z-' 'a-z ')
+          code=$(post "$(body "$LOOSE" admin)")
+          echo "création de l'administrateur -> $code"
+          [ "$code" = 201 ]
+
+          # /setup redirige désormais vers /login
+          loc=$(curl -sk -o /dev/null -w '%{http_code} %{redirect_url}' https://localhost/setup)
+          echo "/setup -> $loc"
+          [ "$loc" = "302 https://localhost/login" ]
+
+          # Second appel refusé (jeton déjà utilisé)
+          code=$(post "$(body "$TOK" admin2)")
+          echo "second appel -> $code $(cat /tmp/resp.json)"
+          [ "$code" = 409 ]
+          grep -q '"reason":"used"' /tmp/resp.json
+
+          # Sans --recovery, setup-token est refusé une fois l'administrateur créé
+          if docker compose exec -T app node src/cli.js setup-token; then echo "::error::setup-token accepté alors qu'un administrateur existe"; exit 1; fi
+          docker compose exec -T app node src/cli.js users
+
       - name: Journaux
         if: always()
-        run: docker compose logs --no-color init db app proxy | sed -E 's/^(app-1 +\| +)[A-Za-z0-9_-]{20,}$/\1<jeton masqué>/'
+        run: docker compose logs --no-color init db app proxy
 
       - name: Arrêt
         if: always()
