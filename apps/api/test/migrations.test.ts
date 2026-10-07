@@ -101,6 +101,9 @@ describe('migration d’une base v2 existante, sans perte', () => {
       [await hashPassword(PASSWORD)],
     ))!.id;
     await v2.q('UPDATE users SET totp_secret=$2 WHERE id=$1', [uid, vault.sealSmall(totpKey, 'totp:' + uid)]);
+    await v2.q(
+      "INSERT INTO users(username, role, password_hash) VALUES ('adjoint', 'rw', 'x'), ('alternant', 'ro', 'x')",
+    );
     const file = Buffer.from('Contenu de la politique v2');
     const docId = (await v2.one<{ id: string }>(
       "INSERT INTO documents(title, refs, current_version, created_by, updated_by) VALUES ('Politique v2', '{A.5.1}', 1, 'rssi', 'rssi') RETURNING id",
@@ -137,7 +140,17 @@ describe('migration d’une base v2 existante, sans perte', () => {
     const applied = (await t.svc.db.q<{ name: string }>('SELECT name FROM schema_migrations ORDER BY name')).rows.map(
       (r) => r.name,
     );
-    expect(applied).toEqual(['001_init.sql', '002_v3_fondations.sql']);
+    expect(applied).toEqual(['001_init.sql', '002_v3_fondations.sql', '003_droits.sql']);
+    // Rôles v2 repris : admin → Administrateur, rw → Contributeur, ro → Lecteur ; colonne users.role supprimée.
+    const mapped = await t.svc.db.q<{ username: string; role_id: string }>(
+      'SELECT u.username, ur.role_id FROM users u JOIN user_roles ur ON ur.user_id = u.id ORDER BY u.username',
+    );
+    expect(mapped.rows).toEqual([
+      { username: 'adjoint', role_id: 'contributeur' },
+      { username: 'alternant', role_id: 'lecteur' },
+      { username: 'rssi', role_id: 'administrateur' },
+    ]);
+    await expect(t.svc.db.q('SELECT role FROM users')).rejects.toThrow(/role/);
     const after = await t.svc.db.one<
       Record<string, number>
     >(`SELECT (SELECT count(*) FROM users)::int u, (SELECT count(*) FROM documents)::int d,

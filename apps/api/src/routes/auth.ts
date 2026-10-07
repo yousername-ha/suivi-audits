@@ -18,6 +18,7 @@ import { z } from 'zod';
 import { accessStage, type Session } from '../auth.js';
 import { HttpError } from '../http/errors.js';
 import { route } from '../http/route.js';
+import { permanentAdminCount } from '../rights.js';
 import { base32, hashPassword, passwordProblems, verifyPassword, verifyTotp } from '../security/crypto.js';
 import type { Services } from '../services.js';
 
@@ -30,7 +31,18 @@ export function meOut(svc: Services, s: Session | null): MeOutT {
   return {
     stage: svc.auth.stage(s),
     csrf: s ? s.csrf : null,
-    user: s ? s.user : null,
+    user: s
+      ? {
+          id: s.user.id,
+          username: s.user.username,
+          displayName: s.user.displayName,
+          totpEnabled: s.user.totpEnabled,
+          mustChangePassword: s.user.mustChangePassword,
+          roles: s.user.roles,
+          expiresAt: s.user.expiresAt,
+        }
+      : null,
+    permissions: s && svc.auth.stage(s) === 'ok' ? s.user.rights.list() : [],
     mfaRequired: svc.cfg.mfaRequired,
     passwordMinLength: svc.cfg.passwordMinLength,
     appName: svc.cfg.appName,
@@ -168,13 +180,14 @@ export const authRoutes = [
         .tx(async (c) => {
           const k = await svc.auth.consumeSetupToken(body.token, c);
           if (k.status !== 'ok') return { status: k.status };
-          if (k.reason !== 'recovery' && (await c.query("SELECT 1 FROM users WHERE role='admin'")).rowCount) {
+          if (k.reason !== 'recovery' && (await permanentAdminCount(c)) > 0) {
             throw new HttpError(409, 'Un administrateur existe déjà.');
           }
           const u = await c.query<{ id: string }>(
-            "INSERT INTO users(username, display_name, email, role, password_hash) VALUES ($1,$2,$3,'admin',$4) RETURNING id",
+            'INSERT INTO users(username, display_name, email, password_hash) VALUES ($1,$2,$3,$4) RETURNING id',
             [body.username, body.displayName || body.username, body.email || '', hash],
           );
+          await c.query("INSERT INTO user_roles(user_id, role_id) VALUES ($1, 'administrateur')", [u.rows[0]!.id]);
           return { status: 'ok' as const, id: u.rows[0]!.id };
         }, body.username)
         .catch((e: { code?: string }) => {
@@ -290,7 +303,7 @@ export const authRoutes = [
     url: '/api/account/totp/disable',
     summary: 'Désactivation de la double authentification (si non obligatoire)',
     tags: ['Compte'],
-    access: 'any',
+    access: 'auth',
     body: PasswordBody,
     handler: async ({ svc, s, ip, body }) => {
       const sess = s as Session;
@@ -312,7 +325,7 @@ export const authRoutes = [
     url: '/api/account/sessions',
     summary: 'Mes sessions ouvertes',
     tags: ['Compte'],
-    access: 'any',
+    access: 'auth',
     response: z.array(
       z.object({
         id: z.string(),
@@ -337,7 +350,7 @@ export const authRoutes = [
     url: '/api/account/sessions/revoke-others',
     summary: 'Fermer mes autres sessions',
     tags: ['Compte'],
-    access: 'any',
+    access: 'auth',
     handler: async ({ svc, s, ip }) => {
       const sess = s as Session;
       await svc.auth.destroyUserSessions(sess.user.id, sess.sid);

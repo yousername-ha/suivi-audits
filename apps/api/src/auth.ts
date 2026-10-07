@@ -1,10 +1,11 @@
 /* Sessions, authentification (mot de passe + TOTP), jeton d'installation initiale. */
-import { roleSatisfies, type AccessStage, type Need, type Role } from '@suivi/shared';
+import { effectivePermissions, Rights, type AccessStage, type Permission } from '@suivi/shared';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { Config } from './config.js';
 import type { Client, Db } from './db/db.js';
 import { HttpError } from './http/errors.js';
 import { isHttps } from './http/security.js';
+import { loadGrants, permanentAdminCount, permissionDenied } from './rights.js';
 import { dummyVerify, sha256, token, verifyPassword, verifyTotp, type Vault } from './security/crypto.js';
 import {
   checkSetupToken,
@@ -21,7 +22,11 @@ export interface SessionUser {
   id: string;
   username: string;
   displayName: string;
-  role: Role;
+  /** Noms des rôles détenus (directement ou par un groupe), pour l'affichage. */
+  roles: string[];
+  /** Droits effectifs, recalculés à chaque requête. */
+  rights: Rights;
+  expiresAt: string | null;
   totpEnabled: boolean;
   mustChangePassword: boolean;
 }
@@ -72,18 +77,29 @@ export class Auth {
     return accessStage(s, this.cfg.mfaRequired);
   }
 
-  /** Vérifie le niveau d'accès. need : 'any' (session complète) | 'rw' | 'admin'. */
-  require(s: Session | null, need: Need): Session {
+  /** Session complète (mot de passe, double authentification, mot de passe définitif). */
+  requireAuth(s: Session | null): Session {
     if (!s) throw new HttpError(401, 'Authentification requise.', { stage: 'anon' });
     const st = this.stage(s);
     if (st !== 'ok') throw new HttpError(403, 'Authentification incomplète.', { stage: st });
-    if (!roleSatisfies(s.user.role, need)) {
-      throw new HttpError(
-        403,
-        need === 'admin' ? 'Réservé aux administrateurs.' : 'Droits insuffisants (lecture seule).',
-      );
-    }
     return s;
+  }
+
+  /** Garde unique des droits : session complète et permission « module:action ». */
+  requirePermission(s: Session | null, p: Permission): Session {
+    const sess = this.requireAuth(s);
+    if (!sess.user.rights.has(p)) throw permissionDenied(p);
+    return sess;
+  }
+
+  /** Accès à l'outil historique et à l'accueil : au moins un module métier lisible. */
+  requireBusinessRead(s: Session | null): Session {
+    const sess = this.requireAuth(s);
+    if (!sess.user.rights.canReadAnyBusiness())
+      throw new HttpError(403, 'Droits insuffisants : aucun module métier ne vous est ouvert en lecture.', {
+        reason: 'permission',
+      });
+    return sess;
   }
 
   /* ---------------------------------------------------------------- Cookie et sessions */
@@ -134,18 +150,19 @@ export class Auth {
       id: string;
       username: string;
       display_name: string;
-      role: Role;
       disabled: boolean;
+      expires_at: Date | null;
       totp_enabled: boolean;
       must_change_password: boolean;
     }>(
-      `SELECT s.id_hash, s.csrf, s.mfa_ok, s.last_seen_at, u.id, u.username, u.display_name, u.role, u.disabled,
+      `SELECT s.id_hash, s.csrf, s.mfa_ok, s.last_seen_at, u.id, u.username, u.display_name, u.disabled, u.expires_at,
               u.totp_enabled, u.must_change_password
          FROM sessions s JOIN users u ON u.id = s.user_id
         WHERE s.id_hash = $1 AND s.expires_at > now() AND s.last_seen_at > now() - make_interval(mins => $2)`,
       [h, this.cfg.session.idleMinutes],
     );
-    if (!r || r.disabled) return null;
+    if (!r || r.disabled || (r.expires_at && new Date(r.expires_at) <= new Date())) return null;
+    const grants = await loadGrants(this.db.pool, r.id);
     if (touch && Date.now() - new Date(r.last_seen_at).getTime() > 60e3) {
       this.db.q('UPDATE sessions SET last_seen_at = now() WHERE id_hash = $1', [h]).catch(() => {});
     }
@@ -157,7 +174,9 @@ export class Auth {
         id: r.id,
         username: r.username,
         displayName: r.display_name,
-        role: r.role,
+        roles: [...new Set(grants.map((g) => g.roleName))],
+        rights: new Rights(effectivePermissions(grants).keys()),
+        expiresAt: r.expires_at ? new Date(r.expires_at).toISOString() : null,
         totpEnabled: r.totp_enabled,
         mustChangePassword: r.must_change_password,
       },
@@ -188,6 +207,7 @@ export class Auth {
       locked_until: Date | null;
       failed_logins: number;
       disabled: boolean;
+      expires_at: Date | null;
       totp_enabled: boolean;
       must_change_password: boolean;
     }>('SELECT * FROM users WHERE lower(username) = lower($1)', [username.slice(0, 64)]);
@@ -211,6 +231,8 @@ export class Auth {
       return { ok: false as const, reason: lock ? ('locked_now' as const) : ('bad_password' as const), user: u };
     }
     if (u.disabled) return { ok: false as const, reason: 'disabled' as const, user: u };
+    if (u.expires_at && new Date(u.expires_at) <= new Date())
+      return { ok: false as const, reason: 'expired' as const, user: u };
     await this.db.q('UPDATE users SET failed_logins = 0, locked_until = NULL, last_login_at = now() WHERE id = $1', [
       u.id,
     ]);
@@ -236,7 +258,7 @@ export class Auth {
 
   /* ---------------------------------------------------------------- Jeton d'installation */
   async adminExists(): Promise<boolean> {
-    return !!(await this.db.one("SELECT 1 FROM users WHERE role = 'admin' AND NOT disabled LIMIT 1"));
+    return (await permanentAdminCount(this.db.pool)) > 0;
   }
   async setupRecord(): Promise<SetupTokenRecord | null> {
     const r = await this.db.one<{ value: SetupTokenRecord }>("SELECT value FROM settings WHERE key = 'setup_token'");

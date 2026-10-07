@@ -6,12 +6,12 @@
    avertissement en temps réel quand un autre utilisateur enregistre. Configuration : window.__SUIVI (injectée par le serveur). */
 (function () {
   'use strict';
-  var CFG = window.__SUIVI || { role: 'ro', user: '', csrf: '', takenOver: [] };
+  var CFG = window.__SUIVI || { roles: [], canWrite: false, admin: false, readOnly: [], user: '', csrf: '', takenOver: [] };
   var KEY = 'suivi-audits-smsi:v1';
   var STATE_URL = '/api/legacy/state';
   var etag = null;
 
-  try { localStorage.setItem('suivi-audits-smsi:ro', CFG.role === 'ro' ? '1' : '0'); } catch (e) { /* stockage local indisponible : sans effet */ }
+  try { localStorage.setItem('suivi-audits-smsi:ro', CFG.canWrite ? '0' : '1'); } catch (e) { /* stockage local indisponible : sans effet */ }
 
   function err(code, msg) { var e = new Error(msg || code); e.code = code; return e; }
   var ready = fetch(STATE_URL, { method: 'HEAD', cache: 'no-store', credentials: 'same-origin' })
@@ -70,6 +70,11 @@
         { label: 'Ouvrir la nouvelle interface', href: '/' }]);
       throw err('conflict');
     }
+    if (r.status === 403 && j.reason === 'permission') {
+      banner((j.error || 'Droits insuffisants.') + ' Vos modifications sur ce module ne sont pas enregistrées.', [
+        { label: 'Recharger la version du serveur', primary: true, run: reloadServer }]);
+      throw err('conflict');
+    }
     if (r.status === 403) throw err('not_writer');
     if (r.status === 412) {
       banner('Les données ont été modifiées par ' + (j.by || 'un autre utilisateur') + ' depuis votre chargement. Vos modifications ne sont pas encore enregistrées sur le serveur.', [
@@ -85,7 +90,7 @@
   function toBlob(d) { if (d instanceof Blob) return d; if (typeof d === 'string') return new Blob([d], { type: 'text/plain;charset=utf-8' }); return new Blob([d]); }
   var artifact = {
     publish: function (files) {
-      if (CFG.role === 'ro') return Promise.reject(err('not_writer'));
+      if (!CFG.canWrite) return Promise.reject(err('not_writer'));
       if (typeof files === 'string') return Promise.reject(err('capability_disabled'));
       var f = files && files['data/state.json'];
       return f ? put(f.content, false) : Promise.reject(err('invalid_content'));
@@ -102,7 +107,7 @@
   window.claude = {
     use: function (name) {
       if (name === 'downloads') return Promise.resolve(downloads);
-      if (name === 'artifact') return CFG.role === 'ro' ? Promise.reject(err('not_granted')) : Promise.resolve(artifact);
+      if (name === 'artifact') return CFG.canWrite ? Promise.resolve(artifact) : Promise.reject(err('not_granted'));
       return Promise.reject(err('not_declared'));
     }
   };
@@ -129,15 +134,20 @@
       t.setAttribute('role', 'note');
       t.textContent = 'Module géré dans la nouvelle interface : ' + CFG.takenOver.map(function (m) { return m.label; }).join(', ') + '. Consultation seule ici.';
       document.body.appendChild(t);
+    } else if (CFG.canWrite && CFG.readOnly && CFG.readOnly.length) {
+      var ro = el('div', 'sv-taken');
+      ro.setAttribute('role', 'note');
+      ro.textContent = 'Consultation seule (droits) : ' + CFG.readOnly.join(', ') + '. Les enregistrements qui modifient ces modules sont refusés.';
+      document.body.appendChild(ro);
     }
     // Menu utilisateur
     var wrap = el('nav', 'sv-menu'); wrap.setAttribute('aria-label', 'Menu du compte');
     var btn = el('button'); btn.type = 'button'; btn.setAttribute('aria-expanded', 'false');
-    var dot = el('i', CFG.role === 'ro' ? 'ro' : ''); btn.append(dot, document.createTextNode(CFG.name || CFG.user));
+    var dot = el('i', CFG.canWrite ? '' : 'ro'); btn.append(dot, document.createTextNode(CFG.name || CFG.user));
     var ul = el('ul'); ul.hidden = true;
-    var roleL = { admin: 'Administrateur', rw: 'Lecture et écriture', ro: 'Lecture seule' }[CFG.role] || '';
+    var roleL = (CFG.roles || []).join(', ') || 'Aucun rôle';
     ul.appendChild(el('li', 'sv-h', CFG.user + ' · ' + roleL));
-    [['Nouvelle interface (accueil)', '/'], ['Documents et liens', '/documents'], ['Mon compte', '/account']].concat(CFG.role === 'admin' ? [['Administration', '/admin']] : [])
+    [['Nouvelle interface (accueil)', '/'], ['Documents et liens', '/documents'], ['Mon compte', '/account']].concat(CFG.admin ? [['Administration', '/admin']] : [])
       .forEach(function (x) { var li = el('li'), a = el('a', '', x[0]); a.href = x[1]; li.appendChild(a); ul.appendChild(li); });
     var lo = el('li'), lb = el('button', '', 'Déconnexion'); lb.type = 'button';
     lb.onclick = function () { fetch('/api/auth/logout', { method: 'POST', headers: { 'X-CSRF-Token': CFG.csrf }, credentials: 'same-origin' }).finally(function () { location.href = '/login'; }); };

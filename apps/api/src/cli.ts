@@ -47,18 +47,23 @@ async function main() {
     case 'users': {
       const r = await svc.db.q<{
         username: string;
-        role: string;
+        roles: string | null;
+        expires_at: Date | null;
         disabled: boolean;
         totp_enabled: boolean;
         locked_until: Date | null;
         last_login_at: Date | null;
       }>(
-        'SELECT username, role, disabled, totp_enabled, locked_until, last_login_at FROM users ORDER BY lower(username)',
+        `SELECT u.username, u.disabled, u.totp_enabled, u.locked_until, u.last_login_at, u.expires_at,
+                (SELECT string_agg(r.name, ', ' ORDER BY r.name) FROM user_roles ur JOIN roles r ON r.id = ur.role_id
+                  WHERE ur.user_id = u.id) AS roles
+           FROM users u ORDER BY lower(u.username)`,
       );
       console.table(
         r.rows.map((u) => ({
           compte: u.username,
-          role: u.role,
+          roles: u.roles ?? '',
+          expiration: u.expires_at ? new Date(u.expires_at).toISOString().slice(0, 10) : '',
           actif: !u.disabled,
           mfa: u.totp_enabled,
           verrouillé: !!(u.locked_until && u.locked_until > new Date()),

@@ -1,5 +1,5 @@
 /* Événements temps réel (SSE /api/events), alimentés par LISTEN/NOTIFY de PostgreSQL. */
-import { roleSatisfies, type Need, type Role } from './roles.js';
+import { type Permission, type Rights } from './permissions.js';
 
 /** Entités diffusées. Chaque événement ne contient que des métadonnées (jamais de contenu). */
 export const ENTITIES = [
@@ -7,6 +7,8 @@ export const ENTITIES = [
   'document_versions',
   'links',
   'users',
+  'groups',
+  'roles',
   'sessions',
   'settings',
   'legacy_state',
@@ -14,20 +16,23 @@ export const ENTITIES = [
 ] as const;
 export type Entity = (typeof ENTITIES)[number];
 
-/** Rôle minimal pour recevoir les événements d'une entité. */
-export const ENTITY_NEED: Record<Entity, Need> = {
-  documents: 'any',
-  document_versions: 'any',
-  links: 'any',
-  users: 'admin',
-  sessions: 'admin',
-  settings: 'admin',
-  legacy_state: 'any',
-  import_batches: 'admin',
+/** Permission requise pour recevoir les événements d'une entité ; « métier » : au moins un module métier lisible. */
+export const ENTITY_PERMISSION: Record<Entity, Permission | 'metier'> = {
+  documents: 'documents:lire',
+  document_versions: 'documents:lire',
+  links: 'documents:lire',
+  users: 'administration:lire',
+  groups: 'administration:lire',
+  roles: 'administration:lire',
+  sessions: 'administration:lire',
+  settings: 'parametres:lire',
+  legacy_state: 'metier',
+  import_batches: 'import_export:lire',
 };
 
-export function canReceive(role: Role, entity: Entity): boolean {
-  return roleSatisfies(role, ENTITY_NEED[entity]);
+export function canReceive(rights: Rights, entity: Entity): boolean {
+  const p = ENTITY_PERMISSION[entity];
+  return p === 'metier' ? rights.canReadAnyBusiness() : rights.has(p);
 }
 
 export type ChangeOp = 'insert' | 'update' | 'delete';

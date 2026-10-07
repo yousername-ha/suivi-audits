@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { HttpError, errorHandler } from './http/errors.js';
 import { buildOpenApi, registerRoutes, route, type RouteDef } from './http/route.js';
 import { isHttps, setBaseHeaders } from './http/security.js';
+import { expireAccounts } from './rights.js';
+import { accessRoutes } from './routes/access.js';
 import { adminRoutes } from './routes/admin.js';
 import { authRoutes } from './routes/auth.js';
 import { documentRoutes } from './routes/documents.js';
@@ -33,7 +35,7 @@ const systemRoutes = (all: () => RouteDef[]) => [
     url: '/api/openapi.json',
     summary: 'Description OpenAPI 3.1 de l’API',
     tags: ['Système'],
-    access: 'any',
+    access: 'auth',
     handler: async ({ svc }) => buildOpenApi(all(), { title: 'Suivi des audits SMSI — API', version: svc.cfg.version }),
   }),
 ];
@@ -44,6 +46,7 @@ export function allRoutes(): RouteDef[] {
     ...systemRoutes(() => list),
     ...authRoutes,
     ...documentRoutes,
+    ...accessRoutes,
     ...adminRoutes,
     ...eventRoutes,
     ...legacyRoutes,
@@ -74,7 +77,18 @@ export async function buildApp(svc: Services): Promise<FastifyInstance> {
   // Purge des sessions expirées.
   const purge = setInterval(() => svc.auth.purgeExpired().catch(() => {}), 10 * 60e3);
   purge.unref();
-  app.addHook('onClose', async () => clearInterval(purge));
+  // Comptes arrivés à expiration : désactivés automatiquement (et sessions fermées), au démarrage puis toutes les 5 min.
+  const expire = () =>
+    expireAccounts(svc.db)
+      .then((names) => names.length && svc.log.info({ accounts: names }, 'accounts expired'))
+      .catch((e: Error) => svc.log.warn({ err: e.message }, 'account expiry failed'));
+  void expire();
+  const expiry = setInterval(expire, 5 * 60e3);
+  expiry.unref();
+  app.addHook('onClose', async () => {
+    clearInterval(purge);
+    clearInterval(expiry);
+  });
   return app;
 }
 

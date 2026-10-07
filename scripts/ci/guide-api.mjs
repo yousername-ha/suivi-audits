@@ -2,7 +2,7 @@
 /* CI, job « guide » : remplace les gestes faits dans le navigateur par le guide d'installation (docs/INSTALLATION.md),
    au moyen de l'API, sur la pile installée en suivant le guide. Sans dépendance (Node 20 ou plus).
      administrateur <url>         étape 8 : jeton d'installation, création de l'administrateur, enrôlement TOTP
-     compte <url>                 étape 9 : création d'un compte « lecture et écriture » (mot de passe temporaire)
+     compte <url>                 étape 9 : création d'un compte « Contributeur » (mot de passe temporaire)
      import <url> <fichier.json>  étape 10 : simulation puis import (mode Initialiser) d'un fichier de l'ancien outil
      verifier <url>               étape 11.4 : après restauration, comptes et données présents
    Le certificat est vérifié : lancer avec NODE_EXTRA_CA_CERTS=<certificat racine copié à l'étape 8.3>.
@@ -128,7 +128,8 @@ switch (cmd) {
     save(st);
     await call('POST', '/api/account/totp/confirm', { json: { code: await freshCode(st) } });
     const m = await me();
-    if (m.stage !== 'ok' || m.user?.role !== 'admin') fail(`administrateur incomplet : ${JSON.stringify(m)}`);
+    if (m.stage !== 'ok' || !m.permissions?.includes('administration:administrer'))
+      fail(`administrateur incomplet : ${JSON.stringify(m)}`);
     if ((await call('GET', '/api/setup')).needed) fail('/setup devrait être désactivé après la création');
     console.log('Étape 8 : administrateur « rssi » créé, double authentification active.');
     break;
@@ -137,11 +138,11 @@ switch (cmd) {
     const st = load();
     await login(st);
     const r = await call('POST', '/api/admin/users', {
-      json: { username: 'adjoint', displayName: 'RSSI adjoint', role: 'rw' },
+      json: { username: 'adjoint', displayName: 'RSSI adjoint', roles: [{ roleId: 'contributeur' }] },
     });
     if (!r.temporaryPassword) fail('mot de passe temporaire absent');
     mask(r.temporaryPassword);
-    console.log('Étape 9 : compte « adjoint » (lecture et écriture) créé avec un mot de passe temporaire.');
+    console.log('Étape 9 : compte « adjoint » (Contributeur) créé avec un mot de passe temporaire.');
     break;
   }
   case 'import': {

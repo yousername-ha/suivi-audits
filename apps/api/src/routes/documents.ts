@@ -119,7 +119,8 @@ async function download(ctx: Ctx<unknown, { v?: string; inline?: string }, { id:
        AND v.version = COALESCE($2::int, d.current_version) WHERE d.id=$1`,
     [params.id, v],
   );
-  if (!row || (row.deleted_at && s.user.role === 'ro')) throw new HttpError(404, 'Document introuvable.');
+  if (!row || (row.deleted_at && !s.user.rights.can('documents', 'supprimer')))
+    throw new HttpError(404, 'Document introuvable.');
   let plain: Buffer;
   try {
     plain = svc.vault.decrypt(
@@ -168,11 +169,11 @@ export const documentRoutes = [
     url: '/api/documents',
     summary: 'Liste des documents (recherche, rattachement, catégorie, corbeille)',
     tags: ['Documents'],
-    access: 'any',
+    access: 'documents:lire',
     query: DocumentQuery,
     response: z.array(DocumentOut),
     handler: async ({ svc, s, query }) => {
-      if (query.trash === '1' && (s as Session).user.role === 'ro')
+      if (query.trash === '1' && !(s as Session).user.rights.can('documents', 'supprimer'))
         throw new HttpError(403, 'Droits insuffisants (lecture seule).');
       const where = [query.trash === '1' ? 'd.deleted_at IS NOT NULL' : 'd.deleted_at IS NULL'];
       const args: unknown[] = [];
@@ -200,7 +201,7 @@ export const documentRoutes = [
     url: '/api/documents/categories',
     summary: 'Catégories utilisées (documents et liens)',
     tags: ['Documents'],
-    access: 'any',
+    access: 'documents:lire',
     response: z.array(z.string()),
     handler: async ({ svc }) =>
       (
@@ -215,7 +216,7 @@ export const documentRoutes = [
     url: '/api/documents',
     summary: 'Dépôt d’un document (corps binaire, en-têtes X-File-Name et X-Meta)',
     tags: ['Documents'],
-    access: 'rw',
+    access: 'documents:modifier',
     raw: true,
     bodyLimit: (c) => c.maxUploadMb * 1024 * 1024,
     status: 201,
@@ -261,12 +262,13 @@ export const documentRoutes = [
     url: '/api/documents/:id',
     summary: 'Fiche d’un document et ses versions (ETag = version)',
     tags: ['Documents'],
-    access: 'any',
+    access: 'documents:lire',
     params: IdParams,
     response: DocumentDetailOut,
     handler: async ({ svc, params, reply, s }) => {
       const d = await docById(svc, params.id);
-      if (!d || (d.deleted_at && (s as Session).user.role === 'ro')) throw new HttpError(404, 'Document introuvable.');
+      if (!d || (d.deleted_at && !(s as Session).user.rights.can('documents', 'supprimer')))
+        throw new HttpError(404, 'Document introuvable.');
       const v = await svc.db.q(
         'SELECT version, filename, mime, size, sha256, scan_status, uploaded_by, uploaded_at, comment FROM document_versions WHERE document_id=$1 ORDER BY version DESC',
         [d.id],
@@ -280,7 +282,7 @@ export const documentRoutes = [
     url: '/api/documents/:id',
     summary: 'Modification des métadonnées (If-Match obligatoire, 412 si le document a changé)',
     tags: ['Documents'],
-    access: 'rw',
+    access: 'documents:modifier',
     params: IdParams,
     body: DocumentMeta,
     response: DocumentOut,
@@ -312,7 +314,7 @@ export const documentRoutes = [
     url: '/api/documents/:id/versions',
     summary: 'Nouvelle version d’un document (corps binaire, X-File-Name, X-Comment)',
     tags: ['Documents'],
-    access: 'rw',
+    access: 'documents:modifier',
     params: IdParams,
     raw: true,
     bodyLimit: (c) => c.maxUploadMb * 1024 * 1024,
@@ -358,15 +360,15 @@ export const documentRoutes = [
   route({
     method: 'DELETE',
     url: '/api/documents/:id',
-    summary: 'Mise à la corbeille (purge=1 : suppression définitive, administrateurs)',
+    summary: 'Mise à la corbeille (purge=1 : suppression définitive, permission documents:administrer)',
     tags: ['Documents'],
-    access: 'rw',
+    access: 'documents:supprimer',
     params: IdParams,
     query: z.object({ purge: z.enum(['0', '1']).optional() }),
     handler: async ({ svc, s, ip, params, query }) => {
       const sess = s as Session;
       const purge = query.purge === '1';
-      if (purge) svc.auth.require(sess, 'admin');
+      if (purge) svc.auth.requirePermission(sess, 'documents:administrer');
       const r = await svc.db.tx(
         (c) =>
           purge
@@ -393,7 +395,7 @@ export const documentRoutes = [
     url: '/api/documents/:id/restore',
     summary: 'Restauration depuis la corbeille',
     tags: ['Documents'],
-    access: 'rw',
+    access: 'documents:supprimer',
     params: IdParams,
     handler: async ({ svc, s, ip, params }) => {
       const sess = s as Session;
@@ -415,7 +417,7 @@ export const documentRoutes = [
     url: '/api/documents/:id/download',
     summary: 'Téléchargement (déchiffrement, contrôle d’intégrité SHA-256)',
     tags: ['Documents'],
-    access: 'any',
+    access: 'documents:lire',
     params: IdParams,
     query: DownloadQuery,
     handler: download,
@@ -425,7 +427,7 @@ export const documentRoutes = [
     url: '/d/:id',
     summary: 'Lien interne vers un document (à coller dans l’outil de suivi)',
     tags: ['Documents'],
-    access: 'any',
+    access: 'documents:lire',
     params: IdParams,
     query: DownloadQuery,
     hidden: true,
@@ -438,7 +440,7 @@ export const documentRoutes = [
     url: '/api/links',
     summary: 'Liste des liens',
     tags: ['Liens'],
-    access: 'any',
+    access: 'documents:lire',
     query: DocumentQuery.omit({ trash: true }),
     response: z.array(LinkOut),
     handler: async ({ svc, query }) => {
@@ -465,7 +467,7 @@ export const documentRoutes = [
     url: '/api/links',
     summary: 'Ajout d’un lien',
     tags: ['Liens'],
-    access: 'rw',
+    access: 'documents:modifier',
     body: LinkCreateBody,
     status: 201,
     response: LinkOut,
@@ -497,7 +499,7 @@ export const documentRoutes = [
     url: '/api/links/:id',
     summary: 'Modification d’un lien (If-Match obligatoire, 412 si le lien a changé)',
     tags: ['Liens'],
-    access: 'rw',
+    access: 'documents:modifier',
     params: IdParams,
     body: LinkPatchBody,
     response: LinkOut,
@@ -530,7 +532,7 @@ export const documentRoutes = [
     url: '/api/links/:id',
     summary: 'Suppression d’un lien',
     tags: ['Liens'],
-    access: 'rw',
+    access: 'documents:supprimer',
     params: IdParams,
     handler: async ({ svc, s, ip, params }) => {
       const sess = s as Session;

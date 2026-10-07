@@ -15,7 +15,7 @@ export const eventRoutes = [
     url: '/api/events',
     summary: 'Flux SSE : changements (entité, id, version, auteur), présence ; filtré selon le rôle',
     tags: ['Temps réel'],
-    access: 'any',
+    access: 'auth',
     handler: async ({ svc, s, req, reply }) => {
       const sess = s as Session;
       reply.hijack();
@@ -36,24 +36,28 @@ export const eventRoutes = [
       res.write('retry: 3000\n\n');
       send('hello', {
         user: sess.user.username,
-        role: sess.user.role,
-        presence: svc.presence.visibleTo(sess.user.role),
+        roles: sess.user.roles,
+        presence: svc.presence.visibleTo(sess.user.rights),
       });
 
       const onChange = (e: ChangeEvent) => {
-        if (canReceive(sess.user.role, e.entity)) send('change', e);
+        if (canReceive(sess.user.rights, e.entity)) send('change', e);
       };
-      const onPresence = () => send('presence', svc.presence.visibleTo(sess.user.role));
+      const onPresence = () => send('presence', svc.presence.visibleTo(sess.user.rights));
       svc.bus.on('change', onChange);
       svc.presence.on('update', onPresence);
 
       const ping = setInterval(() => open && res.write(`: ping ${Date.now()}\n\n`), PING_MS);
-      // Revalidation périodique : une session fermée, expirée ou un rôle modifié coupe le flux.
+      // Revalidation périodique : une session fermée ou expirée, ou des droits modifiés, coupent le flux.
       const recheck = setInterval(() => {
         svc.auth
           .loadByHash(sess.sid, false)
           .then((cur) => {
-            if (!cur || cur.user.role !== sess.user.role || svc.auth.stage(cur) !== 'ok') {
+            if (
+              !cur ||
+              cur.user.rights.list().join() !== sess.user.rights.list().join() ||
+              svc.auth.stage(cur) !== 'ok'
+            ) {
               send('logout', { reason: 'session' });
               close();
             }
@@ -79,21 +83,21 @@ export const eventRoutes = [
     url: '/api/presence',
     summary: 'Présence courante (qui consulte ou modifie quoi)',
     tags: ['Temps réel'],
-    access: 'any',
-    handler: async ({ svc, s }) => svc.presence.visibleTo((s as Session).user.role),
+    access: 'auth',
+    handler: async ({ svc, s }) => svc.presence.visibleTo((s as Session).user.rights),
   }),
   route({
     method: 'POST',
     url: '/api/presence',
     summary: 'Déclaration de présence (renouvelée toutes les 20 s par l’interface)',
     tags: ['Temps réel'],
-    access: 'any',
+    access: 'auth',
     body: PresenceBody,
     handler: async ({ svc, s, body }) => {
       const sess = s as Session;
       if (!svc.limits.presence(body.client)) throw new HttpError(429, 'Trop de requêtes.');
-      if (body.resource.startsWith('admin') && sess.user.role !== 'admin')
-        throw new HttpError(403, 'Réservé aux administrateurs.');
+      if (body.resource.startsWith('admin') && !sess.user.rights.can('administration', 'lire'))
+        throw new HttpError(403, 'Réservé à l’administration.');
       await svc.presence.publish('set', {
         client: body.client,
         username: sess.user.username,
@@ -110,7 +114,7 @@ export const eventRoutes = [
     url: '/api/presence/:client',
     summary: 'Fin de présence (fermeture de l’onglet)',
     tags: ['Temps réel'],
-    access: 'any',
+    access: 'auth',
     params: z.object({ client: z.string().regex(/^[A-Za-z0-9_-]{8,64}$/) }),
     handler: async ({ svc, s, params }) => {
       const sess = s as Session;
