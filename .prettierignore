@@ -1,0 +1,9 @@
+app/public/
+pnpm-lock.yaml
+**/dist/
+**/coverage/
+**/playwright-report/
+**/test-results/
+*.md
+docs/
+tests/fixtures/

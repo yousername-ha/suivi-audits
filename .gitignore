@@ -18,3 +18,8 @@ backups/
 node_modules/
 npm-debug.log*
 .DS_Store
+**/dist/
+**/coverage/
+**/playwright-report/
+**/test-results/
+*.tsbuildinfo
