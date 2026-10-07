@@ -15,9 +15,15 @@
     <div class="brand"><span class="brand-mark" aria-hidden="true">S</span><span>Installation initiale</span></div>
     <div class="card">
       <h1>Créer le compte administrateur</h1>
-      <p class="muted small">Le jeton d'installation est affiché dans les journaux du conteneur au premier démarrage :<br><code class="mono">docker compose logs app | grep -A3 JETON</code></p>
+      <section class="tokbox" aria-labelledby="tokbox-h">
+        <h2 id="tokbox-h">Récupérer le jeton</h2>
+        <p class="small muted">Sur le serveur, dans le dossier de l'application, exécuter l'une des commandes suivantes. Le jeton affiché est valable 24 h ; en générer un nouveau annule le précédent.</p>
+        <div class="cmd"><code class="mono">docker compose exec app setup-token</code><button class="btn sm" type="button" data-copy="docker compose exec app setup-token">Copier</button></div>
+        <p class="small muted">ou, pour retrouver le jeton émis au démarrage :</p>
+        <div class="cmd"><code class="mono">docker compose logs app | grep -A3 JETON</code><button class="btn sm" type="button" data-copy="docker compose logs app | grep -A3 JETON">Copier</button></div>
+      </section>
       <form id="f-setup" autocomplete="off">
-        <label class="fld">Jeton d'installation<input name="token" required autocomplete="off" spellcheck="false" class="mono"></label>
+        <label class="fld">Jeton d'installation<input name="token" id="token" required autocomplete="off" autocapitalize="characters" spellcheck="false" class="mono tok" placeholder="XXXXX-XXXXX-XXXXX-XXXXX" aria-describedby="tokHint"><span class="hint" id="tokHint">20 caractères, majuscules et chiffres de 2 à 9. Minuscules, espaces et tirets acceptés.</span></label>
         <div class="grid2">
           <label class="fld">Identifiant<input name="username" required maxlength="64" autocomplete="username" pattern="[A-Za-z0-9._@\-]{2,64}"></label>
           <label class="fld">Nom affiché<input name="displayName" maxlength="120" autocomplete="name"></label>

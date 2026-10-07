@@ -143,3 +143,12 @@ dialog.wide{width:min(900px,calc(100% - 24px))}
 .dlg-b>*{flex-shrink:0}
 .toolbar .inp{width:auto}.toolbar select.inp{max-width:300px}
 .toolbar .search{width:100%}
+
+/* Installation : encadré « Récupérer le jeton » et champ du jeton */
+.tokbox{margin-top:16px;padding:14px 16px;border:1px solid var(--line);border-radius:var(--r);background:var(--sunk);display:flex;flex-direction:column;gap:8px}
+.tokbox h2{font-size:15px}
+.tokbox p{margin:0}
+.cmd{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line2);border-radius:var(--r);padding:6px 6px 6px 10px}
+.cmd code{flex:1;min-width:0;white-space:pre-wrap;overflow-wrap:anywhere;user-select:all}
+.fld input.tok{font-size:18px;letter-spacing:.08em;text-transform:uppercase}
+.fld input.tok::placeholder{letter-spacing:.08em;color:var(--ink3)}
