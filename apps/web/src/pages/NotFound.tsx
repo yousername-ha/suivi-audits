@@ -23,7 +23,8 @@ export function ErrorPage() {
       <Stack align="center" maw={560}>
         <Title order={1}>Une erreur est survenue</Title>
         <Text c="dimmed" ta="center">
-          L’affichage de cette page a échoué. Rechargez la page ; si le problème persiste, transmettez ce message à l’administrateur.
+          L’affichage de cette page a échoué. Rechargez la page ; si le problème persiste, transmettez ce message à
+          l’administrateur.
         </Text>
         <Text size="sm" className="mono" ta="center">
           {err instanceof Error ? err.message : String(err)}

@@ -35,7 +35,8 @@ const queryClient = new QueryClient({
 function RequireAuth({ admin = false }: { admin?: boolean }) {
   const me = useMe();
   const loc = useLocation();
-  if (me.stage !== 'ok') return <Navigate to={`/login?next=${encodeURIComponent(loc.pathname + loc.search)}`} replace />;
+  if (me.stage !== 'ok')
+    return <Navigate to={`/login?next=${encodeURIComponent(loc.pathname + loc.search)}`} replace />;
   if (admin && me.user?.role !== 'admin') return <Navigate to="/" replace />;
   return (
     <RealtimeProvider>

@@ -13,7 +13,7 @@ services:
     volumes:
       - devpgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d suivi"]
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d suivi']
       interval: 5s
       retries: 20
 
@@ -27,9 +27,9 @@ services:
     environment:
       DB_HOST: db
       DB_USER: postgres
-      DB_PASSWORD: ""
+      DB_PASSWORD: ''
       SECRETS_DIR: /dev-secrets
-      COOKIE_SECURE: "false"
+      COOKIE_SECURE: 'false'
       PUBLIC_URL: http://localhost:5173
       LEGACY_DIR: /work/app/public
       LOG_LEVEL: debug
@@ -47,7 +47,7 @@ services:
     environment:
       API_URL: http://api:8080
     ports:
-      - "127.0.0.1:5173:5173"
+      - '127.0.0.1:5173:5173'
     volumes:
       - .:/work
       - devnodemodules:/work/node_modules

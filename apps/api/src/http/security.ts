@@ -71,7 +71,12 @@ export function sameOrigin(req: FastifyRequest, cfg: Config): boolean {
     }
   }
   const host = (cfg.trustProxy && (req.headers['x-forwarded-host'] as string | undefined)) || req.headers.host;
-  return u.host === String(host || '').split(',')[0]!.trim();
+  return (
+    u.host ===
+    String(host || '')
+      .split(',')[0]!
+      .trim()
+  );
 }
 
 /** Limiteur à fenêtre fixe, en mémoire (une instance d'API par déploiement). */

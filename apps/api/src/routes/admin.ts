@@ -20,11 +20,14 @@ async function userById(c: Client | Services['db']['pool'], id: string) {
 
 /** Refuse toute modification qui laisserait l'application sans administrateur actif. */
 async function lastAdminGuard(c: Client, id: string, change: { role?: string; disabled?: boolean; delete?: boolean }) {
-  const u = (await c.query<{ role: string; disabled: boolean }>('SELECT role, disabled FROM users WHERE id=$1 FOR UPDATE', [id])).rows[0];
+  const u = (
+    await c.query<{ role: string; disabled: boolean }>('SELECT role, disabled FROM users WHERE id=$1 FOR UPDATE', [id])
+  ).rows[0];
   if (!u) throw new HttpError(404, 'Compte introuvable.');
   const stillAdmin = change.delete ? false : (change.role || u.role) === 'admin' && !(change.disabled ?? u.disabled);
   if (u.role === 'admin' && !u.disabled && !stillAdmin) {
-    const n = (await c.query<{ n: number }>("SELECT count(*)::int AS n FROM users WHERE role='admin' AND NOT disabled")).rows[0]!.n;
+    const n = (await c.query<{ n: number }>("SELECT count(*)::int AS n FROM users WHERE role='admin' AND NOT disabled"))
+      .rows[0]!.n;
     if (n <= 1) throw new HttpError(409, 'Impossible : ce compte est le dernier administrateur actif.');
   }
 }
@@ -121,11 +124,12 @@ export const adminRoutes = [
         await lastAdminGuard(c, params.id, { role: body.role, disabled: body.disabled });
         const keys = Object.keys(m);
         if (!keys.length) return cur;
-        await c.query(`UPDATE users SET ${keys.map((k, i) => `${k}=$${i + 2}`).join(', ')}, version = version + 1, updated_at=now() WHERE id=$1`, [
-          params.id,
-          ...keys.map((k) => m[k]),
-        ]);
-        if (body.disabled || (body.role && body.role !== cur.role)) await svc.auth.destroyUserSessions(params.id, null, c);
+        await c.query(
+          `UPDATE users SET ${keys.map((k, i) => `${k}=$${i + 2}`).join(', ')}, version = version + 1, updated_at=now() WHERE id=$1`,
+          [params.id, ...keys.map((k) => m[k])],
+        );
+        if (body.disabled || (body.role && body.role !== cur.role))
+          await svc.auth.destroyUserSessions(params.id, null, c);
         return (await userById(c, params.id))!;
       }, sess.user.username);
       await svc.db.audit(sess.user, ip, 'admin.user_update', params.id, { ...m, version: out.version });
@@ -190,7 +194,8 @@ export const adminRoutes = [
       if (params.id === sess.user.id) throw new HttpError(409, 'Vous ne pouvez pas supprimer votre propre compte.');
       const name = await svc.db.tx(async (c) => {
         await lastAdminGuard(c, params.id, { delete: true });
-        return (await c.query<{ username: string }>('DELETE FROM users WHERE id=$1 RETURNING username', [params.id])).rows[0]?.username;
+        return (await c.query<{ username: string }>('DELETE FROM users WHERE id=$1 RETURNING username', [params.id]))
+          .rows[0]?.username;
       }, sess.user.username);
       await svc.db.audit(sess.user, ip, 'admin.user_delete', name ?? params.id);
       return undefined;
@@ -221,7 +226,10 @@ export const adminRoutes = [
     params: z.object({ id: z.string().regex(/^[0-9a-f]{64}$/) }),
     handler: async ({ svc, s, ip, params }) => {
       const sess = s as Session;
-      await svc.db.tx((c) => c.query("DELETE FROM sessions WHERE id_hash = decode($1,'hex')", [params.id]), sess.user.username);
+      await svc.db.tx(
+        (c) => c.query("DELETE FROM sessions WHERE id_hash = decode($1,'hex')", [params.id]),
+        sess.user.username,
+      );
       await svc.db.audit(sess.user, ip, 'admin.session_revoke', params.id.slice(0, 12));
       return undefined;
     },
@@ -260,10 +268,18 @@ export const adminRoutes = [
       if (query.format !== 'csv') return r.rows;
       await svc.db.audit((s as Session).user, ip, 'admin.audit_export', '', { rows: r.rowCount });
       const cols = ['id', 'ts', 'username', 'ip', 'action', 'target', 'details'];
-      const body = '﻿' + [cols.join(';'), ...r.rows.map((x) => cols.map((c) => csvCell(c === 'ts' ? (x[c] as Date).toISOString() : x[c])).join(';'))].join('\r\n');
+      const body =
+        '﻿' +
+        [
+          cols.join(';'),
+          ...r.rows.map((x) => cols.map((c) => csvCell(c === 'ts' ? (x[c] as Date).toISOString() : x[c])).join(';')),
+        ].join('\r\n');
       reply
         .header('Content-Type', 'text/csv; charset=utf-8')
-        .header('Content-Disposition', `attachment; filename="journal-audit-${new Date().toISOString().slice(0, 10)}.csv"`)
+        .header(
+          'Content-Disposition',
+          `attachment; filename="journal-audit-${new Date().toISOString().slice(0, 10)}.csv"`,
+        )
         .header('Cache-Control', 'no-store');
       return reply.send(body);
     },
@@ -293,7 +309,9 @@ export const adminRoutes = [
     access: 'admin',
     params: z.object({ v: z.coerce.number().int().positive() }),
     handler: async ({ svc, params, reply }) => {
-      const r = await svc.db.one<{ data: string }>('SELECT data::text AS data FROM state_history WHERE version=$1', [params.v]);
+      const r = await svc.db.one<{ data: string }>('SELECT data::text AS data FROM state_history WHERE version=$1', [
+        params.v,
+      ]);
       if (!r) throw new HttpError(404, 'Version introuvable.');
       reply
         .header('Content-Type', 'application/json; charset=utf-8')
@@ -340,7 +358,9 @@ export const adminRoutes = [
         (SELECT count(*) FROM state_history)::int AS versions,
         (SELECT count(*) FROM audit_log)::int AS audit,
         (SELECT count(*) FROM import_batches)::int AS imports`);
-      const migrations = (await svc.db.q<{ name: string }>('SELECT name FROM schema_migrations ORDER BY name')).rows.map((r) => r.name);
+      const migrations = (
+        await svc.db.q<{ name: string }>('SELECT name FROM schema_migrations ORDER BY name')
+      ).rows.map((r) => r.name);
       const c = svc.cfg;
       return {
         app: c.version,
@@ -351,7 +371,9 @@ export const adminRoutes = [
         counts,
         migrations,
         keyId: svc.vault.keyId,
-        clamav: c.clamav ? `${c.clamav.host}:${c.clamav.port}${c.clamav.required ? ' (obligatoire)' : ''}` : 'désactivé',
+        clamav: c.clamav
+          ? `${c.clamav.host}:${c.clamav.port}${c.clamav.required ? ' (obligatoire)' : ''}`
+          : 'désactivé',
         mfaRequired: c.mfaRequired,
         session: c.session,
         maxUploadMb: c.maxUploadMb,

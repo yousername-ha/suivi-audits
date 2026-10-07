@@ -25,7 +25,10 @@ export function HomePage() {
   const me = useMe();
   usePresence('home');
   const { presence } = useLive();
-  const modules = useQuery({ queryKey: ['legacy', 'modules'], queryFn: () => get<LegacyModule[]>('/api/legacy/modules') });
+  const modules = useQuery({
+    queryKey: ['legacy', 'modules'],
+    queryFn: () => get<LegacyModule[]>('/api/legacy/modules'),
+  });
   const byPhase = new Map<number, LegacyModule[]>();
   for (const m of modules.data ?? []) if (m.phase > 0) byPhase.set(m.phase, [...(byPhase.get(m.phase) ?? []), m]);
   const online = [...new Map(presence.map((p) => [p.username, p])).values()];
@@ -40,7 +43,8 @@ export function HomePage() {
               Outil de suivi
             </Title>
             <Text size="sm" c="dimmed">
-              Mesures, écarts, plan d’audit, pilotage… dans l’interface historique, en attendant la reprise de chaque module.
+              Mesures, écarts, plan d’audit, pilotage… dans l’interface historique, en attendant la reprise de chaque
+              module.
             </Text>
             <Button component="a" href="/legacy/">
               Ouvrir l’outil de suivi
@@ -101,8 +105,12 @@ export function HomePage() {
           Reprise des modules de l’outil historique
         </Title>
         <Text size="sm" c="dimmed" mb="sm">
-          Chaque module est repris dans la nouvelle interface au fil des phases ; il reste alors consultable dans l’ancienne interface, en
-          lecture seule. Détail : <Anchor href="https://github.com/yousername-ha/suivi-audits/blob/main/docs/ROADMAP.md">feuille de route</Anchor>.
+          Chaque module est repris dans la nouvelle interface au fil des phases ; il reste alors consultable dans
+          l’ancienne interface, en lecture seule. Détail :{' '}
+          <Anchor href="https://github.com/yousername-ha/suivi-audits/blob/main/docs/ROADMAP.md">
+            feuille de route
+          </Anchor>
+          .
         </Text>
         <div className="table-wrap">
           <Table striped>
@@ -119,7 +127,11 @@ export function HomePage() {
                   <Table.Td>
                     <Group gap={6}>
                       {list.map((m) => (
-                        <Badge key={m.key} variant={m.takenOver ? 'filled' : 'light'} color={m.takenOver ? 'teal' : 'gray'}>
+                        <Badge
+                          key={m.key}
+                          variant={m.takenOver ? 'filled' : 'light'}
+                          color={m.takenOver ? 'teal' : 'gray'}
+                        >
                           {m.label}
                           {m.takenOver ? ' — repris' : ''}
                         </Badge>

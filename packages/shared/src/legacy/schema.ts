@@ -175,7 +175,9 @@ export interface ReadLegacyResult {
 }
 
 const issuesToText = (e: z.ZodError) =>
-  e.issues.slice(0, 50).map((i) => `$${i.path.map((p) => (typeof p === 'number' ? `[${p}]` : `.${String(p)}`)).join('')} : ${i.message}`);
+  e.issues
+    .slice(0, 50)
+    .map((i) => `$${i.path.map((p) => (typeof p === 'number' ? `[${p}]` : `.${String(p)}`)).join('')} : ${i.message}`);
 
 /** Lit un fichier legacy (objet déjà désérialisé) : enveloppe ou format brut, schéma 14 ou 15.
     sha256 : fonction d'empreinte (fournie par l'appelant) pour vérifier l'intégrité d'une enveloppe. */
@@ -191,7 +193,9 @@ export function readLegacyFile(raw: unknown, sha256?: (s: string) => string): Re
     if (!env.success) throw new LegacyFileError("Enveloppe d'export invalide.", issuesToText(env.error));
     const { data: d, ...meta } = env.data;
     if (sha256 && sha256(JSON.stringify(d)) !== meta.sha256) {
-      throw new LegacyFileError("L'empreinte SHA-256 de l'enveloppe ne correspond pas aux données : fichier modifié ou incomplet.");
+      throw new LegacyFileError(
+        "L'empreinte SHA-256 de l'enveloppe ne correspond pas aux données : fichier modifié ou incomplet.",
+      );
     }
     data = d;
     envelope = meta;
@@ -209,7 +213,9 @@ export function readLegacyFile(raw: unknown, sha256?: (s: string) => string): Re
     );
   }
   if (envelope && envelope.schema !== schema) {
-    throw new LegacyFileError(`Incohérence : l'enveloppe annonce le schéma ${envelope.schema}, les données sont au schéma ${schema}.`);
+    throw new LegacyFileError(
+      `Incohérence : l'enveloppe annonce le schéma ${envelope.schema}, les données sont au schéma ${schema}.`,
+    );
   }
   const parsed = LegacyStateSchema.safeParse(data);
   if (!parsed.success) throw new LegacyFileError('Structure de données inattendue.', issuesToText(parsed.error));

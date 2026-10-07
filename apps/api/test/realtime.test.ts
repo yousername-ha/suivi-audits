@@ -18,7 +18,11 @@ function openStream(a: Agent) {
         host: '127.0.0.1',
         port,
         path: '/api/events',
-        headers: { cookie: [...a.cookies].map(([k, v]) => `${k}=${v}`).join('; '), 'x-forwarded-proto': 'https', host: 'suivi.test' },
+        headers: {
+          cookie: [...a.cookies].map(([k, v]) => `${k}=${v}`).join('; '),
+          'x-forwarded-proto': 'https',
+          host: 'suivi.test',
+        },
       },
       (res) => {
         resolve(res.statusCode ?? 0);
@@ -89,11 +93,17 @@ describe('temps réel (SSE, LISTEN/NOTIFY)', () => {
     await Promise.all([roStream.ready, adStream.ready]);
     await Promise.all([roStream.waitFor((e) => e.event === 'hello'), adStream.waitFor((e) => e.event === 'hello')]);
     await adminAgent.post('/api/admin/users', { username: 'nouveau', role: 'ro' });
-    expect(await adStream.waitFor((e) => e.event === 'change' && (e.data as { entity: string }).entity === 'users')).toBeTruthy();
+    expect(
+      await adStream.waitFor((e) => e.event === 'change' && (e.data as { entity: string }).entity === 'users'),
+    ).toBeTruthy();
     // Un événement public ultérieur arrive bien au lecteur : il n'a donc pas reçu celui des comptes.
     await (await login(t, rw)).post('/api/links', { url: 'https://exemple.invalid/marqueur' });
-    expect(await roStream.waitFor((e) => e.event === 'change' && (e.data as { entity: string }).entity === 'links')).toBeTruthy();
-    expect(roStream.events.some((e) => e.event === 'change' && (e.data as { entity: string }).entity === 'users')).toBe(false);
+    expect(
+      await roStream.waitFor((e) => e.event === 'change' && (e.data as { entity: string }).entity === 'links'),
+    ).toBeTruthy();
+    expect(roStream.events.some((e) => e.event === 'change' && (e.data as { entity: string }).entity === 'users')).toBe(
+      false,
+    );
     roStream.close();
     adStream.close();
   });
@@ -102,11 +112,19 @@ describe('temps réel (SSE, LISTEN/NOTIFY)', () => {
     const watcher = openStream(await login(t, ro));
     await watcher.ready;
     const editor = await login(t, rw);
-    expect((await editor.post('/api/presence', { client: 'onglet-redacteur-1', resource: 'documents/abc', mode: 'edit' })).statusCode).toBe(204);
+    expect(
+      (await editor.post('/api/presence', { client: 'onglet-redacteur-1', resource: 'documents/abc', mode: 'edit' }))
+        .statusCode,
+    ).toBe(204);
     const ev = await watcher.waitFor((e) => e.event === 'presence' && (e.data as unknown[]).length > 0);
-    expect(ev?.data).toEqual([expect.objectContaining({ username: 'redacteur', resource: 'documents/abc', mode: 'edit' })]);
+    expect(ev?.data).toEqual([
+      expect.objectContaining({ username: 'redacteur', resource: 'documents/abc', mode: 'edit' }),
+    ]);
     // L'activité dans l'administration n'est pas visible d'un lecteur, et un non-administrateur ne peut pas la déclarer.
-    expect((await editor.post('/api/presence', { client: 'onglet-redacteur-2', resource: 'admin/users', mode: 'view' })).statusCode).toBe(403);
+    expect(
+      (await editor.post('/api/presence', { client: 'onglet-redacteur-2', resource: 'admin/users', mode: 'view' }))
+        .statusCode,
+    ).toBe(403);
     await editor.del('/api/presence/onglet-redacteur-1');
     expect(await watcher.waitFor((e) => e.event === 'presence' && (e.data as unknown[]).length === 0)).toBeTruthy();
     watcher.close();

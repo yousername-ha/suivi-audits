@@ -70,7 +70,10 @@ export async function apiLogin(req: APIRequestContext, username: string, passwor
   if (!r.ok()) throw new Error(`connexion ${username} : ${r.status()} ${await r.text()}`);
   for (let i = 0; i < 3; i++) {
     const csrf = (await (await req.get('/api/auth/me')).json()).csrf as string;
-    const m = await req.post('/api/auth/mfa', { data: { code: await freshTotp(secret) }, headers: { 'x-csrf-token': csrf } });
+    const m = await req.post('/api/auth/mfa', {
+      data: { code: await freshTotp(secret) },
+      headers: { 'x-csrf-token': csrf },
+    });
     if (m.ok()) return (await (await req.get('/api/auth/me')).json()).csrf as string;
   }
   throw new Error(`double authentification refusée pour ${username}`);

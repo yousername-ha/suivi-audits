@@ -12,18 +12,29 @@ const sha = (b: Buffer | string) => createHash('sha256').update(b).digest('hex')
 const fixtureBuf = () => readFileSync(fixturePath);
 const fixture = (): JsonObject => JSON.parse(readFileSync(fixturePath, 'utf8'));
 
-const simulate = (buf: Buffer, q: string) => a.req('POST', `/api/admin/import/simulate?${q}`, { body: buf, headers: { 'x-file-name': 'fixture.json' } });
-const apply = (buf: Buffer, q: string) => a.req('POST', `/api/admin/import/apply?${q}&sha256=${sha(buf)}`, { body: buf, headers: { 'x-file-name': 'fixture.json' } });
+const simulate = (buf: Buffer, q: string) =>
+  a.req('POST', `/api/admin/import/simulate?${q}`, { body: buf, headers: { 'x-file-name': 'fixture.json' } });
+const apply = (buf: Buffer, q: string) =>
+  a.req('POST', `/api/admin/import/apply?${q}&sha256=${sha(buf)}`, {
+    body: buf,
+    headers: { 'x-file-name': 'fixture.json' },
+  });
 
 /** Empreinte complète de la base : toutes les tables, ligne par ligne. */
 async function dbFingerprint(): Promise<string> {
-  const tables = (await t.svc.db.q<{ tablename: string }>("SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY 1")).rows.map((r) => r.tablename);
+  const tables = (
+    await t.svc.db.q<{ tablename: string }>("SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY 1")
+  ).rows.map((r) => r.tablename);
   const parts: string[] = [];
   for (const tb of tables) {
-    const r = await t.svc.db.q<{ h: string | null; n: string }>(`SELECT md5(string_agg(x::text, '|' ORDER BY x::text)) AS h, count(*)::text AS n FROM "${tb}" x`);
+    const r = await t.svc.db.q<{ h: string | null; n: string }>(
+      `SELECT md5(string_agg(x::text, '|' ORDER BY x::text)) AS h, count(*)::text AS n FROM "${tb}" x`,
+    );
     parts.push(`${tb}:${r.rows[0]!.n}:${r.rows[0]!.h}`);
   }
-  const seqs = await t.svc.db.q<{ s: string }>("SELECT string_agg(sequencename || '=' || coalesce(last_value::text,'∅'), ',' ORDER BY sequencename) AS s FROM pg_sequences");
+  const seqs = await t.svc.db.q<{ s: string }>(
+    "SELECT string_agg(sequencename || '=' || coalesce(last_value::text,'∅'), ',' ORDER BY sequencename) AS s FROM pg_sequences",
+  );
   return parts.join('\n') + '\n' + seqs.rows[0]!.s;
 }
 
@@ -68,7 +79,15 @@ describe('import legacy : validation et simulation', () => {
   it('refuse un fichier qui n’est pas du JSON, ou une enveloppe altérée', async () => {
     expect((await simulate(Buffer.from('<html>'), 'mode=merge')).json().error).toMatch(/JSON valide/);
     const data = migrateToSchema15(fixture());
-    const env = { format: 'suivi-audits-legacy', formatVersion: 1, schema: 15, exportedAt: 'x', appVersion: 'x', sha256: '0'.repeat(64), data };
+    const env = {
+      format: 'suivi-audits-legacy',
+      formatVersion: 1,
+      schema: 15,
+      exportedAt: 'x',
+      appVersion: 'x',
+      sha256: '0'.repeat(64),
+      data,
+    };
     expect((await simulate(Buffer.from(JSON.stringify(env)), 'mode=merge')).json().error).toMatch(/empreinte/);
   });
 
@@ -91,15 +110,23 @@ describe('import legacy : application, aller-retour, annulation', () => {
     const r = await apply(fixtureBuf(), 'mode=init');
     expect(r.statusCode, r.body).toBe(201);
     batch = r.json().batch;
-    const b = await t.svc.db.one<{ raw_content: Buffer; sha256: string; status: string; modules: string[] }>('SELECT * FROM import_batches WHERE id=$1', [batch]);
+    const b = await t.svc.db.one<{ raw_content: Buffer; sha256: string; status: string; modules: string[] }>(
+      'SELECT * FROM import_batches WHERE id=$1',
+      [batch],
+    );
     expect(b!.status).toBe('applied');
     expect(b!.sha256).toBe(sha(fixtureBuf()));
     expect(b!.raw_content.includes(Buffer.from('"findings"'))).toBe(false); // chiffré
     expect(b!.modules).toContain('findings');
-    const saved = await t.svc.db.one<{ note: string }>('SELECT note FROM state_history WHERE version=$1', [versionBefore]);
+    const saved = await t.svc.db.one<{ note: string }>('SELECT note FROM state_history WHERE version=$1', [
+      versionBefore,
+    ]);
     // La version d'avant l'import reste dans l'historique avec une note (jamais fusionnée ni purgée par l'import).
     expect(['Données initiales', `Sauvegarde avant l'import n°${batch}`]).toContain(saved!.note);
-    const audit = await t.svc.db.one('SELECT 1 FROM audit_log WHERE action=$1 AND target=$2', ['import.apply', `import:${batch}`]);
+    const audit = await t.svc.db.one('SELECT 1 FROM audit_log WHERE action=$1 AND target=$2', [
+      'import.apply',
+      `import:${batch}`,
+    ]);
     expect(audit).toBeTruthy();
     const file = await a.get(`/api/admin/import/${batch}/file`);
     expect(file.rawPayload.equals(fixtureBuf())).toBe(true);
@@ -132,7 +159,9 @@ describe('import legacy : application, aller-retour, annulation', () => {
     const m = await apply(buf, 'mode=merge');
     expect(m.statusCode, m.body).toBe(201);
     expect(m.json().report.affected).toEqual(['findings']);
-    expect(m.json().report.modules.find((x: { module: string }) => x.module === 'findings').collections[0]).toMatchObject({ created: 1, updated: 1, deleted: 0 });
+    expect(
+      m.json().report.modules.find((x: { module: string }) => x.module === 'findings').collections[0],
+    ).toMatchObject({ created: 1, updated: 1, deleted: 0 });
     const g = migrateToSchema15(fixture());
     (g.findings as JsonObject[]).splice(1);
     const gbuf = Buffer.from(JSON.stringify(g));
@@ -165,10 +194,11 @@ describe('transition : modules repris et /legacy', () => {
   it('/legacy affiche l’état recomposé et refuse les écritures sur un module repris', async () => {
     // Module « swots » repris par un mapper de test (table dédiée), comme le feront les phases 1 à 3.
     await t.svc.db.q('CREATE TABLE test_swots (id text PRIMARY KEY, data jsonb NOT NULL)');
-    await t.svc.db.q("INSERT INTO test_swots VALUES ('SW-1', '{\"id\":\"SW-1\",\"process\":\"Achats\"}')");
+    await t.svc.db.q('INSERT INTO test_swots VALUES (\'SW-1\', \'{"id":"SW-1","process":"Achats"}\')');
     t.svc.legacy.register({
       key: 'swots',
-      read: async (c: Client) => (await c.query<{ data: Json }>('SELECT data FROM test_swots ORDER BY id')).rows.map((r) => r.data),
+      read: async (c: Client) =>
+        (await c.query<{ data: Json }>('SELECT data FROM test_swots ORDER BY id')).rows.map((r) => r.data),
       write: async (c: Client, v: Json) => {
         await c.query('DELETE FROM test_swots');
         for (const e of v as JsonObject[]) await c.query('INSERT INTO test_swots VALUES ($1,$2)', [e.id, e]);

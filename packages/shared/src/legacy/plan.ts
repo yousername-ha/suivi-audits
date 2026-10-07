@@ -80,7 +80,14 @@ function mergeValue(cur: Json | undefined, inc: Json, path: string, warnings: st
 function idStats(path: string, before: Json[] | undefined, after: Json[] | undefined): CollectionStats {
   const b = new Map((before ?? []).filter(isIdObj).map((e) => [e.id, e]));
   const a = new Map((after ?? []).filter(isIdObj).map((e) => [e.id, e]));
-  const s: CollectionStats = { path, created: 0, updated: 0, unchanged: 0, deleted: 0, ids: { created: [], updated: [], deleted: [] } };
+  const s: CollectionStats = {
+    path,
+    created: 0,
+    updated: 0,
+    unchanged: 0,
+    deleted: 0,
+    ids: { created: [], updated: [], deleted: [] },
+  };
   const push = (k: 'created' | 'updated' | 'deleted', id: string) => {
     s[k]++;
     if (s.ids[k].length < MAX_IDS) s.ids[k].push(id);
@@ -95,7 +102,8 @@ function idStats(path: string, before: Json[] | undefined, after: Json[] | undef
   return s;
 }
 function dictStats(path: string, before: JsonObject | undefined, after: JsonObject | undefined): CollectionStats {
-  const toList = (o: JsonObject | undefined) => Object.entries(o ?? {}).map(([id, v]) => ({ id, v }) as unknown as Json);
+  const toList = (o: JsonObject | undefined) =>
+    Object.entries(o ?? {}).map(([id, v]) => ({ id, v }) as unknown as Json);
   return idStats(`${path}.{clé}`, toList(before), toList(after));
 }
 function diffValue(path: string, before: Json | undefined, after: Json | undefined, r: ModuleReport) {
@@ -112,7 +120,8 @@ function diffValue(path: string, before: Json | undefined, after: Json | undefin
   }
   if (objs && (before !== undefined || after !== undefined) && (isObject(before) || isObject(after))) {
     const keys = new Set([...Object.keys((before as JsonObject) ?? {}), ...Object.keys((after as JsonObject) ?? {})]);
-    for (const k of keys) diffValue(`${path}.${k}`, (before as JsonObject | undefined)?.[k], (after as JsonObject | undefined)?.[k], r);
+    for (const k of keys)
+      diffValue(`${path}.${k}`, (before as JsonObject | undefined)?.[k], (after as JsonObject | undefined)?.[k], r);
     return;
   }
   if (!deepEqual(before, after)) r.fields.push(path);
@@ -140,7 +149,8 @@ export function brokenRefs(state: JsonObject): BrokenRef[] {
     for (const v of Array.isArray(o.processes) ? o.processes : [])
       if (typeof v === 'string' && v && !procIds.has(v)) add(`$.objectives[${String(o.id)}].processes`, v);
   for (const p of arr(state.processes))
-    if (typeof p.parent === 'string' && p.parent && !procIds.has(p.parent)) add(`$.processes[${String(p.id)}].parent`, p.parent);
+    if (typeof p.parent === 'string' && p.parent && !procIds.has(p.parent))
+      add(`$.processes[${String(p.id)}].parent`, p.parent);
   if (isObject(state.dda) && items.length) {
     const ids = new Set(items.map((i) => String(i.id)));
     for (const k of Object.keys(state.dda)) if (!ids.has(k)) add('$.dda', k);
@@ -163,8 +173,22 @@ export function brokenRefs(state: JsonObject): BrokenRef[] {
 
 /* ---------------------------------------------------------------- État « vide » (mode Initialiser) */
 const USER_LISTS = [
-  'findings', 'processes', 'objectives', 'indicators', 'suppliers', 'supEvals', 'accessReviews', 'appGaps', 'reviews',
-  'swots', 'incidents', 'roles', 'plans', 'recurring', 'evidences', 'interested',
+  'findings',
+  'processes',
+  'objectives',
+  'indicators',
+  'suppliers',
+  'supEvals',
+  'accessReviews',
+  'appGaps',
+  'reviews',
+  'swots',
+  'incidents',
+  'roles',
+  'plans',
+  'recurring',
+  'evidences',
+  'interested',
 ];
 /** Vrai si l'état ne contient que les référentiels (aucune donnée saisie). */
 export function isEmptyState(s: JsonObject | null): boolean {
@@ -173,7 +197,14 @@ export function isEmptyState(s: JsonObject | null): boolean {
   if (USER_LISTS.some((k) => len(s[k]) > 0)) return false;
   if (len(s.dda) > 0) return false;
   const sub = (k: string, c: string) => (isObject(s[k]) ? len((s[k] as JsonObject)[c]) : 0);
-  return sub('ai', 'register') + sub('ai', 'evals') + sub('invest', 'lines') + sub('crisis', 'cells') + sub('plan', 'slots') === 0;
+  return (
+    sub('ai', 'register') +
+      sub('ai', 'evals') +
+      sub('invest', 'lines') +
+      sub('crisis', 'cells') +
+      sub('plan', 'slots') ===
+    0
+  );
 }
 
 /* ---------------------------------------------------------------- Point d'entrée */
@@ -185,7 +216,11 @@ export interface PlanOptions {
 }
 
 /** Calcule l'état résultant d'un import et son rapport. Ne modifie ni « current » ni « incoming ». */
-export function planImport(current: JsonObject | null, incoming: JsonObject, opts: PlanOptions): { next: JsonObject; report: ImportReport } {
+export function planImport(
+  current: JsonObject | null,
+  incoming: JsonObject,
+  opts: PlanOptions,
+): { next: JsonObject; report: ImportReport } {
   const inc = migrateToSchema15(incoming);
   const cur = current ? migrateToSchema15(current) : null;
   const warnings: string[] = [];
@@ -201,7 +236,8 @@ export function planImport(current: JsonObject | null, incoming: JsonObject, opt
     next = structuredClone(inc);
   } else if (opts.mode === 'replace') {
     if (!module) throw new LegacyFileError('Choisissez le module à remplacer.');
-    if (TECHNICAL_KEYS.has(module)) throw new LegacyFileError(`Le module « ${module} » est technique et ne peut pas être remplacé.`);
+    if (TECHNICAL_KEYS.has(module))
+      throw new LegacyFileError(`Le module « ${module} » est technique et ne peut pas être remplacé.`);
     if (!(module in inc)) throw new LegacyFileError(`Le module « ${moduleLabel(module)} » est absent du fichier.`);
     next = { ...(cur ?? {}), [module]: structuredClone(inc[module] as Json) };
   } else {

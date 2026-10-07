@@ -1,0 +1,35 @@
+# Analyse statique de sécurité (CodeQL) du code JavaScript et TypeScript.
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '27 4 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  analyse:
+    name: CodeQL (JavaScript / TypeScript)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      security-events: write
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v5
+      - uses: github/codeql-action/init@v4
+        with:
+          languages: javascript-typescript
+          queries: security-extended
+          config: |
+            paths-ignore:
+              - app/public/lib
+              - '**/dist'
+      - uses: github/codeql-action/analyze@v4
+        with:
+          category: '/language:javascript-typescript'

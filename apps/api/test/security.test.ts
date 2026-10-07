@@ -77,7 +77,9 @@ describe('double authentification', () => {
   it('impose l’enrôlement TOTP quand il n’est pas encore configuré', async () => {
     const u = await makeUser(t, 'nouveau', 'rw', { totp: false });
     const a = new Agent(t);
-    expect((await a.post('/api/auth/login', { username: u.username, password: PASSWORD })).json()).toEqual({ stage: 'enroll' });
+    expect((await a.post('/api/auth/login', { username: u.username, password: PASSWORD })).json()).toEqual({
+      stage: 'enroll',
+    });
     await a.me();
     expect((await a.get('/api/documents')).statusCode).toBe(403);
     const begin = await a.post('/api/account/totp/begin', {});
@@ -102,13 +104,19 @@ describe('protection CSRF et contrôle d’origine', () => {
   it('refuse un jeton CSRF d’une autre session', async () => {
     const a = await login(t, rw);
     const b = await login(t, admin);
-    const r = await a.req('POST', '/api/links', { json: { url: 'https://exemple.invalid' }, headers: { 'x-csrf-token': b.csrf! } });
+    const r = await a.req('POST', '/api/links', {
+      json: { url: 'https://exemple.invalid' },
+      headers: { 'x-csrf-token': b.csrf! },
+    });
     expect(r.statusCode).toBe(403);
   });
 
   it('refuse une origine étrangère, même avec le bon jeton', async () => {
     const a = await login(t, rw);
-    const r = await a.req('POST', '/api/links', { json: { url: 'https://exemple.invalid' }, headers: { origin: 'https://attaquant.example' } });
+    const r = await a.req('POST', '/api/links', {
+      json: { url: 'https://exemple.invalid' },
+      headers: { origin: 'https://attaquant.example' },
+    });
     expect(r.statusCode).toBe(403);
     expect(r.json().error).toMatch(/Origine/);
   });
@@ -129,7 +137,10 @@ describe('rôles', () => {
     const a = await login(t, ro);
     expect((await a.get('/api/documents')).statusCode).toBe(200);
     expect((await a.post('/api/links', { url: 'https://exemple.invalid' })).statusCode).toBe(403);
-    expect((await a.req('POST', '/api/documents', { body: Buffer.from('x'), headers: { 'x-file-name': 'a.txt' } })).statusCode).toBe(403);
+    expect(
+      (await a.req('POST', '/api/documents', { body: Buffer.from('x'), headers: { 'x-file-name': 'a.txt' } }))
+        .statusCode,
+    ).toBe(403);
     expect((await a.get('/api/documents?trash=1')).statusCode).toBe(403);
     expect((await a.get('/api/admin/users')).statusCode).toBe(403);
   });
@@ -158,7 +169,8 @@ describe('verrouillage après échecs', () => {
   it('verrouille après 5 échecs, même avec le bon mot de passe ensuite', async () => {
     const u = await makeUser(t, 'cible', 'rw');
     const a = new Agent(t);
-    for (let i = 0; i < 4; i++) expect((await a.post('/api/auth/login', { username: u.username, password: 'mauvais' })).statusCode).toBe(401);
+    for (let i = 0; i < 4; i++)
+      expect((await a.post('/api/auth/login', { username: u.username, password: 'mauvais' })).statusCode).toBe(401);
     expect((await a.post('/api/auth/login', { username: u.username, password: 'mauvais' })).statusCode).toBe(423);
     expect((await a.post('/api/auth/login', { username: u.username, password: PASSWORD })).statusCode).toBe(423);
     t.svc.limits.loginByUser.reset();
@@ -168,7 +180,8 @@ describe('verrouillage après échecs', () => {
   it('limite le débit des tentatives par compte', async () => {
     const a = new Agent(t);
     let last = 0;
-    for (let i = 0; i < 11; i++) last = (await a.post('/api/auth/login', { username: 'inconnu', password: 'x' })).statusCode;
+    for (let i = 0; i < 11; i++)
+      last = (await a.post('/api/auth/login', { username: 'inconnu', password: 'x' })).statusCode;
     expect(last).toBe(429);
     t.svc.limits.loginByUser.reset();
     t.svc.limits.loginByIp.reset();
@@ -195,7 +208,9 @@ describe('jeton d’installation', () => {
       const again = await new Agent(t2).post('/api/setup', body(token, 'autre'));
       expect(again.statusCode).toBe(409);
       expect(again.json().reason).toBe('used');
-      expect((await t2.svc.db.one<{ v: string }>("SELECT value::text AS v FROM settings WHERE key='setup_token'"))!.v).not.toContain(token);
+      expect(
+        (await t2.svc.db.one<{ v: string }>("SELECT value::text AS v FROM settings WHERE key='setup_token'"))!.v,
+      ).not.toContain(token);
     } finally {
       await t2.close();
     }
@@ -205,11 +220,17 @@ describe('jeton d’installation', () => {
     const t2 = await createTestApp();
     try {
       const { token } = await t2.svc.auth.issueSetupToken('cli', () => {});
-      await t2.svc.db.q("UPDATE settings SET value = jsonb_set(value, '{expires}', '\"2020-01-01T00:00:00Z\"') WHERE key='setup_token'");
+      await t2.svc.db.q(
+        "UPDATE settings SET value = jsonb_set(value, '{expires}', '\"2020-01-01T00:00:00Z\"') WHERE key='setup_token'",
+      );
       const r = await new Agent(t2).post('/api/setup', { token, username: 'chef', password: PASSWORD });
       expect(r.statusCode).toBe(410);
       expect(r.json().error).toMatch(/expiré.*setup-token/);
-      expect((await new Agent(t2).get('/api/setup')).json()).toMatchObject({ needed: true, pending: false, adminExists: false });
+      expect((await new Agent(t2).get('/api/setup')).json()).toMatchObject({
+        needed: true,
+        pending: false,
+        adminExists: false,
+      });
     } finally {
       await t2.close();
     }
@@ -225,7 +246,9 @@ describe('journal d’audit', () => {
   it('trace les connexions et les échecs', async () => {
     const r = await t.svc.db.q<{ action: string }>("SELECT DISTINCT action FROM audit_log WHERE action LIKE 'auth.%'");
     const actions = r.rows.map((x) => x.action);
-    expect(actions).toEqual(expect.arrayContaining(['auth.login', 'auth.login_failed', 'auth.mfa_failed', 'auth.password_ok']));
+    expect(actions).toEqual(
+      expect.arrayContaining(['auth.login', 'auth.login_failed', 'auth.mfa_failed', 'auth.password_ok']),
+    );
   });
 
   it('export CSV réservé aux administrateurs, neutralise les formules', async () => {

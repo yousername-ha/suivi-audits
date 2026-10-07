@@ -66,7 +66,8 @@ export function registerRoutes(app: FastifyInstance, svc: Services, defs: RouteD
           if (!sameOrigin(req, svc.cfg)) throw new HttpError(403, 'Origine refusée.');
           if (d.csrf !== false) {
             if (!s) throw new HttpError(401, 'Session expirée. Reconnectez-vous.', { stage: 'anon' });
-            if (!safeEqual(req.headers['x-csrf-token'] || '', s.csrf)) throw new HttpError(403, 'Jeton CSRF invalide. Rechargez la page.');
+            if (!safeEqual(req.headers['x-csrf-token'] || '', s.csrf))
+              throw new HttpError(403, 'Jeton CSRF invalide. Rechargez la page.');
           }
         }
         if (d.access === 'session') {
@@ -103,7 +104,12 @@ export function buildOpenApi(defs: RouteDef<any, any, any>[], info: { title: str
       ] as const) {
         if (sch instanceof z.ZodObject) {
           for (const [name, prop] of Object.entries(sch.shape as Record<string, ZodType>)) {
-            parameters.push({ name, in: where, required: where === 'path' || !prop.safeParse(undefined).success, schema: toSchema(prop) });
+            parameters.push({
+              name,
+              in: where,
+              required: where === 'path' || !prop.safeParse(undefined).success,
+              schema: toSchema(prop),
+            });
           }
         }
       }
@@ -123,13 +129,21 @@ export function buildOpenApi(defs: RouteDef<any, any, any>[], info: { title: str
         },
       };
       if (d.body) op.requestBody = { required: true, content: { 'application/json': { schema: toSchema(d.body) } } };
-      if (d.raw) op.requestBody = { required: true, content: { 'application/octet-stream': { schema: { type: 'string', format: 'binary' } } } };
+      if (d.raw)
+        op.requestBody = {
+          required: true,
+          content: { 'application/octet-stream': { schema: { type: 'string', format: 'binary' } } },
+        };
       (paths[p] ??= {})[m.toLowerCase()] = op;
     }
   }
   return {
     openapi: '3.1.0',
-    info: { ...info, description: 'API du suivi des audits SMSI ISO 27001 / HDS. Toute requête modifiante exige l’en-tête X-CSRF-Token et une origine identique.' },
+    info: {
+      ...info,
+      description:
+        'API du suivi des audits SMSI ISO 27001 / HDS. Toute requête modifiante exige l’en-tête X-CSRF-Token et une origine identique.',
+    },
     servers: [{ url: '/' }],
     components: {
       securitySchemes: {

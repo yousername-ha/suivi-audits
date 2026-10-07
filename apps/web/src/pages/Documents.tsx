@@ -22,7 +22,13 @@ import {
   Title,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { CLASSIFICATION_LABELS, CLASSIFICATIONS, type DocumentDetailOut, type DocumentOut, type LinkOut } from '@suivi/shared';
+import {
+  CLASSIFICATION_LABELS,
+  CLASSIFICATIONS,
+  type DocumentDetailOut,
+  type DocumentOut,
+  type LinkOut,
+} from '@suivi/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
@@ -70,7 +76,14 @@ export function DocumentsPage() {
         </Tabs.Panel>
       </Tabs>
       <Drawer opened={!!id} onClose={() => nav('/documents')} position="right" size="lg" title="Fiche du document">
-        {id && <DocumentDetail id={id} canWrite={canWrite} isAdmin={me.user?.role === 'admin'} onClose={() => nav('/documents')} />}
+        {id && (
+          <DocumentDetail
+            id={id}
+            canWrite={canWrite}
+            isAdmin={me.user?.role === 'admin'}
+            onClose={() => nav('/documents')}
+          />
+        )}
       </Drawer>
     </Stack>
   );
@@ -83,7 +96,10 @@ function DocumentList({ canWrite, onOpen }: { canWrite: boolean; onOpen: (id: st
   const [category, setCategory] = useState<string | null>(null);
   const [trash, setTrash] = useState('0');
   const params = new URLSearchParams({ ...(q ? { q } : {}), ...(category ? { category } : {}), trash });
-  const list = useQuery({ queryKey: ['documents', params.toString()], queryFn: () => get<DocumentOut[]>(`/api/documents?${params}`) });
+  const list = useQuery({
+    queryKey: ['documents', params.toString()],
+    queryFn: () => get<DocumentOut[]>(`/api/documents?${params}`),
+  });
   const cats = useQuery({ queryKey: ['categories'], queryFn: () => get<string[]>('/api/documents/categories') });
   const [uploading, setUploading] = useState(false);
 
@@ -93,7 +109,10 @@ function DocumentList({ canWrite, onOpen }: { canWrite: boolean; onOpen: (id: st
       for (const f of files) {
         await api('POST', '/api/documents', {
           raw: await f.arrayBuffer(),
-          headers: { 'X-File-Name': encodeURIComponent(f.name), 'X-Meta': encodeURIComponent(JSON.stringify(category ? { category } : {})) },
+          headers: {
+            'X-File-Name': encodeURIComponent(f.name),
+            'X-Meta': encodeURIComponent(JSON.stringify(category ? { category } : {})),
+          },
         });
       }
       notifications.show({ color: 'teal', message: `${files.length} document(s) déposé(s).` });
@@ -108,7 +127,13 @@ function DocumentList({ canWrite, onOpen }: { canWrite: boolean; onOpen: (id: st
   return (
     <Stack>
       <Group align="flex-end" wrap="wrap">
-        <TextInput label="Rechercher" placeholder="Titre, fichier, rattachement…" value={q} onChange={(e) => setQ(e.currentTarget.value)} w={260} />
+        <TextInput
+          label="Rechercher"
+          placeholder="Titre, fichier, rattachement…"
+          value={q}
+          onChange={(e) => setQ(e.currentTarget.value)}
+          w={260}
+        />
         <Select label="Catégorie" data={cats.data ?? []} value={category} onChange={setCategory} clearable w={200} />
         {canWrite && (
           <SegmentedControl
@@ -190,12 +215,29 @@ function DocumentList({ canWrite, onOpen }: { canWrite: boolean; onOpen: (id: st
 }
 
 /* ---------------------------------------------------------------- Fiche d'un document */
-function DocumentDetail({ id, canWrite, isAdmin, onClose }: { id: string; canWrite: boolean; isAdmin: boolean; onClose: () => void }) {
+function DocumentDetail({
+  id,
+  canWrite,
+  isAdmin,
+  onClose,
+}: {
+  id: string;
+  canWrite: boolean;
+  isAdmin: boolean;
+  onClose: () => void;
+}) {
   const qc = useQueryClient();
   const refs = useRefs();
   const q = useQuery({ queryKey: ['document', id], queryFn: () => get<DocumentDetailOut>(`/api/documents/${id}`) });
   const d = q.data;
-  const [form, setForm] = useState<{ title: string; description: string; category: string; refs: string[]; tags: string[]; classification: string } | null>(null);
+  const [form, setForm] = useState<{
+    title: string;
+    description: string;
+    category: string;
+    refs: string[];
+    tags: string[];
+    classification: string;
+  } | null>(null);
   const [baseVersion, setBaseVersion] = useState<number | null>(null);
   const [conflict, setConflict] = useState<DocumentOut | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -209,7 +251,14 @@ function DocumentDetail({ id, canWrite, isAdmin, onClose }: { id: string; canWri
   const changedByOther = form && baseVersion !== null && d.version !== baseVersion;
 
   const startEdit = () => {
-    setForm({ title: d.title, description: d.description, category: d.category, refs: d.refs, tags: d.tags, classification: d.classification });
+    setForm({
+      title: d.title,
+      description: d.description,
+      category: d.category,
+      refs: d.refs,
+      tags: d.tags,
+      classification: d.classification,
+    });
     setBaseVersion(d.version);
     setConflict(null);
   };
@@ -261,14 +310,21 @@ function DocumentDetail({ id, canWrite, isAdmin, onClose }: { id: string; canWri
             ))}
           </Group>
           <Text size="sm" c="dimmed">
-            {CLASSIFICATION_LABELS[d.classification]} · {d.category || 'sans catégorie'} · modifié le {fmtDate(d.updated_at)} par {d.updated_by}
+            {CLASSIFICATION_LABELS[d.classification]} · {d.category || 'sans catégorie'} · modifié le{' '}
+            {fmtDate(d.updated_at)} par {d.updated_by}
           </Text>
           <Text size="xs" c="dimmed" className="mono">
             SHA-256 : {d.sha256}
           </Text>
           <Group>
             <Button onClick={() => download(`/api/documents/${id}/download`)}>Télécharger</Button>
-            <CopyButton value={internal}>{({ copied, copy }) => <Button variant="default" onClick={copy}>{copied ? 'Lien copié' : 'Copier le lien interne'}</Button>}</CopyButton>
+            <CopyButton value={internal}>
+              {({ copied, copy }) => (
+                <Button variant="default" onClick={copy}>
+                  {copied ? 'Lien copié' : 'Copier le lien interne'}
+                </Button>
+              )}
+            </CopyButton>
             {canWrite && !d.deleted_at && (
               <Button variant="default" onClick={startEdit}>
                 Modifier
@@ -280,7 +336,8 @@ function DocumentDetail({ id, canWrite, isAdmin, onClose }: { id: string; canWri
         <Stack>
           {changedByOther && !conflict && (
             <Alert color="orange">
-              {d.updated_by} vient de modifier ce document. Votre enregistrement sera refusé : rechargez avant de poursuivre.
+              {d.updated_by} vient de modifier ce document. Votre enregistrement sera refusé : rechargez avant de
+              poursuivre.
             </Alert>
           )}
           {conflict && (
@@ -294,12 +351,38 @@ function DocumentDetail({ id, canWrite, isAdmin, onClose }: { id: string; canWri
             </Alert>
           )}
           {err && !conflict && <Alert color="red">{err}</Alert>}
-          <TextInput label="Titre" value={form.title} onChange={(e) => setForm({ ...form, title: e.currentTarget.value })} />
-          <Textarea label="Description" autosize minRows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.currentTarget.value })} />
-          <TextInput label="Catégorie" value={form.category} onChange={(e) => setForm({ ...form, category: e.currentTarget.value })} />
-          <TagsInput label="Rattachements (mesures, écarts, processus…)" data={refs} limit={30} value={form.refs} onChange={(v) => setForm({ ...form, refs: v })} />
+          <TextInput
+            label="Titre"
+            value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.currentTarget.value })}
+          />
+          <Textarea
+            label="Description"
+            autosize
+            minRows={2}
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.currentTarget.value })}
+          />
+          <TextInput
+            label="Catégorie"
+            value={form.category}
+            onChange={(e) => setForm({ ...form, category: e.currentTarget.value })}
+          />
+          <TagsInput
+            label="Rattachements (mesures, écarts, processus…)"
+            data={refs}
+            limit={30}
+            value={form.refs}
+            onChange={(v) => setForm({ ...form, refs: v })}
+          />
           <TagsInput label="Mots-clés" value={form.tags} onChange={(v) => setForm({ ...form, tags: v })} />
-          <Select label="Classification" data={classifOptions} value={form.classification} onChange={(v) => v && setForm({ ...form, classification: v })} allowDeselect={false} />
+          <Select
+            label="Classification"
+            data={classifOptions}
+            value={form.classification}
+            onChange={(v) => v && setForm({ ...form, classification: v })}
+            allowDeselect={false}
+          />
           <Group>
             <Button onClick={save}>Enregistrer</Button>
             <Button variant="default" onClick={() => setForm(null)}>
@@ -319,7 +402,11 @@ function DocumentDetail({ id, canWrite, isAdmin, onClose }: { id: string; canWri
               <Table.Tr key={v.version}>
                 <Table.Td>v{v.version}</Table.Td>
                 <Table.Td>
-                  <Anchor component="button" type="button" onClick={() => download(`/api/documents/${id}/download?v=${v.version}`)}>
+                  <Anchor
+                    component="button"
+                    type="button"
+                    onClick={() => download(`/api/documents/${id}/download?v=${v.version}`)}
+                  >
                     {v.filename}
                   </Anchor>
                   <Text size="xs" c="dimmed">
@@ -342,7 +429,11 @@ function DocumentDetail({ id, canWrite, isAdmin, onClose }: { id: string; canWri
           onChange={(f) =>
             f &&
             void act(
-              async () => api('POST', `/api/documents/${id}/versions`, { raw: await f.arrayBuffer(), headers: { 'X-File-Name': encodeURIComponent(f.name) } }),
+              async () =>
+                api('POST', `/api/documents/${id}/versions`, {
+                  raw: await f.arrayBuffer(),
+                  headers: { 'X-File-Name': encodeURIComponent(f.name) },
+                }),
               'Nouvelle version déposée.',
             ).then(() => qc.invalidateQueries({ queryKey: ['document', id] }))
           }
@@ -357,16 +448,28 @@ function DocumentDetail({ id, canWrite, isAdmin, onClose }: { id: string; canWri
       {canWrite && (
         <Group mt="md">
           {!d.deleted_at ? (
-            <ConfirmButton variant="light" message="Mettre ce document à la corbeille ?" onConfirm={() => act(() => api('DELETE', `/api/documents/${id}`), 'Document mis à la corbeille.', true)}>
+            <ConfirmButton
+              variant="light"
+              message="Mettre ce document à la corbeille ?"
+              onConfirm={() => act(() => api('DELETE', `/api/documents/${id}`), 'Document mis à la corbeille.', true)}
+            >
               Mettre à la corbeille
             </ConfirmButton>
           ) : (
             <>
-              <Button variant="light" onClick={() => act(() => api('POST', `/api/documents/${id}/restore`), 'Document restauré.')}>
+              <Button
+                variant="light"
+                onClick={() => act(() => api('POST', `/api/documents/${id}/restore`), 'Document restauré.')}
+              >
                 Restaurer
               </Button>
               {isAdmin && (
-                <ConfirmButton message="Supprimer définitivement ce document et toutes ses versions ? Cette action est irréversible." onConfirm={() => act(() => api('DELETE', `/api/documents/${id}?purge=1`), 'Document supprimé définitivement.', true)}>
+                <ConfirmButton
+                  message="Supprimer définitivement ce document et toutes ses versions ? Cette action est irréversible."
+                  onConfirm={() =>
+                    act(() => api('DELETE', `/api/documents/${id}?purge=1`), 'Document supprimé définitivement.', true)
+                  }
+                >
                   Supprimer définitivement
                 </ConfirmButton>
               )}
@@ -383,7 +486,10 @@ function LinkList({ canWrite }: { canWrite: boolean }) {
   const qc = useQueryClient();
   const refs = useRefs();
   const [q, setQ] = useState('');
-  const list = useQuery({ queryKey: ['links', q], queryFn: () => get<LinkOut[]>(`/api/links${q ? `?q=${encodeURIComponent(q)}` : ''}`) });
+  const list = useQuery({
+    queryKey: ['links', q],
+    queryFn: () => get<LinkOut[]>(`/api/links${q ? `?q=${encodeURIComponent(q)}` : ''}`),
+  });
   const [edit, setEdit] = useState<(Partial<LinkOut> & { refs: string[]; tags: string[] }) | null>(null);
   const [err, setErr] = useState<string | null>(null);
   usePresence(edit ? `documents/links${edit.id ? '/' + edit.id : ''}` : null, 'edit');
@@ -391,7 +497,14 @@ function LinkList({ canWrite }: { canWrite: boolean }) {
   const save = async () => {
     if (!edit) return;
     setErr(null);
-    const body = { title: edit.title ?? '', url: edit.url ?? '', description: edit.description ?? '', category: edit.category ?? '', refs: edit.refs, tags: edit.tags };
+    const body = {
+      title: edit.title ?? '',
+      url: edit.url ?? '',
+      description: edit.description ?? '',
+      category: edit.category ?? '',
+      refs: edit.refs,
+      tags: edit.tags,
+    };
     try {
       if (edit.id) await api('PATCH', `/api/links/${edit.id}`, { body, ifMatch: edit.version });
       else await api('POST', '/api/links', { body });
@@ -442,7 +555,16 @@ function LinkList({ canWrite }: { canWrite: boolean }) {
                         <Button size="compact-sm" variant="default" onClick={() => setEdit({ ...l })}>
                           Modifier
                         </Button>
-                        <ConfirmButton size="compact-sm" variant="light" message={`Supprimer le lien « ${l.title} » ?`} onConfirm={() => api('DELETE', `/api/links/${l.id}`).then(() => qc.invalidateQueries({ queryKey: ['links'] }))}>
+                        <ConfirmButton
+                          size="compact-sm"
+                          variant="light"
+                          message={`Supprimer le lien « ${l.title} » ?`}
+                          onConfirm={() =>
+                            api('DELETE', `/api/links/${l.id}`).then(() =>
+                              qc.invalidateQueries({ queryKey: ['links'] }),
+                            )
+                          }
+                        >
                           Supprimer
                         </ConfirmButton>
                       </Group>
@@ -463,14 +585,38 @@ function LinkList({ canWrite }: { canWrite: boolean }) {
           </Table>
         </div>
       </Card>
-      <Modal opened={!!edit} onClose={() => setEdit(null)} title={edit?.id ? 'Modifier le lien' : 'Ajouter un lien'} centered>
+      <Modal
+        opened={!!edit}
+        onClose={() => setEdit(null)}
+        title={edit?.id ? 'Modifier le lien' : 'Ajouter un lien'}
+        centered
+      >
         {edit && (
           <Stack>
             {err && <Alert color="red">{err}</Alert>}
-            <TextInput label="Adresse" description="http(s)://…, file://… ou \\serveur\partage\…" required value={edit.url ?? ''} onChange={(e) => setEdit({ ...edit, url: e.currentTarget.value })} />
-            <TextInput label="Titre" value={edit.title ?? ''} onChange={(e) => setEdit({ ...edit, title: e.currentTarget.value })} />
-            <Textarea label="Description" value={edit.description ?? ''} onChange={(e) => setEdit({ ...edit, description: e.currentTarget.value })} />
-            <TagsInput label="Rattachements" data={refs} value={edit.refs} onChange={(v) => setEdit({ ...edit, refs: v })} />
+            <TextInput
+              label="Adresse"
+              description="http(s)://…, file://… ou \\serveur\partage\…"
+              required
+              value={edit.url ?? ''}
+              onChange={(e) => setEdit({ ...edit, url: e.currentTarget.value })}
+            />
+            <TextInput
+              label="Titre"
+              value={edit.title ?? ''}
+              onChange={(e) => setEdit({ ...edit, title: e.currentTarget.value })}
+            />
+            <Textarea
+              label="Description"
+              value={edit.description ?? ''}
+              onChange={(e) => setEdit({ ...edit, description: e.currentTarget.value })}
+            />
+            <TagsInput
+              label="Rattachements"
+              data={refs}
+              value={edit.refs}
+              onChange={(v) => setEdit({ ...edit, refs: v })}
+            />
             <Group justify="flex-end">
               <Button variant="default" onClick={() => setEdit(null)}>
                 Annuler

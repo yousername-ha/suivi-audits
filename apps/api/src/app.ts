@@ -40,7 +40,15 @@ const systemRoutes = (all: () => RouteDef[]) => [
 
 export function allRoutes(): RouteDef[] {
   const list: RouteDef[] = [];
-  list.push(...systemRoutes(() => list), ...authRoutes, ...documentRoutes, ...adminRoutes, ...eventRoutes, ...legacyRoutes, ...importRoutes);
+  list.push(
+    ...systemRoutes(() => list),
+    ...authRoutes,
+    ...documentRoutes,
+    ...adminRoutes,
+    ...eventRoutes,
+    ...legacyRoutes,
+    ...importRoutes,
+  );
   return list;
 }
 
@@ -57,7 +65,8 @@ export async function buildApp(svc: Services): Promise<FastifyInstance> {
   app.addHook('onRequest', async (req, reply) => {
     setBaseHeaders(reply);
     reply.header('Cache-Control', 'no-store');
-    if (svc.cfg.cookieSecure !== 'false' && isHttps(req)) reply.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    if (svc.cfg.cookieSecure !== 'false' && isHttps(req))
+      reply.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   });
   app.setErrorHandler(errorHandler(svc.log));
   app.setNotFoundHandler((_req, reply) => reply.code(404).send({ error: 'Introuvable.' }));

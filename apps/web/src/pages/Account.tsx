@@ -54,7 +54,10 @@ function PasswordCard({ minLen }: { minLen: number }) {
             await post('/api/account/password', { current: f.current, next: f.next });
             await refresh();
             setF({ current: '', next: '', confirm: '' });
-            notifications.show({ color: 'teal', message: 'Mot de passe modifié. Vos autres sessions ont été fermées.' });
+            notifications.show({
+              color: 'teal',
+              message: 'Mot de passe modifié. Vos autres sessions ont été fermées.',
+            });
           } catch (x) {
             setErr(errorMessage(x));
           } finally {
@@ -63,7 +66,13 @@ function PasswordCard({ minLen }: { minLen: number }) {
         }}
       >
         <Stack maw={420}>
-          <PasswordInput label="Mot de passe actuel" autoComplete="current-password" required value={f.current} onChange={(e) => setF({ ...f, current: e.currentTarget.value })} />
+          <PasswordInput
+            label="Mot de passe actuel"
+            autoComplete="current-password"
+            required
+            value={f.current}
+            onChange={(e) => setF({ ...f, current: e.currentTarget.value })}
+          />
           <PasswordInput
             label="Nouveau mot de passe"
             description={`Au moins ${minLen} caractères et 3 types de caractères.`}
@@ -72,7 +81,13 @@ function PasswordCard({ minLen }: { minLen: number }) {
             value={f.next}
             onChange={(e) => setF({ ...f, next: e.currentTarget.value })}
           />
-          <PasswordInput label="Confirmation" autoComplete="new-password" required value={f.confirm} onChange={(e) => setF({ ...f, confirm: e.currentTarget.value })} />
+          <PasswordInput
+            label="Confirmation"
+            autoComplete="new-password"
+            required
+            value={f.confirm}
+            onChange={(e) => setF({ ...f, confirm: e.currentTarget.value })}
+          />
           {err && <Alert color="red">{err}</Alert>}
           <Button type="submit" loading={busy} w="fit-content">
             Changer le mot de passe
@@ -102,11 +117,17 @@ function TotpCard() {
         Double authentification
       </Title>
       <Text size="sm" c="dimmed" mb="sm">
-        Active et obligatoire. Pour changer de téléphone, configurez le nouveau ci-dessous (votre mot de passe est demandé).
+        Active et obligatoire. Pour changer de téléphone, configurez le nouveau ci-dessous (votre mot de passe est
+        demandé).
       </Text>
       {!data ? (
         <Stack maw={420}>
-          <PasswordInput label="Mot de passe" value={pw} onChange={(e) => setPw(e.currentTarget.value)} autoComplete="current-password" />
+          <PasswordInput
+            label="Mot de passe"
+            value={pw}
+            onChange={(e) => setPw(e.currentTarget.value)}
+            autoComplete="current-password"
+          />
           <Button
             variant="light"
             w="fit-content"
@@ -129,8 +150,15 @@ function TotpCard() {
               <img src={img} alt="QR code de configuration" />
             </div>
           )}
-          <PinInput length={6} type="number" oneTimeCode value={code} onChange={setCode} aria-label="Code à 6 chiffres"
-        getInputProps={(i) => ({ 'aria-label': `Chiffre ${i + 1} sur 6` })} />
+          <PinInput
+            length={6}
+            type="number"
+            oneTimeCode
+            value={code}
+            onChange={setCode}
+            aria-label="Code à 6 chiffres"
+            getInputProps={(i) => ({ 'aria-label': `Chiffre ${i + 1} sur 6` })}
+          />
           <Button
             w="fit-content"
             disabled={code.length !== 6}
@@ -193,7 +221,11 @@ function SessionsCard() {
         mt="sm"
         variant="default"
         w="fit-content"
-        onClick={() => post('/api/account/sessions/revoke-others').then(() => qc.invalidateQueries({ queryKey: ['account', 'sessions'] }))}
+        onClick={() =>
+          post('/api/account/sessions/revoke-others').then(() =>
+            qc.invalidateQueries({ queryKey: ['account', 'sessions'] }),
+          )
+        }
       >
         Fermer mes autres sessions
       </Button>

@@ -100,7 +100,8 @@ export class Presence extends EventEmitter {
     else {
       // Le renouvellement d'une même présence conserve son heure de début.
       const prev = this.entries.get(m.entry.client);
-      const since = prev && prev.resource === m.entry.resource && prev.mode === m.entry.mode ? prev.since : m.entry.since;
+      const since =
+        prev && prev.resource === m.entry.resource && prev.mode === m.entry.mode ? prev.since : m.entry.since;
       this.entries.set(m.entry.client, { ...m.entry, since, expires: Date.now() + PRESENCE_TTL_MS });
     }
     if (JSON.stringify(this.list()) !== before) this.emit('update');

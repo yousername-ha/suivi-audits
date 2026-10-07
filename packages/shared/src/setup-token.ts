@@ -21,7 +21,10 @@ export function formatSetupToken(raw: string): string {
 
 /** Caractères significatifs d'une saisie (majuscules, chiffres), sans séparateurs. */
 export function setupTokenChars(input: string): string {
-  return input.normalize('NFKC').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  return input
+    .normalize('NFKC')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '');
 }
 
 /** Normalise une saisie : majuscules, sans espaces ni tirets. Renvoie null si le format est invalide. */
@@ -44,8 +47,7 @@ export type SetupTokenStatus = 'ok' | 'invalid' | 'expired' | 'used' | 'none';
 export const SETUP_TOKEN_MESSAGES: Record<Exclude<SetupTokenStatus, 'ok'>, string> = {
   invalid:
     "Jeton d'installation invalide. Vérifiez la saisie ou utilisez le dernier jeton généré (les précédents sont annulés).",
-  expired:
-    "Jeton d'installation expiré (validité 24 h). Générez-en un nouveau : docker compose exec app setup-token",
+  expired: "Jeton d'installation expiré (validité 24 h). Générez-en un nouveau : docker compose exec app setup-token",
   used: "Ce jeton d'installation a déjà été utilisé. Connectez-vous, ou générez-en un nouveau si aucun administrateur n'a été créé.",
   none: "Aucun jeton d'installation en cours. Générez-en un : docker compose exec app setup-token",
 };

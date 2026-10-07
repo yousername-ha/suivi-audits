@@ -38,7 +38,8 @@ function useTokenInput() {
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const el = e.currentTarget;
     const p = el.selectionStart ?? 0;
-    if (e.key === 'Backspace' && p === el.selectionEnd && p > 0 && el.value[p - 1] === '-') el.setSelectionRange(p - 1, p - 1);
+    if (e.key === 'Backspace' && p === el.selectionEnd && p > 0 && el.value[p - 1] === '-')
+      el.setSelectionRange(p - 1, p - 1);
   };
   return { value, ref, onChange, onKeyDown };
 }
@@ -47,7 +48,10 @@ export function SetupPage() {
   const me = useMe();
   const refresh = useRefreshMe();
   const nav = useNavigate();
-  const status = useQuery({ queryKey: ['setup'], queryFn: () => get<{ needed: boolean; adminExists: boolean; pending: boolean }>('/api/setup') });
+  const status = useQuery({
+    queryKey: ['setup'],
+    queryFn: () => get<{ needed: boolean; adminExists: boolean; pending: boolean }>('/api/setup'),
+  });
   const token = useTokenInput();
   const [f, setF] = useState({ username: '', displayName: '', email: '', password: '', confirm: '' });
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +68,13 @@ export function SetupPage() {
     if (f.password !== f.confirm) return setError('Les deux saisies du mot de passe ne correspondent pas.');
     setBusy(true);
     try {
-      await post('/api/setup', { token: token.value, username: f.username.trim(), displayName: f.displayName, email: f.email, password: f.password });
+      await post('/api/setup', {
+        token: token.value,
+        username: f.username.trim(),
+        displayName: f.displayName,
+        email: f.email,
+        password: f.password,
+      });
       await refresh();
       nav('/login', { replace: true });
     } catch (x) {
@@ -74,7 +84,8 @@ export function SetupPage() {
       setBusy(false);
     }
   };
-  const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) => setF({ ...f, [k]: e.currentTarget.value });
+  const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setF({ ...f, [k]: e.currentTarget.value });
 
   return (
     <main className="auth-wrap">
@@ -95,8 +106,8 @@ export function SetupPage() {
                 Récupérer le jeton
               </Title>
               <Text size="sm" c="dimmed">
-                Sur le serveur, dans le dossier de l’application, exécuter l’une des commandes suivantes. Le jeton est valable 24 h ; en
-                générer un nouveau annule le précédent.
+                Sur le serveur, dans le dossier de l’application, exécuter l’une des commandes suivantes. Le jeton est
+                valable 24 h ; en générer un nouveau annule le précédent.
               </Text>
               <CopyCommand command={`sudo ${SETUP_TOKEN_COMMANDS.generate}`} />
               <Text size="sm" c="dimmed">
@@ -122,10 +133,30 @@ export function SetupPage() {
                 onKeyDown={token.onKeyDown}
               />
               <div className="grid-2">
-                <TextInput label="Identifiant" required maxLength={64} autoComplete="username" value={f.username} onChange={set('username')} />
-                <TextInput label="Nom affiché" maxLength={120} autoComplete="name" value={f.displayName} onChange={set('displayName')} />
+                <TextInput
+                  label="Identifiant"
+                  required
+                  maxLength={64}
+                  autoComplete="username"
+                  value={f.username}
+                  onChange={set('username')}
+                />
+                <TextInput
+                  label="Nom affiché"
+                  maxLength={120}
+                  autoComplete="name"
+                  value={f.displayName}
+                  onChange={set('displayName')}
+                />
               </div>
-              <TextInput label="Adresse e-mail (facultatif)" type="email" maxLength={200} autoComplete="email" value={f.email} onChange={set('email')} />
+              <TextInput
+                label="Adresse e-mail (facultatif)"
+                type="email"
+                maxLength={200}
+                autoComplete="email"
+                value={f.email}
+                onChange={set('email')}
+              />
               <PasswordInput
                 label="Mot de passe"
                 description={`Au moins ${minLen} caractères et 3 types parmi minuscules, majuscules, chiffres, symboles.`}
@@ -134,7 +165,13 @@ export function SetupPage() {
                 value={f.password}
                 onChange={set('password')}
               />
-              <PasswordInput label="Confirmation" required autoComplete="new-password" value={f.confirm} onChange={set('confirm')} />
+              <PasswordInput
+                label="Confirmation"
+                required
+                autoComplete="new-password"
+                value={f.confirm}
+                onChange={set('confirm')}
+              />
               {error && (
                 <Alert color="red" role="alert">
                   {error}

@@ -30,7 +30,16 @@ describe('jeton d’installation : format partagé', () => {
   });
 
   it('refuse les formats invalides', () => {
-    for (const v of ['', 'K7QM2-XH9PD-4TNRW', 'K7QM2-XH9PD-4TNRW-B8FZ0', 'O7QM2-XH9PD-4TNRW-B8FZC', 'K7QM2.XH9PD.4TNRW.B8FZC', null, 42, 'x'.repeat(200)]) {
+    for (const v of [
+      '',
+      'K7QM2-XH9PD-4TNRW',
+      'K7QM2-XH9PD-4TNRW-B8FZ0',
+      'O7QM2-XH9PD-4TNRW-B8FZC',
+      'K7QM2.XH9PD.4TNRW.B8FZC',
+      null,
+      42,
+      'x'.repeat(200),
+    ]) {
       expect(normalizeSetupToken(v), JSON.stringify(v)).toBeNull();
     }
   });

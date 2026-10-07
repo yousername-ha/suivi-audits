@@ -1,5 +1,20 @@
 /* Administration → Import des données legacy : dépôt, simulation (aucune écriture), confirmation, application, annulation. */
-import { Alert, Badge, Button, Card, FileButton, Group, Radio, Select, Stack, Stepper, Table, Text, TextInput, Title } from '@mantine/core';
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  FileButton,
+  Group,
+  Radio,
+  Select,
+  Stack,
+  Stepper,
+  Table,
+  Text,
+  TextInput,
+  Title,
+} from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IMPORT_MODE_LABELS, IMPORT_MODES, type ImportMode } from '@suivi/shared';
 import { LEGACY_MODULES, TECHNICAL_KEYS, type ImportReport } from '@suivi/shared/legacy';
@@ -35,7 +50,10 @@ const CHANGE: Record<string, [string, string]> = {
   unchanged: ['inchangé', 'gray'],
   deleted: ['supprimé', 'red'],
 };
-const moduleOptions = LEGACY_MODULES.filter((m) => !TECHNICAL_KEYS.has(m.key)).map((m) => ({ value: m.key, label: `${m.label} (${m.key})` }));
+const moduleOptions = LEGACY_MODULES.filter((m) => !TECHNICAL_KEYS.has(m.key)).map((m) => ({
+  value: m.key,
+  label: `${m.label} (${m.key})`,
+}));
 
 export function ImportPanel() {
   const qc = useQueryClient();
@@ -48,7 +66,8 @@ export function ImportPanel() {
   const [busy, setBusy] = useState(false);
   const history = useQuery({ queryKey: ['admin', 'imports'], queryFn: () => get<Batch[]>('/api/admin/import') });
   const step = !file ? 0 : !sim ? 1 : 2;
-  const q = (extra = '') => `mode=${mode}${mode === 'replace' && module ? `&module=${encodeURIComponent(module)}` : ''}${extra}`;
+  const q = (extra = '') =>
+    `mode=${mode}${mode === 'replace' && module ? `&module=${encodeURIComponent(module)}` : ''}${extra}`;
   const headers = file ? { 'X-File-Name': encodeURIComponent(file.name) } : undefined;
 
   const reset = () => {
@@ -76,11 +95,19 @@ export function ImportPanel() {
   const apply = () =>
     run(async () => {
       if (!file || !sim) return;
-      const r = await api<{ batch: number }>('POST', `/api/admin/import/apply?${q(`&sha256=${sim.sha256}${mode === 'replace' ? `&confirm=${encodeURIComponent(confirm)}` : ''}`)}`, {
-        raw: file.buf,
-        headers,
+      const r = await api<{ batch: number }>(
+        'POST',
+        `/api/admin/import/apply?${q(`&sha256=${sim.sha256}${mode === 'replace' ? `&confirm=${encodeURIComponent(confirm)}` : ''}`)}`,
+        {
+          raw: file.buf,
+          headers,
+        },
+      );
+      notifications.show({
+        color: 'teal',
+        title: 'Import appliqué',
+        message: `Import n°${r.batch} enregistré. Il peut être annulé depuis l’historique.`,
       });
-      notifications.show({ color: 'teal', title: 'Import appliqué', message: `Import n°${r.batch} enregistré. Il peut être annulé depuis l’historique.` });
       setFile(null);
       reset();
       await qc.invalidateQueries();
@@ -89,9 +116,9 @@ export function ImportPanel() {
   return (
     <Stack>
       <Text c="dimmed" size="sm">
-        Reprise des données de l’outil historique : sauvegarde JSON (Paramètres → Sauvegarde) ou fichier « Exporter pour la nouvelle
-        version ». La simulation n’écrit rien ; l’application se fait en une seule transaction, après une sauvegarde de l’état actuel, et
-        reste annulable.
+        Reprise des données de l’outil historique : sauvegarde JSON (Paramètres → Sauvegarde) ou fichier « Exporter pour
+        la nouvelle version ». La simulation n’écrit rien ; l’application se fait en une seule transaction, après une
+        sauvegarde de l’état actuel, et reste annulable.
       </Text>
       <Stepper active={step} size="sm">
         <Stepper.Step label="Dépôt" description="Fichier JSON" />
@@ -145,7 +172,12 @@ export function ImportPanel() {
               w={420}
             />
           )}
-          <Button onClick={simulate} disabled={!file || (mode === 'replace' && !module)} loading={busy && !sim} w="fit-content">
+          <Button
+            onClick={simulate}
+            disabled={!file || (mode === 'replace' && !module)}
+            loading={busy && !sim}
+            w="fit-content"
+          >
             Simuler l’import
           </Button>
           {error && (
@@ -170,17 +202,29 @@ export function ImportPanel() {
             ) : (
               <>
                 <Text size="sm">
-                  Modules modifiés : <b>{sim.report.affected.join(', ')}</b>. Une sauvegarde de l’état actuel est faite juste avant.
+                  Modules modifiés : <b>{sim.report.affected.join(', ')}</b>. Une sauvegarde de l’état actuel est faite
+                  juste avant.
                 </Text>
                 {mode === 'replace' && (
                   <Alert color="red" title="Confirmation renforcée">
-                    Les éléments du module « {module} » absents du fichier seront supprimés ({sim.report.totals.deleted}). Ressaisissez le nom
-                    du module pour confirmer.
-                    <TextInput mt="xs" value={confirm} onChange={(e) => setConfirm(e.currentTarget.value)} placeholder={module ?? ''} aria-label="Nom du module à remplacer" />
+                    Les éléments du module « {module} » absents du fichier seront supprimés ({sim.report.totals.deleted}
+                    ). Ressaisissez le nom du module pour confirmer.
+                    <TextInput
+                      mt="xs"
+                      value={confirm}
+                      onChange={(e) => setConfirm(e.currentTarget.value)}
+                      placeholder={module ?? ''}
+                      aria-label="Nom du module à remplacer"
+                    />
                   </Alert>
                 )}
                 <Group>
-                  <Button color={mode === 'replace' ? 'red' : undefined} onClick={apply} loading={busy} disabled={mode === 'replace' && confirm !== module}>
+                  <Button
+                    color={mode === 'replace' ? 'red' : undefined}
+                    onClick={apply}
+                    loading={busy}
+                    disabled={mode === 'replace' && confirm !== module}
+                  >
                     Appliquer l’import
                   </Button>
                   <Button variant="default" onClick={reset}>
@@ -226,15 +270,35 @@ export function ImportPanel() {
                     </Text>
                   </Table.Td>
                   <Table.Td>{b.filename}</Table.Td>
-                  <Table.Td>{b.mode === 'replace' ? `remplacer ${b.module}` : b.mode === 'init' ? 'initialiser' : 'fusionner'}</Table.Td>
+                  <Table.Td>
+                    {b.mode === 'replace' ? `remplacer ${b.module}` : b.mode === 'init' ? 'initialiser' : 'fusionner'}
+                  </Table.Td>
                   <Table.Td>{b.modules.join(', ')}</Table.Td>
-                  <Table.Td className="nowrap">{b.status === 'undone' ? <Badge color="gray">annulé le {fmtDate(b.undone_at)}</Badge> : <Badge color="teal">appliqué</Badge>}</Table.Td>
+                  <Table.Td className="nowrap">
+                    {b.status === 'undone' ? (
+                      <Badge color="gray">annulé le {fmtDate(b.undone_at)}</Badge>
+                    ) : (
+                      <Badge color="teal">appliqué</Badge>
+                    )}
+                  </Table.Td>
                   <Table.Td>
                     <Group gap={4} wrap="nowrap">
-                      <Button size="compact-sm" variant="default" onClick={() => get<{ report: ImportReport }>(`/api/admin/import/${b.id}`).then((r) => saveBlob(`rapport-import-${b.id}.json`, JSON.stringify(r.report, null, 2)))}>
+                      <Button
+                        size="compact-sm"
+                        variant="default"
+                        onClick={() =>
+                          get<{ report: ImportReport }>(`/api/admin/import/${b.id}`).then((r) =>
+                            saveBlob(`rapport-import-${b.id}.json`, JSON.stringify(r.report, null, 2)),
+                          )
+                        }
+                      >
                         Rapport
                       </Button>
-                      <Button size="compact-sm" variant="default" onClick={() => download(`/api/admin/import/${b.id}/file`)}>
+                      <Button
+                        size="compact-sm"
+                        variant="default"
+                        onClick={() => download(`/api/admin/import/${b.id}/file`)}
+                      >
                         Fichier
                       </Button>
                       {b.status === 'applied' && (
@@ -247,7 +311,13 @@ export function ImportPanel() {
                             api('POST', `/api/admin/import/${b.id}/undo`)
                               .then(() => notifications.show({ color: 'teal', message: `Import n°${b.id} annulé.` }))
                               .then(() => qc.invalidateQueries())
-                              .catch((e) => notifications.show({ color: 'red', title: 'Annulation impossible', message: errorMessage(e) }))
+                              .catch((e) =>
+                                notifications.show({
+                                  color: 'red',
+                                  title: 'Annulation impossible',
+                                  message: errorMessage(e),
+                                }),
+                              )
                           }
                         >
                           Annuler
@@ -283,14 +353,20 @@ function ReportView({ sim }: { sim: SimResult }) {
           <Title order={3} size="h4">
             Rapport de simulation
           </Title>
-          <Button variant="default" onClick={() => saveBlob(`simulation-${sim.filename.replace(/\.json$/i, '')}.json`, JSON.stringify(sim, null, 2))}>
+          <Button
+            variant="default"
+            onClick={() =>
+              saveBlob(`simulation-${sim.filename.replace(/\.json$/i, '')}.json`, JSON.stringify(sim, null, 2))
+            }
+          >
             Télécharger le rapport
           </Button>
         </Group>
         <Text size="sm">
           Fichier au schéma {r.sourceSchema}
-          {sim.envelope ? ' (export pour la nouvelle version)' : ' (sauvegarde brute)'} — {r.totals.created} création(s), {r.totals.updated} mise(s) à
-          jour, {r.totals.deleted} suppression(s), {r.totals.unchanged} inchangé(s).
+          {sim.envelope ? ' (export pour la nouvelle version)' : ' (sauvegarde brute)'} — {r.totals.created}{' '}
+          création(s), {r.totals.updated} mise(s) à jour, {r.totals.deleted} suppression(s), {r.totals.unchanged}{' '}
+          inchangé(s).
         </Text>
         <div className="table-wrap">
           <Table striped>
@@ -306,7 +382,8 @@ function ReportView({ sim }: { sim: SimResult }) {
             </Table.Thead>
             <Table.Tbody>
               {r.modules.map((m) => {
-                const sum = (k: 'created' | 'updated' | 'unchanged' | 'deleted') => m.collections.reduce((n, c) => n + c[k], 0);
+                const sum = (k: 'created' | 'updated' | 'unchanged' | 'deleted') =>
+                  m.collections.reduce((n, c) => n + c[k], 0);
                 const [label, color] = CHANGE[m.change] ?? ['', 'gray'];
                 return (
                   <Table.Tr key={m.module}>
@@ -341,8 +418,7 @@ function ReportView({ sim }: { sim: SimResult }) {
         )}
         {r.unknownPaths.length > 0 && (
           <Alert color="blue" title={`Champs inconnus du contrat (${r.unknownPaths.length})`}>
-            Ces champs sont conservés tels quels :
-            <div className="pre">{r.unknownPaths.join('\n')}</div>
+            Ces champs sont conservés tels quels :<div className="pre">{r.unknownPaths.join('\n')}</div>
           </Alert>
         )}
         {r.warnings.length > 0 && (
