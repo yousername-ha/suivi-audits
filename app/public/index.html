@@ -1338,7 +1338,7 @@ function renderSettings(){
       <p class="note">${RO_FORCED?'Imposé par le lien d’ouverture (paramètre « ?lecture »).':'Pour un accès en consultation, ouvrir l’outil avec « ?lecture » à la fin de l’adresse. La protection réelle des données reste assurée par les droits du dossier partagé.'}</p></div>
     <div class="hr"></div>
     <div class="fld w2">Sauvegarde<p class="note">Les modifications sont enregistrées automatiquement avec la page. Une copie JSON sert de sauvegarde ou permet de reprendre les données ailleurs.</p>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"><button class="btn" data-act="json">Exporter la sauvegarde JSON</button><button class="btn" data-act="import">Importer une sauvegarde</button><button class="btn danger" data-act="reset">Revenir au fichier d'origine</button></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"><button class="btn" data-act="json">Exporter la sauvegarde JSON</button><button class="btn" data-act="jsonv3">Exporter pour la nouvelle version</button><button class="btn" data-act="import">Importer une sauvegarde</button><button class="btn danger" data-act="reset">Revenir au fichier d'origine</button></div>
       <p class="note" style="margin-top:8px">Source initiale : ${esc(S.source||'')}</p></div>
     <div class="fld w2">Affichage<div class="seg" role="group">${[['auto','Système'],['light','Clair'],['dark','Sombre']].map(([v,l])=>`<button data-act="theme" data-v="${v}" aria-pressed="${(document.documentElement.dataset.theme||'auto')===v}">${l}</button>`).join('')}</div></div>
   </div></div>`;
@@ -1486,7 +1486,7 @@ function fillPlanDates(){
    Structure extensible : chaque module déclare son onglet (TABS),
    ses importeurs Excel (IMPORTERS) et ses feuilles d'export (EXPORTS).
    ===================================================================== */
-const SCHEMA=14;
+const SCHEMA=15;
 const nowTs=()=>new Date().toISOString();
 const RO_FORCED=/[?&#]lecture\b/i.test(location.search+location.hash);
 let RO=RO_FORCED||(()=>{try{return localStorage.getItem('suivi-audits-smsi:ro')==='1'}catch(e){return false}})();
@@ -1518,11 +1518,28 @@ function donut(parts,total,center,sub){const r=26,c=2*Math.PI*r;let off=0;
   return `<div class="donut"><svg viewBox="0 0 68 68" width="84" height="84" aria-hidden="true"><circle r="${r}" cx="34" cy="34" fill="none" class="dn-na" stroke-width="9"/>${segs}</svg><span><b>${esc(center)}</b><small>${esc(sub)}</small></span></div>`}
 function seg2(key,val,opts){return `<div class="seg" role="group">${opts.map(([v,l])=>`<button data-act="set" data-k="${key}" data-v="${v}" aria-pressed="${val===v}">${l}</button>`).join('')}</div>`}
 
+/* ---------- Schéma 15 : identifiant stable des éléments de liste (reprise dans la nouvelle version) ----------
+   Même algorithme que la nouvelle version (packages/shared/src/legacy/schema15.ts) : pour chaque préfixe, numérotation
+   à la suite du plus grand numéro attribué, sur 3 chiffres minimum. Un identifiant attribué n'est jamais modifié. */
+const LID_LISTS=[['findings[].tasks','TK-'],['indicators[].values','IV-'],['ai.plan','AP-'],['ai.policies','AL-'],['plan.slots[].proofs','PR-'],['reviews[].cs.inc.focus','RF-'],['reviews[].cs.sujet','RS-'],['crisis.cells[].log','CL-'],['roles','RO-']];
+function lidLists(s,path){let cur=[s];const t=path.split('.');t.forEach((tok,i)=>{const many=tok.endsWith('[]'),k=many?tok.slice(0,-2):tok,nx=[];for(const n of cur){if(!n||typeof n!=='object'||Array.isArray(n))continue;const v=n[k];if(v===undefined)continue;if(many&&i<t.length-1){if(Array.isArray(v))nx.push(...v)}else nx.push(v)}cur=nx});return cur.filter(Array.isArray)}
+function legacyIds(s){if(!s||typeof s!=='object')return s;for(const[path,pre]of LID_LISTS){const lists=lidLists(s,path),used=new Set();let n=0;
+  for(const l of lists)for(const e of l)if(e&&typeof e==='object'&&typeof e.id==='string'&&e.id){used.add(e.id);if(e.id.startsWith(pre)){const k=Number(e.id.slice(pre.length));if(Number.isInteger(k)&&k>n)n=k}}
+  for(const l of lists)for(let i=0;i<l.length;i++){const e=l[i];if(!e||typeof e!=='object'||Array.isArray(e)||(typeof e.id==='string'&&e.id))continue;let id;do id=pre+String(++n).padStart(3,'0');while(used.has(id));used.add(id);l[i]=Object.assign({id},e)}}
+  return s}
+function migrate15(s){legacyIds(s);s.schema=15;return s}
+/** Export « enveloppe » pour la nouvelle version (docs/legacy/IMPORT-LEGACY.md § 3.2). */
+async function exportNewVersion(){legacyIds(S);const data=JSON.parse(JSON.stringify(S)),json=JSON.stringify(data);
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(json)),sha=[...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+  const env={format:'suivi-audits-legacy',formatVersion:1,schema:data.schema,exportedAt:new Date().toISOString(),appVersion:'outil-historique-schema-'+data.schema,sha256:sha,data};
+  saveFile(`suivi-audits-legacy-${stamp()}.json`,JSON.stringify(env));toast('Export pour la nouvelle version enregistré.')}
+
 /* ---------- Migration de structure ---------- */
 function migrate3(s){
   if(!s)return s;
   s=migrate(s);
   if((s.schema||0)>=SCHEMA)return s;
+  if((s.schema||0)>=14)return migrate15(s);
   if((s.schema||0)>=13)return migrate14(s);
   if((s.schema||0)>=12)return migrate13(s);
   if((s.schema||0)>=11)return migrate12(s);
@@ -1616,7 +1633,7 @@ function migrate11(s){(s.supEvals||[]).forEach(ev=>{if(ev.grid==='2026')return;c
   ev.ans=na;ev.cases=['rgpd',...(old.includes('cloud')?['cloud']:[]),...(old.includes('dev')?['dev']:[]),...(old.includes('ia')?['ia']:[]),...(old.includes('mob')?['mob']:[]),...(old.includes('dm')?['dm']:[])];ev.grid='2026'});s.schema=11;return migrate12(s)}
 function migrate12(s){if(!s.roles)s.roles=[];if(!s.recurring)s.recurring=[];s.schema=12;return migrate13(s)}
 function migrate13(s){if(!s.evidences)s.evidences=[];if(!s.invest)s.invest={baseYear:new Date().getFullYear(),lines:[]};const k=S;S=s;try{crrcState()}finally{S=k}s.schema=13;return migrate14(s)}
-function migrate14(s){try{const seed=JSON.parse(document.getElementById('invseed').textContent||'null');if(seed&&Array.isArray(seed.lines)&&seed.lines.length&&!((s.invest||{}).lines||[]).length){s.invest=Object.assign({},s.invest||{},{baseYear:seed.baseYear||new Date().getFullYear(),lines:JSON.parse(JSON.stringify(seed.lines)),source:seed.source||''})}}catch(e){}s.schema=14;return s}
+function migrate14(s){try{const seed=JSON.parse(document.getElementById('invseed').textContent||'null');if(seed&&Array.isArray(seed.lines)&&seed.lines.length&&!((s.invest||{}).lines||[]).length){s.invest=Object.assign({},s.invest||{},{baseYear:seed.baseYear||new Date().getFullYear(),lines:JSON.parse(JSON.stringify(seed.lines)),source:seed.source||''})}}catch(e){}s.schema=14;return migrate15(s)}
 function migrate10(s){s.scope=s.scope||{};s.interested=s.interested||[];s.swots=s.swots||[];s.incidents=s.incidents||[];s.supEvals=s.supEvals||[];s.crisis=s.crisis||{contacts:[],scenarios:[],cells:[]};s.schema=10;return migrate11(s)}
 function arNext(a){if(!a.month)return null;const [y,m]=a.month.split('-').map(Number);return new Date(y,m-1+(+a.freq||12),1)}
 function arState(a){const n=arNext(a);if(!a.month)return ['Jamais réalisée','bad'];const t=today();if(n<new Date(t.getFullYear(),t.getMonth(),1))return ['En retard','bad'];if(n<=new Date(t.getFullYear(),t.getMonth()+2,1))return ['À planifier','mid'];return ['À jour','ok']}
@@ -2443,6 +2460,7 @@ function renderExportDlg(){
       <button class="xitem" data-act="tplblank"><b>Modèle d'intégration vierge (Excel)</b><span>Mêmes feuilles, sans données, pour intégrer un fichier existant.</span></button>
       <button class="xitem" data-act="tenacyx"><b>Export pour Tenacy (Excel)</b><span>Écarts et actions au format Groups / Gaps de l'export Tenacy.</span></button>
       <button class="xitem" data-act="json"><b>Sauvegarde complète (JSON)</b><span>Copie intégrale des données de l'outil.</span></button>
+      <button class="xitem" data-act="jsonv3"><b>Exporter pour la nouvelle version</b><span>Fichier à importer dans la nouvelle interface (Administration, Import des données legacy).</span></button>
     </div></div>`;
 }
 /* ---------- Onglets (registre extensible) ---------- */
@@ -4774,7 +4792,7 @@ function setStatus(s){
   const el=$('#status'); el.dataset.s=s; el.querySelector('span').textContent=map[s]||''; el.title=map[s]||'';
   $('#syncBtn').hidden=!(s==='unsynced'||s==='manual'||s==='error');
 }
-function localSave(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function localSave(){try{legacyIds(S)}catch(e){}try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 async function flushNow(){try{if(typeof saWrite==='function'&&typeof mode!=='undefined'&&mode==='standalone'){if(typeof saT!=='undefined')clearTimeout(saT);await saWrite(false);return}if(typeof flush==='function')await flush()}catch(e){}}
 async function saveAndClose(closeDrawer){const a=document.activeElement;if(a&&a.blur)a.blur();await new Promise(r=>setTimeout(r,30));if(RO)return;S.updatedAt=Date.now();localSave();await flushNow();
   if(closeDrawer&&$('#drawer').open)$('#drawer').close();else render();toast('Enregistré.')}
@@ -4914,6 +4932,7 @@ document.addEventListener('click',async e=>{
     case 'addyear':{const y=Math.max(...S.years)+1;S.years.push(y);S.items.forEach(i=>{i.afnor[y]='';i.interne[y]=''});touch(true);renderSettings();break}
     case 'theme':{const v=el.dataset.v;if(v==='auto')delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=v;try{localStorage.setItem('suivi-audits-smsi:theme',v)}catch(x){}renderSettings();break}
     case 'json':saveFile(`suivi-audits-smsi-sauvegarde-${stamp()}.json`,JSON.stringify(S,null,1));break;
+    case 'jsonv3':exportNewVersion();break;
     case 'import':$('#importFile').click();break;
     case 'reset':if(await askModal("Remplacer toutes les données par celles du fichier d'origine ? Les modifications seront perdues.")){const u=Date.now();S=migrate3(clone(SEED));S.updatedAt=u;$('#settings').close();touch(true);toast("Données du fichier d'origine rétablies.")}break;
     case 'xlsx':exportXlsx();break;
