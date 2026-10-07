@@ -1,0 +1,20 @@
+# Configuration locale et secrets : jamais dans le dépôt
+.env
+.env.*
+!.env.example
+certs/*
+!certs/.gitkeep
+*.pem
+*.key
+
+# Sauvegardes (contiennent données et secrets)
+backups/
+*.tar
+*.tar.enc
+*.sha256
+*.dump
+
+# Dépendances et fichiers locaux
+node_modules/
+npm-debug.log*
+.DS_Store

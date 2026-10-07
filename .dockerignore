@@ -1,0 +1,9 @@
+# Seuls app/ est copié dans l'image ; exclure le reste du contexte de construction.
+.git
+.github
+.env
+.env.*
+certs
+backups
+**/node_modules
+*.md
