@@ -191,22 +191,20 @@ jobs:
           test "$(docker compose exec -T web id -u)" = 1001
 
       - run: pnpm install --frozen-lockfile --filter @suivi/e2e
-      - name: Navigateur Playwright
-        # Sans --with-deps : l'image du runner fournit déjà les bibliothèques de Chromium ; l'installation
-        # des paquets système par apt a bloqué un runner (étape restée « en cours » au-delà du délai du job).
-        timeout-minutes: 10
-        run: pnpm --filter @suivi/e2e exec playwright install chromium
-      - name: Tests de bout en bout
-        timeout-minutes: 15
-        env:
-          E2E_STACK_DIR: ${{ github.workspace }}
-          E2E_TOKEN_CMD: docker compose exec -T app setup-token
-        run: pnpm --filter @suivi/e2e test
+      - name: Tests de bout en bout et captures de référence (conteneur Playwright officiel)
+        # Même navigateur et mêmes polices qu'en local : les captures de référence sont comparées à l'identique.
+        timeout-minutes: 20
+        run: ./tests/e2e/run-in-container.sh
+      - name: Droits des résultats de test
+        if: always()
+        run: sudo chown -R "$USER" tests/e2e 2>/dev/null || true
       - uses: actions/upload-artifact@v5
         if: failure()
         with:
-          name: playwright-report
-          path: tests/e2e/playwright-report/
+          name: playwright-resultats
+          path: |
+            tests/e2e/playwright-report/
+            tests/e2e/test-results/
 
       - name: Droits du cache Trivy (sauvegarde du cache)
         if: always()

@@ -1,6 +1,9 @@
 /* Outils des tests de bout en bout : TOTP, jeton d'installation, surveillance des violations de CSP, appels API. */
 import { execSync } from 'node:child_process';
 import crypto from 'node:crypto';
+import { readFileSync, writeFileSync } from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import type { APIRequestContext, Page } from '@playwright/test';
 
 export const PASSWORD = 'E2e-Mot-de-passe-2026!';
@@ -82,3 +85,9 @@ export async function apiLogin(req: APIRequestContext, username: string, passwor
 export async function csrfOf(req: APIRequestContext): Promise<string> {
   return (await (await req.get('/api/auth/me')).json()).csrf as string;
 }
+
+/** Compte administrateur créé par le parcours d'installation, réutilisé par les autres fichiers de tests. */
+const ADMIN_FILE = path.join(os.tmpdir(), 'suivi-e2e-admin.json');
+export const saveAdmin = (username: string, secret: string) =>
+  writeFileSync(ADMIN_FILE, JSON.stringify({ username, secret }), { mode: 0o600 });
+export const loadAdmin = (): { username: string; secret: string } => JSON.parse(readFileSync(ADMIN_FILE, 'utf8'));

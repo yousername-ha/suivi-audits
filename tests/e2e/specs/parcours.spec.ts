@@ -4,7 +4,17 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { expect, test, type Browser, type Page } from '@playwright/test';
-import { apiLogin, csrfOf, freshTotp, markTotpUsed, PASSWORD, setupToken, totp, watchPage } from '../helpers';
+import {
+  apiLogin,
+  csrfOf,
+  freshTotp,
+  markTotpUsed,
+  PASSWORD,
+  saveAdmin,
+  setupToken,
+  totp,
+  watchPage,
+} from '../helpers';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -62,6 +72,7 @@ test('installation : jeton, création de l’administrateur, activation de la do
   await page.keyboard.type(totp(adminSecret));
   markTotpUsed(adminSecret);
   await expect(page.getByRole('heading', { name: /^Bonjour Responsable SSI/ })).toBeVisible();
+  saveAdmin(ADMIN, adminSecret);
 
   // Une fois l'administrateur créé, /setup renvoie vers la connexion.
   await page.goto('/setup');

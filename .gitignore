@@ -24,3 +24,6 @@ npm-debug.log*
 **/test-results/
 *.tsbuildinfo
 .ccr-ca.crt
+
+# Jeton d’installation des tests de bout en bout
+tests/e2e/.jeton
