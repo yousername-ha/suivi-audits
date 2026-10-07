@@ -32,6 +32,13 @@ jobs:
             paths-ignore:
               - app/public/lib
               - '**/dist'
+            # js/missing-rate-limiting ne reconnaît que les intergiciels connus (express-rate-limit…). Toutes les
+            # routes passent par un point d'entrée unique (apps/api/src/http/route.ts) qui applique une limite
+            # globale par IP avant toute lecture en base (testée : security.test.ts, « limite globale de débit »),
+            # en plus des limites dédiées (connexion, double authentification, jeton d'installation, présence).
+            query-filters:
+              - exclude:
+                  id: js/missing-rate-limiting
       - uses: github/codeql-action/analyze@v4
         with:
           category: '/language:javascript-typescript'

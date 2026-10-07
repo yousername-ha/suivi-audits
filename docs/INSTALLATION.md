@@ -326,7 +326,7 @@ nano se pilote **uniquement au clavier** (la souris ne déplace pas le curseur) 
 2. Effacez `suivi-audits.example.local` avec la touche **Retour arrière** (⌫), puis tapez votre nom DNS. La ligne devient par exemple `SITE_ADDRESS=suivi-audits.mondomaine.local`.
 3. Descendez à la ligne `APP_VERSION=` et remplacez le numéro par la version choisie à l'étape 5.3, sans le « v ».
 4. Laissez `CADDY_TLS=internal` pour l'instant (voir 6.4), ainsi que toutes les autres lignes.
-5. Enregistrez : **Ctrl + O**, puis **Entrée**. En bas s'affiche `[ Wrote 42 lines ]` (le nombre peut varier).
+5. Enregistrez : **Ctrl + O**, puis **Entrée**. En bas s'affiche `[ Wrote 46 lines ]` (le nombre peut varier).
 6. Quittez : **Ctrl + X**.
 
 **6.3 Protéger le fichier**, puis vérifier les deux valeurs :
@@ -754,6 +754,7 @@ Si vous demandez de l'aide, joignez ces deux sorties. Elles ne contiennent aucun
 | Plus aucun administrateur ne peut se connecter | Téléphones perdus, départ… | `sudo docker compose exec app setup-token --recovery`, puis `https://<nom_dns>/setup` pour créer un administrateur de secours |
 | « Module géré dans la nouvelle interface » dans l'ancien outil | Ce module a été repris par la nouvelle interface | Normal : modifier ces données dans la nouvelle interface |
 | « Droits insuffisants : vous ne pouvez pas … » | Le rôle de la personne ne comprend pas cette action | **Administration**, **Utilisateurs**, bouton **Droits effectifs** du compte, puis ajouter le rôle ou le groupe adapté |
+| « Trop de requêtes. Réessayez dans une minute. » pour plusieurs personnes à la fois | Limite de débit par adresse IP atteinte : de nombreux postes sortent par une même adresse (traduction d'adresses, proxy) | Relever `RATE_LIMIT_PER_MINUTE` dans `.env` (par exemple 5000), puis `sudo docker compose up -d` |
 | Un compte n'arrive plus à se connecter à une date précise | Date d'expiration atteinte : compte désactivé automatiquement | **Administration**, **Utilisateurs**, **Modifier** : nouvelle date d'expiration et état « Actif » |
 | « Impossible : il doit rester au moins un administrateur actif » | Garde-fou : la modification retirerait le dernier administrateur permanent | Donner d'abord le rôle Administrateur (sans date d'expiration) à une autre personne |
 
