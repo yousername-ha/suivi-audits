@@ -35,7 +35,7 @@ import { useNavigate, useParams } from 'react-router';
 import { api, ApiError, download, errorMessage, get } from '../api';
 import { ConfirmButton, ErrorAlert, fmtDate, fmtSize, PresenceBar } from '../components/common';
 import { usePresence } from '../realtime';
-import { useMe } from '../session';
+import { useCan } from '../session';
 
 interface Ref {
   ref: string;
@@ -51,8 +51,8 @@ function useRefs() {
 }
 
 export function DocumentsPage() {
-  const me = useMe();
-  const canWrite = me.user?.role !== 'ro';
+  const can = useCan();
+  const canWrite = can('documents', 'modifier');
   const { id } = useParams();
   const nav = useNavigate();
   const [tab, setTab] = useState<string | null>('docs');
@@ -80,7 +80,7 @@ export function DocumentsPage() {
           <DocumentDetail
             id={id}
             canWrite={canWrite}
-            isAdmin={me.user?.role === 'admin'}
+            isAdmin={can('documents', 'administrer')}
             onClose={() => nav('/documents')}
           />
         )}
@@ -91,6 +91,7 @@ export function DocumentsPage() {
 
 /* ---------------------------------------------------------------- Liste et dépôt */
 function DocumentList({ canWrite, onOpen }: { canWrite: boolean; onOpen: (id: string) => void }) {
+  const canDelete = useCan()('documents', 'supprimer');
   const qc = useQueryClient();
   const [q, setQ] = useState('');
   const [category, setCategory] = useState<string | null>(null);
@@ -135,7 +136,7 @@ function DocumentList({ canWrite, onOpen }: { canWrite: boolean; onOpen: (id: st
           w={260}
         />
         <Select label="Catégorie" data={cats.data ?? []} value={category} onChange={setCategory} clearable w={200} />
-        {canWrite && (
+        {canDelete && (
           <SegmentedControl
             value={trash}
             onChange={setTrash}
@@ -226,6 +227,7 @@ function DocumentDetail({
   isAdmin: boolean;
   onClose: () => void;
 }) {
+  const canDelete = useCan()('documents', 'supprimer');
   const qc = useQueryClient();
   const refs = useRefs();
   const q = useQuery({ queryKey: ['document', id], queryFn: () => get<DocumentDetailOut>(`/api/documents/${id}`) });
@@ -445,7 +447,7 @@ function DocumentDetail({
           )}
         </FileButton>
       )}
-      {canWrite && (
+      {canDelete && (
         <Group mt="md">
           {!d.deleted_at ? (
             <ConfirmButton
@@ -483,6 +485,7 @@ function DocumentDetail({
 
 /* ---------------------------------------------------------------- Liens */
 function LinkList({ canWrite }: { canWrite: boolean }) {
+  const canDelete = useCan()('documents', 'supprimer');
   const qc = useQueryClient();
   const refs = useRefs();
   const [q, setQ] = useState('');
@@ -555,18 +558,20 @@ function LinkList({ canWrite }: { canWrite: boolean }) {
                         <Button size="compact-sm" variant="default" onClick={() => setEdit({ ...l })}>
                           Modifier
                         </Button>
-                        <ConfirmButton
-                          size="compact-sm"
-                          variant="light"
-                          message={`Supprimer le lien « ${l.title} » ?`}
-                          onConfirm={() =>
-                            api('DELETE', `/api/links/${l.id}`).then(() =>
-                              qc.invalidateQueries({ queryKey: ['links'] }),
-                            )
-                          }
-                        >
-                          Supprimer
-                        </ConfirmButton>
+                        {canDelete && (
+                          <ConfirmButton
+                            size="compact-sm"
+                            variant="light"
+                            message={`Supprimer le lien « ${l.title} » ?`}
+                            onConfirm={() =>
+                              api('DELETE', `/api/links/${l.id}`).then(() =>
+                                qc.invalidateQueries({ queryKey: ['links'] }),
+                              )
+                            }
+                          >
+                            Supprimer
+                          </ConfirmButton>
+                        )}
                       </Group>
                     )}
                   </Table.Td>

@@ -1,5 +1,5 @@
 /* Session courante : étape d'accès, utilisateur, jeton CSRF. */
-import type { MeOut } from '@suivi/shared';
+import { BUSINESS_MODULES, type Action, type MeOut, type Module } from '@suivi/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createContext, useContext, type ReactNode } from 'react';
 import { get, setCsrf } from './api';
@@ -35,3 +35,17 @@ export function useRefreshMe() {
     return me;
   };
 }
+
+/** Droit « module:action » de la session (affichage seulement : le serveur reste seul juge). */
+export function useCan() {
+  const me = useMe();
+  const set = new Set<string>(me.permissions);
+  return (m: Module, a: Action) => set.has(`${m}:${a}`);
+}
+
+/** Accès à l'espace d'administration : administration (comptes, journal…) ou import et export. */
+export const canAdminArea = (can: (m: Module, a: Action) => boolean) =>
+  can('administration', 'lire') || can('import_export', 'lire');
+
+/** Au moins un module métier lisible : accès à l'outil historique. */
+export const canReadBusiness = (can: (m: Module, a: Action) => boolean) => BUSINESS_MODULES.some((m) => can(m, 'lire'));

@@ -1,6 +1,5 @@
 /* Mise en page : barre supérieure, navigation (tiroir sur téléphone), indicateur temps réel.
    Mise en page en CSS statique (app.css) : AppShell de Mantine injecte des balises <style>, interdites par la CSP. */
-import { ROLE_LABELS } from '@suivi/shared';
 import {
   Anchor,
   Badge,
@@ -20,7 +19,7 @@ import type { ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { api, setCsrf } from '../api';
 import { useLive } from '../realtime';
-import { ME_KEY, useMe } from '../session';
+import { canAdminArea, canReadBusiness, ME_KEY, useCan, useMe } from '../session';
 
 export function Layout({ children }: { children: ReactNode }) {
   const me = useMe();
@@ -30,12 +29,14 @@ export function Layout({ children }: { children: ReactNode }) {
   const qc = useQueryClient();
   const live = useLive();
   const { colorScheme, setColorScheme } = useMantineColorScheme();
+  const can = useCan();
   const items: [string, string][] = [
     ['/', 'Accueil'],
-    ['/documents', 'Documents et liens'],
+    ...(can('documents', 'lire') ? ([['/documents', 'Documents et liens']] as [string, string][]) : []),
     ['/account', 'Mon compte'],
-    ...(me.user?.role === 'admin' ? ([['/admin', 'Administration']] as [string, string][]) : []),
+    ...(canAdminArea(can) ? ([['/admin', 'Administration']] as [string, string][]) : []),
   ];
+  const legacy = canReadBusiness(can);
   const active = (to: string) => (to === '/' ? loc.pathname === '/' : loc.pathname.startsWith(to));
   const logout = async () => {
     await api('POST', '/api/auth/logout').catch(() => {});
@@ -51,12 +52,14 @@ export function Layout({ children }: { children: ReactNode }) {
         {items.map(([to, label]) => (
           <NavLink key={to} component={Link} to={to} label={label} active={active(to)} onClick={close} />
         ))}
-        <NavLink
-          component="a"
-          href="/legacy/"
-          label="Outil de suivi (ancienne interface)"
-          description="Modules pas encore repris"
-        />
+        {legacy && (
+          <NavLink
+            component="a"
+            href="/legacy/"
+            label="Outil de suivi (ancienne interface)"
+            description="Modules pas encore repris"
+          />
+        )}
       </Stack>
       <Stack mt="xl" gap={4}>
         <Button
@@ -104,7 +107,7 @@ export function Layout({ children }: { children: ReactNode }) {
               {me.user?.displayName || me.user?.username}
             </Text>
             <Badge variant="light" visibleFrom="md">
-              {me.user ? ROLE_LABELS[me.user.role] : ''}
+              {me.user?.roles.join(', ') || 'Aucun rôle'}
             </Badge>
             <Button size="xs" variant="default" onClick={logout}>
               Déconnexion
