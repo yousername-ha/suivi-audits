@@ -1,7 +1,7 @@
 'use strict';
-/* Commandes d'exploitation :  docker compose exec app node src/cli.js <commande> [arguments]
+/* Commandes d'exploitation :  docker compose exec app node src/cli.js <commande> [arguments]   (raccourci : docker compose exec app setup-token)
      users                       liste les comptes
-     setup-token [--recovery]    émet un jeton d'installation (--recovery : création d'un administrateur de secours)
+     setup-token [--recovery]    nouveau jeton d'installation, annule le précédent (--recovery : administrateur de secours)
      reset-password <compte>     mot de passe temporaire (changement imposé à la connexion)
      reset-mfa <compte>          réinitialise la double authentification
      unlock <compte>             déverrouille un compte

@@ -1,0 +1,4 @@
+#!/bin/sh
+# Raccourci : docker compose exec app setup-token [--recovery]
+# Émet un nouveau jeton d'installation (annule le précédent) et l'affiche avec sa date d'expiration et l'URL /setup.
+exec node /app/src/cli.js setup-token "$@"

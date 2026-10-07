@@ -19,8 +19,10 @@ COPY app/src ./src
 COPY app/web ./web
 COPY app/public ./public
 COPY app/seed ./seed
+# Raccourci d'exploitation : docker compose exec app setup-token
+COPY app/bin/setup-token /usr/local/bin/setup-token
 # Code en lecture seule pour l'utilisateur d'exécution.
-RUN chown -R root:root /app && chmod -R a-w,a+rX /app
+RUN chown -R root:root /app /usr/local/bin/setup-token && chmod -R a-w,a+rX /app && chmod 0555 /usr/local/bin/setup-token
 USER node
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
