@@ -11,3 +11,4 @@ tests/fixtures/
 apps/web/src/generated/
 apps/api/legacy-shim/
 pnpm-workspace.yaml
+scripts/carto/

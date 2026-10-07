@@ -1,0 +1,10 @@
+{
+  "flows_to": {"label": "Flux principal", "style": "primary", "directed": true},
+  "depends_on": {"label": "Dépendance", "style": "dependency", "directed": true},
+  "supports": {"label": "Supporte", "style": "dependency", "directed": true},
+  "interacts_with": {"label": "Interaction", "style": "secondary", "directed": false},
+  "impacts": {"label": "Impacte", "style": "issue", "directed": true},
+  "applies_to": {"label": "S'applique à", "style": "secondary", "directed": true},
+  "contains": {"label": "Contient", "style": "structural", "directed": true},
+  "related_to": {"label": "Lié à", "style": "secondary", "directed": false}
+}

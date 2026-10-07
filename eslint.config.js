@@ -13,6 +13,8 @@ export default tseslint.config(
       '**/playwright-report/**',
       '**/test-results/**',
       'app/public/**',
+      'docs/cartographie/**',
+      'scripts/carto/**',
       'apps/web/src/generated/**',
       '**/*.generated.ts',
     ],
