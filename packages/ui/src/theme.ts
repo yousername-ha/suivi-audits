@@ -24,6 +24,8 @@ import {
   SOMBRE,
   VERT,
   VIOLET,
+  CARTE,
+  variablesCarte,
 } from './tokens.ts';
 
 export const theme = createTheme({
@@ -72,6 +74,7 @@ export const cssVariablesResolver: CSSVariablesResolver = (t) => {
       '--suivi-marque-fond': VERT[8],
       '--suivi-qr-fond': '#FFFFFF',
       '--suivi-trait': GRIS[3],
+      ...variablesCarte(CARTE.clair),
     },
     dark: {
       ...base.dark,
@@ -85,6 +88,7 @@ export const cssVariablesResolver: CSSVariablesResolver = (t) => {
       '--suivi-marque-fond': VERT[7],
       '--suivi-qr-fond': '#FFFFFF',
       '--suivi-trait': SOMBRE[5],
+      ...variablesCarte(CARTE.sombre),
     },
   };
 };

@@ -4,12 +4,12 @@ import { type Anchors, anchors, linkPath } from './geometry.js';
 import { isContainer } from './layout.js';
 import {
   type DerivedRelation,
-  type MapEdge,
   type MapLayout,
   type MapNode,
   type MapObject,
   type MapView,
   type Referentiel,
+  type RelationType,
   isFrame,
 } from './model.js';
 import type { ObjectLookup } from './objects.js';
@@ -63,10 +63,19 @@ export interface SceneOptions {
   export?: boolean;
 }
 export type SceneNode = [ref: string, node: MapNode, obj: MapObject | undefined];
-export type SceneEdge = (DerivedRelation | (MapEdge & { key: string; der?: undefined; sec?: undefined })) & {
+/** Lien affiché : relation dérivée (der) ou graphique (id, gen éventuel), avec ses points d'attache et son tracé. */
+export interface SceneEdge {
+  key: string;
+  s: string;
+  t: string;
+  type: RelationType;
+  der?: boolean;
+  sec?: boolean;
+  id?: string;
+  gen?: boolean;
   an: Anchors;
   d: string;
-};
+}
 export interface Scene {
   /** Nœuds visibles, dans l'ordre de la carte. */
   nodes: SceneNode[];

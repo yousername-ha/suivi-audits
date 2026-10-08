@@ -64,6 +64,12 @@ export const IconeMur = () => (
     <path d="M8 20h8M12 16v4" />
   </Icone>
 );
+export const IconeCarte = () => (
+  <Icone>
+    <path d="M9 4L3 6.5v13.5l6-2.5 6 2.5 6-2.5V4l-6 2.5z" />
+    <path d="M9 4v13.5M15 6.5V20" />
+  </Icone>
+);
 export const IconeTheme = () => (
   <Icone>
     <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" />

@@ -17,8 +17,15 @@ describe('préférences d’affichage', () => {
       densite: 'organisation',
       theme: 'organisation',
       colonnes: {},
+      cartographie: {},
     });
-    const p = { taille: '130', densite: 'compacte', theme: 'sombre', colonnes: { documents: ['titre', 'modifie'] } };
+    const p = {
+      taille: '130',
+      densite: 'compacte',
+      theme: 'sombre',
+      colonnes: { documents: ['titre', 'modifie'] },
+      cartographie: { vue: 'process', referentiels: ['HDS'], viewport: { context: { x: 10, y: 20, k: 0.5 } } },
+    };
     expect((await A.put('/api/account/preferences', p)).statusCode).toBe(200);
     expect((await A.get('/api/auth/me')).json().preferences).toEqual(p);
     expect((await A.put('/api/account/preferences', { ...p, taille: '400' })).statusCode).toBeGreaterThanOrEqual(400);

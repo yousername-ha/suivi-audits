@@ -69,8 +69,15 @@ describe('préférences', () => {
       densite: 'organisation',
       theme: 'organisation',
       colonnes: {},
+      cartographie: {},
     });
     expect(Preferences.safeParse({ taille: '200' }).success).toBe(false);
+    expect(Preferences.safeParse({ cartographie: { viewport: { context: { x: 0, y: 0, k: 9 } } } }).success).toBe(
+      false,
+    );
+    expect(Preferences.parse({ cartographie: { viewport: { process: { x: 1, y: 2, k: 1 } } } }).cartographie).toEqual({
+      viewport: { process: { x: 1, y: 2, k: 1 } },
+    });
     expect(Preferences.safeParse({ colonnes: { 'Pas valide!': [] } }).success).toBe(false);
   });
 });

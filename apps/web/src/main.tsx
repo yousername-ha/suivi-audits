@@ -13,6 +13,7 @@ import { ApiError } from './api';
 import { Layout } from './components/Layout';
 import { AccountPage } from './pages/Account';
 import { AdminPage } from './pages/Admin';
+import { CartographiePage } from './pages/Cartographie';
 import { DocumentsPage } from './pages/Documents';
 import { HomePage } from './pages/Home';
 import { LoginPage } from './pages/Login';
@@ -65,6 +66,7 @@ const router = createBrowserRouter([
       { path: '/', element: <HomePage /> },
       { path: '/documents', element: <DocumentsPage /> },
       { path: '/documents/:id', element: <DocumentsPage /> },
+      { path: '/cartographie/:vue?', element: <CartographiePage /> },
       { path: '/account', element: <AccountPage /> },
       { path: '/parametres/:section?', element: <SettingsPage /> },
     ],

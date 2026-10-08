@@ -19,6 +19,7 @@ import { useDisclosure, useMediaQuery } from '@mantine/hooks';
 import {
   IconeAccueil,
   IconeAdministration,
+  IconeCarte,
   IconeCompte,
   IconeDocuments,
   IconeHistorique,
@@ -90,6 +91,7 @@ export function Layout({ children }: { children: ReactNode }) {
   type Item = [string, string, () => ReactNode];
   const items: Item[] = [['/', 'Accueil', IconeAccueil]];
   if (can('documents', 'lire')) items.push(['/documents', 'Documents et liens', IconeDocuments]);
+  if (can('cartographie', 'lire')) items.push(['/cartographie', 'Cartographie', IconeCarte]);
   items.push(['/account', 'Mon compte', IconeCompte]);
   if (can('parametres', 'lire')) items.push(['/parametres', 'Paramètres', IconeParametres]);
   if (canAdminArea(can)) items.push(['/admin', 'Administration', IconeAdministration]);

@@ -7,6 +7,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { convertCssVariables, DEFAULT_THEME, mergeMantineTheme } from '@mantine/core';
 import { cssVariablesResolver, theme as charte } from '@suivi/ui/theme';
+import { CARTE, variablesCarte } from '@suivi/ui/tokens';
 
 const theme = mergeMantineTheme(DEFAULT_THEME, charte);
 const vars = cssVariablesResolver(theme);
@@ -33,7 +34,11 @@ const css =
     dark: { '--mantine-color-scheme': 'dark' },
     light: { '--mantine-color-scheme': 'light' },
   }) +
-  '\n';
+  '\n' +
+  // Exports de la cartographie : toujours en couleurs claires, quel que soit le thème affiché.
+  `.carte-export{${Object.entries(variablesCarte(CARTE.clair))
+    .map(([k, v]) => `${k}:${v}`)
+    .join(';')}}\n`;
 const out = path.join(path.dirname(fileURLToPath(import.meta.url)), '../src/generated/mantine-vars.css');
 mkdirSync(path.dirname(out), { recursive: true });
 writeFileSync(out, css);

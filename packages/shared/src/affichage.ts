@@ -23,6 +23,22 @@ export const Preferences = z.object({
     .record(z.string().regex(/^[a-z0-9_-]{1,40}$/), z.array(z.string().regex(/^[a-z0-9_-]{1,40}$/)).max(30))
     .refine((r) => Object.keys(r).length <= 30, 'Trop de tableaux.')
     .default({}),
+  /** Cartographie (CARTO-06) : vue affichée par carte (zoom, position), filtres et panneaux. */
+  cartographie: z
+    .object({
+      vue: z.enum(['context', 'process']).optional(),
+      viewport: z
+        .partialRecord(
+          z.enum(['context', 'process']),
+          z.object({ x: z.number().finite(), y: z.number().finite(), k: z.number().min(0.2).max(2.5) }),
+        )
+        .optional(),
+      referentiels: z.array(z.enum(['ISO 27001', 'HDS'])).optional(),
+      secondaires: z.boolean().optional(),
+      propositions: z.boolean().optional(),
+      panneau: z.boolean().optional(),
+    })
+    .default({}),
 });
 export type Preferences = z.infer<typeof Preferences>;
 export const DEFAULT_PREFERENCES: Preferences = Preferences.parse({});

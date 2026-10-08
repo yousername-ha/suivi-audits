@@ -19,6 +19,19 @@
   --suivi-fiche-l: clamp(26rem, 32vw, 48rem);
   --suivi-panneau-l: clamp(20rem, 22vw, 34rem);
   --suivi-echelle: 1;
+  /* Cartographie (ADR 0013) : panneau latéral, fiche détaillée, hauteur du canevas, aperçu, échantillons. */
+  --carte-panneau-l: clamp(14rem, 16vw, 20rem);
+  --carte-inspecteur-l: clamp(20rem, 24vw, 28rem);
+  --carte-hauteur: clamp(30rem, calc(100dvh - 16rem), 90rem);
+  --carte-hauteur-mobile: max(26rem, 68dvh);
+  --carte-hauteur-plein-ecran: calc(100dvh - 12rem);
+  --carte-relation-l: 6rem;
+  --carte-mini-l: 11.25rem;
+  --carte-mini-h: 7.5rem;
+  --carte-echantillon: 1.375rem;
+  --carte-icone: 1.5rem;
+  --carte-recherche: 17rem;
+  --carte-vide-icone: 2.5rem;
 }
 
 /* ---------------------------------------------------------------- Taille d'affichage et typographie fluide
