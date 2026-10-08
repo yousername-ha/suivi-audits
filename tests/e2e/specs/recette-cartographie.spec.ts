@@ -999,31 +999,38 @@ test('28. renommer par double-clic : confirmation, nom changé dans la plateform
   expect(bat.problems).toEqual([]);
 });
 
-/** Droits du rôle « Carto sans fournisseurs » (relus à chaque requête). */
-async function droitsLecteur(perms: string[]) {
-  const roles = (await (await admin.req.get('/api/admin/roles')).json()) as {
-    id: string;
-    name: string;
-    version: number;
-  }[];
-  const r = roles.find((x) => x.name === 'Carto sans fournisseurs')!;
-  const patch = await admin.req.patch(`/api/admin/roles/${r.id}`, {
-    data: { permissions: perms },
-    headers: { 'x-csrf-token': admin.csrf, 'if-match': `"${r.version}"` },
-  });
-  expect(patch.status(), await patch.text()).toBe(200);
-}
-
-test('29. sans fournisseurs:modifier : « Fournisseur » absent de la palette, grisé dans le menu ; API 403 (CARTO-15, 16)', async () => {
-  await droitsLecteur([
-    'cartographie:lire',
-    'cartographie:modifier',
-    'pilotage:lire',
-    'pilotage:modifier',
-    'conformite:lire',
-  ]);
+test('29. sans fournisseurs:modifier : « Fournisseur » absent de la palette, grisé dans le menu ; API 403 (CARTO-15, 16)', async ({
+  browser,
+}) => {
+  // Rôle et compte dédiés : modifier un rôle coupe les sessions de ses comptes (le lecteur sert encore au parcours 32).
+  const roles = (await (await admin.req.get('/api/admin/roles')).json()) as { id: string; name: string }[];
+  let roleId = roles.find((x) => x.name === 'Carto et pilotage')?.id;
+  if (!roleId) {
+    const role = await admin.req.post('/api/admin/roles', {
+      data: { from: 'lecteur', name: 'Carto et pilotage' },
+      headers: { 'x-csrf-token': admin.csrf },
+    });
+    expect(role.status(), await role.text()).toBe(201);
+    const r = await role.json();
+    const patch = await admin.req.patch(`/api/admin/roles/${r.id}`, {
+      data: {
+        permissions: [
+          'cartographie:lire',
+          'cartographie:modifier',
+          'pilotage:lire',
+          'pilotage:modifier',
+          'fournisseurs:lire',
+        ],
+      },
+      headers: { 'x-csrf-token': admin.csrf, 'if-match': `"${r.version}"` },
+    });
+    expect(patch.status(), await patch.text()).toBe(200);
+    roleId = r.id as string;
+  }
+  await creerCompte(browser, 'carto-pilotage', roleId!);
+  const s = await ouvrir(browser, 'carto-pilotage', comptes['carto-pilotage']!.secret);
   try {
-    const p = lecteur.page;
+    const p = s.page;
     await p.goto('/cartographie/contexte');
     await editer(p);
     await expect(p.locator('[data-palette="stakeholder"]')).toHaveCount(1);
@@ -1032,15 +1039,14 @@ test('29. sans fournisseurs:modifier : « Fournisseur » absent de la palette, g
     await expect(m.getByRole('menuitem', { name: /Fournisseur/ })).toBeDisabled();
     await p.keyboard.press('Escape');
     await expect(m).toHaveCount(0);
-    const r = await lecteur.req.post('/api/carto/objects', {
+    const r = await s.req.post('/api/carto/objects', {
       data: { type: 'supplier', name: 'Refusé (fictif)' },
-      headers: { 'x-csrf-token': lecteur.csrf },
+      headers: { 'x-csrf-token': s.csrf },
     });
     expect(r.status()).toBe(403);
-    await p.getByRole('button', { name: 'Terminer l’édition' }).click();
-    expect(lecteur.problems).toEqual([]);
+    expect(s.problems).toEqual([]);
   } finally {
-    await droitsLecteur(['cartographie:lire', 'pilotage:lire', 'conformite:lire']);
+    await s.close();
   }
 });
 
