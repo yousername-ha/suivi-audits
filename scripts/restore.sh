@@ -1,11 +1,19 @@
-#!/bin/sh
-# Restauration complète depuis une archive produite par backup.sh.
-#   Usage :  [BACKUP_PASSPHRASE_FILE=...] ./scripts/restore.sh /chemin/suivi-audits-AAAAMMJJ-HHMMSS.tar[.enc]
-# Remplace la base ET les secrets du serveur courant. À utiliser sur une installation arrêtée ou neuve.
-set -eu
-cd "$(dirname "$0")/.."
+#!/usr/bin/env bash
+# Restauration complète depuis une archive produite par backup.sh (EXPL-08).
+#   Usage :  sudo [BACKUP_PASSPHRASE_FILE=...] ./scripts/restore.sh /chemin/suivi-audits-AAAAMMJJ-HHMMSS.tar[.enc]
+# Remplace la base, les secrets et l'autorité de certification interne (si l'archive la contient) du serveur courant,
+# dans le dossier des données DATA_DIR, avec les bons propriétaires et droits (service init). À utiliser sur une
+# installation arrêtée ou neuve. Sur un serveur neuf, DATA_DIR est préparé automatiquement.
+# Variable : RESTAURER_SANS_CONFIRMATION=1 (réservé à mettre-a-jour.sh, après confirmation de son côté).
+set -euo pipefail
+REPO="$(cd "$(dirname "$0")/.." && pwd)"
+. "$REPO/scripts/lib-commun.sh"
+cd "$REPO"
+
 ARCH="${1:?Usage : $0 archive.tar[.enc]}"
-WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
+DATA_DIR=$(dossier_donnees)
+WORK="$(mktemp -d)"
+trap 'rm -rf "$WORK"' EXIT
 umask 077
 if [ -f "$ARCH.sha256" ]; then (cd "$(dirname "$ARCH")" && sha256sum -c "$(basename "$ARCH").sha256"); fi
 case "$ARCH" in
@@ -13,18 +21,32 @@ case "$ARCH" in
   *) cp "$ARCH" "$WORK/a.tar" ;;
 esac
 tar xf "$WORK/a.tar" -C "$WORK"
-cat "$WORK/INFO" 2>/dev/null || true
-printf "Cette opération REMPLACE les données et les secrets actuels. Taper RESTAURER pour continuer : "
-read -r OK; [ "$OK" = "RESTAURER" ] || { echo "Abandon."; exit 1; }
+cat "$WORK/INFO" 2> /dev/null || true
+if [ "${RESTAURER_SANS_CONFIRMATION:-}" != 1 ]; then
+  printf "Cette opération REMPLACE les données et les secrets actuels. Taper RESTAURER pour continuer : "
+  read -r OK
+  [ "$OK" = "RESTAURER" ] || { echo "Abandon."; exit 1; }
+fi
 
+if ! donnees_preparees; then
+  [ -z "$(anciens_volumes)" ] || arret "données encore dans des volumes Docker : faire d'abord sudo ./scripts/migrer-donnees-vers-dossier.sh."
+  "$REPO/scripts/preparer-donnees.sh"
+fi
 docker compose stop app web
-# 1. Secrets (doivent correspondre aux documents chiffrés de la sauvegarde)
-docker compose run --rm --no-deps -T --user 0:0 init sh -c 'rm -f /secrets/* && tar xzf - -C /secrets' < "$WORK/secrets.tgz"
-docker compose run --rm --no-deps init   # réapplique les droits
+# 1. Secrets (doivent correspondre aux documents chiffrés de la sauvegarde), puis autorité de certification interne.
+install -d -m 0711 "$DATA_DIR/secrets"
+find "$DATA_DIR/secrets" -mindepth 1 -maxdepth 1 -type f -delete
+tar xzf "$WORK/secrets.tgz" -C "$DATA_DIR/secrets"
+if [ -f "$WORK/caddy.tgz" ]; then
+  rm -rf "$DATA_DIR/caddy/data"
+  install -d "$DATA_DIR/caddy/data"
+  tar xzf "$WORK/caddy.tgz" -C "$DATA_DIR/caddy/data"
+fi
+docker compose run --rm --no-deps init # recrée les dossiers absents et réapplique propriétaires et droits
 # 2. Base : le mot de passe du rôle applicatif est réaligné sur le secret restauré
 docker compose up -d db
 until docker compose exec -T -u postgres db pg_isready -q; do sleep 2; done
-docker compose exec -T -u postgres db sh -c 'psql -v ON_ERROR_STOP=1 -v pw="$(cat /run/secrets/db_app_password)" -d postgres' <<'EOSQL'
+docker compose exec -T -u postgres db sh -c 'psql -v ON_ERROR_STOP=1 -v pw="$(cat /run/secrets/db_app_password)" -d postgres' << 'EOSQL'
 ALTER ROLE suivi_app PASSWORD :'pw';
 SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'suivi' AND pid <> pg_backend_pid();
 DROP DATABASE IF EXISTS suivi;
@@ -36,4 +58,5 @@ ALTER SCHEMA public OWNER TO suivi_app;
 EOSQL
 docker compose exec -T -u postgres db pg_restore -d suivi --no-owner --role=suivi_app --exit-on-error < "$WORK/suivi.dump"
 docker compose up -d
+printf '{"date":"%s","archive":%s}\n' "$(horodatage)" "$(json_chaine "$ARCH")" | ecrire_etat "$DATA_DIR/etat/sauvegardes/derniere-restauration.json"
 echo "Restauration terminée."

@@ -27,3 +27,7 @@ npm-debug.log*
 
 # Jeton d’installation des tests de bout en bout
 tests/e2e/.jeton
+
+# Données de développement (docker-compose.dev.yml) et copie de .env faite pendant une mise à jour
+.donnees-dev/
+.env.avant-mise-a-jour

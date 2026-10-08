@@ -2,6 +2,7 @@
 #   docker compose -f docker-compose.dev.yml up
 # Interface : http://localhost:5173 (Vite, proxy vers l'API) — API : rechargée à chaque modification (tsx watch).
 # Base de développement sans mot de passe (authentification « trust »), jamais exposée hors de la machine.
+# Données de développement dans ./.donnees-dev (ignoré par git), comme en production : aucun volume nommé pour les données.
 name: suivi-audits-dev
 
 services:
@@ -11,7 +12,7 @@ services:
       POSTGRES_DB: suivi
       POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
-      - devpgdata:/var/lib/postgresql/data
+      - ./.donnees-dev/postgres:/var/lib/postgresql/data
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U postgres -d suivi']
       interval: 5s
@@ -35,7 +36,7 @@ services:
       LOG_LEVEL: debug
     volumes:
       - .:/work
-      - devsecrets:/dev-secrets
+      - ./.donnees-dev/secrets:/dev-secrets
       - devnodemodules:/work/node_modules
     depends_on:
       db: { condition: service_healthy }
@@ -54,6 +55,4 @@ services:
     depends_on: [api]
 
 volumes:
-  devpgdata:
-  devsecrets:
-  devnodemodules:
+  devnodemodules: # dépendances (pas des données)

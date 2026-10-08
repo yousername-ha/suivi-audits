@@ -3,6 +3,10 @@
 # Images versionnées publiées sur GHCR : mise à jour = changer APP_VERSION dans .env, puis
 #   docker compose pull && docker compose up -d
 # Réseaux : seul « web » est exposé ; « app » et « db » n'ont aucun accès sortant.
+# Données (EXPL-01) : toutes dans le dossier du serveur DATA_DIR (montages bind), aucune dans les conteneurs ni dans
+# des volumes Docker. Supprimer les conteneurs, les images ou lancer « docker compose down -v » ne les touche pas.
+#   DATA_DIR/postgres  base · secrets  secrets générés · caddy/data, caddy/config  certificats · clamav  signatures
+#   DATA_DIR/etat      rapports des scripts du serveur (mises à jour, sauvegardes, version disponible)
 
 name: suivi-audits
 
@@ -13,21 +17,25 @@ x-hardening: &hardening
     driver: json-file
     options: { max-size: '20m', max-file: '5' }
 
+x-data-dir: &data-dir ${DATA_DIR:-/srv/suivi-audits/donnees}
+
 x-api-image: &api-image ghcr.io/yousername-ha/suivi-audits-api:${APP_VERSION:?Renseigner APP_VERSION dans .env}
 
 services:
-  # Premier démarrage : génère les secrets (mots de passe base, clé de chiffrement) puis s'arrête.
+  # À chaque démarrage : contrôle et prépare DATA_DIR (dossiers, propriétaires, droits), génère les secrets
+  # manquants, puis s'arrête. Refuse de démarrer sur un DATA_DIR non préparé ou mal placé.
   init:
     image: *api-image
     user: '0:0'
     command: ['node', 'dist/init-secrets.js']
     environment:
-      SECRETS_DIR: /secrets
-      CADDY_DIRS: /caddy/data,/caddy/config
+      DONNEES: /donnees
+      DATA_DIR_HOTE: *data-dir
+      PROJET: /projet
     volumes:
-      - secrets:/secrets
-      - caddy_data:/caddy/data
-      - caddy_config:/caddy/config
+      - ${DATA_DIR:-/srv/suivi-audits/donnees}:/donnees
+      # Dossier de l'application, en lecture seule : vérifie que DATA_DIR n'y est pas.
+      - .:/projet:ro
     network_mode: none
     read_only: true
     cap_drop: [ALL]
@@ -57,8 +65,8 @@ services:
       - -c
       - max_connections=50
     volumes:
-      - pgdata:/var/lib/postgresql/data
-      - secrets:/run/secrets:ro
+      - ${DATA_DIR:-/srv/suivi-audits/donnees}/postgres:/var/lib/postgresql/data
+      - ${DATA_DIR:-/srv/suivi-audits/donnees}/secrets:/run/secrets:ro
       - ./db/init:/docker-entrypoint-initdb.d:ro
     networks: [backend]
     read_only: true
@@ -87,8 +95,11 @@ services:
       SECRETS_DIR: /run/secrets
       TRUST_PROXY: '1'
       PUBLIC_URL: https://${SITE_ADDRESS:?Renseigner SITE_ADDRESS dans .env}
+      ETAT_DIR: /etat
+      DATA_DIR_HOTE: *data-dir
     volumes:
-      - secrets:/run/secrets:ro
+      - ${DATA_DIR:-/srv/suivi-audits/donnees}/secrets:/run/secrets:ro
+      - ${DATA_DIR:-/srv/suivi-audits/donnees}/etat:/etat:ro
     networks: [backend, edge]
     read_only: true
     tmpfs: ['/tmp:size=16m']
@@ -109,8 +120,8 @@ services:
       - '${BIND_ADDR:-0.0.0.0}:${HTTP_PORT:-80}:8080'
     volumes:
       - ./certs:/certs:ro
-      - caddy_data:/data
-      - caddy_config:/config
+      - ${DATA_DIR:-/srv/suivi-audits/donnees}/caddy/data:/data
+      - ${DATA_DIR:-/srv/suivi-audits/donnees}/caddy/config:/config
     networks: [public, edge]
     read_only: true
     tmpfs: ['/tmp:size=16m']
@@ -123,8 +134,10 @@ services:
     image: clamav/clamav:stable
     profiles: ['antivirus']
     networks: [backend, av_update]
+    depends_on:
+      init: { condition: service_completed_successfully }
     volumes:
-      - clamav_db:/var/lib/clamav
+      - ${DATA_DIR:-/srv/suivi-audits/donnees}/clamav:/var/lib/clamav
     mem_limit: 3g
 
 networks:
@@ -133,9 +146,5 @@ networks:
   backend: { internal: true }
   av_update: {}
 
-volumes:
-  pgdata:
-  secrets:
-  caddy_data:
-  caddy_config:
-  clamav_db:
+# Aucun volume nommé : voir DATA_DIR ci-dessus. Les anciens volumes (pgdata, secrets, caddy_data, caddy_config,
+# clamav_db) sont repris par scripts/migrer-donnees-vers-dossier.sh.
