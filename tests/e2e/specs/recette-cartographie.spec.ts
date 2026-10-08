@@ -437,28 +437,34 @@ test('11. deux sessions : présence affichée, la seconde reçoit 412 et choisit
 }) => {
   const p = admin.page;
   const c = await ouvrir(browser, 'contrib-carto', comptes['contrib-carto']!.secret);
-  await p.goto('/cartographie/contexte');
-  await c.page.goto('/cartographie/contexte');
-  await editer(p);
-  await editer(c.page);
-  await expect(p.getByText('Compte contrib-carto modifie la carte')).toBeVisible();
-  // Les deux modifient ; la seconde enregistre après la première.
-  await glisser(p, 'pi:PI-002', 30, 0);
-  await expect(p.getByText('Modifications non enregistrées')).toBeVisible();
-  await glisser(c.page, 'pi:PI-001', 30, 0);
-  await enregistrer(c.page);
-  await p.getByRole('button', { name: 'Enregistrer', exact: true }).click();
-  const dlg = p.getByRole('dialog', { name: 'Carte modifiée entre-temps' });
-  await expect(dlg).toContainText('modifiée par contrib-carto');
-  await dlg.getByRole('button', { name: 'Écraser' }).click();
-  await expect(p.getByText('Carte enregistrée.')).toBeVisible();
-  const audit = (await (await admin.req.get('/api/admin/audit?q=carto.map_overwrite')).json()) as { action: string }[];
-  expect(audit.length).toBeGreaterThan(0);
-  // En quittant la carte, la présence est retirée.
-  await c.page.getByRole('link', { name: 'Accueil' }).click();
-  await expect(p.getByText('Compte contrib-carto modifie la carte')).toBeHidden();
-  expect(c.problems).toEqual([]);
-  await c.close();
+  try {
+    await p.goto('/cartographie/contexte');
+    await c.page.goto('/cartographie/contexte');
+    await editer(p);
+    await editer(c.page);
+    await expect(p.getByText('Compte contrib-carto modifie la carte')).toBeVisible();
+    // Les deux modifient ; la seconde enregistre après la première.
+    await glisser(p, 'pi:PI-002', 30, 0);
+    await expect(p.getByText('Modifications non enregistrées')).toBeVisible();
+    await glisser(c.page, 'pi:PI-001', 30, 0);
+    await enregistrer(c.page);
+    await p.getByRole('button', { name: 'Enregistrer', exact: true }).click();
+    const dlg = p.getByRole('dialog', { name: 'Carte modifiée entre-temps' });
+    await expect(dlg).toContainText('modifiée par contrib-carto');
+    await dlg.getByRole('button', { name: 'Écraser' }).click();
+    await expect(p.getByText('Carte enregistrée.')).toBeVisible();
+    const audit = (await (await admin.req.get('/api/admin/audit?q=carto.map_overwrite')).json()) as {
+      action: string;
+    }[];
+    expect(audit.length).toBeGreaterThan(0);
+    // En quittant la carte, la présence est retirée.
+    await c.page.getByRole('link', { name: 'Accueil' }).click();
+    await expect(p.getByText('Compte contrib-carto modifie la carte')).toBeHidden();
+    expect(c.problems).toEqual([]);
+  } finally {
+    // Contexte fermé même en cas d'échec : sinon sa présence reste active pour les fichiers suivants.
+    await c.close();
+  }
   expect(admin.problems).toEqual([]);
 });
 

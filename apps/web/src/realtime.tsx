@@ -79,19 +79,30 @@ export function RealtimeProvider({ children }: { children: ReactNode }) {
 export const useLive = () => useContext(LiveCtx);
 
 /** Déclare la présence de l'utilisateur sur une ressource (renouvelée toutes les 20 s, retirée en quittant). */
+/** Appels de présence d'une même clé envoyés dans l'ordre : quand le mode change (consulte → modifie), le retrait
+    de l'ancienne déclaration ne doit pas arriver après la nouvelle. */
+const filesPresence = new Map<string, Promise<unknown>>();
+function enFile(key: string, appel: () => Promise<unknown>) {
+  const suite = (filesPresence.get(key) ?? Promise.resolve()).then(appel).catch(() => {});
+  filesPresence.set(key, suite);
+  void suite.then(() => {
+    if (filesPresence.get(key) === suite) filesPresence.delete(key);
+  });
+}
+
 export function usePresence(resource: string | null, mode: PresenceMode = 'view') {
   const { client } = useLive();
   const sent = useRef<string>('');
   useEffect(() => {
     if (!resource || !client) return;
     const key = `${client}-${resource.replace(/[^a-z0-9_-]/gi, '_')}`.slice(0, 64);
-    const beat = () => api('POST', '/api/presence', { body: { client: key, resource, mode } }).catch(() => {});
-    void beat();
+    const beat = () => enFile(key, () => api('POST', '/api/presence', { body: { client: key, resource, mode } }));
+    beat();
     sent.current = key;
     const t = setInterval(beat, PRESENCE_HEARTBEAT_MS);
     return () => {
       clearInterval(t);
-      void api('DELETE', `/api/presence/${key}`).catch(() => {});
+      enFile(key, () => api('DELETE', `/api/presence/${key}`));
     };
   }, [client, resource, mode]);
 }
