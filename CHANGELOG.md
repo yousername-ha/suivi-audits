@@ -15,6 +15,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 - Cartographie, construire de zéro : aucune migration. Créer un objet depuis la carte exige aussi le droit « Créer et modifier » de son module (Pilotage, Fournisseurs ou Conformité) ; un onglet de l'outil historique ouvert pendant une création affiche le conflit habituel à son prochain enregistrement (recharger la page).
 
 ### Ajouté
+- Audit, socle partagé (ADR 0015, lot 1 de la phase 1) : `@suivi/shared/audit` (modèle et libellés de l'outil historique, schémas zod des enregistrements et des corps d'API prévus) ; `AUD-05` pronostic (`analyze`), pire pronostic d'un créneau et exigences ciblées sans créneau en fonctions pures, testés en parité avec l'outil historique exécuté dans un bac à sable (jeu fictif, états aléatoires, tests de mutation) ; `AUD-09` règles des écarts (tâches et statut, clôture datée et signée, réouverture avec motif obligatoire, retards, tri du registre, identifiants `F01`…) ; `AUD-10` échéance d'une tâche (la sienne, sinon celle de l'écart) et indicateurs du plan d'actions. Aucun changement visible ni migration.
 - Cartographie du SMSI (ADR 0013, `CARTO-01` à `CARTO-14`) :
   - `CARTO-01` module de droits `cartographie` ; Contributeur et Lecteur exportent les cartes ; lecture seule réelle ; objets d'un module non lisible jamais envoyés (« Objet non accessible ») ;
   - `CARTO-02` objets lus par adaptateur (état legacy recomposé, filtré selon les droits), relations métier dérivées ;
