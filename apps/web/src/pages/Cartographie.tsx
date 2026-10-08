@@ -44,6 +44,7 @@ import {
   dropMissing,
   emptyLayout,
   frameAround,
+  isContainer,
   generateLayout,
   hideRelation,
   ignoreObjects,
@@ -595,18 +596,21 @@ export function CartographiePage() {
       }
       return E;
     }
+    const creerIci = () => {
+      E.push({ titre: 'Créer ici' });
+      for (const t of typesCreables)
+        E.push({
+          libelle: CREATABLE[t.type].l,
+          refus: t.refus,
+          action: () => demander({ k: 'type', type: t.type }, d.monde),
+        });
+      E.push({ libelle: 'Note', action: () => demander({ k: 'note' }, d.monde) });
+      E.push({ libelle: 'Cadre', action: () => demander({ k: 'frame' }, d.monde) });
+      E.push({ separateur: true });
+    };
     if (c.k === 'fond') {
       if (canEdit) {
-        E.push({ titre: 'Créer ici' });
-        for (const t of typesCreables)
-          E.push({
-            libelle: CREATABLE[t.type].l,
-            refus: t.refus,
-            action: () => demander({ k: 'type', type: t.type }, d.monde),
-          });
-        E.push({ libelle: 'Note', action: () => demander({ k: 'note' }, d.monde) });
-        E.push({ libelle: 'Cadre', action: () => demander({ k: 'frame' }, d.monde) });
-        E.push({ separateur: true });
+        creerIci();
         E.push({
           libelle: 'Ajouter un objet existant…',
           action: () => {
@@ -647,6 +651,8 @@ export function CartographiePage() {
       return E;
     }
     const ref = c.ref;
+    // Dans un cadre (périmètre, bande, cadre libre) : on crée aussi à l'endroit visé.
+    if (canEdit && layout && isContainer(lookup(ref), layout.nodes[ref])) creerIci();
     E.push({ titre: nom(ref) });
     E.push({
       libelle: 'Ouvrir la fiche',

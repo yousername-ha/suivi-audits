@@ -845,6 +845,9 @@ test('22. glisser « Partie intéressée » sur la carte : créée dans son modu
 
 test('23. clic droit sur le fond > Créer ici > Fournisseur : créé et placé sans chevauchement (CARTO-15, 16)', async () => {
   const p = bat.page;
+  // La fiche de l'objet créé au parcours 22 est ouverte en haut à droite : Échap la ferme.
+  await p.keyboard.press('Escape');
+  await expect(p.locator('.carte-inspecteur')).toHaveCount(0);
   const cible = await pointCanevas(p, 0.82, 0.5);
   const m = await menuSur(p, cible);
   await m.getByRole('menuitem', { name: 'Fournisseur' }).click();
@@ -923,7 +926,7 @@ test('26. Ctrl+Z après une création : la boîte quitte la carte, l’objet res
 
 test('27. note et cadre : grouper deux objets dans un cadre qui les emporte ; conservés à l’enregistrement (CARTO-16, 19)', async () => {
   const p = bat.page;
-  const m = await menuSur(p, await pointCanevas(p, 0.5, 0.88));
+  const m = await menuSur(p, await pointCanevas(p, 0.3, 0.8));
   await m.getByRole('menuitem', { name: 'Note', exact: true }).click();
   const d = p.getByRole('dialog', { name: 'Ajouter une note' });
   await d.getByRole('textbox', { name: 'Texte' }).fill('À vérifier avec le RSSI (fictif)');
@@ -1018,7 +1021,7 @@ test('29. sans fournisseurs:modifier : « Fournisseur » absent de la palette, g
     await editer(p);
     await expect(p.locator('[data-palette="stakeholder"]')).toHaveCount(1);
     await expect(p.locator('[data-palette="supplier"]')).toHaveCount(0);
-    const m = await menuSur(p, await pointCanevas(p, 0.5, 0.95));
+    const m = await menuSur(p, await pointCanevas(p, 0.1, 0.85));
     await expect(m.getByRole('menuitem', { name: /Fournisseur/ })).toBeDisabled();
     await p.keyboard.press('Escape');
     await expect(m).toHaveCount(0);
@@ -1120,7 +1123,7 @@ test('32. lecteur : clic droit limité à la consultation, aucune palette (CARTO
   const m = await menuSur(p, await centreNoeud(p, 'isms'));
   await expect(m.getByRole('menuitem')).toHaveText(['Ouvrir la fiche', 'Copier le nom']);
   await p.keyboard.press('Escape');
-  const fond = await menuSur(p, await pointCanevas(p, 0.03, 0.97));
+  const fond = await menuSur(p, await pointCanevas(p, 0.005, 0.01));
   await expect(fond.getByRole('menuitem')).toHaveText(['Ajuster l’affichage']);
   await p.keyboard.press('Escape');
   expect(lecteur.problems).toEqual([]);

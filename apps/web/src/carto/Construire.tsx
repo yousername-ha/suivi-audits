@@ -191,8 +191,10 @@ export function MenuContextuel({
   const ref = useRef<HTMLDivElement>(null);
   const h =
     16 + entrees.reduce((a, e) => a + ('titre' in e ? HAUTEUR_TITRE : 'separateur' in e ? 9 : HAUTEUR_ENTREE), 0);
+  // Plus haut que la carte : le menu prend toute la hauteur disponible et défile.
+  const hh = Math.min(h, Math.max(120, taille.h - 8));
   const x = Math.max(4, Math.min(ecran.x, taille.w - LARGEUR_MENU - 4));
-  const y = Math.max(4, ecran.y + h > taille.h - 4 ? Math.max(4, taille.h - h - 4) : ecran.y);
+  const y = Math.max(4, ecran.y + hh > taille.h - 4 ? taille.h - hh - 4 : ecran.y);
   useEffect(() => {
     ref.current?.querySelector<HTMLButtonElement>('[role="menuitem"]:not([disabled])')?.focus();
     const dehors = (e: globalThis.PointerEvent) => {
@@ -222,7 +224,7 @@ export function MenuContextuel({
     }
   };
   return (
-    <foreignObject x={x} y={y} width={LARGEUR_MENU} height={h}>
+    <foreignObject x={x} y={y} width={LARGEUR_MENU} height={hh}>
       <div ref={ref} className="carte-menu" role="menu" aria-label={titre} onKeyDown={clavier}>
         {entrees.map((e, i) =>
           'titre' in e ? (

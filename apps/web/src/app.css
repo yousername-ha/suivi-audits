@@ -606,9 +606,9 @@
   flex: none;
 }
 .carte-palette-libelle {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  min-width: 0;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 .carte-armee .carte-svg {
   cursor: copy;
@@ -627,6 +627,9 @@
 .carte-menu {
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
+  max-height: 100%;
+  overflow-y: auto;
   padding: var(--mantine-spacing-2xs);
   border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
   border-radius: var(--mantine-radius-md);
