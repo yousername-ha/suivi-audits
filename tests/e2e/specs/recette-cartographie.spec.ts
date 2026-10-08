@@ -951,16 +951,21 @@ test('27. note et cadre : grouper deux objets dans un cadre qui les emporte ; co
   await menu.getByRole('menuitem', { name: 'Grouper dans un cadre' }).click();
   await expect.poll(() => refsDe(p, 'frame:')).toHaveLength(1);
   const [cadre] = await refsDe(p, 'frame:');
-  const avant = [await centreNoeud(p, pi!), await centreNoeud(p, sup!)];
+  // Le cadre emporte son contenu : chaque objet se déplace exactement comme le cadre (mesure relative, indépendante
+  // du zoom et des bandeaux au-dessus de la carte).
+  const position = async () => Promise.all([cadre!, pi!, sup!].map((r) => centreNoeud(p, r)));
+  const avant = await position();
   const fb = (await noeud(p, cadre!).locator('rect').first().boundingBox())!;
   await p.mouse.move(fb.x + 30, fb.y + 12);
   await p.mouse.down();
   await p.mouse.move(fb.x + 60, fb.y + 52, { steps: 5 });
   await p.mouse.up();
-  const apres = [await centreNoeud(p, pi!), await centreNoeud(p, sup!)];
-  for (const i of [0, 1]) {
-    expect(apres[i]!.x - avant[i]!.x).toBeCloseTo(30, -1);
-    expect(apres[i]!.y - avant[i]!.y).toBeCloseTo(40, -1);
+  const apres = await position();
+  const delta = apres.map((a, i) => ({ x: a.x - avant[i]!.x, y: a.y - avant[i]!.y }));
+  expect(Math.hypot(delta[0]!.x, delta[0]!.y)).toBeGreaterThan(15);
+  for (const d of delta.slice(1)) {
+    expect(Math.abs(d.x - delta[0]!.x)).toBeLessThan(1.5);
+    expect(Math.abs(d.y - delta[0]!.y)).toBeLessThan(1.5);
   }
   await enregistrer(p);
   const l = (await carte(admin, 'context')).layout as unknown as { free: Record<string, { text: string }> };
