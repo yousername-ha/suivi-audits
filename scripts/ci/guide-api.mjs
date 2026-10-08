@@ -156,8 +156,8 @@ switch (cmd) {
       json: { username: 'adjoint', displayName: 'RSSI adjoint', roles: [{ roleId: 'contributeur' }] },
     });
     if (!r.temporaryPassword) fail('mot de passe temporaire absent');
-    // Mot de passe temporaire d'un compte de test jetable : jamais affiché, conservé seulement dans le fichier d'état
-    // (0600). Pas de commande de masquage : elle le ferait transiter par la sortie standard.
+    // Mot de passe temporaire d'un compte de test jetable : jamais affiché ni conservé. Pas de commande de masquage :
+    // elle le ferait transiter par la sortie standard.
     console.log('Étape 9 : compte « adjoint » (Contributeur) créé avec un mot de passe temporaire.');
     break;
   }
