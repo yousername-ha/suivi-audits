@@ -1248,9 +1248,9 @@ export function CartographiePage() {
                   }
                 }}
                 onMenu={(d) => {
+                  // La sélection ne change pas : les actions du menu visent l'objet cliqué (la fiche ne masque pas le
+                  // menu).
                   setArme(null);
-                  if (d.cible.k === 'n' && !(sel?.k === 'm' && sel.refs.includes(d.cible.ref)))
-                    setSel({ k: 'n', ref: d.cible.ref });
                   setMenu(d);
                 }}
                 arme={!!arme}
