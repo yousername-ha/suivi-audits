@@ -936,16 +936,18 @@ test('27. note et cadre : grouper deux objets dans un cadre qui les emporte ; co
   const [pi] = await refsDe(p, 'pi:');
   const [sup] = await refsDe(p, 'sup:');
   await p.keyboard.press('Escape');
-  await noeud(p, pi!)
+  // La fiche flottante s'ouvre en haut à droite, au-dessus du fournisseur : on sélectionne d'abord celui-ci, et le
+  // clic droit vise la partie intéressée, à gauche.
+  await noeud(p, sup!)
     .locator('rect')
     .first()
     .click({ position: { x: 8, y: 8 } });
-  await noeud(p, sup!)
+  await noeud(p, pi!)
     .locator('rect')
     .first()
     .click({ position: { x: 8, y: 8 }, modifiers: ['Shift'] });
   await expect(p.getByRole('heading', { name: '2 objets sélectionnés' })).toBeVisible();
-  const menu = await menuSur(p, await centreNoeud(p, sup!));
+  const menu = await menuSur(p, await centreNoeud(p, pi!));
   await menu.getByRole('menuitem', { name: 'Grouper dans un cadre' }).click();
   await expect.poll(() => refsDe(p, 'frame:')).toHaveLength(1);
   const [cadre] = await refsDe(p, 'frame:');
@@ -1090,7 +1092,8 @@ test('31. trois objets sélectionnés : aligner à gauche, répartir ; Ctrl+Z an
   const p = bat.page;
   await p.goto('/cartographie/contexte');
   await editer(p);
-  const refs = [...(await refsDe(p, 'pi:')), ...(await refsDe(p, 'sup:')), 'isms'];
+  // De droite à gauche : la fiche flottante (en haut à droite) ne recouvre jamais l'objet suivant à cliquer.
+  const refs = [...(await refsDe(p, 'sup:')), 'isms', ...(await refsDe(p, 'pi:'))];
   const avant = (await carte(admin, 'context')).layout.nodes;
   await noeud(p, refs[0]!)
     .locator('rect')
