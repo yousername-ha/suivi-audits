@@ -279,7 +279,7 @@ export function createInLegacy(
       if (lignes.some((l) => low(l) === low(name)))
         throw new CreationError(409, body.type === 'site' ? 'Ce site existe déjà.' : 'Ce système existe déjà.');
       const cur = sc[champ];
-      sc[champ] = Array.isArray(cur) ? [...cur, name] : cur ? String(cur).replace(/\s+$/, '') + '\n' + name : name;
+      sc[champ] = Array.isArray(cur) ? [...cur, name] : cur ? String(cur).trimEnd() + '\n' + name : name;
       data.scope = sc;
       return { data, ref: (body.type === 'site' ? 'site:' : 'infra:') + mbHash(name.toLowerCase()), name };
     }
