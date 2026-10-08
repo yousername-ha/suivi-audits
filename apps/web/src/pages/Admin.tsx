@@ -1,6 +1,8 @@
 /* Administration : utilisateurs, groupes, rôles, sessions, journal d'audit, versions, import legacy, système.
    Chaque onglet n'apparaît qu'avec la permission correspondante (le serveur contrôle chaque appel). */
-import { Badge, Button, Card, Group, Stack, Table, Tabs, Text, TextInput, Title } from '@mantine/core';
+import { Alert, Anchor, Badge, Button, Card, Group, Stack, Table, Tabs, Text, TextInput, Title } from '@mantine/core';
+import type { SystemeOut } from '@suivi/shared';
+import { StatusChip, type Etat } from '@suivi/ui';
 import { notifications } from '@mantine/notifications';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -304,6 +306,164 @@ function Versions() {
 }
 
 /* ---------------------------------------------------------------- Système */
+const fmtOctets = (n: number) =>
+  n >= 1024 ** 4
+    ? `${(n / 1024 ** 4).toFixed(1)} To`
+    : n >= 1024 ** 3
+      ? `${(n / 1024 ** 3).toFixed(1)} Go`
+      : `${Math.round(n / 1024 ** 2)} Mo`;
+const RESULTATS: Record<string, [Etat, string]> = {
+  reussie: ['succes', 'Réussie'],
+  'retour-arriere': ['attention', 'Retour arrière'],
+  echec: ['erreur', 'Échec'],
+  abandon: ['neutre', 'Abandonnée'],
+};
+
+/** Exploitation (EXPL-05) : version, mises à jour, sauvegarde, espace disque, nouvelle version. Lecture seule :
+    aucune mise à jour ne se lance depuis le navigateur (scripts/mettre-a-jour.sh sur le serveur). */
+function Exploitation() {
+  const q = useQuery({ queryKey: ['admin', 'systeme'], queryFn: () => get<SystemeOut>('/api/admin/systeme') });
+  const s = q.data;
+  if (!s) return <ErrorAlert error={q.error} />;
+  const disque = s.donnees.disque;
+  const libre = disque ? disque.libreOctets / disque.totalOctets : null;
+  const sv = s.sauvegarde;
+  return (
+    <Stack>
+      {s.versionDisponible?.nouvelle && (
+        <Alert color="violet" title={`Nouvelle version disponible : ${s.versionDisponible.derniere}`}>
+          Version en service : {s.version}. Lire les{' '}
+          <Anchor href={s.versionDisponible.notes} target="_blank" rel="noreferrer">
+            notes de version
+          </Anchor>
+          , puis mettre à jour sur le serveur : <code>sudo ./scripts/mettre-a-jour.sh --verifier</code>, puis{' '}
+          <code>sudo ./scripts/mettre-a-jour.sh</code> (guide d’installation, étape 12.1).
+        </Alert>
+      )}
+      {sv.enRetard && (
+        <Alert color="red" title="Sauvegarde en retard">
+          {sv.derniereReussie
+            ? `Dernière sauvegarde réussie il y a ${Math.round(sv.ageHeures ?? 0)} h (plus de 48 h).`
+            : 'Aucune sauvegarde réussie n’est connue sur ce serveur.'}{' '}
+          Vérifier la tâche planifiée (guide d’installation, étape 11.3) et le fichier /var/log/suivi-backup.log.
+        </Alert>
+      )}
+      <div className="grille-cartes">
+        <Card withBorder>
+          <Title order={2} size="h4" mb="xs">
+            Version
+          </Title>
+          <Text className="chiffre-cle__valeur chiffres">{s.version}</Text>
+          <Text size="sm" c="dimmed">
+            {s.versionDisponible
+              ? `Dernière version publiée : ${s.versionDisponible.derniere} (vérifiée le ${fmtDate(s.versionDisponible.verifieeLe)})`
+              : 'Recherche de nouvelle version non planifiée (scripts/verifier-version.sh).'}
+          </Text>
+          <Text size="sm" c="dimmed">
+            Dernière migration : {s.migrations[0]?.name ?? '—'}
+          </Text>
+        </Card>
+        <Card withBorder>
+          <Title order={2} size="h4" mb="xs">
+            Dernière sauvegarde
+          </Title>
+          {sv.derniereReussie ? (
+            <Stack gap="2xs">
+              <Group gap="xs">
+                <StatusChip etat={sv.enRetard ? 'erreur' : 'succes'}>{sv.enRetard ? 'En retard' : 'À jour'}</StatusChip>
+                <Text size="sm">{fmtDate(sv.derniereReussie.date)}</Text>
+              </Group>
+              <Text size="sm" c="dimmed" className="mono">
+                {sv.derniereReussie.fichier}
+              </Text>
+              <Text size="sm" c="dimmed">
+                {sv.derniereReussie.tailleOctets != null ? fmtOctets(sv.derniereReussie.tailleOctets) : ''}
+                {sv.derniereReussie.chiffree ? ' · chiffrée' : ' · NON chiffrée'}
+              </Text>
+            </Stack>
+          ) : (
+            <StatusChip etat="erreur">Aucune</StatusChip>
+          )}
+          {sv.derniere && sv.derniere.resultat !== 'reussie' && (
+            <Text size="sm" c="red" mt="xs">
+              Dernière tentative en échec le {fmtDate(sv.derniere.date)}.
+            </Text>
+          )}
+        </Card>
+        <Card withBorder>
+          <Title order={2} size="h4" mb="xs">
+            Données du serveur
+          </Title>
+          <Text size="sm" className="mono">
+            {s.donnees.chemin || '(emplacement non communiqué)'}
+          </Text>
+          {disque && libre != null && (
+            <Stack gap="2xs" mt="xs">
+              <Group gap="xs">
+                <StatusChip etat={libre < 0.1 ? 'erreur' : libre < 0.2 ? 'attention' : 'succes'}>
+                  {Math.round(libre * 100)} % libres
+                </StatusChip>
+                <Text size="sm">
+                  {fmtOctets(disque.libreOctets)} sur {fmtOctets(disque.totalOctets)}
+                </Text>
+              </Group>
+            </Stack>
+          )}
+        </Card>
+      </div>
+      <Card withBorder>
+        <Title order={2} size="h4" mb="xs">
+          Historique des mises à jour
+        </Title>
+        {s.misesAJour.length ? (
+          <div className="table-wrap">
+            <Table>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Date</Table.Th>
+                  <Table.Th>Versions</Table.Th>
+                  <Table.Th>Résultat</Table.Th>
+                  <Table.Th>Migrations</Table.Th>
+                  <Table.Th>Durée</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {s.misesAJour.map((m) => {
+                  const [etat, libelle] = RESULTATS[m.resultat] ?? (['neutre', m.resultat] as [Etat, string]);
+                  return (
+                    <Table.Tr key={m.fichier}>
+                      <Table.Td className="nowrap">{fmtDate(m.date) || m.fichier}</Table.Td>
+                      <Table.Td className="nowrap">
+                        {m.depuis || '?'} → {m.vers || '?'}
+                      </Table.Td>
+                      <Table.Td>
+                        <StatusChip etat={etat}>{libelle}</StatusChip>
+                        {m.message && (
+                          <Text size="xs" c="dimmed">
+                            {m.message}
+                          </Text>
+                        )}
+                      </Table.Td>
+                      <Table.Td>{m.migrations.join(', ') || '—'}</Table.Td>
+                      <Table.Td className="nowrap chiffres">
+                        {m.dureeSecondes != null ? `${Math.round(m.dureeSecondes)} s` : ''}
+                      </Table.Td>
+                    </Table.Tr>
+                  );
+                })}
+              </Table.Tbody>
+            </Table>
+          </div>
+        ) : (
+          <Text size="sm" c="dimmed">
+            Aucune mise à jour enregistrée sur ce serveur (scripts/mettre-a-jour.sh).
+          </Text>
+        )}
+      </Card>
+    </Stack>
+  );
+}
+
 function System() {
   const q = useQuery({ queryKey: ['admin', 'info'], queryFn: () => get<Record<string, unknown>>('/api/admin/info') });
   const d = q.data;
@@ -323,21 +483,29 @@ function System() {
       ]
     : [];
   return (
-    <Card withBorder>
-      <ErrorAlert error={q.error} />
-      <Table>
-        <Table.Tbody>
-          {rows.map(([k, v]) => (
-            <Table.Tr key={k}>
-              <Table.Th>{k}</Table.Th>
-              <Table.Td className="mono">{String(v ?? '')}</Table.Td>
-            </Table.Tr>
-          ))}
-        </Table.Tbody>
-      </Table>
-      <Text size="sm" c="dimmed" mt="sm">
-        Documentation de l’API : <a href="/api/openapi.json">/api/openapi.json</a>
-      </Text>
-    </Card>
+    <Stack>
+      <Exploitation />
+      <Card withBorder>
+        <Title order={2} size="h4" mb="xs">
+          Détails techniques
+        </Title>
+        <ErrorAlert error={q.error} />
+        <div className="table-wrap">
+          <Table>
+            <Table.Tbody>
+              {rows.map(([k, v]) => (
+                <Table.Tr key={k}>
+                  <Table.Th>{k}</Table.Th>
+                  <Table.Td className="mono">{String(v ?? '')}</Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+        </div>
+        <Text size="sm" c="dimmed" mt="sm">
+          Documentation de l’API : <a href="/api/openapi.json">/api/openapi.json</a>
+        </Text>
+      </Card>
+    </Stack>
   );
 }

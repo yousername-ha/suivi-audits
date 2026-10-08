@@ -2,6 +2,7 @@
    Téléphone : menu en tiroir ; tablette : menu replié en icônes ; bureau : menu déplié (packages/ui/src/styles.css).
    AppShell de Mantine n'est pas utilisé : il injecte des balises <style>, interdites par la CSP. */
 import {
+  Alert,
   Anchor,
   Badge,
   Burger,
@@ -25,10 +26,11 @@ import {
   IconeParametres,
   IconeTheme,
 } from '@suivi/ui';
-import { useQueryClient } from '@tanstack/react-query';
+import type { SystemeOut } from '@suivi/shared';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
-import { api, setCsrf } from '../api';
+import { api, get, setCsrf } from '../api';
 import { useLive } from '../realtime';
 import { canAdminArea, canReadBusiness, ME_KEY, useCan, useMe, usePreferences } from '../session';
 
@@ -51,6 +53,26 @@ function useAffichage() {
     if (colorScheme !== SCHEME[theme]) setColorScheme(SCHEME[theme]);
   }, [prefs.taille, densite, theme, colorScheme, setColorScheme]);
   return theme;
+}
+
+/** Nouvelle version publiée (détectée par scripts/verifier-version.sh sur le serveur) : bandeau pour les administrateurs.
+    Rien n'est installé automatiquement. */
+function BandeauVersion() {
+  const q = useQuery({
+    queryKey: ['admin', 'systeme'],
+    queryFn: () => get<SystemeOut>('/api/admin/systeme'),
+    staleTime: 600_000,
+  });
+  const v = q.data?.versionDisponible;
+  if (!v?.nouvelle) return null;
+  return (
+    <Alert color="violet" mb="md" className="bandeau-version">
+      Nouvelle version disponible : <b>{v.derniere}</b> (en service : {q.data?.version}).{' '}
+      <Anchor component={Link} to="/admin/system">
+        Détails et procédure
+      </Anchor>
+    </Alert>
+  );
 }
 
 export function Layout({ children }: { children: ReactNode }) {
@@ -175,7 +197,10 @@ export function Layout({ children }: { children: ReactNode }) {
       </header>
       <div className="shell-body">
         <aside className="shell-nav">{navigation}</aside>
-        <main className="shell-main app-main">{children}</main>
+        <main className="shell-main app-main">
+          {can('administration', 'lire') && <BandeauVersion />}
+          {children}
+        </main>
       </div>
       <Drawer opened={opened} onClose={close} title="Menu" size="xs" hiddenFrom="xs">
         {navigation}
