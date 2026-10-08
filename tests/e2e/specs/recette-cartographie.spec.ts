@@ -181,6 +181,17 @@ test.beforeAll(async ({ browser }) => {
 test.afterAll(async () => {
   await lecteur?.close();
   if (!admin) return;
+  // Les présences des comptes de recette expirent (45 s au plus) avant les fichiers suivants : leurs captures
+  // (tableau de bord, liste des personnes en ligne) ne doivent pas dépendre de ce fichier.
+  await expect
+    .poll(
+      async () =>
+        ((await (await admin.req.get('/api/presence')).json()) as { username: string }[]).filter((x) =>
+          ['sans-fournisseurs', 'contrib-carto'].includes(x.username),
+        ).length,
+      { timeout: 60_000, intervals: [2_000] },
+    )
+    .toBe(0);
   await supprimerCartes(admin);
   await ecrireLegacy(admin, (d) => {
     for (const k of Object.keys(d)) if (k !== 'maps') delete d[k];
