@@ -355,7 +355,14 @@ export function Canevas(p: CanevasProps) {
     if (d.kind === 'mv' || d.kind === 'rz') {
       if (d.moved) {
         if (raf.current) cancelAnimationFrame(raf.current);
-        flush();
+        raf.current = 0;
+        // Position finale calculée au relâchement : le dernier déplacement du pointeur peut ne pas avoir été reçu.
+        const dx = (e.clientX - d.sx) / vp.k,
+          dy = (e.clientY - d.sy) / vp.k;
+        pending.current = null;
+        if (d.kind === 'mv' && d.before && d.grp) p.onLive(moveGroup(d.before, d.grp, dx, dy));
+        else if (d.before && d.ref && d.size)
+          p.onLive(resizeNode(d.before, d.ref, d.size.w, d.size.h, dx, dy, p.lookup));
         if (d.before) p.onCommit(d.before);
       } else if (d.ref) choisir(d.ref);
       return;
