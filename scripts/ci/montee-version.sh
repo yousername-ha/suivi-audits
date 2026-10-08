@@ -23,7 +23,7 @@ groupe() { echo "::group::$*"; }
 fin_groupe() { echo "::endgroup::"; }
 echec() { echo "::error::Montée de version : $*"; exit 1; }
 api() { NODE_EXTRA_CA_CERTS="$SERVEUR/racine.crt" node "$OUTILS/guide-api.mjs" "$@"; }
-version_env() { grep -E '^APP_VERSION=' "$SERVEUR/.env" | cut -d= -f2; }
+version_env() { sudo grep -E '^APP_VERSION=' "$SERVEUR/.env" | cut -d= -f2; }
 dernier_rapport() { sudo sh -c "ls -1t /srv/suivi-audits/donnees/etat/mises-a-jour/*.json | head -n 1 | xargs cat"; }
 maj() { (cd "$SERVEUR" && sudo git show "v$CIBLE_VERSION:scripts/mettre-a-jour.sh" | sudo env "$@" bash -s -- "$VERS" --auto --images-locales --delai 240); }
 attendre() {
