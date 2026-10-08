@@ -1035,7 +1035,7 @@ test('29. sans fournisseurs:modifier : « Fournisseur » absent de la palette, g
     await editer(p);
     await expect(p.locator('[data-palette="stakeholder"]')).toHaveCount(1);
     await expect(p.locator('[data-palette="supplier"]')).toHaveCount(0);
-    const m = await menuSur(p, await pointCanevas(p, 0.1, 0.85));
+    const m = await menuSur(p, await pointCanevas(p, 0.1, 0.5));
     await expect(m.getByRole('menuitem', { name: /Fournisseur/ })).toBeDisabled();
     await p.keyboard.press('Escape');
     await expect(m).toHaveCount(0);
