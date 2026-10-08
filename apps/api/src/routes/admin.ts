@@ -1,10 +1,12 @@
 /* Administration : sessions, journal d'audit, versions de l'état legacy, système (droits : routes/access.ts). */
+import { SystemeOut } from '@suivi/shared';
 import { z } from 'zod';
 import type { Session } from '../auth.js';
 import { HttpError } from '../http/errors.js';
 import { route } from '../http/route.js';
 import { csvCell } from '../export/tabular.js';
 import { assertLegacyKeys } from '../rights.js';
+import { systemStatus } from '../systeme.js';
 
 export const adminRoutes = [
   /* ---------------------------------------------------------------- Sessions */
@@ -151,6 +153,23 @@ export const adminRoutes = [
   }),
 
   /* ---------------------------------------------------------------- Système */
+  route({
+    method: 'GET',
+    url: '/api/admin/systeme',
+    summary:
+      'Exploitation : version, mises à jour, dernière sauvegarde, espace disque, nouvelle version disponible (lecture seule)',
+    tags: ['Administration'],
+    access: 'administration:lire',
+    response: SystemeOut,
+    handler: async ({ svc }) => ({
+      ...systemStatus(svc.cfg),
+      migrations: (
+        await svc.db.q<{ name: string; applied_at: Date }>(
+          'SELECT name, applied_at FROM schema_migrations ORDER BY name DESC',
+        )
+      ).rows.map((r) => ({ name: r.name, applied_at: new Date(r.applied_at).toISOString() })),
+    }),
+  }),
   route({
     method: 'GET',
     url: '/api/admin/info',

@@ -14,6 +14,9 @@ import { importRoutes } from './routes/import.js';
 import { legacyRoutes } from './routes/legacy.js';
 import { settingsRoutes } from './routes/settings.js';
 import { affichageRoutes } from './routes/affichage.js';
+import { lastMigration, pendingMigrations } from './systeme.js';
+import { ReadyOut, VersionOut } from '@suivi/shared';
+import { MAX_SCHEMA, MIN_SCHEMA } from '@suivi/shared/legacy';
 import type { Services } from './services.js';
 
 // Messages de validation en français.
@@ -31,6 +34,45 @@ const systemRoutes = (all: () => RouteDef[]) => [
       reply.header('Cache-Control', 'no-store').type('text/plain; charset=utf-8');
       return reply.send('ok');
     },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/health/ready',
+    summary:
+      'Disponibilité complète (base joignable, migrations appliquées, version) — réservée aux appels locaux (script de mise à jour)',
+    tags: ['Système'],
+    access: 'public',
+    response: ReadyOut,
+    handler: async ({ svc, req, reply }) => {
+      // Uniquement depuis le conteneur lui-même (docker compose exec app …), jamais au travers du frontal.
+      if (!/^(127\.0\.0\.1|::1|::ffff:127\.0\.0\.1)$/.test(req.raw.socket.remoteAddress ?? ''))
+        throw new HttpError(404, 'Introuvable.');
+      let base = false;
+      let attente: string[] = [];
+      try {
+        await svc.db.q('SELECT 1');
+        base = true;
+        attente = await pendingMigrations(svc.db);
+      } catch {
+        base = false;
+      }
+      const pret = base && attente.length === 0;
+      reply.code(pret ? 200 : 503).header('Cache-Control', 'no-store');
+      return { pret, version: svc.cfg.version, base, migrationsEnAttente: attente };
+    },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/version',
+    summary: 'Version en service, dernière migration appliquée, schémas de l’outil historique acceptés',
+    tags: ['Système'],
+    access: 'auth',
+    response: VersionOut,
+    handler: async ({ svc }) => ({
+      version: svc.cfg.version,
+      derniereMigration: await lastMigration(svc.db),
+      schemaLegacy: { min: MIN_SCHEMA, max: MAX_SCHEMA },
+    }),
   }),
   route({
     method: 'GET',

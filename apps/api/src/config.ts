@@ -57,6 +57,10 @@ export function loadConfig(env: Env = process.env) {
     /** Dossier de l'outil historique servi sous /legacy (app/public dans le dépôt). */
     legacyDir: env.LEGACY_DIR || path.join(APP_ROOT, 'legacy'),
     seedFile: env.SEED_FILE || path.join(APP_ROOT, 'seed', 'state.json'),
+    /** Rapports d'exploitation (DATA_DIR/etat sur le serveur, monté en lecture seule) : mises à jour, sauvegardes. */
+    etatDir: env.ETAT_DIR || '/etat',
+    /** Emplacement des données sur le serveur (DATA_DIR), affiché dans Administration > Système. */
+    dataDirHote: env.DATA_DIR_HOTE || '',
     version: env.APP_VERSION || readVersion(),
   };
 }

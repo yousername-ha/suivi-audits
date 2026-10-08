@@ -37,6 +37,8 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
   /** Seules routes sans permission métier : authentification, compte personnel, temps réel, pages et fichiers statiques. */
   const UNGUARDED = new Set([
     'GET /healthz',
+    'GET /api/health/ready',
+    'GET /api/version',
     'GET /api/openapi.json',
     'GET /api/auth/me',
     'POST /api/auth/login',
