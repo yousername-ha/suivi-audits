@@ -42,7 +42,8 @@ Données : toutes dans le dossier du serveur `DATA_DIR` (montages bind, aucun vo
 ```
 packages/ui       charte graphique : jetons, thème Mantine clair et sombre, styles statiques, composants communs
 packages/shared   schémas zod partagés (API ⇄ interface), droits, paramètres, jeton d'installation,
-                  format legacy : lecture, schéma 15, contrat, planification d'import (fonctions pures)
+                  format legacy : lecture, schéma 15, contrat, planification d'import (fonctions pures),
+                  cartographie : objets, dispositions, génération, scène (fonctions pures, parité avec la bêta)
 apps/api          API Fastify : src/ (routes, auth, sécurité, temps réel, legacy), migrations/ (SQL), test/ (Vitest + PostgreSQL)
 apps/web          interface React + Vite + Mantine (CSP stricte)
 app/public        outil historique (fichier unique), servi sous /legacy
@@ -79,6 +80,7 @@ Routes livrées en phase 0 :
 | Temps réel | `GET /api/events` (SSE), `POST /api/presence` |
 | Affichage | préférences par personne (`/api/account/preferences`) ; écrans muraux (`/api/admin/murs`, `POST /api/mur/activer`) ; synthèse et flux de la vue `/mur` (`/api/mur/synthese`, `/api/mur/events`) |
 | Outil historique | `/legacy/`, `/api/legacy/state`, `/api/legacy/modules`, `/api/refs` |
+| Cartographie | objets de la plateforme filtrés par droits (`/api/carto/objects`), cartes avec `If-Match` (`/api/carto/maps`), versions, nature des enjeux, journal des exports ([ADR 0013](adr/0013-cartographie.md)) |
 
 ## 4. Données
 
@@ -89,6 +91,8 @@ Routes livrées en phase 0 :
   - sur les tables métier : `version` (concurrence), `legacy_id`, `import_batch_id` et `extra` (champs legacy non repris, conservés) ;
   - les déclencheurs `suivi_notify()` (temps réel).
 - `003_droits.sql` crée les rôles, les groupes et les attributions (`roles`, `groups`, `group_roles`, `user_groups`, `user_roles` avec portée), ajoute l'expiration des comptes et reprend les rôles v2 ([ADR 0010](adr/0010-droits-rbac.md)).
+- `004_affichage_et_ecrans_muraux.sql` ajoute les préférences d'affichage et les écrans muraux.
+- `005_cartographie.sql` crée `maps` et `map_versions` (présentation des cartes seulement) et reprend les cartes du module bêta (`S.maps`) : premier module repris dans des tables, avec son « mapper » (`apps/api/src/carto/maps.ts`, [ADR 0013](adr/0013-cartographie.md)).
 - Le **journal d'audit** est en ajout seul : un déclencheur refuse `UPDATE` et `DELETE`.
 - Les données de l'outil historique vivent dans `app_state.data` (document JSON versionné, historique dans `state_history`) jusqu'à la reprise de chaque module en tables normalisées (phases 1 à 3, [ADR 0007](adr/0007-transition-legacy.md)).
 

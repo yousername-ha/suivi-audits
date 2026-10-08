@@ -1,16 +1,15 @@
 /* Administration > Système (EXPL-05) : version, dernière sauvegarde, emplacement et espace disque des données,
    historique des mises à jour. Lecture seule : aucun bouton de mise à jour. Exécuté après parcours.spec.ts. */
 import { expect, test } from '@playwright/test';
-import { apiLogin, loadAdmin, PASSWORD, watchPage } from '../helpers';
+import { sessionAdmin, watchPage } from '../helpers';
 
 test('administration > système : exploitation en lecture seule', async ({ browser }) => {
-  const admin = loadAdmin();
   const ctx = await browser.newContext({
     ignoreHTTPSErrors: true,
     locale: 'fr-FR',
     viewport: { width: 1366, height: 900 },
+    storageState: (await sessionAdmin(browser)).state,
   });
-  await apiLogin(ctx.request, admin.username, PASSWORD, admin.secret);
   const page = await ctx.newPage();
   const problems = watchPage(page);
   await page.goto('/admin/system');

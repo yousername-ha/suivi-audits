@@ -538,8 +538,8 @@ Les droits se gèrent dans **Administration**, onglets **Utilisateurs**, **Group
 |---|---|---|
 | **Administrateur** | 2 personnes au plus | Tout, y compris les comptes, groupes, rôles, sessions et le journal |
 | **RSSI** | RSSI, RSSI adjoint | Tout, sauf l'administration technique (comptes, groupes, rôles, sessions, journal) |
-| **Contributeur** | Pilotes de processus, référents | Consulter et modifier les modules métier, les documents et les liens (pas de suppression) |
-| **Lecteur** | Alternant, direction | Consulter et télécharger, sans rien modifier |
+| **Contributeur** | Pilotes de processus, référents | Consulter et modifier les modules métier, les documents et les liens (pas de suppression) ; exporter les cartes |
+| **Lecteur** | Alternant, direction | Consulter et télécharger, sans rien modifier ; exporter les cartes |
 | **Auditeur externe** | Auditeur de certification | Consulter les seuls modules choisis ; **date d'expiration obligatoire** |
 
 Pour un besoin particulier, onglet **Rôles** : **Dupliquer** un rôle proche, puis cochez ou décochez les cases de sa matrice (modules × actions : lire, créer et modifier, supprimer, exporter, administrer) et cliquez sur **Enregistrer la matrice**.
@@ -573,6 +573,8 @@ Pour un besoin particulier, onglet **Rôles** : **Dupliquer** un rôle proche, p
 
 Une personne connectée (même avec le seul rôle **Lecteur**) peut aussi ouvrir **Écran mural** depuis le menu.
 
+**9.9 Cartographie du SMSI** (menu **Cartographie**) : vue contexte et vue processus, construites à partir des données déjà saisies (périmètre, processus, parties intéressées, enjeux des objectifs et des SWOT, applications du GAP, fournisseurs), puis ajustées à la main. Droits (module **Cartographie du SMSI** de la matrice) : les rôles **Administrateur** et **RSSI** font tout ; **Contributeur** génère, modifie, enregistre et exporte ; **Lecteur** consulte et exporte ; **Auditeur externe** consulte si le module lui est ouvert. Supprimer une carte ou une version est réservé au droit « supprimer ». Une carte ne contient que la présentation : renommer un processus dans son module le renomme sur la carte, sans la modifier. Les objets d'un module que la personne ne peut pas lire apparaissent « Objet non accessible ».
+
 <!-- ci: exec: NODE_EXTRA_CA_CERTS=/opt/suivi-audits/racine-suivi-audits.crt node "$GITHUB_WORKSPACE/scripts/ci/guide-api.mjs" compte https://<nom_dns> -->
 
 ---
@@ -599,6 +601,8 @@ Sautez cette étape si vous démarrez sans historique.
 4. Cliquez sur **Simuler l'import**.
 
 **Résultat attendu** : un rapport par module (écarts, processus, fournisseurs…), avec le nombre d'éléments **Créés**, **Modifiés**, **Inchangés** et **Supprimés**. Lisez les avertissements : champs inconnus et références cassées sont listés, et le rapport est téléchargeable pour l'archiver.
+
+> Les cartes dessinées avec le module bêta **Cartographie** de l'ancien outil sont reprises (module « Cartographie du SMSI » du rapport) : elles s'ouvrent ensuite dans le menu **Cartographie**, et l'ancien outil les affiche en lecture seule.
 
 **10.3 Appliquer l'import :** cliquez sur **Appliquer l'import**.
 

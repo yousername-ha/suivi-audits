@@ -30,12 +30,12 @@ Les exigences fonctionnelles détaillées sont dans [BACKLOG-FONCTIONNEL.md](BAC
   - `EXPL-05` Administration > Système : version, historique des mises à jour, dernière sauvegarde, espace disque, nouvelle version disponible ;
   - `EXPL-06` à `EXPL-09` outil historique dans l'image, notes de mise à jour dans chaque version, sauvegarde et restauration sur `DATA_DIR`, guide rejoué en CI avec une mise à jour.
 
-## Cartographie du SMSI (après 9 quinquies)
+## Cartographie du SMSI (après 9 quinquies) — livrée
 
 Éditeur de cartes piloté par les données de la plateforme (vue contexte, vue processus), reprise du module bêta validé dans l'outil historique ([spécification](cartographie/SPEC-CARTOGRAPHIE-V3.md), [recette](cartographie/RECETTE.md)).
-- [ ] `CARTO-01` module de droits `cartographie` ; `CARTO-02` objets lus par adaptateur (état legacy, puis tables) ; `CARTO-03` tables `maps` et `map_versions` ; `CARTO-04` API, temps réel et présence.
-- [ ] `CARTO-05` génération assistée ; `CARTO-06` canevas SVG (zoom, recherche, préréglages, filtres) ; `CARTO-07` mode édition ; `CARTO-08` synchronisation ; `CARTO-09` ajout depuis la plateforme ; `CARTO-10` fiche détaillée.
-- [ ] `CARTO-11` versions ; `CARTO-12` nature des enjeux ; `CARTO-13` exports PNG, SVG, PDF, JSON ; `CARTO-14` reprise legacy de `S.maps` et transition.
+- [x] `CARTO-01` module de droits `cartographie` ; `CARTO-02` objets lus par adaptateur (état legacy, puis tables) ; `CARTO-03` tables `maps` et `map_versions` ; `CARTO-04` API, temps réel et présence.
+- [x] `CARTO-05` génération assistée ; `CARTO-06` canevas SVG (zoom, recherche, préréglages, filtres) ; `CARTO-07` mode édition ; `CARTO-08` synchronisation ; `CARTO-09` ajout depuis la plateforme ; `CARTO-10` fiche détaillée.
+- [x] `CARTO-11` versions ; `CARTO-12` nature des enjeux ; `CARTO-13` exports PNG, SVG, PDF, JSON ; `CARTO-14` reprise legacy de `S.maps` et transition.
 
 ## Phase 1 — Audit
 

@@ -10,9 +10,22 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 - Serveur v2 : suivre l'étape 12.4 du guide (copie des volumes par `scripts/migrer-donnees-vers-dossier.sh`).
 - Faire inclure `DATA_DIR` **et** le dossier des sauvegardes dans la sauvegarde externalisée du serveur ; planifier `scripts/verifier-version.sh` (étape 11.3).
 - `docker compose down -v` ne supprime plus aucune donnée. Pour tout effacer : section 14 du guide.
-- Migrations de la base : `003_droits.sql`, `004_affichage_et_ecrans_muraux.sql` (au démarrage, sans action). Durée estimée : 5 minutes, plus la copie des données.
+- Migrations de la base : `003_droits.sql`, `004_affichage_et_ecrans_muraux.sql`, `005_cartographie.sql` (au démarrage, sans action). Durée estimée : 5 minutes, plus la copie des données.
+- Cartographie : nouveau module de droits « Cartographie du SMSI » (75 permissions au lieu de 70). Les rôles prédéfinis le reçoivent automatiquement ; les **rôles personnalisés ne l'ont pas** : cochez ses cases dans leur matrice si besoin. Les cartes dessinées avec le module bêta de l'ancien outil sont reprises automatiquement par la migration ; l'ancien outil les affiche ensuite en lecture seule.
 
 ### Ajouté
+- Cartographie du SMSI (ADR 0013, `CARTO-01` à `CARTO-14`) :
+  - `CARTO-01` module de droits `cartographie` ; Contributeur et Lecteur exportent les cartes ; lecture seule réelle ; objets d'un module non lisible jamais envoyés (« Objet non accessible ») ;
+  - `CARTO-02` objets lus par adaptateur (état legacy recomposé, filtré selon les droits), relations métier dérivées ;
+  - `CARTO-03` tables `maps` et `map_versions` (migration `005_cartographie.sql`), disposition validée (`MapLayoutSchema`) ;
+  - `CARTO-04` API `/api/carto/*` avec `If-Match` et 412, temps réel et présence, journal d'audit ;
+  - `CARTO-05` assistant de génération (vue contexte, vue processus, propositions de flux), confirmation au-delà de 80 objets, refus au-delà de 400 ; dispositions et génération en fonctions pures, testées en parité avec la bêta ;
+  - `CARTO-06` canevas SVG sans dépendance (zoom, pincement, panoramique, aperçu, recherche, préréglages, filtres ISO 27001 et HDS, légende, chiffres clés, plein écran), jetons « carte » clair et sombre ;
+  - `CARTO-07` mode édition (déplacer, cadres qui emportent leur contenu, redimensionner, flèches, relier, masquer, valider, retirer, annuler et rétablir sur 60 niveaux), conflit « Recharger / Écraser » ;
+  - `CARTO-08` synchronisation (nouveaux objets, objets indisponibles), jamais d'ajout automatique ; `CARTO-09` ajout depuis la plateforme sans chevauchement ;
+  - `CARTO-10` fiche détaillée (feuille basse au téléphone, colonne permanente au-delà de 2560 px) ; `CARTO-11` versions (20 au plus) ; `CARTO-12` nature des enjeux corrigeable ;
+  - `CARTO-13` exports PNG, SVG, PDF A3 et JSON produits dans le navigateur, journalisés ;
+  - `CARTO-14` reprise du module legacy `maps` (import, export et annulation à l'identique ; `/legacy` en lecture seule pour la cartographie).
 - Données sur le serveur et mises à jour (chantier 9 quinquies, ADR 0014) :
   - `EXPL-01` toutes les données dans `DATA_DIR` (montages bind avec propriétaires et droits, plus aucun volume nommé) ; le service `init` refuse un dossier non préparé, dans le dossier de l'application, dans un dossier système ou sur un système de fichiers non persistant ; `scripts/preparer-donnees.sh` ;
   - `EXPL-02` `scripts/migrer-donnees-vers-dossier.sh` : sauvegarde chiffrée des volumes, copie, contrôles (fichiers, tailles, enregistrements), démarrage ; idempotent ; anciens volumes conservés jusqu'à confirmation ;

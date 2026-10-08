@@ -1,10 +1,10 @@
 /* Outils des tests de bout en bout : TOTP, jeton d'installation, surveillance des violations de CSP, appels API. */
 import { execSync } from 'node:child_process';
 import crypto from 'node:crypto';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import type { APIRequestContext, Page } from '@playwright/test';
+import type { APIRequestContext, Browser, BrowserContext, Page } from '@playwright/test';
 
 export const PASSWORD = 'E2e-Mot-de-passe-2026!';
 
@@ -91,3 +91,24 @@ const ADMIN_FILE = path.join(os.tmpdir(), 'suivi-e2e-admin.json');
 export const saveAdmin = (username: string, secret: string) =>
   writeFileSync(ADMIN_FILE, JSON.stringify({ username, secret }), { mode: 0o600 });
 export const loadAdmin = (): { username: string; secret: string } => JSON.parse(readFileSync(ADMIN_FILE, 'utf8'));
+
+/** Session administrateur partagée par les fichiers de tests : chaque connexion compte dans la limite par adresse
+    (20 par quart d'heure), la suite complète la dépasserait. Rouverte seulement si elle n'est plus valide. */
+const SESSION_FILE = path.join(os.tmpdir(), 'suivi-e2e-admin-session.json');
+export async function sessionAdmin(
+  browser: Browser,
+): Promise<{ state: Awaited<ReturnType<BrowserContext['storageState']>>; csrf: string }> {
+  if (existsSync(SESSION_FILE)) {
+    const ctx = await browser.newContext({ ignoreHTTPSErrors: true, storageState: SESSION_FILE });
+    const me = await (await ctx.request.get('/api/auth/me')).json();
+    const state = await ctx.storageState();
+    await ctx.close();
+    if (me.stage === 'ok') return { state, csrf: me.csrf as string };
+  }
+  const admin = loadAdmin();
+  const ctx = await browser.newContext({ ignoreHTTPSErrors: true });
+  const csrf = await apiLogin(ctx.request, admin.username, PASSWORD, admin.secret);
+  const state = await ctx.storageState({ path: SESSION_FILE });
+  await ctx.close();
+  return { state, csrf };
+}

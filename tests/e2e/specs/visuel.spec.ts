@@ -2,7 +2,7 @@
    en mode clair et en mode sombre, comparées à chaque PR. Exécutées dans le conteneur Playwright officiel
    (tests/e2e/run-in-container.sh) : polices et rendu identiques en local et en CI. */
 import { expect, test, type Browser, type BrowserContext } from '@playwright/test';
-import { apiLogin, loadAdmin, PASSWORD, watchPage } from '../helpers';
+import { sessionAdmin, watchPage } from '../helpers';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -35,12 +35,8 @@ async function context(browser: Browser, width: number, height: number, scheme: 
 }
 
 test.beforeAll(async ({ browser }) => {
-  // Une seule connexion (double authentification) ; la session est ensuite réutilisée par toutes les captures.
-  const admin = loadAdmin();
-  const ctx = await browser.newContext({ ignoreHTTPSErrors: true });
-  await apiLogin(ctx.request, admin.username, PASSWORD, admin.secret);
-  state = await ctx.storageState();
-  await ctx.close();
+  // Session administrateur partagée ; elle est ensuite réutilisée par toutes les captures.
+  state = (await sessionAdmin(browser)).state;
 });
 
 for (const p of PAGES)

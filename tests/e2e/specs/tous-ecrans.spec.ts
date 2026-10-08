@@ -3,7 +3,7 @@
    largeur exploitée sur les très grands écrans ; aucun défilement horizontal ; écran mural (activation, révocation).
    Exécutés après parcours.spec.ts (ordre alphabétique des fichiers, un seul worker). */
 import { expect, test, type Browser, type BrowserContext, type Page } from '@playwright/test';
-import { apiLogin, csrfOf, loadAdmin, PASSWORD, watchPage } from '../helpers';
+import { csrfOf, sessionAdmin, watchPage } from '../helpers';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -36,10 +36,10 @@ async function context(browser: Browser, width: number, height: number, scheme: 
 }
 
 test.beforeAll(async ({ browser }) => {
-  const admin = loadAdmin();
-  const ctx = await browser.newContext({ ignoreHTTPSErrors: true });
-  const csrf = await apiLogin(ctx.request, admin.username, PASSWORD, admin.secret);
-  state = await ctx.storageState();
+  const session = await sessionAdmin(browser);
+  state = session.state;
+  const csrf = session.csrf;
+  const ctx = await browser.newContext({ ignoreHTTPSErrors: true, storageState: state });
 
   // Données fictives figées : échéances loin dans le passé ou l'avenir, pour que les captures ne dépendent pas
   // de la date du jour.

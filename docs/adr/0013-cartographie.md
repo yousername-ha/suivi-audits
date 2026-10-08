@@ -83,7 +83,7 @@ intéressées, SWOT, périmètre, GAP, fournisseurs) ne sont pas encore repris :
 1. Relations entre processus : **graphiques** (propositions `gen` à valider), pas de table métier.
 2. Appartenance au périmètre : modifiée par l'**écran Périmètre**, jamais par la carte.
 3. Nature des enjeux : `maps.settings.issueKind` (carte de contexte) jusqu'à la reprise des enjeux (phase 3).
-4. Versions : **explicites** seulement ; l'historique fin est dans le journal d'audit.
+4. Versions : **explicites** seulement, figées à partir de la carte enregistrée ; l'historique fin est dans le journal d'audit.
 5. Export PDF : **support visuel**, pas une preuve documentaire.
 6. **Une carte par vue** ; le modèle en accepte plusieurs (par site, par offre CRRC) plus tard.
 7. Filtres : **ISO 27001 et HDS** (pas d'ISO 9001).
