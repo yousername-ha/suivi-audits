@@ -270,7 +270,7 @@ describe('construire de zéro : créer et renommer depuis la carte (CARTO-15, CA
     const m = await t.svc.db.one<{ settings: { issues: unknown[] } }>(
       "SELECT settings FROM maps WHERE view = 'context'",
     );
-    expect(m.settings.issues).toEqual([{ label: 'Menace fictive créée', kind: 'ext' }]);
+    expect(m!.settings.issues).toEqual([{ label: 'Menace fictive créée', kind: 'ext' }]);
     expect((await lecteur.get('/api/carto/maps')).json()).toEqual([]);
   });
 
@@ -283,7 +283,7 @@ describe('construire de zéro : créer et renommer depuis la carte (CARTO-15, CA
     const row = await t.svc.db.one<{ details: { old: string } }>(
       "SELECT details FROM audit_log WHERE action = 'carto.object_rename' ORDER BY id DESC LIMIT 1",
     );
-    expect(row.details.old).toBe(proc.name);
+    expect(row!.details.old).toBe(proc.name);
     await contrib.put('/api/carto/objects/name', { ref: proc.ref, name: proc.name });
     const site = objs.find((o) => o.type === 'site')!;
     expect((await contrib.put('/api/carto/objects/name', { ref: site.ref, name: 'x' })).statusCode).toBe(422);
