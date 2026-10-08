@@ -26,7 +26,8 @@ Un commit ou une PR qui traite une exigence de [docs/BACKLOG-FONCTIONNEL.md](doc
 
 ## Versions et publication
 - Versionnage sémantique `MAJEUR.MINEUR.CORRECTIF`. Phase 0 : `3.0.0`.
-- Pour publier : mettre à jour `CHANGELOG.md` (section `[Non publié]` renommée avec le numéro), et la version des `package.json` dans une PR. Après la fusion, créer l'étiquette `vX.Y.Z` sur `main`. Le workflow `release.yml` publie alors les images signées sur GHCR.
+- Pour publier : mettre à jour `CHANGELOG.md` (section `[Non publié]` renommée avec le numéro), et la version des `package.json` dans une PR. Chaque section du CHANGELOG contient un paragraphe **« Notes de mise à jour »** (actions manuelles, migrations, durée estimée ; à défaut « Aucune action. »), vérifié par la CI et repris par la page de la version et par `scripts/mettre-a-jour.sh`. Après la fusion, créer l'étiquette `vX.Y.Z` sur `main`. Le workflow `release.yml` publie alors les images signées sur GHCR et la page de la version.
+- MAJEUR : action manuelle à la mise à jour ou rupture. Les migrations sont uniquement en avant, jamais modifiées une fois publiées ; un changement destructif (suppression ou renommage de colonne) se fait en deux versions : la version N ajoute et recopie, la version N+1 supprime (ADR 0014). Le job CI « montée de version » vérifie qu'une version se met à jour depuis la précédente, retour arrière compris.
 - Les images ne sont **jamais** publiées depuis une branche.
 
 ## Organisation du dépôt
@@ -53,9 +54,10 @@ Tests de bout en bout, sur la pile Docker construite localement :
 
 ```bash
 cp .env.example .env && sed -i 's/^SITE_ADDRESS=.*/SITE_ADDRESS=localhost/; s/^APP_VERSION=.*/APP_VERSION=local/' .env
+sudo ./scripts/preparer-donnees.sh                  # dossier des données DATA_DIR (/srv/suivi-audits/donnees)
 docker compose -f docker-compose.yml -f docker-compose.build.yml build && docker compose up -d
 ./tests/e2e/run-in-container.sh                     # conteneur Playwright officiel (rendu identique à la CI)
-docker compose down -v
+docker compose down && sudo rm -rf /srv/suivi-audits/donnees   # remise à zéro (down -v ne touche pas aux données)
 ```
 
 Rejouer le guide d'installation (comme la CI) : `node scripts/ci/guide-extraire.mjs docs/INSTALLATION.md nom_dns=localhost version=ci` produit le script exécuté par le job « guide ». Chaque bloc ```` ```bash ```` du guide doit porter un marqueur `<!-- ci: run -->`, `<!-- ci: skip — raison -->` ou `<!-- ci: instead: commande -->` (voir l'en-tête du script).

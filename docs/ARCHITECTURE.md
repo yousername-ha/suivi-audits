@@ -24,18 +24,18 @@ Ce document décrit l'architecture cible et l'état livré en **phase 0** (fonda
    │ db — PostgreSQL 17               │      │ clamav (facultatif)      │
    │  LISTEN/NOTIFY → temps réel      │      │ analyse des dépôts       │
    └──────────────────────────────────┘      └──────────────────────────┘
-   init : service ponctuel (root, sans réseau) — secrets, droits des volumes
+   init : service ponctuel (root, sans réseau) — contrôle de DATA_DIR, secrets, droits des dossiers
 ```
 
 | Service | Image | Rôle |
 |---|---|---|
-| `init` | `ghcr.io/yousername-ha/suivi-audits-api` | Génère les secrets manquants (volume `secrets`), fixe leurs droits, remet au frontal la propriété de ses volumes. S'arrête. |
+| `init` | `ghcr.io/yousername-ha/suivi-audits-api` | Contrôle le dossier des données (`DATA_DIR`), crée ses sous-dossiers avec propriétaires et droits, génère les secrets manquants. S'arrête. |
 | `db` | `postgres:17-alpine` | Base unique. Aucun port publié. |
 | `app` | `ghcr.io/yousername-ha/suivi-audits-api` | API, outil historique sous `/legacy`, commandes d'exploitation (`setup-token`, `suivi`). Désactive aussi les comptes arrivés à expiration. |
 | `web` | `ghcr.io/yousername-ha/suivi-audits-web` | Caddy : TLS, en-têtes de sécurité, interface compilée, reverse proxy vers `app`. Seul service exposé. |
 | `clamav` | `clamav/clamav` | Facultatif (`--profile antivirus`). |
 
-Volumes : `pgdata` (base), `secrets` (mots de passe de la base, clé maître des documents), `caddy_data` et `caddy_config` (certificats, autorité interne).
+Données : toutes dans le dossier du serveur `DATA_DIR` (montages bind, aucun volume nommé, [ADR 0014](adr/0014-donnees-sur-le-serveur-et-mises-a-jour.md)) : `postgres/` (base), `secrets/` (mots de passe de la base, clé maître des documents), `caddy/` (certificats, autorité interne), `clamav/`, `etat/` (rapports des scripts du serveur, lus par l'application). Mises à jour : `scripts/mettre-a-jour.sh` (sauvegarde, signature des images, santé, retour arrière automatique).
 
 ## 2. Dépôt (monorepo pnpm)
 
@@ -109,13 +109,13 @@ Routes livrées en phase 0 :
 | Élévation de privilèges | Permissions `module:action` exigées par le serveur sur chaque route, relues à chaque requête. Le test `rbac.test.ts` vérifie chaque route contre la matrice. Rôles prédéfinis immuables (déclencheur). Il reste toujours un administrateur permanent. Personne ne modifie ses propres droits. Toute modification est journalisée avant/après et coupe les sessions concernées. Comptes à expiration désactivés automatiquement. Temps réel et outil historique filtrés par module |
 | Injection de script (XSS) | CSP stricte sur l'interface : `default-src 'self'; script-src 'self'; style-src 'self'`, aucun script ni style en ligne (vérifié par Playwright). Fichiers téléchargés servis avec `Content-Disposition: attachment`, `nosniff` et une CSP `sandbox`. L'outil historique a sa propre CSP, sans origine externe |
 | Fichiers malveillants | Liste blanche d'extensions et de types, vérification des signatures (« magic bytes »), limite de taille, analyse ClamAV facultative (obligatoire si `CLAMAV_REQUIRED=true`) |
-| Fuite de documents | Chiffrement AES-256-GCM par document, avec une clé dérivée de la clé maître (volume `secrets`, jamais en base). Données associées liées à l'identifiant du document |
+| Fuite de documents | Chiffrement AES-256-GCM par document, avec une clé dérivée de la clé maître (`DATA_DIR/secrets`, jamais en base). Données associées liées à l'identifiant du document |
 | Traçabilité | Journal d'audit en ajout seul (connexions, échecs, administration, documents, imports, restaurations) ; historique des versions de l'état legacy, restaurable |
 | Compromission d'un conteneur | Images non root, système de fichiers en lecture seule, `cap_drop: ALL`, `no-new-privileges`, limites mémoire et processus, aucune sortie Internet pour `app` et `db`, base non exposée |
 | Chaîne d'approvisionnement | Dépendances figées (lockfile), Trivy (échec sur CRITICAL), SBOM CycloneDX, CodeQL, images signées par cosign avec SBOM attesté |
 | Perte de données | `scripts/backup.sh` (base et secrets, chiffrés en AES-256, avec empreinte SHA-256), restauration testée en CI |
 
-**Secrets** : ils sont générés par `init` dans le volume `secrets`, chacun lisible par son seul consommateur (uid 70 pour PostgreSQL, uid 1000 pour l'API). Aucun secret n'est dans le dépôt, dans `.env` ni dans les images.
+**Secrets** : ils sont générés par `init` dans `DATA_DIR/secrets`, chacun lisible par son seul consommateur (uid 70 pour PostgreSQL, uid 1000 pour l'API). Aucun secret n'est dans le dépôt, dans `.env` ni dans les images.
 
 ## 7. Transition depuis l'outil historique
 

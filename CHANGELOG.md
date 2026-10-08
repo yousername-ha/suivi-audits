@@ -4,7 +4,23 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ## [Non publié]
 
+### Notes de mise à jour
+- **Les données quittent les volumes Docker pour le dossier du serveur `DATA_DIR`** (par défaut `/srv/suivi-audits/donnees`, EXPL-01). La mise à jour par `scripts/mettre-a-jour.sh` fait la copie toute seule, contrôle les données et **conserve les anciens volumes** jusqu'à `sudo ./scripts/migrer-donnees-vers-dossier.sh --supprimer-anciens-volumes`. Prévoir l'espace disque : deux fois la taille de la base.
+- Première mise à jour avec le script (il n'existe pas encore dans la version en service) : `sudo git fetch --tags && sudo git show v<version>:scripts/mettre-a-jour.sh | sudo bash -s -- <version>` (`docs/INSTALLATION.md`, étape 12.1).
+- Serveur v2 : suivre l'étape 12.4 du guide (copie des volumes par `scripts/migrer-donnees-vers-dossier.sh`).
+- Faire inclure `DATA_DIR` **et** le dossier des sauvegardes dans la sauvegarde externalisée du serveur ; planifier `scripts/verifier-version.sh` (étape 11.3).
+- `docker compose down -v` ne supprime plus aucune donnée. Pour tout effacer : section 14 du guide.
+- Migrations de la base : `003_droits.sql`, `004_affichage_et_ecrans_muraux.sql` (au démarrage, sans action). Durée estimée : 5 minutes, plus la copie des données.
+
 ### Ajouté
+- Données sur le serveur et mises à jour (chantier 9 quinquies, ADR 0014) :
+  - `EXPL-01` toutes les données dans `DATA_DIR` (montages bind avec propriétaires et droits, plus aucun volume nommé) ; le service `init` refuse un dossier non préparé, dans le dossier de l'application, dans un dossier système ou sur un système de fichiers non persistant ; `scripts/preparer-donnees.sh` ;
+  - `EXPL-02` `scripts/migrer-donnees-vers-dossier.sh` : sauvegarde chiffrée des volumes, copie, contrôles (fichiers, tailles, enregistrements), démarrage ; idempotent ; anciens volumes conservés jusqu'à confirmation ;
+  - `EXPL-03` `scripts/mettre-a-jour.sh` : contrôles, notes de mise à jour, sauvegarde chiffrée obligatoire, signature des images (cosign), migrations sous verrou, santé, retour arrière automatique avec restauration si la base a été migrée, rapport et journal d'audit ; mode `--verifier` ;
+  - `EXPL-04` `GET /api/version`, `GET /api/health/ready` (appels locaux), commandes `suivi migrations`, `suivi controle-donnees`, `suivi consigner-mise-a-jour` ; test CI de montée de version avec retour arrière et restauration simulés ;
+  - `EXPL-05` Administration > Système : version, historique des mises à jour, dernière sauvegarde (alerte au-delà de 48 h), emplacement des données et espace disque, nouvelle version disponible (`scripts/verifier-version.sh`, tâche planifiée ; rien n'est installé automatiquement) ;
+  - `EXPL-07` page de chaque version publiée reprenant sa section du CHANGELOG, paragraphe « Notes de mise à jour » obligatoire (vérifié par la CI) ;
+  - `EXPL-08` `backup.sh` et `restore.sh` sur `DATA_DIR` (autorité de certification interne comprise), rapports dans `DATA_DIR/etat/`.
 - Gestion des droits (RBAC, chantier 9 bis, ADR 0010) :
   - permissions module × action, déclarées dans `packages/shared` ;
   - rôles prédéfinis (Administrateur, RSSI, Contributeur, Lecteur, Auditeur externe) et rôles personnalisés créés par duplication, avec une matrice éditable ;
@@ -42,6 +58,8 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 - Limite de débit globale par adresse IP sur toutes les routes (`RATE_LIMIT_PER_MINUTE`, 1200 par défaut), appliquée avant toute lecture en base.
 
 ### Modifié
+- `EXPL-06` : l'outil historique fait partie de l'image ; `scripts/update-ui.sh` est réservé au poste de développement.
+- `docker-compose.dev.yml` : données de développement dans `./.donnees-dev` au lieu de volumes nommés.
 - Migration `004_affichage_et_ecrans_muraux.sql` : préférences d'affichage par personne (`users.preferences`) et table `wall_screens`.
 - Le choix de thème du bouton du menu est enregistré sur le serveur (et non plus dans le navigateur).
 - Migration `003_droits.sql` : `admin` devient Administrateur, `rw` devient Contributeur, `ro` devient Lecteur. Un ancien compte « lecture et écriture » ne peut plus supprimer de document ni de lien : lui attribuer le rôle RSSI si nécessaire.
@@ -49,7 +67,10 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ## [3.0.0] — Phase 0 : fondations
 
-Nouvelle architecture. La mise à jour depuis la v2 conserve la base, les secrets et les certificats : voir `docs/INSTALLATION.md`, étape 12.3.
+Nouvelle architecture. La mise à jour depuis la v2 conserve la base, les secrets et les certificats.
+
+### Notes de mise à jour
+- Depuis la v2 : `docs/INSTALLATION.md`, étape 12.4 (ajouter `APP_VERSION` dans `.env`, images publiées au lieu d'une construction sur le serveur, retrait du service `proxy`).
 
 ### Ajouté
 - Monorepo TypeScript strict (pnpm) : API Fastify (`apps/api`), interface React + Vite + Mantine (`apps/web`), schémas zod partagés (`packages/shared`).
@@ -74,4 +95,8 @@ Nouvelle architecture. La mise à jour depuis la v2 conserve la base, les secret
 - La CSP de la nouvelle interface interdit tout script et tout style en ligne (vérifié par les tests de bout en bout).
 
 ## [2.0.0]
+
+### Notes de mise à jour
+- Première version Docker : aucune action.
+
 - Déploiement Docker (Caddy, Node 24, PostgreSQL 17) de l'outil historique : authentification avec TOTP, jeton d'installation, documents chiffrés, journal d'audit, sauvegardes.

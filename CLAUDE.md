@@ -10,8 +10,8 @@ Refonte en cours : la nouvelle application (v3) reprend module par module l'outi
   - `apps/web` : React, Vite, React Router, TanStack Query (invalidée par SSE) et Mantine.
   - `tests/e2e` : Playwright sur la pile Docker.
 - `apps/api/migrations/NNN_*.sql` : appliquées au démarrage (table `schema_migrations`, partagée avec la v2). **Ne jamais modifier une migration publiée** : en ajouter une nouvelle (`001_init.sql` = schéma v2, vérifié par empreinte).
-- `docker-compose.yml` (production, images GHCR `${APP_VERSION}`) : `init` (secrets, droits des volumes, sans réseau) → `db` (PostgreSQL 17) → `app` (API, uid 1000) → `web` (Caddy uid 1001, seul service exposé, sert l'interface). Réseaux `edge` et `backend` internes. `docker-compose.build.yml` construit les images en local ; `docker-compose.dev.yml` sert au développement.
-- `app/public/index.html` : outil historique (fichier unique, ~3 Mo, schéma 15). Il est servi sous `/legacy` avec `apps/api/legacy-shim/shim.js`, qui remplace `window.claude`. Ne pas le réécrire ; toute modification fait l'objet d'un commit séparé (mise à jour via `scripts/update-ui.sh`).
+- `docker-compose.yml` (production, images GHCR `${APP_VERSION}`) : `init` (contrôle de `DATA_DIR`, secrets, droits des dossiers, sans réseau) → `db` (PostgreSQL 17) → `app` (API, uid 1000) → `web` (Caddy uid 1001, seul service exposé, sert l'interface). Réseaux `edge` et `backend` internes. **Toutes les données dans `DATA_DIR`** (montages bind, aucun volume nommé, ADR 0014) ; mises à jour par `scripts/mettre-a-jour.sh` (sauvegarde, signature, retour arrière), suivi dans Administration > Système. `docker-compose.build.yml` construit les images en local ; `docker-compose.dev.yml` sert au développement.
+- `app/public/index.html` : outil historique (fichier unique, ~3 Mo, schéma 15). Il est servi sous `/legacy` avec `apps/api/legacy-shim/shim.js`, qui remplace `window.claude`. Ne pas le réécrire ; toute modification fait l'objet d'un commit séparé (mise à jour via `scripts/update-ui.sh`, sur un poste de développement uniquement : il arrive sur le serveur avec une version publiée, EXPL-06).
 - `apps/api/seed/state.json` et le bloc `<script id="seed">` de `index.html` : état **vide** (référentiels seulement, `schema` 14).
 - Charte graphique : `packages/ui` (jetons, thème clair et sombre, composants `Page`, `PageHeader`, `DataTable`, `FormSection`, `StatusChip`…), ADR 0011. **Aucune couleur ni aucun espacement codé en dur** dans `apps/web` (vérifié par `apps/web/test/charte.test.ts`). Contrastes WCAG AA vérifiés par `packages/ui/test/contraste.test.ts`.
 - Tous les écrans (ADR 0012) : grilles `grille-cartes`, `maitre-detail`, `grille-formulaire`, colonnes par priorité (`col-p2`, `col-p3`) et `useColonnes` ; préférences d'affichage par personne côté serveur. Écran mural `/mur` : accès `mur` (session ou appareil activé), lecture seule.
@@ -24,7 +24,7 @@ Refonte en cours : la nouvelle application (v3) reprend module par module l'outi
 - Pas de nouvelle dépendance sans justification dans une ADR (`docs/adr/0009-dependances-et-versions.md`).
 - **Toute PR qui touche l'installation, la configuration, la mise à jour ou l'exploitation met à jour `docs/INSTALLATION.md` dans la même PR.** Le guide est rejoué par le job CI « guide » : chaque bloc ```` ```bash ```` porte un marqueur `<!-- ci: run | skip — raison | instead: commande -->` (voir `scripts/ci/guide-extraire.mjs`).
 - Exigences fonctionnelles : `docs/BACKLOG-FONCTIONNEL.md`. Citer leur identifiant (`CRRC-01`, `INV-02`, `INC-03`…) dans chaque commit et chaque PR qui les traite.
-- Conventional Commits en français ; CHANGELOG tenu à jour ; versionnage sémantique (étiquette `vX.Y.Z` = publication GHCR).
+- Conventional Commits en français ; CHANGELOG tenu à jour, avec un paragraphe « Notes de mise à jour » dans chaque section (vérifié par la CI) ; versionnage sémantique (étiquette `vX.Y.Z` = publication GHCR) ; changement destructif de la base en deux versions (étendre puis réduire, ADR 0014).
 - Travailler sur une branche et ouvrir une pull request ; ne jamais pousser ni fusionner directement sur `main`.
 
 ## Commandes
@@ -38,12 +38,13 @@ pnpm dev                                            # docker-compose.dev.yml : h
 
 # Pile complète construite localement + tests de bout en bout
 cp .env.example .env && sed -i 's/^SITE_ADDRESS=.*/SITE_ADDRESS=localhost/; s/^APP_VERSION=.*/APP_VERSION=local/' .env
+sudo ./scripts/preparer-donnees.sh                  # dossier des données (DATA_DIR), une fois
 docker compose -f docker-compose.yml -f docker-compose.build.yml build && docker compose up -d
 docker compose exec app setup-token                 # jeton d'installation → https://localhost/setup
 ./tests/e2e/run-in-container.sh                     # Playwright dans le conteneur officiel (captures de référence)
 ./tests/e2e/run-in-container.sh --update-snapshots  # après une évolution visuelle voulue : relire les captures
 docker compose exec app suivi users                 # commandes d'exploitation : suivi help
-docker compose down -v                              # remise à zéro complète (supprime les volumes)
+docker compose down && sudo rm -rf /srv/suivi-audits/donnees   # remise à zéro complète (down -v ne touche plus aux données)
 node scripts/ci/guide-extraire.mjs docs/INSTALLATION.md nom_dns=localhost version=ci   # script du job « guide »
 ```
 

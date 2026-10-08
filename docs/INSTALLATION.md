@@ -39,7 +39,8 @@ Cochez chaque ligne avant de passer à l'étape 1. Les demandes aux autres équi
 | ☐ | Élément | Détail |
 |---|---|---|
 | ☐ | **Un serveur Linux** (machine virtuelle) | **Debian 12** ou **Ubuntu 24.04 LTS**, installation minimale, en 64 bits (x86_64). Demandez à l'équipe infrastructure « une VM Linux pour une application Docker ». |
-| ☐ | **Dimensionnement** | 2 processeurs, 4 Go de mémoire, 30 Go de disque, plus la place des sauvegardes (prévoir 10 Go). Avec l'antivirus facultatif (ClamAV) : 8 Go de mémoire. |
+| ☐ | **Dimensionnement** | 2 processeurs, 4 Go de mémoire, 30 Go de disque, plus la place des sauvegardes (prévoir 10 Go). Avec l'antivirus facultatif (ClamAV) : 8 Go de mémoire. Une mise à jour demande, en espace libre, deux fois la taille de la base plus 2 Go. |
+| ☐ | **Un emplacement pour les données** | Un dossier du serveur, par défaut `/srv/suivi-audits/donnees`, sur un disque **inclus dans la sauvegarde externalisée** du serveur, comme `/srv/sauvegardes`. Demandez à l'équipe infrastructure de sauvegarder ces deux dossiers. |
 | ☐ | **Un compte sur ce serveur** avec droits d'administration (`sudo`) | L'équipe infrastructure vous fournit l'adresse IP, l'identifiant et le mot de passe. |
 | ☐ | **Un nom DNS** pointant vers le serveur | Par exemple `suivi-audits.mondomaine.local`. Demandez à l'équipe réseau « un enregistrement DNS de type A vers l'IP du serveur ». |
 | ☐ | **Ports entrants ouverts** des postes utilisateurs vers le serveur | TCP **443** (HTTPS) et TCP **80** (redirection vers HTTPS). Pour l'administration : TCP **22** (SSH), depuis votre poste uniquement. |
@@ -56,11 +57,13 @@ Cochez chaque ligne avant de passer à l'étape 1. Les demandes aux autres équi
 | `download.docker.com` | TCP 443 | Installation de Docker |
 | `github.com` | TCP 22 | Téléchargement de l'application (clé de déploiement SSH) |
 | `ghcr.io`, `pkg-containers.githubusercontent.com` | TCP 443 | Images de l'application |
+| `github.com`, `objects.githubusercontent.com` | TCP 443 | Installation de cosign (étape 3.6) |
+| `tuf-repo-cdn.sigstore.dev`, `rekor.sigstore.dev` | TCP 443 | Vérification de la signature des images à chaque mise à jour (étape 12.1) |
 | `registry-1.docker.io`, `auth.docker.io`, `production.cloudflare.docker.com` | TCP 443 | Image de la base de données (PostgreSQL) |
 | Serveur de temps (NTP) de votre organisation, ou `ntp.ubuntu.com` / `deb.pool.ntp.org` | UDP 123 | Mise à l'heure (indispensable à la double authentification) |
 | `database.clamav.net` | TCP 443 | Facultatif : signatures de l'antivirus |
 
-Une fois démarrée, l'application elle-même n'a **aucun accès à Internet** : seul le système et Docker en ont besoin, pour l'installation et les mises à jour.
+Une fois démarrée, l'application elle-même n'a **aucun accès à Internet** : seuls le système, Docker et les scripts du serveur en ont besoin, pour l'installation et les mises à jour.
 
 ---
 
@@ -201,6 +204,20 @@ sudo docker run --rm hello-world
 ```
 **Résultat attendu** : le texte contient `Hello from Docker!`. Docker fonctionne et sait télécharger des images.
 
+**3.6 Installer cosign**, l'outil qui vérifie, à chaque mise à jour, que les images viennent bien de la chaîne de publication du dépôt (signature) et n'ont pas été modifiées. La commande télécharge cosign et contrôle son empreinte avant de l'installer :
+
+<!-- ci: run -->
+```bash
+cd /tmp && curl -fsSLO https://github.com/sigstore/cosign/releases/download/v2.4.1/cosign-linux-amd64 && curl -fsSL https://github.com/sigstore/cosign/releases/download/v2.4.1/cosign_checksums.txt | grep ' cosign-linux-amd64$' | sha256sum -c && sudo install -m 0755 cosign-linux-amd64 /usr/local/bin/cosign && rm cosign-linux-amd64 && cd -
+```
+**Résultat attendu** : `cosign-linux-amd64: OK`, puis le nom du dossier précédent.
+
+<!-- ci: run -->
+```bash
+cosign version | grep GitVersion
+```
+**Résultat attendu** : `GitVersion:    v2.4.1`.
+
 ---
 
 ## 4. Autoriser le serveur à lire le dépôt et les images
@@ -325,8 +342,8 @@ nano se pilote **uniquement au clavier** (la souris ne déplace pas le curseur) 
 1. Avec les **flèches**, placez le curseur à la fin de la ligne `SITE_ADDRESS=suivi-audits.example.local`.
 2. Effacez `suivi-audits.example.local` avec la touche **Retour arrière** (⌫), puis tapez votre nom DNS. La ligne devient par exemple `SITE_ADDRESS=suivi-audits.mondomaine.local`.
 3. Descendez à la ligne `APP_VERSION=` et remplacez le numéro par la version choisie à l'étape 5.3, sans le « v ».
-4. Laissez `CADDY_TLS=internal` pour l'instant (voir 6.4), ainsi que toutes les autres lignes.
-5. Enregistrez : **Ctrl + O**, puis **Entrée**. En bas s'affiche `[ Wrote 47 lines ]` (le nombre peut varier).
+4. Laissez `CADDY_TLS=internal` pour l'instant (voir 6.4), ainsi que toutes les autres lignes. Laissez aussi `DATA_DIR=/srv/suivi-audits/donnees`, sauf si l'équipe infrastructure a prévu un autre disque pour les données (étape 6.6).
+5. Enregistrez : **Ctrl + O**, puis **Entrée**. En bas s'affiche `[ Wrote 53 lines ]` (le nombre peut varier).
 6. Quittez : **Ctrl + X**.
 
 **6.3 Protéger le fichier**, puis vérifier les deux valeurs :
@@ -367,6 +384,28 @@ Pour utiliser le certificat de votre PKI :
 getent hosts <nom_dns>
 ```
 **Résultat attendu** : une ligne avec l'adresse IP du serveur, puis le nom. Si rien ne s'affiche, l'enregistrement DNS n'existe pas encore : relancez l'équipe réseau avant de continuer.
+
+**6.6 Le dossier des données.** Toutes les données de l'application sont rangées dans **un seul dossier du serveur**, indiqué par la ligne `DATA_DIR` de `.env` (par défaut `/srv/suivi-audits/donnees`). Rien n'est gardé dans les conteneurs : on peut les supprimer, les recréer ou changer de version sans rien perdre. Ce dossier contient :
+
+| Sous-dossier | Contenu | Accès |
+|---|---|---|
+| `postgres/` | la base de données : suivi, comptes, documents chiffrés, journal d'audit | base de données seule |
+| `secrets/` | mots de passe internes et **clé de chiffrement des documents**, créés au premier démarrage | lecture par la base et l'application |
+| `caddy/` | certificats HTTPS et autorité de certification interne | frontal web seul |
+| `clamav/` | signatures de l'antivirus (facultatif) | antivirus seul |
+| `etat/` | rapports des sauvegardes et des mises à jour, affichés dans **Administration**, onglet **Système** | lecture seule pour l'application |
+
+Le service `init` crée ces sous-dossiers avec les bons propriétaires et droits à chaque démarrage. Il **refuse de démarrer** si le dossier n'a pas été préparé, s'il est dans le dossier de l'application (`/opt/suivi-audits`), dans un dossier système (`/var/lib/docker`, `/tmp`…) ou sur un disque temporaire.
+
+> ⚠️ Ce dossier contient la clé de chiffrement des documents : ne le copiez pas hors du serveur sans la protection des sauvegardes (étape 11), et faites-le inclure dans la sauvegarde externalisée du serveur.
+
+**6.7 Préparer le dossier des données** (une seule fois) :
+
+<!-- ci: run -->
+```bash
+sudo ./scripts/preparer-donnees.sh
+```
+**Résultat attendu** : `Dossier des données prêt : /srv/suivi-audits/donnees`. Le message `des données existent déjà dans des volumes Docker` signifie que l'application a déjà été installée sur ce serveur : suivez plutôt l'étape 12.5.
 
 ---
 
@@ -411,7 +450,7 @@ sudo docker compose ps -a
 
 | Service (colonne `SERVICE`) | Rôle | État attendu (colonne `STATUS`) |
 |---|---|---|
-| `init` | génère les mots de passe internes au premier démarrage, puis s'arrête | `Exited (0)` : terminé normalement, c'est voulu |
+| `init` | contrôle et prépare le dossier des données, génère les mots de passe internes au premier démarrage, puis s'arrête | `Exited (0)` : terminé normalement, c'est voulu |
 | `db` | base de données PostgreSQL | `Up … (healthy)` |
 | `app` | application (API) | `Up … (healthy)` |
 | `web` | accès web sécurisé (HTTPS) et interface | `Up …` |
@@ -542,7 +581,7 @@ Une personne connectée (même avec le seul rôle **Lecteur**) peut aussi ouvrir
 
 Sautez cette étape si vous démarrez sans historique.
 
-> **Vous mettez à jour un serveur v2 existant ?** N'importez rien : les données sont reprises automatiquement à la mise à jour (étape 12.3).
+> **Vous mettez à jour un serveur v2 existant ?** N'importez rien : les données sont reprises automatiquement à la mise à jour (étape 12.4).
 
 **10.1 Exporter depuis l'ancien outil** (le fichier HTML utilisé jusqu'ici), sur votre poste :
 1. Ouvrez-le dans le navigateur, comme d'habitude.
@@ -573,7 +612,7 @@ Sautez cette étape si vous démarrez sans historique.
 
 ## 11. Mettre en place les sauvegardes
 
-Une sauvegarde contient la base (suivi, comptes, documents chiffrés, journal) **et** les secrets (clé de chiffrement des documents). Elle est elle-même chiffrée par une phrase secrète.
+Une sauvegarde contient la base (suivi, comptes, documents chiffrés, journal), les secrets (clé de chiffrement des documents) **et** l'autorité de certification interne, lus dans le dossier des données. Elle est elle-même chiffrée par une phrase secrète. Chaque sauvegarde laisse un rapport dans `/srv/suivi-audits/donnees/etat/` : **Administration**, onglet **Système**, affiche la date de la dernière sauvegarde réussie et une **alerte au-delà de 48 h**.
 
 > ⚠️ Sans la phrase secrète, les sauvegardes sont **illisibles**, définitivement. Sans les sauvegardes, une panne du serveur fait **tout perdre**.
 
@@ -611,15 +650,17 @@ sudo ls -lh /srv/sauvegardes/suivi-audits
 ```
 **Résultat attendu** : deux fichiers, `suivi-audits-….tar.enc` (la sauvegarde) et `suivi-audits-….tar.enc.sha256` (son empreinte, qui permet de détecter une altération).
 
-**11.3 Planifier une sauvegarde chaque nuit à 2 h 15** (conservation : 90 jours) :
+**11.3 Planifier une sauvegarde chaque nuit à 2 h 15** (conservation : 90 jours), et la recherche d'une nouvelle version chaque matin à 6 h 40 :
 
 <!-- ci: run -->
 ```bash
-echo '15 2 * * * root cd /opt/suivi-audits && BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass ./scripts/backup.sh /srv/sauvegardes/suivi-audits >> /var/log/suivi-backup.log 2>&1' | sudo tee /etc/cron.d/suivi-audits
+printf '%s\n' '15 2 * * * root cd /opt/suivi-audits && BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass ./scripts/backup.sh /srv/sauvegardes/suivi-audits >> /var/log/suivi-backup.log 2>&1' '40 6 * * * root cd /opt/suivi-audits && ./scripts/verifier-version.sh >> /var/log/suivi-version.log 2>&1' | sudo tee /etc/cron.d/suivi-audits
 ```
-**Résultat attendu** : la ligne s'affiche à nouveau. Le lendemain, `sudo tail /var/log/suivi-backup.log` doit montrer `Sauvegarde : …`.
+**Résultat attendu** : les deux lignes s'affichent à nouveau. Le lendemain, `sudo tail /var/log/suivi-backup.log` doit montrer `Sauvegarde : …`, et `sudo tail /var/log/suivi-version.log` la dernière version publiée.
 
-Demandez à l'équipe infrastructure d'**inclure le dossier `/srv/sauvegardes/suivi-audits` dans la sauvegarde externalisée** du serveur : une sauvegarde restée sur le serveur disparaît avec lui.
+La recherche de version ne fait qu'**informer** : quand une nouvelle version est publiée, un bandeau l'annonce aux administrateurs dans l'application. Rien n'est installé automatiquement (étape 12.1).
+
+Demandez à l'équipe infrastructure d'**inclure les dossiers `/srv/suivi-audits/donnees` et `/srv/sauvegardes/suivi-audits` dans la sauvegarde externalisée** du serveur : une sauvegarde restée sur le serveur disparaît avec lui.
 
 **11.4 Tester la restauration — obligatoire.** Une sauvegarde qui n'a jamais été restaurée n'est pas une sauvegarde. Faites ce test **maintenant**, avant d'ouvrir l'application aux utilisateurs, puis une fois par an sur un serveur de test.
 
@@ -636,6 +677,7 @@ Le script vérifie l'empreinte (`… .tar.enc: OK`), affiche la date de la sauve
 
 <!-- ci: exec: "$GITHUB_WORKSPACE/scripts/ci/guide-attendre.sh" -->
 <!-- ci: exec: NODE_EXTRA_CA_CERTS=/opt/suivi-audits/racine-suivi-audits.crt node "$GITHUB_WORKSPACE/scripts/ci/guide-api.mjs" verifier https://<nom_dns> -->
+<!-- ci: exec: NODE_EXTRA_CA_CERTS=/opt/suivi-audits/racine-suivi-audits.crt node "$GITHUB_WORKSPACE/scripts/ci/guide-api.mjs" systeme https://<nom_dns> -->
 
 ---
 
@@ -643,64 +685,65 @@ Le script vérifie l'empreinte (`… .tar.enc: OK`), affiche la date de la sauve
 
 ### 12.1 Mettre à jour l'application
 
-À faire quand une nouvelle version est annoncée (page **Releases** du dépôt), de préférence en dehors des heures d'utilisation. Lisez d'abord ses notes de version (`CHANGELOG.md`).
+À faire quand une nouvelle version est annoncée (bandeau « Nouvelle version disponible » dans l'application, ou page **Releases** du dépôt), de préférence en dehors des heures d'utilisation. Tout est fait par **un seul script**, `scripts/mettre-a-jour.sh`, qui :
+1. contrôle le serveur (droits, Docker, `.env`, dossier des données, espace disque) ;
+2. affiche la version en service, la version cible et ses **notes de mise à jour** (actions particulières, évolutions de la base, durée estimée), puis demande confirmation ;
+3. refuse de revenir à une version plus ancienne ;
+4. fait une **sauvegarde chiffrée** (obligatoire) dans `/srv/sauvegardes/suivi-audits/avant-mise-a-jour/` et contrôle son empreinte ; les 5 dernières sont gardées ;
+5. passe le dépôt à la nouvelle version, télécharge les images et **vérifie leur signature** (cosign, étape 3.6) ;
+6. redémarre l'application ; les évolutions de la base s'appliquent au démarrage, une par une ;
+7. attend que l'application soit en bon état, relit chaque document chiffré, puis écrit un rapport (onglet **Système** de l'administration, et journal d'audit) ;
+8. **en cas d'échec**, revient tout seul à la version précédente ; si la base avait déjà évolué, il restaure la sauvegarde du point 4 (après votre accord).
 
-1. Faites une sauvegarde, comme à l'étape 11.2 :
-
-<!-- ci: run -->
-```bash
-sudo BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass ./scripts/backup.sh /srv/sauvegardes/suivi-audits
-```
-**Résultat attendu** : `Sauvegarde : …`.
-
-2. Récupérez la nouvelle version du dépôt :
+**1. Récupérer la liste des versions publiées :**
 
 <!-- ci: skip — le runner n'a pas de clé de déploiement -->
 ```bash
 sudo git fetch --tags
 ```
-**Résultat attendu** : la liste des nouvelles versions, par exemple `* [new tag] v3.1.0 -> v3.1.0` (ou aucun message).
+**Résultat attendu** : les nouvelles versions, par exemple `* [new tag] v3.1.0 -> v3.1.0` (ou aucun message).
 
-<!-- ci: skip — la CI installe le commit testé -->
+**2. Simuler la mise à jour.** Rien n'est modifié : le script affiche ce qu'il ferait.
+
+<!-- ci: instead: "$GITHUB_WORKSPACE/scripts/ci/guide-mise-a-jour.sh" verifier -->
 ```bash
-sudo git checkout v<version>
+sudo ./scripts/mettre-a-jour.sh --verifier
 ```
-**Résultat attendu** : `HEAD is now at …`.
+**Résultat attendu** : `Version en service`, `Version cible`, les notes de mise à jour, les évolutions de la base prévues, puis `Simulation terminée : rien n'a été modifié.` Lisez les notes : si elles demandent une action particulière, faites-la avant le point 3.
 
-3. Indiquez la nouvelle version dans `.env` : `sudo nano .env`, ligne `APP_VERSION=` (sans le « v »), puis **Ctrl + O**, **Entrée**, **Ctrl + X**.
+**3. Mettre à jour.** Le script demande de taper `OUI` pour confirmer :
 
-4. Téléchargez les nouvelles images, puis redémarrez :
-
-<!-- ci: skip — images construites par la CI à l'étape 7 -->
+<!-- ci: instead: "$GITHUB_WORKSPACE/scripts/ci/guide-mise-a-jour.sh" appliquer -->
 ```bash
-sudo docker compose pull
+sudo ./scripts/mettre-a-jour.sh
 ```
-**Résultat attendu** : `Pulled` pour chaque composant.
+**Résultat attendu** au bout de quelques minutes : `Mise à jour terminée : <ancienne> → <nouvelle>`, puis le chemin du rapport et celui de la sauvegarde faite avant la mise à jour. Pour une version précise plutôt que la dernière : `sudo ./scripts/mettre-a-jour.sh 3.2.0`.
 
-<!-- ci: run -->
-```bash
-sudo docker compose up -d --remove-orphans
-```
-**Résultat attendu** : `Started` ou `Running` pour chaque composant. Les évolutions de la base s'appliquent toutes seules au démarrage de `app`.
+Si la mise à jour échoue, le script affiche `ERREUR : mise à jour vers … en échec`, puis `Retour arrière terminé : la version … est en service.` Rien n'est perdu ; transmettez le rapport indiqué à l'équipe projet. S'il demande de restaurer la sauvegarde, répondez `OUI` : sans cela, l'ancienne version risque de ne pas démarrer sur une base déjà modifiée.
+
+**4. Vérifier l'état :**
 
 <!-- ci: run -->
 <!-- ci: then: "$GITHUB_WORKSPACE/scripts/ci/guide-attendre.sh" -->
 ```bash
 sudo docker compose ps -a
 ```
-**Résultat attendu** : les mêmes états qu'à l'étape 7.3.
+**Résultat attendu** : les mêmes états qu'à l'étape 7.3. Dans l'application, **Administration**, onglet **Système** : la nouvelle version, et la mise à jour dans l'historique avec le résultat « Réussie ».
 
-5. Faites le ménage des anciennes images (place disque) :
+> **Première mise à jour avec le script.** Si la version en service ne contient pas encore `scripts/mettre-a-jour.sh` (message `No such file or directory`), lancez-le directement depuis la nouvelle version, en remplaçant `<version>` par son numéro (sans le « v ») :
+> ```text
+> sudo git fetch --tags && sudo git show v<version>:scripts/mettre-a-jour.sh | sudo bash -s -- <version>
+> ```
+> Si la version en service gardait ses données dans des volumes Docker, le script les copie au passage dans le dossier des données (étape 12.5).
 
-<!-- ci: run -->
-```bash
-sudo docker image prune -f
-```
-**Résultat attendu** : `Total reclaimed space: …`.
+### 12.2 Revenir à une version précédente
 
-> Si la nouvelle version ne fonctionne pas : remettez l'ancien numéro dans `APP_VERSION`, revenez à l'ancienne version du dépôt (`sudo git checkout v<ancienne_version>`), puis `sudo docker compose up -d`. Si la base a déjà été migrée, restaurez la sauvegarde faite au point 1 (étape 11.4).
+Le script revient en arrière tout seul en cas d'échec. Pour revenir plus tard à une version précédente (problème découvert après coup), il faut **restaurer la sauvegarde faite avant la mise à jour** : les évolutions de la base ne s'annulent pas. Les données saisies depuis la mise à jour seront perdues : exportez-les ou notez-les avant.
+1. Repérez la sauvegarde : `sudo ls -1t /srv/sauvegardes/suivi-audits/avant-mise-a-jour/` (son nom contient les deux versions).
+2. Revenez à l'ancienne version du dépôt : `sudo git checkout v<ancienne_version>`, puis remettez son numéro dans `APP_VERSION` (`sudo nano .env`).
+3. Restaurez la sauvegarde (étape 11.4) avec ce fichier.
 
-### 12.2 Mettre à jour le système
+### 12.3 Mettre à jour le système
 
 Une fois par mois, et dès qu'une faille importante est annoncée :
 
@@ -716,12 +759,34 @@ sudo apt update && sudo apt full-upgrade -y
 ```
 **Résultat attendu** : l'un des deux messages. Si un redémarrage est nécessaire, prévenez les utilisateurs, puis lancez `sudo reboot`. L'application redémarre toute seule avec le serveur. Reconnectez-vous au bout de 2 minutes et vérifiez les états (étape 7.3).
 
-### 12.3 Passer d'un serveur v2 à cette version
+### 12.4 Passer d'un serveur v2 à cette version
 
-La v2 construisait l'application sur le serveur, avec un service `proxy`. La base, les secrets et les certificats sont **conservés** : rien n'est à réimporter.
-1. Faites une sauvegarde (étape 11.2), puis suivez l'étape 12.1 aux points 2 à 4. Au point 3, la ligne `APP_VERSION=` n'existe pas encore dans `.env` : **ajoutez-la** à la fin du fichier, par exemple `APP_VERSION=3.0.0`.
-2. L'option `--remove-orphans` du point 4 retire l'ancien service `proxy`, qui libère les ports 80 et 443.
-3. Au démarrage, le service `init` remet les certificats au nouvel utilisateur du frontal, et `app` met la base à niveau. Vérifiez ensuite que vos comptes, vos documents et vos données de suivi sont présents.
+La v2 construisait l'application sur le serveur, avec un service `proxy`, et gardait ses données dans des volumes Docker. La base, les secrets et les certificats sont **conservés** : rien n'est à réimporter.
+1. Faites une sauvegarde (étape 11.2), et installez cosign (étape 3.6).
+2. Récupérez la nouvelle version : `sudo git fetch --tags`, puis `sudo git checkout v<version>`.
+3. Dans `.env` (`sudo nano .env`), **ajoutez** à la fin les lignes `APP_VERSION=<version>` et `DATA_DIR=/srv/suivi-audits/donnees`.
+4. Téléchargez les images : `sudo docker compose pull`.
+5. Copiez les données des volumes Docker dans le dossier des données, puis démarrez : `sudo ./scripts/migrer-donnees-vers-dossier.sh` (étape 12.5). Au démarrage, `app` met la base à niveau, et `init` remet les certificats au nouvel utilisateur du frontal.
+6. Retirez l'ancien service `proxy`, qui libère les ports 80 et 443 : `sudo docker compose up -d --remove-orphans`.
+7. Vérifiez que vos comptes, vos documents et vos données de suivi sont présents. Les mises à jour suivantes se font par l'étape 12.1.
+
+### 12.5 Passer des volumes Docker au dossier du serveur
+
+Les premières installations gardaient les données dans des **volumes Docker** (dans `/var/lib/docker/volumes`), effacés par `docker compose down -v`. Elles sont désormais dans le dossier des données (étape 6.6). La mise à jour de l'étape 12.1 fait ce passage toute seule ; le script suivant le fait aussi à la demande :
+
+<!-- ci: skip — installation neuve : aucun volume Docker à reprendre (testé par le job CI « montée de version ») -->
+```bash
+sudo ./scripts/migrer-donnees-vers-dossier.sh
+```
+**Résultat attendu** : une ligne par volume copié (`suivi-audits_pgdata → /srv/suivi-audits/donnees/postgres : … fichiers`), puis `Migration terminée`. Le script fait d'abord une sauvegarde chiffrée des volumes (dans `/srv/sauvegardes/suivi-audits`), arrête l'application, copie chaque volume en conservant propriétaires et droits, compare le nombre de fichiers, les tailles et le nombre d'enregistrements, puis redémarre l'application. Relancé, il ne refait rien.
+
+Les **anciens volumes sont conservés**. Après avoir vérifié l'application (connexion, données, téléchargement d'un document), libérez la place :
+
+<!-- ci: skip — installation neuve : aucun volume Docker à supprimer -->
+```bash
+sudo ./scripts/migrer-donnees-vers-dossier.sh --supprimer-anciens-volumes
+```
+**Résultat attendu** : la liste des volumes, la demande de confirmation (taper `OUI`), puis `supprimé : …` pour chacun.
 
 ---
 
@@ -751,7 +816,15 @@ Si vous demandez de l'aide, joignez ces deux sorties. Elles ne contiennent aucun
 | `no configuration file provided: not found` | Commande lancée hors du dossier de l'application | `cd /opt/suivi-audits`, puis relancer |
 | `Bind for 0.0.0.0:443 failed: port is already allocated` ou `address already in use` (80 ou 443) | Un autre service web (Apache, nginx, ou l'ancien service `proxy`) occupe le port | `sudo ss -ltnp \| grep -E ':(80\|443) '` pour l'identifier. Ancien `proxy` : `sudo docker compose up -d --remove-orphans`. Sinon, arrêter ce service, ou changer `HTTPS_PORT` et `HTTP_PORT` dans `.env` |
 | `required variable SITE_ADDRESS is missing a value: Renseigner SITE_ADDRESS dans .env` | `SITE_ADDRESS` vide, ou fichier `.env` absent | Étape 6 |
-| `Renseigner APP_VERSION dans .env` | Ligne `APP_VERSION=` absente (serveur v2) | Étape 12.3 |
+| `Renseigner APP_VERSION dans .env` | Ligne `APP_VERSION=` absente (serveur v2) | Étape 12.4 |
+| `init` affiche `ERREUR (dossier des données) : … n'a pas été préparé` | Dossier des données jamais préparé, ou données encore dans des volumes Docker | Nouvelle installation : étape 6.7. Serveur déjà installé : étape 12.5 |
+| `ERREUR (dossier des données) : DATA_DIR … est dans le dossier de l'application` (ou dans un dossier système, ou « non persistant ») | `DATA_DIR` mal choisi dans `.env` | Choisir un dossier dédié, par exemple `/srv/suivi-audits/donnees`, puis étape 6.7 |
+| `mettre-a-jour.sh` : `cosign est nécessaire` | cosign non installé | Étape 3.6 |
+| `mettre-a-jour.sh` : `signature de l'image … invalide ou absente` | Image modifiée, ou flux vers `rekor.sigstore.dev` bloqué | Ne pas forcer : vérifier les flux de l'étape 0, puis prévenir l'équipe projet. La version précédente reste en service |
+| `mettre-a-jour.sh` : `espace disque insuffisant` | Moins de deux fois la taille de la base, plus 2 Go, de libre | `sudo docker image prune -f`, supprimer d'anciennes sauvegardes locales (après copie externe), ou agrandir le disque |
+| `mettre-a-jour.sh` : `Retour arrière terminé` | La nouvelle version n'a pas démarré correctement : retour automatique | Rien n'est perdu. Transmettre le rapport indiqué (`/srv/suivi-audits/donnees/etat/mises-a-jour/…`) et `sudo docker compose logs app` à l'équipe projet |
+| `mettre-a-jour.sh` : `des fichiers suivis par git ont été modifiés` | Un fichier de l'application a été modifié à la main sur le serveur | `sudo git diff` pour voir lesquels ; `sudo git checkout -- <fichier>` pour les remettre en état |
+| Alerte « Sauvegarde en retard » dans l'onglet **Système** | Aucune sauvegarde réussie depuis plus de 48 h | `sudo tail -50 /var/log/suivi-backup.log`, puis étape 11.3 |
 | `unauthorized`, `denied` ou `manifest unknown` pendant `docker compose pull` | Images privées sans connexion, ou numéro de version erroné | Étape 4.5 ; vérifier `APP_VERSION` (sans « v ») sur la page Releases |
 | `timeout`, `TLS handshake timeout`, `Could not resolve host` pendant une installation ou un téléchargement | Flux sortants bloqués, ou proxy d'entreprise | Vérifier le tableau des flux de l'étape 0 avec l'équipe réseau |
 | `db` reste `unhealthy` ou redémarre | Premier démarrage encore en cours, ou disque plein | Attendre 2 minutes. `df -h /` : en dessous de 10 % d'espace libre, libérer de la place (`sudo docker image prune -f`, anciennes sauvegardes) |
@@ -783,11 +856,11 @@ Toutes ces commandes se lancent depuis `/opt/suivi-audits`.
 |---|---|---|---|
 | Arrêter temporairement | `sudo docker compose stop` | tout | rien |
 | Redémarrer après un arrêt | `sudo docker compose start` | tout | rien |
-| Arrêter et retirer les conteneurs | `sudo docker compose down` | données, secrets, certificats (volumes), configuration | les conteneurs, recréés au prochain `up -d` |
-| ⚠️ **Tout effacer** | `sudo docker compose down -v` | `.env`, sauvegardes de `/srv/sauvegardes` | **base de données, documents, comptes, secrets, certificats : définitivement** |
-| Supprimer aussi l'application | `cd / && sudo rm -rf /opt/suivi-audits /etc/cron.d/suivi-audits` | sauvegardes de `/srv/sauvegardes` | le dépôt, `.env` et la planification des sauvegardes |
+| Arrêter et retirer les conteneurs | `sudo docker compose down` (ou `down -v`) | toutes les données (dossier des données), configuration | les conteneurs, recréés au prochain `up -d` |
+| ⚠️ **Tout effacer** | `sudo docker compose down && sudo rm -rf /srv/suivi-audits/donnees` | `.env`, sauvegardes de `/srv/sauvegardes` | **base de données, documents, comptes, secrets, certificats : définitivement** |
+| Supprimer aussi l'application | `cd / && sudo rm -rf /opt/suivi-audits /etc/cron.d/suivi-audits` | sauvegardes de `/srv/sauvegardes` | le dépôt, `.env` et les tâches planifiées |
 
-> ⚠️ Avant `down -v`, faites une sauvegarde (étape 11.2) **et** vérifiez que la phrase secrète est dans votre coffre-fort. Sans les deux, rien n'est récupérable.
+> ⚠️ Avant d'effacer le dossier des données, faites une sauvegarde (étape 11.2) **et** vérifiez que la phrase secrète est dans votre coffre-fort. Sans les deux, rien n'est récupérable. Supprimer les conteneurs ou les images, ou lancer `docker compose down -v`, ne touche plus aux données.
 
 ---
 
@@ -807,7 +880,10 @@ Toutes ces commandes se lancent depuis `/opt/suivi-audits`.
 | **Image** | Le « modèle » d'une boîte : l'application prête à l'emploi, téléchargée depuis un registre |
 | **Registre (ghcr.io)** | Le site d'où l'on télécharge les images |
 | **Conteneur** | Une boîte en fonctionnement, créée à partir d'une image |
-| **Volume** | L'espace disque où Docker garde les données. Il survit aux mises à jour, pas à `down -v` |
+| **Dossier des données (`DATA_DIR`)** | Le dossier du serveur où sont rangées toutes les données de l'application (étape 6.6). Il survit à tout : mises à jour, suppression des conteneurs et des images, `down -v` |
+| **Montage (bind)** | Un dossier du serveur rendu visible à l'intérieur d'un conteneur : les données restent sur le serveur |
+| **Volume** | Ancien emplacement des données, géré par Docker et effacé par `down -v` ; repris dans le dossier des données (étape 12.5) |
+| **cosign, signature** | Vérification que les images viennent bien de la chaîne de publication du dépôt, sans modification |
 | **docker compose** | La commande qui démarre et arrête ensemble toutes les boîtes de l'application |
 | **`.env`** | Le fichier de réglages de l'application |
 | **Dépôt GitHub** | L'endroit où est rangé le code de l'application, avec son historique |
