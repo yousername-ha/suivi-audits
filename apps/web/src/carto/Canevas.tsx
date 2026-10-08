@@ -371,7 +371,9 @@ export function Canevas(p: CanevasProps) {
     if (d.kind === 'link' && !d.moved && d.ref) p.onLink(d.ref);
   };
   const dbl = (e: MouseEvent<SVGSVGElement>) => {
-    const n = (e.target as Element).closest('[data-n]');
+    // Avec la capture du pointeur, le double-clic vise le canevas : on retrouve l'objet sous le pointeur.
+    const sous = document.elementFromPoint(e.clientX, e.clientY) ?? (e.target as Element);
+    const n = sous.closest('[data-n]') ?? (e.target as Element).closest('[data-n]');
     if (n && p.linkSrc === undefined) p.onOpen(n.getAttribute('data-n')!);
   };
 
