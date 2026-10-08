@@ -547,3 +547,158 @@
     display: none;
   }
 }
+
+/* ---------------------------------------------------------------- Construire de zéro (CARTO-15 à CARTO-19)
+   Palette, menu contextuel (dans la surcouche SVG du canevas), notes et cadres libres, lasso. */
+.carte-colonne {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-sm);
+  min-width: 0;
+}
+.carte-palette {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-xs);
+  padding: var(--mantine-spacing-sm);
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-lg);
+  background: var(--suivi-surface);
+}
+.carte-palette-grille,
+.carte-actions-grille {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--mantine-spacing-2xs);
+}
+.carte-palette-liste {
+  display: grid;
+  gap: var(--mantine-spacing-2xs);
+  max-height: calc(var(--carte-hauteur) * 0.35);
+  overflow: auto;
+}
+.carte-palette-item {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-2xs);
+  min-width: 0;
+  padding: var(--mantine-spacing-2xs) var(--mantine-spacing-xs);
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  background: var(--carte-boite);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.carte-palette-item:hover,
+.carte-palette-item.actif {
+  border-color: var(--carte-bleu-accent);
+}
+.carte-palette-item.actif {
+  background: var(--carte-bleu-doux);
+}
+.carte-palette-item:focus-visible {
+  outline: calc(2 * var(--suivi-trait-l)) solid var(--carte-bleu-accent);
+}
+.carte-palette-ic {
+  width: calc(var(--carte-icone) * 0.75);
+  height: calc(var(--carte-icone) * 0.75);
+  flex: none;
+}
+.carte-palette-libelle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.carte-armee .carte-svg {
+  cursor: copy;
+}
+.carte-surcouche {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.carte-surcouche foreignObject {
+  overflow: visible;
+}
+.carte-menu {
+  display: flex;
+  flex-direction: column;
+  padding: var(--mantine-spacing-2xs);
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  background: var(--suivi-surface);
+  box-shadow: var(--mantine-shadow-md);
+  color: var(--mantine-color-text);
+  font-family: var(--mantine-font-family);
+  font-size: var(--mantine-font-size-sm);
+  pointer-events: auto;
+}
+.carte-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-xs);
+  min-height: 2.4em;
+  padding: 0 var(--mantine-spacing-xs);
+  border: 0;
+  border-radius: var(--mantine-radius-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.carte-menu-item:hover:not(:disabled),
+.carte-menu-item:focus-visible {
+  background: var(--mantine-color-default-hover);
+  outline: none;
+}
+.carte-menu-item:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.carte-menu-item.danger {
+  color: var(--mantine-color-red-text);
+}
+.carte-menu-titre {
+  min-height: 1.85em;
+  padding: var(--mantine-spacing-2xs) var(--mantine-spacing-xs) 0;
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.carte-menu-separateur {
+  margin: var(--mantine-spacing-2xs) 0;
+  border-top: var(--suivi-trait-l) solid var(--suivi-trait);
+}
+.carte-menu-raison,
+.carte-menu-raccourci {
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-xs);
+}
+.carte-fantome {
+  opacity: 0.9;
+}
+.carte-lasso {
+  fill: var(--carte-bleu-doux);
+  fill-opacity: 0.35;
+  stroke: var(--carte-bleu-accent);
+  stroke-dasharray: 6 4;
+}
+.c-note,
+.c-note-coin {
+  stroke: var(--c-trait);
+  stroke-width: 1.2;
+}
+.c-cadre-libre {
+  fill-opacity: 0.45;
+  stroke-width: 1.6;
+  stroke-dasharray: 10 6;
+}

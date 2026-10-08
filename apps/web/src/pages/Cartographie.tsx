@@ -1,5 +1,6 @@
-/* Cartographie du SMSI (CARTO-01 à CARTO-14, ADR 0013) : vue contexte et vue processus, générées à partir des
-   données de la plateforme puis ajustées à la main. La carte ne garde que la présentation ; les objets sont relus à
+/* Cartographie du SMSI (CARTO-01 à CARTO-19, ADR 0013 et 0016) : vue contexte et vue processus, générées à partir
+   des données de la plateforme ou construites de zéro (palette, clic droit), puis ajustées à la main. La carte ne
+   garde que la présentation ; un objet créé depuis la carte est enregistré dans son module. Les objets sont relus à
    chaque affichage et à chaque changement (temps réel). Lecture seule réelle sans cartographie:modifier. */
 import {
   Alert,
@@ -18,7 +19,11 @@ import {
 } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
+import { MODULE_LABELS } from '@suivi/shared';
 import {
+  ADD_TYPES,
+  CREATABLE,
+  CREATABLE_TYPES,
   GENERATE_CONFIRM,
   GENERATE_MAX,
   MAP_VIEW_LABELS,
@@ -26,18 +31,25 @@ import {
   REFERENTIELS,
   UNDO_LEVELS,
   addEdge,
+  addFree,
   addObjects,
+  alignNodes,
   blankLayout,
+  canRename,
   cartoContext,
   computeScene,
   defaultGenerateOptions,
   deleteEdge,
+  distributeNodes,
   dropMissing,
   emptyLayout,
+  frameAround,
   generateLayout,
   hideRelation,
   ignoreObjects,
+  isFreeRef,
   moveGroup,
+  placeNodeAt,
   pruneEdges,
   refModule,
   refreshLabels,
@@ -46,10 +58,14 @@ import {
   resetSize,
   selectForGeneration,
   setEdgeType,
+  setFree,
   syncInfo,
   validateEdge,
   withDependencies,
+  withFree,
   type CartoObject,
+  type CreateObjectInput,
+  type CreateObjectOut,
   type GenerateOptions,
   type MapLayout,
   type MapOut,
@@ -58,13 +74,35 @@ import {
   type ObjectsOut,
   type Referentiel,
   type RelationType,
+  type Tint,
 } from '@suivi/shared/carto';
 import { ConfirmDialog, ErrorAlert, IconeCarte, Page, PageHeader } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { useBlocker, useNavigate, useParams } from 'react-router';
 import { api, ApiError, errorMessage, get } from '../api';
-import { Canevas, fitViewport, type Selection, type Viewport } from '../carto/Canevas';
+import {
+  Canevas,
+  fitViewport,
+  type CanevasApi,
+  type DemandeMenu,
+  type Point,
+  type Selection,
+  type Viewport,
+} from '../carto/Canevas';
+import {
+  ALIGNEMENTS,
+  Creation,
+  Fantome,
+  MenuContextuel,
+  Palette,
+  Renommer,
+  SelectionMultiple,
+  libelleElement,
+  type DemandeCreation,
+  type ElementPalette,
+  type EntreeMenu,
+} from '../carto/Construire';
 import { Ajout, Assistant, Conflit, NouvelleRelation, Versions } from '../carto/Dialogues';
 import { exporter, type FormatExport } from '../carto/exports';
 import { Inspecteur } from '../carto/Inspecteur';
@@ -121,6 +159,8 @@ export function CartographiePage() {
   const [travaux, setTravaux] = useState<Record<MapView, Travail>>({ context: VIDE, process: VIDE });
   const w = travaux[view];
   const layout = w.layout;
+  /** Objets de la plateforme, cadres de la carte, notes et cadres libres (texte et teinte de la carte). */
+  const lookup = useMemo(() => withFree(ctx.lookup, layout?.free), [ctx, layout?.free]);
   useEffect(() => {
     if (!cartesQ.data) return;
     setTravaux((t) => {
@@ -176,10 +216,8 @@ export function CartographiePage() {
 
   const scene = useMemo(
     () =>
-      layout
-        ? computeScene(layout, view, ctx.lookup, ctx.relations, { std, preset: presets[view], q, sec, gen })
-        : null,
-    [layout, view, ctx, std, presets, q, sec, gen],
+      layout ? computeScene(layout, view, lookup, ctx.relations, { std, preset: presets[view], q, sec, gen }) : null,
+    [layout, view, ctx, lookup, std, presets, q, sec, gen],
   );
   const sync = useMemo(() => {
     const s = syncInfo(layout, objs, view);
@@ -252,7 +290,7 @@ export function CartographiePage() {
     majPrefs({ vue: v });
   };
   const nom = (r: string) => {
-    const o = ctx.lookup(r);
+    const o = lookup(r);
     return o ? o.name : layout?.nodes[r]?.label || r;
   };
   const centrer = (ref: string) => {
@@ -362,7 +400,7 @@ export function CartographiePage() {
   const exporterCarte = async (f: FormatExport) => {
     if (!layout) return;
     try {
-      const sc = computeScene(layout, view, ctx.lookup, ctx.relations, {
+      const sc = computeScene(layout, view, lookup, ctx.relations, {
         std,
         preset: 'all',
         q: '',
@@ -374,7 +412,7 @@ export function CartographiePage() {
         view,
         layout,
         scene: sc,
-        lookup: ctx.lookup,
+        lookup: lookup,
         organisation: objetsQ.data?.organisation ?? '',
         std,
       });
@@ -393,6 +431,326 @@ export function CartographiePage() {
     }
   };
 
+  /* ---------------------------------------------------------------- Construire de zéro (CARTO-15 à CARTO-19) */
+  const canevasApi = useRef<CanevasApi | null>(null);
+  const [menu, setMenu] = useState<DemandeMenu | null>(null);
+  const [creation, setCreation] = useState<DemandeCreation | null>(null);
+  const [renommage, setRenommage] = useState<{ ref: string; name: string; module: string } | null>(null);
+  const [arme, setArme] = useState<ElementPalette | null>(null);
+  const [glisse, setGlisse] = useState<{ e: ElementPalette; ecran: Point | null } | null>(null);
+  const [aPlacer, setAPlacer] = useState<{ ref: string; x: number; y: number; view: MapView } | null>(null);
+  const typesCreables = useMemo(
+    () =>
+      CREATABLE_TYPES.filter((t) => CREATABLE[t].views.includes(view)).map((t) => {
+        const m = CREATABLE[t].module;
+        return {
+          type: t,
+          refus:
+            m !== 'cartographie' && !can(m, 'modifier')
+              ? `Droit manquant : ${MODULE_LABELS[m]} (créer et modifier)`
+              : undefined,
+        };
+      }),
+    [view, can],
+  );
+  const nonPlaces = useMemo(() => {
+    const types = new Set<string>(ADD_TYPES[view]);
+    return [...objs.values()].filter((o) => types.has(o.type) && !layout?.nodes[o.ref]);
+  }, [objs, view, layout]);
+  const FAMILLE_BANDE: Record<string, DemandeCreation['famille']> = {
+    'lane:pil': 'Management',
+    'lane:rea': 'Réalisation',
+    'lane:sup': 'Support',
+  };
+  /** Élément choisi dans la palette ou le menu, à placer au point visé. */
+  const demander = (item: ElementPalette, monde: Point) => {
+    setArme(null);
+    setEdit(true);
+    if (item.k === 'obj') {
+      muter((l) => placeNodeAt(l ?? blankLayout(view), item.ref, view, lookup, monde.x, monde.y));
+      setSel({ k: 'n', ref: item.ref });
+      return;
+    }
+    let famille: DemandeCreation['famille'], parent: string | undefined;
+    for (const [r, n] of Object.entries(layout?.nodes ?? {})) {
+      if (monde.x < n.x || monde.y < n.y || monde.x > n.x + n.w || monde.y > n.y + n.h) continue;
+      famille = FAMILLE_BANDE[r] ?? famille;
+      const o = objs.get(r);
+      if (o?.type === 'process' && o.code) parent = o.code;
+    }
+    setCreation({ item, monde, famille, parent });
+  };
+  const creerObjet = async (body: CreateObjectInput, completer: boolean) => {
+    const d = creation;
+    if (!d) return;
+    const out = await api<CreateObjectOut>('POST', '/api/carto/objects', { body });
+    setCreation(null);
+    setAPlacer({ ref: out.ref, x: d.monde.x, y: d.monde.y, view });
+    await qc.invalidateQueries({ queryKey: ['carto', 'objects'] });
+    notifications.show({
+      color: 'teal',
+      message: `« ${out.name} » est enregistré dans la plateforme. Ctrl+Z le retire de la carte seulement ; pensez à enregistrer la carte.`,
+    });
+    if (completer) window.open('/legacy/', '_blank', 'noopener');
+  };
+  // L'objet créé est placé dès qu'il figure dans les objets relus.
+  useEffect(() => {
+    if (!aPlacer || aPlacer.view !== view || !objs.has(aPlacer.ref)) return;
+    const { ref, x, y } = aPlacer;
+    setAPlacer(null);
+    muter((l) => placeNodeAt(l ?? blankLayout(view), ref, view, lookup, x, y));
+    setSel({ k: 'n', ref });
+    // muter et lookup sont recalculés à chaque rendu : seul l'arrivée de l'objet compte.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aPlacer, objs, view]);
+  const creerLibre = (kind: 'note' | 'frame', text: string, tint: Tint) => {
+    const d = creation;
+    if (!d) return;
+    setCreation(null);
+    const id = nouvelId();
+    muter((l) => addFree(l ?? blankLayout(view), kind, id, d.monde.x, d.monde.y, text, tint));
+    setSel({ k: 'n', ref: `${kind}:${id}` });
+  };
+  const demanderRenommage = (ref: string) => {
+    const o = objs.get(ref);
+    const m = refModule(ref);
+    if (!o || !m || !canRename(ref)) return;
+    if (!can(m, 'modifier')) {
+      notifications.show({ color: 'red', message: `Droit manquant : ${MODULE_LABELS[m]} (créer et modifier).` });
+      return;
+    }
+    setRenommage({ ref, name: o.name, module: MODULE_LABELS[m] });
+  };
+  const renommer = async (ref: string, name: string) => {
+    await api('PUT', '/api/carto/objects/name', { body: { ref, name } });
+    setRenommage(null);
+    await qc.invalidateQueries({ queryKey: ['carto', 'objects'] });
+    notifications.show({ color: 'teal', message: `Renommé en « ${name} » dans la plateforme.` });
+  };
+  const copierNom = (ref: string) => {
+    const t = nom(ref);
+    void navigator.clipboard
+      ?.writeText(t)
+      .then(() => notifications.show({ message: `« ${t} » copié.` }))
+      .catch(() => notifications.show({ color: 'red', message: 'Copie impossible dans ce navigateur.' }));
+  };
+  const ajuster = () => scene && setVp(fitViewport(scene, taille.current.w, taille.current.h), true);
+  const selectionnes = sel?.k === 'm' ? sel.refs : sel?.k === 'n' ? [sel.ref] : [];
+  const retirerSelection = () => {
+    muter((l) => selectionnes.reduce((acc, r) => removeNode(acc, r), l ?? emptyLayout()));
+    setSel(null);
+    notifications.show({ message: 'Retiré de la carte (les objets restent dans la plateforme).' });
+  };
+  const grouper = () => {
+    const id = nouvelId();
+    muter((l) => frameAround(l ?? emptyLayout(), selectionnes, id, 'Groupe', 'gris'));
+    setSel({ k: 'n', ref: 'frame:' + id });
+  };
+  const confirmerDisposition = () =>
+    setConfirmation({
+      titre: 'Disposition automatique',
+      message:
+        'Recalculer la disposition ? Les positions manuelles de cette carte seront remplacées (vous pourrez annuler). Les notes et cadres libres restent en place.',
+      libelle: 'Recalculer',
+      couleur: 'blue',
+      action: () => {
+        muter((l) => relayout(l ?? emptyLayout(), ctx, view));
+        setVps((x) => ({ ...x, [view]: undefined }));
+      },
+    });
+  const entreesMenu = (d: DemandeMenu): EntreeMenu[] => {
+    const E: EntreeMenu[] = [];
+    const c = d.cible;
+    const multi = sel?.k === 'm' && c.k === 'n' && sel.refs.includes(c.ref);
+    if (multi) {
+      E.push({ titre: `${(sel as { refs: string[] }).refs.length} objets sélectionnés` });
+      if (canEdit) {
+        const avecEdition = (f: () => void) => () => {
+          setEdit(true);
+          f();
+        };
+        for (const a of ALIGNEMENTS)
+          E.push({
+            libelle: a.l,
+            action: avecEdition(() => muter((l) => alignNodes(l ?? emptyLayout(), selectionnes, a.k))),
+          });
+        E.push({ separateur: true });
+        if (selectionnes.length >= 3) {
+          E.push({
+            libelle: 'Répartir horizontalement',
+            action: avecEdition(() => muter((l) => distributeNodes(l ?? emptyLayout(), selectionnes, 'h'))),
+          });
+          E.push({
+            libelle: 'Répartir verticalement',
+            action: avecEdition(() => muter((l) => distributeNodes(l ?? emptyLayout(), selectionnes, 'v'))),
+          });
+        }
+        E.push({ libelle: 'Grouper dans un cadre', action: avecEdition(grouper) });
+        E.push({
+          libelle: 'Retirer de la carte',
+          action: avecEdition(retirerSelection),
+          danger: true,
+          raccourci: 'Suppr',
+        });
+      }
+      return E;
+    }
+    if (c.k === 'fond') {
+      if (canEdit) {
+        E.push({ titre: 'Créer ici' });
+        for (const t of typesCreables)
+          E.push({
+            libelle: CREATABLE[t.type].l,
+            refus: t.refus,
+            action: () => demander({ k: 'type', type: t.type }, d.monde),
+          });
+        E.push({ libelle: 'Note', action: () => demander({ k: 'note' }, d.monde) });
+        E.push({ libelle: 'Cadre', action: () => demander({ k: 'frame' }, d.monde) });
+        E.push({ separateur: true });
+        E.push({
+          libelle: 'Ajouter un objet existant…',
+          action: () => {
+            setEdit(true);
+            setAjout(true);
+          },
+        });
+        if (editMode) E.push({ libelle: 'Disposition automatique', action: confirmerDisposition });
+      }
+      E.push({ libelle: 'Ajuster l’affichage', action: ajuster });
+      return E;
+    }
+    if (c.k === 'e') {
+      E.push({ libelle: 'Ouvrir la fiche', action: () => setSel({ k: 'e', key: c.key }) });
+      if (canEdit && c.key.startsWith('m:')) {
+        const id = c.key.slice(2);
+        if (layout?.edges.find((x) => x.id === id)?.gen)
+          E.push({
+            libelle: 'Valider la proposition',
+            action: () => muter((l) => validateEdge(l ?? emptyLayout(), id)),
+          });
+        E.push({
+          libelle: 'Supprimer la relation',
+          danger: true,
+          action: () => {
+            muter((l) => deleteEdge(l ?? emptyLayout(), id));
+            setSel(null);
+          },
+        });
+      } else if (canEdit)
+        E.push({
+          libelle: 'Masquer sur cette carte',
+          action: () => {
+            muter((l) => hideRelation(l ?? emptyLayout(), c.key));
+            setSel(null);
+          },
+        });
+      return E;
+    }
+    const ref = c.ref;
+    E.push({ titre: nom(ref) });
+    E.push({
+      libelle: 'Ouvrir la fiche',
+      action: () => {
+        setSel({ k: 'n', ref });
+        setInfo(false);
+      },
+    });
+    if (canEdit && canRename(ref) && objs.has(ref)) {
+      const m = refModule(ref)!;
+      E.push({
+        libelle: 'Renommer…',
+        raccourci: 'F2',
+        refus: can(m, 'modifier') ? undefined : `Droit manquant : ${MODULE_LABELS[m]} (créer et modifier)`,
+        action: () => demanderRenommage(ref),
+      });
+    }
+    if (canEdit && isFreeRef(ref))
+      E.push({
+        libelle: ref.startsWith('note:') ? 'Modifier la note' : 'Modifier le cadre',
+        action: () => {
+          setEdit(true);
+          setSel({ k: 'n', ref });
+        },
+      });
+    if (canEdit)
+      E.push({
+        libelle: 'Relier à…',
+        action: () => {
+          setEdit(true);
+          setLink({ src: ref });
+        },
+      });
+    E.push({ libelle: 'Copier le nom', action: () => copierNom(ref) });
+    if (canEdit) {
+      E.push({
+        libelle: 'Taille par défaut',
+        action: () => {
+          setEdit(true);
+          muter((l) => resetSize(l ?? emptyLayout(), ref, view, lookup));
+        },
+      });
+      E.push({ separateur: true });
+      E.push({
+        libelle: 'Retirer de la carte',
+        danger: true,
+        raccourci: 'Suppr',
+        action: () => {
+          setEdit(true);
+          muter((l) => removeNode(l ?? emptyLayout(), ref));
+          setSel(null);
+        },
+      });
+    }
+    return E;
+  };
+  /** Menu au clavier (Maj+F10, touche Menu) : sur l'objet sélectionné, sinon au centre de la carte. */
+  const menuClavier = () => {
+    const api0 = canevasApi.current;
+    if (!api0 || !layout) return;
+    const cur = vps[view] ?? { x: 0, y: 0, k: 1 };
+    const n = sel?.k === 'n' ? layout.nodes[sel.ref] : sel?.k === 'm' ? layout.nodes[sel.refs[0]!] : undefined;
+    if (n && sel && sel.k !== 'e') {
+      const ref = sel.k === 'n' ? sel.ref : sel.refs[0]!;
+      const monde = { x: n.x + n.w / 2, y: n.y + n.h / 2 };
+      setMenu({ cible: { k: 'n', ref }, monde, ecran: { x: monde.x * cur.k + cur.x, y: monde.y * cur.k + cur.y } });
+    } else setMenu({ cible: { k: 'fond' }, ...api0.centre() });
+  };
+  /** Glisser depuis la palette : fantôme sur la carte, dépôt au point visé ; sans mouvement, le clic arme le placement. */
+  const saisiePalette = (
+    e: ElementPalette,
+    ev: { button: number; clientX: number; clientY: number; preventDefault: () => void },
+  ) => {
+    if (ev.button > 0) return;
+    ev.preventDefault();
+    const sx = ev.clientX,
+      sy = ev.clientY;
+    let bouge = false;
+    const fin = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', annule);
+      setGlisse(null);
+    };
+    const move = (m: globalThis.PointerEvent) => {
+      if (!bouge && Math.hypot(m.clientX - sx, m.clientY - sy) < 6) return;
+      bouge = true;
+      setGlisse({ e, ecran: canevasApi.current?.versMonde(m.clientX, m.clientY)?.ecran ?? null });
+    };
+    const up = (u: globalThis.PointerEvent) => {
+      fin();
+      if (!bouge) {
+        setArme((a) => (a && libelleElement(a) === libelleElement(e) && a.k === e.k ? null : e));
+        return;
+      }
+      const pt = canevasApi.current?.versMonde(u.clientX, u.clientY);
+      if (pt) demander(e, pt.monde);
+    };
+    const annule = () => fin();
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', annule);
+  };
+
   /* ---------------------------------------------------------------- Clavier */
   const clavier = (e: KeyboardEvent | globalThis.KeyboardEvent) => {
     const cible = (e.target as Element).closest?.('[data-n]');
@@ -402,12 +760,24 @@ export function CartographiePage() {
       setInfo(false);
       return;
     }
+    if ((e.key === 'F10' && e.shiftKey) || e.key === 'ContextMenu') {
+      e.preventDefault();
+      menuClavier();
+      return;
+    }
     if (e.key === 'Escape') {
-      if (link) setLink(undefined);
+      if (menu) setMenu(null);
+      else if (arme) setArme(null);
+      else if (link) setLink(undefined);
       else {
         setSel(null);
         setInfo(false);
       }
+      return;
+    }
+    if (e.key === 'F2' && sel?.k === 'n' && canEdit) {
+      e.preventDefault();
+      demanderRenommage(sel.ref);
       return;
     }
     if (!editMode || !layout) return;
@@ -420,7 +790,8 @@ export function CartographiePage() {
       annuler(true);
     } else if ((e.key === 'Delete' || e.key === 'Backspace') && sel) {
       e.preventDefault();
-      if (sel.k === 'n') {
+      if (sel.k === 'm') retirerSelection();
+      else if (sel.k === 'n') {
         muter((l) => removeNode(l ?? emptyLayout(), sel.ref));
         setSel(null);
       } else if (sel.key.startsWith('m:')) {
@@ -430,14 +801,16 @@ export function CartographiePage() {
         muter((l) => hideRelation(l ?? emptyLayout(), sel.key));
         setSel(null);
       }
-    } else if (sel?.k === 'n' && /^Arrow/.test(e.key)) {
+    } else if ((sel?.k === 'n' || sel?.k === 'm') && /^Arrow/.test(e.key)) {
       e.preventDefault();
-      const n = layout.nodes[sel.ref];
-      if (!n) return;
+      const grp = selectionnes
+        .filter((r) => layout.nodes[r])
+        .map((r) => [r, layout.nodes[r]!.x, layout.nodes[r]!.y] as [string, number, number]);
+      if (!grp.length) return;
       const s = e.shiftKey ? 20 : 4;
       const dx = e.key === 'ArrowLeft' ? -s : e.key === 'ArrowRight' ? s : 0,
         dy = e.key === 'ArrowUp' ? -s : e.key === 'ArrowDown' ? s : 0;
-      muter((l) => moveGroup(l ?? emptyLayout(), [[sel.ref, n.x, n.y]], dx, dy));
+      muter((l) => moveGroup(l ?? emptyLayout(), grp, dx, dy));
     }
   };
 
@@ -549,23 +922,7 @@ export function CartographiePage() {
           <Button size="xs" variant="default" disabled={!w.redo.length} onClick={() => annuler(true)} title="Ctrl+Y">
             Rétablir
           </Button>
-          <Button
-            size="xs"
-            variant="default"
-            onClick={() =>
-              setConfirmation({
-                titre: 'Disposition automatique',
-                message:
-                  'Recalculer la disposition ? Les positions manuelles de cette carte seront remplacées (vous pourrez annuler).',
-                libelle: 'Recalculer',
-                couleur: 'blue',
-                action: () => {
-                  muter((l) => relayout(l ?? emptyLayout(), ctx, view));
-                  setVps((x) => ({ ...x, [view]: undefined }));
-                },
-              })
-            }
-          >
+          <Button size="xs" variant="default" onClick={confirmerDisposition}>
             Disposition automatique
           </Button>
         </>
@@ -715,13 +1072,21 @@ export function CartographiePage() {
           {view === 'context'
             ? 'Générez une première carte à partir du périmètre, des processus, des parties intéressées, des enjeux (objectifs et SWOT), des applications et des fournisseurs déjà saisis.'
             : 'Générez la carte à partir des processus de la plateforme : bandes pilotage, réalisation et support, sous-processus regroupés dans leur parent.'}{' '}
-          Vous pourrez ensuite tout déplacer, relier et masquer.
+          Vous pourrez ensuite tout déplacer, relier et masquer. Vous pouvez aussi construire la carte de zéro : les
+          objets créés sur la carte (parties intéressées, fournisseurs, processus…) sont enregistrés dans la plateforme.
         </Text>
         {canEdit ? (
-          <Group>
-            <Button onClick={() => setAssistant(true)}>Générer la carte</Button>
-            <Button variant="default" onClick={() => muter(() => blankLayout(view))}>
-              Partir d’une carte vide
+          <Group justify="center">
+            <Button
+              onClick={() => {
+                muter(() => blankLayout(view));
+                setEdit(true);
+              }}
+            >
+              Construire la carte
+            </Button>
+            <Button variant="default" onClick={() => setAssistant(true)}>
+              Générer depuis la plateforme
             </Button>
           </Group>
         ) : (
@@ -733,43 +1098,61 @@ export function CartographiePage() {
     </Center>
   );
 
-  const inspecteur = layout && (sel || info) && (
-    <Inspecteur
-      sel={sel}
-      info={info}
-      layout={layout}
-      lookup={ctx.lookup}
-      relations={ctx.relations}
-      sync={sync}
-      inaccessible={inaccessible}
-      canEdit={canEdit}
-      edit={editMode}
-      carte={w.base}
-      onClose={() => {
-        setSel(null);
-        setInfo(false);
-      }}
-      onGoto={aller}
-      onRemove={(r) => {
-        muter((l) => removeNode(l ?? emptyLayout(), r));
-        setSel(null);
-        notifications.show({ message: 'Objet retiré de la carte (il reste dans la plateforme).' });
-      }}
-      onDefaultSize={(r) => muter((l) => resetSize(l ?? emptyLayout(), r, view, ctx.lookup))}
-      onIssueKind={nature}
-      onHide={(k) => {
-        muter((l) => hideRelation(l ?? emptyLayout(), k));
-        setSel(null);
-      }}
-      onDeleteEdge={(id) => {
-        muter((l) => deleteEdge(l ?? emptyLayout(), id));
-        setSel(null);
-      }}
-      onValidate={(id) => muter((l) => validateEdge(l ?? emptyLayout(), id))}
-      onEdgeType={(id, t) => muter((l) => setEdgeType(l ?? emptyLayout(), id, t))}
-      onVersions={() => setVersionsOuvert(true)}
-    />
-  );
+  const inspecteur =
+    layout && sel?.k === 'm' && !info ? (
+      <SelectionMultiple
+        refs={sel.refs}
+        edit={editMode}
+        nom={nom}
+        onAlign={(m) => muter((l) => alignNodes(l ?? emptyLayout(), sel.refs, m))}
+        onDistribute={(a) => muter((l) => distributeNodes(l ?? emptyLayout(), sel.refs, a))}
+        onGroup={grouper}
+        onRemove={retirerSelection}
+        onClose={() => setSel(null)}
+      />
+    ) : (
+      layout &&
+      (sel || info) && (
+        <Inspecteur
+          sel={sel?.k === 'm' ? null : sel}
+          info={info}
+          layout={layout}
+          lookup={lookup}
+          relations={ctx.relations}
+          sync={sync}
+          inaccessible={inaccessible}
+          canEdit={canEdit}
+          edit={editMode}
+          carte={w.base}
+          onClose={() => {
+            setSel(null);
+            setInfo(false);
+          }}
+          onGoto={aller}
+          onRemove={(r) => {
+            muter((l) => removeNode(l ?? emptyLayout(), r));
+            setSel(null);
+            notifications.show({ message: 'Objet retiré de la carte (il reste dans la plateforme).' });
+          }}
+          onDefaultSize={(r) => muter((l) => resetSize(l ?? emptyLayout(), r, view, lookup))}
+          onIssueKind={nature}
+          onHide={(k) => {
+            muter((l) => hideRelation(l ?? emptyLayout(), k));
+            setSel(null);
+          }}
+          onDeleteEdge={(id) => {
+            muter((l) => deleteEdge(l ?? emptyLayout(), id));
+            setSel(null);
+          }}
+          onValidate={(id) => muter((l) => validateEdge(l ?? emptyLayout(), id))}
+          onEdgeType={(id, t) => muter((l) => setEdgeType(l ?? emptyLayout(), id, t))}
+          onVersions={() => setVersionsOuvert(true)}
+          peutRenommer={(r) => canEdit && canRename(r) && objs.has(r)}
+          onRename={demanderRenommage}
+          onFree={(r, patch) => muter((l) => setFree(l ?? emptyLayout(), r, patch))}
+        />
+      )
+    );
 
   return (
     <Page>
@@ -786,28 +1169,47 @@ export function CartographiePage() {
         )}
         {vide}
         {layout && scene && (
-          <div className={`carte-grille${panneau ? '' : ' sans-panneau'}${large ? ' avec-inspecteur' : ''}`}>
-            {panneau && (
-              <Panneau
-                view={view}
-                layout={layout}
-                lookup={ctx.lookup}
-                std={std}
-                preset={presets[view]}
-                sec={sec}
-                gen={gen}
-                onStd={(s) => majPrefs({ referentiels: s })}
-                onPreset={(k) => setPresets((x) => ({ ...x, [view]: k }))}
-                onSec={(v) => majPrefs({ secondaires: v })}
-                onGen={(v) => majPrefs({ propositions: v })}
-              />
+          <div
+            className={`carte-grille${panneau || editMode ? '' : ' sans-panneau'}${large ? ' avec-inspecteur' : ''}`}
+          >
+            {(panneau || editMode) && (
+              <div className="carte-panneau carte-colonne">
+                {editMode && (
+                  <Palette
+                    view={view}
+                    types={typesCreables}
+                    nonPlaces={nonPlaces}
+                    arme={arme}
+                    onSaisie={saisiePalette}
+                    onClavier={(e) => {
+                      const c = canevasApi.current?.centre();
+                      if (c) demander(e, c.monde);
+                    }}
+                  />
+                )}
+                {panneau && (
+                  <Panneau
+                    view={view}
+                    layout={layout}
+                    lookup={lookup}
+                    std={std}
+                    preset={presets[view]}
+                    sec={sec}
+                    gen={gen}
+                    onStd={(s) => majPrefs({ referentiels: s })}
+                    onPreset={(k) => setPresets((x) => ({ ...x, [view]: k }))}
+                    onSec={(v) => majPrefs({ secondaires: v })}
+                    onGen={(v) => majPrefs({ propositions: v })}
+                  />
+                )}
+              </div>
             )}
             <div className="carte-canevas">
               <Canevas
                 layout={layout}
                 view={view}
                 scene={scene}
-                lookup={ctx.lookup}
+                lookup={lookup}
                 std={std}
                 hidden={hidden}
                 sel={sel}
@@ -832,31 +1234,60 @@ export function CartographiePage() {
                   setInfo(false);
                 }}
                 onOpen={(r) => {
-                  setSel({ k: 'n', ref: r });
-                  setInfo(false);
+                  // En édition, double-clic sur un objet renommable : renommer (CARTO-18) ; sinon, sa fiche.
+                  if (editMode && canRename(r) && objs.has(r)) demanderRenommage(r);
+                  else {
+                    setSel({ k: 'n', ref: r });
+                    setInfo(false);
+                  }
                 }}
+                onMenu={(d) => {
+                  setArme(null);
+                  if (d.cible.k === 'n' && !(sel?.k === 'm' && sel.refs.includes(d.cible.ref)))
+                    setSel({ k: 'n', ref: d.cible.ref });
+                  setMenu(d);
+                }}
+                arme={!!arme}
+                onPlace={(m) => arme && demander(arme, m)}
+                apiRef={canevasApi}
+                surcouche={(t) => (
+                  <>
+                    {glisse?.ecran && <Fantome e={glisse.e} ecran={glisse.ecran} />}
+                    {menu && (
+                      <MenuContextuel
+                        entrees={entreesMenu(menu)}
+                        ecran={menu.ecran}
+                        taille={t}
+                        titre="Actions sur la carte"
+                        onClose={() => setMenu(null)}
+                      />
+                    )}
+                  </>
+                )}
                 onLink={(r) => {
                   if (!link) return;
                   if (!link.src) setLink({ src: r });
                   else if (link.src !== r) setLiaison({ s: link.src, t: r });
                 }}
               />
-              {(link || editMode) && (
+              {(link || editMode || arme) && (
                 <div className="carte-astuce" role="status">
                   <Text size="sm">
-                    {link
-                      ? link.src
-                        ? 'Cliquez sur l’objet cible'
-                        : 'Cliquez sur l’objet source'
-                      : 'Mode édition : glisser pour déplacer, poignée pour redimensionner, Suppr pour retirer de la carte, flèches pour ajuster'}
+                    {arme
+                      ? `Cliquez sur la carte pour placer : ${libelleElement(arme)}`
+                      : link
+                        ? link.src
+                          ? 'Cliquez sur l’objet cible'
+                          : 'Cliquez sur l’objet source'
+                        : 'Mode édition : clic droit pour créer, glisser pour déplacer, Maj+clic pour sélectionner plusieurs objets, Suppr pour retirer de la carte'}
                   </Text>
                   <Button
                     size="compact-xs"
                     variant="subtle"
                     className="carte-astuce-bouton"
-                    onClick={() => (link ? setLink(undefined) : basculerEdition())}
+                    onClick={() => (arme ? setArme(null) : link ? setLink(undefined) : basculerEdition())}
                   >
-                    {link ? 'Annuler' : 'Terminer'}
+                    {arme || link ? 'Annuler' : 'Terminer'}
                   </Button>
                 </div>
               )}
@@ -900,6 +1331,14 @@ export function CartographiePage() {
           });
         }}
       />
+      <Creation
+        demande={creation}
+        objs={[...objs.values()]}
+        onClose={() => setCreation(null)}
+        onCreate={creerObjet}
+        onCreateFree={creerLibre}
+      />
+      <Renommer demande={renommage} onClose={() => setRenommage(null)} onRename={renommer} />
       <NouvelleRelation
         liaison={liaison}
         view={view}

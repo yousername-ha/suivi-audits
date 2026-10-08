@@ -1,10 +1,12 @@
 /* Fiche détaillée (CARTO-10) : objet, cadre, objet indisponible ou non accessible, relation, informations de la carte.
    Les informations proviennent de la plateforme ; les liens ouvrent l'outil de suivi tant que le module n'est pas
    repris dans la nouvelle interface. */
-import { ActionIcon, Anchor, Badge, Button, Group, Select, Stack, Text, Title } from '@mantine/core';
+import { ActionIcon, Anchor, Badge, Button, Group, Select, Stack, Text, Textarea, Title } from '@mantine/core';
 import {
   GRAPHIC_RELATION_TYPES,
   RELATIONS,
+  TINTS,
+  TINT_LABELS,
   TYPE_LABELS,
   familyOf,
   isFrame,
@@ -16,8 +18,9 @@ import {
   type ObjectLookup,
   type RelationType,
   type SyncInfo,
+  type Tint,
 } from '@suivi/shared/carto';
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Icone, iconOf, teinteOf } from './rendu';
 
 const dateFr = (d?: string) => {
@@ -100,6 +103,49 @@ export interface InspecteurProps {
   onValidate: (id: string) => void;
   onEdgeType: (id: string, type: RelationType) => void;
   onVersions: () => void;
+  /** Objet renommable par la personne (CARTO-18). */
+  peutRenommer: (ref: string) => boolean;
+  onRename: (ref: string) => void;
+  /** Texte ou teinte d'une note ou d'un cadre libre (CARTO-19). */
+  onFree: (ref: string, patch: { text?: string; tint?: Tint }) => void;
+}
+
+/** Édition d'une note ou d'un cadre libre : texte appliqué à la sortie du champ (une étape d'annulation). */
+function EditionLibre({
+  refLibre,
+  text,
+  tint,
+  note,
+  onFree,
+}: {
+  refLibre: string;
+  text: string;
+  tint: Tint;
+  note: boolean;
+  onFree: InspecteurProps['onFree'];
+}) {
+  const [t, setT] = useState(text);
+  useEffect(() => setT(text), [text, refLibre]);
+  return (
+    <Stack gap="xs">
+      <Textarea
+        label={note ? 'Texte de la note' : 'Titre du cadre'}
+        autosize
+        minRows={note ? 3 : 1}
+        maxLength={500}
+        value={t}
+        onChange={(e) => setT(e.currentTarget.value)}
+        onBlur={() => t !== text && onFree(refLibre, { text: t })}
+      />
+      <Select
+        label="Teinte"
+        data={TINTS.map((x) => ({ value: x, label: TINT_LABELS[x] }))}
+        value={tint}
+        allowDeselect={false}
+        onChange={(v) => v && onFree(refLibre, { tint: v as Tint })}
+      />
+    </Stack>
+  );
 }
 
 export function Inspecteur(p: InspecteurProps) {
@@ -444,13 +490,31 @@ export function Inspecteur(p: InspecteurProps) {
           )}
         </>
       )}
-      {isFrame(o) && (
-        <Section titre="Cadre de la carte">
+      {isFrame(o) && (o.type === 'note' || o.type === 'frame') ? (
+        <Section titre={o.type === 'note' ? 'Note de la carte' : 'Cadre libre'}>
           <Text size="sm">
-            Élément de présentation propre à cette carte : il regroupe visuellement les objets et n’existe pas dans les
-            données de la plateforme.
+            Élément propre à cette carte (il n’existe pas dans les données de la plateforme)
+            {o.type === 'frame' ? ' : il emporte son contenu quand on le déplace.' : '.'}
           </Text>
+          {p.edit && p.layout.free?.[ref] && (
+            <EditionLibre
+              refLibre={ref}
+              text={p.layout.free[ref]!.text}
+              tint={p.layout.free[ref]!.tint}
+              note={o.type === 'note'}
+              onFree={p.onFree}
+            />
+          )}
         </Section>
+      ) : (
+        isFrame(o) && (
+          <Section titre="Cadre de la carte">
+            <Text size="sm">
+              Élément de présentation propre à cette carte : il regroupe visuellement les objets et n’existe pas dans
+              les données de la plateforme.
+            </Text>
+          </Section>
+        )
       )}
       {!!rel.length && (!isFrame(o) || o.type === 'lane') && (
         <Section titre={`Relations (${rel.length})`}>
@@ -477,6 +541,11 @@ export function Inspecteur(p: InspecteurProps) {
       {!isFrame(o) && o.type !== 'isms' && <Group>{legacy}</Group>}
       {p.canEdit && (
         <Group gap="xs">
+          {p.peutRenommer(ref) && (
+            <Button variant="default" size="xs" onClick={() => p.onRename(ref)} title="F2">
+              Renommer…
+            </Button>
+          )}
           {p.edit && (
             <Button variant="default" size="xs" onClick={() => p.onDefaultSize(ref)}>
               Taille par défaut
@@ -494,7 +563,7 @@ export function Inspecteur(p: InspecteurProps) {
         </Group>
       )}
       <Text size="xs" c="dimmed">
-        Double-cliquez sur un objet pour ouvrir sa fiche.{' '}
+        {p.edit ? 'Clic droit sur un objet : autres actions.' : 'Double-cliquez sur un objet pour ouvrir sa fiche.'}{' '}
         {!isFrame(o) &&
           'Les informations proviennent de la plateforme : un renommage y est repris ici sans déplacer l’objet.'}
       </Text>

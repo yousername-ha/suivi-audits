@@ -12,6 +12,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 - `docker compose down -v` ne supprime plus aucune donnée. Pour tout effacer : section 14 du guide.
 - Migrations de la base : `003_droits.sql`, `004_affichage_et_ecrans_muraux.sql`, `005_cartographie.sql` (au démarrage, sans action). Durée estimée : 5 minutes, plus la copie des données.
 - Cartographie : nouveau module de droits « Cartographie du SMSI » (75 permissions au lieu de 70). Les rôles prédéfinis le reçoivent automatiquement ; les **rôles personnalisés ne l'ont pas** : cochez ses cases dans leur matrice si besoin. Les cartes dessinées avec le module bêta de l'ancien outil sont reprises automatiquement par la migration ; l'ancien outil les affiche ensuite en lecture seule.
+- Cartographie, construire de zéro : aucune migration. Créer un objet depuis la carte exige aussi le droit « Créer et modifier » de son module (Pilotage, Fournisseurs ou Conformité) ; un onglet de l'outil historique ouvert pendant une création affiche le conflit habituel à son prochain enregistrement (recharger la page).
 
 ### Ajouté
 - Cartographie du SMSI (ADR 0013, `CARTO-01` à `CARTO-14`) :
@@ -26,6 +27,12 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
   - `CARTO-10` fiche détaillée (feuille basse au téléphone, colonne permanente au-delà de 2560 px) ; `CARTO-11` versions (20 au plus) ; `CARTO-12` nature des enjeux corrigeable ;
   - `CARTO-13` exports PNG, SVG, PDF A3 et JSON produits dans le navigateur, journalisés ;
   - `CARTO-14` reprise du module legacy `maps` (import, export et annulation à l'identique ; `/legacy` en lecture seule pour la cartographie).
+- Cartographie : construire une carte de zéro (ADR 0016, `CARTO-15` à `CARTO-19`) :
+  - `CARTO-15` créer depuis la carte une partie intéressée, un fournisseur, une application, un enjeu, un site, un système, un processus ou un sous-processus : l'objet est enregistré dans son module (mêmes champs et identifiants que l'outil historique), avec la permission de ce module en plus de `cartographie:modifier` ; les enjeux créés sur la carte sont rangés dans les réglages de la carte de contexte ;
+  - `CARTO-16` menu contextuel (clic droit, appui long, Maj+F10) sur le fond, un objet, une relation ou une sélection ; sélection multiple (Maj+clic, lasso Maj+glisser) : aligner, répartir, grouper dans un cadre, retirer ;
+  - `CARTO-17` palette en glisser-déposer (types créables, note, cadre, objets non placés), ou clic puis clic sur la carte ;
+  - `CARTO-18` renommer depuis la carte (double-clic ou F2 en édition) : le nom change dans le module d'origine ;
+  - `CARTO-19` notes et cadres libres propres à la carte, « Construire la carte » (SMSI dans le périmètre, ou trois bandes vides).
 - Données sur le serveur et mises à jour (chantier 9 quinquies, ADR 0014) :
   - `EXPL-01` toutes les données dans `DATA_DIR` (montages bind avec propriétaires et droits, plus aucun volume nommé) ; le service `init` refuse un dossier non préparé, dans le dossier de l'application, dans un dossier système ou sur un système de fichiers non persistant ; `scripts/preparer-donnees.sh` ;
   - `EXPL-02` `scripts/migrer-donnees-vers-dossier.sh` : sauvegarde chiffrée des volumes, copie, contrôles (fichiers, tailles, enregistrements), démarrage ; idempotent ; anciens volumes conservés jusqu'à confirmation ;

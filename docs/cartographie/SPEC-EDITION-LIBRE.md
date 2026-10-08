@@ -34,8 +34,10 @@
   | Site, système d'information | contexte | `pilotage:modifier` | libellé (ajouté à la liste du périmètre) |
   | Processus, sous-processus | processus (et contexte) | `pilotage:modifier` | code (proposé), nom, famille (pilotage, réalisation, support), processus parent, pilote |
 
-- Saisie dans une **petite fenêtre** ouverte à l'endroit voulu : seuls les champs indispensables, « Créer » place la
-  boîte à cet endroit sans chevauchement (`placeNode`) ; « Créer et compléter » ouvre ensuite la fiche du module.
+- Saisie dans une **petite fenêtre** (seuls les champs indispensables) : « Créer » place la boîte à l'endroit visé, au
+  plus près sans chevauchement (`placeNodeAt`) ; « Créer et compléter » ouvre ensuite l'outil de suivi pour compléter la
+  fiche du module. Dans la vue processus, la famille est proposée d'après la bande visée et le processus parent d'après
+  le processus visé.
 - Le serveur écrit l'objet dans son module (aujourd'hui l'état legacy, demain la table du module repris), avec un
   identifiant au format de ce module (`PI-…`, `PR…`, etc.), au nom de la personne, et journalise
   (`carto.object_create`). Les autres sessions le voient arriver (temps réel) ; sur les autres cartes, il apparaît
@@ -47,18 +49,18 @@
   conflit habituel de l'outil historique à son prochain enregistrement et recharge.
 
 ### CARTO-16 — Menu contextuel (clic droit, appui long, clavier)
-- **Sur le fond de carte** : « Créer ici » (sous-menu des types autorisés), « Ajouter un objet existant… »
-  (CARTO-09), « Ajouter une note », « Ajouter un cadre », « Coller », « Disposition automatique », « Ajuster
-  l'affichage ».
-- **Sur un objet** : « Ouvrir la fiche », « Renommer » (CARTO-18), « Relier à… », « Copier », « Taille par défaut »,
-  « Masquer les relations métier », « Retirer de la carte » (Suppr) ; pour un objet indisponible : « Retirer » ou
-  « Ignorer ».
-- **Sur une relation** : type de relation, « Valider la proposition », « Masquer », « Supprimer ».
+- **Sur le fond de carte** : « Créer ici » (types autorisés, note, cadre), « Ajouter un objet existant… »
+  (CARTO-09), « Disposition automatique », « Ajuster l'affichage ».
+- **Sur un objet** : « Ouvrir la fiche », « Renommer » (CARTO-18), « Modifier la note / le cadre », « Relier à… »,
+  « Copier le nom », « Taille par défaut », « Retirer de la carte » (Suppr).
+- **Sur une relation** : « Ouvrir la fiche » (type de relation), « Valider la proposition », « Masquer sur cette
+  carte » (relation métier), « Supprimer la relation » (relation graphique).
 - **Sur une sélection multiple** : « Aligner » (gauche, centre, haut), « Répartir », « Grouper dans un cadre »,
   « Retirer de la carte ».
 - Ouverture : clic droit (souris), **appui long de 500 ms** (tactile), touche Menu ou **Maj+F10** (clavier) ; menu
   au point visé, navigable au clavier, fermé par Échap ; entrées grisées avec leur raison quand le droit manque.
-- En lecture seule, seules les entrées de consultation sont proposées (fiche, copier, ajuster).
+- En lecture seule, seules les entrées de consultation sont proposées (« Ouvrir la fiche », « Copier le nom »,
+  « Ajuster l'affichage »).
 
 ### CARTO-17 — Palette et glisser-déposer
 - En mode édition, une **palette** (colonne repliable à gauche ; barre en bas au téléphone) présente les types
@@ -86,9 +88,9 @@
 - Références `note:<id>` et `frame:<id>` dans la disposition (`MapLayoutSchema` étendu : texte, teinte ; au plus
   200 éléments propres par carte) ; reprises par les versions, l'export JSON et le mapper legacy (champ ignoré par
   l'outil historique).
-- **Carte vierge** : l'assistant propose « Partir de zéro » (seulement le SMSI et le périmètre pour la vue
-  contexte, les trois bandes vides pour la vue processus) ; l'état vide de l'écran affiche « Construire la carte »
-  (palette ouverte) à côté de « Générer depuis la plateforme ».
+- **Carte vierge** : l'état vide de l'écran propose « Construire la carte » (seulement le SMSI dans le périmètre
+  pour la vue contexte, les trois bandes vides pour la vue processus, mode édition et palette ouverts) à côté de
+  « Générer depuis la plateforme ».
 
 ## 4. Tests attendus
 - Vitest `packages/shared` : schéma étendu (notes, cadres libres, limites), placement au point de dépôt, alignement
