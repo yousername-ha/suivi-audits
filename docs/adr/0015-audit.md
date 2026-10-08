@@ -1,6 +1,6 @@
 # ADR 0015 — Audit : cycle, référentiels, couverture, écarts et plan d'audit en tables
 
-**Statut** : proposée (phase 1, exigences `AUD-01` à `AUD-16`). Spécification :
+**Statut** : acceptée le 08/10/2026, défauts du § 6 de la spécification retenus (phase 1, exigences `AUD-01` à `AUD-16`). Spécification :
 [`docs/audit/SPEC-AUDIT-V3.md`](../audit/SPEC-AUDIT-V3.md) ; recette : [`RECETTE.md`](../audit/RECETTE.md).
 
 ## Contexte

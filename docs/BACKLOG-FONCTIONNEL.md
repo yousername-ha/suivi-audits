@@ -184,7 +184,7 @@ Spécification détaillée : [cartographie/SPEC-CARTOGRAPHIE-V3.md](cartographie
 - **CARTO-13** — Exports PNG, SVG, PDF A3, JSON, avec titre, date et légende ; journalisés.
 - **CARTO-14** — Reprise de `S.maps` par l'import legacy (mapper « maps ») ; `/legacy` en lecture seule pour la cartographie une fois reprise.
 
-Construire une carte de zéro (demande du RSSI du 08/10/2026, [spécification](cartographie/SPEC-EDITION-LIBRE.md), ADR 0016, statut proposé) :
+Construire une carte de zéro (demande du RSSI du 08/10/2026, [spécification](cartographie/SPEC-EDITION-LIBRE.md), ADR 0016, validée le 08/10/2026) :
 - **CARTO-15** — Créer depuis la carte un objet de la plateforme (partie intéressée, fournisseur, application, enjeu, site, système, processus, sous-processus), enregistré dans son module, avec la permission de ce module.
 - **CARTO-16** — Menu contextuel : clic droit, appui long, Maj+F10 ; sur le fond, un objet, une relation, une sélection (créer ici, relier, aligner, répartir, grouper, retirer…).
 - **CARTO-17** — Palette en glisser-déposer : types créables, notes, cadres, objets de la plateforme non placés.
@@ -195,7 +195,7 @@ Construire une carte de zéro (demande du RSSI du 08/10/2026, [spécification](c
 
 ## 7. Audit — préparation, couverture, écarts, plan d'audit  *(phase 1)*
 
-Spécification détaillée : [audit/SPEC-AUDIT-V3.md](audit/SPEC-AUDIT-V3.md) ; recette : [audit/RECETTE.md](audit/RECETTE.md) ; ADR 0015 (statut proposé, points à arbitrer au § 6 de la spécification).
+Spécification détaillée : [audit/SPEC-AUDIT-V3.md](audit/SPEC-AUDIT-V3.md) ; recette : [audit/RECETTE.md](audit/RECETTE.md) ; ADR 0015 (validée le 08/10/2026 avec les défauts du § 6 de la spécification).
 
 - **AUD-01** — Droits par les modules existants `audit`, `ecarts`, `plan_audit` ; cycle et référentiels en `audit:administrer` ; lecture seule réelle.
 - **AUD-02** — Cycle de certification en table : années, libellés, année N, dates des audits, échéance de clôture (report sur les écarts concernés), ajout et suppression d'une année vide.

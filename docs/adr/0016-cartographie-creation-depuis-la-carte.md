@@ -1,6 +1,6 @@
 # ADR 0016 — Cartographie : créer les objets depuis la carte
 
-**Statut** : proposée (exigences `CARTO-15` à `CARTO-19`). Complète l'[ADR 0013](0013-cartographie.md).
+**Statut** : acceptée le 08/10/2026, défauts du § 5 de la spécification retenus (exigences `CARTO-15` à `CARTO-19`). Complète l'[ADR 0013](0013-cartographie.md).
 Spécification : [`docs/cartographie/SPEC-EDITION-LIBRE.md`](../cartographie/SPEC-EDITION-LIBRE.md).
 
 ## Contexte

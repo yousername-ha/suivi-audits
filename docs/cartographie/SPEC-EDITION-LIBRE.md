@@ -2,7 +2,7 @@
 
 > Évolution demandée par le RSSI le 08/10/2026 après le premier essai sur le serveur : « je dois pouvoir construire
 > de zéro, si possible avec un clic droit ou un glisser-déposer » (ajouter une partie intéressée, un élément…).
-> **Statut : proposée**, à valider avant développement. Décisions : [ADR 0016](../adr/0016-cartographie-creation-depuis-la-carte.md).
+> **Statut : validée par le RSSI le 08/10/2026**, avec les défauts du § 5. Décisions : [ADR 0016](../adr/0016-cartographie-creation-depuis-la-carte.md).
 > Complète la [spécification v3](SPEC-CARTOGRAPHIE-V3.md) ; recette : [RECETTE.md](RECETTE.md), parcours 21 à 32.
 
 ## 1. Constat

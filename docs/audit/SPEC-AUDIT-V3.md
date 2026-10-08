@@ -1,7 +1,7 @@
 # Audit (phase 1) — spécification pour la nouvelle application (v3)
 
-> Exigences `AUD-01` à `AUD-16`, à citer dans les commits et les PR. **Statut : proposée**, à valider par le RSSI
-> avant tout développement (points à arbitrer : § 6). Décisions d'architecture : [ADR 0015](../adr/0015-audit.md).
+> Exigences `AUD-01` à `AUD-16`, à citer dans les commits et les PR. **Statut : validée par le RSSI le 08/10/2026**,
+> avec les défauts du § 6. Décisions d'architecture : [ADR 0015](../adr/0015-audit.md).
 > Recette : [RECETTE.md](RECETTE.md). Référence de comportement : l'outil historique (`app/public/index.html`,
 > schéma 15), inventorié le 08/10/2026 ; les numéros de ligne cités sont indicatifs.
 

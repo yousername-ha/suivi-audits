@@ -18,5 +18,5 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0012](0012-adaptation-ecrans-et-ecran-mural.md) | Adaptation à tous les écrans, préférences d'affichage et écran mural | Acceptée |
 | [0013](0013-cartographie.md) | Cartographie du SMSI : moteur SVG maison, tables `maps`, objets par adaptateur | Acceptée |
 | [0014](0014-donnees-sur-le-serveur-et-mises-a-jour.md) | Données sur le serveur (`DATA_DIR`) et mises à jour outillées | Acceptée |
-| [0015](0015-audit.md) | Audit : cycle, référentiels, couverture, écarts et plan d'audit en tables | Proposée |
-| [0016](0016-cartographie-creation-depuis-la-carte.md) | Cartographie : créer les objets de la plateforme depuis la carte | Proposée |
+| [0015](0015-audit.md) | Audit : cycle, référentiels, couverture, écarts et plan d'audit en tables | Acceptée |
+| [0016](0016-cartographie-creation-depuis-la-carte.md) | Cartographie : créer les objets de la plateforme depuis la carte | Acceptée |

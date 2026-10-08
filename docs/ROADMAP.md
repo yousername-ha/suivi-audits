@@ -37,7 +37,7 @@ Les exigences fonctionnelles détaillées sont dans [BACKLOG-FONCTIONNEL.md](BAC
 - [x] `CARTO-05` génération assistée ; `CARTO-06` canevas SVG (zoom, recherche, préréglages, filtres) ; `CARTO-07` mode édition ; `CARTO-08` synchronisation ; `CARTO-09` ajout depuis la plateforme ; `CARTO-10` fiche détaillée.
 - [x] `CARTO-11` versions ; `CARTO-12` nature des enjeux ; `CARTO-13` exports PNG, SVG, PDF, JSON ; `CARTO-14` reprise legacy de `S.maps` et transition.
 
-## Cartographie : construire une carte de zéro — proposée
+## Cartographie : construire une carte de zéro — validée, en cours
 
 Demande du RSSI du 08/10/2026 après le premier essai ([spécification](cartographie/SPEC-EDITION-LIBRE.md), [ADR 0016](adr/0016-cartographie-creation-depuis-la-carte.md), parcours 21 à 32 de la [recette](cartographie/RECETTE.md)). Prévue **avant la phase 1** (chantier court).
 - [ ] `CARTO-15` créer depuis la carte un objet de la plateforme (enregistré dans son module) ; `CARTO-16` menu contextuel (clic droit, appui long, Maj+F10) ; `CARTO-17` palette en glisser-déposer.
@@ -47,7 +47,7 @@ Demande du RSSI du 08/10/2026 après le premier essai ([spécification](cartogra
 
 - [ ] `UI-01` affichage plus compact par défaut ; `UI-02` graphiques SVG de la synthèse (anneaux, histogrammes), livrés avec la phase 1 ; `UI-03` revue graphique d'ensemble après la phase 1 ([backlog](BACKLOG-FONCTIONNEL.md), section 8).
 
-## Phase 1 — Audit — cadrage proposé
+## Phase 1 — Audit — cadrage validé
 
 [Spécification](audit/SPEC-AUDIT-V3.md) (`AUD-01` à `AUD-16`, points à arbitrer au § 6), [recette](audit/RECETTE.md) (26 parcours), [ADR 0015](adr/0015-audit.md).
 Modules repris : `years`, `yearLabels`, `nextYear`, `nextDate`, `internalDate`, `iso27001Certified`, `groups`, `items`, `hdsChap`, `findings`, `source`, `closeDeadline`, `findingsRev`, `plan`.
