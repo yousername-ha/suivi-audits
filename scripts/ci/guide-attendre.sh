@@ -4,7 +4,7 @@
 set -eu
 cd /opt/suivi-audits
 st=''
-for i in $(seq 1 90); do
+for _ in $(seq 1 90); do
   st=$(sudo docker inspect -f '{{.State.Health.Status}}' "$(sudo docker compose ps -q app)" 2>/dev/null || true)
   [ "$st" = healthy ] && break
   sleep 2
@@ -14,7 +14,7 @@ sudo docker compose ps -a
 [ "$(sudo docker inspect -f '{{.State.ExitCode}}' "$(sudo docker compose ps -aq init)")" = 0 ] || { echo "::error::Guide, étape 7.3 : init n'est pas « Exited (0) »"; exit 1; }
 [ "$(sudo docker inspect -f '{{.State.Health.Status}}' "$(sudo docker compose ps -q db)")" = healthy ] || { echo "::error::Guide, étape 7.3 : db n'est pas « healthy »"; exit 1; }
 [ "$(sudo docker inspect -f '{{.State.Running}}' "$(sudo docker compose ps -q web)")" = true ] || { echo "::error::Guide, étape 7.3 : web n'est pas démarré"; exit 1; }
-for i in $(seq 1 30); do
+for _ in $(seq 1 30); do
   [ "$(curl -sk https://localhost/healthz || true)" = ok ] && { echo "États conformes à l'étape 7.3, site joignable."; exit 0; }
   sleep 2
 done

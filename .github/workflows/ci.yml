@@ -38,6 +38,12 @@ jobs:
         run: pnpm typecheck
       - name: Construction (paquet partagé, API, interface)
         run: pnpm build
+      - name: Scripts d'exploitation (syntaxe bash, ShellCheck)
+        run: |
+          for f in scripts/*.sh scripts/ci/*.sh; do bash -n "$f"; done
+          shellcheck -S warning -x -e SC1091 scripts/*.sh scripts/ci/*.sh
+      - name: CHANGELOG (paragraphe « Notes de mise à jour » dans chaque section, EXPL-07)
+        run: node scripts/ci/verifier-changelog.mjs CHANGELOG.md
       - name: OpenAPI
         run: pnpm --filter @suivi/api openapi "$GITHUB_WORKSPACE/openapi.json"
       - uses: actions/upload-artifact@v5
@@ -158,6 +164,9 @@ jobs:
           name: sbom-cyclonedx
           path: sbom/
 
+      - name: Dossier des données du serveur (EXPL-01)
+        run: sudo ./scripts/preparer-donnees.sh
+
       - name: Démarrage de la pile
         run: |
           docker compose up -d
@@ -206,6 +215,26 @@ jobs:
             tests/e2e/playwright-report/
             tests/e2e/test-results/
 
+      - name: Données intactes après suppression des conteneurs, des images et « down -v » (EXPL-01)
+        run: |
+          set -e
+          docker compose exec -T app suivi controle-donnees > "$RUNNER_TEMP/avant.json"
+          docker compose down -v
+          [ -z "$(docker volume ls -q | grep '^suivi-audits_' || true)" ] || { echo "::error::volume nommé créé par la pile"; exit 1; }
+          docker save -o "$RUNNER_TEMP/images.tar" ghcr.io/yousername-ha/suivi-audits-api:ci ghcr.io/yousername-ha/suivi-audits-web:ci
+          docker image rm ghcr.io/yousername-ha/suivi-audits-api:ci ghcr.io/yousername-ha/suivi-audits-web:ci
+          docker load -i "$RUNNER_TEMP/images.tar"
+          rm -f "$RUNNER_TEMP/images.tar"
+          docker compose up -d
+          for i in $(seq 1 60); do
+            [ "$(docker inspect -f '{{.State.Health.Status}}' "$(docker compose ps -q app)" 2> /dev/null)" = healthy ] && break
+            sleep 3
+          done
+          docker compose exec -T app suivi controle-donnees > "$RUNNER_TEMP/apres.json"
+          diff "$RUNNER_TEMP/avant.json" "$RUNNER_TEMP/apres.json"
+          sudo ls -la /srv/suivi-audits/donnees /srv/suivi-audits/donnees/secrets
+          echo "Données identiques avant et après : $(jq -c '{tables, documents: .documents.versions}' "$RUNNER_TEMP/apres.json")"
+
       - name: Droits du cache Trivy (sauvegarde du cache)
         if: always()
         run: sudo chown -R "$USER" "$HOME/.cache/trivy" 2>/dev/null || true
@@ -215,6 +244,82 @@ jobs:
       - name: Arrêt
         if: always()
         run: docker compose down -v
+
+  montee:
+    name: Montée de version (retour arrière et restauration simulés)
+    # EXPL-02 à EXPL-04 : serveur installé avec la dernière version publiée (à défaut, la base de la PR), données
+    # fictives, puis scripts/mettre-a-jour.sh vers le commit testé (voir scripts/ci/montee-version.sh).
+    runs-on: ubuntu-latest
+    needs: [qualite, tests]
+    timeout-minutes: 50
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: Version de départ
+        id: depart
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -e
+          tag=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' | sort -V | tail -n 1)
+          if [ -n "$tag" ]; then ref="$tag"; version="${tag#v}"; publiee=1
+          elif [ -n "$BASE_SHA" ]; then ref="$BASE_SHA"; version=3.0.0; publiee=0
+          else echo "Ni version publiée ni PR : rien à comparer."; echo "actif=0" >> "$GITHUB_OUTPUT"; exit 0; fi
+          if ! git cat-file -e "$ref:docker/api.Dockerfile" 2> /dev/null; then
+            echo "La version de départ ($ref) n'est pas une v3 : test sans objet."; echo "actif=0" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          cible=$(echo "$version" | awk -F. '{ print $1 "." $2 + 1 ".0" }')
+          { echo "actif=1"; echo "ref=$ref"; echo "version=$version"; echo "publiee=$publiee"; echo "cible=$cible"; } >> "$GITHUB_OUTPUT"
+          echo "Départ : $ref ($version) ; cible : commit testé, étiqueté $cible pour le test."
+      - name: Images de départ
+        if: steps.depart.outputs.actif == '1'
+        env:
+          REF: ${{ steps.depart.outputs.ref }}
+          VERSION: ${{ steps.depart.outputs.version }}
+          PUBLIEE: ${{ steps.depart.outputs.publiee }}
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          git worktree add -q "$RUNNER_TEMP/depart" "$REF"
+          cd "$RUNNER_TEMP/depart"
+          cp .env.example .env
+          sed -i "s/^SITE_ADDRESS=.*/SITE_ADDRESS=localhost/; s/^APP_VERSION=.*/APP_VERSION=$VERSION/" .env
+          if [ "$PUBLIEE" = 1 ] && echo "$TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin && docker compose pull --quiet; then
+            echo "Images publiées $VERSION téléchargées."
+          else
+            docker compose -f docker-compose.yml -f docker-compose.build.yml build --quiet
+          fi
+      - name: Images cibles (commit testé)
+        if: steps.depart.outputs.actif == '1'
+        env:
+          VERSION: ${{ steps.depart.outputs.cible }}
+        run: |
+          cp .env.example .env
+          sed -i "s/^SITE_ADDRESS=.*/SITE_ADDRESS=localhost/; s/^APP_VERSION=.*/APP_VERSION=$VERSION/" .env
+          docker compose -f docker-compose.yml -f docker-compose.build.yml build --quiet
+          rm .env
+      - name: Montée de version, retour arrière, restauration, persistance
+        if: steps.depart.outputs.actif == '1'
+        env:
+          DEPART_REF: ${{ steps.depart.outputs.ref }}
+          DEPART_VERSION: ${{ steps.depart.outputs.version }}
+          CIBLE_VERSION: ${{ steps.depart.outputs.cible }}
+        run: CIBLE_REF="$(git rev-parse HEAD)" ./scripts/ci/montee-version.sh
+      - name: Journaux
+        if: failure()
+        run: |
+          if [ -d /opt/suivi-audits ]; then cd /opt/suivi-audits && sudo docker compose logs --no-color init db app web | tail -300; fi
+          sudo sh -c 'cat /srv/suivi-audits/donnees/etat/mises-a-jour/*.json' 2> /dev/null || true
+      - name: Arrêt
+        if: always()
+        run: if [ -d /opt/suivi-audits ]; then cd /opt/suivi-audits && sudo docker compose down || true; fi
 
   guide:
     name: Guide d'installation (rejoué sur un runner Ubuntu vierge)

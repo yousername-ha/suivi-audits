@@ -5,6 +5,11 @@
      compte <url>                 étape 9 : création d'un compte « Contributeur » (mot de passe temporaire)
      import <url> <fichier.json>  étape 10 : simulation puis import (mode Initialiser) d'un fichier de l'ancien outil
      verifier <url>               étape 11.4 : après restauration, comptes et données présents
+     document <url>               dépôt d'un document fictif (relu ensuite par « instantane »)
+     instantane <url> <fichier> [reference]
+                                  instantané des données (comptes, données de suivi, document relu, version) ; avec une
+                                  référence, échoue si les données diffèrent (mises à jour, retour arrière, EXPL-01 à 04)
+     systeme <url>                Administration > Système : dernière sauvegarde connue (rapport de backup.sh)
    Le certificat est vérifié : lancer avec NODE_EXTRA_CA_CERTS=<certificat racine copié à l'étape 8.3>.
    L'état (mot de passe et secret TOTP de l'administrateur de test) est conservé dans $RUNNER_TEMP. */
 import { execFileSync } from 'node:child_process';
@@ -12,7 +17,7 @@ import crypto from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
-const [cmd, base, file] = process.argv.slice(2);
+const [cmd, base, file, reference] = process.argv.slice(2);
 if (!cmd || !base) {
   console.error('Usage : guide-api.mjs administrateur|compte|import|verifier <url> [fichier]');
   process.exit(2);
@@ -93,11 +98,21 @@ async function freshCode(st) {
 }
 
 async function login(st) {
+  // Session de l'appel précédent, si elle est encore valide (évite d'attendre un nouveau pas TOTP).
+  if (st.cookies) {
+    for (const [k, v] of Object.entries(st.cookies)) jar.set(k, v);
+    const m = await call('GET', '/api/auth/me');
+    csrf = m.csrf || '';
+    if (m.stage === 'ok') return;
+    jar.clear();
+  }
   await call('POST', '/api/auth/login', { json: { username: ADMIN, password: st.password } });
   await me();
   await call('POST', '/api/auth/mfa', { json: { code: await freshCode(st) } });
   const m = await me();
   if (m.stage !== 'ok') fail(`connexion incomplète (étape ${m.stage})`);
+  st.cookies = Object.fromEntries(jar);
+  save(st);
 }
 
 const legacyState = () => call('GET', '/api/legacy/state');
@@ -182,6 +197,73 @@ switch (cmd) {
     const names = users.map((u) => u.username);
     if (!names.includes('adjoint')) fail('compte « adjoint » absent après restauration');
     console.log('Étape 11.4 : restauration vérifiée (connexion TOTP, comptes, données et historique des imports).');
+    break;
+  }
+  case 'document': {
+    const st = load();
+    await login(st);
+    const contenu = Buffer.from(`Procédure fictive de test — ${new Date().toISOString()}\n`);
+    const d = await call('POST', '/api/documents', {
+      body: contenu,
+      headers: {
+        'content-type': 'application/octet-stream',
+        'x-file-name': encodeURIComponent('procedure-fictive.txt'),
+        'x-meta': encodeURIComponent(JSON.stringify({ title: 'Procédure fictive', refs: ['A.5.1'] })),
+      },
+    });
+    st.document = { id: d.id, sha256: crypto.createHash('sha256').update(contenu).digest('hex') };
+    save(st);
+    console.log(`Document fictif déposé (${d.id}).`);
+    break;
+  }
+  case 'instantane': {
+    const st = load();
+    await login(st);
+    const data = await legacyState();
+    const users = (await call('GET', '/api/admin/users')).map((u) => u.username).sort();
+    const docs = (await call('GET', '/api/documents')).map((d) => `${d.id}:${d.current_version}`).sort();
+    let docSha = null;
+    if (st.document) {
+      const r = await fetch(`${base}/api/documents/${st.document.id}/download`, {
+        headers: { cookie: [...jar].map(([k, v]) => `${k}=${v}`).join('; ') },
+      });
+      if (!r.ok) fail(`document fictif illisible : HTTP ${r.status}`);
+      docSha = crypto
+        .createHash('sha256')
+        .update(Buffer.from(await r.arrayBuffer()))
+        .digest('hex');
+      if (docSha !== st.document.sha256) fail('document fictif : contenu différent après déchiffrement');
+    }
+    const v = await call('GET', '/api/version', { expect: [200, 404] });
+    const snap = {
+      comptes: users,
+      documents: docs,
+      documentRelu: docSha,
+      suivi: Object.fromEntries(
+        ['findings', 'processes', 'suppliers', 'items'].map((k) => [k, (data[k] || []).length]),
+      ),
+      schema: data.schema,
+    };
+    writeFileSync(file, JSON.stringify({ ...snap, version: v?.version ?? null }, null, 2));
+    if (reference) {
+      const ref = JSON.parse(readFileSync(reference, 'utf8'));
+      delete ref.version;
+      if (JSON.stringify(ref) !== JSON.stringify(snap))
+        fail(`données différentes de la référence :\n${JSON.stringify(ref)}\n${JSON.stringify(snap)}`);
+      console.log(`Données identiques à la référence (${reference}) ; version en service : ${v?.version ?? '?'}.`);
+    } else console.log(`Instantané des données : ${file}`);
+    break;
+  }
+  case 'systeme': {
+    const st = load();
+    await login(st);
+    const s = await call('GET', '/api/admin/systeme');
+    if (!s.sauvegarde.derniereReussie) fail('Administration > Système : aucune sauvegarde connue');
+    if (s.sauvegarde.enRetard) fail('Administration > Système : sauvegarde signalée en retard');
+    if (!s.donnees.chemin) fail('Administration > Système : emplacement des données absent');
+    console.log(
+      `Administration > Système : version ${s.version}, sauvegarde du ${s.sauvegarde.derniereReussie.date}, données dans ${s.donnees.chemin}.`,
+    );
     break;
   }
   default:
