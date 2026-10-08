@@ -13,20 +13,27 @@ import {
 import { LEGACY_MODULES } from '../src/legacy/index.js';
 
 describe('modèle de droits', () => {
-  it('permissions = modules × actions (14 × 5)', () => {
-    expect(ALL_PERMISSIONS).toHaveLength(70);
-    expect(new Set(ALL_PERMISSIONS).size).toBe(70);
+  it('permissions = modules × actions (15 × 5)', () => {
+    expect(ALL_PERMISSIONS).toHaveLength(75);
+    expect(new Set(ALL_PERMISSIONS).size).toBe(75);
   });
 
   it('rôles prédéfinis conformes à la spécification', () => {
     const p = (r: keyof typeof SYSTEM_ROLE_DEFS) => new Set(SYSTEM_ROLE_DEFS[r].permissions);
-    expect(p('administrateur').size).toBe(70);
+    expect(p('administrateur').size).toBe(75);
     expect([...p('rssi')].some((x) => x.startsWith('administration:'))).toBe(false);
     expect(p('rssi').has('parametres:administrer')).toBe(true);
     expect(p('contributeur').has('ecarts:modifier')).toBe(true);
     expect(p('contributeur').has('ecarts:supprimer')).toBe(false);
     expect(p('contributeur').has('administration:lire')).toBe(false);
-    expect([...p('lecteur')].every((x) => x.endsWith(':lire'))).toBe(true);
+    // Lecteur : lecture seule, plus l'export des cartes (CARTO-01).
+    expect([...p('lecteur')].every((x) => x.endsWith(':lire') || x === 'cartographie:exporter')).toBe(true);
+    expect(p('lecteur').has('cartographie:modifier')).toBe(false);
+    for (const r of ['contributeur', 'lecteur'] as const) expect(p(r).has('cartographie:exporter')).toBe(true);
+    expect(p('contributeur').has('cartographie:modifier')).toBe(true);
+    expect(p('contributeur').has('cartographie:supprimer')).toBe(false);
+    expect(p('rssi').has('cartographie:administrer')).toBe(true);
+    expect([...p('auditeur_externe')].filter((x) => x.startsWith('cartographie:'))).toEqual(['cartographie:lire']);
     expect(SYSTEM_ROLE_DEFS.auditeur_externe.scoped).toBe(true);
     expect(V2_ROLE_MAPPING).toEqual({ admin: 'administrateur', rw: 'contributeur', ro: 'lecteur' });
   });

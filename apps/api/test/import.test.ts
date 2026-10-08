@@ -228,7 +228,9 @@ describe('transition : modules repris et /legacy', () => {
       // La page /legacy reçoit la liste des modules repris (affichage « Module géré dans la nouvelle interface »).
       const page = await w.get('/legacy/');
       expect(page.statusCode).toBe(200);
-      expect(page.body).toContain('"takenOver":[{"key":"swots","label":"Analyses SWOT"}]');
+      expect(page.body).toContain(
+        '"takenOver":[{"key":"maps","label":"Cartographie du SMSI"},{"key":"swots","label":"Analyses SWOT"}]',
+      );
       expect(page.headers['content-security-policy']).toMatch(/unsafe-inline/);
     } finally {
       t.svc.legacy.unregister('swots');

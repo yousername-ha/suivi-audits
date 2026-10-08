@@ -6,7 +6,7 @@
 Trois rôles fixes ne suffisent plus. Il faut ouvrir un module à un pilote sans lui ouvrir les autres, donner à un auditeur externe un accès limité dans le temps, et produire la revue des accès exigée par ISO 27001 (A.5.18).
 
 ## Décision
-- **Permission = module × action.** Les modules sont les 10 modules métier, plus documents, import et export, administration et paramètres. Les actions sont lire, créer et modifier, supprimer, exporter, administrer, soit 70 permissions au total.
+- **Permission = module × action.** Les modules sont les 10 modules métier, plus documents, import et export, administration et paramètres. Les actions sont lire, créer et modifier, supprimer, exporter, administrer, soit 70 permissions au total (75 depuis l’ajout du module « cartographie », ADR 0013).
   La liste est déclarée **une seule fois**, dans `packages/shared/src/permissions.ts`, et réutilisée par l'API, l'interface et les tests.
 - **Rôle = ensemble de permissions.**
   - Cinq rôles **prédéfinis** : Administrateur, RSSI, Contributeur, Lecteur, Auditeur externe. Leurs permissions sont définies dans le code, et un déclencheur PostgreSQL empêche de les modifier ou de les supprimer.

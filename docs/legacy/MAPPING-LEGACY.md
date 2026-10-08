@@ -9,7 +9,7 @@ Un test (`packages/shared/test/mapping.test.ts`) échoue si un chemin du contrat
 
 ## État en phase 0
 
-Aucun module n'est encore repris dans des tables dédiées : **toutes les données legacy sont stockées dans `app_state.data`** (jsonb, versionné dans `state_history`), et `/legacy` les modifie comme avant. Chaque phase (1 à 3) reprend ses modules : elle crée les tables indiquées dans la colonne « Tables prévues », remplace ici `app_state.data` par les colonnes réelles (ou `extra`), ajoute son « mapper » (`apps/api/src/legacy/store.ts`, interface `ModuleMapper`) et son test d'aller-retour, puis le module passe en lecture seule dans `/legacy`.
+Un seul module est repris dans des tables dédiées : la **cartographie** (`maps`, tables `maps` et `map_versions`, mapper `apps/api/src/carto/maps.ts`, ADR 0013). **Toutes les autres données legacy sont stockées dans `app_state.data`** (jsonb, versionné dans `state_history`), et `/legacy` les modifie comme avant. Chaque phase (1 à 3) reprend ses modules : elle crée les tables indiquées dans la colonne « Tables prévues », remplace ici `app_state.data` par les colonnes réelles (ou `extra`), ajoute son « mapper » (`apps/api/src/legacy/store.ts`, interface `ModuleMapper`) et son test d'aller-retour, puis le module passe en lecture seule dans `/legacy`.
 
 | Chemin | Cible | Phase de reprise | Tables prévues | Justification |
 |---|---|---|---|---|
@@ -500,3 +500,98 @@ Aucun module n'est encore repris dans des tables dédiées : **toutes les donné
 | `$.reviews[].cs.sujet[].id` | app_state.data | 2 | management_reviews | Identifiant stable ajouté par le schéma 15 (clé de correspondance legacy_id lors de la reprise). |
 | `$.crisis.cells[].log[].id` | app_state.data | 3 | crisis_cells, crisis_log | Identifiant stable ajouté par le schéma 15 (clé de correspondance legacy_id lors de la reprise). |
 | `$.roles[].id` | app_state.data | 2 | isms_roles | Identifiant stable ajouté par le schéma 15 (clé de correspondance legacy_id lors de la reprise). |
+| `$.maps` | maps.view | 2 | maps, map_versions | Module repris (mapper « maps », ADR 0013) : une ligne par vue. |
+| `$.maps.context` | maps.view | 2 | maps, map_versions | |
+| `$.maps.context.nodes` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.context.nodes.{clé}` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.context.nodes.{clé}.x` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.context.nodes.{clé}.y` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.context.nodes.{clé}.w` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.context.nodes.{clé}.h` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.context.nodes.{clé}.label` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.context.nodes.{clé}.hidden` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.context.edges` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.context.edges[]` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.context.edges[].id` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.context.edges[].s` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.context.edges[].t` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.context.edges[].type` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.context.edges[].gen` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.context.hide` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.context.hide.{clé}` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.context.ignored` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.context.ignored.{clé}` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.context.versions` | map_versions.map_id | 2 | maps, map_versions | Une ligne par version (20 au plus). |
+| `$.maps.context.versions[]` | map_versions.map_id | 2 | maps, map_versions | Une ligne par version (20 au plus). |
+| `$.maps.context.versions[].id` | map_versions.extra | 2 | maps, map_versions | Identifiant et date d’origine (aller-retour exact). |
+| `$.maps.context.versions[].at` | map_versions.extra | 2 | maps, map_versions | Identifiant et date d’origine (aller-retour exact). |
+| `$.maps.context.versions[].label` | map_versions.label | 2 | maps, map_versions | |
+| `$.maps.context.versions[].map` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.context.versions[].map.nodes` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.context.versions[].map.nodes.{clé}` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.context.versions[].map.nodes.{clé}.x` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.context.versions[].map.nodes.{clé}.y` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.context.versions[].map.nodes.{clé}.w` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.context.versions[].map.nodes.{clé}.h` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.context.versions[].map.nodes.{clé}.label` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.context.versions[].map.nodes.{clé}.hidden` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.context.versions[].map.edges` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.context.versions[].map.edges[]` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.context.versions[].map.edges[].id` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.context.versions[].map.edges[].s` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.context.versions[].map.edges[].t` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.context.versions[].map.edges[].type` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.context.versions[].map.edges[].gen` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.context.versions[].map.hide` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.context.versions[].map.hide.{clé}` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.context.versions[].map.ignored` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.context.versions[].map.ignored.{clé}` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.context.updatedAt` | maps.extra | 2 | maps, map_versions | Date propre à l’outil historique ; mise à jour à chaque enregistrement. |
+| `$.maps.process` | maps.view | 2 | maps, map_versions | |
+| `$.maps.process.nodes` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.process.nodes.{clé}` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.process.nodes.{clé}.x` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.process.nodes.{clé}.y` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.process.nodes.{clé}.w` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.process.nodes.{clé}.h` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.process.nodes.{clé}.label` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.process.nodes.{clé}.hidden` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.process.edges` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.process.edges[]` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.process.edges[].id` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.process.edges[].s` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.process.edges[].t` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.process.edges[].type` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.process.edges[].gen` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.process.hide` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.process.hide.{clé}` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.process.ignored` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.process.ignored.{clé}` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.process.versions` | map_versions.map_id | 2 | maps, map_versions | Une ligne par version (20 au plus). |
+| `$.maps.process.versions[]` | map_versions.map_id | 2 | maps, map_versions | Une ligne par version (20 au plus). |
+| `$.maps.process.versions[].id` | map_versions.extra | 2 | maps, map_versions | Identifiant et date d’origine (aller-retour exact). |
+| `$.maps.process.versions[].at` | map_versions.extra | 2 | maps, map_versions | Identifiant et date d’origine (aller-retour exact). |
+| `$.maps.process.versions[].label` | map_versions.label | 2 | maps, map_versions | |
+| `$.maps.process.versions[].map` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.process.versions[].map.nodes` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.process.versions[].map.nodes.{clé}` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.process.versions[].map.nodes.{clé}.x` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.process.versions[].map.nodes.{clé}.y` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.process.versions[].map.nodes.{clé}.w` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.process.versions[].map.nodes.{clé}.h` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.process.versions[].map.nodes.{clé}.label` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.process.versions[].map.nodes.{clé}.hidden` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.process.versions[].map.edges` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.process.versions[].map.edges[]` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.process.versions[].map.edges[].id` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.process.versions[].map.edges[].s` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.process.versions[].map.edges[].t` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.process.versions[].map.edges[].type` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.process.versions[].map.edges[].gen` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.process.versions[].map.hide` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.process.versions[].map.hide.{clé}` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.process.versions[].map.ignored` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.process.versions[].map.ignored.{clé}` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.process.updatedAt` | maps.extra | 2 | maps, map_versions | Date propre à l’outil historique ; mise à jour à chaque enregistrement. |
+| `$.maps.issueKind` | maps.settings | 2 | maps, map_versions | Nature des enjeux corrigée, dans les réglages de la carte de contexte (CARTO-12). |
+| `$.maps.issueKind.{clé}` | maps.settings | 2 | maps, map_versions | Nature des enjeux corrigée, dans les réglages de la carte de contexte (CARTO-12). |

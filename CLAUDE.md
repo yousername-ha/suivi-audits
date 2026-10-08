@@ -51,4 +51,4 @@ node scripts/ci/guide-extraire.mjs docs/INSTALLATION.md nom_dns=localhost versio
 ## Points à surveiller
 - Le premier démarrage avec les images officielles (`postgres:17-alpine` en `read_only`, capacités ajoutées, lecture des secrets par les uid 70 et 1000, frontal uid 1001) est vérifié par la CI (job « pile » et job « guide »). En cas d'échec : `docker compose logs init db app web`.
 - `cap_drop: ALL` interdit les binaires à capacités de fichier : le binaire Caddy est recopié sans `cap_net_bind_service` (ports internes 8080 et 8443).
-- Phase 0 : aucun module legacy n'est encore repris (`ModuleMapper` vide) ; toutes les données legacy sont dans `app_state.data`.
+- Modules legacy repris : seulement `maps` (cartographie, ADR 0013 : `apps/api/src/carto/maps.ts`, tables `maps` / `map_versions`) ; toutes les autres données legacy sont dans `app_state.data`.

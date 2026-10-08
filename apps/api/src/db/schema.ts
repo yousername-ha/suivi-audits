@@ -282,5 +282,35 @@ export const links = pgTable('links', {
   ...businessColumns(),
 });
 
+/* ---------------------------------------------------------------- Cartographie (migration 005, ADR 0013) */
+export const maps = pgTable('maps', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  view: text('view', { enum: ['context', 'process'] }).notNull(),
+  name: text('name').notNull(),
+  layout: jsonb('layout').notNull(),
+  settings: jsonb('settings').notNull().default({}),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  createdBy: text('created_by').notNull(),
+  updatedAt: tstz('updated_at').notNull().defaultNow(),
+  updatedBy: text('updated_by').notNull(),
+  ...businessColumns(),
+});
+
+export const mapVersions = pgTable('map_versions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  mapId: uuid('map_id')
+    .notNull()
+    .references(() => maps.id, { onDelete: 'cascade' }),
+  label: text('label').notNull(),
+  layout: jsonb('layout').notNull(),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  createdBy: text('created_by').notNull(),
+  legacyId: text('legacy_id'),
+  importBatchId: bigint('import_batch_id', { mode: 'number' }).references(() => importBatches.id, {
+    onDelete: 'set null',
+  }),
+  extra: jsonb('extra').notNull().default({}),
+});
+
 /** Tables métier : chacune porte version, legacy_id, import_batch_id et extra (vérifié par les tests). */
-export const BUSINESS_TABLES = { documents, links } as const;
+export const BUSINESS_TABLES = { documents, links, maps } as const;

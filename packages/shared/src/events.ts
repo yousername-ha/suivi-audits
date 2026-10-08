@@ -14,6 +14,7 @@ export const ENTITIES = [
   'legacy_state',
   'import_batches',
   'wall_screens',
+  'maps',
 ] as const;
 export type Entity = (typeof ENTITIES)[number];
 
@@ -30,6 +31,7 @@ export const ENTITY_PERMISSION: Record<Entity, Permission | 'metier'> = {
   legacy_state: 'metier',
   import_batches: 'import_export:lire',
   wall_screens: 'administration:lire',
+  maps: 'cartographie:lire',
 };
 
 export function canReceive(rights: Rights, entity: Entity): boolean {

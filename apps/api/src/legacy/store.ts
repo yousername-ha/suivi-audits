@@ -3,7 +3,7 @@
    - module pas encore repris : ses données vivent dans app_state, /legacy les modifie comme avant ;
    - module repris (un « mapper » est enregistré) : ses données vivent dans des tables ; /legacy les affiche
      (état recomposé) mais le serveur refuse toute modification les concernant. */
-import { canonicalJson, moduleLabel, type Json, type JsonObject } from '@suivi/shared/legacy';
+import { canonicalJson, isObject, moduleLabel, type Json, type JsonObject } from '@suivi/shared/legacy';
 import type { Config } from '../config.js';
 import type { Actor, Client, Db } from '../db/db.js';
 import { HttpError } from '../http/errors.js';
@@ -12,10 +12,11 @@ import { sha256hex } from '../security/crypto.js';
 /** Correspondance d'un module legacy repris vers ses tables (phases 1 à 3). */
 export interface ModuleMapper {
   key: string;
-  /** Valeur du module au format legacy, reconstruite à partir des tables. */
-  read(c: Client): Promise<Json>;
-  /** Enregistre la valeur legacy du module dans les tables (import), dans la transaction fournie. */
-  write(c: Client, value: Json, batchId: number | null): Promise<void>;
+  /** Valeur du module au format legacy, reconstruite à partir des tables (undefined : clé absente de l'état). */
+  read(c: Client): Promise<Json | undefined>;
+  /** Enregistre la valeur legacy du module dans les tables (import), dans la transaction fournie.
+      undefined : le module est absent (annulation d'un import qui l'avait créé). */
+  write(c: Client, value: Json | undefined, batchId: number | null): Promise<void>;
 }
 
 export interface StateRow {
@@ -60,7 +61,11 @@ export class LegacyStore {
       const r = await this.row(cl);
       if (!r) return null;
       const data: JsonObject = { ...r.data };
-      for (const m of this.mappers.values()) data[m.key] = await m.read(cl);
+      for (const m of this.mappers.values()) {
+        const v = await m.read(cl);
+        if (v === undefined) delete data[m.key];
+        else data[m.key] = v;
+      }
       return { version: r.version, data };
     };
     if (c) return run(c);
@@ -139,7 +144,13 @@ export class LegacyStore {
     for (const m of this.mappers.values()) {
       if (m.key in incoming) {
         const current = await m.read(c);
-        if (canonicalJson(incoming[m.key] as Json) !== canonicalJson(current)) blocked.push(m.key);
+        const value = incoming[m.key] as Json;
+        // Module absent des tables : seule une valeur vide est acceptée (l'outil historique crée la clé à la volée).
+        const same =
+          current === undefined
+            ? value === null || (isObject(value) && !Object.keys(value).length)
+            : canonicalJson(value) === canonicalJson(current);
+        if (!same) blocked.push(m.key);
       }
       delete stored[m.key];
     }

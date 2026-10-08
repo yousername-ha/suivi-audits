@@ -1911,5 +1911,385 @@ export const CONTRACT_PATHS: ReadonlyArray<{ path: string; types: string }> = [
   {
     "path": "$.crrc.alerts",
     "types": "liste"
+  },
+  {
+    "path": "$.maps",
+    "types": "objet"
+  },
+  {
+    "path": "$.maps.context",
+    "types": "objet"
+  },
+  {
+    "path": "$.maps.context.nodes",
+    "types": "objet (dictionnaire indexé)"
+  },
+  {
+    "path": "$.maps.context.nodes.{clé}",
+    "types": "objet"
+  },
+  {
+    "path": "$.maps.context.nodes.{clé}.x",
+    "types": "entier, nombre"
+  },
+  {
+    "path": "$.maps.context.nodes.{clé}.y",
+    "types": "entier, nombre"
+  },
+  {
+    "path": "$.maps.context.nodes.{clé}.w",
+    "types": "entier, nombre"
+  },
+  {
+    "path": "$.maps.context.nodes.{clé}.h",
+    "types": "entier, nombre"
+  },
+  {
+    "path": "$.maps.context.nodes.{clé}.label",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.context.nodes.{clé}.hidden",
+    "types": "booléen"
+  },
+  {
+    "path": "$.maps.context.edges",
+    "types": "liste"
+  },
+  {
+    "path": "$.maps.context.edges[]",
+    "types": "objet"
+  },
+  {
+    "path": "$.maps.context.edges[].id",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.context.edges[].s",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.context.edges[].t",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.context.edges[].type",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.context.edges[].gen",
+    "types": "entier, booléen"
+  },
+  {
+    "path": "$.maps.context.hide",
+    "types": "objet (dictionnaire indexé)"
+  },
+  {
+    "path": "$.maps.context.hide.{clé}",
+    "types": "entier"
+  },
+  {
+    "path": "$.maps.context.ignored",
+    "types": "objet (dictionnaire indexé)"
+  },
+  {
+    "path": "$.maps.context.ignored.{clé}",
+    "types": "entier"
+  },
+  {
+    "path": "$.maps.context.versions",
+    "types": "liste"
+  },
+  {
+    "path": "$.maps.context.versions[]",
+    "types": "objet"
+  },
+  {
+    "path": "$.maps.context.versions[].id",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.context.versions[].at",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.context.versions[].label",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.context.versions[].map",
+    "types": "objet"
+  },
+  {
+    "path": "$.maps.context.versions[].map.nodes",
+    "types": "objet (dictionnaire indexé)"
+  },
+  {
+    "path": "$.maps.context.versions[].map.nodes.{clé}",
+    "types": "objet"
+  },
+  {
+    "path": "$.maps.context.versions[].map.nodes.{clé}.x",
+    "types": "entier, nombre"
+  },
+  {
+    "path": "$.maps.context.versions[].map.nodes.{clé}.y",
+    "types": "entier, nombre"
+  },
+  {
+    "path": "$.maps.context.versions[].map.nodes.{clé}.w",
+    "types": "entier, nombre"
+  },
+  {
+    "path": "$.maps.context.versions[].map.nodes.{clé}.h",
+    "types": "entier, nombre"
+  },
+  {
+    "path": "$.maps.context.versions[].map.nodes.{clé}.label",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.context.versions[].map.nodes.{clé}.hidden",
+    "types": "booléen"
+  },
+  {
+    "path": "$.maps.context.versions[].map.edges",
+    "types": "liste"
+  },
+  {
+    "path": "$.maps.context.versions[].map.edges[]",
+    "types": "objet"
+  },
+  {
+    "path": "$.maps.context.versions[].map.edges[].id",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.context.versions[].map.edges[].s",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.context.versions[].map.edges[].t",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.context.versions[].map.edges[].type",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.context.versions[].map.edges[].gen",
+    "types": "entier, booléen"
+  },
+  {
+    "path": "$.maps.context.versions[].map.hide",
+    "types": "objet (dictionnaire indexé)"
+  },
+  {
+    "path": "$.maps.context.versions[].map.hide.{clé}",
+    "types": "entier"
+  },
+  {
+    "path": "$.maps.context.versions[].map.ignored",
+    "types": "objet (dictionnaire indexé)"
+  },
+  {
+    "path": "$.maps.context.versions[].map.ignored.{clé}",
+    "types": "entier"
+  },
+  {
+    "path": "$.maps.context.updatedAt",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.process",
+    "types": "objet"
+  },
+  {
+    "path": "$.maps.process.nodes",
+    "types": "objet (dictionnaire indexé)"
+  },
+  {
+    "path": "$.maps.process.nodes.{clé}",
+    "types": "objet"
+  },
+  {
+    "path": "$.maps.process.nodes.{clé}.x",
+    "types": "entier, nombre"
+  },
+  {
+    "path": "$.maps.process.nodes.{clé}.y",
+    "types": "entier, nombre"
+  },
+  {
+    "path": "$.maps.process.nodes.{clé}.w",
+    "types": "entier, nombre"
+  },
+  {
+    "path": "$.maps.process.nodes.{clé}.h",
+    "types": "entier, nombre"
+  },
+  {
+    "path": "$.maps.process.nodes.{clé}.label",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.process.nodes.{clé}.hidden",
+    "types": "booléen"
+  },
+  {
+    "path": "$.maps.process.edges",
+    "types": "liste"
+  },
+  {
+    "path": "$.maps.process.edges[]",
+    "types": "objet"
+  },
+  {
+    "path": "$.maps.process.edges[].id",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.process.edges[].s",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.process.edges[].t",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.process.edges[].type",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.process.edges[].gen",
+    "types": "entier, booléen"
+  },
+  {
+    "path": "$.maps.process.hide",
+    "types": "objet (dictionnaire indexé)"
+  },
+  {
+    "path": "$.maps.process.hide.{clé}",
+    "types": "entier"
+  },
+  {
+    "path": "$.maps.process.ignored",
+    "types": "objet (dictionnaire indexé)"
+  },
+  {
+    "path": "$.maps.process.ignored.{clé}",
+    "types": "entier"
+  },
+  {
+    "path": "$.maps.process.versions",
+    "types": "liste"
+  },
+  {
+    "path": "$.maps.process.versions[]",
+    "types": "objet"
+  },
+  {
+    "path": "$.maps.process.versions[].id",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.process.versions[].at",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.process.versions[].label",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.process.versions[].map",
+    "types": "objet"
+  },
+  {
+    "path": "$.maps.process.versions[].map.nodes",
+    "types": "objet (dictionnaire indexé)"
+  },
+  {
+    "path": "$.maps.process.versions[].map.nodes.{clé}",
+    "types": "objet"
+  },
+  {
+    "path": "$.maps.process.versions[].map.nodes.{clé}.x",
+    "types": "entier, nombre"
+  },
+  {
+    "path": "$.maps.process.versions[].map.nodes.{clé}.y",
+    "types": "entier, nombre"
+  },
+  {
+    "path": "$.maps.process.versions[].map.nodes.{clé}.w",
+    "types": "entier, nombre"
+  },
+  {
+    "path": "$.maps.process.versions[].map.nodes.{clé}.h",
+    "types": "entier, nombre"
+  },
+  {
+    "path": "$.maps.process.versions[].map.nodes.{clé}.label",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.process.versions[].map.nodes.{clé}.hidden",
+    "types": "booléen"
+  },
+  {
+    "path": "$.maps.process.versions[].map.edges",
+    "types": "liste"
+  },
+  {
+    "path": "$.maps.process.versions[].map.edges[]",
+    "types": "objet"
+  },
+  {
+    "path": "$.maps.process.versions[].map.edges[].id",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.process.versions[].map.edges[].s",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.process.versions[].map.edges[].t",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.process.versions[].map.edges[].type",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.process.versions[].map.edges[].gen",
+    "types": "entier, booléen"
+  },
+  {
+    "path": "$.maps.process.versions[].map.hide",
+    "types": "objet (dictionnaire indexé)"
+  },
+  {
+    "path": "$.maps.process.versions[].map.hide.{clé}",
+    "types": "entier"
+  },
+  {
+    "path": "$.maps.process.versions[].map.ignored",
+    "types": "objet (dictionnaire indexé)"
+  },
+  {
+    "path": "$.maps.process.versions[].map.ignored.{clé}",
+    "types": "entier"
+  },
+  {
+    "path": "$.maps.process.updatedAt",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.issueKind",
+    "types": "objet (dictionnaire indexé)"
+  },
+  {
+    "path": "$.maps.issueKind.{clé}",
+    "types": "texte"
   }
 ];

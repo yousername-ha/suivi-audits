@@ -98,7 +98,7 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
         r.access === 'metier' || r.access === 'mur'
           ? ALL_PERMISSIONS.filter(
               (p) =>
-                !/^(audit|ecarts|plan_audit|pilotage|fournisseurs|conformite|ia|crrc|investissements|incidents):lire$/.test(
+                !/^(audit|ecarts|plan_audit|pilotage|fournisseurs|conformite|ia|crrc|investissements|incidents|cartographie):lire$/.test(
                   p,
                 ),
             )

@@ -38,7 +38,7 @@ describe('schéma', () => {
 
   it('chaque table métier porte version, legacy_id (unique), import_batch_id et extra', async () => {
     const t = opened[0]!;
-    for (const name of ['documents', 'links']) {
+    for (const name of ['documents', 'links', 'maps']) {
       const cols = (
         await t.svc.db.q<{ column_name: string }>(
           'SELECT column_name FROM information_schema.columns WHERE table_name=$1',
@@ -145,6 +145,7 @@ describe('migration d’une base v2 existante, sans perte', () => {
       '002_v3_fondations.sql',
       '003_droits.sql',
       '004_affichage_et_ecrans_muraux.sql',
+      '005_cartographie.sql',
     ]);
     // Rôles v2 repris : admin → Administrateur, rw → Contributeur, ro → Lecteur ; colonne users.role supprimée.
     const mapped = await t.svc.db.q<{ username: string; role_id: string }>(

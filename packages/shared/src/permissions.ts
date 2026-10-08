@@ -14,6 +14,7 @@ export const BUSINESS_MODULES = [
   'crrc',
   'investissements',
   'incidents',
+  'cartographie',
 ] as const;
 export const MODULES = [...BUSINESS_MODULES, 'documents', 'import_export', 'administration', 'parametres'] as const;
 export type Module = (typeof MODULES)[number];
@@ -30,6 +31,7 @@ export const MODULE_LABELS: Record<Module, string> = {
   crrc: 'CRRC',
   investissements: 'Investissements',
   incidents: 'Incidents et PCA/PRA',
+  cartographie: 'Cartographie du SMSI',
   documents: 'Documents et liens',
   import_export: 'Import et export',
   administration: 'Administration (comptes, groupes, rôles, sessions, journal)',
@@ -84,13 +86,13 @@ export const SYSTEM_ROLE_DEFS: Record<SystemRole, SystemRoleDef> = {
   },
   contributeur: {
     name: 'Contributeur',
-    description: 'Lire et modifier les modules métier, les documents et les liens.',
-    permissions: every([...BUSINESS_MODULES, 'documents'], ['lire', 'modifier']),
+    description: 'Lire et modifier les modules métier, les documents et les liens ; exporter les cartes.',
+    permissions: [...every([...BUSINESS_MODULES, 'documents'], ['lire', 'modifier']), 'cartographie:exporter'],
   },
   lecteur: {
     name: 'Lecteur',
-    description: 'Lecture seule des modules métier, des documents et des liens.',
-    permissions: every([...BUSINESS_MODULES, 'documents'], ['lire']),
+    description: 'Lecture seule des modules métier, des documents et des liens ; export des cartes.',
+    permissions: [...every([...BUSINESS_MODULES, 'documents'], ['lire']), 'cartographie:exporter'],
   },
   auditeur_externe: {
     name: 'Auditeur externe',
@@ -202,6 +204,7 @@ const LEGACY_KEY_MODULE: Record<string, Module | null> = {
   incidents: 'incidents',
   crisis: 'incidents',
   branding: 'parametres',
+  maps: 'cartographie',
 };
 /** Module de droits d'une clé legacy ; null pour les métadonnées techniques ; « parametres » pour une clé inconnue. */
 export function legacyKeyModule(key: string): Module | null {

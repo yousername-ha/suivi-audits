@@ -50,6 +50,7 @@ export const LEGACY_MODULES: readonly LegacyModule[] = [
   { key: 'incidents', label: 'Incidents', phase: 3 },
   { key: 'crisis', label: 'Gestion de crise', phase: 3 },
   { key: 'branding', label: 'Personnalisation', phase: 4 },
+  { key: 'maps', label: 'Cartographie du SMSI', phase: 2 },
 ];
 
 const BY_KEY = new Map(LEGACY_MODULES.map((m) => [m.key, m]));

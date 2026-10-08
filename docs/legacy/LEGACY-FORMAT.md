@@ -1,7 +1,7 @@
 # Format de l'outil de suivi « legacy » (schema 14)
 
 Généré automatiquement depuis un export réel, **sans aucune valeur** : uniquement les chemins, les types et les effectifs.
-Sert de contrat pour l'import dans la refonte. Jeu de test associé : `legacy-fixture.json` (anonymisé).
+Sert de contrat pour l'import dans la refonte. La clé `maps` (cartographie, module bêta validé le 08/10/2026, voir `docs/cartographie/reference-beta-legacy/CONTRAT-S-MAPS.md`) a été ajoutée à la main : effectifs indicatifs. Jeu de test associé : `legacy-fixture.json` (anonymisé).
 
 ## Modules (clés de premier niveau)
 
@@ -48,6 +48,7 @@ Sert de contrat pour l'import dans la refonte. Jeu de test associé : `legacy-fi
 | `evidences` | liste | 0 |
 | `invest` | objet | 3 |
 | `crrc` | objet | 6 |
+| `maps` | objet | 2 |
 
 ## Listes d'objets sans identifiant stable (à corriger côté legacy)
 
@@ -545,3 +546,98 @@ Sert de contrat pour l'import dans la refonte. Jeu de test associé : `legacy-fi
 | `$.crrc.runs` | liste | 1 |
 | `$.crrc.restores` | liste | 1 |
 | `$.crrc.alerts` | liste | 1 |
+| `$.maps` | objet | 1 |
+| `$.maps.context` | objet | 1 |
+| `$.maps.context.nodes` | objet (dictionnaire indexé) | 1 |
+| `$.maps.context.nodes.{clé}` | objet | 1 |
+| `$.maps.context.nodes.{clé}.x` | entier, nombre | 1 |
+| `$.maps.context.nodes.{clé}.y` | entier, nombre | 1 |
+| `$.maps.context.nodes.{clé}.w` | entier, nombre | 1 |
+| `$.maps.context.nodes.{clé}.h` | entier, nombre | 1 |
+| `$.maps.context.nodes.{clé}.label` | texte | 1 |
+| `$.maps.context.nodes.{clé}.hidden` | booléen | 1 |
+| `$.maps.context.edges` | liste | 1 |
+| `$.maps.context.edges[]` | objet | 1 |
+| `$.maps.context.edges[].id` | texte | 1 |
+| `$.maps.context.edges[].s` | texte | 1 |
+| `$.maps.context.edges[].t` | texte | 1 |
+| `$.maps.context.edges[].type` | texte | 1 |
+| `$.maps.context.edges[].gen` | entier, booléen | 1 |
+| `$.maps.context.hide` | objet (dictionnaire indexé) | 1 |
+| `$.maps.context.hide.{clé}` | entier | 1 |
+| `$.maps.context.ignored` | objet (dictionnaire indexé) | 1 |
+| `$.maps.context.ignored.{clé}` | entier | 1 |
+| `$.maps.context.versions` | liste | 1 |
+| `$.maps.context.versions[]` | objet | 1 |
+| `$.maps.context.versions[].id` | texte | 1 |
+| `$.maps.context.versions[].at` | texte | 1 |
+| `$.maps.context.versions[].label` | texte | 1 |
+| `$.maps.context.versions[].map` | objet | 1 |
+| `$.maps.context.versions[].map.nodes` | objet (dictionnaire indexé) | 1 |
+| `$.maps.context.versions[].map.nodes.{clé}` | objet | 1 |
+| `$.maps.context.versions[].map.nodes.{clé}.x` | entier, nombre | 1 |
+| `$.maps.context.versions[].map.nodes.{clé}.y` | entier, nombre | 1 |
+| `$.maps.context.versions[].map.nodes.{clé}.w` | entier, nombre | 1 |
+| `$.maps.context.versions[].map.nodes.{clé}.h` | entier, nombre | 1 |
+| `$.maps.context.versions[].map.nodes.{clé}.label` | texte | 1 |
+| `$.maps.context.versions[].map.nodes.{clé}.hidden` | booléen | 1 |
+| `$.maps.context.versions[].map.edges` | liste | 1 |
+| `$.maps.context.versions[].map.edges[]` | objet | 1 |
+| `$.maps.context.versions[].map.edges[].id` | texte | 1 |
+| `$.maps.context.versions[].map.edges[].s` | texte | 1 |
+| `$.maps.context.versions[].map.edges[].t` | texte | 1 |
+| `$.maps.context.versions[].map.edges[].type` | texte | 1 |
+| `$.maps.context.versions[].map.edges[].gen` | entier, booléen | 1 |
+| `$.maps.context.versions[].map.hide` | objet (dictionnaire indexé) | 1 |
+| `$.maps.context.versions[].map.hide.{clé}` | entier | 1 |
+| `$.maps.context.versions[].map.ignored` | objet (dictionnaire indexé) | 1 |
+| `$.maps.context.versions[].map.ignored.{clé}` | entier | 1 |
+| `$.maps.context.updatedAt` | texte | 1 |
+| `$.maps.process` | objet | 1 |
+| `$.maps.process.nodes` | objet (dictionnaire indexé) | 1 |
+| `$.maps.process.nodes.{clé}` | objet | 1 |
+| `$.maps.process.nodes.{clé}.x` | entier, nombre | 1 |
+| `$.maps.process.nodes.{clé}.y` | entier, nombre | 1 |
+| `$.maps.process.nodes.{clé}.w` | entier, nombre | 1 |
+| `$.maps.process.nodes.{clé}.h` | entier, nombre | 1 |
+| `$.maps.process.nodes.{clé}.label` | texte | 1 |
+| `$.maps.process.nodes.{clé}.hidden` | booléen | 1 |
+| `$.maps.process.edges` | liste | 1 |
+| `$.maps.process.edges[]` | objet | 1 |
+| `$.maps.process.edges[].id` | texte | 1 |
+| `$.maps.process.edges[].s` | texte | 1 |
+| `$.maps.process.edges[].t` | texte | 1 |
+| `$.maps.process.edges[].type` | texte | 1 |
+| `$.maps.process.edges[].gen` | entier, booléen | 1 |
+| `$.maps.process.hide` | objet (dictionnaire indexé) | 1 |
+| `$.maps.process.hide.{clé}` | entier | 1 |
+| `$.maps.process.ignored` | objet (dictionnaire indexé) | 1 |
+| `$.maps.process.ignored.{clé}` | entier | 1 |
+| `$.maps.process.versions` | liste | 1 |
+| `$.maps.process.versions[]` | objet | 1 |
+| `$.maps.process.versions[].id` | texte | 1 |
+| `$.maps.process.versions[].at` | texte | 1 |
+| `$.maps.process.versions[].label` | texte | 1 |
+| `$.maps.process.versions[].map` | objet | 1 |
+| `$.maps.process.versions[].map.nodes` | objet (dictionnaire indexé) | 1 |
+| `$.maps.process.versions[].map.nodes.{clé}` | objet | 1 |
+| `$.maps.process.versions[].map.nodes.{clé}.x` | entier, nombre | 1 |
+| `$.maps.process.versions[].map.nodes.{clé}.y` | entier, nombre | 1 |
+| `$.maps.process.versions[].map.nodes.{clé}.w` | entier, nombre | 1 |
+| `$.maps.process.versions[].map.nodes.{clé}.h` | entier, nombre | 1 |
+| `$.maps.process.versions[].map.nodes.{clé}.label` | texte | 1 |
+| `$.maps.process.versions[].map.nodes.{clé}.hidden` | booléen | 1 |
+| `$.maps.process.versions[].map.edges` | liste | 1 |
+| `$.maps.process.versions[].map.edges[]` | objet | 1 |
+| `$.maps.process.versions[].map.edges[].id` | texte | 1 |
+| `$.maps.process.versions[].map.edges[].s` | texte | 1 |
+| `$.maps.process.versions[].map.edges[].t` | texte | 1 |
+| `$.maps.process.versions[].map.edges[].type` | texte | 1 |
+| `$.maps.process.versions[].map.edges[].gen` | entier, booléen | 1 |
+| `$.maps.process.versions[].map.hide` | objet (dictionnaire indexé) | 1 |
+| `$.maps.process.versions[].map.hide.{clé}` | entier | 1 |
+| `$.maps.process.versions[].map.ignored` | objet (dictionnaire indexé) | 1 |
+| `$.maps.process.versions[].map.ignored.{clé}` | entier | 1 |
+| `$.maps.process.updatedAt` | texte | 1 |
+| `$.maps.issueKind` | objet (dictionnaire indexé) | 1 |
+| `$.maps.issueKind.{clé}` | texte | 1 |

@@ -103,7 +103,11 @@ async function writeModules(
     if (m) await m.write(c, v, batchId);
     else data[k] = v;
   }
-  for (const k of values.absent) delete data[k];
+  for (const k of values.absent) {
+    const m = svc.legacy.mapper(k);
+    if (m) await m.write(c, undefined, batchId);
+    delete data[k];
+  }
   for (const k of svc.legacy.takenOver()) delete data[k];
   return svc.legacy.save(c, data, user, null, note, batchId);
 }

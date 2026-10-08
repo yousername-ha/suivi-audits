@@ -86,7 +86,6 @@ export const IssueKindBody = z.object({
 });
 export const ExportBody = z.object({ view: MapViewSchema, format: z.enum(['png', 'svg', 'pdf', 'json']) });
 
-const Person = z.object({ id: z.string(), name: z.string() }).nullable();
 export const MapOut = z.object({
   id: z.string(),
   view: MapViewSchema,
@@ -95,9 +94,9 @@ export const MapOut = z.object({
   settings: MapSettingsSchema,
   version: z.number(),
   created_at: z.string(),
-  created_by: Person,
+  created_by: z.string(),
   updated_at: z.string(),
-  updated_by: Person,
+  updated_by: z.string(),
   versions: z.number(),
 });
 export type MapOut = z.infer<typeof MapOut>;
@@ -105,7 +104,7 @@ export const MapVersionOut = z.object({
   id: z.string(),
   label: z.string(),
   created_at: z.string(),
-  created_by: Person,
+  created_by: z.string(),
   nodes: z.number(),
 });
 export type MapVersionOut = z.infer<typeof MapVersionOut>;

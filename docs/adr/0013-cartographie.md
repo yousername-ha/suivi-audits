@@ -55,9 +55,11 @@ intéressées, SWOT, périmètre, GAP, fournisseurs) ne sont pas encore repris :
 - Migration `005_cartographie.sql` : tables `maps` (`view`, `name`, `layout` jsonb, `settings` jsonb, `version`,
   traçabilité, `legacy_id`, `import_batch_id`, `extra`) et `map_versions` (20 au plus par carte, la plus ancienne
   supprimée) ; déclencheurs de notification (temps réel). Validation zod `MapLayoutSchema` : au plus 400 nœuds,
-  coordonnées finies, tailles de 40 à 6000, types de relation connus, relations entre nœuds existants.
+  coordonnées finies, tailles de 40 à 200 000 (une bande de 400 processus générée dépasse 100 000 px : la borne de
+  6 000 de la spécification est relevée), types de relation connus, relations entre nœuds existants.
 - **Reprise immédiate des cartes de la bêta** : la migration recopie `app_state.data.maps` (s'il existe) dans ces
-  tables et retire la clé de l'état legacy ; un `ModuleMapper` « maps » est enregistré (ADR 0007). L'import legacy
+  tables ; la clé reste dans `app_state` jusqu'au prochain enregistrement (l'empreinte de l'état n'est pas recalculée
+  en SQL), mais l'état servi est recomposé depuis les tables. Un `ModuleMapper` « maps » est enregistré (ADR 0007). L'import legacy
   écrit donc `S.maps` dans les tables, l'export le reconstruit, et `/legacy` affiche la cartographie en lecture
   seule (écritures refusées par 409, comme tout module repris).
 - Une carte par vue au départ ; le modèle permet plusieurs cartes par vue.

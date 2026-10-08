@@ -14,6 +14,7 @@ import { importRoutes } from './routes/import.js';
 import { legacyRoutes } from './routes/legacy.js';
 import { settingsRoutes } from './routes/settings.js';
 import { affichageRoutes } from './routes/affichage.js';
+import { cartoRoutes } from './routes/carto.js';
 import { lastMigration, pendingMigrations } from './systeme.js';
 import { ReadyOut, VersionOut } from '@suivi/shared';
 import { MAX_SCHEMA, MIN_SCHEMA } from '@suivi/shared/legacy';
@@ -97,6 +98,7 @@ export function allRoutes(): RouteDef[] {
     ...importRoutes,
     ...settingsRoutes,
     ...affichageRoutes,
+    ...cartoRoutes,
   );
   return list;
 }

@@ -139,6 +139,8 @@ export interface BuildOptions {
   issueKind?: Record<string, 'ext' | 'int'>;
   /** Ajoute les champs de la fiche détaillée (API) ; les tests de parité s'en passent. */
   details?: boolean;
+  /** Clé legacy lisible par la personne (chiffres clés du SMSI : pas de « 0 » pour un module non lisible). */
+  lisible?: (key: string) => boolean;
 }
 
 const ISO: Referentiel[] = ['ISO 27001'];
@@ -188,7 +190,7 @@ export function buildObjects(state: unknown, opts: BuildOptions): Map<string, Ca
     };
     const counts: { label: string; value: number }[] = [];
     const count = (label: string, key: string, filter?: (x: Rec) => boolean) => {
-      if (Array.isArray(S[key]))
+      if (Array.isArray(S[key]) && (opts.lisible?.(key) ?? true))
         counts.push({ label, value: filter ? arr(S[key]).filter(filter).length : arr(S[key]).length });
     };
     count('Processus', 'processes');
