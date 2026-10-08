@@ -1,14 +1,25 @@
 /* Schémas zod de la cartographie (CARTO-03, CARTO-04) : disposition d'une carte, réglages, échanges avec l'API. */
 import { z } from 'zod';
 import { GENERATE_MAX } from './edit.js';
-import { MAP_VIEWS, OBJECT_TYPES, REFERENTIELS, RELATION_TYPES } from './model.js';
+import { MAP_VIEWS, OBJECT_TYPES, REFERENTIELS, RELATION_TYPES, TINTS } from './model.js';
 
 /** Bornes de la disposition. Une bande de 400 processus générée mesure plus de 100 000 px : la taille maximale
  *  est 200 000 px (au lieu de 6 000 dans la spécification), les coordonnées restent finies et bornées. */
-export const LAYOUT_LIMITS = { nodes: GENERATE_MAX, minSize: 40, maxSize: 200000, coord: 1e6, edges: 2000 } as const;
+export const LAYOUT_LIMITS = {
+  nodes: GENERATE_MAX,
+  minSize: 40,
+  maxSize: 200000,
+  coord: 1e6,
+  edges: 2000,
+  /** Notes et cadres libres par carte (CARTO-19). */
+  free: 200,
+  freeText: 500,
+} as const;
 
 // Référence : préfixe connu, puis 1 à 200 caractères imprimables (aucun caractère de contrôle, pas d'espace en tête).
-const REF_RE = /^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone):\S[^\p{Cc}]{0,199})$/u;
+const REF_RE = /^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone|note|frame):\S[^\p{Cc}]{0,199})$/u;
+/** Note ou cadre libre : identifiant court sans espace. */
+export const FREE_REF_RE = /^(note|frame):[A-Za-z0-9_-]{1,40}$/;
 export const ObjectRef = z.string().max(220).regex(REF_RE, 'Référence d’objet invalide.');
 const coord = z.number().finite().min(-LAYOUT_LIMITS.coord).max(LAYOUT_LIMITS.coord);
 const size = z.number().finite().min(LAYOUT_LIMITS.minSize).max(LAYOUT_LIMITS.maxSize);
@@ -28,6 +39,10 @@ export const MapEdgeSchema = z.object({
   type: z.enum(RELATION_TYPES),
   gen: z.boolean().optional(),
 });
+export const FreeElementSchema = z.object({
+  text: z.string().max(LAYOUT_LIMITS.freeText),
+  tint: z.enum(TINTS),
+});
 const keyRecord = (key: z.ZodString, max: number) =>
   z
     .record(key, z.literal(1))
@@ -43,8 +58,18 @@ export const MapLayoutSchema = z
     edges: z.array(MapEdgeSchema).max(LAYOUT_LIMITS.edges).default([]),
     hide: keyRecord(z.string().max(500).regex(/^d:/), 2000),
     ignored: keyRecord(ObjectRef, 5000),
+    free: z
+      .record(z.string().regex(FREE_REF_RE, 'Référence de note ou de cadre invalide.'), FreeElementSchema)
+      .refine(
+        (f) => Object.keys(f).length <= LAYOUT_LIMITS.free,
+        `Au plus ${LAYOUT_LIMITS.free} notes et cadres par carte.`,
+      )
+      .optional(),
   })
   .superRefine((l, ctx) => {
+    for (const r of Object.keys(l.nodes))
+      if (/^(note|frame):/.test(r) && !FREE_REF_RE.test(r))
+        ctx.addIssue({ code: 'custom', path: ['nodes', r], message: 'Référence de note ou de cadre invalide.' });
     const ids = new Set<string>();
     l.edges.forEach((e, i) => {
       if (!l.nodes[e.s] || !l.nodes[e.t])
@@ -59,11 +84,24 @@ export const MapLayoutSchema = z
 export type MapLayoutInput = z.input<typeof MapLayoutSchema>;
 
 /** Réglages d'une carte : nature des enjeux corrigée à la main (CARTO-12, carte de contexte). */
+const issueLabel = z
+  .string()
+  .trim()
+  .min(1, 'Libellé obligatoire.')
+  .max(200)
+  .regex(/^[^\p{Cc}]*$/u, 'Caractère interdit.');
+export const MapIssueSchema = z.object({
+  label: issueLabel,
+  kind: z.enum(['ext', 'int']),
+  desc: z.string().trim().max(500).optional(),
+});
 export const MapSettingsSchema = z.object({
   issueKind: z
     .record(z.string().regex(/^issue:[a-z0-9]{1,16}$/), z.enum(['ext', 'int']))
     .refine((r) => Object.keys(r).length <= 2000, 'Trop d’entrées.')
     .optional(),
+  /** Enjeux créés sur la carte (CARTO-15), jusqu'à la reprise des enjeux. */
+  issues: z.array(MapIssueSchema).max(500).optional(),
 });
 export type MapSettings = z.infer<typeof MapSettingsSchema>;
 
@@ -111,7 +149,7 @@ export type MapVersionOut = z.infer<typeof MapVersionOut>;
 export const MapVersionDetailOut = MapVersionOut.extend({ layout: MapLayoutSchema });
 
 const IssueSourceSchema = z.object({
-  k: z.enum(['obj', 'swot']),
+  k: z.enum(['obj', 'swot', 'map']),
   id: z.string(),
   l: z.string(),
   proc: z.string().optional(),

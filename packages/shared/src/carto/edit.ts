@@ -12,8 +12,10 @@ import {
   type MapView,
   type ObjectType,
   type RelationType,
+  type Tint,
   emptyLayout,
   familyOf,
+  isFreeRef,
   isMapOnlyRef,
 } from './model.js';
 import { type ObjectLookup, deriveRelations, lookupIn, mapOnlyObject } from './objects.js';
@@ -217,7 +219,9 @@ export function generateLayout(
   const complete = fd.mode === 'complete' && !!prev;
   let w = prev ? clone(prev) : emptyLayout();
   if (!complete) {
-    w.nodes = {};
+    // Notes et cadres libres conservés : ils ne viennent pas des données (CARTO-19).
+    const libres = Object.entries(w.nodes).filter(([r]) => isFreeRef(r));
+    w.nodes = Object.fromEntries(libres);
     w.edges = w.edges.filter((e) => !e.gen);
     w.hide = {};
   }
@@ -249,7 +253,7 @@ export function relayout(l: MapLayout, ctx: CartoContext, view: MapView): MapLay
   const w = clone(l);
   const refs = new Set(Object.keys(w.nodes).filter((r) => !isMapOnlyRef(r) && ctx.objs.has(r)));
   const P = layoutFor(view, refs, ctx.objs);
-  for (const r of Object.keys(w.nodes)) if (mapOnlyObject(r) && !P[r]) delete w.nodes[r];
+  for (const r of Object.keys(w.nodes)) if (mapOnlyObject(r) && !isFreeRef(r) && !P[r]) delete w.nodes[r];
   for (const [r, p] of Object.entries(P)) {
     const n = nodeFrom(p, '');
     w.nodes[r] = Object.assign(w.nodes[r] ?? { label: ctx.lookup(r)?.name ?? '' }, { x: n.x, y: n.y, w: n.w, h: n.h });
@@ -357,6 +361,10 @@ export function removeNode(l: MapLayout, ref: string): MapLayout {
   const w = clone(l);
   delete w.nodes[ref];
   w.edges = w.edges.filter((e) => e.s !== ref && e.t !== ref);
+  if (w.free?.[ref]) {
+    delete w.free[ref];
+    if (!Object.keys(w.free).length) delete w.free;
+  }
   if (!mapOnlyObject(ref)) w.ignored[ref] = 1;
   return w;
 }
@@ -460,9 +468,148 @@ export function refreshLabels(l: MapLayout, objs: ReadonlyMap<string, CartoObjec
   }
   return w;
 }
-/** Carte vierge : vue contexte avec le SMSI seul. */
+/** Carte vierge (« Partir de zéro », CARTO-19) : SMSI dans le périmètre (vue contexte), bandes pilotage, réalisation
+ *  et support vides (vue processus). */
 export function blankLayout(view: MapView): MapLayout {
   const l = emptyLayout();
-  if (view === 'context') l.nodes.isms = { x: 0, y: 0, w: 300, h: 116, label: '' };
+  if (view === 'context') {
+    l.nodes.scope = { x: 0, y: 0, w: 1100, h: 620, label: '' };
+    l.nodes.isms = { x: 400, y: 252, w: 300, h: 116, label: '' };
+  } else
+    (['pil', 'rea', 'sup'] as const).forEach((k, i) => {
+      l.nodes['lane:' + k] = { x: 0, y: i * 330, w: 1400, h: 260, label: '' };
+    });
   return l;
+}
+
+/* ---------------------------------------------------------------- Construire de zéro (CARTO-15 à CARTO-19) */
+/** Place un objet au point visé (centre de la boîte), au plus près sans chevaucher une autre boîte. */
+export function placeNodeAt(
+  l: MapLayout,
+  ref: string,
+  view: MapView,
+  lookup: ObjectLookup,
+  x: number,
+  y: number,
+): MapLayout {
+  const w = clone(l);
+  const o = lookup(ref),
+    sz = defaultSize(view, o);
+  const cards: Rect[] = Object.entries(w.nodes)
+    .filter(([r, n]) => r !== ref && !n.hidden && !isContainer(lookup(r), n))
+    .map(([, n]) => n);
+  const libre = (px: number, py: number) =>
+    isContainer(o, sz) ||
+    !cards.some((n) => px < n.x + n.w + 12 && px + sz.w + 12 > n.x && py < n.y + n.h + 12 && py + sz.h + 12 > n.y);
+  const x0 = Math.round(x - sz.w / 2),
+    y0 = Math.round(y - sz.h / 2);
+  const pas = [Math.round(sz.w / 2) + 12, Math.round(sz.h / 2) + 10] as const;
+  let pos: [number, number] = [x0, y0 + 40 * pas[1]];
+  trouve: for (let rr = 0; rr < 40; rr++) {
+    const C: [number, number][] = [];
+    for (let i = -rr; i <= rr; i++) C.push([i, -rr], [rr, i], [i, rr], [-rr, i]);
+    C.sort((a, b) => Math.hypot(a[0], a[1]) - Math.hypot(b[0], b[1]));
+    for (const [i, j] of C)
+      if (libre(x0 + i * pas[0], y0 + j * pas[1])) {
+        pos = [x0 + i * pas[0], y0 + j * pas[1]];
+        break trouve;
+      }
+  }
+  w.nodes[ref] = { x: pos[0], y: pos[1], w: sz.w, h: sz.h, label: o ? o.name : '' };
+  delete w.ignored[ref];
+  return w;
+}
+
+/** Ajoute une note ou un cadre libre, centré sur le point visé. */
+export function addFree(
+  l: MapLayout,
+  kind: 'note' | 'frame',
+  id: string,
+  x: number,
+  y: number,
+  text: string,
+  tint: Tint,
+  size?: { w: number; h: number },
+): MapLayout {
+  const w = clone(l);
+  const ref = kind + ':' + id;
+  const sz = size ?? (kind === 'note' ? { w: 220, h: 110 } : { w: 520, h: 320 });
+  w.nodes[ref] = { x: Math.round(x - sz.w / 2), y: Math.round(y - sz.h / 2), w: sz.w, h: sz.h, label: text };
+  w.free = { ...(w.free ?? {}), [ref]: { text, tint } };
+  return w;
+}
+/** Modifie le texte ou la teinte d'une note ou d'un cadre libre. */
+export function setFree(l: MapLayout, ref: string, patch: { text?: string; tint?: Tint }): MapLayout {
+  const cur = l.free?.[ref];
+  const n = l.nodes[ref];
+  if (!cur || !n) return l;
+  const f = { ...cur, ...patch };
+  return { ...l, nodes: { ...l.nodes, [ref]: { ...n, label: f.text } }, free: { ...l.free, [ref]: f } };
+}
+/** Cadre libre autour des objets choisis (« Grouper dans un cadre »). */
+export function frameAround(l: MapLayout, refs: readonly string[], id: string, text: string, tint: Tint): MapLayout {
+  const ns = refs.map((r) => l.nodes[r]).filter((n): n is NonNullable<typeof n> => !!n);
+  if (!ns.length) return l;
+  const bb = boundingBox(ns);
+  const w = clone(l);
+  const ref = 'frame:' + id;
+  w.nodes[ref] = { x: bb.x - 32, y: bb.y - 64, w: Math.max(240, bb.w + 64), h: Math.max(120, bb.h + 96), label: text };
+  w.free = { ...(w.free ?? {}), [ref]: { text, tint } };
+  return w;
+}
+
+export type Alignement = 'left' | 'hcenter' | 'right' | 'top' | 'vcenter' | 'bottom';
+/** Aligne les objets choisis sur le premier bord (ou centre) commun. */
+export function alignNodes(l: MapLayout, refs: readonly string[], mode: Alignement): MapLayout {
+  const ns = refs.filter((r) => l.nodes[r]);
+  if (ns.length < 2) return l;
+  const bb = boundingBox(ns.map((r) => l.nodes[r]!));
+  const nodes = { ...l.nodes };
+  for (const r of ns) {
+    const n = nodes[r]!;
+    const x =
+      mode === 'left'
+        ? bb.x
+        : mode === 'right'
+          ? bb.x + bb.w - n.w
+          : mode === 'hcenter'
+            ? Math.round(bb.x + (bb.w - n.w) / 2)
+            : n.x;
+    const y =
+      mode === 'top'
+        ? bb.y
+        : mode === 'bottom'
+          ? bb.y + bb.h - n.h
+          : mode === 'vcenter'
+            ? Math.round(bb.y + (bb.h - n.h) / 2)
+            : n.y;
+    nodes[r] = { ...n, x, y };
+  }
+  return { ...l, nodes };
+}
+/** Répartit les objets choisis à intervalles égaux (horizontalement ou verticalement). */
+export function distributeNodes(l: MapLayout, refs: readonly string[], axis: 'h' | 'v'): MapLayout {
+  const ns = refs.filter((r) => l.nodes[r]);
+  if (ns.length < 3) return l;
+  const pos = (r: string) => (axis === 'h' ? l.nodes[r]!.x : l.nodes[r]!.y);
+  const dim = (r: string) => (axis === 'h' ? l.nodes[r]!.w : l.nodes[r]!.h);
+  const tri = [...ns].sort((a, b) => pos(a) - pos(b));
+  const debut = pos(tri[0]!),
+    fin = pos(tri.at(-1)!) + dim(tri.at(-1)!);
+  const total = tri.reduce((a, r) => a + dim(r), 0);
+  const ecart = (fin - debut - total) / (tri.length - 1);
+  const nodes = { ...l.nodes };
+  let c = debut;
+  for (const r of tri) {
+    const n = nodes[r]!;
+    nodes[r] = axis === 'h' ? { ...n, x: Math.round(c) } : { ...n, y: Math.round(c) };
+    c += dim(r) + ecart;
+  }
+  return { ...l, nodes };
+}
+/** Objets dont la boîte est entièrement dans le rectangle (sélection au lasso). */
+export function nodesWithin(l: MapLayout, r: Rect): string[] {
+  return Object.entries(l.nodes)
+    .filter(([, n]) => !n.hidden && n.x >= r.x && n.y >= r.y && n.x + n.w <= r.x + r.w && n.y + n.h <= r.y + r.h)
+    .map(([k]) => k);
 }

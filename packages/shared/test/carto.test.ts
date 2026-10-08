@@ -172,7 +172,7 @@ describe('édition (CARTO-07)', () => {
     expect(MapLayoutSchema.safeParse(l).success).toBe(true);
   });
   it('les relations vers un objet absent sont refusées par le schéma, puis élaguées', () => {
-    const l = addEdge(blankLayout('context'), 'isms', 'scope', 'related_to', 'x1');
+    const l = addEdge(blankLayout('context'), 'isms', 'pi:absent', 'related_to', 'x1');
     expect(MapLayoutSchema.safeParse(l).success).toBe(false);
     expect(pruneEdges(l).edges).toHaveLength(0);
   });

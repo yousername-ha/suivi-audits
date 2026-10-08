@@ -1,4 +1,4 @@
-/* Cartographie (CARTO-01, 02, 03, 04, 11, 12, 13, 14) : objets filtrés par droits, cartes, If-Match et 412,
+/* Cartographie (CARTO-01, 02, 03, 04, 11, 12, 13, 14, 15, 18) : objets filtrés par droits, cartes, If-Match et 412,
    versions (20 au plus), lecture seule, temps réel, journal d'audit, reprise du module legacy « maps ». */
 import { createHash } from 'node:crypto';
 import { copyFileSync, mkdtempSync, readFileSync } from 'node:fs';
@@ -187,6 +187,112 @@ describe('cartes : création, If-Match, 412, lecture seule (CARTO-03, CARTO-04, 
   });
 });
 
+describe('construire de zéro : créer et renommer depuis la carte (CARTO-15, CARTO-18)', () => {
+  type Obj = { ref: string; type: string; name: string; src?: { k: string }[] };
+  const objets = async (a: Agent) => (await a.get('/api/carto/objects')).json().objects as Obj[];
+  const etat = async () => (await t.svc.legacy.recompose())!.data as Record<string, Record<string, unknown>[]>;
+  // Les enjeux créés ici vivent dans une carte de contexte « vide » : retirée pour les tests de reprise suivants.
+  afterAll(() => t.svc.db.q('DELETE FROM maps'));
+
+  it('partie intéressée créée dans son module, journalisée, visible en temps réel', async () => {
+    await t.svc.bus.start();
+    const ev = new Promise<ChangeEvent>((res) =>
+      t.svc.bus.once('change', (e: ChangeEvent) => e.entity === 'legacy_state' && res(e)),
+    );
+    const r = await contrib.post('/api/carto/objects', {
+      type: 'stakeholder',
+      name: 'Autorité de contrôle (fictive)',
+      nature: 'Externe',
+    });
+    expect(r.statusCode, r.body).toBe(201);
+    const { ref } = r.json() as { ref: string };
+    expect(ref).toMatch(/^pi:PI-/);
+    expect(await ev).toMatchObject({ entity: 'legacy_state' });
+    const pi = (await etat()).interested!.find((x) => 'pi:' + x.id === ref)!;
+    expect(pi).toMatchObject({ name: 'Autorité de contrôle (fictive)', type: 'Externe', cat: 'Autre' });
+    expect((await objets(lecteur)).find((o) => o.ref === ref)).toMatchObject({ type: 'stakeholder' });
+    const row = await t.svc.db.one<{ username: string; target: string; details: { type: string } }>(
+      "SELECT username, target, details FROM audit_log WHERE action = 'carto.object_create' ORDER BY id DESC LIMIT 1",
+    );
+    expect(row).toMatchObject({ username: 'contrib', target: ref, details: { type: 'stakeholder' } });
+  });
+
+  it('double contrôle des droits : cartographie:modifier et la permission du module d’origine', async () => {
+    expect((await lecteur.post('/api/carto/objects', { type: 'site', name: 'Site fictif' })).statusCode).toBe(403);
+    await t.svc.db.q(
+      "INSERT INTO roles(id, name, permissions) VALUES ('r_carto_mod', 'Carto et pilotage', '{cartographie:lire,cartographie:modifier,pilotage:lire,pilotage:modifier,fournisseurs:lire}')",
+    );
+    const a = await login(t, await makeUser(t, 'cartomod', 'r_carto_mod'));
+    const r = await a.post('/api/carto/objects', { type: 'supplier', name: 'Fournisseur fictif refusé' });
+    expect(r.statusCode).toBe(403);
+    expect(r.json().permission).toBe('fournisseurs:modifier');
+    expect((await a.post('/api/carto/objects', { type: 'site', name: 'Site fictif' })).statusCode).toBe(201);
+    expect((await a.post('/api/carto/objects', { type: 'site', name: 'site FICTIF' })).statusCode).toBe(409);
+    expect((await a.post('/api/carto/objects', { type: 'site', name: '' })).statusCode).toBe(422);
+  });
+
+  it('fournisseur, application, processus et sous-processus au format de l’outil historique', async () => {
+    const f = await rssi.post('/api/carto/objects', { type: 'supplier', name: 'Hébergeur fictif', hds: true });
+    expect(f.statusCode, f.body).toBe(201);
+    const app = await rssi.post('/api/carto/objects', {
+      type: 'application',
+      name: 'Application fictive',
+      supplier: 'Hébergeur fictif',
+    });
+    expect(app.statusCode, app.body).toBe(201);
+    const p = await rssi.post('/api/carto/objects', { type: 'process', name: 'Processus fictif', family: 'Support' });
+    const sp = await rssi.post('/api/carto/objects', {
+      type: 'subprocess',
+      name: 'Étape fictive',
+      parent: (p.json().ref as string).slice('process:'.length),
+    });
+    expect(sp.statusCode, sp.body).toBe(201);
+    const o = await objets(rssi);
+    expect(o.find((x) => x.ref === app.json().ref)).toMatchObject({ supRef: f.json().ref });
+    expect(o.find((x) => x.ref === sp.json().ref)).toMatchObject({ type: 'subprocess', family: 'Support' });
+    const sup = (await etat()).suppliers!.find((x) => 'sup:' + x.id === f.json().ref)!;
+    expect((sup.controls as { id: string }[]).map((c) => c.id)).toContain('hds');
+  });
+
+  it('enjeu : rangé dans les réglages de la carte de contexte, sans doublon', async () => {
+    const r = await contrib.post('/api/carto/objects', { type: 'issue', name: 'Menace fictive créée', kind: 'ext' });
+    expect(r.statusCode, r.body).toBe(201);
+    const enjeu = (await objets(rssi)).find((o) => o.ref === r.json().ref)!;
+    expect(enjeu).toMatchObject({ type: 'external_issue', src: [{ k: 'map' }] });
+    expect(
+      (await contrib.post('/api/carto/objects', { type: 'issue', name: 'menace fictive créée', kind: 'int' }))
+        .statusCode,
+    ).toBe(409);
+    const derive = (await objets(rssi)).find((o) => o.type === 'internal_issue' && o.src?.[0]?.k !== 'map')!;
+    expect(
+      (await contrib.post('/api/carto/objects', { type: 'issue', name: derive.name, kind: 'int' })).statusCode,
+    ).toBe(409);
+    const m = await t.svc.db.one<{ settings: { issues: unknown[] } }>(
+      "SELECT settings FROM maps WHERE view = 'context'",
+    );
+    expect(m.settings.issues).toEqual([{ label: 'Menace fictive créée', kind: 'ext' }]);
+    expect((await lecteur.get('/api/carto/maps')).json()).toEqual([]);
+  });
+
+  it('renommer : module d’origine modifié et journalisé ; objets repérés par leur libellé refusés', async () => {
+    const objs = await objets(rssi);
+    const proc = objs.find((o) => o.ref === 'process:PRR-001')!;
+    const r = await contrib.put('/api/carto/objects/name', { ref: proc.ref, name: 'Concevoir (renommé, fictif)' });
+    expect(r.statusCode, r.body).toBe(200);
+    expect((await objets(rssi)).find((o) => o.ref === proc.ref)!.name).toBe('Concevoir (renommé, fictif)');
+    const row = await t.svc.db.one<{ details: { old: string } }>(
+      "SELECT details FROM audit_log WHERE action = 'carto.object_rename' ORDER BY id DESC LIMIT 1",
+    );
+    expect(row.details.old).toBe(proc.name);
+    await contrib.put('/api/carto/objects/name', { ref: proc.ref, name: proc.name });
+    const site = objs.find((o) => o.type === 'site')!;
+    expect((await contrib.put('/api/carto/objects/name', { ref: site.ref, name: 'x' })).statusCode).toBe(422);
+    expect((await contrib.put('/api/carto/objects/name', { ref: 'pi:inexistant', name: 'x' })).statusCode).toBe(404);
+    expect((await lecteur.put('/api/carto/objects/name', { ref: proc.ref, name: 'x' })).statusCode).toBe(403);
+    expect((await sansFournisseurs.put('/api/carto/objects/name', { ref: proc.ref, name: 'x' })).statusCode).toBe(403);
+  });
+});
+
 describe('reprise du module legacy « maps » (CARTO-14)', () => {
   it('import de la fixture : cartes dans les tables, /legacy en lecture seule, export identique', async () => {
     const fixture = JSON.parse(readFileSync(fixturePath, 'utf8')) as JsonObject;
@@ -231,6 +337,24 @@ describe('reprise du module legacy « maps » (CARTO-14)', () => {
     await t.svc.db.q("INSERT INTO roles(id, name, permissions) VALUES ('r_audit', 'Audit seul', '{audit:lire}')");
     const a = await login(t, await makeUser(t, 'auditseul', 'r_audit'));
     expect((await a.get('/api/legacy/state')).json().maps).toEqual({});
+  });
+  it('notes, cadres libres et enjeux créés sur la carte : aller-retour à l’identique (CARTO-15, CARTO-19)', async () => {
+    const fixture = JSON.parse(readFileSync(fixturePath, 'utf8')) as JsonObject;
+    const maps = structuredClone(fixture.maps) as JsonObject;
+    const ctx = maps.context as JsonObject;
+    (ctx.nodes as JsonObject)['note:n1'] = { x: 40, y: -200, w: 220, h: 110, label: 'Note fictive' };
+    ctx.free = { 'note:n1': { text: 'Note fictive', tint: 'orange' } };
+    maps.issues = [{ label: 'Enjeu fictif créé sur la carte', kind: 'ext', desc: 'Exemple fictif' }];
+    await importer(admin, { ...fixture, maps });
+    expect(deepEqual((await admin.get('/api/legacy/state')).json().maps as Json, maps as Json)).toBe(true);
+    const carte = ((await rssi.get('/api/carto/maps')).json() as { view: string; layout: MapLayout }[]).find(
+      (m) => m.view === 'context',
+    )!;
+    expect(carte.layout.free).toEqual({ 'note:n1': { text: 'Note fictive', tint: 'orange' } });
+    const objs = (await rssi.get('/api/carto/objects')).json().objects as { name: string; type: string }[];
+    expect(objs).toContainEqual(
+      expect.objectContaining({ name: 'Enjeu fictif créé sur la carte', type: 'external_issue' }),
+    );
   });
 });
 

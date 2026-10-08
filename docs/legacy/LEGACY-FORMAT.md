@@ -567,6 +567,10 @@ Sert de contrat pour l'import dans la refonte. La clé `maps` (cartographie, mod
 | `$.maps.context.hide.{clé}` | entier | 1 |
 | `$.maps.context.ignored` | objet (dictionnaire indexé) | 1 |
 | `$.maps.context.ignored.{clé}` | entier | 1 |
+| `$.maps.context.free` | objet (dictionnaire indexé) | 1 |
+| `$.maps.context.free.{clé}` | objet | 1 |
+| `$.maps.context.free.{clé}.text` | texte | 1 |
+| `$.maps.context.free.{clé}.tint` | texte | 1 |
 | `$.maps.context.versions` | liste | 1 |
 | `$.maps.context.versions[]` | objet | 1 |
 | `$.maps.context.versions[].id` | texte | 1 |
@@ -592,6 +596,10 @@ Sert de contrat pour l'import dans la refonte. La clé `maps` (cartographie, mod
 | `$.maps.context.versions[].map.hide.{clé}` | entier | 1 |
 | `$.maps.context.versions[].map.ignored` | objet (dictionnaire indexé) | 1 |
 | `$.maps.context.versions[].map.ignored.{clé}` | entier | 1 |
+| `$.maps.context.versions[].map.free` | objet (dictionnaire indexé) | 1 |
+| `$.maps.context.versions[].map.free.{clé}` | objet | 1 |
+| `$.maps.context.versions[].map.free.{clé}.text` | texte | 1 |
+| `$.maps.context.versions[].map.free.{clé}.tint` | texte | 1 |
 | `$.maps.context.updatedAt` | texte | 1 |
 | `$.maps.process` | objet | 1 |
 | `$.maps.process.nodes` | objet (dictionnaire indexé) | 1 |
@@ -613,6 +621,10 @@ Sert de contrat pour l'import dans la refonte. La clé `maps` (cartographie, mod
 | `$.maps.process.hide.{clé}` | entier | 1 |
 | `$.maps.process.ignored` | objet (dictionnaire indexé) | 1 |
 | `$.maps.process.ignored.{clé}` | entier | 1 |
+| `$.maps.process.free` | objet (dictionnaire indexé) | 1 |
+| `$.maps.process.free.{clé}` | objet | 1 |
+| `$.maps.process.free.{clé}.text` | texte | 1 |
+| `$.maps.process.free.{clé}.tint` | texte | 1 |
 | `$.maps.process.versions` | liste | 1 |
 | `$.maps.process.versions[]` | objet | 1 |
 | `$.maps.process.versions[].id` | texte | 1 |
@@ -638,6 +650,15 @@ Sert de contrat pour l'import dans la refonte. La clé `maps` (cartographie, mod
 | `$.maps.process.versions[].map.hide.{clé}` | entier | 1 |
 | `$.maps.process.versions[].map.ignored` | objet (dictionnaire indexé) | 1 |
 | `$.maps.process.versions[].map.ignored.{clé}` | entier | 1 |
+| `$.maps.process.versions[].map.free` | objet (dictionnaire indexé) | 1 |
+| `$.maps.process.versions[].map.free.{clé}` | objet | 1 |
+| `$.maps.process.versions[].map.free.{clé}.text` | texte | 1 |
+| `$.maps.process.versions[].map.free.{clé}.tint` | texte | 1 |
 | `$.maps.process.updatedAt` | texte | 1 |
 | `$.maps.issueKind` | objet (dictionnaire indexé) | 1 |
 | `$.maps.issueKind.{clé}` | texte | 1 |
+| `$.maps.issues` | liste | 1 |
+| `$.maps.issues[]` | objet | 1 |
+| `$.maps.issues[].label` | texte | 1 |
+| `$.maps.issues[].kind` | texte | 1 |
+| `$.maps.issues[].desc` | texte | 1 |

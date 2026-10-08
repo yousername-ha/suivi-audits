@@ -2,7 +2,14 @@
    Aujourd'hui : l'état legacy recomposé, filtré selon les droits de la personne. Quand un module sera repris, sa
    source lira les tables sans changer l'interface ni les cartes (références stables). */
 import { legacyKeyModule, type Module, type Rights } from '@suivi/shared';
-import { buildObjects, deriveRelations, refModule, type CartoObject, type DerivedRelation } from '@suivi/shared/carto';
+import {
+  MapSettingsSchema,
+  buildObjects,
+  deriveRelations,
+  refModule,
+  type CartoObject,
+  type DerivedRelation,
+} from '@suivi/shared/carto';
 import type { JsonObject } from '@suivi/shared/legacy';
 import { redactLegacy } from '../routes/legacy.js';
 import type { Services } from '../services.js';
@@ -25,10 +32,11 @@ export class LegacyCartoSource implements CartoObjectSource {
     const st = await this.svc.legacy.recompose();
     const data = redactLegacy((st?.data ?? {}) as JsonObject, rights);
     const context = (await listMaps(this.svc.db.pool, true)).find((m) => m.view === 'context');
-    const issueKind = (context?.settings?.issueKind ?? undefined) as Record<string, 'ext' | 'int'> | undefined;
+    const settings = MapSettingsSchema.catch({}).parse(context?.settings ?? {});
     const objs = buildObjects(data, {
       org: this.svc.settings.get('general').orgName,
-      issueKind,
+      issueKind: settings.issueKind,
+      mapIssues: settings.issues,
       details: true,
       lisible: (k) => {
         const m = legacyKeyModule(k);

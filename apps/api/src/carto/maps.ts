@@ -7,7 +7,7 @@ import type { ModuleMapper } from '../legacy/store.js';
 
 export const MAX_VERSIONS = 20;
 export const MAP_NAMES: Record<MapView, string> = { context: 'Carte du contexte', process: 'Carte des processus' };
-const LAYOUT_KEYS = ['nodes', 'edges', 'hide', 'ignored'] as const;
+const LAYOUT_KEYS = ['nodes', 'edges', 'hide', 'ignored', 'free'] as const;
 
 export interface MapRow {
   id: string;
@@ -83,6 +83,7 @@ export async function readLegacyMaps(c: Client): Promise<Json | undefined> {
     const extra = (m.extra ?? {}) as MapExtra;
     if (m.view === 'context' && isObject(m.settings) && 'issueKind' in m.settings)
       out.issueKind = m.settings.issueKind as Json;
+    if (m.view === 'context' && isObject(m.settings) && 'issues' in m.settings) out.issues = m.settings.issues as Json;
     if (extra.vide) continue;
     const versions = (await listVersions(c, m.id)).map((v) => ({
       id: v.extra?.id ?? v.id,
@@ -106,23 +107,27 @@ export async function readLegacyMaps(c: Client): Promise<Json | undefined> {
 export async function writeLegacyMaps(c: Client, value: Json | undefined, batchId: number | null): Promise<void> {
   const S = isObject(value ?? null) ? (value as JsonObject) : null;
   const issueKind = S && isObject(S.issueKind ?? null) ? (S.issueKind as JsonObject) : null;
+  const issues = S && Array.isArray(S.issues) ? (S.issues as Json[]) : null;
   for (const view of MAP_VIEWS) {
     const m = S && isObject(S[view] ?? null) ? (S[view] as JsonObject) : null;
     const valid = !!m && isObject(m.nodes ?? null);
-    const settings: JsonObject = view === 'context' && issueKind ? { issueKind } : {};
-    if (!valid && !(view === 'context' && issueKind)) {
+    const settings: JsonObject =
+      view === 'context' ? { ...(issueKind ? { issueKind } : {}), ...(issues ? { issues } : {}) } : {};
+    if (!valid && !(view === 'context' && (issueKind || issues))) {
       await c.query('DELETE FROM maps WHERE view = $1', [view]);
       continue;
     }
     let layout: JsonObject = { nodes: {}, edges: [], hide: {}, ignored: {} };
     let extra: MapExtra = { vide: true };
     if (valid) {
-      const absents = LAYOUT_KEYS.filter((k) => !(k in m));
+      // « free » (notes et cadres de la nouvelle interface) n'est écrit que s'il existe : jamais « absent ».
+      const absents = LAYOUT_KEYS.filter((k) => k !== 'free' && !(k in m));
       layout = {
         nodes: m.nodes as Json,
         edges: Array.isArray(m.edges) ? m.edges : [],
         hide: isObject(m.hide ?? null) ? (m.hide as Json) : {},
         ignored: isObject(m.ignored ?? null) ? (m.ignored as Json) : {},
+        ...(isObject(m.free ?? null) ? { free: m.free as Json } : {}),
       };
       const champs = Object.fromEntries(
         Object.entries(m).filter(([k]) => !(LAYOUT_KEYS as readonly string[]).includes(k) && k !== 'versions'),

@@ -1,9 +1,20 @@
-/* Cartographie du SMSI (CARTO-01 à CARTO-14, ADR 0013) : objets de la plateforme, cartes, versions, nature des
-   enjeux, journal des exports. Chaque route déclare sa permission « cartographie:* » ; un enregistrement exige
+/* Cartographie du SMSI (CARTO-01 à CARTO-19, ADR 0013 et 0016) : objets de la plateforme (lecture, création et
+   renommage depuis la carte), cartes, versions, nature des enjeux, journal des exports. Chaque route déclare sa permission « cartographie:* » ; un enregistrement exige
    If-Match (412 si la carte a changé, avec l'auteur et la date). */
-import { Uuid } from '@suivi/shared';
+import { Uuid, perm } from '@suivi/shared';
 import {
+  CREATABLE,
+  CreateObjectBody,
+  CreateObjectOut,
+  CreationError,
   ExportBody,
+  MapSettingsSchema,
+  RenameBody,
+  buildObjects,
+  createInLegacy,
+  refModule,
+  renameInLegacy,
+  type MapIssue,
   IssueKindBody,
   MapCreateBody,
   MapLayoutSchema,
@@ -16,6 +27,8 @@ import {
   pruneEdges,
   type MapLayout,
 } from '@suivi/shared/carto';
+import { randomBytes } from 'node:crypto';
+import type { JsonObject } from '@suivi/shared/legacy';
 import { z } from 'zod';
 import type { Session } from '../auth.js';
 import {
@@ -32,6 +45,8 @@ import type { Client } from '../db/db.js';
 import { conflict, requireIfMatch, setEtag } from '../http/concurrency.js';
 import { HttpError } from '../http/errors.js';
 import { route } from '../http/route.js';
+import { permissionDenied } from '../rights.js';
+import type { Services } from '../services.js';
 
 const MapParams = z.object({ id: Uuid });
 const VersionParams = z.object({ id: Uuid, v: Uuid });
@@ -79,6 +94,39 @@ function cleanLayout(raw: unknown): MapLayout {
   return retry.data;
 }
 
+/** Identifiant court d'un objet créé (comme l'outil historique : horodatage en base 36), sans collision. */
+const uid = () => Date.now().toString(36) + randomBytes(2).toString('hex');
+const creationError = (e: unknown) =>
+  e instanceof CreationError ? new HttpError(e.status, e.message, { reason: 'carto_object' }) : e;
+
+/** Carte de contexte verrouillée (créée « vide » si besoin) : porte la nature et les enjeux créés sur la carte. */
+async function lockedContextSettings(c: Client, actor: string) {
+  await c.query(
+    `INSERT INTO maps (view, name, layout, created_by, updated_by, extra)
+     VALUES ('context', $1, '{"nodes": {}, "edges": [], "hide": {}, "ignored": {}}', $2, $2, '{"vide": true}')
+     ON CONFLICT (view) DO NOTHING`,
+    [MAP_NAMES.context, actor],
+  );
+  const r = await c.query<{ settings: unknown }>("SELECT settings FROM maps WHERE view = 'context' FOR UPDATE");
+  return MapSettingsSchema.catch({}).parse(r.rows[0]?.settings ?? {});
+}
+
+/** Modifie l'état legacy sous verrou (une seule écriture à la fois, comme un enregistrement de /legacy). */
+async function withLockedState<T>(
+  svc: Services,
+  sess: Session,
+  note: string,
+  fn: (data: Record<string, unknown>) => { data: Record<string, unknown>; out: T },
+): Promise<T> {
+  return svc.db.tx(async (c) => {
+    await c.query('SELECT 1 FROM app_state WHERE id = 1 FOR UPDATE');
+    const row = await svc.legacy.row(c);
+    const { data, out } = fn((row?.data ?? {}) as Record<string, unknown>);
+    await svc.legacy.save(c, data as JsonObject, sess.user, null, note);
+    return out;
+  }, sess.user.username);
+}
+
 export const cartoRoutes = [
   /* ---------------------------------------------------------------- Objets de la plateforme */
   route({
@@ -96,6 +144,79 @@ export const cartoRoutes = [
         objects,
         hiddenModules: SOURCE_MODULES.filter((m) => !rights.can(m, 'lire')),
       };
+    },
+  }),
+
+  route({
+    method: 'POST',
+    url: '/api/carto/objects',
+    summary:
+      'Cartographie : création d’un objet de la plateforme depuis la carte (enregistré dans son module, avec la permission de ce module)',
+    tags: ['Cartographie'],
+    access: 'cartographie:modifier',
+    body: CreateObjectBody,
+    response: CreateObjectOut,
+    status: 201,
+    handler: async ({ svc, s, ip, body }) => {
+      const sess = s as Session;
+      const def = CREATABLE[body.type];
+      if (def.module !== 'cartographie' && !sess.user.rights.can(def.module, 'modifier'))
+        throw permissionDenied(perm(def.module, 'modifier'));
+      const now = new Date().toISOString();
+      try {
+        let out: { ref: string; name: string };
+        if (body.type === 'issue') {
+          out = await svc.db.tx(async (c) => {
+            const settings = await lockedContextSettings(c, sess.user.username);
+            const st = await svc.legacy.recompose(c);
+            const issues: MapIssue[] = settings.issues ?? [];
+            const existants = new Set(
+              [...buildObjects(st?.data ?? {}, { org: '', mapIssues: issues }).values()]
+                .filter((o) => /issue/.test(o.type))
+                .map((o) => o.ref),
+            );
+            const r = createInLegacy(st?.data ?? {}, body, { now, uid, existingIssues: existants });
+            await c.query(
+              `UPDATE maps SET settings = jsonb_set(settings, '{issues}', $1::jsonb) WHERE view = 'context'`,
+              [JSON.stringify([...issues, r.issue])],
+            );
+            return { ref: r.ref, name: r.name };
+          }, sess.user.username);
+        } else
+          out = await withLockedState(svc, sess, `Cartographie : création de « ${body.name} »`, (data) => {
+            const r = createInLegacy(data, body, { now, uid });
+            return { data: r.data, out: { ref: r.ref, name: r.name } };
+          });
+        await svc.db.audit(sess.user, ip, 'carto.object_create', out.ref, { type: body.type, name: out.name });
+        return out;
+      } catch (e) {
+        throw creationError(e);
+      }
+    },
+  }),
+  route({
+    method: 'PUT',
+    url: '/api/carto/objects/name',
+    summary: 'Cartographie : renommer un objet de la plateforme depuis la carte (modifie son module d’origine)',
+    tags: ['Cartographie'],
+    access: 'cartographie:modifier',
+    body: RenameBody,
+    response: CreateObjectOut,
+    handler: async ({ svc, s, ip, body }) => {
+      const sess = s as Session;
+      const m = refModule(body.ref);
+      if (!m) throw new HttpError(422, 'Cet objet ne peut pas être renommé depuis la carte.');
+      if (!sess.user.rights.can(m, 'modifier')) throw permissionDenied(perm(m, 'modifier'));
+      try {
+        const old = await withLockedState(svc, sess, `Cartographie : renommage en « ${body.name} »`, (data) => {
+          const r = renameInLegacy(data, body.ref, body.name);
+          return { data: r.data, out: r.old };
+        });
+        await svc.db.audit(sess.user, ip, 'carto.object_rename', body.ref, { old, name: body.name });
+        return { ref: body.ref, name: body.name };
+      } catch (e) {
+        throw creationError(e);
+      }
     },
   }),
 
