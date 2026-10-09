@@ -137,4 +137,14 @@ describe('exécutant serveur A1a', () => {
     const report = JSON.parse(readFileSync(path.join(f.dir, 'data/etat/sauvegardes/jobs', `${JOB}.json`), 'utf8'));
     expect(report.resultat).toBe('echec');
   });
+  it('préserve la sauvegarde directe avant mise à jour et sa rétention de 36500 jours', async () => {
+    const f = fixture();
+    await exec('bash', [path.join(f.dir, 'scripts/backup.sh'), f.env.BACKUP_DEST], {
+      env: { ...f.env, RETENTION_DAYS: '36500', BACKUP_PREFIXE: 'avant-maj-ci-vers-99.0.0' },
+    });
+    const report = JSON.parse(readFileSync(path.join(f.dir, 'data/etat/sauvegardes/derniere-reussie.json'), 'utf8'));
+    expect(report).toMatchObject({ resultat: 'reussie', chiffree: true, integriteVerifiee: true, jobId: '' });
+    expect(path.basename(report.fichier)).toMatch(/^avant-maj-ci-vers-99\.0\.0-.*\.tar\.enc$/);
+    await exec('sha256sum', ['-c', path.basename(report.fichier) + '.sha256'], { cwd: path.dirname(report.fichier) });
+  });
 });

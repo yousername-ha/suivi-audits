@@ -17,6 +17,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 - Cartographie : nouveau module de droits « Cartographie du SMSI » (75 permissions au lieu de 70). Les rôles prédéfinis le reçoivent automatiquement ; les **rôles personnalisés ne l'ont pas** : cochez ses cases dans leur matrice si besoin. Les cartes dessinées avec le module bêta de l'ancien outil sont reprises automatiquement par la migration ; l'ancien outil les affiche ensuite en lecture seule.
 
 ### Corrigé
+- A1a : préserver la rétention de 36500 jours utilisée par la sauvegarde avant mise à jour ; test de compatibilité avec la procédure existante.
 - A4 : déconnexion fiable, purge des caches privés et propagation aux onglets ; erreur explicite si le serveur est injoignable ou refuse la fermeture. MFA, cookie et contrôles serveur conservés.
 - Écran mural : préserver la requête observée lors du démarrage anonyme ; réinitialiser ses données et recontrôler son autorisation indépendante à la déconnexion.
 - A3 : connexion sans bandeau numéroté d'étapes, avec le formulaire et la charte Sauge conservés.

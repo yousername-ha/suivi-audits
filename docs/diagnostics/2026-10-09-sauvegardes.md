@@ -19,9 +19,9 @@ L'[ADR 0016](../adr/0016-pilotage-sauvegardes.md) conserve les scripts et défin
 
 ## Vérification
 
-Les tests utilisent des bases PostgreSQL et des secrets fictifs isolés. Les 137 tests API passent, dont 14 pour les droits, réessais, concurrence, versions, interruptions, rapports et audit, et 6 pour les scripts. Ces derniers simulent l'appel Docker et utilisent réellement OpenSSL, SHA-256 et tar : archive chiffrée déchiffrée et contenu relu, échec de dump, échec de chiffrement sans publication, exclusion d'un second dump et permissions de clé. Ils ne remplacent pas une restauration de production.
+Les tests utilisent des bases PostgreSQL et des secrets fictifs isolés. Les 138 tests API passent, dont 14 pour les droits, réessais, concurrence, versions, interruptions, rapports et audit, et 7 pour les scripts. Ces derniers simulent l'appel Docker et utilisent réellement OpenSSL, SHA-256 et tar : archive chiffrée déchiffrée et contenu relu, échec de dump, échec de chiffrement sans publication, exclusion d'un second dump permissions de clé et compatibilité de la sauvegarde avant mise à jour (rétention 36500). Ils ne remplacent pas une restauration de production.
 
-Les autres suites passent : 192 tests partagés, 102 tests UI, 12 tests web (443 au total). Typage strict, lint, format, build, syntaxe Bash, ShellCheck, CHANGELOG et extraction du guide réussis. La feuille CSS compilée conserve son nom `index-BVNHOy3h.css`. Les références visuelles existantes ne sont pas renouvelées pour ce lot.
+Les autres suites passent : 192 tests partagés, 102 tests UI, 12 tests web (444 au total). Typage strict, lint, format, build, syntaxe Bash, ShellCheck, CHANGELOG et extraction du guide réussis. La feuille CSS compilée conserve son nom `index-BVNHOy3h.css`. Les références visuelles existantes ne sont pas renouvelées pour ce lot.
 
 Les résultats de la recette Playwright et des contrôles GitHub sont présentés dans la PR #12 ; leur lancement seul ne constitue pas une validation.
 
@@ -32,3 +32,5 @@ L'exploitant doit configurer le poller hôte selon [INSTALLATION, étape 11.5](.
 A1b reste à développer : restauration guidée, planification configurable depuis le navigateur et consultation exhaustive des archives produites hors de cette file. La restauration actuelle demeure une procédure serveur confirmée ; SHA-256 ne prouve ni l'authenticité ni la restaurabilité. Le test isolé de restauration reste obligatoire avant ouverture aux utilisateurs.
 
 Les premiers essais de tests ont révélé des erreurs de fixtures (identifiant de rôle non conforme, chaîne du faux Docker, injection d'échec d'audit). Elles ont été corrigées sans désactiver de contrôle. Aucun jeu de données métier de production n'a été utilisé.
+
+La première CI A1a a détecté une régression de compatibilité : le nouveau plafond de rétention refusait les 36500 jours utilisés par mettre-a-jour.sh. Le plafond a été corrigé sans modifier cette procédure, et un test de sauvegarde directe avec son préfixe et sa rétention protège ce contrat. Le guide complet est rejoué sur le commit corrigé ; aucun contrôle CI n’est désactivé.

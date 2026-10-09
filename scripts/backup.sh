@@ -57,7 +57,7 @@ fin() {
 }
 trap fin EXIT
 umask 077
-[[ "$RETENTION_DAYS" =~ ^[0-9]{1,4}$ ]] && [ "$RETENTION_DAYS" -ge 1 ] && [ "$RETENTION_DAYS" -le 3650 ] || arret "RETENTION_DAYS doit être compris entre 1 et 3650."
+[[ "$RETENTION_DAYS" =~ ^[0-9]{1,5}$ ]] && [ "$RETENTION_DAYS" -ge 1 ] && [ "$RETENTION_DAYS" -le 36500 ] || arret "RETENTION_DAYS doit être compris entre 1 et 36500."
 [[ "$PREFIXE" =~ ^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,60}$ ]] || arret "Préfixe de sauvegarde invalide."
 if [ -n "$JOB_ID" ]; then
   [ -n "${BACKUP_PASSPHRASE_FILE:-}" ] || arret "Chiffrement obligatoire pour une demande web."

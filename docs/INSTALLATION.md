@@ -700,7 +700,7 @@ Le script vérifie l'empreinte (`… .tar.enc: OK`), affiche la date de la sauve
 
 La migration additive `006_sauvegardes.sql` est appliquée au démarrage. L’application enregistre une demande ; elle n’exécute aucun shell et ne reçoit ni clé ni chemin. Un exécutant sur le serveur interroge la file. Il réutilise `backup.sh`, avec chiffrement obligatoire. La restauration reste la procédure 11.4 ; l’empreinte SHA-256 vérifie la cohérence du fichier, pas son authenticité ni sa restaurabilité.
 
-Après les étapes 11.1–11.4, vérifier la phrase secrète **non vide**, fichier régulier lisible par root et inaccessible au groupe et aux autres comptes (0600). Conserver sa copie dans le coffre-fort. La destination doit être persistante, privée et incluse dans la sauvegarde externalisée. `RETENTION_DAYS` accepte 1 à 3650 (90 par défaut) ; `BACKUP_PREFIXE` accepte 1 à 61 caractères ASCII alphanumériques, point, tiret ou soulignement, avec un premier caractère alphanumérique. Ces contrôles s’appliquent aussi aux appels directs de `backup.sh`.
+Après les étapes 11.1–11.4, vérifier la phrase secrète **non vide**, fichier régulier lisible par root et inaccessible au groupe et aux autres comptes (0600). Conserver sa copie dans le coffre-fort. La destination doit être persistante, privée et incluse dans la sauvegarde externalisée. `RETENTION_DAYS` accepte 1 à 36500 (90 par défaut ; 36500 conserve la compatibilité avec les sauvegardes avant mise à jour, dont les cinq dernières sont gardées) ; `BACKUP_PREFIXE` accepte 1 à 61 caractères ASCII alphanumériques, point, tiret ou soulignement, avec un premier caractère alphanumérique. Ces contrôles s’appliquent aussi aux appels directs de `backup.sh`.
 
 Sur le serveur d’exploitation uniquement :
 
