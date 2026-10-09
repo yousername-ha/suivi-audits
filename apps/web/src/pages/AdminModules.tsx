@@ -84,8 +84,8 @@ export function ModulesPanel() {
           Activation des modules
         </Title>
         <Text size="sm">
-          La désactivation masque les menus et bloque les API du module. Ses données et sa configuration sont conservées
-          pour la réactivation.
+          La désactivation masque les menus et bloque les API du module. Ses données enregistrées et sa configuration
+          sont conservées pour la réactivation.
         </Text>
         <Alert color="blue">
           Authentification, comptes, droits, journal de sécurité, sauvegardes et TLS restent opérationnels.
@@ -172,6 +172,10 @@ export function ModulesPanel() {
             <Title order={3} size="h5">
               Conséquences à confirmer
             </Title>
+            <Alert color="yellow">
+              Enregistrez les modifications en cours dans les écrans ouverts avant de confirmer. Les écrans actualisent
+              leurs données et leurs droits ; l’ancienne interface se recharge.
+            </Alert>
             {preview.changes.map((c) => (
               <Text key={c.id} size="sm">
                 {c.enabled ? 'Activation' : 'Désactivation'} : {MODULE_LABELS[c.id]}
