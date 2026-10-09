@@ -37,6 +37,9 @@ const jar = new Map();
 let csrf = '';
 async function call(method, url, { json, body, headers = {}, expect = [200, 201] } = {}) {
   const h = { origin: base, ...headers };
+  // Cette recette recrée Caddy via execFileSync : l'event loop ne peut traiter la fermeture
+  // d'une connexion HTTP inactive pendant l'arrêt. Ne pas réutiliser cette socket après reprise.
+  if (cmd === 'lot-a') h.connection = 'close';
   if (jar.size) h.cookie = [...jar].map(([k, v]) => `${k}=${v}`).join('; ');
   if (csrf && method !== 'GET') h['x-csrf-token'] = csrf;
   if (json !== undefined) h['content-type'] = 'application/json';
