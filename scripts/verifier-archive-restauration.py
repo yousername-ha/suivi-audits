@@ -151,7 +151,7 @@ def checksum(original, snapshot):
     if not sidecar.exists():
         print('ATTENTION : empreinte absente ; authenticité non établie.', file=sys.stderr)
         return
-    if sidecar.stat().st_size > 1024:
+    if not sidecar.is_file() or sidecar.stat().st_size > 1024:
         fail('Fichier d’empreinte excessif.')
     line = sidecar.read_text(encoding='utf-8').rstrip('\n')
     if len(line) < 67 or line[64:66] not in ('  ', ' *') or line[66:] != original.name:

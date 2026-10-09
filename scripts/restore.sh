@@ -90,7 +90,7 @@ docker compose exec -T -u postgres db pg_restore -d suivi --no-owner --role=suiv
 docker compose exec -T -u postgres db psql -v ON_ERROR_STOP=1 -d suivi << 'EOSQL'
 DO $$ BEGIN
   IF to_regclass('public.sessions') IS NOT NULL THEN
-    EXECUTE 'DELETE FROM sessions';
+    EXECUTE 'DELETE FROM public.sessions';
   END IF;
 END $$;
 EOSQL

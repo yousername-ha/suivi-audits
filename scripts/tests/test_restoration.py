@@ -120,6 +120,10 @@ if 'pg_restore' in args and '--list' not in args: Path(os.environ['TEST_RESTORED
         digest = hashlib.sha256(archive.read_bytes()).hexdigest()
         pathlib.Path(str(archive) + '.sha256').write_text(digest + '  autre.tar\n')
         self.assert_refused(archive)
+        sidecar = pathlib.Path(str(archive) + '.sha256')
+        sidecar.unlink()
+        os.mkfifo(sidecar)
+        self.assert_refused(archive)
 
     def test_checksum_detects_corruption(self):
         archive = self.archive()
@@ -208,7 +212,7 @@ if 'pg_restore' in args and '--list' not in args: Path(os.environ['TEST_RESTORED
         self.assertEqual((self.root / 'restored.dump').read_bytes(), b'PGDMP-dump-fictif')
         self.assertEqual((self.root / 'data/secrets/db_app_password').read_text(), 'password-fictif')
         self.assertEqual((self.root / 'data/caddy/data/cert').read_bytes(), b'cert-fictif')
-        self.assertIn('DELETE FROM sessions', self.events.read_text())
+        self.assertIn('DELETE FROM public.sessions', self.events.read_text())
         self.assertTrue((self.root / 'data/etat/sauvegardes/derniere-restauration.json').exists())
         self.assertIn('Restauration terminée.', result.stdout)
 
