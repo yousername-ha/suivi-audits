@@ -20,7 +20,7 @@ Les menus Sauge utilisent les permissions actives. Les sous-menus v2 et la page 
 
 Le bloc de données initiales embarqué dans le HTML historique est filtré lui aussi. Les objets masqués reçoivent uniquement, dans l'adaptateur navigateur, des tableaux et valeurs neutres compatibles avec les vues v2 : désactiver l'IA ne doit pas faire planter le tableau de bord commun. Ces espaces réservés sont ignorés lors de l'enregistrement pour préserver les données stockées. Les commandes de transfert v2 sont masquées et leurs téléchargements refusés lorsque le module import/export est désactivé.
 
-Au premier contact SSE, la session est reconsultée. Si ses droits n'ont pas changé, le cache qui vient d'être chargé est conservé pour éviter une seconde transition à vide. Des droits différents, une reconnexion ou une notification d'activation imposent la réinitialisation complète des données privées.
+Au premier contact SSE, la session est reconsultée. Si ses droits n'ont pas changé, le cache qui vient d'être chargé et la présence filtrée reçue du serveur sont conservés. Des droits différents, une reconnexion ou une notification d'activation imposent la réinitialisation complète des données privées et de la présence.
 
 ## Conséquences
 

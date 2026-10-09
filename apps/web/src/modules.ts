@@ -17,10 +17,11 @@ export async function reloadModuleConfiguration(qc: QueryClient, initialConnecti
     me.stage === 'ok' &&
     JSON.stringify(previous.permissions) === JSON.stringify(me.permissions)
   )
-    return;
+    return false;
   if (initialConnection) await qc.cancelQueries();
   // resetQueries avertit aussi les observateurs déjà montés ; removeQueries seul ne le fait pas.
   await qc.resetQueries({ predicate: isPrivateSessionQuery });
   qc.removeQueries({ predicate: (q) => isPrivateSessionQuery(q) && q.getObserversCount() === 0 });
   await qc.resetQueries({ queryKey: WALL_QUERY_KEY, exact: true });
+  return true;
 }

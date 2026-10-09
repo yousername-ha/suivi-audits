@@ -18,7 +18,7 @@ describe('reconfiguration des modules dans le navigateur', () => {
       const observer = new QueryObserver(qc, { queryKey: ['documents'], queryFn: async () => [] });
       const seen: unknown[] = [];
       const stop = observer.subscribe((r) => seen.push(r.data));
-      await reloadModuleConfiguration(qc, initial);
+      expect(await reloadModuleConfiguration(qc, initial)).toBe(true);
       expect(qc.getQueryData(['me'])).toEqual(me);
       expect(seen).toContain(undefined);
       expect(observer.getCurrentResult().data).toEqual([]);
@@ -33,7 +33,7 @@ describe('reconfiguration des modules dans le navigateur', () => {
     qc.setQueryData(['me'], me);
     qc.setQueryData(['documents'], ['document visible']);
     vi.mocked(fetchMe).mockResolvedValue(me);
-    await reloadModuleConfiguration(qc, true);
+    expect(await reloadModuleConfiguration(qc, true)).toBe(false);
     expect(fetchMe).toHaveBeenCalledOnce();
     expect(qc.getQueryData(['documents'])).toEqual(['document visible']);
     qc.clear();

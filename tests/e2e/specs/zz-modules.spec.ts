@@ -11,6 +11,31 @@ async function open(browser: Browser, width = 1366) {
   const page = await ctx.newPage();
   return { ctx, page, csrf: (await sessionAdmin(browser)).csrf, problems: watchPage(page) };
 }
+
+test('B1 : conserve la présence reçue au premier hello quand les droits sont inchangés', async ({ browser }) => {
+  const { ctx, page, problems } = await open(browser);
+  let meResponses = 0;
+  page.on('response', (r) => {
+    if (new URL(r.url()).pathname === '/api/auth/me') meResponses++;
+  });
+  const presence = [{ username: 'lecteur-test', name: 'Lecteur test', resource: 'documents', mode: 'view' }];
+  await page.route('**/api/events', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'text/event-stream',
+      body: `retry: 60000\n\nevent: hello\ndata: ${JSON.stringify({ presence })}\n\n`,
+    }),
+  );
+  try {
+    await page.goto('/documents');
+    await expect.poll(() => meResponses).toBeGreaterThanOrEqual(2);
+    await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    await expect(page.getByText('Lecteur test consulte', { exact: true })).toBeVisible();
+    expect(problems).toEqual([]);
+  } finally {
+    await ctx.close();
+  }
+});
 test('B1 : prévisualisation mobile, socle protégé et dépendance obligatoire', async ({ browser }) => {
   const { ctx, page, problems } = await open(browser, 390);
   try {

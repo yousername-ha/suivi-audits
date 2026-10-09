@@ -55,8 +55,13 @@ export function RealtimeProvider({ children }: { children: ReactNode }) {
     let reload = Promise.resolve();
     let initialHello = true;
     const reloadConfiguration = (initialConnection = false) => {
-      setPresence([]);
-      reload = reload.then(() => reloadModuleConfiguration(qc, initialConnection)).catch(() => closeLocalSession(qc));
+      if (!initialConnection) setPresence([]);
+      reload = reload
+        .then(async () => {
+          const purged = await reloadModuleConfiguration(qc, initialConnection);
+          if (initialConnection && purged) setPresence([]);
+        })
+        .catch(() => closeLocalSession(qc));
     };
     es.addEventListener('hello', (m) => {
       setConnected(true);
