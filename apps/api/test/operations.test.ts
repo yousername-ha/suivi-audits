@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { Agent, createTestApp, login, makeUser, type TestApp } from './helpers.js';
+import { certificateInfo } from '../src/certificates.js';
 let t: TestApp, a: Agent, reader: Agent, dir: string;
 const hash = 'a'.repeat(64),
   archiveId = 'b'.repeat(64);
@@ -103,6 +104,32 @@ const verified = () => ({
   sha256: hash,
 });
 describe('Lot A : pilotage opérationnel', () => {
+  it('observe un certificat SAN-only sans sujet textuel, comme celui de Caddy', () => {
+    const file = path.join(dir, 'sans-sujet.pem');
+    execFileSync(
+      'openssl',
+      [
+        'req',
+        '-x509',
+        '-new',
+        '-key',
+        path.join(dir, 'key.pem'),
+        '-out',
+        file,
+        '-days',
+        '2',
+        '-subj',
+        '/',
+        '-addext',
+        'subjectAltName=DNS:suivi.test',
+      ],
+      { stdio: 'ignore' },
+    );
+    const cert = certificateInfo(readFileSync(file, 'utf8'), 'suivi.test', key);
+    expect(cert.subject).toBe('');
+    expect(cert.hostMatches).toBe(true);
+    expect(cert.keyMatches).toBe(true);
+  });
   it('exige authentification, droits de lecture/écriture et CSRF', async () => {
     expect((await new Agent(t).get('/api/admin/exploitation')).statusCode).toBe(401);
     expect((await reader.get('/api/admin/exploitation')).statusCode).toBe(200);

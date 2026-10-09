@@ -272,6 +272,9 @@ switch (cmd) {
       const e = await call('GET', '/api/admin/exploitation');
       const job = e.jobs.find((j) => j.id === id);
       if (!job) fail('journal durable introuvable');
+      console.log(
+        `Opération lot A : ${JSON.stringify({ kind: job.kind, status: job.status, phase: job.phase, message: job.message })}`,
+      );
       return job;
     };
     const operation = async (body) => {

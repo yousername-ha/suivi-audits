@@ -33,8 +33,9 @@ export function certificateInfo(pem: string, hostname: string, privateKey?: stri
         throw new Error('clé');
     }
     return {
-      subject: cert.subject,
-      issuer: cert.issuer,
+      // Un certificat SAN-only (notamment Caddy) peut n'avoir aucun DN de sujet.
+      subject: cert.subject ?? '',
+      issuer: cert.issuer ?? '',
       validFrom: new Date(cert.validFrom).toISOString(),
       validTo: new Date(cert.validTo).toISOString(),
       fingerprint: cert.fingerprint256.replace(/:/g, '').toLowerCase(),

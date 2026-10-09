@@ -104,12 +104,9 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 Nouvelle architecture. La mise à jour depuis la v2 conserve la base, les secrets et les certificats.
 
 ### Notes de mise à jour
-- Lot A complet : migration additive `007_exploitation.sql`, poller hôte Python 3 standard selon INSTALLATION 11.6–11.7. Remplacer le poller A1a par le poller commun ; la planification web est désactivée par défaut et ne modifie aucun cron existant. Destination et clé restent côté serveur. `TLS_WEB_MANAGEMENT=0` par défaut ; `TLS_TERMINATION=external` interdit les changements. Aucun paquet applicatif ajouté. Une restauration ferme les sessions ; le journal/reprise hors PostgreSQL survit et le retour arrière de sécurité est contrôlé.
 - Depuis la v2 : `docs/INSTALLATION.md`, étape 12.4 (ajouter `APP_VERSION` dans `.env`, images publiées au lieu d'une construction sur le serveur, retrait du service `proxy`).
 
 ### Ajouté
-- A1 : politique versionnée de planification hebdomadaire UTC/rétention, catalogue d’archives avec contrôle SHA-256, vérification depuis le navigateur, restauration guidée confirmée, sauvegarde de sécurité et retour arrière, journal durable hors base, neutralisation des anciennes demandes après restauration et notifications.
-- A2 : métadonnées et alertes d’expiration TLS, remplacement certificat/chaîne et clé masquée/scellée, contrôle de cohérence/hôte/validité, validation Caddy et certificat servi, retour arrière et retour à `.env`. Terminaison externe en observation seule ; renouvellement interne/ACME conservé chez Caddy. Clés et marqueur sauvegardés avec les secrets.
 - Monorepo TypeScript strict (pnpm) : API Fastify (`apps/api`), interface React + Vite + Mantine (`apps/web`), schémas zod partagés (`packages/shared`).
 - Description OpenAPI 3.1 générée depuis les déclarations de routes (`/api/openapi.json`).
 - Concurrence par enregistrement : colonne `version`, `ETag`, `If-Match` obligatoire (428), 412 seulement si l'enregistrement a changé.
@@ -134,7 +131,6 @@ Nouvelle architecture. La mise à jour depuis la v2 conserve la base, les secret
 ## [2.0.0]
 
 ### Notes de mise à jour
-- Lot A complet : migration additive `007_exploitation.sql`, poller hôte Python 3 standard selon INSTALLATION 11.6–11.7. Remplacer le poller A1a par le poller commun ; la planification web est désactivée par défaut et ne modifie aucun cron existant. Destination et clé restent côté serveur. `TLS_WEB_MANAGEMENT=0` par défaut ; `TLS_TERMINATION=external` interdit les changements. Aucun paquet applicatif ajouté. Une restauration ferme les sessions ; le journal/reprise hors PostgreSQL survit et le retour arrière de sécurité est contrôlé.
 - Première version Docker : aucune action.
 
 - Déploiement Docker (Caddy, Node 24, PostgreSQL 17) de l'outil historique : authentification avec TOTP, jeton d'installation, documents chiffrés, journal d'audit, sauvegardes.
