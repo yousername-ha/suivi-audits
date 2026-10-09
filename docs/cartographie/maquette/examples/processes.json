@@ -1,0 +1,54 @@
+{
+  "processes": [
+    {
+      "code": "PR01",
+      "name": "Processus de réalisation 01",
+      "category": "realisation"
+    },
+    {
+      "code": "PR02",
+      "name": "Processus de réalisation 02",
+      "category": "realisation"
+    },
+    {
+      "code": "PR03",
+      "name": "Processus de réalisation 03",
+      "category": "realisation"
+    },
+    {
+      "code": "PR04",
+      "name": "Processus de réalisation 04",
+      "category": "realisation"
+    },
+    {
+      "code": "PR05",
+      "name": "Processus de réalisation 05",
+      "category": "realisation",
+      "page": 16
+    },
+    {
+      "code": "PS01",
+      "name": "Processus de support 01",
+      "category": "support"
+    },
+    {
+      "code": "PS01.1",
+      "name": "Processus de support 01.1",
+      "category": "support",
+      "parentCode": "PS01",
+      "type": "subprocess"
+    },
+    {
+      "code": "PS01.2",
+      "name": "Processus de support 01.2",
+      "category": "support",
+      "parentCode": "PS01",
+      "type": "subprocess"
+    },
+    {
+      "code": "PS02",
+      "name": "Processus de support 02",
+      "category": "support"
+    }
+  ]
+}

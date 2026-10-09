@@ -1,0 +1,27 @@
+{
+  "context-layered": {
+    "engine": "elk",
+    "direction": "RIGHT",
+    "zones": {
+      "external_issue": "top",
+      "internal_issue": "bottom",
+      "stakeholder": "outer",
+      "supplier": "outer",
+      "scope": "center",
+      "isms": "center"
+    }
+  },
+  "process-horizontal": {
+    "engine": "elk",
+    "direction": "RIGHT",
+    "zones": {
+      "pilotage": "top",
+      "realisation": "middle",
+      "support": "bottom"
+    }
+  },
+  "compact": {
+    "engine": "elk",
+    "direction": "RIGHT"
+  }
+}

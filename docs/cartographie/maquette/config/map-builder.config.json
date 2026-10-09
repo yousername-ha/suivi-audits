@@ -1,0 +1,86 @@
+{
+  "featureFlags": {
+    "editMode": true,
+    "automaticGeneration": true,
+    "autoLayout": true,
+    "versioning": true,
+    "exportPng": true,
+    "exportPdf": true,
+    "contextView": true,
+    "processView": true,
+    "riskOverlay": false,
+    "requirementOverlay": false
+  },
+  "views": {
+    "context": {
+      "label": "Vue contexte",
+      "defaultLayout": "context-layered",
+      "defaultVisibleTypes": [
+        "isms",
+        "scope",
+        "process",
+        "stakeholder",
+        "internal_issue",
+        "external_issue",
+        "application",
+        "infrastructure",
+        "site",
+        "supplier"
+      ]
+    },
+    "process": {
+      "label": "Vue processus",
+      "defaultLayout": "process-horizontal",
+      "defaultVisibleTypes": [
+        "process",
+        "subprocess"
+      ]
+    }
+  },
+  "generation": {
+    "defaultRelationshipDepth": 1,
+    "maxRelationshipDepth": 3,
+    "warningNodeThreshold": 80,
+    "hardNodeLimit": 400,
+    "includeSecondaryRelationsByDefault": false,
+    "preserveManualPositions": true
+  },
+  "sync": {
+    "businessDataWins": [
+      "name",
+      "code",
+      "type",
+      "owner",
+      "standards",
+      "scopeMembership",
+      "businessRelations"
+    ],
+    "mapDataWins": [
+      "x",
+      "y",
+      "width",
+      "height",
+      "hidden",
+      "collapsed",
+      "groupId",
+      "presentationOverrides"
+    ],
+    "autoAddNewRelations": false,
+    "keepTombstonesForMissingObjects": true
+  },
+  "interaction": {
+    "snapToGrid": false,
+    "minZoom": 0.25,
+    "maxZoom": 2.5,
+    "doubleClickOpensDetails": true,
+    "selectionMode": "single-or-multi",
+    "undoRedo": true
+  },
+  "export": {
+    "png": true,
+    "pdf": true,
+    "svg": false,
+    "defaultIncludeLegend": true,
+    "defaultIncludeMetadata": true
+  }
+}

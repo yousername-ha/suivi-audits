@@ -1,0 +1,38 @@
+{
+  "name": "@suivi/ui",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Charte graphique : jetons, thème Mantine (clair et sombre), styles statiques et composants communs",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./theme": {
+      "types": "./src/theme.ts",
+      "default": "./src/theme.ts"
+    },
+    "./tokens": {
+      "types": "./src/tokens.ts",
+      "default": "./src/tokens.ts"
+    },
+    "./styles.css": "./src/styles.css"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "@mantine/core": "8.3.18",
+    "react": "19.3.0"
+  },
+  "devDependencies": {
+    "@mantine/core": "8.3.18",
+    "@mantine/hooks": "8.3.18",
+    "@types/react": "19.3.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "vitest": "3.2.7"
+  }
+}

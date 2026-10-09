@@ -1,0 +1,14 @@
+app/public/
+pnpm-lock.yaml
+**/dist/
+**/coverage/
+**/playwright-report/
+**/test-results/
+*.md
+docs/
+tests/fixtures/
+**/*.generated.ts
+apps/web/src/generated/
+apps/api/legacy-shim/
+pnpm-workspace.yaml
+scripts/carto/

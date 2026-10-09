@@ -1,0 +1,1431 @@
+/* Police Inter variable, hébergée avec l'application (SIL OFL, licence dans fonts/). */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('./fonts/inter-latin-ext-wght-normal.woff2') format('woff2');
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F,
+    U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('./fonts/inter-latin-wght-normal.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074,
+    U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* Charte graphique — styles statiques (CSP « style-src 'self' » : aucun style injecté).
+   Couleurs : variables --suivi-* et --mantine-* générées depuis tokens.ts (mantine-vars.css). */
+
+:root {
+  --suivi-entete-h: 3.75rem;
+  --suivi-nav-l: 15.5rem;
+  --suivi-largeur-formulaire: 45rem; /* formulaires simples : 720 px */
+  --suivi-largeur-lecture: 75ch; /* textes : environ 75 caractères par ligne */
+  --suivi-champ-xs: 8rem;
+  --suivi-champ-s: 12.5rem;
+  --suivi-champ-m: 16.25rem;
+  --suivi-champ-l: 26.25rem;
+  --suivi-marque: 1.875rem;
+  --suivi-qr: 12.5rem;
+  --suivi-trait-l: 1px;
+  --suivi-nav-repliee: 4.25rem;
+  --suivi-marge-page: clamp(0.75rem, 0.5rem + 1vw, 2.5rem);
+  --suivi-carte-min: 24rem; /* cartes de tableau de bord : 320 à 480 px environ */
+  --suivi-fiche-l: clamp(26rem, 32vw, 48rem);
+  --suivi-panneau-l: clamp(20rem, 22vw, 34rem);
+  --suivi-echelle: 1;
+  /* Cartographie (ADR 0013) : panneau latéral, fiche détaillée, hauteur du canevas, aperçu, échantillons. */
+  --carte-panneau-l: clamp(14rem, 16vw, 20rem);
+  --carte-inspecteur-l: clamp(20rem, 24vw, 28rem);
+  --carte-hauteur: clamp(30rem, calc(100dvh - 16rem), 90rem);
+  --carte-hauteur-mobile: max(26rem, 68dvh);
+  --carte-hauteur-plein-ecran: calc(100dvh - 12rem);
+  --carte-relation-l: 6rem;
+  --carte-mini-l: 11.25rem;
+  --carte-mini-h: 7.5rem;
+  --carte-echantillon: 1.375rem;
+  --carte-icone: 1.5rem;
+  --carte-recherche: 17rem;
+  --carte-vide-icone: 2.5rem;
+}
+
+/* ---------------------------------------------------------------- Taille d'affichage et typographie fluide
+   Base fluide bornée (15 à 17 px selon la largeur), multipliée par la taille d'affichage choisie.
+   « Automatique » : agrandissement progressif au-delà de 2560 px (lisible à 2 m sur un écran de 55 pouces). */
+html {
+  font-size: calc(clamp(93.75%, 87.5% + 0.2vw, 106.25%) * var(--suivi-echelle));
+}
+/* Écran mural : texte agrandi d'un quart en plus de la taille d'affichage. */
+html[data-mur] {
+  font-size: calc(clamp(93.75%, 87.5% + 0.2vw, 106.25%) * var(--suivi-echelle) * 1.25);
+}
+html[data-taille='90'] {
+  --suivi-echelle: 0.9;
+}
+html[data-taille='100'] {
+  --suivi-echelle: 1;
+}
+html[data-taille='115'] {
+  --suivi-echelle: 1.15;
+}
+html[data-taille='130'] {
+  --suivi-echelle: 1.3;
+}
+html[data-taille='150'] {
+  --suivi-echelle: 1.5;
+}
+@media (min-width: 160em) {
+  html[data-taille='auto'] {
+    --suivi-echelle: 1.15;
+  }
+}
+@media (min-width: 200em) {
+  html[data-taille='auto'] {
+    --suivi-echelle: 1.3;
+  }
+}
+@media (min-width: 240em) {
+  html[data-taille='auto'] {
+    --suivi-echelle: 1.5;
+  }
+}
+
+body {
+  background: var(--suivi-fond-page);
+  color: var(--mantine-color-text);
+  font-family: var(--mantine-font-family);
+}
+
+/* Chiffres tabulaires : colonnes de nombres alignées. */
+table,
+.chiffres {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------- Coquille de l'application
+   Téléphone (< 36em) : menu en tiroir. Tablette (36 à 64em) : menu replié en icônes. Bureau (≥ 64em) : menu déplié. */
+.shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.shell-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: var(--suivi-entete-h);
+  flex: none;
+  background: var(--suivi-surface);
+  border-bottom: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+}
+.shell-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+.shell-nav {
+  display: none;
+}
+.shell-nav-inner {
+  display: flex;
+  flex-direction: column;
+}
+.shell-main {
+  min-width: 0;
+  padding: var(--suivi-marge-page);
+}
+.nav-icone {
+  display: inline-flex;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+.nav-icone svg {
+  width: 100%;
+  height: 100%;
+}
+@media (min-width: 36em) {
+  .shell-body {
+    grid-template-columns: var(--suivi-nav-repliee) minmax(0, 1fr);
+  }
+  .shell-nav {
+    display: block;
+    padding: var(--mantine-spacing-xs);
+    border-right: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+    background: var(--suivi-surface);
+  }
+  .shell-nav-inner {
+    position: sticky;
+    top: calc(var(--suivi-entete-h) + var(--mantine-spacing-sm));
+  }
+  /* Menu replié : icônes seules (libellés lus par les lecteurs d'écran et affichés au survol). */
+  .shell-nav .nav-libelle,
+  .shell-nav .nav-annexe {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .shell-nav .mantine-NavLink-root {
+    justify-content: center;
+  }
+  .shell-nav .mantine-NavLink-section {
+    margin: 0;
+  }
+}
+@media (min-width: 64em) {
+  .shell-body {
+    grid-template-columns: var(--suivi-nav-l) minmax(0, 1fr);
+  }
+  .shell-nav {
+    padding: var(--mantine-spacing-sm);
+  }
+  .shell-nav .nav-libelle,
+  .shell-nav .nav-annexe {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+  .shell-nav .mantine-NavLink-root {
+    justify-content: flex-start;
+  }
+  .shell-nav .mantine-NavLink-section {
+    margin-inline-end: var(--mantine-spacing-sm);
+  }
+}
+.brand-mark {
+  width: var(--suivi-marque);
+  height: var(--suivi-marque);
+  border-radius: var(--mantine-radius-sm);
+  display: inline-grid;
+  place-items: center;
+  font-weight: 700;
+  color: var(--suivi-marque-texte);
+  background: var(--suivi-marque-fond);
+}
+
+/* ---------------------------------------------------------------- Pages */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-md);
+  width: 100%;
+}
+.page--formulaire {
+  max-width: var(--suivi-largeur-formulaire);
+}
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-sm);
+}
+.page-header__titre {
+  min-width: 0;
+}
+.lecture {
+  max-width: var(--suivi-largeur-lecture);
+}
+.formulaire {
+  max-width: var(--suivi-largeur-formulaire);
+}
+
+/* ---------------------------------------------------------------- Tableaux */
+.data-table {
+  padding: 0;
+  overflow: hidden;
+}
+.table-wrap {
+  overflow-x: auto;
+}
+.data-table thead th {
+  background: var(--suivi-surface);
+}
+.nowrap {
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------- Sections de formulaire */
+.form-section__pied {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--mantine-spacing-sm);
+  border-top: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  padding-top: var(--mantine-spacing-sm);
+}
+
+/* ---------------------------------------------------------------- Largeurs de champs */
+.champ-xs {
+  width: var(--suivi-champ-xs);
+  max-width: 100%;
+}
+.champ-s {
+  width: var(--suivi-champ-s);
+  max-width: 100%;
+}
+.champ-m {
+  width: var(--suivi-champ-m);
+  max-width: 100%;
+}
+.champ-l {
+  width: var(--suivi-champ-l);
+  max-width: 100%;
+}
+
+/* ---------------------------------------------------------------- Divers */
+.mono {
+  font-family: var(--mantine-font-family-monospace);
+}
+.pre {
+  white-space: pre-wrap;
+  font-family: var(--mantine-font-family-monospace);
+  font-size: var(--mantine-font-size-xs);
+  max-height: 20rem;
+  overflow: auto;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------- Page à sections (Paramètres) */
+.settings {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--mantine-spacing-md);
+  align-items: start;
+}
+.settings-nav {
+  display: none;
+}
+.settings-content {
+  min-width: 0;
+}
+@media (min-width: 64em) {
+  .settings {
+    grid-template-columns: var(--suivi-nav-l) minmax(0, 1fr);
+  }
+  .settings-nav {
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: calc(var(--suivi-entete-h) + var(--mantine-spacing-md));
+    padding: var(--mantine-spacing-xs);
+    background: var(--suivi-surface);
+    border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+    border-radius: var(--mantine-radius-lg);
+  }
+  .settings-select {
+    display: none;
+  }
+  .settings-content {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+}
+.settings-logo {
+  max-width: var(--suivi-champ-s);
+  max-height: 6rem;
+}
+
+/* ---------------------------------------------------------------- Densité (Paramètres > Apparence, préférences) */
+html[data-densite='compacte'] {
+  --mantine-spacing-xs: 0.375rem;
+  --mantine-spacing-sm: 0.5rem;
+  --mantine-spacing-md: 0.75rem;
+  --mantine-spacing-lg: 1rem;
+}
+html[data-densite='confortable'] {
+  --mantine-spacing-xs: 0.625rem;
+  --mantine-spacing-sm: 1rem;
+  --mantine-spacing-md: 1.25rem;
+  --mantine-spacing-lg: 2rem;
+}
+
+/* Une puce d'état n'est jamais tronquée dans une cellule étroite. */
+.mantine-Badge-root {
+  flex-shrink: 0;
+  overflow: visible;
+}
+.mantine-Badge-label {
+  overflow: visible;
+}
+
+/* ---------------------------------------------------------------- Grilles
+   Tableaux de bord : on ajoute des colonnes au lieu d'élargir les cartes. */
+.grille-cartes {
+  display: grid;
+  gap: var(--mantine-spacing-md);
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--suivi-carte-min), 100%), 1fr));
+  align-items: start;
+}
+.carte-large {
+  grid-column: 1 / -1;
+}
+/* Formulaires longs : 1 colonne, puis 2 ou 3 selon la largeur de leur conteneur. */
+.grille-formulaire {
+  container-type: inline-size;
+}
+.grille-formulaire .grille-formulaire__champs {
+  display: grid;
+  gap: var(--mantine-spacing-md);
+  grid-template-columns: minmax(0, 1fr);
+}
+@container (min-width: 40rem) {
+  .grille-formulaire .grille-formulaire__champs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@container (min-width: 72rem) {
+  .grille-formulaire .grille-formulaire__champs {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ---------------------------------------------------------------- Liste et fiche (maître-détail)
+   Large (≥ 90em) : liste et fiche côte à côte. Ultra (≥ 160em) : troisième panneau (historique, éléments liés). */
+.maitre-detail {
+  display: grid;
+  gap: var(--mantine-spacing-md);
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+.maitre-detail__fiche,
+.maitre-detail__annexe {
+  display: none;
+}
+@media (min-width: 90em) {
+  .maitre-detail--ouvert {
+    grid-template-columns: minmax(0, 1fr) var(--suivi-fiche-l);
+  }
+  .maitre-detail--ouvert .maitre-detail__fiche {
+    display: block;
+    position: sticky;
+    top: calc(var(--suivi-entete-h) + var(--mantine-spacing-md));
+    max-height: calc(100vh - var(--suivi-entete-h) - 2 * var(--mantine-spacing-md));
+    overflow: auto;
+  }
+}
+@media (min-width: 160em) {
+  .maitre-detail--ouvert {
+    grid-template-columns: minmax(0, 1fr) var(--suivi-fiche-l) var(--suivi-panneau-l);
+  }
+  .maitre-detail--ouvert .maitre-detail__annexe {
+    display: block;
+    position: sticky;
+    top: calc(var(--suivi-entete-h) + var(--mantine-spacing-md));
+  }
+}
+
+/* ---------------------------------------------------------------- Tableaux : en-têtes et première colonne figés,
+   colonnes supplémentaires affichées selon la largeur disponible (requêtes de conteneur). */
+.data-table {
+  container-type: inline-size;
+}
+.data-table .table-wrap {
+  max-height: min(75vh, 60rem);
+  overflow: auto;
+}
+.data-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+.data-table tbody td:first-child,
+.data-table thead th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--suivi-surface);
+}
+.data-table thead th:first-child {
+  z-index: 3;
+}
+.col-p2,
+.col-p3 {
+  display: none;
+}
+@container (min-width: 48rem) {
+  .col-p2 {
+    display: table-cell;
+  }
+}
+@container (min-width: 80rem) {
+  .col-p3 {
+    display: table-cell;
+  }
+}
+/* Colonnes choisies explicitement par la personne : toujours affichées ; les autres sont masquées. */
+.col-choisie {
+  display: table-cell;
+}
+.col-masquee {
+  display: none;
+}
+
+/* ---------------------------------------------------------------- Réglages du système */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+@media (prefers-contrast: more) {
+  :root {
+    --mantine-color-dimmed: var(--mantine-color-text);
+    --mantine-color-default-border: var(--mantine-color-text);
+    --suivi-trait-l: 2px;
+  }
+}
+@media (forced-colors: active) {
+  .brand-mark,
+  .mantine-Badge-root {
+    border: 1px solid CanvasText;
+  }
+}
+
+/* ---------------------------------------------------------------- Chiffres clés (tableau de bord) */
+.chiffre-cle {
+  min-width: 6rem;
+}
+.chiffre-cle__valeur {
+  font-size: var(--suivi-chiffre-taille, 2rem);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+/* ---------------------------------------------------------------- Écran mural (/mur)
+   Plein écran, sans menu, texte agrandi (lisible à distance), aucune action de modification. */
+.mur {
+  --suivi-chiffre-taille: 3.25rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-lg);
+  padding: var(--suivi-marge-page);
+  background: var(--suivi-fond-page);
+}
+.mur-entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-md);
+}
+.mur-message {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: var(--suivi-marge-page);
+  background: var(--suivi-fond-page);
+  text-align: center;
+}
+
+/* Liste avec fiche ouverte : ligne sélectionnée mise en évidence. */
+.ligne-choisie > td {
+  background: var(--mantine-primary-color-light);
+}
+.pousse-droite {
+  margin-left: auto;
+}
+
+/* ========================================================================
+   SAUGE — surfaces calmes, hiérarchie éditoriale et navigation vert profond.
+   Couche visuelle uniquement. Aucun changement des dimensions métier du SVG.
+   ======================================================================== */
+:root {
+  --suivi-entete-h: 4.5rem;
+  --suivi-nav-l: 15rem;
+  --suivi-marque: 2.35rem;
+  --suivi-marge-page: clamp(1rem, 2.35vw, 3rem);
+  --suivi-carte-min: 21rem;
+  --suivi-nav-fond: #163e33;
+  --suivi-nav-texte: #f2f6ef;
+  --suivi-nav-secondaire: #b5cec0;
+  --suivi-nav-active: #305a49;
+  --suivi-nav-survol: #244c3e;
+  --suivi-nav-repere: #c5dbab;
+  --suivi-surface-douce: var(--mantine-color-gray-0);
+  --suivi-ombre: 0 2px 4px rgb(27 54 37 / 2%), 0 8px 28px rgb(27 54 37 / 3%);
+  --suivi-ombre-haute: 0 18px 54px rgb(27 54 37 / 12%);
+  --suivi-motion: 180ms;
+  --suivi-motion-entree: 360ms;
+  --suivi-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+[data-mantine-color-scheme='dark'] {
+  --suivi-surface-douce: var(--mantine-color-dark-6);
+  --suivi-nav-fond: #0c2018;
+  --suivi-nav-active: #284c3b;
+  --suivi-ombre: 0 2px 5px rgb(0 0 0 / 9%);
+  --suivi-ombre-haute: 0 18px 54px rgb(0 0 0 / 26%);
+}
+body {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  letter-spacing: -0.011em;
+}
+h1,
+h2,
+h3,
+.mantine-Title-root {
+  letter-spacing: -0.035em;
+}
+.mantine-Title-root:is(h1) {
+  font-weight: 650;
+  font-size: clamp(1.65rem, 2.2vw, 2.45rem);
+  line-height: 1.2;
+}
+.mantine-Title-root:is(h2, h3, h4) {
+  font-weight: 600;
+}
+::selection {
+  background: var(--mantine-color-suivi-1);
+  color: var(--suivi-encre);
+}
+.shell-header {
+  border-color: var(--suivi-trait);
+}
+.shell-header > .mantine-Group-root {
+  padding-inline: var(--mantine-spacing-lg);
+}
+.brand-mark {
+  border-radius: 0.7rem;
+  font-size: 1.35rem;
+  font-weight: 500;
+  letter-spacing: -0.06em;
+}
+.brand-wordmark {
+  line-height: 1.1;
+}
+.brand-wordmark > .mantine-Text-root:first-child {
+  font-size: 0.91rem;
+  letter-spacing: -0.02em;
+}
+.brand-subtitle {
+  color: var(--mantine-color-dimmed);
+  margin-top: 0.16rem;
+  font-size: 0.68rem;
+}
+.header-user {
+  border-inline-start: 1px solid var(--suivi-trait);
+  padding-inline-start: var(--mantine-spacing-md);
+}
+.live-badge {
+  border: 0;
+  background: var(--suivi-surface-douce);
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.shell-nav {
+  background: var(--suivi-nav-fond);
+  border: 0;
+}
+.shell-nav-inner {
+  gap: var(--mantine-spacing-xs);
+}
+.nav-caption {
+  font-size: 0.61rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  padding: 0.65rem 0.75rem 0.8rem;
+  color: var(--suivi-nav-secondaire);
+}
+.shell-nav-inner .mantine-NavLink-root {
+  border-radius: var(--mantine-radius-md);
+  padding: 0.76rem 0.85rem;
+  transition:
+    background var(--suivi-motion),
+    color var(--suivi-motion);
+}
+.shell-nav-inner .mantine-NavLink-label {
+  font-size: 0.84rem;
+}
+.shell-nav-inner .mantine-NavLink-root:hover {
+  background: var(--suivi-surface-douce);
+}
+.shell-nav .mantine-NavLink-root {
+  color: var(--suivi-nav-secondaire);
+}
+.shell-nav .mantine-NavLink-root:hover {
+  background: var(--suivi-nav-survol);
+  color: var(--suivi-nav-texte);
+}
+.shell-nav .mantine-NavLink-root[data-active] {
+  color: var(--suivi-nav-texte);
+  background: var(--suivi-nav-active);
+  box-shadow: inset 3px 0 var(--suivi-nav-repere);
+}
+.shell-nav .mantine-NavLink-root[data-active] .mantine-NavLink-label {
+  font-weight: 600;
+}
+.shell-nav .mantine-NavLink-description {
+  color: var(--suivi-nav-secondaire);
+  font-size: 0.67rem;
+  line-height: 1.6;
+}
+.nav-footer {
+  padding-top: var(--mantine-spacing-md);
+}
+.nav-signature {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  border-top: 1px solid var(--suivi-nav-active);
+  padding: var(--mantine-spacing-lg) var(--mantine-spacing-xs);
+}
+.nav-signature__mark {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.15rem;
+  height: 2.15rem;
+  border-radius: 50%;
+  background: var(--suivi-nav-active);
+}
+.shell-nav .nav-signature {
+  color: var(--suivi-nav-texte);
+}
+.shell-nav .nav-signature .mantine-Text-root:last-child {
+  color: var(--suivi-nav-secondaire);
+  font-size: 0.68rem;
+}
+.shell-nav .nav-footer .mantine-Button-root {
+  color: var(--suivi-nav-secondaire);
+}
+.shell-nav .nav-footer .mantine-Button-root:hover {
+  background: var(--suivi-nav-survol);
+}
+.shell-nav .app-version {
+  color: var(--suivi-nav-secondaire);
+  font-size: 0.63rem;
+  padding-top: var(--mantine-spacing-xs);
+}
+@media (min-width: 36em) {
+  .shell-nav {
+    padding-block: var(--mantine-spacing-md);
+  }
+  .shell-nav-inner {
+    min-height: calc(100dvh - var(--suivi-entete-h) - 2 * var(--mantine-spacing-md));
+  }
+  .nav-footer {
+    margin-top: auto;
+  }
+}
+@media (min-width: 36em) and (max-width: 63.99em) {
+  .shell-nav .nav-signature {
+    display: none;
+  }
+  .shell-nav .mantine-NavLink-root {
+    padding-inline: 0;
+  }
+  .shell-nav .mantine-NavLink-body {
+    flex: 0;
+  }
+}
+@media (min-width: 64em) {
+  .shell-nav {
+    padding-inline: var(--mantine-spacing-sm);
+  }
+}
+.page {
+  gap: var(--mantine-spacing-lg);
+}
+.page-header {
+  align-items: center;
+  gap: var(--mantine-spacing-md);
+  padding-bottom: var(--mantine-spacing-xs);
+}
+.page-header__titre {
+  min-width: 0;
+}
+.page-header__titre .lecture {
+  margin-top: 0.6rem;
+  line-height: 1.6;
+}
+.page-eyebrow {
+  color: var(--mantine-color-dimmed);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+.page > .page-eyebrow {
+  margin-bottom: calc(-1 * var(--mantine-spacing-sm));
+}
+.section-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-sm);
+  flex-wrap: wrap;
+  padding-top: var(--mantine-spacing-lg);
+  padding-bottom: var(--mantine-spacing-2xs);
+}
+.section-label > .mantine-Text-root:last-child {
+  font-size: 0.75rem;
+}
+.mantine-Card-root {
+  border-color: var(--suivi-trait);
+  box-shadow: var(--suivi-ombre);
+  padding: var(--mantine-spacing-lg);
+  background: var(--suivi-surface);
+}
+.mantine-Card-root .mantine-Title-root:is(h2, h3, h4) {
+  line-height: 1.4;
+}
+.mantine-Button-root {
+  font-weight: 550;
+  letter-spacing: -0.01em;
+  transition:
+    background-color var(--suivi-motion),
+    border-color var(--suivi-motion),
+    box-shadow var(--suivi-motion);
+}
+.mantine-Button-root[data-variant='default'] {
+  border-color: var(--suivi-trait);
+  background: var(--suivi-surface);
+}
+.mantine-Button-root[data-variant='default']:hover:not(:disabled) {
+  border-color: var(--mantine-color-suivi-5);
+  background: var(--suivi-surface-douce);
+}
+.mantine-Button-root[data-variant='filled']:not(:disabled):hover {
+  box-shadow: 0 4px 12px rgb(18 63 41 / 14%);
+}
+.mantine-Button-root:disabled,
+.mantine-Button-root[data-disabled] {
+  box-shadow: none;
+}
+.mantine-Input-input {
+  border-radius: var(--mantine-radius-md);
+  transition:
+    border-color var(--suivi-motion),
+    box-shadow var(--suivi-motion);
+}
+.mantine-Input-input:focus-within {
+  box-shadow: 0 0 0 3px var(--mantine-primary-color-light);
+}
+.mantine-InputWrapper-label {
+  margin-bottom: var(--mantine-spacing-2xs);
+  font-weight: 550;
+  font-size: 0.82rem;
+}
+.mantine-Badge-root {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 550;
+  max-width: 100%;
+  height: auto;
+  min-height: 1.3rem;
+  padding-block: 0.18rem;
+}
+.mantine-Badge-label {
+  white-space: normal;
+  line-height: 1.35;
+}
+.mantine-Table-table {
+  --table-border-color: var(--suivi-trait);
+  font-size: 0.82rem;
+}
+.mantine-Table-th {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.035em;
+  color: var(--mantine-color-dimmed);
+  padding-block: var(--mantine-spacing-sm);
+}
+.mantine-Table-td {
+  padding-block: var(--mantine-spacing-sm);
+  line-height: 1.6;
+}
+.mantine-Table-tr {
+  transition: background-color var(--suivi-motion);
+}
+.data-table.mantine-Card-root {
+  padding: 0;
+}
+.data-table thead th,
+.data-table thead th:first-child {
+  background: var(--suivi-surface-douce);
+}
+.mantine-Tabs-list {
+  border-bottom: 1px solid var(--suivi-trait);
+  gap: var(--mantine-spacing-sm);
+}
+.mantine-Tabs-tab {
+  font-weight: 550;
+  padding-block: var(--mantine-spacing-sm);
+}
+.mantine-Tabs-tab[data-active] {
+  color: var(--mantine-primary-color-filled);
+}
+.mantine-Modal-content,
+.mantine-Drawer-content {
+  box-shadow: var(--suivi-ombre-haute);
+}
+.mantine-Modal-title,
+.mantine-Drawer-title {
+  font-weight: 650;
+  letter-spacing: -0.025em;
+}
+.mantine-Modal-header,
+.mantine-Drawer-header {
+  border-bottom: 1px solid var(--suivi-trait);
+  margin-bottom: var(--mantine-spacing-md);
+}
+.mantine-Modal-overlay,
+.mantine-Drawer-overlay {
+  background: rgb(11 31 23 / 30%);
+}
+.settings-nav {
+  border-color: var(--suivi-trait);
+}
+.settings-nav .mantine-NavLink-root {
+  border-radius: var(--mantine-radius-sm);
+  padding-block: var(--mantine-spacing-sm);
+}
+.form-section__pied {
+  border-color: var(--suivi-trait);
+  margin-top: var(--mantine-spacing-xs);
+}
+
+/* Tableau de bord : un rendez-vous prioritaire et quatre indicateurs distincts. */
+.synthese-grille {
+  align-items: stretch;
+  gap: var(--mantine-spacing-lg);
+}
+.synthese-grille > .carte {
+  min-width: 0;
+}
+.synthese-grille .carte > h2 {
+  font-size: 0.93rem;
+  margin-bottom: var(--mantine-spacing-lg);
+}
+.audit-carte {
+  position: relative;
+  overflow: hidden;
+  background: var(--suivi-nav-fond);
+  color: var(--suivi-nav-texte);
+  border-color: var(--suivi-nav-fond);
+  min-height: 13.5rem;
+}
+.audit-carte::after {
+  content: '';
+  position: absolute;
+  width: 13rem;
+  height: 13rem;
+  border-radius: 50%;
+  border: 1px solid var(--suivi-nav-active);
+  right: -5rem;
+  bottom: -8rem;
+  box-shadow: 0 0 0 2rem var(--suivi-nav-survol);
+  pointer-events: none;
+}
+.audit-carte > h2 {
+  color: var(--suivi-nav-secondaire);
+  font-size: 0.72rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.audit-carte .mantine-Text-root {
+  color: var(--suivi-nav-secondaire) !important;
+}
+.audit-carte .chiffre-cle__valeur {
+  color: var(--suivi-nav-texte) !important;
+  font-size: clamp(1.75rem, 2.3vw, 2.8rem);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  margin-top: 0.2rem;
+  margin-bottom: 0.3rem;
+}
+.audit-symbole {
+  position: absolute;
+  top: var(--mantine-spacing-lg);
+  right: var(--mantine-spacing-lg);
+  color: var(--suivi-nav-repere);
+}
+.audit-carte > .mantine-Stack-root {
+  position: relative;
+  z-index: 1;
+}
+.chiffres-grille {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--mantine-spacing-md);
+}
+.chiffre-cle {
+  min-width: 0;
+  padding-inline-start: var(--mantine-spacing-md);
+  border-inline-start: 2px solid var(--suivi-trait);
+}
+.chiffre-cle .chiffre-cle__valeur {
+  font-size: 2rem;
+  font-weight: 550;
+  letter-spacing: -0.05em;
+  margin-bottom: 0.35rem;
+}
+.chiffre-cle > .mantine-Text-root:last-child {
+  font-size: 0.73rem;
+}
+.chiffre-cle--erreur {
+  border-color: var(--mantine-color-red-4);
+}
+.chiffre-cle--attention {
+  border-color: var(--mantine-color-orange-4);
+}
+.chiffre-cle--erreur .chiffre-cle__valeur {
+  color: var(--mantine-color-red-8);
+}
+.chiffre-cle--attention .chiffre-cle__valeur {
+  color: var(--mantine-color-orange-9);
+}
+[data-mantine-color-scheme='dark'] .chiffre-cle--erreur .chiffre-cle__valeur {
+  color: var(--mantine-color-red-3);
+}
+[data-mantine-color-scheme='dark'] .chiffre-cle--attention .chiffre-cle__valeur {
+  color: var(--mantine-color-orange-3);
+}
+.repartition-carte .mantine-Table-td {
+  border: 0;
+  padding: 0 0 var(--mantine-spacing-md);
+}
+.repartition-carte .mantine-Table-td:first-child {
+  width: 100%;
+}
+.repartition-carte .mantine-Table-td:last-child {
+  font-size: 1.1rem;
+  padding-left: var(--mantine-spacing-lg);
+  font-weight: 550;
+  vertical-align: middle;
+}
+.repartition-label {
+  display: block;
+  margin-bottom: 0.6rem;
+  font-size: 0.79rem;
+}
+.repartition-barre {
+  display: block;
+  width: 100%;
+  height: 0.32rem;
+  overflow: visible;
+}
+.repartition-piste {
+  fill: var(--suivi-surface-douce);
+}
+.repartition-valeur {
+  fill: var(--mantine-color-suivi-6);
+}
+.repartition-carte tr:nth-child(2) .repartition-valeur {
+  fill: var(--mantine-color-suivi-4);
+}
+.repartition-carte tr:nth-child(3) .repartition-valeur {
+  fill: var(--mantine-color-suivi-3);
+}
+.acces-carte {
+  display: flex;
+  flex-direction: column;
+}
+.acces-carte > .mantine-Stack-root {
+  flex: 1;
+  align-items: start;
+}
+.acces-carte .mantine-Text-root {
+  font-size: 0.8rem;
+  line-height: 1.7;
+}
+.acces-carte .mantine-Button-root {
+  margin-top: auto;
+}
+.acces-icone {
+  display: inline-grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  background: var(--mantine-primary-color-light);
+  color: var(--mantine-primary-color-light-color);
+  border-radius: 0.7rem;
+}
+.presence-liste {
+  background: var(--suivi-surface-douce);
+  box-shadow: none;
+}
+.reprise-carte {
+  box-shadow: none;
+}
+.reprise-carte .table-wrap {
+  margin-top: var(--mantine-spacing-xs);
+}
+@media (min-width: 90em) {
+  .synthese-grille {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .synthese-grille .ecarts-carte {
+    grid-column: span 2;
+  }
+  .chiffres-grille {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    height: 100%;
+    align-items: center;
+  }
+  .chiffre-cle .chiffre-cle__valeur {
+    font-size: 2.75rem;
+  }
+  .synthese-grille .echeances-carte:not(.carte-large) {
+    grid-column: span 2;
+  }
+}
+@media (min-width: 160em) {
+  .synthese-grille {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .synthese-grille .ecarts-carte {
+    grid-column: span 3;
+  }
+}
+@media (max-width: 35.99em) {
+  .shell-header > .mantine-Group-root {
+    padding-inline: var(--mantine-spacing-sm);
+  }
+  .shell-header .mantine-Button-root {
+    font-size: 0.7rem;
+  }
+  .mantine-Card-root {
+    padding: var(--mantine-spacing-md);
+  }
+  .page {
+    gap: var(--mantine-spacing-md);
+  }
+  .synthese-grille {
+    gap: var(--mantine-spacing-md);
+  }
+  .audit-carte {
+    min-height: 12rem;
+  }
+  .chiffres-grille {
+    gap: var(--mantine-spacing-lg);
+  }
+  .mantine-Drawer-root .nav-caption {
+    color: var(--mantine-color-dimmed);
+  }
+  .mantine-Drawer-root .nav-signature {
+    border-color: var(--suivi-trait);
+  }
+  .mantine-Drawer-root .nav-signature__mark {
+    background: var(--mantine-primary-color-light);
+  }
+}
+
+/* Cartographie : commandes lisibles, canevas net ; géométrie et exports préservés. */
+.carte-page .carte-outils {
+  padding: var(--mantine-spacing-sm);
+  border: 1px solid var(--suivi-trait);
+  border-radius: var(--mantine-radius-lg);
+  background: var(--suivi-surface);
+  box-shadow: var(--suivi-ombre);
+}
+.carte-page .carte-vues {
+  padding: var(--mantine-spacing-2xs);
+  border: 1px solid var(--suivi-trait);
+  background: var(--suivi-surface);
+  border-radius: var(--mantine-radius-lg);
+}
+.carte-page .carte-vues .mantine-Button-root {
+  border: 0;
+}
+.carte-page .carte-vues .mantine-Button-root[aria-pressed='false'] {
+  background: transparent;
+  color: var(--mantine-color-dimmed);
+}
+.carte-page .carte-canevas,
+.carte-page .carte-panneau,
+.carte-page .carte-inspecteur {
+  border-color: var(--suivi-trait);
+  box-shadow: var(--suivi-ombre);
+}
+.carte-page .carte-canevas {
+  border-radius: var(--mantine-radius-lg);
+}
+.carte-page .page-header {
+  margin-bottom: var(--mantine-spacing-xs);
+}
+.carte-page .carte-vide {
+  border-style: solid;
+  border-color: var(--suivi-trait);
+  box-shadow: var(--suivi-ombre);
+}
+.carte-page .carte-vide-icone {
+  display: grid;
+  place-items: center;
+  width: 5rem;
+  height: 5rem;
+  border-radius: 1.5rem;
+  background: var(--mantine-primary-color-light);
+  margin-bottom: var(--mantine-spacing-sm);
+}
+.carte-page .carte-vide-icone svg {
+  color: var(--mantine-primary-color-filled);
+}
+.carte-page .carte-grille {
+  gap: var(--mantine-spacing-md);
+}
+
+/* Connexion : composition éditoriale, sans ressource distante. */
+.auth-wrap:has(.auth-editorial) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+  gap: var(--mantine-spacing-xl);
+  padding: clamp(1rem, 5vw, 5rem);
+}
+.auth-editorial {
+  background: var(--suivi-nav-fond);
+  color: var(--suivi-nav-texte);
+  padding: clamp(1.5rem, 4vw, 4rem);
+  border-radius: var(--mantine-radius-xl);
+  overflow: hidden;
+  position: relative;
+}
+.auth-kicker {
+  color: var(--suivi-nav-repere);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+}
+.auth-editorial h2 {
+  margin: 2rem 0 1rem;
+  font-size: clamp(2rem, 3.6vw, 3.75rem);
+  font-weight: 500;
+  line-height: 1.12;
+  letter-spacing: -0.05em;
+}
+.auth-editorial p {
+  max-width: 32ch;
+  font-size: 0.9rem;
+  line-height: 1.75;
+  color: var(--suivi-nav-secondaire);
+}
+.auth-caption {
+  display: block;
+  max-width: 42ch;
+  font-size: 0.67rem;
+  color: var(--suivi-nav-secondaire);
+}
+.auth-illustration {
+  position: relative;
+  height: 11rem;
+  margin-block: 2rem;
+}
+.auth-illustration span {
+  position: absolute;
+  border: 1px solid var(--suivi-nav-active);
+  background: var(--suivi-nav-survol);
+  width: 70%;
+  height: 4rem;
+  border-radius: 0.75rem;
+  left: 5%;
+  top: 0;
+}
+.auth-illustration span:nth-child(2) {
+  left: 15%;
+  top: 3rem;
+  background: var(--suivi-nav-active);
+}
+.auth-illustration span:nth-child(3) {
+  left: 25%;
+  top: 6rem;
+  background: var(--suivi-nav-repere);
+}
+.auth-illustration span::after {
+  content: '';
+  position: absolute;
+  width: 55%;
+  height: 0.3rem;
+  background: var(--suivi-nav-secondaire);
+  opacity: 0.35;
+  top: 45%;
+  left: 1.25rem;
+  border-radius: 1rem;
+}
+.auth-illustration span:nth-child(3)::after {
+  background: var(--suivi-nav-fond);
+}
+.auth-wrap .auth-card {
+  padding: clamp(1.25rem, 3vw, 3rem);
+  box-shadow: var(--suivi-ombre-haute);
+}
+.auth-card .mantine-Title-root {
+  margin-block: var(--mantine-spacing-sm);
+}
+.auth-card .mantine-Stepper-stepLabel {
+  font-size: 0.65rem;
+}
+.auth-card .mantine-Stepper-root {
+  margin-block: var(--mantine-spacing-sm);
+}
+@media (min-width: 64em) {
+  .auth-wrap:has(.auth-editorial) {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    max-width: 90rem;
+    margin-inline: auto;
+  }
+  .auth-editorial {
+    min-height: 38rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+}
+@media (max-width: 63.99em) {
+  .auth-editorial {
+    display: none;
+  }
+}
+
+/* Mouvement uniquement à l'apparition ; aucun défilement imposé ni boucle décorative. */
+@keyframes suivi-arrivee {
+  from {
+    opacity: 0;
+    translate: 0 0.45rem;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .page-header,
+  .page > .mantine-Group-root:first-child,
+  .auth-card,
+  .auth-editorial {
+    animation: suivi-arrivee var(--suivi-motion-entree) var(--suivi-ease) both;
+  }
+  .synthese-grille > .mantine-Card-root {
+    animation: suivi-arrivee var(--suivi-motion-entree) var(--suivi-ease) both;
+  }
+  .synthese-grille > .mantine-Card-root:nth-child(2) {
+    animation-delay: 35ms;
+  }
+  .synthese-grille > .mantine-Card-root:nth-child(3) {
+    animation-delay: 70ms;
+  }
+  .synthese-grille > .mantine-Card-root:nth-child(4) {
+    animation-delay: 105ms;
+  }
+}
+@media (prefers-contrast: more) {
+  .mantine-Card-root,
+  .data-table,
+  .carte-page .carte-outils {
+    border-color: var(--mantine-color-text);
+  }
+  .shell-nav .mantine-NavLink-root {
+    color: var(--suivi-nav-texte);
+  }
+}
+@media print {
+  .shell-header,
+  .shell-nav,
+  .nav-footer {
+    display: none;
+  }
+  .shell-body {
+    display: block;
+  }
+  .shell-main {
+    padding: 0;
+  }
+  .mantine-Card-root {
+    box-shadow: none;
+    break-inside: avoid;
+  }
+  .audit-carte {
+    print-color-adjust: exact;
+  }
+}
+
+/* Libellés et légendes restent lisibles même quand Mantine définit leur couleur. */
+.shell-nav .app-version {
+  color: var(--suivi-nav-secondaire) !important;
+}
+.carte-page .carte-panneau .mantine-Card-root {
+  padding: var(--mantine-spacing-md);
+}
+.carte-page .carte-prereglages .mantine-Button-root {
+  padding-inline: var(--mantine-spacing-xs);
+}
+.carte-page .carte-prereglages .mantine-Button-label {
+  white-space: normal;
+  line-height: 1.25;
+}
+.carte-page .carte-prereglages .mantine-Button-section {
+  margin-inline-end: var(--mantine-spacing-2xs);
+}
+.data-table .mantine-Table-td:first-child,
+.data-table .mantine-Table-th:first-child {
+  padding-inline-start: var(--mantine-spacing-lg);
+}
+.data-table .mantine-Table-td:last-child,
+.data-table .mantine-Table-th:last-child {
+  padding-inline-end: var(--mantine-spacing-lg);
+}
+.data-table .mantine-Table-td .mantine-UnstyledButton-root {
+  font-size: 0.88rem;
+}
+
+.data-table .mantine-Table-td .mantine-Anchor-root {
+  font-size: 0.88rem;
+}
+
+/* Étapes de connexion : trois colonnes lisibles sur téléphone. */
+@media (max-width: 35.99em) {
+  .auth-card .mantine-Stepper-steps {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--mantine-spacing-xs);
+    align-items: start;
+  }
+  .auth-card .mantine-Stepper-separator {
+    display: none;
+  }
+  .auth-card .mantine-Stepper-step {
+    flex-direction: column;
+    align-items: center;
+    gap: var(--mantine-spacing-xs);
+  }
+  .auth-card .mantine-Stepper-stepBody {
+    margin: 0;
+  }
+  .auth-card .mantine-Stepper-stepLabel {
+    white-space: normal;
+    text-align: center;
+    line-height: 1.5;
+  }
+}

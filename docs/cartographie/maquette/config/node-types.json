@@ -1,0 +1,15 @@
+{
+  "isms": {"label": "SMSI", "group": "internal", "renderer": "IsmsNode"},
+  "scope": {"label": "Périmètre", "group": "structure", "renderer": "ScopeNode"},
+  "process": {"label": "Processus", "group": "internal", "renderer": "ProcessNode"},
+  "subprocess": {"label": "Sous-processus", "group": "internal", "renderer": "SubprocessNode"},
+  "stakeholder": {"label": "Partie intéressée", "group": "external", "renderer": "StakeholderNode"},
+  "internal_issue": {"label": "Enjeu interne", "group": "issue", "renderer": "IssueNode"},
+  "external_issue": {"label": "Enjeu externe", "group": "issue", "renderer": "IssueNode"},
+  "application": {"label": "Application", "group": "internal", "renderer": "AssetNode"},
+  "infrastructure": {"label": "Infrastructure", "group": "internal", "renderer": "AssetNode"},
+  "site": {"label": "Site", "group": "internal", "renderer": "SiteNode"},
+  "supplier": {"label": "Fournisseur", "group": "external", "renderer": "SupplierNode"},
+  "requirement": {"label": "Exigence", "group": "governance", "renderer": "RequirementNode"},
+  "risk": {"label": "Risque", "group": "governance", "renderer": "RiskNode"}
+}

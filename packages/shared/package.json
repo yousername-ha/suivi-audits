@@ -1,0 +1,37 @@
+{
+  "name": "@suivi/shared",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Schémas zod et types partagés entre l'API et l'interface",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "source": "./src/index.ts",
+      "default": "./dist/index.js"
+    },
+    "./legacy": {
+      "types": "./src/legacy/index.ts",
+      "source": "./src/legacy/index.ts",
+      "default": "./dist/legacy/index.js"
+    },
+    "./carto": {
+      "types": "./src/carto/index.ts",
+      "source": "./src/carto/index.ts",
+      "default": "./dist/carto/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "gen:contract": "node scripts/gen-contract.mjs"
+  },
+  "dependencies": {
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.1",
+    "vitest": "3.2.7"
+  }
+}
