@@ -451,12 +451,20 @@ test('11. deux sessions : présence affichée, la seconde reçoit 412 et choisit
     await p.getByRole('button', { name: 'Enregistrer', exact: true }).click();
     const dlg = p.getByRole('dialog', { name: 'Carte modifiée entre-temps' });
     await expect(dlg).toContainText('modifiée par contrib-carto');
+    // Une notification d'un enregistrement précédent peut encore être visible : attendre la réponse
+    // de cet écrasement avant de consulter son audit, écrit avant la réponse du serveur.
+    const ecrasement = p.waitForResponse(
+      (r) => r.request().method() === 'PUT' && new URL(r.url()).pathname.startsWith('/api/carto/maps/'),
+    );
     await dlg.getByRole('button', { name: 'Écraser' }).click();
+    expect((await ecrasement).status()).toBe(200);
+    await expect(dlg).toBeHidden();
     await expect(p.getByText('Carte enregistrée.')).toBeVisible();
     const audit = (await (await admin.req.get('/api/admin/audit?q=carto.map_overwrite')).json()) as {
       action: string;
     }[];
     expect(audit.length).toBeGreaterThan(0);
+    expect(audit.every((e) => e.action === 'carto.map_overwrite')).toBe(true);
     // En quittant la carte, la présence est retirée.
     await c.page.getByRole('link', { name: 'Accueil' }).click();
     await expect(p.getByText('Compte contrib-carto modifie la carte')).toBeHidden();
