@@ -83,6 +83,37 @@ test('B1 : prévisualisation mobile, socle protégé et dépendance obligatoire'
   }
 });
 
+test('B1 : désactiver le fournisseur facultatif audit conserve les paramètres Conformité', async ({ browser }) => {
+  const { ctx, page, csrf, problems } = await open(browser);
+  const apply = async (changes: { id: string; enabled: boolean }[]) => {
+    const intent = { changes, cascade: true };
+    const p = await (
+      await ctx.request.post('/api/admin/modules/preview', { data: intent, headers: { 'x-csrf-token': csrf } })
+    ).json();
+    const r = await ctx.request.put('/api/admin/modules', {
+      data: { intent, previewId: p.previewId, confirm: 'VALIDER' },
+      headers: { 'x-csrf-token': csrf, 'if-match': `"${p.version}"` },
+    });
+    expect(r.ok()).toBe(true);
+  };
+  try {
+    await apply([{ id: 'audit', enabled: false }]);
+    await page.goto('/parametres/referentiels');
+    await expect(page.getByRole('textbox', { name: 'Référentiel complémentaire actif', exact: true })).toBeEnabled();
+    await expect(
+      page.getByRole('navigation', { name: 'Sections des paramètres' }).getByText('Cycle d’audit et années'),
+    ).toHaveCount(0);
+    const r = await ctx.request.get('/api/settings/referentiels');
+    expect(r.status()).toBe(200);
+    expect((await r.json()).info.referentiels).toEqual([]);
+    expect(problems).toEqual([]);
+  } finally {
+    const state = await (await ctx.request.get('/api/modules')).json();
+    if (state.disabled.length) await apply(state.disabled.map((id: string) => ({ id, enabled: true })));
+    await ctx.close();
+  }
+});
+
 test('B1 : désactivation confirmée, cache renouvelé et réactivation des données intactes', async ({ browser }) => {
   const { ctx, page, csrf, problems } = await open(browser);
   const before = await (await ctx.request.get('/api/legacy/state')).json();

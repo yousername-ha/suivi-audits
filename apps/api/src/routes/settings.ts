@@ -31,16 +31,19 @@ async function info(svc: Services, s: SettingsSection, values: Record<string, un
     case 'general':
       return { logo: !!(await svc.db.one("SELECT 1 FROM settings WHERE key = 'logo'")) };
     case 'referentiels': {
+      const auditEnabled = !(await svc.modules.state()).disabled.includes('audit');
       const d = ((await svc.legacy.recompose())?.data ?? {}) as JsonObject;
       const items = Array.isArray(d.items) ? (d.items as JsonObject[]) : [];
       const count = (ref: string) => items.filter((i) => i.ref === ref).length;
       const fws = Array.isArray(d.frameworks) ? (d.frameworks as JsonObject[]) : [];
       return {
-        referentiels: [
-          { nom: 'ISO/IEC 27001 (clauses 4 à 10)', exigences: count('ISO') },
-          { nom: 'ISO/IEC 27001, Annexe A', exigences: count('A') },
-          { nom: 'Hébergeur de données de santé (HDS)', exigences: count('HDS') },
-        ],
+        referentiels: auditEnabled
+          ? [
+              { nom: 'ISO/IEC 27001 (clauses 4 à 10)', exigences: count('ISO') },
+              { nom: 'ISO/IEC 27001, Annexe A', exigences: count('A') },
+              { nom: 'Hébergeur de données de santé (HDS)', exigences: count('HDS') },
+            ]
+          : [],
         complementaires: fws.map((f) => ({
           nom: String(f.name ?? f.id ?? ''),
           exigences: Array.isArray(f.requirements) ? f.requirements.length : 0,
@@ -68,7 +71,6 @@ async function info(svc: Services, s: SettingsSection, values: Record<string, un
 async function sectionOut(svc: Services, s: SettingsSection, rights: Rights): Promise<SettingsSectionOut> {
   if (s === 'cycle') await svc.modules.assert('audit');
   if (s === 'referentiels') {
-    await svc.modules.assert('audit');
     await svc.modules.assert('conformite');
   }
   if (s === 'import_export') await svc.modules.assert('import_export');
@@ -93,7 +95,7 @@ export const settingsRoutes = [
     handler: async ({ svc, s }) => {
       const disabled = (await svc.modules.state()).disabled;
       const visible = SETTINGS_SECTIONS.filter((x) => x !== 'cycle' || !disabled.includes('audit'))
-        .filter((x) => x !== 'referentiels' || (!disabled.includes('audit') && !disabled.includes('conformite')))
+        .filter((x) => x !== 'referentiels' || !disabled.includes('conformite'))
         .filter((x) => x !== 'import_export' || !disabled.includes('import_export'));
       return Promise.all(visible.map((x) => sectionOut(svc, x, (s as Session).user.rights)));
     },
@@ -125,7 +127,6 @@ export const settingsRoutes = [
       const sess = s as Session;
       if (params.section === 'cycle') await svc.modules.assert('audit');
       if (params.section === 'referentiels') {
-        await svc.modules.assert('audit');
         await svc.modules.assert('conformite');
       }
       if (params.section === 'import_export') await svc.modules.assert('import_export');

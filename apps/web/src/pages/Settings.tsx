@@ -46,7 +46,7 @@ const DESCRIPTIONS: Record<SettingsSection, string> = {
 export function SettingsPage() {
   const can = useCan();
   const visible = SETTINGS_SECTIONS.filter((s) => s !== 'cycle' || can('audit', 'lire'))
-    .filter((s) => s !== 'referentiels' || (can('audit', 'lire') && can('conformite', 'lire')))
+    .filter((s) => s !== 'referentiels' || can('conformite', 'lire'))
     .filter((s) => s !== 'import_export' || can('import_export', 'lire'));
   const params = useParams();
   const nav = useNavigate();

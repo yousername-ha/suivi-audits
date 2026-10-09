@@ -71,6 +71,19 @@ describe('B1 configuration des modules', () => {
     expect(legacy.items).toEqual([]);
     expect(legacy.plan).toEqual({});
     expect((await a.get('/api/settings/cycle')).statusCode).toBe(409);
+    const references = await a.get('/api/settings/referentiels');
+    expect(references.statusCode).toBe(200);
+    expect(references.json().info.referentiels).toEqual([]);
+    const updated = await a.put(
+      '/api/settings/referentiels',
+      {
+        ...references.json().values,
+        entityCategory: 'importante',
+      },
+      { 'if-match': references.headers.etag! },
+    );
+    expect(updated.statusCode).toBe(200);
+    expect(updated.json().values.entityCategory).toBe('importante');
     expect((await a.get('/api/settings')).statusCode).toBe(200);
     expect((await apply(intent('plan_audit', true, true))).statusCode).toBe(200);
     expect((await a.me()).permissions).toContain('audit:lire');
