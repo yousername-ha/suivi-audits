@@ -1,0 +1,78 @@
+# Évolution SMSI / GRC — backlog priorisé et critères de passage
+
+Source : instructions jointes le 9 octobre 2026 (`Texte collé.txt`, lots A–L). La clarification en chat impose **exclusivement `feature/gpt6-evolution-smsi-grc`**, malgré le nom GTP6 indiqué dans la pièce jointe. Main reste inchangée ; chaque lot est documenté, testé et proposé sans fusion automatique.
+
+Diagnostic : [analyse de la base](diagnostics/2026-10-09-sauge-smsi-grc.md) et [intégration Sauge](diagnostics/2026-10-09-integration-sauge.md). Ne pas refaire la refonte ou l'import. Les statuts ci-dessous distinguent travail implémenté et extensions restantes ; la présence d'une ligne n'implique pas que la fonctionnalité existe.
+
+## Architecture cible minimale
+
+Conserver React/Mantine, Fastify/route(), PostgreSQL, permissions partagées, mécanisme de version et mappers legacy. Les données métier communes demeurent la source unique : mesures/items, écarts/findings, processus, objectifs, documents et cartes. Les extensions ajoutent les capacités manquantes et des relations, sans créer des copies propres à CaRE, HAS ou au parcours guidé.
+
+Le SMSI est un usage possible, pas un préalable obligatoire : une organisation peut sélectionner seulement un référentiel ISO 9001 ou sa politique interne. Le moteur doit distinguer configuration de l'instance, activation opérationnelle, filtrage du dashboard et droits utilisateur. Désactivation ne signifie jamais suppression des données ou des relations partagées.
+
+Pour les nouveaux modèles structurants : ADR, contrats zod, migration additive, mapper de reprise, test v2/v3 et aller-retour legacy avant intégration. Les versions publiées d'un référentiel, d'une échelle ou d'une évaluation restent immuables ; une évolution crée une version et un lien explicite, sans recalcul silencieux du passé.
+
+Les fonctions système ne doivent pas convertir l'API en exécutant de commandes arbitraires. Caddy termine TLS. L'API/base n'ont pas d'accès Internet par défaut. Un éventuel service d'exploitation dispose d'un protocole de tâches autorisées, d'un périmètre de fichiers fixe et d'un audit, sans socket Docker offert à l'application. Ce contrat doit être établi et testé avant A1/A2.
+
+## Reprise obligatoire du socle historique
+
+La clarification utilisateur inclut **tous les modules encore dans l'ancien style v2** dans les lots A–L. L'archive source protège le code ; elle ne remplace pas leur intégration fonctionnelle. L'[inventaire de reprise](REPRISE-SOCLE-LEGACY.md) rattache chaque famille aux lots, aux clés de données et aux critères de recette. Aucune famille n'est écartée parce qu'elle utilise encore `/legacy`.
+
+Cette reprise est transversale aux phases 2 et 3 de ROADMAP.md : chacun des nouveaux lots commence par la capacité existante, conserve ses identifiants/relations/historiques et remplace son interface progressivement. La charte cible est Sauge ; l'outil historique reste opérationnel jusqu'à validation de son remplacement. Le premier lot donne un accès documentaire à chaque module autorisé, sans prétendre avoir déjà réécrit ses écrans.
+
+## Phase 1 — fiabilisation
+
+| ID | Nature et état | Critères d'acceptation | Dépendances et limites |
+|---|---|---|---|
+| A4 | Correction implémentée | Session serveur détruite, cookie expiré et rejeu refusé ; cache privé annulé/purgé, requête me conservée ; deux onglets reviennent à la connexion ; erreur réseau/403/500 visible sans fausse réussite ; session expirée 401 purgée | Aucun changement de politique MFA ni de schéma. BroadcastChannel quand disponible ; SSE et relecture de session restent actifs |
+| A3 | Amélioration implémentée | Retirer le bandeau numéroté d'étapes au-dessus de la connexion ; champs/MFA inchangés ; pas de débordement à 390/768/1440 ; CSP sans erreur | Ne pas changer palette, illustration Sauge, typographie ou CSS |
+| A6 | Amélioration implémentée | Sur grand écran, pas de colonne droite vide ; sélection/Infos ouvre la fiche ; fermeture rend la place au canevas ; filtres et préférences conservés | Aucun changement des données/positions ; inspecteur flottant mobile conservé |
+| A5 | Extension implémentée | Guide accessible depuis le menu ; articles par module, recherche, version documentaire ; filtrage des rubriques selon permissions ; fonctionnalités en développement signalées | Guide embarqué statique, maintenu avec le code ; ni norme reproduite ni attestation de conformité |
+| A1 | Extension à concevoir | Rapports/historique et intégrité consultables ; tâches de sauvegarde autorisées, planifiées, concurrentes maîtrisées ; politique de rétention ; restauration guidée confirmée et recette isolée, erreurs/statuts notifiés | Réutiliser backup/restore. ADR de l'exécutant système ; archive contrôlée avant extraction ; chiffrement et secrets conservés ; pas d'action destructive depuis un simple endpoint |
+| A2 | Extension à concevoir | Métadonnées de certificat, expiration, cohérence clé/certificat ; priorité explicite entre .env et configuration web ; renouvellement compatible Caddy, rollback et audit | Aucun secret TLS en réponse/journal ; modes TLS externe limités aux opérations réellement supportées ; métadonnées d'abord |
+
+## Phases 2 et 3 — socle et pilotage
+
+| Lot | Nature | Critères d'acceptation | Dépendances |
+|---|---|---|---|
+| B1 — modules | Extension du socle | Registre, graphe obligatoire/facultatif, sécurité/auth/données indispensables protégées ; aperçu des conséquences, backend/menus/tâches/API/imports cohérents ; réactivation sans perte et audit | Distinguer permission et activation ; aucune désactivation silencieuse des dépendants |
+| B2 — configuration | Extension de Paramètres | Échelles impact/probabilité, matrices/criticité/maturité, statuts/actions, catégories/mesures/preuves/contrôles/fréquences, dashboards, règles de calcul, vocabulaires/workflows, modèles/notifications/affichage configurables ; validation et historique | Defaults actuels conservés ; chaque évaluation référence sa version d'échelle ; pas d'exécution de code fourni par l'utilisateur |
+| C1–C4 — référentiels | Extension des objets existants | Référentiel/version/domaines/exigences personnalisés ; liens mesures/contrôles/évaluations/preuves/risques/actions/audits ; activation et dashboard dédiés ; ISO 9001 seul possible ; PSSI créée sans code spécifique ; partage sans duplication | Inventorier frameworks/items/activeFw et les mappers ; ne pas forcer ISO/HDS ; historiques consultables après désactivation |
+| C5 — mappings | Extension | Types identique/équivalent/partiel/complémentaire/connexe/absence ; source, justification, couverture, auteur/date/version/historique/statut ; proposition IA non validée jusqu'à revue | Aucun raccourci « similarité = conformité » ; liens explicites vers les versions des deux exigences |
+| C6 — template/import | Extension d'import/export | JSON/Excel structuré, exemple fictif et guide ; source/version/cibles/mesures/couverture/validation ; simulation, erreurs/doublons, aperçu, confirmation humaine ; confidentialité explicitée avant transfert externe | Réutiliser simulation, traçabilité et rapports existants ; jamais appliquer silencieusement un mapping IA |
+| G — preuves et contrôle | Extension | Pièce physique partagée, version examinée traçable ; liens vers politique/exigence/mesure/risque/audit/action ; plan de contrôle objectif/périmètre/fréquence/responsable/méthode/critères/échéance/résultat/preuve/écart/action ; récurrence et retards | Documents versionnés existants ; permissions par objet et historique des contrôles |
+| H — amélioration continue | Extension d'écarts/actions | Origines audit/risque/incident/mesure/contrôle/revue ; causes, responsabilité, échéance/priorité, progression, efficacité et clôture documentée ; indicateurs basés sur les données disponibles | Réutiliser findings/actions ; ne pas créer un second registre d'écarts |
+| K — parcours guidé | Orchestration, priorité métier | Organisation/périmètre/objectif, ISO/HDS/combiné ; reprise des objets existants et sauvegarde/reprise ; contexte, périmètre, gouvernance, risques, traitement, DDA, documentation, pilotage, audit, revue, amélioration ; critères de complétude et validations historisées | Moteur C et objets métier communs ; étapes pédagogiques, pas texte normatif. Progression documentaire/opérationnelle ≠ taux de conformité/certification |
+| F — mode auditeur | Extension des droits/parcours | Consultation limitée au périmètre autorisé, preuves/version examinée, observations et rapport distinguant constat/écart/recommandation/validation | Pas d'accès global automatique ; vérifier si les portées RBAC actuelles suffisent |
+
+## Phase 4 — santé et programmes
+
+| Lot | Critères d'acceptation | Prérequis documentaire |
+|---|---|---|
+| D1/D2 — CaRE | Domaines et versions séparés de calendrier/financement ; objectifs identifiés, critères/prérequis/échéances/responsables/mesures/actions/preuves/historique ; périmètres cohérents avec le modèle réel | ANS : publication/version/date de chaque domaine D1/D1bis/D2/D3/D4 à vérifier. Si indisponible, structure générique uniquement et statut explicite |
+| D3 — preuves | Pièce partagée sur plusieurs objectifs, classification/metadata/version/validation interne/date/responsable/commentaire/acceptation/export dossier | Validation interne distinguée d'une acceptation officielle |
+| D4 — finances | Budgets prévus/engagés/réalisés/déclarés, financement demandé/notifié/reçu, écart et pièces ; historique monétaire et arithmétique exacte | Aucun taux/formule/plafond d'aide sans publication source/version/date/périmètre ; estimation séparée de notification officielle |
+| D5 — dashboard/export | Global/domaines/retards/manquants/priorités/échéances/budgets/alertes, Excel et PDF | Données réellement présentes ; pas de fausse éligibilité ou taux de conformité |
+| E — BIA/PCA/PRA/PCRA | BIA activités/services/ressources/dépendances/scénarios/impacts temporels/criticité/besoins/objectifs/mesures/preuves/validation ; stratégies et procédures, rôles/contournements, plans, tests/RETEX ; liens carto/risques/actifs/CaRE D2/docs/audits ; exports | Kits ANS de cadrage/méthode/BIA/PCRA/tests/D2.O1–O3 identifiés, versions/licences validées ; PCA/PRA/PCRA et plans par activité distincts |
+| F — HAS | Grilles/évaluations/preuves/actions/dashboard et rapports via moteur commun | Référentiel HAS exact, dernière version applicable, critères pertinents et droit de réutilisation à identifier ; aucun contenu supposé |
+| K — couche HDS | Activités/périmètre/applicabilité/exigences additionnelles et liens normatifs configurés | Référentiel officiel/version/activités vérifiés ; pas de certification HDS automatique ni présomption de périmètre universel |
+
+## Phase 5 — intégrations et étude
+
+| Lot | Critères d'acceptation | Dépendances |
+|---|---|---|
+| I — email | Transport/credentials sécurisés, connectivité, templates, catégories, notifications autorisées, file/retry/backoff, statut/erreurs, destinataires et audit | Réseaux internes actuels sans sortie : définir le service mutualisé ; pas de relais ouvert ni secrets dans logs ; essais avec boîte de test autorisée |
+| J — MCP | ADR client/serveur/les deux ; auth, droits par objet/organisation, audit/limites/validation, protections contre injections et exfiltration ; lecture/préparation d'abord, validation humaine des écritures sensibles | Spécification MCP officielle actuelle vérifiée ; aucune écriture/destruction autonome par défaut |
+| L — étude comparative | ANALYSE_FONCTIONNELLE_COMPARATIVE.md : fonction/source/présence/intérêt/complexité/recommandation ; documenté distinct d'hypothèse | CISO Assistant et OverSecure : consulter leurs docs, pas copier leur contenu/code/charte ; pas d'implémentation automatique des opportunités |
+
+## Sources à vérifier avant les lots concernés
+
+Les URLs fournies sont des points de départ, pas des contenus déjà validés : ISO `https://www.iso.org/fr/standard/27001` ; HDS `https://esante.gouv.fr/services/hebergeurs-de-donnees-de-sante/les-referentiels-de-la-procedure-de-certification` et PDF `https://esante.gouv.fr/sites/default/files/media/document/Referentiel-HDS-20240516.pdf` ; CaRE/kits `https://esante.gouv.fr/strategie-nationale/cybersecurite/securite-operationnelle/ressources`, axes 1 et 4 ; HAS `https://www.has-sante.fr/` ; MCP : documentation officielle à identifier.
+
+Pour chaque contenu : organisme, document, URL officielle, version/date de publication, identifiant, date de vérification, applicabilité, licence/réutilisation et statut. Ne pas reconstruire les normes payantes ou les textes inaccessibles. Une proposition IA reste non validée. Toute règle financière doit avoir sa source ; les calculs génériques ne valent pas financement accordé.
+
+## Livraisons et tests
+
+Une PR par lot ou un commit de lot distinct dans la PR de branche lorsque GitHub ne permet pas plusieurs PR simultanées avec la même tête/cible. Main ne change qu'après une décision explicite de fusion, qui n'est pas autorisée ici. La PR de travail reste en brouillon.
+
+Pour chaque lot : périmètre/état initial, réutilisation, critères, impact sécurité/données, diff minimal, tests et non-régression, documentation, résultats exécutés et limites. Aucun statut « terminé » fondé sur le build seul. Les changements visuels voulus doivent être revus ; ne pas renouveler aveuglément les captures.

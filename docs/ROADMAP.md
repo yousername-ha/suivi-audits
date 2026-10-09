@@ -8,6 +8,8 @@ Les exigences fonctionnelles détaillées sont dans [BACKLOG-FONCTIONNEL.md](BAC
 
 **Critères communs à chaque module livré** (backlog, « Critères d'acceptation communs ») : charte graphique et adaptation à tous les écrans (phase 0, 9 ter et 9 quater) ; droits RBAC déclarés pour le module (phase 0, 9 bis) ; reprise des données par l'import legacy, documentée dans `MAPPING-LEGACY.md` ; parcours Playwright et captures de référence à 390, 1920 et 3840 px.
 
+La reprise couvre également **tout le socle v2 encore dans l'ancienne interface**, conformément à la clarification utilisateur du 9 octobre 2026. L'[inventaire de reprise](REPRISE-SOCLE-LEGACY.md) établit la correspondance entre ces familles et le [backlog d'évolution A–L](BACKLOG-EVOLUTION-SMSI-GRC.md). Leur archivage ne clôture pas leur migration ; chaque parcours reste opérationnel jusqu'à la recette de son remplacement Sauge.
+
 ## Phase 0 — Fondations (v3.0.0)
 
 - [x] Monorepo TypeScript strict : API Fastify, interface React, paquet partagé zod.
