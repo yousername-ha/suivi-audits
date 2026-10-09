@@ -287,7 +287,26 @@ switch (cmd) {
     worker();
     await login(st);
     let e = await call('GET', '/api/admin/exploitation');
-    if (!e.available || !e.host.backupReady || !e.host.tlsManaged) fail('poller/configuration indisponible');
+    if (!e.available || !e.host?.backupReady || !e.host?.tlsManaged) {
+      // Diagnostic sans clés, payloads ni contenu des fichiers : seulement erreurs de schéma/permissions.
+      console.log(
+        root([
+          'docker',
+          'compose',
+          'exec',
+          '-T',
+          'app',
+          'node',
+          '--input-type=module',
+          '-e',
+          `import fs from 'node:fs'; import {HostState} from '@suivi/shared';
+        try { const s=HostState.safeParse(JSON.parse(fs.readFileSync('/etat/exploitation/etat.json','utf8')));
+          console.log(s.success ? 'Etat hôte valide' : JSON.stringify(s.error.issues.map(x=>({path:x.path,code:x.code}))));
+        } catch(e) { console.log('Lecture état hôte : '+(e.code || 'format')); }`,
+        ]),
+      );
+      fail('poller/configuration indisponible');
+    }
     await call('PUT', '/api/admin/exploitation/politique', {
       json: { enabled: false, hourUtc: 23, minuteUtc: 47, days: [1, 3, 5], retentionDays: 91 },
       headers: { 'if-match': `"${e.policy.version}"` },

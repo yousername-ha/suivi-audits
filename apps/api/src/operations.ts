@@ -1,6 +1,6 @@
 /* Lot A : file autorisée. L'état hôte en lecture seule survit au remplacement de PostgreSQL. */
 import { randomUUID } from 'node:crypto';
-import { readFileSync, statSync } from 'node:fs';
+import { closeSync, constants, fstatSync, openSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { BackupPolicyIn, BackupPolicyOut, HostState, OperationIn, OperationOut } from '@suivi/shared';
 import { z } from 'zod';
@@ -12,13 +12,17 @@ import { certificateInfo } from './certificates.js';
 
 const LOCK = 727275;
 export function readHost(cfg: Config) {
+  let fd: number | undefined;
   try {
     const file = path.join(cfg.etatDir, 'exploitation', 'etat.json');
-    const st = statSync(file);
+    fd = openSync(file, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+    const st = fstatSync(fd);
     if (!st.isFile() || st.size > 2 * 1024 * 1024) return null;
-    return HostState.parse(JSON.parse(readFileSync(file, 'utf8')));
+    return HostState.parse(JSON.parse(readFileSync(fd, 'utf8')));
   } catch {
     return null;
+  } finally {
+    if (fd !== undefined) closeSync(fd);
   }
 }
 const fresh = (h: ReturnType<typeof readHost>) =>
