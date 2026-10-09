@@ -108,6 +108,8 @@ jobs:
         run: pnpm --filter @suivi/shared test
       - name: API (sécurité, concurrence, migrations v2 vers v3, import legacy, temps réel)
         run: pnpm --filter @suivi/api test
+      - name: Construction du paquet partagé pour les consommateurs web
+        run: pnpm --filter @suivi/shared build
       - name: Interface (configuration des modules et invalidation des données privées)
         run: pnpm --filter @suivi/web test
       - name: Composants de la charte graphique
