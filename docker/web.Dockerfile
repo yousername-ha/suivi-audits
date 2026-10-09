@@ -30,8 +30,9 @@ RUN apk upgrade --no-cache \
  # et incompatible avec cap_drop: ALL (exécution refusée).
  && cp /usr/bin/caddy /usr/local/bin/caddy && chmod 0555 /usr/local/bin/caddy && rm /usr/bin/caddy
 COPY docker/Caddyfile /etc/caddy/Caddyfile
+COPY --chmod=0555 docker/demarrer-web.sh /usr/local/bin/demarrer-web
 COPY --from=build /src/apps/web/dist /srv
 RUN chown -R root:root /srv /etc/caddy && chmod -R a-w,a+rX /srv /etc/caddy
 USER caddy
 EXPOSE 8080 8443
-CMD ["/usr/local/bin/caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
+CMD ["/usr/local/bin/demarrer-web"]

@@ -1,10 +1,10 @@
 /* A1a : demandes et résultats ; les opérations système restent exécutées sur le serveur. */
 import { Alert, Button, Card, Group, Stack, Table, Text, Title } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import type { BackupJobOut, BackupsOut } from '@suivi/shared';
+import type { BackupJobOut, BackupsOut, ExploitationOut } from '@suivi/shared';
 import { StatusChip, type Etat } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api, errorMessage, get, post } from '../api';
 import { ConfirmButton, ErrorAlert, fmtDate, fmtOctets } from '../components/common';
 import { useCan } from '../session';
@@ -23,11 +23,31 @@ export function BackupsPanel() {
     queryFn: () => get<BackupsOut>('/api/admin/sauvegardes'),
     refetchInterval: 5_000,
   });
+  const exploitation = useQuery({
+    queryKey: ['admin', 'exploitation'],
+    queryFn: () => get<ExploitationOut>('/api/admin/exploitation'),
+    refetchInterval: 5000,
+  });
   const qc = useQueryClient();
   const can = useCan();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const requestId = useRef<string | null>(null);
+  const seen = useRef(new Map<string, string>());
+  const initialized = useRef(false);
+  useEffect(() => {
+    if (!q.data) return;
+    for (const j of q.data.jobs) {
+      const before = seen.current.get(j.id);
+      if (initialized.current && before !== j.status && ['reussie', 'echec'].includes(j.status))
+        notifications.show({
+          message: `Sauvegarde : ${STATUS[j.status][1]}. ${j.message}`,
+          color: j.status === 'reussie' ? 'teal' : 'red',
+        });
+      seen.current.set(j.id, j.status);
+    }
+    initialized.current = true;
+  }, [q.data]);
   const update = async (fn: () => Promise<unknown>) => {
     setPending(true);
     setError(null);
@@ -54,7 +74,9 @@ export function BackupsPanel() {
         color: 'blue',
       });
     });
-  const active = q.data?.jobs.some((j) => j.status === 'en_attente' || j.status === 'en_cours');
+  const active =
+    q.data?.jobs.some((j) => j.status === 'en_attente' || j.status === 'en_cours') ||
+    exploitation.data?.jobs.some((j) => ['en_attente', 'en_cours', 'intervention'].includes(j.status));
   return (
     <Card withBorder>
       <Stack>
@@ -163,8 +185,8 @@ export function BackupsPanel() {
           </div>
         )}
         <Text size="sm" c="dimmed">
-          La restauration et la rétention sont gérées sur le serveur selon le guide d’installation. Le contrôle
-          d’empreinte ne remplace pas un test de restauration isolé.
+          La restauration guidée, la planification et la rétention sont accessibles ci-dessous lorsque le pilotage
+          serveur est activé. Le contrôle d’empreinte ne remplace pas un test de restauration isolé.
         </Text>
       </Stack>
     </Card>

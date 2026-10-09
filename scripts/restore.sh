@@ -47,9 +47,13 @@ if ! donnees_preparees; then
   "$REPO/scripts/preparer-donnees.sh"
 fi
 # Exclusivité avec le worker et toutes les sauvegardes, avant tout remplacement.
-exec 8> "$DATA_DIR/etat/backup-worker.lock"
+if [ "${RESTORE_WORKER_LOCK_HELD:-}" != 1 ]; then
+  exec 8> "$DATA_DIR/etat/backup-worker.lock"
+fi
 flock -n 8 || arret "Un exécutant de sauvegarde est actif."
-exec 9> "$DATA_DIR/etat/sauvegarde.lock"
+if [ "${RESTORE_SAUVEGARDE_LOCK_HELD:-}" != 1 ]; then
+  exec 9> "$DATA_DIR/etat/sauvegarde.lock"
+fi
 flock -n 9 || arret "Une sauvegarde ou restauration est active."
 [ ! -L "$DATA_DIR/secrets" ] || arret "Le dossier des secrets ne doit pas être un lien."
 # Contrôle du catalogue du dump dans un conteneur éphémère, avant modification des données.

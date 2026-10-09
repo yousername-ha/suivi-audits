@@ -15,6 +15,7 @@ import { GroupsPanel, RolesPanel, UsersPanel } from './AdminAccess';
 import { ImportPanel } from './AdminImport';
 import { MursPanel } from './AdminMurs';
 import { BackupsPanel } from './AdminBackups';
+import { OperationsPanel } from './AdminOperations';
 
 const TABS = [
   ['users', 'Utilisateurs', 'administration'],
@@ -337,6 +338,7 @@ function Exploitation() {
         </Alert>
       )}
       <BackupsPanel />
+      <OperationsPanel />
       {sv.enRetard && (
         <Alert color="red" title="Sauvegarde en retard">
           {sv.derniereReussie

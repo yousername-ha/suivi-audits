@@ -12,9 +12,14 @@
      backup-worker [ready|unavailable] annonce l'état de l'exécutant serveur
      backup-claim               réclame une demande (verrou hôte obligatoire)
      backup-finish <id> <code>   termine une demande avec le rapport serveur
-     consigner-mise-a-jour       consigne au journal d'audit le rapport de mise à jour lu sur l'entrée standard
+     ops-policy | ops-sync [date] | ops-claim  protocole hôte (jamais HTTP)
+  ops-request | ops-certificate  JSON privé sur entrée standard
+  ops-schedule <UUID>         demande planifiée (verrou hôte)
+  consigner-mise-a-jour       consigne au journal d'audit le rapport de mise à jour lu sur l'entrée standard
    Raccourci : docker compose exec app setup-token                                                                */
 import crypto from 'node:crypto';
+import { z } from 'zod';
+import { certificateInfo } from './certificates.js';
 import { loadConfig } from './config.js';
 import { createLogger } from './log.js';
 import { hashPassword, tempPassword } from './security/crypto.js';
@@ -35,6 +40,9 @@ const HELP = `Commandes : docker compose exec app suivi <commande> [arguments]
   backup-worker [ready|unavailable] état du worker serveur
   backup-claim               réclame une demande (verrou hôte obligatoire)
   backup-finish <id> <code>   termine une demande avec son rapport
+  ops-policy | ops-sync [date] | ops-claim  protocole hôte (jamais HTTP)
+  ops-request | ops-certificate  JSON privé sur entrée standard
+  ops-schedule <UUID>         demande planifiée (verrou hôte)
   consigner-mise-a-jour       consigne au journal d'audit un rapport de mise à jour (JSON sur l'entrée standard)`;
 
 async function main() {
@@ -71,6 +79,40 @@ async function main() {
     case 'backup-finish': {
       if (!arg || !extra || !/^\d{1,3}$/.test(extra)) throw new Error('Identifiant et code requis.');
       await svc.backups.finish(arg, Number(extra));
+      break;
+    }
+    case 'ops-policy': {
+      console.log(JSON.stringify(await svc.operations.policy()));
+      break;
+    }
+    case 'ops-sync': {
+      await svc.operations.synchronize(arg || null);
+      break;
+    }
+    case 'ops-claim': {
+      const job = await svc.operations.claim();
+      if (job) console.log(JSON.stringify(job));
+      break;
+    }
+    case 'ops-request': {
+      console.log(
+        JSON.stringify(
+          await svc.operations.request(JSON.parse(await readStdin()), { username: 'exploitation serveur' }, null),
+        ),
+      );
+      break;
+    }
+    case 'ops-schedule': {
+      z.string().uuid().parse(arg);
+      console.log(JSON.stringify(await svc.backups.schedule(arg!)));
+      break;
+    }
+    case 'ops-certificate': {
+      const p = z
+        .object({ pem: z.string().max(65536), privateKey: z.string().max(16384).optional() })
+        .strict()
+        .parse(JSON.parse(await readStdin()));
+      console.log(JSON.stringify(certificateInfo(p.pem, new URL(svc.cfg.publicUrl).hostname, p.privateKey)));
       break;
     }
     case 'users': {

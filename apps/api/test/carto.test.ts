@@ -247,7 +247,11 @@ describe('migration 005 : reprise des cartes de la bêta déjà dessinées (CART
       await t2.svc.db.q("INSERT INTO app_state (id, version, data, sha256, updated_by) VALUES (1, 1, $1, 'x', 'v2')", [
         fixture,
       ]);
-      expect(await t2.svc.db.migrate()).toEqual(['005_cartographie.sql', '006_sauvegardes.sql']);
+      expect(await t2.svc.db.migrate()).toEqual([
+        '005_cartographie.sql',
+        '006_sauvegardes.sql',
+        '007_exploitation.sql',
+      ]);
       const st = await t2.svc.legacy.recompose();
       expect(deepEqual(st!.data.maps as Json, fixture.maps as Json)).toBe(true);
       const n = await t2.svc.db.one<{ maps: number; versions: number }>(

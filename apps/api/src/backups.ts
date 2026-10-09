@@ -6,6 +6,7 @@ import { z } from 'zod';
 import type { Config } from './config.js';
 import type { Actor, Client, Db } from './db/db.js';
 import { HttpError } from './http/errors.js';
+import { readHost } from './operations.js';
 
 const LOCK = 727275;
 const UUID = z.string().uuid();
@@ -67,7 +68,14 @@ export class Backups {
         await c.query("SELECT 1 FROM backup_worker WHERE id=1 AND ready AND seen_at > now() - interval '120 seconds'")
       ).rowCount;
       if (!w) throw new HttpError(503, 'Exécutant serveur indisponible. Vérifiez sa configuration.');
-      if ((await c.query("SELECT 1 FROM backup_jobs WHERE status IN ('en_attente','en_cours')")).rowCount)
+      if (
+        readHost(this.cfg)?.jobs.some((j) => ['en_cours', 'intervention'].includes(j.status)) ||
+        (
+          await c.query(
+            "SELECT 1 FROM backup_jobs WHERE status IN ('en_attente','en_cours') UNION ALL SELECT 1 FROM operation_jobs WHERE status IN ('en_attente','en_cours','intervention')",
+          )
+        ).rowCount
+      )
         throw new HttpError(409, 'Une sauvegarde est déjà en attente ou en cours.');
       const r = (
         await c.query<Row>('INSERT INTO backup_jobs(request_id,requested_by) VALUES ($1,$2) RETURNING *', [
@@ -96,6 +104,31 @@ export class Backups {
       return out(changed);
     });
   }
+  /** CLI hôte : un créneau refusé devient un échec consultable, jamais une tâche cachée à rejouer. */
+  async schedule(requestId: string) {
+    const actor = { username: 'planification' };
+    try {
+      return await this.request(requestId, actor, '127.0.0.1');
+    } catch (e) {
+      if (!(e instanceof HttpError) || ![409, 503].includes(e.status)) throw e;
+      return this.db.tx(async (c) => {
+        await this.lock(c);
+        const existing = (await c.query<Row>('SELECT * FROM backup_jobs WHERE request_id=$1', [requestId])).rows[0];
+        if (existing) {
+          if (existing.requested_by !== actor.username) throw e;
+          return out(existing);
+        }
+        const r = (
+          await c.query<Row>(
+            "INSERT INTO backup_jobs(request_id,requested_by,status,finished_at,message) VALUES ($1,$2,'echec',now(),'Créneau manqué : opération active ou exécutant indisponible. Aucune relance automatique.') RETURNING *",
+            [requestId, actor.username],
+          )
+        ).rows[0]!;
+        await this.db.audit(actor, null, 'backup.schedule_failed', r.id, {}, c);
+        return out(r);
+      });
+    }
+  }
   async heartbeat(ready: boolean) {
     await this.db.q(
       'INSERT INTO backup_worker(id,seen_at,ready,message) VALUES (1,now(),$1,$2) ON CONFLICT(id) DO UPDATE SET seen_at=excluded.seen_at,ready=excluded.ready,message=excluded.message',
@@ -111,6 +144,11 @@ export class Backups {
   async claim() {
     return this.db.tx(async (c) => {
       await this.lock(c);
+      if (
+        (await c.query("SELECT 1 FROM operation_jobs WHERE status IN ('en_attente','en_cours','intervention')"))
+          .rowCount
+      )
+        return null;
       const broken = (
         await c.query<Row>(
           "UPDATE backup_jobs SET status='echec',finished_at=now(),version=version+1,message='Exécutant interrompu ; aucune relance automatique.' WHERE status='en_cours' RETURNING *",

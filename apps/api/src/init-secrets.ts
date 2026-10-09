@@ -199,6 +199,14 @@ function main() {
     dossier(path.join(donnees, 'etat'), 0, 0, 0o755);
     dossier(path.join(donnees, 'etat', 'mises-a-jour'), 0, 0, 0o755);
     dossier(path.join(donnees, 'etat', 'sauvegardes'), 0, 0, 0o755);
+    const tlsDir = path.join(donnees, 'secrets', 'tls-web');
+    dossier(tlsDir, WEB_UID, WEB_UID, 0o750);
+    for (const e of fs.readdirSync(tlsDir, { withFileTypes: true })) {
+      if (e.isFile() && ['cert.pem', 'key.pem', 'mode'].includes(e.name)) {
+        fs.chownSync(path.join(tlsDir, e.name), WEB_UID, WEB_UID);
+        fs.chmodSync(path.join(tlsDir, e.name), 0o400);
+      }
+    }
     secretsDir = path.join(donnees, 'secrets');
     caddyDirs = [path.join(donnees, 'caddy', 'data'), path.join(donnees, 'caddy', 'config')];
     for (const d of caddyDirs) dossier(d, WEB_UID, WEB_UID, 0o700);

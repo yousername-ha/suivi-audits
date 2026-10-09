@@ -333,3 +333,36 @@ export const backupJobs = pgTable('backup_jobs', {
   report: jsonb('report'),
   message: text('message').notNull().default(''),
 });
+
+/** Lot A : suivi opérationnel, sans duplication des objets métier. */
+export const backupPolicy = pgTable('backup_policy', {
+  id: integer('id').primaryKey(),
+  enabled: boolean('enabled').notNull().default(false),
+  hourUtc: integer('hour_utc').notNull().default(2),
+  minuteUtc: integer('minute_utc').notNull().default(15),
+  days: integer('days').array().notNull().default([1, 2, 3, 4, 5, 6, 7]),
+  retentionDays: integer('retention_days').notNull().default(90),
+  version: integer('version').notNull().default(1),
+});
+export const operationJobs = pgTable('operation_jobs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  requestId: uuid('request_id').notNull().unique(),
+  kind: text('kind').notNull(),
+  status: text('status').notNull().default('en_attente'),
+  requestedBy: text('requested_by').notNull(),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  startedAt: tstz('started_at'),
+  finishedAt: tstz('finished_at'),
+  version: integer('version').notNull().default(1),
+  certificateFingerprint: text('certificate_fingerprint'),
+  archiveId: text('archive_id'),
+  sha256: text('sha256'),
+  payload: jsonb('payload').notNull().default({}),
+  secret: bytea('secret'),
+  phase: text('phase').notNull().default('demande'),
+  message: text('message').notNull().default(''),
+});
+export const operationReceipts = pgTable('operation_receipts', {
+  id: uuid('id').primaryKey(),
+  status: text('status').notNull(),
+});

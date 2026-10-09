@@ -7,6 +7,7 @@ import { isHttps, setBaseHeaders } from './http/security.js';
 import { expireAccounts } from './rights.js';
 import { accessRoutes } from './routes/access.js';
 import { adminRoutes } from './routes/admin.js';
+import { operationRoutes } from './routes/operations.js';
 import { authRoutes } from './routes/auth.js';
 import { documentRoutes } from './routes/documents.js';
 import { eventRoutes } from './routes/events.js';
@@ -93,6 +94,7 @@ export function allRoutes(): RouteDef[] {
     ...documentRoutes,
     ...accessRoutes,
     ...adminRoutes,
+    ...operationRoutes,
     ...eventRoutes,
     ...legacyRoutes,
     ...importRoutes,

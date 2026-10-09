@@ -21,3 +21,4 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0015](0015-refonte-visuelle-sauge.md) | Direction graphique Sauge, sans changement métier | Proposée |
 | [0016](0016-pilotage-sauvegardes.md) | Demandes de sauvegarde chiffrée et exécutant serveur (A1a) | Acceptée |
 | [0017](0017-verification-restauration.md) | Vérification préalable et extraction contrôlée des archives de restauration (A1b1) | Acceptée |
+| [0018](0018-exploitation-lot-a.md) | Pilotage hôte, reprise durable, planification et TLS (lot A) | Acceptée |

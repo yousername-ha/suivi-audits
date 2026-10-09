@@ -254,6 +254,222 @@ switch (cmd) {
     } else console.log(`Instantané des données : ${file}`);
     break;
   }
+  case 'lot-a': {
+    // Recette destructive uniquement sur le runner vierge du guide, jamais sur un serveur désigné par un utilisateur.
+    if (!process.env.GITHUB_ACTIONS || process.cwd() !== '/opt/suivi-audits' || base !== 'https://localhost')
+      fail('recette lot A réservée à la pile CI isolée');
+    const st = load();
+    const root = (args, options = {}) => execFileSync('sudo', args, { encoding: 'utf8', timeout: 240000, ...options });
+    const worker = () =>
+      root([
+        'env',
+        'BACKUP_DEST=/srv/sauvegardes/suivi-audits',
+        'BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass',
+        'python3',
+        './scripts/exploitation-worker.py',
+      ]);
+    const result = async (id) => {
+      const e = await call('GET', '/api/admin/exploitation');
+      const job = e.jobs.find((j) => j.id === id);
+      if (!job) fail('journal durable introuvable');
+      return job;
+    };
+    const operation = async (body) => {
+      const job = await call('POST', '/api/admin/exploitation/operations', {
+        json: { requestId: crypto.randomUUID(), ...body },
+        expect: [202],
+      });
+      worker();
+      return job;
+    };
+    root(['sed', '-i', 's/^TLS_WEB_MANAGEMENT=.*/TLS_WEB_MANAGEMENT=1/', '.env']);
+    root(['docker', 'compose', 'up', '-d', 'web']);
+    worker();
+    await login(st);
+    let e = await call('GET', '/api/admin/exploitation');
+    if (!e.available || !e.host.backupReady || !e.host.tlsManaged) fail('poller/configuration indisponible');
+    await call('PUT', '/api/admin/exploitation/politique', {
+      json: { enabled: false, hourUtc: 23, minuteUtc: 47, days: [1, 3, 5], retentionDays: 91 },
+      headers: { 'if-match': `"${e.policy.version}"` },
+    });
+    const before = JSON.stringify(await legacyState());
+    const backup = await call('POST', '/api/admin/sauvegardes', {
+      json: { requestId: crypto.randomUUID() },
+      expect: [202],
+    });
+    worker();
+    const backups = await call('GET', '/api/admin/sauvegardes');
+    if (backups.jobs.find((j) => j.id === backup.id)?.status !== 'reussie') fail('sauvegarde manuelle réelle en échec');
+    e = await call('GET', '/api/admin/exploitation');
+    const archive = e.host.archives.find((a) => a.name === backups.jobs.find((j) => j.id === backup.id).report.fichier);
+    if (!archive?.integrity) fail('catalogue réel incohérent');
+    const selection = { archiveId: archive.id, sha256: archive.sha256 };
+    let job = await operation({ kind: 'verify', ...selection });
+    if ((await result(job.id)).status !== 'reussie') fail('vérification réelle en échec');
+    job = await operation({ kind: 'restore', confirmation: 'RESTAURER', ...selection });
+    // La session initiale a disparu : reconnexion obligatoire, journal hors base toujours lisible.
+    await login(st);
+    if ((await result(job.id)).status !== 'reussie') fail('restauration guidée réelle en échec');
+    if (JSON.stringify(await legacyState()) !== before) fail('données métier modifiées par la restauration');
+    e = await call('GET', '/api/admin/exploitation');
+    if (e.policy.retentionDays !== 91 || e.policy.days.join(',') !== '1,3,5') fail('politique non conservée');
+    console.log(
+      'Lot A : demande de sauvegarde, catalogue, vérification et restauration guidée réels ; reconnexion et données conservées.',
+    );
+
+    // Archive à structure valide et dump invalide : pg_restore doit refuser, puis le retour arrière réel doit réussir.
+    root([
+      'bash',
+      '-c',
+      `set -eu
+      work=$(mktemp -d)
+      trap 'rm -rf "$work"' EXIT
+      printf 'PGDMP-invalide-fictif' > "$work/suivi.dump"
+      printf 'recette=lot-a\n' > "$work/INFO"
+      tar czf "$work/secrets.tgz" -C /srv/suivi-audits/donnees/secrets .
+      tar cf "$work/archive.tar" -C "$work" suivi.dump secrets.tgz INFO
+      openssl enc -aes-256-cbc -pbkdf2 -iter 600000 -salt -in "$work/archive.tar" -out /srv/sauvegardes/suivi-audits/suivi-audits-recette-invalide.tar.enc -pass file:/root/.suivi-backup-pass
+      cd /srv/sauvegardes/suivi-audits
+      sha256sum suivi-audits-recette-invalide.tar.enc > suivi-audits-recette-invalide.tar.enc.sha256`,
+    ]);
+    worker();
+    e = await call('GET', '/api/admin/exploitation');
+    const bad = e.host.archives.find((a) => a.name === 'suivi-audits-recette-invalide.tar.enc');
+    job = await operation({ kind: 'verify', archiveId: bad.id, sha256: bad.sha256 });
+    if ((await result(job.id)).status !== 'reussie') fail('recette préalable de l’archive fictive inattendue');
+    job = await operation({ kind: 'restore', confirmation: 'RESTAURER', archiveId: bad.id, sha256: bad.sha256 });
+    await login(st);
+    if ((await result(job.id)).phase !== 'retour_arriere_termine') fail('retour arrière réel non terminé');
+    if (JSON.stringify(await legacyState()) !== before) fail('données différentes après retour arrière');
+    console.log(
+      'Lot A : archive non restaurable refusée ; sauvegarde de sécurité restaurée, santé et données vérifiées.',
+    );
+
+    const plannedBefore = (await call('GET', '/api/admin/sauvegardes')).jobs.filter(
+      (j) => j.requestedBy === 'planification',
+    ).length;
+    const scheduleTime = new Date(Date.now() - 120000);
+    e = await call('GET', '/api/admin/exploitation');
+    await call('PUT', '/api/admin/exploitation/politique', {
+      json: {
+        enabled: true,
+        hourUtc: scheduleTime.getUTCHours(),
+        minuteUtc: scheduleTime.getUTCMinutes(),
+        days: [1, 2, 3, 4, 5, 6, 7],
+        retentionDays: 91,
+      },
+      headers: { 'if-match': `"${e.policy.version}"` },
+    });
+    worker();
+    worker();
+    const planned = (await call('GET', '/api/admin/sauvegardes')).jobs.filter((j) => j.requestedBy === 'planification');
+    if (planned.length !== plannedBefore + 1 || planned[0].status !== 'reussie')
+      fail('planification réelle : créneau perdu ou doublon');
+    e = await call('GET', '/api/admin/exploitation');
+    await call('PUT', '/api/admin/exploitation/politique', {
+      json: { enabled: false, hourUtc: 23, minuteUtc: 47, days: [1, 3, 5], retentionDays: 91 },
+      headers: { 'if-match': `"${e.policy.version}"` },
+    });
+    console.log('Lot A : créneau UTC réellement exécuté une fois, sans doublon au deuxième passage.');
+
+    const envBefore = root(['cat', '.env']);
+    const ca = '/srv/suivi-audits/donnees/caddy/data/caddy/pki/authorities/local/';
+    const temp = root(['mktemp', '-d']).trim();
+    try {
+      root(
+        [
+          'openssl',
+          'req',
+          '-new',
+          '-newkey',
+          'rsa:2048',
+          '-nodes',
+          '-keyout',
+          `${temp}/key.pem`,
+          '-out',
+          `${temp}/req.pem`,
+          '-subj',
+          '/CN=localhost',
+        ],
+        { stdio: 'ignore' },
+      );
+      root(['bash', '-c', `printf 'subjectAltName=DNS:localhost\nextendedKeyUsage=serverAuth\n' > '${temp}/ext'`]);
+      root(
+        [
+          'openssl',
+          'x509',
+          '-req',
+          '-in',
+          `${temp}/req.pem`,
+          '-CA',
+          `${ca}root.crt`,
+          '-CAkey',
+          `${ca}root.key`,
+          '-set_serial',
+          '27001',
+          '-days',
+          '2',
+          '-extfile',
+          `${temp}/ext`,
+          '-out',
+          `${temp}/cert.pem`,
+        ],
+        { stdio: 'ignore' },
+      );
+      const privateKey = root(['cat', `${temp}/key.pem`]);
+      const certificate = root(['cat', `${temp}/cert.pem`]) + root(['cat', `${ca}root.crt`]);
+      job = await operation({ kind: 'tls_install', certificate, privateKey });
+      if ((await result(job.id)).status !== 'reussie') fail('installation TLS réelle en échec');
+      e = await call('GET', '/api/admin/exploitation');
+      if (e.host.tlsMode !== 'web' || !e.host.certificate?.keyMatches) fail('certificat réellement servi incohérent');
+      if (JSON.stringify(e).includes('PRIVATE KEY')) fail('clé privée dans état public');
+      if (root(['cat', '.env']) !== envBefore) fail('.env modifié par demande TLS');
+
+      // EKU client seul : cohérence/PEM valides, mais contrôle TLS serveur doit échouer puis restaurer le certificat antérieur.
+      root([
+        'bash',
+        '-c',
+        `printf 'subjectAltName=DNS:localhost\nextendedKeyUsage=clientAuth\n' > '${temp}/ext-client'`,
+      ]);
+      root(
+        [
+          'openssl',
+          'x509',
+          '-req',
+          '-in',
+          `${temp}/req.pem`,
+          '-CA',
+          `${ca}root.crt`,
+          '-CAkey',
+          `${ca}root.key`,
+          '-set_serial',
+          '27002',
+          '-days',
+          '2',
+          '-extfile',
+          `${temp}/ext-client`,
+          '-out',
+          `${temp}/client.pem`,
+        ],
+        { stdio: 'ignore' },
+      );
+      job = await operation({
+        kind: 'tls_install',
+        certificate: root(['cat', `${temp}/client.pem`]) + root(['cat', `${ca}root.crt`]),
+        privateKey,
+      });
+      if ((await result(job.id)).phase !== 'tls_retour_arriere_termine') fail('retour arrière TLS réel non terminé');
+      job = await operation({ kind: 'tls_reset', confirmation: 'REVENIR' });
+      if ((await result(job.id)).status !== 'reussie') fail('retour à .env réel en échec');
+      if ((await call('GET', '/api/admin/exploitation')).host.tlsMode !== 'env') fail('mode .env non rétabli');
+      console.log(
+        'Lot A : remplacement TLS, clé cohérente, certificat servi, retour arrière et retour à .env réels ; aucun secret dans état public.',
+      );
+    } finally {
+      root(['rm', '-rf', temp]);
+    }
+    break;
+  }
   case 'systeme': {
     const st = load();
     await login(st);

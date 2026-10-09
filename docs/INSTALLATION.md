@@ -740,6 +740,50 @@ Les commandes `suivi backup-worker ready|unavailable`, `suivi backup-claim` et `
 
 Recette après configuration : confirmer une demande, attendre son résultat « Réussie », contrôler la présence de l’archive `.tar.enc` et de son `.sha256`, puis réaliser une restauration **sur un serveur isolé**, selon 11.4. L’application ne déclare pas cette restauration validée automatiquement. En cas d’échec, consulter `/var/log/suivi-backup-worker.log` et corriger la configuration ; aucun secret ne doit être copié dans un ticket. Supprimer uniquement `/etc/cron.d/suivi-backup-worker` désactive ce poller, sans supprimer les données ni la sauvegarde nocturne.
 
+### 11.6 Pilotage complet du lot A (poller commun)
+
+La migration additive `007_exploitation.sql` est appliquée au démarrage. Installer le poller commun **à la place du poller A1a** : ils partagent un verrou et ne doivent pas être planifiés en concurrence. Les scripts directs restent utilisables. Le poller nécessite root, Python 3 standard, Docker Compose, OpenSSL et une destination persistante, possédée par root et non modifiable par le groupe/les autres comptes. La clé doit être un fichier régulier non vide, possédé par root, avec droits 0600.
+
+<!-- ci: skip — configuration de production facultative ; protocole complet rejoué dans le job guide, recette lot A -->
+```bash
+cd /opt/suivi-audits
+sudo BACKUP_DEST=/srv/sauvegardes/suivi-audits BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass python3 ./scripts/exploitation-worker.py
+```
+
+Installer un cron dédié (une fois par minute, un seul passage actif) :
+
+<!-- ci: skip — activation privilégiée spécifique au serveur de production -->
+```bash
+sudo tee /etc/cron.d/suivi-exploitation > /dev/null <<'CRON'
+* * * * * root cd /opt/suivi-audits && BACKUP_DEST=/srv/sauvegardes/suivi-audits BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass python3 ./scripts/exploitation-worker.py >> /var/log/suivi-exploitation.log 2>&1
+CRON
+sudo chmod 0644 /etc/cron.d/suivi-exploitation
+```
+
+Dans Administration > Système, régler jours ISO, heure/minute **UTC** et rétention (1–36500 jours). La planification est désactivée par défaut. Le prochain créneau est affiché dans le fuseau de votre navigateur. Le poller accepte au plus quinze minutes de retard, consomme chaque créneau avant la demande et ne rejoue pas les créneaux anciens après panne/restauration. Un conflit peut faire manquer un créneau : consulter les statuts et demander une sauvegarde manuelle. Avant d'activer la planification web, retirer **uniquement la ligne de sauvegarde nocturne directe** de l'étape 11.3 et le cron `suivi-backup-worker` de 11.5. Conserver les autres tâches du serveur. Si la planification web est désactivée, le cron de sauvegarde direct peut être conservé ; il reste régi par sa propre rétention. Aucun cron existant n'est modifié par l'application.
+
+Le catalogue montre les 200 archives régulières les plus récentes du dossier configuré, sans sous-dossiers/liens, avec taille, date, chiffrement et contrôle SHA-256. Une empreinte absente ou incohérente interdit les demandes. Vérifier d'abord une archive, puis choisir Restaurer : seules les archives chiffrées et vérifiées sur la même empreinte sont admissibles. Taper RESTAURER après contrôle du périmètre. L'exécutant copie et recontrôle l'archive, crée et vérifie une sauvegarde de sécurité dans `.restauration-securite/<id>/`, puis applique la restauration. Ces sauvegardes de sécurité sont exclues de la rotation : leur conservation/externalisation et suppression après revue relèvent de l'exploitant. Dimensionner le disque pour l'archive copiée, déchiffrée, extraite et la sauvegarde de sécurité ; un contrôle préalable en échec n'est pas une réussite.
+
+Les journaux publics sont dans `DATA_DIR/etat/exploitation` ; les fichiers de reprise privés dans `DATA_DIR/reprise-exploitation` (root, 0700, hors montage API). Ils survivent à la restauration de PostgreSQL. La session sera fermée ; reconnectez-vous pour consulter le résultat. Une erreur d'application déclenche la restauration de la sauvegarde de sécurité. Après interruption, le poller ne rejoue pas l'archive demandée : il reprend uniquement le retour arrière de sécurité si l'application avait commencé. Un retour arrière interrompu/échoué bloque les tâches avec Intervention requise. Reprendre manuellement avec l'équipe d'exploitation, relire les données/documents, vérifier TLS et la santé avant d'acquitter :
+
+<!-- ci: skip — action réservée à l'exploitant après reprise manuelle contrôlée, UUID d'un incident réel -->
+```bash
+sudo BACKUP_DEST=/srv/sauvegardes/suivi-audits BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass python3 ./scripts/exploitation-worker.py --acquitter <UUID>
+```
+
+Les demandes anciennes réintroduites depuis une archive sont neutralisées ; aucune restauration/certification/sauvegarde en attente du passé n'est exécutée. Une demande peut être annulée tant qu'elle reste en attente, avec contrôle de version. Les résultats sont notifiés lorsque l'écran est ouvert ; le journal reste la référence après reconnexion. La rétention normale concerne les archives de préfixe standard à la prochaine sauvegarde, sans supprimer les sauvegardes avant mise à jour ni les sauvegardes de sécurité.
+
+### 11.7 Certificats TLS et priorité explicite
+
+Caddy termine TLS. Par défaut, `TLS_WEB_MANAGEMENT=0` et `.env`/`CADDY_TLS` restent seuls responsables. Pour permettre le remplacement web, régler `TLS_WEB_MANAGEMENT=1` et `TLS_TERMINATION=caddy` dans `.env`, puis recréer le frontal avec `docker compose up -d web`. Si TLS est terminé par un ingress/proxy extérieur, régler `TLS_TERMINATION=external` : observation du certificat public sur SITE_ADDRESS:443, aucune modification proposée. L'accès d'observation doit être permis depuis l'hôte ; aucune sortie Internet n'est donnée à l'API.
+
+Priorité : un couple web actif **et** l'activation serveur sélectionnent les chemins fixes `/certs-web/cert.pem` et `key.pem`. Sinon Caddy utilise exactement `CADDY_TLS` dans `.env`. Le marqueur `secrets/tls-web/mode`, sauvegardé avec le couple, ne contient que web/env ; aucun shell ni fichier de configuration fourni par un utilisateur n'est interprété. Revenir à .env est confirmé, vérifié et journalisé ; le fichier .env n'est jamais modifié par une demande web. Caddy continue les renouvellements internes/ACME ; les certificats manuels sont remplacés par leur gestionnaire. Aucun bouton ne prétend forcer un renouvellement ACME non pris en charge par le moteur.
+
+Le certificat/chaîne PEM et la clé PEM non chiffrée sont contrôlés ensemble (format, validité, hôte, clé publique et chaîne). La clé est scellée avec Vault en base, déchiffrée seulement par la CLI hôte, écrite dans `DATA_DIR/secrets/tls-web` (uid Caddy 1001, fichiers 0400) et incluse dans les sauvegardes chiffrées. Son contenu n'est pas rendu dans l'interface, l'API de lecture, les notifications ou l'audit ; il est effacé de la demande terminée/annulée. Ne pas copier de clé dans les journaux, arguments CLI ou fichiers d'état publics. Conserver les permissions et les sauvegardes externalisées.
+
+L'exécutant valide Caddy, recrée le frontal, vérifie le certificat réellement servi avec l'hôte attendu et la santé. Un échec rétablit le couple/mode antérieur ; une interruption du retour arrière exige la reprise manuelle ci-dessus. Les métadonnées de simple observation (sujet, émetteur, validité, empreinte) ne constituent pas une attestation de confiance PKI. Une expiration à trente jours ou moins déclenche une alerte dans l'interface. Une restauration réattribue aussi les droits des clés TLS sauvegardées avant redémarrage.
+
+
 ## 12. Mettre à jour
 
 ### 12.1 Mettre à jour l'application
@@ -961,4 +1005,4 @@ Toutes ces commandes se lancent depuis `/opt/suivi-audits`.
 
 Ce lot ajoute le guide d'utilisation dans le menu Sauge et fiabilise la déconnexion entre onglets. Il n'ajoute aucune migration ni dépendance et ne change pas les scripts de sauvegarde/restauration. Tous les modules encore dans l'ancien style restent servis sous `/legacy` ; leur reprise complète est suivie dans `REPRISE-SOCLE-LEGACY.md`.
 
-Le script de recette `scripts/ci/guide-api.mjs` ne journalise plus le mot de passe temporaire d'un compte qu'il n'utilise pas ; ses erreurs HTTP affichent le statut sans le corps potentiellement sensible. Cette modification conserve les échecs du guide et ne diminue pas les contrôles de sécurité. Le lot A1a ajoute les demandes manuelles de sauvegarde (étape 11.5). La restauration guidée, la planification web et le pilotage TLS restent à développer.
+Le script de recette `scripts/ci/guide-api.mjs` ne journalise plus le mot de passe temporaire d'un compte qu'il n'utilise pas ; ses erreurs HTTP affichent le statut sans le corps potentiellement sensible. Cette modification conserve les échecs du guide et ne diminue pas les contrôles de sécurité. Le lot A1a ajoute les demandes manuelles de sauvegarde (étape 11.5). Le lot A complète ces capacités avec le poller commun, la planification/rétention, le catalogue, la restauration guidée et les certificats TLS (étapes 11.6–11.7).

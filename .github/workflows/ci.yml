@@ -349,6 +349,10 @@ jobs:
           path: guide.sh
       - name: Rejeu du guide
         run: bash "$RUNNER_TEMP/guide.sh"
+      - name: Lot A — pilotage réel, restauration et retours arrière, TLS
+        run: |
+          cd /opt/suivi-audits
+          NODE_EXTRA_CA_CERTS=/opt/suivi-audits/racine-suivi-audits.crt node "$GITHUB_WORKSPACE/scripts/ci/guide-api.mjs" lot-a https://localhost
       - name: Journaux
         if: failure()
         run: if [ -d /opt/suivi-audits ]; then cd /opt/suivi-audits && sudo docker compose logs --no-color init db app web | tail -300; fi

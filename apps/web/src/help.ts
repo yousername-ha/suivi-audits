@@ -110,10 +110,11 @@ export const HELP_ARTICLES: HelpArticle[] = [
     permission: 'administration:lire',
     link: '/admin/system',
     steps: [
-      'L’écran Système affiche les rapports d’exploitation, la version et la dernière sauvegarde connue. Il ne lance pas une mise à jour ni une restauration.',
+      'L’écran Système affiche les rapports d’exploitation, la version et la dernière sauvegarde connue. Il ne lance pas de mise à jour.',
+      'Dans Certificats TLS, consultez sujet, émetteur, validité et empreinte. Caddy renouvelle les certificats internes/ACME. Le remplacement web nécessite une activation explicite : fournissez le certificat/chaîne et le fichier de clé, dont le contenu reste masqué. Un échec rétablit la configuration antérieure ; Revenir à .env désactive le couple web. Une terminaison TLS externe reste en lecture seule.',
       'Dans Système, un administrateur peut confirmer une demande de sauvegarde chiffrée et suivre son état. L’exécutant doit être configuré sur le serveur ; une demande en attente peut être annulée. Les comptes en lecture seule consultent les résultats.',
-      'Une restauration remplace les données et les secrets : préparez une sauvegarde et une recette isolée avec l’équipe d’exploitation. La commande serveur restore.sh --verifier contrôle l’archive sans restauration ; la restauration confirmée ferme les sessions et impose une reconnexion.',
-      'Le certificat HTTPS est géré par Caddy et la configuration du serveur. La destination, les clés et la rétention restent configurées sur le serveur. La restauration guidée, la planification depuis le navigateur et le pilotage TLS restent à développer.',
+      'Dans Archives disponibles, vérifiez l’archive avant de choisir Restaurer. Confirmez le périmètre et tapez RESTAURER. Le serveur crée une sauvegarde de sécurité, applique l’archive et contrôle la santé ; un échec déclenche un retour arrière. Les sessions sont fermées : reconnectez-vous puis consultez le journal des opérations.',
+      'Configurez les jours, l’heure UTC et la rétention dans Planification et rétention. La destination et la clé restent privées sur le serveur. L’exploitant doit activer le poller et gérer la transition du cron existant. Une vérification de structure ne remplace pas un test de restauration isolé.',
     ],
   },
 ];

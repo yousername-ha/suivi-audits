@@ -5,9 +5,10 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 ## [Non publié]
 
 ### Notes de mise à jour
+- Lot A complet : migration additive `007_exploitation.sql`, poller hôte Python 3 standard selon INSTALLATION 11.6–11.7. Remplacer le poller A1a par le poller commun ; la planification web est désactivée par défaut et ne modifie aucun cron existant. Destination et clé restent côté serveur. `TLS_WEB_MANAGEMENT=0` par défaut ; `TLS_TERMINATION=external` interdit les changements. Aucun paquet applicatif ajouté. Une restauration ferme les sessions ; le journal/reprise hors PostgreSQL survit et le retour arrière de sécurité est contrôlé.
 - A1b1 : installer `python3` sur l’hôte (bibliothèque standard uniquement), selon INSTALLATION 2 et 11.4. Aucun nouveau service ni migration. `restore.sh --verifier` contrôle une archive sans restauration ; les restaurations confirmées ferment les sessions anciennes et exigent une reconnexion. Archives GNU/USTAR uniquement, limites et formats interdits documentés.
-- A1a : migration additive `006_sauvegardes.sql` au démarrage, sans nouvelle dépendance. Configurer l’exécutant hôte selon l’étape 11.5 du guide pour activer les demandes manuelles chiffrées. Sans exécutant, l’action est désactivée. Restauration guidée et planification web restent à développer.
-- Lot de fiabilisation A3/A4/A5/A6 : aucune nouvelle migration ni dépendance. Les modules historiques restent accessibles sous `/legacy` jusqu'à validation de leur reprise Sauge. Le pilotage TLS et les lots B–L restent à développer.
+- A1a : migration additive `006_sauvegardes.sql` au démarrage, sans nouvelle dépendance. Configurer l’exécutant hôte selon l’étape 11.5 du guide pour activer les demandes manuelles chiffrées. Sans exécutant, l’action est désactivée. Le lot A complet ci-dessus les ajoute.
+- Lot de fiabilisation A3/A4/A5/A6 : aucune nouvelle migration ni dépendance. Les modules historiques restent accessibles sous `/legacy` jusqu'à validation de leur reprise Sauge. Le lot A ajoute ensuite le pilotage TLS ; les lots B–L restent à développer.
 - Intégration de la base ZIP Sauge sur `feature/gpt6-evolution-smsi-grc` uniquement : la v2 complète est conservée dans `archives/v2-source.zip`, avec manifeste SHA-256. Aucune migration des données de l’environnement existant ni publication d’image n’est réalisée par ce lot. Voir `docs/diagnostics/2026-10-09-integration-sauge.md`.
 - **Les données quittent les volumes Docker pour le dossier du serveur `DATA_DIR`** (par défaut `/srv/suivi-audits/donnees`, EXPL-01). La mise à jour par `scripts/mettre-a-jour.sh` fait la copie toute seule, contrôle les données et **conserve les anciens volumes** jusqu'à `sudo ./scripts/migrer-donnees-vers-dossier.sh --supprimer-anciens-volumes`. Prévoir l'espace disque : deux fois la taille de la base.
 - Première mise à jour avec le script (il n'existe pas encore dans la version en service) : `sudo git fetch --tags && sudo git show v<version>:scripts/mettre-a-jour.sh | sudo bash -s -- <version>` (`docs/INSTALLATION.md`, étape 12.1).
@@ -27,6 +28,8 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 - Sécurité CI : aucun mot de passe temporaire inutilisé ni corps de réponse sensible dans le journal du guide ; document de test transmis en mémoire plutôt que par un fichier temporaire prévisible.
 
 ### Ajouté
+- A1 : politique versionnée de planification hebdomadaire UTC/rétention, catalogue d’archives avec contrôle SHA-256, vérification depuis le navigateur, restauration guidée confirmée, sauvegarde de sécurité et retour arrière, journal durable hors base, neutralisation des anciennes demandes après restauration et notifications.
+- A2 : métadonnées et alertes d’expiration TLS, remplacement certificat/chaîne et clé masquée/scellée, contrôle de cohérence/hôte/validité, validation Caddy et certificat servi, retour arrière et retour à `.env`. Terminaison externe en observation seule ; renouvellement interne/ACME conservé chez Caddy. Clés et marqueur sauvegardés avec les secrets.
 - A1a / EXPL-08 : demandes manuelles de sauvegarde chiffrée dans Administration > Système, confirmation, suivi des 50 dernières demandes, annulation versionnée avant prise en charge, réessais idempotents et audit transactionnel. Exécutant hôte à commandes fixes, verrou partagé avec les sauvegardes existantes, contrôle SHA-256 et échecs explicites ; aucun accès Docker ou secret offert à l’API.
 - A5 : guide d'utilisation embarqué, versionné, recherchable et filtré par permissions, couvrant les modules Sauge et toutes les familles métier encore dans l'ancienne interface.
 - Références Playwright alignées sur la charte Sauge déjà fournie dans le ZIP, avec navigateur officiel et seuils de comparaison inchangés.
@@ -101,9 +104,12 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 Nouvelle architecture. La mise à jour depuis la v2 conserve la base, les secrets et les certificats.
 
 ### Notes de mise à jour
+- Lot A complet : migration additive `007_exploitation.sql`, poller hôte Python 3 standard selon INSTALLATION 11.6–11.7. Remplacer le poller A1a par le poller commun ; la planification web est désactivée par défaut et ne modifie aucun cron existant. Destination et clé restent côté serveur. `TLS_WEB_MANAGEMENT=0` par défaut ; `TLS_TERMINATION=external` interdit les changements. Aucun paquet applicatif ajouté. Une restauration ferme les sessions ; le journal/reprise hors PostgreSQL survit et le retour arrière de sécurité est contrôlé.
 - Depuis la v2 : `docs/INSTALLATION.md`, étape 12.4 (ajouter `APP_VERSION` dans `.env`, images publiées au lieu d'une construction sur le serveur, retrait du service `proxy`).
 
 ### Ajouté
+- A1 : politique versionnée de planification hebdomadaire UTC/rétention, catalogue d’archives avec contrôle SHA-256, vérification depuis le navigateur, restauration guidée confirmée, sauvegarde de sécurité et retour arrière, journal durable hors base, neutralisation des anciennes demandes après restauration et notifications.
+- A2 : métadonnées et alertes d’expiration TLS, remplacement certificat/chaîne et clé masquée/scellée, contrôle de cohérence/hôte/validité, validation Caddy et certificat servi, retour arrière et retour à `.env`. Terminaison externe en observation seule ; renouvellement interne/ACME conservé chez Caddy. Clés et marqueur sauvegardés avec les secrets.
 - Monorepo TypeScript strict (pnpm) : API Fastify (`apps/api`), interface React + Vite + Mantine (`apps/web`), schémas zod partagés (`packages/shared`).
 - Description OpenAPI 3.1 générée depuis les déclarations de routes (`/api/openapi.json`).
 - Concurrence par enregistrement : colonne `version`, `ETag`, `If-Match` obligatoire (428), 412 seulement si l'enregistrement a changé.
@@ -128,6 +134,7 @@ Nouvelle architecture. La mise à jour depuis la v2 conserve la base, les secret
 ## [2.0.0]
 
 ### Notes de mise à jour
+- Lot A complet : migration additive `007_exploitation.sql`, poller hôte Python 3 standard selon INSTALLATION 11.6–11.7. Remplacer le poller A1a par le poller commun ; la planification web est désactivée par défaut et ne modifie aucun cron existant. Destination et clé restent côté serveur. `TLS_WEB_MANAGEMENT=0` par défaut ; `TLS_TERMINATION=external` interdit les changements. Aucun paquet applicatif ajouté. Une restauration ferme les sessions ; le journal/reprise hors PostgreSQL survit et le retour arrière de sécurité est contrôlé.
 - Première version Docker : aucune action.
 
 - Déploiement Docker (Caddy, Node 24, PostgreSQL 17) de l'outil historique : authentification avec TOTP, jeton d'installation, documents chiffrés, journal d'audit, sauvegardes.

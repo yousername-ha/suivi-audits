@@ -12,6 +12,9 @@ export const REDACT = [
   '*.next',
   '*.token',
   '*.code',
+  '*.privateKey',
+  'req.body.privateKey',
+  '*.secret',
 ];
 
 export function createLogger(level = process.env.LOG_LEVEL || 'info'): Logger {

@@ -63,7 +63,9 @@ if [ -n "$JOB_ID" ]; then
   [ -n "${BACKUP_PASSPHRASE_FILE:-}" ] || arret "Chiffrement obligatoire pour une demande web."
 fi
 [ -d "$DATA_DIR/etat" ] || arret "Dossier d'état absent."
-exec 9> "$DATA_DIR/etat/sauvegarde.lock"
+if [ "${BACKUP_SAUVEGARDE_LOCK_HELD:-}" != 1 ]; then
+  exec 9> "$DATA_DIR/etat/sauvegarde.lock"
+fi
 flock -n 9 || arret "Une sauvegarde est déjà en cours."
 mkdir -p "$DEST"
 
