@@ -292,3 +292,25 @@ describe('limite globale de débit', () => {
     }
   });
 });
+
+describe('déconnexion et rejeu de session', () => {
+  it('supprime la session serveur, expire le cookie et refuse son rejeu', async () => {
+    const a = await login(t, admin);
+    const replay = new Agent(t);
+    replay.cookies = new Map(a.cookies);
+    const r = await a.post('/api/auth/logout', {});
+    expect(r.statusCode).toBe(204);
+    expect(String(r.headers['set-cookie'])).toMatch(/Max-Age=0/);
+    expect(a.cookies.size).toBe(0);
+    expect((await replay.me()).stage).toBe('anon');
+    expect((await replay.get('/api/documents')).statusCode).toBe(401);
+  });
+  it('ne ferme pas la session si le jeton CSRF est invalide', async () => {
+    const a = await login(t, admin);
+    expect((await a.req('POST', '/api/auth/logout', { headers: { 'x-csrf-token': 'incorrect' } })).statusCode).toBe(
+      403,
+    );
+    expect((await a.me()).stage).toBe('ok');
+    await a.post('/api/auth/logout', {});
+  });
+});

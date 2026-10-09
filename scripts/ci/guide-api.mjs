@@ -49,7 +49,7 @@ async function call(method, url, { json, body, headers = {}, expect = [200, 201]
     else jar.set(k, kv.slice(i + 1));
   }
   const text = await r.text();
-  if (!expect.includes(r.status)) fail(`${method} ${url} : HTTP ${r.status} ${text.slice(0, 500)}`);
+  if (!expect.includes(r.status)) fail(`${method} ${url} : HTTP ${r.status}`);
   try {
     return text ? JSON.parse(text) : null;
   } catch {
@@ -156,7 +156,7 @@ switch (cmd) {
       json: { username: 'adjoint', displayName: 'RSSI adjoint', roles: [{ roleId: 'contributeur' }] },
     });
     if (!r.temporaryPassword) fail('mot de passe temporaire absent');
-    mask(r.temporaryPassword);
+    // Ce mot de passe n’est ni utilisé ni affiché : aucune sortie, y compris une commande de masquage.
     console.log('Étape 9 : compte « adjoint » (Contributeur) créé avec un mot de passe temporaire.');
     break;
   }

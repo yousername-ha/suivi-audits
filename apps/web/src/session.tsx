@@ -8,8 +8,9 @@ import {
   type Preferences,
 } from '@suivi/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { createContext, useContext, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, type ReactNode } from 'react';
 import { api, get, setCsrf } from './api';
+import { closeLocalSession, isPrivateSessionQuery, SESSION_CHANNEL } from './logout';
 
 export const ME_KEY = ['me'] as const;
 
@@ -22,7 +23,22 @@ export async function fetchMe(): Promise<MeOut> {
 const Ctx = createContext<MeOut | null>(null);
 
 export function SessionProvider({ children, fallback }: { children: ReactNode; fallback: ReactNode }) {
+  const qc = useQueryClient();
   const q = useQuery({ queryKey: ME_KEY, queryFn: fetchMe, staleTime: 60_000, retry: 1 });
+  useEffect(() => {
+    if (typeof BroadcastChannel === 'undefined') return;
+    const channel = new BroadcastChannel(SESSION_CHANNEL);
+    channel.onmessage = (event) => {
+      if (event.data === 'logout') void closeLocalSession(qc);
+    };
+    return () => channel.close();
+  }, [qc]);
+  useEffect(() => {
+    if (q.data?.stage === 'anon') {
+      void qc.cancelQueries({ predicate: isPrivateSessionQuery });
+      qc.removeQueries({ predicate: isPrivateSessionQuery });
+    }
+  }, [q.data?.stage, qc]);
   if (!q.data) return <>{fallback}</>;
   return <Ctx.Provider value={q.data}>{children}</Ctx.Provider>;
 }

@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { api } from './api';
 import { ME_KEY, useMe } from './session';
+import { closeLocalSession } from './logout';
 
 /** Clés de requête invalidées pour chaque entité. */
 const KEYS: Record<string, string[][]> = {
@@ -66,7 +67,7 @@ export function RealtimeProvider({ children }: { children: ReactNode }) {
     es.addEventListener('presence', (m) => setPresence(JSON.parse((m as MessageEvent).data) as PresenceEntry[]));
     es.addEventListener('logout', () => {
       es.close();
-      void qc.invalidateQueries({ queryKey: ME_KEY });
+      void closeLocalSession(qc);
     });
     es.onerror = () => setConnected(false);
     return () => es.close();

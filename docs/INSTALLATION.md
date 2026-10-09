@@ -8,9 +8,9 @@ Ce guide part d'un serveur vide et ne suppose aucune connaissance de Linux ni de
 > `archives/v2-source.zip` et vérifiable avec `archives/v2-manifest.json`.
 > Le guide ci-dessous décrit le déploiement v3 ; il ne faut pas l’appliquer à une
 > installation v2 en service sans sauvegarde et recette de la montée de version.
-> La validation cloud de ce lot utilise une base PostgreSQL dédiée et Caddy avec
+> La validation cloud de l’intégration utilise une base PostgreSQL dédiée et Caddy avec
 > les fichiers compilés. Elle ne remplace pas les tests des images de production,
-> de restauration et de signatures. Voir le [rapport d’intégration](diagnostics/2026-10-09-integration-sauge.md).
+> de restauration et de signatures. Voir le [rapport d’intégration](diagnostics/2026-10-09-integration-sauge.md) et la [recette de fiabilisation](diagnostics/2026-10-09-fiabilisation.md) (105 scénarios officiels réussis).
 
 **Comment lire ce guide**
 - Chaque cadre gris contient **une commande**. Copiez-la, collez-la dans le terminal du serveur (clic droit dans PowerShell), puis appuyez sur **Entrée**.
@@ -911,3 +911,9 @@ Toutes ces commandes se lancent depuis `/opt/suivi-audits`.
 | **Double authentification (TOTP)** | Code à 6 chiffres du téléphone, demandé en plus du mot de passe |
 | **Jeton d'installation** | Code à usage unique qui autorise la création du premier administrateur |
 | **Ancien outil, legacy** | Le fichier HTML utilisé avant cette application, encore accessible sous `/legacy` pendant la transition |
+
+## Fiabilisation de la branche de travail (9 octobre 2026)
+
+Ce lot ajoute le guide d'utilisation dans le menu Sauge et fiabilise la déconnexion entre onglets. Il n'ajoute aucune migration ni dépendance et ne change pas les scripts de sauvegarde/restauration. Tous les modules encore dans l'ancien style restent servis sous `/legacy` ; leur reprise complète est suivie dans `REPRISE-SOCLE-LEGACY.md`.
+
+Le script de recette `scripts/ci/guide-api.mjs` ne journalise plus le mot de passe temporaire d'un compte qu'il n'utilise pas ; ses erreurs HTTP affichent le statut sans le corps potentiellement sensible. Cette modification conserve les échecs du guide et ne diminue pas les contrôles de sécurité. Le pilotage web des sauvegardes et de TLS reste à développer ; utiliser les procédures serveur de ce guide.

@@ -5,6 +5,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 ## [Non publié]
 
 ### Notes de mise à jour
+- Lot de fiabilisation A3/A4/A5/A6 : aucune nouvelle migration ni dépendance. Les modules historiques restent accessibles sous `/legacy` jusqu'à validation de leur reprise Sauge. Les tâches web de sauvegarde/TLS et les lots B–L ne sont pas annoncés comme livrés.
 - Intégration de la base ZIP Sauge sur `feature/gpt6-evolution-smsi-grc` uniquement : la v2 complète est conservée dans `archives/v2-source.zip`, avec manifeste SHA-256. Aucune migration des données de l’environnement existant ni publication d’image n’est réalisée par ce lot. Voir `docs/diagnostics/2026-10-09-integration-sauge.md`.
 - **Les données quittent les volumes Docker pour le dossier du serveur `DATA_DIR`** (par défaut `/srv/suivi-audits/donnees`, EXPL-01). La mise à jour par `scripts/mettre-a-jour.sh` fait la copie toute seule, contrôle les données et **conserve les anciens volumes** jusqu'à `sudo ./scripts/migrer-donnees-vers-dossier.sh --supprimer-anciens-volumes`. Prévoir l'espace disque : deux fois la taille de la base.
 - Première mise à jour avec le script (il n'existe pas encore dans la version en service) : `sudo git fetch --tags && sudo git show v<version>:scripts/mettre-a-jour.sh | sudo bash -s -- <version>` (`docs/INSTALLATION.md`, étape 12.1).
@@ -14,7 +15,17 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 - Migrations de la base : `003_droits.sql`, `004_affichage_et_ecrans_muraux.sql`, `005_cartographie.sql` (au démarrage, sans action). Durée estimée : 5 minutes, plus la copie des données.
 - Cartographie : nouveau module de droits « Cartographie du SMSI » (75 permissions au lieu de 70). Les rôles prédéfinis le reçoivent automatiquement ; les **rôles personnalisés ne l'ont pas** : cochez ses cases dans leur matrice si besoin. Les cartes dessinées avec le module bêta de l'ancien outil sont reprises automatiquement par la migration ; l'ancien outil les affiche ensuite en lecture seule.
 
+### Corrigé
+- A4 : déconnexion fiable, purge des caches privés et propagation aux onglets ; erreur explicite si le serveur est injoignable ou refuse la fermeture. MFA, cookie et contrôles serveur conservés.
+- Écran mural : préserver la requête observée lors du démarrage anonyme ; réinitialiser ses données et recontrôler son autorisation indépendante à la déconnexion.
+- A3 : connexion sans bandeau numéroté d'étapes, avec le formulaire et la charte Sauge conservés.
+- A6 / CARTO-10 : fiche de sélection rétractable sur grand écran ; sa fermeture rend la largeur au canevas.
+- Sécurité CI : aucun mot de passe temporaire inutilisé ni corps de réponse sensible dans le journal du guide ; document de test transmis en mémoire plutôt que par un fichier temporaire prévisible.
+
 ### Ajouté
+- A5 : guide d'utilisation embarqué, versionné, recherchable et filtré par permissions, couvrant les modules Sauge et toutes les familles métier encore dans l'ancienne interface.
+- Références Playwright alignées sur la charte Sauge déjà fournie dans le ZIP, avec navigateur officiel et seuils de comparaison inchangés.
+- Cadrage A–L, architecture minimale et inventaire de reprise intégrale du socle v2 (`docs/REPRISE-SOCLE-LEGACY.md`). Les migrations des modules historiques restent à livrer progressivement.
 - Cartographie du SMSI (ADR 0013, `CARTO-01` à `CARTO-14`) :
   - `CARTO-01` module de droits `cartographie` ; Contributeur et Lecteur exportent les cartes ; lecture seule réelle ; objets d'un module non lisible jamais envoyés (« Objet non accessible ») ;
   - `CARTO-02` objets lus par adaptateur (état legacy recomposé, filtré selon les droits), relations métier dérivées ;

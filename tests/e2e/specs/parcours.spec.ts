@@ -1,7 +1,6 @@
 /* Parcours complet sur une installation neuve : installation, double authentification, documents, import legacy,
    temps réel entre deux navigateurs. Les tests s'enchaînent (état partagé : la pile n'est installée qu'une fois). */
-import { readFileSync, writeFileSync } from 'node:fs';
-import os from 'node:os';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { expect, test, type Browser, type Page } from '@playwright/test';
 import {
@@ -101,11 +100,15 @@ test('documents : dépôt, fiche, modification, version', async ({ browser }) =>
   const { page, problems } = await newPage(browser);
   await loginUI(page, ADMIN, PASSWORD, adminSecret);
   await page.getByRole('link', { name: 'Documents et liens' }).first().click();
-  const file = path.join(os.tmpdir(), 'politique-securite.txt');
-  writeFileSync(file, 'Politique de sécurité — test de bout en bout\n');
   const chooser = page.waitForEvent('filechooser');
   await page.getByRole('button', { name: 'Déposer des documents' }).click();
-  await (await chooser).setFiles(file);
+  await (
+    await chooser
+  ).setFiles({
+    name: 'politique-securite.txt',
+    mimeType: 'text/plain',
+    buffer: Buffer.from('Politique de sécurité — test de bout en bout\n'),
+  });
   await page.getByRole('button', { name: 'politique-securite' }).click();
   await expect(page.getByRole('heading', { name: 'politique-securite' })).toBeVisible();
   await page.getByRole('button', { name: 'Modifier' }).click();

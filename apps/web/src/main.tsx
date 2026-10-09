@@ -16,6 +16,7 @@ import { AdminPage } from './pages/Admin';
 import { CartographiePage } from './pages/Cartographie';
 import { DocumentsPage } from './pages/Documents';
 import { HomePage } from './pages/Home';
+import { HelpPage } from './pages/Help';
 import { LoginPage } from './pages/Login';
 import { MurActiverPage, MurPage } from './pages/Mur';
 import { ErrorPage, NotFoundPage } from './pages/NotFound';
@@ -68,6 +69,7 @@ const router = createBrowserRouter([
       { path: '/documents/:id', element: <DocumentsPage /> },
       { path: '/cartographie/:vue?', element: <CartographiePage /> },
       { path: '/account', element: <AccountPage /> },
+      { path: '/aide', element: <HelpPage /> },
       { path: '/parametres/:section?', element: <SettingsPage /> },
     ],
   },

@@ -786,7 +786,9 @@ export function CartographiePage() {
         )}
         {vide}
         {layout && scene && (
-          <div className={`carte-grille${panneau ? '' : ' sans-panneau'}${large ? ' avec-inspecteur' : ''}`}>
+          <div
+            className={`carte-grille${panneau ? '' : ' sans-panneau'}${large && inspecteur ? ' avec-inspecteur' : ''}`}
+          >
             {panneau && (
               <Panneau
                 view={view}
@@ -862,13 +864,9 @@ export function CartographiePage() {
               )}
               {!large && inspecteur && <aside className="carte-inspecteur">{inspecteur}</aside>}
             </div>
-            {large && (
-              <aside className="carte-inspecteur-fixe">
-                {inspecteur || (
-                  <Text size="sm" c="dimmed">
-                    Sélectionnez un objet ou une relation pour afficher sa fiche.
-                  </Text>
-                )}
+            {large && inspecteur && (
+              <aside className="carte-inspecteur-fixe" aria-label="Fiche de la sélection">
+                {inspecteur}
               </aside>
             )}
           </div>

@@ -29,11 +29,13 @@ import {
 } from '@suivi/ui';
 import type { SystemeOut } from '@suivi/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
-import { api, get, setCsrf } from '../api';
+import { errorMessage, get } from '../api';
+import { logout as endSession } from '../logout';
+import { ErrorAlert } from './common';
 import { useLive } from '../realtime';
-import { canAdminArea, canReadBusiness, ME_KEY, useCan, useMe, usePreferences } from '../session';
+import { canAdminArea, canReadBusiness, useCan, useMe, usePreferences } from '../session';
 
 const SCHEME = { auto: 'auto', clair: 'light', sombre: 'dark' } as const;
 const THEME_SUIVANT = { clair: 'sombre', sombre: 'auto', auto: 'clair' } as const;
@@ -93,16 +95,25 @@ export function Layout({ children }: { children: ReactNode }) {
   if (can('documents', 'lire')) items.push(['/documents', 'Documents et liens', IconeDocuments]);
   if (can('cartographie', 'lire')) items.push(['/cartographie', 'Cartographie', IconeCarte]);
   items.push(['/account', 'Mon compte', IconeCompte]);
+  items.push(['/aide', 'Guide d’utilisation', IconeDocuments]);
   if (can('parametres', 'lire')) items.push(['/parametres', 'Paramètres', IconeParametres]);
   if (canAdminArea(can)) items.push(['/admin', 'Administration', IconeAdministration]);
   if (canReadBusiness(can)) items.push(['/mur', 'Écran mural', IconeMur]);
   const active = (to: string) => (to === '/' ? loc.pathname === '/' : loc.pathname.startsWith(to));
+  const [logoutError, setLogoutError] = useState<string | null>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
   const logout = async () => {
-    await api('POST', '/api/auth/logout').catch(() => {});
-    setCsrf(null);
-    qc.clear();
-    await qc.invalidateQueries({ queryKey: ME_KEY });
-    nav('/login');
+    if (loggingOut) return;
+    setLoggingOut(true);
+    setLogoutError(null);
+    try {
+      await endSession(qc);
+      nav('/login', { replace: true });
+    } catch (e) {
+      setLogoutError(errorMessage(e));
+    } finally {
+      setLoggingOut(false);
+    }
   };
   const withTip = (label: string, node: ReactNode) => (
     <Tooltip key={label} label={label} position="right" disabled={!tablette}>
@@ -208,7 +219,7 @@ export function Layout({ children }: { children: ReactNode }) {
             <Badge variant="light" visibleFrom="md">
               {me.user?.roles.join(', ') || 'Aucun rôle'}
             </Badge>
-            <Button size="xs" variant="default" onClick={logout}>
+            <Button size="xs" variant="default" loading={loggingOut} onClick={() => void logout()}>
               Déconnexion
             </Button>
           </Group>
@@ -217,6 +228,7 @@ export function Layout({ children }: { children: ReactNode }) {
       <div className="shell-body">
         <aside className="shell-nav">{navigation}</aside>
         <main className="shell-main app-main">
+          <ErrorAlert error={logoutError} />
           {can('administration', 'lire') && <BandeauVersion />}
           {children}
         </main>

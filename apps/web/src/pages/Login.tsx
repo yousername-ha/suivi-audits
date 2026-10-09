@@ -1,17 +1,5 @@
 /* Connexion : mot de passe, puis double authentification (code TOTP), enrôlement TOTP, changement de mot de passe imposé. */
-import {
-  Alert,
-  Button,
-  Card,
-  Group,
-  PasswordInput,
-  PinInput,
-  Stack,
-  Stepper,
-  Text,
-  TextInput,
-  Title,
-} from '@mantine/core';
+import { Alert, Button, Card, Group, PasswordInput, PinInput, Stack, Text, TextInput, Title } from '@mantine/core';
 import { useQuery } from '@tanstack/react-query';
 import qrcode from 'qrcode-generator';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
@@ -21,7 +9,7 @@ import { useMe, useRefreshMe } from '../session';
 
 const safeNext = (n: string | null) => (n && /^\/(?!\/)/.test(n) ? n : '/');
 
-function AuthCard({ title, step, children }: { title: string; step: number; children: ReactNode }) {
+function AuthCard({ title, children }: { title: string; children: ReactNode }) {
   return (
     <main className="auth-wrap">
       <section className="auth-editorial" aria-label="Suivi du SMSI">
@@ -47,13 +35,6 @@ function AuthCard({ title, step, children }: { title: string; step: number; chil
             </span>
             <Text fw={700}>{useMe().appName}</Text>
           </Group>
-          {step > 0 && (
-            <Stepper active={step - 1} size="xs" aria-label="Étapes de connexion">
-              <Stepper.Step label="Mot de passe" />
-              <Stepper.Step label="Double authentification" />
-              <Stepper.Step label="Accès" />
-            </Stepper>
-          )}
           <Title order={1} size="h2">
             {title}
           </Title>
@@ -142,7 +123,7 @@ function PasswordLogin({
   const [u, setU] = useState('');
   const [p, setP] = useState('');
   return (
-    <AuthCard title="Connexion" step={1}>
+    <AuthCard title="Connexion">
       <form
         onSubmit={(e: FormEvent) => {
           e.preventDefault();
@@ -214,7 +195,7 @@ function MfaForm({
   onCode: (c: string) => void;
 }) {
   return (
-    <AuthCard title="Double authentification" step={2}>
+    <AuthCard title="Double authentification">
       <Text size="sm" c="dimmed">
         Saisissez le code à 6 chiffres affiché par votre application d’authentification.
       </Text>
@@ -255,7 +236,7 @@ function EnrollForm({
     return q.createDataURL(6, 2);
   })();
   return (
-    <AuthCard title="Activer la double authentification" step={2}>
+    <AuthCard title="Activer la double authentification">
       <Text size="sm">
         1. Scannez ce QR code avec une application d’authentification (Microsoft Authenticator, FreeOTP, Aegis…).
       </Text>
@@ -292,7 +273,7 @@ function PasswordForm({
   const [f, setF] = useState({ current: '', next: '', confirm: '' });
   const [local, setLocal] = useState<string | null>(null);
   return (
-    <AuthCard title="Choisir un nouveau mot de passe" step={3}>
+    <AuthCard title="Choisir un nouveau mot de passe">
       <Text size="sm" c="dimmed">
         Votre mot de passe est temporaire : choisissez-en un personnel.
       </Text>

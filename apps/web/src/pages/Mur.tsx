@@ -7,9 +7,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { ApiError, errorMessage, get, post } from '../api';
+import { WALL_QUERY_KEY } from '../logout';
 import { SyntheseCartes, VUE_LABELS, VUES, type SyntheseApi, type Vue } from '../components/Synthese';
 
-const KEY = ['synthese', 'mur'];
+const KEY = WALL_QUERY_KEY;
 const ROTATION_S = [15, 30, 60, 120] as const;
 
 function useMurPlein() {
