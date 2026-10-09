@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@suivi/shared": "workspace:*",
-    "drizzle-orm": "0.44.7",
+    "drizzle-orm": "0.45.2",
     "fastify": "5.12.5",
     "pg": "8.23.1",
     "pino": "10.4.0",

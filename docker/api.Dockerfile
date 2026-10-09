@@ -3,14 +3,18 @@
 ARG NODE_IMAGE=node:24-alpine
 
 FROM ${NODE_IMAGE} AS build
-RUN npm install -g pnpm@10.34.6 --no-audit --no-fund
+RUN --mount=type=secret,id=build_ca \
+    if [ -f /run/secrets/build_ca ]; then export NODE_EXTRA_CA_CERTS=/run/secrets/build_ca; fi; \
+    npm install -g pnpm@10.34.6 --no-audit --no-fund
 WORKDIR /src
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc tsconfig.base.json ./
 COPY packages/shared/package.json packages/shared/
 COPY packages/ui/package.json packages/ui/
 COPY apps/api/package.json apps/api/
 COPY apps/web/package.json apps/web/
-RUN pnpm install --frozen-lockfile --filter "@suivi/api..." --ignore-scripts
+RUN --mount=type=secret,id=build_ca \
+    if [ -f /run/secrets/build_ca ]; then export NODE_EXTRA_CA_CERTS=/run/secrets/build_ca; fi; \
+    pnpm install --frozen-lockfile --filter "@suivi/api..." --ignore-scripts
 COPY packages/shared packages/shared
 COPY apps/api apps/api
 RUN pnpm --filter @suivi/shared build && pnpm --filter @suivi/api build
@@ -24,7 +28,9 @@ LABEL org.opencontainers.image.title="suivi-audits-api" \
       org.opencontainers.image.source="https://github.com/yousername-ha/suivi-audits" \
       org.opencontainers.image.licenses="UNLICENSED"
 # Correctifs de l'OS de base ; npm, npx, yarn et corepack retirés de l'image d'exécution (surface d'attaque réduite).
-RUN apk upgrade --no-cache \
+RUN --mount=type=secret,id=build_ca \
+    if [ -f /run/secrets/build_ca ]; then export SSL_CERT_FILE=/run/secrets/build_ca; fi; \
+    apk upgrade --no-cache \
  && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /usr/local/bin/npm /usr/local/bin/npx \
            /usr/local/bin/corepack /opt/yarn* /usr/local/bin/yarn /usr/local/bin/yarnpkg
 ENV NODE_ENV=production PORT=8080
