@@ -24,6 +24,7 @@ const RECHECK_MS = 60_000;
 
 /** Synthèse calculée à partir de l'état filtré selon les droits (personne ou écran mural). */
 export async function synthese(svc: Services, rights: Rights): Promise<Synthese> {
+  rights = await svc.modules.rights(rights, true);
   const st = await svc.legacy.recompose();
   const data = redactLegacy((st?.data ?? {}) as JsonObject, rights);
   return computeSynthese(data, {
@@ -172,7 +173,8 @@ export const affichageRoutes = [
       res.write('retry: 5000\n\n');
       send('hello', { ecran: wall?.name ?? null });
       const onChange = (e: { entity: string }) => {
-        if (e.entity === 'legacy_state' || e.entity === 'settings') send('change', { entity: e.entity });
+        if (e.entity === 'legacy_state' || e.entity === 'settings' || e.entity === 'module_activation')
+          send('change', { entity: e.entity });
       };
       svc.bus.on('change', onChange);
       const ping = setInterval(() => open && res.write(`: ping ${Date.now()}\n\n`), PING_MS);

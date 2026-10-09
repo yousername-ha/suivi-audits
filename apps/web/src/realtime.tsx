@@ -4,6 +4,7 @@ import { PRESENCE_HEARTBEAT_MS, type ChangeEvent, type PresenceEntry, type Prese
 import { useQueryClient } from '@tanstack/react-query';
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { api } from './api';
+import { reloadModuleConfiguration } from './modules';
 import { ME_KEY, useMe } from './session';
 import { closeLocalSession } from './logout';
 
@@ -51,17 +52,24 @@ export function RealtimeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (me.stage !== 'ok') return;
     const es = new EventSource('/api/events');
-    let first = true;
+    let reload = Promise.resolve();
+    const reloadConfiguration = () => {
+      setPresence([]);
+      reload = reload.then(() => reloadModuleConfiguration(qc)).catch(() => closeLocalSession(qc));
+    };
     es.addEventListener('hello', (m) => {
       setConnected(true);
       setPresence((JSON.parse((m as MessageEvent).data) as { presence: PresenceEntry[] }).presence);
       // Après une reconnexion, des changements ont pu être manqués : on recharge tout.
-      if (!first) void qc.invalidateQueries();
-      first = false;
+      reloadConfiguration();
     });
     es.addEventListener('change', (m) => {
       const e = JSON.parse((m as MessageEvent).data) as ChangeEvent;
       setLastChange(e);
+      if (e.entity === 'module_activation') {
+        reloadConfiguration();
+        return;
+      }
       for (const k of KEYS[e.entity] ?? []) void qc.invalidateQueries({ queryKey: k });
     });
     es.addEventListener('presence', (m) => setPresence(JSON.parse((m as MessageEvent).data) as PresenceEntry[]));

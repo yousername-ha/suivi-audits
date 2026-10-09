@@ -66,6 +66,12 @@ async function info(svc: Services, s: SettingsSection, values: Record<string, un
 }
 
 async function sectionOut(svc: Services, s: SettingsSection, rights: Rights): Promise<SettingsSectionOut> {
+  if (s === 'cycle') await svc.modules.assert('audit');
+  if (s === 'referentiels') {
+    await svc.modules.assert('audit');
+    await svc.modules.assert('conformite');
+  }
+  if (s === 'import_export') await svc.modules.assert('import_export');
   const { values, version } = await svc.settings.read(s);
   return { section: s, values, version, canWrite: canWrite(rights, s), info: await info(svc, s, values) };
 }
@@ -84,8 +90,13 @@ export const settingsRoutes = [
     tags: ['Paramètres'],
     access: 'parametres:lire',
     response: z.array(SettingsSectionOut),
-    handler: async ({ svc, s }) =>
-      Promise.all(SETTINGS_SECTIONS.map((x) => sectionOut(svc, x, (s as Session).user.rights))),
+    handler: async ({ svc, s }) => {
+      const disabled = (await svc.modules.state()).disabled;
+      const visible = SETTINGS_SECTIONS.filter((x) => x !== 'cycle' || !disabled.includes('audit'))
+        .filter((x) => x !== 'referentiels' || (!disabled.includes('audit') && !disabled.includes('conformite')))
+        .filter((x) => x !== 'import_export' || !disabled.includes('import_export'));
+      return Promise.all(visible.map((x) => sectionOut(svc, x, (s as Session).user.rights)));
+    },
   }),
   route({
     method: 'GET',
@@ -112,6 +123,12 @@ export const settingsRoutes = [
     response: SettingsSectionOut,
     handler: async ({ svc, s, ip, req, reply, params, body }) => {
       const sess = s as Session;
+      if (params.section === 'cycle') await svc.modules.assert('audit');
+      if (params.section === 'referentiels') {
+        await svc.modules.assert('audit');
+        await svc.modules.assert('conformite');
+      }
+      if (params.section === 'import_export') await svc.modules.assert('import_export');
       for (const p of writePermissions(params.section)) svc.auth.requirePermission(sess, p);
       const expected = requireIfMatch(req);
       const r = await svc.db.tx(

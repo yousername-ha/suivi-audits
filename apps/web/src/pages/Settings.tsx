@@ -44,9 +44,13 @@ const DESCRIPTIONS: Record<SettingsSection, string> = {
 };
 
 export function SettingsPage() {
+  const can = useCan();
+  const visible = SETTINGS_SECTIONS.filter((s) => s !== 'cycle' || can('audit', 'lire'))
+    .filter((s) => s !== 'referentiels' || (can('audit', 'lire') && can('conformite', 'lire')))
+    .filter((s) => s !== 'import_export' || can('import_export', 'lire'));
   const params = useParams();
   const nav = useNavigate();
-  const current = (SETTINGS_SECTIONS as readonly string[]).includes(params.section ?? '')
+  const current = (visible as readonly string[]).includes(params.section ?? '')
     ? (params.section as SettingsSection)
     : 'general';
   usePresence(`parametres/${current}`);
@@ -57,14 +61,14 @@ export function SettingsPage() {
     if (dirty) setPending(s);
     else nav(`/parametres/${s}`);
   };
-  const options = SETTINGS_SECTIONS.map((s) => ({ value: s, label: SETTINGS_LABELS[s] }));
+  const options = visible.map((s) => ({ value: s, label: SETTINGS_LABELS[s] }));
 
   return (
     <Page>
       <PageHeader title="Paramètres" description="Chaque section s’enregistre séparément." />
       <div className="settings">
         <nav className="settings-nav" aria-label="Sections des paramètres">
-          {SETTINGS_SECTIONS.map((s) => (
+          {visible.map((s) => (
             <NavLink
               key={s}
               label={SETTINGS_LABELS[s]}

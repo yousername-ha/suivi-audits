@@ -2,7 +2,7 @@
 import { readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { BUSINESS_MODULES, legacyKeyModule, RefOut, type Rights } from '@suivi/shared';
+import { BUSINESS_MODULES, legacyKeyModule, RefOut, type Module, type Rights } from '@suivi/shared';
 import { deepEqual, isObject, LEGACY_MODULES, moduleLabel, type Json, type JsonObject } from '@suivi/shared/legacy';
 import { z } from 'zod';
 import type { Session } from '../auth.js';
@@ -34,6 +34,11 @@ export function buildLegacyIndex(dir: string): string {
     '<script$1src="lib/xlsx.full.min.js"',
   );
   h = h.replace("const LIB_MODE='cdn';", "const LIB_MODE='local';");
+  h = h.replace(
+    'function render(o){',
+    "function render(o){if(window.__SUIVI_MASK_OBJECTS)window.__SUIVI_MASK_OBJECTS(S);if(window.__SUIVI_ALLOW_PAGE && !window.__SUIVI_ALLOW_PAGE(ui)){ui.tab='dash';}",
+  );
+  h = h.replace('return nav;}', 'return window.__SUIVI_FILTER_NAV ? window.__SUIVI_FILTER_NAV(nav) : nav;}');
   const tag = '\n<!--SUIVI-CFG--><script src="shim.js"></script>';
   h = /<meta charset="utf-8">/i.test(h)
     ? h.replace(/<meta charset="utf-8">/i, (m) => m + tag)
@@ -60,6 +65,17 @@ const emptyLike = (v: Json): Json =>
           : typeof v === 'boolean'
             ? false
             : null;
+
+/** Espaces réservés structurels pour les vues v2 : aucune donnée/configuration utilisateur. */
+function objectPlaceholders(): Record<string, JsonObject> {
+  return {
+    ai: { context: '', register: [], evals: [], plan: [], policies: [], start: '', sources: [], startValidated: false },
+    crrc: { offers: [], establishments: [], resources: [], runs: [], restores: [], alerts: [] },
+    invest: { baseYear: new Date().getFullYear(), lines: [] },
+    crisis: { contacts: [], scenarios: [], cells: [] },
+    plan: { status: '', note: '', days: [], slots: [], people: [] },
+  };
+}
 
 /** État vu par un utilisateur : les modules qu'il ne peut pas lire sont remplacés par une valeur vide du même type. */
 export function redactLegacy(data: JsonObject, rights: Rights): JsonObject {
@@ -145,6 +161,20 @@ export const legacyRoutes = [
         // Verrou, puis fusion selon les droits : modules non lisibles conservés, modules modifiés vérifiés.
         await c.query('SELECT 1 FROM app_state WHERE id=1 FOR UPDATE');
         const cur = (await svc.legacy.recompose(c))?.data ?? {};
+        // Le protocole v2 envoie l'état complet, y compris des valeurs vides masquées.
+        // Ces espaces réservés sont conservés ; une mutation explicite d'un module désactivé est refusée.
+        const disabled = (await svc.modules.state()).disabled;
+        for (const [key, value] of Object.entries(body)) {
+          const id = legacyKeyModule(key);
+          if (
+            id &&
+            disabled.includes(id) &&
+            !deepEqual(value, cur[key]) &&
+            !deepEqual(value, emptyLike(cur[key] ?? null)) &&
+            !deepEqual(value, objectPlaceholders()[key])
+          )
+            await svc.modules.assert(id);
+        }
         return svc.legacy.legacyWrite(c, mergeLegacyWrite(body, cur, sess.user.rights), sess.user, expected);
       }, sess.user.username);
       if (r.conflict) {
@@ -169,7 +199,12 @@ export const legacyRoutes = [
     access: 'metier',
     handler: async ({ svc }) => {
       const taken = new Set(svc.legacy.takenOver());
-      return LEGACY_MODULES.map((m) => ({ ...m, takenOver: taken.has(m.key) }));
+      const disabled = (await svc.modules.state()).disabled;
+      return LEGACY_MODULES.map((m) => ({
+        ...m,
+        takenOver: taken.has(m.key),
+        enabled: !disabled.includes(legacyKeyModule(m.key) as Module),
+      }));
     },
   }),
   route({
@@ -238,6 +273,12 @@ export const legacyRoutes = [
         roles: sess.user.roles,
         canWrite,
         admin: rights.can('administration', 'lire'),
+        enabled: [...BUSINESS_MODULES, 'documents', 'import_export'].filter((m) => rights.can(m as Module, 'lire')),
+        activationVersion: (await svc.modules.state()).version,
+        disabledModules: (await svc.modules.state()).disabled,
+        emptyObjects: Object.fromEntries(
+          Object.entries(objectPlaceholders()).filter(([key]) => !rights.can(legacyKeyModule(key) as Module, 'lire')),
+        ),
         /** Modules non modifiables : les enregistrements qui les touchent sont refusés par le serveur. */
         readOnly: LEGACY_MODULES.filter((m) => {
           const rm = legacyKeyModule(m.key);
@@ -246,9 +287,15 @@ export const legacyRoutes = [
         csrf: sess.csrf,
         takenOver: svc.legacy.takenOver().map((k) => ({ key: k, label: moduleLabel(k) })),
       }).replace(/</g, '\\u003c');
-      const html = buildLegacyIndex(svc.cfg.legacyDir).replace(
+      let html = buildLegacyIndex(svc.cfg.legacyDir).replace(
         '<!--SUIVI-CFG-->',
         `<script>window.__SUIVI=${cfgJs};</script>`,
+      );
+      // Le seed incorporé au fichier source est filtré lui aussi, sans toucher à l'archive v2.
+      html = html.replace(
+        /(<script type="application\/json" id="seed">)([\s\S]*?)(<\/script>)/,
+        (_all, open: string, seed: string, close: string) =>
+          open + JSON.stringify(redactLegacy(JSON.parse(seed) as JsonObject, rights)).replace(/</g, '\\u003c') + close,
       );
       reply
         .header('Content-Security-Policy', CSP_LEGACY)

@@ -121,7 +121,12 @@ export class Presence extends EventEmitter {
   /** Présence visible : celle de l'administration seulement pour qui peut la consulter. */
   visibleTo(rights: Rights): PresenceEntry[] {
     const admin = rights.can('administration', 'lire');
-    return this.list().filter((e) => admin || !e.resource.startsWith('admin'));
+    return this.list().filter(
+      (e) =>
+        (admin || !e.resource.startsWith('admin')) &&
+        (!e.resource.startsWith('documents') || rights.can('documents', 'lire')) &&
+        (!e.resource.startsWith('carto') || rights.can('cartographie', 'lire')),
+    );
   }
   async publish(op: 'set' | 'leave', entry: PresenceEntry) {
     await this.db.q('SELECT pg_notify($1, $2)', ['suivi_presence', JSON.stringify({ op, entry })]);

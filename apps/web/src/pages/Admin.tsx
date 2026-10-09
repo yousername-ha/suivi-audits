@@ -15,6 +15,7 @@ import { GroupsPanel, RolesPanel, UsersPanel } from './AdminAccess';
 import { ImportPanel } from './AdminImport';
 import { MursPanel } from './AdminMurs';
 import { BackupsPanel } from './AdminBackups';
+import { ModulesPanel } from './AdminModules';
 import { OperationsPanel } from './AdminOperations';
 
 const TABS = [
@@ -484,6 +485,7 @@ function System() {
   return (
     <Stack>
       <Exploitation />
+      <ModulesPanel />
       <Card withBorder>
         <Title order={2} size="h4" mb="xs">
           Détails techniques

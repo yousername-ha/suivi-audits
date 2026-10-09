@@ -130,3 +130,59 @@ describe('temps réel (SSE, LISTEN/NOTIFY)', () => {
     watcher.close();
   });
 });
+
+it('B1 : diffuse les activations sans fermer la session et filtre un flux déjà ouvert avec les droits actuels', async () => {
+  const reader = await login(t, ro);
+  const watcher = openStream(reader);
+  expect(await watcher.ready).toBe(200);
+  await watcher.waitFor((e) => e.event === 'hello');
+  const adminAgent = await login(t, admin);
+  const change = async (enabled: boolean) => {
+    const intent = { changes: [{ id: 'documents', enabled }], cascade: false };
+    const p = (await adminAgent.post('/api/admin/modules/preview', intent)).json();
+    const r = await adminAgent.put(
+      '/api/admin/modules',
+      { intent, previewId: p.previewId, confirm: 'VALIDER' },
+      { 'if-match': `"${p.version}"` },
+    );
+    expect(r.statusCode).toBe(200);
+    return r.json().version;
+  };
+  try {
+    const off = await change(false);
+    expect(
+      await watcher.waitFor(
+        (e) =>
+          e.event === 'change' &&
+          (e.data as { entity: string; version: number }).entity === 'module_activation' &&
+          (e.data as { version: number }).version === off,
+      ),
+    ).toBeTruthy();
+    expect((await reader.me()).stage).toBe('ok');
+    expect((await reader.get('/api/documents')).statusCode).toBe(409);
+    // Une modification par un exécutant interne n'est pas diffusée à ce module désactivé.
+    await t.svc.db.q(
+      "INSERT INTO links(title,url,created_by,updated_by) VALUES ('Filtré B1','https://exemple.invalid/b1','worker','worker')",
+    );
+    const on = await change(true);
+    await watcher.waitFor(
+      (e) =>
+        e.event === 'change' &&
+        (e.data as { entity: string; version: number }).entity === 'module_activation' &&
+        (e.data as { version: number }).version === on,
+    );
+    expect(
+      watcher.events.filter((e) => e.event === 'change' && (e.data as { author?: string }).author === 'worker'),
+    ).toEqual([]);
+    const link = (
+      await adminAgent.post('/api/links', { title: 'Réactivé', url: 'https://exemple.invalid/b1-on' })
+    ).json();
+    expect(
+      await watcher.waitFor((e) => e.event === 'change' && (e.data as { id: string }).id === link.id),
+    ).toBeTruthy();
+    expect(watcher.events.filter((e) => e.event === 'logout')).toEqual([]);
+  } finally {
+    watcher.close();
+    await t.svc.db.q("UPDATE module_activation SET disabled='{}',version=version+1 WHERE id=1");
+  }
+});

@@ -108,6 +108,10 @@ jobs:
         run: pnpm --filter @suivi/shared test
       - name: API (sécurité, concurrence, migrations v2 vers v3, import legacy, temps réel)
         run: pnpm --filter @suivi/api test
+      - name: Interface (configuration des modules et invalidation des données privées)
+        run: pnpm --filter @suivi/web test
+      - name: Composants de la charte graphique
+        run: pnpm --filter @suivi/ui test
 
   pile:
     name: Images, sécurité et pile complète (Playwright)
@@ -139,7 +143,7 @@ jobs:
           key: trivy-${{ github.run_id }}
           restore-keys: trivy-
 
-      - name: Trivy — images (échec sur CRITICAL)
+      - name: Trivy — images (échec sur HIGH et CRITICAL)
         run: |
           set -e
           trivy() { docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$HOME/.cache/trivy:/root/.cache/trivy" -v "$PWD:/work" -w /work "$TRIVY_IMAGE" "$@"; }
@@ -148,7 +152,7 @@ jobs:
             trivy image --scanners vuln --severity HIGH,CRITICAL --format table --no-progress "ghcr.io/yousername-ha/suivi-audits-$img:ci"
           done
 
-      - name: Trivy — dépendances du dépôt (échec sur CRITICAL)
+      - name: Trivy — dépendances du dépôt (échec sur HIGH et CRITICAL)
         run: docker run --rm -v "$HOME/.cache/trivy:/root/.cache/trivy" -v "$PWD:/work" -w /work "$TRIVY_IMAGE" fs --scanners vuln --severity HIGH,CRITICAL --exit-code 1 --no-progress .
 
       - name: SBOM CycloneDX (dépôt et images)

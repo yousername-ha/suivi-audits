@@ -18,6 +18,7 @@ export const eventRoutes = [
     access: 'auth',
     handler: async ({ svc, s, req, reply }) => {
       const sess = s as Session;
+      const granted = (await svc.auth.loadByHash(sess.sid, false))!.user.rights;
       reply.hijack();
       const res = reply.raw;
       res.writeHead(200, {
@@ -41,9 +42,19 @@ export const eventRoutes = [
       });
 
       const onChange = (e: ChangeEvent) => {
-        if (canReceive(sess.user.rights, e.entity)) send('change', e);
+        void svc.modules
+          .rights(granted, true)
+          .then((rights) => {
+            if (canReceive(rights, e.entity)) send('change', e);
+          })
+          .catch(() => close());
       };
-      const onPresence = () => send('presence', svc.presence.visibleTo(sess.user.rights));
+      const onPresence = () => {
+        void svc.modules
+          .rights(granted, true)
+          .then((rights) => send('presence', svc.presence.visibleTo(rights)))
+          .catch(() => close());
+      };
       svc.bus.on('change', onChange);
       svc.presence.on('update', onPresence);
 
@@ -53,11 +64,7 @@ export const eventRoutes = [
         svc.auth
           .loadByHash(sess.sid, false)
           .then((cur) => {
-            if (
-              !cur ||
-              cur.user.rights.list().join() !== sess.user.rights.list().join() ||
-              svc.auth.stage(cur) !== 'ok'
-            ) {
+            if (!cur || cur.user.rights.list().join() !== granted.list().join() || svc.auth.stage(cur) !== 'ok') {
               send('logout', { reason: 'session' });
               close();
             }
@@ -96,6 +103,8 @@ export const eventRoutes = [
     handler: async ({ svc, s, body }) => {
       const sess = s as Session;
       if (!svc.limits.presence(body.client)) throw new HttpError(429, 'Trop de requêtes.');
+      if (body.resource.startsWith('documents')) await svc.modules.assert('documents');
+      if (body.resource.startsWith('carto')) await svc.modules.assert('cartographie');
       if (body.resource.startsWith('admin') && !sess.user.rights.can('administration', 'lire'))
         throw new HttpError(403, 'Réservé à l’administration.');
       await svc.presence.publish('set', {

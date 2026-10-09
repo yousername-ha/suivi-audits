@@ -9,7 +9,54 @@
   var CFG = window.__SUIVI || { roles: [], canWrite: false, admin: false, readOnly: [], user: '', csrf: '', takenOver: [] };
   var KEY = 'suivi-audits-smsi:v1';
   var STATE_URL = '/api/legacy/state';
+  function importExportDisabled() { return CFG.disabledModules && CFG.disabledModules.indexOf('import_export') !== -1; }
+  function transferAction(action) { return /^(exp|json)/.test(action || '') || ['import', 'reset', 'tpl', 'tplblank', 'rectpl', 'xls', 'xlsx', 'docx', 'pptx', 'xexport', 'ximport', 'xlsimport', 'crexport', 'crimport', 'crxls', 'crrepx', 'invexp', 'tenacyx', 'gen'].indexOf(action) !== -1; }
+  function hideTransfers() {
+    if (!importExportDisabled()) return;
+    document.querySelectorAll('[data-act]').forEach(function (button) {
+      if (transferAction(button.getAttribute('data-act'))) { button.hidden = true; button.disabled = true; }
+    });
+  }
+  document.addEventListener('click', function (event) {
+    var button = event.target.closest && event.target.closest('[data-act]');
+    if (button && importExportDisabled() && transferAction(button.getAttribute('data-act'))) {
+      event.preventDefault(); event.stopImmediatePropagation();
+    }
+  }, true);
+
   var etag = null;
+  // Les groupes historiques mélangent plusieurs modules : filtrage par sous-menu.
+  function pageModule(item) {
+    var tab = item.tab;
+    if (tab === 'dash') return null;
+    if (tab === 'conformite') return item.set && item.set.confView === 'fw' ? 'conformite' : 'audit';
+    if (tab === 'fournisseurs') return item.set && item.set.supView === 'ar' ? 'pilotage' : 'fournisseurs';
+    if (tab === 'rapports') return item.set && item.set.repView === 'exp' ? 'import_export' : 'pilotage';
+    return { cibles: 'audit', couverture: 'audit', orga: 'plan_audit', contexte: 'pilotage', pilotage: 'pilotage', ecarts: 'ecarts', supeval: 'fournisseurs', preuves: 'pilotage', plans: 'pilotage', gapapp: 'conformite', ia: 'ia', crrc: 'crrc', invest: 'investissements', incidents: 'incidents', crise: 'incidents' }[tab];
+  }
+  window.__SUIVI_FILTER_NAV = function (nav) {
+    if (!CFG.enabled) return nav;
+    return nav.map(function (section) {
+      var copy = Object.assign({}, section);
+      copy.items = section.items.filter(function (item) { var module = pageModule(item); return module === null || CFG.enabled.indexOf(module) !== -1; });
+      if (copy.groups) copy.groups = copy.groups.filter(function (group) { return copy.items.some(function (item) { return item.g === group.id; }); });
+      return copy;
+    }).filter(function (section) { return section.items.length > 0; });
+  };
+  window.__SUIVI_MASK_OBJECTS = function (data) {
+    Object.keys(CFG.emptyObjects || {}).forEach(function (key) { data[key] = JSON.parse(JSON.stringify(CFG.emptyObjects[key])); });
+  };
+  window.__SUIVI_ALLOW_PAGE = function (ui) {
+    if (!CFG.enabled || ui.tab === 'dash') return true;
+    var module = pageModule({ tab: ui.tab, set: { confView: ui.confView, supView: ui.supView, repView: ui.repView } });
+    return CFG.enabled.indexOf(module) !== -1;
+  };
+  try {
+    var versionKey = 'suivi-audits-smsi:activation';
+    if (localStorage.getItem(versionKey) !== String(CFG.activationVersion)) localStorage.removeItem(KEY);
+    localStorage.setItem(versionKey, String(CFG.activationVersion));
+  } catch (e) { /* stockage local indisponible */ }
+
 
   try { localStorage.setItem('suivi-audits-smsi:ro', CFG.canWrite ? '0' : '1'); } catch (e) { /* stockage local indisponible : sans effet */ }
 
@@ -106,7 +153,7 @@
   };
   window.claude = {
     use: function (name) {
-      if (name === 'downloads') return Promise.resolve(downloads);
+      if (name === 'downloads') return importExportDisabled() ? Promise.reject(err('module_disabled', 'Import et export désactivés.')) : Promise.resolve(downloads);
       if (name === 'artifact') return CFG.canWrite ? Promise.resolve(artifact) : Promise.reject(err('not_granted'));
       return Promise.reject(err('not_declared'));
     }
@@ -116,8 +163,12 @@
   function live() {
     if (!window.EventSource) return;
     var es = new EventSource('/api/events');
+    es.addEventListener('hello', function () {
+      fetch('/api/modules', { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error('Session expirée'); return r.json(); }).then(function (state) { if (state.version !== CFG.activationVersion) reloadServer(); }).catch(function () { location.assign('/login'); });
+    });
     es.addEventListener('change', function (m) {
       var e; try { e = JSON.parse(m.data); } catch (x) { return; }
+      if (e.entity === 'module_activation') { reloadServer(); return; }
       if (e.entity !== 'legacy_state' || e.author === CFG.user) return;
       banner('Les données ont été enregistrées par ' + (e.author || 'un autre utilisateur') + '. Rechargez pour voir la dernière version (pensez à enregistrer vos propres modifications avant).', [
         { label: 'Recharger', primary: true, run: reloadServer },
@@ -128,6 +179,7 @@
 
   document.addEventListener('DOMContentLoaded', function () {
     css();
+    if (importExportDisabled()) { hideTransfers(); new MutationObserver(hideTransfers).observe(document.body, { childList: true, subtree: true }); }
     // Modules repris : affichés ici, modifiables uniquement dans la nouvelle interface.
     if (CFG.takenOver && CFG.takenOver.length) {
       var t = el('div', 'sv-taken');
@@ -147,7 +199,7 @@
     var ul = el('ul'); ul.hidden = true;
     var roleL = (CFG.roles || []).join(', ') || 'Aucun rôle';
     ul.appendChild(el('li', 'sv-h', CFG.user + ' · ' + roleL));
-    [['Nouvelle interface (accueil)', '/'], ['Documents et liens', '/documents'], ['Mon compte', '/account']].concat(CFG.admin ? [['Administration', '/admin']] : [])
+    [['Nouvelle interface (accueil)', '/'], ['Mon compte', '/account']].concat(!CFG.enabled || CFG.enabled.indexOf('documents') !== -1 ? [['Documents et liens', '/documents']] : []).concat(CFG.admin ? [['Administration', '/admin']] : [])
       .forEach(function (x) { var li = el('li'), a = el('a', '', x[0]); a.href = x[1]; li.appendChild(a); ul.appendChild(li); });
     var lo = el('li'), lb = el('button', '', 'Déconnexion'); lb.type = 'button';
     lb.onclick = function () { fetch('/api/auth/logout', { method: 'POST', headers: { 'X-CSRF-Token': CFG.csrf }, credentials: 'same-origin' }).finally(function () { location.href = '/login'; }); };

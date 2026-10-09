@@ -15,6 +15,7 @@ export const ENTITIES = [
   'import_batches',
   'wall_screens',
   'maps',
+  'module_activation',
 ] as const;
 export type Entity = (typeof ENTITIES)[number];
 
@@ -32,9 +33,11 @@ export const ENTITY_PERMISSION: Record<Entity, Permission | 'metier'> = {
   import_batches: 'import_export:lire',
   wall_screens: 'administration:lire',
   maps: 'cartographie:lire',
+  module_activation: 'administration:lire',
 };
 
 export function canReceive(rights: Rights, entity: Entity): boolean {
+  if (entity === 'module_activation') return true; // Métadonnées de configuration pour toute session authentifiée.
   const p = ENTITY_PERMISSION[entity];
   return p === 'metier' ? rights.canReadAnyBusiness() : rights.has(p);
 }

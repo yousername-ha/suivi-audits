@@ -12,10 +12,11 @@ RUN --mount=type=secret,id=build_ca --mount=type=cache,target=/go/pkg/mod --moun
     if [ -f /run/secrets/build_ca ]; then export SSL_CERT_FILE=/run/secrets/build_ca; fi; \
     export CGO_ENABLED=0 GOTOOLCHAIN=local; \
     go mod download github.com/caddyserver/caddy/v2@v2.11.7 \
-    && cp -R /go/pkg/mod/github.com/caddyserver/caddy/v2@v2.11.7 /src-caddy \
-    && cd /src-caddy && chmod u+w go.mod go.sum \
-    && go mod edit -require=golang.org/x/net@v0.60.0 \
-    && go build -mod=mod -o /go/bin/caddy ./cmd/caddy
+    && mkdir /src-caddy \
+    && cp /go/pkg/mod/github.com/caddyserver/caddy/v2@v2.11.7/cmd/caddy/main.go /src-caddy/main.go \
+    && cd /src-caddy && go mod init suivi-caddy \
+    && go mod edit -require=github.com/caddyserver/caddy/v2@v2.11.7 -require=golang.org/x/net@v0.60.0 \
+    && go build -mod=mod -o /go/bin/caddy .
 
 FROM ${NODE_IMAGE} AS build
 RUN --mount=type=secret,id=build_ca \

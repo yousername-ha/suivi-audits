@@ -6,6 +6,7 @@ import { buildOpenApi, registerRoutes, route, type RouteDef } from './http/route
 import { isHttps, setBaseHeaders } from './http/security.js';
 import { expireAccounts } from './rights.js';
 import { accessRoutes } from './routes/access.js';
+import { moduleRoutes } from './routes/modules.js';
 import { adminRoutes } from './routes/admin.js';
 import { operationRoutes } from './routes/operations.js';
 import { authRoutes } from './routes/auth.js';
@@ -94,6 +95,7 @@ export function allRoutes(): RouteDef[] {
     ...documentRoutes,
     ...accessRoutes,
     ...adminRoutes,
+    ...moduleRoutes,
     ...operationRoutes,
     ...eventRoutes,
     ...legacyRoutes,
@@ -142,6 +144,7 @@ export async function buildApp(svc: Services): Promise<FastifyInstance> {
   expiry.unref();
   app.addHook('onClose', async () => {
     svc.bus.off('change', onSettings);
+    await svc.modules.end();
     clearInterval(purge);
     clearInterval(expiry);
   });

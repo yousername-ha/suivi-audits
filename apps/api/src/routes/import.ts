@@ -129,6 +129,7 @@ export const importRoutes = [
       const file = readUpload(body);
       const current = (await svc.legacy.recompose())?.data ?? null;
       const { report } = plan(current, file, query.mode, query.module);
+      await svc.modules.assertKeys(query.module ? [query.module] : Object.keys(file.data));
       return {
         filename: fileName(req),
         size: (body as unknown as Buffer).length,
@@ -162,6 +163,7 @@ export const importRoutes = [
         );
       }
       const file = readUpload(buf);
+      await svc.modules.assertKeys(query.module ? [query.module] : Object.keys(file.data));
       const filename = fileName(req);
       const out = await svc.db.tx(async (c) => {
         // Verrou sur l'état : aucune autre écriture entre la lecture et l'application.
@@ -257,6 +259,7 @@ export const importRoutes = [
     handler: async ({ svc, params }) => {
       const r = await svc.db.one(`SELECT ${batchSummary}, report FROM import_batches WHERE id=$1`, [params.id]);
       if (!r) throw new HttpError(404, 'Import introuvable.');
+      await svc.modules.assertKeys(r.modules as string[]);
       return r;
     },
   }),

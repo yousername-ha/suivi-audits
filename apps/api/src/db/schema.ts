@@ -366,3 +366,11 @@ export const operationReceipts = pgTable('operation_receipts', {
   id: uuid('id').primaryKey(),
   status: text('status').notNull(),
 });
+
+export const moduleActivation = pgTable('module_activation', {
+  id: integer('id').primaryKey(),
+  version: integer('version').notNull().default(1),
+  disabled: text('disabled').array().notNull().default([]),
+  updatedAt: tstz('updated_at').notNull().defaultNow(),
+  updatedBy: text('updated_by').notNull().default(''),
+});

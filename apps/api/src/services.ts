@@ -2,6 +2,7 @@
 import type { Logger } from 'pino';
 import { Auth } from './auth.js';
 import { Backups } from './backups.js';
+import { Modules } from './modules.js';
 import { Operations } from './operations.js';
 import type { Config } from './config.js';
 import { Db } from './db/db.js';
@@ -27,6 +28,7 @@ export function createServices(cfg: Config, log: Logger) {
     db,
     vault,
     settings,
+    modules: new Modules(cfg.db, db),
     backups: new Backups(cfg, db),
     operations: new Operations(cfg, db, vault),
     walls: new Walls(cfg, db),
