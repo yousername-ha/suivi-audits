@@ -112,7 +112,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     steps: [
       'L’écran Système affiche les rapports d’exploitation, la version et la dernière sauvegarde connue. Il ne lance pas une mise à jour ni une restauration.',
       'Dans Système, un administrateur peut confirmer une demande de sauvegarde chiffrée et suivre son état. L’exécutant doit être configuré sur le serveur ; une demande en attente peut être annulée. Les comptes en lecture seule consultent les résultats.',
-      'Une restauration remplace les données et les secrets : préparez une sauvegarde, une confirmation et une recette isolée avec l’équipe d’exploitation.',
+      'Une restauration remplace les données et les secrets : préparez une sauvegarde et une recette isolée avec l’équipe d’exploitation. La commande serveur restore.sh --verifier contrôle l’archive sans restauration ; la restauration confirmée ferme les sessions et impose une reconnexion.',
       'Le certificat HTTPS est géré par Caddy et la configuration du serveur. La destination, les clés et la rétention restent configurées sur le serveur. La restauration guidée, la planification depuis le navigateur et le pilotage TLS restent à développer.',
     ],
   },

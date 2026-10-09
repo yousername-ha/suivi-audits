@@ -110,7 +110,7 @@ sudo apt update && sudo apt full-upgrade -y
 
 <!-- ci: run -->
 ```bash
-sudo apt install -y git curl ca-certificates ufw nano openssl
+sudo apt install -y git curl ca-certificates ufw nano openssl python3
 ```
 **Résultat attendu** : la dernière ligne ne contient pas `E:`.
 
@@ -682,11 +682,24 @@ Demandez à l'équipe infrastructure d'**inclure les dossiers `/srv/suivi-audits
 
 Repérez le nom exact du fichier `.tar.enc` affiché à l'étape 11.2, puis :
 
+Avant confirmation, vérifier l’archive sans arrêter l’application ni modifier ses données :
+
+<!-- ci: instead: sudo BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass ./scripts/restore.sh --verifier "$(sudo sh -c 'ls -1 /srv/sauvegardes/suivi-audits/*.tar.enc' | tail -1)" -->
+```bash
+sudo BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass ./scripts/restore.sh --verifier /srv/sauvegardes/suivi-audits/<fichier>.tar.enc
+```
+
+Résultat : « Vérification réussie. Restauration non exécutée. » Python 3 utilise uniquement sa bibliothèque standard, sans paquet à télécharger. L’archive est copiée dans un dossier temporaire privé, puis son empreinte, son déchiffrement et ses contenus imbriqués sont contrôlés. Une erreur empêche tout remplacement. Cette vérification ne prouve pas l’authenticité du fichier ni la réussite d’une restauration PostgreSQL : conserver la recette isolée ci-dessous.
+
+Formats acceptés : archives GNU/USTAR produites par backup.sh, contenant suivi.dump, secrets.tgz, INFO et éventuellement caddy.tgz. Chemins absolus/traversées, liens, fichiers spéciaux/sparse, doublons et extensions PAX sont refusés. Limites : archive/dump 64 Gio, chaque archive imbriquée décompressée 512 Mio, INFO 1 Mio, 20000 en-têtes et 64 niveaux. Prévoir dans le disque temporaire l’espace pour la copie, le déchiffrement et les contenus extraits. Une archive sans fichier .sha256 reste lisible pour compatibilité, avec avertissement ; un fichier d’empreinte présent doit désigner exactement l’archive sélectionnée. Ne pas renommer un fichier sans actualiser son empreinte.
+
+La restauration destructive exige root et la confirmation RESTAURER. Elle refuse un verrou de sauvegarde/exécutant déjà actif, contrôle le catalogue PostgreSQL avant arrêt, applique uniquement les fichiers validés, puis invalide les sessions restaurées. Il faut se reconnecter. L’attente PostgreSQL et la santé de l’application sont bornées par RESTORE_WAIT_SECONDS (300 secondes par défaut, 1 à 1800). Aucun rapport de succès n’est écrit si ces contrôles échouent. Après un échec pendant remplacement, conserver la sauvegarde de sécurité et faire intervenir l’exploitant : ce sous-lot ne fournit pas de rollback automatique ni de déclenchement HTTP.
+
 <!-- ci: instead: echo RESTAURER | sudo BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass ./scripts/restore.sh "$(sudo sh -c 'ls -1 /srv/sauvegardes/suivi-audits/*.tar.enc' | tail -1)" -->
 ```bash
 sudo BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass ./scripts/restore.sh /srv/sauvegardes/suivi-audits/<fichier>.tar.enc
 ```
-Le script vérifie l'empreinte (`… .tar.enc: OK`), affiche la date de la sauvegarde, puis demande de taper `RESTAURER` (en majuscules) suivi d'**Entrée**.
+Le script vérifie l'empreinte et la structure, puis demande de taper `RESTAURER` (en majuscules) suivi d'**Entrée**.
 **Résultat attendu** : la dernière ligne est `Restauration terminée.` Attendez une minute et vérifiez les états (étape 7.3), puis connectez-vous : vos comptes et vos données sont présents. Notez la date de ce test dans **Paramètres**, section **Sauvegardes** : l'application signale quand le prochain test est dû.
 
 <!-- ci: exec: "$GITHUB_WORKSPACE/scripts/ci/guide-attendre.sh" -->

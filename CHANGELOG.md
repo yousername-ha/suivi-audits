@@ -5,6 +5,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 ## [Non publié]
 
 ### Notes de mise à jour
+- A1b1 : installer `python3` sur l’hôte (bibliothèque standard uniquement), selon INSTALLATION 2 et 11.4. Aucun nouveau service ni migration. `restore.sh --verifier` contrôle une archive sans restauration ; les restaurations confirmées ferment les sessions anciennes et exigent une reconnexion. Archives GNU/USTAR uniquement, limites et formats interdits documentés.
 - A1a : migration additive `006_sauvegardes.sql` au démarrage, sans nouvelle dépendance. Configurer l’exécutant hôte selon l’étape 11.5 du guide pour activer les demandes manuelles chiffrées. Sans exécutant, l’action est désactivée. Restauration guidée et planification web restent à développer.
 - Lot de fiabilisation A3/A4/A5/A6 : aucune nouvelle migration ni dépendance. Les modules historiques restent accessibles sous `/legacy` jusqu'à validation de leur reprise Sauge. Le pilotage TLS et les lots B–L restent à développer.
 - Intégration de la base ZIP Sauge sur `feature/gpt6-evolution-smsi-grc` uniquement : la v2 complète est conservée dans `archives/v2-source.zip`, avec manifeste SHA-256. Aucune migration des données de l’environnement existant ni publication d’image n’est réalisée par ce lot. Voir `docs/diagnostics/2026-10-09-integration-sauge.md`.
@@ -17,6 +18,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 - Cartographie : nouveau module de droits « Cartographie du SMSI » (75 permissions au lieu de 70). Les rôles prédéfinis le reçoivent automatiquement ; les **rôles personnalisés ne l'ont pas** : cochez ses cases dans leur matrice si besoin. Les cartes dessinées avec le module bêta de l'ancien outil sont reprises automatiquement par la migration ; l'ancien outil les affiche ensuite en lecture seule.
 
 ### Corrigé
+- A1b1 / EXPL-08 : contrôler les contenus tar imbriqués avant remplacement, vérifier l’empreinte de l’archive sélectionnée, exclure les opérations concurrentes et borner l’attente PostgreSQL/application ; aucun succès avant contrôle de santé.
 - A1a : préserver la rétention de 36500 jours utilisée par la sauvegarde avant mise à jour ; test de compatibilité avec la procédure existante.
 - A4 : déconnexion fiable, purge des caches privés et propagation aux onglets ; erreur explicite si le serveur est injoignable ou refuse la fermeture. MFA, cookie et contrôles serveur conservés.
 - Écran mural : préserver la requête observée lors du démarrage anonyme ; réinitialiser ses données et recontrôler son autorisation indépendante à la déconnexion.

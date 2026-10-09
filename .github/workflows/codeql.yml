@@ -1,4 +1,4 @@
-# Analyse statique de sécurité (CodeQL) du code JavaScript et TypeScript.
+# Analyse statique de sécurité (CodeQL) du code JavaScript, TypeScript et Python.
 # Le dépôt est privé, sans « code scanning » activé : les résultats ne sont pas envoyés à GitHub mais publiés en
 # artefact SARIF, et le job échoue sur toute alerte de gravité élevée ou critique (security-severity >= 7).
 name: CodeQL
@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   analyse:
-    name: CodeQL (JavaScript / TypeScript)
+    name: CodeQL (JavaScript / TypeScript / Python)
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -26,7 +26,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: github/codeql-action/init@v4
         with:
-          languages: javascript-typescript
+          languages: javascript-typescript, python
           queries: security-extended
           config: |
             paths-ignore:
@@ -41,7 +41,7 @@ jobs:
                   id: js/missing-rate-limiting
       - uses: github/codeql-action/analyze@v4
         with:
-          category: '/language:javascript-typescript'
+          category: '/security-extended'
           upload: never
           output: codeql-sarif
       - uses: actions/upload-artifact@v5
