@@ -54,12 +54,18 @@ export function RealtimeProvider({ children }: { children: ReactNode }) {
     const es = new EventSource('/api/events');
     let reload = Promise.resolve();
     let initialHello = true;
+    let generation = 0;
     const reloadConfiguration = (initialConnection = false) => {
+      const current = ++generation;
       if (!initialConnection) setPresence([]);
       reload = reload
         .then(async () => {
           const purged = await reloadModuleConfiguration(qc, initialConnection);
-          if (initialConnection && purged) setPresence([]);
+          if (purged) {
+            setPresence([]);
+            const fresh = await api<PresenceEntry[]>('GET', '/api/presence');
+            if (current === generation) setPresence(fresh);
+          }
         })
         .catch(() => closeLocalSession(qc));
     };

@@ -36,6 +36,33 @@ test('B1 : conserve la présence reçue au premier hello quand les droits sont i
     await ctx.close();
   }
 });
+
+test('B1 : après reconnexion, recharge la présence filtrée actuelle', async ({ browser }) => {
+  const { ctx, page, problems } = await open(browser);
+  let refreshed = 0;
+  await page.route('**/api/events', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'text/event-stream',
+      body: 'retry: 250\n\nevent: hello\ndata: {"presence":[]}\n\n',
+    }),
+  );
+  await page.route('**/api/presence', (route) => {
+    if (route.request().method() !== 'GET') return route.continue();
+    refreshed++;
+    return route.fulfill({
+      json: [{ username: 'lecteur-test', name: 'Lecteur revalidé', resource: 'documents', mode: 'view' }],
+    });
+  });
+  try {
+    await page.goto('/documents');
+    await expect.poll(() => refreshed).toBeGreaterThan(0);
+    await expect(page.getByText('Lecteur revalidé consulte', { exact: true })).toBeVisible();
+    expect(problems).toEqual([]);
+  } finally {
+    await ctx.close();
+  }
+});
 test('B1 : prévisualisation mobile, socle protégé et dépendance obligatoire', async ({ browser }) => {
   const { ctx, page, problems } = await open(browser, 390);
   try {

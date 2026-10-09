@@ -22,6 +22,8 @@ Le bloc de données initiales embarqué dans le HTML historique est filtré lui 
 
 Au premier contact SSE, la session est reconsultée. Si ses droits n'ont pas changé, le cache qui vient d'être chargé et la présence filtrée reçue du serveur sont conservés. Des droits différents, une reconnexion ou une notification d'activation imposent la réinitialisation complète des données privées et de la présence.
 
+Après cette réinitialisation, la présence est relue auprès de l'API avec les droits actuels. Un compteur de demandes empêche un résultat d'une reconfiguration précédente de remplacer la présence d'une demande plus récente.
+
 ## Conséquences
 
 La désactivation est réversible et ne supprime ni données, ni références, ni configuration. Les imports complets et restitutions historiques touchant un module désactivé sont refusés jusqu'à sa réactivation. Les sauvegardes de secours demeurent intégrales pour préserver la restaurabilité. Les tâches métier et intégrations futures devront appeler le service d'activation avant chaque exécution ; le socle ne comporte pas de tels exécutants autonomes aujourd'hui.
