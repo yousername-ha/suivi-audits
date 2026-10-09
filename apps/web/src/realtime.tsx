@@ -53,15 +53,17 @@ export function RealtimeProvider({ children }: { children: ReactNode }) {
     if (me.stage !== 'ok') return;
     const es = new EventSource('/api/events');
     let reload = Promise.resolve();
-    const reloadConfiguration = () => {
+    let initialHello = true;
+    const reloadConfiguration = (initialConnection = false) => {
       setPresence([]);
-      reload = reload.then(() => reloadModuleConfiguration(qc)).catch(() => closeLocalSession(qc));
+      reload = reload.then(() => reloadModuleConfiguration(qc, initialConnection)).catch(() => closeLocalSession(qc));
     };
     es.addEventListener('hello', (m) => {
       setConnected(true);
       setPresence((JSON.parse((m as MessageEvent).data) as { presence: PresenceEntry[] }).presence);
       // Après une reconnexion, des changements ont pu être manqués : on recharge tout.
-      reloadConfiguration();
+      reloadConfiguration(initialHello);
+      initialHello = false;
     });
     es.addEventListener('change', (m) => {
       const e = JSON.parse((m as MessageEvent).data) as ChangeEvent;

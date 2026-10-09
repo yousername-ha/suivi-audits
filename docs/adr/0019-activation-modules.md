@@ -20,6 +20,8 @@ Les menus Sauge utilisent les permissions actives. Les sous-menus v2 et la page 
 
 Le bloc de données initiales embarqué dans le HTML historique est filtré lui aussi. Les objets masqués reçoivent uniquement, dans l'adaptateur navigateur, des tableaux et valeurs neutres compatibles avec les vues v2 : désactiver l'IA ne doit pas faire planter le tableau de bord commun. Ces espaces réservés sont ignorés lors de l'enregistrement pour préserver les données stockées. Les commandes de transfert v2 sont masquées et leurs téléchargements refusés lorsque le module import/export est désactivé.
 
+Au premier contact SSE, la session est reconsultée. Si ses droits n'ont pas changé, le cache qui vient d'être chargé est conservé pour éviter une seconde transition à vide. Des droits différents, une reconnexion ou une notification d'activation imposent la réinitialisation complète des données privées.
+
 ## Conséquences
 
 La désactivation est réversible et ne supprime ni données, ni références, ni configuration. Les imports complets et restitutions historiques touchant un module désactivé sont refusés jusqu'à sa réactivation. Les sauvegardes de secours demeurent intégrales pour préserver la restaurabilité. Les tâches métier et intégrations futures devront appeler le service d'activation avant chaque exécution ; le socle ne comporte pas de tels exécutants autonomes aujourd'hui.

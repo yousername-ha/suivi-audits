@@ -6,22 +6,36 @@ import { fetchMe } from '../src/session';
 vi.mock('../src/session', () => ({ ME_KEY: ['me'], fetchMe: vi.fn() }));
 afterEach(() => vi.clearAllMocks());
 describe('reconfiguration des modules dans le navigateur', () => {
-  it('renouvelle les droits, efface les données des observateurs et recharge des données filtrées', async () => {
-    const qc = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: Infinity } } });
-    const me = { stage: 'ok', permissions: ['administration:lire'] } as MeOut;
+  it.each([false, true])(
+    'renouvelle les droits et purge les observateurs (première connexion : %s)',
+    async (initial) => {
+      const qc = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: Infinity } } });
+      const me = { stage: 'ok', permissions: ['administration:lire'] } as MeOut;
+      vi.mocked(fetchMe).mockResolvedValue(me);
+      qc.setQueryData(['me'], { stage: 'ok', permissions: ['documents:lire', 'administration:lire'] });
+      qc.setQueryData(['documents'], ['ancien document confidentiel']);
+      qc.setQueryData(['document', 'inactif'], { title: 'ancienne donnée' });
+      const observer = new QueryObserver(qc, { queryKey: ['documents'], queryFn: async () => [] });
+      const seen: unknown[] = [];
+      const stop = observer.subscribe((r) => seen.push(r.data));
+      await reloadModuleConfiguration(qc, initial);
+      expect(qc.getQueryData(['me'])).toEqual(me);
+      expect(seen).toContain(undefined);
+      expect(observer.getCurrentResult().data).toEqual([]);
+      expect(qc.getQueryData(['document', 'inactif'])).toBeUndefined();
+      stop();
+      qc.clear();
+    },
+  );
+  it('au premier hello avec les mêmes droits, conserve les données qui viennent d’être chargées', async () => {
+    const qc = new QueryClient();
+    const me = { stage: 'ok', permissions: ['documents:lire'] } as MeOut;
+    qc.setQueryData(['me'], me);
+    qc.setQueryData(['documents'], ['document visible']);
     vi.mocked(fetchMe).mockResolvedValue(me);
-    qc.setQueryData(['me'], { permissions: ['documents:lire', 'administration:lire'] });
-    qc.setQueryData(['documents'], ['ancien document confidentiel']);
-    qc.setQueryData(['document', 'inactif'], { title: 'ancienne donnée' });
-    const observer = new QueryObserver(qc, { queryKey: ['documents'], queryFn: async () => [] });
-    const seen: unknown[] = [];
-    const stop = observer.subscribe((r) => seen.push(r.data));
-    await reloadModuleConfiguration(qc);
-    expect(qc.getQueryData(['me'])).toEqual(me);
-    expect(seen).toContain(undefined);
-    expect(observer.getCurrentResult().data).toEqual([]);
-    expect(qc.getQueryData(['document', 'inactif'])).toBeUndefined();
-    stop();
+    await reloadModuleConfiguration(qc, true);
+    expect(fetchMe).toHaveBeenCalledOnce();
+    expect(qc.getQueryData(['documents'])).toEqual(['document visible']);
     qc.clear();
   });
   it('réinitialise aussi les données de l’écran mural', async () => {
