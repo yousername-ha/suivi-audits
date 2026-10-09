@@ -695,6 +695,38 @@ Le script vérifie l'empreinte (`… .tar.enc: OK`), affiche la date de la sauve
 
 ---
 
+
+**11.5 Activer les demandes manuelles depuis Administration > Système (A1a).**
+
+La migration additive `006_sauvegardes.sql` est appliquée au démarrage. L’application enregistre une demande ; elle n’exécute aucun shell et ne reçoit ni clé ni chemin. Un exécutant sur le serveur interroge la file. Il réutilise `backup.sh`, avec chiffrement obligatoire. La restauration reste la procédure 11.4 ; l’empreinte SHA-256 vérifie la cohérence du fichier, pas son authenticité ni sa restaurabilité.
+
+Après les étapes 11.1–11.4, vérifier la phrase secrète **non vide**, fichier régulier lisible par root et inaccessible au groupe et aux autres comptes (0600). Conserver sa copie dans le coffre-fort. La destination doit être persistante, privée et incluse dans la sauvegarde externalisée. `RETENTION_DAYS` accepte 1 à 3650 (90 par défaut) ; `BACKUP_PREFIXE` accepte 1 à 61 caractères ASCII alphanumériques, point, tiret ou soulignement, avec un premier caractère alphanumérique. Ces contrôles s’appliquent aussi aux appels directs de `backup.sh`.
+
+Sur le serveur d’exploitation uniquement :
+
+<!-- ci: skip — configuration facultative de la tâche hôte A1a, testée avec un exécutant isolé -->
+```bash
+cd /opt/suivi-audits
+sudo chmod 0600 /root/.suivi-backup-pass
+sudo BACKUP_DEST=/srv/sauvegardes/suivi-audits BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass RETENTION_DAYS=90 ./scripts/backup-worker.sh
+```
+
+Sans demande, ce passage annonce seulement que l’exécutant est prêt. Il ne crée pas de sauvegarde. Ajouter un fichier cron distinct, sans écraser la sauvegarde nocturne existante :
+
+<!-- ci: skip — installation facultative d’une tâche privilégiée sur le serveur d’exploitation -->
+```bash
+printf '%s\n' '* * * * * root cd /opt/suivi-audits && BACKUP_DEST=/srv/sauvegardes/suivi-audits BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass RETENTION_DAYS=90 ./scripts/backup-worker.sh >> /var/log/suivi-backup-worker.log 2>&1' | sudo tee /etc/cron.d/suivi-backup-worker
+sudo chmod 0644 /etc/cron.d/suivi-backup-worker
+```
+
+Le passage chaque minute **interroge la file**, sans planifier une sauvegarde chaque minute. Un contact de plus de deux minutes rend le bouton indisponible. Un utilisateur doté du droit Administration/Administrer confirme « Demander une sauvegarde » ; le prochain passage prend la demande, puis l’écran affiche son résultat. Administration/Lire permet seulement la consultation. Aucun changement de permissions prédéfinies.
+
+Une seule demande est active ; un réessai réseau conserve son identifiant. L’annulation concerne seulement une demande en attente et vérifie sa version. Deux exécutants simultanés sont exclus par un verrou hôte ; `backup.sh` conserve aussi un verrou partagé avec les tâches nocturnes et de mise à jour. Une collision produit un échec explicite, sans relance automatique. Une demande interrompue passe en échec au prochain passage valide ; examiner le journal hôte avant une nouvelle demande.
+
+Les commandes `suivi backup-worker ready|unavailable`, `suivi backup-claim` et `suivi backup-finish <uuid> <code>` sont réservées au script hôte dans le conteneur app. Elles ne constituent pas des routes HTTP. Les rapports par demande restent dans `DATA_DIR/etat/sauvegardes/jobs/`. L’écran expose seulement le nom de fichier, la taille, la durée et l’empreinte, sans chemin hôte ni phrase secrète. Les 50 dernières demandes sont affichées ; l’historique SQL et l’audit ne sont pas purgés par la rotation des archives.
+
+Recette après configuration : confirmer une demande, attendre son résultat « Réussie », contrôler la présence de l’archive `.tar.enc` et de son `.sha256`, puis réaliser une restauration **sur un serveur isolé**, selon 11.4. L’application ne déclare pas cette restauration validée automatiquement. En cas d’échec, consulter `/var/log/suivi-backup-worker.log` et corriger la configuration ; aucun secret ne doit être copié dans un ticket. Supprimer uniquement `/etc/cron.d/suivi-backup-worker` désactive ce poller, sans supprimer les données ni la sauvegarde nocturne.
+
 ## 12. Mettre à jour
 
 ### 12.1 Mettre à jour l'application
@@ -916,4 +948,4 @@ Toutes ces commandes se lancent depuis `/opt/suivi-audits`.
 
 Ce lot ajoute le guide d'utilisation dans le menu Sauge et fiabilise la déconnexion entre onglets. Il n'ajoute aucune migration ni dépendance et ne change pas les scripts de sauvegarde/restauration. Tous les modules encore dans l'ancien style restent servis sous `/legacy` ; leur reprise complète est suivie dans `REPRISE-SOCLE-LEGACY.md`.
 
-Le script de recette `scripts/ci/guide-api.mjs` ne journalise plus le mot de passe temporaire d'un compte qu'il n'utilise pas ; ses erreurs HTTP affichent le statut sans le corps potentiellement sensible. Cette modification conserve les échecs du guide et ne diminue pas les contrôles de sécurité. Le pilotage web des sauvegardes et de TLS reste à développer ; utiliser les procédures serveur de ce guide.
+Le script de recette `scripts/ci/guide-api.mjs` ne journalise plus le mot de passe temporaire d'un compte qu'il n'utilise pas ; ses erreurs HTTP affichent le statut sans le corps potentiellement sensible. Cette modification conserve les échecs du guide et ne diminue pas les contrôles de sécurité. Le lot A1a ajoute les demandes manuelles de sauvegarde (étape 11.5). La restauration guidée, la planification web et le pilotage TLS restent à développer.

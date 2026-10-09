@@ -9,6 +9,9 @@
      migrate                     applique les migrations en attente
      migrations [--a-appliquer]  migrations appliquées, ou seulement celles en attente (script de mise à jour)
      controle-donnees            nombres d'enregistrements, empreinte de l'état, relecture de chaque document chiffré
+     backup-worker [ready|unavailable] annonce l'état de l'exécutant serveur
+     backup-claim               réclame une demande (verrou hôte obligatoire)
+     backup-finish <id> <code>   termine une demande avec le rapport serveur
      consigner-mise-a-jour       consigne au journal d'audit le rapport de mise à jour lu sur l'entrée standard
    Raccourci : docker compose exec app setup-token                                                                */
 import crypto from 'node:crypto';
@@ -29,10 +32,13 @@ const HELP = `Commandes : docker compose exec app suivi <commande> [arguments]
   migrate                     applique les migrations en attente
   migrations [--a-appliquer]  migrations appliquées, ou seulement celles en attente
   controle-donnees            nombres d'enregistrements, empreinte de l'état, relecture des documents chiffrés (JSON)
+  backup-worker [ready|unavailable] état du worker serveur
+  backup-claim               réclame une demande (verrou hôte obligatoire)
+  backup-finish <id> <code>   termine une demande avec son rapport
   consigner-mise-a-jour       consigne au journal d'audit un rapport de mise à jour (JSON sur l'entrée standard)`;
 
 async function main() {
-  const [cmd, arg] = process.argv.slice(2);
+  const [cmd, arg, extra] = process.argv.slice(2);
   if (!cmd || cmd === 'help' || cmd === '--help') {
     console.log(HELP);
     process.exit(cmd ? 0 : 2);
@@ -52,6 +58,21 @@ async function main() {
   };
   await svc.db.waitReady(5);
   switch (cmd) {
+    case 'backup-worker': {
+      if (!['ready', 'unavailable'].includes(arg ?? '')) throw new Error('État worker invalide.');
+      await svc.backups.heartbeat(arg === 'ready');
+      break;
+    }
+    case 'backup-claim': {
+      const id = await svc.backups.claim();
+      if (id) console.log(id);
+      break;
+    }
+    case 'backup-finish': {
+      if (!arg || !extra || !/^\d{1,3}$/.test(extra)) throw new Error('Identifiant et code requis.');
+      await svc.backups.finish(arg, Number(extra));
+      break;
+    }
     case 'users': {
       const r = await svc.db.q<{
         username: string;

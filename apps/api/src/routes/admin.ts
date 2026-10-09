@@ -1,5 +1,5 @@
 /* Administration : sessions, journal d'audit, versions de l'état legacy, système (droits : routes/access.ts). */
-import { SystemeOut } from '@suivi/shared';
+import { BackupsOut, BackupJobOut, BackupRequestIn, SystemeOut } from '@suivi/shared';
 import { z } from 'zod';
 import type { Session } from '../auth.js';
 import { HttpError } from '../http/errors.js';
@@ -7,6 +7,7 @@ import { route } from '../http/route.js';
 import { csvCell } from '../export/tabular.js';
 import { assertLegacyKeys } from '../rights.js';
 import { systemStatus } from '../systeme.js';
+import { requireIfMatch } from '../http/concurrency.js';
 
 export const adminRoutes = [
   /* ---------------------------------------------------------------- Sessions */
@@ -152,6 +153,38 @@ export const adminRoutes = [
     },
   }),
 
+  /* A1a : demandes uniquement ; aucune route d'exécution ou accès au système hôte. */
+  route({
+    method: 'GET',
+    url: '/api/admin/sauvegardes',
+    summary: 'Exécutant et historique des demandes de sauvegarde',
+    tags: ['Administration'],
+    access: 'administration:lire',
+    response: BackupsOut,
+    handler: async ({ svc }) => svc.backups.list(),
+  }),
+  route({
+    method: 'POST',
+    url: '/api/admin/sauvegardes',
+    summary: 'Demander une sauvegarde chiffrée complète',
+    tags: ['Administration'],
+    access: 'administration:administrer',
+    body: BackupRequestIn,
+    response: BackupJobOut,
+    status: 202,
+    handler: async ({ svc, s, ip, body }) => svc.backups.request(body.requestId, s!.user, ip),
+  }),
+  route({
+    method: 'POST',
+    url: '/api/admin/sauvegardes/:id/annuler',
+    summary: 'Annuler une demande en attente (If-Match)',
+    tags: ['Administration'],
+    access: 'administration:administrer',
+    body: z.object({}).strict(),
+    params: z.object({ id: z.string().uuid() }),
+    response: BackupJobOut,
+    handler: async ({ svc, s, ip, params, req }) => svc.backups.cancel(params.id, requireIfMatch(req), s!.user, ip),
+  }),
   /* ---------------------------------------------------------------- Système */
   route({
     method: 'GET',

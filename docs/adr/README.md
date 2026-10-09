@@ -19,3 +19,4 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0013](0013-cartographie.md) | Cartographie du SMSI : moteur SVG maison, tables `maps`, objets par adaptateur | Acceptée |
 | [0014](0014-donnees-sur-le-serveur-et-mises-a-jour.md) | Données sur le serveur (`DATA_DIR`) et mises à jour outillées | Acceptée |
 | [0015](0015-refonte-visuelle-sauge.md) | Direction graphique Sauge, sans changement métier | Proposée |
+| [0016](0016-pilotage-sauvegardes.md) | Demandes de sauvegarde chiffrée et exécutant serveur (A1a) | Acceptée |

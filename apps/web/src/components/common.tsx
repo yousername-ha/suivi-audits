@@ -100,3 +100,14 @@ export function SecretModal({
 
 /* Composants de la charte (packages/ui), réexportés pour les écrans existants. */
 export { ConfirmButton, ErrorAlert } from '@suivi/ui';
+
+export const fmtOctets = (n: number) =>
+  n >= 1024 ** 4
+    ? `${(n / 1024 ** 4).toFixed(1)} To`
+    : n >= 1024 ** 3
+      ? `${(n / 1024 ** 3).toFixed(1)} Go`
+      : n >= 1024 ** 2
+        ? `${Math.round(n / 1024 ** 2)} Mo`
+        : n >= 1024
+          ? `${(n / 1024).toFixed(1)} Ko`
+          : `${n} o`;

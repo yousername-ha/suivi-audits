@@ -8,12 +8,13 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { api, download, errorMessage, get } from '../api';
-import { ConfirmButton, ErrorAlert, fmtDate, PresenceBar } from '../components/common';
+import { ConfirmButton, ErrorAlert, fmtDate, fmtOctets, PresenceBar } from '../components/common';
 import { usePresence } from '../realtime';
 import { useCan } from '../session';
 import { GroupsPanel, RolesPanel, UsersPanel } from './AdminAccess';
 import { ImportPanel } from './AdminImport';
 import { MursPanel } from './AdminMurs';
+import { BackupsPanel } from './AdminBackups';
 
 const TABS = [
   ['users', 'Utilisateurs', 'administration'],
@@ -306,12 +307,7 @@ function Versions() {
 }
 
 /* ---------------------------------------------------------------- Système */
-const fmtOctets = (n: number) =>
-  n >= 1024 ** 4
-    ? `${(n / 1024 ** 4).toFixed(1)} To`
-    : n >= 1024 ** 3
-      ? `${(n / 1024 ** 3).toFixed(1)} Go`
-      : `${Math.round(n / 1024 ** 2)} Mo`;
+
 const RESULTATS: Record<string, [Etat, string]> = {
   reussie: ['succes', 'Réussie'],
   'retour-arriere': ['attention', 'Retour arrière'],
@@ -340,6 +336,7 @@ function Exploitation() {
           <code>sudo ./scripts/mettre-a-jour.sh</code> (guide d’installation, étape 12.1).
         </Alert>
       )}
+      <BackupsPanel />
       {sv.enRetard && (
         <Alert color="red" title="Sauvegarde en retard">
           {sv.derniereReussie

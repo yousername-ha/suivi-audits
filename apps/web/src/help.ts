@@ -111,9 +111,9 @@ export const HELP_ARTICLES: HelpArticle[] = [
     link: '/admin/system',
     steps: [
       'L’écran Système affiche les rapports d’exploitation, la version et la dernière sauvegarde connue. Il ne lance pas une mise à jour ni une restauration.',
-      'Les sauvegardes et restaurations sont actuellement réalisées sur le serveur avec les scripts documentés dans le guide d’installation.',
+      'Dans Système, un administrateur peut confirmer une demande de sauvegarde chiffrée et suivre son état. L’exécutant doit être configuré sur le serveur ; une demande en attente peut être annulée. Les comptes en lecture seule consultent les résultats.',
       'Une restauration remplace les données et les secrets : préparez une sauvegarde, une confirmation et une recette isolée avec l’équipe d’exploitation.',
-      'Le certificat HTTPS est géré par Caddy et la configuration du serveur. Les fonctions de pilotage web des sauvegardes et du TLS sont encore à développer.',
+      'Le certificat HTTPS est géré par Caddy et la configuration du serveur. La destination, les clés et la rétention restent configurées sur le serveur. La restauration guidée, la planification depuis le navigateur et le pilotage TLS restent à développer.',
     ],
   },
 ];

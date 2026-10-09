@@ -5,7 +5,8 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 ## [Non publié]
 
 ### Notes de mise à jour
-- Lot de fiabilisation A3/A4/A5/A6 : aucune nouvelle migration ni dépendance. Les modules historiques restent accessibles sous `/legacy` jusqu'à validation de leur reprise Sauge. Les tâches web de sauvegarde/TLS et les lots B–L ne sont pas annoncés comme livrés.
+- A1a : migration additive `006_sauvegardes.sql` au démarrage, sans nouvelle dépendance. Configurer l’exécutant hôte selon l’étape 11.5 du guide pour activer les demandes manuelles chiffrées. Sans exécutant, l’action est désactivée. Restauration guidée et planification web restent à développer.
+- Lot de fiabilisation A3/A4/A5/A6 : aucune nouvelle migration ni dépendance. Les modules historiques restent accessibles sous `/legacy` jusqu'à validation de leur reprise Sauge. Le pilotage TLS et les lots B–L restent à développer.
 - Intégration de la base ZIP Sauge sur `feature/gpt6-evolution-smsi-grc` uniquement : la v2 complète est conservée dans `archives/v2-source.zip`, avec manifeste SHA-256. Aucune migration des données de l’environnement existant ni publication d’image n’est réalisée par ce lot. Voir `docs/diagnostics/2026-10-09-integration-sauge.md`.
 - **Les données quittent les volumes Docker pour le dossier du serveur `DATA_DIR`** (par défaut `/srv/suivi-audits/donnees`, EXPL-01). La mise à jour par `scripts/mettre-a-jour.sh` fait la copie toute seule, contrôle les données et **conserve les anciens volumes** jusqu'à `sudo ./scripts/migrer-donnees-vers-dossier.sh --supprimer-anciens-volumes`. Prévoir l'espace disque : deux fois la taille de la base.
 - Première mise à jour avec le script (il n'existe pas encore dans la version en service) : `sudo git fetch --tags && sudo git show v<version>:scripts/mettre-a-jour.sh | sudo bash -s -- <version>` (`docs/INSTALLATION.md`, étape 12.1).
@@ -23,6 +24,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 - Sécurité CI : aucun mot de passe temporaire inutilisé ni corps de réponse sensible dans le journal du guide ; document de test transmis en mémoire plutôt que par un fichier temporaire prévisible.
 
 ### Ajouté
+- A1a / EXPL-08 : demandes manuelles de sauvegarde chiffrée dans Administration > Système, confirmation, suivi des 50 dernières demandes, annulation versionnée avant prise en charge, réessais idempotents et audit transactionnel. Exécutant hôte à commandes fixes, verrou partagé avec les sauvegardes existantes, contrôle SHA-256 et échecs explicites ; aucun accès Docker ou secret offert à l’API.
 - A5 : guide d'utilisation embarqué, versionné, recherchable et filtré par permissions, couvrant les modules Sauge et toutes les familles métier encore dans l'ancienne interface.
 - Références Playwright alignées sur la charte Sauge déjà fournie dans le ZIP, avec navigateur officiel et seuils de comparaison inchangés.
 - Cadrage A–L, architecture minimale et inventaire de reprise intégrale du socle v2 (`docs/REPRISE-SOCLE-LEGACY.md`). Les migrations des modules historiques restent à livrer progressivement.

@@ -314,3 +314,22 @@ export const mapVersions = pgTable('map_versions', {
 
 /** Tables métier : chacune porte version, legacy_id, import_batch_id et extra (vérifié par les tests). */
 export const BUSINESS_TABLES = { documents, links, maps } as const;
+
+export const backupWorker = pgTable('backup_worker', {
+  id: integer('id').primaryKey(),
+  seenAt: tstz('seen_at').notNull(),
+  ready: boolean('ready').notNull(),
+  message: text('message').notNull(),
+});
+export const backupJobs = pgTable('backup_jobs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  requestId: uuid('request_id').notNull().unique(),
+  status: text('status').notNull().default('en_attente'),
+  requestedBy: text('requested_by').notNull(),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  startedAt: tstz('started_at'),
+  finishedAt: tstz('finished_at'),
+  version: integer('version').notNull().default(1),
+  report: jsonb('report'),
+  message: text('message').notNull().default(''),
+});
