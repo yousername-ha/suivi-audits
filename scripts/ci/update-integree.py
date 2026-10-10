@@ -64,12 +64,12 @@ base_ref=run(['git','rev-parse','HEAD'],cwd=repo).strip()
 run(['git','tag','v98.0.0'],cwd=repo)
 for component in ('api','web','updater'):
     run(['docker','tag',IMAGE+component+':ci',IMAGE+component+':98.0.0'])
-(repo/'apps/api/migrations/010_recette_update.sql').write_text('CREATE TABLE recette_update_temoin(id integer PRIMARY KEY); INSERT INTO recette_update_temoin VALUES (1);\n')
-run(['git','add','apps/api/migrations/010_recette_update.sql'],cwd=repo)
+(repo/'apps/api/migrations/011_recette_update.sql').write_text('CREATE TABLE recette_update_temoin(id integer PRIMARY KEY); INSERT INTO recette_update_temoin VALUES (1);\n')
+run(['git','add','apps/api/migrations/011_recette_update.sql'],cwd=repo)
 run(['git','commit','-m','Fixture privée : témoin de migration'],cwd=repo)
 run(['git','tag','v99.0.0'],cwd=repo)
-(work/'Dockerfile').write_text('FROM '+IMAGE+'api:ci\nCOPY --chmod=0444 010_recette_update.sql /app/apps/api/migrations/010_recette_update.sql\n')
-shutil.copy(repo/'apps/api/migrations/010_recette_update.sql',work/'010_recette_update.sql')
+(work/'Dockerfile').write_text('FROM '+IMAGE+'api:ci\nCOPY --chmod=0444 011_recette_update.sql /app/apps/api/migrations/011_recette_update.sql\n')
+shutil.copy(repo/'apps/api/migrations/011_recette_update.sql',work/'011_recette_update.sql')
 run(['docker','build','-t',IMAGE+'api:99.0.0',str(work)])
 for component in ('web','updater'): run(['docker','tag',IMAGE+component+':ci',IMAGE+component+':99.0.0'])
 run(['git','checkout','--detach',base_ref],cwd=repo)
@@ -100,6 +100,9 @@ code=str((int.from_bytes(raw[offset:offset+4],'big')&0x7fffffff)%1000000).zfill(
 call('POST','/api/auth/mfa',{'code':code})
 csrf=call('GET','/api/auth/me')['csrf']
 before=json.loads(compose('exec','-T','app','suivi','controle-donnees',cwd=repo))
+def environment_snapshot():
+    return json.loads(compose('exec','-T','-u','postgres','db','psql','-d','suivi','-Atc',"SELECT jsonb_build_object('current',(SELECT version FROM environment_configuration WHERE id=1),'versions',(SELECT jsonb_agg(to_jsonb(v) ORDER BY version) FROM environment_versions v))::text",cwd=repo))
+before_environment=environment_snapshot()
 data=Path(re.search(r'^DATA_DIR=(.*)$',original_env,re.M).group(1).strip('"\'')) if re.search(r'^DATA_DIR=(.*)$',original_env,re.M) else Path('/srv/suivi-audits/donnees')
 spec=importlib.util.spec_from_file_location('update_worker',repo/'scripts/update-worker.py'); m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
 os.environ.update(REPO=str(repo),DATA_DIR=str(data),PWD=str(repo));os.environ.pop('APP_VERSION',None)
@@ -156,6 +159,7 @@ try:
     updater=compose('ps','-q','updater',cwd=repo).strip()
     assert run(['docker','inspect','-f','{{.Config.Image}}',updater]).strip().endswith(':99.0.0')
     assert json.loads(compose('exec','-T','app','suivi','controle-donnees',cwd=repo))==before
+    assert environment_snapshot()==before_environment
     assert compose('exec','-T','-u','postgres','db','psql','-d','suivi','-Atc','SELECT count(*) FROM recette_update_temoin',cwd=repo).strip()=='1'
     assert compose('exec','-T','-u','postgres','db','psql','-d','suivi','-Atc',f"SELECT status FROM update_jobs WHERE id='{requested['id']}'",cwd=repo).strip()=='success'
     print('Mise à jour API 98 -> 99 : sauvegarde chiffrée, migration réelle, données identiques, exécutant remplacé, frontal intact.')
@@ -182,6 +186,7 @@ try:
     with patch.object(m.subprocess,'Popen',side_effect=local_popen):worker.locked_operation(lambda:worker.install(claimed))
     assert worker.state['status']=='rolled_back' and not worker.state['maintenance']
     assert worker.state['installed']=='98.0.0'
+    assert environment_snapshot()==before_environment
     assert compose('exec','-T','-u','postgres','db','psql','-d','suivi','-Atc',f"SELECT status FROM update_jobs WHERE id='{requested['id']}'",cwd=repo).strip()=='rolled_back'
     assert json.loads(compose('exec','-T','app','suivi','controle-donnees',cwd=repo))==before
     assert compose('exec','-T','-u','postgres','db','psql','-d','suivi','-Atc',"SELECT to_regclass('recette_update_temoin') IS NULL",cwd=repo).strip()=='t'

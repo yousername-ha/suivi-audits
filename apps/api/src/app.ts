@@ -16,6 +16,7 @@ import { eventRoutes } from './routes/events.js';
 import { importRoutes } from './routes/import.js';
 import { legacyRoutes } from './routes/legacy.js';
 import { settingsRoutes } from './routes/settings.js';
+import { environmentRoutes } from './routes/environment.js';
 import { affichageRoutes } from './routes/affichage.js';
 import { cartoRoutes } from './routes/carto.js';
 import { lastMigration, pendingMigrations } from './systeme.js';
@@ -103,6 +104,7 @@ export function allRoutes(): RouteDef[] {
     ...legacyRoutes,
     ...importRoutes,
     ...settingsRoutes,
+    ...environmentRoutes,
     ...affichageRoutes,
     ...cartoRoutes,
   );

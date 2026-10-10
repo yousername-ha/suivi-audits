@@ -4,6 +4,7 @@ export * from './permissions.js';
 export * from './events.js';
 export * from './schemas.js';
 export * from './settings.js';
+export * from './environment.js';
 export * from './affichage.js';
 export * from './exploitation.js';
 export * from './modules.js';

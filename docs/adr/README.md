@@ -25,3 +25,4 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0019](0019-activation-modules.md) | Activation versionnée des modules, dépendances, garde serveur et conservation des données (B1) | Acceptée |
 
 | [0020](0020-mise-a-jour-integree.md) | Mise à jour web, exécutant isolé et maintenance indépendante | Acceptée |
+| [0021](0021-configuration-environnement-versionnee.md) | Échelles, matrices, simulation et publications immuables (B2a) | Acceptée |

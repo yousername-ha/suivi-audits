@@ -16,6 +16,7 @@ export const ENTITIES = [
   'wall_screens',
   'maps',
   'module_activation',
+  'environment_configuration',
 ] as const;
 export type Entity = (typeof ENTITIES)[number];
 
@@ -34,6 +35,7 @@ export const ENTITY_PERMISSION: Record<Entity, Permission | 'metier'> = {
   wall_screens: 'administration:lire',
   maps: 'cartographie:lire',
   module_activation: 'administration:lire',
+  environment_configuration: 'administration:lire',
 };
 
 export function canReceive(rights: Rights, entity: Entity): boolean {

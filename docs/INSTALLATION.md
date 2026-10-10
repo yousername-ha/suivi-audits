@@ -786,6 +786,14 @@ L'exécutant valide Caddy, recrée le frontal, vérifie le certificat réellemen
 
 ## 12. Mettre à jour
 
+### Configuration de l’environnement (B2a)
+
+Dans **Administration → Système → Configurer l’environnement**, les utilisateurs ayant `administration:lire` consultent les versions publiées. `administration:administrer` permet de préparer des échelles d’impact, de probabilité et de maturité, des seuils de criticité et une règle de calcul (produit, somme ou matrice explicite). La validation refuse les identifiants dupliqués, les valeurs incohérentes et les matrices incomplètes. Le simulateur n’enregistre aucune évaluation métier et n’exécute aucune formule libre.
+
+La publication nécessite simulation, motif et confirmation **PUBLIER**. Une publication concurrente conserve le brouillon et impose un rechargement confirmé. Les versions restent immuables ; préparer une ancienne définition ne l’applique pas, une nouvelle publication est requise. La migration additive `010_configuration_environnement.sql` et l’initialisation au démarrage ne demandent aucun réglage supplémentaire.
+
+La matrice proposée est destinée à de nouveaux usages, sans portée normative. **Les évaluations, méthodes IA/incidents, exports et paramètres historiques restent inchangés.** Le raccordement des évaluations avec référence de version et les autres paramètres métier restent des sous-lots B2. Sauvegarde/restauration PostgreSQL conserve ces configurations ; le JSON historique ne les transporte pas.
+
 ### Mise à jour depuis l’application
 
 L’installation Compose normale démarre désormais `gateway` (frontal HTTPS stable), `web` (interface interne), `app`, `db`, `init` et `updater` (exécutant privilégié). Aucun cron ni fichier de configuration supplémentaire n’est nécessaire pour la mise à jour intégrée. Une installation existante reçoit ces services lors de sa première mise à niveau vers une version qui les contient ; la procédure serveur ci-dessous reste disponible pour ce premier passage et pour le dépannage.

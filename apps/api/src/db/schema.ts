@@ -387,3 +387,17 @@ export const updateJobs = pgTable('update_jobs', {
   startedAt: tstz('started_at'),
   finishedAt: tstz('finished_at'),
 });
+
+export const environmentVersions = pgTable('environment_versions', {
+  version: integer('version').primaryKey(),
+  definition: jsonb('definition').notNull(),
+  reason: text('reason').notNull(),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  createdBy: text('created_by').notNull(),
+});
+export const environmentConfiguration = pgTable('environment_configuration', {
+  id: integer('id').primaryKey(),
+  version: integer('version')
+    .notNull()
+    .references(() => environmentVersions.version),
+});

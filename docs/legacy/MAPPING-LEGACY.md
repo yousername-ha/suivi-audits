@@ -1,5 +1,7 @@
 # Correspondance du format legacy vers la base (MAPPING-LEGACY)
 
+**B2a** : les nouvelles définitions d’échelles et matrices vivent dans `environment_versions` et `environment_configuration` (migration 010). Aucun champ legacy n’est déplacé ou supprimé ; les méthodes IA/incidents et les évaluations de `app_state` restent inchangées. La configuration n’est pas ajoutée artificiellement au contrat v2 : le JSON historique garde son aller-retour existant et ne remplace pas ce registre. Sauvegarde/restauration PostgreSQL le conserve. Le futur raccordement des évaluations devra fournir son mapper et une référence de version explicite.
+
 Chaque chemin du contrat (`LEGACY-FORMAT.md`, schéma 14) et chaque identifiant ajouté par le schéma 15 est associé :
 - à une **colonne** (`table.colonne`) ;
 - à **`extra`** (colonne jsonb de la table métier, pour les champs non modélisés : rien n'est perdu) ;

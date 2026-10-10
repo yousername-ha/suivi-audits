@@ -1,6 +1,6 @@
 /* Guide embarqué versionné avec le code : seulement les fonctionnalités réellement disponibles. */
 import { MODULE_LABELS, type BusinessModule, type Permission } from '@suivi/shared';
-export const HELP_VERSION = '2026-10-09';
+export const HELP_VERSION = '2026-10-10';
 export interface HelpArticle {
   id: string;
   title: string;
@@ -22,6 +22,18 @@ const HISTORICAL_MODULES: readonly BusinessModule[] = [
 ];
 
 export const HELP_ARTICLES: HelpArticle[] = [
+  {
+    id: 'configuration-environnement',
+    title: 'Configuration de l’environnement',
+    permission: 'administration:lire',
+    link: '/admin/environment',
+    steps: [
+      'Depuis Administration → Système, ouvrez Configurer l’environnement pour consulter les échelles, la matrice et les versions publiées.',
+      'Un administrateur peut modifier un brouillon, choisir un scénario puis valider et simuler. Le simulateur ne crée pas d’évaluation métier.',
+      'La publication exige un motif et la confirmation PUBLIER. Chaque version reste immuable ; reprendre une ancienne définition prépare une nouvelle publication.',
+      'Les évaluations et méthodes de l’outil historique restent inchangées. Leur raccordement versionné et les autres paramètres métier seront livrés dans les sous-lots suivants de B2.',
+    ],
+  },
   ...HISTORICAL_MODULES.map((module): HelpArticle => ({
     id: `historique-${module}`,
     title: MODULE_LABELS[module],

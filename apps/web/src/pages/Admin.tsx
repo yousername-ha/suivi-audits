@@ -6,7 +6,7 @@ import { StatusChip, type Etat } from '@suivi/ui';
 import { notifications } from '@mantine/notifications';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { Link, useNavigate, useParams } from 'react-router';
 import { api, download, errorMessage, get } from '../api';
 import { ConfirmButton, ErrorAlert, fmtDate, fmtOctets, PresenceBar } from '../components/common';
 import { usePresence } from '../realtime';
@@ -16,6 +16,7 @@ import { ImportPanel } from './AdminImport';
 import { MursPanel } from './AdminMurs';
 import { BackupsPanel } from './AdminBackups';
 import { ModulesPanel } from './AdminModules';
+import { EnvironmentPanel } from './AdminEnvironment';
 import { UpdatesPanel } from '../components/Updates';
 import { OperationsPanel } from './AdminOperations';
 
@@ -37,7 +38,17 @@ export function AdminPage() {
   const params = useParams();
   const tab = tabs.some(([k]) => k === params.tab) ? params.tab! : (tabs[0]?.[0] ?? 'users');
   const nav = useNavigate();
-  usePresence(`admin/${tab}`);
+  usePresence(`admin/${params.tab === 'environment' && can('administration', 'lire') ? 'environment' : tab}`);
+  if (params.tab === 'environment' && can('administration', 'lire'))
+    return (
+      <Stack className="page">
+        <Title order={1}>Administration</Title>
+        <Button component={Link} to="/admin/system" variant="subtle">
+          Retour au système
+        </Button>
+        <EnvironmentPanel />
+      </Stack>
+    );
   return (
     <Stack className="page">
       <Group justify="space-between">
@@ -477,6 +488,19 @@ function System() {
     <Stack>
       <Exploitation />
       <ModulesPanel />
+      <Card withBorder>
+        <Stack>
+          <Title order={2} size="h4">
+            Configuration de l’environnement
+          </Title>
+          <Text size="sm">
+            Échelles et matrices versionnées, simulation et historique. Les méthodes historiques restent conservées.
+          </Text>
+          <Button component={Link} to="/admin/environment" variant="light">
+            Configurer l’environnement
+          </Button>
+        </Stack>
+      </Card>
       <Card withBorder>
         <Title order={2} size="h4" mb="xs">
           Détails techniques

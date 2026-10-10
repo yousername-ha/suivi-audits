@@ -13,6 +13,7 @@ import { LegacyStore } from './legacy/store.js';
 import { Bus, Presence } from './realtime.js';
 import { Vault } from './security/crypto.js';
 import { Settings } from './settings.js';
+import { Environment } from './environment.js';
 import { Walls } from './walls.js';
 
 export function createServices(cfg: Config, log: Logger) {
@@ -29,6 +30,7 @@ export function createServices(cfg: Config, log: Logger) {
     db,
     vault,
     settings,
+    environment: new Environment(db),
     modules: new Modules(cfg.db, db),
     updates: new Updates(cfg, db),
     backups: new Backups(cfg, db),
