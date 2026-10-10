@@ -8,7 +8,7 @@ cd /opt/suivi-audits
 V=99.0.0
 if ! sudo git rev-parse -q --verify "refs/tags/v$V" > /dev/null; then
   sudo git tag "v$V" HEAD
-  for i in api web; do sudo docker tag "ghcr.io/yousername-ha/suivi-audits-$i:ci" "ghcr.io/yousername-ha/suivi-audits-$i:$V"; done
+  for i in api web updater; do sudo docker tag "ghcr.io/yousername-ha/suivi-audits-$i:ci" "ghcr.io/yousername-ha/suivi-audits-$i:$V"; done
 fi
 case "${1:-}" in
   verifier) sudo ./scripts/mettre-a-jour.sh "$V" --verifier --images-locales ;;

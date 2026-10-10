@@ -39,6 +39,7 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
     'GET /healthz',
     'GET /api/health/ready',
     'GET /api/version',
+    'GET /api/updates', // Versions et état uniquement : aucune commande.
     'GET /api/modules', // Métadonnées d'activation accessibles à toute session complète ; aucun contenu métier.
     'GET /api/openapi.json',
     'GET /api/auth/me',

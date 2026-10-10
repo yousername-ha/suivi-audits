@@ -1,0 +1,73 @@
+# Frontal HTTPS (Caddy 2) : interface web compilée + reverse proxy vers l'API.
+# Variables : SITE_ADDRESS, CADDY_TLS (voir .env). Ports internes non privilégiés : 8080 (HTTP) et 8443 (HTTPS),
+# publiés sur 80 et 443 par docker-compose.yml.
+{
+	admin off
+	# Conteneur en lecture seule : ne pas tenter d'installer la racine interne dans le magasin de confiance.
+	skip_install_trust
+	http_port 8080
+	https_port 8443
+	# Redirection HTTP -> HTTPS gérée ci-dessous (sans le port interne 8443 dans l'adresse).
+	auto_https disable_redirects
+	servers {
+		protocols h1 h2
+	}
+}
+
+:8080 {
+
+	# Compression, sauf pour le flux temps réel (text/event-stream), qui doit partir sans délai.
+	encode {
+		zstd
+		gzip
+		match {
+			header Content-Type text/html* text/css* text/plain* text/javascript* application/javascript* application/json* image/svg+xml*
+		}
+	}
+
+	request_body {
+		max_size 60MB
+	}
+
+	header {
+		-Server
+		-Via
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy no-referrer
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+		Cross-Origin-Opener-Policy same-origin
+	}
+
+	@api path /api/* /legacy /legacy/* /d/* /healthz
+	handle @api {
+		reverse_proxy app:8080 {
+			header_up X-Forwarded-Proto {http.request.header.X-Forwarded-Proto}
+			# Flux SSE (/api/events) : transmis immédiatement.
+			flush_interval -1
+			transport http {
+				read_timeout 120s
+				write_timeout 120s
+			}
+		}
+	}
+
+	# Interface web (application monopage) : CSP stricte, aucun script ni style en ligne.
+	handle {
+		root * /srv
+		header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+		header Cross-Origin-Resource-Policy same-origin
+		@assets path /assets/*
+		header @assets Cache-Control "public, max-age=31536000, immutable"
+		@pages not path /assets/*
+		header @pages Cache-Control "no-cache"
+		try_files {path} /index.html
+		file_server
+	}
+
+	log {
+		output stdout
+		format json
+	}
+}

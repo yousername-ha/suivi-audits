@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="fr" data-mantine-color-scheme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Mise à jour · Suivi SMSI</title>
+    <link rel="stylesheet" href="/update/theme.css" />
+    <link rel="stylesheet" href="/update/maintenance.css" />
+    <script defer src="/update/maintenance.js"></script>
+  </head>
+  <body>
+    <main class="maintenance-card">
+      <div class="brand" aria-hidden="true">S</div>
+      <p class="eyebrow">ESPACE DE PILOTAGE · SMSI</p>
+      <h1 id="title">Mise à jour en cours</h1>
+      <p id="message" role="status" aria-live="polite">
+        Nous préparons le retour de votre espace de travail. Vos données sont conservées.
+      </p>
+      <div id="animation" class="spinner" aria-label="Opération en cours"></div>
+      <ol id="steps">
+        <li data-phase="preparing">Préparation</li>
+        <li data-phase="backup">Sauvegarde de sécurité</li>
+        <li data-phase="installing">Installation</li>
+        <li data-phase="verifying">Vérification</li>
+        <li data-phase="complete">Retour à l’application</li>
+      </ol>
+      <p id="delay" hidden>
+        L’opération prend plus de temps que prévu. Cette page continue à suivre son état ; vous pouvez la laisser
+        ouverte.
+      </p>
+      <p id="connection" hidden>Connexion momentanément interrompue. Le suivi reprendra automatiquement.</p>
+      <p id="versions"></p>
+      <a id="return" href="/admin/system" hidden>Consulter le résultat dans l’application</a>
+      <p class="footnote">Votre espace revient automatiquement dès qu’il est disponible.</p>
+    </main>
+  </body>
+</html>

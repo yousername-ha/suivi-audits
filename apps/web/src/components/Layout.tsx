@@ -2,7 +2,6 @@
    Téléphone : menu en tiroir ; tablette : menu replié en icônes ; bureau : menu déplié (packages/ui/src/styles.css).
    AppShell de Mantine n'est pas utilisé : il injecte des balises <style>, interdites par la CSP. */
 import {
-  Alert,
   Anchor,
   Badge,
   Burger,
@@ -27,12 +26,12 @@ import {
   IconeParametres,
   IconeTheme,
 } from '@suivi/ui';
-import type { SystemeOut } from '@suivi/shared';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
-import { errorMessage, get } from '../api';
+import { errorMessage } from '../api';
 import { logout as endSession } from '../logout';
+import { UpdateNotice } from './Updates';
 import { ErrorAlert } from './common';
 import { useLive } from '../realtime';
 import { canAdminArea, canReadBusiness, useCan, useMe, usePreferences } from '../session';
@@ -56,26 +55,6 @@ function useAffichage() {
     if (colorScheme !== SCHEME[theme]) setColorScheme(SCHEME[theme]);
   }, [prefs.taille, densite, theme, colorScheme, setColorScheme]);
   return theme;
-}
-
-/** Nouvelle version publiée (détectée par scripts/verifier-version.sh sur le serveur) : bandeau pour les administrateurs.
-    Rien n'est installé automatiquement. */
-function BandeauVersion() {
-  const q = useQuery({
-    queryKey: ['admin', 'systeme'],
-    queryFn: () => get<SystemeOut>('/api/admin/systeme'),
-    staleTime: 600_000,
-  });
-  const v = q.data?.versionDisponible;
-  if (!v?.nouvelle) return null;
-  return (
-    <Alert color="violet" mb="md" className="bandeau-version">
-      Nouvelle version disponible : <b>{v.derniere}</b> (en service : {q.data?.version}).{' '}
-      <Anchor component={Link} to="/admin/system">
-        Détails et procédure
-      </Anchor>
-    </Alert>
-  );
 }
 
 export function Layout({ children }: { children: ReactNode }) {
@@ -183,53 +162,55 @@ export function Layout({ children }: { children: ReactNode }) {
 
   return (
     <div className="shell">
-      <header className="shell-header">
-        <Group h="100%" px="md" justify="space-between" wrap="nowrap">
-          <Group gap="sm" wrap="nowrap">
-            <Burger opened={opened} onClick={toggle} hiddenFrom="xs" size="sm" aria-label="Ouvrir le menu" />
-            <Anchor component={Link} to="/" underline="never" c="inherit">
-              <Group gap="xs" wrap="nowrap">
-                <span className="brand-mark" aria-hidden="true">
-                  S
-                </span>
-                <div className="brand-wordmark">
-                  <Text fw={700} visibleFrom="xs">
-                    {me.appName}
-                  </Text>
-                  <Text className="brand-subtitle" size="xs" visibleFrom="sm">
-                    Espace de pilotage · ISO 27001 / HDS
-                  </Text>
-                </div>
-              </Group>
-            </Anchor>
-          </Group>
-          <Group gap="xs" wrap="nowrap">
-            <Tooltip
-              label={
-                live.connected ? 'Mises à jour en temps réel actives' : 'Temps réel déconnecté : reconnexion en cours'
-              }
-            >
-              <Badge color={live.connected ? 'teal' : 'gray'} variant="dot" visibleFrom="xs" className="live-badge">
-                {live.connected ? 'En direct' : 'Hors ligne'}
+      <div className="shell-top">
+        <UpdateNotice />
+        <header className="shell-header">
+          <Group h="100%" px="md" justify="space-between" wrap="nowrap">
+            <Group gap="sm" wrap="nowrap">
+              <Burger opened={opened} onClick={toggle} hiddenFrom="xs" size="sm" aria-label="Ouvrir le menu" />
+              <Anchor component={Link} to="/" underline="never" c="inherit">
+                <Group gap="xs" wrap="nowrap">
+                  <span className="brand-mark" aria-hidden="true">
+                    S
+                  </span>
+                  <div className="brand-wordmark">
+                    <Text fw={700} visibleFrom="xs">
+                      {me.appName}
+                    </Text>
+                    <Text className="brand-subtitle" size="xs" visibleFrom="sm">
+                      Espace de pilotage · ISO 27001 / HDS
+                    </Text>
+                  </div>
+                </Group>
+              </Anchor>
+            </Group>
+            <Group gap="xs" wrap="nowrap">
+              <Tooltip
+                label={
+                  live.connected ? 'Mises à jour en temps réel actives' : 'Temps réel déconnecté : reconnexion en cours'
+                }
+              >
+                <Badge color={live.connected ? 'teal' : 'gray'} variant="dot" visibleFrom="xs" className="live-badge">
+                  {live.connected ? 'En direct' : 'Hors ligne'}
+                </Badge>
+              </Tooltip>
+              <Text size="sm" fw={600} visibleFrom="sm" className="header-user">
+                {me.user?.displayName || me.user?.username}
+              </Text>
+              <Badge variant="light" visibleFrom="md">
+                {me.user?.roles.join(', ') || 'Aucun rôle'}
               </Badge>
-            </Tooltip>
-            <Text size="sm" fw={600} visibleFrom="sm" className="header-user">
-              {me.user?.displayName || me.user?.username}
-            </Text>
-            <Badge variant="light" visibleFrom="md">
-              {me.user?.roles.join(', ') || 'Aucun rôle'}
-            </Badge>
-            <Button size="xs" variant="default" loading={loggingOut} onClick={() => void logout()}>
-              Déconnexion
-            </Button>
+              <Button size="xs" variant="default" loading={loggingOut} onClick={() => void logout()}>
+                Déconnexion
+              </Button>
+            </Group>
           </Group>
-        </Group>
-      </header>
+        </header>
+      </div>
       <div className="shell-body">
         <aside className="shell-nav">{navigation}</aside>
         <main className="shell-main app-main">
           <ErrorAlert error={logoutError} />
-          {can('administration', 'lire') && <BandeauVersion />}
           {children}
         </main>
       </div>

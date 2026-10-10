@@ -218,7 +218,7 @@ sudo docker run --rm hello-world
 
 <!-- ci: run -->
 ```bash
-cd /tmp && curl -fsSLO https://github.com/sigstore/cosign/releases/download/v2.4.1/cosign-linux-amd64 && curl -fsSL https://github.com/sigstore/cosign/releases/download/v2.4.1/cosign_checksums.txt | grep ' cosign-linux-amd64$' | sha256sum -c && sudo install -m 0755 cosign-linux-amd64 /usr/local/bin/cosign && rm cosign-linux-amd64 && cd -
+cd /tmp && curl -fsSLO https://github.com/sigstore/cosign/releases/download/v3.1.3/cosign-linux-amd64 && curl -fsSL https://github.com/sigstore/cosign/releases/download/v3.1.3/cosign_checksums.txt | grep ' cosign-linux-amd64$' | sha256sum -c && sudo install -m 0755 cosign-linux-amd64 /usr/local/bin/cosign && rm cosign-linux-amd64 && cd -
 ```
 **Résultat attendu** : `cosign-linux-amd64: OK`, puis le nom du dossier précédent.
 
@@ -226,7 +226,7 @@ cd /tmp && curl -fsSLO https://github.com/sigstore/cosign/releases/download/v2.4
 ```bash
 cosign version | grep GitVersion
 ```
-**Résultat attendu** : `GitVersion:    v2.4.1`.
+**Résultat attendu** : `GitVersion:    v3.1.3`.
 
 ---
 
@@ -427,7 +427,7 @@ sudo ./scripts/preparer-donnees.sh
 ```bash
 sudo docker compose pull
 ```
-**Résultat attendu** : une ligne par composant (`init`, `db`, `app`, `web`) se terminant par `Pulled`. Si vous lisez `unauthorized` ou `denied`, les images sont privées : faites l'étape 4.5.
+**Résultat attendu** : une ligne par composant (`init`, `db`, `app`, `web`, `gateway`, `updater`) se terminant par `Pulled`. Si vous lisez `unauthorized` ou `denied`, les images sont privées : faites l'étape 4.5.
 
 > **Tester une version non publiée** (une branche, à la demande de l'équipe projet), à la place de la commande ci-dessus.
 > Il faut alors des flux sortants supplémentaires : `registry.npmjs.org` et `dl-cdn.alpinelinux.org` (TCP 443).
@@ -463,7 +463,7 @@ sudo docker compose ps -a
 | `init` | contrôle et prépare le dossier des données, génère les mots de passe internes au premier démarrage, puis s'arrête | `Exited (0)` : terminé normalement, c'est voulu |
 | `db` | base de données PostgreSQL | `Up … (healthy)` |
 | `app` | application (API) | `Up … (healthy)` |
-| `web` | accès web sécurisé (HTTPS) et interface | `Up …` |
+| `web` | interface interne (non exposée) | `Up …` |
 
 Si un service affiche `unhealthy`, `Restarting` ou `Exited (1)`, ou si une ligne manque, allez à la section [13. En cas de problème](#13-en-cas-de-problème).
 
@@ -503,7 +503,7 @@ sudo docker compose exec app setup-token
 
 <!-- ci: run -->
 ```bash
-sudo docker compose cp web:/data/caddy/pki/authorities/local/root.crt /opt/suivi-audits/racine-suivi-audits.crt && sudo chmod 644 /opt/suivi-audits/racine-suivi-audits.crt
+sudo docker compose cp gateway:/data/caddy/pki/authorities/local/root.crt /opt/suivi-audits/racine-suivi-audits.crt && sudo chmod 644 /opt/suivi-audits/racine-suivi-audits.crt
 ```
 **Résultat attendu** : `Successfully copied` (ou aucun message).
 
@@ -775,7 +775,7 @@ Les demandes anciennes réintroduites depuis une archive sont neutralisées ; au
 
 ### 11.7 Certificats TLS et priorité explicite
 
-Caddy termine TLS. Par défaut, `TLS_WEB_MANAGEMENT=0` et `.env`/`CADDY_TLS` restent seuls responsables. Pour permettre le remplacement web, régler `TLS_WEB_MANAGEMENT=1` et `TLS_TERMINATION=caddy` dans `.env`, puis recréer le frontal avec `docker compose up -d web`. Si TLS est terminé par un ingress/proxy extérieur, régler `TLS_TERMINATION=external` : observation du certificat public sur SITE_ADDRESS:443, aucune modification proposée. L'accès d'observation doit être permis depuis l'hôte ; aucune sortie Internet n'est donnée à l'API.
+Caddy termine TLS. Par défaut, `TLS_WEB_MANAGEMENT=0` et `.env`/`CADDY_TLS` restent seuls responsables. Pour permettre le remplacement web, régler `TLS_WEB_MANAGEMENT=1` et `TLS_TERMINATION=caddy` dans `.env`, puis recréer le frontal avec `docker compose up -d gateway`. Si TLS est terminé par un ingress/proxy extérieur, régler `TLS_TERMINATION=external` : observation du certificat public sur SITE_ADDRESS:443, aucune modification proposée. L'accès d'observation doit être permis depuis l'hôte ; aucune sortie Internet n'est donnée à l'API.
 
 Priorité : un couple web actif **et** l'activation serveur sélectionnent les chemins fixes `/certs-web/cert.pem` et `key.pem`. Sinon Caddy utilise exactement `CADDY_TLS` dans `.env`. Le marqueur `secrets/tls-web/mode`, sauvegardé avec le couple, ne contient que web/env ; aucun shell ni fichier de configuration fourni par un utilisateur n'est interprété. Revenir à .env est confirmé, vérifié et journalisé ; le fichier .env n'est jamais modifié par une demande web. Caddy continue les renouvellements internes/ACME ; les certificats manuels sont remplacés par leur gestionnaire. Aucun bouton ne prétend forcer un renouvellement ACME non pris en charge par le moteur.
 
@@ -786,9 +786,26 @@ L'exécutant valide Caddy, recrée le frontal, vérifie le certificat réellemen
 
 ## 12. Mettre à jour
 
-### 12.1 Mettre à jour l'application
+### Mise à jour depuis l’application
 
-À faire quand une nouvelle version est annoncée (bandeau « Nouvelle version disponible » dans l'application, ou page **Releases** du dépôt), de préférence en dehors des heures d'utilisation. Tout est fait par **un seul script**, `scripts/mettre-a-jour.sh`, qui :
+L’installation Compose normale démarre désormais `gateway` (frontal HTTPS stable), `web` (interface interne), `app`, `db`, `init` et `updater` (exécutant privilégié). Aucun cron ni fichier de configuration supplémentaire n’est nécessaire pour la mise à jour intégrée. Une installation existante reçoit ces services lors de sa première mise à niveau vers une version qui les contient ; la procédure serveur ci-dessous reste disponible pour ce premier passage et pour le dépannage.
+
+Chaque utilisateur connecté voit un bandeau fin dès qu’une nouvelle version stable est disponible : version installée, version disponible, lien vers les nouveautés. Le contrôle est automatique au démarrage puis toutes les six heures. Pour un dépôt privé, l’exécutant réutilise **en lecture seule** `/root/.ssh` et `/root/.docker`, provisionnés aux étapes 4.1–4.5. L’API GitHub publique est essayée en premier ; si le dépôt est privé, les étiquettes stables et la présence des trois artefacts sont contrôlées par la clé de déploiement et le registre. Les versions de test/prépublication sont refusées. Une panne réseau conserve la dernière information connue et est signalée, sans prétendre que le serveur est à jour.
+
+Dans **Administration → Système → Mise à jour de l’application**, un compte ayant le **rôle système Administrateur** peut vérifier manuellement puis confirmer en tapant **METTRE À JOUR**. Une permission personnalisée `administration:administrer` seule ne suffit pas. Enregistrer les modifications en cours avant confirmation. Les demandes sont auditées et idempotentes ; une seule peut être active. Le serveur revalide le rôle avant exécution.
+
+L’exécutant télécharge et vérifie les signatures cosign des images API, web et updater, avec l’identité exacte du workflow/tag. Le commit des sources doit correspondre au label de révision des images signées ; les images appliquées sont épinglées par empreinte. Pendant cette préparation, le service reste disponible. Ensuite la maintenance bloque les écritures, attend la fin des mutations déjà engagées, crée une sauvegarde chiffrée et effectue migrations/redémarrage/contrôles de santé et de données. Le frontal sert indépendamment `/update/` et un état public minimal : les utilisateurs et nouvelles connexions conservent la page pendant l’arrêt de l’API, de l’interface et de l’exécutant. Les étapes affichées sont réelles ; aucun pourcentage n’est inventé. Le retour à l’application est automatique après santé confirmée. Un échec avec retour arrière est clairement affiché, avec accès au résultat ; une intervention requise maintient la protection.
+
+`init` crée exclusivement les secrets manquants. La clé spécifique aux sauvegardes de mise à jour est dans **`DATA_DIR/update-secrets/backup-pass`** (root, 0600), hors montage API. Les archives chiffrées sont dans `DATA_DIR/sauvegardes-updates/avant-mise-a-jour`, les cinq dernières sont conservées ; les journaux/reçus privés dans `DATA_DIR/reprise-updates` (root, 0700), l’état public dans `DATA_DIR/etat/updates`. Inclure ces dossiers dans la sauvegarde externalisée du serveur et conserver la clé dans le coffre-fort pour restaurer après perte du serveur. Ne jamais exposer le socket Docker, le projet en écriture ou cette clé à l’API.
+
+L’exécutant se remplace lui-même à la fin d’une mise à jour ; son successeur termine les contrôles depuis le reçu durable. Après une interruption pendant remplacement, il tente le retour sécurisé depuis la sauvegarde précédente. Une reprise échouée reste bloquée et conserve les références privées pour l’exploitant : examiner le journal, le rapport et la sauvegarde avant toute restauration manuelle. Ne pas supprimer le marqueur de maintenance tant que la santé et les données ne sont pas validées.
+
+**Limites d’exploitation** : Internet/GitHub/GHCR/Sigstore sont nécessaires depuis l’exécutant uniquement. Les accès privés du guide doivent être renouvelés à leur expiration. Le frontal stable reste à la version `GATEWAY_VERSION` inscrite lors de la première mise à jour web : il ne doit pas être recréé au milieu de l’opération. Son moteur TLS est un composant d’infrastructure à entretenir séparément ; la procédure serveur ci-dessous met également à jour le frontal. Les applications/API/interfaces et l’exécutant évoluent depuis le web, le moteur du frontal suit une fenêtre d’entretien distincte. L’indisponibilité des données pendant sauvegarde/migration dépend de leur volume ; la maintenance n’assure pas la disponibilité en cas de panne de l’hôte, du stockage ou du frontal lui-même. Les proxy/TLS externes restent gérés par l’infrastructure.
+
+
+### 12.1 Procédure serveur de mise à jour et d’entretien du frontal
+
+À faire quand une nouvelle version est annoncée (bandeau « Nouvelle version disponible » dans l'application, ou page **Releases** du dépôt), de préférence en dehors des heures d'utilisation. Pour le premier passage, le dépannage ou l’entretien du frontal, utiliser **un seul script**, `scripts/mettre-a-jour.sh`, qui :
 1. contrôle le serveur (droits, Docker, `.env`, dossier des données, espace disque) ;
 2. affiche la version en service, la version cible et ses **notes de mise à jour** (actions particulières, évolutions de la base, durée estimée), puis demande confirmation ;
 3. refuse de revenir à une version plus ancienne ;
@@ -905,7 +922,7 @@ sudo docker compose ps -a
 
 <!-- ci: run -->
 ```bash
-sudo docker compose logs --tail 100 init db app web
+sudo docker compose logs --tail 100 init db app web gateway updater
 ```
 **Résultat attendu** : les 100 derniers messages de chaque service. Les messages de `app` sont au format JSON ; cherchez `"level":50` (erreur).
 

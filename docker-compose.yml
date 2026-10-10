@@ -19,7 +19,7 @@ x-hardening: &hardening
 
 x-data-dir: &data-dir ${DATA_DIR:-/srv/suivi-audits/donnees}
 
-x-api-image: &api-image ghcr.io/yousername-ha/suivi-audits-api:${APP_VERSION:?Renseigner APP_VERSION dans .env}
+x-api-image: &api-image ${API_IMAGE:-ghcr.io/yousername-ha/suivi-audits-api:${APP_VERSION:?Renseigner APP_VERSION dans .env}}
 
 services:
   # À chaque démarrage : contrôle et prépare DATA_DIR (dossiers, propriétaires, droits), génère les secrets
@@ -109,11 +109,37 @@ services:
 
   web:
     <<: *hardening
-    image: ghcr.io/yousername-ha/suivi-audits-web:${APP_VERSION:?Renseigner APP_VERSION dans .env}
+    image: ${WEB_IMAGE:-ghcr.io/yousername-ha/suivi-audits-web:${APP_VERSION:?Renseigner APP_VERSION dans .env}}
     depends_on:
       app: { condition: service_healthy }
     environment:
       SITE_ADDRESS: ${SITE_ADDRESS:?Renseigner SITE_ADDRESS dans .env}
+      CADDY_TLS: ${CADDY_TLS:-internal}
+      TLS_WEB_MANAGEMENT: ${TLS_WEB_MANAGEMENT:-0}
+      TLS_TERMINATION: ${TLS_TERMINATION:-caddy}
+      WEB_INTERNAL: '1'
+    volumes:
+      - ./certs:/certs:ro
+      - ${DATA_DIR:-/srv/suivi-audits/donnees}/secrets/tls-web:/certs-web:ro
+      - ${DATA_DIR:-/srv/suivi-audits/donnees}/caddy/data:/data
+      - ${DATA_DIR:-/srv/suivi-audits/donnees}/caddy/config:/config
+    networks: [public, edge]
+    read_only: true
+    tmpfs: ['/tmp:size=16m']
+    cap_drop: [ALL]
+    mem_limit: 256m
+
+  # Frontal stable : son image est indépendante des versions applicatives pendant une mise à jour web.
+  gateway:
+    <<: *hardening
+    image: ghcr.io/yousername-ha/suivi-audits-web:${GATEWAY_VERSION:-${APP_VERSION}}
+    depends_on:
+      init: { condition: service_completed_successfully }
+      # Une ancienne installation libère d'abord les ports de web avant de lancer le nouveau frontal.
+      web: { condition: service_started }
+    command: ['/usr/local/bin/demarrer-gateway']
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS}
       CADDY_TLS: ${CADDY_TLS:-internal}
       TLS_WEB_MANAGEMENT: ${TLS_WEB_MANAGEMENT:-0}
       TLS_TERMINATION: ${TLS_TERMINATION:-caddy}
@@ -125,11 +151,39 @@ services:
       - ${DATA_DIR:-/srv/suivi-audits/donnees}/secrets/tls-web:/certs-web:ro
       - ${DATA_DIR:-/srv/suivi-audits/donnees}/caddy/data:/data
       - ${DATA_DIR:-/srv/suivi-audits/donnees}/caddy/config:/config
+      - ${DATA_DIR:-/srv/suivi-audits/donnees}/etat/updates:/updates:ro
     networks: [public, edge]
     read_only: true
     tmpfs: ['/tmp:size=16m']
     cap_drop: [ALL]
     mem_limit: 256m
+
+  # Composant de confiance privilégié, sans port ni API HTTP ; l'API applicative ne reçoit jamais Docker.
+  updater:
+    <<: *hardening
+    image: ${UPDATER_IMAGE:-ghcr.io/yousername-ha/suivi-audits-updater:${APP_VERSION}}
+    depends_on:
+      app: { condition: service_healthy }
+    environment:
+      REPO: ${PWD}
+      PWD: ${PWD}
+      DATA_DIR: ${DATA_DIR:-/srv/suivi-audits/donnees}
+    working_dir: ${PWD}
+    volumes:
+      - .:${PWD}
+      - ${DATA_DIR:-/srv/suivi-audits/donnees}:${DATA_DIR:-/srv/suivi-audits/donnees}
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Identifiants en lecture seule déjà provisionnés par le guide normal.
+      - /root/.ssh:/root/.ssh:ro
+      - /root/.docker:/root/.docker:ro
+    networks: [public]
+    read_only: true
+    tmpfs: ['/tmp:size=256m', '/root:size=32m']
+    cap_drop: [ALL]
+    cap_add: [CHOWN, FOWNER, DAC_OVERRIDE]
+    mem_limit: 512m
+    pids_limit: 128
+    stop_grace_period: 30s
 
   # Antivirus facultatif : docker compose --profile antivirus up -d  (et CLAMAV_HOST=clamav dans .env)
   clamav:

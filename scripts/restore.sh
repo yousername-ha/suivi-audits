@@ -98,7 +98,7 @@ DO $$ BEGIN
   END IF;
 END $$;
 EOSQL
-docker compose up -d
+if [ "${SUIVI_MAJ_WEB:-}" = 1 ]; then docker compose up -d db app web; else docker compose up -d; fi
 attendre_sante "$DELAI" || arret "Application indisponible après restauration ; intervention requise."
 printf '{"date":"%s","archive":%s}\n' "$(horodatage)" "$(json_chaine "$ARCH")" | ecrire_etat "$DATA_DIR/etat/sauvegardes/derniere-restauration.json"
 echo "Restauration terminée."

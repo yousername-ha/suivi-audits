@@ -7,3 +7,4 @@ export * from './settings.js';
 export * from './affichage.js';
 export * from './exploitation.js';
 export * from './modules.js';
+export * from './updates.js';

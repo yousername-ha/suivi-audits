@@ -547,3 +547,26 @@
     display: none;
   }
 }
+
+/* Bandeau discret intégré à l'entête ; aucun espace ajouté lorsqu'il n'y a pas de publication. */
+.shell-top {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.update-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--mantine-spacing-2xs) var(--mantine-spacing-md);
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  font-size: var(--mantine-font-size-xs);
+  line-height: 1.5;
+  color: var(--mantine-color-text);
+  background: var(--suivi-surface);
+  border-bottom: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+}
+.update-notice span {
+  overflow-wrap: anywhere;
+}

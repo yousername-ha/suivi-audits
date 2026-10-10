@@ -23,3 +23,5 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0017](0017-verification-restauration.md) | Vérification préalable et extraction contrôlée des archives de restauration (A1b1) | Acceptée |
 | [0018](0018-exploitation-lot-a.md) | Pilotage hôte, reprise durable, planification et TLS (lot A) | Acceptée |
 | [0019](0019-activation-modules.md) | Activation versionnée des modules, dépendances, garde serveur et conservation des données (B1) | Acceptée |
+
+| [0020](0020-mise-a-jour-integree.md) | Mise à jour web, exécutant isolé et maintenance indépendante | Acceptée |

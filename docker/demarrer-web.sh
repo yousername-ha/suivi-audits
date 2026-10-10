@@ -5,4 +5,7 @@ if [ "${TLS_WEB_MANAGEMENT:-0}" = 1 ] && [ "${TLS_TERMINATION:-caddy}" = caddy ]
   CADDY_TLS='/certs-web/cert.pem /certs-web/key.pem'
   export CADDY_TLS
 fi
+if [ "${WEB_INTERNAL:-0}" = 1 ]; then
+  exec /usr/local/bin/caddy run --config /etc/caddy/Caddyfile.internal --adapter caddyfile
+fi
 exec /usr/local/bin/caddy run --config /etc/caddy/Caddyfile --adapter caddyfile

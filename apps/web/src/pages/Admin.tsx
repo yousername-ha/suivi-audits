@@ -1,6 +1,6 @@
 /* Administration : utilisateurs, groupes, rôles, sessions, journal d'audit, versions, import legacy, système.
    Chaque onglet n'apparaît qu'avec la permission correspondante (le serveur contrôle chaque appel). */
-import { Alert, Anchor, Badge, Button, Card, Group, Stack, Table, Tabs, Text, TextInput, Title } from '@mantine/core';
+import { Alert, Badge, Button, Card, Group, Stack, Table, Tabs, Text, TextInput, Title } from '@mantine/core';
 import type { SystemeOut } from '@suivi/shared';
 import { StatusChip, type Etat } from '@suivi/ui';
 import { notifications } from '@mantine/notifications';
@@ -16,6 +16,7 @@ import { ImportPanel } from './AdminImport';
 import { MursPanel } from './AdminMurs';
 import { BackupsPanel } from './AdminBackups';
 import { ModulesPanel } from './AdminModules';
+import { UpdatesPanel } from '../components/Updates';
 import { OperationsPanel } from './AdminOperations';
 
 const TABS = [
@@ -317,8 +318,7 @@ const RESULTATS: Record<string, [Etat, string]> = {
   abandon: ['neutre', 'Abandonnée'],
 };
 
-/** Exploitation (EXPL-05) : version, mises à jour, sauvegarde, espace disque, nouvelle version. Lecture seule :
-    aucune mise à jour ne se lance depuis le navigateur (scripts/mettre-a-jour.sh sur le serveur). */
+/** Rapports d’exploitation historiques ; les commandes intégrées sont dans UpdatesPanel. */
 function Exploitation() {
   const q = useQuery({ queryKey: ['admin', 'systeme'], queryFn: () => get<SystemeOut>('/api/admin/systeme') });
   const s = q.data;
@@ -328,17 +328,8 @@ function Exploitation() {
   const sv = s.sauvegarde;
   return (
     <Stack>
-      {s.versionDisponible?.nouvelle && (
-        <Alert color="violet" title={`Nouvelle version disponible : ${s.versionDisponible.derniere}`}>
-          Version en service : {s.version}. Lire les{' '}
-          <Anchor href={s.versionDisponible.notes} target="_blank" rel="noreferrer">
-            notes de version
-          </Anchor>
-          , puis mettre à jour sur le serveur : <code>sudo ./scripts/mettre-a-jour.sh --verifier</code>, puis{' '}
-          <code>sudo ./scripts/mettre-a-jour.sh</code> (guide d’installation, étape 12.1).
-        </Alert>
-      )}
       <BackupsPanel />
+      <UpdatesPanel />
       <OperationsPanel />
       {sv.enRetard && (
         <Alert color="red" title="Sauvegarde en retard">

@@ -75,6 +75,8 @@ export function registerRoutes(app: FastifyInstance, svc: Services, defs: RouteD
         }
         let s = await svc.auth.load(req);
         const execute = async () => {
+          if (UNSAFE.has(req.method) && svc.updates.state().maintenance)
+            throw new HttpError(503, 'Mise à jour en cours. Vos données sont conservées.');
           if (s) s = { ...s, user: { ...s.user, rights: await svc.modules.rights(s.user.rights) } };
           let wall: WallSession | null = null;
           if (UNSAFE.has(req.method)) {

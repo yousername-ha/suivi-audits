@@ -64,7 +64,7 @@ if [ -n "$JOB_ID" ]; then
 fi
 [ -d "$DATA_DIR/etat" ] || arret "Dossier d'état absent."
 if [ "${BACKUP_SAUVEGARDE_LOCK_HELD:-}" != 1 ]; then
-  exec 9> "$DATA_DIR/etat/sauvegarde.lock"
+  if [ "${UPDATE_SAUVEGARDE_LOCK_HELD:-}" != 1 ]; then exec 9> "$DATA_DIR/etat/sauvegarde.lock"; fi
 fi
 flock -n 9 || arret "Une sauvegarde est déjà en cours."
 mkdir -p "$DEST"

@@ -197,6 +197,14 @@ function main() {
     dossier(path.join(donnees, 'caddy'), 0, 0, 0o755);
     dossier(path.join(donnees, 'clamav'), CLAMAV_UID, CLAMAV_GID, 0o755);
     dossier(path.join(donnees, 'etat'), 0, 0, 0o755);
+    dossier(path.join(donnees, 'etat', 'updates'), 0, 0, 0o755);
+    const updateSecrets = path.join(donnees, 'update-secrets');
+    dossier(updateSecrets, 0, 0, 0o700);
+    const updateKey = path.join(updateSecrets, 'backup-pass');
+    if (!fs.existsSync(updateKey))
+      fs.writeFileSync(updateKey, crypto.randomBytes(48).toString('base64') + '\n', { mode: 0o600, flag: 'wx' });
+    fs.chownSync(updateKey, 0, 0);
+    fs.chmodSync(updateKey, 0o600);
     dossier(path.join(donnees, 'etat', 'mises-a-jour'), 0, 0, 0o755);
     dossier(path.join(donnees, 'etat', 'sauvegardes'), 0, 0, 0o755);
     const tlsDir = path.join(donnees, 'secrets', 'tls-web');

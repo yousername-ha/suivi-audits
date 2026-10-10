@@ -39,7 +39,7 @@ export function buildLegacyIndex(dir: string): string {
     "function render(o){if(window.__SUIVI_MASK_OBJECTS)window.__SUIVI_MASK_OBJECTS(S);if(window.__SUIVI_ALLOW_PAGE && !window.__SUIVI_ALLOW_PAGE(ui)){ui.tab='dash';}",
   );
   h = h.replace('return nav;}', 'return window.__SUIVI_FILTER_NAV ? window.__SUIVI_FILTER_NAV(nav) : nav;}');
-  const tag = '\n<!--SUIVI-CFG--><script src="shim.js"></script>';
+  const tag = '\n<!--SUIVI-CFG--><script src="shim.js"></script><script defer src="/update/client.js"></script>';
   h = /<meta charset="utf-8">/i.test(h)
     ? h.replace(/<meta charset="utf-8">/i, (m) => m + tag)
     : h.replace(/<head>/i, (m) => m + tag);

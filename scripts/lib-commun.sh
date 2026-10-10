@@ -111,7 +111,13 @@ octets_libres() {
 }
 
 # Commande docker compose dans le dossier de l'application.
-dc() { (cd "$REPO" && docker compose "$@"); }
+dc() {
+  if [ "${SUIVI_MAJ_WEB:-}" = 1 ] && [ "${1:-}" = up ]; then
+    (cd "$REPO" && docker compose "$@" db app web)
+  else
+    (cd "$REPO" && docker compose "$@")
+  fi
+}
 
 # Attente de la santé de « app » (conteneur healthy), puis du site HTTPS (« ok »). Délai en secondes.
 attendre_sante() {

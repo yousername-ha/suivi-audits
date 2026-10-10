@@ -37,7 +37,7 @@ jobs:
       id-token: write
     strategy:
       matrix:
-        image: [api, web]
+        image: [api, web, updater]
     steps:
       - uses: actions/checkout@v5
       - uses: docker/setup-buildx-action@v3
@@ -63,13 +63,13 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           provenance: true
-      - name: Trivy (échec sur CRITICAL) et SBOM
+      - name: Trivy (échec sur HIGH et CRITICAL) et SBOM
         env:
           REF: ghcr.io/yousername-ha/suivi-audits-${{ matrix.image }}@${{ steps.build.outputs.digest }}
         run: |
           set -e
           trivy() { docker run --rm -v "$HOME/.docker:/root/.docker:ro" -v "$PWD:/work" -w /work aquasec/trivy:0.75.0 "$@"; }
-          trivy image --scanners vuln --severity CRITICAL --ignore-unfixed --exit-code 1 --no-progress "$REF"
+          trivy image --scanners vuln --severity HIGH,CRITICAL --exit-code 1 --no-progress "$REF"
           trivy image --format cyclonedx --output sbom.cdx.json "$REF"
       - uses: sigstore/cosign-installer@v3
       - name: Signature et attestation SBOM (cosign, sans clé)
@@ -103,6 +103,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -e
-          for d in sbom-api sbom-web; do mv "$d/sbom.cdx.json" "suivi-audits-${d#sbom-}.cdx.json"; done
+          for d in sbom-api sbom-web sbom-updater; do mv "$d/sbom.cdx.json" "suivi-audits-${d#sbom-}.cdx.json"; done
           gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "Version ${GITHUB_REF_NAME#v}" \
-            --notes-file notes.md suivi-audits-api.cdx.json suivi-audits-web.cdx.json
+            --notes-file notes.md suivi-audits-api.cdx.json suivi-audits-web.cdx.json suivi-audits-updater.cdx.json

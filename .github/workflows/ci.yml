@@ -119,7 +119,7 @@ jobs:
     name: Images, sécurité et pile complète (Playwright)
     runs-on: ubuntu-latest
     needs: [qualite, tests]
-    timeout-minutes: 40
+    timeout-minutes: 55
     env:
       APP_VERSION: ci
     steps:
@@ -149,7 +149,7 @@ jobs:
         run: |
           set -e
           trivy() { docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$HOME/.cache/trivy:/root/.cache/trivy" -v "$PWD:/work" -w /work "$TRIVY_IMAGE" "$@"; }
-          for img in api web; do
+          for img in api web updater; do
             trivy image --scanners vuln --severity HIGH,CRITICAL --exit-code 1 --no-progress "ghcr.io/yousername-ha/suivi-audits-$img:ci"
             trivy image --scanners vuln --severity HIGH,CRITICAL --format table --no-progress "ghcr.io/yousername-ha/suivi-audits-$img:ci"
           done
@@ -163,7 +163,7 @@ jobs:
           mkdir -p sbom
           trivy() { docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$HOME/.cache/trivy:/root/.cache/trivy" -v "$PWD:/work" -w /work "$TRIVY_IMAGE" "$@"; }
           trivy fs --format cyclonedx --output sbom/depot.cdx.json .
-          for img in api web; do trivy image --format cyclonedx --output "sbom/suivi-audits-$img.cdx.json" "ghcr.io/yousername-ha/suivi-audits-$img:ci"; done
+          for img in api web updater; do trivy image --format cyclonedx --output "sbom/suivi-audits-$img.cdx.json" "ghcr.io/yousername-ha/suivi-audits-$img:ci"; done
           sudo chown -R "$USER" sbom
       - uses: actions/upload-artifact@v5
         with:
@@ -221,14 +221,18 @@ jobs:
             tests/e2e/playwright-report/
             tests/e2e/test-results/
 
+      - name: Mise à jour intégrée réelle et retour arrière après migration (publications locales de recette)
+        timeout-minutes: 15
+        run: sudo -E python3 scripts/ci/update-integree.py
+
       - name: Données intactes après suppression des conteneurs, des images et « down -v » (EXPL-01)
         run: |
           set -e
           docker compose exec -T app suivi controle-donnees > "$RUNNER_TEMP/avant.json"
           docker compose down -v
           [ -z "$(docker volume ls -q | grep '^suivi-audits_' || true)" ] || { echo "::error::volume nommé créé par la pile"; exit 1; }
-          docker save -o "$RUNNER_TEMP/images.tar" ghcr.io/yousername-ha/suivi-audits-api:ci ghcr.io/yousername-ha/suivi-audits-web:ci
-          docker image rm ghcr.io/yousername-ha/suivi-audits-api:ci ghcr.io/yousername-ha/suivi-audits-web:ci
+          docker save -o "$RUNNER_TEMP/images.tar" ghcr.io/yousername-ha/suivi-audits-api:ci ghcr.io/yousername-ha/suivi-audits-web:ci ghcr.io/yousername-ha/suivi-audits-updater:ci
+          docker image rm ghcr.io/yousername-ha/suivi-audits-api:ci ghcr.io/yousername-ha/suivi-audits-web:ci ghcr.io/yousername-ha/suivi-audits-updater:ci
           docker load -i "$RUNNER_TEMP/images.tar"
           rm -f "$RUNNER_TEMP/images.tar"
           docker compose up -d

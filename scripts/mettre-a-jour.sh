@@ -80,6 +80,7 @@ MIGRATIONS=''
 SAUVEGARDE=''
 SIGNATURE=''
 PHASE=controles
+if declare -F progression > /dev/null; then progression; fi
 MIGRATION_DOSSIER=0
 MIGRATIONS_AVANT=''
 CONTROLE_AVANT=''
@@ -111,11 +112,28 @@ rapport() { # resultat message
 }
 TMP_RAPPORT=$(mktemp)
 
+# Protocole privé utilisé uniquement par l'exécutant Compose, jamais fourni par l'interface.
+progression() {
+  if [ -n "${SUIVI_UPDATE_PROGRESS:-}" ]; then
+    SUIVI_PROGRESS_PHASE="$PHASE" SUIVI_PROGRESS_BACKUP="$SAUVEGARDE" python3 - <<'PYPROGRESS'
+import json, os, tempfile
+p=os.environ['SUIVI_UPDATE_PROGRESS']
+fd, name=tempfile.mkstemp(dir=os.path.dirname(p))
+with os.fdopen(fd, 'w') as f:
+    json.dump({'jobId':os.environ['SUIVI_UPDATE_JOB'], 'phase':os.environ['SUIVI_PROGRESS_PHASE'], 'backup':os.environ['SUIVI_PROGRESS_BACKUP']}, f)
+    f.flush(); os.fsync(f.fileno())
+os.replace(name,p)
+PYPROGRESS
+  fi
+}
+progression
+
 # ---------------------------------------------------------------- Retour arrière
 retour_arriere() { # raison
   local raison="$1" apres
   erreur "mise à jour vers $CIBLE en échec ($PHASE) : $raison"
   PHASE="retour arrière ($PHASE)"
+  progression
   etape "Retour arrière vers $ACTUELLE"
   apres=$(migrations_appliquees)
   # Migrations appliquées pendant la tentative (consignées dans le rapport).
@@ -179,8 +197,8 @@ docker compose version > /dev/null 2>&1 || arret "docker compose est introuvable
 [ -f "$REPO/.env" ] || arret "fichier .env absent dans $REPO."
 [ -n "$ACTUELLE" ] || arret "APP_VERSION absent de .env."
 verifier_chemin_donnees "$DATA_DIR"
-exec 9> /run/lock/suivi-audits-mise-a-jour.lock 2> /dev/null || exec 9> /tmp/suivi-audits-mise-a-jour.lock
-flock -n 9 || arret "une autre mise à jour est en cours."
+exec 7> /run/lock/suivi-audits-mise-a-jour.lock 2> /dev/null || exec 7> /tmp/suivi-audits-mise-a-jour.lock
+flock -n 7 || arret "une autre mise à jour est en cours."
 if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
   git status --short --untracked-files=no >&2
   arret "des fichiers suivis par git ont été modifiés sur le serveur : les remettre en état (git diff) avant de mettre à jour."
@@ -223,6 +241,7 @@ fi
 
 # ---------------------------------------------------------------- 2. Notes de mise à jour
 PHASE=notes
+if declare -F progression > /dev/null; then progression; fi
 etape "Notes de mise à jour ($ACTUELLE → $CIBLE)"
 NOTES=$(git show "v$CIBLE:CHANGELOG.md" | awk -v de="$ACTUELLE" -v a="$CIBLE" '
   function vers(s) { split(s, t, "."); return t[1] * 1000000 + t[2] * 1000 + t[3] }
@@ -248,6 +267,7 @@ confirmer "Mettre à jour vers $CIBLE ? L'application sera indisponible quelques
 
 # ---------------------------------------------------------------- 3. Sauvegarde chiffrée obligatoire
 PHASE=sauvegarde
+if declare -F progression > /dev/null; then progression; fi
 etape "Sauvegarde chiffrée"
 mkdir -p "$SAUV/avant-mise-a-jour"
 sortie=$(RETENTION_DAYS=36500 BACKUP_PREFIXE="avant-maj-$ACTUELLE-vers-$CIBLE" BACKUP_PASSPHRASE_FILE="$PASS" \
@@ -268,10 +288,38 @@ CONTROLE_AVANT=$(dc exec -T app suivi controle-donnees 2> /dev/null || true)
 
 # ---------------------------------------------------------------- 4. Version du dépôt et images
 PHASE=images
+if declare -F progression > /dev/null; then progression; fi
 etape "Version $CIBLE du dépôt et images"
 cp -p "$REPO/.env" "$REPO/.env.avant-mise-a-jour"
 git checkout -q "v$CIBLE"
 . "$REPO/scripts/lib-commun.sh"
+if [ "${SUIVI_MAJ_WEB:-}" = 1 ]; then
+  ecrire_env GATEWAY_VERSION "$(valeur_env GATEWAY_VERSION "$ACTUELLE")"
+  # --images-locales est une option CLI de recette ; jamais exposée dans la demande web.
+  if [ "$LOCALES" = 1 ]; then
+    sed -i '/^API_IMAGE=/d; /^WEB_IMAGE=/d; /^UPDATER_IMAGE=/d' "$REPO/.env"
+  else
+  # Images déjà vérifiées par l'exécutant, références immuables validées avant application.
+  python3 - <<'PYPINS'
+import json, os, re
+from pathlib import Path
+images=json.loads(os.environ['SUIVI_UPDATE_IMAGES'])
+p=Path('.env')
+s=p.read_text()
+for component,key in [('api','API_IMAGE'),('web','WEB_IMAGE'),('updater','UPDATER_IMAGE')]:
+    image=images[component]
+    if not re.fullmatch(r'ghcr.io/yousername-ha/suivi-audits-'+component+r'@sha256:[a-f0-9]{64}',image):
+        raise ValueError('Image invalide')
+    s=re.sub(r'^'+key+r'=.*\n?', '', s, flags=re.M)
+    s+='\n'+key+'='+image+'\n'
+p.write_text(s)
+PYPINS
+  fi
+fi
+if [ "${SUIVI_MAJ_WEB:-}" != 1 ]; then
+  sed -i '/^API_IMAGE=/d; /^WEB_IMAGE=/d; /^UPDATER_IMAGE=/d' "$REPO/.env"
+  if [ -n "$(valeur_env GATEWAY_VERSION)" ]; then ecrire_env GATEWAY_VERSION "$CIBLE"; fi
+fi
 if [ "$LOCALES" = 0 ]; then
   APP_VERSION="$CIBLE" dc pull --quiet
   if command -v cosign > /dev/null; then
@@ -288,6 +336,7 @@ ecrire_env APP_VERSION "$CIBLE"
 
 # ---------------------------------------------------------------- 5. Démarrage, migrations, santé
 PHASE=demarrage
+if declare -F progression > /dev/null; then progression; fi
 if [ -n "$VOLS" ] && ! donnees_preparees; then
   MIGRATION_DOSSIER=1
   "$REPO/scripts/migrer-donnees-vers-dossier.sh" --oui --sans-sauvegarde || retour_arriere "échec du passage des données vers $DATA_DIR"
@@ -296,6 +345,7 @@ else
   dc up -d --remove-orphans
 fi
 PHASE=sante
+if declare -F progression > /dev/null; then progression; fi
 attendre_sante "$DELAI" || retour_arriere "l'application ne devient pas « healthy » en $DELAI s"
 pret=$(dc exec -T app node -e "fetch('http://127.0.0.1:8080/api/health/ready').then(r=>r.text()).then(t=>console.log(t)).catch(e=>console.log(e.message))" 2> /dev/null || true)
 info "Santé : $pret"
@@ -314,6 +364,7 @@ MIGRATIONS=$(comm -13 <(printf '%s\n' "$MIGRATIONS_AVANT" | sort) <(migrations_a
 
 # ---------------------------------------------------------------- 6. Rapport, journal, ménage
 PHASE=termine
+if declare -F progression > /dev/null; then progression; fi
 etape "Mise à jour terminée : $ACTUELLE → $CIBLE"
 [ -n "$MIGRATIONS" ] && info "Migrations appliquées : $MIGRATIONS"
 rapport reussie ''

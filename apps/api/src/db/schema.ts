@@ -374,3 +374,16 @@ export const moduleActivation = pgTable('module_activation', {
   updatedAt: tstz('updated_at').notNull().defaultNow(),
   updatedBy: text('updated_by').notNull().default(''),
 });
+
+export const updateJobs = pgTable('update_jobs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  requestId: uuid('request_id').notNull().unique(),
+  kind: text('kind').notNull(),
+  target: text('target'),
+  status: text('status').notNull().default('queued'),
+  requestedBy: text('requested_by').notNull(),
+  userId: uuid('user_id').references(() => users.id),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  startedAt: tstz('started_at'),
+  finishedAt: tstz('finished_at'),
+});

@@ -66,6 +66,29 @@ async function main() {
   };
   await svc.db.waitReady(5);
   switch (cmd) {
+    case 'update-sync': {
+      await svc.updates.synchronize();
+      break;
+    }
+    case 'update-drain': {
+      const c = await svc.db.pool.connect();
+      try {
+        await c.query('SELECT pg_advisory_lock(727276)');
+        await c.query('SELECT pg_advisory_unlock(727276)');
+      } finally {
+        c.release();
+      }
+      break;
+    }
+    case 'update-claim': {
+      const job = await svc.updates.claim();
+      if (job) console.log(JSON.stringify(job));
+      break;
+    }
+    case 'update-finish': {
+      await svc.updates.finish(arg ?? '', extra ?? '');
+      break;
+    }
     case 'backup-worker': {
       if (!['ready', 'unavailable'].includes(arg ?? '')) throw new Error('État worker invalide.');
       await svc.backups.heartbeat(arg === 'ready');

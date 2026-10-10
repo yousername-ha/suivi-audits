@@ -51,9 +51,14 @@ RUN --mount=type=secret,id=build_ca \
  # et incompatible avec cap_drop: ALL (exécution refusée).
  && chmod 0555 /usr/local/bin/caddy && rm /usr/bin/caddy
 COPY docker/Caddyfile /etc/caddy/Caddyfile
+COPY docker/Caddyfile.gateway docker/Caddyfile.internal /etc/caddy/
+COPY docker/maintenance /maintenance
+COPY --from=build /src/apps/web/src/generated/mantine-vars.css /maintenance/theme.css
+COPY packages/ui/src/fonts /maintenance/fonts
 COPY --chmod=0555 docker/demarrer-web.sh /usr/local/bin/demarrer-web
+COPY --chmod=0555 docker/demarrer-gateway.sh /usr/local/bin/demarrer-gateway
 COPY --from=build /src/apps/web/dist /srv
-RUN chown -R root:root /srv /etc/caddy && chmod -R a-w,a+rX /srv /etc/caddy
+RUN chown -R root:root /srv /etc/caddy /maintenance && chmod -R a-w,a+rX /srv /etc/caddy /maintenance
 USER caddy
 EXPOSE 8080 8443
 CMD ["/usr/local/bin/demarrer-web"]
