@@ -10,3 +10,7 @@ Analyse avant toute évolution, depuis `661309c`, sur `feature/gpt6-evolution-sm
 - La chaîne initiale publiait les étiquettes d'images avant ses scans/signatures et mettait à jour l'alias mineur. La livraison de développement doit conserver les alias stables et exposer les trois étiquettes numériques seulement après tous les contrôles.
 
 Décision : numéro de transport `3.0.1`, manifeste de développement versionné, tag depuis la branche de travail après CI/CodeQL verts, préversion GitHub explicite, images exactes scannées/signées, aucun alias stable ni changement de main. Aucun changement de l'authentification, des migrations, de l'interface ou de l'exécutant requis. Les installations locales doivent annoncer un numéro numérique inférieur à la cible ; les installations v2 nécessitent encore la montée de version serveur préalable. Un canal de test isolé ou les préversions d'un futur dépôt public nécessiteraient une évolution distincte.
+
+## Reprise de publication
+
+La tentative `v3.0.1` du commit `cc285b4`, après CI et CodeQL réussis, a échoué dans `actions/setup-node@v5` avant toute construction/publication d'image : le cache automatique découvre `packageManager: pnpm` mais pnpm n'est pas installé dans le job des notes, qui utilise seulement Node et Git. Le cache est désactivé explicitement pour ce job. L'étiquette existante reste immuable ; la publication suivante utilise `3.0.2`, avec les mêmes fonctionnalités et des contrôles sur son propre commit.

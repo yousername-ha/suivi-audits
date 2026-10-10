@@ -4,7 +4,7 @@ Ce guide part d'un serveur vide et ne suppose aucune connaissance de Linux ni de
 
 > **Branche de travail Sauge (lot d’intégration, 9 octobre 2026).** La branche
 > `feature/gpt6-evolution-smsi-grc` reprend le ZIP fourni, sans fusion vers `main`.
-> La préversion numérotée **3.0.1** est préparée pour les tests depuis cette branche (section 12.0).
+> La préversion numérotée **3.0.2** est préparée pour les tests depuis cette branche (section 12.0).
 > La version 2 du dépôt est conservée intégralement dans
 > `archives/v2-source.zip` et vérifiable avec `archives/v2-manifest.json`.
 > Le guide ci-dessous décrit le déploiement v3 ; il ne faut pas l’appliquer à une
@@ -712,7 +712,7 @@ Le script vérifie l'empreinte et la structure, puis demande de taper `RESTAURER
 
 **11.5 Activer les demandes manuelles depuis Administration > Système (A1a).**
 
-**Installation normale depuis 3.0.1 : déjà activé automatiquement.** Le service `updater` exécute également le poller commun, sans cron supplémentaire. Passer à la section 11.6 pour la clé et le catalogue. Les commandes A1a ci-dessous restent utiles uniquement pour les installations antérieures ou un exécutant hôte choisi explicitement.
+**Installation normale depuis 3.0.2 : déjà activé automatiquement.** Le service `updater` exécute également le poller commun, sans cron supplémentaire. Passer à la section 11.6 pour la clé et le catalogue. Les commandes A1a ci-dessous restent utiles uniquement pour les installations antérieures ou un exécutant hôte choisi explicitement.
 
 La migration additive `006_sauvegardes.sql` est appliquée au démarrage. L’application enregistre une demande ; elle n’exécute aucun shell et ne reçoit ni clé ni chemin. Un exécutant sur le serveur interroge la file. Il réutilise `backup.sh`, avec chiffrement obligatoire. La restauration reste la procédure 11.4 ; l’empreinte SHA-256 vérifie la cohérence du fichier, pas son authenticité ni sa restaurabilité.
 
@@ -745,7 +745,7 @@ Recette après configuration : confirmer une demande, attendre son résultat « 
 
 ### 11.6 Pilotage complet du lot A (poller commun)
 
-La migration additive `007_exploitation.sql` est appliquée au démarrage. À partir de **3.0.1**, le service `updater` de l'installation Compose exécute le poller commun automatiquement : sauvegardes manuelles/planifiées, catalogue, vérifications, restaurations et TLS autorisé. Aucun nouveau service, paquet ni cron. Il utilise par défaut **`DATA_DIR/sauvegardes`** (privé, persistant) et la clé déjà générée **`DATA_DIR/update-secrets/backup-pass`** (root 0600, hors API). Conserver cette clé dans le coffre-fort et externaliser les archives. Aucun secret existant n'est remplacé. Les verrous hôte et SQL empêchent les opérations concurrentes ; une mise à jour attend le passage actif. Les fichiers temporaires volumineux sont dans `DATA_DIR/reprise-exploitation/tmp`, hors du petit `/tmp` du conteneur.
+La migration additive `007_exploitation.sql` est appliquée au démarrage. À partir de **3.0.2**, le service `updater` de l'installation Compose exécute le poller commun automatiquement : sauvegardes manuelles/planifiées, catalogue, vérifications, restaurations et TLS autorisé. Aucun nouveau service, paquet ni cron. Il utilise par défaut **`DATA_DIR/sauvegardes`** (privé, persistant) et la clé déjà générée **`DATA_DIR/update-secrets/backup-pass`** (root 0600, hors API). Conserver cette clé dans le coffre-fort et externaliser les archives. Aucun secret existant n'est remplacé. Les verrous hôte et SQL empêchent les opérations concurrentes ; une mise à jour attend le passage actif. Les fichiers temporaires volumineux sont dans `DATA_DIR/reprise-exploitation/tmp`, hors du petit `/tmp` du conteneur.
 
 **Catalogue existant** : renseigner les chemins serveur `BACKUP_DEST` et `BACKUP_PASSPHRASE_FILE` dans `.env`, puis redémarrer `updater` ; Compose les monte pour l'exécutant, sans les exposer à l'API. Garder la clé d'origine pour déchiffrer les anciennes archives. Le dossier doit être persistant, possédé par root et non modifiable par le groupe/les autres comptes ; la clé est régulière, non vide, root 0600. La nouvelle clé par défaut ne déchiffre pas les anciennes archives créées avec une autre clé. Aucun cron existant n'est supprimé ou changé : éviter de planifier deux sauvegardes nocturnes pour le même besoin, même si les verrous empêchent une exécution simultanée.
 
@@ -820,11 +820,11 @@ L’exécutant se remplace lui-même à la fin d’une mise à jour ; son succes
 
 ### 12.0 Tester la branche depuis le menu de mise à jour
 
-La livraison **3.0.1 — Test de développement** regroupe la branche `feature/gpt6-evolution-smsi-grc`, avec G/H/K et le début E. Elle est marquée **Pre-release** sur GitHub et ne modifie ni `main`, ni les alias d'images stables. Les images API, web et updater sont publiées/signées seulement après la réussite des contrôles CI et CodeQL du commit exact, puis de leurs scans HIGH/CRITICAL et de leurs signatures. Les étiquettes d'images installables ne sont exposées qu'une fois les trois composants validés.
+La livraison **3.0.2 — Test de développement** regroupe la branche `feature/gpt6-evolution-smsi-grc`, avec G/H/K et le début E. Elle est marquée **Pre-release** sur GitHub et ne modifie ni `main`, ni les alias d'images stables. Les images API, web et updater sont publiées/signées seulement après la réussite des contrôles CI et CodeQL du commit exact, puis de leurs scans HIGH/CRITICAL et de leurs signatures. Les étiquettes d'images installables ne sont exposées qu'une fois les trois composants validés.
 
-Sur une installation **v3** de ce **dépôt privé**, disposant déjà de `gateway`/`updater` et des accès Git/GHCR du guide, ouvrir **Administration → Système → Mise à jour de l’application**, choisir **Vérifier**, lire les nouveautés de `3.0.1`, puis confirmer **METTRE À JOUR**. La sauvegarde chiffrée, la maintenance persistante, les contrôles et le retour arrière sont ceux décrits ci-dessus. Aucune installation automatique.
+Sur une installation **v3** de ce **dépôt privé**, disposant déjà de `gateway`/`updater` et des accès Git/GHCR du guide, ouvrir **Administration → Système → Mise à jour de l’application**, choisir **Vérifier**, lire les nouveautés de `3.0.2`, puis confirmer **METTRE À JOUR**. La sauvegarde chiffrée, la maintenance persistante, les contrôles et le retour arrière sont ceux décrits ci-dessus. Aucune installation automatique.
 
-Tous les serveurs autorisés sur ce dépôt privé peuvent voir cette préversion numérotée ; l'ancien menu ne dispose pas de canal de test séparé. Une éventuelle ouverture publique du dépôt demande une évolution de la sélection des préversions, car `/releases/latest` les exclut. Les installations v2 suivent d'abord la montée de version 12.4. Une installation déjà en `3.0.1` n'a pas de nouvelle version à installer.
+Tous les serveurs autorisés sur ce dépôt privé peuvent voir cette préversion numérotée ; l'ancien menu ne dispose pas de canal de test séparé. Une éventuelle ouverture publique du dépôt demande une évolution de la sélection des préversions, car `/releases/latest` les exclut. Les installations v2 suivent d'abord la montée de version 12.4. Une installation déjà en `3.0.2` n'a pas de nouvelle version à installer.
 
 **Installation construite localement avec `APP_VERSION=test`, `local` ou `ci`** : ces noms ne permettent pas une comparaison de versions. Dans le dossier de l'application, normaliser une seule fois la version de la construction locale en `3.0.0`, sans toucher aux données ni à la clé de chiffrement. La commande `up --no-deps` conserve la base et le frontal ; les images locales déjà construites sont réutilisées.
 
