@@ -111,6 +111,29 @@ test('SMSI : objet relié, correspondance revue, indicateurs et rapport comité 
       .fill('Validation humaine documentée pour le comité');
     await page.getByRole('button', { name: 'Confirmer la validation humaine', exact: true }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Historique et détail', exact: true }).click();
+    await expect(page.getByRole('dialog').getByText(/Version 2/)).toBeVisible();
+    await page.getByRole('dialog').getByRole('button', { name: 'Fermer l’historique' }).click();
+    await page.getByRole('button', { name: 'Modifier la correspondance', exact: true }).click();
+    await page
+      .getByRole('dialog')
+      .getByLabel('Justification de la correspondance', { exact: true })
+      .fill('Critères partiels examinés après révision de recette');
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: 'Enregistrer et soumettre à nouveau à revue', exact: true })
+      .click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    const revised = await (await page.request.get(prefix + '/objects?kind=mapping')).json();
+    expect(revised.items[0].data.status).toBe('proposed');
+    expect(revised.items[0].version).toBe(3);
+    await page.getByRole('button', { name: 'Revue humaine', exact: true }).click();
+    await page
+      .getByRole('dialog')
+      .getByLabel('Décision et justification de la revue humaine', { exact: true })
+      .fill('Nouvelle validation motivée après modification');
+    await page.getByRole('button', { name: 'Confirmer la validation humaine', exact: true }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
     await page.getByRole('tab', { name: 'Tableau de bord SMSI', exact: true }).click();
     await expect(page.getByText('Référentiels activés et correspondances revues', { exact: true })).toBeVisible();
     await page.getByRole('tab', { name: 'Import / export', exact: true }).click();
@@ -120,7 +143,7 @@ test('SMSI : objet relié, correspondance revue, indicateurs et rapport comité 
     expect(download.suggestedFilename()).toBe('rapport-comite-smsi.html');
     const html = await (await import('node:fs/promises')).readFile((await download.path())!, 'utf8');
     expect(html).toContain('Correspondances validées');
-    expect(html).toContain('Critères partiels examinés');
+    expect(html).toContain('Critères partiels examinés après révision de recette');
     expect(html).not.toContain('<script');
     expect(problems).toEqual([]);
   } finally {

@@ -466,10 +466,25 @@ function MappingPanel({ smsi }: { smsi: string }) {
     qc = useQueryClient(),
     [note, setNote] = useState(''),
     [confirm, setConfirm] = useState<GrcObject | null>(null),
+    [detail, setDetail] = useState<GrcObject | null>(null),
+    [editing, setEditing] = useState<GrcObject | null>(null),
     [error, setError] = useState<unknown>(null);
-  const list = useQuery({
+  const list = useInfiniteQuery({
     queryKey: ['grc', smsi, 'mappings'],
-    queryFn: () => get<{ items: GrcObject[] }>(`/api/grc/${smsi}/objects?kind=mapping`),
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) =>
+      get<{ items: GrcObject[]; nextOffset: number | null }>(
+        `/api/grc/${smsi}/objects?kind=mapping&offset=${pageParam}`,
+      ),
+    getNextPageParam: (p) => p.nextOffset ?? undefined,
+  });
+  const history = useQuery({
+    queryKey: ['grc', smsi, 'mapping-history', detail?.id],
+    queryFn: () =>
+      get<{ version: number; createdBy: string; createdAt: string; reason: string; snapshot: GrcObject }[]>(
+        `/api/grc/${smsi}/objects/${detail!.id}/history`,
+      ),
+    enabled: !!detail,
   });
   return (
     <Stack>
@@ -479,34 +494,86 @@ function MappingPanel({ smsi }: { smsi: string }) {
       </Alert>
       <ErrorAlert error={error ?? list.error} />
       {can('conformite', 'modifier') && <MappingForm smsi={smsi} />}
-      {list.data?.items.map((m) => (
-        <Card withBorder key={m.id}>
-          <Text>
-            {m.name} · {String(m.data.status)} · {String(m.data.origin)}
-          </Text>
-          <Text>{String(m.data.justification)}</Text>
-          <Text>
-            Couverture justifiée : {Number(m.data.coverage)} % · {String(m.data.type)}
-          </Text>
-          <Button
-            variant="subtle"
-            disabled={!can('import_export', 'exporter') || !can('conformite', 'exporter')}
-            onClick={async () => {
-              try {
-                await get(`/api/grc/${smsi}/export/authorize?kind=frameworks`);
-                saveBlob('mapping-' + m.id + '.json', JSON.stringify(m, null, 2));
-              } catch (e) {
-                setError(e);
-              }
-            }}
-          >
-            Exporter la fiche
-          </Button>
-          {can('conformite', 'administrer') && m.data.status !== 'validated' && (
-            <Button onClick={() => setConfirm(m)}>Revue humaine</Button>
-          )}
-        </Card>
-      ))}
+      {list.data?.pages
+        .flatMap((p) => p.items)
+        .map((m) => (
+          <Card withBorder key={m.id}>
+            <Text>
+              {m.name} · {String(m.data.status)} · {String(m.data.origin)}
+            </Text>
+            <Text>{String(m.data.justification)}</Text>
+            <Text size="sm">
+              Fiche version {m.version} · {m.updatedBy} · {new Date(m.updatedAt).toLocaleString('fr-FR')}
+            </Text>
+            <Button variant="light" onClick={() => setDetail(m)}>
+              Historique et détail
+            </Button>
+            {can('conformite', 'modifier') && (
+              <Button variant="subtle" onClick={() => setEditing(m)}>
+                Modifier la correspondance
+              </Button>
+            )}
+            <Text>
+              Couverture justifiée : {Number(m.data.coverage)} % · {String(m.data.type)}
+            </Text>
+            <Button
+              variant="subtle"
+              disabled={!can('import_export', 'exporter') || !can('conformite', 'exporter')}
+              onClick={async () => {
+                try {
+                  await get(`/api/grc/${smsi}/export/authorize?kind=frameworks`);
+                  saveBlob('mapping-' + m.id + '.json', JSON.stringify(m, null, 2));
+                } catch (e) {
+                  setError(e);
+                }
+              }}
+            >
+              Exporter la fiche
+            </Button>
+            {can('conformite', 'administrer') && m.data.status !== 'validated' && (
+              <Button onClick={() => setConfirm(m)}>Revue humaine</Button>
+            )}
+          </Card>
+        ))}
+      {list.hasNextPage && (
+        <Button variant="light" onClick={() => void list.fetchNextPage()}>
+          Charger les 50 correspondances suivantes
+        </Button>
+      )}
+      <Modal opened={!!editing} onClose={() => setEditing(null)} title="Modifier la correspondance" size="lg">
+        <Alert>
+          Une modification remet la correspondance à l’état proposé. Sa couverture validée exige une nouvelle revue
+          humaine.
+        </Alert>
+        {editing && (
+          <MappingForm
+            key={editing.id + editing.version}
+            smsi={smsi}
+            object={editing}
+            onSaved={() => setEditing(null)}
+          />
+        )}
+      </Modal>
+      <Modal
+        opened={!!detail}
+        onClose={() => setDetail(null)}
+        title="Historique de la correspondance"
+        closeButtonProps={{ 'aria-label': 'Fermer l’historique' }}
+        size="lg"
+      >
+        <Stack>
+          <ErrorAlert error={history.error} />
+          {history.data?.map((h) => (
+            <Card key={h.version} withBorder>
+              <Text fw={600}>
+                Version {h.version} · {h.createdBy} · {new Date(h.createdAt).toLocaleString('fr-FR')}
+              </Text>
+              <Text>{h.reason}</Text>
+              <Text component="pre">{JSON.stringify(h.snapshot.data, null, 2)}</Text>
+            </Card>
+          ))}
+        </Stack>
+      </Modal>
       <Modal opened={!!confirm} onClose={() => setConfirm(null)} title="Valider la correspondance">
         <Stack>
           <Textarea

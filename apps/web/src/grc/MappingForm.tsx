@@ -65,15 +65,16 @@ function RequirementPicker({
     </Stack>
   );
 }
-export function MappingForm({ smsi }: { smsi: string }) {
+export function MappingForm({ smsi, object, onSaved }: { smsi: string; object?: GrcObject; onSaved?: () => void }) {
+  const initial = object?.data as MappingData | undefined;
   const qc = useQueryClient(),
-    [source, setSource] = useState(empty),
-    [target, setTarget] = useState(empty),
-    [type, setType] = useState<MappingData['type']>('related'),
-    [coverage, setCoverage] = useState(0),
-    [justification, setJustification] = useState(''),
-    [sourceUrl, setSourceUrl] = useState(''),
-    [origin, setOrigin] = useState<'human' | 'ai'>('human'),
+    [source, setSource] = useState(initial?.source ?? empty),
+    [target, setTarget] = useState(initial?.target ?? empty),
+    [type, setType] = useState<MappingData['type']>(initial?.type ?? 'related'),
+    [coverage, setCoverage] = useState(initial?.coverage ?? 0),
+    [justification, setJustification] = useState(initial?.justification ?? ''),
+    [sourceUrl, setSourceUrl] = useState(initial?.sourceUrl ?? ''),
+    [origin, setOrigin] = useState<'human' | 'ai'>(initial?.origin ?? 'human'),
     [error, setError] = useState<unknown>(null),
     [saving, setSaving] = useState(false);
   return (
@@ -127,7 +128,8 @@ export function MappingForm({ smsi }: { smsi: string }) {
         onClick={async () => {
           setSaving(true);
           try {
-            await api('POST', `/api/grc/${smsi}/objects`, {
+            await api(object ? 'PUT' : 'POST', `/api/grc/${smsi}/objects${object ? '/' + object.id : ''}`, {
+              ifMatch: object?.version,
               body: {
                 kind: 'mapping',
                 name: source.requirementId + ' → ' + target.requirementId,
@@ -146,6 +148,7 @@ export function MappingForm({ smsi }: { smsi: string }) {
             });
             await qc.invalidateQueries({ queryKey: ['grc', smsi] });
             setJustification('');
+            onSaved?.();
           } catch (e) {
             setError(e);
           } finally {
@@ -153,7 +156,7 @@ export function MappingForm({ smsi }: { smsi: string }) {
           }
         }}
       >
-        Enregistrer la proposition
+        {object ? 'Enregistrer et soumettre à nouveau à revue' : 'Enregistrer la proposition'}
       </Button>
     </Stack>
   );
