@@ -1,8 +1,9 @@
-# Suivi des audits SMSI ISO 27001 / HDS
+# Suivi des audits et pilotage multi-référentiels
 
-Application web auto-hébergée de pilotage du SMSI du GCS Normand'e-Santé (RSSI) : préparation et suivi des audits ISO 27001 / HDS, écarts et actions, documents et preuves. Elle remplace, module par module, l'outil historique en fichier unique, qui reste disponible sous `/legacy` pendant la transition.
+Application web auto-hébergée de pilotage du GCS Normand'e-Santé : qualité, sécurité et référentiels, préparation et suivi des audits, écarts et actions, documents et preuves. Le menu Pilotage accompagne les démarches SMQ (ISO 9001), SMSI (ISO 27001), HDS et intégrées, sans imposer la création d’un SMSI. Elle remplace, module par module, l'outil historique en fichier unique, qui reste disponible sous `/legacy` pendant la transition.
 
 - **Installation pas à pas : [docs/INSTALLATION.md](docs/INSTALLATION.md)** (guide pour débutant, rejoué automatiquement en CI)
+- Guide métier : [docs/PILOTAGE.md](docs/PILOTAGE.md) — [lots G/H/K et début E, limites](docs/LOT-G-H-K-DEBUT-E.md)
 - Architecture et modèle de sécurité : [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - Feuille de route : [docs/ROADMAP.md](docs/ROADMAP.md) — décisions : [docs/adr/](docs/adr/README.md)
 - Reprise des données de l'ancien outil : [docs/legacy/IMPORT-LEGACY.md](docs/legacy/IMPORT-LEGACY.md), [format](docs/legacy/LEGACY-FORMAT.md), [correspondance](docs/legacy/MAPPING-LEGACY.md)
@@ -72,6 +73,7 @@ Voir [CONTRIBUTING.md](CONTRIBUTING.md) pour l'organisation du dépôt, les test
 
 ## Limites connues (phase 0)
 
-- Les modules métier (écarts, mesures, processus…) sont encore gérés dans l'outil historique (`/legacy`), enregistrés comme un document unique avec contrôle de version global. Ils sont repris un par un dans la nouvelle interface ([feuille de route](docs/ROADMAP.md)).
+- Les données historiques de contexte, parties intéressées, responsabilités, processus, objectifs, indicateurs, preuves, constats et revues sont éditées directement depuis Pilotage ; leurs champs supplémentaires sont conservés. Les autres écrans historiques restent accessibles sous `/legacy` pendant leur reprise ([feuille de route](docs/ROADMAP.md)).
+- Le lot E est partiel : BIA, plans et exercices génériques ; les grilles officielles indisponibles restent à intégrer. D/J/I/F sont exclus de cette livraison.
 - L'outil historique nécessite `'unsafe-inline'` dans sa CSP. La nouvelle interface n'en a pas besoin.
 - La fédération d'identité (OIDC) est prévue en phase 4.

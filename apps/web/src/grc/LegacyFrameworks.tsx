@@ -32,8 +32,8 @@ export function LegacyFrameworks({ smsi }: { smsi: string }) {
   return (
     <Stack>
       <Alert>
-        Socle historique de l’instance : ces données sont relues depuis leur source v2 et restent liées aux objets SMSI
-        sans copie éditable. Leur provenance est celle de l’import d’origine.
+        Socle historique de l’instance : ces données sont relues depuis leur source v2 et restent liées aux objets de
+        pilotage sans copie éditable. Leur provenance est celle de l’import d’origine.
       </Alert>
       <ErrorAlert error={state.error} />
       {(state.data?.frameworks ?? []).map((f) => (

@@ -1,4 +1,5 @@
 import { Button, Card, Select, Stack, Text, Textarea, TextInput } from '@mantine/core';
+import { GRC_LABELS, type GrcKind } from '@suivi/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { api, get } from '../api';
@@ -55,7 +56,10 @@ export function Relations({ smsi, source }: { smsi: string; source: string }) {
         onChange={setTarget}
         data={(options.data?.items ?? [])
           .filter((r) => r.ref !== source)
-          .map((r) => ({ value: r.ref, label: r.name + ' · ' + r.kind }))}
+          .map((r) => ({
+            value: r.ref,
+            label: r.name + ' · ' + (GRC_LABELS[r.kind as GrcKind] ?? 'Donnée existante'),
+          }))}
       />
       <Select
         label="Type de relation"
@@ -79,10 +83,20 @@ export function Relations({ smsi, source }: { smsi: string; source: string }) {
       {links.data?.map((l) => (
         <Card withBorder key={l.id}>
           <Text>
-            {l.other.name} · {l.other.kind}
+            {l.other.name} · {GRC_LABELS[l.other.kind as GrcKind] ?? 'Donnée existante'}
           </Text>
           <Text>
-            {l.type} · {l.note}
+            {{
+              related_to: 'Lié à',
+              supports: 'Supporte',
+              impacts: 'Impacte',
+              applies_to: 'S’applique à',
+              depends_on: 'Dépend de',
+              implements: 'Met en œuvre',
+              demonstrates: 'Démontre',
+              treats: 'Traite',
+            }[l.type as 'related_to'] ?? 'Relation'}{' '}
+            · {l.note}
           </Text>
           {l.derived ? (
             <Text size="sm">Modifier cette référence dans la fiche source.</Text>

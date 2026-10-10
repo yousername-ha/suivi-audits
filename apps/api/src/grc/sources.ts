@@ -1,6 +1,6 @@
 import type { SessionUser } from '../auth.js';
 import type { Module } from '@suivi/shared';
-import { isObject } from '@suivi/shared/legacy';
+import { isObject, type JsonObject } from '@suivi/shared/legacy';
 import type { Grc } from './core.js';
 import { DEFAULT_SMSI } from './core.js';
 export async function sources(g: Grc, smsi: string, user: SessionUser, search: string) {
@@ -58,15 +58,23 @@ export async function sources(g: Grc, smsi: string, user: SessionUser, search: s
       evidences: 'pilotage',
       plans: 'pilotage',
       suppliers: 'fournisseurs',
+      interested: 'pilotage',
+      swots: 'pilotage',
+      roles: 'pilotage',
+      reviews: 'pilotage',
+      scope: 'pilotage',
     };
     for (const [key, module] of Object.entries(allowed)) {
       if (!user.rights.can(module, 'lire')) continue;
-      const rows = state?.data[key];
-      for (const row of Array.isArray(rows) ? rows : []) {
-        if (!isObject(row) || typeof row.id !== 'string') continue;
-        const name = String(row.title ?? row.name ?? row.text ?? row.id);
+      const rows =
+        key === 'scope' && isObject(state?.data.scope) ? [{ ...state.data.scope, id: 'instance' }] : state?.data[key];
+      const entries: JsonObject[] = (Array.isArray(rows) ? (rows as unknown[]) : []).filter(isObject);
+      for (const [index, row] of entries.entries()) {
+        const id = typeof row.id === 'string' ? row.id : key === 'roles' ? '@' + index : null;
+        if (!id) continue;
+        const name = String(row.title ?? row.name ?? row.text ?? row.org ?? id);
         if (name.toLowerCase().includes(search.toLowerCase()) && objects.length < 400)
-          objects.push({ ref: `legacy:${key}:${row.id}`, name, kind: key });
+          objects.push({ ref: `legacy:${key}:${id}`, name, kind: key });
       }
     }
   }

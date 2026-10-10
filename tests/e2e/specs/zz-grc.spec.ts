@@ -13,12 +13,12 @@ async function request(page: Page, path: string, body: unknown, version?: number
   expect(r.ok(), await r.text()).toBeTruthy();
   return r.json();
 }
-test('SMSI : objet relié, correspondance revue, indicateurs et rapport comité utilisables', async ({ browser }) => {
+test('Pilotage : objet relié, correspondance revue, indicateurs et rapport comité utilisables', async ({ browser }) => {
   const ctx = await browser.newContext({ storageState: (await sessionAdmin(browser)).state, ignoreHTTPSErrors: true });
   const page = await ctx.newPage(),
     problems = watchPage(page);
   try {
-    await page.goto('/grc');
+    await page.goto('/pilotage');
     const smsi = await request(page, '/api/grc/smsis', {
       name: 'QA-GRC-comite-' + Date.now(),
       scope: 'Recette isolée du comité',
@@ -72,22 +72,24 @@ test('SMSI : objet relié, correspondance revue, indicateurs et rapport comité 
       );
     }
     await page.reload();
-    await page.getByRole('textbox', { name: 'SMSI actif', exact: true }).click();
+    await page.getByRole('textbox', { name: 'Périmètre affiché', exact: true }).click();
     await page.getByRole('option', { name: smsi.name, exact: true }).click();
-    await page.getByRole('tab', { name: 'Objets SMSI', exact: true }).click();
-    await page.getByRole('textbox', { name: 'Type d’objet SMSI', exact: true }).click();
+    await page.goto('/pilotage/scenarios');
+    await page.getByRole('textbox', { name: 'Type de fiche', exact: true }).click();
     await page.getByRole('option', { name: 'Bien support', exact: true }).click();
     await page.getByRole('button', { name: 'Créer bien support', exact: true }).click();
     const dialog = page.getByRole('dialog');
-    await dialog.getByLabel('Nom de la fiche', { exact: true }).fill('Bien support lié de recette');
+    await dialog.getByLabel('Intitulé', { exact: true }).fill('Bien support lié de recette');
     await dialog.getByLabel('Description', { exact: true }).fill('Objet du socle relié à un processus');
-    await dialog.getByRole('textbox', { name: 'Objets liés dans le référentiel SMSI', exact: true }).click();
+    await dialog.getByRole('tab', { name: 'Liens et justificatifs', exact: true }).click();
+    await dialog.getByRole('textbox', { name: 'Éléments liés', exact: true }).click();
     await page.getByRole('option', { name: process.name, exact: true }).click();
-    await dialog.getByRole('button', { name: 'Enregistrer la fiche', exact: true }).click();
+    await dialog.getByRole('textbox', { name: 'Éléments liés', exact: true }).press('Escape');
+    await dialog.getByRole('button', { name: 'Enregistrer', exact: true }).click();
     await expect(dialog).toHaveCount(0);
     const assets = await (await page.request.get(prefix + '/objects?kind=support_asset')).json();
     expect(assets.items[0].data.refs).toEqual(['object:' + process.id]);
-    await page.getByRole('tab', { name: 'Correspondances', exact: true }).click();
+    await page.goto('/pilotage/correspondances');
     for (const [direction, framework] of [
       ['source', 'PSSI-source'],
       ['cible', 'PSSI-cible'],
@@ -134,11 +136,11 @@ test('SMSI : objet relié, correspondance revue, indicateurs et rapport comité 
       .fill('Nouvelle validation motivée après modification');
     await page.getByRole('button', { name: 'Confirmer la validation humaine', exact: true }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
-    await page.getByRole('tab', { name: 'Tableau de bord SMSI', exact: true }).click();
+    await page.goto('/pilotage/synthese');
     await expect(page.getByText('Référentiels activés et correspondances revues', { exact: true })).toBeVisible();
-    await page.getByRole('tab', { name: 'Import / export', exact: true }).click();
+    await page.goto('/pilotage/imports');
     const promise = page.waitForEvent('download');
-    await page.getByRole('button', { name: 'Rapport comité SMSI / audit', exact: true }).click();
+    await page.getByRole('button', { name: 'Rapport de pilotage / audit', exact: true }).click();
     const download = await promise;
     expect(download.suggestedFilename()).toBe('rapport-comite-smsi.html');
     const html = await (await import('node:fs/promises')).readFile((await download.path())!, 'utf8');
@@ -150,22 +152,23 @@ test('SMSI : objet relié, correspondance revue, indicateurs et rapport comité 
     await ctx.close();
   }
 });
-test('SMSI : action réelle, cinq vues synchronisées, historique et clôture justifiée', async ({ browser }) => {
+test('Pilotage : action réelle, cinq vues synchronisées, historique et clôture justifiée', async ({ browser }) => {
   const ctx = await browser.newContext({ storageState: (await sessionAdmin(browser)).state, ignoreHTTPSErrors: true });
   const page = await ctx.newPage(),
     problems = watchPage(page);
   try {
-    await page.goto('/grc');
-    await expect(page.getByRole('heading', { name: 'Pilotage SMSI', exact: true })).toBeVisible();
+    await page.goto('/pilotage');
+    await expect(page.getByRole('heading', { name: 'Synthèse', exact: true })).toBeVisible();
     const smsi = await request(page, '/api/grc/smsis', {
       name: 'QA-GRC-actions-' + Date.now(),
       scope: 'Recette isolée',
       timezone: 'Europe/Paris',
     });
     await page.reload();
-    await page.getByRole('textbox', { name: 'SMSI actif', exact: true }).click();
+    await page.getByRole('textbox', { name: 'Périmètre affiché', exact: true }).click();
     await page.getByRole('option', { name: smsi.name, exact: true }).click();
-    await page.getByRole('button', { name: 'Créer une action', exact: true }).click();
+    await page.goto('/pilotage/actions');
+    await page.getByRole('button', { name: 'Ajouter une action', exact: true }).click();
     const dialog = page.getByRole('dialog');
     await dialog.getByLabel('Nom de la fiche', { exact: true }).fill('Action synchronisée de recette');
     await dialog.getByLabel('Description', { exact: true }).fill('Vérification de non-régression et preuve');
@@ -204,21 +207,21 @@ test('SMSI : action réelle, cinq vues synchronisées, historique et clôture ju
     await ctx.close();
   }
 });
-test('SMSI : gabarit Excel réel, simulation, import atomique et doublon refusé', async ({ browser }) => {
+test('Pilotage : gabarit Excel réel, simulation, import atomique et doublon refusé', async ({ browser }) => {
   const ctx = await browser.newContext({ storageState: (await sessionAdmin(browser)).state, ignoreHTTPSErrors: true });
   const page = await ctx.newPage(),
     problems = watchPage(page);
   try {
-    await page.goto('/grc');
+    await page.goto('/pilotage');
     const smsi = await request(page, '/api/grc/smsis', {
       name: 'QA-GRC-import-' + Date.now(),
       scope: 'Recette isolée Excel',
       timezone: 'Europe/Paris',
     });
     await page.reload();
-    await page.getByRole('textbox', { name: 'SMSI actif', exact: true }).click();
+    await page.getByRole('textbox', { name: 'Périmètre affiché', exact: true }).click();
     await page.getByRole('option', { name: smsi.name, exact: true }).click();
-    await page.getByRole('tab', { name: 'Import / export', exact: true }).click();
+    await page.goto('/pilotage/imports');
     const promise = page.waitForEvent('download');
     await page.getByRole('button', { name: 'Gabarit et exemple Excel', exact: true }).click();
     const download = await promise;
@@ -243,7 +246,9 @@ test('SMSI : gabarit Excel réel, simulation, import atomique et doublon refusé
     await ctx.close();
   }
 });
-test('SMSI : EBIOS RM publié, appréciation conservée, cartographie et export SVG sur mobile', async ({ browser }) => {
+test('Pilotage : EBIOS RM publié, appréciation conservée, cartographie et export SVG sur mobile', async ({
+  browser,
+}) => {
   const ctx = await browser.newContext({
     storageState: (await sessionAdmin(browser)).state,
     ignoreHTTPSErrors: true,
@@ -252,7 +257,7 @@ test('SMSI : EBIOS RM publié, appréciation conservée, cartographie et export 
   const page = await ctx.newPage(),
     problems = watchPage(page);
   try {
-    await page.goto('/grc');
+    await page.goto('/pilotage');
     const smsi = await request(page, '/api/grc/smsis', {
         name: 'QA-GRC-risques-' + Date.now(),
         scope: 'Recette risques et carte',
@@ -293,9 +298,9 @@ test('SMSI : EBIOS RM publié, appréciation conservée, cartographie et export 
       },
     });
     await page.reload();
-    await page.getByRole('textbox', { name: 'SMSI actif', exact: true }).click();
+    await page.getByRole('textbox', { name: 'Périmètre affiché', exact: true }).click();
     await page.getByRole('option', { name: smsi.name, exact: true }).click();
-    await page.getByRole('tab', { name: 'Risques', exact: true }).click();
+    await page.goto('/pilotage/risques');
     await page.getByRole('button', { name: 'Apprécier / réévaluer', exact: true }).click();
     const dialog = page.getByRole('dialog');
     await dialog
@@ -307,7 +312,7 @@ test('SMSI : EBIOS RM publié, appréciation conservée, cartographie et export 
     await dialog.getByRole('button', { name: 'Confirmer l’enregistrement', exact: true }).click();
     await expect(dialog.getByText(/Révision 1/)).toBeVisible();
     await page.keyboard.press('Escape');
-    await page.getByRole('tab', { name: 'Cartographie des risques', exact: true }).click();
+    await page.goto('/pilotage/carte');
     await expect(page.locator(`.grc-risk-canvas [data-n="object:${risk.id}"]`)).toBeVisible();
     await page.getByRole('button', { name: 'Ajuster la carte', exact: true }).click();
     const downloaded = page.waitForEvent('download');

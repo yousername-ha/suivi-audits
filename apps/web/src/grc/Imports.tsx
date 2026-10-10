@@ -74,7 +74,7 @@ export function Imports({ smsi }: { smsi: string }) {
           onClick={() =>
             saveBlob(
               'guide-import.txt',
-              'Gabarit Excel : quatre feuilles Métadonnées (Champ/Valeur ; source en JSON), Domaines (id/label), Exigences (id/domain/title/description/applicability/measureRefs en JSON), Correspondances (source/target en JSON avec frameworkId/version/requirementId, type/justification/coverage/origin/status/sourceUrl/reviewNote). Les cibles doivent déjà être publiées dans ce SMSI ; les mappings sont toujours proposés. Conserver les noms des feuilles et colonnes. Remplacer toute formule par sa valeur. 8 Mo compressés / 20 Mo décompressés, 10 000 exigences. Indiquer la source officielle, sa version et les droits de reproduction. Les exemples PSSI sont fictifs et organisationnels. Les correspondances importées restent proposées et exigent une revue humaine. Simuler, corriger les erreurs et doublons, puis confirmer IMPORTER. Aucun texte ISO sous licence n’est livré.',
+              'Gabarit Excel : quatre feuilles Métadonnées (Champ/Valeur ; source en JSON), Domaines (id/label), Exigences (id/domain/title/description/applicability/measureRefs en JSON), Correspondances (source/target en JSON avec frameworkId/version/requirementId, type/justification/coverage/origin/status/sourceUrl/reviewNote). Les cibles doivent déjà être publiées dans ce périmètre ; les mappings sont toujours proposés. Conserver les noms des feuilles et colonnes. Remplacer toute formule par sa valeur. 8 Mo compressés / 20 Mo décompressés, 10 000 exigences. Indiquer la source officielle, sa version et les droits de reproduction. Les exemples PSSI sont fictifs et organisationnels. Les correspondances importées restent proposées et exigent une revue humaine. Simuler, corriger les erreurs et doublons, puis confirmer IMPORTER. Aucun texte ISO sous licence n’est livré.',
               'text/plain',
             )
           }
@@ -130,7 +130,7 @@ export function Imports({ smsi }: { smsi: string }) {
           )}
           {confirm && (
             <Alert>
-              <Text>Confirmez l’importation atomique dans le SMSI sélectionné.</Text>
+              <Text>Confirmez l’importation atomique dans le périmètre sélectionné.</Text>
               <Button
                 onClick={async () => {
                   try {
@@ -176,7 +176,7 @@ export function Imports({ smsi }: { smsi: string }) {
               }
             }}
           >
-            Rapport comité SMSI / audit
+            Rapport de pilotage / audit
           </Button>
           <Button
             variant="subtle"

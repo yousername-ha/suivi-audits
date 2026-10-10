@@ -37,8 +37,8 @@ export function BusinessPolicyPanel({ smsi }: { smsi: string }) {
   return (
     <Stack>
       <Alert>
-        Nomenclatures, workflow, modèles, tableaux de bord, notifications et affichage sont publiés ensemble. Un SMSI
-        conserve sa version jusqu’à adoption explicite d’une nouvelle politique compatible.
+        Nomenclatures, workflow, modèles, tableaux de bord, notifications et affichage sont publiés ensemble. Un
+        périmètre conserve sa version jusqu’à adoption explicite d’une nouvelle politique compatible.
       </Alert>
       <ErrorAlert error={error ?? current.error ?? history.error} />
       {current.data && (
@@ -106,7 +106,7 @@ export function BusinessPolicyPanel({ smsi }: { smsi: string }) {
                 }
               }}
             >
-              Adopter la politique globale pour ce SMSI
+              Adopter la politique globale pour ce périmètre
             </Button>
           )}
         </>

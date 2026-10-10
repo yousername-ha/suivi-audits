@@ -38,6 +38,7 @@ export function Publication({ smsi, type }: { smsi: string; type: 'methods' | 'f
   const can = useCan(),
     qc = useQueryClient(),
     [id, setId] = useState<string | null>(null),
+    [editing, setEditing] = useState(false),
     [draft, setDraft] = useState<unknown>(null),
     [reason, setReason] = useState(''),
     [preview, setPreview] = useState<{ previewId: string; version: number; warning?: string | null } | null>(null),
@@ -67,6 +68,7 @@ export function Publication({ smsi, type }: { smsi: string; type: 'methods' | 'f
   );
   const edit = (value: string | null) => {
     setId(value);
+    setEditing(false);
     setHistoricalVersion(null);
     setPreview(null);
     setConfirm(false);
@@ -96,7 +98,7 @@ export function Publication({ smsi, type }: { smsi: string; type: 'methods' | 'f
     <Stack>
       <Alert>
         {type === 'methods'
-          ? 'Chaque SMSI conserve ses méthodes et versions. Les modèles sont des propositions organisationnelles à adapter ; aucun calcul unique n’est imposé.'
+          ? 'Chaque périmètre conserve ses méthodes et versions. Les modèles sont des propositions organisationnelles à adapter ; aucun calcul unique n’est imposé.'
           : 'Activez les référentiels correspondant au périmètre. Les exigences sont issues de leurs publications ; aucun texte ISO sous licence n’est fourni.'}
       </Alert>
       <Select
@@ -139,6 +141,7 @@ export function Publication({ smsi, type }: { smsi: string; type: 'methods' | 'f
                 onClick={() => {
                   setId(null);
                   setDraft(methodTemplate(f));
+                  setEditing(true);
                   setPreview(null);
                 }}
               >
@@ -157,6 +160,7 @@ export function Publication({ smsi, type }: { smsi: string; type: 'methods' | 'f
               onClick={() => {
                 setId(null);
                 setDraft(structuredClone(exampleFramework));
+                setEditing(true);
                 setPreview(null);
               }}
             >
@@ -187,7 +191,12 @@ export function Publication({ smsi, type }: { smsi: string; type: 'methods' | 'f
           >
             Exporter la définition JSON
           </Button>
-          {write ? (
+          {write && !editing && (
+            <Button variant="light" onClick={() => setEditing(true)}>
+              Préparer une nouvelle version
+            </Button>
+          )}
+          {write && editing ? (
             <ConfigurationEditor
               value={draft}
               onChange={(next) => {
@@ -197,9 +206,9 @@ export function Publication({ smsi, type }: { smsi: string; type: 'methods' | 'f
               }}
             />
           ) : (
-            <Text component="pre">{JSON.stringify(draft, null, 2)}</Text>
+            <Text>Consultez les exigences ci-dessous. Pour adapter le contenu, préparez une nouvelle version.</Text>
           )}
-          {write && (
+          {write && editing && (
             <>
               <Button variant="subtle" onClick={() => setAdvanced(JSON.stringify(draft, null, 2))}>
                 Ouvrir le mode JSON avancé
@@ -278,7 +287,7 @@ export function Publication({ smsi, type }: { smsi: string; type: 'methods' | 'f
                 }
               }}
             >
-              Choisir pour les nouveaux risques du SMSI
+              Utiliser pour les nouveaux risques
             </Button>
           </Card>
         ))}

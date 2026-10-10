@@ -30,6 +30,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { errorMessage } from '../api';
+import { PILOTAGE_NAV } from '../pilotage-navigation';
 import { logout as endSession } from '../logout';
 import { UpdateNotice } from './Updates';
 import { ErrorAlert } from './common';
@@ -70,7 +71,7 @@ export function Layout({ children }: { children: ReactNode }) {
   const tablette = useMediaQuery('(min-width: 36em) and (max-width: 63.99em)');
 
   type Item = [string, string, () => ReactNode];
-  const items: Item[] = [['/', 'Accueil', IconeAccueil]];
+  const items: Item[] = [['/', 'Tableau de bord', IconeAccueil]];
   if (can('documents', 'lire')) items.push(['/documents', 'Documents et liens', IconeDocuments]);
   if (can('cartographie', 'lire')) items.push(['/cartographie', 'Cartographie', IconeCarte]);
   items.push(['/account', 'Mon compte', IconeCompte]);
@@ -100,23 +101,64 @@ export function Layout({ children }: { children: ReactNode }) {
     </Tooltip>
   );
 
+  const navigationItems = (entries: Item[]) =>
+    entries.map(([to, label, Icon]) =>
+      withTip(
+        label,
+        <NavLink
+          component={Link}
+          to={to}
+          label={<span className="nav-libelle">{label}</span>}
+          leftSection={<Icon />}
+          active={active(to)}
+          onClick={close}
+        />,
+      ),
+    );
   const navigation = (
     <nav aria-label="Navigation principale" className="shell-nav-inner">
       <Text className="nav-caption nav-annexe">Espace de travail</Text>
       <Stack gap="2xs">
-        {items.map(([to, label, Icon]) =>
-          withTip(
-            label,
-            <NavLink
-              component={Link}
-              to={to}
-              label={<span className="nav-libelle">{label}</span>}
-              leftSection={<Icon />}
-              active={active(to)}
-              onClick={close}
-            />,
-          ),
+        {navigationItems(items.slice(0, 1))}
+        {canReadBusiness(can) && (
+          <NavLink
+            component={Link}
+            to="/pilotage"
+            className="pilotage-nav-root"
+            label={<span className="nav-libelle">Pilotage</span>}
+            leftSection={<IconeAdministration />}
+            active={active('/pilotage')}
+            opened={active('/pilotage')}
+            onClick={close}
+          >
+            {PILOTAGE_NAV.map((group) => {
+              const visible = group.items.filter(
+                (item) => can(item.module, 'lire') && (item.id !== 'carte' || can('pilotage', 'lire')),
+              );
+              if (!visible.length) return null;
+              return (
+                <NavLink
+                  key={group.label + ':' + visible.some((item) => loc.pathname === '/pilotage/' + item.id)}
+                  label={group.label}
+                  className="pilotage-nav-group"
+                  defaultOpened={visible.some((item) => loc.pathname === '/pilotage/' + item.id)}
+                >
+                  {visible.map((item) => (
+                    <NavLink
+                      key={item.id}
+                      component={Link}
+                      to={'/pilotage/' + item.id}
+                      label={item.label}
+                      active={loc.pathname === '/pilotage/' + item.id}
+                      onClick={close}
+                    />
+                  ))}
+                </NavLink>
+              );
+            })}
+          </NavLink>
         )}
+        {navigationItems(items.slice(1))}
         {canReadBusiness(can) &&
           withTip(
             'Outil de suivi (ancienne interface)',
@@ -138,7 +180,7 @@ export function Layout({ children }: { children: ReactNode }) {
             <Text size="sm" fw={600}>
               {me.orgName}
             </Text>
-            <Text size="xs">Pilotage du SMSI</Text>
+            <Text size="xs">Pilotage de l’organisation</Text>
           </div>
         </div>
         {withTip(
@@ -178,7 +220,7 @@ export function Layout({ children }: { children: ReactNode }) {
                       {me.appName}
                     </Text>
                     <Text className="brand-subtitle" size="xs" visibleFrom="sm">
-                      Espace de pilotage · ISO 27001 / HDS
+                      Qualité, sécurité et référentiels
                     </Text>
                   </div>
                 </Group>

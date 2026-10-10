@@ -24,6 +24,15 @@ export const GRC_KINDS = [
   'objective',
   'indicator',
   'soa',
+  'context',
+  'stakeholder',
+  'swot',
+  'governance',
+  'management_review',
+  'journey',
+  'bia',
+  'continuity_plan',
+  'continuity_exercise',
 ] as const;
 export type GrcKind = (typeof GRC_KINDS)[number];
 export const GRC_MODULES: Record<GrcKind, Module> = {
@@ -50,6 +59,15 @@ export const GRC_MODULES: Record<GrcKind, Module> = {
   objective: 'pilotage',
   indicator: 'pilotage',
   soa: 'pilotage',
+  context: 'pilotage',
+  stakeholder: 'pilotage',
+  swot: 'pilotage',
+  governance: 'pilotage',
+  management_review: 'pilotage',
+  journey: 'pilotage',
+  bia: 'pilotage',
+  continuity_plan: 'pilotage',
+  continuity_exercise: 'pilotage',
 };
 export const GRC_LABELS: Record<GrcKind, string> = {
   framework: 'Référentiel',
@@ -75,6 +93,15 @@ export const GRC_LABELS: Record<GrcKind, string> = {
   objective: 'Objectif',
   indicator: 'Indicateur',
   soa: 'Déclaration d’applicabilité',
+  context: 'Périmètre et contexte',
+  stakeholder: 'Partie intéressée',
+  swot: 'Analyse SWOT',
+  governance: 'Responsabilité',
+  management_review: 'Revue de direction',
+  journey: 'Parcours guidé',
+  bia: 'Analyse d’impact sur l’activité',
+  continuity_plan: 'Plan de continuité ou de reprise',
+  continuity_exercise: 'Exercice et retour d’expérience',
 };
 export const GrcKey = z
   .string()
@@ -318,12 +345,25 @@ export const FrameworkImport = z
   .strict();
 
 export function grcReferences(data: Record<string, unknown>): string[] {
+  const pilotage = data.pilotage && typeof data.pilotage === 'object' ? (data.pilotage as Record<string, unknown>) : {};
+  const historic =
+    !Array.isArray(pilotage.refs) && data.links && typeof data.links === 'object' && !Array.isArray(data.links)
+      ? Object.entries(data.links).flatMap(([key, ids]) =>
+          ['items', 'findings', 'plans', 'recurring', 'indicators', 'suppliers'].includes(key) && Array.isArray(ids)
+            ? ids.filter((id) => typeof id === 'string').map((id) => `legacy:${key}:${id}`)
+            : [],
+        )
+      : [];
   const stages =
     data.stages && typeof data.stages === 'object'
       ? Object.values(data.stages as Record<string, { values?: Record<string, unknown> }>)
       : [];
   return [
     ...(Array.isArray(data.refs) ? data.refs : []),
+    ...(Array.isArray(data.documentRefs) ? data.documentRefs : []),
+    ...(Array.isArray(pilotage.refs) ? pilotage.refs : []),
+    ...(Array.isArray(pilotage.documentRefs) ? pilotage.documentRefs : []),
+    ...historic,
     ...stages.flatMap((stage) => Object.values(stage.values ?? {}).flatMap((v) => (Array.isArray(v) ? v : []))),
   ].filter((ref): ref is string => GrcRef.safeParse(ref).success);
 }

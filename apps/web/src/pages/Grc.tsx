@@ -1,305 +1,22 @@
-import {
-  Alert,
-  Anchor,
-  Button,
-  Card,
-  Group,
-  Modal,
-  Select,
-  Stack,
-  Tabs,
-  Text,
-  Textarea,
-  TextInput,
-} from '@mantine/core';
-import { Page, PageHeader } from '@suivi/ui';
-import { GRC_KINDS, GRC_LABELS, GRC_MODULES, type GrcKind, type GrcObject, type BusinessPolicy } from '@suivi/shared';
+import { Alert, Button, Card, Group, Modal, Select, Stack, Text, Textarea, TextInput } from '@mantine/core';
+import { GRC_KINDS, GRC_LABELS, GRC_MODULES, type GrcKind, type GrcObject } from '@suivi/shared';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { api, get, saveBlob } from '../api';
 import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
 import { MappingForm } from '../grc/MappingForm';
-import { Overview } from '../grc/Overview';
-import { Tasks } from '../grc/Tasks';
-import { ObjectEditor } from '../grc/ObjectEditor';
-import { RiskEvaluation } from '../grc/Risks';
-import { Publication } from '../grc/Publication';
-import { RiskMap } from '../grc/RiskMap';
-import { Relations } from '../grc/Relations';
-import { Imports } from '../grc/Imports';
-import { BusinessPolicyPanel } from '../grc/BusinessPolicy';
-interface Smsi {
-  id: string;
-  name: string;
-  scope: string;
-  version: number;
-  businessVersion: number;
-  visibility: string;
-}
-export function GrcPage() {
-  const can = useCan(),
-    [selected, setSelected] = useState<string | null>(null),
-    [tab, setTab] = useState('tasks'),
-    [create, setCreate] = useState(false),
-    [name, setName] = useState(''),
-    [scope, setScope] = useState(''),
-    [error, setError] = useState<unknown>(null),
-    qc = useQueryClient();
-  const smsis = useQuery({ queryKey: ['grc', 'smsis'], queryFn: () => get<Smsi[]>('/api/grc/smsis') });
-  const smsi = selected ?? smsis.data?.[0]?.id;
-  const policy = useQuery({
-    queryKey: ['grc', smsi, 'policy'],
-    queryFn: () => get<{ definition: BusinessPolicy; version: number }>(`/api/grc/${smsi}/policy`),
-    enabled: !!smsi,
-  });
-  const [kind, setKind] = useState<GrcKind>('action'),
-    [editing, setEditing] = useState<GrcObject | null>(null),
-    [open, setOpen] = useState(false),
-    [evaluation, setEvaluation] = useState<GrcObject | null>(null),
-    [relation, setRelation] = useState<string | null>(null);
-  const notifications = useQuery({
-    queryKey: ['grc', 'notifications'],
-    queryFn: () =>
-      get<{ id: string; smsiId: string; objectId: string; title: string; message: string; readAt: string | null }[]>(
-        '/api/grc/notifications',
-      ),
-  });
-  const edit = (o: GrcObject) => {
-    setKind(o.kind);
-    setEditing(o);
-    setOpen(true);
-  };
-  const start = (k: GrcKind) => {
-    setKind(k);
-    setEditing(null);
-    setOpen(true);
-  };
-  const available = [
-    ['overview', 'Tableau de bord SMSI'],
-    ...(can('ecarts', 'lire') ? [['tasks', 'Actions et récurrences']] : []),
-    ...(can('pilotage', 'lire')
-      ? [
-          ['risks', 'Risques'],
-          ['methods', 'Méthodes'],
-        ]
-      : []),
-    ...(can('conformite', 'lire')
-      ? [
-          ['frameworks', 'Référentiels'],
-          ['mappings', 'Correspondances'],
-        ]
-      : []),
-    ['objects', 'Objets SMSI'],
-    ...(can('cartographie', 'lire') && can('pilotage', 'lire') ? [['map', 'Cartographie des risques']] : []),
-    ...(can('import_export', 'lire') ? [['imports', 'Import / export']] : []),
-    ['notifications', 'Rappels'],
-    ...(can('pilotage', 'administrer') ? [['scope', 'Périmètre et membres']] : []),
-    ...(can('administration', 'lire') ? [['business', 'Configuration métier']] : []),
-  ];
-  const active = available.some(([k]) => k === tab) ? tab : (available[0]?.[0] ?? 'objects');
-  return (
-    <Page>
-      <PageHeader
-        title="Pilotage SMSI"
-        description="Référentiels, risques, tâches et preuves reliés dans un même périmètre."
-      />
-      <Stack>
-        <Group>
-          <Select
-            label="SMSI actif"
-            data={(smsis.data ?? []).map((s) => ({ value: s.id, label: s.name }))}
-            value={smsi ?? null}
-            onChange={(v) => {
-              setSelected(v);
-              setEditing(null);
-              setOpen(false);
-              setRelation(null);
-              setEvaluation(null);
-            }}
-          />
-          {can('pilotage', 'administrer') && (
-            <Button variant="light" onClick={() => setCreate(true)}>
-              Créer un SMSI
-            </Button>
-          )}
-          <Anchor href="/legacy/">Données historiques</Anchor>
-        </Group>
-        <ErrorAlert error={error ?? smsis.error ?? policy.error} />
-        {smsi && policy.data && (
-          <>
-            <Text size="sm">
-              Politique métier publiée : version {policy.data.version} · {smsis.data?.find((s) => s.id === smsi)?.scope}
-            </Text>
-            <Tabs value={active} onChange={(v) => setTab(v ?? 'tasks')} keepMounted={false}>
-              <Tabs.List>
-                {available.map(([key, label]) => (
-                  <Tabs.Tab key={key} value={key!}>
-                    {label}
-                  </Tabs.Tab>
-                ))}
-              </Tabs.List>
-              <Tabs.Panel value="overview" pt="md">
-                <Overview key={smsi} smsi={smsi} />
-              </Tabs.Panel>
-              <Tabs.Panel value="tasks" pt="md">
-                <Stack>
-                  <Group>
-                    {can('ecarts', 'modifier') && (
-                      <>
-                        <Button onClick={() => start('action')}>Créer une action</Button>
-                        <Button variant="light" onClick={() => start('task_series')}>
-                          Créer une tâche récurrente
-                        </Button>
-                      </>
-                    )}
-                  </Group>
-                  <Tasks key={smsi} smsi={smsi} policy={policy.data.definition} onOpen={edit} />
-                  <Registry
-                    smsi={smsi}
-                    fixedKind="task_series"
-                    onOpen={edit}
-                    onEvaluation={setEvaluation}
-                    onRelation={setRelation}
-                  />
-                </Stack>
-              </Tabs.Panel>
-              <Tabs.Panel value="risks" pt="md">
-                <Stack>
-                  {can('pilotage', 'modifier') && <Button onClick={() => start('risk')}>Créer un risque</Button>}
-                  <Registry
-                    smsi={smsi}
-                    fixedKind="risk"
-                    onOpen={edit}
-                    onEvaluation={setEvaluation}
-                    onRelation={setRelation}
-                  />
-                </Stack>
-              </Tabs.Panel>
-              <Tabs.Panel value="methods" pt="md">
-                <Publication key={smsi + 'methods'} smsi={smsi} type="methods" />
-              </Tabs.Panel>
-              <Tabs.Panel value="frameworks" pt="md">
-                <Publication key={smsi + 'frameworks'} smsi={smsi} type="frameworks" />
-              </Tabs.Panel>
-              <Tabs.Panel value="mappings" pt="md">
-                <MappingPanel smsi={smsi} />
-              </Tabs.Panel>
-              <Tabs.Panel value="objects" pt="md">
-                <Registry
-                  key={smsi}
-                  smsi={smsi}
-                  onOpen={edit}
-                  onEvaluation={setEvaluation}
-                  onRelation={setRelation}
-                  onCreate={start}
-                />
-              </Tabs.Panel>
-              <Tabs.Panel value="map" pt="md">
-                <RiskMap key={smsi} smsi={smsi} onOpen={edit} />
-              </Tabs.Panel>
-              <Tabs.Panel value="imports" pt="md">
-                <Imports smsi={smsi} />
-              </Tabs.Panel>
-              <Tabs.Panel value="notifications" pt="md">
-                <ErrorAlert error={notifications.error} />
-                {notifications.data
-                  ?.filter((n) => n.smsiId === smsi)
-                  .map((n) => (
-                    <Card withBorder key={n.id}>
-                      <Text fw={600}>{n.title}</Text>
-                      <Text>{n.message}</Text>
-                      <Group>
-                        <Button
-                          variant="light"
-                          onClick={async () => {
-                            try {
-                              edit(await get<GrcObject>(`/api/grc/${smsi}/objects/${n.objectId}`));
-                            } catch (e) {
-                              setError(e);
-                            }
-                          }}
-                        >
-                          Ouvrir l’action
-                        </Button>
-                        {!n.readAt && (
-                          <Button
-                            variant="subtle"
-                            onClick={async () => {
-                              await api('PUT', `/api/grc/notifications/${n.id}/read`);
-                              await qc.invalidateQueries({ queryKey: ['grc', 'notifications'] });
-                            }}
-                          >
-                            Marquer comme lu
-                          </Button>
-                        )}
-                      </Group>
-                    </Card>
-                  ))}
-              </Tabs.Panel>
-              <Tabs.Panel value="scope" pt="md">
-                <Members smsi={smsi} />
-              </Tabs.Panel>
-              <Tabs.Panel value="business" pt="md">
-                <BusinessPolicyPanel smsi={smsi} />
-              </Tabs.Panel>
-            </Tabs>
-            <ObjectEditor
-              key={editing?.id ?? kind + smsi}
-              smsi={smsi}
-              policy={policy.data.definition}
-              kind={kind}
-              object={editing}
-              opened={open}
-              onClose={() => setOpen(false)}
-            />
-            <RiskEvaluation
-              key={evaluation?.id ?? 'none'}
-              smsi={smsi}
-              risk={evaluation}
-              onClose={() => setEvaluation(null)}
-            />
-            <Modal opened={!!relation} onClose={() => setRelation(null)} title="Liens SMSI" size="lg">
-              {relation && <Relations smsi={smsi} source={relation} />}
-            </Modal>
-          </>
-        )}
-        <Modal opened={create} onClose={() => setCreate(false)} title="Créer un SMSI">
-          <Stack>
-            <TextInput label="Nom du SMSI" value={name} onChange={(e) => setName(e.currentTarget.value)} />
-            <Textarea label="Périmètre" value={scope} onChange={(e) => setScope(e.currentTarget.value)} />
-            <Text>Le nouveau périmètre est restreint à ses membres.</Text>
-            <Button
-              onClick={async () => {
-                try {
-                  const s = await api<Smsi>('POST', '/api/grc/smsis', {
-                    body: { name, scope, timezone: 'Europe/Paris' },
-                  });
-                  setSelected(s.id);
-                  setCreate(false);
-                  await qc.invalidateQueries({ queryKey: ['grc', 'smsis'] });
-                } catch (e) {
-                  setError(e);
-                }
-              }}
-            >
-              Créer le périmètre restreint
-            </Button>
-          </Stack>
-        </Modal>
-      </Stack>
-    </Page>
-  );
-}
-function Registry({
+export function Registry({
   smsi,
   fixedKind,
   onOpen,
   onEvaluation,
   onRelation,
   onCreate,
+  choices,
 }: {
   smsi: string;
+  choices?: GrcKind[];
   fixedKind?: GrcKind;
   onOpen: (o: GrcObject) => void;
   onEvaluation: (o: GrcObject) => void;
@@ -307,7 +24,7 @@ function Registry({
   onCreate?: (kind: GrcKind) => void;
 }) {
   const can = useCan(),
-    [kind, setKind] = useState<GrcKind>('measure'),
+    [kind, setKind] = useState<GrcKind>(choices?.[0] ?? 'measure'),
     [search, setSearch] = useState(''),
     [error, setError] = useState<unknown>(null),
     qc = useQueryClient();
@@ -327,12 +44,12 @@ function Registry({
       {!fixedKind && (
         <Group>
           <Select
-            label="Type d’objet SMSI"
+            label="Type de fiche"
             value={kind}
             onChange={(v) => v && setKind(v as GrcKind)}
-            data={GRC_KINDS.filter(
-              (k) => !['framework', 'requirement', 'mapping'].includes(k) && can(GRC_MODULES[k], 'lire'),
-            ).map((k) => ({ value: k, label: GRC_LABELS[k] }))}
+            data={(choices ?? GRC_KINDS)
+              .filter((k) => !['framework', 'requirement', 'mapping'].includes(k) && can(GRC_MODULES[k], 'lire'))
+              .map((k) => ({ value: k, label: GRC_LABELS[k] }))}
           />
           {can(GRC_MODULES[k], 'modifier') && (
             <Button onClick={() => onCreate?.(k)}>Créer {GRC_LABELS[k].toLowerCase()}</Button>
@@ -393,75 +110,7 @@ function Registry({
     </Stack>
   );
 }
-function Members({ smsi }: { smsi: string }) {
-  const qc = useQueryClient(),
-    [userId, setUserId] = useState(''),
-    [write, setWrite] = useState('read'),
-    [error, setError] = useState<unknown>(null);
-  const members = useQuery({
-    queryKey: ['grc', smsi, 'members'],
-    queryFn: () =>
-      get<{ userId: string; username: string; displayName: string; write: boolean }[]>(`/api/grc/${smsi}/members`),
-  });
-  const users = useQuery({
-    queryKey: ['grc', 'accounts'],
-    queryFn: () => get<{ id: string; username: string; displayName?: string }[]>(`/api/grc/${smsi}/member-candidates`),
-  });
-  return (
-    <Stack>
-      <ErrorAlert error={error ?? members.error} />
-      <Select
-        label="Compte à ajouter"
-        searchable
-        value={userId || null}
-        onChange={(v) => setUserId(v ?? '')}
-        data={(users.data ?? []).map((u) => ({ value: u.id, label: u.displayName || u.username }))}
-      />
-      <Select
-        label="Accès au périmètre"
-        value={write}
-        onChange={(v) => setWrite(v ?? 'read')}
-        data={[
-          { value: 'read', label: 'Lecture seule' },
-          { value: 'write', label: 'Lecture et écriture selon les droits métier' },
-        ]}
-      />
-      <Button
-        onClick={async () => {
-          try {
-            await api('PUT', `/api/grc/${smsi}/members`, { body: { userId, write: write === 'write' } });
-            await qc.invalidateQueries({ queryKey: ['grc', smsi] });
-          } catch (e) {
-            setError(e);
-          }
-        }}
-      >
-        Attribuer l’accès
-      </Button>
-      {members.data?.map((m) => (
-        <Card withBorder key={m.userId}>
-          <Text>
-            {m.displayName || m.username} · {m.write ? 'Écriture' : 'Lecture'}
-          </Text>
-          <Button
-            variant="subtle"
-            onClick={async () => {
-              try {
-                await api('DELETE', `/api/grc/${smsi}/members/${m.userId}`);
-                await qc.invalidateQueries({ queryKey: ['grc', smsi] });
-              } catch (e) {
-                setError(e);
-              }
-            }}
-          >
-            Révoquer l’accès
-          </Button>
-        </Card>
-      ))}
-    </Stack>
-  );
-}
-function MappingPanel({ smsi }: { smsi: string }) {
+export function MappingPanel({ smsi }: { smsi: string }) {
   const can = useCan(),
     qc = useQueryClient(),
     [note, setNote] = useState(''),

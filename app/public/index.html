@@ -1103,8 +1103,8 @@ function navDef(){const N=S.nextYear;
     {id:'people',label:'Participants',tab:'orga',set:{orgaView:'people'},hint:'Interlocuteurs par créneau'},
     {id:'couv',label:'Couverture du cycle',tab:'couverture',hint:'AFNOR et interne sur 2025-2027'}],
    count:AN=>{const m=coverage(AN).miss.length;return m?{n:m,t:'mesure(s) sans créneau'}:null}},
-  {id:'pil',label:'Pilotage SMSI',icon:'pil',groups:[
-     {id:'g-ctx',label:'Contexte du SMSI'},
+  {id:'pil',label:'Pilotage',icon:'pil',groups:[
+     {id:'g-ctx',label:'Contexte de l’organisation'},
      {id:'g-obj',label:'Objectifs et indicateurs',badge:nKo?{n:nKo,bad:1,t:'indicateur(s) non atteint(s)'}:null},
      {id:'g-conf',label:'Conformité'},
      {id:'g-ec',label:'Écarts et actions',badge:nOpen?{n:nOpen,t:'écart(s) ouvert(s)'}:null},

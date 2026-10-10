@@ -5,6 +5,7 @@ import {
   bigserial,
   boolean,
   customType,
+  date,
   integer,
   jsonb,
   pgTable,
@@ -548,4 +549,25 @@ export const grcNotifications = pgTable('grc_notifications', {
   message: text('message').notNull(),
   readAt: tstz('read_at'),
   createdAt: tstz('created_at').notNull(),
+});
+
+export const pilotageDecisions = pgTable('pilotage_decisions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  smsiId: uuid('smsi_id')
+    .notNull()
+    .references(() => grcSmsis.id),
+  sourceRef: text('source_ref').notNull(),
+  sourceVersion: integer('source_version').notNull(),
+  operation: text('operation').notNull(),
+  step: text('step').notNull().default(''),
+  result: text('result').notNull(),
+  performedOn: date('performed_on').notNull(),
+  note: text('note').notNull(),
+  refs: jsonb('refs').notNull().default([]),
+  snapshot: jsonb('snapshot').notNull(),
+  generatedRefs: jsonb('generated_refs').notNull().default([]),
+  requestId: uuid('request_id').notNull().unique(),
+  intentHash: text('intent_hash').notNull(),
+  createdBy: text('created_by').notNull(),
+  createdAt: tstz('created_at').notNull().defaultNow(),
 });

@@ -629,3 +629,30 @@
   margin: 0;
   padding: 0;
 }
+
+/* Navigation Pilotage : familles de l'ancien menu, palette et densité Sauge conservées. */
+.pilotage-nav-group .mantine-NavLink-label {
+  white-space: normal;
+}
+.pilotage-progress {
+  width: 100%;
+  height: var(--mantine-spacing-xs);
+  accent-color: var(--mantine-color-sauge-6);
+}
+@media (min-width: 36em) and (max-width: 63.99em) {
+  .shell-nav .pilotage-nav-group {
+    display: none;
+  }
+}
+
+/* Garder le contenu métier visible lorsque les rubriques du Pilotage sont dépliées. */
+@media (min-width: 64em) {
+  .shell-nav-inner:has(.pilotage-nav-root[data-active]) {
+    max-height: calc(100dvh - var(--suivi-entete-h) - 2 * var(--mantine-spacing-md));
+    overflow-y: auto;
+  }
+  .shell-nav-inner .pilotage-nav-group,
+  .pilotage-nav-group + div .mantine-NavLink-root {
+    padding-block: var(--mantine-spacing-xs);
+  }
+}

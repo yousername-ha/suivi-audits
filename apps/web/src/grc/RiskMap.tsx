@@ -154,7 +154,7 @@ export function RiskMap({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject)
         ...sceneData,
         source: data.data,
         view: 'context',
-        organisation: 'SMSI · décisions issues du registre',
+        organisation: 'Pilotage · décisions issues du registre',
         title: 'Cartographie des risques — ' + (basis === 'gross' ? 'bruts' : 'résiduels'),
         legend: [
           ...new Map(

@@ -20,6 +20,7 @@ import { environmentRoutes } from './routes/environment.js';
 import { riskAssessmentRoutes } from './routes/risk-assessments.js';
 import { businessPolicyRoutes } from './routes/business-policy.js';
 import { grcRoutes } from './routes/grc.js';
+import { pilotageRoutes } from './routes/pilotage.js';
 import { affichageRoutes } from './routes/affichage.js';
 import { cartoRoutes } from './routes/carto.js';
 import { lastMigration, pendingMigrations } from './systeme.js';
@@ -110,6 +111,7 @@ export function allRoutes(): RouteDef[] {
     ...environmentRoutes,
     ...businessPolicyRoutes,
     ...grcRoutes,
+    ...pilotageRoutes,
     ...riskAssessmentRoutes,
     ...affichageRoutes,
     ...cartoRoutes,

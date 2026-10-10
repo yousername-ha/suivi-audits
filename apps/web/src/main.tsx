@@ -15,7 +15,7 @@ import { AccountPage } from './pages/Account';
 import { AdminPage } from './pages/Admin';
 import { CartographiePage } from './pages/Cartographie';
 import { DocumentsPage } from './pages/Documents';
-const GrcPage = lazy(() => import('./pages/Grc').then((m) => ({ default: m.GrcPage })));
+const PilotagePage = lazy(() => import('./pages/Pilotage').then((m) => ({ default: m.PilotagePage })));
 import { HomePage } from './pages/Home';
 import { IaEvaluationsPage } from './pages/IaEvaluations';
 import { HelpPage } from './pages/Help';
@@ -72,19 +72,20 @@ const router = createBrowserRouter([
       { path: '/cartographie/:vue?', element: <CartographiePage /> },
       { path: '/account', element: <AccountPage /> },
       {
-        path: '/grc',
+        path: '/pilotage/:section?',
         element: (
           <Suspense
             fallback={
               <Center>
-                <Loader aria-label="Chargement du pilotage SMSI" />
+                <Loader aria-label="Chargement du pilotage" />
               </Center>
             }
           >
-            <GrcPage />
+            <PilotagePage />
           </Suspense>
         ),
       },
+      { path: '/grc', element: <Navigate to="/pilotage" replace /> },
       { path: '/ia/evaluations', element: <IaEvaluationsPage /> },
       { path: '/aide', element: <HelpPage /> },
       { path: '/parametres/:section?', element: <SettingsPage /> },

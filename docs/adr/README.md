@@ -29,3 +29,5 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0022](0022-evaluations-ia-versionnees.md) | Décisions IA immuables liées aux sources et configurations (B2b) | Acceptée |
 
 | [0023](0023-smsi-referentiels-taches-risques.md) | Registres transversaux, publications et politiques par SMSI (lot C) | Retenue, recette requise |
+
+| [0024](0024-pilotage-metier.md) | Pilotage multi-référentiels, décisions G/H/K et début E | Retenue, recette de PR requise |

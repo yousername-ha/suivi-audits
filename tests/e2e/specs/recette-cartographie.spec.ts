@@ -466,7 +466,7 @@ test('11. deux sessions : présence affichée, la seconde reçoit 412 et choisit
     expect(audit.length).toBeGreaterThan(0);
     expect(audit.every((e) => e.action === 'carto.map_overwrite')).toBe(true);
     // En quittant la carte, la présence est retirée.
-    await c.page.getByRole('link', { name: 'Accueil' }).click();
+    await c.page.getByRole('link', { name: 'Tableau de bord', exact: true }).click();
     await expect(p.getByText('Compte contrib-carto modifie la carte')).toBeHidden();
     expect(c.problems).toEqual([]);
   } finally {

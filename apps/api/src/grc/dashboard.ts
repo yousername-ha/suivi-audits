@@ -15,11 +15,17 @@ export async function dashboard(g: Grc, smsi: string, user: SessionUser) {
     ['controls', 'control', 'pilotage'],
     ['evidence', 'evidence', 'documents'],
   ] as const)
-    if (policy.dashboard.cards.includes(card) && user.rights.can(module, 'lire'))
-      sections[card] = await g.db.one(
-        `SELECT count(*)::int total FROM grc_objects WHERE smsi_id=$1 AND kind=$2 AND NOT archived`,
-        [smsi, kind],
+    if (policy.dashboard.cards.includes(card) && user.rights.can(module, 'lire')) {
+      const summary = await g.db.one<{ total: number; awaitingReview: number; pending: number; overdue: number }>(
+        `SELECT count(*)::int total,count(*) FILTER(WHERE kind='evidence' AND COALESCE(data->>'status','draft')<>'validated')::int AS "awaitingReview",count(*) FILTER(WHERE kind='control' AND COALESCE(data->>'status','draft')<>'paused' AND COALESCE(data->>'performedAt','')='')::int pending,count(*) FILTER(WHERE COALESCE(data->>'status','draft')<>'paused' AND NULLIF(COALESCE(data->>'dueAt',data->>'validUntil'),'')<$3 AND (kind='evidence' OR COALESCE(data->>'performedAt','')<COALESCE(data->>'dueAt','')))::int overdue FROM grc_objects WHERE smsi_id=$1 AND kind=$2 AND NOT archived`,
+        [smsi, kind, new Date().toISOString().slice(0, 10)],
       );
+      sections[card] = summary && {
+        total: summary.total,
+        overdue: summary.overdue,
+        ...(kind === 'control' ? { pending: summary.pending } : { awaitingReview: summary.awaitingReview }),
+      };
+    }
   if (policy.dashboard.cards.includes('frameworks') && user.rights.can('conformite', 'lire'))
     sections.frameworks = (
       await g.db.q(

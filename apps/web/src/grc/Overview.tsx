@@ -31,11 +31,12 @@ export function Overview({ smsi }: { smsi: string }) {
     overdue: 'En retard',
     unassigned: 'Sans responsable',
     awaitingReview: 'À valider',
+    pending: 'Non réalisés',
   };
   return (
     <Stack>
       <ErrorAlert error={data.error} />
-      <Text>Indicateurs issus des registres de ce SMSI, selon la politique publiée et vos droits d’accès.</Text>
+      <Text>Résultats issus de vos registres et référentiels, selon vos droits d’accès.</Text>
       <div className="grc-dashboard-grid">
         {(
           [

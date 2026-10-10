@@ -8,6 +8,7 @@ import {
   SeriesData,
   RiskData,
   MappingData,
+  PILOTAGE_SCHEMAS,
   type GrcKind,
   type GrcObject,
   type Action,
@@ -85,7 +86,7 @@ export class Grc {
   }
   async initialize() {
     await this.db.q(
-      `INSERT INTO grc_smsis(id,name,scope,visibility,business_version,created_by) VALUES($1,'SMSI partagé de l’instance','Données historiques et nouvelles relations communes','instance',(SELECT version FROM business_policy_configuration WHERE id=1),'système') ON CONFLICT DO NOTHING`,
+      `INSERT INTO grc_smsis(id,name,scope,visibility,business_version,created_by) VALUES($1,'Pilotage de l’organisation','Données historiques et nouvelles relations communes','instance',(SELECT version FROM business_policy_configuration WHERE id=1),'système') ON CONFLICT DO NOTHING`,
       [DEFAULT_SMSI],
     );
   }
@@ -102,9 +103,9 @@ export class Grc {
     ).rows[0];
     const admin = await this.isAdmin(user, c);
     if (!r || (r.visibility === 'restricted' && !r.member && !admin))
-      throw new HttpError(404, 'SMSI introuvable ou non accessible.');
+      throw new HttpError(404, 'Périmètre introuvable ou non accessible.');
     if (write && r.visibility === 'restricted' && !r.canWrite && !admin)
-      throw new HttpError(403, 'Votre accès à ce SMSI est en lecture seule.');
+      throw new HttpError(403, 'Votre accès à ce périmètre est en lecture seule.');
     return {
       id: r.id,
       name: r.name,
@@ -418,6 +419,39 @@ export class Grc {
     }
     if (kind === 'requirement')
       throw new HttpError(409, 'Les exigences se publient avec leur référentiel pour conserver la version exacte.');
+    if (kind in PILOTAGE_SCHEMAS) {
+      data = PILOTAGE_SCHEMAS[kind as keyof typeof PILOTAGE_SCHEMAS].parse(data);
+      if (kind === 'nonconformity' && previous?.data.status === 'closed')
+        throw new HttpError(409, 'Conservez la clôture : créez un nouveau constat pour une récidive.');
+      if (kind === 'control') {
+        for (const field of ['result', 'performedAt', 'seriesRef'])
+          if (data[field] !== previous?.data[field])
+            throw new HttpError(422, 'Les réalisations et la planification sont enregistrées par une commande dédiée.');
+        if (
+          previous &&
+          ['objective', 'scope', 'method', 'criteria'].some((field) => data[field] !== previous.data[field])
+        ) {
+          delete data.result;
+          delete data.performedAt;
+        }
+      }
+      if (
+        (kind === 'evidence' && ['validated', 'rejected'].includes(String(data.status))) ||
+        (kind === 'nonconformity' && (data.status === 'closed' || data.effectiveness !== 'pending')) ||
+        (['bia', 'continuity_plan', 'management_review'].includes(kind) && data.status === 'validated')
+      ) {
+        throw new HttpError(422, 'Utilisez la commande de vérification ou validation pour conserver la décision.');
+      }
+      if (kind === 'nonconformity' && (data.closedAt || data.closureNote || data.effectivenessNote))
+        throw new HttpError(422, 'La clôture et l’efficacité sont enregistrées par une décision dédiée.');
+      if (
+        kind === 'continuity_exercise' &&
+        data.status === 'done' &&
+        (!data.performedAt || data.result === 'pending' || String(data.lessons).trim().length < 10)
+      )
+        throw new HttpError(422, 'Renseignez la date, le résultat et le retour d’expérience de l’exercice.');
+      for (const ref of grcReferences(data)) await this.resolve(smsi, ref, user, c);
+    }
     await this.checkOwner(smsi, data.ownerId, c);
     if (data.refs !== undefined) {
       if (!Array.isArray(data.refs) || data.refs.length > 100)
@@ -611,7 +645,7 @@ export class Grc {
         name: row.name || row.title,
         module: 'documents',
         kind: 'evidence',
-        version: 1,
+        version: Number(version),
         data: { documentId: id, version: Number(version) },
       };
     }
@@ -631,6 +665,21 @@ export class Grc {
       frameworks: { module: 'conformite', kind: 'framework', values: data.frameworks },
       evidences: { module: 'pilotage', kind: 'evidence', values: data.evidences },
       plans: { module: 'pilotage', kind: 'action', values: data.plans },
+      scope: {
+        module: 'pilotage',
+        kind: 'context',
+        values: [{ ...(isObject(data.scope) ? data.scope : {}), id: 'instance' }],
+      },
+      interested: { module: 'pilotage', kind: 'stakeholder', values: data.interested },
+      swots: { module: 'pilotage', kind: 'swot', values: data.swots },
+      roles: {
+        module: 'pilotage',
+        kind: 'governance',
+        values: (Array.isArray(data.roles) ? data.roles : [])
+          .filter(isObject)
+          .map((r, i) => ({ ...r, id: typeof r.id === 'string' ? r.id : '@' + i })),
+      },
+      reviews: { module: 'pilotage', kind: 'management_review', values: data.reviews },
       soa: {
         module: 'pilotage',
         kind: 'soa',
@@ -668,13 +717,35 @@ export class Grc {
     ).rows;
     const parents = (
       await this.db.q<ObjectRow>(
-        `SELECT ${objectColumns} FROM grc_objects WHERE smsi_id=$1 AND NOT archived AND (jsonb_path_exists(data,'$.stages.*.values.*[*] ? (@ == $ref)',jsonb_build_object('ref',$2::text)) OR data->'refs' @> $3::jsonb) ORDER BY id LIMIT 500`,
+        `SELECT ${objectColumns} FROM grc_objects WHERE smsi_id=$1 AND NOT archived AND (jsonb_path_exists(data,'$.stages.*.values.*[*] ? (@ == $ref)',jsonb_build_object('ref',$2::text)) OR data->'refs' @> $3::jsonb OR data->'documentRefs' @> $3::jsonb) ORDER BY id LIMIT 500`,
         [smsi, ref, JSON.stringify([ref])],
       )
     ).rows;
+    const historicalParents: { source_ref: string; target_ref: string }[] = [];
+    if (smsi === DEFAULT_SMSI) {
+      const state = (await this.legacy.recompose())?.data ?? {};
+      for (const key of [
+        'items',
+        'findings',
+        'processes',
+        'objectives',
+        'indicators',
+        'evidences',
+        'plans',
+        'recurring',
+        'reviews',
+      ]) {
+        const values = (Array.isArray(state[key]) ? state[key] : []).filter(isObject);
+        for (const row of values) {
+          if (typeof row.id === 'string' && grcReferences(row).includes(ref) && historicalParents.length < 500)
+            historicalParents.push({ source_ref: `legacy:${key}:${row.id}`, target_ref: ref });
+        }
+      }
+    }
     const derived = [
       ...grcReferences(source.data).map((target) => ({ source_ref: ref, target_ref: target })),
       ...parents.map((o) => ({ source_ref: 'object:' + o.id, target_ref: ref })),
+      ...historicalParents,
     ];
     const augmented = [
       ...rows.map((r) => ({ ...r, derived: false })),
