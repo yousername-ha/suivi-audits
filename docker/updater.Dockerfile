@@ -11,7 +11,7 @@ RUN --mount=type=secret,id=build_ca --mount=type=cache,target=/go/pkg/mod --moun
 FROM alpine:3.24
 RUN --mount=type=secret,id=build_ca \
     if [ -f /run/secrets/build_ca ]; then export SSL_CERT_FILE=/run/secrets/build_ca; fi; \
-    apk upgrade --no-cache && apk add --no-cache python3 bash docker-cli docker-cli-compose git openssh-client openssl coreutils util-linux tar gzip curl
+    apk upgrade --no-cache && apk add --no-cache python3 bash docker-cli docker-cli-compose git openssh-client openssl coreutils findutils util-linux tar gzip curl
 COPY --from=cosign /go/bin/cosign /usr/local/bin/cosign
 COPY scripts/update-worker.py /opt/update-worker.py
 LABEL org.opencontainers.image.source="https://github.com/yousername-ha/suivi-audits"

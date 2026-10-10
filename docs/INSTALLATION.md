@@ -826,6 +826,8 @@ Sur une installation **v3** de ce **dépôt privé**, disposant déjà de `gatew
 
 Tous les serveurs autorisés sur ce dépôt privé peuvent voir cette préversion numérotée ; l'ancien menu ne dispose pas de canal de test séparé. Une éventuelle ouverture publique du dépôt demande une évolution de la sélection des préversions, car `/releases/latest` les exclut. Les installations v2 suivent d'abord la montée de version 12.4. Une installation déjà en `3.0.2` n'a pas de nouvelle version à installer.
 
+**Premier redéploiement d'un ancien updater** : si l'installation utilise une image construite avant `3.0.2`, celle-ci peut manquer de GNU find, indispensable à son ancien script de rotation des archives. Une première reconstruction/redéploiement depuis cette branche est alors nécessaire, selon la section 7 ; les trois images doivent être reconstruites et les services redémarrés. L'ancienne image ne peut pas corriger elle-même l'outil qui lui manque avant remplacement. Cette livraison contient l'outil et la coordination des verrous ; les mises à jour suivantes utilisent le menu. Conserver un numéro local inférieur à `3.0.2` et les accès Git/GHCR pour installer ensuite la préversion depuis le menu.
+
 **Installation construite localement avec `APP_VERSION=test`, `local` ou `ci`** : ces noms ne permettent pas une comparaison de versions. Dans le dossier de l'application, normaliser une seule fois la version de la construction locale en `3.0.0`, sans toucher aux données ni à la clé de chiffrement. La commande `up --no-deps` conserve la base et le frontal ; les images locales déjà construites sont réutilisées.
 
 <!-- ci: skip — adaptation unique d'une installation de test existante, pas d'un serveur neuf -->

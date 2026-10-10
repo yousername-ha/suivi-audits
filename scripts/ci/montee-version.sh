@@ -8,7 +8,7 @@
 #      passage des volumes Docker vers DATA_DIR si la version de départ les utilisait, puis suppression des anciens volumes ;
 #   4. version suivante avec une migration, échec simulé → retour arrière AVEC restauration de la sauvegarde ;
 #   5. « docker compose down -v » → données intactes.
-# Les images ghcr.io/yousername-ha/suivi-audits-{api,web}:<version> de départ et cible doivent exister localement.
+# Les images ghcr.io/yousername-ha/suivi-audits-{api,web,updater}:<version> de départ et cible doivent exister localement.
 # Variables : DEPART_REF, DEPART_VERSION, CIBLE_REF, CIBLE_VERSION, SOURCE (dépôt à cloner), SERVEUR (défaut /opt/suivi-audits).
 set -euo pipefail
 : "${DEPART_REF:?}" "${DEPART_VERSION:?}" "${CIBLE_REF:?}" "${CIBLE_VERSION:?}"
@@ -25,7 +25,18 @@ echec() { echo "::error::Montée de version : $*"; exit 1; }
 api() { NODE_EXTRA_CA_CERTS="$SERVEUR/racine.crt" node "$OUTILS/guide-api.mjs" "$@"; }
 version_env() { sudo grep -E '^APP_VERSION=' "$SERVEUR/.env" | cut -d= -f2; }
 dernier_rapport() { sudo sh -c "ls -1t /srv/suivi-audits/donnees/etat/mises-a-jour/*.json | head -n 1 | xargs cat"; }
-maj() { (cd "$SERVEUR" && sudo git show "v$CIBLE_VERSION:scripts/mettre-a-jour.sh" | sudo env "$@" bash -s -- "$VERS" --auto --images-locales --delai 240); }
+maj() {
+  # Exercer les outils du vrai conteneur updater, plutôt que ceux de l'hôte Ubuntu.
+  (cd "$SERVEUR" && sudo git show "v$CIBLE_VERSION:scripts/mettre-a-jour.sh" | sudo docker run --rm -i --network none \
+    -v /var/run/docker.sock:/var/run/docker.sock -v "$SERVEUR:$SERVEUR" -v "$SOURCE:$SOURCE:ro" \
+    -v /srv/suivi-audits/donnees:/srv/suivi-audits/donnees \
+    -v /srv/sauvegardes/suivi-audits:/srv/sauvegardes/suivi-audits \
+    -v /root/.suivi-backup-pass:/root/.suivi-backup-pass:ro \
+    -w "$SERVEUR" -e "PWD=$SERVEUR" \
+    -e GIT_CONFIG_COUNT=2 -e GIT_CONFIG_KEY_0=safe.directory -e "GIT_CONFIG_VALUE_0=$SERVEUR" \
+    -e GIT_CONFIG_KEY_1=safe.directory -e "GIT_CONFIG_VALUE_1=$SOURCE" \
+    "$IMG-updater:$CIBLE_VERSION" env "$@" bash -s -- "$VERS" --auto --images-locales --delai 240)
+}
 attendre() {
   for _ in $(seq 1 100); do
     [ "$(curl -sk "$URL/healthz" || true)" = ok ] && return 0

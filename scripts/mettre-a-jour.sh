@@ -266,6 +266,15 @@ if [ "$VERIFIER" = 1 ]; then
 fi
 confirmer "Mettre à jour vers $CIBLE ? L'application sera indisponible quelques minutes." || arret "abandon (rien n'a été modifié)."
 
+# Garder l'exclusivité avec le poller automatique jusqu'à la santé et au retour arrière éventuel.
+# L'exécutant web transmet déjà ces descripteurs verrouillés ; les réutiliser, sans les rouvrir.
+[ -d "$DATA_DIR/etat" ] || arret "Dossier d'état absent."
+if [ "${RESTORE_WORKER_LOCK_HELD:-}" != 1 ]; then exec 8> "$DATA_DIR/etat/backup-worker.lock"; fi
+flock -w 120 8 || arret "Un exécutant de sauvegarde est actif ; réessayer après son opération."
+if [ "${RESTORE_SAUVEGARDE_LOCK_HELD:-}" != 1 ]; then exec 9> "$DATA_DIR/etat/sauvegarde.lock"; fi
+flock -w 120 9 || arret "Une sauvegarde ou restauration est active ; réessayer après son opération."
+export RESTORE_WORKER_LOCK_HELD=1 RESTORE_SAUVEGARDE_LOCK_HELD=1 UPDATE_SAUVEGARDE_LOCK_HELD=1
+
 # ---------------------------------------------------------------- 3. Sauvegarde chiffrée obligatoire
 PHASE=sauvegarde
 if declare -F progression > /dev/null; then progression; fi
