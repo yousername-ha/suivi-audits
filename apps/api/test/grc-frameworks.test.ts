@@ -162,6 +162,46 @@ it('importe atomiquement après simulation et refuse contenu altéré, doublons 
     (await a.get(root() + '/objects?kind=framework')).json().items.map((o: { name: string }) => o.name),
   ).not.toContain('ALTERATION');
 });
+it('suspend une série sur un référentiel désactivé et reprend sans doublon après réactivation', async () => {
+  const series = await a.post(root() + '/objects', {
+    kind: 'task_series',
+    name: 'Revue du référentiel',
+    data: {
+      description: 'Contrôle périodique',
+      ownerId: null,
+      category: 'action',
+      priority: 'normal',
+      refs: [`requirement:${targetId}:1:REQ1`],
+      recurrence: {
+        start: '2026-10-01',
+        time: '09:00',
+        timezone: 'Europe/Paris',
+        unit: 'month',
+        interval: 1,
+        until: null,
+        count: 1,
+        reminderDays: 7,
+        active: true,
+      },
+    },
+  });
+  expect(series.statusCode, series.body).toBe(200);
+  await t.svc.grc.tasks.tick(new Date('2026-11-02'));
+  expect((await a.get(root() + `/series/${series.json().id}/occurrences`)).json()).toHaveLength(0);
+  const current = (await a.get(root() + '/objects/' + targetId)).json();
+  expect(
+    (
+      await a.put(
+        root() + `/frameworks/${targetId}/activation`,
+        { enabled: true },
+        { 'if-match': `"${current.version}"` },
+      )
+    ).statusCode,
+  ).toBe(200);
+  await t.svc.grc.tasks.tick(new Date('2026-11-02'));
+  await t.svc.grc.tasks.tick(new Date('2026-11-02'));
+  expect((await a.get(root() + `/series/${series.json().id}/occurrences`)).json()).toHaveLength(1);
+});
 it('borne les projections et pagine un registre de 10 000 risques sans lecture par fiche', async () => {
   const methodId = crypto.randomUUID(),
     d = methodTemplate('custom');

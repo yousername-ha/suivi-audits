@@ -183,7 +183,11 @@ export function RiskMap({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject)
           label="Méthode"
           clearable
           value={methodId}
-          onChange={setMethodId}
+          onChange={(id) => {
+            setMethodId(id);
+            const method = methods.data?.find((m) => m.methodId === id);
+            if (method) setBasis(method.definition.display.defaultBasis);
+          }}
           data={(methods.data ?? []).map((m) => ({ value: m.methodId, label: m.definition.name }))}
         />
         <TextInput label="Domaine" value={domain} onChange={(e) => setDomain(e.currentTarget.value)} />

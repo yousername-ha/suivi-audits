@@ -213,4 +213,31 @@ describe('SMSI, permissions et décisions', () => {
     const f = await a.get(root() + `/frameworks/${r.json().id}/versions/1`);
     expect(f.json().definition.requirements).toHaveLength(1);
   });
+  it('le planificateur attend une modification du périmètre avant de lire sa politique', async () => {
+    const gate = await t.svc.db.pool.connect();
+    let ticking: Promise<void> | undefined;
+    try {
+      await gate.query('BEGIN');
+      await gate.query('SELECT id FROM grc_smsis WHERE id=$1 FOR UPDATE', [smsi]);
+      ticking = t.svc.grc.tasks.tick(new Date('2026-12-02T00:00:00Z'));
+      let blocked = false;
+      for (let i = 0; i < 40; i++) {
+        blocked = !!(
+          await t.svc.db.one<{ blocked: boolean }>(
+            `SELECT EXISTS(SELECT 1 FROM pg_stat_activity WHERE datname=current_database() AND wait_event_type='Lock' AND query LIKE '%FOR SHARE OF s%') blocked`,
+          )
+        )?.blocked;
+        if (blocked) break;
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+      expect(blocked).toBe(true);
+      await gate.query('COMMIT');
+      await ticking;
+      ticking = undefined;
+    } finally {
+      await gate.query('ROLLBACK');
+      gate.release();
+      if (ticking) await ticking;
+    }
+  });
 });

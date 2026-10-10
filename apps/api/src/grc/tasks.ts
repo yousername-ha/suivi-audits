@@ -112,24 +112,25 @@ export class GrcTasks {
         ).rows[0]!.next_index;
         const policyRow = (
           await c.query<{ definition: { statuses: { id: string; terminal: boolean }[] } }>(
-            `SELECT p.definition FROM grc_smsis s JOIN business_policy_versions p ON p.version=s.business_version WHERE s.id=$1`,
+            `SELECT p.definition FROM grc_smsis s JOIN business_policy_versions p ON p.version=s.business_version WHERE s.id=$1 FOR SHARE OF s`,
             [o.smsiId],
           )
         ).rows[0];
         if (!policyRow) return;
         await c.query('UPDATE grc_series SET checked_at=$2 WHERE object_id=$1', [id, now]);
         // Une série liée à un référentiel désactivé est suspendue, sans perdre son curseur.
-        const frameworks = d.refs.filter((ref) => ref.startsWith('requirement:')).map((ref) => ref.split(':')[1]);
-        if (
-          frameworks.length &&
-          (
-            await c.query(
-              "SELECT 1 FROM grc_objects WHERE smsi_id=$1 AND id=ANY($2::uuid[]) AND (archived OR data->>'enabled'<>'true')",
+        const frameworks = d.refs
+          .filter((ref) => ref.startsWith('requirement:') || ref.startsWith('object:'))
+          .map((ref) => ref.split(':')[1]);
+        if (frameworks.length) {
+          const publications = (
+            await c.query<{ enabled: string; archived: boolean }>(
+              "SELECT data->>'enabled' enabled,archived FROM grc_objects WHERE smsi_id=$1 AND id=ANY($2::uuid[]) AND kind='framework' FOR SHARE",
               [o.smsiId, frameworks],
             )
-          ).rowCount
-        )
-          return;
+          ).rows;
+          if (publications.some((p) => p.archived || p.enabled !== 'true')) return;
+        }
         const status = policyRow.definition.statuses.find((s) => !s.terminal)!.id;
         // Rattrapage plafonné par transaction, poursuivi au prochain passage ; aucune occurrence perdue.
         for (let generated = 0; generated < 50; generated++) {
