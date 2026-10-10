@@ -1,5 +1,7 @@
 # Installer « Suivi des audits SMSI » — guide pas à pas
 
+> Reprise documentaire du 11 octobre 2026 : ce guide reste la référence des commandes rejouées en CI. Le [dossier de reprise](00_INDEX.md), le [guide administrateur](06_GUIDES/GUIDE_ADMINISTRATEUR.md) et le [dépannage](06_GUIDES/GUIDE_DEPANNAGE.md) décrivent les parcours et réserves actuels ; aucune commande de ce guide n’est modifiée par l’audit.
+
 Ce guide part d'un serveur vide et ne suppose aucune connaissance de Linux ni de Docker. Il s'adresse au RSSI ou à un technicien. Suivez les étapes **dans l'ordre**, sans en sauter. Comptez environ 1 h 30 la première fois.
 
 > **Branche de travail Sauge (lot d’intégration, 9 octobre 2026).** La branche

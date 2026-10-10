@@ -1,5 +1,8 @@
 # Architecture — Suivi des audits SMSI ISO 27001 / HDS (v3)
 
+> Mise en perspective — 11 octobre 2026 : Ce document conserve le snapshot des fondations de phase 0. La pile actuelle inclut gateway/updater et les migrations jusqu’à 015 : lire le [DAT actuel](03_ARCHITECTURE/DAT.md).
+
+
 Ce document décrit l'architecture cible et l'état livré en **phase 0** (fondations). Les choix structurants sont détaillés dans les [ADR](adr/README.md), et le découpage en phases dans la [feuille de route](ROADMAP.md).
 
 ## 1. Vue d'ensemble

@@ -2,6 +2,7 @@
 
 Application web auto-hébergée de pilotage du GCS Normand'e-Santé : qualité, sécurité et référentiels, préparation et suivi des audits, écarts et actions, documents et preuves. Le menu Pilotage accompagne les démarches SMQ (ISO 9001), SMSI (ISO 27001), HDS et intégrées, sans imposer la création d’un SMSI. Elle remplace, module par module, l'outil historique en fichier unique, qui reste disponible sous `/legacy` pendant la transition.
 
+- **Reprise du projet : [HANDOVER.md](HANDOVER.md)** — [état](PROJECT_STATUS.md), [index documentaire](docs/00_INDEX.md), [consignes IA](AGENTS.md)
 - **Installation pas à pas : [docs/INSTALLATION.md](docs/INSTALLATION.md)** (guide pour débutant, rejoué automatiquement en CI)
 - Guide métier : [docs/PILOTAGE.md](docs/PILOTAGE.md) — [lots G/H/K et début E, limites](docs/LOT-G-H-K-DEBUT-E.md)
 - Architecture et modèle de sécurité : [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
@@ -19,8 +20,9 @@ Application web auto-hébergée de pilotage du GCS Normand'e-Santé : qualité, 
 | **Déploiement** | Docker Compose : images signées publiées sur GHCR, conteneurs non root en lecture seule, seul le frontal HTTPS (Caddy) est exposé |
 
 ```
- navigateur ──HTTPS──▶ web (Caddy : TLS + interface) ──▶ app (API Node 24) ──▶ db (PostgreSQL 17)
-                                                        └─▶ clamav (facultatif)
+navigateur → gateway (HTTPS + maintenance) → web (interface React) → app (API) → db
+                                                                       └→ clamav (facultatif)
+updater : mises à jour et exploitation ; données persistantes dans DATA_DIR
 ```
 
 ## Droits
@@ -56,7 +58,7 @@ sudo docker compose exec app setup-token           # jeton d'installation, puis 
 | Administrateur de secours | `sudo docker compose exec app setup-token --recovery` |
 | Sauvegarde chiffrée | `sudo BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass ./scripts/backup.sh /srv/sauvegardes/suivi-audits` |
 | Restauration | `sudo BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass ./scripts/restore.sh <archive>.tar.enc` |
-| Mise à jour | `APP_VERSION` dans `.env`, puis `sudo docker compose pull && sudo docker compose up -d --remove-orphans` |
+| Mise à jour | Administration → Système → Mise à jour ; pour le premier passage ou l’entretien serveur, suivre [INSTALLATION, section 12](docs/INSTALLATION.md) (sauvegarde et signatures). |
 | Antivirus | `CLAMAV_HOST=clamav` dans `.env`, puis `sudo docker compose --profile antivirus up -d` |
 
 Des vues SQL (`v_items`, `v_findings`, `v_documents`) permettent d'interroger les données en lecture, par exemple : `sudo docker compose exec -u postgres db psql -d suivi -c "SELECT * FROM v_findings"`.
@@ -71,7 +73,7 @@ docker compose -f docker-compose.dev.yml up         # pile de développement ave
 
 Voir [CONTRIBUTING.md](CONTRIBUTING.md) pour l'organisation du dépôt, les tests et les conventions.
 
-## Limites connues (phase 0)
+## Limites connues de la livraison actuelle
 
 - Les données historiques de contexte, parties intéressées, responsabilités, processus, objectifs, indicateurs, preuves, constats et revues sont éditées directement depuis Pilotage ; leurs champs supplémentaires sont conservés. Les autres écrans historiques restent accessibles sous `/legacy` pendant leur reprise ([feuille de route](docs/ROADMAP.md)).
 - Le lot E est partiel : BIA, plans et exercices génériques ; les grilles officielles indisponibles restent à intégrer. D/J/I/F sont exclus de cette livraison.

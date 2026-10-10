@@ -1,0 +1,102 @@
+{
+  "analysed_commit": "c704fa6e6d6d516db75f963db8dd5d2049ab42c8",
+  "updated_at": "2026-10-11T00:59:00+02:00",
+  "scope": "Contrôles locaux des documents ajoutés/modifiés ; aucune validation de production ni scan exhaustif de toutes les surfaces GitHub.",
+  "initial_failed_checks": ["EXE-010", "EXE-011"],
+  "resolved_check": "EXE-012",
+  "guide_verification": {
+    "date": "2026-10-11T00:56:42+02:00",
+    "guide_metadata_only": true,
+    "bash_syntax_code": 0,
+    "published_changelog_unchanged": true,
+    "status": "PASSÉ",
+    "code": 0,
+    "normalisation": "Uniquement les commentaires # Généré depuis et # ignoré (source:ligne). Aucun autre commentaire ni commande ignoré."
+  },
+  "checks": [
+    {
+      "name": "coherence",
+      "command": "node docs/08_PILOTAGE/verifier-documentation.mjs",
+      "code": 0,
+      "status": "PASSÉ",
+      "markdown_files": 59,
+      "local_links": 748,
+      "errors": []
+    },
+    {
+      "name": "format",
+      "command": "python3 - <<'PY'\nimport json,subprocess\nfrom pathlib import Path\nfiles=json.loads(Path('/workspace/onboarding-suivi/handover/document-manifest.json').read_text())+['docs/08_PILOTAGE/verifier-documentation.mjs','docs/05_RECETTE/preuves/2026-10-11-controles-documentaires.json']\nraise SystemExit(subprocess.call(['./node_modules/.bin/prettier','--ignore-path','/dev/null','--check',*files]))\nPY",
+      "code": 0,
+      "status": "PASSÉ",
+      "files": 56,
+      "ignore_path": "/dev/null"
+    },
+    {
+      "name": "lint",
+      "command": "./node_modules/.bin/eslint docs/08_PILOTAGE/verifier-documentation.mjs --max-warnings 0",
+      "code": 0,
+      "status": "PASSÉ"
+    },
+    {
+      "name": "syntaxe",
+      "command": "node --check docs/08_PILOTAGE/verifier-documentation.mjs",
+      "code": 0,
+      "status": "PASSÉ"
+    },
+    {
+      "name": "changelog",
+      "command": "node scripts/ci/verifier-changelog.mjs CHANGELOG.md",
+      "code": 0,
+      "status": "PASSÉ",
+      "sections": 4
+    },
+    {
+      "name": "diff",
+      "command": "git diff --check",
+      "code": 0,
+      "status": "PASSÉ"
+    },
+    {
+      "name": "confidentialite",
+      "command": "gitleaks dir <copies-documentaires-privees> --no-banner --redact=100 --report-format json --report-path <rapport-prive>",
+      "code": 0,
+      "status": "PASSÉ",
+      "files": 64,
+      "findings": 0,
+      "limitation": "Documents ajoutés/modifiés seulement ; pas de scan exhaustif du dépôt, de l’historique GitHub ni des images."
+    },
+    {
+      "name": "adresses_personnelles",
+      "command": "python3 : recherche d’adresses email dans les 56 nouveaux fichiers",
+      "code": 0,
+      "status": "PASSÉ",
+      "files": 56,
+      "matches": 0,
+      "limitation": "Les identités historiques d’auteurs et les anciens documents ont été conservés conformément à la demande."
+    }
+  ],
+  "status": "PASSÉ APRÈS CORRECTION DES CONTRÔLES INITIAUX",
+  "git_reference_initial_probe": {
+    "command": "git rev-parse refs/heads/main",
+    "child_code": 128,
+    "python_runner_code": 1,
+    "status": "ÉCHOUÉ",
+    "cause": "Ce clone ne possède pas de branche main locale. La référence origin/main et le serveur ont ensuite été lus sans créer ni modifier main."
+  },
+  "git_verification": {
+    "date": "2026-10-11T00:59:48+02:00",
+    "main_origin": "b148c1ba303954b7023996fce3d0eff2923326b5",
+    "branch": "feature/gpt6-evolution-smsi-grc",
+    "analysed_commit": "c704fa6e6d6d516db75f963db8dd5d2049ab42c8",
+    "app_infra_diff_none": true,
+    "code": 0,
+    "status": "PASSÉ",
+    "limitation": "Référence origin/main récupérée en lecture pendant la mission ; aucun main local n’existe dans ce clone."
+  },
+  "git_remote_read": {
+    "command": "git ls-remote --heads origin main",
+    "code": 0,
+    "status": "PASSÉ",
+    "sha": "b148c1ba303954b7023996fce3d0eff2923326b5"
+  }
+}

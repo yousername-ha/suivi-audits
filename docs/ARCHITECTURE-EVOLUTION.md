@@ -1,5 +1,8 @@
 # Architecture d'évolution minimale SMSI / GRC
 
+> Mise en perspective — 11 octobre 2026 : Ce cadrage historique précède plusieurs livraisons A/B/C/G/H/K. Les formulations « reste à concevoir » ne sont pas l’état courant : lire le [DAT](03_ARCHITECTURE/DAT.md) et le [registre](02_FONCTIONNALITES/INVENTAIRE_FONCTIONNEL.md).
+
+
 Ce cadrage complète ARCHITECTURE.md et les ADR existantes ; il n'ajoute ni service ni modèle parallèle. Le backlog et ses critères sont dans [BACKLOG-EVOLUTION-SMSI-GRC.md](BACKLOG-EVOLUTION-SMSI-GRC.md).
 
 ## Contrats conservés

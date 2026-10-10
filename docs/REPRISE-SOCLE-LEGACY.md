@@ -1,5 +1,8 @@
 # Reprise intégrale du socle v2 dans Sauge
 
+> Mise en perspective — 11 octobre 2026 : Inventaire daté du 9 octobre conservé comme preuve. Pilotage possède depuis des adaptateurs directs et l’exploitation web est intégrée : comparer avec la [matrice actuelle](02_FONCTIONNALITES/COMPARAISON_ANCIEN_NOUVEAU.md), sans déclarer tout v2 migré.
+
+
 ## Périmètre et état vérifié au 9 octobre 2026
 
 La demande utilisateur couvre toutes les fonctionnalités de l'ancienne interface, y compris celles encore utilisées sous `/legacy`. Sources examinées : `archives/v2-manifest.json` (44 fichiers v2 conservés), `app/public/index.html`, `packages/shared/src/permissions.ts`, `docs/legacy/LEGACY-FORMAT.md`, `MAPPING-LEGACY.md`, `docs/ROADMAP.md` et `BACKLOG-FONCTIONNEL.md`. L'archive est une garantie de conservation du code, pas une preuve d'équivalence fonctionnelle.

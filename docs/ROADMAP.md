@@ -1,5 +1,8 @@
 # Feuille de route
 
+> Mise en perspective — 11 octobre 2026 : Les phases ci-dessous sont le plan historique, distinct des livraisons A–L. État courant et exclusions : [PROJECT_STATUS](../PROJECT_STATUS.md) et [backlog de reprise](08_PILOTAGE/BACKLOG.md). B2/E complets et toutes les familles v2 ne sont pas clôturés.
+
+
 L'outil historique (fichier unique) est remplacé **module par module** par une application web avec base PostgreSQL normalisée, un enregistrement par élément et une mise à jour en temps réel entre utilisateurs. Pendant toute la transition, l'ancien outil reste servi sous `/legacy`. Un module repris y devient consultable seulement : « Module géré dans la nouvelle interface » ([ADR 0007](adr/0007-transition-legacy.md)).
 
 Chaque phase est livrée par une ou plusieurs pull requests, avec une version publiée (`vX.Y.Z`), et met à jour `docs/INSTALLATION.md` si l'installation ou l'exploitation change.

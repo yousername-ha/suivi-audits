@@ -1,0 +1,108 @@
+# Reprendre Suivi des audits
+
+Dernière mise à jour : **2026-10-11T00:57:18+02:00 (Europe/Paris)**.
+Référence applicative analysée : **`c704fa6e6d6d516db75f963db8dd5d2049ab42c8`** ; version 3.0.2.
+Branche de travail exclusive : **`feature/gpt6-evolution-smsi-grc`**.
+
+Application auto-hébergée de suivi d’audit et de pilotage qualité/sécurité/HDS
+multi-référentiels. On ne doit pas imposer la création d’un SMSI pour un SMQ.
+Stack : Node 24+, pnpm 10.34.6, TypeScript 5.9.3, Fastify 5.12.5, React 19.3.0,
+Mantine 8.3.18, zod 4.6.5, PostgreSQL 17, Docker Compose, Caddy 2.11.7.
+
+Architecture actuelle : `gateway → web → app → db` ; gateway sert la maintenance
+indépendante, updater exécute les mises à jour et l’exploitation. API/base isolées
+sans Internet. Documents chiffrés ; données persistantes dans DATA_DIR.
+L’ancien outil reste sous `/legacy`, avec une source métier unique et des
+adaptateurs vers Pilotage. Les tables `grc_smsis` et API `/api/grc` gardent leurs
+noms techniques pour compatibilité ; le parcours normal s’appelle Pilotage.
+
+## État et preuves
+
+- 40 domaines inventoriés ; 27 validés
+  automatiquement dans le périmètre décrit ; 6 partiels.
+  6 familles sans remplacement Sauge complet
+  identifié ; leur source legacy demeure.
+- A, B1, B2a/B2b, C, G/H/K et début E ont des implémentations. B2 complet et E
+  complet ne sont pas déclarés terminés. D/J/I/F exclus ; L non réalisé.
+- [CI du code analysé](https://github.com/yousername-ha/suivi-audits/actions/runs/38087692231) : 587 Vitest et 143 Playwright, cinq jobs verts,
+  installation, rollback, restauration et persistance compris.
+  [CodeQL](https://github.com/yousername-ha/suivi-audits/actions/runs/38087692214) vert. Une seule tentative de chacun.
+- Audit documentaire : **360 tests locaux sans base réussis**. Aucun test API,
+  déploiement, restauration ni migration rejoué pendant cette mission.
+- Dernier lot code : Trivy images 6 → 3, toujours bloquant HIGH/CRITICAL ;
+  annulation CodeQL obsolète. Aucun nouveau numéro d’application pour ce lot.
+- Dernier correctif fonctionnel : clic Pilotage rétabli et sauvegarde sans
+  cron supplémentaire (cc285b4), updater avec GNU find et verrous de rollback
+  corrigés, puis préversion **v3.0.2** au commit `fad0205`.
+- 5 bugs corrigés et validés automatiquement ;
+  0 bugs ouverts confirmés dans le registre.
+  L’ergonomie signalée par l’utilisateur reste **CORRIGÉ NON VALIDÉ** humainement.
+  « Aucun bug ouvert enregistré » ne signifie pas « aucun bug possible ».
+- Résultat du test du serveur utilisateur **NON REÇU** ; aucun PV accepté.
+
+## Prochaine action
+
+Recetter sur le serveur de l’utilisateur : version/santé, clic Pilotage,
+sauvegarde complète depuis le menu et téléchargement des données existantes
+(TEST-041), puis acceptation ergonomique (TEST-042). Un ancien updater demande
+un premier redéploiement ; une image immuable ancienne ne se corrige pas seule.
+Consulter [le plan de reprise](docs/01_REPRISE_IA/PLAN_REPRISE.md).
+
+Ensuite cadrer les reprises v2 restantes et compléter B2/E selon les sources
+officielles disponibles. Ne pas démarrer D/J/I/F par déduction.
+
+## Démarrer et vérifier
+
+Développement local : installer les dépendances puis
+`docker compose -f docker-compose.dev.yml up`, interface `http://localhost:5173`.
+Cette pile locale ne comporte pas tous les services d’exploitation production.
+
+```bash
+git status --short --branch
+node --version
+pnpm --version
+pnpm install --frozen-lockfile
+pnpm lint
+pnpm typecheck
+pnpm build
+pnpm --filter @suivi/shared test
+pnpm --filter @suivi/ui test
+pnpm --filter @suivi/web test
+node --test scripts/tests/publication.test.mjs
+python3 -m unittest discover -s scripts/tests -p test_updates.py
+```
+
+Ces commandes supposent Node 24+, pnpm 10.34.6 et un clone de développement.
+L’installation de dépendances accède aux registres externes ; elle n’a pas été
+rejouée pendant l’audit, car les dépendances étaient présentes. Les tests API,
+`pnpm test` et les recettes Docker demandent une base et un environnement
+explicitement dédiés. Leur setup peut supprimer les bases `suivi_t_%` :
+ne jamais les pointer vers une base partagée ou de production.
+
+Installation/serveur : suivre [le guide CI de référence](docs/INSTALLATION.md),
+complété par [le guide de cette reprise](docs/06_GUIDES/GUIDE_INSTALLATION.md).
+Dans le dossier installé, contrôles en lecture :
+
+```bash
+sudo docker compose ps -a
+sudo docker compose logs --tail=100 app web gateway updater
+```
+
+Les logs peuvent contenir des informations privées : ne pas les committer.
+Ne pas écraser .env, changer DATA_DIR, supprimer les données ou utiliser un
+reset pour débloquer Git. Aucun secret dans cette documentation.
+
+## Documents avant intervention
+
+[AGENTS](AGENTS.md) → [PROJECT_STATUS](PROJECT_STATUS.md) →
+[index](docs/00_INDEX.md) → [DAT](docs/03_ARCHITECTURE/DAT.md) →
+[registre fonctionnel](docs/02_FONCTIONNALITES/INVENTAIRE_FONCTIONNEL.md) →
+[comparaison v2](docs/02_FONCTIONNALITES/COMPARAISON_ANCIEN_NOUVEAU.md) →
+[recette](docs/05_RECETTE/RAPPORT_RECETTE.md) →
+[backlog](docs/08_PILOTAGE/BACKLOG.md).
+
+Le dépôt reste privé et main est toujours `b148c1ba303954b7023996fce3d0eff2923326b5`.
+[PR #12](https://github.com/yousername-ha/suivi-audits/pull/12) constatée ouverte
+en brouillon, sans auto-merge. La mission documentaire n’a ni poussé un commit
+ni déclenché une nouvelle CI : la preuve verte ci-dessus est attachée à c704fa6,
+pas à un futur commit documentaire.
