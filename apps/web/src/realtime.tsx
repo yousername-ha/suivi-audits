@@ -19,12 +19,20 @@ const KEYS: Record<string, string[][]> = {
     ['account', 'sessions'],
   ],
   settings: [['setup'], ['synthese'], ['settings'], ['carto', 'objects']],
-  legacy_state: [['refs'], ['admin', 'versions'], ['admin', 'info'], ['synthese'], ['carto', 'objects']],
+  legacy_state: [
+    ['ia', 'evaluations'],
+    ['refs'],
+    ['admin', 'versions'],
+    ['admin', 'info'],
+    ['synthese'],
+    ['carto', 'objects'],
+  ],
   maps: [['carto']],
   wall_screens: [['admin', 'murs']],
   groups: [['admin']],
   roles: [['admin']],
   environment_configuration: [['admin', 'environment']],
+  risk_assessments: [['ia', 'evaluations']],
   import_batches: [['admin', 'imports']],
 };
 

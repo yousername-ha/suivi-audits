@@ -5,7 +5,8 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 ## [Non publié]
 
 ### Notes de mise à jour
-- B2a : migration additive `010_configuration_environnement.sql`, initialisation automatique sans modification des méthodes ni évaluations v2. Administration → Système → Configuration de l’environnement ajoute des échelles et matrices organisationnelles versionnées, validation/simulation, confirmation, motif et audit transactionnel. Les publications sont immuables ; une reprise crée une nouvelle version. Aucun nouveau paquet ni service. Les raccordements métier, nomenclatures, workflows et autres sous-lots B2 restent à livrer.
+- B2b : migration additive `011_evaluations_versionnees.sql`, initialisation automatique. Écran Sauge `/ia/evaluations`, accessible depuis le guide et le menu utilisateur historique. Simulation et décisions confirmées liées aux scénarios IA existants, instantanés source/configuration immuables, résultat serveur, audit atomique, concurrence et réessais idempotents, historique et export JSON contrôlés. Aucun recalcul du passé ni modification du registre v2 ; les autres familles et sous-lots B2 restent à livrer.
+- B2a : migration additive `010_configuration_environnement.sql`, initialisation automatique sans modification des méthodes ni évaluations v2. Administration → Système → Configuration de l’environnement ajoute des échelles et matrices organisationnelles versionnées, validation/simulation, confirmation, motif et audit transactionnel. Les publications sont immuables ; une reprise crée une nouvelle version. Aucun nouveau paquet ni service. Les autres raccordements métier, nomenclatures, workflows et autres sous-lots B2 restent à livrer.
 - Mise à jour intégrée : migration additive `009_mises_a_jour.sql` ; services `gateway` et `updater` installés par Compose. L’API reste sans accès Internet ni socket Docker. Les accès Git/registre déjà installés sont réutilisés. Clé de sauvegarde spécifique générée sans remplacement, à conserver dans le coffre-fort. Bandeau pour tous les utilisateurs, commandes réservées au rôle Administrateur, maintenance indépendante pendant redémarrage, signatures/empreintes et contrôle du commit, sauvegarde chiffrée, reprise durable et retour arrière. L’exécutant se met lui-même à jour ; le frontal stable est entretenu séparément (`GATEWAY_VERSION`, INSTALLATION 12). Aucun tag, déploiement ou fusion automatique de cette branche.
 - Lot A complet : migration additive `007_exploitation.sql`, poller hôte Python 3 standard selon INSTALLATION 11.6–11.7. Remplacer le poller A1a par le poller commun ; la planification web est désactivée par défaut et ne modifie aucun cron existant. Destination et clé restent côté serveur. `TLS_WEB_MANAGEMENT=0` par défaut ; `TLS_TERMINATION=external` interdit les changements. Aucun paquet applicatif ajouté. Une restauration ferme les sessions ; le journal/reprise hors PostgreSQL survit et le retour arrière de sécurité est contrôlé.
 - A1b1 : installer `python3` sur l’hôte (bibliothèque standard uniquement), selon INSTALLATION 2 et 11.4. Aucun nouveau service ni migration. `restore.sh --verifier` contrôle une archive sans restauration ; les restaurations confirmées ferment les sessions anciennes et exigent une reconnexion. Archives GNU/USTAR uniquement, limites et formats interdits documentés.
@@ -106,6 +107,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 Nouvelle architecture. La mise à jour depuis la v2 conserve la base, les secrets et les certificats.
 
 ### Notes de mise à jour
+- B2b : migration additive `011_evaluations_versionnees.sql`, initialisation automatique. Écran Sauge `/ia/evaluations`, accessible depuis le guide et le menu utilisateur historique. Simulation et décisions confirmées liées aux scénarios IA existants, instantanés source/configuration immuables, résultat serveur, audit atomique, concurrence et réessais idempotents, historique et export JSON contrôlés. Aucun recalcul du passé ni modification du registre v2 ; les autres familles et sous-lots B2 restent à livrer.
 - Depuis la v2 : `docs/INSTALLATION.md`, étape 12.4 (ajouter `APP_VERSION` dans `.env`, images publiées au lieu d'une construction sur le serveur, retrait du service `proxy`).
 
 ### Ajouté
@@ -133,6 +135,7 @@ Nouvelle architecture. La mise à jour depuis la v2 conserve la base, les secret
 ## [2.0.0]
 
 ### Notes de mise à jour
+- B2b : migration additive `011_evaluations_versionnees.sql`, initialisation automatique. Écran Sauge `/ia/evaluations`, accessible depuis le guide et le menu utilisateur historique. Simulation et décisions confirmées liées aux scénarios IA existants, instantanés source/configuration immuables, résultat serveur, audit atomique, concurrence et réessais idempotents, historique et export JSON contrôlés. Aucun recalcul du passé ni modification du registre v2 ; les autres familles et sous-lots B2 restent à livrer.
 - Première version Docker : aucune action.
 
 - Déploiement Docker (Caddy, Node 24, PostgreSQL 17) de l'outil historique : authentification avec TOTP, jeton d'installation, documents chiffrés, journal d'audit, sauvegardes.

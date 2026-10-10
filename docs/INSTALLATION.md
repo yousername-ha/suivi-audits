@@ -792,7 +792,7 @@ Dans **Administration → Système → Configurer l’environnement**, les utili
 
 La publication nécessite simulation, motif et confirmation **PUBLIER**. Une publication concurrente conserve le brouillon et impose un rechargement confirmé. Les versions restent immuables ; préparer une ancienne définition ne l’applique pas, une nouvelle publication est requise. La migration additive `010_configuration_environnement.sql` et l’initialisation au démarrage ne demandent aucun réglage supplémentaire.
 
-La matrice proposée est destinée à de nouveaux usages, sans portée normative. **Les évaluations, méthodes IA/incidents, exports et paramètres historiques restent inchangés.** Le raccordement des évaluations avec référence de version et les autres paramètres métier restent des sous-lots B2. Sauvegarde/restauration PostgreSQL conserve ces configurations ; le JSON historique ne les transporte pas.
+La matrice proposée est destinée à de nouveaux usages, sans portée normative. **Les évaluations, méthodes IA/incidents, exports et paramètres historiques restent inchangés.** Le raccordement explicite des scénarios IA est livré en B2b (ci-dessous) ; les autres familles et paramètres métier restent des sous-lots B2. Sauvegarde/restauration PostgreSQL conserve ces configurations ; le JSON historique ne les transporte pas.
 
 ### Mise à jour depuis l’application
 
@@ -1031,3 +1031,12 @@ Toutes ces commandes se lancent depuis `/opt/suivi-audits`.
 Ce lot ajoute le guide d'utilisation dans le menu Sauge et fiabilise la déconnexion entre onglets. Il n'ajoute aucune migration ni dépendance et ne change pas les scripts de sauvegarde/restauration. Tous les modules encore dans l'ancien style restent servis sous `/legacy` ; leur reprise complète est suivie dans `REPRISE-SOCLE-LEGACY.md`.
 
 Le script de recette `scripts/ci/guide-api.mjs` ne journalise plus le mot de passe temporaire d'un compte qu'il n'utilise pas ; ses erreurs HTTP affichent le statut sans le corps potentiellement sensible. Cette modification conserve les échecs du guide et ne diminue pas les contrôles de sécurité. Le lot A1a ajoute les demandes manuelles de sauvegarde (étape 11.5). Le lot A complète ces capacités avec le poller commun, la planification/rétention, le catalogue, la restauration guidée et les certificats TLS (étapes 11.6–11.7).
+
+
+### Évaluations IA versionnées (B2b)
+
+La migration additive `011_evaluations_versionnees.sql` s’applique automatiquement au démarrage, sans nouveau service, paquet ni configuration manuelle. Les scénarios restent dans le registre historique. Depuis son menu utilisateur ou le guide, ouvrez **Évaluations IA versionnées** (`/ia/evaluations`). Le droit `ia:lire` permet de consulter les sources et les historiques ; `ia:modifier` permet une réévaluation explicitement simulée, justifiée et confirmée par ENREGISTRER. Le serveur contrôle la session complète, les permissions et l’activation IA. Une source conditionnelle ou ambiguë doit d’abord être corrigée dans le registre.
+
+Une décision conserve la source complète (maximum 256 Ko), la version publiée choisie, les niveaux, le résultat calculé côté serveur et l’auteur. Une mutation concurrente exige une nouvelle validation. Une publication de configuration ne recalcule pas le passé ; une source retirée conserve son historique consultable. L’écran distingue le calcul historique courant et les décisions organisationnelles. Les instantanés et configurations exactes sont consultables ; l’export JSON complet (maximum 1 000 décisions par scénario) exige `ia:exporter` et `import_export:exporter`, avec les deux modules actifs.
+
+Les sauvegardes et restaurations PostgreSQL conservent ces décisions et les configurations. Le JSON historique v2 ne les transporte pas ; un import/retrait de scénario n’efface pas leur historique. Aucun import automatique de décisions, aucune conversion silencieuse de notes ni reprise complète des autres fonctions IA. Voir ADR 0022.

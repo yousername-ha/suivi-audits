@@ -23,6 +23,18 @@ const HISTORICAL_MODULES: readonly BusinessModule[] = [
 
 export const HELP_ARTICLES: HelpArticle[] = [
   {
+    id: 'evaluations-ia-versionnees',
+    title: 'Évaluations IA versionnées',
+    permission: 'ia:lire',
+    link: '/ia/evaluations',
+    steps: [
+      'Depuis le menu utilisateur du registre historique ou ce guide, ouvrez les évaluations IA versionnées et consultez un scénario existant.',
+      'Avec le droit de modification IA, choisissez une version publiée et les niveaux explicitement, puis simulez sans écriture.',
+      'Saisissez le motif et ENREGISTRER pour conserver une décision immuable : source complète, configuration, résultat et auteur.',
+      'Les décisions restent consultables après modification ou retrait de la source. Une nouvelle configuration ne recalcule jamais le passé. L’export JSON exige les droits IA et import/export.',
+    ],
+  },
+  {
     id: 'configuration-environnement',
     title: 'Configuration de l’environnement',
     permission: 'administration:lire',
@@ -31,7 +43,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       'Depuis Administration → Système, ouvrez Configurer l’environnement pour consulter les échelles, la matrice et les versions publiées.',
       'Un administrateur peut modifier un brouillon, choisir un scénario puis valider et simuler. Le simulateur ne crée pas d’évaluation métier.',
       'La publication exige un motif et la confirmation PUBLIER. Chaque version reste immuable ; reprendre une ancienne définition prépare une nouvelle publication.',
-      'Les évaluations et méthodes de l’outil historique restent inchangées. Leur raccordement versionné et les autres paramètres métier seront livrés dans les sous-lots suivants de B2.',
+      'Les évaluations et méthodes de l’outil historique restent inchangées. Le raccordement explicite des scénarios IA est disponible dans Évaluations IA versionnées. Les autres familles et paramètres métier restent à reprendre dans B2.',
     ],
   },
   ...HISTORICAL_MODULES.map((module): HelpArticle => ({

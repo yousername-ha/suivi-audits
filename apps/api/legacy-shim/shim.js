@@ -199,7 +199,7 @@
     var ul = el('ul'); ul.hidden = true;
     var roleL = (CFG.roles || []).join(', ') || 'Aucun rôle';
     ul.appendChild(el('li', 'sv-h', CFG.user + ' · ' + roleL));
-    [['Nouvelle interface (accueil)', '/'], ['Mon compte', '/account']].concat(!CFG.enabled || CFG.enabled.indexOf('documents') !== -1 ? [['Documents et liens', '/documents']] : []).concat(CFG.admin ? [['Administration', '/admin']] : [])
+    [['Nouvelle interface (accueil)', '/'], ['Mon compte', '/account']].concat(!CFG.enabled || CFG.enabled.indexOf('documents') !== -1 ? [['Documents et liens', '/documents']] : []).concat(!CFG.enabled || CFG.enabled.indexOf('ia') !== -1 ? [['Évaluations IA versionnées', '/ia/evaluations']] : []).concat(CFG.admin ? [['Administration', '/admin']] : [])
       .forEach(function (x) { var li = el('li'), a = el('a', '', x[0]); a.href = x[1]; li.appendChild(a); ul.appendChild(li); });
     var lo = el('li'), lb = el('button', '', 'Déconnexion'); lb.type = 'button';
     lb.onclick = function () { fetch('/api/auth/logout', { method: 'POST', headers: { 'X-CSRF-Token': CFG.csrf }, credentials: 'same-origin' }).finally(function () { location.href = '/login'; }); };

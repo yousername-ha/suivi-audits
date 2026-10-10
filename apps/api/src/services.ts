@@ -14,6 +14,7 @@ import { Bus, Presence } from './realtime.js';
 import { Vault } from './security/crypto.js';
 import { Settings } from './settings.js';
 import { Environment } from './environment.js';
+import { RiskAssessments } from './risk-assessments.js';
 import { Walls } from './walls.js';
 
 export function createServices(cfg: Config, log: Logger) {
@@ -24,13 +25,15 @@ export function createServices(cfg: Config, log: Logger) {
   // Modules repris dans des tables (ADR 0007) : /legacy les affiche, le serveur refuse leurs modifications.
   legacy.register(mapsMapper);
   const settings = new Settings(cfg, db, legacy);
+  const environment = new Environment(db);
   return {
     cfg,
     log,
     db,
     vault,
     settings,
-    environment: new Environment(db),
+    environment,
+    riskAssessments: new RiskAssessments(db, legacy, environment),
     modules: new Modules(cfg.db, db),
     updates: new Updates(cfg, db),
     backups: new Backups(cfg, db),

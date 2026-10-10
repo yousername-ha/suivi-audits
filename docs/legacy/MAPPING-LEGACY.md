@@ -597,3 +597,8 @@ Un seul module est repris dans des tables dédiées : la **cartographie** (`maps
 | `$.maps.process.updatedAt` | maps.extra | 2 | maps, map_versions | Date propre à l’outil historique ; mise à jour à chaque enregistrement. |
 | `$.maps.issueKind` | maps.settings | 2 | maps, map_versions | Nature des enjeux corrigée, dans les réglages de la carte de contexte (CARTO-12). |
 | `$.maps.issueKind.{clé}` | maps.settings | 2 | maps, map_versions | Nature des enjeux corrigée, dans les réglages de la carte de contexte (CARTO-12). |
+
+
+### B2b — décisions IA sur les sources v2
+
+`ai.evals[]` reste dans `app_state` et se modifie via le registre historique, sans mapper ni deuxième registre editable. `/ia/evaluations` ajoute des décisions immuables dans `risk_assessments`, liées à l’identifiant source et à une configuration B2a explicitement choisie. Le snapshot complet préserve les champs inconnus. Le calcul `aiEval` et les exports v2 restent inchangés ; aucune conversion automatique des scores. Les décisions se consultent même après retrait de la source ; elles sont transportées par PostgreSQL et leur export JSON dédié, pas par le JSON v2. Il ne s’agit pas d’une reprise complète du module IA (ADR 0022).
