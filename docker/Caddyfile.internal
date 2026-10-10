@@ -44,6 +44,9 @@
 	handle @api {
 		reverse_proxy app:8080 {
 			header_up X-Forwarded-Proto {http.request.header.X-Forwarded-Proto}
+			# Le frontal externe remplace déjà les en-têtes transmis par le navigateur.
+			# Préserver son adresse client pour l'audit et les limites par IP de l'API.
+			header_up X-Forwarded-For {http.request.header.X-Forwarded-For}
 			# Flux SSE (/api/events) : transmis immédiatement.
 			flush_interval -1
 			transport http {

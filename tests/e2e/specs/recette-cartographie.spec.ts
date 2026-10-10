@@ -603,8 +603,16 @@ test('16. exports PNG, SVG, PDF, JSON : fichiers lisibles avec titre et légende
   ] as const) {
     await p.getByRole('button', { name: 'Exporter' }).click();
     const dl = p.waitForEvent('download');
+    // Le téléchargement est local ; son événement peut précéder la requête d'audit asynchrone.
+    const logged = p.waitForResponse(
+      (response) =>
+        new URL(response.url()).pathname === '/api/carto/exports' &&
+        response.request().method() === 'POST' &&
+        response.request().postDataJSON().format === ext,
+    );
     await p.getByRole('menuitem', { name: libelle }).click();
     const d = await dl;
+    expect((await logged).ok()).toBe(true);
     expect(d.suggestedFilename()).toMatch(new RegExp(`^Cartographie_contexte_\\d{8}-\\d{4}\\.${ext}$`));
     fichiers[ext] = readFileSync((await d.path())!);
   }

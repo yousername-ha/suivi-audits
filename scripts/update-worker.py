@@ -191,24 +191,24 @@ class Worker:
             raise Failure("Le frontal applicatif n'est pas prêt")
 
     def reconcile(self):
-        # Le marqueur de restore.sh neutralise aussi les intentions restaurées sans reçu local.
-        with contextlib.suppress(Failure):
-            self.cli("update-sync")
         # Les reçus survivent au rollback/restauration ; des demandes restaurées ne sont jamais rejouées.
         for receipt in sorted((self.private / "receipts").glob("*.json")):
             r = read(receipt)
             if r and r.get("status") in TERMINAL:
                 with contextlib.suppress(Failure):
                     self.cli("update-finish", str(uuid.UUID(r["id"])), r["status"])
+        # Fermer les demandes dont le résultat est connu AVANT de neutraliser les autres intentions restaurées.
+        with contextlib.suppress(Failure):
+            self.cli("update-sync")
 
     def finish(self, status, message):
         if status not in TERMINAL:
             raise Failure("État terminal invalide")
+        atomic(self.private / "receipts" / f'{self.job["id"]}.json', {"id": self.job["id"], "status": status, "at": now()})
+        self.reconcile()
         self.publish(id=self.job["id"], target=self.job.get("target"), status=status, phase="complete" if status == "success" else self.state["phase"],
                      maintenance=status == "intervention", ready=status != "intervention", message=message,
                      installed=self.env().get("APP_VERSION", self.state["installed"]))
-        atomic(self.private / "receipts" / f'{self.job["id"]}.json', {"id": self.job["id"], "status": status, "at": now()})
-        self.reconcile()
         if status == "intervention":
             self.job["blocked"] = True
             atomic(self.private / "active.json", self.job)

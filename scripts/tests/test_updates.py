@@ -62,12 +62,18 @@ class Updates(unittest.TestCase):
     def test_reprise_apres_remplacement_termine_operation(self):
         (self.root/'.env').write_text('APP_VERSION=3.1.0\n')
         self.w.job={'id':self.id,'target':'3.1.0','handoff':True}
-        with patch.object(self.w,'health') as health,patch.object(self.w,'cli',return_value=''):
+        database={'status':'running'}
+        def cli(command,*args):
+            if command=='update-finish' and database['status']=='running': database['status']=args[1]
+            if command=='update-sync' and database['status']=='running': database['status']='failed'
+            return ''
+        with patch.object(self.w,'health') as health,patch.object(self.w,'cli',side_effect=cli):
             self.w.recover()
         health.assert_called_once_with('3.1.0')
         self.assertEqual(self.w.state['status'],'success')
         self.assertFalse(self.w.state['maintenance'])
         self.assertEqual(self.w.state['installed'],'3.1.0')
+        self.assertEqual(database['status'],'success')
 
     def test_signature_pour_chaque_digest_et_identite_exacte(self):
         self.w.job={'id':self.id,'target':'3.1.0'}

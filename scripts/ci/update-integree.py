@@ -90,7 +90,7 @@ jar=http.cookiejar.CookieJar()
 http=urllib.request.build_opener(urllib.request.HTTPSHandler(context=context),urllib.request.HTTPCookieProcessor(jar))
 csrf=''
 def call(method,path,data=None):
-    req=urllib.request.Request('https://localhost'+path,data=json.dumps(data).encode() if data is not None else None,method=method,headers={'Origin':'https://localhost','Content-Type':'application/json','X-CSRF-Token':csrf})
+    req=urllib.request.Request('https://localhost'+path,data=json.dumps(data).encode() if data is not None else None,method=method,headers={'Origin':'https://localhost','Content-Type':'application/json','X-CSRF-Token':csrf,'X-Forwarded-For':'203.0.113.10'})
     with http.open(req,timeout=10) as r: return json.loads(r.read())
 call('POST','/api/auth/login',{'username':'recette_update','password':'Recette-Update-2026!'})
 csrf=call('GET','/api/auth/me')['csrf']
@@ -116,7 +116,15 @@ def monitor():
             with urllib.request.urlopen('https://localhost/update/status.json',context=context,timeout=5) as r: state=json.loads(r.read())
             if state['maintenance']:
                 with urllib.request.urlopen(urllib.request.Request('https://localhost/',headers={'Accept':'text/html'}),context=context,timeout=5) as r:
-                    html=r.read().decode(); assert 'maintenance-card' in html and '/update/maintenance.js' in html
+                    html=r.read().decode()
+                    if 'maintenance-card' in html:
+                        assert '/update/maintenance.js' in html
+                    else:
+                        # Les deux lectures peuvent encadrer l'ouverture/la fermeture du marqueur atomique.
+                        # Une transition est acceptable uniquement vers l'interface et un service réellement sain.
+                        assert 'id="root"' in html
+                        with urllib.request.urlopen('https://localhost/healthz',context=context,timeout=5) as health:
+                            assert health.status==200 and health.read().strip()==b'ok'
                 for asset in ('maintenance.js','maintenance.css'):
                     with urllib.request.urlopen('https://localhost/update/'+asset,context=context,timeout=5) as r: assert r.status==200 and r.read()
                 observations.append(state['phase'])
@@ -134,6 +142,9 @@ def local_popen(args,*a,**kwargs):
 try:
     worker=Fixture();worker.reconcile();worker.check();worker.publish(ready=True,status='idle',maintenance=False)
     requested=call('POST','/api/admin/updates/install',{'requestId':str(uuid.uuid4()),'version':'99.0.0','confirm':'METTRE À JOUR'})
+    audited_ip=compose('exec','-T','-u','postgres','db','psql','-d','suivi','-Atc',f"SELECT host(ip) FROM audit_log WHERE action='update.install.requested' AND target='{requested['id']}' ORDER BY id DESC LIMIT 1",cwd=repo).strip()
+    gateway_networks=json.loads(run(['docker','inspect','-f','{{json .NetworkSettings.Networks}}',gateway]))
+    assert audited_ip and audited_ip not in ['203.0.113.10',*[n['IPAddress'] for n in gateway_networks.values()]]
     claimed=json.loads(worker.cli('update-claim'));assert claimed['id']==requested['id']
     with patch.object(m.subprocess,'Popen',side_effect=local_popen): worker.locked_operation(lambda:worker.install(claimed))
     for _ in range(100):
@@ -146,6 +157,7 @@ try:
     assert run(['docker','inspect','-f','{{.Config.Image}}',updater]).strip().endswith(':99.0.0')
     assert json.loads(compose('exec','-T','app','suivi','controle-donnees',cwd=repo))==before
     assert compose('exec','-T','-u','postgres','db','psql','-d','suivi','-Atc','SELECT count(*) FROM recette_update_temoin',cwd=repo).strip()=='1'
+    assert compose('exec','-T','-u','postgres','db','psql','-d','suivi','-Atc',f"SELECT status FROM update_jobs WHERE id='{requested['id']}'",cwd=repo).strip()=='success'
     print('Mise à jour API 98 -> 99 : sauvegarde chiffrée, migration réelle, données identiques, exécutant remplacé, frontal intact.')
     # Revenir à la base de la fixture avec la sauvegarde précédente, puis injecter un échec après migration.
     compose('stop','updater',cwd=repo)
@@ -170,6 +182,7 @@ try:
     with patch.object(m.subprocess,'Popen',side_effect=local_popen):worker.locked_operation(lambda:worker.install(claimed))
     assert worker.state['status']=='rolled_back' and not worker.state['maintenance']
     assert worker.state['installed']=='98.0.0'
+    assert compose('exec','-T','-u','postgres','db','psql','-d','suivi','-Atc',f"SELECT status FROM update_jobs WHERE id='{requested['id']}'",cwd=repo).strip()=='rolled_back'
     assert json.loads(compose('exec','-T','app','suivi','controle-donnees',cwd=repo))==before
     assert compose('exec','-T','-u','postgres','db','psql','-d','suivi','-Atc',"SELECT to_regclass('recette_update_temoin') IS NULL",cwd=repo).strip()=='t'
     assert compose('ps','-q','gateway').strip()==gateway
