@@ -90,7 +90,8 @@ export function BackupsPanel() {
         <ErrorAlert error={error ?? q.error} />
         {q.data && !q.data.worker.available && (
           <Alert color="yellow" title="Exécutant serveur indisponible">
-            Vérifiez la tâche planifiée et sa configuration. Aucune commande système n’est exécutée par le navigateur.
+            Le service de sauvegarde n’a pas encore répondu. Vérifiez l’état du service de mise à jour et la
+            configuration de sauvegarde sur le serveur.
           </Alert>
         )}
         {q.data?.worker.seenAt && (

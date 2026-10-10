@@ -343,7 +343,7 @@ sudo cp .env.example .env
 
 **6.2 Ouvrir le fichier dans l'éditeur nano :**
 
-<!-- ci: instead: sudo sed -i 's/^SITE_ADDRESS=.*/SITE_ADDRESS=localhost/; s/^APP_VERSION=.*/APP_VERSION=ci/' .env -->
+<!-- ci: instead: sudo sed -i 's/^SITE_ADDRESS=.*/SITE_ADDRESS=localhost/; s/^APP_VERSION=.*/APP_VERSION=ci/; s/^EXPLOITATION_AUTO=.*/EXPLOITATION_AUTO=0/' .env -->
 ```bash
 sudo nano .env
 ```
@@ -712,6 +712,8 @@ Le script vérifie l'empreinte et la structure, puis demande de taper `RESTAURER
 
 **11.5 Activer les demandes manuelles depuis Administration > Système (A1a).**
 
+**Installation normale depuis 3.0.1 : déjà activé automatiquement.** Le service `updater` exécute également le poller commun, sans cron supplémentaire. Passer à la section 11.6 pour la clé et le catalogue. Les commandes A1a ci-dessous restent utiles uniquement pour les installations antérieures ou un exécutant hôte choisi explicitement.
+
 La migration additive `006_sauvegardes.sql` est appliquée au démarrage. L’application enregistre une demande ; elle n’exécute aucun shell et ne reçoit ni clé ni chemin. Un exécutant sur le serveur interroge la file. Il réutilise `backup.sh`, avec chiffrement obligatoire. La restauration reste la procédure 11.4 ; l’empreinte SHA-256 vérifie la cohérence du fichier, pas son authenticité ni sa restaurabilité.
 
 Après les étapes 11.1–11.4, vérifier la phrase secrète **non vide**, fichier régulier lisible par root et inaccessible au groupe et aux autres comptes (0600). Conserver sa copie dans le coffre-fort. La destination doit être persistante, privée et incluse dans la sauvegarde externalisée. `RETENTION_DAYS` accepte 1 à 36500 (90 par défaut ; 36500 conserve la compatibilité avec les sauvegardes avant mise à jour, dont les cinq dernières sont gardées) ; `BACKUP_PREFIXE` accepte 1 à 61 caractères ASCII alphanumériques, point, tiret ou soulignement, avec un premier caractère alphanumérique. Ces contrôles s’appliquent aussi aux appels directs de `backup.sh`.
@@ -743,7 +745,11 @@ Recette après configuration : confirmer une demande, attendre son résultat « 
 
 ### 11.6 Pilotage complet du lot A (poller commun)
 
-La migration additive `007_exploitation.sql` est appliquée au démarrage. Installer le poller commun **à la place du poller A1a** : ils partagent un verrou et ne doivent pas être planifiés en concurrence. Les scripts directs restent utilisables. Le poller nécessite root, Python 3 standard, Docker Compose, OpenSSL et une destination persistante, possédée par root et non modifiable par le groupe/les autres comptes. La clé doit être un fichier régulier non vide, possédé par root, avec droits 0600.
+La migration additive `007_exploitation.sql` est appliquée au démarrage. À partir de **3.0.1**, le service `updater` de l'installation Compose exécute le poller commun automatiquement : sauvegardes manuelles/planifiées, catalogue, vérifications, restaurations et TLS autorisé. Aucun nouveau service, paquet ni cron. Il utilise par défaut **`DATA_DIR/sauvegardes`** (privé, persistant) et la clé déjà générée **`DATA_DIR/update-secrets/backup-pass`** (root 0600, hors API). Conserver cette clé dans le coffre-fort et externaliser les archives. Aucun secret existant n'est remplacé. Les verrous hôte et SQL empêchent les opérations concurrentes ; une mise à jour attend le passage actif. Les fichiers temporaires volumineux sont dans `DATA_DIR/reprise-exploitation/tmp`, hors du petit `/tmp` du conteneur.
+
+**Catalogue existant** : renseigner les chemins serveur `BACKUP_DEST` et `BACKUP_PASSPHRASE_FILE` dans `.env`, puis redémarrer `updater` ; Compose les monte pour l'exécutant, sans les exposer à l'API. Garder la clé d'origine pour déchiffrer les anciennes archives. Le dossier doit être persistant, possédé par root et non modifiable par le groupe/les autres comptes ; la clé est régulière, non vide, root 0600. La nouvelle clé par défaut ne déchiffre pas les anciennes archives créées avec une autre clé. Aucun cron existant n'est supprimé ou changé : éviter de planifier deux sauvegardes nocturnes pour le même besoin, même si les verrous empêchent une exécution simultanée.
+
+**Mode hôte facultatif** : pour conserver le poller externe plutôt que l'intégration Compose, mettre `EXPLOITATION_AUTO=0` dans `.env`. Les commandes ci-dessous restent utilisables, avec Python 3, Docker Compose et OpenSSL sur le serveur. Le poller commun remplace alors le poller A1a ; ils partagent un verrou. La recette du guide utilise ce mode pour contrôler explicitement chaque opération ; la CI normale teste aussi la sauvegarde automatique depuis le bouton, sans cron.
 
 <!-- ci: skip — configuration de production facultative ; protocole complet rejoué dans le job guide, recette lot A -->
 ```bash

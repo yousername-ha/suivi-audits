@@ -27,3 +27,46 @@ test('administration > système : exploitation en lecture seule', async ({ brows
   expect(problems).toEqual([]);
   await ctx.close();
 });
+
+test('sauvegarde chiffrée réelle depuis le menu, sans cron supplémentaire', async ({ browser }) => {
+  test.skip(process.env.E2E_BACKUP_AUTO !== '1', 'Nécessite la pile Compose complète avec son exécutant automatique.');
+  test.setTimeout(120000);
+  const ctx = await browser.newContext({ storageState: (await sessionAdmin(browser)).state, ignoreHTTPSErrors: true });
+  const page = await ctx.newPage(),
+    problems = watchPage(page);
+  try {
+    await page.goto('/admin/system');
+    await expect(page.getByRole('button', { name: 'Demander une sauvegarde', exact: true })).toBeEnabled({
+      timeout: 60000,
+    });
+    const before = await (await page.request.get('/api/legacy/state')).json();
+    await page.getByRole('button', { name: 'Demander une sauvegarde', exact: true }).click();
+    const requested = page.waitForResponse(
+      (r) => r.url().endsWith('/api/admin/sauvegardes') && r.request().method() === 'POST',
+    );
+    await page.getByRole('dialog').getByRole('button', { name: 'Confirmer', exact: true }).click();
+    const response = await requested;
+    expect(response.status()).toBe(202);
+    const job = await response.json();
+    await expect
+      .poll(
+        async () => {
+          const state = await (await page.request.get('/api/admin/sauvegardes')).json();
+          return state.jobs.find((j: { id: string }) => j.id === job.id)?.status;
+        },
+        { timeout: 60000, intervals: [1000] },
+      )
+      .toBe('reussie');
+    const state = await (await page.request.get('/api/admin/sauvegardes')).json();
+    const report = state.jobs.find((j: { id: string }) => j.id === job.id).report;
+    expect(report.chiffree).toBe(true);
+    expect(report.integriteVerifiee).toBe(true);
+    expect(report.fichier).toMatch(/\.tar\.enc$/);
+    expect(report.sha256).toMatch(/^[a-f0-9]{64}$/);
+    expect(report.tailleOctets).toBeGreaterThan(0);
+    expect(await (await page.request.get('/api/legacy/state')).json()).toEqual(before);
+    expect(problems).toEqual([]);
+  } finally {
+    await ctx.close();
+  }
+});

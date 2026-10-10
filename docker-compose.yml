@@ -172,6 +172,10 @@ services:
     volumes:
       - .:${PWD}
       - ${DATA_DIR:-/srv/suivi-audits/donnees}:${DATA_DIR:-/srv/suivi-audits/donnees}
+      # Sauvegardes intégrées ; les chemins explicites de l'exploitant restent prioritaires.
+      - ${BACKUP_DEST:-${DATA_DIR:-/srv/suivi-audits/donnees}/sauvegardes}:${BACKUP_DEST:-${DATA_DIR:-/srv/suivi-audits/donnees}/sauvegardes}
+      # Par défaut monter le dossier : init doit encore pouvoir y créer le fichier de clé au premier démarrage.
+      - ${BACKUP_PASSPHRASE_FILE:-${DATA_DIR:-/srv/suivi-audits/donnees}/update-secrets}:${BACKUP_PASSPHRASE_FILE:-${DATA_DIR:-/srv/suivi-audits/donnees}/update-secrets}:ro
       - /var/run/docker.sock:/var/run/docker.sock
       # Identifiants en lecture seule déjà provisionnés par le guide normal.
       - /root/.ssh:/root/.ssh:ro

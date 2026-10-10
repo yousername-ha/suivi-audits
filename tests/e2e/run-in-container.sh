@@ -10,5 +10,5 @@ IMAGE=mcr.microsoft.com/playwright:v1.56.1-noble
 docker compose exec -T app setup-token > tests/e2e/.jeton
 docker run --rm --network host --ipc=host \
   -v "$PWD:/work" -w /work/tests/e2e \
-  -e CI -e E2E_TOKEN_CMD="cat .jeton" -e E2E_STACK_DIR=/work/tests/e2e \
+  -e CI -e E2E_BACKUP_AUTO -e E2E_TOKEN_CMD="cat .jeton" -e E2E_STACK_DIR=/work/tests/e2e \
   "$IMAGE" npx playwright test "$@"

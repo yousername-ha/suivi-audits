@@ -1,4 +1,4 @@
-/* A1a : lecture réelle sans worker, puis contrats d'interface simulés. L'API et l'exécutant sont testés séparément. */
+/* A1a : états d'interface simulés. La sauvegarde automatique réelle est testée dans systeme.spec.ts. */
 import { randomUUID } from 'node:crypto';
 import type { BackupJobOut } from '../../../packages/shared/src/exploitation';
 import { expect, test, type Browser } from '@playwright/test';
@@ -27,6 +27,14 @@ const job = (): BackupJobOut => ({
 const worker = { available: true, seenAt: '2026-10-09T12:00:00Z', message: 'Exécutant prêt' };
 test('A1a : sans exécutant configuré, la demande est désactivée', async ({ browser }) => {
   const { ctx, page, problems } = await open(browser);
+  await page.route('**/api/admin/sauvegardes', (route) =>
+    route.fulfill({
+      json: {
+        worker: { available: false, seenAt: null, message: 'Exécutant indisponible' },
+        jobs: [],
+      },
+    }),
+  );
   await page.goto('/admin/system');
   await expect(page.getByRole('heading', { name: 'Demandes de sauvegarde' })).toBeVisible();
   await expect(page.getByText('Exécutant serveur indisponible')).toBeVisible();

@@ -129,7 +129,11 @@ export function Layout({ children }: { children: ReactNode }) {
             leftSection={<IconeAdministration />}
             active={active('/pilotage')}
             opened={active('/pilotage')}
-            onClick={close}
+            // Mantine empêche la navigation native d'un NavLink avec enfants lorsqu'il les déplie.
+            onClick={() => {
+              nav('/pilotage');
+              close();
+            }}
           >
             {PILOTAGE_NAV.map((group) => {
               const visible = group.items.filter(

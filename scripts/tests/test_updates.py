@@ -68,6 +68,35 @@ class Updates(unittest.TestCase):
         self.assertIsNone(self.w.state['available'])
         self.assertTrue(self.w.state['checkError'])
 
+    def test_exploitation_automatique_reutilise_cle_generee_et_stockage_prive(self):
+        with patch.object(self.w,'run') as run:
+            self.w.exploitation()
+        args, options = run.call_args
+        self.assertEqual(args[0],['python3',str(self.root/'scripts/exploitation-worker.py')])
+        self.assertEqual(options['timeout'],4000)
+        env = options['extra_env']
+        self.assertEqual(env['BACKUP_PASSPHRASE_FILE'],str(self.data/'update-secrets/backup-pass'))
+        self.assertEqual(env['BACKUP_DEST'],str(self.data/'sauvegardes'))
+        self.assertEqual(env['EXPLOITATION_TLS_HOST'],'gateway')
+        for path in (Path(env['TMPDIR']),Path(env['BACKUP_DEST'])):
+            self.assertEqual(path.stat().st_mode & 0o777,0o700)
+
+    def test_configuration_sauvegarde_existante_prioritaire_sans_changement_de_cle(self):
+        (self.root/'.env').write_text('APP_VERSION=3.0.0\nBACKUP_DEST=/catalogue-existant\nBACKUP_PASSPHRASE_FILE=/cle-existante\n')
+        with patch.object(self.w,'run') as run:
+            self.w.exploitation()
+        self.assertEqual(run.call_args.kwargs['extra_env']['BACKUP_DEST'],'/catalogue-existant')
+        self.assertEqual(run.call_args.kwargs['extra_env']['BACKUP_PASSPHRASE_FILE'],'/cle-existante')
+
+    def test_maintenance_et_mode_hote_nexecutent_pas_de_sauvegarde_automatique(self):
+        with patch.object(self.w,'run') as run:
+            self.w.state['maintenance'] = True
+            self.w.exploitation()
+            self.w.state['maintenance'] = False
+            (self.root/'.env').write_text('APP_VERSION=3.0.0\nEXPLOITATION_AUTO=0\n')
+            self.w.exploitation()
+        run.assert_not_called()
+
     def test_interruption_avant_remplacement_ne_rejoue_pas_installation(self):
         self.w.job={'id':self.id,'target':'3.1.0','handoff':False}
         with patch.object(self.w,'cli',return_value='') as cli:

@@ -213,6 +213,8 @@ jobs:
       - name: Tests de bout en bout et captures de référence (conteneur Playwright officiel)
         # Même navigateur et mêmes polices qu'en local : les captures de référence sont comparées à l'identique.
         timeout-minutes: 20
+        env:
+          E2E_BACKUP_AUTO: '1'
         run: ./tests/e2e/run-in-container.sh
       - name: Droits des résultats de test
         if: always()

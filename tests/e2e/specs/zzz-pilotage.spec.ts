@@ -1,6 +1,36 @@
 import { expect, test, type Page } from '@playwright/test';
 import { csrfOf, sessionAdmin, watchPage } from '../helpers';
 
+for (const width of [1440, 390]) {
+  test(`Pilotage : accès par le clic du menu à ${width} px`, async ({ browser }) => {
+    const ctx = await browser.newContext({
+      storageState: (await sessionAdmin(browser)).state,
+      ignoreHTTPSErrors: true,
+      viewport: { width, height: 900 },
+    });
+    const page = await ctx.newPage(),
+      problems = watchPage(page);
+    try {
+      await page.goto('/');
+      if (width < 576) await page.getByRole('button', { name: 'Ouvrir le menu' }).click();
+      await page.getByRole('link', { name: 'Pilotage', exact: true }).filter({ visible: true }).click();
+      await expect(page).toHaveURL(/\/pilotage$/);
+      await expect(page.getByRole('heading', { name: 'Synthèse', exact: true })).toBeVisible();
+      if (width < 576) {
+        await expect(page.getByRole('dialog')).toHaveCount(0);
+        await page.getByRole('button', { name: 'Ouvrir le menu' }).click();
+      }
+      await page.getByText('Contexte et responsabilités', { exact: true }).filter({ visible: true }).click();
+      await page.getByRole('link', { name: 'Périmètre et contexte', exact: true }).filter({ visible: true }).click();
+      await expect(page).toHaveURL(/\/pilotage\/contexte$/);
+      await expect(page.getByRole('heading', { name: 'Périmètre et contexte', exact: true })).toBeVisible();
+      expect(problems).toEqual([]);
+    } finally {
+      await ctx.close();
+    }
+  });
+}
+
 async function post(page: Page, path: string, data: unknown) {
   const r = await page.request.post(path, {
     headers: { Origin: new URL(page.url()).origin, 'X-CSRF-Token': await csrfOf(page.request) },

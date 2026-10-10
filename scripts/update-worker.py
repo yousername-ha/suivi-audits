@@ -190,6 +190,28 @@ class Worker:
         if result.strip() != "ok":
             raise Failure("Le frontal applicatif n'est pas prêt")
 
+    def exploitation(self):
+        # Réutiliser l'exécutant existant, séquentiellement : pas de cron ni de service supplémentaire.
+        config = self.env()
+        if config.get("EXPLOITATION_AUTO", "1") != "1" or self.state["maintenance"]:
+            return
+        temporary = self.data / "reprise-exploitation/tmp"
+        temporary.mkdir(mode=0o700, parents=True, exist_ok=True)
+        os.chmod(temporary.parent, 0o700)
+        os.chmod(temporary, 0o700)
+        if not config.get("BACKUP_DEST"):
+            destination = self.data / "sauvegardes"
+            destination.mkdir(mode=0o700, parents=True, exist_ok=True)
+            os.chmod(destination, 0o700)
+        settings = {
+            "BACKUP_DEST": config.get("BACKUP_DEST") or str(self.data / "sauvegardes"),
+            "BACKUP_PASSPHRASE_FILE": config.get("BACKUP_PASSPHRASE_FILE") or str(self.data / "update-secrets/backup-pass"),
+            "TMPDIR": str(temporary),
+            "EXPLOITATION_TLS_HOST": "gateway",
+            "EXPLOITATION_TLS_PORT": "8443",
+        }
+        self.run(["python3", str(self.repo / "scripts/exploitation-worker.py")], timeout=4000, extra_env=settings)
+
     def reconcile(self):
         # Les reçus survivent au rollback/restauration ; des demandes restaurées ne sont jamais rejouées.
         for receipt in sorted((self.private / "receipts").glob("*.json")):
@@ -379,6 +401,11 @@ class Worker:
                 self.publish(ready=self.state["status"] != "intervention")
                 self.reconcile()
                 try:
+                    if self.state["status"] != "intervention":
+                        # Le poller détient son propre verrou partagé avec les sauvegardes et mises à jour.
+                        # Son échec ne bloque pas la vérification GitHub ni la reprise d'une mise à jour.
+                        with contextlib.suppress(Failure, OSError):
+                            self.exploitation()
                     raw = self.cli("update-claim").strip()
                     job = json.loads(raw) if raw else None
                     if job:

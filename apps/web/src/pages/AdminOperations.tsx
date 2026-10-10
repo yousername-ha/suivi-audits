@@ -157,8 +157,8 @@ export function OperationsPanel() {
       <ErrorAlert error={error ?? q.error} />
       {!q.isPending && !q.data?.available && (
         <Alert color="yellow" title="Pilotage serveur indisponible">
-          L’exécutant d’exploitation doit être configuré par l’administrateur du serveur. Les opérations sont
-          désactivées tant qu’il ne répond pas.
+          Le service d’exploitation n’a pas encore répondu. Vérifiez son démarrage et la configuration du serveur. Les
+          opérations sont désactivées tant qu’il ne répond pas.
         </Alert>
       )}
       {host?.message && (
