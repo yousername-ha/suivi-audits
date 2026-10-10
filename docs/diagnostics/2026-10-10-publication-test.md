@@ -14,3 +14,5 @@ Décision : numéro de transport `3.0.1`, manifeste de développement versionné
 ## Reprise de publication
 
 La tentative `v3.0.1` du commit `cc285b4`, après CI et CodeQL réussis, a échoué dans `actions/setup-node@v5` avant toute construction/publication d'image : le cache automatique découvre `packageManager: pnpm` mais pnpm n'est pas installé dans le job des notes, qui utilise seulement Node et Git. Le cache est désactivé explicitement pour ce job. L'étiquette existante reste immuable ; la publication suivante utilise `3.0.2`, avec les mêmes fonctionnalités et des contrôles sur son propre commit.
+
+La première recette CI en présence de ce tag annoté a également révélé une assertion incorrecte dans `montee-version.sh` : après un retour arrière réussi, `rev-parse HEAD` (commit) était comparé à `rev-parse v3.0.1` (objet tag). La référence de départ est désormais résolue avec `^{commit}`. Le processus de retour arrière de production n'est pas modifié ; la recette vérifie les commits réellement exécutés, pour une référence SHA, un tag léger ou un tag annoté.

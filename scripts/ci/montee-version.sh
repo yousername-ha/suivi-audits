@@ -62,7 +62,8 @@ groupe "1. Échec simulé de la santé : retour arrière"
 VERS=$CIBLE_VERSION
 if maj SUIVI_TEST_ECHEC_SANTE=1; then echec "la mise à jour aurait dû échouer (échec simulé)"; fi
 [ "$(version_env)" = "$DEPART_VERSION" ] || echec "APP_VERSION n'est pas revenu à $DEPART_VERSION"
-[ "$(sudo git rev-parse HEAD)" = "$(sudo git rev-parse "$DEPART_REF")" ] || echec "le dépôt n'est pas revenu à la version de départ"
+# Une étiquette annotée désigne un objet tag ; comparer les commits effectivement exécutés.
+[ "$(sudo git rev-parse HEAD)" = "$(sudo git rev-parse "$DEPART_REF^{commit}")" ] || echec "le dépôt n'est pas revenu à la version de départ"
 attendre
 api instantane "$URL" "$RUNNER_TEMP/apres-echec.json" "$RUNNER_TEMP/reference.json"
 dernier_rapport | grep -q '"resultat":"retour-arriere"' || echec "rapport « retour-arriere » absent"
