@@ -19,7 +19,8 @@
     try {
       const url = new URL(next, location.origin);
       if (url.origin === location.origin && !url.pathname.startsWith('/update'))
-        destination = url.pathname + url.search + url.hash;
+        // Garder l'origine validée : un chemin normalisé peut commencer par « // ».
+        destination = url.href;
     } catch {
       /* Une adresse mal formée revient à l'accueil ; elle ne doit pas interrompre le suivi. */
     }

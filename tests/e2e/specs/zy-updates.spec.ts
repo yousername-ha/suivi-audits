@@ -177,6 +177,12 @@ test('mise à jour : panne de suivi et retour arrière sont explicites, sans suc
       '/',
     );
     await expect(page).toHaveURL(/\/update\//);
+    await page.goto('/update/?next=%2Ffolder%2F..%2F%2Fexample.invalid%2F');
+    const returned = page.getByRole('link', { name: 'Consulter le résultat dans l’application' });
+    await expect(returned).toBeVisible();
+    expect(await returned.evaluate((link) => new URL((link as HTMLAnchorElement).href).origin)).toBe(
+      new URL(page.url()).origin,
+    );
     expect(problems).toEqual([]);
   } finally {
     await ctx.close();
