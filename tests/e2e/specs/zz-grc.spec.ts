@@ -236,7 +236,13 @@ test('Pilotage : gabarit Excel réel, simulation, import atomique et doublon ref
     await page.getByRole('button', { name: 'Simuler l’importation', exact: true }).click();
     await expect(page.getByText(/1 domaines · 1 exigences/)).toBeVisible();
     await page.getByRole('button', { name: 'Importer le contenu simulé', exact: true }).click();
+    const imported = page.waitForResponse(
+      (response) =>
+        response.url().endsWith(`/api/grc/${smsi.id}/import/commit`) && response.request().method() === 'POST',
+    );
     await page.getByRole('button', { name: 'Confirmer l’importation', exact: true }).click();
+    expect((await imported).status()).toBe(200);
+    await expect(page.getByRole('button', { name: 'Confirmer l’importation', exact: true })).toHaveCount(0);
     await page.getByRole('button', { name: 'Simuler l’importation', exact: true }).click();
     await expect(page.getByText(/Identifiant de référentiel déjà présent/)).toBeVisible();
     await expect(page.getByRole('button', { name: 'Importer le contenu simulé', exact: true })).toBeDisabled();

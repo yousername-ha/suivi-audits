@@ -122,6 +122,10 @@ test('Pilotage G/H : contrôle, preuve versionnée, constat et action corrective
     await dialog.getByRole('checkbox', { name: 'Je confirme l’enregistrement de cette décision' }).check();
     await dialog.getByRole('button', { name: 'Confirmer l’enregistrement', exact: true }).click();
     await expect(dialog).toHaveCount(0);
+    await expect(row).toContainText('Dernier résultat : Non réussi');
+    // Le focus rendu par la modale peut déplacer les éléments fixes lors d'une capture de page entière.
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.getByRole('button', { name: 'Exporter le registre et ses décisions', exact: true }).hover();
     await page.screenshot({ path: '/work/onboarding-suivi/ghke-controles-desktop.png', fullPage: true });
     await expect(page).toHaveScreenshot('pilotage-controles-desktop.png', {
       fullPage: true,
