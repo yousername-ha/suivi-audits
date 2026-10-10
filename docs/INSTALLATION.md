@@ -3,8 +3,9 @@
 Ce guide part d'un serveur vide et ne suppose aucune connaissance de Linux ni de Docker. Il s'adresse au RSSI ou à un technicien. Suivez les étapes **dans l'ordre**, sans en sauter. Comptez environ 1 h 30 la première fois.
 
 > **Branche de travail Sauge (lot d’intégration, 9 octobre 2026).** La branche
-> `feature/gpt6-evolution-smsi-grc` reprend le ZIP fourni, sans publication ni fusion
-> vers `main`. La version 2 du dépôt est conservée intégralement dans
+> `feature/gpt6-evolution-smsi-grc` reprend le ZIP fourni, sans fusion vers `main`.
+> La préversion numérotée **3.0.1** est préparée pour les tests depuis cette branche (section 12.0).
+> La version 2 du dépôt est conservée intégralement dans
 > `archives/v2-source.zip` et vérifiable avec `archives/v2-manifest.json`.
 > Le guide ci-dessous décrit le déploiement v3 ; il ne faut pas l’appliquer à une
 > installation v2 en service sans sauvegarde et recette de la montée de version.
@@ -798,7 +799,7 @@ La matrice proposée est destinée à de nouveaux usages, sans portée normative
 
 L’installation Compose normale démarre désormais `gateway` (frontal HTTPS stable), `web` (interface interne), `app`, `db`, `init` et `updater` (exécutant privilégié). Aucun cron ni fichier de configuration supplémentaire n’est nécessaire pour la mise à jour intégrée. Une installation existante reçoit ces services lors de sa première mise à niveau vers une version qui les contient ; la procédure serveur ci-dessous reste disponible pour ce premier passage et pour le dépannage.
 
-Chaque utilisateur connecté voit un bandeau fin dès qu’une nouvelle version stable est disponible : version installée, version disponible, lien vers les nouveautés. Le contrôle est automatique au démarrage puis toutes les six heures. Pour un dépôt privé, l’exécutant réutilise **en lecture seule** `/root/.ssh` et `/root/.docker`, provisionnés aux étapes 4.1–4.5. L’API GitHub publique est essayée en premier ; si le dépôt est privé, les étiquettes stables et la présence des trois artefacts sont contrôlées par la clé de déploiement et le registre. Les versions de test/prépublication sont refusées. Une panne réseau conserve la dernière information connue et est signalée, sans prétendre que le serveur est à jour.
+Chaque utilisateur connecté voit un bandeau fin dès qu’une nouvelle version numérotée est disponible : version installée, version disponible, lien vers les nouveautés. Le contrôle est automatique au démarrage puis toutes les six heures. Pour un dépôt privé, l’exécutant réutilise **en lecture seule** `/root/.ssh` et `/root/.docker`, provisionnés aux étapes 4.1–4.5. L’API GitHub publique est essayée en premier et accepte les publications stables uniquement ; si le dépôt est privé, les étiquettes numériques et la présence des trois artefacts sont contrôlées par la clé de déploiement et le registre. Ce dernier chemin peut proposer une préversion **numérotée** comme celle de la section 12.0 ; les suffixes `-beta`/`-dev` restent refusés. Une panne réseau conserve la dernière information connue et est signalée, sans prétendre que le serveur est à jour.
 
 Dans **Administration → Système → Mise à jour de l’application**, un compte ayant le **rôle système Administrateur** peut vérifier manuellement puis confirmer en tapant **METTRE À JOUR**. Une permission personnalisée `administration:administrer` seule ne suffit pas. Enregistrer les modifications en cours avant confirmation. Les demandes sont auditées et idempotentes ; une seule peut être active. Le serveur revalide le rôle avant exécution.
 
@@ -810,6 +811,26 @@ L’exécutant se remplace lui-même à la fin d’une mise à jour ; son succes
 
 **Limites d’exploitation** : Internet/GitHub/GHCR/Sigstore sont nécessaires depuis l’exécutant uniquement. Les accès privés du guide doivent être renouvelés à leur expiration. Le frontal stable reste à la version `GATEWAY_VERSION` inscrite lors de la première mise à jour web : il ne doit pas être recréé au milieu de l’opération. Son moteur TLS est un composant d’infrastructure à entretenir séparément ; la procédure serveur ci-dessous met également à jour le frontal. Les applications/API/interfaces et l’exécutant évoluent depuis le web, le moteur du frontal suit une fenêtre d’entretien distincte. L’indisponibilité des données pendant sauvegarde/migration dépend de leur volume ; la maintenance n’assure pas la disponibilité en cas de panne de l’hôte, du stockage ou du frontal lui-même. Les proxy/TLS externes restent gérés par l’infrastructure.
 
+
+### 12.0 Tester la branche depuis le menu de mise à jour
+
+La livraison **3.0.1 — Test de développement** regroupe la branche `feature/gpt6-evolution-smsi-grc`, avec G/H/K et le début E. Elle est marquée **Pre-release** sur GitHub et ne modifie ni `main`, ni les alias d'images stables. Les images API, web et updater sont publiées/signées seulement après la réussite des contrôles CI et CodeQL du commit exact, puis de leurs scans HIGH/CRITICAL et de leurs signatures. Les étiquettes d'images installables ne sont exposées qu'une fois les trois composants validés.
+
+Sur une installation **v3** de ce **dépôt privé**, disposant déjà de `gateway`/`updater` et des accès Git/GHCR du guide, ouvrir **Administration → Système → Mise à jour de l’application**, choisir **Vérifier**, lire les nouveautés de `3.0.1`, puis confirmer **METTRE À JOUR**. La sauvegarde chiffrée, la maintenance persistante, les contrôles et le retour arrière sont ceux décrits ci-dessus. Aucune installation automatique.
+
+Tous les serveurs autorisés sur ce dépôt privé peuvent voir cette préversion numérotée ; l'ancien menu ne dispose pas de canal de test séparé. Une éventuelle ouverture publique du dépôt demande une évolution de la sélection des préversions, car `/releases/latest` les exclut. Les installations v2 suivent d'abord la montée de version 12.4. Une installation déjà en `3.0.1` n'a pas de nouvelle version à installer.
+
+**Installation construite localement avec `APP_VERSION=test`, `local` ou `ci`** : ces noms ne permettent pas une comparaison de versions. Dans le dossier de l'application, normaliser une seule fois la version de la construction locale en `3.0.0`, sans toucher aux données ni à la clé de chiffrement. La commande `up --no-deps` conserve la base et le frontal ; les images locales déjà construites sont réutilisées.
+
+<!-- ci: skip — adaptation unique d'une installation de test existante, pas d'un serveur neuf -->
+```bash
+sudo cp -p .env .env.avant-version-test
+sudo sed -i 's/^APP_VERSION=.*/APP_VERSION=3.0.0/' .env
+sudo docker compose -f docker-compose.yml -f docker-compose.build.yml build
+sudo docker compose up -d --no-deps --pull never app web updater
+```
+
+Si des images épinglées par `API_IMAGE`/`WEB_IMAGE`/`UPDATER_IMAGE` sont présentes dans `.env`, les conserver pour une version publiée ; pour une construction locale, suivre plutôt la construction de branche de la section 7 et retirer ces trois références. `GATEWAY_VERSION` conserve le frontal existant. Si `Vérifier` échoue, contrôler les accès de la section 4 et l'état des services ; ne pas désactiver les signatures.
 
 ### 12.1 Procédure serveur de mise à jour et d’entretien du frontal
 

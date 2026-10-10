@@ -44,6 +44,10 @@ jobs:
           shellcheck -S warning -x -e SC1091 scripts/*.sh scripts/ci/*.sh
       - name: CHANGELOG (paragraphe « Notes de mise à jour » dans chaque section, EXPL-07)
         run: node scripts/ci/verifier-changelog.mjs CHANGELOG.md
+      - name: Contrats de publication et compatibilité de détection des mises à jour
+        run: |
+          node --test scripts/tests/publication.test.mjs
+          python3 -m unittest discover -s scripts/tests -p test_updates.py
       - name: OpenAPI
         run: pnpm --filter @suivi/api openapi "$GITHUB_WORKSPACE/openapi.json"
       - uses: actions/upload-artifact@v5

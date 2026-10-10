@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import tempfile
+import urllib.error
 import unittest
 import uuid
 from unittest.mock import patch
@@ -41,6 +42,31 @@ class Updates(unittest.TestCase):
         self.assertNotIn('confidentiel', public)
         self.assertEqual((self.w.public/'status.json').stat().st_mode & 0o777, 0o644)
         self.assertEqual(self.w.private.stat().st_mode & 0o777, 0o700)
+
+    def test_preversion_numerotee_detectee_par_ancien_chemin_depot_prive(self):
+        # GitHub /latest n'expose pas les préversions. Le dépôt privé est déjà lu par la clé Git.
+        tags = 'a\trefs/tags/v3.0.0\nb\trefs/tags/v3.0.1\nc\trefs/tags/v3.0.2-beta\n'
+        def run(args, **kwargs):
+            return tags if args[0] == 'git' else '{}'
+        with patch.object(m.urllib.request, 'urlopen', side_effect=urllib.error.HTTPError('url',404,'private',{},None)), \
+                patch.object(self.w,'run',side_effect=run) as commands:
+            self.w.check()
+        self.assertEqual(self.w.state['available'],'3.0.1')
+        self.assertEqual(self.w.state['notes'],f'https://github.com/{m.REPOSITORY}/releases/tag/v3.0.1')
+        self.assertFalse(self.w.state['checkError'])
+        for component in ('api','web','updater'):
+            self.assertIn(unittest.mock.call(['docker','manifest','inspect',f'ghcr.io/{m.REPOSITORY}-{component}:3.0.1'],timeout=45),commands.call_args_list)
+
+    def test_publication_partielle_nest_pas_annoncee(self):
+        def run(args, **kwargs):
+            if args[0]=='git': return 'a\trefs/tags/v3.0.1\n'
+            if args[-1].endswith('-updater:3.0.1'): raise m.Failure('absente')
+            return '{}'
+        with patch.object(m.urllib.request, 'urlopen', side_effect=urllib.error.HTTPError('url',404,'private',{},None)), \
+                patch.object(self.w,'run',side_effect=run):
+            with self.assertRaises(m.Failure): self.w.check()
+        self.assertIsNone(self.w.state['available'])
+        self.assertTrue(self.w.state['checkError'])
 
     def test_interruption_avant_remplacement_ne_rejoue_pas_installation(self):
         self.w.job={'id':self.id,'target':'3.1.0','handoff':False}
