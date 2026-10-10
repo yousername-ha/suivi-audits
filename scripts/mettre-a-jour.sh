@@ -196,7 +196,7 @@ docker compose version > /dev/null 2>&1 || arret "docker compose est introuvable
 [ -f "$REPO/.env" ] || arret "fichier .env absent dans $REPO."
 [ -n "$ACTUELLE" ] || arret "APP_VERSION absent de .env."
 verifier_chemin_donnees "$DATA_DIR"
-exec 7> /run/lock/suivi-audits-mise-a-jour.lock 2> /dev/null || exec 7> /tmp/suivi-audits-mise-a-jour.lock
+{ exec 7> /run/lock/suivi-audits-mise-a-jour.lock; } 2> /dev/null || exec 7> /tmp/suivi-audits-mise-a-jour.lock
 flock -n 7 || arret "une autre mise à jour est en cours."
 if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
   git status --short --untracked-files=no >&2

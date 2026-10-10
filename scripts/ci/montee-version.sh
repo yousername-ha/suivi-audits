@@ -106,6 +106,9 @@ sudo git -C "$SERVEUR" show "v$SUIVANTE:apps/api/migrations/999_essai_montee.sql
 printf 'FROM %s-api:%s\nUSER root\nCOPY 999_essai_montee.sql /app/apps/api/migrations/\nRUN chmod 0444 /app/apps/api/migrations/999_essai_montee.sql\nUSER node\n' "$IMG" "$CIBLE_VERSION" > "$CTX/Dockerfile"
 docker build -q -t "$IMG-api:$SUIVANTE" "$CTX" > /dev/null
 docker tag "$IMG-web:$CIBLE_VERSION" "$IMG-web:$SUIVANTE"
+if sudo git cat-file -e "v$CIBLE_VERSION:docker/updater.Dockerfile" 2> /dev/null; then
+  docker tag "$IMG-updater:$CIBLE_VERSION" "$IMG-updater:$SUIVANTE"
+fi
 VERS=$SUIVANTE
 if maj SUIVI_TEST_ECHEC_SANTE=1; then echec "la mise à jour vers $SUIVANTE aurait dû échouer"; fi
 [ "$(version_env)" = "$CIBLE_VERSION" ] || echec "APP_VERSION n'est pas revenu à $CIBLE_VERSION"
