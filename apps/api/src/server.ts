@@ -24,10 +24,26 @@ async function main() {
     'listening',
   );
 
+  let working = false;
+  const schedule = setInterval(() => {
+    if (working || svc.updates.state().maintenance) return;
+    working = true;
+    void svc.modules
+      .run(true, async () => {
+        await svc.modules.assert('ecarts');
+        await svc.grc.tasks.tick();
+      })
+      .catch((e: unknown) => log.warn({ err: String(e) }, 'task scheduler'))
+      .finally(() => {
+        working = false;
+      });
+  }, 60_000);
+  schedule.unref();
   let stopping = false;
   const stop = async () => {
     if (stopping) return;
     stopping = true;
+    clearInterval(schedule);
     log.info('shutting down');
     setTimeout(() => process.exit(0), 8000).unref();
     await app.close().catch(() => {});

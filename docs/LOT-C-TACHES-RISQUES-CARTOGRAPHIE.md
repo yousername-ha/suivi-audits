@@ -1,6 +1,6 @@
 # Lot C — tâches récurrentes, risques et cartographie SMSI
 
-Statut : **exigences à implémenter**, ajoutées à la demande utilisateur du 10 octobre 2026. Ce document ne décrit pas des fonctionnalités déjà livrées. **Terminer B2 avant de commencer C.** Ces exigences complètent C1–C6 ; elles ne remplacent ni les référentiels/mappings ni la reprise obligatoire du socle v2.
+Statut : **C1–C9 implémentés sur la branche de travail, proposés dans la PR #12 ouverte sans fusion automatique**. Le présent document conserve les critères d’acceptation. Le diagnostic est dans `diagnostics/2026-10-10-lot-c.md`, l’architecture dans l’ADR 0023, l’utilisation dans `PILOTAGE-SMSI.md` et les sources/provenances dans `sources-lot-c.json`. Les contrôles GitHub doivent être verts sur le dernier commit avant toute décision de fusion. Le socle de politiques métier B2 est raccordé aux usages C sans recalcul des décisions historiques.
 
 Branche exclusive : `feature/gpt6-evolution-smsi-grc`. Diagnostic préalable, migrations additives, tests et PR laissée ouverte ; aucune modification directe de main ni fusion automatique.
 

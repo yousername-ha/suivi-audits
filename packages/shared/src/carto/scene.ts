@@ -110,7 +110,8 @@ export function computeScene(
       ob.std &&
       !ob.std.some((s) => opt.std.includes(s)) &&
       ob.type !== 'isms' &&
-      ob.type !== 'scope'
+      ob.type !== 'scope' &&
+      ob.type !== 'grc'
     )
       continue;
     vis.push([ref, n, ob]);

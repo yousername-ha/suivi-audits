@@ -419,3 +419,133 @@ export const riskAssessments = pgTable('risk_assessments', {
   createdAt: tstz('created_at').notNull().defaultNow(),
   createdBy: text('created_by').notNull(),
 });
+
+/* Socle métier et publications immuables du pilotage SMSI (012–013). */
+export const businessPolicyVersions = pgTable('business_policy_versions', {
+  version: integer('version').primaryKey(),
+  definition: jsonb('definition').notNull(),
+  reason: text('reason').notNull(),
+  createdAt: tstz('created_at').notNull(),
+  createdBy: text('created_by').notNull(),
+});
+export const businessPolicyConfiguration = pgTable('business_policy_configuration', {
+  id: integer('id').primaryKey(),
+  version: integer('version').notNull(),
+});
+export const grcSmsis = pgTable('grc_smsis', {
+  riskMethodId: uuid('risk_method_id'),
+  riskMethodVersion: integer('risk_method_version'),
+  id: uuid('id').primaryKey(),
+  name: text('name').notNull(),
+  scope: text('scope').notNull(),
+  visibility: text('visibility').notNull(),
+  timezone: text('timezone').notNull(),
+  businessVersion: integer('business_version').notNull(),
+  version: integer('version').notNull(),
+  createdBy: text('created_by').notNull(),
+  createdAt: tstz('created_at').notNull(),
+  updatedAt: tstz('updated_at').notNull(),
+});
+export const grcMembers = pgTable('grc_members', {
+  smsiId: uuid('smsi_id').notNull(),
+  userId: uuid('user_id').notNull(),
+  canWrite: boolean('can_write').notNull(),
+});
+export const grcObjects = pgTable('grc_objects', {
+  id: uuid('id').primaryKey(),
+  smsiId: uuid('smsi_id').notNull(),
+  kind: text('kind').notNull(),
+  module: text('module').notNull(),
+  name: text('name').notNull(),
+  data: jsonb('data').notNull(),
+  version: integer('version').notNull(),
+  archived: boolean('archived').notNull(),
+  legacyKey: text('legacy_key'),
+  legacyId: text('legacy_id'),
+  importBatchId: bigint('import_batch_id', { mode: 'number' }),
+  extra: jsonb('extra').notNull(),
+  createdBy: text('created_by').notNull(),
+  updatedBy: text('updated_by').notNull(),
+  createdAt: tstz('created_at').notNull(),
+  updatedAt: tstz('updated_at').notNull(),
+});
+export const grcObjectVersions = pgTable('grc_object_versions', {
+  id: uuid('id').primaryKey(),
+  objectId: uuid('object_id').notNull(),
+  smsiId: uuid('smsi_id').notNull(),
+  version: integer('version').notNull(),
+  snapshot: jsonb('snapshot').notNull(),
+  reason: text('reason').notNull(),
+  createdBy: text('created_by').notNull(),
+  createdAt: tstz('created_at').notNull(),
+});
+export const grcLinks = pgTable('grc_links', {
+  id: uuid('id').primaryKey(),
+  smsiId: uuid('smsi_id').notNull(),
+  sourceId: uuid('source_id'),
+  sourceRef: text('source_ref').notNull(),
+  targetRef: text('target_ref').notNull(),
+  type: text('type').notNull(),
+  note: text('note').notNull(),
+  createdBy: text('created_by').notNull(),
+  createdAt: tstz('created_at').notNull(),
+});
+export const grcFrameworkVersions = pgTable('grc_framework_versions', {
+  id: uuid('id').primaryKey(),
+  frameworkId: uuid('framework_id').notNull(),
+  smsiId: uuid('smsi_id').notNull(),
+  version: integer('version').notNull(),
+  definition: jsonb('definition').notNull(),
+  reason: text('reason').notNull(),
+  createdBy: text('created_by').notNull(),
+  createdAt: tstz('created_at').notNull(),
+});
+export const grcMethodVersions = pgTable('grc_method_versions', {
+  id: uuid('id').primaryKey(),
+  methodId: uuid('method_id').notNull(),
+  smsiId: uuid('smsi_id').notNull(),
+  version: integer('version').notNull(),
+  definition: jsonb('definition').notNull(),
+  reason: text('reason').notNull(),
+  createdBy: text('created_by').notNull(),
+  createdAt: tstz('created_at').notNull(),
+});
+export const grcRiskEvaluations = pgTable('grc_risk_evaluations', {
+  id: uuid('id').primaryKey(),
+  riskId: uuid('risk_id').notNull(),
+  smsiId: uuid('smsi_id').notNull(),
+  methodVersionId: uuid('method_version_id').notNull(),
+  revision: integer('revision').notNull(),
+  riskSnapshot: jsonb('risk_snapshot').notNull(),
+  ratings: jsonb('ratings').notNull(),
+  result: jsonb('result').notNull(),
+  rationale: text('rationale').notNull(),
+  decision: text('decision').notNull(),
+  requestId: uuid('request_id').notNull(),
+  userId: uuid('user_id').notNull(),
+  createdBy: text('created_by').notNull(),
+  createdAt: tstz('created_at').notNull(),
+});
+export const grcSeries = pgTable('grc_series', {
+  objectId: uuid('object_id').primaryKey(),
+  checkedAt: tstz('checked_at'),
+  nextIndex: integer('next_index').notNull(),
+});
+export const grcOccurrences = pgTable('grc_occurrences', {
+  seriesId: uuid('series_id').notNull(),
+  slot: text('slot').notNull(),
+  actionId: uuid('action_id').notNull(),
+  createdAt: tstz('created_at').notNull(),
+});
+export const grcNotifications = pgTable('grc_notifications', {
+  id: uuid('id').primaryKey(),
+  smsiId: uuid('smsi_id').notNull(),
+  objectId: uuid('object_id').notNull(),
+  userId: uuid('user_id').notNull(),
+  kind: text('kind').notNull(),
+  dueKey: text('due_key').notNull(),
+  title: text('title').notNull(),
+  message: text('message').notNull(),
+  readAt: tstz('read_at'),
+  createdAt: tstz('created_at').notNull(),
+});

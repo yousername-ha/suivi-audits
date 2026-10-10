@@ -1,0 +1,61 @@
+{
+  "sources": [
+    {
+      "document": "ISO/IEC 27001:2022",
+      "url": "https://www.iso.org/standard/82875.html",
+      "finalUrl": "https://www.iso.org/standard/27001",
+      "consultedAt": "2026-10-10",
+      "sha256": "d629428e11ab57282c6916d7cf46bfb381557099e4cf6d16c9afdd2f4344b461",
+      "bytes": 139655,
+      "scope": "Page publique et référence bibliographique. Aucun texte de la norme n’est reproduit."
+    },
+    {
+      "document": "ISO/IEC 27005:2022",
+      "url": "https://www.iso.org/standard/80585.html",
+      "finalUrl": "https://www.iso.org/standard/80585.html",
+      "consultedAt": "2026-10-10",
+      "sha256": "fb689cfee2ad05780f7b1e69ce6f257e967cb77c35eca757d3bd335c99e83174",
+      "bytes": 100706,
+      "scope": "Page publique et référence bibliographique. Les critères d’appréciation restent une politique organisationnelle."
+    },
+    {
+      "document": "ANSSI EBIOS Risk Manager — guide",
+      "url": "https://messervices.cyber.gouv.fr/documents-guides/250129_np_anssi_guide_ebios_fr_final_collection_WEB.pdf",
+      "finalUrl": "https://messervices.cyber.gouv.fr/documents-guides/250129_np_anssi_guide_ebios_fr_final_collection_WEB.pdf",
+      "consultedAt": "2026-10-10",
+      "sha256": "578da105d1c184e756aadffa9b31f0f5ddc64182c3f92ac329c5afb27e933401",
+      "bytes": 3840591,
+      "scope": "Cinq ateliers et concepts vérifiés dans le guide public. La matrice et les échelles livrées sont des propositions organisationnelles, pas des seuils ANSSI obligatoires."
+    },
+    {
+      "document": "CLUSIF MÉHARI — fondamentaux",
+      "url": "https://clusif.fr/services/management-des-risques/les-fondamentaux-de-mehari/",
+      "finalUrl": "https://clusif.fr/services/management-des-risques/les-fondamentaux-de-mehari/",
+      "consultedAt": "2026-10-10",
+      "sha256": "7be1c99a81ba0d15f2f026acdfe2bd1b6cce638ecbdfcad4731ff5f5028c084e",
+      "bytes": 106658,
+      "scope": "Structure méthodologique publique ; aucune base de connaissances, formule propriétaire ni classeur MÉHARI redistribué."
+    },
+    {
+      "document": "CLUSIF MÉHARI — licence",
+      "url": "https://clusif.fr/services/management-des-risques/les-versions-de-mehari/licence-dattribution-et-de-partage-de-mehari-ou-doeuvre-derivee-de-mehari/",
+      "finalUrl": "https://clusif.fr/services/management-des-risques/les-versions-de-mehari/licence-dattribution-et-de-partage-de-mehari-ou-doeuvre-derivee-de-mehari/",
+      "consultedAt": "2026-10-10",
+      "sha256": "3339f5703b40bc543d2562c205e94cbe147942a43eeab7110145c09100efa977",
+      "bytes": 110449,
+      "scope": "Licence d’attribution et de partage adaptée de CC BY-SA 4.0. Vérifier les obligations avant tout import d’une base ou œuvre dérivée."
+    },
+    {
+      "document": "HDS 2024 — transition officielle COFRAC",
+      "url": "https://www.cofrac.fr/actualites/actualites-et-evenements/certification-des-hebergeurs-de-donnees-de-sante-hds-transition-vers-la-version-2-des-referentiels",
+      "finalUrl": "https://www.cofrac.fr/actualites/actualites-et-evenements/certification-des-hebergeurs-de-donnees-de-sante-hds-transition-vers-la-version-2-des-referentiels",
+      "consultedAt": "2026-10-10",
+      "sha256": "a2a6e9822f815a0798d3a275149445fc3481f180f43f09860363887a1d094168",
+      "bytes": 40149,
+      "scope": "Publication du 27 mai 2024 : arrêté du 26 avril 2024 publié au JO le 16 mai 2024, application le 16 novembre 2024 ; transition des hébergeurs déjà certifiés au 16 mai 2026. L’ANS ne fournit pas le PDF depuis cet environnement ; aucun contenu HDS 2024 n’est inventé."
+    }
+  ],
+  "hdsReference": "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000049537692",
+  "hdsReferenceStatus": "Arrêté identifié par la publication officielle COFRAC ; accès direct Legifrance refusé (403), PDF ANS non obtenu.",
+  "distribution": "Seules métadonnées, références et empreintes sont conservées. Les documents sources ne sont pas redistribués dans le dépôt."
+}

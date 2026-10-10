@@ -570,3 +570,62 @@
 .update-notice span {
   overflow-wrap: anywhere;
 }
+
+/* Pilotage natif SMSI : mêmes jetons Sauge, SVG sans styles inline. */
+.grc-grow {
+  flex: 1;
+  min-width: 0;
+}
+.grc-kanban {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(var(--grc-colonne-min), 1fr));
+  gap: var(--mantine-spacing-md);
+  overflow-x: auto;
+  padding-bottom: var(--mantine-spacing-md);
+}
+.grc-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(var(--grc-jour-min), 1fr));
+  gap: var(--mantine-spacing-xs);
+  overflow-x: auto;
+}
+.grc-calendar .mantine-Card-root {
+  min-height: var(--grc-jour-hauteur);
+}
+.grc-planning {
+  overflow-x: auto;
+}
+.grc-planning svg {
+  min-width: var(--grc-planning-min);
+  width: 100%;
+  font: var(--mantine-font-size-xs) var(--mantine-font-family);
+}
+.grc-planning text {
+  fill: var(--mantine-color-text);
+}
+.grc-risk-canvas {
+  height: var(--grc-canevas-hauteur);
+  min-height: var(--grc-canevas-min);
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+}
+.grc-risk-canvas > div {
+  height: 100%;
+}
+@media (max-width: 700px) {
+  .grc-risk-canvas {
+    height: var(--grc-canevas-mobile);
+  }
+}
+
+.grc-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--grc-colonne-min), 1fr));
+  gap: var(--mantine-spacing-md);
+}
+
+.grc-fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}

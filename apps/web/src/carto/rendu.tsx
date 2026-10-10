@@ -177,6 +177,7 @@ export function teinteOf(o: MapObject | undefined): string {
     case 'external_issue':
     case 'internal_issue':
       return 'orange';
+    case 'grc':
     case 'zone':
       return 'gris';
     case 'lane':
@@ -462,6 +463,9 @@ export const Noeud = memo(function Noeud({
     >
       <title>{titre}</title>
       {corps(ref_, n, o, st)}
+      {o && !isFrame(o) && o.riskColor && /^#[a-fA-F0-9]{6}$/.test(o.riskColor) && (
+        <rect x={x} y={y + h - 6} width={w} height={6} rx={3} fill={o.riskColor} />
+      )}
       {st.hit && <rect x={x - 5} y={y - 5} width={w + 10} height={h + 10} rx={14} className="c-hit" />}
       {st.sel && <rect x={x - 4} y={y - 4} width={w + 8} height={h + 8} rx={14} className="c-sel" />}
       {st.src && <rect x={x - 4} y={y - 4} width={w + 8} height={h + 8} rx={14} className="c-src" />}

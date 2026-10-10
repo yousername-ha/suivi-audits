@@ -1,0 +1,329 @@
+import { z } from 'zod';
+import type { Module } from './permissions.js';
+export const GRC_KINDS = [
+  'framework',
+  'requirement',
+  'measure',
+  'mapping',
+  'risk',
+  'risk_source',
+  'feared_event',
+  'business_asset',
+  'process',
+  'support_asset',
+  'strategic_scenario',
+  'operational_scenario',
+  'treatment',
+  'action',
+  'task_series',
+  'control',
+  'evidence',
+  'audit',
+  'incident',
+  'nonconformity',
+  'objective',
+  'indicator',
+  'soa',
+] as const;
+export type GrcKind = (typeof GRC_KINDS)[number];
+export const GRC_MODULES: Record<GrcKind, Module> = {
+  framework: 'conformite',
+  requirement: 'audit',
+  measure: 'audit',
+  mapping: 'conformite',
+  risk: 'pilotage',
+  risk_source: 'pilotage',
+  feared_event: 'pilotage',
+  business_asset: 'pilotage',
+  process: 'pilotage',
+  support_asset: 'pilotage',
+  strategic_scenario: 'pilotage',
+  operational_scenario: 'pilotage',
+  treatment: 'pilotage',
+  action: 'ecarts',
+  task_series: 'ecarts',
+  control: 'pilotage',
+  evidence: 'documents',
+  audit: 'plan_audit',
+  incident: 'incidents',
+  nonconformity: 'ecarts',
+  objective: 'pilotage',
+  indicator: 'pilotage',
+  soa: 'pilotage',
+};
+export const GRC_LABELS: Record<GrcKind, string> = {
+  framework: 'Référentiel',
+  requirement: 'Exigence',
+  measure: 'Mesure',
+  mapping: 'Correspondance',
+  risk: 'Risque',
+  risk_source: 'Source de risque',
+  feared_event: 'Événement redouté',
+  business_asset: 'Valeur métier',
+  process: 'Processus',
+  support_asset: 'Bien support',
+  strategic_scenario: 'Scénario stratégique',
+  operational_scenario: 'Scénario opérationnel',
+  treatment: 'Traitement',
+  action: 'Action',
+  task_series: 'Tâche récurrente',
+  control: 'Contrôle',
+  evidence: 'Preuve',
+  audit: 'Audit',
+  incident: 'Incident',
+  nonconformity: 'Non-conformité',
+  objective: 'Objectif',
+  indicator: 'Indicateur',
+  soa: 'Déclaration d’applicabilité',
+};
+export const GrcKey = z
+  .string()
+  .regex(/^[a-z][a-z0-9_]{0,63}$/)
+  .refine((k) => !['constructor', 'prototype', '__proto__'].includes(k));
+const label = z.string().trim().min(1).max(200);
+export const GrcRef = z
+  .string()
+  .max(300)
+  .regex(
+    /^(object:[0-9a-f-]{36}|legacy:[a-z_]+:[^\p{Cc}]{1,200}|document:[0-9a-f-]{36}:[1-9][0-9]{0,8}|requirement:[0-9a-f-]{36}:[1-9][0-9]{0,8}:[^\p{Cc}]{1,120})$/u,
+  )
+  .superRefine((ref, c) => {
+    if (['object', 'document', 'requirement'].includes(ref.split(':')[0]!)) {
+      if (!z.uuid().safeParse(ref.split(':')[1]).success)
+        c.addIssue({ code: 'custom', message: 'UUID de référence invalide.' });
+    }
+  });
+export const GrcObjectBody = z
+  .object({ kind: z.enum(GRC_KINDS), name: label, data: z.record(z.string().max(100), z.unknown()).default({}) })
+  .strict();
+export type GrcObjectBody = z.infer<typeof GrcObjectBody>;
+export interface GrcObject {
+  id: string;
+  smsiId: string;
+  kind: GrcKind;
+  name: string;
+  data: Record<string, unknown>;
+  version: number;
+  createdAt: string;
+  createdBy: string;
+  updatedAt: string;
+  updatedBy: string;
+  legacyKey: string | null;
+  legacyId: string | null;
+  archived: boolean;
+}
+export const SmsiCreate = z
+  .object({
+    name: label,
+    scope: z.string().max(5000),
+    visibility: z.literal('restricted').default('restricted'),
+    timezone: z
+      .string()
+      .max(100)
+      .refine((v) => {
+        try {
+          new Intl.DateTimeFormat('fr', { timeZone: v });
+          return true;
+        } catch {
+          return false;
+        }
+      }, 'Fuseau inconnu.'),
+  })
+  .strict();
+export const SmsiMember = z.object({ userId: z.uuid(), write: z.boolean() }).strict();
+export const OfficialSource = z
+  .object({
+    organisation: z.string().min(1).max(120),
+    document: z.string().min(1).max(300),
+    url: z.url().refine((x) => new URL(x).protocol === 'https:'),
+    version: z.string().min(1).max(100),
+    date: z.string().max(30),
+    license: z.string().min(1).max(1000),
+    verifiedAt: z.string().max(30),
+    normative: z.boolean(),
+    status: z.enum(['official_verified', 'licensed_import', 'organisation', 'unverified']),
+  })
+  .strict();
+export const FrameworkDefinition = z
+  .object({
+    name: label,
+    identifier: z.string().min(1).max(100),
+    source: OfficialSource,
+    domains: z.array(z.object({ id: GrcKey, label }).strict()).max(1000),
+    requirements: z
+      .array(
+        z
+          .object({
+            id: z.string().min(1).max(120),
+            domain: GrcKey,
+            title: label,
+            description: z.string().max(20000),
+            applicability: z.string().max(2000),
+            measureRefs: z.array(GrcRef).max(100).default([]),
+          })
+          .strict(),
+      )
+      .max(10000),
+  })
+  .strict()
+  .superRefine((d, c) => {
+    const domains = new Set(d.domains.map((x) => x.id));
+    if (domains.size !== d.domains.length || new Set(d.requirements.map((x) => x.id)).size !== d.requirements.length)
+      c.addIssue({ code: 'custom', message: 'Domaines et exigences : identifiants uniques requis.' });
+    if (d.requirements.some((r) => !domains.has(r.domain)))
+      c.addIssue({ code: 'custom', message: 'Domaine d’exigence inconnu.' });
+    if (d.source.normative && d.source.status === 'organisation')
+      c.addIssue({ code: 'custom', message: 'Un choix organisationnel ne peut être présenté comme normatif.' });
+  });
+export type FrameworkDefinition = z.infer<typeof FrameworkDefinition>;
+export const MappingData = z
+  .object({
+    source: z
+      .object({ frameworkId: z.uuid(), version: z.number().int().positive(), requirementId: z.string().max(120) })
+      .strict(),
+    target: z
+      .object({ frameworkId: z.uuid(), version: z.number().int().positive(), requirementId: z.string().max(120) })
+      .strict(),
+    type: z.enum(['identical', 'equivalent', 'partial', 'complementary', 'related', 'none']),
+    justification: z.string().trim().min(10).max(5000),
+    coverage: z.number().min(0).max(100),
+    origin: z.enum(['human', 'ai']),
+    status: z.enum(['proposed', 'reviewed', 'validated']),
+    sourceUrl: z.url(),
+    reviewNote: z.string().max(5000).default(''),
+  })
+  .strict();
+export type MappingData = z.infer<typeof MappingData>;
+export const Recurrence = z
+  .object({
+    start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    time: z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/),
+    timezone: z
+      .string()
+      .max(100)
+      .refine((v) => {
+        try {
+          new Intl.DateTimeFormat('fr', { timeZone: v });
+          return true;
+        } catch {
+          return false;
+        }
+      }, 'Fuseau inconnu.'),
+    unit: z.enum(['day', 'week', 'month', 'year']),
+    interval: z.number().int().min(1).max(365),
+    until: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .nullable(),
+    count: z.number().int().min(1).max(100000).nullable(),
+    reminderDays: z.number().int().min(0).max(365),
+    active: z.boolean(),
+  })
+  .strict()
+  .superRefine((r, c) => {
+    if (!validDate(r.start) || (r.until && (!validDate(r.until) || r.until < r.start)))
+      c.addIssue({ code: 'custom', message: 'Dates réelles et fin postérieure au début requises.' });
+  });
+export type Recurrence = z.infer<typeof Recurrence>;
+export function validDate(s: string) {
+  const d = new Date(s + 'T12:00:00Z');
+  return Number.isFinite(d.getTime()) && d.toISOString().slice(0, 10) === s;
+}
+export const TaskData = z
+  .object({
+    description: z.string().max(10000),
+    status: GrcKey,
+    ownerId: z.uuid().nullable(),
+    startAt: z.iso.datetime().nullable(),
+    dueAt: z.iso.datetime().nullable(),
+    priority: z.enum(['low', 'normal', 'high', 'urgent']),
+    category: GrcKey,
+    justification: z.string().max(10000),
+    reminderDays: z.number().int().min(0).max(365),
+    dependencies: z.array(z.uuid()).max(100),
+    seriesId: z.uuid().optional(),
+    occurrenceKey: z.string().max(200).optional(),
+  })
+  .strict()
+  .superRefine((v, c) => {
+    if (v.startAt && v.dueAt && v.startAt > v.dueAt)
+      c.addIssue({ code: 'custom', message: 'Le début doit précéder l’échéance.' });
+  });
+export type TaskData = z.infer<typeof TaskData>;
+export const SeriesData = z
+  .object({
+    description: z.string().max(10000),
+    ownerId: z.uuid().nullable(),
+    category: GrcKey,
+    priority: z.enum(['low', 'normal', 'high', 'urgent']),
+    recurrence: Recurrence,
+    refs: z.array(GrcRef).max(100),
+  })
+  .strict();
+export type SeriesData = z.infer<typeof SeriesData>;
+export const RiskData = z
+  .object({
+    description: z.string().max(10000),
+    code: z.string().max(100),
+    ownerId: z.uuid().nullable(),
+    methodId: z.uuid(),
+    methodVersion: z.number().int().positive(),
+    domain: z.string().max(120),
+    entity: z.string().max(200),
+    scope: z.string().max(2000),
+    strategy: z.enum(['reduce', 'accept', 'transfer', 'avoid', 'treated']),
+    acceptanceReason: z.string().max(5000),
+    reviewAt: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .nullable(),
+    stages: z.record(
+      GrcKey,
+      z
+        .object({
+          status: z.enum(['draft', 'reviewed', 'validated']),
+          values: z.record(
+            GrcKey,
+            z.union([z.string().max(10000), z.number().finite(), z.boolean(), z.array(GrcRef).max(100)]),
+          ),
+          comment: z.string().max(5000),
+        })
+        .strict(),
+    ),
+  })
+  .strict()
+  .superRefine((v, c) => {
+    if (v.strategy === 'accept' && v.acceptanceReason.trim().length < 10)
+      c.addIssue({ code: 'custom', message: 'Une acceptation doit être justifiée.' });
+  });
+export type RiskData = z.infer<typeof RiskData>;
+export const LinkBody = z
+  .object({
+    target: GrcRef,
+    type: z.enum([
+      'related_to',
+      'supports',
+      'impacts',
+      'applies_to',
+      'depends_on',
+      'implements',
+      'demonstrates',
+      'treats',
+    ]),
+    note: z.string().max(2000),
+  })
+  .strict();
+export const FrameworkImport = z
+  .object({ definition: FrameworkDefinition, mappings: z.array(MappingData).max(1000).default([]) })
+  .strict();
+
+export function grcReferences(data: Record<string, unknown>): string[] {
+  const stages =
+    data.stages && typeof data.stages === 'object'
+      ? Object.values(data.stages as Record<string, { values?: Record<string, unknown> }>)
+      : [];
+  return [
+    ...(Array.isArray(data.refs) ? data.refs : []),
+    ...stages.flatMap((stage) => Object.values(stage.values ?? {}).flatMap((v) => (Array.isArray(v) ? v : []))),
+  ].filter((ref): ref is string => GrcRef.safeParse(ref).success);
+}

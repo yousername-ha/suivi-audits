@@ -21,6 +21,7 @@ const KEYS: Record<string, string[][]> = {
   settings: [['setup'], ['synthese'], ['settings'], ['carto', 'objects']],
   legacy_state: [
     ['ia', 'evaluations'],
+    ['grc'],
     ['refs'],
     ['admin', 'versions'],
     ['admin', 'info'],
@@ -28,6 +29,7 @@ const KEYS: Record<string, string[][]> = {
     ['carto', 'objects'],
   ],
   maps: [['carto']],
+  grc: [['grc']],
   wall_screens: [['admin', 'murs']],
   groups: [['admin']],
   roles: [['admin']],

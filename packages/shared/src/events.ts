@@ -1,5 +1,5 @@
 /* Événements temps réel (SSE /api/events), alimentés par LISTEN/NOTIFY de PostgreSQL. */
-import { type Permission, type Rights } from './permissions.js';
+import { type Module, type Permission, type Rights } from './permissions.js';
 
 /** Entités diffusées. Chaque événement ne contient que des métadonnées (jamais de contenu). */
 export const ENTITIES = [
@@ -18,6 +18,7 @@ export const ENTITIES = [
   'module_activation',
   'environment_configuration',
   'risk_assessments',
+  'grc',
 ] as const;
 export type Entity = (typeof ENTITIES)[number];
 
@@ -38,6 +39,7 @@ export const ENTITY_PERMISSION: Record<Entity, Permission | 'metier'> = {
   module_activation: 'administration:lire',
   environment_configuration: 'administration:lire',
   risk_assessments: 'ia:lire',
+  grc: 'metier',
 };
 
 export function canReceive(rights: Rights, entity: Entity): boolean {
@@ -50,6 +52,8 @@ export type ChangeOp = 'insert' | 'update' | 'delete';
 
 export interface ChangeEvent {
   entity: Entity;
+  scope?: string;
+  module?: Module;
   id: string;
   version: number | null;
   op: ChangeOp;

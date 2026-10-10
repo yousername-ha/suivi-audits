@@ -23,6 +23,13 @@
    Couleurs : variables --suivi-* et --mantine-* générées depuis tokens.ts (mantine-vars.css). */
 
 :root {
+  --grc-colonne-min: 14.375rem;
+  --grc-jour-min: 7.5rem;
+  --grc-jour-hauteur: 6.875rem;
+  --grc-planning-min: 53.125rem;
+  --grc-canevas-hauteur: 40.625rem;
+  --grc-canevas-min: 25rem;
+  --grc-canevas-mobile: 29.375rem;
   --suivi-entete-h: 3.75rem;
   --suivi-nav-l: 15.5rem;
   --suivi-largeur-formulaire: 45rem; /* formulaires simples : 720 px */

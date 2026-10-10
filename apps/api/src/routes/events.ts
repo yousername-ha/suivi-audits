@@ -44,7 +44,18 @@ export const eventRoutes = [
       const onChange = (e: ChangeEvent) => {
         void svc.modules
           .rights(granted, true)
-          .then((rights) => {
+          .then(async (rights) => {
+            if (e.entity === 'grc') {
+              const current = await svc.auth.loadByHash(sess.sid, false);
+              if (
+                current &&
+                e.scope &&
+                e.module &&
+                (await svc.grc.visible({ ...current.user, rights }, e.scope, e.module))
+              )
+                send('change', e);
+              return;
+            }
             if (canReceive(rights, e.entity)) send('change', e);
           })
           .catch(() => close());

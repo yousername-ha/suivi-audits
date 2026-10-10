@@ -32,6 +32,7 @@ export const OBJECT_TYPES = [
   'infrastructure',
   'site',
   'supplier',
+  'grc',
 ] as const;
 export type ObjectType = (typeof OBJECT_TYPES)[number];
 export const FRAME_TYPES = ['lane', 'band', 'zone'] as const;
@@ -54,6 +55,7 @@ export const TYPE_LABELS: Record<NodeType | 'missing', string> = {
   site: 'Site',
   supplier: 'Fournisseur',
   missing: 'Objet indisponible',
+  grc: 'Objet du registre SMSI',
 };
 /** Types qui sont des cadres (ils emportent leur contenu quand on les déplace). */
 export const CONTAINER_TYPES: ReadonlySet<string> = new Set(['scope', 'lane', 'band', 'zone']);
@@ -188,6 +190,7 @@ export interface ObjectDetails {
   hosting?: string;
 }
 export interface CartoObject {
+  riskColor?: string;
   ref: string;
   type: ObjectType;
   name: string;

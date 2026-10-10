@@ -64,12 +64,12 @@ base_ref=run(['git','rev-parse','HEAD'],cwd=repo).strip()
 run(['git','tag','v98.0.0'],cwd=repo)
 for component in ('api','web','updater'):
     run(['docker','tag',IMAGE+component+':ci',IMAGE+component+':98.0.0'])
-(repo/'apps/api/migrations/012_recette_update.sql').write_text('CREATE TABLE recette_update_temoin(id integer PRIMARY KEY); INSERT INTO recette_update_temoin VALUES (1);\n')
-run(['git','add','apps/api/migrations/012_recette_update.sql'],cwd=repo)
+(repo/'apps/api/migrations/015_recette_update.sql').write_text('CREATE TABLE recette_update_temoin(id integer PRIMARY KEY); INSERT INTO recette_update_temoin VALUES (1);\n')
+run(['git','add','apps/api/migrations/015_recette_update.sql'],cwd=repo)
 run(['git','commit','-m','Fixture privée : témoin de migration'],cwd=repo)
 run(['git','tag','v99.0.0'],cwd=repo)
-(work/'Dockerfile').write_text('FROM '+IMAGE+'api:ci\nCOPY --chmod=0444 012_recette_update.sql /app/apps/api/migrations/012_recette_update.sql\n')
-shutil.copy(repo/'apps/api/migrations/012_recette_update.sql',work/'012_recette_update.sql')
+(work/'Dockerfile').write_text('FROM '+IMAGE+'api:ci\nCOPY --chmod=0444 015_recette_update.sql /app/apps/api/migrations/015_recette_update.sql\n')
+shutil.copy(repo/'apps/api/migrations/015_recette_update.sql',work/'015_recette_update.sql')
 run(['docker','build','-t',IMAGE+'api:99.0.0',str(work)])
 for component in ('web','updater'): run(['docker','tag',IMAGE+component+':ci',IMAGE+component+':99.0.0'])
 run(['git','checkout','--detach',base_ref],cwd=repo)
@@ -77,11 +77,20 @@ compose('stop','updater')
 compose('up','-d','db','app','web',cwd=repo)
 wait_health(repo)
 # Compte fictif supplémentaire, créé uniquement dans cette pile CI. Aucun compte existant n'est modifié.
-js="""import crypto from 'node:crypto'; import {createServices} from './dist/services.js'; import {loadConfig} from './dist/config.js'; import {createLogger} from './dist/log.js'; import {hashPassword} from './dist/security/crypto.js';
+js="""import crypto from 'node:crypto'; import {createServices} from './dist/services.js'; import {loadConfig} from './dist/config.js'; import {createLogger} from './dist/log.js'; import {hashPassword} from './dist/security/crypto.js'; import {methodTemplate,evaluateMethod} from '@suivi/shared';
 const svc=createServices(loadConfig(),createLogger('silent')); const key=crypto.randomBytes(20);
 const u=await svc.db.one('INSERT INTO users(username,display_name,password_hash,must_change_password) VALUES ($1,$2,$3,false) RETURNING id',['recette_update','Recette mise à jour',await hashPassword('Recette-Update-2026!')]);
 await svc.db.q('INSERT INTO user_roles(user_id,role_id) VALUES ($1,$2)',[u.id,'administrateur']);
 await svc.db.q('UPDATE users SET totp_secret=$2,totp_enabled=true WHERE id=$1',[u.id,svc.vault.sealSmall(key,'totp:'+u.id)]);
+const smsi='00000000-0000-4000-8000-000000000001', methodId=crypto.randomUUID(), definition=methodTemplate('custom');
+await svc.db.tx(async c=>{
+ const published=(await c.query('INSERT INTO grc_method_versions(method_id,smsi_id,version,definition,reason,created_by) VALUES($1,$2,1,$3,$4,$5) RETURNING id',[methodId,smsi,definition,'Recette de conservation pendant la mise à jour','recette_update'])).rows[0];
+ const risk=await svc.grc.insert(c,smsi,'risk','Risque témoin de conservation',{description:'Donnée fictive de recette',code:'UPDATE-QA',ownerId:u.id,methodId,methodVersion:1,domain:'information',entity:'Recette',scope:'CI',strategy:'reduce',acceptanceReason:'',reviewAt:'2099-01-01',stages:{}},{username:'recette_update'},'');
+ const task=await svc.grc.insert(c,smsi,'action','Action témoin de conservation',{description:'Donnée fictive de recette',status:'todo',ownerId:u.id,startAt:null,dueAt:null,priority:'normal',category:'action',justification:'',reminderDays:7,dependencies:[]},{username:'recette_update'},'');
+ await c.query("INSERT INTO grc_links(smsi_id,source_id,source_ref,target_ref,type,note,created_by) VALUES($1,$2,$3,$4,'treats','Lien témoin','recette_update')",[smsi,task.id,'object:'+task.id,'object:'+risk.id]);
+ const rating={dimensions:{severity:'impact_1'},likelihood:'likelihood_1',level:'low',inputs:{}};
+ await c.query('INSERT INTO grc_risk_evaluations(risk_id,smsi_id,method_version_id,revision,risk_snapshot,ratings,result,rationale,decision,request_id,user_id,created_by) VALUES($1,$2,$3,1,$4,$5,$6,$7,$8,$9,$10,$11)',[risk.id,smsi,published.id,risk,{gross:rating,residual:rating},{gross:evaluateMethod(definition,rating),residual:evaluateMethod(definition,rating)},'Justification conservée pendant mise à jour et retour arrière','draft',crypto.randomUUID(),u.id,'recette_update']);
+},'recette_update');
 console.log(JSON.stringify({key:key.toString('base64')})); await svc.db.end();"""
 secret=base64.b64decode(json.loads(compose('exec','-T','app','node','--input-type=module','-e',js,cwd=repo))['key'])
 compose('cp','gateway:/data/caddy/pki/authorities/local/root.crt',str(work/'root.crt'))
@@ -101,7 +110,7 @@ call('POST','/api/auth/mfa',{'code':code})
 csrf=call('GET','/api/auth/me')['csrf']
 before=json.loads(compose('exec','-T','app','suivi','controle-donnees',cwd=repo))
 def environment_snapshot():
-    return json.loads(compose('exec','-T','-u','postgres','db','psql','-d','suivi','-Atc',"SELECT jsonb_build_object('current',(SELECT version FROM environment_configuration WHERE id=1),'versions',(SELECT jsonb_agg(to_jsonb(v) ORDER BY version) FROM environment_versions v),'assessments',(SELECT jsonb_agg(to_jsonb(a) ORDER BY source_id,revision) FROM risk_assessments a))::text",cwd=repo))
+    return json.loads(compose('exec','-T','-u','postgres','db','psql','-d','suivi','-Atc',"SELECT jsonb_build_object('current',(SELECT version FROM environment_configuration WHERE id=1),'versions',(SELECT jsonb_agg(to_jsonb(v) ORDER BY version) FROM environment_versions v),'assessments',(SELECT jsonb_agg(to_jsonb(a) ORDER BY source_id,revision) FROM risk_assessments a),'business',(SELECT jsonb_agg(to_jsonb(b) ORDER BY version) FROM business_policy_versions b),'smsis',(SELECT jsonb_agg(to_jsonb(s) ORDER BY id) FROM grc_smsis s),'objects',(SELECT jsonb_agg(to_jsonb(o) ORDER BY id) FROM grc_objects o),'methods',(SELECT jsonb_agg(to_jsonb(m) ORDER BY id) FROM grc_method_versions m),'evaluations',(SELECT jsonb_agg(to_jsonb(e) ORDER BY id) FROM grc_risk_evaluations e),'links',(SELECT jsonb_agg(to_jsonb(l) ORDER BY id) FROM grc_links l),'objectVersions',(SELECT jsonb_agg(to_jsonb(v) ORDER BY id) FROM grc_object_versions v))::text",cwd=repo))
 before_environment=environment_snapshot()
 data=Path(re.search(r'^DATA_DIR=(.*)$',original_env,re.M).group(1).strip('"\'')) if re.search(r'^DATA_DIR=(.*)$',original_env,re.M) else Path('/srv/suivi-audits/donnees')
 spec=importlib.util.spec_from_file_location('update_worker',repo/'scripts/update-worker.py'); m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)

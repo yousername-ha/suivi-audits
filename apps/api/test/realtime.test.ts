@@ -186,3 +186,39 @@ it('B1 : diffuse les activations sans fermer la session et filtre un flux déjà
     await t.svc.db.q("UPDATE module_activation SET disabled='{}',version=version+1 WHERE id=1");
   }
 });
+
+it('les événements GRC ne révèlent ni objets ni auteurs hors du SMSI autorisé', async () => {
+  const owner = await login(t, admin);
+  const privateScope = (
+    await owner.post('/api/grc/smsis', { name: 'SMSI SSE privé', scope: 'Confidentiel', timezone: 'Europe/Paris' })
+  ).json();
+  const stream = openStream(await login(t, ro));
+  try {
+    expect(await stream.ready).toBe(200);
+    await stream.waitFor((e) => e.event === 'hello');
+    const secret = (
+      await owner.post(`/api/grc/${privateScope.id}/objects`, {
+        kind: 'objective',
+        name: 'Objectif confidentiel',
+        data: { description: 'Secret' },
+      })
+    ).json();
+    const marker = (
+      await owner.post('/api/grc/00000000-0000-4000-8000-000000000001/objects', {
+        kind: 'objective',
+        name: 'Objectif partagé',
+        data: { description: '' },
+      })
+    ).json();
+    expect(
+      await stream.waitFor((e) => e.event === 'change' && (e.data as { id: string }).id === marker.id),
+    ).toBeTruthy();
+    expect(
+      stream.events.some(
+        (e) => JSON.stringify(e.data).includes(secret.id) || JSON.stringify(e.data).includes(privateScope.id),
+      ),
+    ).toBe(false);
+  } finally {
+    stream.close();
+  }
+});

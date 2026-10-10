@@ -15,6 +15,8 @@ import { Vault } from './security/crypto.js';
 import { Settings } from './settings.js';
 import { Environment } from './environment.js';
 import { RiskAssessments } from './risk-assessments.js';
+import { BusinessPolicies } from './business-policy.js';
+import { Grc } from './grc/core.js';
 import { Walls } from './walls.js';
 
 export function createServices(cfg: Config, log: Logger) {
@@ -26,6 +28,8 @@ export function createServices(cfg: Config, log: Logger) {
   legacy.register(mapsMapper);
   const settings = new Settings(cfg, db, legacy);
   const environment = new Environment(db);
+  const businessPolicies = new BusinessPolicies(db);
+  const modules = new Modules(cfg.db, db);
   return {
     cfg,
     log,
@@ -33,8 +37,10 @@ export function createServices(cfg: Config, log: Logger) {
     vault,
     settings,
     environment,
+    businessPolicies,
+    grc: new Grc(db, legacy, businessPolicies, modules),
     riskAssessments: new RiskAssessments(db, legacy, environment),
-    modules: new Modules(cfg.db, db),
+    modules,
     updates: new Updates(cfg, db),
     backups: new Backups(cfg, db),
     operations: new Operations(cfg, db, vault),

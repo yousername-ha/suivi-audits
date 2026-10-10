@@ -6,7 +6,7 @@ import './app.css';
 import { Center, Loader, MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { StrictMode } from 'react';
+import { lazy, Suspense, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, Navigate, Outlet, RouterProvider, useLocation } from 'react-router';
 import { ApiError } from './api';
@@ -15,6 +15,7 @@ import { AccountPage } from './pages/Account';
 import { AdminPage } from './pages/Admin';
 import { CartographiePage } from './pages/Cartographie';
 import { DocumentsPage } from './pages/Documents';
+const GrcPage = lazy(() => import('./pages/Grc').then((m) => ({ default: m.GrcPage })));
 import { HomePage } from './pages/Home';
 import { IaEvaluationsPage } from './pages/IaEvaluations';
 import { HelpPage } from './pages/Help';
@@ -70,6 +71,20 @@ const router = createBrowserRouter([
       { path: '/documents/:id', element: <DocumentsPage /> },
       { path: '/cartographie/:vue?', element: <CartographiePage /> },
       { path: '/account', element: <AccountPage /> },
+      {
+        path: '/grc',
+        element: (
+          <Suspense
+            fallback={
+              <Center>
+                <Loader aria-label="Chargement du pilotage SMSI" />
+              </Center>
+            }
+          >
+            <GrcPage />
+          </Suspense>
+        ),
+      },
       { path: '/ia/evaluations', element: <IaEvaluationsPage /> },
       { path: '/aide', element: <HelpPage /> },
       { path: '/parametres/:section?', element: <SettingsPage /> },

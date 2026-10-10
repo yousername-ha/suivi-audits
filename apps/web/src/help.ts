@@ -23,6 +23,21 @@ const HISTORICAL_MODULES: readonly BusinessModule[] = [
 
 export const HELP_ARTICLES: HelpArticle[] = [
   {
+    id: 'pilotage-smsi-grc',
+    title: 'Pilotage SMSI : tâches, risques et cartographie',
+    permission: 'pilotage:lire',
+    link: '/grc',
+    steps: [
+      'Sélectionnez le SMSI et ses membres. Le périmètre partagé accueille les sources historiques ; les nouveaux SMSI sont restreints.',
+      'Publiez vos référentiels et méthodes après simulation. Les modèles EBIOS RM, ISO 27005 et MÉHARI sont des propositions à adapter ; les exigences ISO sous licence doivent être importées avec leurs droits.',
+      'Créez les risques et complétez les étapes de leur méthode. Simulez puis enregistrez explicitement les appréciations brutes et résiduelles ; les décisions sont immuables.',
+      'Reliez les fiches à des actifs, exigences, preuves versionnées, audits, contrôles et objectifs existants. Une mesure de traitement génère une action sans recalculer le risque résiduel.',
+      'Les actions se synchronisent en liste, Kanban, calendrier, planning et tableau de bord. Les récurrences produisent des occurrences uniques ; les réalisations historiques restent dans leur source.',
+      'La cartographie se met à jour depuis le registre. Les couleurs et niveaux appartiennent à chaque méthode ; les versions incompatibles ne produisent pas de comparaison numérique.',
+      'Importez les gabarits JSON ou Excel avec simulation et confirmation. Les propositions de correspondance requièrent une revue humaine. Consultez les rappels et exportez les rapports pour le comité SMSI.',
+    ],
+  },
+  {
     id: 'evaluations-ia-versionnees',
     title: 'Évaluations IA versionnées',
     permission: 'ia:lire',

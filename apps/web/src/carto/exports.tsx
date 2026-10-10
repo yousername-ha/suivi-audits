@@ -87,6 +87,9 @@ export interface ExportCtx {
   lookup: ObjectLookup;
   organisation: string;
   std: string[];
+  title?: string;
+  legend?: { label: string; color: string }[];
+  source?: unknown;
 }
 
 /** Dessin SVG autonome de la carte (couleurs claires recopiées en attributs). */
@@ -94,24 +97,58 @@ export function exportSvg(c: ExportCtx): { svg: string; W: number; H: number } {
   const bb = boundingBox(c.scene.nodes.map(([, n]) => n));
   const pad = 40,
     head = 78,
-    leg = 54;
-  const W = Math.round(bb.w + 2 * pad),
+    leg = c.legend ? Math.ceil(c.legend.length / 3) * 28 + 26 : 54;
+  const W = Math.round(
+      Math.max(
+        bb.w + 2 * pad,
+        c.legend?.length
+          ? Math.max(...c.legend.map((l) => l.label.length * 6.6 + 44)) * Math.min(3, c.legend.length) + 2 * pad
+          : 0,
+      ),
+    ),
     H = Math.round(bb.h + 2 * pad + head + leg);
   const date = new Date().toLocaleDateString('fr-FR');
   let lx = pad;
-  const legende = LEGENDE[c.view].map((l) => {
-    const x = lx;
-    lx += l.libelle.length * 6.6 + 44;
-    return (
-      <g key={l.libelle} className={`ct-${l.teinte}`}>
-        <rect x={x} y={H - leg + 16} width={20} height={14} rx={4} className={`c-fond${l.tirets ? ' c-tirets' : ''}`} />
-        <text x={x + 28} y={H - leg + 27} fontSize={12} className="c-sec">
-          {l.libelle}
-        </text>
-      </g>
-    );
-  });
-  const liens = LIENS[c.view].map(([st, l]) => {
+  const legende = c.legend
+    ? c.legend.map((l, i) => {
+        const x = pad + ((i % 3) * (W - 2 * pad)) / 3,
+          ly = H - leg + 16 + Math.floor(i / 3) * 28;
+        return (
+          <g key={l.label}>
+            <rect
+              x={x}
+              y={ly}
+              width={20}
+              height={14}
+              rx={4}
+              fill={/^#[a-fA-F0-9]{6}$/.test(l.color) ? l.color : undefined}
+            />
+            <text x={x + 28} y={ly + 11} fontSize={12} className="c-sec">
+              {l.label}
+            </text>
+          </g>
+        );
+      })
+    : LEGENDE[c.view].map((l) => {
+        const x = lx;
+        lx += l.libelle.length * 6.6 + 44;
+        return (
+          <g key={l.libelle} className={`ct-${l.teinte}`}>
+            <rect
+              x={x}
+              y={H - leg + 16}
+              width={20}
+              height={14}
+              rx={4}
+              className={`c-fond${l.tirets ? ' c-tirets' : ''}`}
+            />
+            <text x={x + 28} y={H - leg + 27} fontSize={12} className="c-sec">
+              {l.libelle}
+            </text>
+          </g>
+        );
+      });
+  const liens = (c.legend ? [] : LIENS[c.view]).map(([st, l]) => {
     const x = lx;
     lx += l.length * 6.6 + 60;
     return (
@@ -145,7 +182,7 @@ export function exportSvg(c: ExportCtx): { svg: string; W: number; H: number } {
           <Definitions />
           <rect width={W} height={H} className="c-fond-export" />
           <text x={pad} y={44} fontSize={24} fontWeight={700} className="c-titre-marine">
-            {MAP_VIEW_TITLES[c.view]}
+            {c.title ?? MAP_VIEW_TITLES[c.view]}
           </text>
           <text x={pad} y={68} fontSize={13} className="c-sec">
             {`${c.organisation} — ${date} — Référentiels : ${c.std.join(', ') || 'aucun'}`}
@@ -276,7 +313,13 @@ export async function exporter(format: FormatExport, c: ExportCtx): Promise<void
   const stamp = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}-${String(d.getHours()).padStart(2, '0')}${String(d.getMinutes()).padStart(2, '0')}`;
   const base = `Cartographie_${c.view === 'context' ? 'contexte' : 'processus'}_${stamp}`;
   if (format === 'json') {
-    const json = { type: 'smsi-map-layout', view: c.view, exportedAt: d.toISOString(), map: c.layout };
+    const json = {
+      type: 'smsi-map-layout',
+      view: c.view,
+      exportedAt: d.toISOString(),
+      map: c.layout,
+      ...(c.source !== undefined ? { source: c.source } : {}),
+    };
     enregistrer(base + '.json', JSON.stringify(json, null, 1), 'application/json');
     return;
   }
@@ -292,7 +335,7 @@ export async function exporter(format: FormatExport, c: ExportCtx): Promise<void
   }
   enregistrer(
     base + '.pdf',
-    pdfA3(octets(cv.toDataURL('image/jpeg', 0.92)), cv.width, cv.height, MAP_VIEW_TITLES[c.view]),
+    pdfA3(octets(cv.toDataURL('image/jpeg', 0.92)), cv.width, cv.height, c.title ?? MAP_VIEW_TITLES[c.view]),
     'application/pdf',
   );
 }

@@ -1,0 +1,74 @@
+import type { SessionUser } from '../auth.js';
+import type { Module } from '@suivi/shared';
+import { isObject } from '@suivi/shared/legacy';
+import type { Grc } from './core.js';
+import { DEFAULT_SMSI } from './core.js';
+export async function sources(g: Grc, smsi: string, user: SessionUser, search: string) {
+  await g.access(smsi, user);
+  const modules = ['audit', 'ecarts', 'plan_audit', 'pilotage', 'conformite', 'documents', 'incidents'].filter((m) =>
+    user.rights.can(m as Module, 'lire'),
+  );
+  const pattern = '%' + search.replace(/[\\%_]/g, '\\$&') + '%';
+  const objects = (
+    await g.db.q<{ ref: string; name: string; kind: string }>(
+      `SELECT 'object:'||id ref,name,kind FROM grc_objects WHERE smsi_id=$1 AND NOT archived AND module=ANY($2) AND name ILIKE $3 ORDER BY name,id LIMIT 100`,
+      [smsi, modules, pattern],
+    )
+  ).rows;
+  if (user.rights.can('documents', 'lire'))
+    objects.push(
+      ...(
+        await g.db.q<{ ref: string; name: string; kind: string }>(
+          `SELECT 'document:'||d.id||':'||v.version ref,d.title||' · preuve v'||v.version name,'evidence' kind FROM documents d JOIN document_versions v ON v.document_id=d.id WHERE d.deleted_at IS NULL AND d.title ILIKE $1 ORDER BY d.title,v.version DESC LIMIT 100`,
+          [pattern],
+        )
+      ).rows,
+    );
+  if (user.rights.can('audit', 'lire') && user.rights.can('conformite', 'lire')) {
+    const publications = (
+      await g.db.q<{
+        framework_id: string;
+        version: number;
+        definition: { requirements: { id: string; title: string }[] };
+      }>(
+        `SELECT DISTINCT ON(v.framework_id) v.framework_id,v.version,v.definition FROM grc_framework_versions v JOIN grc_objects o ON o.id=v.framework_id WHERE v.smsi_id=$1 AND NOT o.archived AND o.data->>'enabled'='true' ORDER BY v.framework_id,v.version DESC`,
+        [smsi],
+      )
+    ).rows;
+    for (const p of publications)
+      for (const r of p.definition.requirements)
+        if ((r.title + ' ' + r.id).toLowerCase().includes(search.toLowerCase()) && objects.length < 300)
+          objects.push({
+            ref: `requirement:${p.framework_id}:${p.version}:${r.id}`,
+            name: r.id + ' · ' + r.title,
+            kind: 'requirement',
+          });
+  }
+  if (smsi === DEFAULT_SMSI) {
+    const state = await g.legacy.recompose();
+    const allowed: Record<string, Module> = {
+      items: 'audit',
+      findings: 'ecarts',
+      processes: 'pilotage',
+      objectives: 'pilotage',
+      indicators: 'pilotage',
+      recurring: 'pilotage',
+      incidents: 'incidents',
+      frameworks: 'conformite',
+      evidences: 'pilotage',
+      plans: 'pilotage',
+      suppliers: 'fournisseurs',
+    };
+    for (const [key, module] of Object.entries(allowed)) {
+      if (!user.rights.can(module, 'lire')) continue;
+      const rows = state?.data[key];
+      for (const row of Array.isArray(rows) ? rows : []) {
+        if (!isObject(row) || typeof row.id !== 'string') continue;
+        const name = String(row.title ?? row.name ?? row.text ?? row.id);
+        if (name.toLowerCase().includes(search.toLowerCase()) && objects.length < 400)
+          objects.push({ ref: `legacy:${key}:${row.id}`, name, kind: key });
+      }
+    }
+  }
+  return { items: objects, truncated: objects.length >= 100 };
+}
