@@ -58,7 +58,8 @@ COPY packages/ui/src/fonts /maintenance/fonts
 COPY --chmod=0555 docker/demarrer-web.sh /usr/local/bin/demarrer-web
 COPY --chmod=0555 docker/demarrer-gateway.sh /usr/local/bin/demarrer-gateway
 COPY --from=build /src/apps/web/dist /srv
-RUN chown -R root:root /srv /etc/caddy /maintenance && chmod -R a-w,a+rX /srv /etc/caddy /maintenance
+RUN chown -R root:root /srv /etc/caddy /maintenance && chmod -R a-w,a+rX /srv /etc/caddy /maintenance \
+ && chmod 0555 /usr/local/bin/demarrer-web /usr/local/bin/demarrer-gateway
 USER caddy
 EXPOSE 8080 8443
 CMD ["/usr/local/bin/demarrer-web"]

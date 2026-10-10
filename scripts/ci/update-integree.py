@@ -54,6 +54,7 @@ shutil.copytree(ROOT/'certs',repo/'certs',dirs_exist_ok=True)
 run(['git','config','user.name','Recette locale'],cwd=repo)
 run(['git','config','user.email','recette@example.invalid'],cwd=repo)
 original_env=(repo/'.env').read_text()
+original_images={c:run(['docker','inspect','-f','{{.Id}}',IMAGE+c+':ci']).strip() for c in ('api','web','updater')}
 def change_version(v):
     text=re.sub(r'^APP_VERSION=.*$',f'APP_VERSION={v}',original_env,flags=re.M)
     text+='\nGATEWAY_VERSION=ci\n'
@@ -180,6 +181,7 @@ finally:
     compose('stop','updater',cwd=repo)
     # Revenir à la pile originale de CI sans modifier son checkout ni sa branche.
     (repo/'.env').write_text(original_env)
+    for component,image in original_images.items(): run(['docker','tag',image,IMAGE+component+':ci'])
     compose('up','-d','db','app','web','updater')
     wait_health(ROOT)
     shutil.rmtree(work)

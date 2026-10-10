@@ -204,7 +204,7 @@ class Worker:
     def finish(self, status, message):
         if status not in TERMINAL:
             raise Failure("État terminal invalide")
-        self.publish(status=status, phase="complete" if status == "success" else self.state["phase"],
+        self.publish(id=self.job["id"], target=self.job.get("target"), status=status, phase="complete" if status == "success" else self.state["phase"],
                      maintenance=status == "intervention", ready=status != "intervention", message=message,
                      installed=self.env().get("APP_VERSION", self.state["installed"]))
         atomic(self.private / "receipts" / f'{self.job["id"]}.json', {"id": self.job["id"], "status": status, "at": now()})
@@ -386,6 +386,8 @@ class Worker:
                             raise Failure("Demande invalide")
                         if job["kind"] == "check":
                             self.job = job
+                            self.publish(id=job["id"], target=None, status="running", phase="checking", ready=False,
+                                         message="Vérification des publications disponibles.")
                             try:
                                 self.check()
                                 self.finish("success", "Vérification des publications terminée.")

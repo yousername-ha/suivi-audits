@@ -95,6 +95,17 @@ class Updates(unittest.TestCase):
             with self.assertRaises(m.Failure): self.w.signatures('3.1.0')
         self.assertFalse(self.w.state['maintenance'])
 
+    def test_echec_preparation_publie_la_demande_terminee_pour_permettre_un_reessai(self):
+        self.w.publish(id=str(uuid.uuid4()), status='success')
+        self.w.job={'id':self.id,'target':'3.1.0'}
+        with patch.object(self.w,'cli',return_value=''):
+            self.w.finish('failed','GitHub indisponible avant préparation.')
+        self.assertEqual(self.w.state['id'],self.id)
+        self.assertEqual(self.w.state['target'],'3.1.0')
+        self.assertEqual(self.w.state['status'],'failed')
+        self.assertTrue(self.w.state['ready'])
+        self.assertFalse(self.w.state['maintenance'])
+
     def test_verrou_commun_exclut_operations_et_est_libere(self):
         with open(self.data/'etat/backup-worker.lock','a+') as lock:
             m.fcntl.flock(lock,m.fcntl.LOCK_EX|m.fcntl.LOCK_NB)

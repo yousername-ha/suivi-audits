@@ -83,6 +83,37 @@ test('mise à jour : pour un lecteur, information et nouveautés sans commande',
     await ctx.close();
   }
 });
+test('mise à jour : après échec de préparation, une nouvelle confirmation crée une nouvelle demande', async ({
+  browser,
+}) => {
+  const { ctx, page, problems } = await open(browser);
+  let current = state();
+  const requests: { requestId: string }[] = [];
+  const jobId = '00000000-0000-4000-8000-000000000002';
+  await page.route('**/api/updates', (route) => route.fulfill({ json: current }));
+  await page.route('**/api/admin/updates/install', async (route) => {
+    requests.push(route.request().postDataJSON());
+    await route.fulfill({ status: 202, json: { id: jobId, status: 'queued' } });
+  });
+  try {
+    await page.goto('/admin/system');
+    const confirm = page.getByLabel('Taper METTRE À JOUR pour confirmer');
+    const install = page.getByRole('button', { name: 'Installer la version 3.1.0' });
+    await confirm.fill('METTRE À JOUR');
+    await install.click();
+    await expect(page.getByText('Demande enregistrée.', { exact: false })).toBeVisible();
+    current = state({ id: jobId, target: '3.1.0', status: 'failed', message: 'Préparation interrompue.' });
+    await expect(confirm).toHaveValue('', { timeout: 20000 });
+    await expect(install).toBeDisabled();
+    await confirm.fill('METTRE À JOUR');
+    await install.click();
+    await expect.poll(() => requests.length).toBe(2);
+    expect(requests[1]!.requestId).not.toBe(requests[0]!.requestId);
+    expect(problems).toEqual([]);
+  } finally {
+    await ctx.close();
+  }
+});
 test('mise à jour : la maintenance rejoint automatiquement un écran ouvert puis revient après santé réelle', async ({
   browser,
 }) => {
@@ -136,13 +167,14 @@ test('mise à jour : panne de suivi et retour arrière sont explicites, sans suc
         }),
   );
   try {
-    await page.goto('/update/?next=%2Fadmin%2Fsystem');
+    // Une barre oblique inverse peut être normalisée par le navigateur en URL externe.
+    await page.goto('/update/?next=%2F%5Cexample.invalid%2F');
     await expect(page.getByText('Connexion momentanément interrompue.', { exact: false })).toBeVisible();
     offline = false;
     await expect(page.getByRole('heading', { name: 'La mise à jour n’a pas été installée' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Consulter le résultat dans l’application' })).toHaveAttribute(
       'href',
-      '/admin/system',
+      '/',
     );
     await expect(page).toHaveURL(/\/update\//);
     expect(problems).toEqual([]);

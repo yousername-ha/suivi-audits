@@ -14,8 +14,16 @@
   const get = (id) => document.getElementById(id);
   const phases = ['preparing', 'backup', 'installing', 'verifying', 'complete'];
   const next = new URLSearchParams(location.search).get('next');
-  const destination =
-    next && next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/update') ? next : '/';
+  let destination = '/';
+  if (next && next.startsWith('/')) {
+    try {
+      const url = new URL(next, location.origin);
+      if (url.origin === location.origin && !url.pathname.startsWith('/update'))
+        destination = url.pathname + url.search + url.hash;
+    } catch {
+      /* Une adresse mal formée revient à l'accueil ; elle ne doit pas interrompre le suivi. */
+    }
+  }
   let returned = false;
   async function tick() {
     try {

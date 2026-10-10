@@ -55,8 +55,11 @@ export function UpdatesPanel() {
   const s = q.data;
   const busy = pending || !!queued || !!s?.maintenance || s?.status === 'queued' || s?.status === 'running';
   useEffect(() => {
-    if (queued && s?.id === queued && ['success', 'failed', 'rolled_back', 'intervention'].includes(s.status))
+    if (queued && s?.id === queued && ['success', 'failed', 'rolled_back', 'intervention'].includes(s.status)) {
       setQueued(null);
+      id.current = null;
+      setConfirm('');
+    }
   }, [queued, s?.id, s?.status]);
   async function check() {
     setPending(true);

@@ -5,5 +5,5 @@ import { expect, it } from 'vitest';
 import { REPO } from './helpers.js';
 it('exécutant de mise à jour : publications, signatures, verrous et reprise durable', async () => {
   const result = await promisify(execFile)('python3', [path.join(REPO, 'scripts/tests/test_updates.py')]);
-  expect(result.stderr).toMatch(/Ran 9 tests[\s\S]*OK/);
+  expect(result.stderr).toMatch(/Ran 10 tests[\s\S]*OK/);
 });

@@ -71,7 +71,6 @@ while [ $# -gt 0 ]; do
 done
 
 DEPOT_IMAGES=ghcr.io/yousername-ha/suivi-audits
-IDENTITE_SIGNATURE='^https://github.com/yousername-ha/suivi-audits/\.github/workflows/release\.yml@refs/tags/v'
 PASS="${BACKUP_PASSPHRASE_FILE:-/root/.suivi-backup-pass}"
 STAMP=$(date -u +%Y%m%d-%H%M%S)
 DEBUT=$(date +%s)
@@ -226,8 +225,10 @@ besoin=$((2 * ${taille_base:-0} + 2 * 1024 * 1024 * 1024))
 libre=$(octets_libres "$DATA_DIR")
 info "Espace libre : $((libre / 1048576)) Mo (nécessaire : $((besoin / 1048576)) Mo)"
 [ "$libre" -ge "$besoin" ] || arret "espace disque insuffisant (2 × la base + 2 Go pour les images)."
+COMPOSANTS='api web'
+if git cat-file -e "v$CIBLE:docker/updater.Dockerfile" 2> /dev/null; then COMPOSANTS+=' updater'; fi
 if [ "$LOCALES" = 1 ]; then
-  for i in api web; do docker image inspect "$DEPOT_IMAGES-$i:$CIBLE" > /dev/null 2>&1 || arret "image locale $DEPOT_IMAGES-$i:$CIBLE absente."; done
+  for i in $COMPOSANTS; do docker image inspect "$DEPOT_IMAGES-$i:$CIBLE" > /dev/null 2>&1 || arret "image locale $DEPOT_IMAGES-$i:$CIBLE absente."; done
   SIGNATURE='images locales (non vérifiée)'
 elif command -v cosign > /dev/null; then
   SIGNATURE='à vérifier'
@@ -323,8 +324,8 @@ fi
 if [ "$LOCALES" = 0 ]; then
   APP_VERSION="$CIBLE" dc pull --quiet
   if command -v cosign > /dev/null; then
-    for i in api web; do
-      cosign verify "$DEPOT_IMAGES-$i:$CIBLE" --certificate-identity-regexp "$IDENTITE_SIGNATURE" \
+    for i in $COMPOSANTS; do
+      cosign verify "$DEPOT_IMAGES-$i:$CIBLE" --certificate-identity "https://github.com/yousername-ha/suivi-audits/.github/workflows/release.yml@refs/tags/v$CIBLE" \
         --certificate-oidc-issuer https://token.actions.githubusercontent.com > /dev/null \
         || retour_arriere "signature de l'image $i:$CIBLE invalide ou absente"
     done
@@ -370,9 +371,12 @@ etape "Mise à jour terminée : $ACTUELLE → $CIBLE"
 rapport reussie ''
 rm -f "$REPO/.env.avant-mise-a-jour"
 # Images : on garde la version en service et la précédente (retour rapide).
-for i in api web; do
+for i in $COMPOSANTS; do
+  garder="$CIBLE|$ACTUELLE"
+  # Le frontal stable peut être plus ancien que la version applicative précédente.
+  if [ "$i" = web ]; then garder+="|$(valeur_env GATEWAY_VERSION "$CIBLE")"; fi
   docker image ls --format '{{.Repository}}:{{.Tag}}' "$DEPOT_IMAGES-$i" \
-    | grep -vE ":($CIBLE|$ACTUELLE)$" | xargs -r docker image rm > /dev/null 2>&1 || true
+    | grep -vE ":($garder)$" | xargs -r docker image rm > /dev/null 2>&1 || true
 done
 docker image prune -f > /dev/null 2>&1 || true
 [ "$MIGRATION_DOSSIER" = 1 ] && info "Anciens volumes Docker conservés : après vérification, sudo ./scripts/migrer-donnees-vers-dossier.sh --supprimer-anciens-volumes"

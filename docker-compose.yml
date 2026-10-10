@@ -1,8 +1,8 @@
 # Suivi des audits SMSI ISO 27001 / HDS — déploiement de production.
-#   web (Caddy : HTTPS + interface)  ->  app (API Node.js)  ->  db (PostgreSQL 17)
+#   gateway (HTTPS + maintenance) -> web (interface interne) -> app (API Node.js) -> db (PostgreSQL 17)
 # Images versionnées publiées sur GHCR : mise à jour = changer APP_VERSION dans .env, puis
 #   docker compose pull && docker compose up -d
-# Réseaux : seul « web » est exposé ; « app » et « db » n'ont aucun accès sortant.
+# Réseaux : seul « gateway » est exposé ; « app » et « db » n'ont aucun accès sortant.
 # Données (EXPL-01) : toutes dans le dossier du serveur DATA_DIR (montages bind), aucune dans les conteneurs ni dans
 # des volumes Docker. Supprimer les conteneurs, les images ou lancer « docker compose down -v » ne les touche pas.
 #   DATA_DIR/postgres  base · secrets  secrets générés · caddy/data, caddy/config  certificats · clamav  signatures
