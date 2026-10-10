@@ -5,7 +5,11 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 ## [Non publié]
 
 ### Notes de mise à jour
-- Aucune version supplémentaire préparée.
+- Aucune action sur le serveur : optimisation des workflows GitHub Actions uniquement, sans nouvelle version applicative préparée.
+
+### Modifié
+- CI : un seul scan Trivy bloquant HIGH/CRITICAL par image API, web et updater ; suppression du second scan identique destiné à réafficher le tableau. Les SBOM et le scan des dépendances du dépôt sont conservés.
+- CodeQL : une nouvelle analyse de la même référence Git annule l'exécution précédente encore en cours, comme le fait déjà la CI.
 
 ## [3.0.2] — 2026-10-10 — Préversion de développement
 

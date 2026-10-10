@@ -155,7 +155,6 @@ jobs:
           trivy() { docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$HOME/.cache/trivy:/root/.cache/trivy" -v "$PWD:/work" -w /work "$TRIVY_IMAGE" "$@"; }
           for img in api web updater; do
             trivy image --scanners vuln --severity HIGH,CRITICAL --exit-code 1 --no-progress "ghcr.io/yousername-ha/suivi-audits-$img:ci"
-            trivy image --scanners vuln --severity HIGH,CRITICAL --format table --no-progress "ghcr.io/yousername-ha/suivi-audits-$img:ci"
           done
 
       - name: Trivy — dépendances du dépôt (échec sur HIGH et CRITICAL)
