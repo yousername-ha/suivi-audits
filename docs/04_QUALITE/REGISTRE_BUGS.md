@@ -1,6 +1,6 @@
 # Registre central des bugs
 
-Référence applicative analysée : `c704fa6e6d6d516db75f963db8dd5d2049ab42c8`. Mise à jour : 2026-10-11T00:46:53+02:00 (Europe/Paris).
+Référence applicative analysée : `f9545c3ce1a1338f13bb39bdaa4468bcc907da2d`. Mise à jour : 2026-10-11T22:10:00+02:00 (Europe/Paris).
 
 Source : [registre de référence](../08_PILOTAGE/REGISTRES.json). On conserve les corrections, sans déduire la réussite
 du seul préfixe fix. Les tests confirment le code analysé ; un déploiement ancien
@@ -124,3 +124,37 @@ humaine manquante ; sa CI technique est passée.
 Les trois alertes HIGH de dépendances constituent un correctif de sécurité
 historique distinct, documenté dans dependances-high et SEC/optimisations ;
 elles ne sont pas ajoutées artificiellement comme trois bugs applicatifs ouverts.
+
+## BUG-007 — Tableaux du registre des risques et de l’étude EBIOS sans composant Table
+
+| Champ                       | Constat                                                                                                                                                                                                                                  |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fonction, gravité, priorité | FCT-042 ; MAJEURE ; P1                                                                                                                                                                                                                   |
+| Statut                      | CORRIGÉ ET VALIDÉ                                                                                                                                                                                                                        |
+| Détection / correction      | 2026-10-11 ; pendant l’unification, lots U2 et U3                                                                                                                                                                                        |
+| Déclencheur                 | Ouverture du registre des risques ou de l’étude EBIOS RM.                                                                                                                                                                                |
+| Attendu                     | Tableaux affichés.                                                                                                                                                                                                                       |
+| Observé initialement        | Exception d’exécution « Table component was not found in the tree ».                                                                                                                                                                     |
+| Cause / niveau              | CONFIRMÉ : DataTable utilisé sans <Table> interne ; mis en évidence par la recette navigateur.                                                                                                                                           |
+| Correctif                   | Contenu enveloppé dans <DataTable><Table>…</Table></DataTable>.                                                                                                                                                                          |
+| Fichiers                    | [apps/web/src/grc/RegistreRisques.tsx](../../apps/web/src/grc/RegistreRisques.tsx) ; [apps/web/src/grc/Ebios.tsx](../../apps/web/src/grc/Ebios.tsx) ; [tests/e2e/specs/zzzz-risques.spec.ts](../../tests/e2e/specs/zzzz-risques.spec.ts) |
+| Commit                      | f23ad4e                                                                                                                                                                                                                                  |
+| Non-régression              | TEST-047 ; CI de f9545c3                                                                                                                                                                                                                 |
+| Reste à vérifier            | Validation sur le serveur utilisateur.                                                                                                                                                                                                   |
+
+## BUG-008 — Test de pilotage instable selon l’identifiant tiré au hasard
+
+| Champ                       | Constat                                                                        |
+| --------------------------- | ------------------------------------------------------------------------------ |
+| Fonction, gravité, priorité | FCT-019 ; MINEURE ; P3                                                         |
+| Statut                      | CORRIGÉ ET VALIDÉ                                                              |
+| Détection / correction      | 2026-10-11 ; pendant l’unification, lots U2 et U3                              |
+| Déclencheur                 | Identifiant de document commençant par « 1 » dans pilotage.test.ts.            |
+| Attendu                     | Test déterministe.                                                             |
+| Observé initialement        | Remplacement de « :1 » au premier endroit rencontré, référence altérée à tort. |
+| Cause / niveau              | CONFIRMÉ : défaut du test, pas du code applicatif.                             |
+| Correctif                   | Remplacement ancré en fin de référence.                                        |
+| Fichiers                    | [apps/api/test/pilotage.test.ts](../../apps/api/test/pilotage.test.ts)         |
+| Commit                      | 69e4618                                                                        |
+| Non-régression              | TEST-019 ; CI de f9545c3                                                       |
+| Reste à vérifier            | Aucun.                                                                         |

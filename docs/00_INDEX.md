@@ -1,11 +1,17 @@
 # Index documentaire et reprise
 
-2026-10-11T01:15:55+02:00 (Europe/Paris). Référence : `c704fa6e6d6d516db75f963db8dd5d2049ab42c8` ; branche `feature/gpt6-evolution-smsi-grc`.
+2026-10-11T22:10:00+02:00 (Europe/Paris). Référence des registres : `f9545c3ce1a1338f13bb39bdaa4468bcc907da2d` (version 3.1.0, `main`).
 Lire d’abord [AGENTS](../AGENTS.md), [HANDOVER](../HANDOVER.md) et
 [PROJECT_STATUS](../PROJECT_STATUS.md).
 
-L’index et les registres décrivent le code c704fa6 (3.0.2), les tests réellement
-vérifiés et les limites. Les anciennes documentations/ADR restent disponibles
+Les registres (REGISTRES.json, inventaire, cas et exécutions de recette, couverture,
+matrice, bugs, tableau de bord, contrat d’API) ont été réévalués le 2026-10-11 sur
+`f9545c3` : CI complète (EXE-013, 888 tests) et CodeQL (EXE-014) verts. Les autres
+documents de cette arborescence (reprise, guides, historique, qualité, plans) portent
+encore l’estampille `c704fa6` (3.0.2) : ils restent des sources datées, à lire avec le
+[changelog](../CHANGELOG.md) et l’[audit d’unification](unification/L1-AUDIT-ET-CORRESPONDANCE.md).
+EXE-001 à EXE-012 sont des constats historiques sur `c704fa6`, non rejoués. Les tests
+réellement vérifiés et les limites sont ceux des registres. Les anciennes documentations/ADR restent disponibles
 comme sources datées ; le DAT actuel prévaut pour l’état de la pile. Ne pas
 confondre conservation, interface adaptée et migration complète.
 

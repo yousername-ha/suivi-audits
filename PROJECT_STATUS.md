@@ -12,12 +12,11 @@ branche `feature/gpt6-evolution-smsi-grc`. Lire [HANDOVER](HANDOVER.md).
 | Tests locaux | Vitest : shared 327, ui 117, web 17, API 270 (PostgreSQL 17) ; Playwright complet sur la pile Docker locale (voir HANDOVER) |
 | CI GitHub | dépôt rendu public par son propriétaire le 11/10 ; [CI déclenchée manuellement sur `6e921fe`](https://github.com/yousername-ha/suivi-audits/actions/runs/38146426254) : 5 jobs verts (qualité, Vitest sur PostgreSQL, guide d'installation sur Ubuntu vierge, montée de version avec retour arrière et restauration, images + Trivy + Playwright complet + mise à jour intégrée et persistance). CodeQL non exécuté (déclenché seulement par PR ou poussée sur `main`) ; aucune PR ouverte |
 | Fusion dans `main` | faite le 11/10 : [#14](https://github.com/yousername-ha/suivi-audits/pull/14) (version 3.1.0) puis [#15](https://github.com/yousername-ha/suivi-audits/pull/15) (limite de débit de la pile de test) ; CI et CodeQL verts sur `57a7bc9` ; PR #1 à #13 fermées sans fusion |
-| Non fait | étiquette `v3.1.0` (publication des images), nettoyage des branches (script remis au RSSI : `archive/*`, branche `legacy`), recette du RSSI sur son serveur, actualisation de l'audit documentaire ci-dessous |
+| Non fait | étiquette `v3.1.0` (publication des images), nettoyage des branches (script remis au RSSI : `archive/*`, branche `legacy`), recette du RSSI sur son serveur |
 
-Le registre `docs/08_PILOTAGE/REGISTRES.json` et `verifier-documentation.mjs` restent l'instantané de `c704fa6` : sur cette
-branche, le vérificateur signale à juste titre « sources applicatives modifiées depuis le snapshot ». Les lignes
-FCT-019, FCT-022, FCT-030 et FCT-038 y sont dépassées par les lots U2 et U3 ; leur réévaluation demande une recette
-datée sur le code de la branche.
+Le registre `docs/08_PILOTAGE/REGISTRES.json`, ses documents dérivés et `verifier-documentation.mjs` ont été réévalués
+sur `f9545c3` (CI et CodeQL verts, EXE-013 et EXE-014) : 45 fonctions, 50 cas dont 37 passés en CI, 13 non exécutés (serveur,
+ergonomie, performance, références officielles). Les autres documents narratifs gardent l'estampille `c704fa6` (voir l'index).
 
 ## Instantané documentaire de `feature/gpt6-evolution-smsi-grc`
 

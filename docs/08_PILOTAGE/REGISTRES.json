@@ -1,28 +1,28 @@
 {
   "schema": "audit-documentaire-v1",
-  "analysed_commit": "c704fa6e6d6d516db75f963db8dd5d2049ab42c8",
-  "branch": "feature/gpt6-evolution-smsi-grc",
-  "updated_at": "2026-10-11T04:02:41+02:00",
+  "analysed_commit": "f9545c3ce1a1338f13bb39bdaa4468bcc907da2d",
+  "branch": "main (claude-suivi-smsi)",
+  "updated_at": "2026-10-11T22:10:00+02:00",
   "status_rules": ["CONFIRMÉ", "OBSERVÉ", "DÉCLARÉ", "SUPPOSÉ", "NON VÉRIFIÉ", "INCONNU"],
   "statistics": {
-    "features": 40,
-    "automated_validated": 27,
-    "partial": 6,
-    "historical_not_migrated": 6,
+    "features": 45,
+    "automated_validated": 31,
+    "partial": 8,
+    "historical_not_migrated": 5,
     "bugs_open": 0,
-    "bugs_fixed_validated": 5,
+    "bugs_fixed_validated": 7,
     "bugs_fixed_user_validation_pending": 1,
     "regressions_documented": 3,
-    "security_risks": 6,
+    "security_risks": 7,
     "optimisations_done": 5,
     "optimisations_remaining": 3,
-    "planned_cases": 45,
-    "case_passed": 29,
+    "planned_cases": 50,
+    "case_passed": 37,
     "case_failed": 0,
     "case_blocked": 0,
-    "case_not_executed": 16,
-    "local_test_passages": 360,
-    "ci_test_passages": 730
+    "case_not_executed": 13,
+    "local_test_passages": 0,
+    "ci_test_passages": 888
   },
   "features": [
     {
@@ -180,7 +180,7 @@
         "tests/e2e/specs/recette-cartographie.spec.ts"
       ],
       "route": "/cartographie",
-      "verified_scope": "Canevas, objets, disposition, versions, filtres, exports et mapper maps ; parité des cas testés.",
+      "verified_scope": "Canevas, objets, disposition, versions, filtres, exports et mapper maps ; parité des cas testés. Création depuis la carte, notes et cadres libres : voir FCT-045.",
       "validation": "VALIDÉ AUTOMATIQUEMENT",
       "migration": "REPRISE ET VALIDÉE",
       "gap": "Recette du serveur utilisateur non reçue.",
@@ -418,10 +418,19 @@
       "module": "pilotage",
       "historical_key": "processes / objectives / indicators",
       "historical_source": "archives/v2-source.zip → app/public/index.html",
-      "implementation": ["apps/api/src/pilotage/legacy.ts", "apps/web/src/pilotage/Fields.tsx"],
-      "tests": ["apps/api/test/pilotage.test.ts"],
+      "implementation": [
+        "apps/api/src/pilotage/legacy.ts",
+        "apps/web/src/pilotage/Fields.tsx",
+        "apps/web/src/pilotage/ObjectifsProcessus.tsx",
+        "packages/shared/src/tableau-de-bord.ts"
+      ],
+      "tests": [
+        "apps/api/test/pilotage.test.ts",
+        "packages/shared/test/tableau-de-bord.test.ts",
+        "tests/e2e/specs/zzzz-pilotage.spec.ts"
+      ],
       "route": "/pilotage/processus ; /pilotage/objectifs ; /pilotage/indicateurs",
-      "verified_scope": "Édition contrôlée, séries de valeurs historiques conservées, indicateurs automatiques protégés.",
+      "verified_scope": "Édition contrôlée, séries de valeurs historiques conservées, indicateurs automatiques protégés ; vues « Par processus » et « Vue compacte » avec états d’indicateurs calculés comme l’outil historique (test de parité).",
       "validation": "VALIDÉ AUTOMATIQUEMENT",
       "migration": "REPRISE ET VALIDÉE",
       "gap": "Recette du serveur utilisateur non reçue.",
@@ -484,11 +493,22 @@
       "implementation": [
         "packages/shared/src/risk-methods.ts",
         "apps/api/src/grc/risks.ts",
-        "apps/web/src/grc/Risks.tsx"
+        "apps/web/src/grc/Risks.tsx",
+        "packages/shared/src/risques.ts",
+        "apps/api/src/grc/registre-risques.ts",
+        "apps/web/src/grc/Ebios.tsx",
+        "apps/web/src/grc/RegistreRisques.tsx"
       ],
-      "tests": ["apps/api/test/grc.test.ts", "apps/api/test/grc-security.test.ts", "tests/e2e/specs/zz-grc.spec.ts"],
+      "tests": [
+        "apps/api/test/grc.test.ts",
+        "apps/api/test/grc-security.test.ts",
+        "tests/e2e/specs/zz-grc.spec.ts",
+        "apps/api/test/risques.test.ts",
+        "packages/shared/test/risques.test.ts",
+        "tests/e2e/specs/zzzz-risques.spec.ts"
+      ],
       "route": "/pilotage/risques ; /pilotage/scenarios ; /pilotage/traitements",
-      "verified_scope": "EBIOS cinq ateliers, jugement/matrice/règles distincts, brut/résiduel immuables ; aucune réévaluation automatique après action.",
+      "verified_scope": "EBIOS cinq ateliers, jugement/matrice/règles distincts, brut/résiduel immuables ; aucune réévaluation automatique après action. Études EBIOS RM et processus inspiré de l’ISO/IEC 27005 : voir FCT-042.",
       "validation": "VALIDÉ AUTOMATIQUEMENT",
       "migration": "MODIFIÉE VOLONTAIREMENT",
       "gap": "ISO/MÉHARI : modèles configurables ; exhaustivité d’une méthode normative ou des classeurs officiels non certifiée.",
@@ -609,13 +629,21 @@
       "module": "audit",
       "historical_key": "years / groups / items / hdsChap",
       "historical_source": "archives/v2-source.zip → app/public/index.html",
-      "implementation": ["app/public/index.html", "apps/api/src/routes/legacy.ts"],
-      "tests": [],
+      "implementation": [
+        "app/public/index.html",
+        "apps/api/src/routes/legacy.ts",
+        "packages/shared/src/audit/index.ts"
+      ],
+      "tests": [
+        "packages/shared/test/audit.test.ts",
+        "packages/shared/test/audit-parite.test.ts",
+        "tests/e2e/specs/zzzz-pilotage.spec.ts"
+      ],
       "route": "/legacy → Audit",
-      "verified_scope": "Code conservé ; CRUD/couverture annuelle et exports complets non rejoués durant cet audit.",
+      "verified_scope": "Programme d’audit interne affiché en lecture seule dans « Audits internes » ; socle partagé @suivi/shared/audit (pronostic en parité avec l’outil historique) sans écran propre ; couverture interne/certification par année encore historique.",
       "validation": "PARTIEL",
       "migration": "REPRISE PARTIELLEMENT",
-      "gap": "Exigences natives disponibles, couverture interne/certification par année encore historique.",
+      "gap": "Écrans Audit natifs (AUD-01 à AUD-16 hors socle) non livrés ; couverture annuelle historique à reprendre.",
       "criticality": "MOYENNE",
       "provenance": "OBSERVÉ",
       "case": "TEST-028",
@@ -645,13 +673,13 @@
       "module": "pilotage",
       "historical_key": "dda",
       "historical_source": "archives/v2-source.zip → app/public/index.html",
-      "implementation": ["app/public/index.html", "apps/web/src/pages/Pilotage.tsx"],
-      "tests": [],
+      "implementation": ["apps/api/src/pilotage/legacy.ts", "apps/web/src/pages/Pilotage.tsx"],
+      "tests": ["apps/api/test/pilotage-dda.test.ts", "tests/e2e/specs/zzzz-pilotage.spec.ts"],
       "route": "/pilotage/applicabilite ; /pilotage/legacy",
-      "verified_scope": "Registre SoA natif visible ; équivalence de toutes les données et décisions dda non démontrée.",
+      "verified_scope": "La DdA de l’outil de suivi s’affiche et se modifie dans « Applicabilité » sans copie (entrée réécrite sous verrou, version, journal) ; équivalence avec le registre SoA natif non démontrée.",
       "validation": "PARTIEL",
       "migration": "REPRISE PARTIELLEMENT",
-      "gap": "Correspondance de dda vers SoA et recette complète à établir.",
+      "gap": "Correspondance de dda vers SoA et recette métier à établir ; recette du serveur utilisateur non reçue.",
       "criticality": "MOYENNE",
       "provenance": "OBSERVÉ",
       "case": "TEST-030",
@@ -789,13 +817,17 @@
       "module": "pilotage",
       "historical_key": "plans",
       "historical_source": "archives/v2-source.zip → app/public/index.html",
-      "implementation": ["app/public/index.html", "apps/api/src/routes/legacy.ts"],
-      "tests": [],
-      "route": "/legacy → Plans",
-      "verified_scope": "Plans v2 conservés ; aucune migration globale implicite vers continuity_plan.",
-      "validation": "NON VÉRIFIÉ",
-      "migration": "NON REPRISE",
-      "gap": "Inventorier types/champs, identifiants et liens avant migration vers le début E.",
+      "implementation": [
+        "apps/web/src/pilotage/PlansHistoriques.tsx",
+        "packages/shared/src/tableau-de-bord.ts",
+        "apps/api/src/routes/legacy.ts"
+      ],
+      "tests": ["packages/shared/test/tableau-de-bord.test.ts", "tests/e2e/specs/zzzz-pilotage.spec.ts"],
+      "route": "/pilotage/audits ; /pilotage/exercices ; /legacy → Plans",
+      "verified_scope": "Programme d’audit interne et plan d’exercices de l’outil de suivi affichés en lecture seule (retards signalés), avec lien vers leur planification ; aucune migration vers continuity_plan.",
+      "validation": "PARTIEL",
+      "migration": "REPRISE PARTIELLEMENT",
+      "gap": "Édition dans le Pilotage, autres plans et sous-sections, types/champs et liens à inventorier avant migration vers le début E.",
       "criticality": "MOYENNE",
       "provenance": "OBSERVÉ",
       "case": "TEST-038",
@@ -848,6 +880,125 @@
       "criticality": "MOYENNE",
       "provenance": "CONFIRMÉ",
       "case": "TEST-040",
+      "kind": null
+    },
+    {
+      "id": "FCT-041",
+      "name": "Tableau de bord unifié et graphiques",
+      "module": "pilotage",
+      "historical_key": "dashboard",
+      "historical_source": "archives/v2-source.zip → app/public/index.html",
+      "implementation": [
+        "packages/shared/src/tableau-de-bord.ts",
+        "packages/ui/src/graphiques.tsx",
+        "apps/web/src/components/Synthese.tsx"
+      ],
+      "tests": [
+        "packages/shared/test/tableau-de-bord.test.ts",
+        "packages/ui/test/graphiques.test.ts",
+        "tests/e2e/specs/zzzz-pilotage.spec.ts"
+      ],
+      "route": "/ ; /mur ; /pilotage/synthese",
+      "verified_scope": "Graphiques conformité par référentiel, écarts par type, actions, objectifs/indicateurs et plans calculés comme l’outil historique (tests de parité) ; composants SVG sans dépendance, contrastes vérifiés.",
+      "validation": "VALIDÉ AUTOMATIQUEMENT",
+      "migration": "REPRISE PARTIELLEMENT",
+      "gap": "Seuls les graphiques repris sont couverts ; autres vues du tableau de bord historique non inventoriées une à une ; recette du serveur utilisateur non reçue.",
+      "criticality": "MOYENNE",
+      "provenance": "CONFIRMÉ",
+      "case": "TEST-046",
+      "kind": null
+    },
+    {
+      "id": "FCT-042",
+      "name": "Études EBIOS RM, processus ISO/IEC 27005 et registre des risques",
+      "module": "pilotage",
+      "historical_key": null,
+      "historical_source": "Pas d’équivalent historique établi pour cette extension.",
+      "implementation": [
+        "packages/shared/src/risques.ts",
+        "apps/api/src/grc/registre-risques.ts",
+        "apps/web/src/grc/Ebios.tsx",
+        "apps/web/src/grc/RegistreRisques.tsx"
+      ],
+      "tests": [
+        "packages/shared/test/risques.test.ts",
+        "apps/api/test/risques.test.ts",
+        "tests/e2e/specs/zzzz-risques.spec.ts"
+      ],
+      "route": "/pilotage/risques ; /pilotage/ebios",
+      "verified_scope": "Étude EBIOS RM en cinq ateliers d’objets typés avec validation tracée, fiche de risque ISO/IEC 27005, acceptation formelle immuable avec échéance, registre filtrable, références typées contrôlées par le serveur.",
+      "validation": "VALIDÉ AUTOMATIQUEMENT",
+      "migration": "MODIFIÉE VOLONTAIREMENT",
+      "gap": "Aucune conformité à EBIOS RM ou à l’ISO/IEC 27005 revendiquée ni certifiée ; recette métier et du serveur utilisateur non reçues.",
+      "criticality": "HAUTE",
+      "provenance": "CONFIRMÉ",
+      "case": "TEST-047",
+      "kind": null
+    },
+    {
+      "id": "FCT-043",
+      "name": "Liens transverses et catalogue de relations",
+      "module": "transversal",
+      "historical_key": null,
+      "historical_source": "Pas d’équivalent historique établi pour cette extension.",
+      "implementation": ["packages/shared/src/liens.ts", "apps/api/src/grc/core.ts", "apps/web/src/grc/Relations.tsx"],
+      "tests": ["packages/shared/test/liens.test.ts", "apps/api/test/liens.test.ts"],
+      "route": "Panneau « Liens et preuves » (registre des risques)",
+      "verified_scope": "Relations acceptées seulement pour les paires prévues (422 sinon, « Lié à » ouvert), sens lisible des deux côtés, objets archivés signalés et fermés aux nouveaux liens, données historiques limitées au périmètre commun, responsables proposés limités aux comptes autorisés.",
+      "validation": "VALIDÉ AUTOMATIQUEMENT",
+      "migration": "MODIFIÉE VOLONTAIREMENT",
+      "gap": "Panneau branché depuis le registre des risques seulement ; parcours navigateur dédié non écrit ; recette du serveur utilisateur non reçue.",
+      "criticality": "MOYENNE",
+      "provenance": "CONFIRMÉ",
+      "case": "TEST-048",
+      "kind": null
+    },
+    {
+      "id": "FCT-044",
+      "name": "Socle partagé Audit (sans écran)",
+      "module": "pilotage",
+      "historical_key": "audit",
+      "historical_source": "archives/v2-source.zip → app/public/index.html",
+      "implementation": [
+        "packages/shared/src/audit/index.ts",
+        "packages/shared/src/audit/pronostic.ts",
+        "packages/shared/src/audit/ecarts.ts"
+      ],
+      "tests": ["packages/shared/test/audit.test.ts", "packages/shared/test/audit-parite.test.ts"],
+      "route": "Aucune route ni écran",
+      "verified_scope": "Modèle, pronostic en parité avec l’outil historique, règles des écarts et du plan d’actions, schémas zod, vérifiés par tests unitaires.",
+      "validation": "PARTIEL",
+      "migration": "REPRISE PARTIELLEMENT",
+      "gap": "Aucun écran ni route Audit natifs ; le socle seul ne constitue pas la reprise du module Audit.",
+      "criticality": "MOYENNE",
+      "provenance": "CONFIRMÉ",
+      "case": "TEST-049",
+      "kind": null
+    },
+    {
+      "id": "FCT-045",
+      "name": "Cartographie : création depuis la carte, notes et cadres libres",
+      "module": "cartographie",
+      "historical_key": null,
+      "historical_source": "Pas d’équivalent historique établi pour cette extension.",
+      "implementation": [
+        "packages/shared/src/carto/scene.ts",
+        "apps/api/src/carto/maps.ts",
+        "apps/web/src/pages/Cartographie.tsx"
+      ],
+      "tests": [
+        "packages/shared/test/carto-creation.test.ts",
+        "apps/api/test/carto.test.ts",
+        "tests/e2e/specs/recette-cartographie.spec.ts"
+      ],
+      "route": "/cartographie",
+      "verified_scope": "Création d’objets dans leur module avec sa permission (sous verrou, journalisée), renommage, notes et cadres libres, carte vierge, appui long, alignement ; aucune suppression d’objet depuis la carte.",
+      "validation": "VALIDÉ AUTOMATIQUEMENT",
+      "migration": "MODIFIÉE VOLONTAIREMENT",
+      "gap": "Parcours exécutés sur données fictives ; recette du serveur utilisateur non reçue.",
+      "criticality": "MOYENNE",
+      "provenance": "CONFIRMÉ",
+      "case": "TEST-050",
       "kind": null
     }
   ],
@@ -959,6 +1110,46 @@
       "test": "TEST-042",
       "date": "2026-10-10",
       "remaining": "Tests CI passés ; acceptation ergonomique humaine NON EXÉCUTÉE."
+    },
+    {
+      "id": "BUG-007",
+      "title": "Tableaux du registre des risques et de l’étude EBIOS sans composant Table",
+      "feature": "FCT-042",
+      "severity": "MAJEURE",
+      "priority": "P1",
+      "status": "CORRIGÉ ET VALIDÉ",
+      "trigger": "Ouverture du registre des risques ou de l’étude EBIOS RM.",
+      "expected": "Tableaux affichés.",
+      "observed": "Exception d’exécution « Table component was not found in the tree ».",
+      "cause": "CONFIRMÉ : DataTable utilisé sans <Table> interne ; mis en évidence par la recette navigateur.",
+      "fix": "Contenu enveloppé dans <DataTable><Table>…</Table></DataTable>.",
+      "files": [
+        "apps/web/src/grc/RegistreRisques.tsx",
+        "apps/web/src/grc/Ebios.tsx",
+        "tests/e2e/specs/zzzz-risques.spec.ts"
+      ],
+      "commit": "f23ad4e",
+      "test": "TEST-047",
+      "date": "2026-10-11",
+      "remaining": "Validation sur le serveur utilisateur."
+    },
+    {
+      "id": "BUG-008",
+      "title": "Test de pilotage instable selon l’identifiant tiré au hasard",
+      "feature": "FCT-019",
+      "severity": "MINEURE",
+      "priority": "P3",
+      "status": "CORRIGÉ ET VALIDÉ",
+      "trigger": "Identifiant de document commençant par « 1 » dans pilotage.test.ts.",
+      "expected": "Test déterministe.",
+      "observed": "Remplacement de « :1 » au premier endroit rencontré, référence altérée à tort.",
+      "cause": "CONFIRMÉ : défaut du test, pas du code applicatif.",
+      "fix": "Remplacement ancré en fin de référence.",
+      "files": ["apps/api/test/pilotage.test.ts"],
+      "commit": "69e4618",
+      "test": "TEST-019",
+      "date": "2026-10-11",
+      "remaining": "Aucun."
     }
   ],
   "optimisations": [
@@ -1081,8 +1272,8 @@
       "fact": "NON VÉRIFIÉ",
       "source": "docs/03_ARCHITECTURE/SECURITE.md",
       "impact": "Aucune attestation exhaustive de toutes les couches GHCR, secrets Actions et surfaces GitHub.",
-      "controls": "Dépôt privé vérifié ; CI/CodeQL/Trivy réussis au commit analysé.",
-      "remaining": "Audit dédié avec permissions et inventaire complets avant une ouverture publique.",
+      "controls": "Dépôt rendu public le 2026-10-11 à la demande de l’utilisateur ; CI et CodeQL réussis au commit analysé (EXE-013, EXE-014).",
+      "remaining": "Audit dédié avec permissions et inventaire complets des couches GHCR, secrets Actions et paramètres du dépôt, maintenant qu’il est public.",
       "priority": "P1"
     },
     {
@@ -1104,6 +1295,16 @@
       "controls": "Chiffrement et modes privés implémentés ; pas de valeurs de secret documentées.",
       "remaining": "Recette externe de sauvegarde et garde des clés du serveur réel, autorisée et tracée.",
       "priority": "P1"
+    },
+    {
+      "id": "SEC-007",
+      "title": "Lien direct vers l’outil historique : nom de vue non contrôlé",
+      "fact": "CONFIRMÉ",
+      "source": "apps/api/legacy-shim/shim.js",
+      "impact": "Alerte CodeQL js/remote-property-injection (gravité 7,5) : un fragment d’URL pouvait désigner une propriété arbitraire.",
+      "controls": "Liste fixe de 15 noms de vue ; tout autre nom est ignoré. CodeQL de main sans alerte bloquante (EXE-014).",
+      "remaining": "Maintenir la liste en face des vues de l’outil historique.",
+      "priority": "P2"
     }
   ],
   "backlog": [
@@ -1276,7 +1477,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/security.test.ts", "tests/e2e/specs/parcours.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-006",
+      "proof": "EXE-013",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1292,7 +1493,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/rbac.test.ts", "tests/e2e/specs/parcours.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-006",
+      "proof": "EXE-013",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1312,7 +1513,7 @@
         "tests/e2e/specs/z-fiabilisation.spec.ts"
       ],
       "result": "PASSÉ",
-      "proof": "EXE-006",
+      "proof": "EXE-013",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1328,7 +1529,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/documents.test.ts", "tests/e2e/specs/parcours.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-006",
+      "proof": "EXE-013",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1344,7 +1545,7 @@
       "automation": "EXISTANTE",
       "code": ["packages/ui/test/contraste.test.ts", "apps/web/test/charte.test.ts", "tests/e2e/specs/visuel.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-006",
+      "proof": "EXE-013",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1360,7 +1561,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/realtime.test.ts", "tests/e2e/specs/parcours.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-006",
+      "proof": "EXE-013",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1376,7 +1577,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/affichage.test.ts", "tests/e2e/specs/tous-ecrans.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-006",
+      "proof": "EXE-013",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1396,7 +1597,7 @@
         "tests/e2e/specs/recette-cartographie.spec.ts"
       ],
       "result": "PASSÉ",
-      "proof": "EXE-006",
+      "proof": "EXE-013",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1416,7 +1617,7 @@
         "tests/e2e/specs/parcours.spec.ts"
       ],
       "result": "PASSÉ",
-      "proof": "EXE-006",
+      "proof": "EXE-013",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1432,7 +1633,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/backups.test.ts", "tests/e2e/specs/systeme.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-006",
+      "proof": "EXE-013",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1452,7 +1653,7 @@
         "tests/e2e/specs/y-exploitation.spec.ts"
       ],
       "result": "PASSÉ",
-      "proof": "EXE-006",
+      "proof": "EXE-013",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1468,7 +1669,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/operations.test.ts", "tests/e2e/specs/y-exploitation.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-006",
+      "proof": "EXE-013",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1484,7 +1685,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/updates.test.ts", "tests/e2e/specs/zy-updates.spec.ts", "scripts/ci/update-integree.py"],
       "result": "PASSÉ",
-      "proof": "EXE-006",
+      "proof": "EXE-013",
       "limits": "Ancien updater : premier redéploiement serveur nécessaire ; frontal entretenu séparément."
     },
     {
@@ -1500,7 +1701,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/modules.test.ts", "tests/e2e/specs/zz-modules.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-006",
+      "proof": "EXE-013",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1516,7 +1717,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/environment.test.ts", "tests/e2e/specs/zz-environment.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-006",
+      "proof": "EXE-013",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1532,7 +1733,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/risk-assessments.test.ts", "tests/e2e/specs/zz-ia-evaluations.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-006",
+      "proof": "EXE-013",
       "limits": "Ne constitue pas la reprise complète du registre IA (FCT-032)."
     },
     {
@@ -1548,7 +1749,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/grc-security.test.ts", "tests/e2e/specs/zz-grc.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-006",
+      "proof": "EXE-013",
       "limits": "Raccordements des familles historiques et nomenclatures spécifiques B2 à terminer."
     },
     {
@@ -1564,7 +1765,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/pilotage.test.ts", "tests/e2e/specs/zzz-pilotage.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-006",
+      "proof": "EXE-013",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1574,13 +1775,17 @@
       "priority": "P2",
       "prerequisites": "Jeu fictif ; rôles adaptés ; environnement dédié si API ou Docker.",
       "data": "Données synthétiques et identifiants créés par le test ; aucune donnée de production.",
-      "procedure": "Édition contrôlée, séries de valeurs historiques conservées, indicateurs automatiques protégés.",
-      "expected": "Édition contrôlée, séries de valeurs historiques conservées, indicateurs automatiques protégés.",
+      "procedure": "Édition contrôlée, séries de valeurs historiques conservées, indicateurs automatiques protégés ; vues « Par processus » et « Vue compacte » avec états d’indicateurs calculés comme l’outil historique (test de parité).",
+      "expected": "Édition contrôlée, séries de valeurs historiques conservées, indicateurs automatiques protégés ; vues « Par processus » et « Vue compacte » avec états d’indicateurs calculés comme l’outil historique (test de parité).",
       "type": "AUTOMATISÉ",
       "automation": "EXISTANTE",
-      "code": ["apps/api/test/pilotage.test.ts"],
+      "code": [
+        "apps/api/test/pilotage.test.ts",
+        "packages/shared/test/tableau-de-bord.test.ts",
+        "tests/e2e/specs/zzzz-pilotage.spec.ts"
+      ],
       "result": "PASSÉ",
-      "proof": "EXE-006",
+      "proof": "EXE-013",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1596,7 +1801,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/grc-frameworks.test.ts", "tests/e2e/specs/zz-grc.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-006",
+      "proof": "EXE-013",
       "limits": "Moteur C validé ; audit/couverture annuelle et GAP historiques non entièrement migrés."
     },
     {
@@ -1612,7 +1817,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/grc.test.ts", "packages/shared/test/grc.test.ts", "tests/e2e/specs/zz-grc.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-006",
+      "proof": "EXE-013",
       "limits": "Transport email exclu ; pas de migration automatique de toutes les récurrences historiques."
     },
     {
@@ -1626,9 +1831,16 @@
       "expected": "EBIOS cinq ateliers, jugement/matrice/règles distincts, brut/résiduel immuables ; aucune réévaluation automatique après action.",
       "type": "AUTOMATISÉ",
       "automation": "EXISTANTE",
-      "code": ["apps/api/test/grc.test.ts", "apps/api/test/grc-security.test.ts", "tests/e2e/specs/zz-grc.spec.ts"],
+      "code": [
+        "apps/api/test/grc.test.ts",
+        "apps/api/test/grc-security.test.ts",
+        "tests/e2e/specs/zz-grc.spec.ts",
+        "apps/api/test/risques.test.ts",
+        "packages/shared/test/risques.test.ts",
+        "tests/e2e/specs/zzzz-risques.spec.ts"
+      ],
       "result": "PASSÉ",
-      "proof": "EXE-006",
+      "proof": "EXE-013",
       "limits": "ISO/MÉHARI : modèles configurables ; exhaustivité d’une méthode normative ou des classeurs officiels non certifiée."
     },
     {
@@ -1644,7 +1856,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/grc.test.ts", "tests/e2e/specs/zz-grc.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-006",
+      "proof": "EXE-013",
       "limits": "Volumes bornés ; benchmark de charge et ergonomie sur grands graphes non réalisés."
     },
     {
@@ -1660,7 +1872,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/pilotage.test.ts", "tests/e2e/specs/zzz-pilotage.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-006",
+      "proof": "EXE-013",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1676,7 +1888,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/pilotage.test.ts", "tests/e2e/specs/zzz-pilotage.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-006",
+      "proof": "EXE-013",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1692,7 +1904,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/pilotage.test.ts", "tests/e2e/specs/zzz-pilotage.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-006",
+      "proof": "EXE-013",
       "limits": "L’avancement ne constitue ni conformité ni certification ; recette humaine en attente."
     },
     {
@@ -1708,7 +1920,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/pilotage.test.ts", "tests/e2e/specs/zzz-pilotage.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-006",
+      "proof": "EXE-013",
       "limits": "Kits/grilles ANS, configuration des méthodes de continuité et reprise complète plans/crise manquent."
     },
     {
@@ -1718,14 +1930,18 @@
       "priority": "P2",
       "prerequisites": "Jeu fictif ; rôles adaptés ; environnement dédié si API ou Docker.",
       "data": "Données synthétiques et identifiants créés par le test ; aucune donnée de production.",
-      "procedure": "Inventorier la source historique, créer une fiche fictive, modifier, consulter, filtrer, exporter et comparer aux données/relations avant modification.",
-      "expected": "Même capacité et mêmes données/relations ; écarts documentés, aucun abandon implicite.",
-      "type": "MANUEL",
-      "automation": "À PRÉPARER",
-      "code": [],
-      "result": "NON EXÉCUTÉ",
-      "proof": null,
-      "limits": "Exigences natives disponibles, couverture interne/certification par année encore historique."
+      "procedure": "Programme d’audit interne affiché en lecture seule dans « Audits internes » ; socle partagé @suivi/shared/audit (pronostic en parité avec l’outil historique) sans écran propre ; couverture interne/certification par année encore historique.",
+      "expected": "Programme d’audit interne affiché en lecture seule dans « Audits internes » ; socle partagé @suivi/shared/audit (pronostic en parité avec l’outil historique) sans écran propre ; couverture interne/certification par année encore historique.",
+      "type": "AUTOMATISÉ",
+      "automation": "EXISTANTE",
+      "code": [
+        "packages/shared/test/audit.test.ts",
+        "packages/shared/test/audit-parite.test.ts",
+        "tests/e2e/specs/zzzz-pilotage.spec.ts"
+      ],
+      "result": "PASSÉ",
+      "proof": "EXE-013",
+      "limits": "Écrans Audit natifs (AUD-01 à AUD-16 hors socle) non livrés ; couverture annuelle historique à reprendre."
     },
     {
       "id": "TEST-029",
@@ -1750,14 +1966,14 @@
       "priority": "P2",
       "prerequisites": "Jeu fictif ; rôles adaptés ; environnement dédié si API ou Docker.",
       "data": "Données synthétiques et identifiants créés par le test ; aucune donnée de production.",
-      "procedure": "Inventorier la source historique, créer une fiche fictive, modifier, consulter, filtrer, exporter et comparer aux données/relations avant modification.",
-      "expected": "Même capacité et mêmes données/relations ; écarts documentés, aucun abandon implicite.",
-      "type": "MANUEL",
-      "automation": "À PRÉPARER",
-      "code": [],
-      "result": "NON EXÉCUTÉ",
-      "proof": null,
-      "limits": "Correspondance de dda vers SoA et recette complète à établir."
+      "procedure": "La DdA de l’outil de suivi s’affiche et se modifie dans « Applicabilité » sans copie (entrée réécrite sous verrou, version, journal) ; équivalence avec le registre SoA natif non démontrée.",
+      "expected": "La DdA de l’outil de suivi s’affiche et se modifie dans « Applicabilité » sans copie (entrée réécrite sous verrou, version, journal) ; équivalence avec le registre SoA natif non démontrée.",
+      "type": "AUTOMATISÉ",
+      "automation": "EXISTANTE",
+      "code": ["apps/api/test/pilotage-dda.test.ts", "tests/e2e/specs/zzzz-pilotage.spec.ts"],
+      "result": "PASSÉ",
+      "proof": "EXE-013",
+      "limits": "Correspondance de dda vers SoA et recette métier à établir ; recette du serveur utilisateur non reçue."
     },
     {
       "id": "TEST-031",
@@ -1878,14 +2094,14 @@
       "priority": "P2",
       "prerequisites": "Jeu fictif ; rôles adaptés ; environnement dédié si API ou Docker.",
       "data": "Données synthétiques et identifiants créés par le test ; aucune donnée de production.",
-      "procedure": "Inventorier la source historique, créer une fiche fictive, modifier, consulter, filtrer, exporter et comparer aux données/relations avant modification.",
-      "expected": "Même capacité et mêmes données/relations ; écarts documentés, aucun abandon implicite.",
-      "type": "MANUEL",
-      "automation": "À PRÉPARER",
-      "code": [],
-      "result": "NON EXÉCUTÉ",
-      "proof": null,
-      "limits": "Inventorier types/champs, identifiants et liens avant migration vers le début E."
+      "procedure": "Programme d’audit interne et plan d’exercices de l’outil de suivi affichés en lecture seule (retards signalés), avec lien vers leur planification ; aucune migration vers continuity_plan.",
+      "expected": "Programme d’audit interne et plan d’exercices de l’outil de suivi affichés en lecture seule (retards signalés), avec lien vers leur planification ; aucune migration vers continuity_plan.",
+      "type": "AUTOMATISÉ",
+      "automation": "EXISTANTE",
+      "code": ["packages/shared/test/tableau-de-bord.test.ts", "tests/e2e/specs/zzzz-pilotage.spec.ts"],
+      "result": "PASSÉ",
+      "proof": "EXE-013",
+      "limits": "Édition dans le Pilotage, autres plans et sous-sections, types/champs et liens à inventorier avant migration vers le début E."
     },
     {
       "id": "TEST-039",
@@ -1904,7 +2120,7 @@
         "tests/e2e/specs/zzz-pilotage.spec.ts"
       ],
       "result": "PASSÉ",
-      "proof": "EXE-006",
+      "proof": "EXE-013",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1920,7 +2136,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/web/test/pilotage-report.test.ts", "tests/e2e/specs/zzz-pilotage.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-006",
+      "proof": "EXE-013",
       "limits": "Les exports Word/PowerPoint serveur de la feuille de route ne sont pas déclarés implémentés."
     },
     {
@@ -2002,6 +2218,98 @@
       "result": "NON EXÉCUTÉ",
       "proof": null,
       "limits": "Aucun résultat ni validation humaine reçus."
+    },
+    {
+      "id": "TEST-046",
+      "feature": "FCT-041",
+      "title": "Tableau de bord unifié et graphiques",
+      "priority": "P2",
+      "prerequisites": "Jeu fictif ; rôles adaptés ; environnement dédié si API ou Docker.",
+      "data": "Données synthétiques et identifiants créés par le test ; aucune donnée de production.",
+      "procedure": "Graphiques conformité par référentiel, écarts par type, actions, objectifs/indicateurs et plans calculés comme l’outil historique (tests de parité) ; composants SVG sans dépendance, contrastes vérifiés.",
+      "expected": "Graphiques conformité par référentiel, écarts par type, actions, objectifs/indicateurs et plans calculés comme l’outil historique (tests de parité) ; composants SVG sans dépendance, contrastes vérifiés.",
+      "type": "AUTOMATISÉ",
+      "automation": "EXISTANTE",
+      "code": [
+        "packages/shared/test/tableau-de-bord.test.ts",
+        "packages/ui/test/graphiques.test.ts",
+        "tests/e2e/specs/zzzz-pilotage.spec.ts"
+      ],
+      "result": "PASSÉ",
+      "proof": "EXE-013",
+      "limits": "Seuls les graphiques repris sont couverts ; autres vues du tableau de bord historique non inventoriées une à une ; recette du serveur utilisateur non reçue."
+    },
+    {
+      "id": "TEST-047",
+      "feature": "FCT-042",
+      "title": "Études EBIOS RM, processus ISO/IEC 27005 et registre des risques",
+      "priority": "P1",
+      "prerequisites": "Jeu fictif ; rôles adaptés ; environnement dédié si API ou Docker.",
+      "data": "Données synthétiques et identifiants créés par le test ; aucune donnée de production.",
+      "procedure": "Étude EBIOS RM en cinq ateliers d’objets typés avec validation tracée, fiche de risque ISO/IEC 27005, acceptation formelle immuable avec échéance, registre filtrable, références typées contrôlées par le serveur.",
+      "expected": "Étude EBIOS RM en cinq ateliers d’objets typés avec validation tracée, fiche de risque ISO/IEC 27005, acceptation formelle immuable avec échéance, registre filtrable, références typées contrôlées par le serveur.",
+      "type": "AUTOMATISÉ",
+      "automation": "EXISTANTE",
+      "code": [
+        "packages/shared/test/risques.test.ts",
+        "apps/api/test/risques.test.ts",
+        "tests/e2e/specs/zzzz-risques.spec.ts"
+      ],
+      "result": "PASSÉ",
+      "proof": "EXE-013",
+      "limits": "Aucune conformité à EBIOS RM ou à l’ISO/IEC 27005 revendiquée ni certifiée ; recette métier et du serveur utilisateur non reçues."
+    },
+    {
+      "id": "TEST-048",
+      "feature": "FCT-043",
+      "title": "Liens transverses et catalogue de relations",
+      "priority": "P2",
+      "prerequisites": "Jeu fictif ; rôles adaptés ; environnement dédié si API ou Docker.",
+      "data": "Données synthétiques et identifiants créés par le test ; aucune donnée de production.",
+      "procedure": "Relations acceptées seulement pour les paires prévues (422 sinon, « Lié à » ouvert), sens lisible des deux côtés, objets archivés signalés et fermés aux nouveaux liens, données historiques limitées au périmètre commun, responsables proposés limités aux comptes autorisés.",
+      "expected": "Relations acceptées seulement pour les paires prévues (422 sinon, « Lié à » ouvert), sens lisible des deux côtés, objets archivés signalés et fermés aux nouveaux liens, données historiques limitées au périmètre commun, responsables proposés limités aux comptes autorisés.",
+      "type": "AUTOMATISÉ",
+      "automation": "EXISTANTE",
+      "code": ["packages/shared/test/liens.test.ts", "apps/api/test/liens.test.ts"],
+      "result": "PASSÉ",
+      "proof": "EXE-013",
+      "limits": "Panneau branché depuis le registre des risques seulement ; parcours navigateur dédié non écrit ; recette du serveur utilisateur non reçue."
+    },
+    {
+      "id": "TEST-049",
+      "feature": "FCT-044",
+      "title": "Socle partagé Audit (sans écran)",
+      "priority": "P2",
+      "prerequisites": "Jeu fictif ; rôles adaptés ; environnement dédié si API ou Docker.",
+      "data": "Données synthétiques et identifiants créés par le test ; aucune donnée de production.",
+      "procedure": "Modèle, pronostic en parité avec l’outil historique, règles des écarts et du plan d’actions, schémas zod, vérifiés par tests unitaires.",
+      "expected": "Modèle, pronostic en parité avec l’outil historique, règles des écarts et du plan d’actions, schémas zod, vérifiés par tests unitaires.",
+      "type": "AUTOMATISÉ",
+      "automation": "EXISTANTE",
+      "code": ["packages/shared/test/audit.test.ts", "packages/shared/test/audit-parite.test.ts"],
+      "result": "PASSÉ",
+      "proof": "EXE-013",
+      "limits": "Aucun écran ni route Audit natifs ; le socle seul ne constitue pas la reprise du module Audit."
+    },
+    {
+      "id": "TEST-050",
+      "feature": "FCT-045",
+      "title": "Cartographie : création depuis la carte, notes et cadres libres",
+      "priority": "P2",
+      "prerequisites": "Jeu fictif ; rôles adaptés ; environnement dédié si API ou Docker.",
+      "data": "Données synthétiques et identifiants créés par le test ; aucune donnée de production.",
+      "procedure": "Création d’objets dans leur module avec sa permission (sous verrou, journalisée), renommage, notes et cadres libres, carte vierge, appui long, alignement ; aucune suppression d’objet depuis la carte.",
+      "expected": "Création d’objets dans leur module avec sa permission (sous verrou, journalisée), renommage, notes et cadres libres, carte vierge, appui long, alignement ; aucune suppression d’objet depuis la carte.",
+      "type": "AUTOMATISÉ",
+      "automation": "EXISTANTE",
+      "code": [
+        "packages/shared/test/carto-creation.test.ts",
+        "apps/api/test/carto.test.ts",
+        "tests/e2e/specs/recette-cartographie.spec.ts"
+      ],
+      "result": "PASSÉ",
+      "proof": "EXE-013",
+      "limits": "Parcours exécutés sur données fictives ; recette du serveur utilisateur non reçue."
     }
   ],
   "executions": [
@@ -2250,6 +2558,87 @@
       "code": 0,
       "status": "PASSÉ",
       "limitation": "64 blocs bash lus de chaque côté ; seules deux familles de commentaires de provenance normalisées. Commandes identiques, bash -n réussi, sections publiées exactement identiques à c704fa6. Guide non exécuté."
+    },
+    {
+      "id": "EXE-013",
+      "type": "CI AUTOMATIQUE",
+      "suite": "CI complète",
+      "date": "2026-10-11T20:32:14+02:00 → 20:50:34+02:00",
+      "commit": "f9545c3ce1a1338f13bb39bdaa4468bcc907da2d",
+      "command": "Workflow CI automatique sur main (fusion de la PR #16), tentative 1.",
+      "code": 0,
+      "status": "PASSÉ",
+      "total": 888,
+      "passed": 888,
+      "failed": 0,
+      "breakdown": {
+        "shared": 327,
+        "ui": 117,
+        "api": 270,
+        "web": 17,
+        "playwright": 157
+      },
+      "proof": "https://github.com/yousername-ha/suivi-audits/actions/runs/38164228848",
+      "environment": "Runners GitHub isolés, PostgreSQL 17, Docker/TLS et Playwright officiel.",
+      "operator": "GitHub Actions",
+      "limitation": "888 = 731 Vitest + 157 Playwright ; ne compte pas les contrôles shell/Python de CI. La réussite de la CI complète est rattachée aux cas listés sans relire chaque journal par cas. Pas de recette client.",
+      "cases": [
+        "TEST-001",
+        "TEST-002",
+        "TEST-003",
+        "TEST-004",
+        "TEST-005",
+        "TEST-006",
+        "TEST-007",
+        "TEST-008",
+        "TEST-009",
+        "TEST-010",
+        "TEST-011",
+        "TEST-012",
+        "TEST-013",
+        "TEST-014",
+        "TEST-015",
+        "TEST-016",
+        "TEST-017",
+        "TEST-018",
+        "TEST-019",
+        "TEST-020",
+        "TEST-021",
+        "TEST-022",
+        "TEST-023",
+        "TEST-024",
+        "TEST-025",
+        "TEST-026",
+        "TEST-027",
+        "TEST-028",
+        "TEST-030",
+        "TEST-038",
+        "TEST-039",
+        "TEST-040",
+        "TEST-046",
+        "TEST-047",
+        "TEST-048",
+        "TEST-049",
+        "TEST-050"
+      ]
+    },
+    {
+      "id": "EXE-014",
+      "type": "ANALYSE STATIQUE CI",
+      "suite": "CodeQL",
+      "date": "2026-10-11T20:32:14+02:00 → 20:34:18+02:00",
+      "commit": "f9545c3ce1a1338f13bb39bdaa4468bcc907da2d",
+      "command": "Workflow CodeQL automatique sur main (fusion de la PR #16), tentative 1.",
+      "code": 0,
+      "status": "PASSÉ",
+      "total": null,
+      "passed": null,
+      "failed": null,
+      "proof": "https://github.com/yousername-ha/suivi-audits/actions/runs/38164228910",
+      "environment": "Runner GitHub ; JavaScript/TypeScript.",
+      "operator": "GitHub Actions",
+      "limitation": "Aucune alerte de gravité ≥ 7 bloquante ; ne remplace ni revue de sécurité ni test d’intrusion.",
+      "cases": []
     }
   ]
 }

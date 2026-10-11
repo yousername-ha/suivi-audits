@@ -1,8 +1,8 @@
 # Risques du projet
 
-Référence applicative analysée : `c704fa6e6d6d516db75f963db8dd5d2049ab42c8`. Mise à jour : 2026-10-11T00:46:53+02:00 (Europe/Paris).
+Référence applicative analysée : `f9545c3ce1a1338f13bb39bdaa4468bcc907da2d`. Mise à jour : 2026-10-11T22:10:00+02:00 (Europe/Paris).
 
-Les risques de sécurité distincts sont les 6 entrées SEC de
+Les risques de sécurité distincts sont les 7 entrées SEC de
 [SECURITE](../03_ARCHITECTURE/SECURITE.md), source [registre de référence](../08_PILOTAGE/REGISTRES.json).
 
 | ID       | Risque transversal                                       | Preuve / incertitude                                                 | Mesure et prochaine action                                                  |
