@@ -1,10 +1,10 @@
 # API et interfaces
 
-Référence applicative analysée : `c704fa6e6d6d516db75f963db8dd5d2049ab42c8`. Mise à jour : 2026-10-11T00:46:53+02:00 (Europe/Paris).
+Référence applicative analysée : `f9545c3ce1a1338f13bb39bdaa4468bcc907da2d`. Mise à jour : 2026-10-11T22:10:00+02:00 (Europe/Paris).
 
-**193 déclarations de routes**, 186 opérations documentées sur 150 chemins
+**197 déclarations de routes**, 190 opérations documentées sur 153 chemins
 OpenAPI et 7 routes cachées. Extrait sans base par allRoutes()/buildOpenApi()
-(EXE-008). Document complet avec paramètres, schémas et réponses :
+(régénéré sur le commit analysé). Document complet avec paramètres, schémas et réponses :
 [API_CONTRAT.json](API_CONTRAT.json). Le serveur expose /api/openapi.json
 aux sessions authentifiées, pas publiquement sans session.
 

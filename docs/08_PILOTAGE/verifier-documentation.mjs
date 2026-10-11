@@ -147,11 +147,13 @@ const computed = {
   case_failed: count('test_cases', (t) => t.result === 'ÉCHOUÉ'),
   case_blocked: count('test_cases', (t) => t.result === 'BLOQUÉ'),
   case_not_executed: count('test_cases', (t) => t.result === 'NON EXÉCUTÉ'),
-  local_test_passages: data.executions.filter((e) => e.type === 'SUITE LOCALE').reduce((n, e) => n + e.passed, 0),
-  ci_test_passages: data.executions.find((e) => e.id === 'EXE-006').passed,
+  local_test_passages: data.executions
+    .filter((e) => e.type === 'SUITE LOCALE' && e.commit === data.analysed_commit)
+    .reduce((n, e) => n + e.passed, 0),
+  ci_test_passages: data.executions.find((e) => e.id === 'EXE-013').passed,
 };
 for (const [k, v] of Object.entries(computed)) check(data.statistics[k] === v, 'Statistique incohérente : ' + k);
-const ci = data.executions.find((e) => e.id === 'EXE-006');
+const ci = data.executions.find((e) => e.id === 'EXE-013');
 check(Object.values(ci.breakdown).reduce((a, b) => a + b, 0) === ci.total, 'Total CI et suites divergents');
 check(read('docs/05_RECETTE/PV_RECETTE.md').includes('EN ATTENTE DE VALIDATION'), 'PV ne conserve pas son attente');
 const api = JSON.parse(read('docs/03_ARCHITECTURE/API_CONTRAT.json'));
@@ -161,7 +163,7 @@ const operations = Object.values(api.paths).reduce(
   (n, entry) => n + Object.keys(entry).filter((k) => methods.has(k)).length,
   0,
 );
-check(Object.keys(api.paths).length === 150 && operations === 186, 'Inventaire OpenAPI différent du snapshot');
+check(Object.keys(api.paths).length === 153 && operations === 190, 'Inventaire OpenAPI différent du snapshot');
 
 const tick = String.fromCharCode(96);
 function prose(text) {

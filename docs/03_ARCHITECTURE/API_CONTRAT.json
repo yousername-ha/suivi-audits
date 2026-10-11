@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Suivi des audits SMSI — API",
-    "version": "3.0.2",
+    "version": "3.1.0",
     "description": "API du suivi des audits SMSI ISO 27001 / HDS. Toute requête modifiante exige l’en-tête X-CSRF-Token et une origine identique."
   },
   "servers": [
@@ -8950,6 +8950,17 @@
               "type": "string",
               "maxLength": 200
             }
+          },
+          {
+            "name": "cibles",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "string",
+              "maxLength": 500,
+              "pattern": "^((object|legacy):[a-z_]{2,40})(,(object|legacy):[a-z_]{2,40})*$"
+            }
           }
         ],
         "responses": {
@@ -9329,7 +9340,10 @@
                 "journey",
                 "bia",
                 "continuity_plan",
-                "continuity_exercise"
+                "continuity_exercise",
+                "risk_study",
+                "sr_ov",
+                "ecosystem_party"
               ]
             }
           },
@@ -9501,7 +9515,10 @@
                       "journey",
                       "bia",
                       "continuity_plan",
-                      "continuity_exercise"
+                      "continuity_exercise",
+                      "risk_study",
+                      "sr_ov",
+                      "ecosystem_party"
                     ]
                   },
                   "name": {
@@ -9655,7 +9672,10 @@
                       "journey",
                       "bia",
                       "continuity_plan",
-                      "continuity_exercise"
+                      "continuity_exercise",
+                      "risk_study",
+                      "sr_ov",
+                      "ecosystem_party"
                     ]
                   },
                   "name": {
@@ -11122,6 +11142,146 @@
         }
       }
     },
+    "/api/grc/{smsi}/risks/register": {
+      "get": {
+        "summary": "Registre des risques : niveaux, option de traitement, acceptation, revue (lot U3)",
+        "tags": ["SMSI GRC"],
+        "operationId": "get_api_grc_smsi_risks_register",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "x-access": "pilotage:lire",
+        "parameters": [
+          {
+            "name": "smsi",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          {
+            "name": "demarche",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "string",
+              "enum": ["ebios_rm", "iso27005", "mehari", "custom"]
+            }
+          },
+          {
+            "name": "strategie",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "string",
+              "enum": ["reduce", "accept", "transfer", "avoid", "treated"]
+            }
+          },
+          {
+            "name": "acceptation",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "string",
+              "enum": ["sans_objet", "a_decider", "acceptee", "refusee", "echue"]
+            }
+          },
+          {
+            "name": "enRetard",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "string",
+              "enum": ["1"]
+            }
+          },
+          {
+            "name": "etude",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          {
+            "name": "recherche",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "string",
+              "maxLength": 200
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Succès"
+          },
+          "4XX": {
+            "description": "Erreur (message en français dans « error »)"
+          }
+        }
+      }
+    },
+    "/api/grc/{smsi}/risk-studies/{id}": {
+      "get": {
+        "summary": "Étude EBIOS RM par atelier : objets rattachés, calculs, validations (lot U3)",
+        "tags": ["SMSI GRC"],
+        "operationId": "get_api_grc_smsi_risk_studies_id",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "x-access": "pilotage:lire",
+        "parameters": [
+          {
+            "name": "smsi",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Succès"
+          },
+          "4XX": {
+            "description": "Erreur (message en français dans « error »)"
+          }
+        }
+      }
+    },
     "/api/grc/{smsi}/risk-map": {
       "get": {
         "summary": "Projection cartographique du registre selon chaque méthode",
@@ -11437,7 +11597,8 @@
                           "close",
                           "step_validation",
                           "approval",
-                          "action_create"
+                          "action_create",
+                          "risk_acceptance"
                         ]
                       },
                       "requestId": {
@@ -11488,6 +11649,10 @@
                       "createAction": {
                         "default": false,
                         "type": "boolean"
+                      },
+                      "until": {
+                        "default": "",
+                        "type": "string"
                       },
                       "confirm": {
                         "type": "string",
@@ -13416,6 +13581,185 @@
                         }
                       ]
                     },
+                    "conformite": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "ref": {
+                                "type": "string"
+                              },
+                              "libelle": {
+                                "type": "string"
+                              },
+                              "exigences": {
+                                "type": "number"
+                              },
+                              "applicables": {
+                                "type": "number"
+                              },
+                              "total": {
+                                "type": "number"
+                              },
+                              "partiel": {
+                                "type": "number"
+                              },
+                              "insuffisant": {
+                                "type": "number"
+                              },
+                              "nonRenseigne": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "ref",
+                              "libelle",
+                              "exigences",
+                              "applicables",
+                              "total",
+                              "partiel",
+                              "insuffisant",
+                              "nonRenseigne"
+                            ]
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "ecartsOuverts": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "ouverts": {
+                              "type": "number"
+                            },
+                            "parType": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string"
+                                  },
+                                  "libelle": {
+                                    "type": "string"
+                                  },
+                                  "n": {
+                                    "type": "number"
+                                  }
+                                },
+                                "required": ["type", "libelle", "n"]
+                              }
+                            },
+                            "actionsRealisees": {
+                              "type": "number"
+                            },
+                            "actionsTotal": {
+                              "type": "number"
+                            }
+                          },
+                          "required": ["ouverts", "parType", "actionsRealisees", "actionsTotal"]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "indicateurs": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "total": {
+                              "type": "number"
+                            },
+                            "atteints": {
+                              "type": "number"
+                            },
+                            "nonAtteints": {
+                              "type": "number"
+                            },
+                            "nonMesures": {
+                              "type": "number"
+                            }
+                          },
+                          "required": ["total", "atteints", "nonAtteints", "nonMesures"]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "plans": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "annee": {
+                              "type": "number"
+                            },
+                            "types": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string"
+                                  },
+                                  "libelle": {
+                                    "type": "string"
+                                  },
+                                  "realises": {
+                                    "type": "number"
+                                  },
+                                  "aVenir": {
+                                    "type": "number"
+                                  },
+                                  "enRetard": {
+                                    "type": "number"
+                                  }
+                                },
+                                "required": ["type", "libelle", "realises", "aVenir", "enRetard"]
+                              }
+                            }
+                          },
+                          "required": ["annee", "types"]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "pilotage": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "constatsOuverts": {
+                              "type": ["number", "null"]
+                            },
+                            "risques": {
+                              "type": ["number", "null"]
+                            },
+                            "risquesSansDecision": {
+                              "type": ["number", "null"]
+                            },
+                            "actionsEnRetard": {
+                              "type": ["number", "null"]
+                            }
+                          },
+                          "required": ["constatsOuverts", "risques", "risquesSansDecision", "actionsEnRetard"]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
                     "ecran": {
                       "type": ["string", "null"]
                     }
@@ -13429,6 +13773,11 @@
                     "echeances",
                     "plan",
                     "mesures",
+                    "conformite",
+                    "ecartsOuverts",
+                    "indicateurs",
+                    "plans",
+                    "pilotage",
                     "ecran"
                   ]
                 }
@@ -13578,7 +13927,7 @@
                               "properties": {
                                 "k": {
                                   "type": "string",
-                                  "enum": ["obj", "swot"]
+                                  "enum": ["obj", "swot", "map"]
                                 },
                                 "id": {
                                   "type": "string"
@@ -13637,6 +13986,323 @@
             "description": "Erreur (message en français dans « error »)"
           }
         }
+      },
+      "post": {
+        "summary": "Cartographie : création d’un objet de la plateforme depuis la carte (enregistré dans son module, avec la permission de ce module)",
+        "tags": ["Cartographie"],
+        "operationId": "post_api_carto_objects",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "x-access": "cartographie:modifier",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "ref": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["ref", "name"]
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Erreur (message en français dans « error »)"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "stakeholder"
+                      },
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200,
+                        "pattern": "^[^\\p{Cc}]*$"
+                      },
+                      "nature": {
+                        "default": "Externe",
+                        "type": "string",
+                        "enum": ["Externe", "Interne"]
+                      },
+                      "category": {
+                        "type": "string",
+                        "enum": [
+                          "Autorité ou régulateur",
+                          "Organisme de certification",
+                          "Membre ou adhérent",
+                          "Établissement client",
+                          "Patient ou usager",
+                          "Personnel",
+                          "Instance de gouvernance",
+                          "Fournisseur ou prestataire",
+                          "Partenaire",
+                          "Autre"
+                        ]
+                      },
+                      "needs": {
+                        "type": "string",
+                        "maxLength": 2000,
+                        "pattern": "^[^\\p{Cc}]*$"
+                      }
+                    },
+                    "required": ["type", "name"]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "supplier"
+                      },
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200,
+                        "pattern": "^[^\\p{Cc}]*$"
+                      },
+                      "saas": {
+                        "default": false,
+                        "type": "boolean"
+                      },
+                      "hds": {
+                        "default": false,
+                        "type": "boolean"
+                      },
+                      "critical": {
+                        "default": false,
+                        "type": "boolean"
+                      }
+                    },
+                    "required": ["type", "name"]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "application"
+                      },
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200,
+                        "pattern": "^[^\\p{Cc}]*$"
+                      },
+                      "supplier": {
+                        "type": "string",
+                        "maxLength": 200,
+                        "pattern": "^[^\\p{Cc}]*$"
+                      }
+                    },
+                    "required": ["type", "name"]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "issue"
+                      },
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200,
+                        "pattern": "^[^\\p{Cc}]*$"
+                      },
+                      "kind": {
+                        "type": "string",
+                        "enum": ["ext", "int"]
+                      },
+                      "desc": {
+                        "type": "string",
+                        "maxLength": 500,
+                        "pattern": "^[^\\p{Cc}]*$"
+                      }
+                    },
+                    "required": ["type", "name", "kind"]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "site"
+                      },
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200,
+                        "pattern": "^[^\\p{Cc}]*$"
+                      }
+                    },
+                    "required": ["type", "name"]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "infrastructure"
+                      },
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200,
+                        "pattern": "^[^\\p{Cc}]*$"
+                      }
+                    },
+                    "required": ["type", "name"]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "process"
+                      },
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200,
+                        "pattern": "^[^\\p{Cc}]*$"
+                      },
+                      "code": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,29}$"
+                      },
+                      "family": {
+                        "type": "string",
+                        "enum": ["Management", "Réalisation", "Support"]
+                      },
+                      "owner": {
+                        "type": "string",
+                        "maxLength": 120,
+                        "pattern": "^[^\\p{Cc}]*$"
+                      }
+                    },
+                    "required": ["type", "name", "family"]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "subprocess"
+                      },
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200,
+                        "pattern": "^[^\\p{Cc}]*$"
+                      },
+                      "parent": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,29}$"
+                      },
+                      "code": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,29}$"
+                      },
+                      "owner": {
+                        "type": "string",
+                        "maxLength": 120,
+                        "pattern": "^[^\\p{Cc}]*$"
+                      }
+                    },
+                    "required": ["type", "name", "parent"]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/carto/objects/name": {
+      "put": {
+        "summary": "Cartographie : renommer un objet de la plateforme depuis la carte (modifie son module d’origine)",
+        "tags": ["Cartographie"],
+        "operationId": "put_api_carto_objects_name",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "x-access": "cartographie:modifier",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "ref": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["ref", "name"]
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Erreur (message en français dans « error »)"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "maxLength": 220
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "pattern": "^[^\\p{Cc}]*$"
+                  }
+                },
+                "required": ["ref", "name"]
+              }
+            }
+          }
+        }
       }
     },
     "/api/carto/maps": {
@@ -13680,7 +14346,7 @@
                             "propertyNames": {
                               "type": "string",
                               "maxLength": 220,
-                              "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone):\\S[^\\p{Cc}]{0,199})$"
+                              "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone|note|frame):\\S[^\\p{Cc}]{0,199})$"
                             },
                             "additionalProperties": {
                               "type": "object",
@@ -13730,12 +14396,12 @@
                                 "s": {
                                   "type": "string",
                                   "maxLength": 220,
-                                  "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone):\\S[^\\p{Cc}]{0,199})$"
+                                  "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone|note|frame):\\S[^\\p{Cc}]{0,199})$"
                                 },
                                 "t": {
                                   "type": "string",
                                   "maxLength": 220,
-                                  "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone):\\S[^\\p{Cc}]{0,199})$"
+                                  "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone|note|frame):\\S[^\\p{Cc}]{0,199})$"
                                 },
                                 "type": {
                                   "type": "string",
@@ -13777,11 +14443,32 @@
                             "propertyNames": {
                               "type": "string",
                               "maxLength": 220,
-                              "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone):\\S[^\\p{Cc}]{0,199})$"
+                              "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone|note|frame):\\S[^\\p{Cc}]{0,199})$"
                             },
                             "additionalProperties": {
                               "type": "number",
                               "const": 1
+                            }
+                          },
+                          "free": {
+                            "type": "object",
+                            "propertyNames": {
+                              "type": "string",
+                              "pattern": "^(note|frame):[A-Za-z0-9_-]{1,40}$"
+                            },
+                            "additionalProperties": {
+                              "type": "object",
+                              "properties": {
+                                "text": {
+                                  "type": "string",
+                                  "maxLength": 500
+                                },
+                                "tint": {
+                                  "type": "string",
+                                  "enum": ["marine", "bleu", "violet", "orange", "vert", "gris", "rouge"]
+                                }
+                              },
+                              "required": ["text", "tint"]
                             }
                           }
                         },
@@ -13799,6 +14486,30 @@
                             "additionalProperties": {
                               "type": "string",
                               "enum": ["ext", "int"]
+                            }
+                          },
+                          "issues": {
+                            "maxItems": 500,
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "label": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 200,
+                                  "pattern": "^[^\\p{Cc}]*$"
+                                },
+                                "kind": {
+                                  "type": "string",
+                                  "enum": ["ext", "int"]
+                                },
+                                "desc": {
+                                  "type": "string",
+                                  "maxLength": 500
+                                }
+                              },
+                              "required": ["label", "kind"]
                             }
                           }
                         }
@@ -13883,7 +14594,7 @@
                           "propertyNames": {
                             "type": "string",
                             "maxLength": 220,
-                            "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone):\\S[^\\p{Cc}]{0,199})$"
+                            "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone|note|frame):\\S[^\\p{Cc}]{0,199})$"
                           },
                           "additionalProperties": {
                             "type": "object",
@@ -13933,12 +14644,12 @@
                               "s": {
                                 "type": "string",
                                 "maxLength": 220,
-                                "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone):\\S[^\\p{Cc}]{0,199})$"
+                                "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone|note|frame):\\S[^\\p{Cc}]{0,199})$"
                               },
                               "t": {
                                 "type": "string",
                                 "maxLength": 220,
-                                "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone):\\S[^\\p{Cc}]{0,199})$"
+                                "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone|note|frame):\\S[^\\p{Cc}]{0,199})$"
                               },
                               "type": {
                                 "type": "string",
@@ -13980,11 +14691,32 @@
                           "propertyNames": {
                             "type": "string",
                             "maxLength": 220,
-                            "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone):\\S[^\\p{Cc}]{0,199})$"
+                            "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone|note|frame):\\S[^\\p{Cc}]{0,199})$"
                           },
                           "additionalProperties": {
                             "type": "number",
                             "const": 1
+                          }
+                        },
+                        "free": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string",
+                            "pattern": "^(note|frame):[A-Za-z0-9_-]{1,40}$"
+                          },
+                          "additionalProperties": {
+                            "type": "object",
+                            "properties": {
+                              "text": {
+                                "type": "string",
+                                "maxLength": 500
+                              },
+                              "tint": {
+                                "type": "string",
+                                "enum": ["marine", "bleu", "violet", "orange", "vert", "gris", "rouge"]
+                              }
+                            },
+                            "required": ["text", "tint"]
                           }
                         }
                       },
@@ -14002,6 +14734,30 @@
                           "additionalProperties": {
                             "type": "string",
                             "enum": ["ext", "int"]
+                          }
+                        },
+                        "issues": {
+                          "maxItems": 500,
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "label": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 200,
+                                "pattern": "^[^\\p{Cc}]*$"
+                              },
+                              "kind": {
+                                "type": "string",
+                                "enum": ["ext", "int"]
+                              },
+                              "desc": {
+                                "type": "string",
+                                "maxLength": 500
+                              }
+                            },
+                            "required": ["label", "kind"]
                           }
                         }
                       }
@@ -14071,7 +14827,7 @@
                         "propertyNames": {
                           "type": "string",
                           "maxLength": 220,
-                          "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone):\\S[^\\p{Cc}]{0,199})$"
+                          "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone|note|frame):\\S[^\\p{Cc}]{0,199})$"
                         },
                         "additionalProperties": {
                           "type": "object",
@@ -14121,12 +14877,12 @@
                             "s": {
                               "type": "string",
                               "maxLength": 220,
-                              "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone):\\S[^\\p{Cc}]{0,199})$"
+                              "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone|note|frame):\\S[^\\p{Cc}]{0,199})$"
                             },
                             "t": {
                               "type": "string",
                               "maxLength": 220,
-                              "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone):\\S[^\\p{Cc}]{0,199})$"
+                              "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone|note|frame):\\S[^\\p{Cc}]{0,199})$"
                             },
                             "type": {
                               "type": "string",
@@ -14168,11 +14924,32 @@
                         "propertyNames": {
                           "type": "string",
                           "maxLength": 220,
-                          "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone):\\S[^\\p{Cc}]{0,199})$"
+                          "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone|note|frame):\\S[^\\p{Cc}]{0,199})$"
                         },
                         "additionalProperties": {
                           "type": "number",
                           "const": 1
+                        }
+                      },
+                      "free": {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string",
+                          "pattern": "^(note|frame):[A-Za-z0-9_-]{1,40}$"
+                        },
+                        "additionalProperties": {
+                          "type": "object",
+                          "properties": {
+                            "text": {
+                              "type": "string",
+                              "maxLength": 500
+                            },
+                            "tint": {
+                              "type": "string",
+                              "enum": ["marine", "bleu", "violet", "orange", "vert", "gris", "rouge"]
+                            }
+                          },
+                          "required": ["text", "tint"]
                         }
                       }
                     },
@@ -14237,7 +15014,7 @@
                           "propertyNames": {
                             "type": "string",
                             "maxLength": 220,
-                            "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone):\\S[^\\p{Cc}]{0,199})$"
+                            "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone|note|frame):\\S[^\\p{Cc}]{0,199})$"
                           },
                           "additionalProperties": {
                             "type": "object",
@@ -14287,12 +15064,12 @@
                               "s": {
                                 "type": "string",
                                 "maxLength": 220,
-                                "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone):\\S[^\\p{Cc}]{0,199})$"
+                                "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone|note|frame):\\S[^\\p{Cc}]{0,199})$"
                               },
                               "t": {
                                 "type": "string",
                                 "maxLength": 220,
-                                "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone):\\S[^\\p{Cc}]{0,199})$"
+                                "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone|note|frame):\\S[^\\p{Cc}]{0,199})$"
                               },
                               "type": {
                                 "type": "string",
@@ -14334,11 +15111,32 @@
                           "propertyNames": {
                             "type": "string",
                             "maxLength": 220,
-                            "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone):\\S[^\\p{Cc}]{0,199})$"
+                            "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone|note|frame):\\S[^\\p{Cc}]{0,199})$"
                           },
                           "additionalProperties": {
                             "type": "number",
                             "const": 1
+                          }
+                        },
+                        "free": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string",
+                            "pattern": "^(note|frame):[A-Za-z0-9_-]{1,40}$"
+                          },
+                          "additionalProperties": {
+                            "type": "object",
+                            "properties": {
+                              "text": {
+                                "type": "string",
+                                "maxLength": 500
+                              },
+                              "tint": {
+                                "type": "string",
+                                "enum": ["marine", "bleu", "violet", "orange", "vert", "gris", "rouge"]
+                              }
+                            },
+                            "required": ["text", "tint"]
                           }
                         }
                       },
@@ -14356,6 +15154,30 @@
                           "additionalProperties": {
                             "type": "string",
                             "enum": ["ext", "int"]
+                          }
+                        },
+                        "issues": {
+                          "maxItems": 500,
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "label": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 200,
+                                "pattern": "^[^\\p{Cc}]*$"
+                              },
+                              "kind": {
+                                "type": "string",
+                                "enum": ["ext", "int"]
+                              },
+                              "desc": {
+                                "type": "string",
+                                "maxLength": 500
+                              }
+                            },
+                            "required": ["label", "kind"]
                           }
                         }
                       }
@@ -14451,7 +15273,7 @@
                           "propertyNames": {
                             "type": "string",
                             "maxLength": 220,
-                            "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone):\\S[^\\p{Cc}]{0,199})$"
+                            "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone|note|frame):\\S[^\\p{Cc}]{0,199})$"
                           },
                           "additionalProperties": {
                             "type": "object",
@@ -14501,12 +15323,12 @@
                               "s": {
                                 "type": "string",
                                 "maxLength": 220,
-                                "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone):\\S[^\\p{Cc}]{0,199})$"
+                                "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone|note|frame):\\S[^\\p{Cc}]{0,199})$"
                               },
                               "t": {
                                 "type": "string",
                                 "maxLength": 220,
-                                "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone):\\S[^\\p{Cc}]{0,199})$"
+                                "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone|note|frame):\\S[^\\p{Cc}]{0,199})$"
                               },
                               "type": {
                                 "type": "string",
@@ -14548,11 +15370,32 @@
                           "propertyNames": {
                             "type": "string",
                             "maxLength": 220,
-                            "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone):\\S[^\\p{Cc}]{0,199})$"
+                            "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone|note|frame):\\S[^\\p{Cc}]{0,199})$"
                           },
                           "additionalProperties": {
                             "type": "number",
                             "const": 1
+                          }
+                        },
+                        "free": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string",
+                            "pattern": "^(note|frame):[A-Za-z0-9_-]{1,40}$"
+                          },
+                          "additionalProperties": {
+                            "type": "object",
+                            "properties": {
+                              "text": {
+                                "type": "string",
+                                "maxLength": 500
+                              },
+                              "tint": {
+                                "type": "string",
+                                "enum": ["marine", "bleu", "violet", "orange", "vert", "gris", "rouge"]
+                              }
+                            },
+                            "required": ["text", "tint"]
                           }
                         }
                       },
@@ -14570,6 +15413,30 @@
                           "additionalProperties": {
                             "type": "string",
                             "enum": ["ext", "int"]
+                          }
+                        },
+                        "issues": {
+                          "maxItems": 500,
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "label": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 200,
+                                "pattern": "^[^\\p{Cc}]*$"
+                              },
+                              "kind": {
+                                "type": "string",
+                                "enum": ["ext", "int"]
+                              },
+                              "desc": {
+                                "type": "string",
+                                "maxLength": 500
+                              }
+                            },
+                            "required": ["label", "kind"]
                           }
                         }
                       }
@@ -14630,7 +15497,7 @@
                         "propertyNames": {
                           "type": "string",
                           "maxLength": 220,
-                          "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone):\\S[^\\p{Cc}]{0,199})$"
+                          "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone|note|frame):\\S[^\\p{Cc}]{0,199})$"
                         },
                         "additionalProperties": {
                           "type": "object",
@@ -14680,12 +15547,12 @@
                             "s": {
                               "type": "string",
                               "maxLength": 220,
-                              "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone):\\S[^\\p{Cc}]{0,199})$"
+                              "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone|note|frame):\\S[^\\p{Cc}]{0,199})$"
                             },
                             "t": {
                               "type": "string",
                               "maxLength": 220,
-                              "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone):\\S[^\\p{Cc}]{0,199})$"
+                              "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone|note|frame):\\S[^\\p{Cc}]{0,199})$"
                             },
                             "type": {
                               "type": "string",
@@ -14727,11 +15594,32 @@
                         "propertyNames": {
                           "type": "string",
                           "maxLength": 220,
-                          "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone):\\S[^\\p{Cc}]{0,199})$"
+                          "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone|note|frame):\\S[^\\p{Cc}]{0,199})$"
                         },
                         "additionalProperties": {
                           "type": "number",
                           "const": 1
+                        }
+                      },
+                      "free": {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string",
+                          "pattern": "^(note|frame):[A-Za-z0-9_-]{1,40}$"
+                        },
+                        "additionalProperties": {
+                          "type": "object",
+                          "properties": {
+                            "text": {
+                              "type": "string",
+                              "maxLength": 500
+                            },
+                            "tint": {
+                              "type": "string",
+                              "enum": ["marine", "bleu", "violet", "orange", "vert", "gris", "rouge"]
+                            }
+                          },
+                          "required": ["text", "tint"]
                         }
                       }
                     },
@@ -14991,7 +15879,7 @@
                           "propertyNames": {
                             "type": "string",
                             "maxLength": 220,
-                            "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone):\\S[^\\p{Cc}]{0,199})$"
+                            "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone|note|frame):\\S[^\\p{Cc}]{0,199})$"
                           },
                           "additionalProperties": {
                             "type": "object",
@@ -15041,12 +15929,12 @@
                               "s": {
                                 "type": "string",
                                 "maxLength": 220,
-                                "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone):\\S[^\\p{Cc}]{0,199})$"
+                                "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone|note|frame):\\S[^\\p{Cc}]{0,199})$"
                               },
                               "t": {
                                 "type": "string",
                                 "maxLength": 220,
-                                "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone):\\S[^\\p{Cc}]{0,199})$"
+                                "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone|note|frame):\\S[^\\p{Cc}]{0,199})$"
                               },
                               "type": {
                                 "type": "string",
@@ -15088,11 +15976,32 @@
                           "propertyNames": {
                             "type": "string",
                             "maxLength": 220,
-                            "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone):\\S[^\\p{Cc}]{0,199})$"
+                            "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone|note|frame):\\S[^\\p{Cc}]{0,199})$"
                           },
                           "additionalProperties": {
                             "type": "number",
                             "const": 1
+                          }
+                        },
+                        "free": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string",
+                            "pattern": "^(note|frame):[A-Za-z0-9_-]{1,40}$"
+                          },
+                          "additionalProperties": {
+                            "type": "object",
+                            "properties": {
+                              "text": {
+                                "type": "string",
+                                "maxLength": 500
+                              },
+                              "tint": {
+                                "type": "string",
+                                "enum": ["marine", "bleu", "violet", "orange", "vert", "gris", "rouge"]
+                              }
+                            },
+                            "required": ["text", "tint"]
                           }
                         }
                       },
@@ -15215,7 +16124,7 @@
                           "propertyNames": {
                             "type": "string",
                             "maxLength": 220,
-                            "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone):\\S[^\\p{Cc}]{0,199})$"
+                            "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone|note|frame):\\S[^\\p{Cc}]{0,199})$"
                           },
                           "additionalProperties": {
                             "type": "object",
@@ -15265,12 +16174,12 @@
                               "s": {
                                 "type": "string",
                                 "maxLength": 220,
-                                "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone):\\S[^\\p{Cc}]{0,199})$"
+                                "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone|note|frame):\\S[^\\p{Cc}]{0,199})$"
                               },
                               "t": {
                                 "type": "string",
                                 "maxLength": 220,
-                                "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone):\\S[^\\p{Cc}]{0,199})$"
+                                "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone|note|frame):\\S[^\\p{Cc}]{0,199})$"
                               },
                               "type": {
                                 "type": "string",
@@ -15312,11 +16221,32 @@
                           "propertyNames": {
                             "type": "string",
                             "maxLength": 220,
-                            "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone):\\S[^\\p{Cc}]{0,199})$"
+                            "pattern": "^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone|note|frame):\\S[^\\p{Cc}]{0,199})$"
                           },
                           "additionalProperties": {
                             "type": "number",
                             "const": 1
+                          }
+                        },
+                        "free": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string",
+                            "pattern": "^(note|frame):[A-Za-z0-9_-]{1,40}$"
+                          },
+                          "additionalProperties": {
+                            "type": "object",
+                            "properties": {
+                              "text": {
+                                "type": "string",
+                                "maxLength": 500
+                              },
+                              "tint": {
+                                "type": "string",
+                                "enum": ["marine", "bleu", "violet", "orange", "vert", "gris", "rouge"]
+                              }
+                            },
+                            "required": ["text", "tint"]
                           }
                         }
                       },
@@ -15334,6 +16264,30 @@
                           "additionalProperties": {
                             "type": "string",
                             "enum": ["ext", "int"]
+                          }
+                        },
+                        "issues": {
+                          "maxItems": 500,
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "label": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 200,
+                                "pattern": "^[^\\p{Cc}]*$"
+                              },
+                              "kind": {
+                                "type": "string",
+                                "enum": ["ext", "int"]
+                              },
+                              "desc": {
+                                "type": "string",
+                                "maxLength": 500
+                              }
+                            },
+                            "required": ["label", "kind"]
                           }
                         }
                       }
