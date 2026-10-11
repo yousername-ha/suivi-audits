@@ -12,6 +12,10 @@ import {
   GRC_LABELS,
   cibleAutorisee,
   referencesTypees,
+  relationAutorisee,
+  RELATIONS,
+  effectivePermissions,
+  type Permission,
   type GrcKind,
   type GrcObject,
   type Action,
@@ -31,6 +35,14 @@ import { GrcRisks } from './risks.js';
 import { LegacyTasks } from './legacy-tasks.js';
 import { GrcTasks } from './tasks.js';
 export const DEFAULT_SMSI = '00000000-0000-4000-8000-000000000001';
+/** Droits qui rendent un compte éligible comme responsable d'une fiche du pilotage. */
+const LECTURE_PILOTAGE: Permission[] = [
+  'pilotage:lire',
+  'ecarts:lire',
+  'audit:lire',
+  'plan_audit:lire',
+  'conformite:lire',
+];
 export const objectColumns = `id,smsi_id AS "smsiId",kind,name,data,version,archived,legacy_key AS "legacyKey",legacy_id AS "legacyId",created_by AS "createdBy",updated_by AS "updatedBy",created_at AS "createdAt",updated_at AS "updatedAt"`;
 export type ObjectRow = Omit<GrcObject, 'createdAt' | 'updatedAt'> & { createdAt: Date; updatedAt: Date };
 export const objectDto = (r: ObjectRow): GrcObject => ({
@@ -314,14 +326,22 @@ export class Grc {
     ).rows;
     return { items: rows.map(objectDto), total, nextOffset: offset + 50 < total ? offset + 50 : null };
   }
+  /** Responsables proposés : comptes actifs du périmètre qui peuvent consulter le pilotage (lot U4). Un compte réduit
+      à l'écran mural, aux évaluations IA ou aux documents n'est pas proposé. */
   async owners(smsi: string, user: SessionUser) {
     const s = await this.access(smsi, user);
-    return (
-      await this.db.q(
+    const rows = (
+      await this.db.q<{ id: string; username: string; displayName: string }>(
         `SELECT u.id,u.username,u.display_name AS "displayName" FROM users u WHERE NOT u.disabled AND (u.expires_at IS NULL OR u.expires_at>now()) AND ( $2 OR EXISTS(SELECT 1 FROM grc_members m WHERE m.smsi_id=$1 AND m.user_id=u.id)) ORDER BY u.username LIMIT 1000`,
         [smsi, s.visibility === 'instance'],
       )
     ).rows;
+    const out = [];
+    for (const r of rows) {
+      const eff = effectivePermissions(await loadGrants(this.db.pool, r.id));
+      if (LECTURE_PILOTAGE.some((p) => eff.has(p))) out.push(r);
+    }
+    return out;
   }
   async checkOwner(smsi: string, owner: unknown, c: Client) {
     if (owner == null) return;
@@ -629,10 +649,19 @@ export class Grc {
     kind: string;
     version: number;
     data: Record<string, unknown>;
+    archived?: boolean;
   }> {
     if (ref.startsWith('object:')) {
       const o = await this.object(smsi, ref.slice(7), user, false, c);
-      return { ref, name: o.name, module: GRC_MODULES[o.kind], kind: o.kind, version: o.version, data: o.data };
+      return {
+        ref,
+        name: o.name,
+        module: GRC_MODULES[o.kind],
+        kind: o.kind,
+        version: o.version,
+        data: o.data,
+        archived: o.archived,
+      };
     }
     if (ref.startsWith('requirement:')) {
       await this.permission(user, 'audit', 'lire');
@@ -782,7 +811,11 @@ export class Grc {
       seen.add(key);
       try {
         const other = await this.resolve(smsi, r.source_ref === ref ? r.target_ref : r.source_ref, user);
-        visible.push({ ...r, other: { ref: other.ref, name: other.name, kind: other.kind } });
+        visible.push({
+          ...r,
+          sens: r.source_ref === ref ? ('sortant' as const) : ('entrant' as const),
+          other: { ref: other.ref, name: other.name, kind: other.kind, archived: other.archived === true },
+        });
       } catch {
         /* Aucun libellé ni identifiant inaccessible transmis. */
       }
@@ -793,10 +826,22 @@ export class Grc {
     await this.access(smsi, user, true);
     return this.db.tx(async (c) => {
       await this.access(smsi, user, true, c);
+      if (source === target) throw new HttpError(422, 'Une relation relie deux objets distincts.');
+      if (smsi !== DEFAULT_SMSI && [source, target].some((r) => r.startsWith('legacy:')))
+        throw new HttpError(
+          422,
+          'Les données de l’outil de suivi ne se relient que dans le périmètre de l’organisation.',
+        );
       const from = await this.resolve(smsi, source, user, c);
       await this.permission(user, from.module, 'modifier');
-      await this.resolve(smsi, target, user, c);
-      if (source === target) throw new HttpError(422, 'Une relation relie deux objets distincts.');
+      const to = await this.resolve(smsi, target, user, c);
+      if (from.archived || to.archived)
+        throw new HttpError(422, 'Un objet archivé ne reçoit plus de nouvelle relation.');
+      if (!relationAutorisee(type, from.kind, to.kind))
+        throw new HttpError(
+          422,
+          `Relation « ${(RELATIONS as Record<string, { libelle: string }>)[type]?.libelle ?? type} » non prévue de ${GRC_LABELS[from.kind as GrcKind] ?? from.kind} vers ${GRC_LABELS[to.kind as GrcKind] ?? to.kind} : choisissez une autre relation ou « Lié à ».`,
+        );
       const before =
         (
           await c.query(

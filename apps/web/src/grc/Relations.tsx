@@ -1,5 +1,5 @@
 import { Button, Card, Select, Stack, Text, Textarea, TextInput } from '@mantine/core';
-import { GRC_LABELS, type GrcKind } from '@suivi/shared';
+import { GRC_LABELS, libelleRelation, RELATIONS, TYPES_RELATION, type GrcKind } from '@suivi/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { api, get } from '../api';
@@ -27,14 +27,27 @@ export function Relations({ smsi, source }: { smsi: string; source: string }) {
           type: string;
           note: string;
           derived?: boolean;
-          other: { ref: string; name: string; kind: string };
+          sens?: 'sortant' | 'entrant';
+          other: { ref: string; name: string; kind: string; archived?: boolean };
         }[]
       >(`/api/grc/${smsi}/links?ref=${encodeURIComponent(source)}`),
+  });
+  const kindCible = options.data?.items.find((r) => r.ref === target)?.kind;
+  const relationsCible = TYPES_RELATION.filter((t) => {
+    const c = RELATIONS[t].cibles;
+    return !kindCible || c === '*' || (c as readonly string[]).includes(kindCible);
   });
   const save = async () => {
     try {
       setError(null);
-      await api('POST', `/api/grc/${smsi}/links`, { body: { source, target, type, note } });
+      await api('POST', `/api/grc/${smsi}/links`, {
+        body: {
+          source,
+          target,
+          type: relationsCible.includes(type as (typeof TYPES_RELATION)[number]) ? type : 'related_to',
+          note,
+        },
+      });
       await qc.invalidateQueries({ queryKey: ['grc', smsi] });
       setTarget(null);
     } catch (e) {
@@ -63,18 +76,10 @@ export function Relations({ smsi, source }: { smsi: string; source: string }) {
       />
       <Select
         label="Type de relation"
-        value={type}
+        description="Seules les relations prévues pour ce type d’objet sont proposées ; « Lié à » convient à toute paire."
+        value={relationsCible.includes(type as (typeof TYPES_RELATION)[number]) ? type : 'related_to'}
         onChange={(v) => setType(v ?? 'related_to')}
-        data={[
-          { value: 'related_to', label: 'Lié à' },
-          { value: 'supports', label: 'Supporte' },
-          { value: 'impacts', label: 'Impacte' },
-          { value: 'applies_to', label: 'S’applique à' },
-          { value: 'depends_on', label: 'Dépend de' },
-          { value: 'implements', label: 'Met en œuvre' },
-          { value: 'demonstrates', label: 'Démontre' },
-          { value: 'treats', label: 'Traite' },
-        ]}
+        data={relationsCible.map((t) => ({ value: t, label: RELATIONS[t].libelle }))}
       />
       <Textarea label="Justification du lien" value={note} onChange={(e) => setNote(e.currentTarget.value)} />
       <Button disabled={!target} onClick={() => void save()}>
@@ -83,21 +88,11 @@ export function Relations({ smsi, source }: { smsi: string; source: string }) {
       {links.data?.map((l) => (
         <Card withBorder key={l.id}>
           <Text>
-            {l.other.name} · {GRC_LABELS[l.other.kind as GrcKind] ?? 'Donnée existante'}
+            {libelleRelation(l.type, l.sens !== 'entrant')} : {l.other.name} ·{' '}
+            {GRC_LABELS[l.other.kind as GrcKind] ?? 'Donnée existante'}
+            {l.other.archived ? ' (archivé)' : ''}
           </Text>
-          <Text>
-            {{
-              related_to: 'Lié à',
-              supports: 'Supporte',
-              impacts: 'Impacte',
-              applies_to: 'S’applique à',
-              depends_on: 'Dépend de',
-              implements: 'Met en œuvre',
-              demonstrates: 'Démontre',
-              treats: 'Traite',
-            }[l.type as 'related_to'] ?? 'Relation'}{' '}
-            · {l.note}
-          </Text>
+          {l.note && <Text size="sm">{l.note}</Text>}
           {l.derived ? (
             <Text size="sm">Modifier cette référence dans la fiche source.</Text>
           ) : (
