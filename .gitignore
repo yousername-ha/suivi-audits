@@ -36,3 +36,6 @@ tests/e2e/.tmp-e2e/
 # Vérification d’archives (Python standard)
 __pycache__/
 *.pyc
+
+# Captures produites par la recette Pilotage (zzz-pilotage.spec.ts)
+onboarding-suivi/
