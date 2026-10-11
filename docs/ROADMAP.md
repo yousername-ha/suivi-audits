@@ -42,14 +42,25 @@ La reprise couvre également **tout le socle v2 encore dans l'ancienne interface
 - [x] `CARTO-05` génération assistée ; `CARTO-06` canevas SVG (zoom, recherche, préréglages, filtres) ; `CARTO-07` mode édition ; `CARTO-08` synchronisation ; `CARTO-09` ajout depuis la plateforme ; `CARTO-10` fiche détaillée.
 - [x] `CARTO-11` versions ; `CARTO-12` nature des enjeux ; `CARTO-13` exports PNG, SVG, PDF, JSON ; `CARTO-14` reprise legacy de `S.maps` et transition.
 
-## Phase 1 — Audit
+## Cartographie : construire une carte de zéro — validée, en cours
 
-Modules repris : `groups`, `items`, `findings`, `plan`, `years`, et les données de couverture.
-- Référentiels : ISO 27001 (clauses 4 à 10), Annexe A, exigences HDS, en tables versionnées. Les mesures et exigences ont un identifiant stable.
-- Couverture par exigence : statut AFNOR (audit de certification) et statut interne, par année, préparation, responsable, remarques.
-- Écarts et actions : un enregistrement par écart, avec tâches, échéances, preuves, liens aux exigences, clôture et revue.
-- Plan d'audit : journées, créneaux, participants, preuves attendues, questions.
-- Tableaux de bord : couverture, écarts ouverts, échéances.
+Demande du RSSI du 08/10/2026 après le premier essai ([spécification](cartographie/SPEC-EDITION-LIBRE.md), [ADR 0026](adr/0026-cartographie-creation-depuis-la-carte.md), parcours 21 à 32 de la [recette](cartographie/RECETTE.md)). Prévue **avant la phase 1** (chantier court).
+- [ ] `CARTO-15` créer depuis la carte un objet de la plateforme (enregistré dans son module) ; `CARTO-16` menu contextuel (clic droit, appui long, Maj+F10) ; `CARTO-17` palette en glisser-déposer.
+- [ ] `CARTO-18` renommer depuis la carte ; `CARTO-19` notes, cadres libres et carte vierge.
+
+## Interface — retours du premier essai
+
+- [ ] `UI-01` affichage plus compact par défaut ; `UI-02` graphiques SVG de la synthèse (anneaux, histogrammes), livrés avec la phase 1 ; `UI-03` revue graphique d'ensemble après la phase 1 ([backlog](BACKLOG-FONCTIONNEL.md), section 8).
+
+## Phase 1 — Audit — cadrage validé
+
+[Spécification](audit/SPEC-AUDIT-V3.md) (`AUD-01` à `AUD-16`, points à arbitrer au § 6), [recette](audit/RECETTE.md) (26 parcours), [ADR 0025](adr/0025-audit.md).
+Modules repris : `years`, `yearLabels`, `nextYear`, `nextDate`, `internalDate`, `iso27001Certified`, `groups`, `items`, `hdsChap`, `findings`, `source`, `closeDeadline`, `findingsRev`, `plan`.
+- [ ] `AUD-01` droits (modules `audit`, `ecarts`, `plan_audit` existants) ; `AUD-02` cycle de certification ; `AUD-03` référentiels en tables versionnées (ISO 27001 clauses 4 à 10, Annexe A, HDS), guide des preuves et questions.
+- [ ] `AUD-04` couverture AFNOR et interne, préparation par année ; `AUD-05` pronostic en parité avec l'outil historique ; `AUD-06` préparation de l'audit ; `AUD-07` couverture du cycle ; `AUD-08` fiche exigence.
+- [ ] `AUD-09` registre des écarts (clôture tracée, réouverture) ; `AUD-10` plan d'actions ; `AUD-11` plan d'audit par année.
+- [ ] `AUD-12` synthèse et graphiques ; `AUD-13` imports PRM02 et Tenacy ; `AUD-14` exports Excel, CSV, impression.
+- [ ] `AUD-15` reprise legacy et passerelle d'ajout des écarts ; `AUD-16` temps réel, journal, performances.
 
 ## Phase 2 — Pilotage du SMSI
 

@@ -23,11 +23,10 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0017](0017-verification-restauration.md) | Vérification préalable et extraction contrôlée des archives de restauration (A1b1) | Acceptée |
 | [0018](0018-exploitation-lot-a.md) | Pilotage hôte, reprise durable, planification et TLS (lot A) | Acceptée |
 | [0019](0019-activation-modules.md) | Activation versionnée des modules, dépendances, garde serveur et conservation des données (B1) | Acceptée |
-
 | [0020](0020-mise-a-jour-integree.md) | Mise à jour web, exécutant isolé et maintenance indépendante | Acceptée |
 | [0021](0021-configuration-environnement-versionnee.md) | Échelles, matrices, simulation et publications immuables (B2a) | Acceptée |
 | [0022](0022-evaluations-ia-versionnees.md) | Décisions IA immuables liées aux sources et configurations (B2b) | Acceptée |
-
 | [0023](0023-smsi-referentiels-taches-risques.md) | Registres transversaux, publications et politiques par SMSI (lot C) | Retenue, recette requise |
-
 | [0024](0024-pilotage-metier.md) | Pilotage multi-référentiels, décisions G/H/K et début E | Retenue, recette de PR requise |
+| [0025](0025-audit.md) | Audit : cycle, référentiels, couverture, écarts et plan d'audit (ex-0015 de la lignée `refonte/*`) | Acceptée, à réconcilier avec 0023/0024 |
+| [0026](0026-cartographie-creation-depuis-la-carte.md) | Cartographie : créer les objets de la plateforme depuis la carte (ex-0016) | Acceptée |

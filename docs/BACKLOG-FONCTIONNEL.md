@@ -184,6 +184,44 @@ Spécification détaillée : [cartographie/SPEC-CARTOGRAPHIE-V3.md](cartographie
 - **CARTO-13** — Exports PNG, SVG, PDF A3, JSON, avec titre, date et légende ; journalisés.
 - **CARTO-14** — Reprise de `S.maps` par l'import legacy (mapper « maps ») ; `/legacy` en lecture seule pour la cartographie une fois reprise.
 
+Construire une carte de zéro (demande du RSSI du 08/10/2026, [spécification](cartographie/SPEC-EDITION-LIBRE.md), ADR 0026, validée le 08/10/2026) :
+- **CARTO-15** — Créer depuis la carte un objet de la plateforme (partie intéressée, fournisseur, application, enjeu, site, système, processus, sous-processus), enregistré dans son module, avec la permission de ce module.
+- **CARTO-16** — Menu contextuel : clic droit, appui long, Maj+F10 ; sur le fond, un objet, une relation, une sélection (créer ici, relier, aligner, répartir, grouper, retirer…).
+- **CARTO-17** — Palette en glisser-déposer : types créables, notes, cadres, objets de la plateforme non placés.
+- **CARTO-18** — Renommer depuis la carte (modifie le module d'origine) ; aucune suppression d'un objet de la plateforme depuis la carte.
+- **CARTO-19** — Notes et cadres libres propres à la carte ; « Partir de zéro » (carte vierge).
+
+---
+
+## 7. Audit — préparation, couverture, écarts, plan d'audit  *(phase 1)*
+
+Spécification détaillée : [audit/SPEC-AUDIT-V3.md](audit/SPEC-AUDIT-V3.md) ; recette : [audit/RECETTE.md](audit/RECETTE.md) ; ADR 0025 (validée le 08/10/2026 avec les défauts du § 6 de la spécification).
+
+- **AUD-01** — Droits par les modules existants `audit`, `ecarts`, `plan_audit` ; cycle et référentiels en `audit:administrer` ; lecture seule réelle.
+- **AUD-02** — Cycle de certification en table : années, libellés, année N, dates des audits, échéance de clôture (report sur les écarts concernés), ajout et suppression d'une année vide.
+- **AUD-03** — Référentiels en tables (clauses ISO 27001, Annexe A, HDS ; identifiants stables, versions), guide des preuves et questions types.
+- **AUD-04** — Couverture AFNOR et interne par exigence et par année ; préparation, pilote et notes **par année** (reprise de l'année précédente).
+- **AUD-05** — Pronostic porté à l'identique en fonction pure partagée, testé en parité avec l'outil historique.
+- **AUD-06** — Écran « Préparation de l'audit » : bandeau (compte à rebours, frise, faits), carte des pastilles à 3 lentilles, exigences à préparer.
+- **AUD-07** — Écran « Couverture du cycle » : tableau exigences × années, filtres mémorisés, badges d'écarts.
+- **AUD-08** — Fiche exigence : pronostic expliqué, historique, écarts, créneaux, guide, préparation.
+- **AUD-09** — Registre des écarts en tables (exigences liées, tâches) ; filtres année et pilote ; clôture datée et signée ; réouverture avec motif ; `If-Match` par écart.
+- **AUD-10** — Plan d'actions transversal ; échéance et pilote facultatifs par tâche.
+- **AUD-11** — Plan d'audit **par année** : jours, créneaux, participants, preuves, questions (identifiant stable) ; Déroulé, Planning, Participants ; alerte « ciblées sans créneau ».
+- **AUD-12** — Synthèse : cartes et graphiques SVG (anneau des écarts ouverts, couverture du cycle, conformité par référentiel), alternative textuelle.
+- **AUD-13** — Imports PRM02 et Tenacy avec simulation, application exacte et annulation, lecteur Excel sans dépendance.
+- **AUD-14** — Exports Excel (rapport, modèle réimportable, Tenacy), CSV, impression du plan et de la fiche écart.
+- **AUD-15** — Reprise legacy (mappers, contrat complété) ; passerelle d'ajout des écarts créés par les modules restés dans l'outil historique.
+- **AUD-16** — Temps réel et présence, journal d'audit, performances (157 exigences × 4 années, 500 écarts).
+
+---
+
+## 8. Interface — retours du premier essai  *(transverse, demande du RSSI du 08/10/2026)*
+
+- **UI-01** — Affichage plus compact par défaut : la taille « Auto » grossit trop sur les grands écrans ; revoir la taille et la densité par défaut de l'organisation (sans toucher aux préférences déjà choisies), et la hauteur des en-têtes et des cartes.
+- **UI-02** — Graphiques de la synthèse comme dans l'outil historique : anneaux et histogrammes (empilés, à 100 %) en composants SVG de `packages/ui`, sans dépendance, jetons clair et sombre, contrastes AA, alternative textuelle ; utilisés d'abord par AUD-12, puis par les modules suivants.
+- **UI-03** — Revue graphique d'ensemble après la phase 1 (espacements, hiérarchie des titres, densité des tableaux), avec mise à jour des captures de référence.
+
 ---
 
 ## Critères d'acceptation communs

@@ -30,3 +30,23 @@ Aucune donnée réelle.
 
 Les scripts Playwright de la bêta (`reference-beta-legacy/t_*.py`) montrent ces parcours sur l'outil historique ;
 ils servent de modèle, les tests v3 sont écrits en TypeScript dans `tests/e2e`.
+
+## Construire une carte de zéro (CARTO-15 à CARTO-19, [spécification](SPEC-EDITION-LIBRE.md))
+
+Jeu de données : installation **vide** (aucun processus, aucune partie intéressée, aucun fournisseur), puis le jeu
+fictif ci-dessus pour les parcours 29 à 32.
+
+| # | Parcours | Résultat attendu | Exigence |
+|---|---|---|---|
+| 21 | RSSI ouvre Cartographie sur une installation vide | État vide avec « Construire la carte » et « Générer depuis la plateforme » ; « Partir de zéro » donne SMSI + périmètre | 19 |
+| 22 | Glisse « Partie intéressée » de la palette sur la carte, saisit « Autorité de contrôle (fictive) », externe | Boîte au point de dépôt ; la partie intéressée existe dans son module (`/legacy` la liste) ; journal `carto.object_create` | 15, 17 |
+| 23 | Clic droit sur le fond > Créer ici > Fournisseur | Fenêtre au point visé ; fournisseur créé et placé sans chevauchement | 15, 16 |
+| 24 | Vue processus : crée un processus « Réalisation », puis un sous-processus dans son cadre | Processus dans la bande Réalisation ; sous-processus rangé dans son parent ; code proposé | 15, 17 |
+| 25 | Crée un enjeu externe | Enjeu dans la bande externe ; enregistré dans les réglages de la carte | 15, 19 |
+| 26 | Ctrl+Z après une création | La boîte quitte la carte ; l'objet reste dans la plateforme (message avec lien) | 15 |
+| 27 | Ajoute une note et un cadre libre, y glisse deux objets, déplace le cadre | Le cadre emporte les deux objets ; note et cadre conservés après enregistrement, dans les versions et l'export | 17, 19 |
+| 28 | Renomme un objet par double-clic | Confirmation la première fois ; nouveau nom dans la plateforme ; position inchangée | 18 |
+| 29 | Contributeur sans `fournisseurs:modifier` | « Fournisseur » absent de la palette, grisé dans le menu avec sa raison ; création forcée par l'API : 403 | 15, 16 |
+| 30 | Appui long (tactile) et Maj+F10 (clavier) sur un objet | Même menu contextuel, navigable au clavier, fermé par Échap | 16 |
+| 31 | Sélection de trois objets > Aligner à gauche, Répartir | Positions alignées et réparties ; Ctrl+Z annule en un pas | 16 |
+| 32 | Lecteur : clic droit | Seules « Ouvrir la fiche », « Copier », « Ajuster l'affichage » ; aucune palette | 16 |
