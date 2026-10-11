@@ -26,9 +26,9 @@ Cahier de consignes « Unification et évolution de l’application SMSI/GRC ».
   (DdA historique éditable, objectifs par processus, plans historiques, synthèse graphique du Pilotage), U3 (risques :
   études EBIOS RM par ateliers, fiche ISO/IEC 27005, acceptation formelle, registre ; ADR 0027, migration additive
   `016`), U4 (catalogue des relations, sens, archivés, responsables ; ADR 0028).
-- Contrôles locaux (pas de CI : quota GitHub Actions atteint) : Vitest shared, ui, web et API sur PostgreSQL 17 ;
-  Playwright complet sur la pile Docker construite localement (image updater non construite : hôte Alpine bloqué
-  par le réseau de l'environnement). Chiffres du dernier passage : voir `PROJECT_STATUS.md`.
+- Contrôles : Vitest shared, ui, web et API sur PostgreSQL 17 et Playwright complet sur la pile Docker locale ; puis,
+  le dépôt étant devenu public, [CI complète verte sur `6e921fe`](https://github.com/yousername-ha/suivi-audits/actions/runs/38146426254)
+  (déclenchement manuel, sans PR). Détail : `PROJECT_STATUS.md`.
 - Non fait : validation du RSSI sur son serveur, PR unique, rationalisation des branches (U7, après accord explicite).
 - Aucune fusion sur `main`, aucune suppression sur GitHub, aucune donnée réelle.
 

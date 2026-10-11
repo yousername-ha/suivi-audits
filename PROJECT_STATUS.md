@@ -10,7 +10,7 @@ branche `feature/gpt6-evolution-smsi-grc`. Lire [HANDOVER](HANDOVER.md).
 | Lots livrés sur la branche | U0 carte libre et socle Audit ; U1 tableau de bord unique ; U2 Pilotage (DdA, objectifs par processus, plans, synthèse) ; U3 risques EBIOS RM / ISO/IEC 27005 ; U4 liens transverses |
 | Migrations | une seule nouvelle, additive : `016_risques_acceptation.sql` ; retour arrière décrit dans le [plan](docs/unification/PLAN-EVOLUTION.md#retour-arrière) |
 | Tests locaux | Vitest : shared 327, ui 117, web 17, API 270 (PostgreSQL 17) ; Playwright complet sur la pile Docker locale (voir HANDOVER) |
-| CI GitHub | non utilisée : quota Actions atteint ; aucune PR ouverte pour cette branche |
+| CI GitHub | dépôt rendu public par son propriétaire le 11/10 ; [CI déclenchée manuellement sur `6e921fe`](https://github.com/yousername-ha/suivi-audits/actions/runs/38146426254) : 5 jobs verts (qualité, Vitest sur PostgreSQL, guide d'installation sur Ubuntu vierge, montée de version avec retour arrière et restauration, images + Trivy + Playwright complet + mise à jour intégrée et persistance). CodeQL non exécuté (déclenché seulement par PR ou poussée sur `main`) ; aucune PR ouverte |
 | Non fait | recette du RSSI, PR unique, rationalisation des branches (U7, sur accord explicite), actualisation de l'audit documentaire ci-dessous |
 
 Le registre `docs/08_PILOTAGE/REGISTRES.json` et `verifier-documentation.mjs` restent l'instantané de `c704fa6` : sur cette
