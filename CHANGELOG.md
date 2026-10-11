@@ -7,7 +7,6 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 ### Notes de mise à jour
 - **Version stable unique**, publiée depuis `main` (qui reprend la branche de travail `claude-suivi-smsi`) : mise à jour par **Administration → Système → Mise à jour de l’application** (guide, section 12.0). Sauvegarde chiffrée automatique avant mise à jour ; retour à 3.0.2 décrit dans `docs/unification/PLAN-EVOLUTION.md`.
 - Branches du dépôt : `main`, `claude-suivi-smsi` et `legacy` (outil historique autonome) ; les autres sont conservées sous les étiquettes `archive/*`. Les préversions éventuelles viennent de `claude-suivi-smsi`.
-- Aucune action sur le serveur : optimisation des workflows GitHub Actions et dossier de reprise documentaire, sans nouvelle version applicative préparée.
 - Liens transverses (lot U4) : aucune migration ; les liens existants sont conservés tels quels. Une création de lien hors catalogue par l'API reçoit désormais une erreur 422 (« Lié à » reste possible).
 - Pilotage SMSI (lot U2) : aucune migration ni action sur le serveur ; la DdA, les objectifs, les indicateurs et les plans restent enregistrés dans l'outil de suivi (`app_state`).
 - Gestion des risques (lot U3) : migration additive `016_risques_acceptation.sql` appliquée automatiquement au démarrage (colonne `terms` des décisions, index) ; aucune action sur le serveur. Les risques et objets EBIOS existants restent valides, sans recalcul.
@@ -16,6 +15,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 ### Modifié
 - Dépôt : retrait d’un ancien prompt de chantier terminé et d’un rapport ponctuel inutilisé ; consignes Claude consolidées, renvois cartographiques corrigés et exclusions de lint/format d’un dossier absent supprimées. Code applicatif, archives, migrations et références visuelles conservés.
 - CI : un seul scan Trivy bloquant HIGH/CRITICAL par image API, web et updater ; suppression du second scan identique destiné à réafficher le tableau. Les SBOM et le scan des dépendances du dépôt sont conservés.
+- CI : la pile de recette Playwright relève la limite de débit (`RATE_LIMIT_PER_MINUTE=6000`) pour sa seule pile de test, toute la recette partant d'une même adresse IP ; la valeur par défaut des serveurs (1 200) est inchangée. Le lien direct vers l'outil historique n'accepte plus que les noms de vue connus de l'outil (alerte CodeQL `js/remote-property-injection`).
 - CodeQL : une nouvelle analyse de la même référence Git annule l'exécution précédente encore en cours, comme le fait déjà la CI.
 
 ### Ajouté
@@ -28,7 +28,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 - Tableau de bord unifié (`UI-02`, lot U1) : l'accueil et l'écran mural retrouvent les graphiques du tableau de bord historique — conformité par référentiel (DdA, histogramme empilé), écarts ouverts par type (anneau) et actions réalisées (jauge), objectifs et indicateurs (anneau), plans de l'année (histogramme) — calculés côté serveur à l'identique de l'outil historique (tests de parité), plus les compteurs du Pilotage (constats ouverts, risques sans appréciation validée, actions en retard) ; la synthèse du Pilotage présente ses compteurs en anneaux. Composants SVG `Anneau`, `Histogramme`, `Jauge` dans `packages/ui`, sans dépendance, contrastes vérifiés en clair et en sombre.
 - Menu : « Évaluations IA » accessible ; « Outil de suivi (ancienne interface) » ouvre directement les pages encore historiques (audit, DdA, fournisseurs, plans, GAP, CRRC, investissements, incidents, rapports), selon les droits ; « Cartographie du SMSI » distinguée de la carte des risques.
 - Unification : [audit L1 et correspondance ancien / nouveau](docs/unification/L1-AUDIT-ET-CORRESPONDANCE.md) et [plan d'évolution](docs/unification/PLAN-EVOLUTION.md) ; spécifications Audit et carte libre validées par le RSSI, ADR renumérotées 0025 et 0026.
-- Dossier documentaire de reprise IA : inventaire et comparaison v2, DAT actuel, guides, registres de qualité, backlog et recette avec preuves datées. Aucun changement applicatif ni nouvelle publication.
+- Dossier documentaire de reprise IA : inventaire et comparaison v2, DAT actuel, guides, registres de qualité, backlog et recette avec preuves datées. Aucun changement applicatif.
 
 ## [3.0.2] — 2026-10-10 — Préversion de développement
 
