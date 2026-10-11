@@ -113,8 +113,9 @@ précise de l'outil historique.
 3. FCT-028 / FCT-030 : « Applicabilité » n'affiche pas la DdA historique (`dda`, `items`).
 4. FCT-038 : « Audits internes » et « Exercices » sont des objets GRC sans lien avec `plans`.
 5. LOT-C C8 « reprendre les données et identifiants existants » : non fait pour `ai.evals` ni les risques de comité.
-6. `CLAUDE.md` (racine) périmé : web présenté comme seul service exposé (c'est `gateway`), `updater` et `clamav`
-   absents, « seul `maps` repris » contredit par les adaptateurs Pilotage, règle de permission dans `route()` non tenue.
+6. `CLAUDE.md` et `AGENTS.md` (consolidés le 11/10) désignent `feature/gpt6-evolution-smsi-grc` comme branche
+   exclusive, contraire au cahier (branche `claude-suivi-smsi`) : corrigé sur `claude-suivi-smsi`. La règle « permission
+   `module:action` dans `route()` » n'est pas tenue par les 63 routes `metier` (droits vérifiés dans les services).
 7. `docs/ARCHITECTURE.md` : instantané de la phase 0 (deux images, pas de passerelle).
 8. `docs/adr/README.md` : lignes vides qui coupent le tableau (ADR 0020 à 0024 hors tableau).
 9. ADR 0009 : Trivy « critiques » contre « HIGH/CRITICAL » ailleurs ; `fflate` non mentionnée.

@@ -6,7 +6,8 @@ Suivre également [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Périmètre actuel
 
-- Branche exclusive : `feature/gpt6-evolution-smsi-grc`. Vérifier l’état Git avant toute édition.
+- Branche de travail : `claude-suivi-smsi` (cahier du 11/10/2026) ; `feature/gpt6-evolution-smsi-grc`
+  est conservée comme référence. Vérifier l’état Git avant toute édition.
   Aucun commit, push, reset, merge ou réécriture sur `main`.
 - Garder le dépôt privé. Aucun changement de visibilité, aucune suppression
   d’historique/artefact ni anonymisation des auteurs sans instruction explicite.

@@ -5,8 +5,11 @@ intervention, puis consulter [HANDOVER.md](HANDOVER.md),
 [PROJECT_STATUS.md](PROJECT_STATUS.md) et [docs/00_INDEX.md](docs/00_INDEX.md).
 Ces fichiers donnent l’état actuel, les preuves de test et les priorités.
 
-- Branche exclusive : `feature/gpt6-evolution-smsi-grc` ; PR vers `main` laissée
-  ouverte, sans fusion automatique. Garder le dépôt privé.
+- Branche de travail : `claude-suivi-smsi` (cahier de consignes du 11/10/2026,
+  [plan d'unification](docs/unification/PLAN-EVOLUTION.md)) ; `feature/gpt6-evolution-smsi-grc`
+  reste la référence conservée. Aucune fusion sur `main` ; garder le dépôt privé.
+- Budget GitHub Actions limité : vérifier localement, pousser sans PR (aucune CI) ;
+  une PR seulement à la validation, avec l'accord du RSSI.
 - Architecture actuelle : [DAT](docs/03_ARCHITECTURE/DAT.md).
 - Conventions et commandes : [CONTRIBUTING.md](CONTRIBUTING.md).
 - Installation et exploitation : [guide](docs/INSTALLATION.md).
