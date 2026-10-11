@@ -4,9 +4,9 @@
 
 Ce guide part d'un serveur vide et ne suppose aucune connaissance de Linux ni de Docker. Il s'adresse au RSSI ou à un technicien. Suivez les étapes **dans l'ordre**, sans en sauter. Comptez environ 1 h 30 la première fois.
 
-> **Branche de travail Sauge (lot d’intégration, 9 octobre 2026).** La branche
-> `feature/gpt6-evolution-smsi-grc` reprend le ZIP fourni, sans fusion vers `main`.
-> La préversion numérotée **3.0.2** est préparée pour les tests depuis cette branche (section 12.0).
+> **Branches et version (11 octobre 2026).** `main` porte la version Docker unique, **3.1.0** (section 12.0),
+> issue de la branche de travail `claude-suivi-smsi` ; la branche `legacy` porte l'outil historique autonome.
+> Les anciennes branches sont conservées sous les étiquettes `archive/*`.
 > La version 2 du dépôt est conservée intégralement dans
 > `archives/v2-source.zip` et vérifiable avec `archives/v2-manifest.json`.
 > Le guide ci-dessous décrit le déploiement v3 ; il ne faut pas l’appliquer à une
@@ -820,13 +820,13 @@ L’exécutant se remplace lui-même à la fin d’une mise à jour ; son succes
 **Limites d’exploitation** : Internet/GitHub/GHCR/Sigstore sont nécessaires depuis l’exécutant uniquement. Les accès privés du guide doivent être renouvelés à leur expiration. Le frontal stable reste à la version `GATEWAY_VERSION` inscrite lors de la première mise à jour web : il ne doit pas être recréé au milieu de l’opération. Son moteur TLS est un composant d’infrastructure à entretenir séparément ; la procédure serveur ci-dessous met également à jour le frontal. Les applications/API/interfaces et l’exécutant évoluent depuis le web, le moteur du frontal suit une fenêtre d’entretien distincte. L’indisponibilité des données pendant sauvegarde/migration dépend de leur volume ; la maintenance n’assure pas la disponibilité en cas de panne de l’hôte, du stockage ou du frontal lui-même. Les proxy/TLS externes restent gérés par l’infrastructure.
 
 
-### 12.0 Tester la branche depuis le menu de mise à jour
+### 12.0 Mettre à jour vers 3.1.0 depuis le menu de mise à jour
 
-La livraison **3.0.2 — Test de développement** regroupe la branche `feature/gpt6-evolution-smsi-grc`, avec G/H/K et le début E. Elle est marquée **Pre-release** sur GitHub et ne modifie ni `main`, ni les alias d'images stables. Les images API, web et updater sont publiées/signées seulement après la réussite des contrôles CI et CodeQL du commit exact, puis de leurs scans HIGH/CRITICAL et de leurs signatures. Les étiquettes d'images installables ne sont exposées qu'une fois les trois composants validés.
+La version **3.1.0** est la version stable unique : elle est publiée depuis `main`, qui reprend la branche de travail `claude-suivi-smsi` (unification Pilotage SMSI et gestion des risques, voir le `CHANGELOG`). Les images API, web et updater sont publiées et signées seulement après la réussite des contrôles CI et CodeQL du commit exact, puis de leurs scans HIGH/CRITICAL et de leurs signatures. Les étiquettes d'images installables ne sont exposées qu'une fois les trois composants validés. Les préversions éventuelles (canal `development`) ne peuvent venir que de `claude-suivi-smsi`.
 
-Sur une installation **v3** de ce **dépôt privé**, disposant déjà de `gateway`/`updater` et des accès Git/GHCR du guide, ouvrir **Administration → Système → Mise à jour de l’application**, choisir **Vérifier**, lire les nouveautés de `3.0.2`, puis confirmer **METTRE À JOUR**. La sauvegarde chiffrée, la maintenance persistante, les contrôles et le retour arrière sont ceux décrits ci-dessus. Aucune installation automatique.
+Sur une installation **v3** disposant déjà de `gateway`/`updater`, ouvrir **Administration → Système → Mise à jour de l’application**, choisir **Vérifier**, lire les nouveautés de `3.1.0`, puis confirmer **METTRE À JOUR**. La sauvegarde chiffrée, la maintenance persistante, les contrôles et le retour arrière sont ceux décrits ci-dessus. Aucune installation automatique. La migration additive `016_risques_acceptation.sql` s'applique au démarrage ; un retour à `3.0.2` reste possible (voir `docs/unification/PLAN-EVOLUTION.md`, « Retour arrière »).
 
-Tous les serveurs autorisés sur ce dépôt privé peuvent voir cette préversion numérotée ; l'ancien menu ne dispose pas de canal de test séparé. Une éventuelle ouverture publique du dépôt demande une évolution de la sélection des préversions, car `/releases/latest` les exclut. Les installations v2 suivent d'abord la montée de version 12.4. Une installation déjà en `3.0.2` n'a pas de nouvelle version à installer.
+Le dépôt est public depuis le 11 octobre 2026 : `/releases/latest` désigne la dernière version stable. Les installations v2 suivent d'abord la montée de version 12.4.
 
 **Premier redéploiement d'un ancien updater** : si l'installation utilise une image construite avant `3.0.2`, celle-ci peut manquer de GNU find, indispensable à son ancien script de rotation des archives. Une première reconstruction/redéploiement depuis cette branche est alors nécessaire, selon la section 7 ; les trois images doivent être reconstruites et les services redémarrés. L'ancienne image ne peut pas corriger elle-même l'outil qui lui manque avant remplacement. Cette livraison contient l'outil et la coordination des verrous ; les mises à jour suivantes utilisent le menu. Conserver un numéro local inférieur à `3.0.2` et les accès Git/GHCR pour installer ensuite la préversion depuis le menu.
 

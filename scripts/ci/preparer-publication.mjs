@@ -30,7 +30,7 @@ export function publication(ref, config) {
   return {
     version,
     prerelease: development,
-    branch: development ? 'feature/gpt6-evolution-smsi-grc' : 'main',
+    branch: development ? 'claude-suivi-smsi' : 'main',
     title: development ? `Test de développement ${version}` : `Version ${version}`,
   };
 }

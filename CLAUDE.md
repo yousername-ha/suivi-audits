@@ -5,11 +5,11 @@ intervention, puis consulter [HANDOVER.md](HANDOVER.md),
 [PROJECT_STATUS.md](PROJECT_STATUS.md) et [docs/00_INDEX.md](docs/00_INDEX.md).
 Ces fichiers donnent l’état actuel, les preuves de test et les priorités.
 
-- Branche de travail : `claude-suivi-smsi` (cahier de consignes du 11/10/2026,
-  [plan d'unification](docs/unification/PLAN-EVOLUTION.md)) ; `feature/gpt6-evolution-smsi-grc`
-  reste la référence conservée. Aucune fusion sur `main` ; garder le dépôt privé.
-- Budget GitHub Actions limité : vérifier localement, pousser sans PR (aucune CI) ;
-  une PR seulement à la validation, avec l'accord du RSSI.
+- Trois branches (décision du RSSI, 11/10/2026) : `main` (version Docker unique, publiée par étiquette
+  `vX.Y.Z`), `claude-suivi-smsi` (branche de travail, [plan d'unification](docs/unification/PLAN-EVOLUTION.md)),
+  `legacy` (outil historique autonome). Les autres branches sont conservées sous les étiquettes `archive/*`.
+- `main` n'évolue que par PR depuis `claude-suivi-smsi`, après CI verte. Dépôt public : aucune donnée réelle
+  ni aucun secret, y compris dans les messages de commit.
 - Architecture actuelle : [DAT](docs/03_ARCHITECTURE/DAT.md).
 - Conventions et commandes : [CONTRIBUTING.md](CONTRIBUTING.md).
 - Installation et exploitation : [guide](docs/INSTALLATION.md).

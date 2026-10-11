@@ -2,9 +2,11 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
-## [Non publié]
+## [3.1.0] — 2026-10-11
 
 ### Notes de mise à jour
+- **Version stable unique**, publiée depuis `main` (qui reprend la branche de travail `claude-suivi-smsi`) : mise à jour par **Administration → Système → Mise à jour de l’application** (guide, section 12.0). Sauvegarde chiffrée automatique avant mise à jour ; retour à 3.0.2 décrit dans `docs/unification/PLAN-EVOLUTION.md`.
+- Branches du dépôt : `main`, `claude-suivi-smsi` et `legacy` (outil historique autonome) ; les autres sont conservées sous les étiquettes `archive/*`. Les préversions éventuelles viennent de `claude-suivi-smsi`.
 - Aucune action sur le serveur : optimisation des workflows GitHub Actions et dossier de reprise documentaire, sans nouvelle version applicative préparée.
 - Liens transverses (lot U4) : aucune migration ; les liens existants sont conservés tels quels. Une création de lien hors catalogue par l'API reçoit désormais une erreur 422 (« Lié à » reste possible).
 - Pilotage SMSI (lot U2) : aucune migration ni action sur le serveur ; la DdA, les objectifs, les indicateurs et les plans restent enregistrés dans l'outil de suivi (`app_state`).

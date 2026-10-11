@@ -6,7 +6,7 @@ test('préversion numérotée : branche de travail, titre explicite et pas de ve
   assert.deepEqual(publication('v3.0.1', { version: '3.0.1', channel: 'development' }), {
     version: '3.0.1',
     prerelease: true,
-    branch: 'feature/gpt6-evolution-smsi-grc',
+    branch: 'claude-suivi-smsi',
     title: 'Test de développement 3.0.1',
   });
 });

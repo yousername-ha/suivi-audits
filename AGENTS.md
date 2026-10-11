@@ -6,12 +6,12 @@ Suivre également [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Périmètre actuel
 
-- Branche de travail : `claude-suivi-smsi` (cahier du 11/10/2026) ; `feature/gpt6-evolution-smsi-grc`
-  est conservée comme référence. Vérifier l’état Git avant toute édition.
-  Aucun commit, push, reset, merge ou réécriture sur `main`.
-- Garder le dépôt privé. Aucun changement de visibilité, aucune suppression
+- Branches : `main` (version Docker unique), `claude-suivi-smsi` (branche de travail),
+  `legacy` (outil historique autonome) ; anciennes branches sous `archive/*`.
+  Vérifier l’état Git avant toute édition. Aucun commit direct, reset ou réécriture sur `main` :
+  `main` n'évolue que par PR depuis `claude-suivi-smsi`, après CI verte et accord du RSSI.
+- Dépôt public depuis le 11/10/2026 : aucune donnée réelle ni aucun secret. Aucune suppression
   d’historique/artefact ni anonymisation des auteurs sans instruction explicite.
-- PR vers `main` laissée ouverte ; pas de fusion automatique.
 - Périmètre métier demandé : pilotage multi-référentiels, G/H/K, début E et
   préservation de tout v2. D/J/I/F sont exclus de la livraison actuelle.
   Un besoin historique ne donne pas à lui seul autorisation d’implémenter un lot exclu.
@@ -57,7 +57,7 @@ Suivre également [CONTRIBUTING.md](CONTRIBUTING.md).
 - Un seul scan Trivy bloquant HIGH/CRITICAL par image ; garder SBOM et garde
   de publication CI+CodeQL sur le commit exact.
 - Pas de relance GitHub ou publication d’images pour compléter un audit local
-  sans autorisation. Le budget Actions est une contrainte ; ne pas promettre
+  sans autorisation. Ne pas promettre
   50 % de minutes économisées à partir de 50 % de scans supprimés.
 
 ## Fin de session
