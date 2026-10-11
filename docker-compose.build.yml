@@ -1,0 +1,17 @@
+# Construction locale des images (intégration continue, test d'une branche avant publication) :
+#   APP_VERSION=local docker compose -f docker-compose.yml -f docker-compose.build.yml build
+#   APP_VERSION=local docker compose -f docker-compose.yml -f docker-compose.build.yml up -d
+services:
+  init:
+    build: { context: ., dockerfile: docker/api.Dockerfile }
+    pull_policy: build
+  app:
+    build: { context: ., dockerfile: docker/api.Dockerfile }
+    pull_policy: build
+  web:
+    build: { context: ., dockerfile: docker/web.Dockerfile }
+    pull_policy: build
+  # gateway réutilise l'image web : une seule construction/publication par étiquette.
+  updater:
+    build: { context: ., dockerfile: docker/updater.Dockerfile }
+    pull_policy: build

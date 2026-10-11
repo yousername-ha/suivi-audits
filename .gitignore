@@ -1,0 +1,41 @@
+# Configuration locale et secrets : jamais dans le dépôt
+.env
+.env.*
+!.env.example
+certs/*
+!certs/.gitkeep
+*.pem
+*.key
+
+# Sauvegardes (contiennent données et secrets)
+backups/
+*.tar
+*.tar.enc
+*.sha256
+*.dump
+
+# Dépendances et fichiers locaux
+node_modules/
+npm-debug.log*
+.DS_Store
+**/dist/
+**/coverage/
+**/playwright-report/
+**/test-results/
+*.tsbuildinfo
+.ccr-ca.crt
+
+# Jeton d’installation des tests de bout en bout
+tests/e2e/.jeton
+tests/e2e/.tmp-e2e/
+
+# Données de développement (docker-compose.dev.yml) et copie de .env faite pendant une mise à jour
+.donnees-dev/
+.env.avant-mise-a-jour
+
+# Vérification d’archives (Python standard)
+__pycache__/
+*.pyc
+
+# Captures produites par la recette Pilotage (zzz-pilotage.spec.ts)
+onboarding-suivi/

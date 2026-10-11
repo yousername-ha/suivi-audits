@@ -1,35 +1,31 @@
-# CLAUDE.md — Suivi des audits SMSI ISO 27001 / HDS
+# Reprise du projet avec Claude Code
 
-Outil interne du GCS Normand'e-Santé (RSSI). Interface et documentation **en français**.
+Les consignes communes sont dans [AGENTS.md](AGENTS.md). Les lire avant toute
+intervention, puis consulter [HANDOVER.md](HANDOVER.md),
+[PROJECT_STATUS.md](PROJECT_STATUS.md) et [docs/00_INDEX.md](docs/00_INDEX.md).
+Ces fichiers donnent l’état actuel, les preuves de test et les priorités.
 
-## Architecture
-- `docker-compose.yml` : `proxy` (Caddy 2, HTTPS, seul service exposé) → `app` (Node 24, dépendance unique `pg`) → `db` (PostgreSQL 17-alpine).
-  `init` : service ponctuel (root, sans réseau) qui génère les secrets dans le volume `secrets` (`app/src/init-secrets.js`).
-  Réseaux `edge` et `backend` internes (aucune sortie Internet pour app et db).
-- `app/src/` : serveur HTTP sans framework (`server.js` routage et pages, `api.js` routes, `auth.js` sessions/MFA/jeton d'installation,
-  `security.js` scrypt/TOTP/AES-256-GCM, `files.js` contrôle des dépôts et ClamAV, `db.js` pool et migrations, `cli.js` exploitation).
-- `app/src/migrations/NNN_*.sql` : appliquées automatiquement au démarrage (table `schema_migrations`). Ne jamais modifier une migration publiée : en ajouter une nouvelle.
-- `app/web/` : pages connexion, installation, compte, administration, documents. CSP stricte : **aucun script ni style en ligne**, aucun attribut `style=`.
-- `app/public/index.html` : outil de suivi historique (artefact claude.ai monofichier, ~3 Mo). Ne pas le réécrire : il est adapté au démarrage par `buildAppIndex()` et `web/assets/shim.js` (remplace `window.claude`). Mise à jour via `scripts/update-ui.sh`.
-- `app/seed/state.json` et le bloc `<script id="seed">` de `index.html` : état **vide** (référentiels seulement, `schema` 14).
+- Trois branches (décision du RSSI, 11/10/2026) : `main` (version Docker unique, publiée par étiquette
+  `vX.Y.Z`), `claude-suivi-smsi` (branche de travail, [plan d'unification](docs/unification/PLAN-EVOLUTION.md)),
+  `legacy` (outil historique autonome). Les autres branches sont conservées sous les étiquettes `archive/*`.
+- `main` n'évolue que par PR depuis `claude-suivi-smsi`, après CI verte. Dépôt public : aucune donnée réelle
+  ni aucun secret, y compris dans les messages de commit.
+- Architecture actuelle : [DAT](docs/03_ARCHITECTURE/DAT.md).
+- Conventions et commandes : [CONTRIBUTING.md](CONTRIBUTING.md).
+- Installation et exploitation : [guide](docs/INSTALLATION.md).
+- Fonctionnalités et limites : [inventaire](docs/02_FONCTIONNALITES/INVENTAIRE_FONCTIONNEL.md),
+  [recette](docs/05_RECETTE/RAPPORT_RECETTE.md), [backlog](docs/08_PILOTAGE/BACKLOG.md).
 
-## Règles
-- **Aucune donnée réelle dans le dépôt** (écarts, fournisseurs, processus, noms de personnes…), aucun secret, pas de `.env`.
-- Sécurité non négociable : TOTP obligatoire, cookie `__Host-` SameSite=Strict, jeton CSRF + contrôle d'origine sur toute requête modifiante,
-  journal d'audit en ajout seul (`db.audit`), conteneurs en lecture seule, `cap_drop: ALL`.
-- Toute nouvelle route : vérifier le rôle (`auth.requireRole`), journaliser les actions sensibles, valider les entrées.
-- Pas de nouvelle dépendance npm sans nécessité forte.
-- Travailler sur une branche et ouvrir une pull request ; ne jamais pousser directement sur `main`.
+L’ancien outil reste accessible sous `/legacy`. Ne pas réécrire son HTML ; toute
+évolution de ce fichier fait l’objet d’un commit dédié. `scripts/update-ui.sh`
+s’utilise sur un poste de développement ; le serveur reçoit une version publiée.
+Les données de départ restent vides et les fixtures anonymisées. Les cartes et
+les familles historiques encore attendues sont conservées.
 
-## Commandes
-```bash
-cp .env.example .env && sed -i 's/^SITE_ADDRESS=.*/SITE_ADDRESS=localhost/' .env
-docker compose build && docker compose up -d
-docker compose logs app | grep -A3 JETON          # jeton d'installation → https://localhost/setup
-docker compose exec app node src/cli.js users
-docker compose down -v                             # remise à zéro complète (supprime les volumes)
-```
-Sans Docker : PostgreSQL local + `SECRETS_DIR=<dossier> DB_HOST=127.0.0.1 COOKIE_SECURE=false node src/server.js` (voir `init-secrets.js` pour générer les secrets).
+La charte vient de `packages/ui`. Respecter la CSP de l’interface native : pas
+de script ou style en ligne, pas d’AppShell, `lockScroll={false}` et pas de props
+Mantine de style responsives ([ADR 0006](docs/adr/0006-front-react-mantine-csp-stricte.md)).
 
-## Points à surveiller
-Le premier démarrage avec les images officielles (`postgres:17-alpine` en `read_only`, capacités ajoutées, lecture des secrets par l'uid 70) n'a été validé que par la CI : en cas d'échec, lire `docker compose logs init db app`.
+Les décisions, règles de sécurité, permissions, tests et précautions de données
+restent celles d’AGENTS et CONTRIBUTING. Les références datées expliquent
+l’historique ; elles ne remplacent pas les consignes actuelles.

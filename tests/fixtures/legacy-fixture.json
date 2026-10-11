@@ -1,0 +1,3011 @@
+{
+ "v": 1,
+ "updatedAt": 0,
+ "years": [
+  2025,
+  2026,
+  2027
+ ],
+ "yearLabels": {
+  "2025": "Certification initiale",
+  "2026": "Surveillance 1",
+  "2027": "Surveillance 2",
+  "2028": "Renouvellement"
+ },
+ "nextYear": 2027,
+ "nextDate": "2027-05-03",
+ "internalDate": "2027-03-01",
+ "groups": [
+  {
+   "id": "ISO-4",
+   "ref": "ISO",
+   "num": "4",
+   "title": "Contexte de l'organisation"
+  },
+  {
+   "id": "ISO-5",
+   "ref": "ISO",
+   "num": "5",
+   "title": "Leadership"
+  },
+  {
+   "id": "ISO-6",
+   "ref": "ISO",
+   "num": "6",
+   "title": "Planification"
+  },
+  {
+   "id": "ISO-7",
+   "ref": "ISO",
+   "num": "7",
+   "title": "Supports"
+  },
+  {
+   "id": "ISO-8",
+   "ref": "ISO",
+   "num": "8",
+   "title": "Fonctionnement"
+  },
+  {
+   "id": "ISO-9",
+   "ref": "ISO",
+   "num": "9",
+   "title": "Évaluation de la performance"
+  },
+  {
+   "id": "ISO-10",
+   "ref": "ISO",
+   "num": "10",
+   "title": "Amélioration"
+  },
+  {
+   "id": "A-5",
+   "ref": "A",
+   "num": "5",
+   "title": "Mesures de sécurité organisationnelles"
+  },
+  {
+   "id": "A-6",
+   "ref": "A",
+   "num": "6",
+   "title": "Mesures de sécurité applicables aux personnes"
+  },
+  {
+   "id": "A-7",
+   "ref": "A",
+   "num": "7",
+   "title": "Mesures de sécurité physique"
+  },
+  {
+   "id": "A-8",
+   "ref": "A",
+   "num": "8",
+   "title": "Mesures de sécurité technologiques"
+  },
+  {
+   "id": "HDS",
+   "ref": "HDS",
+   "num": "HDS",
+   "title": "Référentiel HDS v2"
+  }
+ ],
+ "items": [
+  {
+   "id": "ISO-4.1",
+   "ref": "ISO",
+   "num": "4.1",
+   "title": "Compréhension de l'organisation et de son contexte",
+   "group": "ISO-4",
+   "depth": 1,
+   "afnor": {
+    "2025": "X",
+    "2026": "X",
+    "2027": "P"
+   },
+   "interne": {
+    "2025": "X",
+    "2026": "X",
+    "2027": "P"
+   },
+   "prep": "",
+   "owner": "",
+   "notes": ""
+  },
+  {
+   "id": "ISO-4.2",
+   "ref": "ISO",
+   "num": "4.2",
+   "title": "Compréhension des besoins et attentes des parties intéressées",
+   "group": "ISO-4",
+   "depth": 1,
+   "afnor": {
+    "2025": "X",
+    "2026": "X",
+    "2027": "P"
+   },
+   "interne": {
+    "2025": "X",
+    "2026": "X",
+    "2027": "P"
+   },
+   "prep": "",
+   "owner": "",
+   "notes": ""
+  },
+  {
+   "id": "ISO-4.3",
+   "ref": "ISO",
+   "num": "4.3",
+   "title": "Détermination du domaine d'application du SMSI",
+   "group": "ISO-4",
+   "depth": 1,
+   "afnor": {
+    "2025": "X",
+    "2026": "X",
+    "2027": "P"
+   },
+   "interne": {
+    "2025": "X",
+    "2026": "X",
+    "2027": "P"
+   },
+   "prep": "",
+   "owner": "",
+   "notes": ""
+  },
+  {
+   "id": "ISO-4.4",
+   "ref": "ISO",
+   "num": "4.4",
+   "title": "Système de management de la sécurité de l'information",
+   "group": "ISO-4",
+   "depth": 1,
+   "afnor": {
+    "2025": "X",
+    "2026": "X",
+    "2027": "P"
+   },
+   "interne": {
+    "2025": "X",
+    "2026": "X",
+    "2027": "P"
+   },
+   "prep": "",
+   "owner": "",
+   "notes": "",
+   "remInterne": "[remInterne]"
+  },
+  {
+   "id": "ISO-5.1",
+   "ref": "ISO",
+   "num": "5.1",
+   "title": "Leadership et engagement",
+   "group": "ISO-5",
+   "depth": 1,
+   "afnor": {
+    "2025": "X",
+    "2026": "X",
+    "2027": "P"
+   },
+   "interne": {
+    "2025": "X",
+    "2026": "X",
+    "2027": "P"
+   },
+   "prep": "",
+   "owner": "",
+   "notes": ""
+  },
+  {
+   "id": "ISO-5.2",
+   "ref": "ISO",
+   "num": "5.2",
+   "title": "Politique",
+   "group": "ISO-5",
+   "depth": 1,
+   "afnor": {
+    "2025": "X",
+    "2026": "X",
+    "2027": "P"
+   },
+   "interne": {
+    "2025": "X",
+    "2026": "X",
+    "2027": "P"
+   },
+   "prep": "",
+   "owner": "",
+   "notes": "",
+   "remInterne": "[remInterne]"
+  },
+  {
+   "id": "ISO-4.4",
+   "ref": "ISO",
+   "num": "4.4",
+   "title": "Système de management de la sécurité de l'information",
+   "group": "ISO-4",
+   "depth": 1,
+   "afnor": {
+    "2025": "X",
+    "2026": "X",
+    "2027": "P"
+   },
+   "interne": {
+    "2025": "X",
+    "2026": "X",
+    "2027": "P"
+   },
+   "prep": "",
+   "owner": "",
+   "notes": "",
+   "remInterne": "[remInterne]"
+  },
+  {
+   "id": "ISO-5.2",
+   "ref": "ISO",
+   "num": "5.2",
+   "title": "Politique",
+   "group": "ISO-5",
+   "depth": 1,
+   "afnor": {
+    "2025": "X",
+    "2026": "X",
+    "2027": "P"
+   },
+   "interne": {
+    "2025": "X",
+    "2026": "X",
+    "2027": "P"
+   },
+   "prep": "",
+   "owner": "",
+   "notes": "",
+   "remInterne": "[remInterne]"
+  }
+ ],
+ "findings": [
+  {
+   "id": "ID-001",
+   "source": "AFNOR",
+   "year": 2026,
+   "type": "NC min",
+   "status": "Ouvert",
+   "text": "[text]",
+   "desc": "[desc]",
+   "action": "[action]",
+   "tasks": [
+    {
+     "t": "[t]",
+     "done": false
+    },
+    {
+     "t": "[t]",
+     "done": false
+    }
+   ],
+   "comment": "",
+   "items": [
+    "[items]",
+    "[items]",
+    "[items]"
+   ],
+   "owner": "",
+   "due": "2026-12-31",
+   "proof": ""
+  },
+  {
+   "id": "ID-002",
+   "source": "AFNOR",
+   "year": 2026,
+   "type": "PS",
+   "status": "Ouvert",
+   "text": "[text]",
+   "desc": "[desc]",
+   "action": "[action]",
+   "tasks": [
+    {
+     "t": "[t]",
+     "done": false
+    },
+    {
+     "t": "[t]",
+     "done": false
+    }
+   ],
+   "comment": "",
+   "items": [
+    "[items]"
+   ],
+   "owner": "",
+   "due": "2026-12-31",
+   "proof": ""
+  }
+ ],
+ "source": "Jeu de test anonymisé (structure uniquement)",
+ "closeDeadline": "2026-12-31",
+ "findingsRev": 2,
+ "dda": {
+  "A-5.1": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "ASSURE-001",
+   "req": "[req]",
+   "url": "https://exemple.invalid/document"
+  },
+  "A-5.2": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "OBJ-001",
+   "req": "[req]"
+  },
+  "A-5.3": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "R-001",
+   "req": "[req]"
+  },
+  "A-5.4": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "S-001",
+   "req": "[req]"
+  },
+  "A-5.5": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "ASSURE-002",
+   "req": "[req]"
+  },
+  "A-5.6": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "ASSURE-003",
+   "req": "[req]"
+  },
+  "A-5.7": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "APPORT-001",
+   "req": "[req]"
+  },
+  "A-5.8": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Partiel",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "ASSURE-004",
+   "req": "[req]"
+  },
+  "A-5.9": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "IDENTI-001",
+   "req": "[req]"
+  },
+  "A-5.10": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "ASSURE-005",
+   "req": "[req]"
+  },
+  "A-5.11": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "PROT-001",
+   "req": "[req]"
+  },
+  "A-5.12": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Partiel",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "ASSURE-006",
+   "req": "[req]"
+  },
+  "A-5.13": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "FACILI-001",
+   "req": "[req]"
+  },
+  "A-5.14": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "MAINTE-001",
+   "req": "[req]"
+  },
+  "A-5.15": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Partiel",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "ASSURE-007",
+   "req": "[req]"
+  },
+  "A-5.16": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "PERMET-001",
+   "req": "[req]"
+  },
+  "A-5.17": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "ASSURE-008",
+   "req": "[req]"
+  },
+  "A-5.18": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "ASSURE-009",
+   "req": "[req]"
+  },
+  "A-5.19": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "MAINTE-002",
+   "req": "[req]"
+  },
+  "A-5.20": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Partiel",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "MAINTE-002",
+   "req": "[req]"
+  },
+  "A-5.21": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "obj": "MAINTE-002",
+   "req": "[req]"
+  },
+  "A-5.22": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Partiel",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "MAINTE-003",
+   "req": "[req]"
+  },
+  "A-5.23": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "SP-001",
+   "req": "[req]"
+  },
+  "A-5.24": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "ASSURE-010",
+   "req": "[req]"
+  },
+  "A-5.25": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Partiel",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "obj": "ASSURE-011",
+   "req": "[req]"
+  },
+  "A-5.26": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "obj": "ASSURE-012",
+   "req": "[req]"
+  },
+  "A-5.27": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "obj": "R-002",
+   "req": "[req]"
+  },
+  "A-5.28": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "obj": "ASSURE-013",
+   "req": "[req]"
+  },
+  "A-5.29": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "[comment]",
+   "obj": "PROT-002",
+   "req": "[req]"
+  },
+  "A-5.30": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "ASSURE-014",
+   "req": "[req]"
+  },
+  "A-5.31": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "ASSURE-015",
+   "req": "[req]"
+  },
+  "A-5.32": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "ASSURE-016",
+   "req": "[req]"
+  },
+  "A-5.33": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "ASSURE-017",
+   "req": "[req]"
+  },
+  "A-5.34": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Partiel",
+   "actions": "[actions]",
+   "docs": "[docs]",
+   "comment": "[comment]",
+   "obj": "ASSURE-018",
+   "req": "[req]"
+  },
+  "A-5.35": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "S-002",
+   "req": "[req]"
+  },
+  "A-5.36": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "S-003",
+   "req": "[req]"
+  },
+  "A-5.37": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Partiel",
+   "actions": "[actions]",
+   "docs": "[docs]",
+   "comment": "[comment]",
+   "obj": "S-004",
+   "req": "[req]"
+  },
+  "A-6.1": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "S-005",
+   "req": "[req]"
+  },
+  "A-6.2": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "S-006",
+   "req": "[req]"
+  },
+  "A-6.3": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "S-007",
+   "req": "[req]"
+  },
+  "A-6.4": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "S-008",
+   "req": "[req]"
+  },
+  "A-6.5": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "PROT-003",
+   "req": "[req]"
+  },
+  "A-6.6": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "ASSURE-019",
+   "req": "[req]"
+  },
+  "A-6.7": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "ASSURE-020",
+   "req": "[req]"
+  },
+  "A-6.8": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Partiel",
+   "actions": "",
+   "docs": "",
+   "comment": "[comment]",
+   "obj": "PERMET-002",
+   "req": "[req]"
+  },
+  "A-7.1": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "EMP-001",
+   "req": "[req]"
+  },
+  "A-7.2": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "ASSURE-021",
+   "req": "[req]"
+  },
+  "A-7.3": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "EMP-002",
+   "req": "[req]"
+  },
+  "A-7.4": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "D-001",
+   "req": "[req]"
+  },
+  "A-7.5": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "PR-001",
+   "req": "[req]"
+  },
+  "A-7.6": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "PROT-004",
+   "req": "[req]"
+  },
+  "A-7.7": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "R-003",
+   "req": "[req]"
+  },
+  "A-7.8": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "R-004",
+   "req": "[req]"
+  },
+  "A-7.9": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "EMP-003",
+   "req": "[req]"
+  },
+  "A-7.10": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Partiel",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "ASSURE-022",
+   "req": "[req]"
+  },
+  "A-7.11": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "obj": "EMP-004",
+   "req": "[req]"
+  },
+  "A-7.12": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "obj": "EMP-005",
+   "req": "[req]"
+  },
+  "A-7.13": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "obj": "EMP-006",
+   "req": "[req]"
+  },
+  "A-7.14": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "OBJ-002",
+   "req": "[req]"
+  },
+  "A-8.1": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "PROT-005",
+   "req": "[req]"
+  },
+  "A-8.2": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "S-009",
+   "req": "[req]"
+  },
+  "A-8.3": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "ASSURE-023",
+   "req": "[req]"
+  },
+  "A-8.4": {
+   "app": "non",
+   "just": "[just]",
+   "risk": "",
+   "level": "",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "obj": "EMP-007",
+   "req": "[req]"
+  },
+  "A-8.5": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Partiel",
+   "actions": "[actions]",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "S-010",
+   "req": "[req]"
+  },
+  "A-8.6": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Partiel",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "obj": "ASSURE-024",
+   "req": "[req]"
+  },
+  "A-8.7": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "S-011",
+   "req": "[req]"
+  },
+  "A-8.8": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Partiel",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "EMP-008",
+   "req": "[req]"
+  },
+  "A-8.9": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "S-012",
+   "req": "[req]"
+  },
+  "A-8.10": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "EMP-009",
+   "req": "[req]"
+  },
+  "A-8.11": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Partiel",
+   "actions": "[actions]",
+   "docs": "[docs]",
+   "comment": "[comment]",
+   "obj": "LIMITE-001",
+   "req": "[req]"
+  },
+  "A-8.12": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Partiel",
+   "actions": "[actions]",
+   "docs": "[docs]",
+   "comment": "[comment]",
+   "obj": "D-002",
+   "req": "[req]"
+  },
+  "A-8.13": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "PERMET-003",
+   "req": "[req]"
+  },
+  "A-8.14": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "obj": "S-013",
+   "req": "[req]"
+  },
+  "A-8.15": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Partiel",
+   "actions": "[actions]",
+   "docs": "",
+   "comment": "[comment]",
+   "obj": "ENREGI-001",
+   "req": "[req]"
+  },
+  "A-8.16": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "D-003",
+   "req": "[req]"
+  },
+  "A-8.17": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "obj": "PERMET-004",
+   "req": "[req]"
+  },
+  "A-8.18": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "S-014",
+   "req": "[req]"
+  },
+  "A-8.19": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "ASSURE-025",
+   "req": "[req]"
+  },
+  "A-8.20": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "obj": "PROT-006",
+   "req": "[req]"
+  },
+  "A-8.21": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "obj": "ASSURE-026",
+   "req": "[req]"
+  },
+  "A-8.22": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "obj": "DIVISE-001",
+   "req": "[req]"
+  },
+  "A-8.23": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "obj": "PROT-007",
+   "req": "[req]"
+  },
+  "A-8.24": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "ASSURE-027",
+   "req": "[req]"
+  },
+  "A-8.25": {
+   "app": "non",
+   "just": "[just]",
+   "risk": "",
+   "level": "",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "obj": "S-015",
+   "req": "[req]"
+  },
+  "A-8.26": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "obj": "S-016",
+   "req": "[req]"
+  },
+  "A-8.27": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Partiel",
+   "actions": "[actions]",
+   "docs": "[docs]",
+   "comment": "[comment]",
+   "obj": "S-017",
+   "req": "[req]"
+  },
+  "A-8.28": {
+   "app": "non",
+   "just": "[just]",
+   "risk": "",
+   "level": "",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "obj": "S-018",
+   "req": "[req]"
+  },
+  "A-8.29": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "VALIDE-001",
+   "req": "[req]"
+  },
+  "A-8.30": {
+   "app": "non",
+   "just": "[just]",
+   "risk": "",
+   "level": "",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "obj": "S-019",
+   "req": "[req]"
+  },
+  "A-8.31": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "PROT-008",
+   "req": "[req]"
+  },
+  "A-8.32": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "PR-002",
+   "req": "[req]"
+  },
+  "A-8.33": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "ASSURE-028",
+   "req": "[req]"
+  },
+  "A-8.34": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "[risk]",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "obj": "MINIMI-001",
+   "req": "[req]"
+  },
+  "HDS-01": {
+   "app": "oui",
+   "just": "",
+   "risk": "",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "req": "[req]"
+  },
+  "HDS-02": {
+   "app": "oui",
+   "just": "",
+   "risk": "",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "req": "[req]"
+  },
+  "HDS-03": {
+   "app": "oui",
+   "just": "",
+   "risk": "",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "req": "[req]"
+  },
+  "HDS-04": {
+   "app": "oui",
+   "just": "",
+   "risk": "",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "req": "[req]"
+  },
+  "HDS-05": {
+   "app": "oui",
+   "just": "",
+   "risk": "",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "req": "[req]"
+  },
+  "HDS-06": {
+   "app": "oui",
+   "just": "",
+   "risk": "",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "req": "[req]"
+  },
+  "HDS-07": {
+   "app": "oui",
+   "just": "",
+   "risk": "",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "req": "[req]"
+  },
+  "HDS-08": {
+   "app": "oui",
+   "just": "",
+   "risk": "",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "req": "[req]"
+  },
+  "HDS-09": {
+   "app": "oui",
+   "just": "",
+   "risk": "",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "req": "[req]"
+  },
+  "HDS-10": {
+   "app": "oui",
+   "just": "",
+   "risk": "",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "req": "[req]"
+  },
+  "HDS-11": {
+   "app": "oui",
+   "just": "",
+   "risk": "",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "req": "[req]"
+  },
+  "HDS-12": {
+   "app": "oui",
+   "just": "",
+   "risk": "",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "req": "[req]"
+  },
+  "HDS-13": {
+   "app": "oui",
+   "just": "",
+   "risk": "",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "req": "[req]"
+  },
+  "HDS-14": {
+   "app": "oui",
+   "just": "",
+   "risk": "",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "req": "[req]"
+  },
+  "HDS-15": {
+   "app": "oui",
+   "just": "",
+   "risk": "",
+   "level": "Partiel",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "req": "[req]"
+  },
+  "HDS-16": {
+   "app": "oui",
+   "just": "",
+   "risk": "",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "req": "[req]"
+  },
+  "HDS-17": {
+   "app": "oui",
+   "just": "",
+   "risk": "",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "req": "[req]"
+  },
+  "HDS-18": {
+   "app": "oui",
+   "just": "",
+   "risk": "",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "req": "[req]"
+  },
+  "HDS-19": {
+   "app": "oui",
+   "just": "",
+   "risk": "",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "req": "[req]"
+  },
+  "HDS-20": {
+   "app": "oui",
+   "just": "",
+   "risk": "",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "req": "[req]"
+  },
+  "HDS-21": {
+   "app": "oui",
+   "just": "",
+   "risk": "",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "req": "[req]"
+  },
+  "HDS-22": {
+   "app": "oui",
+   "just": "",
+   "risk": "",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "req": "[req]"
+  },
+  "HDS-23": {
+   "app": "oui",
+   "just": "",
+   "risk": "",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "req": "[req]"
+  },
+  "HDS-24": {
+   "app": "oui",
+   "just": "",
+   "risk": "",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "req": "[req]"
+  },
+  "HDS-25": {
+   "app": "oui",
+   "just": "",
+   "risk": "",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "req": "[req]"
+  },
+  "HDS-26": {
+   "app": "oui",
+   "just": "",
+   "risk": "",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "req": "[req]"
+  },
+  "HDS-27": {
+   "app": "oui",
+   "just": "",
+   "risk": "",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "req": "[req]"
+  },
+  "HDS-28": {
+   "app": "oui",
+   "just": "",
+   "risk": "",
+   "level": "Total",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "req": "[req]"
+  },
+  "HDS-29": {
+   "app": "non",
+   "just": "",
+   "risk": "",
+   "level": "",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "req": "[req]"
+  },
+  "HDS-30": {
+   "app": "non",
+   "just": "",
+   "risk": "",
+   "level": "",
+   "actions": "",
+   "docs": "",
+   "comment": "",
+   "req": "[req]"
+  },
+  "HDS-31": {
+   "app": "oui",
+   "just": "[just]",
+   "risk": "",
+   "level": "Total",
+   "actions": "",
+   "docs": "[docs]",
+   "comment": "",
+   "req": "[req]"
+  },
+  "ISO-4.1": {
+   "level": "Total"
+  },
+  "ISO-4.2": {
+   "level": "Total"
+  },
+  "ISO-4.3": {
+   "level": "Total"
+  },
+  "ISO-4.4": {
+   "level": "Total"
+  },
+  "ISO-5.1": {
+   "level": "Total"
+  },
+  "ISO-5.2": {
+   "level": "Total"
+  },
+  "ISO-5.3": {
+   "level": "Total"
+  },
+  "ISO-6.1": {
+   "level": "Total"
+  },
+  "ISO-6.1.2": {
+   "level": "Total"
+  },
+  "ISO-6.1.3": {
+   "level": "Total"
+  },
+  "ISO-6.2": {
+   "level": "Total"
+  },
+  "ISO-6.3": {
+   "level": "Total"
+  },
+  "ISO-7.1": {
+   "level": "Total"
+  },
+  "ISO-7.2": {
+   "level": "Total"
+  },
+  "ISO-7.3": {
+   "level": "Total"
+  },
+  "ISO-7.4": {
+   "level": "Total"
+  },
+  "ISO-7.5": {
+   "level": "Partiel"
+  },
+  "ISO-7.5.1": {
+   "level": "Total"
+  },
+  "ISO-7.5.2": {
+   "level": "Total"
+  },
+  "ISO-7.5.3": {
+   "level": "Total"
+  },
+  "ISO-8.1": {
+   "level": "Total"
+  },
+  "ISO-8.2": {
+   "level": "Total"
+  },
+  "ISO-8.3": {
+   "level": "Total"
+  },
+  "ISO-9.1": {
+   "level": "Partiel"
+  },
+  "ISO-9.2": {
+   "level": "Total"
+  },
+  "ISO-9.2.1": {
+   "level": "Total"
+  },
+  "ISO-9.2.2": {
+   "level": "Total"
+  },
+  "ISO-9.3": {
+   "level": "Total"
+  },
+  "ISO-9.3.1": {
+   "level": "Total"
+  },
+  "ISO-9.3.2": {
+   "level": "Total"
+  },
+  "ISO-9.3.3": {
+   "level": "Total"
+  },
+  "ISO-10.1": {
+   "level": "Total"
+  },
+  "ISO-10.2": {
+   "level": "Total"
+  }
+ },
+ "processes": [
+  {
+   "id": "PRR-001",
+   "name": "[name]",
+   "owner": "",
+   "indicators": [],
+   "family": "Réalisation"
+  },
+  {
+   "id": "PRS-001",
+   "name": "[name]",
+   "owner": "",
+   "indicators": [],
+   "family": "Support"
+  },
+  {
+   "id": "PRS-002",
+   "name": "[name]",
+   "owner": "",
+   "family": "Support",
+   "parent": "[parent]"
+  }
+ ],
+ "objectives": [
+  {
+   "id": "OBJ-003",
+   "name": "[name]",
+   "due": "2027-04-01",
+   "owner": "[owner]",
+   "processes": [
+    "[processes]"
+   ],
+   "enjeux": [
+    "[enjeux]",
+    "[enjeux]",
+    "[enjeux]"
+   ]
+  },
+  {
+   "id": "OBJ-004",
+   "name": "[name]",
+   "due": "2027-04-01",
+   "owner": "[owner]",
+   "processes": [
+    "[processes]",
+    "[processes]"
+   ],
+   "enjeux": [
+    "[enjeux]",
+    "[enjeux]",
+    "[enjeux]"
+   ]
+  }
+ ],
+ "indicators": [
+  {
+   "id": "INDOBJ-001",
+   "name": "[name]",
+   "obj": "OBJ-005",
+   "target": 0.9,
+   "action": "[action]",
+   "lastReview": "",
+   "due": "",
+   "owner": "",
+   "values": [
+    {
+     "date": "2026-04-10",
+     "v": 0.3077,
+     "note": "[note]",
+     "hist": "[hist]"
+    }
+   ],
+   "dir": "[dir]",
+   "freq": "",
+   "calc": "[calc]",
+   "auto": true,
+   "actionOwner": "[actionOwner]",
+   "actionDue": "2026-05-29"
+  },
+  {
+   "id": "INDOBJ-002",
+   "name": "[name]",
+   "obj": "OBJ-005",
+   "target": 0.9,
+   "action": "[action]",
+   "lastReview": "",
+   "due": "",
+   "owner": "",
+   "values": [
+    {
+     "date": "2026-04-10",
+     "v": 0.8462,
+     "note": "[note]",
+     "hist": "[hist]"
+    }
+   ],
+   "dir": "[dir]",
+   "freq": "",
+   "calc": "[calc]",
+   "auto": true,
+   "actionOwner": "[actionOwner]"
+  }
+ ],
+ "suppliers": [
+  {
+   "id": "SUP-001",
+   "name": "[name]",
+   "rattachement": "[rattachement]",
+   "saas": true,
+   "sso": "Oui",
+   "MFA-001": "Oui",
+   "critical": "",
+   "hds": "",
+   "contact": "",
+   "lastReview": "",
+   "notes": "",
+   "controls": [
+    {
+     "id": "ACC-001",
+     "t": "[t]",
+     "ref": "[ref]",
+     "freq": 12,
+     "last": "2026-03-01",
+     "result": "",
+     "comment": "[comment]"
+    },
+    {
+     "id": "MFA-001",
+     "t": "[t]",
+     "ref": "A.8.5 ; INDOBJ3.2 ; ReCyF 8.3",
+     "freq": 12,
+     "last": "2026-04-10",
+     "result": "",
+     "comment": "[comment]"
+    }
+   ],
+   "certs": []
+  },
+  {
+   "id": "SUP-002",
+   "name": "[name]",
+   "rattachement": "[rattachement]",
+   "saas": true,
+   "sso": "Oui",
+   "MFA-001": "Non",
+   "critical": "",
+   "hds": "",
+   "contact": "",
+   "lastReview": "",
+   "notes": "",
+   "controls": [
+    {
+     "id": "ACC-001",
+     "t": "[t]",
+     "ref": "[ref]",
+     "freq": 12,
+     "last": "2026-03-01",
+     "result": "",
+     "comment": "[comment]"
+    },
+    {
+     "id": "MFA-001",
+     "t": "[t]",
+     "ref": "A.8.5 ; INDOBJ3.2 ; ReCyF 8.3",
+     "freq": 12,
+     "last": "2026-04-10",
+     "result": "",
+     "comment": "[comment]"
+    }
+   ],
+   "certs": []
+  },
+  {
+   "id": "SUP-003",
+   "createdAt": "2026-10-05T20:43:34.905Z",
+   "name": "[name]",
+   "rattachement": "",
+   "saas": false,
+   "sso": "",
+   "MFA-001": "",
+   "critical": "",
+   "hds": "",
+   "contact": "",
+   "lastReview": "",
+   "notes": "",
+   "controls": [
+    {
+     "id": "ACC-001",
+     "createdAt": "2026-10-05T20:43:34.905Z",
+     "t": "[t]",
+     "ref": "[ref]",
+     "freq": 12,
+     "last": "",
+     "result": "",
+     "comment": ""
+    },
+    {
+     "id": "MFA-001",
+     "createdAt": "2026-10-05T20:43:34.905Z",
+     "t": "[t]",
+     "ref": "A.8.5 ; INDOBJ3.2 ; ReCyF 8.3",
+     "freq": 12,
+     "last": "",
+     "result": "",
+     "comment": ""
+    }
+   ]
+  }
+ ],
+ "frameworks": [
+  {
+   "id": "recyf-2.5",
+   "name": "ReCyF",
+   "version": "v2.5 du 17/03/2026 (version de travail)",
+   "source": "ANSSI — Référentiel Cyber France (ReCyF), NIS 2 transposition nationale, version de travail 2.5 du 17/03/2026 : texte intégral des moyens acceptables de conformité",
+   "scopeMode": "EI/EE",
+   "requirements": [
+    {
+     "id": "1.1-EI/EE",
+     "os": 1,
+     "objective": "OS 1 : Recensement des systèmes d'information",
+     "theme": "Recensement des SI",
+     "scope": "EI/EE",
+     "text": "L’entité liste l’ensemble de ses activités et services, y compris les activités et services qui ne correspondent pas aux critères pour lesquels l’entité constitue une entité importante ou essentielle (par exemple : une entité essentielle au titre d’une activité exploitation d’un oléoduc doit lister, en plus des activités et services participant à l’exploitation de l’oléoduc, tous les services et les autres activités qu’elle fournit).\nPour chaque entrée de cette liste, l’entité :\no identifie un responsable de l’activité ou du service (par exemple le chef de service auquel est rattachée l'activité ou le service, un directeur métier, la direction générale) ;\no liste les systèmes d’information les supportant.",
+     "maps": [],
+     "self": "",
+     "comment": ""
+    },
+    {
+     "id": "1.2-EI/EE",
+     "os": 1,
+     "objective": "OS 1 : Recensement des systèmes d'information",
+     "theme": "Recensement des SI",
+     "scope": "EI/EE",
+     "text": "L’entité précise dans la liste prévue au 1.1-EI/EE les systèmes d’information qui ne sont exposés à aucun des risques mentionnés à l’alinéa 2 de l’objectif de sécurité.\nL’entité renseigne les justifications de ces choix.",
+     "maps": [],
+     "self": "",
+     "comment": ""
+    },
+    {
+     "id": "1.3-EI/EE",
+     "os": 1,
+     "objective": "OS 1 : Recensement des systèmes d'information",
+     "theme": "Recensement des SI",
+     "scope": "EI/EE",
+     "text": "L’entité valide et réexamine annuellement la liste prévue au 1.1-EI/EE, et en tant que de besoin, notamment en cas d’évolution des activités et services de l’entité ou en cas de mise en service d’un nouveau système d’information.",
+     "maps": [],
+     "self": "",
+     "comment": ""
+    },
+    {
+     "id": "2.A.1-EI/EE",
+     "os": 2,
+     "objective": "OS 2 : Mise en œuvre d'un cadre de gouvernance de la sécurité numérique",
+     "theme": "Rôles et responsabilités",
+     "scope": "EI/EE",
+     "text": "Le dirigeant exécutif de l’entité est responsable de la sécurité numérique au sein de son entité et en particulier du suivi de la conformité des systèmes d’information aux présentes mesures.",
+     "maps": [],
+     "self": "",
+     "comment": ""
+    }
+   ],
+   "objectives": {
+    "1": {
+     "title": "OS 1 : Recensement des systèmes d'information",
+     "statement": "Les entités [importantes ou essentielles] réalisent et maintiennent à jour une liste de l’ensemble de leurs activités et services ainsi que des systèmes d’information y contribuant.\nCes entités sont tenues d’appliquer les [objectifs de sécurité] sur l’ensemble de leurs systèmes d’information, à l’exception de ceux pour lesquels elles justifient, sur la base d’une analyse de risques, qu’ils ne sont pas exposés à l’un des risques suivants :\n1. La dégradation ou l'interruption, directe ou indirecte, des activités ou services de l'entité ;\n2. La divulgation à des personnes non autorisées d'informations sensibles traitées par les activités ou services de l'entité ;\n3. L'altération des informations nécessaires aux activités ou services de l'entité.\nLa mise en œuvre de mesures de sécurité sur ces systèmes d’information ne permet pas de justifier qu’ils ne sont exposés à aucun des risques précités.\nPour ces systèmes d’information, le choix de ne pas appliquer les objectifs de sécurité ainsi que sa justification au regard des critères précédents doivent apparaître explicitement dans la liste mentionnée au premier alinéa.",
+     "prevaloir": [],
+     "iso": false,
+     "qualified": [],
+     "nis2": [
+      "Art. 21.2.i"
+     ],
+     "pillar": "Gouvernance"
+    },
+    "2": {
+     "title": "OS 2 : Mise en œuvre d'un cadre de gouvernance de la sécurité numérique",
+     "statement": "Les entités [importantes et essentielles] définissent un cadre de gouvernance de la sécurité numérique placé sous la responsabilité du dirigeant exécutif.\nLe cadre de gouvernance de la sécurité numérique consiste en la mise en place, au sein des entités [importantes et essentielles] :\n1. D’une organisation ;\n2. De rôles et responsabilités en matière de sécurité numérique ;\n3. De processus de gestion de la conformité ;\n4. D’une politique de sécurité des systèmes d’information et des politiques comprenant au minimum des dispositions en matière d’usage du chiffrement, de contrôle d’accès physique et logique et de revue de l’application des mesures de sécurité mises en\nœuvre.\nLes entités [importantes et essentielles] :\n• réalisent une analyse de leur conformité vis-à-vis des dispositions [pointer vers les dispositions du décret correspondant aux objectifs de sécurité],\n• identifient les éventuels écarts existants par rapport aux objectifs de sécurité et,\n• établissent et suivent dans la durée un plan d’action pour corriger chacun de ces écarts dans les meilleurs délais. Ce plan d’action est adapté à la structure de l’entité et à son environnement.\nLa responsabilité de ce plan d’action est déterminée au regard du cadre de gouvernance de la sécurité numérique mis en place.\nLes entités essentielles établissent ce plan d’action en tenant compte de l’analyse de risques qu’elles sont tenues de réaliser en application de [l’objectif 16].\nCe plan d’action ne préjuge pas de l’appréciation du respect de ses obligations légales et règlementaires lors d’un contrôle par l’ANSSI.",
+     "prevaloir": [
+      "Les entités importantes et essentielles peuvent se prévaloir lors d’un contrôle de la mise en place d’un système de management de la sécurité de l’information (SMSI) certifié conforme aux exigences prévues dans la norme ISO/CEI 27001:2022 pour démontrer le respect de cet objectif sur les systèmes d’information couverts par la certification."
+     ],
+     "iso": true,
+     "qualified": [],
+     "nis2": [
+      "Art. 20",
+      "Art. 21.2.a",
+      "Art. 21.2.f",
+      "Art. 21.2.h",
+      "Art. 21.2.i"
+     ],
+     "pillar": "Gouvernance"
+    },
+    "3": {
+     "title": "OS 3 : Maîtrise de l'écosystème",
+     "statement": "Les entités [importantes ou essentielles] réalisent et maintiennent à jour une liste des prestataires et fournisseurs informatiques intervenant dans la réalisation de leurs activités ou dans la fourniture de leurs services et avec lesquels il existe une relation de droit ou de fait ainsi que le périmètre et la nature de la prestation ou du service fourni.\nLes entités [importantes ou essentielles] mettent en place des processus visant à s’assurer, notamment par la voie contractuelle de la conformité des prestations informatiques dont elles bénéficient aux obligations auxquelles l’entité est assujettie notamment en matière de gestion des risques qui menacent la sécurité de leurs réseaux et systèmes d’information et de notification des incidents importants.",
+     "prevaloir": [],
+     "iso": false,
+     "qualified": [],
+     "nis2": [
+      "Art. 21.2.d",
+      "Art. 21.2.i"
+     ],
+     "pillar": "Gouvernance"
+    },
+    "4": {
+     "title": "OS 4 : Prise en compte de la sécurité numérique dans la gestion des ressources humaines",
+     "statement": "Les entités [importantes ou essentielles] définissent les procédures visant à sensibiliser leurs utilisateurs, en particulier les dirigeants de l’entité, à la sécurité numérique ainsi qu’à former les personnes occupant des fonctions à responsabilités dans le domaine du numérique.\nCes entités intègrent la sécurité numérique dans la gestion de leurs ressources humaines dès l’arrivée d’un nouveau personnel jusqu’à son départ de l’entité.",
+     "prevaloir": [],
+     "iso": false,
+     "qualified": [],
+     "nis2": [
+      "Art. 21.2.g"
+     ],
+     "pillar": "Gouvernance"
+    },
+    "5": {
+     "title": "OS 5 : Maîtrise des systèmes d'information",
+     "statement": "Les entités [importantes ou essentielles] disposent d’au moins une cartographie de leurs systèmes d’information suffisamment détaillée pour faciliter :\n1° Le maintien en condition opérationnelle et de sécurité de leurs systèmes d’information ; et\n2° L’amélioration de la réactivité de ces entités en cas d’incident de sécurité affectant leurs systèmes d’information.\nCes entités définissent et mettent en œuvre un processus de maintien en condition opérationnelle et de sécurité de leurs systèmes d’information visant à appliquer les correctifs de sécurité liés à des vulnérabilités affectant ces systèmes et ainsi à limiter l’exposition des entités aux risques numériques résultant de ces vulnérabilités.",
+     "prevaloir": [],
+     "iso": false,
+     "qualified": [],
+     "nis2": [
+      "Art. 21.2.e",
+      "Art. 21.2.i"
+     ],
+     "pillar": "Protection"
+    },
+    "6": {
+     "title": "OS 6 : Maîtrise des accès physiques aux locaux",
+     "statement": "Les entités [importantes ou essentielles] mettent en place des mécanismes de contrôle d’accès et de gestion des droits d’accès ainsi que des processus de gestion des visiteurs afin de s’assurer que seules les personnes autorisées ont accès à leurs locaux et en particulier aux locaux techniques ou contenant des serveurs de données.",
+     "prevaloir": [],
+     "iso": false,
+     "qualified": [],
+     "nis2": [
+      "Art. 21.2"
+     ],
+     "pillar": "Protection"
+    },
+    "7": {
+     "title": "OS 7 : Sécurisation de l'architecture des systèmes d'information",
+     "statement": "Les entités [importantes ou essentielles] identifient les besoins d’exposition des services et interfaces de leurs systèmes d’information ainsi que les besoins d’interconnexion de leurs activités et services à des systèmes d’information tiers.\nCes entités filtrent les communications entrantes et sortantes de leurs systèmes d’information, en particulier les flux dont l’origine, le transit ou la destination est un système d’information tiers.\nLes entités [essentielles] cloisonnent leurs systèmes d’information en zones de sécurité cohérentes et contrôlent les communications entre ces zones de sécurité pour les utilisateurs, les prestataires et les fournisseurs.",
+     "prevaloir": [],
+     "iso": false,
+     "qualified": [],
+     "nis2": [
+      "Art. 21.2.e",
+      "Art. 21.2.h"
+     ],
+     "pillar": "Protection"
+    },
+    "8": {
+     "title": "OS 8 : Sécurisation des accès distants aux systèmes d'information",
+     "statement": "Les entités [importantes ou essentielles] mettent en place :\n1. Des mécanismes d’identification et d’authentification des personnes et processus automatiques accédant à leurs systèmes d’information depuis des systèmes d’information tiers. Ces mécanismes sont conformes [à l’Objectif de sécurité 10]\n2. Des mécanismes de sécurisation du canal de communication, des points d’entrée et de sortie et des accès à leurs systèmes d’information depuis des systèmes d’information tiers.",
+     "prevaloir": [],
+     "iso": false,
+     "qualified": [],
+     "nis2": [
+      "Art. 21.2.e",
+      "Art. 21.2.h",
+      "Art. 21.2.j"
+     ],
+     "pillar": "Protection"
+    },
+    "9": {
+     "title": "OS 9 : Protection des systèmes d'information contre les codes malveillants",
+     "statement": "Les entités [importantes ou essentielles] mettent en œuvre des mécanismes de protection contre les codes malveillants sur les ressources de leurs systèmes d’information.\nLes entités [essentielles] s’assurent que seules les ressources matérielles qu’elles gèrent ou dont elles ont confié la gestion et qui participent à la réalisation des activités et services de l’entité ou au maintien en condition opérationnelle et de sécurité se connectent aux systèmes d’information.",
+     "prevaloir": [],
+     "iso": false,
+     "qualified": [],
+     "nis2": [
+      "Art. 21.2.e"
+     ],
+     "pillar": "Protection"
+    },
+    "10": {
+     "title": "OS 10 : Gestion des identités et des accès des utilisateurs aux systèmes d'information",
+     "statement": "Les entités [importantes ou essentielles] mettent en œuvre :\n1. Des mécanismes d’identification et d’authentification des utilisateurs et des processus automatiques de leurs systèmes d’information ;\n2. Des processus de gestion des droits permettant notamment l’attribution des droits d’accès aux ressources en fonction du besoin opérationnel des utilisateurs et des processus automatiques, la révocation des droits en cas de changement d’affectation des utilisateurs et la désactivation du compte utilisateur en cas de départ de l’entité.",
+     "prevaloir": [],
+     "iso": false,
+     "qualified": [],
+     "nis2": [
+      "Art. 21.2.e",
+      "Art. 21.2.i",
+      "Art. 21.2.j"
+     ],
+     "pillar": "Protection"
+    },
+    "11": {
+     "title": "OS 11 : Maîtrise de l'administration des systèmes d'information",
+     "statement": "Les entités [importantes ou essentielles], ou toute personne qu’elles ont mandatée pour réaliser les activités d’administration, disposent de comptes d’administration exclusivement dédiés à cet usage et utilisés par les seules personnes autorisées.\nLes entités [essentielles] s’assurent de la sécurisation de l’administration de leurs annuaires en s’appuyant sur les recommandations de l’autorité nationale de sécurité des systèmes d’information.",
+     "prevaloir": [],
+     "iso": false,
+     "qualified": [],
+     "nis2": [
+      "Art. 21.2.e",
+      "Art. 21.2.i"
+     ],
+     "pillar": "Protection"
+    },
+    "12": {
+     "title": "OS 12 : Identification et réaction aux incidents de sécurité",
+     "statement": "Les entités [importantes ou essentielles] mettent en œuvre une organisation, des processus et des outils adaptés pour se préparer et réagir à des événements de sécurité susceptibles d’affecter la réalisation de leurs activités ou la fourniture de leurs services.",
+     "prevaloir": [
+      "Les entités importantes et essentielles peuvent se prévaloir lors d’un contrôle du recours à une prestation d’accompagnement et de conseil en sécurité (PACS), qualifiée par l’Agence nationale de la sécurité des systèmes d’information en application de l'article 10 du décret n° 2015-350 du 27 mars 2015 modifié pour la préparation du dispositif de gestion des incidents et le suivi par l’entité du plan d’action issu de la prestation afin de démontrer leur respect de cet objectif."
+     ],
+     "iso": false,
+     "qualified": [
+      "PACS"
+     ],
+     "nis2": [
+      "Art. 21.2.b"
+     ],
+     "pillar": "Défense"
+    },
+    "13": {
+     "title": "OS 13 : Continuité et reprise d'activité",
+     "statement": "Les entités [importantes ou essentielles] mettent en œuvre des mécanismes de sauvegarde et de restauration opérationnels et les testent au minimum une fois par an.\nLes entités [essentielles] définissent et maintiennent à jour des plans de continuité et de reprise d’activité adaptés aux besoins de leurs activités et services.",
+     "prevaloir": [],
+     "iso": false,
+     "qualified": [],
+     "nis2": [
+      "Art. 21.2.c"
+     ],
+     "pillar": "Résilience"
+    },
+    "14": {
+     "title": "OS 14 : Réaction aux crises d'origine cyber",
+     "statement": "Les entités [importantes ou essentielles] mettent en œuvre une organisation, des processus et des outils adaptés pour se préparer et réagir à des crises d’origine cyber et tiennent à la disposition des autorités nationales compétentes et en particulier de l’autorité nationale de sécurité des systèmes d’information les informations relatives aux parties prenantes externes à l’entité pertinente dans la gestion de la crise.\nLes [entités essentielles] mettent en œuvre des retours d’expérience permettant d’identifier les axes d’amélioration et les mesures associées à mettre en œuvre suite à un entraînement, un exercice ou une crise réelle.",
+     "prevaloir": [
+      "Les entités importantes et essentielles peuvent se prévaloir lors d’un contrôle du recours à une prestation d’accompagnement et de conseil en sécurité (PACS), qualifiée par l’Agence nationale de la sécurité des systèmes d’information en application de l'article 10 du décret n° 2015-350 du 27 mars 2015 modifié, pour la préparation du dispositif de gestion des crises d’origine cyber et le suivi par l’entité du plan d’action issu de la prestation pour démontrer leur respect de cet objectif."
+     ],
+     "iso": false,
+     "qualified": [
+      "PACS"
+     ],
+     "nis2": [
+      "Art. 21.2.c",
+      "Art. 21.2.j"
+     ],
+     "pillar": "Résilience"
+    },
+    "15": {
+     "title": "OS 15 : Exercices, tests et entraînements",
+     "statement": "Les entités [importantes ou essentielles] réalisent des exercices, tests et entraînements à intervalles réguliers pour vérifier la capacité de leur organisation, de leurs processus, de leurs outils et de leur préparation à faire face aux incidents de sécurité et aux crises d’origine cyber.",
+     "prevaloir": [
+      "Les entités importantes et essentielles peuvent se prévaloir lors d’un contrôle du recours à une prestation d’accompagnement et de conseil en sécurité (PACS), qualifiée par l’Agence nationale de la sécurité des systèmes d’information en application de l'article 10 du décret n° 2015-350 du 27 mars 2015 modifié, pour la réalisation d’exercices de crise d’origine cyber et le suivi par l’entité du plan d’action issu de la prestation pour démontrer leur respect de cet objectif."
+     ],
+     "iso": false,
+     "qualified": [
+      "PACS"
+     ],
+     "nis2": [
+      "Art. 21.2.b",
+      "Art. 21.2.c",
+      "Art. 21.2.g"
+     ],
+     "pillar": "Résilience"
+    },
+    "16": {
+     "title": "OS 16 : Mise en œuvre d'une approche par les risques",
+     "statement": "Les entités [essentielles] mettent en œuvre une approche par les risques placée sous la responsabilité du dirigeant exécutif et leur permettant :\n1. de prendre connaissance et de suivre l’évolution des risques pesant sur leurs systèmes d’information ;\n2. de définir et suivre la mise en œuvre des mesures de sécurité pour maîtriser ces risques ;\n3. d’accepter les risques résiduels.",
+     "prevaloir": [
+      "Les entités essentielles peuvent se prévaloir lors d’un contrôle de la mise en place d’un système de management de la sécurité des systèmes d’information (SMSI) certifié conforme aux exigences prévues dans la norme ISO/CEI 27001:2022 pour démontrer le respect de cet objectif par les systèmes d’information couverts par la certification. Les entités essentielles peuvent se prévaloir lors d’un contrôle du recours à une prestation d’accompagnement et de conseil en sécurité (PACS), qualifiée par l’Agence nationale de sécurité des systèmes d’information en application de l'article 10 du décret n° 2015-350 du 27 mars 2015 modifié, pour la réalisation de l’analyse de risques et le suivi par l’entité du plan de traitement issu de la prestation pour démontrer leur respect de cet objectif."
+     ],
+     "iso": true,
+     "qualified": [
+      "PACS"
+     ],
+     "nis2": [
+      "Art. 21.2.a"
+     ],
+     "pillar": "Gouvernance"
+    },
+    "17": {
+     "title": "OS 17 : Audit de la sécurité des systèmes d'information",
+     "statement": "Les entités [essentielles] réalisent ou font réaliser à intervalles réguliers et planifiés des audits de sécurité de leurs systèmes d’information.\nCes audits doivent permettre de vérifier l’atteinte des objectifs [de sécurité] et d’évaluer le niveau de sécurité de leurs systèmes d’information.",
+     "prevaloir": [
+      "Les entités essentielles peuvent se prévaloir lors d’un contrôle du recours à une prestation d’audit en sécurité des systèmes d’information (PASSI), qualifiée par l’Agence nationale de la sécurité des systèmes d’information en application de l'article 10 du décret n° 2015-350 du 27 mars 2015 modifié, dont le périmètre de la prestation couvre l’application des mesures correctives issues de la prestation pour démontrer leur respect de cet objectif."
+     ],
+     "iso": false,
+     "qualified": [
+      "PASSI"
+     ],
+     "nis2": [
+      "Art. 21.2.e",
+      "Art. 21.2.f"
+     ],
+     "pillar": "Gouvernance"
+    },
+    "18": {
+     "title": "OS 18 : Sécurisation de la configuration des ressources des systèmes d'information",
+     "statement": "Les entités [essentielles] limitent la surface d'attaque des composants de leurs systèmes d’information. Pour ce faire, elles s’assurent que seules les ressources logicielles nécessaires à la réalisation de leurs activités et services ou au maintien en condition opérationnelle ou de sécurité sont installées ou conservées sur leurs systèmes d’information, et elles configurent les ressources de leurs systèmes d’information de manière sécurisée en s’appuyant sur les recommandations de l’autorité nationale de sécurité des systèmes d’information, de l’éditeur de la fonctionnalité ou du fabricant de la ressource..",
+     "prevaloir": [],
+     "iso": false,
+     "qualified": [],
+     "nis2": [
+      "Art. 21.2.e"
+     ],
+     "pillar": "Protection"
+    },
+    "19": {
+     "title": "OS 19 : Administration des systèmes d'information depuis des ressources dédiées",
+     "statement": "Les entités [essentielles] mettent en place pour l’administration de leurs systèmes d’information :\n1° des postes d'administrations maîtrisés par l’entité ou toute personne qu’elle a mandatée pour réaliser cette activité et qui sont conformes aux recommandations de l’autorité nationale de sécurité des systèmes d’information ;\n2° une sécurisation et un cloisonnement des flux dédiés à cette activité, qui s'appuient sur les recommandations de l’autorité nationale de sécurité des systèmes d’information.",
+     "prevaloir": [
+      "Les entités essentielles peuvent se prévaloir lors d’un contrôle du recours à une prestation d’administration et de maintenance sécurisée (PAMS), qualifiée par l’Agence nationale de sécurité des systèmes d’information en application de l'article 10 du décret n° 2015-350 du 27 mars 2015 modifié, pour démontrer leur respect des mesures 19.2-EE, 19.3-EE, 19.4-EE, 19.5-EE, …"
+     ],
+     "iso": false,
+     "qualified": [
+      "PAMS"
+     ],
+     "nis2": [
+      "Art. 21.2.e"
+     ],
+     "pillar": "Protection"
+    },
+    "20": {
+     "title": "OS 20 : Supervision de la sécurité des systèmes d'information",
+     "statement": "Les entités [essentielles] :\n1° s’assurent que les équipes en charge de l’activité de supervision de sécurité dimensionnent et opèrent le système d’information supportant l’activité de supervision de sécurité en adéquation avec leur capacité opérationnelle, afin de prendre en compte les journaux et les évènements de sécurité, sans retard injustifié et au maximum sous 24 heures ;\n2° élaborent et mettent en œuvre une démarche d’amélioration continue de leur activité de supervision de sécurité, afin d’améliorer la couverture des scénarios de menaces identifiés à l’occasion de l’analyse de risque prévue à l’[objectif de sécurité 16] du présent décret, et l’efficacité de la supervision de sécurité ;\n3° s’assurent que les événements de sécurité et les journaux sont conservés pour une durée d'au moins trois mois sans préjudice d’autres obligations légales et réglementaires, notamment en matière de protection des données à caractère personnel.",
+     "prevaloir": [
+      "Les entités essentielles peuvent se prévaloir lors d’un contrôle du recours à une prestation de détection des incidents de sécurité (PDIS), qualifiée par l’Agence nationale de la sécurité des systèmes d’information en application de l'article 10 du décret no 2015-350 du 27 mars 2015 modifié, pour démontrer leur respect des mesures a, c et e de cet objectif."
+     ],
+     "iso": false,
+     "qualified": [
+      "PDIS"
+     ],
+     "nis2": [
+      "Art. 21.2.b"
+     ],
+     "pillar": "Défense"
+    }
+   }
+  }
+ ],
+ "ai": {
+  "context": "[context]",
+  "register": [
+   {
+    "id": "EXT-001",
+    "usecase": "[usecase]",
+    "owner": "[owner]",
+    "role": "Utilisateur / déployeur",
+    "type": "IA générative",
+    "provider": "[provider]",
+    "purpose": "[purpose]",
+    "dscp": "[dscp]",
+    "data": "[data]",
+    "hdsAct": "[hdsAct]",
+    "hdsCert": "[hdsCert]",
+    "storage": "[storage]",
+    "remote": "[remote]",
+    "training": "[training]",
+    "aiact": "[aiact]",
+    "dm": "[dm]",
+    "human": "[human]",
+    "aipd": "[aipd]",
+    "authz": "[authz]",
+    "golive": "",
+    "proof": "[proof]",
+    "category": "Service IA web externe",
+    "aiPresence": "[aiPresence]"
+   },
+   {
+    "id": "EXT-002",
+    "usecase": "[usecase]",
+    "owner": "[owner]",
+    "role": "Utilisateur / déployeur",
+    "type": "IA générative",
+    "provider": "[provider]",
+    "purpose": "[purpose]",
+    "dscp": "[dscp]",
+    "data": "[data]",
+    "hdsAct": "[hdsAct]",
+    "hdsCert": "[hdsCert]",
+    "storage": "[storage]",
+    "remote": "[remote]",
+    "training": "[training]",
+    "aiact": "[aiact]",
+    "dm": "[dm]",
+    "human": "[human]",
+    "aipd": "[aipd]",
+    "authz": "[authz]",
+    "golive": "",
+    "proof": "[proof]",
+    "category": "Service IA web externe",
+    "aiPresence": "[aiPresence]"
+   }
+  ],
+  "evals": [
+   {
+    "id": "E-001",
+    "domain": "[domain]",
+    "scenario": "[scenario]",
+    "app": "Conditionnel — si intégration interne",
+    "dscp": "[dscp]",
+    "c": 0,
+    "i": 0,
+    "a": 0,
+    "audit": 0,
+    "patient": 0,
+    "prob": 0,
+    "maturity": 0,
+    "effort": 0,
+    "iso": "[iso]",
+    "hds": "EXI 05 F–G, 09, 18, 21, 24–25",
+    "measure": "[measure]",
+    "scope": "Future IA interne",
+    "status": ""
+   },
+   {
+    "id": "E-002",
+    "domain": "[domain]",
+    "scenario": "[scenario]",
+    "app": "Usage externe actuel",
+    "dscp": "[dscp]",
+    "c": 5,
+    "i": 4,
+    "a": 2,
+    "audit": 4,
+    "patient": 4,
+    "prob": 4,
+    "maturity": 1,
+    "effort": 4,
+    "iso": "A.5.12 à A.5.14, A.5.34, A.8.10 à A.8.12",
+    "hds": "EXI 03–05, 09, 19, 26",
+    "measure": "[measure]",
+    "scope": "Tous les usages externes",
+    "status": ""
+   }
+  ],
+  "plan": [
+   {
+    "step": 29,
+    "phase": "4. Fournisseurs et HDS",
+    "action": "[action]",
+    "result": "[result]",
+    "owner": "[owner]",
+    "contrib": "[contrib]",
+    "iso": "A.5.31, A.5.34",
+    "hds": "EXI 30–31 ; CSP R.1111-9-1/R.1111-11",
+    "proof": "[proof]",
+    "kpi": "[kpi]",
+    "jStart": 0,
+    "jEnd": 29,
+    "priority": "Critique",
+    "status": "À faire",
+    "progress": 0,
+    "dep": "[dep]",
+    "evals": "[evals]"
+   },
+   {
+    "step": 36,
+    "phase": "6. Validation",
+    "action": "[action]",
+    "result": "[result]",
+    "owner": "[owner]",
+    "contrib": "[contrib]",
+    "iso": "A.5.2, A.8.14, A.8.26",
+    "hds": "EXI 05 F–G, 13, 25",
+    "proof": "[proof]",
+    "kpi": "[kpi]",
+    "jStart": 45,
+    "jEnd": 75,
+    "priority": "Critique",
+    "status": "À faire",
+    "progress": 0,
+    "dep": "[dep]",
+    "evals": "[evals]"
+   }
+  ],
+  "policies": [
+   {
+    "policy": "[policy]",
+    "impact": "Élevé",
+    "change": "[change]",
+    "iso": "4.2, 6.1",
+    "annex": "[annex]",
+    "hds": "EXI 28–31 ; décret 2026-209",
+    "evals": "[evals]",
+    "steps": "[steps]",
+    "owner": "[owner]",
+    "target": "2026-09-26",
+    "freq": "Trimestrielle + changement",
+    "proof": "[proof]",
+    "status": "À faire"
+   },
+   {
+    "policy": "[policy]",
+    "impact": "Critique",
+    "change": "[change]",
+    "iso": "4.2, 8.1",
+    "annex": "[annex]",
+    "hds": "EXI 13, 17–27",
+    "evals": "[evals]",
+    "steps": "[steps]",
+    "owner": "[owner]",
+    "target": "[target]",
+    "freq": "Annuelle + renouvellement",
+    "proof": "[proof]",
+    "status": "À faire"
+   }
+  ],
+  "start": "2026-08-28",
+  "sources": [
+   {
+    "id": "S-020",
+    "name": "[name]",
+    "version": "[version]",
+    "use": "[use]",
+    "url": "https://exemple.invalid/document",
+    "checked": "2026-09-28",
+    "note": "[note]"
+   },
+   {
+    "id": "S-021",
+    "name": "[name]",
+    "version": "[version]",
+    "use": "[use]",
+    "url": "https://exemple.invalid/document",
+    "checked": "2026-08-27",
+    "note": "[note]"
+   }
+  ],
+  "startValidated": false
+ },
+ "activeFw": "[activeFw]",
+ "entityCategory": "",
+ "schema": 14,
+ "iso27001Certified": true,
+ "accessReviews": [
+  {
+   "id": "CONTRO-001",
+   "app": "[app]",
+   "month": "2026-04",
+   "supplier": "[supplier]",
+   "freq": 12,
+   "source": "[source]",
+   "comment": ""
+  },
+  {
+   "id": "CONTRO-002",
+   "app": "[app]",
+   "month": "2026-07",
+   "supplier": "[supplier]",
+   "freq": 12,
+   "source": "[source]",
+   "comment": ""
+  }
+ ],
+ "plan": {
+  "status": "Projet",
+  "note": "[note]",
+  "days": [
+   {
+    "id": "J-001",
+    "label": "[label]",
+    "date": "2027-05-03"
+   },
+   {
+    "id": "J-002",
+    "label": "[label]",
+    "date": "2027-05-04"
+   }
+  ],
+  "slots": [
+   {
+    "id": "S-022",
+    "day": "J-002",
+    "start": "10:55",
+    "end": "12:30",
+    "type": "audit",
+    "title": "[title]",
+    "detail": "[detail]",
+    "place": "",
+    "items": [
+     "[items]",
+     "[items]",
+     "[items]"
+    ],
+    "people": [
+     "[people]",
+     "[people]",
+     "[people]"
+    ],
+    "proofs": [
+     {
+      "t": "[t]",
+      "done": false
+     },
+     {
+      "t": "[t]",
+      "done": false
+     }
+    ],
+    "questions": [
+     "[questions]",
+     "[questions]",
+     "[questions]"
+    ]
+   },
+   {
+    "id": "S-023",
+    "day": "J-002",
+    "start": "14:45",
+    "end": "16:00",
+    "type": "audit",
+    "title": "[title]",
+    "detail": "[detail]",
+    "place": "",
+    "items": [
+     "[items]",
+     "[items]",
+     "[items]"
+    ],
+    "people": [
+     "[people]",
+     "[people]",
+     "[people]"
+    ],
+    "proofs": [
+     {
+      "t": "[t]",
+      "done": false
+     },
+     {
+      "t": "[t]",
+      "done": false
+     }
+    ],
+    "questions": [
+     "[questions]",
+     "[questions]",
+     "[questions]"
+    ]
+   }
+  ],
+  "people": [
+   {
+    "id": "P-001",
+    "name": "[name]",
+    "role": "Marchés, conventions, fournisseurs"
+   },
+   {
+    "id": "P-002",
+    "name": "[name]",
+    "role": "Délégué à la protection des données"
+   }
+  ]
+ },
+ "appGaps": [
+  {
+   "id": "APP-001",
+   "createdAt": "2026-10-02T07:58:51.403Z",
+   "name": "[name]",
+   "supplier": "",
+   "dscp": "[dscp]",
+   "cloud": "[cloud]",
+   "status": "À étudier",
+   "owner": "",
+   "target": "",
+   "desc": "",
+   "lines": {},
+   "custom": []
+  },
+  {
+   "id": "APP-002",
+   "createdAt": "2026-10-02T09:55:17.442Z",
+   "name": "[name]",
+   "supplier": "",
+   "dscp": "[dscp]",
+   "cloud": "[cloud]",
+   "status": "À étudier",
+   "owner": "",
+   "target": "",
+   "desc": "",
+   "lines": {},
+   "custom": []
+  }
+ ],
+ "reviews": [
+  {
+   "id": "COPIL-001",
+   "type": "COPIL",
+   "createdAt": "2026-10-02T09:56:28.305Z",
+   "date": "2026-10-02",
+   "title": "[title]",
+   "period": "",
+   "participants": "",
+   "classification": "CONFIDENTIEL",
+   "sections": [
+    "[sections]",
+    "[sections]",
+    "[sections]"
+   ],
+   "inputs": {},
+   "decisions": [],
+   "cs": {
+    "inc": {
+     "open": "",
+     "closed": "",
+     "total": "",
+     "focus": [
+      {
+       "name": "",
+       "date": "",
+       "time": "",
+       "desc": ""
+      },
+      {
+       "name": "",
+       "date": "",
+       "time": "",
+       "desc": ""
+      }
+     ]
+    },
+    "vul": {
+     "tenable": {
+      "kpi": "",
+      "txt": "",
+      "img": null
+     },
+     "ext": {
+      "kpi": "",
+      "txt": "",
+      "img": null
+     },
+     "def": {
+      "kpi": "",
+      "txt": "",
+      "img": null
+     }
+    },
+    "rc": {
+     "cont": {
+      "kpi": "",
+      "txt": "",
+      "img": null
+     },
+     "dispo": {
+      "kpi": "",
+      "txt": "",
+      "img": null
+     },
+     "sensi": {
+      "kpi": "",
+      "txt": "",
+      "img": null
+     },
+     "acces": true
+    },
+    "risks": [],
+    "withEcarts": true,
+    "nr": {
+     "chg": "",
+     "vul": "",
+     "inc": "",
+     "nc": ""
+    },
+    "sujet": [
+     {
+      "title": "",
+      "txt": "",
+      "img": null
+     },
+     {
+      "title": "",
+      "txt": "",
+      "img": null
+     }
+    ],
+    "rem": ""
+   }
+  }
+ ],
+ "branding": {},
+ "plans": [],
+ "scope": {
+  "hds": [],
+  "excl": [],
+  "processes": []
+ },
+ "interested": [],
+ "swots": [
+  {
+   "id": "SWOT-001",
+   "createdAt": "2026-10-05T20:45:19.227Z",
+   "process": "[process]",
+   "date": "2026-10-05",
+   "author": "",
+   "version": "[version]",
+   "S": [],
+   "W": [],
+   "O": [],
+   "T": []
+  },
+  {
+   "id": "SWOT-002",
+   "createdAt": "2026-10-06T21:58:56.506Z",
+   "process": "[process]",
+   "date": "2026-10-06",
+   "author": "",
+   "version": "[version]",
+   "S": [],
+   "W": [],
+   "O": [],
+   "T": []
+  }
+ ],
+ "incidents": [],
+ "supEvals": [],
+ "crisis": {
+  "contacts": [],
+  "scenarios": [],
+  "cells": [
+   {
+    "id": "CRISE-001",
+    "createdAt": "2026-10-05T20:42:27.685Z",
+    "title": "[title]",
+    "mode": "[mode]",
+    "scenario": "",
+    "plan": "",
+    "start": "2026-10-05T20:42:27.685Z",
+    "end": "2026-10-05T20:52:31.528Z",
+    "status": "Clôturée",
+    "log": [
+     {
+      "ts": "2026-10-05T20:42:27.685Z",
+      "type": "Information",
+      "author": "",
+      "text": "[text]"
+     },
+     {
+      "ts": "2026-10-05T20:52:31.528Z",
+      "type": "Décision",
+      "author": "",
+      "text": "[text]"
+     }
+    ],
+    "checks": {},
+    "deadlines": []
+   }
+  ]
+ },
+ "roles": [
+  {
+   "createdAt": "2026-10-06T21:58:45.639Z",
+   "name": "[name]",
+   "holder": "",
+   "deputy": "",
+   "email": "",
+   "phone": "",
+   "resp": "[resp]",
+   "refs": "[refs]"
+  },
+  {
+   "createdAt": "2026-10-06T21:58:45.639Z",
+   "name": "[name]",
+   "holder": "",
+   "deputy": "",
+   "email": "",
+   "phone": "",
+   "resp": "[resp]",
+   "refs": "[refs]"
+  }
+ ],
+ "recurring": [],
+ "evidences": [],
+ "invest": {
+  "baseYear": 2026,
+  "lines": [
+   {
+    "id": "INV-001",
+    "createdAt": "2026-01-07T09:00:00.000Z",
+    "company": "[company]",
+    "priority": "2",
+    "type": "Bastion",
+    "desc": "[desc]",
+    "n0": 20736,
+    "n1": 16128,
+    "n2": 16128,
+    "comment": "[comment]",
+    "alt": "[alt]",
+    "account": "",
+    "perimeter": "[perimeter]",
+    "status": "Prévisionnel",
+    "nature": "[nature]",
+    "renewal": "",
+    "notice": 60,
+    "supplier": ""
+   },
+   {
+    "id": "INV-002",
+    "createdAt": "2026-01-07T09:00:00.000Z",
+    "company": "[company]",
+    "priority": "",
+    "type": "Transfert Sécurisé",
+    "desc": "[desc]",
+    "n0": 923.4,
+    "n1": 810,
+    "n2": 810,
+    "comment": "[comment]",
+    "alt": "",
+    "account": "",
+    "perimeter": "[perimeter]",
+    "status": "En place",
+    "nature": "[nature]",
+    "renewal": "",
+    "notice": 60,
+    "supplier": ""
+   }
+  ],
+  "source": "[source]"
+ },
+ "crrc": {
+  "offers": [
+   {
+    "id": "BACKUP-001",
+    "name": "[name]",
+    "status": "Disponible",
+    "partner": "",
+    "desc": "[desc]",
+    "perimeters": [
+     [
+      "[perimeters]",
+      "[perimeters]",
+      "[perimeters]"
+     ],
+     [
+      "[perimeters]",
+      "[perimeters]",
+      "[perimeters]"
+     ],
+     [
+      "[perimeters]",
+      "[perimeters]",
+      "[perimeters]"
+     ]
+    ]
+   }
+  ],
+  "establishments": [],
+  "resources": [],
+  "runs": [],
+  "restores": [],
+  "alerts": []
+ },
+ "maps": {
+  "context": {
+   "nodes": {
+    "isms": {
+     "x": 330,
+     "y": 300,
+     "w": 300,
+     "h": 116,
+     "label": "SMSI – Organisation fictive"
+    },
+    "scope": {
+     "x": 0,
+     "y": 0,
+     "w": 1100,
+     "h": 520,
+     "label": "Périmètre SMSI"
+    },
+    "process:PRR-001": {
+     "x": 120,
+     "y": 90,
+     "w": 200,
+     "h": 96,
+     "label": "Processus fictif"
+    },
+    "pi:PI-999": {
+     "x": -260,
+     "y": 120,
+     "w": 212,
+     "h": 66,
+     "label": "Partie intéressée supprimée (fictive)"
+    }
+   },
+   "edges": [
+    {
+     "id": "e1",
+     "s": "process:PRR-001",
+     "t": "pi:PI-999",
+     "type": "related_to"
+    }
+   ],
+   "hide": {
+    "d:process:PRR-001>isms:part_of": 1
+   },
+   "ignored": {
+    "process:PRS-001": 1
+   },
+   "versions": [
+    {
+     "id": "vfictif1",
+     "at": "2026-10-08T08:00:00.000Z",
+     "label": "Revue de direction (fictive)",
+     "map": {
+      "nodes": {
+       "isms": {
+        "x": 0,
+        "y": 0,
+        "w": 300,
+        "h": 116,
+        "label": ""
+       }
+      },
+      "edges": [],
+      "hide": {},
+      "ignored": {}
+     }
+    }
+   ],
+   "updatedAt": "2026-10-08T08:05:00.000Z"
+  },
+  "process": {
+   "nodes": {
+    "lane:rea": {
+     "x": 0,
+     "y": 0,
+     "w": 940,
+     "h": 268,
+     "label": "Processus de réalisation"
+    },
+    "process:PRR-001": {
+     "x": 28,
+     "y": 86,
+     "w": 236,
+     "h": 156,
+     "label": "Processus fictif"
+    }
+   },
+   "edges": [
+    {
+     "id": "e2",
+     "s": "lane:rea",
+     "t": "process:PRR-001",
+     "type": "applies_to",
+     "gen": 1
+    }
+   ],
+   "hide": {},
+   "ignored": {},
+   "versions": [],
+   "updatedAt": "2026-10-08T08:06:00.000Z"
+  },
+  "issueKind": {
+   "issue:1a2b3c": "ext"
+  }
+ }
+}

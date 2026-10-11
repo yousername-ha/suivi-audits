@@ -1,0 +1,3 @@
+#!/bin/sh
+# Outils d'exploitation : docker compose exec app suivi <commande> (voir « suivi help »).
+exec node /app/apps/api/dist/cli.js "$@"

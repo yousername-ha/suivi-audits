@@ -1,0 +1,376 @@
+# Intégration continue : qualité, tests, images, sécurité (Trivy, SBOM), pile complète et tests de bout en bout.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TRIVY_IMAGE: aquasec/trivy:0.75.0
+
+jobs:
+  qualite:
+    name: Qualité (lint, format, typage, contrôles)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: ESLint
+        run: pnpm lint
+      - name: Prettier
+        run: pnpm format:check
+      - name: Typage TypeScript (strict)
+        run: pnpm typecheck
+      - name: Construction (paquet partagé, API, interface)
+        run: pnpm build
+      - name: Scripts d'exploitation (syntaxe bash, ShellCheck)
+        run: |
+          for f in scripts/*.sh scripts/ci/*.sh; do bash -n "$f"; done
+          shellcheck -S warning -x -e SC1091 scripts/*.sh scripts/ci/*.sh
+      - name: CHANGELOG (paragraphe « Notes de mise à jour » dans chaque section, EXPL-07)
+        run: node scripts/ci/verifier-changelog.mjs CHANGELOG.md
+      - name: Contrats de publication et compatibilité de détection des mises à jour
+        run: |
+          node --test scripts/tests/publication.test.mjs
+          python3 -m unittest discover -s scripts/tests -p test_updates.py
+      - name: OpenAPI
+        run: pnpm --filter @suivi/api openapi "$GITHUB_WORKSPACE/openapi.json"
+      - uses: actions/upload-artifact@v5
+        with:
+          name: openapi
+          path: openapi.json
+      - name: État initial vide (aucune donnée réelle)
+        run: |
+          node -e '
+            const fs = require("fs");
+            const check = (label, s) => {
+              for (const k of ["findings", "suppliers", "processes"]) {
+                if (!Array.isArray(s[k]) || s[k].length) throw new Error(label + " : " + k + " doit être un tableau vide");
+              }
+              if (s.schema !== 14) throw new Error(label + " : schema attendu 14, trouvé " + s.schema);
+            };
+            check("apps/api/seed/state.json", JSON.parse(fs.readFileSync("apps/api/seed/state.json", "utf8")));
+            const h = fs.readFileSync("app/public/index.html", "utf8");
+            const m = h.match(/<script type="application\/json" id="seed">([\s\S]*?)<\/script>/);
+            if (!m) throw new Error("bloc <script id=\"seed\"> introuvable dans app/public/index.html");
+            check("app/public/index.html", JSON.parse(m[1]));
+            console.log("État initial vide : OK");
+          '
+      - name: Aucun secret ni .env versionné
+        run: |
+          if git ls-files | grep -E '(^|/)\.env($|\.)' | grep -v '^\.env\.example$'; then
+            echo "::error::Fichier .env versionné"; exit 1
+          fi
+          if git ls-files | grep -E '\.(pem|key|p12|pfx)$'; then
+            echo "::error::Certificat ou clé privée versionné"; exit 1
+          fi
+          if git grep -nIE 'BEGIN [A-Z ]*PRIVATE KEY' -- . ':!app/public/lib'; then
+            echo "::error::Clé privée dans le dépôt"; exit 1
+          fi
+
+  tests:
+    name: Tests (Vitest, PostgreSQL 17)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_PASSWORD: test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      TEST_PG_HOST: 127.0.0.1
+      TEST_PG_PORT: '5432'
+      TEST_PG_USER: postgres
+      TEST_PG_PASSWORD: test
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Paquet partagé (jeton, format legacy, couverture du contrat, parité avec l'outil historique)
+        run: pnpm --filter @suivi/shared test
+      - name: API (sécurité, concurrence, migrations v2 vers v3, import legacy, temps réel)
+        run: pnpm --filter @suivi/api test
+      - name: Construction du paquet partagé pour les consommateurs web
+        run: pnpm --filter @suivi/shared build
+      - name: Interface (configuration des modules et invalidation des données privées)
+        run: pnpm --filter @suivi/web test
+      - name: Composants de la charte graphique
+        run: pnpm --filter @suivi/ui test
+
+  pile:
+    name: Images, sécurité et pile complète (Playwright)
+    runs-on: ubuntu-latest
+    needs: [qualite, tests]
+    timeout-minutes: 55
+    env:
+      APP_VERSION: ci
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Configuration (.env)
+        run: |
+          cp .env.example .env
+          sed -i 's/^SITE_ADDRESS=.*/SITE_ADDRESS=localhost/; s/^APP_VERSION=.*/APP_VERSION=ci/' .env
+
+      - name: Construction des images
+        run: docker compose -f docker-compose.yml -f docker-compose.build.yml build --pull
+
+      - name: Cache de la base de vulnérabilités Trivy
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/trivy
+          key: trivy-${{ github.run_id }}
+          restore-keys: trivy-
+
+      - name: Trivy — images (échec sur HIGH et CRITICAL)
+        run: |
+          set -e
+          trivy() { docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$HOME/.cache/trivy:/root/.cache/trivy" -v "$PWD:/work" -w /work "$TRIVY_IMAGE" "$@"; }
+          for img in api web updater; do
+            trivy image --scanners vuln --severity HIGH,CRITICAL --exit-code 1 --no-progress "ghcr.io/yousername-ha/suivi-audits-$img:ci"
+          done
+
+      - name: Trivy — dépendances du dépôt (échec sur HIGH et CRITICAL)
+        run: docker run --rm -v "$HOME/.cache/trivy:/root/.cache/trivy" -v "$PWD:/work" -w /work "$TRIVY_IMAGE" fs --scanners vuln --severity HIGH,CRITICAL --exit-code 1 --no-progress .
+
+      - name: SBOM CycloneDX (dépôt et images)
+        run: |
+          set -e
+          mkdir -p sbom
+          trivy() { docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$HOME/.cache/trivy:/root/.cache/trivy" -v "$PWD:/work" -w /work "$TRIVY_IMAGE" "$@"; }
+          trivy fs --format cyclonedx --output sbom/depot.cdx.json .
+          for img in api web updater; do trivy image --format cyclonedx --output "sbom/suivi-audits-$img.cdx.json" "ghcr.io/yousername-ha/suivi-audits-$img:ci"; done
+          sudo chown -R "$USER" sbom
+      - uses: actions/upload-artifact@v5
+        with:
+          name: sbom-cyclonedx
+          path: sbom/
+
+      - name: Dossier des données du serveur (EXPL-01)
+        run: sudo ./scripts/preparer-donnees.sh
+
+      - name: Démarrage de la pile
+        run: |
+          docker compose up -d
+          for i in $(seq 1 60); do
+            st=$(docker inspect -f '{{.State.Health.Status}}' "$(docker compose ps -q app)" 2>/dev/null || true)
+            [ "$st" = healthy ] && break
+            sleep 3
+          done
+          [ "$(docker inspect -f '{{.State.ExitCode}}' "$(docker compose ps -aq init)")" = 0 ]
+          [ "$(docker inspect -f '{{.State.Health.Status}}' "$(docker compose ps -q db)")" = healthy ]
+          [ "$st" = healthy ]
+          for i in $(seq 1 30); do curl -skf https://localhost/healthz && break; sleep 2; done
+          echo
+          docker compose ps
+
+      - name: Masquage des jetons dans les journaux de la CI
+        # Sur le serveur, le jeton reste affiché en clair dans « docker compose logs app ».
+        run: |
+          tok=$(docker compose logs --no-log-prefix app | grep -oE '[A-Z2-9]{5}(-[A-Z2-9]{5}){3}' | head -1)
+          [ -n "$tok" ] || { echo "::error::Jeton du premier démarrage introuvable"; exit 1; }
+          echo "::add-mask::$tok"
+
+      - name: Contrôles HTTP (HTTPS, redirection, CSP, conteneurs non root)
+        run: |
+          set -e
+          test "$(curl -sk https://localhost/healthz)" = ok
+          test "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' http://localhost/setup)" = "308 https://localhost/setup"
+          curl -skI https://localhost/ | grep -i "^content-security-policy: default-src 'self'; script-src 'self'; style-src 'self'"
+          test "$(curl -sk -o /dev/null -w '%{http_code}' https://localhost/api/events)" = 401
+          test "$(docker compose exec -T app id -u)" = 1000
+          test "$(docker compose exec -T web id -u)" = 1001
+
+      - run: pnpm install --frozen-lockfile --filter @suivi/e2e
+      - name: Tests de bout en bout et captures de référence (conteneur Playwright officiel)
+        # Même navigateur et mêmes polices qu'en local : les captures de référence sont comparées à l'identique.
+        timeout-minutes: 20
+        env:
+          E2E_BACKUP_AUTO: '1'
+        run: ./tests/e2e/run-in-container.sh
+      - name: Droits des résultats de test
+        if: always()
+        run: sudo chown -R "$USER" tests/e2e 2>/dev/null || true
+      - uses: actions/upload-artifact@v5
+        if: failure()
+        with:
+          name: playwright-resultats
+          path: |
+            tests/e2e/playwright-report/
+            tests/e2e/test-results/
+
+      - name: Mise à jour intégrée réelle et retour arrière après migration (publications locales de recette)
+        timeout-minutes: 15
+        run: sudo -E python3 scripts/ci/update-integree.py
+
+      - name: Données intactes après suppression des conteneurs, des images et « down -v » (EXPL-01)
+        run: |
+          set -e
+          docker compose exec -T app suivi controle-donnees > "$RUNNER_TEMP/avant.json"
+          docker compose down -v
+          [ -z "$(docker volume ls -q | grep '^suivi-audits_' || true)" ] || { echo "::error::volume nommé créé par la pile"; exit 1; }
+          docker save -o "$RUNNER_TEMP/images.tar" ghcr.io/yousername-ha/suivi-audits-api:ci ghcr.io/yousername-ha/suivi-audits-web:ci ghcr.io/yousername-ha/suivi-audits-updater:ci
+          docker image rm ghcr.io/yousername-ha/suivi-audits-api:ci ghcr.io/yousername-ha/suivi-audits-web:ci ghcr.io/yousername-ha/suivi-audits-updater:ci
+          docker load -i "$RUNNER_TEMP/images.tar"
+          rm -f "$RUNNER_TEMP/images.tar"
+          docker compose up -d
+          for i in $(seq 1 60); do
+            [ "$(docker inspect -f '{{.State.Health.Status}}' "$(docker compose ps -q app)" 2> /dev/null)" = healthy ] && break
+            sleep 3
+          done
+          docker compose exec -T app suivi controle-donnees > "$RUNNER_TEMP/apres.json"
+          diff "$RUNNER_TEMP/avant.json" "$RUNNER_TEMP/apres.json"
+          sudo ls -la /srv/suivi-audits/donnees /srv/suivi-audits/donnees/secrets
+          echo "Données identiques avant et après : $(jq -c '{tables, documents: .documents.versions}' "$RUNNER_TEMP/apres.json")"
+
+      - name: Droits du cache Trivy (sauvegarde du cache)
+        if: always()
+        run: sudo chown -R "$USER" "$HOME/.cache/trivy" 2>/dev/null || true
+      - name: Journaux
+        if: always()
+        run: docker compose logs --no-color init db app web | grep -vE '"msg":"(incoming request|request completed)"' | tail -400
+      - name: Arrêt
+        if: always()
+        run: docker compose down -v
+
+  montee:
+    name: Montée de version (retour arrière et restauration simulés)
+    # EXPL-02 à EXPL-04 : serveur installé avec la dernière version publiée (à défaut, la base de la PR), données
+    # fictives, puis scripts/mettre-a-jour.sh vers le commit testé (voir scripts/ci/montee-version.sh).
+    runs-on: ubuntu-latest
+    needs: [qualite, tests]
+    timeout-minutes: 50
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: Version de départ
+        id: depart
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -e
+          tag=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' | sort -V | tail -n 1)
+          if [ -n "$tag" ]; then ref="$tag"; version="${tag#v}"; publiee=1
+          elif [ -n "$BASE_SHA" ]; then ref="$BASE_SHA"; version=3.0.0; publiee=0
+          else echo "Ni version publiée ni PR : rien à comparer."; echo "actif=0" >> "$GITHUB_OUTPUT"; exit 0; fi
+          if ! git cat-file -e "$ref:docker/api.Dockerfile" 2> /dev/null; then
+            echo "La version de départ ($ref) n'est pas une v3 : test sans objet."; echo "actif=0" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          cible=$(echo "$version" | awk -F. '{ print $1 "." $2 + 1 ".0" }')
+          { echo "actif=1"; echo "ref=$ref"; echo "version=$version"; echo "publiee=$publiee"; echo "cible=$cible"; } >> "$GITHUB_OUTPUT"
+          echo "Départ : $ref ($version) ; cible : commit testé, étiqueté $cible pour le test."
+      - name: Images de départ
+        if: steps.depart.outputs.actif == '1'
+        env:
+          REF: ${{ steps.depart.outputs.ref }}
+          VERSION: ${{ steps.depart.outputs.version }}
+          PUBLIEE: ${{ steps.depart.outputs.publiee }}
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          git worktree add -q "$RUNNER_TEMP/depart" "$REF"
+          cd "$RUNNER_TEMP/depart"
+          cp .env.example .env
+          sed -i "s/^SITE_ADDRESS=.*/SITE_ADDRESS=localhost/; s/^APP_VERSION=.*/APP_VERSION=$VERSION/" .env
+          if [ "$PUBLIEE" = 1 ] && echo "$TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin && docker compose pull --quiet; then
+            echo "Images publiées $VERSION téléchargées."
+          else
+            docker compose -f docker-compose.yml -f docker-compose.build.yml build --quiet
+          fi
+      - name: Images cibles (commit testé)
+        if: steps.depart.outputs.actif == '1'
+        env:
+          VERSION: ${{ steps.depart.outputs.cible }}
+        run: |
+          cp .env.example .env
+          sed -i "s/^SITE_ADDRESS=.*/SITE_ADDRESS=localhost/; s/^APP_VERSION=.*/APP_VERSION=$VERSION/" .env
+          docker compose -f docker-compose.yml -f docker-compose.build.yml build --quiet
+          rm .env
+      - name: Montée de version, retour arrière, restauration, persistance
+        if: steps.depart.outputs.actif == '1'
+        env:
+          DEPART_REF: ${{ steps.depart.outputs.ref }}
+          DEPART_VERSION: ${{ steps.depart.outputs.version }}
+          CIBLE_VERSION: ${{ steps.depart.outputs.cible }}
+        run: CIBLE_REF="$(git rev-parse HEAD)" ./scripts/ci/montee-version.sh
+      - name: Journaux
+        if: failure()
+        run: |
+          if [ -d /opt/suivi-audits ]; then cd /opt/suivi-audits && sudo docker compose logs --no-color init db app web | tail -300; fi
+          sudo sh -c 'cat /srv/suivi-audits/donnees/etat/mises-a-jour/*.json' 2> /dev/null || true
+      - name: Arrêt
+        if: always()
+        run: if [ -d /opt/suivi-audits ]; then cd /opt/suivi-audits && sudo docker compose down || true; fi
+
+  guide:
+    name: Guide d'installation (rejoué sur un runner Ubuntu vierge)
+    # Rejoue docs/INSTALLATION.md : préparation, installation de Docker, configuration, démarrage, administrateur
+    # créé par l'API, compte utilisateur, import de la fixture legacy, sauvegarde, restauration et mise à jour.
+    # Échoue si une commande du guide échoue, si un bloc n'est pas marqué, ou si un résultat attendu n'est pas obtenu.
+    runs-on: ubuntu-24.04
+    needs: [qualite]
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+      - name: Runner vierge (désinstallation de Docker préinstallé)
+        run: |
+          sudo systemctl stop docker.socket docker containerd 2>/dev/null || true
+          pkgs=$(dpkg-query -W -f='${Package}\n' | grep -E '^(docker|moby|containerd|runc|podman-docker)' || true)
+          [ -z "$pkgs" ] || sudo apt-get purge -y $pkgs
+          sudo rm -rf /var/lib/docker /var/lib/containerd /etc/docker /etc/apt/sources.list.d/docker* /etc/apt/keyrings/docker* /usr/share/keyrings/docker*
+          if command -v docker; then echo "::error::Docker est encore présent"; exit 1; fi
+      - name: Extraction des commandes du guide
+        run: |
+          node scripts/ci/guide-extraire.mjs docs/INSTALLATION.md nom_dns=localhost version=ci > "$RUNNER_TEMP/guide.sh"
+          cp "$RUNNER_TEMP/guide.sh" guide.sh
+      - uses: actions/upload-artifact@v5
+        with:
+          name: guide-script
+          path: guide.sh
+      - name: Rejeu du guide
+        run: bash "$RUNNER_TEMP/guide.sh"
+      - name: Lot A — pilotage réel, restauration et retours arrière, TLS
+        run: |
+          cd /opt/suivi-audits
+          NODE_EXTRA_CA_CERTS=/opt/suivi-audits/racine-suivi-audits.crt node "$GITHUB_WORKSPACE/scripts/ci/guide-api.mjs" lot-a https://localhost
+      - name: Journaux
+        if: failure()
+        run: if [ -d /opt/suivi-audits ]; then cd /opt/suivi-audits && sudo docker compose logs --no-color init db app web | tail -300; fi
+      - name: Arrêt
+        if: always()
+        run: if [ -d /opt/suivi-audits ]; then cd /opt/suivi-audits && sudo docker compose down -v || true; fi

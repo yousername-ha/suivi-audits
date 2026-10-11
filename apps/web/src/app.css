@@ -1,0 +1,817 @@
+/* Styles propres à certains écrans. Charte, coquille et jetons : packages/ui/src/styles.css.
+   Aucune couleur ni aucun espacement codé en dur ici : uniquement des variables du thème. */
+.app-main {
+  background: var(--suivi-fond-page);
+}
+.auth-wrap {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: var(--mantine-spacing-lg) var(--mantine-spacing-md);
+  background: var(--suivi-fond-page);
+}
+.auth-card {
+  width: min(var(--suivi-largeur-formulaire), 100%);
+}
+.token-input input {
+  font-family: var(--mantine-font-family-monospace);
+  font-size: var(--mantine-font-size-lg);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.cmd {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  padding: var(--mantine-spacing-2xs) var(--mantine-spacing-2xs) var(--mantine-spacing-2xs) var(--mantine-spacing-xs);
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-sm);
+  background: var(--suivi-surface);
+}
+.cmd code {
+  flex: 1;
+  min-width: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: var(--mantine-font-family-monospace);
+  font-size: var(--mantine-font-size-sm);
+  user-select: all;
+}
+.secret {
+  font-family: var(--mantine-font-family-monospace);
+  font-size: var(--mantine-font-size-lg);
+  letter-spacing: 0.04em;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  border: var(--suivi-trait-l) dashed var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-sm);
+  word-break: break-all;
+  user-select: all;
+}
+.qr {
+  display: flex;
+  justify-content: center;
+  padding: var(--mantine-spacing-sm);
+  background: var(--suivi-qr-fond);
+  border-radius: var(--mantine-radius-md);
+}
+.qr img {
+  width: var(--suivi-qr);
+  height: var(--suivi-qr);
+  image-rendering: pixelated;
+}
+.grid-2,
+.grid-3 {
+  display: grid;
+  gap: var(--mantine-spacing-md);
+  grid-template-columns: 1fr;
+}
+@media (min-width: 48em) {
+  .grid-2 {
+    grid-template-columns: 1fr 1fr;
+  }
+  .grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Matrice des droits (modules × actions) */
+.matrix th,
+.matrix td {
+  white-space: nowrap;
+}
+.matrix .center {
+  text-align: center;
+}
+.matrix .matrix-check {
+  display: inline-flex;
+  justify-content: center;
+}
+
+/* ---------------------------------------------------------------- Cartographie (CARTO-06, ADR 0013)
+   Couleurs : variables --carte-* (packages/ui/src/tokens.ts), en clair et en sombre ; dimensions : variables de la
+   charte. Le canevas SVG n'utilise que des classes (aucun attribut style). */
+.ct-marine {
+  --c-accent: var(--carte-marine-accent);
+  --c-doux: var(--carte-marine-doux);
+  --c-fond: var(--carte-marine-fond);
+  --c-trait: var(--carte-marine-trait);
+}
+.ct-bleu {
+  --c-accent: var(--carte-bleu-accent);
+  --c-doux: var(--carte-bleu-doux);
+  --c-fond: var(--carte-bleu-fond);
+  --c-trait: var(--carte-bleu-trait);
+}
+.ct-violet {
+  --c-accent: var(--carte-violet-accent);
+  --c-doux: var(--carte-violet-doux);
+  --c-fond: var(--carte-violet-fond);
+  --c-trait: var(--carte-violet-trait);
+}
+.ct-orange {
+  --c-accent: var(--carte-orange-accent);
+  --c-doux: var(--carte-orange-doux);
+  --c-fond: var(--carte-orange-fond);
+  --c-trait: var(--carte-orange-trait);
+}
+.ct-vert {
+  --c-accent: var(--carte-vert-accent);
+  --c-doux: var(--carte-vert-doux);
+  --c-fond: var(--carte-vert-fond);
+  --c-trait: var(--carte-vert-trait);
+}
+.ct-gris {
+  --c-accent: var(--carte-gris-accent);
+  --c-doux: var(--carte-gris-doux);
+  --c-fond: var(--carte-gris-fond);
+  --c-trait: var(--carte-gris-trait);
+}
+.ct-rouge {
+  --c-accent: var(--carte-rouge-accent);
+  --c-doux: var(--carte-rouge-doux);
+  --c-fond: var(--carte-rouge-fond);
+  --c-trait: var(--carte-rouge-trait);
+}
+.carte-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-sm);
+}
+.carte-plein-ecran {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  overflow: auto;
+  padding: var(--mantine-spacing-sm);
+  background: var(--suivi-fond-page);
+}
+.carte-plein-ecran .carte-canevas {
+  height: var(--carte-hauteur-plein-ecran);
+}
+.carte-vues {
+  display: flex;
+  gap: var(--mantine-spacing-2xs);
+  flex-wrap: wrap;
+}
+.carte-recherche {
+  width: min(var(--carte-recherche), 100%);
+}
+.carte-compteur {
+  padding-inline-end: var(--mantine-spacing-xs);
+}
+.carte-espace {
+  flex: 1;
+}
+.carte-chargement,
+.carte-vide {
+  min-height: var(--carte-hauteur);
+}
+.carte-vide {
+  border: var(--suivi-trait-l) dashed var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-lg);
+  padding: var(--mantine-spacing-xl) var(--mantine-spacing-md);
+  background: var(--suivi-surface);
+}
+.carte-vide-icone .nav-icone,
+.carte-vide-icone svg {
+  width: var(--carte-vide-icone);
+  height: var(--carte-vide-icone);
+  color: var(--carte-bleu-accent);
+}
+.carte-grille {
+  display: grid;
+  grid-template-columns: var(--carte-panneau-l) minmax(0, 1fr);
+  gap: var(--mantine-spacing-sm);
+  align-items: start;
+}
+.carte-grille.sans-panneau {
+  grid-template-columns: minmax(0, 1fr);
+}
+.carte-grille.avec-inspecteur {
+  grid-template-columns: var(--carte-panneau-l) minmax(0, 1fr) var(--carte-inspecteur-l);
+}
+.carte-grille.sans-panneau.avec-inspecteur {
+  grid-template-columns: minmax(0, 1fr) var(--carte-inspecteur-l);
+}
+.carte-canevas {
+  position: relative;
+  height: var(--carte-hauteur);
+  min-width: 0;
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-lg);
+  overflow: hidden;
+  background: var(--carte-canevas);
+}
+.carte-zone {
+  position: absolute;
+  inset: 0;
+}
+.carte-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  font-family: var(--mantine-font-family);
+  touch-action: none;
+  user-select: none;
+  background: var(--carte-canevas);
+}
+.carte-svg:focus-visible {
+  outline: calc(2 * var(--suivi-trait-l)) solid var(--carte-bleu-accent);
+  outline-offset: calc(-2 * var(--suivi-trait-l));
+}
+.carte-zone .noeud {
+  cursor: pointer;
+}
+.carte-edition .noeud {
+  cursor: move;
+}
+.carte-liaison .noeud {
+  cursor: crosshair;
+}
+.carte-panoramique .carte-svg {
+  cursor: grabbing;
+}
+.noeud:focus-visible {
+  outline: none;
+}
+.noeud:focus-visible > g > rect:first-child {
+  stroke: var(--carte-bleu-accent);
+  stroke-width: 2.4;
+}
+.carte-zoom {
+  position: absolute;
+  top: var(--mantine-spacing-sm);
+  right: var(--mantine-spacing-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-2xs);
+}
+.carte-mini {
+  position: absolute;
+  right: var(--mantine-spacing-sm);
+  bottom: var(--mantine-spacing-sm);
+  width: var(--carte-mini-l);
+  height: var(--carte-mini-h);
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  background: var(--carte-boite);
+  cursor: pointer;
+}
+.mini-objet {
+  fill: var(--c-trait);
+}
+.mini-cadre {
+  fill: var(--c-fond);
+}
+.mini-perimetre {
+  fill: none;
+  stroke: var(--c-trait);
+  stroke-width: 6;
+  stroke-dasharray: 20 14;
+}
+.ct-marine.mini-objet {
+  fill: var(--c-fond);
+}
+.mini-vue {
+  fill: var(--carte-bleu-doux);
+  fill-opacity: 0.5;
+  stroke: var(--carte-bleu-accent);
+}
+.carte-astuce {
+  position: absolute;
+  left: 50%;
+  bottom: var(--mantine-spacing-sm);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  max-width: calc(100% - var(--carte-mini-l) - 3 * var(--mantine-spacing-sm));
+  padding: var(--mantine-spacing-2xs) var(--mantine-spacing-sm);
+  border-radius: var(--mantine-radius-xl);
+  background: var(--carte-boite);
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+}
+.carte-astuce-bouton {
+  flex: none;
+}
+.carte-inspecteur {
+  position: absolute;
+  top: var(--mantine-spacing-sm);
+  right: calc(2 * var(--mantine-spacing-sm) + var(--carte-icone) * 1.5);
+  width: min(var(--carte-inspecteur-l), calc(100% - 4 * var(--mantine-spacing-sm)));
+  max-height: calc(100% - 2 * var(--mantine-spacing-sm));
+  overflow: auto;
+  padding: var(--mantine-spacing-md);
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-lg);
+  background: var(--suivi-surface);
+}
+.carte-inspecteur-fixe {
+  min-height: var(--carte-hauteur);
+  padding: var(--mantine-spacing-md);
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-lg);
+  background: var(--suivi-surface);
+}
+.carte-ligne {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  gap: var(--mantine-spacing-xs);
+  align-items: center;
+}
+.carte-section {
+  padding-top: var(--mantine-spacing-xs);
+  border-top: var(--suivi-trait-l) solid var(--suivi-trait);
+}
+.carte-lien {
+  text-align: start;
+}
+.carte-rel-type {
+  min-width: var(--carte-relation-l);
+}
+.carte-ic-titre {
+  width: var(--carte-icone);
+  height: var(--carte-icone);
+  flex: none;
+}
+.carte-ic-bouton {
+  width: 1em;
+  height: 1em;
+}
+.carte-echantillon {
+  width: var(--carte-echantillon);
+  height: calc(var(--carte-echantillon) * 0.64);
+  flex: none;
+}
+.carte-prereglages {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--mantine-spacing-2xs);
+}
+.carte-version-libelle {
+  flex: 1;
+  min-width: min(var(--carte-recherche), 100%);
+}
+.carte-pied {
+  margin-top: var(--mantine-spacing-xs);
+}
+/* Dessin */
+.c-fond {
+  fill: var(--c-fond);
+  stroke: var(--c-trait);
+}
+.c-fond-plein {
+  fill: var(--c-fond);
+}
+.c-boite {
+  fill: var(--carte-boite);
+  stroke: var(--c-trait);
+}
+.c-sous {
+  stroke: var(--carte-gris-trait);
+  stroke-dasharray: 5 4;
+}
+.c-tirets {
+  stroke-dasharray: 5 4;
+}
+.c-perimetre {
+  fill-opacity: 0.85;
+  stroke-width: 1.6;
+  stroke-dasharray: 8 6;
+}
+.c-doux {
+  fill: var(--c-doux);
+}
+.c-accent-f {
+  fill: var(--c-accent);
+}
+.ic.c-accent-s,
+.c-accent-s {
+  stroke: var(--c-accent);
+}
+.ic.c-courant {
+  stroke: currentColor;
+}
+.c-trait-accent {
+  stroke: var(--c-accent);
+}
+.c-coche {
+  stroke: var(--carte-boite);
+}
+.c-texte {
+  fill: var(--carte-texte);
+}
+.c-sec {
+  fill: var(--carte-secondaire);
+}
+.c-titre-marine {
+  fill: var(--carte-marine-accent);
+}
+.c-sur-marine {
+  fill: var(--carte-sur-marine);
+}
+.c-sur-marine-2 {
+  fill: var(--carte-sur-marine-secondaire);
+}
+.ic.c-sur-marine-s {
+  stroke: var(--carte-sur-marine);
+}
+.c-hit {
+  fill: none;
+  stroke: var(--carte-surbrillance);
+  stroke-width: 3;
+}
+.c-sel {
+  fill: none;
+  stroke: var(--carte-bleu-accent);
+  stroke-width: 2.4;
+}
+.c-src {
+  fill: none;
+  stroke: var(--carte-vert-accent);
+  stroke-width: 2.4;
+  stroke-dasharray: 6 4;
+}
+.c-poignee {
+  fill: var(--carte-boite);
+  stroke: var(--carte-bleu-accent);
+  stroke-width: 2;
+  cursor: nwse-resize;
+}
+.c-attenue {
+  opacity: 0.26;
+}
+.c-attenue-lien {
+  opacity: 0.18;
+}
+.c-proposition {
+  opacity: 0.8;
+}
+.c-ombre {
+  flood-color: var(--carte-marine-accent);
+  flood-opacity: 0.09;
+}
+.c-fond-export {
+  fill: var(--carte-boite);
+}
+.c-separateur {
+  stroke: var(--carte-gris-trait);
+}
+.lien {
+  cursor: pointer;
+}
+.lien-zone {
+  stroke: transparent;
+}
+.lien-trait {
+  fill: none;
+}
+.l-primary {
+  stroke: var(--carte-bleu-accent);
+  stroke-width: 1.9;
+}
+.l-dependency {
+  stroke: var(--carte-bleu-accent);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 5;
+}
+.l-secondary {
+  stroke: var(--carte-gris-accent);
+  stroke-width: 1.3;
+  stroke-dasharray: 4 5;
+}
+.l-issue {
+  stroke: var(--carte-orange-accent);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 5;
+}
+.l-structural {
+  stroke: var(--carte-gris-accent);
+  stroke-width: 1.3;
+  stroke-dasharray: 2 4;
+}
+.lien-trait.l-sel {
+  stroke: var(--carte-marine-accent);
+  stroke-width: 3.1;
+}
+.fleche {
+  stroke: none;
+  stroke-dasharray: none;
+}
+.fleche.l-primary,
+.fleche.l-dependency {
+  fill: var(--carte-bleu-accent);
+}
+.fleche.l-secondary,
+.fleche.l-structural {
+  fill: var(--carte-gris-accent);
+}
+.fleche.l-issue {
+  fill: var(--carte-orange-accent);
+}
+.fleche.l-sel {
+  fill: var(--carte-marine-accent);
+}
+/* Exports : rendu hors écran, puis couleurs recopiées en attributs. */
+.carte-hors-ecran {
+  position: fixed;
+  left: -1000%;
+  top: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+/* Téléphone et petite tablette (< 900 px) : panneaux sous le canevas, fiche en feuille basse. */
+@media (max-width: 56.24em) {
+  .carte-grille,
+  .carte-grille.sans-panneau {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .carte-panneau {
+    order: 2;
+  }
+  .carte-canevas {
+    height: var(--carte-hauteur-mobile);
+  }
+  .carte-inspecteur {
+    position: fixed;
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    max-height: 60dvh;
+    z-index: 200;
+    border-radius: var(--mantine-radius-lg) var(--mantine-radius-lg) 0 0;
+  }
+  .carte-mini {
+    display: none;
+  }
+}
+
+/* Bandeau discret intégré à l'entête ; aucun espace ajouté lorsqu'il n'y a pas de publication. */
+.shell-top {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.update-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--mantine-spacing-2xs) var(--mantine-spacing-md);
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  font-size: var(--mantine-font-size-xs);
+  line-height: 1.5;
+  color: var(--mantine-color-text);
+  background: var(--suivi-surface);
+  border-bottom: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+}
+.update-notice span {
+  overflow-wrap: anywhere;
+}
+
+/* Pilotage natif SMSI : mêmes jetons Sauge, SVG sans styles inline. */
+.grc-grow {
+  flex: 1;
+  min-width: 0;
+}
+.grc-kanban {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(var(--grc-colonne-min), 1fr));
+  gap: var(--mantine-spacing-md);
+  overflow-x: auto;
+  padding-bottom: var(--mantine-spacing-md);
+}
+.grc-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(var(--grc-jour-min), 1fr));
+  gap: var(--mantine-spacing-xs);
+  overflow-x: auto;
+}
+.grc-calendar .mantine-Card-root {
+  min-height: var(--grc-jour-hauteur);
+}
+.grc-planning {
+  overflow-x: auto;
+}
+.grc-planning svg {
+  min-width: var(--grc-planning-min);
+  width: 100%;
+  font: var(--mantine-font-size-xs) var(--mantine-font-family);
+}
+.grc-planning text {
+  fill: var(--mantine-color-text);
+}
+.grc-risk-canvas {
+  height: var(--grc-canevas-hauteur);
+  min-height: var(--grc-canevas-min);
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+}
+.grc-risk-canvas > div {
+  height: 100%;
+}
+@media (max-width: 700px) {
+  .grc-risk-canvas {
+    height: var(--grc-canevas-mobile);
+  }
+}
+
+.grc-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--grc-colonne-min), 1fr));
+  gap: var(--mantine-spacing-md);
+}
+
+.grc-fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+/* Navigation Pilotage : familles de l'ancien menu, palette et densité Sauge conservées. */
+.pilotage-nav-group .mantine-NavLink-label {
+  white-space: normal;
+}
+.pilotage-progress {
+  width: 100%;
+  height: var(--mantine-spacing-xs);
+  accent-color: var(--mantine-color-sauge-6);
+}
+@media (min-width: 36em) and (max-width: 63.99em) {
+  .shell-nav .pilotage-nav-group {
+    display: none;
+  }
+}
+
+/* Garder le contenu métier visible lorsque les rubriques du Pilotage sont dépliées. */
+@media (min-width: 64em) {
+  .shell-nav-inner:has(.pilotage-nav-root[data-active]) {
+    max-height: calc(100dvh - var(--suivi-entete-h) - 2 * var(--mantine-spacing-md));
+    overflow-y: auto;
+  }
+  .shell-nav-inner .pilotage-nav-group,
+  .pilotage-nav-group + div .mantine-NavLink-root {
+    padding-block: var(--mantine-spacing-xs);
+  }
+}
+
+/* ---------------------------------------------------------------- Construire de zéro (CARTO-15 à CARTO-19)
+   Palette, menu contextuel (dans la surcouche SVG du canevas), notes et cadres libres, lasso. */
+.carte-colonne {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-sm);
+  min-width: 0;
+}
+.carte-palette {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-xs);
+  padding: var(--mantine-spacing-sm);
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-lg);
+  background: var(--suivi-surface);
+}
+.carte-palette-grille,
+.carte-actions-grille {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--mantine-spacing-2xs);
+}
+.carte-palette-liste {
+  display: grid;
+  gap: var(--mantine-spacing-2xs);
+  max-height: calc(var(--carte-hauteur) * 0.35);
+  overflow: auto;
+}
+.carte-palette-item {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-2xs);
+  min-width: 0;
+  padding: var(--mantine-spacing-2xs) var(--mantine-spacing-xs);
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  background: var(--carte-boite);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.carte-palette-item:hover,
+.carte-palette-item.actif {
+  border-color: var(--carte-bleu-accent);
+}
+.carte-palette-item.actif {
+  background: var(--carte-bleu-doux);
+}
+.carte-palette-item:focus-visible {
+  outline: calc(2 * var(--suivi-trait-l)) solid var(--carte-bleu-accent);
+}
+.carte-palette-ic {
+  width: calc(var(--carte-icone) * 0.75);
+  height: calc(var(--carte-icone) * 0.75);
+  flex: none;
+}
+.carte-palette-libelle {
+  min-width: 0;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.carte-armee .carte-svg {
+  cursor: copy;
+}
+.carte-surcouche {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.carte-surcouche foreignObject {
+  overflow: visible;
+}
+.carte-menu {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  max-height: 100%;
+  overflow-y: auto;
+  padding: var(--mantine-spacing-2xs);
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  background: var(--suivi-surface);
+  box-shadow: var(--mantine-shadow-md);
+  color: var(--mantine-color-text);
+  font-family: var(--mantine-font-family);
+  font-size: var(--mantine-font-size-sm);
+  pointer-events: auto;
+}
+.carte-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-xs);
+  min-height: 2.4em;
+  padding: 0 var(--mantine-spacing-xs);
+  border: 0;
+  border-radius: var(--mantine-radius-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.carte-menu-item:hover:not(:disabled),
+.carte-menu-item:focus-visible {
+  background: var(--mantine-color-default-hover);
+  outline: none;
+}
+.carte-menu-item:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.carte-menu-item.danger {
+  color: var(--mantine-color-red-text);
+}
+.carte-menu-titre {
+  min-height: 1.85em;
+  padding: var(--mantine-spacing-2xs) var(--mantine-spacing-xs) 0;
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.carte-menu-separateur {
+  margin: var(--mantine-spacing-2xs) 0;
+  border-top: var(--suivi-trait-l) solid var(--suivi-trait);
+}
+.carte-menu-raison,
+.carte-menu-raccourci {
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-xs);
+}
+.carte-fantome {
+  opacity: 0.9;
+}
+.carte-lasso {
+  fill: var(--carte-bleu-doux);
+  fill-opacity: 0.35;
+  stroke: var(--carte-bleu-accent);
+  stroke-dasharray: 6 4;
+}
+.c-note,
+.c-note-coin {
+  stroke: var(--c-trait);
+  stroke-width: 1.2;
+}
+.c-cadre-libre {
+  fill-opacity: 0.45;
+  stroke-width: 1.6;
+  stroke-dasharray: 10 6;
+}

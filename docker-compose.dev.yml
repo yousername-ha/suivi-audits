@@ -1,0 +1,58 @@
+# Environnement de développement avec rechargement à chaud :
+#   docker compose -f docker-compose.dev.yml up
+# Interface : http://localhost:5173 (Vite, proxy vers l'API) — API : rechargée à chaque modification (tsx watch).
+# Base de développement sans mot de passe (authentification « trust »), jamais exposée hors de la machine.
+# Données de développement dans ./.donnees-dev (ignoré par git), comme en production : aucun volume nommé pour les données.
+name: suivi-audits-dev
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: suivi
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - ./.donnees-dev/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d suivi']
+      interval: 5s
+      retries: 20
+
+  api:
+    image: node:24-alpine
+    working_dir: /work
+    command: >
+      sh -c "npm i -g pnpm@10.34.6 >/dev/null 2>&1 && pnpm install --frozen-lockfile &&
+             node -e \"const f='/dev-secrets/doc_master_key',fs=require('fs');fs.mkdirSync('/dev-secrets',{recursive:true});fs.existsSync(f)||fs.writeFileSync(f,require('crypto').randomBytes(32).toString('base64'))\" &&
+             pnpm --filter @suivi/api dev"
+    environment:
+      DB_HOST: db
+      DB_USER: postgres
+      DB_PASSWORD: ''
+      SECRETS_DIR: /dev-secrets
+      COOKIE_SECURE: 'false'
+      PUBLIC_URL: http://localhost:5173
+      LEGACY_DIR: /work/app/public
+      LOG_LEVEL: debug
+    volumes:
+      - .:/work
+      - ./.donnees-dev/secrets:/dev-secrets
+      - devnodemodules:/work/node_modules
+    depends_on:
+      db: { condition: service_healthy }
+
+  web:
+    image: node:24-alpine
+    working_dir: /work
+    command: sh -c "npm i -g pnpm@10.34.6 >/dev/null 2>&1 && until [ -d node_modules/.pnpm ]; do sleep 2; done && pnpm --filter @suivi/web dev --host 0.0.0.0"
+    environment:
+      API_URL: http://api:8080
+    ports:
+      - '127.0.0.1:5173:5173'
+    volumes:
+      - .:/work
+      - devnodemodules:/work/node_modules
+    depends_on: [api]
+
+volumes:
+  devnodemodules: # dépendances (pas des données)

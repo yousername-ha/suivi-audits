@@ -1,0 +1,59 @@
+{
+  "_commentaire": "Données FICTIVES pour la cartographie (docs/cartographie/RECETTE.md) : clés de l'état legacy remplacées dans la fixture lors des tests. Aucune donnée réelle.",
+  "processes": [
+    { "id": "PRP-001", "name": "Diriger et piloter le SMSI", "owner": "Direction", "family": "Management" },
+    { "id": "PRP-002", "name": "Amélioration continue", "owner": "Pilote qualité", "family": "Management" },
+    { "id": "PRR-001", "name": "Concevoir les projets", "owner": "Chef de projet", "family": "Réalisation" },
+    { "id": "PRR-002", "name": "Déployer les usages", "owner": "Responsable des usages", "family": "Réalisation" },
+    { "id": "PRS-001", "name": "Achats et conformité", "owner": "Acheteur", "family": "Support" },
+    { "id": "PRS-001.1", "name": "Sélection des fournisseurs", "owner": "Acheteur", "family": "Support" },
+    { "id": "PRS-001.2", "name": "Suivi des contrats", "owner": "", "family": "Support", "parent": "PRS-001" },
+    { "id": "PRS-002", "name": "Ressources humaines", "owner": "Responsable RH", "family": "Support" }
+  ],
+  "scope": {
+    "statement": "Hébergement et exploitation de services numériques de santé fictifs",
+    "processes": ["PRR-001", "PRS-001"],
+    "hds": [],
+    "excl": [],
+    "sites": "Site principal fictif",
+    "systems": "- Hébergement interne fictif"
+  },
+  "interested": [
+    { "id": "PI-001", "name": "Patients (fictif)", "type": "Externe", "cat": "Usagers", "needs": "Confidentialité des données", "req": "RGPD\nHDS", "addressed": "Oui", "reviewed": "2026-06-01" },
+    { "id": "PI-002", "name": "Autorité de tutelle (fictive)", "type": "Externe", "cat": "Autorités", "needs": "Conformité", "req": "Certification HDS", "addressed": "Partiellement" },
+    { "id": "PI-003", "name": "Équipe technique", "type": "Interne", "cat": "Personnel", "needs": "Outils fiables" },
+    { "id": "PI-004", "name": "Direction générale", "type": "Interne", "cat": "Gouvernance", "needs": "Pilotage des risques" }
+  ],
+  "objectives": [
+    { "id": "OBJ-101", "name": "Sécuriser les accès", "processes": ["PRR-001"], "enjeux": ["Menace cyber : hausse des attaques", "Compétences internes : former les équipes"] },
+    { "id": "OBJ-102", "name": "Fiabiliser les achats", "processes": ["PRS-001", "PRR-002"], "enjeux": ["Exigences réglementaires : HDS et RGPD", "Compétences internes"] }
+  ],
+  "indicators": [
+    { "id": "IND-101", "name": "Taux de comptes avec MFA", "obj": "OBJ-101", "target": 0.9, "dir": "≥", "values": [{ "date": "2026-04-10", "v": 0.5 }] },
+    { "id": "IND-102", "name": "Revue des accès réalisée", "obj": "OBJ-101", "target": "Oui", "dir": "=", "values": [{ "date": "2026-05-10", "v": "Oui" }] },
+    { "id": "IND-103", "name": "MFA des services SaaS", "obj": "OBJ-102", "target": 1, "dir": "≥", "calc": "saasMfa", "auto": true, "values": [] }
+  ],
+  "swots": [
+    { "id": "SWOT-101", "process": "PRR-001", "date": "2026-03-01", "S": ["Ancienne force"], "W": [], "O": [], "T": [] },
+    { "id": "SWOT-102", "process": "PRR-001", "date": "2026-09-15", "S": ["Équipe expérimentée"], "W": ["Documentation incomplète"], "O": ["Nouveaux services numériques"], "T": ["Concurrence des offres en ligne"] },
+    { "id": "SWOT-103", "process": "PRS-001", "date": "2026-08-20", "S": [], "W": ["Dépendance à un fournisseur"], "O": [], "T": ["Menace cyber"] }
+  ],
+  "suppliers": [
+    { "id": "SUP-101", "name": "Hébergeur Alpha", "rattachement": "Infrastructure", "saas": false, "hds": "Oui", "critical": "Oui", "certs": ["HDS", "ISO 27001"] },
+    { "id": "SUP-102", "name": "Messagerie Bêta", "rattachement": "Collaboratif", "saas": true, "sso": "Oui", "mfa": "Oui", "hds": "", "critical": "" },
+    { "id": "SUP-103", "name": "Logiciel Gamma", "rattachement": "Métier", "saas": true, "sso": "Non", "mfa": "Non", "hds": "", "critical": "" },
+    { "id": "SUP-104", "name": "Infogérant Delta", "rattachement": "Infrastructure", "saas": false, "hds": "", "critical": "Oui" },
+    { "id": "SUP-105", "name": "Achat Epsilon", "rattachement": "Achats", "saas": false, "hds": "", "critical": "non" },
+    { "id": "SUP-106", "name": "Formation Zêta", "rattachement": "", "saas": false, "hds": "", "critical": "" },
+    { "id": "SUP-107", "name": "Téléphonie Êta", "rattachement": "Télécom", "saas": true, "hds": "-", "critical": "" },
+    { "id": "SUP-108", "name": "Archivage Thêta", "rattachement": "Archivage", "saas": false, "hds": "", "critical": "" }
+  ],
+  "appGaps": [
+    { "id": "APP-101", "name": "Portail patient fictif", "supplier": "Logiciel Gamma", "dscp": "Oui", "cloud": "SaaS", "status": "Intégrée", "owner": "Chef de projet" },
+    { "id": "APP-102", "name": "Outil de planification", "supplier": "Inconnu", "dscp": "Non", "cloud": "Interne", "status": "À étudier" }
+  ],
+  "findings": [
+    { "id": "ECA-101", "source": "Interne", "year": 2026, "type": "NC maj", "status": "Ouvert" },
+    { "id": "ECA-102", "source": "AFNOR", "year": 2025, "type": "NC min", "status": "Clos" }
+  ]
+}

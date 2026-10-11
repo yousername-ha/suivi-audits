@@ -1,0 +1,9 @@
+# Diagnostic avant correction : menu et sauvegardes
+
+Branche `feature/gpt6-evolution-smsi-grc`, analyse depuis `99dbf38` avant publication.
+
+1. Le lien racine Pilotage est un `NavLink` Mantine avec enfants. Mantine appelle `preventDefault()` pour déplier ces enfants ; le lien React Router n'effectue donc pas la navigation. Son état ouvert dépend lui-même de la route Pilotage : depuis l'accueil, le clic reste sans effet. La navigation directe utilisée dans la recette n'exerçait pas ce clic.
+2. Le bouton de sauvegarde nécessite un battement CLI récent. Le poller commun `exploitation-worker.py` gère déjà chiffrement, catalogue, restaurations, TLS, verrous et reprise, mais était installé par un cron hôte facultatif. Compose démarre seulement l'exécutant de mise à jour, qui possède déjà les outils, le socket et les montages nécessaires ; l'absence du cron explique l'indisponibilité affichée.
+3. Une clé de sauvegarde de mise à jour est déjà générée automatiquement dans `DATA_DIR/update-secrets/backup-pass`, hors accès API. Elle peut chiffrer les sauvegardes intégrées ; une clé/destination explicites doivent rester prioritaires, sans rotation ni remplacement. Les anciennes archives exigent toujours leur clé d'origine.
+
+Correction retenue : navigation explicite du clic racine, recette navigateur au clic sur ordinateur et téléphone ; appel séquentiel du poller commun par l'exécutant Compose déjà installé, avec clé générée et destination privée persistante par défaut, configuration serveur existante prioritaire et verrous conservés. Les fichiers temporaires de sauvegarde restent sur le stockage persistant privé, sans limite du petit `/tmp` du conteneur. L'observation/validation TLS utilise le frontal interne depuis le conteneur, avec validation du nom DNS et du certificat inchangée. Aucun nouveau service, paquet, permission HTTP ni migration.

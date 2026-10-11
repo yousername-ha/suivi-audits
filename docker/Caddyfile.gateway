@@ -1,0 +1,117 @@
+# Frontal HTTPS (Caddy 2) : interface web compilée + reverse proxy vers l'API.
+# Variables : SITE_ADDRESS, CADDY_TLS (voir .env). Ports internes non privilégiés : 8080 (HTTP) et 8443 (HTTPS),
+# publiés sur 80 et 443 par docker-compose.yml.
+{
+	admin off
+	# Conteneur en lecture seule : ne pas tenter d'installer la racine interne dans le magasin de confiance.
+	skip_install_trust
+	http_port 8080
+	https_port 8443
+	# Redirection HTTP -> HTTPS gérée ci-dessous (sans le port interne 8443 dans l'adresse).
+	auto_https disable_redirects
+	servers {
+		protocols h1 h2
+	}
+}
+
+http://{$SITE_ADDRESS}:8080 {
+	redir https://{host}{uri} 308
+}
+
+{$SITE_ADDRESS}:8443 {
+	tls {$CADDY_TLS}
+
+	# Compression, sauf pour le flux temps réel (text/event-stream), qui doit partir sans délai.
+	encode {
+		zstd
+		gzip
+		match {
+			header Content-Type text/html* text/css* text/plain* text/javascript* application/javascript* application/json* image/svg+xml*
+		}
+	}
+
+	request_body {
+		max_size 60MB
+	}
+
+	header {
+		-Server
+		-Via
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy no-referrer
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+		Cross-Origin-Opener-Policy same-origin
+	}
+
+	# État et page servis par le frontal même pendant l'arrêt de tous les composants applicatifs.
+	handle /update/status.json {
+		root * /updates
+		rewrite * /status.json
+		header Cache-Control "no-store"
+		file_server
+	}
+	handle /update/* {
+		root * /maintenance
+		uri strip_prefix /update
+		try_files {path} /index.html
+		header Cache-Control "no-store"
+		header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+		file_server
+	}
+	@maintenance {
+		file {
+			root /updates
+			try_files maintenance
+		}
+		not path /update/* /healthz
+	}
+	handle @maintenance {
+		@read {
+			method GET HEAD
+			header Accept *text/html*
+		}
+		redir @read /update/ 302
+		header Content-Type application/json
+		respond "{\"error\":\"Mise à jour en cours. Vos données sont conservées.\"}" 503
+	}
+
+	handle {
+		reverse_proxy web:8080 {
+			flush_interval -1
+			transport http {
+				dial_timeout 3s
+			}
+		}
+	}
+	handle_errors {
+		header {
+			-Server
+			-Via
+			Strict-Transport-Security "max-age=31536000; includeSubDomains"
+			X-Content-Type-Options nosniff
+			X-Frame-Options DENY
+			Referrer-Policy no-referrer
+		}
+		@apiFailure path /api/* /healthz /d/*
+		handle @apiFailure {
+			header Content-Type application/json
+			respond "{\"error\":\"Service momentanément indisponible.\"}" 503
+		}
+		handle {
+			root * /maintenance
+			rewrite * /index.html
+			header Cache-Control "no-store"
+			header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+			file_server {
+				status 200
+			}
+		}
+	}
+
+	log {
+		output stdout
+		format json
+	}
+}

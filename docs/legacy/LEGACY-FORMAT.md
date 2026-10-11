@@ -1,0 +1,664 @@
+# Format de l'outil de suivi « legacy » (schema 14)
+
+Généré automatiquement depuis un export réel, **sans aucune valeur** : uniquement les chemins, les types et les effectifs.
+Sert de contrat pour l'import dans la refonte. La clé `maps` (cartographie, module bêta validé le 08/10/2026, voir `docs/cartographie/reference-beta-legacy/CONTRAT-S-MAPS.md`) a été ajoutée à la main : effectifs indicatifs. Jeu de test associé : `legacy-fixture.json` (anonymisé).
+
+## Modules (clés de premier niveau)
+
+| Clé | Type | Éléments |
+|---|---|---|
+| `v` | int |  |
+| `updatedAt` | int |  |
+| `years` | liste | 3 |
+| `yearLabels` | objet | 4 |
+| `nextYear` | int |  |
+| `nextDate` | str |  |
+| `internalDate` | str |  |
+| `groups` | liste | 12 |
+| `items` | liste | 157 |
+| `findings` | liste | 23 |
+| `source` | str |  |
+| `closeDeadline` | str |  |
+| `findingsRev` | int |  |
+| `dda` | objet | 157 |
+| `processes` | liste | 11 |
+| `objectives` | liste | 6 |
+| `indicators` | liste | 13 |
+| `suppliers` | liste | 15 |
+| `frameworks` | liste | 1 |
+| `ai` | objet | 8 |
+| `activeFw` | str |  |
+| `entityCategory` | str |  |
+| `schema` | int |  |
+| `iso27001Certified` | bool |  |
+| `accessReviews` | liste | 14 |
+| `plan` | objet | 5 |
+| `appGaps` | liste | 2 |
+| `reviews` | liste | 1 |
+| `branding` | objet | 0 |
+| `plans` | liste | 0 |
+| `scope` | objet | 3 |
+| `interested` | liste | 0 |
+| `swots` | liste | 2 |
+| `incidents` | liste | 0 |
+| `supEvals` | liste | 0 |
+| `crisis` | objet | 3 |
+| `roles` | liste | 8 |
+| `recurring` | liste | 0 |
+| `evidences` | liste | 0 |
+| `invest` | objet | 3 |
+| `crrc` | objet | 6 |
+| `maps` | objet | 2 |
+
+## Listes d'objets sans identifiant stable (à corriger côté legacy)
+
+| Chemin | Objets |
+|---|---|
+| `$.findings[].tasks` | 60 |
+| `$.indicators[].values` | 13 |
+| `$.ai.plan` | 40 |
+| `$.ai.policies` | 18 |
+| `$.plan.slots[].proofs` | 83 |
+| `$.reviews[].cs.inc.focus` | 2 |
+| `$.reviews[].cs.sujet` | 2 |
+| `$.crisis.cells[].log` | 2 |
+| `$.roles` | 8 |
+
+## Tous les chemins
+
+| Chemin | Types | Occurrences |
+|---|---|---|
+| `$.v` | entier | 1 |
+| `$.updatedAt` | entier | 1 |
+| `$.years` | liste | 1 |
+| `$.years[]` | entier | 3 |
+| `$.yearLabels` | objet (dictionnaire indexé) | 1 |
+| `$.yearLabels.{clé}` | texte | 4 |
+| `$.nextYear` | entier | 1 |
+| `$.nextDate` | texte | 1 |
+| `$.internalDate` | texte | 1 |
+| `$.groups` | liste | 1 |
+| `$.groups[]` | objet | 12 |
+| `$.groups[].id` | texte | 12 |
+| `$.groups[].ref` | texte | 12 |
+| `$.groups[].num` | texte | 12 |
+| `$.groups[].title` | texte | 12 |
+| `$.items` | liste | 1 |
+| `$.items[]` | objet | 157 |
+| `$.items[].id` | texte | 157 |
+| `$.items[].ref` | texte | 157 |
+| `$.items[].num` | texte | 157 |
+| `$.items[].title` | texte | 157 |
+| `$.items[].group` | texte | 157 |
+| `$.items[].depth` | entier | 157 |
+| `$.items[].afnor` | objet | 157 |
+| `$.items[].afnor.2025` | texte | 157 |
+| `$.items[].afnor.2026` | texte | 157 |
+| `$.items[].afnor.2027` | texte | 157 |
+| `$.items[].interne` | objet | 157 |
+| `$.items[].interne.2025` | texte | 157 |
+| `$.items[].interne.2026` | texte | 157 |
+| `$.items[].interne.2027` | texte | 157 |
+| `$.items[].prep` | texte | 157 |
+| `$.items[].owner` | texte | 157 |
+| `$.items[].notes` | texte | 157 |
+| `$.items[].remInterne` | texte | 55 |
+| `$.items[].remAfnor` | texte | 45 |
+| `$.findings` | liste | 1 |
+| `$.findings[]` | objet | 23 |
+| `$.findings[].id` | texte | 23 |
+| `$.findings[].source` | texte | 23 |
+| `$.findings[].year` | entier | 23 |
+| `$.findings[].type` | texte | 23 |
+| `$.findings[].status` | texte | 23 |
+| `$.findings[].text` | texte | 23 |
+| `$.findings[].desc` | texte | 23 |
+| `$.findings[].action` | texte | 23 |
+| `$.findings[].tasks` | liste | 23 |
+| `$.findings[].tasks[]` | objet | 60 |
+| `$.findings[].tasks[].t` | texte | 60 |
+| `$.findings[].tasks[].done` | booléen | 60 |
+| `$.findings[].comment` | texte | 23 |
+| `$.findings[].items` | liste | 23 |
+| `$.findings[].items[]` | texte | 26 |
+| `$.findings[].owner` | texte | 23 |
+| `$.findings[].due` | texte | 23 |
+| `$.findings[].proof` | texte | 23 |
+| `$.source` | texte | 1 |
+| `$.closeDeadline` | texte | 1 |
+| `$.findingsRev` | entier | 1 |
+| `$.dda` | objet (dictionnaire indexé) | 1 |
+| `$.dda.{clé}` | objet | 157 |
+| `$.dda.{clé}.app` | texte | 124 |
+| `$.dda.{clé}.just` | texte | 124 |
+| `$.dda.{clé}.risk` | texte | 124 |
+| `$.dda.{clé}.level` | texte | 157 |
+| `$.dda.{clé}.actions` | texte | 124 |
+| `$.dda.{clé}.docs` | texte | 124 |
+| `$.dda.{clé}.comment` | texte | 124 |
+| `$.dda.{clé}.obj` | texte | 93 |
+| `$.dda.{clé}.req` | texte | 124 |
+| `$.dda.{clé}.url` | texte | 1 |
+| `$.processes` | liste | 1 |
+| `$.processes[]` | objet | 11 |
+| `$.processes[].id` | texte | 11 |
+| `$.processes[].name` | texte | 11 |
+| `$.processes[].owner` | texte | 11 |
+| `$.processes[].family` | texte | 11 |
+| `$.processes[].indicators` | liste | 3 |
+| `$.processes[].parent` | texte | 2 |
+| `$.objectives` | liste | 1 |
+| `$.objectives[]` | objet | 6 |
+| `$.objectives[].id` | texte | 6 |
+| `$.objectives[].name` | texte | 6 |
+| `$.objectives[].due` | texte | 6 |
+| `$.objectives[].owner` | texte | 6 |
+| `$.objectives[].processes` | liste | 6 |
+| `$.objectives[].processes[]` | texte | 9 |
+| `$.objectives[].enjeux` | liste | 6 |
+| `$.objectives[].enjeux[]` | texte | 13 |
+| `$.indicators` | liste | 1 |
+| `$.indicators[]` | objet | 13 |
+| `$.indicators[].id` | texte | 13 |
+| `$.indicators[].name` | texte | 13 |
+| `$.indicators[].obj` | texte | 13 |
+| `$.indicators[].target` | entier, nombre, texte | 13 |
+| `$.indicators[].action` | texte | 13 |
+| `$.indicators[].lastReview` | texte | 13 |
+| `$.indicators[].due` | texte | 13 |
+| `$.indicators[].owner` | texte | 13 |
+| `$.indicators[].values` | liste | 13 |
+| `$.indicators[].values[]` | objet | 13 |
+| `$.indicators[].values[].date` | texte | 13 |
+| `$.indicators[].values[].v` | entier, nombre, texte | 13 |
+| `$.indicators[].values[].note` | texte | 13 |
+| `$.indicators[].values[].hist` | texte | 13 |
+| `$.indicators[].dir` | texte | 13 |
+| `$.indicators[].freq` | texte | 13 |
+| `$.indicators[].calc` | texte | 5 |
+| `$.indicators[].auto` | booléen | 5 |
+| `$.indicators[].actionOwner` | texte | 2 |
+| `$.indicators[].actionDue` | texte | 1 |
+| `$.suppliers` | liste | 1 |
+| `$.suppliers[]` | objet | 15 |
+| `$.suppliers[].id` | texte | 15 |
+| `$.suppliers[].name` | texte | 15 |
+| `$.suppliers[].rattachement` | texte | 15 |
+| `$.suppliers[].saas` | booléen | 15 |
+| `$.suppliers[].sso` | texte | 15 |
+| `$.suppliers[].mfa` | texte | 15 |
+| `$.suppliers[].critical` | texte | 15 |
+| `$.suppliers[].hds` | texte | 15 |
+| `$.suppliers[].contact` | texte | 15 |
+| `$.suppliers[].lastReview` | texte | 15 |
+| `$.suppliers[].notes` | texte | 15 |
+| `$.suppliers[].controls` | liste | 15 |
+| `$.suppliers[].controls[]` | objet | 60 |
+| `$.suppliers[].controls[].id` | texte | 60 |
+| `$.suppliers[].controls[].t` | texte | 60 |
+| `$.suppliers[].controls[].ref` | texte | 60 |
+| `$.suppliers[].controls[].freq` | entier | 60 |
+| `$.suppliers[].controls[].last` | texte | 60 |
+| `$.suppliers[].controls[].result` | texte | 60 |
+| `$.suppliers[].controls[].comment` | texte | 60 |
+| `$.suppliers[].certs` | liste | 14 |
+| `$.suppliers[].createdAt` | texte | 1 |
+| `$.suppliers[].controls[].createdAt` | texte | 4 |
+| `$.frameworks` | liste | 1 |
+| `$.frameworks[]` | objet | 1 |
+| `$.frameworks[].id` | texte | 1 |
+| `$.frameworks[].name` | texte | 1 |
+| `$.frameworks[].version` | texte | 1 |
+| `$.frameworks[].source` | texte | 1 |
+| `$.frameworks[].scopeMode` | texte | 1 |
+| `$.frameworks[].requirements` | liste | 1 |
+| `$.frameworks[].requirements[]` | objet | 152 |
+| `$.frameworks[].requirements[].id` | texte | 152 |
+| `$.frameworks[].requirements[].os` | entier | 152 |
+| `$.frameworks[].requirements[].objective` | texte | 152 |
+| `$.frameworks[].requirements[].theme` | texte | 152 |
+| `$.frameworks[].requirements[].scope` | texte | 152 |
+| `$.frameworks[].requirements[].text` | texte | 152 |
+| `$.frameworks[].requirements[].maps` | liste | 152 |
+| `$.frameworks[].requirements[].self` | texte | 152 |
+| `$.frameworks[].requirements[].comment` | texte | 152 |
+| `$.frameworks[].objectives` | objet (dictionnaire indexé) | 1 |
+| `$.frameworks[].objectives.{clé}` | objet | 20 |
+| `$.frameworks[].objectives.{clé}.title` | texte | 20 |
+| `$.frameworks[].objectives.{clé}.statement` | texte | 20 |
+| `$.frameworks[].objectives.{clé}.prevaloir` | liste | 20 |
+| `$.frameworks[].objectives.{clé}.iso` | booléen | 20 |
+| `$.frameworks[].objectives.{clé}.qualified` | liste | 20 |
+| `$.frameworks[].objectives.{clé}.nis2` | liste | 20 |
+| `$.frameworks[].objectives.{clé}.nis2[]` | texte | 36 |
+| `$.frameworks[].objectives.{clé}.pillar` | texte | 20 |
+| `$.frameworks[].objectives.{clé}.prevaloir[]` | texte | 8 |
+| `$.frameworks[].objectives.{clé}.qualified[]` | texte | 7 |
+| `$.ai` | objet | 1 |
+| `$.ai.context` | texte | 1 |
+| `$.ai.register` | liste | 1 |
+| `$.ai.register[]` | objet | 18 |
+| `$.ai.register[].id` | texte | 18 |
+| `$.ai.register[].usecase` | texte | 18 |
+| `$.ai.register[].owner` | texte | 18 |
+| `$.ai.register[].role` | texte | 18 |
+| `$.ai.register[].type` | texte | 18 |
+| `$.ai.register[].provider` | texte | 18 |
+| `$.ai.register[].purpose` | texte | 18 |
+| `$.ai.register[].dscp` | texte | 18 |
+| `$.ai.register[].data` | texte | 18 |
+| `$.ai.register[].hdsAct` | texte | 18 |
+| `$.ai.register[].hdsCert` | texte | 18 |
+| `$.ai.register[].storage` | texte | 18 |
+| `$.ai.register[].remote` | texte | 18 |
+| `$.ai.register[].training` | texte | 18 |
+| `$.ai.register[].aiact` | texte | 18 |
+| `$.ai.register[].dm` | texte | 18 |
+| `$.ai.register[].human` | texte | 18 |
+| `$.ai.register[].aipd` | texte | 18 |
+| `$.ai.register[].authz` | texte | 18 |
+| `$.ai.register[].golive` | texte | 18 |
+| `$.ai.register[].proof` | texte | 18 |
+| `$.ai.register[].category` | texte | 18 |
+| `$.ai.register[].aiPresence` | texte | 18 |
+| `$.ai.evals` | liste | 1 |
+| `$.ai.evals[]` | objet | 22 |
+| `$.ai.evals[].id` | texte | 22 |
+| `$.ai.evals[].domain` | texte | 22 |
+| `$.ai.evals[].scenario` | texte | 22 |
+| `$.ai.evals[].app` | texte | 22 |
+| `$.ai.evals[].dscp` | texte | 22 |
+| `$.ai.evals[].c` | entier | 22 |
+| `$.ai.evals[].i` | entier | 22 |
+| `$.ai.evals[].a` | entier | 22 |
+| `$.ai.evals[].audit` | entier | 22 |
+| `$.ai.evals[].patient` | entier | 22 |
+| `$.ai.evals[].prob` | entier | 22 |
+| `$.ai.evals[].maturity` | entier | 22 |
+| `$.ai.evals[].effort` | entier | 22 |
+| `$.ai.evals[].iso` | texte | 22 |
+| `$.ai.evals[].hds` | texte | 22 |
+| `$.ai.evals[].measure` | texte | 22 |
+| `$.ai.evals[].scope` | texte | 22 |
+| `$.ai.evals[].status` | texte | 22 |
+| `$.ai.plan` | liste | 1 |
+| `$.ai.plan[]` | objet | 40 |
+| `$.ai.plan[].step` | entier | 40 |
+| `$.ai.plan[].phase` | texte | 40 |
+| `$.ai.plan[].action` | texte | 40 |
+| `$.ai.plan[].result` | texte | 40 |
+| `$.ai.plan[].owner` | texte | 40 |
+| `$.ai.plan[].contrib` | texte | 40 |
+| `$.ai.plan[].iso` | texte | 40 |
+| `$.ai.plan[].hds` | texte | 40 |
+| `$.ai.plan[].proof` | texte | 40 |
+| `$.ai.plan[].kpi` | texte | 40 |
+| `$.ai.plan[].jStart` | entier | 40 |
+| `$.ai.plan[].jEnd` | entier | 40 |
+| `$.ai.plan[].priority` | texte | 40 |
+| `$.ai.plan[].status` | texte | 40 |
+| `$.ai.plan[].progress` | entier | 40 |
+| `$.ai.plan[].dep` | texte | 40 |
+| `$.ai.plan[].evals` | texte | 40 |
+| `$.ai.policies` | liste | 1 |
+| `$.ai.policies[]` | objet | 18 |
+| `$.ai.policies[].policy` | texte | 18 |
+| `$.ai.policies[].impact` | texte | 18 |
+| `$.ai.policies[].change` | texte | 18 |
+| `$.ai.policies[].iso` | texte | 18 |
+| `$.ai.policies[].annex` | texte | 18 |
+| `$.ai.policies[].hds` | texte | 18 |
+| `$.ai.policies[].evals` | texte | 18 |
+| `$.ai.policies[].steps` | texte | 18 |
+| `$.ai.policies[].owner` | texte | 18 |
+| `$.ai.policies[].target` | texte | 18 |
+| `$.ai.policies[].freq` | texte | 18 |
+| `$.ai.policies[].proof` | texte | 18 |
+| `$.ai.policies[].status` | texte | 18 |
+| `$.ai.start` | texte | 1 |
+| `$.ai.sources` | liste | 1 |
+| `$.ai.sources[]` | objet | 15 |
+| `$.ai.sources[].id` | texte | 15 |
+| `$.ai.sources[].name` | texte | 15 |
+| `$.ai.sources[].version` | texte | 15 |
+| `$.ai.sources[].use` | texte | 15 |
+| `$.ai.sources[].url` | texte | 15 |
+| `$.ai.sources[].checked` | texte | 15 |
+| `$.ai.sources[].note` | texte | 15 |
+| `$.ai.startValidated` | booléen | 1 |
+| `$.activeFw` | texte | 1 |
+| `$.entityCategory` | texte | 1 |
+| `$.schema` | entier | 1 |
+| `$.iso27001Certified` | booléen | 1 |
+| `$.accessReviews` | liste | 1 |
+| `$.accessReviews[]` | objet | 14 |
+| `$.accessReviews[].id` | texte | 14 |
+| `$.accessReviews[].app` | texte | 14 |
+| `$.accessReviews[].month` | texte | 14 |
+| `$.accessReviews[].supplier` | texte | 14 |
+| `$.accessReviews[].freq` | entier | 14 |
+| `$.accessReviews[].source` | texte | 14 |
+| `$.accessReviews[].comment` | texte | 14 |
+| `$.plan` | objet | 1 |
+| `$.plan.status` | texte | 1 |
+| `$.plan.note` | texte | 1 |
+| `$.plan.days` | liste | 1 |
+| `$.plan.days[]` | objet | 3 |
+| `$.plan.days[].id` | texte | 3 |
+| `$.plan.days[].label` | texte | 3 |
+| `$.plan.days[].date` | texte | 3 |
+| `$.plan.slots` | liste | 1 |
+| `$.plan.slots[]` | objet | 22 |
+| `$.plan.slots[].id` | texte | 22 |
+| `$.plan.slots[].day` | texte | 22 |
+| `$.plan.slots[].start` | texte | 22 |
+| `$.plan.slots[].end` | texte | 22 |
+| `$.plan.slots[].type` | texte | 22 |
+| `$.plan.slots[].title` | texte | 22 |
+| `$.plan.slots[].detail` | texte | 22 |
+| `$.plan.slots[].place` | texte | 22 |
+| `$.plan.slots[].items` | liste | 22 |
+| `$.plan.slots[].people` | liste | 22 |
+| `$.plan.slots[].people[]` | texte | 41 |
+| `$.plan.slots[].proofs` | liste | 22 |
+| `$.plan.slots[].questions` | liste | 22 |
+| `$.plan.slots[].items[]` | texte | 160 |
+| `$.plan.slots[].proofs[]` | objet | 83 |
+| `$.plan.slots[].proofs[].t` | texte | 83 |
+| `$.plan.slots[].proofs[].done` | booléen | 83 |
+| `$.plan.slots[].questions[]` | texte | 71 |
+| `$.plan.people` | liste | 1 |
+| `$.plan.people[]` | objet | 11 |
+| `$.plan.people[].id` | texte | 11 |
+| `$.plan.people[].name` | texte | 11 |
+| `$.plan.people[].role` | texte | 11 |
+| `$.appGaps` | liste | 1 |
+| `$.appGaps[]` | objet | 2 |
+| `$.appGaps[].id` | texte | 2 |
+| `$.appGaps[].createdAt` | texte | 2 |
+| `$.appGaps[].name` | texte | 2 |
+| `$.appGaps[].supplier` | texte | 2 |
+| `$.appGaps[].dscp` | texte | 2 |
+| `$.appGaps[].cloud` | texte | 2 |
+| `$.appGaps[].status` | texte | 2 |
+| `$.appGaps[].owner` | texte | 2 |
+| `$.appGaps[].target` | texte | 2 |
+| `$.appGaps[].desc` | texte | 2 |
+| `$.appGaps[].lines` | objet | 2 |
+| `$.appGaps[].custom` | liste | 2 |
+| `$.reviews` | liste | 1 |
+| `$.reviews[]` | objet | 1 |
+| `$.reviews[].id` | texte | 1 |
+| `$.reviews[].type` | texte | 1 |
+| `$.reviews[].createdAt` | texte | 1 |
+| `$.reviews[].date` | texte | 1 |
+| `$.reviews[].title` | texte | 1 |
+| `$.reviews[].period` | texte | 1 |
+| `$.reviews[].participants` | texte | 1 |
+| `$.reviews[].classification` | texte | 1 |
+| `$.reviews[].sections` | liste | 1 |
+| `$.reviews[].sections[]` | texte | 9 |
+| `$.reviews[].inputs` | objet | 1 |
+| `$.reviews[].decisions` | liste | 1 |
+| `$.reviews[].cs` | objet | 1 |
+| `$.reviews[].cs.inc` | objet | 1 |
+| `$.reviews[].cs.inc.open` | texte | 1 |
+| `$.reviews[].cs.inc.closed` | texte | 1 |
+| `$.reviews[].cs.inc.total` | texte | 1 |
+| `$.reviews[].cs.inc.focus` | liste | 1 |
+| `$.reviews[].cs.inc.focus[]` | objet | 2 |
+| `$.reviews[].cs.inc.focus[].name` | texte | 2 |
+| `$.reviews[].cs.inc.focus[].date` | texte | 2 |
+| `$.reviews[].cs.inc.focus[].time` | texte | 2 |
+| `$.reviews[].cs.inc.focus[].desc` | texte | 2 |
+| `$.reviews[].cs.vul` | objet | 1 |
+| `$.reviews[].cs.vul.tenable` | objet | 1 |
+| `$.reviews[].cs.vul.tenable.kpi` | texte | 1 |
+| `$.reviews[].cs.vul.tenable.txt` | texte | 1 |
+| `$.reviews[].cs.vul.tenable.img` | null | 1 |
+| `$.reviews[].cs.vul.ext` | objet | 1 |
+| `$.reviews[].cs.vul.ext.kpi` | texte | 1 |
+| `$.reviews[].cs.vul.ext.txt` | texte | 1 |
+| `$.reviews[].cs.vul.ext.img` | null | 1 |
+| `$.reviews[].cs.vul.def` | objet | 1 |
+| `$.reviews[].cs.vul.def.kpi` | texte | 1 |
+| `$.reviews[].cs.vul.def.txt` | texte | 1 |
+| `$.reviews[].cs.vul.def.img` | null | 1 |
+| `$.reviews[].cs.rc` | objet | 1 |
+| `$.reviews[].cs.rc.cont` | objet | 1 |
+| `$.reviews[].cs.rc.cont.kpi` | texte | 1 |
+| `$.reviews[].cs.rc.cont.txt` | texte | 1 |
+| `$.reviews[].cs.rc.cont.img` | null | 1 |
+| `$.reviews[].cs.rc.dispo` | objet | 1 |
+| `$.reviews[].cs.rc.dispo.kpi` | texte | 1 |
+| `$.reviews[].cs.rc.dispo.txt` | texte | 1 |
+| `$.reviews[].cs.rc.dispo.img` | null | 1 |
+| `$.reviews[].cs.rc.sensi` | objet | 1 |
+| `$.reviews[].cs.rc.sensi.kpi` | texte | 1 |
+| `$.reviews[].cs.rc.sensi.txt` | texte | 1 |
+| `$.reviews[].cs.rc.sensi.img` | null | 1 |
+| `$.reviews[].cs.rc.acces` | booléen | 1 |
+| `$.reviews[].cs.risks` | liste | 1 |
+| `$.reviews[].cs.withEcarts` | booléen | 1 |
+| `$.reviews[].cs.nr` | objet | 1 |
+| `$.reviews[].cs.nr.chg` | texte | 1 |
+| `$.reviews[].cs.nr.vul` | texte | 1 |
+| `$.reviews[].cs.nr.inc` | texte | 1 |
+| `$.reviews[].cs.nr.nc` | texte | 1 |
+| `$.reviews[].cs.sujet` | liste | 1 |
+| `$.reviews[].cs.sujet[]` | objet | 2 |
+| `$.reviews[].cs.sujet[].title` | texte | 2 |
+| `$.reviews[].cs.sujet[].txt` | texte | 2 |
+| `$.reviews[].cs.sujet[].img` | null | 2 |
+| `$.reviews[].cs.rem` | texte | 1 |
+| `$.branding` | objet | 1 |
+| `$.plans` | liste | 1 |
+| `$.scope` | objet | 1 |
+| `$.scope.hds` | liste | 1 |
+| `$.scope.excl` | liste | 1 |
+| `$.scope.processes` | liste | 1 |
+| `$.interested` | liste | 1 |
+| `$.swots` | liste | 1 |
+| `$.swots[]` | objet | 2 |
+| `$.swots[].id` | texte | 2 |
+| `$.swots[].createdAt` | texte | 2 |
+| `$.swots[].process` | texte | 2 |
+| `$.swots[].date` | texte | 2 |
+| `$.swots[].author` | texte | 2 |
+| `$.swots[].version` | texte | 2 |
+| `$.swots[].S` | liste | 2 |
+| `$.swots[].W` | liste | 2 |
+| `$.swots[].O` | liste | 2 |
+| `$.swots[].T` | liste | 2 |
+| `$.incidents` | liste | 1 |
+| `$.supEvals` | liste | 1 |
+| `$.crisis` | objet | 1 |
+| `$.crisis.contacts` | liste | 1 |
+| `$.crisis.scenarios` | liste | 1 |
+| `$.crisis.cells` | liste | 1 |
+| `$.crisis.cells[]` | objet | 1 |
+| `$.crisis.cells[].id` | texte | 1 |
+| `$.crisis.cells[].createdAt` | texte | 1 |
+| `$.crisis.cells[].title` | texte | 1 |
+| `$.crisis.cells[].mode` | texte | 1 |
+| `$.crisis.cells[].scenario` | texte | 1 |
+| `$.crisis.cells[].plan` | texte | 1 |
+| `$.crisis.cells[].start` | texte | 1 |
+| `$.crisis.cells[].end` | texte | 1 |
+| `$.crisis.cells[].status` | texte | 1 |
+| `$.crisis.cells[].log` | liste | 1 |
+| `$.crisis.cells[].log[]` | objet | 2 |
+| `$.crisis.cells[].log[].ts` | texte | 2 |
+| `$.crisis.cells[].log[].type` | texte | 2 |
+| `$.crisis.cells[].log[].author` | texte | 2 |
+| `$.crisis.cells[].log[].text` | texte | 2 |
+| `$.crisis.cells[].checks` | objet | 1 |
+| `$.crisis.cells[].deadlines` | liste | 1 |
+| `$.roles` | liste | 1 |
+| `$.roles[]` | objet | 8 |
+| `$.roles[].createdAt` | texte | 8 |
+| `$.roles[].name` | texte | 8 |
+| `$.roles[].holder` | texte | 8 |
+| `$.roles[].deputy` | texte | 8 |
+| `$.roles[].email` | texte | 8 |
+| `$.roles[].phone` | texte | 8 |
+| `$.roles[].resp` | texte | 8 |
+| `$.roles[].refs` | texte | 8 |
+| `$.recurring` | liste | 1 |
+| `$.evidences` | liste | 1 |
+| `$.invest` | objet | 1 |
+| `$.invest.baseYear` | entier | 1 |
+| `$.invest.lines` | liste | 1 |
+| `$.invest.lines[]` | objet | 25 |
+| `$.invest.lines[].id` | texte | 25 |
+| `$.invest.lines[].createdAt` | texte | 25 |
+| `$.invest.lines[].company` | texte | 25 |
+| `$.invest.lines[].priority` | texte | 25 |
+| `$.invest.lines[].type` | texte | 25 |
+| `$.invest.lines[].desc` | texte | 25 |
+| `$.invest.lines[].n0` | entier, nombre | 25 |
+| `$.invest.lines[].n1` | entier, nombre | 25 |
+| `$.invest.lines[].n2` | entier, nombre | 25 |
+| `$.invest.lines[].comment` | texte | 25 |
+| `$.invest.lines[].alt` | texte | 25 |
+| `$.invest.lines[].account` | texte | 25 |
+| `$.invest.lines[].perimeter` | texte | 25 |
+| `$.invest.lines[].status` | texte | 25 |
+| `$.invest.lines[].nature` | texte | 25 |
+| `$.invest.lines[].renewal` | texte | 25 |
+| `$.invest.lines[].notice` | entier | 25 |
+| `$.invest.lines[].supplier` | texte | 25 |
+| `$.invest.source` | texte | 1 |
+| `$.crrc` | objet | 1 |
+| `$.crrc.offers` | liste | 1 |
+| `$.crrc.offers[]` | objet | 1 |
+| `$.crrc.offers[].id` | texte | 1 |
+| `$.crrc.offers[].name` | texte | 1 |
+| `$.crrc.offers[].status` | texte | 1 |
+| `$.crrc.offers[].partner` | texte | 1 |
+| `$.crrc.offers[].desc` | texte | 1 |
+| `$.crrc.offers[].perimeters` | liste | 1 |
+| `$.crrc.offers[].perimeters[]` | liste | 5 |
+| `$.crrc.offers[].perimeters[][]` | texte, liste | 20 |
+| `$.crrc.offers[].perimeters[][][]` | texte | 8 |
+| `$.crrc.establishments` | liste | 1 |
+| `$.crrc.resources` | liste | 1 |
+| `$.crrc.runs` | liste | 1 |
+| `$.crrc.restores` | liste | 1 |
+| `$.crrc.alerts` | liste | 1 |
+| `$.maps` | objet | 1 |
+| `$.maps.context` | objet | 1 |
+| `$.maps.context.nodes` | objet (dictionnaire indexé) | 1 |
+| `$.maps.context.nodes.{clé}` | objet | 1 |
+| `$.maps.context.nodes.{clé}.x` | entier, nombre | 1 |
+| `$.maps.context.nodes.{clé}.y` | entier, nombre | 1 |
+| `$.maps.context.nodes.{clé}.w` | entier, nombre | 1 |
+| `$.maps.context.nodes.{clé}.h` | entier, nombre | 1 |
+| `$.maps.context.nodes.{clé}.label` | texte | 1 |
+| `$.maps.context.nodes.{clé}.hidden` | booléen | 1 |
+| `$.maps.context.edges` | liste | 1 |
+| `$.maps.context.edges[]` | objet | 1 |
+| `$.maps.context.edges[].id` | texte | 1 |
+| `$.maps.context.edges[].s` | texte | 1 |
+| `$.maps.context.edges[].t` | texte | 1 |
+| `$.maps.context.edges[].type` | texte | 1 |
+| `$.maps.context.edges[].gen` | entier, booléen | 1 |
+| `$.maps.context.hide` | objet (dictionnaire indexé) | 1 |
+| `$.maps.context.hide.{clé}` | entier | 1 |
+| `$.maps.context.ignored` | objet (dictionnaire indexé) | 1 |
+| `$.maps.context.ignored.{clé}` | entier | 1 |
+| `$.maps.context.free` | objet (dictionnaire indexé) | 1 |
+| `$.maps.context.free.{clé}` | objet | 1 |
+| `$.maps.context.free.{clé}.text` | texte | 1 |
+| `$.maps.context.free.{clé}.tint` | texte | 1 |
+| `$.maps.context.versions` | liste | 1 |
+| `$.maps.context.versions[]` | objet | 1 |
+| `$.maps.context.versions[].id` | texte | 1 |
+| `$.maps.context.versions[].at` | texte | 1 |
+| `$.maps.context.versions[].label` | texte | 1 |
+| `$.maps.context.versions[].map` | objet | 1 |
+| `$.maps.context.versions[].map.nodes` | objet (dictionnaire indexé) | 1 |
+| `$.maps.context.versions[].map.nodes.{clé}` | objet | 1 |
+| `$.maps.context.versions[].map.nodes.{clé}.x` | entier, nombre | 1 |
+| `$.maps.context.versions[].map.nodes.{clé}.y` | entier, nombre | 1 |
+| `$.maps.context.versions[].map.nodes.{clé}.w` | entier, nombre | 1 |
+| `$.maps.context.versions[].map.nodes.{clé}.h` | entier, nombre | 1 |
+| `$.maps.context.versions[].map.nodes.{clé}.label` | texte | 1 |
+| `$.maps.context.versions[].map.nodes.{clé}.hidden` | booléen | 1 |
+| `$.maps.context.versions[].map.edges` | liste | 1 |
+| `$.maps.context.versions[].map.edges[]` | objet | 1 |
+| `$.maps.context.versions[].map.edges[].id` | texte | 1 |
+| `$.maps.context.versions[].map.edges[].s` | texte | 1 |
+| `$.maps.context.versions[].map.edges[].t` | texte | 1 |
+| `$.maps.context.versions[].map.edges[].type` | texte | 1 |
+| `$.maps.context.versions[].map.edges[].gen` | entier, booléen | 1 |
+| `$.maps.context.versions[].map.hide` | objet (dictionnaire indexé) | 1 |
+| `$.maps.context.versions[].map.hide.{clé}` | entier | 1 |
+| `$.maps.context.versions[].map.ignored` | objet (dictionnaire indexé) | 1 |
+| `$.maps.context.versions[].map.ignored.{clé}` | entier | 1 |
+| `$.maps.context.versions[].map.free` | objet (dictionnaire indexé) | 1 |
+| `$.maps.context.versions[].map.free.{clé}` | objet | 1 |
+| `$.maps.context.versions[].map.free.{clé}.text` | texte | 1 |
+| `$.maps.context.versions[].map.free.{clé}.tint` | texte | 1 |
+| `$.maps.context.updatedAt` | texte | 1 |
+| `$.maps.process` | objet | 1 |
+| `$.maps.process.nodes` | objet (dictionnaire indexé) | 1 |
+| `$.maps.process.nodes.{clé}` | objet | 1 |
+| `$.maps.process.nodes.{clé}.x` | entier, nombre | 1 |
+| `$.maps.process.nodes.{clé}.y` | entier, nombre | 1 |
+| `$.maps.process.nodes.{clé}.w` | entier, nombre | 1 |
+| `$.maps.process.nodes.{clé}.h` | entier, nombre | 1 |
+| `$.maps.process.nodes.{clé}.label` | texte | 1 |
+| `$.maps.process.nodes.{clé}.hidden` | booléen | 1 |
+| `$.maps.process.edges` | liste | 1 |
+| `$.maps.process.edges[]` | objet | 1 |
+| `$.maps.process.edges[].id` | texte | 1 |
+| `$.maps.process.edges[].s` | texte | 1 |
+| `$.maps.process.edges[].t` | texte | 1 |
+| `$.maps.process.edges[].type` | texte | 1 |
+| `$.maps.process.edges[].gen` | entier, booléen | 1 |
+| `$.maps.process.hide` | objet (dictionnaire indexé) | 1 |
+| `$.maps.process.hide.{clé}` | entier | 1 |
+| `$.maps.process.ignored` | objet (dictionnaire indexé) | 1 |
+| `$.maps.process.ignored.{clé}` | entier | 1 |
+| `$.maps.process.free` | objet (dictionnaire indexé) | 1 |
+| `$.maps.process.free.{clé}` | objet | 1 |
+| `$.maps.process.free.{clé}.text` | texte | 1 |
+| `$.maps.process.free.{clé}.tint` | texte | 1 |
+| `$.maps.process.versions` | liste | 1 |
+| `$.maps.process.versions[]` | objet | 1 |
+| `$.maps.process.versions[].id` | texte | 1 |
+| `$.maps.process.versions[].at` | texte | 1 |
+| `$.maps.process.versions[].label` | texte | 1 |
+| `$.maps.process.versions[].map` | objet | 1 |
+| `$.maps.process.versions[].map.nodes` | objet (dictionnaire indexé) | 1 |
+| `$.maps.process.versions[].map.nodes.{clé}` | objet | 1 |
+| `$.maps.process.versions[].map.nodes.{clé}.x` | entier, nombre | 1 |
+| `$.maps.process.versions[].map.nodes.{clé}.y` | entier, nombre | 1 |
+| `$.maps.process.versions[].map.nodes.{clé}.w` | entier, nombre | 1 |
+| `$.maps.process.versions[].map.nodes.{clé}.h` | entier, nombre | 1 |
+| `$.maps.process.versions[].map.nodes.{clé}.label` | texte | 1 |
+| `$.maps.process.versions[].map.nodes.{clé}.hidden` | booléen | 1 |
+| `$.maps.process.versions[].map.edges` | liste | 1 |
+| `$.maps.process.versions[].map.edges[]` | objet | 1 |
+| `$.maps.process.versions[].map.edges[].id` | texte | 1 |
+| `$.maps.process.versions[].map.edges[].s` | texte | 1 |
+| `$.maps.process.versions[].map.edges[].t` | texte | 1 |
+| `$.maps.process.versions[].map.edges[].type` | texte | 1 |
+| `$.maps.process.versions[].map.edges[].gen` | entier, booléen | 1 |
+| `$.maps.process.versions[].map.hide` | objet (dictionnaire indexé) | 1 |
+| `$.maps.process.versions[].map.hide.{clé}` | entier | 1 |
+| `$.maps.process.versions[].map.ignored` | objet (dictionnaire indexé) | 1 |
+| `$.maps.process.versions[].map.ignored.{clé}` | entier | 1 |
+| `$.maps.process.versions[].map.free` | objet (dictionnaire indexé) | 1 |
+| `$.maps.process.versions[].map.free.{clé}` | objet | 1 |
+| `$.maps.process.versions[].map.free.{clé}.text` | texte | 1 |
+| `$.maps.process.versions[].map.free.{clé}.tint` | texte | 1 |
+| `$.maps.process.updatedAt` | texte | 1 |
+| `$.maps.issueKind` | objet (dictionnaire indexé) | 1 |
+| `$.maps.issueKind.{clé}` | texte | 1 |
+| `$.maps.issues` | liste | 1 |
+| `$.maps.issues[]` | objet | 1 |
+| `$.maps.issues[].label` | texte | 1 |
+| `$.maps.issues[].kind` | texte | 1 |
+| `$.maps.issues[].desc` | texte | 1 |

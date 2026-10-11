@@ -1,0 +1,46 @@
+{
+  "map": {
+    "id": "map-context-demo",
+    "name": "Cartographie du contexte SMSI",
+    "view": "context",
+    "standards": ["ISO27001", "HDS"],
+    "scopeId": "SMSI-001"
+  },
+  "nodes": [
+    {
+      "id": "node-smsi",
+      "objectRef": "SMSI-001",
+      "objectType": "isms",
+      "position": {"x": 760, "y": 460},
+      "size": {"width": 300, "height": 120}
+    },
+    {
+      "id": "node-prr01",
+      "objectRef": "PR01",
+      "objectType": "process",
+      "position": {"x": 520, "y": 320},
+      "size": {"width": 240, "height": 110}
+    },
+    {
+      "id": "node-prr04",
+      "objectRef": "PR04",
+      "objectType": "process",
+      "position": {"x": 810, "y": 300},
+      "size": {"width": 240, "height": 110}
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-1",
+      "source": "node-prr01",
+      "target": "node-smsi",
+      "type": "related_to"
+    },
+    {
+      "id": "edge-2",
+      "source": "node-prr04",
+      "target": "node-smsi",
+      "type": "related_to"
+    }
+  ]
+}

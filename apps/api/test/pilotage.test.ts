@@ -1,0 +1,444 @@
+import crypto from 'node:crypto';
+import { beforeAll, afterAll, describe, it, expect } from 'vitest';
+import { DEFAULT_SMSI } from '../src/grc/core.js';
+import { createTestApp, login, makeUser, type Agent, type TestApp } from './helpers.js';
+let t: TestApp,
+  a: Agent,
+  reader: Agent,
+  writer: Agent,
+  document: string,
+  proof: string,
+  control: string,
+  finding: string,
+  linkedAction: string,
+  journey: string;
+const base = `/api/grc/${DEFAULT_SMSI}`;
+const clean = (data: Record<string, unknown>) =>
+  Object.fromEntries(Object.entries(data).filter(([k]) => !['legacy', 'sourceSha', 'ownerLabel'].includes(k)));
+async function decide(
+  ref: string,
+  operation: string,
+  result: string,
+  version: number,
+  extra: Record<string, unknown> = {},
+  agent = a,
+) {
+  return agent.post(
+    base + '/pilotage/decisions',
+    {
+      ref,
+      decision: {
+        operation,
+        result,
+        date: '2026-10-10',
+        note: 'Justification détaillée de la recette métier',
+        refs: [document],
+        requestId: crypto.randomUUID(),
+        step: '',
+        createFinding: false,
+        createAction: false,
+        confirm: 'ENREGISTRER',
+        ...extra,
+      },
+    },
+    { 'if-match': `"${version}"` },
+  );
+}
+async function legacyFinding() {
+  return (await a.get(base + '/pilotage/legacy/findings/' + finding.split(':').slice(2).join(':'))).json();
+}
+beforeAll(async () => {
+  t = await createTestApp();
+  a = await login(t, await makeUser(t, 'pilotage_admin', 'admin'));
+  reader = await login(t, await makeUser(t, 'pilotage_reader', 'ro'));
+  writer = await login(t, await makeUser(t, 'pilotage_writer', 'rw'));
+  const doc = await a.req('POST', '/api/documents', {
+    body: Buffer.from('Justificatif de recette'),
+    headers: {
+      'x-file-name': 'preuve.txt',
+      'x-meta': encodeURIComponent(JSON.stringify({ title: 'Justificatif partagé' })),
+    },
+  });
+  expect(doc.statusCode, doc.body).toBe(201);
+  document = 'document:' + doc.json().id + ':1';
+});
+afterAll(async () => t.close());
+describe('Pilotage multi-référentiels G/H/K et début E', () => {
+  it('utilise le périmètre commun automatiquement, conserve les permissions et les versions physiques', async () => {
+    const list = await a.get('/api/grc/smsis');
+    expect(list.json()[0].id).toBe(DEFAULT_SMSI);
+    expect(list.json()[0].name).toBe('Pilotage de l’organisation');
+    const r = await a.post(base + '/objects', {
+      kind: 'evidence',
+      name: 'Preuve examinée',
+      data: { source: 'Document partagé', documentRefs: [document], refs: [] },
+    });
+    expect(r.statusCode, r.body).toBe(200);
+    proof = r.json().id;
+    expect((await decide('object:' + proof, 'proof_review', 'accepted', 1, {}, reader)).statusCode).toBe(403);
+    expect(
+      (await decide('object:' + proof, 'proof_review', 'accepted', 1, { refs: [document.replace(/:1$/, ':99')] }))
+        .statusCode,
+    ).toBe(404);
+    expect(
+      (
+        await a.post(base + '/objects', {
+          kind: 'evidence',
+          name: 'Validation falsifiée',
+          data: { status: 'validated' },
+        })
+      ).statusCode,
+    ).toBe(422);
+  });
+  it('enregistre un examen idempotent et immuable de la version exacte sans copier le document', async () => {
+    const requestId = crypto.randomUUID();
+    const r = await decide('object:' + proof, 'proof_review', 'accepted', 1, { requestId });
+    expect(r.statusCode, r.body).toBe(200);
+    const retry = await decide('object:' + proof, 'proof_review', 'accepted', 1, { requestId });
+    expect(retry.statusCode, retry.body).toBe(200);
+    expect(retry.json().id).toBe(r.json().id);
+    expect((await decide('object:' + proof, 'proof_review', 'rejected', 1, { requestId })).statusCode).toBe(409);
+    expect((await a.get(base + '/objects/' + proof)).json().data.documentRefs).toEqual([document]);
+    const newVersion = await a.req('POST', '/api/documents/' + document.split(':')[1] + '/versions', {
+      body: Buffer.from('Justificatif corrigé'),
+      headers: { 'x-file-name': 'preuve.txt' },
+    });
+    expect(newVersion.statusCode).toBe(201);
+    const exact = await decide('object:' + proof, 'proof_review', 'accepted', 2, {
+      refs: [document.replace(/:1$/, ':2')],
+    });
+    expect(exact.statusCode, exact.body).toBe(200);
+    const history = (await a.get(base + '/pilotage/history?ref=object:' + proof)).json().items;
+    expect(history.map((h: { refs: string[] }) => h.refs[0])).toEqual([document.replace(/:1$/, ':2'), document]);
+    expect((await t.svc.db.one<{ n: number }>('SELECT count(*)::int n FROM document_versions'))!.n).toBe(2);
+    const inbound = await a.get(base + '/links?ref=' + encodeURIComponent(document));
+    expect(inbound.json().some((r: { other: { ref: string } }) => r.other.ref === 'object:' + proof)).toBe(true);
+    await expect(t.svc.db.q('UPDATE pilotage_decisions SET note=$1', ['altéré'])).rejects.toThrow();
+    await expect(t.svc.db.q('DELETE FROM pilotage_decisions')).rejects.toThrow();
+  });
+  it('réalise un contrôle et génère un constat dans findings ainsi qu’une action liée, une seule fois', async () => {
+    const c = await a.post(base + '/objects', {
+      kind: 'control',
+      name: 'Contrôle de conservation',
+      data: {
+        objective: 'Vérifier la conservation',
+        scope: 'Recette',
+        method: 'Comparer les pièces',
+        criteria: 'Aucune perte',
+        dueAt: '2026-10-10',
+        refs: [document],
+      },
+    });
+    expect(c.statusCode, c.body).toBe(200);
+    control = c.json().id;
+    const r = await decide('object:' + control, 'control_execution', 'fail', 1, {
+      createFinding: true,
+      createAction: true,
+    });
+    expect(r.statusCode, r.body).toBe(200);
+    [finding, linkedAction] = r.json().generatedRefs;
+    expect(finding).toMatch(/^legacy:findings:/);
+    expect(linkedAction).toMatch(/^object:/);
+    const state = await t.svc.legacy.recompose();
+    expect((state!.data.findings as { id: string }[]).some((f) => f.id === finding.split(':')[2])).toBe(true);
+    expect(
+      (await a.get(base + '/links?ref=' + encodeURIComponent(finding)))
+        .json()
+        .some((l: { other: { ref: string } }) => l.other.ref === linkedAction),
+    ).toBe(true);
+    expect((await decide('object:' + control, 'control_execution', 'fail', 1)).statusCode).toBe(412);
+  });
+  it('planifie un contrôle avec le moteur de récurrences et empêche une deuxième série', async () => {
+    const recurrence = {
+      start: '2026-10-01',
+      time: '09:00',
+      timezone: 'Europe/Paris',
+      unit: 'month',
+      interval: 1,
+      until: null,
+      count: 3,
+      reminderDays: 7,
+      active: true,
+    };
+    const r = await a.post(base + '/pilotage/controls/' + control + '/schedule', { recurrence }, { 'if-match': '"2"' });
+    expect(r.statusCode, r.body).toBe(200);
+    expect(r.json().data.refs).toEqual(['object:' + control]);
+    expect(
+      (await a.post(base + '/pilotage/controls/' + control + '/schedule', { recurrence }, { 'if-match': '"3"' }))
+        .statusCode,
+    ).toBe(409);
+  });
+  it('garde la clôture, les causes, la vérification d’efficacité et les tâches réellement réalisées', async () => {
+    let f = await legacyFinding();
+    expect((await decide(f.id, 'close', 'completed', f.version)).statusCode).toBe(409);
+    const updated = await a.put(
+      base + '/pilotage/legacy/findings/' + finding.split(':')[2],
+      {
+        name: f.name,
+        sourceSha: f.data.sourceSha,
+        data: { ...clean(f.data), cause: 'Cause identifiée par analyse détaillée' },
+      },
+      { 'if-match': `"${f.version}"` },
+    );
+    expect(updated.statusCode, updated.body).toBe(200);
+    f = updated.json();
+    const effect = await decide(f.id, 'effectiveness', 'effective', f.version);
+    expect(effect.statusCode, effect.body).toBe(200);
+    f = await legacyFinding();
+    expect((await decide(f.id, 'close', 'completed', f.version)).statusCode).toBe(409);
+    const action = (await a.get(base + '/objects/' + linkedAction.slice(7))).json();
+    const progress = await a.put(
+      base + '/objects/' + action.id,
+      { kind: 'action', name: action.name, data: { ...action.data, status: 'progress' } },
+      { 'if-match': `"${action.version}"` },
+    );
+    expect(progress.statusCode, progress.body).toBe(200);
+    const closed = await a.put(
+      base + '/objects/' + action.id,
+      {
+        kind: 'action',
+        name: action.name,
+        data: { ...action.data, status: 'done', justification: 'Travail réalisé et pièces vérifiées' },
+      },
+      { 'if-match': `"${progress.json().version}"` },
+    );
+    expect(closed.statusCode, closed.body).toBe(200);
+    const done = await decide(f.id, 'close', 'completed', f.version);
+    expect(done.statusCode, done.body).toBe(200);
+    expect((await legacyFinding()).data.status).toBe('closed');
+    const report = await a.get(base + '/pilotage/improvement-indicators');
+    expect(report.statusCode).toBe(200);
+    expect(report.json().closed).toBeGreaterThan(0);
+  });
+  it('préserve les champs extra, les rôles sans ID, et les historiques de valeurs', async () => {
+    await t.svc.db.tx(async (c) => {
+      const state = await t.svc.legacy.recompose(c);
+      const saved = await t.svc.legacy.legacyWrite(
+        c,
+        {
+          ...state!.data,
+          roles: [{ name: 'Pilote qualité', holder: 'Alice', resp: 'Organisation', extra: { keep: true } }],
+          indicators: [
+            {
+              id: 'IND-QA',
+              name: 'Indicateur de qualité',
+              values: [{ date: '2026-09-01', v: 2, note: 'Valeur précédente', hist: 'ancien' }],
+              target: 5,
+              extra: 'à garder',
+            },
+          ],
+        },
+        { id: '', username: 'recette' },
+        state!.version,
+      );
+      expect(saved.conflict).toBe(false);
+    });
+    const role = (await a.get(base + '/pilotage/legacy/roles')).json().items[0];
+    expect(role.id).toBe('legacy:roles:@0');
+    const refs = (await a.get(base + '/sources?search=Pilote')).json().items;
+    expect(refs.some((r: { ref: string }) => r.ref === 'legacy:roles:@0')).toBe(true);
+    const r = await a.put(
+      base + '/pilotage/legacy/roles/%400',
+      {
+        name: role.name,
+        sourceSha: role.data.sourceSha,
+        data: { ...clean(role.data), responsibilities: 'Nouvelle responsabilité' },
+      },
+      { 'if-match': `"${role.version}"` },
+    );
+    expect(r.statusCode, r.body).toBe(200);
+    const indicator = (await a.get(base + '/pilotage/legacy/indicators')).json().items[0];
+    const i = await a.put(
+      base + '/pilotage/legacy/indicators/IND-QA',
+      {
+        name: indicator.name,
+        sourceSha: indicator.data.sourceSha,
+        data: { ...clean(indicator.data), value: 3, measuredAt: '2026-10-10' },
+      },
+      { 'if-match': `"${indicator.version}"` },
+    );
+    expect(i.statusCode, i.body).toBe(200);
+    const state = await t.svc.legacy.recompose();
+    const roles = state!.data.roles as { extra: unknown; id?: string }[];
+    expect(roles[0]!.extra).toEqual({ keep: true });
+    expect(roles[0]!.id).toBeUndefined();
+    const indicators = state!.data.indicators as { values: { v: number }[]; extra: string }[];
+    expect(indicators[0]!.values.map((v) => v.v)).toEqual([2, 3]);
+    expect(indicators[0]!.extra).toBe('à garder');
+  });
+  it('reprend un parcours qualité sur les objets communs, garde les prérequis et l’historique', async () => {
+    const r = await a.post(base + '/objects', {
+      kind: 'journey',
+      name: 'Démarche qualité',
+      data: {
+        organisation: 'Organisation de recette',
+        scope: 'Service qualité',
+        goals: 'Piloter ISO 9001',
+        approach: 'quality',
+      },
+    });
+    expect(r.statusCode, r.body).toBe(200);
+    journey = r.json().id;
+    expect((await decide('object:' + journey, 'step_validation', 'completed', 1, { step: 'scope' })).statusCode).toBe(
+      409,
+    );
+    expect(
+      (await decide('object:' + journey, 'step_validation', 'completed', 1, { step: 'context' }, writer)).statusCode,
+    ).toBe(403);
+    const done = await decide('object:' + journey, 'step_validation', 'completed', 1, { step: 'context' });
+    expect(done.statusCode, done.body).toBe(200);
+    const progress = (await a.get(base + '/pilotage/journeys/' + journey)).json();
+    expect(progress.steps[0].state).toBe('completed');
+    expect(progress.steps).toHaveLength(11);
+    expect(progress.object.version).toBe(1);
+    expect(progress.note).toMatch(/sans attestation/);
+    const change = await a.put(
+      base + '/objects/' + journey,
+      { kind: 'journey', name: 'Démarche qualité étendue', data: { ...r.json().data, scope: 'Périmètre modifié' } },
+      { 'if-match': '"1"' },
+    );
+    expect(change.statusCode).toBe(200);
+    const reset = (await a.get(base + '/pilotage/journeys/' + journey)).json();
+    expect(reset.steps[0].state).toBe('todo');
+    expect(reset.history).toHaveLength(1);
+  });
+  it('valide BIA et plan de reprise avec impacts temporels, références et limites cohérentes', async () => {
+    expect(
+      (
+        await a.post(base + '/objects', {
+          kind: 'bia',
+          name: 'Reprise incohérente',
+          data: { maxInterruptionHours: 4, recoveryHours: 8 },
+        })
+      ).statusCode,
+    ).toBe(422);
+    const r = await a.post(base + '/objects', {
+      kind: 'bia',
+      name: 'Activité de recette',
+      data: {
+        activity: 'Service métier',
+        scenario: 'Indisponibilité',
+        minimumService: 'Accueil minimal',
+        maxInterruptionHours: 24,
+        recoveryHours: 4,
+        dataLossHours: 1,
+        impacts: [
+          {
+            hours: 4,
+            business: 'Service dégradé',
+            financial: 'Coût limité',
+            legal: 'Délais',
+            reputation: 'Réclamations',
+          },
+        ],
+        refs: [document],
+      },
+    });
+    expect(r.statusCode, r.body).toBe(200);
+    expect((await decide('object:' + r.json().id, 'approval', 'accepted', 1, {}, writer)).statusCode).toBe(403);
+    const approved = await decide('object:' + r.json().id, 'approval', 'accepted', 1);
+    expect(approved.statusCode, approved.body).toBe(200);
+    const plan = await a.post(base + '/objects', {
+      kind: 'continuity_plan',
+      name: 'PRA métier',
+      data: {
+        planType: 'pra',
+        scope: 'Service métier',
+        trigger: 'Indisponibilité supérieure à 4h',
+        strategy: 'Restaurer',
+        procedures: 'Étapes vérifiées',
+        roles: 'Pilote et suppléant',
+        returnToNormal: 'Vérifier les résultats',
+        refs: ['object:' + r.json().id],
+      },
+    });
+    expect(plan.statusCode, plan.body).toBe(200);
+    expect((await decide('object:' + plan.json().id, 'approval', 'accepted', 1)).statusCode).toBe(200);
+    expect((await a.get(base + '/pilotage/export?kind=bia')).json().objects[0].name).toBe('Activité de recette');
+    expect(
+      (
+        await a.post(base + '/objects', {
+          kind: 'continuity_exercise',
+          name: 'Exercice incomplet',
+          data: { status: 'done', performedAt: '2026-10-10', result: 'success', lessons: '' },
+        })
+      ).statusCode,
+    ).toBe(422);
+    const exercise = (
+      await a.post(base + '/objects', {
+        kind: 'continuity_exercise',
+        name: 'Exercice métier',
+        data: {
+          status: 'done',
+          performedAt: '2026-10-10',
+          result: 'partial',
+          scenario: 'Indisponibilité',
+          lessons: 'Améliorer la procédure de secours',
+          refs: ['object:' + plan.json().id],
+        },
+      })
+    ).json();
+    const improve = await decide('object:' + exercise.id, 'action_create', 'completed', exercise.version, {
+      createAction: true,
+    });
+    expect(improve.statusCode, improve.body).toBe(200);
+    expect(improve.json().generatedRefs[0]).toMatch(/^object:/);
+    expect((await reader.get(base + '/pilotage/export?kind=bia')).statusCode).toBe(403);
+  });
+  it('refuse de falsifier une réalisation ou une validation par une édition générique', async () => {
+    for (const [kind, data] of [
+      ['control', { result: 'pass', performedAt: '2026-10-10' }],
+      ['management_review', { status: 'validated' }],
+      ['nonconformity', { effectiveness: 'effective' }],
+    ] as const) {
+      expect((await a.post(base + '/objects', { kind, name: 'Tentative de contournement', data })).statusCode).toBe(
+        422,
+      );
+    }
+    const o = (
+      await a.post(base + '/objects', {
+        kind: 'nonconformity',
+        name: 'Constat natif',
+        data: { cause: 'Cause test', refs: [document] },
+      })
+    ).json();
+    expect((await decide('object:' + o.id, 'effectiveness', 'effective', o.version)).statusCode).toBe(200);
+    expect((await decide('object:' + o.id, 'close', 'completed', 2)).statusCode).toBe(200);
+    expect(
+      (
+        await a.put(
+          base + '/objects/' + o.id,
+          { kind: o.kind, name: o.name, data: { cause: 'Réouverture contournée', status: 'open' } },
+          { 'if-match': '"3"' },
+        )
+      ).statusCode,
+    ).toBe(409);
+  });
+  it('agrège 10 000 constats sans charger leurs fiches et annonce la limite de causes', async () => {
+    const isolated = (
+      await a.post('/api/grc/smsis', {
+        name: 'Grand registre d’amélioration',
+        scope: 'Recette volume',
+        timezone: 'Europe/Paris',
+      })
+    ).json().id;
+    await t.svc.db.q(
+      `INSERT INTO grc_objects(smsi_id,kind,module,name,data,created_by,updated_by,created_at) SELECT $1,'nonconformity','ecarts','Constat '||n,jsonb_build_object('status','closed','effectiveness','effective','closedAt','2026-10-03','cause','Cause '||(n%2000)),'fixture','fixture','2026-10-01T12:00:00Z'::timestamptz FROM generate_series(1,10000) n`,
+      [isolated],
+    );
+    const report = (await a.get('/api/grc/' + isolated + '/pilotage/improvement-indicators')).json();
+    expect(report.findings).toBe(10000);
+    expect(report.closed).toBe(10000);
+    expect(report.durationSamples).toBe(10000);
+    expect(report.meanDays).toBe(2);
+    expect(report.repeatedCauses).toHaveLength(1000);
+    expect(report.causesTruncated).toBe(true);
+  });
+  it('respecte les périmètres privés et refuse la modification historique depuis un autre périmètre', async () => {
+    const scope = (
+      await a.post('/api/grc/smsis', { name: 'Périmètre isolé', scope: 'Recette', timezone: 'Europe/Paris' })
+    ).json();
+    expect((await reader.get(`/api/grc/${scope.id}/pilotage/improvement-indicators`)).statusCode).toBe(404);
+    expect((await a.get(`/api/grc/${scope.id}/pilotage/legacy/findings`)).statusCode).toBe(404);
+  });
+});
