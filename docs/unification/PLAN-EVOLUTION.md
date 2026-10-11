@@ -79,3 +79,17 @@ dont le contenu est inclus ailleurs. `feat/cartographie-beta`, `feat/carto-editi
 Migrations uniquement additives (tables et colonnes nouvelles, aucune suppression ni réécriture) : revenir à l'image
 précédente laisse la base compatible ; les nouvelles tables sont ignorées. Sauvegarde automatique avant mise à jour
 (`scripts/mettre-a-jour.sh`) et restauration documentée dans `docs/INSTALLATION.md`.
+
+Ce que chaque lot laisse dans la base, et l'effet d'un retour à l'image `3.0.2` (`feature/gpt6-evolution-smsi-grc`) :
+
+| Lot | Données écrites | Retour à 3.0.2 |
+| --- | --- | --- |
+| U0 | notes et cadres dans la disposition des cartes (`map_versions`) ; objets créés depuis la carte dans `app_state` | cartes lisibles ; 3.0.2 refuse (422) d'enregistrer ou de restaurer une disposition qui contient des notes ou des cadres (références `note:` / `frame:` inconnues de son schéma) : les retirer avant le retour. Objets créés depuis la carte conservés dans l'outil de suivi |
+| U1, U2 | aucune nouvelle structure ; la DdA modifiée l'est dans `app_state.data.dda` (format historique) | sans effet |
+| U3 | migration `016` : colonne `pilotage_decisions.terms` et index ; objets `risk_study`, `sr_ov`, `ecosystem_party` dans `grc_objects` ; décisions `risk_acceptance` | colonne et index ignorés ; les nouveaux types d'objets et l'opération d'acceptation ne sont pas reconnus par l'interface 3.0.2 (à archiver avant retour si on veut les masquer) |
+| U4 | aucune nouvelle structure | sans effet ; le catalogue des relations n'est plus contrôlé |
+
+Procédure : sauvegarde chiffrée (faite par `scripts/mettre-a-jour.sh`), puis retour à l'image précédente par le même
+script (`docs/INSTALLATION.md`, section mise à jour et retour arrière). La migration `016` ne se défait pas : elle est
+inerte pour une version antérieure. Limite : le retour à `3.0.2` avec des objets des nouveaux types n'a pas été rejoué
+sur une pile réelle pendant ce chantier (aucune image `3.0.2` reconstruite localement).

@@ -2,7 +2,8 @@
 
 Dernière mise à jour : **2026-10-11T04:04:46+02:00 (Europe/Paris)**.
 Référence applicative analysée : **`c704fa6e6d6d516db75f963db8dd5d2049ab42c8`** ; version 3.0.2.
-Branche de travail exclusive : **`feature/gpt6-evolution-smsi-grc`**.
+Branche de travail de l'unification : **`claude-suivi-smsi`** (créée depuis `feature/gpt6-evolution-smsi-grc`,
+préservée comme `main`). Les sections suivantes décrivent l'état de `feature/gpt6-evolution-smsi-grc` au 11/10 matin.
 
 Application auto-hébergée de suivi d’audit et de pilotage qualité/sécurité/HDS
 multi-référentiels. On ne doit pas imposer la création d’un SMSI pour un SMQ.
@@ -15,6 +16,21 @@ sans Internet. Documents chiffrés ; données persistantes dans DATA_DIR.
 L’ancien outil reste sous `/legacy`, avec une source métier unique et des
 adaptateurs vers Pilotage. Les tables `grc_smsis` et API `/api/grc` gardent leurs
 noms techniques pour compatibilité ; le parcours normal s’appelle Pilotage.
+
+## Unification sur `claude-suivi-smsi` (11/10/2026)
+
+Cahier de consignes « Unification et évolution de l’application SMSI/GRC ». Lire d'abord
+[l'audit L1](docs/unification/L1-AUDIT-ET-CORRESPONDANCE.md) puis [le plan](docs/unification/PLAN-EVOLUTION.md).
+
+- Réalisé : U0 (carte libre CARTO-15 à 19, socle Audit), U1 (tableau de bord unique et graphiques, menu), U2
+  (DdA historique éditable, objectifs par processus, plans historiques, synthèse graphique du Pilotage), U3 (risques :
+  études EBIOS RM par ateliers, fiche ISO/IEC 27005, acceptation formelle, registre ; ADR 0027, migration additive
+  `016`), U4 (catalogue des relations, sens, archivés, responsables ; ADR 0028).
+- Contrôles locaux (pas de CI : quota GitHub Actions atteint) : Vitest shared, ui, web et API sur PostgreSQL 17 ;
+  Playwright complet sur la pile Docker construite localement (image updater non construite : hôte Alpine bloqué
+  par le réseau de l'environnement). Chiffres du dernier passage : voir `PROJECT_STATUS.md`.
+- Non fait : validation du RSSI sur son serveur, PR unique, rationalisation des branches (U7, après accord explicite).
+- Aucune fusion sur `main`, aucune suppression sur GitHub, aucune donnée réelle.
 
 ## État et preuves
 
