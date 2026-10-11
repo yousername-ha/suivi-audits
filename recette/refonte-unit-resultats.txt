@@ -1,0 +1,47 @@
+✔ initialisation additive et répétée : tous les champs legacy et extra sont préservés (4.548954ms)
+✔ catalogues sourcés : 118 critères HAS, 21 impératifs et 10 entrées D1 sans doublons (0.308915ms)
+✔ création de campagne sans toucher aux mesures, actions et autres référentiels (8.056692ms)
+✔ suivi générique pour tous les domaines non documentés, objectifs explicitement locaux (5.628308ms)
+✔ contrôle des domaines, périmètres et chronologie avant toute création (1.482ms)
+✔ réévaluations historisées et sans recalcul des campagnes antérieures (1.476912ms)
+✔ validation interne exige preuve acceptée, vérificateur et date (1.911025ms)
+✔ non-applicabilité justifiée et dates réellement valides (1.972027ms)
+✔ preuve partagée, relations bidirectionnelles et versions stables (1.604114ms)
+✔ validation de chaque version distincte, même pour les liens legacy (1.505766ms)
+✔ actions dans le registre commun, sans duplication ni validation automatique (4.967394ms)
+✔ argent exact : espaces français, centimes et sommes, sans formule d’aide (1.869072ms)
+✔ erreur budgétaire atomique et historique des montants conservé (1.485114ms)
+✔ dossier archivé conservé avec ses liens et protégé des écritures (1.965777ms)
+✔ référentiels importés vérifiables, versions distinctes et pas de remplacement silencieux (1.791215ms)
+✔ paquet auditeur physiquement filtré : aucun champ ni version hors périmètre (1.819538ms)
+✔ observations hors périmètre et mauvais paquet refusés sans écriture (1.558375ms)
+✔ réception idempotente, décision explicite et aucun changement d’évaluation (1.337803ms)
+✔ conflits d’observation : aucun import partiel (1.279385ms)
+✔ sauvegardes incohérentes et pollution de prototype refusées (1.311673ms)
+✔ liens dangereux et formules bureautiques neutralisés (0.327493ms)
+✔ projection des tableaux de bord : sources réelles, retards et aucune division par zéro (1.28924ms)
+✔ migration additive répétée : rôle historique conservé avec ID stable (4.133539ms)
+✔ GHT, établissements et SI partagé : liens, FINESS et cycles contrôlés (1.426346ms)
+✔ responsables : rôle, personne, fonction et comptes multi-établissements (0.595936ms)
+✔ relations bidirectionnelles et affectation utilisent le plan central (0.513202ms)
+✔ une sous-tâche génère une seule action centrale et synchronise le statut (2.161773ms)
+✔ action close ne valide ni données manquantes, ni exigence, ni preuve (0.63145ms)
+✔ validation humaine devient obsolète quand le menu unitaire modifie le périmètre (0.8837ms)
+✔ une preuve refusée, obsolète ou remplacée réouvre la sous-tâche (1.231733ms)
+✔ D2 officiel : 13 références uniques, sources, critères et justificatifs précis (0.315004ms)
+✔ finances : registre de preuves unique, cents exacts et rattachements sans doublons (1.418855ms)
+✔ BIA métier : impacts temporels configurables, besoins et validation humaine (2.316986ms)
+✔ PCA et PRA distincts, modification significative du BIA signale la révision (1.101568ms)
+✔ politique versionnée : l’échelle du BIA existant reste inchangée (0.420974ms)
+✔ exercices, RETEX et actions correctives centrales idempotentes (0.73777ms)
+✔ historique BIA sans snapshots récursifs ; RTO métier et technique restent distincts (0.747735ms)
+✔ CRRC et périmètres : rattachement explicite, nom synchronisé sans seconde saisie (0.513973ms)
+✔ dépendances longues et cycles de tâches : calcul cohérent indépendamment de l’ordre (0.599302ms)
+ℹ tests 39
+ℹ suites 0
+ℹ pass 39
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 110.399179

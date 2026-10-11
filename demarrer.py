@@ -1,44 +1,25 @@
 #!/usr/bin/env python3
-"""Serveur statique local, sans API métier ni dépendance tierce."""
-from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
+"""Lance le serveur Legacy local et son stockage protégé, sans dépendance externe."""
 from pathlib import Path
+from http.server import ThreadingHTTPServer
 import argparse, functools, webbrowser
+from legacy_server import Handler, Store
 
 ROOT = Path(__file__).resolve().parent
 
-class Handler(SimpleHTTPRequestHandler):
-    def end_headers(self):
-        self.send_header('Cache-Control', 'no-store')
-        self.send_header('X-Content-Type-Options', 'nosniff')
-        self.send_header('Referrer-Policy', 'no-referrer')
-        self.send_header('X-Frame-Options', 'DENY')
-        super().end_headers()
-
-    def do_GET(self):
-        if self.headers.get('Host', '').split(':')[0] not in ['127.0.0.1', 'localhost', '[::1]']:
-            self.send_error(403, 'Accès local uniquement')
-            return
-        super().do_GET()
-
-    def do_POST(self):
-        self.send_error(405, 'Serveur statique — aucune écriture réseau')
-
 def main():
-    parser = argparse.ArgumentParser(description='Lancer la copie legacy locale CaRE / HAS')
+    parser = argparse.ArgumentParser(description='Lancer le pilotage Legacy local')
     parser.add_argument('--port', type=int, default=8123)
     parser.add_argument('--sans-navigateur', action='store_true')
+    parser.add_argument('--donnees', type=Path, default=ROOT / '.legacy-data', help='Répertoire privé SQLite et pièces (ne pas publier)')
     args = parser.parse_args()
+    Handler.store = Store(args.donnees)
     server = ThreadingHTTPServer(('127.0.0.1', args.port), functools.partial(Handler, directory=str(ROOT)))
     url = f'http://127.0.0.1:{args.port}'
-    print(f'Pilotage legacy local : {url}\nLes données et pièces restent dans votre navigateur. Ctrl+C pour arrêter.', flush=True)
-    if not args.sans_navigateur:
-        webbrowser.open(url)
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        pass
-    finally:
-        server.server_close()
+    print(f'Pilotage Legacy : {url}\nStockage privé sur ce serveur ; créer le compte administrateur à la première ouverture. Ctrl+C pour arrêter.', flush=True)
+    if not args.sans_navigateur: webbrowser.open(url)
+    try: server.serve_forever()
+    except KeyboardInterrupt: pass
+    finally: server.server_close()
 
-if __name__ == '__main__':
-    main()
+if __name__ == '__main__': main()

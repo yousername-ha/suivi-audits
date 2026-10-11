@@ -1,3 +1,42 @@
+# Refonte Legacy — 11 octobre 2026
+
+Phases réalisées dans l’ordre demandé : diagnostic préalable, fondations,
+parcours, CaRE D2/preuves financières, PCRA, navigation, recette.
+
+- Registre hiérarchique des périmètres, GHT/établissements, FINESS adapté au type,
+  SI mutualisés, contexte GHT/établissement et consolidation sans doublons.
+- Rôles existants conservés, IDs stables et responsables par périmètre ; distinction
+  entre rôle fonctionnel, titulaire et compte d’authentification.
+- Serveur Python local sans nouvelle dépendance, SQLite, comptes, sessions, CSRF,
+  droits serveur, pièces immuables, version optimiste et journal des modifications.
+- Parcours adapté depuis les sources existantes : étapes, sous-tâches, dépendances,
+  actions centrales idempotentes, données réelles, preuves et validations humaines.
+- CaRE D2 : 13 références officielles identifiées, critères et preuves extraits
+  du PDF effectivement contrôlé ; avertissement sur sa version contradictoire.
+- Justificatifs comptables dans les preuves centrales, HT/TTC en centimes,
+  versions physiques protégées et rattachements aux budgets, objectifs et actions.
+- BIA avec activités et impacts temporels selon une politique versionnée, besoins
+  métier, interruption maximale et objectifs RTO/RPO ; PCA/PRA liés, révision après
+  évolution du BIA, exercices/RETEX et actions correctives centrales.
+- Vues PCRA des actions et documents partagés ; rapports PDF et Excel avec BIA,
+  plans, exercices, actions et références précises des preuves.
+- Menu allégé, fonds neutres, accents Sauge, groupes repliables, clavier, mobile
+  et thème sombre, avec conservation des anciennes rubriques.
+- Sauvegarde/restauration métier avec pièces ; migration explicite depuis les
+  données navigateur ; comptes préservés via sauvegarde du dossier privé.
+
+Liste des fichiers, modèle et API : [REFONTE-LEGACY.md](REFONTE-LEGACY.md).
+Résultats actuels : [RECETTE-REFONTE.md](RECETTE-REFONTE.md).
+Limites et décisions de politique : [SOURCES-ET-LIMITES.md](SOURCES-ET-LIMITES.md).
+
+La publication se limite à `legacy/test-lots-d-f`, déjà autorisée pour les tests.
+Les 592 fichiers suivis de la copie de l’application source sont conservés. Les
+lots I/J restent exclus. Aucun changement de main ou de l’application moderne.
+
+---
+
+## Historique : livraison locale initiale, avant autorisation de publication
+
 # Livraison 1.0.0-local-df — 11 octobre 2026
 
 Périmètre validé : **D CaRE** et **F HAS + mode auditeur**, sur une copie locale.

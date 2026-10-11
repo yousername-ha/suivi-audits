@@ -924,6 +924,7 @@ dialog.sheet { box-shadow:-16px 0 50px rgba(27,54,37,.12); }
 :root[data-theme="dark"] .dpanel svg text[font-weight="700"] { fill:var(--ink)!important; }
 </style>
 <link rel="stylesheet" href="modules/df.css">
+<link rel="stylesheet" href="modules/integration.css">
 </head>
 <body>
 <div class="app">
@@ -979,6 +980,17 @@ dialog.sheet { box-shadow:-16px 0 50px rgba(27,54,37,.12); }
 <script src="modules/df-reports.js"></script>
 <script src="modules/df-auditor.js"></script>
 <script src="modules/df-ui.js"></script>
+<script src="modules/integration-core.js"></script>
+<script src="modules/server-client.js"></script>
+<script src="modules/integration-ui.js"></script>
+<script src="modules/journey-steps.js"></script>
+<script src="modules/journey-core.js"></script>
+<script src="modules/journey-ui.js"></script>
+<script src="modules/finance-core.js"></script>
+<script src="modules/finance-ui.js"></script>
+<script src="modules/pcra-core.js"></script>
+<script src="modules/pcra-ui.js"></script>
+<script src="modules/navigation-ui.js"></script>
 <script src="lib/jszip.min.js"></script>
 <script>
 (function(){
@@ -991,7 +1003,7 @@ const KEY='suivi-audits-legacy-df:v1', UIKEY='suivi-audits-legacy-df:ui';
 let S=clone(SEED);
 const ui=Object.assign({tab:'dash',lens:'prono',lvl:'prio',orgaView:'deroule'},readUI(),{q:'',pq:'',ref:'all',fNotSeen:false,fBlind:false,fOpen:false,fStatus:'actifs',fSource:'all',open:{},drawer:null,slot:null,sheet:null});
 function readUI(){try{return JSON.parse(localStorage.getItem(UIKEY))||{}}catch(e){return{}}}
-function saveUI(){try{localStorage.setItem(UIKEY,JSON.stringify({tab:ui.tab,lens:ui.lens,lvl:ui.lvl,orgaView:ui.orgaView,ecView:ui.ecView,confView:ui.confView,pilView:ui.pilView,supView:ui.supView,iaView:ui.iaView,navOrder:ui.navOrder,navLast:ui.navLast,navLastG:ui.navLastG,tbl:ui.tbl,ctxView:ui.ctxView,incView:ui.incView,crView:ui.crView,crAuthor:ui.crAuthor,repView:ui.repView,revSel:ui.revSel,dashView:ui.dashView,mapLens:ui.mapLens,ganttF:ui.ganttF,planView:ui.planView,careView:ui.careView,hasView:ui.hasView,careDossier:ui.careDossier,hasDossier:ui.hasDossier,dfArchived:ui.dfArchived}))}catch(e){}}
+function saveUI(){try{localStorage.setItem(UIKEY,JSON.stringify({tab:ui.tab,lens:ui.lens,lvl:ui.lvl,orgaView:ui.orgaView,ecView:ui.ecView,confView:ui.confView,pilView:ui.pilView,supView:ui.supView,iaView:ui.iaView,navOrder:ui.navOrder,navLast:ui.navLast,navLastG:ui.navLastG,navGroups:ui.navGroups,tbl:ui.tbl,ctxView:ui.ctxView,incView:ui.incView,crView:ui.crView,crAuthor:ui.crAuthor,repView:ui.repView,revSel:ui.revSel,dashView:ui.dashView,mapLens:ui.mapLens,ganttF:ui.ganttF,planView:ui.planView,careView:ui.careView,hasView:ui.hasView,careDossier:ui.careDossier,hasDossier:ui.hasDossier,dfArchived:ui.dfArchived}))}catch(e){}}
 
 const LV={certain:{l:'Certain',o:0},tres:{l:'Très probable',o:1},probable:{l:'Probable',o:2},socle:{l:'Systématique',o:3},faible:{l:'Peu probable',o:4}};
 const PREP={'':'À préparer',encours:'En cours',pret:'Prête'};
@@ -4248,7 +4260,7 @@ function roleOptions(){const seen=new Set(),out=[];rolesList().forEach(r=>{if(r.
 function ensureRoleList(){let d=document.getElementById('roleList');if(!d){d=document.createElement('datalist');d.id='roleList';document.body.appendChild(d)}
   const h=roleOptions().map(([v,l])=>`<option value="${esc(v)}"${l?` label="${esc(l)}"`:''}></option>`).join('');if(d.innerHTML!==h)d.innerHTML=h}
 function applyRoleInputs(root){ensureRoleList();(root||document).querySelectorAll('input:not([type]),input[type=text]').forEach(i=>{if(i.list&&i.getAttribute('list')==='roleList')return;
-  const keys=Object.entries(i.dataset);if(i.id==='crAuthor'||keys.some(([k,v])=>OWNER_KEYS.has(v)||(k==='f'&&OWNER_KEYS.has(v)))){i.setAttribute('list','roleList');i.setAttribute('autocomplete','off');if(!i.placeholder)i.placeholder='Rôle ou nom (liste des rôles)'}})}
+  const keys=Object.entries(i.dataset);if(OWNER_KEYS.has(i.name)||i.id==='crAuthor'||keys.some(([k,v])=>OWNER_KEYS.has(v)||(k==='f'&&OWNER_KEYS.has(v)))){i.setAttribute('list','roleList');i.setAttribute('autocomplete','off');if(!i.placeholder)i.placeholder='Rôle ou nom (liste des rôles)'}})}
 let rrRaf=0;new MutationObserver(()=>{cancelAnimationFrame(rrRaf);rrRaf=requestAnimationFrame(()=>applyRoleInputs())}).observe(document.documentElement,{childList:true,subtree:true});
 function roleLoad(name){const n=String(name||'').trim().toLowerCase();if(!n)return {fd:0,tk:0,pl:0,rec:0,inc:0};const m=v=>String(v||'').trim().toLowerCase()===n;
   return {fd:S.findings.filter(f=>f.status!=='Clos'&&m(f.owner)).length,pl:(S.plans||[]).filter(p=>!['Réalisé','Annulé'].includes(p.status)&&m(p.owner)).length,rec:(S.recurring||[]).filter(r=>r.active!==false&&m(r.owner)).length,inc:(S.incidents||[]).filter(i=>incOpen(i)&&m(i.owner)).length,
@@ -4349,7 +4361,7 @@ document.addEventListener('change',e=>{const t=e.target;if(!t.dataset.recf||!ui.
    ===================================================================== */
 const NES_LOGO='data:image/jpeg;base64,'+document.getElementById('neslogo').textContent.trim();
 document.getElementById('sideLogo').src=NES_LOGO;
-function userInfo(){return Object.assign({name:'Utilisateur',role:'RSSI'},ui.user||{})}
+function userInfo(){const account=window.LegacyServer?.user();return account?{name:account.name,role:{admin:'Administrateur',editor:'Contributeur',viewer:'Lecture'}[account.permission]}:Object.assign({name:'Utilisateur',role:'RSSI'},ui.user||{})}
 function initials(n){return String(n||'?').split(/[\s'’-]+/).filter(Boolean).slice(0,2).map(x=>x[0].toUpperCase()).join('')||'?'}
 function notifList(){const L=[],t=today();
   const cr=crActive();if(cr)L.push(['bad',`Cellule de crise ouverte : ${cr.title}`,cr.mode==='Réel'?'Crise réelle':'Exercice','ops','cr-cell']);
@@ -5156,27 +5168,47 @@ $('#settings').addEventListener('click',e=>{if(e.target===e.currentTarget)e.curr
 try{const th=localStorage.getItem('suivi-audits-smsi:theme');if(th&&th!=='auto')document.documentElement.dataset.theme=th}catch(e){}
 /* Extensions D/F : point d’intégration de la copie locale. */
 const dfMigrate=migrate3;
-migrate3=function(state){return window.LegacyDF.validateState(dfMigrate(state))};
+migrate3=function(state){return window.LegacyIntegration.validate(window.LegacyDF.validateState(dfMigrate(state)))};
 const dfIntegration=window.LegacyDFUI.install({
   getState:()=>S, replaceState:state=>{S=migrate3(state)}, ui,TABS,NAV_DEF,
   readOnly:()=>RO,touch,render:(...args)=>render(...args),saveUI,openSheet,
   toast,confirm:askModal
 });
+const lxIntegration=window.LegacyIntegrationUI.install({
+  getState:()=>S, replaceState:state=>{S=migrate3(state)},ui,TABS,NAV_DEF,
+  readOnly:()=>RO,touch,render:(...args)=>render(...args),saveUI,openSheet,
+  toast,confirm:askModal,df:dfIntegration,navigate:(tab,set={})=>{ui.tab=tab;Object.assign(ui,set);render();saveUI()}
+});
 const dfNav=navDef;
-navDef=function(){return dfIntegration.extendNav(dfNav())};
+navDef=function(){return lxIntegration.extendNav(dfIntegration.extendNav(dfNav()))};
 const dfRender=render;
-render=function(...args){dfRender(...args);dfIntegration.afterRender()};
+render=function(...args){window.LegacyIntegration.sync(S);window.LegacyPCRA.reconcile(S);window.LegacyJourney.reconcile(S);dfRender(...args);dfIntegration.afterRender();lxIntegration.afterRender()};
 const dfPrv=renderPrvSheet;
 renderPrvSheet=function(...args){dfPrv(...args);dfIntegration.afterRender()};
-const dfSave=localSave;
-localSave=function(){dfSave();window.LegacyDFStore.saveState(S).catch(()=>{
-  setStatus('error');toast('Stockage local indisponible : téléchargez une sauvegarde avant de fermer.');
+// En mode serveur, aucune donnée de compte n'est écrite dans le cache partagé du navigateur.
+localSave=function(){window.LegacyIntegration.sync(S);window.LegacyPCRA.reconcile(S);window.LegacyJourney.reconcile(S);try{legacyIds(S)}catch(e){};window.LegacyServer.save(S).catch(e=>{
+  setStatus('error');toast(e.message);
 })};
-const dfBoot=boot;
+const lxFlush=flushNow;
+flushNow=async function(){await window.LegacyServer.flush();await lxFlush()};
 boot=async function(){
-  await dfBoot();
-  try{const stored=await window.LegacyDFStore.loadState();if(stored&&valid(stored)&&(stored.updatedAt||0)>=(S.updatedAt||0)){S=migrate3(stored)}}catch(e){toast(e.message)}
-  dfIntegration.ensureCatalog();render();setStatus('local');
+  try{
+    const remote=await window.LegacyServer.start({
+      ack:state=>{S=migrate3(state)},
+      replace:state=>{S=migrate3(state);render()},error:e=>toast(e.message)
+    });
+    if(remote){S=migrate3(remote)}else{
+      let old=null;try{old=await window.LegacyServer.loadOld();if(!old)old=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+      if(old&&valid(old)&&await askModal('Importer les données déjà enregistrées dans ce navigateur vers le serveur local ?')){
+        S=migrate3(old);await window.LegacyServer.importOldFiles(S);
+      }else S=migrate3(clone(SEED));
+    }
+    RO=RO_FORCED||window.LegacyServer.user().permission==='viewer';
+    S.df.actor=window.LegacyServer.user().name;
+    const addedCatalogs=dfIntegration.ensureCatalog();await lxIntegration.load();
+    if(!remote||(addedCatalogs&&window.LegacyServer.user().permission==='admin')){await window.LegacyServer.save(S);await window.LegacyServer.flush()}
+    window.LegacyServer.ready();render();setStatus('saved');
+  }catch(e){toast(e.message)}
 };
 boot();
 })();

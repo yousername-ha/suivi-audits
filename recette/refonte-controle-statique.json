@@ -1,0 +1,15 @@
+{
+  "checkedAt": "2026-10-11T13:10:38.883173+00:00",
+  "pythonFiles": 5,
+  "jsFiles": 21,
+  "jsonFiles": 13,
+  "inlineJS": 1,
+  "syntax": "PASS",
+  "gitleaksFiles": "PASS — aucune détection",
+  "gitleaksLegacyHistory": "PASS — aucune détection dans le commit initial",
+  "protectedBranchHeads": {
+    "main": "f407f31385f8476280e99ff3b74c0ec0cc88388a",
+    "feature/gpt6-evolution-smsi-grc": "1b698736c02e482570332eac7b5a98896892e669"
+  },
+  "secretsOrProductionDatabaseIncluded": false
+}

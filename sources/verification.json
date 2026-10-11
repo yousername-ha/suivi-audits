@@ -19,5 +19,73 @@
     "latestVersionConfirmed": false,
     "otherDomainDocumentsAvailable": false,
     "reuseDetailsConfirmed": false
+  },
+  "CARE_D2": {
+    "url": "https://prod-convergence.esante.gouv.fr/sites/default/files/media/document/Guide%20des%20pr%C3%A9requis%20et%20objectifs%20du%20domaine%20V1.1.6.pdf",
+    "sha256": "0938288b567bd52d30051820f764a7f765a1f60c070590ca41746582ee9d61ea",
+    "criteria": 13,
+    "versionLabel": "1.1.6 (pied de page du PDF)",
+    "versionHistoryConflict": true,
+    "latestVersionConfirmed": false,
+    "finance": {
+      "url": "https://prod-convergence.esante.gouv.fr/sites/default/files/media/document/Guide%20des%20de%CC%81penses%20e%CC%81ligibles%20domaine%202_v1.0.pdf",
+      "sha256": "3f8a9a7eb6586cd43a50b514887bdfd164bb3fccdbadbe26c46beb04c72460fb",
+      "version": "1.0",
+      "publishedAt": "2026-03-11"
+    },
+    "sourcePagesRead": [
+      [
+        7,
+        8
+      ],
+      [
+        9,
+        10
+      ],
+      [
+        12,
+        13
+      ],
+      [
+        14,
+        15
+      ],
+      [
+        16,
+        18
+      ],
+      [
+        18,
+        20
+      ],
+      [
+        21,
+        23
+      ],
+      [
+        24,
+        25
+      ],
+      [
+        26,
+        27
+      ],
+      [
+        28,
+        29
+      ],
+      [
+        30,
+        32
+      ],
+      [
+        33,
+        34
+      ],
+      [
+        35,
+        36
+      ]
+    ]
   }
 }

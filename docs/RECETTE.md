@@ -1,5 +1,11 @@
 # Recette de la livraison locale
 
+> Document historique de la livraison 1.0 D/F. Pour le fonctionnement actuel
+> (serveur local, comptes, périmètres, parcours, D2 et PCRA), consulter
+> [README](../README.md), [architecture de la refonte](REFONTE-LEGACY.md) et
+> [recette de la refonte](RECETTE-REFONTE.md). Les anciens résultats ne sont
+> pas attribués à la version actuelle.
+
 11 octobre 2026. Profils Chromium isolés, données et pièces **synthétiques**.
 Les recettes ne chargent aucun profil ni document de production.
 

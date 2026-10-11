@@ -9,18 +9,28 @@ const JSZip = require('../lib/jszip.min.js');
 const ROOT = path.resolve(__dirname, '..'), TEMP = fs.mkdtempSync('/tmp/legacy-df-recette-');
 const URL = process.env.LEGACY_URL || 'http://127.0.0.1:8123';
 const tests = [], errors = [], external = [];
-let browser, context, p, careId, firstId, secondId, hasId, hasEvalId, proofId, v1, v2, auditorZip, observationsFile, backupFile, auditServer, auditOrigin;
+let initialState, browser, context, p, careId, firstId, secondId, hasId, hasEvalId, proofId, v1, v2, auditorZip, observationsFile, backupFile, auditServer, auditOrigin;
 const dlg = () => p.locator('#dfDialog');
 const fld = name => dlg().locator('[name="' + name + '"]');
-const stored = page => page.evaluate(() => JSON.parse(localStorage.getItem('suivi-audits-legacy-df:v1')));
+const stored = page => page.evaluate(async () => {await LegacyServer.flush();return (await LegacyServer.request('/api/state')).state});
 const fill = (name, value) => fld(name).fill(String(value));
 async function submit() {
   await dlg().locator('button[type="submit"]').click();
   await dlg().waitFor({ state: 'hidden', timeout: 15000 }).catch(async e => { throw new Error('Formulaire non enregistré : ' + await dlg().locator('#dfError').innerText().catch(() => '') + '\n' + e.message); });
 }
+async function signIn(page) {
+  if (await page.locator('#lx-auth').count()) {
+    if(await page.locator('#lx-auth [name=name]').count())await page.locator('#lx-auth [name=name]').fill('Administration fictive');
+    await page.locator('#lx-auth [name=login]').fill('recette_admin');
+    await page.locator('#lx-auth [name=password]').fill('recette-synthetique-001');
+    await page.locator('#lx-auth button').click();
+  }
+  await page.locator('#lx-account').waitFor();
+}
 async function go(sec, sub) {
+  if(await p.locator('#lx-menu-toggle').isVisible() && await p.locator('#lx-menu-toggle').getAttribute('aria-expanded')!=='true') await p.locator('#lx-menu-toggle').click();
   await p.locator('[data-act="nav"][data-sec="' + sec + '"]').first().click();
-  if (sub) await p.locator('[data-sec="' + sec + '"][data-sub="df-' + sec + '-' + sub + '"]:visible').click();
+  if (sub) await p.locator('[data-sec="' + sec + '"][data-sub="df-' + sec + '-' + sub + '"]:visible').first().click();
 }
 async function openEval(eid) {
   await go(eid === hasEvalId ? 'has' : 'care', 'grid');
@@ -41,7 +51,7 @@ async function confirm() { await p.locator('#askDlg [data-ask="1"]').click(); }
 async function run(name, fn) {
   const at = Date.now();
   try { const result = await fn(); const status = result && result.notExecutedReason ? 'NON EXÉCUTÉ' : 'PASSÉ'; tests.push({ name, status, durationMs: Date.now() - at, ...(result || {}) }); console.log(status + ' ' + name); }
-  catch (e) { tests.push({ name, status: 'ÉCHEC', message: e.message }); console.error('ÉCHEC ' + name + '\n' + e.stack); await p.screenshot({ path: path.join(ROOT, 'recette/echec.png'), fullPage: true }).catch(() => {}); throw e; }
+  catch (e) { tests.push({ name, status: 'ÉCHEC', message: e.message }); console.error('ÉCHEC ' + name + '\n' + e.stack); await p.screenshot({ path: path.join(ROOT, 'recette/refonte-captures/regression-echec.png'), fullPage: true }).catch(() => {}); throw e; }
 }
 function watch(page) { page.on('pageerror', e => errors.push(e.message)); page.on('request', req => { if (/^https?:/.test(req.url()) && !req.url().startsWith(URL) && !(auditOrigin && req.url().startsWith(auditOrigin))) external.push(req.url()); }); }
 async function main() {
@@ -49,7 +59,7 @@ async function main() {
   context = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: 'fr-FR' });
   p = await context.newPage(); watch(p);
   await run('Démarrage local : menu legacy, rubriques CaRE/HAS et aucune donnée opérationnelle préremplie', async () => {
-    await p.goto(URL); await p.locator('[data-sec="care"]').first().waitFor();
+    await p.goto(URL); await p.locator('#lx-auth').waitFor(); await signIn(p);initialState=await stored(p); await p.locator('[data-sec="care"]').first().waitFor();
     await go('care'); assert.equal(await p.locator('#panel h2').innerText(), 'Piloter le programme CaRE');
     assert.equal(await p.locator('[data-sec="has"]').count(), 1); assert.equal(await p.locator('[data-sec="pil"]').count(), 1);
     assert.equal(await p.locator('.df-stat strong').first().innerText(), '0');
@@ -81,7 +91,7 @@ async function main() {
     await dlg().locator('[data-df-version-file]').setInputFiles({ name: 'VERSION_NON_SELECTIONNEE.txt', mimeType: 'text/plain', buffer: Buffer.from('PIECE VERSION 2 NON AUTORISEE POUR AUDIT\n') });
     await dlg().getByText('Version 2 · VERSION_NON_SELECTIONNEE.txt', { exact: true }).waitFor();
     await dlg().locator('[data-df-act="close"]').first().click(); const s = await stored(p); v2 = s.evidences[0].dfVersions[1].id;
-    assert.equal(s.evidences.length, 1); assert.equal(s.evidences[0].dfVersions.length, 2); assert.equal(s.df.evaluations[0].proofRefs[0].versionId, v1); assert.equal(s.df.evaluations[1].proofRefs[0].versionId, v1);
+    assert.equal(s.evidences.length, 1); assert.equal(s.evidences[0].dfVersions.length, 2); assert.equal(s.df.evaluations[0].status,'Atteint'); assert.equal(s.df.evaluations[0].proofRefs[0].versionId, v1); assert.equal(s.df.evaluations[1].proofRefs[0].versionId, v1);
   });
   await run('Action suivie dans le plan legacy et aucun recalcul automatique du statut', async () => {
     await openEval(secondId); await dlg().locator('[data-df-act="new-action"]').click(); await fill('title', 'Action corrective synthétique'); await fill('owner', 'Responsable fictif'); await fill('due', '2026-12-20'); await submit();
@@ -170,21 +180,21 @@ async function main() {
   });
   await run('Restauration dans un profil neuf : données, relations et pièces réellement récupérées', async () => {
     const fresh = await browser.newContext({ viewport: { width: 1440, height: 900 } }), page = await fresh.newPage(); watch(page); const previous = p; p = page;
-    try { await p.goto(URL); await go('care', 'sources'); await chooser(() => p.locator('#panel [data-df-act="restore"]').click(), backupFile); await confirm();
-      await p.waitForFunction(() => { const s = JSON.parse(localStorage.getItem('suivi-audits-legacy-df:v1') || 'null'); return s && s.df.dossiers.length === 2; });
+    try { await p.goto(URL); await p.locator('#lx-auth').waitFor();await signIn(p); await go('care', 'sources'); await chooser(() => p.locator('#panel [data-df-act="restore"]').click(), backupFile); await confirm();
+      await p.waitForFunction(async () => { const s = (await LegacyServer.request('/api/state')).state;return s && s.df.dossiers.length === 2; });
       const st = await stored(p); assert.equal(st.evidences[0].dfVersions.length, 2); assert.equal(st.df.budgets[0].spent, 15); assert.equal(st.df.auditPackages.length, 1);
-      const checked = await p.evaluate(async () => { const st = JSON.parse(localStorage.getItem('suivi-audits-legacy-df:v1')); return (await LegacyDFStore.checkedBlob(st.evidences[0].dfVersions[0])).text(); }); assert.match(checked, /PREUVE SYNTHÉTIQUE/);
+      const checked = await p.evaluate(async () => { const st = (await LegacyServer.request('/api/state')).state; return (await LegacyDFStore.checkedBlob(st.evidences[0].dfVersions[0])).text(); }); assert.match(checked, /PREUVE SYNTHÉTIQUE/);
       await p.reload(); await p.locator('[data-sec="care"]').first().waitFor(); assert.equal((await stored(p)).df.dossiers.length, 2);
-    } finally { p = previous; await fresh.close(); }
+    } finally { p = previous; await fresh.close();await p.reload();await p.locator('#lx-account').waitFor(); }
   });
   await run('Archive altérée refusée avant toute écriture, dépôt trop volumineux également refusé', async () => {
     const z = await JSZip.loadAsync(fs.readFileSync(backupFile)); z.file('data/state.json', '{}'); const bad = await z.generateAsync({ type: 'nodebuffer' });
-    const result = await p.evaluate(async bytes => { const before = JSON.stringify(JSON.parse(localStorage.getItem('suivi-audits-legacy-df:v1'))); let error; try { await LegacyDFStore.inspectBackup(new File([new Uint8Array(bytes)], 'altérée.zip')); } catch (e) { error = e.message; } return { error, unchanged: before === JSON.stringify(JSON.parse(localStorage.getItem('suivi-audits-legacy-df:v1'))) }; }, [...bad]);
+    const result = await p.evaluate(async bytes => { const before = JSON.stringify((await LegacyServer.request('/api/state')).state); let error; try { await LegacyDFStore.inspectBackup(new File([new Uint8Array(bytes)], 'altérée.zip')); } catch (e) { error = e.message; } return { error, unchanged: before === JSON.stringify((await LegacyServer.request('/api/state')).state) }; }, [...bad]);
     assert.match(result.error, /empreinte/); assert.equal(result.unchanged, true);
-    const oversized = await p.evaluate(async () => { const st = JSON.parse(localStorage.getItem('suivi-audits-legacy-df:v1')); try { await LegacyDFStore.deposit(st, st.evidences[0].id, new File([new Uint8Array(20 * 1024 * 1024 + 1)], 'trop-gros.bin')); } catch (e) { return e.message; } }); assert.match(oversized, /20 Mo/);
+    const oversized = await p.evaluate(async () => { const st = (await LegacyServer.request('/api/state')).state; try { await LegacyDFStore.deposit(st, st.evidences[0].id, new File([new Uint8Array(20 * 1024 * 1024 + 1)], 'trop-gros.bin')); } catch (e) { return e.message; } }); assert.match(oversized, /20 Mo/);
   });
   await run('Lecture seule : commandes désactivées et garde sur un événement forcé', async () => {
-    const ro = await browser.newContext(), page = await ro.newPage(); watch(page); await page.goto(URL + '/?lecture'); await page.locator('[data-sec="care"]').first().click();
+    const ro = await browser.newContext(), page = await ro.newPage(); watch(page); await page.goto(URL + '/?lecture');await page.locator('#lx-auth').waitFor();await signIn(page); await page.locator('[data-sec="care"]').first().click();
     const b = page.locator('[data-df-act="new-dossier"]').first(); assert.equal(await b.isDisabled(), true); await b.evaluate(el => el.dispatchEvent(new MouseEvent('click', { bubbles: true })));
     assert.equal(await page.locator('#dfDialog').count(), 0); assert.match(await page.locator('#toast').innerText(), /lecture seule/); await ro.close();
   });
@@ -196,15 +206,15 @@ async function main() {
   });
   await run('Responsive et thème sombre : captures réelles, sans débordement du document', async () => {
     await go('care');
-    for (const width of [390, 768, 1440, 3840]) { await p.setViewportSize({ width, height: 950 }); await go('care', 'budget'); assert.match(await p.locator('#panel h2').innerText(), /Budgets/); await go('care', 'dash'); const overflow = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth); assert.ok(overflow <= 2, 'Débordement ' + width + ': ' + overflow); await p.screenshot({ path: path.join(ROOT, 'recette/care-' + width + '.png'), fullPage: true }); }
-    await p.setViewportSize({ width: 1440, height: 950 }); await p.evaluate(() => document.documentElement.dataset.theme = 'dark'); await go('has', 'grid'); await p.screenshot({ path: path.join(ROOT, 'recette/has-1440-sombre.png') });
-    await p.setViewportSize({ width: 390, height: 950 }); await p.screenshot({ path: path.join(ROOT, 'recette/has-390-sombre.png') }); await openEval(hasEvalId); await p.screenshot({ path: path.join(ROOT, 'recette/has-fiche-390-sombre.png') }); await dlg().locator('[data-df-act="close"]').first().click();
+    for (const width of [390, 768, 1440, 3840]) { await p.setViewportSize({ width, height: 950 }); await go('care', 'budget'); assert.match(await p.locator('#panel h2').innerText(), /Budgets/); await go('care', 'dash'); const overflow = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth); assert.ok(overflow <= 2, 'Débordement ' + width + ': ' + overflow); await p.screenshot({ path: path.join(ROOT, 'recette/refonte-captures/care-' + width + '.png'), fullPage: true }); }
+    await p.setViewportSize({ width: 1440, height: 950 }); await p.evaluate(() => document.documentElement.dataset.theme = 'dark'); await go('has', 'grid'); await p.screenshot({ path: path.join(ROOT, 'recette/refonte-captures/has-1440-sombre.png') });
+    await p.setViewportSize({ width: 390, height: 950 }); await p.screenshot({ path: path.join(ROOT, 'recette/refonte-captures/has-390-sombre.png') }); await openEval(hasEvalId); await p.screenshot({ path: path.join(ROOT, 'recette/refonte-captures/has-fiche-390-sombre.png') }); await dlg().locator('[data-df-act="close"]').first().click();
     await p.evaluate(() => document.documentElement.dataset.theme = 'light'); await p.setViewportSize({ width: 1440, height: 900 });
   });
   await run('Sources et versions : campagne D1 réelle, import de grille, archivage et réouverture', async () => {
     const fresh = await browser.newContext({ viewport: { width: 1440, height: 900 } }), page = await fresh.newPage(), previous = p; p = page; watch(p);
     try {
-      await p.goto(URL); await go('care'); await p.locator('#panel [data-df-act="new-dossier"]').first().click(); await fill('title', 'D1 version documentée'); await fill('scope', 'Périmètre fictif'); await fld('frameworkId').selectOption('CARE-D1-1.9-DF'); await submit();
+      await p.goto(URL);await p.locator('#lx-auth').waitFor();await signIn(p);await p.evaluate(async s=>{await LegacyServer.save(s);await LegacyServer.flush();await LegacyServer.refresh()},initialState);await p.reload();await p.locator('#lx-account').waitFor(); await go('care'); await p.locator('#panel [data-df-act="new-dossier"]').first().click(); await fill('title', 'D1 version documentée'); await fill('scope', 'Périmètre fictif'); await fld('frameworkId').selectOption('CARE-D1-1.9-DF'); await submit();
       let state = await stored(p); assert.equal(state.df.evaluations.length, 10); const original = state.df.dossiers[0]; assert.match(original.frameworkVersion, /1\.9/);
       await go('care', 'dossiers'); await p.locator('#panel [data-df-act="edit-dossier"]').click(); await dlg().locator('[data-df-act="archive-dossier"]').click(); await confirm(); await dlg().waitFor({ state: 'hidden' });
       state = await stored(p); assert.equal(state.df.dossiers[0].archived, true); assert.equal(state.df.evaluations.length, 10);
@@ -217,21 +227,22 @@ async function main() {
       state = await stored(p); assert.equal(state.df.evaluations.length,11); assert.equal(state.df.dossiers[0].frameworkId,original.frameworkId); assert.equal(state.df.evaluations.at(-1).requirement.criteria,'Vérification synthétique');
     } finally {p=previous;await fresh.close();}
   });
-  await run('Ouverture directe du HTML : menu, données locales et téléchargements sans serveur métier', async () => {
+  await run('Ouverture sans serveur : prérequis explicite pour la persistance et les permissions', async () => {
     const c = await browser.newContext(), page = await c.newPage(); watch(page);
     try {
-      await page.goto('file://' + path.join(ROOT, 'index.html')); await page.locator('[data-sec="has"]').first().click(); assert.match(await page.locator('#panel h2').innerText(), /HAS/);
-      await page.locator('[data-sec="has"][data-sub="df-has-sources"]').click(); const promise = page.waitForEvent('download'); await page.locator('[data-df-act="json"]').click(); const dl = await promise; assert.match(dl.suggestedFilename(), /Sauvegarde-legacy/);
+      await page.goto('file://' + path.join(ROOT, 'index.html'));
+      await page.locator('#legacy-session h1').waitFor();
+      assert.match(await page.locator('#legacy-session').innerText(), /Démarrer le serveur Legacy/);
     } catch (e) {
-      if (e.message.includes('ERR_BLOCKED_BY_ADMINISTRATOR')) return { notExecutedReason: 'Politique Chromium du workspace : file:// interdit. Les parcours sont testés sur un serveur statique localhost, sans API métier.' };
+      if (e.message.includes('ERR_BLOCKED_BY_ADMINISTRATOR')) return {notExecutedReason:'Politique Chromium du workspace : file:// interdit. Application qualifiée sur le serveur Legacy localhost.'};
       throw e;
-    } finally { await c.close(); }
+    } finally {await c.close();}
   });
   assert.deepEqual(errors, []); assert.deepEqual(external, []);
 }
 main().catch(e => { process.exitCode = 1; }).finally(async () => {
   if (browser) await browser.close();
   if (auditServer) auditServer.kill();
-  fs.writeFileSync(path.join(ROOT, 'recette/browser-resultats.json'), JSON.stringify({ executedAt: new Date().toISOString(), environment: 'Chromium local, profils isolés, données synthétiques', passed: tests.filter(t => t.status === 'PASSÉ').length, failed: tests.filter(t => t.status === 'ÉCHEC').length, notExecuted: tests.filter(t => t.status === 'NON EXÉCUTÉ').length, pageErrors: errors, externalRequests: external.length, tests }, null, 2));
+  fs.writeFileSync(path.join(ROOT, 'recette/refonte-regression-resultats.json'), JSON.stringify({ executedAt: new Date().toISOString(), environment: 'Chromium local, profils isolés, données synthétiques', passed: tests.filter(t => t.status === 'PASSÉ').length, failed: tests.filter(t => t.status === 'ÉCHEC').length, notExecuted: tests.filter(t => t.status === 'NON EXÉCUTÉ').length, pageErrors: errors, externalRequests: external.length, tests }, null, 2));
   console.log('Résultats ' + tests.filter(t => t.status === 'PASSÉ').length + ' passés ; ' + tests.filter(t => t.status === 'ÉCHEC').length + ' échec(s). Fichiers temporaires hors livraison.');
 });

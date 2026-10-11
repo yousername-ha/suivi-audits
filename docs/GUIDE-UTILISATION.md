@@ -1,5 +1,11 @@
 # Utiliser CaRE et HAS
 
+> Document historique de la livraison 1.0 D/F. Pour le fonctionnement actuel
+> (serveur local, comptes, périmètres, parcours, D2 et PCRA), consulter
+> [README](../README.md), [architecture de la refonte](REFONTE-LEGACY.md) et
+> [recette de la refonte](RECETTE-REFONTE.md). Les anciens résultats ne sont
+> pas attribués à la version actuelle.
+
 Les rubriques se trouvent dans le menu legacy, après Pilotage. Sur les écrans
 étroits, leurs sous-rubriques sont dans une barre d’onglets défilante.
 Les grilles passent en fiches lisibles sur téléphone.

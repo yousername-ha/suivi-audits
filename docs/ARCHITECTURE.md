@@ -1,5 +1,11 @@
 # Architecture locale et données
 
+> Document historique de la livraison 1.0 D/F. Pour le fonctionnement actuel
+> (serveur local, comptes, périmètres, parcours, D2 et PCRA), consulter
+> [README](../README.md), [architecture de la refonte](REFONTE-LEGACY.md) et
+> [recette de la refonte](RECETTE-REFONTE.md). Les anciens résultats ne sont
+> pas attribués à la version actuelle.
+
 Le socle est la copie de `app/public/index.html` du dépôt à la révision
 `5a3bd0c872eed96ef89fba5a7d694be237fb705e`. Les bibliothèques déjà présentes sont
 copiées dans `lib/` ; aucune nouvelle dépendance d’exécution n’est installée.
