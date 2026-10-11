@@ -15,5 +15,6 @@ présente. « En cours » ne signifie pas qu’un développeur travaille actuell
 | Optimisation du coût Actions    | Doublons supprimés ; coût global non mesuré                              | OPT-006 à OPT-008.      |
 
 La PR #12 est en brouillon et non fusionnée. Aucun lot D/J/I/F n’est entrepris.
-L’audit documentaire est un livrable local ; son éventuel push est une opération
-distincte susceptible de déclencher les workflows existants.
+La documentation a été publiée sur la branche au commit 7cc35dc à la demande
+explicite de l’utilisateur ; les workflows habituels se déclenchent automatiquement.
+Le nettoyage ultérieur est tracé dans le diagnostic du 11 octobre.

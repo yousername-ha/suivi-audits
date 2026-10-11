@@ -195,6 +195,7 @@ function anchors(text) {
   return ids;
 }
 const changedOld = [
+  'CLAUDE.md',
   'README.md',
   'CHANGELOG.md',
   'docs/ARCHITECTURE.md',
@@ -203,6 +204,10 @@ const changedOld = [
   'docs/REPRISE-SOCLE-LEGACY.md',
   'docs/PILOTAGE-SMSI.md',
   'docs/INSTALLATION.md',
+  'docs/cartographie/00-LISEZ-MOI.md',
+  'docs/cartographie/maquette/README.md',
+  'docs/cartographie/reference-beta-legacy/CONTRAT-S-MAPS.md',
+  'docs/diagnostics/2026-10-11-nettoyage-depot.md',
 ];
 let localLinks = 0;
 for (const p of [...required, ...changedOld]) {

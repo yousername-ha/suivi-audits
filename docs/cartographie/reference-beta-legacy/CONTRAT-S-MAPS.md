@@ -1,21 +1,26 @@
 # Cartographie (bêta) — module de test dans l'outil historique
 
 Module « Cartographie » (Vue contexte, Vue processus) ajouté à `app/public/index.html` pour tester la
-maquette *Map Builder SMSI* sur l'outil historique avant son portage dans l'application refondue.
+maquette _Map Builder SMSI_ sur l'outil historique avant son portage dans l'application refondue.
 
 ## Fichiers
 
-| Fichier | Rôle |
-|---|---|
-| `carto.js` | Module complet (données, dispositions, rendu SVG, interactions, exports PNG / PDF / SVG). |
-| `carto.css` | Styles du module (jetons de la maquette : marine `#0B2B55`, bleu `#1677FF`, violet, orange, vert). |
+| Fichier          | Rôle                                                                                                                     |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `carto.js`       | Module complet (données, dispositions, rendu SVG, interactions, exports PNG / PDF / SVG).                                |
+| `carto.css`      | Styles du module (jetons de la maquette : marine `#0B2B55`, bleu `#1677FF`, violet, orange, vert).                       |
 | `apply_carto.py` | Insère ou met à jour le module dans un `index.html` exporté de l'artefact (idempotent, marqueurs `MB-BEGIN` / `MB-END`). |
 
+Le script est conservé dans ce dossier comme outil historique. Il s’utilise sur
+une copie locale destinée à une vérification du legacy, hors installation active :
+
 ```bash
-python3 scripts/carto/apply_carto.py app/public/index.html app/public/index.html
+python3 docs/cartographie/reference-beta-legacy/apply_carto.py /tmp/source-legacy.html /tmp/legacy-cartographie.html
 ```
 
-À relancer après chaque `scripts/update-ui.sh` si le nouvel `index.html` ne contient pas déjà le module.
+La cartographie native est déjà livrée ; cette injection n’est pas une étape
+d’installation ou de mise à jour v3. Le module JavaScript reste nécessaire aux
+[tests de parité](../../../packages/shared/test/beta-carto.ts).
 
 ## Contrat de données (sans changement de version de structure)
 

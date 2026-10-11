@@ -1,6 +1,6 @@
 # Reprendre Suivi des audits
 
-Dernière mise à jour : **2026-10-11T00:57:18+02:00 (Europe/Paris)**.
+Dernière mise à jour : **2026-10-11T04:04:46+02:00 (Europe/Paris)**.
 Référence applicative analysée : **`c704fa6e6d6d516db75f963db8dd5d2049ab42c8`** ; version 3.0.2.
 Branche de travail exclusive : **`feature/gpt6-evolution-smsi-grc`**.
 
@@ -103,6 +103,20 @@ reset pour débloquer Git. Aucun secret dans cette documentation.
 
 Le dépôt reste privé et main est toujours `b148c1ba303954b7023996fce3d0eff2923326b5`.
 [PR #12](https://github.com/yousername-ha/suivi-audits/pull/12) constatée ouverte
-en brouillon, sans auto-merge. La mission documentaire n’a ni poussé un commit
-ni déclenché une nouvelle CI : la preuve verte ci-dessus est attachée à c704fa6,
-pas à un futur commit documentaire.
+en brouillon, sans auto-merge. La documentation a été publiée sur cette branche
+au commit `7cc35dc` après demande explicite. La CI historique ci-dessus reste
+une preuve de c704fa6 ; la publication documentaire a déclenché les workflows
+habituels. Aucun déploiement ni fusion.
+
+## Entretien du dépôt
+
+Nettoyage du 11 octobre : ancien prompt et rapport ponctuel retirés ; consignes
+Claude regroupées autour d’AGENTS, exclusions de dossier absent supprimées,
+renvois historiques clarifiés. Voir [diagnostic](docs/diagnostics/2026-10-11-nettoyage-depot.md)
+et [preuves](docs/05_RECETTE/preuves/2026-10-11-nettoyage.json). Les sources
+applicatives, données de départ, archives et références de test sont préservées.
+
+La CI documentaire de 7cc35dc a échoué sur une simulation API de retour arrière ;
+qualité, guide et CodeQL passent. Voir le diagnostic de nettoyage. La preuve
+complète verte de c704fa6 reste historique ; la prochaine CI sera celle du
+nettoyage publié. Cause de l’échec NON CONFIRMÉE à ce stade.

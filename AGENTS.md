@@ -14,9 +14,10 @@ Suivre également [CONTRIBUTING.md](CONTRIBUTING.md).
 - Périmètre métier demandé : pilotage multi-référentiels, G/H/K, début E et
   préservation de tout v2. D/J/I/F sont exclus de la livraison actuelle.
   Un besoin historique ne donne pas à lui seul autorisation d’implémenter un lot exclu.
-- Dernière mission : documentaire et analytique. Ne changer que documentation
-  et preuves synthétiques ; pas de modification applicative, migration, déploiement
-  ou opération sensible externe pour cette mission.
+- Audit documentaire terminé ; entretien du dépôt autorisé sur la branche dédiée.
+  Supprimer uniquement les éléments dont l’inutilité est démontrée et tracer les
+  références contrôlées. Préserver archives, preuves et sources encore consommées.
+  Publier les changements par la PR ouverte, sans fusion ni déploiement.
 - Communiquer en français les étapes franchies et limites.
 
 ## Invariants techniques

@@ -2,7 +2,7 @@
   "schema": "audit-documentaire-v1",
   "analysed_commit": "c704fa6e6d6d516db75f963db8dd5d2049ab42c8",
   "branch": "feature/gpt6-evolution-smsi-grc",
-  "updated_at": "2026-10-11T00:57:18+02:00",
+  "updated_at": "2026-10-11T04:02:41+02:00",
   "status_rules": ["CONFIRMÉ", "OBSERVÉ", "DÉCLARÉ", "SUPPOSÉ", "NON VÉRIFIÉ", "INCONNU"],
   "statistics": {
     "features": 40,
@@ -1110,10 +1110,10 @@
     {
       "id": "DOC-001",
       "title": "Dossier de reprise et correction des renvois obsolètes",
-      "status": "TERMINÉ LOCAL",
+      "status": "PUBLIÉ SUR LA BRANCHE",
       "priority": "P1",
       "origin": "mission documentaire",
-      "acceptance": "Index, guides, registres, chiffres et liens vérifiés ; uniquement Markdown/JSON.",
+      "acceptance": "Index, guides, registres, chiffres et liens vérifiés ; documentation et vérificateur local, publiés dans 7cc35dc. PR #12 ouverte sans fusion.",
       "dependencies": "",
       "next": "Consulter les preuves associées ; intervenir seulement sur la branche dédiée.",
       "estimation": "NON ESTIMÉE : absence de base justifiable"
@@ -1249,6 +1249,17 @@
       "dependencies": "Jeux fictifs représentatifs, isolation et objectifs de service.",
       "next": "Consulter les preuves associées ; intervenir seulement sur la branche dédiée.",
       "estimation": "NON ESTIMÉE : absence de base justifiable"
+    },
+    {
+      "id": "DOC-005",
+      "title": "Nettoyer les éléments obsolètes du dépôt",
+      "status": "CONTRÔLES LOCAUX VALIDÉS",
+      "priority": "P2",
+      "origin": "demande utilisateur du 11 octobre 2026",
+      "acceptance": "Suppression des seuls éléments sans usage, conservation par empreintes des sources/archives/tests ; liens et contrôles adaptés réussis. Diagnostic daté et publication sur la branche sans fusion.",
+      "dependencies": "DOC-001",
+      "next": "Publier sur la branche et suivre la CI de la PR #12 ; ne pas fusionner.",
+      "estimation": "NON ESTIMÉE : entretien ponctuel"
     }
   ],
   "test_cases": [

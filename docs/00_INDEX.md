@@ -1,6 +1,6 @@
 # Index documentaire et reprise
 
-2026-10-11T00:57:18+02:00 (Europe/Paris). Référence : `c704fa6e6d6d516db75f963db8dd5d2049ab42c8` ; branche `feature/gpt6-evolution-smsi-grc`.
+2026-10-11T01:15:55+02:00 (Europe/Paris). Référence : `c704fa6e6d6d516db75f963db8dd5d2049ab42c8` ; branche `feature/gpt6-evolution-smsi-grc`.
 Lire d’abord [AGENTS](../AGENTS.md), [HANDOVER](../HANDOVER.md) et
 [PROJECT_STATUS](../PROJECT_STATUS.md).
 
@@ -113,3 +113,9 @@ chiffres. Il ne valide ni contenu métier, ni site externe, ni acceptation humai
 Les chemins sources sont cliquables depuis les matrices. Les IDs FCT/BUG/SEC/
 OPT/TEST/DEV/MIG/DOC ne changent pas sans décision tracée. Lors d’une session,
 actualiser les lignes touchées et HANDOVER sans réécrire inutilement tout le dossier.
+
+## Entretien du dépôt
+
+- [Nettoyage du 11 octobre](diagnostics/2026-10-11-nettoyage-depot.md) : éléments
+  retirés, usages encore nécessaires et limites.
+- [Contrôles du nettoyage](05_RECETTE/preuves/2026-10-11-nettoyage.json).

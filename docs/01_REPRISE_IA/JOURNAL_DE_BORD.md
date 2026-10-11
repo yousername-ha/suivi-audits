@@ -91,3 +91,29 @@ datés et exécutions liées ; ne pas convertir un message Git en preuve de test
   car ce clone n’a pas de branche main locale. La vérification adaptée a passé :
   origin/main et `git ls-remote --heads origin main` pointent vers b148c1b,
   sans création ni modification de main. Aucun diff applicatif/infrastructure.
+
+## Publication et nettoyage du dépôt — 11 octobre 2026
+
+- Documentation 7cc35dc poussée à la demande de l’utilisateur ; main vérifiée
+  inchangée, PR #12 ouverte en brouillon, CI/CodeQL automatiques.
+- Nettoyage demandé ensuite : inventaire de 592 fichiers, usages/empreintes
+  contrôlés ; deux fichiers retirés et consignes/renvois simplifiés.
+- Difficulté : comparaison avec tsx depuis la racine en échec (module absent).
+  Comparaison native Node 24 réussie : variantes différentes et conservées.
+- [Diagnostic](../diagnostics/2026-10-11-nettoyage-depot.md) et
+  [reçu des commandes](../05_RECETTE/preuves/2026-10-11-nettoyage.json) constituent
+  les sources de ce lot ; aucune nouvelle acceptation humaine ni recette serveur.
+- Prochaine action métier inchangée : TEST-041/TEST-042 avant reprises B2/E.
+
+- Contrôles pnpm initiaux en échec avant lancement (stockage du pnpm 11 fourni
+  par le workspace) ; mêmes scripts réussis avec la vérification préalable
+  désactivée, sans installation. Lint, format, typage et compilation passent.
+- La CI documentaire 7cc35dc a échoué sur un test du protocole hôte de retour
+  arrière simulé ; 245/246 tests API passent. Cause non démontrée, sources
+  applicatives conservées ; [run](https://github.com/yousername-ha/suivi-audits/actions/runs/38093984247).
+  Les nouvelles validations ne seront pas assimilées à une correction de cet échec.
+
+- Test du protocole hôte isolé relancé sur fichiers fictifs : 15/15 passés ;
+  la panne CI n’est pas reproduite ici et n’est pas déclarée corrigée.
+  Bilan du nettoyage : 254 tests locaux passés, sources protégées 405/405
+  identiques et contrôles qualité réussis.

@@ -15,7 +15,6 @@ export default tseslint.config(
       'tests/e2e/.tmp-e2e/**',
       'app/public/**',
       'docs/cartographie/**',
-      'scripts/carto/**',
       'apps/web/src/generated/**',
       '**/*.generated.ts',
     ],

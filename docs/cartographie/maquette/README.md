@@ -1,5 +1,11 @@
 # Map Builder SMSI — Dossier de handoff développeur
 
+Document de conception historique. La cartographie native est implémentée en
+SVG React, conformément à la [spécification v3](../SPEC-CARTOGRAPHIE-V3.md) et au
+[DAT actuel](../../03_ARCHITECTURE/DAT.md). Les propositions React Flow/ELK de ce
+pack ne sont pas la stack livrée. Les exemples JSON et TypeScript sont des
+variantes distinctes, conservées comme références de conception.
+
 Ce dossier décrit la conception d’un **éditeur de cartographie interactif** pour un système de management intégrant notamment ISO 27001, HDS et ISO 9001.
 
 L’objectif n’est pas de produire une image statique : la cartographie est un **canvas éditable piloté par les données déjà présentes dans la plateforme**. L’utilisateur peut :
@@ -26,7 +32,6 @@ L’objectif n’est pas de produire une image statique : la cartographie est un
 - `config/` : configuration JSON directement exploitable comme base.
 - `contracts/` : interfaces TypeScript de référence.
 - `examples/` : données d’exemple basées sur les processus fournis.
-- `index.html` : page d’index locale pour parcourir rapidement le pack.
 
 ## Référence UX principale
 

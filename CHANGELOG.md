@@ -8,6 +8,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 - Aucune action sur le serveur : optimisation des workflows GitHub Actions et dossier de reprise documentaire, sans nouvelle version applicative préparée.
 
 ### Modifié
+- Dépôt : retrait d’un ancien prompt de chantier terminé et d’un rapport ponctuel inutilisé ; consignes Claude consolidées, renvois cartographiques corrigés et exclusions de lint/format d’un dossier absent supprimées. Code applicatif, archives, migrations et références visuelles conservés.
 - CI : un seul scan Trivy bloquant HIGH/CRITICAL par image API, web et updater ; suppression du second scan identique destiné à réafficher le tableau. Les SBOM et le scan des dépendances du dépôt sont conservés.
 - CodeQL : une nouvelle analyse de la même référence Git annule l'exécution précédente encore en cours, comme le fait déjà la CI.
 

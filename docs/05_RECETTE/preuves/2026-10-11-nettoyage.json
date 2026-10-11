@@ -1,0 +1,130 @@
+{
+  "base_commit": "7cc35dc00b2d936c1195ed4f9ff04acbf74f56c9",
+  "date": "2026-10-11T01:15:55+02:00",
+  "branch": "feature/gpt6-evolution-smsi-grc",
+  "initial_failed_attempt": {
+    "command": "node --import tsx --input-type=module - <comparaison-maquette>",
+    "code": 1,
+    "cause": "tsx non résolu depuis la racine ; aucune installation nécessaire."
+  },
+  "corrected_comparison": {
+    "command": "node --input-type=module - <comparaison-maquette>",
+    "code": 0,
+    "generation_identical": false,
+    "views_identical": false,
+    "processes_identical": false,
+    "decision": "Conserver les variantes non identiques."
+  },
+  "checks": [
+    {
+      "name": "build",
+      "command": "pnpm --config.verify-deps-before-run=false build",
+      "workdir": "/workspace/suivi-audits",
+      "code": 0,
+      "status": "PASSÉ",
+      "warnings": [
+        "Script de maintenance classique conservé hors bundle Vite",
+        "Annotations de zod ignorées par Rollup",
+        "Bundle principal supérieur au seuil indicatif de 900 kB"
+      ],
+      "limitation": "Compilation réussie ; avertissements connus, aucun changement d’interface."
+    }
+  ],
+  "not_executed": [
+    "Tests API avec globalSetup destructif",
+    "Déploiement et recettes Docker locales",
+    "Migrations et recettes serveur réelles"
+  ],
+  "limits": "Contrôles du nettoyage ; pas de recette utilisateur, réécriture d’historique ni purge de branches/tags/artefacts.",
+  "collected_at": "2026-10-11T04:02:41+02:00",
+  "local_pnpm_version": "11.19.0",
+  "project_pnpm_version": "10.34.6",
+  "preservation": {
+    "date": "2026-10-11T01:16:40+02:00",
+    "status": "PASSÉ",
+    "code": 0,
+    "preserved_files": 405,
+    "all_sha256_identical": true,
+    "deletions": ["docs/cartographie/PROMPT-CLAUDE-CODE.md", "docs/refonte-ui/verification.json"],
+    "deletion_count": 2,
+    "deleted_bytes": 10288,
+    "main_expected": "b148c1ba303954b7023996fce3d0eff2923326b5"
+  },
+  "pure_suites": [
+    {
+      "name": "shared",
+      "date": "2026-10-11T01:16:19+02:00",
+      "total": 222,
+      "passed": 222,
+      "failed": 0,
+      "report_sha256": "35826c9a1c8b7651449ec9af4307fae3114620862edd895a664728f6dc753866",
+      "environment": "Workspace, dépendances présentes ; aucune base connectée."
+    },
+    {
+      "name": "web",
+      "date": "2026-10-11T01:16:19+02:00",
+      "total": 17,
+      "passed": 17,
+      "failed": 0,
+      "report_sha256": "8c6f833cbefc0e3110ef2046647c74f00e0c3dc4c10eb866f8b9686ef4bd5eb5",
+      "environment": "Workspace, dépendances présentes ; aucune base connectée."
+    }
+  ],
+  "exploitation_suite": {
+    "command": "python3 scripts/tests/test_exploitation.py",
+    "date": "2026-10-11T04:00:25+02:00",
+    "code": 0,
+    "tests": 15,
+    "success": true,
+    "report_sha256": "2acc79fa2d4a7f94b25ce77ec8077a956521bad03eae5788f28769c9151e3e7e",
+    "environment": "Fichiers fictifs temporaires, Docker et réseau simulés ; aucune base ni installation active."
+  },
+  "local_tests_total": 254,
+  "prior_documentation_ci": {
+    "commit": "7cc35dc00b2d936c1195ed4f9ff04acbf74f56c9",
+    "status": "ÉCHOUÉ",
+    "url": "https://github.com/yousername-ha/suivi-audits/actions/runs/38093984247",
+    "api_passed": 245,
+    "api_failed": 1,
+    "failed_case": "test_failed_restore_rolls_back_without_replaying_target",
+    "actual_phase": "intervention",
+    "expected_phase": "retour_arriere_termine",
+    "quality": "PASSÉ",
+    "guide": "PASSÉ",
+    "codeql": "PASSÉ",
+    "root_cause": "NON CONFIRMÉE ; assertion API liée à un protocole hôte simulé, sans changement de source depuis c704fa6."
+  },
+  "prior_log_fetch": {
+    "gh_run_log_failed": {
+      "code": 0,
+      "bytes": 0,
+      "result": "Vide ; non utilisé comme preuve"
+    },
+    "gh_job_logs": {
+      "code": 0,
+      "bytes": 72043,
+      "result": "Journal réel lu et gardé privé hors Git ; synthèse anonymisée ci-dessus."
+    }
+  },
+  "new_ci": "Déclenchée automatiquement à la publication de ce nettoyage ; résultat consultable depuis la PR #12, sans fusion.",
+  "format_extra_initial": {
+    "code": 1,
+    "status": "ÉCHOUÉ",
+    "cause": "Contrôle forcé incluant CHANGELOG.md ; son format historique est volontairement ignoré par la configuration du dépôt. Les sections publiées sont protégées et ne sont pas reformatées."
+  },
+  "format_extra_final": {
+    "command": "prettier --ignore-path /dev/null --check <16-fichiers-sans-changelog>",
+    "code": 0,
+    "status": "PASSÉ",
+    "files": 16,
+    "limitation": "Le CHANGELOG est vérifié par la configuration standard du projet et son vérificateur spécifique, sans reformater les sections publiées."
+  },
+  "confidentiality": {
+    "command": "gitleaks dir <copie-des-fichiers-modifies> --no-banner --redact=100 --report-format json --report-path <rapport-prive>",
+    "code": 0,
+    "status": "PASSÉ",
+    "files": 18,
+    "findings": 0,
+    "scope": "Fichiers ajoutés/modifiés uniquement ; pas de nouvel audit exhaustif de l’historique ou des images."
+  }
+}
