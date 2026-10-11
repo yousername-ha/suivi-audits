@@ -24,31 +24,33 @@ function Indicateurs({ objectif }: { objectif: ObjectifPilotage }) {
   if (!objectif.indicateurs.length) return <Text size="sm">Aucun indicateur.</Text>;
   return (
     <DataTable label={`Indicateurs de l’objectif ${objectif.id}`}>
-      <Table.Thead>
-        <Table.Tr>
-          <Table.Th className="col-p3">Code</Table.Th>
-          <Table.Th>Indicateur</Table.Th>
-          <Table.Th className="col-p2">Cible</Table.Th>
-          <Table.Th>Valeur</Table.Th>
-          <Table.Th>État</Table.Th>
-        </Table.Tr>
-      </Table.Thead>
-      <Table.Tbody>
-        {objectif.indicateurs.map((i) => (
-          <Table.Tr key={i.id}>
-            <Table.Td className="col-p3">{i.id}</Table.Td>
-            <Table.Td>
-              {i.nom}
-              {i.calcule ? ' (calculé)' : ''}
-            </Table.Td>
-            <Table.Td className="col-p2">{i.cible}</Table.Td>
-            <Table.Td>{i.valeur}</Table.Td>
-            <Table.Td>
-              <StatusChip etat={ETATS[i.etat][1]}>{ETATS[i.etat][0]}</StatusChip>
-            </Table.Td>
+      <Table>
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th className="col-p3">Code</Table.Th>
+            <Table.Th>Indicateur</Table.Th>
+            <Table.Th className="col-p2">Cible</Table.Th>
+            <Table.Th>Valeur</Table.Th>
+            <Table.Th>État</Table.Th>
           </Table.Tr>
-        ))}
-      </Table.Tbody>
+        </Table.Thead>
+        <Table.Tbody>
+          {objectif.indicateurs.map((i) => (
+            <Table.Tr key={i.id}>
+              <Table.Td className="col-p3">{i.id}</Table.Td>
+              <Table.Td>
+                {i.nom}
+                {i.calcule ? ' (calculé)' : ''}
+              </Table.Td>
+              <Table.Td className="col-p2">{i.cible}</Table.Td>
+              <Table.Td>{i.valeur}</Table.Td>
+              <Table.Td>
+                <StatusChip etat={ETATS[i.etat][1]}>{ETATS[i.etat][0]}</StatusChip>
+              </Table.Td>
+            </Table.Tr>
+          ))}
+        </Table.Tbody>
+      </Table>
     </DataTable>
   );
 }
@@ -141,30 +143,32 @@ export function ObjectifsProcessus({ smsi }: { smsi: string }) {
             </Tabs.Panel>
             <Tabs.Panel value="compacte">
               <DataTable label="Objectifs, vue compacte">
-                <Table.Thead>
-                  <Table.Tr>
-                    <Table.Th>Objectif</Table.Th>
-                    <Table.Th className="col-p2">Processus</Table.Th>
-                    <Table.Th>Atteints</Table.Th>
-                    <Table.Th className="col-p2">Échéance</Table.Th>
-                    <Table.Th className="col-p3">Responsable</Table.Th>
-                  </Table.Tr>
-                </Table.Thead>
-                <Table.Tbody>
-                  {objectifs.map((o) => (
-                    <Table.Tr key={o.id}>
-                      <Table.Td>
-                        {o.id} · {o.nom}
-                      </Table.Td>
-                      <Table.Td className="col-p2">{o.processus.join(', ') || '–'}</Table.Td>
-                      <Table.Td>
-                        {o.atteints}/{o.indicateurs.length}
-                      </Table.Td>
-                      <Table.Td className="col-p2">{jour(o.echeance)}</Table.Td>
-                      <Table.Td className="col-p3">{o.responsable || '–'}</Table.Td>
+                <Table>
+                  <Table.Thead>
+                    <Table.Tr>
+                      <Table.Th>Objectif</Table.Th>
+                      <Table.Th className="col-p2">Processus</Table.Th>
+                      <Table.Th>Atteints</Table.Th>
+                      <Table.Th className="col-p2">Échéance</Table.Th>
+                      <Table.Th className="col-p3">Responsable</Table.Th>
                     </Table.Tr>
-                  ))}
-                </Table.Tbody>
+                  </Table.Thead>
+                  <Table.Tbody>
+                    {objectifs.map((o) => (
+                      <Table.Tr key={o.id}>
+                        <Table.Td>
+                          {o.id} · {o.nom}
+                        </Table.Td>
+                        <Table.Td className="col-p2">{o.processus.join(', ') || '–'}</Table.Td>
+                        <Table.Td>
+                          {o.atteints}/{o.indicateurs.length}
+                        </Table.Td>
+                        <Table.Td className="col-p2">{jour(o.echeance)}</Table.Td>
+                        <Table.Td className="col-p3">{o.responsable || '–'}</Table.Td>
+                      </Table.Tr>
+                    ))}
+                  </Table.Tbody>
+                </Table>
               </DataTable>
             </Tabs.Panel>
           </Tabs>

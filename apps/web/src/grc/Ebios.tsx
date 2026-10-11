@@ -92,24 +92,26 @@ function Matrice({ vue }: { vue: VueEtude }) {
     );
   return (
     <DataTable label="Scénarios opérationnels par gravité et vraisemblance">
-      <Table.Thead>
-        <Table.Tr>
-          <Table.Th>Gravité \ vraisemblance</Table.Th>
-          {ECHELLE_VRAISEMBLANCE.map((l, i) => (
-            <Table.Th key={l}>{`V${i + 1}`}</Table.Th>
-          ))}
-        </Table.Tr>
-      </Table.Thead>
-      <Table.Tbody>
-        {[4, 3, 2, 1].map((g) => (
-          <Table.Tr key={g}>
-            <Table.Th scope="row">{`G${g} — ${ECHELLE_GRAVITE[g - 1]}`}</Table.Th>
-            {[1, 2, 3, 4].map((v) => (
-              <Table.Td key={v}>{(cases.get(`${g}-${v}`) ?? []).join(', ')}</Table.Td>
+      <Table>
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th>Gravité \ vraisemblance</Table.Th>
+            {ECHELLE_VRAISEMBLANCE.map((l, i) => (
+              <Table.Th key={l}>{`V${i + 1}`}</Table.Th>
             ))}
           </Table.Tr>
-        ))}
-      </Table.Tbody>
+        </Table.Thead>
+        <Table.Tbody>
+          {[4, 3, 2, 1].map((g) => (
+            <Table.Tr key={g}>
+              <Table.Th scope="row">{`G${g} — ${ECHELLE_GRAVITE[g - 1]}`}</Table.Th>
+              {[1, 2, 3, 4].map((v) => (
+                <Table.Td key={v}>{(cases.get(`${g}-${v}`) ?? []).join(', ')}</Table.Td>
+              ))}
+            </Table.Tr>
+          ))}
+        </Table.Tbody>
+      </Table>
     </DataTable>
   );
 }
@@ -224,45 +226,47 @@ export function EtudesEbios({
                   )}
                   {a.objets.length ? (
                     <DataTable label={a.label}>
-                      <Table.Thead>
-                        <Table.Tr>
-                          <Table.Th>Élément</Table.Th>
-                          <Table.Th>Type</Table.Th>
-                          <Table.Th>Synthèse</Table.Th>
-                          <Table.Th>Actions</Table.Th>
-                        </Table.Tr>
-                      </Table.Thead>
-                      <Table.Tbody>
-                        {a.objets.map((o) => (
-                          <Table.Tr key={o.id}>
-                            <Table.Td>{o.name}</Table.Td>
-                            <Table.Td>{GRC_LABELS[o.kind]}</Table.Td>
-                            <Table.Td>{resume(o, noms)}</Table.Td>
-                            <Table.Td>
-                              <Group gap="xs" wrap="nowrap">
-                                <Button size="xs" variant="default" onClick={() => void ouvrir(o.id)}>
-                                  Ouvrir
-                                </Button>
-                                {o.kind === 'operational_scenario' && modifier && (
-                                  <Button
-                                    size="xs"
-                                    variant="light"
-                                    onClick={() =>
-                                      onCreateRisk('Risque : ' + o.name, {
-                                        studyRef: etudeRef,
-                                        scenarioRef: 'object:' + o.id,
-                                        description: String(o.data.attackSequence ?? ''),
-                                      })
-                                    }
-                                  >
-                                    Créer le risque
-                                  </Button>
-                                )}
-                              </Group>
-                            </Table.Td>
+                      <Table>
+                        <Table.Thead>
+                          <Table.Tr>
+                            <Table.Th>Élément</Table.Th>
+                            <Table.Th>Type</Table.Th>
+                            <Table.Th>Synthèse</Table.Th>
+                            <Table.Th>Actions</Table.Th>
                           </Table.Tr>
-                        ))}
-                      </Table.Tbody>
+                        </Table.Thead>
+                        <Table.Tbody>
+                          {a.objets.map((o) => (
+                            <Table.Tr key={o.id}>
+                              <Table.Td>{o.name}</Table.Td>
+                              <Table.Td>{GRC_LABELS[o.kind]}</Table.Td>
+                              <Table.Td>{resume(o, noms)}</Table.Td>
+                              <Table.Td>
+                                <Group gap="xs" wrap="nowrap">
+                                  <Button size="xs" variant="default" onClick={() => void ouvrir(o.id)}>
+                                    Ouvrir
+                                  </Button>
+                                  {o.kind === 'operational_scenario' && modifier && (
+                                    <Button
+                                      size="xs"
+                                      variant="light"
+                                      onClick={() =>
+                                        onCreateRisk('Risque : ' + o.name, {
+                                          studyRef: etudeRef,
+                                          scenarioRef: 'object:' + o.id,
+                                          description: String(o.data.attackSequence ?? ''),
+                                        })
+                                      }
+                                    >
+                                      Créer le risque
+                                    </Button>
+                                  )}
+                                </Group>
+                              </Table.Td>
+                            </Table.Tr>
+                          ))}
+                        </Table.Tbody>
+                      </Table>
                     </DataTable>
                   ) : (
                     <Text size="sm">Aucun élément dans cet atelier.</Text>

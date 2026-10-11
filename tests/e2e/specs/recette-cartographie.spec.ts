@@ -790,14 +790,16 @@ async function centreNoeud(p: Page, ref: string) {
   return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
 }
 /** Point à viser sur un objet : centre de sa partie visible. Une grande boîte peut déborder de la zone du canevas
-    (panneau latéral, bandeau « nouvel objet ») ; un point hors du canevas n'appartient pas à la carte. */
+    (panneau latéral, bandeau « nouvel objet ») ou de la fenêtre ; un point hors de la zone n'appartient pas à la carte. */
 async function pointVisible(p: Page, ref: string) {
   const b = (await noeud(p, ref).locator('rect').first().boundingBox())!;
-  const z = (await svg(p).boundingBox())!;
-  const x1 = Math.max(b.x, z.x),
-    y1 = Math.max(b.y, z.y),
-    x2 = Math.min(b.x + b.width, z.x + z.width),
-    y2 = Math.min(b.y + b.height, z.y + z.height);
+  // La zone de la carte (et non le svg, qui peut la déborder) bornée par la fenêtre.
+  const z = (await p.locator('.carte-zone').first().boundingBox())!;
+  const f = p.viewportSize()!;
+  const x1 = Math.max(b.x, z.x, 0),
+    y1 = Math.max(b.y, z.y, 0),
+    x2 = Math.min(b.x + b.width, z.x + z.width, f.width),
+    y2 = Math.min(b.y + b.height, z.y + z.height, f.height);
   return { x: (x1 + x2) / 2, y: (y1 + y2) / 2 };
 }
 /** Glisse un élément de la palette jusqu'à un point de l'écran. */

@@ -52,11 +52,13 @@ export function RegistreRisques({
   onOpen,
   onEvaluation,
   onAcceptation,
+  onRelation,
 }: {
   smsi: string;
   onOpen: (o: GrcObject) => void;
   onEvaluation: (o: GrcObject) => void;
   onAcceptation: (o: GrcObject) => void;
+  onRelation: (ref: string) => void;
 }) {
   const can = useCan();
   const [demarche, setDemarche] = useState<string | null>(null),
@@ -109,67 +111,70 @@ export function RegistreRisques({
       {q.data && !q.data.items.length && <Text>Aucun risque ne correspond.</Text>}
       {!!q.data?.items.length && (
         <DataTable label="Registre des risques">
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Risque</Table.Th>
-              <Table.Th className="col-p2">Démarche</Table.Th>
-              <Table.Th>Brut</Table.Th>
-              <Table.Th>Résiduel</Table.Th>
-              <Table.Th className="col-p2">Option</Table.Th>
-              <Table.Th>Acceptation</Table.Th>
-              <Table.Th className="col-p3">Prochaine revue</Table.Th>
-              <Table.Th>Actions</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {q.data.items.map((r) => (
-              <Table.Tr key={r.id}>
-                <Table.Td>
-                  {r.code ? `${r.code} · ` : ''}
-                  {r.name}
-                </Table.Td>
-                <Table.Td className="col-p2">{r.demarche ? (DEMARCHES[r.demarche] ?? r.demarche) : '—'}</Table.Td>
-                <Table.Td>{r.brut ?? 'Non apprécié'}</Table.Td>
-                <Table.Td>
-                  {r.residuel ?? '—'}
-                  {r.residuel && !r.appreciationValidee ? ' (brouillon)' : ''}
-                </Table.Td>
-                <Table.Td className="col-p2">{OPTIONS[r.strategie] ?? r.strategie}</Table.Td>
-                <Table.Td>
-                  <StatusChip etat={ETAT_CHIP[r.acceptation]}>{ETATS_ACCEPTATION[r.acceptation]}</StatusChip>
-                  {r.decisionAcceptation?.until && (
-                    <Text size="xs" c="dimmed">
-                      jusqu’au {jour(r.decisionAcceptation.until)}
-                    </Text>
-                  )}
-                </Table.Td>
-                <Table.Td className="col-p3">
-                  {r.enRetard ? (
-                    <StatusChip etat="erreur">{jour(r.prochaineRevue)}</StatusChip>
-                  ) : (
-                    jour(r.prochaineRevue)
-                  )}
-                </Table.Td>
-                <Table.Td>
-                  <Group gap="xs" wrap="nowrap">
-                    <Button size="xs" variant="default" onClick={() => void objet(r.id).then(onOpen)}>
-                      Ouvrir
-                    </Button>
-                    {can('pilotage', 'modifier') && (
-                      <Button size="xs" variant="light" onClick={() => void objet(r.id).then(onEvaluation)}>
-                        Apprécier
-                      </Button>
-                    )}
-                    {can('pilotage', 'administrer') && r.strategie === 'accept' && (
-                      <Button size="xs" variant="light" onClick={() => void objet(r.id).then(onAcceptation)}>
-                        Décider de l’acceptation
-                      </Button>
-                    )}
-                  </Group>
-                </Table.Td>
+          <Table>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Risque</Table.Th>
+                <Table.Th className="col-p2">Démarche</Table.Th>
+                <Table.Th>Brut</Table.Th>
+                <Table.Th>Résiduel</Table.Th>
+                <Table.Th className="col-p2">Option</Table.Th>
+                <Table.Th>Acceptation</Table.Th>
+                <Table.Th className="col-p3">Prochaine revue</Table.Th>
+                <Table.Th>Actions</Table.Th>
               </Table.Tr>
-            ))}
-          </Table.Tbody>
+            </Table.Thead>
+            <Table.Tbody>
+              {q.data.items.map((r) => (
+                <Table.Tr key={r.id}>
+                  <Table.Td>
+                    {r.code ? `${r.code} · ` : ''}
+                    {r.name}
+                  </Table.Td>
+                  <Table.Td className="col-p2">{r.demarche ? (DEMARCHES[r.demarche] ?? r.demarche) : '—'}</Table.Td>
+                  <Table.Td>{r.brut ?? 'Non apprécié'}</Table.Td>
+                  <Table.Td>
+                    {r.residuel ?? '—'}
+                    {r.residuel && !r.appreciationValidee ? ' (brouillon)' : ''}
+                  </Table.Td>
+                  <Table.Td className="col-p2">{OPTIONS[r.strategie] ?? r.strategie}</Table.Td>
+                  <Table.Td>
+                    <StatusChip etat={ETAT_CHIP[r.acceptation]}>{ETATS_ACCEPTATION[r.acceptation]}</StatusChip>
+                    {r.decisionAcceptation?.until && (
+                      <Text size="xs" c="dimmed">
+                        jusqu’au {jour(r.decisionAcceptation.until)}
+                      </Text>
+                    )}
+                  </Table.Td>
+                  <Table.Td className="col-p3">
+                    {r.enRetard ? (
+                      <StatusChip etat="erreur">{jour(r.prochaineRevue)}</StatusChip>
+                    ) : (
+                      jour(r.prochaineRevue)
+                    )}
+                  </Table.Td>
+                  <Table.Td>
+                    <Group gap="xs" wrap="nowrap">
+                      <Button size="xs" variant="default" onClick={() => void objet(r.id).then(onOpen)}>
+                        Ouvrir
+                      </Button>
+                      <Button size="xs" variant="default" onClick={() => onRelation('object:' + r.id)}>
+                        Liens et preuves
+                      </Button>
+                      <Button size="xs" variant="light" onClick={() => void objet(r.id).then(onEvaluation)}>
+                        Apprécier / réévaluer
+                      </Button>
+                      {can('pilotage', 'administrer') && r.strategie === 'accept' && (
+                        <Button size="xs" variant="light" onClick={() => void objet(r.id).then(onAcceptation)}>
+                          Décider de l’acceptation
+                        </Button>
+                      )}
+                    </Group>
+                  </Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
         </DataTable>
       )}
     </>

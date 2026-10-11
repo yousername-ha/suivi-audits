@@ -41,49 +41,51 @@ export function PlansHistoriques({ smsi, type }: { smsi: string; type: keyof typ
         {q.data && !plans.length && <Text size="sm">Aucune séance planifiée dans l’outil de suivi.</Text>}
         {!!plans.length && (
           <DataTable label={TYPES[type].titre}>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Séance</Table.Th>
-                <Table.Th className="col-p2">{TYPES[type].objet}</Table.Th>
-                <Table.Th>Dates</Table.Th>
-                <Table.Th>Statut</Table.Th>
-                <Table.Th className="col-p3">Responsable</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {plans.map((p) => (
-                <Table.Tr key={p.id}>
-                  <Table.Td>
-                    {p.id} · {p.titre || 'Sans intitulé'}
-                    {p.modalite && (
-                      <Text size="xs" c="dimmed">
-                        {p.modalite}
-                      </Text>
-                    )}
-                  </Table.Td>
-                  <Table.Td className="col-p2">{p.objet || '–'}</Table.Td>
-                  <Table.Td>
-                    {jour(p.debut)}
-                    {p.fin && p.fin !== p.debut ? ` → ${jour(p.fin)}` : ''}
-                    {p.realiseLe && (
-                      <Text size="xs" c="dimmed">
-                        Réalisé le {jour(p.realiseLe)}
-                      </Text>
-                    )}
-                  </Table.Td>
-                  <Table.Td>
-                    {p.enRetard ? (
-                      <StatusChip etat="erreur">En retard</StatusChip>
-                    ) : (
-                      <StatusChip etat={p.statut === 'Réalisé' ? 'succes' : 'neutre'}>
-                        {p.statut || 'Planifié'}
-                      </StatusChip>
-                    )}
-                  </Table.Td>
-                  <Table.Td className="col-p3">{p.responsable || '–'}</Table.Td>
+            <Table>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Séance</Table.Th>
+                  <Table.Th className="col-p2">{TYPES[type].objet}</Table.Th>
+                  <Table.Th>Dates</Table.Th>
+                  <Table.Th>Statut</Table.Th>
+                  <Table.Th className="col-p3">Responsable</Table.Th>
                 </Table.Tr>
-              ))}
-            </Table.Tbody>
+              </Table.Thead>
+              <Table.Tbody>
+                {plans.map((p) => (
+                  <Table.Tr key={p.id}>
+                    <Table.Td>
+                      {p.id} · {p.titre || 'Sans intitulé'}
+                      {p.modalite && (
+                        <Text size="xs" c="dimmed">
+                          {p.modalite}
+                        </Text>
+                      )}
+                    </Table.Td>
+                    <Table.Td className="col-p2">{p.objet || '–'}</Table.Td>
+                    <Table.Td>
+                      {jour(p.debut)}
+                      {p.fin && p.fin !== p.debut ? ` → ${jour(p.fin)}` : ''}
+                      {p.realiseLe && (
+                        <Text size="xs" c="dimmed">
+                          Réalisé le {jour(p.realiseLe)}
+                        </Text>
+                      )}
+                    </Table.Td>
+                    <Table.Td>
+                      {p.enRetard ? (
+                        <StatusChip etat="erreur">En retard</StatusChip>
+                      ) : (
+                        <StatusChip etat={p.statut === 'Réalisé' ? 'succes' : 'neutre'}>
+                          {p.statut || 'Planifié'}
+                        </StatusChip>
+                      )}
+                    </Table.Td>
+                    <Table.Td className="col-p3">{p.responsable || '–'}</Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
           </DataTable>
         )}
       </Stack>

@@ -316,6 +316,7 @@ export function PilotagePage() {
                   onOpen={open}
                   onEvaluation={setEvaluation}
                   onAcceptation={(o) => decide(o, 'risk_acceptance')}
+                  onRelation={setRelation}
                 />
               </>
             )}
