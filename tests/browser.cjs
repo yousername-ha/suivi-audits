@@ -29,7 +29,9 @@ async function signIn(page) {
 }
 async function go(sec, sub) {
   if(await p.locator('#lx-menu-toggle').isVisible() && await p.locator('#lx-menu-toggle').getAttribute('aria-expanded')!=='true') await p.locator('#lx-menu-toggle').click();
-  await p.locator('[data-act="nav"][data-sec="' + sec + '"]').first().click();
+  const menu=p.locator('[data-act="nav"][data-sec="' + sec + '"]').first();
+  if(!await menu.isVisible()){const group=await menu.evaluate(e=>e.closest('.lx-nav-group').querySelector('.lx-nav-heading').dataset.lxNavGroup);await p.locator('[data-lx-nav-group="'+group+'"]').click();}
+  await menu.click();
   if (sub) await p.locator('[data-sec="' + sec + '"][data-sub="df-' + sec + '-' + sub + '"]:visible').first().click();
 }
 async function openEval(eid) {
@@ -59,7 +61,7 @@ async function main() {
   context = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: 'fr-FR' });
   p = await context.newPage(); watch(p);
   await run('Démarrage local : menu legacy, rubriques CaRE/HAS et aucune donnée opérationnelle préremplie', async () => {
-    await p.goto(URL); await p.locator('#lx-auth').waitFor(); await signIn(p);initialState=await stored(p); await p.locator('[data-sec="care"]').first().waitFor();
+    await p.goto(URL); await p.locator('#lx-auth').waitFor(); await signIn(p);initialState=await stored(p); await p.locator('[data-sec="care"]').first().waitFor({state:'attached'});
     await go('care'); assert.equal(await p.locator('#panel h2').innerText(), 'Piloter le programme CaRE');
     assert.equal(await p.locator('[data-sec="has"]').count(), 1); assert.equal(await p.locator('[data-sec="pil"]').count(), 1);
     assert.equal(await p.locator('.df-stat strong').first().innerText(), '0');
@@ -184,7 +186,7 @@ async function main() {
       await p.waitForFunction(async () => { const s = (await LegacyServer.request('/api/state')).state;return s && s.df.dossiers.length === 2; });
       const st = await stored(p); assert.equal(st.evidences[0].dfVersions.length, 2); assert.equal(st.df.budgets[0].spent, 15); assert.equal(st.df.auditPackages.length, 1);
       const checked = await p.evaluate(async () => { const st = (await LegacyServer.request('/api/state')).state; return (await LegacyDFStore.checkedBlob(st.evidences[0].dfVersions[0])).text(); }); assert.match(checked, /PREUVE SYNTHÉTIQUE/);
-      await p.reload(); await p.locator('[data-sec="care"]').first().waitFor(); assert.equal((await stored(p)).df.dossiers.length, 2);
+      await p.reload(); await p.locator('[data-sec="care"]').first().waitFor({state:'attached'}); assert.equal((await stored(p)).df.dossiers.length, 2);
     } finally { p = previous; await fresh.close();await p.reload();await p.locator('#lx-account').waitFor(); }
   });
   await run('Archive altérée refusée avant toute écriture, dépôt trop volumineux également refusé', async () => {
@@ -194,14 +196,14 @@ async function main() {
     const oversized = await p.evaluate(async () => { const st = (await LegacyServer.request('/api/state')).state; try { await LegacyDFStore.deposit(st, st.evidences[0].id, new File([new Uint8Array(20 * 1024 * 1024 + 1)], 'trop-gros.bin')); } catch (e) { return e.message; } }); assert.match(oversized, /20 Mo/);
   });
   await run('Lecture seule : commandes désactivées et garde sur un événement forcé', async () => {
-    const ro = await browser.newContext(), page = await ro.newPage(); watch(page); await page.goto(URL + '/?lecture');await page.locator('#lx-auth').waitFor();await signIn(page); await page.locator('[data-sec="care"]').first().click();
+    const ro = await browser.newContext(), page = await ro.newPage(); watch(page); await page.goto(URL + '/?lecture');await page.locator('#lx-auth').waitFor();await signIn(page); await page.locator('[data-lx-nav-group="references"]').click(); await page.locator('[data-sec="care"]').first().click();
     const b = page.locator('[data-df-act="new-dossier"]').first(); assert.equal(await b.isDisabled(), true); await b.evaluate(el => el.dispatchEvent(new MouseEvent('click', { bubbles: true })));
     assert.equal(await page.locator('#dfDialog').count(), 0); assert.match(await page.locator('#toast').innerText(), /lecture seule/); await ro.close();
   });
   await run('Non-régression du menu : les pages legacy restent accessibles', async () => {
-    const targets = [['dash', 'dash'], ['audit', 'cibles'], ['audit', 'deroule'], ['audit', 'cal'], ['audit', 'people'], ['audit', 'couv'], ['pil', 'ctx-scope'], ['pil', 'ctx-pi'], ['pil', 'ctx-swot'], ['pil', 'ctx-roles'], ['pil', 'proc'], ['pil', 'obj'], ['pil', 'cmp'], ['pil', 'iso'], ['pil', 'ann'], ['pil', 'hds'], ['pil', 'fw'], ['pil', 'fd'], ['pil', 'act'], ['pil', 'sup'], ['pil', 'ar'], ['pil', 'sev'], ['pil', 'prv-reg'], ['pil', 'prv-cov'], ['pil', 'prv-det'], ['pil', 'pl-cal'], ['pil', 'pl-gantt'], ['pil', 'pl-rec'], ['pil', 'pl-formation'], ['pil', 'pl-sensi'], ['pil', 'pl-audit'], ['pil', 'pl-exo'], ['gap', 'apps'], ['gap', 'syn'], ['gap', 'reg'], ['gap', 'eval'], ['gap', 'plan'], ['gap', 'pol'], ['crrc', 'cr-over'], ['crrc', 'cr-est'], ['crrc', 'cr-off'], ['crrc', 'bk-dash'], ['crrc', 'bk-res'], ['crrc', 'bk-rest'], ['crrc', 'bk-alerts'], ['crrc', 'bk-rep'], ['inv', 'inv-dash'], ['inv', 'inv-lines'], ['inv', 'inv-ren'], ['inv', 'inv-cmp'], ['ops', 'inc-reg'], ['ops', 'inc-qual'], ['ops', 'cr-cell'], ['ops', 'cr-ct'], ['ops', 'cr-scen'], ['rep', 'exp'], ['rep', 'copil'], ['rep', 'codir']];
+    const targets = [['dash', 'dash'], ['audit', 'cibles'], ['audit', 'deroule'], ['audit', 'cal'], ['audit', 'people'], ['audit', 'couv'], ['pil', 'ctx-scope'], ['pil', 'ctx-pi'], ['pil', 'ctx-swot'], ['pil', 'ctx-roles'], ['pil', 'proc'], ['pil', 'obj'], ['pil', 'cmp'], ['pil', 'iso'], ['pil', 'ann'], ['pil', 'hds'], ['pil', 'fw'], ['pil', 'fd'], ['pil', 'act'], ['pil', 'sup'], ['pil', 'ar'], ['pil', 'sev'], ['pil', 'prv-reg'], ['pil', 'prv-cov'], ['pil', 'prv-det'], ['pil', 'pl-cal'], ['pil', 'pl-gantt'], ['pil', 'pl-rec'], ['pil', 'pl-formation'], ['pil', 'pl-sensi'], ['pil', 'pl-audit'], ['pil', 'pl-exo'], ['gap', 'apps'], ['gap', 'syn'], ['gap', 'reg'], ['gap', 'eval'], ['gap', 'plan'], ['gap', 'pol'], ['crrc', 'cr-over'], ['crrc', 'cr-est'], ['crrc', 'cr-off'], ['crrc', 'bk-dash'], ['crrc', 'bk-res'], ['crrc', 'bk-rest'], ['crrc', 'bk-alerts'], ['crrc', 'bk-rep'], ['inv', 'inv-dash'], ['inv', 'inv-lines'], ['inv', 'inv-ren'], ['inv', 'inv-cmp'], ['ops', 'inc-reg'], ['ops', 'inc-qual'], ['ops', 'cr-cell'], ['ops', 'cr-ct'], ['ops', 'cr-sc'], ['rep', 'exp'], ['rep', 'copil'], ['rep', 'codir']];
     const before = errors.length;
-    for (const [sec, sub] of targets) { await p.locator('[data-act="nav"][data-sec="' + sec + '"]').first().click(); await p.evaluate(({ sec, sub }) => { const btn = document.createElement('button'); btn.dataset.act = 'nav'; btn.dataset.sec = sec; btn.dataset.sub = sub; document.body.appendChild(btn); btn.click(); btn.remove(); }, { sec, sub }); assert.ok((await p.locator('#panel').innerText()).length > 10, sec + '/' + sub); }
+    for (const [sec, sub] of targets) { await go(sec); await p.evaluate(({ sec, sub }) => { const btn = document.createElement('button'); btn.dataset.act = 'nav'; btn.dataset.sec = sec; btn.dataset.sub = sub; document.body.appendChild(btn); btn.click(); btn.remove(); }, { sec, sub }); assert.ok((await p.locator('#panel').innerText()).length > 10, sec + '/' + sub);assert.equal(await p.locator('.mn.on').getAttribute('data-sec'),await p.evaluate(sub=>LegacyNavigation.route(sub==='ctx-roles'?'perimeter-roles':sub),sub),sec+'/'+sub); }
     assert.equal(errors.length, before, errors.slice(before).join('\n'));
   });
   await run('Responsive et thème sombre : captures réelles, sans débordement du document', async () => {

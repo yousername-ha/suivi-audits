@@ -16,6 +16,8 @@ Cette instruction remplace l’interdiction initiale de publication pour cette l
   Séparer risques, études, évaluations, scénarios, mesures et décisions. Les évaluations,
   décisions et politiques sont immuables. La cartographie utilise les références explicites ;
   archiver une étude ou clôturer une action ne supprime ni ne recalcule les risques.
+- Il inclut les cartographies historiques contexte/processus et l'ordonnancement
+  du menu ; les cartes restent liées aux registres et soumises aux périmètres serveur.
 - Aucun secret, email personnel, document réel, cookie ni profil navigateur en Git.
   Utiliser une identité de commit anonyme et des fixtures synthétiques.
 - Les données restent locales : SQLite et pièces dans `.legacy-data`, exclu de Git.

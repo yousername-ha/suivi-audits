@@ -92,8 +92,13 @@ automatiquement par le serveur. Les anciennes clés techniques et leurs liens so
 conservés. La mise à niveau ajoute les compteurs et rôles manquants sans changer
 les validations BIA/PCA/parcours existantes.
 
-La navigation conserve les anciennes pages et les regroupe dans quatre rubriques
-repliables, sur un fond neutre avec des accents Sauge.
+La navigation conserve les anciennes pages et les regroupe dans cinq rubriques
+repliables, sur un fond neutre avec des accents Sauge. **Cartographies** réunit
+le contexte, les processus, les risques consolidés et la conformité. Les cartes
+contexte/processus sont générées depuis les registres, modifiables et versionnées
+par périmètre, avec exports SVG/PNG/PDF/JSON. Les menus d’actions, de preuves,
+de conformité et de fournisseurs sont distincts des objectifs et indicateurs.
+Voir [le guide des cartographies et du menu](docs/CARTOGRAPHIES-NAVIGATION.md).
 
 ## Permissions et contrôles internes
 
@@ -132,14 +137,16 @@ l’administrateur. Le message de sauvegarde en bas indique le résultat serveur
 Python seul pour le serveur ; Node.js et Playwright sont utilisés pour les tests.
 
 ```sh
-node --test tests/core.test.cjs tests/integration.test.cjs tests/risk.test.cjs
+node --test tests/core.test.cjs tests/integration.test.cjs tests/risk.test.cjs tests/carto.test.cjs
 python3 tests/server_test.py
 python3 tests/server_risk_test.py
+python3 tests/server_carto_test.py
 node tests/browser-refonte.cjs
 node tests/browser-risks.cjs
+node tests/browser-carto.cjs
 ```
 
-Les deux recettes navigateur intégrées démarrent **leur propre serveur et un stockage temporaire**.
+Les trois recettes navigateur intégrées démarrent **leur propre serveur et un stockage temporaire**.
 Pour la recette historique adaptée au serveur, lancer un serveur **neuf et dédié**,
 jamais celui contenant vos données :
 
@@ -149,6 +156,6 @@ LEGACY_URL=http://127.0.0.1:8140 node tests/browser.cjs
 ```
 
 Variables développeur : `PLAYWRIGHT_MODULE`, `CHROMIUM_PATH`, `LEGACY_URL`,
-`REFONTE_PORT`. Les fixtures ne reprennent aucun profil ni document de production.
+`REFONTE_PORT`, `RISKS_PORT`, `CARTO_PORT`. Les fixtures ne reprennent aucun profil ni document de production.
 `recette/*refonte*` contient la recette actuelle ; les anciennes preuves restent
 identifiées comme historiques. Le manifeste exclut les bases locales et les nouvelles captures de debug.

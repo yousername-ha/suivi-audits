@@ -1,0 +1,16 @@
+{
+  "unitPassed": 53,
+  "cartographyServerPassed": 9,
+  "riskServerPassed": 11,
+  "historicalServerPassed": 5,
+  "risksBrowserPassed": 18,
+  "refonteBrowserPassed": 17,
+  "regressionBrowserPassed": 22,
+  "cartographyBrowserPassed": 12,
+  "passed": 147,
+  "failed": 0,
+  "notExecuted": 1,
+  "sourceTrackedFilesUnchanged": 592,
+  "gitleaksFilesFindings": 0,
+  "executedAt": "2026-10-11T15:55:23.699241+00:00"
+}

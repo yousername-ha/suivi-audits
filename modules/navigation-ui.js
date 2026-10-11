@@ -3,26 +3,114 @@
   let U;
   const GROUPS = [
     {
+      id: "overview",
+      label: "Vue d’ensemble",
+      sections: ["dash", "journey", "carto"],
+    },
+    {
       id: "pilotage",
-      label: "Pilotage",
-      sections: ["dash", "journey", "perimeters", "pil", "risks"],
+      label: "Organisation et pilotage",
+      sections: ["perimeters", "context", "pil", "risks", "actions"],
     },
     {
       id: "references",
       label: "Référentiels et audits",
-      sections: ["care", "has", "audit"],
+      sections: ["compliance", "care", "has", "audit", "proofs"],
     },
     {
       id: "resilience",
       label: "Continuité et opérations",
-      sections: ["pcra", "ops", "crrc"],
+      sections: ["pcra", "ops", "suppliers", "gap", "crrc"],
     },
     {
       id: "resources",
       label: "Ressources et bilans",
-      sections: ["gap", "inv", "rep", "admin"],
+      sections: ["inv", "rep", "admin"],
     },
   ];
+  function organize(nav) {
+    const out = nav.map((s) => ({ ...s, items: [...s.items] })),
+      pil = out.find((s) => s.id === "pil");
+    function extract(id, label, icon, groups) {
+      const items = pil.items
+        .filter((i) => groups.includes(i.g))
+        .map((i) => ({ ...i }));
+      pil.items = pil.items.filter((i) => !groups.includes(i.g));
+      out.push({
+        id,
+        label,
+        icon,
+        items,
+        groups: pil.groups.filter((g) => groups.includes(g.id)),
+      });
+    }
+    if (pil) {
+      extract("context", "Contexte et parties intéressées", "tiers", ["g-ctx"]);
+      const context = out.find((s) => s.id === "context");
+      // Une seule entrée pour le registre partagé des rôles ; ancienne rubrique conservée par son onglet.
+      context.items = context.items.filter((i) => i.id !== "ctx-roles");
+      extract("actions", "Plan d’action et échéances", "ecarts", [
+        "g-ec",
+        "g-plans",
+      ]);
+      extract("compliance", "Conformité et applicabilité", "conf", ["g-conf"]);
+      extract("suppliers", "Fournisseurs et accès", "tiers", ["g-sup"]);
+      extract("proofs", "Preuves et justificatifs", "rep", ["g-prv"]);
+      pil.groups = pil.groups.filter((g) => g.id === "g-obj");
+      pil.label = "Objectifs et indicateurs";
+      delete pil.count;
+    }
+    const risks = out.find((s) => s.id === "risks"),
+      dash = out.find((s) => s.id === "dash");
+    const map = risks?.items.find((i) => i.id === "risk-map"),
+      status = dash?.items.find((i) => i.id === "dmap");
+    if (risks) {
+      risks.items = risks.items.filter((i) => i.id !== "risk-map");
+      risks.label = "Risques et études";
+    }
+    if (dash) dash.items = dash.items.filter((i) => i.id !== "dmap");
+    out.push({
+      id: "carto",
+      label: "Cartographies",
+      icon: "carto",
+      items: [
+        {
+          id: "mb-ctx",
+          label: "Contexte et dépendances",
+          tab: "carto",
+          set: { mbView: "context" },
+        },
+        {
+          id: "mb-proc",
+          label: "Processus et interactions",
+          tab: "carto",
+          set: { mbView: "process" },
+        },
+        ...(map ? [{ ...map, label: "Risques consolidés" }] : []),
+        ...(status ? [{ ...status, label: "Conformité et indicateurs" }] : []),
+      ],
+    });
+    const prefs = U?.api().ui.navOrder || [];
+    const order = GROUPS.flatMap((g) => {
+      const known = prefs.filter((id) => g.sections.includes(id));
+      let i = 0;
+      return g.sections.map((id) => (known.includes(id) ? known[i++] : id));
+    });
+    const group = (id) => GROUPS.findIndex((g) => g.sections.includes(id));
+    out.sort((a, b) => {
+      if (group(a.id) !== group(b.id)) return group(a.id) - group(b.id);
+      return order.indexOf(a.id) - order.indexOf(b.id);
+    });
+    window.LegacyNavigation.route = (sub) =>
+      out.find((s) => s.items.some((i) => i.id === sub))?.id;
+    return out;
+  }
+  window.LegacyNavigation = {
+    organize,
+    groups: GROUPS,
+    sameGroup: (a, b) =>
+      GROUPS.some((g) => g.sections.includes(a) && g.sections.includes(b)),
+  };
   let lastSection = "";
   function afterRender() {
     const root = document.querySelector("#tabs .mn-in");
@@ -43,9 +131,11 @@
         group.sections.includes(x.button.dataset.sec),
       );
       if (!nodes.length) continue;
-      if (current !== lastSection && group.sections.includes(current))
-        prefs[group.id] = true;
-      const open = prefs[group.id] !== false;
+      const open =
+        current !== lastSection && group.sections.includes(current)
+          ? true
+          : (prefs[group.id] ??
+            (group.id === "overview" || group.sections.includes(current)));
       const box = document.createElement("section");
       box.className = "lx-nav-group";
       const toggle = document.createElement("button");
@@ -115,6 +205,10 @@
   LegacyIntegrationUI.register({
     install: (u) => {
       U = u;
+      if (U.api().ui.tab === "contexte" && U.api().ui.ctxView === "roles") {
+        U.api().ui.tab = "perimeters";
+        U.api().ui.perimetersView = "roles";
+      }
       const t = U.api().TABS.find((x) => x.id === "pilotage");
       if (t) t.label = () => "Pilotage";
     },

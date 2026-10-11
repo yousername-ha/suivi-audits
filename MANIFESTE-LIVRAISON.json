@@ -1,6 +1,6 @@
 {
-  "version": "2.1.0-local-legacy",
-  "createdAt": "2026-10-11T14:38:14.785701+00:00",
+  "version": "2.2.0-local-legacy",
+  "createdAt": "2026-10-11T15:58:30.233195+00:00",
   "branch": "legacy/test-lots-d-f",
   "scope": [
     "Périmètres et responsables",
@@ -12,7 +12,9 @@
     "Registre central indépendant et études EBIOS RM",
     "Évaluations et décisions historisées, cartographie et traitements",
     "Jeu de données FICTIF",
-    "F — HAS et dossier auditeur conservés"
+    "F — HAS et dossier auditeur conservés",
+    "Cartographies SVG contexte/processus par périmètre",
+    "Navigation logique avec actions, conformité, fournisseurs et preuves distincts"
   ],
   "excludedLots": [
     "I",
@@ -23,24 +25,26 @@
   "sourceTrackedFilesUnchanged": 592,
   "githubModified": true,
   "protectedBranchHeads": {
-    "main": "f407f31385f8476280e99ff3b74c0ec0cc88388a",
+    "main": "6190d6ea0345e6fd62672b9f57050bb7672a2e15",
     "feature/gpt6-evolution-smsi-grc": "1b698736c02e482570332eac7b5a98896892e669"
   },
   "dataIncluded": "Application, référentiels attribués, modèles, générateur du jeu FICTIF, fixtures et captures synthétiques historiques ; aucune base utilisateur",
   "manifestSelfHashExcluded": true,
   "checks": {
-    "unitPassed": 48,
+    "unitPassed": 53,
+    "cartographyServerPassed": 9,
     "riskServerPassed": 11,
     "historicalServerPassed": 5,
     "risksBrowserPassed": 18,
     "refonteBrowserPassed": 17,
     "regressionBrowserPassed": 22,
-    "passed": 121,
+    "cartographyBrowserPassed": 12,
+    "passed": 147,
     "failed": 0,
     "notExecuted": 1,
     "sourceTrackedFilesUnchanged": 592,
     "gitleaksFilesFindings": 0,
-    "executedAt": "2026-10-11T14:38:14.785458+00:00"
+    "executedAt": "2026-10-11T15:55:23.699241+00:00"
   },
   "files": [
     {
@@ -50,13 +54,13 @@
     },
     {
       "path": "AGENTS.md",
-      "sizeBytes": 2250,
-      "sha256": "6cb4fbecdd408fb8b8df1fcb93fa094ede170d8ee4ca6ee22e671cc5d6fe83dc"
+      "sizeBytes": 2421,
+      "sha256": "99274f34e2334510f5b29a931d3523e44125e99f128a182f2900ae06394ea3fb"
     },
     {
       "path": "README.md",
-      "sizeBytes": 8766,
-      "sha256": "8f7c6b45b90a8cec19396691c525c3e053061faa5fef518ed27e8a9bc8ea167e"
+      "sizeBytes": 9314,
+      "sha256": "ac4b29250fff9f7450f0c95c1047252560a35297bf4ce782efd7b14a5967c7f3"
     },
     {
       "path": "demarrer.bat",
@@ -79,9 +83,19 @@
       "sha256": "b2c9eccd9c5b7dc03595d63f8b940b8efe8e30cbdd1ec87f96680f928633f5c4"
     },
     {
+      "path": "docs/CARTOGRAPHIES-NAVIGATION.md",
+      "sizeBytes": 5273,
+      "sha256": "8f99b3b0cfdfd839eee318bc5a4cd4b8e8eabb2d91d07fdeee36ae2c3108e7ef"
+    },
+    {
       "path": "docs/CHANGEMENTS.md",
       "sizeBytes": 4657,
       "sha256": "2af8a928a9fb4576d0d308141bba4e5cc2542e8286bcc6ab2379f58274d696d0"
+    },
+    {
+      "path": "docs/DIAGNOSTIC-CARTOGRAPHIES.md",
+      "sizeBytes": 1526,
+      "sha256": "63586c1bf3e1325bf670e1bb25d294a1d20afeb4b2d918f456fece76904c3e57"
     },
     {
       "path": "docs/DIAGNOSTIC-REFONTE-LEGACY.md",
@@ -145,8 +159,13 @@
     },
     {
       "path": "index.html",
-      "sizeBytes": 3172374,
-      "sha256": "dae59d21571af00bcbbb86d91d13cbfb99cd7701177d948ee1926659ccd655b5"
+      "sizeBytes": 3173207,
+      "sha256": "3686dbed9ae1226dc21c2a0922facb729dcddf829bff310b383e9b2b89a451aa"
+    },
+    {
+      "path": "legacy_cartography.py",
+      "sizeBytes": 9040,
+      "sha256": "25a4dfe7eeaee02cdffa28ea3a9516fa5eb95937fd54b2fcd0faf7deb997eb84"
     },
     {
       "path": "legacy_risks.py",
@@ -155,8 +174,8 @@
     },
     {
       "path": "legacy_server.py",
-      "sizeBytes": 51923,
-      "sha256": "9b5e7ffb3d7c5e370ba7154def8cd196e53332364a27d1f7b04f6abe208830f5"
+      "sizeBytes": 52736,
+      "sha256": "de5c92001b6decf0af8ecf562315393754ea7a70754759ad6357d82a156e1f43"
     },
     {
       "path": "lib/docx.iife.js",
@@ -187,6 +206,21 @@
       "path": "modules/admin-ui.js",
       "sizeBytes": 9376,
       "sha256": "64ba177864c13b4b0e86833edc70938e014f807c868f95a45f95dbb35fb65e55"
+    },
+    {
+      "path": "modules/carto-core.js",
+      "sizeBytes": 3380,
+      "sha256": "14d812f7e59772ce93aad3b15ce2896daf088be93af683447a11b6e182b9c41b"
+    },
+    {
+      "path": "modules/carto-ui.js",
+      "sizeBytes": 151777,
+      "sha256": "cd6c1ec5b65925063ee92c87a9ea1368e245781d26a3d7a59c9a4955258f4eff"
+    },
+    {
+      "path": "modules/carto.css",
+      "sizeBytes": 13061,
+      "sha256": "405091d81074c4aa060e230f313d752e05d0989d5629e8cf67f0e44dfc4e955c"
     },
     {
       "path": "modules/demo-data.js",
@@ -270,8 +304,8 @@
     },
     {
       "path": "modules/navigation-ui.js",
-      "sizeBytes": 4099,
-      "sha256": "e63214584ec29924f9820158332155671bc4a36b5f7a8748bd4e9957fdfcef22"
+      "sizeBytes": 7624,
+      "sha256": "bb4e2c100d6cfdb2f162d0fa09032178439877315f83b00d0a715a3da44ae32c"
     },
     {
       "path": "modules/pcra-core.js",
@@ -297,6 +331,11 @@
       "path": "modules/server-client.js",
       "sizeBytes": 11770,
       "sha256": "cbb7b71ce3f7a8f9b526b6a3e63e8138670aa76bfc689be6a41bea0ce26b614d"
+    },
+    {
+      "path": "recette/CARTOGRAPHIES-RECETTE.md",
+      "sizeBytes": 2740,
+      "sha256": "7dee6b7120bcd1857c3886ce1b36dff5d708c1d198e59d68832375d5678c30c5"
     },
     {
       "path": "recette/browser-branche-resultats.json",
@@ -327,6 +366,41 @@
       "path": "recette/care-768.png",
       "sizeBytes": 210932,
       "sha256": "c3f77de423e49471ac8469a5a0215fc5392691c49940346b6925d0d3a0c88eda"
+    },
+    {
+      "path": "recette/cartographies-browser-resultats.json",
+      "sizeBytes": 1594,
+      "sha256": "95fac8584176f1acf8cf01aeedf75e648db06790b0182942ada9e9aaf9e349f7"
+    },
+    {
+      "path": "recette/cartographies-refonte-resultats.json",
+      "sizeBytes": 2703,
+      "sha256": "55a1c63302af86c0aadc1db292224dcf849d050242b3e655258dbf57d8c4163e"
+    },
+    {
+      "path": "recette/cartographies-regression-resultats.json",
+      "sizeBytes": 4112,
+      "sha256": "b0a44053f0e83ed28f9135dada615ff874011c9d039745743cc23dc1bc5be0fd"
+    },
+    {
+      "path": "recette/cartographies-risques-resultats.json",
+      "sizeBytes": 3148,
+      "sha256": "f17fb4e5aaee3d3a1ee021ada1e894a5d452c9912bea5a87d163f21d9ea5b54c"
+    },
+    {
+      "path": "recette/cartographies-serveur-resultats.txt",
+      "sizeBytes": 282,
+      "sha256": "a109229c152fc71d6e3262713065d15ccd21d09495d1540ec0d78ad8f16cb549"
+    },
+    {
+      "path": "recette/cartographies-unit-resultats.txt",
+      "sizeBytes": 4937,
+      "sha256": "d93ba8752465ffa91da1f7c57763f2621dc2148343f517ffee9f2bf284fe3ed2"
+    },
+    {
+      "path": "recette/cartographies-verification.json",
+      "sizeBytes": 409,
+      "sha256": "5953b18e1522c00cb0f53ecf0d5487868abfeaf8f9f967c01f190f5e4dd21896"
     },
     {
       "path": "recette/conservation-source.json",
@@ -365,8 +439,8 @@
     },
     {
       "path": "recette/refonte-browser-resultats.json",
-      "sizeBytes": 2702,
-      "sha256": "f8d58d61590f3189f783ffb79a7c40e7d95b66dce0d4215c42259b6601854792"
+      "sizeBytes": 2703,
+      "sha256": "55a1c63302af86c0aadc1db292224dcf849d050242b3e655258dbf57d8c4163e"
     },
     {
       "path": "recette/refonte-conservation.json",
@@ -381,7 +455,7 @@
     {
       "path": "recette/refonte-regression-resultats.json",
       "sizeBytes": 4112,
-      "sha256": "f8eaa4ab8f33b27a652345bf86bd4fe1ffa638c8862fc5e4f694c97051b6c290"
+      "sha256": "b0a44053f0e83ed28f9135dada615ff874011c9d039745743cc23dc1bc5be0fd"
     },
     {
       "path": "recette/refonte-serveur-resultats.txt",
@@ -396,7 +470,7 @@
     {
       "path": "recette/risques-admin-browser-resultats.json",
       "sizeBytes": 3148,
-      "sha256": "4a396ad10b4e3f48ca2044e349d6eb4ca4e7eaf501f5a0ad6d07248ddbd633bd"
+      "sha256": "f17fb4e5aaee3d3a1ee021ada1e894a5d452c9912bea5a87d163f21d9ea5b54c"
     },
     {
       "path": "recette/risques-admin-conservation.json",
@@ -465,8 +539,8 @@
     },
     {
       "path": "sources/identifiants.json",
-      "sizeBytes": 1298,
-      "sha256": "eee586f4ece04b3412b49a0c68f41b869e06df00ca922fcaada27c6e4e06e4ac"
+      "sizeBytes": 1334,
+      "sha256": "7fe6ae9347800a647da6ed32a05e22509e6411d33024e59a28b84c217c907183"
     },
     {
       "path": "sources/journey-steps.json",
@@ -484,19 +558,29 @@
       "sha256": "29a54ecc579357858667746a843d0655b674416d8a3f1c921a085732d02ccdd8"
     },
     {
+      "path": "tests/browser-carto.cjs",
+      "sizeBytes": 17548,
+      "sha256": "fe25c61ee32e7bfb6f7ebc725fdd7caefd747480a50dbd75bcc8e20ecdba898f"
+    },
+    {
       "path": "tests/browser-refonte.cjs",
       "sizeBytes": 26757,
       "sha256": "3eccd01a0dc99a5324c1ffb701d05548b82f797f506831138ec93afcda28cea2"
     },
     {
       "path": "tests/browser-risks.cjs",
-      "sizeBytes": 28660,
-      "sha256": "19e4aaeaba57a2bbc3c78d1688e1291637e6cbfbde0fe7d5b0de0f1dd435287b"
+      "sizeBytes": 28720,
+      "sha256": "0d32f1442b8e94db732f86828eba664a1f27be410cfa15f33a2f8ce69dc8f831"
     },
     {
       "path": "tests/browser.cjs",
-      "sizeBytes": 30991,
-      "sha256": "b2dbec0b8bdf1098a7391abc0680865c1f99b4b0e98198b90c92263c6c171a49"
+      "sizeBytes": 31420,
+      "sha256": "8a7c0e9b763270d33ad96e89ad03cf45feaa2fa2128a4c36279b995a1e267425"
+    },
+    {
+      "path": "tests/carto.test.cjs",
+      "sizeBytes": 2764,
+      "sha256": "5bbf24684c9cec77da0deb906c6c0cec468b5bf89678fbe578ea2125df9b4e6f"
     },
     {
       "path": "tests/core.test.cjs",
@@ -514,6 +598,11 @@
       "sha256": "55c3ee27659818eeb7d545ecde4d106458c629361bdb66359739d506c7c1a0d1"
     },
     {
+      "path": "tests/server_carto_test.py",
+      "sizeBytes": 5329,
+      "sha256": "7880893126b861c0f581a5b47bb02b9b3e666b30bcb188f8656de3a030510eee"
+    },
+    {
       "path": "tests/server_risk_test.py",
       "sizeBytes": 8118,
       "sha256": "9b61bda322cef2d7f38fa60dd46adaba946b58dc76560d2c4e60357af2227bbc"
@@ -523,5 +612,7 @@
       "sizeBytes": 10915,
       "sha256": "5775983370f24a6c33a1a9220a217e40949a2bde060c0d6ddd2966bceb0580d7"
     }
-  ]
+  ],
+  "evolutionBaseCommit": "90d698d5dabefab7e2674fdc6af06ad6000f19b3",
+  "protectedBranchHeadsObservation": "Références distantes lues avant publication Legacy ; aucune écriture sur ces branches."
 }

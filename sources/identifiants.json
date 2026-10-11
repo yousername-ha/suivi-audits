@@ -42,5 +42,6 @@
   "SAUV": [["crrc", "runs"]],
   "REST": [["crrc", "restores"]],
   "ALR": [["crrc", "alerts"]],
-  "INV": [["invest", "lines"]]
+  "INV": [["invest", "lines"]],
+  "MAP": [["cartography", "maps"]]
 }

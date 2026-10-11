@@ -25,6 +25,7 @@ const state = () =>
 async function nav(sec, sub) {
   await page.evaluate(
     ([sec, sub]) => {
+      sec = sub ? LegacyNavigation.route(sub) || sec : sec;
       const el = document.querySelector(`[data-act="nav"][data-sec="${sec}"]`);
       if (!el) throw Error("Menu absent " + sec);
       el.click();

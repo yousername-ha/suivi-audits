@@ -1,5 +1,5 @@
 {
-  "executedAt": "2026-10-11T14:33:34.936Z",
+  "executedAt": "2026-10-11T15:40:12.028Z",
   "passed": 18,
   "failed": 0,
   "pageErrors": [],
@@ -8,92 +8,92 @@
     {
       "name": "Installation : dix rôles de base, administration sans sauvegarde ni mise à jour",
       "status": "PASSÉ",
-      "durationMs": 976
+      "durationMs": 901
     },
     {
       "name": "Périmètre : référence PERI automatique et rôles proposés comme responsables",
       "status": "PASSÉ",
-      "durationMs": 803
+      "durationMs": 708
     },
     {
       "name": "Démonstration réelle : GHT, deux études, trois risques, BIA/PCA et facture physique",
       "status": "PASSÉ",
-      "durationMs": 760
+      "durationMs": 715
     },
     {
       "name": "Jeu répétable : aucun doublon, aucune altération des données antérieures ni compte ajouté",
       "status": "PASSÉ",
-      "durationMs": 471
+      "durationMs": 433
     },
     {
       "name": "Fiche centrale : deux évaluations datées, auteur réel et niveaux initial/résiduel/accepté",
       "status": "PASSÉ",
-      "durationMs": 291
+      "durationMs": 233
     },
     {
       "name": "Création indépendante et évaluation sans étude, avec identifiants RISK/EVR",
       "status": "PASSÉ",
-      "durationMs": 2058
+      "durationMs": 2052
     },
     {
       "name": "Cartographie GHT et établissement : uniquement les références choisies, jamais un historique arbitraire",
       "status": "PASSÉ",
-      "durationMs": 826
+      "durationMs": 847
     },
     {
       "name": "Exports Excel et rapport imprimable issus de la cartographie filtrée",
       "status": "PASSÉ",
-      "durationMs": 618
+      "durationMs": 586
     },
     {
       "name": "Archiver une étude conserve trois risques initiaux, leurs quatre évaluations et tous les liens",
       "status": "PASSÉ",
-      "durationMs": 1167
+      "durationMs": 1133
     },
     {
       "name": "Traitements, preuves et action unique : clôturer une action conserve le résiduel",
       "status": "PASSÉ",
-      "durationMs": 1394
+      "durationMs": 1446
     },
     {
       "name": "Comptes et habilitations créés dans le panneau d’administration",
       "status": "PASSÉ",
-      "durationMs": 1160
+      "durationMs": 1173
     },
     {
       "name": "Lecteur établissement : registre restreint, politique GHT héritée, API administration interdite",
       "status": "PASSÉ",
-      "durationMs": 868
+      "durationMs": 992
     },
     {
       "name": "Contributeur établissement : édition autorisée, références et historiques protégés côté serveur",
       "status": "PASSÉ",
-      "durationMs": 2094
+      "durationMs": 2224
     },
     {
       "name": "Politique personnalisée, matrice non uniforme et nouvelle version sans altérer l’historique",
       "status": "PASSÉ",
-      "durationMs": 2481
+      "durationMs": 2458
     },
     {
       "name": "Parcours guidé : modification du même risque central sans duplication",
       "status": "PASSÉ",
-      "durationMs": 1316
+      "durationMs": 1321
     },
     {
       "name": "Compatibilité des anciennes rubriques avec le jeu de démonstration",
       "status": "PASSÉ",
-      "durationMs": 132
+      "durationMs": 147
     },
     {
       "name": "Responsive : administration et cartographie à 390, 768, 1440 et 3840 pixels",
       "status": "PASSÉ",
-      "durationMs": 1059
+      "durationMs": 1060
     },
     {
       "name": "Persistance : références automatiques, évaluations et pièces conservées après redémarrage",
       "status": "PASSÉ",
-      "durationMs": 660
+      "durationMs": 538
     }
   ]
 }

@@ -925,6 +925,7 @@ dialog.sheet { box-shadow:-16px 0 50px rgba(27,54,37,.12); }
 </style>
 <link rel="stylesheet" href="modules/df.css">
 <link rel="stylesheet" href="modules/integration.css">
+<link rel="stylesheet" href="modules/carto.css">
 </head>
 <body>
 <div class="app">
@@ -995,6 +996,8 @@ dialog.sheet { box-shadow:-16px 0 50px rgba(27,54,37,.12); }
 <script src="modules/demo-data.js"></script>
 <script src="modules/admin-ui.js"></script>
 <script src="modules/navigation-ui.js"></script>
+<script src="modules/carto-core.js"></script>
+<script src="modules/carto-ui.js"></script>
 <script src="lib/jszip.min.js"></script>
 <script>
 (function(){
@@ -1007,7 +1010,7 @@ const KEY='suivi-audits-legacy-df:v1', UIKEY='suivi-audits-legacy-df:ui';
 let S=clone(SEED);
 const ui=Object.assign({tab:'dash',lens:'prono',lvl:'prio',orgaView:'deroule'},readUI(),{q:'',pq:'',ref:'all',fNotSeen:false,fBlind:false,fOpen:false,fStatus:'actifs',fSource:'all',open:{},drawer:null,slot:null,sheet:null});
 function readUI(){try{return JSON.parse(localStorage.getItem(UIKEY))||{}}catch(e){return{}}}
-function saveUI(){try{localStorage.setItem(UIKEY,JSON.stringify({tab:ui.tab,lens:ui.lens,lvl:ui.lvl,orgaView:ui.orgaView,ecView:ui.ecView,confView:ui.confView,pilView:ui.pilView,supView:ui.supView,iaView:ui.iaView,navOrder:ui.navOrder,navLast:ui.navLast,navLastG:ui.navLastG,navGroups:ui.navGroups,tbl:ui.tbl,ctxView:ui.ctxView,incView:ui.incView,crView:ui.crView,crAuthor:ui.crAuthor,repView:ui.repView,revSel:ui.revSel,dashView:ui.dashView,mapLens:ui.mapLens,ganttF:ui.ganttF,planView:ui.planView,careView:ui.careView,hasView:ui.hasView,careDossier:ui.careDossier,hasDossier:ui.hasDossier,dfArchived:ui.dfArchived}))}catch(e){}}
+function saveUI(){try{localStorage.setItem(UIKEY,JSON.stringify({tab:ui.tab,mbView:ui.mbView,mbScope:ui.mbScope,mbVp:ui.mbVp,mbStd:ui.mbStd,mbSec:ui.mbSec,mbGen:ui.mbGen,mbPre:ui.mbPre,mbLeftOff:ui.mbLeftOff,lens:ui.lens,lvl:ui.lvl,orgaView:ui.orgaView,ecView:ui.ecView,confView:ui.confView,pilView:ui.pilView,supView:ui.supView,iaView:ui.iaView,navOrder:ui.navOrder,navLast:ui.navLast,navLastG:ui.navLastG,navGroups:ui.navGroups,tbl:ui.tbl,ctxView:ui.ctxView,incView:ui.incView,crView:ui.crView,crAuthor:ui.crAuthor,repView:ui.repView,revSel:ui.revSel,dashView:ui.dashView,mapLens:ui.mapLens,ganttF:ui.ganttF,planView:ui.planView,careView:ui.careView,hasView:ui.hasView,careDossier:ui.careDossier,hasDossier:ui.hasDossier,dfArchived:ui.dfArchived}))}catch(e){}}
 
 const LV={certain:{l:'Certain',o:0},tres:{l:'Très probable',o:1},probable:{l:'Probable',o:2},socle:{l:'Systématique',o:3},faible:{l:'Peu probable',o:4}};
 const PREP={'':'À préparer',encours:'En cours',pret:'Prête'};
@@ -1186,7 +1189,7 @@ function navDef(){const N=S.nextYear;
 const PAGE_UNITS={'preuves:reg':'table.prvt tbody tr','preuves:cov':'table.prvc tbody tr','preuves:det':'table.prvd tbody tr','invest:lines':'table.invt tbody tr','invest:ren':'table.invr tbody tr','crrc:est':'table.cov tbody tr','crrc:bk-res':'table.cov tbody tr','crrc:bk-alerts':'table.cov tbody tr','contexte:roles':'table.rlt tbody tr','plans:rec':'table.rect tbody tr','contexte:pi':'table.pit tbody tr','contexte:swot':'.swp','incidents:reg':'table.inct tbody tr',supeval:'table.sevt tbody tr, .sev-p','crise:contacts':'table.crct tbody tr','crise:cell':'.cr-log li','crise:scen':'.swp','dash:map':'.map .tile','plans:gantt':'.g-row','plans:cal':'.plchip','plans:formation':'table.plt tbody tr','plans:sensi':'table.plt tbody tr','plans:audit':'table.plt tbody tr','plans:exo':'table.plt tbody tr',cibles:'.prow, .tile',couverture:'#covBody tr:not(.grp), table.cov tbody tr:not(.grp)','orga:deroule':'data',
   'ecarts:list':'article.fd','ecarts:actions':'tbody tr','conformite':'table.cov tbody tr:not(.grp)','pilotage:proc':'.objb, .pchip','pilotage:obj':'.objb',
   'pilotage:compact':'table.compact tbody tr','orga:people':'table.ppl tbody tr','fournisseurs:list':'table.supt tbody tr','fournisseurs:ar':'table.arv tbody tr','ia:reg':'tbody tr','ia:eval':'tbody tr','ia:plan':'tbody tr:not(.grp)','ia:pol':'tbody tr','gapapp':'table.gapt tbody tr'};
-function pageKey(){const v={crrc:ui.crrcView||'over',invest:ui.invView||'dash',preuves:ui.prvView||'reg',contexte:ui.ctxView||'scope',incidents:ui.incView||'reg',crise:ui.crView||'cell',dash:ui.dashView||'cards',plans:ui.planView||'cal',rapports:ui.repView||'exp',orga:ui.orgaView||'deroule',ecarts:ui.ecView||'list',pilotage:ui.pilView||'proc',fournisseurs:ui.supView||'list',ia:ui.iaView||'syn'}[ui.tab];
+function pageKey(){const v={carto:ui.mbView||'context',crrc:ui.crrcView||'over',invest:ui.invView||'dash',preuves:ui.prvView||'reg',contexte:ui.ctxView||'scope',incidents:ui.incView||'reg',crise:ui.crView||'cell',dash:ui.dashView||'cards',plans:ui.planView||'cal',rapports:ui.repView||'exp',orga:ui.orgaView||'deroule',ecarts:ui.ecView||'list',pilotage:ui.pilView||'proc',fournisseurs:ui.supView||'list',ia:ui.iaView||'syn'}[ui.tab];
   return v?ui.tab+':'+v:ui.tab}
 function applyPageQ(){const k=pageKey(),sel=PAGE_UNITS[k],q=nrm(((ui.pageQ||{})[k]||'').trim()),terms=q.split(/\s+/).filter(Boolean);const out=$('#pqn');
   if(!sel){return}
@@ -1203,7 +1206,7 @@ document.addEventListener('dragstart',e=>{const b=e.target.closest&&e.target.clo
 document.addEventListener('dragover',e=>{const b=e.target.closest&&e.target.closest('.mn');if(!b||!navDragId)return;e.preventDefault();document.querySelectorAll('.mn.drop-l,.mn.drop-r').forEach(x=>x.classList.remove('drop-l','drop-r'));
   const r=b.getBoundingClientRect();b.classList.add(e.clientX<r.left+r.width/2?'drop-l':'drop-r')});
 document.addEventListener('drop',e=>{const b=e.target.closest&&e.target.closest('.mn');if(!b||!navDragId)return;e.preventDefault();
-  const ids=navDef().map(x=>x.id).filter(x=>x!==navDragId);const r=b.getBoundingClientRect();let i=ids.indexOf(b.dataset.sec);if(i<0)return;if(e.clientX>=r.left+r.width/2)i++;
+  const ids=navDef().map(x=>x.id).filter(x=>x!==navDragId);const r=b.getBoundingClientRect();let i=ids.indexOf(b.dataset.sec);if(i<0)return;if(e.clientY>=r.top+r.height/2)i++;
   ids.splice(i,0,navDragId);ui.navOrder=ids;saveUI();navDragged=true;setTimeout(()=>navDragged=false,50);render();toast('Ordre du menu enregistré sur ce poste.')});
 document.addEventListener('dragend',()=>{navDragId=null;document.querySelectorAll('.mn.dragging,.mn.drop-l,.mn.drop-r').forEach(x=>x.classList.remove('dragging','drop-l','drop-r'))});
 function navMatch(it){if(it.tab!==ui.tab)return false;return Object.entries(it.match||it.set||{}).every(([k,v])=>(ui[k]||NAV_DEF[k])===v)}
@@ -1216,13 +1219,13 @@ function renderTabs(AN){
     if(s.groups){const curG=cur.it.g||s.groups[0].id;return `<div class="side-sub">${s.groups.map(g=>`<button class="${g.id===curG?'on':''}" data-act="nav" data-sec="${s.id}" data-grp="${g.id}">${esc(g.label)}${g.badge?`<em class="${g.badge.bad?'bad':''}" title="${esc(g.badge.t||'')}">${g.badge.n}</em>`:''}</button>`).join('')}</div>`}
     return s.items.length>1?`<div class="side-sub">${s.items.map(it=>`<button class="${it.id===cur.it.id?'on':''}" data-act="nav" data-sec="${s.id}" data-sub="${it.id}" ${it.hint?`title="${esc(it.hint)}"`:''}>${esc(it.label)}</button>`).join('')}</div>`:''};
   $('#tabs').innerHTML=`<div class="mn-in">${nav.map(s=>{const c=s.count?s.count(AN):null;
-    return `<button class="mn${s.id===cur.s.id?' on':''}" draggable="true" data-act="nav" data-sec="${s.id}" aria-current="${s.id===cur.s.id?'page':'false'}" title="${esc(s.label)} — glisser pour réordonner le menu"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[s.icon]}</svg><span>${esc(s.label)}</span>${c?`<em class="${c.bad?'bad':''}" title="${esc(c.n+' '+c.t)}">${c.n}</em>`:''}</button>${subOf(s)}`}).join('')}</div>`;
+    return `<button class="mn${s.id===cur.s.id?' on':''}" draggable="true" data-act="nav" data-sec="${s.id}" aria-current="${s.id===cur.s.id?'page':'false'}" title="${esc(s.label)} — glisser pour réordonner dans cette rubrique"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[s.icon]}</svg><span>${esc(s.label)}</span>${c?`<em class="${c.bad?'bad':''}" title="${esc(c.n+' '+c.t)}">${c.n}</em>`:''}</button>${subOf(s)}`}).join('')}</div>`;
   const groups=cur.s.groups||null,curG=groups?(cur.it.g||groups[0].id):null;
   const items=groups?cur.s.items.filter(i=>i.g===curG):[];
   const searchable=PAGE_UNITS[pageKey()]!=null;
   const iHtml=items.length>1?`<div class="sn-items" role="tablist">${items.map(it=>`<button class="sn${it.id===cur.it.id?' on':''}" role="tab" aria-selected="${it.id===cur.it.id}" data-act="nav" data-sec="${cur.s.id}" data-sub="${it.id}" ${it.hint?`title="${esc(it.hint)}"`:''}>${esc(it.label)}</button>`).join('')}</div>`:'';
   const qHtml=searchable?`<label class="pq"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="pageq" type="text" placeholder="Rechercher dans cette page" value="${esc((ui.pageQ||{})[pageKey()]||'')}" autocomplete="off" data-ro-ok><span id="pqn" class="pqn"></span></label>`:'';
-  const xHtml=ui.tab!=='rapports'?`<button class="sn-exp" data-act="exppage" data-ro-ok title="Exporter la page affichée en Excel (filtres et ordre des colonnes compris)"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16"/></svg>Exporter la page</button>`:'';
+  const xHtml=!['rapports','carto'].includes(ui.tab)?`<button class="sn-exp" data-act="exppage" data-ro-ok title="Exporter la page affichée en Excel (filtres et ordre des colonnes compris)"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16"/></svg>Exporter la page</button>`:'';
   $('#subnav').innerHTML=`<div class="sn-in">${iHtml||'<div></div>'}<div class="sn-r">${qHtml}${xHtml}</div></div>`;
   $('#subnav').hidden=!(iHtml||qHtml||xHtml);
   renderShell();
@@ -2690,8 +2693,8 @@ document.addEventListener('click',async e=>{
     case 'supdel':{const sp=fnd(S.suppliers,'id',el.dataset.sup);if(await askModal(`Supprimer « ${sp.name} » ?`)){S.suppliers=S.suppliers.filter(x=>x!==sp);$('#drawer').close();touch(true)}break}
     case 'ctladd':{const sp=fnd(S.suppliers,'id',el.dataset.sup),v=$('#ctlNew').value.trim();if(v){(sp.controls=sp.controls||[]).push({id:'c'+Date.now().toString(36),createdAt:nowTs(),t:v,ref:'',freq:12,last:'',result:'',comment:''});touch(true)}break}
     case 'aradd':{(S.accessReviews=S.accessReviews||[]).push({createdAt:nowTs(),id:'CONTROL-'+(S.accessReviews.length+1),app:'Nouvelle application',month:'',supplier:'',freq:12,source:'',comment:''});touch(true);break}
-    case 'nav':{if(navDragged)break;const s=navDef().find(x=>x.id===el.dataset.sec);if(!s)break;let it;
-      if(el.dataset.sub)it=s.items.find(x=>x.id===el.dataset.sub);
+    case 'nav':{if(navDragged)break;const definitions=navDef(),sub=el.dataset.sub==='ctx-roles'?'perimeter-roles':el.dataset.sub;const s=(sub&&definitions.find(x=>x.items.some(i=>i.id===sub)))||definitions.find(x=>x.id===el.dataset.sec);if(!s)break;let it;
+      if(sub)it=s.items.find(x=>x.id===sub);
       else if(el.dataset.grp){const g=el.dataset.grp,last=(ui.navLastG||{})[g];it=s.items.find(x=>x.id===last&&x.g===g)||s.items.find(x=>x.g===g)}
       else it=s.items.find(x=>x.id===(ui.navLast||{})[s.id]);
       navGo(it||s.items[0]);break}
@@ -3032,7 +3035,7 @@ document.addEventListener('dragover',e=>{if(!thDrag)return;const th=e.target.clo
   document.querySelectorAll('.th-l,.th-r').forEach(x=>x.classList.remove('th-l','th-r'));const r=th.getBoundingClientRect();th.classList.add(e.clientX<r.left+r.width/2?'th-l':'th-r')});
 document.addEventListener('drop',e=>{if(!thDrag)return;const th=e.target.closest&&e.target.closest('table.smart thead tr:first-child th');if(!th||th===thDrag||th.closest('table')!==thDrag.closest('table'))return;e.preventDefault();
   const t=th.closest('table'),cfg=tblCfg(t.dataset.tk),cur=[...t.tHead.rows[0].cells].map(c=>+c.dataset.ci),from=+thDrag.dataset.ci;
-  const list=cur.filter(x=>x!==from);let i=list.indexOf(+th.dataset.ci);const r=th.getBoundingClientRect();if(e.clientX>=r.left+r.width/2)i++;list.splice(i,0,from);cfg.order=list;saveUI();thDrag=null;render()});
+  const list=cur.filter(x=>x!==from);let i=list.indexOf(+th.dataset.ci);const r=th.getBoundingClientRect();if(e.clientY>=r.top+r.height/2)i++;list.splice(i,0,from);cfg.order=list;saveUI();thDrag=null;render()});
 document.addEventListener('dragend',()=>{if(thDrag)thDrag.classList.remove('th-drag');thDrag=null;document.querySelectorAll('.th-l,.th-r').forEach(x=>x.classList.remove('th-l','th-r'))});
 /* =====================================================================
    RAPPORTS ET EXPORTS
@@ -5172,7 +5175,7 @@ $('#settings').addEventListener('click',e=>{if(e.target===e.currentTarget)e.curr
 try{const th=localStorage.getItem('suivi-audits-smsi:theme');if(th&&th!=='auto')document.documentElement.dataset.theme=th}catch(e){}
 /* Extensions D/F : point d’intégration de la copie locale. */
 const dfMigrate=migrate3;
-migrate3=function(state){return window.LegacyRisks.init(window.LegacyIntegration.validate(window.LegacyDF.validateState(dfMigrate(state))))};
+migrate3=function(state){window.LegacyCartographyCore.init(state);return window.LegacyRisks.init(window.LegacyIntegration.validate(window.LegacyDF.validateState(dfMigrate(state))))};
 const dfIntegration=window.LegacyDFUI.install({
   getState:()=>S, replaceState:state=>{S=migrate3(state)}, ui,TABS,NAV_DEF,
   readOnly:()=>RO,touch,render:(...args)=>render(...args),saveUI,openSheet,
@@ -5184,7 +5187,8 @@ const lxIntegration=window.LegacyIntegrationUI.install({
   toast,confirm:askModal,mapTile:(...args)=>mtile(...args).replace("data-act=","data-lx-act="),df:dfIntegration,navigate:(tab,set={})=>{ui.tab=tab;Object.assign(ui,set);render();saveUI()}
 });
 const dfNav=navDef;
-navDef=function(){return lxIntegration.extendNav(dfIntegration.extendNav(dfNav()))};
+navDef=function(){return LegacyNavigation.organize(lxIntegration.extendNav(dfIntegration.extendNav(dfNav())))};
+LegacyCartography.install({getState:()=>S,ui,TABS,NAV_DEF,readOnly:()=>RO,esc,clone,brand,nowTs,todayFr,stamp,saveFile,touch,render:(...args)=>render(...args),toast,askModal,openSheet,navDef:()=>navDef(),navGo,indState,dFr,ICONS,saveUI,navigate:(...args)=>lxIntegration.toolkit.api().navigate(...args)});
 const dfRender=render;
 render=function(...args){window.LegacyIntegration.sync(S);window.LegacyPCRA.reconcile(S);window.LegacyJourney.reconcile(S);dfRender(...args);dfIntegration.afterRender();lxIntegration.afterRender()};
 const dfPrv=renderPrvSheet;

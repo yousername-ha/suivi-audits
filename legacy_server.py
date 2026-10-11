@@ -5,6 +5,7 @@ from http.cookies import SimpleCookie
 from urllib.parse import urlsplit, unquote
 import copy, hashlib, hmac, json, re, secrets, sqlite3, threading, time
 from legacy_risks import validate_risks
+from legacy_cartography import project_maps, validate_maps
 ID_PREFIXES = json.loads((Path(__file__).resolve().parent / "sources/identifiants.json").read_text())
 BASE_ROLES = json.loads((Path(__file__).resolve().parent / "sources/roles-base.json").read_text())
 
@@ -21,7 +22,7 @@ PATHS = [('items',), ('findings',), ('roles',), ('perimeters',), ('processes',),
          ('journey', 'runs'), ('journey', 'tasks'), ('pcra', 'bias'),
          ('pcra', 'plans'), ('pcra', 'exercises'), ('pcra', 'policies'), ('crrc', 'establishments'),
          ('crrc', 'resources'), ('crrc', 'runs'), ('crrc', 'restores'), ('crrc', 'alerts'),
-         ('invest', 'lines')] + [('riskMgmt', k) for k in ('risks','studies','assessments','scenarios','policies','treatments','measures','decisions')]
+         ('invest', 'lines'), ('cartography', 'maps')] + [('riskMgmt', k) for k in ('risks','studies','assessments','scenarios','policies','treatments','measures','decisions')]
 
 def get(s, path):
     for k in path:
@@ -165,6 +166,7 @@ class Store:
         out.setdefault('riskMgmt', {})['schema'] = 1
         out.setdefault('pcra', {}).update({'schema': 1, 'settings': copy.deepcopy(s.get('pcra', {}).get('settings', {}))})
         out.setdefault('crrc', {})['offers'] = []
+        project_maps(s,out,u,self)
         return out
 
     def merge(self, old, incoming, u):
@@ -186,12 +188,18 @@ class Store:
             if path in [('perimeters',), ('roles',)]:
                 if encoded(rows) != encoded(previous): raise Problem(403, 'La structure des périmètres et des rôles est réservée à l’administration.')
                 continue
+            if path == ('cartography','maps'):
+                restricted = {r['id']:r for r in previous if r.get('restricted')}
+                for r in rows:
+                    if r.get('id') in restricted and encoded(r)!=encoded(restricted[r['id']]): raise Problem(403,'Carte reclassée en lecture seule ; révision par un administrateur nécessaire.')
+                if any(r['id'] not in {x.get('id') for x in rows} for r in restricted.values()): raise Problem(403,'Carte reclassée en lecture seule.')
+                rows=[r for r in rows if r.get('id') not in restricted]
             if path in [('pcra','policies'), ('riskMgmt','policies')]:
                 inherited = {r['id']:r for r in previous if not self.visible(r,index,allowed)}
                 for r in rows:
                     if r.get('id') in inherited and encoded(r)!=encoded(inherited[r['id']]): raise Problem(403, 'Politique héritée en lecture seule.')
                 rows = [r for r in rows if r.get('id') not in inherited]
-            hidden = [r for r in get(old, path) if not self.visible(r, index, allowed)]
+            hidden = [r for r in get(old, path) if not self.visible(r, index, allowed) or path == ('cartography','maps') and r.get('id') in restricted]
             hidden_ids = {r.get('id') for r in hidden}
             for r in rows:
                 if not isinstance(r, dict) or r.get('id') in hidden_ids:
@@ -321,6 +329,7 @@ class Store:
                         raise Problem(403, 'Validation humaine non autorisée.')
                     validation['actorId'] = u['id']; validation['actor'] = u['name']
         validate_risks(s, old, u, self, Problem)
+        validate_maps(s, old, u, self, Problem)
         self.sync_perimeters(s, old, u)
         self.validate_pcra(s, old, u)
         self.reconcile(s)

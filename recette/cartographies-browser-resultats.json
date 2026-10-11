@@ -1,0 +1,57 @@
+{
+  "executedAt": "2026-10-11T15:58:08.456Z",
+  "passed": 12,
+  "failed": 0,
+  "pageErrors": [],
+  "externalRequests": 0,
+  "tests": [
+    {
+      "name": "Jeu FICTIF et liens métier préparés sans duplication",
+      "status": "PASSÉ"
+    },
+    {
+      "name": "Menus : ordre logique, Pilotage allégé, liens historiques redirigés",
+      "status": "PASSÉ"
+    },
+    {
+      "name": "Contexte SVG généré et enregistré pour un établissement",
+      "status": "PASSÉ"
+    },
+    {
+      "name": "Déplacement réel, annulation et rétablissement sans altération métier",
+      "status": "PASSÉ"
+    },
+    {
+      "name": "Version nommée, restauration et auteur serveur",
+      "status": "PASSÉ"
+    },
+    {
+      "name": "Renommage métier synchronisé, positions conservées, objet nouveau signalé",
+      "status": "PASSÉ"
+    },
+    {
+      "name": "Exports réels SVG, JSON, PNG et PDF",
+      "status": "PASSÉ"
+    },
+    {
+      "name": "Processus : bandes de familles, propositions identifiées, sauvegarde indépendante",
+      "status": "PASSÉ"
+    },
+    {
+      "name": "GHT consolidé et carte des risques partagent les registres existants",
+      "status": "PASSÉ"
+    },
+    {
+      "name": "Lecteur et contributeur : droits serveur, carte propre, données étrangères absentes",
+      "status": "PASSÉ"
+    },
+    {
+      "name": "Responsive, mode sombre, aucune dépendance réseau extérieure",
+      "status": "PASSÉ"
+    },
+    {
+      "name": "Rechargement conserve les trois dispositions et leurs versions",
+      "status": "PASSÉ"
+    }
+  ]
+}
