@@ -24,6 +24,8 @@ import { Members } from '../pilotage/Members';
 import { Journey } from '../pilotage/Journey';
 import { Relations } from '../grc/Relations';
 import { pilotageReport } from '../pilotage/report';
+import { EtudesEbios } from '../grc/Ebios';
+import { RegistreRisques } from '../grc/RegistreRisques';
 const REGISTERS: Record<string, { kind: GrcKind; legacy?: string; description: string }> = {
   contexte: {
     kind: 'context',
@@ -116,7 +118,9 @@ export function PilotagePage() {
       operation: PilotageRecord['operation'];
       step?: string;
     } | null>(null),
-    [schedule, setSchedule] = useState<GrcObject | null>(null);
+    [schedule, setSchedule] = useState<GrcObject | null>(null),
+    [initial, setInitial] = useState<Record<string, unknown> | undefined>(undefined),
+    [preset, setPreset] = useState<{ name?: string; data?: Record<string, unknown> } | undefined>(undefined);
   const scopes = useQuery({
     queryKey: ['grc', 'smsis'],
     queryFn: () => get<{ id: string; name: string }[]>('/api/grc/smsis'),
@@ -136,9 +140,19 @@ export function PilotagePage() {
     setKind(o.kind);
     setOpened(true);
   };
-  const create = (k: GrcKind) => {
+  const create = (k: GrcKind, init?: Record<string, unknown>) => {
     setEditing(null);
     setKind(k);
+    setInitial(init);
+    setPreset(undefined);
+    setOpened(true);
+  };
+  /** Risque du registre issu d'une étude EBIOS RM : intitulé, étude et scénario préremplis. */
+  const createRisk = (name: string, data: Record<string, unknown>) => {
+    setEditing(null);
+    setKind('risk');
+    setInitial(undefined);
+    setPreset({ name, data });
     setOpened(true);
   };
   const decide = (o: GrcObject, operation: PilotageRecord['operation'], step?: string) =>
@@ -284,14 +298,24 @@ export function PilotagePage() {
                     Choisir ou adapter la méthode d’appréciation
                   </Anchor>
                 </Group>
-                <Registry
+                <RegistreRisques
+                  key={smsi}
                   smsi={smsi}
-                  fixedKind="risk"
                   onOpen={open}
                   onEvaluation={setEvaluation}
-                  onRelation={setRelation}
+                  onAcceptation={(o) => decide(o, 'risk_acceptance')}
                 />
               </>
+            )}
+            {section === 'etudes' && can('pilotage', 'lire') && (
+              <EtudesEbios
+                key={smsi}
+                smsi={smsi}
+                onOpen={open}
+                onCreate={create}
+                onCreateRisk={createRisk}
+                onDecision={decide}
+              />
             )}
             {section === 'traitements' && can('pilotage', 'lire') && (
               <>
@@ -354,6 +378,7 @@ export function PilotagePage() {
                 object={editing}
                 opened={opened}
                 onClose={() => setOpened(false)}
+                preset={preset}
               />
             ) : (
               <RecordEditor
@@ -364,6 +389,7 @@ export function PilotagePage() {
                 object={editing}
                 opened={opened}
                 onClose={() => setOpened(false)}
+                initial={initial}
               />
             )}
             <RiskEvaluation smsi={smsi} risk={evaluation} onClose={() => setEvaluation(null)} />

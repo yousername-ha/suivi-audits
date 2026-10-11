@@ -224,6 +224,23 @@ Spécification détaillée : [audit/SPEC-AUDIT-V3.md](audit/SPEC-AUDIT-V3.md) ; 
 
 ---
 
+## 9. Gestion des risques — EBIOS RM et ISO/IEC 27005  *(lot U3 de l'unification)*
+
+Spécification : [risques/SPEC-RISQUES-V3.md](risques/SPEC-RISQUES-V3.md) ; ADR 0027. Démarches *inspirées* des méthodes, sans conformité revendiquée.
+
+- **RISK-01** — Étude EBIOS RM (`risk_study`) : objet, périmètre, participants, période, socle de sécurité.
+- **RISK-02** — Atelier 1 : valeurs métier, biens supports, événements redoutés gradués (gravité 1 à 4).
+- **RISK-03** — Atelier 2 : sources de risque et couples source de risque / objectif visé (`sr_ov`), retenus et justifiés.
+- **RISK-04** — Atelier 3 : parties prenantes de l'écosystème (`ecosystem_party`, indice de menace) et scénarios stratégiques (gravité proposée).
+- **RISK-05** — Atelier 4 : scénarios opérationnels (biens supports visés, vraisemblance) ; « Créer le risque » avec filiation.
+- **RISK-06** — Atelier 5 et matrice gravité × vraisemblance ; validation de chaque atelier dans l'ordre, décision tracée (`pilotage:administrer`).
+- **RISK-07** — Fiche de risque ISO/IEC 27005 : actifs ou processus, menace, vulnérabilité, conséquences ; appréciations brut et résiduel existantes.
+- **RISK-08** — Acceptation formelle : décision immuable (responsable, date, conditions, échéance), état « à décider / acceptée / refusée / échue ».
+- **RISK-09** — Registre commun : niveaux, option, acceptation, revue, filtres côté serveur (démarche, option, acceptation, retard, étude).
+- **RISK-10** — Références typées vérifiées par le serveur (type, périmètre, droit de lecture) ; sélecteur filtré par cible.
+
+---
+
 ## Critères d'acceptation communs
 - Respect de la charte graphique et de l'adaptation à tous les écrans (sections 9 ter et 9 quater du prompt de la phase 0).
 - Droits RBAC appliqués à chaque nouveau module : CRRC, Prospection, Incidents, PCA/PRA, Événements, Cartographie.

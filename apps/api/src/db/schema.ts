@@ -566,6 +566,7 @@ export const pilotageDecisions = pgTable('pilotage_decisions', {
   refs: jsonb('refs').notNull().default([]),
   snapshot: jsonb('snapshot').notNull(),
   generatedRefs: jsonb('generated_refs').notNull().default([]),
+  terms: jsonb('terms').notNull().default({}),
   requestId: uuid('request_id').notNull().unique(),
   intentHash: text('intent_hash').notNull(),
   createdBy: text('created_by').notNull(),

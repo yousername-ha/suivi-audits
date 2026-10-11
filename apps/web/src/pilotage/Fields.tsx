@@ -11,27 +11,133 @@ import {
   Text,
 } from '@mantine/core';
 import { PILOTAGE_FIELDS, type GrcKind, type PilotageField } from '@suivi/shared';
+import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { get } from '../api';
 export interface Source {
   ref: string;
   name: string;
   kind: string;
 }
+/** Référence typée (lot U3) : seules les cibles autorisées sont proposées, recherchées côté serveur. */
+export function ChampLien({
+  smsi,
+  f,
+  value,
+  onChange,
+  readonly,
+}: {
+  smsi: string;
+  f: PilotageField;
+  value: unknown;
+  onChange: (v: unknown) => void;
+  readonly: boolean;
+}) {
+  const [search, setSearch] = useState('');
+  const cibles = (f.cibles ?? []).join(',');
+  const q = useQuery({
+    queryKey: ['grc', smsi, 'sources', 'cibles', cibles, search],
+    queryFn: () =>
+      get<{ items: Source[] }>(
+        `/api/grc/${smsi}/sources?search=${encodeURIComponent(search)}&cibles=${encodeURIComponent(cibles)}`,
+      ),
+    enabled: !readonly && !!cibles,
+  });
+  const choisis =
+    f.type === 'ref'
+      ? typeof value === 'string' && value
+        ? [value]
+        : []
+      : Array.isArray(value)
+        ? (value as string[])
+        : [];
+  const options = (q.data?.items ?? []).map((s) => ({ value: s.ref, label: s.name }));
+  for (const r of choisis)
+    if (!options.some((o) => o.value === r)) options.push({ value: r, label: 'Référence déjà liée' });
+  if (f.type === 'ref')
+    return (
+      <Select
+        label={f.label}
+        description={f.hint}
+        searchable
+        clearable
+        data={options}
+        value={choisis[0] ?? null}
+        onSearchChange={setSearch}
+        onChange={(v) => onChange(v ?? null)}
+        disabled={readonly}
+      />
+    );
+  return (
+    <MultiSelect
+      label={f.label}
+      description={f.hint}
+      searchable
+      data={options}
+      value={choisis}
+      onSearchChange={setSearch}
+      onChange={(v) => onChange(v)}
+      disabled={readonly}
+    />
+  );
+}
+
 export function Fields({
   kind,
   data,
   onChange,
   sources,
   readonly = false,
+  smsi,
 }: {
   kind: GrcKind;
   data: Record<string, unknown>;
   onChange: (key: string, value: unknown) => void;
   sources: Source[];
   readonly?: boolean;
+  smsi?: string;
 }) {
   const fields = PILOTAGE_FIELDS[kind] ?? [];
   const input = (f: PilotageField) => {
     const value = data[f.key];
+    if ((f.type === 'ref' || f.type === 'refs') && f.cibles && smsi)
+      return (
+        <ChampLien
+          key={f.key}
+          smsi={smsi}
+          f={f}
+          value={value}
+          onChange={(v) => onChange(f.key, v)}
+          readonly={readonly}
+        />
+      );
+    if (f.type === 'niveau')
+      return (
+        <Select
+          key={f.key}
+          label={f.label}
+          description={f.hint}
+          clearable
+          data={(f.echelle ?? []).map((l, i) => ({
+            value: String(i + 1),
+            label: `${i + 1} — ${l.replace(/^\d+ — /, '')}`,
+          }))}
+          value={typeof value === 'number' ? String(value) : null}
+          onChange={(v) => onChange(f.key, v ? Number(v) : null)}
+          disabled={readonly}
+        />
+      );
+    if (f.type === 'multi')
+      return (
+        <MultiSelect
+          key={f.key}
+          label={f.label}
+          data={f.options ?? []}
+          value={Array.isArray(value) ? (value as string[]) : []}
+          onChange={(v) => onChange(f.key, v)}
+          disabled={readonly}
+        />
+      );
     if (f.type === 'boolean')
       return (
         <Checkbox

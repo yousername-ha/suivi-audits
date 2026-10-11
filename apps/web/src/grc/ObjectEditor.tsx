@@ -22,12 +22,14 @@ import {
   type GrcObject,
   type RiskData,
   type RiskMethod,
+  RISK_REF_KINDS,
 } from '@suivi/shared';
 import { api, get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
 import { ConfigurationEditor } from './ConfigurationEditor';
 import type { MethodVersion } from './Risks';
+import { ChampLien } from '../pilotage/Fields';
 type Owners = { id: string; displayName: string; username: string }[];
 const initial = (kind: GrcKind, policy: BusinessPolicy, method?: MethodVersion): Record<string, unknown> =>
   kind === 'action'
@@ -124,6 +126,7 @@ export function ObjectEditor({
   object,
   opened,
   onClose,
+  preset,
 }: {
   smsi: string;
   policy: BusinessPolicy;
@@ -131,6 +134,8 @@ export function ObjectEditor({
   object: GrcObject | null;
   opened: boolean;
   onClose: () => void;
+  /** Création préremplie (risque issu d'une étude EBIOS RM : intitulé, étude, scénario). */
+  preset?: { name?: string; data?: Record<string, unknown> };
 }) {
   const can = useCan(),
     qc = useQueryClient(),
@@ -174,11 +179,11 @@ export function ObjectEditor({
   });
   useEffect(() => {
     if (opened) {
-      setName(object?.name ?? '');
-      setData(object?.data ?? initial(kind, policy));
+      setName(object?.name ?? preset?.name ?? '');
+      setData(object?.data ?? { ...initial(kind, policy), ...(preset?.data ?? {}) });
       setError(null);
     }
-  }, [opened, object, kind, policy]);
+  }, [opened, object, kind, policy, preset]);
   useEffect(() => {
     if (opened && !object && kind === 'risk') {
       const s = scopes.data?.find((s) => s.id === smsi);
@@ -415,6 +420,58 @@ export function ObjectEditor({
                   value={String(data.reviewAt ?? '')}
                   onChange={(e) => set('reviewAt', e.currentTarget.value || null)}
                   disabled={readonly}
+                />
+                <Text fw={600} mt="sm">
+                  Identification (processus inspiré de l’ISO/IEC 27005)
+                </Text>
+                <ChampLien
+                  smsi={smsi}
+                  f={{
+                    key: 'assetRefs',
+                    label: 'Actifs ou processus concernés',
+                    type: 'refs',
+                    cibles: RISK_REF_KINDS.risk!.assetRefs,
+                  }}
+                  value={data.assetRefs ?? []}
+                  onChange={(v) => set('assetRefs', v)}
+                  readonly={readonly}
+                />
+                {(
+                  [
+                    ['threat', 'Menace'],
+                    ['vulnerability', 'Vulnérabilité exploitée'],
+                    ['consequences', 'Conséquences'],
+                  ] as const
+                ).map(([k, l]) => (
+                  <Textarea
+                    key={k}
+                    label={l}
+                    value={String(data[k] ?? '')}
+                    onChange={(e) => set(k, e.currentTarget.value)}
+                    disabled={readonly}
+                  />
+                ))}
+                <Text fw={600} mt="sm">
+                  Filiation EBIOS RM (facultatif)
+                </Text>
+                <ChampLien
+                  smsi={smsi}
+                  f={{ key: 'studyRef', label: 'Étude EBIOS RM', type: 'ref', cibles: RISK_REF_KINDS.risk!.studyRef }}
+                  value={data.studyRef ?? null}
+                  onChange={(v) => set('studyRef', v)}
+                  readonly={readonly}
+                />
+                <ChampLien
+                  smsi={smsi}
+                  f={{
+                    key: 'scenarioRef',
+                    label: 'Scénario opérationnel d’origine',
+                    type: 'ref',
+                    cibles: RISK_REF_KINDS.risk!.scenarioRef,
+                  }}
+                  value={data.scenarioRef ?? null}
+                  onChange={(v) => set('scenarioRef', v)}
+                  readonly={readonly}
                 />
                 {method && (
                   <Stages

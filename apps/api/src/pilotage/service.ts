@@ -1,4 +1,4 @@
-import { GRC_MODULES, JOURNEY_STEPS, PilotageRecord, SeriesData } from '@suivi/shared';
+import { EBIOS_ATELIERS, GRC_MODULES, JOURNEY_STEPS, PilotageRecord, SeriesData } from '@suivi/shared';
 import { isObject } from '@suivi/shared/legacy';
 import type { SessionUser } from '../auth.js';
 import type { Client } from '../db/db.js';
@@ -6,7 +6,7 @@ import { DEFAULT_SMSI, hash, type Grc } from '../grc/core.js';
 import { HttpError } from '../http/errors.js';
 import { PilotageLegacy } from './legacy.js';
 
-const columns = `id,source_ref AS "sourceRef",source_version AS "sourceVersion",operation,step,result,performed_on::text AS date,note,refs,generated_refs AS "generatedRefs",snapshot,created_by AS "createdBy",created_at AS "createdAt"`;
+const columns = `id,source_ref AS "sourceRef",source_version AS "sourceVersion",operation,step,result,performed_on::text AS date,note,refs,generated_refs AS "generatedRefs",terms,snapshot,created_by AS "createdBy",created_at AS "createdAt"`;
 export class Pilotage {
   readonly legacy: PilotageLegacy;
   constructor(readonly g: Grc) {
@@ -107,7 +107,8 @@ export class Pilotage {
         control_execution: ['control'],
         effectiveness: ['nonconformity'],
         close: ['nonconformity'],
-        step_validation: ['journey'],
+        step_validation: ['journey', 'risk_study'],
+        risk_acceptance: ['risk'],
         approval: ['bia', 'continuity_plan', 'management_review'],
         action_create: [
           'nonconformity',
@@ -212,7 +213,41 @@ export class Pilotage {
         data.status = input.result === 'accepted' ? 'validated' : 'draft';
         data.justification = input.note;
       }
-      if (input.operation === 'step_validation') {
+      let terms: Record<string, unknown> = {};
+      if (input.operation === 'risk_acceptance') {
+        await this.g.permission(user, 'pilotage', 'administrer');
+        if (!['accepted', 'rejected'].includes(input.result))
+          throw new HttpError(422, 'Décision d’acceptation attendue : acceptée ou refusée.');
+        if (input.result === 'accepted') {
+          if (!input.until || input.until < input.date)
+            throw new HttpError(422, 'Indiquez l’échéance de l’acceptation, postérieure à la décision.');
+          if (data.strategy !== 'accept')
+            throw new HttpError(409, 'Choisissez d’abord l’option de traitement « accepter » sur la fiche du risque.');
+        }
+        terms = input.until ? { until: input.until } : {};
+      }
+      if (input.operation === 'step_validation' && source.kind === 'risk_study') {
+        await this.g.permission(user, 'pilotage', 'administrer');
+        if (input.result !== 'completed') throw new HttpError(422, 'Validation d’atelier attendue.');
+        const atelier = EBIOS_ATELIERS.find((a) => a.id === input.step);
+        if (!atelier) throw new HttpError(422, 'Atelier inconnu.');
+        if (!String(data.objective ?? '').trim() || !String(data.scope ?? '').trim())
+          throw new HttpError(422, 'Renseignez l’objet et le périmètre de l’étude.');
+        const resolved = await Promise.all(input.refs.map((r) => this.g.resolve(smsi, r, user, c)));
+        if (!resolved.some((r) => (atelier.kinds as readonly string[]).includes(r.kind) && r.data.studyRef === ref))
+          throw new HttpError(422, 'Reliez au moins un élément de cet atelier, rattaché à l’étude.');
+        for (const previous of EBIOS_ATELIERS.slice(0, EBIOS_ATELIERS.indexOf(atelier)))
+          if (
+            !(
+              await c.query(
+                "SELECT 1 FROM pilotage_decisions WHERE smsi_id=$1 AND source_ref=$2 AND source_version=$3 AND operation='step_validation' AND step=$4",
+                [smsi, ref, source.version, previous.id],
+              )
+            ).rowCount
+          )
+            throw new HttpError(409, 'Validez d’abord : ' + previous.label);
+      }
+      if (input.operation === 'step_validation' && source.kind === 'journey') {
         await this.g.permission(user, 'pilotage', 'administrer');
         if (input.result !== 'completed') throw new HttpError(422, 'Validation d’étape attendue.');
         const step = JOURNEY_STEPS.find((s) => s.id === input.step);
@@ -287,7 +322,7 @@ export class Pilotage {
       }
       const row = (
         await c.query(
-          `INSERT INTO pilotage_decisions(smsi_id,source_ref,source_version,operation,step,result,performed_on,note,refs,snapshot,generated_refs,request_id,intent_hash,created_by) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING ${columns}`,
+          `INSERT INTO pilotage_decisions(smsi_id,source_ref,source_version,operation,step,result,performed_on,note,refs,snapshot,generated_refs,request_id,intent_hash,created_by,terms) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING ${columns}`,
           [
             smsi,
             ref,
@@ -303,6 +338,7 @@ export class Pilotage {
             input.requestId,
             intentHash,
             user.username,
+            JSON.stringify(terms),
           ],
         )
       ).rows[0]!;

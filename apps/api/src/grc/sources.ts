@@ -3,19 +3,22 @@ import type { Module } from '@suivi/shared';
 import { isObject, type JsonObject } from '@suivi/shared/legacy';
 import type { Grc } from './core.js';
 import { DEFAULT_SMSI } from './core.js';
-export async function sources(g: Grc, smsi: string, user: SessionUser, search: string) {
+export async function sources(g: Grc, smsi: string, user: SessionUser, search: string, cibles?: string[]) {
   await g.access(smsi, user);
+  // Champ typé (lot U3) : seuls les types d'objets et les clés historiques demandés sont proposés.
+  const typesObjets = cibles?.filter((x) => x.startsWith('object:')).map((x) => x.slice(7));
+  const clesHistoriques = cibles?.filter((x) => x.startsWith('legacy:')).map((x) => x.slice(7));
   const modules = ['audit', 'ecarts', 'plan_audit', 'pilotage', 'conformite', 'documents', 'incidents'].filter((m) =>
     user.rights.can(m as Module, 'lire'),
   );
   const pattern = '%' + search.replace(/[\\%_]/g, '\\$&') + '%';
   const objects = (
     await g.db.q<{ ref: string; name: string; kind: string }>(
-      `SELECT 'object:'||id ref,name,kind FROM grc_objects WHERE smsi_id=$1 AND NOT archived AND module=ANY($2) AND name ILIKE $3 ORDER BY name,id LIMIT 100`,
-      [smsi, modules, pattern],
+      `SELECT 'object:'||id ref,name,kind FROM grc_objects WHERE smsi_id=$1 AND NOT archived AND module=ANY($2) AND name ILIKE $3 AND ($4::text[] IS NULL OR kind=ANY($4)) ORDER BY name,id LIMIT 100`,
+      [smsi, modules, pattern, typesObjets ?? null],
     )
   ).rows;
-  if (user.rights.can('documents', 'lire'))
+  if (!cibles && user.rights.can('documents', 'lire'))
     objects.push(
       ...(
         await g.db.q<{ ref: string; name: string; kind: string }>(
@@ -24,7 +27,7 @@ export async function sources(g: Grc, smsi: string, user: SessionUser, search: s
         )
       ).rows,
     );
-  if (user.rights.can('audit', 'lire') && user.rights.can('conformite', 'lire')) {
+  if (!cibles && user.rights.can('audit', 'lire') && user.rights.can('conformite', 'lire')) {
     const publications = (
       await g.db.q<{
         framework_id: string;
@@ -65,7 +68,7 @@ export async function sources(g: Grc, smsi: string, user: SessionUser, search: s
       scope: 'pilotage',
     };
     for (const [key, module] of Object.entries(allowed)) {
-      if (!user.rights.can(module, 'lire')) continue;
+      if (!user.rights.can(module, 'lire') || (clesHistoriques && !clesHistoriques.includes(key))) continue;
       const rows =
         key === 'scope' && isObject(state?.data.scope) ? [{ ...state.data.scope, id: 'instance' }] : state?.data[key];
       const entries: JsonObject[] = (Array.isArray(rows) ? (rows as unknown[]) : []).filter(isObject);

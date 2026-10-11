@@ -25,6 +25,7 @@ export const OPERATION_LABELS: Record<PilotageRecord['operation'], string> = {
   step_validation: 'Valider les travaux de l’étape',
   approval: 'Valider la fiche',
   action_create: 'Créer une action suivie',
+  risk_acceptance: 'Décider de l’acceptation du risque',
 };
 export function Decision({
   smsi,
@@ -50,6 +51,7 @@ export function Decision({
     [finding, setFinding] = useState(false),
     [action, setAction] = useState(false),
     [confirmed, setConfirmed] = useState(false),
+    [until, setUntil] = useState(''),
     [requestId, setRequestId] = useState('');
   const sources = useQuery({
     queryKey: ['grc', smsi, 'sources', search],
@@ -62,7 +64,7 @@ export function Decision({
       setNote('');
       setDate(new Date().toLocaleDateString('sv-SE'));
       setResult(
-        operation === 'proof_review' || operation === 'approval'
+        operation === 'proof_review' || operation === 'approval' || operation === 'risk_acceptance'
           ? 'accepted'
           : operation === 'control_execution'
             ? 'pass'
@@ -78,11 +80,17 @@ export function Decision({
       setFinding(false);
       setAction(operation === 'action_create');
       setConfirmed(false);
+      setUntil('');
       setRequestId(crypto.randomUUID());
     }
   }, [object, operation, step]);
-  const values =
-    operation === 'proof_review' || operation === 'approval'
+  const acceptation = operation === 'risk_acceptance';
+  const values = acceptation
+    ? [
+        ['accepted', 'Risque accepté'],
+        ['rejected', 'Acceptation refusée'],
+      ]
+    : operation === 'proof_review' || operation === 'approval'
       ? [
           ['accepted', 'Accepté'],
           ['rejected', 'À corriger'],
@@ -122,6 +130,7 @@ export function Decision({
             refs,
             createFinding: finding,
             createAction: action,
+            ...(acceptation ? { until } : {}),
             confirm: 'ENREGISTRER',
           },
         },
@@ -147,10 +156,19 @@ export function Decision({
         <ErrorAlert error={error ?? sources.error} />
         <TextInput
           type="date"
-          label="Date de réalisation"
+          label={acceptation ? 'Date de la décision' : 'Date de réalisation'}
           value={date}
           onChange={(e) => setDate(e.currentTarget.value)}
         />
+        {acceptation && (
+          <TextInput
+            type="date"
+            label="Échéance de l’acceptation"
+            description="Après cette date, l’acceptation est signalée échue et doit être revue."
+            value={until}
+            onChange={(e) => setUntil(e.currentTarget.value)}
+          />
+        )}
         <Select
           label="Résultat"
           data={values.map(([value, label]) => ({ value: value!, label: label! }))}
@@ -161,8 +179,12 @@ export function Decision({
           }}
         />
         <Textarea
-          label="Observations et justification"
-          description="Indiquez ce qui a été examiné ou réalisé et pourquoi vous prenez cette décision."
+          label={acceptation ? 'Conditions et justification de la décision' : 'Observations et justification'}
+          description={
+            acceptation
+              ? 'Niveau de risque accepté, conditions (mesures attendues, surveillance) et raisons de la décision.'
+              : 'Indiquez ce qui a été examiné ou réalisé et pourquoi vous prenez cette décision.'
+          }
           value={note}
           onChange={(e) => setNote(e.currentTarget.value)}
         />
@@ -206,7 +228,11 @@ export function Decision({
           <Button variant="default" onClick={onClose}>
             Annuler
           </Button>
-          <Button loading={saving} disabled={!confirmed || note.trim().length < 10} onClick={() => void save()}>
+          <Button
+            loading={saving}
+            disabled={!confirmed || note.trim().length < 10 || (acceptation && result === 'accepted' && !until)}
+            onClick={() => void save()}
+          >
             Confirmer l’enregistrement
           </Button>
         </Group>

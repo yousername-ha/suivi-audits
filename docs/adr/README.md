@@ -30,3 +30,4 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0024](0024-pilotage-metier.md) | Pilotage multi-référentiels, décisions G/H/K et début E | Retenue, recette de PR requise |
 | [0025](0025-audit.md) | Audit : cycle, référentiels, couverture, écarts et plan d'audit (ex-0015 de la lignée `refonte/*`) | Acceptée, à réconcilier avec 0023/0024 |
 | [0026](0026-cartographie-creation-depuis-la-carte.md) | Cartographie : créer les objets de la plateforme depuis la carte (ex-0016) | Acceptée |
+| [0027](0027-risques-ebios-rm-iso27005.md) | Risques : étude EBIOS RM et processus ISO/IEC 27005 distincts, registre commun (lot U3) | Proposée |

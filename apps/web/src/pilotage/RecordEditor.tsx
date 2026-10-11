@@ -34,6 +34,7 @@ export function RecordEditor({
   opened,
   onClose,
   policy,
+  initial,
 }: {
   smsi: string;
   kind: GrcKind;
@@ -41,6 +42,8 @@ export function RecordEditor({
   opened: boolean;
   onClose: () => void;
   policy: BusinessPolicy;
+  /** Valeurs initiales d'une création (par exemple l'étude EBIOS RM de rattachement). */
+  initial?: Record<string, unknown>;
 }) {
   const can = useCan(),
     qc = useQueryClient();
@@ -86,9 +89,12 @@ export function RecordEditor({
                   ? 0
                   : f.type === 'select'
                     ? (f.options?.[0]?.value ?? '')
-                    : f.type === 'refs'
+                    : f.type === 'refs' || f.type === 'multi'
                       ? []
-                      : '';
+                      : f.type === 'ref' || f.type === 'niveau'
+                        ? null
+                        : '';
+      if (!object && initial) Object.assign(d, initial);
       if (kind === 'evidence' && ['validated', 'rejected'].includes(String(d.status))) d.status = 'draft';
       if (['bia', 'continuity_plan', 'management_review'].includes(kind) && d.status === 'validated')
         d.status = 'draft';
@@ -110,7 +116,7 @@ export function RecordEditor({
       setData(d);
       setError(null);
     }
-  }, [opened, object, kind, policy]);
+  }, [opened, object, kind, policy, initial]);
   const set = (key: string, value: unknown) => setData((old) => ({ ...old, [key]: value }));
   const save = async () => {
     setSaving(true);
@@ -189,7 +195,7 @@ export function RecordEditor({
                 onChange={(v) => set('ownerId', v)}
                 disabled={readonly}
               />
-              <Fields kind={kind} data={data} onChange={set} sources={options} readonly={readonly} />
+              <Fields kind={kind} data={data} onChange={set} sources={options} readonly={readonly} smsi={smsi} />
               {['control', 'evidence', 'measure'].includes(kind) && (
                 <Select
                   label={

@@ -9,6 +9,9 @@ import {
   RiskData,
   MappingData,
   PILOTAGE_SCHEMAS,
+  GRC_LABELS,
+  cibleAutorisee,
+  referencesTypees,
   type GrcKind,
   type GrcObject,
   type Action,
@@ -392,6 +395,7 @@ export class Grc {
     if (kind === 'risk') {
       const d = RiskData.parse(data);
       await this.checkOwner(smsi, d.ownerId, c);
+      await this.checkTypedRefs(smsi, kind, d, user, c);
       const method = await this.risks.method(smsi, d.methodId, d.methodVersion, user, c);
       this.risks.validateStages(method.definition, d.stages);
       if (d.reviewAt && !validDate(d.reviewAt)) throw new HttpError(422, 'Date de réévaluation invalide.');
@@ -421,6 +425,7 @@ export class Grc {
       throw new HttpError(409, 'Les exigences se publient avec leur référentiel pour conserver la version exacte.');
     if (kind in PILOTAGE_SCHEMAS) {
       data = PILOTAGE_SCHEMAS[kind as keyof typeof PILOTAGE_SCHEMAS].parse(data);
+      await this.checkTypedRefs(smsi, kind, data, user, c);
       if (kind === 'nonconformity' && previous?.data.status === 'closed')
         throw new HttpError(409, 'Conservez la clôture : créez un nouveau constat pour une récidive.');
       if (kind === 'control') {
@@ -599,6 +604,18 @@ export class Grc {
         ts: new Date().toISOString(),
       }),
     ]);
+  }
+  /** Références typées des risques (lot U3, ADR 0027) : type de la cible, périmètre et droit de lecture vérifiés ;
+      les références historiques n'existent que dans le périmètre commun. */
+  async checkTypedRefs(smsi: string, kind: GrcKind, data: Record<string, unknown>, user: SessionUser, c?: Client) {
+    for (const { champ, ref, cibles } of referencesTypees(kind, data)) {
+      if (!GrcRef.safeParse(ref).success) throw new HttpError(422, `Référence invalide (${champ}).`);
+      if (ref.startsWith('legacy:') && smsi !== DEFAULT_SMSI)
+        throw new HttpError(422, 'Les fiches historiques ne se relient que dans le périmètre commun.');
+      const r = await this.resolve(smsi, ref, user, c);
+      if (!cibleAutorisee(ref, ref.startsWith('object:') ? (r.kind as GrcKind) : null, cibles))
+        throw new HttpError(422, `Cible non autorisée (${champ}) : ${GRC_LABELS[r.kind as GrcKind] ?? r.kind}.`);
+    }
   }
   async resolve(
     smsi: string,

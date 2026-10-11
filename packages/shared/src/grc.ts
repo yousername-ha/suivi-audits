@@ -33,6 +33,9 @@ export const GRC_KINDS = [
   'bia',
   'continuity_plan',
   'continuity_exercise',
+  'risk_study',
+  'sr_ov',
+  'ecosystem_party',
 ] as const;
 export type GrcKind = (typeof GRC_KINDS)[number];
 export const GRC_MODULES: Record<GrcKind, Module> = {
@@ -68,6 +71,9 @@ export const GRC_MODULES: Record<GrcKind, Module> = {
   bia: 'pilotage',
   continuity_plan: 'pilotage',
   continuity_exercise: 'pilotage',
+  risk_study: 'pilotage',
+  sr_ov: 'pilotage',
+  ecosystem_party: 'pilotage',
 };
 export const GRC_LABELS: Record<GrcKind, string> = {
   framework: 'Référentiel',
@@ -102,6 +108,9 @@ export const GRC_LABELS: Record<GrcKind, string> = {
   bia: 'Analyse d’impact sur l’activité',
   continuity_plan: 'Plan de continuité ou de reprise',
   continuity_exercise: 'Exercice et retour d’expérience',
+  risk_study: 'Étude EBIOS RM',
+  sr_ov: 'Couple source de risque / objectif visé',
+  ecosystem_party: 'Partie prenante de l’écosystème',
 };
 export const GrcKey = z
   .string()
@@ -304,6 +313,13 @@ export const RiskData = z
       .string()
       .regex(/^\d{4}-\d{2}-\d{2}$/)
       .nullable(),
+    // Processus ISO/IEC 27005 et filiation EBIOS RM (lot U3) : champs facultatifs, absents des fiches antérieures.
+    studyRef: GrcRef.nullable().optional(),
+    scenarioRef: GrcRef.nullable().optional(),
+    assetRefs: z.array(GrcRef).max(100).optional(),
+    threat: z.string().max(10000).optional(),
+    vulnerability: z.string().max(10000).optional(),
+    consequences: z.string().max(10000).optional(),
     stages: z.record(
       GrcKey,
       z
@@ -344,6 +360,25 @@ export const FrameworkImport = z
   .object({ definition: FrameworkDefinition, mappings: z.array(MappingData).max(1000).default([]) })
   .strict();
 
+/** Champs de liaison typés des risques (lot U3) : leurs références sont résolues et contrôlées comme « refs ». */
+export const CHAMPS_REF_RISQUES = [
+  'studyRef',
+  'scopeRefs',
+  'processRefs',
+  'businessAssetRefs',
+  'businessAssetRef',
+  'sourceRef',
+  'fearedEventRefs',
+  'partyRefs',
+  'srOvRef',
+  'strategicScenarioRef',
+  'supportAssetRefs',
+  'riskRefs',
+  'measureRefs',
+  'scenarioRef',
+  'assetRefs',
+];
+
 export function grcReferences(data: Record<string, unknown>): string[] {
   const pilotage = data.pilotage && typeof data.pilotage === 'object' ? (data.pilotage as Record<string, unknown>) : {};
   const historic =
@@ -358,9 +393,22 @@ export function grcReferences(data: Record<string, unknown>): string[] {
     data.stages && typeof data.stages === 'object'
       ? Object.values(data.stages as Record<string, { values?: Record<string, unknown> }>)
       : [];
+  // Champs de liaison typés des risques (lot U3, RISK_REF_KINDS) et socle d'une étude EBIOS RM.
+  const typees = Object.entries(data).flatMap(([key, v]) =>
+    CHAMPS_REF_RISQUES.includes(key) ? (typeof v === 'string' ? [v] : Array.isArray(v) ? v : []) : [],
+  );
+  const socle = Array.isArray(data.baseline)
+    ? data.baseline.flatMap((b) =>
+        b && typeof b === 'object' && Array.isArray((b as Record<string, unknown>).requirementRefs)
+          ? ((b as Record<string, unknown>).requirementRefs as unknown[])
+          : [],
+      )
+    : [];
   return [
     ...(Array.isArray(data.refs) ? data.refs : []),
     ...(Array.isArray(data.documentRefs) ? data.documentRefs : []),
+    ...typees,
+    ...socle,
     ...(Array.isArray(pilotage.refs) ? pilotage.refs : []),
     ...(Array.isArray(pilotage.documentRefs) ? pilotage.documentRefs : []),
     ...historic,

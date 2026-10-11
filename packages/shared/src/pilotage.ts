@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { GrcRef, validDate, type GrcKind } from './grc.js';
+import { ECHELLE_GRAVITE, ECHELLE_VRAISEMBLANCE, RISK_REF_KINDS, RISK_SCHEMAS, type CibleRef } from './risques.js';
 
 const text = z.string().max(10000);
 const date = z
@@ -142,6 +143,7 @@ export const PILOTAGE_SCHEMAS = {
   continuity_plan: ContinuityData,
   continuity_exercise: ExerciseData,
   journey: JourneyData,
+  ...RISK_SCHEMAS,
 };
 export type PilotageKind = keyof typeof PILOTAGE_SCHEMAS;
 export const PilotageRecord = z
@@ -154,6 +156,7 @@ export const PilotageRecord = z
       'step_validation',
       'approval',
       'action_create',
+      'risk_acceptance',
     ]),
     requestId: z.uuid(),
     note: z.string().trim().min(10).max(10000),
@@ -163,6 +166,11 @@ export const PilotageRecord = z
     step: z.string().max(64).default(''),
     createFinding: z.boolean().default(false),
     createAction: z.boolean().default(false),
+    /** Échéance d'une acceptation de risque (opération risk_acceptance). */
+    until: z
+      .string()
+      .refine((s) => !s || validDate(s), 'Date invalide.')
+      .default(''),
     confirm: z.literal('ENREGISTRER'),
   })
   .strict();
@@ -295,9 +303,14 @@ export const JOURNEY_STEPS = [
 export interface PilotageField {
   key: string;
   label: string;
-  type?: 'text' | 'date' | 'number' | 'select' | 'boolean' | 'refs';
+  /** ref : une référence typée ; niveau : échelle à quatre niveaux (nombre de 1 à 4) ; multi : choix multiples. */
+  type?: 'text' | 'date' | 'number' | 'select' | 'boolean' | 'refs' | 'ref' | 'niveau' | 'multi';
   options?: { value: string; label: string }[];
   hint?: string;
+  /** Cibles autorisées d'une référence typée (vérifiées aussi par le serveur). */
+  cibles?: CibleRef[];
+  /** Libellés des quatre niveaux d'une échelle. */
+  echelle?: readonly string[];
 }
 const field = (
   key: string,
@@ -316,32 +329,118 @@ const draftReview = status([
   ['draft', 'Brouillon'],
   ['review', 'À valider'],
 ]);
+/** Champ de liaison typé (lot U3) : cibles tirées de RISK_REF_KINDS. */
+const lien = (kind: GrcKind, key: string, label: string, hint?: string): PilotageField => ({
+  key,
+  label,
+  type: key.endsWith('Refs') ? 'refs' : 'ref',
+  cibles: RISK_REF_KINDS[kind]?.[key] ?? [],
+  hint,
+});
+const niveauChamp = (key: string, label: string, echelle: readonly string[], hint?: string): PilotageField => ({
+  key,
+  label,
+  type: 'niveau',
+  echelle,
+  hint,
+});
+const ECHELLE_CRITERE = ['1 — faible', '2 — moyen', '3 — fort', '4 — très fort'];
+const etude = (kind: GrcKind) => lien(kind, 'studyRef', 'Étude EBIOS RM');
 export const PILOTAGE_FIELDS: Partial<Record<GrcKind, PilotageField[]>> = {
   treatment: [
+    etude('treatment'),
     field('strategy', 'Stratégie', 'select', [
       { value: 'reduce', label: 'Réduire' },
       { value: 'accept', label: 'Accepter' },
       { value: 'avoid', label: 'Éviter' },
       { value: 'transfer', label: 'Transférer' },
     ]),
+    lien('treatment', 'riskRefs', 'Risques traités'),
+    lien('treatment', 'measureRefs', 'Mesures de sécurité (mesures, DdA)'),
     field('expectedEffect', 'Effet attendu'),
     field('verification', 'Comment vérifier le traitement'),
     field('reviewAt', 'Prochaine revue', 'date'),
   ],
+  risk_study: [
+    field('objective', 'Objet de l’étude'),
+    field('scope', 'Périmètre étudié'),
+    lien('risk_study', 'scopeRefs', 'Processus, périmètre ou valeurs métier étudiés'),
+    field('participants', 'Participants'),
+    field('startAt', 'Début', 'date'),
+    field('endAt', 'Fin prévue', 'date'),
+  ],
   risk_source: [
+    etude('risk_source'),
+    field('category', 'Catégorie (étatique, crime organisé, terroriste, activiste, interne…)'),
     field('motive', 'Motivations'),
     field('resources', 'Ressources et capacités'),
-    field('targetObjective', 'Objectif visé'),
+    field('targetObjective', 'Objectifs visés (description libre)'),
+  ],
+  sr_ov: [
+    etude('sr_ov'),
+    lien('sr_ov', 'sourceRef', 'Source de risque'),
+    field('objective', 'Objectif visé'),
+    niveauChamp('motivation', 'Motivation', ECHELLE_CRITERE),
+    niveauChamp('resources', 'Ressources', ECHELLE_CRITERE),
+    niveauChamp('activity', 'Activité', ECHELLE_CRITERE),
+    field('retained', 'Couple retenu pour la suite de l’étude', 'boolean'),
+    field('justification', 'Justification du choix'),
+  ],
+  ecosystem_party: [
+    etude('ecosystem_party'),
+    field('category', 'Catégorie (client, partenaire, prestataire…)'),
+    niveauChamp('dependency', 'Dépendance', ECHELLE_CRITERE),
+    niveauChamp('penetration', 'Pénétration', ECHELLE_CRITERE),
+    niveauChamp('maturity', 'Maturité cyber', ECHELLE_CRITERE),
+    niveauChamp('trust', 'Confiance', ECHELLE_CRITERE),
+    field('measures', 'Mesures de sécurité sur l’écosystème'),
   ],
   feared_event: [
-    field('consequences', 'Conséquences'),
-    field('severity', 'Gravité'),
-    field('businessValue', 'Valeur métier concernée'),
+    etude('feared_event'),
+    lien('feared_event', 'businessAssetRef', 'Valeur métier'),
+    field('impacts', 'Critères atteints', 'multi', [
+      { value: 'D', label: 'Disponibilité' },
+      { value: 'I', label: 'Intégrité' },
+      { value: 'C', label: 'Confidentialité' },
+      { value: 'P', label: 'Traçabilité (preuve)' },
+      { value: 'autre', label: 'Autre' },
+    ]),
+    field('consequences', 'Conséquences (impacts sur l’organisation)'),
+    niveauChamp('gravity', 'Gravité', ECHELLE_GRAVITE),
   ],
-  business_asset: [field('mission', 'Mission'), field('entity', 'Entité'), field('scope', 'Périmètre')],
-  support_asset: [field('assetType', 'Type de bien support'), field('location', 'Localisation')],
-  strategic_scenario: [field('attackPath', 'Chemin d’attaque'), field('ecosystem', 'Écosystème concerné')],
-  operational_scenario: [field('attackSequence', 'Séquence d’attaque'), field('likelihood', 'Vraisemblance')],
+  business_asset: [
+    etude('business_asset'),
+    field('nature', 'Nature', 'select', [
+      { value: '', label: 'Non précisée' },
+      { value: 'process', label: 'Processus (activité)' },
+      { value: 'information', label: 'Information' },
+    ]),
+    field('mission', 'Mission'),
+    lien('business_asset', 'processRefs', 'Processus concernés'),
+    field('entity', 'Entité'),
+    field('scope', 'Périmètre'),
+  ],
+  support_asset: [
+    etude('support_asset'),
+    field('assetType', 'Type de bien support (système, réseau, personne, local…)'),
+    lien('support_asset', 'businessAssetRefs', 'Valeurs métier soutenues'),
+    field('location', 'Localisation'),
+  ],
+  strategic_scenario: [
+    etude('strategic_scenario'),
+    lien('strategic_scenario', 'srOvRef', 'Couple source de risque / objectif visé'),
+    lien('strategic_scenario', 'fearedEventRefs', 'Événements redoutés'),
+    lien('strategic_scenario', 'partyRefs', 'Parties prenantes du chemin d’attaque'),
+    field('attackPath', 'Chemin d’attaque'),
+    niveauChamp('gravity', 'Gravité', ECHELLE_GRAVITE, 'Proposée : la plus forte des événements redoutés liés.'),
+  ],
+  operational_scenario: [
+    etude('operational_scenario'),
+    lien('operational_scenario', 'strategicScenarioRef', 'Scénario stratégique'),
+    lien('operational_scenario', 'supportAssetRefs', 'Biens supports visés'),
+    field('attackSequence', 'Mode opératoire (séquence d’attaque)'),
+    niveauChamp('likelihood', 'Vraisemblance', ECHELLE_VRAISEMBLANCE),
+  ],
   context: [
     field('organisation', 'Organisation'),
     field('scope', 'Activités, entités et services concernés'),

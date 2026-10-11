@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { GRC_KINDS, GrcObjectBody, GrcRef, SmsiCreate, SmsiMember, LinkBody, methodTemplate } from '@suivi/shared';
 import type { Session } from '../auth.js';
 import { dashboard } from '../grc/dashboard.js';
+import { etudeEbios, registreRisques } from '../grc/registre-risques.js';
 import { report } from '../grc/report.js';
 import { sources } from '../grc/sources.js';
 import { route } from '../http/route.js';
@@ -143,8 +144,17 @@ export const grcRoutes = [
     url: '/api/grc/:smsi/sources',
     summary: 'Sélectionner un objet ou une version de preuve existants',
     params: scope,
-    query: z.object({ search: z.string().max(200).default('') }),
-    handler: async ({ svc, s, params, query }) => sources(svc.grc, params.smsi, (s as Session).user, query.search),
+    query: z.object({
+      search: z.string().max(200).default(''),
+      /** Cibles d'un champ typé (« object:<type> » ou « legacy:<clé> », séparées par des virgules). */
+      cibles: z
+        .string()
+        .max(500)
+        .regex(/^((object|legacy):[a-z_]{2,40})(,(object|legacy):[a-z_]{2,40})*$/)
+        .optional(),
+    }),
+    handler: async ({ svc, s, params, query }) =>
+      sources(svc.grc, params.smsi, (s as Session).user, query.search, query.cibles?.split(',')),
   }),
   route({
     ...base,
@@ -580,6 +590,35 @@ export const grcRoutes = [
         (s as Session).user,
         ip,
       ),
+  }),
+  route({
+    tags: ['SMSI GRC'],
+    access: 'pilotage:lire',
+    method: 'GET',
+    url: '/api/grc/:smsi/risks/register',
+    summary: 'Registre des risques : niveaux, option de traitement, acceptation, revue (lot U3)',
+    params: scope,
+    query: z
+      .object({
+        demarche: z.enum(['ebios_rm', 'iso27005', 'mehari', 'custom']).optional(),
+        strategie: z.enum(['reduce', 'accept', 'transfer', 'avoid', 'treated']).optional(),
+        acceptation: z.enum(['sans_objet', 'a_decider', 'acceptee', 'refusee', 'echue']).optional(),
+        enRetard: z.enum(['1']).optional(),
+        etude: z.uuid().optional(),
+        recherche: z.string().max(200).optional(),
+      })
+      .strict(),
+    handler: async ({ svc, s, params, query }) =>
+      registreRisques(svc.grc, params.smsi, (s as Session).user, { ...query, enRetard: query.enRetard === '1' }),
+  }),
+  route({
+    tags: ['SMSI GRC'],
+    access: 'pilotage:lire',
+    method: 'GET',
+    url: '/api/grc/:smsi/risk-studies/:id',
+    summary: 'Étude EBIOS RM par atelier : objets rattachés, calculs, validations (lot U3)',
+    params: object,
+    handler: async ({ svc, s, params }) => etudeEbios(svc.grc, params.smsi, params.id, (s as Session).user),
   }),
   route({
     ...base,

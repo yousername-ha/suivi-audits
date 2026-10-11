@@ -37,6 +37,7 @@ export const PILOTAGE_NAV = [
     label: 'Risques',
     items: [
       { id: 'risques', label: 'Registre des risques', module: 'pilotage' },
+      { id: 'etudes', label: 'Études EBIOS RM', module: 'pilotage' },
       { id: 'carte', label: 'Cartographie des risques', module: 'cartographie' },
       { id: 'traitements', label: 'Traitements', module: 'pilotage' },
       { id: 'scenarios', label: 'Scénarios et actifs', module: 'pilotage' },
