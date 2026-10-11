@@ -15,6 +15,11 @@ Source de référence des chiffres/IDs/états :
 [contrat généré](03_ARCHITECTURE/API_CONTRAT.json). Contrôles finaux :
 [reçu documentaire](05_RECETTE/preuves/2026-10-11-controles-documentaires.json).
 
+## Unification SMSI/GRC (branche `claude-suivi-smsi`)
+
+- [L1 — audit et correspondance ancien / nouveau](unification/L1-AUDIT-ET-CORRESPONDANCE.md)
+- [Plan d'évolution](unification/PLAN-EVOLUTION.md)
+
 ## 01_REPRISE_IA
 
 - [Contexte projet](01_REPRISE_IA/CONTEXTE_PROJET.md)
