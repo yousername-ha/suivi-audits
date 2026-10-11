@@ -1,0 +1,3931 @@
+{
+  "_commentaire": "Jeu FICTIF des tests du module Audit (AUD-05, AUD-09, AUD-10) : référentiels du seed vide d'app/public/index.html ; écarts, couverture et plan d'audit inventés. Aucune donnée réelle.",
+  "years": [
+    2025,
+    2026,
+    2027
+  ],
+  "yearLabels": {
+    "2025": "Certification initiale",
+    "2026": "Surveillance 1",
+    "2027": "Surveillance 2"
+  },
+  "nextYear": 2026,
+  "nextDate": "2026-10-28",
+  "internalDate": "2026-06-15",
+  "closeDeadline": "2026-12-08",
+  "groups": [
+    {
+      "id": "ISO-4",
+      "ref": "ISO",
+      "num": "4",
+      "title": "Contexte de l'organisation"
+    },
+    {
+      "id": "ISO-5",
+      "ref": "ISO",
+      "num": "5",
+      "title": "Leadership"
+    },
+    {
+      "id": "ISO-6",
+      "ref": "ISO",
+      "num": "6",
+      "title": "Planification"
+    },
+    {
+      "id": "ISO-7",
+      "ref": "ISO",
+      "num": "7",
+      "title": "Supports"
+    },
+    {
+      "id": "ISO-8",
+      "ref": "ISO",
+      "num": "8",
+      "title": "Fonctionnement"
+    },
+    {
+      "id": "ISO-9",
+      "ref": "ISO",
+      "num": "9",
+      "title": "Évaluation de la performance"
+    },
+    {
+      "id": "ISO-10",
+      "ref": "ISO",
+      "num": "10",
+      "title": "Amélioration"
+    },
+    {
+      "id": "A-5",
+      "ref": "A",
+      "num": "5",
+      "title": "Mesures de sécurité organisationnelles"
+    },
+    {
+      "id": "A-6",
+      "ref": "A",
+      "num": "6",
+      "title": "Mesures de sécurité applicables aux personnes"
+    },
+    {
+      "id": "A-7",
+      "ref": "A",
+      "num": "7",
+      "title": "Mesures de sécurité physique"
+    },
+    {
+      "id": "A-8",
+      "ref": "A",
+      "num": "8",
+      "title": "Mesures de sécurité technologiques"
+    },
+    {
+      "id": "HDS",
+      "ref": "HDS",
+      "num": "HDS",
+      "title": "Référentiel HDS v2"
+    }
+  ],
+  "items": [
+    {
+      "id": "ISO-4.1",
+      "ref": "ISO",
+      "num": "4.1",
+      "title": "Compréhension de l'organisation et de son contexte",
+      "group": "ISO-4",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 1",
+      "notes": ""
+    },
+    {
+      "id": "ISO-4.2",
+      "ref": "ISO",
+      "num": "4.2",
+      "title": "Compréhension des besoins et attentes des parties intéressées",
+      "group": "ISO-4",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 1",
+      "notes": ""
+    },
+    {
+      "id": "ISO-4.3",
+      "ref": "ISO",
+      "num": "4.3",
+      "title": "Détermination du domaine d'application du SMSI",
+      "group": "ISO-4",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 1",
+      "notes": ""
+    },
+    {
+      "id": "ISO-4.4",
+      "ref": "ISO",
+      "num": "4.4",
+      "title": "Système de management de la sécurité de l'information",
+      "group": "ISO-4",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 1",
+      "notes": ""
+    },
+    {
+      "id": "ISO-5.1",
+      "ref": "ISO",
+      "num": "5.1",
+      "title": "Leadership et engagement",
+      "group": "ISO-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 1",
+      "notes": ""
+    },
+    {
+      "id": "ISO-5.2",
+      "ref": "ISO",
+      "num": "5.2",
+      "title": "Politique",
+      "group": "ISO-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 1",
+      "notes": ""
+    },
+    {
+      "id": "ISO-5.3",
+      "ref": "ISO",
+      "num": "5.3",
+      "title": "Rôles, responsabilités et autorités au sein de l'organisation",
+      "group": "ISO-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 1",
+      "notes": ""
+    },
+    {
+      "id": "ISO-6.1",
+      "ref": "ISO",
+      "num": "6.1",
+      "title": "Actions à mettre en œuvre face aux risques et opportunités",
+      "group": "ISO-6",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 1",
+      "notes": ""
+    },
+    {
+      "id": "ISO-6.1.2",
+      "ref": "ISO",
+      "num": "6.1.2",
+      "title": "Appréciation des risques de sécurité de l'information",
+      "group": "ISO-6",
+      "depth": 2,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "ISO-6.1.3",
+      "ref": "ISO",
+      "num": "6.1.3",
+      "title": "Traitement des risques de sécurité de l'information",
+      "group": "ISO-6",
+      "depth": 2,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "ISO-6.2",
+      "ref": "ISO",
+      "num": "6.2",
+      "title": "Objectifs de sécurité de l'information et plans pour les atteindre",
+      "group": "ISO-6",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 1",
+      "notes": ""
+    },
+    {
+      "id": "ISO-6.3",
+      "ref": "ISO",
+      "num": "6.3",
+      "title": "Planification des modifications",
+      "group": "ISO-6",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 1",
+      "notes": ""
+    },
+    {
+      "id": "ISO-7.1",
+      "ref": "ISO",
+      "num": "7.1",
+      "title": "Ressources",
+      "group": "ISO-7",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 1",
+      "notes": ""
+    },
+    {
+      "id": "ISO-7.2",
+      "ref": "ISO",
+      "num": "7.2",
+      "title": "Compétences",
+      "group": "ISO-7",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 1",
+      "notes": ""
+    },
+    {
+      "id": "ISO-7.3",
+      "ref": "ISO",
+      "num": "7.3",
+      "title": "Sensibilisation",
+      "group": "ISO-7",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 1",
+      "notes": ""
+    },
+    {
+      "id": "ISO-7.4",
+      "ref": "ISO",
+      "num": "7.4",
+      "title": "Communication",
+      "group": "ISO-7",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 1",
+      "notes": ""
+    },
+    {
+      "id": "ISO-7.5",
+      "ref": "ISO",
+      "num": "7.5",
+      "title": "Informations documentées",
+      "group": "ISO-7",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 1",
+      "notes": ""
+    },
+    {
+      "id": "ISO-7.5.1",
+      "ref": "ISO",
+      "num": "7.5.1",
+      "title": "Généralités",
+      "group": "ISO-7",
+      "depth": 2,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "ISO-7.5.2",
+      "ref": "ISO",
+      "num": "7.5.2",
+      "title": "Création et mise à jour",
+      "group": "ISO-7",
+      "depth": 2,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "ISO-7.5.3",
+      "ref": "ISO",
+      "num": "7.5.3",
+      "title": "Contrôle des informations documentées",
+      "group": "ISO-7",
+      "depth": 2,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "ISO-8.1",
+      "ref": "ISO",
+      "num": "8.1",
+      "title": "Planification et contrôle opérationnels",
+      "group": "ISO-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 1",
+      "notes": ""
+    },
+    {
+      "id": "ISO-8.2",
+      "ref": "ISO",
+      "num": "8.2",
+      "title": "Appréciation des risques de sécurité de l'information",
+      "group": "ISO-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 1",
+      "notes": ""
+    },
+    {
+      "id": "ISO-8.3",
+      "ref": "ISO",
+      "num": "8.3",
+      "title": "Traitement des risques de sécurité de l'information",
+      "group": "ISO-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 1",
+      "notes": ""
+    },
+    {
+      "id": "ISO-9.1",
+      "ref": "ISO",
+      "num": "9.1",
+      "title": "Surveillance, mesurages, analyse et évaluation",
+      "group": "ISO-9",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 1",
+      "notes": ""
+    },
+    {
+      "id": "ISO-9.2",
+      "ref": "ISO",
+      "num": "9.2",
+      "title": "Audit interne",
+      "group": "ISO-9",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 1",
+      "notes": ""
+    },
+    {
+      "id": "ISO-9.2.1",
+      "ref": "ISO",
+      "num": "9.2.1",
+      "title": "Généralités",
+      "group": "ISO-9",
+      "depth": 2,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "ISO-9.2.2",
+      "ref": "ISO",
+      "num": "9.2.2",
+      "title": "Programme d'audit interne",
+      "group": "ISO-9",
+      "depth": 2,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "ISO-9.3",
+      "ref": "ISO",
+      "num": "9.3",
+      "title": "Revue de direction",
+      "group": "ISO-9",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 1",
+      "notes": ""
+    },
+    {
+      "id": "ISO-9.3.1",
+      "ref": "ISO",
+      "num": "9.3.1",
+      "title": "Généralités",
+      "group": "ISO-9",
+      "depth": 2,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "ISO-9.3.2",
+      "ref": "ISO",
+      "num": "9.3.2",
+      "title": "Éléments d'entrée de la revue de direction",
+      "group": "ISO-9",
+      "depth": 2,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "ISO-9.3.3",
+      "ref": "ISO",
+      "num": "9.3.3",
+      "title": "Résultats des revues de direction",
+      "group": "ISO-9",
+      "depth": 2,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "ISO-10.1",
+      "ref": "ISO",
+      "num": "10.1",
+      "title": "Amélioration continue",
+      "group": "ISO-10",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 2",
+      "notes": ""
+    },
+    {
+      "id": "ISO-10.2",
+      "ref": "ISO",
+      "num": "10.2",
+      "title": "Non-conformité et action corrective",
+      "group": "ISO-10",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 2",
+      "notes": ""
+    },
+    {
+      "id": "A-5.1",
+      "ref": "A",
+      "num": "5.1",
+      "title": "Politiques de sécurité de l'information",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "X",
+        "2027": "P"
+      },
+      "interne": {
+        "2025": "P",
+        "2026": "X",
+        "2027": ""
+      },
+      "prep": "pret",
+      "owner": "Pilote fictif 1",
+      "notes": ""
+    },
+    {
+      "id": "A-5.2",
+      "ref": "A",
+      "num": "5.2",
+      "title": "Fonctions et responsabilités liées à la sécurité de l'information",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 1",
+      "notes": ""
+    },
+    {
+      "id": "A-5.3",
+      "ref": "A",
+      "num": "5.3",
+      "title": "Séparation des tâches",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-5.4",
+      "ref": "A",
+      "num": "5.4",
+      "title": "Responsabilités de la direction",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-5.5",
+      "ref": "A",
+      "num": "5.5",
+      "title": "Contact avec les autorités",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-5.6",
+      "ref": "A",
+      "num": "5.6",
+      "title": "Contacts avec des groupes d'intérêt spécifiques",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-5.7",
+      "ref": "A",
+      "num": "5.7",
+      "title": "Renseignements sur les menaces",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "pret",
+      "owner": "Pilote fictif 1",
+      "notes": ""
+    },
+    {
+      "id": "A-5.8",
+      "ref": "A",
+      "num": "5.8",
+      "title": "Sécurité de l'information dans la gestion de projet",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "P",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 1",
+      "notes": ""
+    },
+    {
+      "id": "A-5.9",
+      "ref": "A",
+      "num": "5.9",
+      "title": "Inventaire des informations et autres actifs associés",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-5.10",
+      "ref": "A",
+      "num": "5.10",
+      "title": "Utilisation correcte des informations et autres actifs associés",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "",
+        "2026": "X",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-5.11",
+      "ref": "A",
+      "num": "5.11",
+      "title": "Restitution des actifs",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-5.12",
+      "ref": "A",
+      "num": "5.12",
+      "title": "Classification des informations",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "X",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-5.13",
+      "ref": "A",
+      "num": "5.13",
+      "title": "Marquage des informations",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "prep": "pret",
+      "owner": "Pilote fictif 2",
+      "notes": ""
+    },
+    {
+      "id": "A-5.14",
+      "ref": "A",
+      "num": "5.14",
+      "title": "Transfert des informations",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": "P"
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 2",
+      "notes": ""
+    },
+    {
+      "id": "A-5.15",
+      "ref": "A",
+      "num": "5.15",
+      "title": "Contrôle d'accès",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "P",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-5.16",
+      "ref": "A",
+      "num": "5.16",
+      "title": "Gestion des identités",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-5.17",
+      "ref": "A",
+      "num": "5.17",
+      "title": "Informations d'authentification",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-5.18",
+      "ref": "A",
+      "num": "5.18",
+      "title": "Droits d'accès",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-5.19",
+      "ref": "A",
+      "num": "5.19",
+      "title": "Sécurité de l'information dans les relations avec les fournisseurs",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "X",
+        "2027": ""
+      },
+      "prep": "pret",
+      "owner": "Pilote fictif 2",
+      "notes": ""
+    },
+    {
+      "id": "A-5.20",
+      "ref": "A",
+      "num": "5.20",
+      "title": "La sécurité de l'information dans les accords conclus avec les fournisseurs",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 2",
+      "notes": ""
+    },
+    {
+      "id": "A-5.21",
+      "ref": "A",
+      "num": "5.21",
+      "title": "Gestion de la sécurité de l'information dans la chaîne d'approvisionnement TIC",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-5.22",
+      "ref": "A",
+      "num": "5.22",
+      "title": "Surveillance, révision et gestion des changements des services fournisseurs",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-5.23",
+      "ref": "A",
+      "num": "5.23",
+      "title": "Sécurité de l'information dans l'utilisation de services en nuage",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "X",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-5.24",
+      "ref": "A",
+      "num": "5.24",
+      "title": "Planification et préparation de la gestion des incidents de sécurité de l'information",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-5.25",
+      "ref": "A",
+      "num": "5.25",
+      "title": "Évaluation des événements de sécurité de l'information et prise de décision",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "prep": "pret",
+      "owner": "Pilote fictif 2",
+      "notes": ""
+    },
+    {
+      "id": "A-5.26",
+      "ref": "A",
+      "num": "5.26",
+      "title": "Réponse aux incidents de sécurité de l'information",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 2",
+      "notes": ""
+    },
+    {
+      "id": "A-5.27",
+      "ref": "A",
+      "num": "5.27",
+      "title": "Tirer des enseignements des incidents de sécurité de l'information",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": "P"
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-5.28",
+      "ref": "A",
+      "num": "5.28",
+      "title": "Collecte des preuves",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "",
+        "2026": "X",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-5.29",
+      "ref": "A",
+      "num": "5.29",
+      "title": "Sécurité de l'information pendant une perturbation",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "P",
+        "2026": "P",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-5.30",
+      "ref": "A",
+      "num": "5.30",
+      "title": "Préparation des TIC pour la continuité d'activité",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-5.31",
+      "ref": "A",
+      "num": "5.31",
+      "title": "Exigences légales, statutaires, réglementaires et contractuelles",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "pret",
+      "owner": "Pilote fictif 2",
+      "notes": ""
+    },
+    {
+      "id": "A-5.32",
+      "ref": "A",
+      "num": "5.32",
+      "title": "Droits de propriété intellectuelle",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 2",
+      "notes": ""
+    },
+    {
+      "id": "A-5.33",
+      "ref": "A",
+      "num": "5.33",
+      "title": "Protection des enregistrements",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-5.34",
+      "ref": "A",
+      "num": "5.34",
+      "title": "Protection de la vie privée et des DCP",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "X",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-5.35",
+      "ref": "A",
+      "num": "5.35",
+      "title": "Révision indépendante de la sécurité de l'information",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-5.36",
+      "ref": "A",
+      "num": "5.36",
+      "title": "Conformité aux politiques, règles et normes de sécurité de l'information",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "P",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-5.37",
+      "ref": "A",
+      "num": "5.37",
+      "title": "Procédures d'exploitation documentées",
+      "group": "A-5",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "X",
+        "2027": ""
+      },
+      "prep": "pret",
+      "owner": "Pilote fictif 2",
+      "notes": ""
+    },
+    {
+      "id": "A-6.1",
+      "ref": "A",
+      "num": "6.1",
+      "title": "Sélection des candidats",
+      "group": "A-6",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 1",
+      "notes": ""
+    },
+    {
+      "id": "A-6.2",
+      "ref": "A",
+      "num": "6.2",
+      "title": "Termes et conditions du contrat de travail",
+      "group": "A-6",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-6.3",
+      "ref": "A",
+      "num": "6.3",
+      "title": "Sensibilisation, enseignement et formation en sécurité de l'information",
+      "group": "A-6",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "",
+        "2027": "P"
+      },
+      "interne": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-6.4",
+      "ref": "A",
+      "num": "6.4",
+      "title": "Processus disciplinaire",
+      "group": "A-6",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-6.5",
+      "ref": "A",
+      "num": "6.5",
+      "title": "Responsabilités après la fin ou le changement d’un emploi",
+      "group": "A-6",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-6.6",
+      "ref": "A",
+      "num": "6.6",
+      "title": "Accords de confidentialité ou de non-divulgation",
+      "group": "A-6",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "P",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "pret",
+      "owner": "Pilote fictif 1",
+      "notes": ""
+    },
+    {
+      "id": "A-6.7",
+      "ref": "A",
+      "num": "6.7",
+      "title": "Travail à distance",
+      "group": "A-6",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 1",
+      "notes": ""
+    },
+    {
+      "id": "A-6.8",
+      "ref": "A",
+      "num": "6.8",
+      "title": "Déclaration des événements de sécurité de l'information",
+      "group": "A-6",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "X",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-7.1",
+      "ref": "A",
+      "num": "7.1",
+      "title": "Périmètres de sécurité physique",
+      "group": "A-7",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "",
+        "2026": "X",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-7.2",
+      "ref": "A",
+      "num": "7.2",
+      "title": "Les entrées physiques",
+      "group": "A-7",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-7.3",
+      "ref": "A",
+      "num": "7.3",
+      "title": "Sécurisation des bureaux, des salles et des installations",
+      "group": "A-7",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-7.4",
+      "ref": "A",
+      "num": "7.4",
+      "title": "Surveillance de la sécurité physique",
+      "group": "A-7",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "prep": "pret",
+      "owner": "Pilote fictif 1",
+      "notes": ""
+    },
+    {
+      "id": "A-7.5",
+      "ref": "A",
+      "num": "7.5",
+      "title": "Protection contre les menaces physiques et environnementales",
+      "group": "A-7",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "P",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 1",
+      "notes": ""
+    },
+    {
+      "id": "A-7.6",
+      "ref": "A",
+      "num": "7.6",
+      "title": "Travail dans les zones sécurisées",
+      "group": "A-7",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-7.7",
+      "ref": "A",
+      "num": "7.7",
+      "title": "Bureau vide et écran vide",
+      "group": "A-7",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-7.8",
+      "ref": "A",
+      "num": "7.8",
+      "title": "Emplacement et protection du matériel",
+      "group": "A-7",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": "P"
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-7.9",
+      "ref": "A",
+      "num": "7.9",
+      "title": "Sécurité des actifs hors des locaux",
+      "group": "A-7",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-7.10",
+      "ref": "A",
+      "num": "7.10",
+      "title": "Supports de stockage",
+      "group": "A-7",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "",
+        "2026": "X",
+        "2027": ""
+      },
+      "prep": "pret",
+      "owner": "Pilote fictif 2",
+      "notes": ""
+    },
+    {
+      "id": "A-7.11",
+      "ref": "A",
+      "num": "7.11",
+      "title": "Services supports",
+      "group": "A-7",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "X",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 2",
+      "notes": ""
+    },
+    {
+      "id": "A-7.12",
+      "ref": "A",
+      "num": "7.12",
+      "title": "Sécurité du câblage",
+      "group": "A-7",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "P",
+        "2026": "P",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-7.13",
+      "ref": "A",
+      "num": "7.13",
+      "title": "Maintenance du matériel",
+      "group": "A-7",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-7.14",
+      "ref": "A",
+      "num": "7.14",
+      "title": "Élimination ou recyclage sécurisé(e) du matériel",
+      "group": "A-7",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-8.1",
+      "ref": "A",
+      "num": "8.1",
+      "title": "Terminaux finaux des utilisateurs",
+      "group": "A-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-8.2",
+      "ref": "A",
+      "num": "8.2",
+      "title": "Droits d'accès privilégiés",
+      "group": "A-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "prep": "pret",
+      "owner": "Pilote fictif 1",
+      "notes": ""
+    },
+    {
+      "id": "A-8.3",
+      "ref": "A",
+      "num": "8.3",
+      "title": "Restrictions d'accès aux informations",
+      "group": "A-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 1",
+      "notes": ""
+    },
+    {
+      "id": "A-8.4",
+      "ref": "A",
+      "num": "8.4",
+      "title": "Accès aux codes source",
+      "group": "A-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-8.5",
+      "ref": "A",
+      "num": "8.5",
+      "title": "Authentification sécurisée",
+      "group": "A-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "",
+        "2026": "X",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-8.6",
+      "ref": "A",
+      "num": "8.6",
+      "title": "Dimensionnement",
+      "group": "A-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-8.7",
+      "ref": "A",
+      "num": "8.7",
+      "title": "Protection contre les programmes malveillants (malware)",
+      "group": "A-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "P",
+        "2027": "P"
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-8.8",
+      "ref": "A",
+      "num": "8.8",
+      "title": "Gestion des vulnérabilités techniques",
+      "group": "A-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "X",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "pret",
+      "owner": "Pilote fictif 1",
+      "notes": ""
+    },
+    {
+      "id": "A-8.9",
+      "ref": "A",
+      "num": "8.9",
+      "title": "Gestion des configurations",
+      "group": "A-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 1",
+      "notes": ""
+    },
+    {
+      "id": "A-8.10",
+      "ref": "A",
+      "num": "8.10",
+      "title": "Suppression des informations",
+      "group": "A-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-8.11",
+      "ref": "A",
+      "num": "8.11",
+      "title": "Masquage des données",
+      "group": "A-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-8.12",
+      "ref": "A",
+      "num": "8.12",
+      "title": "Prévention de la fuite de données",
+      "group": "A-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "P",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-8.13",
+      "ref": "A",
+      "num": "8.13",
+      "title": "Sauvegarde des informations",
+      "group": "A-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-8.14",
+      "ref": "A",
+      "num": "8.14",
+      "title": "Redondance des moyens de traitement de l'information",
+      "group": "A-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "X",
+        "2027": ""
+      },
+      "prep": "pret",
+      "owner": "Pilote fictif 2",
+      "notes": ""
+    },
+    {
+      "id": "A-8.15",
+      "ref": "A",
+      "num": "8.15",
+      "title": "Journalisation",
+      "group": "A-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 2",
+      "notes": ""
+    },
+    {
+      "id": "A-8.16",
+      "ref": "A",
+      "num": "8.16",
+      "title": "Activités de surveillance",
+      "group": "A-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-8.17",
+      "ref": "A",
+      "num": "8.17",
+      "title": "Synchronisation des horloges",
+      "group": "A-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-8.18",
+      "ref": "A",
+      "num": "8.18",
+      "title": "Utilisation de programmes utilitaires à privilèges",
+      "group": "A-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-8.19",
+      "ref": "A",
+      "num": "8.19",
+      "title": "Installation de logiciels sur des systèmes opérationnels",
+      "group": "A-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "X",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "P",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-8.20",
+      "ref": "A",
+      "num": "8.20",
+      "title": "Sécurité des réseaux",
+      "group": "A-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "",
+        "2027": "P"
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "pret",
+      "owner": "Pilote fictif 2",
+      "notes": ""
+    },
+    {
+      "id": "A-8.21",
+      "ref": "A",
+      "num": "8.21",
+      "title": "Sécurité des services réseau",
+      "group": "A-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 2",
+      "notes": ""
+    },
+    {
+      "id": "A-8.22",
+      "ref": "A",
+      "num": "8.22",
+      "title": "Cloisonnement des réseaux",
+      "group": "A-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-8.23",
+      "ref": "A",
+      "num": "8.23",
+      "title": "Filtrage web",
+      "group": "A-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "",
+        "2026": "X",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-8.24",
+      "ref": "A",
+      "num": "8.24",
+      "title": "Utilisation de la cryptographie",
+      "group": "A-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-8.25",
+      "ref": "A",
+      "num": "8.25",
+      "title": "Cycle de vie de développement sécurisé",
+      "group": "A-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-8.26",
+      "ref": "A",
+      "num": "8.26",
+      "title": "Exigences de sécurité des applications",
+      "group": "A-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "P",
+        "2026": "P",
+        "2027": ""
+      },
+      "prep": "pret",
+      "owner": "Pilote fictif 2",
+      "notes": ""
+    },
+    {
+      "id": "A-8.27",
+      "ref": "A",
+      "num": "8.27",
+      "title": "Principes d'ingénierie et d'architecture des système sécurisés",
+      "group": "A-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 2",
+      "notes": ""
+    },
+    {
+      "id": "A-8.28",
+      "ref": "A",
+      "num": "8.28",
+      "title": "Codage sécurisé",
+      "group": "A-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-8.29",
+      "ref": "A",
+      "num": "8.29",
+      "title": "Tests de sécurité dans le développement et l'acceptation",
+      "group": "A-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-8.30",
+      "ref": "A",
+      "num": "8.30",
+      "title": "Développement externalisé",
+      "group": "A-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "X",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-8.31",
+      "ref": "A",
+      "num": "8.31",
+      "title": "Séparation des environnements de développement, de test et opérationnels",
+      "group": "A-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "A-8.32",
+      "ref": "A",
+      "num": "8.32",
+      "title": "Gestion des changements",
+      "group": "A-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "X",
+        "2027": ""
+      },
+      "prep": "pret",
+      "owner": "Pilote fictif 2",
+      "notes": ""
+    },
+    {
+      "id": "A-8.33",
+      "ref": "A",
+      "num": "8.33",
+      "title": "Informations de test",
+      "group": "A-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": "P"
+      },
+      "interne": {
+        "2025": "P",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "encours",
+      "owner": "Pilote fictif 2",
+      "notes": ""
+    },
+    {
+      "id": "A-8.34",
+      "ref": "A",
+      "num": "8.34",
+      "title": "Protection des systèmes d'information pendant les tests d'audit",
+      "group": "A-8",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "P",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "HDS-01",
+      "ref": "HDS",
+      "num": "01",
+      "title": "La certification d’un Hébergeur nécessite : - Qu’il ait mis en oeuvre un Système de Management de la Sécuri…",
+      "group": "HDS",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "HDS-02",
+      "ref": "HDS",
+      "num": "02",
+      "title": "Dans la détermination de ses enjeux externes et internes, l’Hébergeur doit prendre en compte le fait que sa…",
+      "group": "HDS",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "HDS-03",
+      "ref": "HDS",
+      "num": "03",
+      "title": "Dans la détermination des exigences des parties intéressées, l’Hébergeur doit prendre en compte le cadre ju…",
+      "group": "HDS",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "HDS-04",
+      "ref": "HDS",
+      "num": "04",
+      "title": "Le domaine d’application du SMSI doit comprendre l’ensemble des traitements de DSCP assurés par l’Hébergeur…",
+      "group": "HDS",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "HDS-05",
+      "ref": "HDS",
+      "num": "05",
+      "title": "Lors de l’appréciation des risques, l’Hébergeur doit a minima envisager les événements suivants : A. Défail…",
+      "group": "HDS",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "HDS-06",
+      "ref": "HDS",
+      "num": "06",
+      "title": "En cas de recours à la sous-traitance, l’Hébergeur doit s’assurer qu’il maîtrise les changements des mesure…",
+      "group": "HDS",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "HDS-07",
+      "ref": "HDS",
+      "num": "07",
+      "title": "Afin de réduire les risques d’usage imprévu du système, l’Hébergeur doit s’assurer que : - Les interfaces p…",
+      "group": "HDS",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "HDS-08",
+      "ref": "HDS",
+      "num": "08",
+      "title": "La déclaration d’applicabilité doit être disponible en langue française pour les auditeurs qui en feront la…",
+      "group": "HDS",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "HDS-09",
+      "ref": "HDS",
+      "num": "09",
+      "title": "Les objectifs de sécurité de l’information établis par l’Hébergeur doivent intégrer la protection des DSCP…",
+      "group": "HDS",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "HDS-10",
+      "ref": "HDS",
+      "num": "10",
+      "title": "Les personnels travaillant pour l’Hébergeur doivent être sensibilisés à la criticité en termes de disponibi…",
+      "group": "HDS",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "HDS-11",
+      "ref": "HDS",
+      "num": "11",
+      "title": "L’Hébergeur doit : - Maintenir une liste des points de contact pour chacun des clients. Ce point de contact…",
+      "group": "HDS",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "HDS-12",
+      "ref": "HDS",
+      "num": "12",
+      "title": "L’Hébergeur doit communiquer à ses clients : - Une copie du certificat de conformité HDS. Cette copie const…",
+      "group": "HDS",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "HDS-13",
+      "ref": "HDS",
+      "num": "13",
+      "title": "L’Hébergeur doit planifier et contrôler la répartition des responsabilités en termes de sécurité de l’infor…",
+      "group": "HDS",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "HDS-14",
+      "ref": "HDS",
+      "num": "14",
+      "title": "En cas de recours à un sous-traitant certifié pour la réalisation de tout ou partie du service d’hébergemen…",
+      "group": "HDS",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "HDS-15",
+      "ref": "HDS",
+      "num": "15",
+      "title": "L’Hébergeur doit permettre au client d’effectuer les vérifications suivantes du niveau de sécurité proposé…",
+      "group": "HDS",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "HDS-16",
+      "ref": "HDS",
+      "num": "16",
+      "title": "Les audits internes effectués par l’Hébergeur doivent comprendre a minima : - Un audit permettant de déterm…",
+      "group": "HDS",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "HDS-17",
+      "ref": "HDS",
+      "num": "17",
+      "title": "Conformément au 1° de l’article R.1111-11 du CSP, le contrat d’hébergement conclu entre l’Hébergeur et son…",
+      "group": "HDS",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "HDS-18",
+      "ref": "HDS",
+      "num": "18",
+      "title": "Conformément au 2° de l’article R.1111-11 du CSP, le contrat d’hébergement conclu entre l’Hébergeur et son…",
+      "group": "HDS",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "HDS-19",
+      "ref": "HDS",
+      "num": "19",
+      "title": "Conformément au 4° de l’article R.1111-11 du CSP, le contrat d’hébergement conclu entre l’Hébergeur et son…",
+      "group": "HDS",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "HDS-20",
+      "ref": "HDS",
+      "num": "20",
+      "title": "Conformément au 5° de l’article R.1111-11 du CSP, le contrat d’hébergement conclu entre l’Hébergeur et son…",
+      "group": "HDS",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "HDS-21",
+      "ref": "HDS",
+      "num": "21",
+      "title": "Conformément au 6° de l’article R.1111-11 du CSP, le contrat d’hébergement conclu entre l’Hébergeur et son…",
+      "group": "HDS",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "HDS-22",
+      "ref": "HDS",
+      "num": "22",
+      "title": "Conformément au 7° de l’article R. 1111-11 du CSP, le contrat d’hébergement conclu entre l’Hébergeur et son…",
+      "group": "HDS",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "HDS-23",
+      "ref": "HDS",
+      "num": "23",
+      "title": "Conformément au 8° de l’article R.1111-11 du CSP, le contrat d’hébergement conclu entre l’Hébergeur et son…",
+      "group": "HDS",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "HDS-24",
+      "ref": "HDS",
+      "num": "24",
+      "title": "Conformément au 9° de l’article R. 1111-11 du CSP, le contrat d’hébergement doit préciser les obligations d…",
+      "group": "HDS",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "HDS-25",
+      "ref": "HDS",
+      "num": "25",
+      "title": "Conformément au 10° de l’article R.1111-11 du CSP, le contrat d’hébergement conclu entre l’Hébergeur et son…",
+      "group": "HDS",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "HDS-26",
+      "ref": "HDS",
+      "num": "26",
+      "title": "Conformément au 11° de l’article R.1111-11 du CSP, le contrat d’hébergement conclu entre l’Hébergeur et son…",
+      "group": "HDS",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "HDS-27",
+      "ref": "HDS",
+      "num": "27",
+      "title": "Conformément aux 12° à 14° de l’article R.1111-11 du CSP, une clause relative à la réversibilité doit en pr…",
+      "group": "HDS",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "HDS-28",
+      "ref": "HDS",
+      "num": "28",
+      "title": "Quelle que soit l’activité d’hébergement de DSCP proposée au Client par l’Hébergeur ou l’un de ses soustrai…",
+      "group": "HDS",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "HDS-29",
+      "ref": "HDS",
+      "num": "29",
+      "title": "Lorsque la prestation proposée par l’Hébergeur ou l’un de ses sous-traitants implique un accès à distance d…",
+      "group": "HDS",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "HDS-30",
+      "ref": "HDS",
+      "num": "30",
+      "title": "Lorsque l’Hébergeur, ou l’un de ses sous-traitants intervenant dans la prestation d’hébergement, est soumis…",
+      "group": "HDS",
+      "depth": 1,
+      "afnor": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "HDS-31",
+      "ref": "HDS",
+      "num": "31",
+      "title": "L’Hébergeur doit rendre publiques et mettre à jour la cartographie des transferts des DSCP vers un pays n'a…",
+      "group": "HDS",
+      "depth": 1,
+      "afnor": {
+        "2025": "",
+        "2026": "",
+        "2027": ""
+      },
+      "interne": {
+        "2025": "X",
+        "2026": "",
+        "2027": ""
+      },
+      "prep": "",
+      "owner": "",
+      "notes": ""
+    }
+  ],
+  "findings": [
+    {
+      "id": "F01",
+      "createdAt": "2026-03-01T09:00:00.000Z",
+      "source": "AFNOR",
+      "year": 2025,
+      "type": "NC maj",
+      "status": "Ouvert",
+      "text": "Constat fictif F01",
+      "desc": "Description fictive de l'écart F01.",
+      "action": "Action corrective fictive F01",
+      "tasks": [
+        {
+          "t": "Rédiger la procédure fictive",
+          "done": false,
+          "createdAt": "2026-03-02T09:00:00.000Z"
+        },
+        {
+          "t": "Valider la procédure fictive",
+          "done": false,
+          "createdAt": "2026-03-02T09:00:00.000Z"
+        }
+      ],
+      "comment": "",
+      "items": [
+        "A-5.15",
+        "ISO-9.2"
+      ],
+      "owner": "Pilote fictif 1",
+      "due": "2026-12-08",
+      "proof": ""
+    },
+    {
+      "id": "F02",
+      "createdAt": "2026-03-01T09:00:00.000Z",
+      "source": "Interne",
+      "year": 2026,
+      "type": "NC maj",
+      "status": "En cours",
+      "text": "Constat fictif F02",
+      "desc": "Description fictive de l'écart F02.",
+      "action": "Action corrective fictive F02",
+      "tasks": [
+        {
+          "t": "Corriger le paramétrage fictif",
+          "done": true,
+          "createdAt": "2026-03-02T09:00:00.000Z"
+        },
+        {
+          "t": "Contrôler le paramétrage fictif",
+          "done": false,
+          "createdAt": "2026-03-02T09:00:00.000Z",
+          "due": "2026-11-15"
+        }
+      ],
+      "comment": "",
+      "items": [
+        "A-8.8"
+      ],
+      "owner": "Pilote fictif 1",
+      "due": "2026-09-30",
+      "proof": ""
+    },
+    {
+      "id": "F03",
+      "createdAt": "2026-03-01T09:00:00.000Z",
+      "source": "AFNOR",
+      "year": 2025,
+      "type": "NC min",
+      "status": "Clos",
+      "text": "Constat fictif F03",
+      "desc": "Description fictive de l'écart F03.",
+      "action": "Action corrective fictive F03",
+      "tasks": [
+        {
+          "t": "Mettre à jour le registre fictif",
+          "done": true,
+          "createdAt": "2026-03-02T09:00:00.000Z"
+        }
+      ],
+      "comment": "",
+      "items": [
+        "A-5.23",
+        "A-5.30"
+      ],
+      "owner": "",
+      "due": "",
+      "proof": ""
+    },
+    {
+      "id": "F04",
+      "createdAt": "2026-03-01T09:00:00.000Z",
+      "source": "Interne",
+      "year": 2026,
+      "type": "NC min",
+      "status": "Ouvert",
+      "text": "Constat fictif F04",
+      "desc": "Description fictive de l'écart F04.",
+      "action": "Action corrective fictive F04",
+      "tasks": [],
+      "comment": "",
+      "items": [
+        "HDS-05"
+      ],
+      "owner": "Pilote fictif 1",
+      "due": "2026-12-08",
+      "proof": ""
+    },
+    {
+      "id": "F05",
+      "createdAt": "2026-03-01T09:00:00.000Z",
+      "source": "AFNOR",
+      "year": 2025,
+      "type": "PS",
+      "status": "Ouvert",
+      "text": "Constat fictif F05",
+      "desc": "Description fictive de l'écart F05.",
+      "action": "Action corrective fictive F05",
+      "tasks": [
+        {
+          "t": "Revoir les habilitations fictives",
+          "done": false,
+          "createdAt": "2026-03-02T09:00:00.000Z"
+        }
+      ],
+      "comment": "",
+      "items": [
+        "A-5.15",
+        "A-5.18"
+      ],
+      "owner": "Pilote fictif 1",
+      "due": "2026-12-08",
+      "proof": ""
+    },
+    {
+      "id": "F06",
+      "createdAt": "2026-03-01T09:00:00.000Z",
+      "source": "AFNOR",
+      "year": 2025,
+      "type": "PS",
+      "status": "Clos",
+      "text": "Constat fictif F06",
+      "desc": "Description fictive de l'écart F06.",
+      "action": "Action corrective fictive F06",
+      "tasks": [
+        {
+          "t": "Former les équipes fictives",
+          "done": true,
+          "createdAt": "2026-03-02T09:00:00.000Z"
+        }
+      ],
+      "comment": "",
+      "items": [
+        "A-6.3",
+        "A-5.30"
+      ],
+      "owner": "",
+      "due": "",
+      "proof": ""
+    },
+    {
+      "id": "F07",
+      "createdAt": "2026-03-01T09:00:00.000Z",
+      "source": "Interne",
+      "year": 2026,
+      "type": "PS",
+      "status": "En cours",
+      "text": "Constat fictif F07",
+      "desc": "Description fictive de l'écart F07.",
+      "action": "Action corrective fictive F07",
+      "tasks": [
+        {
+          "t": "Tester la restauration fictive",
+          "done": true,
+          "createdAt": "2026-03-02T09:00:00.000Z"
+        },
+        {
+          "t": "Documenter le test fictif",
+          "done": false,
+          "createdAt": "2026-03-02T09:00:00.000Z"
+        }
+      ],
+      "comment": "",
+      "items": [
+        "A-8.13"
+      ],
+      "owner": "Pilote fictif 1",
+      "due": "2026-09-15",
+      "proof": ""
+    },
+    {
+      "id": "F08",
+      "createdAt": "2026-03-01T09:00:00.000Z",
+      "source": "Tenacy",
+      "year": 2026,
+      "type": "PS",
+      "status": "Ouvert",
+      "text": "Constat fictif F08",
+      "desc": "Description fictive de l'écart F08.",
+      "action": "Action corrective fictive F08",
+      "tasks": [],
+      "comment": "",
+      "items": [
+        "A-5.30",
+        "ISO-6.1.3"
+      ],
+      "owner": "Pilote fictif 1",
+      "due": "2026-12-08",
+      "proof": "",
+      "tenacyName": "Gap fictif",
+      "tenacyStatus": "Ouvert",
+      "tenacyCrit": "Moyenne"
+    },
+    {
+      "id": "F09",
+      "createdAt": "2026-03-01T09:00:00.000Z",
+      "source": "AFNOR",
+      "year": 2025,
+      "type": "PP",
+      "status": "Ouvert",
+      "text": "Constat fictif F09",
+      "desc": "Description fictive de l'écart F09.",
+      "action": "Action corrective fictive F09",
+      "tasks": [
+        {
+          "t": "Étudier la piste fictive",
+          "done": false,
+          "createdAt": "2026-03-02T09:00:00.000Z"
+        }
+      ],
+      "comment": "",
+      "items": [
+        "A-7.4",
+        "A-5.1"
+      ],
+      "owner": "Pilote fictif 1",
+      "due": "2026-12-08",
+      "proof": ""
+    },
+    {
+      "id": "F10",
+      "createdAt": "2026-03-01T09:00:00.000Z",
+      "source": "Interne",
+      "year": 2026,
+      "type": "PP",
+      "status": "Clos",
+      "text": "Constat fictif F10",
+      "desc": "Description fictive de l'écart F10.",
+      "action": "Action corrective fictive F10",
+      "tasks": [
+        {
+          "t": "Mettre en œuvre la piste fictive",
+          "done": true,
+          "createdAt": "2026-03-02T09:00:00.000Z"
+        }
+      ],
+      "comment": "",
+      "items": [
+        "A-5.15"
+      ],
+      "owner": "",
+      "due": "",
+      "proof": ""
+    },
+    {
+      "id": "F11",
+      "createdAt": "2026-03-01T09:00:00.000Z",
+      "source": "Veille",
+      "year": 2026,
+      "type": "Remarque",
+      "status": "Ouvert",
+      "text": "Constat fictif F11",
+      "desc": "Description fictive de l'écart F11.",
+      "action": "Action corrective fictive F11",
+      "tasks": [],
+      "comment": "",
+      "items": [],
+      "owner": "Pilote fictif 1",
+      "due": "2026-12-08",
+      "proof": ""
+    },
+    {
+      "id": "GAP-01",
+      "createdAt": "2026-03-01T09:00:00.000Z",
+      "source": "GAP",
+      "year": 2026,
+      "type": "Remarque",
+      "status": "Ouvert",
+      "text": "Constat fictif GAP-01",
+      "desc": "Description fictive de l'écart GAP-01.",
+      "action": "Action corrective fictive GAP-01",
+      "tasks": [
+        {
+          "t": "Analyser l'écart fictif",
+          "done": false,
+          "createdAt": "2026-03-02T09:00:00.000Z"
+        }
+      ],
+      "comment": "",
+      "items": [
+        "A-8.32",
+        "A-5.1"
+      ],
+      "owner": "Pilote fictif 1",
+      "due": "2026-12-08",
+      "proof": ""
+    }
+  ],
+  "plan": {
+    "status": "Plan reçu de l'AFNOR",
+    "note": "Plan fictif pour les tests.",
+    "days": [
+      {
+        "id": "j1",
+        "label": "Jour 1",
+        "date": "2026-10-28"
+      },
+      {
+        "id": "j2",
+        "label": "Jour 2",
+        "date": "2026-10-29"
+      }
+    ],
+    "slots": [
+      {
+        "id": "s1",
+        "day": "j1",
+        "start": "09:00",
+        "end": "09:30",
+        "type": "ouverture",
+        "title": "Réunion d'ouverture",
+        "detail": "",
+        "place": "Salle fictive",
+        "items": [],
+        "people": [
+          "p1",
+          "p2",
+          "p3"
+        ],
+        "proofs": [],
+        "questions": []
+      },
+      {
+        "id": "s2",
+        "day": "j1",
+        "start": "09:30",
+        "end": "11:00",
+        "type": "audit",
+        "title": "Contexte et leadership",
+        "detail": "",
+        "place": "Salle fictive",
+        "items": [
+          "ISO-4.1",
+          "ISO-4.2",
+          "ISO-5.1",
+          "ISO-9.2"
+        ],
+        "people": [
+          "p1",
+          "p2"
+        ],
+        "proofs": [
+          {
+            "t": "Preuve fictive s2",
+            "done": false
+          }
+        ],
+        "questions": [
+          "Question fictive s2 ?"
+        ]
+      },
+      {
+        "id": "s3",
+        "day": "j1",
+        "start": "11:00",
+        "end": "12:30",
+        "type": "audit",
+        "title": "Contrôle d’accès",
+        "detail": "",
+        "place": "Salle fictive",
+        "items": [
+          "A-5.15",
+          "A-5.18",
+          "A-8.8"
+        ],
+        "people": [
+          "p1",
+          "p4"
+        ],
+        "proofs": [
+          {
+            "t": "Preuve fictive s3",
+            "done": false
+          }
+        ],
+        "questions": [
+          "Question fictive s3 ?"
+        ]
+      },
+      {
+        "id": "s4",
+        "day": "j1",
+        "start": "12:30",
+        "end": "13:30",
+        "type": "pause",
+        "title": "Pause",
+        "detail": "",
+        "place": "Salle fictive",
+        "items": [],
+        "people": [],
+        "proofs": [],
+        "questions": []
+      },
+      {
+        "id": "s5",
+        "day": "j1",
+        "start": "13:30",
+        "end": "15:00",
+        "type": "visite",
+        "title": "Visite du site",
+        "detail": "",
+        "place": "Site fictif",
+        "items": [
+          "A-7.4",
+          "A-7.10"
+        ],
+        "people": [
+          "p1",
+          "p5"
+        ],
+        "proofs": [
+          {
+            "t": "Preuve fictive s5",
+            "done": false
+          }
+        ],
+        "questions": [
+          "Question fictive s5 ?"
+        ]
+      },
+      {
+        "id": "s6",
+        "day": "j2",
+        "start": "09:00",
+        "end": "10:30",
+        "type": "audit",
+        "title": "Exigences HDS",
+        "detail": "",
+        "place": "Salle fictive",
+        "items": [
+          "HDS-01",
+          "HDS-05",
+          "A-5.30"
+        ],
+        "people": [
+          "p1",
+          "p3"
+        ],
+        "proofs": [
+          {
+            "t": "Preuve fictive s6",
+            "done": false
+          }
+        ],
+        "questions": [
+          "Question fictive s6 ?"
+        ]
+      },
+      {
+        "id": "s7",
+        "day": "j2",
+        "start": "10:30",
+        "end": "12:00",
+        "type": "synthese",
+        "title": "Synthèse",
+        "detail": "",
+        "place": "Salle fictive",
+        "items": [
+          "A-8.13",
+          "A-9.99"
+        ],
+        "people": [
+          "p1"
+        ],
+        "proofs": [
+          {
+            "t": "Preuve fictive s7",
+            "done": false
+          }
+        ],
+        "questions": [
+          "Question fictive s7 ?"
+        ]
+      },
+      {
+        "id": "s8",
+        "day": "j2",
+        "start": "14:00",
+        "end": "15:00",
+        "type": "cloture",
+        "title": "Réunion de clôture",
+        "detail": "",
+        "place": "Salle fictive",
+        "items": [],
+        "people": [
+          "p1",
+          "p2",
+          "p3"
+        ],
+        "proofs": [],
+        "questions": []
+      }
+    ],
+    "people": [
+      {
+        "id": "p1",
+        "name": "Personne fictive A",
+        "role": "Auditeur (fictif)"
+      },
+      {
+        "id": "p2",
+        "name": "Personne fictive B",
+        "role": "Direction (fictive)"
+      },
+      {
+        "id": "p3",
+        "name": "Personne fictive C",
+        "role": "RSSI (fictif)"
+      },
+      {
+        "id": "p4",
+        "name": "Personne fictive D",
+        "role": "Administrateur systèmes (fictif)"
+      },
+      {
+        "id": "p5",
+        "name": "Personne fictive E",
+        "role": "Services généraux (fictifs)"
+      }
+    ]
+  }
+}

@@ -6,6 +6,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 - Aucune action sur le serveur : optimisation des workflows GitHub Actions et dossier de reprise documentaire, sans nouvelle version applicative préparée.
+- Branche `claude-suivi-smsi` (unification, [plan](docs/unification/PLAN-EVOLUTION.md)) : aucune migration ni nouveau service pour l'édition libre de la carte et le socle Audit. Les notes et cadres libres sont enregistrés dans la disposition des cartes (`maps`, `map_versions`) ; les objets créés depuis la carte le sont dans leur module de l'outil historique (`app_state`), sous verrou, au nom de la personne et journalisés (`carto.object_create`, `carto.object_rename`).
 
 ### Modifié
 - Dépôt : retrait d’un ancien prompt de chantier terminé et d’un rapport ponctuel inutilisé ; consignes Claude consolidées, renvois cartographiques corrigés et exclusions de lint/format d’un dossier absent supprimées. Code applicatif, archives, migrations et références visuelles conservés.
@@ -14,6 +15,9 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Ajouté
 
+- Cartographie, construire une carte de zéro (`CARTO-15` à `CARTO-19`, ADR 0026) : créer depuis la carte une partie intéressée, un fournisseur, une application, un enjeu, un site, un système ou un processus, enregistré dans son module avec la permission de ce module ; menu contextuel (clic droit, appui long, Maj+F10) ; palette en glisser-déposer ; renommage depuis la carte ; sélection multiple, alignement et répartition ; notes et cadres libres ; carte vierge. Aucune suppression d'un objet de la plateforme depuis la carte. La carte des risques réutilise le canevas sans menu contextuel.
+- Audit, socle partagé (`AUD-05`, `AUD-09`, `AUD-10`, ADR 0025) : `@suivi/shared/audit` (modèle et libellés, pronostic en parité avec l'outil historique, règles des écarts et du plan d'actions, schémas zod). Aucun écran ni route à ce stade.
+- Unification : [audit L1 et correspondance ancien / nouveau](docs/unification/L1-AUDIT-ET-CORRESPONDANCE.md) et [plan d'évolution](docs/unification/PLAN-EVOLUTION.md) ; spécifications Audit et carte libre validées par le RSSI, ADR renumérotées 0025 et 0026.
 - Dossier documentaire de reprise IA : inventaire et comparaison v2, DAT actuel, guides, registres de qualité, backlog et recette avec preuves datées. Aucun changement applicatif ni nouvelle publication.
 
 ## [3.0.2] — 2026-10-10 — Préversion de développement

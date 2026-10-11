@@ -19,6 +19,11 @@
       "types": "./src/carto/index.ts",
       "source": "./src/carto/index.ts",
       "default": "./dist/carto/index.js"
+    },
+    "./audit": {
+      "types": "./src/audit/index.ts",
+      "source": "./src/audit/index.ts",
+      "default": "./dist/audit/index.js"
     }
   },
   "scripts": {
