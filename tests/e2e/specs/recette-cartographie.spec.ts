@@ -1042,6 +1042,14 @@ test('30. appui long (tactile) et Maj+F10 (clavier) : même menu, navigable, fer
   const problems = watchPage(page);
   await page.goto('/cartographie/contexte');
   await expect(noeud(page, 'isms')).toHaveCount(1);
+  // La carte s'ouvre sur sa dernière vue : on l'ajuste à l'écran pour que la boîte du SMSI soit à portée du doigt.
+  await page.getByRole('button', { name: 'Ajuster à l’écran' }).click();
+  await expect
+    .poll(async () => {
+      const b = await noeud(page, 'isms').locator('rect').first().boundingBox();
+      return !!b && b.x + 8 < 1280 && b.y + 8 < 900;
+    })
+    .toBe(true);
   const c = await pointVisible(page, 'isms');
   const cible = noeud(page, 'isms').locator('rect').first();
   await cible.dispatchEvent('pointerdown', {
