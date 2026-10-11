@@ -1,5 +1,6 @@
 /* Affichage : préférences par personne, écrans muraux (création, activation, portée, révocation), synthèse. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { DEFAULT_SMSI } from '../src/grc/core.js';
 import { Agent, createTestApp, login, makeUser, type TestApp } from './helpers.js';
 
 let t: TestApp;
@@ -29,6 +30,36 @@ describe('préférences d’affichage', () => {
     expect((await A.put('/api/account/preferences', p)).statusCode).toBe(200);
     expect((await A.get('/api/auth/me')).json().preferences).toEqual(p);
     expect((await A.put('/api/account/preferences', { ...p, taille: '400' })).statusCode).toBeGreaterThanOrEqual(400);
+  });
+});
+
+describe('tableau de bord unifié (UI-02)', () => {
+  it('graphiques repris de l’outil historique et compteurs du Pilotage, selon les droits', async () => {
+    const avant = (await A.get('/api/mur/synthese')).json();
+    expect(avant.conformite.map((c: { ref: string }) => c.ref)).toEqual(['ISO', 'A', 'HDS']);
+    expect(avant.indicateurs).toMatchObject({ total: expect.any(Number) });
+    expect(avant.plans.annee).toBe(new Date().getFullYear());
+    expect(avant.ecartsOuverts).toMatchObject({ ouverts: expect.any(Number) });
+    const base = avant.pilotage;
+    expect(base).toMatchObject({ constatsOuverts: expect.any(Number), risques: expect.any(Number) });
+
+    const ids = (
+      await t.svc.db.q<{ id: string }>(
+        `INSERT INTO grc_objects(smsi_id,kind,module,name,data,created_by,updated_by) VALUES
+         ($1,'nonconformity','ecarts','Constat ouvert (fictif)','{"status":"open"}','test','test'),
+         ($1,'nonconformity','ecarts','Constat clos (fictif)','{"status":"closed"}','test','test'),
+         ($1,'risk','pilotage','Risque fictif','{}','test','test') RETURNING id`,
+        [DEFAULT_SMSI],
+      )
+    ).rows.map((r) => r.id);
+    try {
+      const apres = (await A.get('/api/mur/synthese')).json().pilotage;
+      expect(apres.constatsOuverts).toBe(base.constatsOuverts + 1);
+      expect(apres.risques).toBe(base.risques + 1);
+      expect(apres.risquesSansDecision).toBe(base.risquesSansDecision + 1);
+    } finally {
+      await t.svc.db.q('DELETE FROM grc_objects WHERE id = ANY($1)', [ids]);
+    }
   });
 });
 
@@ -78,6 +109,15 @@ describe('écrans muraux', () => {
     expect(s.ecarts).not.toBeNull();
     expect(s.mesures).toBeNull();
     expect(s.prochainAudit).toBeNull();
+    // Tableau de bord unifié (UI-02) : seuls les compteurs des écarts, rien sur les risques, la DdA ou les plans.
+    expect(s.ecartsOuverts).not.toBeNull();
+    expect(s.pilotage).toEqual({
+      constatsOuverts: expect.any(Number),
+      risques: null,
+      risquesSansDecision: null,
+      actionsEnRetard: expect.any(Number),
+    });
+    expect([s.conformite, s.indicateurs, s.plans]).toEqual([null, null, null]);
   });
 
   it('une personne avec une lecture métier peut ouvrir /mur ; sans droit métier, refus', async () => {

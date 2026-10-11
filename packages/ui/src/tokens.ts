@@ -252,6 +252,8 @@ export const COUPLES_CONTRASTE: { nom: string; texte: string; fond: string; seui
           { nom: `carte ${k} : lien sur canevas (${m})`, texte: t.accent, fond: p.canevas, seuil: 3 },
           { nom: `carte ${k} : texte sur fond (${m})`, texte: p.texte, fond: t.fond, seuil: 4.5 },
           { nom: `carte ${k} : texte secondaire sur fond (${m})`, texte: p.secondaire, fond: t.fond, seuil: 4.5 },
+          // Graphiques du tableau de bord (UI-02) : élément graphique sur la surface des cartes (WCAG 1.4.11).
+          { nom: `graphique ${k} sur surface (${m})`, texte: t.accent, fond: FONDS[m].surface, seuil: 3 },
         ];
       }),
     ];

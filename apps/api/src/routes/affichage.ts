@@ -17,6 +17,7 @@ import { HttpError } from '../http/errors.js';
 import { route } from '../http/route.js';
 import type { Services } from '../services.js';
 import type { WallSession } from '../walls.js';
+import { compteursCommuns } from '../grc/dashboard.js';
 import { redactLegacy } from './legacy.js';
 
 const PING_MS = 25_000;
@@ -27,7 +28,7 @@ export async function synthese(svc: Services, rights: Rights): Promise<Synthese>
   rights = await svc.modules.rights(rights, true);
   const st = await svc.legacy.recompose();
   const data = redactLegacy((st?.data ?? {}) as JsonObject, rights);
-  return computeSynthese(data, {
+  const base = computeSynthese(data, {
     organisation: svc.settings.get('general').orgName,
     aujourdHui: new Date(),
     joursEcheance: svc.settings.get('notifications').echeancesJours || 30,
@@ -36,6 +37,7 @@ export async function synthese(svc: Services, rights: Rights): Promise<Synthese>
       return !!m && rights.can(m, 'lire');
     },
   });
+  return { ...base, pilotage: await compteursCommuns(svc.grc, rights) };
 }
 
 const viewerRights = (s: Session | null, wall: WallSession | null) => (wall ? wall.rights : (s as Session).user.rights);

@@ -30,7 +30,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { errorMessage } from '../api';
-import { PILOTAGE_NAV } from '../pilotage-navigation';
+import { lienHistorique, PAGES_HISTORIQUES, PILOTAGE_NAV } from '../pilotage-navigation';
 import { logout as endSession } from '../logout';
 import { UpdateNotice } from './Updates';
 import { ErrorAlert } from './common';
@@ -73,7 +73,8 @@ export function Layout({ children }: { children: ReactNode }) {
   type Item = [string, string, () => ReactNode];
   const items: Item[] = [['/', 'Tableau de bord', IconeAccueil]];
   if (can('documents', 'lire')) items.push(['/documents', 'Documents et liens', IconeDocuments]);
-  if (can('cartographie', 'lire')) items.push(['/cartographie', 'Cartographie', IconeCarte]);
+  if (can('cartographie', 'lire')) items.push(['/cartographie', 'Cartographie du SMSI', IconeCarte]);
+  if (can('ia', 'lire')) items.push(['/ia/evaluations', 'Évaluations IA', IconeDocuments]);
   items.push(['/account', 'Mon compte', IconeCompte]);
   items.push(['/aide', 'Guide d’utilisation', IconeDocuments]);
   if (can('parametres', 'lire')) items.push(['/parametres', 'Paramètres', IconeParametres]);
@@ -167,12 +168,24 @@ export function Layout({ children }: { children: ReactNode }) {
           withTip(
             'Outil de suivi (ancienne interface)',
             <NavLink
-              component="a"
-              href="/legacy/"
+              className="historique-nav-root"
               leftSection={<IconeHistorique />}
               label={<span className="nav-libelle">Outil de suivi (ancienne interface)</span>}
               description={<span className="nav-annexe">Modules pas encore repris</span>}
-            />,
+            >
+              <NavLink component="a" href="/legacy/" label="Accueil de l’outil de suivi" />
+              {PAGES_HISTORIQUES.map((groupe) => {
+                const pages = groupe.items.filter((p) => can(p.module, 'lire'));
+                if (!pages.length) return null;
+                return (
+                  <NavLink key={groupe.label} label={groupe.label} className="pilotage-nav-group">
+                    {pages.map((p) => (
+                      <NavLink key={p.label} component="a" href={lienHistorique(p)} label={p.label} />
+                    ))}
+                  </NavLink>
+                );
+              })}
+            </NavLink>,
           )}
       </Stack>
       <Stack mt="xl" gap="2xs" className="nav-footer">

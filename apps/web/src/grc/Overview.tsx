@@ -1,5 +1,6 @@
 import { Card, Stack, Text, Table } from '@mantine/core';
 import { useQuery } from '@tanstack/react-query';
+import { Anneau, type PartGraphique } from '@suivi/ui';
 import { get } from '../api';
 import { ErrorAlert } from '../components/common';
 interface Summary {
@@ -9,6 +10,51 @@ interface Summary {
   unassigned?: number;
   awaitingReview?: number;
 }
+/** Répartition graphique d'une section (UI-02) : uniquement des comptes calculés par le serveur, sans taux inventé. */
+function parts(
+  title: string,
+  x: Summary & { pending?: number },
+): { parts: PartGraphique[]; centre: string; sous: string } {
+  const total = x.total;
+  const retard = x.overdue ?? 0;
+  if (title === 'Actions') {
+    const closes = x.closed ?? 0;
+    return {
+      parts: [
+        { libelle: 'Closes', valeur: closes, teinte: 'vert' },
+        { libelle: 'En cours', valeur: Math.max(0, total - closes - retard), teinte: 'bleu' },
+        { libelle: 'En retard', valeur: retard, teinte: 'rouge' },
+      ],
+      centre: String(total),
+      sous: 'actions',
+    };
+  }
+  if (title === 'Contrôles') {
+    const nonRealises = x.pending ?? 0;
+    return {
+      parts: [
+        { libelle: 'Réalisés', valeur: Math.max(0, total - nonRealises), teinte: 'vert' },
+        { libelle: 'Non réalisés', valeur: nonRealises, teinte: 'orange' },
+      ],
+      centre: String(total),
+      sous: 'contrôles',
+    };
+  }
+  const aValider = x.awaitingReview ?? 0;
+  return {
+    parts: [
+      {
+        libelle: title === 'Risques' ? 'Appréciation validée' : 'Validées',
+        valeur: Math.max(0, total - aValider),
+        teinte: 'vert',
+      },
+      { libelle: 'À valider', valeur: aValider, teinte: 'orange' },
+    ],
+    centre: String(total),
+    sous: title.toLowerCase(),
+  };
+}
+
 export function Overview({ smsi }: { smsi: string }) {
   const data = useQuery({
     queryKey: ['grc', smsi, 'dashboard'],
@@ -51,6 +97,10 @@ export function Overview({ smsi }: { smsi: string }) {
             <Card key={title} withBorder>
               <Stack>
                 <Text fw={600}>{title}</Text>
+                {(() => {
+                  const g = parts(title, summary as Summary & { pending?: number });
+                  return <Anneau titre={title} parts={g.parts} centre={g.centre} sousCentre={g.sous} />;
+                })()}
                 {Object.entries(summary!)
                   .filter(
                     ([key]) =>

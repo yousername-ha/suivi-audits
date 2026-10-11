@@ -1,6 +1,7 @@
 /* Affichage : préférences par personne (taille, densité, thème, colonnes), écrans muraux, synthèse du tableau de bord
    (calculée à partir de l'état de l'outil historique, déjà filtré selon les droits). */
 import { z } from 'zod';
+import { conformiteParReferentiel, ecartsOuverts, indicateursSynthese, plansAnnee } from './tableau-de-bord.js';
 import { BUSINESS_MODULES } from './permissions.js';
 
 /* ---------------------------------------------------------------- Préférences */
@@ -100,6 +101,55 @@ export const Synthese = z.object({
     })
     .nullable(),
   mesures: z.object({ total: z.number(), parReferentiel: z.record(z.string(), z.number()) }).nullable(),
+  /* Tableau de bord unifié (UI-02) : graphiques repris du tableau de bord historique, et compteurs du Pilotage. */
+  conformite: z
+    .array(
+      z.object({
+        ref: z.string(),
+        libelle: z.string(),
+        exigences: z.number(),
+        applicables: z.number(),
+        total: z.number(),
+        partiel: z.number(),
+        insuffisant: z.number(),
+        nonRenseigne: z.number(),
+      }),
+    )
+    .nullable(),
+  ecartsOuverts: z
+    .object({
+      ouverts: z.number(),
+      parType: z.array(z.object({ type: z.string(), libelle: z.string(), n: z.number() })),
+      actionsRealisees: z.number(),
+      actionsTotal: z.number(),
+    })
+    .nullable(),
+  indicateurs: z
+    .object({ total: z.number(), atteints: z.number(), nonAtteints: z.number(), nonMesures: z.number() })
+    .nullable(),
+  plans: z
+    .object({
+      annee: z.number(),
+      types: z.array(
+        z.object({
+          type: z.string(),
+          libelle: z.string(),
+          realises: z.number(),
+          aVenir: z.number(),
+          enRetard: z.number(),
+        }),
+      ),
+    })
+    .nullable(),
+  /** Objets du Pilotage (périmètre commun) : constats ouverts, risques, actions en retard. */
+  pilotage: z
+    .object({
+      constatsOuverts: z.number().nullable(),
+      risques: z.number().nullable(),
+      risquesSansDecision: z.number().nullable(),
+      actionsEnRetard: z.number().nullable(),
+    })
+    .nullable(),
 });
 export type Synthese = z.infer<typeof Synthese>;
 
@@ -182,5 +232,12 @@ export function computeSynthese(
         }
       : null,
     mesures,
+    conformite: opts.lisible('items') && opts.lisible('dda') ? conformiteParReferentiel(state) : null,
+    ecartsOuverts: opts.lisible('findings') ? ecartsOuverts(state) : null,
+    indicateurs: opts.lisible('indicators') ? indicateursSynthese(state) : null,
+    plans: opts.lisible('plans')
+      ? { annee: opts.aujourdHui.getFullYear(), types: plansAnnee(state, opts.aujourdHui.getFullYear(), today) }
+      : null,
+    pilotage: null,
   };
 }

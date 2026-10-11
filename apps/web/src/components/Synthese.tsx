@@ -2,7 +2,7 @@
    Grille « grille-cartes » : on ajoute des colonnes sur les grands écrans au lieu d'élargir les cartes. */
 import { Card, Stack, Table, Text, Title } from '@mantine/core';
 import type { Synthese } from '@suivi/shared';
-import { IconeAdministration, StatusChip } from '@suivi/ui';
+import { Anneau, Histogramme, IconeAdministration, Jauge, StatusChip, type TeinteGraphique } from '@suivi/ui';
 import type { ReactNode } from 'react';
 
 export type SyntheseApi = Synthese & { ecran: string | null };
@@ -155,6 +155,148 @@ function Plan({ s, large }: { s: Synthese; large?: boolean }) {
   );
 }
 
+const TEINTE_ECART: Record<string, TeinteGraphique> = {
+  'NC maj': 'rouge',
+  'NC min': 'orange',
+  PS: 'violet',
+  PP: 'bleu',
+  Remarque: 'gris',
+};
+
+/** Écarts ouverts par type (anneau) et actions réalisées (jauge), comme le tableau de bord historique. */
+function EcartsOuverts({ s }: { s: Synthese }) {
+  const e = s.ecartsOuverts;
+  if (!e) return null;
+  const retard = s.ecarts?.enRetard ?? 0;
+  return (
+    <Carte titre="Écarts ouverts" className="graph-carte">
+      <Anneau
+        titre="Écarts ouverts par type"
+        parts={e.parType
+          .filter((t) => t.n || t.type)
+          .map((t) => ({ libelle: t.libelle, valeur: t.n, teinte: TEINTE_ECART[t.type] ?? 'gris' }))}
+        centre={String(e.ouverts)}
+        sousCentre="ouverts"
+      />
+      <Jauge
+        libelle="Actions réalisées"
+        valeur={e.actionsRealisees}
+        max={e.actionsTotal}
+        texte={`${e.actionsRealisees}/${e.actionsTotal}`}
+        detail={retard ? `${retard} écart(s) en retard` : 'Aucun écart en retard'}
+      />
+    </Carte>
+  );
+}
+
+function Indicateurs({ s }: { s: Synthese }) {
+  const i = s.indicateurs;
+  if (!i) return null;
+  return (
+    <Carte titre="Objectifs et indicateurs" className="graph-carte">
+      <Anneau
+        titre="Indicateurs"
+        parts={[
+          { libelle: 'Atteints', valeur: i.atteints, teinte: 'vert' },
+          { libelle: 'Non atteints', valeur: i.nonAtteints, teinte: 'rouge' },
+          { libelle: 'Non mesurés', valeur: i.nonMesures, teinte: 'gris' },
+        ]}
+        centre={`${i.atteints}/${i.total}`}
+        sousCentre="atteints"
+      />
+    </Carte>
+  );
+}
+
+const pc = (n: number, d: number) => (d ? (n * 100) / d : 0);
+
+function Conformite({ s }: { s: Synthese }) {
+  const c = s.conformite;
+  if (!c || !c.some((r) => r.exigences)) return null;
+  return (
+    <Carte titre="Conformité par référentiel" className="graph-carte">
+      <Histogramme
+        titre="Niveau de mise en œuvre des exigences applicables, en pourcentage (déclaration d’applicabilité)"
+        categories={c
+          .filter((r) => r.exigences)
+          .map((r) => ({
+            libelle: r.libelle,
+            valeurs: {
+              t: pc(r.total, r.applicables),
+              p: pc(r.partiel, r.applicables),
+              i: pc(r.insuffisant, r.applicables),
+              n: pc(r.nonRenseigne, r.applicables),
+            },
+          }))}
+        series={[
+          { cle: 't', libelle: 'Total', teinte: 'vert' },
+          { cle: 'p', libelle: 'Partiel', teinte: 'orange' },
+          { cle: 'i', libelle: 'Insuffisant', teinte: 'rouge' },
+          { cle: 'n', libelle: 'Non renseigné', teinte: 'gris' },
+        ]}
+        max={100}
+        format={(v) => `${Math.round(v)} %`}
+      />
+      <Text size="xs" c="dimmed" mt="xs">
+        Déclaration interne : ce n’est ni un taux de conformité certifié ni le résultat d’un audit.
+      </Text>
+    </Carte>
+  );
+}
+
+function Plans({ s }: { s: Synthese }) {
+  const p = s.plans;
+  if (!p) return null;
+  return (
+    <Carte titre={`Plans du SMSI ${p.annee}`} className="graph-carte">
+      <Histogramme
+        titre={`Actions des plans ${p.annee} par type et par état`}
+        categories={p.types.map((t) => ({
+          libelle: t.libelle,
+          valeurs: { r: t.realises, v: t.aVenir, l: t.enRetard },
+        }))}
+        series={[
+          { cle: 'r', libelle: 'Réalisé', teinte: 'vert' },
+          { cle: 'v', libelle: 'À venir', teinte: 'bleu' },
+          { cle: 'l', libelle: 'En retard', teinte: 'rouge' },
+        ]}
+        vide={`Aucune action planifiée en ${p.annee}.`}
+      />
+    </Carte>
+  );
+}
+
+/** Compteurs du Pilotage (objets créés dans la nouvelle interface, périmètre commun). */
+function Pilotage({ s }: { s: Synthese }) {
+  const p = s.pilotage;
+  if (!p) return null;
+  return (
+    <Carte titre="Pilotage" className="ecarts-carte">
+      <div className="chiffres-grille">
+        {p.constatsOuverts != null && <Chiffre valeur={p.constatsOuverts} libelle="constats ouverts" />}
+        {p.actionsEnRetard != null && (
+          <Chiffre
+            valeur={p.actionsEnRetard}
+            libelle="actions en retard"
+            etat={p.actionsEnRetard ? 'erreur' : undefined}
+          />
+        )}
+        {p.risques != null && <Chiffre valeur={p.risques} libelle="risques" />}
+        {p.risquesSansDecision != null && (
+          <Chiffre
+            valeur={p.risquesSansDecision}
+            libelle="sans appréciation validée"
+            etat={p.risquesSansDecision ? 'attention' : undefined}
+          />
+        )}
+      </div>
+      <Text size="xs" c="dimmed" mt="xs">
+        Objets du Pilotage (périmètre commun) ; les écarts de l’outil de suivi sont comptés à part.
+      </Text>
+    </Carte>
+  );
+}
+
 /** Cartes de la synthèse. vue : sous-ensemble affiché (rotation de l'écran mural). */
 export function SyntheseCartes({ s, vue = 'synthese', extra }: { s: Synthese; vue?: Vue; extra?: ReactNode }) {
   const e = s.ecarts;
@@ -205,8 +347,12 @@ export function SyntheseCartes({ s, vue = 'synthese', extra }: { s: Synthese; vu
         <>
           {audit}
           {chiffres}
+          <Conformite s={s} />
+          <EcartsOuverts s={s} />
+          <Indicateurs s={s} />
+          <Plans s={s} />
+          <Pilotage s={s} />
           {e && <Repartition titre="Écarts par statut" valeurs={e.parStatut} />}
-          {e && <Repartition titre="Écarts par type" valeurs={e.parType} />}
           {mesures}
           <Plan s={s} />
           <Echeances s={s} />
@@ -216,8 +362,9 @@ export function SyntheseCartes({ s, vue = 'synthese', extra }: { s: Synthese; vu
       {vue === 'ecarts' && (
         <>
           {chiffres}
+          <EcartsOuverts s={s} />
           {e && <Repartition titre="Écarts par statut" valeurs={e.parStatut} />}
-          {e && <Repartition titre="Écarts par type" valeurs={e.parType} />}
+          <Pilotage s={s} />
           <Echeances s={s} />
         </>
       )}

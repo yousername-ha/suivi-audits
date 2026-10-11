@@ -16,3 +16,4 @@ export * from './grc.js';
 export * from './risk-methods.js';
 export * from './recurrence.js';
 export * from './pilotage.js';
+export * from './tableau-de-bord.js';

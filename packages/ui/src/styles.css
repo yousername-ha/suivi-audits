@@ -1436,3 +1436,158 @@ h3,
     line-height: 1.5;
   }
 }
+
+/* ---------------------------------------------------------------- Graphiques du tableau de bord (UI-02)
+   Teintes de la charte (--carte-<teinte>-accent, clair et sombre), aucun style en ligne. */
+.graph-anneau {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-md);
+}
+.graph-anneau svg {
+  width: clamp(7.5rem, 30%, 10rem);
+  flex: none;
+}
+.graph-piste {
+  fill: none;
+  stroke: var(--suivi-surface-douce);
+  stroke-width: 12;
+}
+.graph-arc {
+  fill: none;
+  stroke-width: 12;
+}
+.graph-centre {
+  font-size: 1.05rem;
+  font-weight: 650;
+  fill: var(--mantine-color-text);
+}
+.graph-sous-centre {
+  font-size: 0.5rem;
+  fill: var(--mantine-color-dimmed);
+}
+.graph-legende {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--mantine-spacing-2xs);
+  flex: 1;
+  min-width: 10rem;
+  font-size: var(--mantine-font-size-sm);
+}
+.graph-legende li {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+}
+.graph-legende-ligne {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mantine-spacing-2xs) var(--mantine-spacing-md);
+  font-size: var(--mantine-font-size-xs);
+}
+.graph-legende-ligne li {
+  display: inline-flex;
+}
+.graph-legende-pourcent {
+  color: var(--mantine-color-dimmed);
+  min-width: 2.75rem;
+  text-align: right;
+}
+.graph-pastille {
+  display: inline-block;
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+}
+.graph-histogramme svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.graph-grille {
+  stroke: var(--suivi-trait);
+  stroke-width: 1;
+}
+.graph-axe {
+  font-size: 10.5px;
+  fill: var(--mantine-color-dimmed);
+}
+.graph-total {
+  font-size: 10.5px;
+  font-weight: 600;
+  fill: var(--mantine-color-text);
+}
+.graph-vide {
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-sm);
+  margin: 0;
+}
+.graph-jauge + .graph-jauge {
+  margin-top: var(--mantine-spacing-sm);
+}
+.graph-jauge-tete {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-sm);
+  font-size: var(--mantine-font-size-sm);
+  margin-bottom: var(--mantine-spacing-2xs);
+}
+.graph-jauge svg {
+  display: block;
+  width: 100%;
+  height: 0.4rem;
+}
+.graph-piste-jauge {
+  fill: var(--suivi-surface-douce);
+}
+.graph-cible {
+  stroke: var(--mantine-color-text);
+  stroke-width: 0.6;
+}
+.graph-jauge-detail {
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-dimmed);
+  margin-top: var(--mantine-spacing-2xs);
+}
+.graph-vert {
+  fill: var(--carte-vert-accent);
+  stroke: var(--carte-vert-accent);
+  background: var(--carte-vert-accent);
+}
+.graph-bleu {
+  fill: var(--carte-bleu-accent);
+  stroke: var(--carte-bleu-accent);
+  background: var(--carte-bleu-accent);
+}
+.graph-violet {
+  fill: var(--carte-violet-accent);
+  stroke: var(--carte-violet-accent);
+  background: var(--carte-violet-accent);
+}
+.graph-orange {
+  fill: var(--carte-orange-accent);
+  stroke: var(--carte-orange-accent);
+  background: var(--carte-orange-accent);
+}
+.graph-rouge {
+  fill: var(--carte-rouge-accent);
+  stroke: var(--carte-rouge-accent);
+  background: var(--carte-rouge-accent);
+}
+.graph-gris {
+  fill: var(--carte-gris-accent);
+  stroke: var(--carte-gris-accent);
+  background: var(--carte-gris-accent);
+}
+.graph-arc.graph-vert,
+.graph-arc.graph-bleu,
+.graph-arc.graph-violet,
+.graph-arc.graph-orange,
+.graph-arc.graph-rouge,
+.graph-arc.graph-gris {
+  fill: none;
+}

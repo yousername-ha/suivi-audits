@@ -8,6 +8,21 @@
   'use strict';
   var CFG = window.__SUIVI || { roles: [], canWrite: false, admin: false, readOnly: [], user: '', csrf: '', takenOver: [] };
   var KEY = 'suivi-audits-smsi:v1';
+  // Ouverture directe d'une page depuis le menu de la nouvelle interface : /legacy/#ouvrir=<onglet>&<vue>=<valeur>.
+  // L'onglet et la sous-vue sont écrits dans les préférences d'affichage lues par l'outil au démarrage (ce script
+  // s'exécute avant lui) ; les droits restent appliqués par __SUIVI_ALLOW_PAGE. Seuls des identifiants simples passent.
+  (function ouvrirPage() {
+    var m = /^#ouvrir=([a-z]{2,20})((?:&[a-z]{2,10}View=[A-Za-z-]{1,12})?)$/.exec(location.hash || '');
+    if (!m) return;
+    try {
+      var cle = 'suivi-audits-smsi:ui';
+      var pref = JSON.parse(localStorage.getItem(cle) || '{}') || {};
+      pref.tab = m[1];
+      if (m[2]) { var kv = m[2].slice(1).split('='); pref[kv[0]] = kv[1]; }
+      localStorage.setItem(cle, JSON.stringify(pref));
+    } catch (e) { /* stockage indisponible : l'outil s'ouvre sur sa page habituelle */ }
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* sans effet */ }
+  })();
   var STATE_URL = '/api/legacy/state';
   function importExportDisabled() { return CFG.disabledModules && CFG.disabledModules.indexOf('import_export') !== -1; }
   function transferAction(action) { return /^(exp|json)/.test(action || '') || ['import', 'reset', 'tpl', 'tplblank', 'rectpl', 'xls', 'xlsx', 'docx', 'pptx', 'xexport', 'ximport', 'xlsimport', 'crexport', 'crimport', 'crxls', 'crrepx', 'invexp', 'tenacyx', 'gen'].indexOf(action) !== -1; }
