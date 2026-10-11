@@ -1,5 +1,5 @@
 {
-  "executedAt": "2026-10-11T15:45:53.483Z",
+  "executedAt": "2026-10-11T16:23:38.752Z",
   "passed": 17,
   "failed": 0,
   "pageErrors": [],
@@ -8,87 +8,87 @@
     {
       "name": "Installation, création du compte et état serveur autoritatif",
       "status": "PASSÉ",
-      "durationMs": 1086
+      "durationMs": 1858
     },
     {
       "name": "GHT, deux établissements et SI mutualisé déclarés dans l’interface",
       "status": "PASSÉ",
-      "durationMs": 2827
+      "durationMs": 3375
     },
     {
       "name": "Responsable issu du registre existant, fonction et compte affecté",
       "status": "PASSÉ",
-      "durationMs": 1417
+      "durationMs": 1503
     },
     {
       "name": "Parcours D2 : mêmes évaluations et données que les menus unitaires",
       "status": "PASSÉ",
-      "durationMs": 1358
+      "durationMs": 1395
     },
     {
       "name": "Action idempotente, clôture depuis le plan central et validation humaine distincte",
       "status": "PASSÉ",
-      "durationMs": 2878
+      "durationMs": 2933
     },
     {
       "name": "Pièce financière réelle, montant exact et téléchargement protégé",
       "status": "PASSÉ",
-      "durationMs": 1119
+      "durationMs": 865
     },
     {
       "name": "Création du BIA et impacts temporels sur les données persistées",
       "status": "PASSÉ",
-      "durationMs": 2600
+      "durationMs": 1938
     },
     {
       "name": "PCA et PRA reliés au BIA, avec objectifs métier et techniques distincts",
       "status": "PASSÉ",
-      "durationMs": 2589
+      "durationMs": 2468
     },
     {
       "name": "Modification du BIA : anciens plans signalés à réexaminer",
       "status": "PASSÉ",
-      "durationMs": 820
+      "durationMs": 763
     },
     {
       "name": "Exercice réalisé, RETEX et action corrective centrale sans doublon",
       "status": "PASSÉ",
-      "durationMs": 1676
+      "durationMs": 1609
     },
     {
       "name": "Vue GHT consolidée, établissement et contexte conservé",
       "status": "PASSÉ",
-      "durationMs": 1274
+      "durationMs": 1270
     },
     {
       "name": "PCRA : pièces, actions centrales et liens CaRE sans duplication",
       "status": "PASSÉ",
-      "durationMs": 731
+      "durationMs": 673
     },
     {
       "name": "Rapport PCRA et Excel réels : BIA, plans, exercice, actions et preuve",
       "status": "PASSÉ",
-      "durationMs": 612
+      "durationMs": 624
     },
     {
       "name": "Sauvegarde complète : données intégrées et pièce physique conservée",
       "status": "PASSÉ",
-      "durationMs": 453
+      "durationMs": 465
     },
     {
       "name": "Contrôle serveur : compte en lecture, établissement interdit et pièce protégée",
       "status": "PASSÉ",
-      "durationMs": 911
+      "durationMs": 937
     },
     {
       "name": "Navigation regroupée, clavier et responsive à quatre largeurs",
       "status": "PASSÉ",
-      "durationMs": 556
+      "durationMs": 566
     },
     {
       "name": "Rechargement : parcours, BIA, actions et pièces restaurés depuis le serveur",
       "status": "PASSÉ",
-      "durationMs": 357
+      "durationMs": 343
     }
   ]
 }

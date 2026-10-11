@@ -1,0 +1,41 @@
+{
+  "executedAt": "2026-10-11T16:23:52.392Z",
+  "passed": 8,
+  "failed": 0,
+  "pageErrors": [],
+  "externalRequests": 0,
+  "tests": [
+    {
+      "name": "Démarrage normal : connexion admin/admin depuis le formulaire",
+      "status": "PASSÉ"
+    },
+    {
+      "name": "Rôles et responsabilités dans Pilotage, accents français et boutons alignés",
+      "status": "PASSÉ"
+    },
+    {
+      "name": "Texte long et affectation personnalisée conservés, dispositions uniformes",
+      "status": "PASSÉ"
+    },
+    {
+      "name": "Rechargement : retour au registre des rôles dans Pilotage",
+      "status": "PASSÉ"
+    },
+    {
+      "name": "Cartographie V2 : première vue, lectures et ouverture des fiches d'origine",
+      "status": "PASSÉ"
+    },
+    {
+      "name": "Cartographies contexte/processus GPT6 conservées et police Sauge",
+      "status": "PASSÉ"
+    },
+    {
+      "name": "Mobile et thème sombre : cartes lisibles sans débordement",
+      "status": "PASSÉ"
+    },
+    {
+      "name": "Redémarrage : accents CP1252 réparés, personnalisation et identités préservées",
+      "status": "PASSÉ"
+    }
+  ]
+}

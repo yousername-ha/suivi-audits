@@ -4,7 +4,7 @@ import json, re, hashlib, argparse
 parser=argparse.ArgumentParser();parser.add_argument('recherche',type=Path);args=parser.parse_args()
 root=Path(__file__).resolve().parents[1]; guide=args.recherche/'d2-guide-prod-convergence.esante.gouv.fr.pdf'
 finance=args.recherche/'d2-finance-prod-convergence.esante.gouv.fr.pdf'
-pages=guide.with_suffix('.txt').read_text().split('\f')
+pages=guide.with_suffix('.txt').read_text(encoding='utf-8').split('\f')
 url='https://prod-convergence.esante.gouv.fr/sites/default/files/media/document/Guide%20des%20pr%C3%A9requis%20et%20objectifs%20du%20domaine%20V1.1.6.pdf'
 finance_url='https://prod-convergence.esante.gouv.fr/sites/default/files/media/document/Guide%20des%20de%CC%81penses%20e%CC%81ligibles%20domaine%202_v1.0.pdf'
 entries=[
@@ -31,13 +31,13 @@ for rid,start,end,title in entries:
  assert len(text)<=10000, (rid,len(text))
  proof=re.split(r'Documents justificatifs\s*',text,maxsplit=1)
  requirements.append({'id':rid,'title':title,'text':title,'chapter':'Prérequis' if '.P' in rid else rid.rsplit('.',1)[0] if rid.count('.')>1 else rid,'objective':rid,'sourceUrl':url,'sourcePage':f'{start}–{end}','prerequisites':'D2.P1 et D2.P2 — apprécier le périmètre et les conditions du guide.' if '.O' in rid else '', 'criteria':text,'expectedProofs':proof[-1].split('Opération de contrôle')[0].strip() if len(proof)>1 else '', 'sourceStatus':'Extrait officiel lu — décision humaine attendue','maps':[],'self':''})
-catalog=json.loads((root/'sources/catalogue.json').read_text())
+catalog=json.loads((root/'sources/catalogue.json').read_text(encoding='utf-8'))
 framework={'id':'CARE-D2-1.1.6-LEGACY','dfKind':'CARE','domain':'D2','name':'CaRE D2 — Stratégie de continuité et de reprise d’activité','version':'1.1.6 (pied de page du PDF)','sourceUrl':url,'publisher':'Agence du Numérique en Santé','publishedAt':'2026-05-06','checkedAt':'2026-10-11','sourceStatus':'Document officiel consulté — dernière version non confirmée','reuse':'Extraits attribués à l’ANS ; vérifier les conditions de réutilisation avant redistribution.','source':'Guide ANS D2, pied de page 1.1.6 du 6 mai 2026 ; historique mentionne aussi 1.1.7 (8 juillet 2026). Incohérence conservée et signalée.','requirements':requirements,'objectives':{}}
 catalog['frameworks']=[f for f in catalog['frameworks'] if f['id']!=framework['id']]+[framework]
 for key,path,title,version,date in [('D2-guide',guide,framework['name'],framework['version'],'2026-05-06'),('D2-finance',finance,'CaRE D2 — Guide des dépenses éligibles','1.0','2026-03-11')]:
  catalog['sources']=[x for x in catalog['sources'] if x.get('id')!=key]+[{'id':key,'kind':'CARE','domain':'D2','title':title,'version':version,'url':url if key=='D2-guide' else finance_url,'publisher':'Agence du Numérique en Santé','publishedAt':date,'checkedAt':'2026-10-11','status':'PDF officiel lu ; ne vaut pas validation d’éligibilité ou de conformité.','reuse':'Conditions de redistribution à vérifier.'}]
-(root/'sources/catalogue.json').write_text(json.dumps(catalog,ensure_ascii=False,indent=2)+'\n')
-(root/'modules/df-sources.js').write_text('/* Sources et limites : sources/catalogue.json. */\nwindow.LegacyDFCatalog = '+json.dumps(catalog,ensure_ascii=False)+';\n')
-verification=json.loads((root/'sources/verification.json').read_text());verification['CARE_D2']={'url':url,'sha256':hashlib.sha256(guide.read_bytes()).hexdigest(),'criteria':len(requirements),'versionLabel':framework['version'],'versionHistoryConflict':True,'latestVersionConfirmed':False,'finance':{'url':finance_url,'sha256':hashlib.sha256(finance.read_bytes()).hexdigest(),'version':'1.0','publishedAt':'2026-03-11'},'sourcePagesRead':[list(x[1:3]) for x in entries]}
-(root/'sources/verification.json').write_text(json.dumps(verification,ensure_ascii=False,indent=2)+'\n')
+(root/'sources/catalogue.json').write_text(json.dumps(catalog,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+(root/'modules/df-sources.js').write_text('/* Sources et limites : sources/catalogue.json. */\nwindow.LegacyDFCatalog = '+json.dumps(catalog,ensure_ascii=False)+';\n',encoding='utf-8')
+verification=json.loads((root/'sources/verification.json').read_text(encoding='utf-8'));verification['CARE_D2']={'url':url,'sha256':hashlib.sha256(guide.read_bytes()).hexdigest(),'criteria':len(requirements),'versionLabel':framework['version'],'versionHistoryConflict':True,'latestVersionConfirmed':False,'finance':{'url':finance_url,'sha256':hashlib.sha256(finance.read_bytes()).hexdigest(),'version':'1.0','publishedAt':'2026-03-11'},'sourcePagesRead':[list(x[1:3]) for x in entries]}
+(root/'sources/verification.json').write_text(json.dumps(verification,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
 print('13 entrées D2 officielles extraites ; version contradictoire signalée.')

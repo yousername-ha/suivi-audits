@@ -406,11 +406,25 @@
     if (view === "roles")
       return (
         header(
-          "Responsables et rôles",
-          "Le registre existant est partagé avec tous les menus.",
+          "Rôles et responsabilités",
+          "Désignez les responsables et leurs périmètres. Les affectations sont partagées avec les autres menus.",
           button("Ajouter un rôle", "role-new", "", true),
         ) +
-        `<div class="lx-list">${s.roles.map((r) => `<article class="lx-card"><h3>${esc(I.roleLabel(r, users))}</h3><p>${esc(scopeLabel(r.perimeterIds))}</p><p>${esc(r.resp || "")}</p>${button("Modifier les affectations", "role-edit", `data-id="${r.id}"`)}</article>`).join("")}</div>`
+        `<div class="lx-list lx-role-list">${s.roles
+          .map((r) => {
+            const members = users.filter(
+                (u) =>
+                  u.active &&
+                  ((r.userIds || []).includes(u.id) ||
+                    u.roleIds?.includes(r.id)),
+              ),
+              holder =
+                r.holder ||
+                members.map((u) => u.name).join(", ") ||
+                "Titulaire à désigner";
+            return `<article class="lx-card lx-role-card"><div class="lx-role-heading"><h3>${esc(r.name || "Rôle")}</h3><p class="lx-muted lx-role-function">${esc(r.function || "Fonction à préciser")}</p></div><div class="lx-role-assignment"><p><span class="lx-muted">Responsable</span><br><strong>${esc(holder)}</strong></p><p class="lx-muted">${esc(scopeLabel(r.perimeterIds))}</p></div><p class="lx-role-responsibility">${esc(r.resp || "Responsabilités à préciser")}</p><div class="lx-card-actions">${button("Modifier les affectations", "role-edit", `data-id="${esc(r.id)}"`)}</div></article>`;
+          })
+          .join("")}</div>`
       );
     if (view === "classification") {
       const kind = api.ui.classKind || "action",
@@ -621,6 +635,16 @@
       ],
       afterRender: () => {
         for (const p of plugins) p.afterRender?.();
+        for (const card of document.querySelectorAll(".lx-list > .lx-card")) {
+          const actions = [...card.children].filter((el) =>
+            el.matches("button.btn"),
+          );
+          if (!actions.length) continue;
+          const footer = document.createElement("div");
+          footer.className = "lx-card-actions";
+          footer.append(...actions);
+          card.append(footer);
+        }
         if (api.readOnly())
           document.querySelectorAll("[data-lx-act]").forEach((el) => {
             if (

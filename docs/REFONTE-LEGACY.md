@@ -66,7 +66,9 @@ IDs, leur affichage dérive des périmètres. Un changement n’exige pas une se
 SQLite `user_version=1` : tables `state`, `users`, `sessions`, `files`, `audit`.
 `state` porte une version optimiste. Les fichiers sont immuables, contrôlés par taille
 et SHA-256. Les comptes ne font pas partie du JSON métier. Les nouveaux comptes
-n’ont pas de mot de passe par défaut. Le journal serveur identifie le compte réel et
+conservent un mot de passe de 12 caractères minimum. Le lanceur propose désormais
+le compte de recette explicitement demandé `admin` / `admin`, sans écraser un
+compte existant ; `--sans-compte-test` désactive son provisionnement. Le journal serveur identifie le compte réel et
 les champs modifiés ; les déclarations de responsables restent distinctes.
 
 ## API locale

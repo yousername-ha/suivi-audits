@@ -20,6 +20,9 @@ Cette instruction remplace l’interdiction initiale de publication pour cette l
   du menu ; les cartes restent liées aux registres et soumises aux périmètres serveur.
 - Aucun secret, email personnel, document réel, cookie ni profil navigateur en Git.
   Utiliser une identité de commit anonyme et des fixtures synthétiques.
+- Exception explicitement demandée : compte public de test local `admin` / `admin`,
+  provisionné par le lanceur Legacy, sans écraser un compte existant. Aucun mot de
+  passe réel ni aucune base locale n'est publié.
 - Les données restent locales : SQLite et pièces dans `.legacy-data`, exclu de Git.
   Les contrôles de session et de périmètres sont côté serveur. Ne pas exposer
   le serveur localhost sur Internet.

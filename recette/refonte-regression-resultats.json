@@ -1,5 +1,5 @@
 {
-  "executedAt": "2026-10-11T15:53:32.175Z",
+  "executedAt": "2026-10-11T16:24:40.426Z",
   "environment": "Chromium local, profils isolés, données synthétiques",
   "passed": 22,
   "failed": 0,
@@ -10,117 +10,117 @@
     {
       "name": "Démarrage local : menu legacy, rubriques CaRE/HAS et aucune donnée opérationnelle préremplie",
       "status": "PASSÉ",
-      "durationMs": 1056
+      "durationMs": 991
     },
     {
       "name": "CaRE : dossier générique D2 et objectif local avec périmètre réel saisi",
       "status": "PASSÉ",
-      "durationMs": 1142
+      "durationMs": 1182
     },
     {
       "name": "Preuve physique : dépôt, SHA-256 et rattachement dans le registre partagé",
       "status": "PASSÉ",
-      "durationMs": 1191
+      "durationMs": 1218
     },
     {
       "name": "Vérification interne et validation documentée d’un objectif CaRE",
       "status": "PASSÉ",
-      "durationMs": 1821
+      "durationMs": 1883
     },
     {
       "name": "Preuve partagée et nouvelle version : aucun déplacement silencieux des références",
       "status": "PASSÉ",
-      "durationMs": 2143
+      "durationMs": 2266
     },
     {
       "name": "Action suivie dans le plan legacy et aucun recalcul automatique du statut",
       "status": "PASSÉ",
-      "durationMs": 2356
+      "durationMs": 2469
     },
     {
       "name": "Budgets : saisie décimale française, sommes exactes et historique",
       "status": "PASSÉ",
-      "durationMs": 1919
+      "durationMs": 1987
     },
     {
       "name": "HAS : création d’une campagne version 2025 et pagination de 118 critères",
       "status": "PASSÉ",
-      "durationMs": 1160
+      "durationMs": 1112
     },
     {
       "name": "HAS : applicabilité justifiée et preuve partagée pour une validation interne",
       "status": "PASSÉ",
-      "durationMs": 3766
+      "durationMs": 3412
     },
     {
       "name": "Exports Excel CaRE/HAS réels et données limitées aux dossiers sélectionnés",
       "status": "PASSÉ",
-      "durationMs": 1360
+      "durationMs": 1242
     },
     {
       "name": "Rapport PDF réel : périmètre, preuves et décisions lisibles",
       "status": "PASSÉ",
-      "durationMs": 339
+      "durationMs": 286
     },
     {
       "name": "Dossier auditeur exporté : une sélection explicite et aucun objet/version hors périmètre",
       "status": "PASSÉ",
-      "durationMs": 1214
+      "durationMs": 1156
     },
     {
       "name": "Application auditeur hors ligne : consultation, observations et rapport sans accès à l’application",
       "status": "PASSÉ",
-      "durationMs": 633
+      "durationMs": 568
     },
     {
       "name": "Import et décision sur observations : scope contrôlé, résultats internes conservés",
       "status": "PASSÉ",
-      "durationMs": 946
+      "durationMs": 959
     },
     {
       "name": "Sauvegarde complète : données et deux versions de preuve avec empreintes vérifiables",
       "status": "PASSÉ",
-      "durationMs": 632
+      "durationMs": 616
     },
     {
       "name": "Export JSON du menu legacy : conservation des données existantes et des lots D/F",
       "status": "PASSÉ",
-      "durationMs": 164
+      "durationMs": 148
     },
     {
       "name": "Restauration dans un profil neuf : données, relations et pièces réellement récupérées",
       "status": "PASSÉ",
-      "durationMs": 2510
+      "durationMs": 2354
     },
     {
       "name": "Archive altérée refusée avant toute écriture, dépôt trop volumineux également refusé",
       "status": "PASSÉ",
-      "durationMs": 109
+      "durationMs": 125
     },
     {
       "name": "Lecture seule : commandes désactivées et garde sur un événement forcé",
       "status": "PASSÉ",
-      "durationMs": 811
+      "durationMs": 847
     },
     {
       "name": "Non-régression du menu : les pages legacy restent accessibles",
       "status": "PASSÉ",
-      "durationMs": 4926
+      "durationMs": 5007
     },
     {
       "name": "Responsive et thème sombre : captures réelles, sans débordement du document",
       "status": "PASSÉ",
-      "durationMs": 2982
+      "durationMs": 3623
     },
     {
       "name": "Sources et versions : campagne D1 réelle, import de grille, archivage et réouverture",
       "status": "PASSÉ",
-      "durationMs": 6099
+      "durationMs": 6709
     },
     {
       "name": "Ouverture sans serveur : prérequis explicite pour la persistance et les permissions",
       "status": "NON EXÉCUTÉ",
-      "durationMs": 194,
+      "durationMs": 131,
       "notExecutedReason": "Politique Chromium du workspace : file:// interdit. Application qualifiée sur le serveur Legacy localhost."
     }
   ]

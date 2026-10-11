@@ -18,8 +18,11 @@ python3 demarrer.py
 
 Le navigateur ouvre `http://127.0.0.1:8123`. Garder le lanceur ouvert.
 Aucun Docker, Node.js, jeton GitHub ni service externe n’est nécessaire à l’exécution.
-Créer son compte administrateur à la première ouverture. Il n’existe aucun mot de
-passe par défaut. Le serveur reste lié à localhost.
+Se connecter avec **`admin` / `admin`**, compte de test créé automatiquement.
+Si cet identifiant existe déjà, son compte et son mot de passe sont conservés.
+Le serveur reste lié à localhost. Les autres comptes sont créés dans Administration.
+Pour tester la création du premier accès sans ce compte :
+`python3 demarrer.py --sans-compte-test` sur un stockage vierge.
 
 Pour cloner dans un nouveau dossier :
 
@@ -64,7 +67,7 @@ le lanceur Python local est nécessaire. Le dossier auditeur exporté reste auto
 1. **Périmètres** : GHT, établissement support, établissements, entités juridiques,
    sites, activités et SI mutualisés. Rattachements hiérarchiques et liens partagés.
    Les établissements CRRC existants se relient explicitement au registre commun.
-2. **Responsables et rôles** : même registre `roles` que les anciens menus ;
+2. **Pilotage → Rôles et responsabilités** : même registre `roles` que les anciens menus ;
    titulaire, fonction, comptes affectés et couverture des établissements.
    Un rôle fonctionnel ne remplace pas l’habilitation du compte.
 3. **Parcours guidé** : étapes issues du parcours existant, données modifiables
@@ -94,10 +97,11 @@ les validations BIA/PCA/parcours existantes.
 
 La navigation conserve les anciennes pages et les regroupe dans cinq rubriques
 repliables, sur un fond neutre avec des accents Sauge. **Cartographies** réunit
-le contexte, les processus, les risques consolidés et la conformité. Les cartes
+la **Vue d’ensemble** en cases cliquables de la V2, puis le contexte, les processus
+et les risques consolidés. Les cartes
 contexte/processus sont générées depuis les registres, modifiables et versionnées
 par périmètre, avec exports SVG/PNG/PDF/JSON. Les menus d’actions, de preuves,
-de conformité et de fournisseurs sont distincts des objectifs et indicateurs.
+de conformité et de fournisseurs sont distincts de Pilotage (objectifs, indicateurs et rôles).
 Voir [le guide des cartographies et du menu](docs/CARTOGRAPHIES-NAVIGATION.md).
 
 ## Permissions et contrôles internes
@@ -137,25 +141,28 @@ l’administrateur. Le message de sauvegarde en bas indique le résultat serveur
 Python seul pour le serveur ; Node.js et Playwright sont utilisés pour les tests.
 
 ```sh
-node --test tests/core.test.cjs tests/integration.test.cjs tests/risk.test.cjs tests/carto.test.cjs
-python3 tests/server_test.py
-python3 tests/server_risk_test.py
-python3 tests/server_carto_test.py
+node --test tests/*.test.cjs
+python3 -m unittest discover -s tests -p 'server*test.py'
 node tests/browser-refonte.cjs
 node tests/browser-risks.cjs
 node tests/browser-carto.cjs
+node tests/browser-interface.cjs
 ```
 
-Les trois recettes navigateur intégrées démarrent **leur propre serveur et un stockage temporaire**.
+Les quatre recettes navigateur intégrées démarrent **leur propre serveur et un stockage temporaire**.
 Pour la recette historique adaptée au serveur, lancer un serveur **neuf et dédié**,
 jamais celui contenant vos données :
 
 ```sh
-python3 demarrer.py --sans-navigateur --port 8140 --donnees /tmp/legacy-recette-neuve
+python3 demarrer.py --sans-compte-test --sans-navigateur --port 8140 --donnees /tmp/legacy-recette-neuve
 LEGACY_URL=http://127.0.0.1:8140 node tests/browser.cjs
 ```
 
 Variables développeur : `PLAYWRIGHT_MODULE`, `CHROMIUM_PATH`, `LEGACY_URL`,
-`REFONTE_PORT`, `RISKS_PORT`, `CARTO_PORT`. Les fixtures ne reprennent aucun profil ni document de production.
+`REFONTE_PORT`, `RISKS_PORT`, `CARTO_PORT`, `INTERFACE_PORT`. Les fixtures ne reprennent aucun profil ni document de production.
 `recette/*refonte*` contient la recette actuelle ; les anciennes preuves restent
 identifiées comme historiques. Le manifeste exclut les bases locales et les nouvelles captures de debug.
+
+La correction des accents, des cartes et du compte de test est décrite dans
+[le diagnostic](docs/DIAGNOSTIC-ROLES-INTERFACE.md) et
+[la recette exécutée](recette/INTERFACE-RECETTE.md).

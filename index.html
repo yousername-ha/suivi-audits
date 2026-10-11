@@ -1010,7 +1010,7 @@ const KEY='suivi-audits-legacy-df:v1', UIKEY='suivi-audits-legacy-df:ui';
 let S=clone(SEED);
 const ui=Object.assign({tab:'dash',lens:'prono',lvl:'prio',orgaView:'deroule'},readUI(),{q:'',pq:'',ref:'all',fNotSeen:false,fBlind:false,fOpen:false,fStatus:'actifs',fSource:'all',open:{},drawer:null,slot:null,sheet:null});
 function readUI(){try{return JSON.parse(localStorage.getItem(UIKEY))||{}}catch(e){return{}}}
-function saveUI(){try{localStorage.setItem(UIKEY,JSON.stringify({tab:ui.tab,mbView:ui.mbView,mbScope:ui.mbScope,mbVp:ui.mbVp,mbStd:ui.mbStd,mbSec:ui.mbSec,mbGen:ui.mbGen,mbPre:ui.mbPre,mbLeftOff:ui.mbLeftOff,lens:ui.lens,lvl:ui.lvl,orgaView:ui.orgaView,ecView:ui.ecView,confView:ui.confView,pilView:ui.pilView,supView:ui.supView,iaView:ui.iaView,navOrder:ui.navOrder,navLast:ui.navLast,navLastG:ui.navLastG,navGroups:ui.navGroups,tbl:ui.tbl,ctxView:ui.ctxView,incView:ui.incView,crView:ui.crView,crAuthor:ui.crAuthor,repView:ui.repView,revSel:ui.revSel,dashView:ui.dashView,mapLens:ui.mapLens,ganttF:ui.ganttF,planView:ui.planView,careView:ui.careView,hasView:ui.hasView,careDossier:ui.careDossier,hasDossier:ui.hasDossier,dfArchived:ui.dfArchived}))}catch(e){}}
+function saveUI(){try{localStorage.setItem(UIKEY,JSON.stringify({tab:ui.tab,perimetersView:ui.perimetersView,mbView:ui.mbView,mbScope:ui.mbScope,mbVp:ui.mbVp,mbStd:ui.mbStd,mbSec:ui.mbSec,mbGen:ui.mbGen,mbPre:ui.mbPre,mbLeftOff:ui.mbLeftOff,lens:ui.lens,lvl:ui.lvl,orgaView:ui.orgaView,ecView:ui.ecView,confView:ui.confView,pilView:ui.pilView,supView:ui.supView,iaView:ui.iaView,navOrder:ui.navOrder,navLast:ui.navLast,navLastG:ui.navLastG,navGroups:ui.navGroups,tbl:ui.tbl,ctxView:ui.ctxView,incView:ui.incView,crView:ui.crView,crAuthor:ui.crAuthor,repView:ui.repView,revSel:ui.revSel,dashView:ui.dashView,mapLens:ui.mapLens,ganttF:ui.ganttF,planView:ui.planView,careView:ui.careView,hasView:ui.hasView,careDossier:ui.careDossier,hasDossier:ui.hasDossier,dfArchived:ui.dfArchived}))}catch(e){}}
 
 const LV={certain:{l:'Certain',o:0},tres:{l:'Très probable',o:1},probable:{l:'Probable',o:2},socle:{l:'Systématique',o:3},faible:{l:'Peu probable',o:4}};
 const PREP={'':'À préparer',encours:'En cours',pret:'Prête'};
@@ -3787,7 +3787,7 @@ function viewDashMap(){
   const apps=(S.appGaps||[]).map(a=>{const s=gapStats(a);return mtile(s.pct>=100?'ok':s.open?'hi':'mid',a.name.slice(0,6),`${a.name} — ${s.pct} % conforme, ${s.open} écart(s)`,'gap',`data-gap="${esc(a.id)}"`)}).join('');
   const prow=(l,s,html,empty)=>`<div class="mrow"><div class="ml">${esc(l)}<span>${esc(s)}</span></div><div class="tiles">${html||`<span class="note" style="padding-top:8px">${esc(empty)}</span>`}</div></div>`;
   return `<div class="map">
-    <div class="sec-head"><div><h2>Carte du SMSI</h2><p>Vue d’ensemble : chaque case est une mesure ou un élément suivi. Touchez une case pour ouvrir le détail.</p></div>
+    <div class="sec-head"><div><h2>Cartographie du pilotage</h2><p>Vue d’ensemble : chaque case est une mesure ou un élément suivi. Touchez une case pour ouvrir le détail.</p></div>
       <div class="seg" role="group">${MAP_LENS.map(([v,l])=>`<button data-act="set" data-k="mapLens" data-v="${v}" aria-pressed="${lens===v}">${l}</button>`).join('')}</div></div>
     <h3 class="maph">Mesures ISO 27001 et HDS</h3>
     <ul class="legend">${MAP_LEG[lens].map(([k,l])=>`<li><span class="sw mt-${k}"></span>${esc(l)} <b>${cnt(k)}</b></li>`).join('')}${lens==='sante'?'<li><span class="sw" style="background:var(--ink3);width:8px;height:8px;border-radius:50%"></span>Écart ouvert</li>':''}</ul>

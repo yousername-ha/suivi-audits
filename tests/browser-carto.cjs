@@ -88,6 +88,7 @@ async function main() {
     "python3",
     [
       "demarrer.py",
+      "--sans-compte-test",
       "--sans-navigateur",
       "--port",
       String(PORT),
@@ -197,10 +198,7 @@ async function main() {
         a.render();
       });
       await nav("pil", "obj");
-      assert.match(
-        await page.locator(".crumb").innerText(),
-        /Objectifs et indicateurs/,
-      );
+      assert.match(await page.locator(".crumb").innerText(), /Pilotage/);
       // Une carte historique de tableau de bord conserve son lien même après déplacement.
       await page.evaluate(() => {
         const e = document.createElement("button");

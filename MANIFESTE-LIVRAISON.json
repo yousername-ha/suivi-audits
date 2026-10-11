@@ -1,6 +1,6 @@
 {
-  "version": "2.2.0-local-legacy",
-  "createdAt": "2026-10-11T15:58:30.233195+00:00",
+  "version": "2.3.0-local-legacy",
+  "createdAt": "2026-10-11T19:28:07.131349+02:00",
   "branch": "legacy/test-lots-d-f",
   "scope": [
     "Périmètres et responsables",
@@ -14,7 +14,10 @@
     "Jeu de données FICTIF",
     "F — HAS et dossier auditeur conservés",
     "Cartographies SVG contexte/processus par périmètre",
-    "Navigation logique avec actions, conformité, fournisseurs et preuves distincts"
+    "Navigation logique avec actions, conformité, fournisseurs et preuves distincts",
+    "Rôles et responsabilités dans Pilotage, correction UTF-8 et cartes uniformes",
+    "Cartographie V2 accessible en première vue, canevas GPT6 conservé",
+    "Compte admin/admin de test local, sans écrasement des comptes existants"
   ],
   "excludedLots": [
     "I",
@@ -25,8 +28,8 @@
   "sourceTrackedFilesUnchanged": 592,
   "githubModified": true,
   "protectedBranchHeads": {
-    "main": "6190d6ea0345e6fd62672b9f57050bb7672a2e15",
-    "feature/gpt6-evolution-smsi-grc": "1b698736c02e482570332eac7b5a98896892e669"
+    "feature/gpt6-evolution-smsi-grc": "1b698736c02e482570332eac7b5a98896892e669",
+    "main": "57a7bc9fea5c779ecb93a659f7a0eb56f76cd6d1"
   },
   "dataIncluded": "Application, référentiels attribués, modèles, générateur du jeu FICTIF, fixtures et captures synthétiques historiques ; aucune base utilisateur",
   "manifestSelfHashExcluded": true,
@@ -35,16 +38,19 @@
     "cartographyServerPassed": 9,
     "riskServerPassed": 11,
     "historicalServerPassed": 5,
+    "interfaceServerPassed": 5,
+    "sourceTrackedFilesUnchanged": 592,
+    "gitleaksFilesFindings": 0,
     "risksBrowserPassed": 18,
     "refonteBrowserPassed": 17,
     "regressionBrowserPassed": 22,
     "cartographyBrowserPassed": 12,
-    "passed": 147,
+    "interfaceBrowserPassed": 8,
+    "passed": 160,
     "failed": 0,
     "notExecuted": 1,
-    "sourceTrackedFilesUnchanged": 592,
-    "gitleaksFilesFindings": 0,
-    "executedAt": "2026-10-11T15:55:23.699241+00:00"
+    "executedAt": "2026-10-11T19:26:58.897005+02:00",
+    "windowsDefaultEncodingSimulated": true
   },
   "files": [
     {
@@ -54,13 +60,13 @@
     },
     {
       "path": "AGENTS.md",
-      "sizeBytes": 2421,
-      "sha256": "99274f34e2334510f5b29a931d3523e44125e99f128a182f2900ae06394ea3fb"
+      "sizeBytes": 2642,
+      "sha256": "0c85c061c199562db5e8a3d4723b96ecee80e39fa472c5e3d44d71d4359ac603"
     },
     {
       "path": "README.md",
-      "sizeBytes": 9314,
-      "sha256": "ac4b29250fff9f7450f0c95c1047252560a35297bf4ce782efd7b14a5967c7f3"
+      "sizeBytes": 9774,
+      "sha256": "24a0f050639160f49f96f21ca4fcc427b16a15f266fa9a163df2935e8ffd5591"
     },
     {
       "path": "demarrer.bat",
@@ -69,8 +75,8 @@
     },
     {
       "path": "demarrer.py",
-      "sizeBytes": 1240,
-      "sha256": "e9223e611e070ee56ef8d6b3ce0571c8c0ff710cfab22f97924f438b26f83b19"
+      "sizeBytes": 1603,
+      "sha256": "becdc064f01fac634cd54210fc975a2cfb92be3726a76b9076e54348a9c1ddba"
     },
     {
       "path": "demarrer.sh",
@@ -84,8 +90,8 @@
     },
     {
       "path": "docs/CARTOGRAPHIES-NAVIGATION.md",
-      "sizeBytes": 5273,
-      "sha256": "8f99b3b0cfdfd839eee318bc5a4cd4b8e8eabb2d91d07fdeee36ae2c3108e7ef"
+      "sizeBytes": 5666,
+      "sha256": "20589040092c59a2e1dd6a395e7b81f7c78d3536d4666448ce73fdf96c52db0a"
     },
     {
       "path": "docs/CHANGEMENTS.md",
@@ -106,6 +112,11 @@
       "path": "docs/DIAGNOSTIC-RISQUES-ADMINISTRATION.md",
       "sizeBytes": 2706,
       "sha256": "5d7fa58320665d7246a24346519feb93b19827a627bdcf3f905da4f12bedecc6"
+    },
+    {
+      "path": "docs/DIAGNOSTIC-ROLES-INTERFACE.md",
+      "sizeBytes": 2893,
+      "sha256": "19f34037edb2eb66d752b5013a09992e37c6480f8d98dd4693cf1e208c2f9c95"
     },
     {
       "path": "docs/DIAGNOSTIC.md",
@@ -144,8 +155,8 @@
     },
     {
       "path": "docs/REFONTE-LEGACY.md",
-      "sizeBytes": 10812,
-      "sha256": "ed0ff9c8efb0e98824427ab865438893c6c2eb7923f61295f455060ca26e516a"
+      "sizeBytes": 11006,
+      "sha256": "c0731342c8b09a17373f4182988854fccb996ddff02216aa5157c29c93ee3f78"
     },
     {
       "path": "docs/RISQUES-ADMINISTRATION.md",
@@ -159,8 +170,8 @@
     },
     {
       "path": "index.html",
-      "sizeBytes": 3173207,
-      "sha256": "3686dbed9ae1226dc21c2a0922facb729dcddf829bff310b383e9b2b89a451aa"
+      "sizeBytes": 3173251,
+      "sha256": "5ba230cd3d1d66ad3bfdcc08d7274d294139a4223261659fe780ae9b28b1beae"
     },
     {
       "path": "legacy_cartography.py",
@@ -174,8 +185,8 @@
     },
     {
       "path": "legacy_server.py",
-      "sizeBytes": 52736,
-      "sha256": "de5c92001b6decf0af8ecf562315393754ea7a70754759ad6357d82a156e1f43"
+      "sizeBytes": 55723,
+      "sha256": "7559ce53d346a3f5da010ee688b738dbcc4651247fb411120d323886b6082fef"
     },
     {
       "path": "lib/docx.iife.js",
@@ -214,8 +225,8 @@
     },
     {
       "path": "modules/carto-ui.js",
-      "sizeBytes": 151777,
-      "sha256": "cd6c1ec5b65925063ee92c87a9ea1368e245781d26a3d7a59c9a4955258f4eff"
+      "sizeBytes": 151793,
+      "sha256": "fe444816de389889023c4a5bb2368d8046ce323442b1e0ff86c1155ac10d1110"
     },
     {
       "path": "modules/carto.css",
@@ -279,13 +290,13 @@
     },
     {
       "path": "modules/integration-ui.js",
-      "sizeBytes": 24593,
-      "sha256": "b3fa0645cc28560d7d48b2487e256796d86dc33fff90fe4e651ede2c02f80f3b"
+      "sizeBytes": 25863,
+      "sha256": "90348108d13fe928bce17cf827caf08a31cc7f01c32a5e398dd6a00c0cdbf86b"
     },
     {
       "path": "modules/integration.css",
-      "sizeBytes": 10583,
-      "sha256": "28f87db2529bdafc5436c7dd5855f854f66fec6014ceb4642daee304da67f32c"
+      "sizeBytes": 11200,
+      "sha256": "90b839e989570b016798089dad43ece9de9f08299488d6545e0dd3d6176fa863"
     },
     {
       "path": "modules/journey-core.js",
@@ -304,8 +315,8 @@
     },
     {
       "path": "modules/navigation-ui.js",
-      "sizeBytes": 7624,
-      "sha256": "bb4e2c100d6cfdb2f162d0fa09032178439877315f83b00d0a715a3da44ae32c"
+      "sizeBytes": 8052,
+      "sha256": "5caa5b12db658a0a89280f9eecf973ff8da9aa775f72373308e9c7ca1fa00fa6"
     },
     {
       "path": "modules/pcra-core.js",
@@ -329,13 +340,18 @@
     },
     {
       "path": "modules/server-client.js",
-      "sizeBytes": 11770,
-      "sha256": "cbb7b71ce3f7a8f9b526b6a3e63e8138670aa76bfc689be6a41bea0ce26b614d"
+      "sizeBytes": 11867,
+      "sha256": "d1d11b6b01a262f104e03130d05b2ed3c19daf50ec15071b041453a2f0d26dc1"
     },
     {
       "path": "recette/CARTOGRAPHIES-RECETTE.md",
       "sizeBytes": 2740,
       "sha256": "7dee6b7120bcd1857c3886ce1b36dff5d708c1d198e59d68832375d5678c30c5"
+    },
+    {
+      "path": "recette/INTERFACE-RECETTE.md",
+      "sizeBytes": 3820,
+      "sha256": "9b8bb3b0848f34c222f543010252ce2437e897b88744f66eb0765e8e2c151b22"
     },
     {
       "path": "recette/browser-branche-resultats.json",
@@ -370,7 +386,7 @@
     {
       "path": "recette/cartographies-browser-resultats.json",
       "sizeBytes": 1594,
-      "sha256": "95fac8584176f1acf8cf01aeedf75e648db06790b0182942ada9e9aaf9e349f7"
+      "sha256": "5f6671a5c46009540956a0cd294c79a8d3c0b8b3518f6b6aa90e7100077acce1"
     },
     {
       "path": "recette/cartographies-refonte-resultats.json",
@@ -433,14 +449,34 @@
       "sha256": "9f1fe9f802058c456a95e4ac3c5d304c1f32bc8dc0fd38990238860e168f566b"
     },
     {
+      "path": "recette/interface-browser-resultats.json",
+      "sizeBytes": 1144,
+      "sha256": "73e90186e99ca83333fda6bc6cc713bb7aa19594a56bdffdf5927e1ef1902be9"
+    },
+    {
+      "path": "recette/interface-serveur-resultats.txt",
+      "sizeBytes": 287,
+      "sha256": "1e41d17f38db19668ce9ba316f11a913ba39484b6a31e7d97ca700b18685e9c9"
+    },
+    {
+      "path": "recette/interface-unit-resultats.txt",
+      "sizeBytes": 4941,
+      "sha256": "afb74312ec98ebe27b42bbf81bfcfd36bb7871588a0c48eb7dc313a8df2a7991"
+    },
+    {
+      "path": "recette/interface-verification.json",
+      "sizeBytes": 513,
+      "sha256": "ac18aa8f51acc2b5edf664927868be14040b9326ab6092b5db82e77e1ac9b6db"
+    },
+    {
       "path": "recette/preparation-branche.json",
       "sizeBytes": 1631,
       "sha256": "72c8d9896161ab75468086040430bd9e616ef068f8cbec51c8aa6fad80ac3182"
     },
     {
       "path": "recette/refonte-browser-resultats.json",
-      "sizeBytes": 2703,
-      "sha256": "55a1c63302af86c0aadc1db292224dcf849d050242b3e655258dbf57d8c4163e"
+      "sizeBytes": 2702,
+      "sha256": "4c1ab1fb99c87f3d806b82136cd5ea84fe8fb048ae8ac044921ca934f92f3ace"
     },
     {
       "path": "recette/refonte-conservation.json",
@@ -454,8 +490,8 @@
     },
     {
       "path": "recette/refonte-regression-resultats.json",
-      "sizeBytes": 4112,
-      "sha256": "b0a44053f0e83ed28f9135dada615ff874011c9d039745743cc23dc1bc5be0fd"
+      "sizeBytes": 4111,
+      "sha256": "ee56d18e03714ef2e3b4948f73a74373dad9f6825fc007f960382d9bf66749a0"
     },
     {
       "path": "recette/refonte-serveur-resultats.txt",
@@ -469,8 +505,8 @@
     },
     {
       "path": "recette/risques-admin-browser-resultats.json",
-      "sizeBytes": 3148,
-      "sha256": "f17fb4e5aaee3d3a1ee021ada1e894a5d452c9912bea5a87d163f21d9ea5b54c"
+      "sizeBytes": 3150,
+      "sha256": "f6bcae4d311b7b0478e64f7da48ba7cf1a8489f310ddc4d69fb75acbc5de82b3"
     },
     {
       "path": "recette/risques-admin-conservation.json",
@@ -524,13 +560,13 @@
     },
     {
       "path": "scripts/generer_etapes_parcours.py",
-      "sizeBytes": 407,
-      "sha256": "9b6955c00986128e5c9930c429b7ec315d921399ed5fa4a3dfde209f19e3b920"
+      "sizeBytes": 440,
+      "sha256": "0380c4e66a818ce900ff5061de8afc7bd136651500473165a39451ceedf90265"
     },
     {
       "path": "scripts/importer_sources_d2.py",
-      "sizeBytes": 5607,
-      "sha256": "9dcfdee114753b8caabb5a57a4063665b58fab48ac6046c68a46e6be80af3bca"
+      "sizeBytes": 5706,
+      "sha256": "3e930fd4b7f1ecbcf2fb7dae6b915203ecc1051095a69b4addd1448848fc3900"
     },
     {
       "path": "sources/catalogue.json",
@@ -559,18 +595,23 @@
     },
     {
       "path": "tests/browser-carto.cjs",
-      "sizeBytes": 17548,
-      "sha256": "fe25c61ee32e7bfb6f7ebc725fdd7caefd747480a50dbd75bcc8e20ecdba898f"
+      "sizeBytes": 17535,
+      "sha256": "6fe2cace7edd11c1719b6007bed161260dd46db2b9570c0f70c90df3091f42b5"
+    },
+    {
+      "path": "tests/browser-interface.cjs",
+      "sizeBytes": 11292,
+      "sha256": "235c86a4a065bfed83791944769a4f242708ef9eda64dbe9a45d7239b3ed6e94"
     },
     {
       "path": "tests/browser-refonte.cjs",
-      "sizeBytes": 26757,
-      "sha256": "3eccd01a0dc99a5324c1ffb701d05548b82f797f506831138ec93afcda28cea2"
+      "sizeBytes": 27099,
+      "sha256": "4b1a8ef8c18eb4419eaa91ffb2262a7b71a3d05b5e5d4902baf6f8c5ac7ed368"
     },
     {
       "path": "tests/browser-risks.cjs",
-      "sizeBytes": 28720,
-      "sha256": "0d32f1442b8e94db732f86828eba664a1f27be410cfa15f33a2f8ce69dc8f831"
+      "sizeBytes": 28780,
+      "sha256": "30b565b8627fc918b0f8433b5a039989ba4a8a8e174a60d03efb16e9c73f0a75"
     },
     {
       "path": "tests/browser.cjs",
@@ -603,6 +644,11 @@
       "sha256": "7880893126b861c0f581a5b47bb02b9b3e666b30bcb188f8656de3a030510eee"
     },
     {
+      "path": "tests/server_interface_test.py",
+      "sizeBytes": 7954,
+      "sha256": "794e39d480315485fb1c1d27937e1a1b3cbdc05bf3fa30a4d482640576b53386"
+    },
+    {
       "path": "tests/server_risk_test.py",
       "sizeBytes": 8118,
       "sha256": "9b61bda322cef2d7f38fa60dd46adaba946b58dc76560d2c4e60357af2227bbc"
@@ -613,6 +659,6 @@
       "sha256": "5775983370f24a6c33a1a9220a217e40949a2bde060c0d6ddd2966bceb0580d7"
     }
   ],
-  "evolutionBaseCommit": "90d698d5dabefab7e2674fdc6af06ad6000f19b3",
-  "protectedBranchHeadsObservation": "Références distantes lues avant publication Legacy ; aucune écriture sur ces branches."
+  "evolutionBaseCommit": "f0e34bdc4e96eb644eb55731bdaca9115820fa99",
+  "protectedBranchHeadsObservation": "Références lues avant publication Legacy ; main a évolué entre deux lectures distantes (6190d6ea → 57a7bc9f). Aucune écriture de cette livraison sur main ou sur feature/gpt6-evolution-smsi-grc."
 }

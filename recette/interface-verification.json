@@ -1,0 +1,19 @@
+{
+  "unitPassed": 53,
+  "cartographyServerPassed": 9,
+  "riskServerPassed": 11,
+  "historicalServerPassed": 5,
+  "interfaceServerPassed": 5,
+  "sourceTrackedFilesUnchanged": 592,
+  "gitleaksFilesFindings": 0,
+  "risksBrowserPassed": 18,
+  "refonteBrowserPassed": 17,
+  "regressionBrowserPassed": 22,
+  "cartographyBrowserPassed": 12,
+  "interfaceBrowserPassed": 8,
+  "passed": 160,
+  "failed": 0,
+  "notExecuted": 1,
+  "executedAt": "2026-10-11T19:26:58.897005+02:00",
+  "windowsDefaultEncodingSimulated": true
+}

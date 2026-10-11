@@ -57,7 +57,18 @@
       extract("suppliers", "Fournisseurs et accès", "tiers", ["g-sup"]);
       extract("proofs", "Preuves et justificatifs", "rep", ["g-prv"]);
       pil.groups = pil.groups.filter((g) => g.id === "g-obj");
-      pil.label = "Objectifs et indicateurs";
+      const perimeters = out.find((s) => s.id === "perimeters"),
+        roles = perimeters?.items.find((i) => i.id === "perimeter-roles");
+      if (roles) {
+        perimeters.items = perimeters.items.filter((i) => i.id !== roles.id);
+        pil.groups.push({ id: "g-roles", label: "Rôles et responsabilités" });
+        pil.items.push({
+          ...roles,
+          label: "Rôles et responsabilités",
+          g: "g-roles",
+        });
+      }
+      pil.label = "Pilotage";
       delete pil.count;
     }
     const risks = out.find((s) => s.id === "risks"),
@@ -74,6 +85,7 @@
       label: "Cartographies",
       icon: "carto",
       items: [
+        ...(status ? [{ ...status, label: "Vue d’ensemble" }] : []),
         {
           id: "mb-ctx",
           label: "Contexte et dépendances",
@@ -87,7 +99,6 @@
           set: { mbView: "process" },
         },
         ...(map ? [{ ...map, label: "Risques consolidés" }] : []),
-        ...(status ? [{ ...status, label: "Conformité et indicateurs" }] : []),
       ],
     });
     const prefs = U?.api().ui.navOrder || [];

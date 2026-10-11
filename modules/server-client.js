@@ -74,7 +74,7 @@
       );
       el.querySelector("div").insertAdjacentHTML(
         "beforeend",
-        `<form id="lx-auth">${!current.configured ? '<label>Votre nom<input name="name" required maxlength="200" autocomplete="name"></label>' : ""}<label>Identifiant<input name="login" minlength="3" maxlength="80" required autocomplete="username"></label><label>Mot de passe<input name="password" type="password" minlength="12" maxlength="200" required autocomplete="${current.configured ? "current-password" : "new-password"}"></label><p>${current.configured ? "" : "Créez votre premier compte administrateur. Au moins 12 caractères pour le mot de passe."}</p><p role="alert" id="lx-auth-error"></p><button class="btn primary" type="submit">${current.configured ? "Se connecter" : "Créer mon accès"}</button></form>`,
+        `<form id="lx-auth">${!current.configured ? '<label>Votre nom<input name="name" required maxlength="200" autocomplete="name"></label>' : ""}<label>Identifiant<input name="login" minlength="3" maxlength="80" required autocomplete="username"></label><label>Mot de passe<input name="password" type="password" minlength="${current.configured ? 1 : 12}" maxlength="200" required autocomplete="${current.configured ? "current-password" : "new-password"}"></label><p>${current.configured ? (current.testAccountAvailable ? "Compte de test : admin / admin." : "") : "Créez votre premier compte administrateur. Au moins 12 caractères pour le mot de passe."}</p><p role="alert" id="lx-auth-error"></p><button class="btn primary" type="submit">${current.configured ? "Se connecter" : "Créer mon accès"}</button></form>`,
       );
       el.querySelector("form").onsubmit = async (e) => {
         e.preventDefault();

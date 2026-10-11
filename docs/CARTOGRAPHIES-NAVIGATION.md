@@ -5,7 +5,7 @@
 | Rubrique | Entrées, dans l’ordre par défaut |
 |---|---|
 | Vue d’ensemble | Tableau de bord, Parcours guidé, Cartographies |
-| Organisation et pilotage | Périmètres, Contexte et parties intéressées, Objectifs et indicateurs, Risques et études, Plan d’action et échéances |
+| Organisation et pilotage | Périmètres, Contexte et parties intéressées, Pilotage (objectifs, indicateurs, rôles et responsabilités), Risques et études, Plan d’action et échéances |
 | Référentiels et audits | Conformité et applicabilité, Programme CaRE, Qualité HAS, Gestion de l’audit, Preuves et justificatifs |
 | Continuité et opérations | PCRA, Incidents et crise, Fournisseurs et accès, GAP, Gestion CRRC |
 | Ressources et bilans | Investissements, Rapports et exports, Administration |
@@ -14,14 +14,20 @@ Les rubriques se replient ; celle de la page visitée s’ouvre automatiquement.
 L’ouverture manuelle est mémorisée sur le poste. Les entrées peuvent être déplacées
 dans leur rubrique sans mélanger les familles de fonctions. Les anciens liens
 internes trouvent leur nouvelle rubrique ; les rôles utilisent le registre partagé
-dans Périmètres. Aucun registre métier n’est déplacé ou supprimé.
+dans **Pilotage → Rôles et responsabilités**. Aucun registre métier n’est déplacé ou supprimé.
 
 ## Utiliser Cartographies
 
-L’entrée réunit quatre vues : **Contexte et dépendances**, **Processus et
-interactions**, **Risques consolidés**, **Conformité et indicateurs**. Les deux
-dernières réutilisent les vues existantes ; les deux premières importent le
-canevas SVG historique, adapté au Legacy Sauge et au pilotage de plusieurs référentiels.
+L’entrée réunit quatre vues : **Vue d’ensemble**, **Contexte et dépendances**,
+**Processus et interactions**, **Risques consolidés**. La première reprend la
+carte en cases cliquables de la V2 : mesures ISO/HDS, indicateurs, écarts,
+fournisseurs, contrôles et échéances. Choisir une lecture dans la barre supérieure
+et cliquer sur une case pour ouvrir la fiche correspondante. Les données et les
+interactions d’origine sont conservées.
+
+Les vues contexte/processus reprennent le canevas SVG historique de la branche
+GPT6, adapté au Legacy Sauge. La vue Risques consolidés utilise le registre central.
+Pour les cartes contexte/processus :
 
 1. Choisir un établissement, un GHT ou tous les périmètres autorisés.
 2. Cliquer sur **Générer** et sélectionner les types d’objets existants à afficher.

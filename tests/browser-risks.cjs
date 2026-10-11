@@ -101,6 +101,7 @@ async function main() {
     "python3",
     [
       "demarrer.py",
+      "--sans-compte-test",
       "--sans-navigateur",
       "--port",
       String(PORT),
@@ -757,6 +758,7 @@ async function main() {
         "python3",
         [
           "demarrer.py",
+          "--sans-compte-test",
           "--sans-navigateur",
           "--port",
           String(PORT),

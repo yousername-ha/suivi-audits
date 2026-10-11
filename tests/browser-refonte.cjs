@@ -50,6 +50,11 @@ async function submit() {
   await page.evaluate(() => LegacyServer.flush());
 }
 async function nav(sec, sub) {
+  if (sub)
+    sec = await page.evaluate(
+      ([sec, sub]) => LegacyNavigation.route(sub) || sec,
+      [sec, sub],
+    );
   await page.evaluate((sec) => {
     const target = document.querySelector(
       `[data-act="nav"][data-sec="${sec}"]`,
@@ -60,6 +65,12 @@ async function nav(sec, sub) {
   if (sub)
     await page.evaluate(
       ([sec, sub]) => {
+        if (sub === "perimeter-roles") {
+          document
+            .querySelector('[data-act=nav][data-sec=pil][data-grp="g-roles"]')
+            .click();
+          return;
+        }
         const target = document.querySelector(
           `[data-act="nav"][data-sec="${sec}"][data-sub="${sub}"]`,
         );
@@ -94,6 +105,7 @@ async function main() {
     "python3",
     [
       "demarrer.py",
+      "--sans-compte-test",
       "--sans-navigateur",
       "--port",
       String(PORT),

@@ -6,10 +6,10 @@ from urllib.parse import urlsplit, unquote
 import copy, hashlib, hmac, json, re, secrets, sqlite3, threading, time
 from legacy_risks import validate_risks
 from legacy_cartography import project_maps, validate_maps
-ID_PREFIXES = json.loads((Path(__file__).resolve().parent / "sources/identifiants.json").read_text())
-BASE_ROLES = json.loads((Path(__file__).resolve().parent / "sources/roles-base.json").read_text())
+ID_PREFIXES = json.loads((Path(__file__).resolve().parent / "sources/identifiants.json").read_text(encoding='utf-8'))
+BASE_ROLES = json.loads((Path(__file__).resolve().parent / "sources/roles-base.json").read_text(encoding='utf-8'))
 
-JOURNEY_STEPS = json.loads((Path(__file__).resolve().parent / 'sources/journey-steps.json').read_text())
+JOURNEY_STEPS = json.loads((Path(__file__).resolve().parent / 'sources/journey-steps.json').read_text(encoding='utf-8'))
 MAX_JSON = 40 * 1024 * 1024
 MAX_FILE = 20 * 1024 * 1024
 KEY = re.compile(r'^[A-Za-z0-9_-]{1,200}$')
@@ -77,6 +77,46 @@ class Store:
             ''')
         self.dbpath.chmod(0o600)
         self.attempts = []
+        self.repair_base_role_labels()
+
+    def repair_base_role_labels(self):
+        """Réparer les libellés de base mal décodés, sans écraser la personnalisation."""
+        with self.lock, self.connect() as db:
+            version, state = self.state(db)
+            if not isinstance(state, dict): return
+            before = copy.deepcopy(state)
+            repaired = []
+            for role in state.get('roles', []):
+                template = next((r for r in BASE_ROLES if r['key'] == role.get('baseRoleKey')), None)
+                if not template: continue
+                for field in ('name', 'function', 'resp'):
+                    expected = template.get(field, '')
+                    current = role.get(field)
+                    # Les variantes couvrent une ou deux lectures UTF-8 comme CP1252/Latin-1.
+                    variants = {expected}
+                    for _ in range(2):
+                        for value in tuple(variants):
+                            for encoding in ('cp1252', 'latin-1'):
+                                try: variants.add(value.encode('utf-8').decode(encoding))
+                                except UnicodeError: pass
+                    if isinstance(current, str) and current != expected and current in variants:
+                        role[field] = expected
+                        repaired.append({'id': role.get('id'), 'field': field})
+            if repaired:
+                db.execute('UPDATE state SET version=?,data=? WHERE id=1', (version + 1, encoded(state)))
+                self.trace(db, 'SYSTEM', 'Correction des accents des rôles de base', before, state, {'fields': repaired})
+
+    def ensure_test_admin(self):
+        """Compte public de recette demandé pour le Legacy local ; aucun écrasement."""
+        with self.lock, self.connect() as db:
+            if db.execute('SELECT 1 FROM users WHERE login=?', ('admin',)).fetchone(): return False
+            user = {'id': 'USER-' + secrets.token_hex(12), 'login': 'admin',
+                    'name': 'Administrateur de test', 'permission': 'admin', 'perimeterIds': [],
+                    'roleIds': [], 'canValidate': True, 'active': True, 'testAccount': True}
+            salt = secrets.token_hex(24)
+            db.execute('INSERT INTO users VALUES(?,?,?,?,?)', (user['id'], user['login'], encoded(user), salt, password_hash('admin', salt)))
+            self.trace(db, 'SYSTEM', 'Création du compte de test Legacy', None, public_user(user))
+            return True
 
     def connect(self):
         db = sqlite3.connect(self.dbpath, timeout=15)
@@ -620,10 +660,13 @@ class Handler(SimpleHTTPRequestHandler):
         with st.lock, st.connect() as db:
             if path == '/api/session' and self.command == 'GET':
                 setup = bool(db.execute('SELECT 1 FROM users').fetchone())
+                test_row = db.execute('SELECT data FROM users WHERE login=?', ('admin',)).fetchone()
+                test_user = json.loads(test_row['data']) if test_row else {}
+                test_available = bool(test_user.get('testAccount') and test_user.get('active') and test_user.get('permission') == 'admin')
                 try:
                     u, csrf = self.auth(db)
                     return self.send_json({'configured': setup, 'user': public_user(u), 'csrf': csrf})
-                except Problem: return self.send_json({'configured': setup, 'user': None})
+                except Problem: return self.send_json({'configured': setup, 'user': None, 'testAccountAvailable': test_available})
             if path in ('/api/setup', '/api/login') and self.command == 'POST':
                 st.attempts = [x for x in st.attempts if x > time.time() - 300]
                 if len(st.attempts) >= 20: raise Problem(429, 'Trop de tentatives : réessayez dans cinq minutes.')
@@ -669,6 +712,7 @@ class Handler(SimpleHTTPRequestHandler):
                         if permission not in ('admin', 'editor', 'viewer'): raise Problem(422, 'Permission inconnue.')
                         target.update({k: data[k] for k in ('name', 'active', 'canValidate', 'perimeterIds', 'roleIds') if k in data})
                         target['permission'] = permission
+                        if data.get('password'): target.pop('testAccount', None)
                         _, s = st.state(db)
                         if not set(target['perimeterIds']) <= {p['id'] for p in (s or {}).get('perimeters', [])} or not set(target['roleIds']) <= {r['id'] for r in (s or {}).get('roles', [])}: raise Problem(422, 'Affectation inconnue.')
                         if not any((x if x['id'] != target['id'] else target)['active'] and (x if x['id'] != target['id'] else target)['permission'] == 'admin' for x in st.users(db)):
