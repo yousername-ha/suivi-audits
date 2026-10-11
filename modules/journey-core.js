@@ -282,10 +282,20 @@
     "needsReview",
   ]);
   function snapshot(r) {
+    const withoutCodes = (value) =>
+      Array.isArray(value)
+        ? value.map(withoutCodes)
+        : value && typeof value === "object"
+          ? Object.fromEntries(
+              Object.entries(value)
+                .filter(([k]) => k !== "internalId")
+                .map(([k, v]) => [k, withoutCodes(v)]),
+            )
+          : value;
     return Object.fromEntries(
       Object.entries(r || {})
-        .filter(([k]) => !ignored.has(k))
-        .map(([k, v]) => [k, C.clone(v)]),
+        .filter(([k]) => !ignored.has(k) && k !== "internalId")
+        .map(([k, v]) => [k, withoutCodes(C.clone(v))]),
     );
   }
   function accepted(s, ref, latest = true) {
@@ -355,7 +365,7 @@
     const validationNeeded =
       t.requiresValidation &&
       (!t.validation ||
-        JSON.stringify(t.validation.dataSnapshot) !==
+        JSON.stringify(snapshot(t.validation.dataSnapshot)) !==
           JSON.stringify(snapshot(business)));
     return { missing, validationNeeded, business };
   }

@@ -1,5 +1,10 @@
 # Livraison de la refonte Legacy
 
+L’évolution du registre central, de l’administration et des identifiants est décrite
+dans [RISQUES-ADMINISTRATION.md](RISQUES-ADMINISTRATION.md). Le jeu de démonstration
+se charge depuis **Administration → Données de démonstration**, après confirmation.
+Il n’est pas préinstallé dans les données d’un utilisateur.
+
 Branche exclusive : **`legacy/test-lots-d-f`**. La publication sur cette branche
 Legacy autonome est autorisée par l’utilisateur pour permettre ses tests et son
 téléchargement. Son nom historique reste inchangé. `main` et

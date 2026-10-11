@@ -58,7 +58,7 @@
       ...(old || { id: C.id("PER"), createdAt: C.now() }),
       name: C.required(fields.name, "Le nom"),
       type: fields.type || "Établissement",
-      internalId: C.cleanText(fields.internalId || "", 100),
+      internalId: old?.internalId || "",
       finessEJ: C.cleanText(fields.finessEJ || "", 9),
       finessEG: C.cleanText(fields.finessEG || "", 9),
       parentId: fields.parentId || "",
@@ -213,6 +213,15 @@
   function collections(s) {
     init(s);
     return {
+      risk: s.riskMgmt?.risks || [],
+      riskStudy: s.riskMgmt?.studies || [],
+      riskAssessment: s.riskMgmt?.assessments || [],
+      riskScenario: s.riskMgmt?.scenarios || [],
+      riskTreatment: s.riskMgmt?.treatments || [],
+      riskMeasure: s.riskMgmt?.measures || [],
+      riskDecision: s.riskMgmt?.decisions || [],
+      riskPolicy: s.riskMgmt?.policies || [],
+      control: s.items,
       action: s.findings,
       establishment: s.crrc?.establishments || [],
       proof: s.evidences,

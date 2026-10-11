@@ -1,5 +1,9 @@
 # Recette de la refonte Legacy
 
+Cette recette correspond à la livraison initiale `3e3fad5`. Les résultats de l’évolution
+risques/administration et la nouvelle non-régression figurent dans
+[RECETTE-RISQUES-ADMINISTRATION.md](RECETTE-RISQUES-ADMINISTRATION.md).
+
 Branche `legacy/test-lots-d-f`, 11 octobre 2026. Chromium local, comptes,
 établissements et pièces exclusivement **synthétiques**. Les recettes utilisent
 des bases temporaires hors dépôt ; aucun profil de production n’est chargé.

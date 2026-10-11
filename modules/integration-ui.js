@@ -125,7 +125,13 @@
       id ? "Modifier le périmètre" : "Déclarer un périmètre",
       field("name", "Nom", p.name, "text", 'required maxlength="500"') +
         select("type", "Type", I.TYPES, p.type || "Établissement") +
-        field("internalId", "Identifiant interne", p.internalId) +
+        field(
+          "internalId",
+          "Identifiant interne automatique",
+          p.internalId || "Attribué à l’enregistrement",
+          "text",
+          "readonly",
+        ) +
         select(
           "parentId",
           "Rattachement hiérarchique",
@@ -251,20 +257,38 @@
             userIds: f.getAll("userIds"),
           };
           if (r.id) Object.assign(r, next);
-          else
-            s.roles.push({
-              ...next,
-              id: C.id("ROLE"),
-              createdAt: C.now(),
-              email: "",
-              phone: "",
-              refs: [],
-            });
+          else {
+            const existing = s.roles.find(
+              (x) =>
+                x.name.trim().toLocaleLowerCase() ===
+                next.name.trim().toLocaleLowerCase(),
+            );
+            if (
+              existing &&
+              existing.baseRoleKey &&
+              !existing.holder &&
+              !existing.userIds?.length
+            ) {
+              Object.assign(existing, next);
+            } else if (existing)
+              throw Error("Ce rôle existe déjà ; modifiez ses affectations.");
+            else
+              s.roles.push({
+                ...next,
+                id: C.id("ROLE"),
+                createdAt: C.now(),
+                email: "",
+                phone: "",
+                refs: [],
+              });
+          }
           C.log(
             s,
             "Rôle / affectations",
             "role",
-            r.id || s.roles.at(-1).id,
+            r.id ||
+              s.roles.find((x) => x.name === next.name)?.id ||
+              s.roles.at(-1).id,
             null,
             next,
           );
@@ -484,6 +508,14 @@
     related,
     perimeterForm,
     roleForm,
+    accounts,
+    rolesView: () => {
+      const previous = api.ui.perimetersView;
+      api.ui.perimetersView = "roles";
+      const html = perimeters();
+      api.ui.perimetersView = previous;
+      return html;
+    },
     api: () => api,
     users: () => users,
   };

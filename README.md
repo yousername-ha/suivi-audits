@@ -1,4 +1,4 @@
-# Pilotage Legacy — périmètres, parcours guidé, CaRE/HAS et PCRA
+# Pilotage Legacy — périmètres, risques, parcours guidé, CaRE/HAS et PCRA
 
 Refonte locale du 11 octobre 2026, exclusivement sur **`legacy/test-lots-d-f`**.
 La branche principale et la nouvelle application restent inchangées.
@@ -78,6 +78,19 @@ le lanceur Python local est nécessaire. Le dossier auditeur exporté reste auto
 6. **PCRA** : politiques d’impact versionnées, BIA par activité, impacts temporels,
    besoins humains/matériels/SI, PCA et PRA distincts, objectifs métier et techniques,
    exercices, RETEX et actions correctives. Modifier un BIA signale les plans à revoir.
+7. **Risques et études EBIOS RM** : registre central indépendant des études,
+   évaluations historisées, références initiale/résiduelle et décision d’acceptation,
+   scénarios, traitements, mesures/preuves et actions partagées. Cartographie consolidée
+   par périmètre avec barèmes/couleurs versionnés, Excel et rapport imprimable/PDF.
+8. **Administration** : comptes/habilitations, dix rôles de base, paramètres,
+   référentiels et journal. Aucun écran de sauvegarde ou de mise à jour dans ce panneau.
+   **Données de démonstration → Ajouter le jeu FICTIF** fournit sur confirmation un
+   GHT, CaRE/PCRA et trois risques dans deux études, sans écrasement ni compte ajouté.
+
+Les références internes (`PERI-`, `IMP-`, `RISK-`, `EVR-`, etc.) sont attribuées
+automatiquement par le serveur. Les anciennes clés techniques et leurs liens sont
+conservés. La mise à niveau ajoute les compteurs et rôles manquants sans changer
+les validations BIA/PCA/parcours existantes.
 
 La navigation conserve les anciennes pages et les regroupe dans quatre rubriques
 repliables, sur un fond neutre avec des accents Sauge.
@@ -107,6 +120,8 @@ l’administrateur. Le message de sauvegarde en bas indique le résultat serveur
 
 - [Diagnostic avant toute modification](docs/DIAGNOSTIC-REFONTE-LEGACY.md)
 - [Modèles, API, migrations et décisions](docs/REFONTE-LEGACY.md)
+- [Risques centraux, administration et jeu FICTIF](docs/RISQUES-ADMINISTRATION.md)
+- [Recette risques/administration et non-régression](docs/RECETTE-RISQUES-ADMINISTRATION.md)
 - [Guide CaRE/HAS existant](docs/GUIDE-UTILISATION.md)
 - [Sources officielles et limites](docs/SOURCES-ET-LIMITES.md)
 - [Dossier auditeur autonome](docs/MODE-AUDITEUR.md)
@@ -117,12 +132,14 @@ l’administrateur. Le message de sauvegarde en bas indique le résultat serveur
 Python seul pour le serveur ; Node.js et Playwright sont utilisés pour les tests.
 
 ```sh
-node --test tests/core.test.cjs tests/integration.test.cjs
+node --test tests/core.test.cjs tests/integration.test.cjs tests/risk.test.cjs
 python3 tests/server_test.py
+python3 tests/server_risk_test.py
 node tests/browser-refonte.cjs
+node tests/browser-risks.cjs
 ```
 
-La dernière commande démarre **son propre serveur et un stockage temporaire**.
+Les deux recettes navigateur intégrées démarrent **leur propre serveur et un stockage temporaire**.
 Pour la recette historique adaptée au serveur, lancer un serveur **neuf et dédié**,
 jamais celui contenant vos données :
 

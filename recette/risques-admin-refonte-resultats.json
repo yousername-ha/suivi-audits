@@ -1,0 +1,94 @@
+{
+  "executedAt": "2026-10-11T14:32:57.467Z",
+  "passed": 17,
+  "failed": 0,
+  "pageErrors": [],
+  "externalRequests": 0,
+  "tests": [
+    {
+      "name": "Installation, création du compte et état serveur autoritatif",
+      "status": "PASSÉ",
+      "durationMs": 1468
+    },
+    {
+      "name": "GHT, deux établissements et SI mutualisé déclarés dans l’interface",
+      "status": "PASSÉ",
+      "durationMs": 3207
+    },
+    {
+      "name": "Responsable issu du registre existant, fonction et compte affecté",
+      "status": "PASSÉ",
+      "durationMs": 1471
+    },
+    {
+      "name": "Parcours D2 : mêmes évaluations et données que les menus unitaires",
+      "status": "PASSÉ",
+      "durationMs": 1325
+    },
+    {
+      "name": "Action idempotente, clôture depuis le plan central et validation humaine distincte",
+      "status": "PASSÉ",
+      "durationMs": 2809
+    },
+    {
+      "name": "Pièce financière réelle, montant exact et téléchargement protégé",
+      "status": "PASSÉ",
+      "durationMs": 854
+    },
+    {
+      "name": "Création du BIA et impacts temporels sur les données persistées",
+      "status": "PASSÉ",
+      "durationMs": 1703
+    },
+    {
+      "name": "PCA et PRA reliés au BIA, avec objectifs métier et techniques distincts",
+      "status": "PASSÉ",
+      "durationMs": 2597
+    },
+    {
+      "name": "Modification du BIA : anciens plans signalés à réexaminer",
+      "status": "PASSÉ",
+      "durationMs": 814
+    },
+    {
+      "name": "Exercice réalisé, RETEX et action corrective centrale sans doublon",
+      "status": "PASSÉ",
+      "durationMs": 2011
+    },
+    {
+      "name": "Vue GHT consolidée, établissement et contexte conservé",
+      "status": "PASSÉ",
+      "durationMs": 1329
+    },
+    {
+      "name": "PCRA : pièces, actions centrales et liens CaRE sans duplication",
+      "status": "PASSÉ",
+      "durationMs": 688
+    },
+    {
+      "name": "Rapport PCRA et Excel réels : BIA, plans, exercice, actions et preuve",
+      "status": "PASSÉ",
+      "durationMs": 972
+    },
+    {
+      "name": "Sauvegarde complète : données intégrées et pièce physique conservée",
+      "status": "PASSÉ",
+      "durationMs": 829
+    },
+    {
+      "name": "Contrôle serveur : compte en lecture, établissement interdit et pièce protégée",
+      "status": "PASSÉ",
+      "durationMs": 1463
+    },
+    {
+      "name": "Navigation regroupée, clavier et responsive à quatre largeurs",
+      "status": "PASSÉ",
+      "durationMs": 834
+    },
+    {
+      "name": "Rechargement : parcours, BIA, actions et pièces restaurés depuis le serveur",
+      "status": "PASSÉ",
+      "durationMs": 827
+    }
+  ]
+}

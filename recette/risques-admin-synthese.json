@@ -1,0 +1,14 @@
+{
+  "unitPassed": 48,
+  "riskServerPassed": 11,
+  "historicalServerPassed": 5,
+  "risksBrowserPassed": 18,
+  "refonteBrowserPassed": 17,
+  "regressionBrowserPassed": 22,
+  "passed": 121,
+  "failed": 0,
+  "notExecuted": 1,
+  "sourceTrackedFilesUnchanged": 592,
+  "gitleaksFilesFindings": 0,
+  "executedAt": "2026-10-11T14:38:14.785458+00:00"
+}

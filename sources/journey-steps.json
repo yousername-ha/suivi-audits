@@ -33,11 +33,11 @@
   {
     "id": "risks",
     "label": "Apprécier les risques",
-    "why": "Documenter les enjeux et décisions dans les objets existants.",
-    "kind": "process",
+    "why": "Identifier les risques centraux et conserver leurs évaluations et décisions.",
+    "kind": "risk",
     "fields": [
-      "name",
-      "desc"
+      "title",
+      "description"
     ]
   },
   {

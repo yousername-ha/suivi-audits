@@ -4,6 +4,9 @@ from pathlib import Path
 from http.cookies import SimpleCookie
 from urllib.parse import urlsplit, unquote
 import copy, hashlib, hmac, json, re, secrets, sqlite3, threading, time
+from legacy_risks import validate_risks
+ID_PREFIXES = json.loads((Path(__file__).resolve().parent / "sources/identifiants.json").read_text())
+BASE_ROLES = json.loads((Path(__file__).resolve().parent / "sources/roles-base.json").read_text())
 
 JOURNEY_STEPS = json.loads((Path(__file__).resolve().parent / 'sources/journey-steps.json').read_text())
 MAX_JSON = 40 * 1024 * 1024
@@ -18,7 +21,7 @@ PATHS = [('items',), ('findings',), ('roles',), ('perimeters',), ('processes',),
          ('journey', 'runs'), ('journey', 'tasks'), ('pcra', 'bias'),
          ('pcra', 'plans'), ('pcra', 'exercises'), ('pcra', 'policies'), ('crrc', 'establishments'),
          ('crrc', 'resources'), ('crrc', 'runs'), ('crrc', 'restores'), ('crrc', 'alerts'),
-         ('invest', 'lines')]
+         ('invest', 'lines')] + [('riskMgmt', k) for k in ('risks','studies','assessments','scenarios','policies','treatments','measures','decisions')]
 
 def get(s, path):
     for k in path:
@@ -32,6 +35,12 @@ def put(s, path, rows):
 
 def encoded(s):
     return json.dumps(s, ensure_ascii=False, separators=(',', ':'), sort_keys=True)
+
+def without_codes(value):
+    """Une référence de présentation ne modifie pas le contenu métier validé."""
+    if isinstance(value, dict): return {k:without_codes(v) for k,v in value.items() if k!='internalId'}
+    if isinstance(value, list): return [without_codes(v) for v in value]
+    return value
 
 def digest(s):
     return hashlib.sha256(encoded(s).encode()).hexdigest()
@@ -62,7 +71,8 @@ class Store:
             CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY, user_id TEXT, csrf TEXT, expires REAL);
             CREATE TABLE IF NOT EXISTS files(key TEXT PRIMARY KEY, owner TEXT, sha256 TEXT, mime TEXT, data BLOB);
             CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY, at REAL, actor TEXT, action TEXT, before_hash TEXT, after_hash TEXT, details TEXT);
-            PRAGMA user_version=1;
+            CREATE TABLE IF NOT EXISTS code_counters(prefix TEXT PRIMARY KEY, value INTEGER NOT NULL);
+            PRAGMA user_version=2;
             ''')
         self.dbpath.chmod(0o600)
         self.attempts = []
@@ -129,9 +139,11 @@ class Store:
                 rows = []
                 for r in get(s, path):
                     covered = self.allowed(s, {'perimeterIds': r.get('perimeterIds', [])})
-                    if covered & allowed:
+                    if covered & allowed or r.get('baseRoleKey') and not r.get('perimeterIds'):
                         role = copy.deepcopy(r); role['perimeterIds'] = sorted(covered & allowed); rows.append(role)
                 put(out, path, rows)
+            elif path in [('pcra','policies'), ('riskMgmt','policies')]:
+                put(out, path, [copy.deepcopy(r) for r in get(s,path) if self.allowed(s, {'perimeterIds':r.get('perimeterIds',[])}) & allowed])
             else:
                 put(out, path, [copy.deepcopy(r) for r in get(s, path) if self.visible(r, index, allowed)])
         visible_perimeters = {p['id'] for p in out.get('perimeters', [])}
@@ -150,6 +162,7 @@ class Store:
         # Journaux client non transmis : peuvent contenir des snapshots hors périmètre.
         out.setdefault('df', {}).update({'schema': 1, 'actor': u['name'], 'history': [], 'auditPackages': []})
         out.setdefault('journey', {})['schema'] = 1
+        out.setdefault('riskMgmt', {})['schema'] = 1
         out.setdefault('pcra', {}).update({'schema': 1, 'settings': copy.deepcopy(s.get('pcra', {}).get('settings', {}))})
         out.setdefault('crrc', {})['offers'] = []
         return out
@@ -173,6 +186,11 @@ class Store:
             if path in [('perimeters',), ('roles',)]:
                 if encoded(rows) != encoded(previous): raise Problem(403, 'La structure des périmètres et des rôles est réservée à l’administration.')
                 continue
+            if path in [('pcra','policies'), ('riskMgmt','policies')]:
+                inherited = {r['id']:r for r in previous if not self.visible(r,index,allowed)}
+                for r in rows:
+                    if r.get('id') in inherited and encoded(r)!=encoded(inherited[r['id']]): raise Problem(403, 'Politique héritée en lecture seule.')
+                rows = [r for r in rows if r.get('id') not in inherited]
             hidden = [r for r in get(old, path) if not self.visible(r, index, allowed)]
             hidden_ids = {r.get('id') for r in hidden}
             for r in rows:
@@ -188,7 +206,7 @@ class Store:
                 if r.get('id') not in hidden_ids:
                     if 'history' in before: r['history'] = copy.deepcopy(before['history'])
                     hidden_refs = [ref for ref in before.get('objectRefs', []) if ref not in next((x.get('objectRefs', []) for x in previous if x.get('id') == r.get('id')), [])]
-                    r['objectRefs'] = hidden_refs + r.get('objectRefs', [])
+                    if hidden_refs or 'objectRefs' in before or 'objectRefs' in r: r['objectRefs'] = hidden_refs + r.get('objectRefs', [])
             put(result, path, merged + list(by_id.values()))
         result['updatedAt'] = incoming.get('updatedAt', old.get('updatedAt'))
         return result
@@ -302,6 +320,7 @@ class Store:
                     if not u['canValidate']:
                         raise Problem(403, 'Validation humaine non autorisée.')
                     validation['actorId'] = u['id']; validation['actor'] = u['name']
+        validate_risks(s, old, u, self, Problem)
         self.sync_perimeters(s, old, u)
         self.validate_pcra(s, old, u)
         self.reconcile(s)
@@ -310,6 +329,45 @@ class Store:
         for event in s.get('df', {}).get('history', []):
             if event.get('id') not in prior_events:
                 event['actorId'] = u['id']; event['actor'] = u['name']
+
+    def allocate_identifiers(self, s, old, u, db):
+        if not isinstance(s, dict): raise Problem(422, 'État invalide.')
+        if u['permission'] == 'admin':
+            s.setdefault('integration', {'schema':1})['adminSchema'] = 1
+            roles = s.setdefault('roles', [])
+            for template in BASE_ROLES:
+                if not any(r.get('baseRoleKey') == template['key'] or r.get('name', '').casefold() == template['name'].casefold() for r in roles):
+                    roles.append({**template, 'baseRoleKey': template['key'], 'id': 'ROLE-' + secrets.token_hex(12), 'holder': '', 'deputy': '', 'email': '', 'phone': '', 'refs': [], 'perimeterIds': [], 'userIds': []})
+        records = []
+        for prefix, paths in ID_PREFIXES.items():
+            for path in paths:
+                for r in get(s, path):
+                    if not isinstance(r, dict): raise Problem(422, 'Objet invalide.')
+                    selected = 'PRA' if prefix == 'PCA' and r.get('kind') == 'PRA' else prefix
+                    records.append((selected, r))
+                    if prefix == 'IMP': records.extend(('ACTI', a) for a in r.get('activities', []))
+        old_codes = {r.get('id'): r.get('internalId') for path in PATHS for r in get(old or {}, path) if isinstance(r, dict)}
+        old_codes.update({a.get('id'):a.get('internalId') for b in (old or {}).get('pcra',{}).get('bias',[]) for a in b.get('activities',[])})
+        used = set()
+        for prefix, r in records:
+            code = r.get('internalId')
+            previous = old_codes.get(r.get('id'))
+            if previous and code != previous: raise Problem(422, 'L’identifiant interne est immuable.')
+            if code:
+                if not isinstance(code,str) or len(code)>100 or code.casefold() in used: raise Problem(422,'Identifiant interne dupliqué ou invalide.')
+                if not previous and u['permission'] != 'admin': raise Problem(403, 'Identifiant attribué par le serveur.')
+                used.add(code.casefold())
+                match = re.fullmatch(re.escape(prefix)+r'-(\d+)',code)
+                if match: db.execute('INSERT INTO code_counters VALUES(?,?) ON CONFLICT(prefix) DO UPDATE SET value=MAX(value,excluded.value)',(prefix,int(match.group(1))))
+        for prefix, r in records:
+            if not r.get('internalId'):
+                db.execute('INSERT OR IGNORE INTO code_counters VALUES(?,0)',(prefix,))
+                while True:
+                    db.execute('UPDATE code_counters SET value=value+1 WHERE prefix=?',(prefix,))
+                    n=db.execute('SELECT value FROM code_counters WHERE prefix=?',(prefix,)).fetchone()[0]
+                    code=prefix+'-'+str(n).zfill(6)
+                    if code.casefold() not in used: break
+                r['internalId']=code;used.add(code.casefold())
 
     def sync_perimeters(self, s, old, u):
         perimeters = {p['id']: p for p in s.get('perimeters', [])}
@@ -345,7 +403,7 @@ class Store:
         bias = {b['id']: b for b in pcra.get('bias', [])}
         old_bias = {b['id']: b for b in (old or {}).get('pcra', {}).get('bias', [])}
         for p in policies.values():
-            if p['id'] in old_policies and p != old_policies[p['id']]: raise Problem(422, 'Une politique est immuable : créez une nouvelle version.')
+            if p['id'] in old_policies and without_codes(p) != without_codes(old_policies[p['id']]): raise Problem(422, 'Une politique est immuable : créez une nouvelle version.')
             for key in ('horizons', 'dimensions', 'levels'):
                 rows = p.get(key, [])
                 if not 1 <= len(rows) <= 30 or len({r.get('id') for r in rows}) != len(rows) or any(not r.get('label') for r in rows): raise Problem(422, 'Politique BIA invalide.')
@@ -357,7 +415,7 @@ class Store:
             covered = self.allowed(s, {'perimeterIds': p.get('perimeterIds', [])})
             if not set(b['perimeterIds']) <= covered: raise Problem(422, 'Politique hors périmètre BIA.')
             previous = old_bias.get(b['id'])
-            changed = not previous or any(b.get(k) != previous.get(k) for k in ('activities', 'policyId', 'perimeterIds'))
+            changed = not previous or any(without_codes(b.get(k)) != without_codes(previous.get(k)) for k in ('activities', 'policyId', 'perimeterIds'))
             b['contentRevision'] = (previous or {}).get('contentRevision', 0) + int(changed)
             issues = self.bia_issues(b, p)
             b['issues'] = issues
@@ -416,7 +474,7 @@ class Store:
         actions = {a.get('id'): a for a in s.get('findings', [])}
         def snapshot(r):
             ignored = {'id', 'createdAt', 'updatedAt', 'history', 'validation', 'objectRefs', 'actionIds', 'reviewState', 'needsReview'}
-            return {k: copy.deepcopy(v) for k, v in (r or {}).items() if k not in ignored}
+            return without_codes({k: copy.deepcopy(v) for k, v in (r or {}).items() if k not in ignored})
         visited = set()
         def task_status(t, chain):
             if t['id'] in chain: raise Problem(422, 'Cycle entre les sous-tâches.')
@@ -443,7 +501,7 @@ class Store:
             if t.get('requireProof') and not any(self.proof_accepted(s, r, latest=t.get('requireLatestProof', True)) for r in refs): missing.append('Version actuelle de preuve acceptée en interne requise')
             if t.get('requirement') and obj and obj.get('status') not in ('Atteint', 'Conforme', 'Non applicable'): missing.append('Exigence à évaluer et valider dans son registre')
             if any(by_id[dep].get('status') != 'Terminé' for dep in t.get('dependsOn', [])): missing.append('Dépendance non terminée')
-            needs = bool(t.get('requiresValidation') and (not t.get('validation') or t['validation'].get('dataSnapshot') != snapshot(obj)))
+            needs = bool(t.get('requiresValidation') and (not t.get('validation') or snapshot(t['validation'].get('dataSnapshot')) != snapshot(obj)))
             requested = t.get('completionRequested', False)
             status = 'Bloqué' if t.get('blocked') or requested and missing else 'En attente de validation' if requested and needs else 'Terminé' if requested else 'En cours' if t.get('started') or a and a.get('status') == 'En cours' else 'Non commencé'
             t.update({'status': status, 'issues': missing, 'needsValidation': needs})
@@ -623,6 +681,7 @@ class Handler(SimpleHTTPRequestHandler):
                     incoming = self.read_json()
                     if incoming.get('version') != version: raise Problem(409, 'Données modifiées ailleurs. Rechargez avant de poursuivre ; votre saisie peut être exportée.')
                     next_state = st.merge(old, incoming.get('state'), u)
+                    st.allocate_identifiers(next_state, old, u, db)
                     st.validate(next_state, old, u, db)
                     st.trace(db, u['id'], 'Sauvegarde métier', old, next_state, {'objects': st.changes(old, next_state)})
                     db.execute('UPDATE state SET version=?,data=? WHERE id=1', (version + 1, encoded(next_state))); db.commit()
@@ -647,6 +706,10 @@ class Handler(SimpleHTTPRequestHandler):
                     if u['permission'] != 'admin' and not any(st.visible(p, st.record_index(s or {}), st.allowed(s or {}, u)) for p in proofs):
                         if proofs or blob['owner'] != u['id']: raise Problem(403, 'Pièce hors périmètre.')
                     self.send_response(200); self.send_header('Content-Type', 'application/octet-stream'); self.send_header('Content-Disposition', 'attachment; filename="piece"'); self.send_header('Content-Length', str(len(blob['data']))); self.end_headers(); self.wfile.write(blob['data']); return
+            if path == '/api/admin/status' and self.command == 'GET':
+                if u['permission'] != 'admin': raise Problem(403, 'Administration requise.')
+                _, state = st.state(db)
+                return self.send_json({'schema': 2, 'users': len(st.users(db)), 'perimeters': len((state or {}).get('perimeters',[])), 'sessions': db.execute('SELECT COUNT(*) FROM sessions WHERE expires>?',(time.time(),)).fetchone()[0], 'prefixes': sorted(set(ID_PREFIXES) | {'PRA','ACTI'}), 'riskSchema': 1})
             if path == '/api/audit' and self.command == 'GET':
                 if u['permission'] != 'admin': raise Problem(403, 'Administration requise.')
                 rows = [dict(x) for x in db.execute('SELECT * FROM audit ORDER BY id DESC LIMIT 500')]

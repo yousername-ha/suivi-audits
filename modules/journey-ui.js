@@ -231,6 +231,16 @@
       );
       return;
     }
+    if (["risk", "riskStudy", "riskTreatment", "riskMeasure"].includes(kind)) {
+      if (!ref)
+        binding = {
+          taskId: id,
+          kind,
+          ids: I.collections(U.state())[kind].map((r) => r.id),
+        };
+      window.LegacyRiskUI.open(kind, ref?.id, t.perimeterIds);
+      return;
+    }
     if (kind === "evaluation") {
       if (!ref)
         throw Error("Rattachez une évaluation existante à cette sous-tâche.");

@@ -1,13 +1,17 @@
 {
-  "version": "2.0.0-local-legacy",
-  "createdAt": "2026-10-11T13:11:39.139650+00:00",
+  "version": "2.1.0-local-legacy",
+  "createdAt": "2026-10-11T14:38:14.785701+00:00",
   "branch": "legacy/test-lots-d-f",
   "scope": [
     "Périmètres et responsables",
     "Parcours guidé et plan partagé",
     "D — CaRE D2 et pièces financières",
     "PCRA — BIA/PCA/PRA/exercices",
-    "Navigation et non-régression",
+    "Administration et rôles de base",
+    "Identifiants internes automatiques",
+    "Registre central indépendant et études EBIOS RM",
+    "Évaluations et décisions historisées, cartographie et traitements",
+    "Jeu de données FICTIF",
     "F — HAS et dossier auditeur conservés"
   ],
   "excludedLots": [
@@ -15,23 +19,28 @@
     "J"
   ],
   "sourceCommit": "1b698736c02e482570332eac7b5a98896892e669",
-  "baseLegacyCommit": "8b135695e30e8e505ced06034c1db319d4ab5a9b",
+  "baseLegacyCommit": "3e3fad529b0adaf28048b32e0ce081f938ffa425",
   "sourceTrackedFilesUnchanged": 592,
   "githubModified": true,
   "protectedBranchHeads": {
     "main": "f407f31385f8476280e99ff3b74c0ec0cc88388a",
     "feature/gpt6-evolution-smsi-grc": "1b698736c02e482570332eac7b5a98896892e669"
   },
-  "dataIncluded": "Application, référentiels attribués, modèles existants et fixtures de tests synthétiques ; aucune base utilisateur",
+  "dataIncluded": "Application, référentiels attribués, modèles, générateur du jeu FICTIF, fixtures et captures synthétiques historiques ; aucune base utilisateur",
   "manifestSelfHashExcluded": true,
   "checks": {
-    "unitPassed": 39,
-    "serverPassed": 5,
+    "unitPassed": 48,
+    "riskServerPassed": 11,
+    "historicalServerPassed": 5,
+    "risksBrowserPassed": 18,
     "refonteBrowserPassed": 17,
     "regressionBrowserPassed": 22,
-    "browserNotExecuted": 1,
+    "passed": 121,
     "failed": 0,
-    "gitleaksFilesFindings": 0
+    "notExecuted": 1,
+    "sourceTrackedFilesUnchanged": 592,
+    "gitleaksFilesFindings": 0,
+    "executedAt": "2026-10-11T14:38:14.785458+00:00"
   },
   "files": [
     {
@@ -41,13 +50,13 @@
     },
     {
       "path": "AGENTS.md",
-      "sizeBytes": 1781,
-      "sha256": "1212de035b10319e8ccdab021c6b1a7b879200ed3f00019f3a3b08311e46ee9a"
+      "sizeBytes": 2250,
+      "sha256": "6cb4fbecdd408fb8b8df1fcb93fa094ede170d8ee4ca6ee22e671cc5d6fe83dc"
     },
     {
       "path": "README.md",
-      "sizeBytes": 7473,
-      "sha256": "9df093d10138f2187c13b5ea1e8d56e0106c0bdac6d04f0906a11a5cb15529c8"
+      "sizeBytes": 8766,
+      "sha256": "8f7c6b45b90a8cec19396691c525c3e053061faa5fef518ed27e8a9bc8ea167e"
     },
     {
       "path": "demarrer.bat",
@@ -80,6 +89,11 @@
       "sha256": "de516c67c19a9f7ae2ab92cf592f7faafb66c6ffa97e599e6a31f6fe4837fd35"
     },
     {
+      "path": "docs/DIAGNOSTIC-RISQUES-ADMINISTRATION.md",
+      "sizeBytes": 2706,
+      "sha256": "5d7fa58320665d7246a24346519feb93b19827a627bdcf3f905da4f12bedecc6"
+    },
+    {
       "path": "docs/DIAGNOSTIC.md",
       "sizeBytes": 3287,
       "sha256": "02d9c13cf824eb27234d8a74791e855845148dbd3e61ab2b513e61d3d8bff777"
@@ -91,8 +105,8 @@
     },
     {
       "path": "docs/LIVRAISON-GITHUB.md",
-      "sizeBytes": 2484,
-      "sha256": "02585529caabf20169efbe09f81d893eac02642f79a0c4430264930326f4c2d9"
+      "sizeBytes": 2818,
+      "sha256": "77de75acc5590deea9aa4d624d47fd1a2c01857c52106cdacb3d3ad4dd34647f"
     },
     {
       "path": "docs/MODE-AUDITEUR.md",
@@ -101,8 +115,13 @@
     },
     {
       "path": "docs/RECETTE-REFONTE.md",
-      "sizeBytes": 4875,
-      "sha256": "5e1746d9152ed27c60b689cc0ff6e0fb550538987ecfe5ee84e8fe51545f8ff1"
+      "sizeBytes": 5110,
+      "sha256": "fba70ade0a6091e1c812464614c168824d328832d93303b6838a56b4207d2626"
+    },
+    {
+      "path": "docs/RECETTE-RISQUES-ADMINISTRATION.md",
+      "sizeBytes": 5534,
+      "sha256": "8f51b6af33cce62334860ce76869c68fea88347f31616b151bcd7686642e4cab"
     },
     {
       "path": "docs/RECETTE.md",
@@ -115,19 +134,29 @@
       "sha256": "ed0ff9c8efb0e98824427ab865438893c6c2eb7923f61295f455060ca26e516a"
     },
     {
+      "path": "docs/RISQUES-ADMINISTRATION.md",
+      "sizeBytes": 11375,
+      "sha256": "418f11fce03c32e7892dc0c4e6d9dcdd742431dbca4b5cbaad419aa36ed4c6b1"
+    },
+    {
       "path": "docs/SOURCES-ET-LIMITES.md",
       "sizeBytes": 7233,
       "sha256": "c699cd917b2d611363883974724626e876fa7e4b0944ab71713cda6b35838f29"
     },
     {
       "path": "index.html",
-      "sizeBytes": 3171944,
-      "sha256": "6a3acbeabab5dc8cb4b9e58f123f097a3c4f985de77963611a4bd97050a9d329"
+      "sizeBytes": 3172374,
+      "sha256": "dae59d21571af00bcbbb86d91d13cbfb99cd7701177d948ee1926659ccd655b5"
+    },
+    {
+      "path": "legacy_risks.py",
+      "sizeBytes": 10826,
+      "sha256": "6c9f7d9e27169f5a33fd058de4eb9a7a6710680c9248a843594474866ec2b1d2"
     },
     {
       "path": "legacy_server.py",
-      "sizeBytes": 46791,
-      "sha256": "a0314436c18067b90eee25934b588531a15a949c413e5b0e4dbf564f1b0838b0"
+      "sizeBytes": 51923,
+      "sha256": "9b5e7ffb3d7c5e370ba7154def8cd196e53332364a27d1f7b04f6abe208830f5"
     },
     {
       "path": "lib/docx.iife.js",
@@ -153,6 +182,16 @@
       "path": "lib/xlsx.full.min.js",
       "sizeBytes": 881727,
       "sha256": "c9506197caf809a075b6dee1da0d36fb19da7158ffe8a88e7b0c96c5d8623c99"
+    },
+    {
+      "path": "modules/admin-ui.js",
+      "sizeBytes": 9376,
+      "sha256": "64ba177864c13b4b0e86833edc70938e014f807c868f95a45f95dbb35fb65e55"
+    },
+    {
+      "path": "modules/demo-data.js",
+      "sizeBytes": 15866,
+      "sha256": "c25fcc3dacf4e3439a91f453172ea049f25511ba6ac8e1341aed8dab374177a0"
     },
     {
       "path": "modules/df-auditor.js",
@@ -201,13 +240,13 @@
     },
     {
       "path": "modules/integration-core.js",
-      "sizeBytes": 9776,
-      "sha256": "9bed8d505083df117be2bb9d6d8fc4852879ef45d356f6321c49d36bd1fde95a"
+      "sizeBytes": 10156,
+      "sha256": "7da5762b31bd6a1b235b2e77aeed68dd2617a0073f730a1a0cad2b818ca252c2"
     },
     {
       "path": "modules/integration-ui.js",
-      "sizeBytes": 23600,
-      "sha256": "29611da7cccf6a027012c8f5dfd0bacb53f2e8331852d2c1d5ea3389bb977671"
+      "sizeBytes": 24593,
+      "sha256": "b3fa0645cc28560d7d48b2487e256796d86dc33fff90fe4e651ede2c02f80f3b"
     },
     {
       "path": "modules/integration.css",
@@ -216,23 +255,23 @@
     },
     {
       "path": "modules/journey-core.js",
-      "sizeBytes": 15500,
-      "sha256": "26ae174b888ff460dfe569426957fba1cd62f44d98df31efc32a8b9ec3387b9b"
+      "sizeBytes": 15898,
+      "sha256": "4c1c3fe33d2ffdf9800a3a8017b3eac79af3e707cc0478720e744b5c2baaa2a8"
     },
     {
       "path": "modules/journey-steps.js",
-      "sizeBytes": 2130,
-      "sha256": "3e72d1513cf95897f6aba7e9ed84b4af2eb3b7d154ed2c742a6b70c15414d5d2"
+      "sizeBytes": 2151,
+      "sha256": "d021ee510fb979ad4f59fa02f94fab4324142e1650b4d5d3b6cd4c65c117ec76"
     },
     {
       "path": "modules/journey-ui.js",
-      "sizeBytes": 16984,
-      "sha256": "90f51c098185540f502b6b5fb3708907f9c04570828b3c8fb53a19a87f840f9c"
+      "sizeBytes": 17296,
+      "sha256": "71a835b809af0613ea68c2a7e2a6b25728ecca23d83e37b1fd14bfd4bd21a04c"
     },
     {
       "path": "modules/navigation-ui.js",
-      "sizeBytes": 4081,
-      "sha256": "c377566983d17f3de8d53adb020b5913fdf553368b6e87a3d533f2d5d9f555dd"
+      "sizeBytes": 4099,
+      "sha256": "e63214584ec29924f9820158332155671bc4a36b5f7a8748bd4e9957fdfcef22"
     },
     {
       "path": "modules/pcra-core.js",
@@ -241,8 +280,18 @@
     },
     {
       "path": "modules/pcra-ui.js",
-      "sizeBytes": 37024,
-      "sha256": "bffc96cb56d7307307afcd9c7bd675571db2a94942532ba0189963331fd9a012"
+      "sizeBytes": 37100,
+      "sha256": "b4ff7f8bc960abff56ccb3abd3f1007530f55eaf1af4ea3e8da232255e03bc63"
+    },
+    {
+      "path": "modules/risk-core.js",
+      "sizeBytes": 15807,
+      "sha256": "a708d5672491019c53089d3982ebdc689e44f26eaf85ce65bf7fdf0989085620"
+    },
+    {
+      "path": "modules/risk-ui.js",
+      "sizeBytes": 41751,
+      "sha256": "bd94c220d509cdf248f3258ac634a21545e4df3137be2e48d2355949661c9260"
     },
     {
       "path": "modules/server-client.js",
@@ -345,6 +394,51 @@
       "sha256": "6fb4e8402a5505c986e74e0b8600e6603bb836faa35a90a27f6b81380a2c854c"
     },
     {
+      "path": "recette/risques-admin-browser-resultats.json",
+      "sizeBytes": 3148,
+      "sha256": "4a396ad10b4e3f48ca2044e349d6eb4ca4e7eaf501f5a0ad6d07248ddbd633bd"
+    },
+    {
+      "path": "recette/risques-admin-conservation.json",
+      "sizeBytes": 124,
+      "sha256": "0223ea12a01fe86afee81a56a485aef223f3da993dea557c3ae816654e48dd35"
+    },
+    {
+      "path": "recette/risques-admin-refonte-resultats.json",
+      "sizeBytes": 2703,
+      "sha256": "b2ac876327b7bdd4878bf397038b4b3a4ea87d1615127f98969e5133afbd85d6"
+    },
+    {
+      "path": "recette/risques-admin-regression-resultats.json",
+      "sizeBytes": 4114,
+      "sha256": "1c6ec0552bfda3ec7ee90f482568b0a855c4fc66501be5103ad05cb5783928d1"
+    },
+    {
+      "path": "recette/risques-admin-serveur-historique-resultats.txt",
+      "sizeBytes": 261,
+      "sha256": "812b63219ac8c18200ba0a5c438f85ee09dcbc7ce6e63ca8728afa67a35b2d58"
+    },
+    {
+      "path": "recette/risques-admin-serveur-resultats.txt",
+      "sizeBytes": 110,
+      "sha256": "4d01680e123b50f733fd842496c79117d7322354ac9b7f8295d3194efdd74ee7"
+    },
+    {
+      "path": "recette/risques-admin-syntaxe.json",
+      "sizeBytes": 67,
+      "sha256": "57076785166f153f424f51aca4e88ec1786ba310a274267e5fd7c89883b079b8"
+    },
+    {
+      "path": "recette/risques-admin-synthese.json",
+      "sizeBytes": 343,
+      "sha256": "419a614b558760cc10da73b3265e3e5392000fa077ac5572428920a34ac9375d"
+    },
+    {
+      "path": "recette/risques-admin-unit-resultats.txt",
+      "sizeBytes": 4523,
+      "sha256": "5f0bfd21f4f422e7c567bb3cd25ffe0b70a349593d45a324a7b568fb979fc7d1"
+    },
+    {
       "path": "recette/unit-branche-resultats.txt",
       "sizeBytes": 2106,
       "sha256": "4555c1db62a8df5e2c0b4b0a1ef5db221bfc4961e9e250f72423e50112935620"
@@ -370,9 +464,19 @@
       "sha256": "c9a0cd229ba510d36b2804f98e9b6a0e99e26dbc249894bd66d6076b04c55bb1"
     },
     {
+      "path": "sources/identifiants.json",
+      "sizeBytes": 1298,
+      "sha256": "eee586f4ece04b3412b49a0c68f41b869e06df00ca922fcaada27c6e4e06e4ac"
+    },
+    {
       "path": "sources/journey-steps.json",
-      "sizeBytes": 2556,
-      "sha256": "a2e7fac874bb4de3461e7c32df9567e4b493e259da34713eb98e1ea6d54d9f49"
+      "sizeBytes": 2577,
+      "sha256": "eb35b3484b396b1673dd2eeacffeaccd8b52b7930a6b72e3c443cad52d54a977"
+    },
+    {
+      "path": "sources/roles-base.json",
+      "sizeBytes": 1976,
+      "sha256": "57106d876c0f8a177428d84c0090793f785464993736044198f469102619fece"
     },
     {
       "path": "sources/verification.json",
@@ -383,6 +487,11 @@
       "path": "tests/browser-refonte.cjs",
       "sizeBytes": 26757,
       "sha256": "3eccd01a0dc99a5324c1ffb701d05548b82f797f506831138ec93afcda28cea2"
+    },
+    {
+      "path": "tests/browser-risks.cjs",
+      "sizeBytes": 28660,
+      "sha256": "19e4aaeaba57a2bbc3c78d1688e1291637e6cbfbde0fe7d5b0de0f1dd435287b"
     },
     {
       "path": "tests/browser.cjs",
@@ -398,6 +507,16 @@
       "path": "tests/integration.test.cjs",
       "sizeBytes": 14253,
       "sha256": "d6644423b43d88ab0d3eefc6bf16a4ee8270b112d198279abda38b7e63ab8173"
+    },
+    {
+      "path": "tests/risk.test.cjs",
+      "sizeBytes": 7466,
+      "sha256": "55c3ee27659818eeb7d545ecde4d106458c629361bdb66359739d506c7c1a0d1"
+    },
+    {
+      "path": "tests/server_risk_test.py",
+      "sizeBytes": 8118,
+      "sha256": "9b61bda322cef2d7f38fa60dd46adaba946b58dc76560d2c4e60357af2227bbc"
     },
     {
       "path": "tests/server_test.py",

@@ -1,0 +1,62 @@
+[
+  {
+    "key": "direction",
+    "name": "Direction",
+    "function": "Direction de l’établissement",
+    "resp": "Valider les orientations, arbitrer les moyens et accepter les risques."
+  },
+  {
+    "key": "rssi",
+    "name": "RSSI",
+    "function": "Sécurité des systèmes d’information",
+    "resp": "Coordonner la cybersécurité, l’appréciation des risques et les plans de traitement."
+  },
+  {
+    "key": "dsi",
+    "name": "DSI",
+    "function": "Direction des systèmes d’information",
+    "resp": "Piloter les systèmes, leurs dépendances, sauvegardes et objectifs de reprise."
+  },
+  {
+    "key": "pcra",
+    "name": "Responsable PCRA",
+    "function": "Continuité et reprise d’activité",
+    "resp": "Coordonner BIA, PCA/PRA, exercices et maintien des plans."
+  },
+  {
+    "key": "metier",
+    "name": "Responsable métier",
+    "function": "Responsable de service ou d’activité",
+    "resp": "Décrire les activités, leurs besoins, impacts et solutions dégradées."
+  },
+  {
+    "key": "qualite",
+    "name": "Responsable qualité",
+    "function": "Qualité et gestion des risques",
+    "resp": "Piloter les exigences qualité, les preuves et les actions d’amélioration."
+  },
+  {
+    "key": "dpo",
+    "name": "DPO",
+    "function": "Protection des données",
+    "resp": "Conseiller sur la protection des données et les impacts pour les personnes."
+  },
+  {
+    "key": "finances",
+    "name": "Responsable financier",
+    "function": "Finances et achats",
+    "resp": "Suivre les dépenses, engagements et pièces justificatives."
+  },
+  {
+    "key": "referent",
+    "name": "Référent établissement",
+    "function": "Coordination locale",
+    "resp": "Assurer le suivi du périmètre et les relations avec les responsables transverses."
+  },
+  {
+    "key": "auditeur",
+    "name": "Auditeur interne",
+    "function": "Évaluation indépendante",
+    "resp": "Préparer les contrôles et documenter les constats et preuves."
+  }
+]

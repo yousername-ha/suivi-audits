@@ -1,0 +1,99 @@
+{
+  "executedAt": "2026-10-11T14:33:34.936Z",
+  "passed": 18,
+  "failed": 0,
+  "pageErrors": [],
+  "externalRequests": 0,
+  "tests": [
+    {
+      "name": "Installation : dix rôles de base, administration sans sauvegarde ni mise à jour",
+      "status": "PASSÉ",
+      "durationMs": 976
+    },
+    {
+      "name": "Périmètre : référence PERI automatique et rôles proposés comme responsables",
+      "status": "PASSÉ",
+      "durationMs": 803
+    },
+    {
+      "name": "Démonstration réelle : GHT, deux études, trois risques, BIA/PCA et facture physique",
+      "status": "PASSÉ",
+      "durationMs": 760
+    },
+    {
+      "name": "Jeu répétable : aucun doublon, aucune altération des données antérieures ni compte ajouté",
+      "status": "PASSÉ",
+      "durationMs": 471
+    },
+    {
+      "name": "Fiche centrale : deux évaluations datées, auteur réel et niveaux initial/résiduel/accepté",
+      "status": "PASSÉ",
+      "durationMs": 291
+    },
+    {
+      "name": "Création indépendante et évaluation sans étude, avec identifiants RISK/EVR",
+      "status": "PASSÉ",
+      "durationMs": 2058
+    },
+    {
+      "name": "Cartographie GHT et établissement : uniquement les références choisies, jamais un historique arbitraire",
+      "status": "PASSÉ",
+      "durationMs": 826
+    },
+    {
+      "name": "Exports Excel et rapport imprimable issus de la cartographie filtrée",
+      "status": "PASSÉ",
+      "durationMs": 618
+    },
+    {
+      "name": "Archiver une étude conserve trois risques initiaux, leurs quatre évaluations et tous les liens",
+      "status": "PASSÉ",
+      "durationMs": 1167
+    },
+    {
+      "name": "Traitements, preuves et action unique : clôturer une action conserve le résiduel",
+      "status": "PASSÉ",
+      "durationMs": 1394
+    },
+    {
+      "name": "Comptes et habilitations créés dans le panneau d’administration",
+      "status": "PASSÉ",
+      "durationMs": 1160
+    },
+    {
+      "name": "Lecteur établissement : registre restreint, politique GHT héritée, API administration interdite",
+      "status": "PASSÉ",
+      "durationMs": 868
+    },
+    {
+      "name": "Contributeur établissement : édition autorisée, références et historiques protégés côté serveur",
+      "status": "PASSÉ",
+      "durationMs": 2094
+    },
+    {
+      "name": "Politique personnalisée, matrice non uniforme et nouvelle version sans altérer l’historique",
+      "status": "PASSÉ",
+      "durationMs": 2481
+    },
+    {
+      "name": "Parcours guidé : modification du même risque central sans duplication",
+      "status": "PASSÉ",
+      "durationMs": 1316
+    },
+    {
+      "name": "Compatibilité des anciennes rubriques avec le jeu de démonstration",
+      "status": "PASSÉ",
+      "durationMs": 132
+    },
+    {
+      "name": "Responsive : administration et cartographie à 390, 768, 1440 et 3840 pixels",
+      "status": "PASSÉ",
+      "durationMs": 1059
+    },
+    {
+      "name": "Persistance : références automatiques, évaluations et pièces conservées après redémarrage",
+      "status": "PASSÉ",
+      "durationMs": 660
+    }
+  ]
+}

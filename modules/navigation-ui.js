@@ -5,7 +5,7 @@
     {
       id: "pilotage",
       label: "Pilotage",
-      sections: ["dash", "journey", "perimeters", "pil"],
+      sections: ["dash", "journey", "perimeters", "pil", "risks"],
     },
     {
       id: "references",
@@ -20,7 +20,7 @@
     {
       id: "resources",
       label: "Ressources et bilans",
-      sections: ["gap", "inv", "rep"],
+      sections: ["gap", "inv", "rep", "admin"],
     },
   ];
   let lastSection = "";

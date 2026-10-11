@@ -395,7 +395,10 @@
     return (
       U.header(
         b.title,
-        U.scopeLabel(b.perimeterIds) + " · version " + b.version,
+        (b.internalId ? b.internalId + " · " : "") +
+          U.scopeLabel(b.perimeterIds) +
+          " · version " +
+          b.version,
         U.button(
           "Ajouter une activité",
           "pcra-activity-new",

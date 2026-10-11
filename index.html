@@ -990,6 +990,10 @@ dialog.sheet { box-shadow:-16px 0 50px rgba(27,54,37,.12); }
 <script src="modules/finance-ui.js"></script>
 <script src="modules/pcra-core.js"></script>
 <script src="modules/pcra-ui.js"></script>
+<script src="modules/risk-core.js"></script>
+<script src="modules/risk-ui.js"></script>
+<script src="modules/demo-data.js"></script>
+<script src="modules/admin-ui.js"></script>
 <script src="modules/navigation-ui.js"></script>
 <script src="lib/jszip.min.js"></script>
 <script>
@@ -1202,7 +1206,7 @@ document.addEventListener('drop',e=>{const b=e.target.closest&&e.target.closest(
   const ids=navDef().map(x=>x.id).filter(x=>x!==navDragId);const r=b.getBoundingClientRect();let i=ids.indexOf(b.dataset.sec);if(i<0)return;if(e.clientX>=r.left+r.width/2)i++;
   ids.splice(i,0,navDragId);ui.navOrder=ids;saveUI();navDragged=true;setTimeout(()=>navDragged=false,50);render();toast('Ordre du menu enregistré sur ce poste.')});
 document.addEventListener('dragend',()=>{navDragId=null;document.querySelectorAll('.mn.dragging,.mn.drop-l,.mn.drop-r').forEach(x=>x.classList.remove('dragging','drop-l','drop-r'))});
-function navMatch(it){if(it.tab!==ui.tab)return false;return Object.entries(it.set||{}).every(([k,v])=>(ui[k]||NAV_DEF[k])===v)}
+function navMatch(it){if(it.tab!==ui.tab)return false;return Object.entries(it.match||it.set||{}).every(([k,v])=>(ui[k]||NAV_DEF[k])===v)}
 function navCurrent(){const nav=navDef();for(const s of nav){const it=s.items.find(navMatch);if(it)return {s,it}}
   for(const s of nav){const it=s.items.find(i=>i.tab===ui.tab);if(it)return {s,it}}return {s:nav[0],it:nav[0].items[0]}}
 function navGo(it,noHist){if(!noHist){ui.hist=ui.hist||[];const snap={tab:ui.tab};Object.keys(NAV_DEF).forEach(k=>snap[k]=ui[k]);ui.hist.push(snap);if(ui.hist.length>30)ui.hist.shift()}ui.tab=it.tab;Object.assign(ui,it.set||{});ui.navLast=ui.navLast||{};ui.navLastG=ui.navLastG||{};const s=navDef().find(x=>x.items.some(y=>y.id===it.id));if(s){ui.navLast[s.id]=it.id;if(it.g)ui.navLastG[it.g]=it.id}saveUI();render();window.scrollTo({top:0})}
@@ -5089,7 +5093,7 @@ document.addEventListener('click',async e=>{
     case 'tkadd':{const f=S.findings.find(x=>x.id===el.dataset.fd),inp=(el.parentElement&&el.parentElement.querySelector('.newTask'))||document.querySelector(`.newTask[data-fd="${CSS.escape(f.id)}"]`),v=inp&&inp.value.trim();
       if(v){(f.tasks=f.tasks||[]).push({t:v,done:false,createdAt:nowTs()});touch(true);const n=document.querySelector(`.newTask[data-fd="${CSS.escape(f.id)}"]`);if(n)n.focus()}break}
     case 'xlsimport':$('#xlsFile').click();break;
-    case 'settings':renderSettings();$('#settings').showModal();break;
+    case 'settings':if(window.LegacyServer.user()?.permission==='admin'){ui.tab='admin';ui.adminView='overview';render();saveUI()}else{renderSettings();$('#settings').showModal()}break;
     case 'rotoggle':{if(RO_FORCED)break;RO=el.checked;try{localStorage.setItem('suivi-audits-smsi:ro',RO?'1':'0')}catch(x){}if(!RO){document.body.classList.remove('ro');render();renderSettings();const b=document.getElementById('roBadge');if(b)b.hidden=true}else{applyRO()}toast(RO?'Mode lecture seule activé.':'Mode lecture seule désactivé.');break}
     case 'closeset':$('#settings').close();break;
     case 'addyear':{const y=Math.max(...S.years)+1;S.years.push(y);S.items.forEach(i=>{i.afnor[y]='';i.interne[y]=''});touch(true);renderSettings();break}
@@ -5168,7 +5172,7 @@ $('#settings').addEventListener('click',e=>{if(e.target===e.currentTarget)e.curr
 try{const th=localStorage.getItem('suivi-audits-smsi:theme');if(th&&th!=='auto')document.documentElement.dataset.theme=th}catch(e){}
 /* Extensions D/F : point d’intégration de la copie locale. */
 const dfMigrate=migrate3;
-migrate3=function(state){return window.LegacyIntegration.validate(window.LegacyDF.validateState(dfMigrate(state)))};
+migrate3=function(state){return window.LegacyRisks.init(window.LegacyIntegration.validate(window.LegacyDF.validateState(dfMigrate(state))))};
 const dfIntegration=window.LegacyDFUI.install({
   getState:()=>S, replaceState:state=>{S=migrate3(state)}, ui,TABS,NAV_DEF,
   readOnly:()=>RO,touch,render:(...args)=>render(...args),saveUI,openSheet,
@@ -5177,7 +5181,7 @@ const dfIntegration=window.LegacyDFUI.install({
 const lxIntegration=window.LegacyIntegrationUI.install({
   getState:()=>S, replaceState:state=>{S=migrate3(state)},ui,TABS,NAV_DEF,
   readOnly:()=>RO,touch,render:(...args)=>render(...args),saveUI,openSheet,
-  toast,confirm:askModal,df:dfIntegration,navigate:(tab,set={})=>{ui.tab=tab;Object.assign(ui,set);render();saveUI()}
+  toast,confirm:askModal,mapTile:(...args)=>mtile(...args).replace("data-act=","data-lx-act="),df:dfIntegration,navigate:(tab,set={})=>{ui.tab=tab;Object.assign(ui,set);render();saveUI()}
 });
 const dfNav=navDef;
 navDef=function(){return lxIntegration.extendNav(dfIntegration.extendNav(dfNav()))};
@@ -5206,7 +5210,7 @@ boot=async function(){
     RO=RO_FORCED||window.LegacyServer.user().permission==='viewer';
     S.df.actor=window.LegacyServer.user().name;
     const addedCatalogs=dfIntegration.ensureCatalog();await lxIntegration.load();
-    if(!remote||(addedCatalogs&&window.LegacyServer.user().permission==='admin')){await window.LegacyServer.save(S);await window.LegacyServer.flush()}
+    if(!remote||((addedCatalogs||S.integration.adminSchema!==1)&&window.LegacyServer.user().permission==='admin')){await window.LegacyServer.save(S);await window.LegacyServer.flush()}
     window.LegacyServer.ready();render();setStatus('saved');
   }catch(e){toast(e.message)}
 };

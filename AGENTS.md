@@ -11,6 +11,11 @@ Cette instruction remplace l’interdiction initiale de publication pour cette l
   principale ; aucune CI, release, image Docker ou mise à jour déployée par cette livraison.
 - Copie HTML/CSS/JavaScript/JSON : préserver le menu, le style Sauge et les parcours.
 - Le périmètre actuel inclut la refonte demandée : périmètres, parcours guidé, CaRE D2, preuves financières et PCRA (BIA/PCA/PRA/exercices), puis navigation. Exécuter les phases dans cet ordre. I et J restent exclus.
+- Il inclut désormais l’administration (sans sauvegarde ni mise à jour), les rôles de base,
+  les références internes automatiques, le jeu FICTIF et le registre central des risques.
+  Séparer risques, études, évaluations, scénarios, mesures et décisions. Les évaluations,
+  décisions et politiques sont immuables. La cartographie utilise les références explicites ;
+  archiver une étude ou clôturer une action ne supprime ni ne recalcule les risques.
 - Aucun secret, email personnel, document réel, cookie ni profil navigateur en Git.
   Utiliser une identité de commit anonyme et des fixtures synthétiques.
 - Les données restent locales : SQLite et pièces dans `.legacy-data`, exclu de Git.

@@ -1,0 +1,127 @@
+{
+  "executedAt": "2026-10-11T14:33:13.977Z",
+  "environment": "Chromium local, profils isolés, données synthétiques",
+  "passed": 22,
+  "failed": 0,
+  "notExecuted": 1,
+  "pageErrors": [],
+  "externalRequests": 0,
+  "tests": [
+    {
+      "name": "Démarrage local : menu legacy, rubriques CaRE/HAS et aucune donnée opérationnelle préremplie",
+      "status": "PASSÉ",
+      "durationMs": 1800
+    },
+    {
+      "name": "CaRE : dossier générique D2 et objectif local avec périmètre réel saisi",
+      "status": "PASSÉ",
+      "durationMs": 1378
+    },
+    {
+      "name": "Preuve physique : dépôt, SHA-256 et rattachement dans le registre partagé",
+      "status": "PASSÉ",
+      "durationMs": 1497
+    },
+    {
+      "name": "Vérification interne et validation documentée d’un objectif CaRE",
+      "status": "PASSÉ",
+      "durationMs": 1935
+    },
+    {
+      "name": "Preuve partagée et nouvelle version : aucun déplacement silencieux des références",
+      "status": "PASSÉ",
+      "durationMs": 2436
+    },
+    {
+      "name": "Action suivie dans le plan legacy et aucun recalcul automatique du statut",
+      "status": "PASSÉ",
+      "durationMs": 2367
+    },
+    {
+      "name": "Budgets : saisie décimale française, sommes exactes et historique",
+      "status": "PASSÉ",
+      "durationMs": 1864
+    },
+    {
+      "name": "HAS : création d’une campagne version 2025 et pagination de 118 critères",
+      "status": "PASSÉ",
+      "durationMs": 1169
+    },
+    {
+      "name": "HAS : applicabilité justifiée et preuve partagée pour une validation interne",
+      "status": "PASSÉ",
+      "durationMs": 3654
+    },
+    {
+      "name": "Exports Excel CaRE/HAS réels et données limitées aux dossiers sélectionnés",
+      "status": "PASSÉ",
+      "durationMs": 1322
+    },
+    {
+      "name": "Rapport PDF réel : périmètre, preuves et décisions lisibles",
+      "status": "PASSÉ",
+      "durationMs": 350
+    },
+    {
+      "name": "Dossier auditeur exporté : une sélection explicite et aucun objet/version hors périmètre",
+      "status": "PASSÉ",
+      "durationMs": 1368
+    },
+    {
+      "name": "Application auditeur hors ligne : consultation, observations et rapport sans accès à l’application",
+      "status": "PASSÉ",
+      "durationMs": 1102
+    },
+    {
+      "name": "Import et décision sur observations : scope contrôlé, résultats internes conservés",
+      "status": "PASSÉ",
+      "durationMs": 1582
+    },
+    {
+      "name": "Sauvegarde complète : données et deux versions de preuve avec empreintes vérifiables",
+      "status": "PASSÉ",
+      "durationMs": 717
+    },
+    {
+      "name": "Export JSON du menu legacy : conservation des données existantes et des lots D/F",
+      "status": "PASSÉ",
+      "durationMs": 139
+    },
+    {
+      "name": "Restauration dans un profil neuf : données, relations et pièces réellement récupérées",
+      "status": "PASSÉ",
+      "durationMs": 2853
+    },
+    {
+      "name": "Archive altérée refusée avant toute écriture, dépôt trop volumineux également refusé",
+      "status": "PASSÉ",
+      "durationMs": 136
+    },
+    {
+      "name": "Lecture seule : commandes désactivées et garde sur un événement forcé",
+      "status": "PASSÉ",
+      "durationMs": 960
+    },
+    {
+      "name": "Non-régression du menu : les pages legacy restent accessibles",
+      "status": "PASSÉ",
+      "durationMs": 4602
+    },
+    {
+      "name": "Responsive et thème sombre : captures réelles, sans débordement du document",
+      "status": "PASSÉ",
+      "durationMs": 2933
+    },
+    {
+      "name": "Sources et versions : campagne D1 réelle, import de grille, archivage et réouverture",
+      "status": "PASSÉ",
+      "durationMs": 5735
+    },
+    {
+      "name": "Ouverture sans serveur : prérequis explicite pour la persistance et les permissions",
+      "status": "NON EXÉCUTÉ",
+      "durationMs": 150,
+      "notExecutedReason": "Politique Chromium du workspace : file:// interdit. Application qualifiée sur le serveur Legacy localhost."
+    }
+  ]
+}
