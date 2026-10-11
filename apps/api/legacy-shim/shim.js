@@ -18,7 +18,13 @@
       var cle = 'suivi-audits-smsi:ui';
       var pref = JSON.parse(localStorage.getItem(cle) || '{}') || {};
       pref.tab = m[1];
-      if (m[2]) { var kv = m[2].slice(1).split('='); pref[kv[0]] = kv[1]; }
+      if (m[2]) {
+        // Nom de vue pris dans la liste fixe des préférences de l'outil, jamais recopié depuis l'adresse.
+        var kv = m[2].slice(1).split('=');
+        var VUES = ['confView', 'crView', 'crrcView', 'ctxView', 'dashView', 'ecView', 'iaView', 'incView', 'invView',
+          'orgaView', 'pilView', 'planView', 'prvView', 'repView', 'supView'];
+        for (var i = 0; i < VUES.length; i++) if (VUES[i] === kv[0]) pref[VUES[i]] = kv[1];
+      }
       localStorage.setItem(cle, JSON.stringify(pref));
     } catch (e) { /* stockage indisponible : l'outil s'ouvre sur sa page habituelle */ }
     try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* sans effet */ }
