@@ -83,7 +83,7 @@ Routes livrées en phase 0 :
 | Temps réel | `GET /api/events` (SSE), `POST /api/presence` |
 | Affichage | préférences par personne (`/api/account/preferences`) ; écrans muraux (`/api/admin/murs`, `POST /api/mur/activer`) ; synthèse et flux de la vue `/mur` (`/api/mur/synthese`, `/api/mur/events`) |
 | Outil historique | `/legacy/`, `/api/legacy/state`, `/api/legacy/modules`, `/api/refs` |
-| Cartographie | objets de la plateforme filtrés par droits (`/api/carto/objects`), cartes avec `If-Match` (`/api/carto/maps`), versions, nature des enjeux, journal des exports ([ADR 0013](adr/0013-cartographie.md)) |
+| Cartographie | objets de la plateforme filtrés par droits (`/api/carto/objects`), création et renommage d'objets depuis la carte, écrits dans leur module sous verrou (`POST /api/carto/objects`, `PUT /api/carto/objects/name`), cartes avec `If-Match` (`/api/carto/maps`), versions, nature des enjeux, journal des exports ([ADR 0013](adr/0013-cartographie.md), [ADR 0026](adr/0026-cartographie-creation-depuis-la-carte.md)) |
 
 ## 4. Données
 

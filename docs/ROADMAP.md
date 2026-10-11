@@ -42,11 +42,11 @@ La reprise couvre également **tout le socle v2 encore dans l'ancienne interface
 - [x] `CARTO-05` génération assistée ; `CARTO-06` canevas SVG (zoom, recherche, préréglages, filtres) ; `CARTO-07` mode édition ; `CARTO-08` synchronisation ; `CARTO-09` ajout depuis la plateforme ; `CARTO-10` fiche détaillée.
 - [x] `CARTO-11` versions ; `CARTO-12` nature des enjeux ; `CARTO-13` exports PNG, SVG, PDF, JSON ; `CARTO-14` reprise legacy de `S.maps` et transition.
 
-## Cartographie : construire une carte de zéro — validée, en cours
+## Cartographie : construire une carte de zéro — livrée
 
 Demande du RSSI du 08/10/2026 après le premier essai ([spécification](cartographie/SPEC-EDITION-LIBRE.md), [ADR 0026](adr/0026-cartographie-creation-depuis-la-carte.md), parcours 21 à 32 de la [recette](cartographie/RECETTE.md)). Prévue **avant la phase 1** (chantier court).
-- [ ] `CARTO-15` créer depuis la carte un objet de la plateforme (enregistré dans son module) ; `CARTO-16` menu contextuel (clic droit, appui long, Maj+F10) ; `CARTO-17` palette en glisser-déposer.
-- [ ] `CARTO-18` renommer depuis la carte ; `CARTO-19` notes, cadres libres et carte vierge.
+- [x] `CARTO-15` créer depuis la carte un objet de la plateforme (enregistré dans son module) ; `CARTO-16` menu contextuel (clic droit, appui long, Maj+F10) ; `CARTO-17` palette en glisser-déposer.
+- [x] `CARTO-18` renommer depuis la carte ; `CARTO-19` notes, cadres libres et carte vierge.
 
 ## Interface — retours du premier essai
 

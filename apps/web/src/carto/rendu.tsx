@@ -180,6 +180,9 @@ export function teinteOf(o: MapObject | undefined): string {
     case 'grc':
     case 'zone':
       return 'gris';
+    case 'note':
+    case 'frame':
+      return (isFrame(o) && o.tint) || (o.type === 'note' ? 'orange' : 'gris');
     case 'lane':
       return FAMILLE_TEINTE[familyOf(isFrame(o) ? o.fam : undefined).k]!;
     case 'stakeholder':
@@ -197,12 +200,16 @@ export const iconOf = (o: MapObject | undefined): string => {
   if (o.type === 'lane') return familyOf(isFrame(o) ? o.fam : undefined).ic;
   if (o.type === 'band') return 'alert';
   if (o.type === 'zone') return 'layers';
+  if (o.type === 'note') return 'doc';
+  if (o.type === 'frame') return 'layers';
   return (o as CartoObject).ic || TYPE_ICONS[o.type] || 'layers';
 };
 
 /* ---------------------------------------------------------------- Nœud */
 export interface EtatNoeud {
   sel: boolean;
+  /** Poignée de redimensionnement (sélection simple, en édition). */
+  poignee?: boolean;
   dim: boolean;
   hit: boolean;
   edit: boolean;
@@ -299,6 +306,33 @@ function corps(ref: string, n: MapNode, o: MapObject | undefined, st: EtatNoeud)
         <rect x={x} y={y} width={w} height={h} rx={14} className="c-fond c-tirets" />
         <Texte x={x + 16} y={y + 25} lines={[o.name]} fs={13} cls="c-accent-f" bold />
         <Texte x={x + 130} y={y + 25} lines={[o.sub ?? '']} fs={11.5} cls="c-sec" />
+      </g>
+    );
+  if (o.type === 'note') {
+    const fs = 13;
+    const lignes = String(o.name)
+      .split('\n')
+      .flatMap((l) => (l.trim() ? wrap(l, w - 28, fs, 50) : ['']));
+    return (
+      <g className={`ct-${teinteOf(o)}`}>
+        <rect x={x} y={y} width={w} height={h} rx={8} className="c-doux c-note" />
+        <path d={`M${x + w - 18} ${y}v18h18`} className="c-note-coin" fill="none" />
+        <Texte
+          x={x + 14}
+          y={y + 24}
+          lines={lignes.slice(0, Math.max(1, Math.floor((h - 18) / 17)))}
+          fs={fs}
+          cls="c-texte"
+          interligne={17}
+        />
+      </g>
+    );
+  }
+  if (o.type === 'frame')
+    return (
+      <g className={`ct-${teinteOf(o)}`}>
+        <rect x={x} y={y} width={w} height={h} rx={16} className="c-fond c-cadre-libre" />
+        <Texte x={x + 18} y={y + 30} lines={wrap(o.name, w - 36, 15, 1, true)} fs={15} cls="c-accent-f" bold />
       </g>
     );
   if (o.type === 'lane') {
@@ -469,7 +503,7 @@ export const Noeud = memo(function Noeud({
       {st.hit && <rect x={x - 5} y={y - 5} width={w + 10} height={h + 10} rx={14} className="c-hit" />}
       {st.sel && <rect x={x - 4} y={y - 4} width={w + 8} height={h + 8} rx={14} className="c-sel" />}
       {st.src && <rect x={x - 4} y={y - 4} width={w + 8} height={h + 8} rx={14} className="c-src" />}
-      {st.sel && st.edit && (
+      {st.poignee && st.edit && (
         <rect data-h={ref_} x={x + w - 7} y={y + h - 7} width={14} height={14} rx={3.5} className="c-poignee" />
       )}
     </g>

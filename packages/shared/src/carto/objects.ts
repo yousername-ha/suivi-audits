@@ -10,6 +10,8 @@ import {
   type Referentiel,
   type RelationType,
   type ScopeState,
+  type FreeElement,
+  type Tint,
   FAMILIES,
 } from './model.js';
 
@@ -141,7 +143,17 @@ export interface BuildOptions {
   details?: boolean;
   /** Clé legacy lisible par la personne (chiffres clés du SMSI : pas de « 0 » pour un module non lisible). */
   lisible?: (key: string) => boolean;
+  /** Enjeux créés sur la carte (CARTO-15, rangés dans les réglages de la carte de contexte). */
+  mapIssues?: readonly MapIssue[];
 }
+/** Enjeu créé sur la carte, en attendant la reprise des enjeux (phase 3). */
+export interface MapIssue {
+  label: string;
+  kind: 'ext' | 'int';
+  desc?: string;
+}
+/** Référence d'un enjeu d'après son libellé (identique pour les enjeux dérivés et ceux créés sur la carte). */
+export const issueRef = (label: string): string => 'issue:' + mbHash(label.trim().toLowerCase());
 
 const ISO: Referentiel[] = ['ISO 27001'];
 const BOTH: Referentiel[] = ['ISO 27001', 'HDS'];
@@ -338,6 +350,9 @@ export function buildObjects(state: unknown, opts: BuildOptions): Map<string, Ca
         );
   }
 
+  for (const i of opts.mapIssues ?? [])
+    addIssue(i.label, i.desc ?? '', i.kind, { k: 'map', id: 'carte', l: 'Créé sur la carte' }, []);
+
   const suppliers = arr(S.suppliers),
     appGaps = arr(S.appGaps);
   const supByName = new Map(suppliers.map((s) => [str(s.name).toLowerCase(), s]));
@@ -472,7 +487,25 @@ export function mapOnlyObject(ref: string): FrameObject | null {
       sub: 'Objets de la plateforme non inclus dans le périmètre',
       mapOnly: true,
     };
+  if ((k === 'note' || k === 'frame') && v)
+    return {
+      ref,
+      type: k,
+      name: k === 'note' ? 'Note' : 'Cadre',
+      tint: k === 'note' ? 'orange' : 'gris',
+      mapOnly: true,
+    };
   return null;
+}
+/** Recherche complétée par les notes et cadres libres de la carte (texte et teinte saisis, CARTO-19). */
+export function withFree(lookup: ObjectLookup, free: Readonly<Record<string, FreeElement>> | undefined): ObjectLookup {
+  if (!free || !Object.keys(free).length) return lookup;
+  return (ref) => {
+    const o = lookup(ref);
+    const f = free[ref];
+    if (!f || !o || !('mapOnly' in o)) return o;
+    return { ...o, name: f.text || o.name, tint: f.tint as Tint };
+  };
 }
 /** Objet affiché pour une référence : objet de la plateforme, sinon cadre de la carte, sinon indisponible. */
 export type ObjectLookup = (ref: string) => MapObject | undefined;

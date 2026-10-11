@@ -523,6 +523,10 @@ Un seul module est repris dans des tables dédiées : la **cartographie** (`maps
 | `$.maps.context.hide.{clé}` | maps.layout | 2 | maps, map_versions | |
 | `$.maps.context.ignored` | maps.layout | 2 | maps, map_versions | |
 | `$.maps.context.ignored.{clé}` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.context.free` | maps.layout | 2 | maps, map_versions | Notes et cadres libres créés dans la nouvelle interface (CARTO-19) ; ignorés par l'outil historique. |
+| `$.maps.context.free.{clé}` | maps.layout | 2 | maps, map_versions |  |
+| `$.maps.context.free.{clé}.text` | maps.layout | 2 | maps, map_versions |  |
+| `$.maps.context.free.{clé}.tint` | maps.layout | 2 | maps, map_versions |  |
 | `$.maps.context.versions` | map_versions.map_id | 2 | maps, map_versions | Une ligne par version (20 au plus). |
 | `$.maps.context.versions[]` | map_versions.map_id | 2 | maps, map_versions | Une ligne par version (20 au plus). |
 | `$.maps.context.versions[].id` | map_versions.extra | 2 | maps, map_versions | Identifiant et date d’origine (aller-retour exact). |
@@ -548,6 +552,10 @@ Un seul module est repris dans des tables dédiées : la **cartographie** (`maps
 | `$.maps.context.versions[].map.hide.{clé}` | map_versions.layout | 2 | maps, map_versions | |
 | `$.maps.context.versions[].map.ignored` | map_versions.layout | 2 | maps, map_versions | |
 | `$.maps.context.versions[].map.ignored.{clé}` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.context.versions[].map.free` | map_versions.layout | 2 | maps, map_versions | Notes et cadres libres créés dans la nouvelle interface (CARTO-19) ; ignorés par l'outil historique. |
+| `$.maps.context.versions[].map.free.{clé}` | map_versions.layout | 2 | maps, map_versions |  |
+| `$.maps.context.versions[].map.free.{clé}.text` | map_versions.layout | 2 | maps, map_versions |  |
+| `$.maps.context.versions[].map.free.{clé}.tint` | map_versions.layout | 2 | maps, map_versions |  |
 | `$.maps.context.updatedAt` | maps.extra | 2 | maps, map_versions | Date propre à l’outil historique ; mise à jour à chaque enregistrement. |
 | `$.maps.process` | maps.view | 2 | maps, map_versions | |
 | `$.maps.process.nodes` | maps.layout | 2 | maps, map_versions | |
@@ -569,6 +577,10 @@ Un seul module est repris dans des tables dédiées : la **cartographie** (`maps
 | `$.maps.process.hide.{clé}` | maps.layout | 2 | maps, map_versions | |
 | `$.maps.process.ignored` | maps.layout | 2 | maps, map_versions | |
 | `$.maps.process.ignored.{clé}` | maps.layout | 2 | maps, map_versions | |
+| `$.maps.process.free` | maps.layout | 2 | maps, map_versions | Notes et cadres libres créés dans la nouvelle interface (CARTO-19) ; ignorés par l'outil historique. |
+| `$.maps.process.free.{clé}` | maps.layout | 2 | maps, map_versions |  |
+| `$.maps.process.free.{clé}.text` | maps.layout | 2 | maps, map_versions |  |
+| `$.maps.process.free.{clé}.tint` | maps.layout | 2 | maps, map_versions |  |
 | `$.maps.process.versions` | map_versions.map_id | 2 | maps, map_versions | Une ligne par version (20 au plus). |
 | `$.maps.process.versions[]` | map_versions.map_id | 2 | maps, map_versions | Une ligne par version (20 au plus). |
 | `$.maps.process.versions[].id` | map_versions.extra | 2 | maps, map_versions | Identifiant et date d’origine (aller-retour exact). |
@@ -594,9 +606,18 @@ Un seul module est repris dans des tables dédiées : la **cartographie** (`maps
 | `$.maps.process.versions[].map.hide.{clé}` | map_versions.layout | 2 | maps, map_versions | |
 | `$.maps.process.versions[].map.ignored` | map_versions.layout | 2 | maps, map_versions | |
 | `$.maps.process.versions[].map.ignored.{clé}` | map_versions.layout | 2 | maps, map_versions | |
+| `$.maps.process.versions[].map.free` | map_versions.layout | 2 | maps, map_versions | Notes et cadres libres créés dans la nouvelle interface (CARTO-19) ; ignorés par l'outil historique. |
+| `$.maps.process.versions[].map.free.{clé}` | map_versions.layout | 2 | maps, map_versions |  |
+| `$.maps.process.versions[].map.free.{clé}.text` | map_versions.layout | 2 | maps, map_versions |  |
+| `$.maps.process.versions[].map.free.{clé}.tint` | map_versions.layout | 2 | maps, map_versions |  |
 | `$.maps.process.updatedAt` | maps.extra | 2 | maps, map_versions | Date propre à l’outil historique ; mise à jour à chaque enregistrement. |
 | `$.maps.issueKind` | maps.settings | 2 | maps, map_versions | Nature des enjeux corrigée, dans les réglages de la carte de contexte (CARTO-12). |
 | `$.maps.issueKind.{clé}` | maps.settings | 2 | maps, map_versions | Nature des enjeux corrigée, dans les réglages de la carte de contexte (CARTO-12). |
+| `$.maps.issues` | maps.settings | 2 | maps, map_versions | Enjeux créés sur la carte (CARTO-15), dans les réglages de la carte de contexte jusqu'à la reprise des enjeux. |
+| `$.maps.issues[]` | maps.settings | 2 | maps, map_versions | Enjeux créés sur la carte (CARTO-15), dans les réglages de la carte de contexte jusqu'à la reprise des enjeux. |
+| `$.maps.issues[].label` | maps.settings | 2 | maps, map_versions | Enjeux créés sur la carte (CARTO-15), dans les réglages de la carte de contexte jusqu'à la reprise des enjeux. |
+| `$.maps.issues[].kind` | maps.settings | 2 | maps, map_versions | Enjeux créés sur la carte (CARTO-15), dans les réglages de la carte de contexte jusqu'à la reprise des enjeux. |
+| `$.maps.issues[].desc` | maps.settings | 2 | maps, map_versions | Enjeux créés sur la carte (CARTO-15), dans les réglages de la carte de contexte jusqu'à la reprise des enjeux. |
 
 
 ### B2b — décisions IA sur les sources v2

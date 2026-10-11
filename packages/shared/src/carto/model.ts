@@ -35,7 +35,7 @@ export const OBJECT_TYPES = [
   'grc',
 ] as const;
 export type ObjectType = (typeof OBJECT_TYPES)[number];
-export const FRAME_TYPES = ['lane', 'band', 'zone'] as const;
+export const FRAME_TYPES = ['lane', 'band', 'zone', 'frame', 'note'] as const;
 export type FrameType = (typeof FRAME_TYPES)[number];
 export type NodeType = ObjectType | FrameType;
 
@@ -45,6 +45,8 @@ export const TYPE_LABELS: Record<NodeType | 'missing', string> = {
   lane: 'Zone de processus',
   band: 'Bande d’enjeux',
   zone: 'Zone hors périmètre',
+  frame: 'Cadre',
+  note: 'Note',
   process: 'Processus',
   subprocess: 'Sous-processus',
   stakeholder: 'Partie intéressée',
@@ -58,7 +60,7 @@ export const TYPE_LABELS: Record<NodeType | 'missing', string> = {
   grc: 'Objet du registre SMSI',
 };
 /** Types qui sont des cadres (ils emportent leur contenu quand on les déplace). */
-export const CONTAINER_TYPES: ReadonlySet<string> = new Set(['scope', 'lane', 'band', 'zone']);
+export const CONTAINER_TYPES: ReadonlySet<string> = new Set(['scope', 'lane', 'band', 'zone', 'frame']);
 /** Icône par défaut de chaque type (noms d'icônes dessinées par l'interface). */
 export const TYPE_ICONS: Partial<Record<NodeType | 'missing', string>> = {
   stakeholder: 'users',
@@ -149,8 +151,8 @@ export const GRAPHIC_RELATION_TYPES = RELATION_TYPES.filter((t) => t !== 'part_o
 /* ---------------------------------------------------------------- Objets métier (normalisés par l'API) */
 export type ScopeState = 'in' | 'out' | 'unk';
 export interface IssueSource {
-  /** obj : enjeu d'un objectif ; swot : élément du SWOT le plus récent d'un processus. */
-  k: 'obj' | 'swot';
+  /** obj : enjeu d'un objectif ; swot : élément du SWOT le plus récent d'un processus ; map : créé sur la carte. */
+  k: 'obj' | 'swot' | 'map';
   id: string;
   l: string;
   proc?: string;
@@ -219,7 +221,20 @@ export interface CartoObject {
   scDef?: boolean;
   details?: ObjectDetails;
 }
-/** Cadre propre à une carte (bande de processus, bande d'enjeux, zone hors périmètre). */
+/** Teintes proposées pour les notes et les cadres libres (jetons « carte » de packages/ui). */
+export const TINTS = ['marine', 'bleu', 'violet', 'orange', 'vert', 'gris', 'rouge'] as const;
+export type Tint = (typeof TINTS)[number];
+export const TINT_LABELS: Record<Tint, string> = {
+  marine: 'Marine',
+  bleu: 'Bleu',
+  violet: 'Violet',
+  orange: 'Orange',
+  vert: 'Vert',
+  gris: 'Gris',
+  rouge: 'Rouge',
+};
+
+/** Cadre propre à une carte (bande de processus, bande d'enjeux, zone hors périmètre, cadre libre, note). */
 export interface FrameObject {
   ref: string;
   type: FrameType;
@@ -227,6 +242,8 @@ export interface FrameObject {
   sub?: string;
   fam?: string;
   kind?: 'ext' | 'int';
+  /** Cadre libre ou note : teinte choisie (CARTO-19). */
+  tint?: Tint;
   mapOnly: true;
 }
 export type MapObject = CartoObject | FrameObject;
@@ -260,6 +277,11 @@ export interface MapEdge {
   /** Proposition générée, à valider. */
   gen?: boolean;
 }
+/** Élément propre à la carte (note ou cadre libre, CARTO-19) : texte et teinte. */
+export interface FreeElement {
+  text: string;
+  tint: Tint;
+}
 export interface MapLayout {
   nodes: Record<string, MapNode>;
   edges: MapEdge[];
@@ -267,17 +289,22 @@ export interface MapLayout {
   hide: Record<string, 1>;
   /** Objets volontairement absents (pas de bandeau « nouveaux objets »). */
   ignored: Record<string, 1>;
+  /** Notes et cadres libres (références `note:<id>` et `frame:<id>`). Absent si la carte n'en a pas. */
+  free?: Record<string, FreeElement>;
 }
 export const emptyLayout = (): MapLayout => ({ nodes: {}, edges: [], hide: {}, ignored: {} });
 
 /* ---------------------------------------------------------------- Références */
-const MAP_ONLY_PREFIXES = new Set(['lane', 'band', 'zone']);
+const MAP_ONLY_PREFIXES = new Set(['lane', 'band', 'zone', 'note', 'frame']);
+const FREE_PREFIXES = new Set(['note', 'frame']);
 /** Préfixe d'une référence d'objet (« process », « pi »…, ou « isms », « scope »). */
 export const refPrefix = (ref: string): string => {
   const i = ref.indexOf(':');
   return i < 0 ? ref : ref.slice(0, i);
 };
 export const isMapOnlyRef = (ref: string): boolean => MAP_ONLY_PREFIXES.has(refPrefix(ref));
+/** Note ou cadre libre (élément propre à la carte, jamais recalculé par la disposition automatique). */
+export const isFreeRef = (ref: string): boolean => FREE_PREFIXES.has(refPrefix(ref));
 /** Module d'origine d'un objet (droits : un objet d'un module non lisible n'est pas envoyé, CARTO-01). */
 export const REF_MODULES: Record<string, Module> = {
   process: 'pilotage',

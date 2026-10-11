@@ -1997,6 +1997,22 @@ export const CONTRACT_PATHS: ReadonlyArray<{ path: string; types: string }> = [
     "types": "entier"
   },
   {
+    "path": "$.maps.context.free",
+    "types": "objet (dictionnaire indexé)"
+  },
+  {
+    "path": "$.maps.context.free.{clé}",
+    "types": "objet"
+  },
+  {
+    "path": "$.maps.context.free.{clé}.text",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.context.free.{clé}.tint",
+    "types": "texte"
+  },
+  {
     "path": "$.maps.context.versions",
     "types": "liste"
   },
@@ -2097,6 +2113,22 @@ export const CONTRACT_PATHS: ReadonlyArray<{ path: string; types: string }> = [
     "types": "entier"
   },
   {
+    "path": "$.maps.context.versions[].map.free",
+    "types": "objet (dictionnaire indexé)"
+  },
+  {
+    "path": "$.maps.context.versions[].map.free.{clé}",
+    "types": "objet"
+  },
+  {
+    "path": "$.maps.context.versions[].map.free.{clé}.text",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.context.versions[].map.free.{clé}.tint",
+    "types": "texte"
+  },
+  {
     "path": "$.maps.context.updatedAt",
     "types": "texte"
   },
@@ -2179,6 +2211,22 @@ export const CONTRACT_PATHS: ReadonlyArray<{ path: string; types: string }> = [
   {
     "path": "$.maps.process.ignored.{clé}",
     "types": "entier"
+  },
+  {
+    "path": "$.maps.process.free",
+    "types": "objet (dictionnaire indexé)"
+  },
+  {
+    "path": "$.maps.process.free.{clé}",
+    "types": "objet"
+  },
+  {
+    "path": "$.maps.process.free.{clé}.text",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.process.free.{clé}.tint",
+    "types": "texte"
   },
   {
     "path": "$.maps.process.versions",
@@ -2281,6 +2329,22 @@ export const CONTRACT_PATHS: ReadonlyArray<{ path: string; types: string }> = [
     "types": "entier"
   },
   {
+    "path": "$.maps.process.versions[].map.free",
+    "types": "objet (dictionnaire indexé)"
+  },
+  {
+    "path": "$.maps.process.versions[].map.free.{clé}",
+    "types": "objet"
+  },
+  {
+    "path": "$.maps.process.versions[].map.free.{clé}.text",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.process.versions[].map.free.{clé}.tint",
+    "types": "texte"
+  },
+  {
     "path": "$.maps.process.updatedAt",
     "types": "texte"
   },
@@ -2290,6 +2354,26 @@ export const CONTRACT_PATHS: ReadonlyArray<{ path: string; types: string }> = [
   },
   {
     "path": "$.maps.issueKind.{clé}",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.issues",
+    "types": "liste"
+  },
+  {
+    "path": "$.maps.issues[]",
+    "types": "objet"
+  },
+  {
+    "path": "$.maps.issues[].label",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.issues[].kind",
+    "types": "texte"
+  },
+  {
+    "path": "$.maps.issues[].desc",
     "types": "texte"
   }
 ];

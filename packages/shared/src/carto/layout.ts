@@ -18,6 +18,8 @@ export function isContainer(o: MapObject | undefined | null, n?: { h: number } |
 /** Taille par défaut d'un objet sur une carte. */
 export function defaultSize(view: MapView, o: MapObject | undefined | null): { w: number; h: number } {
   if (!o) return { w: 200, h: 78 };
+  if (o.type === 'note') return { w: 220, h: 110 };
+  if (o.type === 'frame') return { w: 520, h: 320 };
   if (view === 'process') return o.type === 'subprocess' ? { w: 220, h: 126 } : { w: 236, h: 156 };
   return o.type === 'isms'
     ? { w: 300, h: 116 }

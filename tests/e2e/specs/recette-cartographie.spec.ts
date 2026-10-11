@@ -1,4 +1,4 @@
-/* Recette de la cartographie (docs/cartographie/RECETTE.md, CARTO-01 à CARTO-14) sur la pile Docker : 20 parcours,
+/* Recette de la cartographie (docs/cartographie/RECETTE.md, CARTO-01 à CARTO-19) sur la pile Docker : 32 parcours,
    captures 390 / 1920 / 3840 px, aucune violation de CSP, lecture seule réelle. Données FICTIVES
    (tests/fixtures/carto-donnees.json). Exécutés après parcours.spec.ts (compte administrateur) ; l'état legacy est
    rétabli à la fin pour les fichiers suivants. */
@@ -142,7 +142,7 @@ async function zoom(p: Page) {
 }
 async function generer(p: Page, vue: 'contexte' | 'processus') {
   await p.goto(`/cartographie/${vue}`);
-  await p.getByRole('button', { name: 'Générer la carte' }).click();
+  await p.getByRole('button', { name: 'Générer depuis la plateforme' }).click();
   await p.getByRole('dialog').getByRole('button', { name: 'Générer', exact: true }).click();
   await expect(p.getByText('Modifications non enregistrées')).toBeVisible();
 }
@@ -776,4 +776,391 @@ test('20. 400 objets : confirmation au-delà de 80, refus au-delà de 400, gliss
   expect(Date.now() - debut, 'glisser fluide').toBeLessThan(3000);
   await expect(p.getByText('Modifications non enregistrées')).toBeVisible();
   expect(admin.problems).toEqual([]);
+});
+
+/* ---------------------------------------------------------------- Construire de zéro (CARTO-15 à CARTO-19) */
+let bat: Session;
+/** Centre (écran) d'un point de la zone du canevas, en fraction de sa taille. */
+async function pointCanevas(p: Page, fx: number, fy: number) {
+  const b = (await svg(p).boundingBox())!;
+  return { x: Math.round(b.x + b.width * fx), y: Math.round(b.y + b.height * fy) };
+}
+async function centreNoeud(p: Page, ref: string) {
+  const b = (await noeud(p, ref).locator('rect').first().boundingBox())!;
+  return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
+}
+/** Glisse un élément de la palette jusqu'à un point de l'écran. */
+async function deposer(p: Page, item: string, cible: { x: number; y: number }) {
+  const b = (await p.locator(`[data-palette="${item}"]`).boundingBox())!;
+  await p.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
+  await p.mouse.down();
+  await p.mouse.move(b.x + b.width / 2 + 20, b.y + b.height / 2 + 10, { steps: 3 });
+  await p.mouse.move(cible.x, cible.y, { steps: 8 });
+  await expect(p.locator('.carte-fantome')).toBeVisible();
+  await p.mouse.up();
+}
+async function menuSur(p: Page, pt: { x: number; y: number }) {
+  await p.mouse.click(pt.x, pt.y, { button: 'right' });
+  const m = p.getByRole('menu', { name: 'Actions sur la carte' });
+  await expect(m).toBeVisible();
+  return m;
+}
+async function creer(p: Page, titre: string, nom: string) {
+  const d = p.getByRole('dialog', { name: titre });
+  await expect(d).toBeVisible();
+  await d.getByRole('textbox', { name: /^(Nom|Libellé)/ }).fill(nom);
+  return d;
+}
+const refsDe = async (p: Page, prefixe: string) =>
+  p.locator(`g.noeud[data-n^="${prefixe}"]`).evaluateAll((els) => els.map((e) => e.getAttribute('data-n')!));
+
+test('21. installation vide : « Construire la carte », SMSI dans le périmètre, palette (CARTO-19)', async () => {
+  // Nouvel onglet : l'onglet principal porte une carte modifiée non enregistrée (parcours 20).
+  const page = await admin.page.context().newPage();
+  bat = { ...admin, page, problems: watchPage(page) };
+  await ecrireLegacy(admin, (d) => {
+    Object.assign(d, { processes: [], interested: [], suppliers: [], appGaps: [], objectives: [], swots: [] });
+    d.scope = {};
+  });
+  await supprimerCartes(admin);
+  const p = bat.page;
+  await p.goto('/cartographie/contexte');
+  await expect(p.getByRole('heading', { name: 'Aucune carte de contexte' })).toBeVisible();
+  await expect(p.getByRole('button', { name: 'Générer depuis la plateforme' })).toBeVisible();
+  await p.getByRole('button', { name: 'Construire la carte' }).click();
+  await expect(noeud(p, 'isms')).toHaveCount(1);
+  await expect(noeud(p, 'scope')).toHaveCount(1);
+  await expect(p.getByRole('region', { name: 'Palette : construire la carte' })).toBeVisible();
+  await expect(p.getByRole('button', { name: 'Terminer l’édition' })).toBeVisible();
+  expect(bat.problems).toEqual([]);
+});
+
+test('22. glisser « Partie intéressée » sur la carte : créée dans son module, placée au point de dépôt (CARTO-15, 17)', async () => {
+  const p = bat.page;
+  const cible = await pointCanevas(p, 0.18, 0.5);
+  await deposer(p, 'stakeholder', cible);
+  await (
+    await creer(p, 'Créer : Partie intéressée', 'Autorité de contrôle (fictive)')
+  )
+    .getByRole('button', {
+      name: 'Créer',
+      exact: true,
+    })
+    .click();
+  await expect(p.getByText('« Autorité de contrôle (fictive) » est enregistré dans la plateforme')).toBeVisible();
+  await expect.poll(() => refsDe(p, 'pi:')).toHaveLength(1);
+  const [ref] = await refsDe(p, 'pi:');
+  const c = await centreNoeud(p, ref!);
+  expect(Math.abs(c.x - cible.x)).toBeLessThan(40);
+  expect(Math.abs(c.y - cible.y)).toBeLessThan(40);
+  const pi = ((await etatLegacy(admin.req)).data.interested as { id: string; name: string; type: string }[])[0]!;
+  expect(pi).toMatchObject({ name: 'Autorité de contrôle (fictive)', type: 'Externe' });
+  expect('pi:' + pi.id).toBe(ref);
+  expect(bat.problems).toEqual([]);
+});
+
+test('23. clic droit sur le fond > Créer ici > Fournisseur : créé et placé sans chevauchement (CARTO-15, 16)', async () => {
+  const p = bat.page;
+  // La fiche de l'objet créé au parcours 22 est ouverte en haut à droite : Échap la ferme.
+  await p.keyboard.press('Escape');
+  await expect(p.locator('.carte-inspecteur')).toHaveCount(0);
+  const cible = await pointCanevas(p, 0.82, 0.5);
+  const m = await menuSur(p, cible);
+  await m.getByRole('menuitem', { name: 'Fournisseur' }).click();
+  const d = await creer(p, 'Créer : Fournisseur', 'Hébergeur fictif');
+  await d.getByRole('switch', { name: 'Hébergeur HDS' }).check();
+  await d.getByRole('button', { name: 'Créer', exact: true }).click();
+  await expect.poll(() => refsDe(p, 'sup:')).toHaveLength(1);
+  const [ref] = await refsDe(p, 'sup:');
+  const c = await centreNoeud(p, ref!);
+  expect(Math.abs(c.x - cible.x)).toBeLessThan(60);
+  expect(((await objets(admin)).find((o) => o.ref === ref) as { hds?: boolean }).hds).toBe(true);
+  expect(bat.problems).toEqual([]);
+});
+
+test('24. vue processus : processus créé dans la bande Réalisation, sous-processus avec son parent (CARTO-15, 17)', async () => {
+  const p = bat.page;
+  await p.getByRole('button', { name: 'Vue processus' }).click();
+  await p.getByRole('button', { name: 'Construire la carte' }).click();
+  for (const ref of ['lane:pil', 'lane:rea', 'lane:sup']) await expect(noeud(p, ref)).toHaveCount(1);
+  await p.getByRole('button', { name: 'Ajuster à l’écran' }).click();
+  const rea = (await noeud(p, 'lane:rea').locator('rect').first().boundingBox())!;
+  const m = await menuSur(p, { x: rea.x + rea.width * 0.3, y: rea.y + rea.height * 0.6 });
+  await m.getByRole('menuitem', { name: 'Processus', exact: true }).click();
+  const d = await creer(p, 'Créer : Processus', 'Réaliser les services (fictif)');
+  await expect(d.getByRole('textbox', { name: 'Famille' })).toHaveValue('Réalisation');
+  await d.getByRole('button', { name: 'Créer', exact: true }).click();
+  await expect(noeud(p, 'process:PR1')).toHaveCount(1);
+  const b = (await noeud(p, 'process:PR1').locator('rect').first().boundingBox())!;
+  expect(b.y).toBeGreaterThan(rea.y);
+  expect(b.y + b.height).toBeLessThan(rea.y + rea.height + 2);
+  await deposer(p, 'subprocess', await centreNoeud(p, 'process:PR1'));
+  const d2 = p.getByRole('dialog', { name: 'Créer : Sous-processus' });
+  await expect(d2.getByRole('textbox', { name: 'Processus parent' })).toHaveValue(/^PR1 — /);
+  await expect(d2.getByRole('textbox', { name: 'Code' })).toHaveAttribute('placeholder', 'PR1.1');
+  await d2.getByRole('textbox', { name: 'Nom' }).fill('Étape fictive');
+  await d2.getByRole('button', { name: 'Créer', exact: true }).click();
+  await expect(noeud(p, 'process:PR1.1')).toHaveCount(1);
+  expect((await objets(admin)).find((o) => o.ref === 'process:PR1.1')).toMatchObject({ type: 'subprocess' });
+  await enregistrer(p);
+  expect(bat.problems).toEqual([]);
+});
+
+test('25. enjeu externe créé sur la carte : bande externe, réglages de la carte (CARTO-15, 19)', async () => {
+  const p = bat.page;
+  await p.getByRole('button', { name: 'Vue contexte' }).click();
+  const m = await menuSur(p, await pointCanevas(p, 0.5, 0.12));
+  await m.getByRole('menuitem', { name: 'Enjeu', exact: true }).click();
+  await (
+    await creer(p, 'Créer : Enjeu', 'Menace fictive (carte)')
+  )
+    .getByRole('button', {
+      name: 'Créer',
+      exact: true,
+    })
+    .click();
+  await expect.poll(() => refsDe(p, 'issue:')).toHaveLength(1);
+  const o = (await objets(admin)).find((x) => x.name === 'Menace fictive (carte)') as unknown as {
+    type: string;
+    src: { k: string }[];
+  };
+  expect(o).toMatchObject({ type: 'external_issue', src: [{ k: 'map' }] });
+  expect(bat.problems).toEqual([]);
+});
+
+test('26. Ctrl+Z après une création : la boîte quitte la carte, l’objet reste dans la plateforme (CARTO-15)', async () => {
+  const p = bat.page;
+  const [ref] = await refsDe(p, 'issue:');
+  await svg(p).focus();
+  await p.keyboard.press('Control+z');
+  await expect(noeud(p, ref!)).toHaveCount(0);
+  expect((await objets(admin)).some((o) => o.ref === ref)).toBe(true);
+  await p.keyboard.press('Control+y');
+  await expect(noeud(p, ref!)).toHaveCount(1);
+  expect(bat.problems).toEqual([]);
+});
+
+test('27. note et cadre : grouper deux objets dans un cadre qui les emporte ; conservés à l’enregistrement (CARTO-16, 19)', async () => {
+  const p = bat.page;
+  const m = await menuSur(p, await pointCanevas(p, 0.3, 0.8));
+  await m.getByRole('menuitem', { name: 'Note', exact: true }).click();
+  const d = p.getByRole('dialog', { name: 'Ajouter une note' });
+  await d.getByRole('textbox', { name: 'Texte' }).fill('À vérifier avec le RSSI (fictif)');
+  await d.getByRole('button', { name: 'Ajouter', exact: true }).click();
+  await expect.poll(() => refsDe(p, 'note:')).toHaveLength(1);
+  // Sélection multiple (Maj+clic) puis « Grouper dans un cadre » au clic droit.
+  const [pi] = await refsDe(p, 'pi:');
+  const [sup] = await refsDe(p, 'sup:');
+  await p.keyboard.press('Escape');
+  // La fiche flottante s'ouvre en haut à droite, au-dessus du fournisseur : on sélectionne d'abord celui-ci, et le
+  // clic droit vise la partie intéressée, à gauche.
+  await noeud(p, sup!)
+    .locator('rect')
+    .first()
+    .click({ position: { x: 8, y: 8 } });
+  await noeud(p, pi!)
+    .locator('rect')
+    .first()
+    .click({ position: { x: 8, y: 8 }, modifiers: ['Shift'] });
+  await expect(p.getByRole('heading', { name: '2 objets sélectionnés' })).toBeVisible();
+  const menu = await menuSur(p, await centreNoeud(p, pi!));
+  await menu.getByRole('menuitem', { name: 'Grouper dans un cadre' }).click();
+  await expect.poll(() => refsDe(p, 'frame:')).toHaveLength(1);
+  const [cadre] = await refsDe(p, 'frame:');
+  // Le cadre emporte son contenu : chaque objet se déplace exactement comme le cadre (mesure relative, indépendante
+  // du zoom et des bandeaux au-dessus de la carte).
+  const position = async () => Promise.all([cadre!, pi!, sup!].map((r) => centreNoeud(p, r)));
+  const avant = await position();
+  const fb = (await noeud(p, cadre!).locator('rect').first().boundingBox())!;
+  await p.mouse.move(fb.x + 30, fb.y + 12);
+  await p.mouse.down();
+  await p.mouse.move(fb.x + 60, fb.y + 52, { steps: 5 });
+  await p.mouse.up();
+  const apres = await position();
+  const delta = apres.map((a, i) => ({ x: a.x - avant[i]!.x, y: a.y - avant[i]!.y }));
+  expect(Math.hypot(delta[0]!.x, delta[0]!.y)).toBeGreaterThan(15);
+  for (const d of delta.slice(1)) {
+    expect(Math.abs(d.x - delta[0]!.x)).toBeLessThan(1.5);
+    expect(Math.abs(d.y - delta[0]!.y)).toBeLessThan(1.5);
+  }
+  await enregistrer(p);
+  const l = (await carte(admin, 'context')).layout as unknown as { free: Record<string, { text: string }> };
+  expect(
+    Object.values(l.free)
+      .map((f) => f.text)
+      .sort(),
+  ).toEqual(['Groupe', 'À vérifier avec le RSSI (fictif)']);
+  await p.reload();
+  await expect.poll(() => refsDe(p, 'note:')).toHaveLength(1);
+  expect(bat.problems).toEqual([]);
+});
+
+test('28. renommer par double-clic : confirmation, nom changé dans la plateforme, position conservée (CARTO-18)', async () => {
+  const p = bat.page;
+  const [ref] = await refsDe(p, 'pi:');
+  await editer(p);
+  const avant = await centreNoeud(p, ref!);
+  await noeud(p, ref!)
+    .locator('rect')
+    .first()
+    .dblclick({ position: { x: 10, y: 10 } });
+  const d = p.getByRole('dialog', { name: 'Renommer' });
+  await expect(d.getByText('Le nom change partout dans la plateforme')).toBeVisible();
+  await d.getByRole('textbox', { name: 'Nouveau nom' }).fill('Autorité de contrôle renommée (fictive)');
+  await d.getByRole('button', { name: 'Renommer' }).click();
+  await expect(noeud(p, ref!)).toHaveAttribute('aria-label', /Autorité de contrôle renommée \(fictive\)/);
+  expect(await centreNoeud(p, ref!)).toEqual(avant);
+  const pi = ((await etatLegacy(admin.req)).data.interested as { name: string }[])[0]!;
+  expect(pi.name).toBe('Autorité de contrôle renommée (fictive)');
+  expect(bat.problems).toEqual([]);
+});
+
+test('30. appui long (tactile) et Maj+F10 (clavier) : même menu, navigable, fermé par Échap (CARTO-16)', async ({
+  browser,
+}) => {
+  const ctx = await browser.newContext({
+    ignoreHTTPSErrors: true,
+    locale: 'fr-FR',
+    viewport: { width: 1280, height: 900 },
+    hasTouch: true,
+    storageState: await admin.page.context().storageState(),
+  });
+  const page = await ctx.newPage();
+  const problems = watchPage(page);
+  await page.goto('/cartographie/contexte');
+  await expect(noeud(page, 'isms')).toHaveCount(1);
+  const c = await centreNoeud(page, 'isms');
+  const cible = noeud(page, 'isms').locator('rect').first();
+  await cible.dispatchEvent('pointerdown', {
+    pointerType: 'touch',
+    pointerId: 7,
+    isPrimary: true,
+    button: 0,
+    clientX: c.x,
+    clientY: c.y,
+    bubbles: true,
+  });
+  const menu = page.getByRole('menu', { name: 'Actions sur la carte' });
+  await expect(menu).toBeVisible({ timeout: 3000 });
+  await cible.dispatchEvent('pointerup', {
+    pointerType: 'touch',
+    pointerId: 7,
+    clientX: c.x,
+    clientY: c.y,
+    bubbles: true,
+  });
+  await expect(menu.getByRole('menuitem', { name: 'Ouvrir la fiche' })).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(menu).toHaveCount(0);
+  // Clavier : sélection, puis Maj+F10.
+  await cible.click({ position: { x: 10, y: 10 } });
+  await page.keyboard.press('Shift+F10');
+  await expect(menu).toBeVisible();
+  await page.keyboard.press('ArrowDown');
+  await expect(menu.getByRole('menuitem').nth(1)).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(menu).toHaveCount(0);
+  expect(problems).toEqual([]);
+  await ctx.close();
+});
+
+test('31. trois objets sélectionnés : aligner à gauche, répartir ; Ctrl+Z annule en un pas (CARTO-16)', async () => {
+  const p = bat.page;
+  await p.goto('/cartographie/contexte');
+  await editer(p);
+  // De droite à gauche : la fiche flottante (en haut à droite) ne recouvre jamais l'objet suivant à cliquer.
+  const refs = [...(await refsDe(p, 'sup:')), 'isms', ...(await refsDe(p, 'pi:'))];
+  const avant = (await carte(admin, 'context')).layout.nodes;
+  await noeud(p, refs[0]!)
+    .locator('rect')
+    .first()
+    .click({ position: { x: 8, y: 8 } });
+  for (const r of refs.slice(1))
+    await noeud(p, r)
+      .locator('rect')
+      .first()
+      .click({ position: { x: 8, y: 8 }, modifiers: ['Shift'] });
+  await expect(p.getByRole('heading', { name: '3 objets sélectionnés' })).toBeVisible();
+  await p.getByRole('button', { name: 'Aligner à gauche' }).click();
+  // Positions relues jusqu'au rendu suivant : la mesure immédiate après le clic peut précéder le nouveau rendu.
+  await expect
+    .poll(async () => {
+      const xs = await Promise.all(refs.map(async (r) => (await noeud(p, r).locator('rect').first().boundingBox())!.x));
+      return Math.max(...xs) - Math.min(...xs);
+    })
+    .toBeLessThan(1.5);
+  await p.getByRole('button', { name: 'Répartir verticalement' }).click();
+  await svg(p).focus();
+  await p.keyboard.press('Control+z');
+  await p.keyboard.press('Control+z');
+  await enregistrer(p).catch(() => {});
+  const apres = (await carte(admin, 'context')).layout.nodes;
+  for (const r of refs) expect(apres[r]!.x).toBe(avant[r]!.x);
+  expect(bat.problems).toEqual([]);
+});
+
+test('32. lecteur : clic droit limité à la consultation, aucune palette (CARTO-16)', async () => {
+  const p = lecteur.page;
+  await p.goto('/cartographie/contexte');
+  await expect(noeud(p, 'isms')).toHaveCount(1);
+  await expect(p.getByRole('region', { name: 'Palette : construire la carte' })).toHaveCount(0);
+  const m = await menuSur(p, await centreNoeud(p, 'isms'));
+  await expect(m.getByRole('menuitem')).toHaveText(['Ouvrir la fiche', 'Copier le nom']);
+  await p.keyboard.press('Escape');
+  const fond = await menuSur(p, await pointCanevas(p, 0.005, 0.01));
+  await expect(fond.getByRole('menuitem')).toHaveText(['Ajuster l’affichage']);
+  await p.keyboard.press('Escape');
+  expect(lecteur.problems).toEqual([]);
+  await bat.page.close();
+});
+
+/** Droits du rôle « Carto sans fournisseurs » : modifier un rôle coupe les sessions de ses comptes. */
+async function droitsLecteur(perms: string[]) {
+  const roles = (await (await admin.req.get('/api/admin/roles')).json()) as {
+    id: string;
+    name: string;
+    version: number;
+  }[];
+  const r = roles.find((x) => x.name === 'Carto sans fournisseurs')!;
+  const patch = await admin.req.patch(`/api/admin/roles/${r.id}`, {
+    data: { permissions: perms },
+    headers: { 'x-csrf-token': admin.csrf, 'if-match': `"${r.version}"` },
+  });
+  expect(patch.status(), await patch.text()).toBe(200);
+}
+
+// Exécuté en dernier : il élargit puis rétablit le rôle du lecteur (sans créer de compte, pour ne pas changer les
+// captures des fichiers suivants).
+test('29. sans fournisseurs:modifier : « Fournisseur » absent de la palette, grisé dans le menu ; API 403 (CARTO-15, 16)', async ({
+  browser,
+}) => {
+  await lecteur.close();
+  await droitsLecteur([
+    'cartographie:lire',
+    'cartographie:modifier',
+    'pilotage:lire',
+    'pilotage:modifier',
+    'conformite:lire',
+  ]);
+  const s = await ouvrir(browser, 'sans-fournisseurs', comptes['sans-fournisseurs']!.secret);
+  try {
+    const p = s.page;
+    await p.goto('/cartographie/contexte');
+    await editer(p);
+    await expect(p.locator('[data-palette="stakeholder"]')).toHaveCount(1);
+    await expect(p.locator('[data-palette="supplier"]')).toHaveCount(0);
+    const m = await menuSur(p, await pointCanevas(p, 0.1, 0.5));
+    await expect(m.getByRole('menuitem', { name: /Fournisseur/ })).toBeDisabled();
+    await p.keyboard.press('Escape');
+    await expect(m).toHaveCount(0);
+    const r = await s.req.post('/api/carto/objects', {
+      data: { type: 'supplier', name: 'Refusé (fictif)' },
+      headers: { 'x-csrf-token': s.csrf },
+    });
+    expect(r.status()).toBe(403);
+    expect(s.problems).toEqual([]);
+  } finally {
+    await s.close();
+    await droitsLecteur(['cartographie:lire', 'pilotage:lire', 'conformite:lire']);
+  }
 });
