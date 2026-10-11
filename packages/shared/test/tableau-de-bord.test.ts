@@ -10,7 +10,10 @@ import {
   ecartsOuverts,
   etatIndicateur,
   indicateursSynthese,
+  objectifsParProcessus,
+  objectifsPilotage,
   plansAnnee,
+  plansHistoriques,
   TYPES_PLAN,
 } from '../src/tableau-de-bord.js';
 
@@ -29,6 +32,8 @@ const CODE = [
   extraire('function ddaStats(ref){', '\n}\n') + '\n}',
   extraire('function indCalc(ind){', '\n}\n') + '\n}',
   extraire('function indState(ind){', '\n}\n') + '\n}',
+  extraire('function isRate(ind){', '\n'),
+  extraire('function fmtVal(ind,v){', '\n'),
   extraire('function planLate(p){', '\n'),
   extraire('function plansOf(t,y){', '\n'),
 ].join('\n');
@@ -37,12 +42,15 @@ const CODE = [
 function historique(S: unknown) {
   const ctx: Record<string, any> = { S: JSON.parse(JSON.stringify(S)) };
   vm.createContext(ctx);
-  vm.runInContext(`${CODE}\n;globalThis.__h={ddaStats,indState,planLate,plansOf};`, ctx, { filename: 'index.html' });
+  vm.runInContext(`${CODE}\n;globalThis.__h={ddaStats,indState,planLate,plansOf,fmtVal};`, ctx, {
+    filename: 'index.html',
+  });
   return ctx.__h as {
     ddaStats(ref: string): any;
-    indState(ind: any): { st: string };
+    indState(ind: any): { st: string; v: unknown };
     planLate(p: any): boolean;
     plansOf(t: string, y: number): any[];
+    fmtVal(ind: any, v: unknown): string;
   };
 }
 
@@ -85,8 +93,19 @@ function etatFictif(graine: number) {
     mfa: un(['Oui', 'Non']),
     sso: un(['Oui', 'Non']),
   }));
+  const processes = Array.from({ length: 8 }, (_, i) => ({
+    id: `PR${i}`,
+    name: `Processus fictif ${i}`,
+    family: un(['Pilotage', 'Support', undefined]),
+  }));
+  const objectives = Array.from({ length: 6 }, (_, i) => ({
+    id: `OBJ${i}`,
+    name: `Objectif fictif ${i}`,
+    processes: processes.filter(() => r() < 0.25).map((p) => p.id),
+  }));
   const indicators = Array.from({ length: 20 }, (_, i) => ({
     id: `I${i}`,
+    obj: un([...objectives.map((o) => o.id), undefined]),
     dir: un(['', '≥', '≤', '=']),
     target: un([0.9, 3, 'Oui', '', null, 0]),
     calc: un([undefined, 'saasMfa', 'saasSso', 'afnorNcMaj', 'interneNcMaj', 'interneNcMajOpen', 'inconnu']),
@@ -105,7 +124,7 @@ function etatFictif(graine: number) {
     end: r() < 0.5 ? jour(r) : '',
     done: r() < 0.3 ? jour(r) : '',
   }));
-  return { items, dda, findings, suppliers, indicators, plans };
+  return { items, dda, findings, suppliers, processes, objectives, indicators, plans };
 }
 
 const aujourdhui = (() => {
@@ -137,6 +156,17 @@ describe('tableau de bord unifié : parité avec l’outil historique', () => {
         nonAtteints: etats.filter((e) => e === 'ko').length,
         nonMesures: etats.filter((e) => e !== 'ok' && e !== 'ko').length,
       });
+      for (const t of ['audit', 'exo'])
+        expect(
+          plansHistoriques(S, t, aujourdhui)
+            .map((p) => [p.id, p.enRetard])
+            .sort(),
+        ).toEqual(
+          h
+            .plansOf(t, 0)
+            .map((x: any) => [x.id, !!h.planLate(x)])
+            .sort(),
+        );
       for (const p of plansAnnee(S, annee, aujourdhui)) {
         const l = h.plansOf(p.type, annee).filter((x: any) => x.status !== 'Annulé');
         expect([p.realises, p.enRetard, p.aVenir]).toEqual([
@@ -145,6 +175,38 @@ describe('tableau de bord unifié : parité avec l’outil historique', () => {
           l.filter((x: any) => x.status !== 'Réalisé' && !h.planLate(x)).length,
         ]);
       }
+      // Vues « Par objectif » et « Par processus » de viewPilotage.
+      const objectifs = objectifsPilotage(S);
+      for (const o of objectifs)
+        for (const i of o.indicateurs) {
+          const ind = S.indicators.find((x) => x.id === i.id)!;
+          expect(i.valeur).toBe(h.fmtVal(ind, h.indState(ind).v));
+          expect(i.etat).toBe(h.indState(ind).st);
+        }
+      const vue = objectifsParProcessus(S);
+      const famOf = (p: { family?: string }) => p.family || 'Autres';
+      expect(vue.familles.map((f) => f.famille)).toEqual([...new Set(S.processes.map(famOf))]);
+      for (const f of vue.familles)
+        for (const p of f.avecObjectif) {
+          const os = S.objectives.filter((o) => o.processes.includes(p.id));
+          const sts = [...new Set(os.flatMap((o) => S.indicators.filter((i) => i.obj === o.id)))].map(
+            (i) => h.indState(i).st,
+          );
+          expect([p.atteints, p.nonAtteints, p.aMesurer]).toEqual([
+            sts.filter((x) => x === 'ok').length,
+            sts.filter((x) => x === 'ko').length,
+            sts.filter((x) => x === 'na' || x === 'undef').length,
+          ]);
+        }
+      expect(vue.familles.flatMap((f) => f.sansObjectif.map((p) => p.id)).sort()).toEqual(
+        S.processes
+          .filter((p) => !S.objectives.some((o) => o.processes.includes(p.id)))
+          .map((p) => p.id)
+          .sort(),
+      );
+      expect(vue.sansProcessus.map((o) => o.id)).toEqual(
+        S.objectives.filter((o) => !o.processes.length).map((o) => o.id),
+      );
       const ouverts = S.findings.filter((f) => f.status !== 'Clos');
       const e = ecartsOuverts(S);
       expect(e.ouverts).toBe(ouverts.length);
@@ -161,6 +223,7 @@ describe('tableau de bord unifié : parité avec l’outil historique', () => {
       TYPES_PLAN.map(() => 0),
     );
     expect(ecartsOuverts({})).toMatchObject({ ouverts: 0, actionsRealisees: 0, actionsTotal: 0 });
+    expect(objectifsParProcessus({})).toEqual({ familles: [], sansProcessus: [] });
   });
 
   it('un plan sans date de début n’est jamais en retard ; un plan réalisé non plus', () => {
@@ -173,5 +236,12 @@ describe('tableau de bord unifié : parité avec l’outil historique', () => {
     };
     const audit = plansAnnee(S, annee, aujourdhui).find((p) => p.type === 'audit')!;
     expect(audit).toMatchObject({ realises: 1, enRetard: 0, aVenir: 1 });
+    const liste = plansHistoriques(S, 'audit', aujourdhui);
+    expect(liste.map((p) => [p.debut, p.enRetard])).toEqual([
+      ['', false],
+      [`${annee}-01-01`, false],
+      ['2020-01-01', false],
+    ]);
+    expect(plansHistoriques(S, 'exo', aujourdhui)).toEqual([]);
   });
 });

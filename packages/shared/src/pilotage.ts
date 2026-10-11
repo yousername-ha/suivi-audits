@@ -488,7 +488,16 @@ export const PILOTAGE_FIELDS: Partial<Record<GrcKind, PilotageField[]>> = {
   soa: [
     field('applicable', 'Applicable', 'boolean'),
     field('reason', 'Justification de l’applicabilité'),
-    field('implemented', 'Mis en œuvre', 'boolean'),
+    field('level', 'Niveau de mise en œuvre', 'select', [
+      { value: '', label: 'Non renseigné' },
+      { value: 'Total', label: 'Total' },
+      { value: 'Partiel', label: 'Partiel' },
+      { value: 'Insuffisant', label: 'Insuffisant' },
+    ]),
+    field('risk', 'Risques traités'),
+    field('actions', 'Actions prévues'),
+    field('docs', 'Documents et preuves'),
+    field('comment', 'Commentaire'),
   ],
   measure: [field('implementation', 'Mise en œuvre'), field('verification', 'Vérification attendue')],
   audit: [

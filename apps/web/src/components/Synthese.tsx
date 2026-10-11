@@ -297,6 +297,19 @@ function Pilotage({ s }: { s: Synthese }) {
   );
 }
 
+/** Tableau de bord graphique du Pilotage (lot U2) : mêmes agrégats que la synthèse, centrés sur le SMSI. */
+export function CartesPilotage({ s }: { s: Synthese }) {
+  return (
+    <div className="grille-cartes synthese-grille">
+      <Indicateurs s={s} />
+      <EcartsOuverts s={s} />
+      <Conformite s={s} />
+      <Plans s={s} />
+      <Pilotage s={s} />
+    </div>
+  );
+}
+
 /** Cartes de la synthèse. vue : sous-ensemble affiché (rotation de l'écran mural). */
 export function SyntheseCartes({ s, vue = 'synthese', extra }: { s: Synthese; vue?: Vue; extra?: ReactNode }) {
   const e = s.ecarts;

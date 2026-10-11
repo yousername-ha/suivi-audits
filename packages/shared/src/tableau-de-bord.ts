@@ -84,15 +84,30 @@ function calculAuto(ind: Obj, state: Obj): { v: number | null } | null {
   return null;
 }
 
-/** État d'un indicateur (`indState(ind).st`) : atteint, non atteint, non mesuré ou cible à définir. */
-export function etatIndicateur(ind: Obj, state: Obj): EtatIndicateur {
+/** Valeur courante d'un indicateur (`indState(ind).v`) : calculée par l'outil, sinon dernière mesure hors historique. */
+export function valeurIndicateur(ind: Obj, state: Obj): { v: unknown; calcule: boolean; date: string } {
   const auto = ind.calc && ind.auto !== false ? calculAuto(ind, state) : null;
   const valeurs = arr(ind.values)
     .slice()
     .sort((a, b) => String(a.date).localeCompare(String(b.date)))
     .filter((x) => !x.hist);
   const derniere = valeurs[valeurs.length - 1];
-  const v = auto ? auto.v : derniere ? derniere.v : null;
+  if (auto) return { v: auto.v, calcule: true, date: '' };
+  return { v: derniere ? derniere.v : null, calcule: false, date: derniere ? str(derniere.date) : '' };
+}
+
+/** `fmtVal(ind, v)` : taux (cible entre 0 et 1) en pourcentage, nombres à la française, « – » sans valeur. */
+export function formatValeurIndicateur(ind: Obj, v: unknown): string {
+  if (v == null || v === '') return '–';
+  const taux = typeof ind.target === 'number' && ind.target > 0 && ind.target <= 1;
+  if (typeof v === 'number' && taux) return String(Math.round(v * 1000) / 10).replace('.', ',') + ' %';
+  if (typeof v === 'number') return String(v).replace('.', ',');
+  return str(v);
+}
+
+/** État d'un indicateur (`indState(ind).st`) : atteint, non atteint, non mesuré ou cible à définir. */
+export function etatIndicateur(ind: Obj, state: Obj): EtatIndicateur {
+  const v = valeurIndicateur(ind, state).v;
   if (!ind.dir || ind.target === '' || ind.target == null) return 'undef';
   if (v == null || v === '') return 'na';
   if (ind.dir === '=') return String(v).toLowerCase() === String(ind.target).toLowerCase() ? 'ok' : 'ko';
@@ -114,6 +129,101 @@ export function indicateursSynthese(state: Obj): SyntheseIndicateurs {
   const atteints = etats.filter((e) => e === 'ok').length;
   const nonAtteints = etats.filter((e) => e === 'ko').length;
   return { total: etats.length, atteints, nonAtteints, nonMesures: etats.length - atteints - nonAtteints };
+}
+
+/* ---------------------------------------------------------------- Objectifs par processus */
+
+export interface IndicateurObjectif {
+  id: string;
+  nom: string;
+  cible: string;
+  valeur: string;
+  calcule: boolean;
+  etat: EtatIndicateur;
+}
+export interface ObjectifPilotage {
+  id: string;
+  nom: string;
+  echeance: string;
+  responsable: string;
+  processus: string[];
+  indicateurs: IndicateurObjectif[];
+  atteints: number;
+}
+export interface ProcessusPilotage {
+  id: string;
+  nom: string;
+  pilote: string;
+  objectifs: ObjectifPilotage[];
+  /** Indicateurs distincts des objectifs rattachés, par état (comme la carte « Par processus » historique). */
+  atteints: number;
+  nonAtteints: number;
+  aMesurer: number;
+}
+export interface FamilleProcessus {
+  famille: string;
+  avecObjectif: ProcessusPilotage[];
+  sansObjectif: { id: string; nom: string }[];
+}
+
+/** Objectifs du SMSI et leurs indicateurs (vue « Par objectif » et « Vue compacte » de `viewPilotage`). */
+export function objectifsPilotage(state: Obj): ObjectifPilotage[] {
+  const indicateurs = arr(state.indicators);
+  return arr(state.objectives).map((o) => {
+    const its = indicateurs
+      .filter((i) => i.obj === o.id)
+      .map((i) => {
+        const val = valeurIndicateur(i, state);
+        return {
+          id: str(i.id),
+          nom: str(i.name),
+          cible: `${str(i.dir) || '?'} ${formatValeurIndicateur(i, i.target)}`,
+          valeur: formatValeurIndicateur(i, val.v),
+          calcule: val.calcule,
+          etat: etatIndicateur(i, state),
+        };
+      });
+    return {
+      id: str(o.id),
+      nom: str(o.name),
+      echeance: str(o.due).slice(0, 10),
+      responsable: str(o.owner),
+      processus: Array.isArray(o.processes) ? o.processes.map(str) : [],
+      indicateurs: its,
+      atteints: its.filter((x) => x.etat === 'ok').length,
+    };
+  });
+}
+
+/** Vue « Par processus » de `viewPilotage` : familles, processus avec objectifs, processus sans objectif. */
+export function objectifsParProcessus(state: Obj): { familles: FamilleProcessus[]; sansProcessus: ObjectifPilotage[] } {
+  const objectifs = objectifsPilotage(state);
+  const processus = arr(state.processes);
+  const famille = (p: Obj) => str(p.family) || 'Autres';
+  const familles = [...new Set(processus.map(famille))].map((f) => {
+    const ps = processus.filter((p) => famille(p) === f);
+    const avec: ProcessusPilotage[] = [];
+    const sans: { id: string; nom: string }[] = [];
+    for (const p of ps) {
+      const os = objectifs.filter((o) => o.processus.includes(str(p.id)));
+      if (!os.length) {
+        sans.push({ id: str(p.id), nom: str(p.name) });
+        continue;
+      }
+      const etats = [...new Map(os.flatMap((o) => o.indicateurs).map((i) => [i.id, i.etat])).values()];
+      avec.push({
+        id: str(p.id),
+        nom: str(p.name),
+        pilote: str(p.owner),
+        objectifs: os,
+        atteints: etats.filter((e) => e === 'ok').length,
+        nonAtteints: etats.filter((e) => e === 'ko').length,
+        aMesurer: etats.filter((e) => e === 'na' || e === 'undef').length,
+      });
+    }
+    return { famille: f, avecObjectif: avec, sansObjectif: sans };
+  });
+  return { familles, sansProcessus: objectifs.filter((o) => !o.processus.length) };
 }
 
 /* ---------------------------------------------------------------- Plans du SMSI */
@@ -151,6 +261,39 @@ export function plansAnnee(state: Obj, annee: number, aujourdhui: string): PlanA
     const realises = l.filter((p) => p.status === 'Réalisé').length;
     return { type, libelle, realises, enRetard, aVenir: l.length - realises - enRetard };
   });
+}
+
+export interface PlanHistorique {
+  id: string;
+  titre: string;
+  modalite: string;
+  debut: string;
+  fin: string;
+  realiseLe: string;
+  statut: string;
+  responsable: string;
+  /** Périmètre (audit) ou scénario (exercice), selon le type. */
+  objet: string;
+  enRetard: boolean;
+}
+
+/** Plans historiques d'un type (`plansOf(type)`), les plus récents d'abord, avec leur retard (`planLate`). */
+export function plansHistoriques(state: Obj, type: string, aujourdhui: string): PlanHistorique[] {
+  return arr(state.plans)
+    .filter((p) => p.type === type)
+    .map((p) => ({
+      id: str(p.id),
+      titre: str(p.title),
+      modalite: str(p.kind),
+      debut: str(p.start).slice(0, 10),
+      fin: str(p.end).slice(0, 10),
+      realiseLe: str(p.done).slice(0, 10),
+      statut: str(p.status),
+      responsable: str(p.owner || p.auditor),
+      objet: str(type === 'exo' ? p.scenario : p.scope),
+      enRetard: planEnRetard(p, aujourdhui),
+    }))
+    .sort((a, b) => (b.debut || b.realiseLe).localeCompare(a.debut || a.realiseLe) || a.id.localeCompare(b.id));
 }
 
 /* ---------------------------------------------------------------- Écarts ouverts */

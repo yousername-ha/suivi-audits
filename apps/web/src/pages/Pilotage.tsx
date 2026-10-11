@@ -26,6 +26,9 @@ import { Relations } from '../grc/Relations';
 import { pilotageReport } from '../pilotage/report';
 import { EtudesEbios } from '../grc/Ebios';
 import { RegistreRisques } from '../grc/RegistreRisques';
+import { ObjectifsProcessus } from '../pilotage/ObjectifsProcessus';
+import { PlansHistoriques } from '../pilotage/PlansHistoriques';
+import { CartesPilotage, type SyntheseApi } from '../components/Synthese';
 const REGISTERS: Record<string, { kind: GrcKind; legacy?: string; description: string }> = {
   contexte: {
     kind: 'context',
@@ -62,7 +65,12 @@ const REGISTERS: Record<string, { kind: GrcKind; legacy?: string; description: s
     legacy: 'indicators',
     description: 'Suivez les résultats avec des valeurs réellement mesurées.',
   },
-  applicabilite: { kind: 'soa', description: 'Justifiez les exigences et mesures retenues pour votre démarche.' },
+  applicabilite: {
+    kind: 'soa',
+    legacy: 'dda',
+    description:
+      'Déclaration d’applicabilité : clauses ISO 27001, Annexe A et HDS de l’outil de suivi, puis vos justifications propres.',
+  },
   mesures: { kind: 'measure', description: 'Suivez la mise en œuvre des mesures et leurs justificatifs.' },
   amelioration: {
     kind: 'nonconformity',
@@ -217,6 +225,9 @@ export function PilotagePage() {
             {config && (
               <>
                 {section === 'amelioration' && <ImprovementIndicators smsi={smsi} />}
+                {section === 'objectifs' && <ObjectifsProcessus smsi={smsi} />}
+                {section === 'audits' && can('pilotage', 'lire') && <PlansHistoriques smsi={smsi} type="audit" />}
+                {section === 'exercices' && <PlansHistoriques smsi={smsi} type="exo" />}
                 <BusinessRegistry
                   key={smsi + section}
                   smsi={smsi}
@@ -255,6 +266,7 @@ export function PilotagePage() {
                     </Group>
                   </Stack>
                 </Card>
+                {smsi === '00000000-0000-4000-8000-000000000001' && <TableauPilotage />}
                 <Overview smsi={smsi} />
               </>
             )}
@@ -409,6 +421,16 @@ export function PilotagePage() {
         {scopes.data && !smsi && <Text>Aucun périmètre accessible. Contactez votre administrateur.</Text>}
       </Stack>
     </Page>
+  );
+}
+/** Indicateurs, écarts, conformité et plans de l'outil de suivi (périmètre de l'instance), selon les droits. */
+function TableauPilotage() {
+  const q = useQuery({ queryKey: ['synthese'], queryFn: () => get<SyntheseApi>('/api/mur/synthese') });
+  return (
+    <>
+      <ErrorAlert error={q.error} />
+      {q.data && <CartesPilotage s={q.data} />}
+    </>
   );
 }
 function ImprovementIndicators({ smsi }: { smsi: string }) {

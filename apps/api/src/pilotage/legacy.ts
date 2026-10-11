@@ -38,6 +38,13 @@ export const LEGACY_PILOTAGE = {
   },
   evidences: { kind: 'evidence', name: 'title', fields: { source: 'source', validUntil: 'review' } },
   findings: { kind: 'nonconformity', name: 'text', fields: { cause: 'cause', dueAt: 'due', closureNote: 'closeNote' } },
+  /** Déclaration d'applicabilité historique (lot U2) : une ligne par exigence de `items` (clauses ISO 27001,
+      Annexe A, HDS), décision lue et écrite dans `dda[<id exigence>]`, sans copie. */
+  dda: {
+    kind: 'soa',
+    name: 'title',
+    fields: { reason: 'just', level: 'level', risk: 'risk', actions: 'actions', docs: 'docs', comment: 'comment' },
+  },
   reviews: {
     kind: 'management_review',
     name: 'title',
@@ -63,10 +70,21 @@ export class PilotageLegacy {
     await this.g.access(smsi, user, write, c);
     await this.g.permission(user, GRC_MODULES[def.kind], write ? 'modifier' : 'lire');
     if (key === 'evidences') await this.g.permission(user, 'pilotage', write ? 'modifier' : 'lire');
+    if (key === 'dda') await this.g.permission(user, 'audit', 'lire');
     return { def, state: await this.g.legacy.recompose(c) };
   }
   rows(data: JsonObject, key: string): JsonObject[] {
     if (key === 'scope') return isObject(data.scope) ? [{ ...data.scope, id: 'instance' }] : [];
+    if (key === 'dda') {
+      const dda = isObject(data.dda) ? data.dda : {};
+      return (Array.isArray(data.items) ? data.items : [])
+        .filter(isObject)
+        .filter((i) => typeof i.id === 'string' && ['ISO', 'A', 'HDS'].includes(String(i.ref)))
+        .map((i) => {
+          const d = isObject(dda[i.id as string]) ? (dda[i.id as string] as JsonObject) : {};
+          return { ...d, id: i.id, title: `${String(i.id)} — ${String(i.title ?? '')}`, ref: i.ref } as JsonObject;
+        });
+    }
     return (Array.isArray(data[key]) ? data[key] : [])
       .filter(isObject)
       .map((r, i) => (typeof r.id === 'string' ? r : { ...r, id: '@' + i }));
@@ -118,6 +136,11 @@ export class PilotageLegacy {
           .filter(isObject)
           .map((v) => String(v.text ?? v.t ?? v.title ?? ''))
           .join('\n');
+    }
+    if (key === 'dda') {
+      data.applicable = raw.app !== 'non';
+      data.implemented = raw.level === 'Total';
+      data.description = String(raw.comment ?? '');
     }
     if (key === 'findings') {
       data.status =
@@ -194,6 +217,17 @@ export class PilotageLegacy {
   }
   merge(key: string, raw: JsonObject, name: string, data: Record<string, unknown>, actor: string): JsonObject {
     const def = this.definition(key);
+    if (key === 'dda') {
+      // Seuls les champs de la DdA historique sont écrits ; l'intitulé vient de l'exigence et ne se modifie pas ici.
+      const { title: ignored, ref: ignoredRef, ...entree } = raw;
+      void ignored;
+      void ignoredRef;
+      const next: JsonObject = { ...entree, app: data.applicable === false ? 'non' : 'oui' };
+      for (const [field, source] of Object.entries(def.fields))
+        if (typeof data[field] === 'string') next[source] = data[field] as string;
+      if (data.implemented === true && !next.level) next.level = 'Total';
+      return next;
+    }
     const next = {
       ...raw,
       [def.name]: name,
@@ -260,6 +294,10 @@ export class PilotageLegacy {
       const { id: ignored, ...scope } = raw;
       void ignored;
       data.scope = scope;
+    } else if (key === 'dda') {
+      const { id: ignored, ...entree } = raw;
+      void ignored;
+      data.dda = { ...(isObject(data.dda) ? data.dda : {}), [id]: entree };
     } else
       data[key] = (Array.isArray(data[key]) ? data[key] : []).map((r, i) =>
         isObject(r) && (r.id === id || (!r.id && id === '@' + i))
