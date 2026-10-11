@@ -77,7 +77,7 @@ describe('Pilotage multi-référentiels G/H/K et début E', () => {
     proof = r.json().id;
     expect((await decide('object:' + proof, 'proof_review', 'accepted', 1, {}, reader)).statusCode).toBe(403);
     expect(
-      (await decide('object:' + proof, 'proof_review', 'accepted', 1, { refs: [document.replace(':1', ':99')] }))
+      (await decide('object:' + proof, 'proof_review', 'accepted', 1, { refs: [document.replace(/:1$/, ':99')] }))
         .statusCode,
     ).toBe(404);
     expect(
@@ -105,11 +105,11 @@ describe('Pilotage multi-référentiels G/H/K et début E', () => {
     });
     expect(newVersion.statusCode).toBe(201);
     const exact = await decide('object:' + proof, 'proof_review', 'accepted', 2, {
-      refs: [document.replace(':1', ':2')],
+      refs: [document.replace(/:1$/, ':2')],
     });
     expect(exact.statusCode, exact.body).toBe(200);
     const history = (await a.get(base + '/pilotage/history?ref=object:' + proof)).json().items;
-    expect(history.map((h: { refs: string[] }) => h.refs[0])).toEqual([document.replace(':1', ':2'), document]);
+    expect(history.map((h: { refs: string[] }) => h.refs[0])).toEqual([document.replace(/:1$/, ':2'), document]);
     expect((await t.svc.db.one<{ n: number }>('SELECT count(*)::int n FROM document_versions'))!.n).toBe(2);
     const inbound = await a.get(base + '/links?ref=' + encodeURIComponent(document));
     expect(inbound.json().some((r: { other: { ref: string } }) => r.other.ref === 'object:' + proof)).toBe(true);
