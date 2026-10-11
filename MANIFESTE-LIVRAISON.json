@@ -1,0 +1,251 @@
+{
+  "version": "1.0.0-local-df",
+  "createdAt": "2026-10-11T12:55:09.139968+02:00",
+  "scope": [
+    "D — CaRE",
+    "F — HAS et dossier auditeur"
+  ],
+  "excludedLots": [
+    "I",
+    "J"
+  ],
+  "sourceCommit": "1b698736c02e482570332eac7b5a98896892e669",
+  "sourceTrackedFilesUnchanged": 592,
+  "githubModified": true,
+  "dataIncluded": "Application et fixtures de recette synthétiques ; aucune donnée utilisateur",
+  "manifestSelfHashExcluded": true,
+  "files": [
+    {
+      "path": ".gitignore",
+      "sizeBytes": 75,
+      "sha256": "4436c51030018ba28c2cd8574fe12f84c03ae4fd4ed921f22172e4400427a8ee"
+    },
+    {
+      "path": "AGENTS.md",
+      "sizeBytes": 1549,
+      "sha256": "94a63d14a4943df8865a818e4fc9c4febed2d993d47209ea28b51ea35fc74074"
+    },
+    {
+      "path": "README.md",
+      "sizeBytes": 5671,
+      "sha256": "b31c427d5b764403cc91b706a09f94ed4e26e4bf8b5339575664b0215612edbb"
+    },
+    {
+      "path": "demarrer.bat",
+      "sizeBytes": 120,
+      "sha256": "8b4a7b4abf103a2f61ba0ece7cc4deb4f0e5e347aa6ee00899ccb5b5c3335b51"
+    },
+    {
+      "path": "demarrer.py",
+      "sizeBytes": 1692,
+      "sha256": "9964e86cc41be5af2d3e47a90fc830f58bc8bb982b94a08273c9c696d7b47a9f"
+    },
+    {
+      "path": "demarrer.sh",
+      "sizeBytes": 77,
+      "sha256": "9eb66c4096722d91fec60231785ccea660dfc370309433b465d2834139997f7c"
+    },
+    {
+      "path": "docs/ARCHITECTURE.md",
+      "sizeBytes": 4088,
+      "sha256": "9ce829fa653029d56f6b2ea9b32450adde035923b65cda719475cf48cbb741b8"
+    },
+    {
+      "path": "docs/CHANGEMENTS.md",
+      "sizeBytes": 2224,
+      "sha256": "0ddb91a51ff98ee09dfed688e2ed69254ef6478431c3e66b9a393bffc6c2e52e"
+    },
+    {
+      "path": "docs/DIAGNOSTIC.md",
+      "sizeBytes": 3287,
+      "sha256": "02d9c13cf824eb27234d8a74791e855845148dbd3e61ab2b513e61d3d8bff777"
+    },
+    {
+      "path": "docs/GUIDE-UTILISATION.md",
+      "sizeBytes": 6687,
+      "sha256": "560a0f6cdd1ac692a7ecb5017e092cdb8e888a21fc96527fb82aa4124f01eebc"
+    },
+    {
+      "path": "docs/LIVRAISON-GITHUB.md",
+      "sizeBytes": 1368,
+      "sha256": "f959197657e16e41246220d11436c157908ac5dc60f8d1207e2799cc62d9ea52"
+    },
+    {
+      "path": "docs/MODE-AUDITEUR.md",
+      "sizeBytes": 4284,
+      "sha256": "8ac441df29fbeed67999bc00cf90e14073a272d8be0028c0088736b5499554b0"
+    },
+    {
+      "path": "docs/RECETTE.md",
+      "sizeBytes": 4082,
+      "sha256": "f28d217ff224a61d6fcedae57acec6d47bd8d51c5ffda3929407c2b9a83da4d5"
+    },
+    {
+      "path": "docs/SOURCES-ET-LIMITES.md",
+      "sizeBytes": 4721,
+      "sha256": "ab17ab9f2f2804c104ab2b4bbebf7d727dbf750b48172d75d9d4d2b2871ed5d7"
+    },
+    {
+      "path": "index.html",
+      "sizeBytes": 3169667,
+      "sha256": "7195e035f3c615f693743e7727aed07c339834ae77ac91db32dbb883b9b638dd"
+    },
+    {
+      "path": "lib/docx.iife.js",
+      "sizeBytes": 857630,
+      "sha256": "ecef72931c98461fc327aa6e95867820aced5db4c3d971ac5ad38ccda21dd360"
+    },
+    {
+      "path": "lib/exceljs.min.js",
+      "sizeBytes": 947702,
+      "sha256": "7e49da68588e250dbb8bba190d2caa8ab3787cc0284bda1d8b2f805c4df742c9"
+    },
+    {
+      "path": "lib/jszip.min.js",
+      "sizeBytes": 97630,
+      "sha256": "acc7e41455a80765b5fd9c7ee1b8078a6d160bbbca455aeae854de65c947d59e"
+    },
+    {
+      "path": "lib/pptxgen.bundle.js",
+      "sizeBytes": 460889,
+      "sha256": "4fb9eac5cfefb213e2d8743c2b7151025f31bfb3f834c73c12062916daa0f3f8"
+    },
+    {
+      "path": "lib/xlsx.full.min.js",
+      "sizeBytes": 881727,
+      "sha256": "c9506197caf809a075b6dee1da0d36fb19da7158ffe8a88e7b0c96c5d8623c99"
+    },
+    {
+      "path": "modules/df-auditor.js",
+      "sizeBytes": 16506,
+      "sha256": "421b63f82911eb31c6ecbab856f381c44b6b555508ab68c3d6608b9ac1ad59ad"
+    },
+    {
+      "path": "modules/df-core.js",
+      "sizeBytes": 35832,
+      "sha256": "9ef5f0d19ea87a720c59ed4f17954332ca6f10737b9fe1613d2873e918fe1141"
+    },
+    {
+      "path": "modules/df-reports.js",
+      "sizeBytes": 7213,
+      "sha256": "dcde524936c91aba38cd61624d3019eab2ad918b7a0adc45ef49817f198bfa76"
+    },
+    {
+      "path": "modules/df-sources.js",
+      "sizeBytes": 101710,
+      "sha256": "2881d9779bd92f0c1e0270aaa7c20d1dcc1d63866b8ca82544e830e92b0f7f1c"
+    },
+    {
+      "path": "modules/df-storage.js",
+      "sizeBytes": 8841,
+      "sha256": "1d3ea024c1e08112df5a21589b3f66c7d1eb6776891f789fb83867c412e70b65"
+    },
+    {
+      "path": "modules/df-ui.js",
+      "sizeBytes": 66845,
+      "sha256": "90eb713751eed9146ddae75ab6c443966ff7703a3fe614ab7e75569d51ccf9df"
+    },
+    {
+      "path": "modules/df.css",
+      "sizeBytes": 8656,
+      "sha256": "57e62d57fc85d985ea92c7a2393d828e309a99fda495de46a8cc22ae07d45dbc"
+    },
+    {
+      "path": "recette/browser-branche-resultats.json",
+      "sizeBytes": 4140,
+      "sha256": "c131ab64b7788a3ea728bd90b937f31d1c1d204217d669cdde4cfe6c19865e4d"
+    },
+    {
+      "path": "recette/browser-resultats.json",
+      "sizeBytes": 4139,
+      "sha256": "2aaa03af9f91e666d74667940f3c802359688fe98c9b37d4e72b8dc17e639b44"
+    },
+    {
+      "path": "recette/care-1440.png",
+      "sizeBytes": 229255,
+      "sha256": "6ca69c165211cbe1a5c2fce862bce363204f0ac558e68458f2de60cf9b383a55"
+    },
+    {
+      "path": "recette/care-3840.png",
+      "sizeBytes": 227096,
+      "sha256": "9f4834c762d055a74ec9966e015c99d9c4053e8b9ba49ff95f115594cbf8ae58"
+    },
+    {
+      "path": "recette/care-390.png",
+      "sizeBytes": 205250,
+      "sha256": "f3c4ffa104bc33f9ad8fdd821c76c5a3510c34008a23159fc3ad5ddda7971d00"
+    },
+    {
+      "path": "recette/care-768.png",
+      "sizeBytes": 210932,
+      "sha256": "c3f77de423e49471ac8469a5a0215fc5392691c49940346b6925d0d3a0c88eda"
+    },
+    {
+      "path": "recette/conservation-source.json",
+      "sizeBytes": 369,
+      "sha256": "70ae06c5fff48440ed811ca9365e34899a4f01c7e578f5e47161fc6b89fd89c4"
+    },
+    {
+      "path": "recette/controle-statique.json",
+      "sizeBytes": 248,
+      "sha256": "6d80e8b4fe0db625d1a07f4b81a7d2f01fbf731a2196eae93a7d1d9438bd8fdc"
+    },
+    {
+      "path": "recette/controle-visuel.json",
+      "sizeBytes": 612,
+      "sha256": "92769929805790605e7ce0a125b5fabae46051fed0a9fff112c37d3519d3549e"
+    },
+    {
+      "path": "recette/has-1440-sombre.png",
+      "sizeBytes": 208574,
+      "sha256": "aff2fab9d0f3b9cf9a956989954a0fcb59d9bcca0be1b9d737185a409625afb2"
+    },
+    {
+      "path": "recette/has-390-sombre.png",
+      "sizeBytes": 71821,
+      "sha256": "a130456c239a0792c13354c64e85684c6e4e3bffbd23ad7aecbff5153970db63"
+    },
+    {
+      "path": "recette/has-fiche-390-sombre.png",
+      "sizeBytes": 58633,
+      "sha256": "9f1fe9f802058c456a95e4ac3c5d304c1f32bc8dc0fd38990238860e168f566b"
+    },
+    {
+      "path": "recette/preparation-branche.json",
+      "sizeBytes": 1631,
+      "sha256": "72c8d9896161ab75468086040430bd9e616ef068f8cbec51c8aa6fad80ac3182"
+    },
+    {
+      "path": "recette/unit-branche-resultats.txt",
+      "sizeBytes": 2106,
+      "sha256": "4555c1db62a8df5e2c0b4b0a1ef5db221bfc4961e9e250f72423e50112935620"
+    },
+    {
+      "path": "recette/unit-resultats.tap",
+      "sizeBytes": 2103,
+      "sha256": "08a1b5e84c376a21a0610c448df8c956af82a3e7fc89e937d2aaca9dd9a4d067"
+    },
+    {
+      "path": "sources/catalogue.json",
+      "sizeBytes": 123614,
+      "sha256": "4dfb0ffc8898083960ba0b9724fa94396feed0db6a7a179d9bed69d27ceee6ac"
+    },
+    {
+      "path": "sources/verification.json",
+      "sizeBytes": 818,
+      "sha256": "7d1968e5c7e9e5e8560c8ffc932d9d492f3a878c52e3830792a86dabacfbd5b0"
+    },
+    {
+      "path": "tests/browser.cjs",
+      "sizeBytes": 29975,
+      "sha256": "c1b95618a0934a99ad51c367b73015fd54f0f618823ccef9ad7beb40821d1bf8"
+    },
+    {
+      "path": "tests/core.test.cjs",
+      "sizeBytes": 15314,
+      "sha256": "d3ed88fb9f818384aa6e629ffc7d3b454b927f4b46d92d14d4a1bf3e3a28dd02"
+    }
+  ],
+  "githubPublicationScope": "Branche legacy/test-lots-d-f uniquement",
+  "publicationBranch": "legacy/test-lots-d-f"
+}

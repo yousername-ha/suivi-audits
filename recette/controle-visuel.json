@@ -1,0 +1,27 @@
+{
+  "checkedAt": "2026-10-11T07:34:44.607Z",
+  "description": "Contrôle final des critères après ajustement typographique, sauvegarde synthétique restaurée dans un profil neuf.",
+  "viewports": [
+    {
+      "width": 390,
+      "documentOverflow": 0,
+      "criterionButtonWidth": 324
+    },
+    {
+      "width": 768,
+      "documentOverflow": 0,
+      "criterionButtonWidth": 243
+    },
+    {
+      "width": 1440,
+      "documentOverflow": 0,
+      "criterionButtonWidth": 617
+    },
+    {
+      "width": 3840,
+      "documentOverflow": 0,
+      "criterionButtonWidth": 617
+    }
+  ],
+  "pageErrors": []
+}

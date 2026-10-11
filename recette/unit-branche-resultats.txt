@@ -1,0 +1,31 @@
+✔ initialisation additive et répétée : tous les champs legacy et extra sont préservés (4.474473ms)
+✔ catalogues sourcés : 118 critères HAS, 21 impératifs et 10 entrées D1 sans doublons (0.314232ms)
+✔ création de campagne sans toucher aux mesures, actions et autres référentiels (10.022872ms)
+✔ suivi générique pour tous les domaines non documentés, objectifs explicitement locaux (4.321313ms)
+✔ contrôle des domaines, périmètres et chronologie avant toute création (1.114417ms)
+✔ réévaluations historisées et sans recalcul des campagnes antérieures (1.024291ms)
+✔ validation interne exige preuve acceptée, vérificateur et date (1.48904ms)
+✔ non-applicabilité justifiée et dates réellement valides (1.966459ms)
+✔ preuve partagée, relations bidirectionnelles et versions stables (1.421549ms)
+✔ validation de chaque version distincte, même pour les liens legacy (1.142699ms)
+✔ actions dans le registre commun, sans duplication ni validation automatique (2.024908ms)
+✔ argent exact : espaces français, centimes et sommes, sans formule d’aide (1.518115ms)
+✔ erreur budgétaire atomique et historique des montants conservé (1.130441ms)
+✔ dossier archivé conservé avec ses liens et protégé des écritures (0.863299ms)
+✔ référentiels importés vérifiables, versions distinctes et pas de remplacement silencieux (1.195448ms)
+✔ paquet auditeur physiquement filtré : aucun champ ni version hors périmètre (1.551304ms)
+✔ observations hors périmètre et mauvais paquet refusés sans écriture (1.1961ms)
+✔ réception idempotente, décision explicite et aucun changement d’évaluation (1.004552ms)
+✔ conflits d’observation : aucun import partiel (0.876749ms)
+✔ sauvegardes incohérentes et pollution de prototype refusées (1.225684ms)
+✔ liens dangereux et formules bureautiques neutralisés (0.425991ms)
+✔ projection des tableaux de bord : sources réelles, retards et aucune division par zéro (0.715577ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 110.241552
+

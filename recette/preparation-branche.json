@@ -1,0 +1,43 @@
+{
+  "preparedAt": "2026-10-11T12:55:09.139968+02:00",
+  "timezone": "Europe/Paris",
+  "branch": "legacy/test-lots-d-f",
+  "history": "Indépendant, sans parent et sans historique personnel",
+  "scope": [
+    "D (CaRE)",
+    "F (HAS et mode auditeur)"
+  ],
+  "excludedLots": [
+    "I",
+    "J"
+  ],
+  "applicationFilesIdenticalToLocalDelivery": true,
+  "sourceRepositoryFilesVerifiedUnchanged": 592,
+  "unitTests": {
+    "command": "node --test tests/core.test.cjs",
+    "passed": 22,
+    "failed": 0,
+    "status": "PASSÉ"
+  },
+  "browserTests": {
+    "command": "node tests/browser.cjs",
+    "passed": 22,
+    "failed": 0,
+    "notExecuted": 1,
+    "status": "PASSÉ",
+    "environment": "Chromium / Playwright ; copie isolée et profils synthétiques",
+    "notExecutedReason": "Ouverture file:// interdite par la politique du navigateur du workspace"
+  },
+  "preliminarySmoke": {
+    "status": "ÉCHEC sur une assertion HTTP globale",
+    "cause": "La source facultative data/state.json est absente (404) ; le code existant revient au stockage local.",
+    "resolution": "Aucun fichier fonctionnel changé ; les 22 parcours navigateur existants ont ensuite réussi."
+  },
+  "targetedContactDomainMatches": 0,
+  "secretPatternMatches": 0,
+  "dotenvFilesIncluded": 0,
+  "secretScanScope": "Domaines personnels précédemment identifiés, formats de tokens GitHub, clés privées et identifiants AWS ; scan ciblé, non exhaustif",
+  "syntheticTestDataOnly": true,
+  "githubActionsExecutedForValidation": false,
+  "remotePublishingStatus": "Préparation vérifiée ; résultat du push et archive GitHub contrôlés séparément"
+}

@@ -1,0 +1,127 @@
+{
+  "executedAt": "2026-10-11T10:54:09.365Z",
+  "environment": "Chromium local, profils isolés, données synthétiques",
+  "passed": 22,
+  "failed": 0,
+  "notExecuted": 1,
+  "pageErrors": [],
+  "externalRequests": 0,
+  "tests": [
+    {
+      "name": "Démarrage local : menu legacy, rubriques CaRE/HAS et aucune donnée opérationnelle préremplie",
+      "status": "PASSÉ",
+      "durationMs": 415
+    },
+    {
+      "name": "CaRE : dossier générique D2 et objectif local avec périmètre réel saisi",
+      "status": "PASSÉ",
+      "durationMs": 1096
+    },
+    {
+      "name": "Preuve physique : dépôt, SHA-256 et rattachement dans le registre partagé",
+      "status": "PASSÉ",
+      "durationMs": 1071
+    },
+    {
+      "name": "Vérification interne et validation documentée d’un objectif CaRE",
+      "status": "PASSÉ",
+      "durationMs": 1559
+    },
+    {
+      "name": "Preuve partagée et nouvelle version : aucun déplacement silencieux des références",
+      "status": "PASSÉ",
+      "durationMs": 2067
+    },
+    {
+      "name": "Action suivie dans le plan legacy et aucun recalcul automatique du statut",
+      "status": "PASSÉ",
+      "durationMs": 2156
+    },
+    {
+      "name": "Budgets : saisie décimale française, sommes exactes et historique",
+      "status": "PASSÉ",
+      "durationMs": 1456
+    },
+    {
+      "name": "HAS : création d’une campagne version 2025 et pagination de 118 critères",
+      "status": "PASSÉ",
+      "durationMs": 1026
+    },
+    {
+      "name": "HAS : applicabilité justifiée et preuve partagée pour une validation interne",
+      "status": "PASSÉ",
+      "durationMs": 3210
+    },
+    {
+      "name": "Exports Excel CaRE/HAS réels et données limitées aux dossiers sélectionnés",
+      "status": "PASSÉ",
+      "durationMs": 1280
+    },
+    {
+      "name": "Rapport PDF réel : périmètre, preuves et décisions lisibles",
+      "status": "PASSÉ",
+      "durationMs": 301
+    },
+    {
+      "name": "Dossier auditeur exporté : une sélection explicite et aucun objet/version hors périmètre",
+      "status": "PASSÉ",
+      "durationMs": 931
+    },
+    {
+      "name": "Application auditeur hors ligne : consultation, observations et rapport sans accès à l’application",
+      "status": "PASSÉ",
+      "durationMs": 496
+    },
+    {
+      "name": "Import et décision sur observations : scope contrôlé, résultats internes conservés",
+      "status": "PASSÉ",
+      "durationMs": 790
+    },
+    {
+      "name": "Sauvegarde complète : données et deux versions de preuve avec empreintes vérifiables",
+      "status": "PASSÉ",
+      "durationMs": 561
+    },
+    {
+      "name": "Export JSON du menu legacy : conservation des données existantes et des lots D/F",
+      "status": "PASSÉ",
+      "durationMs": 130
+    },
+    {
+      "name": "Restauration dans un profil neuf : données, relations et pièces réellement récupérées",
+      "status": "PASSÉ",
+      "durationMs": 1588
+    },
+    {
+      "name": "Archive altérée refusée avant toute écriture, dépôt trop volumineux également refusé",
+      "status": "PASSÉ",
+      "durationMs": 61
+    },
+    {
+      "name": "Lecture seule : commandes désactivées et garde sur un événement forcé",
+      "status": "PASSÉ",
+      "durationMs": 594
+    },
+    {
+      "name": "Non-régression du menu : les pages legacy restent accessibles",
+      "status": "PASSÉ",
+      "durationMs": 3832
+    },
+    {
+      "name": "Responsive et thème sombre : captures réelles, sans débordement du document",
+      "status": "PASSÉ",
+      "durationMs": 2659
+    },
+    {
+      "name": "Sources et versions : campagne D1 réelle, import de grille, archivage et réouverture",
+      "status": "PASSÉ",
+      "durationMs": 5068
+    },
+    {
+      "name": "Ouverture directe du HTML : menu, données locales et téléchargements sans serveur métier",
+      "status": "NON EXÉCUTÉ",
+      "durationMs": 183,
+      "notExecutedReason": "Politique Chromium du workspace : file:// interdit. Les parcours sont testés sur un serveur statique localhost, sans API métier."
+    }
+  ]
+}
