@@ -148,7 +148,7 @@ async function generer(p: Page, vue: 'contexte' | 'processus') {
 }
 async function enregistrer(p: Page) {
   await p.getByRole('button', { name: 'Enregistrer', exact: true }).click();
-  await expect(p.getByText('Carte enregistrée.')).toBeVisible();
+  await expect(p.getByText('Carte enregistrée.').last()).toBeVisible();
   await expect(p.getByText('Modifications non enregistrées')).toBeHidden();
 }
 

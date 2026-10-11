@@ -87,7 +87,7 @@ test('A6 : le panneau droit se rétracte puis se rouvre avec Infos', async ({ br
     page.locator('.carte-grille').or(page.getByRole('heading', { name: 'Aucune carte de contexte' })),
   ).toBeVisible();
   if (await page.getByRole('heading', { name: 'Aucune carte de contexte' }).isVisible()) {
-    await page.getByRole('button', { name: 'Générer la carte', exact: true }).click();
+    await page.getByRole('button', { name: 'Générer depuis la plateforme', exact: true }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Générer', exact: true }).click();
   }
   await expect(page.locator('.carte-grille')).toBeVisible();
