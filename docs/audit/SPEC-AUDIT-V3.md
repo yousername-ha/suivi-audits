@@ -21,7 +21,7 @@ Après la reprise, `/legacy` les affiche en lecture seule (« Module géré dans
   d'audit AFNOR `N` (`nextYear`, l'année précédente `P = N-1` sert au pronostic), date de l'audit AFNOR (compte à
   rebours), date de l'audit interne (saisie, inutilisée), échéance globale de clôture des écarts (`closeDeadline`).
   Ajout d'une année ; ni suppression, ni copie, ni archivage.
-- **Référentiels** : 12 chapitres (`ISO-4` à `ISO-10`, `A-5` à `A-8`, `HDS`) et 157 exigences : 35 sous-clauses ISO
+- **Référentiels** : 12 chapitres (`ISO-4` à `ISO-10`, `A-5` à `A-8`, `HDS`) et 157 exigences : 33 sous-clauses ISO
   (profondeur 1 ou 2), 93 mesures de l'Annexe A, 31 exigences HDS. Titre modifiable, texte de référence facultatif.
 - **Couverture** : pour chaque exigence et chaque année, statut AFNOR et statut interne (`''` non auditée, `P`
   prévue, `X` auditée). **Préparation, pilote et notes ne sont pas annualisés** (écrasés d'un cycle à l'autre) ;

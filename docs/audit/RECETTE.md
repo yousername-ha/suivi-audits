@@ -19,7 +19,7 @@ Aucune donnée réelle.
 | 8 | Filtres « Angles morts P » puis « Avec écart ouvert », recherche « 5.15 » | Compteurs exacts ; filtres retrouvés après rechargement | 07 |
 | 9 | Ouvre la fiche A.5.15 | Motifs du pronostic, historique, écarts liés, créneaux, preuves et questions types, préparation | 08 |
 | 10 | « Placer dans un créneau » depuis la fiche | Exigence ajoutée au créneau ; alerte « sans créneau » décrémentée | 08, 11 |
-| 11 | Crée un écart depuis une fiche exigence | Identifiant `F13`, exigence liée, année N, échéance = échéance de clôture | 09 |
+| 11 | Crée un écart depuis une fiche exigence | Identifiant `F12` (premier numéro libre ; le 12e écart du jeu est `GAP-01`), exigence liée, année N, échéance = échéance de clôture | 09 |
 | 12 | Coche la première tâche d'un écart ouvert, puis toutes | Écart « En cours » ; invitation à clôturer ; clôture : date et auteur enregistrés | 09 |
 | 13 | Rouvre un écart clos | Motif demandé ; statut « En cours » ; réouverture journalisée | 09 |
 | 14 | Filtres du registre (À traiter, AFNOR, Annexe A, année, pilote) | Tri : non clos, AFNOR, type, identifiant ; compteurs exacts | 09 |
