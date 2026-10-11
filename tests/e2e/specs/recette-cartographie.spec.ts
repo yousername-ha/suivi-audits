@@ -789,6 +789,17 @@ async function centreNoeud(p: Page, ref: string) {
   const b = (await noeud(p, ref).locator('rect').first().boundingBox())!;
   return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
 }
+/** Point à viser sur un objet : centre de sa partie visible. Une grande boîte peut déborder de la zone du canevas
+    (panneau latéral, bandeau « nouvel objet ») ; un point hors du canevas n'appartient pas à la carte. */
+async function pointVisible(p: Page, ref: string) {
+  const b = (await noeud(p, ref).locator('rect').first().boundingBox())!;
+  const z = (await svg(p).boundingBox())!;
+  const x1 = Math.max(b.x, z.x),
+    y1 = Math.max(b.y, z.y),
+    x2 = Math.min(b.x + b.width, z.x + z.width),
+    y2 = Math.min(b.y + b.height, z.y + z.height);
+  return { x: (x1 + x2) / 2, y: (y1 + y2) / 2 };
+}
 /** Glisse un élément de la palette jusqu'à un point de l'écran. */
 async function deposer(p: Page, item: string, cible: { x: number; y: number }) {
   const b = (await p.locator(`[data-palette="${item}"]`).boundingBox())!;
@@ -894,7 +905,7 @@ test('24. vue processus : processus créé dans la bande Réalisation, sous-proc
   const b = (await noeud(p, 'process:PR1').locator('rect').first().boundingBox())!;
   expect(b.y).toBeGreaterThan(rea.y);
   expect(b.y + b.height).toBeLessThan(rea.y + rea.height + 2);
-  await deposer(p, 'subprocess', await centreNoeud(p, 'process:PR1'));
+  await deposer(p, 'subprocess', await pointVisible(p, 'process:PR1'));
   const d2 = p.getByRole('dialog', { name: 'Créer : Sous-processus' });
   await expect(d2.getByRole('textbox', { name: 'Processus parent' })).toHaveValue(/^PR1 — /);
   await expect(d2.getByRole('textbox', { name: 'Code' })).toHaveAttribute('placeholder', 'PR1.1');
@@ -963,7 +974,7 @@ test('27. note et cadre : grouper deux objets dans un cadre qui les emporte ; co
     .first()
     .click({ position: { x: 8, y: 8 }, modifiers: ['Shift'] });
   await expect(p.getByRole('heading', { name: '2 objets sélectionnés' })).toBeVisible();
-  const menu = await menuSur(p, await centreNoeud(p, pi!));
+  const menu = await menuSur(p, await pointVisible(p, pi!));
   await menu.getByRole('menuitem', { name: 'Grouper dans un cadre' }).click();
   await expect.poll(() => refsDe(p, 'frame:')).toHaveLength(1);
   const [cadre] = await refsDe(p, 'frame:');
@@ -1029,7 +1040,7 @@ test('30. appui long (tactile) et Maj+F10 (clavier) : même menu, navigable, fer
   const problems = watchPage(page);
   await page.goto('/cartographie/contexte');
   await expect(noeud(page, 'isms')).toHaveCount(1);
-  const c = await centreNoeud(page, 'isms');
+  const c = await pointVisible(page, 'isms');
   const cible = noeud(page, 'isms').locator('rect').first();
   await cible.dispatchEvent('pointerdown', {
     pointerType: 'touch',
@@ -1104,7 +1115,7 @@ test('32. lecteur : clic droit limité à la consultation, aucune palette (CARTO
   await p.goto('/cartographie/contexte');
   await expect(noeud(p, 'isms')).toHaveCount(1);
   await expect(p.getByRole('region', { name: 'Palette : construire la carte' })).toHaveCount(0);
-  const m = await menuSur(p, await centreNoeud(p, 'isms'));
+  const m = await menuSur(p, await pointVisible(p, 'isms'));
   await expect(m.getByRole('menuitem')).toHaveText(['Ouvrir la fiche', 'Copier le nom']);
   await p.keyboard.press('Escape');
   const fond = await menuSur(p, await pointCanevas(p, 0.005, 0.01));
