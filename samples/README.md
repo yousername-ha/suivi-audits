@@ -8,6 +8,7 @@ explicite de l’utilisateur. Les captures utilisent exclusivement des données 
 
 | Date | Série | Captures | Version de l’application |
 | --- | --- | --- | --- |
+| 12 octobre 2026 | [ASTRA — série 06 : bleu institutionnel et touches sauge](2026-10-12-astra-06/README.md) | **10 images** : marine, turquoise et sauge legacy | Propositions visuelles |
 | 12 octobre 2026 | [ASTRA — série 05 : bleu institutionnel × Normand’e-Santé](2026-10-12-astra-05/README.md) | **10 images** : structure institutionnelle, palette marine et turquoise | Propositions visuelles |
 | 12 octobre 2026 | [ASTRA — série 04 : inspiration Normand’e-Santé](2026-10-12-astra-04/README.md) | **10 images** : cockpit, risques, conformité, actions, audits, preuves, périmètres, continuité et revue | Propositions visuelles |
 | 12 octobre 2026 | [ASTRA — série 03 : 10 styles SMSI](2026-10-12-astra-03/README.md) | **100 images** : 10 styles × 10 vues de cartographie des processus | Propositions visuelles |
