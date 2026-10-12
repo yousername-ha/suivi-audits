@@ -1,3 +1,10 @@
+# Risques et Annexe A ISO 27001:2022 — 12 octobre 2026
+
+- Sélection de plusieurs mesures depuis la fiche risque, recherche et filtre par domaine.
+- Consultation bidirectionnelle, retrait des liens directs et conservation des liens des traitements.
+- Contrôles serveur des périmètres et de la réciprocité ; aucune modification des évaluations.
+- Nouvelles captures ajoutées à l’historique `samples/` sans remplacer les anciennes.
+
 # ASTRA — 12 octobre 2026
 
 La refonte ASTRA est intégrée sur `legacy`, désormais branche exclusive de travail

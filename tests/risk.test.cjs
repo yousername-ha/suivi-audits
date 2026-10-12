@@ -234,3 +234,37 @@ test("jeu FICTIF cohérent, répétable, sans écrasement ni compte de connexion
   assert.deepEqual(again.state, info.state);
   assert.ok(!JSON.stringify(info.state).includes("password"));
 });
+
+
+test("Annexe A : liens directs multiples, bidirectionnels et retrait sans recalcul", () => {
+  const f = fixture(), s = f.s;
+  s.items.push({ id: "A-5.1", ref: "A", title: "Politiques FICTIVES" }, { id: "A-8.1", ref: "A", title: "Terminaux FICTIFS" }, { id: "ISO-4.1", ref: "ISO", title: "Contexte FICTIF" });
+  const r = R.risk(s, { title: "Risque FICTIF", description: "Contexte", perimeterIds: [f.a.id] });
+  const a = evaluate(f, r, null, "residual", "L2");
+  R.reference(s, r.id, a.id);
+  I.relate(s, { kind: "risk", id: r.id }, { kind: "control", id: "ISO-4.1" });
+  const beforeAssessment = C.clone(s.riskMgmt.assessments), references = C.clone(r.referenceEvaluationIds);
+  const t = R.treatment(s, { riskId: r.id, title: "Traitement FICTIF", strategy: "Réduire" });
+  const m = R.measure(s, { treatmentId: t.id, title: "Mesure FICTIVE", description: "Réalisation", controlIds: ["A-5.1"] });
+  R.linkAnnexA(s, r.id, ["A-5.1", "A-8.1", "A-5.1"]);
+  R.linkAnnexA(s, r.id, ["A-5.1", "A-8.1"]);
+  assert.equal(r.objectRefs.filter((x) => x.id === "A-5.1").length, 1);
+  assert.deepEqual(s.items[0].objectRefs, [{ kind: "risk", id: r.id }]);
+  assert.equal(R.annexALinks(s, r.id).length, 2);
+  const snapshot = C.clone(s);
+  assert.throws(() => R.linkAnnexA(s, r.id, ["A-8.1", "INCONNU"]), /inconnue/);
+  assert.deepEqual(s, snapshot, "La validation précède toute modification");
+  assert.throws(() => R.linkAnnexA(s, r.id, ["ISO-4.1"]), /inconnue/);
+  R.linkAnnexA(s, r.id, ["A-8.1"]);
+  assert.deepEqual(s.items[0].objectRefs, []);
+  assert(r.objectRefs.some((ref) => ref.id === "ISO-4.1"));
+  const indirect = R.annexALinks(s, r.id).find((link) => link.control.id === "A-5.1");
+  assert.equal(indirect.direct, false);
+  assert.equal(indirect.measures[0].id, m.id);
+  R.linkAnnexA(s, r.id, []);
+  assert.deepEqual(s.items[1].objectRefs, []);
+  assert.deepEqual(s.riskMgmt.assessments, beforeAssessment);
+  assert.deepEqual(r.referenceEvaluationIds, references);
+  assert.equal(r.needsReview, false);
+  assert.equal(s.findings.length, 0);
+});

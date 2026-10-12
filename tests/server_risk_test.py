@@ -83,4 +83,29 @@ class RiskServerTests(unittest.TestCase):
         projected['riskMgmt']['assessments'].append(evaluation);merged=self.store.merge(s,projected,u)
         with self.assertRaises(Problem) as e:self.store.validate(merged,s,u,self.db)
         self.assertEqual(e.exception.status,403)
+    def test_annex_a_links_are_scoped_bidirectional_and_audited(self):
+        old=copy.deepcopy(self.state);scope=old['perimeters'][1]['id']
+        old['items'].append({'id':'A-5.1','ref':'A','title':'Mesure FICTIVE','perimeterIds':[scope]})
+        u={**ADMIN,'permission':'editor','perimeterIds':[scope],'canValidate':False}
+        incoming=self.store.project(old,u);risk=incoming['riskMgmt']['risks'][0]
+        risk.setdefault('objectRefs',[]).append({'kind':'control','id':'A-5.1'})
+        incoming['items'][0].setdefault('objectRefs',[]).append({'kind':'risk','id':risk['id']})
+        merged=self.store.merge(old,incoming,u);self.store.validate(merged,old,u,self.db)
+        changed=next(r for r in merged['riskMgmt']['risks'] if r['id']==risk['id'])
+        self.assertIn('objectRefs',changed['history'][-1]['fields'])
+        prior=next(r for r in old['riskMgmt']['risks'] if r['id']==risk['id'])
+        self.assertEqual(changed['referenceEvaluationIds'],prior['referenceEvaluationIds'])
+        self.assertEqual(merged['riskMgmt']['assessments'],old['riskMgmt']['assessments'])
+        for target in ('INCONNU','A-5.1'):
+            invalid=copy.deepcopy(old);invalid['riskMgmt']['risks'][0].setdefault('objectRefs',[]).append({'kind':'control','id':target})
+            with self.assertRaises(Problem) as e:self.store.validate(invalid,old,ADMIN,self.db)
+            self.assertEqual(e.exception.status,422)
+        hidden=copy.deepcopy(old);hidden['items'][0]['perimeterIds']=[old['perimeters'][2]['id']]
+        invalid=copy.deepcopy(hidden);invalid['riskMgmt']['risks'][0].setdefault('objectRefs',[]).append({'kind':'control','id':'A-5.1'})
+        invalid['items'][0]['objectRefs']=[{'kind':'risk','id':invalid['riskMgmt']['risks'][0]['id']}]
+        with self.assertRaises(Problem) as e:self.store.validate(invalid,hidden,u,self.db)
+        self.assertEqual(e.exception.status,403)
+        viewer={**u,'permission':'viewer'}
+        with self.assertRaises(Problem) as e:self.store.merge(old,incoming,viewer)
+        self.assertEqual(e.exception.status,403)
 if __name__=='__main__':unittest.main()

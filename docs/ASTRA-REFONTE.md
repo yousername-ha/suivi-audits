@@ -10,8 +10,8 @@ branches et les fichiers non suivis ne sont pas modifiés ni inclus dans le ZIP.
 Base : `4bcdf60c629b50466aa40f1a98d67346a4641359`. La première réalisation avait été
 autorisée sur la branche alors nommée `legacy/test-lots-d-f` ; elle est conservée
 localement sous `archive/astra-refonte` au commit
-`3f711d67d861e791b1ec39e9be8d72a14482f63e`. La branche distante `legacy` désigne
-la même base, ce qui permet de reprendre les modifications ASTRA sans conflit.
+`3f711d67d861e791b1ec39e9be8d72a14482f63e`. Lors de l’intégration, la branche distante `legacy` désignait
+la même base, permettant de reprendre les modifications ASTRA sans conflit.
 Lors de la restauration initiale, les 122 blobs du ZIP fourni, les arbres et le
 commit avaient été vérifiés par leurs empreintes Git exactes. L’historique local
 reste limité à cette base et aux commits de la refonte.
@@ -28,7 +28,10 @@ Registres conservés : `findings` et leurs sous-actions, `plans`, `recurring`,
 `riskMgmt`, `items`/`dda`, `frameworks`, `evidences`, `perimeters`, `roles`,
 incidents/crise, fournisseurs/accès, audits, objectifs/indicateurs, cartographies,
 CaRE/HAS, parcours, PCRA, CRRC, investissements, IA et écarts applicatifs.
-Les modules `*-core.js`, le schéma de stockage et les API Python ne sont pas modifiés.
+Les calculs de risque et de conformité, le schéma de stockage et les routes API
+Python sont conservés. Le module `risk-core.js` expose désormais le rattachement
+à l’Annexe A via les relations `objectRefs` existantes ; le serveur contrôle les
+changements de liens, leur réciprocité et les périmètres autorisés.
 L’adaptateur JavaScript de sauvegarde conserve les identifiants internes attribués
 par le serveur dans les saisies en attente : cela corrige un refus HTTP 422 lors
 d’une édition immédiate après création, sans écraser les champs modifiés ou
@@ -101,6 +104,26 @@ les contrôles et leurs gestionnaires ne sont pas supprimés.
   visuels harmonisés. Les fonctions expertes restent accessibles par les vues
   de saisie détaillée lorsqu’elles ne possèdent pas de nouvelle synthèse.
 
+## Rattachement des risques à l’Annexe A ISO 27001:2022
+
+Depuis la matrice ou le registre, ouvrir la fiche d’un risque puis choisir
+**Lier / délier des mesures** dans la section **Mesures liées · Annexe A
+ISO 27001:2022**. Rechercher par référence ou titre, filtrer par domaine, cocher
+une ou plusieurs mesures puis enregistrer. Décocher retire uniquement le lien
+explicite ; cela ne supprime aucune mesure du référentiel.
+
+Le catalogue est celui des 93 mesures de l’Annexe A déjà embarquées, limité aux
+objets consultables par le compte connecté. Aucun référentiel dupliqué ni champ
+de score ajouté. Les relations sont stockées dans les `objectRefs` bidirectionnels
+existants et historisées côté serveur. Une mesure ouvre sa fiche de conformité,
+où les risques liés sont également consultables. Le rôle lecteur peut consulter
+ces liens, mais ne peut pas les modifier.
+
+Les liens déjà portés par les mesures des plans de traitement sont également
+visibles et identifiés comme tels. Ils restent gérés dans leurs plans ; décocher
+un lien direct ne les efface pas. Les scores, décisions, niveaux résiduels et
+statuts de conformité ne sont pas recalculés par un rattachement.
+
 ## Limites explicites du modèle préservé
 
 - Pas d’évaluation cible dans `riskMgmt` : aucun quatrième score fictif ajouté.
@@ -131,7 +154,7 @@ Voir `recette/astra-validation.json` pour les résultats de cette livraison,
 distincts des résultats historiques déjà présents dans `recette/`.
 
 Contrôles : syntaxe de tous les modules JS et du script principal, compilation
-Python, 54 tests JavaScript (métier et file de sauvegarde), trente tests serveur, recette Chromium
+Python, 55 tests JavaScript (métier, rattachements et file de sauvegarde), 31 tests serveur, recette Chromium
 avec données explicitement fictives isolées, 100 destinations de navigation,
 quatre résolutions (390, 768, 1440, 1920 px), thème sombre, rôle lecteur,
 changement de statut, formulaires, récurrences et rechargement serveur.

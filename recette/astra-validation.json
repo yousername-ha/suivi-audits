@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-12T11:33:51.733266+00:00",
+  "date": "2026-10-12T13:03:25.250559+00:00",
   "branch": "legacy",
   "baseCommit": "4bcdf60c629b50466aa40f1a98d67346a4641359",
   "environment": {
@@ -16,23 +16,25 @@
   },
   "javascript": {
     "command": "node --test tests/*.test.cjs",
-    "passed": 54,
+    "passed": 55,
     "failed": 0
   },
   "pythonServer": {
     "command": "python -m unittest discover -s tests -p 'server*test.py'",
-    "passed": 30,
+    "passed": 31,
     "failed": 0
   },
   "browser": {
     "command": "ASTRA_LAUNCHER=sh node tests/astra-browser.cjs",
     "testedFromExtractedArchive": true,
-    "passed": 14,
+    "passed": 16,
     "checks": [
       "Cockpit et lancement local",
       "Données persistées par le moteur existant",
       "Tableau de bord historique conservé",
       "Matrice, sélection et fiche du risque",
+      "Annexe A : sélection multiple, recherche et liens persistants dans les deux sens",
+      "Annexe A : retrait persistant d’un lien et conservation de l’autre",
       "Conformité, hiérarchie et détail",
       "Actions : Kanban et changement de statut partagé",
       "Actions : Planning, Calendrier, Gantt et Synthèse",
@@ -58,7 +60,7 @@
     "after": "création, édition et rechargement depuis le serveur réussis ; suppressions conservées et altération explicite refusée"
   },
   "testedCandidate": {
-    "sha256": "809b35209dbfd2c6184ce88d447fe0ac5e52302e24132dbe417149c77c1dfbfc",
+    "sha256": "d7cc26415f2cb47f26c69f1d3bde09f6a01a81d3e378d4e0b354181fb4c8d2f0",
     "zipIntegrity": "OK",
     "manifestHashes": "OK"
   },
@@ -72,6 +74,21 @@
   "integration": {
     "fromSavedAstraCommit": "3f711d67d861e791b1ec39e9be8d72a14482f63e",
     "method": "Application des modifications directement sur legacy, sans merge/rebase/cherry-pick",
-    "runtimeUnchanged": true
+    "runtimeUnchanged": false
+  },
+  "annexALinks": {
+    "edition": "ISO 27001:2022",
+    "catalog": "93 mesures existantes, limitées aux périmètres consultables",
+    "storage": "objectRefs bidirectionnels existants",
+    "verified": [
+      "sélection multiple et filtrage",
+      "rechargement serveur",
+      "retrait sans suppression du référentiel",
+      "consultation inverse",
+      "liens issus des traitements conservés",
+      "scores et références inchangés",
+      "liens inconnus, unilatéraux et hors périmètre refusés lors du changement côté risque",
+      "compte lecteur sans mutation"
+    ]
   }
 }

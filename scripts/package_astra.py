@@ -36,7 +36,7 @@ def main():
         if required not in content:
             raise SystemExit('Fichier indispensable absent : ' + required)
     manifest = {
-        'version': '3.0.0-astra-local',
+        'version': '3.0.1-astra-local',
         'createdAt': datetime.datetime.now(datetime.timezone.utc).isoformat(),
         'branch': branch,
         'baseCommit': BASE,

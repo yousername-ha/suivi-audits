@@ -223,7 +223,7 @@
       .join("");
     detail(
       r.title,
-      `<p class="as-note">${E(r.internalId)} · ${E(U.scopeLabel(r.perimeterIds))}</p>${pill(r.status)}<div class="as-metrics">${levels}</div><h3>Contexte</h3><p>${E(r.description || "À documenter")}</p><dl class="as-facts"><dt>Responsable</dt><dd>${E(U.ownerLabel(r))}</dd><dt>Prochaine revue</dt><dd>${date(r.reviewDate)}</dd><dt>Domaine</dt><dd>${E(r.domain || "À préciser")}</dd></dl><h3>Plan de traitement</h3>${
+      `<p class="as-note">${E(r.internalId)} · ${E(U.scopeLabel(r.perimeterIds))}</p>${pill(r.status)}<div class="as-metrics">${levels}</div><h3>Contexte</h3><p>${E(r.description || "À documenter")}</p><dl class="as-facts"><dt>Responsable</dt><dd>${E(U.ownerLabel(r))}</dd><dt>Prochaine revue</dt><dd>${date(r.reviewDate)}</dd><dt>Domaine</dt><dd>${E(r.domain || "À préciser")}</dd></dl>${LegacyRiskUI.controlsSection(r)}<h3>Plan de traitement</h3>${
         s.riskMgmt.treatments
           .filter((t) => t.riskId === id)
           .map(
@@ -797,7 +797,7 @@
             ),
           )
           .join("") || "<p>Aucun écart lié.</p>"
-      }`,
+      }${!r.fw && r.raw.ref === "A" ? `<h3>Risques liés</h3>${S().riskMgmt.risks.filter((risk) => LegacyRisks.annexALinks(S(), risk.id).some((link) => link.control.id === id)).map((risk) => btn(risk.title, "risk-detail", `data-id="${E(risk.id)}"`)).join("") || "<p>Aucun risque lié.</p>"}` : ""}`,
       !A.readOnly()
         ? btn("Évaluer / modifier", "control-edit", `data-id="${E(id)}"`, true)
         : "",
@@ -1215,5 +1215,12 @@
     },
     afterRender,
   });
-  window.AstraUI = { workRows, filtered, riskRows, events, workspace };
+  window.AstraUI = {
+    workRows, filtered, riskRows, events, workspace, riskDetail,
+    openAnnexControl(id) {
+      closeDetail();
+      A.navigate("conformite", { confView: "A" });
+      control(id);
+    },
+  };
 })();

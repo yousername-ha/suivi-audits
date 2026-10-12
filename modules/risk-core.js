@@ -209,6 +209,38 @@
       id,
     );
   }
+  function annexAControls(s) {
+    return (s.items || []).filter((item) => item.ref === "A");
+  }
+  function annexALinks(s, riskId) {
+    const r = find(init(s).riskMgmt.risks, riskId, "Risque"),
+      direct = new Set((r.objectRefs || []).filter((ref) => ref.kind === "control").map((ref) => ref.id)),
+      measures = s.riskMgmt.measures.filter((m) => m.riskId === riskId);
+    return annexAControls(s).map((control) => ({
+      control,
+      direct: direct.has(control.id),
+      measures: measures.filter((m) => (m.controlIds || []).includes(control.id)),
+    })).filter((link) => link.direct || link.measures.length);
+  }
+  function linkAnnexA(s, riskId, ids) {
+    const r = find(init(s).riskMgmt.risks, riskId, "Risque"),
+      controls = annexAControls(s),
+      selected = I.unique(ids),
+      valid = new Set(controls.map((c) => c.id));
+    if (selected.some((id) => !valid.has(id)))
+      throw Error("Mesure de l’Annexe A inconnue ou inaccessible.");
+    const previous = (r.objectRefs || []).filter((ref) => ref.kind === "control" && valid.has(ref.id)).map((ref) => ref.id);
+    if (previous.length === selected.length && previous.every((id) => selected.includes(id))) return r;
+    const removed = new Set(previous.filter((id) => !selected.includes(id)));
+    r.objectRefs = (r.objectRefs || []).filter((ref) => ref.kind !== "control" || !removed.has(ref.id));
+    for (const c of controls) {
+      if (removed.has(c.id)) c.objectRefs = (c.objectRefs || []).filter((ref) => ref.kind !== "risk" || ref.id !== riskId);
+    }
+    for (const id of selected) I.relate(s, { kind: "risk", id: riskId }, { kind: "control", id });
+    r.updatedAt = C.now();
+    C.log(s, "Rattachement Annexe A ISO 27001:2022", "risk", riskId, previous, selected);
+    return r;
+  }
   function study(s, f, id) {
     init(s);
     const ids = scoped(s, f.perimeterIds),
@@ -508,6 +540,9 @@
     init,
     policy,
     risk,
+    annexAControls,
+    annexALinks,
+    linkAnnexA,
     study,
     scenario,
     assessment,

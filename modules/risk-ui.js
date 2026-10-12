@@ -79,6 +79,45 @@
         }),
     );
   }
+  function controlsSection(r) {
+    const links = R.annexALinks(U.state(), r.id);
+    return `<section class="lx-card risk-annex-links"><h3>Mesures liées · Annexe A ISO 27001:2022</h3>${links.map(({ control, direct, measures }) => `<div class="risk-annex-link">${U.button(control.id + " · " + control.title, "risk-control-open", `data-id="${U.esc(control.id)}"`)}<small>${direct ? "Lien direct avec le risque" : ""}${direct && measures.length ? " · " : ""}${measures.length ? "Via le traitement : " + measures.map((m) => U.esc(m.title)).join(", ") : ""}</small></div>`).join("") || '<p>Aucune mesure de l’Annexe A liée à ce risque.</p>'}${!U.api().readOnly() ? U.button("Lier / délier des mesures", "risk-annex-controls", `data-id="${U.esc(r.id)}"`) : ""}<p class="lx-muted">Un lien documente une correspondance ; il ne valide ni la mise en œuvre de la mesure ni la réduction du risque.</p></section>`;
+  }
+  function annexControlsForm(id) {
+    if (U.api().readOnly()) return;
+    const s = U.state(), r = get("risk", id),
+      controls = R.annexAControls(s),
+      selected = R.annexALinks(s, id).filter((link) => link.direct).map((link) => link.control.id),
+      parent = document.getElementById("as-detail"),
+      reopen = !!parent?.open;
+    if (reopen) parent.close();
+    U.dialog(
+      "Lier des mesures · Annexe A ISO 27001:2022",
+      `<p>${U.esc(r.title)}</p><p class="lx-muted">Cochez les mesures à relier directement au risque. Décochez-les pour retirer ce lien. Les liens provenant des mesures de traitement se gèrent dans leur plan.</p>` +
+      U.field("annexQuery", "Rechercher une mesure par référence ou titre", "", "search") +
+      U.select("annexDomain", "Domaine", [{ value: "all", label: "Tous les domaines" }, ...[...new Set(controls.map((c) => c.group))].map((group) => ({ value: group, label: s.groups?.find((g) => g.id === group)?.title || group }))], "all") +
+      '<p class="risk-annex-count" role="status" aria-live="polite"></p>' +
+      U.multi("annexControlIds", "Mesures disponibles dans votre périmètre", controls.map((c) => ({ value: c.id, label: c.id + " · " + c.title })), selected).replace('class="lx-choices"', 'class="lx-choices risk-annex-options"'),
+      (fd) => U.mutate((state) => R.linkAnnexA(state, id, fd.getAll("annexControlIds"))),
+    );
+    const d = document.getElementById("lx-dialog"),
+      query = d.querySelector('[name="annexQuery"]'),
+      domain = d.querySelector('[name="annexDomain"]'),
+      normalize = (value) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(),
+      refresh = () => {
+        let visible = 0;
+        d.querySelectorAll('.risk-annex-options label').forEach((label, n) => {
+          label.hidden = !normalize(label.textContent).includes(normalize(query.value.trim())) || (domain.value !== "all" && controls[n].group !== domain.value);
+          if (!label.hidden) visible++;
+        });
+        const checked = d.querySelectorAll('[name="annexControlIds"]:checked').length;
+        d.querySelector('.risk-annex-count').textContent = `${visible} mesure(s) affichée(s) · ${checked} sélectionnée(s)`;
+      };
+    query.addEventListener("input", refresh);
+    d.querySelector("form").addEventListener("change", refresh);
+    if (reopen) d.addEventListener("close", () => window.AstraUI?.riskDetail(id), { once: true });
+    refresh();
+  }
   function studyForm(id) {
     const st = id ? get("riskStudy", id) : {};
     U.dialog(
@@ -614,7 +653,7 @@
         )
         .join(
           "",
-        )}</section>${plansForRisk(r)}<section class="lx-card">${U.button("Liens et preuves partagés", "object-relations", `data-kind="risk" data-id="${r.id}"`)}</section>`
+        )}</section>${controlsSection(r)}${plansForRisk(r)}<section class="lx-card">${U.button("Liens et preuves partagés", "object-relations", `data-kind="risk" data-id="${r.id}"`)}</section>`
     );
   }
   function plansForRisk(r) {
@@ -963,6 +1002,7 @@
       "risk-study-open",
       "risk-studies-back",
       "risk-action-open",
+      "risk-control-open",
       "risk-export",
       "risk-report",
     ],
@@ -970,6 +1010,11 @@
       const id = el.dataset.id;
       if (act === "risk-new") riskForm();
       else if (act === "risk-edit") riskForm(id);
+      else if (act === "risk-annex-controls") annexControlsForm(id);
+      else if (act === "risk-control-open") {
+        if (window.AstraUI?.openAnnexControl) window.AstraUI.openAnnexControl(id);
+        else U.api().astra.openControl(id);
+      }
       else if (act === "risk-open") {
         U.api().navigate("risks", { riskView: "register", riskId: id });
       } else if (act === "risk-back")
@@ -1011,6 +1056,8 @@
     },
   });
   window.LegacyRiskUI = {
+    controlsSection,
+    annexControlsForm,
     open: (kind, id, ids) =>
       kind === "risk"
         ? riskForm(id, ids)

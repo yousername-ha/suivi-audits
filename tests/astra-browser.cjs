@@ -229,6 +229,68 @@ async function start() {
       path: path.join(RESULTS, "astra-matrix.png"),
       fullPage: true,
     });
+    let annexRiskId;
+    await check("Annexe A : sélection multiple, recherche et liens persistants dans les deux sens", async () => {
+      annexRiskId = await page.evaluate(async () => {
+        const u = LegacyIntegrationUI.toolkit;
+        const id = u.state().riskMgmt.risks[0].id;
+        await u.mutate((state) => {
+          for (const cid of ["A-5.1", "A-8.1"])
+            state.items.find((c) => c.id === cid).perimeterIds = [...state.riskMgmt.risks[0].perimeterIds];
+        });
+        AstraUI.riskDetail(id);
+        return id;
+      });
+      await page.locator('#as-detail [data-lx-act="risk-annex-controls"]').click();
+      const dlg = page.locator('#lx-dialog');
+      assert.equal(await dlg.locator('[name="annexControlIds"]').count(), 93);
+      await dlg.locator('[name="annexQuery"]').fill('A-5.1');
+      await dlg.locator('[name="annexControlIds"][value="A-5.1"]').check();
+      await dlg.locator('[name="annexQuery"]').fill('A-8.1');
+      await dlg.locator('[name="annexControlIds"][value="A-8.1"]').check();
+      await dlg.locator('[name="annexQuery"]').fill('introuvable-fixture');
+      assert.equal(await dlg.locator('.risk-annex-options label:visible').count(), 0);
+      await dlg.locator('[name="annexQuery"]').fill('');
+      await dlg.locator('[name="annexDomain"]').selectOption('A-8');
+      assert.equal(await dlg.locator('[name="annexControlIds"]:checked').count(), 2);
+      await page.screenshot({ path: path.join(RESULTS, 'astra-risk-annex-selection.png'), fullPage: true });
+      await dlg.locator('[type=submit]').click();
+      await dlg.waitFor({ state: 'hidden' });
+      await page.evaluate(() => LegacyServer.flush());
+      await page.reload();
+      await page.locator('#lx-account').waitFor();
+      await page.evaluate((id) => AstraUI.riskDetail(id), annexRiskId);
+      assert.equal(await page.locator('#as-detail .risk-annex-link').count(), 2);
+      await page.screenshot({ path: path.join(RESULTS, 'astra-risk-annex-links.png'), fullPage: true });
+      const saved = await page.evaluate(async (id) => {
+        const s = (await LegacyServer.request('/api/state')).state;
+        return s.items.filter((c) => ["A-5.1", "A-8.1"].includes(c.id)).every((c) => c.objectRefs.some((r) => r.kind === 'risk' && r.id === id));
+      }, annexRiskId);
+      assert(saved);
+      await page.locator('#as-detail [data-lx-act="risk-control-open"][data-id="A-8.1"]').click();
+      await page.locator('#as-detail [data-astra="risk-detail"]').first().waitFor();
+      assert((await page.locator('#as-detail').innerText()).includes('Risques liés'));
+      await page.locator('#as-detail [data-astra="risk-detail"]').first().click();
+      await page.locator('#as-detail [data-astra="risk-full"]').click();
+      assert.equal(await page.locator('#panel .risk-annex-link').count(), 2);
+      await page.locator('#panel [data-lx-act="risk-annex-controls"]').click();
+      await page.locator('#lx-dialog [data-lx-act="dialog-close"]').first().click();
+    });
+    await check("Annexe A : retrait persistant d’un lien et conservation de l’autre", async () => {
+      await page.evaluate((id) => AstraUI.riskDetail(id), annexRiskId);
+      await page.locator('#as-detail [data-lx-act="risk-annex-controls"]').click();
+      await page.locator('#lx-dialog [name="annexControlIds"][value="A-5.1"]').uncheck();
+      await page.locator('#lx-dialog [type=submit]').click();
+      await page.locator('#lx-dialog').waitFor({ state: 'hidden' });
+      await page.evaluate(() => LegacyServer.flush());
+      await page.reload();
+      await page.locator('#lx-account').waitFor();
+      const links = await page.evaluate((id) => {
+        const s = LegacyIntegrationUI.toolkit.state();
+        return { direct: LegacyRisks.annexALinks(s, id).filter((l) => l.direct).map((l) => l.control.id), reverse: s.items.find((c) => c.id === 'A-5.1').objectRefs.some((r) => r.kind === 'risk' && r.id === id) };
+      }, annexRiskId);
+      assert.deepEqual(links, { direct: ['A-8.1'], reverse: false });
+    });
     await check("Conformité, hiérarchie et détail", async () => {
       await nav("conformite", { confView: "A" });
       assert.equal(await page.locator(".as-table tbody input").count(), 0);
@@ -488,6 +550,12 @@ async function start() {
           await reader.locator("#as-detail [data-astra-status]").count(),
           0,
         );
+        await reader.locator('#as-detail [data-astra="close"]').click();
+        await reader.evaluate((id) => AstraUI.riskDetail(id), annexRiskId);
+        assert.equal(await reader.locator('#as-detail [data-lx-act="risk-annex-controls"]').count(), 0);
+        assert.equal(await reader.locator('#as-detail .risk-annex-link').count(), 1);
+        await reader.locator('#as-detail [data-lx-act="risk-control-open"]').click();
+        assert((await reader.locator('#as-detail').innerText()).includes('Risques liés'));
         await context.close();
       },
     );

@@ -20,6 +20,9 @@ Cette instruction remplace l’interdiction initiale de publication pour cette l
   archiver une étude ou clôturer une action ne supprime ni ne recalcule les risques.
 - Il inclut les cartographies historiques contexte/processus et l'ordonnancement
   du menu ; les cartes restent liées aux registres et soumises aux périmètres serveur.
+- Les risques se rattachent aux mesures de l’Annexe A ISO 27001:2022 via les
+  `objectRefs` bidirectionnels existants. Conserver les liens des plans de traitement ;
+  un rattachement ne valide ni la conformité ni le risque résiduel.
 - Aucun secret, email personnel, document réel, cookie ni profil navigateur en Git.
   Utiliser une identité de commit anonyme et des fixtures synthétiques.
 - Exception explicitement demandée : compte public de test local `admin` / `admin`,

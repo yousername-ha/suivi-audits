@@ -49,6 +49,19 @@ def validate_risks(s, old, u, store, Problem):
         date(r.get('reviewDate'),False)
         refs=r.setdefault('referenceEvaluationIds',{'initial':None,'residual':None})
         prior=before['risks'].get(r['id'],{})
+        # Liens explicites vers le registre de mesures existant : contrôle des
+        # changements, sans invalider les éventuels anciens liens inchangés.
+        controls = {c['id']:c for c in s.get('items', [])}
+        current_links = {ref.get('id') for ref in r.get('objectRefs', []) if ref.get('kind') == 'control'}
+        previous_links = {ref.get('id') for ref in prior.get('objectRefs', []) if ref.get('kind') == 'control'}
+        for control_id in current_links ^ previous_links:
+            control = controls.get(control_id)
+            if control_id in current_links and not control: fail('Mesure de référentiel inconnue.')
+            if control:
+                if u['permission'] != 'admin' and not store.visible(control, store.record_index(s), store.allowed(s, u)):
+                    raise Problem(403, 'Mesure de référentiel hors périmètre.')
+                reciprocal = any(ref.get('kind') == 'risk' and ref.get('id') == r['id'] for ref in control.get('objectRefs', []))
+                if reciprocal != (control_id in current_links): fail('Le lien risque–mesure doit être bidirectionnel.')
         if (refs!=prior.get('referenceEvaluationIds',{'initial':None,'residual':None}) or r.get('acceptedDecisionId')!=prior.get('acceptedDecisionId')) and not u['canValidate']: raise Problem(403,'Choix de référence et acceptation réservés aux validateurs.')
         for stage,id in refs.items():
             if stage not in ('initial','residual'): fail('Type de référence invalide.')

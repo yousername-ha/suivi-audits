@@ -1632,3 +1632,12 @@ meter::-moz-meter-bar {
 .as-nav-compact .lx-nav-body[hidden] {
   display: block !important;
 }
+
+/* Rattachements explicites aux mesures du référentiel existant. */
+.risk-annex-options { max-height: 340px; }
+.risk-annex-options label[hidden] { display: none; }
+.risk-annex-options label { padding: 7px 0; align-items: flex-start; }
+.risk-annex-count { color: var(--muted); font-size: 13px; }
+.risk-annex-link { margin: 12px 0; }
+.risk-annex-link .btn { white-space: normal; text-align: left; }
+.risk-annex-link small { display: block; margin-top: 4px; }
