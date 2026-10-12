@@ -1,16 +1,16 @@
 # Index documentaire et reprise
 
-2026-10-11T22:10:00+02:00 (Europe/Paris). Référence des registres : `f9545c3ce1a1338f13bb39bdaa4468bcc907da2d` (version 3.1.0, `main`).
+2026-10-12T17:00:00+02:00 (Europe/Paris). Référence des registres : `70ab3f09c4937d8445b8c02402956cd835f380d3` (`main`, version 3.1.0 + recette automatisée).
 Lire d’abord [AGENTS](../AGENTS.md), [HANDOVER](../HANDOVER.md) et
 [PROJECT_STATUS](../PROJECT_STATUS.md).
 
 Les registres (REGISTRES.json, inventaire, cas et exécutions de recette, couverture,
-matrice, bugs, tableau de bord, contrat d’API) ont été réévalués le 2026-10-11 sur
-`f9545c3` : CI complète (EXE-013, 888 tests) et CodeQL (EXE-014) verts. Les autres
+matrice, bugs, tableau de bord, contrat d’API) ont été réévalués le 2026-10-12 sur
+`70ab3f0` : CI complète (EXE-015, 898 tests), CodeQL (EXE-016) et recette serveur automatisée en CI (EXE-017) verts. Les autres
 documents de cette arborescence (reprise, guides, historique, qualité, plans) portent
 encore l’estampille `c704fa6` (3.0.2) : ils restent des sources datées, à lire avec le
 [changelog](../CHANGELOG.md) et l’[audit d’unification](unification/L1-AUDIT-ET-CORRESPONDANCE.md).
-EXE-001 à EXE-012 sont des constats historiques sur `c704fa6`, non rejoués. Les tests
+EXE-001 à EXE-014 sont des constats historiques (`c704fa6`, `f9545c3`), non rejoués. Les tests
 réellement vérifiés et les limites sont ceux des registres. Les anciennes documentations/ADR restent disponibles
 comme sources datées ; le DAT actuel prévaut pour l’état de la pile. Ne pas
 confondre conservation, interface adaptée et migration complète.

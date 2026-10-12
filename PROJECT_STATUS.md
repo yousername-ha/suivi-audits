@@ -14,11 +14,13 @@ branche `feature/gpt6-evolution-smsi-grc`. Lire [HANDOVER](HANDOVER.md).
 | Fusion dans `main` | faite le 11/10 : [#14](https://github.com/yousername-ha/suivi-audits/pull/14) (version 3.1.0) puis [#15](https://github.com/yousername-ha/suivi-audits/pull/15) (limite de débit de la pile de test) ; CI et CodeQL verts sur `57a7bc9` ; PR #1 à #13 fermées sans fusion |
 | Publication | fait le 12/10 : étiquette `v3.1.0` sur `f9545c3` ; [workflow Publication](https://github.com/yousername-ha/suivi-audits/actions/runs/38230058314) vert à la 2e tentative (la 1re n'a obtenu aucun exécutant, aucune étape lancée) : images API, web et updater construites, scannées (Trivy), signées, [release 3.1.0](https://github.com/yousername-ha/suivi-audits/releases/tag/v3.1.0) stable avec SBOM |
 | Branches | nettoyées le 12/10 : `main`, `claude-suivi-smsi`, `legacy` (reprend `legacy/test-lots-d-f`, tête `4bcdf60`) ; anciennes branches conservées sous les étiquettes `archive/*` |
-| Non fait | recette du RSSI sur son serveur (mise à jour vers 3.1.0 par le menu Système) |
+| Non fait | recette du RSSI sur son serveur : mise à jour vers 3.1.0 (menu Système) puis `sudo ./scripts/recette-serveur.sh --version 3.1.0 --avec-sauvegarde`, rapport à joindre au PV |
 
 Le registre `docs/08_PILOTAGE/REGISTRES.json`, ses documents dérivés et `verifier-documentation.mjs` ont été réévalués
-sur `f9545c3` (CI et CodeQL verts, EXE-013 et EXE-014) : 45 fonctions, 50 cas dont 37 passés en CI, 13 non exécutés (serveur,
-ergonomie, performance, références officielles). Les autres documents narratifs gardent l'estampille `c704fa6` (voir l'index).
+le 12/10 sur `70ab3f0` (CI 898 tests, CodeQL et recette serveur automatisée en CI verts : EXE-015 à EXE-017) : 45 fonctions,
+51 cas dont 39 passés, 12 non exécutés (recette sur le serveur du RSSI, ergonomie, références officielles, fonctions encore
+historiques) ; BUG-010 ouvert (sept écarts visuels d'accessibilité reportés, graphisme en cours dans `legacy`). Les autres
+documents narratifs gardent l'estampille `c704fa6` (voir l'index). Recette automatisée : [mode d'emploi](docs/05_RECETTE/RECETTE_AUTOMATISEE.md).
 
 ## Instantané documentaire de `feature/gpt6-evolution-smsi-grc`
 
