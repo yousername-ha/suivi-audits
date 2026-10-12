@@ -1,9 +1,9 @@
 {
-  "version": "3.0.0-astra-local",
-  "createdAt": "2026-10-12T11:33:51.807360+00:00",
+  "version": "3.0.1-astra-local",
+  "createdAt": "2026-10-12T13:03:25.493036+00:00",
   "branch": "legacy",
   "baseCommit": "4bcdf60c629b50466aa40f1a98d67346a4641359",
-  "sourceCommit": "4bcdf60c629b50466aa40f1a98d67346a4641359",
+  "sourceCommit": "6de35a3cdc5203d3f45c8c6c2e3dae870fd31e5f",
   "workingTreeChanges": true,
   "runtime": "Python >= 3.10 ; HTML/CSS/JavaScript et bibliothèques locales",
   "entryPoints": [
@@ -20,18 +20,18 @@
     },
     {
       "path": "AGENTS.md",
-      "size": 2819,
-      "sha256": "6a5e13d876668b28ef98aa491861ee5229bfbfe1a9504733cee0ce52cdbe1d6a"
+      "size": 3655,
+      "sha256": "5c37e9f33c90c90572a4b18552f3d4e9752cff4020bcf537d09ac7a98c7521c0"
     },
     {
       "path": "LIRE-MOI-ASTRA.txt",
-      "size": 2266,
-      "sha256": "f4b8531c1aecc1a72e9ef6d39ad70141cba0a6a5730b736a425f074c1b44ea61"
+      "size": 2349,
+      "sha256": "88766f3ad7849fe0011bc634dd72b9bfa1e143e8eed2f0631114241da8f4bfb1"
     },
     {
       "path": "README.md",
-      "size": 10068,
-      "sha256": "f57a79d7ae2075dbffe1c3bfdd031115048ecd545033098de950ed7b459f7766"
+      "size": 10133,
+      "sha256": "06c948b5a1fde4b14d0cb8d5c2c051ce59cf170912d55903a198561da4a47cfd"
     },
     {
       "path": "demarrer.bat",
@@ -55,8 +55,8 @@
     },
     {
       "path": "docs/ASTRA-REFONTE.md",
-      "size": 10307,
-      "sha256": "0c6e339e8638f6abff09c5d54624119758ef0a76c44cbca3005a18f4f863f4f4"
+      "size": 11795,
+      "sha256": "5126174dfc468aa000c5c80b4ef41d8830a1e1fea8b855e74419a4bc2ff29eef"
     },
     {
       "path": "docs/CARTOGRAPHIES-NAVIGATION.md",
@@ -65,8 +65,8 @@
     },
     {
       "path": "docs/CHANGEMENTS.md",
-      "size": 5135,
-      "sha256": "0d48b718f10626094b20712e894c19a972ecbf2a5667f0e8beccd07570a61594"
+      "size": 5578,
+      "sha256": "16f9451e294d122db5df89260f29039d5f0867773eafc5d2cbb6ebc5f5fafe8f"
     },
     {
       "path": "docs/DIAGNOSTIC-CARTOGRAPHIES.md",
@@ -150,8 +150,8 @@
     },
     {
       "path": "legacy_risks.py",
-      "size": 10826,
-      "sha256": "6c9f7d9e27169f5a33fd058de4eb9a7a6710680c9248a843594474866ec2b1d2"
+      "size": 11953,
+      "sha256": "1a0d651f218bad03e27c79d2c33fb2da0be00f6f33ec4186ddcea87f2fcc49fe"
     },
     {
       "path": "legacy_server.py",
@@ -190,13 +190,13 @@
     },
     {
       "path": "modules/astra-ui.js",
-      "size": 60011,
-      "sha256": "287066d848bd5bcf0891e323a58e3fb08b1412c2f6d01200cab95c894315edf2"
+      "size": 60479,
+      "sha256": "8691b72fd7d8f872987ef07f1b53d5a5f5e2d8c6dca6f4d829a6dad1faf53bdc"
     },
     {
       "path": "modules/astra.css",
-      "size": 28524,
-      "sha256": "77de2b5398701390badff1c8d8b828503738e5014781f36f230e094e21f54032"
+      "size": 28984,
+      "sha256": "f1a113b189f1e9f5bbc59180e19c66a28d1e206e7b3703c54917012edfbbcb97"
     },
     {
       "path": "modules/carto-core.js",
@@ -310,13 +310,13 @@
     },
     {
       "path": "modules/risk-core.js",
-      "size": 15807,
-      "sha256": "a708d5672491019c53089d3982ebdc689e44f26eaf85ce65bf7fdf0989085620"
+      "size": 17634,
+      "sha256": "71864a02d701af9a06cce0a90162c7ebc90ab22461b349c7e11652e5b56e9063"
     },
     {
       "path": "modules/risk-ui.js",
-      "size": 41751,
-      "sha256": "bd94c220d509cdf248f3258ac634a21545e4df3137be2e48d2355949661c9260"
+      "size": 45467,
+      "sha256": "dcd7d7ae68b7e012509b810701438e7258b3b0d6d478617fe8a802397b504645"
     },
     {
       "path": "modules/server-client.js",
@@ -335,8 +335,8 @@
     },
     {
       "path": "recette/astra-validation.json",
-      "size": 2798,
-      "sha256": "d0d0de1336a348cef65bcc711c9fcd5eed45b3dfb4accad30c6464f68217506a"
+      "size": 3567,
+      "sha256": "789d8d7ed015151d543f24a0489c1800d51eac87d443808a73de3250a2fc3914"
     },
     {
       "path": "recette/browser-branche-resultats.json",
@@ -544,6 +544,56 @@
       "sha256": "08a1b5e84c376a21a0610c448df8c956af82a3e7fc89e937d2aaca9dd9a4d067"
     },
     {
+      "path": "samples/2026-10-12-astra-01/README.md",
+      "size": 598,
+      "sha256": "091d10557be496464c0b439d94a01e5fd2a4128be07ba077ebee7c1176cc6e81"
+    },
+    {
+      "path": "samples/2026-10-12-astra-01/astra-cockpit.png",
+      "size": 219046,
+      "sha256": "6d607cbb22a2eeb61970c2b791596950bbc22b57b473efef721ef5ee3a5e8edf"
+    },
+    {
+      "path": "samples/2026-10-12-astra-01/astra-kanban.png",
+      "size": 181568,
+      "sha256": "1ccc46cb39c01d4bc0f803e66dbe02d80464d5c7edad4abfe0890352dbf68a8d"
+    },
+    {
+      "path": "samples/2026-10-12-astra-01/astra-matrix.png",
+      "size": 156121,
+      "sha256": "9c860cdfe5e1eba3cddf89928bef0481c636b7416d73c96dcf6400f4eb963408"
+    },
+    {
+      "path": "samples/2026-10-12-astra-01/metadata.json",
+      "size": 776,
+      "sha256": "1b3afaebc7b6799ea2475acda6153feded55959f20f72c3f8fc4995c2ffb0d1d"
+    },
+    {
+      "path": "samples/2026-10-12-astra-02/README.md",
+      "size": 744,
+      "sha256": "0b801a0cc9cf6cb37ee5b413b37997585aad975547d6454894fe3c0e0a4af8a0"
+    },
+    {
+      "path": "samples/2026-10-12-astra-02/astra-risk-annex-links.png",
+      "size": 245195,
+      "sha256": "a4378103f5cb88dece737f9e1e906b525d4d6974ea3e211d80803461afa9219a"
+    },
+    {
+      "path": "samples/2026-10-12-astra-02/astra-risk-annex-selection.png",
+      "size": 236263,
+      "sha256": "9d44c87adccf4f7e9e54b11c50690a1c287ca5178017236159ff27bde2baf3b5"
+    },
+    {
+      "path": "samples/2026-10-12-astra-02/metadata.json",
+      "size": 644,
+      "sha256": "3d0d4feabb4e5a3d881b344481961e386f095c5cbd73cf6e2228d6dfd458cfa8"
+    },
+    {
+      "path": "samples/README.md",
+      "size": 945,
+      "sha256": "987b58520a728a6f4359ac5a573cf2f625fb8b08b8cf776ae9e640091b09fb4a"
+    },
+    {
       "path": "scripts/generer_etapes_parcours.py",
       "size": 440,
       "sha256": "0380c4e66a818ce900ff5061de8afc7bd136651500473165a39451ceedf90265"
@@ -556,7 +606,7 @@
     {
       "path": "scripts/package_astra.py",
       "size": 3226,
-      "sha256": "78126c91f4faa99dc71c412bd8ad5e1619bf6c26209be71dd12115d3fa616e48"
+      "sha256": "a9b7d407989082f012bcf242110a1ca722a25735c0433f8cba65910c7b0faab6"
     },
     {
       "path": "sources/catalogue.json",
@@ -585,8 +635,8 @@
     },
     {
       "path": "tests/astra-browser.cjs",
-      "size": 19359,
-      "sha256": "16e9032abe97c07cd9446d84bfab383f9a5f2d60b9943b7aead55857017f6a47"
+      "size": 23913,
+      "sha256": "acfd7e202ef1b9fd85d729855ec83633b732fef60a9fff95601e7972c549c905"
     },
     {
       "path": "tests/browser-carto.cjs",
@@ -630,8 +680,8 @@
     },
     {
       "path": "tests/risk.test.cjs",
-      "size": 7466,
-      "sha256": "55c3ee27659818eeb7d545ecde4d106458c629361bdb66359739d506c7c1a0d1"
+      "size": 9517,
+      "sha256": "047ac1aecc070efd04df2fb8862a61dd19ce7fc98e215e9f4df1c3435889b699"
     },
     {
       "path": "tests/server-client.test.cjs",
@@ -650,8 +700,8 @@
     },
     {
       "path": "tests/server_risk_test.py",
-      "size": 8118,
-      "sha256": "9b61bda322cef2d7f38fa60dd46adaba946b58dc76560d2c4e60357af2227bbc"
+      "size": 10195,
+      "sha256": "8d4291e20dda3b07f977ba309a52fe6756b2505e3779e6534ac6d80b57475239"
     },
     {
       "path": "tests/server_test.py",
