@@ -167,7 +167,9 @@ export async function nextCode(t: TestApp, u: TestUser): Promise<string> {
     (await t.svc.db.one<{ s: string }>('SELECT totp_last_step::text AS s FROM users WHERE id=$1', [u.id]))!.s,
   );
   const cur = Math.floor(Date.now() / 30000);
-  const step = [cur - 1, cur, cur + 1].find((s) => s > last);
+  // Pas courant d'abord (milieu de la fenêtre acceptée par le serveur) : choisir le pas précédent exposait le test à un
+  // rejet quand l'horloge franchit la limite entre la génération du code et sa vérification, sur un exécuteur chargé.
+  const step = [cur, cur + 1, cur - 1].find((s) => s > last);
   if (step === undefined) {
     // Fenêtre épuisée (trois connexions dans la même minute) : on remet le compteur à zéro, réservé aux tests.
     await t.svc.db.q('UPDATE users SET totp_last_step=0 WHERE id=$1', [u.id]);
