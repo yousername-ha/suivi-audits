@@ -34,3 +34,13 @@ Cette instruction remplace l’interdiction initiale de publication pour cette l
 
 Les résultats historiques dans `recette/` concernent la recette locale originale.
 Le contrôle de préparation de la branche est documenté séparément.
+
+## Historique des aperçus demandé par l’utilisateur
+
+- Conserver les captures d’interface dans `samples/` sur `legacy`.
+- Pour chaque nouvelle série, créer un dossier daté unique `AAAA-MM-JJ-astra-NN`,
+  ajouter une galerie et référencer le commit de l’application représentée.
+- Maintenir l’index `samples/README.md` à chaque ajout.
+- Ne pas écraser ni supprimer les séries précédentes, même lors d’un nettoyage,
+  tant que l’utilisateur n’en a pas explicitement demandé la suppression.
+- Utiliser uniquement des données fictives et conserver les images originales.

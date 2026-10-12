@@ -1,5 +1,7 @@
 # ASTRA — refonte GRC locale
 
+[Consulter les captures et leur historique](samples/README.md).
+
 Cette livraison est prête à lancer après extraction : voir [LIRE-MOI-ASTRA.txt](LIRE-MOI-ASTRA.txt).
 La navigation, les vues et leurs limites sont détaillées dans [la documentation ASTRA](docs/ASTRA-REFONTE.md).
 Les informations ci-dessous décrivent également les mécanismes historiques conservés.
