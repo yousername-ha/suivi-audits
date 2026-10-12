@@ -129,6 +129,11 @@ check(
   receipt.commit === data.analysed_commit && JSON.stringify(receipt.executions) === JSON.stringify(data.executions),
   'Reçu et registre divergent',
 );
+// Dernière exécution de CI complète sur le commit analysé.
+const ciCourante = data.executions
+  .filter((e) => e.type === 'CI AUTOMATIQUE' && e.commit === data.analysed_commit)
+  .at(-1);
+check(Boolean(ciCourante), 'Aucune exécution de CI sur le commit analysé');
 const count = (key, fn) => data[key].filter(fn).length;
 const computed = {
   features: data.features.length,
@@ -150,10 +155,10 @@ const computed = {
   local_test_passages: data.executions
     .filter((e) => e.type === 'SUITE LOCALE' && e.commit === data.analysed_commit)
     .reduce((n, e) => n + e.passed, 0),
-  ci_test_passages: data.executions.find((e) => e.id === 'EXE-013').passed,
+  ci_test_passages: ciCourante.passed,
 };
 for (const [k, v] of Object.entries(computed)) check(data.statistics[k] === v, 'Statistique incohérente : ' + k);
-const ci = data.executions.find((e) => e.id === 'EXE-013');
+const ci = ciCourante;
 check(Object.values(ci.breakdown).reduce((a, b) => a + b, 0) === ci.total, 'Total CI et suites divergents');
 check(read('docs/05_RECETTE/PV_RECETTE.md').includes('EN ATTENTE DE VALIDATION'), 'PV ne conserve pas son attente');
 const api = JSON.parse(read('docs/03_ARCHITECTURE/API_CONTRAT.json'));

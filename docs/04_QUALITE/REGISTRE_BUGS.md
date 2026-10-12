@@ -1,6 +1,6 @@
 # Registre central des bugs
 
-Référence applicative analysée : `f9545c3ce1a1338f13bb39bdaa4468bcc907da2d`. Mise à jour : 2026-10-11T22:10:00+02:00 (Europe/Paris).
+Référence applicative analysée : `70ab3f09c4937d8445b8c02402956cd835f380d3`. Mise à jour : 2026-10-12T17:00:00+02:00 (Europe/Paris).
 
 Source : [registre de référence](../08_PILOTAGE/REGISTRES.json). On conserve les corrections, sans déduire la réussite
 du seul préfixe fix. Les tests confirment le code analysé ; un déploiement ancien
@@ -158,3 +158,37 @@ elles ne sont pas ajoutées artificiellement comme trois bugs applicatifs ouvert
 | Commit                      | 69e4618                                                                        |
 | Non-régression              | TEST-019 ; CI de f9545c3                                                       |
 | Reste à vérifier            | Aucun.                                                                         |
+
+## BUG-009 — Échec intermittent de connexion dans les tests API (code TOTP en bord de fenêtre)
+
+| Champ                       | Constat                                                                                                                                                                                   |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fonction, gravité, priorité | FCT-001 ; MINEURE ; P2                                                                                                                                                                    |
+| Statut                      | CORRIGÉ ET VALIDÉ                                                                                                                                                                         |
+| Détection / correction      | 2026-10-12 ; recette automatisée                                                                                                                                                          |
+| Déclencheur                 | CI de main (ec2979b) : documents.test.ts et import.test.ts, « Code incorrect ou déjà utilisé » à l’étape MFA.                                                                             |
+| Attendu                     | Connexion de test déterministe.                                                                                                                                                           |
+| Observé initialement        | Deux tests en échec sur main, verts sur la PR du même code.                                                                                                                               |
+| Cause / niveau              | CONFIRMÉ : nextCode choisissait le pas TOTP précédent, en bord de la fenêtre acceptée ; l’horloge franchissait la limite de 30 s sur un exécuteur chargé. Défaut du test, pas du serveur. |
+| Correctif                   | Pas courant essayé en premier, puis le suivant, puis le précédent.                                                                                                                        |
+| Fichiers                    | [apps/api/test/helpers.ts](../../apps/api/test/helpers.ts)                                                                                                                                |
+| Commit                      | a8f5026                                                                                                                                                                                   |
+| Non-régression              | TEST-001 ; CI de 70ab3f0                                                                                                                                                                  |
+| Reste à vérifier            | Aucun.                                                                                                                                                                                    |
+
+## BUG-010 — Défauts d’accessibilité relevés par axe-core (53 constats au premier passage)
+
+| Champ                       | Constat                                                                                                                                                                                                                                                                     |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fonction, gravité, priorité | FCT-005 ; MAJEURE ; P2                                                                                                                                                                                                                                                      |
+| Statut                      | OUVERT                                                                                                                                                                                                                                                                      |
+| Détection / correction      | 2026-10-12 ; recette automatisée                                                                                                                                                                                                                                            |
+| Déclencheur                 | Premier passage de zzzzz-accessibilite.spec.ts sur 14 écrans, clair/sombre, ordinateur/téléphone.                                                                                                                                                                           |
+| Attendu                     | Aucune violation WCAG 2.0/2.1 A et AA détectable.                                                                                                                                                                                                                           |
+| Observé initialement        | Contraste insuffisant des couleurs d’état et de l’onglet actif sombre (2,1 à 3,9 pour 4,5), liens distingués par la seule couleur, lien d’accueil sans nom sur téléphone, tableaux défilants inatteignables au clavier.                                                     |
+| Cause / niveau              | CONFIRMÉ : nuances par défaut de Mantine trop claires ; liens soulignés au survol seulement ; composants sans nom accessible ni focus.                                                                                                                                      |
+| Correctif                   | Corrigés et conservés : nom du lien d’accueil, tableaux défilants focalisables. Reportés à la demande du RSSI (graphisme en cours dans la branche legacy) : couleurs d’état assombries, liens soulignés, onglet actif sombre ; correctif écrit et validé au commit e8af11a. |
+| Fichiers                    | [packages/ui/src/tokens.ts](../../packages/ui/src/tokens.ts) ; [packages/ui/src/theme.ts](../../packages/ui/src/theme.ts) ; [tests/e2e/specs/zzzzz-accessibilite.spec.ts](../../tests/e2e/specs/zzzzz-accessibilite.spec.ts)                                                |
+| Commit                      | e8af11a                                                                                                                                                                                                                                                                     |
+| Non-régression              | TEST-051 ; CI de 70ab3f0                                                                                                                                                                                                                                                    |
+| Reste à vérifier            | Sept écarts visuels connus consignés dans ECARTS_CONNUS ; à réactiver avec le futur graphisme.                                                                                                                                                                              |

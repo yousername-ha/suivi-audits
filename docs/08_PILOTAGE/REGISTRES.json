@@ -1,28 +1,28 @@
 {
   "schema": "audit-documentaire-v1",
-  "analysed_commit": "f9545c3ce1a1338f13bb39bdaa4468bcc907da2d",
+  "analysed_commit": "70ab3f09c4937d8445b8c02402956cd835f380d3",
   "branch": "main (claude-suivi-smsi)",
-  "updated_at": "2026-10-11T22:10:00+02:00",
+  "updated_at": "2026-10-12T17:00:00+02:00",
   "status_rules": ["CONFIRMÉ", "OBSERVÉ", "DÉCLARÉ", "SUPPOSÉ", "NON VÉRIFIÉ", "INCONNU"],
   "statistics": {
     "features": 45,
     "automated_validated": 31,
     "partial": 8,
     "historical_not_migrated": 5,
-    "bugs_open": 0,
-    "bugs_fixed_validated": 7,
+    "bugs_open": 1,
+    "bugs_fixed_validated": 8,
     "bugs_fixed_user_validation_pending": 1,
     "regressions_documented": 3,
     "security_risks": 7,
     "optimisations_done": 5,
     "optimisations_remaining": 3,
-    "planned_cases": 50,
-    "case_passed": 37,
+    "planned_cases": 51,
+    "case_passed": 39,
     "case_failed": 0,
     "case_blocked": 0,
-    "case_not_executed": 13,
+    "case_not_executed": 12,
     "local_test_passages": 0,
-    "ci_test_passages": 888
+    "ci_test_passages": 898
   },
   "features": [
     {
@@ -116,12 +116,17 @@
       "historical_key": "branding / settings",
       "historical_source": "archives/v2-source.zip → app/public/index.html",
       "implementation": ["packages/ui/src/theme.ts", "packages/ui/src/tokens.ts", "apps/web/src/pages/Settings.tsx"],
-      "tests": ["packages/ui/test/contraste.test.ts", "apps/web/test/charte.test.ts", "tests/e2e/specs/visuel.spec.ts"],
+      "tests": [
+        "packages/ui/test/contraste.test.ts",
+        "apps/web/test/charte.test.ts",
+        "tests/e2e/specs/visuel.spec.ts",
+        "tests/e2e/specs/zzzzz-accessibilite.spec.ts"
+      ],
       "route": "/parametres",
-      "verified_scope": "Jetons, clair/sombre, paramètres par section, captures et contraste des combinaisons testées.",
+      "verified_scope": "Jetons, clair/sombre, paramètres par section, captures et contraste des combinaisons testées. Contrôle automatique d’accessibilité axe-core (WCAG 2.0/2.1 A et AA) sur 14 écrans, clair/sombre, ordinateur/téléphone : voir TEST-051.",
       "validation": "VALIDÉ AUTOMATIQUEMENT",
       "migration": "REPRISE ET VALIDÉE",
-      "gap": "Recette du serveur utilisateur non reçue.",
+      "gap": "Recette du serveur utilisateur non reçue ; sept écarts visuels d’accessibilité (contrastes, soulignement des liens) reportés à la demande du RSSI, correctif prêt au commit e8af11a.",
       "criticality": "MOYENNE",
       "provenance": "CONFIRMÉ",
       "case": "TEST-005",
@@ -225,11 +230,12 @@
         "apps/web/src/pages/AdminBackups.tsx",
         "scripts/backup.sh",
         "scripts/exploitation-worker.py",
-        "scripts/update-worker.py"
+        "scripts/update-worker.py",
+        "scripts/recette-serveur.sh"
       ],
       "tests": ["apps/api/test/backups.test.ts", "tests/e2e/specs/systeme.spec.ts"],
       "route": "/admin/system",
-      "verified_scope": "Sauvegarde réelle chiffrée depuis le menu sans cron supplémentaire sur installation Compose de recette.",
+      "verified_scope": "Sauvegarde réelle chiffrée depuis le menu sans cron supplémentaire sur installation Compose de recette. Script de recette du serveur (conteneurs, version, migrations, données, HTTPS, en-têtes, sauvegarde chiffrée réelle puis archive vérifiée) exécuté en CI.",
       "validation": "VALIDÉ AUTOMATIQUEMENT",
       "migration": "MODIFIÉE VOLONTAIREMENT",
       "gap": "Recette du serveur utilisateur non reçue.",
@@ -524,12 +530,12 @@
       "historical_key": null,
       "historical_source": "Pas d’équivalent historique établi pour cette extension.",
       "implementation": ["apps/api/src/grc/risks.ts", "apps/web/src/grc/RiskMap.tsx", "apps/web/src/carto/Canevas.tsx"],
-      "tests": ["apps/api/test/grc.test.ts", "tests/e2e/specs/zz-grc.spec.ts"],
+      "tests": ["apps/api/test/grc.test.ts", "tests/e2e/specs/zz-grc.spec.ts", "apps/api/test/performance.test.ts"],
       "route": "/pilotage/carte",
-      "verified_scope": "Projection du registre, graphe, filtres, couleurs versionnées, détail, exports et comparaisons compatibles ; sans double saisie.",
+      "verified_scope": "Projection du registre, graphe, filtres, couleurs versionnées, détail, exports et comparaisons compatibles ; sans double saisie. Lectures agrégeant 10 000 risques mesurées en CI (carte, liste, registre filtré, tableau de bord, rafale de 40 lectures).",
       "validation": "VALIDÉ AUTOMATIQUEMENT",
       "migration": "MODIFIÉE VOLONTAIREMENT",
-      "gap": "Volumes bornés ; benchmark de charge et ergonomie sur grands graphes non réalisés.",
+      "gap": "Budgets (p95 < 800 ms, rafale < 3 s) et volume de 10 000 risques proposés, à valider par le RSSI ; mesures sur exécuteur de CI ; mémoire et rendu de la carte dans le navigateur non mesurés.",
       "criticality": "MOYENNE",
       "provenance": "CONFIRMÉ",
       "case": "TEST-023",
@@ -1150,6 +1156,42 @@
       "test": "TEST-019",
       "date": "2026-10-11",
       "remaining": "Aucun."
+    },
+    {
+      "id": "BUG-009",
+      "title": "Échec intermittent de connexion dans les tests API (code TOTP en bord de fenêtre)",
+      "feature": "FCT-001",
+      "severity": "MINEURE",
+      "priority": "P2",
+      "status": "CORRIGÉ ET VALIDÉ",
+      "trigger": "CI de main (ec2979b) : documents.test.ts et import.test.ts, « Code incorrect ou déjà utilisé » à l’étape MFA.",
+      "expected": "Connexion de test déterministe.",
+      "observed": "Deux tests en échec sur main, verts sur la PR du même code.",
+      "cause": "CONFIRMÉ : nextCode choisissait le pas TOTP précédent, en bord de la fenêtre acceptée ; l’horloge franchissait la limite de 30 s sur un exécuteur chargé. Défaut du test, pas du serveur.",
+      "fix": "Pas courant essayé en premier, puis le suivant, puis le précédent.",
+      "files": ["apps/api/test/helpers.ts"],
+      "commit": "a8f5026",
+      "test": "TEST-001",
+      "date": "2026-10-12",
+      "remaining": "Aucun."
+    },
+    {
+      "id": "BUG-010",
+      "title": "Défauts d’accessibilité relevés par axe-core (53 constats au premier passage)",
+      "feature": "FCT-005",
+      "severity": "MAJEURE",
+      "priority": "P2",
+      "status": "OUVERT",
+      "trigger": "Premier passage de zzzzz-accessibilite.spec.ts sur 14 écrans, clair/sombre, ordinateur/téléphone.",
+      "expected": "Aucune violation WCAG 2.0/2.1 A et AA détectable.",
+      "observed": "Contraste insuffisant des couleurs d’état et de l’onglet actif sombre (2,1 à 3,9 pour 4,5), liens distingués par la seule couleur, lien d’accueil sans nom sur téléphone, tableaux défilants inatteignables au clavier.",
+      "cause": "CONFIRMÉ : nuances par défaut de Mantine trop claires ; liens soulignés au survol seulement ; composants sans nom accessible ni focus.",
+      "fix": "Corrigés et conservés : nom du lien d’accueil, tableaux défilants focalisables. Reportés à la demande du RSSI (graphisme en cours dans la branche legacy) : couleurs d’état assombries, liens soulignés, onglet actif sombre ; correctif écrit et validé au commit e8af11a.",
+      "files": ["packages/ui/src/tokens.ts", "packages/ui/src/theme.ts", "tests/e2e/specs/zzzzz-accessibilite.spec.ts"],
+      "commit": "e8af11a",
+      "test": "TEST-051",
+      "date": "2026-10-12",
+      "remaining": "Sept écarts visuels connus consignés dans ECARTS_CONNUS ; à réactiver avec le futur graphisme."
     }
   ],
   "optimisations": [
@@ -1477,7 +1519,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/security.test.ts", "tests/e2e/specs/parcours.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1493,7 +1535,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/rbac.test.ts", "tests/e2e/specs/parcours.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1513,7 +1555,7 @@
         "tests/e2e/specs/z-fiabilisation.spec.ts"
       ],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1529,7 +1571,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/documents.test.ts", "tests/e2e/specs/parcours.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1545,8 +1587,8 @@
       "automation": "EXISTANTE",
       "code": ["packages/ui/test/contraste.test.ts", "apps/web/test/charte.test.ts", "tests/e2e/specs/visuel.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-013",
-      "limits": "Recette du serveur utilisateur non reçue."
+      "proof": "EXE-015",
+      "limits": "Recette du serveur utilisateur non reçue ; sept écarts visuels d’accessibilité (contrastes, soulignement des liens) reportés à la demande du RSSI, correctif prêt au commit e8af11a."
     },
     {
       "id": "TEST-006",
@@ -1561,7 +1603,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/realtime.test.ts", "tests/e2e/specs/parcours.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1577,7 +1619,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/affichage.test.ts", "tests/e2e/specs/tous-ecrans.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1597,7 +1639,7 @@
         "tests/e2e/specs/recette-cartographie.spec.ts"
       ],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1617,7 +1659,7 @@
         "tests/e2e/specs/parcours.spec.ts"
       ],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1633,7 +1675,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/backups.test.ts", "tests/e2e/specs/systeme.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1653,7 +1695,7 @@
         "tests/e2e/specs/y-exploitation.spec.ts"
       ],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1669,7 +1711,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/operations.test.ts", "tests/e2e/specs/y-exploitation.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1685,7 +1727,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/updates.test.ts", "tests/e2e/specs/zy-updates.spec.ts", "scripts/ci/update-integree.py"],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "Ancien updater : premier redéploiement serveur nécessaire ; frontal entretenu séparément."
     },
     {
@@ -1701,7 +1743,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/modules.test.ts", "tests/e2e/specs/zz-modules.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1717,7 +1759,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/environment.test.ts", "tests/e2e/specs/zz-environment.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1733,7 +1775,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/risk-assessments.test.ts", "tests/e2e/specs/zz-ia-evaluations.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "Ne constitue pas la reprise complète du registre IA (FCT-032)."
     },
     {
@@ -1749,7 +1791,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/grc-security.test.ts", "tests/e2e/specs/zz-grc.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "Raccordements des familles historiques et nomenclatures spécifiques B2 à terminer."
     },
     {
@@ -1765,7 +1807,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/pilotage.test.ts", "tests/e2e/specs/zzz-pilotage.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1785,7 +1827,7 @@
         "tests/e2e/specs/zzzz-pilotage.spec.ts"
       ],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1801,7 +1843,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/grc-frameworks.test.ts", "tests/e2e/specs/zz-grc.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "Moteur C validé ; audit/couverture annuelle et GAP historiques non entièrement migrés."
     },
     {
@@ -1817,7 +1859,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/grc.test.ts", "packages/shared/test/grc.test.ts", "tests/e2e/specs/zz-grc.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "Transport email exclu ; pas de migration automatique de toutes les récurrences historiques."
     },
     {
@@ -1840,7 +1882,7 @@
         "tests/e2e/specs/zzzz-risques.spec.ts"
       ],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "ISO/MÉHARI : modèles configurables ; exhaustivité d’une méthode normative ou des classeurs officiels non certifiée."
     },
     {
@@ -1856,8 +1898,8 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/grc.test.ts", "tests/e2e/specs/zz-grc.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-013",
-      "limits": "Volumes bornés ; benchmark de charge et ergonomie sur grands graphes non réalisés."
+      "proof": "EXE-015",
+      "limits": "Budgets (p95 < 800 ms, rafale < 3 s) et volume de 10 000 risques proposés, à valider par le RSSI ; mesures sur exécuteur de CI ; mémoire et rendu de la carte dans le navigateur non mesurés."
     },
     {
       "id": "TEST-024",
@@ -1872,7 +1914,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/pilotage.test.ts", "tests/e2e/specs/zzz-pilotage.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1888,7 +1930,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/pilotage.test.ts", "tests/e2e/specs/zzz-pilotage.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -1904,7 +1946,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/pilotage.test.ts", "tests/e2e/specs/zzz-pilotage.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "L’avancement ne constitue ni conformité ni certification ; recette humaine en attente."
     },
     {
@@ -1920,7 +1962,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/pilotage.test.ts", "tests/e2e/specs/zzz-pilotage.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "Kits/grilles ANS, configuration des méthodes de continuité et reprise complète plans/crise manquent."
     },
     {
@@ -1940,7 +1982,7 @@
         "tests/e2e/specs/zzzz-pilotage.spec.ts"
       ],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "Écrans Audit natifs (AUD-01 à AUD-16 hors socle) non livrés ; couverture annuelle historique à reprendre."
     },
     {
@@ -1972,7 +2014,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/api/test/pilotage-dda.test.ts", "tests/e2e/specs/zzzz-pilotage.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "Correspondance de dda vers SoA et recette métier à établir ; recette du serveur utilisateur non reçue."
     },
     {
@@ -2100,7 +2142,7 @@
       "automation": "EXISTANTE",
       "code": ["packages/shared/test/tableau-de-bord.test.ts", "tests/e2e/specs/zzzz-pilotage.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "Édition dans le Pilotage, autres plans et sous-sections, types/champs et liens à inventorier avant migration vers le début E."
     },
     {
@@ -2120,7 +2162,7 @@
         "tests/e2e/specs/zzz-pilotage.spec.ts"
       ],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "Recette du serveur utilisateur non reçue."
     },
     {
@@ -2136,7 +2178,7 @@
       "automation": "EXISTANTE",
       "code": ["apps/web/test/pilotage-report.test.ts", "tests/e2e/specs/zzz-pilotage.spec.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "Les exports Word/PowerPoint serveur de la feuille de route ne sont pas déclarés implémentés."
     },
     {
@@ -2149,11 +2191,11 @@
       "procedure": "Préparer le scénario, consigner contexte/version, effectuer le parcours puis relever résultat et réserves.",
       "expected": "Pilotage au clic, heartbeat exploitation, sauvegarde chiffrée réelle et données anciennes présentes.",
       "type": "MANUEL",
-      "automation": "PARTIELLE OU À PRÉPARER",
+      "automation": "SCRIPT PRÊT, À LANCER SUR LE SERVEUR",
       "code": [],
       "result": "NON EXÉCUTÉ",
       "proof": null,
-      "limits": "Aucun résultat ni validation humaine reçus."
+      "limits": "scripts/recette-serveur.sh prêt et exécuté en CI (EXE-017) ; non exécuté sur le serveur du RSSI : aucun résultat reçu."
     },
     {
       "id": "TEST-042",
@@ -2174,18 +2216,18 @@
     {
       "id": "TEST-043",
       "feature": "FCT-023",
-      "title": "Performance aux volumes cibles",
+      "title": "Performance aux volumes de référence",
       "priority": "P2",
       "prerequisites": "Autorisation et environnement de recette adaptés ; aucun essai destructif en production.",
       "data": "Jeux fictifs ou données serveur uniquement sous contrôle de leur responsable.",
-      "procedure": "Préparer le scénario, consigner contexte/version, effectuer le parcours puis relever résultat et réserves.",
-      "expected": "Budgets de latence/mémoire et comportement de la carte mesurés sur jeu fictif représentatif.",
-      "type": "MANUEL",
-      "automation": "PARTIELLE OU À PRÉPARER",
-      "code": [],
-      "result": "NON EXÉCUTÉ",
-      "proof": null,
-      "limits": "Aucun résultat ni validation humaine reçus."
+      "procedure": "Créer 10 000 risques fictifs, mesurer 15 fois la carte, la liste paginée, le registre (filtré ou non) et le tableau de bord, puis lancer une rafale de 40 lectures simultanées.",
+      "expected": "p95 inférieur à 800 ms pour chaque lecture ; rafale de 40 lectures terminée en moins de 3 s ; aucune erreur.",
+      "type": "AUTOMATISÉ",
+      "automation": "EXISTANTE",
+      "code": ["apps/api/test/performance.test.ts"],
+      "result": "PASSÉ",
+      "proof": "EXE-015",
+      "limits": "Volume de référence et budgets proposés, à valider par le RSSI ; exécuteur de CI, pas le matériel du client ; mémoire et rendu de la carte dans le navigateur non mesurés."
     },
     {
       "id": "TEST-044",
@@ -2213,11 +2255,11 @@
       "procedure": "Préparer le scénario, consigner contexte/version, effectuer le parcours puis relever résultat et réserves.",
       "expected": "Archive, clé gardée séparément et configuration restaurées sur serveur de recette autorisé ; contrôles de données réussis.",
       "type": "MANUEL",
-      "automation": "PARTIELLE OU À PRÉPARER",
+      "automation": "PARTIELLE : ARCHIVE VÉRIFIÉE PAR SCRIPT",
       "code": [],
       "result": "NON EXÉCUTÉ",
       "proof": null,
-      "limits": "Aucun résultat ni validation humaine reçus."
+      "limits": "La sauvegarde chiffrée et la vérification de son archive sont automatisées (EXE-017, en CI) ; la restauration sur une autre machine n’a pas été faite."
     },
     {
       "id": "TEST-046",
@@ -2236,7 +2278,7 @@
         "tests/e2e/specs/zzzz-pilotage.spec.ts"
       ],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "Seuls les graphiques repris sont couverts ; autres vues du tableau de bord historique non inventoriées une à une ; recette du serveur utilisateur non reçue."
     },
     {
@@ -2256,7 +2298,7 @@
         "tests/e2e/specs/zzzz-risques.spec.ts"
       ],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "Aucune conformité à EBIOS RM ou à l’ISO/IEC 27005 revendiquée ni certifiée ; recette métier et du serveur utilisateur non reçues."
     },
     {
@@ -2272,7 +2314,7 @@
       "automation": "EXISTANTE",
       "code": ["packages/shared/test/liens.test.ts", "apps/api/test/liens.test.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "Panneau branché depuis le registre des risques seulement ; parcours navigateur dédié non écrit ; recette du serveur utilisateur non reçue."
     },
     {
@@ -2288,7 +2330,7 @@
       "automation": "EXISTANTE",
       "code": ["packages/shared/test/audit.test.ts", "packages/shared/test/audit-parite.test.ts"],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "Aucun écran ni route Audit natifs ; le socle seul ne constitue pas la reprise du module Audit."
     },
     {
@@ -2308,8 +2350,24 @@
         "tests/e2e/specs/recette-cartographie.spec.ts"
       ],
       "result": "PASSÉ",
-      "proof": "EXE-013",
+      "proof": "EXE-015",
       "limits": "Parcours exécutés sur données fictives ; recette du serveur utilisateur non reçue."
+    },
+    {
+      "id": "TEST-051",
+      "feature": "FCT-005",
+      "title": "Accessibilité automatique (axe-core)",
+      "priority": "P2",
+      "prerequisites": "Pile complète démarrée, compte administrateur de recette et données fictives des parcours précédents.",
+      "data": "Données synthétiques ; aucune donnée de production.",
+      "procedure": "Analyser avec axe-core (WCAG 2.0/2.1 A et AA) 14 écrans, en clair et en sombre, sur ordinateur (1366 px) et téléphone (390 px).",
+      "expected": "Aucune violation en dehors des écarts connus consignés.",
+      "type": "AUTOMATISÉ",
+      "automation": "EXISTANTE",
+      "code": ["tests/e2e/specs/zzzzz-accessibilite.spec.ts"],
+      "result": "PASSÉ",
+      "proof": "EXE-015",
+      "limits": "Sept écarts visuels connus (contraste sur six écrans, lien du tableau de bord) reportés à la demande du RSSI ; contrôle automatique partiel, sans clavier ni lecteur d’écran ; ne remplace pas TEST-042."
     }
   ],
   "executions": [
@@ -2638,6 +2696,107 @@
       "environment": "Runner GitHub ; JavaScript/TypeScript.",
       "operator": "GitHub Actions",
       "limitation": "Aucune alerte de gravité ≥ 7 bloquante ; ne remplace ni revue de sécurité ni test d’intrusion.",
+      "cases": []
+    },
+    {
+      "id": "EXE-015",
+      "type": "CI AUTOMATIQUE",
+      "suite": "CI complète",
+      "date": "2026-10-12T16:19:52+02:00 → 16:43:14+02:00",
+      "commit": "70ab3f09c4937d8445b8c02402956cd835f380d3",
+      "command": "Workflow CI automatique sur main (fusion de la PR #21), tentative 1.",
+      "code": 0,
+      "status": "PASSÉ",
+      "total": 898,
+      "passed": 898,
+      "failed": 0,
+      "breakdown": {
+        "shared": 327,
+        "ui": 117,
+        "api": 275,
+        "web": 17,
+        "playwright": 162
+      },
+      "proof": "https://github.com/yousername-ha/suivi-audits/actions/runs/38262112488",
+      "environment": "Runners GitHub isolés, PostgreSQL 17, Docker/TLS et Playwright officiel.",
+      "operator": "GitHub Actions",
+      "limitation": "898 = 736 Vitest + 162 Playwright ; ne compte pas les contrôles shell/Python de CI. La réussite de la CI complète est rattachée aux cas listés sans relire chaque journal par cas. Pas de recette client.",
+      "cases": [
+        "TEST-001",
+        "TEST-002",
+        "TEST-003",
+        "TEST-004",
+        "TEST-005",
+        "TEST-006",
+        "TEST-007",
+        "TEST-008",
+        "TEST-009",
+        "TEST-010",
+        "TEST-011",
+        "TEST-012",
+        "TEST-013",
+        "TEST-014",
+        "TEST-015",
+        "TEST-016",
+        "TEST-017",
+        "TEST-018",
+        "TEST-019",
+        "TEST-020",
+        "TEST-021",
+        "TEST-022",
+        "TEST-023",
+        "TEST-024",
+        "TEST-025",
+        "TEST-026",
+        "TEST-027",
+        "TEST-028",
+        "TEST-030",
+        "TEST-038",
+        "TEST-039",
+        "TEST-040",
+        "TEST-043",
+        "TEST-046",
+        "TEST-047",
+        "TEST-048",
+        "TEST-049",
+        "TEST-050",
+        "TEST-051"
+      ]
+    },
+    {
+      "id": "EXE-016",
+      "type": "ANALYSE STATIQUE CI",
+      "suite": "CodeQL",
+      "date": "2026-10-12T16:19:52+02:00 → 16:21:35+02:00",
+      "commit": "70ab3f09c4937d8445b8c02402956cd835f380d3",
+      "command": "Workflow CodeQL automatique sur main (fusion de la PR #21), tentative 1.",
+      "code": 0,
+      "status": "PASSÉ",
+      "total": null,
+      "passed": null,
+      "failed": null,
+      "proof": "https://github.com/yousername-ha/suivi-audits/actions/runs/38262112306",
+      "environment": "Runner GitHub ; JavaScript/TypeScript et Python.",
+      "operator": "GitHub Actions",
+      "limitation": "Aucune alerte de gravité ≥ 7 bloquante ; ne remplace ni revue de sécurité ni test d’intrusion.",
+      "cases": []
+    },
+    {
+      "id": "EXE-017",
+      "type": "RECETTE SERVEUR AUTOMATISÉE (CI)",
+      "suite": "scripts/recette-serveur.sh --avec-sauvegarde",
+      "date": "2026-10-12T16:38:47+02:00 → 16:38:51+02:00",
+      "commit": "70ab3f09c4937d8445b8c02402956cd835f380d3",
+      "command": "sudo ./scripts/recette-serveur.sh --version ci --avec-sauvegarde, étape du job « Images, sécurité et pile complète » de la CI (run 38262112488).",
+      "code": 0,
+      "status": "PASSÉ",
+      "total": 24,
+      "passed": 24,
+      "failed": 0,
+      "proof": "https://github.com/yousername-ha/suivi-audits/actions/runs/38262112488",
+      "environment": "Pile Docker complète de la CI (HTTPS local, certificat interne) ; pas le serveur du RSSI.",
+      "operator": "GitHub Actions",
+      "limitation": "Prouve que le script fonctionne et que la pile de CI est conforme à ses 24 contrôles ; ne vaut pas recette du serveur réel (TEST-041) ni restauration hors serveur (TEST-045). Rapport joint en artefact « recette-serveur ».",
       "cases": []
     }
   ]

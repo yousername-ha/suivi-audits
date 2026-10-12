@@ -1,12 +1,12 @@
 # Exécutions réellement constatées
 
-Référence applicative analysée : `f9545c3ce1a1338f13bb39bdaa4468bcc907da2d`. Mise à jour : 2026-10-11T22:10:00+02:00 (Europe/Paris).
+Référence applicative analysée : `70ab3f09c4937d8445b8c02402956cd835f380d3`. Mise à jour : 2026-10-12T17:00:00+02:00 (Europe/Paris).
 
 Source persistante anonymisée : [reçu JSON](preuves/2026-10-11-executions.json),
 avec chiffres, commandes, codes et empreintes des rapports locaux lorsque
 collectées. Rapports bruts hors Git ; les anciennes traces contenant des données
-de recette ne sont pas copiées. La preuve CI est vérifiable sur GitHub. EXE-001 à EXE-012 sont des constats historiques sur `c704fa6`
-(conservés, non rejoués) ; EXE-013 et EXE-014 portent sur le commit analysé.
+de recette ne sont pas copiées. La preuve CI est vérifiable sur GitHub. EXE-001 à EXE-014 sont des constats historiques sur `c704fa6` et `f9545c3`
+(conservés, non rejoués) ; EXE-015 à EXE-017 portent sur le commit analysé.
 
 ## EXE-001 — shared
 
@@ -184,3 +184,41 @@ historiques sont relus en tentative 1 et non relancés.
 - Cas liés : aucun ; analyse statique hors décompte des cas.
 - Preuve : [exécution GitHub Actions](https://github.com/yousername-ha/suivi-audits/actions/runs/38164228910) ; [reçu synthétique](preuves/2026-10-11-executions.json).
 - Limites : Aucune alerte de gravité ≥ 7 bloquante ; ne remplace ni revue de sécurité ni test d’intrusion.
+
+## EXE-015 — CI complète
+
+- Type : CI AUTOMATIQUE ; date : 2026-10-12T16:19:52+02:00 → 16:43:14+02:00.
+- Version/source : 3.1.0 ; `70ab3f09c4937d8445b8c02402956cd835f380d3`.
+- Environnement : Runners GitHub isolés, PostgreSQL 17, Docker/TLS et Playwright officiel.
+- Exécutant : GitHub Actions.
+- Commande/procédure : Workflow CI automatique sur main (fusion de la PR #21), tentative 1.
+- Statut / code retour : **PASSÉ / 0**.
+- Tests : 898 (shared 327, ui 117, api 275, web 17, playwright 162).
+- Cas liés : 39 cas passés (liste dans le registre et dans le plan de tests).
+- Preuve : [exécution GitHub Actions](https://github.com/yousername-ha/suivi-audits/actions/runs/38262112488) ; [reçu synthétique](preuves/2026-10-11-executions.json).
+- Limites : 898 = 736 Vitest + 162 Playwright ; ne compte pas les contrôles shell/Python de CI. La réussite de la CI complète est rattachée aux cas listés sans relire chaque journal par cas. Pas de recette client.
+
+## EXE-016 — CodeQL
+
+- Type : ANALYSE STATIQUE CI ; date : 2026-10-12T16:19:52+02:00 → 16:21:35+02:00.
+- Version/source : 3.1.0 ; `70ab3f09c4937d8445b8c02402956cd835f380d3`.
+- Environnement : Runner GitHub ; JavaScript/TypeScript et Python.
+- Exécutant : GitHub Actions.
+- Commande/procédure : Workflow CodeQL automatique sur main (fusion de la PR #21), tentative 1.
+- Statut / code retour : **PASSÉ / 0**.
+- Cas liés : aucun ; hors décompte des cas (preuve complémentaire).
+- Preuve : [exécution GitHub Actions](https://github.com/yousername-ha/suivi-audits/actions/runs/38262112306) ; [reçu synthétique](preuves/2026-10-11-executions.json).
+- Limites : Aucune alerte de gravité ≥ 7 bloquante ; ne remplace ni revue de sécurité ni test d’intrusion.
+
+## EXE-017 — scripts/recette-serveur.sh --avec-sauvegarde
+
+- Type : RECETTE SERVEUR AUTOMATISÉE (CI) ; date : 2026-10-12T16:38:47+02:00 → 16:38:51+02:00.
+- Version/source : 3.1.0 ; `70ab3f09c4937d8445b8c02402956cd835f380d3`.
+- Environnement : Pile Docker complète de la CI (HTTPS local, certificat interne) ; pas le serveur du RSSI.
+- Exécutant : GitHub Actions.
+- Commande/procédure : sudo ./scripts/recette-serveur.sh --version ci --avec-sauvegarde, étape du job « Images, sécurité et pile complète » de la CI (run 38262112488).
+- Statut / code retour : **PASSÉ / 0**.
+- Contrôles : 24.
+- Cas liés : aucun ; hors décompte des cas (preuve complémentaire).
+- Preuve : [exécution GitHub Actions](https://github.com/yousername-ha/suivi-audits/actions/runs/38262112488) ; [reçu synthétique](preuves/2026-10-11-executions.json).
+- Limites : Prouve que le script fonctionne et que la pile de CI est conforme à ses 24 contrôles ; ne vaut pas recette du serveur réel (TEST-041) ni restauration hors serveur (TEST-045). Rapport joint en artefact « recette-serveur ».
