@@ -1,0 +1,918 @@
+{
+  "date": "2026-10-12",
+  "branch": "legacy",
+  "applicationReference": "5369552a9468d12fb559d0e5070d220d91a72be1",
+  "type": "Propositions visuelles de cartographie SMSI, données fictives, non intégrées à l’application",
+  "styles": 10,
+  "imagesPerStyle": 10,
+  "images": 100,
+  "renderer": "Chromium / HTML-CSS-SVG",
+  "sourceHashes": {
+    "preview.html": "2974613f5027008adbd1eed8521ce7f7df98cb1431a43010d510a9f1b79dc712",
+    "styles.json": "250d9a5c50cb56c013734a6aa200d3a0ab5196d105a631f07e7df0106bb03ba5",
+    "generate.cjs": "493c416da4a4a2d5300126ccb97373564f19ab529ba49997d503a15e78064d96"
+  },
+  "errors": [],
+  "files": [
+    {
+      "style": "01-bleu-institutionnel",
+      "view": "01-vue-ensemble",
+      "path": "01-bleu-institutionnel/01-vue-ensemble.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 162087,
+      "sha256": "cb29611aaf08233bc03b30c0da9c74da0dfa50f53cd8b66222806def98e5a3ec"
+    },
+    {
+      "style": "01-bleu-institutionnel",
+      "view": "02-processus-pilotage",
+      "path": "01-bleu-institutionnel/02-processus-pilotage.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 141464,
+      "sha256": "2a434a44df85905611f2ca1391b3823fbf1d98c4a8cd349ff391554a41e9231e"
+    },
+    {
+      "style": "01-bleu-institutionnel",
+      "view": "03-processus-realisation",
+      "path": "01-bleu-institutionnel/03-processus-realisation.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 141994,
+      "sha256": "ba1f7f419d2975f0ff1b5c688ddad0e8ee575430201d285c4a3292603e1fed33"
+    },
+    {
+      "style": "01-bleu-institutionnel",
+      "view": "04-processus-support",
+      "path": "01-bleu-institutionnel/04-processus-support.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 140980,
+      "sha256": "8645d364385e1fca6f1f6bf5b3702f19f3058cf273e67ec2b9fcd93ee40cf8a1"
+    },
+    {
+      "style": "01-bleu-institutionnel",
+      "view": "05-flux-interactions",
+      "path": "01-bleu-institutionnel/05-flux-interactions.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 141064,
+      "sha256": "5472c6d3b180ad4b33af872fceee153b01389e50b249983258c64c19e1e3f705"
+    },
+    {
+      "style": "01-bleu-institutionnel",
+      "view": "06-fiche-processus",
+      "path": "01-bleu-institutionnel/06-fiche-processus.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 142906,
+      "sha256": "ec612f4a583f5bf3e02821e7005485d6203bb9c90ee8a841d2192b86ef5dc66c"
+    },
+    {
+      "style": "01-bleu-institutionnel",
+      "view": "07-risques-mesures",
+      "path": "01-bleu-institutionnel/07-risques-mesures.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 144460,
+      "sha256": "79a4d1948861d0d7d9541b84d1ece11921d5daf059e95c0b8b2b665e72da5cf6"
+    },
+    {
+      "style": "01-bleu-institutionnel",
+      "view": "08-indicateurs",
+      "path": "01-bleu-institutionnel/08-indicateurs.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 136624,
+      "sha256": "1189dcd0a8711ddfa9bd3d65258a178b2077173d29fb9c8689212f416c7546e3"
+    },
+    {
+      "style": "01-bleu-institutionnel",
+      "view": "09-responsabilites",
+      "path": "01-bleu-institutionnel/09-responsabilites.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 118337,
+      "sha256": "1809f51c892f1b4145ca4ace578bf169f47167f11d65d66ba6ae80a6165deb21"
+    },
+    {
+      "style": "01-bleu-institutionnel",
+      "view": "10-revue-direction",
+      "path": "01-bleu-institutionnel/10-revue-direction.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 147493,
+      "sha256": "974e27beb1a7e2204f742d3f999e4a0bc0d36d8b32fb4b9100bc35d8ec7b69a7"
+    },
+    {
+      "style": "02-emeraude-organique",
+      "view": "01-vue-ensemble",
+      "path": "02-emeraude-organique/01-vue-ensemble.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 187537,
+      "sha256": "28d203f15a610e54f636ec39a10163ef97c71890e4cb4833473d900cedf6aa75"
+    },
+    {
+      "style": "02-emeraude-organique",
+      "view": "02-processus-pilotage",
+      "path": "02-emeraude-organique/02-processus-pilotage.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 151938,
+      "sha256": "ddeb8cb6b0427b874c9753ef9c731e0b8916f36a965d0bc42b4b350c6ed714f2"
+    },
+    {
+      "style": "02-emeraude-organique",
+      "view": "03-processus-realisation",
+      "path": "02-emeraude-organique/03-processus-realisation.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 152467,
+      "sha256": "a161ce23e9be87085a84b420df90c573aa279349aa662e1b4f1b9a855a6bc55e"
+    },
+    {
+      "style": "02-emeraude-organique",
+      "view": "04-processus-support",
+      "path": "02-emeraude-organique/04-processus-support.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 152056,
+      "sha256": "49b71bf1049d4d81ba3e9e8d16f8d9e964316c6e900e838b9380847900a67eb2"
+    },
+    {
+      "style": "02-emeraude-organique",
+      "view": "05-flux-interactions",
+      "path": "02-emeraude-organique/05-flux-interactions.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 164022,
+      "sha256": "7fbc569784a33a12e7e8ae4e71e8e534e80bac9497ad841de08afaf006029d66"
+    },
+    {
+      "style": "02-emeraude-organique",
+      "view": "06-fiche-processus",
+      "path": "02-emeraude-organique/06-fiche-processus.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 156573,
+      "sha256": "fa19f96c3b61c6222fc41a9fa5aaeb72011c65eec707bbcf377159698791337a"
+    },
+    {
+      "style": "02-emeraude-organique",
+      "view": "07-risques-mesures",
+      "path": "02-emeraude-organique/07-risques-mesures.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 163243,
+      "sha256": "c9ac95fd8ce5e513c09adb54e976d8ff3136f7a3e8a6ec567324214e2628d073"
+    },
+    {
+      "style": "02-emeraude-organique",
+      "view": "08-indicateurs",
+      "path": "02-emeraude-organique/08-indicateurs.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 154209,
+      "sha256": "521bcb101a3379efe4c813a337463406444ade72158e6630a38b093d72fd8617"
+    },
+    {
+      "style": "02-emeraude-organique",
+      "view": "09-responsabilites",
+      "path": "02-emeraude-organique/09-responsabilites.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 131014,
+      "sha256": "032fb8d5e1f1d413c426e4aed9311bd44d3f550702b7d0f9969669c79a3ef131"
+    },
+    {
+      "style": "02-emeraude-organique",
+      "view": "10-revue-direction",
+      "path": "02-emeraude-organique/10-revue-direction.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 166102,
+      "sha256": "8944ecdfa82d5609bc86d51ef0e0472e67e6f812dcbe0787e2e6f9acf68ce92a"
+    },
+    {
+      "style": "03-violet-studio",
+      "view": "01-vue-ensemble",
+      "path": "03-violet-studio/01-vue-ensemble.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 149217,
+      "sha256": "3f2af9b2a1d3d0af0a0f6a1ac3665820d9f908eda39fe1a86416fb3183b5f476"
+    },
+    {
+      "style": "03-violet-studio",
+      "view": "02-processus-pilotage",
+      "path": "03-violet-studio/02-processus-pilotage.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 136359,
+      "sha256": "b7f4a75c013a34ebae73a19b3139693322c422d525c8c4d2b19e1221604468ad"
+    },
+    {
+      "style": "03-violet-studio",
+      "view": "03-processus-realisation",
+      "path": "03-violet-studio/03-processus-realisation.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 137295,
+      "sha256": "660db97e6283029124a5d6a303533133f091d78ecd386c35ee3c8aca6b961791"
+    },
+    {
+      "style": "03-violet-studio",
+      "view": "04-processus-support",
+      "path": "03-violet-studio/04-processus-support.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 135692,
+      "sha256": "9b27f8211b070295128507093ab272fb163dec22b1bd30395857c76c7859eab5"
+    },
+    {
+      "style": "03-violet-studio",
+      "view": "05-flux-interactions",
+      "path": "03-violet-studio/05-flux-interactions.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 137957,
+      "sha256": "fe52d169c2e8b030b15222b474d8c398b802214ccda79b85cd17aa6acb42441f"
+    },
+    {
+      "style": "03-violet-studio",
+      "view": "06-fiche-processus",
+      "path": "03-violet-studio/06-fiche-processus.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 229782,
+      "sha256": "0bb6e8767e821d8f925c3a03ac9f4094aa2266b987b21ed52665fc7dd80a29ae"
+    },
+    {
+      "style": "03-violet-studio",
+      "view": "07-risques-mesures",
+      "path": "03-violet-studio/07-risques-mesures.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 139414,
+      "sha256": "0a50a9aa5ac8dcf2a8c8939651c46fa4647b68f97b286106420034106f822b85"
+    },
+    {
+      "style": "03-violet-studio",
+      "view": "08-indicateurs",
+      "path": "03-violet-studio/08-indicateurs.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 129915,
+      "sha256": "de85ea4acb8c8064b2cef3f8230fbb92628fe2f8953a5867693b2fdf399f868a"
+    },
+    {
+      "style": "03-violet-studio",
+      "view": "09-responsabilites",
+      "path": "03-violet-studio/09-responsabilites.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 108997,
+      "sha256": "84d9f9eff6e6920696dbb5a501d4b01eb5bf464ec310a94de7bf2dc60574c09f"
+    },
+    {
+      "style": "03-violet-studio",
+      "view": "10-revue-direction",
+      "path": "03-violet-studio/10-revue-direction.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 235119,
+      "sha256": "193e80ddee61e6ae9b054ab512765fa1ef2a0b765727fdcc496a4a4abd5f3690"
+    },
+    {
+      "style": "04-graphite-ambre",
+      "view": "01-vue-ensemble",
+      "path": "04-graphite-ambre/01-vue-ensemble.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 146837,
+      "sha256": "d832a047d35b0cf42fcab5f689b660c52fa7df8f37eb7d401889a5f9eca5f567"
+    },
+    {
+      "style": "04-graphite-ambre",
+      "view": "02-processus-pilotage",
+      "path": "04-graphite-ambre/02-processus-pilotage.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 118739,
+      "sha256": "097668bc6b614bc2186000e2991793335cd6701cd1721e032480d6fa0a050bfa"
+    },
+    {
+      "style": "04-graphite-ambre",
+      "view": "03-processus-realisation",
+      "path": "04-graphite-ambre/03-processus-realisation.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 119597,
+      "sha256": "3f0c5f0cf3397202bdc8b4f469fb1ec565597d0954c33ba2aaf7969511a74fe3"
+    },
+    {
+      "style": "04-graphite-ambre",
+      "view": "04-processus-support",
+      "path": "04-graphite-ambre/04-processus-support.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 119591,
+      "sha256": "f5341983792f7ec85f203489d2ae9f4df356705d2bdee79053d61fdde7b10e46"
+    },
+    {
+      "style": "04-graphite-ambre",
+      "view": "05-flux-interactions",
+      "path": "04-graphite-ambre/05-flux-interactions.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 126391,
+      "sha256": "0c02f97f647eb985f4cc4c5f35c65459bb12a4aa6eb8ad2b4457c67bd7fdbadf"
+    },
+    {
+      "style": "04-graphite-ambre",
+      "view": "06-fiche-processus",
+      "path": "04-graphite-ambre/06-fiche-processus.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 124584,
+      "sha256": "ef7295bdc5097b9ee4a0905f9a90abf62de5c991ee980294e91e71c84d0d7b91"
+    },
+    {
+      "style": "04-graphite-ambre",
+      "view": "07-risques-mesures",
+      "path": "04-graphite-ambre/07-risques-mesures.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 127606,
+      "sha256": "861feb3e2d55cb05b32b1665d499f0058be49664a96cbc3de76562de1903d91b"
+    },
+    {
+      "style": "04-graphite-ambre",
+      "view": "08-indicateurs",
+      "path": "04-graphite-ambre/08-indicateurs.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 119164,
+      "sha256": "40f55d540c7e7d42956e08a574140701806f34d5cc90a4b0ad2570faf8dd204b"
+    },
+    {
+      "style": "04-graphite-ambre",
+      "view": "09-responsabilites",
+      "path": "04-graphite-ambre/09-responsabilites.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 100045,
+      "sha256": "2e508d7c90125b9278b4cb9c8f4590d752d0f8410639fd095b01815f7045bfe8"
+    },
+    {
+      "style": "04-graphite-ambre",
+      "view": "10-revue-direction",
+      "path": "04-graphite-ambre/10-revue-direction.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 129454,
+      "sha256": "a2fb0e6f2145149d0022906030e2c55d18efb7dc50e03eae9f70498c24e4ee96"
+    },
+    {
+      "style": "05-cyan-technique",
+      "view": "01-vue-ensemble",
+      "path": "05-cyan-technique/01-vue-ensemble.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 165525,
+      "sha256": "f1b0fb16232550f5a8d082bcf84736fa96cb75962108dd4244039b9e0765560a"
+    },
+    {
+      "style": "05-cyan-technique",
+      "view": "02-processus-pilotage",
+      "path": "05-cyan-technique/02-processus-pilotage.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 147140,
+      "sha256": "87e541c4cd7ed8637613081c6d5070b1bc96000b2c7f4df79c76612abb3e85c7"
+    },
+    {
+      "style": "05-cyan-technique",
+      "view": "03-processus-realisation",
+      "path": "05-cyan-technique/03-processus-realisation.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 147748,
+      "sha256": "58e2d408e42f6ac8d91f9dcb99da83d768d35dc947d6865768a9a3b4f76158df"
+    },
+    {
+      "style": "05-cyan-technique",
+      "view": "04-processus-support",
+      "path": "05-cyan-technique/04-processus-support.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 147480,
+      "sha256": "258aec3aa43d89afdfc3377c7e73970340c65964102449f061ff815a5d3b09f8"
+    },
+    {
+      "style": "05-cyan-technique",
+      "view": "05-flux-interactions",
+      "path": "05-cyan-technique/05-flux-interactions.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 145346,
+      "sha256": "16d26f9ff190b9e94f98541101777113d7e60a0e13f59fd9edbb931fbe738e16"
+    },
+    {
+      "style": "05-cyan-technique",
+      "view": "06-fiche-processus",
+      "path": "05-cyan-technique/06-fiche-processus.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 144079,
+      "sha256": "212bf0bfc1008ef760ee713de453c5b9e482e55301efdd9d63503018e26629ba"
+    },
+    {
+      "style": "05-cyan-technique",
+      "view": "07-risques-mesures",
+      "path": "05-cyan-technique/07-risques-mesures.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 147591,
+      "sha256": "4cf2db11a5c7c4401aa378cb5b93b5f21e80f66b3887f7b1bfea904c4d146152"
+    },
+    {
+      "style": "05-cyan-technique",
+      "view": "08-indicateurs",
+      "path": "05-cyan-technique/08-indicateurs.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 142046,
+      "sha256": "c342e1e992c32353a1fd5e6d0a09f10c67569ab5984a580d6a050195e206b8f5"
+    },
+    {
+      "style": "05-cyan-technique",
+      "view": "09-responsabilites",
+      "path": "05-cyan-technique/09-responsabilites.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 124801,
+      "sha256": "295b702ea934301acb739b24b7551e597f211909693870685356fa5bbf8c2362"
+    },
+    {
+      "style": "05-cyan-technique",
+      "view": "10-revue-direction",
+      "path": "05-cyan-technique/10-revue-direction.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 149836,
+      "sha256": "b48dd740e9e87fd97eb30aa2fc9d93b1b548838356ff5bd8e327ff999109497e"
+    },
+    {
+      "style": "06-terre-cuite",
+      "view": "01-vue-ensemble",
+      "path": "06-terre-cuite/01-vue-ensemble.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 139165,
+      "sha256": "05cda13cc077adb3ae4df58cfbde3c286a6c2d75bef7c248077d7c2dcc6a9bf0"
+    },
+    {
+      "style": "06-terre-cuite",
+      "view": "02-processus-pilotage",
+      "path": "06-terre-cuite/02-processus-pilotage.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 127794,
+      "sha256": "b26f726c7fda103ba94fc5c5e21bb50dafe2e51f67e969466d417d86fb495f90"
+    },
+    {
+      "style": "06-terre-cuite",
+      "view": "03-processus-realisation",
+      "path": "06-terre-cuite/03-processus-realisation.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 128892,
+      "sha256": "b78e8dfeecf17195d3df7e5868ed66fe9cfd53cdc6b87ecaaa570ef326c59483"
+    },
+    {
+      "style": "06-terre-cuite",
+      "view": "04-processus-support",
+      "path": "06-terre-cuite/04-processus-support.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 126827,
+      "sha256": "a2a8af98c605f04b4984071bd0abf39f68d47af236c50fead4ae3793ea6f7033"
+    },
+    {
+      "style": "06-terre-cuite",
+      "view": "05-flux-interactions",
+      "path": "06-terre-cuite/05-flux-interactions.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 129181,
+      "sha256": "6318064373925f7dc041b809b6f55f5803c716422e8e83d21ddb4b6f4b460911"
+    },
+    {
+      "style": "06-terre-cuite",
+      "view": "06-fiche-processus",
+      "path": "06-terre-cuite/06-fiche-processus.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 126175,
+      "sha256": "54a89ccd72ce987bdfccffdc5780851207cbdaf3c5aeb17db37ce72d5820a519"
+    },
+    {
+      "style": "06-terre-cuite",
+      "view": "07-risques-mesures",
+      "path": "06-terre-cuite/07-risques-mesures.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 130053,
+      "sha256": "ae869ef3fce2e66d6dbf2250dfef88fcfd43ff1923878698c50f1ab81de47662"
+    },
+    {
+      "style": "06-terre-cuite",
+      "view": "08-indicateurs",
+      "path": "06-terre-cuite/08-indicateurs.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 122646,
+      "sha256": "32a4b9592e579b027e3fe363055fdc5888de1ff70cfb380e8ba21462e58fa05f"
+    },
+    {
+      "style": "06-terre-cuite",
+      "view": "09-responsabilites",
+      "path": "06-terre-cuite/09-responsabilites.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 105773,
+      "sha256": "5186b6f7ad277caec68e151f1621b8c97154bf6ff30beb97adbcd057313fd034"
+    },
+    {
+      "style": "06-terre-cuite",
+      "view": "10-revue-direction",
+      "path": "06-terre-cuite/10-revue-direction.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 131149,
+      "sha256": "0326dbdcd5dba043d27078f7dc7dd6528d584362af63abb948b9347ebf37cb66"
+    },
+    {
+      "style": "07-encre-et-or",
+      "view": "01-vue-ensemble",
+      "path": "07-encre-et-or/01-vue-ensemble.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 156337,
+      "sha256": "a937ab3e1f5dc14c1df0f41374c42a1bc9f70cfd8be9f9a030d3d3184f2bac30"
+    },
+    {
+      "style": "07-encre-et-or",
+      "view": "02-processus-pilotage",
+      "path": "07-encre-et-or/02-processus-pilotage.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 129739,
+      "sha256": "80ad8e36518ea8a46240cbdf12e00bc46d6d168774efbd23ce372c884760d5dd"
+    },
+    {
+      "style": "07-encre-et-or",
+      "view": "03-processus-realisation",
+      "path": "07-encre-et-or/03-processus-realisation.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 129785,
+      "sha256": "59cb05ccecb3392680877ccfdffa291786f7a48b20ca0d8590d21f4eb0d1d3db"
+    },
+    {
+      "style": "07-encre-et-or",
+      "view": "04-processus-support",
+      "path": "07-encre-et-or/04-processus-support.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 130284,
+      "sha256": "6e0a3ac354f82540d524001486a3aa60ec389eb516cebb517e4f497bd325c226"
+    },
+    {
+      "style": "07-encre-et-or",
+      "view": "05-flux-interactions",
+      "path": "07-encre-et-or/05-flux-interactions.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 137745,
+      "sha256": "027d3aa15fae21f2ef7514d51f484084425621b4a9d292a0c67030d3ef1d10ca"
+    },
+    {
+      "style": "07-encre-et-or",
+      "view": "06-fiche-processus",
+      "path": "07-encre-et-or/06-fiche-processus.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 134854,
+      "sha256": "2dd37b53dbe6482b51d0814a5aec6fe29810b45386ef7d897c2c59cf056ac3de"
+    },
+    {
+      "style": "07-encre-et-or",
+      "view": "07-risques-mesures",
+      "path": "07-encre-et-or/07-risques-mesures.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 139127,
+      "sha256": "a62071c2d8596f4d70853e3623406980a6a93ea60a4463054542ebd73e17ee7d"
+    },
+    {
+      "style": "07-encre-et-or",
+      "view": "08-indicateurs",
+      "path": "07-encre-et-or/08-indicateurs.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 129246,
+      "sha256": "15077b35289097044a514721629691283f87ef39ed5736043ad7760b1b4c0c98"
+    },
+    {
+      "style": "07-encre-et-or",
+      "view": "09-responsabilites",
+      "path": "07-encre-et-or/09-responsabilites.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 116220,
+      "sha256": "666548bc937410e469994ae84097bded532f15a7eea55d860b48dc28a48f5047"
+    },
+    {
+      "style": "07-encre-et-or",
+      "view": "10-revue-direction",
+      "path": "07-encre-et-or/10-revue-direction.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 139774,
+      "sha256": "3eafdda79bb9dc4d2835281f711920e8676469eb2b8e84729a7499abe75aca45"
+    },
+    {
+      "style": "08-monochrome-editorial",
+      "view": "01-vue-ensemble",
+      "path": "08-monochrome-editorial/01-vue-ensemble.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 131764,
+      "sha256": "0faeedc642cd809834bf6cd8da193e5ec9e7bcc3cb58637e353bca8c1be41eeb"
+    },
+    {
+      "style": "08-monochrome-editorial",
+      "view": "02-processus-pilotage",
+      "path": "08-monochrome-editorial/02-processus-pilotage.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 108293,
+      "sha256": "279e206136d634381ce947f076c3754877318f16a6e6b2d6d7927424075bd2e5"
+    },
+    {
+      "style": "08-monochrome-editorial",
+      "view": "03-processus-realisation",
+      "path": "08-monochrome-editorial/03-processus-realisation.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 109373,
+      "sha256": "362308e3a7455d38c96b4ab3126aae0ef11066ae67e259176e3bc7b831e62f51"
+    },
+    {
+      "style": "08-monochrome-editorial",
+      "view": "04-processus-support",
+      "path": "08-monochrome-editorial/04-processus-support.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 110018,
+      "sha256": "c081db1bd18f1d66748d2bcd6877b308646c92a2ea1a7d584d64b5bd0f31450b"
+    },
+    {
+      "style": "08-monochrome-editorial",
+      "view": "05-flux-interactions",
+      "path": "08-monochrome-editorial/05-flux-interactions.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 116671,
+      "sha256": "16a8bce3beea7c5b667dcf98c35c14c449515403f9aea1c05e7810a1ebda5004"
+    },
+    {
+      "style": "08-monochrome-editorial",
+      "view": "06-fiche-processus",
+      "path": "08-monochrome-editorial/06-fiche-processus.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 114895,
+      "sha256": "1031548ca987b12fc3053ba33b8edd3bbe71700242cd2ee203baa905eef2e836"
+    },
+    {
+      "style": "08-monochrome-editorial",
+      "view": "07-risques-mesures",
+      "path": "08-monochrome-editorial/07-risques-mesures.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 116438,
+      "sha256": "cb8364e0f77241fef706e5afbc53552d2a327702a53f716818bb184991540812"
+    },
+    {
+      "style": "08-monochrome-editorial",
+      "view": "08-indicateurs",
+      "path": "08-monochrome-editorial/08-indicateurs.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 107649,
+      "sha256": "524ad6403e0f8fb24948bfbff2d654c24b7d6cef90c89347b92b60c810c0604d"
+    },
+    {
+      "style": "08-monochrome-editorial",
+      "view": "09-responsabilites",
+      "path": "08-monochrome-editorial/09-responsabilites.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 94484,
+      "sha256": "ecb5527d7c79cda38fa012e0708f4205ef65ac67ce82a7f1a4728b9b0b63973a"
+    },
+    {
+      "style": "08-monochrome-editorial",
+      "view": "10-revue-direction",
+      "path": "08-monochrome-editorial/10-revue-direction.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 118826,
+      "sha256": "274b21d99af657d22b734bfefcf9d473c987b21a4e6ec98cc8fa7e7555acd078"
+    },
+    {
+      "style": "09-corail-marine",
+      "view": "01-vue-ensemble",
+      "path": "09-corail-marine/01-vue-ensemble.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 157921,
+      "sha256": "89e59feb3150fa339d348099768d8210a764ede3a13d6ee4a881b54a67281343"
+    },
+    {
+      "style": "09-corail-marine",
+      "view": "02-processus-pilotage",
+      "path": "09-corail-marine/02-processus-pilotage.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 142664,
+      "sha256": "309e39189f54ed909bdce3755637bc3eb0c10b7b0c0c8963821fe875c718a351"
+    },
+    {
+      "style": "09-corail-marine",
+      "view": "03-processus-realisation",
+      "path": "09-corail-marine/03-processus-realisation.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 143630,
+      "sha256": "0264237f5cc6ca1706c1bf6de1cac59a2292c8aa8f33caa3443a8bee126aefea"
+    },
+    {
+      "style": "09-corail-marine",
+      "view": "04-processus-support",
+      "path": "09-corail-marine/04-processus-support.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 141959,
+      "sha256": "1e4824a57cdf76a7ab84f66b66b1629f685731d9d22742fdcc0b59cb4e90ce2d"
+    },
+    {
+      "style": "09-corail-marine",
+      "view": "05-flux-interactions",
+      "path": "09-corail-marine/05-flux-interactions.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 144330,
+      "sha256": "d2cc348ce413e9c103a845298187e0fd5a4e3a223436514b0a968e0fbdd81a6b"
+    },
+    {
+      "style": "09-corail-marine",
+      "view": "06-fiche-processus",
+      "path": "09-corail-marine/06-fiche-processus.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 139460,
+      "sha256": "58663c3bea1aa3369c936f0ae78c2f328cc9b4ed1125eefe47faec4c4da463dc"
+    },
+    {
+      "style": "09-corail-marine",
+      "view": "07-risques-mesures",
+      "path": "09-corail-marine/07-risques-mesures.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 145296,
+      "sha256": "a8e870d66f42e33fb36eb590c688043b468383ce02aa390e89099c4400a7954f"
+    },
+    {
+      "style": "09-corail-marine",
+      "view": "08-indicateurs",
+      "path": "09-corail-marine/08-indicateurs.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 135827,
+      "sha256": "505731f3bc9b101303ea96135a1b6630c24523569531d9be0f8a09c781ab1464"
+    },
+    {
+      "style": "09-corail-marine",
+      "view": "09-responsabilites",
+      "path": "09-corail-marine/09-responsabilites.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 114254,
+      "sha256": "1ff5bccfb84981dfd6b255da2990f5e55f430e222d2d191a21952ac28961d6b3"
+    },
+    {
+      "style": "09-corail-marine",
+      "view": "10-revue-direction",
+      "path": "09-corail-marine/10-revue-direction.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 146512,
+      "sha256": "40aac8ec090e89e3c52e5510387572fa3ab8c0011fad0dc534a88e1cfd4adaaf"
+    },
+    {
+      "style": "10-lavande-minerale",
+      "view": "01-vue-ensemble",
+      "path": "10-lavande-minerale/01-vue-ensemble.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 174915,
+      "sha256": "4d1e3f65732c106e378466f2bba84b99c757d60cf5a53274b4f016552de1c1d0"
+    },
+    {
+      "style": "10-lavande-minerale",
+      "view": "02-processus-pilotage",
+      "path": "10-lavande-minerale/02-processus-pilotage.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 143516,
+      "sha256": "3e6c20a0f368aeef17780d3df2fd0af53e16042e3b7840785c5f91074bbffc37"
+    },
+    {
+      "style": "10-lavande-minerale",
+      "view": "03-processus-realisation",
+      "path": "10-lavande-minerale/03-processus-realisation.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 144156,
+      "sha256": "1d732139a806f6c2b5709bbe1609c86404d56703e4649b5b5b35205155d74cfc"
+    },
+    {
+      "style": "10-lavande-minerale",
+      "view": "04-processus-support",
+      "path": "10-lavande-minerale/04-processus-support.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 143768,
+      "sha256": "12e561cd38d91895400d7df40c298d8a46d50489c8100e100937ce8aa60301d5"
+    },
+    {
+      "style": "10-lavande-minerale",
+      "view": "05-flux-interactions",
+      "path": "10-lavande-minerale/05-flux-interactions.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 154205,
+      "sha256": "288ea19c8a2e7f0be7038b9fb74671216570947da82a2cbc12aad2e44a6a14f1"
+    },
+    {
+      "style": "10-lavande-minerale",
+      "view": "06-fiche-processus",
+      "path": "10-lavande-minerale/06-fiche-processus.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 148552,
+      "sha256": "1e2688e827d4700d5558e5c92cce13949fa42169e196ef956b449b59d7f5966c"
+    },
+    {
+      "style": "10-lavande-minerale",
+      "view": "07-risques-mesures",
+      "path": "10-lavande-minerale/07-risques-mesures.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 154197,
+      "sha256": "0684dd473eb8a15f83a3074433c2dda61908091da910686330409a98e4794974"
+    },
+    {
+      "style": "10-lavande-minerale",
+      "view": "08-indicateurs",
+      "path": "10-lavande-minerale/08-indicateurs.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 144333,
+      "sha256": "6e426789e60db36cea0b38a4c9437b664eabe6f69306c1b1355135ef35059e20"
+    },
+    {
+      "style": "10-lavande-minerale",
+      "view": "09-responsabilites",
+      "path": "10-lavande-minerale/09-responsabilites.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 124126,
+      "sha256": "679cc31fbc16ba0ebaa2d0eaac898efbf904661417e9f43d6eb8eff13833f4d2"
+    },
+    {
+      "style": "10-lavande-minerale",
+      "view": "10-revue-direction",
+      "path": "10-lavande-minerale/10-revue-direction.png",
+      "width": 1600,
+      "height": 1280,
+      "bytes": 157002,
+      "sha256": "699455a7534b2400044a11b29f02a3301b42d0c21086c8990e2b617821a6699b"
+    }
+  ]
+}

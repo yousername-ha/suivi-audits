@@ -8,6 +8,7 @@ explicite de l’utilisateur. Les captures utilisent exclusivement des données 
 
 | Date | Série | Captures | Version de l’application |
 | --- | --- | --- | --- |
+| 12 octobre 2026 | [ASTRA — série 03 : 10 styles SMSI](2026-10-12-astra-03/README.md) | **100 images** : 10 styles × 10 vues de cartographie des processus | Propositions visuelles |
 | 12 octobre 2026 | [ASTRA — série 02](2026-10-12-astra-02/README.md) | Risques et mesures de l’Annexe A ISO 27001:2022 | `6de35a3` |
 | 12 octobre 2026 | [ASTRA — série 01](2026-10-12-astra-01/README.md) | Cockpit RSSI, matrice des risques, Kanban | `1e8d9f0` |
 
