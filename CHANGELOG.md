@@ -2,6 +2,17 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
+## [Non publié]
+
+### Notes de mise à jour
+- Aucune migration ni action sur le serveur. Les contrastes de couleur de l'interface sont renforcés (badges et boutons pleins, textes des variantes légères, onglet actif en mode sombre) : l'aspect change légèrement, sans changement de fonctionnement.
+
+### Modifié
+- Accessibilité (WCAG 2.1 AA), défauts relevés par le contrôle automatique axe-core : contraste du texte sur les fonds d'état (rouge, orange, jaune, vert, sarcelle, bleu) et sur l'onglet actif en mode sombre ; liens toujours soulignés (distinction autrement que par la couleur) ; lien d'accueil nommé sur téléphone ; tableaux à défilement horizontal atteignables au clavier et annoncés comme régions.
+
+### Ajouté
+- Recette automatisée ([ADR 0029](docs/adr/0029-recette-automatisee.md), [mode d'emploi](docs/05_RECETTE/RECETTE_AUTOMATISEE.md)) : `scripts/recette-serveur.sh` (contrôles du serveur après installation ou mise à jour, rapport sans secret), test de performance sur 10 000 risques fictifs, test d'accessibilité automatique sur 14 écrans. Nouvelle dépendance de test : `@axe-core/playwright` 4.13.0 (développement seulement).
+
 ## [3.1.0] — 2026-10-11
 
 ### Notes de mise à jour

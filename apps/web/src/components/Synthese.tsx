@@ -94,7 +94,7 @@ function Echeances({ s, large }: { s: Synthese; large?: boolean }) {
   return (
     <Carte titre="Prochaines échéances" large={large} className="echeances-carte">
       {s.echeances.length ? (
-        <div className="table-wrap">
+        <div className="table-wrap" role="region" aria-label="Prochaines échéances" tabIndex={0}>
           <Table>
             <Table.Thead>
               <Table.Tr>

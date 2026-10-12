@@ -124,7 +124,12 @@ export function Tasks({
       )}
       <ErrorAlert error={summary.error} />
       {view === 'list' && (
-        <Table.ScrollContainer minWidth={650}>
+        <Table.ScrollContainer
+          minWidth={650}
+          scrollAreaProps={{
+            viewportProps: { tabIndex: 0, role: 'region', 'aria-label': 'Tableau, défilement horizontal possible' },
+          }}
+        >
           <Table>
             <Table.Thead>
               <Table.Tr>

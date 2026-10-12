@@ -278,7 +278,7 @@ export function OperationsPanel() {
             </Text>
           )}
           {!!archives.length && (
-            <div className="table-wrap">
+            <div className="table-wrap" role="region" aria-label="Archives de sauvegarde" tabIndex={0}>
               <Table>
                 <Table.Thead>
                   <Table.Tr>
@@ -488,7 +488,7 @@ export function OperationsPanel() {
             </Text>
           )}
           {!!q.data?.jobs.length && (
-            <div className="table-wrap">
+            <div className="table-wrap" role="region" aria-label="Opérations de maintenance" tabIndex={0}>
               <Table>
                 <Table.Thead>
                   <Table.Tr>

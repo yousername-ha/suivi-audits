@@ -520,7 +520,7 @@ function EffectiveRights({ userId }: { userId: string }) {
 /** Matrice modules × actions (lecture ou édition). */
 function RightsMatrix({ cell }: { cell: (p: Permission) => React.ReactNode }) {
   return (
-    <div className="table-wrap">
+    <div className="table-wrap" role="region" aria-label="Droits par module" tabIndex={0}>
       <Table className="matrix" withColumnBorders>
         <Table.Thead>
           <Table.Tr>
@@ -565,7 +565,7 @@ export function GroupsPanel() {
       )}
       <ErrorAlert error={q.error} />
       <Card withBorder p={0}>
-        <div className="table-wrap">
+        <div className="table-wrap" role="region" aria-label="Groupes" tabIndex={0}>
           <Table>
             <Table.Thead>
               <Table.Tr>
@@ -724,7 +724,7 @@ export function RolesPanel() {
       </Text>
       <ErrorAlert error={q.error} />
       <Card withBorder p={0}>
-        <div className="table-wrap">
+        <div className="table-wrap" role="region" aria-label="Rôles" tabIndex={0}>
           <Table>
             <Table.Thead>
               <Table.Tr>

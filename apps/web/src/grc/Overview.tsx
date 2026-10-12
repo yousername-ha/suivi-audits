@@ -124,7 +124,12 @@ export function Overview({ smsi }: { smsi: string }) {
               La couverture ci-dessous mesure les exigences ayant une correspondance humaine validée. Elle ne constitue
               pas un taux de conformité.
             </Text>
-            <Table.ScrollContainer minWidth={600}>
+            <Table.ScrollContainer
+              minWidth={600}
+              scrollAreaProps={{
+                viewportProps: { tabIndex: 0, role: 'region', 'aria-label': 'Tableau, défilement horizontal possible' },
+              }}
+            >
               <Table>
                 <Table.Thead>
                   <Table.Tr>

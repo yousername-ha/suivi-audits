@@ -246,7 +246,7 @@ export function ImportPanel() {
             Exporter au format legacy (schéma 15)
           </Button>
         </Group>
-        <div className="table-wrap">
+        <div className="table-wrap" role="region" aria-label="Enregistrements de l’état" tabIndex={0}>
           <Table>
             <Table.Thead>
               <Table.Tr>
@@ -368,7 +368,7 @@ function ReportView({ sim }: { sim: SimResult }) {
           création(s), {r.totals.updated} mise(s) à jour, {r.totals.deleted} suppression(s), {r.totals.unchanged}{' '}
           inchangé(s).
         </Text>
-        <div className="table-wrap">
+        <div className="table-wrap" role="region" aria-label="Résultat de la simulation" tabIndex={0}>
           <Table striped>
             <Table.Thead>
               <Table.Tr>

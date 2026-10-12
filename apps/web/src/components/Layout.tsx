@@ -227,7 +227,7 @@ export function Layout({ children }: { children: ReactNode }) {
           <Group h="100%" px="md" justify="space-between" wrap="nowrap">
             <Group gap="sm" wrap="nowrap">
               <Burger opened={opened} onClick={toggle} hiddenFrom="xs" size="sm" aria-label="Ouvrir le menu" />
-              <Anchor component={Link} to="/" underline="never" c="inherit">
+              <Anchor component={Link} to="/" underline="never" c="inherit" aria-label={`${me.appName} — accueil`}>
                 <Group gap="xs" wrap="nowrap">
                   <span className="brand-mark" aria-hidden="true">
                     S

@@ -203,7 +203,13 @@ export function BusinessRegistry({
           </Text>
         </Card>
       )}
-      <Table.ScrollContainer minWidth={650} visibleFrom="sm">
+      <Table.ScrollContainer
+        minWidth={650}
+        scrollAreaProps={{
+          viewportProps: { tabIndex: 0, role: 'region', 'aria-label': 'Tableau, défilement horizontal possible' },
+        }}
+        visibleFrom="sm"
+      >
         <Table highlightOnHover>
           <Table.Thead>
             <Table.Tr>

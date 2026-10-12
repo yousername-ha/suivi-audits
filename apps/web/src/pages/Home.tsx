@@ -130,7 +130,7 @@ export function HomePage() {
           </Anchor>
           .
         </Text>
-        <div className="table-wrap">
+        <div className="table-wrap" role="region" aria-label="Avancement par phase" tabIndex={0}>
           <Table striped>
             <Table.Thead>
               <Table.Tr>

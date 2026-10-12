@@ -279,7 +279,7 @@ function SessionsCard() {
         Sessions ouvertes
       </Title>
       <ErrorAlert error={q.error} />
-      <div className="table-wrap">
+      <div className="table-wrap" role="region" aria-label="Sessions ouvertes" tabIndex={0}>
         <Table>
           <Table.Thead>
             <Table.Tr>
