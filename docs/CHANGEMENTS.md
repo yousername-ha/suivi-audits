@@ -1,3 +1,14 @@
+# ASTRA — 12 octobre 2026
+
+La refonte ASTRA est intégrée sur `legacy`, désormais branche exclusive de travail
+et de livraison. Navigation, cockpit, risques, conformité et vues opérationnelles :
+voir [ASTRA-REFONTE.md](ASTRA-REFONTE.md). Les résultats de validation actuels sont
+consignés dans [astra-validation.json](../recette/astra-validation.json).
+Les sections suivantes décrivent les livraisons historiques et leurs branches
+au moment de leur réalisation.
+
+---
+
 # Refonte Legacy — 11 octobre 2026
 
 Phases réalisées dans l’ordre demandé : diagnostic préalable, fondations,

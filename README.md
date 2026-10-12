@@ -1,14 +1,20 @@
+# ASTRA — refonte GRC locale
+
+Cette livraison est prête à lancer après extraction : voir [LIRE-MOI-ASTRA.txt](LIRE-MOI-ASTRA.txt).
+La navigation, les vues et leurs limites sont détaillées dans [la documentation ASTRA](docs/ASTRA-REFONTE.md).
+Les informations ci-dessous décrivent également les mécanismes historiques conservés.
+
 # Pilotage Legacy — périmètres, risques, parcours guidé, CaRE/HAS et PCRA
 
-Refonte locale du 11 octobre 2026, exclusivement sur **`legacy/test-lots-d-f`**.
+Refonte ASTRA intégrée le 12 octobre 2026, exclusivement sur **`legacy`**.
 La branche principale et la nouvelle application restent inchangées.
 
 ## Télécharger et démarrer
 
-Sur GitHub : sélectionner `legacy/test-lots-d-f`, puis **Code → Download ZIP**.
+Sur GitHub : sélectionner `legacy`, puis **Code → Download ZIP**.
 Extraire toute l’archive. Le téléchargement est également disponible à cette adresse :
 
-https://github.com/yousername-ha/suivi-audits/archive/refs/heads/legacy/test-lots-d-f.zip
+https://github.com/yousername-ha/suivi-audits/archive/refs/heads/legacy.zip
 
 Avec **Python 3.10 ou supérieur**, lancer `demarrer.bat` sous Windows ou :
 
@@ -27,7 +33,7 @@ Pour tester la création du premier accès sans ce compte :
 Pour cloner dans un nouveau dossier :
 
 ```sh
-git clone --single-branch --branch legacy/test-lots-d-f https://github.com/yousername-ha/suivi-audits.git suivi-audits-legacy-test
+git clone --single-branch --branch legacy https://github.com/yousername-ha/suivi-audits.git suivi-audits-legacy-test
 cd suivi-audits-legacy-test
 python3 demarrer.py
 ```

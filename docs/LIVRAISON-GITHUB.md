@@ -5,22 +5,22 @@ dans [RISQUES-ADMINISTRATION.md](RISQUES-ADMINISTRATION.md). Le jeu de démonstr
 se charge depuis **Administration → Données de démonstration**, après confirmation.
 Il n’est pas préinstallé dans les données d’un utilisateur.
 
-Branche exclusive : **`legacy/test-lots-d-f`**. La publication sur cette branche
+Branche exclusive : **`legacy`**. La publication sur cette branche
 Legacy autonome est autorisée par l’utilisateur pour permettre ses tests et son
-téléchargement. Son nom historique reste inchangé. `main` et
+téléchargement. Cette branche devient la référence de travail et de livraison le 12 octobre 2026. `main` et
 `feature/gpt6-evolution-smsi-grc` sont conservées ; aucune fusion, PR vers main,
 CI, image Docker ou release n’est lancée par cette livraison.
 
 ## Obtenir la copie
 
-[Ouvrir la branche](https://github.com/yousername-ha/suivi-audits/tree/legacy/test-lots-d-f),
+[Ouvrir la branche](https://github.com/yousername-ha/suivi-audits/tree/legacy),
 puis **Code → Download ZIP**, ou utiliser le
-[ZIP de la branche](https://github.com/yousername-ha/suivi-audits/archive/refs/heads/legacy/test-lots-d-f.zip).
+[ZIP de la branche](https://github.com/yousername-ha/suivi-audits/archive/refs/heads/legacy.zip).
 Le dépôt privé nécessite une session GitHub autorisée.
 
 Après extraction, lancer `python3 demarrer.py` ou `demarrer.bat` sous Windows.
-Python 3.10+ est requis. Ouvrir `http://127.0.0.1:8123`, puis créer le premier
-compte administrateur. Ne pas ouvrir directement `index.html` : les données,
+Python 3.10+ est requis. Ouvrir `http://127.0.0.1:8123`, puis se connecter avec
+le compte local de test `admin` / `admin` ou un compte existant. Ne pas ouvrir directement `index.html` : les données,
 pièces et contrôles d’accès passent maintenant par le serveur local.
 
 ## Actualiser une installation Legacy
@@ -40,7 +40,9 @@ une sauvegarde métier de l’ancienne copie reste conseillée avant migration.
 
 - [Diagnostic préalable](DIAGNOSTIC-REFONTE-LEGACY.md).
 - [Modèles, migrations, API, intégrations et limites](REFONTE-LEGACY.md).
-- [Recette actuelle et critères d’acceptation](RECETTE-REFONTE.md).
+- [Refonte ASTRA et limites](ASTRA-REFONTE.md).
+- [Recette ASTRA actuelle](../recette/astra-validation.json).
+- [Recette historique et critères d’acceptation](RECETTE-REFONTE.md).
 - [Sources officielles et éléments à confirmer](SOURCES-ET-LIMITES.md).
 
 Les anciennes recettes et documents sont conservés comme historique de la version

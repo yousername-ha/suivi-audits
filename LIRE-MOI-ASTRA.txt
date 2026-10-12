@@ -1,0 +1,40 @@
+ASTRA — Application GRC locale, refonte de legacy
+
+DÉMARRAGE SUR PC
+1. Extraire TOUT le ZIP dans un dossier accessible en écriture.
+2. Comme dans la version précédente, Python 3.10 ou supérieur doit être installé.
+3. Sous Windows : double-cliquer sur demarrer.bat.
+   Sous Linux/macOS : python3 demarrer.py (ou sh demarrer.sh).
+4. Le navigateur s'ouvre sur http://127.0.0.1:8123.
+5. Conserver la fenêtre du lanceur ouverte pendant l'utilisation.
+
+Le compte de test local admin / admin est créé comme auparavant ; un compte
+existant et son mot de passe sont conservés. Aucun Node.js, Docker, compilation,
+service cloud ni téléchargement de bibliothèque n'est requis pour utiliser
+l'application. Les sources HTML/JS/Python constituent directement l'application
+exécutable : il n'y a pas de bundle supplémentaire à reconstruire.
+
+CONSERVER SES DONNÉES
+Arrêter l'ancienne application, sauvegarder son dossier .legacy-data, puis
+conserver ce dossier intact dans la nouvelle installation. Ne jamais le remplacer
+par un dossier de test. Les comptes, données et pièces restent sur le PC.
+Voir README.md pour la sauvegarde, la restauration et la migration historique.
+
+NOUVEAUTÉS
+- Navigation : Pilotage, Gouvernance, Opérations, Administration.
+- Cockpit RSSI, matrice des risques, conformité consultable avant édition.
+- Actions : Liste, Kanban, Planning, Calendrier, Gantt et Synthèse.
+- Récurrences : Liste, Kanban calculé, Planning, Calendrier et historique.
+- Fiches de synthèse, édition à la demande et thèmes clair/sombre.
+- Les options de saisie détaillée donnent accès aux fonctions historiques.
+
+Les règles métier sont inchangées. Une clôture marque les sous-actions réalisées
+comme auparavant. Les matrices respectent les politiques configurées. Les
+récurrences restent calculées depuis la dernière réalisation ; leurs projections
+ne sont pas des occurrences indépendantes. Les évaluations cibles, dépendances
+et pourcentages non présents dans le modèle ne sont pas inventés.
+
+VALIDATION
+Recette exécutée sous Linux et Chromium, y compris sur l'archive extraite.
+Le double-clic du lanceur Windows n'a pas pu être testé sur un PC Windows.
+Détails : docs/ASTRA-REFONTE.md et recette/astra-validation.json.

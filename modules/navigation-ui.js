@@ -4,28 +4,36 @@
   const GROUPS = [
     {
       id: "overview",
-      label: "Vue d’ensemble",
-      sections: ["dash", "journey", "carto"],
+      label: "Pilotage & stratégie",
+      sections: ["dash", "pil", "rep", "inv"],
     },
     {
-      id: "pilotage",
-      label: "Organisation et pilotage",
-      sections: ["perimeters", "context", "pil", "risks", "actions"],
+      id: "governance",
+      label: "Gouvernance & GRC",
+      sections: [
+        "risks",
+        "compliance",
+        "care",
+        "has",
+        "audit",
+        "proofs",
+        "context",
+        "carto",
+        "journey",
+        "suppliers",
+        "pcra",
+        "ai",
+      ],
     },
     {
-      id: "references",
-      label: "Référentiels et audits",
-      sections: ["compliance", "care", "has", "audit", "proofs"],
+      id: "operations",
+      label: "Opérations & remédiation",
+      sections: ["actions", "recurring", "programs", "ops", "gap", "crrc"],
     },
     {
-      id: "resilience",
-      label: "Continuité et opérations",
-      sections: ["pcra", "ops", "suppliers", "gap", "crrc"],
-    },
-    {
-      id: "resources",
-      label: "Ressources et bilans",
-      sections: ["inv", "rep", "admin"],
+      id: "administration",
+      label: "Administration",
+      sections: ["perimeters", "admin"],
     },
   ];
   function organize(nav) {
@@ -49,10 +57,21 @@
       const context = out.find((s) => s.id === "context");
       // Une seule entrée pour le registre partagé des rôles ; ancienne rubrique conservée par son onglet.
       context.items = context.items.filter((i) => i.id !== "ctx-roles");
-      extract("actions", "Plan d’action et échéances", "ecarts", [
-        "g-ec",
-        "g-plans",
-      ]);
+      extract("actions", "Plans d’action", "ecarts", ["g-ec"]);
+      extract("programs", "Programmes du SMSI", "audit", ["g-plans"]);
+      const programs = out.find((s) => s.id === "programs");
+      const rec = programs.items.find((i) => i.id === "pl-rec");
+      programs.items = programs.items.filter(
+        (i) => !["pl-rec", "pl-gantt"].includes(i.id),
+      );
+      const cal = programs.items.find((i) => i.id === "pl-cal");
+      if (cal) cal.label = "Vue d’ensemble";
+      out.push({
+        id: "recurring",
+        label: "Tâches récurrentes",
+        icon: "audit",
+        items: rec ? [{ ...rec, g: undefined }] : [],
+      });
       extract("compliance", "Conformité et applicabilité", "conf", ["g-conf"]);
       extract("suppliers", "Fournisseurs et accès", "tiers", ["g-sup"]);
       extract("proofs", "Preuves et justificatifs", "rep", ["g-prv"]);
@@ -61,11 +80,10 @@
         roles = perimeters?.items.find((i) => i.id === "perimeter-roles");
       if (roles) {
         perimeters.items = perimeters.items.filter((i) => i.id !== roles.id);
-        pil.groups.push({ id: "g-roles", label: "Rôles et responsabilités" });
-        pil.items.push({
+        perimeters.items.push({
           ...roles,
           label: "Rôles et responsabilités",
-          g: "g-roles",
+          g: undefined,
         });
       }
       pil.label = "Pilotage";
@@ -73,10 +91,11 @@
     }
     const risks = out.find((s) => s.id === "risks"),
       dash = out.find((s) => s.id === "dash");
-    const map = risks?.items.find((i) => i.id === "risk-map"),
-      status = dash?.items.find((i) => i.id === "dmap");
+    const status = dash?.items.find((i) => i.id === "dmap");
     if (risks) {
-      risks.items = risks.items.filter((i) => i.id !== "risk-map");
+      risks.items = risks.items.map((i) =>
+        i.id === "risk-map" ? { ...i, label: "Matrice des risques" } : i,
+      );
       risks.label = "Risques et études";
     }
     if (dash) dash.items = dash.items.filter((i) => i.id !== "dmap");
@@ -98,9 +117,34 @@
           tab: "carto",
           set: { mbView: "process" },
         },
-        ...(map ? [{ ...map, label: "Risques consolidés" }] : []),
       ],
     });
+    const gap = out.find((s) => s.id === "gap");
+    if (gap) {
+      out.push({
+        id: "ai",
+        label: "Gouvernance de l’IA",
+        icon: "ia",
+        items: gap.items
+          .filter((i) => i.g === "g-ia")
+          .map((i) => ({ ...i, g: undefined })),
+      });
+      gap.items = gap.items
+        .filter((i) => i.g === "g-app")
+        .map((i) => ({ ...i, g: undefined }));
+      delete gap.groups;
+      gap.label = "Écarts applicatifs";
+    }
+    if (dash) dash.label = "Cockpit RSSI";
+    const actions = out.find((s) => s.id === "actions");
+    if (actions) {
+      actions.items = actions.items.map((i) => ({
+        ...i,
+        label: i.id === "act" ? "Sous-actions" : "Registre & vues",
+        g: undefined,
+      }));
+      delete actions.groups;
+    }
     const prefs = U?.api().ui.navOrder || [];
     const order = GROUPS.flatMap((g) => {
       const known = prefs.filter((id) => g.sections.includes(id));
@@ -206,10 +250,9 @@
       mobile.setAttribute("aria-expanded", "false");
     }
     const sideBrand = document.querySelector(".side-brand b");
-    if (sideBrand) sideBrand.textContent = "Pilotage";
+    if (sideBrand) sideBrand.textContent = "ASTRA";
     const sideSubtitle = document.querySelector(".side-brand small");
-    if (sideSubtitle)
-      sideSubtitle.textContent = "Cybersécurité · Qualité · Continuité";
+    if (sideSubtitle) sideSubtitle.textContent = "Gouvernance cybersécurité";
     const foot = document.querySelector(".side-foot span");
     if (foot) foot.textContent = "Pilotage des référentiels et des activités";
   }

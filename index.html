@@ -926,6 +926,7 @@ dialog.sheet { box-shadow:-16px 0 50px rgba(27,54,37,.12); }
 <link rel="stylesheet" href="modules/df.css">
 <link rel="stylesheet" href="modules/integration.css">
 <link rel="stylesheet" href="modules/carto.css">
+<link rel="stylesheet" href="modules/astra.css">
 </head>
 <body>
 <div class="app">
@@ -998,6 +999,7 @@ dialog.sheet { box-shadow:-16px 0 50px rgba(27,54,37,.12); }
 <script src="modules/navigation-ui.js"></script>
 <script src="modules/carto-core.js"></script>
 <script src="modules/carto-ui.js"></script>
+<script src="modules/astra-ui.js"></script>
 <script src="lib/jszip.min.js"></script>
 <script>
 (function(){
@@ -1015,6 +1017,7 @@ function saveUI(){try{localStorage.setItem(UIKEY,JSON.stringify({tab:ui.tab,peri
 const LV={certain:{l:'Certain',o:0},tres:{l:'Très probable',o:1},probable:{l:'Probable',o:2},socle:{l:'Systématique',o:3},faible:{l:'Peu probable',o:4}};
 const PREP={'':'À préparer',encours:'En cours',pret:'Prête'};
 const STATUTS=['Ouvert','En cours','Clos'];
+function setFindingStatus(f,status){if(RO)throw Error('Mode lecture seule.');if(!STATUTS.includes(status))throw Error('Statut invalide.');f.status=status;if(status==='Clos')(f.tasks||[]).forEach(x=>x.done=true)}
 const TYPES=['NC maj','NC min','PS','PP','Remarque'];
 const AGROUP={'A-5':'Organisationnelles','A-6':'Personnes','A-7':'Physiques','A-8':'Technologiques'};
 
@@ -1341,7 +1344,7 @@ function viewActions(){
     <td class="tl">${esc(o.fd.text||'')}</td><td class="tl">${esc(o.fd.owner||'–')}</td>
     <td style="white-space:nowrap">${o.fd.due?`<span class="${late(o)?'warn':''}">${esc(fmtShort(o.fd.due))}</span>`:'–'}</td><td class="note" style="white-space:nowrap">${esc(fmtCreated(o.x,true)||'–')}</td></tr>`).join('');
   const todo=all.filter(o=>!o.x.done).length;
-  return `<div class="sec-head"><div><h2>Plan d'actions</h2><p>Toutes les actions des écarts, triées par échéance. Cocher une action la marque comme réalisée dans l'écart correspondant.</p></div></div>
+  return `<div class="sec-head"><div><h2>Sous-actions des écarts</h2><p>Toutes les actions des écarts, triées par échéance. Cocher une action la marque comme réalisée dans l'écart correspondant.</p></div></div>
     <div class="kpis"><div><b>${todo}</b><span>à faire</span></div><div><b>${all.length-todo}</b><span>réalisées</span></div><div><b>${all.filter(late).length}</b><span>en retard</span></div><div><b>${pct(all.length-todo,all.length)} %</b><span>avancement</span></div></div>
     <div class="filters">${seg2('actF',f,[['todo','À faire'],['done','Réalisées'],['all','Toutes']])}<span class="count-note">${L.length} action${L.length>1?'s':''}</span></div>
     <div class="tblwrap"><table class="cov acts"><colgroup><col style="width:44px"><col><col style="width:130px"><col style="width:28%"><col style="width:120px"><col style="width:100px"><col style="width:90px"></colgroup>
@@ -5148,7 +5151,7 @@ document.addEventListener('input',e=>{
 });
 document.addEventListener('change',e=>{
   const t=e.target;
-  if(t.dataset.fd&&t.dataset.f&&t.dataset.rr){const f=S.findings.find(x=>x.id===t.dataset.fd);f[t.dataset.f]=t.dataset.f==='year'?(parseInt(t.value)||f.year):t.value;if(t.dataset.f==='status'&&t.value==='Clos')(f.tasks||[]).forEach(x=>x.done=true);touch(true);return}
+  if(t.dataset.fd&&t.dataset.f&&t.dataset.rr){const f=S.findings.find(x=>x.id===t.dataset.fd);if(t.dataset.f==='status')setFindingStatus(f,t.value);else f[t.dataset.f]=t.dataset.f==='year'?(parseInt(t.value)||f.year):t.value;touch(true);return}
   if(t.dataset.sl&&t.dataset.f&&t.dataset.rr){const s=slotById(t.dataset.sl);s[t.dataset.f]=t.value;if(t.dataset.f==='start'&&mins(s.end)<=mins(s.start))s.end=toT(Math.min(mins(s.start)+60,1439));touch(true);return}
   if(t.dataset.day&&t.dataset.f){const d=S.plan.days.find(x=>x.id===t.dataset.day);d.date=t.value;if(d===S.plan.days[0]&&t.value&&!S.nextDate)S.nextDate=t.value;touch(true);return}
   if(t.dataset.plan){S.plan[t.dataset.plan]=t.value;touch(true);return}
@@ -5184,6 +5187,7 @@ const dfIntegration=window.LegacyDFUI.install({
 const lxIntegration=window.LegacyIntegrationUI.install({
   getState:()=>S, replaceState:state=>{S=migrate3(state)},ui,TABS,NAV_DEF,
   readOnly:()=>RO,touch,render:(...args)=>render(...args),saveUI,openSheet,
+  astra:{navigation:()=>navDef(),incOpen,recNext,recState,recFreq,recOccurrences,isoD,ddaStats,reqEffective,reqPresumed,reqInScope,fwActive,fwStats,setFindingStatus,planState,planLate,PLAN_T,openControl:id=>{const b=document.createElement("button");b.dataset.act="open";b.dataset.id=id;document.body.append(b);b.click();b.remove()}},
   toast,confirm:askModal,mapTile:(...args)=>mtile(...args).replace("data-act=","data-lx-act="),df:dfIntegration,navigate:(tab,set={})=>{ui.tab=tab;Object.assign(ui,set);render();saveUI()}
 });
 const dfNav=navDef;

@@ -1,15 +1,17 @@
-# Branche legacy de test — lots D et F
+# Branche legacy — refonte ASTRA
 
 L’utilisateur a autorisé le 11 octobre 2026 la publication de la copie legacy
 locale sur une branche GitHub dédiée, pour permettre son téléchargement et ses tests.
 Cette instruction remplace l’interdiction initiale de publication pour cette livraison.
 
-- Branche exclusive de cette copie : `legacy/test-lots-d-f`.
+- Branche exclusive de travail et de livraison : `legacy`, conformément à la demande
+  explicite du 12 octobre 2026. La refonte ASTRA est intégrée sur cette branche.
 - Ne modifier, fusionner ni réécrire aucune autre branche. Conserver `main` et
   `feature/gpt6-evolution-smsi-grc` dans leur état existant.
 - Historique indépendant : aucune PR de fusion de cette branche vers l’application
   principale ; aucune CI, release, image Docker ou mise à jour déployée par cette livraison.
-- Copie HTML/CSS/JavaScript/JSON : préserver le menu, le style Sauge et les parcours.
+- Copie HTML/CSS/JavaScript/JSON : appliquer la navigation et le design ASTRA
+  demandés par l’utilisateur, en préservant les fonctions et parcours métier.
 - Le périmètre actuel inclut la refonte demandée : périmètres, parcours guidé, CaRE D2, preuves financières et PCRA (BIA/PCA/PRA/exercices), puis navigation. Exécuter les phases dans cet ordre. I et J restent exclus.
 - Il inclut désormais l’administration (sans sauvegarde ni mise à jour), les rôles de base,
   les références internes automatiques, le jeu FICTIF et le registre central des risques.

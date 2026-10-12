@@ -6,6 +6,7 @@
     adapter = null,
     saving = false,
     pending = null,
+    acknowledgedState = null,
     broken = false;
   const esc = (s) =>
     String(s ?? "").replace(
@@ -101,6 +102,7 @@
     await authenticate();
     const data = await request("/api/state");
     version = data.version;
+    acknowledgedState = JSON.parse(JSON.stringify(data.state));
     return data.state;
   }
   function ready() {
@@ -126,6 +128,25 @@
       el.classList.toggle("lx-error", error);
     }
   }
+  // Réconcilier uniquement les identifiants attribués par le serveur, jamais les
+  // champs métier saisis depuis l'envoi ni les éléments supprimés entre-temps.
+  function inheritInternalIds(target, source) {
+    if (!target || !source || typeof target !== "object" || typeof source !== "object") return;
+    if (Array.isArray(target)) {
+      if (!Array.isArray(source)) return;
+      const byId = new Map(source.filter((row) => row && row.id != null).map((row) => [row.id, row]));
+      for (const row of target) {
+        if (row && row.id != null) inheritInternalIds(row, byId.get(row.id));
+      }
+      return;
+    }
+    if (target.id != null && target.id === source.id && !target.internalId && source.internalId) {
+      target.internalId = source.internalId;
+    }
+    for (const key of Object.keys(target)) {
+      if (key !== "internalId" && Object.hasOwn(source, key)) inheritInternalIds(target[key], source[key]);
+    }
+  }
   async function drain() {
     if (saving || !pending || broken) return;
     saving = true;
@@ -138,7 +159,9 @@
         body: JSON.stringify({ version, state: snapshot }),
       });
       version = data.version;
-      if (!pending) adapter?.ack(data.state);
+      acknowledgedState = JSON.parse(JSON.stringify(data.state));
+      if (pending) inheritInternalIds(pending, acknowledgedState);
+      else adapter?.ack(data.state);
       status("Sauvegardé sur le serveur");
     } catch (e) {
       broken = true;
@@ -159,14 +182,15 @@
   function save(state) {
     if (!session) return Promise.resolve();
     pending = JSON.parse(JSON.stringify(state));
+    inheritInternalIds(pending, acknowledgedState);
     return drain();
   }
   async function flush() {
+    while (saving) await new Promise((r) => setTimeout(r, 40));
     if (broken)
       throw Error(
         "Sauvegarde en attente : exportez votre saisie avant de recharger.",
       );
-    while (saving) await new Promise((r) => setTimeout(r, 40));
     if (pending) await drain();
   }
   async function refresh() {
@@ -174,6 +198,7 @@
     const data = await request("/api/state");
     if (data.version !== version) {
       version = data.version;
+      acknowledgedState = JSON.parse(JSON.stringify(data.state));
       adapter?.replace(data.state);
     }
     return data;

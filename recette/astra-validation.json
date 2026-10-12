@@ -1,0 +1,77 @@
+{
+  "date": "2026-10-12T11:33:51.733266+00:00",
+  "branch": "legacy",
+  "baseCommit": "4bcdf60c629b50466aa40f1a98d67346a4641359",
+  "environment": {
+    "os": "Linux",
+    "browser": "Chromium",
+    "launcher": "sh demarrer.sh --sans-navigateur",
+    "data": "fixtures synthétiques, répertoire temporaire isolé"
+  },
+  "syntax": {
+    "javascriptModules": 24,
+    "inlineScripts": 1,
+    "pythonFiles": 11,
+    "passed": true
+  },
+  "javascript": {
+    "command": "node --test tests/*.test.cjs",
+    "passed": 54,
+    "failed": 0
+  },
+  "pythonServer": {
+    "command": "python -m unittest discover -s tests -p 'server*test.py'",
+    "passed": 30,
+    "failed": 0
+  },
+  "browser": {
+    "command": "ASTRA_LAUNCHER=sh node tests/astra-browser.cjs",
+    "testedFromExtractedArchive": true,
+    "passed": 14,
+    "checks": [
+      "Cockpit et lancement local",
+      "Données persistées par le moteur existant",
+      "Tableau de bord historique conservé",
+      "Matrice, sélection et fiche du risque",
+      "Conformité, hiérarchie et détail",
+      "Actions : Kanban et changement de statut partagé",
+      "Actions : Planning, Calendrier, Gantt et Synthèse",
+      "Action : édition existante et persistance",
+      "Récurrences : vues et détail d’une projection",
+      "Réalisation récurrente : historique et prochaine échéance",
+      "Création et saisie rapide de programme persistées malgré une réponse retardée",
+      "Navigation complète sans erreur de rendu",
+      "Responsive 390 / 768 / 1440 / 1920 et thème sombre",
+      "Compte lecteur : consultation et absence de contrôles de mutation"
+    ],
+    "errors": [],
+    "navigationDestinations": 100,
+    "viewportWidths": [
+      390,
+      768,
+      1440,
+      1920
+    ]
+  },
+  "saveQueueRegression": {
+    "before": "HTTP 422 : identifiant interne immuable, reproduction avec réponse serveur retardée",
+    "after": "création, édition et rechargement depuis le serveur réussis ; suppressions conservées et altération explicite refusée"
+  },
+  "testedCandidate": {
+    "sha256": "809b35209dbfd2c6184ce88d447fe0ac5e52302e24132dbe417149c77c1dfbfc",
+    "zipIntegrity": "OK",
+    "manifestHashes": "OK"
+  },
+  "notTested": [
+    "Exécution native Windows et macOS",
+    "Données réelles de l’utilisateur",
+    "Audit exhaustif de chaque formulaire spécialisé",
+    "Mesure de charge avec grands volumes"
+  ],
+  "modelLimits": "Voir docs/ASTRA-REFONTE.md : cibles, dépendances de planification et occurrences indépendantes non ajoutées au modèle existant.",
+  "integration": {
+    "fromSavedAstraCommit": "3f711d67d861e791b1ec39e9be8d72a14482f63e",
+    "method": "Application des modifications directement sur legacy, sans merge/rebase/cherry-pick",
+    "runtimeUnchanged": true
+  }
+}
