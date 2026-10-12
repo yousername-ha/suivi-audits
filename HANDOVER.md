@@ -29,7 +29,7 @@ Cahier de consignes « Unification et évolution de l’application SMSI/GRC ».
 - Contrôles : Vitest shared, ui, web et API sur PostgreSQL 17 et Playwright complet sur la pile Docker locale ; puis,
   le dépôt étant devenu public, [CI complète verte sur `6e921fe`](https://github.com/yousername-ha/suivi-audits/actions/runs/38146426254)
   (déclenchement manuel, sans PR). Détail : `PROJECT_STATUS.md`.
-- Fusionné dans `main` (11/10) par les PR #14 et #15 ; `main` = `claude-suivi-smsi`. Reste : étiquette `v3.1.0`, nettoyage des branches (anciennes branches sous `archive/*`, branche `legacy`), validation du RSSI sur son serveur.
+- Fusionné dans `main` (11/10) par les PR #14 et #15 ; `main` = `claude-suivi-smsi`. Publiée le 12/10 : étiquette et [release v3.1.0](https://github.com/yousername-ha/suivi-audits/releases/tag/v3.1.0) (images signées) ; branches nettoyées (`main`, `claude-suivi-smsi`, `legacy` ; anciennes branches sous `archive/*`). Reste : validation du RSSI sur son serveur.
 - Aucune donnée réelle ni aucun secret dans le dépôt.
 
 ## État et preuves
