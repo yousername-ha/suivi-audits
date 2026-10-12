@@ -110,8 +110,16 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Paquet partagé (jeton, format legacy, couverture du contrat, parité avec l'outil historique)
         run: pnpm --filter @suivi/shared test
-      - name: API (sécurité, concurrence, migrations v2 vers v3, import legacy, temps réel)
+      - name: API (sécurité, concurrence, migrations v2 vers v3, import legacy, temps réel, performance sur 10 000 risques)
+        env:
+          PERF_OUT: ${{ runner.temp }}/performance/mesures.json
         run: pnpm --filter @suivi/api test
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: performance-mesures
+          path: ${{ runner.temp }}/performance/
+          if-no-files-found: ignore
       - name: Construction du paquet partagé pour les consommateurs web
         run: pnpm --filter @suivi/shared build
       - name: Interface (configuration des modules et invalidation des données privées)
@@ -229,6 +237,20 @@ jobs:
           path: |
             tests/e2e/playwright-report/
             tests/e2e/test-results/
+
+      - name: Recette automatisée du serveur (scripts/recette-serveur.sh, avec sauvegarde chiffrée et vérification de l'archive)
+        timeout-minutes: 10
+        run: |
+          set -e
+          umask 077
+          head -c 24 /dev/urandom | base64 > "$RUNNER_TEMP/passphrase-recette"
+          sudo BACKUP_PASSPHRASE_FILE="$RUNNER_TEMP/passphrase-recette" ./scripts/recette-serveur.sh --version ci --avec-sauvegarde --sortie "$RUNNER_TEMP/recette-serveur"
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: recette-serveur
+          path: ${{ runner.temp }}/recette-serveur/
+          if-no-files-found: ignore
 
       - name: Mise à jour intégrée réelle et retour arrière après migration (publications locales de recette)
         timeout-minutes: 15

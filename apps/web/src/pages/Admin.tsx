@@ -112,7 +112,7 @@ function Sessions() {
   return (
     <Card withBorder p={0}>
       <ErrorAlert error={q.error} />
-      <div className="table-wrap">
+      <div className="table-wrap" role="region" aria-label="Comptes" tabIndex={0}>
         <Table>
           <Table.Thead>
             <Table.Tr>
@@ -212,7 +212,7 @@ function Audit() {
       </Text>
       <ErrorAlert error={r.error} />
       <Card withBorder p={0}>
-        <div className="table-wrap">
+        <div className="table-wrap" role="region" aria-label="Journal" tabIndex={0}>
           <Table striped>
             <Table.Thead>
               <Table.Tr>
@@ -263,7 +263,7 @@ function Versions() {
       </Text>
       <ErrorAlert error={q.error} />
       <Card withBorder p={0}>
-        <div className="table-wrap">
+        <div className="table-wrap" role="region" aria-label="Versions de l’application" tabIndex={0}>
           <Table>
             <Table.Thead>
               <Table.Tr>
@@ -418,7 +418,7 @@ function Exploitation() {
           Historique des mises à jour
         </Title>
         {s.misesAJour.length ? (
-          <div className="table-wrap">
+          <div className="table-wrap" role="region" aria-label="Historique des mises à jour" tabIndex={0}>
             <Table>
               <Table.Thead>
                 <Table.Tr>
@@ -506,7 +506,7 @@ function System() {
           Détails techniques
         </Title>
         <ErrorAlert error={q.error} />
-        <div className="table-wrap">
+        <div className="table-wrap" role="region" aria-label="Détails techniques" tabIndex={0}>
           <Table>
             <Table.Tbody>
               {rows.map(([k, v]) => (

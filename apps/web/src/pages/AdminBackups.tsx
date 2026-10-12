@@ -117,7 +117,7 @@ export function BackupsPanel() {
           </Text>
         )}
         {!!q.data?.jobs.length && (
-          <div className="table-wrap">
+          <div className="table-wrap" role="region" aria-label="Demandes de sauvegarde" tabIndex={0}>
             <Table>
               <Table.Thead>
                 <Table.Tr>

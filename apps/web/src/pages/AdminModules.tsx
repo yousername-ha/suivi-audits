@@ -92,7 +92,7 @@ export function ModulesPanel() {
           Administration et paramètres sont protégés.
         </Alert>
         <ErrorAlert error={q.error || history.error || error} />
-        <div className="table-wrap">
+        <div className="table-wrap" role="region" aria-label="Modules" tabIndex={0}>
           <Table>
             <Table.Thead>
               <Table.Tr>

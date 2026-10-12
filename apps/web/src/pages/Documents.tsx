@@ -531,7 +531,7 @@ function DocumentDetail({
 function VersionsTable({ d }: { d: DocumentDetailOut }) {
   const id = d.id;
   return (
-    <div className="table-wrap">
+    <div className="table-wrap" role="region" aria-label="Versions du document" tabIndex={0}>
       <Table>
         <Table.Tbody>
           {d.versions.map((v) => (
@@ -648,7 +648,7 @@ function LinkList({ canWrite }: { canWrite: boolean }) {
       </Group>
       <ErrorAlert error={list.error} />
       <Card withBorder p={0}>
-        <div className="table-wrap">
+        <div className="table-wrap" role="region" aria-label="Liens du document" tabIndex={0}>
           <Table highlightOnHover>
             <Table.Tbody>
               {(list.data ?? []).map((l) => (
