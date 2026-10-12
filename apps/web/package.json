@@ -18,7 +18,7 @@
     "@suivi/shared": "workspace:*",
     "@suivi/ui": "workspace:*",
     "@tanstack/react-query": "5.104.1",
-    "fflate": "0.8.2",
+    "fflate": "0.8.3",
     "qrcode-generator": "1.5.2",
     "react": "19.3.0",
     "react-dom": "19.3.0",
@@ -29,6 +29,6 @@
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "5.2.0",
     "vite": "7.3.7",
-    "vitest": "3.2.7"
+    "vitest": "4.1.11"
   }
 }

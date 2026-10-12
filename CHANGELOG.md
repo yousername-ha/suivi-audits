@@ -5,12 +5,14 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 ## [Non publié]
 
 ### Notes de mise à jour
-- Aucune migration, aucune action sur le serveur, aucun changement d'apparence : le graphisme est en cours de travail (branche `legacy`), les correctifs visuels d'accessibilité (contrastes, liens soulignés, onglet actif sombre) sont donc reportés ; ils restent disponibles dans l'historique (commit `e8af11a`) et consignés comme écarts connus du test d'accessibilité.
+- Aucune migration, aucune action sur le serveur, aucun changement d'apparence (l'interface est reconstruite avec fflate 0.8.3) : le graphisme est en cours de travail (branche `legacy`), les correctifs visuels d'accessibilité (contrastes, liens soulignés, onglet actif sombre) sont donc reportés ; ils restent disponibles dans l'historique (commit `e8af11a`) et consignés comme écarts connus du test d'accessibilité.
 
 ### Modifié
+- Sécurité des dépendances : Vitest 3.2.7 → 4.1.11 (outil de test, développement seulement : failles « tinypool » critiques et « @vitest/mocker » modérée) et fflate 0.8.2 → 0.8.3 (lecture et écriture des classeurs dans l'interface : boucle infinie possible sur une archive ZIP64 malformée). `pnpm audit` ne signale plus aucune faille.
 - Accessibilité (WCAG 2.1 AA), correctifs sans effet visuel relevés par le contrôle automatique axe-core : lien d'accueil nommé sur téléphone ; tableaux à défilement horizontal atteignables au clavier et annoncés comme régions.
 
 ### Ajouté
+- CI : étape « Audit des dépendances » (`pnpm audit --audit-level=moderate`) dans le job Qualité, bloquante : une faille connue de gravité modérée ou plus empêche la fusion.
 - Recette automatisée ([ADR 0029](docs/adr/0029-recette-automatisee.md), [mode d'emploi](docs/05_RECETTE/RECETTE_AUTOMATISEE.md)) : `scripts/recette-serveur.sh` (contrôles du serveur après installation ou mise à jour, rapport sans secret), test de performance sur 10 000 risques fictifs, test d'accessibilité automatique sur 14 écrans (sept écarts visuels connus, reportés). Nouvelle dépendance de test : `@axe-core/playwright` 4.13.0 (développement seulement).
 
 ## [3.1.0] — 2026-10-11

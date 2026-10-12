@@ -30,6 +30,8 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Audit des dépendances (aucune faille connue, gravité modérée ou plus)
+        run: pnpm audit --audit-level=moderate
       - name: ESLint
         run: pnpm lint
       - name: Prettier
