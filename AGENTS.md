@@ -38,6 +38,12 @@ Cette instruction remplace l’interdiction initiale de publication pour cette l
 Les résultats historiques dans `recette/` concernent la recette locale originale.
 Le contrôle de préparation de la branche est documenté séparément.
 
+## Cartographie dynamique — restriction explicite de l’utilisateur
+
+- Ne modifier ni le fonctionnement ni l’interface de la cartographie dynamique
+  du module cartographique. Cette restriction prévaut sur le périmètre de refonte
+  général décrit plus haut. Les propositions visuelles restent isolées dans `samples/`.
+
 ## Historique des aperçus demandé par l’utilisateur
 
 - Conserver les captures d’interface dans `samples/` sur `legacy`.
