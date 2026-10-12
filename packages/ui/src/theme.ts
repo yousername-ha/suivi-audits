@@ -1,7 +1,6 @@
 /* Thème Mantine de la charte (clair et sombre). Ses variables CSS sont écrites dans un fichier statique
    (apps/web/scripts/mantine-css-vars.ts) : CSP stricte, aucune balise <style> injectée. */
 import {
-  Anchor,
   Badge,
   Button,
   Card,
@@ -26,9 +25,7 @@ import {
   VERT,
   VIOLET,
   CARTE,
-  ETATS,
   variablesCarte,
-  type EtatCouleur,
 } from './tokens.ts';
 
 export const theme = createTheme({
@@ -51,27 +48,9 @@ export const theme = createTheme({
     Card: Card.extend({ defaultProps: { radius: 'lg', withBorder: true } }),
     Button: Button.extend({ defaultProps: { radius: 'md' } }),
     Badge: Badge.extend({ defaultProps: { radius: 'sm' } }),
-    // Un lien ne doit pas se distinguer par la seule couleur (WCAG 1.4.1) : souligné en permanence.
-    Anchor: Anchor.extend({ defaultProps: { underline: 'always' } }),
     Table: Table.extend({ defaultProps: { verticalSpacing: 'xs', highlightOnHover: true } }),
   },
 });
-
-/** Couleurs d'état : fonds pleins, survol, texte et contour assombris pour le contraste (voir ETATS dans tokens.ts). */
-const variablesEtats = (mode: 'clair' | 'sombre'): Record<string, string> =>
-  Object.fromEntries(
-    (Object.keys(ETATS) as EtatCouleur[]).flatMap((k) => {
-      const e = ETATS[k];
-      const communes: [string, string][] = [
-        [`--mantine-color-${k}-filled`, e.fond],
-        [`--mantine-color-${k}-filled-hover`, e.survol],
-      ];
-      // En sombre, le texte et le contour clairs de Mantine (nuances 2 à 4) sont déjà très contrastés.
-      return mode === 'clair'
-        ? [...communes, [`--mantine-color-${k}-light-color`, e.texte], [`--mantine-color-${k}-outline`, e.texte]]
-        : communes;
-    }),
-  );
 
 /** Variables CSS : celles de Mantine, ajustées (fonds, bordures, texte secondaire) et complétées par la charte. */
 export const cssVariablesResolver: CSSVariablesResolver = (t) => {
@@ -95,7 +74,6 @@ export const cssVariablesResolver: CSSVariablesResolver = (t) => {
       '--suivi-marque-fond': VERT[8],
       '--suivi-qr-fond': '#FFFFFF',
       '--suivi-trait': GRIS[3],
-      ...variablesEtats('clair'),
       ...variablesCarte(CARTE.clair),
     },
     dark: {
@@ -110,7 +88,6 @@ export const cssVariablesResolver: CSSVariablesResolver = (t) => {
       '--suivi-marque-fond': VERT[7],
       '--suivi-qr-fond': '#FFFFFF',
       '--suivi-trait': SOMBRE[5],
-      ...variablesEtats('sombre'),
       ...variablesCarte(CARTE.sombre),
     },
   };

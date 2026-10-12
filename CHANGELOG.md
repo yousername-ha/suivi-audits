@@ -5,13 +5,13 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 ## [Non publié]
 
 ### Notes de mise à jour
-- Aucune migration ni action sur le serveur. Les contrastes de couleur de l'interface sont renforcés (badges et boutons pleins, textes des variantes légères, onglet actif en mode sombre) : l'aspect change légèrement, sans changement de fonctionnement.
+- Aucune migration, aucune action sur le serveur, aucun changement d'apparence : le graphisme est en cours de travail (branche `legacy`), les correctifs visuels d'accessibilité (contrastes, liens soulignés, onglet actif sombre) sont donc reportés ; ils restent disponibles dans l'historique (commit `e8af11a`) et consignés comme écarts connus du test d'accessibilité.
 
 ### Modifié
-- Accessibilité (WCAG 2.1 AA), défauts relevés par le contrôle automatique axe-core : contraste du texte sur les fonds d'état (rouge, orange, jaune, vert, sarcelle, bleu) et sur l'onglet actif en mode sombre ; liens toujours soulignés (distinction autrement que par la couleur) ; lien d'accueil nommé sur téléphone ; tableaux à défilement horizontal atteignables au clavier et annoncés comme régions.
+- Accessibilité (WCAG 2.1 AA), correctifs sans effet visuel relevés par le contrôle automatique axe-core : lien d'accueil nommé sur téléphone ; tableaux à défilement horizontal atteignables au clavier et annoncés comme régions.
 
 ### Ajouté
-- Recette automatisée ([ADR 0029](docs/adr/0029-recette-automatisee.md), [mode d'emploi](docs/05_RECETTE/RECETTE_AUTOMATISEE.md)) : `scripts/recette-serveur.sh` (contrôles du serveur après installation ou mise à jour, rapport sans secret), test de performance sur 10 000 risques fictifs, test d'accessibilité automatique sur 14 écrans. Nouvelle dépendance de test : `@axe-core/playwright` 4.13.0 (développement seulement).
+- Recette automatisée ([ADR 0029](docs/adr/0029-recette-automatisee.md), [mode d'emploi](docs/05_RECETTE/RECETTE_AUTOMATISEE.md)) : `scripts/recette-serveur.sh` (contrôles du serveur après installation ou mise à jour, rapport sans secret), test de performance sur 10 000 risques fictifs, test d'accessibilité automatique sur 14 écrans (sept écarts visuels connus, reportés). Nouvelle dépendance de test : `@axe-core/playwright` 4.13.0 (développement seulement).
 
 ## [3.1.0] — 2026-10-11
 
