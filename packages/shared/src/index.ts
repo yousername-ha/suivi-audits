@@ -19,3 +19,4 @@ export * from './pilotage.js';
 export * from './tableau-de-bord.js';
 export * from './liens.js';
 export * from './risques.js';
+export * from './fournisseurs.js';

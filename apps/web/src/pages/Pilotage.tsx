@@ -23,6 +23,9 @@ import { Decision } from '../pilotage/Decision';
 import { Members } from '../pilotage/Members';
 import { Bibliotheque } from '../pilotage/Bibliotheque';
 import { Perimetres } from '../pilotage/Perimetres';
+import { Fournisseurs } from '../pilotage/Fournisseurs';
+import { CriteresFournisseurs } from '../pilotage/CriteresFournisseurs';
+import { FournisseursPerimetre } from '../pilotage/FournisseursPerimetre';
 import { Rapprochements } from '../pilotage/Rapprochements';
 import { Couverture } from '../pilotage/Couverture';
 import { CorrespondancesBibliotheque } from '../pilotage/CorrespondancesBibliotheque';
@@ -392,6 +395,11 @@ export function PilotagePage() {
             {section === 'rapprochements' && can('conformite', 'lire') && smsi && <Rapprochements smsi={smsi} />}
             {section === 'couverture' && can('conformite', 'lire') && smsi && <Couverture smsi={smsi} />}
             {section === 'correspondances-bibliotheque' && can('conformite', 'lire') && <CorrespondancesBibliotheque />}
+            {section === 'fournisseurs' && can('fournisseurs', 'lire') && <Fournisseurs />}
+            {section === 'criteres-fournisseurs' && can('fournisseurs', 'lire') && <CriteresFournisseurs />}
+            {section === 'fournisseurs-perimetre' && can('fournisseurs', 'lire') && smsi && (
+              <FournisseursPerimetre smsi={smsi} />
+            )}
             {section === 'perimetres' && can('pilotage', 'lire') && (
               <Perimetres
                 affiche={smsi}

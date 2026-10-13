@@ -70,7 +70,7 @@ const STATUTS: Record<Correspondance['status'], { etat: Etat; libelle: string }>
   withdrawn: { etat: 'neutre', libelle: 'Retirée' },
 };
 
-function ExtremiteChamps({
+export function ExtremiteChamps({
   titre,
   valeur,
   referentiels,

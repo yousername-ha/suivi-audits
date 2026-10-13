@@ -39,6 +39,14 @@ export const PILOTAGE_NAV = [
     ],
   },
   {
+    label: 'Fournisseurs',
+    items: [
+      { id: 'fournisseurs', label: 'Fournisseurs de l’organisation', module: 'fournisseurs' },
+      { id: 'criteres-fournisseurs', label: 'Critères d’évaluation des fournisseurs', module: 'fournisseurs' },
+      { id: 'fournisseurs-perimetre', label: 'Fournisseurs du périmètre', module: 'fournisseurs' },
+    ],
+  },
+  {
     label: 'Risques',
     items: [
       { id: 'risques', label: 'Registre des risques', module: 'pilotage' },

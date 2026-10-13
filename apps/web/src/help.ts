@@ -97,6 +97,18 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
   },
   {
+    id: 'fournisseurs-organisation',
+    title: 'Fournisseurs de l’organisation',
+    permission: 'fournisseurs:lire',
+    link: '/pilotage/fournisseurs',
+    steps: [
+      'Les fournisseurs et leurs évaluations appartiennent à l’organisation, pas à un périmètre : un fournisseur évalué l’est de la même façon dans tous les périmètres où il est rattaché. Le registre est celui de l’outil de suivi ; vous pouvez y ajouter un fournisseur, le reste de sa fiche se complète dans l’outil de suivi.',
+      'Rubrique « Critères d’évaluation des fournisseurs » : les critères sont définis par votre organisme (aucun n’est fourni, ni note ni seuil). Chaque critère a des usages tirés de l’ISO 9001:2015 8.4.1 (sélection, évaluation, surveillance, réévaluation) et peut viser des exigences des référentiels de la bibliothèque.',
+      'Évaluer : choisissez les critères retenus et indiquez pour chacun « Répond », « Ne répond pas » ou « Non évalué », avec un résultat libre. Une évaluation enregistrée ne se modifie plus ; la plus récente est la courante, les autres restent dans l’historique. Une date de réévaluation est facultative.',
+      'Périmètres : rattachez un fournisseur à un ou plusieurs périmètres sans copier son évaluation ; « Fournisseurs du périmètre » les liste avec l’évaluation courante et ceux à réévaluer. Retirer un rattachement ne supprime ni le fournisseur ni ses évaluations.',
+    ],
+  },
+  {
     id: 'parcours-pilotage',
     title: 'Parcours guidé',
     permission: 'pilotage:lire',

@@ -15,6 +15,6 @@ describe('guide du socle historique', () => {
   it('un lecteur limité aux fournisseurs ne reçoit pas les rubriques des autres modules', () => {
     const permissions: readonly string[] = ['fournisseurs:lire'];
     const permitted = HELP_ARTICLES.filter((a) => !a.permission || permissions.includes(a.permission));
-    expect(permitted.map((a) => a.id)).toEqual(['historique-fournisseurs', 'compte']);
+    expect(permitted.map((a) => a.id)).toEqual(['fournisseurs-organisation', 'historique-fournisseurs', 'compte']);
   });
 });
