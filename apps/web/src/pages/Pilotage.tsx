@@ -21,6 +21,7 @@ import { BusinessRegistry } from '../pilotage/Registry';
 import { RecordEditor } from '../pilotage/RecordEditor';
 import { Decision } from '../pilotage/Decision';
 import { Members } from '../pilotage/Members';
+import { Perimetres } from '../pilotage/Perimetres';
 import { Journey } from '../pilotage/Journey';
 import { Relations } from '../grc/Relations';
 import { pilotageReport } from '../pilotage/report';
@@ -142,6 +143,20 @@ export function PilotagePage() {
     queryFn: () => get<{ definition: BusinessPolicy }>(`/api/grc/${smsi}/policy`),
     enabled: !!smsi,
   });
+  const chooseScope = (v: string | null) => {
+    setSelected(v);
+    try {
+      if (v) sessionStorage.setItem('pilotage-scope', v);
+      else sessionStorage.removeItem('pilotage-scope');
+    } catch {
+      /* Stockage facultatif : le choix reste actif en mémoire. */
+    }
+    setOpened(false);
+    setDecision(null);
+    setEvaluation(null);
+    setRelation(null);
+    setSchedule(null);
+  };
   const config = REGISTERS[section];
   const open = (o: GrcObject) => {
     setEditing(o);
@@ -203,20 +218,7 @@ export function PilotagePage() {
             description="Les accès existants sont conservés."
             data={scopes.data!.map((s) => ({ value: s.id, label: s.name }))}
             value={smsi ?? null}
-            onChange={(v) => {
-              setSelected(v);
-              try {
-                if (v) sessionStorage.setItem('pilotage-scope', v);
-                else sessionStorage.removeItem('pilotage-scope');
-              } catch {
-                /* Stockage facultatif : le choix reste actif en mémoire. */
-              }
-              setOpened(false);
-              setDecision(null);
-              setEvaluation(null);
-              setRelation(null);
-              setSchedule(null);
-            }}
+            onChange={chooseScope}
           />
         )}
         {!allowed && <Text>Vous ne disposez pas du droit de consulter cette rubrique.</Text>}
@@ -379,6 +381,15 @@ export function PilotagePage() {
                   </Card>
                 )}
               </>
+            )}
+            {section === 'perimetres' && can('pilotage', 'lire') && (
+              <Perimetres
+                affiche={smsi}
+                onChoisir={(id) => {
+                  chooseScope(id);
+                  navigate('/pilotage/synthese');
+                }}
+              />
             )}
             {section === 'rappels' && <Reminders smsi={smsi} onOpen={open} />}
             {!config && !PILOTAGE_LABELS[section] && <Text>Rubrique introuvable. Utilisez le menu Pilotage.</Text>}

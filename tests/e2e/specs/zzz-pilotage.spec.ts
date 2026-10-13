@@ -165,6 +165,37 @@ test('Pilotage G/H : contrôle, preuve versionnée, constat et action corrective
     await ctx.close();
   }
 });
+test('Pilotage : page Périmètres, création puis modification de la nature d’un périmètre', async ({ browser }) => {
+  const ctx = await browser.newContext({ storageState: (await sessionAdmin(browser)).state, ignoreHTTPSErrors: true });
+  const page = await ctx.newPage(),
+    problems = watchPage(page);
+  const nom = `QA-Perimetre-${Date.now()}`;
+  try {
+    await page.goto('/pilotage/perimetres');
+    await expect(page.getByRole('heading', { name: 'Périmètres', exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Créer un périmètre', exact: true }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByLabel(/^Nom/).fill(nom);
+    await dialog.getByLabel('Nature', { exact: true }).fill('SMQ');
+    await dialog.getByLabel('Nature', { exact: true }).press('Tab');
+    await dialog.getByLabel('Périmètre', { exact: true }).fill('Activités du système de management de la qualité');
+    await dialog.getByRole('button', { name: 'Créer', exact: true }).click();
+    await expect(dialog).toHaveCount(0);
+    const ligne = page.getByRole('row').filter({ hasText: nom });
+    await expect(ligne).toContainText('SMQ');
+    await ligne.getByRole('button', { name: `Modifier le périmètre ${nom}` }).click();
+    await dialog.getByLabel('Nature', { exact: true }).fill('SMI');
+    await dialog.getByLabel('Nature', { exact: true }).press('Tab');
+    await dialog.getByRole('button', { name: 'Enregistrer', exact: true }).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(ligne).toContainText('SMI');
+    await page.reload();
+    await expect(page.getByRole('row').filter({ hasText: nom })).toContainText('SMI');
+    expect(problems).toEqual([]);
+  } finally {
+    await ctx.close();
+  }
+});
 test('Pilotage K : parcours qualité enregistré, repris et validation humaine conservée', async ({ browser }) => {
   const ctx = await browser.newContext({ storageState: (await sessionAdmin(browser)).state, ignoreHTTPSErrors: true });
   const page = await ctx.newPage(),

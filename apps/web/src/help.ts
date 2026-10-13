@@ -62,6 +62,17 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
   },
   {
+    id: 'perimetres-pilotage',
+    title: 'Périmètres de management',
+    permission: 'pilotage:lire',
+    link: '/pilotage/perimetres',
+    steps: [
+      'La rubrique Périmètres liste les périmètres auxquels vous avez accès. « Afficher » ouvre le périmètre choisi dans le Pilotage.',
+      'Le rôle de Pilotage crée et modifie un périmètre : nom, texte du périmètre, fuseau et nature. La nature (SMSI, SMQ, SMI ou un libellé libre) est facultative et ne change pas le fonctionnement.',
+      'Pour un périmètre restreint, « Accès » attribue ou retire l’accès des comptes. Rien n’est supprimé : les données d’un périmètre restent conservées.',
+    ],
+  },
+  {
     id: 'parcours-pilotage',
     title: 'Parcours guidé',
     permission: 'pilotage:lire',

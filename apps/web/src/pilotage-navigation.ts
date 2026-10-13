@@ -5,6 +5,7 @@ export const PILOTAGE_NAV = [
     items: [
       { id: 'synthese', label: 'Synthèse', module: 'pilotage' },
       { id: 'parcours', label: 'Parcours guidé', module: 'pilotage' },
+      { id: 'perimetres', label: 'Périmètres', module: 'pilotage' },
     ],
   },
   {

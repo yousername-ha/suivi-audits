@@ -439,6 +439,7 @@ export const grcSmsis = pgTable('grc_smsis', {
   id: uuid('id').primaryKey(),
   name: text('name').notNull(),
   scope: text('scope').notNull(),
+  nature: text('nature').notNull(),
   visibility: text('visibility').notNull(),
   timezone: text('timezone').notNull(),
   businessVersion: integer('business_version').notNull(),

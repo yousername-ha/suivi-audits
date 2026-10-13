@@ -27,6 +27,7 @@ const ECRANS = [
   ['documents', '/documents'],
   ['cartographie', '/cartographie'],
   ['pilotage-synthese', '/pilotage/synthese'],
+  ['pilotage-perimetres', '/pilotage/perimetres'],
   ['pilotage-risques', '/pilotage/risques'],
   ['pilotage-applicabilite', '/pilotage/applicabilite'],
   ['pilotage-objectifs', '/pilotage/objectifs'],
