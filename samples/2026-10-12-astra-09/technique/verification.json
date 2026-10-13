@@ -1,0 +1,1836 @@
+{
+  "branch": "legacy",
+  "applicationReference": "f7e543a5c1f31e0bd904f40cf941dbed32fa9dd3",
+  "date": "2026-10-13",
+  "type": "Écrans réels avec habillage de prévisualisation en mémoire ; cartographies sans habillage",
+  "sections": 24,
+  "routes": 100,
+  "images": 104,
+  "errors": [],
+  "externalRequests": [],
+  "checks": [
+    {
+      "name": "Cartographie sans habillage dmap",
+      "pass": true
+    },
+    {
+      "name": "Cartographie sans habillage mb-ctx",
+      "pass": true
+    },
+    {
+      "name": "Cartographie sans habillage mb-proc",
+      "pass": true
+    }
+  ],
+  "responsive": [
+    {
+      "width": 390,
+      "scroll": 390,
+      "pass": true
+    },
+    {
+      "width": 768,
+      "scroll": 768,
+      "pass": true
+    },
+    {
+      "width": 1440,
+      "scroll": 1442,
+      "pass": true
+    },
+    {
+      "width": 1920,
+      "scroll": 1922,
+      "pass": true
+    }
+  ],
+  "sourceHashes": {
+    "demarrer.py": "becdc064f01fac634cd54210fc975a2cfb92be3726a76b9076e54348a9c1ddba",
+    "index.html": "5a9454f07dde2ab171ad1ce6e7df0db98398caf0ca69bd77366ec6fa07572bd3",
+    "legacy_cartography.py": "25a4dfe7eeaee02cdffa28ea3a9516fa5eb95937fd54b2fcd0faf7deb997eb84",
+    "legacy_risks.py": "1a0d651f218bad03e27c79d2c33fb2da0be00f6f33ec4186ddcea87f2fcc49fe",
+    "legacy_server.py": "7559ce53d346a3f5da010ee688b738dbcc4651247fb411120d323886b6082fef",
+    "modules/admin-ui.js": "64ba177864c13b4b0e86833edc70938e014f807c868f95a45f95dbb35fb65e55",
+    "modules/astra-ui.js": "8691b72fd7d8f872987ef07f1b53d5a5f5e2d8c6dca6f4d829a6dad1faf53bdc",
+    "modules/astra.css": "f1a113b189f1e9f5bbc59180e19c66a28d1e206e7b3703c54917012edfbbcb97",
+    "modules/carto-core.js": "14d812f7e59772ce93aad3b15ce2896daf088be93af683447a11b6e182b9c41b",
+    "modules/carto-ui.js": "fe444816de389889023c4a5bb2368d8046ce323442b1e0ff86c1155ac10d1110",
+    "modules/carto.css": "405091d81074c4aa060e230f313d752e05d0989d5629e8cf67f0e44dfc4e955c",
+    "modules/demo-data.js": "c25fcc3dacf4e3439a91f453172ea049f25511ba6ac8e1341aed8dab374177a0",
+    "modules/df-auditor.js": "421b63f82911eb31c6ecbab856f381c44b6b555508ab68c3d6608b9ac1ad59ad",
+    "modules/df-core.js": "9ef5f0d19ea87a720c59ed4f17954332ca6f10737b9fe1613d2873e918fe1141",
+    "modules/df-reports.js": "dcde524936c91aba38cd61624d3019eab2ad918b7a0adc45ef49817f198bfa76",
+    "modules/df-sources.js": "3070039fd7124105560a51019808bc33ac6a2d24555c2cde5459065c3cae132e",
+    "modules/df-storage.js": "1d3ea024c1e08112df5a21589b3f66c7d1eb6776891f789fb83867c412e70b65",
+    "modules/df-ui.js": "6c5162868d17381c70aac07762d1807c9a8865a4a0dd425158b00c882f5aba4e",
+    "modules/df.css": "57e62d57fc85d985ea92c7a2393d828e309a99fda495de46a8cc22ae07d45dbc",
+    "modules/finance-core.js": "ca78db44015ad54400e3c01e1d857f93afd7c25460d636cc81d64006667c87fb",
+    "modules/finance-ui.js": "cafaf6a6855997bcc645d94c58ec89e81423bee1188e788d39106fd578b7b45d",
+    "modules/integration-core.js": "7da5762b31bd6a1b235b2e77aeed68dd2617a0073f730a1a0cad2b818ca252c2",
+    "modules/integration-ui.js": "90348108d13fe928bce17cf827caf08a31cc7f01c32a5e398dd6a00c0cdbf86b",
+    "modules/integration.css": "90b839e989570b016798089dad43ece9de9f08299488d6545e0dd3d6176fa863",
+    "modules/journey-core.js": "4c1c3fe33d2ffdf9800a3a8017b3eac79af3e707cc0478720e744b5c2baaa2a8",
+    "modules/journey-steps.js": "d021ee510fb979ad4f59fa02f94fab4324142e1650b4d5d3b6cd4c65c117ec76",
+    "modules/journey-ui.js": "71a835b809af0613ea68c2a7e2a6b25728ecca23d83e37b1fd14bfd4bd21a04c",
+    "modules/navigation-ui.js": "5bb3d695be63caeab5472dbb67ce1203987dc1a7eceea6b0829e39f30382a29e",
+    "modules/pcra-core.js": "08bee097db98ebb2e308ac7651979cdc7814d33528d37f0acd0c2fbb8d280554",
+    "modules/pcra-ui.js": "b4ff7f8bc960abff56ccb3abd3f1007530f55eaf1af4ea3e8da232255e03bc63",
+    "modules/risk-core.js": "71864a02d701af9a06cce0a90162c7ebc90ab22461b349c7e11652e5b56e9063",
+    "modules/risk-ui.js": "dcd7d7ae68b7e012509b810701438e7258b3b0d6d478617fe8a802397b504645",
+    "modules/server-client.js": "2451384056de5e9b0079d5a3439800884a9adc7f5c5d9819040aeb0afd29dc2e"
+  },
+  "files": [
+    {
+      "file": "images/001-dash-dash.png",
+      "section": "dash",
+      "sectionLabel": "Cockpit RSSI",
+      "id": "dash",
+      "label": "Synthèse",
+      "tab": "dash",
+      "set": {
+        "dashView": "cards"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "45cb62175ff4e670f19392f8b48c033cbe2e499c98af1a69242d019c2e69396a",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/002-pil-proc.png",
+      "section": "pil",
+      "sectionLabel": "Pilotage",
+      "id": "proc",
+      "label": "Par processus",
+      "tab": "pilotage",
+      "set": {
+        "pilView": "proc"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "89c2b6e50883d8f3bc489428eb5c8afa8a612cc8e31f42e038b722783d9fbd8c",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/003-pil-obj.png",
+      "section": "pil",
+      "sectionLabel": "Pilotage",
+      "id": "obj",
+      "label": "Par objectif",
+      "tab": "pilotage",
+      "set": {
+        "pilView": "obj"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "29181a2e144240dc4058325cbf2748f2b96861af9b161b2b1364fb26910ed861",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/004-pil-cmp.png",
+      "section": "pil",
+      "sectionLabel": "Pilotage",
+      "id": "cmp",
+      "label": "Vue compacte",
+      "tab": "pilotage",
+      "set": {
+        "pilView": "compact"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "d58183fc575e2eb4d9cbeeb4ec70d6adae55af48d863d559eb5614b71d56861e",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/005-rep-exp.png",
+      "section": "rep",
+      "sectionLabel": "Rapports et exports",
+      "id": "exp",
+      "label": "Exports",
+      "tab": "rapports",
+      "set": {
+        "repView": "exp"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "11b6b198cf5e3990e38ce7fd6a285a200d3b9af0c657ae2ea722cb180bf9b810",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/006-rep-copil.png",
+      "section": "rep",
+      "sectionLabel": "Rapports et exports",
+      "id": "copil",
+      "label": "COPIL sécurité",
+      "tab": "rapports",
+      "set": {
+        "repView": "COPIL"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "902b0c61a5d99f591820e56783dd3323b13502b6d6213734cd3afcd6e21e79f7",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/007-rep-codir.png",
+      "section": "rep",
+      "sectionLabel": "Rapports et exports",
+      "id": "codir",
+      "label": "Comité de direction",
+      "tab": "rapports",
+      "set": {
+        "repView": "CODIR"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "f1766bc12a272471686ec6d6baa66d38655bab13529b38596ce548a0b9e2b04d",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/008-inv-inv-dash.png",
+      "section": "inv",
+      "sectionLabel": "Investissements",
+      "id": "inv-dash",
+      "label": "Tableau de bord",
+      "tab": "invest",
+      "set": {
+        "invView": "dash"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "9353c0f418164130ab643a8d089ac423b865345732b173a4acdbe7e1cbc2f574",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/009-inv-inv-lines.png",
+      "section": "inv",
+      "sectionLabel": "Investissements",
+      "id": "inv-lines",
+      "label": "Lignes budgétaires",
+      "tab": "invest",
+      "set": {
+        "invView": "lines"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "b474ea8a8a8dcbe71603a728f8f2898b8fb98385cb7995b9f3c91d0d620b0013",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/010-inv-inv-ren.png",
+      "section": "inv",
+      "sectionLabel": "Investissements",
+      "id": "inv-ren",
+      "label": "Renouvellements",
+      "tab": "invest",
+      "set": {
+        "invView": "ren"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "7c23ad4044016f409c59287214acb4515ec6cc9f706bdaf55891c06215da5b48",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/011-inv-inv-cmp.png",
+      "section": "inv",
+      "sectionLabel": "Investissements",
+      "id": "inv-cmp",
+      "label": "Comparaison des options",
+      "tab": "invest",
+      "set": {
+        "invView": "cmp"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "95f8db63362d689d3f77af5ea8fc3d4c9e539fda1a3c1faa437530951f25e7df",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/012-risks-risk-register.png",
+      "section": "risks",
+      "sectionLabel": "Risques et études",
+      "id": "risk-register",
+      "label": "Registre central",
+      "tab": "risks",
+      "set": {
+        "riskView": "register",
+        "riskId": "",
+        "riskStudyId": ""
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "f7b6a90b892465ba0a0d233f4dc8599cc183d31be190b4aaf711484c29134d48",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/013-risks-risk-map.png",
+      "section": "risks",
+      "sectionLabel": "Risques et études",
+      "id": "risk-map",
+      "label": "Matrice des risques",
+      "tab": "risks",
+      "set": {
+        "riskView": "map",
+        "riskId": "",
+        "riskStudyId": ""
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "bb6a89911928a7892b70af9bff160a388e05dc203b83ec3b5c87ddba1bda2892",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/014-risks-risk-studies.png",
+      "section": "risks",
+      "sectionLabel": "Risques et études",
+      "id": "risk-studies",
+      "label": "Études EBIOS RM",
+      "tab": "risks",
+      "set": {
+        "riskView": "studies",
+        "riskId": "",
+        "riskStudyId": ""
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "fa807f3f93115ea50785c95b746da3f8ec91b2e723e11afeca300bfa8eb2d56d",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/015-risks-risk-scenarios.png",
+      "section": "risks",
+      "sectionLabel": "Risques et études",
+      "id": "risk-scenarios",
+      "label": "Scénarios",
+      "tab": "risks",
+      "set": {
+        "riskView": "scenarios",
+        "riskId": "",
+        "riskStudyId": ""
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "01d87ee1de7447cc79582d34be2ea80920a710e298400700ccc9fcf0a8be03ea",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/016-risks-risk-treatments.png",
+      "section": "risks",
+      "sectionLabel": "Risques et études",
+      "id": "risk-treatments",
+      "label": "Traitements et mesures",
+      "tab": "risks",
+      "set": {
+        "riskView": "treatments",
+        "riskId": "",
+        "riskStudyId": ""
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "14dab42fde19fad6b7580dc8f89131283081cd54b026b84672f7f24a15156477",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/017-risks-risk-policies.png",
+      "section": "risks",
+      "sectionLabel": "Risques et études",
+      "id": "risk-policies",
+      "label": "Politiques méthodologiques",
+      "tab": "risks",
+      "set": {
+        "riskView": "policies",
+        "riskId": "",
+        "riskStudyId": ""
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "5e5388d8dccba0d04ccd65fdca333aad29e16c7108cc88dae5c6632e0b7e449f",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/018-compliance-iso.png",
+      "section": "compliance",
+      "sectionLabel": "Conformité et applicabilité",
+      "id": "iso",
+      "label": "Clauses ISO 27001",
+      "tab": "conformite",
+      "set": {
+        "confView": "ISO"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "600f86b13aec959800de130d94f68b16f81e8102cbbc6cbf0ecfd57224aa57d7",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/019-compliance-ann.png",
+      "section": "compliance",
+      "sectionLabel": "Conformité et applicabilité",
+      "id": "ann",
+      "label": "Annexe A (DdA)",
+      "tab": "conformite",
+      "set": {
+        "confView": "A"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "e6ba1d762e48ac275ad0ab17aae6d46ff612bffb602abf12f4b3094d293c76d4",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/020-compliance-hds.png",
+      "section": "compliance",
+      "sectionLabel": "Conformité et applicabilité",
+      "id": "hds",
+      "label": "HDS (DdA)",
+      "tab": "conformite",
+      "set": {
+        "confView": "HDS"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "a55951dd85154e8dbd8e769d0bab07cc95ade4a328df799efb48da6dcd4e5667",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/021-compliance-fw.png",
+      "section": "compliance",
+      "sectionLabel": "Conformité et applicabilité",
+      "id": "fw",
+      "label": "ReCyF et autres référentiels",
+      "tab": "conformite",
+      "set": {
+        "confView": "fw"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "624ae9fb48ff1550e9f9c452dd8c0f1d831477413d07faf5b12caddc9169eea5",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/022-care-df-care-dash.png",
+      "section": "care",
+      "sectionLabel": "Programme CaRE",
+      "id": "df-care-dash",
+      "label": "Tableau de bord",
+      "tab": "care",
+      "set": {
+        "careView": "dash"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "2afbc15b568806285bdc4d37000975e1cc7b961f4318e6965a23b13925d29ec4",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/023-care-df-care-dossiers.png",
+      "section": "care",
+      "sectionLabel": "Programme CaRE",
+      "id": "df-care-dossiers",
+      "label": "Suivis par domaine",
+      "tab": "care",
+      "set": {
+        "careView": "dossiers"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "6ed7662376e1344f65588a737feafd7a37ecc02b379cb0dd568a868ead6eda51",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/024-care-df-care-grid.png",
+      "section": "care",
+      "sectionLabel": "Programme CaRE",
+      "id": "df-care-grid",
+      "label": "Objectifs",
+      "tab": "care",
+      "set": {
+        "careView": "grid"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "3cfadb25a9138ae8ba918eb82c497e2a9ea99b2378343fd70904b6f753ee5b3b",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/025-care-df-care-budget.png",
+      "section": "care",
+      "sectionLabel": "Programme CaRE",
+      "id": "df-care-budget",
+      "label": "Budgets et financements",
+      "tab": "care",
+      "set": {
+        "careView": "budget"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "1c46310affa5185ecd0da8d78d930751a31111f1cbd9c662e49ac1300c03ac5f",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/026-care-df-care-proofs.png",
+      "section": "care",
+      "sectionLabel": "Programme CaRE",
+      "id": "df-care-proofs",
+      "label": "Preuves et versions",
+      "tab": "care",
+      "set": {
+        "careView": "proofs"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "9a8c3c127bc8ccc1b261c17a70eb1640cf843e6ba7be56bad199e43bd95aafcf",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/027-care-df-care-actions.png",
+      "section": "care",
+      "sectionLabel": "Programme CaRE",
+      "id": "df-care-actions",
+      "label": "Actions",
+      "tab": "care",
+      "set": {
+        "careView": "actions"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "be616bc0be4f87e49de9213f5571924f76f4c3195253aa9f04f2001ce55054f6",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/028-care-df-care-audit.png",
+      "section": "care",
+      "sectionLabel": "Programme CaRE",
+      "id": "df-care-audit",
+      "label": "Dossiers auditeur",
+      "tab": "care",
+      "set": {
+        "careView": "audit"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "538fa100b867b32d1da73d8b229e9662e9fc8c75c388c103ce29cb1215f3bc74",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/029-care-df-care-sources.png",
+      "section": "care",
+      "sectionLabel": "Programme CaRE",
+      "id": "df-care-sources",
+      "label": "Sources et sauvegarde",
+      "tab": "care",
+      "set": {
+        "careView": "sources"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "2a90591a720fb8cbe1e2b17603fb3258b4a851046955ecd074a84f9cba502f01",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/030-care-care-finance.png",
+      "section": "care",
+      "sectionLabel": "Programme CaRE",
+      "id": "care-finance",
+      "label": "Pièces comptables et financières",
+      "tab": "finance",
+      "set": {},
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "253801b59b75bec6d7831b53694c250b0e624d1d997d2f78b528e22d62799d66",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/031-has-df-has-dash.png",
+      "section": "has",
+      "sectionLabel": "Qualité · HAS",
+      "id": "df-has-dash",
+      "label": "Tableau de bord",
+      "tab": "has",
+      "set": {
+        "hasView": "dash"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "7eda8322d332398b8c5e3c8cb2f85b65c81643911298327fd8fd082684ad4f30",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/032-has-df-has-dossiers.png",
+      "section": "has",
+      "sectionLabel": "Qualité · HAS",
+      "id": "df-has-dossiers",
+      "label": "Campagnes",
+      "tab": "has",
+      "set": {
+        "hasView": "dossiers"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "cfad5cd713834f4d4c4f98b92d4e36bb9e87c821e10586e91368723a639b04fa",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/033-has-df-has-grid.png",
+      "section": "has",
+      "sectionLabel": "Qualité · HAS",
+      "id": "df-has-grid",
+      "label": "Grille d’évaluation",
+      "tab": "has",
+      "set": {
+        "hasView": "grid"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "c2b758af2b6a718e731a5c616a62c3273ce73b09eede8e25567a19a47fd9fbde",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/034-has-df-has-proofs.png",
+      "section": "has",
+      "sectionLabel": "Qualité · HAS",
+      "id": "df-has-proofs",
+      "label": "Preuves et versions",
+      "tab": "has",
+      "set": {
+        "hasView": "proofs"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "a3954693f9ed02b31ed1efe7b218343237ad8a270c2b55c7b8798b78e86a4a68",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/035-has-df-has-actions.png",
+      "section": "has",
+      "sectionLabel": "Qualité · HAS",
+      "id": "df-has-actions",
+      "label": "Actions",
+      "tab": "has",
+      "set": {
+        "hasView": "actions"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "a331130d25976f0dac6671a8153b5da753ff68669746b2fd292dec33e0ad078d",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/036-has-df-has-audit.png",
+      "section": "has",
+      "sectionLabel": "Qualité · HAS",
+      "id": "df-has-audit",
+      "label": "Mode auditeur",
+      "tab": "has",
+      "set": {
+        "hasView": "audit"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "3cdaa4e260fd9662f1820dfedb702dba9a6c015e2a675e1de8c3d7f6caf7c3eb",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/037-has-df-has-sources.png",
+      "section": "has",
+      "sectionLabel": "Qualité · HAS",
+      "id": "df-has-sources",
+      "label": "Sources et sauvegarde",
+      "tab": "has",
+      "set": {
+        "hasView": "sources"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "407e1028dbe2f5d46dc8ef0683ba5f3b5e88c42227704b171eb410d9923312d0",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/038-audit-cibles.png",
+      "section": "audit",
+      "sectionLabel": "Gestion de l'audit",
+      "id": "cibles",
+      "label": "Pronostic 2027",
+      "tab": "cibles",
+      "set": {},
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "75dc0e0d42cbc62c4513c70dde60e2be6daa83ba3da76d1ae450632887558101",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/039-audit-deroule.png",
+      "section": "audit",
+      "sectionLabel": "Gestion de l'audit",
+      "id": "deroule",
+      "label": "Déroulé",
+      "tab": "orga",
+      "set": {
+        "orgaView": "deroule"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "8f3089f5339d25fbcc3014597b9c190f7bdbf0e5eea21f97bb774e4471ffc83b",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/040-audit-cal.png",
+      "section": "audit",
+      "sectionLabel": "Gestion de l'audit",
+      "id": "cal",
+      "label": "Planning",
+      "tab": "orga",
+      "set": {
+        "orgaView": "cal"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "47693f6ae279497a2438203744238f576cb68504017cefc84c029cfb140a6b5f",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/041-audit-people.png",
+      "section": "audit",
+      "sectionLabel": "Gestion de l'audit",
+      "id": "people",
+      "label": "Participants",
+      "tab": "orga",
+      "set": {
+        "orgaView": "people"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "1a720e6b2746dcefc4117df491cc4eb0da349af8cfc90cfc118dd1f1d778a6dd",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/042-audit-couv.png",
+      "section": "audit",
+      "sectionLabel": "Gestion de l'audit",
+      "id": "couv",
+      "label": "Couverture du cycle",
+      "tab": "couverture",
+      "set": {},
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "e7f0c7a7022a43d0ceb7108953a687c93c5e799622f2efde5df295313d6d0467",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/043-proofs-prv-reg.png",
+      "section": "proofs",
+      "sectionLabel": "Preuves et justificatifs",
+      "id": "prv-reg",
+      "label": "Registre des preuves",
+      "tab": "preuves",
+      "set": {
+        "prvView": "reg"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "b3a156894a8e5cf595e45fe59a7ca25b75d0f552ed80c62947bc7f0e7390e615",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/044-proofs-prv-cov.png",
+      "section": "proofs",
+      "sectionLabel": "Preuves et justificatifs",
+      "id": "prv-cov",
+      "label": "Couverture par mesure",
+      "tab": "preuves",
+      "set": {
+        "prvView": "cov"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "f390c95c207cb5389352f82b1c764b668f53bfcc0e76f3a919d57cc05754a988",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/045-proofs-prv-det.png",
+      "section": "proofs",
+      "sectionLabel": "Preuves et justificatifs",
+      "id": "prv-det",
+      "label": "Preuves repérées",
+      "tab": "preuves",
+      "set": {
+        "prvView": "det"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "fc88559c06a2b45d0a0c5e5bbbda9c87a75b7513fc87d8c60f9c4ccb04ed90dc",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/046-context-ctx-scope.png",
+      "section": "context",
+      "sectionLabel": "Contexte et parties intéressées",
+      "id": "ctx-scope",
+      "label": "Périmètre",
+      "tab": "contexte",
+      "set": {
+        "ctxView": "scope"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "ecd8a27eb2ce02e79fa139a152d3edc7878ed5659284d1d365af8cabcf7194f3",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/047-context-ctx-pi.png",
+      "section": "context",
+      "sectionLabel": "Contexte et parties intéressées",
+      "id": "ctx-pi",
+      "label": "Parties intéressées",
+      "tab": "contexte",
+      "set": {
+        "ctxView": "pi"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "860a444b204b69946742603c69da62497de86649e4e208d4f17d7289b0235c8f",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/048-context-ctx-swot.png",
+      "section": "context",
+      "sectionLabel": "Contexte et parties intéressées",
+      "id": "ctx-swot",
+      "label": "SWOT par processus",
+      "tab": "contexte",
+      "set": {
+        "ctxView": "swot"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "dc7b17875b702226ef471ce44a9b3bff2a72f0a26f65b7be7c723ee11f3546cb",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/049-carto-dmap.png",
+      "section": "carto",
+      "sectionLabel": "Cartographies",
+      "id": "dmap",
+      "label": "Vue d’ensemble",
+      "tab": "dash",
+      "set": {
+        "dashView": "map"
+      },
+      "protected": true,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "4d8983a5af32c711c8813c210ab9f07fad7c57622ef88c176c26c4185ccb5e8a",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/050-carto-mb-ctx.png",
+      "section": "carto",
+      "sectionLabel": "Cartographies",
+      "id": "mb-ctx",
+      "label": "Contexte et dépendances",
+      "tab": "carto",
+      "set": {
+        "mbView": "context"
+      },
+      "protected": true,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "f863efe433f02003ccdbb0500af397b1c7ac341ee1c4920ac9ea5927c59f49d0",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/051-carto-mb-proc.png",
+      "section": "carto",
+      "sectionLabel": "Cartographies",
+      "id": "mb-proc",
+      "label": "Processus et interactions",
+      "tab": "carto",
+      "set": {
+        "mbView": "process"
+      },
+      "protected": true,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "2c0e92f41807347322be53ca74394de32b776cc8cff75b2f7f17730ecb955b8b",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/052-journey-journey-home.png",
+      "section": "journey",
+      "sectionLabel": "Parcours guidé",
+      "id": "journey-home",
+      "label": "Ma démarche",
+      "tab": "journey",
+      "set": {},
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "75eaa5a9996c00008ade0d4a7fe3ac4e99190b94e456bdd999f7bd7fefb62698",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/053-suppliers-sup.png",
+      "section": "suppliers",
+      "sectionLabel": "Fournisseurs et accès",
+      "id": "sup",
+      "label": "Fournisseurs et applications",
+      "tab": "fournisseurs",
+      "set": {
+        "supView": "list"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "9746c057b7b456c20900268a4253b148bc8d3997be0bcdb3a5e31a03cc670066",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/054-suppliers-ar.png",
+      "section": "suppliers",
+      "sectionLabel": "Fournisseurs et accès",
+      "id": "ar",
+      "label": "Revues des accès",
+      "tab": "fournisseurs",
+      "set": {
+        "supView": "ar"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "6d9383f566279da2d2c170d85b2956bf5d1bcebf0f64d631067d7ef3a99d02c3",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/055-suppliers-sev.png",
+      "section": "suppliers",
+      "sectionLabel": "Fournisseurs et accès",
+      "id": "sev",
+      "label": "Évaluations sécurité",
+      "tab": "supeval",
+      "set": {},
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "e169b81c47c1fd3b71d684411a2d345ff7eebda3dc8d37724b3e382d555a01fa",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/056-pcra-pcra-dashboard.png",
+      "section": "pcra",
+      "sectionLabel": "PCRA · continuité et reprise",
+      "id": "pcra-dashboard",
+      "label": "Vue d’ensemble",
+      "tab": "pcra",
+      "set": {
+        "pcraView": "dashboard",
+        "biaId": ""
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "c7b97deaa3d66b1258ac236e394f1cf530f519f3b06dfa321ad817fb84e34da6",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/057-pcra-pcra-bias.png",
+      "section": "pcra",
+      "sectionLabel": "PCRA · continuité et reprise",
+      "id": "pcra-bias",
+      "label": "Analyses d’impact · BIA",
+      "tab": "pcra",
+      "set": {
+        "pcraView": "bias",
+        "biaId": ""
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "5fdbf14fd0c9fde614af2b45be4009e62b91633156748bc96afe4c4096968c95",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/058-pcra-pcra-PCA.png",
+      "section": "pcra",
+      "sectionLabel": "PCRA · continuité et reprise",
+      "id": "pcra-PCA",
+      "label": "Plans de continuité · PCA",
+      "tab": "pcra",
+      "set": {
+        "pcraView": "PCA",
+        "biaId": ""
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "5b09d396d95d8a5c53c4eb524e81198c7e9372ff5e1dbcb30c47e9c9472e1ad4",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/059-pcra-pcra-PRA.png",
+      "section": "pcra",
+      "sectionLabel": "PCRA · continuité et reprise",
+      "id": "pcra-PRA",
+      "label": "Plans de reprise · PRA",
+      "tab": "pcra",
+      "set": {
+        "pcraView": "PRA",
+        "biaId": ""
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "2c6d2a96ae1c94ffde6488ce70584be8476395f5c6d424bbffc4e2834a306b8a",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/060-pcra-pcra-exercises.png",
+      "section": "pcra",
+      "sectionLabel": "PCRA · continuité et reprise",
+      "id": "pcra-exercises",
+      "label": "Exercices et RETEX",
+      "tab": "pcra",
+      "set": {
+        "pcraView": "exercises",
+        "biaId": ""
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "ff0a57c2a776e7e9d5921d8320fe0b694781667cf2a3f1fea492190494e637e3",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/061-pcra-pcra-actions.png",
+      "section": "pcra",
+      "sectionLabel": "PCRA · continuité et reprise",
+      "id": "pcra-actions",
+      "label": "Actions et améliorations",
+      "tab": "pcra",
+      "set": {
+        "pcraView": "actions",
+        "biaId": ""
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "3d21ca39ac55f20950fa0c4461dc7b338948eb46634342eb965ee8c9b32cae4a",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/062-pcra-pcra-documents.png",
+      "section": "pcra",
+      "sectionLabel": "PCRA · continuité et reprise",
+      "id": "pcra-documents",
+      "label": "Documents et preuves",
+      "tab": "pcra",
+      "set": {
+        "pcraView": "documents",
+        "biaId": ""
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "c66e5048d9c297fd9bab72b3a22f8890c4d5772946afba9a4b20ef9fe4391f17",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/063-pcra-pcra-policies.png",
+      "section": "pcra",
+      "sectionLabel": "PCRA · continuité et reprise",
+      "id": "pcra-policies",
+      "label": "Politiques d’impact",
+      "tab": "pcra",
+      "set": {
+        "pcraView": "policies",
+        "biaId": ""
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "ac033579cfa7adbbc5e05ac26d22a9b8214185c1446212ed99aa52f4fceb63fd",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/064-ai-syn.png",
+      "section": "ai",
+      "sectionLabel": "Gouvernance de l’IA",
+      "id": "syn",
+      "label": "Synthèse",
+      "tab": "ia",
+      "set": {
+        "iaView": "syn"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "151837aaec8717cebfde8157033b04936f5edd852088636996dcab21a86477ea",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/065-ai-reg.png",
+      "section": "ai",
+      "sectionLabel": "Gouvernance de l’IA",
+      "id": "reg",
+      "label": "Registre des usages",
+      "tab": "ia",
+      "set": {
+        "iaView": "reg"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "a353cd23514c0d89b279310beb104206f76b279f2db9a30c4f393adcf370fa83",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/066-ai-eval.png",
+      "section": "ai",
+      "sectionLabel": "Gouvernance de l’IA",
+      "id": "eval",
+      "label": "Évaluation des risques",
+      "tab": "ia",
+      "set": {
+        "iaView": "eval"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "563e0635d73df5fd78256a185a76e55681d1638fa46d6511ad60728167354652",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/067-ai-plan.png",
+      "section": "ai",
+      "sectionLabel": "Gouvernance de l’IA",
+      "id": "plan",
+      "label": "Plan d'action",
+      "tab": "ia",
+      "set": {
+        "iaView": "plan"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "1b94e81c09fa4dbd0271e41470811b6728bcabe38e51249b84a19bad5cc702f1",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/068-ai-pol.png",
+      "section": "ai",
+      "sectionLabel": "Gouvernance de l’IA",
+      "id": "pol",
+      "label": "Politiques à adapter",
+      "tab": "ia",
+      "set": {
+        "iaView": "pol"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "d7e89d5bff6357f7cd0a92aa4334346351786ba0f4ac706313a12f925aa2b049",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/069-actions-fd.png",
+      "section": "actions",
+      "sectionLabel": "Plans d’action",
+      "id": "fd",
+      "label": "Registre & vues",
+      "tab": "ecarts",
+      "set": {
+        "ecView": "list"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "98a80be458ff625dd9df3dc89a35b390fdf65c0380073f01e3973c3343b94bd6",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/070-actions-act.png",
+      "section": "actions",
+      "sectionLabel": "Plans d’action",
+      "id": "act",
+      "label": "Sous-actions",
+      "tab": "ecarts",
+      "set": {
+        "ecView": "actions"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "f1812fc856482717b5a8c97b7827270cdfd53c46e011170e9add36e816944171",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/071-recurring-pl-rec.png",
+      "section": "recurring",
+      "sectionLabel": "Tâches récurrentes",
+      "id": "pl-rec",
+      "label": "Tâches récurrentes",
+      "tab": "plans",
+      "set": {
+        "planView": "rec"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "e820ef6491fc946c3b71951eb498706398196d106116985323b829a940b1f2f0",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/072-programs-pl-cal.png",
+      "section": "programs",
+      "sectionLabel": "Programmes du SMSI",
+      "id": "pl-cal",
+      "label": "Vue d’ensemble",
+      "tab": "plans",
+      "set": {
+        "planView": "cal"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "e58290b5db4ab8d177b7a2e1f96f87e2f646f189731a5fffef999ec5c761867b",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/073-programs-pl-formation.png",
+      "section": "programs",
+      "sectionLabel": "Programmes du SMSI",
+      "id": "pl-formation",
+      "label": "Formation",
+      "tab": "plans",
+      "set": {
+        "planView": "formation"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "ddc404361a099aba1ed094fe6f2ac82dca3f5ef1a21a3cbae724c608328d185a",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/074-programs-pl-sensi.png",
+      "section": "programs",
+      "sectionLabel": "Programmes du SMSI",
+      "id": "pl-sensi",
+      "label": "Sensibilisation",
+      "tab": "plans",
+      "set": {
+        "planView": "sensi"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "c84c686f792286a054bd41da0c1b3d52a1ec0e0564e4884f113c54f07275b746",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/075-programs-pl-audit.png",
+      "section": "programs",
+      "sectionLabel": "Programmes du SMSI",
+      "id": "pl-audit",
+      "label": "Audit interne",
+      "tab": "plans",
+      "set": {
+        "planView": "audit"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "1acc176971514149de40fabfcaa74ed748b9f89b57035a77040f35b8c6c533da",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/076-programs-pl-exo.png",
+      "section": "programs",
+      "sectionLabel": "Programmes du SMSI",
+      "id": "pl-exo",
+      "label": "Exercices PRA et crise",
+      "tab": "plans",
+      "set": {
+        "planView": "exo"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "b4393f17e0c46ac6731bf7eb6122a9a162b463321964a8878ba88dedfe0682ad",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/077-ops-inc-reg.png",
+      "section": "ops",
+      "sectionLabel": "Incidents et crise",
+      "id": "inc-reg",
+      "label": "Registre",
+      "tab": "incidents",
+      "set": {
+        "incView": "reg"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "be3400e67a3d94f88d85f7cb075d85af65b7a650c97fefc39cb4d5802511f226",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/078-ops-inc-qual.png",
+      "section": "ops",
+      "sectionLabel": "Incidents et crise",
+      "id": "inc-qual",
+      "label": "Qualifier un signalement",
+      "tab": "incidents",
+      "set": {
+        "incView": "qual"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "5b44a509735c57f27444706fdfd16568d2fc4372e067179e920a530218a071e7",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/079-ops-cr-cell.png",
+      "section": "ops",
+      "sectionLabel": "Incidents et crise",
+      "id": "cr-cell",
+      "label": "Cellule de crise",
+      "tab": "crise",
+      "set": {
+        "crView": "cell"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "eb1d2e137f028d17a78d46e132263d2262df013e3a5bac26cec10fda03eff87d",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/080-ops-cr-ct.png",
+      "section": "ops",
+      "sectionLabel": "Incidents et crise",
+      "id": "cr-ct",
+      "label": "Contacts",
+      "tab": "crise",
+      "set": {
+        "crView": "contacts"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "b61f5f031fc11af5372ff3d9f8a664bc9a332c20cc08df446939eb37fbed67a7",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/081-ops-cr-sc.png",
+      "section": "ops",
+      "sectionLabel": "Incidents et crise",
+      "id": "cr-sc",
+      "label": "Scénarios et check-lists",
+      "tab": "crise",
+      "set": {
+        "crView": "scen"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "f6575105dee9afbbc9e1dfccb8291e48ec54e3ee8d79f4bb5956c233ce92657a",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/082-gap-apps.png",
+      "section": "gap",
+      "sectionLabel": "Écarts applicatifs",
+      "id": "apps",
+      "label": "Applications",
+      "tab": "gapapp",
+      "set": {},
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "51d33b50ab1c1db77600a48c10a0da01773b64fe65bc0d36402b889a9830057d",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/083-crrc-cr-over.png",
+      "section": "crrc",
+      "sectionLabel": "Gestion CRRC",
+      "id": "cr-over",
+      "label": "Vue d’ensemble",
+      "tab": "crrc",
+      "set": {
+        "crrcView": "over"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "62811f0b881705a6f25c00638c7ddabe0ca09c7551e3ef762f3953fbbefe3ac9",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/084-crrc-cr-est.png",
+      "section": "crrc",
+      "sectionLabel": "Gestion CRRC",
+      "id": "cr-est",
+      "label": "Établissements",
+      "tab": "crrc",
+      "set": {
+        "crrcView": "est"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "8a7d2eab96c4411483fa4e4c79492e00d6f8a652c80b0529ef0515af832fc134",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/085-crrc-cr-off.png",
+      "section": "crrc",
+      "sectionLabel": "Gestion CRRC",
+      "id": "cr-off",
+      "label": "Catalogue des offres",
+      "tab": "crrc",
+      "set": {
+        "crrcView": "off"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "0f3f12e9b5f6428d6d1366e030b8d2885fd0f1859699573b57c9646d0e56c409",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/086-crrc-bk-dash.png",
+      "section": "crrc",
+      "sectionLabel": "Gestion CRRC",
+      "id": "bk-dash",
+      "label": "Tableau de bord",
+      "tab": "crrc",
+      "set": {
+        "crrcView": "bk-dash"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "b3c7042208c8650ab9d6aa39df3873d471455a4f887b335acb5477a766565682",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/087-crrc-bk-res.png",
+      "section": "crrc",
+      "sectionLabel": "Gestion CRRC",
+      "id": "bk-res",
+      "label": "Sauvegardes",
+      "tab": "crrc",
+      "set": {
+        "crrcView": "bk-res"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "e5766cb552f3cc3492ed67558a5de50808c32e60a43383722ea8bb21b0c75ce3",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/088-crrc-bk-rest.png",
+      "section": "crrc",
+      "sectionLabel": "Gestion CRRC",
+      "id": "bk-rest",
+      "label": "Restaurations",
+      "tab": "crrc",
+      "set": {
+        "crrcView": "bk-rest"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "e68cbd80d8b36f63895cf6b0c441e06e991a4cd4d8b2d5325d2531a8177d7b4a",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/089-crrc-bk-alerts.png",
+      "section": "crrc",
+      "sectionLabel": "Gestion CRRC",
+      "id": "bk-alerts",
+      "label": "Alertes",
+      "tab": "crrc",
+      "set": {
+        "crrcView": "bk-alerts"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "d295db652a25cbb88e30f342aebd2e42a6006f2a63e67eb8eaca0e173d44bca8",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/090-crrc-bk-rep.png",
+      "section": "crrc",
+      "sectionLabel": "Gestion CRRC",
+      "id": "bk-rep",
+      "label": "Rapports",
+      "tab": "crrc",
+      "set": {
+        "crrcView": "bk-rep"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "9d75853e8b95cd3ec6ec0beeb1198ea9be8c56a696422933d7f9ed3738b93cea",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/091-perimeters-perimeter-registry.png",
+      "section": "perimeters",
+      "sectionLabel": "Périmètres",
+      "id": "perimeter-registry",
+      "label": "Organisations et établissements",
+      "tab": "perimeters",
+      "set": {
+        "perimetersView": "registry"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "2c3aa226d9637a50bbe05e3c21a259328c4210a875935e2bf69c97472677080b",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/092-perimeters-perimeter-relations.png",
+      "section": "perimeters",
+      "sectionLabel": "Périmètres",
+      "id": "perimeter-relations",
+      "label": "Relations et classement",
+      "tab": "perimeters",
+      "set": {
+        "perimetersView": "classification"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "8237ef150830acc6c004891ea24c0d9dec0f6b9c766326df45aaed93e82a701c",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/093-perimeters-perimeter-accounts.png",
+      "section": "perimeters",
+      "sectionLabel": "Périmètres",
+      "id": "perimeter-accounts",
+      "label": "Comptes et habilitations",
+      "tab": "perimeters",
+      "set": {
+        "perimetersView": "accounts"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "eeb66dd043c0609b3ca69a16bd66c6054307578c17c15679dc7c91d66500d902",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/094-perimeters-perimeter-roles.png",
+      "section": "perimeters",
+      "sectionLabel": "Périmètres",
+      "id": "perimeter-roles",
+      "label": "Rôles et responsabilités",
+      "tab": "perimeters",
+      "set": {
+        "perimetersView": "roles"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "f384632756ff51fa181170982ea69c8ecab3cc44e79c866c44e51cf6022cbb22",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/095-admin-admin-overview.png",
+      "section": "admin",
+      "sectionLabel": "Administration",
+      "id": "admin-overview",
+      "label": "Vue d’ensemble",
+      "tab": "admin",
+      "set": {
+        "adminView": "overview"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "8cd6a836aa3bbc8a71575dd4b3ef187966773ed866fa7b604fe27daabdc971f4",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/096-admin-admin-users.png",
+      "section": "admin",
+      "sectionLabel": "Administration",
+      "id": "admin-users",
+      "label": "Comptes et habilitations",
+      "tab": "admin",
+      "set": {
+        "adminView": "users"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "6788dd976bb07548b26f016a5190ed412cd3b22258a117d8a90097a6b9ab47c4",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/097-admin-admin-roles.png",
+      "section": "admin",
+      "sectionLabel": "Administration",
+      "id": "admin-roles",
+      "label": "Rôles et responsabilités",
+      "tab": "admin",
+      "set": {
+        "adminView": "roles"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "b4003740142b6f7400b99c384537a7f289e3fd240579654be4dd8f67d6086ea4",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/098-admin-admin-frameworks.png",
+      "section": "admin",
+      "sectionLabel": "Administration",
+      "id": "admin-frameworks",
+      "label": "Référentiels",
+      "tab": "admin",
+      "set": {
+        "adminView": "frameworks"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "76847389c22700feafa83962a47d7d7e22b8c47a27258b4a83bc7eddacabefcc",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/099-admin-admin-audit.png",
+      "section": "admin",
+      "sectionLabel": "Administration",
+      "id": "admin-audit",
+      "label": "Journal et traçabilité",
+      "tab": "admin",
+      "set": {
+        "adminView": "audit"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "af97822f60040e99119816da0aaec6b05b687bf9e89b513897ebf117062252ae",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/100-admin-admin-demo.png",
+      "section": "admin",
+      "sectionLabel": "Administration",
+      "id": "admin-demo",
+      "label": "Données de démonstration",
+      "tab": "admin",
+      "set": {
+        "adminView": "demo"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "40813fb18d05c17a1530d342ba7439ec5d6d7e20dbf0145c8e06be9d06fbfe70",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/utilitaire-parametres.png",
+      "id": "parametres",
+      "label": "parametres",
+      "kind": "utility",
+      "protected": false,
+      "width": 1600,
+      "height": 1100,
+      "sha256": "60fde9c969a07b453727638797c0663fbbfff5008e387bd4ed81731b61c11558",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/utilitaire-recherche.png",
+      "id": "recherche",
+      "label": "recherche",
+      "kind": "utility",
+      "protected": false,
+      "width": 1600,
+      "height": 1100,
+      "sha256": "ffac6e10da2f78f0cc2d2a252b3db1b678d88e37043b2f5bdbb59b2ced603a53",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/utilitaire-export.png",
+      "id": "export",
+      "label": "export",
+      "kind": "utility",
+      "protected": false,
+      "width": 1600,
+      "height": 1100,
+      "sha256": "cec27467c10b52a408873dd96307bd2283894b5067c56384bc1a4f759ddbfde7",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/utilitaire-notifications.png",
+      "id": "notifications",
+      "label": "Notifications",
+      "kind": "utility",
+      "protected": false,
+      "width": 1600,
+      "height": 1100,
+      "sha256": "188a570ec7cb780ea8c838690cfb6a6aeb368451d15ae9cd40c565c25a0b17c4",
+      "documentOverflow": false
+    }
+  ]
+}
