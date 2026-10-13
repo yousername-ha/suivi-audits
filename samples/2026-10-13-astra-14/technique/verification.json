@@ -1,0 +1,591 @@
+{
+  "branch": "legacy",
+  "applicationReference": "ae11bac6d8398cd145951f0d93492c85a857e367",
+  "date": "2026-10-13",
+  "type": "30 vues pour validation, référence visuelle série 08, habillage isolé en mémoire ; cartographies exclues",
+  "palette": {
+    "background": "#f5f5f0",
+    "secondary": "#edf2ee",
+    "surface": "#ffffff",
+    "sidebar": "#103f33",
+    "accent": "#00a8b0",
+    "note": "Transposition HTML proposée de l’image 08 ; valeurs non normatives"
+  },
+  "sections": 17,
+  "routes": 21,
+  "views": 30,
+  "images": 30,
+  "errors": [],
+  "externalRequests": [],
+  "checks": [
+    {
+      "name": "Historique de réalisation visible",
+      "pass": true
+    }
+  ],
+  "responsive": [],
+  "sourceHashes": {
+    "demarrer.py": "becdc064f01fac634cd54210fc975a2cfb92be3726a76b9076e54348a9c1ddba",
+    "index.html": "5a9454f07dde2ab171ad1ce6e7df0db98398caf0ca69bd77366ec6fa07572bd3",
+    "legacy_cartography.py": "25a4dfe7eeaee02cdffa28ea3a9516fa5eb95937fd54b2fcd0faf7deb997eb84",
+    "legacy_risks.py": "1a0d651f218bad03e27c79d2c33fb2da0be00f6f33ec4186ddcea87f2fcc49fe",
+    "legacy_server.py": "7559ce53d346a3f5da010ee688b738dbcc4651247fb411120d323886b6082fef",
+    "modules/admin-ui.js": "64ba177864c13b4b0e86833edc70938e014f807c868f95a45f95dbb35fb65e55",
+    "modules/astra-ui.js": "8691b72fd7d8f872987ef07f1b53d5a5f5e2d8c6dca6f4d829a6dad1faf53bdc",
+    "modules/astra.css": "f1a113b189f1e9f5bbc59180e19c66a28d1e206e7b3703c54917012edfbbcb97",
+    "modules/carto-core.js": "14d812f7e59772ce93aad3b15ce2896daf088be93af683447a11b6e182b9c41b",
+    "modules/carto-ui.js": "fe444816de389889023c4a5bb2368d8046ce323442b1e0ff86c1155ac10d1110",
+    "modules/carto.css": "405091d81074c4aa060e230f313d752e05d0989d5629e8cf67f0e44dfc4e955c",
+    "modules/demo-data.js": "c25fcc3dacf4e3439a91f453172ea049f25511ba6ac8e1341aed8dab374177a0",
+    "modules/df-auditor.js": "421b63f82911eb31c6ecbab856f381c44b6b555508ab68c3d6608b9ac1ad59ad",
+    "modules/df-core.js": "9ef5f0d19ea87a720c59ed4f17954332ca6f10737b9fe1613d2873e918fe1141",
+    "modules/df-reports.js": "dcde524936c91aba38cd61624d3019eab2ad918b7a0adc45ef49817f198bfa76",
+    "modules/df-sources.js": "3070039fd7124105560a51019808bc33ac6a2d24555c2cde5459065c3cae132e",
+    "modules/df-storage.js": "1d3ea024c1e08112df5a21589b3f66c7d1eb6776891f789fb83867c412e70b65",
+    "modules/df-ui.js": "6c5162868d17381c70aac07762d1807c9a8865a4a0dd425158b00c882f5aba4e",
+    "modules/df.css": "57e62d57fc85d985ea92c7a2393d828e309a99fda495de46a8cc22ae07d45dbc",
+    "modules/finance-core.js": "ca78db44015ad54400e3c01e1d857f93afd7c25460d636cc81d64006667c87fb",
+    "modules/finance-ui.js": "cafaf6a6855997bcc645d94c58ec89e81423bee1188e788d39106fd578b7b45d",
+    "modules/integration-core.js": "7da5762b31bd6a1b235b2e77aeed68dd2617a0073f730a1a0cad2b818ca252c2",
+    "modules/integration-ui.js": "90348108d13fe928bce17cf827caf08a31cc7f01c32a5e398dd6a00c0cdbf86b",
+    "modules/integration.css": "90b839e989570b016798089dad43ece9de9f08299488d6545e0dd3d6176fa863",
+    "modules/journey-core.js": "4c1c3fe33d2ffdf9800a3a8017b3eac79af3e707cc0478720e744b5c2baaa2a8",
+    "modules/journey-steps.js": "d021ee510fb979ad4f59fa02f94fab4324142e1650b4d5d3b6cd4c65c117ec76",
+    "modules/journey-ui.js": "71a835b809af0613ea68c2a7e2a6b25728ecca23d83e37b1fd14bfd4bd21a04c",
+    "modules/navigation-ui.js": "5bb3d695be63caeab5472dbb67ce1203987dc1a7eceea6b0829e39f30382a29e",
+    "modules/pcra-core.js": "08bee097db98ebb2e308ac7651979cdc7814d33528d37f0acd0c2fbb8d280554",
+    "modules/pcra-ui.js": "b4ff7f8bc960abff56ccb3abd3f1007530f55eaf1af4ea3e8da232255e03bc63",
+    "modules/risk-core.js": "71864a02d701af9a06cce0a90162c7ebc90ab22461b349c7e11652e5b56e9063",
+    "modules/risk-ui.js": "dcd7d7ae68b7e012509b810701438e7258b3b0d6d478617fe8a802397b504645",
+    "modules/server-client.js": "2451384056de5e9b0079d5a3439800884a9adc7f5c5d9819040aeb0afd29dc2e"
+  },
+  "files": [
+    {
+      "file": "images/001-dash-dash.png",
+      "section": "dash",
+      "sectionLabel": "Cockpit RSSI",
+      "id": "dash",
+      "label": "Synthèse",
+      "tab": "dash",
+      "set": {
+        "dashView": "cards"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "7ea59b6a46ef95587aa166c1105c0a0a9a7c1f7859672017bb77ed34fa501e71",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/002-risks-risk-register.png",
+      "section": "risks",
+      "sectionLabel": "Risques et études",
+      "id": "risk-register",
+      "label": "Registre central",
+      "tab": "risks",
+      "set": {
+        "riskView": "register",
+        "riskId": "",
+        "riskStudyId": ""
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "51fa678209fa8cd7df0d7563341a38169d2499a7de763724d8098a2959bb1fcd",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/003-risks-risk-map.png",
+      "section": "risks",
+      "sectionLabel": "Risques et études",
+      "id": "risk-map",
+      "label": "Matrice des risques",
+      "tab": "risks",
+      "set": {
+        "riskView": "map",
+        "riskId": "",
+        "riskStudyId": ""
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "97a0be8ab8487479ee243fbd6407c34c440516f5d7f98bbc57dac80852aadce8",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/004-risks-risk-studies.png",
+      "section": "risks",
+      "sectionLabel": "Risques et études",
+      "id": "risk-studies",
+      "label": "Études EBIOS RM",
+      "tab": "risks",
+      "set": {
+        "riskView": "studies",
+        "riskId": "",
+        "riskStudyId": ""
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "a65039b9b97ee8a22027a053413efabd981544fc203fc4e85d533fb6e8788827",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/005-compliance-iso.png",
+      "section": "compliance",
+      "sectionLabel": "Conformité et applicabilité",
+      "id": "iso",
+      "label": "Clauses ISO 27001",
+      "tab": "conformite",
+      "set": {
+        "confView": "ISO"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "97b5cc562a82d5e888f60ee323e67087c528e3d7178ca2ff3583b6afac88edb8",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/006-compliance-ann.png",
+      "section": "compliance",
+      "sectionLabel": "Conformité et applicabilité",
+      "id": "ann",
+      "label": "Annexe A (DdA)",
+      "tab": "conformite",
+      "set": {
+        "confView": "A"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "f9ff8221fdfaf8dfb17d823c05d0fe1444cbf13ea060f04f2ee6219a18b9e6a1",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/007-care-df-care-dash.png",
+      "section": "care",
+      "sectionLabel": "Programme CaRE",
+      "id": "df-care-dash",
+      "label": "Tableau de bord",
+      "tab": "care",
+      "set": {
+        "careView": "dash"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "e54d42ebd96e8d87ce835cdc0791ff9dfd02beaef3fba5f38480f6abc0453ac8",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/008-has-df-has-dash.png",
+      "section": "has",
+      "sectionLabel": "Qualité · HAS",
+      "id": "df-has-dash",
+      "label": "Tableau de bord",
+      "tab": "has",
+      "set": {
+        "hasView": "dash"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "388a517e5104a3ad8089b2d5645029c238d6e72b3532e1df6ea8938c5699e074",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/009-audit-cibles.png",
+      "section": "audit",
+      "sectionLabel": "Gestion de l'audit",
+      "id": "cibles",
+      "label": "Pronostic 2027",
+      "tab": "cibles",
+      "set": {},
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "84c44bd5637efd3ddb2656c49d679f20f22f815906e924882d1806a7f426ba27",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/010-proofs-prv-reg.png",
+      "section": "proofs",
+      "sectionLabel": "Preuves et justificatifs",
+      "id": "prv-reg",
+      "label": "Registre des preuves",
+      "tab": "preuves",
+      "set": {
+        "prvView": "reg"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "281206fee77aaa56435c53ad6e9ac05cc17cfe5ce43962288e51883140a57956",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/011-pcra-pcra-dashboard.png",
+      "section": "pcra",
+      "sectionLabel": "PCRA · continuité et reprise",
+      "id": "pcra-dashboard",
+      "label": "Vue d’ensemble",
+      "tab": "pcra",
+      "set": {
+        "pcraView": "dashboard",
+        "biaId": ""
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "5157e3e05de9826de7e6eb98f0d43597a6d08a0fff5f09abdaae1840fb1a19b2",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/012-pcra-pcra-bias.png",
+      "section": "pcra",
+      "sectionLabel": "PCRA · continuité et reprise",
+      "id": "pcra-bias",
+      "label": "Analyses d’impact · BIA",
+      "tab": "pcra",
+      "set": {
+        "pcraView": "bias",
+        "biaId": ""
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "bb10a4070d665625ff4a703de56c8da0b855ed09cadd0e10b5cced02486c43d8",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/013-perimeters-perimeter-registry.png",
+      "section": "perimeters",
+      "sectionLabel": "Périmètres",
+      "id": "perimeter-registry",
+      "label": "Organisations et établissements",
+      "tab": "perimeters",
+      "set": {
+        "perimetersView": "registry"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "5c369f2a153226514d4633d25b98366a96f5217184de75483a71243a68ed9449",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/014-suppliers-sup.png",
+      "section": "suppliers",
+      "sectionLabel": "Fournisseurs et accès",
+      "id": "sup",
+      "label": "Fournisseurs et applications",
+      "tab": "fournisseurs",
+      "set": {
+        "supView": "list"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "8d5b4fc531f425821b2257f4aafdab906c99e9c7f8ed3093eda305c12cb3b177",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/015-admin-admin-overview.png",
+      "section": "admin",
+      "sectionLabel": "Administration",
+      "id": "admin-overview",
+      "label": "Vue d’ensemble",
+      "tab": "admin",
+      "set": {
+        "adminView": "overview"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "2ac428d5d1c40798d3fdc08f7e545a02ed890f0572294f346e3cc7f758308fc9",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/016-programs-pl-formation.png",
+      "section": "programs",
+      "sectionLabel": "Programmes du SMSI",
+      "id": "pl-formation",
+      "label": "Formation",
+      "tab": "plans",
+      "set": {
+        "planView": "formation"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "e5c41de28fb71ec7c5fe67d3be77391fe5f4b6a78d17ace96f988f7c3d137c5a",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/017-ops-inc-reg.png",
+      "section": "ops",
+      "sectionLabel": "Incidents et crise",
+      "id": "inc-reg",
+      "label": "Registre",
+      "tab": "incidents",
+      "set": {
+        "incView": "reg"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "dc559da65e923e1a4721b50e8640b168cb7b173903a86251c3d99a1f280cc728",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/018-ai-reg.png",
+      "section": "ai",
+      "sectionLabel": "Gouvernance de l’IA",
+      "id": "reg",
+      "label": "Registre des usages",
+      "tab": "ia",
+      "set": {
+        "iaView": "reg"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "55f22fd265126348b55cb35db92bd8afd70415bce400552c59799d71c5cd9cd5",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/019-context-ctx-pi.png",
+      "section": "context",
+      "sectionLabel": "Contexte et parties intéressées",
+      "id": "ctx-pi",
+      "label": "Parties intéressées",
+      "tab": "contexte",
+      "set": {
+        "ctxView": "pi"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "205f317c1ac95bb8112c95cdfb4ff05349916d4eb4ccaa0e2a1fd43a00c93794",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/020-actions-list.png",
+      "section": "actions",
+      "sectionLabel": "Plans d’action",
+      "id": "fd",
+      "label": "Liste",
+      "previewView": "list",
+      "tab": "ecarts",
+      "set": {
+        "ecView": "list"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "dc1f179cfbabf3147824c1b08eb13b71d9430edd3bd6262255033ec163bf4c6c",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/021-actions-kanban.png",
+      "section": "actions",
+      "sectionLabel": "Plans d’action",
+      "id": "fd",
+      "label": "Kanban",
+      "previewView": "kanban",
+      "tab": "ecarts",
+      "set": {
+        "ecView": "list"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "e7e0fc69ce28ebef297e9c006d9d8faab88b0ab06d6e1387823e1232e126236b",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/022-actions-planning.png",
+      "section": "actions",
+      "sectionLabel": "Plans d’action",
+      "id": "fd",
+      "label": "Planning",
+      "previewView": "planning",
+      "tab": "ecarts",
+      "set": {
+        "ecView": "list"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "e83677edb2fbd76ecece0bf9dbd54abececcf8d79b47395dd236540a7a7f151d",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/023-actions-calendar.png",
+      "section": "actions",
+      "sectionLabel": "Plans d’action",
+      "id": "fd",
+      "label": "Calendrier",
+      "previewView": "calendar",
+      "tab": "ecarts",
+      "set": {
+        "ecView": "list"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "c95319472841d4ca8fe25bee09afc8ab9f5155d4548beec46f0535657d3577b5",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/024-actions-gantt.png",
+      "section": "actions",
+      "sectionLabel": "Plans d’action",
+      "id": "fd",
+      "label": "Gantt",
+      "previewView": "gantt",
+      "tab": "ecarts",
+      "set": {
+        "ecView": "list"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "0033114161a23f8823854f30b9b6db6f7329187d4f2fda8f767e72756577b6a5",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/025-actions-summary.png",
+      "section": "actions",
+      "sectionLabel": "Plans d’action",
+      "id": "fd",
+      "label": "Synthèse",
+      "previewView": "summary",
+      "tab": "ecarts",
+      "set": {
+        "ecView": "list"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "5c915906897f613763a37c44aaa1917258874d4c33e21dd1db4c9dca0d386214",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/026-recurring-list.png",
+      "section": "recurring",
+      "sectionLabel": "Tâches récurrentes",
+      "id": "pl-rec",
+      "label": "Liste",
+      "previewView": "list",
+      "tab": "plans",
+      "set": {
+        "planView": "rec"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "abdcb37ea50216129cb45e7799dbb79bf3ae8dd96acf622827025ba4794110f8",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/027-recurring-kanban.png",
+      "section": "recurring",
+      "sectionLabel": "Tâches récurrentes",
+      "id": "pl-rec",
+      "label": "Kanban",
+      "previewView": "kanban",
+      "tab": "plans",
+      "set": {
+        "planView": "rec"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "c2e18cb7749f8d2d6ed8b5df945a33986e65d3c517da7b9e566150f0d0a97b93",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/028-recurring-planning.png",
+      "section": "recurring",
+      "sectionLabel": "Tâches récurrentes",
+      "id": "pl-rec",
+      "label": "Planning",
+      "previewView": "planning",
+      "tab": "plans",
+      "set": {
+        "planView": "rec"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "64b503668bfe93ccd57b7e1713b6e6d4c0753cec5aee06be19da292a05f17b4f",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/029-recurring-calendar.png",
+      "section": "recurring",
+      "sectionLabel": "Tâches récurrentes",
+      "id": "pl-rec",
+      "label": "Calendrier",
+      "previewView": "calendar",
+      "tab": "plans",
+      "set": {
+        "planView": "rec"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "40a0b6e8998d670b9f5ac35b72ae60fe147c185474496a948e9d618429612849",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/030-recurring-fiche-historique.png",
+      "section": "recurring",
+      "sectionLabel": "Tâches récurrentes",
+      "label": "Fiche et historique",
+      "kind": "detail",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "1227c531fa65d9fc4913660355c3e4db6364041bed94652ee95adf45c2c286e4",
+      "documentOverflow": false
+    }
+  ],
+  "galleryChecks": {
+    "cards": 30,
+    "recurringFilter": 5,
+    "actionsFilter": 6,
+    "unmatchedFilter": 0,
+    "pass": true
+  }
+}

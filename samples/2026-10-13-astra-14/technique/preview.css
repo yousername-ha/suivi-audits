@@ -1,0 +1,47 @@
+/* Prototype de prévisualisation uniquement. Ne jamais charger sur les routes cartographiques. */
+html[data-style-preview="nes-sage"]{--paper:#f5f6f1;--surface:#fff;--sunk:#edf2ee;--ink:#173f34;--ink2:#52645e;--ink3:#63776b;--line:#dce2db;--line2:#e9ede7;--blue:#142f61;--blue-soft:#eaf0f7;--blue-50:#f1f5fa;--ds-nav:#173f34;--ds-nav-text:#f6faf6;--ds-nav-muted:#bdcec2;--ds-nav-on:#315b4b;--ds-nav-hover:#264d3e;--ds-nav-mark:#84a28c;--as-teal:#173f34;--as-shadow:0 3px 15px #173f3408;--nes-accent:#236b70}
+html[data-style-preview="nes-sage"] body{background:var(--paper)}
+html[data-style-preview="nes-sage"] .app{margin-top:78px;grid-template-columns:252px minmax(0,1fr)}
+html[data-style-preview="nes-sage"] .side{top:78px;height:calc(100vh - 78px);background:#173f34;padding-top:14px}
+html[data-style-preview="nes-sage"] .side-brand{display:none}
+html[data-style-preview="nes-sage"] .side .mn{color:#c5d7cc}
+html[data-style-preview="nes-sage"] .side .mn.on{background:#315b4b;color:#fff;border-left:3px solid #84a28c}
+html[data-style-preview="nes-sage"] .side-sub button{color:#c5d7cc}
+html[data-style-preview="nes-sage"] .side-sub button.on{background:#315b4b;color:#fff}
+html[data-style-preview="nes-sage"] .lx-nav-heading{color:#bdcec2!important}
+html[data-style-preview="nes-sage"] .as-collapse{background:#315b4b;color:#fff}
+html[data-style-preview="nes-sage"] .side-foot{border-color:#537765;color:#bdcec2}
+html[data-style-preview="nes-sage"] .top{top:78px;background:#fff}
+html[data-style-preview="nes-sage"] .top-in{min-height:58px;gap:12px}
+html[data-style-preview="nes-sage"] .wrap{padding-left:30px;padding-right:30px}
+html[data-style-preview="nes-sage"] .as-head h1{color:#173f34}
+html[data-style-preview="nes-sage"] .as-cockpit-intro{background:#173f34}
+html[data-style-preview="nes-sage"] .as-cockpit-intro .as-eyebrow{color:#c5d7cc}
+html[data-style-preview="nes-sage"] :is(.as-surface,.kcard,.card,.lx-card){border:1px solid #dce2db;border-radius:12px;box-shadow:0 3px 15px #173f3408}
+html[data-style-preview="nes-sage"] .as-surface>h3:after{content:'';display:block;width:30px;height:3px;background:#236b70;margin-top:10px}
+html[data-style-preview="nes-sage"] .btn.primary{background:#173f34;border-color:#173f34;color:#fff}
+html[data-style-preview="nes-sage"] .as-views .btn[aria-pressed=true]{background:#e4eee6;color:#244b32;border-color:#84a28c}
+html[data-style-preview="nes-sage"] :is(button,a,input,select,textarea):focus-visible{outline:3px solid #326899;outline-offset:3px}
+.nes-preview-header{height:78px;position:fixed;top:0;left:0;right:0;z-index:90;background:white;border-bottom:1px solid #dce2db;display:flex;align-items:center;padding:0 24px;gap:28px;color:#173f34;font:14px 'Sauge Inter',Arial,sans-serif}
+.nes-preview-brand{display:flex;gap:13px;align-items:center;min-width:310px}.nes-preview-monogram{width:44px;height:44px;display:grid;place-items:center;background:#245d4a;color:white;border-radius:11px;font-size:28px}.nes-preview-brand strong{font-size:19px;display:block}.nes-preview-brand small{display:block;margin-top:5px;font-size:11px;color:#52645e}
+.nes-preview-signature{border-left:1px solid #dce2db;padding-left:25px;color:#142f61;font-weight:700;font-size:20px;line-height:1.4}.nes-preview-signature:before{content:'';display:inline-block;width:9px;height:9px;background:#236b70;margin-right:10px}.nes-preview-signature small{display:block;padding-left:19px;font-size:9px;color:#63776b;letter-spacing:1.7px;font-weight:400}
+.nes-preview-site{margin-left:auto;font-size:12px;text-decoration:none;border:1px solid #cbd6df;border-radius:7px;padding:10px 14px;color:#142f61;background:white}.nes-preview-demo{font-size:10px;color:#52645e;background:#eef3ef;border-radius:4px;padding:6px 9px}.nes-preview-caption{position:fixed;bottom:0;left:0;right:0;z-index:100;background:#fff;border-top:1px solid #dce2db;color:#52645e;text-align:center;padding:6px 12px;font:10px Arial,sans-serif}
+@media(max-width:1000px){.nes-preview-signature{font-size:15px;padding-left:15px}.nes-preview-brand{min-width:0}.nes-preview-header{gap:14px}.nes-preview-demo{display:none}}
+@media(max-width:700px){.nes-preview-header{height:68px;padding:0 10px}.nes-preview-brand strong{font-size:13px}.nes-preview-brand small,.nes-preview-signature small,.nes-preview-site{display:none}.nes-preview-monogram{width:30px;height:30px;font-size:20px}.nes-preview-signature{font-size:12px}.nes-preview-caption{font-size:8px}html[data-style-preview="nes-sage"] .app{margin-top:68px;grid-template-columns:1fr}html[data-style-preview="nes-sage"] .top{top:68px}html[data-style-preview="nes-sage"] .side{top:68px;height:calc(100vh - 68px)}}
+html[data-style-preview="nes-sage"] .side .mn.on{background:#315b4b!important;color:#fff!important;border-left-color:#84a28c!important}
+html[data-style-preview="nes-sage"] .side-sub button.on{background:#315b4b!important;color:#fff!important}
+
+/* Série 08 retenue le 13 octobre : transposition pour validation, sans modification du runtime. */
+html[data-style-preview="nes-sage"]{--paper:#f5f5f0;--ds-nav:#103f33;--nes-accent:#00a8b0}
+html[data-style-preview="nes-sage"] .app{grid-template-columns:275px minmax(0,1fr)}
+html[data-style-preview="nes-sage"] .side{background:linear-gradient(120deg,#123e32,#0b392e)}
+html[data-style-preview="nes-sage"] .side .mn.on{border-left-color:#00a8b0!important;background:#275647!important}
+html[data-style-preview="nes-sage"] .as-surface>h3:after{background:#00a8b0}
+.nes-preview-signature:before{background:#00a8b0;border-radius:0}
+html[data-style-preview="nes-sage"] .as-views .btn[aria-pressed=true]{background:white;color:#12545a;border-bottom:3px solid #00a8b0}
+html[data-style-preview="nes-sage"] .as-head{padding-bottom:15px;border-bottom:1px solid #dce2db}
+html[data-style-preview="nes-sage"] .as-head h1{font-size:32px;letter-spacing:-1px}
+html[data-style-preview="nes-sage"] .as-cockpit-intro{background:linear-gradient(110deg,#103f33,#154a3b)}
+html[data-style-preview="nes-sage"] .lx-table th{background:#edf2ee}
+html[data-style-preview="nes-sage"] .wrap{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='470' height='180' viewBox='0 0 470 180'%3E%3Cg fill='none' stroke='%230e737b' stroke-opacity='.11'%3E%3Cpath d='M70 0l40 23v46L70 92 30 69V23zM175 30l40 23v46l-40 23-40-23V53zM280 0l40 23v46l-40 23-40-23V23zM385 55l40 23v46l-40 23-40-23V78z'/%3E%3C/g%3E%3C/svg%3E");background-repeat:no-repeat;background-position:top right}
+@media(max-width:700px){html[data-style-preview="nes-sage"] .app{grid-template-columns:1fr}}

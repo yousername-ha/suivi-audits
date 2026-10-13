@@ -1,0 +1,476 @@
+[
+  {
+    "id": "dash",
+    "label": "Cockpit RSSI",
+    "icon": "dash",
+    "items": [
+      {
+        "id": "dash",
+        "label": "Synthèse",
+        "tab": "dash",
+        "set": {
+          "dashView": "cards"
+        },
+        "hint": "Indicateurs clés par domaine"
+      }
+    ]
+  },
+  {
+    "id": "risks",
+    "label": "Risques et études",
+    "icon": "pil",
+    "items": [
+      {
+        "id": "risk-register",
+        "label": "Registre central",
+        "tab": "risks",
+        "set": {
+          "riskView": "register",
+          "riskId": "",
+          "riskStudyId": ""
+        },
+        "match": {
+          "riskView": "register"
+        }
+      }
+    ]
+  },
+  {
+    "id": "risks",
+    "label": "Risques et études",
+    "icon": "pil",
+    "items": [
+      {
+        "id": "risk-map",
+        "label": "Matrice des risques",
+        "tab": "risks",
+        "set": {
+          "riskView": "map",
+          "riskId": "",
+          "riskStudyId": ""
+        },
+        "match": {
+          "riskView": "map"
+        }
+      }
+    ]
+  },
+  {
+    "id": "risks",
+    "label": "Risques et études",
+    "icon": "pil",
+    "items": [
+      {
+        "id": "risk-studies",
+        "label": "Études EBIOS RM",
+        "tab": "risks",
+        "set": {
+          "riskView": "studies",
+          "riskId": "",
+          "riskStudyId": ""
+        },
+        "match": {
+          "riskView": "studies"
+        }
+      }
+    ]
+  },
+  {
+    "id": "compliance",
+    "label": "Conformité et applicabilité",
+    "icon": "conf",
+    "items": [
+      {
+        "id": "iso",
+        "g": "g-conf",
+        "label": "Clauses ISO 27001",
+        "tab": "conformite",
+        "set": {
+          "confView": "ISO"
+        }
+      }
+    ],
+    "groups": [
+      {
+        "id": "g-conf",
+        "label": "Conformité"
+      }
+    ]
+  },
+  {
+    "id": "compliance",
+    "label": "Conformité et applicabilité",
+    "icon": "conf",
+    "items": [
+      {
+        "id": "ann",
+        "g": "g-conf",
+        "label": "Annexe A (DdA)",
+        "tab": "conformite",
+        "set": {
+          "confView": "A"
+        }
+      }
+    ],
+    "groups": [
+      {
+        "id": "g-conf",
+        "label": "Conformité"
+      }
+    ]
+  },
+  {
+    "id": "care",
+    "label": "Programme CaRE",
+    "icon": "pil",
+    "items": [
+      {
+        "id": "df-care-dash",
+        "label": "Tableau de bord",
+        "tab": "care",
+        "set": {
+          "careView": "dash"
+        }
+      }
+    ]
+  },
+  {
+    "id": "has",
+    "label": "Qualité · HAS",
+    "icon": "audit",
+    "items": [
+      {
+        "id": "df-has-dash",
+        "label": "Tableau de bord",
+        "tab": "has",
+        "set": {
+          "hasView": "dash"
+        }
+      }
+    ]
+  },
+  {
+    "id": "audit",
+    "label": "Gestion de l'audit",
+    "icon": "audit",
+    "items": [
+      {
+        "id": "cibles",
+        "label": "Pronostic 2027",
+        "tab": "cibles",
+        "hint": "Mesures susceptibles d’être auditées"
+      }
+    ]
+  },
+  {
+    "id": "proofs",
+    "label": "Preuves et justificatifs",
+    "icon": "rep",
+    "items": [
+      {
+        "id": "prv-reg",
+        "g": "g-prv",
+        "label": "Registre des preuves",
+        "tab": "preuves",
+        "set": {
+          "prvView": "reg"
+        }
+      }
+    ],
+    "groups": [
+      {
+        "id": "g-prv",
+        "label": "Preuves",
+        "badge": {
+          "n": 1,
+          "t": "preuve(s) à produire ou à revoir"
+        }
+      }
+    ]
+  },
+  {
+    "id": "pcra",
+    "label": "PCRA · continuité et reprise",
+    "icon": "ops",
+    "items": [
+      {
+        "id": "pcra-dashboard",
+        "label": "Vue d’ensemble",
+        "tab": "pcra",
+        "set": {
+          "pcraView": "dashboard",
+          "biaId": ""
+        }
+      }
+    ]
+  },
+  {
+    "id": "pcra",
+    "label": "PCRA · continuité et reprise",
+    "icon": "ops",
+    "items": [
+      {
+        "id": "pcra-bias",
+        "label": "Analyses d’impact · BIA",
+        "tab": "pcra",
+        "set": {
+          "pcraView": "bias",
+          "biaId": ""
+        }
+      }
+    ]
+  },
+  {
+    "id": "perimeters",
+    "label": "Périmètres",
+    "icon": "pil",
+    "items": [
+      {
+        "id": "perimeter-registry",
+        "label": "Organisations et établissements",
+        "tab": "perimeters",
+        "set": {
+          "perimetersView": "registry"
+        }
+      }
+    ]
+  },
+  {
+    "id": "suppliers",
+    "label": "Fournisseurs et accès",
+    "icon": "tiers",
+    "items": [
+      {
+        "id": "sup",
+        "g": "g-sup",
+        "label": "Fournisseurs et applications",
+        "tab": "fournisseurs",
+        "set": {
+          "supView": "list"
+        }
+      }
+    ],
+    "groups": [
+      {
+        "id": "g-sup",
+        "label": "Fournisseurs"
+      }
+    ]
+  },
+  {
+    "id": "admin",
+    "label": "Administration",
+    "icon": "pil",
+    "items": [
+      {
+        "id": "admin-overview",
+        "label": "Vue d’ensemble",
+        "tab": "admin",
+        "set": {
+          "adminView": "overview"
+        }
+      }
+    ]
+  },
+  {
+    "id": "programs",
+    "label": "Programmes du SMSI",
+    "icon": "audit",
+    "items": [
+      {
+        "id": "pl-formation",
+        "g": "g-plans",
+        "label": "Formation",
+        "tab": "plans",
+        "set": {
+          "planView": "formation"
+        }
+      }
+    ],
+    "groups": [
+      {
+        "id": "g-plans",
+        "label": "Plans",
+        "badge": {
+          "n": 1,
+          "bad": 1,
+          "t": "action(s) de plan en retard"
+        }
+      }
+    ]
+  },
+  {
+    "id": "ops",
+    "label": "Incidents et crise",
+    "icon": "ops",
+    "groups": [
+      {
+        "id": "g-inc",
+        "label": "Incidents",
+        "badge": null
+      },
+      {
+        "id": "g-cr",
+        "label": "PRA, PCA et crise",
+        "badge": null
+      }
+    ],
+    "items": [
+      {
+        "id": "inc-reg",
+        "g": "g-inc",
+        "label": "Registre",
+        "tab": "incidents",
+        "set": {
+          "incView": "reg"
+        }
+      }
+    ]
+  },
+  {
+    "id": "ai",
+    "label": "Gouvernance de l’IA",
+    "icon": "ia",
+    "items": [
+      {
+        "id": "reg",
+        "label": "Registre des usages",
+        "tab": "ia",
+        "set": {
+          "iaView": "reg"
+        }
+      }
+    ]
+  },
+  {
+    "id": "context",
+    "label": "Contexte et parties intéressées",
+    "icon": "tiers",
+    "items": [
+      {
+        "id": "ctx-pi",
+        "g": "g-ctx",
+        "label": "Parties intéressées",
+        "tab": "contexte",
+        "set": {
+          "ctxView": "pi"
+        },
+        "hint": "Besoins et attentes (§ 4.2)"
+      }
+    ],
+    "groups": [
+      {
+        "id": "g-ctx",
+        "label": "Contexte de l’organisation"
+      }
+    ]
+  },
+  {
+    "id": "actions",
+    "label": "Plans d’action",
+    "icon": "ecarts",
+    "items": [
+      {
+        "id": "fd",
+        "label": "Liste",
+        "tab": "ecarts",
+        "set": {
+          "ecView": "list"
+        },
+        "previewView": "list"
+      },
+      {
+        "id": "fd",
+        "label": "Kanban",
+        "tab": "ecarts",
+        "set": {
+          "ecView": "list"
+        },
+        "previewView": "kanban"
+      },
+      {
+        "id": "fd",
+        "label": "Planning",
+        "tab": "ecarts",
+        "set": {
+          "ecView": "list"
+        },
+        "previewView": "planning"
+      },
+      {
+        "id": "fd",
+        "label": "Calendrier",
+        "tab": "ecarts",
+        "set": {
+          "ecView": "list"
+        },
+        "previewView": "calendar"
+      },
+      {
+        "id": "fd",
+        "label": "Gantt",
+        "tab": "ecarts",
+        "set": {
+          "ecView": "list"
+        },
+        "previewView": "gantt"
+      },
+      {
+        "id": "fd",
+        "label": "Synthèse",
+        "tab": "ecarts",
+        "set": {
+          "ecView": "list"
+        },
+        "previewView": "summary"
+      }
+    ]
+  },
+  {
+    "id": "recurring",
+    "label": "Tâches récurrentes",
+    "icon": "audit",
+    "items": [
+      {
+        "id": "pl-rec",
+        "label": "Liste",
+        "tab": "plans",
+        "set": {
+          "planView": "rec"
+        },
+        "hint": "Activités périodiques, historique des réalisations",
+        "previewView": "list"
+      },
+      {
+        "id": "pl-rec",
+        "label": "Kanban",
+        "tab": "plans",
+        "set": {
+          "planView": "rec"
+        },
+        "hint": "Activités périodiques, historique des réalisations",
+        "previewView": "kanban"
+      },
+      {
+        "id": "pl-rec",
+        "label": "Planning",
+        "tab": "plans",
+        "set": {
+          "planView": "rec"
+        },
+        "hint": "Activités périodiques, historique des réalisations",
+        "previewView": "planning"
+      },
+      {
+        "id": "pl-rec",
+        "label": "Calendrier",
+        "tab": "plans",
+        "set": {
+          "planView": "rec"
+        },
+        "hint": "Activités périodiques, historique des réalisations",
+        "previewView": "calendar"
+      }
+    ]
+  }
+]
