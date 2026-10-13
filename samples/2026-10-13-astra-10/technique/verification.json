@@ -1,0 +1,228 @@
+{
+  "branch": "legacy",
+  "applicationReference": "9770314c5db2835516449d700b33516b940567e8",
+  "date": "2026-10-13",
+  "type": "Dix aperçus au fond éclairci, habillage en mémoire, données fictives ; cartographies exclues",
+  "palette": {
+    "background": "#f7f9fb",
+    "secondary": "#f0f4f7",
+    "surface": "#ffffff",
+    "sidebar": "#173f34",
+    "accent": "#236b70"
+  },
+  "sections": 10,
+  "routes": 10,
+  "images": 10,
+  "errors": [],
+  "externalRequests": [],
+  "checks": [],
+  "responsive": [],
+  "sourceHashes": {
+    "demarrer.py": "becdc064f01fac634cd54210fc975a2cfb92be3726a76b9076e54348a9c1ddba",
+    "index.html": "5a9454f07dde2ab171ad1ce6e7df0db98398caf0ca69bd77366ec6fa07572bd3",
+    "legacy_cartography.py": "25a4dfe7eeaee02cdffa28ea3a9516fa5eb95937fd54b2fcd0faf7deb997eb84",
+    "legacy_risks.py": "1a0d651f218bad03e27c79d2c33fb2da0be00f6f33ec4186ddcea87f2fcc49fe",
+    "legacy_server.py": "7559ce53d346a3f5da010ee688b738dbcc4651247fb411120d323886b6082fef",
+    "modules/admin-ui.js": "64ba177864c13b4b0e86833edc70938e014f807c868f95a45f95dbb35fb65e55",
+    "modules/astra-ui.js": "8691b72fd7d8f872987ef07f1b53d5a5f5e2d8c6dca6f4d829a6dad1faf53bdc",
+    "modules/astra.css": "f1a113b189f1e9f5bbc59180e19c66a28d1e206e7b3703c54917012edfbbcb97",
+    "modules/carto-core.js": "14d812f7e59772ce93aad3b15ce2896daf088be93af683447a11b6e182b9c41b",
+    "modules/carto-ui.js": "fe444816de389889023c4a5bb2368d8046ce323442b1e0ff86c1155ac10d1110",
+    "modules/carto.css": "405091d81074c4aa060e230f313d752e05d0989d5629e8cf67f0e44dfc4e955c",
+    "modules/demo-data.js": "c25fcc3dacf4e3439a91f453172ea049f25511ba6ac8e1341aed8dab374177a0",
+    "modules/df-auditor.js": "421b63f82911eb31c6ecbab856f381c44b6b555508ab68c3d6608b9ac1ad59ad",
+    "modules/df-core.js": "9ef5f0d19ea87a720c59ed4f17954332ca6f10737b9fe1613d2873e918fe1141",
+    "modules/df-reports.js": "dcde524936c91aba38cd61624d3019eab2ad918b7a0adc45ef49817f198bfa76",
+    "modules/df-sources.js": "3070039fd7124105560a51019808bc33ac6a2d24555c2cde5459065c3cae132e",
+    "modules/df-storage.js": "1d3ea024c1e08112df5a21589b3f66c7d1eb6776891f789fb83867c412e70b65",
+    "modules/df-ui.js": "6c5162868d17381c70aac07762d1807c9a8865a4a0dd425158b00c882f5aba4e",
+    "modules/df.css": "57e62d57fc85d985ea92c7a2393d828e309a99fda495de46a8cc22ae07d45dbc",
+    "modules/finance-core.js": "ca78db44015ad54400e3c01e1d857f93afd7c25460d636cc81d64006667c87fb",
+    "modules/finance-ui.js": "cafaf6a6855997bcc645d94c58ec89e81423bee1188e788d39106fd578b7b45d",
+    "modules/integration-core.js": "7da5762b31bd6a1b235b2e77aeed68dd2617a0073f730a1a0cad2b818ca252c2",
+    "modules/integration-ui.js": "90348108d13fe928bce17cf827caf08a31cc7f01c32a5e398dd6a00c0cdbf86b",
+    "modules/integration.css": "90b839e989570b016798089dad43ece9de9f08299488d6545e0dd3d6176fa863",
+    "modules/journey-core.js": "4c1c3fe33d2ffdf9800a3a8017b3eac79af3e707cc0478720e744b5c2baaa2a8",
+    "modules/journey-steps.js": "d021ee510fb979ad4f59fa02f94fab4324142e1650b4d5d3b6cd4c65c117ec76",
+    "modules/journey-ui.js": "71a835b809af0613ea68c2a7e2a6b25728ecca23d83e37b1fd14bfd4bd21a04c",
+    "modules/navigation-ui.js": "5bb3d695be63caeab5472dbb67ce1203987dc1a7eceea6b0829e39f30382a29e",
+    "modules/pcra-core.js": "08bee097db98ebb2e308ac7651979cdc7814d33528d37f0acd0c2fbb8d280554",
+    "modules/pcra-ui.js": "b4ff7f8bc960abff56ccb3abd3f1007530f55eaf1af4ea3e8da232255e03bc63",
+    "modules/risk-core.js": "71864a02d701af9a06cce0a90162c7ebc90ab22461b349c7e11652e5b56e9063",
+    "modules/risk-ui.js": "dcd7d7ae68b7e012509b810701438e7258b3b0d6d478617fe8a802397b504645",
+    "modules/server-client.js": "2451384056de5e9b0079d5a3439800884a9adc7f5c5d9819040aeb0afd29dc2e"
+  },
+  "files": [
+    {
+      "file": "images/001-dash-dash.png",
+      "section": "dash",
+      "sectionLabel": "Cockpit RSSI",
+      "id": "dash",
+      "label": "Synthèse",
+      "tab": "dash",
+      "set": {
+        "dashView": "cards"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "301ca95e034f507f51c00bf0bc4274ed76dff6686fe5be6132970915fdabdf6d",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/002-risks-risk-register.png",
+      "section": "risks",
+      "sectionLabel": "Risques et études",
+      "id": "risk-register",
+      "label": "Registre central",
+      "tab": "risks",
+      "set": {
+        "riskView": "register",
+        "riskId": "",
+        "riskStudyId": ""
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "ffbea2e5c2c067332790185d6d4056129ede31cc0563370e995910fd4c8b8773",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/003-compliance-ann.png",
+      "section": "compliance",
+      "sectionLabel": "Conformité et applicabilité",
+      "id": "ann",
+      "label": "Annexe A (DdA)",
+      "tab": "conformite",
+      "set": {
+        "confView": "A"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "a77a219679e0024772f69fdd3db34584839e9d6fae74308c8973d1c112a48ab2",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/004-care-df-care-dash.png",
+      "section": "care",
+      "sectionLabel": "Programme CaRE",
+      "id": "df-care-dash",
+      "label": "Tableau de bord",
+      "tab": "care",
+      "set": {
+        "careView": "dash"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "32741ef6a62d1f93c90f1d37b9c791bac2b32ca4ebe04a7ff25e4cea6078488c",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/005-audit-cibles.png",
+      "section": "audit",
+      "sectionLabel": "Gestion de l'audit",
+      "id": "cibles",
+      "label": "Pronostic 2027",
+      "tab": "cibles",
+      "set": {},
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "d65bdf7d710b856353051658bf5ae95105bc2d9c8df933e3dcb5d34145cbd35c",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/006-proofs-prv-reg.png",
+      "section": "proofs",
+      "sectionLabel": "Preuves et justificatifs",
+      "id": "prv-reg",
+      "label": "Registre des preuves",
+      "tab": "preuves",
+      "set": {
+        "prvView": "reg"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "b0ebac3ed0e3ec0bb531687fd7a075698af15002393c2df4488784eb330415c6",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/007-actions-fd.png",
+      "section": "actions",
+      "sectionLabel": "Plans d’action",
+      "id": "fd",
+      "label": "Registre & vues",
+      "tab": "ecarts",
+      "set": {
+        "ecView": "list"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "71f879db0928a9a223e9a75f7d78a932e6690208ca9a57dc024b8fcfc543fefb",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/008-pcra-pcra-dashboard.png",
+      "section": "pcra",
+      "sectionLabel": "PCRA · continuité et reprise",
+      "id": "pcra-dashboard",
+      "label": "Vue d’ensemble",
+      "tab": "pcra",
+      "set": {
+        "pcraView": "dashboard",
+        "biaId": ""
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "0a00b1f6ac2005a903dca915c27eb98b183610acfa1cba13bfd02edd83a5e3ab",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/009-perimeters-perimeter-registry.png",
+      "section": "perimeters",
+      "sectionLabel": "Périmètres",
+      "id": "perimeter-registry",
+      "label": "Organisations et établissements",
+      "tab": "perimeters",
+      "set": {
+        "perimetersView": "registry"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "c8d509aa0c281eef711a37e79273de93bfdfeea5d48de39ebd85fe32ebd32449",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/010-admin-admin-overview.png",
+      "section": "admin",
+      "sectionLabel": "Administration",
+      "id": "admin-overview",
+      "label": "Vue d’ensemble",
+      "tab": "admin",
+      "set": {
+        "adminView": "overview"
+      },
+      "protected": false,
+      "kind": "route",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "74349cba8a990938d1dbd1c42b18abccc853979d15db29622170daa362e686a9",
+      "documentOverflow": false
+    }
+  ]
+}

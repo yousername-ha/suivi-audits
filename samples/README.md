@@ -8,6 +8,7 @@ explicite de l’utilisateur. Les captures utilisent exclusivement des données 
 
 | Date | Série | Captures | Version de l’application |
 | --- | --- | --- | --- |
+| 13 octobre 2026 | [Série 10 — fond éclairci](2026-10-13-astra-10/README.md) | **10 images**, dont le Kanban, fond gris bleuté très clair | Propositions visuelles |
 | 13 octobre 2026 | [Dossier technique — style retenu, série 09](2026-10-12-astra-09/README.md) | **105 images**, dossier technique, prompt et galerie hors ligne | Préparation d’implémentation |
 | 12 octobre 2026 | [Intégration de l’identité — série 08](2026-10-12-astra-08/README.md) | 1 aperçu intermédiaire conservé | Historique visuel |
 | 12 octobre 2026 | [ASTRA — série 07 : navigation sauge clair](2026-10-12-astra-07/README.md) | **10 images** : barre latérale sauge clair et touches bleues | Propositions visuelles |
