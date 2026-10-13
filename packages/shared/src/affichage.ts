@@ -34,7 +34,7 @@ export const Preferences = z.object({
           z.object({ x: z.number().finite(), y: z.number().finite(), k: z.number().min(0.2).max(2.5) }),
         )
         .optional(),
-      referentiels: z.array(z.enum(['ISO 27001', 'HDS'])).optional(),
+      referentiels: z.array(z.enum(['ISO 27001', 'HDS', 'ISO 9001'])).optional(),
       secondaires: z.boolean().optional(),
       propositions: z.boolean().optional(),
       panneau: z.boolean().optional(),

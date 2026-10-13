@@ -15,8 +15,9 @@ export const MAP_VIEW_TITLES: Record<MapView, string> = {
   process: 'Cartographie des processus',
 };
 
-/** Référentiels proposés dans les filtres (spécification § 6, point 7 : pas d'ISO 9001). */
-export const REFERENTIELS = ['ISO 27001', 'HDS'] as const;
+/** Référentiels proposés dans les filtres (spécification § 6, point 7, révisé par l'ADR 0013 : l'ISO 9001 s'ajoute
+    quand un référentiel 9001 est rattaché au périmètre ; la carte ne lui attribue aucun objet par elle-même). */
+export const REFERENTIELS = ['ISO 27001', 'HDS', 'ISO 9001'] as const;
 export type Referentiel = (typeof REFERENTIELS)[number];
 
 /* ---------------------------------------------------------------- Objets */
@@ -208,6 +209,9 @@ export interface CartoObject {
   nObj?: number;
   nInd?: number;
   nKo?: number;
+  /** Indicateurs atteints et indicateurs non mesurés (ou cible à définir) : calque « santé des indicateurs ». */
+  nOk?: number;
+  nMes?: number;
   ext?: boolean;
   crit?: boolean;
   hds?: boolean;

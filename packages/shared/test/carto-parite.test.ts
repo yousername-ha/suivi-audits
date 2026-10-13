@@ -165,7 +165,14 @@ describe.each(ETATS)('%s', (_nom, S) => {
 
   it('objets métier identiques (références, ordre, champs)', () => {
     const attendus = [...b.MB.objs.values()].map(normaliserObjet);
-    const obtenus = [...objs.values()].map((o) => JSON.parse(JSON.stringify(o)) as CartoObject);
+    // Écart documenté (lot M5) : `nOk` et `nMes` complètent `nInd` et `nKo` pour le calque « santé des indicateurs » ;
+    // la bêta ne les connaît pas, tout le reste reste identique.
+    const obtenus = [...objs.values()].map((o) => {
+      const { nOk: _ok, nMes: _mes, ...reste } = JSON.parse(JSON.stringify(o)) as CartoObject;
+      void _ok;
+      void _mes;
+      return reste as CartoObject;
+    });
     expect(obtenus.map((o) => o.ref)).toEqual(attendus.map((o) => o.ref));
     expect(obtenus).toEqual(attendus);
   });

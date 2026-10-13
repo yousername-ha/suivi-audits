@@ -15,6 +15,10 @@ export const BRAND = {
     viennent de la méthode publiée, jamais d'ici). */
 export const MATRICE = { encre: '#173f34', neutre: '#e5e9e2' } as const;
 
+/** Calque « santé des indicateurs » de la cartographie : liseré de la couleur d'état au bas d'un processus. Le rouge est
+    réservé à un indicateur non atteint ; l'orange signale des indicateurs non mesurés ou sans cible. */
+export const SANTE = { ok: '#2f8f5b', ko: '#c2312a', mesure: '#d98a1d' } as const;
+
 type Tuple = readonly [string, string, string, string, string, string, string, string, string, string];
 
 /** Vert (couleur principale) : nuance 8 = vert de marque. */
