@@ -8,6 +8,7 @@ explicite de l’utilisateur. Les captures utilisent exclusivement des données 
 
 | Date | Série | Captures | Version de l’application |
 | --- | --- | --- | --- |
+| 13 octobre 2026 | [Série 12 — Administration : choix du style](2026-10-13-astra-12/README.md) | **2 images**, prototype interactif, complément technique et prompt actualisé | Préparation d’implémentation |
 | 13 octobre 2026 | [Série 11 — Plans d’action, toutes les vues](2026-10-13-astra-11/README.md) | **6 images** : Liste, Kanban, Planning, Calendrier, Gantt, Synthèse | Propositions visuelles |
 | 13 octobre 2026 | [Série 10 — fond éclairci](2026-10-13-astra-10/README.md) | **10 images**, dont le Kanban, fond gris bleuté très clair | Propositions visuelles |
 | 13 octobre 2026 | [Dossier technique — style retenu, série 09](2026-10-12-astra-09/README.md) | **105 images**, dossier technique, prompt et galerie hors ligne | Préparation d’implémentation |

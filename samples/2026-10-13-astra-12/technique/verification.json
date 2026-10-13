@@ -1,0 +1,74 @@
+{
+  "date": "2026-10-13",
+  "scope": "Prototype autonome seulement : pas de recette de l’application",
+  "checks": [
+    {
+      "name": "Sélection sage",
+      "pass": true
+    },
+    {
+      "name": "Persistance sage",
+      "pass": true
+    },
+    {
+      "name": "Sélection clair",
+      "pass": true
+    },
+    {
+      "name": "Persistance clair",
+      "pass": true
+    },
+    {
+      "name": "Choix au clavier",
+      "pass": true
+    },
+    {
+      "name": "Retour au défaut",
+      "pass": true
+    },
+    {
+      "name": "Valeur invalide",
+      "pass": true
+    },
+    {
+      "name": "Pas de débordement 390",
+      "pass": true
+    },
+    {
+      "name": "Pas de débordement 768",
+      "pass": true
+    },
+    {
+      "name": "Pas de débordement 1440",
+      "pass": true
+    },
+    {
+      "name": "Pas de débordement 1920",
+      "pass": true
+    },
+    {
+      "name": "Aucune erreur JavaScript",
+      "pass": true
+    },
+    {
+      "name": "Aucune requête externe",
+      "pass": true
+    }
+  ],
+  "errors": [],
+  "externalRequests": [],
+  "files": [
+    {
+      "file": "images/001-administration-sage.png",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "a91178d00e7778300c524a9c002e4388e1fd961e540b48ca57fe3cb0e1eaa19c"
+    },
+    {
+      "file": "images/002-administration-clair.png",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "5e0d095c458e29c0938ce1301bc09fafa09b49ad8bd5eda3cbbb4ef9d3da9be9"
+    }
+  ]
+}
