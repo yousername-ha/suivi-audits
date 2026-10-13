@@ -40,10 +40,11 @@ et le [cadrage](../unification/CADRAGE-MODULE-QUALITE-9001.md). Aucun code n'est
    couverture explicite, **exclu des taux**. Une correspondance « partielle » ne donne jamais une couverture complète.
    Le **pilote** la **confirme** (cela crée alors un lien explicite « met en œuvre », au nom du pilote, avec la date et le
    motif éventuel) ou la **rejette** (motif conservé).
-   - **Menu « Rapprochements à valider »** dans le Pilotage, avec le nombre de propositions en attente, filtrable par
-     référentiel et par mesure, et décision unitaire ou **en lot** après revue.
-   - **Notification** au pilote du périmètre (mécanisme de notifications existant) à chaque nouvelle proposition, regroupée
-     pour éviter un message par exigence.
+   - **Menu « Rapprochements à valider »** dans le Pilotage, **visible** : une **pastille avec le nombre** de propositions en
+     attente dans la navigation, filtrable par référentiel et par mesure, décision unitaire ou **en lot** après revue.
+   - **Notification visuelle** au pilote du périmètre, par le mécanisme de notifications existant (la cloche), à chaque
+     nouvelle proposition, **regroupée** pour éviter un message par exigence ; un **bandeau** sur la synthèse du Pilotage tant
+     que des rapprochements attendent une décision.
    - Une proposition rejetée n'est **pas reproposée** tant que la correspondance ou le lien source ne changent pas ; les
      rejets restent consultables et révisables.
    - Qui décide : un membre du périmètre ayant le droit d'écriture et `pilotage:modifier` (à confirmer au lot M3).
