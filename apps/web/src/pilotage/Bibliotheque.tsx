@@ -539,6 +539,7 @@ interface CandidatSuivi {
   canPublish: boolean;
   warning: string | null;
   notes: string[];
+  error: string | null;
 }
 
 /** Référentiels déjà saisis dans l'outil de suivi (clauses ISO 27001, Annexe A, HDS, ReCyF…) : simulation, puis
@@ -598,6 +599,11 @@ function ImportOutilSuivi({ onClose, onDone }: { onClose: () => void; onDone: ()
               {c.requirements} exigence(s) · {c.domains} domaine(s) · source : {c.definition.source.organisation},
               version {c.definition.source.version}
             </Text>
+            {c.error && (
+              <Alert color="red" title="Référentiel non importable">
+                {c.error}
+              </Alert>
+            )}
             {c.warning && <Alert color="orange">{c.warning}</Alert>}
             {c.notes.map((n) => (
               <Text key={n} size="sm">

@@ -23,8 +23,8 @@ describe('transformation de l’état de l’outil de suivi', () => {
     const iso = candidats[0]!.definition;
     expect(iso.requirements).toHaveLength(33 + 93);
     expect(iso.requirements.every((r) => r.description === '' && r.applicability === '')).toBe(true);
-    expect(iso.requirements.find((r) => r.id === 'A.5.1')?.title).toBe("Politiques de sécurité de l'information");
-    expect(iso.requirements.find((r) => r.id === '9.3.2')).toBeTruthy();
+    expect(iso.requirements.find((r) => r.id === 'A-5.1')?.title).toBe("5.1 — Politiques de sécurité de l'information");
+    expect(iso.requirements.find((r) => r.id === 'ISO-9.3.2')).toBeTruthy();
   });
   it('ne présente aucune source comme vérifiée ou normative et signale les intitulés tronqués', () => {
     for (const c of candidats) {
@@ -39,6 +39,14 @@ describe('transformation de l’état de l’outil de suivi', () => {
     expect(r.requirements[0]!.description.length).toBeGreaterThan(50);
     expect(JSON.stringify(r)).not.toMatch(/"comment"|"self"|"maps"/);
     expect(r.domains).toHaveLength(20);
+  });
+  it('ignore les identifiants en double de l’état au lieu de produire une définition invalide', () => {
+    const doublon = { ...(seed.items as Record<string, unknown>[]).find((i) => i.id === 'ISO-4.1')! };
+    const etat = { ...seed, items: [...(seed.items as unknown[]), doublon] };
+    const iso = trackerCandidates(etat)[0]!;
+    expect(iso.definition.requirements).toHaveLength(33 + 93);
+    expect(iso.notes.join(' ')).toMatch(/identifiant en double/);
+    expect(() => LibraryFrameworkDefinition.parse(iso.definition)).not.toThrow();
   });
   it('est vide sans référentiel dans l’état', () => {
     expect(trackerCandidates({})).toEqual([]);

@@ -60,17 +60,20 @@ function iso(data: Json): TrackerCandidate | null {
   }));
   const parGroupe = new Map(groupes.map((g) => [str(g.id), domaine(g)]));
   const notes: string[] = [];
+  const vus = new Set<string>();
   const requirements = items.flatMap((i) => {
     const d = parGroupe.get(str(i.group));
-    if (!d) {
-      notes.push(`« ${str(i.id)} » ignorée : groupe « ${str(i.group)} » absent de l’outil de suivi.`);
+    const id = str(i.id);
+    if (!d || !id || vus.has(id)) {
+      notes.push(`« ${id || str(i.num)} » ignorée : groupe absent ou identifiant en double dans l’outil de suivi.`);
       return [];
     }
+    vus.add(id);
     return [
       {
-        id: `${i.ref === 'A' ? 'A.' : ''}${str(i.num)}`,
+        id,
         domain: d,
-        title: str(i.title).slice(0, 200) || str(i.num),
+        title: (str(i.num) ? `${str(i.num)} — ${str(i.title)}` : str(i.title)).slice(0, 200) || id,
         description: '',
         applicability: '',
         measureRefs: [],
@@ -93,18 +96,24 @@ function hds(data: Json): TrackerCandidate | null {
     const n = /^(\d+)\./.exec(c)?.[1];
     return n ? `hds_${n}` : cle('hds', c);
   };
-  const requirements = items.map((i) => {
+  const vusHds = new Set<string>();
+  const requirements = items.flatMap((i) => {
+    const id = str(i.id) || str(i.num);
+    if (!id || vusHds.has(id)) return [];
+    vusHds.add(id);
     const chapitre = str(chapitres[str(i.id)]);
     const d = chapitre ? cleChapitre(chapitre) : 'hds_sans_chapitre';
     if (!domains.has(d)) domains.set(d, chapitre || 'Chapitre non renseigné');
-    return {
-      id: str(i.num) || str(i.id),
-      domain: d,
-      title: str(i.title).slice(0, 200) || str(i.id),
-      description: '',
-      applicability: '',
-      measureRefs: [],
-    };
+    return [
+      {
+        id,
+        domain: d,
+        title: str(i.title).slice(0, 200) || id,
+        description: '',
+        applicability: '',
+        measureRefs: [],
+      },
+    ];
   });
   const groupe = arr(data.groups).find((g) => g.ref === 'HDS');
   const intitule = str(groupe?.title);
@@ -132,7 +141,8 @@ function hds(data: Json): TrackerCandidate | null {
 
 /** Référentiel de la liste `frameworks` de l'outil de suivi (forme du ReCyF : exigences par objectif de sécurité). */
 function liste(f: Json): TrackerCandidate | null {
-  const reqs = arr(f.requirements);
+  const brutes = arr(f.requirements);
+  const reqs = brutes.filter((r, i) => brutes.findIndex((x) => str(x.id) === str(r.id)) === i);
   const id = str(f.id);
   if (!id || !reqs.length || !reqs.every((r) => str(r.id) && str(r.text))) return null;
   const objectifs = (f.objectives && typeof f.objectives === 'object' ? f.objectives : {}) as Record<string, Json>;
