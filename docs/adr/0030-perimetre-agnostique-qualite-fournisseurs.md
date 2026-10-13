@@ -1,8 +1,8 @@
 # ADR 0030 — Périmètres gérés à part, groupe « Qualité » et fournisseurs transverses du Pilotage
 
-**Statut** : proposée le 13/10/2026, après les décisions D1 à D9 du RSSI (voir le
+**Statut** : proposée le 13/10/2026, après les décisions D1 à D13 du RSSI (voir le
 [cadrage](../unification/CADRAGE-MODULE-QUALITE-9001.md), §1 bis). Aucun code n'est écrit. Cette ADR fixe l'orientation des
-lots M1 (page « Périmètres ») et M2 (fournisseurs) ; la bibliothèque de référentiels (M3) aura la sienne (ADR 0031).
+lots M1 (page « Périmètres ») et M4 (fournisseurs) ; la bibliothèque de référentiels (M2 et M3) a la sienne : [ADR 0031](0031-bibliotheque-de-referentiels.md).
 
 ## Contexte
 
@@ -28,7 +28,7 @@ Constats de lecture du code (état `78ba57e`) :
 
 ## Décision
 
-1. **Page « Périmètres »** au niveau de l'organisation (lot M1) : créer et modifier un périmètre, lui donner une **nature**
+1. **Page « Périmètres »** au niveau de l'organisation (lot M1, droit `pilotage:administrer`, décision D12) : créer et modifier un périmètre, lui donner une **nature**
    libre (SMSI, SMQ, SMI, autre : une étiquette, sans règle de comportement) et lui rattacher méthode de risque, politique
    métier et membres (déjà existants), puis référentiels et fournisseurs. Aucun référentiel ni aucune nature n'est requis au
    démarrage ; une vue propre à un référentiel n'apparaît que s'il est rattaché au périmètre courant.
@@ -51,20 +51,20 @@ Constats de lecture du code (état `78ba57e`) :
 
 ## Conséquences
 
-- **Migration additive** (lot M2) : tables des critères, des évaluations et des rattachements, sans `smsi_id` pour les deux
+- **Migration additive** (lot M4) : tables des critères, des évaluations et des rattachements, sans `smsi_id` pour les deux
   premières ; rien n'est supprimé ni copié. Cela remplace ma première proposition (critères en plan de contrôle, sans
   migration), incompatible avec une évaluation hors périmètre.
 - **Écarts, actions et rappels** nés d'une évaluation sont des objets de périmètre : le périmètre est choisi à la création,
-  par défaut le périmètre courant, et l'objet garde un lien vers l'évaluation (question Q12, à confirmer).
-- **Bibliothèque de référentiels au niveau organisation** (« attacher » un même référentiel à plusieurs périmètres sans le
-  republier) : changement **le plus lourd** du chantier (publications, correspondances, mesures, DdA, tests), traité par
-  l'ADR 0031 et le lot M3, après M1 et M2. D'ici là, l'import par périmètre actuel fonctionne sans changement.
+  par défaut le périmètre courant, et l'objet garde un lien vers l'évaluation (décision D11).
+- **Bibliothèque de référentiels au niveau organisation** (décision D10, le « cœur » du chantier) : décidée ; elle est traitée
+  par l'[ADR 0031](0031-bibliotheque-de-referentiels.md) et les lots M2 et M3, **avant** les fournisseurs, dont les critères
+  désignent leurs exigences dans la bibliothèque. D'ici là, l'import par périmètre actuel fonctionne sans changement.
 - Le libellé « SMSI » du conteneur devient neutre dans l'interface avec le design ; les noms techniques (`grc_smsis`,
   `/api/grc/smsis`) ne changent pas.
-- **Non traité ici** : opportunités de 6.1 (Q8), texte de la révision 2026 (Q9), design (Q10), bibliothèque de référentiels
-  (Q13), droits de la page « Périmètres » (Q14).
+- **Non traité ici** : opportunités de 6.1 (Q8, ouverte). La révision 2026 n'est pas attendue (D9) et le style graphique est
+  fourni ensuite (D13).
 - Les états « existant » ci-dessus sont des constats de lecture, vérifiés lot par lot par des tests ; ils ne prouvent ni la
   conformité à l'ISO 9001 ni à aucun autre référentiel.
-- Retour arrière par lot : M1 supprime la page sans toucher aux périmètres ; M2 supprime les nouvelles tables et l'adaptateur,
+- Retour arrière par lot : M1 supprime la page sans toucher aux périmètres ; M4 supprime les nouvelles tables et l'adaptateur,
   le registre historique n'ayant pas été copié, aucune donnée de fournisseur n'est à restaurer (les évaluations saisies
   seraient perdues, d'où une sauvegarde avant mise à jour, déjà automatique).

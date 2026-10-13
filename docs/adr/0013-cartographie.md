@@ -95,3 +95,10 @@ intéressées, SWOT, périmètre, GAP, fournisseurs) ne sont pas encore repris :
 - Les écarts volontaires avec la bêta sont listés dans `docs/legacy/MAPPING-LEGACY.md` (section « maps ») : pas
   d'attribut `style`, couleurs par jetons, objets construits par le serveur selon les droits, identifiants de relation
   générés par le serveur ou le navigateur sans `Math.random` dans les fonctions partagées.
+
+## Révision du 13/10/2026 (ADR 0030 et 0031)
+
+Le point 7 (« filtres ISO 27001 et HDS, pas d'ISO 9001 ») date d'une carte limitée à la sécurité. Il est **révisé dans son
+principe** : les filtres de référentiel de la carte viendront des **référentiels rattachés au périmètre** (bibliothèque de
+l'organisation, ADR 0031) et non d'une liste figée dans le code (`REFERENTIELS` de `packages/shared/src/carto/model.ts`).
+Rien n'est modifié tant que le lot concerné n'est pas livré ; la carte actuelle garde ses deux filtres.

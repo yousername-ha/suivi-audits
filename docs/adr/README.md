@@ -34,3 +34,4 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0028](0028-liens-transverses.md) | Liens transverses : catalogue des relations autorisées, sens explicite (lot U4) | Proposée |
 | [0029](0029-recette-automatisee.md) | Recette automatisée : script serveur, performance, accessibilité axe-core (dépendance de test) | Proposée |
 | [0030](0030-perimetre-agnostique-qualite-fournisseurs.md) | Périmètres gérés à part (SMI), groupe « Qualité » du Pilotage et fournisseurs transverses | Proposée |
+| [0031](0031-bibliotheque-de-referentiels.md) | Bibliothèque de référentiels de l'organisation : déclarer une fois, évaluer sur plusieurs référentiels | Proposée |

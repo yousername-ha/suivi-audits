@@ -33,9 +33,13 @@ consigne les décisions structurantes ; les lots (§8) ne démarrent qu'après l
 | D6 | **Pas de grille d'évaluation des fournisseurs pour le moment.** | Livraison **sans grille**, critères saisis par l'organisme. |
 | D7 | Granularité des exigences 9001 : **article + alinéas énumérés** (Q3). | §4.1. |
 | D8 | **PESTEL ajouté**, même si la norme ne l'exige pas (Q7). | §4.5. |
-| D9 | Le texte de la **révision 2026** sera transmis « bientôt ». | Q9 reste ouverte ; rien n'en est supposé d'ici là. |
+| D9 | **On n'attend pas le texte de la révision 2026** : on construit avec l'édition 2015 fournie, et le mécanisme de versions absorbera la suivante. | §6 ; Q9 close. |
+| D10 | **Bibliothèque de référentiels au niveau de l'organisation** : c'est le **cœur** du chantier, pour s'évaluer sur plusieurs référentiels à la fois **sans refaire les mêmes déclarations**. | [ADR 0031](../adr/0031-bibliotheque-de-referentiels.md) ; lots M2 et M3. |
+| D11 | Une action, un constat ou un rappel issu d'une évaluation de fournisseur naît **dans un périmètre choisi à la création** (par défaut le périmètre courant). | §4.4 ; Q12 close. |
+| D12 | La page « Périmètres » est ouverte au **rôle de Pilotage** : droit `pilotage:administrer`, déjà exigé pour créer un périmètre (RSSI, administrateur). | §4.9 ; Q14 close. |
+| D13 | **Les fonctionnalités d'abord, le style ensuite** : le RSSI fournira rapidement un style proche de l'actuel ; aucun écran n'est figé sur un style d'ici là. | §7 ; Q10 close. |
 
-Restent ouvertes (§9) : Q8 opportunités de 6.1, Q10 design, et trois questions nées de D4 et D5 (Q12 à Q14).
+Reste ouverte (§9) : **Q8**, les opportunités de 6.1 (expliquée en clair), et Q15, une règle d'affichage proposée par ADR 0031.
 
 ## 2. Ce que demande le RSSI, et ce que la norme en dit
 
@@ -138,17 +142,17 @@ tient plus**. En revanche le registre historique des fournisseurs est déjà à 
   copie.
 - **Rattachement** : lien fournisseur ↔ périmètre (plusieurs à la fois), **sans donnée d'évaluation**. Retirer un
   rattachement ne supprime ni le fournisseur ni son évaluation.
-- **Critères et exigences** : un critère peut être relié à des exigences désignées par (référentiel, édition, identifiant
-  d'exigence), sans dépendre d'un périmètre. Un périmètre n'affiche, par référentiel, que les critères reliés aux référentiels
-  qui lui sont rattachés. Côté **ISO 9001** je peux déjà indiquer le rattachement, car j'en ai le texte : 8.4.1 (critères
-  d'évaluation, de sélection, de surveillance et de réévaluation, informations conservées), 8.4.2 (type et étendue de la
-  maîtrise), 8.4.3 (informations transmises au prestataire), 9.1.3 f et 9.3.2 c 7. Côté **ISO/IEC 27001:2022** et **HDS**, je ne
-  cite aucune exigence : aucune source ne m'a été fournie dans cette session ; elles viendront de vos référentiels importés
-  ou de votre relecture.
+- **Critères et exigences** : un critère peut être relié à des exigences **de la bibliothèque de référentiels** (§4.9,
+  ADR 0031), désignées comme dans le registre commun, sans dépendre d'un périmètre. Un périmètre n'affiche, par
+  référentiel, que les critères reliés aux référentiels qui lui sont rattachés. Côté **ISO 9001** je peux déjà indiquer le
+  rattachement, car j'en ai le texte : 8.4.1 (critères d'évaluation, de sélection, de surveillance et de réévaluation,
+  informations conservées), 8.4.2 (type et étendue de la maîtrise), 8.4.3 (informations transmises au prestataire), 9.1.3 f et
+  9.3.2 c 7. Côté **ISO/IEC 27001:2022** et **HDS**, je ne cite aucune exigence : aucune source ne m'a été fournie dans cette
+  session ; elles viendront des référentiels que vous importerez, ou de votre relecture.
 - **Sans grille** (D6) : au démarrage, aucun critère, aucune fréquence, aucun seuil ; l'écran propose d'en créer.
 - **Écarts, actions et rappels** : une action ou un constat naît **dans un périmètre** (ce sont des objets de périmètre).
-  L'utilisateur choisit ce périmètre à la création, par défaut le périmètre courant, et l'objet garde un lien vers
-  l'évaluation. La ré-évaluation périodique (série récurrente) pose la même question : **Q12**.
+  L'utilisateur choisit ce périmètre à la création, par défaut le périmètre courant (**décision D11**), et l'objet garde un
+  lien vers l'évaluation. Il en va de même pour la série de ré-évaluation périodique.
 - **Lectures par périmètre** (sans copie) : fournisseurs rattachés, évalués, non évalués, à réévaluer ; ces lectures nourrissent
   l'entrée « performances des prestataires externes » de la revue de direction (9.3.2).
 - Les contrôles historiques existants (champ de référence libre, fréquence, dernière date) restent lisibles tels quels ; leur
@@ -214,15 +218,18 @@ Créer une série reste une action explicite de l'utilisateur ; rien n'est plani
   référentiel n'est requis au démarrage, et aucune vue 9001 n'apparaît tant qu'un référentiel 9001 n'est pas rattaché.
 - **SMI** : ce n'est pas un nouvel objet, c'est un périmètre où plusieurs référentiels (27001:2022, HDS, 9001) sont rattachés ;
   processus, indicateurs, risques, actions, audits et revues y sont saisis une fois et lus selon chaque référentiel. **SMQ et
-  SMSI distincts** : deux périmètres. Ce qui est transverse (fournisseurs, évaluations, bibliothèque de référentiels) vit au
-  niveau organisation.
-- **Point structurant (Q13)** : aujourd'hui un référentiel est **publié dans chaque périmètre** (versions, correspondances et
-  mesures par périmètre). Pour « attacher » un même référentiel à plusieurs périmètres sans le republier, il faut une
-  **bibliothèque de référentiels au niveau de l'organisation**. C'est le changement le plus lourd de ce chantier : il touche
-  les publications, les correspondances, les mesures, la DdA et leurs tests. Recommandation : un lot dédié et son ADR 0031,
-  **après** la page « Périmètres » et la gestion des fournisseurs. D'ici là, l'import par périmètre continue de fonctionner
-  sans changement ; rien ne casse.
-- **Droits** : qui peut créer ou modifier un périmètre n'est pas tranché ; à instruire au lot M1 (Q14).
+  SMSI distincts** : deux périmètres. Ce qui est transverse (fournisseurs, évaluations, bibliothèque de référentiels et leurs
+  correspondances) vit au niveau organisation.
+- **Bibliothèque de référentiels (décision D10, [ADR 0031](../adr/0031-bibliotheque-de-referentiels.md))** : aujourd'hui un
+  référentiel est **publié dans chaque périmètre** et ses correspondances sont validées par périmètre. La cible est une
+  **bibliothèque au niveau de l'organisation** : on importe un référentiel **une fois**, on le **rattache** à plusieurs
+  périmètres (version précise, changement explicite), et ses **correspondances** se valident **une fois**. La mesure d'un
+  périmètre est l'**unité de déclaration** : elle peut mettre en œuvre des exigences de plusieurs référentiels, et une
+  correspondance validée fait apparaître l'exigence équivalente comme « **couverte par correspondance** », en lecture seule,
+  distincte de la couverture explicite et exclue des taux. Les référentiels déjà publiés dans un périmètre continuent de
+  fonctionner sans changement ; une promotion vers la bibliothèque est explicite et simulée.
+- **Droits (décision D12)** : créer, modifier un périmètre et lui rattacher un référentiel exigent `pilotage:administrer`,
+  c'est-à-dire le rôle de Pilotage (RSSI, administrateur), comme l'exige déjà la création d'un périmètre.
 - **Vocabulaire** : le libellé « SMSI » du conteneur devient neutre (« périmètre de management ») dans l'interface, avec le
   design (Q10) ; les noms techniques (`grc_smsis`, `/api/grc/smsis`) ne changent pas.
 
@@ -239,7 +246,7 @@ Créer une série reste une action explicite de l'utilisateur ; rien n'est plani
 | 7.1 à 7.4                     | Ressources et connaissances (champ de `governance`), compétences, sensibilisation, communication                        | Écart : compétences, communication    |
 | 7.5                           | Documents versionnés et chiffrés                                                                                         | Existant                              |
 | 8.1 à 8.3, 8.5 à 8.6          | Hors périmètre fonctionnel de l'outil : seule la **preuve** (documents, contrôles) peut y être rattachée                 | Preuves seulement                     |
-| 8.4                           | Revue des fournisseurs commune                                                                                           | Gestion des fournisseurs (§4.4, M2)   |
+| 8.4                           | Revue des fournisseurs commune                                                                                           | Gestion des fournisseurs (§4.4, M4)   |
 | 8.7, 10.2                     | Non-conformités, causes, actions, efficacité, clôture                                                                    | Existant (FCT-025)                    |
 | 9.1, 9.1.2, 9.1.3             | Indicateurs, satisfaction du client, analyse                                                                             | À compléter                           |
 | 9.2                           | Audit interne, programme, constats                                                                                      | Partiel (FCT-028) ; audit combiné     |
@@ -249,14 +256,14 @@ Créer une série reste une action explicite de l'utilisateur ; rien n'est plani
 Je ne propose **aucune fonction de réalisation** (conception, production, libération, après livraison) : ce sont des
 activités métier de chaque organisme, que l'outil trace sans les piloter.
 
-## 6. Prise en compte de la révision 2026
+## 6. Prise en compte de la révision 2026 (décision D9 : on n'attend pas)
 
-- Les référentiels sont des **publications immuables et versionnées** ; la 2026 sera une publication de plus, importée
-  quand son texte officiel sera fourni, et non une modification du code.
-- Les **correspondances révisables** entre publications (2015 → 2026) permettent de reporter risques, mesures, preuves et
-  indicateurs sans ressaisie, avec revue humaine des écarts.
-- Aucun numéro d'article ni aucune édition ne sera écrit en dur dans le code ; les libellés viennent de la publication.
-- Dès que le texte 2026 est publié, il sera relu avec cette même méthode (source consignée, aucun texte reproduit).
+- On construit **maintenant** avec l'ISO 9001:2015 fournie. La révision ne conditionne aucun lot.
+- Les référentiels de la bibliothèque sont des **versions immuables** ; la prochaine édition sera une version de plus,
+  importée quand son texte officiel sera fourni, et non une modification du code.
+- Une **correspondance entre versions** (2015 → suivante) permet de reporter liens, preuves et déclarations avec revue
+  humaine des écarts, via le mécanisme de changement de version de l'ADR 0031.
+- Aucun numéro d'article ni aucune édition n'est écrit en dur dans le code ; les libellés viennent de la version importée.
 
 ## 7. Données, sécurité et recette
 
@@ -267,46 +274,47 @@ activités métier de chaque organisme, que l'outil trace sans les piloter.
 - Recette prévue par lot : tests Vitest (calculs d'état, droits, refus 422 des paires non prévues), parcours Playwright,
   accessibilité axe-core (14 écrans + nouveaux écrans), performance sur le volume cible. Les cas de test seront ajoutés au
   registre documentaire avec leurs limites, sans passer un cas non exécuté pour réussi.
-- Charte : le module suit la charte graphique du dépôt ; **il attendra le design en cours de préparation par le RSSI** pour
-  ne pas figer d'écrans avant lui.
+- Charte (décision D13) : on crée les **fonctionnalités d'abord** avec les composants actuels, sans figer de style ; le
+  RSSI fournira rapidement un style proche de l'actuel, appliqué ensuite en une fois (captures de référence régénérées à
+  ce moment-là).
 
-## 8. Lots proposés (M0 à M8, ordre, sans calendrier)
+## 8. Lots proposés (M0 à M9, ordre, sans calendrier)
 
 | Lot | Contenu | Migration |
 | --- | ------- | --------- |
-| M0 | Réponses restantes du §9, ADR 0030 révisée, ADR 0031 (bibliothèque de référentiels), registre des sources, révision de l'ADR 0013 (filtre 9001) | aucune |
-| M1 | **Page « Périmètres »** : créer et modifier, nature, rattachement (méthode de risque, politique, membres), libellés neutres, droits | aucune attendue |
-| M2 | **Gestion des fournisseurs** hors périmètre : adaptateur du registre, évaluations immuables, rattachement à plusieurs périmètres, critères sans grille | **additive** |
-| M3 | **Bibliothèque de référentiels** au niveau organisation et rattachement aux périmètres ; référentiel ISO 9001 (article + alinéas) importable | additive, **lourde** |
-| M4 | Fiche processus 4.4.1, lien indicateurs ↔ processus, calque « santé » sur la carte | additive éventuelle |
-| M5 | Indicateurs et objectifs (6.2, 9.1), **boxes** et tableau de bord qualité | aucune attendue |
-| M6 | Contexte, **PESTEL**, parties intéressées, opportunités (6.1), séries récurrentes proposées | additive éventuelle |
-| M7 | Revue de direction (9.3.2) et audit combiné, amélioration continue | aucune attendue |
-| M8 | Recette, accessibilité, performance, documentation, réévaluation du registre | aucune |
+| M0 | Décisions D1 à D13, ADR 0030 et 0031, révision de l'ADR 0013 (filtre 9001) | aucune |
+| M1 | **Page « Périmètres »** : créer et modifier, nature, rattachement (méthode de risque, politique, membres), libellés neutres, droit `pilotage:administrer` | aucune attendue |
+| M2 | **Bibliothèque de référentiels** : stockage organisationnel, import et publication, rattachement d'une version à un périmètre, double résolution des références, promotion explicite et simulée | additive, **lourde** |
+| M3 | **Déclarer une fois** : correspondances organisationnelles, couverture déduite, confirmation, vue commune multi-référentiels, tableau de bord de conformité étendu | additive |
+| M4 | **Gestion des fournisseurs** hors périmètre : adaptateur du registre, évaluations immuables, rattachement à plusieurs périmètres, critères reliés à la bibliothèque, sans grille | **additive** |
+| M5 | Fiche processus 4.4.1, lien indicateurs ↔ processus, calque « santé » sur la carte | additive éventuelle |
+| M6 | Indicateurs et objectifs (6.2, 9.1), **boxes** et tableau de bord qualité | aucune attendue |
+| M7 | Contexte, **PESTEL**, parties intéressées, opportunités (6.1), séries récurrentes proposées | additive éventuelle |
+| M8 | Revue de direction (9.3.2) et audit combiné, amélioration continue | aucune attendue |
+| M9 | Recette, accessibilité, performance, documentation, application du style fourni, réévaluation du registre | aucune |
 
-Ordre recommandé : **M0 à M8 dans l'ordre**. M1 et M2 sont utiles **sans** le référentiel 9001 (ils servent déjà l'ISO/IEC
-27001:2022 et l'HDS) ; M3, le plus lourd, vient après eux pour ne pas retarder la valeur. Chaque lot : branche
-`claude-suivi-smsi`, PR vers `main` après CI verte, CHANGELOG, retour arrière décrit, registre réévalué à la fin du lot.
+Ordre recommandé : **M0 à M9 dans l'ordre**. M1 est petit et débloque le rattachement ; **M2 et M3, le cœur voulu par le
+RSSI, passent avant les fournisseurs** : M4 en dépend (ses critères visent la bibliothèque). Tout ce qui précède M5 sert déjà
+l'ISO/IEC 27001:2022 et l'HDS, sans le référentiel 9001. Chaque lot : branche `claude-suivi-smsi`, PR vers `main` après CI
+verte, CHANGELOG, retour arrière décrit, registre réévalué à la fin du lot.
 
 ## 9. Décisions et questions
 
-**Tranchées le 13/10/2026** (§1 bis) : Q1 (ISO/IEC 27001:2022), Q2 (groupe « Qualité » du Pilotage), Q3 (article + alinéas),
-Q4 (agnostique, SMI = périmètre partagé), Q5 (module Fournisseurs du Pilotage), Q6 (pas de grille), Q7 (PESTEL ajouté), Q11
-(fournisseur commun à plusieurs périmètres : **oui**, par D5).
+**Tranchées le 13/10/2026** (§1 bis) : D1 à D13, soit les anciennes Q1 à Q7 et Q9 à Q14.
 
-**Restent ouvertes**
+**Reste ouverte, sans bloquer M0 à M5**
 
-1. **Q8** — Opportunités (6.1) : les ajouter comme nature du risque commun, ou comme objet séparé ? (Le constat du Pilotage
-   connaît déjà la nature « opportunité d'amélioration », qui relève de 10.1 et non de 6.1 : à ne pas confondre.)
-2. **Q9** — Révision 2026 : transmettre le texte officiel dès qu'il est publié (annoncé « bientôt »).
-3. **Q10** — **Design** : le module est-il à concevoir dans la nouvelle charte dès le départ ?
-4. **Q12** — Une action, un constat ou un rappel issu d'une évaluation de fournisseur naît dans un périmètre (objets de
-   périmètre). Recommandation : **le périmètre est choisi à la création, par défaut le périmètre courant**, l'évaluation restant
-   unique. D'accord ?
-5. **Q13** — **Bibliothèque de référentiels** au niveau organisation (§4.9) : la confirmez-vous comme objectif, en lot dédié
-   (M3), sachant que c'est le changement le plus lourd ? Sinon, chaque périmètre garde son import, au prix d'un référentiel
-   dupliqué.
-6. **Q14** — Droits de la page « Périmètres » : réservée aux administrateurs, ou ouverte au rôle qui pilote le Pilotage ?
+1. **Q8** — Opportunités de 6.1. La norme demande de déterminer des **risques et des opportunités** (6.1.1, notes de 6.1.2).
+   Un risque est une situation défavorable qu'on veut réduire ; une **opportunité** est une situation **favorable** qu'on veut
+   saisir (la note 2 de 6.1 cite : nouvelles pratiques, nouveaux produits, nouveaux marchés, nouveaux clients, partenariats,
+   nouvelle technologie). Le registre des risques de l'outil est fait pour les premiers (matrice de gravité et de
+   vraisemblance). Où enregistrer les secondes ? **A)** dans le même registre, avec une « nature » risque ou opportunité ;
+   **B)** dans un **objet « Opportunité » séparé**, plus léger (description, bénéfice attendu, actions), affiché avec les
+   risques dans une vue commune « Risques et opportunités ». **Recommandation : B**, car une matrice de gravité n'a pas de
+   sens pour une opportunité, et la norme n'impose aucune méthode de risque (A.4). Ne pas confondre avec l'« opportunité
+   d'amélioration » d'un constat (10.1), déjà dans l'outil.
+2. **Q15** — Règle d'affichage proposée par l'ADR 0031 : une exigence « couverte par correspondance » est affichée **à
+   part** et **ne compte pas** dans les taux de couverture, tant que l'utilisateur ne l'a pas confirmée. D'accord ?
 
 ## 10. Ce que ce cadrage n'établit pas
 
