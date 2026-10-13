@@ -21,6 +21,7 @@ import { BusinessRegistry } from '../pilotage/Registry';
 import { RecordEditor } from '../pilotage/RecordEditor';
 import { Decision } from '../pilotage/Decision';
 import { Members } from '../pilotage/Members';
+import { Bibliotheque } from '../pilotage/Bibliotheque';
 import { Perimetres } from '../pilotage/Perimetres';
 import { Journey } from '../pilotage/Journey';
 import { Relations } from '../grc/Relations';
@@ -382,6 +383,7 @@ export function PilotagePage() {
                 )}
               </>
             )}
+            {section === 'bibliotheque' && can('conformite', 'lire') && <Bibliotheque />}
             {section === 'perimetres' && can('pilotage', 'lire') && (
               <Perimetres
                 affiche={smsi}

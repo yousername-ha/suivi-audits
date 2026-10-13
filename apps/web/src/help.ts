@@ -73,6 +73,18 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
   },
   {
+    id: 'bibliotheque-referentiels',
+    title: 'Bibliothèque de référentiels',
+    permission: 'conformite:lire',
+    link: '/pilotage/bibliotheque',
+    steps: [
+      'La bibliothèque contient les référentiels de l’organisation, importés une seule fois. Aucun texte normatif n’est fourni : importez les exigences dont vous détenez les droits.',
+      'Importer un référentiel : collez sa définition, simulez la publication, indiquez un motif puis publiez. Chaque version est immuable ; une évolution crée une nouvelle version.',
+      'Dans la page Périmètres, « Référentiels » rattache une version précise à un périmètre. Le même référentiel peut être rattaché à plusieurs périmètres sans être importé à nouveau.',
+      'Un référentiel déjà publié dans un périmètre peut être promu dans la bibliothèque (simulation puis confirmation) ; l’original est conservé.',
+    ],
+  },
+  {
     id: 'parcours-pilotage',
     title: 'Parcours guidé',
     permission: 'pilotage:lire',

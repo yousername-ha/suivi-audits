@@ -9,6 +9,7 @@ import { DataTable, StatusChip } from '@suivi/ui';
 import { api, get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
+import { ReferentielsDuPerimetre } from './Bibliotheque';
 import { Members } from './Members';
 
 interface Perimetre {
@@ -34,6 +35,7 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
     admin = can('pilotage', 'administrer'),
     [formulaire, setFormulaire] = useState<{ edition: Perimetre | null; valeurs: Formulaire } | null>(null),
     [acces, setAcces] = useState<Perimetre | null>(null),
+    [referentiels, setReferentiels] = useState<Perimetre | null>(null),
     [erreur, setErreur] = useState<unknown>(null),
     [envoi, setEnvoi] = useState(false);
   const liste = useQuery({
@@ -131,6 +133,16 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
                         Modifier
                       </Button>
                     )}
+                    {can('conformite', 'lire') && (
+                      <Button
+                        size="xs"
+                        variant="default"
+                        aria-label={`Référentiels rattachés au périmètre ${p.name}`}
+                        onClick={() => setReferentiels(p)}
+                      >
+                        Référentiels
+                      </Button>
+                    )}
                     {admin && p.visibility === 'restricted' && (
                       <Button
                         size="xs"
@@ -195,6 +207,14 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
             </Group>
           </Stack>
         )}
+      </Modal>
+      <Modal
+        opened={!!referentiels}
+        onClose={() => setReferentiels(null)}
+        size="lg"
+        title={referentiels ? `Référentiels du périmètre ${referentiels.name}` : ''}
+      >
+        {referentiels && <ReferentielsDuPerimetre smsi={referentiels.id} />}
       </Modal>
       <Modal opened={!!acces} onClose={() => setAcces(null)} title={acces ? `Accès au périmètre ${acces.name}` : ''}>
         {acces && <Members smsi={acces.id} />}

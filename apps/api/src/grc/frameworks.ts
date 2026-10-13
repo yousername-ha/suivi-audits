@@ -7,6 +7,9 @@ import { hash, type Grc } from './core.js';
 export class GrcFrameworks {
   constructor(private readonly g: Grc) {}
   async version(smsi: string, id: string, version: number, user: SessionUser, c?: Client) {
+    // Un référentiel de la bibliothèque rattaché au périmètre se résout comme un référentiel publié dans le périmètre.
+    const attached = await this.g.library.versionForScope(smsi, id, version, user, c);
+    if (attached) return attached;
     const object = await this.g.object(smsi, id, user, false, c);
     if (object.kind !== 'framework') throw new HttpError(422, 'Référentiel attendu.');
     const row = (

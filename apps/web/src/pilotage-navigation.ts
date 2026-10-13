@@ -29,6 +29,7 @@ export const PILOTAGE_NAV = [
     label: 'Conformité',
     items: [
       { id: 'referentiels', label: 'Référentiels et exigences', module: 'conformite' },
+      { id: 'bibliotheque', label: 'Bibliothèque de référentiels', module: 'conformite' },
       { id: 'applicabilite', label: 'Applicabilité et justifications', module: 'pilotage' },
       { id: 'mesures', label: 'Mesures', module: 'audit' },
       { id: 'correspondances', label: 'Correspondances entre exigences', module: 'conformite' },

@@ -46,6 +46,25 @@ export async function sources(g: Grc, smsi: string, user: SessionUser, search: s
             name: r.id + ' · ' + r.title,
             kind: 'requirement',
           });
+    // Référentiels de la bibliothèque rattachés et actifs dans ce périmètre (ADR 0031).
+    const attached = (
+      await g.db.q<{
+        framework_id: string;
+        version: number;
+        definition: { requirements: { id: string; title: string }[] };
+      }>(
+        `SELECT s.framework_id,s.version,v.definition FROM grc_scope_frameworks s JOIN lib_framework_versions v ON v.framework_id=s.framework_id AND v.version=s.version WHERE s.smsi_id=$1 AND s.enabled`,
+        [smsi],
+      )
+    ).rows;
+    for (const p of attached)
+      for (const r of p.definition.requirements)
+        if ((r.title + ' ' + r.id).toLowerCase().includes(search.toLowerCase()) && objects.length < 300)
+          objects.push({
+            ref: `requirement:${p.framework_id}:${p.version}:${r.id}`,
+            name: r.id + ' · ' + r.title,
+            kind: 'requirement',
+          });
   }
   if (smsi === DEFAULT_SMSI) {
     const state = await g.legacy.recompose();
