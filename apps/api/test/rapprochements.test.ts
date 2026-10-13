@@ -141,8 +141,11 @@ describe('correspondances organisationnelles', () => {
     expect(r.statusCode, r.body).toBe(200);
     expect(r.json()).toMatchObject({ status: 'validated', validatedBy: 'rap_admin', version: 2 });
     expect((await valider(map1, 2)).statusCode).toBe(409);
-    const h = await t.svc.db.q('SELECT version FROM lib_mapping_history WHERE mapping_id=$1 ORDER BY version', [map1]);
-    expect(h.rows.map((x: { version: number }) => x.version)).toEqual([1, 2]);
+    const h = await t.svc.db.q<{ version: number }>(
+      'SELECT version FROM lib_mapping_history WHERE mapping_id=$1 ORDER BY version',
+      [map1],
+    );
+    expect(h.rows.map((x) => x.version)).toEqual([1, 2]);
     await expect(t.svc.db.q('DELETE FROM lib_mapping_history WHERE mapping_id=$1', [map1])).rejects.toThrow();
     expect(
       (
