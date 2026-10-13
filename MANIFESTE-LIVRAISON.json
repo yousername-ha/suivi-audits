@@ -1,9 +1,9 @@
 {
   "version": "3.0.1-astra-local",
-  "createdAt": "2026-10-13T15:56:31.812726+00:00",
+  "createdAt": "2026-10-13T16:31:31.432354+00:00",
   "branch": "claude/audit-suivi-docker-github-0pfu4y",
   "baseCommit": "4bcdf60c629b50466aa40f1a98d67346a4641359",
-  "sourceCommit": "8c032e7d0fb3514a0ece4315020993adc02abfc4",
+  "sourceCommit": "c56e325245933991d268635cfddfc05736840dc2",
   "workingTreeChanges": false,
   "runtime": "Python >= 3.10 ; HTML/CSS/JavaScript et bibliothèques locales",
   "entryPoints": [
@@ -56,7 +56,7 @@
     {
       "path": "docs/ASTRA-REFONTE.md",
       "size": 14435,
-      "sha256": "8a3a8b3dcc8495df658fcc73a9ba6ba9828f32da5f4b0344904e3f97a51a8b68"
+      "sha256": "a7769b4985e745795c1df20e2329253d0ed07b960114bf6dde9f803d76e2f710"
     },
     {
       "path": "docs/CARTOGRAPHIES-NAVIGATION.md",
@@ -346,7 +346,7 @@
     {
       "path": "recette/apparence-globale.md",
       "size": 6257,
-      "sha256": "9a795be24a641642458811fb80985d1d70161befd9293c98fc7a273afc8bc6fb"
+      "sha256": "b937b96e7ffcfdc8b4d736f537b0af2d959cbe2f7dffd37623e1b6b42bfa879c"
     },
     {
       "path": "recette/apparence-globale/anciens-parcours-avant-apres.json",
@@ -2554,294 +2554,294 @@
       "sha256": "ad9ba41bd883bd6cd3cf06184c79aa4d9c376cf9df0165c856ce9fbd5df86ab6"
     },
     {
-      "path": "samples/2026-10-13-astra-16/PLANCHE-CONTACT.jpg",
+      "path": "samples/2026-10-13-astra-17/PLANCHE-CONTACT.jpg",
       "size": 639224,
       "sha256": "7a049efc988e23979e382e35babfbe869a747ccae77937f20cf73027296983a4"
     },
     {
-      "path": "samples/2026-10-13-astra-16/README.md",
-      "size": 10008,
-      "sha256": "39237a5cb1ec81fdcee2d2d40a72b8eaaca72ac103eb0761134176b1cf1ddfdd"
+      "path": "samples/2026-10-13-astra-17/README.md",
+      "size": 10210,
+      "sha256": "60c2490c062d2ad1b28a1e2f80988e4923d250f58a9a7cfe94c74c427ff607b2"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/001-dash-dash-sage.png",
+      "path": "samples/2026-10-13-astra-17/images/001-dash-dash-sage.png",
       "size": 287674,
       "sha256": "7ac9ec5dab09574c06b44ee7d6263328e7675a122d00b1ae084a701583028284"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/002-risks-risk-register-sage.png",
+      "path": "samples/2026-10-13-astra-17/images/002-risks-risk-register-sage.png",
       "size": 275996,
       "sha256": "3755d8e7215c0034636288694452c74e9aa0b8bd98a37df10d149c6e6dfbdbaf"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/003-risks-risk-map-sage.png",
+      "path": "samples/2026-10-13-astra-17/images/003-risks-risk-map-sage.png",
       "size": 262090,
       "sha256": "8ac130a85b37e19ee8845b9425433a1996b9446a91a7aba3c1fe5188109eafb9"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/004-risks-risk-studies-sage.png",
+      "path": "samples/2026-10-13-astra-17/images/004-risks-risk-studies-sage.png",
       "size": 226731,
       "sha256": "5c2b34fdc3ae00360e33fc1addb1a51c7df5f19c531fa290d7c70b1684e10693"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/005-compliance-iso-sage.png",
+      "path": "samples/2026-10-13-astra-17/images/005-compliance-iso-sage.png",
       "size": 258952,
       "sha256": "670df30aa2874af9c5bf33b2758899ab23b950d2f19f6cc6a3edd1ae66feb78f"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/006-compliance-ann-sage.png",
+      "path": "samples/2026-10-13-astra-17/images/006-compliance-ann-sage.png",
       "size": 271708,
       "sha256": "f1a7ae9f857db6c402b93be12723499bab86ccb88b16a9bb0e286607ab8b9de2"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/007-care-df-care-dash-sage.png",
+      "path": "samples/2026-10-13-astra-17/images/007-care-df-care-dash-sage.png",
       "size": 289652,
       "sha256": "2c2e11e7d9d380a86abae8d00860dbb81ab0cdbd62798cea192b329c3929913b"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/008-has-df-has-dash-sage.png",
+      "path": "samples/2026-10-13-astra-17/images/008-has-df-has-dash-sage.png",
       "size": 243888,
       "sha256": "8e4e56672b6eac38b90c1f9643c1d344a073bbf1634cfe077713acabea029cf3"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/009-audit-cibles-sage.png",
+      "path": "samples/2026-10-13-astra-17/images/009-audit-cibles-sage.png",
       "size": 309745,
       "sha256": "81cff77330f12f749ff3a55245472a4351e7f86ebf33dd1295f6073b1deb050d"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/010-proofs-prv-reg-sage.png",
+      "path": "samples/2026-10-13-astra-17/images/010-proofs-prv-reg-sage.png",
       "size": 249335,
       "sha256": "f1b93ed571a2b06bbfb4392a9be6a06d892f880ccf9f8b903bfd47fa8dd125a8"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/011-pcra-pcra-dashboard-sage.png",
+      "path": "samples/2026-10-13-astra-17/images/011-pcra-pcra-dashboard-sage.png",
       "size": 238940,
       "sha256": "5acc63e45ece80255fcd4ea53e20db6e77bda94f3017bff0c9fa61251fc035b3"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/012-pcra-pcra-bias-sage.png",
+      "path": "samples/2026-10-13-astra-17/images/012-pcra-pcra-bias-sage.png",
       "size": 211054,
       "sha256": "f2b6498fca69c08bc35eb66d3a872b308433eb9ec306b2e3760b68577cd48f37"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/013-perimeters-perimeter-registry-sage.png",
+      "path": "samples/2026-10-13-astra-17/images/013-perimeters-perimeter-registry-sage.png",
       "size": 249669,
       "sha256": "39ba08b96aa5d0e2cb01c901b25717b300141fcbbcb1fc9a92e2a9262f481273"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/014-suppliers-sup-sage.png",
+      "path": "samples/2026-10-13-astra-17/images/014-suppliers-sup-sage.png",
       "size": 244188,
       "sha256": "bad0f368a8cd686b8b7e1a3b2835d93d477ad4867d4c220f3d0e26c37f220f8a"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/015-admin-admin-overview-sage.png",
+      "path": "samples/2026-10-13-astra-17/images/015-admin-admin-overview-sage.png",
       "size": 235056,
       "sha256": "da189650826482b7ce8d3605d3f31b02ba71eb25a368edef748e16dff34bf0ba"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/016-programs-pl-formation-sage.png",
+      "path": "samples/2026-10-13-astra-17/images/016-programs-pl-formation-sage.png",
       "size": 215714,
       "sha256": "cd49839fc927adb61f1d573a7bfb6b78265fefd54c1550d0cdd4586b0086c8f4"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/017-ops-inc-reg-sage.png",
+      "path": "samples/2026-10-13-astra-17/images/017-ops-inc-reg-sage.png",
       "size": 220516,
       "sha256": "bb3bd8092492a41a4b575b0040f13b56de010b0fbed74204102ba728dacb9b4a"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/018-ai-reg-sage.png",
+      "path": "samples/2026-10-13-astra-17/images/018-ai-reg-sage.png",
       "size": 214168,
       "sha256": "f8660e0fe5c96a82f6f6691df251e7dae84e34d001aad7a6041c91cff16652cb"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/019-context-ctx-pi-sage.png",
+      "path": "samples/2026-10-13-astra-17/images/019-context-ctx-pi-sage.png",
       "size": 239884,
       "sha256": "c284d2a4ec8ef58dcaaae15de9b39d2d62ce46840e04fbaa8b8342f868f82f02"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/020-actions-list-sage.png",
+      "path": "samples/2026-10-13-astra-17/images/020-actions-list-sage.png",
       "size": 268212,
       "sha256": "0895b9ec8c357b93adee8b256be1ef895cbd89f1cdfca5c83044f8b4703d7351"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/021-actions-kanban-sage.png",
+      "path": "samples/2026-10-13-astra-17/images/021-actions-kanban-sage.png",
       "size": 253935,
       "sha256": "9242635c742b9adb304a39fcc287174d430d1c08c89630bcaa8140385ff25e0d"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/022-actions-planning-sage.png",
+      "path": "samples/2026-10-13-astra-17/images/022-actions-planning-sage.png",
       "size": 251080,
       "sha256": "ab65f7a852fa8fec8631e2732d40349ef67039274f60ac1d4eb905421e4c07ed"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/023-actions-calendar-sage.png",
+      "path": "samples/2026-10-13-astra-17/images/023-actions-calendar-sage.png",
       "size": 218046,
       "sha256": "10b8178029da5e595ea5bd9c630bfa316990d9247ab62c14af40304b5f9ad478"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/024-actions-gantt-sage.png",
+      "path": "samples/2026-10-13-astra-17/images/024-actions-gantt-sage.png",
       "size": 251179,
       "sha256": "f3e4bc55c822bc40f8afc0aab0baf7230fbaf509e178c7dcf967678599a4ae8e"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/025-actions-summary-sage.png",
+      "path": "samples/2026-10-13-astra-17/images/025-actions-summary-sage.png",
       "size": 237646,
       "sha256": "70192d60fa8f1025548315d6f3f5506609f8851efbd9a016ff008cd877141cc8"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/026-recurring-list-sage.png",
+      "path": "samples/2026-10-13-astra-17/images/026-recurring-list-sage.png",
       "size": 264140,
       "sha256": "89d95a740fcf4c8626b288ed9403a8ac8d8ebb47c517923ac2c5569edc69f7bc"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/027-recurring-kanban-sage.png",
+      "path": "samples/2026-10-13-astra-17/images/027-recurring-kanban-sage.png",
       "size": 237553,
       "sha256": "5e67db9694f5a7bbbe927873fc9d25456a65f664b675301473647c5539fb43e8"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/028-recurring-planning-sage.png",
+      "path": "samples/2026-10-13-astra-17/images/028-recurring-planning-sage.png",
       "size": 240858,
       "sha256": "1ee362b1f0b3bdaec1ae192070c8cdfa1f7d8e8ac08dd44b3b5a6b6043fa4fa9"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/029-recurring-calendar-sage.png",
+      "path": "samples/2026-10-13-astra-17/images/029-recurring-calendar-sage.png",
       "size": 224766,
       "sha256": "85475e6f1880b9b82085487699337c97b572f2c13992debbcdc1dc918967c08f"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/030-recurring-fiche-historique-sage.png",
+      "path": "samples/2026-10-13-astra-17/images/030-recurring-fiche-historique-sage.png",
       "size": 246342,
       "sha256": "49521e6f8d5cd0b49e80a25a54a3bad9882957205e73ebc2fd8aafc2bf5da3ae"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/031-admin-appearance-enregistre.png",
+      "path": "samples/2026-10-13-astra-17/images/031-admin-appearance-enregistre.png",
       "size": 207534,
       "sha256": "5954b4f9b31403366a176d9878b8a2f4a075e1d6735bbb3af9689c48f38e522f"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/032-admin-appearance-apercu-clair.png",
+      "path": "samples/2026-10-13-astra-17/images/032-admin-appearance-apercu-clair.png",
       "size": 209129,
       "sha256": "c0b437e65829fb4beb9916b6ae469973da4db996acbc7bc4e85575d1a3e6980e"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/033-admin-appearance-enregistre-clair.png",
+      "path": "samples/2026-10-13-astra-17/images/033-admin-appearance-enregistre-clair.png",
       "size": 208261,
       "sha256": "2cfd8e1fe607456fa49a778fe4f747532a189b674026f9b1a2ef8663b5ca2b25"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/034-dash-dash-clair.png",
+      "path": "samples/2026-10-13-astra-17/images/034-dash-dash-clair.png",
       "size": 287616,
       "sha256": "f2e18e2e84f0232da487a698f5c6c5eb9cf81c9498796b941cf228d9ac6962fd"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/035-risks-risk-map-clair.png",
+      "path": "samples/2026-10-13-astra-17/images/035-risks-risk-map-clair.png",
       "size": 262457,
       "sha256": "2d869b15f5e5097948c1463154a3c7b3f19768dcf95d33aabeeec5862f393190"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/036-actions-kanban-clair.png",
+      "path": "samples/2026-10-13-astra-17/images/036-actions-kanban-clair.png",
       "size": 254056,
       "sha256": "edf13f0e9ebb3671d00439e980d695f05c9527f3c1b11e159f41263542f5f5b7"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/037-recurring-list-clair.png",
+      "path": "samples/2026-10-13-astra-17/images/037-recurring-list-clair.png",
       "size": 264302,
       "sha256": "d87b877f2f5a03b5596d49a9daab442d5e667df59fe366520c88972745c10cf2"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/038-dash-dash-sombre.png",
+      "path": "samples/2026-10-13-astra-17/images/038-dash-dash-sombre.png",
       "size": 276958,
       "sha256": "1d5a60f2993026a2bba9e712a6f93b72a0625eb53cd2374512bb7460f5468c45"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/039-risks-risk-map-sombre.png",
+      "path": "samples/2026-10-13-astra-17/images/039-risks-risk-map-sombre.png",
       "size": 252486,
       "sha256": "04e13fcc3343f5654fb54175921121ed74edbf73d73c0f6bb294cb180c2f5ac0"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/040-dash-dash-390.png",
+      "path": "samples/2026-10-13-astra-17/images/040-dash-dash-390.png",
       "size": 92336,
       "sha256": "9e0614c2e184013171298853649deadb15c457dff9ebe3f1bf0df48a173858a4"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/041-risks-risk-map-390.png",
+      "path": "samples/2026-10-13-astra-17/images/041-risks-risk-map-390.png",
       "size": 69649,
       "sha256": "c33210c7c07135e8edafad7c87ed3ac8a0f4ac0406b7a40fc1345cfd17331294"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/042-dash-dash-768.png",
+      "path": "samples/2026-10-13-astra-17/images/042-dash-dash-768.png",
       "size": 192675,
       "sha256": "c41bb4728ba6b8830f2687c753abe1d630e35c82979e840f81ed429edc0f2d3e"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/043-risks-risk-map-768.png",
+      "path": "samples/2026-10-13-astra-17/images/043-risks-risk-map-768.png",
       "size": 193325,
       "sha256": "0df885b1b52d4c14b6e03c7f34d42142e6f0180da28d1c2bea1bf2e6ec2c5e53"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/044-dash-dash-1440.png",
+      "path": "samples/2026-10-13-astra-17/images/044-dash-dash-1440.png",
       "size": 245015,
       "sha256": "79195ef6657a819006a37a89401abae31b1fa3803d10960432b0a70d8a84ac82"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/045-risks-risk-map-1440.png",
+      "path": "samples/2026-10-13-astra-17/images/045-risks-risk-map-1440.png",
       "size": 224302,
       "sha256": "bca29412580a02f96ce6950f9174796a933be09e0c6f781bfa0b954c5dd99688"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/046-dash-dash-1920.png",
+      "path": "samples/2026-10-13-astra-17/images/046-dash-dash-1920.png",
       "size": 295529,
       "sha256": "6514e0ec992fad5e29734ef00df3f6d637571e7d8ee4a93777bdb85515af8288"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/047-risks-risk-map-1920.png",
+      "path": "samples/2026-10-13-astra-17/images/047-risks-risk-map-1920.png",
       "size": 260861,
       "sha256": "e4c8277ab5d6e8abb6e6a1fd01a2a8133701e8902e1311c78e1eb58ea75ef1b8"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/048-carto-context-protegee.png",
+      "path": "samples/2026-10-13-astra-17/images/048-carto-context-protegee.png",
       "size": 200927,
       "sha256": "721d2520fc593a46472d107062d748332ea43cdd5aeff8eec0e4bdb604d54423"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/049-carto-process-protegee.png",
+      "path": "samples/2026-10-13-astra-17/images/049-carto-process-protegee.png",
       "size": 198149,
       "sha256": "86d549628ba66a96f98d66e50c3f4b8a173db0999bcb50df611b6e0fb934830d"
     },
     {
-      "path": "samples/2026-10-13-astra-16/images/050-dash-map-protegee.png",
+      "path": "samples/2026-10-13-astra-17/images/050-dash-map-protegee.png",
       "size": 208851,
       "sha256": "56f13118fe65bae98d1c209285bbbe10c10e040d777987a5a09b119ddbc5cd6f"
     },
     {
-      "path": "samples/2026-10-13-astra-16/index.html",
+      "path": "samples/2026-10-13-astra-17/index.html",
       "size": 13296,
-      "sha256": "90a35196a438112f38af2d794319f534f37139f5a617f73732fee375535135fb"
+      "sha256": "53b53544f96dcf6e406a8fba5b54c392e0af00b2c2968686f5eaf725f89e5f83"
     },
     {
-      "path": "samples/2026-10-13-astra-16/technique/capture.cjs",
+      "path": "samples/2026-10-13-astra-17/technique/capture.cjs",
       "size": 10598,
-      "sha256": "1bba2261abf097ef3dd2e043eb1ee9716884d4f838949bc71d6c11bbb4eaae9e"
+      "sha256": "5e337c478ef53f67b493c68dd94bd2c4bb0cb49c7a76cf7794bae56b2be146bd"
     },
     {
-      "path": "samples/2026-10-13-astra-16/technique/cartographies-avant-apres.json",
+      "path": "samples/2026-10-13-astra-17/technique/cartographies-avant-apres.json",
       "size": 1255,
       "sha256": "06dc44b141861e5e27882987afcef9f9b8e8fe27e20b5039a121c63928e5217c"
     },
     {
-      "path": "samples/2026-10-13-astra-16/technique/planche.py",
+      "path": "samples/2026-10-13-astra-17/technique/planche.py",
       "size": 844,
       "sha256": "76ff705073ebb8cfcb358b07cb12fbaf73f4c878317b24820c707fba218ca4d6"
     },
     {
-      "path": "samples/2026-10-13-astra-16/technique/verification.json",
+      "path": "samples/2026-10-13-astra-17/technique/verification.json",
       "size": 20721,
       "sha256": "97811156834a4b107552129ee0507ebee3f3e3f718b01bca79a6d4d15ceae020"
     },
     {
       "path": "samples/README.md",
       "size": 3863,
-      "sha256": "ac1297f811b1f6427d12b61231f78fe49597272a838a0b934cd51496e46ff03c"
+      "sha256": "9195e1898500a6ab1f12348cb53a910e1fcb44c49ff1515bf9117b00e1215616"
     },
     {
       "path": "scripts/generer_etapes_parcours.py",
