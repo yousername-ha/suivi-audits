@@ -8,6 +8,25 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 - **PostgreSQL 17 → 18 : migration automatique de la base** ([ADR 0035](docs/adr/0035-postgresql-18-migration-automatique.md)). Pendant la mise à jour (script ou menu Système), après la sauvegarde chiffrée obligatoire, l'application est arrêtée, la base est exportée avec le moteur 17, recréée en PostgreSQL 18 dans `DATA_DIR/postgres18`, restaurée, puis contrôlée (nombres de lignes identiques table par table). Durée : quelques minutes, proportionnelle à la taille de la base. Espace libre nécessaire : deux fois la base plus 512 Mo. **L'ancienne base n'est jamais modifiée** : en cas d'échec, la version précédente redémarre dessus. Après avoir vérifié l'application, libérer la place : `sudo ./scripts/nettoyer-ancienne-base-postgresql.sh`. Ne pas lancer `docker compose up` directement avant la mise à jour : le démarrage est refusé tant que la base n'est pas migrée.
 - **Node 24 → 26** dans les images : aucune action sur le serveur.
 - Aucune migration SQL.
+- **Aucune action sur le serveur** pour les nouveautés ci-dessous ; la commande `suivi jeu-de-test` n'est jamais lancée par une mise à jour.
+
+### Corrigé
+- **Cartographie des risques : plus d'écran gris.** La zone de la carte n'avait pas de repère de positionnement et recouvrait toute la fenêtre ; elle reste dans son cadre (test de non-régression).
+- Parties intéressées : le champ « exigences » est relu et écrit sous le bon nom de l'outil de suivi (`req`).
+
+### Modifié
+- **Menu** : une seule section dépliée à la fois (groupes du Pilotage, « Outil de suivi (ancienne interface) » et ses groupes) ; **pastilles collées aux libellés**, rouges quand un indicateur est mauvais (indicateur non atteint, échéance dépassée), neutres pour un simple volume à traiter (rapprochements, risques sans décision) ; lignes alignées à gauche.
+- **Police globale réduite d'environ 6 %** (14 à 16 px selon la largeur, au lieu de 15 à 17) ; le choix de taille d'affichage de chaque personne s'applique par-dessus.
+- **Objectifs et indicateurs : interface de l'ancienne version reprise** ([ADR 0036](docs/adr/0036-objectifs-boites-contexte-et-revue-de-direction.md)) : vues « Par processus », « Par objectif » et « Vue compacte », ajout de processus, d'objectifs et d'indicateurs, fiches, mesures (taux en %, Oui/Non), tendance, source de la valeur, légende et filtre d'état.
+- **Fournisseurs** : colonnes Type, SSO, MFA, Critique, Hébergeur HDS, Certificats, Contrôles et Prochain, indicateurs MFA/SSO des services SaaS, bouton **Filtres** (sans MFA, contrôles à faire, certificats à traiter, critiques, type), modification en ligne et **fiche** (certificats, contrôles périodiques, contrôles types) ; les états sont ceux de l'outil de suivi.
+- Listes du Pilotage (registres) : bouton **Filtres** (état, responsable, échéance, origine).
+- Bibliothèque de référentiels : les **standards** de l'outil de suivi sont disponibles d'emblée (un geste, sans motif ni alerte rouge, y compris depuis le rattachement d'un périmètre) en **version source verrouillée** ; pour personnaliser un standard (par exemple l'ISO 27001) et ajouter des exigences ou des mesures, on **crée une copie** ([ADR 0037](docs/adr/0037-standards-verrouilles-jeu-de-test-et-relations.md)). « Nouvelle version » devient « Nouvelle édition » (import explicite).
+
+### Ajouté
+- **Lots M5 à M8 du module qualité** ([ADR 0036](docs/adr/0036-objectifs-boites-contexte-et-revue-de-direction.md)) : fiche processus (ISO 9001:2015, 4.4.1 a à h), champs de surveillance et de mesure des indicateurs (9.1.1) et catégorie « satisfaction du client » (9.1.2), planification des objectifs (6.2.2), tous facultatifs et vides par défaut ; **boîtes de pilotage** par processus ; **calque « santé des indicateurs »** sur la cartographie et filtre ISO 9001 quand un référentiel 9001 est rattaché ; **PESTEL** des enjeux externes ; objet **Opportunité** (6.1) ; **séries récurrentes proposées** sans fréquence ; **entrées de la revue de direction** (9.3.2) préparées à partir des données, sorties (9.3.3) ; **audit combiné** (référentiels audités).
+- **Jeu de données de test** fictif et cohérent : `docker compose exec app suivi jeu-de-test <administrateur> --confirmer` (instance de test vide uniquement, par l'API publique).
+- **Contrôle des relations** : `suivi controle-relations` (et clé `relations` de `controle-donnees`) vérifie les références logiques (état historique, liens, méthodes, référentiels, critères) ; la mise à jour signale les anomalies apparues pendant son déroulement. La migration PostgreSQL 17 → 18 compare aussi les contraintes (clés étrangères, uniques, contrôles) avant et après.
+- Archive visuelle de l'ancienne interface : [docs/archive/ancienne-interface](docs/archive/ancienne-interface/README.md) (inventaire, correspondance avec le nouveau, captures).
 
 ## [3.1.1] — 2026-10-13
 
