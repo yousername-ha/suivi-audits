@@ -173,7 +173,7 @@ ni ajouté, puisque la distribution initiale utilise déjà Python.
 ## Habillage global « Référence 08 » (13 octobre 2026)
 
 Source de vérité : `samples/2026-10-13-astra-15/`. Résultats et limites réels : [`recette/apparence-globale.md`](../recette/apparence-globale.md) ;
-captures de l’application intégrée : [`samples/2026-10-13-astra-16/`](../samples/2026-10-13-astra-16/README.md).
+captures de l’application intégrée : [`samples/2026-10-13-astra-17/`](../samples/2026-10-13-astra-17/README.md).
 
 - **Fichiers ajoutés** : `modules/nes-sage.css` (jetons et règles, tous bornés par `html[data-nes-style]`) et `modules/nes-sage-ui.js`
   (lecture serveur, aperçu, propagation, bandeau d’identité, pictogrammes et chevrons de navigation, panneau Apparence). Modifications

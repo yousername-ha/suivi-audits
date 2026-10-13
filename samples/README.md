@@ -8,7 +8,7 @@ explicite de l’utilisateur. Les captures utilisent exclusivement des données 
 
 | Date | Série | Captures | Version de l’application |
 | --- | --- | --- | --- |
-| 13 octobre 2026 | [Série 16 — Application intégrée : habillage global Référence 08](2026-10-13-astra-16/README.md) | **50 images** de l’application réelle (30 vues, Apparence, Clair bleuté, sombre, 4 largeurs, cartographies exclues), planche et galerie | `05dadbb` |
+| 13 octobre 2026 | [Série 17 — Application intégrée : habillage global Référence 08](2026-10-13-astra-17/README.md) | **50 images** de l’application réelle (30 vues, Apparence, Clair bleuté, sombre, 4 largeurs, cartographies exclues), planche et galerie | `05dadbb` |
 | 13 octobre 2026 | [Série 15 — Dossier d’implémentation consolidé](2026-10-13-astra-15/README.md) | Référence 08, 30 vues liées, tâches récurrentes, styles globaux et prompt complet | Dossier de référence |
 | 13 octobre 2026 | [Série 14 — 30 vues, référence 08](2026-10-13-astra-14/README.md) | **30 images**, dont 6 plans d’action et 5 tâches récurrentes, galerie et planche | Validation visuelle avant dossier |
 | 13 octobre 2026 | [Série 13 — Apparence globale confirmée](2026-10-13-astra-13/README.md) | **2 images**, choix administrateur pour tous les utilisateurs, dossier et prompt révisés | Préparation d’implémentation |

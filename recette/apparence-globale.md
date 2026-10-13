@@ -14,7 +14,7 @@ Les preuves brutes sont dans [`recette/apparence-globale/`](apparence-globale/).
 | `node tests/astra-browser.cjs` | 16 contrôles réussis, **101 destinations** (100 + Apparence) |
 | `node tests/browser-nes.cjs` (nouveau) | 16 contrôles réussis ([détail](apparence-globale/browser-nes.txt)) |
 | `node tests/nes-cartographies.cjs <avant 909aebc> <après>` (nouveau) | 10 comparaisons identiques, trois routes cartographiques ([détail](apparence-globale/cartographies.txt)) |
-| `node samples/2026-10-13-astra-16/technique/capture.cjs` | 50 images, 15 contrôles, 0 erreur JavaScript, 0 requête externe |
+| `node samples/2026-10-13-astra-17/technique/capture.cjs` | 50 images, 15 contrôles, 0 erreur JavaScript, 0 requête externe |
 | `node tests/browser-carto.cjs`, `browser-interface.cjs`, `browser-risks.cjs`, `browser-refonte.cjs`, `browser.cjs` | **échecs identiques avant (`909aebc`) et après** ([comparaison](apparence-globale/anciens-parcours-avant-apres.json)) |
 
 Échecs préexistants, non imputables à cette livraison : les quatre premiers parcours s’arrêtent sur une attente périmée de l’ancien menu
@@ -26,7 +26,7 @@ changement de ces tests est `browser-risks.cjs` : le schéma annoncé par `/api/
 
 | Domaine | Statut | Preuve ou limite |
 | --- | --- | --- |
-| Référence, deux styles, mode sombre | Exécuté | Captures de la série 16 ; couleurs calculées dans les deux styles et en sombre (`browser-nes`) |
+| Référence, deux styles, mode sombre | Exécuté | Captures de la série 17 ; couleurs calculées dans les deux styles et en sombre (`browser-nes`) |
 | Icônes, dépli/repli | Exécuté | Icône, filet et fond actifs mesurés ; chevrons droite / bas ; `aria-expanded`, `aria-controls` ; Entrée au clavier |
 | Navigation | Exécuté | 101 destinations, une seule ajoutée (`admin-appearance`) |
 | Style commun, deux comptes indépendants | Exécuté | Trois contextes (deux administrateurs, un contributeur) ; persistance après redémarrage du serveur |

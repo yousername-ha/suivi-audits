@@ -1,6 +1,6 @@
 /* Captures de l'application RÉELLEMENT intégrée (aucune CSS injectée) : habillage global Référence 08.
    Serveur et base temporaires, données FICTIVES (tests/nes-harness.cjs). Usage :
-   CHROMIUM_EXECUTABLE=… node samples/2026-10-13-astra-16/technique/capture.cjs */
+   CHROMIUM_EXECUTABLE=… node samples/2026-10-13-astra-17/technique/capture.cjs */
 const fs = require("node:fs"),
   path = require("node:path"),
   crypto = require("node:crypto"),

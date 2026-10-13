@@ -1,6 +1,8 @@
-# Série 16 — application intégrée : habillage global « Référence 08 »
+# Série 17 — application intégrée : habillage global « Référence 08 »
 
 **13 octobre 2026 · branche `claude/audit-suivi-docker-github-0pfu4y` · application représentée : `05dadbb78e28858cb1d647a0b9af705a9038312b`.**
+
+*Numérotation : cette série porte le numéro 17 car le numéro 16 est utilisé sur `legacy` (commit `699c39e`, aperçu de la matrice des risques colorée) ; les deux dossiers ne se chevauchent pas.*
 
 Contrairement aux séries 08 à 15 (maquettes, injections CSS en mémoire et dossiers de préparation), **ces 50 captures
 montrent le code réellement intégré** : aucune feuille de style n’est ajoutée par le script de capture. Le serveur Python
