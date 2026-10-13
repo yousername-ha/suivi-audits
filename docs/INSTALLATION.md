@@ -626,6 +626,22 @@ Sautez cette étape si vous démarrez sans historique.
 
 > Les autres modes : **Fusionner** ajoute et met à jour sans jamais rien supprimer ; **Remplacer un module** remplace un seul module et **supprime** les éléments absents du fichier (il faut ressaisir le nom du module pour confirmer).
 
+**10.4 Charger un jeu de données de test (instance de test uniquement).** Pour évaluer la plateforme sans saisir de données réelles, l'API sait charger un jeu **fictif et cohérent** (processus, objectifs et indicateurs, parties intéressées, fournisseurs évalués, écarts, plans d'audit, revue de direction, référentiel de démonstration, méthode de risque et risques appréciés, actions, série récurrente, opportunités) :
+
+```bash
+sudo docker compose exec app suivi jeu-de-test <compte administrateur> --confirmer
+```
+
+Le chargement n'est jamais automatique : il est **refusé si le pilotage n'est pas vide** et écrit au nom du compte indiqué (journal d'audit). Ne l'utilisez pas en production. Il passe par l'API publique, donc par les mêmes validations que la saisie.
+
+**10.5 Contrôler les relations entre les données.** Après un import, un chargement ou une migration :
+
+```bash
+sudo docker compose exec app suivi controle-relations --anomalies
+```
+
+La commande vérifie les références logiques entre objets (processus, objectifs, indicateurs, fournisseurs, risques, décisions, liens) et affiche une ligne par anomalie ; sans `--anomalies`, elle renvoie un JSON. Le script de mise à jour l'exécute avant et après la montée de version et signale l'écart **sans bloquer** la mise à jour. Pour PostgreSQL 18, la migration depuis la version 17 compare en plus le nombre de lignes et les contraintes (clés étrangères, unicité) avant d'être déclarée réussie ([ADR 0035](adr/0035-postgresql-18-migration-automatique.md)).
+
 ---
 
 ## 11. Mettre en place les sauvegardes
