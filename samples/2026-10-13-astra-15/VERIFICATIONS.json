@@ -1,12 +1,12 @@
 {
   "date": "2026-10-13",
   "type": "Contrôles documentaires uniquement ; aucun test applicatif exécuté pour cette livraison",
-  "baseCommit": "f7eccadb4f97d855dcc50b8ef2921122ae82a8c0",
+  "baseCommit": "909aebc4304f8fccdca760ba20a1c5eda7ce5631",
   "checks": [
     {
       "name": "Liens relatifs des documents résolus",
       "pass": true,
-      "count": 43
+      "count": 45
     },
     {
       "name": "Inventaire des 100 destinations, nouvelle route décrite séparément",

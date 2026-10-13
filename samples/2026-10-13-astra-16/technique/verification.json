@@ -1,0 +1,48 @@
+{
+  "branch": "legacy",
+  "applicationReference": "909aebc4304f8fccdca760ba20a1c5eda7ce5631",
+  "date": "2026-10-13",
+  "type": "Aperçu sur serveur temporaire : nouvelle politique fictive matricielle, palette demandée et habillage injecté ; aucun code applicatif modifié",
+  "checks": [
+    {
+      "name": "Grille 4 × 4",
+      "pass": true
+    },
+    {
+      "name": "Quatre couleurs pleines",
+      "pass": true
+    },
+    {
+      "name": "Cellule vide sélectionnée en bleu",
+      "pass": true
+    },
+    {
+      "name": "Panneau de sélection vide",
+      "pass": true
+    },
+    {
+      "name": "Trois références cliquables",
+      "pass": true
+    },
+    {
+      "name": "Référence ouvre la fiche",
+      "pass": true
+    },
+    {
+      "name": "Réinitialisation",
+      "pass": true
+    }
+  ],
+  "errors": [],
+  "externalRequests": [],
+  "files": [
+    {
+      "file": "images/001-matrice-corrigee-vue-complete.png",
+      "sha256": "cb02bbbd40b4dec106dbee90b1904aa5f67fe7c99fae4e89680e8548970826f9"
+    },
+    {
+      "file": "images/002-matrice-corrigee-detail.png",
+      "sha256": "c56be15ef96a4b5c5cabd8a11ceb6d563ef555dca96d9f91d0c9b5e6911a6c84"
+    }
+  ]
+}
