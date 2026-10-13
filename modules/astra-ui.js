@@ -92,15 +92,48 @@
       status: pref("riskStatus", ""),
     });
   }
-  function levelColor(level) {
-    return level?.color || "#e9eef0";
+  /* Palette de présentation de la politique standard à quatre niveaux, reconnue par ses identifiants stables, ses
+     libellés et ses couleurs d'origine (gabarit livré de LegacyRisks.DEFAULT_POLICY, calcul matriciel). Valeurs de
+     transposition visuelle de la référence 08, non normatives ; le rouge est légèrement assombri (#e5192f au lieu de
+     #ff293f) pour que le libellé blanc atteigne un contraste de 4,5:1 (4,03:1 mesuré avec #ff293f). Une politique personnalisée (identifiant, libellé ou
+     couleur modifiés), une politique manuelle ou un identifiant simplement « L1 » d'une autre politique gardent leurs
+     couleurs : rien n'est déduit du rang ou d'un libellé libre, et aucune politique versionnée n'est modifiée. */
+  const STANDARD_LEVELS = [
+    ["L1", "Faible", "#dce8e0", "#4dbb69"],
+    ["L2", "Modéré", "#b9d0c1", "#ffdf45"],
+    ["L3", "Élevé", "#d6b979", "#ff8335"],
+    ["L4", "Critique", "#b66f61", "#e5192f"],
+  ];
+  function isStandardPolicy(p) {
+    return (
+      p?.calculation === "matrix" &&
+      p.levels?.length === STANDARD_LEVELS.length &&
+      STANDARD_LEVELS.every(
+        ([id, label, color], i) =>
+          p.levels[i].id === id &&
+          p.levels[i].label === label &&
+          String(p.levels[i].color).toLowerCase() === color,
+      )
+    );
   }
+  function levelColor(level, policy) {
+    const mapped =
+      level && isStandardPolicy(policy)
+        ? STANDARD_LEVELS.find((x) => x[0] === level.id)
+        : null;
+    return mapped ? mapped[3] : level?.color || "#e9eef0";
+  }
+  /* Texte sombre ou blanc, selon le meilleur contraste mesuré (WCAG) sur le fond de la case. */
   function ink(hex) {
     const c = /^#[0-9a-f]{6}$/i.test(hex) ? hex : "#e9eef0";
-    const rgb = [1, 3, 5]
-      .map((n) => parseInt(c.slice(n, n + 2), 16) / 255)
-      .map((v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
-    return rgb[0] * 0.2126 + rgb[1] * 0.7152 + rgb[2] * 0.0722 > 0.179
+    const lum = (h) => {
+      const rgb = [1, 3, 5]
+        .map((n) => parseInt(h.slice(n, n + 2), 16) / 255)
+        .map((v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+      return rgb[0] * 0.2126 + rgb[1] * 0.7152 + rgb[2] * 0.0722;
+    };
+    const ratio = (a, b) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+    return ratio(lum(c), lum("#102a32")) >= ratio(lum(c), 1)
       ? "#102a32"
       : "#ffffff";
   }
@@ -149,8 +182,8 @@
                           r.assessment?.impactId === imp.id &&
                           r.assessment?.likelihoodId === like.id,
                       );
-                    const col = isMatrix ? levelColor(l) : "#e9eef0";
-                    return `<div class="as-risk-cell ${selected === id + "|" + key ? "selected" : ""}" style="--cell:${E(col)};--ink:${ink(col)}"><button class="as-cell-select" type="button" data-astra="risk-cell" data-id="${E(id + "|" + key)}" aria-pressed="${selected === id + "|" + key}" aria-label="${E(imp.label + " / " + like.label + " : " + (l?.label || "Appréciation manuelle") + ", " + matches.length + " risques")}"><span>${E(isMatrix ? l?.label || "Non défini" : "Appréciation manuelle")}</span><b>${matches.length || "–"}</b></button><div class="as-risk-dots">${matches.map((r) => `<button type="button" data-astra="risk-detail" data-id="${E(r.risk.id)}" title="${E(r.risk.title + " · " + r.level?.label)}" style="--dot:${E(levelColor(r.level))};color:${ink(levelColor(r.level))}">${E(r.risk.internalId || r.risk.id)}</button>`).join("")}</div></div>`;
+                    const col = isMatrix ? levelColor(l, p) : "#e9eef0";
+                    return `<div class="as-risk-cell ${selected === id + "|" + key ? "selected" : ""}" style="--cell:${E(col)};--ink:${ink(col)}"><button class="as-cell-select" type="button" data-astra="risk-cell" data-id="${E(id + "|" + key)}" aria-pressed="${selected === id + "|" + key}" aria-label="${E(imp.label + " / " + like.label + " : " + (l?.label || "Appréciation manuelle") + ", " + matches.length + " risques")}"><span>${E(isMatrix ? l?.label || "Non défini" : "Appréciation manuelle")}</span><b>${matches.length || "–"}</b></button><div class="as-risk-dots">${matches.map((r) => `<button type="button" data-astra="risk-detail" data-id="${E(r.risk.id)}" title="${E(r.risk.title + " · " + r.level?.label)}" style="--dot:${E(levelColor(r.level, p))};color:${ink(levelColor(r.level, p))}">${E(r.risk.internalId || r.risk.id)}</button>`).join("")}</div></div>`;
                   })
                   .join("")}`,
             )
@@ -162,7 +195,7 @@
                   selected.slice(id.length + 1),
               )
             : rs;
-          return `<section class="as-surface"><div class="as-section-title"><div><h3>${E(p.title)}</h3><p>${E(p.method)} · version ${p.version} · ${rs.length} risques</p></div>${selected ? btn("Réinitialiser la sélection", "risk-cell", 'data-id=""') : ""}</div><div class="as-risk-layout ${compact ? "compact" : ""}"><div><p class="as-axis-title">↑ Impact / gravité</p><div class="as-matrix-scroll"><div class="as-matrix" style="grid-template-columns:100px repeat(${p.likelihoodScale.length},minmax(80px,1fr))">${cells}<div></div>${p.likelihoodScale.map((l) => `<div class="as-axis bottom">${E(l.label)}</div>`).join("")}</div></div><p class="as-axis-title right">Probabilité / vraisemblance →</p><div class="as-legend">${p.levels.map((l) => `<span><i style="background:${E(l.color)}"></i>${E(l.label)}</span>`).join("")}</div>${!isMatrix ? '<p class="as-note">Cette politique utilise une appréciation manuelle. Les pastilles portent le niveau évalué ; les cellules n’imposent aucun calcul.</p>' : ""}</div>${compact ? "" : `<aside><h4>${selected ? "Risques sélectionnés" : "Dans cette matrice"} · ${display.length}</h4>${display.map((r) => `<div class="as-risk-row">${btn(r.risk.title, "risk-detail", `data-id="${E(r.risk.id)}"`)}${pill(r.level?.label || "Non évalué", tone(r.level?.label || ""))}<small>${E(U.ownerLabel(r.risk))} · ${E(r.risk.status)}</small></div>`).join("") || "<p>Aucun risque dans cette cellule.</p>"}</aside>`}</div></section>`;
+          return `<section class="as-surface"><div class="as-section-title"><div><h3>${E(p.title)}</h3><p>${E(p.method)} · version ${p.version} · ${rs.length} risques</p></div>${selected ? btn("Réinitialiser la sélection", "risk-cell", 'data-id=""') : ""}</div><div class="as-risk-layout ${compact ? "compact" : ""}"><div><p class="as-axis-title">↑ Impact / gravité</p><div class="as-matrix-scroll"><div class="as-matrix" style="grid-template-columns:100px repeat(${p.likelihoodScale.length},minmax(80px,1fr))">${cells}<div></div>${p.likelihoodScale.map((l) => `<div class="as-axis bottom">${E(l.label)}</div>`).join("")}</div></div><p class="as-axis-title right">Probabilité / vraisemblance →</p><div class="as-legend">${p.levels.map((l) => `<span><i style="background:${E(levelColor(l, p))}"></i>${E(l.label)}</span>`).join("")}</div>${!isMatrix ? '<p class="as-note">Cette politique utilise une appréciation manuelle. Les pastilles portent le niveau évalué ; les cellules n’imposent aucun calcul.</p>' : ""}</div>${compact ? "" : `<aside><h4>${selected.startsWith(id + "|") ? "Risques sélectionnés" : "Dans cette matrice"} · ${display.length}</h4>${display.map((r) => `<div class="as-risk-row">${btn(r.risk.title, "risk-detail", `data-id="${E(r.risk.id)}"`)}${pill(r.level?.label || "Non évalué", tone(r.level?.label || ""))}<small>${E(U.ownerLabel(r.risk))} · ${E(r.risk.status)}</small></div>`).join("") || "<p>Aucun risque dans cette cellule.</p>"}</aside>`}</div></section>`;
         })
         .join("") ||
       empty(
@@ -337,7 +370,7 @@
     );
   }
   function workTable(rows) {
-    return `<div class="as-table-scroll"><table class="as-table"><thead><tr><th>Action / tâche</th><th>Responsable</th><th>Échéance</th><th>Statut</th><th>Priorité / fréquence</th><th>Avancement</th></tr></thead><tbody>${rows.map((r) => `<tr><td>${openButton(r)}<small>${E(r.id)} · ${E(r.group)}</small></td><td>${E(r.owner)}</td><td>${date(r.due)}${late(r) ? pill("En retard", "bad") : ""}</td><td>${pill(r.status, tone(r.status))}</td><td>${E(r.kind === "rec" ? B.recFreq(r.raw) : r.priority)}</td><td>${r.progress === null ? "—" : progress(r.progress)}</td></tr>`).join("") || '<tr><td colspan="6">Aucun résultat. Ajustez les filtres ou ajoutez une entrée.</td></tr>'}</tbody></table></div>`;
+    return `<div class="as-table-scroll"><table class="as-table"><thead><tr><th>Action / tâche</th><th>Responsable</th><th>Échéance</th><th>Statut</th><th>Priorité / fréquence</th><th>Avancement</th></tr></thead><tbody>${rows.map((r) => `<tr><td>${openButton(r)}<small>${E(r.id)} · ${E(r.group)}</small></td><td>${E(r.owner)}</td><td>${date(r.due)}${late(r) && r.status !== "En retard" ? pill("En retard", "bad") : ""}</td><td>${pill(r.status, tone(r.status))}</td><td>${E(r.kind === "rec" ? B.recFreq(r.raw) : r.priority)}</td><td>${r.progress === null ? "—" : progress(r.progress)}</td></tr>`).join("") || '<tr><td colspan="6">Aucun résultat. Ajustez les filtres ou ajoutez une entrée.</td></tr>'}</tbody></table></div>`;
   }
   function kanban(rows, kind) {
     const statuses =
@@ -618,7 +651,7 @@
     const x = r.raw;
     detail(
       r.title,
-      `${pill(r.status, tone(r.status))}${late(r) ? pill("En retard", "bad") : ""}<dl class="as-facts"><dt>Référence</dt><dd>${E(id)}</dd><dt>Responsable</dt><dd>${E(r.owner)}</dd><dt>Échéance</dt><dd>${date(r.due)}</dd><dt>${kind === "rec" ? "Fréquence" : "Priorité / type"}</dt><dd>${E(kind === "rec" ? B.recFreq(x) : r.priority)}</dd></dl>${r.progress !== null ? `<h3>Avancement</h3>${progress(r.progress)}` : ""}<h3>Description</h3><p class="as-preline">${E(x.desc || x.notes || x.action || "À documenter")}</p>${
+      `${pill(r.status, tone(r.status))}${late(r) && r.status !== "En retard" ? pill("En retard", "bad") : ""}<dl class="as-facts"><dt>Référence</dt><dd>${E(id)}</dd><dt>Responsable</dt><dd>${E(r.owner)}</dd><dt>Échéance</dt><dd>${date(r.due)}</dd><dt>${kind === "rec" ? "Fréquence" : "Priorité / type"}</dt><dd>${E(kind === "rec" ? B.recFreq(x) : r.priority)}</dd></dl>${r.progress !== null ? `<h3>Avancement</h3>${progress(r.progress)}` : ""}<h3>Description</h3><p class="as-preline">${E(x.desc || x.notes || x.action || "À documenter")}</p>${
         kind === "action"
           ? `<h3>Sous-actions</h3><ul class="as-checklist">${(x.tasks || []).map((t) => `<li>${t.done ? "✓" : "○"} ${E(t.t)}</li>`).join("") || "<li>Aucune sous-action.</li>"}</ul><h3>Preuves</h3><p>${E(x.proof || "Aucune preuve textuelle renseignée.")}</p>${S()
               .evidences.filter((e) => e.links?.findings?.includes(id))
