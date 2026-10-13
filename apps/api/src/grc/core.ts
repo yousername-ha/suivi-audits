@@ -33,6 +33,8 @@ import { loadGrants } from '../rights.js';
 import { validDate } from '@suivi/shared';
 import { GrcFrameworks } from './frameworks.js';
 import { GrcLibrary } from './library.js';
+import { GrcLibraryMappings } from './library-mappings.js';
+import { GrcRapprochements } from './rapprochements.js';
 import { GrcRisks } from './risks.js';
 import { LegacyTasks } from './legacy-tasks.js';
 import { GrcTasks } from './tasks.js';
@@ -85,6 +87,8 @@ export class Grc {
   readonly legacyTasks: LegacyTasks;
   readonly frameworks: GrcFrameworks;
   readonly library: GrcLibrary;
+  readonly libraryMappings: GrcLibraryMappings;
+  readonly rapprochements: GrcRapprochements;
   readonly risks: GrcRisks;
   readonly tasks: GrcTasks;
   constructor(
@@ -96,6 +100,8 @@ export class Grc {
     this.legacyTasks = new LegacyTasks(this);
     this.frameworks = new GrcFrameworks(this);
     this.library = new GrcLibrary(this);
+    this.libraryMappings = new GrcLibraryMappings(this);
+    this.rapprochements = new GrcRapprochements(this);
     this.risks = new GrcRisks(this);
     this.tasks = new GrcTasks(this);
   }
@@ -860,7 +866,20 @@ export class Grc {
   }
   async link(smsi: string, source: string, target: string, type: string, note: string, user: SessionUser, ip: string) {
     await this.access(smsi, user, true);
-    return this.db.tx(async (c) => {
+    return this.db.tx((c) => this.linkIn(c, smsi, source, target, type, note, user, ip), user.username);
+  }
+  /** Crée la relation dans la transaction de l'appelant (une décision de rapprochement la partage). */
+  async linkIn(
+    c: Client,
+    smsi: string,
+    source: string,
+    target: string,
+    type: string,
+    note: string,
+    user: SessionUser,
+    ip: string,
+  ) {
+    {
       await this.access(smsi, user, true, c);
       if (source === target) throw new HttpError(422, 'Une relation relie deux objets distincts.');
       if (smsi !== DEFAULT_SMSI && [source, target].some((r) => r.startsWith('legacy:')))
@@ -900,8 +919,9 @@ export class Grc {
         c,
       );
       await this.notify(c, r.id, 1, smsi, from.module, user.username);
+      await this.rapprochements.sync(smsi, c);
       return r;
-    }, user.username);
+    }
   }
   async unlink(smsi: string, id: string, user: SessionUser, ip: string) {
     await this.access(smsi, user, true);
@@ -918,6 +938,7 @@ export class Grc {
       await c.query('DELETE FROM grc_links WHERE id=$1', [id]);
       await this.db.audit(user, ip, 'grc.link.deleted', id, { smsiId: smsi, ...row }, c);
       await this.notify(c, id, 1, smsi, source.module, user.username);
+      await this.rapprochements.sync(smsi, c);
     }, user.username);
   }
 }

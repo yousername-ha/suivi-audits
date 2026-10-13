@@ -239,6 +239,38 @@ export const LibraryFrameworkDefinition = FrameworkDefinition.superRefine((d, c)
     });
 });
 export type LibraryFrameworkDefinition = z.infer<typeof LibraryFrameworkDefinition>;
+
+/** Correspondance organisationnelle entre deux exigences de la bibliothèque (ADR 0031) : validée une fois pour toute
+    l'organisation. La validation est une décision humaine, jamais une conséquence d'une importation ni d'une IA. */
+const ExtremiteCorrespondance = z
+  .object({ frameworkId: z.uuid(), version: z.number().int().positive(), requirementId: z.string().min(1).max(120) })
+  .strict();
+export const LibraryMappingBody = z
+  .object({
+    source: ExtremiteCorrespondance,
+    target: ExtremiteCorrespondance,
+    type: z.enum(['identical', 'equivalent', 'partial', 'complementary', 'related', 'none']),
+    justification: z.string().trim().min(10).max(5000),
+    coverage: z.number().int().min(0).max(100),
+    origin: z.enum(['human', 'ai']),
+    sourceUrl: z.url(),
+  })
+  .strict();
+export type LibraryMappingBody = z.infer<typeof LibraryMappingBody>;
+/** Décision du pilote sur des propositions de rapprochement : confirmer crée un lien explicite, rejeter garde le motif. */
+export const RapprochementDecision = z
+  .object({
+    ids: z.array(z.uuid()).min(1).max(100),
+    decision: z.enum(['confirm', 'reject']),
+    note: z.string().trim().max(2000).default(''),
+    confirm: z.literal('DECIDER'),
+  })
+  .strict()
+  .refine((d) => d.decision === 'confirm' || d.note.length >= 5, {
+    message: 'Un rejet exige un motif d’au moins 5 caractères.',
+    path: ['note'],
+  });
+export type RapprochementDecision = z.infer<typeof RapprochementDecision>;
 export const MappingData = z
   .object({
     source: z

@@ -85,6 +85,18 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
   },
   {
+    id: 'rapprochements',
+    title: 'Rapprochements entre référentiels',
+    permission: 'conformite:lire',
+    link: '/pilotage/rapprochements',
+    steps: [
+      'Une correspondance de la bibliothèque dit en quoi une exigence d’un référentiel rejoint celle d’un autre. Elle est proposée, puis validée une seule fois pour l’organisation par une personne habilitée (rubrique « Correspondances de la bibliothèque »). Aucune correspondance n’est fournie.',
+      'Quand une mesure met déjà en œuvre une exigence et qu’une correspondance validée la rattache à une exigence d’un autre référentiel du périmètre, un rapprochement est proposé. Il n’est jamais appliqué seul : une pastille du menu « Rapprochements à valider », un bandeau de la synthèse et « Mes rappels » signalent les propositions en attente.',
+      'Le pilote confirme (un lien « met en œuvre » est alors créé, à son nom) ou rejette avec un motif, une proposition à la fois ou en lot. Une correspondance partielle ne donne jamais une couverture complète.',
+      '« Couverture par référentiel » compte, pour chaque référentiel rattaché, les exigences couvertes, à valider et non couvertes. Ce sont des repères de pilotage, pas un taux de conformité.',
+    ],
+  },
+  {
     id: 'parcours-pilotage',
     title: 'Parcours guidé',
     permission: 'pilotage:lire',

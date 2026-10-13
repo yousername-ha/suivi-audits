@@ -215,7 +215,14 @@ export class GrcTasks {
     ).rows;
     const visible = [];
     for (const r of rows)
-      if (await this.g.visible(user, r.smsiId, r.kind === 'risk_review' ? 'pilotage' : 'ecarts')) visible.push(r);
+      if (
+        await this.g.visible(
+          user,
+          r.smsiId,
+          r.kind === 'risk_review' ? 'pilotage' : r.kind === 'rapprochement' ? 'conformite' : 'ecarts',
+        )
+      )
+        visible.push(r);
     return visible;
   }
   async read(id: string, user: SessionUser) {

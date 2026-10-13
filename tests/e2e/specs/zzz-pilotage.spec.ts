@@ -360,3 +360,125 @@ test('Pilotage E : BIA sur téléphone, plan relié et rapport imprimable sans d
     await ctx.close();
   }
 });
+test('Pilotage : correspondance validée, rapprochement proposé puis confirmé par le pilote', async ({ browser }) => {
+  const ctx = await browser.newContext({ storageState: (await sessionAdmin(browser)).state, ignoreHTTPSErrors: true });
+  const page = await ctx.newPage(),
+    problems = watchPage(page);
+  const stamp = Date.now();
+  const definition = (identifier: string, id: string) => ({
+    name: `Référentiel ${identifier}`,
+    identifier,
+    source: {
+      organisation: 'Organisation fictive',
+      document: 'Document fictif',
+      url: 'https://example.invalid/qa',
+      version: '1',
+      date: '2026-10-13',
+      license: 'Exemple fictif libre',
+      verifiedAt: '',
+      normative: false,
+      status: 'organisation',
+    },
+    domains: [{ id: 'gouvernance', label: 'Gouvernance' }],
+    requirements: [
+      {
+        id,
+        domain: 'gouvernance',
+        title: `Exigence ${id}`,
+        description: 'Exemple',
+        applicability: 'Tout',
+        measureRefs: [],
+      },
+    ],
+  });
+  const publier = async (identifier: string, id: string) => {
+    const def = definition(identifier, id);
+    const apercu = await post(page, '/api/library/frameworks/preview', { id: null, definition: def });
+    const r = await page.request.post('/api/library/frameworks/publish', {
+      headers: {
+        Origin: new URL(page.url()).origin,
+        'X-CSRF-Token': await csrfOf(page.request),
+        'If-Match': '"0"',
+      },
+      data: {
+        id: null,
+        definition: def,
+        previewId: apercu.previewId,
+        reason: 'Publication fictive de recette automatisée',
+        confirm: 'PUBLIER',
+      },
+    });
+    expect(r.ok(), await r.text()).toBeTruthy();
+    return (await r.json()) as { id: string };
+  };
+  try {
+    await page.goto('/pilotage/synthese');
+    const a = await publier(`QA-RAP-A-${stamp}`, 'RA-1'),
+      b = await publier(`QA-RAP-B-${stamp}`, 'RB-1');
+    const perimetre = await post(page, '/api/grc/smsis', {
+      name: `Périmètre rapprochements ${stamp}`,
+      scope: 'Fixture privée de recette',
+      nature: 'SMI',
+      timezone: 'Europe/Paris',
+    });
+    for (const fw of [a.id, b.id]) {
+      const r = await page.request.put(`/api/grc/${perimetre.id}/framework-attachments/${fw}`, {
+        headers: { Origin: new URL(page.url()).origin, 'X-CSRF-Token': await csrfOf(page.request) },
+        data: { version: 1, confirm: 'RATTACHER' },
+      });
+      expect(r.ok(), await r.text()).toBeTruthy();
+    }
+    const mesure = await post(page, `/api/grc/${perimetre.id}/objects`, {
+      kind: 'measure',
+      name: `Mesure rapprochement ${stamp}`,
+      data: {},
+    });
+    await post(page, `/api/library/mappings`, {
+      source: { frameworkId: a.id, version: 1, requirementId: 'RA-1' },
+      target: { frameworkId: b.id, version: 1, requirementId: 'RB-1' },
+      type: 'equivalent',
+      justification: 'Correspondance fictive de recette automatisée',
+      coverage: 100,
+      origin: 'human',
+      sourceUrl: 'https://example.invalid/correspondance',
+    });
+    await page.evaluate((id) => sessionStorage.setItem('pilotage-scope', id), perimetre.id);
+
+    // 1. La correspondance proposée se valide une seule fois, avec un motif.
+    await page.goto('/pilotage/correspondances-bibliotheque');
+    await expect(page.getByRole('heading', { name: 'Correspondances de la bibliothèque', exact: true })).toBeVisible();
+    await page.getByRole('button', { name: /^Valider la correspondance RA-1 vers RB-1$/ }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByLabel('Motif').fill('Correspondance examinée par le responsable');
+    await dialog.getByRole('button', { name: 'Valider', exact: true }).click();
+    await expect(dialog).toHaveCount(0);
+
+    // 2. Une mesure reliée à l'exigence source : aucune couverture n'est affirmée, une proposition apparaît.
+    await post(page, `/api/grc/${perimetre.id}/links`, {
+      source: 'object:' + mesure.id,
+      target: `requirement:${a.id}:1:RA-1`,
+      type: 'implements',
+      note: 'Lien de recette',
+    });
+    await page.goto('/pilotage/synthese');
+    await expect(page.getByRole('status').filter({ hasText: 'Rapprochements à valider' })).toBeVisible();
+    await page.getByRole('link', { name: 'Examiner les rapprochements' }).click();
+    await expect(page.getByRole('heading', { name: 'Rapprochements à valider', exact: true })).toBeVisible();
+    const ligne = page.getByRole('row').filter({ hasText: `Mesure rapprochement ${stamp}` });
+    await expect(ligne).toContainText('RB-1');
+
+    // 3. Le pilote confirme : le lien explicite est créé et la proposition quitte la file.
+    await page
+      .getByRole('button', {
+        name: new RegExp(`^Confirmer le rapprochement vers RB-1 pour Mesure rapprochement ${stamp}`),
+      })
+      .click();
+    await expect(page.getByText('Aucun rapprochement à valider.')).toBeVisible();
+    await page.goto('/pilotage/couverture');
+    await expect(page.getByRole('heading', { name: 'Couverture par référentiel', exact: true })).toBeVisible();
+    await expect(page.getByText(`Référentiel QA-RAP-B-${stamp}`).first()).toBeVisible();
+    expect(problems).toEqual([]);
+  } finally {
+    await ctx.close();
+  }
+});
