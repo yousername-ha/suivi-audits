@@ -1,0 +1,52 @@
+[
+  [
+    "01-parcours",
+    "parcours",
+    "Vue d’ensemble"
+  ],
+  [
+    "02-cadrage",
+    "atelier-1-etape-1",
+    "Atelier 1 · Cadrage"
+  ],
+  [
+    "03-perimetre",
+    "atelier-1-etape-2",
+    "Atelier 1 · Périmètre"
+  ],
+  [
+    "04-sources-risque",
+    "atelier-2-etape-1",
+    "Atelier 2 · Sources de risque"
+  ],
+  [
+    "05-ecosysteme",
+    "atelier-3-etape-1",
+    "Atelier 3 · Écosystème"
+  ],
+  [
+    "06-scenarios-strategiques",
+    "atelier-3-etape-2",
+    "Atelier 3 · Scénarios stratégiques"
+  ],
+  [
+    "07-scenarios-operationnels",
+    "atelier-4-etape-1",
+    "Atelier 4 · Scénarios opérationnels"
+  ],
+  [
+    "08-vraisemblance",
+    "atelier-4-etape-2",
+    "Atelier 4 · Vraisemblance"
+  ],
+  [
+    "09-plan-traitement",
+    "atelier-5-etape-3",
+    "Atelier 5 · Plan de traitement"
+  ],
+  [
+    "10-surveillance",
+    "atelier-5-etape-6",
+    "Atelier 5 · Surveillance"
+  ]
+]

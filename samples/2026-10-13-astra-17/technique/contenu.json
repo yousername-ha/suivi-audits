@@ -1,0 +1,491 @@
+{
+  "workshops": [
+    {
+      "id": 1,
+      "title": "Cadrage et socle de sécurité",
+      "short": "Cadrer",
+      "icon": "scope",
+      "purpose": "Définir ce qui est étudié, ce qui compte et le socle de protection.",
+      "printed": "18–31",
+      "pdf": 20,
+      "refs": [
+        "F1",
+        "F2"
+      ],
+      "input": "Objet et objectifs de l’étude",
+      "outputs": [
+        "Cadre et responsabilités",
+        "Missions, valeurs métier et biens supports",
+        "Événements redoutés et gravité",
+        "Socle de sécurité et écarts"
+      ],
+      "notice": "L’échelle de gravité est à définir avec les métiers ; privilégier celle de l’organisation lorsqu’elle existe.",
+      "noticeRef": "F2",
+      "steps": [
+        [
+          "Définir le cadre",
+          "Quel est l’objet de votre étude ?",
+          "Préciser les objectifs, les rôles, les responsabilités et les cycles. Identifier la personne chargée d’accepter les risques résiduels.",
+          [
+            "Objet et objectifs",
+            "Participants, responsabilités et cycles"
+          ],
+          [
+            "Objet de l’étude",
+            "Décideur et contributeurs",
+            "Cadre temporel"
+          ],
+          19,
+          []
+        ],
+        [
+          "Délimiter le périmètre",
+          "Quelles valeurs métier faut-il protéger ?",
+          "Relier les missions aux valeurs métier, puis aux biens supports. Identifier leurs propriétaires.",
+          [
+            "Missions et valeurs métier",
+            "Biens supports et propriétaires"
+          ],
+          [
+            "Missions",
+            "Valeurs métier",
+            "Biens supports"
+          ],
+          20,
+          [
+            "F1"
+          ]
+        ],
+        [
+          "Événements redoutés et gravité",
+          "Quelles conséquences seraient inacceptables ?",
+          "Décrire les atteintes aux valeurs métier et leurs impacts. Justifier la gravité avec l’échelle retenue pour l’étude.",
+          [
+            "Événements redoutés et impacts",
+            "Échelle de gravité et justification"
+          ],
+          [
+            "Valeur métier",
+            "Événement redouté",
+            "Gravité estimée"
+          ],
+          24,
+          [
+            "F2"
+          ]
+        ],
+        [
+          "Évaluer le socle de sécurité",
+          "Quels référentiels s’appliquent ?",
+          "Examiner les mesures du socle, leur application et les écarts. Conserver les justifications et les mesures envisagées.",
+          [
+            "Référentiels et état d’application",
+            "Écarts et justifications"
+          ],
+          [
+            "Référentiels applicables",
+            "État d’application",
+            "Écarts du socle"
+          ],
+          28,
+          []
+        ]
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Sources de risque",
+      "short": "Identifier",
+      "icon": "target",
+      "purpose": "Identifier les sources de risque et les objectifs qu’elles pourraient viser.",
+      "printed": "34–39",
+      "pdf": 36,
+      "refs": [
+        "F3"
+      ],
+      "input": "Missions et valeurs métier de l’atelier 1",
+      "outputs": [
+        "Couples SR/OV prioritaires",
+        "Couples secondaires à surveiller",
+        "Cartographie des sources de risque"
+      ],
+      "notice": "La sélection s’appuie sur le contexte et la connaissance de la menace. Aucun attaquant n’est présélectionné.",
+      "noticeRef": "F3",
+      "steps": [
+        [
+          "Identifier les couples SR/OV",
+          "Qui pourrait viser vos valeurs métier, et dans quel but ?",
+          "Associer une source de risque à un objectif visé, en documentant les informations disponibles.",
+          [
+            "Sources de risque et objectifs visés",
+            "Éléments de contexte et sources"
+          ],
+          [
+            "Source de risque",
+            "Objectif visé",
+            "Couple SR/OV"
+          ],
+          36,
+          [
+            "F3"
+          ]
+        ],
+        [
+          "Apprécier la pertinence",
+          "Quels couples sont pertinents dans votre contexte ?",
+          "Caractériser les couples et justifier leur pertinence à partir des éléments connus sur la menace.",
+          [
+            "Caractérisation des couples",
+            "Appréciation et justification"
+          ],
+          [
+            "Couple SR/OV",
+            "Caractérisation",
+            "Pertinence"
+          ],
+          38,
+          [
+            "F3"
+          ]
+        ],
+        [
+          "Retenir les priorités",
+          "Quels couples poursuivent l’analyse ?",
+          "Retenir les couples prioritaires et identifier les couples secondaires à surveiller.",
+          [
+            "Couples retenus et justification",
+            "Couples secondaires et surveillance"
+          ],
+          [
+            "Couples examinés",
+            "Prioritaires",
+            "Secondaires"
+          ],
+          38,
+          [
+            "F3"
+          ]
+        ]
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Scénarios stratégiques",
+      "short": "Relier",
+      "icon": "network",
+      "purpose": "Comprendre l’écosystème et construire les chemins d’attaque de haut niveau.",
+      "printed": "42–55",
+      "pdf": 44,
+      "refs": [
+        "F5",
+        "F4"
+      ],
+      "input": "Valeurs métier, événements redoutés, couples SR/OV retenus et vue de l’écosystème",
+      "outputs": [
+        "Cartographie de dangerosité et parties prenantes critiques",
+        "Scénarios stratégiques et événements redoutés",
+        "Mesures de sécurité pour l’écosystème"
+      ],
+      "notice": "Une partie prenante et une source de risque sont deux rôles distincts dans l’analyse.",
+      "noticeRef": "F5",
+      "steps": [
+        [
+          "Analyser l’écosystème",
+          "Quelles parties prenantes exposent l’objet étudié ?",
+          "Examiner les relations et leur dangerosité, puis identifier les parties prenantes critiques.",
+          [
+            "Parties prenantes et relations",
+            "Dangerosité justifiée et parties critiques"
+          ],
+          [
+            "Objet de l’étude",
+            "Parties prenantes",
+            "Relations à examiner"
+          ],
+          43,
+          [
+            "F5"
+          ]
+        ],
+        [
+          "Construire les scénarios",
+          "Par quels chemins l’objectif pourrait-il être atteint ?",
+          "Décrire les chemins directs ou via l’écosystème. Relier les scénarios aux événements redoutés et à leur gravité.",
+          [
+            "Couples SR/OV et chemins d’attaque",
+            "Événements redoutés et gravité associée"
+          ],
+          [
+            "Couple SR/OV",
+            "Chemin d’attaque",
+            "Valeur métier visée"
+          ],
+          48,
+          []
+        ],
+        [
+          "Protéger l’écosystème",
+          "Sur quelles relations faut-il agir ?",
+          "Définir les mesures adaptées aux parties prenantes et aux scénarios retenus.",
+          [
+            "Mesures pour l’écosystème",
+            "Justification des choix"
+          ],
+          [
+            "Relation exposée",
+            "Mesure de sécurité",
+            "Plan de traitement"
+          ],
+          53,
+          [
+            "F4"
+          ]
+        ]
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Scénarios opérationnels",
+      "short": "Approfondir",
+      "icon": "route",
+      "purpose": "Décrire les modes opératoires sur les biens supports et apprécier leur vraisemblance.",
+      "printed": "58–67",
+      "pdf": 60,
+      "refs": [
+        "F6",
+        "F7"
+      ],
+      "input": "Scénarios stratégiques, biens supports et socle de sécurité",
+      "outputs": [
+        "Scénarios opérationnels",
+        "Vraisemblance justifiée pour chaque scénario"
+      ],
+      "notice": "La vraisemblance n’est pas une prédiction de la décision d’attaquer. Aucune note n’est calculée sans analyse.",
+      "noticeRef": "F7",
+      "steps": [
+        [
+          "Élaborer les scénarios",
+          "Comment le chemin d’attaque pourrait-il se réaliser ?",
+          "Représenter les actions élémentaires et leurs enchaînements sur les biens supports. Le graphe doit relier un départ accessible à l’objectif visé.",
+          [
+            "Chemin d’attaque et biens supports",
+            "Actions élémentaires et enchaînements"
+          ],
+          [
+            "Connaître",
+            "Rentrer",
+            "Trouver",
+            "Exploiter"
+          ],
+          59,
+          [
+            "F6"
+          ]
+        ],
+        [
+          "Estimer la vraisemblance",
+          "Quelle est la vraisemblance du scénario ?",
+          "Choisir une approche adaptée, expliciter l’échelle et justifier l’estimation avec la source de risque et les protections considérées.",
+          [
+            "Échelle et approche retenues",
+            "Estimation et justification"
+          ],
+          [
+            "Scénario opérationnel",
+            "Analyse argumentée",
+            "Vraisemblance"
+          ],
+          65,
+          [
+            "F7"
+          ]
+        ]
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Traitement du risque",
+      "short": "Décider",
+      "icon": "shield",
+      "purpose": "Décider du traitement, documenter les risques résiduels et organiser leur suivi.",
+      "printed": "70–82",
+      "pdf": 72,
+      "refs": [
+        "F8"
+      ],
+      "input": "Socle, scénarios et mesures déjà identifiées",
+      "outputs": [
+        "Stratégie de traitement",
+        "Plan de traitement du risque",
+        "Synthèse des risques résiduels",
+        "Cadre de suivi et surveillance"
+      ],
+      "notice": "L’acceptation du risque résiduel relève du responsable désigné. La maquette ne prend aucune décision.",
+      "noticeRef": "G",
+      "steps": [
+        [
+          "Synthétiser les risques",
+          "Quels risques ressortent de l’étude ?",
+          "Rassembler les scénarios et vérifier la couverture des événements redoutés.",
+          [
+            "Synthèse des scénarios de risque",
+            "Couverture des événements redoutés"
+          ],
+          [
+            "Gravité",
+            "Vraisemblance",
+            "Synthèse des risques"
+          ],
+          71,
+          []
+        ],
+        [
+          "Choisir le traitement",
+          "Quelle stratégie retenir pour chaque risque ?",
+          "Documenter la stratégie retenue et sa justification.",
+          [
+            "Stratégies retenues",
+            "Décisions et justifications"
+          ],
+          [
+            "Risque apprécié",
+            "Décision",
+            "Stratégie de traitement"
+          ],
+          74,
+          []
+        ],
+        [
+          "Définir les mesures",
+          "Quelles mesures inscrire au plan de traitement ?",
+          "Préciser les actions, leur propriétaire et leur échéance. Prioriser leur mise en œuvre.",
+          [
+            "Mesures, propriétaires et échéances",
+            "Priorisation et modalités de suivi"
+          ],
+          [
+            "Mesure",
+            "Propriétaire",
+            "Échéance"
+          ],
+          76,
+          [
+            "F8"
+          ]
+        ],
+        [
+          "Documenter le risque résiduel",
+          "Quel risque subsiste après application des mesures ?",
+          "Après application des mesures, évaluer et documenter les risques résiduels ; consigner leur acceptation par le responsable compétent.",
+          [
+            "Risques résiduels et justification",
+            "Décisions d’acceptation"
+          ],
+          [
+            "Mesures appliquées",
+            "Risque résiduel",
+            "Décision d’acceptation"
+          ],
+          78,
+          []
+        ],
+        [
+          "Organiser le suivi",
+          "Comment suivre les risques et les mesures ?",
+          "Définir les indicateurs et la gouvernance de suivi du plan de traitement.",
+          [
+            "Indicateurs et responsables",
+            "Modalités et fréquence de revue"
+          ],
+          [
+            "Indicateurs",
+            "Gouvernance",
+            "Suivi"
+          ],
+          81,
+          [
+            "F8"
+          ]
+        ],
+        [
+          "Mettre sous surveillance",
+          "Quelles évolutions devront faire revoir l’étude ?",
+          "Organiser la veille et la remontée des changements utiles à la réévaluation des risques.",
+          [
+            "Éléments sous surveillance",
+            "Modalités de réexamen"
+          ],
+          [
+            "Surveillance",
+            "Évolution du contexte",
+            "Réexaminer l’étude"
+          ],
+          82,
+          []
+        ]
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "G",
+      "url": "https://messervices.cyber.gouv.fr/documents-guides/250129_np_anssi_guide_ebios_fr_final_collection_WEB.pdf",
+      "sha256": "578da105d1c184e756aadffa9b31f0f5ddc64182c3f92ac329c5afb27e933401",
+      "label": "Guide EBIOS Risk Manager — version 1.5, septembre 2024"
+    },
+    {
+      "id": "F1",
+      "url": "https://messervices.cyber.gouv.fr/documents-guides/Fiche_methode-Identifier_le_perimetre_metier_et_technique-atelier_1.pdf",
+      "sha256": "5010dec1d24c6e00828d19e880d538c782f7c3fb3b512a8d14b221e25c7673db",
+      "label": "Périmètre métier et technique"
+    },
+    {
+      "id": "F2",
+      "url": "https://messervices.cyber.gouv.fr/documents-guides/Fiche_methode-Evaluer_la_gravite_des_evenements_redoute-atelier_1.pdf",
+      "sha256": "8f05ae42db6dc8e552ee6286f53c52db9f06b0560b2988d438530c8a1c449d43",
+      "label": "Gravité des événements redoutés"
+    },
+    {
+      "id": "F3",
+      "url": "https://messervices.cyber.gouv.fr/documents-guides/Fiche_methode-Identifier_et_caracteriser_les_sources_de_risque-atelier_2.pdf",
+      "sha256": "75e59bc3cfb17ce5291e7901a651ae7df052b53e2b10f6772e7d4ad7888aabd4",
+      "label": "Sources de risque et objectifs visés"
+    },
+    {
+      "id": "F4",
+      "url": "https://messervices.cyber.gouv.fr/documents-guides/Fiche_methode-Definir_des_mesures_de_securite_pour_l_ecosysteme-atelier_3.pdf",
+      "sha256": "e8fdfb497c0d94fd1a477e5aa702fa15d00542aa4f1adda36a9401df334183ba",
+      "label": "Mesures de sécurité pour l’écosystème"
+    },
+    {
+      "id": "F5",
+      "url": "https://messervices.cyber.gouv.fr/documents-guides/Fiche_methode-Construire_lestimation_de_la_dangerosite_des_parties_prenantes_de_l_ecosysteme-atelier_3.pdf",
+      "sha256": "f64d5e88453813022198bd4caf71e7642177144bf3373d21e3a5f56177c187a6",
+      "label": "Dangerosité des parties prenantes"
+    },
+    {
+      "id": "F6",
+      "url": "https://messervices.cyber.gouv.fr/documents-guides/Fiche_methode-Elaborer_des_graphes_d_attaque-atelier_4.pdf",
+      "sha256": "c31112f6f52ddffe40f7ff3d13cd3752ba3d5ec6e9f4a8d25595c6a7200e3e35",
+      "label": "Graphes d’attaque"
+    },
+    {
+      "id": "F7",
+      "url": "https://messervices.cyber.gouv.fr/documents-guides/Fiche_methode-Evaluer_la_vraisemblance_des_scenarios_operationnels-atelier_4.pdf",
+      "sha256": "9c8b60fbcefeda53214264627b6e5d3d8b3b64e19eee8fce2f93092ab0331568",
+      "label": "Vraisemblance des scénarios opérationnels"
+    },
+    {
+      "id": "F8",
+      "url": "https://messervices.cyber.gouv.fr/documents-guides/Fiche_methode-Structurer_les_mesures_de_traitement_du_risque-atelier_5.pdf",
+      "sha256": "dd1f3609e8b8b703abaae4febace1adb62ec18d4717e4f3813ddabda27ff0fce",
+      "label": "Mesures de traitement du risque"
+    },
+    {
+      "id": "F9",
+      "url": "https://messervices.cyber.gouv.fr/documents-guides/EBIOS_RM_Ateliers_modele.xlsx",
+      "sha256": "752dadf48369d0e135def3a79affccdb455d0a812925e193b4068f75a45501dc",
+      "label": "Modèle de tableur des ateliers"
+    }
+  ]
+}

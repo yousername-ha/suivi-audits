@@ -1,0 +1,90 @@
+{
+  "date": "2026-10-13",
+  "workshops": 5,
+  "steps": 18,
+  "screenshots": 10,
+  "sourceLinks": 9,
+  "checks": [
+    "18 étapes accessibles et champs vides",
+    "Liens de pages PDF vérifiés",
+    "Notes persistantes et échappées après rechargement",
+    "Navigation entre ateliers",
+    "Dialogue et fermeture clavier",
+    "Aucun appel réseau automatique",
+    "Aucune erreur JavaScript"
+  ],
+  "responsive": [
+    {
+      "width": 390,
+      "hash": "parcours",
+      "actual": 390,
+      "viewport": 390
+    },
+    {
+      "width": 390,
+      "hash": "atelier-4-etape-1",
+      "actual": 390,
+      "viewport": 390
+    },
+    {
+      "width": 390,
+      "hash": "atelier-5-etape-6",
+      "actual": 390,
+      "viewport": 390
+    },
+    {
+      "width": 768,
+      "hash": "parcours",
+      "actual": 768,
+      "viewport": 768
+    },
+    {
+      "width": 768,
+      "hash": "atelier-4-etape-1",
+      "actual": 768,
+      "viewport": 768
+    },
+    {
+      "width": 768,
+      "hash": "atelier-5-etape-6",
+      "actual": 768,
+      "viewport": 768
+    },
+    {
+      "width": 1440,
+      "hash": "parcours",
+      "actual": 1440,
+      "viewport": 1440
+    },
+    {
+      "width": 1440,
+      "hash": "atelier-4-etape-1",
+      "actual": 1440,
+      "viewport": 1440
+    },
+    {
+      "width": 1440,
+      "hash": "atelier-5-etape-6",
+      "actual": 1440,
+      "viewport": 1440
+    },
+    {
+      "width": 1600,
+      "hash": "parcours",
+      "actual": 1600,
+      "viewport": 1600
+    },
+    {
+      "width": 1600,
+      "hash": "atelier-4-etape-1",
+      "actual": 1600,
+      "viewport": 1600
+    },
+    {
+      "width": 1600,
+      "hash": "atelier-5-etape-6",
+      "actual": 1600,
+      "viewport": 1600
+    }
+  ]
+}
