@@ -292,3 +292,82 @@ describe('rattachement aux périmètres', () => {
     expect(outsiderUser.id).toBeTruthy();
   });
 });
+
+describe('suite donnée à une évaluation, dans un périmètre choisi', () => {
+  let evaluationId: string;
+  const ref = () => `legacy:suppliers:${supplier}`;
+  const suite = (
+    smsi: string,
+    extra: Record<string, unknown>,
+    agent = contributor,
+    id = evaluationId,
+    sup = supplier,
+  ) => agent.post(`/api/suppliers/${sup}/evaluations/${id}/follow-up`, { smsi, ...extra });
+  beforeAll(async () => {
+    evaluationId = (await reader.get(`/api/suppliers/${supplier}/evaluations`)).json()[0].id;
+  });
+  it('crée une action liée au fournisseur sans rattacher l’évaluation au périmètre', async () => {
+    const r = await suite(scopeA, { kind: 'action', name: 'Traiter l’écart relevé', dueAt: '2026-12-01' });
+    expect(r.statusCode, r.body).toBe(200);
+    const links = (await contributor.get(`/api/grc/${scopeA}/links?ref=${encodeURIComponent(ref())}`)).json();
+    expect(links.map((l: { source_ref: string }) => l.source_ref)).toContain('object:' + r.json().id);
+    const o = (await contributor.get(`/api/grc/${scopeA}/objects/${r.json().id}`)).json();
+    expect(o.data.description).toContain(evaluationId);
+    expect(o.data.dueAt).toBe('2026-12-01T12:00:00.000Z');
+    expect((await t.svc.db.one<{ n: string }>('SELECT count(*)::text n FROM sup_evaluations'))!.n).toBe('4');
+  });
+  it('crée une série de réévaluation qui référence le fournisseur, sans fréquence par défaut', async () => {
+    expect((await suite(scopeB, { kind: 'task_series', name: 'Réévaluer le fournisseur' })).statusCode).toBe(422);
+    const r = await suite(scopeB, {
+      kind: 'task_series',
+      name: 'Réévaluer le fournisseur',
+      start: '2026-11-01',
+      interval: 6,
+      unit: 'month',
+    });
+    expect(r.statusCode, r.body).toBe(200);
+    const o = (await contributor.get(`/api/grc/${scopeB}/objects/${r.json().id}`)).json();
+    expect(o.data.refs).toEqual([ref()]);
+    expect(o.data.recurrence).toMatchObject({ unit: 'month', interval: 6, start: '2026-11-01', active: true });
+  });
+  it('refuse les cas invalides ou non autorisés', async () => {
+    expect((await suite(scopeA, { kind: 'action', name: 'Trop tôt', dueAt: '2020-01-01' })).statusCode).toBe(422);
+    expect(
+      (await suite(scopeA, { kind: 'action', name: 'Évaluation inconnue' }, contributor, crypto.randomUUID()))
+        .statusCode,
+    ).toBe(404);
+    const other = (await a.post('/api/suppliers', { name: 'Autre fournisseur fictif' })).json().id;
+    expect(
+      (await suite(scopeA, { kind: 'action', name: 'Mauvais fournisseur' }, contributor, evaluationId, other))
+        .statusCode,
+    ).toBe(404);
+    expect((await suite(scopeA, { kind: 'action', name: 'Lecture seule' }, reader)).statusCode).toBe(403);
+    expect((await suite(restricted, { kind: 'action', name: 'Hors accès' }, outsider)).statusCode).toBe(404);
+    expect((await suite(scopeA, { kind: 'action', name: 'x' })).statusCode).toBe(422);
+  });
+  it('autorise le lien manuel vers un fournisseur depuis un périmètre non commun, pas vers une fiche historique', async () => {
+    const m = (
+      await a.post(`/api/grc/${scopeA}/objects`, { kind: 'measure', name: 'Mesure fournisseur', data: {} })
+    ).json().id;
+    expect(
+      (
+        await a.post(`/api/grc/${scopeA}/links`, {
+          source: 'object:' + m,
+          target: ref(),
+          type: 'related_to',
+          note: 'Lien manuel',
+        })
+      ).statusCode,
+    ).toBe(200);
+    expect(
+      (
+        await a.post(`/api/grc/${scopeA}/links`, {
+          source: 'object:' + m,
+          target: 'legacy:findings:F-1',
+          type: 'related_to',
+          note: '',
+        })
+      ).statusCode,
+    ).toBe(422);
+  });
+});

@@ -11,6 +11,7 @@ import {
   SupplierBody,
   SupplierCriterionBody,
   SupplierEvaluationBody,
+  SupplierFollowUpBody,
   LinkBody,
   methodTemplate,
 } from '@suivi/shared';
@@ -649,6 +650,17 @@ export const grcRoutes = [
     body: SupplierEvaluationBody,
     handler: async ({ svc, s, params, body, ip }) =>
       svc.grc.suppliers.evaluate(params.id, body, (s as Session).user, ip),
+  }),
+  route({
+    ...base,
+    access: 'fournisseurs:modifier' as const,
+    method: 'POST',
+    url: '/api/suppliers/:id/evaluations/:evaluationId/follow-up',
+    summary: 'Créer, dans un périmètre choisi, une action ou une série de réévaluation à la suite d’une évaluation',
+    params: supplierParam.extend({ evaluationId: z.uuid() }),
+    body: SupplierFollowUpBody,
+    handler: async ({ svc, s, params, body, ip }) =>
+      svc.grc.suppliers.followUp(params.id, params.evaluationId, body, (s as Session).user, ip),
   }),
   route({
     ...base,

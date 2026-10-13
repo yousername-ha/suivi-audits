@@ -30,9 +30,13 @@ périmètres en même temps ; mon évaluation de lui n'a pas changé, peu import
    ne supprime ni le fournisseur ni ses évaluations. Droit : `fournisseurs:modifier` et écriture sur le périmètre.
 5. **Lecture par périmètre** (sans copie) : fournisseurs rattachés, évalués, non évalués, à réévaluer (date dépassée). La même
    évaluation est affichée quel que soit le périmètre. Chiffres d'aide au pilotage, pas un résultat de conformité.
-6. **Reporté (M4 suite)** : action ou constat née d'une évaluation dans un périmètre choisi (D11), série de ré-évaluation.
-   Obstacle constaté : `legacy:suppliers:<id>` n'est résolu que dans le périmètre commun ; il faudra une référence propre
-   (`supplier:<id>`) au catalogue des liens avant de relier une action d'un autre périmètre. Rien n'est simulé en attendant.
+6. **Suite donnée à une évaluation** (D11, `POST /api/suppliers/{id}/evaluations/{evaluationId}/follow-up`) : depuis
+   l'historique, une **action** ou une **série de tâches de réévaluation** est créée dans le périmètre choisi (droits
+   `fournisseurs:modifier` et écriture sur ce périmètre). L'action est reliée au fournisseur par un lien `related_to` (une tâche
+   n'a pas de champ de références) ; la série porte le fournisseur dans ses `refs`. Statut et catégorie viennent de la politique
+   du périmètre cible ; **aucune fréquence n'est proposée par défaut** (début, intervalle et unité sont exigés). L'évaluation
+   n'est pas copiée dans le périmètre. Pour cela, la référence `legacy:suppliers:<id>` est désormais liable depuis tout
+   périmètre (fournisseur d'organisation), alors que les autres fiches `legacy:` restent réservées au périmètre commun.
 7. **ISO/IEC 27001:2022 et HDS** : aucune exigence citée ; elles viendront des référentiels importés dans la bibliothèque.
 
 ## Conséquences

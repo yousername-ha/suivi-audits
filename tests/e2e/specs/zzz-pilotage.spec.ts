@@ -550,6 +550,20 @@ test('Pilotage : fournisseur évalué une fois, rattaché à deux périmètres a
       await expect(page.getByRole('heading', { name: 'Fournisseurs du périmètre', exact: true })).toBeVisible();
       await expect(page.getByRole('row').filter({ hasText: fournisseur })).toContainText('1 répond');
     }
+
+    // 5. Suite donnée à l'évaluation, dans un périmètre choisi : une série sans fréquence par défaut.
+    await page.goto('/pilotage/fournisseurs');
+    await page.getByRole('button', { name: `Historique des évaluations de ${fournisseur}`, exact: true }).click();
+    await dialog.getByRole('button', { name: /^Donner suite à l’évaluation du/ }).click();
+    await choose(page, 'Type de suite', 'Série de réévaluation');
+    await choose(page, 'Périmètre où la créer', b.name);
+    await dialog.getByLabel('Intitulé').fill(`Réévaluer ${fournisseur}`);
+    await dialog.getByLabel('Première échéance').fill('2027-01-15');
+    await expect(dialog.getByRole('button', { name: 'Planifier la réévaluation', exact: true })).toBeDisabled();
+    await dialog.getByLabel('Tous les').fill('12');
+    await choose(page, 'Unité', 'mois');
+    await dialog.getByRole('button', { name: 'Planifier la réévaluation', exact: true }).click();
+    await expect(dialog.getByRole('status')).toContainText('liée au fournisseur');
     expect(problems).toEqual([]);
   } finally {
     await ctx.close();
