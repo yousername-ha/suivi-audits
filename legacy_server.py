@@ -10,6 +10,9 @@ ID_PREFIXES = json.loads((Path(__file__).resolve().parent / "sources/identifiant
 BASE_ROLES = json.loads((Path(__file__).resolve().parent / "sources/roles-base.json").read_text(encoding='utf-8'))
 
 JOURNEY_STEPS = json.loads((Path(__file__).resolve().parent / 'sources/journey-steps.json').read_text(encoding='utf-8'))
+# Schéma des tables : 2 = état métier ; 3 = configuration d'apparence globale (table distincte de l'état métier).
+SCHEMA_VERSION = 3
+APPEARANCE_STYLES = ('sage', 'clair')
 MAX_JSON = 40 * 1024 * 1024
 MAX_FILE = 20 * 1024 * 1024
 KEY = re.compile(r'^[A-Za-z0-9_-]{1,200}$')
@@ -73,11 +76,29 @@ class Store:
             CREATE TABLE IF NOT EXISTS files(key TEXT PRIMARY KEY, owner TEXT, sha256 TEXT, mime TEXT, data BLOB);
             CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY, at REAL, actor TEXT, action TEXT, before_hash TEXT, after_hash TEXT, details TEXT);
             CREATE TABLE IF NOT EXISTS code_counters(prefix TEXT PRIMARY KEY, value INTEGER NOT NULL);
-            PRAGMA user_version=2;
             ''')
         self.dbpath.chmod(0o600)
         self.attempts = []
+        self.migrate()
         self.repair_base_role_labels()
+
+    def migrate(self):
+        """Migration idempotente : ajoute la configuration d'apparence sans toucher à l'état métier ni abaisser la version."""
+        with self.lock, self.connect() as db:
+            db.execute('''CREATE TABLE IF NOT EXISTS appearance(
+                id INTEGER PRIMARY KEY CHECK(id=1),
+                style TEXT NOT NULL CHECK(style IN ('sage','clair')),
+                revision INTEGER NOT NULL CHECK(revision>=1))''')
+            db.execute("INSERT OR IGNORE INTO appearance(id,style,revision) VALUES(1,'sage',1)")
+            if db.execute('PRAGMA user_version').fetchone()[0] < SCHEMA_VERSION:
+                db.execute(f'PRAGMA user_version={SCHEMA_VERSION}')
+
+    def schema_version(self, db):
+        return db.execute('PRAGMA user_version').fetchone()[0]
+
+    def appearance(self, db):
+        row = db.execute('SELECT style,revision FROM appearance WHERE id=1').fetchone()
+        return {'style': row['style'], 'revision': row['revision']}
 
     def repair_base_role_labels(self):
         """Réparer les libellés de base mal décodés, sans écraser la personnalisation."""
@@ -759,10 +780,28 @@ class Handler(SimpleHTTPRequestHandler):
                     if u['permission'] != 'admin' and not any(st.visible(p, st.record_index(s or {}), st.allowed(s or {}, u)) for p in proofs):
                         if proofs or blob['owner'] != u['id']: raise Problem(403, 'Pièce hors périmètre.')
                     self.send_response(200); self.send_header('Content-Type', 'application/octet-stream'); self.send_header('Content-Disposition', 'attachment; filename="piece"'); self.send_header('Content-Length', str(len(blob['data']))); self.end_headers(); self.wfile.write(blob['data']); return
+            if path == '/api/appearance' and self.command == 'GET':
+                return self.send_json(st.appearance(db))
+            if path == '/api/admin/appearance' and self.command == 'PUT':
+                if u['permission'] != 'admin': raise Problem(403, 'Administration requise.')
+                data = self.read_json()
+                revision = data.get('revision') if isinstance(data, dict) else None
+                if (not isinstance(data, dict) or set(data) != {'style', 'revision'} or data['style'] not in APPEARANCE_STYLES
+                        or not isinstance(revision, int) or isinstance(revision, bool) or not 1 <= revision <= 2**53):
+                    raise Problem(422, 'Style ou révision invalide.')
+                before = st.appearance(db)
+                if revision != before['revision']:
+                    return self.send_json({'error': 'Le style a été modifié ailleurs. Relisez la valeur actuelle avant de le remplacer.', **before}, 409)
+                if data['style'] == before['style']: return self.send_json(before)
+                changed = db.execute('UPDATE appearance SET style=?,revision=revision+1 WHERE id=1 AND revision=?', (data['style'], revision)).rowcount
+                if changed != 1: return self.send_json({'error': 'Le style a été modifié ailleurs. Relisez la valeur actuelle avant de le remplacer.', **st.appearance(db)}, 409)
+                after = st.appearance(db)
+                st.trace(db, u['id'], 'Apparence globale', before, after, {'before': before, 'after': after}); db.commit()
+                return self.send_json(after)
             if path == '/api/admin/status' and self.command == 'GET':
                 if u['permission'] != 'admin': raise Problem(403, 'Administration requise.')
                 _, state = st.state(db)
-                return self.send_json({'schema': 2, 'users': len(st.users(db)), 'perimeters': len((state or {}).get('perimeters',[])), 'sessions': db.execute('SELECT COUNT(*) FROM sessions WHERE expires>?',(time.time(),)).fetchone()[0], 'prefixes': sorted(set(ID_PREFIXES) | {'PRA','ACTI'}), 'riskSchema': 1})
+                return self.send_json({'schema': st.schema_version(db), 'users': len(st.users(db)), 'perimeters': len((state or {}).get('perimeters',[])), 'sessions': db.execute('SELECT COUNT(*) FROM sessions WHERE expires>?',(time.time(),)).fetchone()[0], 'prefixes': sorted(set(ID_PREFIXES) | {'PRA','ACTI'}), 'riskSchema': 1})
             if path == '/api/audit' and self.command == 'GET':
                 if u['permission'] != 'admin': raise Problem(403, 'Administration requise.')
                 rows = [dict(x) for x in db.execute('SELECT * FROM audit ORDER BY id DESC LIMIT 500')]

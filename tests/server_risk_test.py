@@ -59,7 +59,7 @@ class RiskServerTests(unittest.TestCase):
     def test_last_base_roles_and_counter_migration_are_repeatable(self):
         s=copy.deepcopy(self.state);codes=[r['internalId'] for r in s['roles']];self.store.allocate_identifiers(s,self.state,ADMIN,self.db)
         self.assertEqual([r['internalId'] for r in s['roles']],codes);self.assertEqual(len([r for r in s['roles'] if r.get('baseRoleKey')]),10)
-        self.assertEqual(self.db.execute('PRAGMA user_version').fetchone()[0],2)
+        self.assertEqual(self.db.execute('PRAGMA user_version').fetchone()[0],3)
     def test_upgrade_existing_validated_objects_preserves_business_validation(self):
         from legacy_server import without_codes
         old=without_codes(copy.deepcopy(self.state));old['integration'].pop('adminSchema',None)

@@ -146,7 +146,7 @@ async function main() {
       const status = await page.evaluate(() =>
         LegacyServer.request("/api/admin/status"),
       );
-      assert.equal(status.schema, 2);
+      assert.equal(status.schema, 3);
       assert.equal(status.users, 1);
     },
   );
