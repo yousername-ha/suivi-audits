@@ -14,6 +14,7 @@ export const PILOTAGE_NAV = [
       { id: 'contexte', label: 'Périmètre et contexte', module: 'pilotage' },
       { id: 'parties', label: 'Parties intéressées', module: 'pilotage' },
       { id: 'swot', label: 'SWOT par processus', module: 'pilotage' },
+      { id: 'pestel', label: 'PESTEL des enjeux externes', module: 'pilotage' },
       { id: 'responsabilites', label: 'Rôles et responsabilités', module: 'pilotage' },
     ],
   },
@@ -50,6 +51,7 @@ export const PILOTAGE_NAV = [
     label: 'Risques',
     items: [
       { id: 'risques', label: 'Registre des risques', module: 'pilotage' },
+      { id: 'opportunites', label: 'Opportunités', module: 'pilotage' },
       { id: 'etudes', label: 'Études EBIOS RM', module: 'pilotage' },
       { id: 'carte', label: 'Cartographie des risques', module: 'cartographie' },
       { id: 'traitements', label: 'Traitements', module: 'pilotage' },

@@ -4,6 +4,7 @@ import type { Session } from '../auth.js';
 import { Pilotage } from '../pilotage/service.js';
 import { PilotageObjectifs } from '../pilotage/objectifs.js';
 import { PilotageBoites } from '../pilotage/boites.js';
+import { PilotagePestel } from '../pilotage/pestel.js';
 import { route } from '../http/route.js';
 import { requireIfMatch } from '../http/concurrency.js';
 const base = { tags: ['Pilotage'], access: 'metier' as const };
@@ -11,6 +12,24 @@ const scope = z.object({ smsi: z.uuid() });
 const cleObjectifs = z.enum(['processes', 'objectives', 'indicators']);
 const recordBody = z.object({ ref: GrcRef, decision: PilotageRecord }).strict();
 export const pilotageRoutes = [
+  route({
+    ...base,
+    method: 'GET',
+    url: '/api/grc/:smsi/pilotage/pestel',
+    params: scope,
+    summary: 'Enjeux du contexte regroupés selon le PESTEL (enjeux externes) et enjeux internes',
+    handler: async ({ svc, s, params }) => new PilotagePestel(svc.grc, svc).lire(params.smsi, (s as Session).user),
+  }),
+  route({
+    ...base,
+    method: 'PUT',
+    url: '/api/grc/:smsi/pilotage/pestel',
+    params: scope,
+    body: z.record(z.string(), z.unknown()),
+    summary: 'Classer des enjeux externes dans les facteurs du PESTEL',
+    handler: async ({ svc, s, params, body, ip }) =>
+      new PilotagePestel(svc.grc, svc).affecter(params.smsi, body, (s as Session).user, ip),
+  }),
   route({
     ...base,
     method: 'GET',

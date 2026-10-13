@@ -28,6 +28,11 @@ const STATES: Record<string, string> = {
   completed: 'Réalisé',
   effective: 'Efficace',
   ineffective: 'Non efficace',
+  identified: 'Identifiée',
+  evaluated: 'Évaluée',
+  pursued: 'Poursuivie',
+  realised: 'Réalisée',
+  dropped: 'Écartée',
 };
 export function stateLabel(value: unknown) {
   return STATES[String(value)] ?? String(value ?? '—');

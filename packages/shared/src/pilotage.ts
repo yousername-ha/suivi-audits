@@ -134,7 +134,20 @@ export const JourneyData = common
     hdsApplicability: text.default(''),
   })
   .passthrough();
+/** Opportunité (ISO 9001:2015, 6.1.1 b et 6.1.2) : objet plus léger que le risque, traité avec lui dans la vue « Risques et
+    opportunités ». La norme n'impose ni échelle ni méthode : le niveau de précision est celui de l'organisme. */
+export const OpportunityData = common
+  .extend({
+    source: text.default(''),
+    benefit: text.default(''),
+    status: z.enum(['identified', 'evaluated', 'pursued', 'realised', 'dropped']).default('identified'),
+    decision: text.default(''),
+    reviewAt: date,
+    dueAt: date,
+  })
+  .passthrough();
 export const PILOTAGE_SCHEMAS = {
+  opportunity: OpportunityData,
   evidence: ProofData,
   control: ControlData,
   management_review: ManagementReviewData,
@@ -347,6 +360,20 @@ const niveauChamp = (key: string, label: string, echelle: readonly string[], hin
 const ECHELLE_CRITERE = ['1 — faible', '2 — moyen', '3 — fort', '4 — très fort'];
 const etude = (kind: GrcKind) => lien(kind, 'studyRef', 'Étude EBIOS RM');
 export const PILOTAGE_FIELDS: Partial<Record<GrcKind, PilotageField[]>> = {
+  opportunity: [
+    field('source', 'Origine', 'text', undefined),
+    field('benefit', 'Bénéfice attendu'),
+    status([
+      ['identified', 'Identifiée'],
+      ['evaluated', 'Évaluée'],
+      ['pursued', 'Poursuivie (actions en cours)'],
+      ['realised', 'Réalisée'],
+      ['dropped', 'Écartée'],
+    ]),
+    field('decision', 'Décision et justification'),
+    field('dueAt', 'Échéance', 'date'),
+    field('reviewAt', 'Prochaine revue', 'date'),
+  ],
   treatment: [
     etude('treatment'),
     field('strategy', 'Stratégie', 'select', [
@@ -449,8 +476,21 @@ export const PILOTAGE_FIELDS: Partial<Record<GrcKind, PilotageField[]>> = {
     field('exclusions', 'Exclusions et justification'),
   ],
   stakeholder: [
+    field('nature', 'Nature', 'select', [
+      { value: 'Externe', label: 'Externe' },
+      { value: 'Interne', label: 'Interne' },
+    ]),
+    field('category', 'Catégorie'),
     field('expectations', 'Besoins et attentes'),
     field('requirements', 'Exigences pertinentes'),
+    field('addressed', 'Exigences traitées', 'select', [
+      { value: '', label: 'Non renseigné' },
+      { value: 'Oui', label: 'Oui' },
+      { value: 'Partiel', label: 'Partiellement' },
+      { value: 'Non', label: 'Non' },
+    ]),
+    field('treatment', 'Traitement dans le système de management'),
+    field('reviewedAt', 'Dernière revue', 'date'),
     field('contact', 'Contact'),
   ],
   swot: [
