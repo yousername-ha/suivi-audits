@@ -7,6 +7,9 @@ import {
   evaluateMethod,
   BusinessPolicy,
   businessDefaults,
+  NATURES_PERIMETRE,
+  SmsiCreate,
+  SmsiUpdate,
 } from '../src/index.js';
 const base = {
   start: '2026-01-31',
@@ -63,5 +66,26 @@ describe('Méthodes indépendantes et nomenclatures', () => {
     const p = businessDefaults();
     p.transitions.push({ from: 'inexistant', to: 'done' });
     expect(BusinessPolicy.safeParse(p).success).toBe(false);
+  });
+});
+describe('périmètres de management : nature libre', () => {
+  const corps = { name: 'Qualité', scope: 'Activités', timezone: 'Europe/Paris' };
+  it('propose SMSI, SMQ et SMI sans les imposer', () => {
+    expect([...NATURES_PERIMETRE]).toEqual(['SMSI', 'SMQ', 'SMI']);
+    expect(SmsiCreate.parse(corps).nature).toBe('');
+    expect(SmsiCreate.parse({ ...corps, nature: '  Système intégré HDS ' }).nature).toBe('Système intégré HDS');
+  });
+  it('refuse une nature de plus de 60 caractères et un champ inconnu', () => {
+    expect(SmsiCreate.safeParse({ ...corps, nature: 'x'.repeat(61) }).success).toBe(false);
+    expect(SmsiCreate.safeParse({ ...corps, rôle: 'x' }).success).toBe(false);
+  });
+  it('exige la confirmation et un fuseau connu pour une modification', () => {
+    const maj = { ...corps, nature: 'SMQ', confirm: 'ENREGISTRER' };
+    expect(SmsiUpdate.safeParse(maj).success).toBe(true);
+    expect(SmsiUpdate.safeParse({ ...maj, confirm: 'OK' }).success).toBe(false);
+    expect(SmsiUpdate.safeParse({ ...maj, timezone: 'Mars/Phobos' }).success).toBe(false);
+    expect(
+      SmsiUpdate.safeParse({ name: 'Qualité', scope: '', timezone: 'Europe/Paris', confirm: 'ENREGISTRER' }).success,
+    ).toBe(false);
   });
 });

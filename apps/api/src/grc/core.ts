@@ -18,6 +18,7 @@ import {
   type Permission,
   type GrcKind,
   type GrcObject,
+  type SmsiUpdate,
   type Action,
   type Module,
 } from '@suivi/shared';
@@ -69,6 +70,7 @@ export interface GrcSmsi {
   id: string;
   name: string;
   scope: string;
+  nature: string;
   visibility: 'instance' | 'restricted';
   timezone: string;
   businessVersion: number;
@@ -77,7 +79,7 @@ export interface GrcSmsi {
   version: number;
   createdBy: string;
 }
-const smsiColumns = `s.id,s.name,s.scope,s.visibility,s.timezone,s.business_version AS "businessVersion",s.risk_method_id AS "riskMethodId",s.risk_method_version AS "riskMethodVersion",s.version,s.created_by AS "createdBy"`;
+const smsiColumns = `s.id,s.name,s.scope,s.nature,s.visibility,s.timezone,s.business_version AS "businessVersion",s.risk_method_id AS "riskMethodId",s.risk_method_version AS "riskMethodVersion",s.version,s.created_by AS "createdBy"`;
 export class Grc {
   readonly legacyTasks: LegacyTasks;
   readonly frameworks: GrcFrameworks;
@@ -125,6 +127,7 @@ export class Grc {
       id: r.id,
       name: r.name,
       scope: r.scope,
+      nature: r.nature,
       visibility: r.visibility,
       timezone: r.timezone,
       businessVersion: r.businessVersion,
@@ -151,19 +154,49 @@ export class Grc {
       )
     ).rows;
   }
-  async createSmsi(input: { name: string; scope: string; timezone: string }, user: SessionUser, ip: string) {
+  async createSmsi(
+    input: { name: string; scope: string; nature: string; timezone: string },
+    user: SessionUser,
+    ip: string,
+  ) {
     await this.permission(user, 'pilotage', 'administrer');
     return this.db.tx(async (c) => {
       const row = (
         await c.query<{ id: string }>(
-          `INSERT INTO grc_smsis(name,scope,timezone,business_version,created_by) VALUES($1,$2,$3,(SELECT version FROM business_policy_configuration WHERE id=1),$4) RETURNING id`,
-          [input.name, input.scope, input.timezone, user.username],
+          `INSERT INTO grc_smsis(name,scope,nature,timezone,business_version,created_by) VALUES($1,$2,$3,$4,(SELECT version FROM business_policy_configuration WHERE id=1),$5) RETURNING id`,
+          [input.name, input.scope, input.nature, input.timezone, user.username],
         )
       ).rows[0]!;
       await c.query('INSERT INTO grc_members(smsi_id,user_id,can_write) VALUES($1,$2,true)', [row.id, user.id]);
       await this.db.audit(user, ip, 'grc.smsi.created', row.id, {}, c);
       await this.notify(c, row.id, 1, row.id, 'pilotage', user.username);
       return this.access(row.id, user, true, c);
+    }, user.username);
+  }
+  /** Modifie le nom, le texte, la nature et le fuseau d'un périmètre (version attendue ; membres et rattachements inchangés). */
+  async updateSmsi(id: string, input: SmsiUpdate, expected: number, user: SessionUser, ip: string) {
+    await this.permission(user, 'pilotage', 'administrer');
+    await this.access(id, user, true);
+    return this.db.tx(async (c) => {
+      await c.query('SELECT id FROM grc_smsis WHERE id=$1 FOR UPDATE', [id]);
+      const current = await this.access(id, user, true, c);
+      if (current.version !== expected)
+        throw new HttpError(412, 'Le périmètre a changé : rechargez-le avant de le modifier.');
+      await c.query(
+        'UPDATE grc_smsis SET name=$2,scope=$3,nature=$4,timezone=$5,version=version+1,updated_at=now() WHERE id=$1',
+        [id, input.name, input.scope, input.nature, input.timezone],
+      );
+      const changed = (['name', 'scope', 'nature', 'timezone'] as const).filter((k) => current[k] !== input[k]);
+      await this.db.audit(
+        user,
+        ip,
+        'grc.smsi.updated',
+        id,
+        { changed, previousName: current.name, previousNature: current.nature },
+        c,
+      );
+      await this.notify(c, id, current.version + 1, id, 'pilotage', user.username);
+      return this.access(id, user, false, c);
     }, user.username);
   }
   async members(id: string, user: SessionUser) {

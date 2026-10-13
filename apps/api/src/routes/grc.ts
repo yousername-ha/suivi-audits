@@ -1,5 +1,14 @@
 import { z } from 'zod';
-import { GRC_KINDS, GrcObjectBody, GrcRef, SmsiCreate, SmsiMember, LinkBody, methodTemplate } from '@suivi/shared';
+import {
+  GRC_KINDS,
+  GrcObjectBody,
+  GrcRef,
+  SmsiCreate,
+  SmsiMember,
+  SmsiUpdate,
+  LinkBody,
+  methodTemplate,
+} from '@suivi/shared';
 import type { Session } from '../auth.js';
 import { dashboard } from '../grc/dashboard.js';
 import { etudeEbios, registreRisques } from '../grc/registre-risques.js';
@@ -193,6 +202,16 @@ export const grcRoutes = [
     summary: 'Créer un périmètre SMSI restreint',
     body: SmsiCreate,
     handler: async ({ svc, s, body, ip }) => svc.grc.createSmsi(body, (s as Session).user, ip),
+  }),
+  route({
+    ...base,
+    method: 'PATCH',
+    url: '/api/grc/smsis/:smsi',
+    summary: 'Modifier le nom, le texte, la nature et le fuseau d’un périmètre',
+    params: scope,
+    body: SmsiUpdate,
+    handler: async ({ svc, s, params, body, req, ip }) =>
+      svc.grc.updateSmsi(params.smsi, body, requireIfMatch(req), (s as Session).user, ip),
   }),
   route({
     ...base,

@@ -148,24 +148,40 @@ export interface GrcObject {
   legacyId: string | null;
   archived: boolean;
 }
+/** Natures proposées à la création d'un périmètre : de simples suggestions, la nature reste un libellé libre. */
+export const NATURES_PERIMETRE = ['SMSI', 'SMQ', 'SMI'] as const;
+const natureLibelle = z.string().trim().max(60);
+const fuseau = z
+  .string()
+  .max(100)
+  .refine((v) => {
+    try {
+      new Intl.DateTimeFormat('fr', { timeZone: v });
+      return true;
+    } catch {
+      return false;
+    }
+  }, 'Fuseau inconnu.');
 export const SmsiCreate = z
   .object({
     name: label,
     scope: z.string().max(5000),
+    nature: natureLibelle.default(''),
     visibility: z.literal('restricted').default('restricted'),
-    timezone: z
-      .string()
-      .max(100)
-      .refine((v) => {
-        try {
-          new Intl.DateTimeFormat('fr', { timeZone: v });
-          return true;
-        } catch {
-          return false;
-        }
-      }, 'Fuseau inconnu.'),
+    timezone: fuseau,
   })
   .strict();
+/** Modification d'un périmètre : nom, texte du périmètre, nature et fuseau (version attendue en If-Match). */
+export const SmsiUpdate = z
+  .object({
+    name: label,
+    scope: z.string().max(5000),
+    nature: natureLibelle,
+    timezone: fuseau,
+    confirm: z.literal('ENREGISTRER'),
+  })
+  .strict();
+export type SmsiUpdate = z.infer<typeof SmsiUpdate>;
 export const SmsiMember = z.object({ userId: z.uuid(), write: z.boolean() }).strict();
 export const OfficialSource = z
   .object({
