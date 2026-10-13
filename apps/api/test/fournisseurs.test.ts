@@ -114,6 +114,39 @@ describe('registre et critères', () => {
     expect(after.suppliers.map((s: { id: string }) => s.id)).toEqual(['SUP-001']);
     expect(after.items).toEqual(before.items);
   });
+  it('modifie les champs de suivi (MFA, SSO, criticité, HDS, certificats, contrôles) et calcule les états', async () => {
+    expect((await reader.patch(`/api/suppliers/${supplier}`, { mfa: 'Oui' })).statusCode).toBe(403);
+    expect((await contributor.patch(`/api/suppliers/${supplier}`, {})).statusCode).toBe(422);
+    expect((await contributor.patch(`/api/suppliers/${supplier}`, { mfa: 'Peut-être' })).statusCode).toBe(422);
+    expect((await contributor.patch('/api/suppliers/SUP-999', { mfa: 'Oui' })).statusCode).toBe(404);
+    const r = await contributor.patch(`/api/suppliers/${supplier}`, {
+      saas: true,
+      mfa: 'Non',
+      sso: 'En cours',
+      critical: 'Oui',
+      hds: 'Non',
+      notes: 'Note fictive',
+      certs: [{ type: 'ISO 27001', validUntil: '2020-01-01' }],
+      controls: [{ t: 'Vérifier la MFA', ref: 'A.8.5', freq: 12, last: '2020-01-01' }, { t: 'Revue annuelle' }],
+    });
+    expect(r.statusCode, r.body).toBe(200);
+    expect(r.json()).toMatchObject({
+      saas: true,
+      mfa: 'Non',
+      certificateState: ['Expiré', 'bad'],
+      controlSummary: { enRetard: 1, aRealiser: 1, total: 2 },
+    });
+    const liste = (await reader.get('/api/suppliers')).json() as { id: string; sso: string; controls: { id: string }[] }[];
+    const ligne = liste.find((x) => x.id === supplier)!;
+    expect(ligne.sso).toBe('En cours');
+    expect(ligne.controls.every((c) => !!c.id)).toBe(true);
+    // Les autres données historiques ne sont pas touchées.
+    const etat = (await a.get('/api/legacy/state')).json();
+    expect(etat.suppliers).toHaveLength(1);
+    expect((await contributor.patch(`/api/suppliers/${supplier}`, { name: 'Autre nom' })).statusCode).toBe(200);
+    expect((await contributor.patch(`/api/suppliers/${supplier}`, { name: 'Fournisseur fictif' })).statusCode).toBe(200);
+    expect((await contributor.patch(`/api/suppliers/${supplier}`, { name: 'x' })).statusCode).toBe(422);
+  });
   it('réserve la définition des critères au droit d’administration', async () => {
     expect((await contributor.post('/api/suppliers/criteria', critBody('Critère refusé'))).statusCode).toBe(403);
     const r1 = await a.post('/api/suppliers/criteria', critBody('Maîtrise de la sous-traitance'));

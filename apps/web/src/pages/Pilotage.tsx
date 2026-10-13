@@ -235,19 +235,24 @@ export function PilotagePage() {
             {config && (
               <>
                 {section === 'amelioration' && <ImprovementIndicators smsi={smsi} />}
-                {section === 'objectifs' && <ObjectifsProcessus smsi={smsi} />}
+                {section === 'processus' && <ObjectifsProcessus smsi={smsi} vue="processus" />}
+                {section === 'objectifs' && <ObjectifsProcessus smsi={smsi} vue="objectif" />}
+                {section === 'indicateurs' && <ObjectifsProcessus smsi={smsi} vue="compacte" />}
                 {section === 'audits' && can('pilotage', 'lire') && <PlansHistoriques smsi={smsi} type="audit" />}
                 {section === 'exercices' && <PlansHistoriques smsi={smsi} type="exo" />}
-                <BusinessRegistry
-                  key={smsi + section}
-                  smsi={smsi}
-                  kind={config.kind}
-                  legacyKey={config.legacy}
-                  onOpen={open}
-                  onCreate={create}
-                  onDecision={decide}
-                  onSchedule={setSchedule}
-                />
+                {(smsi !== '00000000-0000-4000-8000-000000000001' ||
+                  !['processus', 'objectifs', 'indicateurs'].includes(section)) && (
+                  <BusinessRegistry
+                    key={smsi + section}
+                    smsi={smsi}
+                    kind={config.kind}
+                    legacyKey={config.legacy}
+                    onOpen={open}
+                    onCreate={create}
+                    onDecision={decide}
+                    onSchedule={setSchedule}
+                  />
+                )}
                 {['bia', 'continuite', 'exercices', 'preuves', 'controles', 'amelioration', 'revues'].includes(
                   section,
                 ) &&

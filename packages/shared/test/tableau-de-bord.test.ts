@@ -6,7 +6,9 @@ import path from 'node:path';
 import vm from 'node:vm';
 import { describe, expect, it } from 'vitest';
 import {
+  analyserValeurIndicateur,
   conformiteParReferentiel,
+  detailMesures,
   ecartsOuverts,
   etatIndicateur,
   indicateursSynthese,
@@ -243,5 +245,56 @@ describe('tableau de bord unifié : parité avec l’outil historique', () => {
       ['2020-01-01', false],
     ]);
     expect(plansHistoriques(S, 'exo', aujourdhui)).toEqual([]);
+  });
+});
+
+describe('détail des mesures et saisie d’une valeur (interface des objectifs)', () => {
+  const etat = {
+    suppliers: [
+      { saas: true, mfa: 'Oui' },
+      { saas: true, mfa: 'Non' },
+    ],
+    findings: [],
+  };
+  it('donne tendance, date de la dernière mesure et valeur historique, comme l’outil de suivi', () => {
+    const ind = {
+      id: 'I1',
+      dir: '≥',
+      target: 0.9,
+      values: [
+        { date: '2025-12-31', v: 0.7, hist: '2025-2026' },
+        { date: '2026-04-01', v: 0.8 },
+        { date: '2026-07-01', v: 0.92 },
+      ],
+    };
+    expect(detailMesures(ind, etat)).toEqual({
+      tendance: '↗',
+      source: '2026-07-01',
+      historique: { periode: '2025-2026', valeur: '70 %' },
+    });
+    expect(detailMesures({ ...ind, values: [{ date: '2026-04-01', v: 0.8 }] }, etat).tendance).toBe('→');
+  });
+  it('ne donne pas de tendance à un indicateur calculé, et cite la source du calcul', () => {
+    const auto = detailMesures(
+      {
+        calc: 'saasMfa',
+        values: [
+          { date: '2026-01-01', v: 1 },
+          { date: '2026-02-01', v: 2 },
+        ],
+      },
+      etat,
+    );
+    expect(auto).toMatchObject({ tendance: '', source: '1/2 services SaaS' });
+  });
+  it('analyse une saisie : Oui/Non, nombre, taux en pourcentage ramené entre 0 et 1', () => {
+    const taux = { target: 0.9, dir: '≥' };
+    expect(analyserValeurIndicateur(taux, '88 %')).toBe(0.88);
+    expect(analyserValeurIndicateur(taux, '92')).toBe(0.92);
+    expect(analyserValeurIndicateur(taux, '0,5')).toBe(0.5);
+    expect(analyserValeurIndicateur({ dir: '=', target: 'Oui' }, 'oui')).toBe('Oui');
+    expect(analyserValeurIndicateur({ dir: '≤', target: 3 }, '2')).toBe(2);
+    expect(analyserValeurIndicateur({ dir: '≤', target: 3 }, 'abc')).toBe('abc');
+    expect(analyserValeurIndicateur(taux, '  ')).toBeNull();
   });
 });

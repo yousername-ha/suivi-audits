@@ -14,6 +14,7 @@ import {
   SupplierCriterionBody,
   SupplierEvaluationBody,
   SupplierFollowUpBody,
+  SupplierUpdateBody,
   LinkBody,
   methodTemplate,
 } from '@suivi/shared';
@@ -646,6 +647,16 @@ export const grcRoutes = [
     summary: 'Ajouter un fournisseur au registre de l’organisation',
     body: SupplierBody,
     handler: async ({ svc, s, body, ip }) => svc.grc.suppliers.create(body, (s as Session).user, ip),
+  }),
+  route({
+    ...base,
+    access: 'fournisseurs:modifier' as const,
+    method: 'PATCH',
+    url: '/api/suppliers/:id',
+    summary: 'Modifier un fournisseur du registre (MFA, SSO, criticité, HDS, certificats, contrôles…)',
+    params: z.object({ id: z.string().min(1).max(60) }),
+    body: SupplierUpdateBody,
+    handler: async ({ svc, s, params, body, ip }) => svc.grc.suppliers.update(params.id, body, (s as Session).user, ip),
   }),
   route({
     ...base,
