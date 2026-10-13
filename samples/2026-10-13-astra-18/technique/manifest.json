@@ -1,0 +1,79 @@
+{
+  "date": "2026-10-13",
+  "baseCommit": "6c6a4f24d48596acb33ae0ac4524ce9a2ca6d839",
+  "sourceGuideSha256": "578da105d1c184e756aadffa9b31f0f5ddc64182c3f92ac329c5afb27e933401",
+  "files": {
+    "README.md": {
+      "bytes": 3225,
+      "sha256": "bb464669d8d546bd9a7ae555972228d92b5f6dc2f4654498a81284b35b24f94f"
+    },
+    "SOURCES-PARCOURS.md": {
+      "bytes": 8877,
+      "sha256": "ded2c1be9f716f221522ca427315afe8ad1173b81310db236d334dfab488a49d"
+    },
+    "SOURCES.md": {
+      "bytes": 4201,
+      "sha256": "18d2317529e8409076873029ad05b80af275a964148d50d57297f312cc819ef2"
+    },
+    "app.js": {
+      "bytes": 10224,
+      "sha256": "d91a450cdefdb0e86878a03d8095b41313f5b2f3ed78b6a073ec15da773bfcdf"
+    },
+    "contenu.js": {
+      "bytes": 11783,
+      "sha256": "3495399686eadd24e41593f8dfbb9e3fd57f0dab9e7fe69bcabd3d6fc5ce18d0"
+    },
+    "galerie.html": {
+      "bytes": 1901,
+      "sha256": "74aaa685bda72c38791a9ccdc1738228ce95cf3cfa99ca58b476ace96c257090"
+    },
+    "images/01-suivi-risques.png": {
+      "bytes": 353970,
+      "sha256": "a5b12c239e344a827cdf7f0b761b3c6865389c5dc7a90a00eef9f146226da152"
+    },
+    "images/02-scenario-visuel.png": {
+      "bytes": 333928,
+      "sha256": "db347dbb8c5f781f04625c06920b36a9a76c93f3d65d4274dc8076fa86eb6f59"
+    },
+    "images/03-risque-laboratoire.png": {
+      "bytes": 353124,
+      "sha256": "bfd29e7831ad656dc90b6efb55d2f03a74ece37436cecad8768b72255c890f33"
+    },
+    "images/04-risque-production.png": {
+      "bytes": 353308,
+      "sha256": "257180a58a72c4b43118e530cbf6f25b5d63149859e06c1d1b8a247d9a9eb8d6"
+    },
+    "images/05-chemin-intrusion.png": {
+      "bytes": 331450,
+      "sha256": "9ff76f7e6cc5235ff43d9e33b068fb7954b90cd35f33f0a7065f62e0ca41915d"
+    },
+    "images/06-chemin-personnel.png": {
+      "bytes": 325839,
+      "sha256": "6f3a7cb63efb4223b8085fbae03c0dc5b831240068cecc43364aeda2a16f9557"
+    },
+    "index.html": {
+      "bytes": 3593,
+      "sha256": "0506f670fa578b999d71c97f74b12a20e47a14bcf7a65d6a3f567fb9db107baf"
+    },
+    "style.css": {
+      "bytes": 21771,
+      "sha256": "442b1742806d5b6fcb67c04abb53ca4c87b5f05b33f5909d6be8b48d4117f482"
+    },
+    "technique/capturer.cjs": {
+      "bytes": 3573,
+      "sha256": "abbe92cff773a298eae6984c5a0ad175af8319e0e6d31970f75c45f9fd4381f8"
+    },
+    "technique/verification.json": {
+      "bytes": 441,
+      "sha256": "874698f7f9db1f03799019a53d202b8c4ac63f1a1340f32629c728b6bd420d35"
+    },
+    "technique/vues.json": {
+      "bytes": 591,
+      "sha256": "8a6653fc70043909a7cd5b3c36daabb6632e55f4b530c8474531bd5af82e6636"
+    },
+    "vues.js": {
+      "bytes": 14827,
+      "sha256": "df5a0f9aa4bb60204b908e00e6f28b9be646b710b805be3bd92c8b656e484800"
+    }
+  }
+}
