@@ -604,6 +604,10 @@
   fill: var(--mantine-color-text);
 }
 .grc-risk-canvas {
+  /* Repère de .carte-zone (position: absolute; inset: 0) : sans lui, la carte recouvre toute la fenêtre. */
+  position: relative;
+  overflow: hidden;
+  background: var(--carte-canevas);
   height: var(--grc-canevas-hauteur);
   min-height: var(--grc-canevas-min);
   border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
