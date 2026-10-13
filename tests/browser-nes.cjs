@@ -288,6 +288,127 @@ const openAppearance = async (page) => {
       await A.p.waitForFunction(() => document.documentElement.dataset.nesMode === "light");
     });
 
+    const route = (p, id) =>
+      p.evaluate((rid) => {
+        for (const s of LegacyIntegrationUI.toolkit.api().astra.navigation()) {
+          const it = s.items.find((i) => i.id === rid);
+          if (it) return { tab: it.tab, set: it.set || {}, section: s.id };
+        }
+      }, id);
+
+    await check("Navigation : pictogrammes, entrée active turquoise, chevrons droite/bas, aria et clavier", async () => {
+      await H.navigate(A.p, "dash");
+      const nav = () => A.p.evaluate(() => {
+        const cs = (e, p) => getComputedStyle(e)[p];
+        const heading = document.querySelector(".lx-nav-heading");
+        const on = document.querySelector(".side .mn.on");
+        const other = document.querySelector(".side .mn:not(.on)");
+        return {
+          headingChevron: !!heading.querySelector(".nes-chev svg"),
+          signHidden: cs(heading.querySelector(".nes-sign"), "display") === "none",
+          headingExpanded: heading.getAttribute("aria-expanded"),
+          headingControls: !!document.getElementById(heading.getAttribute("aria-controls")),
+          chevronTransform: cs(heading.querySelector(".nes-chev"), "transform"),
+          onIcon: cs(on.querySelector("svg"), "color"), onBorder: cs(on, "borderLeftColor"), onText: cs(on, "color"), onBg: cs(on, "backgroundColor"),
+          otherIcon: cs(other.querySelector("svg"), "color"),
+          houseIcon: document.querySelector('.side .mn[data-sec="dash"] svg').dataset.nesIcon,
+        };
+      });
+      const n = await nav();
+      assert.equal(n.headingChevron, true);
+      assert.equal(n.signHidden, true);
+      assert.equal(n.headingControls, true);
+      assert.equal(n.houseIcon, "dash");
+      assert.equal(n.onIcon, "rgb(0, 168, 176)");
+      assert.equal(n.onBorder, "rgb(0, 168, 176)");
+      assert.equal(n.onText, "rgb(246, 250, 246)");
+      assert.equal(n.onBg, "rgb(39, 86, 71)");
+      assert.equal(n.otherIcon, "rgb(197, 215, 204)");
+      assert.equal(n.headingExpanded, "true");
+      assert.notEqual(n.chevronTransform, "none", "ouvert : chevron vers le bas");
+      // Repli au clavier : Entrée sur le bouton du groupe, chevron vers la droite.
+      const heading = A.p.locator(".lx-nav-heading").first();
+      await heading.focus();
+      await A.p.keyboard.press("Enter");
+      assert.equal(await A.p.locator(".lx-nav-heading").first().getAttribute("aria-expanded"), "false");
+      assert.equal(await A.p.locator(".lx-nav-heading").first().locator(".nes-chev").evaluate((e) => getComputedStyle(e).transform), "none");
+      assert.equal(await A.p.locator("#lx-nav-body-overview").evaluate((e) => e.hidden), true);
+      await A.p.locator(".lx-nav-heading").first().focus();
+      await A.p.keyboard.press("Enter");
+      assert.equal(await A.p.locator(".lx-nav-heading").first().getAttribute("aria-expanded"), "true");
+      // Entrées à sous-menu : fermées par défaut (droite), ouvertes sur la section courante (bas, aria-controls valide).
+      const closed = await A.p.locator('.side .mn[data-sec="pil"]').evaluate((e) => ({ expanded: e.getAttribute("aria-expanded"), controls: e.getAttribute("aria-controls"), chevron: !!e.querySelector(".nes-chev") }));
+      assert.deepEqual(closed, { expanded: "false", controls: null, chevron: true });
+      await A.p.locator('.side .mn[data-sec="pil"]').click();
+      const open = await A.p.locator('.side .mn[data-sec="pil"]').evaluate((e) => ({ expanded: e.getAttribute("aria-expanded"), exists: !!document.getElementById(e.getAttribute("aria-controls")), transform: getComputedStyle(e.querySelector(".nes-chev")).transform }));
+      assert.equal(open.expanded, "true");
+      assert.equal(open.exists, true);
+      assert.notEqual(open.transform, "none");
+      assert.equal(await A.p.locator('.side .mn[data-sec="pil"] > svg').getAttribute("data-nes-icon"), "pil");
+      assert.equal(await A.p.locator(".nes-header .nes-site").evaluate((e) => e.innerText.replace(/\s+/g, " ").trim()), "Site Normand’e-Santé (s’ouvre dans un nouvel onglet)");
+    });
+
+    await check("Navigation : mêmes pictogrammes et chevrons en Clair bleuté, mode sombre lisible, mouvement réduit respecté", async () => {
+      await H.navigate(A.p, "dash");
+      await A.p.evaluate(() => NesStyle.setPreview("clair"));
+      const clair = await A.p.evaluate(() => ({ attr: document.documentElement.dataset.nesStyle, paper: getComputedStyle(document.body).backgroundColor, onIcon: getComputedStyle(document.querySelector(".side .mn.on svg")).color, chevrons: document.querySelectorAll(".nes-chev").length, border: getComputedStyle(document.querySelector(".as-surface, .card")).borderTopColor }));
+      assert.equal(clair.attr, "clair");
+      assert.equal(clair.paper, "rgb(247, 249, 251)");
+      assert.equal(clair.onIcon, "rgb(0, 168, 176)");
+      assert(clair.chevrons > 3);
+      await A.p.evaluate(() => NesStyle.cancel());
+      await A.p.evaluate(() => (document.documentElement.dataset.theme = "dark"));
+      await A.p.waitForFunction(() => document.documentElement.dataset.nesMode === "dark");
+      const dark = await A.p.evaluate(() => ({ nav: getComputedStyle(document.querySelector(".side .mn:not(.on)")).color, bg: getComputedStyle(document.body).backgroundColor, on: getComputedStyle(document.querySelector(".side .mn.on")).color, onBg: getComputedStyle(document.querySelector(".side .mn.on")).backgroundColor }));
+      assert(ratio(dark.nav, "rgb(12, 32, 24)") >= 4.5, "texte de navigation lisible en sombre");
+      assert(ratio(dark.on, dark.onBg) >= 4.5, "entrée active lisible en sombre");
+      assert(lum(dark.bg) < 0.05);
+      await A.p.evaluate(() => (document.documentElement.dataset.theme = "light"));
+      await A.p.waitForFunction(() => document.documentElement.dataset.nesMode === "light");
+      await A.p.emulateMedia({ reducedMotion: "reduce" });
+      assert.equal(await A.p.locator(".nes-chev").first().evaluate((e) => getComputedStyle(e).transitionDuration), "0s");
+      await A.p.emulateMedia({ reducedMotion: "no-preference" });
+    });
+
+    await check("Plans d'action : six vues et récurrences : quatre vues, fiche et historique, sans badge « En retard » en double", async () => {
+      const act = await route(A.p, "fd");
+      await H.navigate(A.p, act.tab, act.set);
+      for (const [v, expected] of [["list", /Action \/ tâche|Titre/], ["kanban", /Ouvert|En cours/], ["planning", /Activité \/ responsable/], ["calendar", /lun|Lun|janv|oct/], ["gantt", /Une durée est affichée uniquement si une date de début existe/], ["summary", /Actions au total/]]) {
+        await A.p.locator(`[data-astra=view][data-value=${v}]`).click();
+        assert.equal(await A.p.locator(`[data-astra=view][data-value=${v}]`).getAttribute("aria-pressed"), "true", v);
+        assert.match(await A.p.locator("#panel").innerText(), expected, v);
+      }
+      const rec = await route(A.p, "pl-rec");
+      await H.navigate(A.p, rec.tab, rec.set);
+      await A.p.locator("[data-astra=view][data-value=list]").click();
+      const late = A.p.locator("#panel tbody tr", { hasText: "Revue des habilitations (FICTIF)" });
+      assert.equal(await late.locator(".as-pill", { hasText: "En retard" }).count(), 1);
+      for (const v of ["kanban", "planning", "calendar", "list"]) {
+        await A.p.locator(`[data-astra=view][data-value=${v}]`).click();
+        assert.equal(await A.p.locator(`[data-astra=view][data-value=${v}]`).getAttribute("aria-pressed"), "true", v);
+      }
+      await A.p.locator('#panel [data-astra=work-detail][data-id="NES-REC-0"]').click();
+      const detail = await A.p.locator("#as-detail").innerText();
+      assert.match(detail, /Revue des habilitations effectuée/);
+      assert.equal((detail.match(/En retard/g) || []).length <= 1, true);
+    });
+
+    await check("Responsive 390 / 768 / 1440 / 1920 et zoom 200 % : pas de débordement global, bandeau et lien visibles", async () => {
+      for (const [w, h] of [[390, 844], [768, 1024], [1440, 900], [1920, 1080], [720, 450]]) {
+        const R = await ctx({ width: w, height: h });
+        await H.login(R.p, url);
+        for (const [tab, set] of [["dash", {}], ["risks", { riskView: "map" }]]) {
+          await H.navigate(R.p, tab, set);
+          await R.p.waitForTimeout(300);
+          const m = await R.p.evaluate(() => ({ sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth, header: document.querySelector(".nes-header").getBoundingClientRect().height, link: (() => { const r = document.querySelector(".nes-site").getBoundingClientRect(); return r.width > 0 && r.right <= innerWidth + 1; })() }));
+          assert(m.sw <= m.cw + 1, `${w}px ${tab} : débordement ${m.sw} > ${m.cw}`);
+          assert.equal(m.header, w <= 720 ? 68 : 78);
+          assert.equal(m.link, true);
+        }
+        await R.c.close();
+      }
+    });
+
     await check("Persistance après redémarrage du serveur et reprise d'un contexte neuf", async () => {
       await H.navigate(A.p, "dash");
       server.kill();

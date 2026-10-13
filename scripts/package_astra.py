@@ -9,7 +9,9 @@ import subprocess
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-BRANCH = 'legacy'
+# Branches autorisées : `legacy` et la branche dédiée de l'intervention « apparence globale » (instruction explicite
+# de l'utilisateur du 13 octobre 2026). Tout autre nom reste refusé ; les contrôles de distribution sont inchangés.
+BRANCHES = ('legacy', 'claude/audit-suivi-docker-github-0pfu4y')
 BASE = '4bcdf60c629b50466aa40f1a98d67346a4641359'
 MANIFEST = 'MANIFESTE-LIVRAISON.json'
 
@@ -24,15 +26,16 @@ def main():
     parser.add_argument('--update-manifest', action='store_true')
     args = parser.parse_args()
     branch = git('branch', '--show-current')
-    if branch != BRANCH:
-        raise SystemExit(f'Branche refusée : {branch!r}; attendu : {BRANCH}')
+    if branch not in BRANCHES:
+        raise SystemExit(f'Branche refusée : {branch!r}; attendu : {" ou ".join(BRANCHES)}')
     files = git('ls-files', '-z').split('\0')
     forbidden = ('.git/', '.legacy-data/', 'node_modules/', 'apps/', 'packages/')
     if any(p.startswith(forbidden) or p.endswith(('.sqlite3', '.pyc')) for p in files):
         raise SystemExit('Un fichier non distribuable est suivi. Vérifier la liste.')
     content = {p: (ROOT / p).read_bytes() for p in files if p and p != MANIFEST}
     for required in ('index.html','demarrer.py','demarrer.bat','demarrer.sh',
-                     'legacy_server.py','modules/astra-ui.js','modules/astra.css'):
+                     'legacy_server.py','modules/astra-ui.js','modules/astra.css',
+                     'modules/nes-sage-ui.js','modules/nes-sage.css'):
         if required not in content:
             raise SystemExit('Fichier indispensable absent : ' + required)
     manifest = {

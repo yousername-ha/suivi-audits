@@ -1,94 +1,24 @@
 {
-  "executedAt": "2026-10-11T16:23:38.752Z",
-  "passed": 17,
-  "failed": 0,
+  "executedAt": "2026-10-13T15:41:57.572Z",
+  "passed": 2,
+  "failed": 1,
   "pageErrors": [],
   "externalRequests": 0,
   "tests": [
     {
       "name": "Installation, création du compte et état serveur autoritatif",
       "status": "PASSÉ",
-      "durationMs": 1858
+      "durationMs": 1674
     },
     {
       "name": "GHT, deux établissements et SI mutualisé déclarés dans l’interface",
       "status": "PASSÉ",
-      "durationMs": 3375
+      "durationMs": 2063
     },
     {
       "name": "Responsable issu du registre existant, fonction et compte affecté",
-      "status": "PASSÉ",
-      "durationMs": 1503
-    },
-    {
-      "name": "Parcours D2 : mêmes évaluations et données que les menus unitaires",
-      "status": "PASSÉ",
-      "durationMs": 1395
-    },
-    {
-      "name": "Action idempotente, clôture depuis le plan central et validation humaine distincte",
-      "status": "PASSÉ",
-      "durationMs": 2933
-    },
-    {
-      "name": "Pièce financière réelle, montant exact et téléchargement protégé",
-      "status": "PASSÉ",
-      "durationMs": 865
-    },
-    {
-      "name": "Création du BIA et impacts temporels sur les données persistées",
-      "status": "PASSÉ",
-      "durationMs": 1938
-    },
-    {
-      "name": "PCA et PRA reliés au BIA, avec objectifs métier et techniques distincts",
-      "status": "PASSÉ",
-      "durationMs": 2468
-    },
-    {
-      "name": "Modification du BIA : anciens plans signalés à réexaminer",
-      "status": "PASSÉ",
-      "durationMs": 763
-    },
-    {
-      "name": "Exercice réalisé, RETEX et action corrective centrale sans doublon",
-      "status": "PASSÉ",
-      "durationMs": 1609
-    },
-    {
-      "name": "Vue GHT consolidée, établissement et contexte conservé",
-      "status": "PASSÉ",
-      "durationMs": 1270
-    },
-    {
-      "name": "PCRA : pièces, actions centrales et liens CaRE sans duplication",
-      "status": "PASSÉ",
-      "durationMs": 673
-    },
-    {
-      "name": "Rapport PCRA et Excel réels : BIA, plans, exercice, actions et preuve",
-      "status": "PASSÉ",
-      "durationMs": 624
-    },
-    {
-      "name": "Sauvegarde complète : données intégrées et pièce physique conservée",
-      "status": "PASSÉ",
-      "durationMs": 465
-    },
-    {
-      "name": "Contrôle serveur : compte en lecture, établissement interdit et pièce protégée",
-      "status": "PASSÉ",
-      "durationMs": 937
-    },
-    {
-      "name": "Navigation regroupée, clavier et responsive à quatre largeurs",
-      "status": "PASSÉ",
-      "durationMs": 566
-    },
-    {
-      "name": "Rechargement : parcours, BIA, actions et pièces restaurés depuis le serveur",
-      "status": "PASSÉ",
-      "durationMs": 343
+      "status": "ÉCHEC",
+      "message": "page.evaluate: TypeError: Cannot read properties of null (reading 'click')\n    at eval (eval at evaluate (:290:30), <anonymous>:5:13)\n    at UtilityScript.evaluate (<anonymous>:292:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)"
     }
   ]
 }
