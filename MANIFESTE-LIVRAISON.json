@@ -1,10 +1,10 @@
 {
   "version": "3.0.1-astra-local",
-  "createdAt": "2026-10-12T13:03:25.493036+00:00",
-  "branch": "legacy",
+  "createdAt": "2026-10-13T15:56:31.812726+00:00",
+  "branch": "claude/audit-suivi-docker-github-0pfu4y",
   "baseCommit": "4bcdf60c629b50466aa40f1a98d67346a4641359",
-  "sourceCommit": "6de35a3cdc5203d3f45c8c6c2e3dae870fd31e5f",
-  "workingTreeChanges": true,
+  "sourceCommit": "8c032e7d0fb3514a0ece4315020993adc02abfc4",
+  "workingTreeChanges": false,
   "runtime": "Python >= 3.10 ; HTML/CSS/JavaScript et bibliothèques locales",
   "entryPoints": [
     "demarrer.bat",
@@ -20,8 +20,8 @@
     },
     {
       "path": "AGENTS.md",
-      "size": 3655,
-      "sha256": "5c37e9f33c90c90572a4b18552f3d4e9752cff4020bcf537d09ac7a98c7521c0"
+      "size": 3986,
+      "sha256": "f3e4bc37a3b855c19bb63cb696923eed2c2052d37aec99461dbb9373290e6643"
     },
     {
       "path": "LIRE-MOI-ASTRA.txt",
@@ -55,8 +55,8 @@
     },
     {
       "path": "docs/ASTRA-REFONTE.md",
-      "size": 11795,
-      "sha256": "5126174dfc468aa000c5c80b4ef41d8830a1e1fea8b855e74419a4bc2ff29eef"
+      "size": 14435,
+      "sha256": "8a3a8b3dcc8495df658fcc73a9ba6ba9828f32da5f4b0344904e3f97a51a8b68"
     },
     {
       "path": "docs/CARTOGRAPHIES-NAVIGATION.md",
@@ -140,8 +140,8 @@
     },
     {
       "path": "index.html",
-      "size": 3173877,
-      "sha256": "5a9454f07dde2ab171ad1ce6e7df0db98398caf0ca69bd77366ec6fa07572bd3"
+      "size": 3174079,
+      "sha256": "d7614093a058a6d6b4baaf757bcb652bdaff71f9e845aa2a7faaf4ddf9bdfa87"
     },
     {
       "path": "legacy_cartography.py",
@@ -155,8 +155,8 @@
     },
     {
       "path": "legacy_server.py",
-      "size": 55723,
-      "sha256": "7559ce53d346a3f5da010ee688b738dbcc4651247fb411120d323886b6082fef"
+      "size": 58501,
+      "sha256": "725b87543800d13e451599ce53f992f927e59502de6098fdad6fe7565182898d"
     },
     {
       "path": "lib/docx.iife.js",
@@ -185,13 +185,13 @@
     },
     {
       "path": "modules/admin-ui.js",
-      "size": 9376,
-      "sha256": "64ba177864c13b4b0e86833edc70938e014f807c868f95a45f95dbb35fb65e55"
+      "size": 9760,
+      "sha256": "192ac8d2272d0c280e1861cbd694e68d5873562deb951dac130ac35d8e41abde"
     },
     {
       "path": "modules/astra-ui.js",
-      "size": 60479,
-      "sha256": "8691b72fd7d8f872987ef07f1b53d5a5f5e2d8c6dca6f4d829a6dad1faf53bdc"
+      "size": 62332,
+      "sha256": "9c8707849edb4fac8ab57ec751bf1d60c34c1dcf1a1b8491af8d7dabb1ef2f76"
     },
     {
       "path": "modules/astra.css",
@@ -299,6 +299,16 @@
       "sha256": "5bb3d695be63caeab5472dbb67ce1203987dc1a7eceea6b0829e39f30382a29e"
     },
     {
+      "path": "modules/nes-sage-ui.js",
+      "size": 13532,
+      "sha256": "37ebd1873c36961cd9bf23cdec284365a42c4f055a8e21186c0ad7770b442e5e"
+    },
+    {
+      "path": "modules/nes-sage.css",
+      "size": 9721,
+      "sha256": "f207fa4d1beb56558945fcb2cddf8565c9371aa5b8bc59ec660dea318fd3eb66"
+    },
+    {
       "path": "modules/pcra-core.js",
       "size": 17355,
       "sha256": "08bee097db98ebb2e308ac7651979cdc7814d33528d37f0acd0c2fbb8d280554"
@@ -332,6 +342,46 @@
       "path": "recette/INTERFACE-RECETTE.md",
       "size": 3820,
       "sha256": "9b8bb3b0848f34c222f543010252ce2437e897b88744f66eb0765e8e2c151b22"
+    },
+    {
+      "path": "recette/apparence-globale.md",
+      "size": 6257,
+      "sha256": "9a795be24a641642458811fb80985d1d70161befd9293c98fc7a273afc8bc6fb"
+    },
+    {
+      "path": "recette/apparence-globale/anciens-parcours-avant-apres.json",
+      "size": 627,
+      "sha256": "dbbbe671074ecdad856ab9284b16135f20f7d391856574df4a2c7fcaf546178e"
+    },
+    {
+      "path": "recette/apparence-globale/astra-browser.txt",
+      "size": 941,
+      "sha256": "d6ffaf8cc4e5f812783a34754047f73f033a7a325e8e33efc564748c5cfedd80"
+    },
+    {
+      "path": "recette/apparence-globale/browser-nes-resultats.json",
+      "size": 1634,
+      "sha256": "35795c0aa0b659dbb91ee6b7bd30d717a6d90fe289e32db01dd6cd94540a9ae9"
+    },
+    {
+      "path": "recette/apparence-globale/browser-nes.txt",
+      "size": 1536,
+      "sha256": "f262034a32043e5d54c1254ef09e37197ec797e1db9da4ffef2eb06cbe8ff29b"
+    },
+    {
+      "path": "recette/apparence-globale/cartographies.txt",
+      "size": 967,
+      "sha256": "62377548df3d0769202917fb3cc774716ff12dcf4af9b21b5908b2c5d56c705a"
+    },
+    {
+      "path": "recette/apparence-globale/node-test-resume.txt",
+      "size": 56,
+      "sha256": "4126e041c5e0309e4e6d34a78a1f8d7bc111d3663b265584a4bb726415ffcadc"
+    },
+    {
+      "path": "recette/apparence-globale/python.txt",
+      "size": 6770,
+      "sha256": "d84b2797d1d2305bf29a7b56b07f92517f529a75bb5e87ed150c7e28babae5ee"
     },
     {
       "path": "recette/astra-validation.json",
@@ -370,8 +420,8 @@
     },
     {
       "path": "recette/cartographies-browser-resultats.json",
-      "size": 1594,
-      "sha256": "5f6671a5c46009540956a0cd294c79a8d3c0b8b3518f6b6aa90e7100077acce1"
+      "size": 502,
+      "sha256": "a941b11c85c0787d4fb7dc223f53c6c22b4ca7959df50237146b2edcbaf28745"
     },
     {
       "path": "recette/cartographies-refonte-resultats.json",
@@ -435,8 +485,8 @@
     },
     {
       "path": "recette/interface-browser-resultats.json",
-      "size": 1144,
-      "sha256": "73e90186e99ca83333fda6bc6cc713bb7aa19594a56bdffdf5927e1ef1902be9"
+      "size": 500,
+      "sha256": "7d0d46f6050e58ce154640c8b867e0659b54c73bb292c7daf64d54ef663a4ac8"
     },
     {
       "path": "recette/interface-serveur-resultats.txt",
@@ -460,8 +510,8 @@
     },
     {
       "path": "recette/refonte-browser-resultats.json",
-      "size": 2702,
-      "sha256": "4c1ab1fb99c87f3d806b82136cd5ea84fe8fb048ae8ac044921ca934f92f3ace"
+      "size": 818,
+      "sha256": "dd205d1f2297179e65ca5e5efe079c0503744e964fc828eec9cdaf339a1dcb89"
     },
     {
       "path": "recette/refonte-conservation.json",
@@ -475,8 +525,8 @@
     },
     {
       "path": "recette/refonte-regression-resultats.json",
-      "size": 4111,
-      "sha256": "ee56d18e03714ef2e3b4948f73a74373dad9f6825fc007f960382d9bf66749a0"
+      "size": 573,
+      "sha256": "e58fcc192edf1cb0fc512f3308792bfd3d5cb9e3751d0e57020ce5fc9971fc8f"
     },
     {
       "path": "recette/refonte-serveur-resultats.txt",
@@ -490,8 +540,8 @@
     },
     {
       "path": "recette/risques-admin-browser-resultats.json",
-      "size": 3150,
-      "sha256": "f6bcae4d311b7b0478e64f7da48ba7cf1a8489f310ddc4d69fb75acbc5de82b3"
+      "size": 1027,
+      "sha256": "42815c0f2921a0e65e7f01c728cde915b807c5b9c57380254bc7e1f70d2b4f34"
     },
     {
       "path": "recette/risques-admin-conservation.json",
@@ -589,9 +639,2209 @@
       "sha256": "3d0d4feabb4e5a3d881b344481961e386f095c5cbd73cf6e2228d6dfd458cfa8"
     },
     {
+      "path": "samples/2026-10-12-astra-03/01-bleu-institutionnel/01-vue-ensemble.png",
+      "size": 162087,
+      "sha256": "cb29611aaf08233bc03b30c0da9c74da0dfa50f53cd8b66222806def98e5a3ec"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/01-bleu-institutionnel/02-processus-pilotage.png",
+      "size": 141464,
+      "sha256": "2a434a44df85905611f2ca1391b3823fbf1d98c4a8cd349ff391554a41e9231e"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/01-bleu-institutionnel/03-processus-realisation.png",
+      "size": 141994,
+      "sha256": "ba1f7f419d2975f0ff1b5c688ddad0e8ee575430201d285c4a3292603e1fed33"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/01-bleu-institutionnel/04-processus-support.png",
+      "size": 140980,
+      "sha256": "8645d364385e1fca6f1f6bf5b3702f19f3058cf273e67ec2b9fcd93ee40cf8a1"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/01-bleu-institutionnel/05-flux-interactions.png",
+      "size": 141064,
+      "sha256": "5472c6d3b180ad4b33af872fceee153b01389e50b249983258c64c19e1e3f705"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/01-bleu-institutionnel/06-fiche-processus.png",
+      "size": 142906,
+      "sha256": "ec612f4a583f5bf3e02821e7005485d6203bb9c90ee8a841d2192b86ef5dc66c"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/01-bleu-institutionnel/07-risques-mesures.png",
+      "size": 144460,
+      "sha256": "79a4d1948861d0d7d9541b84d1ece11921d5daf059e95c0b8b2b665e72da5cf6"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/01-bleu-institutionnel/08-indicateurs.png",
+      "size": 136624,
+      "sha256": "1189dcd0a8711ddfa9bd3d65258a178b2077173d29fb9c8689212f416c7546e3"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/01-bleu-institutionnel/09-responsabilites.png",
+      "size": 118337,
+      "sha256": "1809f51c892f1b4145ca4ace578bf169f47167f11d65d66ba6ae80a6165deb21"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/01-bleu-institutionnel/10-revue-direction.png",
+      "size": 147493,
+      "sha256": "974e27beb1a7e2204f742d3f999e4a0bc0d36d8b32fb4b9100bc35d8ec7b69a7"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/01-bleu-institutionnel/README.md",
+      "size": 1321,
+      "sha256": "ddc208a343b5c6f06062f630898cfa4bb7f2cbf8ff638ffa35f59b2d620b496d"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/02-emeraude-organique/01-vue-ensemble.png",
+      "size": 187537,
+      "sha256": "28d203f15a610e54f636ec39a10163ef97c71890e4cb4833473d900cedf6aa75"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/02-emeraude-organique/02-processus-pilotage.png",
+      "size": 151938,
+      "sha256": "ddeb8cb6b0427b874c9753ef9c731e0b8916f36a965d0bc42b4b350c6ed714f2"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/02-emeraude-organique/03-processus-realisation.png",
+      "size": 152467,
+      "sha256": "a161ce23e9be87085a84b420df90c573aa279349aa662e1b4f1b9a855a6bc55e"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/02-emeraude-organique/04-processus-support.png",
+      "size": 152056,
+      "sha256": "49b71bf1049d4d81ba3e9e8d16f8d9e964316c6e900e838b9380847900a67eb2"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/02-emeraude-organique/05-flux-interactions.png",
+      "size": 164022,
+      "sha256": "7fbc569784a33a12e7e8ae4e71e8e534e80bac9497ad841de08afaf006029d66"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/02-emeraude-organique/06-fiche-processus.png",
+      "size": 156573,
+      "sha256": "fa19f96c3b61c6222fc41a9fa5aaeb72011c65eec707bbcf377159698791337a"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/02-emeraude-organique/07-risques-mesures.png",
+      "size": 163243,
+      "sha256": "c9ac95fd8ce5e513c09adb54e976d8ff3136f7a3e8a6ec567324214e2628d073"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/02-emeraude-organique/08-indicateurs.png",
+      "size": 154209,
+      "sha256": "521bcb101a3379efe4c813a337463406444ade72158e6630a38b093d72fd8617"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/02-emeraude-organique/09-responsabilites.png",
+      "size": 131014,
+      "sha256": "032fb8d5e1f1d413c426e4aed9311bd44d3f550702b7d0f9969669c79a3ef131"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/02-emeraude-organique/10-revue-direction.png",
+      "size": 166102,
+      "sha256": "8944ecdfa82d5609bc86d51ef0e0472e67e6f812dcbe0787e2e6f9acf68ce92a"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/02-emeraude-organique/README.md",
+      "size": 1322,
+      "sha256": "ba3e2d7fe469217e7ba8cb692c93f4b1d0bc2162260445fde4facc5456a29f1d"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/03-violet-studio/01-vue-ensemble.png",
+      "size": 149217,
+      "sha256": "3f2af9b2a1d3d0af0a0f6a1ac3665820d9f908eda39fe1a86416fb3183b5f476"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/03-violet-studio/02-processus-pilotage.png",
+      "size": 136359,
+      "sha256": "b7f4a75c013a34ebae73a19b3139693322c422d525c8c4d2b19e1221604468ad"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/03-violet-studio/03-processus-realisation.png",
+      "size": 137295,
+      "sha256": "660db97e6283029124a5d6a303533133f091d78ecd386c35ee3c8aca6b961791"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/03-violet-studio/04-processus-support.png",
+      "size": 135692,
+      "sha256": "9b27f8211b070295128507093ab272fb163dec22b1bd30395857c76c7859eab5"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/03-violet-studio/05-flux-interactions.png",
+      "size": 137957,
+      "sha256": "fe52d169c2e8b030b15222b474d8c398b802214ccda79b85cd17aa6acb42441f"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/03-violet-studio/06-fiche-processus.png",
+      "size": 229782,
+      "sha256": "0bb6e8767e821d8f925c3a03ac9f4094aa2266b987b21ed52665fc7dd80a29ae"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/03-violet-studio/07-risques-mesures.png",
+      "size": 139414,
+      "sha256": "0a50a9aa5ac8dcf2a8c8939651c46fa4647b68f97b286106420034106f822b85"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/03-violet-studio/08-indicateurs.png",
+      "size": 129915,
+      "sha256": "de85ea4acb8c8064b2cef3f8230fbb92628fe2f8953a5867693b2fdf399f868a"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/03-violet-studio/09-responsabilites.png",
+      "size": 108997,
+      "sha256": "84d9f9eff6e6920696dbb5a501d4b01eb5bf464ec310a94de7bf2dc60574c09f"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/03-violet-studio/10-revue-direction.png",
+      "size": 235119,
+      "sha256": "193e80ddee61e6ae9b054ab512765fa1ef2a0b765727fdcc496a4a4abd5f3690"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/03-violet-studio/README.md",
+      "size": 1255,
+      "sha256": "0756982f56275f345beb38e821be71f2e203bed7669b44d2db2140d5999dcaa6"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/04-graphite-ambre/01-vue-ensemble.png",
+      "size": 146837,
+      "sha256": "d832a047d35b0cf42fcab5f689b660c52fa7df8f37eb7d401889a5f9eca5f567"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/04-graphite-ambre/02-processus-pilotage.png",
+      "size": 118739,
+      "sha256": "097668bc6b614bc2186000e2991793335cd6701cd1721e032480d6fa0a050bfa"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/04-graphite-ambre/03-processus-realisation.png",
+      "size": 119597,
+      "sha256": "3f0c5f0cf3397202bdc8b4f469fb1ec565597d0954c33ba2aaf7969511a74fe3"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/04-graphite-ambre/04-processus-support.png",
+      "size": 119591,
+      "sha256": "f5341983792f7ec85f203489d2ae9f4df356705d2bdee79053d61fdde7b10e46"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/04-graphite-ambre/05-flux-interactions.png",
+      "size": 126391,
+      "sha256": "0c02f97f647eb985f4cc4c5f35c65459bb12a4aa6eb8ad2b4457c67bd7fdbadf"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/04-graphite-ambre/06-fiche-processus.png",
+      "size": 124584,
+      "sha256": "ef7295bdc5097b9ee4a0905f9a90abf62de5c991ee980294e91e71c84d0d7b91"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/04-graphite-ambre/07-risques-mesures.png",
+      "size": 127606,
+      "sha256": "861feb3e2d55cb05b32b1665d499f0058be49664a96cbc3de76562de1903d91b"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/04-graphite-ambre/08-indicateurs.png",
+      "size": 119164,
+      "sha256": "40f55d540c7e7d42956e08a574140701806f34d5cc90a4b0ad2570faf8dd204b"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/04-graphite-ambre/09-responsabilites.png",
+      "size": 100045,
+      "sha256": "2e508d7c90125b9278b4cb9c8f4590d752d0f8410639fd095b01815f7045bfe8"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/04-graphite-ambre/10-revue-direction.png",
+      "size": 129454,
+      "sha256": "a2fb0e6f2145149d0022906030e2c55d18efb7dc50e03eae9f70498c24e4ee96"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/04-graphite-ambre/README.md",
+      "size": 1287,
+      "sha256": "12e5c62dd84c8c48d3bc200ef0af76fa958e375a0caa0e3dc0309ecd3457ef88"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/05-cyan-technique/01-vue-ensemble.png",
+      "size": 165525,
+      "sha256": "f1b0fb16232550f5a8d082bcf84736fa96cb75962108dd4244039b9e0765560a"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/05-cyan-technique/02-processus-pilotage.png",
+      "size": 147140,
+      "sha256": "87e541c4cd7ed8637613081c6d5070b1bc96000b2c7f4df79c76612abb3e85c7"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/05-cyan-technique/03-processus-realisation.png",
+      "size": 147748,
+      "sha256": "58e2d408e42f6ac8d91f9dcb99da83d768d35dc947d6865768a9a3b4f76158df"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/05-cyan-technique/04-processus-support.png",
+      "size": 147480,
+      "sha256": "258aec3aa43d89afdfc3377c7e73970340c65964102449f061ff815a5d3b09f8"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/05-cyan-technique/05-flux-interactions.png",
+      "size": 145346,
+      "sha256": "16d26f9ff190b9e94f98541101777113d7e60a0e13f59fd9edbb931fbe738e16"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/05-cyan-technique/06-fiche-processus.png",
+      "size": 144079,
+      "sha256": "212bf0bfc1008ef760ee713de453c5b9e482e55301efdd9d63503018e26629ba"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/05-cyan-technique/07-risques-mesures.png",
+      "size": 147591,
+      "sha256": "4cf2db11a5c7c4401aa378cb5b93b5f21e80f66b3887f7b1bfea904c4d146152"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/05-cyan-technique/08-indicateurs.png",
+      "size": 142046,
+      "sha256": "c342e1e992c32353a1fd5e6d0a09f10c67569ab5984a580d6a050195e206b8f5"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/05-cyan-technique/09-responsabilites.png",
+      "size": 124801,
+      "sha256": "295b702ea934301acb739b24b7551e597f211909693870685356fa5bbf8c2362"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/05-cyan-technique/10-revue-direction.png",
+      "size": 149836,
+      "sha256": "b48dd740e9e87fd97eb30aa2fc9d93b1b548838356ff5bd8e327ff999109497e"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/05-cyan-technique/README.md",
+      "size": 1269,
+      "sha256": "940473b6e49918672357e5cc301dbbf0de6c5cdb5900aeaef4d90176f4c7f9ae"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/06-terre-cuite/01-vue-ensemble.png",
+      "size": 139165,
+      "sha256": "05cda13cc077adb3ae4df58cfbde3c286a6c2d75bef7c248077d7c2dcc6a9bf0"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/06-terre-cuite/02-processus-pilotage.png",
+      "size": 127794,
+      "sha256": "b26f726c7fda103ba94fc5c5e21bb50dafe2e51f67e969466d417d86fb495f90"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/06-terre-cuite/03-processus-realisation.png",
+      "size": 128892,
+      "sha256": "b78e8dfeecf17195d3df7e5868ed66fe9cfd53cdc6b87ecaaa570ef326c59483"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/06-terre-cuite/04-processus-support.png",
+      "size": 126827,
+      "sha256": "a2a8af98c605f04b4984071bd0abf39f68d47af236c50fead4ae3793ea6f7033"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/06-terre-cuite/05-flux-interactions.png",
+      "size": 129181,
+      "sha256": "6318064373925f7dc041b809b6f55f5803c716422e8e83d21ddb4b6f4b460911"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/06-terre-cuite/06-fiche-processus.png",
+      "size": 126175,
+      "sha256": "54a89ccd72ce987bdfccffdc5780851207cbdaf3c5aeb17db37ce72d5820a519"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/06-terre-cuite/07-risques-mesures.png",
+      "size": 130053,
+      "sha256": "ae869ef3fce2e66d6dbf2250dfef88fcfd43ff1923878698c50f1ab81de47662"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/06-terre-cuite/08-indicateurs.png",
+      "size": 122646,
+      "sha256": "32a4b9592e579b027e3fe363055fdc5888de1ff70cfb380e8ba21462e58fa05f"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/06-terre-cuite/09-responsabilites.png",
+      "size": 105773,
+      "sha256": "5186b6f7ad277caec68e151f1621b8c97154bf6ff30beb97adbcd057313fd034"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/06-terre-cuite/10-revue-direction.png",
+      "size": 131149,
+      "sha256": "0326dbdcd5dba043d27078f7dc7dd6528d584362af63abb948b9347ebf37cb66"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/06-terre-cuite/README.md",
+      "size": 1231,
+      "sha256": "e9a2c5e6604c3d6b9404863385aa04ede6e60974e7f95d3839df021f40343ddc"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/07-encre-et-or/01-vue-ensemble.png",
+      "size": 156337,
+      "sha256": "a937ab3e1f5dc14c1df0f41374c42a1bc9f70cfd8be9f9a030d3d3184f2bac30"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/07-encre-et-or/02-processus-pilotage.png",
+      "size": 129739,
+      "sha256": "80ad8e36518ea8a46240cbdf12e00bc46d6d168774efbd23ce372c884760d5dd"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/07-encre-et-or/03-processus-realisation.png",
+      "size": 129785,
+      "sha256": "59cb05ccecb3392680877ccfdffa291786f7a48b20ca0d8590d21f4eb0d1d3db"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/07-encre-et-or/04-processus-support.png",
+      "size": 130284,
+      "sha256": "6e0a3ac354f82540d524001486a3aa60ec389eb516cebb517e4f497bd325c226"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/07-encre-et-or/05-flux-interactions.png",
+      "size": 137745,
+      "sha256": "027d3aa15fae21f2ef7514d51f484084425621b4a9d292a0c67030d3ef1d10ca"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/07-encre-et-or/06-fiche-processus.png",
+      "size": 134854,
+      "sha256": "2dd37b53dbe6482b51d0814a5aec6fe29810b45386ef7d897c2c59cf056ac3de"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/07-encre-et-or/07-risques-mesures.png",
+      "size": 139127,
+      "sha256": "a62071c2d8596f4d70853e3623406980a6a93ea60a4463054542ebd73e17ee7d"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/07-encre-et-or/08-indicateurs.png",
+      "size": 129246,
+      "sha256": "15077b35289097044a514721629691283f87ef39ed5736043ad7760b1b4c0c98"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/07-encre-et-or/09-responsabilites.png",
+      "size": 116220,
+      "sha256": "666548bc937410e469994ae84097bded532f15a7eea55d860b48dc28a48f5047"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/07-encre-et-or/10-revue-direction.png",
+      "size": 139774,
+      "sha256": "3eafdda79bb9dc4d2835281f711920e8676469eb2b8e84729a7499abe75aca45"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/07-encre-et-or/README.md",
+      "size": 1228,
+      "sha256": "96cb5498cee0f99764e3d158ce5852bae3837eb6d731cf5de30338acf164e7f1"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/08-monochrome-editorial/01-vue-ensemble.png",
+      "size": 131764,
+      "sha256": "0faeedc642cd809834bf6cd8da193e5ec9e7bcc3cb58637e353bca8c1be41eeb"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/08-monochrome-editorial/02-processus-pilotage.png",
+      "size": 108293,
+      "sha256": "279e206136d634381ce947f076c3754877318f16a6e6b2d6d7927424075bd2e5"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/08-monochrome-editorial/03-processus-realisation.png",
+      "size": 109373,
+      "sha256": "362308e3a7455d38c96b4ab3126aae0ef11066ae67e259176e3bc7b831e62f51"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/08-monochrome-editorial/04-processus-support.png",
+      "size": 110018,
+      "sha256": "c081db1bd18f1d66748d2bcd6877b308646c92a2ea1a7d584d64b5bd0f31450b"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/08-monochrome-editorial/05-flux-interactions.png",
+      "size": 116671,
+      "sha256": "16a8bce3beea7c5b667dcf98c35c14c449515403f9aea1c05e7810a1ebda5004"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/08-monochrome-editorial/06-fiche-processus.png",
+      "size": 114895,
+      "sha256": "1031548ca987b12fc3053ba33b8edd3bbe71700242cd2ee203baa905eef2e836"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/08-monochrome-editorial/07-risques-mesures.png",
+      "size": 116438,
+      "sha256": "cb8364e0f77241fef706e5afbc53552d2a327702a53f716818bb184991540812"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/08-monochrome-editorial/08-indicateurs.png",
+      "size": 107649,
+      "sha256": "524ad6403e0f8fb24948bfbff2d654c24b7d6cef90c89347b92b60c810c0604d"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/08-monochrome-editorial/09-responsabilites.png",
+      "size": 94484,
+      "sha256": "ecb5527d7c79cda38fa012e0708f4205ef65ac67ce82a7f1a4728b9b0b63973a"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/08-monochrome-editorial/10-revue-direction.png",
+      "size": 118826,
+      "sha256": "274b21d99af657d22b734bfefcf9d473c987b21a4e6ec98cc8fa7e7555acd078"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/08-monochrome-editorial/README.md",
+      "size": 1352,
+      "sha256": "296803037f7a894b06059cdd61a4ee23ca6d21ba63225342873b5d4b1ff28b4b"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/09-corail-marine/01-vue-ensemble.png",
+      "size": 157921,
+      "sha256": "89e59feb3150fa339d348099768d8210a764ede3a13d6ee4a881b54a67281343"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/09-corail-marine/02-processus-pilotage.png",
+      "size": 142664,
+      "sha256": "309e39189f54ed909bdce3755637bc3eb0c10b7b0c0c8963821fe875c718a351"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/09-corail-marine/03-processus-realisation.png",
+      "size": 143630,
+      "sha256": "0264237f5cc6ca1706c1bf6de1cac59a2292c8aa8f33caa3443a8bee126aefea"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/09-corail-marine/04-processus-support.png",
+      "size": 141959,
+      "sha256": "1e4824a57cdf76a7ab84f66b66b1629f685731d9d22742fdcc0b59cb4e90ce2d"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/09-corail-marine/05-flux-interactions.png",
+      "size": 144330,
+      "sha256": "d2cc348ce413e9c103a845298187e0fd5a4e3a223436514b0a968e0fbdd81a6b"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/09-corail-marine/06-fiche-processus.png",
+      "size": 139460,
+      "sha256": "58663c3bea1aa3369c936f0ae78c2f328cc9b4ed1125eefe47faec4c4da463dc"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/09-corail-marine/07-risques-mesures.png",
+      "size": 145296,
+      "sha256": "a8e870d66f42e33fb36eb590c688043b468383ce02aa390e89099c4400a7954f"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/09-corail-marine/08-indicateurs.png",
+      "size": 135827,
+      "sha256": "505731f3bc9b101303ea96135a1b6630c24523569531d9be0f8a09c781ab1464"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/09-corail-marine/09-responsabilites.png",
+      "size": 114254,
+      "sha256": "1ff5bccfb84981dfd6b255da2990f5e55f430e222d2d191a21952ac28961d6b3"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/09-corail-marine/10-revue-direction.png",
+      "size": 146512,
+      "sha256": "40aac8ec090e89e3c52e5510387572fa3ab8c0011fad0dc534a88e1cfd4adaaf"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/09-corail-marine/README.md",
+      "size": 1279,
+      "sha256": "f3f345768b678fee6e082d762cfa4d6751099b713c2dd757394318c384cc4c7b"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/10-lavande-minerale/01-vue-ensemble.png",
+      "size": 174915,
+      "sha256": "4d1e3f65732c106e378466f2bba84b99c757d60cf5a53274b4f016552de1c1d0"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/10-lavande-minerale/02-processus-pilotage.png",
+      "size": 143516,
+      "sha256": "3e6c20a0f368aeef17780d3df2fd0af53e16042e3b7840785c5f91074bbffc37"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/10-lavande-minerale/03-processus-realisation.png",
+      "size": 144156,
+      "sha256": "1d732139a806f6c2b5709bbe1609c86404d56703e4649b5b5b35205155d74cfc"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/10-lavande-minerale/04-processus-support.png",
+      "size": 143768,
+      "sha256": "12e561cd38d91895400d7df40c298d8a46d50489c8100e100937ce8aa60301d5"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/10-lavande-minerale/05-flux-interactions.png",
+      "size": 154205,
+      "sha256": "288ea19c8a2e7f0be7038b9fb74671216570947da82a2cbc12aad2e44a6a14f1"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/10-lavande-minerale/06-fiche-processus.png",
+      "size": 148552,
+      "sha256": "1e2688e827d4700d5558e5c92cce13949fa42169e196ef956b449b59d7f5966c"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/10-lavande-minerale/07-risques-mesures.png",
+      "size": 154197,
+      "sha256": "0684dd473eb8a15f83a3074433c2dda61908091da910686330409a98e4794974"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/10-lavande-minerale/08-indicateurs.png",
+      "size": 144333,
+      "sha256": "6e426789e60db36cea0b38a4c9437b664eabe6f69306c1b1355135ef35059e20"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/10-lavande-minerale/09-responsabilites.png",
+      "size": 124126,
+      "sha256": "679cc31fbc16ba0ebaa2d0eaac898efbf904661417e9f43d6eb8eff13833f4d2"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/10-lavande-minerale/10-revue-direction.png",
+      "size": 157002,
+      "sha256": "699455a7534b2400044a11b29f02a3301b42d0c21086c8990e2b617821a6699b"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/10-lavande-minerale/README.md",
+      "size": 1305,
+      "sha256": "6d47a16955fdb2b6cb7e524185edd4c07074a43c549b8117c1f5b4d18dac547a"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/README.md",
+      "size": 4948,
+      "sha256": "e35db2a30aec5439c316ea70fed8e97884fd89717650df6585ef5201cd1d1116"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/generate.cjs",
+      "size": 3898,
+      "sha256": "493c416da4a4a2d5300126ccb97373564f19ab529ba49997d503a15e78064d96"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/metadata.json",
+      "size": 30148,
+      "sha256": "a397684b169d5245a7759c1a5ccde68c42444302c3a46153174cfc212c85773a"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/preview.html",
+      "size": 25774,
+      "sha256": "2974613f5027008adbd1eed8521ce7f7df98cb1431a43010d510a9f1b79dc712"
+    },
+    {
+      "path": "samples/2026-10-12-astra-03/styles.json",
+      "size": 3574,
+      "sha256": "250d9a5c50cb56c013734a6aa200d3a0ab5196d105a631f07e7df0106bb03ba5"
+    },
+    {
+      "path": "samples/2026-10-12-astra-04/01-cockpit.png",
+      "size": 124713,
+      "sha256": "4574dc7d454f8dc7669a037a23ce9ffec7345fb9c675c57895ad970807a93960"
+    },
+    {
+      "path": "samples/2026-10-12-astra-04/02-registre-risques.png",
+      "size": 105592,
+      "sha256": "0564c8c1c0599a1ce8892c0647e4d3011b63369e341278ede64dd9960a41ff74"
+    },
+    {
+      "path": "samples/2026-10-12-astra-04/03-detail-risque.png",
+      "size": 122521,
+      "sha256": "1230248b91422e4e3a68d12a0e93b5695c145e1662da46063394d97263d781b5"
+    },
+    {
+      "path": "samples/2026-10-12-astra-04/04-annexe-a.png",
+      "size": 113338,
+      "sha256": "20656b0280e1a10bdf3c4aed070b8604bffe43b66bbe85f2ff64e418d6e6e1f4"
+    },
+    {
+      "path": "samples/2026-10-12-astra-04/05-plan-actions.png",
+      "size": 101039,
+      "sha256": "8151e9c58f5025db4d499f0930ea3181d9373c1414d89857842a838da6319955"
+    },
+    {
+      "path": "samples/2026-10-12-astra-04/06-audits.png",
+      "size": 106509,
+      "sha256": "bfea4896be3f25d4722e09f7c05e33d1c7d6125e7a831db504f3bd898ceef9a0"
+    },
+    {
+      "path": "samples/2026-10-12-astra-04/07-preuves.png",
+      "size": 115260,
+      "sha256": "984f4cc186ea8f305a27cb8439812136d11111877ef4f47f7e6e33db43873b48"
+    },
+    {
+      "path": "samples/2026-10-12-astra-04/08-perimetres.png",
+      "size": 104332,
+      "sha256": "c1a987a19e7f1805d18df0132adef0a0a6621a48c2053d06a4b87c4917c205f4"
+    },
+    {
+      "path": "samples/2026-10-12-astra-04/09-continuite.png",
+      "size": 111439,
+      "sha256": "339e9d231ab39cc6382acfe6f8e048fbee31cfa1a2f694201c5b2b8cfba7a6d6"
+    },
+    {
+      "path": "samples/2026-10-12-astra-04/10-revue-direction.png",
+      "size": 116833,
+      "sha256": "2f86d7215cf69d26083aedee4591d3a4807deb4c31897935fa85250aaad72f58"
+    },
+    {
+      "path": "samples/2026-10-12-astra-04/README.md",
+      "size": 2677,
+      "sha256": "b388df057ac2e0dd36b3e1a9f140c0d6f9d53643502606dc5b08fe9ea0dc065c"
+    },
+    {
+      "path": "samples/2026-10-12-astra-04/generate.cjs",
+      "size": 2608,
+      "sha256": "d28a559413995de506eedce11ab37108867b3ef51160f565c0358fbbff6b2067"
+    },
+    {
+      "path": "samples/2026-10-12-astra-04/metadata.json",
+      "size": 2758,
+      "sha256": "38ff4014869d2d22737f5cec0394b2ba1adcb15939e75a23e2dc02ce530807f5"
+    },
+    {
+      "path": "samples/2026-10-12-astra-04/preview.html",
+      "size": 19420,
+      "sha256": "0a54876c31864afdad3cdc77de1cb8e21bf73a0ead6061f6999391b4b1f3e659"
+    },
+    {
+      "path": "samples/2026-10-12-astra-05/01-cockpit.png",
+      "size": 118144,
+      "sha256": "b20415dd8b7aac015d98cd7db161f6eb5603257b5e77a44a9984353a547f97e3"
+    },
+    {
+      "path": "samples/2026-10-12-astra-05/02-registre-risques.png",
+      "size": 101508,
+      "sha256": "ae1b099dc6902a8febbf0c9ebee68e86b46f785bcc8398f8432d2d5402b2ec13"
+    },
+    {
+      "path": "samples/2026-10-12-astra-05/03-detail-risque.png",
+      "size": 120301,
+      "sha256": "df8f27b4821f5e621f2329cd8ecf2c8261d65654b8b738828d2a5ae5459127bd"
+    },
+    {
+      "path": "samples/2026-10-12-astra-05/04-annexe-a.png",
+      "size": 109031,
+      "sha256": "1b58181932aab42ef57a7842877e041aaec5bfc67e24d3225340e12b62068ac2"
+    },
+    {
+      "path": "samples/2026-10-12-astra-05/05-plan-actions.png",
+      "size": 103181,
+      "sha256": "8c2ec114f7f00ee9329e5ba96355042671910b57d24fc2247ece0693e02ff2a8"
+    },
+    {
+      "path": "samples/2026-10-12-astra-05/06-audits.png",
+      "size": 102420,
+      "sha256": "17d47ad21ee3b8cf9ee298ad6b8d667c3a1d98c8c7ea5d13fa37a397fffc2a09"
+    },
+    {
+      "path": "samples/2026-10-12-astra-05/07-preuves.png",
+      "size": 110073,
+      "sha256": "4ef77dfaeb7346b91ffd13bd78f7ca8ffaed38ae12cd7bb59a8022ce41179e61"
+    },
+    {
+      "path": "samples/2026-10-12-astra-05/08-perimetres.png",
+      "size": 109418,
+      "sha256": "a0ad2f62087e43fe80beb2f452d262ecd4e9f28bf2de8a1a0cf86727cf77754b"
+    },
+    {
+      "path": "samples/2026-10-12-astra-05/09-continuite.png",
+      "size": 106166,
+      "sha256": "64e6fe61b1292e37e462de73e0a041151a6daec2e6c55d238e3b6bd436c38e1b"
+    },
+    {
+      "path": "samples/2026-10-12-astra-05/10-revue-direction.png",
+      "size": 112612,
+      "sha256": "eb1c5752f8838822d98cbd31db8437f91127476ee637d7fd27cccd3883bd695a"
+    },
+    {
+      "path": "samples/2026-10-12-astra-05/README.md",
+      "size": 2558,
+      "sha256": "ed15588673067d7b39921e89a1038d743c80ddf96cfdad367091cb3837b94cf1"
+    },
+    {
+      "path": "samples/2026-10-12-astra-05/generate.cjs",
+      "size": 2731,
+      "sha256": "4a2ce2eb8cd4173a020361031082406a50e1bb656da0d23866fa3d0b08073704"
+    },
+    {
+      "path": "samples/2026-10-12-astra-05/metadata.json",
+      "size": 2893,
+      "sha256": "38c285193b712eafeba6ebfa968464492a0b23ac8d0b8c889db3edb42e24a413"
+    },
+    {
+      "path": "samples/2026-10-12-astra-05/preview.html",
+      "size": 23281,
+      "sha256": "be4ae40f2c424637d01fa9372ec460c263d25924b1e324816c876cf2c30a4984"
+    },
+    {
+      "path": "samples/2026-10-12-astra-06/01-cockpit.png",
+      "size": 120460,
+      "sha256": "5fcef383add9bf4959432977ad3de4d88964c8825382511d8e15c39ac4f72e08"
+    },
+    {
+      "path": "samples/2026-10-12-astra-06/02-registre-risques.png",
+      "size": 103818,
+      "sha256": "53f8e59b47e9c350169f348d8d0f3c2b1bec705cee5873c990d3904cbda8ff6b"
+    },
+    {
+      "path": "samples/2026-10-12-astra-06/03-detail-risque.png",
+      "size": 122459,
+      "sha256": "894b5a9f0b46a7b128e5111aac60dbeef9238391444419adb3907493eed38367"
+    },
+    {
+      "path": "samples/2026-10-12-astra-06/04-annexe-a.png",
+      "size": 111460,
+      "sha256": "2cbf79acfa8b81d88775f4cba5bbaf4c1b30af206d49249dc4db2216c9571a66"
+    },
+    {
+      "path": "samples/2026-10-12-astra-06/05-plan-actions.png",
+      "size": 106852,
+      "sha256": "a5aeaf899c6cadfd5a68a369b57ca306288d35106c4a3291f05e00787a77858c"
+    },
+    {
+      "path": "samples/2026-10-12-astra-06/06-audits.png",
+      "size": 104733,
+      "sha256": "86931562cd14b89d9b10dec9bfe7d35aaaab7b755ab8d7e6f149fca9b696a290"
+    },
+    {
+      "path": "samples/2026-10-12-astra-06/07-preuves.png",
+      "size": 112389,
+      "sha256": "e4b50c19502a91f20194fa563f4e87f39a05e50bd133a7e44d17737933be0338"
+    },
+    {
+      "path": "samples/2026-10-12-astra-06/08-perimetres.png",
+      "size": 111691,
+      "sha256": "986811478f9bccb185710b5f0786f87fc160f6b3a84e43dde91cdf7383466e0f"
+    },
+    {
+      "path": "samples/2026-10-12-astra-06/09-continuite.png",
+      "size": 108553,
+      "sha256": "419e7d4ef458766b9c860af13bfd641a7e7ca484465034fc530a8093b0bd1561"
+    },
+    {
+      "path": "samples/2026-10-12-astra-06/10-revue-direction.png",
+      "size": 114919,
+      "sha256": "643a6dd2f23d5bcf596993190361638982770aac1da8434223d0a3f8a4dd7701"
+    },
+    {
+      "path": "samples/2026-10-12-astra-06/README.md",
+      "size": 2653,
+      "sha256": "388b22991c9f0388a1793f05f4c9b9feafe9f025e015f577b93550f90e795dda"
+    },
+    {
+      "path": "samples/2026-10-12-astra-06/generate.cjs",
+      "size": 2812,
+      "sha256": "247b9caa5cfe2b30d3e7536d425ba78968e07b06888e191c500035cc9dd429a7"
+    },
+    {
+      "path": "samples/2026-10-12-astra-06/metadata.json",
+      "size": 3006,
+      "sha256": "5f7b0876c26831973c6315cdd4f9b4f110d04f63333a2b127b6f5dae1b4e7756"
+    },
+    {
+      "path": "samples/2026-10-12-astra-06/preview.html",
+      "size": 24149,
+      "sha256": "172d877f9a969ec9cd66103e2751630768752ae7ac2cb30809335dd2a67e1a63"
+    },
+    {
+      "path": "samples/2026-10-12-astra-07/01-cockpit.png",
+      "size": 120658,
+      "sha256": "3f7edd0b814fe3d55ee3991ea597eee98d83d5ba56e117decfddcf6984f2ba76"
+    },
+    {
+      "path": "samples/2026-10-12-astra-07/02-registre-risques.png",
+      "size": 103919,
+      "sha256": "1bc8b56c917e26d3bc4f8e67365005ec4433f08e60ae2969ee369ec551aebe91"
+    },
+    {
+      "path": "samples/2026-10-12-astra-07/03-detail-risque.png",
+      "size": 122639,
+      "sha256": "341e2893ac1062a5a6bfcd3a332dbf3451d92c0fa2f3c7369297efacdf185264"
+    },
+    {
+      "path": "samples/2026-10-12-astra-07/04-annexe-a.png",
+      "size": 111607,
+      "sha256": "6dd01c56c25ba5aa27b059b52a9a043029d8c1c2724f7f192ca4a918b2f17635"
+    },
+    {
+      "path": "samples/2026-10-12-astra-07/05-plan-actions.png",
+      "size": 106983,
+      "sha256": "860dbbe982e08ba268b2b3d30d93294202657467fa251188655467c34daacd74"
+    },
+    {
+      "path": "samples/2026-10-12-astra-07/06-audits.png",
+      "size": 104912,
+      "sha256": "99b4ae543457d5dd46234225131a200fa9c63acb63faeff34cc5a789ef1d8c35"
+    },
+    {
+      "path": "samples/2026-10-12-astra-07/07-preuves.png",
+      "size": 112448,
+      "sha256": "0e72c3d10cf8c37bf6e9335c474248e32174009411b6caf7a788bec430ea0f18"
+    },
+    {
+      "path": "samples/2026-10-12-astra-07/08-perimetres.png",
+      "size": 111864,
+      "sha256": "5b7702c8c73b602437a8f971ebce9fe50fa2895a9520e9f931380fb54793f68a"
+    },
+    {
+      "path": "samples/2026-10-12-astra-07/09-continuite.png",
+      "size": 108652,
+      "sha256": "cffa5b1b5284e63947c1f4dada93310fc9b5d2199dbf4b602d651b4dfd31b6bf"
+    },
+    {
+      "path": "samples/2026-10-12-astra-07/10-revue-direction.png",
+      "size": 115158,
+      "sha256": "691a3a732cb9eff77a8669011505d20f87d255e4d77978a97957e24efbbd3dc4"
+    },
+    {
+      "path": "samples/2026-10-12-astra-07/README.md",
+      "size": 2501,
+      "sha256": "ef096709ce8f42e9f1ddc1a213dbd445e830c645f3de4086ddde576bcfb0f294"
+    },
+    {
+      "path": "samples/2026-10-12-astra-07/generate.cjs",
+      "size": 2907,
+      "sha256": "d9aa3fb9b26c0b893f156f6c9487c4ddfecfef46c9394a4fd269a9ed0961df49"
+    },
+    {
+      "path": "samples/2026-10-12-astra-07/metadata.json",
+      "size": 3133,
+      "sha256": "51ab5e3724aa805571fd6041a46bf0161212746299fd2e2ce9066bc20db79d77"
+    },
+    {
+      "path": "samples/2026-10-12-astra-07/preview.html",
+      "size": 24689,
+      "sha256": "97940bb9d2eb69ce4ff361b8d8130d87e8e59b09fbc2158fc5cdbf6ad194f008"
+    },
+    {
+      "path": "samples/2026-10-12-astra-08/02-turquoise-assombri.png",
+      "size": 1606361,
+      "sha256": "299188b42aad4e12619669e4dd0751104b7f6bfe2c968f42310ca8bff3297078"
+    },
+    {
+      "path": "samples/2026-10-12-astra-08/README.md",
+      "size": 546,
+      "sha256": "97e3389e3a9b1a0ed40ac9486635802fe5480657c4193eba63c78f46ecc7af1b"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/.gitattributes",
+      "size": 44,
+      "sha256": "54ec2927870288eb8ad054f2705de006c7ed00c8703d6e9ce72561990d97cbfc"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/DOSSIER-TECHNIQUE.md",
+      "size": 16201,
+      "sha256": "d31e746d8e672199bf7f0c97fc4131d6c14e57aa81f9102b2444a1166bde14f0"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/DOSSIER-TECHNIQUE.pdf",
+      "size": 226101,
+      "sha256": "14e88fe015a2e1003e2b4bc56bdd0aa0066b30d89aad916b7debf7267f7482e8"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/GALERIE.md",
+      "size": 14553,
+      "sha256": "0e00fd2a41fa51f5c4414cdcf21081bf8645ebaa2ff102a3a3216de1c1eb6f87"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/INVENTAIRE-MENUS.md",
+      "size": 18558,
+      "sha256": "a82c6f2b6b1ba2cfb31c95d3782cab81b5b055239475c4826d412f5e8418df88"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/MANIFESTE.json",
+      "size": 19872,
+      "sha256": "90ccc2a73966945c29c571667f0e9871fff1cecf93ee2bab87108c6831a55079"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/PROMPT-IMPLEMENTATION.md",
+      "size": 7399,
+      "sha256": "564ef8306c22b3eee16bb60860b1a8acb1895528ec62f182ea482442bc8c748f"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/README.md",
+      "size": 2162,
+      "sha256": "4857a14f4d57c07767dcdb24325d927ed1a4dfa7d8dc9ecc53101baa02892e77"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/VERIFICATIONS.md",
+      "size": 2496,
+      "sha256": "f2e5fc7cf6b4a83844ba97217eba8c2b6857fe56f6bbf50607a7d307bb153a36"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/000-reference-style.png",
+      "size": 122632,
+      "sha256": "2474c69c055270d881268540b9cc6afe1568bcc8b98ca3f3e11eddf705377e34"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/001-dash-dash.png",
+      "size": 134346,
+      "sha256": "45cb62175ff4e670f19392f8b48c033cbe2e499c98af1a69242d019c2e69396a"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/002-pil-proc.png",
+      "size": 119071,
+      "sha256": "89c2b6e50883d8f3bc489428eb5c8afa8a612cc8e31f42e038b722783d9fbd8c"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/003-pil-obj.png",
+      "size": 96892,
+      "sha256": "29181a2e144240dc4058325cbf2748f2b96861af9b161b2b1364fb26910ed861"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/004-pil-cmp.png",
+      "size": 116344,
+      "sha256": "d58183fc575e2eb4d9cbeeb4ec70d6adae55af48d863d559eb5614b71d56861e"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/005-rep-exp.png",
+      "size": 196279,
+      "sha256": "11b6b198cf5e3990e38ce7fd6a285a200d3b9af0c657ae2ea722cb180bf9b810"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/006-rep-copil.png",
+      "size": 105337,
+      "sha256": "902b0c61a5d99f591820e56783dd3323b13502b6d6213734cd3afcd6e21e79f7"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/007-rep-codir.png",
+      "size": 109808,
+      "sha256": "f1766bc12a272471686ec6d6baa66d38655bab13529b38596ce548a0b9e2b04d"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/008-inv-inv-dash.png",
+      "size": 148580,
+      "sha256": "9353c0f418164130ab643a8d089ac423b865345732b173a4acdbe7e1cbc2f574"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/009-inv-inv-lines.png",
+      "size": 109534,
+      "sha256": "b474ea8a8a8dcbe71603a728f8f2898b8fb98385cb7995b9f3c91d0d620b0013"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/010-inv-inv-ren.png",
+      "size": 98141,
+      "sha256": "7c23ad4044016f409c59287214acb4515ec6cc9f706bdaf55891c06215da5b48"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/011-inv-inv-cmp.png",
+      "size": 92836,
+      "sha256": "95f8db63362d689d3f77af5ea8fc3d4c9e539fda1a3c1faa437530951f25e7df"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/012-risks-risk-register.png",
+      "size": 180039,
+      "sha256": "f7b6a90b892465ba0a0d233f4dc8599cc183d31be190b4aaf711484c29134d48"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/013-risks-risk-map.png",
+      "size": 195852,
+      "sha256": "bb6a89911928a7892b70af9bff160a388e05dc203b83ec3b5c87ddba1bda2892"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/014-risks-risk-studies.png",
+      "size": 131439,
+      "sha256": "fa807f3f93115ea50785c95b746da3f8ec91b2e723e11afeca300bfa8eb2d56d"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/015-risks-risk-scenarios.png",
+      "size": 126466,
+      "sha256": "01d87ee1de7447cc79582d34be2ea80920a710e298400700ccc9fcf0a8be03ea"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/016-risks-risk-treatments.png",
+      "size": 142818,
+      "sha256": "14dab42fde19fad6b7580dc8f89131283081cd54b026b84672f7f24a15156477"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/017-risks-risk-policies.png",
+      "size": 128397,
+      "sha256": "5e5388d8dccba0d04ccd65fdca333aad29e16c7108cc88dae5c6632e0b7e449f"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/018-compliance-iso.png",
+      "size": 167192,
+      "sha256": "600f86b13aec959800de130d94f68b16f81e8102cbbc6cbf0ecfd57224aa57d7"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/019-compliance-ann.png",
+      "size": 178357,
+      "sha256": "e6ba1d762e48ac275ad0ab17aae6d46ff612bffb602abf12f4b3094d293c76d4"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/020-compliance-hds.png",
+      "size": 178838,
+      "sha256": "a55951dd85154e8dbd8e769d0bab07cc95ade4a328df799efb48da6dcd4e5667"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/021-compliance-fw.png",
+      "size": 196918,
+      "sha256": "624ae9fb48ff1550e9f9c452dd8c0f1d831477413d07faf5b12caddc9169eea5"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/022-care-df-care-dash.png",
+      "size": 181160,
+      "sha256": "2afbc15b568806285bdc4d37000975e1cc7b961f4318e6965a23b13925d29ec4"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/023-care-df-care-dossiers.png",
+      "size": 127962,
+      "sha256": "6ed7662376e1344f65588a737feafd7a37ecc02b379cb0dd568a868ead6eda51"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/024-care-df-care-grid.png",
+      "size": 222329,
+      "sha256": "3cfadb25a9138ae8ba918eb82c497e2a9ea99b2378343fd70904b6f753ee5b3b"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/025-care-df-care-budget.png",
+      "size": 149269,
+      "sha256": "1c46310affa5185ecd0da8d78d930751a31111f1cbd9c662e49ac1300c03ac5f"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/026-care-df-care-proofs.png",
+      "size": 138957,
+      "sha256": "9a8c3c127bc8ccc1b261c17a70eb1640cf843e6ba7be56bad199e43bd95aafcf"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/027-care-df-care-actions.png",
+      "size": 121223,
+      "sha256": "be616bc0be4f87e49de9213f5571924f76f4c3195253aa9f04f2001ce55054f6"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/028-care-df-care-audit.png",
+      "size": 156773,
+      "sha256": "538fa100b867b32d1da73d8b229e9662e9fc8c75c388c103ce29cb1215f3bc74"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/029-care-df-care-sources.png",
+      "size": 221634,
+      "sha256": "2a90591a720fb8cbe1e2b17603fb3258b4a851046955ecd074a84f9cba502f01"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/030-care-care-finance.png",
+      "size": 151810,
+      "sha256": "253801b59b75bec6d7831b53694c250b0e624d1d997d2f78b528e22d62799d66"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/031-has-df-has-dash.png",
+      "size": 149576,
+      "sha256": "7eda8322d332398b8c5e3c8cb2f85b65c81643911298327fd8fd082684ad4f30"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/032-has-df-has-dossiers.png",
+      "size": 117221,
+      "sha256": "cfad5cd713834f4d4c4f98b92d4e36bb9e87c821e10586e91368723a639b04fa"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/033-has-df-has-grid.png",
+      "size": 128676,
+      "sha256": "c2b758af2b6a718e731a5c616a62c3273ce73b09eede8e25567a19a47fd9fbde"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/034-has-df-has-proofs.png",
+      "size": 138292,
+      "sha256": "a3954693f9ed02b31ed1efe7b218343237ad8a270c2b55c7b8798b78e86a4a68"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/035-has-df-has-actions.png",
+      "size": 121452,
+      "sha256": "a331130d25976f0dac6671a8153b5da753ff68669746b2fd292dec33e0ad078d"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/036-has-df-has-audit.png",
+      "size": 155431,
+      "sha256": "3cdaa4e260fd9662f1820dfedb702dba9a6c015e2a675e1de8c3d7f6caf7c3eb"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/037-has-df-has-sources.png",
+      "size": 220851,
+      "sha256": "407e1028dbe2f5d46dc8ef0683ba5f3b5e88c42227704b171eb410d9923312d0"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/038-audit-cibles.png",
+      "size": 207787,
+      "sha256": "75dc0e0d42cbc62c4513c70dde60e2be6daa83ba3da76d1ae450632887558101"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/039-audit-deroule.png",
+      "size": 209561,
+      "sha256": "8f3089f5339d25fbcc3014597b9c190f7bdbf0e5eea21f97bb774e4471ffc83b"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/040-audit-cal.png",
+      "size": 200663,
+      "sha256": "47693f6ae279497a2438203744238f576cb68504017cefc84c029cfb140a6b5f"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/041-audit-people.png",
+      "size": 213834,
+      "sha256": "1a720e6b2746dcefc4117df491cc4eb0da349af8cfc90cfc118dd1f1d778a6dd"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/042-audit-couv.png",
+      "size": 198588,
+      "sha256": "e7f0c7a7022a43d0ceb7108953a687c93c5e799622f2efde5df295313d6d0467"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/043-proofs-prv-reg.png",
+      "size": 156300,
+      "sha256": "b3a156894a8e5cf595e45fe59a7ca25b75d0f552ed80c62947bc7f0e7390e615"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/044-proofs-prv-cov.png",
+      "size": 181500,
+      "sha256": "f390c95c207cb5389352f82b1c764b668f53bfcc0e76f3a919d57cc05754a988"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/045-proofs-prv-det.png",
+      "size": 127188,
+      "sha256": "fc88559c06a2b45d0a0c5e5bbbda9c87a75b7513fc87d8c60f9c4ccb04ed90dc"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/046-context-ctx-scope.png",
+      "size": 178600,
+      "sha256": "ecd8a27eb2ce02e79fa139a152d3edc7878ed5659284d1d365af8cabcf7194f3"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/047-context-ctx-pi.png",
+      "size": 146382,
+      "sha256": "860a444b204b69946742603c69da62497de86649e4e208d4f17d7289b0235c8f"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/048-context-ctx-swot.png",
+      "size": 153297,
+      "sha256": "dc7b17875b702226ef471ce44a9b3bff2a72f0a26f65b7be7c723ee11f3546cb"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/049-carto-dmap.png",
+      "size": 191717,
+      "sha256": "4d8983a5af32c711c8813c210ab9f07fad7c57622ef88c176c26c4185ccb5e8a"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/050-carto-mb-ctx.png",
+      "size": 184723,
+      "sha256": "f863efe433f02003ccdbb0500af397b1c7ac341ee1c4920ac9ea5927c59f49d0"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/051-carto-mb-proc.png",
+      "size": 183123,
+      "sha256": "2c0e92f41807347322be53ca74394de32b776cc8cff75b2f7f17730ecb955b8b"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/052-journey-journey-home.png",
+      "size": 183655,
+      "sha256": "75eaa5a9996c00008ade0d4a7fe3ac4e99190b94e456bdd999f7bd7fefb62698"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/053-suppliers-sup.png",
+      "size": 152236,
+      "sha256": "9746c057b7b456c20900268a4253b148bc8d3997be0bcdb3a5e31a03cc670066"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/054-suppliers-ar.png",
+      "size": 134469,
+      "sha256": "6d9383f566279da2d2c170d85b2956bf5d1bcebf0f64d631067d7ef3a99d02c3"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/055-suppliers-sev.png",
+      "size": 161888,
+      "sha256": "e169b81c47c1fd3b71d684411a2d345ff7eebda3dc8d37724b3e382d555a01fa"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/056-pcra-pcra-dashboard.png",
+      "size": 145667,
+      "sha256": "c7b97deaa3d66b1258ac236e394f1cf530f519f3b06dfa321ad817fb84e34da6"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/057-pcra-pcra-bias.png",
+      "size": 122139,
+      "sha256": "5fdbf14fd0c9fde614af2b45be4009e62b91633156748bc96afe4c4096968c95"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/058-pcra-pcra-PCA.png",
+      "size": 128794,
+      "sha256": "5b09d396d95d8a5c53c4eb524e81198c7e9372ff5e1dbcb30c47e9c9472e1ad4"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/059-pcra-pcra-PRA.png",
+      "size": 117785,
+      "sha256": "2c6d2a96ae1c94ffde6488ce70584be8476395f5c6d424bbffc4e2834a306b8a"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/060-pcra-pcra-exercises.png",
+      "size": 130723,
+      "sha256": "ff0a57c2a776e7e9d5921d8320fe0b694781667cf2a3f1fea492190494e637e3"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/061-pcra-pcra-actions.png",
+      "size": 124104,
+      "sha256": "3d21ca39ac55f20950fa0c4461dc7b338948eb46634342eb965ee8c9b32cae4a"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/062-pcra-pcra-documents.png",
+      "size": 124108,
+      "sha256": "c66e5048d9c297fd9bab72b3a22f8890c4d5772946afba9a4b20ef9fe4391f17"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/063-pcra-pcra-policies.png",
+      "size": 124821,
+      "sha256": "ac033579cfa7adbbc5e05ac26d22a9b8214185c1446212ed99aa52f4fceb63fd"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/064-ai-syn.png",
+      "size": 125101,
+      "sha256": "151837aaec8717cebfde8157033b04936f5edd852088636996dcab21a86477ea"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/065-ai-reg.png",
+      "size": 124240,
+      "sha256": "a353cd23514c0d89b279310beb104206f76b279f2db9a30c4f393adcf370fa83"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/066-ai-eval.png",
+      "size": 123518,
+      "sha256": "563e0635d73df5fd78256a185a76e55681d1638fa46d6511ad60728167354652"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/067-ai-plan.png",
+      "size": 120735,
+      "sha256": "1b94e81c09fa4dbd0271e41470811b6728bcabe38e51249b84a19bad5cc702f1"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/068-ai-pol.png",
+      "size": 112601,
+      "sha256": "d7e89d5bff6357f7cd0a92aa4334346351786ba0f4ac706313a12f925aa2b049"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/069-actions-fd.png",
+      "size": 187638,
+      "sha256": "98a80be458ff625dd9df3dc89a35b390fdf65c0380073f01e3973c3343b94bd6"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/070-actions-act.png",
+      "size": 152080,
+      "sha256": "f1812fc856482717b5a8c97b7827270cdfd53c46e011170e9add36e816944171"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/071-recurring-pl-rec.png",
+      "size": 116789,
+      "sha256": "e820ef6491fc946c3b71951eb498706398196d106116985323b829a940b1f2f0"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/072-programs-pl-cal.png",
+      "size": 128449,
+      "sha256": "e58290b5db4ab8d177b7a2e1f96f87e2f646f189731a5fffef999ec5c761867b"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/073-programs-pl-formation.png",
+      "size": 127307,
+      "sha256": "ddc404361a099aba1ed094fe6f2ac82dca3f5ef1a21a3cbae724c608328d185a"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/074-programs-pl-sensi.png",
+      "size": 128278,
+      "sha256": "c84c686f792286a054bd41da0c1b3d52a1ec0e0564e4884f113c54f07275b746"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/075-programs-pl-audit.png",
+      "size": 127978,
+      "sha256": "1acc176971514149de40fabfcaa74ed748b9f89b57035a77040f35b8c6c533da"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/076-programs-pl-exo.png",
+      "size": 129429,
+      "sha256": "b4393f17e0c46ac6731bf7eb6122a9a162b463321964a8878ba88dedfe0682ad"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/077-ops-inc-reg.png",
+      "size": 130872,
+      "sha256": "be3400e67a3d94f88d85f7cb075d85af65b7a650c97fefc39cb4d5802511f226"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/078-ops-inc-qual.png",
+      "size": 198417,
+      "sha256": "5b44a509735c57f27444706fdfd16568d2fc4372e067179e920a530218a071e7"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/079-ops-cr-cell.png",
+      "size": 140238,
+      "sha256": "eb1d2e137f028d17a78d46e132263d2262df013e3a5bac26cec10fda03eff87d"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/080-ops-cr-ct.png",
+      "size": 120562,
+      "sha256": "b61f5f031fc11af5372ff3d9f8a664bc9a332c20cc08df446939eb37fbed67a7"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/081-ops-cr-sc.png",
+      "size": 120592,
+      "sha256": "f6575105dee9afbbc9e1dfccb8291e48ec54e3ee8d79f4bb5956c233ce92657a"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/082-gap-apps.png",
+      "size": 126873,
+      "sha256": "51d33b50ab1c1db77600a48c10a0da01773b64fe65bc0d36402b889a9830057d"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/083-crrc-cr-over.png",
+      "size": 188676,
+      "sha256": "62811f0b881705a6f25c00638c7ddabe0ca09c7551e3ef762f3953fbbefe3ac9"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/084-crrc-cr-est.png",
+      "size": 128412,
+      "sha256": "8a7d2eab96c4411483fa4e4c79492e00d6f8a652c80b0529ef0515af832fc134"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/085-crrc-cr-off.png",
+      "size": 200584,
+      "sha256": "0f3f12e9b5f6428d6d1366e030b8d2885fd0f1859699573b57c9646d0e56c409"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/086-crrc-bk-dash.png",
+      "size": 200167,
+      "sha256": "b3c7042208c8650ab9d6aa39df3873d471455a4f887b335acb5477a766565682"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/087-crrc-bk-res.png",
+      "size": 200217,
+      "sha256": "e5766cb552f3cc3492ed67558a5de50808c32e60a43383722ea8bb21b0c75ce3"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/088-crrc-bk-rest.png",
+      "size": 199877,
+      "sha256": "e68cbd80d8b36f63895cf6b0c441e06e991a4cd4d8b2d5325d2531a8177d7b4a"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/089-crrc-bk-alerts.png",
+      "size": 200015,
+      "sha256": "d295db652a25cbb88e30f342aebd2e42a6006f2a63e67eb8eaca0e173d44bca8"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/090-crrc-bk-rep.png",
+      "size": 199879,
+      "sha256": "9d75853e8b95cd3ec6ec0beeb1198ea9be8c56a696422933d7f9ed3738b93cea"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/091-perimeters-perimeter-registry.png",
+      "size": 156635,
+      "sha256": "2c3aa226d9637a50bbe05e3c21a259328c4210a875935e2bf69c97472677080b"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/092-perimeters-perimeter-relations.png",
+      "size": 159210,
+      "sha256": "8237ef150830acc6c004891ea24c0d9dec0f6b9c766326df45aaed93e82a701c"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/093-perimeters-perimeter-accounts.png",
+      "size": 103025,
+      "sha256": "eeb66dd043c0609b3ca69a16bd66c6054307578c17c15679dc7c91d66500d902"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/094-perimeters-perimeter-roles.png",
+      "size": 173858,
+      "sha256": "f384632756ff51fa181170982ea69c8ecab3cc44e79c866c44e51cf6022cbb22"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/095-admin-admin-overview.png",
+      "size": 140952,
+      "sha256": "8cd6a836aa3bbc8a71575dd4b3ef187966773ed866fa7b604fe27daabdc971f4"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/096-admin-admin-users.png",
+      "size": 104841,
+      "sha256": "6788dd976bb07548b26f016a5190ed412cd3b22258a117d8a90097a6b9ab47c4"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/097-admin-admin-roles.png",
+      "size": 175842,
+      "sha256": "b4003740142b6f7400b99c384537a7f289e3fd240579654be4dd8f67d6086ea4"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/098-admin-admin-frameworks.png",
+      "size": 149126,
+      "sha256": "76847389c22700feafa83962a47d7d7e22b8c47a27258b4a83bc7eddacabefcc"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/099-admin-admin-audit.png",
+      "size": 125025,
+      "sha256": "af97822f60040e99119816da0aaec6b05b687bf9e89b513897ebf117062252ae"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/100-admin-admin-demo.png",
+      "size": 126349,
+      "sha256": "40813fb18d05c17a1530d342ba7439ec5d6d7e20dbf0145c8e06be9d06fbfe70"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/utilitaire-export.png",
+      "size": 203236,
+      "sha256": "cec27467c10b52a408873dd96307bd2283894b5067c56384bc1a4f759ddbfde7"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/utilitaire-notifications.png",
+      "size": 149094,
+      "sha256": "188a570ec7cb780ea8c838690cfb6a6aeb368451d15ae9cd40c565c25a0b17c4"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/utilitaire-parametres.png",
+      "size": 139930,
+      "sha256": "60fde9c969a07b453727638797c0663fbbfff5008e387bd4ed81731b61c11558"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/images/utilitaire-recherche.png",
+      "size": 220932,
+      "sha256": "ffac6e10da2f78f0cc2d2a252b3db1b678d88e37043b2f5bdbb59b2ced603a53"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/index.html",
+      "size": 36930,
+      "sha256": "43fce60190d93d1ef45aa62ca696caf8535971335446e545d80003f05cf2043f"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/technique/capture.cjs",
+      "size": 8657,
+      "sha256": "c48dad4e3730972f63fd2f357e5a3ff6e49caf7ac9dd419923d580b594c828ae"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/technique/navigation.csv",
+      "size": 12111,
+      "sha256": "c733b77232ec3bb0054334d36963464f0ace1c6df639b71cd2fb32e256273420"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/technique/navigation.json",
+      "size": 22560,
+      "sha256": "59db8b41b438de6e87ed7e0d9d2ee1144e524027b2a7775f19dd5f4ad37c3eaf"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/technique/preview.css",
+      "size": 4894,
+      "sha256": "1ef15965d01eaac354105b2f6abde3e3fbc8590d4cc36c6305364e90ac9b444c"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/technique/reference.html",
+      "size": 7447,
+      "sha256": "9335e98072fcf81a4b63143fe61e76b8e87476ca1e3cd31a2be26947419d3da9"
+    },
+    {
+      "path": "samples/2026-10-12-astra-09/technique/verification.json",
+      "size": 53087,
+      "sha256": "c2992034dd9066b69ae09abccc57130d08904835e1e99ee86d9d6e24f01dafb5"
+    },
+    {
+      "path": "samples/2026-10-13-astra-10/README.md",
+      "size": 2896,
+      "sha256": "24015dcb01b78e6bb746f3d68e3e73e0ff7bc05b7cfb2118f6985ed96df903d6"
+    },
+    {
+      "path": "samples/2026-10-13-astra-10/images/001-dash-dash.png",
+      "size": 141662,
+      "sha256": "301ca95e034f507f51c00bf0bc4274ed76dff6686fe5be6132970915fdabdf6d"
+    },
+    {
+      "path": "samples/2026-10-13-astra-10/images/002-risks-risk-register.png",
+      "size": 180214,
+      "sha256": "ffbea2e5c2c067332790185d6d4056129ede31cc0563370e995910fd4c8b8773"
+    },
+    {
+      "path": "samples/2026-10-13-astra-10/images/003-compliance-ann.png",
+      "size": 177634,
+      "sha256": "a77a219679e0024772f69fdd3db34584839e9d6fae74308c8973d1c112a48ab2"
+    },
+    {
+      "path": "samples/2026-10-13-astra-10/images/004-care-df-care-dash.png",
+      "size": 181041,
+      "sha256": "32741ef6a62d1f93c90f1d37b9c791bac2b32ca4ebe04a7ff25e4cea6078488c"
+    },
+    {
+      "path": "samples/2026-10-13-astra-10/images/005-audit-cibles.png",
+      "size": 208385,
+      "sha256": "d65bdf7d710b856353051658bf5ae95105bc2d9c8df933e3dcb5d34145cbd35c"
+    },
+    {
+      "path": "samples/2026-10-13-astra-10/images/006-proofs-prv-reg.png",
+      "size": 156499,
+      "sha256": "b0ebac3ed0e3ec0bb531687fd7a075698af15002393c2df4488784eb330415c6"
+    },
+    {
+      "path": "samples/2026-10-13-astra-10/images/007-actions-fd.png",
+      "size": 164015,
+      "sha256": "71f879db0928a9a223e9a75f7d78a932e6690208ca9a57dc024b8fcfc543fefb"
+    },
+    {
+      "path": "samples/2026-10-13-astra-10/images/008-pcra-pcra-dashboard.png",
+      "size": 145869,
+      "sha256": "0a00b1f6ac2005a903dca915c27eb98b183610acfa1cba13bfd02edd83a5e3ab"
+    },
+    {
+      "path": "samples/2026-10-13-astra-10/images/009-perimeters-perimeter-registry.png",
+      "size": 156152,
+      "sha256": "c8d509aa0c281eef711a37e79273de93bfdfeea5d48de39ebd85fe32ebd32449"
+    },
+    {
+      "path": "samples/2026-10-13-astra-10/images/010-admin-admin-overview.png",
+      "size": 140690,
+      "sha256": "74349cba8a990938d1dbd1c42b18abccc853979d15db29622170daa362e686a9"
+    },
+    {
+      "path": "samples/2026-10-13-astra-10/technique/capture.cjs",
+      "size": 8132,
+      "sha256": "b05ae28eed162ec79d826c64367dcdf0c6075b5ac0083ef9c2ab7620505dd113"
+    },
+    {
+      "path": "samples/2026-10-13-astra-10/technique/navigation.json",
+      "size": 3215,
+      "sha256": "b247f13b4a4118ebc0de7c0e3efb67059ce36795ba0a240021bbcd3749cf3091"
+    },
+    {
+      "path": "samples/2026-10-13-astra-10/technique/preview.css",
+      "size": 5230,
+      "sha256": "4c795bc78a9ac340c3987ea6fa2bd5b6518375803ba675b2467ee6ffc9013bbb"
+    },
+    {
+      "path": "samples/2026-10-13-astra-10/technique/verification.json",
+      "size": 8532,
+      "sha256": "1fe08915ed673ab0155f2f2a06cbf57571aa43884ac40bebd903f2fa59c3eb0d"
+    },
+    {
+      "path": "samples/2026-10-13-astra-11/README.md",
+      "size": 2059,
+      "sha256": "2b5f5d85da0fe5956bba0b81888cee160941bfed0d23ab9832315711c12a1a2c"
+    },
+    {
+      "path": "samples/2026-10-13-astra-11/images/001-plan-actions-list.png",
+      "size": 174595,
+      "sha256": "144c78db985ca1159e3f9434dbf6cf5b755a515c630e614fb38a5e330d5232d5"
+    },
+    {
+      "path": "samples/2026-10-13-astra-11/images/002-plan-actions-kanban.png",
+      "size": 163366,
+      "sha256": "231684b537062afdb9cfbfa9c50f141f1710d60901cc4a76a9d97cd899217139"
+    },
+    {
+      "path": "samples/2026-10-13-astra-11/images/003-plan-actions-planning.png",
+      "size": 168245,
+      "sha256": "9fccb97b731e1ce0f4b131acc84e3e16f5d6ea815374616f5a64b78aeb6a2b79"
+    },
+    {
+      "path": "samples/2026-10-13-astra-11/images/004-plan-actions-calendar.png",
+      "size": 128656,
+      "sha256": "1183decaeb3cd3cabb4fe72e90170150383c274f8ff597db64d75c8042ec9951"
+    },
+    {
+      "path": "samples/2026-10-13-astra-11/images/005-plan-actions-gantt.png",
+      "size": 167546,
+      "sha256": "74ae561d764c75f47dcf4ca89a94ce2933753bd1f46dc096a1c7336e3d4b7212"
+    },
+    {
+      "path": "samples/2026-10-13-astra-11/images/006-plan-actions-summary.png",
+      "size": 146564,
+      "sha256": "51ba732ebf1b121a5e06c62c8932cb0713bfb4afba57199e0e0dc4e825795489"
+    },
+    {
+      "path": "samples/2026-10-13-astra-11/technique/capture.cjs",
+      "size": 8308,
+      "sha256": "216297ec8c34a19572c92d56ad4694a89f7c89e22e4ba54b66225ce607ab42cf"
+    },
+    {
+      "path": "samples/2026-10-13-astra-11/technique/navigation.json",
+      "size": 1173,
+      "sha256": "495886b4b242b28a1e0fea174430b33d511256872e92f2a6cc059928df1c0f50"
+    },
+    {
+      "path": "samples/2026-10-13-astra-11/technique/preview.css",
+      "size": 5230,
+      "sha256": "4c795bc78a9ac340c3987ea6fa2bd5b6518375803ba675b2467ee6ffc9013bbb"
+    },
+    {
+      "path": "samples/2026-10-13-astra-11/technique/verification.json",
+      "size": 6678,
+      "sha256": "390093249614610335d02a4304d5daef7c5a9ce050a09e671d7da77cf66bc570"
+    },
+    {
+      "path": "samples/2026-10-13-astra-12/COMPLEMENT-TECHNIQUE.md",
+      "size": 6018,
+      "sha256": "5a9fc40a6d62c73b9a51683e303578c4dea3d8a20d7c955b11d00f3e3d142f92"
+    },
+    {
+      "path": "samples/2026-10-13-astra-12/MANIFESTE.json",
+      "size": 778,
+      "sha256": "fb2a5c657c17e06322c12c74e0057be2802b2a63c93954e68288c970adf7c275"
+    },
+    {
+      "path": "samples/2026-10-13-astra-12/PROMPT-IMPLEMENTATION.md",
+      "size": 9058,
+      "sha256": "9fae725999149d0e736095fa6c28df494174f60e286e6f8521299a0f7f3ac7f0"
+    },
+    {
+      "path": "samples/2026-10-13-astra-12/README.md",
+      "size": 1292,
+      "sha256": "b63b0131175f8f2581a0169b1e0ce5e29f5018e2f112ff0b90a6f821d173ecd8"
+    },
+    {
+      "path": "samples/2026-10-13-astra-12/images/001-administration-sage.png",
+      "size": 130852,
+      "sha256": "a91178d00e7778300c524a9c002e4388e1fd961e540b48ca57fe3cb0e1eaa19c"
+    },
+    {
+      "path": "samples/2026-10-13-astra-12/images/002-administration-clair.png",
+      "size": 130448,
+      "sha256": "5e0d095c458e29c0938ce1301bc09fafa09b49ad8bd5eda3cbbb4ef9d3da9be9"
+    },
+    {
+      "path": "samples/2026-10-13-astra-12/index.html",
+      "size": 10437,
+      "sha256": "3eb7ab50916c6184e16246734dab189c851d812d3b8485611fe5936b2a187fe5"
+    },
+    {
+      "path": "samples/2026-10-13-astra-12/technique/capture.cjs",
+      "size": 2804,
+      "sha256": "90fc7f77bff437c98aa06c9c8bde31a93f9f5f5e41d19e1721d4f848fdb633b2"
+    },
+    {
+      "path": "samples/2026-10-13-astra-12/technique/verification.json",
+      "size": 1469,
+      "sha256": "e2c3a6b4be8f5ec7c9a8807590f6d9b4631fe6c7b1adfe33dd71b05827ddfc4f"
+    },
+    {
+      "path": "samples/2026-10-13-astra-13/COMPLEMENT-TECHNIQUE.md",
+      "size": 7768,
+      "sha256": "882bbe80d00194f0e1a093f37e4962500809f4768549bd041d5f887887781bd7"
+    },
+    {
+      "path": "samples/2026-10-13-astra-13/MANIFESTE.json",
+      "size": 778,
+      "sha256": "1948ed73479b8711028e7dac9091586e979930b5a08a982df340d8c3103cff18"
+    },
+    {
+      "path": "samples/2026-10-13-astra-13/PROMPT-IMPLEMENTATION.md",
+      "size": 9526,
+      "sha256": "3349840e99adfe52020865cce1f4acff0d69c0b60e6ee48e95822a34293fb1bd"
+    },
+    {
+      "path": "samples/2026-10-13-astra-13/README.md",
+      "size": 1638,
+      "sha256": "e85eb525f8841d9f1661ce6f4715044574f5ba96626a05cd764fca9f1d377244"
+    },
+    {
+      "path": "samples/2026-10-13-astra-13/images/001-administration-sage.png",
+      "size": 134394,
+      "sha256": "0a6743a8fcfb646afd719e91b18290477cd037f685918f1f881839f8eb3932ea"
+    },
+    {
+      "path": "samples/2026-10-13-astra-13/images/002-administration-clair.png",
+      "size": 134226,
+      "sha256": "290fd8d4f84412d864f8449414f0427b7cd641d91c0db76fd0e347405c06900d"
+    },
+    {
+      "path": "samples/2026-10-13-astra-13/index.html",
+      "size": 10910,
+      "sha256": "83ea895398b1c760d3b3da0a932628b205cd290f95384fe60eee4d6e6fd71a50"
+    },
+    {
+      "path": "samples/2026-10-13-astra-13/technique/capture.cjs",
+      "size": 3067,
+      "sha256": "b4672876eb04aeb594b45248dfd23827237fc38c7145417955b200b1542f80ee"
+    },
+    {
+      "path": "samples/2026-10-13-astra-13/technique/verification.json",
+      "size": 1572,
+      "sha256": "b83b94078cc60e4cdbed0340d078065f38aff3a20cf0760f1287103e831af544"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/MANIFESTE.json",
+      "size": 3794,
+      "sha256": "c8f0f59218a469eaa67b3449e6214558eddc06f75f4952c5aa6c6f65b5268b61"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/PLANCHE-CONTACT.jpg",
+      "size": 669600,
+      "sha256": "229fa19d8c886b78f9a9fb3822738093d57ca1c4e523d0c37d560557883be004"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/README.md",
+      "size": 5998,
+      "sha256": "a2f9e4bee5be4f990f39c7a8fb548042b9826556bdb7e0cce6c74f68789846d1"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/images/001-dash-dash.png",
+      "size": 283864,
+      "sha256": "7ea59b6a46ef95587aa166c1105c0a0a9a7c1f7859672017bb77ed34fa501e71"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/images/002-risks-risk-register.png",
+      "size": 266716,
+      "sha256": "51fa678209fa8cd7df0d7563341a38169d2499a7de763724d8098a2959bb1fcd"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/images/003-risks-risk-map.png",
+      "size": 277671,
+      "sha256": "97a0be8ab8487479ee243fbd6407c34c440516f5d7f98bbc57dac80852aadce8"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/images/004-risks-risk-studies.png",
+      "size": 219502,
+      "sha256": "a65039b9b97ee8a22027a053413efabd981544fc203fc4e85d533fb6e8788827"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/images/005-compliance-iso.png",
+      "size": 254572,
+      "sha256": "97b5cc562a82d5e888f60ee323e67087c528e3d7178ca2ff3583b6afac88edb8"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/images/006-compliance-ann.png",
+      "size": 265701,
+      "sha256": "f9ff8221fdfaf8dfb17d823c05d0fe1444cbf13ea060f04f2ee6219a18b9e6a1"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/images/007-care-df-care-dash.png",
+      "size": 277474,
+      "sha256": "e54d42ebd96e8d87ce835cdc0791ff9dfd02beaef3fba5f38480f6abc0453ac8"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/images/008-has-df-has-dash.png",
+      "size": 237488,
+      "sha256": "388a517e5104a3ad8089b2d5645029c238d6e72b3532e1df6ea8938c5699e074"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/images/009-audit-cibles.png",
+      "size": 299985,
+      "sha256": "84c44bd5637efd3ddb2656c49d679f20f22f815906e924882d1806a7f426ba27"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/images/010-proofs-prv-reg.png",
+      "size": 243737,
+      "sha256": "281206fee77aaa56435c53ad6e9ac05cc17cfe5ce43962288e51883140a57956"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/images/011-pcra-pcra-dashboard.png",
+      "size": 232337,
+      "sha256": "5157e3e05de9826de7e6eb98f0d43597a6d08a0fff5f09abdaae1840fb1a19b2"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/images/012-pcra-pcra-bias.png",
+      "size": 208163,
+      "sha256": "bb10a4070d665625ff4a703de56c8da0b855ed09cadd0e10b5cced02486c43d8"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/images/013-perimeters-perimeter-registry.png",
+      "size": 239177,
+      "sha256": "5c369f2a153226514d4633d25b98366a96f5217184de75483a71243a68ed9449"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/images/014-suppliers-sup.png",
+      "size": 239138,
+      "sha256": "8d5b4fc531f425821b2257f4aafdab906c99e9c7f8ed3093eda305c12cb3b177"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/images/015-admin-admin-overview.png",
+      "size": 226388,
+      "sha256": "2ac428d5d1c40798d3fdc08f7e545a02ed890f0572294f346e3cc7f758308fc9"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/images/016-programs-pl-formation.png",
+      "size": 211617,
+      "sha256": "e5c41de28fb71ec7c5fe67d3be77391fe5f4b6a78d17ace96f988f7c3d137c5a"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/images/017-ops-inc-reg.png",
+      "size": 215350,
+      "sha256": "dc559da65e923e1a4721b50e8640b168cb7b173903a86251c3d99a1f280cc728"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/images/018-ai-reg.png",
+      "size": 207806,
+      "sha256": "55f22fd265126348b55cb35db92bd8afd70415bce400552c59799d71c5cd9cd5"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/images/019-context-ctx-pi.png",
+      "size": 231492,
+      "sha256": "205f317c1ac95bb8112c95cdfb4ff05349916d4eb4ccaa0e2a1fd43a00c93794"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/images/020-actions-list.png",
+      "size": 259431,
+      "sha256": "dc1f179cfbabf3147824c1b08eb13b71d9430edd3bd6262255033ec163bf4c6c"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/images/021-actions-kanban.png",
+      "size": 248722,
+      "sha256": "e7e0fc69ce28ebef297e9c006d9d8faab88b0ab06d6e1387823e1232e126236b"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/images/022-actions-planning.png",
+      "size": 248310,
+      "sha256": "e83677edb2fbd76ecece0bf9dbd54abececcf8d79b47395dd236540a7a7f151d"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/images/023-actions-calendar.png",
+      "size": 212872,
+      "sha256": "c95319472841d4ca8fe25bee09afc8ab9f5155d4548beec46f0535657d3577b5"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/images/024-actions-gantt.png",
+      "size": 247317,
+      "sha256": "0033114161a23f8823854f30b9b6db6f7329187d4f2fda8f767e72756577b6a5"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/images/025-actions-summary.png",
+      "size": 230647,
+      "sha256": "5c915906897f613763a37c44aaa1917258874d4c33e21dd1db4c9dca0d386214"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/images/026-recurring-list.png",
+      "size": 256211,
+      "sha256": "abdcb37ea50216129cb45e7799dbb79bf3ae8dd96acf622827025ba4794110f8"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/images/027-recurring-kanban.png",
+      "size": 230958,
+      "sha256": "c2e18cb7749f8d2d6ed8b5df945a33986e65d3c517da7b9e566150f0d0a97b93"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/images/028-recurring-planning.png",
+      "size": 234456,
+      "sha256": "64b503668bfe93ccd57b7e1713b6e6d4c0753cec5aee06be19da292a05f17b4f"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/images/029-recurring-calendar.png",
+      "size": 218904,
+      "sha256": "40a0b6e8998d670b9f5ac35b72ae60fe147c185474496a948e9d618429612849"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/images/030-recurring-fiche-historique.png",
+      "size": 244530,
+      "sha256": "1227c531fa65d9fc4913660355c3e4db6364041bed94652ee95adf45c2c286e4"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/index.html",
+      "size": 15069,
+      "sha256": "56cf78bcf8c4aa5c43213b4ddd06c1787dfc5cbd0937fa415422ff6b0a7ada92"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/technique/capture.cjs",
+      "size": 10773,
+      "sha256": "6da0dea678e7d1553aa98e9be40f715281c0a7e8f6b79c0275ba2126b3504a9e"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/technique/navigation.json",
+      "size": 9077,
+      "sha256": "ac79a8005838b566583a0809a3c1493197491485116fa16ca7c76890d79f38b4"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/technique/preview.css",
+      "size": 6564,
+      "sha256": "881f7749b5a390e0ea5ca206ccea67217bcb4bb2d6f9542974cfe3a78ad5b089"
+    },
+    {
+      "path": "samples/2026-10-13-astra-14/technique/verification.json",
+      "size": 18574,
+      "sha256": "9794216a90d8e54611a2ed5697484d8c81d15996ec7257ec0bbe9c9c0e19fb1c"
+    },
+    {
+      "path": "samples/2026-10-13-astra-15/DOSSIER-IMPLEMENTATION.md",
+      "size": 27956,
+      "sha256": "4fbe4ed758aa79a2111f1c19c7d0ff731389c21af6d710ff20113706720e8ece"
+    },
+    {
+      "path": "samples/2026-10-13-astra-15/INVENTAIRE-MENUS.md",
+      "size": 16010,
+      "sha256": "bb94161171597588b12ade1554f2f5835cde6ebf975f862c59de5c17166f55eb"
+    },
+    {
+      "path": "samples/2026-10-13-astra-15/MANIFESTE.json",
+      "size": 552,
+      "sha256": "23e9ecfc080316a4766cd899f17cc9e35c3d63ba61b722b87c6163e9465d24ce"
+    },
+    {
+      "path": "samples/2026-10-13-astra-15/PROMPT-IMPLEMENTATION.md",
+      "size": 8322,
+      "sha256": "311ff1fe7bb5465db8b74d88d86eedf1953ee71f0471cfa7a4d993b878c43a32"
+    },
+    {
+      "path": "samples/2026-10-13-astra-15/README.md",
+      "size": 2795,
+      "sha256": "e2c4e98492574156f6271ddb58e35024f9a7bc4f9e8d02dc8071795b21799191"
+    },
+    {
+      "path": "samples/2026-10-13-astra-15/RECETTE.md",
+      "size": 5033,
+      "sha256": "bde7728d51a713ef4bc92d4a28ac98917ef9f4483b5c5ced5e7d8d00febcbfc8"
+    },
+    {
+      "path": "samples/2026-10-13-astra-15/VERIFICATIONS.json",
+      "size": 1244,
+      "sha256": "ad9ba41bd883bd6cd3cf06184c79aa4d9c376cf9df0165c856ce9fbd5df86ab6"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/PLANCHE-CONTACT.jpg",
+      "size": 639224,
+      "sha256": "7a049efc988e23979e382e35babfbe869a747ccae77937f20cf73027296983a4"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/README.md",
+      "size": 10008,
+      "sha256": "39237a5cb1ec81fdcee2d2d40a72b8eaaca72ac103eb0761134176b1cf1ddfdd"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/001-dash-dash-sage.png",
+      "size": 287674,
+      "sha256": "7ac9ec5dab09574c06b44ee7d6263328e7675a122d00b1ae084a701583028284"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/002-risks-risk-register-sage.png",
+      "size": 275996,
+      "sha256": "3755d8e7215c0034636288694452c74e9aa0b8bd98a37df10d149c6e6dfbdbaf"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/003-risks-risk-map-sage.png",
+      "size": 262090,
+      "sha256": "8ac130a85b37e19ee8845b9425433a1996b9446a91a7aba3c1fe5188109eafb9"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/004-risks-risk-studies-sage.png",
+      "size": 226731,
+      "sha256": "5c2b34fdc3ae00360e33fc1addb1a51c7df5f19c531fa290d7c70b1684e10693"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/005-compliance-iso-sage.png",
+      "size": 258952,
+      "sha256": "670df30aa2874af9c5bf33b2758899ab23b950d2f19f6cc6a3edd1ae66feb78f"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/006-compliance-ann-sage.png",
+      "size": 271708,
+      "sha256": "f1a7ae9f857db6c402b93be12723499bab86ccb88b16a9bb0e286607ab8b9de2"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/007-care-df-care-dash-sage.png",
+      "size": 289652,
+      "sha256": "2c2e11e7d9d380a86abae8d00860dbb81ab0cdbd62798cea192b329c3929913b"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/008-has-df-has-dash-sage.png",
+      "size": 243888,
+      "sha256": "8e4e56672b6eac38b90c1f9643c1d344a073bbf1634cfe077713acabea029cf3"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/009-audit-cibles-sage.png",
+      "size": 309745,
+      "sha256": "81cff77330f12f749ff3a55245472a4351e7f86ebf33dd1295f6073b1deb050d"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/010-proofs-prv-reg-sage.png",
+      "size": 249335,
+      "sha256": "f1b93ed571a2b06bbfb4392a9be6a06d892f880ccf9f8b903bfd47fa8dd125a8"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/011-pcra-pcra-dashboard-sage.png",
+      "size": 238940,
+      "sha256": "5acc63e45ece80255fcd4ea53e20db6e77bda94f3017bff0c9fa61251fc035b3"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/012-pcra-pcra-bias-sage.png",
+      "size": 211054,
+      "sha256": "f2b6498fca69c08bc35eb66d3a872b308433eb9ec306b2e3760b68577cd48f37"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/013-perimeters-perimeter-registry-sage.png",
+      "size": 249669,
+      "sha256": "39ba08b96aa5d0e2cb01c901b25717b300141fcbbcb1fc9a92e2a9262f481273"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/014-suppliers-sup-sage.png",
+      "size": 244188,
+      "sha256": "bad0f368a8cd686b8b7e1a3b2835d93d477ad4867d4c220f3d0e26c37f220f8a"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/015-admin-admin-overview-sage.png",
+      "size": 235056,
+      "sha256": "da189650826482b7ce8d3605d3f31b02ba71eb25a368edef748e16dff34bf0ba"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/016-programs-pl-formation-sage.png",
+      "size": 215714,
+      "sha256": "cd49839fc927adb61f1d573a7bfb6b78265fefd54c1550d0cdd4586b0086c8f4"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/017-ops-inc-reg-sage.png",
+      "size": 220516,
+      "sha256": "bb3bd8092492a41a4b575b0040f13b56de010b0fbed74204102ba728dacb9b4a"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/018-ai-reg-sage.png",
+      "size": 214168,
+      "sha256": "f8660e0fe5c96a82f6f6691df251e7dae84e34d001aad7a6041c91cff16652cb"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/019-context-ctx-pi-sage.png",
+      "size": 239884,
+      "sha256": "c284d2a4ec8ef58dcaaae15de9b39d2d62ce46840e04fbaa8b8342f868f82f02"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/020-actions-list-sage.png",
+      "size": 268212,
+      "sha256": "0895b9ec8c357b93adee8b256be1ef895cbd89f1cdfca5c83044f8b4703d7351"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/021-actions-kanban-sage.png",
+      "size": 253935,
+      "sha256": "9242635c742b9adb304a39fcc287174d430d1c08c89630bcaa8140385ff25e0d"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/022-actions-planning-sage.png",
+      "size": 251080,
+      "sha256": "ab65f7a852fa8fec8631e2732d40349ef67039274f60ac1d4eb905421e4c07ed"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/023-actions-calendar-sage.png",
+      "size": 218046,
+      "sha256": "10b8178029da5e595ea5bd9c630bfa316990d9247ab62c14af40304b5f9ad478"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/024-actions-gantt-sage.png",
+      "size": 251179,
+      "sha256": "f3e4bc55c822bc40f8afc0aab0baf7230fbaf509e178c7dcf967678599a4ae8e"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/025-actions-summary-sage.png",
+      "size": 237646,
+      "sha256": "70192d60fa8f1025548315d6f3f5506609f8851efbd9a016ff008cd877141cc8"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/026-recurring-list-sage.png",
+      "size": 264140,
+      "sha256": "89d95a740fcf4c8626b288ed9403a8ac8d8ebb47c517923ac2c5569edc69f7bc"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/027-recurring-kanban-sage.png",
+      "size": 237553,
+      "sha256": "5e67db9694f5a7bbbe927873fc9d25456a65f664b675301473647c5539fb43e8"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/028-recurring-planning-sage.png",
+      "size": 240858,
+      "sha256": "1ee362b1f0b3bdaec1ae192070c8cdfa1f7d8e8ac08dd44b3b5a6b6043fa4fa9"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/029-recurring-calendar-sage.png",
+      "size": 224766,
+      "sha256": "85475e6f1880b9b82085487699337c97b572f2c13992debbcdc1dc918967c08f"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/030-recurring-fiche-historique-sage.png",
+      "size": 246342,
+      "sha256": "49521e6f8d5cd0b49e80a25a54a3bad9882957205e73ebc2fd8aafc2bf5da3ae"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/031-admin-appearance-enregistre.png",
+      "size": 207534,
+      "sha256": "5954b4f9b31403366a176d9878b8a2f4a075e1d6735bbb3af9689c48f38e522f"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/032-admin-appearance-apercu-clair.png",
+      "size": 209129,
+      "sha256": "c0b437e65829fb4beb9916b6ae469973da4db996acbc7bc4e85575d1a3e6980e"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/033-admin-appearance-enregistre-clair.png",
+      "size": 208261,
+      "sha256": "2cfd8e1fe607456fa49a778fe4f747532a189b674026f9b1a2ef8663b5ca2b25"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/034-dash-dash-clair.png",
+      "size": 287616,
+      "sha256": "f2e18e2e84f0232da487a698f5c6c5eb9cf81c9498796b941cf228d9ac6962fd"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/035-risks-risk-map-clair.png",
+      "size": 262457,
+      "sha256": "2d869b15f5e5097948c1463154a3c7b3f19768dcf95d33aabeeec5862f393190"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/036-actions-kanban-clair.png",
+      "size": 254056,
+      "sha256": "edf13f0e9ebb3671d00439e980d695f05c9527f3c1b11e159f41263542f5f5b7"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/037-recurring-list-clair.png",
+      "size": 264302,
+      "sha256": "d87b877f2f5a03b5596d49a9daab442d5e667df59fe366520c88972745c10cf2"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/038-dash-dash-sombre.png",
+      "size": 276958,
+      "sha256": "1d5a60f2993026a2bba9e712a6f93b72a0625eb53cd2374512bb7460f5468c45"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/039-risks-risk-map-sombre.png",
+      "size": 252486,
+      "sha256": "04e13fcc3343f5654fb54175921121ed74edbf73d73c0f6bb294cb180c2f5ac0"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/040-dash-dash-390.png",
+      "size": 92336,
+      "sha256": "9e0614c2e184013171298853649deadb15c457dff9ebe3f1bf0df48a173858a4"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/041-risks-risk-map-390.png",
+      "size": 69649,
+      "sha256": "c33210c7c07135e8edafad7c87ed3ac8a0f4ac0406b7a40fc1345cfd17331294"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/042-dash-dash-768.png",
+      "size": 192675,
+      "sha256": "c41bb4728ba6b8830f2687c753abe1d630e35c82979e840f81ed429edc0f2d3e"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/043-risks-risk-map-768.png",
+      "size": 193325,
+      "sha256": "0df885b1b52d4c14b6e03c7f34d42142e6f0180da28d1c2bea1bf2e6ec2c5e53"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/044-dash-dash-1440.png",
+      "size": 245015,
+      "sha256": "79195ef6657a819006a37a89401abae31b1fa3803d10960432b0a70d8a84ac82"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/045-risks-risk-map-1440.png",
+      "size": 224302,
+      "sha256": "bca29412580a02f96ce6950f9174796a933be09e0c6f781bfa0b954c5dd99688"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/046-dash-dash-1920.png",
+      "size": 295529,
+      "sha256": "6514e0ec992fad5e29734ef00df3f6d637571e7d8ee4a93777bdb85515af8288"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/047-risks-risk-map-1920.png",
+      "size": 260861,
+      "sha256": "e4c8277ab5d6e8abb6e6a1fd01a2a8133701e8902e1311c78e1eb58ea75ef1b8"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/048-carto-context-protegee.png",
+      "size": 200927,
+      "sha256": "721d2520fc593a46472d107062d748332ea43cdd5aeff8eec0e4bdb604d54423"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/049-carto-process-protegee.png",
+      "size": 198149,
+      "sha256": "86d549628ba66a96f98d66e50c3f4b8a173db0999bcb50df611b6e0fb934830d"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/images/050-dash-map-protegee.png",
+      "size": 208851,
+      "sha256": "56f13118fe65bae98d1c209285bbbe10c10e040d777987a5a09b119ddbc5cd6f"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/index.html",
+      "size": 13296,
+      "sha256": "90a35196a438112f38af2d794319f534f37139f5a617f73732fee375535135fb"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/technique/capture.cjs",
+      "size": 10598,
+      "sha256": "1bba2261abf097ef3dd2e043eb1ee9716884d4f838949bc71d6c11bbb4eaae9e"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/technique/cartographies-avant-apres.json",
+      "size": 1255,
+      "sha256": "06dc44b141861e5e27882987afcef9f9b8e8fe27e20b5039a121c63928e5217c"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/technique/planche.py",
+      "size": 844,
+      "sha256": "76ff705073ebb8cfcb358b07cb12fbaf73f4c878317b24820c707fba218ca4d6"
+    },
+    {
+      "path": "samples/2026-10-13-astra-16/technique/verification.json",
+      "size": 20721,
+      "sha256": "97811156834a4b107552129ee0507ebee3f3e3f718b01bca79a6d4d15ceae020"
+    },
+    {
       "path": "samples/README.md",
-      "size": 945,
-      "sha256": "987b58520a728a6f4359ac5a573cf2f625fb8b08b8cf776ae9e640091b09fb4a"
+      "size": 3863,
+      "sha256": "ac1297f811b1f6427d12b61231f78fe49597272a838a0b934cd51496e46ff03c"
     },
     {
       "path": "scripts/generer_etapes_parcours.py",
@@ -605,8 +2855,8 @@
     },
     {
       "path": "scripts/package_astra.py",
-      "size": 3226,
-      "sha256": "a9b7d407989082f012bcf242110a1ca722a25735c0433f8cba65910c7b0faab6"
+      "size": 3605,
+      "sha256": "fc2df23260da7bb8183acb49e64cab2405deb75027d8a75943abe7cec2108352"
     },
     {
       "path": "sources/catalogue.json",
@@ -649,6 +2899,11 @@
       "sha256": "235c86a4a065bfed83791944769a4f242708ef9eda64dbe9a45d7239b3ed6e94"
     },
     {
+      "path": "tests/browser-nes.cjs",
+      "size": 27570,
+      "sha256": "fb713d3af5294b2e90671109b38a0caf9f7abbd1281128e5fc5ecef339446b4a"
+    },
+    {
       "path": "tests/browser-refonte.cjs",
       "size": 27099,
       "sha256": "4b1a8ef8c18eb4419eaa91ffb2262a7b71a3d05b5e5d4902baf6f8c5ac7ed368"
@@ -656,7 +2911,7 @@
     {
       "path": "tests/browser-risks.cjs",
       "size": 28780,
-      "sha256": "30b565b8627fc918b0f8433b5a039989ba4a8a8e174a60d03efb16e9c73f0a75"
+      "sha256": "cc2a531d2b422e13bd2189d9d673231e915fd1941089b4345604bc390ec12a81"
     },
     {
       "path": "tests/browser.cjs",
@@ -679,6 +2934,16 @@
       "sha256": "d6644423b43d88ab0d3eefc6bf16a4ee8270b112d198279abda38b7e63ab8173"
     },
     {
+      "path": "tests/nes-cartographies.cjs",
+      "size": 7357,
+      "sha256": "8e22b8d97627d1043523dc99e64248a3105273a84ccbad3a47a877207f3b5493"
+    },
+    {
+      "path": "tests/nes-harness.cjs",
+      "size": 5801,
+      "sha256": "951f449ef3bd48f70919d9460c52e6b9dc09478cefd491459e70d71dc5b1f7fc"
+    },
+    {
       "path": "tests/risk.test.cjs",
       "size": 9517,
       "sha256": "047ac1aecc070efd04df2fb8862a61dd19ce7fc98e215e9f4df1c3435889b699"
@@ -687,6 +2952,11 @@
       "path": "tests/server-client.test.cjs",
       "size": 3203,
       "sha256": "7640395555ec5a68ebc7412b2e49f5b514f35e8377a4bbfe9c7a4b55bfd954b6"
+    },
+    {
+      "path": "tests/server_appearance_test.py",
+      "size": 10526,
+      "sha256": "76ed3a9a32d4609088758a3b52445a1c42f0ce37eaa858eb9e638ec48471064c"
     },
     {
       "path": "tests/server_carto_test.py",
@@ -701,7 +2971,7 @@
     {
       "path": "tests/server_risk_test.py",
       "size": 10195,
-      "sha256": "8d4291e20dda3b07f977ba309a52fe6756b2505e3779e6534ac6d80b57475239"
+      "sha256": "f3e57ac983b3a0ca3d8d61c592d3e7feb5dceb577183a09b71b6b96514a29824"
     },
     {
       "path": "tests/server_test.py",
