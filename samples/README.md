@@ -8,6 +8,7 @@ explicite de l’utilisateur. Les captures utilisent exclusivement des données 
 
 | Date | Série | Captures | Version de l’application |
 | --- | --- | --- | --- |
+| 13 octobre 2026 | [Série 19 — Pictogrammes SR / OV](2026-10-13-astra-19/README.md) | **7 vues**, illustrations dans le tableau et le graphe, palette de pictogrammes | Maquette à valider · référence 08 |
 | 13 octobre 2026 | [Série 18 — Risques et scénarios graphiques](2026-10-13-astra-18/README.md) | **6 vues**, tableau synchronisé avec matrice et cercle, graphe à trois chemins | Maquette à valider · référence 08 |
 | 13 octobre 2026 | [Série 17 — Parcours EBIOS RM](2026-10-13-astra-17/README.md) | **10 vues**, prototype de 5 ateliers / 18 étapes et sources ANSSI | Maquette à valider · référence 08 |
 | 13 octobre 2026 | [Série 16 — Matrice corrigée](2026-10-13-astra-16/README.md) | **2 images** : vue complète et détail coloré | Aperçu de correction |
