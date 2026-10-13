@@ -1,6 +1,12 @@
 # Prompt complet d’implémentation
 
-Tu travailles sur `https://github.com/yousername-ha/suivi-audits`, exclusivement sur la branche `legacy`. Implémente la refonte dans l’application existante, en utilisant le dossier consolidé **`samples/2026-10-13-astra-15/`** comme source de vérité. Le but est une application fonctionnelle, pas une nouvelle série de maquettes ou un simple plan.
+Tu travailles sur `https://github.com/yousername-ha/suivi-audits`, **exclusivement sur ta propre branche de travail dédiée**. Utilise la branche qui t’est attribuée ; si aucune n’existe, crée ta branche dédiée depuis `origin/legacy` sans modifier `legacy`. Implémente la refonte dans l’application existante, en utilisant le dossier consolidé **`samples/2026-10-13-astra-15/`** comme source de vérité. Le but est une application fonctionnelle, pas une nouvelle série de maquettes ou un simple plan.
+
+## Autorisation de branche — instruction explicite de l’utilisateur
+
+Toutes tes modifications, tes commits et tes publications doivent rester sur **ta propre branche**. `legacy` est uniquement la référence de départ et la source du dossier ; aucun commit, push ou fusion vers `legacy`, `main` ou la branche d’un autre agent. Vérifie la branche avant toute écriture Git et utilise un push explicitement ciblé vers ta branche, sans force-push.
+
+Cette instruction remplace, pour ton intervention, les anciennes mentions « branche legacy exclusivement » du dossier, de la recette et d’AGENTS.md. Elle ne modifie aucune autre contrainte. Si un outil de packaging impose encore `legacy`, adapte sa garde uniquement à ta branche dédiée en conservant les contrôles de distribution ; ne bascule pas sur `legacy` pour le contourner. Préserve le travail et l’historique déjà présents sur ta branche et utilise un worktree isolé si nécessaire.
 
 ## Lecture obligatoire
 
@@ -32,4 +38,4 @@ Conserve toutes les fonctions de compte, recherche, sauvegarde, notifications, i
 
 Avance jusqu’à l’intégration et à la vérification complètes : inspecte, implémente, teste et corrige les régressions introduites. Exécute les tests pertinents et la recette du dossier, notamment droits API, migration, deux sessions indépendantes, changement de style pendant un formulaire et conservation des cartes. Ne déclare pas un contrôle réussi sans l’avoir exécuté.
 
-Livre un diff ciblé, le SHA, les résultats réels, une nouvelle série de captures de l’application intégrée dans `samples` et le ZIP via le script de packaging existant. Préserve toutes les images historiques. Publication uniquement sur `legacy`, identité de commit anonyme prévue, message `[skip ci]`. Ne déploie pas, ne lance pas de CI, ne fusionne pas, ne force-pousse pas et ne modifie aucune autre branche. Si un accès indispensable bloque réellement, décris précisément le blocage et les travaux achevés.
+Livre un diff ciblé, le SHA, les résultats réels, une nouvelle série de captures de l’application intégrée dans `samples` et le ZIP via le script de packaging existant. Préserve toutes les images historiques. Publication uniquement sur **ta propre branche dédiée**, identité de commit anonyme prévue, message `[skip ci]`. Ne déploie pas, ne lance pas de CI, ne fusionne pas, ne force-pousse pas et ne modifie aucune autre branche. Si un accès indispensable bloque réellement, décris précisément le blocage et les travaux achevés.
