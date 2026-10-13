@@ -1,0 +1,48 @@
+{
+  "date": "2026-10-13",
+  "type": "Contrôles documentaires uniquement ; aucun test applicatif exécuté pour cette livraison",
+  "baseCommit": "b8ff86126f70114ba3bb7e32a4552fbefd3b7b04",
+  "checks": [
+    {
+      "name": "Liens relatifs des documents résolus",
+      "pass": true,
+      "count": 43
+    },
+    {
+      "name": "Inventaire des 100 destinations, nouvelle route décrite séparément",
+      "pass": true
+    },
+    {
+      "name": "Référence 08 présent dans le dossier et le prompt",
+      "pass": true
+    },
+    {
+      "name": "Portée globale présent dans le dossier et le prompt",
+      "pass": true
+    },
+    {
+      "name": "Tâches récurrentes présent dans le dossier et le prompt",
+      "pass": true
+    },
+    {
+      "name": "API globale présent dans le dossier et le prompt",
+      "pass": true
+    },
+    {
+      "name": "Icônes colorées présent dans le dossier et le prompt",
+      "pass": true
+    },
+    {
+      "name": "Menus dépliables présent dans le dossier et le prompt",
+      "pass": true
+    },
+    {
+      "name": "Protection des cartes présent dans le dossier et le prompt",
+      "pass": true
+    },
+    {
+      "name": "Diff suivi limité à samples",
+      "pass": true
+    }
+  ]
+}
