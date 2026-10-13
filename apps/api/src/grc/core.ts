@@ -35,6 +35,7 @@ import { GrcFrameworks } from './frameworks.js';
 import { GrcLibrary } from './library.js';
 import { GrcLibraryMappings } from './library-mappings.js';
 import { GrcRapprochements } from './rapprochements.js';
+import { GrcSuppliers } from './suppliers.js';
 import { GrcRisks } from './risks.js';
 import { LegacyTasks } from './legacy-tasks.js';
 import { GrcTasks } from './tasks.js';
@@ -89,6 +90,7 @@ export class Grc {
   readonly library: GrcLibrary;
   readonly libraryMappings: GrcLibraryMappings;
   readonly rapprochements: GrcRapprochements;
+  readonly suppliers: GrcSuppliers;
   readonly risks: GrcRisks;
   readonly tasks: GrcTasks;
   constructor(
@@ -102,6 +104,7 @@ export class Grc {
     this.library = new GrcLibrary(this);
     this.libraryMappings = new GrcLibraryMappings(this);
     this.rapprochements = new GrcRapprochements(this);
+    this.suppliers = new GrcSuppliers(this);
     this.risks = new GrcRisks(this);
     this.tasks = new GrcTasks(this);
   }

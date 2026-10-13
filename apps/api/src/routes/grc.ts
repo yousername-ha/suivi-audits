@@ -8,6 +8,9 @@ import {
   SmsiUpdate,
   LibraryMappingBody,
   RapprochementDecision,
+  SupplierBody,
+  SupplierCriterionBody,
+  SupplierEvaluationBody,
   LinkBody,
   methodTemplate,
 } from '@suivi/shared';
@@ -21,6 +24,8 @@ import { requireIfMatch, setEtag } from '../http/concurrency.js';
 const base = { tags: ['SMSI GRC'], access: 'metier' as const };
 const scope = z.object({ smsi: z.uuid() });
 const object = scope.extend({ id: z.uuid() });
+const supplierParam = z.object({ id: z.string().min(1).max(200) });
+const criterionParam = z.object({ id: z.uuid() });
 const publication = z
   .object({
     definition: z.unknown(),
@@ -567,6 +572,109 @@ export const grcRoutes = [
     body: z.object({ note: z.string().trim().min(10).max(5000), confirm: z.literal('RETIRER') }).strict(),
     handler: async ({ svc, s, params, body, req, ip }) =>
       svc.grc.libraryMappings.withdraw(params.id, requireIfMatch(req), body.note, (s as Session).user, ip),
+  }),
+  route({
+    ...base,
+    access: 'fournisseurs:lire' as const,
+    method: 'GET',
+    url: '/api/suppliers',
+    summary: 'Fournisseurs de l’organisation avec leur évaluation courante',
+    handler: async ({ svc, s }) => svc.grc.suppliers.list((s as Session).user),
+  }),
+  route({
+    ...base,
+    access: 'fournisseurs:modifier' as const,
+    method: 'POST',
+    url: '/api/suppliers',
+    summary: 'Ajouter un fournisseur au registre de l’organisation',
+    body: SupplierBody,
+    handler: async ({ svc, s, body, ip }) => svc.grc.suppliers.create(body, (s as Session).user, ip),
+  }),
+  route({
+    ...base,
+    access: 'fournisseurs:lire' as const,
+    method: 'GET',
+    url: '/api/suppliers/criteria',
+    summary: 'Critères d’évaluation des fournisseurs définis par l’organisme',
+    query: z.object({ archived: z.enum(['true', 'false']).default('false') }),
+    handler: async ({ svc, s, query }) => svc.grc.suppliers.criteria((s as Session).user, query.archived === 'true'),
+  }),
+  route({
+    ...base,
+    access: 'fournisseurs:administrer' as const,
+    method: 'POST',
+    url: '/api/suppliers/criteria',
+    summary: 'Définir un critère d’évaluation des fournisseurs',
+    body: SupplierCriterionBody,
+    handler: async ({ svc, s, body, ip }) => svc.grc.suppliers.createCriterion(body, (s as Session).user, ip),
+  }),
+  route({
+    ...base,
+    access: 'fournisseurs:administrer' as const,
+    method: 'PUT',
+    url: '/api/suppliers/criteria/:id',
+    summary: 'Modifier un critère (nouvelle version, instantané conservé)',
+    params: criterionParam,
+    body: SupplierCriterionBody,
+    handler: async ({ svc, s, params, body, req, ip }) =>
+      svc.grc.suppliers.updateCriterion(params.id, body, requireIfMatch(req), (s as Session).user, ip),
+  }),
+  route({
+    ...base,
+    access: 'fournisseurs:administrer' as const,
+    method: 'POST',
+    url: '/api/suppliers/criteria/:id/archive',
+    summary: 'Retirer un critère des nouvelles évaluations',
+    params: criterionParam,
+    body: z.object({ reason: z.string().trim().min(5).max(2000), confirm: z.literal('RETIRER') }).strict(),
+    handler: async ({ svc, s, params, body, req, ip }) =>
+      svc.grc.suppliers.archiveCriterion(params.id, requireIfMatch(req), body.reason, (s as Session).user, ip),
+  }),
+  route({
+    ...base,
+    access: 'fournisseurs:lire' as const,
+    method: 'GET',
+    url: '/api/suppliers/:id/evaluations',
+    summary: 'Évaluations d’un fournisseur (la plus récente est la courante)',
+    params: supplierParam,
+    handler: async ({ svc, s, params }) => svc.grc.suppliers.evaluations(params.id, (s as Session).user),
+  }),
+  route({
+    ...base,
+    access: 'fournisseurs:modifier' as const,
+    method: 'POST',
+    url: '/api/suppliers/:id/evaluations',
+    summary: 'Enregistrer une évaluation immuable, indépendante des périmètres',
+    params: supplierParam,
+    body: SupplierEvaluationBody,
+    handler: async ({ svc, s, params, body, ip }) =>
+      svc.grc.suppliers.evaluate(params.id, body, (s as Session).user, ip),
+  }),
+  route({
+    ...base,
+    method: 'GET',
+    url: '/api/grc/:smsi/suppliers',
+    summary: 'Fournisseurs rattachés au périmètre et leur évaluation courante (lecture, sans copie)',
+    params: scope,
+    handler: async ({ svc, s, params }) => svc.grc.suppliers.forScope(params.smsi, (s as Session).user),
+  }),
+  route({
+    ...base,
+    method: 'PUT',
+    url: '/api/grc/:smsi/suppliers/:supplierId',
+    summary: 'Rattacher un fournisseur au périmètre (sans donnée d’évaluation)',
+    params: scope.extend({ supplierId: z.string().min(1).max(200) }),
+    handler: async ({ svc, s, params, ip }) =>
+      svc.grc.suppliers.attach(params.smsi, params.supplierId, (s as Session).user, ip),
+  }),
+  route({
+    ...base,
+    method: 'DELETE',
+    url: '/api/grc/:smsi/suppliers/:supplierId',
+    summary: 'Retirer le rattachement (le fournisseur et ses évaluations sont conservés)',
+    params: scope.extend({ supplierId: z.string().min(1).max(200) }),
+    handler: async ({ svc, s, params, ip }) =>
+      svc.grc.suppliers.detach(params.smsi, params.supplierId, (s as Session).user, ip),
   }),
   route({
     ...base,

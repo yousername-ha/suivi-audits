@@ -387,6 +387,7 @@ describe('migration 005 : reprise des cartes de la bêta déjà dessinées (CART
         '017_perimetres_nature.sql',
         '018_bibliotheque_referentiels.sql',
         '019_correspondances_rapprochements.sql',
+        '020_fournisseurs_organisation.sql',
       ]);
       const st = await t2.svc.legacy.recompose();
       expect(deepEqual(st!.data.maps as Json, fixture.maps as Json)).toBe(true);

@@ -482,3 +482,76 @@ test('Pilotage : correspondance validée, rapprochement proposé puis confirmé 
     await ctx.close();
   }
 });
+test('Pilotage : fournisseur évalué une fois, rattaché à deux périmètres avec la même évaluation', async ({
+  browser,
+}) => {
+  const ctx = await browser.newContext({ storageState: (await sessionAdmin(browser)).state, ignoreHTTPSErrors: true });
+  const page = await ctx.newPage(),
+    problems = watchPage(page);
+  const stamp = Date.now(),
+    fournisseur = `Fournisseur fictif ${stamp}`,
+    critere = `Critère fictif ${stamp}`;
+  try {
+    await page.goto('/pilotage/synthese');
+    const perimetre = async (name: string) =>
+      post(page, '/api/grc/smsis', {
+        name,
+        scope: 'Fixture privée de recette',
+        nature: 'SMQ',
+        timezone: 'Europe/Paris',
+      });
+    const [a, b] = [
+      await perimetre(`Périmètre fournisseurs A ${stamp}`),
+      await perimetre(`Périmètre fournisseurs B ${stamp}`),
+    ];
+    await post(page, '/api/suppliers/criteria', {
+      label: critere,
+      description: 'Critère fictif de recette automatisée',
+      purposes: ['evaluation'],
+      requirementRefs: [],
+      reason: 'Définition fictive de recette',
+    });
+
+    // 1. Ajout d'un fournisseur au registre de l'organisation.
+    await page.goto('/pilotage/fournisseurs');
+    await expect(page.getByRole('heading', { name: 'Fournisseurs de l’organisation', exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Ajouter un fournisseur', exact: true }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByLabel('Nom', { exact: false }).fill(fournisseur);
+    await dialog.getByRole('button', { name: 'Ajouter', exact: true }).click();
+    await expect(dialog).toHaveCount(0);
+    const ligne = page.getByRole('row').filter({ hasText: fournisseur });
+    await expect(ligne).toContainText('Non évalué');
+
+    // 2. Une évaluation, indépendante des périmètres.
+    await page.getByRole('button', { name: `Évaluer le fournisseur ${fournisseur}`, exact: true }).click();
+    await dialog.getByRole('checkbox', { name: new RegExp(critere) }).check();
+    await choose(page, `Répond au critère « ${critere} » ?`, 'Répond');
+    await dialog.getByLabel(`Résultat pour « ${critere} »`).fill('Contrat examiné');
+    await dialog.getByRole('button', { name: 'Enregistrer l’évaluation', exact: true }).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(ligne).toContainText('1 répond');
+
+    // 3. Rattachement à deux périmètres, sans copie de l'évaluation.
+    await page.getByRole('button', { name: `Périmètres de rattachement de ${fournisseur}`, exact: true }).click();
+    for (const p of [a, b]) {
+      await dialog.getByRole('button', { name: `Rattacher au périmètre ${p.name}`, exact: true }).click();
+      await expect(
+        dialog.getByRole('button', { name: `Retirer le rattachement au périmètre ${p.name}` }),
+      ).toBeVisible();
+    }
+    await page.keyboard.press('Escape');
+    await expect(ligne).toContainText('2 rattaché(s)');
+
+    // 4. La même évaluation dans chaque périmètre.
+    for (const p of [a, b]) {
+      await page.evaluate((id) => sessionStorage.setItem('pilotage-scope', id), p.id);
+      await page.goto('/pilotage/fournisseurs-perimetre');
+      await expect(page.getByRole('heading', { name: 'Fournisseurs du périmètre', exact: true })).toBeVisible();
+      await expect(page.getByRole('row').filter({ hasText: fournisseur })).toContainText('1 répond');
+    }
+    expect(problems).toEqual([]);
+  } finally {
+    await ctx.close();
+  }
+});

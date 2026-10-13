@@ -585,6 +585,58 @@ export const grcRapprochements = pgTable('grc_rapprochements', {
   decisionNote: text('decision_note').notNull(),
   createdAt: tstz('created_at').notNull(),
 });
+export const supCriteria = pgTable('sup_criteria', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  label: text('label').notNull(),
+  description: text('description').notNull().default(''),
+  purposes: text('purposes').array().notNull().default([]),
+  requirementRefs: text('requirement_refs').array().notNull().default([]),
+  version: integer('version').notNull().default(1),
+  archived: boolean('archived').notNull().default(false),
+  createdBy: text('created_by').notNull(),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  updatedBy: text('updated_by').notNull(),
+  updatedAt: tstz('updated_at').notNull().defaultNow(),
+});
+export const supCriterionHistory = pgTable('sup_criterion_history', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  criterionId: uuid('criterion_id').notNull(),
+  version: integer('version').notNull(),
+  snapshot: jsonb('snapshot').notNull(),
+  reason: text('reason').notNull(),
+  createdBy: text('created_by').notNull(),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+});
+export const supEvaluations = pgTable('sup_evaluations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  supplierId: text('supplier_id').notNull(),
+  supplierName: text('supplier_name').notNull(),
+  evaluatedAt: date('evaluated_at').notNull(),
+  evaluator: text('evaluator').notNull(),
+  conclusion: text('conclusion').notNull().default(''),
+  nextReviewAt: date('next_review_at'),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+});
+export const supEvaluationItems = pgTable('sup_evaluation_items', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  evaluationId: uuid('evaluation_id').notNull(),
+  criterionId: uuid('criterion_id').notNull(),
+  criterionVersion: integer('criterion_version').notNull(),
+  criterionLabel: text('criterion_label').notNull(),
+  requirementRefs: text('requirement_refs').array().notNull().default([]),
+  meets: boolean('meets'),
+  result: text('result').notNull().default(''),
+});
+export const supScopeLinks = pgTable(
+  'sup_scope_links',
+  {
+    smsiId: uuid('smsi_id').notNull(),
+    supplierId: text('supplier_id').notNull(),
+    attachedBy: text('attached_by').notNull(),
+    attachedAt: tstz('attached_at').notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.smsiId, t.supplierId] })],
+);
 export const grcMethodVersions = pgTable('grc_method_versions', {
   id: uuid('id').primaryKey(),
   methodId: uuid('method_id').notNull(),
