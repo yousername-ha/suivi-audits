@@ -228,6 +228,17 @@ export const FrameworkDefinition = z
       c.addIssue({ code: 'custom', message: 'Un choix organisationnel ne peut être présenté comme normatif.' });
   });
 export type FrameworkDefinition = z.infer<typeof FrameworkDefinition>;
+/** Définition d'un référentiel de la bibliothèque (ADR 0031) : celle d'un périmètre, sans lien vers des mesures. Un lien
+    entre une exigence et une mesure est une donnée de périmètre : il ne figure jamais dans la bibliothèque. */
+export const LibraryFrameworkDefinition = FrameworkDefinition.superRefine((d, c) => {
+  if (d.requirements.some((r) => r.measureRefs.length))
+    c.addIssue({
+      code: 'custom',
+      message:
+        'Une exigence de la bibliothèque ne porte aucun lien vers une mesure : ces liens sont propres à un périmètre.',
+    });
+});
+export type LibraryFrameworkDefinition = z.infer<typeof LibraryFrameworkDefinition>;
 export const MappingData = z
   .object({
     source: z

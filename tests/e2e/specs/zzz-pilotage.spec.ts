@@ -196,6 +196,65 @@ test('Pilotage : page Périmètres, création puis modification de la nature d�
     await ctx.close();
   }
 });
+test('Pilotage : bibliothèque de référentiels, import puis rattachement à un périmètre', async ({ browser }) => {
+  const ctx = await browser.newContext({ storageState: (await sessionAdmin(browser)).state, ignoreHTTPSErrors: true });
+  const page = await ctx.newPage(),
+    problems = watchPage(page);
+  const stamp = Date.now(),
+    nom = `Référentiel QA ${stamp}`;
+  const definition = {
+    name: nom,
+    identifier: `QA-BIBLIO-${stamp}`,
+    source: {
+      organisation: 'Organisation fictive',
+      document: 'Document fictif',
+      url: 'https://example.invalid/qa',
+      version: '1',
+      date: '2026-10-13',
+      license: 'Exemple fictif libre',
+      verifiedAt: '',
+      normative: false,
+      status: 'organisation',
+    },
+    domains: [{ id: 'gouvernance', label: 'Gouvernance' }],
+    requirements: [
+      {
+        id: 'QA-1',
+        domain: 'gouvernance',
+        title: 'Exigence fictive',
+        description: 'Exemple',
+        applicability: 'Tout',
+        measureRefs: [],
+      },
+    ],
+  };
+  try {
+    await page.goto('/pilotage/bibliotheque');
+    await expect(page.getByRole('heading', { name: 'Bibliothèque de référentiels', exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Importer un référentiel', exact: true }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByLabel('Définition du référentiel (JSON)').fill(JSON.stringify(definition));
+    await dialog.getByRole('button', { name: 'Simuler la publication', exact: true }).click();
+    await expect(dialog.getByText(/1 exigence\(s\) dans 1 domaine\(s\)/)).toBeVisible();
+    await dialog.getByLabel('Motif de la publication').fill('Publication de recette automatisée');
+    await dialog.getByRole('button', { name: 'Publier', exact: true }).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(page.getByRole('row').filter({ hasText: nom })).toContainText('QA-BIBLIO');
+    await page.goto('/pilotage/perimetres');
+    await page.getByRole('button', { name: /^Référentiels rattachés au périmètre Pilotage de l/ }).click();
+    await expect(dialog.getByText('Aucun référentiel de la bibliothèque n’est rattaché à ce périmètre.')).toBeVisible();
+    await choose(page, 'Rattacher un référentiel de la bibliothèque', nom);
+    await dialog.getByRole('button', { name: 'Rattacher', exact: true }).click();
+    await expect(dialog.getByText(nom, { exact: true })).toBeVisible();
+    await expect(dialog.getByText(/Version 1/)).toBeVisible();
+    await page.reload();
+    await page.getByRole('button', { name: /^Référentiels rattachés au périmètre Pilotage de l/ }).click();
+    await expect(page.getByRole('dialog').getByText(nom, { exact: true })).toBeVisible();
+    expect(problems).toEqual([]);
+  } finally {
+    await ctx.close();
+  }
+});
 test('Pilotage K : parcours qualité enregistré, repris et validation humaine conservée', async ({ browser }) => {
   const ctx = await browser.newContext({ storageState: (await sessionAdmin(browser)).state, ignoreHTTPSErrors: true });
   const page = await ctx.newPage(),

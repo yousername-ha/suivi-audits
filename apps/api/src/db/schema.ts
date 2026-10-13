@@ -502,6 +502,42 @@ export const grcFrameworkVersions = pgTable('grc_framework_versions', {
   createdBy: text('created_by').notNull(),
   createdAt: tstz('created_at').notNull(),
 });
+export const libFrameworks = pgTable('lib_frameworks', {
+  id: uuid('id').primaryKey(),
+  identifier: text('identifier').notNull(),
+  name: text('name').notNull(),
+  version: integer('version').notNull(),
+  createdBy: text('created_by').notNull(),
+  createdAt: tstz('created_at').notNull(),
+  updatedBy: text('updated_by').notNull(),
+  updatedAt: tstz('updated_at').notNull(),
+});
+export const libFrameworkVersions = pgTable('lib_framework_versions', {
+  id: uuid('id').primaryKey(),
+  frameworkId: uuid('framework_id').notNull(),
+  version: integer('version').notNull(),
+  definition: jsonb('definition').notNull(),
+  reason: text('reason').notNull(),
+  createdBy: text('created_by').notNull(),
+  createdAt: tstz('created_at').notNull(),
+});
+export const grcScopeFrameworks = pgTable('grc_scope_frameworks', {
+  smsiId: uuid('smsi_id').notNull(),
+  frameworkId: uuid('framework_id').notNull(),
+  version: integer('version').notNull(),
+  enabled: boolean('enabled').notNull(),
+  attachedBy: text('attached_by').notNull(),
+  attachedAt: tstz('attached_at').notNull(),
+});
+export const libFrameworkPromotions = pgTable('lib_framework_promotions', {
+  sourceFrameworkId: uuid('source_framework_id').notNull(),
+  sourceVersion: integer('source_version').notNull(),
+  smsiId: uuid('smsi_id').notNull(),
+  libraryFrameworkId: uuid('library_framework_id').notNull(),
+  libraryVersion: integer('library_version').notNull(),
+  promotedBy: text('promoted_by').notNull(),
+  promotedAt: tstz('promoted_at').notNull(),
+});
 export const grcMethodVersions = pgTable('grc_method_versions', {
   id: uuid('id').primaryKey(),
   methodId: uuid('method_id').notNull(),

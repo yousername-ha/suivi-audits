@@ -32,6 +32,7 @@ import { HttpError } from '../http/errors.js';
 import { loadGrants } from '../rights.js';
 import { validDate } from '@suivi/shared';
 import { GrcFrameworks } from './frameworks.js';
+import { GrcLibrary } from './library.js';
 import { GrcRisks } from './risks.js';
 import { LegacyTasks } from './legacy-tasks.js';
 import { GrcTasks } from './tasks.js';
@@ -83,6 +84,7 @@ const smsiColumns = `s.id,s.name,s.scope,s.nature,s.visibility,s.timezone,s.busi
 export class Grc {
   readonly legacyTasks: LegacyTasks;
   readonly frameworks: GrcFrameworks;
+  readonly library: GrcLibrary;
   readonly risks: GrcRisks;
   readonly tasks: GrcTasks;
   constructor(
@@ -93,6 +95,7 @@ export class Grc {
   ) {
     this.legacyTasks = new LegacyTasks(this);
     this.frameworks = new GrcFrameworks(this);
+    this.library = new GrcLibrary(this);
     this.risks = new GrcRisks(this);
     this.tasks = new GrcTasks(this);
   }

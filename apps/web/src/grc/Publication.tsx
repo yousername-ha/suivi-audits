@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { methodTemplate, type FrameworkDefinition, type GrcObject } from '@suivi/shared';
 import { api, get, saveBlob } from '../api';
 import { ErrorAlert } from '../components/common';
+import { PromotionBouton } from '../pilotage/Bibliotheque';
 import { LegacyFrameworks } from './LegacyFrameworks';
 import { ConfigurationEditor } from './ConfigurationEditor';
 import type { MethodVersion } from './Risks';
@@ -316,6 +317,7 @@ export function Publication({ smsi, type }: { smsi: string; type: 'methods' | 'f
                 {o.data.enabled ? 'Désactiver' : 'Activer'}
               </Button>
             )}
+            {write && can('pilotage', 'administrer') && <PromotionBouton smsi={smsi} id={o.id} />}
             {(o.data.definition as FrameworkDefinition).requirements.slice(0, requirementLimit).map((r) => (
               <Text key={r.id}>
                 {r.id} · {r.title}
