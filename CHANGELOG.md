@@ -5,8 +5,13 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 ## [Non publié]
 
 ### Notes de mise à jour
+- Aucune action.
+
+## [3.1.1] — 2026-10-13
+
+### Notes de mise à jour
 - **Quatre migrations additives**, appliquées automatiquement au démarrage après la sauvegarde habituelle, sans action sur le serveur : `017_perimetres_nature.sql` (colonne `nature` des périmètres, vide par défaut), `018_bibliotheque_referentiels.sql` (tables de la bibliothèque de référentiels), `019_correspondances_rapprochements.sql` (correspondances entre exigences, leur historique immuable et les propositions de rapprochement) et `020_fournisseurs_organisation.sql` (critères, évaluations immuables et rattachements des fournisseurs ; aucune table existante n'est modifiée). Les périmètres et les référentiels existants sont inchangés.
-- Aucune autre migration. Apparence : l'identité « Référence 08 » est appliquée à l'application principale ([ADR 0034](docs/adr/0034-apparence-reference-08.md)) ; le style global (sauge par défaut, clair bleuté) se règle dans Paramètres > Apparence, sans migration. Les correctifs visuels d'accessibilité reportés (contrastes, liens soulignés, onglet actif sombre) restent consignés comme écarts connus du test d'accessibilité (commit `e8af11a`). Les contrastes de couleur sont renforcés (badges et boutons pleins, textes des variantes légères, onglet actif en mode sombre, liens toujours soulignés) : sept écarts visuels connus du test d’accessibilité sont ainsi résolus.
+- Aucune autre migration. **Apparence** : l'identité « Référence 08 » est appliquée à l'application principale ([ADR 0034](docs/adr/0034-apparence-reference-08.md)) ; le style global (sauge par défaut, clair bleuté) se règle dans Paramètres > Apparence et s'applique à tous les comptes, sans migration. Les contrastes de couleur sont renforcés (badges et boutons pleins, textes des variantes légères, onglet actif en mode sombre, liens toujours soulignés) : les sept écarts visuels connus du test d'accessibilité sont résolus. Pour la signature de l'organisation dans l'en-tête, renseigner le nom (et le site en https) dans Paramètres > Général. Durée de la mise à jour : quelques minutes.
 
 ### Modifié
 - Sécurité des dépendances : Vitest 3.2.7 → 4.1.11 (outil de test, développement seulement : failles « tinypool » critiques et « @vitest/mocker » modérée) et fflate 0.8.2 → 0.8.3 (lecture et écriture des classeurs dans l'interface : boucle infinie possible sur une archive ZIP64 malformée). `pnpm audit` ne signale plus aucune faille.
