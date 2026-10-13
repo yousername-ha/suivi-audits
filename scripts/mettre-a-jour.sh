@@ -295,6 +295,8 @@ find "$SAUV/avant-mise-a-jour" -maxdepth 1 -name '*.tar*' ! -name '*.sha256' -pr
   | cut -d' ' -f2- | while read -r f; do rm -f "$f" "$f.sha256"; done
 MIGRATIONS_AVANT=$(migrations_appliquees)
 CONTROLE_AVANT=$(dc exec -T app suivi controle-donnees 2> /dev/null || true)
+# Références logiques entre objets (JSON, état historique) avant : la version précédente peut ne pas connaître la commande.
+RELATIONS_AVANT=$(dc exec -T app suivi controle-relations --anomalies 2> /dev/null || true)
 
 # ---------------------------------------------------------------- 4. Version du dépôt et images
 PHASE=images
@@ -370,6 +372,12 @@ if [ -n "$CONTROLE_AVANT" ]; then
   empreinte() { printf '%s' "$1" | grep -A3 '"documents"' | grep '"empreinte"' | head -n 1; }
   [ "$(empreinte "$CONTROLE_AVANT")" = "$(empreinte "$CONTROLE_APRES")" ] || avertir "documents différents avant et après la mise à jour : vérifier le rapport."
 fi
+# Relations : aucune anomalie nouvelle après la mise à jour (celles qui existaient déjà sont seulement rappelées).
+RELATIONS_APRES=$(dc exec -T app suivi controle-relations --anomalies 2> /dev/null || true)
+NOUVELLES=$(comm -13 <(printf '%s\n' "$RELATIONS_AVANT" | sort) <(printf '%s\n' "$RELATIONS_APRES" | sort) | sed '/^$/d')
+if [ -n "$NOUVELLES" ]; then avertir "relations entre objets : anomalies apparues pendant la mise à jour :"; printf '%s\n' "$NOUVELLES" >&2
+elif [ -n "$(printf '%s' "$RELATIONS_APRES" | tr -d '[:space:]')" ]; then info "Relations entre objets : $(printf '%s\n' "$RELATIONS_APRES" | sed '/^$/d' | wc -l) anomalie(s) déjà présente(s) avant la mise à jour (voir : suivi controle-relations)."
+else info "Relations entre objets : aucune anomalie."; fi
 MIGRATIONS=$(comm -13 <(printf '%s\n' "$MIGRATIONS_AVANT" | sort) <(migrations_appliquees | sort) | tr '\n' ' ')
 
 # ---------------------------------------------------------------- 6. Rapport, journal, ménage

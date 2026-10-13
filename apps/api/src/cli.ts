@@ -9,6 +9,9 @@
      migrate                     applique les migrations en attente
      migrations [--a-appliquer]  migrations appliquées, ou seulement celles en attente (script de mise à jour)
      controle-donnees            nombres d'enregistrements, empreinte de l'état, relecture de chaque document chiffré
+     controle-relations [--anomalies]  références logiques entre objets (JSON, ou une ligne par anomalie)
+     controle-relations [--anomalies]  références logiques entre objets (JSON, ou une ligne par anomalie)
+  jeu-de-test <compte> --confirmer  charge un jeu de données fictif et cohérent (instance de test vide uniquement)
      backup-worker [ready|unavailable] annonce l'état de l'exécutant serveur
      backup-claim               réclame une demande (verrou hôte obligatoire)
      backup-finish <id> <code>   termine une demande avec le rapport serveur
@@ -24,6 +27,7 @@ import { loadConfig } from './config.js';
 import { createLogger } from './log.js';
 import { hashPassword, tempPassword } from './security/crypto.js';
 import { createServices, type Services } from './services.js';
+import { controleRelations } from './controle-relations.js';
 import { pendingMigrations } from './systeme.js';
 
 const HELP = `Commandes : docker compose exec app suivi <commande> [arguments]
@@ -37,6 +41,7 @@ const HELP = `Commandes : docker compose exec app suivi <commande> [arguments]
   migrate                     applique les migrations en attente
   migrations [--a-appliquer]  migrations appliquées, ou seulement celles en attente
   controle-donnees            nombres d'enregistrements, empreinte de l'état, relecture des documents chiffrés (JSON)
+  jeu-de-test <compte> --confirmer  charge un jeu de données fictif et cohérent, au nom d'un administrateur (instance de test vide uniquement)
   backup-worker [ready|unavailable] état du worker serveur
   backup-claim               réclame une demande (verrou hôte obligatoire)
   backup-finish <id> <code>   termine une demande avec son rapport
@@ -250,6 +255,35 @@ async function main() {
       if (!out.ok) process.exitCode = 1;
       break;
     }
+    case 'controle-relations': {
+      const r = await controleRelations(svc);
+      if (arg === '--anomalies')
+        for (const c of r.controles) for (const a of c.anomalies) console.log(`${c.nom} : ${a}`);
+      else {
+        console.log(JSON.stringify(r, null, 2));
+        if (!r.ok) process.exitCode = 1;
+      }
+      break;
+    }
+    case 'jeu-de-test': {
+      if (!arg || extra !== '--confirmer') {
+        console.error(
+          'Jeu de données fictif : à réserver à une instance de test vide.\nUsage : suivi jeu-de-test <compte administrateur> --confirmer',
+        );
+        process.exit(2);
+      }
+      const { buildApp } = await import('./app.js');
+      const { chargerJeuDeTest } = await import('./jeu-de-test.js');
+      const app = await buildApp(svc);
+      await app.ready();
+      try {
+        const bilan = await chargerJeuDeTest(svc, app, arg, { publicUrl: svc.cfg.publicUrl || 'https://localhost' });
+        console.log(JSON.stringify(bilan, null, 2));
+      } finally {
+        await app.close();
+      }
+      break;
+    }
     case 'consigner-mise-a-jour': {
       const raw = await readStdin();
       let rep: Record<string, unknown>;
@@ -331,11 +365,13 @@ async function controleDonnees(svc: Services) {
     }
     h.update(`${v.document_id}:${v.version}:${v.sha256}\n`);
   }
+  const relations = await controleRelations(svc);
   return {
     ok: erreurs.length === 0,
     tables,
     etat: st ? { version: st.version, empreinte: st.empreinte } : null,
     documents: { versions: versions.rows.length, relues, empreinte: h.digest('hex'), erreurs },
+    relations,
   };
 }
 

@@ -131,6 +131,15 @@ postgresql_comptes() {
   dc exec -T -u postgres db psql -d suivi -At -F ' ' -c "$requete" | sort
 }
 
+# Contraintes de relations (clés étrangères, primaires, uniques, contrôles) de la base « suivi », triées, pour comparer avant et après.
+postgresql_contraintes() {
+  dc exec -T -u postgres db psql -d suivi -At -c "SELECT conrelid::regclass::text, contype, conname, pg_get_constraintdef(oid) FROM pg_constraint WHERE connamespace = 'public'::regnamespace AND contype IN ('f','p','u','c') ORDER BY 1,2,3"
+}
+# Contraintes non validées (une clé étrangère créée « NOT VALID » n'aurait pas contrôlé les lignes existantes).
+postgresql_contraintes_non_validees() {
+  dc exec -T -u postgres db psql -d suivi -At -c "SELECT count(*) FROM pg_constraint WHERE connamespace = 'public'::regnamespace AND NOT convalidated"
+}
+
 # Base « suivi » recréée vide, mot de passe du rôle applicatif aligné sur le secret (mêmes étapes que restore.sh).
 postgresql_recreer_base() {
   dc exec -T -u postgres db sh -c 'psql -v ON_ERROR_STOP=1 -v pw="$(cat /run/secrets/db_app_password)" -d postgres' << 'EOSQL'
@@ -199,13 +208,22 @@ migrer_postgresql() { # ancienne nouvelle
     abandonner_migration_postgresql "$neuf" "$expo"
     return 1
   fi
-  rm -f "$expo/suivi-pg17.dump" "$expo/differences.txt"
+  # 4. Relations : mêmes contraintes qu'avant, toutes validées (aucune ligne orpheline).
+  postgresql_contraintes > "$expo/contraintes-$nouv.txt" || { erreur "lecture des contraintes impossible."; abandonner_migration_postgresql "$neuf" "$expo"; return 1; }
+  if ! diff -u "$expo/contraintes-17.txt" "$expo/contraintes-$nouv.txt" > "$expo/differences-contraintes.txt"; then
+    cat "$expo/differences-contraintes.txt" >&2
+    erreur "les relations (clés étrangères, unicités) de la base restaurée diffèrent de l'ancienne."
+    abandonner_migration_postgresql "$neuf" "$expo"
+    return 1
+  fi
+  [ "$(postgresql_contraintes_non_validees | tr -d '[:space:]')" = 0 ] || { erreur "des contraintes de la base restaurée ne sont pas validées."; abandonner_migration_postgresql "$neuf" "$expo"; return 1; }
+  rm -f "$expo/suivi-pg17.dump" "$expo/differences.txt" "$expo/differences-contraintes.txt"
   printf '%s\n' "$empreinte" > "$data/postgres$nouv/.migre-depuis-postgres"
   printf '{"date":"%s","de":%s,"vers":%s,"tables":%s,"ancienneBase":%s}\n' "$(horodatage)" "$anc" "$nouv" "$(wc -l < "$expo/comptes-$nouv.txt")" \
     "$(json_chaine "$data/postgres")" | ecrire_etat "$expo/migration-$anc-vers-$nouv.json"
   rm -f "$data/postgres$nouv/.migration-en-cours"
   unset SUIVI_PG_EN_COURS
-  info "Base migrée vers PostgreSQL $nouv : $(wc -l < "$expo/comptes-$nouv.txt") tables, nombres de lignes identiques."
+  info "Base migrée vers PostgreSQL $nouv : $(wc -l < "$expo/comptes-$nouv.txt") tables, nombres de lignes identiques, $(wc -l < "$expo/contraintes-$nouv.txt") relations et unicités identiques."
   info "Ancienne base PostgreSQL $anc conservée (retour arrière possible) ; après vérification de l'application : sudo ./scripts/nettoyer-ancienne-base-postgresql.sh"
 }
 
