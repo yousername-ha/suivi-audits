@@ -9,18 +9,8 @@ import path from 'node:path';
 import { expect, test, type Browser } from '@playwright/test';
 import { sessionAdmin } from '../helpers';
 
-/** Écarts connus : « règle@écran » → justification. Tout écart absent de cette liste fait échouer le test. */
-const REPORT_VISUEL =
-  'Correctif visuel reporté à la demande du RSSI (le graphisme est en cours de travail dans la branche legacy) : ' +
-  'couleurs d’état assombries et liens soulignés, voir le commit e8af11a et docs/05_RECETTE/RECETTE_AUTOMATISEE.md.';
-const ECARTS_CONNUS: Record<string, string> = {
-  ...Object.fromEntries(
-    ['tableau-de-bord', 'cartographie', 'admin-utilisateurs', 'admin-systeme', 'documents', 'pilotage-objectifs'].map(
-      (e) => [`color-contrast@${e}`, REPORT_VISUEL],
-    ),
-  ),
-  'link-in-text-block@tableau-de-bord': REPORT_VISUEL,
-};
+/** Écarts connus : « règle@écran » → justification. Vide tant que l'on n'a rien à tolérer. */
+const ECARTS_CONNUS: Record<string, string> = {};
 
 const ECRANS = [
   ['tableau-de-bord', '/'],

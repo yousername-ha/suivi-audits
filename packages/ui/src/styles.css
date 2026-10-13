@@ -894,6 +894,10 @@ h3,
 .mantine-Tabs-tab[data-active] {
   color: var(--mantine-primary-color-filled);
 }
+/* En sombre, le vert plein (nuance 7) n'atteint que 2,6 sur le fond : nuance claire (WCAG 1.4.3). */
+[data-mantine-color-scheme='dark'] .mantine-Tabs-tab[data-active] {
+  color: var(--mantine-color-suivi-light-color);
+}
 .mantine-Modal-content,
 .mantine-Drawer-content {
   box-shadow: var(--suivi-ombre-haute);

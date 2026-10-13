@@ -210,6 +210,36 @@ export function contrast(a: string, b: string): number {
   return (x + 0.05) / (y + 0.05);
 }
 
+/** Couleurs d'état de Mantine (rouge, orange, jaune, vert, sarcelle, bleu), assombries pour le contraste WCAG AA
+    (l'audit d'accessibilité automatique a relevé 2,1 à 3,9 pour 4,5 attendus avec les nuances par défaut).
+    fond : fond plein sous texte blanc ; survol : fond plein survolé ; texte : texte des variantes légère et contour
+    sur la teinte de l'état (nuance 6 de Mantine, 10 à 15 % d'opacité) ; teinte : cette nuance 6. */
+export const ETATS = {
+  red: { fond: '#C92A2A', survol: '#B12525', texte: '#A82424', teinte: '#FA5252' },
+  orange: { fond: '#CE440E', survol: '#B53C0C', texte: '#A03E08', teinte: '#FD7E14' },
+  yellow: { fond: '#AC5900', survol: '#974E00', texte: '#925500', teinte: '#FAB005' },
+  green: { fond: '#29833B', survol: '#247334', texte: '#206D2F', teinte: '#40C057' },
+  teal: { fond: '#087F5B', survol: '#077050', texte: '#066A4C', teinte: '#12B886' },
+  blue: { fond: '#1971C2', survol: '#1663AB', texte: '#145B9C', teinte: '#228BE6' },
+} as const;
+export type EtatCouleur = keyof typeof ETATS;
+
+/** Couleur obtenue en posant `couleur` à l'opacité `alpha` sur `fond` (variantes légères de Mantine). */
+export function melange(couleur: string, alpha: number, fond: string): string {
+  const v = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const [c, f] = [v(couleur), v(fond)];
+  return (
+    '#' +
+    c
+      .map((x, i) =>
+        Math.round(x! * alpha + f[i]! * (1 - alpha))
+          .toString(16)
+          .padStart(2, '0'),
+      )
+      .join('')
+  );
+}
+
 /** Couples texte / fond utilisés par l'interface, avec le seuil WCAG AA attendu (4,5 texte, 3 composants). */
 export const COUPLES_CONTRASTE: { nom: string; texte: string; fond: string; seuil: number }[] = [
   { nom: 'texte sur fond de page (clair)', texte: FONDS.clair.texte, fond: FONDS.clair.page, seuil: 4.5 },
@@ -231,6 +261,24 @@ export const COUPLES_CONTRASTE: { nom: string; texte: string; fond: string; seui
   },
   { nom: 'bouton principal (sombre)', texte: '#FFFFFF', fond: VERT[7], seuil: 4.5 },
   { nom: 'lien vert sur surface (sombre)', texte: VERT[3], fond: FONDS.sombre.surface, seuil: 4.5 },
+  ...(Object.keys(ETATS) as EtatCouleur[]).flatMap((k) => [
+    { nom: `état ${k} : texte blanc sur fond plein`, texte: '#FFFFFF', fond: ETATS[k].fond, seuil: 4.5 },
+    { nom: `état ${k} : texte blanc sur fond plein survolé`, texte: '#FFFFFF', fond: ETATS[k].survol, seuil: 4.5 },
+    ...(
+      [
+        ['page (clair)', FONDS.clair.page],
+        ['surface (clair)', FONDS.clair.surface],
+      ] as const
+    ).flatMap(([nom, fond]) =>
+      [0.1, 0.15, 0.3].map((alpha) => ({
+        nom: `état ${k} : texte léger sur ${nom}, teinte ${alpha * 100} %`,
+        texte: ETATS[k].texte,
+        fond: melange(ETATS[k].teinte, alpha, fond),
+        seuil: 4.5,
+      })),
+    ),
+  ]),
+  { nom: 'onglet actif (sombre)', texte: VERT[2], fond: FONDS.sombre.page, seuil: 4.5 },
   { nom: 'bordure de champ (clair)', texte: GRIS[5], fond: FONDS.clair.surface, seuil: 3 },
   { nom: 'bordure de champ (sombre)', texte: SOMBRE[3], fond: FONDS.sombre.surface, seuil: 3 },
   ...(['clair', 'sombre'] as const).flatMap((m) => {
