@@ -1,0 +1,63 @@
+[
+  {
+    "id": "actions",
+    "label": "Plans d’action",
+    "icon": "ecarts",
+    "items": [
+      {
+        "id": "fd",
+        "label": "Liste",
+        "tab": "ecarts",
+        "set": {
+          "ecView": "list"
+        },
+        "previewView": "list"
+      },
+      {
+        "id": "fd",
+        "label": "Kanban",
+        "tab": "ecarts",
+        "set": {
+          "ecView": "list"
+        },
+        "previewView": "kanban"
+      },
+      {
+        "id": "fd",
+        "label": "Planning",
+        "tab": "ecarts",
+        "set": {
+          "ecView": "list"
+        },
+        "previewView": "planning"
+      },
+      {
+        "id": "fd",
+        "label": "Calendrier",
+        "tab": "ecarts",
+        "set": {
+          "ecView": "list"
+        },
+        "previewView": "calendar"
+      },
+      {
+        "id": "fd",
+        "label": "Gantt",
+        "tab": "ecarts",
+        "set": {
+          "ecView": "list"
+        },
+        "previewView": "gantt"
+      },
+      {
+        "id": "fd",
+        "label": "Synthèse",
+        "tab": "ecarts",
+        "set": {
+          "ecView": "list"
+        },
+        "previewView": "summary"
+      }
+    ]
+  }
+]
