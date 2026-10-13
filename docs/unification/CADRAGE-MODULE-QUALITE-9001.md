@@ -243,7 +243,7 @@ Créer une série reste une action explicite de l'utilisateur ; rien n'est plani
 | 4.1, 4.2, 4.3                 | Contexte, parties intéressées, SWOT, vue PESTEL, exclusions justifiées                                                  | Existant + vue à créer                |
 | 4.4                           | Fiche processus et carte                                                                                                | À étendre                             |
 | 5.1 à 5.3                     | Responsabilités (`governance`), politique en information documentée (module documents)                                 | Existant                              |
-| 6.1                           | Registre des risques commun ; **opportunités** à traiter (aujourd'hui le SWOT n'a qu'un champ libre) ; méthode au choix | Écart : opportunités                  |
+| 6.1                           | Registre des risques commun ; **opportunités** à traiter (aujourd'hui le SWOT n'a qu'un champ libre) ; méthode au choix | Objet Opportunité séparé (D14, M7)    |
 | 6.2                           | Objectifs, indicateurs, plan d'actions (quoi, ressources, responsable, échéance, évaluation)                            | Existant, champs à compléter          |
 | 6.3                           | Planification des modifications                                                                                         | Écart : pas d'objet dédié identifié   |
 | 7.1 à 7.4                     | Ressources et connaissances (champ de `governance`), compétences, sensibilisation, communication                        | Écart : compétences, communication    |
