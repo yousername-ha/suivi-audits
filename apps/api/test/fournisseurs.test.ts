@@ -136,7 +136,11 @@ describe('registre et critères', () => {
       certificateState: ['Expiré', 'bad'],
       controlSummary: { enRetard: 1, aRealiser: 1, total: 2 },
     });
-    const liste = (await reader.get('/api/suppliers')).json() as { id: string; sso: string; controls: { id: string }[] }[];
+    const liste = (await reader.get('/api/suppliers')).json() as {
+      id: string;
+      sso: string;
+      controls: { id: string }[];
+    }[];
     const ligne = liste.find((x) => x.id === supplier)!;
     expect(ligne.sso).toBe('En cours');
     expect(ligne.controls.every((c) => !!c.id)).toBe(true);
@@ -144,7 +148,9 @@ describe('registre et critères', () => {
     const etat = (await a.get('/api/legacy/state')).json();
     expect(etat.suppliers).toHaveLength(1);
     expect((await contributor.patch(`/api/suppliers/${supplier}`, { name: 'Autre nom' })).statusCode).toBe(200);
-    expect((await contributor.patch(`/api/suppliers/${supplier}`, { name: 'Fournisseur fictif' })).statusCode).toBe(200);
+    expect((await contributor.patch(`/api/suppliers/${supplier}`, { name: 'Fournisseur fictif' })).statusCode).toBe(
+      200,
+    );
     expect((await contributor.patch(`/api/suppliers/${supplier}`, { name: 'x' })).statusCode).toBe(422);
   });
   it('réserve la définition des critères au droit d’administration', async () => {

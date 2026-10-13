@@ -18,7 +18,8 @@ export const pilotageRoutes = [
     method: 'GET',
     url: '/api/grc/:smsi/pilotage/revue/entrees',
     params: scope,
-    summary: 'Entrées de la revue de direction (ISO 9001:2015, 9.3.2) préparées à partir des données, sans interprétation',
+    summary:
+      'Entrées de la revue de direction (ISO 9001:2015, 9.3.2) préparées à partir des données, sans interprétation',
     handler: async ({ svc, s, params }) => new PilotageRevue(svc.grc).entrees(params.smsi, (s as Session).user),
   }),
   route({

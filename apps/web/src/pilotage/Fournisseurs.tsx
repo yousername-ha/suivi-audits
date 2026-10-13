@@ -23,7 +23,6 @@ import { DataTable, StatusChip, type Etat } from '@suivi/ui';
 import { api, get, post } from '../api';
 import { ErrorAlert } from '../components/common';
 import { Filtres } from '../components/Filtres';
-import { lienHistorique } from '../pilotage-navigation';
 import { useCan } from '../session';
 
 export interface EvaluationCourante {
