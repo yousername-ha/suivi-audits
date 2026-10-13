@@ -1,7 +1,13 @@
 /* Fournisseurs de l'organisation (ADR 0032, lot M4). Le registre reste celui de l'état historique (sans copie) ; ce
    service y ajoute des critères définis par l'organisme, des évaluations immuables SANS périmètre et le rattachement
    des fournisseurs à des périmètres. Aucune grille, aucun seuil, aucun critère n'est fourni. */
-import { SupplierBody, SupplierCriterionBody, SupplierEvaluationBody, type FrameworkDefinition } from '@suivi/shared';
+import {
+  SupplierBody,
+  SupplierCriterionBody,
+  SupplierEvaluationBody,
+  SupplierFollowUpBody,
+  type FrameworkDefinition,
+} from '@suivi/shared';
 import { isObject, type JsonObject } from '@suivi/shared/legacy';
 import type { SessionUser } from '../auth.js';
 import type { Client } from '../db/db.js';
@@ -345,6 +351,84 @@ export class GrcSuppliers {
     } finally {
       client.release();
     }
+  }
+
+  /* ------------------------------------------------------------------ Suite d'une évaluation (D11) */
+  /** Crée, dans le périmètre choisi, une action liée au fournisseur ou une série de réévaluation qui le référence.
+      L'évaluation reste sans périmètre : seul l'objet créé en dépend. Droits : fournisseurs:modifier et ecarts:modifier. */
+  async followUp(supplierId: string, evaluationId: string, input: unknown, user: SessionUser, ip: string) {
+    await this.g.permission(user, 'fournisseurs', 'modifier');
+    const body = SupplierFollowUpBody.parse(input);
+    const scope = await this.g.access(body.smsi, user, true);
+    const evaluation = (
+      await this.g.db.q<{ id: string; supplier_name: string; evaluated_at: string }>(
+        'SELECT id,supplier_name,evaluated_at::text FROM sup_evaluations WHERE id=$1 AND supplier_id=$2',
+        [evaluationId, supplierId],
+      )
+    ).rows[0];
+    if (!evaluation) throw new HttpError(404, 'Évaluation introuvable pour ce fournisseur.');
+    await this.supplier(supplierId);
+    const ref = `legacy:suppliers:${supplierId}`;
+    const policy = (await this.g.policy(body.smsi, user)).definition;
+    const status = policy.statuses.find((s) => !s.terminal)?.id,
+      category = policy.catalogues.actionCategories[0]?.id;
+    if (!status || !category) throw new HttpError(422, 'La politique du périmètre ne permet pas de créer cet objet.');
+    const origin = `Suite à l’évaluation du fournisseur « ${evaluation.supplier_name} » du ${evaluation.evaluated_at} (évaluation ${evaluation.id}).${body.note ? '\n' + body.note : ''}`;
+    if (body.kind === 'action') {
+      if (body.dueAt && body.dueAt < evaluation.evaluated_at)
+        throw new HttpError(422, 'L’échéance ne peut pas précéder l’évaluation.');
+      const created = await this.g.createObject(
+        body.smsi,
+        {
+          kind: 'action',
+          name: body.name,
+          data: {
+            description: origin,
+            status,
+            ownerId: null,
+            startAt: null,
+            dueAt: body.dueAt ? `${body.dueAt}T12:00:00.000Z` : null,
+            priority: 'normal',
+            category,
+            justification: '',
+            reminderDays: 0,
+            dependencies: [],
+          },
+        },
+        user,
+        ip,
+      );
+      await this.g.link(body.smsi, 'object:' + created.id, ref, 'related_to', `Évaluation ${evaluation.id}`, user, ip);
+      return { id: created.id, smsiId: body.smsi, kind: 'action', name: created.name, scope: scope.name };
+    }
+    const created = await this.g.createObject(
+      body.smsi,
+      {
+        kind: 'task_series',
+        name: body.name,
+        data: {
+          description: origin,
+          ownerId: null,
+          category,
+          priority: 'normal',
+          recurrence: {
+            start: body.start!,
+            time: body.time,
+            timezone: scope.timezone,
+            unit: body.unit!,
+            interval: body.interval!,
+            until: null,
+            count: null,
+            reminderDays: 0,
+            active: true,
+          },
+          refs: [ref],
+        },
+      },
+      user,
+      ip,
+    );
+    return { id: created.id, smsiId: body.smsi, kind: 'task_series', name: created.name, scope: scope.name };
   }
 
   /* ------------------------------------------------------------------ Rattachement aux périmètres */

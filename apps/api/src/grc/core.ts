@@ -40,6 +40,9 @@ import { GrcRisks } from './risks.js';
 import { LegacyTasks } from './legacy-tasks.js';
 import { GrcTasks } from './tasks.js';
 export const DEFAULT_SMSI = '00000000-0000-4000-8000-000000000001';
+/** Fiche de l'outil de suivi propre au périmètre commun. Les fournisseurs (`legacy:suppliers:`) sont à l'échelle de
+    l'organisation (ADR 0032) : ils se relient depuis n'importe quel périmètre. */
+export const ficheHistorique = (ref: string) => ref.startsWith('legacy:') && !ref.startsWith('legacy:suppliers:');
 /** Droits qui rendent un compte éligible comme responsable d'une fiche du pilotage. */
 const LECTURE_PILOTAGE: Permission[] = [
   'pilotage:lire',
@@ -675,7 +678,7 @@ export class Grc {
   async checkTypedRefs(smsi: string, kind: GrcKind, data: Record<string, unknown>, user: SessionUser, c?: Client) {
     for (const { champ, ref, cibles } of referencesTypees(kind, data)) {
       if (!GrcRef.safeParse(ref).success) throw new HttpError(422, `Référence invalide (${champ}).`);
-      if (ref.startsWith('legacy:') && smsi !== DEFAULT_SMSI)
+      if (ficheHistorique(ref) && smsi !== DEFAULT_SMSI)
         throw new HttpError(422, 'Les fiches historiques ne se relient que dans le périmètre commun.');
       const r = await this.resolve(smsi, ref, user, c);
       if (!cibleAutorisee(ref, ref.startsWith('object:') ? (r.kind as GrcKind) : null, cibles))
@@ -885,7 +888,7 @@ export class Grc {
     {
       await this.access(smsi, user, true, c);
       if (source === target) throw new HttpError(422, 'Une relation relie deux objets distincts.');
-      if (smsi !== DEFAULT_SMSI && [source, target].some((r) => r.startsWith('legacy:')))
+      if (smsi !== DEFAULT_SMSI && [source, target].some(ficheHistorique))
         throw new HttpError(
           422,
           'Les données de l’outil de suivi ne se relient que dans le périmètre de l’organisation.',

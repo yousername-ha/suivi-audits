@@ -61,3 +61,31 @@ export const SupplierEvaluationBody = z
   })
   .strict();
 export type SupplierEvaluationBody = z.infer<typeof SupplierEvaluationBody>;
+
+/** Suite donnée à une évaluation, dans un périmètre choisi (D11) : une action, ou une série de réévaluation. Aucune
+    fréquence n'est proposée par défaut : la personne la choisit. */
+export const SupplierFollowUpBody = z
+  .object({
+    smsi: z.uuid(),
+    kind: z.enum(['action', 'task_series']),
+    name: z.string().trim().min(3).max(200),
+    note: z.string().trim().max(2000).default(''),
+    dueAt: DATE.nullable().default(null),
+    start: DATE.nullable().default(null),
+    time: z
+      .string()
+      .regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/)
+      .default('09:00'),
+    interval: z.number().int().min(1).max(365).nullable().default(null),
+    unit: z.enum(['day', 'week', 'month', 'year']).nullable().default(null),
+  })
+  .strict()
+  .superRefine((v, c) => {
+    if (v.kind === 'task_series' && (!v.start || !v.interval || !v.unit))
+      c.addIssue({
+        code: 'custom',
+        message: 'Une série exige une date de début, un intervalle et une unité.',
+        path: ['interval'],
+      });
+  });
+export type SupplierFollowUpBody = z.infer<typeof SupplierFollowUpBody>;

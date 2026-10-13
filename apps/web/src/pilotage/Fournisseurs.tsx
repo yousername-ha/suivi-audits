@@ -7,6 +7,7 @@ import {
   Checkbox,
   Group,
   Modal,
+  NumberInput,
   Select,
   Stack,
   Table,
@@ -18,7 +19,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { DataTable, StatusChip } from '@suivi/ui';
-import { api, get } from '../api';
+import { api, get, post } from '../api';
 import { ErrorAlert } from '../components/common';
 import { lienHistorique } from '../pilotage-navigation';
 import { useCan } from '../session';
@@ -347,6 +348,8 @@ function EvaluationForm({ fournisseur, onDone }: { fournisseur: Fournisseur; onD
 }
 
 function HistoriqueEvaluations({ fournisseur }: { fournisseur: Fournisseur }) {
+  const modifier = useCan()('fournisseurs', 'modifier'),
+    [suite, setSuite] = useState<string | null>(null);
   const q = useQuery({
     queryKey: ['suppliers', fournisseur.id, 'evaluations'],
     queryFn: () => get<Historique[]>(`/api/suppliers/${encodeURIComponent(fournisseur.id)}/evaluations`),
@@ -365,6 +368,21 @@ function HistoriqueEvaluations({ fournisseur }: { fournisseur: Fournisseur }) {
             {e.nextReviewAt && <Text size="sm">Réévaluation prévue le {e.nextReviewAt}</Text>}
           </Group>
           {e.conclusion && <Text>{e.conclusion}</Text>}
+          {modifier &&
+            (suite === e.id ? (
+              <SuiteEvaluation fournisseur={fournisseur} evaluation={e} onClose={() => setSuite(null)} />
+            ) : (
+              <div>
+                <Button
+                  size="xs"
+                  variant="default"
+                  aria-label={`Donner suite à l’évaluation du ${e.evaluatedAt}`}
+                  onClick={() => setSuite(e.id)}
+                >
+                  Donner suite
+                </Button>
+              </div>
+            ))}
           <DataTable label={`Critères de l’évaluation du ${e.evaluatedAt}`}>
             <Table>
               <Table.Thead>
@@ -444,6 +462,133 @@ function RattachementPerimetres({ fournisseurId }: { fournisseurId: string }) {
           )}
         </Group>
       ))}
+    </Stack>
+  );
+}
+
+const UNITES = [
+  { value: 'day', label: 'jour(s)' },
+  { value: 'week', label: 'semaine(s)' },
+  { value: 'month', label: 'mois' },
+  { value: 'year', label: 'an(s)' },
+];
+
+/* Suite donnée à une évaluation (ADR 0032) : une action ou une série de tâches de réévaluation, créée dans le
+   périmètre choisi et liée au fournisseur. Aucune fréquence n'est proposée par défaut : elle vient de l'organisation. */
+function SuiteEvaluation({
+  fournisseur,
+  evaluation,
+  onClose,
+}: {
+  fournisseur: Fournisseur;
+  evaluation: Historique;
+  onClose: () => void;
+}) {
+  const scopes = useQuery({ queryKey: ['grc', 'smsis'], queryFn: () => get<Perimetre[]>('/api/grc/smsis') });
+  const [kind, setKind] = useState<string | null>('action'),
+    [smsi, setSmsi] = useState<string | null>(() => {
+      try {
+        return sessionStorage.getItem('pilotage-scope');
+      } catch {
+        return null;
+      }
+    }),
+    [name, setName] = useState(''),
+    [note, setNote] = useState(''),
+    [dueAt, setDueAt] = useState(''),
+    [start, setStart] = useState(''),
+    [interval, setIntervalle] = useState<number | string>(''),
+    [unit, setUnit] = useState<string | null>(null),
+    [erreur, setErreur] = useState<unknown>(null),
+    [cree, setCree] = useState<{ kind: string; name: string; smsiId: string } | null>(null);
+  const serie = kind === 'task_series';
+  const valide = !!smsi && name.trim().length >= 3 && (!serie || (!!start && Number(interval) >= 1 && !!unit));
+  const creer = async () => {
+    try {
+      setErreur(null);
+      const r = await post<{ kind: string; name: string; smsiId: string }>(
+        `/api/suppliers/${encodeURIComponent(fournisseur.id)}/evaluations/${encodeURIComponent(evaluation.id)}/follow-up`,
+        serie
+          ? { smsi, kind, name: name.trim(), note, start, interval: Number(interval), unit }
+          : { smsi, kind, name: name.trim(), note, dueAt: dueAt || null },
+      );
+      setCree(r);
+    } catch (e) {
+      setErreur(e);
+    }
+  };
+  if (cree)
+    return (
+      <Alert color="green" title="Suite créée" role="status">
+        <Stack gap="xs">
+          <Text>
+            « {cree.name} » a été créée et liée au fournisseur {fournisseur.name}.
+          </Text>
+          <Group>
+            <Anchor component={Link} to={cree.kind === 'action' ? '/pilotage/actions' : '/pilotage/recurrences'}>
+              Ouvrir {cree.kind === 'action' ? 'le plan d’actions' : 'les tâches récurrentes'}
+            </Anchor>
+            <Button size="xs" variant="default" onClick={onClose}>
+              Fermer
+            </Button>
+          </Group>
+        </Stack>
+      </Alert>
+    );
+  return (
+    <Stack gap="xs">
+      <ErrorAlert error={erreur ?? scopes.error} />
+      <Group align="flex-end">
+        <Select
+          label="Type de suite"
+          data={[
+            { value: 'action', label: 'Action corrective ou d’amélioration' },
+            { value: 'task_series', label: 'Série de réévaluation' },
+          ]}
+          value={kind}
+          onChange={setKind}
+          allowDeselect={false}
+        />
+        <Select
+          label="Périmètre où la créer"
+          placeholder="Choisir un périmètre"
+          data={(scopes.data ?? []).map((p) => ({ value: p.id, label: p.name }))}
+          value={smsi}
+          onChange={setSmsi}
+          allowDeselect={false}
+        />
+      </Group>
+      <TextInput label="Intitulé" value={name} onChange={(e) => setName(e.currentTarget.value)} required />
+      <Textarea label="Précisions" value={note} onChange={(e) => setNote(e.currentTarget.value)} />
+      {serie ? (
+        <Group align="flex-end">
+          <TextInput
+            label="Première échéance"
+            type="date"
+            value={start}
+            onChange={(e) => setStart(e.currentTarget.value)}
+            required
+          />
+          <NumberInput label="Tous les" min={1} max={365} value={interval} onChange={setIntervalle} required />
+          <Select label="Unité" data={UNITES} value={unit} onChange={setUnit} required />
+        </Group>
+      ) : (
+        <TextInput
+          label="Échéance (facultative)"
+          type="date"
+          value={dueAt}
+          min={evaluation.evaluatedAt}
+          onChange={(e) => setDueAt(e.currentTarget.value)}
+        />
+      )}
+      <Group justify="flex-end">
+        <Button variant="default" onClick={onClose}>
+          Annuler
+        </Button>
+        <Button disabled={!valide} onClick={creer}>
+          {serie ? 'Planifier la réévaluation' : 'Créer l’action'}
+        </Button>
+      </Group>
     </Stack>
   );
 }
