@@ -155,7 +155,7 @@ distincts des résultats historiques déjà présents dans `recette/`.
 
 Contrôles : syntaxe de tous les modules JS et du script principal, compilation
 Python, 55 tests JavaScript (métier, rattachements et file de sauvegarde), 31 tests serveur, recette Chromium
-avec données explicitement fictives isolées, 100 destinations de navigation,
+avec données explicitement fictives isolées, 101 destinations de navigation (100 d’origine plus « Apparence »),
 quatre résolutions (390, 768, 1440, 1920 px), thème sombre, rôle lecteur,
 changement de statut, formulaires, récurrences et rechargement serveur.
 
@@ -169,3 +169,27 @@ Le lancement a été testé sous Linux dans Chromium. Le double-clic `demarrer.b
 sur Windows n’a pas été exécuté dans cet environnement ; le fichier et la chaîne
 de lancement Python d’origine sont conservés. Aucun binaire Windows n’est requis
 ni ajouté, puisque la distribution initiale utilise déjà Python.
+
+## Habillage global « Référence 08 » (13 octobre 2026)
+
+Source de vérité : `samples/2026-10-13-astra-15/`. Résultats et limites réels : [`recette/apparence-globale.md`](../recette/apparence-globale.md) ;
+captures de l’application intégrée : [`samples/2026-10-13-astra-16/`](../samples/2026-10-13-astra-16/README.md).
+
+- **Fichiers ajoutés** : `modules/nes-sage.css` (jetons et règles, tous bornés par `html[data-nes-style]`) et `modules/nes-sage-ui.js`
+  (lecture serveur, aperçu, propagation, bandeau d’identité, pictogrammes et chevrons de navigation, panneau Apparence). Modifications
+  ciblées : `index.html` (chargement des deux fichiers, appel `NesStyle.beforeRender(ui)` au début de `render()` et `NesStyle.load()` au
+  démarrage), `modules/admin-ui.js` (destination et panneau Apparence), `modules/astra-ui.js` (palette de présentation de la matrice,
+  contraste du texte des cases, badge « En retard » en double), `legacy_server.py` (table `appearance`, deux routes, migration,
+  schéma 3), `scripts/package_astra.py` (garde de branche).
+- **Attributs** : `data-nes-style="sage|clair"` et `data-nes-mode="light|dark"` (dérivé de `data-theme` et de `prefers-color-scheme`) ;
+  le mode personnel Clair / Sombre / Système n’est pas modifié, le sombre garde ses variables.
+- **Cartographies** (`tab: carto`, `tab: dash` avec `dashView: map`) : l’attribut, le bandeau et les décorations sont retirés
+  **avant** le rendu (`beforeRender`) puis à chaque rendu ; `carto-core.js`, `carto-ui.js`, `carto.css` et `legacy_cartography.py` ne sont pas modifiés.
+- **Matrice des risques** : la palette vive (Faible `#4DBB69`, Modéré `#FFDF45`, Élevé `#FF8335`, Critique `#E5192F`) ne s’applique
+  qu’à une politique **reconnue comme standard** : calcul matriciel, quatre niveaux d’identifiants `L1` à `L4`, de libellés
+  Faible / Modéré / Élevé / Critique et de couleurs identiques au gabarit livré (`LegacyRisks.DEFAULT_POLICY`). Une politique dont
+  un identifiant, un libellé ou une couleur diffère, ou à appréciation manuelle (cellules neutres, aucun barème inventé), garde ses
+  couleurs ; aucune politique ni évaluation versionnée n’est modifiée.
+- **Serveur** : `GET /api/appearance` (compte actif) → `{style, revision}` ; `PUT /api/admin/appearance` (administrateur, CSRF) avec
+  `{style, revision}` strict → 200 `{style, revision}`, 401, 403, 422, 409 `{error, style, revision}` ; même style = aucun changement ;
+  trace `Apparence globale` (avant / après). `PRAGMA user_version` passe de 2 à 3 sans jamais être abaissé.

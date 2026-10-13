@@ -1,0 +1,639 @@
+{
+  "branch": "claude/audit-suivi-docker-github-0pfu4y",
+  "applicationReference": "05dadbb78e28858cb1d647a0b9af705a9038312b",
+  "date": "2026-10-13",
+  "type": "Captures de l'application intégrée (habillage global Référence 08), cartographies exclues",
+  "images": 50,
+  "errors": [],
+  "externalRequests": [],
+  "checks": [
+    {
+      "name": "actions / Liste actif",
+      "pass": true
+    },
+    {
+      "name": "actions / Kanban actif",
+      "pass": true
+    },
+    {
+      "name": "actions / Planning actif",
+      "pass": true
+    },
+    {
+      "name": "actions / Calendrier actif",
+      "pass": true
+    },
+    {
+      "name": "actions / Gantt actif",
+      "pass": true
+    },
+    {
+      "name": "actions / Synthèse actif",
+      "pass": true
+    },
+    {
+      "name": "recurring / Liste actif",
+      "pass": true
+    },
+    {
+      "name": "recurring / Kanban actif",
+      "pass": true
+    },
+    {
+      "name": "recurring / Planning actif",
+      "pass": true
+    },
+    {
+      "name": "recurring / Calendrier actif",
+      "pass": true
+    },
+    {
+      "name": "Historique de réalisation visible",
+      "pass": true
+    },
+    {
+      "name": "Style global Clair bleuté appliqué",
+      "pass": true
+    },
+    {
+      "name": "Cartographie sans habillage : carto-context",
+      "pass": true
+    },
+    {
+      "name": "Cartographie sans habillage : carto-process",
+      "pass": true
+    },
+    {
+      "name": "Cartographie sans habillage : dash-map",
+      "pass": true
+    }
+  ],
+  "sourceHashes": {
+    "demarrer.py": "becdc064f01fac634cd54210fc975a2cfb92be3726a76b9076e54348a9c1ddba",
+    "index.html": "d7614093a058a6d6b4baaf757bcb652bdaff71f9e845aa2a7faaf4ddf9bdfa87",
+    "legacy_cartography.py": "25a4dfe7eeaee02cdffa28ea3a9516fa5eb95937fd54b2fcd0faf7deb997eb84",
+    "legacy_risks.py": "1a0d651f218bad03e27c79d2c33fb2da0be00f6f33ec4186ddcea87f2fcc49fe",
+    "legacy_server.py": "725b87543800d13e451599ce53f992f927e59502de6098fdad6fe7565182898d",
+    "modules/admin-ui.js": "192ac8d2272d0c280e1861cbd694e68d5873562deb951dac130ac35d8e41abde",
+    "modules/astra-ui.js": "9c8707849edb4fac8ab57ec751bf1d60c34c1dcf1a1b8491af8d7dabb1ef2f76",
+    "modules/astra.css": "f1a113b189f1e9f5bbc59180e19c66a28d1e206e7b3703c54917012edfbbcb97",
+    "modules/carto-core.js": "14d812f7e59772ce93aad3b15ce2896daf088be93af683447a11b6e182b9c41b",
+    "modules/carto-ui.js": "fe444816de389889023c4a5bb2368d8046ce323442b1e0ff86c1155ac10d1110",
+    "modules/carto.css": "405091d81074c4aa060e230f313d752e05d0989d5629e8cf67f0e44dfc4e955c",
+    "modules/demo-data.js": "c25fcc3dacf4e3439a91f453172ea049f25511ba6ac8e1341aed8dab374177a0",
+    "modules/df-auditor.js": "421b63f82911eb31c6ecbab856f381c44b6b555508ab68c3d6608b9ac1ad59ad",
+    "modules/df-core.js": "9ef5f0d19ea87a720c59ed4f17954332ca6f10737b9fe1613d2873e918fe1141",
+    "modules/df-reports.js": "dcde524936c91aba38cd61624d3019eab2ad918b7a0adc45ef49817f198bfa76",
+    "modules/df-sources.js": "3070039fd7124105560a51019808bc33ac6a2d24555c2cde5459065c3cae132e",
+    "modules/df-storage.js": "1d3ea024c1e08112df5a21589b3f66c7d1eb6776891f789fb83867c412e70b65",
+    "modules/df-ui.js": "6c5162868d17381c70aac07762d1807c9a8865a4a0dd425158b00c882f5aba4e",
+    "modules/df.css": "57e62d57fc85d985ea92c7a2393d828e309a99fda495de46a8cc22ae07d45dbc",
+    "modules/finance-core.js": "ca78db44015ad54400e3c01e1d857f93afd7c25460d636cc81d64006667c87fb",
+    "modules/finance-ui.js": "cafaf6a6855997bcc645d94c58ec89e81423bee1188e788d39106fd578b7b45d",
+    "modules/integration-core.js": "7da5762b31bd6a1b235b2e77aeed68dd2617a0073f730a1a0cad2b818ca252c2",
+    "modules/integration-ui.js": "90348108d13fe928bce17cf827caf08a31cc7f01c32a5e398dd6a00c0cdbf86b",
+    "modules/integration.css": "90b839e989570b016798089dad43ece9de9f08299488d6545e0dd3d6176fa863",
+    "modules/journey-core.js": "4c1c3fe33d2ffdf9800a3a8017b3eac79af3e707cc0478720e744b5c2baaa2a8",
+    "modules/journey-steps.js": "d021ee510fb979ad4f59fa02f94fab4324142e1650b4d5d3b6cd4c65c117ec76",
+    "modules/journey-ui.js": "71a835b809af0613ea68c2a7e2a6b25728ecca23d83e37b1fd14bfd4bd21a04c",
+    "modules/navigation-ui.js": "5bb3d695be63caeab5472dbb67ce1203987dc1a7eceea6b0829e39f30382a29e",
+    "modules/nes-sage-ui.js": "37ebd1873c36961cd9bf23cdec284365a42c4f055a8e21186c0ad7770b442e5e",
+    "modules/nes-sage.css": "f207fa4d1beb56558945fcb2cddf8565c9371aa5b8bc59ec660dea318fd3eb66",
+    "modules/pcra-core.js": "08bee097db98ebb2e308ac7651979cdc7814d33528d37f0acd0c2fbb8d280554",
+    "modules/pcra-ui.js": "b4ff7f8bc960abff56ccb3abd3f1007530f55eaf1af4ea3e8da232255e03bc63",
+    "modules/risk-core.js": "71864a02d701af9a06cce0a90162c7ebc90ab22461b349c7e11652e5b56e9063",
+    "modules/risk-ui.js": "dcd7d7ae68b7e012509b810701438e7258b3b0d6d478617fe8a802397b504645",
+    "modules/server-client.js": "2451384056de5e9b0079d5a3439800884a9adc7f5c5d9819040aeb0afd29dc2e"
+  },
+  "files": [
+    {
+      "file": "images/001-dash-dash-sage.png",
+      "kind": "route",
+      "section": "dash",
+      "id": "dash",
+      "style": "sage",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "7ac9ec5dab09574c06b44ee7d6263328e7675a122d00b1ae084a701583028284",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/002-risks-risk-register-sage.png",
+      "kind": "route",
+      "section": "risks",
+      "id": "risk-register",
+      "style": "sage",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "3755d8e7215c0034636288694452c74e9aa0b8bd98a37df10d149c6e6dfbdbaf",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/003-risks-risk-map-sage.png",
+      "kind": "route",
+      "section": "risks",
+      "id": "risk-map",
+      "style": "sage",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "8ac130a85b37e19ee8845b9425433a1996b9446a91a7aba3c1fe5188109eafb9",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/004-risks-risk-studies-sage.png",
+      "kind": "route",
+      "section": "risks",
+      "id": "risk-studies",
+      "style": "sage",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "5c2b34fdc3ae00360e33fc1addb1a51c7df5f19c531fa290d7c70b1684e10693",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/005-compliance-iso-sage.png",
+      "kind": "route",
+      "section": "compliance",
+      "id": "iso",
+      "style": "sage",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "670df30aa2874af9c5bf33b2758899ab23b950d2f19f6cc6a3edd1ae66feb78f",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/006-compliance-ann-sage.png",
+      "kind": "route",
+      "section": "compliance",
+      "id": "ann",
+      "style": "sage",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "f1a7ae9f857db6c402b93be12723499bab86ccb88b16a9bb0e286607ab8b9de2",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/007-care-df-care-dash-sage.png",
+      "kind": "route",
+      "section": "care",
+      "id": "df-care-dash",
+      "style": "sage",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "2c2e11e7d9d380a86abae8d00860dbb81ab0cdbd62798cea192b329c3929913b",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/008-has-df-has-dash-sage.png",
+      "kind": "route",
+      "section": "has",
+      "id": "df-has-dash",
+      "style": "sage",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "8e4e56672b6eac38b90c1f9643c1d344a073bbf1634cfe077713acabea029cf3",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/009-audit-cibles-sage.png",
+      "kind": "route",
+      "section": "audit",
+      "id": "cibles",
+      "style": "sage",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "81cff77330f12f749ff3a55245472a4351e7f86ebf33dd1295f6073b1deb050d",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/010-proofs-prv-reg-sage.png",
+      "kind": "route",
+      "section": "proofs",
+      "id": "prv-reg",
+      "style": "sage",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "f1b93ed571a2b06bbfb4392a9be6a06d892f880ccf9f8b903bfd47fa8dd125a8",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/011-pcra-pcra-dashboard-sage.png",
+      "kind": "route",
+      "section": "pcra",
+      "id": "pcra-dashboard",
+      "style": "sage",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "5acc63e45ece80255fcd4ea53e20db6e77bda94f3017bff0c9fa61251fc035b3",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/012-pcra-pcra-bias-sage.png",
+      "kind": "route",
+      "section": "pcra",
+      "id": "pcra-bias",
+      "style": "sage",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "f2b6498fca69c08bc35eb66d3a872b308433eb9ec306b2e3760b68577cd48f37",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/013-perimeters-perimeter-registry-sage.png",
+      "kind": "route",
+      "section": "perimeters",
+      "id": "perimeter-registry",
+      "style": "sage",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "39ba08b96aa5d0e2cb01c901b25717b300141fcbbcb1fc9a92e2a9262f481273",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/014-suppliers-sup-sage.png",
+      "kind": "route",
+      "section": "suppliers",
+      "id": "sup",
+      "style": "sage",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "bad0f368a8cd686b8b7e1a3b2835d93d477ad4867d4c220f3d0e26c37f220f8a",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/015-admin-admin-overview-sage.png",
+      "kind": "route",
+      "section": "admin",
+      "id": "admin-overview",
+      "style": "sage",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "da189650826482b7ce8d3605d3f31b02ba71eb25a368edef748e16dff34bf0ba",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/016-programs-pl-formation-sage.png",
+      "kind": "route",
+      "section": "programs",
+      "id": "pl-formation",
+      "style": "sage",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "cd49839fc927adb61f1d573a7bfb6b78265fefd54c1550d0cdd4586b0086c8f4",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/017-ops-inc-reg-sage.png",
+      "kind": "route",
+      "section": "ops",
+      "id": "inc-reg",
+      "style": "sage",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "bb3bd8092492a41a4b575b0040f13b56de010b0fbed74204102ba728dacb9b4a",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/018-ai-reg-sage.png",
+      "kind": "route",
+      "section": "ai",
+      "id": "reg",
+      "style": "sage",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "f8660e0fe5c96a82f6f6691df251e7dae84e34d001aad7a6041c91cff16652cb",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/019-context-ctx-pi-sage.png",
+      "kind": "route",
+      "section": "context",
+      "id": "ctx-pi",
+      "style": "sage",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "c284d2a4ec8ef58dcaaae15de9b39d2d62ce46840e04fbaa8b8342f868f82f02",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/020-actions-list-sage.png",
+      "kind": "view",
+      "section": "actions",
+      "view": "Liste",
+      "style": "sage",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "0895b9ec8c357b93adee8b256be1ef895cbd89f1cdfca5c83044f8b4703d7351",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/021-actions-kanban-sage.png",
+      "kind": "view",
+      "section": "actions",
+      "view": "Kanban",
+      "style": "sage",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "9242635c742b9adb304a39fcc287174d430d1c08c89630bcaa8140385ff25e0d",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/022-actions-planning-sage.png",
+      "kind": "view",
+      "section": "actions",
+      "view": "Planning",
+      "style": "sage",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "ab65f7a852fa8fec8631e2732d40349ef67039274f60ac1d4eb905421e4c07ed",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/023-actions-calendar-sage.png",
+      "kind": "view",
+      "section": "actions",
+      "view": "Calendrier",
+      "style": "sage",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "10b8178029da5e595ea5bd9c630bfa316990d9247ab62c14af40304b5f9ad478",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/024-actions-gantt-sage.png",
+      "kind": "view",
+      "section": "actions",
+      "view": "Gantt",
+      "style": "sage",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "f3e4bc55c822bc40f8afc0aab0baf7230fbaf509e178c7dcf967678599a4ae8e",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/025-actions-summary-sage.png",
+      "kind": "view",
+      "section": "actions",
+      "view": "Synthèse",
+      "style": "sage",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "70192d60fa8f1025548315d6f3f5506609f8851efbd9a016ff008cd877141cc8",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/026-recurring-list-sage.png",
+      "kind": "view",
+      "section": "recurring",
+      "view": "Liste",
+      "style": "sage",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "89d95a740fcf4c8626b288ed9403a8ac8d8ebb47c517923ac2c5569edc69f7bc",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/027-recurring-kanban-sage.png",
+      "kind": "view",
+      "section": "recurring",
+      "view": "Kanban",
+      "style": "sage",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "5e67db9694f5a7bbbe927873fc9d25456a65f664b675301473647c5539fb43e8",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/028-recurring-planning-sage.png",
+      "kind": "view",
+      "section": "recurring",
+      "view": "Planning",
+      "style": "sage",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "1ee362b1f0b3bdaec1ae192070c8cdfa1f7d8e8ac08dd44b3b5a6b6043fa4fa9",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/029-recurring-calendar-sage.png",
+      "kind": "view",
+      "section": "recurring",
+      "view": "Calendrier",
+      "style": "sage",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "85475e6f1880b9b82085487699337c97b572f2c13992debbcdc1dc918967c08f",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/030-recurring-fiche-historique-sage.png",
+      "kind": "detail",
+      "section": "recurring",
+      "style": "sage",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "49521e6f8d5cd0b49e80a25a54a3bad9882957205e73ebc2fd8aafc2bf5da3ae",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/031-admin-appearance-enregistre.png",
+      "kind": "appearance",
+      "state": "enregistré pour tous : Sauge",
+      "style": "sage",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "5954b4f9b31403366a176d9878b8a2f4a075e1d6735bbb3af9689c48f38e522f",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/032-admin-appearance-apercu-clair.png",
+      "kind": "appearance",
+      "state": "aperçu non enregistré : Clair bleuté",
+      "style": "clair",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "c0b437e65829fb4beb9916b6ae469973da4db996acbc7bc4e85575d1a3e6980e",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/033-admin-appearance-enregistre-clair.png",
+      "kind": "appearance",
+      "state": "enregistré pour tous : Clair bleuté (révision 2)",
+      "style": "clair",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "2cfd8e1fe607456fa49a778fe4f747532a189b674026f9b1a2ef8663b5ca2b25",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/034-dash-dash-clair.png",
+      "kind": "style-clair",
+      "section": "dash",
+      "style": "clair",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "f2e18e2e84f0232da487a698f5c6c5eb9cf81c9498796b941cf228d9ac6962fd",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/035-risks-risk-map-clair.png",
+      "kind": "style-clair",
+      "section": "risks",
+      "style": "clair",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "2d869b15f5e5097948c1463154a3c7b3f19768dcf95d33aabeeec5862f393190",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/036-actions-kanban-clair.png",
+      "kind": "style-clair",
+      "section": "actions",
+      "style": "clair",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "edf13f0e9ebb3671d00439e980d695f05c9527f3c1b11e159f41263542f5f5b7",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/037-recurring-list-clair.png",
+      "kind": "style-clair",
+      "section": "recurring",
+      "style": "clair",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "d87b877f2f5a03b5596d49a9daab442d5e667df59fe366520c88972745c10cf2",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/038-dash-dash-sombre.png",
+      "kind": "dark",
+      "section": "dash",
+      "style": "sage",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "1d5a60f2993026a2bba9e712a6f93b72a0625eb53cd2374512bb7460f5468c45",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/039-risks-risk-map-sombre.png",
+      "kind": "dark",
+      "section": "risks",
+      "style": "sage",
+      "width": 1600,
+      "height": 1100,
+      "sha256": "04e13fcc3343f5654fb54175921121ed74edbf73d73c0f6bb294cb180c2f5ac0",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/040-dash-dash-390.png",
+      "kind": "responsive",
+      "section": "dash",
+      "style": "sage",
+      "width": 390,
+      "height": 844,
+      "sha256": "9e0614c2e184013171298853649deadb15c457dff9ebe3f1bf0df48a173858a4",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/041-risks-risk-map-390.png",
+      "kind": "responsive",
+      "section": "risks",
+      "style": "sage",
+      "width": 390,
+      "height": 844,
+      "sha256": "c33210c7c07135e8edafad7c87ed3ac8a0f4ac0406b7a40fc1345cfd17331294",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/042-dash-dash-768.png",
+      "kind": "responsive",
+      "section": "dash",
+      "style": "sage",
+      "width": 768,
+      "height": 1024,
+      "sha256": "c41bb4728ba6b8830f2687c753abe1d630e35c82979e840f81ed429edc0f2d3e",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/043-risks-risk-map-768.png",
+      "kind": "responsive",
+      "section": "risks",
+      "style": "sage",
+      "width": 768,
+      "height": 1024,
+      "sha256": "0df885b1b52d4c14b6e03c7f34d42142e6f0180da28d1c2bea1bf2e6ec2c5e53",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/044-dash-dash-1440.png",
+      "kind": "responsive",
+      "section": "dash",
+      "style": "sage",
+      "width": 1440,
+      "height": 900,
+      "sha256": "79195ef6657a819006a37a89401abae31b1fa3803d10960432b0a70d8a84ac82",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/045-risks-risk-map-1440.png",
+      "kind": "responsive",
+      "section": "risks",
+      "style": "sage",
+      "width": 1440,
+      "height": 900,
+      "sha256": "bca29412580a02f96ce6950f9174796a933be09e0c6f781bfa0b954c5dd99688",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/046-dash-dash-1920.png",
+      "kind": "responsive",
+      "section": "dash",
+      "style": "sage",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "6514e0ec992fad5e29734ef00df3f6d637571e7d8ee4a93777bdb85515af8288",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/047-risks-risk-map-1920.png",
+      "kind": "responsive",
+      "section": "risks",
+      "style": "sage",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "e4c8277ab5d6e8abb6e6a1fd01a2a8133701e8902e1311c78e1eb58ea75ef1b8",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/048-carto-context-protegee.png",
+      "kind": "protected",
+      "route": "carto-context",
+      "style": null,
+      "width": 1600,
+      "height": 1100,
+      "sha256": "721d2520fc593a46472d107062d748332ea43cdd5aeff8eec0e4bdb604d54423",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/049-carto-process-protegee.png",
+      "kind": "protected",
+      "route": "carto-process",
+      "style": null,
+      "width": 1600,
+      "height": 1100,
+      "sha256": "86d549628ba66a96f98d66e50c3f4b8a173db0999bcb50df611b6e0fb934830d",
+      "documentOverflow": false
+    },
+    {
+      "file": "images/050-dash-map-protegee.png",
+      "kind": "protected",
+      "route": "dash-map",
+      "style": null,
+      "width": 1600,
+      "height": 1100,
+      "sha256": "56f13118fe65bae98d1c209285bbbe10c10e040d777987a5a09b119ddbc5cd6f",
+      "documentOverflow": false
+    }
+  ]
+}

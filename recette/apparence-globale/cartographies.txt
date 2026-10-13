@@ -1,0 +1,54 @@
+[
+ {
+  "route": "carto-context",
+  "element": "initial",
+  "identique": true
+ },
+ {
+  "route": "carto-context",
+  "element": "metrics",
+  "identique": true
+ },
+ {
+  "route": "carto-context",
+  "element": "zoom",
+  "identique": true
+ },
+ {
+  "route": "carto-context",
+  "element": "pan",
+  "identique": true
+ },
+ {
+  "route": "carto-process",
+  "element": "initial",
+  "identique": true
+ },
+ {
+  "route": "carto-process",
+  "element": "metrics",
+  "identique": true
+ },
+ {
+  "route": "carto-process",
+  "element": "zoom",
+  "identique": true
+ },
+ {
+  "route": "carto-process",
+  "element": "pan",
+  "identique": true
+ },
+ {
+  "route": "dash-map",
+  "element": "initial",
+  "identique": true
+ },
+ {
+  "route": "dash-map",
+  "element": "metrics",
+  "identique": true
+ }
+]
+{"receivedWhileOnMap":{"identical":true,"noAttribute":true,"noHeader":true,"domSize":[3186075,3186075]},"afterLeaving":"clair","afterReturn":{"attribute":null,"header":0}}
+CARTOGRAPHIES INCHANGÉES

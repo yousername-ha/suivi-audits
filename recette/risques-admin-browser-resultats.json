@@ -1,5 +1,5 @@
 {
-  "executedAt": "2026-10-13T15:41:52.323Z",
+  "executedAt": "2026-10-13T15:55:57.048Z",
   "passed": 4,
   "failed": 1,
   "pageErrors": [],
@@ -8,22 +8,22 @@
     {
       "name": "Installation : dix rôles de base, administration sans sauvegarde ni mise à jour",
       "status": "PASSÉ",
-      "durationMs": 1738
+      "durationMs": 1617
     },
     {
       "name": "Périmètre : référence PERI automatique et rôles proposés comme responsables",
       "status": "PASSÉ",
-      "durationMs": 676
+      "durationMs": 553
     },
     {
       "name": "Démonstration réelle : GHT, deux études, trois risques, BIA/PCA et facture physique",
       "status": "PASSÉ",
-      "durationMs": 497
+      "durationMs": 470
     },
     {
       "name": "Jeu répétable : aucun doublon, aucune altération des données antérieures ni compte ajouté",
       "status": "PASSÉ",
-      "durationMs": 507
+      "durationMs": 440
     },
     {
       "name": "Fiche centrale : deux évaluations datées, auteur réel et niveaux initial/résiduel/accepté",

@@ -1,0 +1,18 @@
+PASS Cockpit et lancement local
+PASS Données persistées par le moteur existant
+PASS Tableau de bord historique conservé
+PASS Matrice, sélection et fiche du risque
+PASS Annexe A : sélection multiple, recherche et liens persistants dans les deux sens
+PASS Annexe A : retrait persistant d’un lien et conservation de l’autre
+PASS Conformité, hiérarchie et détail
+PASS Actions : Kanban et changement de statut partagé
+PASS Actions : Planning, Calendrier, Gantt et Synthèse
+PASS Action : édition existante et persistance
+PASS Récurrences : vues et détail d’une projection
+PASS Réalisation récurrente : historique et prochaine échéance
+PASS Création et saisie rapide de programme persistées malgré une réponse retardée
+ROUTES 101
+PASS Navigation complète sans erreur de rendu
+PASS Responsive 390 / 768 / 1440 / 1920 et thème sombre
+PASS Compte lecteur : consultation et absence de contrôles de mutation
+ALL PASSED 16

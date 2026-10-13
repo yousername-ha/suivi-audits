@@ -1,0 +1,23 @@
+{
+  "date": "2026-10-13T15:53:10.149Z",
+  "checks": [
+    "Style par défaut Sauge, identité et lien externe sur clic seulement",
+    "Droits API : lecture pour tous les comptes, écriture refusée sans administration, sans CSRF ou invalide",
+    "Administration → Apparence : une seule destination ajoutée, deux cartes radio",
+    "Aperçu local sans écriture, puis abandon",
+    "Enregistrer pour tous : réponse serveur, audit, propagation sans rechargement ni perte de saisie",
+    "Conflit entre deux administrateurs : le second reçoit un refus, son choix est conservé",
+    "Réseau coupé : aucun faux succès, aperçu et dernier style connu conservés",
+    "Matrice des risques : cases pleines vert / jaune / orange / rouge pour la politique standard",
+    "Matrice : politique personnalisée conservée, politique manuelle sans niveau de cellule inventé",
+    "Matrice : sélection, cellule vide, réinitialisation, références et totaux inchangés",
+    "Matrice : mêmes couleurs dans les deux styles et en mode sombre, même marquage",
+    "Navigation : pictogrammes, entrée active turquoise, chevrons droite/bas, aria et clavier",
+    "Navigation : mêmes pictogrammes et chevrons en Clair bleuté, mode sombre lisible, mouvement réduit respecté",
+    "Plans d'action : six vues et récurrences : quatre vues, fiche et historique, sans badge « En retard » en double",
+    "Responsive 390 / 768 / 1440 / 1920 et zoom 200 % : pas de débordement global, bandeau et lien visibles",
+    "Persistance après redémarrage du serveur et reprise d'un contexte neuf"
+  ],
+  "errors": [],
+  "externalRequests": []
+}

@@ -1,0 +1,18 @@
+{
+  "commande": "node tests/<suite>.cjs avec /usr/bin/chromium relié au Chromium de Playwright",
+  "avant (909aebc)": {
+    "browser-carto": "1",
+    "browser-interface": "1",
+    "browser-risks": "1",
+    "browser-refonte": "1",
+    "browser": "1"
+  },
+  "après": {
+    "browser-carto": "1",
+    "browser-interface": "1",
+    "browser-risks": "1",
+    "browser-refonte": "1",
+    "browser": "1"
+  },
+  "remarque": "Mêmes échecs avant et après : attentes périmées sur l’ancien menu (browser-carto, browser-interface, browser-risks, browser-refonte) ; browser.cjs exige un serveur lancé à la main sur le port 8123."
+}

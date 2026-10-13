@@ -1,5 +1,5 @@
 {
-  "executedAt": "2026-10-13T15:41:57.572Z",
+  "executedAt": "2026-10-13T15:56:01.519Z",
   "passed": 2,
   "failed": 1,
   "pageErrors": [],
@@ -8,12 +8,12 @@
     {
       "name": "Installation, création du compte et état serveur autoritatif",
       "status": "PASSÉ",
-      "durationMs": 1674
+      "durationMs": 1504
     },
     {
       "name": "GHT, deux établissements et SI mutualisé déclarés dans l’interface",
       "status": "PASSÉ",
-      "durationMs": 2063
+      "durationMs": 1770
     },
     {
       "name": "Responsable issu du registre existant, fonction et compte affecté",

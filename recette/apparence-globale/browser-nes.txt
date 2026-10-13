@@ -1,0 +1,18 @@
+PASS Style par défaut Sauge, identité et lien externe sur clic seulement
+PASS Droits API : lecture pour tous les comptes, écriture refusée sans administration, sans CSRF ou invalide
+PASS Administration → Apparence : une seule destination ajoutée, deux cartes radio
+PASS Aperçu local sans écriture, puis abandon
+  propagation : 17 s
+PASS Enregistrer pour tous : réponse serveur, audit, propagation sans rechargement ni perte de saisie
+PASS Conflit entre deux administrateurs : le second reçoit un refus, son choix est conservé
+PASS Réseau coupé : aucun faux succès, aperçu et dernier style connu conservés
+PASS Matrice des risques : cases pleines vert / jaune / orange / rouge pour la politique standard
+PASS Matrice : politique personnalisée conservée, politique manuelle sans niveau de cellule inventé
+PASS Matrice : sélection, cellule vide, réinitialisation, références et totaux inchangés
+PASS Matrice : mêmes couleurs dans les deux styles et en mode sombre, même marquage
+PASS Navigation : pictogrammes, entrée active turquoise, chevrons droite/bas, aria et clavier
+PASS Navigation : mêmes pictogrammes et chevrons en Clair bleuté, mode sombre lisible, mouvement réduit respecté
+PASS Plans d'action : six vues et récurrences : quatre vues, fiche et historique, sans badge « En retard » en double
+PASS Responsive 390 / 768 / 1440 / 1920 et zoom 200 % : pas de débordement global, bandeau et lien visibles
+PASS Persistance après redémarrage du serveur et reprise d'un contexte neuf
+ALL PASSED 16
