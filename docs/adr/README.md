@@ -38,3 +38,4 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0032](0032-fournisseurs-de-l-organisation.md) | Fournisseurs de l'organisation : évaluations immuables indépendantes des périmètres, sans grille (lot M4) | Proposée |
 | [0033](0033-import-referentiels-outil-de-suivi.md) | Importer dans la bibliothèque les référentiels déjà saisis dans l'outil de suivi (lot M4 suite) | Proposée |
 | [0034](0034-apparence-reference-08.md) | Apparence « Référence 08 » de l'application principale et style global | Proposée |
+| [0035](0035-postgresql-18-migration-automatique.md) | PostgreSQL 18 avec migration automatique depuis la 17, et Node 26 | Proposée |

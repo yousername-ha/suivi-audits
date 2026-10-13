@@ -46,10 +46,11 @@ confirmer() {
 # ---------------------------------------------------------------- Suppression des anciens volumes (après vérification)
 if [ "$SUPPRIMER" = 1 ]; then
   donnees_preparees || arret "$DATA_DIR n'est pas encore utilisé : faire d'abord la migration."
-  [ -n "$(ls -A "$DATA_DIR/postgres" 2> /dev/null)" ] || arret "$DATA_DIR/postgres est vide : migration non faite."
-  src=$(docker inspect -f '{{range .Mounts}}{{if eq .Destination "/var/lib/postgresql/data"}}{{.Source}}{{end}}{{end}}' \
+  base=$(dossier_base_postgresql)
+  [ -n "$(ls -A "$base" 2> /dev/null)" ] || arret "$base est vide : migration non faite."
+  src=$(docker inspect -f '{{range .Mounts}}{{if or (eq .Destination "/var/lib/postgresql/data") (eq .Destination "/var/lib/postgresql")}}{{.Source}}{{end}}{{end}}' \
     "$(dc ps -q db)" 2> /dev/null || true)
-  [ "$src" = "$DATA_DIR/postgres" ] || arret "la base en service n'utilise pas $DATA_DIR/postgres (démarrer l'application d'abord)."
+  [ "$src" = "$base" ] || arret "la base en service n'utilise pas $base (démarrer l'application d'abord)."
   vols=$(anciens_volumes)
   [ -n "$vols" ] || { info "Aucun ancien volume : rien à supprimer."; exit 0; }
   info "Anciens volumes (non utilisés) :"
@@ -65,7 +66,7 @@ if [ -z "$vols" ]; then
   donnees_preparees && { info "Rien à migrer : les données sont déjà dans $DATA_DIR."; exit 0; }
   arret "aucun volume Docker de l'application : pour une nouvelle installation, utiliser sudo ./scripts/preparer-donnees.sh."
 fi
-if donnees_preparees && [ ! -f "$EN_COURS" ] && [ -n "$(ls -A "$DATA_DIR/postgres" 2> /dev/null)" ]; then
+if donnees_preparees && [ ! -f "$EN_COURS" ] && [ -n "$(ls -A "$(dossier_base_postgresql)" 2> /dev/null)" ]; then
   info "Migration déjà faite : les données sont dans $DATA_DIR."
   info "Anciens volumes conservés :"
   printf '  %s\n' $vols

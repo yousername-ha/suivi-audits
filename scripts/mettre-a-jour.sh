@@ -168,7 +168,7 @@ retour_arriere() { # raison
 ecarter_copie_donnees() {
   local d="$DATA_DIR" sous="$DATA_DIR/.echec-$STAMP"
   mkdir -p "$sous"
-  for x in postgres secrets caddy clamav; do [ -e "$d/$x" ] && mv "$d/$x" "$sous/"; done
+  for x in postgres postgres18 secrets caddy clamav; do [ -e "$d/$x" ] && mv "$d/$x" "$sous/"; done
   mv "$d/$MARQUEUR" "$sous/" 2> /dev/null || true
   mv "$d/.migration-en-cours" "$sous/" 2> /dev/null || true
   info "Copie des données mise de côté : $sous"
@@ -217,7 +217,7 @@ if semver "$ACTUELLE"; then
 else
   avertir "version en service non numérotée (« $ACTUELLE ») : impossible de vérifier qu'il s'agit d'une montée de version."
 fi
-taille_base=$(du -sb "$DATA_DIR/postgres" 2> /dev/null | cut -f1 || echo 0)
+taille_base=$(du -sbc "$DATA_DIR/postgres" "$DATA_DIR/postgres18" 2> /dev/null | tail -n 1 | cut -f1 || echo 0)
 for v in $(anciens_volumes); do
   case "$v" in *_pgdata) taille_base=$(du -sb "$(docker volume inspect -f '{{.Mountpoint}}' "$v")" | cut -f1) ;; esac
 done

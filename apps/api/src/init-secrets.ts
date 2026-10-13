@@ -3,7 +3,8 @@
       fichiers persistant, hors du dossier de l'application, préparé par scripts/preparer-donnees.sh ou
       scripts/migrer-donnees-vers-dossier.sh (fichier témoin) — refus de démarrer sinon.
    2. Crée les sous-dossiers absents avec leurs propriétaires et leurs droits :
-        postgres/      base PostgreSQL                       uid 70,   0700
+        postgres18/    base PostgreSQL 18                    uid 70,   0700
+        postgres/      ancienne base PostgreSQL 17 (si migrée, conservée intacte)   uid 70, 0700
         secrets/       secrets générés ci-dessous            root,     0711 (traversée seule : pas de listage)
         caddy/data/    certificats, autorité interne         uid 1001, 0700
         caddy/config/  configuration du frontal              uid 1001, 0700
@@ -119,6 +120,16 @@ function controlerEmplacement(donnees: string, hote: string, projet: string | un
   }
 }
 
+/** Vrai si une ancienne base PostgreSQL 17 (postgres/) existe sans que la base 18 (postgres18/) ait été créée par la migration
+    (scripts/lib-commun.sh) : démarrer alors PostgreSQL 18 créerait une base vide à côté des données (ADR 0035). La migration
+    pose elle-même le témoin postgres18/.migration-en-cours le temps de son exécution. */
+export function migrationPostgresqlRequise(donnees: string): boolean {
+  const ancienne = fs.existsSync(path.join(donnees, 'postgres', 'PG_VERSION'));
+  const nouvelle = fs.existsSync(path.join(donnees, 'postgres18', '18', 'docker', 'PG_VERSION'));
+  const enCours = fs.existsSync(path.join(donnees, 'postgres18', '.migration-en-cours'));
+  return ancienne && !nouvelle && !enCours;
+}
+
 function dossier(p: string, uid: number, gid: number, mode: number) {
   fs.mkdirSync(p, { recursive: true });
   fs.lchownSync(p, uid, gid);
@@ -220,9 +231,18 @@ function main() {
   if (donnees) {
     const hote = process.env.DATA_DIR_HOTE || '';
     controlerEmplacement(donnees, hote, process.env.PROJET);
-    const pg = path.join(donnees, 'postgres');
+    const pg = path.join(donnees, 'postgres18');
     const neuf = !fs.existsSync(pg) || fs.readdirSync(pg).length === 0;
     dossier(pg, PG_UID, PG_UID, 0o700);
+    // Ancienne base PostgreSQL 17 : jamais créée, seulement protégée si elle existe (retour arrière possible).
+    const ancien = path.join(donnees, 'postgres');
+    if (fs.existsSync(ancien)) dossier(ancien, PG_UID, PG_UID, 0o700);
+    if (migrationPostgresqlRequise(donnees))
+      arret(
+        "une base PostgreSQL 17 existe (DATA_DIR/postgres) et n'a pas encore été migrée vers PostgreSQL 18 : démarrer avec « docker compose up » " +
+          'créerait une base vide à côté de vos données (qui restent intactes). Lancer la mise à jour avec le script, qui migre la base ' +
+          'avec sauvegarde et retour arrière : sudo ./scripts/mettre-a-jour.sh (docs/INSTALLATION.md, section 12).',
+      );
     dossier(path.join(donnees, 'secrets'), 0, 0, 0o711);
     dossier(path.join(donnees, 'caddy'), 0, 0, 0o755);
     dossier(path.join(donnees, 'clamav'), CLAMAV_UID, CLAMAV_GID, 0o755);

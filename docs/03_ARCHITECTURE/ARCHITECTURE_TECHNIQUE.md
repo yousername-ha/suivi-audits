@@ -8,7 +8,7 @@ flowchart LR
     G --> W[web Caddy + React]
     G --> M[Maintenance statique et état minimal]
     W --> A[app Fastify]
-    A --> P[(PostgreSQL 17)]
+    A --> P[(PostgreSQL 18)]
     A --> L[Source legacy et documents chiffrés]
     A -->|Option antivirus| V[ClamAV]
     I[init ponctuel] --> D[DATA_DIR sur le serveur]
@@ -37,6 +37,6 @@ images Docker de base ; ClamAV si profil actif. L’accès réseau du workspace
 ne prouve pas celui du serveur client. Aucun système email/SSO externe déployé
 n’est identifié par le code actuel.
 
-Compatibilité : Node >=24, pnpm épinglé, PostgreSQL 17, navigateur moderne
+Compatibilité : Node >=24, pnpm épinglé, PostgreSQL 18, navigateur moderne
 supportant SVG/Fetch/SSE/BroadcastChannel ; compatibilité exhaustive des
 navigateurs et système de fichiers clients NON VÉRIFIÉE.

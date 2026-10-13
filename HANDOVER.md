@@ -8,7 +8,7 @@ préservée comme `main`). Les sections suivantes décrivent l'état de `feature
 Application auto-hébergée de suivi d’audit et de pilotage qualité/sécurité/HDS
 multi-référentiels. On ne doit pas imposer la création d’un SMSI pour un SMQ.
 Stack : Node 24+, pnpm 10.34.6, TypeScript 5.9.3, Fastify 5.12.5, React 19.3.0,
-Mantine 8.3.18, zod 4.6.5, PostgreSQL 17, Docker Compose, Caddy 2.11.7.
+Mantine 8.3.18, zod 4.6.5, PostgreSQL 18, Docker Compose, Caddy 2.11.7.
 
 Architecture actuelle : `gateway → web → app → db` ; gateway sert la maintenance
 indépendante, updater exécute les mises à jour et l’exploitation. API/base isolées
@@ -26,7 +26,7 @@ Cahier de consignes « Unification et évolution de l’application SMSI/GRC ».
   (DdA historique éditable, objectifs par processus, plans historiques, synthèse graphique du Pilotage), U3 (risques :
   études EBIOS RM par ateliers, fiche ISO/IEC 27005, acceptation formelle, registre ; ADR 0027, migration additive
   `016`), U4 (catalogue des relations, sens, archivés, responsables ; ADR 0028).
-- Contrôles : Vitest shared, ui, web et API sur PostgreSQL 17 et Playwright complet sur la pile Docker locale ; puis,
+- Contrôles : Vitest shared, ui, web et API sur PostgreSQL 18 et Playwright complet sur la pile Docker locale ; puis,
   le dépôt étant devenu public, [CI complète verte sur `6e921fe`](https://github.com/yousername-ha/suivi-audits/actions/runs/38146426254)
   (déclenchement manuel, sans PR). Détail : `PROJECT_STATUS.md`.
 - Fusionné dans `main` (11/10) par les PR #14 et #15 ; `main` = `claude-suivi-smsi`. Publiée le 12/10 : étiquette et [release v3.1.0](https://github.com/yousername-ha/suivi-audits/releases/tag/v3.1.0) (images signées) ; branches nettoyées (`main`, `claude-suivi-smsi`, `legacy` ; anciennes branches sous `archive/*`). Reste : validation du RSSI sur son serveur.

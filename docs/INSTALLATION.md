@@ -402,7 +402,8 @@ getent hosts <nom_dns>
 
 | Sous-dossier | Contenu | Accès |
 |---|---|---|
-| `postgres/` | la base de données : suivi, comptes, documents chiffrés, journal d'audit | base de données seule |
+| `postgres18/` | la base de données PostgreSQL 18 : suivi, comptes, documents chiffrés, journal d'audit | base de données seule |
+| `postgres/` | seulement sur un serveur mis à jour depuis une version en PostgreSQL 17 : l'**ancienne base**, conservée intacte après la migration (voir 12.1) | aucun usage |
 | `secrets/` | mots de passe internes et **clé de chiffrement des documents**, créés au premier démarrage | lecture par la base et l'application |
 | `caddy/` | certificats HTTPS et autorité de certification interne | frontal web seul |
 | `clamav/` | signatures de l'antivirus (facultatif) | antivirus seul |
@@ -879,6 +880,16 @@ sudo ./scripts/mettre-a-jour.sh
 **Résultat attendu** au bout de quelques minutes : `Mise à jour terminée : <ancienne> → <nouvelle>`, puis le chemin du rapport et celui de la sauvegarde faite avant la mise à jour. Pour une version précise plutôt que la dernière : `sudo ./scripts/mettre-a-jour.sh 3.2.0`.
 
 Si la mise à jour échoue, le script affiche `ERREUR : mise à jour vers … en échec`, puis `Retour arrière terminé : la version … est en service.` Rien n'est perdu ; transmettez le rapport indiqué à l'équipe projet. S'il demande de restaurer la sauvegarde, répondez `OUI` : sans cela, l'ancienne version risque de ne pas démarrer sur une base déjà modifiée.
+
+**3 bis. Passage de PostgreSQL 17 à 18** (versions 3.2 et suivantes, serveur encore en PostgreSQL 17). La migration est **automatique** pendant la mise à jour : après la sauvegarde chiffrée, l'application est arrêtée, la base est exportée avec PostgreSQL 17, recréée en PostgreSQL 18 dans `postgres18/`, restaurée, puis contrôlée (nombres de lignes identiques table par table). Durée : quelques minutes, proportionnelle à la taille de la base ; il faut deux fois la taille de la base d'espace libre, plus 512 Mo. **L'ancien dossier `postgres/` n'est jamais modifié** : en cas d'échec, la version précédente redémarre dessus. N'utilisez pas `docker compose up` seul pour cette montée de version : le démarrage est refusé tant que la base n'est pas migrée (message explicite).
+
+Après avoir vérifié l'application (connexion, données, téléchargement d'un document), libérez la place de l'ancienne base :
+
+<!-- ci: skip — l'ancienne base n'existe que sur un serveur migré depuis PostgreSQL 17 (testé par le job CI « montée de version ») -->
+```bash
+sudo ./scripts/nettoyer-ancienne-base-postgresql.sh
+```
+**Résultat attendu** : le volume à libérer, puis la demande de taper `SUPPRIMER`. Le script refuse d'agir si la base 18 est absente ou si l'application n'est pas en bon état. Cette suppression est définitive : après elle, un retour à la version précédente passe par la restauration d'une sauvegarde.
 
 **4. Vérifier l'état :**
 

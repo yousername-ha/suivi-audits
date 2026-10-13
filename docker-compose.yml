@@ -1,11 +1,12 @@
 # Suivi des audits SMSI ISO 27001 / HDS — déploiement de production.
-#   gateway (HTTPS + maintenance) -> web (interface interne) -> app (API Node.js) -> db (PostgreSQL 17)
+#   gateway (HTTPS + maintenance) -> web (interface interne) -> app (API Node.js) -> db (PostgreSQL 18)
 # Images versionnées publiées sur GHCR : mise à jour = changer APP_VERSION dans .env, puis
 #   docker compose pull && docker compose up -d
 # Réseaux : seul « gateway » est exposé ; « app » et « db » n'ont aucun accès sortant.
 # Données (EXPL-01) : toutes dans le dossier du serveur DATA_DIR (montages bind), aucune dans les conteneurs ni dans
 # des volumes Docker. Supprimer les conteneurs, les images ou lancer « docker compose down -v » ne les touche pas.
-#   DATA_DIR/postgres  base · secrets  secrets générés · caddy/data, caddy/config  certificats · clamav  signatures
+#   DATA_DIR/postgres18  base PostgreSQL 18 (postgres18/18/docker). L'ancien dossier postgres (PostgreSQL 17) n'est plus utilisé : il
+#                      est conservé intact après la migration jusqu'à scripts/nettoyer-ancienne-base-postgresql.sh · secrets  secrets générés · caddy/data, caddy/config  certificats · clamav  signatures
 #   DATA_DIR/etat      rapports des scripts du serveur (mises à jour, sauvegardes, version disponible)
 
 name: suivi-audits
@@ -45,7 +46,7 @@ services:
 
   db:
     <<: *hardening
-    image: postgres:17-alpine
+    image: postgres:18-alpine
     depends_on:
       init: { condition: service_completed_successfully }
     environment:
@@ -65,7 +66,9 @@ services:
       - -c
       - max_connections=50
     volumes:
-      - ${DATA_DIR:-/srv/suivi-audits/donnees}/postgres:/var/lib/postgresql/data
+      # PostgreSQL 18 : l'image range la base dans /var/lib/postgresql/18/docker (donc postgres18/18/docker sur le serveur) et
+      # refuse un dossier contenant déjà une base d'une version plus ancienne : d'où un dossier à part de l'ancien « postgres ».
+      - ${DATA_DIR:-/srv/suivi-audits/donnees}/postgres18:/var/lib/postgresql
       - ${DATA_DIR:-/srv/suivi-audits/donnees}/secrets:/run/secrets:ro
       - ./db/init:/docker-entrypoint-initdb.d:ro
     networks: [backend]
@@ -83,6 +86,27 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
+
+  # Migration PostgreSQL 17 -> 18 (ADR 0035) : conteneur éphémère lancé par scripts/lib-commun.sh (migrer_postgresql), jamais
+  # au démarrage normal. Moteur 17 sur l'ancien dossier de données, sans réseau ; exporte la base vers etat/migration-postgresql.
+  db-pg17:
+    profiles: ['migration-postgresql']
+    image: postgres:17-alpine
+    user: '70:70'
+    entrypoint: ['sh', '/migration/exporter-pg17.sh']
+    network_mode: none
+    restart: 'no'
+    security_opt: ['no-new-privileges:true']
+    volumes:
+      - ${DATA_DIR:-/srv/suivi-audits/donnees}/postgres:/var/lib/postgresql/data
+      - ./docker/migration-postgresql:/migration:ro
+      - ${DATA_DIR:-/srv/suivi-audits/donnees}/etat/migration-postgresql:/export
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+    cap_drop: [ALL]
+    shm_size: 128m
+    mem_limit: 1g
 
   app:
     <<: *hardening

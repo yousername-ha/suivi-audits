@@ -1,7 +1,7 @@
 /* Génère src/generated/mantine-vars.css : variables CSS du thème et classes de points de rupture (hiddenFrom/visibleFrom),
    servies en fichier statique. Mantine les injecte normalement dans des balises <style> ; la CSP stricte
    (style-src 'self') l'interdit : MantineProvider est configuré avec withCssVariables={false} et withGlobalClasses={false}.
-   Lancé avant « vite » et « vite build » (Node 24 exécute directement ce fichier TypeScript). */
+   Lancé avant « vite » et « vite build » (Node 26 exécute directement ce fichier TypeScript). */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';

@@ -28,7 +28,7 @@ Il n'y a **aucune** extension Fastify (cookies, CORS, swagger, multipart) : leur
 Le projet utilise les **dernières versions des lignes majeures éprouvées** plutôt que les toutes dernières majeures, sorties récemment :
 - TypeScript 5.9, Vite 7, Mantine 8, Vitest 3, ESLint 9, pnpm 10 ;
 - React 19, React Router 7, Fastify 5, zod 4 ;
-- Node 24 LTS et PostgreSQL 17.
+- Node 24 LTS et PostgreSQL 17. *Mise à jour : PostgreSQL 18 et Node 26 depuis la version 3.2 ([ADR 0035](0035-postgresql-18-migration-automatique.md)).*
 
 Les versions sont figées (`save-exact`), et le fichier `pnpm-lock.yaml` fait foi. Trivy (CI) bloque toute vulnérabilité critique, ce qui impose de monter de version dès qu'un correctif l'exige.
 

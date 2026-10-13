@@ -50,8 +50,10 @@ export function passwordProblems(pw: unknown, minLen: number, ctx: string[] = []
 }
 
 export const token = (n = 32) => crypto.randomBytes(n).toString('base64url');
-export const sha256 = (b: crypto.BinaryLike) => crypto.createHash('sha256').update(b).digest();
-export const sha256hex = (b: crypto.BinaryLike) => crypto.createHash('sha256').update(b).digest('hex');
+/** Octets hachables : chaîne ou vue sur un tampon (Buffer, Uint8Array…). */
+type Octets = string | NodeJS.ArrayBufferView;
+export const sha256 = (b: Octets) => crypto.createHash('sha256').update(b).digest();
+export const sha256hex = (b: Octets) => crypto.createHash('sha256').update(b).digest('hex');
 export function safeEqual(a: unknown, b: unknown): boolean {
   const x = Buffer.from(String(a)),
     y = Buffer.from(String(b));

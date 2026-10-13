@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 # Suivi des audits SMSI — frontal HTTPS (Caddy 2) avec l'interface web (React) compilée.
 # Caddy s'exécute sans privilège (utilisateur caddy, ports internes 8080 et 8443).
-ARG NODE_IMAGE=node:24-alpine
+ARG NODE_IMAGE=node:26-alpine
 ARG CADDY_IMAGE=caddy:2.11.7-alpine
 ARG GO_IMAGE=golang:1.26.9-alpine
 

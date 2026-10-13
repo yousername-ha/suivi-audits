@@ -94,7 +94,15 @@ api instantane "$URL" "$RUNNER_TEMP/apres-maj.json" "$RUNNER_TEMP/reference.json
 grep -q "\"version\": \"$CIBLE_VERSION\"" "$RUNNER_TEMP/apres-maj.json" || echec "/api/version n'indique pas $CIBLE_VERSION"
 dernier_rapport | grep -q '"resultat":"reussie"' || echec "rapport « reussie » absent"
 sudo docker compose exec -T app suivi controle-donnees > /dev/null || echec "contrôle des données (documents relus) en échec"
-sudo test -s /srv/suivi-audits/donnees/postgres/PG_VERSION || echec "la base n'est pas dans DATA_DIR"
+sudo test -s /srv/suivi-audits/donnees/postgres18/18/docker/PG_VERSION || echec "la base PostgreSQL 18 n'est pas dans DATA_DIR/postgres18"
+# Migration PostgreSQL 17 → 18 (ADR 0035) : seulement si la version de départ était encore en 17.
+if sudo test -s /srv/suivi-audits/donnees/postgres/PG_VERSION; then
+  [ "$(sudo cat /srv/suivi-audits/donnees/postgres/PG_VERSION)" = 17 ] || echec "l'ancien dossier postgres n'est pas resté en version 17 (il doit rester intact)"
+  [ "$(sudo docker compose exec -T -u postgres db psql -d suivi -Atc 'SHOW server_version_num' | cut -c1-2)" = 18 ] || echec "la base en service n'est pas PostgreSQL 18"
+  sudo test -s /srv/suivi-audits/donnees/etat/migration-postgresql/migration-17-vers-18.json || echec "rapport de migration PostgreSQL absent"
+  sudo test ! -e /srv/suivi-audits/donnees/etat/migration-postgresql/suivi-pg17.dump || echec "l'export non chiffré de la base n'a pas été supprimé"
+  echo "Migration PostgreSQL 17 → 18 vérifiée : base 18 en service, ancien dossier intact, export supprimé."
+fi
 api systeme "$URL" || true
 if [ "$VOLUMES_DEPART" -gt 0 ]; then
   sudo docker volume ls -q | grep -q '^suivi-audits_pgdata$' || echec "anciens volumes supprimés sans confirmation"
