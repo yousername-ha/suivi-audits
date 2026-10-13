@@ -24,7 +24,12 @@ describe('alertes du menu', () => {
   });
   it('n’affiche aucune pastille sans donnée ni droit de lecture', () => {
     expect(alertesDepuisSynthese(undefined, 0)).toEqual({});
-    const sain = { ...base, ecarts: { ...base.ecarts, enRetard: 0 }, indicateurs: { ...base.indicateurs!, nonAtteints: 0 }, pilotage: { ...base.pilotage!, risquesSansDecision: 0, actionsEnRetard: 0 } } as SyntheseApi;
+    const sain = {
+      ...base,
+      ecarts: { ...base.ecarts, enRetard: 0 },
+      indicateurs: { ...base.indicateurs!, nonAtteints: 0 },
+      pilotage: { ...base.pilotage!, risquesSansDecision: 0, actionsEnRetard: 0 },
+    } as SyntheseApi;
     expect(alertesDepuisSynthese(sain, 0)).toEqual({});
   });
   it('la racine est neutre quand seules des pastilles neutres existent', () => {

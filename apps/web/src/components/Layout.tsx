@@ -93,7 +93,8 @@ export function Layout({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (groupeDeLaPage) setOuvert('p:' + groupeDeLaPage);
   }, [groupeDeLaPage]);
-  const basculer = (cle: string, ouvre: boolean) => setOuvert((courant) => (ouvre ? cle : courant === cle ? null : courant));
+  const basculer = (cle: string, ouvre: boolean) =>
+    setOuvert((courant) => (ouvre ? cle : courant === cle ? null : courant));
   const sousOuvert = (prefixe: string) => ouvert?.startsWith(prefixe) ?? false;
   const [logoutError, setLogoutError] = useState<string | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);

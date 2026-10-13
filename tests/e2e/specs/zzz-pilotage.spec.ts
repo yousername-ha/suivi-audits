@@ -570,7 +570,7 @@ test('Pilotage : fournisseur évalué une fois, rattaché à deux périmètres a
   }
 });
 
-test('Pilotage : la bibliothèque propose l’import depuis l’outil de suivi, sans rien écrire sans confirmation', async ({
+test('Pilotage : les standards sont disponibles d’emblée, verrouillés, et se personnalisent par une copie', async ({
   browser,
 }) => {
   const ctx = await browser.newContext({ storageState: (await sessionAdmin(browser)).state, ignoreHTTPSErrors: true });
@@ -578,18 +578,56 @@ test('Pilotage : la bibliothèque propose l’import depuis l’outil de suivi, 
     problems = watchPage(page);
   try {
     await page.goto('/pilotage/bibliotheque');
-    const avant = await page.getByText(/référentiel\(s\) dans la bibliothèque/).textContent();
-    await page.getByRole('button', { name: 'Importer depuis l’outil de suivi', exact: true }).click();
-    const dialog = page.getByRole('dialog');
-    await expect(dialog.getByText(/Simulation : rien n’est écrit/)).toBeVisible();
+    // Un standard repris de l'outil de suivi (identifiant propre à l'essai, jamais un texte normatif).
+    const etat = await page.request.get('/api/legacy/state');
+    const state = await etat.json();
+    const me = await (await page.request.get('/api/auth/me')).json();
+    const suffixe = String(Date.now());
+    const frameworks = [
+      ...(state.frameworks ?? []),
+      {
+        id: `QA-STD-${suffixe}`,
+        name: `Standard fictif ${suffixe}`,
+        version: '1',
+        source: 'Organisation fictive — document fictif',
+        objectives: { '1': { title: 'Objectif fictif' } },
+        requirements: [{ id: 'QA-1', os: '1', theme: 'Thème fictif', text: 'Exigence fictive.', scope: '' }],
+      },
+    ];
+    const put = await page.request.put('/api/legacy/state', {
+      headers: { Origin: new URL(page.url()).origin, 'X-CSRF-Token': me.csrf, 'If-Match': etat.headers().etag! },
+      data: { ...state, frameworks },
+    });
+    expect(put.status()).toBe(204);
+    await page.reload();
+    const nom = `Standard fictif ${suffixe}`;
+    await expect(page.getByText('Standards disponibles', { exact: true })).toBeVisible();
+    // Aucune alerte rouge, aucun blocage : le bouton est actif sans motif ni confirmation.
     await expect(
-      dialog
-        .getByText('Aucun référentiel à importer dans l’outil de suivi.')
-        .or(dialog.getByText(/exigence\(s\)/).first()),
-    ).toBeVisible();
-    await dialog.getByRole('button', { name: 'Fermer', exact: true }).click();
+      page.locator('.mantine-Alert-root[data-variant]').filter({ hasText: /non importable|erreur/i }),
+    ).toHaveCount(0);
+    await page.getByRole('button', { name: `Ajouter ${nom} à la bibliothèque`, exact: true }).click();
+    const ligne = page.getByRole('row').filter({ hasText: nom });
+    await expect(ligne.getByText('Version source verrouillée')).toBeVisible();
+    // Une version source n'offre pas d'ajout d'exigence : seule la copie se personnalise.
+    await expect(ligne.getByRole('button', { name: `Ajouter une exigence à ${nom}`, exact: true })).toHaveCount(0);
+    await ligne.getByRole('button', { name: `Créer une copie personnalisable de ${nom}`, exact: true }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByLabel('Nom de la copie').fill(`Copie ${suffixe}`);
+    await dialog.getByRole('button', { name: 'Créer la copie', exact: true }).click();
     await expect(dialog).toHaveCount(0);
-    await expect(page.getByText(/référentiel\(s\) dans la bibliothèque/)).toHaveText(avant!);
+    const copie = page.getByRole('row').filter({ hasText: `Copie ${suffixe}` });
+    await expect(copie.getByText('Copie de l’organisation')).toBeVisible();
+    await copie.getByRole('button', { name: `Ajouter une exigence à Copie ${suffixe}`, exact: true }).click();
+    const ajout = page.getByRole('dialog');
+    await ajout.getByLabel('Ou nouveau domaine').fill('Mesures locales');
+    await ajout.getByLabel('Identifiant de l’exigence').fill('LOC-1');
+    await ajout.getByLabel('Intitulé').fill('Mesure propre à l’organisation fictive');
+    await ajout.getByRole('button', { name: 'Publier la nouvelle version', exact: true }).click();
+    await expect(ajout).toHaveCount(0);
+    await expect(copie.getByRole('cell', { name: '2', exact: true }).first()).toBeVisible();
+    // L'original reste en version 1 et verrouillé.
+    await expect(ligne.getByRole('cell', { name: '1', exact: true }).first()).toBeVisible();
     expect(problems).toEqual([]);
   } finally {
     await ctx.close();

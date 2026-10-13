@@ -18,6 +18,9 @@ interface Referentiel {
   requirements: number;
   scopes: number;
   source: { status: string; organisation: string };
+  /** Version source : verrouillée, seule une copie se personnalise. */
+  locked: boolean;
+  derivedFrom: { identifier: string; name: string; version: number } | null;
 }
 interface Rattachement {
   frameworkId: string;
@@ -58,7 +61,7 @@ const STATUTS: Record<string, string> = {
   official_verified: 'Source officielle vérifiée',
   licensed_import: 'Importé sous licence',
   organisation: 'Choix de l’organisation',
-  unverified: 'Source non vérifiée',
+  unverified: 'Repris de l’outil de suivi',
 };
 const versions = (n: number) =>
   Array.from({ length: n }, (_, i) => ({ value: String(n - i), label: `Version ${n - i}` }));
@@ -69,7 +72,8 @@ export function Bibliotheque() {
     qc = useQueryClient(),
     modifier = can('conformite', 'modifier'),
     [import_, setImport] = useState<{ cible: Referentiel | null } | null>(null),
-    [depuisSuivi, setDepuisSuivi] = useState(false),
+    [copie, setCopie] = useState<Referentiel | null>(null),
+    [ajout, setAjout] = useState<Referentiel | null>(null),
     [consulte, setConsulte] = useState<{ cible: Referentiel; version: string } | null>(null);
   const liste = useQuery({
     queryKey: ['library', 'frameworks'],
@@ -93,15 +97,9 @@ export function Bibliotheque() {
       <ErrorAlert error={liste.error ?? exigences.error} />
       <Group justify="space-between">
         <Text>{liste.data ? `${liste.data.length} référentiel(s) dans la bibliothèque` : 'Chargement…'}</Text>
-        {modifier && (
-          <Group>
-            <Button variant="default" onClick={() => setDepuisSuivi(true)}>
-              Importer depuis l’outil de suivi
-            </Button>
-            <Button onClick={() => setImport({ cible: null })}>Importer un référentiel</Button>
-          </Group>
-        )}
+        {modifier && <Button onClick={() => setImport({ cible: null })}>Importer un référentiel</Button>}
       </Group>
+      {modifier && <StandardsDisponibles onDone={() => qc.invalidateQueries({ queryKey: ['library'] })} />}
       <DataTable label="Référentiels de la bibliothèque, défilement horizontal possible">
         <Table>
           <Table.Thead>
@@ -127,9 +125,14 @@ export function Bibliotheque() {
                 <Table.Td>{f.requirements}</Table.Td>
                 <Table.Td>{f.scopes}</Table.Td>
                 <Table.Td>
-                  <StatusChip etat={f.source.status === 'unverified' ? 'attention' : 'neutre'}>
-                    {STATUTS[f.source.status] ?? f.source.status}
-                  </StatusChip>
+                  <Group gap="xs">
+                    <StatusChip etat={f.locked ? 'neutre' : 'succes'}>
+                      {f.locked ? 'Version source verrouillée' : 'Copie de l’organisation'}
+                    </StatusChip>
+                    <Text size="xs" c="dimmed">
+                      {f.derivedFrom ? `Copie de ${f.derivedFrom.name}` : (STATUTS[f.source.status] ?? f.source.status)}
+                    </Text>
+                  </Group>
                 </Table.Td>
                 <Table.Td>
                   <Group gap="xs">
@@ -145,10 +148,30 @@ export function Bibliotheque() {
                       <Button
                         size="xs"
                         variant="default"
-                        aria-label={`Publier une nouvelle version de ${f.name}`}
+                        aria-label={`Créer une copie personnalisable de ${f.name}`}
+                        onClick={() => setCopie(f)}
+                      >
+                        Créer une copie
+                      </Button>
+                    )}
+                    {modifier && !f.locked && (
+                      <Button
+                        size="xs"
+                        variant="default"
+                        aria-label={`Ajouter une exigence à ${f.name}`}
+                        onClick={() => setAjout(f)}
+                      >
+                        Ajouter une exigence
+                      </Button>
+                    )}
+                    {modifier && (
+                      <Button
+                        size="xs"
+                        variant="subtle"
+                        aria-label={`Importer une nouvelle édition de ${f.name}`}
                         onClick={() => setImport({ cible: f })}
                       >
-                        Nouvelle version
+                        Nouvelle édition
                       </Button>
                     )}
                   </Group>
@@ -181,10 +204,24 @@ export function Bibliotheque() {
           </Stack>
         )}
       </Modal>
-      {depuisSuivi && (
-        <ImportOutilSuivi
-          onClose={() => setDepuisSuivi(false)}
-          onDone={() => qc.invalidateQueries({ queryKey: ['library'] })}
+      {copie && (
+        <CopieReferentiel
+          cible={copie}
+          onClose={() => setCopie(null)}
+          onDone={async () => {
+            setCopie(null);
+            await qc.invalidateQueries({ queryKey: ['library'] });
+          }}
+        />
+      )}
+      {ajout && (
+        <AjoutExigence
+          cible={ajout}
+          onClose={() => setAjout(null)}
+          onDone={async () => {
+            setAjout(null);
+            await qc.invalidateQueries({ queryKey: ['library'] });
+          }}
         />
       )}
       {import_ && (
@@ -340,8 +377,12 @@ export function ReferentielsDuPerimetre({ smsi }: { smsi: string }) {
     queryKey: ['library', 'frameworks'],
     queryFn: () => get<Referentiel[]>('/api/library/frameworks'),
   });
+  const standards = useStandards(can('conformite', 'modifier'));
   const libres = (biblio.data ?? []).filter((f) => !(rattaches.data ?? []).some((r) => r.frameworkId === f.id));
   const selection = libres.find((f) => f.id === choix);
+  // Standards pas encore dans la bibliothèque : proposés à la sélection, ajoutés en version source verrouillée au rattachement.
+  const standardsOfferts = (standards.data ?? []).filter((c) => !c.duplicate && !c.error);
+  const standardChoisi = standardsOfferts.find((c) => 'standard:' + c.definition.identifier === choix);
   const agir = async (action: () => Promise<unknown>) => {
     try {
       setErreur(null);
@@ -404,16 +445,22 @@ export function ReferentielsDuPerimetre({ smsi }: { smsi: string }) {
           )}
         </Group>
       ))}
-      {admin && libres.length > 0 && (
+      {admin && (libres.length > 0 || standardsOfferts.length > 0) && (
         <Group align="flex-end">
           <Select
             label="Rattacher un référentiel de la bibliothèque"
             placeholder="Choisir un référentiel"
-            data={libres.map((f) => ({ value: f.id, label: f.name }))}
+            data={[
+              ...libres.map((f) => ({ value: f.id, label: f.name })),
+              ...standardsOfferts.map((c) => ({
+                value: 'standard:' + c.definition.identifier,
+                label: `${c.definition.name} (standard)`,
+              })),
+            ]}
             value={choix}
             onChange={(v) => {
               setChoix(v);
-              setVersion(v ? String(libres.find((f) => f.id === v)!.version) : null);
+              setVersion(v && libres.some((f) => f.id === v) ? String(libres.find((f) => f.id === v)!.version) : null);
             }}
           />
           {selection && (
@@ -426,9 +473,19 @@ export function ReferentielsDuPerimetre({ smsi }: { smsi: string }) {
             />
           )}
           <Button
-            disabled={!selection || !version}
+            disabled={!(selection && version) && !standardChoisi}
             onClick={async () => {
-              await rattacher(selection!.id, Number(version));
+              if (standardChoisi) {
+                // Standard de l'outil de suivi : ajouté à la bibliothèque (version source verrouillée), puis rattaché.
+                try {
+                  setErreur(null);
+                  const ajoute = await adopterStandard(standardChoisi.definition.identifier);
+                  await rattacher(ajoute.id, ajoute.version);
+                } catch (e) {
+                  setErreur(e);
+                  return;
+                }
+              } else await rattacher(selection!.id, Number(version));
               setChoix(null);
               setVersion(null);
             }}
@@ -530,7 +587,7 @@ export function PromotionBouton({ smsi, id }: { smsi: string; id: string }) {
   );
 }
 
-interface CandidatSuivi {
+export interface CandidatSuivi {
   definition: { name: string; identifier: string; source: { status: string; organisation: string; version: string } };
   previewId: string;
   requirements: number;
@@ -542,23 +599,30 @@ interface CandidatSuivi {
   error: string | null;
 }
 
-/** Référentiels déjà saisis dans l'outil de suivi (clauses ISO 27001, Annexe A, HDS, ReCyF…) : simulation, puis
-    importation explicite, un référentiel à la fois. Seuls les champs présents dans l'outil de suivi sont repris. */
-function ImportOutilSuivi({ onClose, onDone }: { onClose: () => void; onDone: () => unknown }) {
-  const qc = useQueryClient(),
-    [erreur, setErreur] = useState<unknown>(null),
-    [fait, setFait] = useState<string[]>([]);
-  const q = useQuery({
+/** Standards disponibles : lus dans l'outil de suivi (aucun texte normatif n'est fourni par l'application). Un geste les
+    ajoute à la bibliothèque en version source verrouillée ; un standard dont les données sont incomplètes est indiqué
+    sans alerte et sans bloquer les autres. */
+export function useStandards(actif: boolean) {
+  return useQuery({
     queryKey: ['library', 'tracker-import'],
     queryFn: () => get<CandidatSuivi[]>('/api/library/tracker-import'),
+    enabled: actif,
+    retry: false,
   });
-  const importer = async (c: CandidatSuivi) => {
+}
+export async function adopterStandard(identifier: string) {
+  return api<{ id: string; version: number }>('POST', '/api/library/standards/adopt', { body: { identifier } });
+}
+function StandardsDisponibles({ onDone }: { onDone: () => unknown }) {
+  const qc = useQueryClient(),
+    [erreur, setErreur] = useState<unknown>(null),
+    q = useStandards(true);
+  const proposes = (q.data ?? []).filter((c) => !c.duplicate);
+  if (!proposes.length) return null;
+  const adopter = async (c: CandidatSuivi) => {
     try {
       setErreur(null);
-      await api('POST', '/api/library/tracker-import', {
-        body: { identifier: c.definition.identifier, previewId: c.previewId, confirm: 'IMPORTER' },
-      });
-      setFait((f) => [...f, c.definition.identifier]);
+      await adopterStandard(c.definition.identifier);
       await qc.invalidateQueries({ queryKey: ['library', 'tracker-import'] });
       await onDone();
     } catch (e) {
@@ -566,55 +630,167 @@ function ImportOutilSuivi({ onClose, onDone }: { onClose: () => void; onDone: ()
     }
   };
   return (
-    <Modal opened onClose={onClose} size="lg" title="Importer depuis l’outil de suivi">
-      <Stack>
-        <Text size="sm">
-          Simulation : rien n’est écrit tant que vous n’avez pas confirmé un référentiel. Les référentiels importés
-          portent le statut « non vérifié » et ne sont jamais présentés comme normatifs ; seuls les intitulés ou textes
-          saisis dans l’outil de suivi sont repris.
-        </Text>
-        <ErrorAlert error={erreur ?? q.error} />
-        {q.data && !q.data.length && <Text>Aucun référentiel à importer dans l’outil de suivi.</Text>}
-        {(q.data ?? []).map((c) => (
-          <Stack key={c.definition.identifier} gap="xs">
-            <Group justify="space-between">
-              <Text fw={600}>{c.definition.name}</Text>
-              {c.duplicate ? (
-                <StatusChip etat="succes">
-                  {fait.includes(c.definition.identifier) ? 'Importé' : 'Déjà dans la bibliothèque'}
-                </StatusChip>
-              ) : (
-                <ConfirmButton
-                  size="xs"
-                  color="orange"
-                  disabled={!c.canPublish}
-                  message={`Importer « ${c.definition.name} » (${c.requirements} exigences) dans la bibliothèque, en version 1 ? Cette version sera immuable.`}
-                  onConfirm={() => importer(c)}
-                >
-                  {`Importer ${c.definition.name}`}
-                </ConfirmButton>
-              )}
-            </Group>
-            <Text size="sm">
-              {c.requirements} exigence(s) · {c.domains} domaine(s) · source : {c.definition.source.organisation},
-              version {c.definition.source.version}
+    <Stack gap="xs" aria-label="Standards disponibles">
+      <Text fw={600}>Standards disponibles</Text>
+      <Text size="sm">
+        Repris de l’outil de suivi : les intitulés et textes qui y sont saisis, sans rien ajouter. Une fois ajouté, un
+        standard est une version source verrouillée ; pour le personnaliser, créez-en une copie.
+      </Text>
+      <ErrorAlert error={erreur} />
+      {proposes.map((c) => (
+        <Group key={c.definition.identifier} justify="space-between" wrap="nowrap">
+          <div>
+            <Text fw={500}>{c.definition.name}</Text>
+            <Text size="sm" c="dimmed">
+              {c.requirements} exigence(s) · {c.domains} domaine(s) · {c.definition.source.organisation}
+              {c.error ? ` · non repris : ${c.error}` : ''}
             </Text>
-            {c.error && (
-              <Alert color="red" title="Référentiel non importable">
-                {c.error}
-              </Alert>
-            )}
-            {c.warning && <Alert color="orange">{c.warning}</Alert>}
-            {c.notes.map((n) => (
-              <Text key={n} size="sm">
-                {n}
-              </Text>
-            ))}
-          </Stack>
-        ))}
+          </div>
+          <Button
+            size="xs"
+            variant="default"
+            disabled={!!c.error}
+            aria-label={`Ajouter ${c.definition.name} à la bibliothèque`}
+            onClick={() => adopter(c)}
+          >
+            Ajouter à la bibliothèque
+          </Button>
+        </Group>
+      ))}
+    </Stack>
+  );
+}
+
+function CopieReferentiel({
+  cible,
+  onClose,
+  onDone,
+}: {
+  cible: Referentiel;
+  onClose: () => void;
+  onDone: () => Promise<void>;
+}) {
+  const [nom, setNom] = useState(`${cible.name} — version de l’organisation`.slice(0, 200)),
+    [erreur, setErreur] = useState<unknown>(null),
+    [envoi, setEnvoi] = useState(false);
+  const creer = async () => {
+    setEnvoi(true);
+    try {
+      setErreur(null);
+      await api('POST', `/api/library/frameworks/${cible.id}/copy`, { body: { name: nom } });
+      await onDone();
+    } catch (e) {
+      setErreur(e);
+    } finally {
+      setEnvoi(false);
+    }
+  };
+  return (
+    <Modal opened onClose={onClose} title={`Créer une copie de ${cible.name}`}>
+      <Stack>
+        <ErrorAlert error={erreur} />
+        <Text size="sm">
+          {cible.locked
+            ? 'Cette version source reste verrouillée et inchangée. '
+            : 'La copie repart de la version courante de cette copie. '}
+          La copie est un référentiel de l’organisation : vous pourrez y ajouter vos propres exigences et mesures, puis
+          la rattacher à un périmètre.
+        </Text>
+        <TextInput label="Nom de la copie" value={nom} onChange={(e) => setNom(e.currentTarget.value)} />
         <Group justify="flex-end">
           <Button variant="default" onClick={onClose}>
-            Fermer
+            Annuler
+          </Button>
+          <Button loading={envoi} disabled={!nom.trim()} onClick={creer}>
+            Créer la copie
+          </Button>
+        </Group>
+      </Stack>
+    </Modal>
+  );
+}
+
+function AjoutExigence({
+  cible,
+  onClose,
+  onDone,
+}: {
+  cible: Referentiel;
+  onClose: () => void;
+  onDone: () => Promise<void>;
+}) {
+  const def = useQuery({
+    queryKey: ['library', 'frameworks', cible.id, cible.version],
+    queryFn: () =>
+      get<{ definition: FrameworkDefinition }>(`/api/library/frameworks/${cible.id}/versions/${cible.version}`),
+  });
+  const [domaine, setDomaine] = useState<string | null>(null),
+    [nouveau, setNouveau] = useState(''),
+    [id, setId] = useState(''),
+    [titre, setTitre] = useState(''),
+    [description, setDescription] = useState(''),
+    [erreur, setErreur] = useState<unknown>(null),
+    [envoi, setEnvoi] = useState(false);
+  const domaines = def.data?.definition.domains ?? [];
+  const valide = id.trim() && titre.trim() && (nouveau.trim() || domaine);
+  const enregistrer = async () => {
+    setEnvoi(true);
+    try {
+      setErreur(null);
+      await api('POST', `/api/library/frameworks/${cible.id}/requirements`, {
+        body: {
+          expectedVersion: cible.version,
+          ...(nouveau.trim() ? { newDomainLabel: nouveau.trim() } : { domain: domaine }),
+          id: id.trim(),
+          title: titre.trim(),
+          description,
+        },
+      });
+      await onDone();
+    } catch (e) {
+      setErreur(e);
+    } finally {
+      setEnvoi(false);
+    }
+  };
+  return (
+    <Modal opened onClose={onClose} size="lg" title={`Ajouter une exigence à ${cible.name}`}>
+      <Stack>
+        <ErrorAlert error={erreur ?? def.error} />
+        <Text size="sm">
+          Chaque ajout publie une nouvelle version immuable de la copie. Un identifiant déjà présent est remplacé dans
+          cette nouvelle version ; les versions précédentes restent consultables.
+        </Text>
+        <Select
+          label="Domaine"
+          searchable
+          clearable
+          data={domaines.map((d) => ({ value: d.id, label: d.label }))}
+          value={domaine}
+          onChange={setDomaine}
+          disabled={!!nouveau.trim()}
+        />
+        <TextInput
+          label="Ou nouveau domaine"
+          description="Libellé du domaine à créer."
+          value={nouveau}
+          onChange={(e) => setNouveau(e.currentTarget.value)}
+        />
+        <TextInput label="Identifiant de l’exigence" value={id} onChange={(e) => setId(e.currentTarget.value)} />
+        <TextInput label="Intitulé" value={titre} onChange={(e) => setTitre(e.currentTarget.value)} />
+        <Textarea
+          label="Description"
+          autosize
+          minRows={3}
+          value={description}
+          onChange={(e) => setDescription(e.currentTarget.value)}
+        />
+        <Group justify="flex-end">
+          <Button variant="default" onClick={onClose}>
+            Annuler
+          </Button>
+          <Button loading={envoi} disabled={!valide} onClick={enregistrer}>
+            Publier la nouvelle version
           </Button>
         </Group>
       </Stack>

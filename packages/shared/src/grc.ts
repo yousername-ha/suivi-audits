@@ -201,6 +201,12 @@ export const FrameworkDefinition = z
     name: label,
     identifier: z.string().min(1).max(100),
     source: OfficialSource,
+    /** Présent seulement sur une copie de l'organisation : référentiel d'origine. Une version sans cette marque est une
+        version source, verrouillée : on ne la modifie pas, on en crée une copie. */
+    derivedFrom: z
+      .object({ identifier: z.string().min(1).max(100), name: label, version: z.number().int().positive() })
+      .strict()
+      .optional(),
     domains: z.array(z.object({ id: GrcKey, label }).strict()).max(1000),
     requirements: z
       .array(
@@ -239,6 +245,25 @@ export const LibraryFrameworkDefinition = FrameworkDefinition.superRefine((d, c)
     });
 });
 export type LibraryFrameworkDefinition = z.infer<typeof LibraryFrameworkDefinition>;
+/** Copie personnalisable d'un référentiel de la bibliothèque : nom de la copie, identifiant facultatif. */
+export const LibraryCopyBody = z
+  .object({ name: label, identifier: z.string().trim().min(1).max(100).optional() })
+  .strict();
+export type LibraryCopyBody = z.infer<typeof LibraryCopyBody>;
+/** Ajout ou modification d'une exigence (mesure) dans une copie : domaine existant, ou nouveau domaine par son libellé. */
+export const LibraryRequirementBody = z
+  .object({
+    expectedVersion: z.number().int().positive(),
+    domain: GrcKey.optional(),
+    newDomainLabel: label.optional(),
+    id: z.string().trim().min(1).max(120),
+    title: label,
+    description: z.string().max(20000).default(''),
+    applicability: z.string().max(2000).default(''),
+  })
+  .strict()
+  .refine((b) => !!b.domain !== !!b.newDomainLabel, 'Indiquez un domaine existant ou le libellé d’un nouveau domaine.');
+export type LibraryRequirementBody = z.infer<typeof LibraryRequirementBody>;
 
 /** Correspondance organisationnelle entre deux exigences de la bibliothèque (ADR 0031) : validée une fois pour toute
     l'organisation. La validation est une décision humaine, jamais une conséquence d'une importation ni d'une IA. */
