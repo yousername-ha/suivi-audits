@@ -33,4 +33,4 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0027](0027-risques-ebios-rm-iso27005.md) | Risques : étude EBIOS RM et processus ISO/IEC 27005 distincts, registre commun (lot U3) | Proposée |
 | [0028](0028-liens-transverses.md) | Liens transverses : catalogue des relations autorisées, sens explicite (lot U4) | Proposée |
 | [0029](0029-recette-automatisee.md) | Recette automatisée : script serveur, performance, accessibilité axe-core (dépendance de test) | Proposée |
-| [0030](0030-perimetre-agnostique-qualite-fournisseurs.md) | Périmètre agnostique (SMI), groupe « Qualité » du Pilotage et module Fournisseurs | Proposée |
+| [0030](0030-perimetre-agnostique-qualite-fournisseurs.md) | Périmètres gérés à part (SMI), groupe « Qualité » du Pilotage et fournisseurs transverses | Proposée |

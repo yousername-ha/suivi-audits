@@ -1,7 +1,6 @@
 # Cadrage — module Qualité ISO 9001 (système de management intégré)
 
-**Statut** : réflexion du 13/10/2026, à la demande du RSSI, **mise à jour le même jour avec ses premières décisions
-(§1 bis)**. Aucun code, aucune migration. L'ADR 0030 ([proposée](../adr/0030-perimetre-agnostique-qualite-fournisseurs.md))
+**Statut** : réflexion du 13/10/2026, à la demande du RSSI, **mise à jour le même jour avec ses décisions (§1 bis)**. Aucun code, aucune migration. L'ADR 0030 ([proposée](../adr/0030-perimetre-agnostique-qualite-fournisseurs.md))
 consigne les décisions structurantes ; les lots (§8) ne démarrent qu'après les réponses restantes du §9.
 
 ## 1. Cadre et règles de ce travail
@@ -24,16 +23,19 @@ consigne les décisions structurantes ; les lots (§8) ne démarrent qu'après l
 
 ## 1 bis. Décisions du RSSI (13/10/2026)
 
-| Id | Décision                                                                                                                                                                                                  | Effet sur ce cadrage                                                                  |
-| -- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| D1 | Le référentiel de sécurité est l'**ISO/IEC 27001:2022**.                                                                                                                                                   | Plus d'ambiguïté d'édition.                                                           |
-| D2 | **Groupe « Qualité » dans le Pilotage**, sans nouveau module de droits.                                                                                                                                    | §4.8 : option (a) retenue.                                                            |
-| D3 | La solution est **agnostique au démarrage** : si le SMQ et le SMSI ont le même périmètre, ils le **partagent au sein d'un SMI** ; sinon, chacun garde le sien.                                            | §4.9 (nouveau) : le périmètre porte les référentiels actifs, rien n'est dupliqué.    |
-| D4 | Créer un **module « Gestion des fournisseurs » dans le Pilotage**, en lien avec les critères de l'ISO/IEC 27001:2022, de l'HDS et de l'ISO 9001 sur la gestion des fournisseurs.                           | §4.4 réécrit ; ce module apporte de la valeur au SMSI **avant** même le référentiel 9001. |
-| D5 | **Pas de grille d'évaluation des fournisseurs pour le moment.**                                                                                                                                            | Le module est livré **sans grille** : critères saisis par l'organisme, jamais inventés. |
-| D6 | Le texte de la **révision 2026** sera transmis « bientôt ».                                                                                                                                                | Q9 reste ouverte ; rien n'en est supposé d'ici là.                                    |
+| Id | Décision | Effet sur ce cadrage |
+| -- | -------- | -------------------- |
+| D1 | Le référentiel de sécurité est l'**ISO/IEC 27001:2022**. | Plus d'ambiguïté d'édition. |
+| D2 | **Groupe « Qualité » dans le Pilotage**, sans nouveau module de droits. | §4.8. |
+| D3 | La solution est **agnostique au démarrage** : si le SMQ et le SMSI ont le même périmètre, ils le **partagent au sein d'un SMI**. | §4.9. |
+| D4 | **Gestion des périmètres d'un côté**, à laquelle on **attache un référentiel, une méthode de risque, etc.**, pour créer un SMSI, un SMQ, un SMI… | §4.9 : nouvelle page « Périmètres » et, plus loin, bibliothèque de référentiels. |
+| D5 | **Gestion des fournisseurs à part**, dans le Pilotage, en lien avec les critères de l'ISO/IEC 27001:2022, de l'HDS et de l'ISO 9001. Un fournisseur évalué peut être rattaché à **plusieurs périmètres** ; **son évaluation ne change pas selon le périmètre**. | §4.4 réécrit : fournisseur et évaluation **hors périmètre** (migration additive). |
+| D6 | **Pas de grille d'évaluation des fournisseurs pour le moment.** | Livraison **sans grille**, critères saisis par l'organisme. |
+| D7 | Granularité des exigences 9001 : **article + alinéas énumérés** (Q3). | §4.1. |
+| D8 | **PESTEL ajouté**, même si la norme ne l'exige pas (Q7). | §4.5. |
+| D9 | Le texte de la **révision 2026** sera transmis « bientôt ». | Q9 reste ouverte ; rien n'en est supposé d'ici là. |
 
-Restent ouvertes (§9) : Q3 granularité des exigences, Q7 axes du PESTEL, Q8 opportunités de 6.1, Q10 design.
+Restent ouvertes (§9) : Q8 opportunités de 6.1, Q10 design, et trois questions nées de D4 et D5 (Q12 à Q14).
 
 ## 2. Ce que demande le RSSI, et ce que la norme en dit
 
@@ -64,8 +66,9 @@ Constat de lecture du code et de l'inventaire fonctionnel, pas une preuve de con
 | Processus                       | Objet `process` (mission, entité, périmètre), vue « Processus », cartographie des processus par familles pilotage / réalisation / support (FCT-008, FCT-019)                                          | Pas de champs « entrées, sorties, ressources, séquence » ; pas d'indicateurs de santé par processus sur la carte                                                    |
 | Indicateurs et objectifs        | Objets `objective` et `indicator`, séries de valeurs, calcul de l'état atteint / non atteint / non mesuré, graphiques SVG du tableau de bord (FCT-019, FCT-041)                                     | Rattachement indicateur ↔ processus à préciser ; pas de vue par processus ; certains calculs automatiques lisent les fournisseurs historiques (`saasMfa`, `saasSso`)   |
 | Contexte et parties intéressées | Objets `context` (enjeux, exclusions), `stakeholder` (besoins, exigences), `swot` ; enjeux interne/externe sur la carte (FCT-018, FCT-008)                                                           | Pas de classement des enjeux externes par facteur ; pas de revue périodique tracée                                                                                  |
-| Fournisseurs                    | Registre **historique** dans `app_state` (contrôles avec fréquence, dernière date, résultat), références déjà résolues par le registre commun, plan de contrôle récurrent (FCT-024), `ecosystem_party` pour EBIOS (FCT-031, **NON VÉRIFIÉ**, aucun parcours Sauge) | Module Fournisseurs du Pilotage à créer (décision D4, §4.4) ; aucune grille d'évaluation (D5) |
-| Référentiels et mesures         | Référentiels publiés immuables, exigences, mesures (module audit), correspondances révisables, applicabilité ; livrés **vides**, importés par l'administrateur (FCT-020, FCT-030)                      | Aucun référentiel 9001 ; la cartographie exclut volontairement l'ISO 9001 de ses filtres (ADR 0013, point 7 : à réviser)                                            |
+| Périmètres | Table `grc_smsis` (nom, texte du périmètre, visibilité, méthode de risque, fuseau, politique métier, membres) ; API de lecture **et de création** (`/api/grc/smsis`) ; un périmètre « Pilotage de l'organisation » créé à l'initialisation | **Aucun écran de gestion** : l'interface ne fait que lire la liste (sélecteur). Pas de nature (SMSI, SMQ…), pas de rattachement de référentiel hors publication dans le périmètre (D4) |
+| Fournisseurs | Registre **historique** à l'échelle de l'instance dans `app_state` (contrôles avec fréquence, dernière date, résultat), références déjà résolues par le registre commun, `ecosystem_party` pour EBIOS (FCT-031, **NON VÉRIFIÉ**, aucun parcours Sauge) ; les objets du registre commun (contrôle, action, série) portent un **périmètre obligatoire** | Gestion des fournisseurs **hors périmètre** à créer (D5, §4.4) ; aucune grille d'évaluation (D6) |
+| Référentiels et mesures | Référentiels **publiés dans chaque périmètre** (versions immuables par périmètre), exigences, mesures (module audit), correspondances révisables et validées par périmètre, applicabilité ; livrés **vides**, importés par l'administrateur (FCT-020, FCT-030) | Aucun référentiel 9001 ; pas de bibliothèque commune à plusieurs périmètres ; la cartographie exclut volontairement l'ISO 9001 de ses filtres (ADR 0013, point 7 : à réviser) |
 | Actions et récurrences          | Objet `task_series`, moteur de récurrence (unité, intervalle, fuseau, fin), occurrences idempotentes, cinq vues, rappels internes (FCT-021)                                                          | Aucun modèle de série rattaché à un article de norme                                                                                                                |
 | Audit, revue, amélioration      | Audit interne et programme (FCT-028, partiel), revue de direction (FCT-037, non vérifié de bout en bout), causes, actions, efficacité, clôture (FCT-025)                                              | Entrées de revue propres à la 9001 (9.3.2) ; audit combiné SMSI + SMQ                                                                                              |
 | Liens transverses               | Catalogue de relations : toute paire non prévue est refusée (422), « Lié à » reste ouvert (FCT-043, ADR 0028)                                                                                         | Paires nouvelles à déclarer explicitement (§4.6)                                                                                                                    |
@@ -82,8 +85,8 @@ fournisseurs) du même périmètre, éventuellement partagé avec le SMSI.
 
 - Une publication de référentiel **importée par l'administrateur** (mécanisme existant, publications immuables), **livrée
   vide**. Les exigences portent le numéro d'article et l'intitulé choisi par l'organisme ; aucun texte de la norme n'est
-  embarqué. Granularité : à décider (§9, Q3) ; je recommande l'article, et l'alinéa seulement là où la norme énumère
-  (4.4.1 a à h, 6.2.2 a à e, 9.1.3 a à g).
+  embarqué. Granularité (**décision D7**) : l'article **et** les alinéas là où la norme énumère (par exemple 4.4.1 a à h,
+  6.2.2 a à e, 9.1.3 a à g, 8.4.1 à 8.4.3).
 - L'édition est une **donnée** (version de la publication), jamais une constante du code : c'est ce qui permet d'accueillir
   l'édition 2026 sans refonte (§6).
 - **Correspondances 9001 ↔ 27001** : aucune livrée. Elles sont rédigées et validées par le RSSI dans l'écran existant
@@ -114,47 +117,55 @@ fournisseurs) du même périmètre, éventuellement partagé avec le SMSI.
   réclamations, retours) est choisie par l'organisme. Aucune formule imposée ; saisie manuelle ou import.
 - Les chiffres restent des indicateurs d'aide au pilotage : jamais un « taux de conformité » certifié.
 
-### 4.4 Module « Gestion des fournisseurs » du Pilotage (décisions D4 et D5)
+### 4.4 Gestion des fournisseurs du Pilotage, indépendante des périmètres (décisions D5 et D6)
 
-**Constat de lecture qui oriente le choix** : le registre fournisseurs vit dans l'outil historique (`suppliers`, avec pour
-chaque fournisseur des contrôles à fréquence, dernière date et résultat), mais les références vers lui sont **déjà résolues**
-par le registre commun (`liens.ts`, `apps/api/src/pilotage/legacy.ts`), et le Pilotage sait déjà afficher et modifier une
-donnée historique **sans la copier** (la DdA, FCT-030). Le plan de contrôle (`control`, FCT-024) sait déjà planifier une
-vérification récurrente, en enregistrer le résultat de façon immuable et créer en même temps le constat et l'action.
+**Principe** : le fournisseur et son évaluation appartiennent à **l'organisation**, pas à un périmètre. Un périmètre ne fait que
+**rattacher** des fournisseurs et **lire** leur évaluation. Un fournisseur évalué une fois l'est pour tous les périmètres où
+il est rattaché ; son évaluation ne change pas selon le périmètre.
+
+**Correction de ma proposition précédente.** J'avais prévu des critères sous forme de contrôles du plan de contrôle, sans
+migration. Or les objets du registre commun (`control`, `action`, `task_series`) ont un périmètre **obligatoire**
+(`smsi_id`) : y stocker l'évaluation la rattacherait à un périmètre, ce que D5 interdit. Cette partie de la proposition **ne
+tient plus**. En revanche le registre historique des fournisseurs est déjà à l'échelle de l'instance.
 
 **Proposition** (à confirmer à l'ADR) :
 
-- **Registre** : même méthode que la DdA : le module Fournisseurs du Pilotage présente et édite le registre existant sous
-  verrou, **sans copie ni migration de données** ; l'outil historique continue de fonctionner. Cela dispense de choisir
-  entre `ecosystem_party` et un nouveau type `supplier` (question Q5 : réponse « ni l'un ni l'autre »).
-- **Droits** : le module d'activation `fournisseurs` existe déjà (RBAC et `modules.ts`) ; il est réutilisé tel quel.
-- **Critères = plan de contrôle** : chaque critère d'évaluation est un `control` lié au fournisseur, avec **ses exigences
-  de rattachement** prises dans les référentiels **actifs du périmètre** (ISO/IEC 27001:2022, HDS, ISO 9001, par les
-  correspondances et références du registre commun). Une revue = l'exécution du contrôle ; son résultat est immuable ; un
-  écart crée constat et action ; la périodicité est une série récurrente choisie par l'organisme.
-- **Sans grille livrée** (D5) : au démarrage, aucun critère ; l'écran propose d'en créer, sans valeur par défaut. Quand une
-  grille existera, elle sera saisie ou importée par l'organisme.
-- **Une seule revue, trois lectures** : pour un même fournisseur, la vue regroupe les critères par référentiel actif. Côté
-  **ISO 9001** je peux déjà indiquer le rattachement, car j'en ai le texte : 8.4.1 (critères d'évaluation, de sélection, de
-  surveillance et de réévaluation, informations conservées), 8.4.2 (type et étendue de la maîtrise), 8.4.3 (informations
-  transmises au prestataire), 9.1.3 f et 9.3.2 c 7 (analyse et entrée de la revue de direction). Côté **ISO/IEC 27001:2022** et
-  **HDS**, je ne cite aucune exigence : aucune source ne m'a été fournie dans cette session ; elles viendront des
-  référentiels que vous importez, ou de votre relecture.
-- Les contrôles historiques existants (champ de référence libre, fréquence, dernière date) restent lisibles tels quels ;
-  leur conversion en contrôles du Pilotage est une action explicite et simulée, jamais automatique.
-- Les indicateurs calculés qui lisent aujourd'hui ce registre (`saasMfa`, `saasSso`) restent inchangés.
-- Le résultat des revues alimente l'entrée « performances des prestataires externes » de la revue de direction (9.3.2).
+- **Registre** : le module présente et édite le registre historique existant sous verrou, comme la DdA, **sans copie** ;
+  l'identité d'un fournisseur reste son identifiant historique. Droits : module `fournisseurs` existant.
+- **Évaluation au niveau de l'organisation** : structure propre, **sans périmètre**, par **migration additive** : critères
+  d'évaluation définis par l'organisme ; évaluations **datées et immuables** (résultat, justification, auteur, date, version
+  du critère) avec historique conservé. Il n'existe qu'une évaluation courante par fournisseur ; aucun périmètre n'en détient de
+  copie.
+- **Rattachement** : lien fournisseur ↔ périmètre (plusieurs à la fois), **sans donnée d'évaluation**. Retirer un
+  rattachement ne supprime ni le fournisseur ni son évaluation.
+- **Critères et exigences** : un critère peut être relié à des exigences désignées par (référentiel, édition, identifiant
+  d'exigence), sans dépendre d'un périmètre. Un périmètre n'affiche, par référentiel, que les critères reliés aux référentiels
+  qui lui sont rattachés. Côté **ISO 9001** je peux déjà indiquer le rattachement, car j'en ai le texte : 8.4.1 (critères
+  d'évaluation, de sélection, de surveillance et de réévaluation, informations conservées), 8.4.2 (type et étendue de la
+  maîtrise), 8.4.3 (informations transmises au prestataire), 9.1.3 f et 9.3.2 c 7. Côté **ISO/IEC 27001:2022** et **HDS**, je ne
+  cite aucune exigence : aucune source ne m'a été fournie dans cette session ; elles viendront de vos référentiels importés
+  ou de votre relecture.
+- **Sans grille** (D6) : au démarrage, aucun critère, aucune fréquence, aucun seuil ; l'écran propose d'en créer.
+- **Écarts, actions et rappels** : une action ou un constat naît **dans un périmètre** (ce sont des objets de périmètre).
+  L'utilisateur choisit ce périmètre à la création, par défaut le périmètre courant, et l'objet garde un lien vers
+  l'évaluation. La ré-évaluation périodique (série récurrente) pose la même question : **Q12**.
+- **Lectures par périmètre** (sans copie) : fournisseurs rattachés, évalués, non évalués, à réévaluer ; ces lectures nourrissent
+  l'entrée « performances des prestataires externes » de la revue de direction (9.3.2).
+- Les contrôles historiques existants (champ de référence libre, fréquence, dernière date) restent lisibles tels quels ; leur
+  conversion en critères d'évaluation est une action explicite et simulée, jamais automatique. Les indicateurs calculés
+  qui lisent aujourd'hui ce registre (`saasMfa`, `saasSso`) sont inchangés.
 
-### 4.5 PESTEL
+### 4.5 PESTEL (décision D8)
 
-- La norme n'exige pas PESTEL : c'est **une présentation facultative** des enjeux externes de 4.1. L'outil l'offre comme
-  nomenclature organisationnelle (le catalogue métier de l'outil gère déjà des nomenclatures), pas comme exigence.
-- Attention : les facteurs « politique » et « environnemental » ne figurent pas dans la note 2 de 4.1 (juridique,
-  technologique, concurrentiel, commercial, culturel, social, économique). Ils peuvent être ajoutés par l'organisme, mais
-  l'écran ne doit pas laisser croire que la norme les demande (§9, Q7).
-- Chaque facteur est un **enjeu externe** relié aux risques et opportunités (6.1) et aux processus concernés ; la vue
-  PESTEL est un regroupement des enjeux existants, et non un nouvel objet. Les enjeux **internes** (valeurs, culture,
-  connaissances, performance, note 3) restent dans le SWOT / contexte.
+- Le PESTEL est **ajouté**, bien que la norme ne l'exige pas : c'est une **présentation facultative** des enjeux externes de
+  4.1. Les six axes (politique, économique, social, technologique, environnemental, légal) forment une **nomenclature
+  organisationnelle** paramétrable (le catalogue métier gère déjà des nomenclatures).
+- Un court texte d'information sur l'écran précise que la norme ne l'exige pas, et que « politique » et « environnemental »
+  vont au-delà de la note 2 de 4.1 (juridique, technologique, concurrentiel, commercial, culturel, social, économique) :
+  l'écran ne doit pas laisser croire le contraire.
+- Chaque facteur est un **enjeu externe** relié aux risques et opportunités (6.1) et aux processus concernés ; la vue PESTEL
+  est un regroupement des enjeux existants, et non un nouvel objet. Les enjeux **internes** (valeurs, culture, connaissances,
+  performance, note 3) restent dans le SWOT / contexte.
 - La surveillance et la revue de 4.1 et 4.2 donnent lieu à une série récurrente, à fréquence choisie par l'organisme.
 
 ### 4.6 Liens transverses
@@ -191,21 +202,29 @@ Créer une série reste une action explicite de l'utilisateur ; rien n'est plani
   conservation des données (FCT-014) restent la règle.
 - **Fournisseurs** : une entrée du Pilotage qui s'appuie sur le module `fournisseurs` existant (§4.4).
 
-### 4.9 Périmètre agnostique et système de management intégré (décision D3)
+### 4.9 Gestion des périmètres, SMI et bibliothèque de référentiels (décisions D3 et D4)
 
-- **Constat de lecture** : chaque objet du registre commun appartient à **un** périmètre (`smsi_id` dans `grc_objects`), et
-  l'activation d'un référentiel se fait **par périmètre** (`frameworks.activate`). Le conteneur s'appelle « SMSI » dans le
-  code et l'interface, mais rien n'y est propre à la sécurité : il peut porter plusieurs référentiels.
-- **Conséquence** : le **SMI n'est pas un nouvel objet**, c'est un périmètre où plusieurs référentiels (27001:2022, HDS,
-  9001) sont actifs. Au démarrage, aucun référentiel n'est supposé : l'outil ne pose pas de « mode qualité » ou « mode
-  sécurité ». Les vues 9001 ne s'affichent que si un référentiel 9001 est actif dans le périmètre courant.
-- **Même périmètre** : processus, indicateurs, risques, actions, audits, revues et fournisseurs sont **saisis une fois** et
-  lus selon chaque référentiel actif (une seule revue de direction, un seul programme d'audit combiné).
-- **Périmètres distincts** (4.3 permet des domaines d'application différents) : chaque périmètre garde ses objets. Un
-  objet ne peut appartenir qu'à un périmètre aujourd'hui ; un fournisseur commun à deux périmètres distincts devrait donc
-  y être référencé deux fois. **Cas à instruire à l'ADR avant tout développement** (non prévu au premier lot).
-- **Vocabulaire** : le libellé « SMSI » du conteneur devra devenir neutre (« périmètre de management ») dans l'interface ;
-  c'est un changement de libellés à faire avec le design (Q10), pas de noms techniques (`grc_smsis`, `/api/grc/smsis`).
+- **Constat de lecture** : un périmètre est une ligne de `grc_smsis` (nom, texte du périmètre, visibilité, méthode de risque,
+  fuseau, politique métier, membres). L'API sait **lister et créer** des périmètres ; l'interface web ne fait que les lire. Le
+  conteneur s'appelle « SMSI » dans le code et l'interface, mais rien n'y est propre à la sécurité. Chaque objet du registre
+  commun appartient à **un** périmètre.
+- **Nouvelle page « Périmètres »** (niveau organisation) : créer et modifier un périmètre, lui donner une **nature** (SMSI,
+  SMQ, SMI, autre : simple étiquette, sans règle de comportement) et lui **rattacher** : référentiels, méthode de risque et
+  politique métier (qui existent déjà), membres (existent déjà) et fournisseurs (§4.4). **Agnostique** : aucune nature ni
+  référentiel n'est requis au démarrage, et aucune vue 9001 n'apparaît tant qu'un référentiel 9001 n'est pas rattaché.
+- **SMI** : ce n'est pas un nouvel objet, c'est un périmètre où plusieurs référentiels (27001:2022, HDS, 9001) sont rattachés ;
+  processus, indicateurs, risques, actions, audits et revues y sont saisis une fois et lus selon chaque référentiel. **SMQ et
+  SMSI distincts** : deux périmètres. Ce qui est transverse (fournisseurs, évaluations, bibliothèque de référentiels) vit au
+  niveau organisation.
+- **Point structurant (Q13)** : aujourd'hui un référentiel est **publié dans chaque périmètre** (versions, correspondances et
+  mesures par périmètre). Pour « attacher » un même référentiel à plusieurs périmètres sans le republier, il faut une
+  **bibliothèque de référentiels au niveau de l'organisation**. C'est le changement le plus lourd de ce chantier : il touche
+  les publications, les correspondances, les mesures, la DdA et leurs tests. Recommandation : un lot dédié et son ADR 0031,
+  **après** la page « Périmètres » et la gestion des fournisseurs. D'ici là, l'import par périmètre continue de fonctionner
+  sans changement ; rien ne casse.
+- **Droits** : qui peut créer ou modifier un périmètre n'est pas tranché ; à instruire au lot M1 (Q14).
+- **Vocabulaire** : le libellé « SMSI » du conteneur devient neutre (« périmètre de management ») dans l'interface, avec le
+  design (Q10) ; les noms techniques (`grc_smsis`, `/api/grc/smsis`) ne changent pas.
 
 ## 5. Correspondance par article (couverture visée, hors exigences de réalisation)
 
@@ -220,7 +239,7 @@ Créer une série reste une action explicite de l'utilisateur ; rien n'est plani
 | 7.1 à 7.4                     | Ressources et connaissances (champ de `governance`), compétences, sensibilisation, communication                        | Écart : compétences, communication    |
 | 7.5                           | Documents versionnés et chiffrés                                                                                         | Existant                              |
 | 8.1 à 8.3, 8.5 à 8.6          | Hors périmètre fonctionnel de l'outil : seule la **preuve** (documents, contrôles) peut y être rattachée                 | Preuves seulement                     |
-| 8.4                           | Revue des fournisseurs commune                                                                                           | Module Fournisseurs (§4.4, lot M4)    |
+| 8.4                           | Revue des fournisseurs commune                                                                                           | Gestion des fournisseurs (§4.4, M2)   |
 | 8.7, 10.2                     | Non-conformités, causes, actions, efficacité, clôture                                                                    | Existant (FCT-025)                    |
 | 9.1, 9.1.2, 9.1.3             | Indicateurs, satisfaction du client, analyse                                                                             | À compléter                           |
 | 9.2                           | Audit interne, programme, constats                                                                                      | Partiel (FCT-028) ; audit combiné     |
@@ -251,40 +270,43 @@ activités métier de chaque organisme, que l'outil trace sans les piloter.
 - Charte : le module suit la charte graphique du dépôt ; **il attendra le design en cours de préparation par le RSSI** pour
   ne pas figer d'écrans avant lui.
 
-## 8. Lots proposés (M0 à M7, ordre, sans calendrier)
+## 8. Lots proposés (M0 à M8, ordre, sans calendrier)
 
-| Lot | Contenu                                                                                          | Migration            |
-| --- | ------------------------------------------------------------------------------------------------ | -------------------- |
-| M0  | Réponses restantes du §9, ADR 0030, registre des sources, révision de l'ADR 0013 (filtre 9001)     | aucune               |
-| M1  | Référentiel 9001 importable, exigences, usage des correspondances 9001 ↔ 27001 par le RSSI       | aucune attendue      |
-| M2  | Fiche processus 4.4.1, lien indicateurs ↔ processus, calque « santé » sur la carte               | additive éventuelle  |
-| M3  | Indicateurs et objectifs (6.2, 9.1), **boxes** et tableau de bord qualité                         | aucune attendue      |
-| M4  | **Module Fournisseurs du Pilotage** (§4.4) : adaptateur du registre existant, critères en plan de contrôle, revues récurrentes, lecture par référentiel actif. **Peut passer en premier** : il sert déjà l'ISO/IEC 27001:2022 et l'HDS sans la 9001 | aucune attendue      |
-| M5  | Contexte, vue PESTEL, parties intéressées, opportunités (6.1), séries récurrentes proposées      | additive éventuelle  |
-| M6  | Revue de direction (9.3.2) et audit combiné SMSI + SMQ, amélioration continue                    | aucune attendue      |
-| M7  | Recette, accessibilité, performance, documentation, réévaluation du registre                      | aucune               |
+| Lot | Contenu | Migration |
+| --- | ------- | --------- |
+| M0 | Réponses restantes du §9, ADR 0030 révisée, ADR 0031 (bibliothèque de référentiels), registre des sources, révision de l'ADR 0013 (filtre 9001) | aucune |
+| M1 | **Page « Périmètres »** : créer et modifier, nature, rattachement (méthode de risque, politique, membres), libellés neutres, droits | aucune attendue |
+| M2 | **Gestion des fournisseurs** hors périmètre : adaptateur du registre, évaluations immuables, rattachement à plusieurs périmètres, critères sans grille | **additive** |
+| M3 | **Bibliothèque de référentiels** au niveau organisation et rattachement aux périmètres ; référentiel ISO 9001 (article + alinéas) importable | additive, **lourde** |
+| M4 | Fiche processus 4.4.1, lien indicateurs ↔ processus, calque « santé » sur la carte | additive éventuelle |
+| M5 | Indicateurs et objectifs (6.2, 9.1), **boxes** et tableau de bord qualité | aucune attendue |
+| M6 | Contexte, **PESTEL**, parties intéressées, opportunités (6.1), séries récurrentes proposées | additive éventuelle |
+| M7 | Revue de direction (9.3.2) et audit combiné, amélioration continue | aucune attendue |
+| M8 | Recette, accessibilité, performance, documentation, réévaluation du registre | aucune |
 
-Ordre recommandé : **M0, M4, M1, M2, M3, M5, M6, M7** (le module Fournisseurs d'abord, car il est utile sans le référentiel 9001).
-Chaque lot : branche `claude-suivi-smsi`, PR vers `main` après CI verte, CHANGELOG, retour arrière décrit, registre
-réévalué à la fin du lot.
+Ordre recommandé : **M0 à M8 dans l'ordre**. M1 et M2 sont utiles **sans** le référentiel 9001 (ils servent déjà l'ISO/IEC
+27001:2022 et l'HDS) ; M3, le plus lourd, vient après eux pour ne pas retarder la valeur. Chaque lot : branche
+`claude-suivi-smsi`, PR vers `main` après CI verte, CHANGELOG, retour arrière décrit, registre réévalué à la fin du lot.
 
 ## 9. Décisions et questions
 
-**Tranchées le 13/10/2026** (voir §1 bis) : Q1 (ISO/IEC 27001:2022), Q2 (groupe « Qualité » du Pilotage), Q4 (solution
-agnostique, SMI = périmètre partagé), Q5 (module Fournisseurs du Pilotage ; modélisation par adaptateur, §4.4), Q6 (pas de grille
-pour le moment).
+**Tranchées le 13/10/2026** (§1 bis) : Q1 (ISO/IEC 27001:2022), Q2 (groupe « Qualité » du Pilotage), Q3 (article + alinéas),
+Q4 (agnostique, SMI = périmètre partagé), Q5 (module Fournisseurs du Pilotage), Q6 (pas de grille), Q7 (PESTEL ajouté), Q11
+(fournisseur commun à plusieurs périmètres : **oui**, par D5).
 
 **Restent ouvertes**
 
-1. **Q3** — Granularité des exigences 9001 : article seul, ou article + alinéas énumérés (**recommandé**) ?
-2. **Q7** — PESTEL : accepter les six axes comme nomenclature **organisationnelle**, en précisant que la norme ne les exige
-   pas, et que « politique » et « environnemental » vont au-delà de la note 2 de 4.1 ?
-3. **Q8** — Opportunités (6.1) : les ajouter comme nature du risque commun, ou comme objet séparé ? (Le constat du Pilotage
+1. **Q8** — Opportunités (6.1) : les ajouter comme nature du risque commun, ou comme objet séparé ? (Le constat du Pilotage
    connaît déjà la nature « opportunité d'amélioration », qui relève de 10.1 et non de 6.1 : à ne pas confondre.)
-4. **Q9** — Révision 2026 : transmettre le texte officiel dès qu'il est publié (annoncé « bientôt »).
-5. **Q10** — Articulation avec le **design** en préparation : le module est-il à concevoir dans la nouvelle charte dès le départ ?
-6. **Q11 (nouvelle)** — Fournisseur commun à deux périmètres distincts : saisie en double acceptée au premier lot, ou
-   partage à prévoir ? (Sans objet si SMQ et SMSI partagent un seul périmètre.)
+2. **Q9** — Révision 2026 : transmettre le texte officiel dès qu'il est publié (annoncé « bientôt »).
+3. **Q10** — **Design** : le module est-il à concevoir dans la nouvelle charte dès le départ ?
+4. **Q12** — Une action, un constat ou un rappel issu d'une évaluation de fournisseur naît dans un périmètre (objets de
+   périmètre). Recommandation : **le périmètre est choisi à la création, par défaut le périmètre courant**, l'évaluation restant
+   unique. D'accord ?
+5. **Q13** — **Bibliothèque de référentiels** au niveau organisation (§4.9) : la confirmez-vous comme objectif, en lot dédié
+   (M3), sachant que c'est le changement le plus lourd ? Sinon, chaque périmètre garde son import, au prix d'un référentiel
+   dupliqué.
+6. **Q14** — Droits de la page « Périmètres » : réservée aux administrateurs, ou ouverte au rôle qui pilote le Pilotage ?
 
 ## 10. Ce que ce cadrage n'établit pas
 
