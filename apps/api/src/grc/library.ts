@@ -7,6 +7,7 @@ import type { SessionUser } from '../auth.js';
 import type { Client } from '../db/db.js';
 import { HttpError } from '../http/errors.js';
 import { hash, type Grc } from './core.js';
+import { trackerCandidates } from './library-tracker.js';
 
 export interface LibraryFramework {
   id: string;
@@ -168,6 +169,31 @@ export class GrcLibrary {
       );
       return { id: frameworkId!, identifier: p.definition.identifier, name: p.definition.name, version };
     }, user.username);
+  }
+
+  /** Référentiels présents dans l'outil de suivi, simulés avant toute importation (rien n'est écrit). */
+  async trackerPreview(user: SessionUser) {
+    await this.g.permission(user, 'conformite', 'modifier');
+    const state = await this.g.legacy.recompose();
+    const candidates = trackerCandidates((state?.data ?? {}) as Record<string, unknown>);
+    return Promise.all(
+      candidates.map(async (c) => ({ ...(await this.preview(null, c.definition, user)), notes: c.notes })),
+    );
+  }
+
+  /** Publie en version 1 un référentiel de l'outil de suivi, après simulation identique (previewId) et confirmation. */
+  async trackerImport(identifier: string, previewId: string, user: SessionUser, ip: string) {
+    const p = (await this.trackerPreview(user)).find((x) => x.definition.identifier === identifier);
+    if (!p) throw new HttpError(404, 'Référentiel introuvable dans l’outil de suivi.');
+    return this.publish(
+      null,
+      p.definition,
+      0,
+      previewId,
+      'Importé depuis l’outil de suivi (simulation confirmée).',
+      user,
+      ip,
+    );
   }
 
   async attachments(smsi: string, user: SessionUser): Promise<ScopeAttachment[]> {

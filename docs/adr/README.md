@@ -36,3 +36,4 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0030](0030-perimetre-agnostique-qualite-fournisseurs.md) | Périmètres gérés à part (SMI), groupe « Qualité » du Pilotage et fournisseurs transverses | Proposée |
 | [0031](0031-bibliotheque-de-referentiels.md) | Bibliothèque de référentiels de l'organisation : déclarer une fois, évaluer sur plusieurs référentiels | Proposée |
 | [0032](0032-fournisseurs-de-l-organisation.md) | Fournisseurs de l'organisation : évaluations immuables indépendantes des périmètres, sans grille (lot M4) | Proposée |
+| [0033](0033-import-referentiels-outil-de-suivi.md) | Importer dans la bibliothèque les référentiels déjà saisis dans l'outil de suivi (lot M4 suite) | Proposée |

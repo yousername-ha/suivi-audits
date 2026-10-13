@@ -484,6 +484,30 @@ export const grcRoutes = [
   }),
   route({
     ...base,
+    access: 'conformite:modifier' as const,
+    method: 'GET',
+    url: '/api/library/tracker-import',
+    summary: 'Référentiels de l’outil de suivi importables dans la bibliothèque (simulation, aucune écriture)',
+    handler: async ({ svc, s }) => svc.grc.library.trackerPreview((s as Session).user),
+  }),
+  route({
+    ...base,
+    access: 'conformite:modifier' as const,
+    method: 'POST',
+    url: '/api/library/tracker-import',
+    summary: 'Importer un référentiel de l’outil de suivi dans la bibliothèque',
+    body: z
+      .object({
+        identifier: z.string().min(1).max(100),
+        previewId: z.string().regex(/^[a-f0-9]{64}$/),
+        confirm: z.literal('IMPORTER'),
+      })
+      .strict(),
+    handler: async ({ svc, s, body, ip }) =>
+      svc.grc.library.trackerImport(body.identifier, body.previewId, (s as Session).user, ip),
+  }),
+  route({
+    ...base,
     access: 'conformite:lire' as const,
     method: 'GET',
     url: '/api/library/frameworks/:id/versions/:version',

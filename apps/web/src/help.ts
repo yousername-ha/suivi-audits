@@ -80,6 +80,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     steps: [
       'La bibliothèque contient les référentiels de l’organisation, importés une seule fois. Aucun texte normatif n’est fourni : importez les exigences dont vous détenez les droits.',
       'Importer un référentiel : collez sa définition, simulez la publication, indiquez un motif puis publiez. Chaque version est immuable ; une évolution crée une nouvelle version.',
+      'Importer depuis l’outil de suivi : les clauses ISO 27001, l’Annexe A, le HDS et le ReCyF déjà saisis dans l’outil de suivi s’importent d’un clic après simulation et confirmation. Seuls les intitulés ou textes saisis sont repris ; la source reste « non vérifiée » et jamais normative.',
       'Dans la page Périmètres, « Référentiels » rattache une version précise à un périmètre. Le même référentiel peut être rattaché à plusieurs périmètres sans être importé à nouveau.',
       'Un référentiel déjà publié dans un périmètre peut être promu dans la bibliothèque (simulation puis confirmation) ; l’original est conservé.',
     ],

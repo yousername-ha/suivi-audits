@@ -69,6 +69,7 @@ export function Bibliotheque() {
     qc = useQueryClient(),
     modifier = can('conformite', 'modifier'),
     [import_, setImport] = useState<{ cible: Referentiel | null } | null>(null),
+    [depuisSuivi, setDepuisSuivi] = useState(false),
     [consulte, setConsulte] = useState<{ cible: Referentiel; version: string } | null>(null);
   const liste = useQuery({
     queryKey: ['library', 'frameworks'],
@@ -92,7 +93,14 @@ export function Bibliotheque() {
       <ErrorAlert error={liste.error ?? exigences.error} />
       <Group justify="space-between">
         <Text>{liste.data ? `${liste.data.length} référentiel(s) dans la bibliothèque` : 'Chargement…'}</Text>
-        {modifier && <Button onClick={() => setImport({ cible: null })}>Importer un référentiel</Button>}
+        {modifier && (
+          <Group>
+            <Button variant="default" onClick={() => setDepuisSuivi(true)}>
+              Importer depuis l’outil de suivi
+            </Button>
+            <Button onClick={() => setImport({ cible: null })}>Importer un référentiel</Button>
+          </Group>
+        )}
       </Group>
       <DataTable label="Référentiels de la bibliothèque, défilement horizontal possible">
         <Table>
@@ -173,6 +181,12 @@ export function Bibliotheque() {
           </Stack>
         )}
       </Modal>
+      {depuisSuivi && (
+        <ImportOutilSuivi
+          onClose={() => setDepuisSuivi(false)}
+          onDone={() => qc.invalidateQueries({ queryKey: ['library'] })}
+        />
+      )}
       {import_ && (
         <Import
           cible={import_.cible}
@@ -513,5 +527,91 @@ export function PromotionBouton({ smsi, id }: { smsi: string; id: string }) {
         </Stack>
       </Modal>
     </>
+  );
+}
+
+interface CandidatSuivi {
+  definition: { name: string; identifier: string; source: { status: string; organisation: string; version: string } };
+  previewId: string;
+  requirements: number;
+  domains: number;
+  duplicate: boolean;
+  canPublish: boolean;
+  warning: string | null;
+  notes: string[];
+}
+
+/** Référentiels déjà saisis dans l'outil de suivi (clauses ISO 27001, Annexe A, HDS, ReCyF…) : simulation, puis
+    importation explicite, un référentiel à la fois. Seuls les champs présents dans l'outil de suivi sont repris. */
+function ImportOutilSuivi({ onClose, onDone }: { onClose: () => void; onDone: () => unknown }) {
+  const qc = useQueryClient(),
+    [erreur, setErreur] = useState<unknown>(null),
+    [fait, setFait] = useState<string[]>([]);
+  const q = useQuery({
+    queryKey: ['library', 'tracker-import'],
+    queryFn: () => get<CandidatSuivi[]>('/api/library/tracker-import'),
+  });
+  const importer = async (c: CandidatSuivi) => {
+    try {
+      setErreur(null);
+      await api('POST', '/api/library/tracker-import', {
+        body: { identifier: c.definition.identifier, previewId: c.previewId, confirm: 'IMPORTER' },
+      });
+      setFait((f) => [...f, c.definition.identifier]);
+      await qc.invalidateQueries({ queryKey: ['library', 'tracker-import'] });
+      await onDone();
+    } catch (e) {
+      setErreur(e);
+    }
+  };
+  return (
+    <Modal opened onClose={onClose} size="lg" title="Importer depuis l’outil de suivi">
+      <Stack>
+        <Text size="sm">
+          Simulation : rien n’est écrit tant que vous n’avez pas confirmé un référentiel. Les référentiels importés
+          portent le statut « non vérifié » et ne sont jamais présentés comme normatifs ; seuls les intitulés ou textes
+          saisis dans l’outil de suivi sont repris.
+        </Text>
+        <ErrorAlert error={erreur ?? q.error} />
+        {q.data && !q.data.length && <Text>Aucun référentiel à importer dans l’outil de suivi.</Text>}
+        {(q.data ?? []).map((c) => (
+          <Stack key={c.definition.identifier} gap="xs">
+            <Group justify="space-between">
+              <Text fw={600}>{c.definition.name}</Text>
+              {c.duplicate ? (
+                <StatusChip etat="succes">
+                  {fait.includes(c.definition.identifier) ? 'Importé' : 'Déjà dans la bibliothèque'}
+                </StatusChip>
+              ) : (
+                <ConfirmButton
+                  size="xs"
+                  color="orange"
+                  disabled={!c.canPublish}
+                  message={`Importer « ${c.definition.name} » (${c.requirements} exigences) dans la bibliothèque, en version 1 ? Cette version sera immuable.`}
+                  onConfirm={() => importer(c)}
+                >
+                  {`Importer ${c.definition.name}`}
+                </ConfirmButton>
+              )}
+            </Group>
+            <Text size="sm">
+              {c.requirements} exigence(s) · {c.domains} domaine(s) · source : {c.definition.source.organisation},
+              version {c.definition.source.version}
+            </Text>
+            {c.warning && <Alert color="orange">{c.warning}</Alert>}
+            {c.notes.map((n) => (
+              <Text key={n} size="sm">
+                {n}
+              </Text>
+            ))}
+          </Stack>
+        ))}
+        <Group justify="flex-end">
+          <Button variant="default" onClick={onClose}>
+            Fermer
+          </Button>
+        </Group>
+      </Stack>
+    </Modal>
   );
 }
