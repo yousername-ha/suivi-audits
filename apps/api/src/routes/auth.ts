@@ -48,6 +48,7 @@ export function meOut(svc: Services, s: Session | null): MeOutT {
     passwordMinLength: svc.settings.get('securite').passwordMinLength,
     appName: svc.settings.get('general').appName,
     orgName: svc.settings.get('general').orgName,
+    orgSite: svc.settings.get('general').site,
     appearance: svc.settings.get('apparence'),
     version: svc.cfg.version,
   };

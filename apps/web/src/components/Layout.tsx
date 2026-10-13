@@ -4,6 +4,7 @@
 import {
   Anchor,
   Badge,
+  Box,
   Burger,
   Button,
   Drawer,
@@ -54,8 +55,9 @@ function useAffichage() {
     const html = document.documentElement;
     html.dataset.taille = prefs.taille;
     html.dataset.densite = densite;
+    html.dataset.style = me.appearance.style;
     if (colorScheme !== SCHEME[theme]) setColorScheme(SCHEME[theme]);
-  }, [prefs.taille, densite, theme, colorScheme, setColorScheme]);
+  }, [prefs.taille, densite, me.appearance.style, theme, colorScheme, setColorScheme]);
   return theme;
 }
 
@@ -243,6 +245,12 @@ export function Layout({ children }: { children: ReactNode }) {
                   </div>
                 </Group>
               </Anchor>
+              {me.orgName && (
+                <Box className="org-signature" visibleFrom="lg">
+                  <span className="org-signature__carre" aria-hidden="true" />
+                  <span className="org-signature__nom">{me.orgName}</span>
+                </Box>
+              )}
             </Group>
             <Group gap="xs" wrap="nowrap">
               <Tooltip

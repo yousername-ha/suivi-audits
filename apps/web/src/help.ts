@@ -230,6 +230,16 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
   },
   {
+    id: 'parametres-apparence',
+    title: 'Paramètres et apparence',
+    permission: 'parametres:lire',
+    link: '/parametres',
+    steps: [
+      'Style global : dans Paramètres > Apparence, choisissez « Référence 08 — Sauge » (défaut) ou « Clair bleuté » pour tous les comptes ; l’aperçu s’affiche avant l’enregistrement. Le thème clair, sombre ou automatique reste un choix personnel.',
+      'Thème et densité par défaut s’appliquent à toute personne qui n’a pas choisi ses propres préférences (Mon compte). Seule la permission d’écriture sur les paramètres permet de les modifier.',
+    ],
+  },
+  {
     id: 'droits',
     title: 'Comptes, groupes et rôles',
     permission: 'administration:lire',

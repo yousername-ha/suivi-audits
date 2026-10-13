@@ -1,6 +1,6 @@
 /* Accueil : tableau de bord (synthèse selon les droits), accès aux modules, activité en cours,
    état de la reprise de l'outil historique. Une seule grille de cartes : plus de colonnes sur les grands écrans. */
-import { Anchor, Badge, Button, Card, Group, Stack, Table, Text, Title } from '@mantine/core';
+import { Anchor, Badge, Button, Card, Group, Stack, Table, Text, Title, VisuallyHidden } from '@mantine/core';
 import { ErrorAlert, IconeAdministration, IconeDocuments, IconeHistorique, Page, PageHeader } from '@suivi/ui';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router';
@@ -24,9 +24,46 @@ const RESOURCE_LABELS: [RegExp, string][] = [
 ];
 const resourceLabel = (r: string) => RESOURCE_LABELS.find(([re]) => re.test(r))?.[1] ?? r;
 
+/** Adresse du site de l'organisation, acceptée seulement en https : lien ouvert par clic explicite, jamais chargé. */
+const siteHttps = (u: string) => {
+  try {
+    return new URL(u).protocol === 'https:' ? u : '';
+  } catch {
+    return '';
+  }
+};
+function LienSite({ url, nom }: { url: string; nom: string }) {
+  return (
+    <Button
+      component="a"
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      variant="default"
+      rightSection={
+        <svg
+          viewBox="0 0 24 24"
+          width="14"
+          height="14"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          aria-hidden="true"
+        >
+          <path d="M7 17L17 7M9 7h8v8" />
+        </svg>
+      }
+    >
+      Site {nom}
+      <VisuallyHidden> (nouvel onglet)</VisuallyHidden>
+    </Button>
+  );
+}
+
 export function HomePage() {
   const me = useMe();
   const can = useCan();
+  const site = siteHttps(me.orgSite);
   usePresence('home');
   const { presence } = useLive();
   const modules = useQuery({
@@ -171,6 +208,7 @@ export function HomePage() {
       <PageHeader
         title={`Bonjour ${me.user?.displayName || me.user?.username}`}
         description={synthese.data ? `Tableau de bord — ${synthese.data.organisation}` : undefined}
+        actions={site && <LienSite url={site} nom={me.orgName} />}
       />
       {synthese.error && <ErrorAlert error={synthese.error} />}
       {synthese.data ? (

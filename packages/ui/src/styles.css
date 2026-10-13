@@ -1591,3 +1591,150 @@ h3,
 .graph-arc.graph-gris {
   fill: none;
 }
+
+/* ---------------------------------------------------------------- Style global « clair bleuté »
+   Choix de l'instance (Paramètres > Apparence), posé sur <html data-style>. Ne remplace que les fonds et bordures du
+   mode clair : navigation vert profond, couleurs métier, graphiques et cartographie restent inchangés. Le mode sombre
+   garde ses variables. */
+html[data-style='clair'][data-mantine-color-scheme='light'] {
+  --suivi-fond-page: #f7f9fb;
+  --suivi-trait: #dce5e9;
+  --suivi-surface-douce: #f0f4f7;
+}
+
+/* ---------------------------------------------------------------- Identité Référence 08 (signature, filets, repère actif)
+   Turquoise décoratif : filets et carré de signature. Sur la navigation sombre, une teinte plus claire garde 3:1 au moins
+   avec le fond de l'entrée active ; la sélection reste aussi portée par le fond, le texte et aria-current. */
+:root {
+  --suivi-turquoise: #00a8b0;
+  --suivi-turquoise-nav: #2cc4cb;
+  --suivi-marine: #142f61;
+}
+.org-signature {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-inline-start: var(--mantine-spacing-md);
+  padding-inline-start: var(--mantine-spacing-md);
+  border-inline-start: 1px solid var(--suivi-trait);
+}
+.org-signature__carre {
+  width: 0.55rem;
+  height: 0.55rem;
+  background: var(--suivi-turquoise);
+}
+.org-signature__nom {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--suivi-marine);
+}
+[data-mantine-color-scheme='dark'] .org-signature__nom {
+  color: var(--mantine-color-text);
+}
+.shell-nav .mantine-NavLink-root[data-active] {
+  box-shadow: inset 3px 0 var(--suivi-turquoise-nav);
+}
+.shell-nav .mantine-NavLink-root[data-active] .nav-icone {
+  color: var(--suivi-turquoise-nav);
+}
+.carte > .mantine-Title-root::after {
+  content: '';
+  display: block;
+  width: 1.75rem;
+  height: 3px;
+  margin-top: 0.4rem;
+  background: var(--suivi-turquoise);
+}
+
+/* ---------------------------------------------------------------- Matrice des risques : cases pleines (couleur du niveau)
+   La couleur de chaque case est un fond SVG (fill) issu de la méthode publiée ; ici seulement la géométrie, le texte et
+   la sélection. Aucun voile ni mélange : la case garde la couleur exacte du niveau. */
+.matrice-defilement {
+  overflow-x: auto;
+}
+.matrice-risques {
+  border-collapse: separate;
+  border-spacing: 4px;
+  min-width: 40rem;
+}
+.matrice-risques th {
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-align: center;
+  padding: 0.4rem;
+}
+.matrice-cellule-td {
+  padding: 0;
+}
+.matrice-cellule {
+  position: relative;
+  min-height: 5.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 6px;
+}
+.matrice-fond {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.matrice-cellule > :not(.matrice-fond) {
+  position: relative;
+}
+.matrice-texte-fonce {
+  color: #173f34;
+}
+.matrice-texte-clair {
+  color: #ffffff;
+}
+.matrice-choix,
+.matrice-ref {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-align: start;
+}
+.matrice-choix {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  border-radius: 4px;
+}
+.matrice-niveau {
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.matrice-nombre {
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.matrice-refs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.5rem;
+  font-size: 0.7rem;
+}
+.matrice-ref {
+  text-decoration: underline;
+}
+.matrice-cellule:has(.matrice-choix[aria-pressed='true']) {
+  outline: 3px solid #326899;
+  outline-offset: 1px;
+}
+.matrice-choix:focus-visible,
+.matrice-ref:focus-visible {
+  outline: 3px solid #326899;
+  outline-offset: 2px;
+  background: rgb(255 255 255 / 25%);
+}

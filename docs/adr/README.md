@@ -37,3 +37,4 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0031](0031-bibliotheque-de-referentiels.md) | Bibliothèque de référentiels de l'organisation : déclarer une fois, évaluer sur plusieurs référentiels | Proposée |
 | [0032](0032-fournisseurs-de-l-organisation.md) | Fournisseurs de l'organisation : évaluations immuables indépendantes des périmètres, sans grille (lot M4) | Proposée |
 | [0033](0033-import-referentiels-outil-de-suivi.md) | Importer dans la bibliothèque les référentiels déjà saisis dans l'outil de suivi (lot M4 suite) | Proposée |
+| [0034](0034-apparence-reference-08.md) | Apparence « Référence 08 » de l'application principale et style global | Proposée |

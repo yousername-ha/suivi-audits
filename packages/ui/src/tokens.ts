@@ -11,6 +11,10 @@ export const BRAND = {
   surface: '#FFFFFF',
 } as const;
 
+/** Matrice des risques : encre du texte sur les cases claires et fond d'une case sans niveau défini (les couleurs de niveau
+    viennent de la méthode publiée, jamais d'ici). */
+export const MATRICE = { encre: '#173f34', neutre: '#e5e9e2' } as const;
+
 type Tuple = readonly [string, string, string, string, string, string, string, string, string, string];
 
 /** Vert (couleur principale) : nuance 8 = vert de marque. */

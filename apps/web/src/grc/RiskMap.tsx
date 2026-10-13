@@ -8,6 +8,7 @@ import { ErrorAlert } from '../components/common';
 import { Canevas, fitViewport, type Viewport, type Selection } from '../carto/Canevas';
 import { exporter } from '../carto/exports';
 import type { MethodVersion } from './Risks';
+import { MatriceRisques } from './MatriceRisques';
 import { useCan } from '../session';
 export interface Projection {
   items: (GrcObject & {
@@ -392,49 +393,13 @@ export function RiskMap({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject)
               {m.name} · publication {m.publicationId.slice(0, 8)}
             </Text>
             {m.calculation.kind === 'matrix' ? (
-              <div className="grc-planning">
-                <svg viewBox={`0 0 700 ${m.likelihood.length * 65 + 70}`} role="img" aria-label={`Matrice ${m.name}`}>
-                  {m.likelihood.map((l, j) => (
-                    <g key={l.id}>
-                      <text x="5" y={j * 65 + 70}>
-                        {l.label}
-                      </text>
-                      {m.calculation.kind === 'matrix' &&
-                        m.dimensions
-                          .find((d) => m.calculation.kind === 'matrix' && d.id === m.calculation.dimension)
-                          ?.levels.map((impact, i) => {
-                            const cell =
-                              m.calculation.kind === 'matrix'
-                                ? m.calculation.cells.find((c) => c.impact === impact.id && c.likelihood === l.id)
-                                : null;
-                            const n = data.data?.items.filter(
-                              (r) =>
-                                r.assessment?.method_version_id === m.publicationId &&
-                                r.assessment?.ratings[basis].dimensions[
-                                  m.calculation.kind === 'matrix' ? m.calculation.dimension : ''
-                                ] === impact.id &&
-                                r.assessment.ratings[basis].likelihood === l.id,
-                            ).length;
-                            return (
-                              <g key={impact.id}>
-                                <rect
-                                  x={190 + i * 110}
-                                  y={j * 65 + 40}
-                                  width="100"
-                                  height="55"
-                                  rx="5"
-                                  fill={m.levels.find((x) => x.id === cell?.level)?.color}
-                                />
-                                <text x={205 + i * 110} y={j * 65 + 72}>
-                                  {impact.label} : {n ?? 0}
-                                </text>
-                              </g>
-                            );
-                          })}
-                    </g>
-                  ))}
-                </svg>
-              </div>
+              <MatriceRisques
+                methode={m}
+                publicationId={m.publicationId}
+                items={data.data?.items ?? []}
+                basis={basis}
+                onOpen={onOpen}
+              />
             ) : (
               <Text>
                 Cette méthode utilise{' '}
@@ -442,13 +407,14 @@ export function RiskMap({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject)
                 matrice artificielle.
               </Text>
             )}
-            {data.data?.items
-              .filter((i) => i.assessment?.method_version_id === m.publicationId)
-              .map((i) => (
-                <Button key={i.id} variant="subtle" onClick={() => onOpen(i)}>
-                  {i.name} · {i.assessment?.result[basis].label}
-                </Button>
-              ))}
+            {m.calculation.kind !== 'matrix' &&
+              data.data?.items
+                .filter((i) => i.assessment?.method_version_id === m.publicationId)
+                .map((i) => (
+                  <Button key={i.id} variant="subtle" onClick={() => onOpen(i)}>
+                    {i.name} · {i.assessment?.result[basis].label}
+                  </Button>
+                ))}
           </Card>
         ))
       )}

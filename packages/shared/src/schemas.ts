@@ -77,10 +77,13 @@ export const MeOut = z.object({
   passwordMinLength: z.number(),
   appName: z.string(),
   orgName: z.string(),
+  /** Site web de l'organisation (Paramètres > Général), chaîne vide si non renseigné. */
+  orgSite: z.string(),
   /** Apparence par défaut de l'organisation (page Paramètres). */
   appearance: z.object({
     theme: z.enum(['auto', 'clair', 'sombre']),
     densite: z.enum(['compacte', 'normale', 'confortable']),
+    style: z.enum(['sage', 'clair']),
   }),
   /** Préférences d'affichage de la personne (null avant la connexion). */
   preferences: PreferencesSchema.nullable(),
