@@ -927,6 +927,7 @@ dialog.sheet { box-shadow:-16px 0 50px rgba(27,54,37,.12); }
 <link rel="stylesheet" href="modules/integration.css">
 <link rel="stylesheet" href="modules/carto.css">
 <link rel="stylesheet" href="modules/astra.css">
+<link rel="stylesheet" href="modules/nes-sage.css">
 </head>
 <body>
 <div class="app">
@@ -1000,6 +1001,7 @@ dialog.sheet { box-shadow:-16px 0 50px rgba(27,54,37,.12); }
 <script src="modules/carto-core.js"></script>
 <script src="modules/carto-ui.js"></script>
 <script src="modules/astra-ui.js"></script>
+<script src="modules/nes-sage-ui.js"></script>
 <script src="lib/jszip.min.js"></script>
 <script>
 (function(){
@@ -4955,6 +4957,7 @@ function viewDash(AN){
 
 /* ---------- Rendu global ---------- */
 function render(o){
+  if(window.NesStyle)window.NesStyle.beforeRender(ui);
   ensurePlan();
   const AN=analysisAll();
   let tab=TABS.find(x=>x.id===ui.tab);if(!tab){tab=TABS[0];ui.tab=tab.id}
@@ -5217,7 +5220,7 @@ boot=async function(){
     }
     RO=RO_FORCED||window.LegacyServer.user().permission==='viewer';
     S.df.actor=window.LegacyServer.user().name;
-    const addedCatalogs=dfIntegration.ensureCatalog();await lxIntegration.load();
+    const addedCatalogs=dfIntegration.ensureCatalog();await lxIntegration.load();if(window.NesStyle)await window.NesStyle.load();
     if(!remote||((addedCatalogs||S.integration.adminSchema!==1)&&window.LegacyServer.user().permission==='admin')){await window.LegacyServer.save(S);await window.LegacyServer.flush()}
     window.LegacyServer.ready();render();setStatus('saved');
   }catch(e){toast(e.message)}

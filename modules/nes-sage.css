@@ -1,0 +1,125 @@
+/* Habillage « Référence 08 » (styles globaux sage / clair).
+   Tous les sélecteurs sont bornés par html[data-nes-style] : l'attribut est retiré avant le rendu des cartographies
+   (modules/nes-sage-ui.js) et aucune règle ne s'applique alors. Jamais de sélecteur global, jamais de remplacement des
+   couleurs métier (risques, retards, graphiques SVG/canvas). Le mode sombre garde les variables sombres existantes. */
+
+/* ---- Jetons communs ---- */
+html[data-nes-style]{
+  --nes-header-h:78px;
+  --nes-green:#103F33;
+  --nes-nav-top:#123E32; --nes-nav-bottom:#0B392E;
+  --nes-nav-active:#275647; --nes-nav-sub:#315B4B;
+  --nes-nav-text:#F6FAF6; --nes-nav-muted:#C5D7CC; --nes-nav-line:#31594B;
+  --nes-sage:#84A28C; --nes-sage-pale:#E4EEE6;
+  --nes-navy:#142F61; --nes-teal:#00A8B0; --nes-focus:#326899;
+  --nes-radius:12px; --nes-shadow:0 3px 15px #173F3408;
+}
+/* ---- Palettes de fond, mode clair uniquement ---- */
+html[data-nes-style="sage"][data-nes-mode="light"]{
+  --paper:#F5F5F0; --sunk:#EDF2EE; --line:#DCE2DB; --line2:#E9EDE7;
+}
+html[data-nes-style="clair"][data-nes-mode="light"]{
+  --paper:#F7F9FB; --sunk:#F0F4F7; --line:#DCE5E9; --line2:#EEF2F4;
+}
+html[data-nes-style][data-nes-mode="light"]{
+  --surface:#FFFFFF; --ink:#173F34; --ink2:#52645E; --ink3:#5F7268;
+  --blue:#142F61; --blue-2:#1B3E80; --blue-soft:#EAF0F7; --blue-50:#F1F5FA;
+  --ds-nav:#103F33; --ds-nav-text:#F6FAF6; --ds-nav-muted:#C5D7CC; --ds-nav-on:#275647; --ds-nav-hover:#264D3E; --ds-nav-mark:#00A8B0;
+  --as-teal:#173F34; --as-shadow:var(--nes-shadow); --focus:#326899;
+  --nes-surface-line:var(--line);
+}
+html[data-nes-style][data-nes-mode="dark"]{
+  --nes-nav-top:#0C2018; --nes-nav-bottom:#0A1A14; --nes-nav-active:#284C3B; --nes-nav-sub:#284C3B; --nes-nav-line:#2B4335;
+  --nes-nav-text:#E7EEE9; --nes-nav-muted:#ACBDB1; --ds-nav-mark:#00A8B0;
+  --nes-navy:#BBD5C5; --nes-surface-line:var(--line);
+}
+
+/* ---- Identité : bandeau supérieur ---- */
+.nes-header{display:none}
+html[data-nes-style] .nes-header{
+  display:flex;align-items:center;gap:28px;position:fixed;top:0;left:0;right:0;z-index:90;height:var(--nes-header-h);
+  padding:0 24px;background:var(--surface);border-bottom:1px solid var(--line);color:var(--ink);
+  font:14px "Sauge Inter","Inter",Arial,sans-serif;
+}
+html[data-nes-style] .nes-brand{display:flex;align-items:center;gap:13px;min-width:0}
+html[data-nes-style] .nes-monogram{width:44px;height:44px;flex:none;display:grid;place-items:center;border-radius:11px;background:#245D4A;color:#fff;font-size:28px;line-height:1}
+html[data-nes-style] .nes-brand strong{display:block;font-size:19px;line-height:1.2;color:var(--ink)}
+html[data-nes-style] .nes-brand small{display:block;margin-top:3px;font-size:11px;color:var(--ink2)}
+html[data-nes-style] .nes-signature{border-left:1px solid var(--line);padding-left:25px;color:var(--nes-navy);font-weight:700;font-size:20px;line-height:1.35;white-space:nowrap}
+html[data-nes-style] .nes-signature:before{content:"";display:inline-block;width:9px;height:9px;margin-right:10px;background:var(--nes-teal)}
+html[data-nes-style] .nes-signature small{display:block;padding-left:19px;font-size:9px;font-weight:400;letter-spacing:1.7px;color:var(--ink3)}
+html[data-nes-style] .nes-demo{font-size:10px;color:var(--ink2);background:var(--sunk);border-radius:4px;padding:6px 9px;letter-spacing:.02em}
+html[data-nes-style] .nes-site{margin-left:auto;display:inline-flex;align-items:center;gap:8px;font-size:12px;text-decoration:none;color:var(--nes-navy);border:1px solid var(--line);border-radius:7px;padding:10px 14px;background:var(--surface)}
+html[data-nes-style] .nes-site:hover{background:var(--sunk)}
+html[data-nes-style] .nes-site svg{flex:none}
+
+/* ---- Mise en page : bandeau, navigation de 275 px, barre d'outils ---- */
+html[data-nes-style] body{background:var(--paper)}
+html[data-nes-style] .app{margin-top:var(--nes-header-h)}
+html[data-nes-style] .side{top:var(--nes-header-h);height:calc(100vh - var(--nes-header-h));padding-top:14px;
+  background:linear-gradient(120deg,var(--nes-nav-top),var(--nes-nav-bottom));border:0}
+html[data-nes-style] .top{top:var(--nes-header-h);background:var(--surface)}
+html[data-nes-style] .side-brand{display:none}
+@media (min-width:1101px){html[data-nes-style] .app{grid-template-columns:275px minmax(0,1fr)}}
+html[data-nes-style] .wrap{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='470' height='180' viewBox='0 0 470 180'%3E%3Cg fill='none' stroke='%230e737b' stroke-opacity='.11'%3E%3Cpath d='M70 0l40 23v46L70 92 30 69V23zM175 30l40 23v46l-40 23-40-23V53zM280 0l40 23v46l-40 23-40-23V23zM385 55l40 23v46l-40 23-40-23V78z'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:top right;pointer-events:auto}
+
+/* ---- Navigation : pictogrammes, entrée active turquoise, chevrons ---- */
+html[data-nes-style] .side .mn{color:var(--nes-nav-muted);border-left:3px solid transparent;border-radius:9px}
+html[data-nes-style] .side .mn svg{color:var(--nes-nav-muted);opacity:1}
+html[data-nes-style] .side .mn:hover{background:var(--ds-nav-hover);color:var(--nes-nav-text)}
+html[data-nes-style] .side .mn.on{background:var(--nes-nav-active);color:var(--nes-nav-text);border-left-color:var(--nes-teal)}
+html[data-nes-style] .side .mn.on svg{color:var(--nes-teal)}
+html[data-nes-style] .side-sub{border-color:var(--nes-nav-line)}
+html[data-nes-style] .side-sub button{color:var(--nes-nav-muted)}
+html[data-nes-style] .side-sub button:hover{background:var(--ds-nav-hover);color:var(--nes-nav-text)}
+html[data-nes-style] .side-sub button.on{background:var(--nes-nav-sub);color:var(--nes-nav-text)}
+html[data-nes-style] .lx-nav-heading{color:var(--nes-nav-muted)!important}
+html[data-nes-style] .as-collapse{background:var(--nes-nav-sub);color:var(--nes-nav-text)}
+html[data-nes-style] .side-foot{border-color:var(--nes-nav-line);color:var(--nes-nav-muted)}
+html[data-nes-style] .side-foot b{color:var(--nes-nav-text)}
+/* Chevron de dépli : à droite, orienté vers la droite fermé, vers le bas ouvert ; remplace les signes +/− */
+.nes-chev{display:none}
+html[data-nes-style] .nes-chev{display:inline-flex;margin-left:auto;flex:none;transition:transform .15s}
+html[data-nes-style] [aria-expanded="true"]>.nes-chev{transform:rotate(90deg)}
+html[data-nes-style] .lx-nav-heading .nes-sign{display:none}
+html[data-nes-style] .side .mn .nes-chev{opacity:.85}
+@media (prefers-reduced-motion:reduce){html[data-nes-style] .nes-chev{transition:none}}
+@media (min-width:721px) and (max-width:1100px){html[data-nes-style] .nes-chev{display:none}}
+
+/* ---- Cartes, titres, tables, boutons ---- */
+html[data-nes-style] :is(.as-surface,.kcard,.card,.lx-card){border:1px solid var(--line);border-radius:var(--nes-radius);box-shadow:var(--nes-shadow)}
+html[data-nes-style] .as-surface>h3:after,html[data-nes-style] .as-section-title h3:after{content:"";display:block;width:30px;height:3px;margin-top:10px;background:var(--nes-teal)}
+html[data-nes-style] .as-head{padding-bottom:15px;border-bottom:1px solid var(--line)}
+html[data-nes-style] .as-head h1{font-size:32px;letter-spacing:-1px;color:var(--ink)}
+html[data-nes-style] .as-cockpit-intro{background:linear-gradient(110deg,#103F33,#154A3B)}
+html[data-nes-style] .as-cockpit-intro .as-eyebrow{color:#C5D7CC}
+html[data-nes-style] :is(.lx-table,.as-table) th{background:var(--sunk)}
+html[data-nes-style] .btn.primary,html[data-nes-style] .btn.primary:hover{background:#173F34;border-color:#173F34;color:#fff}
+html[data-nes-style][data-nes-mode="dark"] .btn.primary{background:var(--blue);border-color:var(--blue);color:#12241C}
+html[data-nes-style] .as-views .btn[aria-pressed="true"]{background:var(--surface);color:#12545A;border-bottom:3px solid var(--nes-teal)}
+html[data-nes-style] :is(button,a,input,select,textarea,summary):focus-visible{outline:3px solid var(--nes-focus);outline-offset:3px}
+html[data-nes-style][data-nes-mode="dark"] :is(button,a,input,select,textarea,summary):focus-visible{outline-color:#BBD5C5}
+
+/* ---- Écrans étroits : bandeau compact, navigation conservée ---- */
+@media (max-width:1000px){
+  html[data-nes-style] .nes-header{gap:14px;padding:0 14px}
+  html[data-nes-style] .nes-signature{font-size:15px;padding-left:15px}
+  html[data-nes-style] .nes-demo{display:none}
+}
+@media (max-width:720px){
+  html[data-nes-style]{--nes-header-h:68px}
+  html[data-nes-style] .nes-header{padding:0 10px}
+  html[data-nes-style] .nes-brand strong{font-size:13px}
+  html[data-nes-style] .nes-brand small,html[data-nes-style] .nes-signature small,html[data-nes-style] .nes-site span{display:none}
+  html[data-nes-style] .nes-monogram{width:30px;height:30px;font-size:20px}
+  html[data-nes-style] .nes-signature{font-size:12px;padding-left:10px}
+  html[data-nes-style] .nes-site{padding:8px}
+  html[data-nes-style] .side{position:static;top:auto;height:auto}
+  html[data-nes-style] .top{position:static;top:auto}
+}
+
+/* ---- Matrice des risques : cases pleines, niveau toujours lisible en texte ---- */
+html[data-nes-style] .as-risk-cell{border-radius:8px}
+html[data-nes-style] .as-risk-cell.selected{outline:4px solid #2664B8;outline-offset:-4px;box-shadow:0 0 0 2px #fff inset}
+html[data-nes-style][data-nes-mode="dark"] .as-risk-cell.selected{outline-color:#9DC3FF;box-shadow:none}

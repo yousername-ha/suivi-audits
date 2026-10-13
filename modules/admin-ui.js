@@ -110,6 +110,10 @@
       v = U.api().ui.adminView || "overview";
     if (v === "users") return U.accounts();
     if (v === "roles") return U.rolesView();
+    if (v === "appearance")
+      return window.NesStyle
+        ? window.NesStyle.panel(U)
+        : U.empty("Apparence indisponible", "Le module d’apparence n’est pas chargé.");
     if (v === "frameworks")
       return (
         U.header(
@@ -184,6 +188,7 @@
                 ["frameworks", "Référentiels"],
                 ["audit", "Journal et traçabilité"],
                 ["demo", "Données de démonstration"],
+                ["appearance", "Apparence"],
               ].map(([v, label]) => ({
                 id: "admin-" + v,
                 label,
@@ -210,6 +215,8 @@
       if (act === "admin-refresh") await load();
       else if (act === "admin-settings") settings();
       else if (act === "admin-demo") await demo();
+      else if (act === "admin-appearance-save") await window.NesStyle.save();
+      else if (act === "admin-appearance-cancel") window.NesStyle.cancel();
       else if (act === "admin-care-sources")
         U.api().navigate("care", { careView: "sources" });
       else if (act === "admin-has-sources")
