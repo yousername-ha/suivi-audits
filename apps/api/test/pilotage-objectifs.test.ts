@@ -154,3 +154,84 @@ describe('objectifs et indicateurs', () => {
     expect(relue.data.mission).toBe('Mission native');
   });
 });
+
+describe('boîtes de pilotage par processus', () => {
+  it('compte ce qui est rattaché à chaque processus et donne la prochaine échéance récurrente', async () => {
+    const racine = `/api/grc/${DEFAULT_SMSI}`;
+    const p = (await a.post(`${base}/processes`, { name: 'Processus de la boîte' })).json().id as string;
+    const autre = (await a.post(`${base}/processes`, { name: 'Processus sans rattachement' })).json().id as string;
+    const ref = `legacy:processes:${p}`;
+    const action = {
+      kind: 'action',
+      name: 'Action liée au processus',
+      data: {
+        description: '',
+        status: 'todo',
+        ownerId: null,
+        startAt: null,
+        dueAt: '2020-01-01T09:00:00Z',
+        priority: 'normal',
+        category: 'action',
+        justification: '',
+        reminderDays: 7,
+        dependencies: [],
+      },
+    };
+    const ouverte = await a.post(`${racine}/objects`, action);
+    expect(ouverte.statusCode, ouverte.body).toBe(200);
+    const lien = await a.post(`${racine}/links`, {
+      source: 'object:' + ouverte.json().id,
+      target: ref,
+      type: 'related_to',
+      note: 'Action rattachée au processus',
+    });
+    expect(lien.statusCode, lien.body).toBe(200);
+    const futur = new Date(Date.now() + 40 * 86400e3).toISOString().slice(0, 10);
+    const serie = await a.post(`${racine}/objects`, {
+      kind: 'task_series',
+      name: 'Revue du processus',
+      data: {
+        description: '',
+        ownerId: null,
+        category: 'action',
+        priority: 'normal',
+        refs: [ref],
+        recurrence: {
+          start: futur,
+          time: '09:00',
+          timezone: 'Europe/Paris',
+          unit: 'month',
+          interval: 3,
+          until: null,
+          count: null,
+          reminderDays: 7,
+          active: true,
+        },
+      },
+    });
+    expect(serie.statusCode, serie.body).toBe(200);
+    const r = await a.get(`${racine}/pilotage/boites`);
+    expect(r.statusCode, r.body).toBe(200);
+    const boites = r.json() as {
+      ref: string;
+      actionsOuvertes: number;
+      actionsEnRetard: number;
+      series: number;
+      prochaineEcheance: string | null;
+      risques: number;
+    }[];
+    expect(boites.find((b) => b.ref === ref)).toMatchObject({
+      actionsOuvertes: 1,
+      actionsEnRetard: 1,
+      series: 1,
+      risques: 0,
+      prochaineEcheance: futur,
+    });
+    expect(boites.find((b) => b.ref === `legacy:processes:${autre}`)).toMatchObject({
+      actionsOuvertes: 0,
+      series: 0,
+      prochaineEcheance: null,
+    });
+    expect((await ro.get(`${racine}/pilotage/boites`)).statusCode).toBe(200);
+  });
+});

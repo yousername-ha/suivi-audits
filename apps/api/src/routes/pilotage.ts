@@ -3,6 +3,7 @@ import { GrcRef, GRC_MODULES, PilotageRecord, Recurrence, SuppressionBody } from
 import type { Session } from '../auth.js';
 import { Pilotage } from '../pilotage/service.js';
 import { PilotageObjectifs } from '../pilotage/objectifs.js';
+import { PilotageBoites } from '../pilotage/boites.js';
 import { route } from '../http/route.js';
 import { requireIfMatch } from '../http/concurrency.js';
 const base = { tags: ['Pilotage'], access: 'metier' as const };
@@ -10,6 +11,14 @@ const scope = z.object({ smsi: z.uuid() });
 const cleObjectifs = z.enum(['processes', 'objectives', 'indicators']);
 const recordBody = z.object({ ref: GrcRef, decision: PilotageRecord }).strict();
 export const pilotageRoutes = [
+  route({
+    ...base,
+    method: 'GET',
+    url: '/api/grc/:smsi/pilotage/boites',
+    params: scope,
+    summary: 'Boîtes de pilotage par processus : actions, risques et séries rattachés, prochaine échéance récurrente',
+    handler: async ({ svc, s, params }) => new PilotageBoites(svc.grc).lister(params.smsi, (s as Session).user),
+  }),
   route({
     ...base,
     method: 'POST',

@@ -32,7 +32,16 @@ const jour = (d: string) => (/^\d{4}-\d{2}-\d{2}$/.test(d) ? d.split('-').revers
 const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
 const rows = (v: unknown): Ligne[] =>
   Array.isArray(v) ? (v.filter((x) => x && typeof x === 'object') as Ligne[]) : [];
-type Vue = 'processus' | 'objectif' | 'compacte';
+type Vue = 'processus' | 'objectif' | 'compacte' | 'boites';
+interface Boite {
+  ref: string;
+  actionsOuvertes: number | null;
+  actionsEnRetard: number | null;
+  risques: number | null;
+  series: number | null;
+  prochaineEcheance: string | null;
+}
+const PIRE: EtatIndicateur[] = ['ko', 'undef', 'na', 'ok'];
 type Ouvert = { type: 'processus' | 'objectif' | 'indicateur'; id: string } | null;
 
 export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { smsi: string; vue?: Vue }) {
@@ -46,6 +55,11 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
     queryKey: ['grc', smsi, 'legacy-objectifs'],
     queryFn: () => get<Record<string, unknown>>('/api/legacy/state'),
     enabled: smsi === SOCLE,
+  });
+  const boites = useQuery({
+    queryKey: ['grc', smsi, 'legacy-objectifs', 'boites'],
+    queryFn: () => get<Boite[]>(`/api/grc/${smsi}/pilotage/boites`),
+    enabled: smsi === SOCLE && vue === 'boites',
   });
   if (smsi !== SOCLE) return null;
   const donnees = q.data;
@@ -232,7 +246,92 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
               <Tabs.Tab value="processus">Par processus</Tabs.Tab>
               <Tabs.Tab value="objectif">Par objectif</Tabs.Tab>
               <Tabs.Tab value="compacte">Vue compacte</Tabs.Tab>
+              <Tabs.Tab value="boites">Boîtes de pilotage</Tabs.Tab>
             </Tabs.List>
+            <Tabs.Panel value="boites">
+              <Stack>
+                <Text size="sm">
+                  Une boîte par processus (ISO 9001:2015, 4.4.1 c et 9.1.1) : indicateurs liés par leurs objectifs ou
+                  directement, avec leur état, puis ce qui est rattaché au processus dans le registre commun. Ces
+                  chiffres aident le pilotage ; ils ne constituent pas un taux de conformité.
+                </Text>
+                <ErrorAlert error={boites.error} />
+                <div className="grc-dashboard-grid">
+                  {rProcessus.map((p) => {
+                    const id = texte(p.id);
+                    const mesObjectifs = objectifs.filter((o) => o.processus.includes(id));
+                    const directs = rIndicateurs.filter(
+                      (i) => Array.isArray(i.processes) && (i.processes as unknown[]).includes(id),
+                    );
+                    const parObjectif = mesObjectifs.flatMap((o) => o.indicateurs);
+                    const tous = [
+                      ...parObjectif,
+                      ...objectifs
+                        .flatMap((o) => o.indicateurs)
+                        .filter(
+                          (i) => directs.some((d) => texte(d.id) === i.id) && !parObjectif.some((x) => x.id === i.id),
+                        ),
+                    ].filter(garde);
+                    const pire = PIRE.find((e) => tous.some((i) => i.etat === e));
+                    const b = boites.data?.find((x) => x.ref === `legacy:processes:${id}`);
+                    return (
+                      <Card key={id} withBorder aria-label={`Boîte du processus ${id}`}>
+                        <Stack gap="xs">
+                          <Group justify="space-between" wrap="nowrap">
+                            <Button
+                              variant="subtle"
+                              size="compact-sm"
+                              aria-label={`Ouvrir le processus ${id}`}
+                              onClick={() => setOuvert({ type: 'processus', id })}
+                            >
+                              {id} · {texte(p.name)}
+                            </Button>
+                            {pire && <StatusChip etat={ETATS[pire][1]}>{ETATS[pire][0]}</StatusChip>}
+                          </Group>
+                          <Text size="sm" c="dimmed">
+                            Pilote : {texte(p.owner) || 'à définir'}
+                          </Text>
+                          {tous.length ? (
+                            tous.map((i) => (
+                              <Group key={i.id} justify="space-between" wrap="nowrap">
+                                <Button
+                                  variant="subtle"
+                                  size="compact-sm"
+                                  aria-label={`Ouvrir l’indicateur ${i.id}`}
+                                  onClick={() => ouvrirIndicateur(i.id)}
+                                >
+                                  {i.nom}
+                                </Button>
+                                <Text size="sm">
+                                  <b>{i.valeur}</b> {i.tendance} · {i.cible}
+                                </Text>
+                                <StatusChip etat={ETATS[i.etat][1]}>{ETATS[i.etat][0]}</StatusChip>
+                              </Group>
+                            ))
+                          ) : (
+                            <Text size="sm">Aucun indicateur pour ce processus.</Text>
+                          )}
+                          <Group gap="md">
+                            <Text size="sm">
+                              Actions ouvertes : {b?.actionsOuvertes ?? '–'}
+                              {b?.actionsEnRetard ? ` (dont ${b.actionsEnRetard} en retard)` : ''}
+                            </Text>
+                            <Text size="sm">Risques liés : {b?.risques ?? '–'}</Text>
+                            <Text size="sm">Séries récurrentes : {b?.series ?? '–'}</Text>
+                            <Text size="sm">
+                              Prochaine échéance : {b?.prochaineEcheance ? jour(b.prochaineEcheance) : '–'}
+                            </Text>
+                          </Group>
+                        </Stack>
+                      </Card>
+                    );
+                  })}
+                </div>
+                {!rProcessus.length && (
+                  <Text>Aucun processus : ajoutez-en un pour constituer sa boîte de pilotage.</Text>
+                )}
+              </Stack>
+            </Tabs.Panel>
             <Tabs.Panel value="processus">
               <Stack>
                 {parProcessus?.familles.map((f) => (
