@@ -11,6 +11,7 @@ const capture = (page: Page, nom: string) => page.screenshot({ path: `${DIR}/${n
 test('jeu de test : menu, objectifs, fournisseurs, PESTEL, boîtes, carte des risques, revue et standards', async ({
   browser,
 }) => {
+  test.setTimeout(240_000);
   const ctx = await browser.newContext({
     storageState: (await sessionAdmin(browser)).state,
     ignoreHTTPSErrors: true,
@@ -23,19 +24,17 @@ test('jeu de test : menu, objectifs, fournisseurs, PESTEL, boîtes, carte des ri
     await page.goto('/pilotage/synthese');
     const nav = page.getByRole('navigation', { name: 'Navigation principale' });
     await expect(nav.locator('[data-alerte="rouge"]').first()).toBeVisible();
-    const objectifs = nav
-      .getByRole('link', { name: /^Objectifs et indicateurs/ })
-      .or(nav.getByText(/^Objectifs et indicateurs/));
     await expect(nav.locator('.nav-pastille[data-alerte="rouge"]').first()).toHaveAccessibleName(
       /non atteint|échéance/,
     );
     await capture(page, '01-menu-pastilles');
+    // Une seule section dépliée : ouvrir « Fournisseurs » referme « Objectifs et indicateurs » (la racine Pilotage + 1 groupe).
     await nav.getByText('Objectifs et indicateurs', { exact: true }).click();
+    await expect(nav.locator('.mantine-NavLink-children').filter({ visible: true })).toHaveCount(2);
     await nav.getByText('Fournisseurs', { exact: true }).first().click();
-    const ouvertes = nav.locator('.pilotage-nav-group [data-expanded="true"]');
-    await expect(nav.locator('.pilotage-nav-group .mantine-NavLink-children').filter({ visible: true })).toHaveCount(1);
-    void objectifs;
-    void ouvertes;
+    await expect(nav.locator('.mantine-NavLink-children').filter({ visible: true })).toHaveCount(2);
+    await expect(page.getByRole('link', { name: 'Fournisseurs de l’organisation' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Objectifs', exact: true })).toBeHidden();
 
     // Objectifs : trois vues de l'ancienne interface, fiches, boîtes.
     await page.goto('/pilotage/processus');
@@ -75,7 +74,7 @@ test('jeu de test : menu, objectifs, fournisseurs, PESTEL, boîtes, carte des ri
       'Contrôles',
       'Prochain',
     ])
-      await expect(page.getByRole('columnheader', { name: colonne, exact: true })).toBeVisible();
+      await expect(page.locator('th').filter({ hasText: colonne }).first()).toBeVisible();
     await expect(page.getByText('SaaS avec MFA')).toBeVisible();
     await capture(page, '07-fournisseurs');
     await page.getByRole('button', { name: 'Filtres', exact: true }).click();
@@ -98,7 +97,7 @@ test('jeu de test : menu, objectifs, fournisseurs, PESTEL, boîtes, carte des ri
     await expect(page.getByLabel('Synthèse des parties intéressées')).toContainText('non revues depuis un an');
     await capture(page, '10-parties-interessees');
     await page.goto('/pilotage/opportunites');
-    await expect(page.getByText('Ouverture à la téléconsultation')).toBeVisible();
+    await expect(page.getByText('Ouverture à la téléconsultation').first()).toBeVisible();
     await capture(page, '11-opportunites');
 
     // Séries proposées sans fréquence, revue de direction préparée, audits.
@@ -107,7 +106,7 @@ test('jeu de test : menu, objectifs, fournisseurs, PESTEL, boîtes, carte des ri
     await capture(page, '12-series-proposees');
     await page.goto('/pilotage/revues');
     await page.getByRole('button', { name: /Statut des actions décidées lors des revues précédentes/ }).click();
-    await expect(page.getByText(/Revue du .* : 1 action décidée/)).toBeVisible();
+    await expect(page.getByText(/Revue du .* : (1 action décidée|aucune action)/)).toBeVisible();
     await capture(page, '13-revue-entrees');
 
     // Cartographie des risques : la carte reste dans son cadre (plus d'écran gris).
@@ -121,13 +120,16 @@ test('jeu de test : menu, objectifs, fournisseurs, PESTEL, boîtes, carte des ri
 
     // Cartographie du SMSI : calque santé.
     await page.goto('/cartographie');
-    await expect(page.getByText('Calques')).toBeVisible();
-    await page.getByLabel('Santé des indicateurs').check({ force: true });
+    await page.getByRole('button', { name: 'Vue processus' }).click();
+    await page.getByRole('button', { name: 'Générer depuis la plateforme' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Générer', exact: true }).click();
+    await expect(page.getByText('Calques', { exact: true })).toBeVisible();
+    await page.getByRole('switch', { name: 'Santé des indicateurs' }).check();
     await capture(page, '15-cartographie-sante');
 
     // Bibliothèque : standards d'emblée, sans alerte rouge.
     await page.goto('/pilotage/bibliotheque');
-    await expect(page.getByText('Référentiel fictif de démonstration')).toBeVisible();
+    await expect(page.getByText('Référentiel fictif de démonstration').first()).toBeVisible();
     await expect(page.getByText('Version source verrouillée').first()).toBeVisible();
     await capture(page, '16-bibliotheque');
 

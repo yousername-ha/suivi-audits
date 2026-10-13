@@ -10,8 +10,7 @@
      migrations [--a-appliquer]  migrations appliquées, ou seulement celles en attente (script de mise à jour)
      controle-donnees            nombres d'enregistrements, empreinte de l'état, relecture de chaque document chiffré
      controle-relations [--anomalies]  références logiques entre objets (JSON, ou une ligne par anomalie)
-     controle-relations [--anomalies]  références logiques entre objets (JSON, ou une ligne par anomalie)
-  jeu-de-test <compte> --confirmer  charge un jeu de données fictif et cohérent (instance de test vide uniquement)
+     jeu-de-test <compte> --confirmer  charge un jeu de données fictif et cohérent (instance de test vide uniquement)
      backup-worker [ready|unavailable] annonce l'état de l'exécutant serveur
      backup-claim               réclame une demande (verrou hôte obligatoire)
      backup-finish <id> <code>   termine une demande avec le rapport serveur

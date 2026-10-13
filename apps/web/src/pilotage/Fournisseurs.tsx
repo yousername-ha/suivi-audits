@@ -173,6 +173,7 @@ export function Fournisseurs() {
     modifier ? (
       <Select
         size="xs"
+        className="select-compact"
         aria-label={`${{ sso: 'SSO', mfa: 'MFA', critical: 'Critique', hds: 'Hébergeur HDS' }[champ]} de ${f.name}`}
         allowDeselect={false}
         data={champ === 'sso' || champ === 'mfa' ? OPTIONS_SSO_MFA : OPTIONS_OUI_NON}

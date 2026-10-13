@@ -55,8 +55,8 @@ test('archive : une capture par page de l’ancienne interface', async ({ browse
       n++;
       await page.goto('about:blank');
       await page.goto(`/legacy/#ouvrir=${onglet}${vue ? '&' + vue : ''}`);
-      await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1500);
+      await page.waitForLoadState('load');
+      await page.waitForTimeout(2500);
       await page.screenshot({
         path: `${DIR}/${String(n).padStart(2, '0')}-${nom(groupe)}--${nom(libelle)}.png`,
         fullPage: true,

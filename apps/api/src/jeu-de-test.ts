@@ -882,6 +882,36 @@ export async function chargerJeuDeTest(
       'Évaluation SUP-003',
     );
     bilan.evaluations = 2;
+    // 6) Décision de la revue de direction précédente : crée une action suivie (entrée 9.3.2 a de la revue suivante).
+    const revue = await exiger<{ version: number }>(
+      await appel('GET', `/api/grc/${commun}/pilotage/legacy/reviews/R1`),
+      'Lecture de la revue',
+    );
+    await exiger(
+      await appel(
+        'POST',
+        `/api/grc/${commun}/pilotage/decisions`,
+        {
+          ref: 'legacy:reviews:R1',
+          decision: {
+            operation: 'action_create',
+            requestId: crypto.randomUUID(),
+            note: 'Décision fictive de la revue : renforcer la revue des accès.',
+            date: decaler(-200),
+            result: 'completed',
+            refs: [],
+            step: '',
+            createFinding: false,
+            createAction: true,
+            until: '',
+            confirm: 'ENREGISTRER',
+          },
+        },
+        { 'if-match': `"${revue.version}"` },
+      ),
+      'Décision de la revue',
+    );
+    bilan.actions++;
     await svc.db.audit({ username: 'jeu-de-test' } as never, '127.0.0.1', 'jeu-de-test.loaded', commun, {
       compte,
       ...bilan,

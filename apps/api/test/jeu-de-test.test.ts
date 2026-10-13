@@ -26,7 +26,7 @@ describe('jeu de données de test', () => {
     expect(bilan).toMatchObject({
       etat: 'oui',
       risques: 3,
-      actions: 4,
+      actions: 5,
       serie: 1,
       opportunites: 3,
       criteres: 3,
@@ -62,6 +62,7 @@ describe('jeu de données de test', () => {
     expect(pestel.nonClasses.length + pestel.internes.length).toBeGreaterThan(0);
     const revue = (await a.get(`/api/grc/${DEFAULT_SMSI}/pilotage/revue/entrees`)).json();
     expect(revue.precedente).toMatchObject({ id: 'R1' });
+    expect(revue.entrees.find((e: { id: string }) => e.id === 'a').faits.join(' ')).toMatch(/1 action décidée/);
   });
   it('refuse de se charger deux fois : les données de départ restent vides sauf demande explicite', async () => {
     await expect(chargerJeuDeTest(t.svc, t.app, 'jdt_admin', { publicUrl: 'https://suivi.test' })).rejects.toThrow(
