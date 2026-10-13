@@ -272,7 +272,12 @@ describe('détail des mesures et saisie d’une valeur (interface des objectifs)
       source: '2026-07-01',
       historique: { periode: '2025-2026', valeur: '70 %' },
     });
-    expect(detailMesures({ ...ind, values: [{ date: '2026-04-01', v: 0.8 }] }, etat).tendance).toBe('→');
+    expect(detailMesures({ ...ind, values: [{ date: '2026-04-01', v: 0.8 }] }, etat).tendance).toBe('');
+    const stable = [
+      { date: '2026-04-01', v: 0.8 },
+      { date: '2026-07-01', v: 0.8 },
+    ];
+    expect(detailMesures({ ...ind, values: stable }, etat).tendance).toBe('→');
   });
   it('ne donne pas de tendance à un indicateur calculé, et cite la source du calcul', () => {
     const auto = detailMesures(
