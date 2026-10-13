@@ -10,6 +10,7 @@ import {
   Image,
   NavLink,
   NumberInput,
+  Radio,
   SegmentedControl,
   Select,
   Stack,
@@ -29,7 +30,7 @@ import { Link, useNavigate, useParams } from 'react-router';
 import { api, ApiError, download, errorMessage, get } from '../api';
 import { CopyCommand, ErrorAlert } from '../components/common';
 import { usePresence } from '../realtime';
-import { ME_KEY, useCan } from '../session';
+import { ME_KEY, useCan, useMe } from '../session';
 
 const DESCRIPTIONS: Record<SettingsSection, string> = {
   general: 'Identité de l’organisation : nom, logo et coordonnées affichés dans l’application.',
@@ -218,6 +219,41 @@ function Num({
   );
 }
 
+/** Style global de l'instance : aperçu local tant que la section n'est pas enregistrée ; abandonné en quittant le panneau. */
+function StyleGlobal({ p }: { p: P }) {
+  const enregistre = useMe().appearance.style;
+  const choisi = p.values.style === 'clair' ? 'clair' : 'sage';
+  useEffect(() => {
+    document.documentElement.dataset.style = choisi;
+    return () => {
+      document.documentElement.dataset.style = enregistre;
+    };
+  }, [choisi, enregistre]);
+  return (
+    <Radio.Group
+      label="Style de l’application (global)"
+      description="Pour tous les comptes de l’instance. Le thème clair, sombre ou automatique reste un choix personnel."
+      value={choisi}
+      onChange={(v) => p.set('style', v)}
+    >
+      <Stack gap="xs" mt="xs">
+        <Radio
+          value="sage"
+          label="Référence 08 — Sauge"
+          description="Fonds sauge chauds (par défaut)."
+          disabled={p.ro}
+        />
+        <Radio
+          value="clair"
+          label="Clair bleuté"
+          description="Fonds et bordures bleutés ; navigation vert profond conservée."
+          disabled={p.ro}
+        />
+      </Stack>
+    </Radio.Group>
+  );
+}
+
 /* ---------------------------------------------------------------- Sections */
 const SECTIONS: Record<SettingsSection, (p: P) => ReactNode> = {
   general: (p) => <General p={p} />,
@@ -257,8 +293,10 @@ const SECTIONS: Record<SettingsSection, (p: P) => ReactNode> = {
           disabled={p.ro}
         />
       </Stack>
+      <StyleGlobal p={p} />
       <Text size="sm" c="dimmed">
-        Valeurs appliquées à toute personne qui n’a pas choisi ses propres préférences d’affichage.
+        Thème et densité s’appliquent à toute personne qui n’a pas choisi ses propres préférences d’affichage. Le style
+        est le même pour tous les comptes.
       </Text>
     </Stack>
   ),

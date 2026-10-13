@@ -41,17 +41,9 @@ reste libre de fixer d'autres volumes et d'autres seuils (OPT-008).
 
 ## Accessibilité : écarts connus
 
-Toute violation nouvelle fait échouer la CI. Les écarts volontairement tolérés sont listés dans `ECARTS_CONNUS` du
-fichier de test, avec leur justification. Le premier passage a relevé 53 constats ; ceux qui n'ont pas d'effet visuel
-sont corrigés (lien d'accueil nommé sur téléphone, tableaux défilants atteignables au clavier). **Sept écarts visuels
-sont reportés** à la demande du RSSI, le graphisme étant en cours de travail dans la branche `legacy` :
-
-| Règle WCAG | Écrans | Cause | Correctif prêt |
-| --- | --- | --- | --- |
-| contraste du texte (1.4.3) | tableau de bord, cartographie, utilisateurs, système, documents, objectifs | couleurs d'état de Mantine trop claires (badges et boutons pleins, titres d'alertes, boutons légers) ; onglet actif en mode sombre | couleurs assombries dans `packages/ui` (`ETATS`), 166 contrôles de contraste unitaires, voir le commit `e8af11a` |
-| lien distinguable sans la couleur (1.4.1) | tableau de bord | lien dans un texte, souligné au survol seulement | souligner les liens en permanence (thème `Anchor`) |
-
-Le rapport complet de chaque exécution (`accessibilite.json`) est écrit dans `tests/e2e/test-results/accessibilite/`.
+Toute violation nouvelle fait échouer la CI. Les écarts volontairement tolérés sont listés dans
+`ECARTS_CONNUS` du fichier de test, avec leur justification (aucun à ce jour). Le rapport complet de chaque exécution
+(`accessibilite.json`) est publié en artefact.
 
 ## Ce qui reste manuel
 

@@ -27,8 +27,6 @@ humain, textes officiels sous licence, fonctions non reprises) ; trois volets le
    licence MPL-2.0, aucun code embarqué dans les images). 14 écrans, clair et sombre, ordinateur et téléphone, règles
    WCAG 2.0/2.1 A et AA. Toute violation nouvelle fait échouer la CI ; les écarts tolérés sont listés avec leur
    justification, aucune règle n'est désactivée en bloc.
-   Les écarts à effet visuel (contrastes, soulignement des liens) sont consignés et reportés tant que le graphisme
-   est en cours de refonte (décision du RSSI du 12/10/2026) ; leur correctif a été écrit et validé (commit `e8af11a`).
 
 ## Conséquences
 

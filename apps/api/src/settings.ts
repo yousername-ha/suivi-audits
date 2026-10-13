@@ -36,7 +36,7 @@ export function settingsDefaults(cfg: Config): { [K in Stored]: SettingsValues[K
       site: '',
       rssi: '',
     },
-    apparence: { theme: 'auto', densite: 'normale' },
+    apparence: { theme: 'auto', densite: 'normale', style: 'sage' },
     notifications: { echeancesJours: 30, conventionJours: 90, alerterImports: true, alerterDroits: true },
     import_export: { formatRevue: 'xlsx' },
     sauvegardes: { emplacement: '/srv/sauvegardes/suivi-audits', dernierTestRestauration: '', frequenceTestMois: 12 },

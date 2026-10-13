@@ -58,6 +58,27 @@ describe('paramètres', () => {
     expect(bad.statusCode).toBe(422);
   });
 
+  it('style global : « sage » par défaut, partagé par tous les comptes, réservé à la permission d’écriture', async () => {
+    const reader = await login(t, await makeUser(t, 'style_reader', 'ro'));
+    expect((await reader.get('/api/auth/me')).json().appearance.style).toBe('sage');
+    const s = await section(A, 'apparence');
+    expect(s.values.style).toBe('sage');
+    const clair = await A.put('/api/settings/apparence', { ...s.values, style: 'clair' }, { 'if-match': s.etag });
+    expect(clair.statusCode, clair.body).toBe(200);
+    expect((await reader.get('/api/auth/me')).json().appearance.style).toBe('clair');
+    const invalide = await A.put('/api/settings/apparence', { ...s.values, style: 'rose' }, { 'if-match': '"1"' });
+    expect(invalide.statusCode).toBe(422);
+    const refus = await reader.put('/api/settings/apparence', { ...s.values, style: 'sage' }, { 'if-match': '"1"' });
+    expect(refus.statusCode).toBe(403);
+    expect((await reader.get('/api/auth/me')).json().appearance.style).toBe('clair');
+    // Un ancien enregistrement sans style reste lisible : « sage ».
+    await t.svc.db.q(
+      "UPDATE settings SET value = jsonb_set(value, '{values}', (value->'values') - 'style') WHERE key = 'section:apparence'",
+    );
+    await t.svc.settings.load();
+    expect(t.svc.settings.get('apparence').style).toBe('sage');
+  });
+
   it('politique de sécurité : bornes non négociables, appliquée aux mots de passe', async () => {
     const s = await section(A, 'securite');
     expect(

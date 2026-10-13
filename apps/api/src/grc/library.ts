@@ -3,10 +3,12 @@
    dans un périmètre (frameworks.ts) restent inchangés ; une promotion explicite, simulée avant application, les copie ici.
    Aucun lien vers une mesure n'est stocké dans la bibliothèque : ces liens sont propres à chaque périmètre. */
 import { LibraryFrameworkDefinition, type FrameworkDefinition } from '@suivi/shared';
+import { ZodError } from 'zod';
 import type { SessionUser } from '../auth.js';
 import type { Client } from '../db/db.js';
 import { HttpError } from '../http/errors.js';
 import { hash, type Grc } from './core.js';
+import { trackerCandidates } from './library-tracker.js';
 
 export interface LibraryFramework {
   id: string;
@@ -168,6 +170,51 @@ export class GrcLibrary {
       );
       return { id: frameworkId!, identifier: p.definition.identifier, name: p.definition.name, version };
     }, user.username);
+  }
+
+  /** Référentiels présents dans l'outil de suivi, simulés avant toute importation (rien n'est écrit). */
+  async trackerPreview(user: SessionUser) {
+    await this.g.permission(user, 'conformite', 'modifier');
+    const state = await this.g.legacy.recompose();
+    const candidates = trackerCandidates((state?.data ?? {}) as Record<string, unknown>);
+    return Promise.all(
+      candidates.map(async (c) => {
+        try {
+          return { ...(await this.preview(null, c.definition, user)), notes: c.notes, error: null as string | null };
+        } catch (e) {
+          // Un référentiel invalide ne masque pas les autres : il est listé, non importable, avec la raison.
+          const raison = e instanceof ZodError ? e.issues.map((i) => i.message).join(' ; ') : (e as Error).message;
+          return {
+            definition: c.definition,
+            version: 0,
+            previewId: '',
+            requirements: c.definition.requirements.length,
+            domains: c.definition.domains.length,
+            duplicate: false,
+            canPublish: false,
+            warning: null,
+            notes: c.notes,
+            error: raison,
+          };
+        }
+      }),
+    );
+  }
+
+  /** Publie en version 1 un référentiel de l'outil de suivi, après simulation identique (previewId) et confirmation. */
+  async trackerImport(identifier: string, previewId: string, user: SessionUser, ip: string) {
+    const p = (await this.trackerPreview(user)).find((x) => x.definition.identifier === identifier);
+    if (!p) throw new HttpError(404, 'Référentiel introuvable dans l’outil de suivi.');
+    if (p.error) throw new HttpError(422, `Référentiel non importable : ${p.error}`);
+    return this.publish(
+      null,
+      p.definition,
+      0,
+      previewId,
+      'Importé depuis l’outil de suivi (simulation confirmée).',
+      user,
+      ip,
+    );
   }
 
   async attachments(smsi: string, user: SessionUser): Promise<ScopeAttachment[]> {

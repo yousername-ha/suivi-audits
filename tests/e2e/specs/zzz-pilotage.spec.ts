@@ -569,3 +569,29 @@ test('Pilotage : fournisseur évalué une fois, rattaché à deux périmètres a
     await ctx.close();
   }
 });
+
+test('Pilotage : la bibliothèque propose l’import depuis l’outil de suivi, sans rien écrire sans confirmation', async ({
+  browser,
+}) => {
+  const ctx = await browser.newContext({ storageState: (await sessionAdmin(browser)).state, ignoreHTTPSErrors: true });
+  const page = await ctx.newPage(),
+    problems = watchPage(page);
+  try {
+    await page.goto('/pilotage/bibliotheque');
+    const avant = await page.getByText(/référentiel\(s\) dans la bibliothèque/).textContent();
+    await page.getByRole('button', { name: 'Importer depuis l’outil de suivi', exact: true }).click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog.getByText(/Simulation : rien n’est écrit/)).toBeVisible();
+    await expect(
+      dialog
+        .getByText('Aucun référentiel à importer dans l’outil de suivi.')
+        .or(dialog.getByText(/exigence\(s\)/).first()),
+    ).toBeVisible();
+    await dialog.getByRole('button', { name: 'Fermer', exact: true }).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(page.getByText(/référentiel\(s\) dans la bibliothèque/)).toHaveText(avant!);
+    expect(problems).toEqual([]);
+  } finally {
+    await ctx.close();
+  }
+});

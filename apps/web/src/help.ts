@@ -80,6 +80,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     steps: [
       'La bibliothèque contient les référentiels de l’organisation, importés une seule fois. Aucun texte normatif n’est fourni : importez les exigences dont vous détenez les droits.',
       'Importer un référentiel : collez sa définition, simulez la publication, indiquez un motif puis publiez. Chaque version est immuable ; une évolution crée une nouvelle version.',
+      'Importer depuis l’outil de suivi : les clauses ISO 27001, l’Annexe A, le HDS et le ReCyF déjà saisis dans l’outil de suivi s’importent d’un clic après simulation et confirmation. Seuls les intitulés ou textes saisis sont repris ; la source reste « non vérifiée » et jamais normative.',
       'Dans la page Périmètres, « Référentiels » rattache une version précise à un périmètre. Le même référentiel peut être rattaché à plusieurs périmètres sans être importé à nouveau.',
       'Un référentiel déjà publié dans un périmètre peut être promu dans la bibliothèque (simulation puis confirmation) ; l’original est conservé.',
     ],
@@ -226,6 +227,16 @@ export const HELP_ARTICLES: HelpArticle[] = [
       'Utilisez l’écran Import pour charger une sauvegarde JSON de l’outil historique. Commencez par la simulation et lisez le rapport.',
       'Vérifiez le mode d’import et ses conséquences avant l’application. Seuls les utilisateurs disposant des droits nécessaires peuvent appliquer les données.',
       'Consultez l’historique pour retrouver le rapport et le fichier source. L’annulation reste soumise aux contrôles de concurrence et aux permissions.',
+    ],
+  },
+  {
+    id: 'parametres-apparence',
+    title: 'Paramètres et apparence',
+    permission: 'parametres:lire',
+    link: '/parametres',
+    steps: [
+      'Style global : dans Paramètres > Apparence, choisissez « Référence 08 — Sauge » (défaut) ou « Clair bleuté » pour tous les comptes ; l’aperçu s’affiche avant l’enregistrement. Le thème clair, sombre ou automatique reste un choix personnel.',
+      'Thème et densité par défaut s’appliquent à toute personne qui n’a pas choisi ses propres préférences (Mon compte). Seule la permission d’écriture sur les paramètres permet de les modifier.',
     ],
   },
   {

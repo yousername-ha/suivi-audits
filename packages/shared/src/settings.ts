@@ -66,9 +66,13 @@ export const ReferentielsSettings = z.object({
 });
 export const THEMES = ['auto', 'clair', 'sombre'] as const;
 export const DENSITES = ['compacte', 'normale', 'confortable'] as const;
+/** Style global de l'instance (identique pour tous les comptes) : « sage » = Référence 08 (défaut), « clair » = clair bleuté.
+    Il ne remplace que les fonds et bordures claires ; le mode clair/sombre reste une préférence distincte. */
+export const STYLES = ['sage', 'clair'] as const;
 export const ApparenceSettings = z.object({
   theme: z.enum(THEMES),
   densite: z.enum(DENSITES),
+  style: z.enum(STYLES).default('sage'),
 });
 export const NotificationsSettings = z.object({
   echeancesJours: z.number().int().min(0).max(365),

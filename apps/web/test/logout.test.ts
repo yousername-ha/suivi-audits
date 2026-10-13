@@ -22,7 +22,8 @@ const me: MeOut = {
   passwordMinLength: 12,
   appName: 'Suivi',
   orgName: 'Test',
-  appearance: { theme: 'auto', densite: 'normale' },
+  orgSite: '',
+  appearance: { theme: 'auto', densite: 'normale', style: 'sage' },
   version: '3.0.0',
 };
 let qc: QueryClient;
