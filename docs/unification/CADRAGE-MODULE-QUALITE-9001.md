@@ -38,8 +38,10 @@ consigne les décisions structurantes ; les lots (§8) ne démarrent qu'après l
 | D11 | Une action, un constat ou un rappel issu d'une évaluation de fournisseur naît **dans un périmètre choisi à la création** (par défaut le périmètre courant). | §4.4 ; Q12 close. |
 | D12 | La page « Périmètres » est ouverte au **rôle de Pilotage** : droit `pilotage:administrer`, déjà exigé pour créer un périmètre (RSSI, administrateur). | §4.9 ; Q14 close. |
 | D13 | **Les fonctionnalités d'abord, le style ensuite** : le RSSI fournira rapidement un style proche de l'actuel ; aucun écran n'est figé sur un style d'ici là. | §7 ; Q10 close. |
+| D14 | **Opportunités de 6.1 : objet « Opportunité » séparé**, plus léger que le risque, affiché avec les risques dans une vue « Risques et opportunités » (Q8, option B). | §4.5 et lot M7. |
+| D15 | Un rapprochement entre référentiels est **proposé, jamais affirmé** : **menu « Rapprochements à valider » et notification** demandent au pilote de le **valider ou le rejeter** ; tant qu'il n'est pas décidé, il est affiché à part et exclu des taux (Q15). | [ADR 0031](../adr/0031-bibliotheque-de-referentiels.md), décision 5 ; lot M3. |
 
-Reste ouverte (§9) : **Q8**, les opportunités de 6.1 (expliquée en clair), et Q15, une règle d'affichage proposée par ADR 0031.
+Aucune question ouverte à ce stade (§9).
 
 ## 2. Ce que demande le RSSI, et ce que la norme en dit
 
@@ -225,8 +227,9 @@ Créer une série reste une action explicite de l'utilisateur ; rien n'est plani
   **bibliothèque au niveau de l'organisation** : on importe un référentiel **une fois**, on le **rattache** à plusieurs
   périmètres (version précise, changement explicite), et ses **correspondances** se valident **une fois**. La mesure d'un
   périmètre est l'**unité de déclaration** : elle peut mettre en œuvre des exigences de plusieurs référentiels, et une
-  correspondance validée fait apparaître l'exigence équivalente comme « **couverte par correspondance** », en lecture seule,
-  distincte de la couverture explicite et exclue des taux. Les référentiels déjà publiés dans un périmètre continuent de
+  correspondance validée fait apparaître l'exigence équivalente comme « **rapprochement à valider** », en lecture seule,
+  distinct de la couverture explicite et exclu des taux : un **menu** et une **notification** demandent au pilote de le
+  confirmer ou de le rejeter (**décision D15**). Les référentiels déjà publiés dans un périmètre continuent de
   fonctionner sans changement ; une promotion vers la bibliothèque est explicite et simulée.
 - **Droits (décision D12)** : créer, modifier un périmètre et lui rattacher un référentiel exigent `pilotage:administrer`,
   c'est-à-dire le rôle de Pilotage (RSSI, administrateur), comme l'exige déjà la création d'un périmètre.
@@ -285,11 +288,11 @@ activités métier de chaque organisme, que l'outil trace sans les piloter.
 | M0 | Décisions D1 à D13, ADR 0030 et 0031, révision de l'ADR 0013 (filtre 9001) | aucune |
 | M1 | **Page « Périmètres »** : créer et modifier, nature, rattachement (méthode de risque, politique, membres), libellés neutres, droit `pilotage:administrer` | aucune attendue |
 | M2 | **Bibliothèque de référentiels** : stockage organisationnel, import et publication, rattachement d'une version à un périmètre, double résolution des références, promotion explicite et simulée | additive, **lourde** |
-| M3 | **Déclarer une fois** : correspondances organisationnelles, couverture déduite, confirmation, vue commune multi-référentiels, tableau de bord de conformité étendu | additive |
+| M3 | **Déclarer une fois** : correspondances organisationnelles, propositions de rapprochement, menu « Rapprochements à valider » et notifications, vue commune multi-référentiels, tableau de bord de conformité étendu | additive |
 | M4 | **Gestion des fournisseurs** hors périmètre : adaptateur du registre, évaluations immuables, rattachement à plusieurs périmètres, critères reliés à la bibliothèque, sans grille | **additive** |
 | M5 | Fiche processus 4.4.1, lien indicateurs ↔ processus, calque « santé » sur la carte | additive éventuelle |
 | M6 | Indicateurs et objectifs (6.2, 9.1), **boxes** et tableau de bord qualité | aucune attendue |
-| M7 | Contexte, **PESTEL**, parties intéressées, opportunités (6.1), séries récurrentes proposées | additive éventuelle |
+| M7 | Contexte, **PESTEL**, parties intéressées, **objet Opportunité (6.1)** et vue « Risques et opportunités », séries récurrentes proposées | additive éventuelle |
 | M8 | Revue de direction (9.3.2) et audit combiné, amélioration continue | aucune attendue |
 | M9 | Recette, accessibilité, performance, documentation, application du style fourni, réévaluation du registre | aucune |
 
@@ -300,21 +303,9 @@ verte, CHANGELOG, retour arrière décrit, registre réévalué à la fin du lot
 
 ## 9. Décisions et questions
 
-**Tranchées le 13/10/2026** (§1 bis) : D1 à D13, soit les anciennes Q1 à Q7 et Q9 à Q14.
-
-**Reste ouverte, sans bloquer M0 à M5**
-
-1. **Q8** — Opportunités de 6.1. La norme demande de déterminer des **risques et des opportunités** (6.1.1, notes de 6.1.2).
-   Un risque est une situation défavorable qu'on veut réduire ; une **opportunité** est une situation **favorable** qu'on veut
-   saisir (la note 2 de 6.1 cite : nouvelles pratiques, nouveaux produits, nouveaux marchés, nouveaux clients, partenariats,
-   nouvelle technologie). Le registre des risques de l'outil est fait pour les premiers (matrice de gravité et de
-   vraisemblance). Où enregistrer les secondes ? **A)** dans le même registre, avec une « nature » risque ou opportunité ;
-   **B)** dans un **objet « Opportunité » séparé**, plus léger (description, bénéfice attendu, actions), affiché avec les
-   risques dans une vue commune « Risques et opportunités ». **Recommandation : B**, car une matrice de gravité n'a pas de
-   sens pour une opportunité, et la norme n'impose aucune méthode de risque (A.4). Ne pas confondre avec l'« opportunité
-   d'amélioration » d'un constat (10.1), déjà dans l'outil.
-2. **Q15** — Règle d'affichage proposée par l'ADR 0031 : une exigence « couverte par correspondance » est affichée **à
-   part** et **ne compte pas** dans les taux de couverture, tant que l'utilisateur ne l'a pas confirmée. D'accord ?
+**Toutes les questions sont tranchées au 13/10/2026** (§1 bis, D1 à D15). Points à **confirmer au lot concerné**, sans bloquer
+le suivant : qui décide d'un rapprochement (membre en écriture avec `pilotage:modifier`, lot M3) ; la nature des
+périmètres proposée à la création (lot M1).
 
 ## 10. Ce que ce cadrage n'établit pas
 

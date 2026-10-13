@@ -61,7 +61,7 @@ Constats de lecture du code (état `78ba57e`) :
   désignent leurs exigences dans la bibliothèque. D'ici là, l'import par périmètre actuel fonctionne sans changement.
 - Le libellé « SMSI » du conteneur devient neutre dans l'interface avec le design ; les noms techniques (`grc_smsis`,
   `/api/grc/smsis`) ne changent pas.
-- **Non traité ici** : opportunités de 6.1 (Q8, ouverte). La révision 2026 n'est pas attendue (D9) et le style graphique est
+- **Non traité ici** : opportunités de 6.1 (décision D14 : objet séparé, lot M7). La révision 2026 n'est pas attendue (D9) et le style graphique est
   fourni ensuite (D13).
 - Les états « existant » ci-dessus sont des constats de lecture, vérifiés lot par lot par des tests ; ils ne prouvent ni la
   conformité à l'ISO 9001 ni à aucun autre référentiel.

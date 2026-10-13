@@ -33,16 +33,24 @@ et le [cadrage](../unification/CADRAGE-MODULE-QUALITE-9001.md). Aucun code n'est
 4. **Déclarer une fois.** L'unité de déclaration est la **mesure** d'un périmètre, avec son état de mise en œuvre, son
    responsable, ses preuves et ses actions. Une mesure peut « mettre en œuvre » des exigences de **n'importe quel**
    référentiel rattaché ; la saisie reste unique, la lecture se fait par référentiel.
-5. **Couverture déduite, jamais affirmée.** Quand une exigence d'un référentiel A est reliée à une mesure et qu'une
-   correspondance **validée** la rattache à une exigence d'un référentiel B, l'exigence de B s'affiche « couverte par
-   correspondance », avec le type, le taux de la correspondance, qui l'a validée et quand. Cet état est **calculé, en lecture
-   seule, distinct de la couverture explicite**, et ne compte pas dans un taux de conformité. L'utilisateur peut le
-   **confirmer** (cela crée alors son propre lien explicite) ou le rejeter. Une correspondance « partielle » ne donne
-   jamais une couverture complète.
+5. **Rapprochement proposé, jamais affirmé.** Quand une exigence d'un référentiel A est reliée à une mesure et qu'une
+   correspondance **validée** la rattache à une exigence d'un référentiel B, le système crée une **proposition de
+   rapprochement** (mesure, exigence cible, correspondance, type et taux de la correspondance). Tant qu'elle n'est pas
+   décidée, l'exigence de B s'affiche « **rapprochement à valider** » : état **calculé, en lecture seule**, distinct de la
+   couverture explicite, **exclu des taux**. Une correspondance « partielle » ne donne jamais une couverture complète.
+   Le **pilote** la **confirme** (cela crée alors un lien explicite « met en œuvre », au nom du pilote, avec la date et le
+   motif éventuel) ou la **rejette** (motif conservé).
+   - **Menu « Rapprochements à valider »** dans le Pilotage, avec le nombre de propositions en attente, filtrable par
+     référentiel et par mesure, et décision unitaire ou **en lot** après revue.
+   - **Notification** au pilote du périmètre (mécanisme de notifications existant) à chaque nouvelle proposition, regroupée
+     pour éviter un message par exigence.
+   - Une proposition rejetée n'est **pas reproposée** tant que la correspondance ou le lien source ne changent pas ; les
+     rejets restent consultables et révisables.
+   - Qui décide : un membre du périmètre ayant le droit d'écriture et `pilotage:modifier` (à confirmer au lot M3).
 6. **Applicabilité.** Elle se décide par périmètre et par exigence. Une correspondance peut la **proposer** pour une
-   exigence équivalente ; la reprise se fait en lot, après revue, jamais automatiquement.
+   exigence équivalente ; la reprise passe par la même file de validation, jamais automatiquement.
 7. **Vue commune multi-référentiels.** Pour un périmètre : par référentiel rattaché, nombre d'exigences, applicables,
-   couvertes explicitement, couvertes par correspondance, non couvertes ; et, pour chaque mesure, la liste des exigences
+   couvertes explicitement, **rapprochements à valider**, non couvertes ; et, pour chaque mesure, la liste des exigences
    qu'elle couvre dans chaque référentiel. Ce sont des **indicateurs d'aide au pilotage**, pas un taux de conformité certifié.
 8. **Compatibilité.** Les référentiels publiés dans un périmètre **continuent de fonctionner sans changement** (aucune
    migration automatique, aucune rupture des références existantes ni de la déclaration d'applicabilité historique).
@@ -57,8 +65,8 @@ et le [cadrage](../unification/CADRAGE-MODULE-QUALITE-9001.md). Aucun code n'est
 
 ## Conséquences
 
-- **Migration additive** (lot M2) : tables de la bibliothèque (référentiels, versions, alias), rattachements périmètre ↔
-  version, correspondances organisationnelles. Aucune table existante n'est modifiée ni supprimée.
+- **Migration additive** (lots M2 et M3) : tables de la bibliothèque (référentiels, versions, alias), rattachements périmètre ↔
+  version, correspondances organisationnelles, propositions de rapprochement et leurs décisions. Aucune table existante n'est modifiée ni supprimée.
 - **Double résolution des références** pendant la transition : une référence `requirement:` doit se résoudre soit dans un
   périmètre, soit dans la bibliothèque. C'est le point technique le plus délicat ; il est couvert par des tests de non-régression
   sur les 27001 et HDS déjà publiés.
@@ -69,7 +77,8 @@ et le [cadrage](../unification/CADRAGE-MODULE-QUALITE-9001.md). Aucun code n'est
 - La mise à jour d'une norme (ISO 9001:2026 ou autre) est une nouvelle version de la bibliothèque et une correspondance
   entre versions ; on **n'attend pas** son texte pour construire le mécanisme (décision du RSSI).
 - **Risques** : volume des correspondances (limites existantes : 10 000 exigences par version, 1 000 correspondances par
-  import, à reprendre) ; confusion entre couverture explicite et déduite (d'où l'affichage séparé et l'exclusion des taux).
+  import, à reprendre) ; confusion entre couverture explicite et rapprochement non validé (d'où l'affichage séparé, l'exclusion des taux et la file de validation) ;
+  surcharge du pilote (d'où le regroupement des notifications et la décision en lot).
 - Ces états sont des constats de lecture ; chaque comportement sera vérifié par des tests. Ils ne prouvent la conformité à
   aucun référentiel.
 - Retour arrière : la bibliothèque est additive ; la supprimer laisse les référentiels des périmètres intacts. Les liens
