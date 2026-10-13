@@ -18,6 +18,7 @@ export * from './recurrence.js';
 export * from './pilotage.js';
 export * from './objectifs.js';
 export * from './pestel.js';
+export * from './revue-direction.js';
 export * from './suivi-fournisseurs.js';
 export * from './tableau-de-bord.js';
 export * from './liens.js';

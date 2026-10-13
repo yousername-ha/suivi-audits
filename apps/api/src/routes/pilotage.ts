@@ -5,6 +5,7 @@ import { Pilotage } from '../pilotage/service.js';
 import { PilotageObjectifs } from '../pilotage/objectifs.js';
 import { PilotageBoites } from '../pilotage/boites.js';
 import { PilotagePestel } from '../pilotage/pestel.js';
+import { PilotageRevue } from '../pilotage/revue.js';
 import { route } from '../http/route.js';
 import { requireIfMatch } from '../http/concurrency.js';
 const base = { tags: ['Pilotage'], access: 'metier' as const };
@@ -12,6 +13,14 @@ const scope = z.object({ smsi: z.uuid() });
 const cleObjectifs = z.enum(['processes', 'objectives', 'indicators']);
 const recordBody = z.object({ ref: GrcRef, decision: PilotageRecord }).strict();
 export const pilotageRoutes = [
+  route({
+    ...base,
+    method: 'GET',
+    url: '/api/grc/:smsi/pilotage/revue/entrees',
+    params: scope,
+    summary: 'Entrées de la revue de direction (ISO 9001:2015, 9.3.2) préparées à partir des données, sans interprétation',
+    handler: async ({ svc, s, params }) => new PilotageRevue(svc.grc).entrees(params.smsi, (s as Session).user),
+  }),
   route({
     ...base,
     method: 'GET',

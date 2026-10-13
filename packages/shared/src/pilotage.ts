@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ENTREES_REVUE, SORTIES_REVUE, cleEntree } from './revue-direction.js';
 import { GrcRef, validDate, type GrcKind } from './grc.js';
 import { ECHELLE_GRAVITE, ECHELLE_VRAISEMBLANCE, RISK_REF_KINDS, RISK_SCHEMAS, type CibleRef } from './risques.js';
 
@@ -513,6 +514,8 @@ export const PILOTAGE_FIELDS: Partial<Record<GrcKind, PilotageField[]>> = {
     field('heldAt', 'Date de la revue', 'date'),
     field('participants', 'Participants'),
     field('inputs', 'Résultats, risques et indicateurs examinés'),
+    ...ENTREES_REVUE.map((e) => field(cleEntree(e.id), `${e.titre} (${e.article})`)),
+    ...SORTIES_REVUE.map((x) => field(x.cle, `${x.titre} (${x.article})`)),
     field('decisions', 'Décisions et moyens'),
     field('followup', 'Suivi des décisions'),
     draftReview,
