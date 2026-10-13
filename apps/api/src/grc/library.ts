@@ -212,6 +212,7 @@ export class GrcLibrary {
         c,
       );
       await this.g.notify(c, smsi, 0, smsi, 'conformite', user.username);
+      await this.g.rapprochements.sync(smsi, c);
     }, user.username);
     return this.attachments(smsi, user);
   }
@@ -229,6 +230,7 @@ export class GrcLibrary {
       if (!r.rowCount) throw new HttpError(404, 'Référentiel non rattaché à ce périmètre.');
       await this.g.db.audit(user, ip, 'library.framework.enabled', smsi, { frameworkId: id, enabled }, c);
       await this.g.notify(c, smsi, 0, smsi, 'conformite', user.username);
+      await this.g.rapprochements.sync(smsi, c);
     }, user.username);
     return this.attachments(smsi, user);
   }
@@ -264,6 +266,7 @@ export class GrcLibrary {
       await c.query('DELETE FROM grc_scope_frameworks WHERE smsi_id=$1 AND framework_id=$2', [smsi, id]);
       await this.g.db.audit(user, ip, 'library.framework.detached', smsi, { frameworkId: id }, c);
       await this.g.notify(c, smsi, 0, smsi, 'conformite', user.username);
+      await this.g.rapprochements.sync(smsi, c);
     }, user.username);
     return this.attachments(smsi, user);
   }
@@ -367,6 +370,7 @@ export class GrcLibrary {
         c,
       );
       await this.g.notify(c, smsi, 0, smsi, 'conformite', user.username);
+      await this.g.rapprochements.sync(smsi, c);
       return { libraryFrameworkId: libraryId, version: 1, droppedMeasureRefs: again.droppedMeasureRefs };
     }, user.username);
   }

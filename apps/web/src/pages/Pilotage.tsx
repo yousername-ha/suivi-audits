@@ -1,4 +1,4 @@
-import { Anchor, Button, Card, Group, Modal, NumberInput, Select, Stack, Text, TextInput } from '@mantine/core';
+import { Alert, Anchor, Button, Card, Group, Modal, NumberInput, Select, Stack, Text, TextInput } from '@mantine/core';
 import { Page, PageHeader } from '@suivi/ui';
 import { type BusinessPolicy, type GrcKind, type GrcObject, type PilotageRecord, type Module } from '@suivi/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -23,6 +23,10 @@ import { Decision } from '../pilotage/Decision';
 import { Members } from '../pilotage/Members';
 import { Bibliotheque } from '../pilotage/Bibliotheque';
 import { Perimetres } from '../pilotage/Perimetres';
+import { Rapprochements } from '../pilotage/Rapprochements';
+import { Couverture } from '../pilotage/Couverture';
+import { CorrespondancesBibliotheque } from '../pilotage/CorrespondancesBibliotheque';
+import { useRapprochementsEnAttente } from '../pilotage/compteur-rapprochements';
 import { Journey } from '../pilotage/Journey';
 import { Relations } from '../grc/Relations';
 import { pilotageReport } from '../pilotage/report';
@@ -249,6 +253,7 @@ export function PilotagePage() {
             )}
             {section === 'synthese' && (
               <>
+                {smsi && <BandeauRapprochements smsi={smsi} />}
                 <Card withBorder>
                   <Stack>
                     <Text fw={600}>Vos travaux de pilotage</Text>
@@ -384,6 +389,9 @@ export function PilotagePage() {
               </>
             )}
             {section === 'bibliotheque' && can('conformite', 'lire') && <Bibliotheque />}
+            {section === 'rapprochements' && can('conformite', 'lire') && smsi && <Rapprochements smsi={smsi} />}
+            {section === 'couverture' && can('conformite', 'lire') && smsi && <Couverture smsi={smsi} />}
+            {section === 'correspondances-bibliotheque' && can('conformite', 'lire') && <CorrespondancesBibliotheque />}
             {section === 'perimetres' && can('pilotage', 'lire') && (
               <Perimetres
                 affiche={smsi}
@@ -579,15 +587,40 @@ function ControlSchedule({ smsi, object, onClose }: { smsi: string; object: GrcO
     </Modal>
   );
 }
+function BandeauRapprochements({ smsi }: { smsi: string }) {
+  const n = useRapprochementsEnAttente(smsi);
+  if (!n) return null;
+  return (
+    <Alert color="suivi" title="Rapprochements à valider" role="status">
+      <Group justify="space-between">
+        <Text>
+          {n} rapprochement(s) proposé(s) à partir des mesures déjà déclarées attendent une décision du pilote.
+        </Text>
+        <Button component={Link} to="/pilotage/rapprochements" size="xs">
+          Examiner les rapprochements
+        </Button>
+      </Group>
+    </Alert>
+  );
+}
 function Reminders({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject) => void }) {
   const qc = useQueryClient(),
+    navigate = useNavigate(),
     [error, setError] = useState<unknown>(null);
   const q = useQuery({
     queryKey: ['grc', 'notifications'],
     queryFn: () =>
-      get<{ id: string; smsiId: string; objectId: string; title: string; message: string; readAt: string | null }[]>(
-        '/api/grc/notifications',
-      ),
+      get<
+        {
+          id: string;
+          smsiId: string;
+          objectId: string;
+          kind: string;
+          title: string;
+          message: string;
+          readAt: string | null;
+        }[]
+      >('/api/grc/notifications'),
   });
   return (
     <Stack>
@@ -602,6 +635,10 @@ function Reminders({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject) => v
               <Button
                 variant="light"
                 onClick={async () => {
+                  if (n.kind === 'rapprochement') {
+                    navigate('/pilotage/rapprochements');
+                    return;
+                  }
                   try {
                     onOpen(await get<GrcObject>(`/api/grc/${smsi}/objects/${n.objectId}`));
                   } catch (e) {

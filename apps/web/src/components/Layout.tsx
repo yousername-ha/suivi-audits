@@ -32,6 +32,7 @@ import { Link, useLocation, useNavigate } from 'react-router';
 import { errorMessage } from '../api';
 import { lienHistorique, PAGES_HISTORIQUES, PILOTAGE_NAV } from '../pilotage-navigation';
 import { logout as endSession } from '../logout';
+import { LibelleAvecPastille } from '../pilotage/compteur-rapprochements';
 import { UpdateNotice } from './Updates';
 import { ErrorAlert } from './common';
 import { useLive } from '../realtime';
@@ -144,7 +145,7 @@ export function Layout({ children }: { children: ReactNode }) {
               return (
                 <NavLink
                   key={group.label + ':' + visible.some((item) => loc.pathname === '/pilotage/' + item.id)}
-                  label={group.label}
+                  label={group.label === 'Conformité' ? <LibelleAvecPastille libelle={group.label} /> : group.label}
                   className="pilotage-nav-group"
                   defaultOpened={visible.some((item) => loc.pathname === '/pilotage/' + item.id)}
                 >
@@ -153,7 +154,7 @@ export function Layout({ children }: { children: ReactNode }) {
                       key={item.id}
                       component={Link}
                       to={'/pilotage/' + item.id}
-                      label={item.label}
+                      label={item.id === 'rapprochements' ? <LibelleAvecPastille libelle={item.label} /> : item.label}
                       active={loc.pathname === '/pilotage/' + item.id}
                       onClick={close}
                     />

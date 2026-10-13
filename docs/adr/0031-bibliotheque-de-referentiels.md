@@ -42,12 +42,12 @@ et le [cadrage](../unification/CADRAGE-MODULE-QUALITE-9001.md). Aucun code n'est
    motif éventuel) ou la **rejette** (motif conservé).
    - **Menu « Rapprochements à valider »** dans le Pilotage, **visible** : une **pastille avec le nombre** de propositions en
      attente dans la navigation, filtrable par référentiel et par mesure, décision unitaire ou **en lot** après revue.
-   - **Notification visuelle** au pilote du périmètre, par le mécanisme de notifications existant (la cloche), à chaque
-     nouvelle proposition, **regroupée** pour éviter un message par exigence ; un **bandeau** sur la synthèse du Pilotage tant
+   - **Notification visuelle** au pilote du périmètre, par le mécanisme de notifications existant (rubrique « Mes rappels » du
+     Pilotage ; il n'y a pas de cloche dans l'en-tête), à chaque nouvelle proposition, **regroupée** pour éviter un message par exigence ; un **bandeau** sur la synthèse du Pilotage tant
      que des rapprochements attendent une décision.
    - Une proposition rejetée n'est **pas reproposée** tant que la correspondance ou le lien source ne changent pas ; les
      rejets restent consultables et révisables.
-   - Qui décide : un membre du périmètre ayant le droit d'écriture et `pilotage:modifier` (à confirmer au lot M3).
+   - Qui décide : un membre du périmètre ayant le droit d'écriture et `pilotage:modifier` (confirmé au lot M3 : droit d'écriture sur le périmètre, `pilotage:modifier` et `conformite:lire`).
 6. **Applicabilité.** Elle se décide par périmètre et par exigence. Une correspondance peut la **proposer** pour une
    exigence équivalente ; la reprise passe par la même file de validation, jamais automatiquement.
 7. **Vue commune multi-référentiels.** Pour un périmètre : par référentiel rattaché, nombre d'exigences, applicables,
