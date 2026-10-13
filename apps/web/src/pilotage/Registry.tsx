@@ -310,6 +310,12 @@ export function BusinessRegistry({
                       Existant
                     </Badge>
                   )}
+                  {Array.isArray(o.data.auditedFrameworks) && (o.data.auditedFrameworks as unknown[]).length > 0 && (
+                    <Badge size="xs" variant="light" color="encre">
+                      {(o.data.auditedFrameworks as unknown[]).length > 1 ? 'Audit combiné : ' : 'Audit : '}
+                      {(o.data.auditedFrameworks as string[]).join(' + ')}
+                    </Badge>
+                  )}
                 </Table.Td>
                 <Table.Td>
                   {state(o)}

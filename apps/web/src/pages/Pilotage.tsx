@@ -37,6 +37,7 @@ import { EtudesEbios } from '../grc/Ebios';
 import { RegistreRisques } from '../grc/RegistreRisques';
 import { ObjectifsProcessus } from '../pilotage/ObjectifsProcessus';
 import { Pestel, SynthesePartiesBandeau } from '../pilotage/Pestel';
+import { PreparationRevue } from '../pilotage/PreparationRevue';
 import { SeriesProposees } from '../pilotage/SeriesProposees';
 import { PlansHistoriques } from '../pilotage/PlansHistoriques';
 import { CartesPilotage, type SyntheseApi } from '../components/Synthese';
@@ -251,6 +252,9 @@ export function PilotagePage() {
               <>
                 {section === 'amelioration' && <ImprovementIndicators smsi={smsi} />}
                 {section === 'parties' && <SynthesePartiesBandeau smsi={smsi} />}
+                {section === 'revues' && (
+                  <PreparationRevue smsi={smsi} onCreer={(initial) => create('management_review', initial)} />
+                )}
                 {section === 'processus' && <ObjectifsProcessus smsi={smsi} vue="processus" />}
                 {section === 'objectifs' && <ObjectifsProcessus smsi={smsi} vue="objectif" />}
                 {section === 'indicateurs' && <ObjectifsProcessus smsi={smsi} vue="compacte" />}
