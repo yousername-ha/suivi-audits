@@ -65,7 +65,7 @@ const VIDE: Formulaire = {
   sourceUrl: '',
 };
 const STATUTS: Record<Correspondance['status'], { etat: Etat; libelle: string }> = {
-  proposed: { etat: 'attention', libelle: 'Proposée' },
+  proposed: { etat: 'info', libelle: 'Proposée' },
   validated: { etat: 'succes', libelle: 'Validée' },
   withdrawn: { etat: 'neutre', libelle: 'Retirée' },
 };

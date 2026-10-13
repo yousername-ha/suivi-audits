@@ -1,6 +1,6 @@
 /* Rapprochements à valider : compteur partagé par la pastille du menu et le bandeau de la synthèse du Pilotage
    (ADR 0031, lot M3). Le périmètre lu est celui que le Pilotage affiche (même clé de session que la page Pilotage). */
-import { Badge } from '@mantine/core';
+import { Badge, Group } from '@mantine/core';
 import { useQuery } from '@tanstack/react-query';
 import { get } from '../api';
 import { useCan } from '../session';
@@ -34,5 +34,16 @@ export function PastilleRapprochements() {
     <Badge size="sm" variant="white" color="suivi" aria-label={`${n} rapprochement(s) à valider`}>
       {n}
     </Badge>
+  );
+}
+/** Libellé de menu suivi de la pastille ; sans proposition en attente, le libellé seul (aucun changement de la mise en page). */
+export function LibelleAvecPastille({ libelle }: { libelle: string }) {
+  const n = useRapprochementsEnAttente();
+  if (!n) return <>{libelle}</>;
+  return (
+    <Group component="span" gap="xs" wrap="nowrap">
+      {libelle}
+      <PastilleRapprochements />
+    </Group>
   );
 }

@@ -167,9 +167,7 @@ export function Rapprochements({ smsi }: { smsi: string }) {
                 <Table.Td>{exigence(p.source)}</Table.Td>
                 <Table.Td>{exigence(p.target)}</Table.Td>
                 <Table.Td>
-                  <StatusChip
-                    etat={p.mappingType === 'partial' || p.mappingType === 'related' ? 'attention' : 'neutre'}
-                  >
+                  <StatusChip etat={p.mappingType === 'partial' || p.mappingType === 'related' ? 'info' : 'neutre'}>
                     {TYPES_CORRESPONDANCE[p.mappingType] ?? p.mappingType} · {p.coverage} %
                   </StatusChip>
                   <Text size="xs" c="dimmed">

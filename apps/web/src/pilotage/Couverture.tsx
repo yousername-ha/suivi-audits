@@ -25,7 +25,7 @@ interface Detail {
 }
 const ETATS: Record<Detail['status'], { etat: Etat; libelle: string }> = {
   covered: { etat: 'succes', libelle: 'Couverte par une mesure' },
-  to_validate: { etat: 'attention', libelle: 'Rapprochement à valider' },
+  to_validate: { etat: 'info', libelle: 'Rapprochement à valider' },
   uncovered: { etat: 'neutre', libelle: 'Non couverte' },
 };
 
@@ -62,7 +62,7 @@ export function Couverture({ smsi }: { smsi: string }) {
             </Text>
             <Group mt="sm" gap="xs">
               <StatusChip etat="succes">{f.covered} couverte(s)</StatusChip>
-              <StatusChip etat="attention">{f.toValidate} à valider</StatusChip>
+              <StatusChip etat="info">{f.toValidate} à valider</StatusChip>
               <StatusChip etat="neutre">{f.uncovered} non couverte(s)</StatusChip>
             </Group>
           </Card>
