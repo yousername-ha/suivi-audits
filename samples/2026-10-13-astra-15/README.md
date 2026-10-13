@@ -23,6 +23,7 @@ Ce dossier est le point d’entrée pour implémenter la refonte. Il remplace le
 
 - Série 08 rétablie comme référence, couleurs et composition alignées avec la série 14.
 - Pictogrammes et icône active turquoise conservés ; dépli/repli par chevrons à droite, selon la capture annotée du 13 octobre. Cette précision prévaut sur la navigation visible dans la série 14.
+- Matrice des risques corrigée : cellules pleines vert/jaune/orange/rouge, sélection bleue et panneau latéral ; la dernière capture utilisateur prévaut sur la vue 03 de la série 14 (§ 4 bis du dossier).
 - Deux styles conservés, choisis par un administrateur **pour tous les utilisateurs**, avec persistance serveur et synchronisation.
 - Six vues Actions et cinq vues Récurrences explicitement couvertes, sans inventer de fonctions Tenacy absentes.
 - Évolution serveur limitée à la configuration d’apparence désormais prévue ; fin de l’ancienne interdiction générale de modification serveur pour cette fonction.

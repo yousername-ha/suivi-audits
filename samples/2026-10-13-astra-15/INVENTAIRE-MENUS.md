@@ -38,7 +38,7 @@ Référence : 24 rubriques / 100 destinations avant ajout d’Apparence. Extract
 | Destination | Route / paramètres | Couverture |
 | --- | --- | --- |
 | Registre central (`risk-register`) | `risks` · `{"riskView": "register", "riskId": "", "riskStudyId": ""}` | [Vue 14](../2026-10-13-astra-14/images/002-risks-risk-register.png) |
-| Matrice des risques (`risk-map`) | `risks` · `{"riskView": "map", "riskId": "", "riskStudyId": ""}` | [Vue 14](../2026-10-13-astra-14/images/003-risks-risk-map.png) |
+| Matrice des risques (`risk-map`) — couleurs corrigées au § 4 bis du dossier | `risks` · `{"riskView": "map", "riskId": "", "riskStudyId": ""}` | [Vue 14](../2026-10-13-astra-14/images/003-risks-risk-map.png) |
 | Études EBIOS RM (`risk-studies`) | `risks` · `{"riskView": "studies", "riskId": "", "riskStudyId": ""}` | [Vue 14](../2026-10-13-astra-14/images/004-risks-risk-studies.png) |
 | Scénarios (`risk-scenarios`) | `risks` · `{"riskView": "scenarios", "riskId": "", "riskStudyId": ""}` | À décliner avec les composants communs |
 | Traitements et mesures (`risk-treatments`) | `risks` · `{"riskView": "treatments", "riskId": "", "riskStudyId": ""}` | À décliner avec les composants communs |

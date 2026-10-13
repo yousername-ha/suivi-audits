@@ -1,7 +1,7 @@
 {
   "date": "2026-10-13",
   "type": "Contrôles documentaires uniquement ; aucun test applicatif exécuté pour cette livraison",
-  "baseCommit": "b8ff86126f70114ba3bb7e32a4552fbefd3b7b04",
+  "baseCommit": "f7eccadb4f97d855dcc50b8ef2921122ae82a8c0",
   "checks": [
     {
       "name": "Liens relatifs des documents résolus",

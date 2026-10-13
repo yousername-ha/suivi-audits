@@ -23,6 +23,8 @@ Ces contrôles sont des exigences de réalisation, **pas des résultats déjà o
 | Récurrences | Liste/Kanban/Planning/Calendrier/fiche ; recherche, tri, responsable, fréquence et historique corrects |
 | Réalisation | Date/commentaire/preuve/auteur persistés après rechargement, prochaine échéance recalculée par le moteur existant |
 | Série | Modification de fréquence sans altération des réalisations passées ; aucune édition isolée d’une projection prétendue |
+| Matrice des risques | Cases pleines vert/jaune/orange/rouge, libellés/nombres/références lisibles, axes, sélection bleue, panneau et reset ; mêmes totaux/positions avant/après, deux styles et sombre |
+| Politiques de risque | Fixture matricielle explicite pour la référence ; couleurs personnalisées préservées, aucune couleur de cellule déduite pour une politique manuelle, aucune mutation des politiques/évaluations immuables |
 | Annexe A | Liaison/déliaison risque–mesures 2022, lien inverse et droits, aucune modification automatique de conformité |
 | Cartographies | Trois routes inchangées visuellement et fonctionnellement, y compris réception d’un style global et transitions |
 | Responsive | 390/768/1440/1920 px, zoom 200 %, clavier et dialogues ; aucun débordement global non prévu |

@@ -13,6 +13,7 @@ Ce dossier remplace les prescriptions d’implémentation des séries 09, 12 et 
 | Déclinaison des écrans | [30 vues de la série 14](../2026-10-13-astra-14/README.md), dont six vues des plans d’action et cinq des tâches récurrentes |
 | Couverture fonctionnelle | Toutes les destinations du registre réel ; les 30 images sont une sélection, pas une réduction du périmètre |
 | Navigation annotée | Conserver les pictogrammes, l’icône active turquoise et les chevrons de dépli/repli à droite, selon la dernière capture annotée |
+| Matrice des risques | Cases entièrement colorées selon le niveau, comme la dernière capture fournie ; cette référence remplace le rendu atténué de la vue 03 |
 | Tâches récurrentes | Organisation inspirée de Tenacy, intégrée à l’identité visuelle 08 ; ne pas importer une autre palette |
 | Deux styles | `sage` = « Référence 08 — Sauge », valeur par défaut ; `clair` = « Clair bleuté », fond alternatif conservé |
 | Portée du choix | Globale à l’instance, pour tous les utilisateurs et tous leurs appareils ; seuls les administrateurs la modifient |
@@ -93,6 +94,35 @@ Les projections ne sont pas des occurrences persistées indépendantes. Le moteu
 
 Ne pas ajouter implicitement un moteur de rappels, d’envoi d’emails, de workflows d’approbation ou une récurrence d’un autre produit. Une tâche récurrente reste distincte d’une action corrective, même lorsqu’elle s’y rapporte. L’apparence est commune à tous les modules.
 
+## 4 bis. Matrice des risques : correction explicite de la capture utilisateur
+
+**Cette consigne prévaut sur la vue 03 de la série 14 pour la matrice.** Elle concerne la destination `risk-map`, `tab: 'risks'`, `riskView: 'map'` et sa vue ASTRA `matrix`, pas le module cartographique protégé.
+
+### Rendu attendu
+
+- Grille à **cases pleines et colorées**, séparées par un fin espace blanc, avec coins légèrement arrondis. Ne pas remplacer les cases par des cartes blanches ou sauge, des contours colorés seuls ou des pastilles sur fond neutre.
+- Pour la palette standard à quatre niveaux de la référence : **Faible vert**, **Modéré jaune**, **Élevé orange**, **Critique rouge**. Valeurs de départ pour reproduire le rendu : `#4DBB69`, `#FFDF45`, `#FF8335`, `#FF293F` ; ce sont des valeurs de transposition visuelle, pas une palette normative ISO/EBIOS.
+- Dans chaque case : libellé du niveau en haut, nombre de risques lisible (tiret si aucun), puis références cliquables telles que `RISK-000001`. Les valeurs proviennent des données filtrées, jamais des nombres de la capture.
+- Axe vertical « Impact / gravité » : gravité décroissante de haut en bas ; axe horizontal « Probabilité / vraisemblance » : ordre croissant de gauche à droite. Afficher les libellés réels de la politique. La référence montre 4 × 4 ; une autre politique conserve ses propres dimensions.
+- Case sélectionnée : contour bleu bien visible, **sans supprimer son fond de niveau**. Réinitialisation de sélection accessible par bouton. Panneau latéral indiquant « Risques sélectionnés · N » et la liste correspondante ; pour une case vide, afficher zéro et « Aucun risque dans cette cellule. ». Sans sélection, afficher les risques de la matrice.
+- Conserver titre de politique, méthode, version, total de risques, légende, filtres d’évaluation/périmètre/statut et ouverture de la fiche. Les niveaux restent identifiables par le texte en plus de la couleur.
+
+### Couleurs, politiques et calculs
+
+Le code inspecté utilise déjà `background: var(--cell)` dans `.as-risk-cell`. `matrix()` de `modules/astra-ui.js` calcule `--cell` à partir de `levelColor(level)`, lui-même issu de `policy.levels[].color`. Certaines politiques du jeu de démonstration ont une palette discrète ; d’autres utilisent une appréciation manuelle. Il ne faut donc pas attribuer toute différence à une surcharge CSS, ni forcer une couleur par numéro de ligne/colonne.
+
+Pour la politique standard à quatre niveaux visée par la référence, appliquer une **palette de présentation dédiée**, avec correspondance explicite aux identifiants stables de ses niveaux. Ne pas modifier en place une politique versionnée ou les évaluations historiques pour recolorer l’écran. Les politiques personnalisées conservent leurs couleurs configurées : ne pas déduire arbitrairement le sens d’un niveau de son libellé libre, de son rang ou d’un ID générique partagé entre politiques. Documenter la portée du mapping et tester au moins une politique personnalisée.
+
+La correspondance cellule → niveau reste issue de `policy.matrix`, sans recalculer les seuils ni transformer le barème en produit impact × probabilité. Légende, fond de case et marqueurs de risque affichent des couleurs cohérentes pour un même niveau dans cette vue. Les politiques à appréciation manuelle n’ont pas de niveau implicite de cellule : conserver leurs cellules neutres et leurs marqueurs évalués ; ne pas leur inventer un barème pour imiter l’image. Pour vérifier la référence, utiliser une fixture **à calcul matriciel explicite**, pas une politique manuelle.
+
+La palette métier reste distincte des fonds globaux `sage` et `clair`. Aucun `opacity`, mélange de couleurs ou token de fond générique ne doit délaver les cases. En mode sombre, conserver les niveaux et adapter les contrastes/contours pour rester lisible. Mesurer le contraste du texte, des références et du focus sur chacune des quatre couleurs.
+
+### Interactions et recette
+
+Réutiliser les événements `risk-cell` et `risk-detail`, les filtres et les règles de périmètre serveur. Boutons accessibles au clavier, `aria-pressed` sur la sélection, nom de case indiquant impact, vraisemblance, niveau et nombre. Conserver le défilement local sur petit écran, sans rogner la grille.
+
+Vérifier : quatre niveaux colorés sur une matrice de test 4 × 4, cellule vide sélectionnée, cellule contenant plusieurs risques, réinitialisation, clic sur une référence, changement d’étape d’évaluation et de périmètre, deux styles, thème sombre, politique personnalisée et politique manuelle. Les totaux, positions et décisions restent identiques avant/après la correction visuelle. Aucun fichier ni rendu du module cartographique dynamique n’est modifié.
+
 ## 5. Administration → Apparence : réglage global
 
 Ajouter une seule destination `admin-appearance`, `tab: 'admin'`, `set: {adminView: 'appearance'}`, dans la section Administration. Contrôle administrateur dans `modules/admin-ui.js` et contrôle serveur sur toute écriture. Les autres rôles affichent le style commun sans pouvoir le modifier.
@@ -153,7 +183,7 @@ const isProtectedCartography = ui =>
 
 Cela couvre `dmap`, `mb-ctx`, `mb-proc`. Retirer avant rendu le nouvel attribut de style, la signature ajoutée et tous les effets du nouvel habillage : couleurs héritées, polices, offsets, tailles et géométrie. Restaurer exactement l’enveloppe précédente ; réappliquer le style courant en quittant la carte. Une réponse API ou une notification reçue pendant l’affichage d’une carte ne doit pas modifier son rendu.
 
-La matrice du registre des risques (`tab: 'risks'`, vue `map`) n’est pas le module cartographique protégé et peut recevoir l’habillage prévu par l’image 03.
+La matrice du registre des risques (`tab: 'risks'`, vue `map`) n’est pas le module cartographique protégé. Elle reçoit l’enveloppe visuelle 08 et conserve les cellules métier pleines et colorées exigées au § 4 bis, qui remplace le rendu atténué de l’image 03.
 
 Comparer les trois routes avant/après avec même jeu fictif, même fenêtre et même mode historique : captures, dimensions, zoom/pan/sélection, nœuds, liens, filtres, exports et droits. Vérifier entrée/sortie, accès direct, changement global depuis une autre session et thème sombre. L’absence de diff dans `carto.css` seule ne suffit pas.
 
