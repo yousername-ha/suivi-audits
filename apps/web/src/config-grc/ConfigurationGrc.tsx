@@ -76,7 +76,7 @@ export function ConfigurationGrc({
   const can = useCan();
   const peutCreer = can('parametres', 'modifier') || can('pilotage', 'administrer');
   return (
-    <Stack>
+    <Stack className="grille-formulaire">
       <Text>
         {contexte === 'plateforme'
           ? 'Définissez une fois les échelles, matrices, critères et catégories ; toutes les méthodes d’analyse les réutilisent.'
