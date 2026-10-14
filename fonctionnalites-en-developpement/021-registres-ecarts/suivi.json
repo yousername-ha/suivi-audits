@@ -10,6 +10,11 @@
       "date": "2026-10-14",
       "etape": "en-developpement",
       "motif": "Demande de registres d’écarts, plans multiples et liens avec la conformité par périmètre."
+    },
+    {
+      "date": "2026-10-14",
+      "etape": "en-developpement",
+      "motif": "v002 : création directe d’un écart depuis un audit, dans un registre existant ou nouveau."
     }
   ]
 }

@@ -1,0 +1,17 @@
+ASTRA — 021 Registres d’écarts / 017 Plans d’action / Conformité
+MAQUETTE FONCTIONNELLE À VALIDER
+
+Extraire tout le ZIP puis double-cliquer sur DEMARRER.bat.
+Aucune installation de Python ou Node n’est nécessaire pour utiliser la maquette.
+Les fichiers restent locaux au PC ; aucun service distant n’est appelé.
+
+Commencer par « Audit de surveillance 2026 », ouvrir un écart et ses actions.
+Consulter GUIDE-DE-TEST.md pour le parcours complet.
+
+Données fictives. HDS : exemple DEMO, pas le catalogue officiel.
+Les preuves sont des références textuelles, sans pièce jointe physique.
+Avant de déplacer le dossier ou changer de PC, exporter les essais dans Journal & données.
+Le stockage local dépend du navigateur et du chemin du fichier.
+
+Le BAT ouvre index.html. Recette exécutée dans Chromium sous Linux via localhost ;
+le lancement BAT n’a pas été exécuté nativement sur Windows.

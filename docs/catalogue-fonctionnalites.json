@@ -291,13 +291,13 @@
       "description": "Regrouper les écarts par audit ou campagne et les relier aux exigences, actions correctives et à la conformité du périmètre.",
       "etape": "en-developpement",
       "dossier": "fonctionnalites-en-developpement/021-registres-ecarts",
-      "maquetteCourante": "fonctionnalites-en-developpement/021-registres-ecarts/maquettes/v001-registres-lies",
+      "maquetteCourante": "fonctionnalites-en-developpement/021-registres-ecarts/maquettes/v002-creation-depuis-audit",
       "statutMaquette": "a-valider",
       "implementation": "a-suivre",
       "tests": "fonctionnalites-en-developpement/021-registres-ecarts/tests/README.md",
       "dossierImplementation": "fonctionnalites-en-developpement/021-registres-ecarts/implementation/README.md",
       "suivi": "fonctionnalites-en-developpement/021-registres-ecarts/suivi.json",
-      "archive": "downloads/ASTRA-021-registres-ecarts-v001.zip"
+      "archive": "downloads/ASTRA-021-registres-ecarts-v002.zip"
     }
   ],
   "cycle": [

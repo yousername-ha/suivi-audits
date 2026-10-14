@@ -45,4 +45,4 @@ Les 21 propositions de ce catalogue sont encore à valider. Les dossiers `implem
 
 ## 021 — Registres d’écarts et plans liés
 
-[Prototype fonctionnel, sept aperçus et ZIP de test](021-registres-ecarts/README.md). La fonctionnalité 017 Plans d’action passe en maquette v002 partagée.
+[Prototype fonctionnel, neuf aperçus et ZIP de test](021-registres-ecarts/README.md). La fonctionnalité 017 Plans d’action passe en maquette v002 partagée.

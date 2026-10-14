@@ -1,0 +1,37 @@
+{
+  "date": "2026-10-14T20:29:23.502Z",
+  "status": "passed",
+  "checks": [
+    "Trois registres initiaux et style du menu affichés",
+    "Création du registre lié à un audit et un périmètre",
+    "Écart lié à plusieurs exigences ISO / HDS de démonstration",
+    "Clôture refusée sans action corrective",
+    "Plan multi-périmètre et action commune à deux registres sans duplication",
+    "Action terminée avec preuve, sans clôture automatique ni conformité automatique",
+    "Clôture explicite avec cause, correction, efficacité, preuve et vérificateur",
+    "Conformité explicite après résolution de tous les écarts, historique conservé",
+    "Réouverture action : écarts à vérifier, conformité à réévaluer, ancienne décision conservée",
+    "Kanban et persistance après rechargement",
+    "Changement de périmètre et archivage bloqués quand incompatibles avec les écarts",
+    "Applicabilité protégée pour les exigences référencées",
+    "Ajout d’une exigence et choix explicite des périmètres applicables",
+    "Filtrage de conformité par périmètre",
+    "Le lien et le rechargement conservent le périmètre de l’exigence",
+    "Validation des sauvegardes : refus des liens hors périmètre",
+    "Export JSON réel, remise à zéro et restauration confirmée",
+    "Téléchargement CSV des actions",
+    "Dix destinations fonctionnelles accessibles",
+    "Menu accordéon et sous-menus conservés",
+    "Vue mobile sans débordement et menu accessible",
+    "Audit vers écart dans un registre existant, sans duplication, avec retour à l’audit",
+    "Création simultanée registre et écart ; refus sans exigence sans écriture partielle",
+    "Audit sans registre : proposition de création, annulation sans effet et exigences du bon périmètre"
+  ],
+  "consoleErrors": [],
+  "environment": "Chromium Linux via localhost",
+  "limits": [
+    "BAT non exécuté nativement sous Windows",
+    "Maquette locale, sans sécurité serveur ni validation officielle de conformité",
+    "Liens multiples proposés, validation fonctionnelle utilisateur encore attendue"
+  ]
+}
