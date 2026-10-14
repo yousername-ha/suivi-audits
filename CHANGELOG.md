@@ -5,14 +5,20 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 ## [Non publié]
 
 ### Notes de mise à jour
-Aucune action.
+- **Migration SQL 021** (catalogue de configuration, additive, appliquée automatiquement au démarrage) ; aucune donnée existante n’est modifiée.
+- **Aucune autre action sur le serveur.**
+
+### Ajouté
+- **Catalogue de configuration GRC transversal** ([ADR 0038](docs/adr/0038-socle-de-configuration-grc-transversal.md), analyse dans [docs/refonte-grc](docs/refonte-grc/README.md)) : échelles, matrices, correspondances, critères et taxonomies **versionnés** (versions immuables, aperçu avec étude d'impact, publication confirmée avec motif, usages enregistrés, variantes dérivées, archivage), API `/api/config-grc/*`, droits existants réutilisés, **vide à l'installation** ; le lot « pertinence EBIOS RM » (ressources × motivation) peut être adopté à la demande, à valider. **Migration SQL 021** (additive). Les écrans d'administration arrivent dans un lot suivant.
+- **Méthodes de risque épinglées au catalogue** : une méthode peut épingler des échelles et une matrice (`bindings`) ; la version publiée embarque la copie résolue, les méthodes existantes ne changent pas. Une méthode épinglée n'est pas relisible par une version antérieure de l'application.
+- **Écrans de configuration GRC** : Paramètres → Configuration GRC et Gestion des risques → Configuration des analyses (mêmes données) : liste filtrée, création guidée, éditeurs sans JSON (niveaux décrits, grille de matrice, correspondances, critères, catégories), simulation avec étude d'impact, publication confirmée avec motif, versions, dépendances, variantes, archivage, adoption d'un modèle.
 
 ## [3.2.0] — 2026-10-14
 
 ### Notes de mise à jour
 - **PostgreSQL 17 → 18 : migration automatique de la base** ([ADR 0035](docs/adr/0035-postgresql-18-migration-automatique.md)). Pendant la mise à jour (script ou menu Système), après la sauvegarde chiffrée obligatoire, l'application est arrêtée, la base est exportée avec le moteur 17, recréée en PostgreSQL 18 dans `DATA_DIR/postgres18`, restaurée, puis contrôlée (nombres de lignes identiques table par table). Durée : quelques minutes, proportionnelle à la taille de la base. Espace libre nécessaire : deux fois la base plus 512 Mo. **L'ancienne base n'est jamais modifiée** : en cas d'échec, la version précédente redémarre dessus. Après avoir vérifié l'application, libérer la place : `sudo ./scripts/nettoyer-ancienne-base-postgresql.sh`. Ne pas lancer `docker compose up` directement avant la mise à jour : le démarrage est refusé tant que la base n'est pas migrée.
 - **Node 24 → 26** dans les images : aucune action sur le serveur.
-- **Migration SQL 021** (catalogue de configuration, additive, appliquée automatiquement au démarrage) ; aucune donnée existante n’est modifiée.
+- Aucune migration SQL.
 - **Aucune action sur le serveur** pour les nouveautés ci-dessous ; la commande `suivi jeu-de-test` n'est jamais lancée par une mise à jour.
 
 ### Corrigé
@@ -28,8 +34,6 @@ Aucune action.
 - Bibliothèque de référentiels : les **standards** de l'outil de suivi sont disponibles d'emblée (un geste, sans motif ni alerte rouge, y compris depuis le rattachement d'un périmètre) en **version source verrouillée** ; pour personnaliser un standard (par exemple l'ISO 27001) et ajouter des exigences ou des mesures, on **crée une copie** ([ADR 0037](docs/adr/0037-standards-verrouilles-jeu-de-test-et-relations.md)). « Nouvelle version » devient « Nouvelle édition » (import explicite).
 
 ### Ajouté
-- **Catalogue de configuration GRC transversal** ([ADR 0038](docs/adr/0038-socle-de-configuration-grc-transversal.md), analyse dans [docs/refonte-grc](docs/refonte-grc/README.md)) : échelles, matrices, correspondances, critères et taxonomies **versionnés** (versions immuables, aperçu avec étude d'impact, publication confirmée avec motif, usages enregistrés, variantes dérivées, archivage), API `/api/config-grc/*`, droits existants réutilisés, **vide à l'installation** ; le lot « pertinence EBIOS RM » (ressources × motivation) peut être adopté à la demande, à valider. **Migration SQL 021** (additive). Les écrans d'administration arrivent dans un lot suivant.
-- **Méthodes de risque épinglées au catalogue** : une méthode peut épingler des échelles et une matrice (`bindings`) ; la version publiée embarque la copie résolue, les méthodes existantes ne changent pas. Une méthode épinglée n'est pas relisible par une version antérieure de l'application.
 - **Lots M5 à M8 du module qualité** ([ADR 0036](docs/adr/0036-objectifs-boites-contexte-et-revue-de-direction.md)) : fiche processus (ISO 9001:2015, 4.4.1 a à h), champs de surveillance et de mesure des indicateurs (9.1.1) et catégorie « satisfaction du client » (9.1.2), planification des objectifs (6.2.2), tous facultatifs et vides par défaut ; **boîtes de pilotage** par processus ; **calque « santé des indicateurs »** sur la cartographie et filtre ISO 9001 quand un référentiel 9001 est rattaché ; **PESTEL** des enjeux externes ; objet **Opportunité** (6.1) ; **séries récurrentes proposées** sans fréquence ; **entrées de la revue de direction** (9.3.2) préparées à partir des données, sorties (9.3.3) ; **audit combiné** (référentiels audités).
 - **Jeu de données de test** fictif et cohérent : `docker compose exec app suivi jeu-de-test <administrateur> --confirmer` (instance de test vide uniquement, par l'API publique).
 - **Contrôle des relations** : `suivi controle-relations` (et clé `relations` de `controle-donnees`) vérifie les références logiques (état historique, liens, méthodes, référentiels, critères) ; la mise à jour signale les anomalies apparues pendant son déroulement. La migration PostgreSQL 17 → 18 compare aussi les contraintes (clés étrangères, uniques, contrôles) avant et après.
