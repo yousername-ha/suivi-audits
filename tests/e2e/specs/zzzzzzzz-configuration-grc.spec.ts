@@ -122,3 +122,101 @@ test('Atelier 2 : étude liée à la matrice du catalogue, pertinence proposée 
     await ctx.close();
   }
 });
+
+test('Méthode ISO 27005 : échelles et matrice du catalogue épinglées, version publiée', async ({ browser }) => {
+  const ctx = await browser.newContext({ storageState: (await sessionAdmin(browser)).state, ignoreHTTPSErrors: true });
+  const page = await ctx.newPage(),
+    problems = watchPage(page);
+  try {
+    await page.goto('/pilotage');
+    const entetes = async () => ({
+      Origin: new URL(page.url()).origin,
+      'X-CSRF-Token': await csrfOf(page.request),
+    });
+    const post = async (url: string, data: unknown) => {
+      const r = await page.request.post(url, { headers: await entetes(), data });
+      expect(r.ok(), await r.text()).toBeTruthy();
+      return r.json();
+    };
+    const publier = async (kind: string, key: string, definition: unknown) => {
+      const item = await post('/api/config-grc/items', { kind, key, definition });
+      const p = await post(`/api/config-grc/items/${item.id}/preview`, {});
+      const etag = (await page.request.get(`/api/config-grc/items/${item.id}`)).headers().etag!;
+      const r = await page.request.post(`/api/config-grc/items/${item.id}/publish`, {
+        headers: { ...(await entetes()), 'If-Match': etag },
+        data: { previewId: p.previewId, reason: 'Publication de recette', confirm: 'PUBLIER' },
+      });
+      expect(r.ok(), await r.text()).toBeTruthy();
+      return item.id as string;
+    };
+    const niveaux = (ids: string[]) => ids.map((id) => ({ id, label: id.toUpperCase(), description: '' }));
+    const gravite = await publier('scale', 'gravite_iso', {
+      name: 'Gravité ISO de recette',
+      category: 'severity',
+      nature: 'qualitative',
+      levels: niveaux(['g1', 'g2', 'g3']),
+    });
+    const vraisemblance = await publier('scale', 'vraisemblance_iso', {
+      name: 'Vraisemblance ISO de recette',
+      category: 'likelihood',
+      nature: 'qualitative',
+      levels: niveaux(['v1', 'v2']),
+    });
+    const risque = await publier('scale', 'risque_iso', {
+      name: 'Niveaux de risque ISO de recette',
+      category: 'risk_level',
+      nature: 'qualitative',
+      levels: [
+        { id: 'bas', label: 'Bas', description: '', color: '#718975', acceptability: 'acceptable' },
+        { id: 'haut', label: 'Haut', description: '', color: '#A36F65', acceptability: 'unacceptable' },
+      ],
+    });
+    await publier('matrix', 'matrice_iso', {
+      name: 'Matrice ISO de recette',
+      category: 'risk',
+      appliesTo: ['iso27005'],
+      rows: { scale: { item: gravite, version: 1 }, label: 'Gravité' },
+      columns: { scale: { item: vraisemblance, version: 1 }, label: 'Vraisemblance' },
+      result: { scale: { item: risque, version: 1 } },
+      cells: ['g1', 'g2', 'g3'].flatMap((row) =>
+        ['v1', 'v2'].map((column) => ({
+          row,
+          column,
+          result: row === 'g3' || column === 'v2' ? 'haut' : 'bas',
+          score: null,
+        })),
+      ),
+    });
+    const s = await post('/api/grc/smsis', {
+      name: 'QA-Methode-' + Date.now(),
+      scope: 'Fixture privée de recette',
+      timezone: 'Europe/Paris',
+    });
+
+    await page.goto('/pilotage/configuration');
+    await page.getByRole('textbox', { name: 'Périmètre affiché', exact: true }).click();
+    await page.getByRole('option', { name: s.name, exact: true }).click();
+    await page.getByRole('button', { name: 'Créer ISO 27005' }).click();
+    await expect(page.getByText('Éléments du catalogue (facultatif)')).toBeVisible();
+    const choisirIci = async (champ: string, option: string) => {
+      await page.getByRole('textbox', { name: champ, exact: true }).click();
+      await page.getByRole('option', { name: option, exact: true }).click();
+    };
+    await choisirIci('Échelle de la dimension « Gravité »', 'Gravité ISO de recette (gravite_iso)');
+    await choisirIci('Échelle de vraisemblance', 'Vraisemblance ISO de recette (vraisemblance_iso)');
+    await choisirIci('Échelle des niveaux de risque', 'Niveaux de risque ISO de recette (risque_iso)');
+    await choisirIci('Matrice de calcul', 'Matrice ISO de recette (matrice_iso)');
+    await page.getByRole('textbox', { name: 'Motif de publication' }).fill('Méthode épinglée de recette');
+    await page.getByRole('button', { name: 'Simuler la publication' }).click();
+    await expect(page.getByText('Configuration valide')).toBeVisible();
+    await page.getByRole('button', { name: 'Publier cette version' }).click();
+    await page.getByRole('button', { name: 'Confirmer la publication' }).click();
+    await expect(page.getByText(/ISO\/IEC 27005 — politique d’appréciation · version 1/)).toBeVisible();
+    // La version publiée embarque les niveaux du catalogue ; l'usage est enregistré côté catalogue.
+    const usages = await (await page.request.get(`/api/config-grc/items/${gravite}/usages`)).json();
+    expect(usages.some((u: { consumerKind: string }) => u.consumerKind === 'method_version')).toBeTruthy();
+    expect(problems).toEqual([]);
+  } finally {
+    await ctx.close();
+  }
+});

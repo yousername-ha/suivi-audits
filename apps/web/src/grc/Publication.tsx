@@ -7,6 +7,7 @@ import { ErrorAlert } from '../components/common';
 import { PromotionBouton } from '../pilotage/Bibliotheque';
 import { LegacyFrameworks } from './LegacyFrameworks';
 import { ConfigurationEditor } from './ConfigurationEditor';
+import { EpinglagesMethode } from '../config-grc/EpinglagesMethode';
 import type { MethodVersion } from './Risks';
 import { useCan } from '../session';
 export const exampleFramework: FrameworkDefinition = {
@@ -34,6 +35,13 @@ export const exampleFramework: FrameworkDefinition = {
       measureRefs: [],
     },
   ],
+};
+/** L'épinglage a son propre éditeur : l'éditeur générique ne le voit pas. */
+const withoutBindings = (d: unknown) => {
+  if (!d || typeof d !== 'object' || !('bindings' in d)) return d;
+  const { bindings: _b, ...reste } = d as Record<string, unknown>;
+  void _b;
+  return reste;
 };
 export function Publication({ smsi, type }: { smsi: string; type: 'methods' | 'frameworks' }) {
   const can = useCan(),
@@ -198,14 +206,30 @@ export function Publication({ smsi, type }: { smsi: string; type: 'methods' | 'f
             </Button>
           )}
           {write && editing ? (
-            <ConfigurationEditor
-              value={draft}
-              onChange={(next) => {
-                setDraft(next);
-                setPreview(null);
-                setConfirm(false);
-              }}
-            />
+            <>
+              {type === 'methods' && (
+                <EpinglagesMethode
+                  value={draft as Parameters<typeof EpinglagesMethode>[0]['value']}
+                  onChange={(next) => {
+                    setDraft(next);
+                    setPreview(null);
+                    setConfirm(false);
+                  }}
+                />
+              )}
+              <ConfigurationEditor
+                value={type === 'methods' ? withoutBindings(draft) : draft}
+                onChange={(next) => {
+                  setDraft(
+                    type === 'methods' && draft && typeof draft === 'object' && 'bindings' in draft
+                      ? { ...(next as object), bindings: (draft as { bindings: unknown }).bindings }
+                      : next,
+                  );
+                  setPreview(null);
+                  setConfirm(false);
+                }}
+              />
+            </>
           ) : (
             <Text>Consultez les exigences ci-dessous. Pour adapter le contenu, préparez une nouvelle version.</Text>
           )}
