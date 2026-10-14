@@ -63,3 +63,9 @@ Le contrôle de préparation de la branche est documenté séparément.
   commun et l’instruction explicite de l’utilisateur ; `legacy` est sa référence en lecture.
 - Ne modifier aucune cartographie dynamique, autre branche, donnée privée ni travail
   local étranger à la tâche. Aucun déploiement, aucune CI ni fusion automatique.
+
+## ZIP de test — clarification utilisateur du 14 octobre 2026
+
+- Continuer à publier les ZIP de maquettes sur GitHub, sur `legacy`, pour que l’utilisateur puisse les télécharger et les tester. Ne pas attendre la validation de la maquette pour publier son ZIP de test.
+- Marquer clairement les propositions « à valider » : publier un ZIP ne vaut pas validation utilisateur ni autorisation d’intégration en production.
+- Consolider le dossier final destiné à l’IA de codage après validation ; l’agent de codage reste limité à sa propre branche.
