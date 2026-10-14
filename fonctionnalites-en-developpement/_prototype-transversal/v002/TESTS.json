@@ -1,0 +1,35 @@
+{
+  "date": "2026-10-14",
+  "status": "passed",
+  "environment": "Chromium sur Linux, serveur local temporaire",
+  "checks": [
+    "Création d’étude avec versions épinglées",
+    "Atelier 1 : création, références et validation",
+    "Atelier 2 : couple, matrice, cercle et cellule vide",
+    "Atelier 3 : scénario stratégique relié",
+    "Atelier 4 : graphe éditable, variantes animées et mouvement réduit",
+    "Atelier 5 : risque, mesure, action, décision et parcours 5/5",
+    "Clôture sans résiduel automatique ; réévaluation explicite et invalidation de validation",
+    "Étude et données restaurées après rechargement",
+    "Versions de matrice immuables, étude épinglée et adoption explicite",
+    "Création de version d’échelle sans écrasement",
+    "Récurrence mensuelle, fin de mois et historique de réalisation",
+    "Création de preuve et filtrage de liste",
+    "Simulation d’import de lot fictif idempotente",
+    "Deux apparences et persistance",
+    "Export JSON réel, remise à zéro et restauration des essais",
+    "Sauvegarde invalide refusée sans perte de données",
+    "Export CSV réel et vue Kanban",
+    "31 destinations du menu ouvertes sans erreur",
+    "Navigation réelle par chevron et sous-menu, un groupe ouvert",
+    "Fiche générique secondaire créée et persistée",
+    "Menu mobile et absence de débordement horizontal à 390 px sur accueil"
+  ],
+  "consoleErrors": [],
+  "limits": [
+    "BAT non exécuté nativement sur Windows",
+    "Ouverture file:// bloquée par la politique du navigateur de cet environnement ; code autonome sans fetch ni modules ES",
+    "Aucune recette du serveur métier ; autres modules limités aux fiches génériques",
+    "Cartographie dynamique volontairement exclue ; import ARM réel non implémenté"
+  ]
+}

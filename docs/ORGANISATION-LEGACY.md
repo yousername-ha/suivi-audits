@@ -1,60 +1,52 @@
-# Organisation de legacy par fonctionnalité
+# Cycle des fonctionnalités sur legacy
 
-## Où travailler
+Trois dossiers correspondent aux trois étapes demandées par l’utilisateur. Le dossier complet d’une fonctionnalité est **déplacé**, avec son historique, ses maquettes, tests et documents ; il n’est pas dupliqué entre étapes.
 
-```text
-fonctionnalites/
-  catalogue.json
-  ebios-rm/
-    README.md
-    maquettes/
-      README.md
-      v001-parcours-anime/
-        index.html
-        DEMARRER.bat
-        images/
-        technique/
-        version.json
-    tests/README.md
-    implementation/README.md
-  plans-action/…
-  taches-recurrentes/…
-  _modele/…
-implementation/socle-astra/   dossier et prompt communs
-references/                  style 08 et captures partagées
-downloads/                   ZIP lançables et empreintes
-samples/                     table de correspondance historique
-```
+| Dossier | Contenu | Condition de sortie |
+| --- | --- | --- |
+| [fonctionnalites-en-developpement](../fonctionnalites-en-developpement/README.md) | Maquettes et visuels en cours, prototypes testables, dossiers techniques préparatoires | Validation explicite de la version par l’utilisateur et dossier complet prêt |
+| [fonctionnalites-a-implementer](../fonctionnalites-a-implementer/README.md) | Maquettes validées et dossier complet pour l’IA de codage | Intégration terminée, version du code identifiée et vérifications consignées |
+| [fonctionnalites-implementees](../fonctionnalites-implementees/README.md) | Dossiers livrés avec preuves d’intégration et recette | Conservation de l’historique ; une évolution ouvre une nouvelle version en développement |
 
-Le [catalogue](../fonctionnalites/README.md) couvre 20 fonctionnalités : les 18 fonctionnalités représentées par les captures existantes, la configuration GRC transversale et la navigation simplifiée. Une capture statique n’est pas présentée comme un prototype lançable. Les composants historiques de l’application restent à leurs chemins actuels pour préserver le démarrage et les imports.
+## 1. Concevoir et tester
 
-## À chaque nouvelle maquette
+Commencer dans `fonctionnalites-en-developpement/<fonctionnalite>/`. Utiliser le [modèle](../fonctionnalites-en-developpement/_modele/README.md), créer une version `maquettes/vNNN-description/`, garder les versions utiles et les images. Renseigner le [catalogue commun](catalogue-fonctionnalites.json) et `suivi.json`.
 
-1. Ouvrir le dossier de la fonctionnalité. Si elle n’existe pas, copier le [modèle](../fonctionnalites/_modele/README.md), choisir un nom simple et l’ajouter au catalogue.
-2. Créer `maquettes/v002-description/`, puis `v003-description/`, etc. Conserver la version utile précédente ; ne pas recopier ses données réelles ou ses notes locales.
-3. Placer les sources du prototype, les captures, la galerie et les références méthodologiques dans cette version. Pour des images partagées, créer des liens vers `references/` plutôt que des copies.
-4. Compléter `version.json` : identifiant, statut, type, commit source, références, version précédente et décision utilisateur lorsqu’elle existe. États proposés : `brouillon`, `a-valider`, `validee`, `a-corriger`, `remplacee`. Un changement d’état doit refléter une décision réelle, pas seulement une réussite technique.
-5. Ajouter les résultats datés dans `tests/` ou dans `technique/` de la version, en précisant le SHA testé. Distinguer les tests de maquette, les tests de code intégré et la validation utilisateur.
-6. Actualiser `maquettes/README.md`, le README de la fonctionnalité et `catalogue.json`. Mettre à jour les consignes de son dossier `implementation/` si la demande change ; les invariants communs restent dans le socle.
-7. Pour un prototype Windows autonome, fournir `DEMARRER.bat`, tester ce qui est disponible et publier le ZIP. Le script de packaging lit la version courante du catalogue et vérifie les chemins et l’archive.
+Publier les ZIP de test dans `downloads/` sur GitHub dès qu’ils sont testables, avec BAT, guide et empreinte SHA-256. Ne pas attendre la validation utilisateur pour publier. Une publication ou des tests réussis ne valent pas validation de la maquette.
+
+Le [prototype transversal v2](../fonctionnalites-en-developpement/_prototype-transversal/README.md) couvre plusieurs fonctionnalités : conserver une source commune et indiquer la version et le périmètre concernés dans chaque dossier. Les [dossiers transversaux préparatoires](../fonctionnalites-en-developpement/_dossiers-transversaux/README.md) restent en développement. Leur nom « dossier d’implémentation » ne signifie pas qu’ils sont validés.
+
+## 2. Valider et préparer le codage
+
+Après accord explicite de l’utilisateur, consigner dans `suivi.json` la date, la version, le périmètre et la référence de sa décision. Consolider dans `implementation/` :
+
+- périmètre validé, exclusions, parcours et critères d’acceptation ;
+- sources de la maquette fonctionnelle, captures de chaque écran et états importants ;
+- charte graphique, composants, comportements, responsive et accessibilité ;
+- architecture, modèle de données, API/contrats, droits, migrations et compatibilité ;
+- dépendances, sources officielles, décisions et limites connues ;
+- plan de réalisation, recette, résultats réellement exécutés et prompt de codage ;
+- ZIP complet, lanceur, inventaire des fichiers et empreintes.
+
+Déplacer ensuite **tout le dossier** dans `fonctionnalites-a-implementer/<fonctionnalite>/`. Mettre à jour chemins, liens, catalogue, manifestes et historique. Une validation partielle ne valide que son périmètre : laisser le reste en développement. Référencer les ressources communes par une version ou un SHA précis.
+
+L’IA de codage travaille exclusivement sur **sa propre branche** ; `origin/legacy` est sa référence en lecture. Elle ne fusionne, ne déploie et ne modifie pas la branche legacy. Le déplacement documentaire sur legacy est assuré ici.
+
+## 3. Clore l’intégration
+
+Quand l’intégration est terminée et vérifiée, consigner dans `suivi.json` la branche d’implémentation, le SHA exact, le périmètre livré, les résultats de recette et la référence de confirmation. Déplacer le dossier dans `fonctionnalites-implementees/<fonctionnalite>/` et actualiser le catalogue et les liens. Une maquette fonctionnelle seule ne constitue pas une implémentation dans l’application.
+
+Les fonctions déjà présentes historiquement dans l’application ne prouvent pas que les nouvelles maquettes sont intégrées. Les 20 propositions actuelles restent donc en développement. Aucun dossier n’est déclaré prêt à coder ou implémenté par cette réorganisation.
+
+## Contrôles et conservation
 
 ```sh
-python scripts/packager_maquette.py ebios-rm
 python scripts/verifier_structure.py
+python scripts/packager_maquette.py ebios-rm
 ```
 
-L’archive EBIOS RM garde le même nom et le même lien public : [télécharger](https://github.com/yousername-ha/suivi-audits/raw/refs/heads/legacy/downloads/EBIOS-RM-maquette-Windows.zip). Le téléchargement est la version courante ; une version antérieure reste récupérable par son commit Git.
+Le catalogue est centralisé dans `docs/catalogue-fonctionnalites.json`, indépendant du dossier d’étape. `etape`, `dossier`, `suivi`, `maquetteCourante`, `tests` et `dossierImplementation` doivent rester cohérents. `suivi.json` conserve les décisions réelles et les transitions ; ne pas inventer de validation ou de recette.
 
-## Passage à l’implémentation
+Les liens existants des ZIP dans `downloads/` restent stables. Les archives, PDF et rapports antérieurs restent des instantanés datés ; leurs chemins internes peuvent refléter l’organisation d’origine. Les documents Markdown courants et le catalogue indiquent les chemins actuels. Conserver les versions utiles dans Git.
 
-L’intégration s’appuie sur la version explicitement demandée par l’utilisateur. Les tests réussis n’accordent pas automatiquement une validation visuelle. Le statut « à suivre » décrit le travail d’intégration de la proposition, sans nier les fonctions déjà présentes dans le moteur legacy.
-
-L’agent d’implémentation suit [le prompt commun](../implementation/socle-astra/PROMPT-IMPLEMENTATION.md) et travaille uniquement sur sa propre branche. `legacy` reste sa référence en lecture. Documenter la branche, le SHA, le périmètre intégré et les résultats dans le dossier de la fonctionnalité. Ne pas déclencher de CI, fusion ou déploiement par cette organisation.
-
-Les cartographies dynamiques restent protégées. Les fichiers locaux étrangers à ce travail ne sont ni déplacés ni publiés.
-
-## Historique et manifestes
-
-Les anciennes séries 08, 14, 15, 16 et 20 ont été déplacées ; [la table de correspondance](../samples/README.md) permet de retrouver leurs fichiers. Les images originales sont conservées. Les rapports de tests historiques gardent leur date et leur portée, sans être attribués à ce nouveau commit.
-
-Les anciens manifestes de livraison décrivent leur livraison d’origine. Les manifestes courants de la maquette lançable et du dossier consolidé sont actualisés lors d’un changement de leurs fichiers. Le nettoyage ultérieur d’une version utile ou validée nécessite une demande de l’utilisateur.
+Le code métier et les lanceurs historiques restent à leur place. La cartographie dynamique demeure protégée. Les références partagées restent dans `references/`. Aucun déploiement, fusion ou CI n’est déclenché par cette organisation.

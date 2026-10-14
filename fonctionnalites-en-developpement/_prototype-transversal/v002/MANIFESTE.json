@@ -1,0 +1,22 @@
+{
+  "version": "v2-a-valider",
+  "publishedToGitHub": true,
+  "publicationPurpose": "telechargement-et-test-sans-validation-implicite",
+  "files": {
+    "DEMARRER.bat": "0edbd8f5b22789c3f11971244871f1b36e23f9e710fdc8b25ca6429165ec81be",
+    "GUIDE-DE-TEST.md": "dcde774c97ca7a139003d457e656358c58827a6aaf9fc703287f3510ee5d35eb",
+    "LIRE-MOI.txt": "07a86cb99d3291e1437b361d426364d6522b3398d745dc8bac08abf85dcb1329",
+    "PROMPT-APRES-VALIDATION.md": "94658b3addc1ca18134e6f0b11809b3ced5c1885836a3a58f9da0b2b857a3ff5",
+    "TECHNIQUE-MAQUETTE.md": "f366c17bc102b0e6bdff5ff86b1cbc3fad1905b0ea332bb643c5741fac658aa4",
+    "TESTS.json": "47b19600e2429646c6b8d1d09b8171e3b3e188fc1dd2cd5d96da5c597857ff50",
+    "apercus/01-menu-et-couples.png": "1c7275d6c030fbf3beed3782e6846a6ce88e04fd5fb09665c7c1d6954aece5eb",
+    "apercus/02-scenario-interactif.png": "336744401ec713104fbc1d496c159b874bf37a97c6f6177445039be9eb6c0e1c",
+    "apercus/03-accueil.png": "3266d87cc22545a72759870cf13fc5a175471a7049abdc2cc40852cb5a503661",
+    "app.js": "91b322cd5fdd1c66ac3a77c03d5f20ca6eab469332681a4944215a601a643087",
+    "base.css": "0d8abac2655fd646cce95593420257ef9e6c782f8aef2944cb99d493d4b0d3a1",
+    "index.html": "b8e895abfb46901f5fc07915281e1550dd7a2ce9d82e41e4e6d8598b5b466bc0",
+    "prototype.css": "7ac519ae0184a5694384c863a4f69527fcc2d936e045e72bea5ed2690467362a",
+    "seed.js": "82ddd73b2d20a58c82a6351a90e0824132dd48858d18dbc5c05645e55bdff475",
+    "verification/parcours.cjs": "d8fa1877928458e32ac27e5a53d9b1f2563ad661eda37bd0b50b4ca6785e550b"
+  }
+}

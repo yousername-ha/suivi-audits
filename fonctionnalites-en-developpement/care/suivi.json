@@ -1,0 +1,14 @@
+{
+  "fonctionnalite": "care",
+  "etape": "en-developpement",
+  "validationUtilisateur": null,
+  "livraisonImplementation": null,
+  "integration": null,
+  "historique": [
+    {
+      "date": "2026-10-14",
+      "etape": "en-developpement",
+      "motif": "Organisation demandée par l’utilisateur ; proposition encore à valider."
+    }
+  ]
+}

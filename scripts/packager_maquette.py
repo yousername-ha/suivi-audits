@@ -11,13 +11,13 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('fonctionnalite')
     args = parser.parse_args()
-    catalogue = json.loads((ROOT / 'fonctionnalites/catalogue.json').read_text())
+    catalogue = json.loads((ROOT / 'docs/catalogue-fonctionnalites.json').read_text())
     feature = next((f for f in catalogue['fonctionnalites'] if f['id'] == args.fonctionnalite), None)
     if not feature or not feature.get('archive'):
         parser.error('Cette fonctionnalité ne dispose pas d’un prototype lançable déclaré.')
     source = (ROOT / feature['maquetteCourante']).resolve()
-    if not source.is_relative_to((ROOT / 'fonctionnalites').resolve()):
-        parser.error('La maquette doit rester dans fonctionnalites/.')
+    if not any(source.is_relative_to((ROOT / folder).resolve()) for folder in ('fonctionnalites-en-developpement', 'fonctionnalites-a-implementer', 'fonctionnalites-implementees')):
+        parser.error('La maquette doit rester dans l’un des trois dossiers du cycle.')
     for name in ('index.html', 'DEMARRER.bat'):
         if not (source / name).is_file():
             parser.error(f'Entrée manquante : {name}')

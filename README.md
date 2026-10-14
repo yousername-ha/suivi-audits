@@ -1,12 +1,14 @@
 # ASTRA — refonte GRC locale
 
-## Travailler par fonctionnalité
+## Cycle des fonctionnalités
 
-**[Ouvrir le catalogue des fonctionnalités](fonctionnalites/README.md)** : maquettes versionnées, tests et consignes d’implémentation.
+1. **[En développement](fonctionnalites-en-developpement/README.md)** : maquettes, essais et corrections.
+2. **[À implémenter](fonctionnalites-a-implementer/README.md)** : après ta validation, maquette et dossier technique complet pour coder.
+3. **[Implémentées](fonctionnalites-implementees/README.md)** : après intégration terminée et vérifiée.
 
-- [Tester EBIOS RM](fonctionnalites/ebios-rm/README.md) · [ZIP Windows avec BAT](downloads/README.md).
-- [Dossier technique commun](implementation/socle-astra/README.md) · [Références visuelles](references/README.md).
-- [Ajouter une nouvelle version de maquette](docs/ORGANISATION-LEGACY.md).
+[Tester la maquette fonctionnelle v2](downloads/ASTRA-maquette-fonctionnelle-v2.zip) · [Téléchargements](downloads/README.md) · [Règles de passage](docs/ORGANISATION-LEGACY.md) · [Catalogue](docs/catalogue-fonctionnalites.json).
+
+Les 20 propositions actuelles sont en développement. Les ZIP de test continuent d’être publiés sur GitHub avant validation.
 
 La maquette EBIOS RM est autonome. Les instructions ci-dessous concernent l’application métier historique, dont le lanceur et les chemins sont conservés.
 
@@ -185,4 +187,4 @@ La correction des accents, des cartes et du compte de test est décrite dans
 
 ## Dossier GRC transversal et navigation simplifiée
 
-[Analyse ARM, architecture, douze chapitres techniques et prompt IA](implementation/grc-transversal/v001-dossier-arm/README.md) · [Menu proposé](fonctionnalites/navigation/README.md) · [Téléchargements](downloads/README.md). Proposition documentaire et graphique du 14 octobre 2026, sans modification du moteur métier.
+[Analyse ARM, architecture, douze chapitres techniques et prompt IA](fonctionnalites-en-developpement/_dossiers-transversaux/grc-transversal/v001-dossier-arm/README.md) · [Menu proposé](fonctionnalites-en-developpement/navigation/README.md) · [Téléchargements](downloads/README.md). Proposition documentaire et graphique du 14 octobre 2026, sans modification du moteur métier.

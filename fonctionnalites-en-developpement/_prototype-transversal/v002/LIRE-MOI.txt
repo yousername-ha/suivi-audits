@@ -1,0 +1,37 @@
+ASTRA — MAQUETTE FONCTIONNELLE V2 — A VALIDER
+
+OUVRIR SUR VOTRE PC
+1. Extraire tout le ZIP dans un dossier (ne pas lancer le BAT depuis le ZIP).
+2. Double-cliquer sur DEMARRER.bat.
+3. Le navigateur ouvre la maquette. Aucune installation ni aucun compte requis.
+Alternative : ouvrir directement index.html.
+
+Le menu est restructuré à partir de la vidéo : sept rubriques métier,
+Administration séparée, icônes colorées, chevrons et sous-menus repliables.
+
+COMMENCER LE TEST
+Cliquer sur « Guide de test », puis créer une étude dans Risques > Études & parcours.
+Le jeu initial permet aussi d'essayer immédiatement matrices, cercle et scénarios.
+Le guide détaillé est dans GUIDE-DE-TEST.md.
+
+CONSERVER LES ESSAIS
+Les modifications sont enregistrées dans le stockage local du navigateur.
+Dans Administration > Journal & données, utiliser « Exporter la sauvegarde JSON »
+pour déplacer vos essais sur un autre PC ou les conserver avant de déplacer le dossier.
+La navigation privée ou certains réglages peuvent empêcher la sauvegarde locale :
+un message le signale ; l'export JSON reste disponible.
+
+PERIMETRE
+- Parcours EBIOS RM en cinq ateliers interactifs, avec contrôles de complétude fictifs.
+- Registres partagés, couples SR/OV, matrices, cercle, scénarios éditables et flux animés.
+- Risques, actions, tâches récurrentes et fiches de preuve.
+- Versions d'échelles et de matrice, adoption explicite par l'étude.
+- Export/import JSON, export CSV, recherche et remise à zéro.
+- Les autres modules ont des fiches génériques interactives : leurs règles métier
+  spécialisées ne sont pas implémentées dans cette maquette.
+- L'import ARM est une simulation de rapprochement sur lot fictif, pas un lecteur XLSX.
+- La cartographie dynamique est volontairement exclue et reste inchangée dans l'application.
+
+Aucune connexion à l'application réelle, aucun serveur métier et aucune donnée ARM réelle.
+Cette version est publiée sur GitHub pour téléchargement et test. Elle reste à valider.
+Les tests ont été exécutés dans Chromium sur Linux ; le BAT n'a pas été exécuté sous Windows.

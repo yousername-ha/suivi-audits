@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-14",
+  "baseCommit": "03e44bd64bf8300f34f38230cc31708a444af596",
+  "portee": "Réorganisation documentaire du cycle des fonctionnalités, sans modification du code métier",
+  "etapes": {
+    "en-developpement": 20,
+    "a-implementer": 0,
+    "implementee": 0
+  },
+  "controles": {
+    "fichiersDeplacesConserves": 222,
+    "imagesEtPdfIdentiques": 25,
+    "liensLocauxVerifies": 561,
+    "archivesPublieesInchangees": true,
+    "sourcesPrototypeV2IdentiquesAuZip": true,
+    "catalogueSuivisEtManifestes": "OK",
+    "syntaxeScriptsPython": "OK",
+    "gitDiffCheck": "OK avec cr-at-eol pour le BAT Windows conservé en CRLF",
+    "packagingEbiosDansCopieTemporaire": "OK, archive et empreintes vérifiées sans remplacer le téléchargement publié"
+  },
+  "limites": [
+    "Les recettes navigateur antérieures sont conservées ; aucune nouvelle recette applicative nécessaire pour ce déplacement documentaire.",
+    "Aucune validation de maquette ni intégration métier déduite de cette réorganisation."
+  ]
+}

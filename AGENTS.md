@@ -42,15 +42,15 @@ Le contrôle de préparation de la branche est documenté séparément.
 
 - Ne modifier ni le fonctionnement ni l’interface de la cartographie dynamique
   du module cartographique. Cette restriction prévaut sur le périmètre de refonte
-  général décrit plus haut. Les propositions visuelles restent isolées dans `fonctionnalites/` et `references/`.
+  général décrit plus haut. Les propositions visuelles restent isolées dans `fonctionnalites-en-developpement/` et `references/`.
 
 ## Organisation par fonctionnalité — demande du 14 octobre 2026
 
-- Point d’entrée : `fonctionnalites/README.md` et `docs/ORGANISATION-LEGACY.md`.
+- Point d’entrée : `fonctionnalites-en-developpement/README.md` et `docs/ORGANISATION-LEGACY.md`.
 - Chaque fonctionnalité possède `maquettes/`, `tests/` et `implementation/`.
 - Ajouter les nouvelles propositions dans une version `vNNN-description`, mettre à jour
   le catalogue, le statut explicite, les références, les résultats et le téléchargement concerné.
-- Le dossier commun est `implementation/socle-astra/` ; les références partagées sont
+- Le dossier commun est `fonctionnalites-en-developpement/_dossiers-transversaux/socle-astra/` ; les références partagées sont
   dans `references/`. `samples/` conserve uniquement l’orientation et le relevé historique.
 - Préserver les versions utiles et les images originales. Les suppressions restent
   soumises à une demande explicite ; le nettoyage des séries 01–19 a déjà été autorisé.
@@ -69,3 +69,15 @@ Le contrôle de préparation de la branche est documenté séparément.
 - Continuer à publier les ZIP de maquettes sur GitHub, sur `legacy`, pour que l’utilisateur puisse les télécharger et les tester. Ne pas attendre la validation de la maquette pour publier son ZIP de test.
 - Marquer clairement les propositions « à valider » : publier un ZIP ne vaut pas validation utilisateur ni autorisation d’intégration en production.
 - Consolider le dossier final destiné à l’IA de codage après validation ; l’agent de codage reste limité à sa propre branche.
+
+## Cycle à trois dossiers — dernière demande utilisateur
+
+Cette règle remplace l’ancienne organisation par dossier unique. Les propositions suivent :
+`fonctionnalites-en-developpement/` → `fonctionnalites-a-implementer/` → `fonctionnalites-implementees/`.
+
+- Commencer toute nouvelle maquette en développement ; publier son ZIP de test sur GitHub sans attendre sa validation.
+- Après validation explicite de la version et du périmètre par l’utilisateur, préparer le dossier technique et graphique complet, puis déplacer le dossier entier vers « à implémenter ».
+- Après intégration terminée et vérifiée, consigner branche, SHA et recette, puis déplacer vers « implémentées ». Ne pas déduire une intégration d’un test de maquette.
+- Suivre `docs/ORGANISATION-LEGACY.md`, `docs/catalogue-fonctionnalites.json` et le `suivi.json` de chaque fonctionnalité. Mettre à jour tous les liens et manifestes après déplacement.
+- Les dossiers transversaux préparatoires sont dans `fonctionnalites-en-developpement/_dossiers-transversaux/`. Le prototype commun est dans `fonctionnalites-en-developpement/_prototype-transversal/`.
+- Conserver les ZIP téléchargeables, les versions utiles et les preuves. L’IA de codage reste limitée à sa propre branche ; legacy lui sert de référence en lecture.
