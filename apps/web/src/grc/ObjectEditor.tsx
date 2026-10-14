@@ -30,7 +30,7 @@ import { useCan } from '../session';
 import { ConfigurationEditor } from './ConfigurationEditor';
 import type { MethodVersion } from './Risks';
 import { ChampLien } from '../pilotage/Fields';
-type Owners = { id: string; displayName: string; username: string }[];
+import { SelecteurResponsable, useResponsables } from '../components/selecteurs';
 const initial = (kind: GrcKind, policy: BusinessPolicy, method?: MethodVersion): Record<string, unknown> =>
   kind === 'action'
     ? {
@@ -147,7 +147,7 @@ export function ObjectEditor({
     [date, setDate] = useState(new Date().toISOString().slice(0, 10)),
     [legacyComment, setLegacyComment] = useState(''),
     [proof, setProof] = useState('');
-  const owners = useQuery({ queryKey: ['grc', smsi, 'owners'], queryFn: () => get<Owners>(`/api/grc/${smsi}/owners`) });
+  const owners = useResponsables(smsi);
   const methods = useQuery({
     queryKey: ['grc', smsi, 'methods'],
     queryFn: () => get<MethodVersion[]>(`/api/grc/${smsi}/methods`),
@@ -268,10 +268,9 @@ export function ObjectEditor({
               minRows={3}
               disabled={readonly}
             />
-            <Select
-              label="Responsable"
-              clearable
-              data={(owners.data ?? []).map((u) => ({ value: u.id, label: u.displayName || u.username }))}
+            <SelecteurResponsable
+              smsi={smsi}
+              sansRecherche
               value={typeof data.ownerId === 'string' ? data.ownerId : null}
               onChange={(v) => set('ownerId', v)}
               disabled={readonly}

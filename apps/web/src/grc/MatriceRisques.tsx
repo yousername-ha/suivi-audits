@@ -16,7 +16,7 @@ const lum = (hex: string) => {
   return 0.2126 * c[0]! + 0.7152 * c[1]! + 0.0722 * c[2]!;
 };
 /** Texte blanc ou encre foncée, selon le meilleur contraste avec le fond de la case. */
-const texteSur = (fond: string) => {
+export const texteSur = (fond: string) => {
   const l = lum(fond);
   const surBlanc = 1.05 / (l + 0.05);
   const surEncre = (l + 0.05) / (lum(MATRICE.encre) + 0.05);

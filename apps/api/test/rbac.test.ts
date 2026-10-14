@@ -67,6 +67,23 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
     'GET /api/account/preferences',
     'PUT /api/account/preferences',
     'POST /api/mur/activer',
+    // Catalogue de configuration GRC : droits contrôlés par le service (pilotage, paramètres ou administration), testés dans
+    // config-grc.test.ts (401, 403, portée du périmètre, droits de publication).
+    'GET /api/config-grc/templates',
+    'POST /api/config-grc/templates/:id/adopt',
+    'GET /api/config-grc/items',
+    'POST /api/config-grc/items',
+    'GET /api/config-grc/items/:id',
+    'PUT /api/config-grc/items/:id/draft',
+    'POST /api/config-grc/items/:id/preview',
+    'POST /api/config-grc/items/:id/publish',
+    'GET /api/config-grc/items/:id/versions/:version',
+    'GET /api/config-grc/items/:id/usages',
+    'GET /api/config-grc/items/:id/impact',
+    'POST /api/config-grc/items/:id/derive',
+    'POST /api/config-grc/items/:id/archive',
+    'POST /api/config-grc/items/:id/restore',
+    'DELETE /api/config-grc/items/:id',
   ]);
 
   it('toute route hors de la liste explicite exige une permission (ou un module métier lisible)', () => {

@@ -30,6 +30,7 @@ const KEYS: Record<string, string[][]> = {
   ],
   maps: [['carto']],
   grc: [['grc']],
+  config_grc: [['config-grc']],
   wall_screens: [['admin', 'murs']],
   groups: [['admin']],
   roles: [['admin']],

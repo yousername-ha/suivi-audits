@@ -14,6 +14,8 @@ import { PILOTAGE_FIELDS, type GrcKind, type PilotageField } from '@suivi/shared
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { get } from '../api';
+import { BlocGravite, useGravite } from '../config-grc/Gravite';
+import { BlocPertinence, ConfigurationEtude, usePertinence } from '../config-grc/Pertinence';
 export interface Source {
   ref: string;
   name: string;
@@ -141,7 +143,15 @@ export function Fields({
   readonly?: boolean;
   smsi?: string;
 }) {
-  const fields = PILOTAGE_FIELDS[kind] ?? [];
+  const pertinence = usePertinence(kind === 'sr_ov' ? smsi : undefined, data.studyRef);
+  // Avec une matrice épinglée par l'étude, motivation et ressources se choisissent sur ses échelles : les anciens champs
+  // à quatre niveaux ne sont plus proposés (leurs valeurs déjà saisies restent conservées).
+  const gravite = useGravite(kind === 'feared_event' ? smsi : undefined, data.studyRef);
+  const fields = (PILOTAGE_FIELDS[kind] ?? []).filter(
+    (f) =>
+      !(pertinence && kind === 'sr_ov' && ['motivation', 'resources'].includes(f.key)) &&
+      !(gravite && kind === 'feared_event' && f.key === 'gravity'),
+  );
   const input = (f: PilotageField) => {
     const value = data[f.key];
     if ((f.type === 'ref' || f.type === 'refs') && f.cibles && smsi)
@@ -255,6 +265,15 @@ export function Fields({
   return (
     <Stack>
       {fields.map(input)}
+      {kind === 'risk_study' && (
+        <ConfigurationEtude
+          value={data.configuration}
+          onChange={(v) => onChange('configuration', v)}
+          readonly={readonly}
+        />
+      )}
+      {gravite && <BlocGravite gravite={gravite} data={data} onChange={onChange} readonly={readonly} />}
+      {pertinence && <BlocPertinence pertinence={pertinence} data={data} onChange={onChange} readonly={readonly} />}
       {kind === 'audit' && smsi && (
         <ReferentielsAudites
           smsi={smsi}

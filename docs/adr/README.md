@@ -41,3 +41,4 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0035](0035-postgresql-18-migration-automatique.md) | PostgreSQL 18 avec migration automatique depuis la 17, et Node 26 | Proposée |
 | [0036](0036-objectifs-boites-contexte-et-revue-de-direction.md) | Objectifs, boîtes de pilotage, contexte et revue de direction (lots M5 à M8) | Acceptée |
 | [0037](0037-standards-verrouilles-jeu-de-test-et-relations.md) | Standards verrouillés, copies personnalisables, jeu de test et contrôle des relations | Acceptée |
+| [0038](0038-socle-de-configuration-grc-transversal.md) | Socle de configuration GRC transversal (échelles, matrices, critères) et méthodes épinglées | Proposée |

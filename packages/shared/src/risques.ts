@@ -2,7 +2,8 @@
    ISO/IEC 27005 sur la fiche de risque, références typées, calculs d'aide à la décision et état d'acceptation.
    Démarches « inspirées » des méthodes : aucune conformité n'est revendiquée, aucun texte normatif n'est reproduit. */
 import { z } from 'zod';
-import { GrcRef, validDate, type GrcKind } from './grc.js';
+import { CfgRef } from './config-grc.js';
+import { GrcKey, GrcRef, validDate, type GrcKind } from './grc.js';
 
 const text = z.string().max(10000);
 const date = z
@@ -68,8 +69,20 @@ export const ECHELLE_VRAISEMBLANCE = ['Peu vraisemblable', 'Vraisemblable', 'Tr�
 
 /* ---------------------------------------------------------------- Schémas des objets */
 
+/** Liaison de configuration de l'étude (ADR 0038) : éléments du catalogue épinglés à une version précise. Facultative :
+    une étude sans liaison garde l'échelle d'origine à quatre niveaux. */
+export const StudyConfiguration = z
+  .object({
+    /** Matrice de pertinence des couples source de risque / objectif visé (lignes : ressources, colonnes : motivation). */
+    relevanceMatrix: CfgRef.nullable().default(null),
+    /** Correspondance impact → gravité (atelier 1) : l'échelle de départ porte les niveaux d'impact, celle d'arrivée la gravité. */
+    severityMapping: CfgRef.nullable().default(null),
+  })
+  .strict();
+export type StudyConfiguration = z.infer<typeof StudyConfiguration>;
 export const RiskStudyData = common
   .extend({
+    configuration: StudyConfiguration.nullable().default(null),
     objective: text.default(''),
     scope: text.default(''),
     participants: text.default(''),
@@ -119,6 +132,13 @@ export const FearedEventData = common
       .max(5)
       .default([]),
     gravity: niveau,
+    /** Impacts relevés sur l'échelle de départ de la correspondance épinglée par l'étude (catégorie facultative). */
+    impactLevels: z
+      .array(z.object({ category: GrcKey.nullable().default(null), level: GrcKey }).strict())
+      .max(50)
+      .default([]),
+    /** Gravité retenue sur l'échelle d'arrivée ; la gravité proposée est le résultat de l'agrégation des impacts. */
+    severityLevel: GrcKey.nullable().default(null),
     // Champs texte historiques du formulaire générique, conservés tels quels.
     severity: z.string().max(10000).optional(),
     businessValue: z.string().max(10000).optional(),
@@ -139,6 +159,11 @@ export const SrOvData = common
     motivation: niveau,
     resources: niveau,
     activity: niveau,
+    /** Niveaux choisis sur les échelles épinglées par l'étude (identifiants de niveau) ; la pertinence retenue est
+        décidée par l'analyste, la matrice n'en fait qu'une proposition. */
+    resourcesLevel: GrcKey.nullable().default(null),
+    motivationLevel: GrcKey.nullable().default(null),
+    relevanceLevel: GrcKey.nullable().default(null),
     retained: z.boolean().default(false),
     justification: text.default(''),
   })
@@ -148,6 +173,8 @@ export const SrOvData = common
   });
 export const EcosystemPartyData = common
   .extend({
+    /** Fournisseur du registre de l'organisation, lorsque la partie prenante en est un (facultatif). */
+    supplierRef: ref,
     category: text.default(''),
     dependency: niveau,
     penetration: niveau,
@@ -213,7 +240,7 @@ export const RISK_REF_KINDS: Partial<Record<GrcKind, Record<string, CibleRef[]>>
   feared_event: { studyRef: STUDY_REF, businessAssetRef: ['object:business_asset'] },
   risk_source: { studyRef: STUDY_REF },
   sr_ov: { studyRef: STUDY_REF, sourceRef: ['object:risk_source'] },
-  ecosystem_party: { studyRef: STUDY_REF },
+  ecosystem_party: { studyRef: STUDY_REF, supplierRef: ['legacy:suppliers'] },
   strategic_scenario: {
     studyRef: STUDY_REF,
     srOvRef: ['object:sr_ov'],

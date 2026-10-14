@@ -6,6 +6,7 @@ import {
   RiskRatings,
   evaluateMethod,
   validDate,
+  type CfgRef,
   type RiskData,
 } from '@suivi/shared';
 import type { SessionUser } from '../auth.js';
@@ -56,14 +57,22 @@ export class GrcRisks {
       )
     ).rows;
   }
+  /** Définition à publier : épinglages résolus sur le catalogue de configuration, ou définition inchangée sans épinglage. */
+  private async resolved(smsi: string, definition: RiskMethod, current: MethodVersion | null | undefined, c?: Client) {
+    const resolver = this.g.methodBindings;
+    if (!definition.bindings) return { definition, refs: [] as CfgRef[] };
+    if (!resolver) throw new HttpError(503, 'Catalogue de configuration indisponible.');
+    return resolver.resolveMethod(smsi, definition, c, resolver.pinnedRefs(current?.definition));
+  }
   async previewMethod(smsi: string, id: string | null, input: unknown, user: SessionUser) {
     await this.g.access(smsi, user, true);
     await this.g.permission(user, 'pilotage', 'administrer');
-    const definition = RiskMethod.parse(input);
+    const parsed = RiskMethod.parse(input);
     const current = id ? (await this.methods(smsi, user)).find((m) => m.methodId === id) : null;
     if (id && !current) throw new HttpError(404, 'Méthode introuvable.');
     const version = current?.version ?? 0;
-    return { definition, version, previewId: hash({ smsi, id, version, definition }) };
+    const { definition, refs } = await this.resolved(smsi, parsed, current);
+    return { definition, version, pinned: refs, previewId: hash({ smsi, id, version, definition }) };
   }
   async publishMethod(
     smsi: string,
@@ -90,18 +99,37 @@ export class GrcRisks {
           )
         ).rows[0]?.version ?? 0;
       if (current !== expected) throw new HttpError(412, 'Publication concurrente.');
+      // Les éléments épinglés sont relus dans la transaction : un archivage survenu depuis l'aperçu est pris en compte.
+      const previous = current
+        ? (
+            await c.query<MethodVersion>(
+              `SELECT ${methodColumns} FROM grc_method_versions WHERE smsi_id=$1 AND method_id=$2 AND version=$3`,
+              [smsi, methodId, current],
+            )
+          ).rows[0]
+        : null;
+      const fresh = await this.resolved(smsi, RiskMethod.parse(input), previous, c);
+      if (hash({ smsi, id, version: current, definition: fresh.definition }) !== previewId)
+        throw new HttpError(422, 'Simulation différente du contenu publié.');
       const row = (
         await c.query<MethodVersion>(
           `INSERT INTO grc_method_versions(smsi_id,method_id,version,definition,reason,created_by) VALUES($1,$2,$3,$4,$5,$6) RETURNING ${methodColumns}`,
-          [smsi, methodId, current + 1, p.definition, reason, user.username],
+          [smsi, methodId, current + 1, fresh.definition, reason, user.username],
         )
       ).rows[0]!;
+      if (fresh.refs.length)
+        await this.g.methodBindings!.recordUsage(
+          c,
+          user,
+          { kind: 'method_version', id: row.id, version: row.version },
+          fresh.refs,
+        );
       await this.g.db.audit(
         user,
         ip,
         'grc.method.published',
         methodId,
-        { smsiId: smsi, version: row.version, previewId },
+        { smsiId: smsi, version: row.version, previewId, pinned: fresh.refs.length },
         c,
       );
       await this.g.notify(c, methodId, row.version, smsi, 'pilotage', user.username);

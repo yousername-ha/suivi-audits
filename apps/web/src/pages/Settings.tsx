@@ -62,7 +62,10 @@ export function SettingsPage() {
     if (dirty) setPending(s);
     else nav(`/parametres/${s}`);
   };
-  const options = visible.map((s) => ({ value: s, label: SETTINGS_LABELS[s] }));
+  const options = [
+    ...visible.map((s) => ({ value: s as string, label: SETTINGS_LABELS[s] })),
+    { value: 'configuration-grc', label: 'Configuration GRC' },
+  ];
 
   return (
     <Page>
@@ -78,13 +81,16 @@ export function SettingsPage() {
               component="button"
             />
           ))}
+          <NavLink component={Link} to="/parametres/configuration-grc" label="Configuration GRC" />
         </nav>
         <Select
           className="settings-select"
           label="Section"
           data={options}
           value={current}
-          onChange={(v) => v && go(v as SettingsSection)}
+          onChange={(v) =>
+            v && (v === 'configuration-grc' ? nav('/parametres/configuration-grc') : go(v as SettingsSection))
+          }
           allowDeselect={false}
         />
         <div className="settings-content grille-formulaire">

@@ -708,3 +708,48 @@ export const pilotageDecisions = pgTable('pilotage_decisions', {
   createdBy: text('created_by').notNull(),
   createdAt: tstz('created_at').notNull().defaultNow(),
 });
+
+/* Catalogue de configuration GRC transversal (migration 021, ADR 0038). */
+export const cfgItems = pgTable('cfg_items', {
+  id: uuid('id').primaryKey(),
+  kind: text('kind').notNull(),
+  key: text('key').notNull(),
+  scope: text('scope').notNull(),
+  smsiId: uuid('smsi_id'),
+  state: text('state').notNull(),
+  draft: jsonb('draft'),
+  currentVersion: integer('current_version'),
+  derivedFromId: uuid('derived_from_id'),
+  derivedFromVersion: integer('derived_from_version'),
+  origin: jsonb('origin').notNull(),
+  version: integer('version').notNull(),
+  createdBy: text('created_by').notNull(),
+  updatedBy: text('updated_by').notNull(),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+  updatedAt: tstz('updated_at').notNull().defaultNow(),
+});
+export const cfgVersions = pgTable(
+  'cfg_versions',
+  {
+    itemId: uuid('item_id').notNull(),
+    version: integer('version').notNull(),
+    definition: jsonb('definition').notNull(),
+    reason: text('reason').notNull(),
+    createdBy: text('created_by').notNull(),
+    createdAt: tstz('created_at').notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.itemId, t.version] })],
+);
+export const cfgUsages = pgTable(
+  'cfg_usages',
+  {
+    itemId: uuid('item_id').notNull(),
+    itemVersion: integer('item_version').notNull(),
+    consumerKind: text('consumer_kind').notNull(),
+    consumerId: text('consumer_id').notNull(),
+    consumerVersion: integer('consumer_version').notNull(),
+    createdBy: text('created_by').notNull(),
+    createdAt: tstz('created_at').notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.itemId, t.itemVersion, t.consumerKind, t.consumerId, t.consumerVersion] })],
+);

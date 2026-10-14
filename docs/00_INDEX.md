@@ -26,6 +26,7 @@ Source de référence des chiffres/IDs/états :
 - [L1 — audit et correspondance ancien / nouveau](unification/L1-AUDIT-ET-CORRESPONDANCE.md)
 - [Plan d'évolution](unification/PLAN-EVOLUTION.md)
 - [Cadrage du module Qualité ISO 9001](unification/CADRAGE-MODULE-QUALITE-9001.md) (réflexion, aucun code)
+- [Refonte GRC : configuration transversale et multiméthode](refonte-grc/README.md) ([ADR 0038](adr/0038-socle-de-configuration-grc-transversal.md))
 
 ## 01_REPRISE_IA
 

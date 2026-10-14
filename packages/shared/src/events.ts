@@ -19,6 +19,7 @@ export const ENTITIES = [
   'environment_configuration',
   'risk_assessments',
   'grc',
+  'config_grc',
 ] as const;
 export type Entity = (typeof ENTITIES)[number];
 
@@ -40,6 +41,7 @@ export const ENTITY_PERMISSION: Record<Entity, Permission | 'metier'> = {
   environment_configuration: 'administration:lire',
   risk_assessments: 'ia:lire',
   grc: 'metier',
+  config_grc: 'metier',
 };
 
 export function canReceive(rights: Rights, entity: Entity): boolean {

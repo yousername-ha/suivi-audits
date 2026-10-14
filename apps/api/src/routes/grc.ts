@@ -885,6 +885,40 @@ export const grcRoutes = [
   route({
     ...base,
     method: 'GET',
+    url: '/api/grc/:smsi/studies/:id/configuration-migration',
+    summary:
+      'Étude d’impact du passage d’une étude aux versions les plus récentes de sa configuration (aucune écriture)',
+    params: object,
+    handler: async ({ svc, s, params }) => svc.grc.studyConfig.preview(params.smsi, params.id, (s as Session).user),
+  }),
+  route({
+    ...base,
+    method: 'POST',
+    url: '/api/grc/:smsi/studies/:id/configuration-migration',
+    summary:
+      'Migrer explicitement une étude vers les versions récentes de sa configuration (If-Match : version de l’étude)',
+    params: object,
+    body: z
+      .object({
+        previewId: z.string().regex(/^[a-f0-9]{64}$/),
+        reason: z.string().trim().min(10).max(1000),
+        confirm: z.literal('MIGRER'),
+      })
+      .strict(),
+    handler: async ({ svc, s, params, body, req, ip }) =>
+      svc.grc.studyConfig.apply(
+        params.smsi,
+        params.id,
+        requireIfMatch(req),
+        body.previewId,
+        body.reason,
+        (s as Session).user,
+        ip,
+      ),
+  }),
+  route({
+    ...base,
+    method: 'GET',
     url: '/api/grc/methods/templates/:family',
     summary: 'Modèle méthodologique organisationnel à adapter',
     params: z.object({ family: z.enum(['ebios_rm', 'iso27005', 'mehari', 'custom']) }),
