@@ -23,4 +23,5 @@ export * from './suivi-fournisseurs.js';
 export * from './tableau-de-bord.js';
 export * from './liens.js';
 export * from './risques.js';
+export * from './config-grc.js';
 export * from './fournisseurs.js';
