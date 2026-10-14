@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { BusinessPolicy, GrcObject, TaskData } from '@suivi/shared';
 import { get } from '../api';
 import { ErrorAlert } from '../components/common';
+import { SelecteurResponsable, useResponsables } from '../components/selecteurs';
 const views = [
   { value: 'list', label: 'Liste' },
   { value: 'kanban', label: 'Kanban' },
@@ -51,10 +52,7 @@ export function Tasks({
         byStatus: { status: string; count: number }[];
       }>(`/api/grc/${smsi}/tasks/dashboard`),
   });
-  const owners = useQuery({
-    queryKey: ['grc', smsi, 'owners'],
-    queryFn: () => get<{ id: string; displayName: string; username: string }[]>(`/api/grc/${smsi}/owners`),
-  });
+  const owners = useResponsables(smsi);
   const items = (
     view === 'list' || view === 'kanban' ? (all.data?.pages.flatMap((p) => p.items) ?? []) : (list.data?.items ?? [])
   ).filter(
@@ -96,13 +94,7 @@ export function Tasks({
           }}
         />
         <TextInput label="Rechercher une action" value={search} onChange={(e) => setSearch(e.currentTarget.value)} />
-        <Select
-          label="Responsable"
-          clearable
-          value={owner}
-          onChange={setOwner}
-          data={(owners.data ?? []).map((o) => ({ value: o.id, label: o.displayName || o.username }))}
-        />
+        <SelecteurResponsable smsi={smsi} value={owner} onChange={setOwner} sansRecherche />
         <Select
           label="État"
           clearable

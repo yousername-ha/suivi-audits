@@ -1,12 +1,13 @@
 import { Badge, Button, Card, Group, Menu, Modal, Select, Stack, Table, Text, TextInput } from '@mantine/core';
 import { GRC_LABELS, GRC_MODULES, type GrcKind, type GrcObject, type PilotageRecord } from '@suivi/shared';
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { Filtres } from '../components/Filtres';
 import { useCan } from '../session';
 import { OPERATION_LABELS } from './Decision';
+import { useResponsables } from '../components/selecteurs';
 const STATES: Record<string, string> = {
   draft: 'À préparer',
   review: 'À valider',
@@ -108,10 +109,7 @@ export function BusinessRegistry({
     getNextPageParam: (p) => p.nextBefore ?? undefined,
     enabled: !!history,
   });
-  const owners = useQuery({
-    queryKey: ['grc', smsi, 'owners'],
-    queryFn: () => get<{ id: string; displayName: string; username: string }[]>(`/api/grc/${smsi}/owners`),
-  });
+  const owners = useResponsables(smsi);
   const toutes = [
     ...(native.data?.pages.flatMap((p) => p.items) ?? []),
     ...(historical.data?.pages.flatMap((p) => p.items) ?? []),

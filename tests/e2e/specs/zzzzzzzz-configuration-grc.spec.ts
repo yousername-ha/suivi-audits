@@ -97,7 +97,7 @@ test('Atelier 2 : étude liée à la matrice du catalogue, pertinence proposée 
     await d.getByRole('textbox', { name: 'Intitulé', exact: true }).fill('Étude fictive de pertinence');
     await choisir(
       page,
-      'Matrice de pertinence des couples source de risque / objectif visé',
+      'Matrice de pertinence des couples source de risque / objectif visé (atelier 2)',
       'Niveau de pertinence (ressources × motivation) (matrice_pertinence_sr_ov)',
     );
     await expect(d.getByRole('textbox', { name: 'Version épinglée' })).toHaveValue('Version 1 (courante)');
@@ -149,20 +149,21 @@ test('Méthode ISO 27005 : échelles et matrice du catalogue épinglées, versio
       expect(r.ok(), await r.text()).toBeTruthy();
       return item.id as string;
     };
+    const suffixe = String(Date.now()).slice(-6);
     const niveaux = (ids: string[]) => ids.map((id) => ({ id, label: id.toUpperCase(), description: '' }));
-    const gravite = await publier('scale', 'gravite_iso', {
+    const gravite = await publier('scale', 'gravite_iso_' + suffixe, {
       name: 'Gravité ISO de recette',
       category: 'severity',
       nature: 'qualitative',
       levels: niveaux(['g1', 'g2', 'g3']),
     });
-    const vraisemblance = await publier('scale', 'vraisemblance_iso', {
+    const vraisemblance = await publier('scale', 'vraisemblance_iso_' + suffixe, {
       name: 'Vraisemblance ISO de recette',
       category: 'likelihood',
       nature: 'qualitative',
       levels: niveaux(['v1', 'v2']),
     });
-    const risque = await publier('scale', 'risque_iso', {
+    const risque = await publier('scale', 'risque_iso_' + suffixe, {
       name: 'Niveaux de risque ISO de recette',
       category: 'risk_level',
       nature: 'qualitative',
@@ -171,7 +172,7 @@ test('Méthode ISO 27005 : échelles et matrice du catalogue épinglées, versio
         { id: 'haut', label: 'Haut', description: '', color: '#A36F65', acceptability: 'unacceptable' },
       ],
     });
-    await publier('matrix', 'matrice_iso', {
+    await publier('matrix', 'matrice_iso_' + suffixe, {
       name: 'Matrice ISO de recette',
       category: 'risk',
       appliesTo: ['iso27005'],
@@ -202,11 +203,11 @@ test('Méthode ISO 27005 : échelles et matrice du catalogue épinglées, versio
       await page.getByRole('textbox', { name: champ, exact: true }).click();
       await page.getByRole('option', { name: option, exact: true }).click();
     };
-    await choisirIci('Échelle de la dimension « Gravité »', 'Gravité ISO de recette (gravite_iso)');
-    await choisirIci('Échelle de vraisemblance', 'Vraisemblance ISO de recette (vraisemblance_iso)');
-    await choisirIci('Échelle des niveaux de risque', 'Niveaux de risque ISO de recette (risque_iso)');
-    await choisirIci('Matrice de calcul', 'Matrice ISO de recette (matrice_iso)');
-    await page.getByRole('textbox', { name: 'Motif de publication' }).fill('Méthode épinglée de recette');
+    await choisirIci('Échelle de la dimension « Gravité »', `Gravité ISO de recette (gravite_iso_${suffixe})`);
+    await choisirIci('Échelle de vraisemblance', `Vraisemblance ISO de recette (vraisemblance_iso_${suffixe})`);
+    await choisirIci('Échelle des niveaux de risque', `Niveaux de risque ISO de recette (risque_iso_${suffixe})`);
+    await choisirIci('Matrice de calcul', `Matrice ISO de recette (matrice_iso_${suffixe})`);
+    await page.getByRole('textbox', { name: 'Motif de publication', exact: true }).fill('Méthode épinglée de recette');
     await page.getByRole('button', { name: 'Simuler la publication' }).click();
     await expect(page.getByText('Configuration valide')).toBeVisible();
     await page.getByRole('button', { name: 'Publier cette version' }).click();
