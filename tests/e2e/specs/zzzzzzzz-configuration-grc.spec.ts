@@ -1,7 +1,7 @@
 /* Configuration GRC (ADR 0038) : catalogue vide, adoption du modèle de pertinence, création et publication d'une échelle
    dans l'interface, matrice complète, même contenu sous Gestion des risques → Configuration des analyses. Données fictives. */
-import { expect, test } from '@playwright/test';
-import { sessionAdmin, watchPage } from '../helpers';
+import { expect, test, type Page } from '@playwright/test';
+import { csrfOf, sessionAdmin, watchPage } from '../helpers';
 
 test('Configuration GRC : modèle adopté, échelle créée et publiée, mêmes éléments côté analyses', async ({
   browser,
@@ -64,6 +64,59 @@ test('Configuration GRC : modèle adopté, échelle créée et publiée, mêmes 
     await page.goto('/pilotage/configuration-analyses');
     await expect(page.getByRole('heading', { name: 'Configuration des analyses' })).toBeVisible();
     await expect(page.getByRole('region', { name: 'Échelles' }).getByText('Gravité fictive de recette')).toBeVisible();
+    expect(problems).toEqual([]);
+  } finally {
+    await ctx.close();
+  }
+});
+
+async function choisir(page: Page, champ: string, option: string) {
+  const dialogue = page.getByRole('dialog');
+  await dialogue.getByRole('textbox', { name: champ, exact: true }).click();
+  await page.getByRole('option', { name: option, exact: true }).click();
+}
+
+test('Atelier 2 : étude liée à la matrice du catalogue, pertinence proposée puis retenue', async ({ browser }) => {
+  const ctx = await browser.newContext({ storageState: (await sessionAdmin(browser)).state, ignoreHTTPSErrors: true });
+  const page = await ctx.newPage(),
+    problems = watchPage(page);
+  try {
+    // Périmètre privé de recette (préparation par l'API) ; la matrice a été adoptée par le test précédent.
+    await page.goto('/pilotage');
+    const s = await (
+      await page.request.post('/api/grc/smsis', {
+        headers: { Origin: new URL(page.url()).origin, 'X-CSRF-Token': await csrfOf(page.request) },
+        data: { name: 'QA-Pertinence-' + Date.now(), scope: 'Fixture privée de recette', timezone: 'Europe/Paris' },
+      })
+    ).json();
+    await page.goto('/pilotage/etudes');
+    await page.getByRole('textbox', { name: 'Périmètre affiché', exact: true }).click();
+    await page.getByRole('option', { name: s.name, exact: true }).click();
+    await page.getByRole('button', { name: 'Nouvelle étude' }).click();
+    let d = page.getByRole('dialog');
+    await d.getByRole('textbox', { name: 'Intitulé', exact: true }).fill('Étude fictive de pertinence');
+    await choisir(
+      page,
+      'Matrice de pertinence des couples source de risque / objectif visé',
+      'Niveau de pertinence (ressources × motivation) (matrice_pertinence_sr_ov)',
+    );
+    await expect(d.getByText('Version 1 (courante)')).toBeVisible();
+    await d.getByRole('button', { name: 'Enregistrer', exact: true }).click();
+    await expect(d).toHaveCount(0);
+    await page.getByRole('button', { name: 'Ouvrir l’étude' }).click();
+
+    // Atelier 2 : les niveaux se choisissent sur les échelles de la matrice ; la pertinence est proposée.
+    await page.getByRole('tab', { name: /^2\./ }).click();
+    await page.getByRole('button', { name: 'Ajouter : Couple source de risque / objectif visé' }).click();
+    d = page.getByRole('dialog');
+    await d.getByRole('textbox', { name: 'Intitulé', exact: true }).fill('Couple fictif');
+    await choisir(page, 'Ressources', '++');
+    await choisir(page, 'Motivation', '++');
+    await expect(d.getByRole('status')).toContainText('Moyenne');
+    await d.getByRole('button', { name: 'Retenir la proposition' }).click();
+    await expect(d.getByRole('textbox', { name: 'Pertinence retenue' })).toHaveValue('Moyenne');
+    await d.getByRole('button', { name: 'Enregistrer', exact: true }).click();
+    await expect(d).toHaveCount(0);
     expect(problems).toEqual([]);
   } finally {
     await ctx.close();

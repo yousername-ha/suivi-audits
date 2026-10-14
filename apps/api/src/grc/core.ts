@@ -14,6 +14,7 @@ import {
   referencesTypees,
   relationAutorisee,
   RELATIONS,
+  StudyConfiguration,
   effectivePermissions,
   type Permission,
   type GrcKind,
@@ -98,6 +99,14 @@ export interface MethodBindingsResolver {
     already?: CfgRef[],
   ): Promise<{ definition: RiskMethod; refs: CfgRef[] }>;
   pinnedRefs(method: RiskMethod | undefined): CfgRef[];
+  checkAnalysisPin(
+    smsi: string,
+    ref: CfgRef,
+    kind: 'scale' | 'matrix',
+    family: 'ebios_rm' | 'iso27005' | 'mehari' | 'custom',
+    already: CfgRef | null,
+    c: Client,
+  ): Promise<void>;
   recordUsage(
     c: Client,
     user: { username: string },
@@ -105,6 +114,11 @@ export interface MethodBindingsResolver {
     refs: CfgRef[],
   ): Promise<void>;
 }
+/** Matrice de pertinence épinglée par une étude (champ facultatif `configuration`), ou null. */
+const studyMatrix = (data: Record<string, unknown>): CfgRef | null => {
+  const c = StudyConfiguration.safeParse(data.configuration);
+  return c.success ? c.data.relevanceMatrix : null;
+};
 export class Grc {
   methodBindings?: MethodBindingsResolver;
   readonly legacyTasks: LegacyTasks;
@@ -513,6 +527,7 @@ export class Grc {
     if (kind in PILOTAGE_SCHEMAS) {
       data = PILOTAGE_SCHEMAS[kind as keyof typeof PILOTAGE_SCHEMAS].parse(data);
       await this.checkTypedRefs(smsi, kind, data, user, c);
+      if (kind === 'risk_study') await this.checkStudyConfiguration(smsi, data, previous, c);
       if (kind === 'nonconformity' && previous?.data.status === 'closed')
         throw new HttpError(409, 'Conservez la clôture : créez un nouveau constat pour une récidive.');
       if (kind === 'control') {
@@ -571,6 +586,31 @@ export class Grc {
       throw new HttpError(422, 'Fréquence absente de la politique publiée.');
     return data;
   }
+  /** Liaison de configuration d'une étude EBIOS RM (ADR 0038) : la matrice épinglée doit exister, être visible et convenir. */
+  private async checkStudyConfiguration(
+    smsi: string,
+    data: Record<string, unknown>,
+    previous: GrcObject | undefined,
+    c: Client,
+  ) {
+    const ref = studyMatrix(data);
+    if (!ref) return;
+    if (!this.methodBindings) throw new HttpError(503, 'Catalogue de configuration indisponible.');
+    await this.methodBindings.checkAnalysisPin(
+      smsi,
+      ref,
+      'matrix',
+      'ebios_rm',
+      previous ? studyMatrix(previous.data) : null,
+      c,
+    );
+  }
+  /** Usage « analyse » du catalogue : l'étude épingle (élément, version) ; l'enregistrement est immuable. */
+  private async recordStudyUsage(c: Client, o: GrcObject, user: { username: string }) {
+    const ref = o.kind === 'risk_study' ? studyMatrix(o.data) : null;
+    if (ref && this.methodBindings)
+      await this.methodBindings.recordUsage(c, user, { kind: 'analysis', id: o.id, version: o.version }, [ref]);
+  }
   async createObject(smsi: string, input: GrcObjectBody, user: SessionUser, ip: string) {
     const body = GrcObjectBody.parse(input);
     await this.access(smsi, user, true);
@@ -578,7 +618,9 @@ export class Grc {
     return this.db.tx(async (c) => {
       await this.access(smsi, user, true, c);
       const data = await this.normalize(smsi, body.kind, body.data, user, c);
-      return this.insert(c, smsi, body.kind, body.name, data, user, ip);
+      const o = await this.insert(c, smsi, body.kind, body.name, data, user, ip);
+      await this.recordStudyUsage(c, o, user);
+      return o;
     }, user.username);
   }
   async insert(
@@ -611,7 +653,9 @@ export class Grc {
         throw new HttpError(412, 'La fiche a changé. Rechargez avant de confirmer.');
       if (body.kind !== previous.kind || current.archived) throw new HttpError(409, 'Type immuable ou fiche archivée.');
       const data = await this.normalize(smsi, body.kind, body.data, user, c, current);
-      return this.write(c, current, body.name, data, user, ip, 'Modification');
+      const o = await this.write(c, current, body.name, data, user, ip, 'Modification');
+      await this.recordStudyUsage(c, o, user);
+      return o;
     }, user.username);
   }
   async write(

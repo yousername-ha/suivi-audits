@@ -647,6 +647,44 @@ export class ConfigGrc {
     return { definition: r.definition, refs };
   }
 
+  /** Épinglage d'un élément du catalogue par une analyse (étude EBIOS RM) : existence, type attendu, visibilité du
+      périmètre, famille de méthode et archivage (sauf si l'analyse l'épinglait déjà). Lève une erreur 422 sinon. */
+  async checkAnalysisPin(
+    smsi: string,
+    ref: CfgRef,
+    kind: CfgKind,
+    family: CfgFamily,
+    already: CfgRef | null,
+    c: Client,
+  ) {
+    const row = (
+      await c.query<{
+        kind: CfgKind;
+        key: string;
+        scope: CfgScope;
+        smsiId: string | null;
+        state: CfgState;
+        definition: Record<string, unknown>;
+      }>(
+        `SELECT i.kind,i.key,i.scope,i.smsi_id AS "smsiId",i.state,v.definition FROM cfg_items i JOIN cfg_versions v ON v.item_id=i.id
+         WHERE i.id=$1 AND v.version=$2`,
+        [ref.item, ref.version],
+      )
+    ).rows[0];
+    if (!row) throw new HttpError(422, `Référence de configuration introuvable : ${ref.item} version ${ref.version}.`);
+    if (row.kind !== kind) throw new HttpError(422, `« ${row.key} » n’est pas du type attendu (${kind}).`);
+    if (row.scope === 'smsi' && row.smsiId !== smsi)
+      throw new HttpError(422, `« ${row.key} » est propre à un autre périmètre.`);
+    const same = already && already.item === ref.item && already.version === ref.version;
+    if (row.state === 'archived' && !same)
+      throw new HttpError(422, `« ${row.key} » est archivé : il ne peut plus recevoir de nouvel usage.`);
+    const parsed =
+      kind === 'matrix' ? MatrixDefinition.safeParse(row.definition) : ScaleDefinition.safeParse(row.definition);
+    if (!parsed.success) throw new HttpError(422, `« ${row.key} » : définition illisible.`);
+    if (!appliesToFamily(parsed.data.appliesTo, family))
+      throw new HttpError(422, `« ${row.key} » ne s’applique pas à la famille « ${family} ».`);
+  }
+
   /** Épinglages d'une méthode : lecture de la version publiée (immuable) pour les références déjà valides. */
   pinnedRefs(method: RiskMethod | undefined) {
     return methodBindingRefs(method?.bindings);

@@ -2,7 +2,8 @@
    ISO/IEC 27005 sur la fiche de risque, références typées, calculs d'aide à la décision et état d'acceptation.
    Démarches « inspirées » des méthodes : aucune conformité n'est revendiquée, aucun texte normatif n'est reproduit. */
 import { z } from 'zod';
-import { GrcRef, validDate, type GrcKind } from './grc.js';
+import { CfgRef } from './config-grc.js';
+import { GrcKey, GrcRef, validDate, type GrcKind } from './grc.js';
 
 const text = z.string().max(10000);
 const date = z
@@ -68,8 +69,18 @@ export const ECHELLE_VRAISEMBLANCE = ['Peu vraisemblable', 'Vraisemblable', 'Tr�
 
 /* ---------------------------------------------------------------- Schémas des objets */
 
+/** Liaison de configuration de l'étude (ADR 0038) : éléments du catalogue épinglés à une version précise. Facultative :
+    une étude sans liaison garde l'échelle d'origine à quatre niveaux. */
+export const StudyConfiguration = z
+  .object({
+    /** Matrice de pertinence des couples source de risque / objectif visé (lignes : ressources, colonnes : motivation). */
+    relevanceMatrix: CfgRef.nullable().default(null),
+  })
+  .strict();
+export type StudyConfiguration = z.infer<typeof StudyConfiguration>;
 export const RiskStudyData = common
   .extend({
+    configuration: StudyConfiguration.nullable().default(null),
     objective: text.default(''),
     scope: text.default(''),
     participants: text.default(''),
@@ -139,6 +150,11 @@ export const SrOvData = common
     motivation: niveau,
     resources: niveau,
     activity: niveau,
+    /** Niveaux choisis sur les échelles épinglées par l'étude (identifiants de niveau) ; la pertinence retenue est
+        décidée par l'analyste, la matrice n'en fait qu'une proposition. */
+    resourcesLevel: GrcKey.nullable().default(null),
+    motivationLevel: GrcKey.nullable().default(null),
+    relevanceLevel: GrcKey.nullable().default(null),
     retained: z.boolean().default(false),
     justification: text.default(''),
   })
