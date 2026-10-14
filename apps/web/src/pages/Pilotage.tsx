@@ -1,6 +1,13 @@
 import { Alert, Anchor, Button, Card, Group, Modal, NumberInput, Select, Stack, Text, TextInput } from '@mantine/core';
 import { Page, PageHeader } from '@suivi/ui';
-import { type BusinessPolicy, type GrcKind, type GrcObject, type PilotageRecord, type Module } from '@suivi/shared';
+import {
+  type BusinessPolicy,
+  type CfgKind,
+  type GrcKind,
+  type GrcObject,
+  type PilotageRecord,
+  type Module,
+} from '@suivi/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router';
@@ -34,6 +41,7 @@ import { Journey } from '../pilotage/Journey';
 import { Relations } from '../grc/Relations';
 import { pilotageReport } from '../pilotage/report';
 import { EtudesEbios } from '../grc/Ebios';
+import { ConfigurationGrc } from '../config-grc/ConfigurationGrc';
 import { RegistreRisques } from '../grc/RegistreRisques';
 import { ObjectifsProcessus } from '../pilotage/ObjectifsProcessus';
 import { Pestel, SynthesePartiesBandeau } from '../pilotage/Pestel';
@@ -136,6 +144,7 @@ export function PilotagePage() {
     [editing, setEditing] = useState<GrcObject | null>(null),
     [kind, setKind] = useState<GrcKind>('context'),
     [opened, setOpened] = useState(false),
+    [cfgKind, setCfgKind] = useState<CfgKind | 'modeles'>('scale'),
     [evaluation, setEvaluation] = useState<GrcObject | null>(null),
     [relation, setRelation] = useState<string | null>(null),
     [decision, setDecision] = useState<{
@@ -397,6 +406,9 @@ export function PilotagePage() {
                   'operational_scenario',
                 ]}
               />
+            )}
+            {section === 'configuration-analyses' && can('pilotage', 'lire') && (
+              <ConfigurationGrc kind={cfgKind} onKind={setCfgKind} contexte="analyses" />
             )}
             {section === 'carte' && can('cartographie', 'lire') && can('pilotage', 'lire') && (
               <RiskMap smsi={smsi} onOpen={open} />

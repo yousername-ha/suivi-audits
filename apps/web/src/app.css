@@ -832,3 +832,11 @@
   background: var(--mantine-color-body);
   box-shadow: -1px 0 0 var(--mantine-color-default-border);
 }
+/* Configuration GRC : sélecteur d'élément épinglé. */
+.selecteur-element {
+  display: grid;
+  gap: var(--mantine-spacing-xs);
+}
+.matrice-cellule .mantine-Select-root {
+  position: relative;
+}

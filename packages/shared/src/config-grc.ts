@@ -143,11 +143,19 @@ export type ScaleDefinition = z.infer<typeof ScaleDefinition>;
 /* ---------------------------------------------------------------- Matrice */
 
 const axis = z.object({ scale: CfgRef, label: z.string().trim().max(100).default('') }).strict();
+export const MATRIX_CATEGORIES = ['criticality', 'relevance', 'risk', 'exposure', 'other'] as const;
+export const MATRIX_CATEGORY_LABELS: Record<(typeof MATRIX_CATEGORIES)[number], string> = {
+  criticality: 'Criticité',
+  relevance: 'Pertinence',
+  risk: 'Risque',
+  exposure: 'Exposition',
+  other: 'Autre',
+};
 export const MatrixDefinition = z
   .object({
     name: label,
     description: text.default(''),
-    category: z.enum(['criticality', 'relevance', 'risk', 'exposure', 'other']),
+    category: z.enum(MATRIX_CATEGORIES),
     appliesTo: AppliesTo,
     /** Axe vertical (lignes) et axe horizontal (colonnes) ; chacun épingle une échelle. */
     rows: axis,
