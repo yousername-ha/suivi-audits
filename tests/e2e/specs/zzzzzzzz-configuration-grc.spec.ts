@@ -46,7 +46,7 @@ test('Configuration GRC : modèle adopté, échelle créée et publiée, mêmes 
       await niveaux.press('Enter');
     }
     await nouveau.getByRole('button', { name: 'Créer le brouillon' }).click();
-    await expect(page.getByText('Brouillon', { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Fermer la fiche' })).toBeVisible();
     await page
       .getByRole('textbox', { name: 'Description du niveau' })
       .first()
