@@ -36,12 +36,19 @@ export const exampleFramework: FrameworkDefinition = {
     },
   ],
 };
-/** L'épinglage a son propre éditeur : l'éditeur générique ne le voit pas. */
+/** Épinglages, objets et livrables ont leur propre éditeur : l'éditeur générique ne les voit pas. */
+const GEREES = ['bindings', 'objects', 'deliverables'] as const;
 const withoutBindings = (d: unknown) => {
-  if (!d || typeof d !== 'object' || !('bindings' in d)) return d;
-  const { bindings: _b, ...reste } = d as Record<string, unknown>;
-  void _b;
+  if (!d || typeof d !== 'object') return d;
+  const reste = { ...(d as Record<string, unknown>) };
+  for (const k of GEREES) delete reste[k];
   return reste;
+};
+const withManaged = (next: unknown, d: unknown) => {
+  if (!d || typeof d !== 'object') return next;
+  const out = { ...(next as Record<string, unknown>) };
+  for (const k of GEREES) if (k in d) out[k] = (d as Record<string, unknown>)[k];
+  return out;
 };
 export function Publication({ smsi, type }: { smsi: string; type: 'methods' | 'frameworks' }) {
   const can = useCan(),
@@ -220,11 +227,7 @@ export function Publication({ smsi, type }: { smsi: string; type: 'methods' | 'f
               <ConfigurationEditor
                 value={type === 'methods' ? withoutBindings(draft) : draft}
                 onChange={(next) => {
-                  setDraft(
-                    type === 'methods' && draft && typeof draft === 'object' && 'bindings' in draft
-                      ? { ...(next as object), bindings: (draft as { bindings: unknown }).bindings }
-                      : next,
-                  );
+                  setDraft(type === 'methods' ? withManaged(next, draft) : next);
                   setPreview(null);
                   setConfirm(false);
                 }}

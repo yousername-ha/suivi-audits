@@ -27,6 +27,7 @@ import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
 import { Fields, type Source } from './Fields';
 import { Relations } from '../grc/Relations';
+import { MigrationEtude } from '../config-grc/MigrationEtude';
 import { SelecteurResponsable, useResponsables } from '../components/selecteurs';
 export function RecordEditor({
   smsi,
@@ -190,6 +191,9 @@ export function RecordEditor({
                 disabled={readonly}
               />
               <Fields kind={kind} data={data} onChange={set} sources={options} readonly={readonly} smsi={smsi} />
+              {kind === 'risk_study' && object && !object.id.startsWith('legacy:') && (
+                <MigrationEtude smsi={smsi} study={object} readonly={readonly} onDone={onClose} />
+              )}
               {['control', 'evidence', 'measure'].includes(kind) && (
                 <Select
                   label={

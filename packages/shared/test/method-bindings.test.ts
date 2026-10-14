@@ -137,3 +137,23 @@ describe('épinglage des méthodes au catalogue', () => {
     expect(RiskMethod.safeParse({ ...m, bindings: { ...m.bindings, extra: 1 } }).success).toBe(false);
   });
 });
+
+describe('livrables et objets d’une méthode', () => {
+  it('sont facultatifs, vérifiés contre les étapes et sans doublon', () => {
+    const base = methodTemplate('custom');
+    expect(RiskMethod.safeParse(base).success).toBe(true);
+    const stage = base.stages[0]!.id;
+    const ok = {
+      ...base,
+      objects: ['risk', 'treatment'],
+      deliverables: [{ id: 'rapport', label: 'Rapport', stage, required: true }],
+    };
+    expect(RiskMethod.safeParse(ok).success).toBe(true);
+    expect(
+      RiskMethod.safeParse({ ...ok, deliverables: [{ id: 'x', label: 'X', stage: 'inconnue', required: false }] })
+        .success,
+    ).toBe(false);
+    expect(RiskMethod.safeParse({ ...ok, objects: ['risk', 'risk'] }).success).toBe(false);
+    expect(RiskMethod.safeParse({ ...ok, objects: ['type_inconnu'] }).success).toBe(false);
+  });
+});

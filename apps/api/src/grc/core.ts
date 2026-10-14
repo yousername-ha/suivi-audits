@@ -40,6 +40,7 @@ import { GrcLibraryMappings } from './library-mappings.js';
 import { GrcRapprochements } from './rapprochements.js';
 import { GrcSuppliers } from './suppliers.js';
 import { GrcRisks } from './risks.js';
+import { GrcStudyConfig } from './study-config.js';
 import { LegacyTasks } from './legacy-tasks.js';
 import { GrcTasks } from './tasks.js';
 export const DEFAULT_SMSI = '00000000-0000-4000-8000-000000000001';
@@ -133,6 +134,7 @@ export class Grc {
   readonly rapprochements: GrcRapprochements;
   readonly suppliers: GrcSuppliers;
   readonly risks: GrcRisks;
+  readonly studyConfig: GrcStudyConfig;
   readonly tasks: GrcTasks;
   constructor(
     readonly db: Db,
@@ -147,6 +149,7 @@ export class Grc {
     this.rapprochements = new GrcRapprochements(this);
     this.suppliers = new GrcSuppliers(this);
     this.risks = new GrcRisks(this);
+    this.studyConfig = new GrcStudyConfig(this);
     this.tasks = new GrcTasks(this);
   }
   async isAdmin(user: SessionUser, c?: Client) {
@@ -613,7 +616,7 @@ export class Grc {
       );
   }
   /** Usage « analyse » du catalogue : l'étude épingle (élément, version) ; l'enregistrement est immuable. */
-  private async recordStudyUsage(c: Client, o: GrcObject, user: { username: string }) {
+  async recordStudyUsage(c: Client, o: GrcObject, user: { username: string }) {
     const pins = o.kind === 'risk_study' ? studyPins(o.data) : [];
     if (pins.length && this.methodBindings)
       await this.methodBindings.recordUsage(

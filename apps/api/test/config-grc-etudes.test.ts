@@ -196,3 +196,72 @@ describe('partie prenante de l’écosystème liée au registre des fournisseurs
     expect(mauvais.statusCode).toBe(422);
   });
 });
+
+describe('migration explicite d’une étude vers une nouvelle version de configuration', () => {
+  it('mesure l’impact, exige confirmation et motif, ne réécrit aucune évaluation', async () => {
+    // La matrice a été archivée par un test précédent : on la restaure avant de lier une nouvelle étude.
+    await a.post(`${cfg}/items/${matrice.item}/restore`);
+    const e = await a.post(root() + '/objects', {
+      kind: 'risk_study',
+      name: 'Étude à migrer',
+      data: { objective: 'Migration', configuration: { relevanceMatrix: { item: matrice.item, version: 1 } } },
+    });
+    expect(e.statusCode, e.body).toBe(200);
+    const studyRef = 'object:' + e.json().id;
+    const couple = await a.post(root() + '/objects', {
+      kind: 'sr_ov',
+      name: 'Couple migré',
+      data: { studyRef, resourcesLevel: 'niveau_2', motivationLevel: 'niveau_3', relevanceLevel: 'moyenne' },
+    });
+    expect(couple.statusCode, couple.body).toBe(200);
+    const url = `${root()}/studies/${e.json().id}/configuration-migration`;
+
+    // Rien à migrer tant que la matrice épinglée est la version courante.
+    const avant = (await a.get(url)).json();
+    expect(avant.upToDate).toBe(true);
+
+    // Nouvelle version de la matrice : une cellule change de résultat.
+    const item = (await a.get(`${cfg}/items/${matrice.item}`)).json();
+    const definition = structuredClone(item.definition) as { cells: { row: string; column: string; result: string }[] };
+    const cellule = definition.cells[0]!;
+    cellule.result = definition.cells.find((c) => c.result !== cellule.result)!.result;
+    expect(
+      (
+        await a.put(
+          `${cfg}/items/${matrice.item}/draft`,
+          { definition },
+          { 'if-match': (await a.get(`${cfg}/items/${matrice.item}`)).headers.etag as string },
+        )
+      ).statusCode,
+    ).toBe(200);
+    const p = (await a.post(`${cfg}/items/${matrice.item}/preview`)).json();
+    const pub = await a.post(
+      `${cfg}/items/${matrice.item}/publish`,
+      { previewId: p.previewId, reason: 'Cellule corrigée pour la recette', confirm: 'PUBLIER' },
+      { 'if-match': (await a.get(`${cfg}/items/${matrice.item}`)).headers.etag as string },
+    );
+    expect(pub.statusCode, pub.body).toBe(200);
+
+    const apercu = (await a.get(url)).json();
+    expect(apercu.upToDate).toBe(false);
+    expect(apercu.pins[0]).toMatchObject({ slot: 'relevanceMatrix', from: 1, to: 2, changed: true, resultsChanged: 1 });
+    expect(apercu.pins[0].evaluations).toBe(1);
+
+    const ifMatch = { 'if-match': `"${apercu.version}"` };
+    const corps = { previewId: apercu.previewId, reason: 'Adoption de la matrice corrigée', confirm: 'MIGRER' };
+    expect((await a.post(url, { ...corps, confirm: 'OUI' }, ifMatch)).statusCode).toBe(422);
+    expect((await a.post(url, { ...corps, reason: 'court' }, ifMatch)).statusCode).toBe(422);
+    expect((await a.post(url, { ...corps, previewId: 'a'.repeat(64) }, ifMatch)).statusCode).toBe(422);
+    expect((await a.post(url, corps, { 'if-match': '"999"' })).statusCode).toBe(412);
+    const ok = await a.post(url, corps, ifMatch);
+    expect(ok.statusCode, ok.body).toBe(200);
+    expect(ok.json().data.configuration.relevanceMatrix).toEqual({ item: matrice.item, version: 2 });
+
+    // L'étude est à jour, l'usage de la version 2 est enregistré et l'évaluation du couple n'a pas changé.
+    expect((await a.get(url)).json().upToDate).toBe(true);
+    expect((await a.post(url, corps, { 'if-match': `"${ok.json().version}"` })).statusCode).toBe(422);
+    expect((await usages(matrice.item)).some((u) => u.consumerId === e.json().id)).toBe(true);
+    const relu = (await a.get(`${root()}/objects/${couple.json().id}`)).json();
+    expect(relu.data.relevanceLevel).toBe('moyenne');
+  });
+});

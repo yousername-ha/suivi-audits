@@ -1,14 +1,17 @@
 /* Éditeur de méthode : épinglage des échelles et de la matrice du catalogue (ADR 0038). Facultatif : une méthode sans
    épinglage garde ses niveaux et son calcul intégrés. À la publication, le serveur résout les éléments choisis et fige une
    copie dans la version publiée ; modifier le catalogue plus tard ne change pas une version déjà publiée. */
-import { Alert, Select, Stack, Text } from '@mantine/core';
-import type { CfgFamily, CfgRef, MethodBindings } from '@suivi/shared';
-import { SelecteurElement } from './commun';
+import { ActionIcon, Alert, Button, Checkbox, Group, MultiSelect, Select, Stack, Text, TextInput } from '@mantine/core';
+import { GRC_KINDS, GRC_LABELS, type CfgFamily, type CfgRef, type GrcKind, type MethodBindings } from '@suivi/shared';
+import { cleDepuis, SelecteurElement } from './commun';
 
 interface MethodeEditee {
   family: CfgFamily;
   dimensions: { id: string; label: string }[];
+  stages?: { id: string; label: string }[];
   bindings?: MethodBindings;
+  objects?: GrcKind[];
+  deliverables?: { id: string; label: string; stage: string; required: boolean }[];
   [key: string]: unknown;
 }
 
@@ -20,6 +23,16 @@ const normaliser = (m: MethodeEditee, b: MethodBindings): MethodeEditee => {
   return (vide ? reste : { ...reste, bindings: b }) as MethodeEditee;
 };
 
+/** Champ facultatif : retiré de la définition quand il est vide, pour qu'une méthode sans objets ni livrables reste inchangée. */
+const optionnel = <K extends 'objects' | 'deliverables'>(
+  m: MethodeEditee,
+  cle: K,
+  v: MethodeEditee[K],
+): MethodeEditee => {
+  const { [cle]: _ancien, ...reste } = m;
+  void _ancien;
+  return (v && v.length ? { ...reste, [cle]: v } : reste) as MethodeEditee;
+};
 export function EpinglagesMethode({
   value,
   onChange,
@@ -89,6 +102,101 @@ export function EpinglagesMethode({
           axes doivent correspondre à ces échelles.
         </Alert>
       )}
+      <Text fw={600}>Objets et livrables (facultatif)</Text>
+      <MultiSelect
+        label="Types d’objets mobilisés par la méthode"
+        description="Indicatif : aucun type n’est imposé."
+        searchable
+        data={GRC_KINDS.map((k) => ({ value: k, label: GRC_LABELS[k] }))}
+        value={value.objects ?? []}
+        onChange={(v) => onChange(optionnel(value, 'objects', v.length ? (v as GrcKind[]) : undefined))}
+      />
+      {(value.deliverables ?? []).map((d, i) => (
+        <Group key={d.id} align="end" wrap="nowrap">
+          <TextInput
+            label={`Livrable ${i + 1}`}
+            value={d.label}
+            onChange={(e) =>
+              onChange(
+                optionnel(
+                  value,
+                  'deliverables',
+                  (value.deliverables ?? []).map((x, k) => (k === i ? { ...x, label: e.currentTarget.value } : x)),
+                ),
+              )
+            }
+          />
+          <Select
+            label="Étape"
+            allowDeselect={false}
+            data={(value.stages ?? []).map((st) => ({ value: st.id, label: st.label }))}
+            value={d.stage}
+            onChange={(v) =>
+              v &&
+              onChange(
+                optionnel(
+                  value,
+                  'deliverables',
+                  (value.deliverables ?? []).map((x, k) => (k === i ? { ...x, stage: v } : x)),
+                ),
+              )
+            }
+          />
+          <Checkbox
+            label="Obligatoire"
+            checked={d.required}
+            onChange={(e) =>
+              onChange(
+                optionnel(
+                  value,
+                  'deliverables',
+                  (value.deliverables ?? []).map((x, k) => (k === i ? { ...x, required: e.currentTarget.checked } : x)),
+                ),
+              )
+            }
+          />
+          <ActionIcon
+            variant="default"
+            aria-label={`Retirer le livrable ${d.label || i + 1}`}
+            onClick={() =>
+              onChange(
+                optionnel(
+                  value,
+                  'deliverables',
+                  (value.deliverables ?? []).filter((_, k) => k !== i),
+                ),
+              )
+            }
+          >
+            ×
+          </ActionIcon>
+        </Group>
+      ))}
+      <Group>
+        <Button
+          variant="default"
+          disabled={!value.stages?.length || (value.deliverables?.length ?? 0) >= 100}
+          onClick={() =>
+            onChange(
+              optionnel(value, 'deliverables', [
+                ...(value.deliverables ?? []),
+                {
+                  id: cleDepuis(
+                    '',
+                    (value.deliverables ?? []).map((x) => x.id),
+                    'livrable',
+                  ),
+                  label: '',
+                  stage: value.stages![0]!.id,
+                  required: false,
+                },
+              ]),
+            )
+          }
+        >
+          Ajouter un livrable
+        </Button>
+      </Group>
     </Stack>
   );
 }

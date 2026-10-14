@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { CfgRef } from './config-grc.js';
-import { GrcKey, OfficialSource } from './grc.js';
+import { GRC_KINDS, GrcKey, OfficialSource } from './grc.js';
 const named = z.object({ id: GrcKey, label: z.string().trim().min(1).max(200) }).strict();
 const scale = z
   .array(named.extend({ value: z.number().finite().min(0).max(100000) }))
@@ -28,6 +28,13 @@ export type MethodBindings = z.infer<typeof MethodBindings>;
 export const RiskMethod = z
   .object({
     bindings: MethodBindings.optional(),
+    /** Types d'objets que la méthode mobilise (facultatif ; sans valeur, aucun type n'est imposé). */
+    objects: z.array(z.enum(GRC_KINDS)).max(50).optional(),
+    /** Livrables attendus, rattachés à une étape de la méthode (facultatif). */
+    deliverables: z
+      .array(named.extend({ stage: GrcKey, required: z.boolean() }))
+      .max(100)
+      .optional(),
     name: z.string().trim().min(1).max(200),
     family: z.enum(['ebios_rm', 'iso27005', 'mehari', 'custom']),
     description: z.string().max(10000),
@@ -142,6 +149,11 @@ export const RiskMethod = z
       )
     )
       issue('Champ/étape ou choix invalide.');
+    if (m.deliverables) {
+      if (new Set(m.deliverables.map((x) => x.id)).size !== m.deliverables.length) issue('Livrables dupliqués.');
+      if (m.deliverables.some((d) => !stages.has(d.stage))) issue('Un livrable désigne une étape inconnue.');
+    }
+    if (m.objects && new Set(m.objects).size !== m.objects.length) issue('Types d’objets dupliqués.');
     if (m.family === 'ebios_rm' && m.stages.length !== 5) issue('EBIOS RM exige les cinq ateliers.');
     if (new Set(m.display.groupings).size !== m.display.groupings.length) issue('Regroupements dupliqués.');
     const calc = m.calculation;
