@@ -173,3 +173,26 @@ describe('étude liée à une correspondance impact → gravité (atelier 1)', (
     expect(er.statusCode).toBe(422);
   });
 });
+
+describe('partie prenante de l’écosystème liée au registre des fournisseurs (atelier 3)', () => {
+  it('lie un fournisseur du registre ; refuse une autre cible', async () => {
+    const f = await a.post('/api/suppliers', { name: 'Prestataire fictif atelier 3' });
+    expect(f.statusCode, f.body).toBeLessThan(300);
+    const ref = 'legacy:suppliers:' + (f.json().id ?? f.json().supplier?.id);
+    const e = await etude(null, 'Étude écosystème');
+    const studyRef = 'object:' + e.json().id;
+    const ok = await a.post(root() + '/objects', {
+      kind: 'ecosystem_party',
+      name: 'Prestataire (écosystème)',
+      data: { studyRef, supplierRef: ref },
+    });
+    expect(ok.statusCode, ok.body).toBe(200);
+    expect(ok.json().data.supplierRef).toBe(ref);
+    const mauvais = await a.post(root() + '/objects', {
+      kind: 'ecosystem_party',
+      name: 'Mauvaise cible',
+      data: { studyRef, supplierRef: studyRef },
+    });
+    expect(mauvais.statusCode).toBe(422);
+  });
+});

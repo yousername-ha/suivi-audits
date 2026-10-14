@@ -173,6 +173,8 @@ export const SrOvData = common
   });
 export const EcosystemPartyData = common
   .extend({
+    /** Fournisseur du registre de l'organisation, lorsque la partie prenante en est un (facultatif). */
+    supplierRef: ref,
     category: text.default(''),
     dependency: niveau,
     penetration: niveau,
@@ -238,7 +240,7 @@ export const RISK_REF_KINDS: Partial<Record<GrcKind, Record<string, CibleRef[]>>
   feared_event: { studyRef: STUDY_REF, businessAssetRef: ['object:business_asset'] },
   risk_source: { studyRef: STUDY_REF },
   sr_ov: { studyRef: STUDY_REF, sourceRef: ['object:risk_source'] },
-  ecosystem_party: { studyRef: STUDY_REF },
+  ecosystem_party: { studyRef: STUDY_REF, supplierRef: ['legacy:suppliers'] },
   strategic_scenario: {
     studyRef: STUDY_REF,
     srOvRef: ['object:sr_ov'],
