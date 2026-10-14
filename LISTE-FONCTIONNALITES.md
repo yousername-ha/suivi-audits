@@ -20,10 +20,11 @@ Numéros permanents : ils restent identiques lors du déplacement entre les troi
 | 014 | [Incidents](fonctionnalites-en-developpement/014-incidents/README.md) | Enregistrer les incidents et suivre leur traitement, leurs enseignements et les actions associées. | En développement |
 | 015 | [Évaluations IA](fonctionnalites-en-developpement/015-evaluations-ia/README.md) | Documenter les évaluations liées aux usages de l’intelligence artificielle. | En développement |
 | 016 | [Contexte et parties intéressées](fonctionnalites-en-developpement/016-contexte/README.md) | Décrire le contexte du SMSI, les parties intéressées et leurs attentes. | En développement |
-| 017 | [Plans d’action](fonctionnalites-en-developpement/017-plans-action/README.md) | Organiser les actions, responsables, échéances et avancement en liste, Kanban ou planning. | En développement |
+| 017 | [Plans d’action](fonctionnalites-en-developpement/017-plans-action/README.md) | Créer plusieurs plans d’action, relier leurs actions aux registres d’écarts et suivre leur réalisation par périmètre. | En développement |
 | 018 | [Tâches récurrentes](fonctionnalites-en-developpement/018-taches-recurrentes/README.md) | Planifier les tâches périodiques et conserver l’historique de leurs exécutions. | En développement |
 | 019 | [Configuration GRC transversale](fonctionnalites-en-developpement/019-configuration-grc/README.md) | Partager les catégories, échelles, matrices et paramètres versionnés entre les parcours GRC. | En développement |
 | 020 | [Navigation simplifiée](fonctionnalites-en-developpement/020-navigation/README.md) | Simplifier les menus, conserver les icônes colorées et regrouper les accès sans doublons. | En développement |
+| 021 | [Registres d’écarts](fonctionnalites-en-developpement/021-registres-ecarts/README.md) | Regrouper les écarts par audit ou campagne et les relier aux exigences, actions correctives et à la conformité du périmètre. | En développement |
 
 [Règles de fonctionnement](docs/ORGANISATION-LEGACY.md) · [Catalogue source](docs/catalogue-fonctionnalites.json).
 

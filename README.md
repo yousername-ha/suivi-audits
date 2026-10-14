@@ -10,7 +10,7 @@
 
 [Tester la maquette fonctionnelle v2](downloads/ASTRA-maquette-fonctionnelle-v2.zip) · [Téléchargements](downloads/README.md) · [Règles de passage](docs/ORGANISATION-LEGACY.md) · [Catalogue](docs/catalogue-fonctionnalites.json).
 
-Les 20 propositions actuelles sont en développement. Les ZIP de test continuent d’être publiés sur GitHub avant validation.
+Les 21 propositions actuelles sont en développement. Les ZIP de test continuent d’être publiés sur GitHub avant validation.
 
 La maquette EBIOS RM est autonome. Les instructions ci-dessous concernent l’application métier historique, dont le lanceur et les chemins sont conservés.
 

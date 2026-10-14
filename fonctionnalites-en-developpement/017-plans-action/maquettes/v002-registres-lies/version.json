@@ -1,0 +1,12 @@
+{
+  "id": "v002-registres-lies",
+  "statut": "a-valider",
+  "type": "prototype-partage",
+  "date": "2026-10-14",
+  "sourceCommit": "4542eb07c2abe31e60fcc6fcf87bc23844698382",
+  "references": [
+    "fonctionnalites-en-developpement/021-registres-ecarts/maquettes/v001-registres-lies"
+  ],
+  "versionPrecedente": "v001-reference-08",
+  "validationUtilisateur": null
+}

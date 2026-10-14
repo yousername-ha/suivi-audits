@@ -2,7 +2,7 @@
 
 | Élément | Accès |
 | --- | --- |
-| Maquette courante | [v001-reference-08](maquettes/v001-reference-08/README.md) |
+| Maquette courante | [v002-registres-lies](maquettes/v002-registres-lies/README.md) |
 | État de la maquette | **À valider** |
 | Contrôles et recette | [tests/](tests/README.md) |
 | Consignes d’intégration | [implementation/](implementation/README.md) |

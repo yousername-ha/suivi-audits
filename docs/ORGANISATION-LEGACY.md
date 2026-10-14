@@ -36,7 +36,7 @@ L’IA de codage travaille exclusivement sur **sa propre branche** ; `origin/leg
 
 Quand l’intégration est terminée et vérifiée, consigner dans `suivi.json` la branche d’implémentation, le SHA exact, le périmètre livré, les résultats de recette et la référence de confirmation. Déplacer le dossier dans `fonctionnalites-implementees/<NNN-fonctionnalite>/` et actualiser le catalogue et les liens. Une maquette fonctionnelle seule ne constitue pas une implémentation dans l’application.
 
-Les fonctions déjà présentes historiquement dans l’application ne prouvent pas que les nouvelles maquettes sont intégrées. Les 20 propositions actuelles restent donc en développement. Aucun dossier n’est déclaré prêt à coder ou implémenté par cette réorganisation.
+Les fonctions déjà présentes historiquement dans l’application ne prouvent pas que les nouvelles maquettes sont intégrées. Les 21 propositions actuelles restent donc en développement. Aucun dossier n’est déclaré prêt à coder ou implémenté par cette réorganisation.
 
 ## Contrôles et conservation
 
@@ -55,7 +55,7 @@ Le code métier et les lanceurs historiques restent à leur place. La cartograph
 
 Chaque fonctionnalité possède un dossier `NNN-identifiant`, par exemple `001-tableau-de-bord`, `002-gestion-risques` et `003-ebios-rm`. Ce numéro est permanent, sans rapport avec l’étape, la priorité ou la version de la maquette. Le déplacement entre étapes conserve le nom complet du dossier.
 
-La [liste séparée](../LISTE-FONCTIONNALITES.md) contient le numéro, le nom, une courte description, l’étape et un lien direct vers chaque dossier. Le catalogue JSON en est la source ; son compteur `prochainNumero` indique le prochain numéro libre (021 après les vingt premières entrées). Ne jamais réutiliser un ancien numéro.
+La [liste séparée](../LISTE-FONCTIONNALITES.md) contient le numéro, le nom, une courte description, l’étape et un lien direct vers chaque dossier. Le catalogue JSON en est la source ; son compteur `prochainNumero` indique le prochain numéro libre (022 après la création de la fonctionnalité 021). Ne jamais réutiliser un ancien numéro.
 
 Après toute modification du catalogue :
 

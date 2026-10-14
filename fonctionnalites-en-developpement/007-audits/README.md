@@ -12,3 +12,5 @@ Ce statut concerne la proposition visuelle, pas l’existence des fonctions hist
 [Catalogue des fonctionnalités](../README.md) · [Dossier technique commun](../_dossiers-transversaux/socle-astra/README.md).
 
 [Liste numérotée des fonctionnalités](../../LISTE-FONCTIONNALITES.md).
+
+Parcours lié en développement : [registres d’écarts, plans et conformité](../021-registres-ecarts/README.md).

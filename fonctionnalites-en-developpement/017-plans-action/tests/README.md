@@ -13,3 +13,5 @@ Suivre aussi la [recette commune](../../_dossiers-transversaux/socle-astra/RECET
 ## Validation utilisateur
 
 **Non consignée pour cette version dans cette réorganisation.** Ajouter la décision explicite et sa date dans `maquettes/v001-reference-08/version.json` ; ne pas transformer automatiquement des tests réussis en validation.
+
+Recette de la v002 partagée : [21 contrôles du prototype 021](../../021-registres-ecarts/tests/README.md).

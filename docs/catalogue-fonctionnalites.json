@@ -229,7 +229,7 @@
     {
       "id": "plans-action",
       "titre": "Plans d’action",
-      "maquetteCourante": "fonctionnalites-en-developpement/017-plans-action/maquettes/v001-reference-08",
+      "maquetteCourante": "fonctionnalites-en-developpement/017-plans-action/maquettes/v002-registres-lies",
       "statutMaquette": "a-valider",
       "implementation": "a-suivre",
       "tests": "fonctionnalites-en-developpement/017-plans-action/tests/README.md",
@@ -238,7 +238,7 @@
       "dossier": "fonctionnalites-en-developpement/017-plans-action",
       "suivi": "fonctionnalites-en-developpement/017-plans-action/suivi.json",
       "numero": "017",
-      "description": "Organiser les actions, responsables, échéances et avancement en liste, Kanban ou planning."
+      "description": "Créer plusieurs plans d’action, relier leurs actions aux registres d’écarts et suivre leur réalisation par périmètre."
     },
     {
       "id": "taches-recurrentes",
@@ -283,6 +283,21 @@
       "suivi": "fonctionnalites-en-developpement/020-navigation/suivi.json",
       "numero": "020",
       "description": "Simplifier les menus, conserver les icônes colorées et regrouper les accès sans doublons."
+    },
+    {
+      "id": "registres-ecarts",
+      "numero": "021",
+      "titre": "Registres d’écarts",
+      "description": "Regrouper les écarts par audit ou campagne et les relier aux exigences, actions correctives et à la conformité du périmètre.",
+      "etape": "en-developpement",
+      "dossier": "fonctionnalites-en-developpement/021-registres-ecarts",
+      "maquetteCourante": "fonctionnalites-en-developpement/021-registres-ecarts/maquettes/v001-registres-lies",
+      "statutMaquette": "a-valider",
+      "implementation": "a-suivre",
+      "tests": "fonctionnalites-en-developpement/021-registres-ecarts/tests/README.md",
+      "dossierImplementation": "fonctionnalites-en-developpement/021-registres-ecarts/implementation/README.md",
+      "suivi": "fonctionnalites-en-developpement/021-registres-ecarts/suivi.json",
+      "archive": "downloads/ASTRA-021-registres-ecarts-v001.zip"
     }
   ],
   "cycle": [
@@ -290,5 +305,5 @@
     "a-implementer",
     "implementee"
   ],
-  "prochainNumero": 21
+  "prochainNumero": 22
 }

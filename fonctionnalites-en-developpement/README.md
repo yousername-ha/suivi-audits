@@ -37,8 +37,12 @@
 
 [À implémenter](../fonctionnalites-a-implementer/README.md) · [Implémentées](../fonctionnalites-implementees/README.md) · [Règles de passage](../docs/ORGANISATION-LEGACY.md).
 
-Les 20 propositions ci-dessus sont encore à valider. Les dossiers `implementation/` contiennent des préparations, pas une autorisation de codage.
+Les 21 propositions de ce catalogue sont encore à valider. Les dossiers `implementation/` contiennent des préparations, pas une autorisation de codage.
 
 [Tester la maquette fonctionnelle transversale v2](_prototype-transversal/README.md) · [Dossiers préparatoires communs](_dossiers-transversaux/README.md).
 
 [Liste complète avec numéros et descriptions](../LISTE-FONCTIONNALITES.md).
+
+## 021 — Registres d’écarts et plans liés
+
+[Prototype fonctionnel, sept aperçus et ZIP de test](021-registres-ecarts/README.md). La fonctionnalité 017 Plans d’action passe en maquette v002 partagée.

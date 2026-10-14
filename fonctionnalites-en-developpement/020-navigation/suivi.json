@@ -11,5 +11,13 @@
       "motif": "Organisation demandée par l’utilisateur ; proposition encore à valider."
     }
   ],
-  "numero": "020"
+  "numero": "020",
+  "retoursUtilisateur": [
+    {
+      "date": "2026-10-14",
+      "portee": "Style du menu",
+      "retour": "L’utilisateur apprécie le style du menu ; l’ordonnancement reste à revoir.",
+      "validationGlobale": false
+    }
+  ]
 }

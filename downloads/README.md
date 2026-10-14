@@ -27,3 +27,9 @@ Analyse structurelle des 25 fichiers ARM, architecture, contrats, migration, rec
 Extraire tout le ZIP, puis ouvrir `DEMARRER.bat` ou `index.html`. Menu simplifié inspiré de la vidéo, cinq ateliers EBIOS interactifs, matrices, cercle, scénarios animés, actions, tâches récurrentes, sauvegarde locale et export/import JSON. Le ZIP contient le guide et le rapport de 21 contrôles navigateur réussis. Les autres modules sont des fiches de démonstration simplifiées ; l’import ARM réel et la cartographie dynamique sont exclus. Le BAT n’a pas été testé nativement sous Windows.
 
 **Publication pour téléchargement et test, sans validation implicite.** Les ZIP de maquette continuent à être publiés sur GitHub à chaque livraison ; le dossier final de codage est consolidé après validation utilisateur. Le runtime legacy reste inchangé.
+
+## 021 — Registres d’écarts et plans d’action liés
+
+[**Télécharger le ZIP testable**](ASTRA-021-registres-ecarts-v001.zip) · [SHA-256](ASTRA-021-registres-ecarts-v001.sha256) · [Sept aperçus et guide](../fonctionnalites-en-developpement/021-registres-ecarts/maquettes/v001-registres-lies/README.md). Extraire tout, puis lancer `DEMARRER.bat`.
+
+Maquette ciblée à valider : registres d’écarts multiples, plans multiples, liens avec audits/exigences/périmètres, vérification de clôture et conformité distinctes. Données fictives ; HDS illustratif. La maquette EBIOS v2 reste disponible séparément.
