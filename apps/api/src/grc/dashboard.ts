@@ -9,7 +9,7 @@ export async function dashboard(g: Grc, smsi: string, user: SessionUser) {
     sections.tasks = await g.tasks.dashboard(smsi, user);
   if (policy.dashboard.cards.includes('risks') && user.rights.can('pilotage', 'lire'))
     sections.risks = await g.db.one(
-      `SELECT count(*)::int total,count(*) FILTER(WHERE NOT EXISTS(SELECT 1 FROM grc_risk_evaluations e WHERE e.risk_id=o.id AND e.decision='approved'))::int awaitingReview,count(*) FILTER(WHERE data->>'reviewAt'<$2)::int overdue FROM grc_objects o WHERE smsi_id=$1 AND kind='risk' AND NOT archived`,
+      `SELECT count(*)::int total,count(*) FILTER(WHERE NOT EXISTS(SELECT 1 FROM grc_risk_evaluations e WHERE e.risk_id=o.id AND e.decision='approved'))::int AS "awaitingReview",count(*) FILTER(WHERE data->>'reviewAt'<$2)::int overdue FROM grc_objects o WHERE smsi_id=$1 AND kind='risk' AND NOT archived`,
       [smsi, new Date().toISOString().slice(0, 10)],
     );
   for (const [card, kind, module] of [

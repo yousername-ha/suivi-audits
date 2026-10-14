@@ -18,6 +18,51 @@ const EXIGENCE_BIBLIOTHEQUE = z
 export const SupplierBody = z.object({ name: z.string().trim().min(2).max(200) }).strict();
 export type SupplierBody = z.infer<typeof SupplierBody>;
 
+const OUI_NON = z.enum(['', 'Oui', 'Non', 'N/A']);
+const OUI_NON_COURS = z.enum(['', 'Oui', 'En cours', 'Non', 'N/A']);
+const jourFacultatif = z.string().regex(/^(\d{4}-\d{2}-\d{2})?$/, 'Date AAAA-MM-JJ attendue.');
+/** Certificat d'un fournisseur (ISO 27001, HDS…), tel que l'outil de suivi le conserve. */
+export const SupplierCertificate = z
+  .object({
+    type: z.string().trim().min(1).max(60),
+    validUntil: jourFacultatif.default(''),
+    received: jourFacultatif.default(''),
+    scope: z.string().trim().max(500).default(''),
+    location: z.string().trim().max(500).default(''),
+  })
+  .strict();
+/** Contrôle périodique d'un fournisseur : fréquence en mois, dernier contrôle, résultat. */
+export const SupplierControl = z
+  .object({
+    id: z.string().trim().min(1).max(60).optional(),
+    t: z.string().trim().min(1).max(300),
+    ref: z.string().trim().max(300).default(''),
+    freq: z.number().int().min(1).max(120).default(12),
+    last: jourFacultatif.default(''),
+    result: z.enum(['', 'Conforme', 'Non conforme']).default(''),
+    comment: z.string().trim().max(1000).default(''),
+  })
+  .strict();
+/** Modification d'un fournisseur (champs de « Fournisseurs et applications »). Seuls les champs présents sont écrits. */
+export const SupplierUpdateBody = z
+  .object({
+    name: z.string().trim().min(2).max(200),
+    saas: z.boolean(),
+    rattachement: z.string().trim().max(300),
+    contact: z.string().trim().max(300),
+    notes: z.string().trim().max(5000),
+    sso: OUI_NON_COURS,
+    mfa: OUI_NON_COURS,
+    critical: OUI_NON,
+    hds: OUI_NON,
+    certs: z.array(SupplierCertificate).max(50),
+    controls: z.array(SupplierControl).max(100),
+  })
+  .partial()
+  .strict()
+  .refine((b) => Object.keys(b).length > 0, 'Aucune modification.');
+export type SupplierUpdateBody = z.infer<typeof SupplierUpdateBody>;
+
 export const SupplierCriterionBody = z
   .object({
     label: z.string().trim().min(3).max(200),

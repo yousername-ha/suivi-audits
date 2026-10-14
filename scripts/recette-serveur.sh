@@ -6,7 +6,7 @@
 # données, la dernière sauvegarde et, avec --avec-sauvegarde, une sauvegarde chiffrée réelle suivie de la
 # vérification de son archive (restore.sh --verifier, sans restauration).
 # Elle ne remplace pas la recette humaine (ergonomie, parcours métier) ni une restauration sur une autre machine.
-#   Usage :  sudo [BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass] ./scripts/recette-serveur.sh [--version X.Y.Z]
+#   Usage :  sudo [BACKUP_PASSPHRASE_FILE=<fichier>, défaut /root/.suivi-backup-pass] ./scripts/recette-serveur.sh [--version X.Y.Z]
 #                 [--avec-sauvegarde] [--sortie DOSSIER]
 # Rapports (sans secret) : DOSSIER, par défaut DATA_DIR/etat/recette/recette-AAAAMMJJ-HHMMSS.{md,json}.
 # Code de sortie : 0 si aucun contrôle n'a échoué (les avertissements ne font pas échouer), 1 sinon.
@@ -153,7 +153,7 @@ esac
 if donnees_preparees; then noter PASSÉ R16 "Dossier des données préparé ($DATA_DIR)"; else noter ÉCHOUÉ R16 "Dossier des données préparé" "$DATA_DIR sans marqueur"; fi
 if [ -d "$DATA_DIR/secrets" ]; then
   # Le dossier peut se traverser (conteneurs sous d'autres identifiants) ; aucun fichier ne doit être accessible à « autres ».
-  ouverts=$(find "$DATA_DIR/secrets" "$DATA_DIR/update-secrets" "$DATA_DIR/postgres" -maxdepth 2 -type f -perm /007 2> /dev/null | wc -l)
+  ouverts=$(find "$DATA_DIR/secrets" "$DATA_DIR/update-secrets" "$DATA_DIR/postgres" "$DATA_DIR/postgres18" -maxdepth 2 -type f -perm /007 2> /dev/null | wc -l)
   if [ "$ouverts" = 0 ]; then noter PASSÉ R17 "Aucun fichier de secret ou de base accessible à tous"; else noter ÉCHOUÉ R17 "Aucun fichier de secret ou de base accessible à tous" "$ouverts fichier(s) ouvert(s) à « autres »"; fi
 else
   noter ÉCHOUÉ R17 "Aucun fichier de secret accessible à tous" "dossier secrets absent"
@@ -177,8 +177,11 @@ else
   noter AVERTISSEMENT R19 "Dernière sauvegarde" "aucun rapport de sauvegarde (planification à configurer)"
 fi
 if [ "$AVEC_SAUVEGARDE" = 1 ]; then
-  if [ -z "${BACKUP_PASSPHRASE_FILE:-}" ] || [ ! -f "${BACKUP_PASSPHRASE_FILE:-}" ]; then
-    noter ÉCHOUÉ R20 "Sauvegarde chiffrée puis vérification de l'archive" "BACKUP_PASSPHRASE_FILE absent ou illisible"
+  # Même fichier par défaut que mettre-a-jour.sh : la recette n'oblige pas à répéter la variable.
+  BACKUP_PASSPHRASE_FILE="${BACKUP_PASSPHRASE_FILE:-/root/.suivi-backup-pass}"
+  export BACKUP_PASSPHRASE_FILE
+  if [ ! -s "$BACKUP_PASSPHRASE_FILE" ]; then
+    noter ÉCHOUÉ R20 "Sauvegarde chiffrée puis vérification de l'archive" "phrase secrète des sauvegardes absente ou vide ($BACKUP_PASSPHRASE_FILE) : indiquer BACKUP_PASSPHRASE_FILE=<fichier>"
   else
     tmp=$(mktemp -d)
     # Le dossier temporaire ne contient que l'archive chiffrée, supprimée en fin de contrôle.

@@ -82,6 +82,50 @@ export function ChampLien({
   );
 }
 
+/** Audit combiné (ISO 9001:2015, 9.2) : référentiels audités ensemble. Deux référentiels ou plus font un audit combiné ;
+    l'audit se rattache à ceux de la bibliothèque rattachés au périmètre, sans en copier les exigences. */
+function ReferentielsAudites({
+  smsi,
+  value,
+  onChange,
+  readonly,
+}: {
+  smsi: string;
+  value: unknown;
+  onChange: (v: string[]) => void;
+  readonly: boolean;
+}) {
+  const q = useQuery({
+    queryKey: ['grc', smsi, 'attachments'],
+    queryFn: () =>
+      get<{ frameworkId: string; name: string; enabled: boolean }[]>(`/api/grc/${smsi}/framework-attachments`),
+    retry: false,
+  });
+  const choisis = Array.isArray(value) ? (value as string[]) : [];
+  const options = (q.data ?? []).map((r) => ({ value: r.name, label: r.name }));
+  for (const n of choisis) if (!options.some((o) => o.value === n)) options.push({ value: n, label: n });
+  return (
+    <Stack gap="2xs">
+      <MultiSelect
+        label="Référentiels audités"
+        description="Un audit portant sur deux référentiels ou plus est un audit combiné : il se prépare, se mène et se rapporte une seule fois."
+        searchable
+        data={options}
+        value={choisis}
+        onChange={onChange}
+        disabled={readonly}
+      />
+      <Text size="sm">
+        {choisis.length > 1
+          ? `Audit combiné : ${choisis.join(' + ')}.`
+          : choisis.length === 1
+            ? 'Audit sur un seul référentiel.'
+            : 'Aucun référentiel indiqué.'}
+      </Text>
+    </Stack>
+  );
+}
+
 export function Fields({
   kind,
   data,
@@ -211,6 +255,14 @@ export function Fields({
   return (
     <Stack>
       {fields.map(input)}
+      {kind === 'audit' && smsi && (
+        <ReferentielsAudites
+          smsi={smsi}
+          value={data.auditedFrameworks}
+          onChange={(v) => onChange('auditedFrameworks', v)}
+          readonly={readonly}
+        />
+      )}
       {kind === 'bia' && (
         <Stack>
           <Text fw={600}>Impacts selon la durée d’interruption</Text>

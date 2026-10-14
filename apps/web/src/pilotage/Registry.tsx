@@ -1,9 +1,10 @@
-import { Badge, Button, Card, Group, Menu, Modal, Stack, Table, Text, TextInput } from '@mantine/core';
+import { Badge, Button, Card, Group, Menu, Modal, Select, Stack, Table, Text, TextInput } from '@mantine/core';
 import { GRC_LABELS, GRC_MODULES, type GrcKind, type GrcObject, type PilotageRecord } from '@suivi/shared';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { get } from '../api';
 import { ErrorAlert } from '../components/common';
+import { Filtres } from '../components/Filtres';
 import { useCan } from '../session';
 import { OPERATION_LABELS } from './Decision';
 const STATES: Record<string, string> = {
@@ -27,6 +28,11 @@ const STATES: Record<string, string> = {
   completed: 'Réalisé',
   effective: 'Efficace',
   ineffective: 'Non efficace',
+  identified: 'Identifiée',
+  evaluated: 'Évaluée',
+  pursued: 'Poursuivie',
+  realised: 'Réalisée',
+  dropped: 'Écartée',
 };
 export function stateLabel(value: unknown) {
   return STATES[String(value)] ?? String(value ?? '—');
@@ -51,7 +57,11 @@ export function BusinessRegistry({
 }) {
   const can = useCan(),
     [search, setSearch] = useState(''),
-    [history, setHistory] = useState<GrcObject | null>(null);
+    [history, setHistory] = useState<GrcObject | null>(null),
+    [fEtat, setFEtat] = useState('all'),
+    [fResp, setFResp] = useState('all'),
+    [fEcheance, setFEcheance] = useState('all'),
+    [fOrigine, setFOrigine] = useState('all');
   const native = useInfiniteQuery({
     queryKey: ['grc', smsi, 'business-register', kind, search],
     initialPageParam: 0,
@@ -102,7 +112,7 @@ export function BusinessRegistry({
     queryKey: ['grc', smsi, 'owners'],
     queryFn: () => get<{ id: string; displayName: string; username: string }[]>(`/api/grc/${smsi}/owners`),
   });
-  const rows = [
+  const toutes = [
     ...(native.data?.pages.flatMap((p) => p.items) ?? []),
     ...(historical.data?.pages.flatMap((p) => p.items) ?? []),
   ];
@@ -114,6 +124,22 @@ export function BusinessRegistry({
     kind === 'nonconformity' && o.data.effectiveness === 'effective' && o.data.status !== 'closed'
       ? 'Efficacité vérifiée'
       : stateLabel(o.data.status ?? o.data.result);
+  const echeanceDe = (o: GrcObject) =>
+    String(o.data.dueAt ?? o.data.reviewAt ?? o.data.validUntil ?? o.data.plannedAt ?? '').slice(0, 10);
+  const aujourdhui = new Date().toISOString().slice(0, 10);
+  const etats = [...new Set(toutes.map(state))].sort();
+  const responsables = [...new Set(toutes.map(owner))].sort();
+  const rows = toutes.filter(
+    (o) =>
+      (fEtat === 'all' || state(o) === fEtat) &&
+      (fResp === 'all' || owner(o) === fResp) &&
+      (fOrigine === 'all' || (fOrigine === 'existant') === o.id.startsWith('legacy:')) &&
+      (fEcheance === 'all' ||
+        (fEcheance === 'sans' && !echeanceDe(o)) ||
+        (fEcheance === 'retard' && !!echeanceDe(o) && echeanceDe(o) < aujourdhui && o.data.status !== 'closed') ||
+        (fEcheance === 'avenir' && !!echeanceDe(o) && echeanceDe(o) >= aujourdhui)),
+  );
+  const filtresActifs = [fEtat, fResp, fEcheance, fOrigine].filter((f) => f !== 'all').length;
   const actions = (o: GrcObject) => {
     const editable = writable && o.data.status !== 'closed';
     const primary =
@@ -180,7 +206,56 @@ export function BusinessRegistry({
   return (
     <Stack>
       <Group justify="space-between">
-        <TextInput label="Rechercher" value={search} onChange={(e) => setSearch(e.currentTarget.value)} />
+        <Group align="flex-end">
+          <TextInput label="Rechercher" value={search} onChange={(e) => setSearch(e.currentTarget.value)} />
+          <Filtres
+            actifs={filtresActifs}
+            onReinitialiser={() => {
+              setFEtat('all');
+              setFResp('all');
+              setFEcheance('all');
+              setFOrigine('all');
+            }}
+          >
+            <Select
+              label="État"
+              allowDeselect={false}
+              data={[{ value: 'all', label: 'Tous les états' }, ...etats.map((e) => ({ value: e, label: e }))]}
+              value={fEtat}
+              onChange={(v) => setFEtat(v ?? 'all')}
+            />
+            <Select
+              label="Responsable"
+              allowDeselect={false}
+              data={[{ value: 'all', label: 'Tous' }, ...responsables.map((e) => ({ value: e, label: e }))]}
+              value={fResp}
+              onChange={(v) => setFResp(v ?? 'all')}
+            />
+            <Select
+              label="Échéance"
+              allowDeselect={false}
+              data={[
+                { value: 'all', label: 'Toutes' },
+                { value: 'retard', label: 'Dépassée' },
+                { value: 'avenir', label: 'À venir' },
+                { value: 'sans', label: 'Sans échéance' },
+              ]}
+              value={fEcheance}
+              onChange={(v) => setFEcheance(v ?? 'all')}
+            />
+            <Select
+              label="Origine"
+              allowDeselect={false}
+              data={[
+                { value: 'all', label: 'Toutes' },
+                { value: 'existant', label: 'Existant (outil de suivi)' },
+                { value: 'natif', label: 'Créé dans le Pilotage' },
+              ]}
+              value={fOrigine}
+              onChange={(v) => setFOrigine(v ?? 'all')}
+            />
+          </Filtres>
+        </Group>
         {writable && (
           <Button onClick={() => onCreate(kind)}>
             {kind === 'nonconformity'
@@ -193,8 +268,10 @@ export function BusinessRegistry({
       </Group>
       <ErrorAlert error={native.error ?? historical.error} />
       <Text size="sm">
-        {(native.data?.pages[0]?.total ?? 0) + (historical.data?.pages[0]?.total ?? 0)}{' '}
-        {kind === 'nonconformity' ? 'constats' : 'fiches'}
+        {filtresActifs
+          ? `${rows.length} sur ${toutes.length} affichées`
+          : `${(native.data?.pages[0]?.total ?? 0) + (historical.data?.pages[0]?.total ?? 0)} `}
+        {filtresActifs ? '' : kind === 'nonconformity' ? 'constats' : 'fiches'}
       </Text>
       {!rows.length && !native.isPending && (
         <Card withBorder>
@@ -231,6 +308,12 @@ export function BusinessRegistry({
                   {o.id.startsWith('legacy:') && (
                     <Badge size="xs" variant="light">
                       Existant
+                    </Badge>
+                  )}
+                  {Array.isArray(o.data.auditedFrameworks) && (o.data.auditedFrameworks as unknown[]).length > 0 && (
+                    <Badge size="xs" variant="light" color="encre">
+                      {(o.data.auditedFrameworks as unknown[]).length > 1 ? 'Audit combiné : ' : 'Audit : '}
+                      {(o.data.auditedFrameworks as string[]).join(' + ')}
                     </Badge>
                   )}
                 </Table.Td>

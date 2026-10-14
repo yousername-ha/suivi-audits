@@ -46,7 +46,7 @@ pnpm dev                                    # = docker compose -f docker-compose
 
 ```bash
 pnpm lint && pnpm format:check && pnpm typecheck && pnpm build
-docker run -d --name pgtest -e POSTGRES_PASSWORD=test -p 127.0.0.1:55432:5432 postgres:17-alpine   # une fois
+docker run -d --name pgtest -e POSTGRES_PASSWORD=test -p 127.0.0.1:55432:5432 postgres:18-alpine   # une fois
 pnpm test                                   # paquet partagé, puis API sur PostgreSQL (TEST_PG_HOST, TEST_PG_PORT…)
 ```
 

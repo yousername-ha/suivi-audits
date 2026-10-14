@@ -117,6 +117,7 @@ chiffres. Il ne valide ni contenu métier, ni site externe, ni acceptation humai
   [source v2 archivée](../archives/README.md).
 - [Format legacy](legacy/LEGACY-FORMAT.md), [mapping](legacy/MAPPING-LEGACY.md),
   [import](legacy/IMPORT-LEGACY.md), [inventaire initial](REPRISE-SOCLE-LEGACY.md).
+- [Archive de l'ancienne interface](archive/ancienne-interface/README.md) (captures, correspondance avec la nouvelle interface).
 - [Pilotage métier](PILOTAGE.md), [lots G/H/K/début E](LOT-G-H-K-DEBUT-E.md),
   [lot C](LOT-C-TACHES-RISQUES-CARTOGRAPHIE.md), [sources officielles connues](sources-lot-c.json).
 - [Feuille de route historique](ROADMAP.md), [backlog A–L](BACKLOG-EVOLUTION-SMSI-GRC.md),

@@ -32,7 +32,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v5
         with:
-          node-version: 24
+          node-version: 26
           # Aucun paquet n'est installé dans ce job ; ne pas chercher pnpm pour un cache automatique.
           package-manager-cache: false
       - id: plan

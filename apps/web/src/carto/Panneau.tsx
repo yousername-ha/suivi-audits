@@ -66,6 +66,10 @@ export interface PanneauProps {
   onPreset: (p: string) => void;
   onSec: (v: boolean) => void;
   onGen: (v: boolean) => void;
+  /** Calque « santé des indicateurs » (processus) et disponibilité du filtre ISO 9001 (référentiel 9001 rattaché). */
+  sante: boolean;
+  onSante: (v: boolean) => void;
+  norme9001: boolean;
 }
 
 export function Panneau(p: PanneauProps) {
@@ -100,7 +104,7 @@ export function Panneau(p: PanneauProps) {
           Référentiels
         </Title>
         <Stack gap="2xs">
-          {REFERENTIELS.map((r) => (
+          {REFERENTIELS.filter((r) => r !== 'ISO 9001' || p.norme9001).map((r) => (
             <Switch
               key={r}
               label={r}
@@ -111,6 +115,16 @@ export function Panneau(p: PanneauProps) {
         </Stack>
         <Text size="xs" c="dimmed" mt="2xs">
           Masque les objets qui ne relèvent d’aucun référentiel activé.
+        </Text>
+      </Card>
+      <Card padding="sm">
+        <Title order={3} size="h6" mb="xs">
+          Calques
+        </Title>
+        <Switch label="Santé des indicateurs" checked={p.sante} onChange={(e) => p.onSante(e.currentTarget.checked)} />
+        <Text size="xs" c="dimmed" mt="2xs">
+          Liseré au bas de chaque processus : rouge si un indicateur lié n’est pas atteint, vert si tous le sont, orange
+          s’il en reste à mesurer. Un processus sans indicateur n’a pas de liseré.
         </Text>
       </Card>
       <Card padding="sm">

@@ -320,6 +320,11 @@ test('Pilotage : EBIOS RM publié, appréciation conservée, cartographie et exp
     await page.keyboard.press('Escape');
     await page.goto('/pilotage/carte');
     await expect(page.locator(`.grc-risk-canvas [data-n="object:${risk.id}"]`)).toBeVisible();
+    // Régression « écran gris » : la zone de la carte doit rester dans son cadre, jamais recouvrir la page.
+    const cadre = (await page.locator('.grc-risk-canvas').boundingBox())!;
+    const zone = (await page.locator('.grc-risk-canvas .carte-zone').boundingBox())!;
+    expect(zone.width).toBeLessThanOrEqual(cadre.width + 1);
+    expect(zone.height).toBeLessThanOrEqual(cadre.height + 1);
     await page.getByRole('button', { name: 'Ajuster la carte', exact: true }).click();
     const downloaded = page.waitForEvent('download');
     await page.getByRole('button', { name: 'Exporter SVG', exact: true }).click();

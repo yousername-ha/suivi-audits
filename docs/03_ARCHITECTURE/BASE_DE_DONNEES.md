@@ -2,7 +2,7 @@
 
 Référence applicative analysée : `c704fa6e6d6d516db75f963db8dd5d2049ab42c8`. Mise à jour : 2026-10-11T00:46:53+02:00 (Europe/Paris).
 
-PostgreSQL 17, migrations versionnées au démarrage sous verrou consultatif.
+PostgreSQL 18, migrations versionnées au démarrage sous verrou consultatif.
 `schema_migrations` suit les versions ; ne jamais modifier une migration
 publiée. Les DDL ci-dessous créent 42 tables repérées ; ce relevé n’est pas une
 inspection de la base client. Schéma TypeScript : apps/api/src/db/schema.ts.

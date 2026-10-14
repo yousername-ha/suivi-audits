@@ -122,3 +122,104 @@ describe('API d’import', () => {
     expect(encore.statusCode).toBe(409);
   });
 });
+
+describe('standards disponibles, versions sources verrouillées et copies', () => {
+  let t: TestApp, a: Agent, reader: Agent;
+  beforeAll(async () => {
+    t = await createTestApp();
+    a = await login(t, await makeUser(t, 'std_admin', 'admin'));
+    reader = await login(t, await makeUser(t, 'std_reader', 'ro'));
+    await t.svc.db.q(
+      `INSERT INTO app_state (id, version, data, sha256, updated_by) VALUES (1, 1, $1, 'x', 'test')
+       ON CONFLICT (id) DO UPDATE SET data = $1`,
+      [JSON.stringify(seed)],
+    );
+  });
+  afterAll(async () => t.close());
+  it('adopte un standard en un geste, sans motif ni confirmation, et reste idempotent', async () => {
+    expect((await reader.post('/api/library/standards/adopt', { identifier: 'iso-27001-2022' })).statusCode).toBe(403);
+    const r = await a.post('/api/library/standards/adopt', { identifier: 'iso-27001-2022' });
+    expect(r.statusCode, r.body).toBe(200);
+    expect(r.json()).toMatchObject({ identifier: 'iso-27001-2022', version: 1, created: true });
+    const encore = await a.post('/api/library/standards/adopt', { identifier: 'iso-27001-2022' });
+    expect(encore.json()).toMatchObject({ id: r.json().id, created: false });
+    expect((await a.post('/api/library/standards/adopt', { identifier: 'inconnu' })).statusCode).toBe(404);
+    const liste = (await a.get('/api/library/frameworks')).json() as { identifier: string; locked: boolean }[];
+    expect(liste.find((f) => f.identifier === 'iso-27001-2022')!.locked).toBe(true);
+  });
+  it('refuse d’ajouter une exigence à une version source : il faut une copie', async () => {
+    const liste = (await a.get('/api/library/frameworks')).json() as {
+      id: string;
+      identifier: string;
+      version: number;
+    }[];
+    const iso = liste.find((f) => f.identifier === 'iso-27001-2022')!;
+    const r = await a.post(`/api/library/frameworks/${iso.id}/requirements`, {
+      expectedVersion: iso.version,
+      domain: 'clause_4',
+      id: 'ORG-1',
+      title: 'Exigence de l’organisation',
+    });
+    expect(r.statusCode).toBe(422);
+    expect(r.json().error ?? r.body).toMatch(/verrouillée/);
+  });
+  it('crée une copie, y ajoute des exigences (nouvelles versions) et laisse l’original intact', async () => {
+    const liste = (await a.get('/api/library/frameworks')).json() as {
+      id: string;
+      identifier: string;
+      version: number;
+      requirements: number;
+    }[];
+    const iso = liste.find((f) => f.identifier === 'iso-27001-2022')!;
+    const copie = await a.post(`/api/library/frameworks/${iso.id}/copy`, {
+      name: 'ISO 27001 — version de l’organisation',
+    });
+    expect(copie.statusCode, copie.body).toBe(200);
+    expect(copie.json()).toMatchObject({ identifier: 'iso-27001-2022-copie', version: 1 });
+    const seconde = await a.post(`/api/library/frameworks/${iso.id}/copy`, { name: 'Autre copie' });
+    expect(seconde.json().identifier).toBe('iso-27001-2022-copie-2');
+    const id = copie.json().id as string;
+    const domaine = (await a.get(`/api/library/frameworks/${id}/versions/1`)).json().definition.domains[0].id as string;
+    const ajout = await a.post(`/api/library/frameworks/${id}/requirements`, {
+      expectedVersion: 1,
+      domain: domaine,
+      id: 'ORG-1',
+      title: 'Mesure propre à l’organisation',
+      description: 'Fictive',
+    });
+    expect(ajout.statusCode, ajout.body).toBe(200);
+    expect(ajout.json().version).toBe(2);
+    const nouveauDomaine = await a.post(`/api/library/frameworks/${id}/requirements`, {
+      expectedVersion: 2,
+      newDomainLabel: 'Mesures locales',
+      id: 'ORG-2',
+      title: 'Autre mesure',
+    });
+    expect(nouveauDomaine.statusCode, nouveauDomaine.body).toBe(200);
+    const v3 = (await a.get(`/api/library/frameworks/${id}/versions/3`)).json().definition;
+    expect(v3.requirements.map((r: { id: string }) => r.id)).toEqual(expect.arrayContaining(['ORG-1', 'ORG-2']));
+    expect(v3.derivedFrom).toMatchObject({ identifier: 'iso-27001-2022', version: 1 });
+    expect(v3.source.status).toBe('organisation');
+    // Version obsolète et mélange de domaine refusés.
+    expect(
+      (
+        await a.post(`/api/library/frameworks/${id}/requirements`, {
+          expectedVersion: 1,
+          domain: domaine,
+          id: 'X',
+          title: 'x',
+        })
+      ).statusCode,
+    ).toBe(412);
+    expect(
+      (await a.post(`/api/library/frameworks/${id}/requirements`, { expectedVersion: 3, id: 'X', title: 'x' }))
+        .statusCode,
+    ).toBe(422);
+    const origine = (await a.get(`/api/library/frameworks/${iso.id}/versions/1`)).json().definition;
+    expect(origine.requirements).toHaveLength(iso.requirements);
+    expect((await a.get('/api/library/frameworks')).json().find((f: { id: string }) => f.id === id)).toMatchObject({
+      locked: false,
+      derivedFrom: { identifier: 'iso-27001-2022' },
+    });
+  });
+});

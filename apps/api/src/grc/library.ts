@@ -2,7 +2,12 @@
    par versions immuables, puis rattaché à une version précise dans chaque périmètre qui l'utilise. Les référentiels publiés
    dans un périmètre (frameworks.ts) restent inchangés ; une promotion explicite, simulée avant application, les copie ici.
    Aucun lien vers une mesure n'est stocké dans la bibliothèque : ces liens sont propres à chaque périmètre. */
-import { LibraryFrameworkDefinition, type FrameworkDefinition } from '@suivi/shared';
+import {
+  LibraryFrameworkDefinition,
+  type FrameworkDefinition,
+  type LibraryCopyBody,
+  type LibraryRequirementBody,
+} from '@suivi/shared';
 import { ZodError } from 'zod';
 import type { SessionUser } from '../auth.js';
 import type { Client } from '../db/db.js';
@@ -19,6 +24,9 @@ export interface LibraryFramework {
   source: FrameworkDefinition['source'];
   requirements: number;
   scopes: number;
+  /** Version source (importée) : verrouillée, on n'y ajoute rien ; seule une copie se personnalise. */
+  locked: boolean;
+  derivedFrom: { identifier: string; name: string; version: number } | null;
 }
 export interface ScopeAttachment {
   frameworkId: string;
@@ -48,7 +56,8 @@ export class GrcLibrary {
       await this.g.db.q<LibraryFramework>(
         `SELECT f.id,f.identifier,f.name,f.version,f.updated_at AS "updatedAt",v.definition->'source' AS source,
                 jsonb_array_length(v.definition->'requirements')::int AS requirements,
-                (SELECT count(*)::int FROM grc_scope_frameworks s WHERE s.framework_id=f.id) AS scopes
+                (SELECT count(*)::int FROM grc_scope_frameworks s WHERE s.framework_id=f.id) AS scopes,
+                NOT (v.definition ? 'derivedFrom') AS locked,v.definition->'derivedFrom' AS "derivedFrom"
            FROM lib_frameworks f JOIN lib_framework_versions v ON v.framework_id=f.id AND v.version=f.version
           ORDER BY f.name,f.id`,
       )
@@ -172,6 +181,103 @@ export class GrcLibrary {
     }, user.username);
   }
 
+  /** Crée une copie personnalisable d'un référentiel de la bibliothèque (version courante). L'original reste verrouillé. */
+  async copy(id: string, body: LibraryCopyBody, user: SessionUser, ip: string) {
+    await this.g.permission(user, 'conformite', 'modifier');
+    const row = (
+      await this.g.db.q<{ definition: FrameworkDefinition; version: number; name: string }>(
+        `SELECT v.definition,f.version,f.name FROM lib_frameworks f
+           JOIN lib_framework_versions v ON v.framework_id=f.id AND v.version=f.version WHERE f.id=$1`,
+        [id],
+      )
+    ).rows[0];
+    if (!row) throw new HttpError(404, 'Référentiel de la bibliothèque introuvable.');
+    const base = body.identifier ?? `${row.definition.identifier}-copie`;
+    let identifier = base;
+    for (
+      let n = 2;
+      (await this.g.db.q('SELECT 1 FROM lib_frameworks WHERE identifier=$1', [identifier])).rowCount;
+      n++
+    ) {
+      if (body.identifier) throw new HttpError(409, 'Un référentiel de la bibliothèque porte déjà cet identifiant.');
+      identifier = `${base}-${n}`;
+    }
+    const definition: FrameworkDefinition = {
+      ...row.definition,
+      name: body.name,
+      identifier,
+      source: {
+        ...row.definition.source,
+        document: `Copie de l’organisation de « ${row.name} » (version ${row.version})`.slice(0, 300),
+        normative: false,
+        status: 'organisation',
+        verifiedAt: '',
+      },
+      derivedFrom: row.definition.derivedFrom ?? {
+        identifier: row.definition.identifier,
+        name: row.name,
+        version: row.version,
+      },
+    };
+    const p = await this.preview(null, definition, user);
+    return this.publish(
+      null,
+      definition,
+      0,
+      p.previewId,
+      `Copie personnalisable de « ${row.name} » (version ${row.version}).`,
+      user,
+      ip,
+    );
+  }
+
+  /** Ajoute (ou remplace par identifiant) une exigence dans une copie : nouvelle version immuable. Une version source
+      est verrouillée : il faut d'abord en créer une copie. */
+  async upsertRequirement(id: string, body: LibraryRequirementBody, user: SessionUser, ip: string) {
+    await this.g.permission(user, 'conformite', 'modifier');
+    const row = (
+      await this.g.db.q<{ definition: FrameworkDefinition; version: number }>(
+        `SELECT v.definition,f.version FROM lib_frameworks f
+           JOIN lib_framework_versions v ON v.framework_id=f.id AND v.version=f.version WHERE f.id=$1`,
+        [id],
+      )
+    ).rows[0];
+    if (!row) throw new HttpError(404, 'Référentiel de la bibliothèque introuvable.');
+    if (!row.definition.derivedFrom)
+      throw new HttpError(422, 'Version source verrouillée : créez une copie pour la personnaliser.');
+    if (row.version !== body.expectedVersion) throw new HttpError(412, 'Version obsolète.');
+    const domains = [...row.definition.domains];
+    let domain = body.domain;
+    if (body.newDomainLabel) {
+      domain = `domaine_${domains.length + 1}`;
+      while (domains.some((d) => d.id === domain)) domain += '_x';
+      domains.push({ id: domain, label: body.newDomainLabel });
+    }
+    const requirement = {
+      id: body.id,
+      domain: domain!,
+      title: body.title,
+      description: body.description,
+      applicability: body.applicability,
+      measureRefs: [],
+    };
+    const existing = row.definition.requirements.some((r) => r.id === body.id);
+    const requirements = existing
+      ? row.definition.requirements.map((r) => (r.id === body.id ? requirement : r))
+      : [...row.definition.requirements, requirement];
+    const definition = { ...row.definition, domains, requirements };
+    const p = await this.preview(id, definition, user);
+    return this.publish(
+      id,
+      definition,
+      row.version,
+      p.previewId,
+      `${existing ? 'Modification' : 'Ajout'} de l’exigence ${body.id}.`,
+      user,
+      ip,
+    );
+  }
+
   /** Référentiels présents dans l'outil de suivi, simulés avant toute importation (rien n'est écrit). */
   async trackerPreview(user: SessionUser) {
     await this.g.permission(user, 'conformite', 'modifier');
@@ -215,6 +321,35 @@ export class GrcLibrary {
       user,
       ip,
     );
+  }
+
+  /** Rend un standard de l'outil de suivi disponible dans la bibliothèque en un geste (version source verrouillée). Déjà
+      présent : renvoie l'existant. Un standard non repris (données incomplètes) est refusé avec sa raison, sans alerte. */
+  async adoptStandard(identifier: string, user: SessionUser, ip: string) {
+    const p = (await this.trackerPreview(user)).find((x) => x.definition.identifier === identifier);
+    if (!p) throw new HttpError(404, 'Standard introuvable dans l’outil de suivi.');
+    if (p.error) throw new HttpError(422, `Standard non repris : ${p.error}`);
+    if (p.duplicate) {
+      const existing = (
+        await this.g.db.q<{ id: string; name: string; version: number }>(
+          'SELECT id,name,version FROM lib_frameworks WHERE identifier=$1',
+          [identifier],
+        )
+      ).rows[0]!;
+      return { id: existing.id, identifier, name: existing.name, version: existing.version, created: false };
+    }
+    return {
+      ...(await this.publish(
+        null,
+        p.definition,
+        0,
+        p.previewId,
+        'Standard repris de l’outil de suivi (version source verrouillée).',
+        user,
+        ip,
+      )),
+      created: true,
+    };
   }
 
   async attachments(smsi: string, user: SessionUser): Promise<ScopeAttachment[]> {

@@ -60,26 +60,39 @@ export function conformiteParReferentiel(state: Obj): ConformiteReferentiel[] {
 
 export type EtatIndicateur = 'ok' | 'ko' | 'na' | 'undef';
 
-function calculAuto(ind: Obj, state: Obj): { v: number | null } | null {
+function calculAuto(ind: Obj, state: Obj): { v: number | null; src: string } | null {
   const saas = arr(state.suppliers).filter((x) => x.saas);
   const findings = arr(state.findings);
   const derniere = (src: string) =>
     Math.max(0, ...findings.filter((f) => f.source === src).map((f) => +str(f.year) || 0));
   switch (ind.calc) {
-    case 'saasMfa':
-      return { v: saas.length ? saas.filter((x) => x.mfa === 'Oui').length / saas.length : null };
-    case 'saasSso':
-      return { v: saas.length ? saas.filter((x) => x.sso === 'Oui').length / saas.length : null };
+    case 'saasMfa': {
+      const oui = saas.filter((x) => x.mfa === 'Oui').length;
+      return { v: saas.length ? oui / saas.length : null, src: `${oui}/${saas.length} services SaaS` };
+    }
+    case 'saasSso': {
+      const oui = saas.filter((x) => x.sso === 'Oui').length;
+      return { v: saas.length ? oui / saas.length : null, src: `${oui}/${saas.length} services SaaS` };
+    }
     case 'afnorNcMaj': {
       const y = derniere('AFNOR');
-      return { v: findings.filter((f) => f.source === 'AFNOR' && f.type === 'NC maj' && +str(f.year) === y).length };
+      return {
+        v: findings.filter((f) => f.source === 'AFNOR' && f.type === 'NC maj' && +str(f.year) === y).length,
+        src: `écarts AFNOR ${y || ''}`,
+      };
     }
     case 'interneNcMaj': {
       const y = derniere('Interne');
-      return { v: findings.filter((f) => f.source === 'Interne' && f.type === 'NC maj' && +str(f.year) === y).length };
+      return {
+        v: findings.filter((f) => f.source === 'Interne' && f.type === 'NC maj' && +str(f.year) === y).length,
+        src: `audit interne ${y || ''}`,
+      };
     }
     case 'interneNcMajOpen':
-      return { v: findings.filter((f) => f.source === 'Interne' && f.type === 'NC maj' && f.status !== 'Clos').length };
+      return {
+        v: findings.filter((f) => f.source === 'Interne' && f.type === 'NC maj' && f.status !== 'Clos').length,
+        src: 'écarts internes ouverts',
+      };
   }
   return null;
 }
@@ -116,6 +129,46 @@ export function etatIndicateur(ind: Obj, state: Obj): EtatIndicateur {
   return 'na';
 }
 
+/** Tendance, origine de la valeur et valeur historique d'un indicateur (`indState` de l'outil de suivi). */
+export function detailMesures(
+  ind: Obj,
+  state: Obj,
+): { tendance: IndicateurObjectif['tendance']; source: string; historique: IndicateurObjectif['historique'] } {
+  const auto = ind.calc && ind.auto !== false ? calculAuto(ind, state) : null;
+  const toutes = arr(ind.values)
+    .slice()
+    .sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  const valeurs = toutes.filter((x) => !x.hist),
+    historiques = toutes.filter((x) => x.hist);
+  const derniere = valeurs[valeurs.length - 1];
+  const precedente = valeurs[valeurs.length - 2] ?? historiques[historiques.length - 1];
+  let tendance: IndicateurObjectif['tendance'] = '';
+  if (!auto && derniere && precedente && typeof derniere.v === 'number' && typeof precedente.v === 'number')
+    tendance = derniere.v > precedente.v ? '↗' : derniere.v < precedente.v ? '↘' : '→';
+  const h = historiques[historiques.length - 1];
+  const entier = (v: unknown) =>
+    typeof v === 'number' && Number.isInteger(v) ? String(v) : formatValeurIndicateur(ind, v);
+  return {
+    tendance,
+    source: auto ? auto.src : derniere ? str(derniere.date) : '',
+    historique: h ? { periode: str(h.hist), valeur: entier(h.v) } : null,
+  };
+}
+
+/** Analyse d'une valeur saisie (`parseIndValue` de l'outil de suivi) : « Oui »/« Non » ou nombre ; un taux saisi en
+    pourcentage (ou supérieur à 1) est ramené entre 0 et 1 quand la cible est un taux. */
+export function analyserValeurIndicateur(ind: Obj, saisie: string): string | number | null {
+  const brut = saisie.trim();
+  if (!brut) return null;
+  if (ind.dir === '=' || /^(oui|non)$/i.test(brut))
+    return /^oui$/i.test(brut) ? 'Oui' : /^non$/i.test(brut) ? 'Non' : brut;
+  let n = parseFloat(brut.replace(',', '.').replace(/%/g, ''));
+  if (Number.isNaN(n)) return brut;
+  const taux = typeof ind.target === 'number' && ind.target > 0 && ind.target <= 1;
+  if (taux && (brut.includes('%') || n > 1)) n = n / 100;
+  return n;
+}
+
 export interface SyntheseIndicateurs {
   total: number;
   atteints: number;
@@ -140,6 +193,14 @@ export interface IndicateurObjectif {
   valeur: string;
   calcule: boolean;
   etat: EtatIndicateur;
+  /** Tendance de la dernière mesure sur la précédente (↗ ↘ →), vide pour un indicateur calculé ou sans deux mesures. */
+  tendance: '↗' | '↘' | '→' | '';
+  /** Origine de la valeur : source du calcul automatique, sinon date de la dernière mesure (AAAA-MM-JJ). */
+  source: string;
+  /** Dernière valeur historique (période précédente), affichée en gris tant que la période courante n'est pas mesurée. */
+  historique: { periode: string; valeur: string } | null;
+  /** Catégorie facultative de l'indicateur (ISO 9001, 9.1.2 : satisfaction du client). */
+  categorie: string;
 }
 export interface ObjectifPilotage {
   id: string;
@@ -174,6 +235,7 @@ export function objectifsPilotage(state: Obj): ObjectifPilotage[] {
       .filter((i) => i.obj === o.id)
       .map((i) => {
         const val = valeurIndicateur(i, state);
+        const detail = detailMesures(i, state);
         return {
           id: str(i.id),
           nom: str(i.name),
@@ -181,6 +243,10 @@ export function objectifsPilotage(state: Obj): ObjectifPilotage[] {
           valeur: formatValeurIndicateur(i, val.v),
           calcule: val.calcule,
           etat: etatIndicateur(i, state),
+          tendance: detail.tendance,
+          source: detail.source,
+          historique: detail.historique,
+          categorie: str(i.category),
         };
       });
     return {

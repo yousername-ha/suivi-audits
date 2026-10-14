@@ -36,6 +36,9 @@ import { pilotageReport } from '../pilotage/report';
 import { EtudesEbios } from '../grc/Ebios';
 import { RegistreRisques } from '../grc/RegistreRisques';
 import { ObjectifsProcessus } from '../pilotage/ObjectifsProcessus';
+import { Pestel, SynthesePartiesBandeau } from '../pilotage/Pestel';
+import { PreparationRevue } from '../pilotage/PreparationRevue';
+import { SeriesProposees } from '../pilotage/SeriesProposees';
 import { PlansHistoriques } from '../pilotage/PlansHistoriques';
 import { CartesPilotage, type SyntheseApi } from '../components/Synthese';
 const REGISTERS: Record<string, { kind: GrcKind; legacy?: string; description: string }> = {
@@ -58,6 +61,11 @@ const REGISTERS: Record<string, { kind: GrcKind; legacy?: string; description: s
     kind: 'governance',
     legacy: 'roles',
     description: 'Attribuez les responsabilités, décisions et moyens.',
+  },
+  opportunites: {
+    kind: 'opportunity',
+    description:
+      'Opportunités de l’article 6.1 (ISO 9001:2015), traitées avec les risques : origine, bénéfice attendu, décision et revue.',
   },
   processus: {
     kind: 'process',
@@ -178,6 +186,14 @@ export function PilotagePage() {
     setPreset(undefined);
     setOpened(true);
   };
+  /** Fiche préparée (série proposée, par exemple) : intitulé et valeurs préremplis, à compléter avant enregistrement. */
+  const createPreset = (k: GrcKind, name: string, data: Record<string, unknown>) => {
+    setEditing(null);
+    setKind(k);
+    setInitial(undefined);
+    setPreset({ name, data });
+    setOpened(true);
+  };
   /** Risque du registre issu d'une étude EBIOS RM : intitulé, étude et scénario préremplis. */
   const createRisk = (name: string, data: Record<string, unknown>) => {
     setEditing(null);
@@ -235,19 +251,28 @@ export function PilotagePage() {
             {config && (
               <>
                 {section === 'amelioration' && <ImprovementIndicators smsi={smsi} />}
-                {section === 'objectifs' && <ObjectifsProcessus smsi={smsi} />}
+                {section === 'parties' && <SynthesePartiesBandeau smsi={smsi} />}
+                {section === 'revues' && (
+                  <PreparationRevue smsi={smsi} onCreer={(initial) => create('management_review', initial)} />
+                )}
+                {section === 'processus' && <ObjectifsProcessus smsi={smsi} vue="processus" />}
+                {section === 'objectifs' && <ObjectifsProcessus smsi={smsi} vue="objectif" />}
+                {section === 'indicateurs' && <ObjectifsProcessus smsi={smsi} vue="compacte" />}
                 {section === 'audits' && can('pilotage', 'lire') && <PlansHistoriques smsi={smsi} type="audit" />}
                 {section === 'exercices' && <PlansHistoriques smsi={smsi} type="exo" />}
-                <BusinessRegistry
-                  key={smsi + section}
-                  smsi={smsi}
-                  kind={config.kind}
-                  legacyKey={config.legacy}
-                  onOpen={open}
-                  onCreate={create}
-                  onDecision={decide}
-                  onSchedule={setSchedule}
-                />
+                {(smsi !== '00000000-0000-4000-8000-000000000001' ||
+                  !['processus', 'objectifs', 'indicateurs'].includes(section)) && (
+                  <BusinessRegistry
+                    key={smsi + section}
+                    smsi={smsi}
+                    kind={config.kind}
+                    legacyKey={config.legacy}
+                    onOpen={open}
+                    onCreate={create}
+                    onDecision={decide}
+                    onSchedule={setSchedule}
+                  />
+                )}
                 {['bia', 'continuite', 'exercices', 'preuves', 'controles', 'amelioration', 'revues'].includes(
                   section,
                 ) &&
@@ -302,6 +327,9 @@ export function PilotagePage() {
                   )}
                 </Group>
                 <Tasks key={smsi + section} smsi={smsi} policy={policy.data.definition} onOpen={open} />
+                {section === 'recurrences' && can('ecarts', 'modifier') && (
+                  <SeriesProposees onPreparer={(name, data) => createPreset('task_series', name, data)} />
+                )}
                 {section === 'recurrences' && (
                   <Registry
                     smsi={smsi}
@@ -373,6 +401,7 @@ export function PilotagePage() {
             {section === 'carte' && can('cartographie', 'lire') && can('pilotage', 'lire') && (
               <RiskMap smsi={smsi} onOpen={open} />
             )}
+            {section === 'pestel' && can('pilotage', 'lire') && <Pestel smsi={smsi} />}
             {section === 'referentiels' && can('conformite', 'lire') && <Publication smsi={smsi} type="frameworks" />}
             {section === 'correspondances' && can('conformite', 'lire') && <MappingPanel smsi={smsi} />}
             {section === 'imports' && can('import_export', 'lire') && <Imports smsi={smsi} />}

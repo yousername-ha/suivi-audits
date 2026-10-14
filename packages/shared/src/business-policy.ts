@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { PESTEL_PAR_DEFAUT } from './pestel.js';
 const key = z
   .string()
   .regex(/^[a-z][a-z0-9_]{0,39}$/)
@@ -26,12 +27,14 @@ export const BusinessPolicy = z
       .max(20),
     transitions: z.array(z.object({ from: key, to: key }).strict()).max(200),
     catalogues: z
-      .object(
-        Object.fromEntries(BUSINESS_CATALOGUES.map((k) => [k, catalogue])) as Record<
+      .object({
+        ...(Object.fromEntries(BUSINESS_CATALOGUES.map((k) => [k, catalogue])) as Record<
           (typeof BUSINESS_CATALOGUES)[number],
           typeof catalogue
-        >,
-      )
+        >),
+        /** Facteurs du PESTEL (ISO 9001:2015, 4.1, présentation facultative) ; absent des politiques antérieures. */
+        pestelFactors: catalogue.optional(),
+      })
       .strict(),
     dashboard: z
       .object({
@@ -110,6 +113,7 @@ export function businessDefaults(): BusinessPolicy {
         { id: 'yearly', label: 'Annuelle' },
       ],
       riskDomains: [{ id: 'information', label: 'Sécurité de l’information' }],
+      pestelFactors: PESTEL_PAR_DEFAUT.map((f) => ({ ...f })),
     },
     dashboard: {
       cards: ['tasks', 'risks', 'frameworks', 'controls', 'evidence'],

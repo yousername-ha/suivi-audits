@@ -74,3 +74,16 @@ export function recurrenceSlot(input: RecurrenceType, index: number) {
   if (r.until !== null && day > r.until) return null;
   return { key: `${day}T${r.time}[${r.timezone}]`, local: day, dueAt: localDue(day, r.time, r.timezone) };
 }
+
+/** Prochaine occurrence d'une série à partir d'un jour donné (AAAA-MM-JJ) : nulle si la série est inactive, terminée ou
+    hors limites. Aucune fréquence n'est supposée : tout vient de la récurrence saisie par l'organisme. */
+export function prochaineOccurrence(input: RecurrenceType, aujourdhui: string): string | null {
+  const r = Recurrence.parse(input);
+  if (!r.active) return null;
+  for (let i = 0; i < 20000; i++) {
+    const slot = recurrenceSlot(r, i);
+    if (!slot) return null;
+    if (slot.local >= aujourdhui) return slot.local;
+  }
+  return null;
+}

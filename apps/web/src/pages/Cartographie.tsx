@@ -77,7 +77,7 @@ import {
   type RelationType,
   type Tint,
 } from '@suivi/shared/carto';
-import { ConfirmDialog, ErrorAlert, IconeCarte, Page, PageHeader } from '@suivi/ui';
+import { ConfirmDialog, ErrorAlert, IconeCarte, Page, PageHeader, SANTE } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { useBlocker, useNavigate, useParams } from 'react-router';
@@ -147,9 +147,39 @@ export function CartographiePage() {
   /* ---------------------------------------------------------------- Données */
   const objetsQ = useQuery({ queryKey: ['carto', 'objects'], queryFn: () => get<ObjectsOut>('/api/carto/objects') });
   const cartesQ = useQuery({ queryKey: ['carto', 'maps'], queryFn: () => get<MapOut[]>('/api/carto/maps') });
+  const [sante, setSante] = useState(false);
+  // ISO 9001 : le filtre n'apparaît que si un référentiel 9001 est rattaché au périmètre commun (ADR 0013, révision).
+  const rattaches = useQuery({
+    queryKey: ['grc', '00000000-0000-4000-8000-000000000001', 'attachments'],
+    queryFn: () =>
+      get<{ identifier: string; name: string; enabled: boolean }[]>(
+        '/api/grc/00000000-0000-4000-8000-000000000001/framework-attachments',
+      ),
+    retry: false,
+  });
+  const norme9001 = (rattaches.data ?? []).some((r) => r.enabled && /9001/.test(`${r.identifier} ${r.name}`));
   const objs = useMemo(
-    () => new Map((objetsQ.data?.objects ?? []).map((o) => [o.ref, o as CartoObject])),
-    [objetsQ.data],
+    () =>
+      new Map(
+        (objetsQ.data?.objects ?? []).map((o) => {
+          const base = o as CartoObject;
+          const processus = base.type === 'process' || base.type === 'subprocess';
+          let objet = base;
+          if (sante && processus && (base.nInd ?? 0) > 0)
+            objet = {
+              ...objet,
+              riskColor: base.nKo ? SANTE.ko : base.nOk === base.nInd ? SANTE.ok : SANTE.mesure,
+            };
+          // Cadrage 9001 : la norme porte sur les processus, leurs parties intéressées, leurs enjeux et les prestataires.
+          if (
+            norme9001 &&
+            ['process', 'subprocess', 'stakeholder', 'external_issue', 'internal_issue', 'supplier'].includes(base.type)
+          )
+            objet = { ...objet, std: [...objet.std, 'ISO 9001'] };
+          return [o.ref, objet] as const;
+        }),
+      ),
+    [objetsQ.data, sante, norme9001],
   );
   const ctx = useMemo(() => cartoContext(objs), [objs]);
   const hidden = useMemo(() => new Set<string>(objetsQ.data?.hiddenModules ?? []), [objetsQ.data]);
@@ -1206,6 +1236,9 @@ export function CartographiePage() {
                     onPreset={(k) => setPresets((x) => ({ ...x, [view]: k }))}
                     onSec={(v) => majPrefs({ secondaires: v })}
                     onGen={(v) => majPrefs({ propositions: v })}
+                    sante={sante}
+                    onSante={setSante}
+                    norme9001={norme9001}
                   />
                 )}
               </div>
