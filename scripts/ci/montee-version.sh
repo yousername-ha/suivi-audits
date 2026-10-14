@@ -37,6 +37,20 @@ maj() {
     -e GIT_CONFIG_KEY_1=safe.directory -e "GIT_CONFIG_VALUE_1=$SOURCE" \
     "$IMG-updater:$CIBLE_VERSION" env "$@" bash -s -- "$VERS" --auto --images-locales --delai 240)
 }
+# Trajet réel d'un serveur qui se met à jour depuis l'interface : c'est le script de la version INSTALLÉE (celui du dépôt,
+# lancé en fichier par l'exécutant installé) qui s'exécute, dans l'image updater de cette version ; il bascule le dépôt sur
+# la cible puis charge les outils de la cible. maj() ci-dessus exerce, lui, le script de la cible.
+maj_installee() {
+  (cd "$SERVEUR" && sudo docker run --rm --network none \
+    -v /var/run/docker.sock:/var/run/docker.sock -v "$SERVEUR:$SERVEUR" -v "$SOURCE:$SOURCE:ro" \
+    -v /srv/suivi-audits/donnees:/srv/suivi-audits/donnees \
+    -v /srv/sauvegardes/suivi-audits:/srv/sauvegardes/suivi-audits \
+    -v /root/.suivi-backup-pass:/root/.suivi-backup-pass:ro \
+    -w "$SERVEUR" -e "PWD=$SERVEUR" \
+    -e GIT_CONFIG_COUNT=2 -e GIT_CONFIG_KEY_0=safe.directory -e "GIT_CONFIG_VALUE_0=$SERVEUR" \
+    -e GIT_CONFIG_KEY_1=safe.directory -e "GIT_CONFIG_VALUE_1=$SOURCE" \
+    "$IMG-updater:$DEPART_VERSION" bash scripts/mettre-a-jour.sh "$VERS" --auto --images-locales --delai 240)
+}
 attendre() {
   for _ in $(seq 1 100); do
     [ "$(curl -sk "$URL/healthz" || true)" = ok ] && return 0
@@ -86,8 +100,10 @@ groupe "2. Simulation (--verifier) : rien ne change"
 [ "$(version_env)" = "$DEPART_VERSION" ] || echec "--verifier a modifié APP_VERSION"
 fin_groupe
 
-groupe "3. Mise à jour $DEPART_VERSION → $CIBLE_VERSION"
-maj
+groupe "3. Mise à jour $DEPART_VERSION → $CIBLE_VERSION (script de la version installée, comme depuis l'interface)"
+sudo git -C "$SERVEUR" rev-parse --verify -q "$DEPART_REF^{commit}" > /dev/null
+[ "$(sudo git -C "$SERVEUR" rev-parse HEAD)" = "$(sudo git -C "$SERVEUR" rev-parse "$DEPART_REF^{commit}")" ] || echec "le dépôt n'est pas à la version de départ avant la mise à jour"
+maj_installee
 [ "$(version_env)" = "$CIBLE_VERSION" ] || echec "APP_VERSION différent de $CIBLE_VERSION"
 attendre
 api instantane "$URL" "$RUNNER_TEMP/apres-maj.json" "$RUNNER_TEMP/reference.json"

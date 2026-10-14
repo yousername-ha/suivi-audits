@@ -5,6 +5,11 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 ## [Non publié]
 
 ### Notes de mise à jour
+Aucune action.
+
+## [3.2.0] — 2026-10-14
+
+### Notes de mise à jour
 - **PostgreSQL 17 → 18 : migration automatique de la base** ([ADR 0035](docs/adr/0035-postgresql-18-migration-automatique.md)). Pendant la mise à jour (script ou menu Système), après la sauvegarde chiffrée obligatoire, l'application est arrêtée, la base est exportée avec le moteur 17, recréée en PostgreSQL 18 dans `DATA_DIR/postgres18`, restaurée, puis contrôlée (nombres de lignes identiques table par table). Durée : quelques minutes, proportionnelle à la taille de la base. Espace libre nécessaire : deux fois la base plus 512 Mo. **L'ancienne base n'est jamais modifiée** : en cas d'échec, la version précédente redémarre dessus. Après avoir vérifié l'application, libérer la place : `sudo ./scripts/nettoyer-ancienne-base-postgresql.sh`. Ne pas lancer `docker compose up` directement avant la mise à jour : le démarrage est refusé tant que la base n'est pas migrée.
 - **Node 24 → 26** dans les images : aucune action sur le serveur.
 - **Migration SQL 021** (catalogue de configuration, additive, appliquée automatiquement au démarrage) ; aucune donnée existante n’est modifiée.
