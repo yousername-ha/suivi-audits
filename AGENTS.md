@@ -81,3 +81,10 @@ Cette règle remplace l’ancienne organisation par dossier unique. Les proposit
 - Suivre `docs/ORGANISATION-LEGACY.md`, `docs/catalogue-fonctionnalites.json` et le `suivi.json` de chaque fonctionnalité. Mettre à jour tous les liens et manifestes après déplacement.
 - Les dossiers transversaux préparatoires sont dans `fonctionnalites-en-developpement/_dossiers-transversaux/`. Le prototype commun est dans `fonctionnalites-en-developpement/_prototype-transversal/`.
 - Conserver les ZIP téléchargeables, les versions utiles et les preuves. L’IA de codage reste limitée à sa propre branche ; legacy lui sert de référence en lecture.
+
+## Numérotation stable des fonctionnalités — demande utilisateur
+
+- Chaque fonctionnalité a son propre dossier `NNN-identifiant`, par exemple `003-ebios-rm`, conservé à l’identique lors des passages entre les trois étapes.
+- La liste séparée `LISTE-FONCTIONNALITES.md` présente numéro, nom, description courte, étape et lien vers le dossier. Elle est générée depuis `docs/catalogue-fonctionnalites.json` par `python scripts/generer_liste_fonctionnalites.py`.
+- Pour une nouvelle fonctionnalité, attribuer `prochainNumero` (sur au moins trois chiffres), puis incrémenter ce compteur. Ne jamais réattribuer ni renuméroter un numéro existant. Conserver une entrée d’historique si une fonctionnalité est retirée.
+- Mettre à jour le catalogue, la liste, les liens et `suivi.json` après chaque création, changement de nom, description ou étape. Les dossiers préfixés `_` sont des ressources communes ou modèles, pas des fonctionnalités supplémentaires.

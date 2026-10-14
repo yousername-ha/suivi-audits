@@ -10,7 +10,7 @@ Trois dossiers correspondent aux trois étapes demandées par l’utilisateur. L
 
 ## 1. Concevoir et tester
 
-Commencer dans `fonctionnalites-en-developpement/<fonctionnalite>/`. Utiliser le [modèle](../fonctionnalites-en-developpement/_modele/README.md), créer une version `maquettes/vNNN-description/`, garder les versions utiles et les images. Renseigner le [catalogue commun](catalogue-fonctionnalites.json) et `suivi.json`.
+Commencer dans `fonctionnalites-en-developpement/<NNN-fonctionnalite>/`. Utiliser le [modèle](../fonctionnalites-en-developpement/_modele/README.md), créer une version `maquettes/vNNN-description/`, garder les versions utiles et les images. Renseigner le [catalogue commun](catalogue-fonctionnalites.json) et `suivi.json`.
 
 Publier les ZIP de test dans `downloads/` sur GitHub dès qu’ils sont testables, avec BAT, guide et empreinte SHA-256. Ne pas attendre la validation utilisateur pour publier. Une publication ou des tests réussis ne valent pas validation de la maquette.
 
@@ -28,13 +28,13 @@ Après accord explicite de l’utilisateur, consigner dans `suivi.json` la date,
 - plan de réalisation, recette, résultats réellement exécutés et prompt de codage ;
 - ZIP complet, lanceur, inventaire des fichiers et empreintes.
 
-Déplacer ensuite **tout le dossier** dans `fonctionnalites-a-implementer/<fonctionnalite>/`. Mettre à jour chemins, liens, catalogue, manifestes et historique. Une validation partielle ne valide que son périmètre : laisser le reste en développement. Référencer les ressources communes par une version ou un SHA précis.
+Déplacer ensuite **tout le dossier** dans `fonctionnalites-a-implementer/<NNN-fonctionnalite>/`. Mettre à jour chemins, liens, catalogue, manifestes et historique. Une validation partielle ne valide que son périmètre : laisser le reste en développement. Référencer les ressources communes par une version ou un SHA précis.
 
 L’IA de codage travaille exclusivement sur **sa propre branche** ; `origin/legacy` est sa référence en lecture. Elle ne fusionne, ne déploie et ne modifie pas la branche legacy. Le déplacement documentaire sur legacy est assuré ici.
 
 ## 3. Clore l’intégration
 
-Quand l’intégration est terminée et vérifiée, consigner dans `suivi.json` la branche d’implémentation, le SHA exact, le périmètre livré, les résultats de recette et la référence de confirmation. Déplacer le dossier dans `fonctionnalites-implementees/<fonctionnalite>/` et actualiser le catalogue et les liens. Une maquette fonctionnelle seule ne constitue pas une implémentation dans l’application.
+Quand l’intégration est terminée et vérifiée, consigner dans `suivi.json` la branche d’implémentation, le SHA exact, le périmètre livré, les résultats de recette et la référence de confirmation. Déplacer le dossier dans `fonctionnalites-implementees/<NNN-fonctionnalite>/` et actualiser le catalogue et les liens. Une maquette fonctionnelle seule ne constitue pas une implémentation dans l’application.
 
 Les fonctions déjà présentes historiquement dans l’application ne prouvent pas que les nouvelles maquettes sont intégrées. Les 20 propositions actuelles restent donc en développement. Aucun dossier n’est déclaré prêt à coder ou implémenté par cette réorganisation.
 
@@ -50,3 +50,18 @@ Le catalogue est centralisé dans `docs/catalogue-fonctionnalites.json`, indépe
 Les liens existants des ZIP dans `downloads/` restent stables. Les archives, PDF et rapports antérieurs restent des instantanés datés ; leurs chemins internes peuvent refléter l’organisation d’origine. Les documents Markdown courants et le catalogue indiquent les chemins actuels. Conserver les versions utiles dans Git.
 
 Le code métier et les lanceurs historiques restent à leur place. La cartographie dynamique demeure protégée. Les références partagées restent dans `references/`. Aucun déploiement, fusion ou CI n’est déclenché par cette organisation.
+
+## Numéros et liste séparée
+
+Chaque fonctionnalité possède un dossier `NNN-identifiant`, par exemple `001-tableau-de-bord`, `002-gestion-risques` et `003-ebios-rm`. Ce numéro est permanent, sans rapport avec l’étape, la priorité ou la version de la maquette. Le déplacement entre étapes conserve le nom complet du dossier.
+
+La [liste séparée](../LISTE-FONCTIONNALITES.md) contient le numéro, le nom, une courte description, l’étape et un lien direct vers chaque dossier. Le catalogue JSON en est la source ; son compteur `prochainNumero` indique le prochain numéro libre (021 après les vingt premières entrées). Ne jamais réutiliser un ancien numéro.
+
+Après toute modification du catalogue :
+
+```sh
+python scripts/generer_liste_fonctionnalites.py
+python scripts/verifier_structure.py
+```
+
+Les répertoires `_modele`, `_dossiers-transversaux` et `_prototype-transversal` regroupent des ressources partagées et ne reçoivent pas de numéro de fonctionnalité.

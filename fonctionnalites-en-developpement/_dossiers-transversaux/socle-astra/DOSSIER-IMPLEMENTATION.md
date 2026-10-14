@@ -98,7 +98,7 @@ Ne pas ajouter implicitement un moteur de rappels, d’envoi d’emails, de work
 
 **Cette consigne prévaut sur la vue 03 de la série 14 pour la matrice.** Elle concerne la destination `risk-map`, `tab: 'risks'`, `riskView: 'map'` et sa vue ASTRA `matrix`, pas le module cartographique protégé.
 
-[Aperçu corrigé — matrice et légende](../../gestion-risques/maquettes/v001-matrice/images/002-matrice-corrigee-detail.png) · [Vue complète](../../gestion-risques/maquettes/v001-matrice/images/001-matrice-corrigee-vue-complete.png).
+[Aperçu corrigé — matrice et légende](../../002-gestion-risques/maquettes/v001-matrice/images/002-matrice-corrigee-detail.png) · [Vue complète](../../002-gestion-risques/maquettes/v001-matrice/images/001-matrice-corrigee-vue-complete.png).
 
 ### Rendu attendu
 
