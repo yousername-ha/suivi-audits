@@ -217,7 +217,9 @@ if semver "$ACTUELLE"; then
 else
   avertir "version en service non numérotée (« $ACTUELLE ») : impossible de vérifier qu'il s'agit d'une montée de version."
 fi
-taille_base=$(du -sbc "$DATA_DIR/postgres" "$DATA_DIR/postgres18" 2> /dev/null | tail -n 1 | cut -f1 || echo 0)
+# Somme des deux dossiers (un seul existe avant la migration vers PostgreSQL 18) : « du » sort en erreur si l'un manque,
+# ce qui, avec pipefail, ajouterait une seconde ligne à la valeur.
+taille_base=$(du -sb "$DATA_DIR/postgres" "$DATA_DIR/postgres18" 2> /dev/null | awk '{ s += $1 } END { print s + 0 }' || true)
 for v in $(anciens_volumes); do
   case "$v" in *_pgdata) taille_base=$(du -sb "$(docker volume inspect -f '{{.Mountpoint}}' "$v")" | cut -f1) ;; esac
 done

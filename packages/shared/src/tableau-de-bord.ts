@@ -162,7 +162,7 @@ export function analyserValeurIndicateur(ind: Obj, saisie: string): string | num
   if (!brut) return null;
   if (ind.dir === '=' || /^(oui|non)$/i.test(brut))
     return /^oui$/i.test(brut) ? 'Oui' : /^non$/i.test(brut) ? 'Non' : brut;
-  let n = parseFloat(brut.replace(',', '.').replace('%', ''));
+  let n = parseFloat(brut.replace(',', '.').replace(/%/g, ''));
   if (Number.isNaN(n)) return brut;
   const taux = typeof ind.target === 'number' && ind.target > 0 && ind.target <= 1;
   if (taux && (brut.includes('%') || n > 1)) n = n / 100;

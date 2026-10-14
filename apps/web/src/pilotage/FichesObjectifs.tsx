@@ -56,7 +56,7 @@ export function useEcriture(smsi: string) {
 export function analyserCible(saisie: string, dir: string): string | number {
   const brut = saisie.trim().replace(/\s+/g, ' ');
   if (!brut || dir === '=') return brut;
-  const n = parseFloat(brut.replace(',', '.').replace('%', ''));
+  const n = parseFloat(brut.replace(',', '.').replace(/%/g, ''));
   if (Number.isNaN(n)) return brut;
   return brut.includes('%') ? Math.round(n * 10) / 1000 : n;
 }

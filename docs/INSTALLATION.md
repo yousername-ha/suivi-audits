@@ -628,6 +628,7 @@ Sautez cette étape si vous démarrez sans historique.
 
 **10.4 Charger un jeu de données de test (instance de test uniquement).** Pour évaluer la plateforme sans saisir de données réelles, l'API sait charger un jeu **fictif et cohérent** (processus, objectifs et indicateurs, parties intéressées, fournisseurs évalués, écarts, plans d'audit, revue de direction, référentiel de démonstration, méthode de risque et risques appréciés, actions, série récurrente, opportunités) :
 
+<!-- ci: skip — instance de test uniquement, jamais rejoué par le guide -->
 ```bash
 sudo docker compose exec app suivi jeu-de-test <compte administrateur> --confirmer
 ```
@@ -636,6 +637,7 @@ Le chargement n'est jamais automatique : il est **refusé si le pilotage n'est p
 
 **10.5 Contrôler les relations entre les données.** Après un import, un chargement ou une migration :
 
+<!-- ci: skip — contrôle d'exploitation, couvert par les tests de la CLI -->
 ```bash
 sudo docker compose exec app suivi controle-relations --anomalies
 ```
