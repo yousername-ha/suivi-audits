@@ -1,7 +1,7 @@
-# Intégration de Normand’e-Santé — étape intermédiaire
+# Référence visuelle retenue — style 08
 
-Aperçu généré à partir de la capture fournie, avec signature discrète et premier assombrissement du turquoise. L’utilisateur a ensuite demandé une nuance plus sombre.
+L’image ci-dessous est la référence explicitement retenue par l’utilisateur : vert forêt, fond clair, touches turquoise et signature Normand’e-Santé.
 
-**Cette image est une étape historique, pas la palette finale.** La référence technique retenue est dans le [dossier de la série 09](../2026-10-12-astra-09/README.md), accent `#236B70`. Aucune modification de l’application ou de la cartographie.
+Le [dossier courant](../2026-10-13-astra-15/README.md) et les [30 vues](../2026-10-13-astra-14/README.md) la déclinent. Cette mention remplace l’ancienne indication d’étape intermédiaire, devenue obsolète après le choix explicite de l’utilisateur.
 
-![Étape intermédiaire](02-turquoise-assombri.png)
+![Référence 08](02-turquoise-assombri.png)

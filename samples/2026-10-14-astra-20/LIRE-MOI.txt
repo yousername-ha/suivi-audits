@@ -1,0 +1,23 @@
+MAQUETTE EBIOS RM - WINDOWS
+
+1. Telechargez le ZIP et choisissez "Extraire tout".
+2. Ouvrez le dossier extrait EBIOS-RM-maquette-Windows.
+3. Double-cliquez sur DEMARRER.bat.
+4. Ouvrez "Scenario visuel", puis choisissez un chemin 1, 2 ou 3.
+
+Les fleches du chemin selectionne sont animees dans le sens du parcours.
+Les blocs de ce chemin ont un contour renforce. "Pause du flux" suspend
+l'animation. Le reglage d'accessibilite de reduction des mouvements est respecte.
+
+Aucune installation de Python ou Node n'est necessaire. Le lanceur ouvre
+index.html dans votre navigateur par defaut. Vous pouvez aussi ouvrir ce
+fichier directement. Les notes restent locales dans ce navigateur.
+Les liens de sources ANSSI necessitent Internet ; la maquette fonctionne
+hors ligne. Si votre navigateur est gere par une organisation et interdit
+les fichiers locaux, utilisez un navigateur autorise ou un serveur local.
+
+Ceci est la maquette EBIOS RM, pas l'application metier complete.
+Les donnees illustrees viennent du cas pedagogique ANSSI.
+
+Verification : interface et animations testees dans Chromium sur Linux.
+Le fichier BAT a ete controle statiquement ; pas d'execution Windows disponible.

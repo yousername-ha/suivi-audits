@@ -53,3 +53,11 @@ Le contrôle de préparation de la branche est documenté séparément.
 - Ne pas écraser ni supprimer les séries précédentes, même lors d’un nettoyage,
   tant que l’utilisateur n’en a pas explicitement demandé la suppression.
 - Utiliser uniquement des données fictives et conserver les images originales.
+
+## Nettoyage des aperçus autorisé par l’utilisateur
+
+La demande « nettoie le github des sample qui ne servent plus » autorise le retrait
+des séries obsolètes de l’arbre courant de `legacy`. Le nettoyage associé à la
+série 20 conserve les références 08, 14, 15, 16 et la maquette courante 20.
+Les anciennes séries restent récupérables dans l’historique Git, sans réécriture
+de cet historique ni modification d’autres branches. Voir `samples/NETTOYAGE.md`.

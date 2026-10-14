@@ -2,7 +2,7 @@
 
 **13 octobre 2026 · Branche `legacy` · Référence applicative `ae11bac6d8398cd145951f0d93492c85a857e367`.**
 
-La [série 08](../2026-10-12-astra-08/02-turquoise-assombri.png) est la référence visuelle explicitement retenue. Cette décision remplace l’ancienne mention « étape intermédiaire » de son README, conservé pour historique.
+La [série 08](../2026-10-12-astra-08/02-turquoise-assombri.png) est la référence visuelle explicitement retenue. Son README confirme désormais ce choix.
 
 **Cette livraison sert à valider le rendu avant de refaire le dossier d’implémentation.** 30 PNG distincts, en 1600 × 1100 px, transposent le vert profond, le fond clair chaud, les accents turquoise et la signature Normand’e-Santé sur les vues réelles. La disposition des modules est adaptée à leur contenu : ce ne sont pas des copies pixel à pixel du cockpit de référence.
 
