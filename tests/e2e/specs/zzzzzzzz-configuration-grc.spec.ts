@@ -3,23 +3,28 @@
 import { expect, test } from '@playwright/test';
 import { sessionAdmin, watchPage } from '../helpers';
 
-test('Configuration GRC : modèle adopté, échelle créée et publiée, mêmes éléments côté analyses', async ({ browser }) => {
+test('Configuration GRC : modèle adopté, échelle créée et publiée, mêmes éléments côté analyses', async ({
+  browser,
+}) => {
   const ctx = await browser.newContext({ storageState: (await sessionAdmin(browser)).state, ignoreHTTPSErrors: true });
   const page = await ctx.newPage(),
     problems = watchPage(page);
   try {
     await page.goto('/parametres');
-    await page.getByRole('navigation', { name: 'Sections des paramètres' }).getByRole('link', { name: 'Configuration GRC' }).click();
+    await page
+      .getByRole('navigation', { name: 'Sections des paramètres' })
+      .getByRole('link', { name: 'Configuration GRC' })
+      .click();
     await expect(page.getByRole('heading', { name: 'Configuration GRC' })).toBeVisible();
     await expect(page.getByText('Le catalogue est vide à l’installation')).toBeVisible();
 
     // Modèle de pertinence : adopté à la demande, jamais livré par défaut.
     await page.getByRole('tab', { name: 'Modèles' }).click();
-    await expect(page.getByText('À valider')).toBeVisible();
+    await expect(page.getByText('À valider', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Adopter ce modèle' }).click();
     await expect(page.getByText('Aucune différence de niveaux').or(page.getByText('Fermer la fiche'))).toBeVisible();
     await page.getByRole('tab', { name: 'Échelles' }).click();
-    await expect(page.getByRole('table', { name: 'Échelles' }).locator('tbody tr')).toHaveCount(3);
+    await expect(page.getByRole('region', { name: 'Échelles' }).locator('tbody tr')).toHaveCount(3);
 
     // La matrice adoptée est complète (9 résultats) et épinglée à ses trois échelles.
     await page.getByRole('tab', { name: 'Matrices' }).click();
@@ -41,8 +46,11 @@ test('Configuration GRC : modèle adopté, échelle créée et publiée, mêmes 
       await niveaux.press('Enter');
     }
     await nouveau.getByRole('button', { name: 'Créer le brouillon' }).click();
-    await expect(page.getByText('Brouillon')).toBeVisible();
-    await page.getByRole('textbox', { name: 'Description du niveau' }).first().fill('Gêne passagère sans conséquence durable.');
+    await expect(page.getByText('Brouillon', { exact: true })).toBeVisible();
+    await page
+      .getByRole('textbox', { name: 'Description du niveau' })
+      .first()
+      .fill('Gêne passagère sans conséquence durable.');
     await page.getByRole('button', { name: 'Enregistrer le brouillon' }).click();
     await page.getByRole('button', { name: 'Simuler et publier' }).click();
     const publier = page.getByRole('dialog');
@@ -55,7 +63,7 @@ test('Configuration GRC : modèle adopté, échelle créée et publiée, mêmes 
     // Mêmes éléments sous Gestion des risques → Configuration des analyses.
     await page.goto('/pilotage/configuration-analyses');
     await expect(page.getByRole('heading', { name: 'Configuration des analyses' })).toBeVisible();
-    await expect(page.getByRole('table', { name: 'Échelles' }).getByText('Gravité fictive de recette')).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Échelles' }).getByText('Gravité fictive de recette')).toBeVisible();
     expect(problems).toEqual([]);
   } finally {
     await ctx.close();
