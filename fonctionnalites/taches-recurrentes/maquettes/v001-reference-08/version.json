@@ -1,0 +1,15 @@
+{
+  "id": "v001-reference-08",
+  "statut": "a-valider",
+  "validationUtilisateur": null,
+  "sourceCommit": "e4042009962bab09169624d7413f044addf737be",
+  "type": "apercus-statiques",
+  "references": [
+    "references/vues-modules/images/026-recurring-list.png",
+    "references/vues-modules/images/027-recurring-kanban.png",
+    "references/vues-modules/images/028-recurring-planning.png",
+    "references/vues-modules/images/029-recurring-calendar.png",
+    "references/vues-modules/images/030-recurring-fiche-historique.png"
+  ],
+  "versionPrecedente": null
+}

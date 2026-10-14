@@ -1,0 +1,11 @@
+{
+  "id": "v001-parcours-anime",
+  "statut": "a-valider",
+  "validationUtilisateur": null,
+  "sourceCommit": "e4042009962bab09169624d7413f044addf737be",
+  "type": "prototype-interactif",
+  "references": [
+    "references/vues-modules/images/004-risks-risk-studies.png"
+  ],
+  "versionPrecedente": null
+}

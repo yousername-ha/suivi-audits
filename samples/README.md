@@ -1,13 +1,13 @@
-# Aperçus ASTRA — références actuelles
+# Les maquettes sont désormais classées par fonctionnalité
 
-Les anciennes explorations ont été retirées de l’arbre courant de `legacy` à la demande de l’utilisateur. Les références utiles au dossier d’implémentation sont conservées ; l’historique Git reste intact.
+**[Ouvrir le catalogue](../fonctionnalites/README.md)** · [Dossier d’implémentation commun](../implementation/socle-astra/README.md) · [Téléchargements](../downloads/README.md).
 
-| Série | Usage |
+| Ancienne série | Nouvel emplacement |
 | --- | --- |
-| [20 — EBIOS RM animé](2026-10-14-astra-20/README.md) | Maquette courante : parcours, risques, matrice, cercle, scénarios et pictogrammes |
-| [08 — Style retenu](2026-10-12-astra-08/README.md) | Référence visuelle principale |
-| [14 — 30 vues](2026-10-13-astra-14/README.md) | Déclinaisons des modules, actions et tâches récurrentes |
-| [15 — Dossier d’implémentation](2026-10-13-astra-15/README.md) | Dossier et prompt courants |
-| [16 — Matrice corrigée](2026-10-13-astra-16/README.md) | Référence de la matrice des risques |
+| 08 · style retenu | [references/style-08](../references/style-08/README.md) |
+| 14 · 30 vues | [references/vues-modules](../references/vues-modules/README.md) |
+| 15 · dossier consolidé | [implementation/socle-astra](../implementation/socle-astra/README.md) |
+| 16 · matrice corrigée | [gestion-risques / v001-matrice](../fonctionnalites/gestion-risques/maquettes/v001-matrice/README.md) |
+| 20 · EBIOS RM | [ebios-rm / v001-parcours-anime](../fonctionnalites/ebios-rm/maquettes/v001-parcours-anime/README.md) |
 
-**[ZIP Windows et lanceur BAT](../downloads/README.md)** · [Détail du nettoyage](NETTOYAGE.md).
+Les captures originales ont été déplacées, pas régénérées. [Relevé du nettoyage précédent](NETTOYAGE.md). L’historique Git conserve les anciens chemins.

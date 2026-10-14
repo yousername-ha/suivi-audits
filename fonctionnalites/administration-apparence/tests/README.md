@@ -1,0 +1,15 @@
+# Tests — Administration et apparence globale
+
+## Maquette
+
+[Résultats techniques disponibles](../../../references/vues-modules/technique/verification.json). Ils décrivent la capture ou le prototype à la date et sur la version indiquées dans le fichier ; ils ne prouvent pas la recette d’une future intégration.
+
+## À vérifier lors de l’intégration
+
+Vérifier le choix global des deux styles, les droits administrateur, la persistance serveur, les sessions concurrentes et la conservation des cartographies protégées.
+
+Suivre aussi la [recette commune](../../../implementation/socle-astra/RECETTE.md). Consigner le SHA testé, l’environnement, le résultat et les anomalies dans un nouveau rapport daté. Ne pas remplacer les résultats précédents.
+
+## Validation utilisateur
+
+**Non consignée pour cette version dans cette réorganisation.** Ajouter la décision explicite et sa date dans `maquettes/v001-reference-08/version.json` ; ne pas transformer automatiquement des tests réussis en validation.

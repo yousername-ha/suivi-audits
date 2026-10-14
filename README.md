@@ -1,6 +1,14 @@
 # ASTRA — refonte GRC locale
 
-[Consulter les captures et leur historique](samples/README.md).
+## Travailler par fonctionnalité
+
+**[Ouvrir le catalogue des fonctionnalités](fonctionnalites/README.md)** : maquettes versionnées, tests et consignes d’implémentation.
+
+- [Tester EBIOS RM](fonctionnalites/ebios-rm/README.md) · [ZIP Windows avec BAT](downloads/README.md).
+- [Dossier technique commun](implementation/socle-astra/README.md) · [Références visuelles](references/README.md).
+- [Ajouter une nouvelle version de maquette](docs/ORGANISATION-LEGACY.md).
+
+La maquette EBIOS RM est autonome. Les instructions ci-dessous concernent l’application métier historique, dont le lanceur et les chemins sont conservés.
 
 Cette livraison est prête à lancer après extraction : voir [LIRE-MOI-ASTRA.txt](LIRE-MOI-ASTRA.txt).
 La navigation, les vues et leurs limites sont détaillées dans [la documentation ASTRA](docs/ASTRA-REFONTE.md).

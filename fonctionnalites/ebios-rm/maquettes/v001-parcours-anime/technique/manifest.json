@@ -1,0 +1,114 @@
+{
+  "feature": "ebios-rm",
+  "version": "v001-parcours-anime",
+  "files": {
+    "DEMARRER.bat": {
+      "bytes": 362,
+      "sha256": "f4f69e32ff46496fa665f38be0d72d0044122332686af4d65b0d7846c761b7b8"
+    },
+    "LIRE-MOI.txt": {
+      "bytes": 1447,
+      "sha256": "00b0f029a23e908dff1fe3f31231f33a1f0face11fd5930885b997e8a2e14085"
+    },
+    "PARCOURS-DE-TEST.md": {
+      "bytes": 4996,
+      "sha256": "2dd9b934638ee27cc62f89bc198937499889166be079664ab0ad2573584b3345"
+    },
+    "README.md": {
+      "bytes": 3210,
+      "sha256": "15085cff0a6d68b73d0bded397ea815653b88827792749536d5c510769ccecc3"
+    },
+    "SOURCES-PARCOURS.md": {
+      "bytes": 8877,
+      "sha256": "ded2c1be9f716f221522ca427315afe8ad1173b81310db236d334dfab488a49d"
+    },
+    "SOURCES.md": {
+      "bytes": 4601,
+      "sha256": "fe7a1dcc5a9367497632caa3a86be6388615eb0d70317013f8ff224a1fcb4ab5"
+    },
+    "TESTER-PARCOURS-COMPLET.bat": {
+      "bytes": 237,
+      "sha256": "c159920e04163e6a38b0bcb7a91cac33b1a8edf55291fca9d807f8691000bca7"
+    },
+    "app.js": {
+      "bytes": 10224,
+      "sha256": "bd4fa29b1b50fefeb8d76f703aa02bc64b02bb7e55061ec3dce4029cb0453acb"
+    },
+    "contenu.js": {
+      "bytes": 11783,
+      "sha256": "3495399686eadd24e41593f8dfbb9e3fd57f0dab9e7fe69bcabd3d6fc5ce18d0"
+    },
+    "galerie.html": {
+      "bytes": 1573,
+      "sha256": "2052cc5ac04ff5fb94293e73c999c184005b7cb9606a17f9185d725dd8ef8d77"
+    },
+    "images/01-suivi-risques.png": {
+      "bytes": 382001,
+      "sha256": "e29c80b77e3f4112d84af70dc7b8f0528fbdf7c7da081432f84ac2c9e8dadef2"
+    },
+    "images/02-scenario-visuel.png": {
+      "bytes": 345460,
+      "sha256": "920bc041fd2dca1f452f9a6e0e221e50da033c8e974c78a56119d0bb1b27376b"
+    },
+    "images/03-risque-laboratoire.png": {
+      "bytes": 381243,
+      "sha256": "7299e6e820ec195f4841e0849cdafeaf96b33ad5422e2800ae3ce21dba0cb38a"
+    },
+    "images/04-risque-production.png": {
+      "bytes": 381358,
+      "sha256": "83121e5611ee971e64772b65df296d849fba7d550626c9d26367415219458366"
+    },
+    "images/05-chemin-intrusion.png": {
+      "bytes": 365981,
+      "sha256": "0edab22da95d63a63020004b0ba7bb1378f60ce13b24bd153c95ae33f7d4a93b"
+    },
+    "images/06-chemin-personnel.png": {
+      "bytes": 345148,
+      "sha256": "b2ded649c0b467a5092a8e15d2b419dd050cdef4785bb97d439550730c3069d5"
+    },
+    "images/07-palette-pictogrammes.png": {
+      "bytes": 52509,
+      "sha256": "193343a2f114035c987dbf96a147385564ab54000bf720b0a048679688a25137"
+    },
+    "index.html": {
+      "bytes": 3632,
+      "sha256": "f7cdd7597a9b8a212e40fb39ac400abaad6b6070e61bc2ae1e296e4fedc48292"
+    },
+    "parcours-complet.html": {
+      "bytes": 300,
+      "sha256": "4dcce39fb0cee2a72ada2e6c8bb568470fd4c7faa03da3f2c6f0422c7a6bea0c"
+    },
+    "pictogrammes.js": {
+      "bytes": 4211,
+      "sha256": "bb4cc6cc910e1841dbd6f71d179c5f0e06fd73d57069b855e6ca2e4e1bebf436"
+    },
+    "style.css": {
+      "bytes": 24379,
+      "sha256": "1010648989e8db1a06767a54460ae2e994d0fecd0ba45739d069648ad67a12c8"
+    },
+    "technique/capturer.cjs": {
+      "bytes": 5644,
+      "sha256": "de957b77ff5f48690b029dbff32b7780e3979b3f9241d7ff903575d57f54a87b"
+    },
+    "technique/parcours-complet.json": {
+      "bytes": 1377,
+      "sha256": "416431f1185ebc1bbb69ad4a400b7608ef80c303345ca69c35f31b278aadf235"
+    },
+    "technique/verification.json": {
+      "bytes": 654,
+      "sha256": "82ecb119b4536052d0f1537e6bc06db5684d2ef8b7a7fce113497080f502d3b0"
+    },
+    "technique/vues.json": {
+      "bytes": 693,
+      "sha256": "cc58b0bc99e4beb5ab7ed9602691833a8a66a4bf22c3a5444bdc212d06e2c4f2"
+    },
+    "version.json": {
+      "bytes": 304,
+      "sha256": "e3dbb9ca5fc3cb32150a2c04b39b80e306afa7e491453a96b950d20b4fb1945b"
+    },
+    "vues.js": {
+      "bytes": 16542,
+      "sha256": "362100249e3b3d5003184d38b5095a74bfe408402eedbe9b16bb873533b515cb"
+    }
+  }
+}

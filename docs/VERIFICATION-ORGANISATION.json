@@ -1,0 +1,24 @@
+{
+  "date": "2026-10-14",
+  "baseCommit": "e404200",
+  "workingTreeChanges": true,
+  "features": 18,
+  "localLinksChecked": 460,
+  "runtimeFilesUnchanged": 38,
+  "imagesMovedUnchanged": 41,
+  "scope": "Organisation documentaire et packaging ; code métier inchangé",
+  "ebiosReport": "fonctionnalites/ebios-rm/tests/2026-10-14-parcours-complet.json",
+  "checks": [
+    "Liens locaux des dossiers gérés",
+    "Catalogue et fiches de versions",
+    "Manifeste du dossier commun",
+    "Empreintes du code métier avant / après",
+    "Empreintes des images avant / après",
+    "Syntaxe des scripts de capture déplacés",
+    "Parcours EBIOS RM complet dans Chromium"
+  ],
+  "limitations": [
+    "Lanceurs BAT non exécutés sous Windows",
+    "Aucune validation métier ou utilisateur déduite des tests"
+  ]
+}

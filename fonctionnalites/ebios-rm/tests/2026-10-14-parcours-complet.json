@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-14",
+  "baseCommit": "e4042009962bab09169624d7413f044addf737be",
+  "workingTreeChanges": true,
+  "result": "passed",
+  "workshops": 5,
+  "steps": 18,
+  "savedNotesRestoredAfterReload": 36,
+  "riskSelections": 5,
+  "graphFilters": 3,
+  "sourceDocuments": 9,
+  "checks": [
+    "Entrée parcours-complet.html",
+    "Parcours séquentiel des 18 étapes et retour à la vue d’ensemble",
+    "36 notes enregistrées et restituées après rechargement",
+    "Liens de sources PDF à chaque étape",
+    "Tableau / matrice / cercle synchronisés",
+    "Trois chemins sélectionnables, flux et contours",
+    "Pause et reprise",
+    "Palette et sources au clavier",
+    "Retour au parcours",
+    "Aucune erreur JavaScript"
+  ],
+  "runtimeFiles": {
+    "index.html": "f7cdd7597a9b8a212e40fb39ac400abaad6b6070e61bc2ae1e296e4fedc48292",
+    "parcours-complet.html": "4dcce39fb0cee2a72ada2e6c8bb568470fd4c7faa03da3f2c6f0422c7a6bea0c",
+    "app.js": "bd4fa29b1b50fefeb8d76f703aa02bc64b02bb7e55061ec3dce4029cb0453acb",
+    "contenu.js": "3495399686eadd24e41593f8dfbb9e3fd57f0dab9e7fe69bcabd3d6fc5ce18d0",
+    "vues.js": "362100249e3b3d5003184d38b5095a74bfe408402eedbe9b16bb873533b515cb",
+    "pictogrammes.js": "bb4cc6cc910e1841dbd6f71d179c5f0e06fd73d57069b855e6ca2e4e1bebf436",
+    "style.css": "1010648989e8db1a06767a54460ae2e994d0fecd0ba45739d069648ad67a12c8"
+  }
+}

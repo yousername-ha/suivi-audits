@@ -42,22 +42,24 @@ Le contrôle de préparation de la branche est documenté séparément.
 
 - Ne modifier ni le fonctionnement ni l’interface de la cartographie dynamique
   du module cartographique. Cette restriction prévaut sur le périmètre de refonte
-  général décrit plus haut. Les propositions visuelles restent isolées dans `samples/`.
+  général décrit plus haut. Les propositions visuelles restent isolées dans `fonctionnalites/` et `references/`.
 
-## Historique des aperçus demandé par l’utilisateur
+## Organisation par fonctionnalité — demande du 14 octobre 2026
 
-- Conserver les captures d’interface dans `samples/` sur `legacy`.
-- Pour chaque nouvelle série, créer un dossier daté unique `AAAA-MM-JJ-astra-NN`,
-  ajouter une galerie et référencer le commit de l’application représentée.
-- Maintenir l’index `samples/README.md` à chaque ajout.
-- Ne pas écraser ni supprimer les séries précédentes, même lors d’un nettoyage,
-  tant que l’utilisateur n’en a pas explicitement demandé la suppression.
-- Utiliser uniquement des données fictives et conserver les images originales.
-
-## Nettoyage des aperçus autorisé par l’utilisateur
-
-La demande « nettoie le github des sample qui ne servent plus » autorise le retrait
-des séries obsolètes de l’arbre courant de `legacy`. Le nettoyage associé à la
-série 20 conserve les références 08, 14, 15, 16 et la maquette courante 20.
-Les anciennes séries restent récupérables dans l’historique Git, sans réécriture
-de cet historique ni modification d’autres branches. Voir `samples/NETTOYAGE.md`.
+- Point d’entrée : `fonctionnalites/README.md` et `docs/ORGANISATION-LEGACY.md`.
+- Chaque fonctionnalité possède `maquettes/`, `tests/` et `implementation/`.
+- Ajouter les nouvelles propositions dans une version `vNNN-description`, mettre à jour
+  le catalogue, le statut explicite, les références, les résultats et le téléchargement concerné.
+- Le dossier commun est `implementation/socle-astra/` ; les références partagées sont
+  dans `references/`. `samples/` conserve uniquement l’orientation et le relevé historique.
+- Préserver les versions utiles et les images originales. Les suppressions restent
+  soumises à une demande explicite ; le nettoyage des séries 01–19 a déjà été autorisé.
+- Les tests techniques ne valent pas validation utilisateur et une maquette ne prouve
+  pas une intégration métier. Ne jamais marquer une recette réussie sans exécution.
+- Conserver le lien stable `downloads/EBIOS-RM-maquette-Windows.zip` pour la maquette
+  courante et publier son empreinte SHA-256 lorsqu’elle est régénérée.
+- Ce travail de maquettes et d’organisation reste sur `legacy`. L’agent chargé de
+  l’implémentation utilise exclusivement sa propre branche dédiée, selon le prompt
+  commun et l’instruction explicite de l’utilisateur ; `legacy` est sa référence en lecture.
+- Ne modifier aucune cartographie dynamique, autre branche, donnée privée ni travail
+  local étranger à la tâche. Aucun déploiement, aucune CI ni fusion automatique.

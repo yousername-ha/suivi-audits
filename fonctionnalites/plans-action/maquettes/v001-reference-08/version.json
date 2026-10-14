@@ -1,0 +1,16 @@
+{
+  "id": "v001-reference-08",
+  "statut": "a-valider",
+  "validationUtilisateur": null,
+  "sourceCommit": "e4042009962bab09169624d7413f044addf737be",
+  "type": "apercus-statiques",
+  "references": [
+    "references/vues-modules/images/020-actions-list.png",
+    "references/vues-modules/images/021-actions-kanban.png",
+    "references/vues-modules/images/022-actions-planning.png",
+    "references/vues-modules/images/023-actions-calendar.png",
+    "references/vues-modules/images/024-actions-gantt.png",
+    "references/vues-modules/images/025-actions-summary.png"
+  ],
+  "versionPrecedente": null
+}
