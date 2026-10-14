@@ -28,7 +28,7 @@ export function usePertinence(smsi: string | undefined, studyRef: unknown) {
   return { def, rows: levels(rows.data), columns: levels(columns.data), result: levels(result.data) };
 }
 
-/** Section « Configuration de l'étude » de la fiche d'étude. */
+/** Section « Configuration de l'étude » de la fiche d'étude : éléments du catalogue épinglés à une version précise. */
 export function ConfigurationEtude({
   value,
   onChange,
@@ -38,18 +38,33 @@ export function ConfigurationEtude({
   onChange: (v: StudyConfiguration | null) => void;
   readonly: boolean;
 }) {
-  const ref = (value as StudyConfiguration | null | undefined)?.relevanceMatrix ?? null;
+  const conf = (value as Partial<StudyConfiguration> | null | undefined) ?? {};
+  const relevanceMatrix = conf.relevanceMatrix ?? null;
+  const severityMapping = conf.severityMapping ?? null;
+  const maj = (patch: Partial<StudyConfiguration>) => {
+    const next = { relevanceMatrix, severityMapping, ...patch };
+    onChange(next.relevanceMatrix || next.severityMapping ? next : null);
+  };
   return (
     <Stack>
       <Text fw={600}>Configuration de l’étude</Text>
       <SelecteurElement
-        label="Matrice de pertinence des couples source de risque / objectif visé"
+        label="Correspondance impact → gravité (atelier 1)"
+        description="Échelle de départ : impacts ; échelle d’arrivée : gravité. Épinglée à une version précise."
+        kind="mapping"
+        family="ebios_rm"
+        disabled={readonly}
+        value={severityMapping}
+        onChange={(r: CfgRef | null) => maj({ severityMapping: r })}
+      />
+      <SelecteurElement
+        label="Matrice de pertinence des couples source de risque / objectif visé (atelier 2)"
         description="Épinglée à une version précise : modifier la matrice plus tard ne change pas cette étude. Les modèles sont à adopter dans Paramètres → Configuration GRC → Modèles."
         kind="matrix"
         family="ebios_rm"
         disabled={readonly}
-        value={ref}
-        onChange={(r: CfgRef | null) => onChange(r ? { relevanceMatrix: r } : null)}
+        value={relevanceMatrix}
+        onChange={(r: CfgRef | null) => maj({ relevanceMatrix: r })}
       />
     </Stack>
   );

@@ -75,6 +75,8 @@ export const StudyConfiguration = z
   .object({
     /** Matrice de pertinence des couples source de risque / objectif visé (lignes : ressources, colonnes : motivation). */
     relevanceMatrix: CfgRef.nullable().default(null),
+    /** Correspondance impact → gravité (atelier 1) : l'échelle de départ porte les niveaux d'impact, celle d'arrivée la gravité. */
+    severityMapping: CfgRef.nullable().default(null),
   })
   .strict();
 export type StudyConfiguration = z.infer<typeof StudyConfiguration>;
@@ -130,6 +132,13 @@ export const FearedEventData = common
       .max(5)
       .default([]),
     gravity: niveau,
+    /** Impacts relevés sur l'échelle de départ de la correspondance épinglée par l'étude (catégorie facultative). */
+    impactLevels: z
+      .array(z.object({ category: GrcKey.nullable().default(null), level: GrcKey }).strict())
+      .max(50)
+      .default([]),
+    /** Gravité retenue sur l'échelle d'arrivée ; la gravité proposée est le résultat de l'agrégation des impacts. */
+    severityLevel: GrcKey.nullable().default(null),
     // Champs texte historiques du formulaire générique, conservés tels quels.
     severity: z.string().max(10000).optional(),
     businessValue: z.string().max(10000).optional(),

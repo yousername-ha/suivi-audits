@@ -102,7 +102,7 @@ export interface MethodBindingsResolver {
   checkAnalysisPin(
     smsi: string,
     ref: CfgRef,
-    kind: 'scale' | 'matrix',
+    kind: 'scale' | 'matrix' | 'mapping',
     family: 'ebios_rm' | 'iso27005' | 'mehari' | 'custom',
     already: CfgRef | null,
     c: Client,
@@ -114,10 +114,15 @@ export interface MethodBindingsResolver {
     refs: CfgRef[],
   ): Promise<void>;
 }
-/** Matrice de pertinence épinglée par une étude (champ facultatif `configuration`), ou null. */
-const studyMatrix = (data: Record<string, unknown>): CfgRef | null => {
+/** Éléments du catalogue épinglés par une étude (champ facultatif `configuration`) : matrice de pertinence et correspondance
+    impact → gravité. */
+const studyPins = (data: Record<string, unknown>): { ref: CfgRef; kind: 'matrix' | 'mapping' }[] => {
   const c = StudyConfiguration.safeParse(data.configuration);
-  return c.success ? c.data.relevanceMatrix : null;
+  if (!c.success) return [];
+  return [
+    ...(c.data.relevanceMatrix ? [{ ref: c.data.relevanceMatrix, kind: 'matrix' as const }] : []),
+    ...(c.data.severityMapping ? [{ ref: c.data.severityMapping, kind: 'mapping' as const }] : []),
+  ];
 };
 export class Grc {
   methodBindings?: MethodBindingsResolver;
@@ -586,30 +591,37 @@ export class Grc {
       throw new HttpError(422, 'Fréquence absente de la politique publiée.');
     return data;
   }
-  /** Liaison de configuration d'une étude EBIOS RM (ADR 0038) : la matrice épinglée doit exister, être visible et convenir. */
+  /** Liaison de configuration d'une étude EBIOS RM (ADR 0038) : chaque élément épinglé doit exister, être visible et convenir. */
   private async checkStudyConfiguration(
     smsi: string,
     data: Record<string, unknown>,
     previous: GrcObject | undefined,
     c: Client,
   ) {
-    const ref = studyMatrix(data);
-    if (!ref) return;
+    const pins = studyPins(data);
+    if (!pins.length) return;
     if (!this.methodBindings) throw new HttpError(503, 'Catalogue de configuration indisponible.');
-    await this.methodBindings.checkAnalysisPin(
-      smsi,
-      ref,
-      'matrix',
-      'ebios_rm',
-      previous ? studyMatrix(previous.data) : null,
-      c,
-    );
+    const before = previous ? studyPins(previous.data) : [];
+    for (const { ref, kind } of pins)
+      await this.methodBindings.checkAnalysisPin(
+        smsi,
+        ref,
+        kind,
+        'ebios_rm',
+        before.find((x) => x.kind === kind)?.ref ?? null,
+        c,
+      );
   }
   /** Usage « analyse » du catalogue : l'étude épingle (élément, version) ; l'enregistrement est immuable. */
   private async recordStudyUsage(c: Client, o: GrcObject, user: { username: string }) {
-    const ref = o.kind === 'risk_study' ? studyMatrix(o.data) : null;
-    if (ref && this.methodBindings)
-      await this.methodBindings.recordUsage(c, user, { kind: 'analysis', id: o.id, version: o.version }, [ref]);
+    const pins = o.kind === 'risk_study' ? studyPins(o.data) : [];
+    if (pins.length && this.methodBindings)
+      await this.methodBindings.recordUsage(
+        c,
+        user,
+        { kind: 'analysis', id: o.id, version: o.version },
+        pins.map((x) => x.ref),
+      );
   }
   async createObject(smsi: string, input: GrcObjectBody, user: SessionUser, ip: string) {
     const body = GrcObjectBody.parse(input);

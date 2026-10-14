@@ -10,6 +10,7 @@ import {
   cfgTemplates,
   diffScales,
   instantiateTemplateDefinition,
+  MappingDefinition,
   MatrixDefinition,
   methodBindingRefs,
   parseCfgDefinition,
@@ -25,7 +26,6 @@ import {
   type CfgRef,
   type CfgScope,
   type CfgState,
-  type MappingDefinition,
 } from '@suivi/shared';
 import type { SessionUser } from './auth.js';
 import type { Client, Db } from './db/db.js';
@@ -678,10 +678,11 @@ export class ConfigGrc {
     const same = already && already.item === ref.item && already.version === ref.version;
     if (row.state === 'archived' && !same)
       throw new HttpError(422, `« ${row.key} » est archivé : il ne peut plus recevoir de nouvel usage.`);
-    const parsed =
-      kind === 'matrix' ? MatrixDefinition.safeParse(row.definition) : ScaleDefinition.safeParse(row.definition);
+    const parsed = (
+      kind === 'matrix' ? MatrixDefinition : kind === 'mapping' ? MappingDefinition : ScaleDefinition
+    ).safeParse(row.definition);
     if (!parsed.success) throw new HttpError(422, `« ${row.key} » : définition illisible.`);
-    if (!appliesToFamily(parsed.data.appliesTo, family))
+    if (!appliesToFamily((parsed.data as { appliesTo: AppliesTo }).appliesTo, family))
       throw new HttpError(422, `« ${row.key} » ne s’applique pas à la famille « ${family} ».`);
   }
 

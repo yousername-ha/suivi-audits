@@ -94,3 +94,82 @@ describe('étude liée à une matrice de pertinence', () => {
     expect(maj.statusCode, maj.body).toBe(200);
   });
 });
+
+describe('étude liée à une correspondance impact → gravité (atelier 1)', () => {
+  let correspondance: { item: string; version: number };
+  const publier = async (kind: string, key: string, definition: unknown) => {
+    const c = await a.post(`${cfg}/items`, { kind, key, definition });
+    expect(c.statusCode, c.body).toBe(201);
+    const id = c.json().id as string;
+    const p = (await a.post(`${cfg}/items/${id}/preview`)).json();
+    const r = await a.post(
+      `${cfg}/items/${id}/publish`,
+      { previewId: p.previewId, reason: 'Publication de contrôle', confirm: 'PUBLIER' },
+      { 'if-match': (await a.get(`${cfg}/items/${id}`)).headers.etag as string },
+    );
+    expect(r.statusCode, r.body).toBe(200);
+    return id;
+  };
+  const niveaux = (ids: string[]) => ids.map((id) => ({ id, label: id.toUpperCase(), description: '' }));
+  beforeAll(async () => {
+    const impact = await publier('scale', 'impact_etude', {
+      name: 'Impact',
+      category: 'impact',
+      nature: 'qualitative',
+      dimensions: [{ id: 'activite', label: 'Activité' }],
+      levels: niveaux(['i1', 'i2', 'i3']),
+    });
+    const gravite = await publier('scale', 'gravite_etude', {
+      name: 'Gravité',
+      category: 'severity',
+      nature: 'qualitative',
+      levels: niveaux(['g1', 'g2', 'g3', 'g4']),
+    });
+    const m = await publier('mapping', 'impact_vers_gravite', {
+      name: 'Impact vers gravité',
+      from: { item: impact, version: 1 },
+      to: { item: gravite, version: 1 },
+      pairs: [
+        { from: 'i1', to: 'g1' },
+        { from: 'i2', to: 'g3' },
+        { from: 'i3', to: 'g4' },
+      ],
+      aggregation: 'max',
+    });
+    correspondance = { item: m, version: 1 };
+  });
+
+  it('épingle la correspondance, enregistre l’usage et accepte les impacts et la gravité retenue', async () => {
+    const e = await etude({ severityMapping: correspondance }, 'Étude gravité');
+    expect(e.statusCode, e.body).toBe(200);
+    expect((await usages(correspondance.item)).some((x) => x.consumerId === e.json().id)).toBe(true);
+    const er = await a.post(root() + '/objects', {
+      kind: 'feared_event',
+      name: 'Événement fictif',
+      data: {
+        studyRef: 'object:' + e.json().id,
+        impactLevels: [
+          { category: 'activite', level: 'i1' },
+          { category: null, level: 'i2' },
+        ],
+        severityLevel: 'g3',
+      },
+    });
+    expect(er.statusCode, er.body).toBe(200);
+    expect(er.json().data.severityLevel).toBe('g3');
+    expect(er.json().data.impactLevels).toHaveLength(2);
+  });
+
+  it('refuse un élément qui n’est pas une correspondance et un champ inconnu dans un impact', async () => {
+    const mauvais = await etude({ severityMapping: matrice });
+    expect(mauvais.statusCode).toBe(422);
+    expect(mauvais.body).toMatch(/type attendu/);
+    const e = await etude({ severityMapping: correspondance }, 'Étude impacts');
+    const er = await a.post(root() + '/objects', {
+      kind: 'feared_event',
+      name: 'Événement invalide',
+      data: { studyRef: 'object:' + e.json().id, impactLevels: [{ level: 'i1', extra: 1 }] },
+    });
+    expect(er.statusCode).toBe(422);
+  });
+});
