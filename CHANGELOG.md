@@ -5,7 +5,19 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 ## [Non publié]
 
 ### Notes de mise à jour
-Aucune action.
+- **Migration SQL 021** (catalogue de configuration, additive, appliquée automatiquement au démarrage) ; aucune donnée existante n’est modifiée.
+- **Aucune autre action sur le serveur.**
+
+### Ajouté
+- **Catalogue de configuration GRC transversal** ([ADR 0038](docs/adr/0038-socle-de-configuration-grc-transversal.md), analyse dans [docs/refonte-grc](docs/refonte-grc/README.md)) : échelles, matrices, correspondances, critères et taxonomies **versionnés** (versions immuables, aperçu avec étude d'impact, publication confirmée avec motif, usages enregistrés, variantes dérivées, archivage), API `/api/config-grc/*`, droits existants réutilisés, **vide à l'installation** ; le lot « pertinence EBIOS RM » (ressources × motivation) peut être adopté à la demande, à valider. **Migration SQL 021** (additive). Les écrans d'administration arrivent dans un lot suivant.
+- **Méthodes de risque épinglées au catalogue** : une méthode peut épingler des échelles et une matrice (`bindings`) ; la version publiée embarque la copie résolue, les méthodes existantes ne changent pas. Une méthode épinglée n'est pas relisible par une version antérieure de l'application.
+- **Sélecteurs partagés** de responsable et de périmètre (une seule requête et un seul composant pour quatre écrans).
+- **Écrans de configuration GRC** : Paramètres → Configuration GRC et Gestion des risques → Configuration des analyses (mêmes données) : liste filtrée, création guidée, éditeurs sans JSON (niveaux décrits, grille de matrice, correspondances, critères, catégories), simulation avec étude d'impact, publication confirmée avec motif, versions, dépendances, variantes, archivage, adoption d'un modèle.
+- **Atelier 2 EBIOS RM sur le catalogue** : l'étude épingle une matrice de pertinence (version précise, usage « analyse » enregistré) ; le couple source de risque / objectif visé choisit ses niveaux sur les échelles de la matrice et reçoit la pertinence **proposée**, que l'analyste retient ou corrige en la justifiant. Une étude sans matrice garde l'échelle d'origine.
+- **Atelier 1 EBIOS RM sur le catalogue** : l'étude épingle une correspondance impact → gravité ; l'événement redouté relève ses impacts (catégorie et niveau) et reçoit la gravité **proposée** par agrégation (maximum, minimum ou unique selon la correspondance), que l'analyste retient ou corrige.
+- **Atelier 3** : une partie prenante de l'écosystème peut être liée à un fournisseur du registre (une seule fiche, pas de ressaisie).
+- **Éditeur de méthodes** : panneau « Éléments du catalogue » (échelles des dimensions, vraisemblance, niveaux de risque, matrice de calcul) pour les méthodes ISO/IEC 27005, MÉHARI, EBIOS RM et personnalisées ; la version publiée embarque une copie figée. Les méthodes déclarent aussi, facultativement, leurs **types d'objets** et leurs **livrables attendus** par étape.
+- **Migration explicite d'une étude** : quand une version plus récente d'une matrice ou d'une correspondance épinglée existe, la fiche d'étude affiche l'impact (résultats modifiés, niveaux déjà choisis qui n'existent plus, fiches concernées) ; la migration exige un motif et la confirmation « MIGRER », est journalisée et ne réécrit aucune évaluation. Une étude reste sur ses versions tant qu'on ne migre pas.
 
 ## [3.2.0] — 2026-10-14
 

@@ -27,6 +27,8 @@ import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
 import { Fields, type Source } from './Fields';
 import { Relations } from '../grc/Relations';
+import { MigrationEtude } from '../config-grc/MigrationEtude';
+import { SelecteurResponsable, useResponsables } from '../components/selecteurs';
 export function RecordEditor({
   smsi,
   kind,
@@ -57,11 +59,7 @@ export function RecordEditor({
     queryFn: () => get<{ items: Source[] }>(`/api/grc/${smsi}/sources?search=${encodeURIComponent(search)}`),
     enabled: opened,
   });
-  const owners = useQuery({
-    queryKey: ['grc', smsi, 'owners'],
-    queryFn: () => get<{ id: string; displayName: string; username: string }[]>(`/api/grc/${smsi}/owners`),
-    enabled: opened,
-  });
+  const owners = useResponsables(smsi, opened);
   const history = useQuery({
     queryKey: ['grc', smsi, 'history', object?.id],
     queryFn: () =>
@@ -186,16 +184,16 @@ export function RecordEditor({
                 onChange={(e) => set('description', e.currentTarget.value)}
                 disabled={readonly}
               />
-              <Select
-                label="Responsable"
-                searchable
-                clearable
-                data={(owners.data ?? []).map((o) => ({ value: o.id, label: o.displayName || o.username }))}
+              <SelecteurResponsable
+                smsi={smsi}
                 value={typeof data.ownerId === 'string' ? data.ownerId : null}
                 onChange={(v) => set('ownerId', v)}
                 disabled={readonly}
               />
               <Fields kind={kind} data={data} onChange={set} sources={options} readonly={readonly} smsi={smsi} />
+              {kind === 'risk_study' && object && !object.id.startsWith('legacy:') && (
+                <MigrationEtude smsi={smsi} study={object} readonly={readonly} onDone={onClose} />
+              )}
               {['control', 'evidence', 'measure'].includes(kind) && (
                 <Select
                   label={

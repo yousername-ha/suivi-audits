@@ -13,6 +13,7 @@ import { LegacyStore } from './legacy/store.js';
 import { Bus, Presence } from './realtime.js';
 import { Vault } from './security/crypto.js';
 import { Settings } from './settings.js';
+import { ConfigGrc } from './config-grc.js';
 import { Environment } from './environment.js';
 import { RiskAssessments } from './risk-assessments.js';
 import { BusinessPolicies } from './business-policy.js';
@@ -30,6 +31,9 @@ export function createServices(cfg: Config, log: Logger) {
   const environment = new Environment(db);
   const businessPolicies = new BusinessPolicies(db);
   const modules = new Modules(cfg.db, db);
+  const grc = new Grc(db, legacy, businessPolicies, modules);
+  const configGrc = new ConfigGrc(db, grc);
+  grc.methodBindings = configGrc;
   return {
     cfg,
     log,
@@ -38,7 +42,8 @@ export function createServices(cfg: Config, log: Logger) {
     settings,
     environment,
     businessPolicies,
-    grc: new Grc(db, legacy, businessPolicies, modules),
+    grc,
+    configGrc,
     riskAssessments: new RiskAssessments(db, legacy, environment),
     modules,
     updates: new Updates(cfg, db),

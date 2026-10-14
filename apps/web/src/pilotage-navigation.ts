@@ -56,6 +56,7 @@ export const PILOTAGE_NAV = [
       { id: 'carte', label: 'Cartographie des risques', module: 'cartographie' },
       { id: 'traitements', label: 'Traitements', module: 'pilotage' },
       { id: 'scenarios', label: 'Scénarios et actifs', module: 'pilotage' },
+      { id: 'configuration-analyses', label: 'Configuration des analyses', module: 'pilotage' },
     ],
   },
   {

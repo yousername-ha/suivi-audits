@@ -16,6 +16,7 @@ import { eventRoutes } from './routes/events.js';
 import { importRoutes } from './routes/import.js';
 import { legacyRoutes } from './routes/legacy.js';
 import { settingsRoutes } from './routes/settings.js';
+import { configGrcRoutes } from './routes/config-grc.js';
 import { environmentRoutes } from './routes/environment.js';
 import { riskAssessmentRoutes } from './routes/risk-assessments.js';
 import { businessPolicyRoutes } from './routes/business-policy.js';
@@ -110,6 +111,7 @@ export function allRoutes(): RouteDef[] {
     ...settingsRoutes,
     ...environmentRoutes,
     ...businessPolicyRoutes,
+    ...configGrcRoutes,
     ...grcRoutes,
     ...pilotageRoutes,
     ...riskAssessmentRoutes,

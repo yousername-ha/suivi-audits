@@ -416,6 +416,12 @@ export const PILOTAGE_FIELDS: Partial<Record<GrcKind, PilotageField[]>> = {
   ],
   ecosystem_party: [
     etude('ecosystem_party'),
+    lien(
+      'ecosystem_party',
+      'supplierRef',
+      'Fournisseur du registre',
+      'Si la partie prenante est un fournisseur déjà enregistré, liez-le : une seule fiche, pas de ressaisie.',
+    ),
     field('category', 'Catégorie (client, partenaire, prestataire…)'),
     niveauChamp('dependency', 'Dépendance', ECHELLE_CRITERE),
     niveauChamp('penetration', 'Pénétration', ECHELLE_CRITERE),

@@ -14,13 +14,16 @@ import {
   referencesTypees,
   relationAutorisee,
   RELATIONS,
+  StudyConfiguration,
   effectivePermissions,
   type Permission,
   type GrcKind,
   type GrcObject,
   type SmsiUpdate,
   type Action,
+  type CfgRef,
   type Module,
+  type RiskMethod,
 } from '@suivi/shared';
 import { isObject, type JsonObject } from '@suivi/shared/legacy';
 import type { SessionUser } from '../auth.js';
@@ -37,6 +40,7 @@ import { GrcLibraryMappings } from './library-mappings.js';
 import { GrcRapprochements } from './rapprochements.js';
 import { GrcSuppliers } from './suppliers.js';
 import { GrcRisks } from './risks.js';
+import { GrcStudyConfig } from './study-config.js';
 import { LegacyTasks } from './legacy-tasks.js';
 import { GrcTasks } from './tasks.js';
 export const DEFAULT_SMSI = '00000000-0000-4000-8000-000000000001';
@@ -87,7 +91,42 @@ export interface GrcSmsi {
   createdBy: string;
 }
 const smsiColumns = `s.id,s.name,s.scope,s.nature,s.visibility,s.timezone,s.business_version AS "businessVersion",s.risk_method_id AS "riskMethodId",s.risk_method_version AS "riskMethodVersion",s.version,s.created_by AS "createdBy"`;
+/** Résolution des épinglages d'une méthode de risque sur le catalogue de configuration (ADR 0038), branchée par services.ts. */
+export interface MethodBindingsResolver {
+  resolveMethod(
+    smsi: string,
+    method: RiskMethod,
+    c?: Client,
+    already?: CfgRef[],
+  ): Promise<{ definition: RiskMethod; refs: CfgRef[] }>;
+  pinnedRefs(method: RiskMethod | undefined): CfgRef[];
+  checkAnalysisPin(
+    smsi: string,
+    ref: CfgRef,
+    kind: 'scale' | 'matrix' | 'mapping',
+    family: 'ebios_rm' | 'iso27005' | 'mehari' | 'custom',
+    already: CfgRef | null,
+    c: Client,
+  ): Promise<void>;
+  recordUsage(
+    c: Client,
+    user: { username: string },
+    consumer: { kind: 'method_version' | 'analysis'; id: string; version: number },
+    refs: CfgRef[],
+  ): Promise<void>;
+}
+/** Éléments du catalogue épinglés par une étude (champ facultatif `configuration`) : matrice de pertinence et correspondance
+    impact → gravité. */
+const studyPins = (data: Record<string, unknown>): { ref: CfgRef; kind: 'matrix' | 'mapping' }[] => {
+  const c = StudyConfiguration.safeParse(data.configuration);
+  if (!c.success) return [];
+  return [
+    ...(c.data.relevanceMatrix ? [{ ref: c.data.relevanceMatrix, kind: 'matrix' as const }] : []),
+    ...(c.data.severityMapping ? [{ ref: c.data.severityMapping, kind: 'mapping' as const }] : []),
+  ];
+};
 export class Grc {
+  methodBindings?: MethodBindingsResolver;
   readonly legacyTasks: LegacyTasks;
   readonly frameworks: GrcFrameworks;
   readonly library: GrcLibrary;
@@ -95,6 +134,7 @@ export class Grc {
   readonly rapprochements: GrcRapprochements;
   readonly suppliers: GrcSuppliers;
   readonly risks: GrcRisks;
+  readonly studyConfig: GrcStudyConfig;
   readonly tasks: GrcTasks;
   constructor(
     readonly db: Db,
@@ -109,6 +149,7 @@ export class Grc {
     this.rapprochements = new GrcRapprochements(this);
     this.suppliers = new GrcSuppliers(this);
     this.risks = new GrcRisks(this);
+    this.studyConfig = new GrcStudyConfig(this);
     this.tasks = new GrcTasks(this);
   }
   async isAdmin(user: SessionUser, c?: Client) {
@@ -494,6 +535,7 @@ export class Grc {
     if (kind in PILOTAGE_SCHEMAS) {
       data = PILOTAGE_SCHEMAS[kind as keyof typeof PILOTAGE_SCHEMAS].parse(data);
       await this.checkTypedRefs(smsi, kind, data, user, c);
+      if (kind === 'risk_study') await this.checkStudyConfiguration(smsi, data, previous, c);
       if (kind === 'nonconformity' && previous?.data.status === 'closed')
         throw new HttpError(409, 'Conservez la clôture : créez un nouveau constat pour une récidive.');
       if (kind === 'control') {
@@ -552,6 +594,38 @@ export class Grc {
       throw new HttpError(422, 'Fréquence absente de la politique publiée.');
     return data;
   }
+  /** Liaison de configuration d'une étude EBIOS RM (ADR 0038) : chaque élément épinglé doit exister, être visible et convenir. */
+  private async checkStudyConfiguration(
+    smsi: string,
+    data: Record<string, unknown>,
+    previous: GrcObject | undefined,
+    c: Client,
+  ) {
+    const pins = studyPins(data);
+    if (!pins.length) return;
+    if (!this.methodBindings) throw new HttpError(503, 'Catalogue de configuration indisponible.');
+    const before = previous ? studyPins(previous.data) : [];
+    for (const { ref, kind } of pins)
+      await this.methodBindings.checkAnalysisPin(
+        smsi,
+        ref,
+        kind,
+        'ebios_rm',
+        before.find((x) => x.kind === kind)?.ref ?? null,
+        c,
+      );
+  }
+  /** Usage « analyse » du catalogue : l'étude épingle (élément, version) ; l'enregistrement est immuable. */
+  async recordStudyUsage(c: Client, o: GrcObject, user: { username: string }) {
+    const pins = o.kind === 'risk_study' ? studyPins(o.data) : [];
+    if (pins.length && this.methodBindings)
+      await this.methodBindings.recordUsage(
+        c,
+        user,
+        { kind: 'analysis', id: o.id, version: o.version },
+        pins.map((x) => x.ref),
+      );
+  }
   async createObject(smsi: string, input: GrcObjectBody, user: SessionUser, ip: string) {
     const body = GrcObjectBody.parse(input);
     await this.access(smsi, user, true);
@@ -559,7 +633,9 @@ export class Grc {
     return this.db.tx(async (c) => {
       await this.access(smsi, user, true, c);
       const data = await this.normalize(smsi, body.kind, body.data, user, c);
-      return this.insert(c, smsi, body.kind, body.name, data, user, ip);
+      const o = await this.insert(c, smsi, body.kind, body.name, data, user, ip);
+      await this.recordStudyUsage(c, o, user);
+      return o;
     }, user.username);
   }
   async insert(
@@ -592,7 +668,9 @@ export class Grc {
         throw new HttpError(412, 'La fiche a changé. Rechargez avant de confirmer.');
       if (body.kind !== previous.kind || current.archived) throw new HttpError(409, 'Type immuable ou fiche archivée.');
       const data = await this.normalize(smsi, body.kind, body.data, user, c, current);
-      return this.write(c, current, body.name, data, user, ip, 'Modification');
+      const o = await this.write(c, current, body.name, data, user, ip, 'Modification');
+      await this.recordStudyUsage(c, o, user);
+      return o;
     }, user.username);
   }
   async write(

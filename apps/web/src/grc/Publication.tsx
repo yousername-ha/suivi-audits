@@ -7,6 +7,7 @@ import { ErrorAlert } from '../components/common';
 import { PromotionBouton } from '../pilotage/Bibliotheque';
 import { LegacyFrameworks } from './LegacyFrameworks';
 import { ConfigurationEditor } from './ConfigurationEditor';
+import { EpinglagesMethode } from '../config-grc/EpinglagesMethode';
 import type { MethodVersion } from './Risks';
 import { useCan } from '../session';
 export const exampleFramework: FrameworkDefinition = {
@@ -34,6 +35,20 @@ export const exampleFramework: FrameworkDefinition = {
       measureRefs: [],
     },
   ],
+};
+/** Épinglages, objets et livrables ont leur propre éditeur : l'éditeur générique ne les voit pas. */
+const GEREES = ['bindings', 'objects', 'deliverables'] as const;
+const withoutBindings = (d: unknown) => {
+  if (!d || typeof d !== 'object') return d;
+  const reste = { ...(d as Record<string, unknown>) };
+  for (const k of GEREES) delete reste[k];
+  return reste;
+};
+const withManaged = (next: unknown, d: unknown) => {
+  if (!d || typeof d !== 'object') return next;
+  const out = { ...(next as Record<string, unknown>) };
+  for (const k of GEREES) if (k in d) out[k] = (d as Record<string, unknown>)[k];
+  return out;
 };
 export function Publication({ smsi, type }: { smsi: string; type: 'methods' | 'frameworks' }) {
   const can = useCan(),
@@ -198,14 +213,26 @@ export function Publication({ smsi, type }: { smsi: string; type: 'methods' | 'f
             </Button>
           )}
           {write && editing ? (
-            <ConfigurationEditor
-              value={draft}
-              onChange={(next) => {
-                setDraft(next);
-                setPreview(null);
-                setConfirm(false);
-              }}
-            />
+            <>
+              {type === 'methods' && (
+                <EpinglagesMethode
+                  value={draft as Parameters<typeof EpinglagesMethode>[0]['value']}
+                  onChange={(next) => {
+                    setDraft(next);
+                    setPreview(null);
+                    setConfirm(false);
+                  }}
+                />
+              )}
+              <ConfigurationEditor
+                value={type === 'methods' ? withoutBindings(draft) : draft}
+                onChange={(next) => {
+                  setDraft(type === 'methods' ? withManaged(next, draft) : next);
+                  setPreview(null);
+                  setConfirm(false);
+                }}
+              />
+            </>
           ) : (
             <Text>Consultez les exigences ci-dessous. Pour adapter le contenu, préparez une nouvelle version.</Text>
           )}
