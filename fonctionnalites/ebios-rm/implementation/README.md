@@ -10,3 +10,7 @@
 L’agent chargé de l’intégration doit travailler et publier exclusivement sur **sa propre branche dédiée**, en utilisant `legacy` comme référence en lecture. Le [prompt commun](../../../implementation/socle-astra/PROMPT-IMPLEMENTATION.md) conserve cette restriction. Cette réorganisation ne lance aucune intégration, CI, fusion ou mise en production.
 
 La cartographie dynamique reste protégée. Les exemples ANSSI ou fictifs des maquettes ne sont pas des données de production.
+
+## Socle transversal — 14 octobre 2026
+
+Lire également [le dossier GRC fondé sur l’export ARM](../../../implementation/grc-transversal/v001-dossier-arm/README.md) pour les registres, configurations, méthodes, migrations et parcours. Cette proposition complète les spécifications visuelles sans annoncer une intégration réalisée.

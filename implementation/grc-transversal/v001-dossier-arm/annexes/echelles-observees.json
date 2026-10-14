@@ -1,0 +1,254 @@
+[
+  {
+    "sourceFile": "Atelier 1/Échelle d'intégrité.xlsx",
+    "modeObserved": "ordinal-qualitative",
+    "levels": [
+      {
+        "order": 1,
+        "label": "Négligeable",
+        "color": null,
+        "indicativeValue": null,
+        "gravityMapping": null
+      },
+      {
+        "order": 2,
+        "label": "Limitée",
+        "color": null,
+        "indicativeValue": null,
+        "gravityMapping": null
+      },
+      {
+        "order": 3,
+        "label": "Critique",
+        "color": null,
+        "indicativeValue": null,
+        "gravityMapping": null
+      }
+    ],
+    "note": "Descriptions réelles omises du dossier public ; disponibles dans le fichier source privé."
+  },
+  {
+    "sourceFile": "Atelier 1/Échelle de confidentialité.xlsx",
+    "modeObserved": "ordinal-qualitative",
+    "levels": [
+      {
+        "order": 1,
+        "label": "Public",
+        "color": null,
+        "indicativeValue": null,
+        "gravityMapping": null
+      },
+      {
+        "order": 2,
+        "label": "Interne",
+        "color": null,
+        "indicativeValue": null,
+        "gravityMapping": null
+      },
+      {
+        "order": 3,
+        "label": "Restreint",
+        "color": null,
+        "indicativeValue": null,
+        "gravityMapping": null
+      },
+      {
+        "order": 4,
+        "label": "Confidentiel",
+        "color": null,
+        "indicativeValue": null,
+        "gravityMapping": null
+      }
+    ],
+    "note": "Descriptions réelles omises du dossier public ; disponibles dans le fichier source privé."
+  },
+  {
+    "sourceFile": "Atelier 1/Échelle de disponibilité.xlsx",
+    "modeObserved": "ordinal-qualitative",
+    "levels": [
+      {
+        "order": 1,
+        "label": "Négligeable",
+        "color": null,
+        "indicativeValue": null,
+        "gravityMapping": null
+      },
+      {
+        "order": 2,
+        "label": "Limitée",
+        "color": null,
+        "indicativeValue": null,
+        "gravityMapping": null
+      },
+      {
+        "order": 3,
+        "label": "Importante",
+        "color": null,
+        "indicativeValue": null,
+        "gravityMapping": null
+      },
+      {
+        "order": 4,
+        "label": "Critique",
+        "color": null,
+        "indicativeValue": null,
+        "gravityMapping": null
+      }
+    ],
+    "note": "Descriptions réelles omises du dossier public ; disponibles dans le fichier source privé."
+  },
+  {
+    "sourceFile": "Atelier 1/Échelle de gravité.xlsx",
+    "modeObserved": "ordinal-qualitative",
+    "levels": [
+      {
+        "order": 1,
+        "label": "G1 - Mineure",
+        "color": "#009F8F",
+        "indicativeValue": null,
+        "gravityMapping": null
+      },
+      {
+        "order": 2,
+        "label": "G2 - Significative",
+        "color": "#F6EB45",
+        "indicativeValue": null,
+        "gravityMapping": null
+      },
+      {
+        "order": 3,
+        "label": "G3 - Grave",
+        "color": "#FF9A35",
+        "indicativeValue": null,
+        "gravityMapping": null
+      },
+      {
+        "order": 4,
+        "label": "G4 - Critique",
+        "color": "#E73C50",
+        "indicativeValue": null,
+        "gravityMapping": null
+      }
+    ],
+    "note": "Descriptions réelles omises du dossier public ; disponibles dans le fichier source privé."
+  },
+  {
+    "sourceFile": "Atelier 1/Échelle de niveau d'impact.xlsx",
+    "modeObserved": "ordinal-qualitative",
+    "levels": [
+      {
+        "order": 1,
+        "label": "Mineure",
+        "color": "#009F8F",
+        "indicativeValue": null,
+        "gravityMapping": "G1 - Mineure"
+      },
+      {
+        "order": 2,
+        "label": "Significatif",
+        "color": "#F6EB45",
+        "indicativeValue": null,
+        "gravityMapping": "G2 - Significative"
+      },
+      {
+        "order": 3,
+        "label": "Grave",
+        "color": "#FF9A35",
+        "indicativeValue": null,
+        "gravityMapping": "G3 - Grave"
+      },
+      {
+        "order": 4,
+        "label": "Critique",
+        "color": "#E73C50",
+        "indicativeValue": null,
+        "gravityMapping": "G4 - Critique"
+      }
+    ],
+    "note": "Descriptions réelles omises du dossier public ; disponibles dans le fichier source privé."
+  },
+  {
+    "sourceFile": "Atelier 2/Échelle de motivation.xlsx",
+    "modeObserved": "ordinal-qualitative",
+    "levels": [
+      {
+        "order": 1,
+        "label": "+",
+        "color": null,
+        "indicativeValue": null,
+        "gravityMapping": null
+      },
+      {
+        "order": 2,
+        "label": "++",
+        "color": null,
+        "indicativeValue": null,
+        "gravityMapping": null
+      },
+      {
+        "order": 3,
+        "label": "+++",
+        "color": null,
+        "indicativeValue": null,
+        "gravityMapping": null
+      }
+    ],
+    "note": "Descriptions réelles omises du dossier public ; disponibles dans le fichier source privé."
+  },
+  {
+    "sourceFile": "Atelier 2/Échelle de pertinence.xlsx",
+    "modeObserved": "ordinal-qualitative",
+    "levels": [
+      {
+        "order": 1,
+        "label": "Faible",
+        "color": "#009F8F",
+        "indicativeValue": null,
+        "gravityMapping": null
+      },
+      {
+        "order": 2,
+        "label": "Moyenne",
+        "color": "#FF9A35",
+        "indicativeValue": null,
+        "gravityMapping": null
+      },
+      {
+        "order": 3,
+        "label": "Élevée",
+        "color": "#E73C50",
+        "indicativeValue": null,
+        "gravityMapping": null
+      }
+    ],
+    "note": "Descriptions réelles omises du dossier public ; disponibles dans le fichier source privé."
+  },
+  {
+    "sourceFile": "Atelier 2/Échelle des ressources.xlsx",
+    "modeObserved": "ordinal-qualitative",
+    "levels": [
+      {
+        "order": 1,
+        "label": "+",
+        "color": null,
+        "indicativeValue": null,
+        "gravityMapping": null
+      },
+      {
+        "order": 2,
+        "label": "++",
+        "color": null,
+        "indicativeValue": null,
+        "gravityMapping": null
+      },
+      {
+        "order": 3,
+        "label": "+++",
+        "color": null,
+        "indicativeValue": null,
+        "gravityMapping": null
+      }
+    ],
+    "note": "Descriptions réelles omises du dossier public ; disponibles dans le fichier source privé."
+  }
+]

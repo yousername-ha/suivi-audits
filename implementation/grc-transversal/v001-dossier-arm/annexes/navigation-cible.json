@@ -1,0 +1,107 @@
+{
+  "status": "proposition-a-valider",
+  "businessGroupCount": 7,
+  "utilityGroupCount": 1,
+  "groups": [
+    {
+      "id": "pilotage",
+      "label": "Pilotage",
+      "icon": "home",
+      "placement": "main",
+      "children": [
+        "Vue d’ensemble",
+        "Objectifs & indicateurs",
+        "Rapports & comités",
+        "Budgets & investissements"
+      ]
+    },
+    {
+      "id": "organisation",
+      "label": "Organisation",
+      "icon": "grid",
+      "placement": "main",
+      "children": [
+        "Contexte & périmètres",
+        "Processus & actifs",
+        "Fournisseurs",
+        "Rôles & responsabilités",
+        "Cartographies du SMSI"
+      ]
+    },
+    {
+      "id": "risques",
+      "label": "Risques",
+      "icon": "risk",
+      "placement": "main",
+      "children": [
+        "Registre des risques",
+        "Études & parcours",
+        "Scénarios",
+        "Traitements",
+        "Gouvernance de l’IA"
+      ]
+    },
+    {
+      "id": "conformite",
+      "label": "Conformité & audits",
+      "icon": "shield",
+      "placement": "main",
+      "children": [
+        "Conformité & applicabilité",
+        "Audits",
+        "CaRE",
+        "HAS",
+        "Écarts applicatifs"
+      ]
+    },
+    {
+      "id": "actions",
+      "label": "Actions",
+      "icon": "check",
+      "placement": "main",
+      "children": [
+        "Plan d’action",
+        "Tâches récurrentes",
+        "Programmes & formation"
+      ]
+    },
+    {
+      "id": "resilience",
+      "label": "Résilience",
+      "icon": "shield",
+      "placement": "main",
+      "children": [
+        "Incidents & crise",
+        "PCRA · continuité",
+        "CRRC · sauvegardes"
+      ]
+    },
+    {
+      "id": "documents",
+      "label": "Documents",
+      "icon": "book",
+      "placement": "main",
+      "children": []
+    },
+    {
+      "id": "administration",
+      "label": "Administration",
+      "icon": "settings",
+      "placement": "footer",
+      "children": [
+        "Configuration GRC",
+        "Comptes & habilitations",
+        "Référentiels administrés",
+        "Apparence",
+        "Journal & données"
+      ]
+    }
+  ],
+  "rules": {
+    "oneExpandedGroup": true,
+    "primaryDestinationUnique": true,
+    "preserveRoutes": true,
+    "contextualLinksAllowed": true,
+    "permissionChanges": false
+  }
+}

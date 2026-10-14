@@ -1,0 +1,171 @@
+{
+  "schemaVersion": 1,
+  "scales": [
+    {
+      "id": "resources-v1",
+      "familyId": "resources",
+      "version": 1,
+      "dimensionKey": "resources",
+      "mode": "qualitative",
+      "levels": [
+        {
+          "id": "resources-1",
+          "order": 1,
+          "label": "+",
+          "color": "#D6E9E3",
+          "numericValue": null,
+          "unit": null
+        },
+        {
+          "id": "resources-2",
+          "order": 2,
+          "label": "++",
+          "color": "#D6E9E3",
+          "numericValue": null,
+          "unit": null
+        },
+        {
+          "id": "resources-3",
+          "order": 3,
+          "label": "+++",
+          "color": "#D6E9E3",
+          "numericValue": null,
+          "unit": null
+        }
+      ]
+    },
+    {
+      "id": "motivation-v1",
+      "familyId": "motivation",
+      "version": 1,
+      "dimensionKey": "motivation",
+      "mode": "qualitative",
+      "levels": [
+        {
+          "id": "motivation-1",
+          "order": 1,
+          "label": "+",
+          "color": "#D6E9E3",
+          "numericValue": null,
+          "unit": null
+        },
+        {
+          "id": "motivation-2",
+          "order": 2,
+          "label": "++",
+          "color": "#D6E9E3",
+          "numericValue": null,
+          "unit": null
+        },
+        {
+          "id": "motivation-3",
+          "order": 3,
+          "label": "+++",
+          "color": "#D6E9E3",
+          "numericValue": null,
+          "unit": null
+        }
+      ]
+    },
+    {
+      "id": "relevance-v1",
+      "familyId": "relevance",
+      "version": 1,
+      "dimensionKey": "relevance",
+      "mode": "qualitative",
+      "levels": [
+        {
+          "id": "relevance-1",
+          "order": 1,
+          "label": "Faible",
+          "color": "#009F8F",
+          "numericValue": null,
+          "unit": null
+        },
+        {
+          "id": "relevance-2",
+          "order": 2,
+          "label": "Moyenne",
+          "color": "#FF9A35",
+          "numericValue": null,
+          "unit": null
+        },
+        {
+          "id": "relevance-3",
+          "order": 3,
+          "label": "Élevée",
+          "color": "#E73C50",
+          "numericValue": null,
+          "unit": null
+        }
+      ]
+    }
+  ],
+  "matrices": [
+    {
+      "id": "relevance-matrix-v1",
+      "rowScaleVersionId": "resources-v1",
+      "columnScaleVersionId": "motivation-v1",
+      "resultScaleVersionId": "relevance-v1",
+      "cells": [
+        {
+          "rowLevelId": "resources-1",
+          "columnLevelId": "motivation-1",
+          "resultLevelId": "relevance-1"
+        },
+        {
+          "rowLevelId": "resources-1",
+          "columnLevelId": "motivation-2",
+          "resultLevelId": "relevance-1"
+        },
+        {
+          "rowLevelId": "resources-1",
+          "columnLevelId": "motivation-3",
+          "resultLevelId": "relevance-2"
+        },
+        {
+          "rowLevelId": "resources-2",
+          "columnLevelId": "motivation-1",
+          "resultLevelId": "relevance-1"
+        },
+        {
+          "rowLevelId": "resources-2",
+          "columnLevelId": "motivation-2",
+          "resultLevelId": "relevance-2"
+        },
+        {
+          "rowLevelId": "resources-2",
+          "columnLevelId": "motivation-3",
+          "resultLevelId": "relevance-3"
+        },
+        {
+          "rowLevelId": "resources-3",
+          "columnLevelId": "motivation-1",
+          "resultLevelId": "relevance-2"
+        },
+        {
+          "rowLevelId": "resources-3",
+          "columnLevelId": "motivation-2",
+          "resultLevelId": "relevance-3"
+        },
+        {
+          "rowLevelId": "resources-3",
+          "columnLevelId": "motivation-3",
+          "resultLevelId": "relevance-3"
+        }
+      ]
+    }
+  ],
+  "context": {
+    "id": "context-DEMO-1",
+    "studyId": "study-DEMO",
+    "organizationId": "org-DEMO",
+    "methodVersionId": "method-DEMO-ebios-v1",
+    "configBindings": {
+      "relevance": "relevance-matrix-v1",
+      "resources": "resources-v1",
+      "motivation": "motivation-v1"
+    },
+    "status": "synthetic-proposal"
+  }
+}

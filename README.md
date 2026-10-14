@@ -182,3 +182,7 @@ identifiées comme historiques. Le manifeste exclut les bases locales et les nou
 La correction des accents, des cartes et du compte de test est décrite dans
 [le diagnostic](docs/DIAGNOSTIC-ROLES-INTERFACE.md) et
 [la recette exécutée](recette/INTERFACE-RECETTE.md).
+
+## Dossier GRC transversal et navigation simplifiée
+
+[Analyse ARM, architecture, douze chapitres techniques et prompt IA](implementation/grc-transversal/v001-dossier-arm/README.md) · [Menu proposé](fonctionnalites/navigation/README.md) · [Téléchargements](downloads/README.md). Proposition documentaire et graphique du 14 octobre 2026, sans modification du moteur métier.

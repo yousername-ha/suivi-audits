@@ -1,0 +1,19 @@
+﻿id,exigence,documents,recette
+REQ-01,"Configurer une fois, utiliser partout","03,04,05",CFG-01 à CFG-06
+REQ-02,"Déclarer une fois, réutiliser partout","01,03,04","DAT-03,REG-03"
+REQ-03,Socle + méthodes + instances,"04,05,06","MET-01,MET-02"
+REQ-04,Minimiser les champs libres,"03,07","DAT-04,EBI-01"
+REQ-05,Référentiel distinct de son évaluation,"03,05","EBI-01,CFG-04"
+REQ-06,Préserver historique et existant,"01,08","MIG-01,MIG-02"
+REQ-07,Export analysé sans extrapolation,"02,annexes","DAT-01,DAT-02"
+REQ-08,Portée globale/organisation/méthode/étude,"03,04","CFG-05,SEC-01"
+REQ-09,Échelles qualitatives/quantitatives/hybrides,"03,05","CFG-01,CFG-06"
+REQ-10,Cinq ateliers EBIOS et représentations,"06,07",EBI-01 à EBI-06
+REQ-11,ISO27005 et méthodes personnalisées,"06,11","MET-01,MET-02"
+REQ-12,Administration et gouvernance,"03,04,07","SEC-02,CFG-04"
+REQ-13,Plan technique et migration,"08,09","MIG-01,CON-01"
+REQ-14,Tests de bout en bout et exports,10,"EXP-01,REG-01 à REG-03"
+REQ-15,"Style08,icônes,flux et thème global",07,"UX-01,UX-02,EBI-04"
+REQ-16,Cartographie dynamique protégée,"01,09,PROMPT",REG-02
+REQ-17,Agent sur sa branche uniquement,"PROMPT,09",Revue de branche et diff avant publication
+REQ-18,"Épurer les menus selon la vidéo, préserver fonctions et droits","12,annexes/navigation-*",NAV-01 à NAV-05

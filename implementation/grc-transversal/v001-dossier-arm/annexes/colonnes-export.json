@@ -1,0 +1,455 @@
+[
+  {
+    "file": "Atelier 1/Base d'évènements redoutés.xlsx",
+    "sheet": "Sheet1",
+    "rows": 18,
+    "columns": 11,
+    "headers": [
+      "#",
+      "✓/❒",
+      "Valeurs métier",
+      "Évènement redouté",
+      "Abrév.",
+      "Critère de sécurité",
+      "Besoin de sécurité",
+      "Impacts",
+      "Gravité proposée",
+      "Gravité retenue",
+      "Description"
+    ],
+    "secondHeader": null,
+    "mergedRanges": [],
+    "formulas": 0,
+    "excelTables": 0
+  },
+  {
+    "file": "Atelier 1/Base de catégories d'impact.xlsx",
+    "sheet": "Sheet1",
+    "rows": 5,
+    "columns": 6,
+    "headers": [
+      "#",
+      "✓/❒",
+      "Nom",
+      "Abrév.",
+      "Catégorie parente",
+      "Description"
+    ],
+    "secondHeader": null,
+    "mergedRanges": [],
+    "formulas": 0,
+    "excelTables": 0
+  },
+  {
+    "file": "Atelier 1/Base de critères de sécurité.xlsx",
+    "sheet": "Sheet1",
+    "rows": 4,
+    "columns": 5,
+    "headers": [
+      "#",
+      "✓/❒",
+      "Nom",
+      "Échelle de besoin de sécurité",
+      "Description"
+    ],
+    "secondHeader": null,
+    "mergedRanges": [],
+    "formulas": 0,
+    "excelTables": 0
+  },
+  {
+    "file": "Atelier 1/Base de responsables.xlsx",
+    "sheet": "Sheet1",
+    "rows": 14,
+    "columns": 6,
+    "headers": [
+      "#",
+      "✓/❒",
+      "Nom",
+      "Valeurs métier",
+      "Biens supports",
+      "Description"
+    ],
+    "secondHeader": null,
+    "mergedRanges": [],
+    "formulas": 0,
+    "excelTables": 0
+  },
+  {
+    "file": "Atelier 1/Biens supports.xlsx",
+    "sheet": "Sheet1",
+    "rows": 3,
+    "columns": 8,
+    "headers": [
+      "#",
+      "✓/❒",
+      "Nom",
+      "Abrév.",
+      "Bien support parent",
+      "Catégories",
+      "Propriétaires",
+      "Description"
+    ],
+    "secondHeader": null,
+    "mergedRanges": [],
+    "formulas": 0,
+    "excelTables": 0
+  },
+  {
+    "file": "Atelier 1/Catégories de bien support.xlsx",
+    "sheet": "Sheet1",
+    "rows": 10,
+    "columns": 7,
+    "headers": [
+      "#",
+      "✓/❒",
+      "Nom",
+      "Abrév.",
+      "Catégorie parente",
+      "Propriétaires",
+      "Description"
+    ],
+    "secondHeader": null,
+    "mergedRanges": [],
+    "formulas": 0,
+    "excelTables": 0
+  },
+  {
+    "file": "Atelier 1/Définir le cadre de l'étude.xlsx",
+    "sheet": "Sheet1",
+    "rows": 2,
+    "columns": 9,
+    "headers": [
+      "#",
+      "Nom",
+      "Objet de l'étude",
+      "Objectifs de l'étude",
+      "Confidentialité",
+      "Langue",
+      "Durée des cycles stratégiques",
+      "Durée des cycles opérationnels",
+      "Contraintes"
+    ],
+    "secondHeader": null,
+    "mergedRanges": [],
+    "formulas": 0,
+    "excelTables": 0
+  },
+  {
+    "file": "Atelier 1/Identifier les missions et l'objet de l'étude.xlsx",
+    "sheet": "Sheet1",
+    "rows": 91,
+    "columns": 10,
+    "headers": [
+      "#",
+      "✓/❒",
+      "Mission",
+      "Valeurs métier",
+      "Biens supports",
+      "Description"
+    ],
+    "secondHeader": [
+      "Nom",
+      "Nature",
+      "Propriétaires",
+      "Nom",
+      "Catégories",
+      "Propriétaires"
+    ],
+    "mergedRanges": [
+      "J56:J65",
+      "B31:B36",
+      "E66:E77",
+      "C47:C55",
+      "D31:D36",
+      "C1:C2",
+      "E3:E12",
+      "C37:C46",
+      "C66:C77",
+      "E37:E46",
+      "J13:J18",
+      "E56:E65",
+      "F19:F30",
+      "C3:C12",
+      "C78:C91",
+      "D47:D55",
+      "B66:B77",
+      "B56:B65",
+      "F47:F55",
+      "E13:E18",
+      "C19:C30",
+      "J47:J55",
+      "D19:D30",
+      "B3:B12",
+      "F78:F91",
+      "B1:B2",
+      "F3:F12",
+      "J37:J46",
+      "G1:I1",
+      "C31:C36",
+      "E31:E36",
+      "B13:B18",
+      "D13:D18",
+      "E47:E55",
+      "C56:C65",
+      "F31:F36",
+      "J19:J30",
+      "E19:E30",
+      "D1:F1",
+      "J78:J91",
+      "F13:F18",
+      "J31:J36",
+      "C13:C18",
+      "E78:E91",
+      "D56:D65",
+      "D66:D77",
+      "B47:B55",
+      "F66:F77",
+      "F56:F65",
+      "D3:D12",
+      "J66:J77",
+      "B78:B91",
+      "J3:J12",
+      "D78:D91",
+      "B37:B46",
+      "D37:D46",
+      "B19:B30",
+      "F37:F46",
+      "J1:J2",
+      "A1:A2"
+    ],
+    "formulas": 0,
+    "excelTables": 0
+  },
+  {
+    "file": "Atelier 1/Impacts.xlsx",
+    "sheet": "Sheet1",
+    "rows": 17,
+    "columns": 6,
+    "headers": [
+      "#",
+      "✓/❒",
+      "Nom",
+      "Catégories",
+      "Niveau d'impact",
+      "Description"
+    ],
+    "secondHeader": null,
+    "mergedRanges": [],
+    "formulas": 0,
+    "excelTables": 0
+  },
+  {
+    "file": "Atelier 1/Échelle d'intégrité.xlsx",
+    "sheet": "Sheet1",
+    "rows": 4,
+    "columns": 5,
+    "headers": [
+      "#",
+      "✓/❒",
+      "Niveau",
+      "Nom",
+      "Description"
+    ],
+    "secondHeader": null,
+    "mergedRanges": [],
+    "formulas": 0,
+    "excelTables": 0
+  },
+  {
+    "file": "Atelier 1/Échelle de confidentialité.xlsx",
+    "sheet": "Sheet1",
+    "rows": 5,
+    "columns": 5,
+    "headers": [
+      "#",
+      "✓/❒",
+      "Niveau",
+      "Nom",
+      "Description"
+    ],
+    "secondHeader": null,
+    "mergedRanges": [],
+    "formulas": 0,
+    "excelTables": 0
+  },
+  {
+    "file": "Atelier 1/Échelle de disponibilité.xlsx",
+    "sheet": "Sheet1",
+    "rows": 5,
+    "columns": 5,
+    "headers": [
+      "#",
+      "✓/❒",
+      "Niveau",
+      "Nom",
+      "Description"
+    ],
+    "secondHeader": null,
+    "mergedRanges": [],
+    "formulas": 0,
+    "excelTables": 0
+  },
+  {
+    "file": "Atelier 1/Échelle de gravité.xlsx",
+    "sheet": "Sheet1",
+    "rows": 5,
+    "columns": 7,
+    "headers": [
+      "#",
+      "✓/❒",
+      "Niveau",
+      "Nom",
+      "Couleur",
+      "Description",
+      "Valeur indicative"
+    ],
+    "secondHeader": null,
+    "mergedRanges": [],
+    "formulas": 0,
+    "excelTables": 0
+  },
+  {
+    "file": "Atelier 1/Échelle de niveau d'impact.xlsx",
+    "sheet": "Sheet1",
+    "rows": 5,
+    "columns": 7,
+    "headers": [
+      "#",
+      "✓/❒",
+      "Niveau",
+      "Nom",
+      "Couleur",
+      "Niveau de gravité",
+      "Description"
+    ],
+    "secondHeader": null,
+    "mergedRanges": [],
+    "formulas": 0,
+    "excelTables": 0
+  },
+  {
+    "file": "Atelier 2/Base d'objectifs visés.xlsx",
+    "sheet": "Sheet1",
+    "rows": 5,
+    "columns": 6,
+    "headers": [
+      "#",
+      "✓/❒",
+      "Nom",
+      "Abrév.",
+      "Catégorie",
+      "Description"
+    ],
+    "secondHeader": null,
+    "mergedRanges": [],
+    "formulas": 0,
+    "excelTables": 0
+  },
+  {
+    "file": "Atelier 2/Base de sources de risque.xlsx",
+    "sheet": "Sheet1",
+    "rows": 6,
+    "columns": 6,
+    "headers": [
+      "#",
+      "✓/❒",
+      "Nom",
+      "Abrév.",
+      "Catégorie",
+      "Description"
+    ],
+    "secondHeader": null,
+    "mergedRanges": [],
+    "formulas": 0,
+    "excelTables": 0
+  },
+  {
+    "file": "Atelier 2/Catégories d'objectif visé.xlsx",
+    "sheet": "Sheet1",
+    "rows": 8,
+    "columns": 6,
+    "headers": [
+      "#",
+      "✓/❒",
+      "Nom",
+      "Abrév.",
+      "Catégorie parente",
+      "Description"
+    ],
+    "secondHeader": null,
+    "mergedRanges": [],
+    "formulas": 0,
+    "excelTables": 0
+  },
+  {
+    "file": "Atelier 2/Catégories de source de risque.xlsx",
+    "sheet": "Sheet1",
+    "rows": 13,
+    "columns": 6,
+    "headers": [
+      "#",
+      "✓/❒",
+      "Nom",
+      "Abrév.",
+      "Catégorie parente",
+      "Description"
+    ],
+    "secondHeader": null,
+    "mergedRanges": [],
+    "formulas": 0,
+    "excelTables": 0
+  },
+  {
+    "file": "Atelier 2/Échelle de motivation.xlsx",
+    "sheet": "Sheet1",
+    "rows": 4,
+    "columns": 5,
+    "headers": [
+      "#",
+      "✓/❒",
+      "Niveau",
+      "Nom",
+      "Description"
+    ],
+    "secondHeader": null,
+    "mergedRanges": [],
+    "formulas": 0,
+    "excelTables": 0
+  },
+  {
+    "file": "Atelier 2/Échelle de pertinence.xlsx",
+    "sheet": "Sheet1",
+    "rows": 4,
+    "columns": 6,
+    "headers": [
+      "#",
+      "✓/❒",
+      "Niveau",
+      "Nom",
+      "Couleur",
+      "Description"
+    ],
+    "secondHeader": null,
+    "mergedRanges": [],
+    "formulas": 0,
+    "excelTables": 0
+  },
+  {
+    "file": "Atelier 2/Échelle des ressources.xlsx",
+    "sheet": "Sheet1",
+    "rows": 4,
+    "columns": 5,
+    "headers": [
+      "#",
+      "✓/❒",
+      "Niveau",
+      "Nom",
+      "Description"
+    ],
+    "secondHeader": null,
+    "mergedRanges": [],
+    "formulas": 0,
+    "excelTables": 0
+  }
+]

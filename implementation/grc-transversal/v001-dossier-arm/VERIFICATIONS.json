@@ -1,0 +1,58 @@
+{
+  "date": "2026-10-14",
+  "status": "passed",
+  "scope": "Dossier technique et maquettes uniquement",
+  "sourceAuditCommit": "472a81fe315ac323d75a59db74e16b8d39a5b0e8",
+  "export": {
+    "files": 25,
+    "workbooks": 21,
+    "images": 3,
+    "systemCaches": 1,
+    "scales": 8,
+    "scaleLevels": 28,
+    "missions": 9,
+    "physicalMissionRows": 89,
+    "sourceValuesPublished": false
+  },
+  "documents": {
+    "technicalChapters": 12,
+    "technicalPdfPages": 32,
+    "moduleScreenshots": 10,
+    "navigationScreenshots": 2,
+    "architectureDiagram": true
+  },
+  "navigation": {
+    "businessGroups": 7,
+    "administrationGroups": 1,
+    "mappedDocumentedDestinationsAndAliases": 102
+  },
+  "checks": {
+    "contractsAndAnnexes": "verification/contrats-annexes.json",
+    "browser": "verification/navigateur.json",
+    "protectedAndRuntimeFilesUnchanged": [
+      "modules/carto-core.js",
+      "modules/carto-ui.js",
+      "modules/carto.css",
+      "legacy_cartography.py",
+      "index.html",
+      "modules/risk-core.js",
+      "modules/risk-ui.js",
+      "legacy_server.py",
+      "legacy_risks.py",
+      "modules/navigation-ui.js"
+    ],
+    "repositoryStructure": "20 fonctionnalités, 540 liens locaux, versions et manifeste commun : OK.",
+    "archive": "ZIP testé, empreintes internes conformes, aucun XLSX/MP4/DB inclus"
+  },
+  "limits": [
+    "Aucune implémentation métier réalisée",
+    "Aucune migration ni recette de production exécutée",
+    "Maquettes non validées par l’utilisateur",
+    "Exécution native Windows du BAT non vérifiée",
+    "Audit complet d’accessibilité à réaliser sur le code intégré"
+  ],
+  "sourcesPrivate": [
+    "Export ARM.zip",
+    "Vidéo de référence de navigation"
+  ]
+}

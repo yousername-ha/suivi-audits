@@ -1,0 +1,25 @@
+{
+  "scope": "Contrats proposés et intégrité documentaire ; pas une recette du moteur métier",
+  "status": "passed",
+  "checks": [
+    "Schéma JSON Draft 2020-12 valide",
+    "Fixture synthétique conforme au schéma et invariants",
+    "Références et cellules complètes",
+    "Rejet vérifié : cellule absente",
+    "Rejet vérifié : cellule dupliquée",
+    "Rejet vérifié : résultat étranger",
+    "Rejet vérifié : ordre dupliqué",
+    "Rejet vérifié : affectation introuvable",
+    "Rejet vérifié : quantitatif sans valeur",
+    "25 fichiers inventoriés, 21 classeurs et 3 PNG",
+    "8 échelles et 28 niveaux",
+    "Missions : 91 lignes dont 2 en-têtes, 60 fusions (9 missions constatées dans audit privé)",
+    "9 correspondances de pertinence exactes",
+    "7 familles métier + Administration",
+    "102 destinations/alias documentés classés sans ID dupliqué",
+    "3 accès cartographiques protégés",
+    "Liens locaux du dossier existants"
+  ],
+  "negativeCases": 6,
+  "sourceAuditCommit": "472a81fe315ac323d75a59db74e16b8d39a5b0e8"
+}

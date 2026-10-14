@@ -1,0 +1,13 @@
+{
+  "id": "v001-menu-epure",
+  "statut": "a-valider",
+  "type": "galerie-dossier",
+  "date": "2026-10-14",
+  "sourceCommit": "472a81fe315ac323d75a59db74e16b8d39a5b0e8",
+  "references": [
+    "implementation/grc-transversal/v001-dossier-arm",
+    "references/style-08"
+  ],
+  "previousVersion": null,
+  "decisionUtilisateur": null
+}

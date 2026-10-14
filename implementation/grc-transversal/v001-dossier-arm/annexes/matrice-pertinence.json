@@ -1,0 +1,63 @@
+{
+  "status": "transcription-observee-a-valider-avant-publication",
+  "source": "Atelier 2/Matrice de niveau de pertinence.png",
+  "rowDimension": "resources",
+  "columnDimension": "motivation",
+  "displayRowOrder": [
+    3,
+    2,
+    1
+  ],
+  "displayColumnOrder": [
+    1,
+    2,
+    3
+  ],
+  "cells": [
+    {
+      "resources": 1,
+      "motivation": 1,
+      "result": "Faible"
+    },
+    {
+      "resources": 1,
+      "motivation": 2,
+      "result": "Faible"
+    },
+    {
+      "resources": 1,
+      "motivation": 3,
+      "result": "Moyenne"
+    },
+    {
+      "resources": 2,
+      "motivation": 1,
+      "result": "Faible"
+    },
+    {
+      "resources": 2,
+      "motivation": 2,
+      "result": "Moyenne"
+    },
+    {
+      "resources": 2,
+      "motivation": 3,
+      "result": "Élevée"
+    },
+    {
+      "resources": 3,
+      "motivation": 1,
+      "result": "Moyenne"
+    },
+    {
+      "resources": 3,
+      "motivation": 2,
+      "result": "Élevée"
+    },
+    {
+      "resources": 3,
+      "motivation": 3,
+      "result": "Élevée"
+    }
+  ]
+}

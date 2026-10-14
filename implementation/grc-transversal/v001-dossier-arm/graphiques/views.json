@@ -1,0 +1,52 @@
+[
+  {
+    "id": "registres",
+    "title": "Registres partagés",
+    "image": "images/01-registres.png"
+  },
+  {
+    "id": "configurations",
+    "title": "Configuration GRC",
+    "image": "images/02-configurations.png"
+  },
+  {
+    "id": "echelle",
+    "title": "Échelle de gravité",
+    "image": "images/03-echelle.png"
+  },
+  {
+    "id": "matrice",
+    "title": "Matrice de pertinence SR/OV",
+    "image": "images/04-matrice.png"
+  },
+  {
+    "id": "etude",
+    "title": "Nouvelle étude de risques",
+    "image": "images/05-etude.png"
+  },
+  {
+    "id": "atelier1",
+    "title": "Atelier 1 · Cadrage et socle de sécurité",
+    "image": "images/06-atelier1.png"
+  },
+  {
+    "id": "atelier2",
+    "title": "Atelier 2 · Suivi des couples SR/OV",
+    "image": "images/07-atelier2.png"
+  },
+  {
+    "id": "scenario",
+    "title": "Scénario opérationnel · Chemins d’attaque",
+    "image": "images/08-scenario.png"
+  },
+  {
+    "id": "import",
+    "title": "Importer les bases ARM",
+    "image": "images/09-import.png"
+  },
+  {
+    "id": "historique",
+    "title": "Versions et études utilisatrices",
+    "image": "images/10-historique.png"
+  }
+]

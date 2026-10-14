@@ -26,7 +26,7 @@ downloads/                   ZIP lançables et empreintes
 samples/                     table de correspondance historique
 ```
 
-Le [catalogue](../fonctionnalites/README.md) couvre les 18 fonctionnalités représentées par les captures existantes. Une capture statique n’est pas présentée comme un prototype lançable. Les composants historiques de l’application restent à leurs chemins actuels pour préserver le démarrage et les imports.
+Le [catalogue](../fonctionnalites/README.md) couvre 20 fonctionnalités : les 18 fonctionnalités représentées par les captures existantes, la configuration GRC transversale et la navigation simplifiée. Une capture statique n’est pas présentée comme un prototype lançable. Les composants historiques de l’application restent à leurs chemins actuels pour préserver le démarrage et les imports.
 
 ## À chaque nouvelle maquette
 

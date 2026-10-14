@@ -1,0 +1,103 @@
+﻿sourceSection,sourceId,sourceRoute,targetGroup,canonicalDestination,transition
+Cockpit RSSI,dash,"`dash` · `{""dashView"": ""cards""}`",Pilotage,dash,Conserver route et état ; déplacer son accès
+Pilotage,proc,"`pilotage` · `{""pilView"": ""proc""}`",Pilotage,proc,Conserver route et état ; déplacer son accès
+Pilotage,obj,"`pilotage` · `{""pilView"": ""obj""}`",Pilotage,obj,Conserver route et état ; déplacer son accès
+Pilotage,cmp,"`pilotage` · `{""pilView"": ""compact""}`",Pilotage,cmp,"Vue ou onglet interne ; route conservée, pas une entrée latérale supplémentaire"
+Rapports et exports,exp,"`rapports` · `{""repView"": ""exp""}`",Pilotage,exp,Conserver route et état ; déplacer son accès
+Rapports et exports,copil,"`rapports` · `{""repView"": ""COPIL""}`",Pilotage,copil,Conserver route et état ; déplacer son accès
+Rapports et exports,codir,"`rapports` · `{""repView"": ""CODIR""}`",Pilotage,codir,Conserver route et état ; déplacer son accès
+Investissements,inv-dash,"`invest` · `{""invView"": ""dash""}`",Pilotage,inv-dash,Conserver route et état ; déplacer son accès
+Investissements,inv-lines,"`invest` · `{""invView"": ""lines""}`",Pilotage,inv-lines,Conserver route et état ; déplacer son accès
+Investissements,inv-ren,"`invest` · `{""invView"": ""ren""}`",Pilotage,inv-ren,Conserver route et état ; déplacer son accès
+Investissements,inv-cmp,"`invest` · `{""invView"": ""cmp""}`",Pilotage,inv-cmp,Conserver route et état ; déplacer son accès
+Risques et études,risk-register,"`risks` · `{""riskView"": ""register"", ""riskId"": """", ""riskStudyId"": """"}`",Risques,risk-register,Conserver route et état ; déplacer son accès
+Risques et études,risk-map,"`risks` · `{""riskView"": ""map"", ""riskId"": """", ""riskStudyId"": """"}`",Risques,risk-map,"Vue ou onglet interne ; route conservée, pas une entrée latérale supplémentaire"
+Risques et études,risk-studies,"`risks` · `{""riskView"": ""studies"", ""riskId"": """", ""riskStudyId"": """"}`",Risques,risk-studies,Conserver route et état ; déplacer son accès
+Risques et études,risk-scenarios,"`risks` · `{""riskView"": ""scenarios"", ""riskId"": """", ""riskStudyId"": """"}`",Risques,risk-scenarios,Conserver route et état ; déplacer son accès
+Risques et études,risk-treatments,"`risks` · `{""riskView"": ""treatments"", ""riskId"": """", ""riskStudyId"": """"}`",Risques,risk-treatments,Conserver route et état ; déplacer son accès
+Risques et études,risk-policies,"`risks` · `{""riskView"": ""policies"", ""riskId"": """", ""riskStudyId"": """"}`",Administration / Configuration GRC,risk-policies,Gestion centrale proposée ; lecture et références accessibles depuis le contexte métier
+Conformité et applicabilité,iso,"`conformite` · `{""confView"": ""ISO""}`",Conformité & audits,iso,Conserver route et état ; déplacer son accès
+Conformité et applicabilité,ann,"`conformite` · `{""confView"": ""A""}`",Conformité & audits,ann,Conserver route et état ; déplacer son accès
+Conformité et applicabilité,hds,"`conformite` · `{""confView"": ""HDS""}`",Conformité & audits,hds,Conserver route et état ; déplacer son accès
+Conformité et applicabilité,fw,"`conformite` · `{""confView"": ""fw""}`",Conformité & audits,fw,Conserver route et état ; déplacer son accès
+Programme CaRE,df-care-dash,"`care` · `{""careView"": ""dash""}`",Conformité & audits,df-care-dash,Conserver route et état ; déplacer son accès
+Programme CaRE,df-care-dossiers,"`care` · `{""careView"": ""dossiers""}`",Conformité & audits,df-care-dossiers,Conserver route et état ; déplacer son accès
+Programme CaRE,df-care-grid,"`care` · `{""careView"": ""grid""}`",Conformité & audits,df-care-grid,Conserver route et état ; déplacer son accès
+Programme CaRE,df-care-budget,"`care` · `{""careView"": ""budget""}`",Conformité & audits,df-care-budget,Conserver route et état ; déplacer son accès
+Programme CaRE,df-care-proofs,"`care` · `{""careView"": ""proofs""}`",Conformité & audits,df-care-proofs,Vue contextuelle avec ses permissions et versions ; Documents est l’accès transversal
+Programme CaRE,df-care-actions,"`care` · `{""careView"": ""actions""}`",Conformité & audits,df-care-actions,Vue contextuelle préservée ; lien vers action canonique sans migration implicite
+Programme CaRE,df-care-audit,"`care` · `{""careView"": ""audit""}`",Conformité & audits,df-care-audit,Conserver route et état ; déplacer son accès
+Programme CaRE,df-care-sources,"`care` · `{""careView"": ""sources""}`",Conformité & audits,df-care-sources,Conserver route et état ; déplacer son accès
+Programme CaRE,care-finance,`finance` · `{}`,Conformité & audits,care-finance,Conserver route et état ; déplacer son accès
+Qualité · HAS,df-has-dash,"`has` · `{""hasView"": ""dash""}`",Conformité & audits,df-has-dash,Conserver route et état ; déplacer son accès
+Qualité · HAS,df-has-dossiers,"`has` · `{""hasView"": ""dossiers""}`",Conformité & audits,df-has-dossiers,Conserver route et état ; déplacer son accès
+Qualité · HAS,df-has-grid,"`has` · `{""hasView"": ""grid""}`",Conformité & audits,df-has-grid,Conserver route et état ; déplacer son accès
+Qualité · HAS,df-has-proofs,"`has` · `{""hasView"": ""proofs""}`",Conformité & audits,df-has-proofs,Vue contextuelle avec ses permissions et versions ; Documents est l’accès transversal
+Qualité · HAS,df-has-actions,"`has` · `{""hasView"": ""actions""}`",Conformité & audits,df-has-actions,Vue contextuelle préservée ; lien vers action canonique sans migration implicite
+Qualité · HAS,df-has-audit,"`has` · `{""hasView"": ""audit""}`",Conformité & audits,df-has-audit,Conserver route et état ; déplacer son accès
+Qualité · HAS,df-has-sources,"`has` · `{""hasView"": ""sources""}`",Conformité & audits,df-has-sources,Conserver route et état ; déplacer son accès
+Gestion de l'audit,cibles,`cibles` · `{}`,Conformité & audits,cibles,Conserver route et état ; déplacer son accès
+Gestion de l'audit,deroule,"`orga` · `{""orgaView"": ""deroule""}`",Conformité & audits,deroule,Conserver route et état ; déplacer son accès
+Gestion de l'audit,cal,"`orga` · `{""orgaView"": ""cal""}`",Conformité & audits,cal,Conserver route et état ; déplacer son accès
+Gestion de l'audit,people,"`orga` · `{""orgaView"": ""people""}`",Conformité & audits,people,Conserver route et état ; déplacer son accès
+Gestion de l'audit,couv,`couverture` · `{}`,Conformité & audits,couv,Conserver route et état ; déplacer son accès
+Preuves et justificatifs,prv-reg,"`preuves` · `{""prvView"": ""reg""}`",Documents,prv-reg,Conserver route et état ; déplacer son accès
+Preuves et justificatifs,prv-cov,"`preuves` · `{""prvView"": ""cov""}`",Documents,prv-cov,"Vue ou onglet interne ; route conservée, pas une entrée latérale supplémentaire"
+Preuves et justificatifs,prv-det,"`preuves` · `{""prvView"": ""det""}`",Documents,prv-det,"Vue ou onglet interne ; route conservée, pas une entrée latérale supplémentaire"
+Contexte et parties intéressées,ctx-scope,"`contexte` · `{""ctxView"": ""scope""}`",Organisation,ctx-scope,Conserver route et état ; déplacer son accès
+Contexte et parties intéressées,ctx-pi,"`contexte` · `{""ctxView"": ""pi""}`",Organisation,ctx-pi,Conserver route et état ; déplacer son accès
+Contexte et parties intéressées,ctx-swot,"`contexte` · `{""ctxView"": ""swot""}`",Organisation,ctx-swot,Conserver route et état ; déplacer son accès
+Cartographies,dmap,"`dash` · `{""dashView"": ""map""}`",Organisation / Cartographies du SMSI,dmap,"Accès conservé ; route, rendu et interactions strictement inchangés"
+Cartographies,mb-ctx,"`carto` · `{""mbView"": ""context""}`",Organisation / Cartographies du SMSI,mb-ctx,"Accès conservé ; route, rendu et interactions strictement inchangés"
+Cartographies,mb-proc,"`carto` · `{""mbView"": ""process""}`",Organisation / Cartographies du SMSI,mb-proc,"Accès conservé ; route, rendu et interactions strictement inchangés"
+Parcours guidé,journey-home,`journey` · `{}`,Aide / démarrer,journey-home,Conserver route et état ; déplacer son accès
+Fournisseurs et accès,sup,"`fournisseurs` · `{""supView"": ""list""}`",Organisation,sup,Conserver route et état ; déplacer son accès
+Fournisseurs et accès,ar,"`fournisseurs` · `{""supView"": ""ar""}`",Organisation,ar,Conserver route et état ; déplacer son accès
+Fournisseurs et accès,sev,`supeval` · `{}`,Organisation,sev,Conserver route et état ; déplacer son accès
+PCRA · continuité et reprise,pcra-dashboard,"`pcra` · `{""pcraView"": ""dashboard"", ""biaId"": """"}`",Résilience,pcra-dashboard,Conserver route et état ; déplacer son accès
+PCRA · continuité et reprise,pcra-bias,"`pcra` · `{""pcraView"": ""bias"", ""biaId"": """"}`",Résilience,pcra-bias,Conserver route et état ; déplacer son accès
+PCRA · continuité et reprise,pcra-PCA,"`pcra` · `{""pcraView"": ""PCA"", ""biaId"": """"}`",Résilience,pcra-PCA,Conserver route et état ; déplacer son accès
+PCRA · continuité et reprise,pcra-PRA,"`pcra` · `{""pcraView"": ""PRA"", ""biaId"": """"}`",Résilience,pcra-PRA,Conserver route et état ; déplacer son accès
+PCRA · continuité et reprise,pcra-exercises,"`pcra` · `{""pcraView"": ""exercises"", ""biaId"": """"}`",Résilience,pcra-exercises,Conserver route et état ; déplacer son accès
+PCRA · continuité et reprise,pcra-actions,"`pcra` · `{""pcraView"": ""actions"", ""biaId"": """"}`",Résilience,pcra-actions,Vue contextuelle préservée ; lien vers action canonique sans migration implicite
+PCRA · continuité et reprise,pcra-documents,"`pcra` · `{""pcraView"": ""documents"", ""biaId"": """"}`",Résilience,pcra-documents,Vue contextuelle avec ses permissions et versions ; Documents est l’accès transversal
+PCRA · continuité et reprise,pcra-policies,"`pcra` · `{""pcraView"": ""policies"", ""biaId"": """"}`",Administration / Configuration GRC,pcra-policies,Gestion centrale proposée ; lecture et références accessibles depuis le contexte métier
+Gouvernance de l’IA,syn,"`ia` · `{""iaView"": ""syn""}`",Risques,syn,Conserver route et état ; déplacer son accès
+Gouvernance de l’IA,reg,"`ia` · `{""iaView"": ""reg""}`",Risques,reg,Conserver route et état ; déplacer son accès
+Gouvernance de l’IA,eval,"`ia` · `{""iaView"": ""eval""}`",Risques,eval,Conserver route et état ; déplacer son accès
+Gouvernance de l’IA,plan,"`ia` · `{""iaView"": ""plan""}`",Risques,plan,Vue contextuelle préservée ; lien vers action canonique sans migration implicite
+Gouvernance de l’IA,pol,"`ia` · `{""iaView"": ""pol""}`",Risques,pol,Conserver route et état ; déplacer son accès
+Plans d’action,fd,"`ecarts` · `{""ecView"": ""list""}`",Actions,fd,Conserver route et état ; déplacer son accès
+Plans d’action,act,"`ecarts` · `{""ecView"": ""actions""}`",Actions,act,"Vue ou onglet interne ; route conservée, pas une entrée latérale supplémentaire"
+Tâches récurrentes,pl-rec,"`plans` · `{""planView"": ""rec""}`",Actions,pl-rec,Conserver route et état ; déplacer son accès
+Programmes du SMSI,pl-cal,"`plans` · `{""planView"": ""cal""}`",Actions,pl-cal,"Vue ou onglet interne ; route conservée, pas une entrée latérale supplémentaire"
+Programmes du SMSI,pl-formation,"`plans` · `{""planView"": ""formation""}`",Actions,pl-formation,Conserver route et état ; déplacer son accès
+Programmes du SMSI,pl-sensi,"`plans` · `{""planView"": ""sensi""}`",Actions,pl-sensi,Conserver route et état ; déplacer son accès
+Programmes du SMSI,pl-audit,"`plans` · `{""planView"": ""audit""}`",Actions,pl-audit,Conserver route et état ; déplacer son accès
+Programmes du SMSI,pl-exo,"`plans` · `{""planView"": ""exo""}`",Actions,pl-exo,Conserver route et état ; déplacer son accès
+Incidents et crise,inc-reg,"`incidents` · `{""incView"": ""reg""}`",Résilience,inc-reg,Conserver route et état ; déplacer son accès
+Incidents et crise,inc-qual,"`incidents` · `{""incView"": ""qual""}`",Résilience,inc-qual,Conserver route et état ; déplacer son accès
+Incidents et crise,cr-cell,"`crise` · `{""crView"": ""cell""}`",Résilience,cr-cell,Conserver route et état ; déplacer son accès
+Incidents et crise,cr-ct,"`crise` · `{""crView"": ""contacts""}`",Résilience,cr-ct,Conserver route et état ; déplacer son accès
+Incidents et crise,cr-sc,"`crise` · `{""crView"": ""scen""}`",Résilience,cr-sc,Conserver route et état ; déplacer son accès
+Écarts applicatifs,apps,`gapapp` · `{}`,Conformité & audits,apps,Conserver route et état ; déplacer son accès
+Gestion CRRC,cr-over,"`crrc` · `{""crrcView"": ""over""}`",Résilience,cr-over,Conserver route et état ; déplacer son accès
+Gestion CRRC,cr-est,"`crrc` · `{""crrcView"": ""est""}`",Résilience,cr-est,Conserver route et état ; déplacer son accès
+Gestion CRRC,cr-off,"`crrc` · `{""crrcView"": ""off""}`",Résilience,cr-off,Conserver route et état ; déplacer son accès
+Gestion CRRC,bk-dash,"`crrc` · `{""crrcView"": ""bk-dash""}`",Résilience,bk-dash,Conserver route et état ; déplacer son accès
+Gestion CRRC,bk-res,"`crrc` · `{""crrcView"": ""bk-res""}`",Résilience,bk-res,Conserver route et état ; déplacer son accès
+Gestion CRRC,bk-rest,"`crrc` · `{""crrcView"": ""bk-rest""}`",Résilience,bk-rest,Conserver route et état ; déplacer son accès
+Gestion CRRC,bk-alerts,"`crrc` · `{""crrcView"": ""bk-alerts""}`",Résilience,bk-alerts,Conserver route et état ; déplacer son accès
+Gestion CRRC,bk-rep,"`crrc` · `{""crrcView"": ""bk-rep""}`",Résilience,bk-rep,Conserver route et état ; déplacer son accès
+Périmètres,perimeter-registry,"`perimeters` · `{""perimetersView"": ""registry""}`",Organisation,perimeter-registry,Conserver route et état ; déplacer son accès
+Périmètres,perimeter-relations,"`perimeters` · `{""perimetersView"": ""classification""}`",Organisation,perimeter-relations,Conserver route et état ; déplacer son accès
+Périmètres,perimeter-accounts,"`perimeters` · `{""perimetersView"": ""accounts""}`",Administration / Comptes et habilitations,admin-users,Alias vers une seule destination ; conserver accès annuaire autorisé et droits actuels
+Périmètres,perimeter-roles,"`perimeters` · `{""perimetersView"": ""roles""}`",Organisation / Rôles et responsabilités,perimeter-roles,Alias vers le registre partagé ; édition sous les mêmes permissions
+Administration,admin-overview,"`admin` · `{""adminView"": ""overview""}`",Administration,admin-overview,Conserver route et état ; déplacer son accès
+Administration,admin-users,"`admin` · `{""adminView"": ""users""}`",Administration / Comptes et habilitations,admin-users,Alias vers une seule destination ; conserver accès annuaire autorisé et droits actuels
+Administration,admin-roles,"`admin` · `{""adminView"": ""roles""}`",Organisation / Rôles et responsabilités,perimeter-roles,Alias vers le registre partagé ; édition sous les mêmes permissions
+Administration,admin-frameworks,"`admin` · `{""adminView"": ""frameworks""}`",Administration,admin-frameworks,Conserver route et état ; déplacer son accès
+Administration,admin-audit,"`admin` · `{""adminView"": ""audit""}`",Administration,admin-audit,Conserver route et état ; déplacer son accès
+Administration,admin-demo,"`admin` · `{""adminView"": ""demo""}`",Administration,admin-demo,Conserver route et état ; déplacer son accès
+Alias historique du code,ctx-roles,contexte / roles,Organisation / Rôles et responsabilités,perimeter-roles,Ancien alias déjà redirigé par le code ; conserver compatibilité
+Alias historique du code,pl-gantt,plans / gantt,Actions / Programmes & formation,pl-gantt,Route historique retirée de la barre par organize ; garder comme vue interne

@@ -24,3 +24,11 @@ Point d’entrée de la branche `legacy`. Chaque fonctionnalité possède ses ve
 | [Tâches récurrentes](taches-recurrentes/README.md) | [v001-reference-08](taches-recurrentes/maquettes/README.md) | [Consulter](taches-recurrentes/tests/README.md) | [Consulter](taches-recurrentes/implementation/README.md) |
 
 [Ajouter une nouvelle maquette](../docs/ORGANISATION-LEGACY.md) · [Dossier commun](../implementation/socle-astra/README.md) · [Téléchargement Windows](../downloads/README.md) · [Catalogue JSON](catalogue.json).
+
+## Configuration GRC transversale
+
+[Configuration GRC — analyse ARM, dossier et dix vues](configuration-grc/README.md). Proposition supplémentaire à valider ; les versions et maquettes antérieures restent conservées.
+
+## Navigation simplifiée
+
+[Menu épuré : sept rubriques métier et Administration](navigation/README.md), proposition issue de la vidéo du 14 octobre 2026.

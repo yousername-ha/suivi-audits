@@ -1,0 +1,72 @@
+{
+  "status": "passed",
+  "views": [
+    {
+      "id": "registres",
+      "overflow": false,
+      "height": 1030.1875
+    },
+    {
+      "id": "configurations",
+      "overflow": false,
+      "height": 1090.09375
+    },
+    {
+      "id": "echelle",
+      "overflow": false,
+      "height": 1056.96875
+    },
+    {
+      "id": "matrice",
+      "overflow": false,
+      "height": 940.59375
+    },
+    {
+      "id": "etude",
+      "overflow": false,
+      "height": 975.296875
+    },
+    {
+      "id": "atelier1",
+      "overflow": false,
+      "height": 942.8125
+    },
+    {
+      "id": "atelier2",
+      "overflow": false,
+      "height": 1119.59375
+    },
+    {
+      "id": "scenario",
+      "overflow": false,
+      "height": 1091.59375
+    },
+    {
+      "id": "import",
+      "overflow": false,
+      "height": 1060.1875
+    },
+    {
+      "id": "historique",
+      "overflow": false,
+      "height": 1120.390625
+    }
+  ],
+  "consoleErrors": [],
+  "checks": [
+    "10 vues ouvertes",
+    "aucun débordement horizontal desktop",
+    "sélection ligne vers matrice",
+    "sélection cellule vers ligne",
+    "cellule vide",
+    "3 modes de chemins et nombre de traits",
+    "mouvement réduit",
+    "7 rubriques métier + Administration",
+    "un seul groupe déplié à la fois"
+  ],
+  "limits": [
+    "prototype uniquement",
+    "lanceur Windows non exécuté",
+    "accessibilité complète non auditée"
+  ]
+}

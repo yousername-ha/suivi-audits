@@ -163,6 +163,26 @@
       "implementation": "a-suivre",
       "tests": "fonctionnalites/taches-recurrentes/tests/README.md",
       "dossierImplementation": "fonctionnalites/taches-recurrentes/implementation/README.md"
+    },
+    {
+      "id": "configuration-grc",
+      "titre": "Configuration GRC transversale",
+      "maquetteCourante": "fonctionnalites/configuration-grc/maquettes/v001-dossier-arm",
+      "statutMaquette": "a-valider",
+      "implementation": "a-suivre",
+      "tests": "fonctionnalites/configuration-grc/tests/README.md",
+      "dossierImplementation": "fonctionnalites/configuration-grc/implementation/README.md",
+      "archive": "downloads/Dossier-implementation-GRC-transversal.zip"
+    },
+    {
+      "id": "navigation",
+      "titre": "Navigation simplifiée",
+      "maquetteCourante": "fonctionnalites/navigation/maquettes/v001-menu-epure",
+      "statutMaquette": "a-valider",
+      "implementation": "a-suivre",
+      "tests": "fonctionnalites/navigation/tests/README.md",
+      "dossierImplementation": "fonctionnalites/navigation/implementation/README.md",
+      "archive": "downloads/Dossier-implementation-GRC-transversal.zip"
     }
   ]
 }
