@@ -11,4 +11,3 @@ Aperçus existants regroupés par fonctionnalité. Version à valider ; aucune n
 ![029-recurring-calendar](../../../../references/vues-modules/images/029-recurring-calendar.png)
 
 ![030-recurring-fiche-historique](../../../../references/vues-modules/images/030-recurring-fiche-historique.png)
-

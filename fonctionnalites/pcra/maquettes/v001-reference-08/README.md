@@ -5,4 +5,3 @@ Aperçus existants regroupés par fonctionnalité. Version à valider ; aucune n
 ![011-pcra-pcra-dashboard](../../../../references/vues-modules/images/011-pcra-pcra-dashboard.png)
 
 ![012-pcra-pcra-bias](../../../../references/vues-modules/images/012-pcra-pcra-bias.png)
-

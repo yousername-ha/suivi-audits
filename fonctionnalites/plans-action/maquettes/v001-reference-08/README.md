@@ -13,4 +13,3 @@ Aperçus existants regroupés par fonctionnalité. Version à valider ; aucune n
 ![024-actions-gantt](../../../../references/vues-modules/images/024-actions-gantt.png)
 
 ![025-actions-summary](../../../../references/vues-modules/images/025-actions-summary.png)
-
