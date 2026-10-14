@@ -11,7 +11,7 @@ Principe : chaque lot est livrable seul, additif, testé, et laisse l'existant i
 | I1 | Schémas partagés du catalogue (`config-grc.ts`) : échelles, matrices, correspondances, critères, taxonomies ; fonctions pures (validation, évaluation, diff, correspondance), modèle de pertinence | livré, 25 tests |
 | I2 | Migration 021, service et routes `/api/config-grc/*` (cycle de vie, usages, impact, dérivation, modèles), droits réutilisés, temps réel | livré, 23 tests |
 | I3 | Épinglage des échelles et matrices par les méthodes de risque (`bindings`), résolution figée à la publication, usages `method_version` | livré, 6 tests partagés + 7 API |
-| I4 | **Interface** Paramètres → Configuration GRC (échelles, matrices, correspondances, critères, taxonomies : liste, éditeur guidé, versions, dépendances, dérivation, archivage, adoption de modèle) ; entrée Gestion des risques → Configuration des analyses (mêmes services) | à faire |
+| I4 | **Interface** Paramètres → Configuration GRC (échelles, matrices, correspondances, critères, taxonomies : liste, éditeur guidé, versions, dépendances, dérivation, archivage, adoption de modèle) ; entrée Gestion des risques → Configuration des analyses (mêmes services) | livré, spec e2e |
 | I5 | Composants mutualisés (`SelecteurObjet`, périmètre, responsable, fournisseur, `SelecteurNiveau`, `MatriceEvaluation`, `Justification`) et remplacement progressif des champs libres listés dans [01](01-DIAGNOSTIC.md) § 5 | à faire |
 | I6 | Liaison de configuration d'une analyse, usages `analysis`, migration explicite avec étude d'impact | à faire |
 | I7 | Ateliers EBIOS RM sur le catalogue : gravité proposée (maximum par correspondance), pertinence proposée (matrice), critères à échelle propre, impacts catégorie × niveau, lien fournisseur sur les parties prenantes, socle de sécurité sélectionnable | à faire |
@@ -27,8 +27,8 @@ contient pas les ateliers 3 à 5 ([02](02-ANALYSE-EXPORT-ARM.md) § 4).
 | --- | --- | --- |
 | Unitaires partagés | `config-grc.test.ts`, `method-bindings.test.ts` | sélecteurs, migration d'analyse |
 | API (PostgreSQL réel) | `config-grc.test.ts`, `config-grc-methods.test.ts`, migrations, schéma Drizzle, cartographie des routes | liaison d'analyse, migration |
-| Web | — | pages de configuration, sélecteurs, contrôle de charte (pas de style en ligne) |
-| Bout en bout | — | parcours : adopter le modèle de pertinence, éditer une échelle, publier, épingler à une méthode, créer une analyse |
+| Web | charte (aucun style en ligne), tests existants | pages de configuration, sélecteurs, contrôle de charte (pas de style en ligne) |
+| Bout en bout | `zzzzzzzz-configuration-grc.spec.ts` (modèle adopté, échelle créée et publiée, mêmes éléments côté analyses) | parcours : adopter le modèle de pertinence, éditer une échelle, publier, épingler à une méthode, créer une analyse |
 | Non-régression | état historique, environnement, méthodes publiées inchangés | études existantes sans liaison |
 
 ## 3. Points à arbitrer
