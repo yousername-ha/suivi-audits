@@ -13,7 +13,10 @@ for (const width of [1440, 390]) {
     try {
       await page.goto('/');
       if (width < 576) await page.getByRole('button', { name: 'Ouvrir le menu' }).click();
-      await page.getByRole('link', { name: 'Pilotage', exact: true }).filter({ visible: true }).click();
+      await page
+        .getByRole('link', { name: /^Pilotage(\s|$)/ })
+        .filter({ visible: true })
+        .click();
       await expect(page).toHaveURL(/\/pilotage$/);
       await expect(page.getByRole('heading', { name: 'Synthèse', exact: true })).toBeVisible();
       if (width < 576) {
@@ -132,6 +135,8 @@ test('Pilotage G/H : contrôle, preuve versionnée, constat et action corrective
       animations: 'disabled',
       caret: 'hide',
       mask: [
+        // Les pastilles du menu dépendent des données cumulées par les parcours précédents.
+        page.getByRole('navigation', { name: 'Navigation principale' }),
         page.getByRole('textbox', { name: 'Périmètre affiché', exact: true }),
         page.locator('.presence-bar'),
         page.locator('.live-badge'),
@@ -348,6 +353,8 @@ test('Pilotage E : BIA sur téléphone, plan relié et rapport imprimable sans d
       animations: 'disabled',
       caret: 'hide',
       mask: [
+        // Les pastilles du menu dépendent des données cumulées par les parcours précédents.
+        page.getByRole('navigation', { name: 'Navigation principale' }),
         page.getByRole('textbox', { name: 'Périmètre affiché', exact: true }),
         page.locator('.presence-bar'),
         page.locator('.live-badge'),

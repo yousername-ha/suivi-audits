@@ -275,7 +275,7 @@ export function Fournisseurs() {
               <Table.Th>Prochain</Table.Th>
               <Table.Th>Évaluation courante</Table.Th>
               <Table.Th>Périmètres</Table.Th>
-              <Table.Th>Actions</Table.Th>
+              <Table.Th className="col-actions">Actions</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
@@ -336,7 +336,7 @@ export function Fournisseurs() {
                     )}
                   </Table.Td>
                   <Table.Td>{f.scopes.length ? `${f.scopes.length} rattaché(s)` : 'Aucun'}</Table.Td>
-                  <Table.Td>
+                  <Table.Td className="col-actions">
                     <Group gap="xs">
                       <Button
                         size="xs"

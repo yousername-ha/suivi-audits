@@ -29,7 +29,7 @@ test('Pilotage : DdA historique, objectifs par processus, plans et graphiques de
 
     // Objectifs : vues « Par processus » et « Vue compacte ».
     await page.goto('/pilotage/objectifs');
-    await expect(page.getByText('Objectifs de sécurité et indicateurs de l’outil de suivi')).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Par processus' })).toBeVisible();
     if ((etat.objectives ?? []).length) {
       await page.getByRole('tab', { name: 'Vue compacte' }).click();
       const compacte = page.getByRole('region', { name: 'Objectifs, vue compacte' });

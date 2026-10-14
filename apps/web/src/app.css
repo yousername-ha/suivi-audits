@@ -824,3 +824,11 @@
 .select-compact {
   min-width: 7.5em;
 }
+
+/* Tableau large à défilement horizontal : la colonne des actions reste visible à droite. */
+.col-actions {
+  position: sticky;
+  right: 0;
+  background: var(--mantine-color-body);
+  box-shadow: -1px 0 0 var(--mantine-color-default-border);
+}
