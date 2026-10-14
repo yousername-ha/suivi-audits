@@ -5,7 +5,13 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 ## [Non publié]
 
 ### Notes de mise à jour
-- **Migration SQL 021** (catalogue de configuration, additive, appliquée automatiquement au démarrage) ; aucune donnée existante n’est modifiée.
+Aucune action.
+
+## [3.3.0] — 2026-10-14
+
+### Notes de mise à jour
+- **Migration SQL 021** (catalogue de configuration, additive, appliquée automatiquement au démarrage après la sauvegarde habituelle) ; aucune donnée existante n’est modifiée et le catalogue est vide à l’installation.
+- **Tout est facultatif** : les méthodes, études et évaluations existantes ne changent pas. Une méthode qui épingle des éléments du catalogue (`bindings`) ne peut pas être relue par une version antérieure de l’application : avant de publier une telle méthode, ne pas prévoir de retour à la 3.2.0.
 - **Aucune autre action sur le serveur.**
 
 ### Ajouté
