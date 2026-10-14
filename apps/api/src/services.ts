@@ -32,6 +32,8 @@ export function createServices(cfg: Config, log: Logger) {
   const businessPolicies = new BusinessPolicies(db);
   const modules = new Modules(cfg.db, db);
   const grc = new Grc(db, legacy, businessPolicies, modules);
+  const configGrc = new ConfigGrc(db, grc);
+  grc.methodBindings = configGrc;
   return {
     cfg,
     log,
@@ -41,7 +43,7 @@ export function createServices(cfg: Config, log: Logger) {
     environment,
     businessPolicies,
     grc,
-    configGrc: new ConfigGrc(db, grc),
+    configGrc,
     riskAssessments: new RiskAssessments(db, legacy, environment),
     modules,
     updates: new Updates(cfg, db),

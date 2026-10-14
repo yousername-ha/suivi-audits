@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CfgRef } from './config-grc.js';
 import { GrcKey, OfficialSource } from './grc.js';
 const named = z.object({ id: GrcKey, label: z.string().trim().min(1).max(200) }).strict();
 const scale = z
@@ -9,8 +10,24 @@ const scale = z
     if (new Set(a.map((x) => x.id)).size !== a.length || a.some((x, i) => i > 0 && x.value <= a[i - 1]!.value))
       c.addIssue({ code: 'custom', message: 'Niveaux uniques, valeurs strictement croissantes.' });
   });
+/** Éléments du catalogue de configuration épinglés par la méthode (ADR 0038) : à la publication, le serveur résout ces
+    références et fige une copie intégrée dans la définition ; le moteur d'évaluation n'utilise que cette copie. Facultatif :
+    une méthode sans épinglage garde ses échelles et sa matrice intégrées. Les épinglages l'emportent sur les valeurs intégrées. */
+export const MethodBindings = z
+  .object({
+    /** Dimension de la méthode → échelle (impact, gravité…) dont les niveaux la définissent. */
+    dimensions: z.record(GrcKey, CfgRef).default({}),
+    likelihood: CfgRef.optional(),
+    /** Échelle des niveaux de risque : chaque niveau porte une couleur et une acceptabilité. */
+    levels: CfgRef.optional(),
+    /** Matrice de calcul (lignes = dimension désignée, colonnes = vraisemblance, résultat = niveaux de risque). */
+    matrix: z.object({ ref: CfgRef, dimension: GrcKey }).strict().optional(),
+  })
+  .strict();
+export type MethodBindings = z.infer<typeof MethodBindings>;
 export const RiskMethod = z
   .object({
+    bindings: MethodBindings.optional(),
     name: z.string().trim().min(1).max(200),
     family: z.enum(['ebios_rm', 'iso27005', 'mehari', 'custom']),
     description: z.string().max(10000),

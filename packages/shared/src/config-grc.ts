@@ -48,6 +48,7 @@ export const SCALE_CATEGORIES = [
   'reliability',
   'dangerousness',
   'security_need',
+  'risk_level',
   'other',
 ] as const;
 export type ScaleCategory = (typeof SCALE_CATEGORIES)[number];
@@ -66,6 +67,7 @@ export const SCALE_CATEGORY_LABELS: Record<ScaleCategory, string> = {
   reliability: 'Fiabilité',
   dangerousness: 'Dangerosité',
   security_need: 'Besoin de sécurité',
+  risk_level: 'Niveau de risque',
   other: 'Autre',
 };
 

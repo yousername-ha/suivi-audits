@@ -20,7 +20,9 @@ import {
   type GrcObject,
   type SmsiUpdate,
   type Action,
+  type CfgRef,
   type Module,
+  type RiskMethod,
 } from '@suivi/shared';
 import { isObject, type JsonObject } from '@suivi/shared/legacy';
 import type { SessionUser } from '../auth.js';
@@ -87,7 +89,24 @@ export interface GrcSmsi {
   createdBy: string;
 }
 const smsiColumns = `s.id,s.name,s.scope,s.nature,s.visibility,s.timezone,s.business_version AS "businessVersion",s.risk_method_id AS "riskMethodId",s.risk_method_version AS "riskMethodVersion",s.version,s.created_by AS "createdBy"`;
+/** Résolution des épinglages d'une méthode de risque sur le catalogue de configuration (ADR 0038), branchée par services.ts. */
+export interface MethodBindingsResolver {
+  resolveMethod(
+    smsi: string,
+    method: RiskMethod,
+    c?: Client,
+    already?: CfgRef[],
+  ): Promise<{ definition: RiskMethod; refs: CfgRef[] }>;
+  pinnedRefs(method: RiskMethod | undefined): CfgRef[];
+  recordUsage(
+    c: Client,
+    user: { username: string },
+    consumer: { kind: 'method_version' | 'analysis'; id: string; version: number },
+    refs: CfgRef[],
+  ): Promise<void>;
+}
 export class Grc {
+  methodBindings?: MethodBindingsResolver;
   readonly legacyTasks: LegacyTasks;
   readonly frameworks: GrcFrameworks;
   readonly library: GrcLibrary;

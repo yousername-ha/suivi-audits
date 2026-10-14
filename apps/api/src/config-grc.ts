@@ -10,7 +10,11 @@ import {
   cfgTemplates,
   diffScales,
   instantiateTemplateDefinition,
+  MatrixDefinition,
+  methodBindingRefs,
   parseCfgDefinition,
+  resolveMethodBindings,
+  type RiskMethod,
   ScaleDefinition,
   validateMapping,
   validateMatrix,
@@ -22,7 +26,6 @@ import {
   type CfgScope,
   type CfgState,
   type MappingDefinition,
-  type MatrixDefinition,
 } from '@suivi/shared';
 import type { SessionUser } from './auth.js';
 import type { Client, Db } from './db/db.js';
@@ -573,6 +576,80 @@ export class ConfigGrc {
       )
     ).rows;
     return { from, to, diff: diffScales(a, b), consumers, consumersCount: consumers.length };
+  }
+
+  /* ------------------------------------------------------------ Méthodes de risque (épinglages) */
+  /** Résout les épinglages d'une méthode sur le catalogue (visibilité, type, famille, archivage) et renvoie la définition
+      intégrée à publier ; `already` : références déjà épinglées par la version précédente de la méthode (restent valables archivées). */
+  async resolveMethod(smsi: string, method: RiskMethod, c?: Client, already: CfgRef[] = []) {
+    const refs = methodBindingRefs(method.bindings);
+    if (!refs.length) return { definition: method, refs };
+    const b = method.bindings!;
+    const q = c ?? this.db.pool;
+    const expected = new Map<string, Set<CfgKind>>();
+    const expect = (r: CfgRef, kind: CfgKind) =>
+      expected.set(r.item + '@' + r.version, (expected.get(r.item + '@' + r.version) ?? new Set()).add(kind));
+    for (const r of [
+      ...Object.values(b.dimensions),
+      ...(b.likelihood ? [b.likelihood] : []),
+      ...(b.levels ? [b.levels] : []),
+    ])
+      expect(r, 'scale');
+    if (b.matrix) expect(b.matrix.ref, 'matrix');
+    const known = new Set(already.map((r) => r.item + '@' + r.version));
+    const scales = new Map<string, ScaleDefinition>();
+    const matrices = new Map<string, MatrixDefinition>();
+    const errors: string[] = [];
+    for (const ref of refs) {
+      const k = ref.item + '@' + ref.version;
+      const row = (
+        await q.query<{
+          kind: CfgKind;
+          key: string;
+          scope: CfgScope;
+          smsiId: string | null;
+          state: CfgState;
+          definition: Record<string, unknown>;
+        }>(
+          `SELECT i.kind,i.key,i.scope,i.smsi_id AS "smsiId",i.state,v.definition FROM cfg_items i JOIN cfg_versions v ON v.item_id=i.id
+           WHERE i.id=$1 AND v.version=$2`,
+          [ref.item, ref.version],
+        )
+      ).rows[0];
+      if (!row) {
+        errors.push(`Référence introuvable : ${ref.item} version ${ref.version}.`);
+        continue;
+      }
+      const kinds = expected.get(k)!;
+      if (kinds.size > 1 || !kinds.has(row.kind)) {
+        errors.push(
+          `« ${row.key} » est ${row.kind === 'scale' ? 'une échelle' : 'de type ' + row.kind} : ${kinds.size > 1 ? 'elle ne peut être épinglée à la fois comme échelle et comme matrice.' : kinds.has('matrix') ? 'une matrice est attendue.' : 'une échelle est attendue.'}`,
+        );
+        continue;
+      }
+      if (row.scope === 'smsi' && row.smsiId !== smsi) errors.push(`« ${row.key} » est propre à un autre périmètre.`);
+      if (row.state === 'archived' && !known.has(k))
+        errors.push(`« ${row.key} » est archivé : il ne peut plus recevoir de nouveau usage.`);
+      const parsed =
+        row.kind === 'scale' ? ScaleDefinition.safeParse(row.definition) : MatrixDefinition.safeParse(row.definition);
+      if (!parsed.success) {
+        errors.push(`« ${row.key} » : définition illisible.`);
+        continue;
+      }
+      if (!appliesToFamily(parsed.data.appliesTo, method.family))
+        errors.push(`« ${row.key} » ne s’applique pas à la famille de méthode « ${method.family} ».`);
+      if (row.kind === 'scale') scales.set(k, parsed.data as ScaleDefinition);
+      else matrices.set(k, parsed.data as MatrixDefinition);
+    }
+    if (errors.length) throw new HttpError(422, errors.join(' '));
+    const r = resolveMethodBindings(method, { scales, matrices });
+    if (!r.ok) throw new HttpError(422, r.errors.join(' '));
+    return { definition: r.definition, refs };
+  }
+
+  /** Épinglages d'une méthode : lecture de la version publiée (immuable) pour les références déjà valides. */
+  pinnedRefs(method: RiskMethod | undefined) {
+    return methodBindingRefs(method?.bindings);
   }
 
   /** Épingle des éléments pour un consommateur (méthode publiée, analyse) : enregistre les usages, sans les modifier ensuite. */

@@ -14,6 +14,7 @@ export * from './updates.js';
 export * from './business-policy.js';
 export * from './grc.js';
 export * from './risk-methods.js';
+export * from './method-bindings.js';
 export * from './recurrence.js';
 export * from './pilotage.js';
 export * from './objectifs.js';
