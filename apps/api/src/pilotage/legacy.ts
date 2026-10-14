@@ -21,7 +21,16 @@ export const LEGACY_PILOTAGE = {
   interested: {
     kind: 'stakeholder',
     name: 'name',
-    fields: { expectations: 'needs', requirements: 'requirements', contact: 'contact' },
+    fields: {
+      expectations: 'needs',
+      requirements: 'req',
+      contact: 'contact',
+      nature: 'type',
+      category: 'cat',
+      addressed: 'addressed',
+      treatment: 'how',
+      reviewedAt: 'reviewed',
+    },
   },
   swots: { kind: 'swot', name: 'name', fields: { strengths: 'S', weaknesses: 'W', opportunities: 'O', threats: 'T' } },
   roles: {

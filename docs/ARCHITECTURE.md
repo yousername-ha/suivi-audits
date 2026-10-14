@@ -24,7 +24,7 @@ Ce document décrit l'architecture cible et l'état livré en **phase 0** (fonda
    └────────────────┬─────────────────┘
                     │ réseau « backend » (interne, sans sortie Internet)
    ┌────────────────▼─────────────────┐      ┌──────────────────────────┐
-   │ db — PostgreSQL 17               │      │ clamav (facultatif)      │
+   │ db — PostgreSQL 18               │      │ clamav (facultatif)      │
    │  LISTEN/NOTIFY → temps réel      │      │ analyse des dépôts       │
    └──────────────────────────────────┘      └──────────────────────────┘
    init : service ponctuel (root, sans réseau) — contrôle de DATA_DIR, secrets, droits des dossiers
@@ -33,7 +33,7 @@ Ce document décrit l'architecture cible et l'état livré en **phase 0** (fonda
 | Service | Image | Rôle |
 |---|---|---|
 | `init` | `ghcr.io/yousername-ha/suivi-audits-api` | Contrôle le dossier des données (`DATA_DIR`), crée ses sous-dossiers avec propriétaires et droits, génère les secrets manquants. S'arrête. |
-| `db` | `postgres:17-alpine` | Base unique. Aucun port publié. |
+| `db` | `postgres:18-alpine` | Base unique. Aucun port publié. |
 | `app` | `ghcr.io/yousername-ha/suivi-audits-api` | API, outil historique sous `/legacy`, commandes d'exploitation (`setup-token`, `suivi`). Désactive aussi les comptes arrivés à expiration. |
 | `web` | `ghcr.io/yousername-ha/suivi-audits-web` | Caddy : TLS, en-têtes de sécurité, interface compilée, reverse proxy vers `app`. Seul service exposé. |
 | `clamav` | `clamav/clamav` | Facultatif (`--profile antivirus`). |
@@ -87,7 +87,7 @@ Routes livrées en phase 0 :
 
 ## 4. Données
 
-- **PostgreSQL 17**. Migrations SQL versionnées (`apps/api/migrations`), appliquées au démarrage sous verrou consultatif, dans la table `schema_migrations` partagée avec la v2 ([ADR 0003](adr/0003-postgresql-drizzle-migrations-sql.md)).
+- **PostgreSQL 18**. Migrations SQL versionnées (`apps/api/migrations`), appliquées au démarrage sous verrou consultatif, dans la table `schema_migrations` partagée avec la v2 ([ADR 0003](adr/0003-postgresql-drizzle-migrations-sql.md)).
 - `001_init.sql` est le schéma v2, inchangé : comptes, sessions, paramètres, journal d'audit, état legacy et son historique, documents et versions, liens.
 - `002_v3_fondations.sql` ajoute :
   - `import_batches` : traçabilité des imports (fichier source chiffré, rapport, états avant et après, annulation) ;
@@ -132,7 +132,7 @@ L'import et l'export (`docs/legacy/IMPORT-LEGACY.md`, `docs/legacy/MAPPING-LEGAC
 
 ## 8. Livraison
 
-- **CI** (`.github/workflows/ci.yml`) : ESLint, Prettier, typage strict, construction, OpenAPI. Puis Vitest sur PostgreSQL 17, construction des images, Trivy, SBOM, pile complète et Playwright. Le job **guide** rejoue `docs/INSTALLATION.md` sur un runner vierge. CodeQL tourne dans `codeql.yml`.
+- **CI** (`.github/workflows/ci.yml`) : ESLint, Prettier, typage strict, construction, OpenAPI. Puis Vitest sur PostgreSQL 18, construction des images, Trivy, SBOM, pile complète et Playwright. Le job **guide** rejoue `docs/INSTALLATION.md` sur un runner vierge. CodeQL tourne dans `codeql.yml`.
 - **Publication** (`release.yml`) : uniquement sur une étiquette `vX.Y.Z`. Elle publie sur GHCR les images signées (cosign) et leur SBOM attesté.
 - **Production** : `docker compose pull && docker compose up -d` avec `APP_VERSION` dans `.env` ([ADR 0008](adr/0008-images-ghcr-cosign-caddy-non-root.md)).
 - **Développement** : `docker-compose.dev.yml` (rechargement à chaud), voir [CONTRIBUTING.md](../CONTRIBUTING.md).

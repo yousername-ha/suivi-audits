@@ -37,6 +37,20 @@ maj() {
     -e GIT_CONFIG_KEY_1=safe.directory -e "GIT_CONFIG_VALUE_1=$SOURCE" \
     "$IMG-updater:$CIBLE_VERSION" env "$@" bash -s -- "$VERS" --auto --images-locales --delai 240)
 }
+# Trajet réel d'un serveur qui se met à jour depuis l'interface : c'est le script de la version INSTALLÉE (celui du dépôt,
+# lancé en fichier par l'exécutant installé) qui s'exécute, dans l'image updater de cette version ; il bascule le dépôt sur
+# la cible puis charge les outils de la cible. maj() ci-dessus exerce, lui, le script de la cible.
+maj_installee() {
+  (cd "$SERVEUR" && sudo docker run --rm --network none \
+    -v /var/run/docker.sock:/var/run/docker.sock -v "$SERVEUR:$SERVEUR" -v "$SOURCE:$SOURCE:ro" \
+    -v /srv/suivi-audits/donnees:/srv/suivi-audits/donnees \
+    -v /srv/sauvegardes/suivi-audits:/srv/sauvegardes/suivi-audits \
+    -v /root/.suivi-backup-pass:/root/.suivi-backup-pass:ro \
+    -w "$SERVEUR" -e "PWD=$SERVEUR" \
+    -e GIT_CONFIG_COUNT=2 -e GIT_CONFIG_KEY_0=safe.directory -e "GIT_CONFIG_VALUE_0=$SERVEUR" \
+    -e GIT_CONFIG_KEY_1=safe.directory -e "GIT_CONFIG_VALUE_1=$SOURCE" \
+    "$IMG-updater:$DEPART_VERSION" bash scripts/mettre-a-jour.sh "$VERS" --auto --images-locales --delai 240)
+}
 attendre() {
   for _ in $(seq 1 100); do
     [ "$(curl -sk "$URL/healthz" || true)" = ok ] && return 0
@@ -86,15 +100,25 @@ groupe "2. Simulation (--verifier) : rien ne change"
 [ "$(version_env)" = "$DEPART_VERSION" ] || echec "--verifier a modifié APP_VERSION"
 fin_groupe
 
-groupe "3. Mise à jour $DEPART_VERSION → $CIBLE_VERSION"
-maj
+groupe "3. Mise à jour $DEPART_VERSION → $CIBLE_VERSION (script de la version installée, comme depuis l'interface)"
+sudo git -C "$SERVEUR" rev-parse --verify -q "$DEPART_REF^{commit}" > /dev/null
+[ "$(sudo git -C "$SERVEUR" rev-parse HEAD)" = "$(sudo git -C "$SERVEUR" rev-parse "$DEPART_REF^{commit}")" ] || echec "le dépôt n'est pas à la version de départ avant la mise à jour"
+maj_installee
 [ "$(version_env)" = "$CIBLE_VERSION" ] || echec "APP_VERSION différent de $CIBLE_VERSION"
 attendre
 api instantane "$URL" "$RUNNER_TEMP/apres-maj.json" "$RUNNER_TEMP/reference.json"
 grep -q "\"version\": \"$CIBLE_VERSION\"" "$RUNNER_TEMP/apres-maj.json" || echec "/api/version n'indique pas $CIBLE_VERSION"
 dernier_rapport | grep -q '"resultat":"reussie"' || echec "rapport « reussie » absent"
 sudo docker compose exec -T app suivi controle-donnees > /dev/null || echec "contrôle des données (documents relus) en échec"
-sudo test -s /srv/suivi-audits/donnees/postgres/PG_VERSION || echec "la base n'est pas dans DATA_DIR"
+sudo test -s /srv/suivi-audits/donnees/postgres18/18/docker/PG_VERSION || echec "la base PostgreSQL 18 n'est pas dans DATA_DIR/postgres18"
+# Migration PostgreSQL 17 → 18 (ADR 0035) : seulement si la version de départ était encore en 17.
+if sudo test -s /srv/suivi-audits/donnees/postgres/PG_VERSION; then
+  [ "$(sudo cat /srv/suivi-audits/donnees/postgres/PG_VERSION)" = 17 ] || echec "l'ancien dossier postgres n'est pas resté en version 17 (il doit rester intact)"
+  [ "$(sudo docker compose exec -T -u postgres db psql -d suivi -Atc 'SHOW server_version_num' | cut -c1-2)" = 18 ] || echec "la base en service n'est pas PostgreSQL 18"
+  sudo test -s /srv/suivi-audits/donnees/etat/migration-postgresql/migration-17-vers-18.json || echec "rapport de migration PostgreSQL absent"
+  sudo test ! -e /srv/suivi-audits/donnees/etat/migration-postgresql/suivi-pg17.dump || echec "l'export non chiffré de la base n'a pas été supprimé"
+  echo "Migration PostgreSQL 17 → 18 vérifiée : base 18 en service, ancien dossier intact, export supprimé."
+fi
 api systeme "$URL" || true
 if [ "$VOLUMES_DEPART" -gt 0 ]; then
   sudo docker volume ls -q | grep -q '^suivi-audits_pgdata$' || echec "anciens volumes supprimés sans confirmation"

@@ -220,7 +220,9 @@ export function buildObjects(state: unknown, opts: BuildOptions): Map<string, Ca
     const scp: ScopeState = scDef ? (inSc.has(p.id) || (parent && inSc.has(parent)) ? 'in' : 'out') : 'unk';
     const ob = objOf(p.id);
     const ind = indicators.filter((i) => ob.some((o) => o.id === i.obj));
-    const ko = ind.filter((i) => indicatorState(i, S) === 'ko').length;
+    const etats = ind.map((i) => indicatorState(i, S));
+    const ko = etats.filter((e) => e === 'ko').length;
+    const okN = etats.filter((e) => e === 'ok').length;
     const o = add({
       ref: 'process:' + String(p.id),
       type: parent ? 'subprocess' : 'process',
@@ -235,6 +237,8 @@ export function buildObjects(state: unknown, opts: BuildOptions): Map<string, Ca
       nObj: ob.length,
       nInd: ind.length,
       nKo: ko,
+      nOk: okN,
+      nMes: ind.length - ko - okN,
     });
     if (det) {
       const sw = swotLatest(S, p.id);

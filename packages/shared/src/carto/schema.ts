@@ -171,6 +171,8 @@ export const CartoObjectSchema = z.object({
   nObj: z.number().optional(),
   nInd: z.number().optional(),
   nKo: z.number().optional(),
+  nOk: z.number().optional(),
+  nMes: z.number().optional(),
   ext: z.boolean().optional(),
   crit: z.boolean().optional(),
   hds: z.boolean().optional(),

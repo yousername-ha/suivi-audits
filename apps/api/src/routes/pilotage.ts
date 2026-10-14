@@ -1,13 +1,102 @@
 import { z } from 'zod';
-import { GrcRef, GRC_MODULES, PilotageRecord, Recurrence } from '@suivi/shared';
+import { GrcRef, GRC_MODULES, PilotageRecord, Recurrence, SuppressionBody } from '@suivi/shared';
 import type { Session } from '../auth.js';
 import { Pilotage } from '../pilotage/service.js';
+import { PilotageObjectifs } from '../pilotage/objectifs.js';
+import { PilotageBoites } from '../pilotage/boites.js';
+import { PilotagePestel } from '../pilotage/pestel.js';
+import { PilotageRevue } from '../pilotage/revue.js';
 import { route } from '../http/route.js';
 import { requireIfMatch } from '../http/concurrency.js';
 const base = { tags: ['Pilotage'], access: 'metier' as const };
 const scope = z.object({ smsi: z.uuid() });
+const cleObjectifs = z.enum(['processes', 'objectives', 'indicators']);
 const recordBody = z.object({ ref: GrcRef, decision: PilotageRecord }).strict();
 export const pilotageRoutes = [
+  route({
+    ...base,
+    method: 'GET',
+    url: '/api/grc/:smsi/pilotage/revue/entrees',
+    params: scope,
+    summary:
+      'Entrées de la revue de direction (ISO 9001:2015, 9.3.2) préparées à partir des données, sans interprétation',
+    handler: async ({ svc, s, params }) => new PilotageRevue(svc.grc).entrees(params.smsi, (s as Session).user),
+  }),
+  route({
+    ...base,
+    method: 'GET',
+    url: '/api/grc/:smsi/pilotage/pestel',
+    params: scope,
+    summary: 'Enjeux du contexte regroupés selon le PESTEL (enjeux externes) et enjeux internes',
+    handler: async ({ svc, s, params }) => new PilotagePestel(svc.grc, svc).lire(params.smsi, (s as Session).user),
+  }),
+  route({
+    ...base,
+    method: 'PUT',
+    url: '/api/grc/:smsi/pilotage/pestel',
+    params: scope,
+    body: z.record(z.string(), z.unknown()),
+    summary: 'Classer des enjeux externes dans les facteurs du PESTEL',
+    handler: async ({ svc, s, params, body, ip }) =>
+      new PilotagePestel(svc.grc, svc).affecter(params.smsi, body, (s as Session).user, ip),
+  }),
+  route({
+    ...base,
+    method: 'GET',
+    url: '/api/grc/:smsi/pilotage/boites',
+    params: scope,
+    summary: 'Boîtes de pilotage par processus : actions, risques et séries rattachés, prochaine échéance récurrente',
+    handler: async ({ svc, s, params }) => new PilotageBoites(svc.grc).lister(params.smsi, (s as Session).user),
+  }),
+  route({
+    ...base,
+    method: 'POST',
+    url: '/api/grc/:smsi/pilotage/objectifs/:cle',
+    params: scope.extend({ cle: cleObjectifs }),
+    body: z.record(z.string(), z.unknown()),
+    summary: 'Créer un processus, un objectif ou un indicateur dans l’état de l’outil de suivi',
+    handler: async ({ svc, s, params, body, ip }) =>
+      new PilotageObjectifs(svc.grc).creer(params.smsi, params.cle, body, (s as Session).user, ip),
+  }),
+  route({
+    ...base,
+    method: 'PATCH',
+    url: '/api/grc/:smsi/pilotage/objectifs/:cle/:id',
+    params: scope.extend({ cle: cleObjectifs, id: z.string().min(1).max(60) }),
+    body: z.record(z.string(), z.unknown()),
+    summary: 'Modifier un processus, un objectif ou un indicateur (champs présents seulement)',
+    handler: async ({ svc, s, params, body, ip }) =>
+      new PilotageObjectifs(svc.grc).modifier(params.smsi, params.cle, params.id, body, (s as Session).user, ip),
+  }),
+  route({
+    ...base,
+    method: 'DELETE',
+    url: '/api/grc/:smsi/pilotage/objectifs/:cle/:id',
+    params: scope.extend({ cle: cleObjectifs, id: z.string().min(1).max(60) }),
+    query: SuppressionBody,
+    summary: 'Supprimer un processus, un objectif (et ses indicateurs) ou un indicateur',
+    handler: async ({ svc, s, params, ip }) =>
+      new PilotageObjectifs(svc.grc).supprimer(params.smsi, params.cle, params.id, (s as Session).user, ip),
+  }),
+  route({
+    ...base,
+    method: 'POST',
+    url: '/api/grc/:smsi/pilotage/objectifs/indicators/:id/values',
+    params: scope.extend({ id: z.string().min(1).max(60) }),
+    body: z.record(z.string(), z.unknown()),
+    summary: 'Ajouter une mesure à un indicateur',
+    handler: async ({ svc, s, params, body, ip }) =>
+      new PilotageObjectifs(svc.grc).ajouterValeur(params.smsi, params.id, body, (s as Session).user, ip),
+  }),
+  route({
+    ...base,
+    method: 'DELETE',
+    url: '/api/grc/:smsi/pilotage/objectifs/indicators/:id/values/:rang',
+    params: scope.extend({ id: z.string().min(1).max(60), rang: z.coerce.number().int().min(0).max(10000) }),
+    summary: 'Supprimer une mesure d’un indicateur',
+    handler: async ({ svc, s, params, ip }) =>
+      new PilotageObjectifs(svc.grc).supprimerValeur(params.smsi, params.id, params.rang, (s as Session).user, ip),
+  }),
   route({
     ...base,
     method: 'GET',

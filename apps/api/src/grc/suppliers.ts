@@ -6,7 +6,12 @@ import {
   SupplierCriterionBody,
   SupplierEvaluationBody,
   SupplierFollowUpBody,
+  SupplierUpdateBody,
+  etatCertificats,
+  resumeControles,
+  type EtatSuivi,
   type FrameworkDefinition,
+  type ResumeControles,
 } from '@suivi/shared';
 import { isObject, type JsonObject } from '@suivi/shared/legacy';
 import type { SessionUser } from '../auth.js';
@@ -46,6 +51,14 @@ export interface SupplierRow {
   critical: string;
   hds: string;
   contact: string;
+  notes: string;
+  sso: string;
+  mfa: string;
+  certs: Record<string, unknown>[];
+  controls: Record<string, unknown>[];
+  /** États calculés comme l'outil de suivi historique (aucune valeur estimée). */
+  certificateState: EtatSuivi;
+  controlSummary: ResumeControles;
   current: EvaluationSummary | null;
   toReview: boolean;
   scopes: string[];
@@ -92,6 +105,13 @@ export class GrcSuppliers {
       critical: str(s.critical),
       hds: str(s.hds),
       contact: str(s.contact),
+      notes: str(s.notes),
+      sso: str(s.sso),
+      mfa: str(s.mfa),
+      certs: (Array.isArray(s.certs) ? s.certs : []).filter(isObject),
+      controls: (Array.isArray(s.controls) ? s.controls : []).filter(isObject),
+      certificateState: etatCertificats(s, day),
+      controlSummary: resumeControles(s, day),
       current,
       toReview: !!current?.nextReviewAt && current.nextReviewAt < day,
       scopes,
@@ -152,6 +172,44 @@ export class GrcSuppliers {
       await this.g.db.audit(user, ip, 'supplier.created', `legacy:suppliers:${id}`, { version: r.version }, c);
       await this.g.notify(c, `legacy:suppliers:${id}`, r.version, DEFAULT_SMSI, 'fournisseurs', user.username);
       return this.row(created as JsonObject & { id: string }, null, [], today('UTC'));
+    }, user.username);
+  }
+
+  /** Modifie les champs d'un fournisseur du registre historique (sous verrou, sans copie). Contrôles et certificats sont
+      remplacés tels quels ; un contrôle sans identifiant en reçoit un. */
+  async update(id: string, input: unknown, user: SessionUser, ip: string) {
+    await this.g.permission(user, 'fournisseurs', 'modifier');
+    const body = SupplierUpdateBody.parse(input);
+    return this.g.db.tx(async (c) => {
+      await c.query('SELECT id FROM app_state WHERE id=1 FOR UPDATE');
+      const { state, suppliers } = await this.registry(c);
+      if (!state) throw new HttpError(409, 'Registre historique indisponible.');
+      const before = suppliers.find((s) => s.id === id);
+      if (!before) throw new HttpError(404, 'Fournisseur absent du registre.');
+      if (
+        body.name &&
+        suppliers.some((s) => s.id !== id && str(s.name).trim().toLowerCase() === body.name!.toLowerCase())
+      )
+        throw new HttpError(409, 'Un fournisseur porte déjà ce nom.');
+      const next: JsonObject = { ...before };
+      for (const [k, v] of Object.entries(body)) {
+        if (k === 'controls')
+          next.controls = (body.controls ?? []).map((ctl, i) => ({
+            ...ctl,
+            id: ctl.id ?? `ctl-${Date.now().toString(36)}-${i}`,
+          }));
+        else next[k] = v as never;
+      }
+      const r = await this.g.legacy.legacyWrite(
+        c,
+        { ...state.data, suppliers: suppliers.map((s) => (s.id === id ? next : s)) },
+        user,
+        state.version,
+      );
+      if (r.conflict) throw new HttpError(412, 'Le registre a changé. Rechargez avant de modifier.');
+      await this.g.db.audit(user, ip, 'supplier.updated', `legacy:suppliers:${id}`, { fields: Object.keys(body) }, c);
+      await this.g.notify(c, `legacy:suppliers:${id}`, r.version, DEFAULT_SMSI, 'fournisseurs', user.username);
+      return this.row(next as JsonObject & { id: string }, null, [], today('UTC'));
     }, user.username);
   }
 

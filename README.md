@@ -16,7 +16,7 @@ Application web auto-hébergée de pilotage du GCS Normand'e-Santé : qualité, 
 |---|---|
 | **Interface** | React, en français, accessible et utilisable au téléphone ; mise à jour en temps réel entre utilisateurs, avec indication de présence |
 | **Sécurité** | Comptes nominatifs, **double authentification TOTP obligatoire**, jeton d'installation à usage unique (aucun mot de passe par défaut), droits par module (rôles, groupes, revue des accès), CSRF, journal d'audit en ajout seul, documents chiffrés en AES-256-GCM, CSP stricte |
-| **Données** | PostgreSQL 17, un enregistrement par élément (concurrence par enregistrement), historique et sauvegardes chiffrées |
+| **Données** | PostgreSQL 18, un enregistrement par élément (concurrence par enregistrement), historique et sauvegardes chiffrées |
 | **Déploiement** | Docker Compose : images signées publiées sur GHCR, conteneurs non root en lecture seule, seul le frontal HTTPS (Caddy) est exposé |
 
 ```

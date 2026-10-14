@@ -16,7 +16,7 @@ flowchart LR
     G --> W[web Caddy + React]
     G --> M[Maintenance statique et état minimal]
     W --> A[app Fastify]
-    A --> P[(PostgreSQL 17)]
+    A --> P[(PostgreSQL 18)]
     A --> L[Source legacy et documents chiffrés]
     A -->|Option antivirus| V[ClamAV]
     I[init ponctuel] --> D[DATA_DIR sur le serveur]
@@ -32,7 +32,7 @@ flowchart LR
   seuls 80/443 exposés en Compose production.
 - `web` : interface React compilée et proxy interne via Caddy, distinct du frontal.
 - `app` : Fastify, routes REST/OpenAPI, auth, SSE, données/legacy et automate métier.
-- `db` : PostgreSQL 17 ; transaction, contraintes, verrous, NOTIFY. Pas de port public.
+- `db` : PostgreSQL 18 ; transaction, contraintes, verrous, NOTIFY. Pas de port public.
 - `init` : ponctuel, root sans réseau, génère uniquement les secrets manquants
   et prépare propriétaires/dossiers.
 - `updater` : conteneur root distinct, socket Docker et dépôt pour opérations

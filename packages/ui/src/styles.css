@@ -63,14 +63,14 @@
 }
 
 /* ---------------------------------------------------------------- Taille d'affichage et typographie fluide
-   Base fluide bornée (15 à 17 px selon la largeur), multipliée par la taille d'affichage choisie.
+   Base fluide bornée (14 à 16 px selon la largeur), multipliée par la taille d'affichage choisie.
    « Automatique » : agrandissement progressif au-delà de 2560 px (lisible à 2 m sur un écran de 55 pouces). */
 html {
-  font-size: calc(clamp(93.75%, 87.5% + 0.2vw, 106.25%) * var(--suivi-echelle));
+  font-size: calc(clamp(87.5%, 82.5% + 0.2vw, 100%) * var(--suivi-echelle));
 }
 /* Écran mural : texte agrandi d'un quart en plus de la taille d'affichage. */
 html[data-mur] {
-  font-size: calc(clamp(93.75%, 87.5% + 0.2vw, 106.25%) * var(--suivi-echelle) * 1.25);
+  font-size: calc(clamp(87.5%, 82.5% + 0.2vw, 100%) * var(--suivi-echelle) * 1.25);
 }
 html[data-taille='90'] {
   --suivi-echelle: 0.9;
@@ -1741,4 +1741,22 @@ html[data-style='clair'][data-mantine-color-scheme='light'] {
   outline: 3px solid #326899;
   outline-offset: 2px;
   background: rgb(255 255 255 / 25%);
+}
+
+/* Menu : lignes alignées à gauche, pastilles collées au libellé, rouge quand un indicateur est mauvais. */
+.shell-nav .mantine-NavLink-body {
+  text-align: start;
+}
+.shell-nav .mantine-NavLink-children {
+  padding-inline-start: var(--mantine-spacing-xs);
+}
+.nav-libelle-alerte {
+  justify-content: flex-start;
+}
+.nav-pastille {
+  flex-shrink: 0;
+}
+.shell-nav .nav-pastille[data-alerte='rouge'] {
+  background: var(--mantine-color-red-7);
+  color: var(--mantine-color-white);
 }
