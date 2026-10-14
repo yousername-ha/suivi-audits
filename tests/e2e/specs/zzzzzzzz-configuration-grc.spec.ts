@@ -100,7 +100,7 @@ test('Atelier 2 : étude liée à la matrice du catalogue, pertinence proposée 
       'Matrice de pertinence des couples source de risque / objectif visé',
       'Niveau de pertinence (ressources × motivation) (matrice_pertinence_sr_ov)',
     );
-    await expect(d.getByText('Version 1 (courante)')).toBeVisible();
+    await expect(d.getByRole('textbox', { name: 'Version épinglée' })).toHaveValue('Version 1 (courante)');
     await d.getByRole('button', { name: 'Enregistrer', exact: true }).click();
     await expect(d).toHaveCount(0);
     await page.getByRole('button', { name: 'Ouvrir l’étude' }).click();

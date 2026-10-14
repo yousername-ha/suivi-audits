@@ -13,8 +13,8 @@ Principe : chaque lot est livrable seul, additif, testé, et laisse l'existant i
 | I3 | Épinglage des échelles et matrices par les méthodes de risque (`bindings`), résolution figée à la publication, usages `method_version` | livré, 6 tests partagés + 7 API |
 | I4 | **Interface** Paramètres → Configuration GRC (échelles, matrices, correspondances, critères, taxonomies : liste, éditeur guidé, versions, dépendances, dérivation, archivage, adoption de modèle) ; entrée Gestion des risques → Configuration des analyses (mêmes services) | livré, spec e2e |
 | I5 | Composants mutualisés (`SelecteurObjet`, périmètre, responsable, fournisseur, `SelecteurNiveau`, `MatriceEvaluation`, `Justification`) et remplacement progressif des champs libres listés dans [01](01-DIAGNOSTIC.md) § 5 | à faire |
-| I6 | Liaison de configuration d'une analyse, usages `analysis`, migration explicite avec étude d'impact | à faire |
-| I7 | Ateliers EBIOS RM sur le catalogue : gravité proposée (maximum par correspondance), pertinence proposée (matrice), critères à échelle propre, impacts catégorie × niveau, lien fournisseur sur les parties prenantes, socle de sécurité sélectionnable | à faire |
+| I6 | Liaison de configuration d'une analyse, usages `analysis`, migration explicite avec étude d'impact | partiel : liaison de la matrice de pertinence par l'étude et usages `analysis` livrés ; migration explicite à faire |
+| I7 | Ateliers EBIOS RM sur le catalogue (atelier 2 : pertinence proposée par la matrice, livré ; ateliers 1, 3, 4, 5 à faire) : gravité proposée (maximum par correspondance), pertinence proposée (matrice), critères à échelle propre, impacts catégorie × niveau, lien fournisseur sur les parties prenantes, socle de sécurité sélectionnable | à faire |
 | I8 | Méthode ISO/IEC 27005 configurable (modèle « inspiré de »), éditeur de méthodes personnalisées, `objects` et `deliverables`, méthodes partagées | à faire |
 | I9 | Documentation d'exploitation, recette, captures, validation globale | à faire |
 
