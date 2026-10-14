@@ -13,6 +13,9 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 - **Méthodes de risque épinglées au catalogue** : une méthode peut épingler des échelles et une matrice (`bindings`) ; la version publiée embarque la copie résolue, les méthodes existantes ne changent pas. Une méthode épinglée n'est pas relisible par une version antérieure de l'application.
 - **Écrans de configuration GRC** : Paramètres → Configuration GRC et Gestion des risques → Configuration des analyses (mêmes données) : liste filtrée, création guidée, éditeurs sans JSON (niveaux décrits, grille de matrice, correspondances, critères, catégories), simulation avec étude d'impact, publication confirmée avec motif, versions, dépendances, variantes, archivage, adoption d'un modèle.
 - **Atelier 2 EBIOS RM sur le catalogue** : l'étude épingle une matrice de pertinence (version précise, usage « analyse » enregistré) ; le couple source de risque / objectif visé choisit ses niveaux sur les échelles de la matrice et reçoit la pertinence **proposée**, que l'analyste retient ou corrige en la justifiant. Une étude sans matrice garde l'échelle d'origine.
+- **Atelier 1 EBIOS RM sur le catalogue** : l'étude épingle une correspondance impact → gravité ; l'événement redouté relève ses impacts (catégorie et niveau) et reçoit la gravité **proposée** par agrégation (maximum, minimum ou unique selon la correspondance), que l'analyste retient ou corrige.
+- **Atelier 3** : une partie prenante de l'écosystème peut être liée à un fournisseur du registre (une seule fiche, pas de ressaisie).
+- **Éditeur de méthodes** : panneau « Éléments du catalogue » (échelles des dimensions, vraisemblance, niveaux de risque, matrice de calcul) pour les méthodes ISO/IEC 27005, MÉHARI, EBIOS RM et personnalisées ; la version publiée embarque une copie figée.
 
 ## [3.2.0] — 2026-10-14
 

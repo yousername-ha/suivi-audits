@@ -77,7 +77,7 @@ nouvelle version de méthode.
 | --- | --- | --- |
 | `objects` (types d'objets attendus) et `deliverables` (livrables) d'une méthode | prévu | champs facultatifs de `RiskMethod`, vérifiés à la validation d'étape |
 | Méthode partagée entre périmètres | prévu | portée `instance` pour les méthodes (table de pointeurs) ; aujourd'hui une méthode appartient à un `smsi_id` |
-| Liaison de configuration d'une analyse | partiel (livré) | `risk_study.configuration.relevanceMatrix` : matrice de pertinence épinglée (version précise), vérifiée à l'enregistrement, usage `analysis` enregistré ; les niveaux d'un couple (`resourcesLevel`, `motivationLevel`, `relevanceLevel`) sont des identifiants de niveau. Méthode, version, entité et statut : prévus |
+| Liaison de configuration d'une analyse | partiel (livré) | `risk_study.configuration.relevanceMatrix` : matrice de pertinence épinglée (version précise), vérifiée à l'enregistrement, usage `analysis` enregistré ; les niveaux d'un couple (`resourcesLevel`, `motivationLevel`, `relevanceLevel`) sont des identifiants de niveau. `configuration.severityMapping` : correspondance impact → gravité (événement redouté : `impactLevels`, `severityLevel`). Méthode, version, entité et statut : prévus |
 | Entité / organisation | à arbitrer (point 1) | aujourd'hui texte libre dans les risques |
 | Bases de sources de risque / objectifs visés / parties prenantes | à arbitrer (point 8) | taxonomie du catalogue + sélection par étude |
 | Migration explicite d'une analyse vers une nouvelle version | prévu | aperçu d'impact puis action confirmée, journalisée, sans réécrire les évaluations passées |
