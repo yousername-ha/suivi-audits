@@ -5,7 +5,10 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 ## [Non publié]
 
 ### Notes de mise à jour
-Aucune action.
+Aucune action, aucune migration : les plans restent dans l'état historique, lus et modifiés sous verrou, comme les fournisseurs.
+
+### Ajouté
+- **Plans du SMSI repris dans la nouvelle interface** (formation, sensibilisation, programme d'audit interne, exercices PRA et crise ; pages « Calendrier », « Planning », « Formation » et « Sensibilisation » de l'outil de suivi) : Pilotage → Plans et revues → Calendrier des plans, Planning annuel des plans (barres déplaçables à la souris ou aux flèches du clavier), Plan de formation, Plan de sensibilisation, et listes modifiables dans Audits internes et Exercices et RETEX. Actions croisées : couverture du cycle (audit réalisé), enregistrement du taux dans l'indicateur (sensibilisation réalisée, jamais sur un indicateur calculé), action du registre des écarts (exercice). Les champs inconnus des actions sont conservés et /legacy lit les mêmes données. API : `/api/plans`.
 
 ## [3.3.0] — 2026-10-14
 

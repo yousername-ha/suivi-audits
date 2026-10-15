@@ -80,6 +80,10 @@ export const PILOTAGE_NAV = [
       { id: 'bia', label: 'Impacts sur l’activité — BIA', module: 'pilotage' },
       { id: 'continuite', label: 'Continuité et reprise', module: 'pilotage' },
       { id: 'exercices', label: 'Exercices et RETEX', module: 'pilotage' },
+      { id: 'plans-calendrier', label: 'Calendrier des plans', module: 'pilotage' },
+      { id: 'plans-planning', label: 'Planning annuel des plans', module: 'pilotage' },
+      { id: 'plans-formation', label: 'Plan de formation', module: 'pilotage' },
+      { id: 'plans-sensibilisation', label: 'Plan de sensibilisation', module: 'pilotage' },
       { id: 'audits', label: 'Audits internes', module: 'plan_audit' },
       { id: 'revues', label: 'Revues de direction', module: 'pilotage' },
     ],
@@ -131,15 +135,6 @@ export const PAGES_HISTORIQUES: { label: string; items: PageHistorique[] }[] = [
       { label: 'Fournisseurs et applications', module: 'fournisseurs', onglet: 'fournisseurs', vue: 'supView=list' },
       { label: 'Revues des accès', module: 'pilotage', onglet: 'fournisseurs', vue: 'supView=ar' },
       { label: 'Évaluations sécurité', module: 'fournisseurs', onglet: 'supeval' },
-    ],
-  },
-  {
-    label: 'Plans',
-    items: [
-      { label: 'Calendrier', module: 'pilotage', onglet: 'plans', vue: 'planView=cal' },
-      { label: 'Planning annuel', module: 'pilotage', onglet: 'plans', vue: 'planView=gantt' },
-      { label: 'Formation', module: 'pilotage', onglet: 'plans', vue: 'planView=formation' },
-      { label: 'Sensibilisation', module: 'pilotage', onglet: 'plans', vue: 'planView=sensi' },
     ],
   },
   {

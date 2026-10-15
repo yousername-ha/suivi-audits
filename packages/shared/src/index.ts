@@ -21,6 +21,7 @@ export * from './objectifs.js';
 export * from './pestel.js';
 export * from './revue-direction.js';
 export * from './suivi-fournisseurs.js';
+export * from './suivi-plans.js';
 export * from './tableau-de-bord.js';
 export * from './liens.js';
 export * from './risques.js';

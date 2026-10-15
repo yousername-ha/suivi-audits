@@ -840,3 +840,135 @@
 .matrice-cellule .mantine-Select-root {
   position: relative;
 }
+
+/* Plans du SMSI (reprise du calendrier et du planning de l'outil de suivi) : pastilles et planning annuel en SVG. */
+.plan-cellule {
+  vertical-align: top;
+  min-width: 6em;
+}
+.plan-pastille {
+  display: block;
+  max-width: 12em;
+  margin-bottom: var(--mantine-spacing-2xs);
+  padding: 0 var(--mantine-spacing-xs);
+  overflow: hidden;
+  border: var(--suivi-trait-l) solid var(--carte-gris-trait);
+  border-radius: var(--mantine-radius-sm);
+  background: var(--carte-gris-doux);
+  color: var(--carte-gris-accent);
+  font-size: var(--mantine-font-size-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.plan-pastille-ok {
+  border-color: var(--carte-vert-trait);
+  background: var(--carte-vert-doux);
+  color: var(--carte-vert-accent);
+}
+.plan-pastille-mid {
+  border-color: var(--carte-bleu-trait);
+  background: var(--carte-bleu-doux);
+  color: var(--carte-bleu-accent);
+}
+.plan-pastille-hi {
+  border-color: var(--carte-orange-trait);
+  background: var(--carte-orange-doux);
+  color: var(--carte-orange-accent);
+}
+.plan-pastille-bad {
+  border-color: var(--carte-rouge-trait);
+  background: var(--carte-rouge-doux);
+  color: var(--carte-rouge-accent);
+}
+.plan-planning {
+  overflow-x: auto;
+}
+.plan-svg {
+  display: block;
+  width: 100%;
+  min-width: 60em;
+  height: auto;
+}
+.plan-grille {
+  stroke: var(--carte-gris-trait);
+  stroke-width: 1;
+}
+.plan-aujourdhui {
+  stroke: var(--carte-rouge-accent);
+  stroke-width: 2;
+}
+.plan-mois,
+.plan-vide {
+  fill: var(--carte-secondaire);
+  font-size: var(--mantine-font-size-xs);
+}
+.plan-groupe {
+  fill: var(--carte-texte);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 700;
+}
+.plan-etiquette {
+  fill: var(--carte-texte);
+  font-size: var(--mantine-font-size-xs);
+}
+.plan-realise {
+  fill: var(--carte-vert-accent);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 700;
+}
+.plan-barre {
+  cursor: grab;
+  fill: var(--carte-gris-accent);
+}
+.plan-barre:focus-visible {
+  stroke: var(--carte-texte);
+  stroke-width: 2;
+  outline: none;
+}
+.plan-barre-deplacee {
+  cursor: grabbing;
+  opacity: 0.7;
+}
+.plan-barre-ok {
+  fill: var(--carte-vert-accent);
+}
+.plan-barre-mid {
+  fill: var(--carte-bleu-accent);
+}
+.plan-barre-hi {
+  fill: var(--carte-orange-accent);
+}
+.plan-barre-bad {
+  fill: var(--carte-rouge-accent);
+}
+.plan-barre-na {
+  fill: var(--carte-gris-accent);
+}
+.plan-legende {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--mantine-font-size-xs);
+}
+.plan-pastille-pt {
+  display: inline-block;
+  width: var(--mantine-spacing-xs);
+  height: var(--mantine-spacing-xs);
+  margin-right: var(--mantine-spacing-2xs);
+  border-radius: var(--mantine-radius-xs);
+}
+.plan-pastille-pt.plan-barre-ok {
+  background: var(--carte-vert-accent);
+}
+.plan-pastille-pt.plan-barre-mid {
+  background: var(--carte-bleu-accent);
+}
+.plan-pastille-pt.plan-barre-hi {
+  background: var(--carte-orange-accent);
+}
+.plan-pastille-pt.plan-barre-bad {
+  background: var(--carte-rouge-accent);
+}
+.plan-pastille-pt.plan-barre-na {
+  background: var(--carte-gris-accent);
+}

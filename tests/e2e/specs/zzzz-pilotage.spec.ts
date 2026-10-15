@@ -36,15 +36,12 @@ test('Pilotage : DdA historique, objectifs par processus, plans et graphiques de
       for (const o of etat.objectives) await expect(compacte).toContainText(o.id);
     }
 
-    // Audits internes et exercices : plans historiques en lecture seule, lien vers leur planification.
+    // Audits internes et exercices : programme et plan de l'outil de suivi, modifiables ici (clé `plans`).
     await page.goto('/pilotage/audits');
-    await expect(page.getByText('Programme d’audit interne de l’outil de suivi')).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Planifier dans l’outil historique' })).toHaveAttribute(
-      'href',
-      '/legacy/#ouvrir=plans&planView=audit',
-    );
+    await expect(page.getByText("Programme d'audit interne", { exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Planifier dans l’outil historique' })).toHaveCount(0);
     await page.goto('/pilotage/exercices');
-    await expect(page.getByText('Plan d’exercices de l’outil de suivi')).toBeVisible();
+    await expect(page.getByText('Plan d’exercices PRA et crise', { exact: true })).toBeVisible();
     expect(problems).toEqual([]);
   } finally {
     await ctx.close();

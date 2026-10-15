@@ -36,10 +36,10 @@ l'[inventaire fonctionnel](../../02_FONCTIONNALITES/INVENTAIRE_FONCTIONNEL.md) a
 | 10 | Fournisseurs → Fournisseurs et applications            | repris      | Pilotage → Fournisseurs (colonnes, filtres, fiche, indicateurs MFA/SSO)           | [10](captures/10-fournisseurs--fournisseurs-et-applications.png) |
 | 11 | Fournisseurs → Revues des accès                        | non repris  |                                                                                   | [11](captures/11-fournisseurs--revues-des-acces.png) |
 | 12 | Fournisseurs → Évaluations sécurité                    | non repris  | Sources conservées, pas de parcours natif (FCT-031)                               | [12](captures/12-fournisseurs--evaluations-securite.png) |
-| 13 | Plans → Calendrier                                     | non repris  |                                                                                   | [13](captures/13-plans--calendrier.png) |
-| 14 | Plans → Planning annuel                                | non repris  |                                                                                   | [14](captures/14-plans--planning-annuel.png) |
-| 15 | Plans → Formation                                      | non repris  |                                                                                   | [15](captures/15-plans--formation.png) |
-| 16 | Plans → Sensibilisation                                | non repris  |                                                                                   | [16](captures/16-plans--sensibilisation.png) |
+| 13 | Plans → Calendrier                                     | repris      | Pilotage → Calendrier des plans (plans et tâches récurrentes de l’année)          | [13](captures/13-plans--calendrier.png) |
+| 14 | Plans → Planning annuel                                | repris      | Pilotage → Planning annuel des plans (barres déplaçables à la souris et au clavier) | [14](captures/14-plans--planning-annuel.png) |
+| 15 | Plans → Formation                                      | repris      | Pilotage → Plan de formation                                                      | [15](captures/15-plans--formation.png) |
+| 16 | Plans → Sensibilisation                                | repris      | Pilotage → Plan de sensibilisation (enregistrement du taux dans l’indicateur)     | [16](captures/16-plans--sensibilisation.png) |
 | 17 | GAP et IA → Applications à intégrer                    | non repris  |                                                                                   | [17](captures/17-gap-et-ia--applications-a-integrer.png) |
 | 18 | GAP et IA → Usages de l'IA                             | non repris  | Registre des usages de l'IA                                                       | [18](captures/18-gap-et-ia--usages-de-l-ia.png) |
 | 19 | Autres modules → Gestion CRRC                          | non repris  |                                                                                   | [19](captures/19-autres-modules--gestion-crrc.png) |
@@ -49,7 +49,7 @@ l'[inventaire fonctionnel](../../02_FONCTIONNALITES/INVENTAIRE_FONCTIONNEL.md) a
 | 23 | Autres modules → Rapports et exports                   | partiel     | Rapports natifs et exports cartographiques (FCT-040) ; exports historiques partiels | [23](captures/23-autres-modules--rapports-et-exports.png) |
 | 24 | Pilotage → Processus, objectifs, indicateurs           | repris      | Pilotage → Objectifs et indicateurs (trois vues, fiches, mesures, PESTEL, revue)  | [24](captures/24-pilotage--pilotage-processus-objectifs-indicateurs.png) |
 
-Bilan : 2 pages reprises, 6 partielles, 16 non reprises.
+Bilan : 6 pages reprises, 6 partielles, 12 non reprises.
 
 ## Captures de la nouvelle interface (jeu de test)
 
