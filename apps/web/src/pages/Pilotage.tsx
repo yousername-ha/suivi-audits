@@ -47,8 +47,23 @@ import { ObjectifsProcessus } from '../pilotage/ObjectifsProcessus';
 import { Pestel, SynthesePartiesBandeau } from '../pilotage/Pestel';
 import { PreparationRevue } from '../pilotage/PreparationRevue';
 import { SeriesProposees } from '../pilotage/SeriesProposees';
-import { PlansHistoriques } from '../pilotage/PlansHistoriques';
+import { PlansSmsi } from '../pilotage/Plans';
+import { ConformiteIa } from '../pilotage/Ia';
+import { GapApplications } from '../pilotage/Gap';
+import { CelluleCriseVue, ContactsCrise, ScenariosCrise } from '../incidents/Crise';
+import { QualifierSignalement, RegistreIncidents } from '../incidents/Incidents';
+import { DeclarationApplicabilite } from '../dda/Dda';
+import { EtablissementsCrrc, OffresCrrc, VueEnsembleCrrc } from '../crrc/Contrats';
+import { AlertesCrrc, RapportsCrrc, RessourcesCrrc, RestaurationsCrrc, TableauSauvegardes } from '../crrc/Sauvegardes';
+import { EvaluationsClausier } from '../pilotage/EvaluationsClausier';
+import { Investissements } from '../pilotage/Investissements';
+import { RevuesAcces } from '../pilotage/RevuesAcces';
+import { CouvertureCycle } from '../audit/Couverture';
+import { Organisation } from '../audit/Organisation';
+import { Pronostic } from '../audit/Pronostic';
 import { CartesPilotage, type SyntheseApi } from '../components/Synthese';
+
+const SOCLE = '00000000-0000-4000-8000-000000000001';
 const REGISTERS: Record<string, { kind: GrcKind; legacy?: string; description: string }> = {
   contexte: {
     kind: 'context',
@@ -267,8 +282,8 @@ export function PilotagePage() {
                 {section === 'processus' && <ObjectifsProcessus smsi={smsi} vue="processus" />}
                 {section === 'objectifs' && <ObjectifsProcessus smsi={smsi} vue="objectif" />}
                 {section === 'indicateurs' && <ObjectifsProcessus smsi={smsi} vue="compacte" />}
-                {section === 'audits' && can('pilotage', 'lire') && <PlansHistoriques smsi={smsi} type="audit" />}
-                {section === 'exercices' && <PlansHistoriques smsi={smsi} type="exo" />}
+                {section === 'audits' && can('pilotage', 'lire') && smsi === SOCLE && <PlansSmsi vue="audit" />}
+                {section === 'exercices' && smsi === SOCLE && <PlansSmsi vue="exo" />}
                 {(smsi !== '00000000-0000-4000-8000-000000000001' ||
                   !['processus', 'objectifs', 'indicateurs'].includes(section)) && (
                   <BusinessRegistry
@@ -414,6 +429,36 @@ export function PilotagePage() {
               <RiskMap smsi={smsi} onOpen={open} />
             )}
             {section === 'pestel' && can('pilotage', 'lire') && <Pestel smsi={smsi} />}
+            {section === 'conformite-ia' && can('ia', 'lire') && <ConformiteIa />}
+            {section === 'gap-applications' && can('conformite', 'lire') && <GapApplications />}
+            {section === 'crrc-ensemble' && can('crrc', 'lire') && <VueEnsembleCrrc />}
+            {section === 'crrc-etablissements' && can('crrc', 'lire') && <EtablissementsCrrc />}
+            {section === 'crrc-offres' && can('crrc', 'lire') && <OffresCrrc />}
+            {section === 'crrc-tableau' && can('crrc', 'lire') && <TableauSauvegardes />}
+            {section === 'crrc-ressources' && can('crrc', 'lire') && <RessourcesCrrc />}
+            {section === 'crrc-restaurations' && can('crrc', 'lire') && <RestaurationsCrrc />}
+            {section === 'crrc-alertes' && can('crrc', 'lire') && <AlertesCrrc />}
+            {section === 'crrc-rapports' && can('crrc', 'lire') && <RapportsCrrc />}
+            {section === 'dda-iso' && can('audit', 'lire') && <DeclarationApplicabilite reference="ISO" />}
+            {section === 'dda-annexe-a' && can('audit', 'lire') && <DeclarationApplicabilite reference="A" />}
+            {section === 'dda-hds' && can('audit', 'lire') && <DeclarationApplicabilite reference="HDS" />}
+            {section === 'crise-cellule' && can('incidents', 'lire') && <CelluleCriseVue />}
+            {section === 'crise-contacts' && can('incidents', 'lire') && <ContactsCrise />}
+            {section === 'crise-scenarios' && can('incidents', 'lire') && <ScenariosCrise />}
+            {section === 'incidents-registre' && can('incidents', 'lire') && <RegistreIncidents />}
+            {section === 'incidents-qualifier' && can('incidents', 'lire') && <QualifierSignalement />}
+            {section === 'evaluations-clausier' && can('fournisseurs', 'lire') && <EvaluationsClausier />}
+            {section === 'investissements' && can('investissements', 'lire') && <Investissements />}
+            {section === 'revues-acces' && can('pilotage', 'lire') && <RevuesAcces />}
+            {section === 'audit-pronostic' && can('audit', 'lire') && <Pronostic />}
+            {section === 'audit-couverture' && can('audit', 'lire') && <CouvertureCycle />}
+            {section === 'audit-deroule' && can('plan_audit', 'lire') && <Organisation vue="deroule" />}
+            {section === 'audit-planning' && can('plan_audit', 'lire') && <Organisation vue="planning" />}
+            {section === 'audit-participants' && can('plan_audit', 'lire') && <Organisation vue="participants" />}
+            {section === 'plans-calendrier' && can('pilotage', 'lire') && <PlansSmsi vue="calendrier" />}
+            {section === 'plans-planning' && can('pilotage', 'lire') && <PlansSmsi vue="planning" />}
+            {section === 'plans-formation' && can('pilotage', 'lire') && <PlansSmsi vue="formation" />}
+            {section === 'plans-sensibilisation' && can('pilotage', 'lire') && <PlansSmsi vue="sensi" />}
             {section === 'referentiels' && can('conformite', 'lire') && <Publication smsi={smsi} type="frameworks" />}
             {section === 'correspondances' && can('conformite', 'lire') && <MappingPanel smsi={smsi} />}
             {section === 'imports' && can('import_export', 'lire') && <Imports smsi={smsi} />}

@@ -73,7 +73,7 @@ test.beforeAll(async ({ browser }) => {
 });
 
 const PAGES = [
-  { nom: 'tableau-de-bord', url: () => '/', titre: /^Bonjour/, contenu: 'Prochain audit' },
+  { nom: 'tableau-de-bord', url: () => '/', titre: /^Bonjour/, contenu: /^Prochaines échéances$/ },
   {
     nom: 'liste-fiche',
     url: () => `/documents/${docId}`,
@@ -84,7 +84,7 @@ const PAGES = [
   { nom: 'parametres', url: () => '/parametres/general', titre: 'Paramètres', contenu: 'Nom de l’application' },
 ] as const;
 
-async function pret(page: Page, titre: string | RegExp, contenu: string) {
+async function pret(page: Page, titre: string | RegExp, contenu: string | RegExp) {
   await expect(page.getByRole('heading', { name: titre, level: 1 })).toBeVisible();
   // Le flux temps réel reste ouvert (pas d'état « réseau au repos ») : on attend le contenu et les polices.
   await expect(page.getByText(contenu).first()).toBeVisible();
@@ -132,7 +132,7 @@ for (const [w, h] of [
     const ctx = await context(browser, w, h, 'light');
     const page = await ctx.newPage();
     await page.goto('/');
-    await pret(page, /^Bonjour/, 'Prochain audit');
+    await pret(page, /^Bonjour/, /^Prochaines échéances$/);
     const r = await page.evaluate(() => {
       const cartes = Array.from(document.querySelectorAll('.grille-cartes > *')).map((e) => e.getBoundingClientRect());
       const gauche = Math.min(...cartes.map((c) => c.left));

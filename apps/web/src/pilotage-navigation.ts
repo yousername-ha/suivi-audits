@@ -27,15 +27,30 @@ export const PILOTAGE_NAV = [
     ],
   },
   {
+    label: 'Gestion de l’audit',
+    items: [
+      { id: 'audit-pronostic', label: 'Carte du prochain audit', module: 'audit' },
+      { id: 'audit-couverture', label: 'Couverture du cycle', module: 'audit' },
+      { id: 'audit-deroule', label: 'Organisation : déroulé', module: 'plan_audit' },
+      { id: 'audit-planning', label: 'Organisation : planning', module: 'plan_audit' },
+      { id: 'audit-participants', label: 'Organisation : participants', module: 'plan_audit' },
+    ],
+  },
+  {
     label: 'Conformité',
     items: [
       { id: 'referentiels', label: 'Référentiels et exigences', module: 'conformite' },
       { id: 'bibliotheque', label: 'Bibliothèque de référentiels', module: 'conformite' },
+      { id: 'dda-iso', label: 'Clauses ISO 27001 (DdA)', module: 'audit' },
+      { id: 'dda-annexe-a', label: 'Annexe A (DdA)', module: 'audit' },
+      { id: 'dda-hds', label: 'HDS (DdA)', module: 'audit' },
       { id: 'applicabilite', label: 'Applicabilité et justifications', module: 'pilotage' },
       { id: 'mesures', label: 'Mesures', module: 'audit' },
       { id: 'correspondances', label: 'Correspondances entre exigences', module: 'conformite' },
       { id: 'rapprochements', label: 'Rapprochements à valider', module: 'conformite' },
       { id: 'couverture', label: 'Couverture par référentiel', module: 'conformite' },
+      { id: 'gap-applications', label: 'Applications à intégrer', module: 'conformite' },
+      { id: 'conformite-ia', label: 'Conformité IA', module: 'ia' },
       { id: 'correspondances-bibliotheque', label: 'Correspondances de la bibliothèque', module: 'conformite' },
     ],
   },
@@ -45,6 +60,8 @@ export const PILOTAGE_NAV = [
       { id: 'fournisseurs', label: 'Fournisseurs de l’organisation', module: 'fournisseurs' },
       { id: 'criteres-fournisseurs', label: 'Critères d’évaluation des fournisseurs', module: 'fournisseurs' },
       { id: 'fournisseurs-perimetre', label: 'Fournisseurs du périmètre', module: 'fournisseurs' },
+      { id: 'evaluations-clausier', label: 'Évaluations par le clausier (Club RSSI Santé)', module: 'fournisseurs' },
+      { id: 'revues-acces', label: 'Revues des accès', module: 'pilotage' },
     ],
   },
   {
@@ -80,9 +97,40 @@ export const PILOTAGE_NAV = [
       { id: 'bia', label: 'Impacts sur l’activité — BIA', module: 'pilotage' },
       { id: 'continuite', label: 'Continuité et reprise', module: 'pilotage' },
       { id: 'exercices', label: 'Exercices et RETEX', module: 'pilotage' },
+      { id: 'plans-calendrier', label: 'Calendrier des plans', module: 'pilotage' },
+      { id: 'plans-planning', label: 'Planning annuel des plans', module: 'pilotage' },
+      { id: 'plans-formation', label: 'Plan de formation', module: 'pilotage' },
+      { id: 'plans-sensibilisation', label: 'Plan de sensibilisation', module: 'pilotage' },
       { id: 'audits', label: 'Audits internes', module: 'plan_audit' },
       { id: 'revues', label: 'Revues de direction', module: 'pilotage' },
     ],
+  },
+  {
+    label: 'Incidents et crise',
+    items: [
+      { id: 'incidents-registre', label: 'Registre des incidents', module: 'incidents' },
+      { id: 'incidents-qualifier', label: 'Qualifier un signalement', module: 'incidents' },
+      { id: 'crise-cellule', label: 'Cellule de crise', module: 'incidents' },
+      { id: 'crise-contacts', label: 'Contacts de crise', module: 'incidents' },
+      { id: 'crise-scenarios', label: 'Scénarios et check-lists', module: 'incidents' },
+    ],
+  },
+  {
+    label: 'Gestion CRRC',
+    items: [
+      { id: 'crrc-ensemble', label: 'Vue d’ensemble CRRC', module: 'crrc' },
+      { id: 'crrc-etablissements', label: 'Établissements et contrats', module: 'crrc' },
+      { id: 'crrc-offres', label: 'Catalogue des offres', module: 'crrc' },
+      { id: 'crrc-tableau', label: 'Tableau de bord des sauvegardes', module: 'crrc' },
+      { id: 'crrc-ressources', label: 'Sauvegardes par ressource', module: 'crrc' },
+      { id: 'crrc-restaurations', label: 'Restaurations', module: 'crrc' },
+      { id: 'crrc-alertes', label: 'Alertes de sauvegarde', module: 'crrc' },
+      { id: 'crrc-rapports', label: 'Rapports mensuels', module: 'crrc' },
+    ],
+  },
+  {
+    label: 'Budget',
+    items: [{ id: 'investissements', label: 'Plan d’investissement', module: 'investissements' }],
   },
   {
     label: 'Outils',
@@ -107,57 +155,18 @@ export interface PageHistorique {
 }
 export const PAGES_HISTORIQUES: { label: string; items: PageHistorique[] }[] = [
   {
-    label: 'Gestion de l’audit',
-    items: [
-      { label: 'Pronostic', module: 'audit', onglet: 'cibles' },
-      { label: 'Déroulé', module: 'plan_audit', onglet: 'orga', vue: 'orgaView=deroule' },
-      { label: 'Planning', module: 'plan_audit', onglet: 'orga', vue: 'orgaView=cal' },
-      { label: 'Participants', module: 'plan_audit', onglet: 'orga', vue: 'orgaView=people' },
-      { label: 'Couverture du cycle', module: 'audit', onglet: 'couverture' },
-    ],
-  },
-  {
     label: 'Conformité',
-    items: [
-      { label: 'Clauses ISO 27001', module: 'audit', onglet: 'conformite', vue: 'confView=ISO' },
-      { label: 'Annexe A (DdA)', module: 'audit', onglet: 'conformite', vue: 'confView=A' },
-      { label: 'HDS (DdA)', module: 'audit', onglet: 'conformite', vue: 'confView=HDS' },
-      { label: 'ReCyF et autres référentiels', module: 'conformite', onglet: 'conformite', vue: 'confView=fw' },
-    ],
+    items: [{ label: 'ReCyF et autres référentiels', module: 'conformite', onglet: 'conformite', vue: 'confView=fw' }],
   },
   {
     label: 'Fournisseurs',
     items: [
       { label: 'Fournisseurs et applications', module: 'fournisseurs', onglet: 'fournisseurs', vue: 'supView=list' },
-      { label: 'Revues des accès', module: 'pilotage', onglet: 'fournisseurs', vue: 'supView=ar' },
-      { label: 'Évaluations sécurité', module: 'fournisseurs', onglet: 'supeval' },
-    ],
-  },
-  {
-    label: 'Plans',
-    items: [
-      { label: 'Calendrier', module: 'pilotage', onglet: 'plans', vue: 'planView=cal' },
-      { label: 'Planning annuel', module: 'pilotage', onglet: 'plans', vue: 'planView=gantt' },
-      { label: 'Formation', module: 'pilotage', onglet: 'plans', vue: 'planView=formation' },
-      { label: 'Sensibilisation', module: 'pilotage', onglet: 'plans', vue: 'planView=sensi' },
-    ],
-  },
-  {
-    label: 'GAP et IA',
-    items: [
-      { label: 'Applications à intégrer', module: 'conformite', onglet: 'gapapp' },
-      { label: 'Usages de l’IA', module: 'ia', onglet: 'ia', vue: 'iaView=reg' },
     ],
   },
   {
     label: 'Autres modules',
-    items: [
-      { label: 'Gestion CRRC', module: 'crrc', onglet: 'crrc', vue: 'crrcView=over' },
-      { label: 'Investissements', module: 'investissements', onglet: 'invest', vue: 'invView=dash' },
-      { label: 'Incidents', module: 'incidents', onglet: 'incidents', vue: 'incView=reg' },
-      { label: 'Cellule de crise', module: 'incidents', onglet: 'crise', vue: 'crView=cell' },
-      { label: 'Rapports et exports', module: 'import_export', onglet: 'rapports', vue: 'repView=exp' },
-    ],
+    items: [{ label: 'Rapports et exports', module: 'import_export', onglet: 'rapports', vue: 'repView=exp' }],
   },
 ];
 
