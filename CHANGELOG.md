@@ -4,6 +4,9 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ## [Non publié]
 
+### Notes de mise à jour
+Aucune action particulière, aucune migration pour le moment.
+
 ## [3.4.0] — 2026-10-15
 
 ### Notes de mise à jour
