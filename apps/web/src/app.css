@@ -1358,3 +1358,12 @@ rect.audit-niv-faible {
   fill: var(--carte-gris-accent);
   background: var(--carte-gris-accent);
 }
+
+/* Cellule de crise : main courante. */
+.crise-log {
+  margin: 0;
+  padding: 0 0 0 var(--mantine-spacing-md);
+}
+.crise-log li {
+  margin-bottom: var(--mantine-spacing-sm);
+}

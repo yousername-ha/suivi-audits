@@ -50,6 +50,8 @@ import { SeriesProposees } from '../pilotage/SeriesProposees';
 import { PlansSmsi } from '../pilotage/Plans';
 import { ConformiteIa } from '../pilotage/Ia';
 import { GapApplications } from '../pilotage/Gap';
+import { CelluleCriseVue, ContactsCrise, ScenariosCrise } from '../incidents/Crise';
+import { QualifierSignalement, RegistreIncidents } from '../incidents/Incidents';
 import { EtablissementsCrrc, OffresCrrc, VueEnsembleCrrc } from '../crrc/Contrats';
 import { AlertesCrrc, RapportsCrrc, RessourcesCrrc, RestaurationsCrrc, TableauSauvegardes } from '../crrc/Sauvegardes';
 import { Investissements } from '../pilotage/Investissements';
@@ -435,6 +437,11 @@ export function PilotagePage() {
             {section === 'crrc-restaurations' && can('crrc', 'lire') && <RestaurationsCrrc />}
             {section === 'crrc-alertes' && can('crrc', 'lire') && <AlertesCrrc />}
             {section === 'crrc-rapports' && can('crrc', 'lire') && <RapportsCrrc />}
+            {section === 'crise-cellule' && can('incidents', 'lire') && <CelluleCriseVue />}
+            {section === 'crise-contacts' && can('incidents', 'lire') && <ContactsCrise />}
+            {section === 'crise-scenarios' && can('incidents', 'lire') && <ScenariosCrise />}
+            {section === 'incidents-registre' && can('incidents', 'lire') && <RegistreIncidents />}
+            {section === 'incidents-qualifier' && can('incidents', 'lire') && <QualifierSignalement />}
             {section === 'investissements' && can('investissements', 'lire') && <Investissements />}
             {section === 'revues-acces' && can('pilotage', 'lire') && <RevuesAcces />}
             {section === 'audit-pronostic' && can('audit', 'lire') && <Pronostic />}

@@ -102,6 +102,16 @@ export const PILOTAGE_NAV = [
     ],
   },
   {
+    label: 'Incidents et crise',
+    items: [
+      { id: 'incidents-registre', label: 'Registre des incidents', module: 'incidents' },
+      { id: 'incidents-qualifier', label: 'Qualifier un signalement', module: 'incidents' },
+      { id: 'crise-cellule', label: 'Cellule de crise', module: 'incidents' },
+      { id: 'crise-contacts', label: 'Contacts de crise', module: 'incidents' },
+      { id: 'crise-scenarios', label: 'Scénarios et check-lists', module: 'incidents' },
+    ],
+  },
+  {
     label: 'Gestion CRRC',
     items: [
       { id: 'crrc-ensemble', label: 'Vue d’ensemble CRRC', module: 'crrc' },
@@ -158,11 +168,7 @@ export const PAGES_HISTORIQUES: { label: string; items: PageHistorique[] }[] = [
   },
   {
     label: 'Autres modules',
-    items: [
-      { label: 'Incidents', module: 'incidents', onglet: 'incidents', vue: 'incView=reg' },
-      { label: 'Cellule de crise', module: 'incidents', onglet: 'crise', vue: 'crView=cell' },
-      { label: 'Rapports et exports', module: 'import_export', onglet: 'rapports', vue: 'repView=exp' },
-    ],
+    items: [{ label: 'Rapports et exports', module: 'import_export', onglet: 'rapports', vue: 'repView=exp' }],
   },
 ];
 

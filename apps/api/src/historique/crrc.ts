@@ -1,7 +1,8 @@
 /* Gestion CRRC (reprise de la page de l'outil de suivi) : clé `crrc` de l'état historique (offres, établissements,
    ressources, sauvegardes, restaurations, alertes), modifiée sous verrou et sans copie. Comme dans l'outil historique,
-   la suppression d'une ressource supprime ses sauvegardes et celle d'un contrat laisse ses ressources. L'import de
-   rapports, l'export Excel et la création d'un incident depuis une alerte ne sont pas repris ici. */
+   la suppression d'une ressource supprime ses sauvegardes et celle d'un contrat laisse ses ressources. Une alerte peut
+   ouvrir une fiche du registre des incidents (droit des incidents requis en plus). L'import de rapports et l'export
+   Excel ne sont pas repris. */
 import {
   AlerteCreation,
   AlerteModification,
@@ -21,6 +22,7 @@ import {
 import { isObject, type Json, type JsonObject } from '@suivi/shared/legacy';
 import type { SessionUser } from '../auth.js';
 import { HttpError } from '../http/errors.js';
+import { ajouterIncident, incidentBrut } from './incidents.js';
 import type { RegistreHistorique } from './registre.js';
 
 const str = (v: unknown) => (typeof v === 'string' ? v : v == null ? '' : String(v));
@@ -234,6 +236,43 @@ export class GestionCrrc {
       remplacer(c, 'alerts', id, { ...trouver(c, 'alerts', id, 'Alerte'), ...body });
       return { id };
     });
+  }
+
+  /** Ouvre une fiche du registre des incidents depuis une alerte (qualifiée, rapportée par « Gestion CRRC »). */
+  creerIncidentAlerte(id: string, user: SessionUser, ip: string) {
+    return this.r.modifier(
+      user,
+      ip,
+      {
+        module: 'crrc',
+        droits: ['incidents'],
+        action: 'crrc.alert.incident-created',
+        reference: (x: { id: string }) => `legacy:crrc:${x.id}`,
+      },
+      (data) => {
+        const c = racine(data);
+        const al = trouver(c, 'alerts', id, 'Alerte');
+        if (str(al.incident)) throw new HttpError(409, `Un incident existe déjà : ${str(al.incident)}.`);
+        const nom = (cle: Cle, ref: unknown) => c[cle].find((x): x is JsonObject => isObject(x) && x.id === ref)?.name;
+        const quand = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}:\d{2})/.exec(str(al.date));
+        const date = quand ? `${quand[3]}/${quand[2]}/${quand[1]} ${quand[4]}` : str(al.date);
+        const incident = incidentBrut(data, {
+          title: `Sauvegarde : ${str(al.message) || 'alerte'} (${str(nom('establishments', al.est))})`,
+          desc: `Alerte ${id} du ${date} sur ${str(nom('resources', al.res))}.`,
+          kind: al.severity === 'Haute' ? 'Incident' : 'Événement',
+          cat: 'Indisponibilité de service',
+          status: 'Qualifié',
+          reporter: 'Gestion CRRC',
+        });
+        ajouterIncident(data, incident);
+        remplacer(c, 'alerts', id, {
+          ...al,
+          incident: str(incident.id),
+          status: str(al.status) === 'Ouverte' ? 'En cours' : str(al.status),
+        });
+        return { id, incident: str(incident.id) };
+      },
+    );
   }
 
   /* ------------------------------------------------------------------------------------------ offres */

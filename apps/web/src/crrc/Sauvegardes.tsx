@@ -212,6 +212,7 @@ function CarteNormandie({ e }: { e: EtatCrrc }) {
 
 /* ---------------------------------------------------------------------------------------------------- alertes */
 function TableauAlertes({ e, lignes, agir }: { e: EtatCrrc; lignes: EtatCrrc['alerts']; agir?: AgirCrrc }) {
+  const peutOuvrir = useCan()('incidents', 'modifier');
   return (
     <DataTable label="Alertes">
       <Table>
@@ -248,7 +249,23 @@ function TableauAlertes({ e, lignes, agir }: { e: EtatCrrc; lignes: EtatCrrc['al
                   <Pastille s={a.status} />
                 )}
               </Table.Td>
-              {agir && <Table.Td>{a.incident || '–'}</Table.Td>}
+              {agir && (
+                <Table.Td>
+                  {a.incident ||
+                    (peutOuvrir ? (
+                      <Button
+                        size="compact-sm"
+                        variant="default"
+                        title="Créer une fiche dans le registre des incidents du SMSI"
+                        onClick={() => void agir('POST', `/api/crrc/alertes/${encodeURIComponent(a.id)}/incident`)}
+                      >
+                        Créer un incident
+                      </Button>
+                    ) : (
+                      '–'
+                    ))}
+                </Table.Td>
+              )}
             </Table.Tr>
           ))}
           {!lignes.length && (

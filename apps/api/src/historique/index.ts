@@ -2,8 +2,10 @@
 import type { Grc } from '../grc/core.js';
 import { AuditSuivi } from './audit.js';
 import { GestionCrrc } from './crrc.js';
+import { Crise } from './crise.js';
 import { Gap } from './gap.js';
 import { ConformiteIa } from './ia.js';
+import { Incidents } from './incidents.js';
 import { Investissements } from './invest.js';
 import { Plans } from './plans.js';
 import { RevuesAcces } from './revues-acces.js';
@@ -18,6 +20,8 @@ export class Historique {
   readonly ia: ConformiteIa;
   readonly invest: Investissements;
   readonly crrc: GestionCrrc;
+  readonly incidents: Incidents;
+  readonly crise: Crise;
   constructor(g: Grc) {
     this.registre = new RegistreHistorique(g);
     this.plans = new Plans(this.registre);
@@ -27,5 +31,7 @@ export class Historique {
     this.ia = new ConformiteIa(this.registre);
     this.invest = new Investissements(this.registre);
     this.crrc = new GestionCrrc(this.registre);
+    this.incidents = new Incidents(this.registre);
+    this.crise = new Crise(this.registre);
   }
 }
