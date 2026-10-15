@@ -80,6 +80,8 @@ test('Incidents et cellule de crise : qualification, fiche, cellule, main couran
     // Alerte CRRC → incident.
     await page.goto('/pilotage/crrc-alertes');
     await page.getByRole('button', { name: 'Créer un incident' }).click();
+    // L'alerte passe « En cours » et quitte l'onglet des alertes ouvertes.
+    await page.getByText(/^En cours \(1\)$/).click();
     await expect(page.getByText(/^INC-\d{4}-002$/)).toBeVisible();
 
     // Cellule de crise : ouverture en exercice, main courante, check-list, échéance, clôture.
@@ -91,7 +93,7 @@ test('Incidents et cellule de crise : qualification, fiche, cellule, main couran
     await page.getByRole('option', { name: /EXO-1/ }).click();
     await page.getByRole('button', { name: 'Ouvrir la cellule de crise' }).click();
     await expect(page.getByText('EXERCICE', { exact: true })).toBeVisible();
-    await page.getByRole('textbox', { name: 'Entrée' }).fill('Isolement du serveur décidé');
+    await page.getByRole('textbox', { name: 'Entrée', exact: true }).last().fill('Isolement du serveur décidé');
     await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
     await expect(page.getByText('Isolement du serveur décidé')).toBeVisible();
     await page.getByRole('checkbox', { name: /Alerter la direction/ }).click();
@@ -99,10 +101,7 @@ test('Incidents et cellule de crise : qualification, fiche, cellule, main couran
     await page.getByRole('button', { name: 'CNIL 72 h' }).click();
     await expect(page.getByText('Notification CNIL (RGPD)')).toBeVisible();
     await page.getByRole('button', { name: 'Clôturer la cellule' }).click();
-    await page
-      .getByRole('dialog')
-      .getByRole('button', { name: 'Confirmer', exact: true })
-      .click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Confirmer', exact: true }).click();
     await expect(page.getByText(/clôturée le/)).toBeVisible();
 
     // Contacts de crise et scénarios.
