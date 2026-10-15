@@ -40,8 +40,8 @@ l'[inventaire fonctionnel](../../02_FONCTIONNALITES/INVENTAIRE_FONCTIONNEL.md) a
 | 14 | Plans → Planning annuel                                | repris      | Pilotage → Planning annuel des plans (barres déplaçables à la souris et au clavier) | [14](captures/14-plans--planning-annuel.png) |
 | 15 | Plans → Formation                                      | repris      | Pilotage → Plan de formation                                                      | [15](captures/15-plans--formation.png) |
 | 16 | Plans → Sensibilisation                                | repris      | Pilotage → Plan de sensibilisation (enregistrement du taux dans l’indicateur)     | [16](captures/16-plans--sensibilisation.png) |
-| 17 | GAP et IA → Applications à intégrer                    | non repris  |                                                                                   | [17](captures/17-gap-et-ia--applications-a-integrer.png) |
-| 18 | GAP et IA → Usages de l'IA                             | non repris  | Registre des usages de l'IA                                                       | [18](captures/18-gap-et-ia--usages-de-l-ia.png) |
+| 17 | GAP et IA → Applications à intégrer                    | repris     | Pilotage → Conformité → Applications à intégrer (liste de contrôle, questionnaire guidé, plan d’action) | [17](captures/17-gap-et-ia--applications-a-integrer.png) |
+| 18 | GAP et IA → Usages de l'IA                             | repris     | Pilotage → Conformité → Conformité IA (usages, évaluation, plan, politiques) | [18](captures/18-gap-et-ia--usages-de-l-ia.png) |
 | 19 | Autres modules → Gestion CRRC                          | non repris  |                                                                                   | [19](captures/19-autres-modules--gestion-crrc.png) |
 | 20 | Autres modules → Investissements                       | non repris  | Registre et export conservés, INV-01/INV-02 non revendiqués (FCT-034)             | [20](captures/20-autres-modules--investissements.png) |
 | 21 | Autres modules → Incidents                             | non repris  |                                                                                   | [21](captures/21-autres-modules--incidents.png) |
@@ -49,7 +49,7 @@ l'[inventaire fonctionnel](../../02_FONCTIONNALITES/INVENTAIRE_FONCTIONNEL.md) a
 | 23 | Autres modules → Rapports et exports                   | partiel     | Rapports natifs et exports cartographiques (FCT-040) ; exports historiques partiels | [23](captures/23-autres-modules--rapports-et-exports.png) |
 | 24 | Pilotage → Processus, objectifs, indicateurs           | repris      | Pilotage → Objectifs et indicateurs (trois vues, fiches, mesures, PESTEL, revue)  | [24](captures/24-pilotage--pilotage-processus-objectifs-indicateurs.png) |
 
-Bilan : 12 pages reprises, 5 partielles, 7 non reprises.
+Bilan : 14 pages reprises, 5 partielles, 5 non reprises.
 
 ## Captures de la nouvelle interface (jeu de test)
 

@@ -48,6 +48,8 @@ import { Pestel, SynthesePartiesBandeau } from '../pilotage/Pestel';
 import { PreparationRevue } from '../pilotage/PreparationRevue';
 import { SeriesProposees } from '../pilotage/SeriesProposees';
 import { PlansSmsi } from '../pilotage/Plans';
+import { ConformiteIa } from '../pilotage/Ia';
+import { GapApplications } from '../pilotage/Gap';
 import { RevuesAcces } from '../pilotage/RevuesAcces';
 import { CouvertureCycle } from '../audit/Couverture';
 import { Organisation } from '../audit/Organisation';
@@ -420,6 +422,8 @@ export function PilotagePage() {
               <RiskMap smsi={smsi} onOpen={open} />
             )}
             {section === 'pestel' && can('pilotage', 'lire') && <Pestel smsi={smsi} />}
+            {section === 'conformite-ia' && can('ia', 'lire') && <ConformiteIa />}
+            {section === 'gap-applications' && can('conformite', 'lire') && <GapApplications />}
             {section === 'revues-acces' && can('pilotage', 'lire') && <RevuesAcces />}
             {section === 'audit-pronostic' && can('audit', 'lire') && <Pronostic />}
             {section === 'audit-couverture' && can('audit', 'lire') && <CouvertureCycle />}

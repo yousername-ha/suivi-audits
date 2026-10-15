@@ -46,6 +46,8 @@ export const PILOTAGE_NAV = [
       { id: 'correspondances', label: 'Correspondances entre exigences', module: 'conformite' },
       { id: 'rapprochements', label: 'Rapprochements à valider', module: 'conformite' },
       { id: 'couverture', label: 'Couverture par référentiel', module: 'conformite' },
+      { id: 'gap-applications', label: 'Applications à intégrer', module: 'conformite' },
+      { id: 'conformite-ia', label: 'Conformité IA', module: 'ia' },
       { id: 'correspondances-bibliotheque', label: 'Correspondances de la bibliothèque', module: 'conformite' },
     ],
   },
@@ -135,13 +137,6 @@ export const PAGES_HISTORIQUES: { label: string; items: PageHistorique[] }[] = [
     items: [
       { label: 'Fournisseurs et applications', module: 'fournisseurs', onglet: 'fournisseurs', vue: 'supView=list' },
       { label: 'Évaluations sécurité', module: 'fournisseurs', onglet: 'supeval' },
-    ],
-  },
-  {
-    label: 'GAP et IA',
-    items: [
-      { label: 'Applications à intégrer', module: 'conformite', onglet: 'gapapp' },
-      { label: 'Usages de l’IA', module: 'ia', onglet: 'ia', vue: 'iaView=reg' },
     ],
   },
   {
