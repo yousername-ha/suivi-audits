@@ -30,3 +30,5 @@ export * from './liens.js';
 export * from './risques.js';
 export * from './config-grc.js';
 export * from './fournisseurs.js';
+export * from './suivi-invest.js';
+export * from './suivi-crrc.js';

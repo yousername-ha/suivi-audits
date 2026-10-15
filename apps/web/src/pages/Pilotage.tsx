@@ -50,6 +50,9 @@ import { SeriesProposees } from '../pilotage/SeriesProposees';
 import { PlansSmsi } from '../pilotage/Plans';
 import { ConformiteIa } from '../pilotage/Ia';
 import { GapApplications } from '../pilotage/Gap';
+import { EtablissementsCrrc, OffresCrrc, VueEnsembleCrrc } from '../crrc/Contrats';
+import { AlertesCrrc, RapportsCrrc, RessourcesCrrc, RestaurationsCrrc, TableauSauvegardes } from '../crrc/Sauvegardes';
+import { Investissements } from '../pilotage/Investissements';
 import { RevuesAcces } from '../pilotage/RevuesAcces';
 import { CouvertureCycle } from '../audit/Couverture';
 import { Organisation } from '../audit/Organisation';
@@ -424,6 +427,15 @@ export function PilotagePage() {
             {section === 'pestel' && can('pilotage', 'lire') && <Pestel smsi={smsi} />}
             {section === 'conformite-ia' && can('ia', 'lire') && <ConformiteIa />}
             {section === 'gap-applications' && can('conformite', 'lire') && <GapApplications />}
+            {section === 'crrc-ensemble' && can('crrc', 'lire') && <VueEnsembleCrrc />}
+            {section === 'crrc-etablissements' && can('crrc', 'lire') && <EtablissementsCrrc />}
+            {section === 'crrc-offres' && can('crrc', 'lire') && <OffresCrrc />}
+            {section === 'crrc-tableau' && can('crrc', 'lire') && <TableauSauvegardes />}
+            {section === 'crrc-ressources' && can('crrc', 'lire') && <RessourcesCrrc />}
+            {section === 'crrc-restaurations' && can('crrc', 'lire') && <RestaurationsCrrc />}
+            {section === 'crrc-alertes' && can('crrc', 'lire') && <AlertesCrrc />}
+            {section === 'crrc-rapports' && can('crrc', 'lire') && <RapportsCrrc />}
+            {section === 'investissements' && can('investissements', 'lire') && <Investissements />}
             {section === 'revues-acces' && can('pilotage', 'lire') && <RevuesAcces />}
             {section === 'audit-pronostic' && can('audit', 'lire') && <Pronostic />}
             {section === 'audit-couverture' && can('audit', 'lire') && <CouvertureCycle />}

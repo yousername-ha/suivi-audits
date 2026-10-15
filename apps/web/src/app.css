@@ -1244,3 +1244,117 @@ rect.audit-niv-socle {
 rect.audit-niv-faible {
   fill: var(--carte-gris-trait);
 }
+
+/* ---------------------------------------------------------------- Graphiques des pages reprises (barres, anneau)
+   Six teintes de la palette des cartes ; positions en attributs SVG, aucune dimension en pixels dans la feuille. */
+.gr-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.gr-anneau {
+  width: 10em;
+  height: 10em;
+  flex: none;
+}
+.gr-grille {
+  stroke: var(--carte-gris-trait);
+  stroke-width: 1;
+}
+.gr-axe,
+.gr-etiquette,
+.gr-sous {
+  fill: var(--carte-secondaire);
+  font-size: var(--mantine-font-size-xs);
+}
+.gr-total,
+.gr-centre {
+  fill: var(--carte-texte);
+  font-weight: 700;
+  font-size: var(--mantine-font-size-sm);
+}
+.gr-vide {
+  fill: none;
+  stroke: var(--carte-gris-doux);
+  stroke-width: 28;
+}
+.gr-t0 {
+  fill: var(--carte-marine-accent);
+  background: var(--carte-marine-accent);
+}
+.gr-t1 {
+  fill: var(--carte-bleu-accent);
+  background: var(--carte-bleu-accent);
+}
+.gr-t2 {
+  fill: var(--carte-violet-accent);
+  background: var(--carte-violet-accent);
+}
+.gr-t3 {
+  fill: var(--carte-orange-accent);
+  background: var(--carte-orange-accent);
+}
+.gr-t4 {
+  fill: var(--carte-vert-accent);
+  background: var(--carte-vert-accent);
+}
+.gr-t5 {
+  fill: var(--carte-gris-accent);
+  background: var(--carte-gris-accent);
+}
+.gr-legende {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gr-legende li {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+}
+.gr-legende-ligne {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mantine-spacing-md);
+}
+.gr-pastille {
+  display: inline-block;
+  width: var(--mantine-spacing-xs);
+  height: var(--mantine-spacing-xs);
+  border-radius: var(--mantine-radius-xs);
+}
+
+/* Gestion CRRC : carte schématique des établissements par département. */
+.crrc-dept {
+  fill: var(--carte-bleu-doux);
+  stroke: var(--carte-boite);
+  stroke-width: 2;
+}
+.crrc-dept-nom {
+  fill: var(--carte-secondaire);
+  font-size: var(--mantine-font-size-xs);
+}
+.crrc-halo {
+  opacity: 0.18;
+}
+.crrc-point {
+  stroke: var(--carte-boite);
+  stroke-width: 1.5;
+}
+.crrc-n-ok {
+  fill: var(--carte-bleu-accent);
+  background: var(--carte-bleu-accent);
+}
+.crrc-n-mid {
+  fill: var(--carte-orange-accent);
+  background: var(--carte-orange-accent);
+}
+.crrc-n-bad {
+  fill: var(--carte-rouge-accent);
+  background: var(--carte-rouge-accent);
+}
+.crrc-n-na,
+.crrc-n-info {
+  fill: var(--carte-gris-accent);
+  background: var(--carte-gris-accent);
+}
