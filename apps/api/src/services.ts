@@ -19,6 +19,7 @@ import { RiskAssessments } from './risk-assessments.js';
 import { BusinessPolicies } from './business-policy.js';
 import { Grc } from './grc/core.js';
 import { Walls } from './walls.js';
+import { Historique } from './historique/index.js';
 
 export function createServices(cfg: Config, log: Logger) {
   const db = new Db(cfg.db, log);
@@ -34,6 +35,7 @@ export function createServices(cfg: Config, log: Logger) {
   const grc = new Grc(db, legacy, businessPolicies, modules);
   const configGrc = new ConfigGrc(db, grc);
   grc.methodBindings = configGrc;
+  const historique = new Historique(grc);
   return {
     cfg,
     log,
@@ -44,6 +46,7 @@ export function createServices(cfg: Config, log: Logger) {
     businessPolicies,
     grc,
     configGrc,
+    historique,
     riskAssessments: new RiskAssessments(db, legacy, environment),
     modules,
     updates: new Updates(cfg, db),

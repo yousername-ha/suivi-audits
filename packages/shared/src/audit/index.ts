@@ -3,3 +3,4 @@ export * from './model.js';
 export * from './pronostic.js';
 export * from './ecarts.js';
 export * from './schema.js';
+export * from './guide.js';

@@ -840,3 +840,544 @@
 .matrice-cellule .mantine-Select-root {
   position: relative;
 }
+
+/* Plans du SMSI (reprise du calendrier et du planning de l'outil de suivi) : pastilles et planning annuel en SVG. */
+.plan-cellule {
+  vertical-align: top;
+  min-width: 6em;
+}
+.plan-pastille {
+  display: block;
+  max-width: 12em;
+  margin-bottom: var(--mantine-spacing-2xs);
+  padding: 0 var(--mantine-spacing-xs);
+  overflow: hidden;
+  border: var(--suivi-trait-l) solid var(--carte-gris-trait);
+  border-radius: var(--mantine-radius-sm);
+  background: var(--carte-gris-doux);
+  color: var(--carte-gris-accent);
+  font-size: var(--mantine-font-size-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.plan-pastille-ok {
+  border-color: var(--carte-vert-trait);
+  background: var(--carte-vert-doux);
+  color: var(--carte-vert-accent);
+}
+.plan-pastille-mid {
+  border-color: var(--carte-bleu-trait);
+  background: var(--carte-bleu-doux);
+  color: var(--carte-bleu-accent);
+}
+.plan-pastille-hi {
+  border-color: var(--carte-orange-trait);
+  background: var(--carte-orange-doux);
+  color: var(--carte-orange-accent);
+}
+.plan-pastille-bad {
+  border-color: var(--carte-rouge-trait);
+  background: var(--carte-rouge-doux);
+  color: var(--carte-rouge-accent);
+}
+.plan-planning {
+  overflow-x: auto;
+}
+.plan-svg {
+  display: block;
+  width: 100%;
+  min-width: 60em;
+  height: auto;
+}
+.plan-grille {
+  stroke: var(--carte-gris-trait);
+  stroke-width: 1;
+}
+.plan-aujourdhui {
+  stroke: var(--carte-rouge-accent);
+  stroke-width: 2;
+}
+.plan-mois,
+.plan-vide {
+  fill: var(--carte-secondaire);
+  font-size: var(--mantine-font-size-xs);
+}
+.plan-groupe {
+  fill: var(--carte-texte);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 700;
+}
+.plan-etiquette {
+  fill: var(--carte-texte);
+  font-size: var(--mantine-font-size-xs);
+}
+.plan-realise {
+  fill: var(--carte-vert-accent);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 700;
+}
+.plan-barre {
+  cursor: grab;
+  fill: var(--carte-gris-accent);
+}
+.plan-barre:focus-visible {
+  stroke: var(--carte-texte);
+  stroke-width: 2;
+  outline: none;
+}
+.plan-barre-deplacee {
+  cursor: grabbing;
+  opacity: 0.7;
+}
+.plan-barre-ok {
+  fill: var(--carte-vert-accent);
+}
+.plan-barre-mid {
+  fill: var(--carte-bleu-accent);
+}
+.plan-barre-hi {
+  fill: var(--carte-orange-accent);
+}
+.plan-barre-bad {
+  fill: var(--carte-rouge-accent);
+}
+.plan-barre-na {
+  fill: var(--carte-gris-accent);
+}
+.plan-legende {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--mantine-font-size-xs);
+}
+.plan-pastille-pt {
+  display: inline-block;
+  width: var(--mantine-spacing-xs);
+  height: var(--mantine-spacing-xs);
+  margin-right: var(--mantine-spacing-2xs);
+  border-radius: var(--mantine-radius-xs);
+}
+.plan-pastille-pt.plan-barre-ok {
+  background: var(--carte-vert-accent);
+}
+.plan-pastille-pt.plan-barre-mid {
+  background: var(--carte-bleu-accent);
+}
+.plan-pastille-pt.plan-barre-hi {
+  background: var(--carte-orange-accent);
+}
+.plan-pastille-pt.plan-barre-bad {
+  background: var(--carte-rouge-accent);
+}
+.plan-pastille-pt.plan-barre-na {
+  background: var(--carte-gris-accent);
+}
+
+/* Gestion de l'audit (reprise de l'outil de suivi) : carte du prochain audit, couverture du cycle, organisation. */
+.audit-legende {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--mantine-font-size-xs);
+}
+.audit-pastille {
+  display: inline-block;
+  width: var(--mantine-spacing-xs);
+  height: var(--mantine-spacing-xs);
+  margin-right: var(--mantine-spacing-2xs);
+  border-radius: var(--mantine-radius-xs);
+}
+.audit-ligne {
+  display: flex;
+  gap: var(--mantine-spacing-md);
+  align-items: flex-start;
+}
+.audit-ligne-titre {
+  flex: 0 0 14em;
+}
+.audit-tuiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mantine-spacing-2xs);
+}
+.audit-tuile {
+  position: relative;
+  min-width: 2.6em;
+  padding: var(--mantine-spacing-2xs) var(--mantine-spacing-xs);
+  border: var(--suivi-trait-l) solid var(--carte-gris-trait);
+  border-radius: var(--mantine-radius-sm);
+  background: var(--carte-gris-doux);
+  color: var(--carte-gris-accent);
+  font: inherit;
+  font-size: var(--mantine-font-size-xs);
+  text-align: center;
+}
+button.audit-tuile {
+  cursor: pointer;
+}
+button.audit-tuile:focus-visible {
+  outline: var(--suivi-trait-l) solid var(--carte-texte);
+  outline-offset: var(--suivi-trait-l);
+}
+.audit-point,
+.audit-pret {
+  position: absolute;
+  top: calc(var(--mantine-spacing-2xs) * -1);
+  width: var(--mantine-spacing-xs);
+  height: var(--mantine-spacing-xs);
+  border-radius: 50%;
+}
+.audit-point {
+  right: calc(var(--mantine-spacing-2xs) * -1);
+  background: var(--carte-secondaire);
+}
+.audit-pret {
+  left: calc(var(--mantine-spacing-2xs) * -1);
+  background: var(--carte-vert-accent);
+}
+.audit-niv-certain {
+  border-color: var(--carte-rouge-trait);
+  background: var(--carte-rouge-doux);
+  color: var(--carte-rouge-accent);
+}
+.audit-niv-tres {
+  border-color: var(--carte-orange-trait);
+  background: var(--carte-orange-doux);
+  color: var(--carte-orange-accent);
+}
+.audit-niv-probable {
+  border-color: var(--carte-violet-trait);
+  background: var(--carte-violet-doux);
+  color: var(--carte-violet-accent);
+}
+.audit-niv-socle {
+  border-color: var(--carte-bleu-trait);
+  background: var(--carte-bleu-doux);
+  color: var(--carte-bleu-accent);
+}
+.audit-niv-faible {
+  border-color: var(--carte-gris-trait);
+  background: var(--carte-gris-doux);
+  color: var(--carte-gris-accent);
+}
+.audit-cov-x-afnor {
+  border-color: var(--carte-bleu-accent);
+  background: var(--carte-bleu-accent);
+  color: var(--carte-boite);
+}
+.audit-cov-x-interne {
+  border-color: var(--carte-vert-accent);
+  background: var(--carte-vert-accent);
+  color: var(--carte-boite);
+}
+.audit-cov-p-afnor {
+  border-color: var(--carte-bleu-accent);
+  background: var(--carte-bleu-doux);
+  color: var(--carte-bleu-accent);
+}
+.audit-cov-p-interne {
+  border-color: var(--carte-vert-accent);
+  background: var(--carte-vert-doux);
+  color: var(--carte-vert-accent);
+}
+.audit-pastille.audit-niv-certain {
+  background: var(--carte-rouge-accent);
+}
+.audit-pastille.audit-niv-tres {
+  background: var(--carte-orange-accent);
+}
+.audit-pastille.audit-niv-probable {
+  background: var(--carte-violet-accent);
+}
+.audit-pastille.audit-niv-socle {
+  background: var(--carte-bleu-accent);
+}
+.audit-pastille.audit-niv-faible {
+  background: var(--carte-gris-trait);
+}
+.audit-niveau {
+  padding: 0 var(--mantine-spacing-xs);
+  border: var(--suivi-trait-l) solid var(--carte-gris-trait);
+  border-radius: var(--mantine-radius-sm);
+  font-size: var(--mantine-font-size-xs);
+  white-space: nowrap;
+}
+.audit-liste {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.audit-motifs {
+  margin: var(--mantine-spacing-2xs) 0;
+  padding-left: var(--mantine-spacing-lg);
+  font-size: var(--mantine-font-size-sm);
+}
+.audit-marque {
+  display: inline-block;
+  width: var(--mantine-spacing-md);
+  height: var(--mantine-spacing-md);
+  padding: 0;
+  border: var(--suivi-trait-l) solid var(--carte-gris-trait);
+  border-radius: 50%;
+  background: transparent;
+  vertical-align: middle;
+}
+button.audit-marque {
+  cursor: pointer;
+}
+.audit-marque-afnor.audit-marque-x {
+  border-color: var(--carte-bleu-accent);
+  background: var(--carte-bleu-accent);
+}
+.audit-marque-interne.audit-marque-x {
+  border-color: var(--carte-vert-accent);
+  background: var(--carte-vert-accent);
+}
+.audit-marque-afnor.audit-marque-p {
+  border-color: var(--carte-bleu-accent);
+  background: var(--carte-bleu-doux);
+}
+.audit-marque-interne.audit-marque-p {
+  border-color: var(--carte-vert-accent);
+  background: var(--carte-vert-doux);
+}
+.audit-creneau {
+  display: grid;
+  grid-template-columns: 5em var(--mantine-spacing-2xs) 1fr auto;
+  gap: var(--mantine-spacing-sm);
+  width: 100%;
+  padding: var(--mantine-spacing-xs);
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-sm);
+  background: var(--suivi-surface);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.audit-creneau-pause {
+  opacity: 0.75;
+}
+.audit-creneau-heure {
+  font-weight: 700;
+}
+.audit-creneau-heure span,
+.audit-creneau-genre,
+.audit-creneau-ecarts {
+  display: block;
+  color: var(--carte-secondaire);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 400;
+}
+.audit-creneau-corps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-2xs);
+}
+.audit-creneau-cote {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-2xs);
+  font-size: var(--mantine-font-size-xs);
+  text-align: right;
+}
+.audit-rail {
+  align-self: stretch;
+  border-radius: var(--mantine-radius-xs);
+  background: var(--carte-gris-trait);
+}
+.audit-rail.audit-niv-certain {
+  background: var(--carte-rouge-accent);
+}
+.audit-rail.audit-niv-tres {
+  background: var(--carte-orange-accent);
+}
+.audit-rail.audit-niv-probable {
+  background: var(--carte-violet-accent);
+}
+.audit-rail.audit-niv-socle {
+  background: var(--carte-bleu-accent);
+}
+.audit-alerte {
+  color: var(--carte-rouge-accent);
+}
+.audit-champ-large {
+  flex: 1;
+}
+.audit-evenement {
+  cursor: pointer;
+}
+.audit-evenement:focus-visible .audit-evenement-fond {
+  stroke: var(--carte-texte);
+  stroke-width: 2;
+}
+.audit-evenement-fond {
+  fill: var(--carte-boite);
+  stroke: var(--carte-gris-trait);
+  stroke-width: 1;
+}
+.audit-creneau-ouverture .audit-evenement-fond,
+.audit-creneau-cloture .audit-evenement-fond {
+  fill: var(--carte-bleu-doux);
+}
+.audit-creneau-visite .audit-evenement-fond {
+  fill: var(--carte-vert-doux);
+}
+.audit-creneau-synthese .audit-evenement-fond {
+  fill: var(--carte-violet-doux);
+}
+.audit-creneau-pause .audit-evenement-fond {
+  fill: var(--carte-gris-doux);
+}
+rect.audit-niv-certain {
+  fill: var(--carte-rouge-accent);
+}
+rect.audit-niv-tres {
+  fill: var(--carte-orange-accent);
+}
+rect.audit-niv-probable {
+  fill: var(--carte-violet-accent);
+}
+rect.audit-niv-socle {
+  fill: var(--carte-bleu-accent);
+}
+rect.audit-niv-faible {
+  fill: var(--carte-gris-trait);
+}
+
+/* ---------------------------------------------------------------- Graphiques des pages reprises (barres, anneau)
+   Six teintes de la palette des cartes ; positions en attributs SVG, aucune dimension en pixels dans la feuille. */
+.gr-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.gr-anneau {
+  width: 10em;
+  height: 10em;
+  flex: none;
+}
+.gr-grille {
+  stroke: var(--carte-gris-trait);
+  stroke-width: 1;
+}
+.gr-axe,
+.gr-etiquette,
+.gr-sous {
+  fill: var(--carte-secondaire);
+  font-size: var(--mantine-font-size-xs);
+}
+.gr-total,
+.gr-centre {
+  fill: var(--carte-texte);
+  font-weight: 700;
+  font-size: var(--mantine-font-size-sm);
+}
+.gr-vide {
+  fill: none;
+  stroke: var(--carte-gris-doux);
+  stroke-width: 28;
+}
+.gr-t0 {
+  fill: var(--carte-marine-accent);
+  background: var(--carte-marine-accent);
+}
+.gr-t1 {
+  fill: var(--carte-bleu-accent);
+  background: var(--carte-bleu-accent);
+}
+.gr-t2 {
+  fill: var(--carte-violet-accent);
+  background: var(--carte-violet-accent);
+}
+.gr-t3 {
+  fill: var(--carte-orange-accent);
+  background: var(--carte-orange-accent);
+}
+.gr-t4 {
+  fill: var(--carte-vert-accent);
+  background: var(--carte-vert-accent);
+}
+.gr-t5 {
+  fill: var(--carte-gris-accent);
+  background: var(--carte-gris-accent);
+}
+.gr-legende {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gr-legende li {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+}
+.gr-legende-ligne {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mantine-spacing-md);
+}
+.gr-pastille {
+  display: inline-block;
+  width: var(--mantine-spacing-xs);
+  height: var(--mantine-spacing-xs);
+  border-radius: var(--mantine-radius-xs);
+}
+
+/* Gestion CRRC : carte schématique des établissements par département. */
+.crrc-dept {
+  fill: var(--carte-bleu-doux);
+  stroke: var(--carte-boite);
+  stroke-width: 2;
+}
+.crrc-dept-nom {
+  fill: var(--carte-secondaire);
+  font-size: var(--mantine-font-size-xs);
+}
+.crrc-halo {
+  opacity: 0.18;
+}
+.crrc-point {
+  stroke: var(--carte-boite);
+  stroke-width: 1.5;
+}
+.crrc-n-ok {
+  fill: var(--carte-bleu-accent);
+  background: var(--carte-bleu-accent);
+}
+.crrc-n-mid {
+  fill: var(--carte-orange-accent);
+  background: var(--carte-orange-accent);
+}
+.crrc-n-bad {
+  fill: var(--carte-rouge-accent);
+  background: var(--carte-rouge-accent);
+}
+.crrc-n-na,
+.crrc-n-info {
+  fill: var(--carte-gris-accent);
+  background: var(--carte-gris-accent);
+}
+
+/* Cellule de crise : main courante. */
+.crise-log {
+  margin: 0;
+  padding: 0 0 0 var(--mantine-spacing-md);
+}
+.crise-log li {
+  margin-bottom: var(--mantine-spacing-sm);
+}
+
+/* Évaluations par le clausier : texte intégral d'une exigence. */
+.evaluation-texte {
+  white-space: pre-line;
+}
+
+/* Barre de répartition (déclaration d'applicabilité). */
+.gr-barre {
+  display: block;
+  width: 100%;
+  height: var(--mantine-spacing-md);
+  border-radius: var(--mantine-radius-xs);
+  overflow: hidden;
+}
