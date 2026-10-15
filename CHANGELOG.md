@@ -4,8 +4,12 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ## [Non publié]
 
+## [3.4.0] — 2026-10-15
+
 ### Notes de mise à jour
-Aucune action, aucune migration : les plans restent dans l'état historique, lus et modifiés sous verrou, comme les fournisseurs.
+- **Aucune migration SQL, aucune action sur le serveur** : toutes les pages reprises de l'outil de suivi lisent et modifient l'état historique sous verrou, sans copie ; `/legacy` affiche les mêmes données. Les données de départ restent vides.
+- **Évaluation par le clausier (facultative)** : le clausier du Club RSSI Santé est sous licence **CC BY-NC-SA 4.0, usage non commercial** ([mention](docs/licences/CLAUSIER-CLUB-RSSI-SANTE.md)). Une organisation à usage commercial retire le fichier `apps/api/src/historique/clausier-club-rssi-sante-2026.ts` et l'évaluation par le clausier ; le reste de l'application n'en dépend pas.
+- **Toujours sous `/legacy`** : la page « ReCyF et autres référentiels », les exports Excel par rubrique et les supports PowerPoint et Word des comités.
 
 ### Ajouté
 - **Déclaration d'applicabilité reprise dans la nouvelle interface** (pages « Clauses ISO 27001 », « Annexe A (DdA) » et « HDS (DdA) » de l'outil de suivi) : Pilotage → Conformité. Applicabilité et niveau de mise en œuvre par mesure, indicateurs (mise en œuvre totale, partielles, insuffisantes, exclues), barre de répartition, mesures « Total » avec écart ouvert, filtres, documents associés (lien ouvrable), écarts ouverts rattachés et fiche de mesure ; une clause ISO est obligatoire ; le texte de référence est saisi par l'utilisateur (aucun texte normatif fourni). L'import Excel de l'outil historique n'est pas repris. API : `/api/dda`.
