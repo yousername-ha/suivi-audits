@@ -158,7 +158,9 @@ export const CelluleOuverture = z
   })
   .partial()
   .strict();
-export const EntreeCreation = z.object({ type: z.enum(TYPES_ENTREE_CRISE), author: t(200), text: t(5000).min(1) }).strict();
+export const EntreeCreation = z
+  .object({ type: z.enum(TYPES_ENTREE_CRISE), author: t(200), text: t(5000).min(1) })
+  .strict();
 export const EcheanceCreation = z.object({ label: t(300).min(1), heures: z.number().int().min(1).max(8760) }).strict();
 export const ChecklistBascule = z.object({ fait: z.boolean(), author: t(200).optional() }).strict();
 export const AuteurCrise = z.object({ author: t(200).optional() }).strict();
@@ -176,7 +178,10 @@ export const ContactModification = z
   })
   .partial()
   .strict();
-export const ScenarioModification = z.object({ title: t(300), ref: t(100), desc: t(5000) }).partial().strict();
+export const ScenarioModification = z
+  .object({ title: t(300), ref: t(100), desc: t(5000) })
+  .partial()
+  .strict();
 export const ActionScenarioModification = z
   .object({ phase: z.enum(PHASES_CRISE), t: t(2000), owner: t(200) })
   .partial()

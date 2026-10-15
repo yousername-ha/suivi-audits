@@ -83,7 +83,9 @@ describe('priorité et états', () => {
   it('validation des écritures', () => {
     expect(IncidentModification.safeParse({ status: 'Autre' }).success).toBe(false);
     expect(IncidentModification.safeParse({ detectedAt: '14/10/2026' }).success).toBe(false);
-    expect(IncidentModification.safeParse({ impact: '', urgency: 'Moyen', detectedAt: '2026-10-14T08:30' }).success).toBe(true);
+    expect(
+      IncidentModification.safeParse({ impact: '', urgency: 'Moyen', detectedAt: '2026-10-14T08:30' }).success,
+    ).toBe(true);
     expect(IncidentCreation.safeParse({ answers: { cia: 'peut-être' } }).success).toBe(false);
     expect(IncidentCreation.safeParse({ answers: { cia: 'oui' }, title: 'Titre fictif' }).success).toBe(true);
   });
@@ -91,10 +93,34 @@ describe('priorité et états', () => {
 
 describe('cellule de crise', () => {
   const etat = lireEtatCrise({
-    scenarios: [{ id: 'SCN-1', title: 'Rançongiciel', items: [{ phase: 'Alerte', t: 'Alerter' }, { t: 'Isoler' }, { phase: 'Gestion', t: 'Restaurer' }] }],
+    scenarios: [
+      {
+        id: 'SCN-1',
+        title: 'Rançongiciel',
+        items: [{ phase: 'Alerte', t: 'Alerter' }, { t: 'Isoler' }, { phase: 'Gestion', t: 'Restaurer' }],
+      },
+    ],
     cells: [
-      { id: 'C1', title: 'Exercice', mode: 'Exercice', scenario: 'SCN-1', start: '2026-10-14T08:00:00.000Z', status: 'Clôturée', end: '2026-10-14T09:05:09.000Z', log: [{ ts: '2026-10-14T08:00:00.000Z', type: 'Information', text: 'Ouverture' }], checks: { '0': { done: true, ts: 'x' }, '1': { done: false } } },
-      { id: 'C2', title: 'Crise', mode: 'Réel', status: 'Active', start: '2026-10-14T10:00:00.000Z', log: [], deadlines: [{ label: 'CNIL', due: '2026-10-17T10:00:00.000Z' }] },
+      {
+        id: 'C1',
+        title: 'Exercice',
+        mode: 'Exercice',
+        scenario: 'SCN-1',
+        start: '2026-10-14T08:00:00.000Z',
+        status: 'Clôturée',
+        end: '2026-10-14T09:05:09.000Z',
+        log: [{ ts: '2026-10-14T08:00:00.000Z', type: 'Information', text: 'Ouverture' }],
+        checks: { '0': { done: true, ts: 'x' }, '1': { done: false } },
+      },
+      {
+        id: 'C2',
+        title: 'Crise',
+        mode: 'Réel',
+        status: 'Active',
+        start: '2026-10-14T10:00:00.000Z',
+        log: [],
+        deadlines: [{ label: 'CNIL', due: '2026-10-17T10:00:00.000Z' }],
+      },
     ],
     contacts: [{ name: 'Contact fictif', key: 1 }],
   });
@@ -113,7 +139,9 @@ describe('cellule de crise', () => {
     expect(avancementChecklist(etat.cells[0]!, etat.scenarios[0])).toEqual({ faits: 1, total: 3 });
     expect(avancementChecklist(etat.cells[1]!, undefined)).toEqual({ faits: 0, total: 0 });
     expect(resteEcheance(etat.cells[1]!.deadlines[0]!, Date.parse('2026-10-16T10:00:00.000Z'))).toBe(864e5);
-    expect(syntheseRetex(etat.cells[0]!, '2026-10-14T09:05:09.000Z')).toBe('Main courante : 1 entrées, durée 1 h 05 min 09 s.');
+    expect(syntheseRetex(etat.cells[0]!, '2026-10-14T09:05:09.000Z')).toBe(
+      'Main courante : 1 entrées, durée 1 h 05 min 09 s.',
+    );
   });
   it('validation des écritures', () => {
     expect(EcheanceCreation.safeParse({ label: 'x', heures: 0 }).success).toBe(false);

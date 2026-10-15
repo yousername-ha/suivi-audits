@@ -29,27 +29,27 @@ l'[inventaire fonctionnel](../../02_FONCTIONNALITES/INVENTAIRE_FONCTIONNEL.md) a
 | 03 | Gestion de l'audit → Planning                          | repris     | Pilotage → Gestion de l’audit → Organisation : planning | [03](captures/03-gestion-de-l-audit--planning.png) |
 | 04 | Gestion de l'audit → Participants                      | repris     | Pilotage → Gestion de l’audit → Organisation : participants | [04](captures/04-gestion-de-l-audit--participants.png) |
 | 05 | Gestion de l'audit → Couverture du cycle               | repris     | Pilotage → Gestion de l’audit → Couverture du cycle (prévue, auditée, AFNOR et interne) | [05](captures/05-gestion-de-l-audit--couverture-du-cycle.png) |
-| 06 | Conformité → Clauses ISO 27001                         | partiel     | Bibliothèque de référentiels (versions verrouillées, copies) et rapprochements    | [06](captures/06-conformite--clauses-iso-27001.png) |
-| 07 | Conformité → Annexe A (DDA)                            | partiel     | idem                                                                              | [07](captures/07-conformite--annexe-a-dda.png) |
-| 08 | Conformité → HDS (DDA)                                 | partiel     | idem                                                                              | [08](captures/08-conformite--hds-dda.png) |
-| 09 | Conformité → REcyF et autres référentiels              | partiel     | idem                                                                              | [09](captures/09-conformite--recyf-et-autres-referentiels.png) |
+| 06 | Conformité → Clauses ISO 27001                         | repris     | Pilotage → Conformité → Clauses ISO 27001 (DdA) : niveau, documents, écarts, indicateurs | [06](captures/06-conformite--clauses-iso-27001.png) |
+| 07 | Conformité → Annexe A (DDA)                            | repris     | Pilotage → Conformité → Annexe A (DdA) : applicabilité, niveau, justification, actions, documents, écarts | [07](captures/07-conformite--annexe-a-dda.png) |
+| 08 | Conformité → HDS (DDA)                                 | repris     | Pilotage → Conformité → HDS (DdA) | [08](captures/08-conformite--hds-dda.png) |
+| 09 | Conformité → REcyF et autres référentiels              | partiel    | Référentiels et exigences, correspondances et couverture natifs ; la page d’évaluation des exigences par référentiel (ReCyF) reste sous /legacy | [09](captures/09-conformite--recyf-et-autres-referentiels.png) |
 | 10 | Fournisseurs → Fournisseurs et applications            | repris      | Pilotage → Fournisseurs (colonnes, filtres, fiche, indicateurs MFA/SSO)           | [10](captures/10-fournisseurs--fournisseurs-et-applications.png) |
 | 11 | Fournisseurs → Revues des accès                        | repris     | Pilotage → Fournisseurs → Revues des accès (calcul de l’échéance et de l’état repris) | [11](captures/11-fournisseurs--revues-des-acces.png) |
-| 12 | Fournisseurs → Évaluations sécurité                    | non repris  | Sources conservées, pas de parcours natif (FCT-031)                               | [12](captures/12-fournisseurs--evaluations-securite.png) |
+| 12 | Fournisseurs → Évaluations sécurité                    | repris     | Pilotage → Fournisseurs → Évaluations par le clausier (facultative, Club RSSI Santé, CC BY-NC-SA 4.0) ; évaluations natives sur critères de l’organisation | [12](captures/12-fournisseurs--evaluations-securite.png) |
 | 13 | Plans → Calendrier                                     | repris      | Pilotage → Calendrier des plans (plans et tâches récurrentes de l’année)          | [13](captures/13-plans--calendrier.png) |
 | 14 | Plans → Planning annuel                                | repris      | Pilotage → Planning annuel des plans (barres déplaçables à la souris et au clavier) | [14](captures/14-plans--planning-annuel.png) |
 | 15 | Plans → Formation                                      | repris      | Pilotage → Plan de formation                                                      | [15](captures/15-plans--formation.png) |
 | 16 | Plans → Sensibilisation                                | repris      | Pilotage → Plan de sensibilisation (enregistrement du taux dans l’indicateur)     | [16](captures/16-plans--sensibilisation.png) |
 | 17 | GAP et IA → Applications à intégrer                    | repris     | Pilotage → Conformité → Applications à intégrer (liste de contrôle, questionnaire guidé, plan d’action) | [17](captures/17-gap-et-ia--applications-a-integrer.png) |
 | 18 | GAP et IA → Usages de l'IA                             | repris     | Pilotage → Conformité → Conformité IA (usages, évaluation, plan, politiques) | [18](captures/18-gap-et-ia--usages-de-l-ia.png) |
-| 19 | Autres modules → Gestion CRRC                          | non repris  |                                                                                   | [19](captures/19-autres-modules--gestion-crrc.png) |
-| 20 | Autres modules → Investissements                       | non repris  | Registre et export conservés, INV-01/INV-02 non revendiqués (FCT-034)             | [20](captures/20-autres-modules--investissements.png) |
-| 21 | Autres modules → Incidents                             | non repris  |                                                                                   | [21](captures/21-autres-modules--incidents.png) |
-| 22 | Autres modules → Cellule de crise                      | non repris  |                                                                                   | [22](captures/22-autres-modules--cellule-de-crise.png) |
-| 23 | Autres modules → Rapports et exports                   | partiel     | Rapports natifs et exports cartographiques (FCT-040) ; exports historiques partiels | [23](captures/23-autres-modules--rapports-et-exports.png) |
+| 19 | Autres modules → Gestion CRRC                          | repris     | Pilotage → Gestion CRRC (contrats, offres, sauvegardes, restaurations, alertes, rapports) | [19](captures/19-autres-modules--gestion-crrc.png) |
+| 20 | Autres modules → Investissements                       | repris     | Pilotage → Budget → Plan d’investissement (lignes, renouvellements, comparaison) ; import et export Excel non repris | [20](captures/20-autres-modules--investissements.png) |
+| 21 | Autres modules → Incidents                             | repris     | Pilotage → Incidents et crise → Registre des incidents, Qualifier un signalement | [21](captures/21-autres-modules--incidents.png) |
+| 22 | Autres modules → Cellule de crise                      | repris     | Pilotage → Incidents et crise → Cellule de crise, Contacts, Scénarios ; export Excel de la main courante non repris | [22](captures/22-autres-modules--cellule-de-crise.png) |
+| 23 | Autres modules → Rapports et exports                   | partiel    | Rapports natifs et exports cartographiques (FCT-040) ; exports Excel par rubrique et supports PowerPoint et Word des comités (COPIL, CODIR) restent sous /legacy | [23](captures/23-autres-modules--rapports-et-exports.png) |
 | 24 | Pilotage → Processus, objectifs, indicateurs           | repris      | Pilotage → Objectifs et indicateurs (trois vues, fiches, mesures, PESTEL, revue)  | [24](captures/24-pilotage--pilotage-processus-objectifs-indicateurs.png) |
 
-Bilan : 14 pages reprises, 5 partielles, 5 non reprises.
+Bilan : 22 pages reprises, 2 partielles (09 et 23), 0 non reprise.
 
 ## Captures de la nouvelle interface (jeu de test)
 

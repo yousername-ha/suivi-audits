@@ -34,3 +34,5 @@ export * from './suivi-invest.js';
 export * from './suivi-crrc.js';
 export * from './suivi-incidents.js';
 export * from './suivi-crise.js';
+export * from './suivi-evals-fournisseurs.js';
+export * from './suivi-dda.js';

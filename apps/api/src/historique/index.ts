@@ -3,6 +3,8 @@ import type { Grc } from '../grc/core.js';
 import { AuditSuivi } from './audit.js';
 import { GestionCrrc } from './crrc.js';
 import { Crise } from './crise.js';
+import { DeclarationApplicabilite } from './dda.js';
+import { EvaluationsClausier } from './evals-fournisseurs.js';
 import { Gap } from './gap.js';
 import { ConformiteIa } from './ia.js';
 import { Incidents } from './incidents.js';
@@ -22,6 +24,8 @@ export class Historique {
   readonly crrc: GestionCrrc;
   readonly incidents: Incidents;
   readonly crise: Crise;
+  readonly evaluations: EvaluationsClausier;
+  readonly dda: DeclarationApplicabilite;
   constructor(g: Grc) {
     this.registre = new RegistreHistorique(g);
     this.plans = new Plans(this.registre);
@@ -33,5 +37,7 @@ export class Historique {
     this.crrc = new GestionCrrc(this.registre);
     this.incidents = new Incidents(this.registre);
     this.crise = new Crise(this.registre);
+    this.evaluations = new EvaluationsClausier(this.registre);
+    this.dda = new DeclarationApplicabilite(this.registre);
   }
 }

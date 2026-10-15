@@ -52,8 +52,10 @@ import { ConformiteIa } from '../pilotage/Ia';
 import { GapApplications } from '../pilotage/Gap';
 import { CelluleCriseVue, ContactsCrise, ScenariosCrise } from '../incidents/Crise';
 import { QualifierSignalement, RegistreIncidents } from '../incidents/Incidents';
+import { DeclarationApplicabilite } from '../dda/Dda';
 import { EtablissementsCrrc, OffresCrrc, VueEnsembleCrrc } from '../crrc/Contrats';
 import { AlertesCrrc, RapportsCrrc, RessourcesCrrc, RestaurationsCrrc, TableauSauvegardes } from '../crrc/Sauvegardes';
+import { EvaluationsClausier } from '../pilotage/EvaluationsClausier';
 import { Investissements } from '../pilotage/Investissements';
 import { RevuesAcces } from '../pilotage/RevuesAcces';
 import { CouvertureCycle } from '../audit/Couverture';
@@ -437,11 +439,15 @@ export function PilotagePage() {
             {section === 'crrc-restaurations' && can('crrc', 'lire') && <RestaurationsCrrc />}
             {section === 'crrc-alertes' && can('crrc', 'lire') && <AlertesCrrc />}
             {section === 'crrc-rapports' && can('crrc', 'lire') && <RapportsCrrc />}
+            {section === 'dda-iso' && can('audit', 'lire') && <DeclarationApplicabilite reference="ISO" />}
+            {section === 'dda-annexe-a' && can('audit', 'lire') && <DeclarationApplicabilite reference="A" />}
+            {section === 'dda-hds' && can('audit', 'lire') && <DeclarationApplicabilite reference="HDS" />}
             {section === 'crise-cellule' && can('incidents', 'lire') && <CelluleCriseVue />}
             {section === 'crise-contacts' && can('incidents', 'lire') && <ContactsCrise />}
             {section === 'crise-scenarios' && can('incidents', 'lire') && <ScenariosCrise />}
             {section === 'incidents-registre' && can('incidents', 'lire') && <RegistreIncidents />}
             {section === 'incidents-qualifier' && can('incidents', 'lire') && <QualifierSignalement />}
+            {section === 'evaluations-clausier' && can('fournisseurs', 'lire') && <EvaluationsClausier />}
             {section === 'investissements' && can('investissements', 'lire') && <Investissements />}
             {section === 'revues-acces' && can('pilotage', 'lire') && <RevuesAcces />}
             {section === 'audit-pronostic' && can('audit', 'lire') && <Pronostic />}

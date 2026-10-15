@@ -30,8 +30,14 @@ export const NIVEAUX_INCIDENT = ['Élevé', 'Moyen', 'Faible'] as const;
 export type RepInc = 'oui' | 'non' | 'nsp';
 
 export const QUESTIONS_INCIDENT = [
-  ['demande', 'La personne demande-t-elle un service, une information, un accès ou un matériel, sans signaler de dysfonctionnement ?'],
-  ['service', 'Un service est-il interrompu ou dégradé pour les utilisateurs, ou risque-t-il de l’être à court terme ?'],
+  [
+    'demande',
+    'La personne demande-t-elle un service, une information, un accès ou un matériel, sans signaler de dysfonctionnement ?',
+  ],
+  [
+    'service',
+    'Un service est-il interrompu ou dégradé pour les utilisateurs, ou risque-t-il de l’être à court terme ?',
+  ],
   [
     'cia',
     'La confidentialité, l’intégrité ou la disponibilité d’informations est-elle compromise ou probablement compromise (accès non autorisé, fuite, perte, modification, chiffrement malveillant, compte compromis) ?',
@@ -56,7 +62,10 @@ export function qualifierIncident(a: Reponses): { kind: (typeof QUALIFICATIONS_I
   if (y('service'))
     return y('politique')
       ? { kind: 'Incident de sécurité', why: 'Dégradation de service liée à une atteinte à la politique de sécurité.' }
-      : { kind: 'Incident', why: 'Interruption ou dégradation non planifiée d’un service (définition ITIL d’un incident).' };
+      : {
+          kind: 'Incident',
+          why: 'Interruption ou dégradation non planifiée d’un service (définition ITIL d’un incident).',
+        };
   if (y('politique'))
     return {
       kind: 'Événement de sécurité',
@@ -67,7 +76,10 @@ export function qualifierIncident(a: Reponses): { kind: (typeof QUALIFICATIONS_I
       kind: 'Demande',
       why: 'Demande de service sans dysfonctionnement (définition ITIL d’une demande de service) : à traiter dans le catalogue de services.',
     };
-  return { kind: 'Événement', why: 'Changement d’état sans impact ni demande identifiés : à enregistrer pour information.' };
+  return {
+    kind: 'Événement',
+    why: 'Changement d’état sans impact ni demande identifiés : à enregistrer pour information.',
+  };
 }
 /** Obligations à vérifier pour un incident de sécurité (qualification, RGPD, santé et HDS, NIS 2). */
 export function obligationsIncident(a: Reponses, kind: string, categorieEntite: string): [string, string][] {
@@ -189,12 +201,23 @@ export type FiltreIncidents = 'open' | 'sec' | 'all' | (typeof QUALIFICATIONS_IN
 /** Registre filtré, du plus récemment détecté au plus ancien. */
 export function filtrerIncidents(l: readonly Incident[], f: FiltreIncidents): Incident[] {
   return l
-    .filter((i) => (f === 'all' ? true : f === 'open' ? incidentOuvert(i) : f === 'sec' ? i.kind === 'Incident de sécurité' : i.kind === f))
+    .filter((i) =>
+      f === 'all'
+        ? true
+        : f === 'open'
+          ? incidentOuvert(i)
+          : f === 'sec'
+            ? i.kind === 'Incident de sécurité'
+            : i.kind === f,
+    )
     .sort((a, b) => b.detectedAt.localeCompare(a.detectedAt));
 }
 
 const t = (n: number) => z.string().trim().max(n);
-const heure = z.union([z.literal(''), z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, 'Date et heure invalides (AAAA-MM-JJThh:mm).')]);
+const heure = z.union([
+  z.literal(''),
+  z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, 'Date et heure invalides (AAAA-MM-JJThh:mm).'),
+]);
 const reponse = z.enum(['oui', 'non', 'nsp']);
 const reponses = z.object(Object.fromEntries(QUESTIONS_INCIDENT.map(([k]) => [k, reponse.optional()]))).strict();
 export const IncidentCreation = z

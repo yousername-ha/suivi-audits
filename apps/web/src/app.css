@@ -1367,3 +1367,17 @@ rect.audit-niv-faible {
 .crise-log li {
   margin-bottom: var(--mantine-spacing-sm);
 }
+
+/* Évaluations par le clausier : texte intégral d'une exigence. */
+.evaluation-texte {
+  white-space: pre-line;
+}
+
+/* Barre de répartition (déclaration d'applicabilité). */
+.gr-barre {
+  display: block;
+  width: 100%;
+  height: var(--mantine-spacing-md);
+  border-radius: var(--mantine-radius-xs);
+  overflow: hidden;
+}

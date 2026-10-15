@@ -188,3 +188,34 @@ export function Chiffres({ items }: { items: { valeur: string | number; libelle:
     </Group>
   );
 }
+
+export interface PartRepartition {
+  libelle: string;
+  valeur: number;
+  /** Teinte 0 à 5 de la palette des graphiques. */
+  teinte: number;
+}
+/** Barre de répartition horizontale (parts d'un total), avec légende textuelle. */
+export function BarreRepartition({ parts, ariaLabel }: { parts: PartRepartition[]; ariaLabel: string }) {
+  const total = parts.reduce((a, p) => a + p.valeur, 0);
+  let x = 0;
+  return (
+    <svg viewBox="0 0 100 6" preserveAspectRatio="none" role="img" aria-label={ariaLabel} className="gr-barre">
+      {!total && <rect x="0" y="0" width="100" height="6" className="gr-t5" />}
+      {parts
+        .filter((p) => p.valeur > 0)
+        .map((p) => {
+          const w = (p.valeur * 100) / total,
+            r = (
+              <rect key={p.libelle} x={x} y="0" width={w} height="6" className={`gr-t${p.teinte}`}>
+                <title>
+                  {p.libelle} : {p.valeur}
+                </title>
+              </rect>
+            );
+          x += w;
+          return r;
+        })}
+    </svg>
+  );
+}

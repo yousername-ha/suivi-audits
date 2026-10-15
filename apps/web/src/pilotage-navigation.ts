@@ -41,6 +41,9 @@ export const PILOTAGE_NAV = [
     items: [
       { id: 'referentiels', label: 'Référentiels et exigences', module: 'conformite' },
       { id: 'bibliotheque', label: 'Bibliothèque de référentiels', module: 'conformite' },
+      { id: 'dda-iso', label: 'Clauses ISO 27001 (DdA)', module: 'audit' },
+      { id: 'dda-annexe-a', label: 'Annexe A (DdA)', module: 'audit' },
+      { id: 'dda-hds', label: 'HDS (DdA)', module: 'audit' },
       { id: 'applicabilite', label: 'Applicabilité et justifications', module: 'pilotage' },
       { id: 'mesures', label: 'Mesures', module: 'audit' },
       { id: 'correspondances', label: 'Correspondances entre exigences', module: 'conformite' },
@@ -57,6 +60,7 @@ export const PILOTAGE_NAV = [
       { id: 'fournisseurs', label: 'Fournisseurs de l’organisation', module: 'fournisseurs' },
       { id: 'criteres-fournisseurs', label: 'Critères d’évaluation des fournisseurs', module: 'fournisseurs' },
       { id: 'fournisseurs-perimetre', label: 'Fournisseurs du périmètre', module: 'fournisseurs' },
+      { id: 'evaluations-clausier', label: 'Évaluations par le clausier (Club RSSI Santé)', module: 'fournisseurs' },
       { id: 'revues-acces', label: 'Revues des accès', module: 'pilotage' },
     ],
   },
@@ -152,18 +156,12 @@ export interface PageHistorique {
 export const PAGES_HISTORIQUES: { label: string; items: PageHistorique[] }[] = [
   {
     label: 'Conformité',
-    items: [
-      { label: 'Clauses ISO 27001', module: 'audit', onglet: 'conformite', vue: 'confView=ISO' },
-      { label: 'Annexe A (DdA)', module: 'audit', onglet: 'conformite', vue: 'confView=A' },
-      { label: 'HDS (DdA)', module: 'audit', onglet: 'conformite', vue: 'confView=HDS' },
-      { label: 'ReCyF et autres référentiels', module: 'conformite', onglet: 'conformite', vue: 'confView=fw' },
-    ],
+    items: [{ label: 'ReCyF et autres référentiels', module: 'conformite', onglet: 'conformite', vue: 'confView=fw' }],
   },
   {
     label: 'Fournisseurs',
     items: [
       { label: 'Fournisseurs et applications', module: 'fournisseurs', onglet: 'fournisseurs', vue: 'supView=list' },
-      { label: 'Évaluations sécurité', module: 'fournisseurs', onglet: 'supeval' },
     ],
   },
   {
