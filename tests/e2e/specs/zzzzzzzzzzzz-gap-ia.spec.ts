@@ -118,8 +118,16 @@ test('GAP guidé, fiche, action ; conformité IA : usage, scénario, plan', asyn
     await fiche.getByRole('textbox', { name: 'Constat du point G03' }).blur();
     await fiche.getByRole('textbox', { name: 'État du point G03' }).click();
     await page.getByRole('option', { name: 'Non conforme', exact: true }).click();
-    await fiche.getByRole('button', { name: 'Créer l’action dans le registre des écarts' }).first().click();
+    await expect(fiche.getByText(/Plan d’action GAP-\d+/)).toBeVisible();
     await expect(fiche.getByText(/Action GAP-\d+/).first()).toBeVisible();
+    // Un point ajouté après coup n'a pas encore d'action : on la crée.
+    await fiche.getByRole('textbox', { name: 'Point de contrôle' }).fill('Point ajouté fictif');
+    await fiche.getByRole('textbox', { name: 'Point de contrôle' }).blur();
+    await fiche.getByRole('button', { name: 'Ajouter', exact: true }).click();
+    await fiche.getByRole('textbox', { name: 'État du point C1' }).click();
+    await page.getByRole('option', { name: 'Non conforme', exact: true }).click();
+    await fiche.getByRole('button', { name: 'Créer l’action dans le registre des écarts' }).click();
+    await expect(fiche.getByRole('button', { name: 'Créer l’action dans le registre des écarts' })).toHaveCount(0);
     await page.keyboard.press('Escape');
     await expect(page.getByRole('button', { name: new RegExp(`Service fictif ${suffixe}`) })).toBeVisible();
 
