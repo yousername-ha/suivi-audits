@@ -2,15 +2,18 @@
 import type { Grc } from '../grc/core.js';
 import { AuditSuivi } from './audit.js';
 import { Plans } from './plans.js';
+import { RevuesAcces } from './revues-acces.js';
 import { RegistreHistorique } from './registre.js';
 
 export class Historique {
   readonly registre: RegistreHistorique;
   readonly plans: Plans;
   readonly audit: AuditSuivi;
+  readonly revuesAcces: RevuesAcces;
   constructor(g: Grc) {
     this.registre = new RegistreHistorique(g);
     this.plans = new Plans(this.registre);
     this.audit = new AuditSuivi(this.registre);
+    this.revuesAcces = new RevuesAcces(this.registre);
   }
 }

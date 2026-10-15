@@ -34,7 +34,7 @@ l'[inventaire fonctionnel](../../02_FONCTIONNALITES/INVENTAIRE_FONCTIONNEL.md) a
 | 08 | Conformité → HDS (DDA)                                 | partiel     | idem                                                                              | [08](captures/08-conformite--hds-dda.png) |
 | 09 | Conformité → REcyF et autres référentiels              | partiel     | idem                                                                              | [09](captures/09-conformite--recyf-et-autres-referentiels.png) |
 | 10 | Fournisseurs → Fournisseurs et applications            | repris      | Pilotage → Fournisseurs (colonnes, filtres, fiche, indicateurs MFA/SSO)           | [10](captures/10-fournisseurs--fournisseurs-et-applications.png) |
-| 11 | Fournisseurs → Revues des accès                        | non repris  |                                                                                   | [11](captures/11-fournisseurs--revues-des-acces.png) |
+| 11 | Fournisseurs → Revues des accès                        | repris     | Pilotage → Fournisseurs → Revues des accès (calcul de l’échéance et de l’état repris) | [11](captures/11-fournisseurs--revues-des-acces.png) |
 | 12 | Fournisseurs → Évaluations sécurité                    | non repris  | Sources conservées, pas de parcours natif (FCT-031)                               | [12](captures/12-fournisseurs--evaluations-securite.png) |
 | 13 | Plans → Calendrier                                     | repris      | Pilotage → Calendrier des plans (plans et tâches récurrentes de l’année)          | [13](captures/13-plans--calendrier.png) |
 | 14 | Plans → Planning annuel                                | repris      | Pilotage → Planning annuel des plans (barres déplaçables à la souris et au clavier) | [14](captures/14-plans--planning-annuel.png) |
@@ -49,7 +49,7 @@ l'[inventaire fonctionnel](../../02_FONCTIONNALITES/INVENTAIRE_FONCTIONNEL.md) a
 | 23 | Autres modules → Rapports et exports                   | partiel     | Rapports natifs et exports cartographiques (FCT-040) ; exports historiques partiels | [23](captures/23-autres-modules--rapports-et-exports.png) |
 | 24 | Pilotage → Processus, objectifs, indicateurs           | repris      | Pilotage → Objectifs et indicateurs (trois vues, fiches, mesures, PESTEL, revue)  | [24](captures/24-pilotage--pilotage-processus-objectifs-indicateurs.png) |
 
-Bilan : 11 pages reprises, 5 partielles, 8 non reprises.
+Bilan : 12 pages reprises, 5 partielles, 7 non reprises.
 
 ## Captures de la nouvelle interface (jeu de test)
 

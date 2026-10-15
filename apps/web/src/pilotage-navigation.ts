@@ -55,6 +55,7 @@ export const PILOTAGE_NAV = [
       { id: 'fournisseurs', label: 'Fournisseurs de l’organisation', module: 'fournisseurs' },
       { id: 'criteres-fournisseurs', label: 'Critères d’évaluation des fournisseurs', module: 'fournisseurs' },
       { id: 'fournisseurs-perimetre', label: 'Fournisseurs du périmètre', module: 'fournisseurs' },
+      { id: 'revues-acces', label: 'Revues des accès', module: 'pilotage' },
     ],
   },
   {
@@ -133,7 +134,6 @@ export const PAGES_HISTORIQUES: { label: string; items: PageHistorique[] }[] = [
     label: 'Fournisseurs',
     items: [
       { label: 'Fournisseurs et applications', module: 'fournisseurs', onglet: 'fournisseurs', vue: 'supView=list' },
-      { label: 'Revues des accès', module: 'pilotage', onglet: 'fournisseurs', vue: 'supView=ar' },
       { label: 'Évaluations sécurité', module: 'fournisseurs', onglet: 'supeval' },
     ],
   },

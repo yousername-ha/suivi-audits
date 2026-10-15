@@ -1,6 +1,6 @@
 /* Modules de l'outil de suivi historique repris dans la nouvelle interface (sans copie, voir historique/registre.ts).
    Les droits sont ceux du module concerné ; les actions qui touchent un autre module exigent aussi son droit. */
-import { ActionPlanCreation, ActionPlanModification, DecalagePlan } from '@suivi/shared';
+import { ActionPlanCreation, ActionPlanModification, DecalagePlan, RevueAccesModification } from '@suivi/shared';
 import { PlanDayBody, PlanPersonBody, PlanUpdateBody } from '@suivi/shared/audit';
 import { z } from 'zod';
 import type { Session } from '../auth.js';
@@ -220,5 +220,32 @@ export const historiqueRoutes = [
     access: 'plan_audit:modifier' as const,
     params: idElement,
     handler: async ({ svc, s, params, ip }) => svc.historique.audit.supprimerPersonne(params.id, user(s), ip),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/revues-acces',
+    summary: 'Revues des accès des applications (contrôles périodiques)',
+    tags,
+    access: 'pilotage:lire' as const,
+    handler: async ({ svc, s }) => svc.historique.revuesAcces.vue(user(s)),
+  }),
+  route({
+    method: 'POST',
+    url: '/api/revues-acces',
+    summary: 'Ajouter une revue des accès',
+    tags,
+    access: 'pilotage:modifier' as const,
+    status: 201,
+    handler: async ({ svc, s, ip }) => svc.historique.revuesAcces.creer(user(s), ip),
+  }),
+  route({
+    method: 'PATCH',
+    url: '/api/revues-acces/:id',
+    summary: 'Modifier une revue des accès (application, fournisseur, dernière revue, périodicité, commentaire)',
+    tags,
+    access: 'pilotage:modifier' as const,
+    params: idElement,
+    body: RevueAccesModification,
+    handler: async ({ svc, s, params, body, ip }) => svc.historique.revuesAcces.modifier(params.id, body, user(s), ip),
   }),
 ];

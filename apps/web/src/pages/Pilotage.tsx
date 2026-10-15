@@ -48,6 +48,7 @@ import { Pestel, SynthesePartiesBandeau } from '../pilotage/Pestel';
 import { PreparationRevue } from '../pilotage/PreparationRevue';
 import { SeriesProposees } from '../pilotage/SeriesProposees';
 import { PlansSmsi } from '../pilotage/Plans';
+import { RevuesAcces } from '../pilotage/RevuesAcces';
 import { CouvertureCycle } from '../audit/Couverture';
 import { Organisation } from '../audit/Organisation';
 import { Pronostic } from '../audit/Pronostic';
@@ -419,6 +420,7 @@ export function PilotagePage() {
               <RiskMap smsi={smsi} onOpen={open} />
             )}
             {section === 'pestel' && can('pilotage', 'lire') && <Pestel smsi={smsi} />}
+            {section === 'revues-acces' && can('pilotage', 'lire') && <RevuesAcces />}
             {section === 'audit-pronostic' && can('audit', 'lire') && <Pronostic />}
             {section === 'audit-couverture' && can('audit', 'lire') && <CouvertureCycle />}
             {section === 'audit-deroule' && can('plan_audit', 'lire') && <Organisation vue="deroule" />}
