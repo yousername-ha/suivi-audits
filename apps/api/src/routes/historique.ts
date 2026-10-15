@@ -1,13 +1,18 @@
 /* Modules de l'outil de suivi historique repris dans la nouvelle interface (sans copie, voir historique/registre.ts).
    Les droits sont ceux du module concerné ; les actions qui touchent un autre module exigent aussi son droit. */
 import { ActionPlanCreation, ActionPlanModification, DecalagePlan } from '@suivi/shared';
+import { PlanDayBody, PlanPersonBody, PlanUpdateBody } from '@suivi/shared/audit';
 import { z } from 'zod';
 import type { Session } from '../auth.js';
+import { CouvertureBody, CycleBody, PreparationBody } from '../historique/audit.js';
 import { route } from '../http/route.js';
 
 const tags = ['Outil de suivi (reprise)'];
 const user = (s: unknown) => (s as Session).user;
 const idPlan = z.object({ id: z.string().trim().min(1).max(80) });
+const idElement = z.object({ id: z.string().trim().min(1).max(64) });
+const creneau = z.object({ day: z.string().trim().min(1).max(64).optional() }).strict();
+const souple = z.record(z.string(), z.unknown());
 
 export const historiqueRoutes = [
   route({
@@ -83,5 +88,137 @@ export const historiqueRoutes = [
     access: 'pilotage:modifier' as const,
     params: idPlan,
     handler: async ({ svc, s, params, ip }) => svc.historique.plans.creerEcart(params.id, user(s), ip),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/audit-suivi',
+    summary: 'Exigences, écarts, cycle et organisation de l’audit (état de l’outil de suivi)',
+    tags,
+    access: 'audit:lire' as const,
+    handler: async ({ svc, s }) => svc.historique.audit.vue(user(s)),
+  }),
+  route({
+    method: 'POST',
+    url: '/api/audit-suivi/couverture',
+    summary: 'Faire avancer la couverture d’une exigence (vide, prévue, auditée) pour une année du cycle',
+    tags,
+    access: 'audit:modifier' as const,
+    body: CouvertureBody,
+    handler: async ({ svc, s, body, ip }) => svc.historique.audit.couvrir(body, user(s), ip),
+  }),
+  route({
+    method: 'POST',
+    url: '/api/audit-suivi/preparation',
+    summary: 'Indiquer l’avancement de la préparation d’une exigence',
+    tags,
+    access: 'audit:modifier' as const,
+    body: PreparationBody,
+    handler: async ({ svc, s, body, ip }) => svc.historique.audit.preparer(body, user(s), ip),
+  }),
+  route({
+    method: 'PATCH',
+    url: '/api/audit-suivi/cycle',
+    summary: 'Régler le cycle d’audit : prochain audit, dates, années et libellés',
+    tags,
+    access: 'audit:modifier' as const,
+    body: CycleBody,
+    handler: async ({ svc, s, body, ip }) => svc.historique.audit.regler(body, user(s), ip),
+  }),
+  route({
+    method: 'PATCH',
+    url: '/api/audit-suivi/plan',
+    summary: 'État et note de l’organisation de l’audit',
+    tags,
+    access: 'plan_audit:modifier' as const,
+    body: PlanUpdateBody,
+    handler: async ({ svc, s, body, ip }) => svc.historique.audit.majPlan(body, user(s), ip),
+  }),
+  route({
+    method: 'POST',
+    url: '/api/audit-suivi/plan/jours',
+    summary: 'Ajouter un jour d’audit',
+    tags,
+    access: 'plan_audit:modifier' as const,
+    status: 201,
+    body: PlanDayBody.partial(),
+    handler: async ({ svc, s, body, ip }) => svc.historique.audit.ajouterJour(body, user(s), ip),
+  }),
+  route({
+    method: 'PATCH',
+    url: '/api/audit-suivi/plan/jours/:id',
+    summary: 'Modifier un jour d’audit',
+    tags,
+    access: 'plan_audit:modifier' as const,
+    params: idElement,
+    body: PlanDayBody.partial(),
+    handler: async ({ svc, s, params, body, ip }) => svc.historique.audit.modifierJour(params.id, body, user(s), ip),
+  }),
+  route({
+    method: 'DELETE',
+    url: '/api/audit-suivi/plan/jours/:id',
+    summary: 'Supprimer un jour d’audit sans créneau',
+    tags,
+    access: 'plan_audit:modifier' as const,
+    params: idElement,
+    handler: async ({ svc, s, params, ip }) => svc.historique.audit.supprimerJour(params.id, user(s), ip),
+  }),
+  route({
+    method: 'POST',
+    url: '/api/audit-suivi/plan/creneaux',
+    summary: 'Ajouter un créneau à la suite du dernier créneau du jour',
+    tags,
+    access: 'plan_audit:modifier' as const,
+    status: 201,
+    body: creneau,
+    handler: async ({ svc, s, body, ip }) => svc.historique.audit.ajouterCreneau(body, user(s), ip),
+  }),
+  route({
+    method: 'PATCH',
+    url: '/api/audit-suivi/plan/creneaux/:id',
+    summary: 'Modifier un créneau (champs fournis seulement ; `requirements` = exigences abordées)',
+    tags,
+    access: 'plan_audit:modifier' as const,
+    params: idElement,
+    body: souple,
+    handler: async ({ svc, s, params, body, ip }) => svc.historique.audit.modifierCreneau(params.id, body, user(s), ip),
+  }),
+  route({
+    method: 'DELETE',
+    url: '/api/audit-suivi/plan/creneaux/:id',
+    summary: 'Supprimer un créneau',
+    tags,
+    access: 'plan_audit:modifier' as const,
+    params: idElement,
+    handler: async ({ svc, s, params, ip }) => svc.historique.audit.supprimerCreneau(params.id, user(s), ip),
+  }),
+  route({
+    method: 'POST',
+    url: '/api/audit-suivi/plan/personnes',
+    summary: 'Ajouter une personne à l’organisation de l’audit',
+    tags,
+    access: 'plan_audit:modifier' as const,
+    status: 201,
+    body: PlanPersonBody.partial(),
+    handler: async ({ svc, s, body, ip }) => svc.historique.audit.ajouterPersonne(body, user(s), ip),
+  }),
+  route({
+    method: 'PATCH',
+    url: '/api/audit-suivi/plan/personnes/:id',
+    summary: 'Modifier une personne de l’organisation de l’audit',
+    tags,
+    access: 'plan_audit:modifier' as const,
+    params: idElement,
+    body: PlanPersonBody.partial(),
+    handler: async ({ svc, s, params, body, ip }) =>
+      svc.historique.audit.modifierPersonne(params.id, body, user(s), ip),
+  }),
+  route({
+    method: 'DELETE',
+    url: '/api/audit-suivi/plan/personnes/:id',
+    summary: 'Retirer une personne de l’organisation et de tous ses créneaux',
+    tags,
+    access: 'plan_audit:modifier' as const,
+    params: idElement,
+    handler: async ({ svc, s, params, ip }) => svc.historique.audit.supprimerPersonne(params.id, user(s), ip),
   }),
 ];

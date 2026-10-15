@@ -27,6 +27,16 @@ export const PILOTAGE_NAV = [
     ],
   },
   {
+    label: 'Gestion de l’audit',
+    items: [
+      { id: 'audit-pronostic', label: 'Carte du prochain audit', module: 'audit' },
+      { id: 'audit-couverture', label: 'Couverture du cycle', module: 'audit' },
+      { id: 'audit-deroule', label: 'Organisation : déroulé', module: 'plan_audit' },
+      { id: 'audit-planning', label: 'Organisation : planning', module: 'plan_audit' },
+      { id: 'audit-participants', label: 'Organisation : participants', module: 'plan_audit' },
+    ],
+  },
+  {
     label: 'Conformité',
     items: [
       { id: 'referentiels', label: 'Référentiels et exigences', module: 'conformite' },
@@ -110,16 +120,6 @@ export interface PageHistorique {
   vue?: string;
 }
 export const PAGES_HISTORIQUES: { label: string; items: PageHistorique[] }[] = [
-  {
-    label: 'Gestion de l’audit',
-    items: [
-      { label: 'Pronostic', module: 'audit', onglet: 'cibles' },
-      { label: 'Déroulé', module: 'plan_audit', onglet: 'orga', vue: 'orgaView=deroule' },
-      { label: 'Planning', module: 'plan_audit', onglet: 'orga', vue: 'orgaView=cal' },
-      { label: 'Participants', module: 'plan_audit', onglet: 'orga', vue: 'orgaView=people' },
-      { label: 'Couverture du cycle', module: 'audit', onglet: 'couverture' },
-    ],
-  },
   {
     label: 'Conformité',
     items: [

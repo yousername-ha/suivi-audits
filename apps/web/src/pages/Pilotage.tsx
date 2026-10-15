@@ -48,6 +48,9 @@ import { Pestel, SynthesePartiesBandeau } from '../pilotage/Pestel';
 import { PreparationRevue } from '../pilotage/PreparationRevue';
 import { SeriesProposees } from '../pilotage/SeriesProposees';
 import { PlansSmsi } from '../pilotage/Plans';
+import { CouvertureCycle } from '../audit/Couverture';
+import { Organisation } from '../audit/Organisation';
+import { Pronostic } from '../audit/Pronostic';
 import { CartesPilotage, type SyntheseApi } from '../components/Synthese';
 
 const SOCLE = '00000000-0000-4000-8000-000000000001';
@@ -416,6 +419,11 @@ export function PilotagePage() {
               <RiskMap smsi={smsi} onOpen={open} />
             )}
             {section === 'pestel' && can('pilotage', 'lire') && <Pestel smsi={smsi} />}
+            {section === 'audit-pronostic' && can('audit', 'lire') && <Pronostic />}
+            {section === 'audit-couverture' && can('audit', 'lire') && <CouvertureCycle />}
+            {section === 'audit-deroule' && can('plan_audit', 'lire') && <Organisation vue="deroule" />}
+            {section === 'audit-planning' && can('plan_audit', 'lire') && <Organisation vue="planning" />}
+            {section === 'audit-participants' && can('plan_audit', 'lire') && <Organisation vue="participants" />}
             {section === 'plans-calendrier' && can('pilotage', 'lire') && <PlansSmsi vue="calendrier" />}
             {section === 'plans-planning' && can('pilotage', 'lire') && <PlansSmsi vue="planning" />}
             {section === 'plans-formation' && can('pilotage', 'lire') && <PlansSmsi vue="formation" />}

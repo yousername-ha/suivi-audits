@@ -24,11 +24,11 @@ l'[inventaire fonctionnel](../../02_FONCTIONNALITES/INVENTAIRE_FONCTIONNEL.md) a
 
 | #  | Groupe → page                                          | Statut      | Équivalent natif / remarque                                                       | Capture |
 | -- | ------------------------------------------------------ | ----------- | --------------------------------------------------------------------------------- | ------- |
-| 01 | Gestion de l'audit → Pronostic                         | partiel     | Calcul du pronostic repris dans `@suivi/shared/audit` (parité testée), sans écran | [01](captures/01-gestion-de-l-audit--pronostic.jpg) |
-| 02 | Gestion de l'audit → Déroulé                           | non repris  |                                                                                   | [02](captures/02-gestion-de-l-audit--deroule.png) |
-| 03 | Gestion de l'audit → Planning                          | non repris  |                                                                                   | [03](captures/03-gestion-de-l-audit--planning.png) |
-| 04 | Gestion de l'audit → Participants                      | non repris  |                                                                                   | [04](captures/04-gestion-de-l-audit--participants.png) |
-| 05 | Gestion de l'audit → Couverture du cycle               | non repris  | Couverture par année encore historique (FCT-028)                                  | [05](captures/05-gestion-de-l-audit--couverture-du-cycle.png) |
+| 01 | Gestion de l'audit → Pronostic                         | repris     | Pilotage → Gestion de l’audit → Carte du prochain audit (pronostic, mesures à préparer, guide de préparation) | [01](captures/01-gestion-de-l-audit--pronostic.jpg) |
+| 02 | Gestion de l'audit → Déroulé                           | repris     | Pilotage → Gestion de l’audit → Organisation : déroulé (jours, créneaux, preuves, questions) | [02](captures/02-gestion-de-l-audit--deroule.png) |
+| 03 | Gestion de l'audit → Planning                          | repris     | Pilotage → Gestion de l’audit → Organisation : planning | [03](captures/03-gestion-de-l-audit--planning.png) |
+| 04 | Gestion de l'audit → Participants                      | repris     | Pilotage → Gestion de l’audit → Organisation : participants | [04](captures/04-gestion-de-l-audit--participants.png) |
+| 05 | Gestion de l'audit → Couverture du cycle               | repris     | Pilotage → Gestion de l’audit → Couverture du cycle (prévue, auditée, AFNOR et interne) | [05](captures/05-gestion-de-l-audit--couverture-du-cycle.png) |
 | 06 | Conformité → Clauses ISO 27001                         | partiel     | Bibliothèque de référentiels (versions verrouillées, copies) et rapprochements    | [06](captures/06-conformite--clauses-iso-27001.png) |
 | 07 | Conformité → Annexe A (DDA)                            | partiel     | idem                                                                              | [07](captures/07-conformite--annexe-a-dda.png) |
 | 08 | Conformité → HDS (DDA)                                 | partiel     | idem                                                                              | [08](captures/08-conformite--hds-dda.png) |
@@ -49,7 +49,7 @@ l'[inventaire fonctionnel](../../02_FONCTIONNALITES/INVENTAIRE_FONCTIONNEL.md) a
 | 23 | Autres modules → Rapports et exports                   | partiel     | Rapports natifs et exports cartographiques (FCT-040) ; exports historiques partiels | [23](captures/23-autres-modules--rapports-et-exports.png) |
 | 24 | Pilotage → Processus, objectifs, indicateurs           | repris      | Pilotage → Objectifs et indicateurs (trois vues, fiches, mesures, PESTEL, revue)  | [24](captures/24-pilotage--pilotage-processus-objectifs-indicateurs.png) |
 
-Bilan : 6 pages reprises, 6 partielles, 12 non reprises.
+Bilan : 11 pages reprises, 5 partielles, 8 non reprises.
 
 ## Captures de la nouvelle interface (jeu de test)
 

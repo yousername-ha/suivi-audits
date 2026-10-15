@@ -972,3 +972,275 @@
 .plan-pastille-pt.plan-barre-na {
   background: var(--carte-gris-accent);
 }
+
+/* Gestion de l'audit (reprise de l'outil de suivi) : carte du prochain audit, couverture du cycle, organisation. */
+.audit-legende {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--mantine-font-size-xs);
+}
+.audit-pastille {
+  display: inline-block;
+  width: var(--mantine-spacing-xs);
+  height: var(--mantine-spacing-xs);
+  margin-right: var(--mantine-spacing-2xs);
+  border-radius: var(--mantine-radius-xs);
+}
+.audit-ligne {
+  display: flex;
+  gap: var(--mantine-spacing-md);
+  align-items: flex-start;
+}
+.audit-ligne-titre {
+  flex: 0 0 14em;
+}
+.audit-tuiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mantine-spacing-2xs);
+}
+.audit-tuile {
+  position: relative;
+  min-width: 2.6em;
+  padding: var(--mantine-spacing-2xs) var(--mantine-spacing-xs);
+  border: var(--suivi-trait-l) solid var(--carte-gris-trait);
+  border-radius: var(--mantine-radius-sm);
+  background: var(--carte-gris-doux);
+  color: var(--carte-gris-accent);
+  font: inherit;
+  font-size: var(--mantine-font-size-xs);
+  text-align: center;
+}
+button.audit-tuile {
+  cursor: pointer;
+}
+button.audit-tuile:focus-visible {
+  outline: var(--suivi-trait-l) solid var(--carte-texte);
+  outline-offset: var(--suivi-trait-l);
+}
+.audit-point,
+.audit-pret {
+  position: absolute;
+  top: calc(var(--mantine-spacing-2xs) * -1);
+  width: var(--mantine-spacing-xs);
+  height: var(--mantine-spacing-xs);
+  border-radius: 50%;
+}
+.audit-point {
+  right: calc(var(--mantine-spacing-2xs) * -1);
+  background: var(--carte-secondaire);
+}
+.audit-pret {
+  left: calc(var(--mantine-spacing-2xs) * -1);
+  background: var(--carte-vert-accent);
+}
+.audit-niv-certain {
+  border-color: var(--carte-rouge-trait);
+  background: var(--carte-rouge-doux);
+  color: var(--carte-rouge-accent);
+}
+.audit-niv-tres {
+  border-color: var(--carte-orange-trait);
+  background: var(--carte-orange-doux);
+  color: var(--carte-orange-accent);
+}
+.audit-niv-probable {
+  border-color: var(--carte-violet-trait);
+  background: var(--carte-violet-doux);
+  color: var(--carte-violet-accent);
+}
+.audit-niv-socle {
+  border-color: var(--carte-bleu-trait);
+  background: var(--carte-bleu-doux);
+  color: var(--carte-bleu-accent);
+}
+.audit-niv-faible {
+  border-color: var(--carte-gris-trait);
+  background: var(--carte-gris-doux);
+  color: var(--carte-gris-accent);
+}
+.audit-cov-x-afnor {
+  border-color: var(--carte-bleu-accent);
+  background: var(--carte-bleu-accent);
+  color: var(--carte-boite);
+}
+.audit-cov-x-interne {
+  border-color: var(--carte-vert-accent);
+  background: var(--carte-vert-accent);
+  color: var(--carte-boite);
+}
+.audit-cov-p-afnor {
+  border-color: var(--carte-bleu-accent);
+  background: var(--carte-bleu-doux);
+  color: var(--carte-bleu-accent);
+}
+.audit-cov-p-interne {
+  border-color: var(--carte-vert-accent);
+  background: var(--carte-vert-doux);
+  color: var(--carte-vert-accent);
+}
+.audit-pastille.audit-niv-certain {
+  background: var(--carte-rouge-accent);
+}
+.audit-pastille.audit-niv-tres {
+  background: var(--carte-orange-accent);
+}
+.audit-pastille.audit-niv-probable {
+  background: var(--carte-violet-accent);
+}
+.audit-pastille.audit-niv-socle {
+  background: var(--carte-bleu-accent);
+}
+.audit-pastille.audit-niv-faible {
+  background: var(--carte-gris-trait);
+}
+.audit-niveau {
+  padding: 0 var(--mantine-spacing-xs);
+  border: var(--suivi-trait-l) solid var(--carte-gris-trait);
+  border-radius: var(--mantine-radius-sm);
+  font-size: var(--mantine-font-size-xs);
+  white-space: nowrap;
+}
+.audit-liste {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.audit-motifs {
+  margin: var(--mantine-spacing-2xs) 0;
+  padding-left: var(--mantine-spacing-lg);
+  font-size: var(--mantine-font-size-sm);
+}
+.audit-marque {
+  display: inline-block;
+  width: var(--mantine-spacing-md);
+  height: var(--mantine-spacing-md);
+  padding: 0;
+  border: var(--suivi-trait-l) solid var(--carte-gris-trait);
+  border-radius: 50%;
+  background: transparent;
+  vertical-align: middle;
+}
+button.audit-marque {
+  cursor: pointer;
+}
+.audit-marque-afnor.audit-marque-x {
+  border-color: var(--carte-bleu-accent);
+  background: var(--carte-bleu-accent);
+}
+.audit-marque-interne.audit-marque-x {
+  border-color: var(--carte-vert-accent);
+  background: var(--carte-vert-accent);
+}
+.audit-marque-afnor.audit-marque-p {
+  border-color: var(--carte-bleu-accent);
+  background: var(--carte-bleu-doux);
+}
+.audit-marque-interne.audit-marque-p {
+  border-color: var(--carte-vert-accent);
+  background: var(--carte-vert-doux);
+}
+.audit-creneau {
+  display: grid;
+  grid-template-columns: 5em var(--mantine-spacing-2xs) 1fr auto;
+  gap: var(--mantine-spacing-sm);
+  width: 100%;
+  padding: var(--mantine-spacing-xs);
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-sm);
+  background: var(--suivi-surface);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.audit-creneau-pause {
+  opacity: 0.75;
+}
+.audit-creneau-heure {
+  font-weight: 700;
+}
+.audit-creneau-heure span,
+.audit-creneau-genre,
+.audit-creneau-ecarts {
+  display: block;
+  color: var(--carte-secondaire);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 400;
+}
+.audit-creneau-corps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-2xs);
+}
+.audit-creneau-cote {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-2xs);
+  font-size: var(--mantine-font-size-xs);
+  text-align: right;
+}
+.audit-rail {
+  align-self: stretch;
+  border-radius: var(--mantine-radius-xs);
+  background: var(--carte-gris-trait);
+}
+.audit-rail.audit-niv-certain {
+  background: var(--carte-rouge-accent);
+}
+.audit-rail.audit-niv-tres {
+  background: var(--carte-orange-accent);
+}
+.audit-rail.audit-niv-probable {
+  background: var(--carte-violet-accent);
+}
+.audit-rail.audit-niv-socle {
+  background: var(--carte-bleu-accent);
+}
+.audit-alerte {
+  color: var(--carte-rouge-accent);
+}
+.audit-champ-large {
+  flex: 1;
+}
+.audit-evenement {
+  cursor: pointer;
+}
+.audit-evenement:focus-visible .audit-evenement-fond {
+  stroke: var(--carte-texte);
+  stroke-width: 2;
+}
+.audit-evenement-fond {
+  fill: var(--carte-boite);
+  stroke: var(--carte-gris-trait);
+  stroke-width: 1;
+}
+.audit-creneau-ouverture .audit-evenement-fond,
+.audit-creneau-cloture .audit-evenement-fond {
+  fill: var(--carte-bleu-doux);
+}
+.audit-creneau-visite .audit-evenement-fond {
+  fill: var(--carte-vert-doux);
+}
+.audit-creneau-synthese .audit-evenement-fond {
+  fill: var(--carte-violet-doux);
+}
+.audit-creneau-pause .audit-evenement-fond {
+  fill: var(--carte-gris-doux);
+}
+rect.audit-niv-certain {
+  fill: var(--carte-rouge-accent);
+}
+rect.audit-niv-tres {
+  fill: var(--carte-orange-accent);
+}
+rect.audit-niv-probable {
+  fill: var(--carte-violet-accent);
+}
+rect.audit-niv-socle {
+  fill: var(--carte-bleu-accent);
+}
+rect.audit-niv-faible {
+  fill: var(--carte-gris-trait);
+}
