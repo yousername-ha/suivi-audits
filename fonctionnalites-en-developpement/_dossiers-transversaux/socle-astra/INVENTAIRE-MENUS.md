@@ -1,5 +1,7 @@
 # Inventaire des destinations et couverture visuelle
 
+> **Cible historique — 13 octobre 2026.** Conserver les décisions graphiques utiles. Les chemins, API et prescriptions Python/SQLite ci-dessous ne décrivent pas le socle Claude actuel et ne doivent pas déclencher leur recréation. Lire le [prompt courant](PROMPT-IMPLEMENTATION.md) et l’[audit de convergence](../../AUDIT-CONVERGENCE.md) avant toute intégration. Les anciennes recettes ne prouvent pas les nouveaux contrats.
+
 Référence : 24 rubriques / 100 destinations avant ajout d’Apparence. Extraction initiale du registre réel en série 09 ; les routes sélectionnées en série 14 ont été parcourues au HEAD `b8ff86126f70114ba3bb7e32a4552fbefd3b7b04`. Relever de nouveau le registre au début de l’implémentation. Les autres destinations restent dans le périmètre même sans image récente.
 
 ## Cockpit RSSI

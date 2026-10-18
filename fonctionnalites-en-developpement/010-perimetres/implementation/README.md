@@ -1,5 +1,11 @@
 # Implémentation — Périmètres
 
+## Compatibilité vérifiée le 18 octobre 2026
+
+Le contrat Claude audité (`d044eb9`) fournit les périmètres et les rattachements de référentiels, mais aucun parent/enfant ni héritage. Le brouillon d’organigramme reste une simulation à valider. Ne pas ajouter `parentId` ou `cascade` au corps strict de l’API. Préparer le contrat de hiérarchie, droits des descendants et règles d’héritage avec le responsable métier avant raccordement.
+
+Voir l’[audit de convergence](../../AUDIT-CONVERGENCE.md) et le [prompt courant](../../_dossiers-transversaux/socle-astra/PROMPT-IMPLEMENTATION.md).
+
 **État : intégration de cette proposition à suivre.** Le déplacement des dossiers n’implémente pas la maquette dans le moteur métier existant.
 
 1. Lire la [maquette courante](../maquettes/v001-reference-08/README.md) et sa fiche de version.

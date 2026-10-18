@@ -1,5 +1,7 @@
 # Dossier d’implémentation — socle GRC transversal
 
+> **Analyse historique, à rapprocher du socle courant.** Lire le [prompt actualisé](PROMPT-IMPLEMENTATION.md) et l’[audit de convergence](../../../AUDIT-CONVERGENCE.md). Les collections et API proposées ici ne sont pas à reconstruire lorsqu’elles existent dans Claude.
+
 Version 1 • 14 octobre 2026 • **Spécification proposée, intégration non réalisée, validation métier à obtenir.**
 
 Ce dossier traduit l’analyse de l’export ARM et du code legacy en une refonte progressive de l’application existante. Il est destiné à une IA qui code. Les maquettes décrivent la cible ; elles ne prouvent pas l’existence des fonctions dans l’application.

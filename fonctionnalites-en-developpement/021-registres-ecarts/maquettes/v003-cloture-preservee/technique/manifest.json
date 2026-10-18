@@ -1,0 +1,27 @@
+{
+  "algorithm": "SHA-256",
+  "files": {
+    "DEMARRER.bat": "0edbd8f5b22789c3f11971244871f1b36e23f9e710fdc8b25ca6429165ec81be",
+    "README.md": "a1b736cfced84270a26cc6344295a5f9c392627053bd38d03790c4a293b55381",
+    "app.js": "4a3363011dbb6b9d340790b9bb04a854ae54d8bb4b3115d4b022ab58bb3277a4",
+    "base.css": "0d8abac2655fd646cce95593420257ef9e6c782f8aef2944cb99d493d4b0d3a1",
+    "images/01-registres-ecarts.png": "41051c2672a7a983dda0ce9855a095bd9cfbfc7178ceaab3185bd49aa86814b2",
+    "images/02-registre-surveillance.png": "dcff257508c410083ee6d8208b06f9db36ecdcad8079bc4fb04ba8a3e0748d3e",
+    "images/03-fiche-ecart.png": "161f03e1e699143f41f338a1efd1d623504eebe47f86402bce21f83be768a8e2",
+    "images/04-plans-action.png": "f49147680ad925aff5afd609b2caa4f403eba4ed27eb65bdd13ba9270c826098",
+    "images/05-plan-transversal.png": "5cbd14c49f7bfac4e688bbad308e16744f25fb505de7af8503062fce9d869af9",
+    "images/06-conformite-perimetre.png": "8851f2f7dc2a6201ecf563cda9090aa43fc8e39d0150af0367da9aa4a286a468",
+    "images/07-kanban.png": "dd72544c19f8ddb286cd30bd929cb8d931ab8dd2b949341b62a3007e7b2b3c19",
+    "images/08-audits-ajouter-ecart.png": "d7a1ea19a1c7392c7c936196ce0d453ea0e280d6197221e75aa5ca7706b756e5",
+    "images/09-creation-ecart-depuis-audit.png": "0c87767e05e4502838062795a8dd5269d931ea11ff9a26052af149394611d7d3",
+    "images/10-nouveau-constat-lie.png": "ee4037e4e2bad32d25997bb62f739028cda2901b2d8f9efe16878eb8f6283dc6",
+    "images/11-cloture-preservee.png": "abebbe33be6ce448458d2ae0f0d0498a3755e36663aca6b0d721fe7c294fce2d",
+    "index.html": "04dd2aed7304fa2d7bc10726e04e531c04d82be12381372a747ae3cf7f713c1f",
+    "prototype.css": "7ac519ae0184a5694384c863a4f69527fcc2d936e045e72bea5ed2690467362a",
+    "registres.css": "7e56fad860feb2c6f007419196f488174eb42068581f26e18320a3297fe958f7",
+    "seed.js": "aa23838003cc688b720b5548601fa86714953d8dfe9fa738f1985e5ac6690e26",
+    "technique/recette.json": "283371786eead5a9fc672ce9723593ca37e62084d0487d962d1b47560353d677",
+    "technique/registres.cjs": "474b136862b842edb392977519b235f69cea6ad786d83b8d46cfa1081c0e891e",
+    "version.json": "abb5c04fd1a67a896bcbb197ad123b0a3fb33a05fb1439b21726920fe03be205"
+  }
+}

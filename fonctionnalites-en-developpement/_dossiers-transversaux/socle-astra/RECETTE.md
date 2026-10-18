@@ -1,5 +1,7 @@
 # Recette de l’implémentation — à exécuter sur le code réalisé
 
+> **Cible historique — 13 octobre 2026.** Conserver les décisions graphiques utiles. Les chemins, API et prescriptions Python/SQLite ci-dessous ne décrivent pas le socle Claude actuel et ne doivent pas déclencher leur recréation. Lire le [prompt courant](PROMPT-IMPLEMENTATION.md) et l’[audit de convergence](../../AUDIT-CONVERGENCE.md) avant toute intégration. Les anciennes recettes ne prouvent pas les nouveaux contrats.
+
 Ces contrôles sont des exigences de réalisation, **pas des résultats déjà obtenus** lors de la livraison documentaire.
 
 | Domaine | Vérification attendue |

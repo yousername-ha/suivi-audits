@@ -1,5 +1,11 @@
 # Implémentation — Administration et apparence globale
 
+## Compatibilité vérifiée le 18 octobre 2026
+
+Le choix global `sage` / `clair` existe déjà dans Claude (`d044eb9`) : `GET/PUT /api/settings/apparence`, lecture via `/api/auth/me`, version/If-Match. Ne pas recréer les endpoints proposés dans l’ancien dossier. Vérifier la permission réelle `parametres:modifier` face à la demande d’accès administrateur exclusif, et la propagation aux sessions actives.
+
+Voir l’[audit de convergence](../../AUDIT-CONVERGENCE.md) et le [prompt courant](../../_dossiers-transversaux/socle-astra/PROMPT-IMPLEMENTATION.md).
+
 **État : intégration de cette proposition à suivre.** Le déplacement des dossiers n’implémente pas la maquette dans le moteur métier existant.
 
 1. Lire la [maquette courante](../maquettes/v001-reference-08/README.md) et sa fiche de version.

@@ -1,5 +1,7 @@
 # Dossier d’implémentation consolidé — ASTRA / référence 08
 
+> **Cible historique — 13 octobre 2026.** Conserver les décisions graphiques utiles. Les chemins, API et prescriptions Python/SQLite ci-dessous ne décrivent pas le socle Claude actuel et ne doivent pas déclencher leur recréation. Lire le [prompt courant](PROMPT-IMPLEMENTATION.md) et l’[audit de convergence](../../AUDIT-CONVERGENCE.md) avant toute intégration. Les anciennes recettes ne prouvent pas les nouveaux contrats.
+
 Version du 13 octobre 2026. Dépôt `yousername-ha/suivi-audits`, branche exclusive `legacy`.
 Base inspectée : `b8ff86126f70114ba3bb7e32a4552fbefd3b7b04`.
 

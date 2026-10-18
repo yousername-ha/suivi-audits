@@ -1,8 +1,8 @@
 # Dossier d’implémentation consolidé — référence 08
 
-**Version courante du 13 octobre 2026, branche `legacy`.** Base inspectée : `b8ff86126f70114ba3bb7e32a4552fbefd3b7b04`.
+**Référence graphique historique du 13 octobre 2026, branche `legacy`.** Base inspectée : `b8ff86126f70114ba3bb7e32a4552fbefd3b7b04`.
 
-Ce dossier est le point d’entrée pour implémenter la refonte. Il remplace les prescriptions contradictoires des séries 09, 12 et 13, retrouvables dans l’historique Git. La référence visuelle est la **série 08** ; les **30 vues de la série 14** en donnent la déclinaison. Le thème et le réglage global restent à intégrer dans le code.
+Le [prompt courant](PROMPT-IMPLEMENTATION.md) et l’[audit de convergence](../../AUDIT-CONVERGENCE.md) sont les points d’entrée techniques depuis le 18 octobre 2026. Le réglage global Sauge/Clair existe déjà dans le socle Claude ; son API et ses permissions sont décrites dans l’audit. Ce dossier conserve les décisions graphiques de la refonte. Il remplace les prescriptions contradictoires des séries 09, 12 et 13, retrouvables dans l’historique Git. La référence visuelle est la **série 08** ; les **30 vues de la série 14** en donnent la déclinaison. Le raccordement des propositions doit être confronté au code et aux permissions actuels.
 
 ## Lire et utiliser
 
@@ -26,7 +26,7 @@ Ce dossier est le point d’entrée pour implémenter la refonte. Il remplace le
 - Matrice des risques corrigée : cellules pleines vert/jaune/orange/rouge, sélection bleue et panneau latéral ; la dernière capture utilisateur prévaut sur la vue 03 de la série 14 (§ 4 bis du dossier).
 - Deux styles conservés, choisis par un administrateur **pour tous les utilisateurs**, avec persistance serveur et synchronisation.
 - Six vues Actions et cinq vues Récurrences explicitement couvertes, sans inventer de fonctions Tenacy absentes.
-- Évolution serveur limitée à la configuration d’apparence désormais prévue ; fin de l’ancienne interdiction générale de modification serveur pour cette fonction.
+- Prescription serveur historique remplacée par la réutilisation du réglage d’apparence existant ; aucune modification du backend Claude autorisée.
 - Cartographies strictement exclues, même lors d’un changement de style global.
 
 Cette série ne contient pas de nouveaux aperçus ni de code applicatif. Les anciennes livraisons restent récupérables dans l’historique Git. Les tests de recette sont à exécuter lors de l’implémentation ; ils ne sont pas présentés comme passés par cette livraison documentaire.
