@@ -142,10 +142,10 @@ export async function ecrireEtat(req: APIRequestContext, csrf: string, souhaite:
     // Le schéma 15 exige un identifiant sur les valeurs d'indicateur : l'aide en ajoute aux valeurs qui n'en ont pas.
     const valeur =
       k === 'indicators' && Array.isArray(souhaite[k])
-        ? (souhaite[k] as Record<string, unknown>[]).map((i) => ({
+        ? (souhaite[k] as Record<string, unknown>[]).map((i, rang) => ({
             ...i,
             values: Array.isArray(i.values)
-              ? (i.values as Record<string, unknown>[]).map((x, n) => ({ id: `V-${n + 1}`, ...x }))
+              ? (i.values as Record<string, unknown>[]).map((x, n) => ({ id: `V-${rang + 1}-${n + 1}`, ...x }))
               : i.values,
           }))
         : souhaite[k];
