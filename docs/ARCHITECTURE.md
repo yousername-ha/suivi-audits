@@ -13,14 +13,13 @@ Ce document décrit l'architecture cible et l'état livré en **phase 0** (fonda
    ┌────────────────▼─────────────────┐  réseau « public »
    │ web — Caddy 2 (uid 1001)         │  TLS (interne ou PKI), HSTS, CSP stricte,
    │  · interface React compilée      │  sert l'interface (SPA)
-   │  · reverse proxy /api /legacy /d │
+   │  · reverse proxy /api /d         │
    └────────────────┬─────────────────┘
                     │ réseau « edge » (interne, sans sortie Internet)
    ┌────────────────▼─────────────────┐
    │ app — API Node 24 (uid 1000)     │  Fastify, sessions, TOTP, CSRF, rôles, audit,
    │  · /api (REST + OpenAPI)         │  documents chiffrés (AES-256-GCM),
-   │  · /api/events (SSE)             │  temps réel, import legacy, outil historique
-   │  · /legacy (outil historique)    │
+   │  · /api/events (SSE)             │  temps réel, import et export au format historique
    └────────────────┬─────────────────┘
                     │ réseau « backend » (interne, sans sortie Internet)
    ┌────────────────▼─────────────────┐      ┌──────────────────────────┐
@@ -34,7 +33,7 @@ Ce document décrit l'architecture cible et l'état livré en **phase 0** (fonda
 |---|---|---|
 | `init` | `ghcr.io/yousername-ha/suivi-audits-api` | Contrôle le dossier des données (`DATA_DIR`), crée ses sous-dossiers avec propriétaires et droits, génère les secrets manquants. S'arrête. |
 | `db` | `postgres:18-alpine` | Base unique. Aucun port publié. |
-| `app` | `ghcr.io/yousername-ha/suivi-audits-api` | API, outil historique sous `/legacy`, commandes d'exploitation (`setup-token`, `suivi`). Désactive aussi les comptes arrivés à expiration. |
+| `app` | `ghcr.io/yousername-ha/suivi-audits-api` | API, commandes d'exploitation (`setup-token`, `suivi`). Désactive aussi les comptes arrivés à expiration. |
 | `web` | `ghcr.io/yousername-ha/suivi-audits-web` | Caddy : TLS, en-têtes de sécurité, interface compilée, reverse proxy vers `app`. Seul service exposé. |
 | `clamav` | `clamav/clamav` | Facultatif (`--profile antivirus`). |
 
@@ -49,10 +48,10 @@ packages/shared   schémas zod partagés (API ⇄ interface), droits, paramètre
                   cartographie : objets, dispositions, génération, scène (fonctions pures, parité avec la bêta)
 apps/api          API Fastify : src/ (routes, auth, sécurité, temps réel, legacy), migrations/ (SQL), test/ (Vitest + PostgreSQL)
 apps/web          interface React + Vite + Mantine (CSP stricte)
-app/public        outil historique (fichier unique), servi sous /legacy
+app/public        outil historique (fichier unique), conservé comme référence de parité, non servi
 tests/e2e         Playwright : parcours complets sur la pile Docker
 docker/           Dockerfile des deux images et Caddyfile
-scripts/          sauvegarde, restauration, mise à jour de l'outil historique, scripts de CI
+scripts/          sauvegarde, restauration, mise à jour du fichier historique de référence, scripts de CI
 docs/             architecture, feuille de route, ADR, installation, format legacy
 ```
 
@@ -82,7 +81,7 @@ Routes livrées en phase 0 :
 | Import legacy | simulation, application, historique, fichier source, annulation, export au schéma 15 |
 | Temps réel | `GET /api/events` (SSE), `POST /api/presence` |
 | Affichage | préférences par personne (`/api/account/preferences`) ; écrans muraux (`/api/admin/murs`, `POST /api/mur/activer`) ; synthèse et flux de la vue `/mur` (`/api/mur/synthese`, `/api/mur/events`) |
-| Outil historique | `/legacy/`, `/api/legacy/state`, `/api/legacy/modules`, `/api/refs` |
+| État du suivi | `/api/suivi/etat`, `/api/suivi/modules`, `/api/suivi/export`, `/api/refs` |
 | Cartographie | objets de la plateforme filtrés par droits (`/api/carto/objects`), création et renommage d'objets depuis la carte, écrits dans leur module sous verrou (`POST /api/carto/objects`, `PUT /api/carto/objects/name`), cartes avec `If-Match` (`/api/carto/maps`), versions, nature des enjeux, journal des exports ([ADR 0013](adr/0013-cartographie.md), [ADR 0026](adr/0026-cartographie-creation-depuis-la-carte.md)) |
 
 ## 4. Données
@@ -126,9 +125,10 @@ Routes livrées en phase 0 :
 
 ## 7. Transition depuis l'outil historique
 
-L'outil historique reste servi sous `/legacy`, sans modification fonctionnelle hors schéma 15 et export pour la nouvelle version. `window.claude` y est remplacé par un adaptateur (`apps/api/legacy-shim/shim.js`) : enregistrement sur le serveur avec contrôle de version, avertissement temps réel, menu vers la nouvelle interface.
-
-L'import et l'export (`docs/legacy/IMPORT-LEGACY.md`, `docs/legacy/MAPPING-LEGACY.md`) sont décrits dans l'[ADR 0007](adr/0007-transition-legacy.md).
+L'écran `/legacy` est retiré ([ADR 0042](adr/0042-retrait-de-lecran-legacy.md)). Les modules vivent dans des tables
+([ADR 0040](adr/0040-sortie-du-json-plat-modules-en-tables.md)) ; la nouvelle interface lit la forme historique recomposée par
+`/api/suivi/etat` et écrit par ses écrans (`nativeWrite`). L'import et l'export au format historique
+(`docs/legacy/IMPORT-LEGACY.md`, `docs/legacy/MAPPING-LEGACY.md`, [ADR 0007](adr/0007-transition-legacy.md)) sont conservés.
 
 ## 8. Livraison
 

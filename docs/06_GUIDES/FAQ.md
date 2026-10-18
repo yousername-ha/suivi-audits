@@ -8,11 +8,12 @@ Non. Pilotage réutilise le périmètre commun et accepte qualité/SMQ, sécurit
 HDS, intégré ou personnalisé. Les noms techniques grc_smsis subsistent pour
 compatibilité, sans imposer ce parcours à l’utilisateur.
 
-## Pourquoi reste-t-il un ancien outil ?
+## Que devient l’ancien outil ?
 
-Plusieurs familles v2 n’ont pas de remplacement Sauge complet. /legacy conserve
-leurs fonctions/données, jusqu’à reprise et recette. Une archive ne clôture
-pas une migration.
+L’écran /legacy est retiré (ADR 0042). Ses données sont dans les tables de la plateforme ; l’outil
+autonome reste téléchargeable, testable, sur la branche `archive/outil-legacy-autonome`. Les exports
+Excel sont dans « Exports Excel » ; ReCyF, le pronostic d’audit en export, le clausier fournisseurs et
+le GAP applications en export Excel ne sont pas encore repris.
 
 ## Une action terminée réduit-elle le risque résiduel ?
 

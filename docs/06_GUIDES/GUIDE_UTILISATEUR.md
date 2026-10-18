@@ -6,8 +6,8 @@ Cette application suit les audits et les travaux qualité/sécurité/référenti
 Le menu **Pilotage** est commun : il ne faut pas créer un SMSI pour une démarche
 qualité. Les droits et modules activés déterminent les rubriques visibles.
 
-Les sections suivantes couvrent les 40 domaines inventoriés. Une fonction
-historique conserve son accès /legacy ; NON VÉRIFIÉ signifie que son parcours
+Les sections suivantes couvrent les 40 domaines inventoriés. Les fonctions
+historiques sont accessibles dans Pilotage (l’écran /legacy est retiré) ; NON VÉRIFIÉ signifie que son parcours
 complet n’a pas été rejoué, pas qu’il est forcément inutilisable. Une partie
 livrée n’est pas une certification ISO/HDS.
 
@@ -669,12 +669,12 @@ et le cas TEST-027.
 Objectif : Code conservé ; CRUD/couverture annuelle et exports complets non rejoués durant cet audit.
 
 État : **PARTIEL**, uniquement dans ce périmètre.
-Accès : **/legacy → Audit**.
+Accès : **Pilotage → Audit**.
 Profils : Session complète, lecture du domaine audit ; opérations soumises aux permissions modifier/exporter/administrer et au périmètre. Une validation peut exiger un rôle de validation distinct.
 Prérequis : module activé, accès au périmètre et données nécessaires disponibles ;
 un environnement de recette autorisé pour les opérations sensibles.
 
-1. Ouvrir l’outil historique /legacy et sélectionner la famille métier indiquée.
+1. Ouvrir le menu Pilotage et sélectionner la rubrique indiquée.
 2. Consulter les éléments existants selon ses permissions ; conserver un jeu fictif pour toute recette.
 3. Relever les champs, liens, filtres et exports effectivement présents avant de préparer une reprise.
 4. Consigner tout écart : le parcours complet n’a pas été exécuté pendant cet audit.
@@ -693,12 +693,12 @@ et le cas TEST-028.
 Objectif : Planning historique conservé ; registre natif audit ne prouve pas la reprise des journées/créneaux.
 
 État : **PARTIEL**, uniquement dans ce périmètre.
-Accès : **/legacy → Plan d’audit**.
+Accès : **Pilotage → Plan d’audit**.
 Profils : Session complète, lecture du domaine plan_audit ; opérations soumises aux permissions modifier/exporter/administrer et au périmètre. Une validation peut exiger un rôle de validation distinct.
 Prérequis : module activé, accès au périmètre et données nécessaires disponibles ;
 un environnement de recette autorisé pour les opérations sensibles.
 
-1. Ouvrir l’outil historique /legacy et sélectionner la famille métier indiquée.
+1. Ouvrir le menu Pilotage et sélectionner la rubrique indiquée.
 2. Consulter les éléments existants selon ses permissions ; conserver un jeu fictif pour toute recette.
 3. Relever les champs, liens, filtres et exports effectivement présents avant de préparer une reprise.
 4. Consigner tout écart : le parcours complet n’a pas été exécuté pendant cet audit.
@@ -722,7 +722,7 @@ Profils : Session complète, lecture du domaine pilotage ; opérations soumises 
 Prérequis : module activé, accès au périmètre et données nécessaires disponibles ;
 un environnement de recette autorisé pour les opérations sensibles.
 
-1. Ouvrir l’outil historique /legacy et sélectionner la famille métier indiquée.
+1. Ouvrir le menu Pilotage et sélectionner la rubrique indiquée.
 2. Consulter les éléments existants selon ses permissions ; conserver un jeu fictif pour toute recette.
 3. Relever les champs, liens, filtres et exports effectivement présents avant de préparer une reprise.
 4. Consigner tout écart : le parcours complet n’a pas été exécuté pendant cet audit.
@@ -741,12 +741,12 @@ et le cas TEST-030.
 Objectif : Sources conservées, pas de nouveau parcours fournisseur Sauge identifié.
 
 État : **NON VÉRIFIÉ**, uniquement dans ce périmètre.
-Accès : **/legacy → Fournisseurs**.
+Accès : **Pilotage → Fournisseurs**.
 Profils : Session complète, lecture du domaine fournisseurs ; opérations soumises aux permissions modifier/exporter/administrer et au périmètre. Une validation peut exiger un rôle de validation distinct.
 Prérequis : module activé, accès au périmètre et données nécessaires disponibles ;
 un environnement de recette autorisé pour les opérations sensibles.
 
-1. Ouvrir l’outil historique /legacy et sélectionner la famille métier indiquée.
+1. Ouvrir le menu Pilotage et sélectionner la rubrique indiquée.
 2. Consulter les éléments existants selon ses permissions ; conserver un jeu fictif pour toute recette.
 3. Relever les champs, liens, filtres et exports effectivement présents avant de préparer une reprise.
 4. Consigner tout écart : le parcours complet n’a pas été exécuté pendant cet audit.
@@ -765,12 +765,12 @@ et le cas TEST-031.
 Objectif : B2b ajoute des décisions ; registre/plans/politiques complets restent historiques.
 
 État : **PARTIEL**, uniquement dans ce périmètre.
-Accès : **/legacy → IA ; /ia/evaluations**.
+Accès : **Pilotage → IA ; /ia/evaluations**.
 Profils : Session complète, lecture du domaine ia ; opérations soumises aux permissions modifier/exporter/administrer et au périmètre. Une validation peut exiger un rôle de validation distinct.
 Prérequis : module activé, accès au périmètre et données nécessaires disponibles ;
 un environnement de recette autorisé pour les opérations sensibles.
 
-1. Ouvrir l’outil historique /legacy et sélectionner la famille métier indiquée.
+1. Ouvrir le menu Pilotage et sélectionner la rubrique indiquée.
 2. Consulter les éléments existants selon ses permissions ; conserver un jeu fictif pour toute recette.
 3. Relever les champs, liens, filtres et exports effectivement présents avant de préparer une reprise.
 4. Consigner tout écart : le parcours complet n’a pas été exécuté pendant cet audit.
@@ -789,12 +789,12 @@ et le cas TEST-032.
 Objectif : Code historique conservé ; parcours CRRC complet non rejoué.
 
 État : **NON VÉRIFIÉ**, uniquement dans ce périmètre.
-Accès : **/legacy → CRRC**.
+Accès : **Pilotage → CRRC**.
 Profils : Session complète, lecture du domaine crrc ; opérations soumises aux permissions modifier/exporter/administrer et au périmètre. Une validation peut exiger un rôle de validation distinct.
 Prérequis : module activé, accès au périmètre et données nécessaires disponibles ;
 un environnement de recette autorisé pour les opérations sensibles.
 
-1. Ouvrir l’outil historique /legacy et sélectionner la famille métier indiquée.
+1. Ouvrir le menu Pilotage et sélectionner la rubrique indiquée.
 2. Consulter les éléments existants selon ses permissions ; conserver un jeu fictif pour toute recette.
 3. Relever les champs, liens, filtres et exports effectivement présents avant de préparer une reprise.
 4. Consigner tout écart : le parcours complet n’a pas été exécuté pendant cet audit.
@@ -813,12 +813,12 @@ et le cas TEST-033.
 Objectif : Registre et code d’export conservés ; INV-01 et INV-02 ne sont pas revendiqués livrés.
 
 État : **NON VÉRIFIÉ**, uniquement dans ce périmètre.
-Accès : **/legacy → Investissements**.
+Accès : **Pilotage → Investissements**.
 Profils : Session complète, lecture du domaine investissements ; opérations soumises aux permissions modifier/exporter/administrer et au périmètre. Une validation peut exiger un rôle de validation distinct.
 Prérequis : module activé, accès au périmètre et données nécessaires disponibles ;
 un environnement de recette autorisé pour les opérations sensibles.
 
-1. Ouvrir l’outil historique /legacy et sélectionner la famille métier indiquée.
+1. Ouvrir le menu Pilotage et sélectionner la rubrique indiquée.
 2. Consulter les éléments existants selon ses permissions ; conserver un jeu fictif pour toute recette.
 3. Relever les champs, liens, filtres et exports effectivement présents avant de préparer une reprise.
 4. Consigner tout écart : le parcours complet n’a pas été exécuté pendant cet audit.
@@ -837,12 +837,12 @@ et le cas TEST-034.
 Objectif : Début E ne remplace pas le registre d’incidents ni la main courante historique.
 
 État : **NON VÉRIFIÉ**, uniquement dans ce périmètre.
-Accès : **/legacy → Incidents / crise**.
+Accès : **Pilotage → Incidents / crise**.
 Profils : Session complète, lecture du domaine incidents ; opérations soumises aux permissions modifier/exporter/administrer et au périmètre. Une validation peut exiger un rôle de validation distinct.
 Prérequis : module activé, accès au périmètre et données nécessaires disponibles ;
 un environnement de recette autorisé pour les opérations sensibles.
 
-1. Ouvrir l’outil historique /legacy et sélectionner la famille métier indiquée.
+1. Ouvrir le menu Pilotage et sélectionner la rubrique indiquée.
 2. Consulter les éléments existants selon ses permissions ; conserver un jeu fictif pour toute recette.
 3. Relever les champs, liens, filtres et exports effectivement présents avant de préparer une reprise.
 4. Consigner tout écart : le parcours complet n’a pas été exécuté pendant cet audit.
@@ -861,12 +861,12 @@ et le cas TEST-035.
 Objectif : Distinct de la revue technique RBAC déjà reprise (FCT-002).
 
 État : **NON VÉRIFIÉ**, uniquement dans ce périmètre.
-Accès : **/legacy → Pilotage**.
+Accès : **Pilotage → Pilotage**.
 Profils : Session complète, lecture du domaine pilotage ; opérations soumises aux permissions modifier/exporter/administrer et au périmètre. Une validation peut exiger un rôle de validation distinct.
 Prérequis : module activé, accès au périmètre et données nécessaires disponibles ;
 un environnement de recette autorisé pour les opérations sensibles.
 
-1. Ouvrir l’outil historique /legacy et sélectionner la famille métier indiquée.
+1. Ouvrir le menu Pilotage et sélectionner la rubrique indiquée.
 2. Consulter les éléments existants selon ses permissions ; conserver un jeu fictif pour toute recette.
 3. Relever les champs, liens, filtres et exports effectivement présents avant de préparer une reprise.
 4. Consigner tout écart : le parcours complet n’a pas été exécuté pendant cet audit.
@@ -909,12 +909,12 @@ et le cas TEST-037.
 Objectif : Plans v2 conservés ; aucune migration globale implicite vers continuity_plan.
 
 État : **NON VÉRIFIÉ**, uniquement dans ce périmètre.
-Accès : **/legacy → Plans**.
+Accès : **Pilotage → Plans**.
 Profils : Session complète, lecture du domaine pilotage ; opérations soumises aux permissions modifier/exporter/administrer et au périmètre. Une validation peut exiger un rôle de validation distinct.
 Prérequis : module activé, accès au périmètre et données nécessaires disponibles ;
 un environnement de recette autorisé pour les opérations sensibles.
 
-1. Ouvrir l’outil historique /legacy et sélectionner la famille métier indiquée.
+1. Ouvrir le menu Pilotage et sélectionner la rubrique indiquée.
 2. Consulter les éléments existants selon ses permissions ; conserver un jeu fictif pour toute recette.
 3. Relever les champs, liens, filtres et exports effectivement présents avant de préparer une reprise.
 4. Consigner tout écart : le parcours complet n’a pas été exécuté pendant cet audit.
