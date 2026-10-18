@@ -5,6 +5,9 @@
    pas tant que la correspondance ne change pas. Les calculs sont des aides au pilotage, jamais un taux de conformité. */
 import {
   effectivePermissions,
+  etatExigence,
+  syntheseEtats,
+  type EtatExigence,
   type FrameworkDefinition,
   type Permission,
   type RapprochementDecision,
@@ -400,14 +403,20 @@ export class GrcRapprochements {
         )
       ).rows.map((o) => ['object:' + o.id, o.name]),
     );
+    const evaluations = await this.g.evaluations.courantes(
+      smsi,
+      attached.map((a) => a.framework_id),
+    );
     const frameworks = attached.map((a) => {
       const reqs = defs.get(`${a.framework_id}:${a.version}`)?.definition.requirements ?? [];
       let covered = 0,
         pending = 0;
+      const etats: EtatExigence[] = [];
       for (const r of reqs) {
         const ref = requirementRef(a.framework_id, a.version, r.id);
         if (explicit.has(ref)) covered++;
         else if (toValidate.has(ref)) pending++;
+        etats.push(etatExigence(evaluations.get(`${a.framework_id}:${r.id}`) ?? null));
       }
       return {
         frameworkId: a.framework_id,
@@ -418,6 +427,7 @@ export class GrcRapprochements {
         covered,
         toValidate: pending,
         uncovered: reqs.length - covered - pending,
+        etats: syntheseEtats(etats),
       };
     });
     const detail = frameworkId
@@ -427,11 +437,19 @@ export class GrcRapprochements {
           return (defs.get(`${a.framework_id}:${a.version}`)?.definition.requirements ?? []).slice(0, 1000).map((r) => {
             const ref = requirementRef(a.framework_id, a.version, r.id);
             const measures = (explicit.get(ref) ?? []).map((m) => ({ ref: m, name: measureNames.get(m) ?? '' }));
+            const evaluation = evaluations.get(`${a.framework_id}:${r.id}`) ?? null;
+            const etat = etatExigence(evaluation);
             return {
               id: r.id,
               title: r.title,
               status: measures.length ? 'covered' : toValidate.has(ref) ? 'to_validate' : 'uncovered',
               measures,
+              evaluation,
+              etat,
+              // Une mise en œuvre déclarée sans mesure reliée : à justifier, jamais comptée comme preuve.
+              sansMesure:
+                !measures.length &&
+                (etat === 'partiel' || etat === 'implemente' || etat === 'teste' || etat === 'valide_metier'),
             };
           });
         })()

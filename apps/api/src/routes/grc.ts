@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import {
+  EvaluationExigenceCorps,
   GRC_KINDS,
   GrcObjectBody,
   GrcRef,
@@ -802,6 +803,36 @@ export const grcRoutes = [
     query: z.object({ frameworkId: z.uuid().optional() }),
     handler: async ({ svc, s, params, query }) =>
       svc.grc.rapprochements.coverage(params.smsi, (s as Session).user, query.frameworkId),
+  }),
+  route({
+    ...base,
+    method: 'GET',
+    url: '/api/grc/:smsi/exigences/:frameworkId/:requirementId/evaluations',
+    summary:
+      'Historique des évaluations d’une exigence dans le périmètre (versions immuables, la plus récente d’abord)',
+    params: scope.extend({ frameworkId: z.uuid(), requirementId: z.string().min(1).max(200) }),
+    handler: async ({ svc, s, params }) =>
+      svc.grc.evaluations.historique(params.smsi, params.frameworkId, params.requirementId, (s as Session).user),
+  }),
+  route({
+    ...base,
+    method: 'POST',
+    url: '/api/grc/:smsi/exigences/:frameworkId/:requirementId/evaluations',
+    summary:
+      'Enregistrer une nouvelle version de l’évaluation d’une exigence (applicabilité, mise en œuvre, test, validation métier)',
+    params: scope.extend({ frameworkId: z.uuid(), requirementId: z.string().min(1).max(200) }),
+    status: 201,
+    body: EvaluationExigenceCorps,
+    handler: async ({ svc, s, params, body, req, ip }) =>
+      svc.grc.evaluations.evaluer(
+        params.smsi,
+        params.frameworkId,
+        params.requirementId,
+        body,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      ),
   }),
   route({
     ...base,
