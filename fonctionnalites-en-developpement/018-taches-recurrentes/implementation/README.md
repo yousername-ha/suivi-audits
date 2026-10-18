@@ -10,3 +10,7 @@
 L’agent chargé de l’intégration doit travailler et publier exclusivement sur **sa propre branche dédiée**, en utilisant `legacy` comme référence en lecture. Le [prompt commun](../../_dossiers-transversaux/socle-astra/PROMPT-IMPLEMENTATION.md) conserve cette restriction. Cette réorganisation ne lance aucune intégration, CI, fusion ou mise en production.
 
 La cartographie dynamique reste protégée. Les exemples ANSSI ou fictifs des maquettes ne sont pas des données de production.
+
+## Contrat complémentaire de la candidate v002
+
+Lire la [note technique de la timeline](../maquettes/v002-timeline-validations/TECHNIQUE-MAQUETTE.md). Le socle Claude `284cb1e` enregistre déjà auteur et date des réalisations historiques ; le contrat OK/KO/NA avec référence de preuve versionnée et conservation non modifiable doit être confirmé ou complété côté métier. Ne pas transposer le stockage navigateur ni créer un moteur parallèle. La validation visuelle de la candidate précède le dossier final de codage.

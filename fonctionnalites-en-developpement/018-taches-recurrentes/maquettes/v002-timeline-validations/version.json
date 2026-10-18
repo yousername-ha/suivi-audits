@@ -1,0 +1,20 @@
+{
+  "id": "v002-timeline-validations",
+  "statut": "a-valider",
+  "type": "prototype-fonctionnel",
+  "date": "2026-10-18",
+  "sourceCommit": "944ab8ed2b47cded9565a2b3fe8d037c01572e1f",
+  "referenceMetier": "284cb1e4ffbaee37e0952073db5659c2257c888e",
+  "versionPrecedente": "v001-reference-08",
+  "validationUtilisateur": null,
+  "references": [
+    "references/style-08",
+    "fonctionnalites-en-developpement/018-taches-recurrentes"
+  ],
+  "canal": "candidate-a-valider",
+  "choixAValider": [
+    "Disposition timeline et panneau de validation",
+    "Preuve facultative ou obligatoire selon résultat",
+    "Traitement éventuel des corrections sans réécriture de la trace"
+  ]
+}

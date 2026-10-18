@@ -1,0 +1,37 @@
+{
+  "date": "2026-10-18T18:44:25.670Z",
+  "status": "passed",
+  "checks": [
+    "Six séries et 31 jours, occurrences colorées",
+    "Zoom semaine/mois et changement de période",
+    "Filtres par périmètre et résultat",
+    "Responsable et validateur distingués, identité non saisissable",
+    "Choix explicite du résultat requis",
+    "OK, preuve existante sans duplication, auteur et date automatiques",
+    "Seconde validation refusée et historique conservé",
+    "Persistance et consultation en lecture seule après rechargement",
+    "Annulation du dépôt sans création de preuve ni validation",
+    "KO et nouvelle preuve enregistrés ensemble, empreinte exacte",
+    "Fiche preuve, lien inverse et téléchargement du fichier original",
+    "Preuve retrouvée dans le registre",
+    "NA avec justification, preuve facultative",
+    "Même fichier et même périmètre : aucune preuve dupliquée",
+    "Preuve hors périmètre refusée",
+    "Fichier HTML refusé",
+    "Export du journal et des preuves",
+    "Conflit de révision refusé avant enregistrement",
+    "Échec stockage : aucun faux succès ni écriture partielle",
+    "Commentaire HTML affiché comme texte, sans exécution",
+    "Fermeture pendant la lecture du fichier : aucun effet tardif",
+    "Mobile sans débordement, menu et fermeture clavier"
+  ],
+  "consoleErrors": [],
+  "screenshots": 8,
+  "environment": "Chromium Linux / localhost",
+  "limits": [
+    "BAT non exécuté sous Windows",
+    "Identité et date simulées : aucune garantie serveur d’immutabilité",
+    "Preuve facultative, proposition à confirmer",
+    "Contrats natifs OK/KO/NA et preuves à compléter"
+  ]
+}

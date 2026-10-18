@@ -9,7 +9,13 @@
       "date": "2026-10-14",
       "etape": "en-developpement",
       "motif": "Organisation demandée par l’utilisateur ; proposition encore à valider."
+    },
+    {
+      "date": "2026-10-18",
+      "etape": "en-developpement",
+      "motif": "Candidate v002 : timeline des occurrences, résultats OK/KO/NA, acteur automatique fictif, preuves partagées et journal. À valider ; aucun raccordement serveur."
     }
   ],
-  "numero": "018"
+  "numero": "018",
+  "candidate": "maquettes/v002-timeline-validations"
 }

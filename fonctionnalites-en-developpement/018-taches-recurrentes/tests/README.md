@@ -13,3 +13,7 @@ Suivre aussi la [recette commune](../../_dossiers-transversaux/socle-astra/RECET
 ## Validation utilisateur
 
 **Non consignée pour cette version dans cette réorganisation.** Ajouter la décision explicite et sa date dans `maquettes/v001-reference-08/version.json` ; ne pas transformer automatiquement des tests réussis en validation.
+
+## Candidate v002
+
+[Recette exécutée](../maquettes/v002-timeline-validations/technique/recette.json) · [Script Playwright](../maquettes/v002-timeline-validations/technique/parcours.cjs). Les contrôles couvrent le parcours local et les preuves ; ils ne prouvent ni une authentification réelle ni une immutabilité serveur.

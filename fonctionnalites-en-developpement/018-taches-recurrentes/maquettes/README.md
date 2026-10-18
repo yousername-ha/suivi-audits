@@ -3,5 +3,6 @@
 | Version | État | Type |
 | --- | --- | --- |
 | [v001-reference-08](v001-reference-08/README.md) | À valider | Aperçus statiques |
+| [v002-timeline-validations](v002-timeline-validations/README.md) | Candidate à valider | Prototype fonctionnel : timeline, validations et preuves |
 
-La prochaine proposition prendra un nouveau numéro `v002-…`, avec ses captures et sa fiche `version.json`. Une validation utilisateur doit être consignée explicitement ; des tests techniques réussis ne valent pas validation visuelle.
+La v002 est disponible avec ses captures et son ZIP. Une validation utilisateur doit être consignée explicitement ; des tests techniques réussis ne valent pas validation visuelle.
