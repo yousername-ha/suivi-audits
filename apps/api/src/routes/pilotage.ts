@@ -6,8 +6,11 @@ import { PilotageObjectifs } from '../pilotage/objectifs.js';
 import { PilotageBoites } from '../pilotage/boites.js';
 import { PilotagePestel } from '../pilotage/pestel.js';
 import { PilotageRevue } from '../pilotage/revue.js';
+import { HttpError } from '../http/errors.js';
 import { route } from '../http/route.js';
 import { requireIfMatch } from '../http/concurrency.js';
+import { classeur, docx, pptx } from '../export/office.js';
+import { modeleRevue } from '../export/revue.js';
 const base = { tags: ['Pilotage'], access: 'metier' as const };
 const scope = z.object({ smsi: z.uuid() });
 const cleObjectifs = z.enum(['processes', 'objectives', 'indicators']);
@@ -21,6 +24,36 @@ export const pilotageRoutes = [
     summary:
       'Entrées de la revue de direction (ISO 9001:2015, 9.3.2) préparées à partir des données, sans interprétation',
     handler: async ({ svc, s, params }) => new PilotageRevue(svc.grc).entrees(params.smsi, (s as Session).user),
+  }),
+  route({
+    ...base,
+    method: 'GET',
+    url: '/api/grc/:smsi/pilotage/revue/:id/export',
+    params: scope.extend({ id: z.uuid() }),
+    query: z.object({ format: z.enum(['docx', 'pptx', 'xlsx']) }),
+    summary: 'Exporter une revue de direction : compte rendu Word, support PowerPoint ou classeur Excel',
+    handler: async ({ svc, s, params, query, ip, reply }) => {
+      const u = (s as Session).user;
+      const fiche = await svc.grc.object(params.smsi, params.id, u);
+      if (fiche.kind !== 'management_review') throw new HttpError(404, 'Objet introuvable.');
+      await svc.grc.permission(u, GRC_MODULES.management_review, 'exporter');
+      const modele = modeleRevue({ name: fiche.name, data: fiche.data });
+      const fichier = { docx, pptx, xlsx: classeur }[query.format](modele);
+      await svc.db.audit(u, ip, 'grc.revue.export', params.id, { format: query.format });
+      const jour = new Date().toISOString().slice(0, 10);
+      return reply
+        .header('Cache-Control', 'no-store')
+        .header(
+          'Content-Type',
+          {
+            docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          }[query.format],
+        )
+        .header('Content-Disposition', `attachment; filename="revue-de-direction-${jour}.${query.format}"`)
+        .send(fichier);
+    },
   }),
   route({
     ...base,
