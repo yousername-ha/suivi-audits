@@ -2,7 +2,7 @@
    référence natives sous verrou, champs inconnus conservés. Données fictives. */
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { ecrireInvest } from '../src/historique/tables/invest.js';
-import { createTestApp, login, makeUser, type Agent, type TestApp } from './helpers.js';
+import { createTestApp, login, makeUser, seedState, type Agent, type TestApp } from './helpers.js';
 
 let t: TestApp, admin: Agent, reader: Agent, writer: Agent;
 const etat = async () => (await admin.get('/api/legacy/state')).json();
@@ -15,6 +15,7 @@ beforeAll(async () => {
   const cur = await admin.get('/api/legacy/state');
   const s = cur.json();
   s.suppliers = [{ id: 'SUP-001', name: 'Fournisseur fictif' }];
+  await seedState(t, s);
   // Le module est repris dans des tables (ADR 0040) : l'amorçage passe par la correspondance, pas par /legacy.
   await t.svc.db.tx((c) =>
     ecrireInvest(c, {
@@ -33,7 +34,6 @@ beforeAll(async () => {
       ],
     }),
   );
-  expect((await admin.put('/api/legacy/state', s, { 'if-match': cur.headers.etag as string })).statusCode).toBe(204);
 });
 afterAll(() => t.close());
 
@@ -129,7 +129,7 @@ describe('investissements en tables (ADR 0040)', () => {
     expect(s.invest.inconnuRacine).toBe('garder');
     expect(s.invest.lines.find((l: { id: string }) => l.id === 'INV-001').inconnu).toEqual({ x: 1 });
     // Renvoyer l'état tel quel est accepté ; le modifier est refusé.
-    expect((await admin.put('/api/legacy/state', s, { 'if-match': cur.headers.etag as string })).statusCode).toBe(204);
+    await seedState(t, s);
     const cur2 = await admin.get('/api/legacy/state');
     const s2 = cur2.json();
     s2.invest.lines[0].company = 'Modifiée depuis /legacy';

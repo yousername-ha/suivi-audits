@@ -1,7 +1,7 @@
 /* Revues des accès reprises de l'outil de suivi (clé `accessReviews`) : ajout, saisie du mois de la dernière revue et
    état calculé. Données fictives. */
 import { expect, test } from '@playwright/test';
-import { sessionAdmin, watchPage } from '../helpers';
+import { sessionAdmin, watchPage, ecrireEtat } from '../helpers';
 
 test('Revues des accès : une revue ajoutée, son mois saisi, son état calculé', async ({ browser }) => {
   const { state, csrf } = await sessionAdmin(browser);
@@ -13,11 +13,7 @@ test('Revues des accès : une revue ajoutée, son mois saisi, son état calculé
     const s = await cur.json();
     s.suppliers = [{ id: 'SUP-901', name: 'Fournisseur fictif des revues' }];
     s.accessReviews = [];
-    const put = await ctx.request.put('/api/legacy/state', {
-      data: s,
-      headers: { 'if-match': cur.headers().etag!, 'x-csrf-token': csrf },
-    });
-    expect(put.status()).toBe(204);
+    await ecrireEtat(ctx.request, csrf, s);
 
     await page.goto('/pilotage/revues-acces');
     await expect(page.getByText('Aucune revue des accès.')).toBeVisible();

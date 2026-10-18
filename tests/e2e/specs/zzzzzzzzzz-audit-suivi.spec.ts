@@ -1,7 +1,7 @@
 /* Gestion de l'audit reprise de l'outil de suivi : carte du prochain audit, préparation, cycle, couverture, organisation
    (participants, jours, créneaux, planning). L'état d'audit fictif est posé par l'API. Données fictives. */
 import { expect, test } from '@playwright/test';
-import { sessionAdmin, watchPage } from '../helpers';
+import { sessionAdmin, watchPage, ecrireEtat } from '../helpers';
 
 const exigence = (id: string, ref: string, num: string) => ({
   id,
@@ -48,11 +48,7 @@ test('Gestion de l’audit : carte, préparation, cycle, couverture et organisat
       ],
     });
     delete s.plan;
-    const put = await ctx.request.put('/api/legacy/state', {
-      data: s,
-      headers: { 'if-match': cur.headers().etag!, 'x-csrf-token': csrf },
-    });
-    expect(put.status()).toBe(204);
+    await ecrireEtat(ctx.request, csrf, s);
 
     // Carte du prochain audit : une case, sa fiche, la préparation.
     await page.goto('/pilotage/audit-pronostic');

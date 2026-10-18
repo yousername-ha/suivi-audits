@@ -25,10 +25,18 @@ tables. Conséquences : verrou global, aucune contrainte d'intégrité, aucune r
 4. **Migration SQL de reprise, non destructive** : la migration copie la clé d'`app_state` dans les tables ; la clé reste en
    place dans `app_state` jusqu'au prochain enregistrement, puis en est retirée. Les snapshots de `state_history` et la
    sauvegarde automatique avant mise à jour permettent le retour arrière. Une base sans la clé n'est pas modifiée.
-5. **Premier module : investissements** (`invest_settings`, `invest_lines`, migration 023). Les autres suivront un par un, chacun
+5. **Collections génériques** (lot H2b, migration 024) : une même correspondance sans perte (`collection.ts`) range une clé tableau
+   dans une table à colonnes typées nullables : NULL = champ absent, `extra` = champs inconnus ou de type inattendu, entrée non
+   objet conservée telle quelle, ordre conservé, clé vide mais présente mémorisée (`suivi_presence`). Premières clés reprises :
+   `incidents`, `plans`, `accessReviews`, `appGaps`, `supEvals`. Un test compare la copie SQL de la migration et l'écriture par
+   la correspondance : elles doivent produire la même valeur.
+6. **Premier module : investissements** (`invest_settings`, `invest_lines`, migration 023). Les autres suivront un par un, chacun
    avec sa migration, son mapper, son test de reprise (aller-retour à l'identique) et son test d'API.
-6. **Hors périmètre de ce lot** : rattacher ces tables aux objets GRC (écarts, actions, preuves, fournisseurs) par des clés
-   étrangères. Les identifiants restent des textes tant que le module cible n'est pas lui-même repris.
+7. **Aucune copie dans `app_state`, quel que soit l'appelant** : `LegacyStore.save` retire les clés des modules repris ; la
+   restauration d'une version, l'amorçage, la cartographie et le jeu de test écrivent par `nativeWrite`.
+8. **Hors périmètre de ce lot** : rattacher ces tables aux objets GRC (écarts, actions, preuves, fournisseurs) par des clés
+   étrangères. Les identifiants restent des textes tant que le module cible n'est pas lui-même repris. Les dates restent des textes
+   (valeurs historiques parfois invalides) jusqu'à la normalisation de chaque module.
 
 ## Conséquences
 

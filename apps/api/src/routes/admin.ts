@@ -145,7 +145,7 @@ export const adminRoutes = [
         const r = (await c.query('SELECT data FROM state_history WHERE version=$1', [params.v])).rows[0];
         if (!r) throw new HttpError(404, 'Version introuvable.');
         assertLegacyKeys(sess.user.rights, Object.keys(r.data as object), 'modifier');
-        const res = await svc.legacy.save(c, r.data, sess.user, null, `Restauration de la version ${params.v}`);
+        const res = await svc.legacy.nativeWrite(c, r.data, sess.user, null, `Restauration de la version ${params.v}`);
         return res.conflict ? res.version : res.version;
       }, sess.user.username);
       await svc.db.audit(sess.user, ip, 'admin.state_restore', `v${params.v}`, { newVersion: out });

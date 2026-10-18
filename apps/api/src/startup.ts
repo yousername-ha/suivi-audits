@@ -8,7 +8,7 @@ export async function seedState(svc: Services): Promise<boolean> {
   try {
     const obj = JSON.parse(readFileSync(svc.cfg.seedFile, 'utf8'));
     if (!validLegacyState(obj)) throw new Error('structure inattendue');
-    await svc.db.tx((c) => svc.legacy.save(c, obj, null, null, 'Données initiales'), 'système');
+    await svc.db.tx((c) => svc.legacy.nativeWrite(c, obj, null, null, 'Données initiales'), 'système');
     svc.log.info('state seeded');
     return true;
   } catch (e) {

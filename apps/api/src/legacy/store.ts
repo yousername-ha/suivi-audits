@@ -82,7 +82,7 @@ export class LegacyStore {
       expected : version attendue (contrôle optimiste) ou null pour forcer. */
   async save(
     c: Client,
-    obj: JsonObject,
+    incoming: JsonObject,
     user: Actor | null,
     expected: number | null,
     note: string,
@@ -90,6 +90,9 @@ export class LegacyStore {
   ): Promise<
     { conflict: true; by: string; at: Date; version: number } | { conflict: false; version: number; sha256: string }
   > {
+    // Les modules repris vivent dans leurs tables : jamais de copie dans app_state, quel que soit l'appelant.
+    const obj: JsonObject = { ...incoming };
+    for (const m of this.mappers.values()) delete obj[m.key];
     const sha = sha256hex(JSON.stringify(obj));
     const cur = (
       await c.query<{ version: number; updated_by: string; updated_at: Date }>(
@@ -145,10 +148,12 @@ export class LegacyStore {
       if (m.key in incoming) {
         const current = await m.read(c);
         const value = incoming[m.key] as Json;
-        // Module absent des tables : seule une valeur vide est acceptée (l'outil historique crée la clé à la volée).
+        // Module absent des tables : seule une valeur vide (null, objet ou liste vide) est acceptée (l'outil historique crée la clé à la volée).
         const same =
           current === undefined
-            ? value === null || (isObject(value) && !Object.keys(value).length)
+            ? value === null ||
+              (isObject(value) && !Object.keys(value).length) ||
+              (Array.isArray(value) && !value.length)
             : canonicalJson(value) === canonicalJson(current);
         if (!same) blocked.push(m.key);
       }
@@ -170,7 +175,7 @@ export class LegacyStore {
   /** Écriture depuis la nouvelle interface : les modules repris dans des tables sont enregistrés dans leurs tables (par
       leur correspondance) quand leur valeur change ; seul le reste de l'état va dans app_state. Contrairement à
       `legacyWrite`, rien n'est refusé : c'est la source de vérité relationnelle qui est modifiée. */
-  async nativeWrite(c: Client, incoming: JsonObject, user: Actor, expected: number | null, note = '') {
+  async nativeWrite(c: Client, incoming: JsonObject, user: Actor | null, expected: number | null, note = '') {
     const stored: JsonObject = { ...incoming };
     // Conflit détecté avant toute écriture dans les tables des modules repris.
     const cur = (
@@ -186,7 +191,9 @@ export class LegacyStore {
         const value = incoming[m.key] as Json;
         const same =
           current === undefined
-            ? value === null || (isObject(value) && !Object.keys(value).length)
+            ? value === null ||
+              (isObject(value) && !Object.keys(value).length) ||
+              (Array.isArray(value) && !value.length)
             : canonicalJson(value) === canonicalJson(current);
         if (!same) await m.write(c, value, null);
       }

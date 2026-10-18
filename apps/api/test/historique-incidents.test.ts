@@ -1,7 +1,7 @@
 /* Reprise du registre des incidents, de la cellule de crise et de l'alerte CRRC → incident de l'outil de suivi : écritures
    natives sous verrou, droits croisés (écarts, pilotage, incidents), champs inconnus conservés. Données fictives. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createTestApp, login, makeUser, type Agent, type TestApp } from './helpers.js';
+import { createTestApp, login, makeUser, seedState, type Agent, type TestApp } from './helpers.js';
 
 let t: TestApp, admin: Agent, reader: Agent, writer: Agent, sansEcarts: Agent;
 const etat = async () => (await admin.get('/api/legacy/state')).json();
@@ -46,7 +46,7 @@ beforeAll(async () => {
       },
     ],
   };
-  expect((await admin.put('/api/legacy/state', s, { 'if-match': cur.headers.etag as string })).statusCode).toBe(204);
+  await seedState(t, s);
 });
 afterAll(() => t.close());
 

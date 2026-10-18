@@ -193,3 +193,12 @@ export async function login(t: TestApp, u: TestUser): Promise<Agent> {
 }
 
 export const fixturePath = path.join(REPO, 'tests/fixtures/legacy-fixture.json');
+
+/** Amorce l'état historique d'un test : les modules repris vont dans leurs tables, le reste dans app_state (ADR 0040). */
+export async function seedState(t: TestApp, etat: Record<string, unknown>) {
+  await t.svc.db.tx(async (c) => {
+    await c.query('SELECT 1 FROM app_state WHERE id=1 FOR UPDATE');
+    const r = await t.svc.legacy.nativeWrite(c, etat as never, null, null, 'amorçage de test');
+    if (r.conflict) throw new Error('amorçage de test : conflit de version');
+  }, 'test');
+}

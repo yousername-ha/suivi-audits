@@ -1,7 +1,7 @@
 /* Reprise de la conformité IA de l'outil de suivi (clé `ai`) : registre des usages, évaluation des scénarios, plan et
    politiques, lecture et écriture natives sous verrou, sans copie, champs inconnus conservés. Données fictives. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createTestApp, login, makeUser, type Agent, type TestApp } from './helpers.js';
+import { createTestApp, login, makeUser, seedState, type Agent, type TestApp } from './helpers.js';
 
 let t: TestApp, admin: Agent, reader: Agent, writer: Agent;
 const etat = async () => (await admin.get('/api/legacy/state')).json();
@@ -9,7 +9,7 @@ const poser = async (m: (s: Record<string, unknown>) => void) => {
   const cur = await admin.get('/api/legacy/state');
   const s = cur.json();
   m(s);
-  expect((await admin.put('/api/legacy/state', s, { 'if-match': cur.headers.etag as string })).statusCode).toBe(204);
+  await seedState(t, s);
 };
 
 beforeAll(async () => {

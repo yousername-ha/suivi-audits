@@ -2,7 +2,7 @@
    indicateurs et niveaux de la DdA, fiche d'une mesure, évaluation par le clausier (chapitres, points, note, action des
    écarts). Données fictives posées par l'API. */
 import { expect, test } from '@playwright/test';
-import { sessionAdmin, watchPage } from '../helpers';
+import { sessionAdmin, watchPage, ecrireEtat } from '../helpers';
 
 test('DdA et évaluation par le clausier : niveaux, fiche, chapitres, points, note, écarts', async ({ browser }) => {
   const { state, csrf } = await sessionAdmin(browser);
@@ -34,11 +34,7 @@ test('DdA et évaluation par le clausier : niveaux, fiche, chapitres, points, no
       suppliers: [{ id: 'SUP01', name: 'Fournisseur fictif', hds: 'Non', mfa: 'Oui', sso: 'SAML' }],
       supEvals: [],
     });
-    const put = await ctx.request.put('/api/legacy/state', {
-      data: s,
-      headers: { 'if-match': cur.headers().etag!, 'x-csrf-token': csrf },
-    });
-    expect(put.status()).toBe(204);
+    await ecrireEtat(ctx.request, csrf, s);
 
     // DdA : indicateurs, incohérence, niveau modifié.
     await page.goto('/pilotage/dda-annexe-a');

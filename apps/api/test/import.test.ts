@@ -228,9 +228,8 @@ describe('transition : modules repris et /legacy', () => {
       // La page /legacy reçoit la liste des modules repris (affichage « Module géré dans la nouvelle interface »).
       const page = await w.get('/legacy/');
       expect(page.statusCode).toBe(200);
-      expect(page.body).toContain(
-        '"takenOver":[{"key":"invest","label":"Investissements"},{"key":"maps","label":"Cartographie du SMSI"},{"key":"swots","label":"Analyses SWOT"}]',
-      );
+      for (const cle of ['accessReviews', 'appGaps', 'incidents', 'invest', 'maps', 'plans', 'swots', 'supEvals'])
+        expect(page.body, cle).toContain(`{"key":"${cle}","label":`);
       expect(page.headers['content-security-policy']).toMatch(/unsafe-inline/);
     } finally {
       t.svc.legacy.unregister('swots');
