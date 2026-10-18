@@ -75,6 +75,7 @@ test('GAP guidé, fiche, action ; conformité IA : usage, scénario, plan', asyn
         ],
         policies: [
           {
+            id: 'POL-001',
             policy: 'Politique fictive',
             impact: 'Impact',
             change: 'Changement',
