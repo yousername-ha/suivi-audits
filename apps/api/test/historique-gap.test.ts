@@ -198,9 +198,8 @@ describe('questionnaire guidé', () => {
     ).toBe(false);
   });
   it('sans registre IA : il est initialisé vide puis l’usage y est inscrit', async () => {
-    await poser((s) => {
-      delete s.ai;
-    });
+    // Le module IA est repris dans des tables : on le vide par sa correspondance (supprimer la clé de l'état n'y suffit pas).
+    await t.svc.db.tx((c) => t.svc.legacy.mapper('ai')!.write(c, undefined, null));
     const r = await writer.post('/api/gap/guide', {
       name: 'Service fictif sans registre',
       answers: { ia: 'Oui' },

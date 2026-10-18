@@ -1,14 +1,15 @@
 /* Reprise des collections de l'outil de suivi en tables (ADR 0040, migration 024) : la copie SQL et l'écriture par la
    correspondance restituent exactement la valeur d'origine, entrées atypiques comprises. Données fictives. */
-import { copyFileSync, mkdtempSync, readdirSync } from 'node:fs';
+import { copyFileSync, mkdtempSync, readdirSync, readFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { type Json, type JsonObject } from '@suivi/shared/legacy';
 import { describe, expect, it } from 'vitest';
 import { MIGRATIONS_DIR } from '../src/db/db.js';
-import { ecrireCollection } from '../src/historique/tables/collection.js';
+import { ecrireCarte, ecrireCollection, ecrireGroupe } from '../src/historique/tables/collection.js';
 import { COLLECTIONS } from '../src/historique/tables/collections.js';
-import { createTestApp } from './helpers.js';
+import { CARTES, GROUPES } from '../src/historique/tables/groupes.js';
+import { createTestApp, fixturePath } from './helpers.js';
 import { createDatabase } from './pg.js';
 
 const ETAT: JsonObject = {
@@ -93,6 +94,39 @@ describe('migration 024 et correspondance générique', () => {
       await expect(t.svc.db.tx((c) => ecrireCollection(c, spec, { a: 1 }))).rejects.toThrow(/liste/);
     } finally {
       await t.close();
+    }
+  });
+
+  const CLES = ['invest', 'incidents', 'plans', 'accessReviews', 'appGaps', 'supEvals', 'crrc', 'crisis', 'ai', 'dda'];
+  it('jeu de départ complet : la copie SQL et l’écriture par la correspondance restituent la fixture à l’identique', async () => {
+    const fixture = JSON.parse(readFileSync(fixturePath, 'utf8')) as JsonObject;
+    const attendu = Object.fromEntries(CLES.filter((k) => k in fixture).map((k) => [k, fixture[k]]));
+    // 1) Migration SQL depuis une base ancienne qui contient la fixture.
+    const dbName = await createDatabase();
+    const t = await createTestApp({}, { migrate: false, dbName });
+    try {
+      const avant = mkdtempSync(path.join(os.tmpdir(), 'fixt-'));
+      for (const f of readdirSync(MIGRATIONS_DIR).filter((x) => x < '023'))
+        copyFileSync(path.join(MIGRATIONS_DIR, f), path.join(avant, f));
+      await t.svc.db.migrate(avant);
+      await t.svc.db.q("INSERT INTO app_state (id, version, data, sha256, updated_by) VALUES (1, 1, $1, 'x', 'v2')", [
+        fixture,
+      ]);
+      await t.svc.db.migrate();
+      const etat = (await t.svc.legacy.recompose())!.data;
+      for (const [k, v] of Object.entries(attendu)) expect(etat[k], `SQL ${k}`).toEqual(v);
+    } finally {
+      await t.close();
+    }
+    // 2) Écriture par la correspondance (import, restauration) sur une base neuve.
+    const t2 = await createTestApp();
+    try {
+      for (const g of GROUPES) await t2.svc.db.tx((c) => ecrireGroupe(c, g, attendu[g.key] as Json | undefined));
+      for (const k of CARTES) await t2.svc.db.tx((c) => ecrireCarte(c, k, attendu[k.key] as Json | undefined));
+      const etat = (await t2.svc.legacy.recompose())!.data;
+      for (const k of ['crrc', 'crisis', 'ai', 'dda']) if (k in attendu) expect(etat[k], `TS ${k}`).toEqual(attendu[k]);
+    } finally {
+      await t2.close();
     }
   });
 });
