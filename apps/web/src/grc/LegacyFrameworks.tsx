@@ -22,7 +22,7 @@ export function LegacyFrameworks({ smsi }: { smsi: string }) {
         }[];
         items?: { id: string; ref: string; title: string }[];
         activeFw?: string;
-      }>('/api/legacy/state'),
+      }>('/api/suivi/etat'),
     enabled: smsi === '00000000-0000-4000-8000-000000000001',
   });
   if (smsi !== '00000000-0000-4000-8000-000000000001') return null;

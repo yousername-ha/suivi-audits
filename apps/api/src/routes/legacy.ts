@@ -130,6 +130,21 @@ export const legacyRoutes = [
   }),
   route({
     method: ['GET', 'HEAD'],
+    url: '/api/suivi/etat',
+    summary: 'État du suivi (lecture seule, recomposé depuis les tables) filtré selon les droits ; ETag = version',
+    tags: ['Suivi'],
+    access: 'metier',
+    handler: async ({ svc, s, reply }) => {
+      const r = await legacyState(svc);
+      reply
+        .header('ETag', `"v${r.version}"`)
+        .header('Cache-Control', 'no-store')
+        .header('Content-Type', 'application/json; charset=utf-8');
+      return reply.send(JSON.stringify(redactLegacy(r.data, (s as Session).user.rights)));
+    },
+  }),
+  route({
+    method: ['GET', 'HEAD'],
     url: '/legacy/data/state.json',
     summary: 'État (chemin relatif utilisé par le fichier historique)',
     tags: ['Outil historique'],
@@ -189,6 +204,22 @@ export const legacyRoutes = [
       });
       reply.header('ETag', `"v${r.version}"`);
       return undefined;
+    },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/suivi/modules',
+    summary: 'Modules de l’outil de suivi et leur statut (repris dans la nouvelle interface, activés ou non)',
+    tags: ['Suivi'],
+    access: 'metier',
+    handler: async ({ svc }) => {
+      const taken = new Set(svc.legacy.takenOver());
+      const disabled = (await svc.modules.state()).disabled;
+      return LEGACY_MODULES.map((m) => ({
+        ...m,
+        takenOver: taken.has(m.key),
+        enabled: !disabled.includes(legacyKeyModule(m.key) as Module),
+      }));
     },
   }),
   route({

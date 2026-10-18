@@ -607,7 +607,7 @@ export async function chargerJeuDeTest(
     };
     const commun = '00000000-0000-4000-8000-000000000001';
     // 1) État de l'outil de suivi : refusé s'il contient déjà des données de pilotage.
-    const lu = await appel('GET', '/api/legacy/state');
+    const lu = await appel('GET', '/api/suivi/etat');
     const courant = (await exiger<Json>(lu, 'Lecture de l’état')) as Json;
     const existants = ['processes', 'objectives', 'indicators', 'suppliers', 'findings', 'interested'].filter(
       (k) => Array.isArray(courant[k]) && (courant[k] as unknown[]).length > 0,

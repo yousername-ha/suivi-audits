@@ -68,7 +68,7 @@ export function HomePage() {
   const { presence } = useLive();
   const modules = useQuery({
     queryKey: ['legacy', 'modules'],
-    queryFn: () => get<LegacyModule[]>('/api/legacy/modules'),
+    queryFn: () => get<LegacyModule[]>('/api/suivi/modules'),
     enabled: canReadBusiness(can),
   });
   const synthese = useQuery({
