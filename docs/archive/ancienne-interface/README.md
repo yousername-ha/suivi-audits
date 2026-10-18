@@ -54,7 +54,7 @@ Bilan : 22 pages reprises, 2 partielles (09 et 23), 0 non reprise.
 ## Captures de la nouvelle interface (jeu de test)
 
 Captures de validation de la nouvelle interface sur le jeu de test fictif (`suivi jeu-de-test`), prises par
-`zzzzzz-jeu-de-test.spec.ts` : [`jeu-de-test/`](jeu-de-test/) — menu et pastilles, processus, objectifs (trois
+`zzzzzz-jeu-de-test.spec.ts` : [`jeu-de-test/`](jeu-de-test) — menu et pastilles, processus, objectifs (trois
 vues), fiche indicateur, fournisseurs et fiche, PESTEL, parties intéressées, opportunités, séries proposées,
 revue de direction, carte des risques et calque santé, bibliothèque, tableau de bord.
 

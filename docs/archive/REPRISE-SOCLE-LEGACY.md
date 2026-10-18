@@ -1,6 +1,6 @@
 # Reprise intégrale du socle v2 dans Sauge
 
-> Mise en perspective — 11 octobre 2026 : Inventaire daté du 9 octobre conservé comme preuve. Pilotage possède depuis des adaptateurs directs et l’exploitation web est intégrée : comparer avec la [matrice actuelle](02_FONCTIONNALITES/COMPARAISON_ANCIEN_NOUVEAU.md), sans déclarer tout v2 migré.
+> Mise en perspective — 11 octobre 2026 : Inventaire daté du 9 octobre conservé comme preuve. Pilotage possède depuis des adaptateurs directs et l’exploitation web est intégrée : comparer avec la [matrice actuelle](../02_FONCTIONNALITES/COMPARAISON_ANCIEN_NOUVEAU.md), sans déclarer tout v2 migré.
 
 
 ## Périmètre et état vérifié au 9 octobre 2026

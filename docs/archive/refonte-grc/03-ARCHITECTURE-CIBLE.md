@@ -1,6 +1,6 @@
 # Architecture cible : plateforme GRC multiméthode à configuration transversale
 
-Statut : proposition du 14/10/2026, décision formalisée dans l'[ADR 0038](../adr/0038-socle-de-configuration-grc-transversal.md).
+Statut : proposition du 14/10/2026, décision formalisée dans l'[ADR 0038](../../adr/0038-socle-de-configuration-grc-transversal.md).
 S'appuie sur le [diagnostic](01-DIAGNOSTIC.md) et l'[analyse de l'export](02-ANALYSE-EXPORT-ARM.md). Le modèle de données est détaillé
 dans [04](04-MODELE-DE-DONNEES.md), le plan dans [05](05-PLAN-IMPLEMENTATION.md).
 
@@ -212,7 +212,7 @@ le menu et la charte ne changent pas ; les nouvelles pages utilisent les composa
 
 Règles : respect des permissions et du contexte ; recherche dynamique au-delà de 100 objets (la liste actuelle est tronquée) ;
 cas « aucune donnée » explicite avec lien de création ; la création rapide **enrichit le registre officiel**, elle ne crée pas
-de donnée parallèle. Contraintes de style : [ADR 0006](../adr/0006-front-react-mantine-csp-stricte.md) (pas de style en ligne,
+de donnée parallèle. Contraintes de style : [ADR 0006](../../adr/0006-front-react-mantine-csp-stricte.md) (pas de style en ligne,
 pas de props responsives de style, jetons du thème).
 
 ## 9. Parcours EBIOS RM sur le catalogue

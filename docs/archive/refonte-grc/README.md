@@ -1,6 +1,6 @@
 # Refonte structurelle de la plateforme GRC : index des livrables
 
-Décision : [ADR 0038](../adr/0038-socle-de-configuration-grc-transversal.md). Branche de travail : `refonte-grc-multimethode`.
+Décision : [ADR 0038](../../adr/0038-socle-de-configuration-grc-transversal.md). Branche de travail : `refonte-grc-multimethode`.
 
 | N° | Livrable demandé | Où |
 | --- | --- | --- |
@@ -18,7 +18,7 @@ Décision : [ADR 0038](../adr/0038-socle-de-configuration-grc-transversal.md). B
 | 12 | Cadrage ISO/IEC 27005 | [03](03-ARCHITECTURE-CIBLE.md) (niveau B) |
 | 13 | Conception des méthodes personnalisées | [03](03-ARCHITECTURE-CIBLE.md) (niveau B), [04](04-MODELE-DE-DONNEES.md) § 4 |
 | 14 | Plan priorisé | [05-PLAN-IMPLEMENTATION](05-PLAN-IMPLEMENTATION.md) § 1 |
-| 15 | Modifications de code | [CHANGELOG](../../CHANGELOG.md), [04](04-MODELE-DE-DONNEES.md) § 1 à 3 |
+| 15 | Modifications de code | [CHANGELOG](../../../CHANGELOG.md), [04](04-MODELE-DE-DONNEES.md) § 1 à 3 |
 | 16 | Tests et points à arbitrer | [05](05-PLAN-IMPLEMENTATION.md) § 2 et § 3 |
 
 Les lots d'interface et d'ateliers ne sont pas encore livrés : voir le statut de chaque lot dans le plan.

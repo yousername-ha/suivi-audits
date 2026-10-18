@@ -1,6 +1,6 @@
 # Architecture d'évolution minimale SMSI / GRC
 
-> Mise en perspective — 11 octobre 2026 : Ce cadrage historique précède plusieurs livraisons A/B/C/G/H/K. Les formulations « reste à concevoir » ne sont pas l’état courant : lire le [DAT](03_ARCHITECTURE/DAT.md) et le [registre](02_FONCTIONNALITES/INVENTAIRE_FONCTIONNEL.md).
+> Mise en perspective — 11 octobre 2026 : Ce cadrage historique précède plusieurs livraisons A/B/C/G/H/K. Les formulations « reste à concevoir » ne sont pas l’état courant : lire le [DAT](../03_ARCHITECTURE/DAT.md) et le [registre](../02_FONCTIONNALITES/INVENTAIRE_FONCTIONNEL.md).
 
 
 Ce cadrage complète ARCHITECTURE.md et les ADR existantes ; il n'ajoute ni service ni modèle parallèle. Le backlog et ses critères sont dans [BACKLOG-EVOLUTION-SMSI-GRC.md](BACKLOG-EVOLUTION-SMSI-GRC.md).
@@ -19,7 +19,7 @@ La reprise s'applique aussi à **toutes les fonctions encore sous l'ancien style
 2. **Référentiel générique, SMSI facultatif.** Les organisations peuvent choisir leur référentiel, y compris ISO 9001 seul ou une PSSI personnalisée. Versions/exigences/mesures/preuves/mappings appartiennent au moteur commun ; les parcours ISO/HDS et programmes CaRE ne font qu'orchestrer ces objets. Les évaluations gardent les versions d'échelles et les sources utilisées.
 3. **Exploitation hors API métier.** La pile actuelle est isolée sans Internet pour API/base. Sauvegarde/restauration et TLS nécessitent un exécutant à commandes prédéfinies, un protocole de tâches/audit et un périmètre fixe. Ne pas introduire accès Docker, shell arbitraire ou clés privées en réponse pour satisfaire une interface web. Documenter les modes compatibles et le rollback avant de les implémenter.
 
-Ces décisions fixent les contraintes. Le protocole A1a est implémenté et décrit dans l’[ADR 0016](adr/0016-pilotage-sauvegardes.md) : file SQL exclusive et audit atomique, requêtes idempotentes, annulation If-Match, heartbeat, puis exécution de backup.sh par une tâche hôte sous verrou. L’API ne reçoit aucun chemin, secret ou commande. La restauration guidée, la planification web et TLS restent à concevoir dans leurs lots. Les données ou conclusions réglementaires ne sont pas supposées : sources officielles/versionnées et validations humaines sont nécessaires.
+Ces décisions fixent les contraintes. Le protocole A1a est implémenté et décrit dans l’[ADR 0016](../adr/0016-pilotage-sauvegardes.md) : file SQL exclusive et audit atomique, requêtes idempotentes, annulation If-Match, heartbeat, puis exécution de backup.sh par une tâche hôte sous verrou. L’API ne reçoit aucun chemin, secret ou commande. La restauration guidée, la planification web et TLS restent à concevoir dans leurs lots. Les données ou conclusions réglementaires ne sont pas supposées : sources officielles/versionnées et validations humaines sont nécessaires.
 
 ## Fiabilisation de session livrée
 

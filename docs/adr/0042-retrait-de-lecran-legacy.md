@@ -6,7 +6,7 @@ historique) et [0040](0040-sortie-du-json-plat-modules-en-tables.md) (sortie du 
 ## Contexte
 
 Tous les modules métier de l'outil historique sont repris dans des tables (ADR 0040) : `/legacy` n'affichait plus que
-l'état recomposé, en lecture seule, et refusait toute écriture sur un module repris. La décision du RSSI (12/10/2026) est de
+l'état recomposé, en lecture seule, et refusait toute écriture sur un module repris. La décision du RSSI est de
 retirer l'ancien outil de l'application et de le conserver, testable, sur la branche d'archive
 `archive/outil-legacy-autonome` (archive ZIP de l'outil autonome, version 3.4.0, avec sa somme de contrôle).
 

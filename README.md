@@ -3,6 +3,7 @@
 Application web auto-hébergée de pilotage du GCS Normand'e-Santé : qualité, sécurité et référentiels, préparation et suivi des audits, écarts et actions, documents et preuves. Le menu Pilotage accompagne les démarches SMQ (ISO 9001), SMSI (ISO 27001), HDS et intégrées, sans imposer la création d’un SMSI. Elle remplace, module par module, l'outil historique en fichier unique, qui reste disponible sous `/legacy` pendant la transition.
 
 - **Reprise du projet : [HANDOVER.md](HANDOVER.md)** — [état](PROJECT_STATUS.md), [index documentaire](docs/00_INDEX.md), [consignes IA](AGENTS.md)
+- **Comprendre le produit** : [PRODUCT](docs/PRODUCT.md), [référentiels](docs/REFERENTIALS.md), [décisions](docs/DECISIONS.md), [feuille de route](docs/ROADMAP.md) ; les documents de travail terminés sont dans [docs/archive](docs/archive/README.md)
 - **Installation pas à pas : [docs/INSTALLATION.md](docs/INSTALLATION.md)** (guide pour débutant, rejoué automatiquement en CI)
 - Guide métier : [docs/PILOTAGE.md](docs/PILOTAGE.md) — [lots G/H/K et début E, limites](docs/LOT-G-H-K-DEBUT-E.md)
 - Architecture et modèle de sécurité : [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)

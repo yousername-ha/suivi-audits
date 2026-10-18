@@ -100,7 +100,7 @@ datés et exécutions liées ; ne pas convertir un message Git en preuve de test
   contrôlés ; deux fichiers retirés et consignes/renvois simplifiés.
 - Difficulté : comparaison avec tsx depuis la racine en échec (module absent).
   Comparaison native Node 24 réussie : variantes différentes et conservées.
-- [Diagnostic](../diagnostics/2026-10-11-nettoyage-depot.md) et
+- [Diagnostic](../archive/diagnostics/2026-10-11-nettoyage-depot.md) et
   [reçu des commandes](../05_RECETTE/preuves/2026-10-11-nettoyage.json) constituent
   les sources de ce lot ; aucune nouvelle acceptation humaine ni recette serveur.
 - Prochaine action métier inchangée : TEST-041/TEST-042 avant reprises B2/E.

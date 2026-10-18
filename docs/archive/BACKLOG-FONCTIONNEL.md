@@ -167,7 +167,7 @@ Spécification détaillée : [specs/EXPL-donnees-et-mises-a-jour.md](specs/EXPL-
 
 ## 6. Cartographie du SMSI  *(chantier « Cartographie », après 9 quinquies)*
 
-Spécification détaillée : [cartographie/SPEC-CARTOGRAPHIE-V3.md](cartographie/SPEC-CARTOGRAPHIE-V3.md) ; recette : [cartographie/RECETTE.md](cartographie/RECETTE.md) ; référence de comportement : le module bêta de l'outil historique validé le 08/10/2026 (`cartographie/reference-beta-legacy/`).
+Spécification détaillée : [cartographie/SPEC-CARTOGRAPHIE-V3.md](../cartographie/SPEC-CARTOGRAPHIE-V3.md) ; recette : [cartographie/RECETTE.md](../cartographie/RECETTE.md) ; référence de comportement : le module bêta de l'outil historique validé le 08/10/2026 (`cartographie/reference-beta-legacy/`).
 
 - **CARTO-01** — Module de droits `cartographie` (lire, modifier, supprimer, exporter, administrer) ; lecture seule réelle ; objets filtrés selon les droits de leur module d'origine.
 - **CARTO-02** — Source des objets par adaptateur (état legacy recomposé, puis tables des modules repris), `objectRef` stables, relations métier dérivées.
@@ -184,7 +184,7 @@ Spécification détaillée : [cartographie/SPEC-CARTOGRAPHIE-V3.md](cartographie
 - **CARTO-13** — Exports PNG, SVG, PDF A3, JSON, avec titre, date et légende ; journalisés.
 - **CARTO-14** — Reprise de `S.maps` par l'import legacy (mapper « maps ») ; `/legacy` en lecture seule pour la cartographie une fois reprise.
 
-Construire une carte de zéro (demande du RSSI du 08/10/2026, [spécification](cartographie/SPEC-EDITION-LIBRE.md), ADR 0026, validée le 08/10/2026) :
+Construire une carte de zéro (demande du RSSI du 08/10/2026, [spécification](../cartographie/SPEC-EDITION-LIBRE.md), ADR 0026, validée le 08/10/2026) :
 - **CARTO-15** — Créer depuis la carte un objet de la plateforme (partie intéressée, fournisseur, application, enjeu, site, système, processus, sous-processus), enregistré dans son module, avec la permission de ce module.
 - **CARTO-16** — Menu contextuel : clic droit, appui long, Maj+F10 ; sur le fond, un objet, une relation, une sélection (créer ici, relier, aligner, répartir, grouper, retirer…).
 - **CARTO-17** — Palette en glisser-déposer : types créables, notes, cadres, objets de la plateforme non placés.
@@ -195,7 +195,7 @@ Construire une carte de zéro (demande du RSSI du 08/10/2026, [spécification](c
 
 ## 7. Audit — préparation, couverture, écarts, plan d'audit  *(phase 1)*
 
-Spécification détaillée : [audit/SPEC-AUDIT-V3.md](audit/SPEC-AUDIT-V3.md) ; recette : [audit/RECETTE.md](audit/RECETTE.md) ; ADR 0025 (validée le 08/10/2026 avec les défauts du § 6 de la spécification).
+Spécification détaillée : [audit/SPEC-AUDIT-V3.md](../audit/SPEC-AUDIT-V3.md) ; recette : [audit/RECETTE.md](../audit/RECETTE.md) ; ADR 0025 (validée le 08/10/2026 avec les défauts du § 6 de la spécification).
 
 - **AUD-01** — Droits par les modules existants `audit`, `ecarts`, `plan_audit` ; cycle et référentiels en `audit:administrer` ; lecture seule réelle.
 - **AUD-02** — Cycle de certification en table : années, libellés, année N, dates des audits, échéance de clôture (report sur les écarts concernés), ajout et suppression d'une année vide.
@@ -226,7 +226,7 @@ Spécification détaillée : [audit/SPEC-AUDIT-V3.md](audit/SPEC-AUDIT-V3.md) ; 
 
 ## 9. Gestion des risques — EBIOS RM et ISO/IEC 27005  *(lot U3 de l'unification)*
 
-Spécification : [risques/SPEC-RISQUES-V3.md](risques/SPEC-RISQUES-V3.md) ; ADR 0027. Démarches *inspirées* des méthodes, sans conformité revendiquée.
+Spécification : [risques/SPEC-RISQUES-V3.md](../risques/SPEC-RISQUES-V3.md) ; ADR 0027. Démarches *inspirées* des méthodes, sans conformité revendiquée.
 
 - **RISK-01** — Étude EBIOS RM (`risk_study`) : objet, périmètre, participants, période, socle de sécurité.
 - **RISK-02** — Atelier 1 : valeurs métier, biens supports, événements redoutés gradués (gravité 1 à 4).

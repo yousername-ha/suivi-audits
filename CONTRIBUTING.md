@@ -22,7 +22,7 @@ Format : `type(portée): résumé à l'impératif, en français`.
 Portées usuelles : `api`, `web`, `shared`, `legacy`, `import`, `auth`, `docker`, `ci`, `docs`.
 Exemple : `feat(api): reprise du module findings en tables normalisées`.
 
-Un commit ou une PR qui traite une exigence de [docs/BACKLOG-FONCTIONNEL.md](docs/BACKLOG-FONCTIONNEL.md) cite son identifiant, dans le résumé ou en pied de message : `feat(crrc): catalogue des offres (CRRC-01)`, ou `Exigences : CRRC-03, CRRC-04`.
+Un commit ou une PR qui traite une exigence de [docs/archive/BACKLOG-FONCTIONNEL.md](docs/archive/BACKLOG-FONCTIONNEL.md) cite son identifiant, dans le résumé ou en pied de message : `feat(crrc): catalogue des offres (CRRC-01)`, ou `Exigences : CRRC-03, CRRC-04`.
 
 ## Versions et publication
 - Versionnage sémantique `MAJEUR.MINEUR.CORRECTIF`. Phase 0 : `3.0.0`.

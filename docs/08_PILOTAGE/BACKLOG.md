@@ -24,13 +24,13 @@ reprises essentielles, travaux partiels, dette, optimisations, secondaire.
 
 Estimations : **NON ESTIMÉES**, absence de base chiffrable ; pas de charge ou
 délai inventés. Backlogs métier détaillés A–L et CRRC/INV/INC restent dans
-[BACKLOG-EVOLUTION](../BACKLOG-EVOLUTION-SMSI-GRC.md) et
-[BACKLOG-FONCTIONNEL](../BACKLOG-FONCTIONNEL.md).
+[BACKLOG-EVOLUTION](../archive/BACKLOG-EVOLUTION-SMSI-GRC.md) et
+[BACKLOG-FONCTIONNEL](../archive/BACKLOG-FONCTIONNEL.md).
 
 Les risques SEC-001 à SEC-006, BUG et cas TEST sont des registres associés,
 pas des tâches implicitement autorisées sur la production. DOC-001 termine
 localement cette mission ; aucun push GitHub nécessaire à l’analyse.
 
 DOC-005 — **P2, CONTRÔLES LOCAUX VALIDÉS** : nettoyage demandé du dépôt ;
-[diagnostic](../diagnostics/2026-10-11-nettoyage-depot.md), conservation des sources,
+[diagnostic](../archive/diagnostics/2026-10-11-nettoyage-depot.md), conservation des sources,
 liens et contrôles avant publication dans la PR #12, sans fusion.
