@@ -2,7 +2,7 @@ import { Badge, Button, Card, Group, Menu, Modal, Select, Stack, Table, Text, Te
 import { GRC_LABELS, GRC_MODULES, type GrcKind, type GrcObject, type PilotageRecord } from '@suivi/shared';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { get } from '../api';
+import { download, get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { Filtres } from '../components/Filtres';
 import { useCan } from '../session';
@@ -195,6 +195,19 @@ export function BusinessRegistry({
               can('ecarts', 'modifier') && (
                 <Menu.Item onClick={() => onDecision(o, 'action_create')}>Créer une action suivie</Menu.Item>
               )}
+            {kind === 'management_review' && can('pilotage', 'exporter') && (
+              <>
+                <Menu.Item onClick={() => download(`/api/grc/${smsi}/pilotage/revue/${o.id}/export?format=docx`)}>
+                  Compte rendu (Word)
+                </Menu.Item>
+                <Menu.Item onClick={() => download(`/api/grc/${smsi}/pilotage/revue/${o.id}/export?format=pptx`)}>
+                  Support de présentation (PowerPoint)
+                </Menu.Item>
+                <Menu.Item onClick={() => download(`/api/grc/${smsi}/pilotage/revue/${o.id}/export?format=xlsx`)}>
+                  Classeur (Excel)
+                </Menu.Item>
+              </>
+            )}
             <Menu.Item onClick={() => setHistory(o)}>Décisions et réalisations</Menu.Item>
           </Menu.Dropdown>
         </Menu>
