@@ -29,9 +29,14 @@
       "date": "2026-10-18",
       "etape": "en-developpement",
       "motif": "v005 : visuels des sept périodicités, fenêtres de réalisation et lignes selon état. Aucun ZIP ni BAT selon nouvelle consigne."
+    },
+    {
+      "date": "2026-10-18",
+      "etape": "en-developpement",
+      "motif": "v006 : visuels custom et calendriers iCal, flux scolaire vérifié, source jours fériés distincte et conflit de fenêtre. Aucun import métier."
     }
   ],
   "numero": "018",
-  "candidate": "maquettes/v005-periodicites-fenetres",
+  "candidate": "maquettes/v006-recurrence-calendriers-ical",
   "modeLivraison": "visuels-uniquement-sauf-demande-explicite"
 }

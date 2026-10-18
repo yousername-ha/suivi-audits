@@ -1,0 +1,22 @@
+{
+  "url": "https://fr.ftp.opendatasoft.com/openscol/fr-en-calendrier-scolaire/Zone-A-B-C-Corse.ics",
+  "consultation": "2026-10-18",
+  "http": 200,
+  "sha256": "463a94b1a2887da5c4e3da6f39540be86c26bce24e4c0144fe20704b67aebfec",
+  "evenements": 244,
+  "dureesNulles": 5,
+  "debutBrut": "2009-10-26",
+  "finBrute": "2028-07-04",
+  "exempleToussaint": {
+    "debutInclus": "2026-10-17",
+    "finExclusive": "2026-11-02",
+    "zones": [
+      "A",
+      "B",
+      "C",
+      "Corse"
+    ]
+  },
+  "statut": "Source lue ; aucun import de production effectué",
+  "couverture": "À contrôler par zone et année ; la date maximale ne prouve pas une couverture complète"
+}

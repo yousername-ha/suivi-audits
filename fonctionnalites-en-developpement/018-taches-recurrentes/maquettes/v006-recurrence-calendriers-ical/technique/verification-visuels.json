@@ -1,0 +1,18 @@
+{
+  "status": "passed",
+  "screenshots": 6,
+  "checks": [
+    "Source scolaire et jours fériés distincts",
+    "244 événements et DTEND exclusif affichés",
+    "Déclaration iCal URL/fichier, aucun import prétendu",
+    "Récurrence custom et intervalle positif",
+    "Règle de report non présélectionnée",
+    "Fenêtre totalement exclue signalée ; report hors fenêtre non appliqué",
+    "Mobile sans débordement"
+  ],
+  "limits": [
+    "Proposition visuelle sans persistance",
+    "Import iCal et moteur de report à intégrer au backend existant",
+    "Politique par défaut en attente de réponse"
+  ]
+}

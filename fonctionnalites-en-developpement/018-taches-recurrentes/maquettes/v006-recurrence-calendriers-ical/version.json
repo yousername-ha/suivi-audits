@@ -1,0 +1,13 @@
+{
+  "id": "v006-recurrence-calendriers-ical",
+  "statut": "a-valider",
+  "type": "proposition-visuelle",
+  "date": "2026-10-18",
+  "sourceCommit": "8bebd9c6af67007010131805a4f60aa6dfe24559",
+  "versionPrecedente": "v005-periodicites-fenetres",
+  "validationUtilisateur": null,
+  "livraison": "images-uniquement",
+  "references": [
+    "references/style-08"
+  ]
+}

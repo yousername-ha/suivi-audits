@@ -36,3 +36,7 @@ Pastilles carrées élargies, ligne guide par tâche et défilement des échéan
 **Nouvelle consigne utilisateur : ne plus créer de ZIP ni de BAT sans demande explicite.** Les anciens téléchargements restent historiques.
 
 [Périodicités et fenêtres de réalisation](maquettes/v005-periodicites-fenetres/README.md) · [Cinq visuels](maquettes/v005-periodicites-fenetres/images/). Ligne colorée selon l’état courant, fenêtre configurable et exemple mensuel ouvert sur les 14 derniers jours. À valider ; aucune intégration métier annoncée.
+
+## Dernière proposition — v006 : récurrence custom et iCal
+
+[Six visuels et principes](maquettes/v006-recurrence-calendriers-ical/README.md) · [Images](maquettes/v006-recurrence-calendriers-ical/images/). Récurrence personnalisée, calendriers scolaires/jours fériés dans la configuration et conflits d’exclusions. Aucun ZIP ni BAT ; règle de report à confirmer.
