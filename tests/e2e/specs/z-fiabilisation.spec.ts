@@ -62,8 +62,10 @@ test('A5 : le guide est consultable et sa recherche filtre les articles', async 
   await page.goto('/');
   await page.getByRole('link', { name: 'Guide d’utilisation' }).click();
   await expect(page.getByRole('heading', { name: 'Guide d’utilisation', exact: true })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Fournisseurs', exact: true })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Incidents et PCA/PRA', exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Pilotage : qualité, sécurité et référentiels', exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Exports Excel', exact: true })).toBeVisible();
   await page.getByLabel('Rechercher dans le guide').fill('cartographie');
   await expect(page.getByRole('heading', { name: 'Cartographie et fiche de sélection' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Comptes, groupes et rôles' })).toHaveCount(0);
