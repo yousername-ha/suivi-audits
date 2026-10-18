@@ -13,7 +13,7 @@ Ce guide part d'un serveur vide et ne suppose aucune connaissance de Linux ni de
 > installation v2 en service sans sauvegarde et recette de la montée de version.
 > La validation cloud de l’intégration utilise une base PostgreSQL dédiée et Caddy avec
 > les fichiers compilés. Elle ne remplace pas les tests des images de production,
-> de restauration et de signatures. Voir le [rapport d’intégration](diagnostics/2026-10-09-integration-sauge.md) et la [recette de fiabilisation](diagnostics/2026-10-09-fiabilisation.md) (105 scénarios officiels réussis).
+> de restauration et de signatures. Voir le [rapport d’intégration](archive/diagnostics/2026-10-09-integration-sauge.md) et la [recette de fiabilisation](archive/diagnostics/2026-10-09-fiabilisation.md) (105 scénarios officiels réussis).
 
 **Comment lire ce guide**
 - Chaque cadre gris contient **une commande**. Copiez-la, collez-la dans le terminal du serveur (clic droit dans PowerShell), puis appuyez sur **Entrée**.

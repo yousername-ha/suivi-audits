@@ -206,15 +206,15 @@ const changedOld = [
   'README.md',
   'CHANGELOG.md',
   'docs/ARCHITECTURE.md',
-  'docs/ARCHITECTURE-EVOLUTION.md',
+  'docs/archive/ARCHITECTURE-EVOLUTION.md',
   'docs/ROADMAP.md',
-  'docs/REPRISE-SOCLE-LEGACY.md',
+  'docs/archive/REPRISE-SOCLE-LEGACY.md',
   'docs/PILOTAGE-SMSI.md',
   'docs/INSTALLATION.md',
   'docs/cartographie/00-LISEZ-MOI.md',
   'docs/cartographie/maquette/README.md',
   'docs/cartographie/reference-beta-legacy/CONTRAT-S-MAPS.md',
-  'docs/diagnostics/2026-10-11-nettoyage-depot.md',
+  'docs/archive/diagnostics/2026-10-11-nettoyage-depot.md',
 ];
 let localLinks = 0;
 for (const p of [...required, ...changedOld]) {

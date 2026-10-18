@@ -2,7 +2,7 @@
 
 Date : 2026-10-11 (Europe/Paris). Branche `claude-suivi-smsi`. Constat de départ : [audit L1](../unification/L1-AUDIT-ET-CORRESPONDANCE.md),
 § 6. Décisions : [ADR 0027](../adr/0027-risques-ebios-rm-iso27005.md). Exigences : `RISK-01` à `RISK-10`
-([backlog](../BACKLOG-FONCTIONNEL.md), section 9).
+([backlog](../archive/BACKLOG-FONCTIONNEL.md), section 9).
 
 > **Aucune conformité n'est revendiquée.** L'application outille une démarche *inspirée* d'EBIOS Risk Manager (guide
 > de l'ANSSI) et un processus *inspiré* de l'ISO/IEC 27005. Les libellés reprennent le vocabulaire courant des

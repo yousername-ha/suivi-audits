@@ -1,6 +1,6 @@
 # Cartographie du SMSI — spécification pour la nouvelle application (v3)
 
-> Exigences `CARTO-01` à `CARTO-14`, à citer dans les commits et les PR, comme celles de `docs/BACKLOG-FONCTIONNEL.md`.
+> Exigences `CARTO-01` à `CARTO-14`, à citer dans les commits et les PR, comme celles de `docs/archive/BACKLOG-FONCTIONNEL.md`.
 > Référence de comportement : le module bêta testé dans l'outil historique (`reference-beta-legacy/`),
 > validé par le RSSI le 08/10/2026. Référence visuelle : `maquette/images/01` à `03`.
 > La maquette (`maquette/docs/`) reste la source pour l'intention fonctionnelle ; **ce document l'emporte**

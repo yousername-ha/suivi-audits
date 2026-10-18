@@ -1,5 +1,18 @@
 # Index documentaire et reprise
 
+## Jeu court à lire d'abord (18/10/2026)
+
+1. [README](../README.md), [PRODUCT](PRODUCT.md), [REFERENTIALS](REFERENTIALS.md) : ce que fait la plateforme.
+2. [ARCHITECTURE](ARCHITECTURE.md) et [DAT](03_ARCHITECTURE/DAT.md) : comment elle est construite ; [ADR](adr/README.md) et
+   [DECISIONS](DECISIONS.md) : pourquoi.
+3. [ROADMAP](ROADMAP.md), [PROJECT_STATUS](../PROJECT_STATUS.md), [CHANGELOG](../CHANGELOG.md) : où on en est et la suite.
+4. [INSTALLATION](INSTALLATION.md) (rejoué en CI), [CONTRIBUTING](../CONTRIBUTING.md), [AGENTS](../AGENTS.md), [CLAUDE](../CLAUDE.md).
+
+Le reste (numérotées 01 à 08) sont les registres et la recette, **datés** : à lire avec le journal des modifications. Les
+documents de travail terminés (diagnostics, refonte GRC, backlogs de reprise, spécifications d'exploitation, journal de
+reprise) sont dans [archive](archive/README.md), rien n'a été supprimé.
+
+
 2026-10-12T17:00:00+02:00 (Europe/Paris). Référence des registres : `70ab3f09c4937d8445b8c02402956cd835f380d3` (`main`, version 3.1.0 + recette automatisée).
 Lire d’abord [AGENTS](../AGENTS.md), [HANDOVER](../HANDOVER.md) et
 [PROJECT_STATUS](../PROJECT_STATUS.md).
@@ -26,7 +39,7 @@ Source de référence des chiffres/IDs/états :
 - [L1 — audit et correspondance ancien / nouveau](unification/L1-AUDIT-ET-CORRESPONDANCE.md)
 - [Plan d'évolution](unification/PLAN-EVOLUTION.md)
 - [Cadrage du module Qualité ISO 9001](unification/CADRAGE-MODULE-QUALITE-9001.md) (réflexion, aucun code)
-- [Refonte GRC : configuration transversale et multiméthode](refonte-grc/README.md) ([ADR 0038](adr/0038-socle-de-configuration-grc-transversal.md))
+- [Refonte GRC : configuration transversale et multiméthode](archive/refonte-grc/README.md) ([ADR 0038](adr/0038-socle-de-configuration-grc-transversal.md))
 
 ## 01_REPRISE_IA
 
@@ -114,15 +127,15 @@ chiffres. Il ne valide ni contenu métier, ni site externe, ni acceptation humai
 
 - [Installation rejouée en CI](INSTALLATION.md), [Contribuer](../CONTRIBUTING.md),
   [CHANGELOG racine](../CHANGELOG.md).
-- [ADR](adr/README.md), [diagnostics datés](diagnostics/),
+- [ADR](adr/README.md), [diagnostics datés](archive/diagnostics),
   [source v2 archivée](../archives/README.md).
 - [Format legacy](legacy/LEGACY-FORMAT.md), [mapping](legacy/MAPPING-LEGACY.md),
-  [import](legacy/IMPORT-LEGACY.md), [inventaire initial](REPRISE-SOCLE-LEGACY.md).
+  [import](legacy/IMPORT-LEGACY.md), [inventaire initial](archive/REPRISE-SOCLE-LEGACY.md).
 - [Archive de l'ancienne interface](archive/ancienne-interface/README.md) (captures, correspondance avec la nouvelle interface).
 - [Pilotage métier](PILOTAGE.md), [lots G/H/K/début E](LOT-G-H-K-DEBUT-E.md),
-  [lot C](LOT-C-TACHES-RISQUES-CARTOGRAPHIE.md), [sources officielles connues](sources-lot-c.json).
-- [Feuille de route historique](ROADMAP.md), [backlog A–L](BACKLOG-EVOLUTION-SMSI-GRC.md),
-  [backlog détaillé](BACKLOG-FONCTIONNEL.md), [cartographie](cartographie/00-LISEZ-MOI.md).
+  [lot C](archive/LOT-C-TACHES-RISQUES-CARTOGRAPHIE.md), [sources officielles connues](sources-lot-c.json).
+- [Feuille de route historique](ROADMAP.md), [backlog A–L](archive/BACKLOG-EVOLUTION-SMSI-GRC.md),
+  [backlog détaillé](archive/BACKLOG-FONCTIONNEL.md), [cartographie](cartographie/00-LISEZ-MOI.md).
 
 Les chemins sources sont cliquables depuis les matrices. Les IDs FCT/BUG/SEC/
 OPT/TEST/DEV/MIG/DOC ne changent pas sans décision tracée. Lors d’une session,
@@ -130,6 +143,6 @@ actualiser les lignes touchées et HANDOVER sans réécrire inutilement tout le 
 
 ## Entretien du dépôt
 
-- [Nettoyage du 11 octobre](diagnostics/2026-10-11-nettoyage-depot.md) : éléments
+- [Nettoyage du 11 octobre](archive/diagnostics/2026-10-11-nettoyage-depot.md) : éléments
   retirés, usages encore nécessaires et limites.
 - [Contrôles du nettoyage](05_RECETTE/preuves/2026-10-11-nettoyage.json).

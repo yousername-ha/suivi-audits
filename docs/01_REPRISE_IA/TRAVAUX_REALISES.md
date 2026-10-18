@@ -17,6 +17,6 @@ Référence applicative analysée : `c704fa6e6d6d516db75f963db8dd5d2049ab42c8`. 
 | Optimisations CI                                         | c704fa6                                                  | Trivy 6 → 3 et concurrence CodeQL ; CI/CodeQL verts en tentative 1.                     |
 | Audit/transmission présent                               | modifications documentaires locales                      | 360 tests sûrs, archive, API et contrôles documentaires ; aucune opération production.  |
 
-Sources historiques détaillées conservées dans [diagnostics](../diagnostics/)
+Sources historiques détaillées conservées dans [diagnostics](../archive/diagnostics)
 et [CHANGELOG](../../CHANGELOG.md). Un titre de commit ne suffit pas à
 prouver un correctif : voir [bugs et tests](../04_QUALITE/REGISTRE_BUGS.md).

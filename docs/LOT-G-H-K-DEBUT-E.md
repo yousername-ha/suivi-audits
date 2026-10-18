@@ -2,7 +2,7 @@
 
 ## Périmètre
 
-Le diagnostic utilisateur et technique est dans [le diagnostic préalable](diagnostics/2026-10-10-pilotage-ghke.md). Le guide métier est [PILOTAGE.md](PILOTAGE.md). D, J, I et F restent explicitement hors de cette livraison ; le lot E est commencé, pas déclaré entièrement livré.
+Le diagnostic utilisateur et technique est dans [le diagnostic préalable](archive/diagnostics/2026-10-10-pilotage-ghke.md). Le guide métier est [PILOTAGE.md](PILOTAGE.md). D, J, I et F restent explicitement hors de cette livraison ; le lot E est commencé, pas déclaré entièrement livré.
 
 Le menu reprend les familles historiques et la charte Sauge. Les onze onglets techniques et la création de SMSI disparaissent du parcours normal. Les écrans affichent une rubrique métier à la fois, des formulaires français et des décisions explicites. Sur téléphone, les registres deviennent des fiches lisibles avec leurs commandes accessibles. Les UUID et noms d’attributs ne servent plus de libellés de saisie courante.
 

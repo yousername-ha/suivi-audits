@@ -637,7 +637,7 @@
       "historical_source": "archives/v2-source.zip → app/public/index.html",
       "implementation": [
         "app/public/index.html",
-        "apps/api/src/routes/legacy.ts",
+        "apps/api/src/routes/suivi.ts",
         "packages/shared/src/audit/index.ts"
       ],
       "tests": [
@@ -661,7 +661,7 @@
       "module": "plan_audit",
       "historical_key": "plan",
       "historical_source": "archives/v2-source.zip → app/public/index.html",
-      "implementation": ["app/public/index.html", "apps/api/src/routes/legacy.ts"],
+      "implementation": ["app/public/index.html", "apps/api/src/routes/suivi.ts"],
       "tests": [],
       "route": "/legacy → Plan d’audit",
       "verified_scope": "Planning historique conservé ; registre natif audit ne prouve pas la reprise des journées/créneaux.",
@@ -697,7 +697,7 @@
       "module": "fournisseurs",
       "historical_key": "suppliers / supEvals",
       "historical_source": "archives/v2-source.zip → app/public/index.html",
-      "implementation": ["app/public/index.html", "apps/api/src/routes/legacy.ts"],
+      "implementation": ["app/public/index.html", "apps/api/src/routes/suivi.ts"],
       "tests": [],
       "route": "/legacy → Fournisseurs",
       "verified_scope": "Sources conservées, pas de nouveau parcours fournisseur Sauge identifié.",
@@ -733,7 +733,7 @@
       "module": "crrc",
       "historical_key": "crrc",
       "historical_source": "archives/v2-source.zip → app/public/index.html",
-      "implementation": ["app/public/index.html", "apps/api/src/routes/legacy.ts"],
+      "implementation": ["app/public/index.html", "apps/api/src/routes/suivi.ts"],
       "tests": [],
       "route": "/legacy → CRRC",
       "verified_scope": "Code historique conservé ; parcours CRRC complet non rejoué.",
@@ -751,7 +751,7 @@
       "module": "investissements",
       "historical_key": "invest",
       "historical_source": "archives/v2-source.zip → app/public/index.html",
-      "implementation": ["app/public/index.html", "apps/api/src/routes/legacy.ts"],
+      "implementation": ["app/public/index.html", "apps/api/src/routes/suivi.ts"],
       "tests": [],
       "route": "/legacy → Investissements",
       "verified_scope": "Registre et code d’export conservés ; INV-01 et INV-02 ne sont pas revendiqués livrés.",
@@ -769,7 +769,7 @@
       "module": "incidents",
       "historical_key": "incidents / crisis",
       "historical_source": "archives/v2-source.zip → app/public/index.html",
-      "implementation": ["app/public/index.html", "apps/api/src/routes/legacy.ts"],
+      "implementation": ["app/public/index.html", "apps/api/src/routes/suivi.ts"],
       "tests": [],
       "route": "/legacy → Incidents / crise",
       "verified_scope": "Début E ne remplace pas le registre d’incidents ni la main courante historique.",
@@ -787,7 +787,7 @@
       "module": "pilotage",
       "historical_key": "accessReviews",
       "historical_source": "archives/v2-source.zip → app/public/index.html",
-      "implementation": ["app/public/index.html", "apps/api/src/routes/legacy.ts"],
+      "implementation": ["app/public/index.html", "apps/api/src/routes/suivi.ts"],
       "tests": [],
       "route": "/legacy → Pilotage",
       "verified_scope": "Distinct de la revue technique RBAC déjà reprise (FCT-002).",
@@ -824,9 +824,9 @@
       "historical_key": "plans",
       "historical_source": "archives/v2-source.zip → app/public/index.html",
       "implementation": [
-        "apps/web/src/pilotage/PlansHistoriques.tsx",
+        "apps/web/src/pilotage/Plans.tsx",
         "packages/shared/src/tableau-de-bord.ts",
-        "apps/api/src/routes/legacy.ts"
+        "apps/api/src/routes/suivi.ts"
       ],
       "tests": ["packages/shared/test/tableau-de-bord.test.ts", "tests/e2e/specs/zzzz-pilotage.spec.ts"],
       "route": "/pilotage/audits ; /pilotage/exercices ; /legacy → Plans",
@@ -1250,7 +1250,7 @@
       "prereq": "Accès aux statistiques et fenêtre de référence représentative.",
       "acceptance": "Mesures datées, coûts runner et fréquence ; aucune réduction des contrôles sans analyse.",
       "tests": "Comparaison non destructive des données Actions.",
-      "proof": "docs/diagnostics/2026-10-10-optimisation-actions.md"
+      "proof": "docs/archive/diagnostics/2026-10-10-optimisation-actions.md"
     },
     {
       "id": "OPT-007",

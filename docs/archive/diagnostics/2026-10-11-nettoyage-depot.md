@@ -75,7 +75,7 @@ la cause n’est pas attribuée au nettoyage et reste à confirmer. Les logs bru
 restent privés hors Git. [Run concerné](https://github.com/yousername-ha/suivi-audits/actions/runs/38093984247).
 
 Les contrôles finaux et leurs codes sont consignés dans
-[le reçu de nettoyage](../05_RECETTE/preuves/2026-10-11-nettoyage.json).
+[le reçu de nettoyage](../../05_RECETTE/preuves/2026-10-11-nettoyage.json).
 Le vérificateur documentaire est étendu aux documents touchés par ce nettoyage.
 Les suites API, recettes Docker et tests destructifs ne sont pas exécutés
 localement. Les workflows de la PR assurent les contrôles isolés complémentaires.

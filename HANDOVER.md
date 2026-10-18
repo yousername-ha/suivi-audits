@@ -128,7 +128,7 @@ habituels. Aucun déploiement ni fusion.
 
 Nettoyage du 11 octobre : ancien prompt et rapport ponctuel retirés ; consignes
 Claude regroupées autour d’AGENTS, exclusions de dossier absent supprimées,
-renvois historiques clarifiés. Voir [diagnostic](docs/diagnostics/2026-10-11-nettoyage-depot.md)
+renvois historiques clarifiés. Voir [diagnostic](docs/archive/diagnostics/2026-10-11-nettoyage-depot.md)
 et [preuves](docs/05_RECETTE/preuves/2026-10-11-nettoyage.json). Les sources
 applicatives, données de départ, archives et références de test sont préservées.
 

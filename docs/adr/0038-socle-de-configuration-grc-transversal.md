@@ -2,7 +2,7 @@
 
 **Statut** : proposée le 14/10/2026. Étudie et complète les [ADR 0021](0021-configuration-environnement-versionnee.md) (configuration versionnée),
 [0023](0023-smsi-referentiels-taches-risques.md) et [0027](0027-risques-ebios-rm-iso27005.md).
-Analyse détaillée : [`docs/refonte-grc/`](../refonte-grc/README.md).
+Analyse détaillée : [`docs/archive/refonte-grc/`](../archive/refonte-grc/README.md).
 
 ## Contexte
 
@@ -36,5 +36,5 @@ sans valeur administrable codée en dur, sans dupliquer les registres et sans ca
 
 - Les échelles deviennent réutilisables et auditables ; modifier une échelle crée une version et n'altère aucun consommateur.
 - L'interface d'administration, les sélecteurs mutualisés, la liaison d'analyse, la migration explicite et les ateliers EBIOS sur
-  catalogue sont des lots suivants ([plan](../refonte-grc/05-PLAN-IMPLEMENTATION.md)).
-- Points à arbitrer : [plan](../refonte-grc/05-PLAN-IMPLEMENTATION.md) § 3.
+  catalogue sont des lots suivants ([plan](../archive/refonte-grc/05-PLAN-IMPLEMENTATION.md)).
+- Points à arbitrer : [plan](../archive/refonte-grc/05-PLAN-IMPLEMENTATION.md) § 3.

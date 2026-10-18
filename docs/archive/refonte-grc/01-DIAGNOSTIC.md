@@ -1,9 +1,9 @@
 # Diagnostic de l'architecture actuelle (module de risques et configuration)
 
 Statut : audit du 14/10/2026 sur la branche `claude-suivi-smsi` (v3.2.0 en préparation). Méthode : lecture du code
-(`packages/shared`, `apps/api`, `apps/web`, migrations 001 à 020), de l'[ADR 0021](../adr/0021-configuration-environnement-versionnee.md),
-[0022](../adr/0022-evaluations-ia-versionnees.md), [0023](../adr/0023-smsi-referentiels-taches-risques.md),
-[0027](../adr/0027-risques-ebios-rm-iso27005.md), de la maquette EBIOS RM de la branche `legacy` et de l'archive d'export
+(`packages/shared`, `apps/api`, `apps/web`, migrations 001 à 020), de l'[ADR 0021](../../adr/0021-configuration-environnement-versionnee.md),
+[0022](../../adr/0022-evaluations-ia-versionnees.md), [0023](../../adr/0023-smsi-referentiels-taches-risques.md),
+[0027](../../adr/0027-risques-ebios-rm-iso27005.md), de la maquette EBIOS RM de la branche `legacy` et de l'archive d'export
 ([analyse](02-ANALYSE-EXPORT-ARM.md)). Les chemins sont relatifs à la racine du dépôt. Ce qui n'a pas été contrôlé est
 signalé « non vérifié ».
 

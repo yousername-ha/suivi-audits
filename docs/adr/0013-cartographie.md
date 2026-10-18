@@ -3,7 +3,7 @@
 **Statut** : acceptée (chantier « Cartographie », exigences `CARTO-01` à `CARTO-14`).
 Spécification : [`docs/cartographie/SPEC-CARTOGRAPHIE-V3.md`](../cartographie/SPEC-CARTOGRAPHIE-V3.md) (elle l'emporte sur la
 maquette) ; recette : [`RECETTE.md`](../cartographie/RECETTE.md) ; référence de comportement : le module bêta de l'outil
-historique validé le 08/10/2026 ([`reference-beta-legacy/`](../cartographie/reference-beta-legacy/)).
+historique validé le 08/10/2026 ([`reference-beta-legacy/`](../cartographie/reference-beta-legacy)).
 
 ## Contexte
 Le RSSI veut deux cartes du SMSI tenues à jour par les données de la plateforme, pas des images : la **vue contexte**

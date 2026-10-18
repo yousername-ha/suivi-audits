@@ -1,5 +1,21 @@
 # État synthétique du projet
 
+## État au 18/10/2026
+
+| Sujet | État réel |
+| --- | --- |
+| Branches | `main` (version Docker unique), `claude-suivi-smsi` (travail, alignée sur `main`), `legacy` (outil autonome) ; archive testable de l'ancien outil sur `archive/outil-legacy-autonome` |
+| Dernière version publiée | `v3.4.0`. Non étiquetés : migrations `022` à `027` (hiérarchie, tables des modules, couverture), exports de revue et Excel, retrait de `/legacy` |
+| Modules | Tous en tables PostgreSQL ; `app_state` ne garde que la version et le verrou ([ADR 0040](docs/adr/0040-sortie-du-json-plat-modules-en-tables.md)) |
+| Ancien outil | Écran `/legacy` retiré ([ADR 0042](docs/adr/0042-retrait-de-lecran-legacy.md)) ; import et export JSON, versions de l'état conservés |
+| Tests (local, 18/10) | shared 492, ui 166, web 27, API 526 (PostgreSQL 18) ; Playwright complet : 175 à 177 réussis, instabilité connue sur la déconnexion à deux onglets |
+| CI GitHub | six contrôles par PR (qualité, tests, CodeQL, guide d'installation, montée de version, pile complète) ; dernière PR fusionnée : #43 |
+| Non fait | Recette du RSSI sur son serveur ; étiquette de version (poussée par le RSSI) |
+
+Lire aussi : [PRODUCT](docs/PRODUCT.md), [REFERENTIALS](docs/REFERENTIALS.md), [DECISIONS](docs/DECISIONS.md), [ROADMAP](docs/ROADMAP.md).
+Les sections suivantes sont des instantanés datés des 11 et 12 octobre.
+
+
 2026-10-11T04:04:46+02:00 (Europe/Paris). Source applicative : `c704fa6e6d6d516db75f963db8dd5d2049ab42c8`, version 3.0.2,
 branche `feature/gpt6-evolution-smsi-grc`. Lire [HANDOVER](HANDOVER.md).
 
@@ -42,7 +58,7 @@ Prochaine action : TEST-041 sur le serveur réellement utilisé, puis TEST-042
 [rapport](docs/05_RECETTE/RAPPORT_RECETTE.md). Les chiffres décrivent ces registres,
 pas toutes les fonctions nommées du HTML ni toutes les exigences ISO/HDS.
 
-Entretien du dépôt : voir [nettoyage](docs/diagnostics/2026-10-11-nettoyage-depot.md).
+Entretien du dépôt : voir [nettoyage](docs/archive/diagnostics/2026-10-11-nettoyage-depot.md).
 Les chiffres de l’audit initial restent distincts des contrôles de cet entretien.
 
 CI documentaire 7cc35dc : échec sur le protocole de retour arrière simulé

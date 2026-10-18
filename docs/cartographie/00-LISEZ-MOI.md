@@ -27,4 +27,4 @@ la galerie Sauge sont des références historiques, pas une nouvelle acceptation
 
 Aucune donnée réelle dans les exemples ; ne pas modifier l’outil en service pour
 rejouer un script historique. La liste des éléments retirés et des preuves de
-conservation est dans [le diagnostic de nettoyage](../diagnostics/2026-10-11-nettoyage-depot.md).
+conservation est dans [le diagnostic de nettoyage](../archive/diagnostics/2026-10-11-nettoyage-depot.md).

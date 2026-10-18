@@ -1,5 +1,28 @@
 # Feuille de route
 
+## État courant et suite (18/10/2026)
+
+**Fait depuis la 3.4.0 (hors étiquette)** : hiérarchie des périmètres et héritage des référentiels (H1), tous les modules en
+tables (H2, migrations 022 à 027), couverture par exigence avec états et versions (H3), exports de revue de direction en
+Word, PowerPoint et Excel (H4), exports Excel par rubrique, retrait de l'écran `/legacy` ([ADR 0042](adr/0042-retrait-de-lecran-legacy.md)),
+consolidation documentaire (H5, ci-dessous).
+
+**Reste à faire, par ordre de priorité**
+
+1. Recette de l'ensemble sur le serveur du RSSI, puis étiquette de version (par le RSSI) portant les migrations 022 à 027.
+2. Reprise des exports encore absents : pronostic d'audit, clausier fournisseurs, GAP applications (ReCyF est couvert par la
+   page Couverture). Exports de comité à la charte du modèle interne (COPIL).
+3. Normalisation des sous-structures encore en JSON (étapes du plan d'audit, valeurs d'indicateurs, tâches des écarts)
+   dans des tables liées ([ADR 0040](adr/0040-sortie-du-json-plat-modules-en-tables.md)).
+4. Décision à prendre : retirer l'import et l'export au format historique, ou les garder comme outil de sauvegarde ;
+   retirer ou non `app/public/index.html` (référence de la CI et des tests de parité).
+5. Entretien : mise à jour de la pile (actions GitHub, versions majeures, Node 26), module Qualité ISO 9001
+   ([cadrage](unification/CADRAGE-MODULE-QUALITE-9001.md)).
+6. Stabiliser le test Playwright de déconnexion à deux onglets (échecs intermittents en CI, non reproduits en isolation).
+
+Les phases ci-dessous sont le plan historique.
+
+
 > Mise en perspective — 11 octobre 2026 : Les phases ci-dessous sont le plan historique, distinct des livraisons A–L. État courant et exclusions : [PROJECT_STATUS](../PROJECT_STATUS.md) et [backlog de reprise](08_PILOTAGE/BACKLOG.md). B2/E complets et toutes les familles v2 ne sont pas clôturés.
 
 
@@ -7,11 +30,11 @@ L'outil historique (fichier unique) est remplacé **module par module** par une 
 
 Chaque phase est livrée par une ou plusieurs pull requests, avec une version publiée (`vX.Y.Z`), et met à jour `docs/INSTALLATION.md` si l'installation ou l'exploitation change.
 
-Les exigences fonctionnelles détaillées sont dans [BACKLOG-FONCTIONNEL.md](BACKLOG-FONCTIONNEL.md). Leur identifiant (`CRRC-01`, `INV-02`, `INC-03`…) est cité dans chaque commit et chaque PR qui les traite.
+Les exigences fonctionnelles détaillées sont dans [BACKLOG-FONCTIONNEL.md](archive/BACKLOG-FONCTIONNEL.md). Leur identifiant (`CRRC-01`, `INV-02`, `INC-03`…) est cité dans chaque commit et chaque PR qui les traite.
 
 **Critères communs à chaque module livré** (backlog, « Critères d'acceptation communs ») : charte graphique et adaptation à tous les écrans (phase 0, 9 ter et 9 quater) ; droits RBAC déclarés pour le module (phase 0, 9 bis) ; reprise des données par l'import legacy, documentée dans `MAPPING-LEGACY.md` ; parcours Playwright et captures de référence à 390, 1920 et 3840 px.
 
-La reprise couvre également **tout le socle v2 encore dans l'ancienne interface**, conformément à la clarification utilisateur du 9 octobre 2026. L'[inventaire de reprise](REPRISE-SOCLE-LEGACY.md) établit la correspondance entre ces familles et le [backlog d'évolution A–L](BACKLOG-EVOLUTION-SMSI-GRC.md). Leur archivage ne clôture pas leur migration ; chaque parcours reste opérationnel jusqu'à la recette de son remplacement Sauge.
+La reprise couvre également **tout le socle v2 encore dans l'ancienne interface**, conformément à la clarification utilisateur du 9 octobre 2026. L'[inventaire de reprise](archive/REPRISE-SOCLE-LEGACY.md) établit la correspondance entre ces familles et le [backlog d'évolution A–L](archive/BACKLOG-EVOLUTION-SMSI-GRC.md). Leur archivage ne clôture pas leur migration ; chaque parcours reste opérationnel jusqu'à la recette de son remplacement Sauge.
 
 ## Phase 0 — Fondations (v3.0.0)
 
@@ -27,7 +50,7 @@ La reprise couvre également **tout le socle v2 encore dans l'ancienne interface
 - [x] **9 bis — Gestion des droits (RBAC)** ([ADR 0010](adr/0010-droits-rbac.md)) : permissions module × action déclarées dans `packages/shared` ; rôles prédéfinis (Administrateur, RSSI, Contributeur, Lecteur, Auditeur externe) et personnalisés ; groupes ; garde `requirePermission` sur chaque route et filtrage du temps réel ; écrans Utilisateurs, Groupes, Rôles, droits effectifs, export de la revue des accès (ISO 27001 A.5.18) ; garde-fous et migration des comptes v2.
 - [x] **9 ter — Charte graphique et page Paramètres** ([ADR 0011](adr/0011-charte-graphique-et-parametres.md)) : `packages/ui` (thème Mantine clair et sombre, WCAG AA, composants communs) ; page Paramètres pleine largeur par sections, chacune avec son enregistrement et sa permission ; captures de référence.
 - [x] **9 quater — Adaptation à tous les écrans** (du téléphone au 4K, [ADR 0012](adr/0012-adaptation-ecrans-et-ecran-mural.md)) : points de rupture et container queries, grilles auto-fill, maître-détail, tableaux configurables, typographie fluide, préférences « Taille d'affichage » et « Densité » enregistrées sur le serveur ; mode **écran mural** (`/mur`) ; tests de largeur utile et d'absence de défilement horizontal.
-- [x] **9 quinquies — Données sur le serveur et mises à jour** ([spécification](specs/EXPL-donnees-et-mises-a-jour.md), [ADR 0014](adr/0014-donnees-sur-le-serveur-et-mises-a-jour.md)) :
+- [x] **9 quinquies — Données sur le serveur et mises à jour** ([spécification](archive/specs/EXPL-donnees-et-mises-a-jour.md), [ADR 0014](adr/0014-donnees-sur-le-serveur-et-mises-a-jour.md)) :
   - `EXPL-01` toutes les données dans `DATA_DIR` (montages bind, plus de volumes nommés), intactes après `docker compose down -v` ;
   - `EXPL-02` passage des volumes nommés vers `DATA_DIR`, anciens volumes conservés jusqu'à confirmation ;
   - `EXPL-03` script `mettre-a-jour.sh` (sauvegarde obligatoire, signature des images, santé, retour arrière automatique, rapport) ;
@@ -50,7 +73,7 @@ Demande du RSSI du 08/10/2026 après le premier essai ([spécification](cartogra
 
 ## Interface — retours du premier essai
 
-- [ ] `UI-01` affichage plus compact par défaut ; `UI-02` graphiques SVG de la synthèse (anneaux, histogrammes), livrés avec la phase 1 ; `UI-03` revue graphique d'ensemble après la phase 1 ([backlog](BACKLOG-FONCTIONNEL.md), section 8).
+- [ ] `UI-01` affichage plus compact par défaut ; `UI-02` graphiques SVG de la synthèse (anneaux, histogrammes), livrés avec la phase 1 ; `UI-03` revue graphique d'ensemble après la phase 1 ([backlog](archive/BACKLOG-FONCTIONNEL.md), section 8).
 
 ## Phase 1 — Audit — cadrage validé
 

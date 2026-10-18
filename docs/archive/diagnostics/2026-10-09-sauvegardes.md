@@ -6,7 +6,7 @@ Branche exclusive : `feature/gpt6-evolution-smsi-grc`. Ce lot prolonge le socle 
 
 Le serveur possédait déjà `backup.sh`, `restore.sh`, des rapports d'exploitation et une planification cron. L'écran Système consultait les rapports ; les paramètres de sauvegarde étaient déclaratifs. L'API isolée ne dispose ni de Docker ni de la phrase secrète : exécuter les commandes depuis une route aurait élargi inutilement ses privilèges.
 
-L'[ADR 0016](../adr/0016-pilotage-sauvegardes.md) conserve les scripts et définit une file SQL exclusive, une CLI interne et un exécutant hôte. La migration 006 est additive ; les migrations précédentes, données métier, modules v2 et jetons Sauge restent inchangés. Aucune dépendance ajoutée.
+L'[ADR 0016](../../adr/0016-pilotage-sauvegardes.md) conserve les scripts et définit une file SQL exclusive, une CLI interne et un exécutant hôte. La migration 006 est additive ; les migrations précédentes, données métier, modules v2 et jetons Sauge restent inchangés. Aucune dépendance ajoutée.
 
 ## Résultat fonctionnel
 
@@ -27,7 +27,7 @@ Les résultats de la recette Playwright et des contrôles GitHub sont présenté
 
 ## Limites et exploitation
 
-L'exploitant doit configurer le poller hôte selon [INSTALLATION, étape 11.5](../INSTALLATION.md). Il interroge la file chaque minute et ne crée pas de sauvegarde sans demande. La destination, la rétention et la phrase secrète restent côté serveur. Le poller n'est pas installé sur un serveur de production par ce lot.
+L'exploitant doit configurer le poller hôte selon [INSTALLATION, étape 11.5](../../INSTALLATION.md). Il interroge la file chaque minute et ne crée pas de sauvegarde sans demande. La destination, la rétention et la phrase secrète restent côté serveur. Le poller n'est pas installé sur un serveur de production par ce lot.
 
 A1b reste à développer : restauration guidée, planification configurable depuis le navigateur et consultation exhaustive des archives produites hors de cette file. La restauration actuelle demeure une procédure serveur confirmée ; SHA-256 ne prouve ni l'authenticité ni la restaurabilité. Le test isolé de restauration reste obligatoire avant ouverture aux utilisateurs.
 
