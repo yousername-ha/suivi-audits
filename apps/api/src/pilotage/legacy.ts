@@ -315,7 +315,7 @@ export class PilotageLegacy {
             : (Object.fromEntries(Object.entries(raw).filter(([k]) => k !== 'id')) as JsonObject)
           : r,
       );
-    const result = await this.g.legacy.legacyWrite(c, data, user, expected);
+    const result = await this.g.legacy.nativeWrite(c, data, user, expected);
     if (result.conflict) throw new HttpError(412, 'La source historique a changé.');
     await this.g.db.audit(
       user,
@@ -363,7 +363,7 @@ export class PilotageLegacy {
       user.username,
     );
     state.data.findings = [...(Array.isArray(state.data.findings) ? state.data.findings : []), raw];
-    const saved = await this.g.legacy.legacyWrite(c, state.data, user, state.version);
+    const saved = await this.g.legacy.nativeWrite(c, state.data, user, state.version);
     if (saved.conflict) throw new HttpError(412, 'Source historique modifiée.');
     await this.g.db.audit(user, ip, 'pilotage.finding.created', String(raw.id), {}, c);
     await this.g.notify(c, `legacy:findings:${raw.id}`, saved.version, smsi, 'ecarts', user.username);

@@ -229,7 +229,7 @@ describe('transition : modules repris et /legacy', () => {
       const page = await w.get('/legacy/');
       expect(page.statusCode).toBe(200);
       expect(page.body).toContain(
-        '"takenOver":[{"key":"maps","label":"Cartographie du SMSI"},{"key":"swots","label":"Analyses SWOT"}]',
+        '"takenOver":[{"key":"invest","label":"Investissements"},{"key":"maps","label":"Cartographie du SMSI"},{"key":"swots","label":"Analyses SWOT"}]',
       );
       expect(page.headers['content-security-policy']).toMatch(/unsafe-inline/);
     } finally {

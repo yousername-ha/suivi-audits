@@ -166,4 +166,32 @@ export class LegacyStore {
     }
     return this.save(c, stored, user, expected, '');
   }
+
+  /** Écriture depuis la nouvelle interface : les modules repris dans des tables sont enregistrés dans leurs tables (par
+      leur correspondance) quand leur valeur change ; seul le reste de l'état va dans app_state. Contrairement à
+      `legacyWrite`, rien n'est refusé : c'est la source de vérité relationnelle qui est modifiée. */
+  async nativeWrite(c: Client, incoming: JsonObject, user: Actor, expected: number | null, note = '') {
+    const stored: JsonObject = { ...incoming };
+    // Conflit détecté avant toute écriture dans les tables des modules repris.
+    const cur = (
+      await c.query<{ version: number; updated_by: string; updated_at: Date }>(
+        'SELECT version, updated_by, updated_at FROM app_state WHERE id=1 FOR UPDATE',
+      )
+    ).rows[0];
+    if (cur && expected != null && expected !== cur.version)
+      return { conflict: true as const, by: cur.updated_by, at: cur.updated_at, version: cur.version };
+    for (const m of this.mappers.values()) {
+      if (m.key in incoming) {
+        const current = await m.read(c);
+        const value = incoming[m.key] as Json;
+        const same =
+          current === undefined
+            ? value === null || (isObject(value) && !Object.keys(value).length)
+            : canonicalJson(value) === canonicalJson(current);
+        if (!same) await m.write(c, value, null);
+      }
+      delete stored[m.key];
+    }
+    return this.save(c, stored, user, expected, note);
+  }
 }

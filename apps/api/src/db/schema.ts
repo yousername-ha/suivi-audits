@@ -6,6 +6,7 @@ import {
   boolean,
   customType,
   date,
+  doublePrecision,
   integer,
   jsonb,
   pgTable,
@@ -756,3 +757,34 @@ export const cfgUsages = pgTable(
   },
   (t) => [primaryKey({ columns: [t.itemId, t.itemVersion, t.consumerKind, t.consumerId, t.consumerVersion] })],
 );
+
+/* Plan d'investissement (ADR 0040) : réglages de l'année de référence et lignes budgétaires. */
+export const investSettings = pgTable('invest_settings', {
+  id: smallint('id').primaryKey().default(1),
+  baseYear: integer('base_year').notNull(),
+  extra: jsonb('extra').notNull().default({}),
+  updatedAt: tstz('updated_at').notNull().defaultNow(),
+});
+
+export const investLines = pgTable('invest_lines', {
+  seq: bigint('seq', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+  position: integer('position').notNull(),
+  id: text('id'),
+  company: text('company').notNull().default(''),
+  priority: text('priority').notNull().default(''),
+  type: text('type').notNull().default(''),
+  description: text('description').notNull().default(''),
+  n0: doublePrecision('n0').notNull().default(0),
+  n1: doublePrecision('n1').notNull().default(0),
+  n2: doublePrecision('n2').notNull().default(0),
+  comment: text('comment').notNull().default(''),
+  alt: text('alt').notNull().default(''),
+  account: text('account').notNull().default(''),
+  perimeter: text('perimeter').notNull().default(''),
+  status: text('status').notNull().default('À qualifier'),
+  nature: text('nature').notNull().default('Abonnement'),
+  renewal: text('renewal').notNull().default(''),
+  notice: integer('notice').notNull().default(60),
+  supplier: text('supplier').notNull().default(''),
+  extra: jsonb('extra').notNull().default({}),
+});

@@ -1,6 +1,7 @@
 /* Reprise du plan d'investissement de l'outil de suivi (clé `invest`) : création, modification, suppression et année de
    référence natives sous verrou, champs inconnus conservés. Données fictives. */
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { ecrireInvest } from '../src/historique/tables/invest.js';
 import { createTestApp, login, makeUser, type Agent, type TestApp } from './helpers.js';
 
 let t: TestApp, admin: Agent, reader: Agent, writer: Agent;
@@ -14,21 +15,24 @@ beforeAll(async () => {
   const cur = await admin.get('/api/legacy/state');
   const s = cur.json();
   s.suppliers = [{ id: 'SUP-001', name: 'Fournisseur fictif' }];
-  s.invest = {
-    baseYear: 2026,
-    inconnuRacine: 'garder',
-    lines: [
-      {
-        id: 'INV-001',
-        company: 'Société fictive',
-        type: 'EDR',
-        n0: 1000,
-        n1: 500,
-        status: 'Validé',
-        inconnu: { x: 1 },
-      },
-    ],
-  };
+  // Le module est repris dans des tables (ADR 0040) : l'amorçage passe par la correspondance, pas par /legacy.
+  await t.svc.db.tx((c) =>
+    ecrireInvest(c, {
+      baseYear: 2026,
+      inconnuRacine: 'garder',
+      lines: [
+        {
+          id: 'INV-001',
+          company: 'Société fictive',
+          type: 'EDR',
+          n0: 1000,
+          n1: 500,
+          status: 'Validé',
+          inconnu: { x: 1 },
+        },
+      ],
+    }),
+  );
   expect((await admin.put('/api/legacy/state', s, { 'if-match': cur.headers.etag as string })).statusCode).toBe(204);
 });
 afterAll(() => t.close());
@@ -90,5 +94,66 @@ describe('investissements', () => {
     expect(new Set(rows.rows.map((x) => x.action))).toEqual(
       new Set(['invest.created', 'invest.updated', 'invest.deleted', 'invest.year']),
     );
+  });
+});
+
+const amorcer = () =>
+  t.svc.db.tx((c) =>
+    ecrireInvest(c, {
+      baseYear: 2026,
+      inconnuRacine: 'garder',
+      lines: [{ id: 'INV-001', company: 'Société fictive', n0: 1000, status: 'Validé', inconnu: { x: 1 } }],
+    }),
+  );
+
+describe('investissements en tables (ADR 0040)', () => {
+  beforeEach(amorcer);
+  it('range les lignes dans des tables et plus dans app_state, champs inconnus compris', async () => {
+    const ligne = await t.svc.db.one<{ id: string; company: string; extra: { inconnu?: unknown } }>(
+      "SELECT id, company, extra FROM invest_lines WHERE id='INV-001'",
+    );
+    expect(ligne).toMatchObject({ id: 'INV-001', company: 'Société fictive', extra: { inconnu: { x: 1 } } });
+    const creee = await writer.post('/api/investissements/lignes');
+    expect(creee.statusCode, creee.body).toBe(201);
+    const n = await t.svc.db.one<{ n: number }>('SELECT count(*)::int AS n FROM invest_lines');
+    expect(n!.n).toBeGreaterThanOrEqual(2);
+    const brut = await t.svc.db.one<{ present: boolean }>(
+      "SELECT data ? 'invest' AS present FROM app_state WHERE id=1",
+    );
+    expect(brut!.present).toBe(false);
+  });
+  it('/legacy lit la forme historique recomposée mais ne peut plus la modifier', async () => {
+    const cur = await admin.get('/api/legacy/state');
+    const s = cur.json();
+    expect(s.invest.baseYear).toBe(2026);
+    expect(s.invest.inconnuRacine).toBe('garder');
+    expect(s.invest.lines.find((l: { id: string }) => l.id === 'INV-001').inconnu).toEqual({ x: 1 });
+    // Renvoyer l'état tel quel est accepté ; le modifier est refusé.
+    expect((await admin.put('/api/legacy/state', s, { 'if-match': cur.headers.etag as string })).statusCode).toBe(204);
+    const cur2 = await admin.get('/api/legacy/state');
+    const s2 = cur2.json();
+    s2.invest.lines[0].company = 'Modifiée depuis /legacy';
+    const r = await admin.put('/api/legacy/state', s2, { 'if-match': cur2.headers.etag as string });
+    expect(r.statusCode).toBe(409);
+    expect(r.json().reason ?? r.body).toMatch(/taken_over|nouvelle interface/);
+  });
+  it('conserve une entrée non objet et l’ordre des lignes au aller-retour', async () => {
+    await t.svc.db.tx((c) =>
+      ecrireInvest(c, { baseYear: 2027, lines: [{ id: 'B' }, 'texte brut', { id: 'A', n0: '12' }, 7] }),
+    );
+    const etat = (await admin.get('/api/legacy/state')).json();
+    expect(etat.invest.baseYear).toBe(2027);
+    expect(etat.invest.lines[1]).toBe('texte brut');
+    expect(etat.invest.lines[3]).toBe(7);
+    expect(etat.invest.lines.map((l: unknown) => (typeof l === 'object' ? (l as { id: string }).id : l))).toEqual([
+      'B',
+      'texte brut',
+      'A',
+      7,
+    ]);
+    expect(etat.invest.lines[2].n0).toBe(12);
+    // Un module vidé disparaît de l'état.
+    await t.svc.db.tx((c) => ecrireInvest(c, undefined));
+    expect((await admin.get('/api/legacy/state')).json().invest).toBeUndefined();
   });
 });

@@ -162,7 +162,7 @@ export class GrcSuppliers {
       const next = used.reduce((m, n) => Math.max(m, Number(n)), 0) + 1;
       const id = `SUP-${String(next).padStart(3, '0')}`;
       const created = { id, name: body.name, saas: false, controls: [], certs: [] } as JsonObject;
-      const r = await this.g.legacy.legacyWrite(
+      const r = await this.g.legacy.nativeWrite(
         c,
         { ...state.data, suppliers: [...suppliers, created] },
         user,
@@ -200,7 +200,7 @@ export class GrcSuppliers {
           }));
         else next[k] = v as never;
       }
-      const r = await this.g.legacy.legacyWrite(
+      const r = await this.g.legacy.nativeWrite(
         c,
         { ...state.data, suppliers: suppliers.map((s) => (s.id === id ? next : s)) },
         user,

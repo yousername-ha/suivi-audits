@@ -9,6 +9,7 @@ import type { Config } from './config.js';
 import { Db } from './db/db.js';
 import { limiter } from './http/security.js';
 import { mapsMapper } from './carto/maps.js';
+import { investMapper } from './historique/tables/invest.js';
 import { LegacyStore } from './legacy/store.js';
 import { Bus, Presence } from './realtime.js';
 import { Vault } from './security/crypto.js';
@@ -28,6 +29,7 @@ export function createServices(cfg: Config, log: Logger) {
   const legacy = new LegacyStore(cfg, db);
   // Modules repris dans des tables (ADR 0007) : /legacy les affiche, le serveur refuse leurs modifications.
   legacy.register(mapsMapper);
+  legacy.register(investMapper);
   const settings = new Settings(cfg, db, legacy);
   const environment = new Environment(db);
   const businessPolicies = new BusinessPolicies(db);

@@ -5,7 +5,11 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 ## [Non publié]
 
 ### Notes de mise à jour
+- **Migration SQL additive `023_investissements_tables.sql`** : le plan d'investissement passe d'`app_state` à deux tables (copie automatique au démarrage, rien n'est supprimé avant le prochain enregistrement). Sauvegarde automatique avant la mise à jour, comme d'habitude ; `/legacy` affiche les investissements en lecture seule.
 - **Migration SQL additive `022_hierarchie_perimetres.sql`**, appliquée au démarrage : trois colonnes et un déclencheur anti-boucle sur les périmètres. Aucune donnée n'est modifiée ; les périmètres existants restent à plat et n'héritent de rien. Aucune action sur le serveur.
+
+### Modifié
+- **Investissements en tables** ([ADR 0040](docs/adr/0040-sortie-du-json-plat-modules-en-tables.md)) : première étape de la sortie de l'état JSON plat. Les lignes budgétaires et l'année de référence sont stockées dans des tables (champs inconnus conservés) ; les écrans natifs, l'export et `/legacy` (lecture seule) lisent la même donnée. Les autres modules suivront un par un.
 
 ### Ajouté
 - **Hiérarchie des périmètres** ([ADR 0039](docs/adr/0039-hierarchie-des-perimetres.md)) : un périmètre peut être rattaché à un parent (organisation → entité → périmètre), sans boucle (contrôle applicatif et garde-fou en base) et avec une profondeur bornée. La page « Périmètres » affiche l'arbre et permet de choisir le niveau, le parent et l'héritage.

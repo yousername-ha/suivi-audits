@@ -47,7 +47,7 @@ export class PilotageObjectifs {
     action: string,
     ref: string,
   ) {
-    const r = await this.g.legacy.legacyWrite(c, state.data, user, state.version);
+    const r = await this.g.legacy.nativeWrite(c, state.data, user, state.version);
     if (r.conflict) throw new HttpError(412, 'Le registre a changé. Rechargez avant de modifier.');
     await this.g.db.audit(user, ip, action, ref, { version: r.version }, c);
     await this.g.notify(c, ref, r.version, DEFAULT_SMSI, GRC_MODULES.indicator, user.username);
