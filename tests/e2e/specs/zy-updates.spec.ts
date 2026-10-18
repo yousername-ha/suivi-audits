@@ -188,23 +188,3 @@ test('mise à jour : panne de suivi et retour arrière sont explicites, sans suc
     await ctx.close();
   }
 });
-test('mise à jour : ancien socle v2 informé et protégé par la même maintenance', async ({ browser }) => {
-  const { ctx, page, problems } = await open(browser);
-  let current = state();
-  await page.route('**/update/status.json', (route) => route.fulfill({ json: current }));
-  try {
-    await page.goto('/legacy/');
-    await expect(page.locator('.suivi-update-notice')).toContainText('Mise à jour disponible : 3.1.0');
-    current = state({
-      maintenance: true,
-      status: 'running',
-      phase: 'installing',
-      message: 'Installation de la nouvelle version.',
-    });
-    await expect(page).toHaveURL(/\/update\//);
-    await expect(page.getByRole('status')).toContainText('Installation de la nouvelle version');
-    expect(problems).toEqual([]);
-  } finally {
-    await ctx.close();
-  }
-});

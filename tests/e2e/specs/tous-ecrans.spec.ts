@@ -43,7 +43,7 @@ test.beforeAll(async ({ browser }) => {
 
   // Données fictives figées : échéances loin dans le passé ou l'avenir, pour que les captures ne dépendent pas
   // de la date du jour.
-  const cur = await ctx.request.get('/api/legacy/state');
+  const cur = await ctx.request.get('/api/suivi/etat');
   const data = await cur.json();
   data.findings = (data.findings as Record<string, unknown>[]).map((f, i) => ({
     ...f,

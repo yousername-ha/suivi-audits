@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { ecrireEtat, sessionAdmin, watchPage } from '../helpers';
 async function changeSource(page: Page, id: string, source: Record<string, unknown> | null) {
-  const r = await page.request.get('/api/legacy/state');
+  const r = await page.request.get('/api/suivi/etat');
   const state = await r.json();
   const me = await (await page.request.get('/api/auth/me')).json();
   const evals = (state.ai?.evals ?? []).filter((e: { id: string }) => e.id !== id);

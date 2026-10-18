@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createTestApp, login, makeUser, seedState, type Agent, type TestApp } from './helpers.js';
 
 let t: TestApp, admin: Agent, reader: Agent, writer: Agent;
-const etat = async () => (await admin.get('/api/legacy/state')).json();
+const etat = async () => (await admin.get('/api/suivi/etat')).json();
 let est = '',
   res = '';
 
@@ -13,7 +13,7 @@ beforeAll(async () => {
   admin = await login(t, await makeUser(t, 'cr_admin', 'admin'));
   reader = await login(t, await makeUser(t, 'cr_reader', 'ro'));
   writer = await login(t, await makeUser(t, 'cr_writer', 'rw'));
-  const cur = await admin.get('/api/legacy/state');
+  const cur = await admin.get('/api/suivi/etat');
   const s = cur.json();
   s.crrc = {
     inconnuRacine: 'garder',

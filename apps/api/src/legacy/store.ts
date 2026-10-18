@@ -1,12 +1,11 @@
-/* État de l'outil historique (/legacy) pendant la transition.
-   Une seule source modifiable par module (docs/legacy/IMPORT-LEGACY.md § 4) :
-   - module pas encore repris : ses données vivent dans app_state, /legacy les modifie comme avant ;
-   - module repris (un « mapper » est enregistré) : ses données vivent dans des tables ; /legacy les affiche
-     (état recomposé) mais le serveur refuse toute modification les concernant. */
-import { canonicalJson, isObject, moduleLabel, type Json, type JsonObject } from '@suivi/shared/legacy';
+/* État du suivi : recomposition de la forme historique (schéma 15) à partir des tables, et écriture depuis la nouvelle
+   interface. Une seule source modifiable par module (docs/legacy/IMPORT-LEGACY.md § 4) :
+   - module repris (un « mapper » est enregistré) : ses données vivent dans des tables, `recompose` les relit et
+     `nativeWrite` les y enregistre ;
+   - reste de l'état : app_state (clés techniques et version de l'état). */
+import { canonicalJson, type Json, type JsonObject } from '@suivi/shared/legacy';
 import type { Config } from '../config.js';
 import type { Actor, Client, Db } from '../db/db.js';
-import { HttpError } from '../http/errors.js';
 import { sha256hex } from '../security/crypto.js';
 
 /** Correspondance d'un module legacy repris vers ses tables (phases 1 à 3). */

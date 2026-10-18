@@ -121,7 +121,7 @@ describe('paramètres', () => {
       { 'if-match': c.etag },
     );
     expect(r.statusCode).toBe(200);
-    const st = (await A.get('/api/legacy/state')).json();
+    const st = (await A.get('/api/suivi/etat')).json();
     expect(st.years).toEqual([2026, 2027, 2028]);
     expect(st.nextDate).toBe('2027-03-15');
   });

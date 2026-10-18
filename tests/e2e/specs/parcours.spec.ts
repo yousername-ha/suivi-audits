@@ -90,9 +90,6 @@ test('connexion avec double authentification ; code erroné refusé', async ({ b
   await expect(page.getByRole('alert')).toContainText('Code incorrect');
   await page.getByRole('button', { name: 'Changer de compte' }).click();
   await loginUI(page, ADMIN, PASSWORD, adminSecret);
-  // L'ancienne interface est accessible avec la même session.
-  await page.goto('/legacy/');
-  await expect(page.getByRole('navigation', { name: 'Menu du compte' })).toBeVisible();
   expect(problems).toEqual([]);
 });
 
@@ -137,8 +134,8 @@ test('import legacy : simulation, rapport, application, historique', async ({ br
   await page.getByRole('button', { name: 'Appliquer l’import' }).click();
   await expect(page.getByText(/Import n°1 enregistré/)).toBeVisible();
   await expect(page.getByRole('cell', { name: 'initialiser' })).toBeVisible();
-  // Les données importées sont servies à l'ancienne interface.
-  const state = await page.request.get('/api/legacy/state');
+  // Les données importées sont relues depuis les tables.
+  const state = await page.request.get('/api/suivi/etat');
   expect((await state.json()).findings.length).toBe(2);
   expect(problems).toEqual([]);
 });

@@ -4,9 +4,9 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createTestApp, login, makeUser, seedState, type Agent, type TestApp } from './helpers.js';
 
 let t: TestApp, admin: Agent, reader: Agent, writer: Agent;
-const etat = async () => (await admin.get('/api/legacy/state')).json();
+const etat = async () => (await admin.get('/api/suivi/etat')).json();
 const poser = async (modifier: (s: Record<string, unknown>) => void) => {
-  const cur = await admin.get('/api/legacy/state');
+  const cur = await admin.get('/api/suivi/etat');
   const s = cur.json();
   modifier(s);
   await seedState(t, s);

@@ -22,7 +22,7 @@ test('Gestion de l’audit : carte, préparation, cycle, couverture et organisat
   const suffixe = Date.now().toString(36);
   try {
     // État d'audit fictif.
-    const cur = await ctx.request.get('/api/legacy/state');
+    const cur = await ctx.request.get('/api/suivi/etat');
     const s = await cur.json();
     Object.assign(s, {
       years: [2025, 2026],

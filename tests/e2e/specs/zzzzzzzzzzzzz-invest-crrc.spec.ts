@@ -14,7 +14,7 @@ test('Investissements et CRRC : lignes, comparaison, contrat, sauvegardes, resta
   const page = await ctx.newPage(),
     problems = watchPage(page);
   try {
-    const cur = await ctx.request.get('/api/legacy/state');
+    const cur = await ctx.request.get('/api/suivi/etat');
     const s = await cur.json();
     const annee = new Date().getFullYear();
     Object.assign(s, {

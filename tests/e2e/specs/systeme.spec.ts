@@ -39,7 +39,7 @@ test('sauvegarde chiffrée réelle depuis le menu, sans cron supplémentaire', a
     await expect(page.getByRole('button', { name: 'Demander une sauvegarde', exact: true })).toBeEnabled({
       timeout: 60000,
     });
-    const before = await (await page.request.get('/api/legacy/state')).json();
+    const before = await (await page.request.get('/api/suivi/etat')).json();
     await page.getByRole('button', { name: 'Demander une sauvegarde', exact: true }).click();
     const requested = page.waitForResponse(
       (r) => r.url().endsWith('/api/admin/sauvegardes') && r.request().method() === 'POST',
@@ -64,7 +64,7 @@ test('sauvegarde chiffrée réelle depuis le menu, sans cron supplémentaire', a
     expect(report.fichier).toMatch(/\.tar\.enc$/);
     expect(report.sha256).toMatch(/^[a-f0-9]{64}$/);
     expect(report.tailleOctets).toBeGreaterThan(0);
-    expect(await (await page.request.get('/api/legacy/state')).json()).toEqual(before);
+    expect(await (await page.request.get('/api/suivi/etat')).json()).toEqual(before);
     expect(problems).toEqual([]);
   } finally {
     await ctx.close();

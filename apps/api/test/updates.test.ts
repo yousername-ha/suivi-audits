@@ -116,7 +116,7 @@ describe('mise à jour intégrée : frontière de privilèges', () => {
   it('protège aussi les mutations via l’API interne pendant la maintenance', async () => {
     state({ maintenance: true, status: 'running', phase: 'backup' });
     expect((await a.post('/api/admin/updates/check')).statusCode).toBe(503);
-    expect((await a.put('/api/legacy/state', {})).statusCode).toBe(503);
+    expect((await a.put('/api/admin/modules', {})).statusCode).toBe(503);
     expect((await a.get('/healthz')).statusCode).toBe(200);
   });
   it('neutralise les intentions restaurées sans interrompre un retour arrière actif', async () => {

@@ -312,31 +312,25 @@ describe('reprise du module legacy « maps » (CARTO-14)', () => {
     ]);
     expect((await t.svc.db.one<{ has: boolean }>("SELECT data ? 'maps' AS has FROM app_state"))!.has).toBe(false);
     // Recomposition et export : S.maps à l'identique.
-    const st = await admin.get('/api/legacy/state');
+    const st = await admin.get('/api/suivi/etat');
     expect(deepEqual(st.json().maps as Json, fixture.maps as Json)).toBe(true);
     const exp = await admin.get('/api/admin/export/legacy');
     expect(exp.statusCode).toBe(200);
     const exported = JSON.parse(exp.body) as JsonObject;
     const data = (exported.data ?? exported) as JsonObject;
     expect(deepEqual(data.maps as Json, fixture.maps as Json)).toBe(true);
-    // /legacy : modifier la cartographie est refusé (409), le reste est accepté.
-    const s2 = st.json() as JsonObject;
-    (s2.maps as JsonObject).issueKind = { 'issue:1a2b3c': 'int' };
-    const ko = await admin.put('/api/legacy/state', s2, { 'if-match': st.headers.etag as string });
-    expect(ko.statusCode).toBe(409);
-    expect(ko.json().modules).toEqual(['maps']);
     // Annulation de l'import : cartes retirées (elles n'existaient pas avant).
     const undo = await admin.post(`/api/admin/import/${batch}/undo`);
     expect(undo.statusCode, undo.body).toBe(200);
     expect((await t.svc.db.one<{ n: number }>('SELECT count(*)::int AS n FROM maps'))!.n).toBe(0);
-    expect('maps' in (await admin.get('/api/legacy/state')).json()).toBe(false);
+    expect('maps' in (await admin.get('/api/suivi/etat')).json()).toBe(false);
   });
   it('lecteur sans cartographie:lire : la clé « maps » est masquée dans /legacy', async () => {
     const fixture = JSON.parse(readFileSync(fixturePath, 'utf8')) as JsonObject;
     await importer(admin, fixture);
     await t.svc.db.q("INSERT INTO roles(id, name, permissions) VALUES ('r_audit', 'Audit seul', '{audit:lire}')");
     const a = await login(t, await makeUser(t, 'auditseul', 'r_audit'));
-    expect((await a.get('/api/legacy/state')).json().maps).toEqual({});
+    expect((await a.get('/api/suivi/etat')).json().maps).toEqual({});
   });
   it('notes, cadres libres et enjeux créés sur la carte : aller-retour à l’identique (CARTO-15, CARTO-19)', async () => {
     const fixture = JSON.parse(readFileSync(fixturePath, 'utf8')) as JsonObject;
@@ -346,7 +340,7 @@ describe('reprise du module legacy « maps » (CARTO-14)', () => {
     ctx.free = { 'note:n1': { text: 'Note fictive', tint: 'orange' } };
     maps.issues = [{ label: 'Enjeu fictif créé sur la carte', kind: 'ext', desc: 'Exemple fictif' }];
     await importer(admin, { ...fixture, maps });
-    expect(deepEqual((await admin.get('/api/legacy/state')).json().maps as Json, maps as Json)).toBe(true);
+    expect(deepEqual((await admin.get('/api/suivi/etat')).json().maps as Json, maps as Json)).toBe(true);
     const carte = ((await rssi.get('/api/carto/maps')).json() as { view: string; layout: MapLayout }[]).find(
       (m) => m.view === 'context',
     )!;

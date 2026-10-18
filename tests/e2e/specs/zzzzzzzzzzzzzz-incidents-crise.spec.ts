@@ -12,7 +12,7 @@ test('Incidents et cellule de crise : qualification, fiche, cellule, main couran
   const page = await ctx.newPage(),
     problems = watchPage(page);
   try {
-    const cur = await ctx.request.get('/api/legacy/state');
+    const cur = await ctx.request.get('/api/suivi/etat');
     const s = await cur.json();
     Object.assign(s, {
       entityCategory: 'importante',

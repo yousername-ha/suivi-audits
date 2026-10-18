@@ -200,7 +200,7 @@ describe('migration d’une base v2 existante, sans perte', () => {
     const dl = await a.get(`/api/documents/${docId}/download`);
     expect(dl.statusCode).toBe(200);
     expect(dl.rawPayload.equals(file)).toBe(true);
-    const st = await a.get('/api/legacy/state');
+    const st = await a.get('/api/suivi/etat');
     expect(st.headers.etag).toBe('"v7"');
     expect(st.json().findings[0].text).toBe('Écart de test');
     // L'état n'a pas été réinitialisé par l'amorçage (seed) : la base contenait déjà des données.

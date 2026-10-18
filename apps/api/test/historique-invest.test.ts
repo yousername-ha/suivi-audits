@@ -5,14 +5,14 @@ import { ecrireInvest } from '../src/historique/tables/invest.js';
 import { createTestApp, login, makeUser, seedState, type Agent, type TestApp } from './helpers.js';
 
 let t: TestApp, admin: Agent, reader: Agent, writer: Agent;
-const etat = async () => (await admin.get('/api/legacy/state')).json();
+const etat = async () => (await admin.get('/api/suivi/etat')).json();
 
 beforeAll(async () => {
   t = await createTestApp();
   admin = await login(t, await makeUser(t, 'inv_admin', 'admin'));
   reader = await login(t, await makeUser(t, 'inv_reader', 'ro'));
   writer = await login(t, await makeUser(t, 'inv_writer', 'rw'));
-  const cur = await admin.get('/api/legacy/state');
+  const cur = await admin.get('/api/suivi/etat');
   const s = cur.json();
   s.suppliers = [{ id: 'SUP-001', name: 'Fournisseur fictif' }];
   await seedState(t, s);
@@ -122,26 +122,18 @@ describe('investissements en tables (ADR 0040)', () => {
     );
     expect(brut!.present).toBe(false);
   });
-  it('/legacy lit la forme historique recomposée mais ne peut plus la modifier', async () => {
-    const cur = await admin.get('/api/legacy/state');
+  it('l’état du suivi recompose la forme historique depuis les tables', async () => {
+    const cur = await admin.get('/api/suivi/etat');
     const s = cur.json();
     expect(s.invest.baseYear).toBe(2026);
     expect(s.invest.inconnuRacine).toBe('garder');
     expect(s.invest.lines.find((l: { id: string }) => l.id === 'INV-001').inconnu).toEqual({ x: 1 });
-    // Renvoyer l'état tel quel est accepté ; le modifier est refusé.
-    await seedState(t, s);
-    const cur2 = await admin.get('/api/legacy/state');
-    const s2 = cur2.json();
-    s2.invest.lines[0].company = 'Modifiée depuis /legacy';
-    const r = await admin.put('/api/legacy/state', s2, { 'if-match': cur2.headers.etag as string });
-    expect(r.statusCode).toBe(409);
-    expect(r.json().reason ?? r.body).toMatch(/taken_over|nouvelle interface/);
   });
   it('conserve une entrée non objet et l’ordre des lignes au aller-retour', async () => {
     await t.svc.db.tx((c) =>
       ecrireInvest(c, { baseYear: 2027, lines: [{ id: 'B' }, 'texte brut', { id: 'A', n0: '12' }, 7] }),
     );
-    const etat = (await admin.get('/api/legacy/state')).json();
+    const etat = (await admin.get('/api/suivi/etat')).json();
     expect(etat.invest.baseYear).toBe(2027);
     expect(etat.invest.lines[1]).toBe('texte brut');
     expect(etat.invest.lines[3]).toBe(7);
@@ -154,6 +146,6 @@ describe('investissements en tables (ADR 0040)', () => {
     expect(etat.invest.lines[2].n0).toBe(12);
     // Un module vidé disparaît de l'état.
     await t.svc.db.tx((c) => ecrireInvest(c, undefined));
-    expect((await admin.get('/api/legacy/state')).json().invest).toBeUndefined();
+    expect((await admin.get('/api/suivi/etat')).json().invest).toBeUndefined();
   });
 });

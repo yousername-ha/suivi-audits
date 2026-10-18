@@ -169,7 +169,7 @@ describe('import legacy : application, aller-retour, annulation', () => {
     const rep = await apply(gbuf, 'mode=replace&module=findings&confirm=findings');
     expect(rep.statusCode, rep.body).toBe(201);
     expect(rep.json().report.modules[0].collections[0].deleted).toBe(2);
-    const st = (await a.get('/api/legacy/state')).json();
+    const st = (await a.get('/api/suivi/etat')).json();
     expect(st.findings).toHaveLength(1);
   });
 
@@ -185,13 +185,13 @@ describe('import legacy : application, aller-retour, annulation', () => {
     // Le dernier peut être annulé : le module retrouve son contenu d'avant.
     const ok = await a.post(`/api/admin/import/${last.id}/undo`);
     expect(ok.statusCode, ok.body).toBe(200);
-    expect((await a.get('/api/legacy/state')).json().findings).toHaveLength(3);
+    expect((await a.get('/api/suivi/etat')).json().findings).toHaveLength(3);
     expect((await a.post(`/api/admin/import/${last.id}/undo`)).statusCode).toBe(409);
   });
 });
 
 describe('transition : modules repris et /legacy', () => {
-  it('/legacy affiche l’état recomposé et refuse les écritures sur un module repris', async () => {
+  it('l’état du suivi affiche l’état recomposé et les modules repris', async () => {
     // Module « swots » repris par un mapper de test (table dédiée), comme le feront les phases 1 à 3.
     await t.svc.db.q('CREATE TABLE test_swots (id text PRIMARY KEY, data jsonb NOT NULL)');
     await t.svc.db.q('INSERT INTO test_swots VALUES (\'SW-1\', \'{"id":"SW-1","process":"Achats"}\')');
@@ -206,41 +206,16 @@ describe('transition : modules repris et /legacy', () => {
     });
     try {
       const w = await login(t, rw);
-      const st = await w.get('/api/legacy/state');
+      const st = await w.get('/api/suivi/etat');
       const data = st.json();
       expect(data.swots).toEqual([{ id: 'SW-1', process: 'Achats' }]);
-      const modules = (await w.get('/api/legacy/modules')).json() as { key: string; takenOver: boolean }[];
+      const modules = (await w.get('/api/suivi/modules')).json() as { key: string; takenOver: boolean }[];
       expect(modules.find((m) => m.key === 'swots')?.takenOver).toBe(true);
 
-      // Écriture qui ne touche pas au module repris : acceptée, et le module n'est pas copié dans app_state.
-      const ok = await w.put('/api/legacy/state', data, { 'if-match': st.headers.etag as string });
-      expect(ok.statusCode, ok.body).toBe(204);
+      // Les modules repris ne sont jamais stockés dans app_state.
       expect((await t.svc.db.one<{ has: boolean }>("SELECT data ? 'swots' AS has FROM app_state"))!.has).toBe(false);
-
-      // Écriture qui modifie le module repris : refusée avec le message attendu.
-      data.swots = [{ id: 'SW-1', process: 'Modifié depuis legacy' }];
-      const ko = await w.put('/api/legacy/state', data, { 'if-match': ok.headers.etag as string });
-      expect(ko.statusCode).toBe(409);
-      expect(ko.json().error).toMatch(/^Module géré dans la nouvelle interface : Analyses SWOT/);
-      expect(ko.json().modules).toEqual(['swots']);
-
-      // La page /legacy reçoit la liste des modules repris (affichage « Module géré dans la nouvelle interface »).
-      const page = await w.get('/legacy/');
-      expect(page.statusCode).toBe(200);
-      for (const cle of ['accessReviews', 'appGaps', 'incidents', 'invest', 'maps', 'plans', 'swots', 'supEvals'])
-        expect(page.body, cle).toContain(`{"key":"${cle}","label":`);
-      expect(page.headers['content-security-policy']).toMatch(/unsafe-inline/);
     } finally {
       t.svc.legacy.unregister('swots');
     }
-  });
-
-  it('/legacy exige une session complète et sert ses bibliothèques locales', async () => {
-    const anon = await t.app.inject({ method: 'GET', url: '/legacy/', headers: { 'x-forwarded-proto': 'https' } });
-    expect(anon.statusCode).toBe(302);
-    expect(anon.headers.location).toBe('/login?next=%2Flegacy%2F');
-    const lib = await t.app.inject({ method: 'GET', url: '/legacy/lib/jszip.min.js' });
-    expect(lib.statusCode).toBe(200);
-    expect((await t.app.inject({ method: 'GET', url: '/legacy/lib/..%2Findex.html' })).statusCode).not.toBe(200);
   });
 });

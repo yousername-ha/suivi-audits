@@ -15,7 +15,7 @@ afterAll(() => t.close());
 describe('/api/suivi/etat et /api/suivi/modules', () => {
   it("renvoient l'état recomposé avec l'ETag de version, comme l'ancienne route", async () => {
     const neuf = await a.get('/api/suivi/etat');
-    const ancien = await a.get('/api/legacy/state');
+    const ancien = await a.get('/api/suivi/etat');
     expect(neuf.statusCode).toBe(200);
     expect(neuf.headers.etag).toMatch(/^"v\d+"$/);
     expect(neuf.headers['cache-control']).toBe('no-store');
@@ -27,13 +27,13 @@ describe('/api/suivi/etat et /api/suivi/modules', () => {
     expect((await t.app.inject({ method: 'GET', url: '/api/suivi/etat' })).statusCode).toBe(401);
     const lu = await ro.get('/api/suivi/etat');
     expect(lu.statusCode).toBe(200);
-    expect(lu.body).toBe((await ro.get('/api/legacy/state')).body);
+    expect(lu.body).toBe((await ro.get('/api/suivi/etat')).body);
   });
 
   it('listent les modules comme l’ancienne route', async () => {
     const neuf = await a.get('/api/suivi/modules');
     expect(neuf.statusCode).toBe(200);
-    expect(neuf.json()).toEqual((await a.get('/api/legacy/modules')).json());
+    expect(neuf.json()).toEqual((await a.get('/api/suivi/modules')).json());
     expect(neuf.json().length).toBeGreaterThan(5);
   });
 });

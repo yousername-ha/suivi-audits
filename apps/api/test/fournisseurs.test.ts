@@ -104,13 +104,13 @@ describe('registre et critères', () => {
   });
   it('crée un fournisseur dans le registre historique, sans doublon de nom', async () => {
     expect((await reader.post('/api/suppliers', { name: 'Fournisseur fictif' })).statusCode).toBe(403);
-    const before = (await a.get('/api/legacy/state')).json();
+    const before = (await a.get('/api/suivi/etat')).json();
     const r = await contributor.post('/api/suppliers', { name: 'Fournisseur fictif' });
     expect(r.statusCode, r.body).toBe(200);
     supplier = r.json().id;
     expect(supplier).toBe('SUP-001');
     expect((await contributor.post('/api/suppliers', { name: 'fournisseur FICTIF' })).statusCode).toBe(409);
-    const after = (await a.get('/api/legacy/state')).json();
+    const after = (await a.get('/api/suivi/etat')).json();
     expect(after.suppliers.map((s: { id: string }) => s.id)).toEqual(['SUP-001']);
     expect(after.items).toEqual(before.items);
   });
@@ -145,7 +145,7 @@ describe('registre et critères', () => {
     expect(ligne.sso).toBe('En cours');
     expect(ligne.controls.every((c) => !!c.id)).toBe(true);
     // Les autres données historiques ne sont pas touchées.
-    const etat = (await a.get('/api/legacy/state')).json();
+    const etat = (await a.get('/api/suivi/etat')).json();
     expect(etat.suppliers).toHaveLength(1);
     expect((await contributor.patch(`/api/suppliers/${supplier}`, { name: 'Autre nom' })).statusCode).toBe(200);
     expect((await contributor.patch(`/api/suppliers/${supplier}`, { name: 'Fournisseur fictif' })).statusCode).toBe(

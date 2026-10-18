@@ -10,7 +10,7 @@ test('DdA et évaluation par le clausier : niveaux, fiche, chapitres, points, no
   const page = await ctx.newPage(),
     problems = watchPage(page);
   try {
-    const cur = await ctx.request.get('/api/legacy/state');
+    const cur = await ctx.request.get('/api/suivi/etat');
     const s = await cur.json();
     const mesure = (id: string, ref: string, num: string) => ({
       id,

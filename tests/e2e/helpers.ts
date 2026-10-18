@@ -114,13 +114,13 @@ export async function sessionAdmin(
 }
 
 /** Écrit l'état historique souhaité (ADR 0040) : les modules repris dans des tables passent par l'import « Remplacer un
-    module » (seule voie d'écriture hors écrans natifs), le reste par l'écriture directe de /legacy. */
+    module » (seule voie d'écriture hors écrans natifs). */
 export async function ecrireEtat(req: APIRequestContext, csrf: string, souhaite: Record<string, unknown>) {
-  const modules = (await (await req.get('/api/legacy/modules')).json()) as { key: string; takenOver: boolean }[];
+  const modules = (await (await req.get('/api/suivi/modules')).json()) as { key: string; takenOver: boolean }[];
   const repris = modules.filter((m) => m.takenOver).map((m) => m.key);
   const lire = async () => {
-    const r = await req.get('/api/legacy/state');
-    return { data: (await r.json()) as Record<string, unknown>, etag: r.headers().etag! };
+    const r = await req.get('/api/suivi/etat');
+    return { data: (await r.json()) as Record<string, unknown> };
   };
   const avant = (await lire()).data;
   // Une clé absente de l'état souhaité mais présente dans l'instance est vidée (liste ou objet vide, équivalent à son absence).
@@ -163,9 +163,10 @@ export async function ecrireEtat(req: APIRequestContext, csrf: string, souhaite:
     });
     if (!app.ok()) throw new Error(`Import « ${k} » : ${app.status()} ${await app.text()}`);
   }
-  const { data, etag } = await lire();
-  const reste = { ...souhaite };
-  for (const k of repris) reste[k] = data[k];
-  const put = await req.put('/api/legacy/state', { data: reste, headers: { 'if-match': etag, 'x-csrf-token': csrf } });
-  if (put.status() !== 204) throw new Error(`Écriture de l’état : ${put.status()} ${await put.text()}`);
+  // Plus d'écriture directe : une clé qui n'est portée par aucun module repris ne peut pas être posée par l'aide.
+  const { data } = await lire();
+  const inecrivables = Object.keys(souhaite).filter(
+    (k) => !repris.includes(k) && JSON.stringify(souhaite[k] ?? null) !== JSON.stringify(data[k] ?? null),
+  );
+  if (inecrivables.length) throw new Error(`Clés non écrivables par l’aide de test : ${inecrivables.join(', ')}`);
 }

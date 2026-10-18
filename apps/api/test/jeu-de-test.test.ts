@@ -38,7 +38,7 @@ describe('jeu de données de test', () => {
     expect(relations.ok).toBe(true);
     expect(relations.controles.reduce((n, c) => n + c.verifies, 0)).toBeGreaterThan(50);
     // Ce que l'on retrouve par l'API, comme l'interface le fait.
-    const etat = (await a.get('/api/legacy/state')).json();
+    const etat = (await a.get('/api/suivi/etat')).json();
     expect(etat.processes).toHaveLength(6);
     expect(etat.indicators.filter((i: { calc?: string }) => i.calc)).toHaveLength(3);
     const synthese = (await a.get('/api/mur/synthese')).json();
