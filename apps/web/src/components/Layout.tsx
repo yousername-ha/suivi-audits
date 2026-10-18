@@ -79,6 +79,7 @@ export function Layout({ children }: { children: ReactNode }) {
   if (can('documents', 'lire')) items.push(['/documents', 'Documents et liens', IconeDocuments]);
   if (can('cartographie', 'lire')) items.push(['/cartographie', 'Cartographie du SMSI', IconeCarte]);
   if (can('ia', 'lire')) items.push(['/ia/evaluations', 'Évaluations IA', IconeDocuments]);
+  if (can('import_export', 'exporter')) items.push(['/exports', 'Exports Excel', IconeDocuments]);
   items.push(['/account', 'Mon compte', IconeCompte]);
   items.push(['/aide', 'Guide d’utilisation', IconeDocuments]);
   if (can('parametres', 'lire')) items.push(['/parametres', 'Paramètres', IconeParametres]);
