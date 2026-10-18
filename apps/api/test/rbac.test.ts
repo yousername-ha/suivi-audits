@@ -365,16 +365,20 @@ describe('outil historique : lecture et écriture par module', () => {
     data.findings = [
       { id: 'ID-900', source: 'Interne', year: 2026, type: 'NC min', status: 'Ouvert', text: 'Écart RBAC', items: [] },
     ];
+    // Le droit est reconnu, mais les écarts sont repris dans des tables : /legacy ne peut plus les modifier (ADR 0040).
     const w = await a.put('/api/legacy/state', data, { 'if-match': st.headers.etag as string });
-    expect(w.statusCode).toBe(204);
+    expect(w.statusCode).toBe(409);
+    expect(w.json().reason).toBe('module_taken_over');
     const after = (await A.get('/api/legacy/state')).json();
-    expect(after.findings.map((f: { id: string }) => f.id)).toEqual(['ID-900']);
+    expect(after.findings).toEqual(full.findings);
     expect(after.items.length).toBe(full.items.length);
     // Un lecteur ne peut rien modifier.
     const l = await login(t, await makeUser(t, 'lecteur-legacy', 'lecteur'));
     const s2 = await l.get('/api/legacy/state');
     const d2 = s2.json();
-    d2.findings = [];
+    d2.findings = [
+      { id: 'ID-901', source: 'Interne', year: 2026, type: 'NC min', status: 'Ouvert', text: 'Refusé', items: [] },
+    ];
     const w2 = await l.put('/api/legacy/state', d2, { 'if-match': s2.headers.etag as string });
     expect(w2.statusCode).toBe(403);
     expect(w2.json().permission).toBe('ecarts:modifier');

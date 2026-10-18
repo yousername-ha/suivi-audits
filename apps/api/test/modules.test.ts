@@ -158,9 +158,8 @@ describe('B1 configuration des modules', () => {
     visible.suppliers = [{ id: 'intrusion', name: 'ne doit pas être écrit' }];
     expect((await a.put('/api/legacy/state', visible)).statusCode).toBe(409);
     expect((await t.svc.legacy.recompose())!.data).toEqual(before.data);
-    // Un autre module reste enregistrable malgré les espaces réservés du module masqué.
-    visible.suppliers = [];
-    visible.nextDate = '2027-01-15';
+    // L'outil historique est en lecture seule (tous ses modules sont repris) : l'état inchangé reste accepté.
+    visible.suppliers = (await a.get('/api/legacy/state')).json().suppliers;
     expect((await a.put('/api/legacy/state', visible)).statusCode).toBe(204);
     expect((await t.svc.legacy.recompose())!.data.suppliers).toEqual(before.data.suppliers);
   });
@@ -224,7 +223,6 @@ describe('B1 configuration des modules', () => {
     const stored = (await t.svc.legacy.recompose())!.data.ai;
     const visible = (await a.get('/api/legacy/state')).json();
     visible.ai = cfg.emptyObjects.ai;
-    visible.nextDate = '2027-01-16';
     expect((await a.put('/api/legacy/state', visible)).statusCode).toBe(204);
     expect((await t.svc.legacy.recompose())!.data.ai).toEqual(stored);
     expect(readFileSync(path.join(REPO, 'app/public/index.html')).equals(before)).toBe(true);

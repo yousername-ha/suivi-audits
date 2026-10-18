@@ -114,7 +114,7 @@ describe('objectifs et indicateurs', () => {
         dir: '≥',
         values: [],
       });
-      await t.svc.legacy.legacyWrite(c, st.data, { username: 'test' } as never, st.version);
+      await t.svc.legacy.nativeWrite(c, st.data, { username: 'test' } as never, st.version);
     }, 'test');
     expect((await a.post(`${base}/indicators/IND-AUTO/values`, { date: '2026-01-01', value: '50' })).statusCode).toBe(
       422,

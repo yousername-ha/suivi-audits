@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { methodTemplate, type RiskMethod, type RiskData } from '@suivi/shared';
 import { DEFAULT_SMSI } from '../src/grc/core.js';
-import { createTestApp, login, makeUser, type Agent, type TestApp, type TestUser } from './helpers.js';
+import { createTestApp, login, makeUser, type Agent, type TestApp, type TestUser, seedState } from './helpers.js';
 let t: TestApp, a: Agent, reader: Agent, smsi: string, owner: string, ownerUser: TestUser;
 const root = () => `/api/grc/${smsi}`;
 const task = (name: string, ownerId: string | null = null) => ({
@@ -248,8 +248,7 @@ it('présente et réalise les actions historiques dans leur source, sans perdre 
       tasks: [{ t: 'Action v2 à conserver', done: false, extraTask: 42 }],
     },
   ];
-  const saved = await a.put('/api/legacy/state', state, { 'if-match': current.headers.etag as string });
-  expect(saved.statusCode, saved.body).toBe(204);
+  await seedState(t, state);
   const base = `/api/grc/${DEFAULT_SMSI}`,
     list = await a.get(base + '/tasks');
   const legacy = list.json().items.find((o: { name: string }) => o.name === 'Action v2 à conserver');

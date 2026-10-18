@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { csrfOf, sessionAdmin, watchPage } from '../helpers';
+import { csrfOf, sessionAdmin, watchPage, ecrireEtat } from '../helpers';
 
 for (const width of [1440, 390]) {
   test(`Pilotage : accès par le clic du menu à ${width} px`, async ({ browser }) => {
@@ -601,11 +601,7 @@ test('Pilotage : les standards sont disponibles d’emblée, verrouillés, et se
         requirements: [{ id: 'QA-1', os: '1', theme: 'Thème fictif', text: 'Exigence fictive.', scope: '' }],
       },
     ];
-    const put = await page.request.put('/api/legacy/state', {
-      headers: { Origin: new URL(page.url()).origin, 'X-CSRF-Token': me.csrf, 'If-Match': etat.headers().etag! },
-      data: { ...state, frameworks },
-    });
-    expect(put.status()).toBe(204);
+    await ecrireEtat(page.request, me.csrf, { ...state, frameworks });
     await page.reload();
     const nom = `Standard fictif ${suffixe}`;
     await expect(page.getByText('Standards disponibles', { exact: true })).toBeVisible();

@@ -123,19 +123,33 @@ export async function ecrireEtat(req: APIRequestContext, csrf: string, souhaite:
     return { data: (await r.json()) as Record<string, unknown>, etag: r.headers().etag! };
   };
   const avant = (await lire()).data;
+  // Une clé absente de l'état souhaité mais présente dans l'instance est vidée (liste ou objet vide, équivalent à son absence).
+  souhaite = { ...souhaite };
+  for (const k of repris) {
+    const v = avant[k];
+    if (!(k in souhaite) && v && typeof v === 'object') souhaite[k] = Array.isArray(v) ? [] : {};
+  }
   const delta = repris.filter(
     (k) => k in souhaite && JSON.stringify(souhaite[k] ?? null) !== JSON.stringify(avant[k] ?? null),
   );
   for (const k of delta) {
     const courant = (await lire()).data;
     // Le fichier ne contient que le socle de l'état et le module remplacé : les autres modules repris n'y figurent pas.
-    // Socle structurel seulement (listes vidées) : en mode « remplacer », seul le module visé est lu dans le fichier.
+    // Socle de l'état (listes et objets vidés, scalaires conservés) : en mode « remplacer », seul le module visé est lu.
     const socle = Object.fromEntries(
-      Object.entries(courant)
-        .filter(([cle]) => !repris.includes(cle))
-        .map(([cle, v]) => [cle, Array.isArray(v) ? [] : v]),
+      Object.entries(courant).map(([cle, v]) => [cle, Array.isArray(v) ? [] : v && typeof v === 'object' ? {} : v]),
     );
-    const fichier = Buffer.from(JSON.stringify({ ...socle, [k]: souhaite[k] }));
+    // Le schéma 15 exige un identifiant sur les valeurs d'indicateur : l'aide en ajoute aux valeurs qui n'en ont pas.
+    const valeur =
+      k === 'indicators' && Array.isArray(souhaite[k])
+        ? (souhaite[k] as Record<string, unknown>[]).map((i, rang) => ({
+            ...i,
+            values: Array.isArray(i.values)
+              ? (i.values as Record<string, unknown>[]).map((x, n) => ({ id: `V-${rang + 1}-${n + 1}`, ...x }))
+              : i.values,
+          }))
+        : souhaite[k];
+    const fichier = Buffer.from(JSON.stringify({ ...socle, [k]: valeur }));
     const entetes = { 'x-csrf-token': csrf, 'content-type': 'application/octet-stream', 'x-file-name': 'etat.json' };
     const sim = await req.post(`/api/admin/import/simulate?mode=replace&module=${k}`, {
       data: fichier,

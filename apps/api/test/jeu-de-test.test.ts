@@ -78,7 +78,7 @@ describe('jeu de données de test', () => {
       const st = (await t.svc.legacy.recompose(c))!;
       (st.data.objectives as Record<string, unknown>[])[0]!.processes = ['PR-INCONNU'];
       (st.data.indicators as Record<string, unknown>[])[0]!.obj = 'OBJ-INCONNU';
-      await t.svc.legacy.legacyWrite(c, st.data, { username: 'test' } as never, st.version);
+      await t.svc.legacy.nativeWrite(c, st.data, { username: 'test' } as never, st.version);
     }, 'test');
     const r = await controleRelations(t.svc);
     expect(r.ok).toBe(false);

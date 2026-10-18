@@ -3,7 +3,7 @@
    largeur exploitée sur les très grands écrans ; aucun défilement horizontal ; écran mural (activation, révocation).
    Exécutés après parcours.spec.ts (ordre alphabétique des fichiers, un seul worker). */
 import { expect, test, type Browser, type BrowserContext, type Page } from '@playwright/test';
-import { csrfOf, sessionAdmin, watchPage } from '../helpers';
+import { csrfOf, sessionAdmin, watchPage, ecrireEtat } from '../helpers';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -49,11 +49,7 @@ test.beforeAll(async ({ browser }) => {
     ...f,
     due: i === 0 ? '2020-06-30' : '2099-12-31',
   }));
-  const put = await ctx.request.put('/api/legacy/state', {
-    data,
-    headers: { 'x-csrf-token': csrf, 'if-match': cur.headers()['etag'] ?? '' },
-  });
-  expect(put.status(), await put.text()).toBe(204);
+  await ecrireEtat(ctx.request, csrf, data);
 
   // Document fictif au contenu fixe (empreinte stable), ouvert dans la vue « liste avec fiche ».
   const up = await ctx.request.post('/api/documents', {

@@ -30,11 +30,19 @@ tables. Conséquences : verrou global, aucune contrainte d'intégrité, aucune r
    objet conservée telle quelle, ordre conservé, clé vide mais présente mémorisée (`suivi_presence`). Premières clés reprises :
    `incidents`, `plans`, `accessReviews`, `appGaps`, `supEvals`. Un test compare la copie SQL de la migration et l'écriture par
    la correspondance : elles doivent produire la même valeur.
-6. **Premier module : investissements** (`invest_settings`, `invest_lines`, migration 023). Les autres suivront un par un, chacun
+6. **Cœur de l'outil de suivi** (lot H2d, migration 026) : mesures et chapitres, écarts, processus, objectifs, indicateurs,
+   fournisseurs, référentiels complémentaires, revues, parties intéressées, SWOT, rôles, tâches récurrentes et preuves passent
+   par la même correspondance générique. Les réglages scalaires ou objets (années du cycle, dates d'audit, plan d'audit,
+   périmètre, catégorie d'entité…) sont une ligne par clé dans `suivi_reglages`, lue en une seule requête. **`app_state` ne
+   contient plus aucune donnée métier** : il ne garde que la version de l'état (concurrence optimiste, verrou) en attendant
+   le retrait de l'ancienne interface.
+   Limites assumées : les sous-structures (étapes du plan d'audit, valeurs d'indicateurs, tâches d'un écart…) restent des
+   colonnes JSON dans leur ligne ; les normaliser en tables liées est l'étape suivante, module par module.
+7. **Premier module : investissements** (`invest_settings`, `invest_lines`, migration 023). Les autres suivront un par un, chacun
    avec sa migration, son mapper, son test de reprise (aller-retour à l'identique) et son test d'API.
-7. **Aucune copie dans `app_state`, quel que soit l'appelant** : `LegacyStore.save` retire les clés des modules repris ; la
+8. **Aucune copie dans `app_state`, quel que soit l'appelant** : `LegacyStore.save` retire les clés des modules repris ; la
    restauration d'une version, l'amorçage, la cartographie et le jeu de test écrivent par `nativeWrite`.
-8. **Hors périmètre de ce lot** : rattacher ces tables aux objets GRC (écarts, actions, preuves, fournisseurs) par des clés
+9. **Hors périmètre de ce lot** : rattacher ces tables aux objets GRC (écarts, actions, preuves, fournisseurs) par des clés
    étrangères. Les identifiants restent des textes tant que le module cible n'est pas lui-même repris. Les dates restent des textes
    (valeurs historiques parfois invalides) jusqu'à la normalisation de chaque module.
 

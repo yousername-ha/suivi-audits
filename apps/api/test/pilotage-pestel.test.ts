@@ -27,7 +27,7 @@ beforeAll(async () => {
         enjeux: ['Menace cyber : attaques ciblées', 'Évolution de la législation fictive', 'Compétences internes'],
       },
     ];
-    await t.svc.legacy.legacyWrite(c, st.data, { username: 'test' } as never, st.version);
+    await t.svc.legacy.nativeWrite(c, st.data, { username: 'test' } as never, st.version);
   }, 'test');
 });
 afterAll(() => t.close());
@@ -76,7 +76,7 @@ describe('PESTEL des enjeux externes', () => {
       await c.query('SELECT 1 FROM app_state WHERE id=1 FOR UPDATE');
       const st = (await t.svc.legacy.recompose(c))!;
       (st.data.scope as Record<string, unknown>).issueFactors = { [menace]: 'facteur_supprime' };
-      await t.svc.legacy.legacyWrite(c, st.data, { username: 'test' } as never, st.version);
+      await t.svc.legacy.nativeWrite(c, st.data, { username: 'test' } as never, st.version);
     }, 'test');
     expect((await a.get(url)).json().nonClasses.map((e: { label: string }) => e.label)).toContain('Menace cyber');
   });
