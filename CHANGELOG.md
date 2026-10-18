@@ -5,7 +5,11 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 ## [Non publié]
 
 ### Notes de mise à jour
-Aucune action particulière, aucune migration pour le moment.
+- **Migration SQL additive `022_hierarchie_perimetres.sql`**, appliquée au démarrage : trois colonnes et un déclencheur anti-boucle sur les périmètres. Aucune donnée n'est modifiée ; les périmètres existants restent à plat et n'héritent de rien. Aucune action sur le serveur.
+
+### Ajouté
+- **Hiérarchie des périmètres** ([ADR 0039](docs/adr/0039-hierarchie-des-perimetres.md)) : un périmètre peut être rattaché à un parent (organisation → entité → périmètre), sans boucle (contrôle applicatif et garde-fou en base) et avec une profondeur bornée. La page « Périmètres » affiche l'arbre et permet de choisir le niveau, le parent et l'héritage.
+- **Héritage explicite des référentiels** : si le périmètre l'a décidé, il reçoit les référentiels rattachés à son parent (exigences proposées comme cibles de lien, couverture, rapprochements) ; un rattachement local, même désactivé, l'emporte. Seuls les référentiels se propagent : objets, preuves, évaluations et droits restent propres à chaque périmètre.
 
 ## [3.4.0] — 2026-10-15
 

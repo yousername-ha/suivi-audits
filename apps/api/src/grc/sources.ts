@@ -47,16 +47,20 @@ export async function sources(g: Grc, smsi: string, user: SessionUser, search: s
             kind: 'requirement',
           });
     // Référentiels de la bibliothèque rattachés et actifs dans ce périmètre (ADR 0031).
-    const attached = (
-      await g.db.q<{
-        framework_id: string;
-        version: number;
-        definition: { requirements: { id: string; title: string }[] };
-      }>(
-        `SELECT s.framework_id,s.version,v.definition FROM grc_scope_frameworks s JOIN lib_framework_versions v ON v.framework_id=s.framework_id AND v.version=s.version WHERE s.smsi_id=$1 AND s.enabled`,
-        [smsi],
-      )
-    ).rows;
+    const effectifs = (await g.effectiveFrameworks(smsi)).filter((e) => e.enabled);
+    const attached = effectifs.length
+      ? (
+          await g.db.q<{
+            framework_id: string;
+            version: number;
+            definition: { requirements: { id: string; title: string }[] };
+          }>(
+            `SELECT v.framework_id,v.version,v.definition FROM lib_framework_versions v
+               JOIN unnest($1::uuid[],$2::int[]) AS e(id,version) ON e.id=v.framework_id AND e.version=v.version`,
+            [effectifs.map((e) => e.frameworkId), effectifs.map((e) => e.version)],
+          )
+        ).rows
+      : [];
     for (const p of attached)
       for (const r of p.definition.requirements)
         if ((r.title + ' ' + r.id).toLowerCase().includes(search.toLowerCase()) && objects.length < 300)

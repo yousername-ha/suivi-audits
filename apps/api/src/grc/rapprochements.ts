@@ -75,13 +75,9 @@ export class GrcRapprochements {
   /** Recalcule les propositions du périmètre à partir des liens, des rattachements et des correspondances validées.
       Idempotent. Renvoie le nombre de propositions nouvelles (ou rouvertes) et prévient les pilotes, par mesure. */
   async sync(smsi: string, c: Client): Promise<number> {
+    // Référentiels actifs du périmètre : rattachements propres et hérités (hiérarchie des périmètres, lot H1).
     const attached = new Map(
-      (
-        await c.query<{ framework_id: string; version: number }>(
-          'SELECT framework_id,version FROM grc_scope_frameworks WHERE smsi_id=$1 AND enabled',
-          [smsi],
-        )
-      ).rows.map((a) => [a.framework_id, a.version]),
+      (await this.g.effectiveFrameworks(smsi, c)).filter((a) => a.enabled).map((a) => [a.frameworkId, a.version]),
     );
     const candidates = new Map<string, Candidate>();
     if (attached.size) {
@@ -208,13 +204,16 @@ export class GrcRapprochements {
 
   /** Après un changement de correspondance : recalcule chaque périmètre qui utilise l'un des référentiels. */
   async syncFrameworks(frameworkIds: string[]) {
-    const smsis = (
+    const directs = (
       await this.g.db.q<{ smsi_id: string }>(
         'SELECT DISTINCT smsi_id FROM grc_scope_frameworks WHERE framework_id=ANY($1::uuid[])',
         [frameworkIds],
       )
-    ).rows;
-    for (const { smsi_id } of smsis) await this.g.db.tx((c) => this.sync(smsi_id, c), 'Automate SMSI');
+    ).rows.map((r) => r.smsi_id);
+    // Les périmètres qui en héritent sont recalculés aussi.
+    const smsis = new Set(directs);
+    for (const d of directs) for (const h of await this.g.heritiers(d)) smsis.add(h);
+    for (const smsi_id of smsis) await this.g.db.tx((c) => this.sync(smsi_id, c), 'Automate SMSI');
   }
 
   /** Actualisation à la demande du pilote. */
@@ -365,13 +364,17 @@ export class GrcRapprochements {
   async coverage(smsi: string, user: SessionUser, frameworkId?: string) {
     await this.g.permission(user, 'conformite', 'lire');
     await this.g.access(smsi, user);
-    const attached = (
-      await this.g.db.q<{ framework_id: string; version: number; name: string; identifier: string }>(
-        `SELECT s.framework_id,s.version,f.name,f.identifier FROM grc_scope_frameworks s JOIN lib_frameworks f ON f.id=s.framework_id
-          WHERE s.smsi_id=$1 AND s.enabled ORDER BY f.name,f.id`,
-        [smsi],
-      )
-    ).rows;
+    const effectifs = (await this.g.effectiveFrameworks(smsi)).filter((e) => e.enabled);
+    const attached = effectifs.length
+      ? (
+          await this.g.db.q<{ framework_id: string; version: number; name: string; identifier: string }>(
+            `SELECT f.id AS framework_id,f.name,f.identifier,v.version
+               FROM lib_frameworks f JOIN unnest($1::uuid[],$2::int[]) AS v(id,version) ON v.id=f.id
+              ORDER BY f.name,f.id`,
+            [effectifs.map((e) => e.frameworkId), effectifs.map((e) => e.version)],
+          )
+        ).rows
+      : [];
     const links = (
       await this.g.db.q<{ source_ref: string; target_ref: string }>(
         `SELECT source_ref,target_ref FROM grc_links WHERE smsi_id=$1 AND type='implements' AND target_ref LIKE 'requirement:%'`,
