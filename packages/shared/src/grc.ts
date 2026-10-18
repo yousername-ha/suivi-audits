@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { NIVEAUX_PERIMETRE } from './hierarchie-perimetres.js';
 import type { Module } from './permissions.js';
 export const GRC_KINDS = [
   'framework',
@@ -170,6 +171,9 @@ export const SmsiCreate = z
     name: label,
     scope: z.string().max(5000),
     nature: natureLibelle.default(''),
+    parentId: z.uuid().nullable().default(null),
+    entityKind: z.enum(NIVEAUX_PERIMETRE).default('perimetre'),
+    inheritFrameworks: z.boolean().default(false),
     visibility: z.literal('restricted').default('restricted'),
     timezone: fuseau,
   })
@@ -181,6 +185,10 @@ export const SmsiUpdate = z
     scope: z.string().max(5000),
     nature: natureLibelle,
     timezone: fuseau,
+    /** Absents : inchangés. `parentId: null` détache le périmètre de son parent. */
+    parentId: z.uuid().nullable().optional(),
+    entityKind: z.enum(NIVEAUX_PERIMETRE).optional(),
+    inheritFrameworks: z.boolean().optional(),
     confirm: z.literal('ENREGISTRER'),
   })
   .strict();

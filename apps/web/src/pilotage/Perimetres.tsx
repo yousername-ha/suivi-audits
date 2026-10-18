@@ -1,10 +1,31 @@
 /* Page « Périmètres » (ADR 0030, lot M1) : créer et modifier les périmètres de management, leur donner une nature
    libre (SMSI, SMQ, SMI…) et gérer les accès des périmètres restreints. Création et modification : droit
    `pilotage:administrer`, comme l'exige l'API. La nature est une simple étiquette, sans règle de comportement. */
-import { Alert, Autocomplete, Button, Group, Modal, Stack, Table, Text, Textarea, TextInput } from '@mantine/core';
+import {
+  Alert,
+  Autocomplete,
+  Button,
+  Checkbox,
+  Group,
+  Modal,
+  Select,
+  Stack,
+  Table,
+  Text,
+  Textarea,
+  TextInput,
+} from '@mantine/core';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { NATURES_PERIMETRE } from '@suivi/shared';
+import {
+  LIBELLES_NIVEAU,
+  NATURES_PERIMETRE,
+  NIVEAUX_PERIMETRE,
+  aplatir,
+  arbre,
+  descendants,
+  type NiveauPerimetre,
+} from '@suivi/shared';
 import { DataTable, StatusChip } from '@suivi/ui';
 import { api, get } from '../api';
 import { ErrorAlert } from '../components/common';
@@ -17,6 +38,9 @@ interface Perimetre {
   name: string;
   scope: string;
   nature: string;
+  parentId: string | null;
+  entityKind: NiveauPerimetre;
+  inheritFrameworks: boolean;
   visibility: 'instance' | 'restricted';
   timezone: string;
   version: number;
@@ -26,8 +50,19 @@ interface Formulaire {
   nature: string;
   scope: string;
   timezone: string;
+  parentId: string | null;
+  entityKind: NiveauPerimetre;
+  inheritFrameworks: boolean;
 }
-const VIDE: Formulaire = { name: '', nature: '', scope: '', timezone: 'Europe/Paris' };
+const VIDE: Formulaire = {
+  name: '',
+  nature: '',
+  scope: '',
+  timezone: 'Europe/Paris',
+  parentId: null,
+  entityKind: 'perimetre',
+  inheritFrameworks: false,
+};
 
 export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir: (id: string) => void }) {
   const can = useCan(),
@@ -46,7 +81,17 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
     setErreur(null);
     setFormulaire({
       edition: p,
-      valeurs: p ? { name: p.name, nature: p.nature, scope: p.scope, timezone: p.timezone } : VIDE,
+      valeurs: p
+        ? {
+            name: p.name,
+            nature: p.nature,
+            scope: p.scope,
+            timezone: p.timezone,
+            parentId: p.parentId,
+            entityKind: p.entityKind,
+            inheritFrameworks: p.inheritFrameworks,
+          }
+        : VIDE,
     });
   };
   const enregistrer = async () => {
@@ -69,8 +114,21 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
       setEnvoi(false);
     }
   };
-  const champ = (k: keyof Formulaire) => (v: string) =>
-    setFormulaire((f) => (f ? { ...f, valeurs: { ...f.valeurs, [k]: v } } : f));
+  const champ =
+    <K extends keyof Formulaire>(k: K) =>
+    (v: Formulaire[K]) =>
+      setFormulaire((f) => (f ? { ...f, valeurs: { ...f.valeurs, [k]: v } } : f));
+  const lignes = aplatir(arbre(liste.data ?? []));
+  const noeuds = (liste.data ?? []).map((p) => ({
+    id: p.id,
+    parentId: p.parentId,
+    inheritFrameworks: p.inheritFrameworks,
+  }));
+  // Parents proposés : tout périmètre accessible, sauf lui-même et ses descendants (une boucle est refusée par l'API).
+  const interdits = formulaire?.edition
+    ? new Set([formulaire.edition.id, ...descendants(noeuds, formulaire.edition.id)])
+    : new Set<string>();
+  const nomParent = (id: string | null) => (liste.data ?? []).find((p) => p.id === id)?.name;
   return (
     <Stack>
       <Alert>
@@ -99,10 +157,15 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {(liste.data ?? []).map((p) => (
+            {lignes.map(({ item: p, profondeur }) => (
               <Table.Tr key={p.id}>
-                <Table.Td>
+                <Table.Td className={`hier-n${Math.min(profondeur, 8)}`}>
                   <Text fw={600}>{p.name}</Text>
+                  <Text size="xs">
+                    {LIBELLES_NIVEAU[p.entityKind]}
+                    {p.parentId && nomParent(p.parentId) ? ` de ${nomParent(p.parentId)}` : ''}
+                    {p.inheritFrameworks ? ' · hérite des référentiels du parent' : ''}
+                  </Text>
                   {p.id === affiche && <StatusChip etat="info">Affiché dans le Pilotage</StatusChip>}
                 </Table.Td>
                 <Table.Td>{p.nature ? <StatusChip etat="neutre">{p.nature}</StatusChip> : 'Non précisée'}</Table.Td>
@@ -181,6 +244,34 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
               maxLength={60}
               value={formulaire.valeurs.nature}
               onChange={champ('nature')}
+            />
+            <Select
+              label="Niveau"
+              description="Organisation, entité ou périmètre : une étiquette de structure."
+              allowDeselect={false}
+              data={NIVEAUX_PERIMETRE.map((n) => ({ value: n, label: LIBELLES_NIVEAU[n] }))}
+              value={formulaire.valeurs.entityKind}
+              onChange={(v) => v && champ('entityKind')(v as NiveauPerimetre)}
+            />
+            <Select
+              label="Rattaché à"
+              description="Parent dans la hiérarchie ; laisser vide pour une racine."
+              clearable
+              searchable
+              placeholder="Aucun parent"
+              data={(liste.data ?? []).filter((p) => !interdits.has(p.id)).map((p) => ({ value: p.id, label: p.name }))}
+              value={formulaire.valeurs.parentId}
+              onChange={(v) => {
+                champ('parentId')(v);
+                if (!v) champ('inheritFrameworks')(false);
+              }}
+            />
+            <Checkbox
+              label="Hériter des référentiels du parent"
+              description="Les référentiels rattachés au parent s’appliquent aussi ici, sauf s’ils sont désactivés localement."
+              disabled={!formulaire.valeurs.parentId}
+              checked={formulaire.valeurs.inheritFrameworks}
+              onChange={(e) => champ('inheritFrameworks')(e.currentTarget.checked)}
             />
             <Textarea
               label="Périmètre"

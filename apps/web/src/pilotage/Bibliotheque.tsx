@@ -29,6 +29,9 @@ interface Rattachement {
   version: number;
   latestVersion: number;
   enabled: boolean;
+  inherited: boolean;
+  originId: string;
+  originName: string | null;
 }
 /** Exemple fictif d'import : ne reproduit aucun référentiel officiel. */
 const EXEMPLE_FICTIF: FrameworkDefinition = {
@@ -411,9 +414,29 @@ export function ReferentielsDuPerimetre({ smsi }: { smsi: string }) {
               Version {r.version}
               {r.latestVersion > r.version && ` (la version ${r.latestVersion} est disponible)`} ·{' '}
               {r.enabled ? 'Actif' : 'Inactif'}
+              {r.inherited && ` · hérité de ${r.originName ?? 'un périmètre parent non accessible'}`}
             </Text>
           </div>
-          {admin && (
+          {admin && r.inherited && (
+            <ConfirmButton
+              size="xs"
+              variant="default"
+              message={`Désactiver « ${r.name} » pour ce périmètre ? Le référentiel reste actif dans le périmètre parent.`}
+              onConfirm={() =>
+                agir(async () => {
+                  await api('PUT', `/api/grc/${smsi}/framework-attachments/${r.frameworkId}`, {
+                    body: { version: r.version, confirm: 'RATTACHER' },
+                  });
+                  await api('PUT', `/api/grc/${smsi}/framework-attachments/${r.frameworkId}/activation`, {
+                    body: { enabled: false },
+                  });
+                })
+              }
+            >
+              Désactiver ici
+            </ConfirmButton>
+          )}
+          {admin && !r.inherited && (
             <Group gap="xs">
               {r.latestVersion > r.version && (
                 <Button size="xs" variant="default" onClick={() => rattacher(r.frameworkId, r.latestVersion)}>

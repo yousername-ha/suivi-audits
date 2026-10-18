@@ -16,6 +16,11 @@ import {
   RELATIONS,
   StudyConfiguration,
   effectivePermissions,
+  MESSAGES_REFUS,
+  refusRattachement,
+  type NiveauPerimetre,
+  type NoeudPerimetre,
+  type RattachementReferentiel,
   type Permission,
   type GrcKind,
   type GrcObject,
@@ -82,6 +87,9 @@ export interface GrcSmsi {
   name: string;
   scope: string;
   nature: string;
+  parentId: string | null;
+  entityKind: NiveauPerimetre;
+  inheritFrameworks: boolean;
   visibility: 'instance' | 'restricted';
   timezone: string;
   businessVersion: number;
@@ -90,7 +98,7 @@ export interface GrcSmsi {
   version: number;
   createdBy: string;
 }
-const smsiColumns = `s.id,s.name,s.scope,s.nature,s.visibility,s.timezone,s.business_version AS "businessVersion",s.risk_method_id AS "riskMethodId",s.risk_method_version AS "riskMethodVersion",s.version,s.created_by AS "createdBy"`;
+const smsiColumns = `s.id,s.name,s.scope,s.nature,s.parent_id AS "parentId",s.entity_kind AS "entityKind",s.inherit_frameworks AS "inheritFrameworks",s.visibility,s.timezone,s.business_version AS "businessVersion",s.risk_method_id AS "riskMethodId",s.risk_method_version AS "riskMethodVersion",s.version,s.created_by AS "createdBy"`;
 /** Résolution des épinglages d'une méthode de risque sur le catalogue de configuration (ADR 0038), branchée par services.ts. */
 export interface MethodBindingsResolver {
   resolveMethod(
@@ -184,6 +192,9 @@ export class Grc {
       name: r.name,
       scope: r.scope,
       nature: r.nature,
+      parentId: r.parentId,
+      entityKind: r.entityKind,
+      inheritFrameworks: r.inheritFrameworks,
       visibility: r.visibility,
       timezone: r.timezone,
       businessVersion: r.businessVersion,
@@ -211,23 +222,88 @@ export class Grc {
     ).rows;
   }
   async createSmsi(
-    input: { name: string; scope: string; nature: string; timezone: string },
+    input: {
+      name: string;
+      scope: string;
+      nature: string;
+      timezone: string;
+      parentId?: string | null;
+      entityKind?: NiveauPerimetre;
+      inheritFrameworks?: boolean;
+    },
     user: SessionUser,
     ip: string,
   ) {
     await this.permission(user, 'pilotage', 'administrer');
     return this.db.tx(async (c) => {
+      const parentId = input.parentId ?? null;
+      if (parentId) await this.verifierParent('', parentId, user, c);
       const row = (
         await c.query<{ id: string }>(
-          `INSERT INTO grc_smsis(name,scope,nature,timezone,business_version,created_by) VALUES($1,$2,$3,$4,(SELECT version FROM business_policy_configuration WHERE id=1),$5) RETURNING id`,
-          [input.name, input.scope, input.nature, input.timezone, user.username],
+          `INSERT INTO grc_smsis(name,scope,nature,timezone,parent_id,entity_kind,inherit_frameworks,business_version,created_by) VALUES($1,$2,$3,$4,$5,$6,$7,(SELECT version FROM business_policy_configuration WHERE id=1),$8) RETURNING id`,
+          [
+            input.name,
+            input.scope,
+            input.nature,
+            input.timezone,
+            parentId,
+            input.entityKind ?? 'perimetre',
+            parentId ? (input.inheritFrameworks ?? false) : false,
+            user.username,
+          ],
         )
       ).rows[0]!;
       await c.query('INSERT INTO grc_members(smsi_id,user_id,can_write) VALUES($1,$2,true)', [row.id, user.id]);
-      await this.db.audit(user, ip, 'grc.smsi.created', row.id, {}, c);
+      await this.db.audit(user, ip, 'grc.smsi.created', row.id, { parentId }, c);
+      if (parentId && input.inheritFrameworks) await this.rapprochements.sync(row.id, c);
       await this.notify(c, row.id, 1, row.id, 'pilotage', user.username);
       return this.access(row.id, user, true, c);
     }, user.username);
+  }
+  /** Contrôle d'un rattachement : parent connu, accessible en écriture, sans boucle ni profondeur excessive. */
+  private async verifierParent(id: string, parentId: string, user: SessionUser, c: Client) {
+    const noeuds = (
+      await c.query<NoeudPerimetre>(
+        'SELECT id,parent_id AS "parentId",inherit_frameworks AS "inheritFrameworks" FROM grc_smsis',
+      )
+    ).rows;
+    const refus = refusRattachement(noeuds, id, parentId);
+    if (refus) throw new HttpError(422, MESSAGES_REFUS[refus]);
+    await this.access(parentId, user, true, c);
+  }
+  /** Référentiels effectifs d'un périmètre : les siens et ceux hérités (chaîne d'héritage explicite), le plus proche l'emporte. */
+  async effectiveFrameworks(smsi: string, c?: Client): Promise<RattachementReferentiel[]> {
+    return (
+      await (c ?? this.db.pool).query<RattachementReferentiel>(
+        `WITH RECURSIVE chaine(id,parent_id,inherit,profondeur) AS (
+           SELECT id,parent_id,inherit_frameworks,0 FROM grc_smsis WHERE id=$1
+           UNION ALL
+           SELECT p.id,p.parent_id,p.inherit_frameworks,c.profondeur+1
+             FROM chaine c JOIN grc_smsis p ON p.id=c.parent_id WHERE c.inherit AND c.profondeur<64)
+         SELECT DISTINCT ON (s.framework_id) s.framework_id AS "frameworkId",s.version,s.enabled,ch.id AS "origineId"
+           FROM chaine ch JOIN grc_scope_frameworks s ON s.smsi_id=ch.id
+          ORDER BY s.framework_id,ch.profondeur`,
+        [smsi],
+      )
+    ).rows;
+  }
+  /** Périmètres qui héritent (directement ou non) des référentiels de `smsi` : à recalculer quand ils changent. */
+  async heritiers(smsi: string, c?: Client): Promise<string[]> {
+    return (
+      await (c ?? this.db.pool).query<{ id: string }>(
+        `WITH RECURSIVE d(id,profondeur) AS (
+           SELECT id,1 FROM grc_smsis WHERE parent_id=$1 AND inherit_frameworks
+           UNION
+           SELECT s.id,d.profondeur+1 FROM grc_smsis s JOIN d ON s.parent_id=d.id WHERE s.inherit_frameworks AND d.profondeur<64)
+         SELECT DISTINCT id FROM d`,
+        [smsi],
+      )
+    ).rows.map((r) => r.id);
+  }
+  /** Recalcule les rapprochements du périmètre et de ceux qui héritent de lui. */
+  async resynchroniser(smsi: string, c: Client) {
+    await this.rapprochements.sync(smsi, c);
+    for (const h of await this.heritiers(smsi, c)) await this.rapprochements.sync(h, c);
   }
   /** Modifie le nom, le texte, la nature et le fuseau d'un périmètre (version attendue ; membres et rattachements inchangés). */
   async updateSmsi(id: string, input: SmsiUpdate, expected: number, user: SessionUser, ip: string) {
@@ -238,19 +314,30 @@ export class Grc {
       const current = await this.access(id, user, true, c);
       if (current.version !== expected)
         throw new HttpError(412, 'Le périmètre a changé : rechargez-le avant de le modifier.');
+      const parentId = input.parentId === undefined ? current.parentId : input.parentId;
+      const entityKind = input.entityKind ?? current.entityKind;
+      const inheritFrameworks = parentId ? (input.inheritFrameworks ?? current.inheritFrameworks) : false;
+      if (parentId !== current.parentId && parentId) await this.verifierParent(id, parentId, user, c);
       await c.query(
-        'UPDATE grc_smsis SET name=$2,scope=$3,nature=$4,timezone=$5,version=version+1,updated_at=now() WHERE id=$1',
-        [id, input.name, input.scope, input.nature, input.timezone],
+        'UPDATE grc_smsis SET name=$2,scope=$3,nature=$4,timezone=$5,parent_id=$6,entity_kind=$7,inherit_frameworks=$8,version=version+1,updated_at=now() WHERE id=$1',
+        [id, input.name, input.scope, input.nature, input.timezone, parentId, entityKind, inheritFrameworks],
       );
-      const changed = (['name', 'scope', 'nature', 'timezone'] as const).filter((k) => current[k] !== input[k]);
+      const changed: string[] = (['name', 'scope', 'nature', 'timezone'] as const).filter(
+        (k) => current[k] !== input[k],
+      );
+      if (parentId !== current.parentId) changed.push('parentId');
+      if (entityKind !== current.entityKind) changed.push('entityKind');
+      if (inheritFrameworks !== current.inheritFrameworks) changed.push('inheritFrameworks');
       await this.db.audit(
         user,
         ip,
         'grc.smsi.updated',
         id,
-        { changed, previousName: current.name, previousNature: current.nature },
+        { changed, previousName: current.name, previousNature: current.nature, previousParentId: current.parentId },
         c,
       );
+      if (parentId !== current.parentId || inheritFrameworks !== current.inheritFrameworks)
+        await this.resynchroniser(id, c);
       await this.notify(c, id, current.version + 1, id, 'pilotage', user.username);
       return this.access(id, user, false, c);
     }, user.username);

@@ -1381,3 +1381,32 @@ rect.audit-niv-faible {
   border-radius: var(--mantine-radius-xs);
   overflow: hidden;
 }
+
+/* Hiérarchie des périmètres : retrait de la première colonne selon la profondeur (aucun style en ligne, CSP stricte). */
+.hier-n0 {
+  padding-inline-start: calc(var(--mantine-spacing-md) * 0 + var(--mantine-spacing-xs));
+}
+.hier-n1 {
+  padding-inline-start: calc(var(--mantine-spacing-md) * 1 + var(--mantine-spacing-xs));
+}
+.hier-n2 {
+  padding-inline-start: calc(var(--mantine-spacing-md) * 2 + var(--mantine-spacing-xs));
+}
+.hier-n3 {
+  padding-inline-start: calc(var(--mantine-spacing-md) * 3 + var(--mantine-spacing-xs));
+}
+.hier-n4 {
+  padding-inline-start: calc(var(--mantine-spacing-md) * 4 + var(--mantine-spacing-xs));
+}
+.hier-n5 {
+  padding-inline-start: calc(var(--mantine-spacing-md) * 5 + var(--mantine-spacing-xs));
+}
+.hier-n6 {
+  padding-inline-start: calc(var(--mantine-spacing-md) * 6 + var(--mantine-spacing-xs));
+}
+.hier-n7 {
+  padding-inline-start: calc(var(--mantine-spacing-md) * 7 + var(--mantine-spacing-xs));
+}
+.hier-n8 {
+  padding-inline-start: calc(var(--mantine-spacing-md) * 8 + var(--mantine-spacing-xs));
+}

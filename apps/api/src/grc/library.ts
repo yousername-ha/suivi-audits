@@ -37,6 +37,11 @@ export interface ScopeAttachment {
   enabled: boolean;
   attachedBy: string;
   attachedAt: string;
+  /** Hérité d'un périmètre parent (chaîne d'héritage explicite) : se modifie là où il est rattaché. */
+  inherited: boolean;
+  originId: string;
+  /** Nom du périmètre porteur, absent si l'utilisateur n'y a pas accès. */
+  originName: string | null;
 }
 interface LibraryRow {
   id: string;
@@ -355,15 +360,31 @@ export class GrcLibrary {
   async attachments(smsi: string, user: SessionUser): Promise<ScopeAttachment[]> {
     await this.g.permission(user, 'conformite', 'lire');
     await this.g.access(smsi, user);
-    return (
+    const propres = (
       await this.g.db.q<ScopeAttachment>(
         `SELECT s.framework_id AS "frameworkId",f.identifier,f.name,s.version,f.version AS "latestVersion",s.enabled,
-                s.attached_by AS "attachedBy",s.attached_at AS "attachedAt"
+                s.attached_by AS "attachedBy",s.attached_at AS "attachedAt",false AS inherited,s.smsi_id AS "originId",NULL::text AS "originName"
            FROM grc_scope_frameworks s JOIN lib_frameworks f ON f.id=s.framework_id
           WHERE s.smsi_id=$1 ORDER BY f.name,f.id`,
         [smsi],
       )
     ).rows;
+    const heritees = (await this.g.effectiveFrameworks(smsi)).filter((e) => e.origineId !== smsi);
+    if (!heritees.length) return propres;
+    const origines = new Map<string, string | null>();
+    for (const o of new Set(heritees.map((h) => h.origineId)))
+      origines.set(o, (await this.g.visible(user, o)) ? (await this.g.access(o, user)).name : null);
+    const rows = (
+      await this.g.db.q<ScopeAttachment & { origine: string }>(
+        `SELECT s.framework_id AS "frameworkId",f.identifier,f.name,s.version,f.version AS "latestVersion",s.enabled,
+                s.attached_by AS "attachedBy",s.attached_at AS "attachedAt",true AS inherited,s.smsi_id AS "originId",NULL::text AS "originName"
+           FROM grc_scope_frameworks s JOIN lib_frameworks f ON f.id=s.framework_id
+           JOIN unnest($1::uuid[],$2::uuid[]) AS h(framework_id,origine) ON h.framework_id=s.framework_id AND h.origine=s.smsi_id
+          ORDER BY f.name,f.id`,
+        [heritees.map((h) => h.frameworkId), heritees.map((h) => h.origineId)],
+      )
+    ).rows;
+    return [...propres, ...rows.map((r) => ({ ...r, originName: origines.get(r.originId) ?? null }))];
   }
 
   /** Rattache (ou change la version rattachée de) un référentiel de la bibliothèque à un périmètre. */
@@ -394,7 +415,7 @@ export class GrcLibrary {
         c,
       );
       await this.g.notify(c, smsi, 0, smsi, 'conformite', user.username);
-      await this.g.rapprochements.sync(smsi, c);
+      await this.g.resynchroniser(smsi, c);
     }, user.username);
     return this.attachments(smsi, user);
   }
@@ -412,7 +433,7 @@ export class GrcLibrary {
       if (!r.rowCount) throw new HttpError(404, 'Référentiel non rattaché à ce périmètre.');
       await this.g.db.audit(user, ip, 'library.framework.enabled', smsi, { frameworkId: id, enabled }, c);
       await this.g.notify(c, smsi, 0, smsi, 'conformite', user.username);
-      await this.g.rapprochements.sync(smsi, c);
+      await this.g.resynchroniser(smsi, c);
     }, user.username);
     return this.attachments(smsi, user);
   }
@@ -448,7 +469,7 @@ export class GrcLibrary {
       await c.query('DELETE FROM grc_scope_frameworks WHERE smsi_id=$1 AND framework_id=$2', [smsi, id]);
       await this.g.db.audit(user, ip, 'library.framework.detached', smsi, { frameworkId: id }, c);
       await this.g.notify(c, smsi, 0, smsi, 'conformite', user.username);
-      await this.g.rapprochements.sync(smsi, c);
+      await this.g.resynchroniser(smsi, c);
     }, user.username);
     return this.attachments(smsi, user);
   }
@@ -552,7 +573,7 @@ export class GrcLibrary {
         c,
       );
       await this.g.notify(c, smsi, 0, smsi, 'conformite', user.username);
-      await this.g.rapprochements.sync(smsi, c);
+      await this.g.resynchroniser(smsi, c);
       return { libraryFrameworkId: libraryId, version: 1, droppedMeasureRefs: again.droppedMeasureRefs };
     }, user.username);
   }
