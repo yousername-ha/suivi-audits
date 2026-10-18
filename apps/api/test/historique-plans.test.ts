@@ -1,7 +1,7 @@
 /* Reprise des plans de l'outil de suivi (clé `plans`) : lecture et écriture natives sous verrou, sans copie, champs
    inconnus conservés, actions croisées (couverture du cycle, indicateur, registre des écarts). Données fictives. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createTestApp, login, makeUser, type Agent, type TestApp } from './helpers.js';
+import { createTestApp, login, makeUser, seedState, type Agent, type TestApp } from './helpers.js';
 
 let t: TestApp, admin: Agent, reader: Agent, writer: Agent;
 const etat = async () => (await admin.get('/api/legacy/state')).json();
@@ -9,8 +9,7 @@ const poser = async (modifier: (s: Record<string, unknown>) => void) => {
   const cur = await admin.get('/api/legacy/state');
   const s = cur.json();
   modifier(s);
-  const r = await admin.put('/api/legacy/state', s, { 'if-match': cur.headers.etag as string });
-  expect(r.statusCode, r.body).toBe(204);
+  await seedState(t, s);
 };
 
 beforeAll(async () => {

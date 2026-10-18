@@ -120,9 +120,9 @@ async function withLockedState<T>(
 ): Promise<T> {
   return svc.db.tx(async (c) => {
     await c.query('SELECT 1 FROM app_state WHERE id = 1 FOR UPDATE');
-    const row = await svc.legacy.row(c);
-    const { data, out } = fn((row?.data ?? {}) as Record<string, unknown>);
-    await svc.legacy.save(c, data as JsonObject, sess.user, null, note);
+    const etat = await svc.legacy.recompose(c);
+    const { data, out } = fn((etat?.data ?? {}) as Record<string, unknown>);
+    await svc.legacy.nativeWrite(c, data as JsonObject, sess.user, null, note);
     return out;
   }, sess.user.username);
 }

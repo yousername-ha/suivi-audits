@@ -1,7 +1,7 @@
 /* Reprise de la gestion CRRC de l'outil de suivi (clé `crrc`) : contrats, ressources, sauvegardes, restaurations,
    alertes et offres natifs sous verrou, champs inconnus conservés. Données fictives. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createTestApp, login, makeUser, type Agent, type TestApp } from './helpers.js';
+import { createTestApp, login, makeUser, seedState, type Agent, type TestApp } from './helpers.js';
 
 let t: TestApp, admin: Agent, reader: Agent, writer: Agent;
 const etat = async () => (await admin.get('/api/legacy/state')).json();
@@ -23,7 +23,7 @@ beforeAll(async () => {
     resources: [{ id: 'RES-1', est: 'CRRC-001-AAA', name: 'NAS fictif', tech: 's3' }],
     runs: [{ id: 'RUN-1', res: 'RES-1', date: '2026-10-01T02:00', type: 'Complète', status: 'Réussie', volumeGb: 10 }],
   };
-  expect((await admin.put('/api/legacy/state', s, { 'if-match': cur.headers.etag as string })).statusCode).toBe(204);
+  await seedState(t, s);
 });
 afterAll(() => t.close());
 

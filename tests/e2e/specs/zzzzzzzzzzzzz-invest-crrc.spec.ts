@@ -1,7 +1,7 @@
 /* Plan d'investissement et gestion CRRC repris de l'outil de suivi : lignes budgétaires, comparaison des options,
    contrats, tableau de bord des sauvegardes, ressources, restauration guidée et alertes. Données fictives posées par l'API. */
 import { expect, test } from '@playwright/test';
-import { sessionAdmin, watchPage } from '../helpers';
+import { sessionAdmin, watchPage, ecrireEtat } from '../helpers';
 
 const il = (heures: number) => new Date(Date.now() - heures * 36e5).toISOString().slice(0, 16);
 const dans = (jours: number) => new Date(Date.now() + jours * 864e5).toISOString().slice(0, 10);
@@ -94,11 +94,7 @@ test('Investissements et CRRC : lignes, comparaison, contrat, sauvegardes, resta
         ],
       },
     });
-    const put = await ctx.request.put('/api/legacy/state', {
-      data: s,
-      headers: { 'if-match': cur.headers().etag!, 'x-csrf-token': csrf },
-    });
-    expect(put.status()).toBe(204);
+    await ecrireEtat(ctx.request, csrf, s);
 
     // Investissements : tableau de bord, ligne ajoutée, comparaison.
     await page.goto('/pilotage/investissements');

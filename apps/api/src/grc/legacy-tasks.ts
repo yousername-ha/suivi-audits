@@ -150,7 +150,7 @@ export class LegacyTasks {
             .sort()
             .at(-1) ?? '';
       }
-      const saved = await this.g.legacy.legacyWrite(c, state.data, user, expected);
+      const saved = await this.g.legacy.nativeWrite(c, state.data, user, expected);
       if (saved.conflict) throw new HttpError(412, 'Version obsolète.');
       await this.g.db.audit(user, ip, 'grc.legacy.task.completed', ref, { ...input, sourceSha }, c);
       await this.g.notify(c, ref, saved.version, DEFAULT_SMSI, key === 'tasks' ? 'ecarts' : 'pilotage', user.username);

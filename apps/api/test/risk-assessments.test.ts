@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { environmentDefaults, type AssessmentIntent } from '@suivi/shared';
-import { Agent, createTestApp, login, makeUser, PASSWORD, type TestApp } from './helpers.js';
+import { Agent, createTestApp, login, makeUser, PASSWORD, seedState, type TestApp } from './helpers.js';
 let t: TestApp, admin: Agent;
 const root = '/api/ia/evaluations',
   id = 'B2-QA-IA',
@@ -25,12 +25,7 @@ const source = {
 const ratings = { impact: 'impact_5', probability: 'probability_4', maturity: 'maturity_1' };
 async function sources(evals: unknown[]) {
   const state = (await admin.get('/api/legacy/state')).json();
-  const r = await admin.put(
-    '/api/legacy/state',
-    { ...state, ai: { ...state.ai, evals } },
-    { 'if-match': (await admin.get('/api/legacy/state')).headers.etag as string },
-  );
-  expect(r.statusCode).toBe(204);
+  await seedState(t, { ...state, ai: { ...state.ai, evals } });
 }
 async function intent(): Promise<AssessmentIntent> {
   const d = (await admin.get(path)).json();

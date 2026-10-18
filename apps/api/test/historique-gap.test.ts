@@ -1,7 +1,7 @@
 /* Reprise des applications à intégrer au périmètre (clé `appGaps`) : liste de contrôle, états, plan d'action, questionnaire
    guidé, lecture et écriture natives sous verrou, sans copie. Données fictives. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createTestApp, login, makeUser, type Agent, type TestApp } from './helpers.js';
+import { createTestApp, login, makeUser, seedState, type Agent, type TestApp } from './helpers.js';
 
 let t: TestApp, admin: Agent, reader: Agent, writer: Agent;
 const etat = async () => (await admin.get('/api/legacy/state')).json();
@@ -9,7 +9,7 @@ const poser = async (m: (s: Record<string, unknown>) => void) => {
   const cur = await admin.get('/api/legacy/state');
   const s = cur.json();
   m(s);
-  expect((await admin.put('/api/legacy/state', s, { 'if-match': cur.headers.etag as string })).statusCode).toBe(204);
+  await seedState(t, s);
 };
 const item = (id: string, ref: string, num: string) => ({
   id,
@@ -198,9 +198,8 @@ describe('questionnaire guidé', () => {
     ).toBe(false);
   });
   it('sans registre IA : il est initialisé vide puis l’usage y est inscrit', async () => {
-    await poser((s) => {
-      delete s.ai;
-    });
+    // Le module IA est repris dans des tables : on le vide par sa correspondance (supprimer la clé de l'état n'y suffit pas).
+    await t.svc.db.tx((c) => t.svc.legacy.mapper('ai')!.write(c, undefined, null));
     const r = await writer.post('/api/gap/guide', {
       name: 'Service fictif sans registre',
       answers: { ia: 'Oui' },

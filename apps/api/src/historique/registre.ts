@@ -41,7 +41,7 @@ export class RegistreHistorique {
       if (!etat) throw new HttpError(409, 'Registre historique indisponible.');
       const data: JsonObject = { ...etat.data };
       const resultat = await appliquer(data, c);
-      const r = await this.g.legacy.legacyWrite(c, data, user, etat.version);
+      const r = await this.g.legacy.nativeWrite(c, data, user, etat.version);
       if (r.conflict) throw new HttpError(412, 'Les données historiques ont changé. Rechargez avant de modifier.');
       const ref = cible.reference(resultat);
       await this.g.db.audit(user, ip, cible.action, ref, { version: r.version }, c);

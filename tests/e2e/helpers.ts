@@ -112,3 +112,46 @@ export async function sessionAdmin(
   await ctx.close();
   return { state, csrf };
 }
+
+/** Écrit l'état historique souhaité (ADR 0040) : les modules repris dans des tables passent par l'import « Remplacer un
+    module » (seule voie d'écriture hors écrans natifs), le reste par l'écriture directe de /legacy. */
+export async function ecrireEtat(req: APIRequestContext, csrf: string, souhaite: Record<string, unknown>) {
+  const modules = (await (await req.get('/api/legacy/modules')).json()) as { key: string; takenOver: boolean }[];
+  const repris = modules.filter((m) => m.takenOver).map((m) => m.key);
+  const lire = async () => {
+    const r = await req.get('/api/legacy/state');
+    return { data: (await r.json()) as Record<string, unknown>, etag: r.headers().etag! };
+  };
+  const avant = (await lire()).data;
+  const delta = repris.filter(
+    (k) => k in souhaite && JSON.stringify(souhaite[k] ?? null) !== JSON.stringify(avant[k] ?? null),
+  );
+  for (const k of delta) {
+    const courant = (await lire()).data;
+    // Le fichier ne contient que le socle de l'état et le module remplacé : les autres modules repris n'y figurent pas.
+    // Socle structurel seulement (listes vidées) : en mode « remplacer », seul le module visé est lu dans le fichier.
+    const socle = Object.fromEntries(
+      Object.entries(courant)
+        .filter(([cle]) => !repris.includes(cle))
+        .map(([cle, v]) => [cle, Array.isArray(v) ? [] : v]),
+    );
+    const fichier = Buffer.from(JSON.stringify({ ...socle, [k]: souhaite[k] }));
+    const entetes = { 'x-csrf-token': csrf, 'content-type': 'application/octet-stream', 'x-file-name': 'etat.json' };
+    const sim = await req.post(`/api/admin/import/simulate?mode=replace&module=${k}`, {
+      data: fichier,
+      headers: entetes,
+    });
+    if (!sim.ok()) throw new Error(`Simulation de l’import « ${k} » : ${sim.status()} ${await sim.text()}`);
+    const sha = ((await sim.json()) as { sha256: string }).sha256;
+    const app = await req.post(`/api/admin/import/apply?mode=replace&module=${k}&confirm=${k}&sha256=${sha}`, {
+      data: fichier,
+      headers: entetes,
+    });
+    if (!app.ok()) throw new Error(`Import « ${k} » : ${app.status()} ${await app.text()}`);
+  }
+  const { data, etag } = await lire();
+  const reste = { ...souhaite };
+  for (const k of repris) reste[k] = data[k];
+  const put = await req.put('/api/legacy/state', { data: reste, headers: { 'if-match': etag, 'x-csrf-token': csrf } });
+  if (put.status() !== 204) throw new Error(`Écriture de l’état : ${put.status()} ${await put.text()}`);
+}

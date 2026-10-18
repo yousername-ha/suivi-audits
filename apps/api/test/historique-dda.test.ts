@@ -1,7 +1,7 @@
 /* Reprise de la déclaration d'applicabilité de l'outil de suivi (clé `dda`) : écritures natives sous verrou, clauses ISO
    obligatoires, texte de référence saisi par l'utilisateur, champs inconnus conservés. Données fictives. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createTestApp, login, makeUser, type Agent, type TestApp } from './helpers.js';
+import { createTestApp, login, makeUser, seedState, type Agent, type TestApp } from './helpers.js';
 
 let t: TestApp, admin: Agent, reader: Agent, writer: Agent;
 const etat = async () => (await admin.get('/api/legacy/state')).json();
@@ -32,7 +32,7 @@ beforeAll(async () => {
     { id: 'NC-1', type: 'NC mineure', status: 'Ouvert', source: 'Audit', text: 'Écart fictif', items: ['A-5.1'] },
     { id: 'NC-2', type: 'NC', status: 'Ouvert', source: 'Audit', text: 'Autre', items: ['HDS-1'] },
   ];
-  expect((await admin.put('/api/legacy/state', s, { 'if-match': cur.headers.etag as string })).statusCode).toBe(204);
+  await seedState(t, s);
 });
 afterAll(() => t.close());
 

@@ -35,7 +35,7 @@ describe('déclaration d’applicabilité historique dans le Pilotage', () => {
         ...((st.data.dda as object) ?? {}),
         'A-5.1': { app: 'oui', level: 'Partiel', obj: 'OBJ-FICTIF' },
       };
-      await t.svc.legacy.legacyWrite(c, st.data, { username: 'test' } as never, st.version);
+      await t.svc.legacy.nativeWrite(c, st.data, { username: 'test' } as never, st.version);
     }, 'test');
     const fiche = (await a.get(base + '/A-5.1')).json();
     expect(fiche.data.level).toBe('Partiel');

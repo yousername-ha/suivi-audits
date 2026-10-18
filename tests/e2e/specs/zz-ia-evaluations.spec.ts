@@ -1,16 +1,12 @@
 import { test, expect, type Page } from '@playwright/test';
-import { sessionAdmin, watchPage } from '../helpers';
+import { ecrireEtat, sessionAdmin, watchPage } from '../helpers';
 async function changeSource(page: Page, id: string, source: Record<string, unknown> | null) {
   const r = await page.request.get('/api/legacy/state');
   const state = await r.json();
   const me = await (await page.request.get('/api/auth/me')).json();
   const evals = (state.ai?.evals ?? []).filter((e: { id: string }) => e.id !== id);
   if (source) evals.push(source);
-  const result = await page.request.put('/api/legacy/state', {
-    headers: { Origin: new URL(page.url()).origin, 'X-CSRF-Token': me.csrf, 'If-Match': r.headers().etag! },
-    data: { ...state, ai: { ...state.ai, evals } },
-  });
-  expect(result.status()).toBe(204);
+  await ecrireEtat(page.request, me.csrf, { ...state, ai: { ...state.ai, evals } });
 }
 test('IA : décision mobile réelle, instantané conservé après modification et retrait de la source', async ({
   browser,

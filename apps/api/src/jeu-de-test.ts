@@ -9,6 +9,7 @@
 import crypto from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 import { methodTemplate } from '@suivi/shared';
+import type { JsonObject } from '@suivi/shared/legacy';
 import type { Services } from './services.js';
 
 export const ORGANISATION_TEST = 'Association Fictive de Santé (jeu de test)';
@@ -617,13 +618,12 @@ export async function chargerJeuDeTest(
       );
     const { today: _jour, ...jeu } = etatJeuDeTest();
     void _jour;
-    const put = await appel(
-      'PUT',
-      '/api/legacy/state',
-      { ...courant, ...jeu },
-      { 'if-match': String(lu.headers.etag) },
-    );
-    if (put.statusCode >= 400) throw new Error(`Écriture de l’état : ${put.statusCode} ${put.body}`);
+    // Écriture directe par le service : les modules repris vont dans leurs tables (ADR 0040), /legacy les refuse.
+    await svc.db.tx(async (c) => {
+      await c.query('SELECT 1 FROM app_state WHERE id=1 FOR UPDATE');
+      const r = await svc.legacy.nativeWrite(c, { ...courant, ...jeu } as JsonObject, null, null, 'Jeu de test');
+      if (r.conflict) throw new Error('Écriture de l’état : conflit de version.');
+    }, compte);
     bilan.etat = 'oui';
     // 2) Référentiel de démonstration dans la bibliothèque, rattaché au pilotage commun.
     const definition = referentielDemonstration();

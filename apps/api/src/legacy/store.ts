@@ -82,7 +82,7 @@ export class LegacyStore {
       expected : version attendue (contrôle optimiste) ou null pour forcer. */
   async save(
     c: Client,
-    obj: JsonObject,
+    incoming: JsonObject,
     user: Actor | null,
     expected: number | null,
     note: string,
@@ -90,6 +90,9 @@ export class LegacyStore {
   ): Promise<
     { conflict: true; by: string; at: Date; version: number } | { conflict: false; version: number; sha256: string }
   > {
+    // Les modules repris vivent dans leurs tables : jamais de copie dans app_state, quel que soit l'appelant.
+    const obj: JsonObject = { ...incoming };
+    for (const m of this.mappers.values()) delete obj[m.key];
     const sha = sha256hex(JSON.stringify(obj));
     const cur = (
       await c.query<{ version: number; updated_by: string; updated_at: Date }>(
@@ -145,12 +148,16 @@ export class LegacyStore {
       if (m.key in incoming) {
         const current = await m.read(c);
         const value = incoming[m.key] as Json;
-        // Module absent des tables : seule une valeur vide est acceptée (l'outil historique crée la clé à la volée).
+        // Module absent des tables : seule une valeur vide (null, objet ou liste vide) est acceptée (l'outil historique crée la clé à la volée).
         const same =
           current === undefined
-            ? value === null || (isObject(value) && !Object.keys(value).length)
+            ? value === null ||
+              (isObject(value) && !Object.keys(value).length) ||
+              (Array.isArray(value) && !value.length)
             : canonicalJson(value) === canonicalJson(current);
         if (!same) blocked.push(m.key);
+        // Conteneur vide accepté sur un module absent : sa présence est enregistrée (clé attendue par l'outil historique).
+        else if (current === undefined && value !== null) await m.write(c, value, null);
       }
       delete stored[m.key];
     }
@@ -165,5 +172,31 @@ export class LegacyStore {
       );
     }
     return this.save(c, stored, user, expected, '');
+  }
+
+  /** Écriture depuis la nouvelle interface : les modules repris dans des tables sont enregistrés dans leurs tables (par
+      leur correspondance) quand leur valeur change ; seul le reste de l'état va dans app_state. Contrairement à
+      `legacyWrite`, rien n'est refusé : c'est la source de vérité relationnelle qui est modifiée. */
+  async nativeWrite(c: Client, incoming: JsonObject, user: Actor | null, expected: number | null, note = '') {
+    const stored: JsonObject = { ...incoming };
+    // Conflit détecté avant toute écriture dans les tables des modules repris.
+    const cur = (
+      await c.query<{ version: number; updated_by: string; updated_at: Date }>(
+        'SELECT version, updated_by, updated_at FROM app_state WHERE id=1 FOR UPDATE',
+      )
+    ).rows[0];
+    if (cur && expected != null && expected !== cur.version)
+      return { conflict: true as const, by: cur.updated_by, at: cur.updated_at, version: cur.version };
+    for (const m of this.mappers.values()) {
+      if (m.key in incoming) {
+        const current = await m.read(c);
+        const value = incoming[m.key] as Json;
+        // Contrairement à /legacy, un conteneur vide explicite est enregistré (l'outil historique attend la clé présente).
+        const same = current === undefined ? value === null : canonicalJson(value) === canonicalJson(current);
+        if (!same) await m.write(c, value, null);
+      }
+      delete stored[m.key];
+    }
+    return this.save(c, stored, user, expected, note);
   }
 }

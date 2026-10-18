@@ -77,7 +77,7 @@ export class PilotagePestel {
       }
       scope.issueFactors = actuel;
       etat.data.scope = scope;
-      const r = await this.g.legacy.legacyWrite(c, etat.data, user, etat.version);
+      const r = await this.g.legacy.nativeWrite(c, etat.data, user, etat.version);
       if (r.conflict) throw new HttpError(412, 'Le contexte a changé. Rechargez avant de classer.');
       await this.g.db.audit(
         user,

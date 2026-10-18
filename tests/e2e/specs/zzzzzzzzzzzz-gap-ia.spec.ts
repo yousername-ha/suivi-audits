@@ -1,7 +1,7 @@
 /* Applications à intégrer (GAP) et conformité IA reprises de l'outil de suivi : questionnaire guidé, fiche d'application,
    action du registre des écarts, registre des usages, évaluation et plan IA. Données fictives posées par l'API. */
 import { expect, test } from '@playwright/test';
-import { sessionAdmin, watchPage } from '../helpers';
+import { sessionAdmin, watchPage, ecrireEtat } from '../helpers';
 
 const exigence = (id: string, ref: string, num: string) => ({
   id,
@@ -58,7 +58,7 @@ test('GAP guidé, fiche, action ; conformité IA : usage, scénario, plan', asyn
         plan: [
           {
             id: 'AP-001',
-            step: '1',
+            step: 1,
             phase: 'Phase fictive',
             action: 'Étape fictive du plan',
             result: 'Résultat',
@@ -75,6 +75,7 @@ test('GAP guidé, fiche, action ; conformité IA : usage, scénario, plan', asyn
         ],
         policies: [
           {
+            id: 'POL-001',
             policy: 'Politique fictive',
             impact: 'Impact',
             change: 'Changement',
@@ -88,11 +89,7 @@ test('GAP guidé, fiche, action ; conformité IA : usage, scénario, plan', asyn
         ],
       },
     });
-    const put = await ctx.request.put('/api/legacy/state', {
-      data: s,
-      headers: { 'if-match': cur.headers().etag!, 'x-csrf-token': csrf },
-    });
-    expect(put.status()).toBe(204);
+    await ecrireEtat(ctx.request, csrf, s);
 
     // GAP guidé.
     await page.goto('/pilotage/gap-applications');

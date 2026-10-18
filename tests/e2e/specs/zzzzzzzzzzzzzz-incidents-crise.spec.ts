@@ -2,7 +2,7 @@
    obligations, action du registre des écarts, ouverture d'une cellule, main courante, check-list, contacts et
    scénarios, alerte CRRC → incident. Données fictives posées par l'API. */
 import { expect, test } from '@playwright/test';
-import { sessionAdmin, watchPage } from '../helpers';
+import { sessionAdmin, watchPage, ecrireEtat } from '../helpers';
 
 test('Incidents et cellule de crise : qualification, fiche, cellule, main courante, contacts, scénarios', async ({
   browser,
@@ -46,11 +46,7 @@ test('Incidents et cellule de crise : qualification, fiche, cellule, main couran
         ],
       },
     });
-    const put = await ctx.request.put('/api/legacy/state', {
-      data: s,
-      headers: { 'if-match': cur.headers().etag!, 'x-csrf-token': csrf },
-    });
-    expect(put.status()).toBe(204);
+    await ecrireEtat(ctx.request, csrf, s);
 
     // Qualification d'un signalement : atteinte aux données personnelles, donc incident de sécurité avec obligations.
     await page.goto('/pilotage/incidents-qualifier');
