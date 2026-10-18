@@ -22,7 +22,6 @@ import {
   IconeCarte,
   IconeCompte,
   IconeDocuments,
-  IconeHistorique,
   IconeMur,
   IconeParametres,
   IconeTheme,
@@ -31,7 +30,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { errorMessage } from '../api';
-import { lienHistorique, PAGES_HISTORIQUES, PILOTAGE_NAV } from '../pilotage-navigation';
+import { PILOTAGE_NAV } from '../pilotage-navigation';
 import { logout as endSession } from '../logout';
 import { LibelleAlerte, useAlertesMenu } from '../pilotage/alertes-menu';
 import { LibelleAvecPastille } from '../pilotage/compteur-rapprochements';
@@ -87,8 +86,8 @@ export function Layout({ children }: { children: ReactNode }) {
   if (canReadBusiness(can)) items.push(['/mur', 'Écran mural', IconeMur]);
   const active = (to: string) => (to === '/' ? loc.pathname === '/' : loc.pathname.startsWith(to));
   const alertes = useAlertesMenu();
-  // Une seule section dépliée à la fois : ouvrir une section referme la précédente (groupes du Pilotage, puis
-  // « Outil de suivi (ancienne interface) » et ses groupes). La page affichée déplie son groupe.
+  // Une seule section dépliée à la fois : ouvrir un groupe du Pilotage referme le précédent. La page affichée déplie
+  // son groupe.
   const groupeDeLaPage = PILOTAGE_NAV.find((g) => g.items.some((i) => loc.pathname === '/pilotage/' + i.id))?.label;
   const [ouvert, setOuvert] = useState<string | null>(groupeDeLaPage ? 'p:' + groupeDeLaPage : null);
   useEffect(() => {
@@ -96,7 +95,6 @@ export function Layout({ children }: { children: ReactNode }) {
   }, [groupeDeLaPage]);
   const basculer = (cle: string, ouvre: boolean) =>
     setOuvert((courant) => (ouvre ? cle : courant === cle ? null : courant));
-  const sousOuvert = (prefixe: string) => ouvert?.startsWith(prefixe) ?? false;
   const [logoutError, setLogoutError] = useState<string | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);
   const logout = async () => {
@@ -145,11 +143,10 @@ export function Layout({ children }: { children: ReactNode }) {
             label={<LibelleAlerte libelle="Pilotage" alerte={alertes['Pilotage']} />}
             leftSection={<IconeAdministration />}
             active={active('/pilotage')}
-            opened={active('/pilotage') && !sousOuvert('h')}
+            opened={active('/pilotage')}
             // Mantine empêche la navigation native d'un NavLink avec enfants lorsqu'il les déplie.
             onClick={() => {
               if (!active('/pilotage')) setOuvert(null);
-              else if (sousOuvert('h')) setOuvert(null);
               nav('/pilotage');
               close();
             }}
@@ -183,37 +180,6 @@ export function Layout({ children }: { children: ReactNode }) {
           </NavLink>
         )}
         {navigationItems(items.slice(1))}
-        {canReadBusiness(can) &&
-          withTip(
-            'Outil de suivi (ancienne interface)',
-            <NavLink
-              className="historique-nav-root"
-              leftSection={<IconeHistorique />}
-              label={<span className="nav-libelle">Outil de suivi (ancienne interface)</span>}
-              description={<span className="nav-annexe">Modules pas encore repris</span>}
-              opened={sousOuvert('h')}
-              onChange={(o) => setOuvert(o ? 'h' : null)}
-            >
-              <NavLink component="a" href="/legacy/" label="Accueil de l’outil de suivi" />
-              {PAGES_HISTORIQUES.map((groupe) => {
-                const pages = groupe.items.filter((p) => can(p.module, 'lire'));
-                if (!pages.length) return null;
-                return (
-                  <NavLink
-                    key={groupe.label}
-                    label={groupe.label}
-                    className="pilotage-nav-group"
-                    opened={ouvert === 'h:' + groupe.label}
-                    onChange={(o) => basculer('h:' + groupe.label, o)}
-                  >
-                    {pages.map((p) => (
-                      <NavLink key={p.label} component="a" href={lienHistorique(p)} label={p.label} />
-                    ))}
-                  </NavLink>
-                );
-              })}
-            </NavLink>,
-          )}
       </Stack>
       <Stack mt="xl" gap="2xs" className="nav-footer">
         <div className="nav-signature nav-annexe">

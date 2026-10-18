@@ -18,7 +18,7 @@ import { route } from '../http/route.js';
 import type { Services } from '../services.js';
 import type { WallSession } from '../walls.js';
 import { compteursCommuns } from '../grc/dashboard.js';
-import { redactLegacy } from './legacy.js';
+import { redactLegacy } from './suivi.js';
 
 const PING_MS = 25_000;
 const RECHECK_MS = 60_000;

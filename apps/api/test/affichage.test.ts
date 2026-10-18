@@ -84,7 +84,7 @@ describe('écrans muraux', () => {
     expect(s.json().ecran).toBe('Salle COPIL');
     expect(s.json().mesures.total).toBeGreaterThan(90);
     // Rien d'autre que la vue /mur.
-    for (const url of ['/api/legacy/state', '/api/documents', '/api/admin/users', '/api/settings'])
+    for (const url of ['/api/suivi/etat', '/api/documents', '/api/admin/users', '/api/settings'])
       expect((await ecran.get(url)).statusCode, url).toBe(401);
     expect((await ecran.get('/api/auth/me')).json().stage).toBe('anon');
 

@@ -58,11 +58,6 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
     'GET /api/presence',
     'POST /api/presence',
     'DELETE /api/presence/:client',
-    'GET /legacy',
-    'GET /legacy/',
-    'GET /legacy/index.html',
-    'GET /legacy/shim.js',
-    'GET /legacy/lib/:file',
     'GET /api/settings/logo',
     'GET /api/account/preferences',
     'PUT /api/account/preferences',
@@ -124,7 +119,7 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
           : ALL_PERMISSIONS.filter((p) => p !== r.access),
       );
       const denied = await call(r);
-      if (denied.statusCode !== 403 && !(r.url === '/legacy/' && denied.statusCode === 302))
+      if (denied.statusCode !== 403)
         failures.push(`${r.method} ${r.url} sans ${required.join()} : ${denied.statusCode}`);
       // Avec la seule permission requise : jamais refusé pour cette permission-là.
       await setPerms(required);
@@ -348,45 +343,25 @@ describe('revue des accès (ISO 27001 A.5.18)', () => {
 });
 
 /* ---------------------------------------------------------------- Outil historique selon les modules */
-describe('outil historique : lecture et écriture par module', () => {
-  it('modules non lisibles masqués, modules non modifiables protégés, modules cachés conservés', async () => {
+describe('état du suivi : lecture par module', () => {
+  it('modules non lisibles masqués, modules lisibles conservés', async () => {
     await t.svc.db.q(
       "INSERT INTO roles(id, name, permissions) VALUES ('r_ecarts', 'Écarts seulement', '{ecarts:lire,ecarts:modifier}')",
     );
     const u = await makeUser(t, 'ecarts', 'r_ecarts');
     const a = await login(t, u);
-    const st = await a.get('/api/legacy/state');
+    const st = await a.get('/api/suivi/etat');
     expect(st.statusCode).toBe(200);
     const data = st.json();
     expect(data.items).toEqual([]); // audit : non lisible
-    const full = (await A.get('/api/legacy/state')).json();
+    const full = (await A.get('/api/suivi/etat')).json();
     expect(full.items.length).toBeGreaterThan(0);
-    // Écriture des écarts : acceptée ; les mesures (masquées) restent intactes côté serveur.
-    data.findings = [
-      { id: 'ID-900', source: 'Interne', year: 2026, type: 'NC min', status: 'Ouvert', text: 'Écart RBAC', items: [] },
-    ];
-    // Le droit est reconnu, mais les écarts sont repris dans des tables : /legacy ne peut plus les modifier (ADR 0040).
-    const w = await a.put('/api/legacy/state', data, { 'if-match': st.headers.etag as string });
-    expect(w.statusCode).toBe(409);
-    expect(w.json().reason).toBe('module_taken_over');
-    const after = (await A.get('/api/legacy/state')).json();
-    expect(after.findings).toEqual(full.findings);
-    expect(after.items.length).toBe(full.items.length);
-    // Un lecteur ne peut rien modifier.
-    const l = await login(t, await makeUser(t, 'lecteur-legacy', 'lecteur'));
-    const s2 = await l.get('/api/legacy/state');
-    const d2 = s2.json();
-    d2.findings = [
-      { id: 'ID-901', source: 'Interne', year: 2026, type: 'NC min', status: 'Ouvert', text: 'Refusé', items: [] },
-    ];
-    const w2 = await l.put('/api/legacy/state', d2, { 'if-match': s2.headers.etag as string });
-    expect(w2.statusCode).toBe(403);
-    expect(w2.json().permission).toBe('ecarts:modifier');
+    expect(data.findings).toEqual(full.findings);
   });
 
-  it('sans aucun module métier lisible : outil historique refusé', async () => {
+  it('sans aucun module métier lisible : état du suivi refusé', async () => {
     const a = await login(t, await makeUser(t, 'sans-droit', null));
-    expect((await a.get('/api/legacy/state')).statusCode).toBe(403);
+    expect((await a.get('/api/suivi/etat')).statusCode).toBe(403);
     expect((await a.me()).permissions).toEqual([]);
   });
 });

@@ -72,7 +72,7 @@ export function IaEvaluationsPage() {
           Le registre historique reste la source des scénarios. Une réévaluation enregistre une nouvelle décision ; elle
           ne remplace pas les calculs historiques.
         </Text>
-        <Anchor href="/legacy/">Ouvrir le registre historique</Anchor>
+        <Anchor href="/pilotage">Ouvrir le pilotage</Anchor>
         <TextInput
           label="Rechercher un scénario"
           maxLength={200}

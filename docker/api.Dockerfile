@@ -45,9 +45,6 @@ COPY --from=build /src/apps/api/node_modules apps/api/node_modules
 COPY --from=build /src/apps/api/dist apps/api/dist
 COPY apps/api/migrations apps/api/migrations
 COPY apps/api/seed apps/api/seed
-COPY apps/api/legacy-shim apps/api/legacy-shim
-# Outil historique (fichier unique), servi sous /legacy.
-COPY app/public apps/api/legacy
 # Outils d'exploitation : docker compose exec app setup-token | suivi <commande>
 COPY apps/api/bin/setup-token apps/api/bin/suivi /usr/local/bin/
 # Code en lecture seule pour l'utilisateur d'exécution.

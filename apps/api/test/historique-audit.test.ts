@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createTestApp, login, makeUser, seedState, type Agent, type TestApp } from './helpers.js';
 
 let t: TestApp, admin: Agent, reader: Agent, writer: Agent, seulAudit: Agent;
-const etat = async () => (await admin.get('/api/legacy/state')).json();
+const etat = async () => (await admin.get('/api/suivi/etat')).json();
 const vue = async (a: Agent = admin) => (await a.get('/api/audit-suivi')).json();
 const item = (id: string, ref: string, num: string, extra = {}) => ({
   id,
@@ -24,7 +24,7 @@ beforeAll(async () => {
   reader = await login(t, await makeUser(t, 'aud_reader', 'ro'));
   writer = await login(t, await makeUser(t, 'aud_writer', 'rw'));
   seulAudit = await login(t, await makeUser(t, 'aud_seul', 'ro', { modules: ['audit'] }));
-  const cur = await admin.get('/api/legacy/state');
+  const cur = await admin.get('/api/suivi/etat');
   const s = cur.json();
   Object.assign(s, {
     years: [2025, 2026],

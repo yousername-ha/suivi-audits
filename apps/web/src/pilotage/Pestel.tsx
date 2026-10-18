@@ -123,7 +123,7 @@ export function Pestel({ smsi }: { smsi: string }) {
 export function SynthesePartiesBandeau({ smsi }: { smsi: string }) {
   const q = useQuery({
     queryKey: ['grc', smsi, 'legacy-parties'],
-    queryFn: () => get<{ interested?: { addressed?: unknown; reviewed?: unknown }[] }>('/api/legacy/state'),
+    queryFn: () => get<{ interested?: { addressed?: unknown; reviewed?: unknown }[] }>('/api/suivi/etat'),
     enabled: smsi === SOCLE,
   });
   if (smsi !== SOCLE || !q.data) return null;

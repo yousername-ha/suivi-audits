@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createTestApp, login, makeUser, seedState, type Agent, type TestApp } from './helpers.js';
 
 let t: TestApp, admin: Agent, reader: Agent, writer: Agent, sansEcarts: Agent;
-const etat = async () => (await admin.get('/api/legacy/state')).json();
+const etat = async () => (await admin.get('/api/suivi/etat')).json();
 let ev = '';
 
 beforeAll(async () => {
@@ -13,7 +13,7 @@ beforeAll(async () => {
   reader = await login(t, await makeUser(t, 'ec_reader', 'ro'));
   writer = await login(t, await makeUser(t, 'ec_writer', 'rw'));
   sansEcarts = await login(t, await makeUser(t, 'ec_sans_ecarts', null, { modules: ['fournisseurs'] }));
-  const cur = await admin.get('/api/legacy/state');
+  const cur = await admin.get('/api/suivi/etat');
   const s = cur.json();
   s.suppliers = [{ id: 'SUP-1', name: 'Fournisseur fictif', hds: 'Oui', mfa: 'Oui', sso: 'SAML' }];
   s.items = [

@@ -67,7 +67,7 @@ describe('B1 configuration des modules', () => {
     expect(me.stage).toBe('ok');
     expect(me.permissions).not.toContain('audit:lire');
     expect(me.permissions).toContain('administration:administrer');
-    const legacy = (await a.get('/api/legacy/state')).json();
+    const legacy = (await a.get('/api/suivi/etat')).json();
     expect(legacy.items).toEqual([]);
     expect(legacy.plan).toEqual({});
     expect((await a.get('/api/settings/cycle')).statusCode).toBe(409);
@@ -92,13 +92,13 @@ describe('B1 configuration des modules', () => {
     const before = (await t.svc.legacy.recompose())!;
     const roles = (await t.svc.db.q('SELECT * FROM user_roles ORDER BY user_id, role_id')).rows;
     expect((await apply(intent('fournisseurs', false))).statusCode).toBe(200);
-    expect((await a.get('/api/legacy/state')).json().suppliers).toEqual([]);
+    expect((await a.get('/api/suivi/etat')).json().suppliers).toEqual([]);
     expect((await t.svc.legacy.recompose())!.data).toEqual(before.data);
     expect((await t.svc.legacy.recompose())!.version).toBe(before.version);
     expect((await t.svc.db.q('SELECT * FROM user_roles ORDER BY user_id, role_id')).rows).toEqual(roles);
     expect((await a.get('/api/mur/synthese')).statusCode).toBe(200);
     expect((await apply(intent('fournisseurs', true))).statusCode).toBe(200);
-    expect((await a.get('/api/legacy/state')).json().suppliers).toEqual(before.data.suppliers);
+    expect((await a.get('/api/suivi/etat')).json().suppliers).toEqual(before.data.suppliers);
     const h = await a.get('/api/admin/modules/history');
     expect(h.statusCode).toBe(200);
     expect(h.json()[0].details.after.disabled).toEqual([]);
@@ -151,18 +151,6 @@ describe('B1 configuration des modules', () => {
     ).toBe(412);
     expect((await a.get('/api/modules')).json().disabled).toEqual(['ia']);
   });
-  it('ne permet pas de réécrire un module désactivé via le JSON historique', async () => {
-    const before = (await t.svc.legacy.recompose())!;
-    expect((await apply(intent('fournisseurs', false))).statusCode).toBe(200);
-    const visible = (await a.get('/api/legacy/state')).json();
-    visible.suppliers = [{ id: 'intrusion', name: 'ne doit pas être écrit' }];
-    expect((await a.put('/api/legacy/state', visible)).statusCode).toBe(409);
-    expect((await t.svc.legacy.recompose())!.data).toEqual(before.data);
-    // L'outil historique est en lecture seule (tous ses modules sont repris) : l'état inchangé reste accepté.
-    visible.suppliers = (await a.get('/api/legacy/state')).json().suppliers;
-    expect((await a.put('/api/legacy/state', visible)).statusCode).toBe(204);
-    expect((await t.svc.legacy.recompose())!.data.suppliers).toEqual(before.data.suppliers);
-  });
   it('refuse les simulations et imports portant sur un module désactivé', async () => {
     expect((await apply(intent('fournisseurs', false))).statusCode).toBe(200);
     const file = readFileSync(path.join(REPO, 'apps/api/seed/state.json'));
@@ -205,26 +193,5 @@ describe('B1 configuration des modules', () => {
     await write;
     expect((await disable).disabled).toContain('documents');
     await expect(t.svc.modules.run(true, () => t.svc.modules.assert('documents'))).rejects.toThrow(/désactivé/);
-  });
-  it('adapte les menus hérités à l’exécution sans réécrire le fichier v2', async () => {
-    const before = readFileSync(path.join(REPO, 'app/public/index.html'));
-    expect((await apply(intent('ia', false))).statusCode).toBe(200);
-    const html = await a.get('/legacy/');
-    expect(html.statusCode).toBe(200);
-    expect(html.body).toContain('__SUIVI_FILTER_NAV');
-    expect(html.body).toContain('__SUIVI_ALLOW_PAGE');
-    const cfg = JSON.parse(/window.__SUIVI=(.*?);<\/script>/.exec(html.body)![1]!);
-    expect(cfg.enabled).not.toContain('ia');
-    expect(cfg.enabled).toContain('audit');
-    expect(cfg.emptyObjects.ai.evals).toEqual([]);
-    expect(cfg.emptyObjects.ai.register).toEqual([]);
-    const seed = JSON.parse(/<script type="application\/json" id="seed">([\s\S]*?)<\/script>/.exec(html.body)![1]!);
-    expect(seed.ai).toEqual({});
-    const stored = (await t.svc.legacy.recompose())!.data.ai;
-    const visible = (await a.get('/api/legacy/state')).json();
-    visible.ai = cfg.emptyObjects.ai;
-    expect((await a.put('/api/legacy/state', visible)).statusCode).toBe(204);
-    expect((await t.svc.legacy.recompose())!.data.ai).toEqual(stored);
-    expect(readFileSync(path.join(REPO, 'app/public/index.html')).equals(before)).toBe(true);
   });
 });

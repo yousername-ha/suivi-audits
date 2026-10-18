@@ -14,7 +14,7 @@ import { authRoutes } from './routes/auth.js';
 import { documentRoutes } from './routes/documents.js';
 import { eventRoutes } from './routes/events.js';
 import { importRoutes } from './routes/import.js';
-import { legacyRoutes } from './routes/legacy.js';
+import { suiviRoutes } from './routes/suivi.js';
 import { exportSuiviRoutes } from './routes/export-suivi.js';
 import { settingsRoutes } from './routes/settings.js';
 import { configGrcRoutes } from './routes/config-grc.js';
@@ -108,7 +108,7 @@ export function allRoutes(): RouteDef[] {
     ...operationRoutes,
     ...updateRoutes,
     ...eventRoutes,
-    ...legacyRoutes,
+    ...suiviRoutes,
     ...exportSuiviRoutes,
     ...importRoutes,
     ...settingsRoutes,

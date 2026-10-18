@@ -5,6 +5,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 ## [Non publié]
 
 ### Notes de mise à jour
+- **L'écran `/legacy` n'existe plus** : un signet ou un lien vers `/legacy/` mène à la page d'erreur ; utiliser le menu Pilotage et « Exports Excel ». Aucune migration SQL ni action sur le serveur pour ce retrait ; les données ne sont pas touchées. Le fichier `app/public/index.html` n'est plus copié dans l'image de l'API (il reste dans le dépôt comme référence).
 - **Migration SQL additive `027_evaluations_exigences.sql`** : table des évaluations d'exigences par périmètre (versions immuables). Aucune donnée existante n'est modifiée ; sans évaluation, une exigence est « non implémentée ».
 - **Migration SQL additive `026_coeur_suivi_tables.sql`** : le cœur de l'outil de suivi (mesures, écarts, processus, objectifs, indicateurs, fournisseurs, revues, parties intéressées, SWOT, rôles, preuves, référentiels complémentaires) et ses réglages (années, dates d'audit, plan d'audit, périmètre) passent d'`app_state` à des tables. Même précautions. `app_state` ne contient plus aucune donnée métier ; `/legacy` est désormais en lecture seule.
 - **Migration SQL additive `025_cles_multi_listes_tables.sql`** : CRRC, cellule de crise, conformité IA et DdA passent en tables.
@@ -13,6 +14,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 - **Migration SQL additive `022_hierarchie_perimetres.sql`**, appliquée au démarrage : trois colonnes et un déclencheur anti-boucle sur les périmètres. Aucune donnée n'est modifiée ; les périmètres existants restent à plat et n'héritent de rien. Aucune action sur le serveur.
 
 ### Modifié
+- **Retrait de l'écran `/legacy`** ([ADR 0042](docs/adr/0042-retrait-de-lecran-legacy.md)) : l'ancien outil n'est plus servi (écran, adaptateur, politique de sécurité à scripts en ligne, chemins Caddy et copie dans l'image Docker retirés) ; son archive testable reste sur la branche `archive/outil-legacy-autonome`. La nouvelle interface lit l'état par `GET /api/suivi/etat` et `GET /api/suivi/modules` ; `PUT /api/legacy/state` et les anciennes routes `/api/legacy/*` disparaissent. L'import et l'export au format historique, les versions de l'état et `app/public/index.html` (référence de parité) sont conservés. Menu, accueil, aide, cartographie et évaluations IA ne renvoient plus vers `/legacy`.
 - **Investissements en tables** ([ADR 0040](docs/adr/0040-sortie-du-json-plat-modules-en-tables.md)) : première étape de la sortie de l'état JSON plat. Les lignes budgétaires et l'année de référence sont stockées dans des tables (champs inconnus conservés) ; les écrans natifs, l'export et `/legacy` (lecture seule) lisent la même donnée. Incidents, plans, revues des accès, analyses GAP et évaluations clausier suivent dans la foulée (modèle générique sans perte) ; CRRC, crise, IA, DdA et les clés du cœur (écarts, mesures, processus…) viendront ensuite.
 
 ### Ajouté

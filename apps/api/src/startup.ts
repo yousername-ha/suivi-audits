@@ -1,6 +1,6 @@
 /* Initialisation de la base au démarrage : migrations, état initial vide (référentiels seulement), jeton d'installation. */
 import { readFileSync } from 'node:fs';
-import { validLegacyState } from './routes/legacy.js';
+import { validLegacyState } from './routes/suivi.js';
 import type { Services } from './services.js';
 
 export async function seedState(svc: Services): Promise<boolean> {

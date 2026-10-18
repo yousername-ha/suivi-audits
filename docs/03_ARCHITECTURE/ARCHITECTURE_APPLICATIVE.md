@@ -15,7 +15,7 @@ Le DAT est le point d’entrée. Organisation :
 | apps/api/src/pilotage/legacy.ts     | Adaptateurs scope/interested/swots/roles/processes/objectives/indicators/evidences/findings/reviews.     |
 | apps/api/src/grc                    | Objets partagés, relations, sources, méthodes, récurrences, référentiels et rapports.                    |
 | apps/api/src/legacy/store.ts        | app_state + recomposition ; un mapper enregistré, maps.                                                  |
-| app/public/index.html               | Outil historique toujours servi sous /legacy et bibliothèques embarquées.                                |
+| app/public/index.html               | Outil historique conservé comme référence de parité (non servi) et bibliothèques embarquées.             |
 | scripts                             | Commandes serveur et workers ; distincts de l’API métier.                                                |
 
 Les objets GRC natifs, sources legacy et dispositions cartographiques sont

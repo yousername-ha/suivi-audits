@@ -616,7 +616,7 @@ Sautez cette étape si vous démarrez sans historique.
 
 **Résultat attendu** : un rapport par module (écarts, processus, fournisseurs…), avec le nombre d'éléments **Créés**, **Modifiés**, **Inchangés** et **Supprimés**. Lisez les avertissements : champs inconnus et références cassées sont listés, et le rapport est téléchargeable pour l'archiver.
 
-> Les cartes dessinées avec le module bêta **Cartographie** de l'ancien outil sont reprises (module « Cartographie du SMSI » du rapport) : elles s'ouvrent ensuite dans le menu **Cartographie**, et l'ancien outil les affiche en lecture seule.
+> Les cartes dessinées avec le module bêta **Cartographie** de l'ancien outil sont reprises (module « Cartographie du SMSI » du rapport) : elles s'ouvrent ensuite dans le menu **Cartographie**.
 
 **10.3 Appliquer l'import :** cliquez sur **Appliquer l'import**.
 
@@ -1026,7 +1026,7 @@ Si vous demandez de l'aide, joignez ces deux sorties. Elles ne contiennent aucun
 | Compte verrouillé après plusieurs erreurs | Protection contre les attaques par essais successifs | Attendre 15 minutes, ou `sudo docker compose exec app suivi unlock <identifiant>` |
 | Mot de passe oublié | — | **Administration**, **Utilisateurs**, bouton **Mot de passe** sur la ligne du compte (affiche un mot de passe temporaire). Ou : `sudo docker compose exec app suivi reset-password <identifiant>` (affiche un mot de passe temporaire) |
 | Plus aucun administrateur ne peut se connecter | Téléphones perdus, départ… | `sudo docker compose exec app setup-token --recovery`, puis `https://<nom_dns>/setup` pour créer un administrateur de secours |
-| « Module géré dans la nouvelle interface » dans l'ancien outil | Ce module a été repris par la nouvelle interface | Normal : modifier ces données dans la nouvelle interface |
+| Lien ou signet vers `/legacy` qui mène à une page d'erreur | L'écran de l'ancien outil est retiré | Normal : utiliser le menu **Pilotage** et **Exports Excel** |
 | « Droits insuffisants : vous ne pouvez pas … » | Le rôle de la personne ne comprend pas cette action | **Administration**, **Utilisateurs**, bouton **Droits effectifs** du compte, puis ajouter le rôle ou le groupe adapté |
 | « Trop de requêtes. Réessayez dans une minute. » pour plusieurs personnes à la fois | Limite de débit par adresse IP atteinte : de nombreux postes sortent par une même adresse (traduction d'adresses, proxy) | Relever `RATE_LIMIT_PER_MINUTE` dans `.env` (par exemple 5000), puis `sudo docker compose up -d` |
 | Un compte n'arrive plus à se connecter à une date précise | Date d'expiration atteinte : compte désactivé automatiquement | **Administration**, **Utilisateurs**, **Modifier** : nouvelle date d'expiration et état « Actif » |
@@ -1084,7 +1084,7 @@ Toutes ces commandes se lancent depuis `/opt/suivi-audits`.
 | **PKI** | L'infrastructure de certificats de votre organisation |
 | **Double authentification (TOTP)** | Code à 6 chiffres du téléphone, demandé en plus du mot de passe |
 | **Jeton d'installation** | Code à usage unique qui autorise la création du premier administrateur |
-| **Ancien outil, legacy** | Le fichier HTML utilisé avant cette application, encore accessible sous `/legacy` pendant la transition |
+| **Ancien outil, legacy** | Le fichier HTML utilisé avant cette application ; il n'est plus servi (écran `/legacy` retiré), son archive testable est sur la branche `archive/outil-legacy-autonome` |
 
 ## Fiabilisation de la branche de travail (9 octobre 2026)
 

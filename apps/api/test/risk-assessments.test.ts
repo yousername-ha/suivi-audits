@@ -24,7 +24,7 @@ const source = {
 };
 const ratings = { impact: 'impact_5', probability: 'probability_4', maturity: 'maturity_1' };
 async function sources(evals: unknown[]) {
-  const state = (await admin.get('/api/legacy/state')).json();
+  const state = (await admin.get('/api/suivi/etat')).json();
   await seedState(t, { ...state, ai: { ...state.ai, evals } });
 }
 async function intent(): Promise<AssessmentIntent> {

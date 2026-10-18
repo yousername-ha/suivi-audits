@@ -144,32 +144,3 @@ export const PILOTAGE_NAV = [
 export const PILOTAGE_LABELS: Record<string, string> = Object.fromEntries(
   PILOTAGE_NAV.flatMap((g) => g.items.map((i) => [i.id, i.label])),
 );
-
-/** Pages encore servies par l'outil historique (/legacy), ouvertes directement depuis le menu (lot U1).
-    vue : sous-vue historique (« confView=A »…), appliquée par legacy-shim/shim.js avant le chargement de l'outil. */
-export interface PageHistorique {
-  label: string;
-  module: Module;
-  onglet: string;
-  vue?: string;
-}
-export const PAGES_HISTORIQUES: { label: string; items: PageHistorique[] }[] = [
-  {
-    label: 'Conformité',
-    items: [{ label: 'ReCyF et autres référentiels', module: 'conformite', onglet: 'conformite', vue: 'confView=fw' }],
-  },
-  {
-    label: 'Fournisseurs',
-    items: [
-      { label: 'Fournisseurs et applications', module: 'fournisseurs', onglet: 'fournisseurs', vue: 'supView=list' },
-    ],
-  },
-  {
-    label: 'Autres modules',
-    items: [{ label: 'Rapports et exports', module: 'import_export', onglet: 'rapports', vue: 'repView=exp' }],
-  },
-];
-
-/** Lien d'ouverture directe d'une page de l'outil historique. */
-export const lienHistorique = (p: Pick<PageHistorique, 'onglet' | 'vue'>) =>
-  `/legacy/#ouvrir=${p.onglet}${p.vue ? '&' + p.vue : ''}`;

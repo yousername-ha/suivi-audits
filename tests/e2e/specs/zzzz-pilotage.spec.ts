@@ -12,7 +12,7 @@ test('Pilotage : DdA historique, objectifs par processus, plans et graphiques de
     await page.goto('/pilotage');
     // Les fiches de pilotage du périmètre de l'instance sont relues depuis l'outil de suivi.
     await page.evaluate(() => sessionStorage.setItem('pilotage-scope', '00000000-0000-4000-8000-000000000001'));
-    const etat = await (await page.request.get('/api/legacy/state')).json();
+    const etat = await (await page.request.get('/api/suivi/etat')).json();
 
     // Synthèse : graphiques issus des mêmes calculs que le tableau de bord.
     await page.goto('/pilotage/synthese');

@@ -21,7 +21,7 @@ test('GAP guidé, fiche, action ; conformité IA : usage, scénario, plan', asyn
     problems = watchPage(page);
   const suffixe = Date.now().toString(36);
   try {
-    const cur = await ctx.request.get('/api/legacy/state');
+    const cur = await ctx.request.get('/api/suivi/etat');
     const s = await cur.json();
     Object.assign(s, {
       items: [exigence('ISO-6.1.2', 'ISO', '6.1.2'), exigence('ISO-4.3', 'ISO', '4.3'), exigence('A-5.9', 'A', '5.9')],

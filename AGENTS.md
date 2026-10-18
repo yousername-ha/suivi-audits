@@ -31,8 +31,8 @@ Suivre également [CONTRIBUTING.md](CONTRIBUTING.md).
 - Une seule source modifiable par objet. Les adaptateurs Pilotage écrivent
   directement le legacy commun ; seule la carte maps possède un mapper
   enregistré dans LegacyStore. Ne pas transformer cela en migration complète.
-- Préserver IDs, champs extra, historique, relations et exports. Ne pas retirer
-  `/legacy` tant que chaque famille n’a pas un remplacement recetté.
+- Préserver IDs, champs extra, historique, relations et exports. L’écran `/legacy` est retiré
+  (ADR 0042) ; l’import/export au format historique et les versions de l’état sont conservés.
 - Ajouter les migrations ; ne jamais réécrire une migration publiée.
 - Décisions/publications immuables ; une action terminée ne recalcule pas le résiduel.
 - L’API n’obtient ni socket Docker, ni commandes shell arbitraires, ni clés

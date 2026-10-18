@@ -236,7 +236,7 @@ it('bloque responsables expirés, catégories inconnues, références hors péri
   expect((await reader.get(`/api/grc/${DEFAULT_SMSI}/report`)).statusCode).toBe(403);
 });
 it('présente et réalise les actions historiques dans leur source, sans perdre les extras', async () => {
-  const current = await a.get('/api/legacy/state'),
+  const current = await a.get('/api/suivi/etat'),
     state = current.json();
   state.findings = [
     {
@@ -268,7 +268,7 @@ it('présente et réalise les actions historiques dans leur source, sans perdre 
     { 'if-match': `"${legacy.version}"` },
   );
   expect(done.statusCode, done.body).toBe(200);
-  const source = (await a.get('/api/legacy/state')).json().findings[0];
+  const source = (await a.get('/api/suivi/etat')).json().findings[0];
   expect(source.unknownExtra).toEqual({ keep: true });
   expect(source.tasks[0].extraTask).toBe(42);
   expect(source.tasks[0].done).toBe(true);

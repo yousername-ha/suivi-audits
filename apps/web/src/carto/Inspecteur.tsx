@@ -222,8 +222,8 @@ export function Inspecteur(p: InspecteurProps) {
           ? [c.scopeLabel || 'Périmètre à confirmer', 'orange']
           : null;
   const legacy = (
-    <Button component="a" href="/legacy/" variant="default" size="xs">
-      Ouvrir dans l’outil de suivi
+    <Button component="a" href="/pilotage" variant="default" size="xs">
+      Ouvrir dans le pilotage
     </Button>
   );
   return (

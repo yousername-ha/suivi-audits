@@ -1,5 +1,5 @@
 /* Guide embarqué versionné avec le code : seulement les fonctionnalités réellement disponibles. */
-import { MODULE_LABELS, type BusinessModule, type Permission } from '@suivi/shared';
+import type { Permission } from '@suivi/shared';
 export const HELP_VERSION = '2026-10-10';
 export interface HelpArticle {
   id: string;
@@ -8,19 +8,6 @@ export interface HelpArticle {
   link: string;
   steps: string[];
 }
-const HISTORICAL_MODULES: readonly BusinessModule[] = [
-  'audit',
-  'ecarts',
-  'plan_audit',
-  'pilotage',
-  'fournisseurs',
-  'conformite',
-  'ia',
-  'crrc',
-  'investissements',
-  'incidents',
-];
-
 export const HELP_ARTICLES: HelpArticle[] = [
   {
     id: 'pilotage-smsi-grc',
@@ -159,18 +146,6 @@ export const HELP_ARTICLES: HelpArticle[] = [
       'Les évaluations et méthodes de l’outil historique restent inchangées. Le raccordement explicite des scénarios IA est disponible dans Évaluations IA versionnées. Les autres familles et paramètres métier restent à reprendre dans B2.',
     ],
   },
-  ...HISTORICAL_MODULES.map((module): HelpArticle => ({
-    id: `historique-${module}`,
-    title: MODULE_LABELS[module],
-    permission: `${module}:lire`,
-    link: '/legacy/',
-    steps: [
-      `Ouvrez l’outil de suivi historique, puis la rubrique « ${MODULE_LABELS[module]} ».`,
-      'Ce module fait partie du socle de la plateforme. Ses données et ses fonctions restent accessibles pendant sa reprise progressive dans la charte Sauge.',
-      'Les modifications et exports dépendent de vos droits. Le serveur contrôle les permissions et conserve un historique des états.',
-      'La reprise dans la nouvelle interface sera validée sur les données, les relations, les exports et les parcours existants avant le retrait de l’ancienne rubrique.',
-    ],
-  })),
   {
     id: 'compte',
     title: 'Connexion, double authentification et déconnexion',
@@ -208,14 +183,14 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
   },
   {
-    id: 'historique',
-    title: 'Outil de suivi historique',
-    permission: 'audit:lire',
-    link: '/legacy/',
+    id: 'exports-excel',
+    title: 'Exports Excel',
+    permission: 'import_export:exporter',
+    link: '/exports',
     steps: [
-      'Le lien Outil de suivi (ancienne interface) donne accès aux modules qui ne sont pas encore repris dans la nouvelle interface.',
-      'Les modules visibles et les possibilités de modification dépendent de vos permissions.',
-      'Les données sont enregistrées sur le serveur et versionnées ; en cas d’écriture concurrente, examinez le conflit avant de remplacer un état.',
+      'Ouvrez Exports Excel dans le menu : les rubriques sont regroupées (audit, objectifs et indicateurs, conformité, écarts, fournisseurs, contexte, incidents et crise, CRRC, investissements, preuves, plans, IA).',
+      'Excel classique donne les données brutes avec filtres ; Excel pro ajoute un sommaire, des en-têtes colorés et une mise en page prête à imprimer.',
+      'Les rubriques que vous n’avez pas le droit de lire sont exportées vides. Chaque export est tracé dans le journal d’audit.',
     ],
   },
   {
@@ -224,7 +199,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     permission: 'import_export:lire',
     link: '/admin/import',
     steps: [
-      'Utilisez l’écran Import pour charger une sauvegarde JSON de l’outil historique. Commencez par la simulation et lisez le rapport.',
+      'Utilisez l’écran Import pour charger une sauvegarde JSON au format de l’outil de suivi. Commencez par la simulation et lisez le rapport.',
       'Vérifiez le mode d’import et ses conséquences avant l’application. Seuls les utilisateurs disposant des droits nécessaires peuvent appliquer les données.',
       'Consultez l’historique pour retrouver le rapport et le fichier source. L’annulation reste soumise aux contrôles de concurrence et aux permissions.',
     ],

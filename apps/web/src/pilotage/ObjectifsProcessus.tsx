@@ -53,7 +53,7 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
     { ecrire, erreur } = useEcriture(smsi);
   const q = useQuery({
     queryKey: ['grc', smsi, 'legacy-objectifs'],
-    queryFn: () => get<Record<string, unknown>>('/api/legacy/state'),
+    queryFn: () => get<Record<string, unknown>>('/api/suivi/etat'),
     enabled: smsi === SOCLE,
   });
   const boites = useQuery({

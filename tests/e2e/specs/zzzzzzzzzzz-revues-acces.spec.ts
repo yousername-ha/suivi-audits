@@ -9,7 +9,7 @@ test('Revues des accès : une revue ajoutée, son mois saisi, son état calculé
   const page = await ctx.newPage(),
     problems = watchPage(page);
   try {
-    const cur = await ctx.request.get('/api/legacy/state');
+    const cur = await ctx.request.get('/api/suivi/etat');
     const s = await cur.json();
     s.suppliers = [{ id: 'SUP-901', name: 'Fournisseur fictif des revues' }];
     s.accessReviews = [];

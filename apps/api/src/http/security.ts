@@ -15,20 +15,6 @@ export const CSP_STRICT = [
   "form-action 'self'",
   "frame-ancestors 'none'",
 ].join('; ');
-/** CSP de l'outil historique (/legacy, fichier unique : scripts et styles en ligne nécessaires, aucune origine externe). */
-export const CSP_LEGACY = [
-  "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
-  "font-src 'self' data:",
-  "connect-src 'self'",
-  "worker-src 'self' blob:",
-  "object-src 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-  "frame-ancestors 'none'",
-].join('; ');
 /** Fichiers téléchargés : jamais interprétés dans l'origine de l'application. */
 export const CSP_FILE = "default-src 'none'; sandbox";
 

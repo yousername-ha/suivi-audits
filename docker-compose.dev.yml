@@ -33,7 +33,6 @@ services:
       SECRETS_DIR: /dev-secrets
       COOKIE_SECURE: 'false'
       PUBLIC_URL: http://localhost:5173
-      LEGACY_DIR: /work/app/public
       LOG_LEVEL: debug
     volumes:
       - .:/work

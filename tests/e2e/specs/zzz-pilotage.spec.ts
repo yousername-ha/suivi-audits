@@ -586,7 +586,7 @@ test('Pilotage : les standards sont disponibles d’emblée, verrouillés, et se
   try {
     await page.goto('/pilotage/bibliotheque');
     // Un standard repris de l'outil de suivi (identifiant propre à l'essai, jamais un texte normatif).
-    const etat = await page.request.get('/api/legacy/state');
+    const etat = await page.request.get('/api/suivi/etat');
     const state = await etat.json();
     const me = await (await page.request.get('/api/auth/me')).json();
     const suffixe = String(Date.now());

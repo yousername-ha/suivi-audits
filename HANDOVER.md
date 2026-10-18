@@ -13,8 +13,8 @@ Mantine 8.3.18, zod 4.6.5, PostgreSQL 18, Docker Compose, Caddy 2.11.7.
 Architecture actuelle : `gateway → web → app → db` ; gateway sert la maintenance
 indépendante, updater exécute les mises à jour et l’exploitation. API/base isolées
 sans Internet. Documents chiffrés ; données persistantes dans DATA_DIR.
-L’ancien outil reste sous `/legacy`, avec une source métier unique et des
-adaptateurs vers Pilotage. Les tables `grc_smsis` et API `/api/grc` gardent leurs
+L’écran `/legacy` est retiré (ADR 0042) ; les modules sont en tables et la nouvelle interface lit
+l’état par `/api/suivi/etat`. Les tables `grc_smsis` et API `/api/grc` gardent leurs
 noms techniques pour compatibilité ; le parcours normal s’appelle Pilotage.
 
 ## Unification sur `claude-suivi-smsi` (11/10/2026)

@@ -11,7 +11,7 @@ import {
   type DerivedRelation,
 } from '@suivi/shared/carto';
 import type { JsonObject } from '@suivi/shared/legacy';
-import { redactLegacy } from '../routes/legacy.js';
+import { redactLegacy } from '../routes/suivi.js';
 import type { Services } from '../services.js';
 import { listMaps } from './maps.js';
 

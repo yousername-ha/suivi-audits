@@ -522,7 +522,7 @@ export function CartographiePage() {
       color: 'teal',
       message: `« ${out.name} » est enregistré dans la plateforme. Ctrl+Z le retire de la carte seulement ; pensez à enregistrer la carte.`,
     });
-    if (completer) window.open('/legacy/', '_blank', 'noopener');
+    if (completer) window.open('/pilotage', '_blank', 'noopener');
   };
   // L'objet créé est placé dès qu'il figure dans les objets relus.
   useEffect(() => {

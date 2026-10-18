@@ -90,7 +90,7 @@ async function creerCompte(browser: Browser, username: string, roleId: string) {
 }
 
 async function etatLegacy(req: APIRequestContext) {
-  const r = await req.get('/api/legacy/state');
+  const r = await req.get('/api/suivi/etat');
   return { data: (await r.json()) as Record<string, unknown>, etag: r.headers()['etag'] ?? '' };
 }
 async function ecrireLegacy(s: Session, patch: (d: Record<string, unknown>) => void) {
@@ -671,15 +671,6 @@ test('18. import legacy avec S.maps : module reconnu, cartes identiques, /legacy
   expect(app.status(), await app.text()).toBe(201);
   const retour = await (await admin.req.get('/api/admin/export/legacy')).json();
   expect(retour.data.maps).toEqual(maps);
-  // /legacy : une modification de la cartographie est refusée (module repris).
-  const st = await etatLegacy(admin.req);
-  st.data.maps = { ...(st.data.maps as object), issueKind: { 'issue:abc': 'int' } };
-  const ko = await admin.req.put('/api/legacy/state', {
-    data: st.data,
-    headers: { 'x-csrf-token': admin.csrf, 'if-match': st.etag },
-  });
-  expect(ko.status()).toBe(409);
-  expect((await ko.json()).modules).toEqual(['maps']);
   expect(admin.problems).toEqual([]);
 });
 

@@ -116,7 +116,7 @@ test('B1 : désactiver le fournisseur facultatif audit conserve les paramètres 
 
 test('B1 : désactivation confirmée, cache renouvelé et réactivation des données intactes', async ({ browser }) => {
   const { ctx, page, csrf, problems } = await open(browser);
-  const before = await (await ctx.request.get('/api/legacy/state')).json();
+  const before = await (await ctx.request.get('/api/suivi/etat')).json();
   let off = false;
   try {
     await page.goto('/admin/system');
@@ -159,7 +159,7 @@ test('B1 : désactivation confirmée, cache renouvelé et réactivation des donn
         .getByRole('navigation', { name: 'Navigation principale' })
         .getByRole('link', { name: 'Documents et liens', exact: true }),
     ).toBeVisible();
-    expect(await (await ctx.request.get('/api/legacy/state')).json()).toEqual(before);
+    expect(await (await ctx.request.get('/api/suivi/etat')).json()).toEqual(before);
     expect(problems).toEqual([]);
   } finally {
     if (off) {
@@ -177,38 +177,8 @@ test('B1 : désactivation confirmée, cache renouvelé et réactivation des donn
   }
 });
 
-test('B1 : les sous-menus v2 sont masqués et réapparaissent après réactivation', async ({ browser }) => {
-  const { ctx, page, csrf, problems } = await open(browser);
-  const toggle = async (enabled: boolean) => {
-    const state = await (await ctx.request.get('/api/modules')).json();
-    if (state.disabled.includes('ia') === !enabled) return;
-    const intent = { changes: [{ id: 'ia', enabled }], cascade: false };
-    const p = await (
-      await ctx.request.post('/api/admin/modules/preview', { data: intent, headers: { 'x-csrf-token': csrf } })
-    ).json();
-    const r = await ctx.request.put('/api/admin/modules', {
-      data: { intent, previewId: p.previewId, confirm: 'VALIDER' },
-      headers: { 'x-csrf-token': csrf, 'if-match': `"${p.version}"` },
-    });
-    expect(r.ok()).toBe(true);
-  };
-  try {
-    await toggle(false);
-    await page.goto('/legacy/');
-    await page.getByRole('button', { name: 'GAP', exact: true }).click();
-    await expect(page.locator('[data-grp="g-ia"]')).toHaveCount(0);
-    await expect(page.locator('[data-grp="g-app"]')).toBeVisible();
-    await toggle(true);
-    await expect(page.locator('[data-grp="g-ia"]')).toBeVisible();
-    expect(problems).toEqual([]);
-  } finally {
-    await toggle(true);
-    await ctx.close();
-  }
-});
-
-test('B1 : désactiver import/export masque les transferts v2 sans bloquer les autres modules', async ({ browser }) => {
-  const { ctx, page, csrf, problems } = await open(browser);
+test('B1 : désactiver import/export bloque les transferts sans bloquer les autres modules', async ({ browser }) => {
+  const { ctx, csrf, problems } = await open(browser);
   const toggle = async (enabled: boolean) => {
     const state = await (await ctx.request.get('/api/modules')).json();
     if (state.disabled.includes('import_export') === !enabled) return;
@@ -224,11 +194,6 @@ test('B1 : désactiver import/export masque les transferts v2 sans bloquer les a
   };
   try {
     await toggle(false);
-    await page.goto('/legacy/');
-    await expect(page.locator('[data-act="json"]')).toBeHidden();
-    await expect(page.locator('[data-act="xlsx"]')).toBeHidden();
-    await page.getByRole('button', { name: 'GAP', exact: true }).click();
-    await expect(page.locator('[data-grp="g-ia"]')).toBeVisible();
     expect((await ctx.request.get('/api/admin/import')).status()).toBe(409);
     expect(problems).toEqual([]);
   } finally {

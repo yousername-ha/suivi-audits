@@ -6,7 +6,7 @@ import { classeur } from '../export/classeur.js';
 import { GROUPES, feuillesDuGroupe } from '../export/rubriques.js';
 import { HttpError } from '../http/errors.js';
 import { route } from '../http/route.js';
-import { redactLegacy } from './legacy.js';
+import { redactLegacy } from './suivi.js';
 
 const jourFr = (iso: string) => iso.split('-').reverse().join('/');
 
