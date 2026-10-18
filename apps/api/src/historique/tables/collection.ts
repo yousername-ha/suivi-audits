@@ -122,7 +122,7 @@ export async function lireGroupe(c: Client, spec: GroupeSpec): Promise<Json | un
 export async function ecrireGroupe(c: Client, spec: GroupeSpec, value: Json | undefined): Promise<void> {
   await effacerPresence(c, spec.key);
   for (const part of spec.parts) await ecrireRangees(c, part, []);
-  if (videOuAbsent(value)) return;
+  if (value === undefined || value === null) return;
   if (!isObject(value)) throw new HttpError(422, `La clé « ${spec.key} » doit être un objet.`);
   const reste: JsonObject = { ...value };
   const champs: string[] = [];
@@ -147,12 +147,15 @@ export async function ecrireGroupe(c: Client, spec: GroupeSpec, value: Json | un
 /* ---------------------------------------------------------------- carte */
 export async function lireCarte(c: Client, spec: CarteSpec): Promise<Json | undefined> {
   const lignes = await lireRangees(c, spec);
-  if (!lignes.length) return undefined;
+  if (!lignes.length)
+    return (await c.query('SELECT 1 FROM suivi_presence WHERE cle=$1', [spec.key])).rowCount ? {} : undefined;
   return Object.fromEntries(lignes.map((r) => [r.cle as string, entree(r, spec)]));
 }
 export async function ecrireCarte(c: Client, spec: CarteSpec, value: Json | undefined): Promise<void> {
-  if (videOuAbsent(value)) return void (await ecrireRangees(c, spec, []));
+  await effacerPresence(c, spec.key);
+  if (value === undefined || value === null) return void (await ecrireRangees(c, spec, []));
   if (!isObject(value)) throw new HttpError(422, `La clé « ${spec.key} » doit être un objet.`);
+  await c.query("INSERT INTO suivi_presence(cle,kind) VALUES ($1,'objet')", [spec.key]);
   await ecrireRangees(c, spec, Object.entries(value));
 }
 

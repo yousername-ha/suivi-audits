@@ -213,7 +213,7 @@ CREATE TABLE suivi_ia_etapes (
   seq      bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   position integer NOT NULL,
   id text,
-  step text,
+  step double precision,
   phase text,
   action text,
   result text,
@@ -477,7 +477,7 @@ WHERE s.id = 1 AND jsonb_typeof(s.data -> 'ai' -> 'evals') = 'array';
 INSERT INTO suivi_ia_etapes(position,id,step,phase,action,result,proof,iso,hds,owner,priority,status,progress,j_start,j_end,extra)
 SELECT x.n - 1,
        CASE WHEN jsonb_typeof(x.l -> 'id') = 'string' THEN x.l ->> 'id' END,
-       CASE WHEN jsonb_typeof(x.l -> 'step') = 'string' THEN x.l ->> 'step' END,
+       CASE WHEN jsonb_typeof(x.l -> 'step') = 'number' THEN (x.l ->> 'step')::float8 END,
        CASE WHEN jsonb_typeof(x.l -> 'phase') = 'string' THEN x.l ->> 'phase' END,
        CASE WHEN jsonb_typeof(x.l -> 'action') = 'string' THEN x.l ->> 'action' END,
        CASE WHEN jsonb_typeof(x.l -> 'result') = 'string' THEN x.l ->> 'result' END,
@@ -490,7 +490,7 @@ SELECT x.n - 1,
        CASE WHEN jsonb_typeof(x.l -> 'progress') = 'number' THEN (x.l ->> 'progress')::float8 END,
        CASE WHEN jsonb_typeof(x.l -> 'jStart') = 'number' THEN (x.l ->> 'jStart')::float8 END,
        CASE WHEN jsonb_typeof(x.l -> 'jEnd') = 'number' THEN (x.l ->> 'jEnd')::float8 END,
-       CASE WHEN jsonb_typeof(x.l) = 'object' THEN x.l - array_remove(ARRAY[CASE WHEN jsonb_typeof(x.l -> 'id') = 'string' THEN 'id' END, CASE WHEN jsonb_typeof(x.l -> 'step') = 'string' THEN 'step' END, CASE WHEN jsonb_typeof(x.l -> 'phase') = 'string' THEN 'phase' END, CASE WHEN jsonb_typeof(x.l -> 'action') = 'string' THEN 'action' END, CASE WHEN jsonb_typeof(x.l -> 'result') = 'string' THEN 'result' END, CASE WHEN jsonb_typeof(x.l -> 'proof') = 'string' THEN 'proof' END, CASE WHEN jsonb_typeof(x.l -> 'iso') = 'string' THEN 'iso' END, CASE WHEN jsonb_typeof(x.l -> 'hds') = 'string' THEN 'hds' END, CASE WHEN jsonb_typeof(x.l -> 'owner') = 'string' THEN 'owner' END, CASE WHEN jsonb_typeof(x.l -> 'priority') = 'string' THEN 'priority' END, CASE WHEN jsonb_typeof(x.l -> 'status') = 'string' THEN 'status' END, CASE WHEN jsonb_typeof(x.l -> 'progress') = 'number' THEN 'progress' END, CASE WHEN jsonb_typeof(x.l -> 'jStart') = 'number' THEN 'jStart' END, CASE WHEN jsonb_typeof(x.l -> 'jEnd') = 'number' THEN 'jEnd' END], NULL) ELSE jsonb_build_object('brut', x.l) END
+       CASE WHEN jsonb_typeof(x.l) = 'object' THEN x.l - array_remove(ARRAY[CASE WHEN jsonb_typeof(x.l -> 'id') = 'string' THEN 'id' END, CASE WHEN jsonb_typeof(x.l -> 'step') = 'number' THEN 'step' END, CASE WHEN jsonb_typeof(x.l -> 'phase') = 'string' THEN 'phase' END, CASE WHEN jsonb_typeof(x.l -> 'action') = 'string' THEN 'action' END, CASE WHEN jsonb_typeof(x.l -> 'result') = 'string' THEN 'result' END, CASE WHEN jsonb_typeof(x.l -> 'proof') = 'string' THEN 'proof' END, CASE WHEN jsonb_typeof(x.l -> 'iso') = 'string' THEN 'iso' END, CASE WHEN jsonb_typeof(x.l -> 'hds') = 'string' THEN 'hds' END, CASE WHEN jsonb_typeof(x.l -> 'owner') = 'string' THEN 'owner' END, CASE WHEN jsonb_typeof(x.l -> 'priority') = 'string' THEN 'priority' END, CASE WHEN jsonb_typeof(x.l -> 'status') = 'string' THEN 'status' END, CASE WHEN jsonb_typeof(x.l -> 'progress') = 'number' THEN 'progress' END, CASE WHEN jsonb_typeof(x.l -> 'jStart') = 'number' THEN 'jStart' END, CASE WHEN jsonb_typeof(x.l -> 'jEnd') = 'number' THEN 'jEnd' END], NULL) ELSE jsonb_build_object('brut', x.l) END
 FROM app_state s
 CROSS JOIN LATERAL jsonb_array_elements(s.data -> 'ai' -> 'plan') WITH ORDINALITY AS x(l, n)
 WHERE s.id = 1 AND jsonb_typeof(s.data -> 'ai' -> 'plan') = 'array';
@@ -511,6 +511,8 @@ SELECT x.n - 1,
 FROM app_state s
 CROSS JOIN LATERAL jsonb_array_elements(s.data -> 'ai' -> 'policies') WITH ORDINALITY AS x(l, n)
 WHERE s.id = 1 AND jsonb_typeof(s.data -> 'ai' -> 'policies') = 'array';
+
+INSERT INTO suivi_presence(cle,kind) SELECT 'dda', 'objet' FROM app_state s WHERE s.id = 1 AND jsonb_typeof(s.data -> 'dda') = 'object';
 
 INSERT INTO suivi_dda(position,cle,app,level,just,risk,actions,docs,url,comment,req,extra)
 SELECT x.n - 1,

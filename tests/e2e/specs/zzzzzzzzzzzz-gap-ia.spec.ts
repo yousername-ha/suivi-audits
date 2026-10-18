@@ -58,7 +58,7 @@ test('GAP guidé, fiche, action ; conformité IA : usage, scénario, plan', asyn
         plan: [
           {
             id: 'AP-001',
-            step: '1',
+            step: 1,
             phase: 'Phase fictive',
             action: 'Étape fictive du plan',
             result: 'Résultat',

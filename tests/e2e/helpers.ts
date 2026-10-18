@@ -123,10 +123,13 @@ export async function ecrireEtat(req: APIRequestContext, csrf: string, souhaite:
     return { data: (await r.json()) as Record<string, unknown>, etag: r.headers().etag! };
   };
   const avant = (await lire()).data;
-  const delta = repris.filter((k) => JSON.stringify(souhaite[k] ?? null) !== JSON.stringify(avant[k] ?? null));
+  const delta = repris.filter(
+    (k) => k in souhaite && JSON.stringify(souhaite[k] ?? null) !== JSON.stringify(avant[k] ?? null),
+  );
   for (const k of delta) {
     const courant = (await lire()).data;
-    const fichier = Buffer.from(JSON.stringify({ ...courant, [k]: souhaite[k] }));
+    // Fichier minimal : seul le module remplacé est validé (les autres données de l'instance n'en font pas partie).
+    const fichier = Buffer.from(JSON.stringify({ v: courant.v, schema: courant.schema, [k]: souhaite[k] }));
     const entetes = { 'x-csrf-token': csrf, 'content-type': 'application/octet-stream', 'x-file-name': 'etat.json' };
     const sim = await req.post(`/api/admin/import/simulate?mode=replace&module=${k}`, {
       data: fichier,

@@ -1092,7 +1092,7 @@ export const suiviIaEtapes = pgTable('suivi_ia_etapes', {
   seq: bigint('seq', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
   position: integer('position').notNull(),
   id: text('id'),
-  step: text('step'),
+  step: doublePrecision('step'),
   phase: text('phase'),
   action: text('action'),
   result: text('result'),

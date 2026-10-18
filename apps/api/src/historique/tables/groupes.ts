@@ -203,7 +203,7 @@ export const GROUPES: readonly GroupeSpec[] = [
         table: 'suivi_ia_etapes',
         cols: [
           { f: 'id', c: 'id', t: 'text' },
-          { f: 'step', c: 'step', t: 'text' },
+          { f: 'step', c: 'step', t: 'num' },
           { f: 'phase', c: 'phase', t: 'text' },
           { f: 'action', c: 'action', t: 'text' },
           { f: 'result', c: 'result', t: 'text' },

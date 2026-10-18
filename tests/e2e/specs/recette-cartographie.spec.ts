@@ -6,7 +6,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { expect, test, type APIRequestContext, type Browser, type Page } from '@playwright/test';
-import { apiLogin, csrfOf, markTotpUsed, PASSWORD, sessionAdmin, totp, watchPage } from '../helpers';
+import { apiLogin, csrfOf, ecrireEtat, markTotpUsed, PASSWORD, sessionAdmin, totp, watchPage } from '../helpers';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -96,11 +96,7 @@ async function etatLegacy(req: APIRequestContext) {
 async function ecrireLegacy(s: Session, patch: (d: Record<string, unknown>) => void) {
   const cur = await etatLegacy(s.req);
   patch(cur.data);
-  const r = await s.req.put('/api/legacy/state', {
-    data: cur.data,
-    headers: { 'x-csrf-token': s.csrf, 'if-match': cur.etag },
-  });
-  expect(r.status(), await r.text()).toBe(204);
+  await ecrireEtat(s.req, s.csrf, cur.data);
 }
 async function supprimerCartes(s: Session) {
   const cartes = (await (await s.req.get('/api/carto/maps')).json()) as { id: string }[];

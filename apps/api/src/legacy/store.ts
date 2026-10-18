@@ -156,6 +156,8 @@ export class LegacyStore {
               (Array.isArray(value) && !value.length)
             : canonicalJson(value) === canonicalJson(current);
         if (!same) blocked.push(m.key);
+        // Conteneur vide accepté sur un module absent : sa présence est enregistrée (clé attendue par l'outil historique).
+        else if (current === undefined && value !== null) await m.write(c, value, null);
       }
       delete stored[m.key];
     }
@@ -189,12 +191,8 @@ export class LegacyStore {
       if (m.key in incoming) {
         const current = await m.read(c);
         const value = incoming[m.key] as Json;
-        const same =
-          current === undefined
-            ? value === null ||
-              (isObject(value) && !Object.keys(value).length) ||
-              (Array.isArray(value) && !value.length)
-            : canonicalJson(value) === canonicalJson(current);
+        // Contrairement à /legacy, un conteneur vide explicite est enregistré (l'outil historique attend la clé présente).
+        const same = current === undefined ? value === null : canonicalJson(value) === canonicalJson(current);
         if (!same) await m.write(c, value, null);
       }
       delete stored[m.key];
