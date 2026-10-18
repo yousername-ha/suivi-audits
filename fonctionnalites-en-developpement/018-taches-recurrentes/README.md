@@ -30,3 +30,9 @@ Tâches rattachées à un registre ; affichage de tous les registres ou d’une 
 [Timeline avec guides et intitulés fixes](maquettes/v004-timeline-guides-fixes/README.md) · [12 aperçus](maquettes/v004-timeline-guides-fixes/images/) · [ZIP de test](maquettes/v004-timeline-guides-fixes/ASTRA-018-timeline-guides-fixes-v004.zip).
 
 Pastilles carrées élargies, ligne guide par tâche et défilement des échéances avec intitulés fixes. Proposition à valider ; versions précédentes conservées.
+
+## Dernière proposition — v005 : visuels uniquement
+
+**Nouvelle consigne utilisateur : ne plus créer de ZIP ni de BAT sans demande explicite.** Les anciens téléchargements restent historiques.
+
+[Périodicités et fenêtres de réalisation](maquettes/v005-periodicites-fenetres/README.md) · [Cinq visuels](maquettes/v005-periodicites-fenetres/images/). Ligne colorée selon l’état courant, fenêtre configurable et exemple mensuel ouvert sur les 14 derniers jours. À valider ; aucune intégration métier annoncée.

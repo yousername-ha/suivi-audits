@@ -1,0 +1,16 @@
+{
+  "status": "passed",
+  "checks": [
+    "Sept périodicités ; ligne mensuelle jaune sur 31 jours ; fenêtre de 14 jours",
+    "Fenêtre personnalisée, refus début après fin et état avant ouverture",
+    "Application à l’aperçu et fenêtre de réalisation ouverte",
+    "États avant ouverture, ouvert, expiré, OK, KO, NA",
+    "Mobile sans débordement et intitulés fixes"
+  ],
+  "screenshots": 5,
+  "limits": [
+    "Proposition visuelle, pas de persistance ni de raccordement métier",
+    "Réalisation tardive à définir",
+    "Bimensuel interprété deux fois par mois en attente de réponse"
+  ]
+}

@@ -24,8 +24,14 @@
       "date": "2026-10-18",
       "etape": "en-developpement",
       "motif": "Candidate v004 : pastilles carrées plus larges, guide horizontal et intitulés fixes au défilement."
+    },
+    {
+      "date": "2026-10-18",
+      "etape": "en-developpement",
+      "motif": "v005 : visuels des sept périodicités, fenêtres de réalisation et lignes selon état. Aucun ZIP ni BAT selon nouvelle consigne."
     }
   ],
   "numero": "018",
-  "candidate": "maquettes/v004-timeline-guides-fixes"
+  "candidate": "maquettes/v005-periodicites-fenetres",
+  "modeLivraison": "visuels-uniquement-sauf-demande-explicite"
 }

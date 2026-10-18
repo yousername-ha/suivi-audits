@@ -1,0 +1,13 @@
+{
+  "id": "v005-periodicites-fenetres",
+  "statut": "a-valider",
+  "type": "proposition-visuelle",
+  "date": "2026-10-18",
+  "sourceCommit": "09bb3f5d5d5a77e8830ef9e5676c78fddd4092c4",
+  "versionPrecedente": "v004-timeline-guides-fixes",
+  "validationUtilisateur": null,
+  "livraison": "images-uniquement",
+  "references": [
+    "references/style-08"
+  ]
+}
