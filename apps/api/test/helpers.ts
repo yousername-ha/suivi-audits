@@ -38,7 +38,6 @@ export async function createTestApp(
     SECRETS_DIR: '/nonexistent',
     TRUST_PROXY: '1',
     PUBLIC_URL: ORIGIN,
-    LEGACY_DIR: path.join(REPO, 'app/public'),
     SEED_FILE: path.join(REPO, 'apps/api/seed/state.json'),
     APP_VERSION: '3.0.0-test',
     ...env,

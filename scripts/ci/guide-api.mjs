@@ -118,7 +118,7 @@ async function login(st) {
   save(st);
 }
 
-const legacyState = () => call('GET', '/api/legacy/state');
+const legacyState = () => call('GET', '/api/suivi/etat');
 
 switch (cmd) {
   case 'administrateur': {

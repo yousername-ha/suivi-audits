@@ -41,7 +41,7 @@ export default tseslint.config(
   },
   {
     // Intégration de l'outil historique : script navigateur classique (ES5, sans module).
-    files: ['apps/api/legacy-shim/**/*.js', 'docker/maintenance/*.js'],
+    files: ['docker/maintenance/*.js'],
     languageOptions: { sourceType: 'script', globals: { ...globals.browser } },
   },
   {

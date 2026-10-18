@@ -45,7 +45,7 @@ http://{$SITE_ADDRESS}:8080 {
 		Cross-Origin-Opener-Policy same-origin
 	}
 
-	@api path /api/* /legacy /legacy/* /d/* /healthz
+	@api path /api/* /d/* /healthz
 	handle @api {
 		reverse_proxy app:8080 {
 			# Flux SSE (/api/events) : transmis immédiatement.

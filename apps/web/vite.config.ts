@@ -19,7 +19,6 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': { target: api, changeOrigin: false },
-      '/legacy': { target: api, changeOrigin: false },
       '/d/': { target: api, changeOrigin: false },
       '/healthz': { target: api, changeOrigin: false },
     },

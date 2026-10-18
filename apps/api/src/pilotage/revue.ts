@@ -14,7 +14,7 @@ import { isObject, type JsonObject } from '@suivi/shared/legacy';
 import type { SessionUser } from '../auth.js';
 import { DEFAULT_SMSI, type Grc } from '../grc/core.js';
 import { HttpError } from '../http/errors.js';
-import { redactLegacy } from '../routes/legacy.js';
+import { redactLegacy } from '../routes/suivi.js';
 
 const lignes = (v: unknown): JsonObject[] => (Array.isArray(v) ? v.filter(isObject) : []);
 const pluriel = (n: number, un: string, plusieurs: string) => `${n} ${n > 1 ? plusieurs : un}`;

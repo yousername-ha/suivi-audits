@@ -164,44 +164,9 @@ export class LegacyStore {
     return { conflict: false, version, sha256: sha };
   }
 
-  /** Écriture depuis /legacy : refusée si elle modifie un module repris ; les modules repris ne sont jamais stockés dans app_state. */
-  async legacyWrite(c: Client, incoming: JsonObject, user: Actor, expected: number | null) {
-    const blocked: string[] = [];
-    const stored: JsonObject = { ...incoming };
-    const actuel = await this.lireTous(c);
-    for (const m of this.mappers.values()) {
-      if (m.key in incoming) {
-        const current = actuel.get(m.key);
-        const value = incoming[m.key] as Json;
-        // Module absent des tables : seule une valeur vide (null, objet ou liste vide) est acceptée (l'outil historique crée la clé à la volée).
-        const same =
-          current === undefined
-            ? value === null ||
-              (isObject(value) && !Object.keys(value).length) ||
-              (Array.isArray(value) && !value.length)
-            : canonicalJson(value) === canonicalJson(current);
-        if (!same) blocked.push(m.key);
-        // Conteneur vide accepté sur un module absent : sa présence est enregistrée (clé attendue par l'outil historique).
-        else if (current === undefined && value !== null) await m.write(c, value, null);
-      }
-      delete stored[m.key];
-    }
-    if (blocked.length) {
-      throw new HttpError(
-        409,
-        `Module géré dans la nouvelle interface : ${blocked.map(moduleLabel).join(', ')}. Ces données ne peuvent plus être modifiées ici.`,
-        {
-          reason: 'module_taken_over',
-          modules: blocked,
-        },
-      );
-    }
-    return this.save(c, stored, user, expected, '');
-  }
-
   /** Écriture depuis la nouvelle interface : les modules repris dans des tables sont enregistrés dans leurs tables (par
-      leur correspondance) quand leur valeur change ; seul le reste de l'état va dans app_state. Contrairement à
-      `legacyWrite`, rien n'est refusé : c'est la source de vérité relationnelle qui est modifiée. */
+      leur correspondance) quand leur valeur change ; seul le reste de l'état va dans app_state. Rien n'est refusé :
+      c'est la source de vérité relationnelle qui est modifiée. */
   async nativeWrite(
     c: Client,
     incoming: JsonObject,

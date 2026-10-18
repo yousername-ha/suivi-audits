@@ -1,5 +1,5 @@
 #!/bin/sh
-# Met à jour l'outil historique (servi sous /legacy) dans le dépôt, à partir d'un index.html exporté de l'artefact claude.ai.
+# Met à jour le fichier historique app/public/index.html (conservé dans le dépôt, plus servi par l'application) à partir d'un index.html exporté de l'artefact claude.ai.
 # Réservé au poste de développement (EXPL-06) : l'outil historique fait partie de l'image de l'API ; il arrive sur le
 # serveur avec une version publiée (pull request, puis étiquette vX.Y.Z, puis scripts/mettre-a-jour.sh), jamais par copie.
 #   Usage : ./scripts/update-ui.sh /chemin/vers/index.html

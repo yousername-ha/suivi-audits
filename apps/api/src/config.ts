@@ -9,7 +9,7 @@ const bool = (v: string | undefined, d: boolean) => (v == null || v === '' ? d :
 const int = (v: string | undefined, d: number) => (v == null || v === '' ? d : parseInt(v, 10));
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-/** Racine de l'application (contient seed/ et, dans l'image, legacy/). */
+/** Racine de l'application (contient seed/ et migrations/). */
 export const APP_ROOT = path.resolve(here, '..');
 
 export function loadConfig(env: Env = process.env) {
@@ -54,8 +54,6 @@ export function loadConfig(env: Env = process.env) {
       : null,
     appName: env.APP_NAME || 'Suivi des audits SMSI',
     orgName: env.ORG_NAME || "GCS Normand'e-Santé",
-    /** Dossier de l'outil historique servi sous /legacy (app/public dans le dépôt). */
-    legacyDir: env.LEGACY_DIR || path.join(APP_ROOT, 'legacy'),
     seedFile: env.SEED_FILE || path.join(APP_ROOT, 'seed', 'state.json'),
     /** Rapports d'exploitation (DATA_DIR/etat sur le serveur, monté en lecture seule) : mises à jour, sauvegardes. */
     etatDir: env.ETAT_DIR || '/etat',
