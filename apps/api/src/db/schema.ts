@@ -1380,3 +1380,27 @@ export const suiviPreuves = pgTable('suivi_preuves', {
   validUntil: text('valid_until'),
   extra: jsonb('extra').notNull().default({}),
 });
+
+/* Évaluations des exigences par périmètre (ADR 0041) : versions immuables. */
+export const grcRequirementAssessments = pgTable('grc_requirement_assessments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  smsiId: uuid('smsi_id').notNull(),
+  frameworkId: uuid('framework_id').notNull(),
+  frameworkVersion: integer('framework_version').notNull(),
+  requirementId: text('requirement_id').notNull(),
+  version: integer('version').notNull(),
+  applicability: text('applicability').notNull().default('a_determiner'),
+  justification: text('justification').notNull().default(''),
+  implementation: text('implementation').notNull().default('aucune'),
+  implementationNote: text('implementation_note').notNull().default(''),
+  testedAt: date('tested_at'),
+  testResult: text('test_result'),
+  testNote: text('test_note').notNull().default(''),
+  testRef: text('test_ref').notNull().default(''),
+  validatedAt: date('validated_at'),
+  validatedBy: text('validated_by'),
+  validationNote: text('validation_note').notNull().default(''),
+  reason: text('reason').notNull(),
+  createdBy: text('created_by').notNull(),
+  createdAt: tstz('created_at').notNull().defaultNow(),
+});

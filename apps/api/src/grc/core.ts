@@ -42,6 +42,7 @@ import { validDate } from '@suivi/shared';
 import { GrcFrameworks } from './frameworks.js';
 import { GrcLibrary } from './library.js';
 import { GrcLibraryMappings } from './library-mappings.js';
+import { GrcEvaluationsExigences } from './evaluations-exigences.js';
 import { GrcRapprochements } from './rapprochements.js';
 import { GrcSuppliers } from './suppliers.js';
 import { GrcRisks } from './risks.js';
@@ -140,6 +141,7 @@ export class Grc {
   readonly library: GrcLibrary;
   readonly libraryMappings: GrcLibraryMappings;
   readonly rapprochements: GrcRapprochements;
+  readonly evaluations: GrcEvaluationsExigences;
   readonly suppliers: GrcSuppliers;
   readonly risks: GrcRisks;
   readonly studyConfig: GrcStudyConfig;
@@ -155,6 +157,7 @@ export class Grc {
     this.library = new GrcLibrary(this);
     this.libraryMappings = new GrcLibraryMappings(this);
     this.rapprochements = new GrcRapprochements(this);
+    this.evaluations = new GrcEvaluationsExigences(this);
     this.suppliers = new GrcSuppliers(this);
     this.risks = new GrcRisks(this);
     this.studyConfig = new GrcStudyConfig(this);

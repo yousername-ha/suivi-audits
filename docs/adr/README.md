@@ -44,3 +44,4 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0038](0038-socle-de-configuration-grc-transversal.md) | Socle de configuration GRC transversal (échelles, matrices, critères) et méthodes épinglées | Proposée |
 | [0039](0039-hierarchie-des-perimetres.md) | Hiérarchie des périmètres (organisation → entité → périmètre) et héritage explicite des référentiels | Proposée |
 | [0040](0040-sortie-du-json-plat-modules-en-tables.md) | Sortie du JSON plat : modules de l'outil de suivi repris en tables, un par un | Proposée |
+| [0041](0041-evaluation-des-exigences-et-couverture.md) | Évaluation des exigences : applicabilité, mise en œuvre, test d'efficacité, validation métier et état de couverture | Proposée |
