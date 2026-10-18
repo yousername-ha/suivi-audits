@@ -129,7 +129,12 @@ export async function ecrireEtat(req: APIRequestContext, csrf: string, souhaite:
   for (const k of delta) {
     const courant = (await lire()).data;
     // Le fichier ne contient que le socle de l'état et le module remplacé : les autres modules repris n'y figurent pas.
-    const socle = Object.fromEntries(Object.entries(courant).filter(([cle]) => !repris.includes(cle)));
+    // Socle structurel seulement (listes vidées) : en mode « remplacer », seul le module visé est lu dans le fichier.
+    const socle = Object.fromEntries(
+      Object.entries(courant)
+        .filter(([cle]) => !repris.includes(cle))
+        .map(([cle, v]) => [cle, Array.isArray(v) ? [] : v]),
+    );
     const fichier = Buffer.from(JSON.stringify({ ...socle, [k]: souhaite[k] }));
     const entetes = { 'x-csrf-token': csrf, 'content-type': 'application/octet-stream', 'x-file-name': 'etat.json' };
     const sim = await req.post(`/api/admin/import/simulate?mode=replace&module=${k}`, {
