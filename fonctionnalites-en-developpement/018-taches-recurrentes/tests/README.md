@@ -17,3 +17,7 @@ Suivre aussi la [recette commune](../../_dossiers-transversaux/socle-astra/RECET
 ## Candidate v002
 
 [Recette exécutée](../maquettes/v002-timeline-validations/technique/recette.json) · [Script Playwright](../maquettes/v002-timeline-validations/technique/parcours.cjs). Les contrôles couvrent le parcours local et les preuves ; ils ne prouvent ni une authentification réelle ni une immutabilité serveur.
+
+## Candidate v003 — 30 contrôles exécutés
+
+[Consulter](../maquettes/v003-registres-dialogues-centres/technique/recette.json). La recette locale ne prouve pas l’intégration backend.

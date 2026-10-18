@@ -14,8 +14,13 @@
       "date": "2026-10-18",
       "etape": "en-developpement",
       "motif": "Candidate v002 : timeline des occurrences, résultats OK/KO/NA, acteur automatique fictif, preuves partagées et journal. À valider ; aucun raccordement serveur."
+    },
+    {
+      "date": "2026-10-18",
+      "etape": "en-developpement",
+      "motif": "Candidate v003 : dialogues centrés compacts, appartenance aux registres et sélection multiple. Maquette locale à valider."
     }
   ],
   "numero": "018",
-  "candidate": "maquettes/v002-timeline-validations"
+  "candidate": "maquettes/v003-registres-dialogues-centres"
 }

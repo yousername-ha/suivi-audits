@@ -14,3 +14,7 @@ La cartographie dynamique reste protégée. Les exemples ANSSI ou fictifs des ma
 ## Contrat complémentaire de la candidate v002
 
 Lire la [note technique de la timeline](../maquettes/v002-timeline-validations/TECHNIQUE-MAQUETTE.md). Le socle Claude `284cb1e` enregistre déjà auteur et date des réalisations historiques ; le contrat OK/KO/NA avec référence de preuve versionnée et conservation non modifiable doit être confirmé ou complété côté métier. Ne pas transposer le stockage navigateur ni créer un moteur parallèle. La validation visuelle de la candidate précède le dossier final de codage.
+
+## Candidate v003 — contrat préparatoire
+
+[Consulter](../maquettes/v003-registres-dialogues-centres/TECHNIQUE-MAQUETTE.md). La recette locale ne prouve pas l’intégration backend.
