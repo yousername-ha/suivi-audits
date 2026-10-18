@@ -118,7 +118,11 @@ async function login(st) {
   save(st);
 }
 
-const legacyState = () => call('GET', '/api/suivi/etat');
+// Les versions publiées avant l'ADR 0042 servent l'état sous /api/legacy/state : la montée de version part de l'une d'elles.
+const legacyState = async () => {
+  const r = await call('GET', '/api/suivi/etat', { expect: [200, 404] });
+  return r && Array.isArray(r.items) ? r : call('GET', '/api/legacy/state');
+};
 
 switch (cmd) {
   case 'administrateur': {
