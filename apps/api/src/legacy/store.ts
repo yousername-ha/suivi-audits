@@ -27,8 +27,16 @@ export interface StateRow {
   updated_at: Date;
 }
 
+/** Correspondance d'un lot de clés lues en une seule requête (réglages scalaires), pour ne pas multiplier les lectures. */
+export interface BatchMapper {
+  keys: readonly string[];
+  readAll(c: Client): Promise<Map<string, Json>>;
+  write(c: Client, key: string, value: Json | undefined, batchId: number | null): Promise<void>;
+}
+
 export class LegacyStore {
   private readonly mappers = new Map<string, ModuleMapper>();
+  private batch: BatchMapper | null = null;
   constructor(
     private readonly cfg: Config,
     private readonly db: Db,
@@ -37,6 +45,23 @@ export class LegacyStore {
   /* ---------------------------------------------------------------- Modules repris */
   register(m: ModuleMapper) {
     this.mappers.set(m.key, m);
+  }
+  registerBatch(b: BatchMapper) {
+    this.batch = b;
+    for (const key of b.keys)
+      this.mappers.set(key, {
+        key,
+        read: async (c) => (await b.readAll(c)).get(key),
+        write: (c, value, batchId) => b.write(c, key, value, batchId),
+      });
+  }
+  /** Valeur actuelle de chaque module repris (le lot de réglages est lu en une requête). */
+  private async lireTous(c: Client): Promise<Map<string, Json | undefined>> {
+    const lot = this.batch ? await this.batch.readAll(c) : null;
+    const out = new Map<string, Json | undefined>();
+    for (const m of this.mappers.values())
+      out.set(m.key, lot && this.batch!.keys.includes(m.key) ? lot.get(m.key) : await m.read(c));
+    return out;
   }
   unregister(key: string) {
     this.mappers.delete(key);
@@ -61,10 +86,9 @@ export class LegacyStore {
       const r = await this.row(cl);
       if (!r) return null;
       const data: JsonObject = { ...r.data };
-      for (const m of this.mappers.values()) {
-        const v = await m.read(cl);
-        if (v === undefined) delete data[m.key];
-        else data[m.key] = v;
+      for (const [key, v] of await this.lireTous(cl)) {
+        if (v === undefined) delete data[key];
+        else data[key] = v;
       }
       return { version: r.version, data };
     };
@@ -144,9 +168,10 @@ export class LegacyStore {
   async legacyWrite(c: Client, incoming: JsonObject, user: Actor, expected: number | null) {
     const blocked: string[] = [];
     const stored: JsonObject = { ...incoming };
+    const actuel = await this.lireTous(c);
     for (const m of this.mappers.values()) {
       if (m.key in incoming) {
-        const current = await m.read(c);
+        const current = actuel.get(m.key);
         const value = incoming[m.key] as Json;
         // Module absent des tables : seule une valeur vide (null, objet ou liste vide) est acceptée (l'outil historique crée la clé à la volée).
         const same =
@@ -177,7 +202,14 @@ export class LegacyStore {
   /** Écriture depuis la nouvelle interface : les modules repris dans des tables sont enregistrés dans leurs tables (par
       leur correspondance) quand leur valeur change ; seul le reste de l'état va dans app_state. Contrairement à
       `legacyWrite`, rien n'est refusé : c'est la source de vérité relationnelle qui est modifiée. */
-  async nativeWrite(c: Client, incoming: JsonObject, user: Actor | null, expected: number | null, note = '') {
+  async nativeWrite(
+    c: Client,
+    incoming: JsonObject,
+    user: Actor | null,
+    expected: number | null,
+    note = '',
+    opts: { retirerAbsents?: boolean } = {},
+  ) {
     const stored: JsonObject = { ...incoming };
     // Conflit détecté avant toute écriture dans les tables des modules repris.
     const cur = (
@@ -187,13 +219,17 @@ export class LegacyStore {
     ).rows[0];
     if (cur && expected != null && expected !== cur.version)
       return { conflict: true as const, by: cur.updated_by, at: cur.updated_at, version: cur.version };
+    const actuel = await this.lireTous(c);
     for (const m of this.mappers.values()) {
       if (m.key in incoming) {
-        const current = await m.read(c);
+        const current = actuel.get(m.key);
         const value = incoming[m.key] as Json;
         // Contrairement à /legacy, un conteneur vide explicite est enregistré (l'outil historique attend la clé présente).
         const same = current === undefined ? value === null : canonicalJson(value) === canonicalJson(current);
         if (!same) await m.write(c, value, null);
+      } else if (opts.retirerAbsents && actuel.get(m.key) !== undefined) {
+        // Appelant qui fournit l'état complet : une clé absente est une clé retirée (amorçage, restauration).
+        await m.write(c, undefined, null);
       }
       delete stored[m.key];
     }

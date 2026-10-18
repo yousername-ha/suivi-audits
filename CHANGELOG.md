@@ -5,6 +5,8 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 ## [Non publié]
 
 ### Notes de mise à jour
+- **Migration SQL additive `026_coeur_suivi_tables.sql`** : le cœur de l'outil de suivi (mesures, écarts, processus, objectifs, indicateurs, fournisseurs, revues, parties intéressées, SWOT, rôles, preuves, référentiels complémentaires) et ses réglages (années, dates d'audit, plan d'audit, périmètre) passent d'`app_state` à des tables. Même précautions. `app_state` ne contient plus aucune donnée métier ; `/legacy` est désormais en lecture seule.
+- **Migration SQL additive `025_cles_multi_listes_tables.sql`** : CRRC, cellule de crise, conformité IA et DdA passent en tables.
 - **Migration SQL additive `024_collections_suivi_tables.sql`** : les incidents, les plans, les revues des accès, les analyses GAP et les évaluations par le clausier passent d'`app_state` à des tables (copie automatique au démarrage, entrées atypiques conservées). Même précautions que ci-dessous ; l'export et `/legacy` (lecture seule) lisent la même donnée.
 - **Migration SQL additive `023_investissements_tables.sql`** : le plan d'investissement passe d'`app_state` à deux tables (copie automatique au démarrage, rien n'est supprimé avant le prochain enregistrement). Sauvegarde automatique avant la mise à jour, comme d'habitude ; `/legacy` affiche les investissements en lecture seule.
 - **Migration SQL additive `022_hierarchie_perimetres.sql`**, appliquée au démarrage : trois colonnes et un déclencheur anti-boucle sur les périmètres. Aucune donnée n'est modifiée ; les périmètres existants restent à plat et n'héritent de rien. Aucune action sur le serveur.

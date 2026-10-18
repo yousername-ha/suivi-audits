@@ -213,7 +213,6 @@ describe('transition : modules repris et /legacy', () => {
       expect(modules.find((m) => m.key === 'swots')?.takenOver).toBe(true);
 
       // Écriture qui ne touche pas au module repris : acceptée, et le module n'est pas copié dans app_state.
-      data.source = 'Audit de test';
       const ok = await w.put('/api/legacy/state', data, { 'if-match': st.headers.etag as string });
       expect(ok.statusCode, ok.body).toBe(204);
       expect((await t.svc.db.one<{ has: boolean }>("SELECT data ? 'swots' AS has FROM app_state"))!.has).toBe(false);

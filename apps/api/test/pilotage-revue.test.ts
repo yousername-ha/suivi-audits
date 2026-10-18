@@ -90,7 +90,7 @@ describe('entrées de la revue de direction', () => {
           { id: 'F3', text: 'Observation', status: 'Ouvert', type: 'Observation', source: 'Interne' },
         ],
       });
-      await t.svc.legacy.legacyWrite(c, st.data, { username: 'test' } as never, st.version);
+      await t.svc.legacy.nativeWrite(c, st.data, { username: 'test' } as never, st.version);
       await c.query(
         `INSERT INTO pilotage_decisions(smsi_id,source_ref,source_version,operation,step,result,performed_on,note,refs,snapshot,generated_refs,request_id,intent_hash,created_by,terms)
          VALUES($1,'legacy:reviews:R1',1,'action_create','','completed','2026-01-15','Décision fictive de recette',$2,'{}'::jsonb,$3,$4,'x','test','[]'::jsonb)`,

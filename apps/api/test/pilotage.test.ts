@@ -213,7 +213,7 @@ describe('Pilotage multi-référentiels G/H/K et début E', () => {
   it('préserve les champs extra, les rôles sans ID, et les historiques de valeurs', async () => {
     await t.svc.db.tx(async (c) => {
       const state = await t.svc.legacy.recompose(c);
-      const saved = await t.svc.legacy.legacyWrite(
+      const saved = await t.svc.legacy.nativeWrite(
         c,
         {
           ...state!.data,

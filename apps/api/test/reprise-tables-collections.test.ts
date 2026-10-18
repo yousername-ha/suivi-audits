@@ -8,8 +8,10 @@ import { describe, expect, it } from 'vitest';
 import { MIGRATIONS_DIR } from '../src/db/db.js';
 import { ecrireCarte, ecrireCollection, ecrireGroupe } from '../src/historique/tables/collection.js';
 import { COLLECTIONS } from '../src/historique/tables/collections.js';
+import { CLES_REGLAGES } from '../src/historique/tables/coeur.js';
 import { CARTES, GROUPES } from '../src/historique/tables/groupes.js';
-import { createTestApp, fixturePath } from './helpers.js';
+import { etatJeuDeTest } from '../src/jeu-de-test.js';
+import { createTestApp, fixturePath, REPO } from './helpers.js';
 import { createDatabase } from './pg.js';
 
 const ETAT: JsonObject = {
@@ -97,36 +99,83 @@ describe('migration 024 et correspondance générique', () => {
     }
   });
 
-  const CLES = ['invest', 'incidents', 'plans', 'accessReviews', 'appGaps', 'supEvals', 'crrc', 'crisis', 'ai', 'dda'];
-  it('jeu de départ complet : la copie SQL et l’écriture par la correspondance restituent la fixture à l’identique', async () => {
-    const fixture = JSON.parse(readFileSync(fixturePath, 'utf8')) as JsonObject;
-    const attendu = Object.fromEntries(CLES.filter((k) => k in fixture).map((k) => [k, fixture[k]]));
-    // 1) Migration SQL depuis une base ancienne qui contient la fixture.
-    const dbName = await createDatabase();
-    const t = await createTestApp({}, { migrate: false, dbName });
-    try {
-      const avant = mkdtempSync(path.join(os.tmpdir(), 'fixt-'));
-      for (const f of readdirSync(MIGRATIONS_DIR).filter((x) => x < '023'))
-        copyFileSync(path.join(MIGRATIONS_DIR, f), path.join(avant, f));
-      await t.svc.db.migrate(avant);
-      await t.svc.db.q("INSERT INTO app_state (id, version, data, sha256, updated_by) VALUES (1, 1, $1, 'x', 'v2')", [
-        fixture,
-      ]);
-      await t.svc.db.migrate();
-      const etat = (await t.svc.legacy.recompose())!.data;
-      for (const [k, v] of Object.entries(attendu)) expect(etat[k], `SQL ${k}`).toEqual(v);
-    } finally {
-      await t.close();
-    }
-    // 2) Écriture par la correspondance (import, restauration) sur une base neuve.
-    const t2 = await createTestApp();
-    try {
-      for (const g of GROUPES) await t2.svc.db.tx((c) => ecrireGroupe(c, g, attendu[g.key] as Json | undefined));
-      for (const k of CARTES) await t2.svc.db.tx((c) => ecrireCarte(c, k, attendu[k.key] as Json | undefined));
-      const etat = (await t2.svc.legacy.recompose())!.data;
-      for (const k of ['crrc', 'crisis', 'ai', 'dda']) if (k in attendu) expect(etat[k], `TS ${k}`).toEqual(attendu[k]);
-    } finally {
-      await t2.close();
-    }
-  });
+  const CLES = [
+    'invest',
+    'incidents',
+    'plans',
+    'accessReviews',
+    'appGaps',
+    'supEvals',
+    'crrc',
+    'crisis',
+    'ai',
+    'dda',
+    'groups',
+    'items',
+    'findings',
+    'processes',
+    'objectives',
+    'indicators',
+    'suppliers',
+    'frameworks',
+    'reviews',
+    'interested',
+    'swots',
+    'roles',
+    'recurring',
+    'evidences',
+    ...CLES_REGLAGES,
+  ];
+  const SOURCES: [string, () => JsonObject][] = [
+    ['fixture legacy', () => JSON.parse(readFileSync(fixturePath, 'utf8')) as JsonObject],
+    ['données d’audit', () => JSON.parse(readFileSync(path.join(REPO, 'tests/fixtures/audit-donnees.json'), 'utf8'))],
+    [
+      'données de cartographie',
+      () => JSON.parse(readFileSync(path.join(REPO, 'tests/fixtures/carto-donnees.json'), 'utf8')),
+    ],
+    ['jeu de test', () => etatJeuDeTest() as JsonObject],
+  ];
+  it.each(SOURCES)(
+    'jeu de départ complet (%s) : la copie SQL et l’écriture par la correspondance restituent tout à l’identique',
+    async (_nom, charger) => {
+      const fixture = charger();
+      const attendu = Object.fromEntries(CLES.filter((k) => k in fixture).map((k) => [k, fixture[k]]));
+      // 1) Migration SQL depuis une base ancienne qui contient la fixture.
+      const dbName = await createDatabase();
+      const t = await createTestApp({}, { migrate: false, dbName });
+      try {
+        const avant = mkdtempSync(path.join(os.tmpdir(), 'fixt-'));
+        for (const f of readdirSync(MIGRATIONS_DIR).filter((x) => x < '023'))
+          copyFileSync(path.join(MIGRATIONS_DIR, f), path.join(avant, f));
+        await t.svc.db.migrate(avant);
+        await t.svc.db.q("INSERT INTO app_state (id, version, data, sha256, updated_by) VALUES (1, 1, $1, 'x', 'v2')", [
+          fixture,
+        ]);
+        await t.svc.db.migrate();
+        const etat = (await t.svc.legacy.recompose())!.data;
+        for (const [k, v] of Object.entries(attendu)) expect(etat[k], `SQL ${k}`).toEqual(v);
+        // Après un enregistrement natif, plus aucune clé de module repris ne subsiste dans app_state.
+        await t.svc.db.tx(async (c) => {
+          const r = (await t.svc.legacy.recompose(c))!;
+          const w = await t.svc.legacy.nativeWrite(c, r.data, null, r.version, 'contrôle');
+          if (w.conflict) throw new Error('conflit');
+        });
+        const brut = await t.svc.db.one<{ data: Record<string, unknown> }>('SELECT data FROM app_state WHERE id=1');
+        expect(Object.keys(brut!.data).filter((k) => t.svc.legacy.takenOver().includes(k))).toEqual([]);
+      } finally {
+        await t.close();
+      }
+      // 2) Écriture par la correspondance (import, restauration) sur une base neuve.
+      const t2 = await createTestApp();
+      try {
+        for (const g of GROUPES) await t2.svc.db.tx((c) => ecrireGroupe(c, g, attendu[g.key] as Json | undefined));
+        for (const k of CARTES) await t2.svc.db.tx((c) => ecrireCarte(c, k, attendu[k.key] as Json | undefined));
+        const etat = (await t2.svc.legacy.recompose())!.data;
+        for (const k of ['crrc', 'crisis', 'ai', 'dda'])
+          if (k in attendu) expect(etat[k], `TS ${k}`).toEqual(attendu[k]);
+      } finally {
+        await t2.close();
+      }
+    },
+  );
 });

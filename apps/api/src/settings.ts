@@ -167,7 +167,7 @@ export class Settings {
       if (v === null || v === '') delete data[k];
       else data[k] = v as JsonObject[string];
     }
-    const r = await this.legacy.save(c, data, user, st.version, `Paramètres : ${s}`);
+    const r = await this.legacy.nativeWrite(c, data, user, st.version, `Paramètres : ${s}`);
     if (r.conflict) throw conflictError(r.version, before);
     return { before, after, version: r.version };
   }
