@@ -19,8 +19,13 @@
       "date": "2026-10-18",
       "etape": "en-developpement",
       "motif": "Candidate v003 : dialogues centrés compacts, appartenance aux registres et sélection multiple. Maquette locale à valider."
+    },
+    {
+      "date": "2026-10-18",
+      "etape": "en-developpement",
+      "motif": "Candidate v004 : pastilles carrées plus larges, guide horizontal et intitulés fixes au défilement."
     }
   ],
   "numero": "018",
-  "candidate": "maquettes/v003-registres-dialogues-centres"
+  "candidate": "maquettes/v004-timeline-guides-fixes"
 }

@@ -18,3 +18,5 @@ Lire la [note technique de la timeline](../maquettes/v002-timeline-validations/T
 ## Candidate v003 — contrat préparatoire
 
 [Consulter](../maquettes/v003-registres-dialogues-centres/TECHNIQUE-MAQUETTE.md). La recette locale ne prouve pas l’intégration backend.
+
+[Candidate v004 — suivi horizontal](../maquettes/v004-timeline-guides-fixes/TECHNIQUE-MAQUETTE.md).

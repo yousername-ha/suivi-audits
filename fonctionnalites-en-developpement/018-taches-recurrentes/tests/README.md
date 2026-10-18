@@ -21,3 +21,5 @@ Suivre aussi la [recette commune](../../_dossiers-transversaux/socle-astra/RECET
 ## Candidate v003 — 30 contrôles exécutés
 
 [Consulter](../maquettes/v003-registres-dialogues-centres/technique/recette.json). La recette locale ne prouve pas l’intégration backend.
+
+[Candidate v004 — suivi horizontal](../maquettes/v004-timeline-guides-fixes/technique/recette.json).

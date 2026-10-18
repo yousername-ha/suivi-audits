@@ -24,3 +24,9 @@ La candidate ajoute la validation nominative simulée, une confirmation, la cons
 [Fenêtres centrées et registres](maquettes/v003-registres-dialogues-centres/README.md) · [11 aperçus](maquettes/v003-registres-dialogues-centres/images/) · [ZIP de test](maquettes/v003-registres-dialogues-centres/ASTRA-018-registres-dialogues-centres-v003.zip).
 
 Tâches rattachées à un registre ; affichage de tous les registres ou d’une sélection. Fenêtres de validation, consultation et preuve centrées et compactes. Versions précédentes conservées ; proposition à valider.
+
+## Dernière candidate — v004
+
+[Timeline avec guides et intitulés fixes](maquettes/v004-timeline-guides-fixes/README.md) · [12 aperçus](maquettes/v004-timeline-guides-fixes/images/) · [ZIP de test](maquettes/v004-timeline-guides-fixes/ASTRA-018-timeline-guides-fixes-v004.zip).
+
+Pastilles carrées élargies, ligne guide par tâche et défilement des échéances avec intitulés fixes. Proposition à valider ; versions précédentes conservées.
