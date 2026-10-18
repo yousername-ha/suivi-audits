@@ -1,20 +1,19 @@
-import { BUSINESS_MODULES, MODULE_LABELS } from '@suivi/shared';
 import { describe, expect, it } from 'vitest';
 import { HELP_ARTICLES } from '../src/help';
 
-describe('guide du socle historique', () => {
-  it('couvre chaque module métier historique sans le présenter comme migré', () => {
-    for (const module of BUSINESS_MODULES.filter((m) => m !== 'cartographie')) {
-      const article = HELP_ARTICLES.find((a) => a.id === `historique-${module}`);
-      expect(article, module).toBeDefined();
-      expect(article?.title).toBe(MODULE_LABELS[module]);
-      expect(article?.permission).toBe(`${module}:lire`);
-      expect(article?.link).toBe('/legacy/');
-    }
+describe('guide embarqué', () => {
+  it('ne renvoie plus vers l’ancien outil /legacy', () => {
+    for (const a of HELP_ARTICLES) expect(a.link, a.id).not.toMatch(/^\/legacy/);
+    expect(HELP_ARTICLES.some((a) => a.id.startsWith('historique'))).toBe(false);
   });
-  it('un lecteur limité aux fournisseurs ne reçoit pas les rubriques des autres modules', () => {
+  it('décrit les exports Excel avec leur droit', () => {
+    const article = HELP_ARTICLES.find((a) => a.id === 'exports-excel');
+    expect(article?.permission).toBe('import_export:exporter');
+    expect(article?.link).toBe('/exports');
+  });
+  it('un lecteur sans droit d’export ne reçoit pas l’article des exports', () => {
     const permissions: readonly string[] = ['fournisseurs:lire'];
     const permitted = HELP_ARTICLES.filter((a) => !a.permission || permissions.includes(a.permission));
-    expect(permitted.map((a) => a.id)).toEqual(['fournisseurs-organisation', 'historique-fournisseurs', 'compte']);
+    expect(permitted.map((a) => a.id)).not.toContain('exports-excel');
   });
 });

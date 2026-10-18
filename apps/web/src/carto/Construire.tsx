@@ -399,7 +399,7 @@ export function Creation({
               L’objet est enregistré dans la plateforme
               {item.k === 'type' && item.type === 'issue'
                 ? ' (réglages de la carte de contexte, en attendant la reprise des enjeux)'
-                : ' (module d’origine, visible aussi dans l’outil de suivi)'}{' '}
+                : ' (module d’origine, visible aussi dans le pilotage)'}{' '}
               puis placé sur la carte à l’endroit choisi.
             </Text>
           )}
@@ -533,7 +533,7 @@ export function Creation({
                 disabled={nomObligatoire || sansParent}
                 loading={envoi}
                 onClick={() => void valider(true)}
-                title="Crée l’objet puis ouvre l’outil de suivi pour compléter sa fiche"
+                title="Crée l’objet puis ouvre le pilotage pour compléter sa fiche"
               >
                 Créer et compléter
               </Button>
