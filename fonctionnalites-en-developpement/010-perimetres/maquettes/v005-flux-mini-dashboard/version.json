@@ -1,0 +1,38 @@
+{
+  "id": "v005-flux-mini-dashboard",
+  "statut": "a-valider",
+  "versionPrecedente": "v004-conformite-fournisseurs",
+  "validationUtilisateur": null,
+  "integrationBackend": false,
+  "date": "2026-10-19",
+  "references": [
+    "fonctionnalites-en-developpement/010-perimetres/maquettes/v005-flux-mini-dashboard/visuels/01-cartes-dashboard.png",
+    "fonctionnalites-en-developpement/010-perimetres/maquettes/v005-flux-mini-dashboard/visuels/04-flux-parent-enfants.gif",
+    "fonctionnalites-en-developpement/010-perimetres/maquettes/v005-flux-mini-dashboard/visuels/02-actions-en-retard.png",
+    "fonctionnalites-en-developpement/010-perimetres/maquettes/v005-flux-mini-dashboard/visuels/03-bia-du-perimetre.png"
+  ],
+  "visuels": [
+    {
+      "fichier": "visuels/01-cartes-dashboard.png",
+      "titre": "Cartes des périmètres et mini-tableau de bord",
+      "sha256": "5e4ed5e78c578e1d5b6c378b6cef6e22f253883c878de2f0ff5af19e577617d7"
+    },
+    {
+      "fichier": "visuels/04-flux-parent-enfants.gif",
+      "titre": "Aperçu animé du flux parent vers enfants",
+      "sha256": "1637569abe447cca6f43b99dc1ecf6c4f703d64e53617ce60da7a5e2a30beb5d"
+    },
+    {
+      "fichier": "visuels/02-actions-en-retard.png",
+      "titre": "Détail des actions en retard",
+      "sha256": "5787a4b6f3639573a3790c6a32478561f25b1dc2ad20064b88895ebd2fc5a155"
+    },
+    {
+      "fichier": "visuels/03-bia-du-perimetre.png",
+      "titre": "BIA du périmètre",
+      "sha256": "a2924ff292b2e5c47cfa7ec607c43aba1967c203b074b7d33fb23cca7d399131"
+    }
+  ],
+  "referenceClaudeLectureSeule": "284cb1e4ffbaee37e0952073db5659c2257c888e",
+  "zip": null
+}

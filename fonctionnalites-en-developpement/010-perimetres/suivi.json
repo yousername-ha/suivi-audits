@@ -19,8 +19,13 @@
       "date": "2026-10-19",
       "etape": "en-developpement",
       "motif": "v004 : fournisseur externe confirmé ; conformité ; liste et graphique réciproques ; composition symétrique. Version visuelle à valider. Aucun marqueur local implémentation ok."
+    },
+    {
+      "date": "2026-10-19",
+      "etape": "en-developpement",
+      "motif": "v005 : flux parent/enfant, ancrages recalculés et mini-tableau de bord BIA/PCRA/retards. Trois PNG et un GIF, version à valider."
     }
   ],
   "numero": "010",
-  "maquetteCourante": "maquettes/v004-conformite-fournisseurs"
+  "maquetteCourante": "maquettes/v005-flux-mini-dashboard"
 }

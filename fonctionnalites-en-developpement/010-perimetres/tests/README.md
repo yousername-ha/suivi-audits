@@ -1,6 +1,12 @@
 # Tests — Périmètres
 
-## v004 — exécutés le 19 octobre 2026
+## v005 — exécutés le 19 octobre 2026
+
+[Rapport v005](../maquettes/v005-flux-mini-dashboard/technique/verification.json) · [Script](../maquettes/v005-flux-mini-dashboard/technique/verifier.cjs).
+
+Quatorze groupes de contrôles réussis, dont compteurs filtrés, modal détaillée et état vide, sens des chemins, animation CSS, pause, mouvement réduit, symétrie, ajout d’un lien lors d’une création et non-régression liste/graphique. Trois PNG et un GIF de 24 images. Ces contrôles portent sur la maquette, sans intégration backend.
+
+## v004 — historique, exécutés le 19 octobre 2026
 
 [Rapport v004](../maquettes/v004-conformite-fournisseurs/technique/verification.json) · [Script](../maquettes/v004-conformite-fournisseurs/technique/verifier.cjs).
 

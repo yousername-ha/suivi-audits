@@ -1,4 +1,4 @@
-# 010 — Spécification préparatoire v004
+# 010 — Spécification préparatoire v005
 
 **À valider. Source de rendu de maquette, pas code de production.**
 
@@ -28,7 +28,7 @@ Montrer la provenance, la date et le détail par référentiel. Un parent affich
 
 Style 08 : fond clair sauge, menu vert profond fixe, icônes colorées, accents turquoise/bleu. Registres partagés en barre horizontale ; parent centré entre ses enfants, cartes de largeur uniforme, fournisseur dans une colonne externe séparée. Les fenêtres sont centrées avec bordure visible. Liste défilante à en-têtes fixes ; graphique défilant dans sa propre zone ; le contenu principal défile sans déplacer le menu.
 
-Le prototype utilise des positions fixes uniquement pour fixer l’intention graphique. L’intégration doit adapter l’agencement au nombre de nœuds et aux dimensions des cartes, éviter les collisions, préserver sélection/zoom au rafraîchissement et proposer une liste accessible comme alternative. Les positions de présentation éventuelles ne remplacent jamais les relations métier. Le module historique de cartographie dynamique reste inchangé.
+La maquette v005 calcule un agencement d’arbre et mesure les dimensions des cartes pour ancrer les liaisons. L’intégration doit adapter l’agencement au nombre de nœuds et aux dimensions des cartes, éviter les collisions, préserver sélection/zoom au rafraîchissement et proposer une liste accessible comme alternative. Les positions de présentation éventuelles ne remplacent jamais les relations métier. Le module historique de cartographie dynamique reste inchangé.
 
 ## Recette d’intégration exigée
 
@@ -44,3 +44,16 @@ Le prototype utilise des positions fixes uniquement pour fixer l’intention gra
 ## Prompt pour l’IA de codage, après validation
 
 Travaille uniquement sur ta branche attribuée. Lis les instructions globales et la version validée de 010 sur legacy en lecture seule. Réutilise les services, schémas, permissions et composants existants du commit cible. Implémente les vues Liste et Graphique sur une collection et des mutations communes ; raccorde les cartes fournisseur au registre existant ; n’invente ni moteur de conformité ni doublon de périmètre. Respecte les visuels, états et cas de recette ci-dessus. Documente les contrats manquants et les tests réellement exécutés. À livraison terminée, crée sur ta branche `implementation/IMPLEMENTATION-OK.md`, en identifiant la fonctionnalité, la version livrée, la branche/SHA, les contrôles et les limites. Ne modifie pas legacy ni l’espace Claude. Codex lira ce marqueur pour déplacer le dossier documentaire vers « implémentées ».
+
+## Flux et mini-tableau de bord — incrément v005
+
+Les chemins SVG sont orientés du centre bas de la carte parent vers le centre haut de l’enfant. Une base et une pointe de flèche restent visibles ; une couche à tirets se déplace vers l’extrémité du chemin. Recalculer les ancrages après création, redimensionnement ou changement de dimensions. L’animation ne déclenche aucune mutation métier. Prévoir pause/reprise et `prefers-reduced-motion` ; maintenir les informations de sens sans mouvement. Le lien fournisseur reste distinct de la hiérarchie.
+
+Les quatre compteurs, propres au périmètre, sont cliquables et ouvrent les listes du module concerné filtrées avec le même ID de périmètre. Filtrer les archives et appliquer les autorisations avant de compter. Afficher chargement, erreur ou indisponibilité explicitement ; une absence d’accès ne vaut pas zéro.
+
+- BIA : objets `bia` non archivés, états brouillon/revue/validé compris dans « existants ».
+- PCRA : plans `continuity_plan` non archivés de type `pcra`, sans fusion arbitraire avec les autres types de plans.
+- Tâches en retard : occurrences récurrentes échues et non terminales ; utiliser la relation de série existante, l’échéance réelle et le statut métier.
+- Actions en retard : actions échues non terminales hors occurrences récurrentes, pour éviter le double comptage entre les deux tuiles. Confirmer cette partition au raccordement aux registres réels.
+
+Aucun héritage implicite des comptes, aucun recalcul de conformité à partir des retards. Vérifier les dates aux limites de fenêtre et dans le fuseau métier, les actions terminées en retard, les échéances absentes, l’archivage, les objets partagés et les droits d’accès. Les tests actuels vérifient les filtres sur des données fictives à date fixe ; les contrôles API/permissions et les listes réelles restent à exécuter lors du codage.
