@@ -10,8 +10,8 @@ consolidation documentaire (H5, ci-dessous).
 **Reste à faire, par ordre de priorité**
 
 1. Recette de l'ensemble sur le serveur du RSSI, puis étiquette de version (par le RSSI) portant les migrations 022 à 027.
-2. Reprise des exports encore absents : pronostic d'audit, clausier fournisseurs, GAP applications (ReCyF est couvert par la
-   page Couverture). Exports de comité à la charte du modèle interne (COPIL).
+2. Exports de comité à la charte du modèle interne (COPIL). Les exports Excel du pronostic, du clausier fournisseurs et du
+   GAP applications sont repris ; ReCyF est couvert par la page Couverture.
 3. Normalisation des sous-structures encore en JSON (étapes du plan d'audit, valeurs d'indicateurs, tâches des écarts)
    dans des tables liées ([ADR 0040](adr/0040-sortie-du-json-plat-modules-en-tables.md)).
 4. Décision à prendre : retirer l'import et l'export au format historique, ou les garder comme outil de sauvegarde ;

@@ -188,7 +188,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     permission: 'import_export:exporter',
     link: '/exports',
     steps: [
-      'Ouvrez Exports Excel dans le menu : les rubriques sont regroupées (audit, objectifs et indicateurs, conformité, écarts, fournisseurs, contexte, incidents et crise, CRRC, investissements, preuves, plans, IA).',
+      'Ouvrez Exports Excel dans le menu : les rubriques sont regroupées (audit avec le pronostic, objectifs et indicateurs, conformité, écarts, fournisseurs avec les évaluations par le clausier, contexte, incidents et crise, CRRC, investissements, preuves, plans, IA, GAP applications).',
       'Excel classique donne les données brutes avec filtres ; Excel pro ajoute un sommaire, des en-têtes colorés et une mise en page prête à imprimer.',
       'Les rubriques que vous n’avez pas le droit de lire sont exportées vides. Chaque export est tracé dans le journal d’audit.',
     ],

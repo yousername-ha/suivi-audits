@@ -15,8 +15,28 @@ import {
   valeurIndicateur,
   evaluationIa,
   etapeIa,
+  lireAppGap,
+  etatPointGap,
+  pointsGap,
+  SECTIONS_GAP,
+  statsGap,
+  lireEvaluationClausier,
+  pointsEvaluation,
+  scoreEvaluation,
+  etatPoint,
   type TypePlan,
 } from '@suivi/shared';
+import {
+  AUDIT_REF_EXPORT_LABELS,
+  LV,
+  PREP_LABELS,
+  analyzeAll,
+  itemCode,
+  type AuditState,
+  type AuditRef,
+  type PrepValue,
+} from '@suivi/shared/audit';
+import { CLAUSIER_2026 } from '../historique/clausier-club-rssi-sante-2026.js';
 import { isObject, type JsonObject } from '@suivi/shared/legacy';
 import type { Feuille } from './classeur.js';
 
@@ -97,6 +117,22 @@ const lignesDda =
 
 const nomFournisseur = (etat: JsonObject, id: unknown) =>
   texte(objs(etat.suppliers).find((s) => s.id === id)?.name) || texte(id);
+
+/** Exigences exclues de la déclaration d'applicabilité (points GAP « Non applicable » par défaut). */
+const exigencesExclues = (etat: JsonObject): Set<string> => {
+  const dda = obj(etat.dda);
+  return new Set(
+    objs(etat.items)
+      .filter((i) => obj(dda[texte(i.id)]).app === 'non')
+      .map((i) => texte(i.id)),
+  );
+};
+const appsGap = (etat: JsonObject) =>
+  (Array.isArray(etat.appGaps) ? etat.appGaps : []).map(lireAppGap).filter((a): a is NonNullable<typeof a> => !!a);
+const codeExigence = (etat: JsonObject, id: string) => {
+  const m = objs(etat.items).find((x) => x.id === id);
+  return m ? codeMesure(m) : id;
+};
 
 export const JEUX: Record<string, Jeu> = {
   plan: {
@@ -1028,6 +1064,166 @@ export const JEUX: Record<string, Jeu> = {
     lignes: ({ etat }) =>
       objs(obj(etat.ai).policies).map((p) => [texte(p.policy), texte(p.change), texte(p.owner), texte(p.status)]),
   },
+  pronostic: {
+    titre: ({ etat }) => `Pronostic de l'audit ${texte(etat.nextYear)}`.trim(),
+    colonnes: [
+      ['Mesure', 10],
+      ['Intitulé', 46],
+      ['Référentiel', 18],
+      ['Pronostic', 14],
+      ['Raisons', 60],
+      ['Préparation', 12],
+      ['Créneau', 36],
+    ],
+    lignes: ({ etat }) => {
+      const annees = (Array.isArray(etat.years) ? etat.years : []).map(Number).filter(Number.isInteger);
+      const N = Number.isInteger(+(etat.nextYear as number)) && etat.nextYear !== '' ? +(etat.nextYear as number) : 0;
+      const exigences = objs(etat.items)
+        .filter((i) => ['ISO', 'A', 'HDS'].includes(texte(i.ref)))
+        .map((i) => ({
+          id: texte(i.id),
+          ref: texte(i.ref),
+          num: texte(i.num),
+          title: texte(i.title),
+          group: texte(i.group),
+          depth: nombre(i.depth),
+          afnor: obj(i.afnor) as Record<string, string>,
+          interne: obj(i.interne) as Record<string, string>,
+          prep: texte(i.prep),
+        }));
+      const ecarts = objs(etat.findings).map((f) => ({
+        id: texte(f.id),
+        source: texte(f.source),
+        year: nombre(f.year),
+        type: texte(f.type),
+        status: texte(f.status),
+        items: Array.isArray(f.items) ? (f.items as unknown[]).map(texte) : [],
+      }));
+      const AN = analyzeAll(
+        { years: annees, findings: ecarts, items: exigences } as Pick<AuditState, 'years' | 'findings' | 'items'>,
+        N,
+      );
+      const plan = obj(etat.plan);
+      const jours = objs(plan.days);
+      const creneau = (id: string) => {
+        const s = objs(plan.slots).find((x) => Array.isArray(x.items) && (x.items as unknown[]).includes(id));
+        if (!s) return '';
+        return `${texte(jours.find((d) => d.id === s.day)?.label)} ${texte(s.start)} — ${texte(s.title)}`.trim();
+      };
+      return exigences
+        .filter((i) => AN[i.id] && AN[i.id]!.level !== 'faible')
+        .sort((a, b) => LV[AN[a.id]!.level].o - LV[AN[b.id]!.level].o)
+        .map((i) => [
+          itemCode({ ref: i.ref, num: i.num }),
+          i.title,
+          AUDIT_REF_EXPORT_LABELS[i.ref as AuditRef],
+          LV[AN[i.id]!.level].l,
+          AN[i.id]!.reasons.join(' ; '),
+          PREP_LABELS[(i.prep in PREP_LABELS ? i.prep : '') as PrepValue],
+          creneau(i.id),
+        ]);
+    },
+  },
+  gapApps: {
+    titre: () => 'GAP — applications à intégrer',
+    colonnes: [
+      ['Application', 30],
+      ['DSCP', 10],
+      ['Nuage', 10],
+      ['Statut', 12],
+      ['Avancement', 11],
+      ['Conformes', 10],
+      ['Écarts', 8],
+      ['À évaluer', 10],
+      ['Responsable', 18],
+      ['Échéance cible', 14],
+    ],
+    lignes: ({ etat }) => {
+      const exclues = exigencesExclues(etat);
+      return appsGap(etat).map((a) => {
+        const st = statsGap(a, exclues);
+        return [
+          a.name,
+          a.dscp,
+          a.cloud,
+          a.status,
+          `${st.pct} %`,
+          st.c.Conforme,
+          st.ouverts,
+          st.c['À évaluer'],
+          a.owner,
+          dFr(a.target),
+        ];
+      });
+    },
+  },
+  gapLignes: {
+    titre: () => 'GAP — points de contrôle',
+    colonnes: [
+      ['Application', 26],
+      ['Section', 22],
+      ['Références', 20],
+      ['Point de contrôle', 60],
+      ['État', 14],
+      ['Constat', 40],
+      ['Pilote', 16],
+      ['Échéance', 12],
+    ],
+    lignes: ({ etat }) => {
+      const exclues = exigencesExclues(etat);
+      return appsGap(etat).flatMap((a) =>
+        pointsGap(a).map((l) => {
+          const v = a.lines[l.id] ?? {};
+          return [
+            a.name,
+            SECTIONS_GAP.find((x) => x[0] === l.sec)?.[1] ?? '',
+            l.refs.map((r) => codeExigence(etat, r)).join(', '),
+            l.t,
+            etatPointGap(a, l, exclues),
+            v.comment ?? '',
+            v.owner ?? '',
+            dFr(v.due),
+          ];
+        }),
+      );
+    },
+  },
+  evalFournisseurs: {
+    titre: () => 'Évaluations sécurité fournisseurs',
+    colonnes: [
+      ['Fournisseur', 24],
+      ['Produit', 24],
+      ['Date', 12],
+      ['Note indicative', 10],
+      ['Conformité', 10],
+      ['Exigence du clausier', 12],
+      ['Libellé', 70],
+      ['État', 14],
+      ['Commentaire', 40],
+    ],
+    lignes: ({ etat }) => {
+      const fournisseurs = objs(etat.suppliers);
+      return (Array.isArray(etat.supEvals) ? etat.supEvals : [])
+        .map(lireEvaluationClausier)
+        .filter((e): e is NonNullable<typeof e> => !!e)
+        .flatMap((ev) => {
+          const points = pointsEvaluation(CLAUSIER_2026, ev.cases);
+          const sc = scoreEvaluation(points, ev);
+          const nom = texte(fournisseurs.find((x) => x.id === ev.supplier)?.name);
+          return points.map((p) => [
+            nom,
+            ev.product,
+            dFr(ev.date),
+            sc.note,
+            sc.pc == null ? '' : `${sc.pc} %`,
+            p.id,
+            p.titre,
+            etatPoint(ev, p.id),
+            ev.ans[p.id]?.c ?? '',
+          ]);
+        });
+    },
+  },
 };
 
 /** Groupes proposés à l'export (repris de l'outil historique ; les jeux absents de cette liste n'ont pas encore d'équivalent). */
@@ -1035,8 +1231,8 @@ export const GROUPES: readonly { id: string; titre: string; description: string;
   {
     id: 'audit',
     titre: "Gestion de l'audit",
-    description: 'Plan, participants et couverture du cycle.',
-    jeux: ['plan', 'participants', 'couverture'],
+    description: 'Pronostic, plan, participants et couverture du cycle.',
+    jeux: ['pronostic', 'plan', 'participants', 'couverture'],
   },
   {
     id: 'obj',
@@ -1059,8 +1255,8 @@ export const GROUPES: readonly { id: string; titre: string; description: string;
   {
     id: 'sup',
     titre: 'Fournisseurs',
-    description: 'Fournisseurs, certificats, contrôles et revues des accès.',
-    jeux: ['fournisseurs', 'certificats', 'controles', 'revues'],
+    description: 'Fournisseurs, certificats, contrôles, revues des accès et évaluations sécurité.',
+    jeux: ['fournisseurs', 'certificats', 'controles', 'revues', 'evalFournisseurs'],
   },
   {
     id: 'ctx',
@@ -1098,6 +1294,12 @@ export const GROUPES: readonly { id: string; titre: string; description: string;
     titre: 'GAP — Intelligence artificielle',
     description: 'Registre, évaluation, plan d’action et politiques.',
     jeux: ['iaRegistre', 'iaEval', 'iaPlan', 'iaPolitiques'],
+  },
+  {
+    id: 'apps',
+    titre: 'GAP — Applications',
+    description: 'Synthèse par application et points de contrôle.',
+    jeux: ['gapApps', 'gapLignes'],
   },
 ];
 export const TOUS_LES_JEUX = GROUPES.flatMap((g) => g.jeux);

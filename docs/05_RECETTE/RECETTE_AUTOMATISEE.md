@@ -45,6 +45,20 @@ Toute violation nouvelle fait échouer la CI. Les écarts volontairement tolér�
 `ECARTS_CONNUS` du fichier de test, avec leur justification (aucun à ce jour). Le rapport complet de chaque exécution
 (`accessibilite.json`) est publié en artefact.
 
+## Contrôles ajoutés depuis la version 3.4.0
+
+Tenu à jour à chaque livraison : ce que chaque évolution a ajouté comme contrôle automatique, et ce qui reste à valider
+à la main. Les résultats chiffrés d'une exécution sont dans la CI de la demande de fusion correspondante.
+
+| Évolution | Contrôles automatiques | Reste manuel |
+| --- | --- | --- |
+| Hiérarchie des périmètres et héritage des référentiels | `packages/shared/test/hierarchie-perimetres.test.ts`, `apps/api/test/perimetres-hierarchie.test.ts` | Lecture de l'arbre et du choix du parent par le RSSI |
+| Modules en tables (migrations 022 à 027) | `apps/api/test/reprise-tables-*.test.ts`, `historique-*.test.ts` ; job CI « Montée de version » (dernière version publiée vers la version courante) | Mise à jour réelle sur le serveur du RSSI, avec sauvegarde |
+| Couverture par exigence | `packages/shared/test/couverture.test.ts`, `apps/api/test/couverture-exigences.test.ts`, `tests/e2e/specs/zzzzzzzzzzzzzzzz-couverture-exigences.spec.ts` | Justesse métier des états et de la validation |
+| Exports de revue de direction (Word, PowerPoint, Excel) | `apps/api/test/export-revue.test.ts` (structure des archives, rubriques vides) | Ouverture dans Word, PowerPoint et Excel sans demande de réparation |
+| Exports Excel par rubrique, dont pronostic de l'audit, GAP applications et évaluations fournisseurs | `apps/api/test/export-suivi.test.ts`, `export-suivi-complements.test.ts`, `tests/e2e/specs/zzzzzzzzzzzzzzzzz-exports-excel.spec.ts` | Ouverture dans Excel, lisibilité du mode pro à l'impression |
+| Retrait de l'écran `/legacy` | `apps/api/test/suivi-lecture.test.ts`, parcours Playwright adaptés (aucune écriture par l'ancienne route) | Parcours d'un utilisateur habitué à l'ancien outil |
+
 ## Ce qui reste manuel
 
 TEST-042 (acceptation ergonomique), TEST-044 (références officielles sous licence), TEST-028 à TEST-038 pour leur
