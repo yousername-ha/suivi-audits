@@ -1,5 +1,5 @@
 /* B1 : confirmation dans le navigateur, API réelle et conservation de l'état historique. */
-import { expect, test, type Browser } from '@playwright/test';
+import { expect, test, type Browser, type Page } from '@playwright/test';
 import { sessionAdmin, watchPage } from '../helpers';
 
 async function open(browser: Browser, width = 1366) {
@@ -10,6 +10,14 @@ async function open(browser: Browser, width = 1366) {
   });
   const page = await ctx.newPage();
   return { ctx, page, csrf: (await sessionAdmin(browser)).csrf, problems: watchPage(page) };
+}
+
+/** Destination « Documents et liens » du menu : elle se trouve dans la famille « Documents », qu'il faut déplier. */
+async function destinationDocuments(page: Page) {
+  const nav = page.getByRole('navigation', { name: 'Navigation principale' });
+  const lien = nav.getByRole('link', { name: 'Documents et liens', exact: true });
+  if (!(await lien.isVisible())) await nav.getByRole('link', { name: 'Documents', exact: true }).click();
+  return lien;
 }
 
 test('B1 : conserve la présence reçue au premier hello quand les droits sont inchangés', async ({ browser }) => {
@@ -126,11 +134,7 @@ test('B1 : désactivation confirmée, cache renouvelé et réactivation des donn
   try {
     await page.goto('/admin/system');
     const card = page.getByRole('heading', { name: 'Activation des modules', exact: true }).locator('..');
-    await expect(
-      page
-        .getByRole('navigation', { name: 'Navigation principale' })
-        .getByRole('link', { name: 'Documents et liens', exact: true }),
-    ).toBeVisible();
+    await expect(await destinationDocuments(page)).toBeVisible();
     await card.getByRole('checkbox', { name: 'Activer Documents et liens', exact: true }).uncheck();
     await card.getByRole('button', { name: 'Prévisualiser les conséquences' }).click();
     await expect(card.getByText('Désactivation : Documents et liens', { exact: true })).toBeVisible();
@@ -142,11 +146,7 @@ test('B1 : désactivation confirmée, cache renouvelé et réactivation des donn
       .toContain('documents');
     off = true;
     expect((await ctx.request.get('/api/documents')).status()).toBe(409);
-    await expect(
-      page
-        .getByRole('navigation', { name: 'Navigation principale' })
-        .getByRole('link', { name: 'Documents et liens', exact: true }),
-    ).toHaveCount(0);
+    await expect(await destinationDocuments(page)).toHaveCount(0);
     expect((await (await ctx.request.get('/api/auth/me')).json()).stage).toBe('ok');
     await expect(card.getByRole('checkbox', { name: 'Activer Documents et liens', exact: true })).not.toBeChecked();
     await card.getByRole('checkbox', { name: 'Activer Documents et liens', exact: true }).check();
@@ -159,11 +159,7 @@ test('B1 : désactivation confirmée, cache renouvelé et réactivation des donn
       .not.toContain('documents');
     off = false;
     expect((await ctx.request.get('/api/documents')).status()).toBe(200);
-    await expect(
-      page
-        .getByRole('navigation', { name: 'Navigation principale' })
-        .getByRole('link', { name: 'Documents et liens', exact: true }),
-    ).toBeVisible();
+    await expect(await destinationDocuments(page)).toBeVisible();
     expect(await (await ctx.request.get('/api/suivi/etat')).json()).toEqual(before);
     expect(problems).toEqual([]);
   } finally {

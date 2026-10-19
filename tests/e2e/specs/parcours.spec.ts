@@ -96,7 +96,8 @@ test('connexion avec double authentification ; code erroné refusé', async ({ b
 test('documents : dépôt, fiche, modification, version', async ({ browser }) => {
   const { page, problems } = await newPage(browser);
   await loginUI(page, ADMIN, PASSWORD, adminSecret);
-  await page.getByRole('link', { name: 'Documents et liens' }).first().click();
+  await page.getByRole('link', { name: 'Documents', exact: true }).filter({ visible: true }).click();
+  await page.getByRole('link', { name: 'Documents et liens', exact: true }).filter({ visible: true }).click();
   const chooser = page.waitForEvent('filechooser');
   await page.getByRole('button', { name: 'Déposer des documents' }).click();
   await (

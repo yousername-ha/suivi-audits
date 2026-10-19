@@ -14,7 +14,7 @@ import { Link, useParams, useNavigate } from 'react-router';
 import { api, get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
-import { PILOTAGE_LABELS, PILOTAGE_NAV } from '../pilotage-navigation';
+import { PILOTAGE_LABELS } from '../pilotage-navigation';
 import { Overview } from '../grc/Overview';
 import { Tasks } from '../grc/Tasks';
 import { ObjectEditor } from '../grc/ObjectEditor';
@@ -249,16 +249,6 @@ export function PilotagePage() {
         }
       />
       <Stack>
-        <Select
-          hiddenFrom="lg"
-          label="Rubrique du pilotage"
-          value={section}
-          onChange={(v) => v && navigate('/pilotage/' + v)}
-          data={PILOTAGE_NAV.map((g) => ({
-            group: g.label,
-            items: g.items.filter((i) => can(i.module, 'lire')).map((i) => ({ value: i.id, label: i.label })),
-          }))}
-        />
         <ErrorAlert error={scopes.error ?? policy.error} />
         {(scopes.data?.length ?? 0) > 1 && (
           <Select

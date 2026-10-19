@@ -1,6 +1,6 @@
 /* Pastilles du menu : rouge quand un indicateur est mauvais, neutre pour un volume à traiter, absente sans alerte. */
 import { describe, expect, it } from 'vitest';
-import { alertesDepuisSynthese } from '../src/pilotage/alertes-menu';
+import { alerteDeFamille, alertesDepuisSynthese } from '../src/pilotage/alertes-menu';
 import type { SyntheseApi } from '../src/components/Synthese';
 
 const base = {
@@ -12,15 +12,19 @@ const base = {
 describe('alertes du menu', () => {
   it('compte en rouge les indicateurs non atteints et les échéances dépassées', () => {
     const a = alertesDepuisSynthese(base, 0);
-    expect(a['Objectifs et indicateurs']).toMatchObject({ n: 1, rouge: true });
-    expect(a['Écarts et actions']).toMatchObject({ n: 5, rouge: true });
-    expect(a['Risques']).toMatchObject({ n: 2, rouge: false });
-    expect(a['Conformité']).toBeUndefined();
+    expect(a['objectifs']).toMatchObject({ n: 1, rouge: true });
+    expect(a['plan-actions']).toMatchObject({ n: 5, rouge: true });
+    expect(a['risques']).toMatchObject({ n: 2, rouge: false });
+    expect(a['referentiels']).toBeUndefined();
   });
-  it('totalise la racine et reste rouge dès qu’un groupe est rouge', () => {
+  it('totalise une famille et reste rouge dès qu’une destination est rouge', () => {
     const a = alertesDepuisSynthese(base, 4);
-    expect(a['Conformité']).toMatchObject({ n: 4, rouge: false });
-    expect(a['Pilotage']).toMatchObject({ n: 12, rouge: true });
+    expect(a['referentiels']).toMatchObject({ n: 4, rouge: false });
+    expect(alerteDeFamille(a, [{ id: 'objectifs' }, { id: 'plan-actions' }, { id: 'revues' }])).toMatchObject({
+      n: 6,
+      rouge: true,
+    });
+    expect(alerteDeFamille(a, [{ id: 'revues' }])).toBeUndefined();
   });
   it('n’affiche aucune pastille sans donnée ni droit de lecture', () => {
     expect(alertesDepuisSynthese(undefined, 0)).toEqual({});
@@ -32,7 +36,8 @@ describe('alertes du menu', () => {
     } as SyntheseApi;
     expect(alertesDepuisSynthese(sain, 0)).toEqual({});
   });
-  it('la racine est neutre quand seules des pastilles neutres existent', () => {
-    expect(alertesDepuisSynthese(undefined, 3)['Pilotage']).toMatchObject({ n: 3, rouge: false });
+  it('une famille est neutre quand seules des pastilles neutres existent', () => {
+    const a = alertesDepuisSynthese(undefined, 3);
+    expect(alerteDeFamille(a, [{ id: 'referentiels' }])).toMatchObject({ n: 3, rouge: false });
   });
 });

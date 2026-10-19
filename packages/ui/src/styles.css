@@ -577,6 +577,13 @@ html[data-densite='confortable'] {
   --suivi-nav-active: #305a49;
   --suivi-nav-survol: #244c3e;
   --suivi-nav-repere: #c5dbab;
+  --suivi-famille-pilotage: #c5dbab;
+  --suivi-famille-organisation: #9cc7e4;
+  --suivi-famille-risques: #f2a99b;
+  --suivi-famille-conformite: #e8d28c;
+  --suivi-famille-actions: #bcaaec;
+  --suivi-famille-resilience: #84d6c6;
+  --suivi-famille-documents: #e6b8d2;
   --suivi-surface-douce: var(--mantine-color-gray-0);
   --suivi-ombre: 0 2px 4px rgb(27 54 37 / 2%), 0 8px 28px rgb(27 54 37 / 3%);
   --suivi-ombre-haute: 0 18px 54px rgb(27 54 37 / 12%);
@@ -699,6 +706,32 @@ h3,
 }
 .nav-footer {
   padding-top: var(--mantine-spacing-md);
+}
+/* Familles du menu : icône teintée (décorative), sous-entrées en retrait, séparation de l'administration. */
+.nav-famille[data-famille='pilotage'] .nav-icone {
+  color: var(--suivi-famille-pilotage);
+}
+.nav-famille[data-famille='organisation'] .nav-icone {
+  color: var(--suivi-famille-organisation);
+}
+.nav-famille[data-famille='risques'] .nav-icone {
+  color: var(--suivi-famille-risques);
+}
+.nav-famille[data-famille='conformite'] .nav-icone {
+  color: var(--suivi-famille-conformite);
+}
+.nav-famille[data-famille='actions'] .nav-icone {
+  color: var(--suivi-famille-actions);
+}
+.nav-famille[data-famille='resilience'] .nav-icone {
+  color: var(--suivi-famille-resilience);
+}
+.nav-famille[data-famille='documents'] .nav-icone {
+  color: var(--suivi-famille-documents);
+}
+.nav-administration {
+  margin-top: var(--mantine-spacing-md);
+  border-top: 1px solid var(--suivi-nav-active);
 }
 .nav-signature {
   display: flex;
