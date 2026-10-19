@@ -50,6 +50,7 @@ test('Registres : registre créé, périmètre ajouté après aperçu de l’imp
     const edition = page.getByRole('dialog');
     await edition.getByRole('combobox', { name: 'Périmètres du registre' }).click();
     await page.getByRole('option', { name: second }).click();
+    await edition.getByRole('combobox', { name: 'Périmètres du registre' }).press('Escape');
     await edition.getByRole('button', { name: 'Prévisualiser l’impact' }).click();
     await expect(edition.getByText('Impact de la modification')).toBeVisible();
     await expect(edition.getByText(`Ajoutés : ${second}`)).toBeVisible();
