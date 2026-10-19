@@ -29,8 +29,13 @@
       "date": "2026-10-19",
       "etape": "en-developpement",
       "motif": "v006 : section Écarts ouverts sous la conformité ; majeurs rouges, mineurs orange foncé, points sensibles violets ; tuiles compactes, cartes réduites de 12 px sans élargissement."
+    },
+    {
+      "date": "2026-10-19",
+      "etape": "en-developpement",
+      "motif": "v007 : fond uni sans petits points, contrôle du rendu et nouveaux aperçus."
     }
   ],
   "numero": "010",
-  "maquetteCourante": "maquettes/v006-ecarts-dashboard-compact"
+  "maquetteCourante": "maquettes/v007-fond-uni"
 }

@@ -1,6 +1,10 @@
 # Tests — Périmètres
 
-## v006 — exécutés le 19 octobre 2026
+## v007 — contrôle visuel
+
+[Contrôle de capture](../maquettes/v007-fond-uni/verification.json) : aucun motif de fond, teinte conservée et aucune erreur JavaScript. Aucun nouveau test fonctionnel pour cette modification CSS.
+
+## v006 — historique, exécutés le 19 octobre 2026
 
 [Rapport](../maquettes/v006-ecarts-dashboard-compact/technique/verification.json) · [Script](../maquettes/v006-ecarts-dashboard-compact/technique/verifier.cjs).
 

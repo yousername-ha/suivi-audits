@@ -131,7 +131,7 @@
     {
       "id": "perimetres",
       "titre": "Périmètres",
-      "maquetteCourante": "fonctionnalites-en-developpement/010-perimetres/maquettes/v006-ecarts-dashboard-compact",
+      "maquetteCourante": "fonctionnalites-en-developpement/010-perimetres/maquettes/v007-fond-uni",
       "statutMaquette": "a-valider",
       "implementation": "a-suivre",
       "tests": "fonctionnalites-en-developpement/010-perimetres/tests/README.md",

@@ -1,4 +1,4 @@
-# 010 — Spécification préparatoire v006
+# 010 — Spécification préparatoire v007
 
 **À valider. Source de rendu de maquette, pas code de production.**
 
@@ -63,3 +63,7 @@ Aucun héritage implicite des comptes, aucun recalcul de conformité à partir d
 Placer la section titrée « Écarts ouverts » directement sous le taux de conformité et avant les quatre tuiles BIA/PCRA/retards. Conserver les trois catégories métier distinctes : écarts majeurs en rouge `#B4233C`, mineurs en orange foncé `#A34608`, points sensibles en violet `#7040A6`, sur fonds respectifs `#FFEDEF`, `#FFF0E5`, `#F3EBFC`. Afficher nombre et libellé ; ne pas convertir un point sensible en non-conformité mineure. Appliquer ces couleurs aux badges, au détail et à la légende, sans modifier les catégories du backend.
 
 Les quatre tuiles BIA/PCRA/retards sont compactées, icône et valeur alignées avec le libellé, hauteur minimale 36 px. Aucun agrandissement de carte pour ajouter la troisième catégorie. Référence mesurée : cartes de périmètre de 300 px de largeur, 12 px moins hautes que v005 ; fournisseur de 280 × 241 px (1 px moins haut). Préserver les cibles clavier, le focus visible et les libellés accessibles. Tester l’absence de débordement avec les volumes réels de compteurs avant intégration.
+
+## Fond — v007
+
+Fond uni `#FCFDFB`, sans grille de points ni image de fond. Conserver la teinte sauge des zones d’organisation et les traits de liaison.

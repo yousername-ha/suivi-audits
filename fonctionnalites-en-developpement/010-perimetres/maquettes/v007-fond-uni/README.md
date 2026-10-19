@@ -1,0 +1,15 @@
+# 010 · v007 — Fond uni
+
+**Proposition à valider · Données fictives.** Le fond à petits points est remplacé par une surface unie `#FCFDFB`. La disposition, les écarts sous la conformité, les tuiles compactes et le flux parent/enfant sont conservés.
+
+## Aperçu
+
+![Fond uni](visuels/01-fond-uni.png)
+
+## Animation
+
+![Flux sur fond uni](visuels/02-flux-fond-uni.gif)
+
+Contrôle de rendu : `background-image: none`, fond `rgb(252, 253, 251)`, aucune erreur JavaScript pendant la capture. Aucun nouveau test fonctionnel ni intégration backend pour cette modification CSS. [Résultat du contrôle](verification.json).
+
+Un PNG et un GIF, sans ZIP/BAT. La version reste en développement ; aucun marqueur local « implémentation ok » trouvé.

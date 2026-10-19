@@ -1,0 +1,24 @@
+{
+  "id": "v007-fond-uni",
+  "statut": "a-valider",
+  "date": "2026-10-19",
+  "versionPrecedente": "v006-ecarts-dashboard-compact",
+  "validationUtilisateur": null,
+  "integrationBackend": false,
+  "references": [
+    "fonctionnalites-en-developpement/010-perimetres/maquettes/v007-fond-uni/visuels/01-fond-uni.png",
+    "fonctionnalites-en-developpement/010-perimetres/maquettes/v007-fond-uni/visuels/02-flux-fond-uni.gif"
+  ],
+  "visuels": [
+    {
+      "fichier": "visuels/01-fond-uni.png",
+      "titre": "Cartographie sur fond uni",
+      "sha256": "ddce046e27cced9feee3d75e5eac3009f9875695c15fb4a7f2002835e7310517"
+    },
+    {
+      "fichier": "visuels/02-flux-fond-uni.gif",
+      "titre": "Flux animé sur fond uni",
+      "sha256": "af4adab559ed71680ccfd3b8aa3a44c3c15f58af2e650c607765cc5685d95495"
+    }
+  ]
+}

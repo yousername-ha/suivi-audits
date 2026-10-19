@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-19",
+  "version": "v007-fond-uni",
+  "background": {
+    "image": "none",
+    "color": "rgb(252, 253, 251)"
+  },
+  "errors": [],
+  "viewport": [
+    1600,
+    1500
+  ],
+  "frames": 24,
+  "backendTested": false
+}
