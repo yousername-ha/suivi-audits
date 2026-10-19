@@ -131,7 +131,7 @@
     {
       "id": "perimetres",
       "titre": "Périmètres",
-      "maquetteCourante": "fonctionnalites-en-developpement/010-perimetres/maquettes/v001-reference-08",
+      "maquetteCourante": "fonctionnalites-en-developpement/010-perimetres/maquettes/v004-conformite-fournisseurs",
       "statutMaquette": "a-valider",
       "implementation": "a-suivre",
       "tests": "fonctionnalites-en-developpement/010-perimetres/tests/README.md",
@@ -140,7 +140,7 @@
       "dossier": "fonctionnalites-en-developpement/010-perimetres",
       "suivi": "fonctionnalites-en-developpement/010-perimetres/suivi.json",
       "numero": "010",
-      "description": "Définir les établissements, entités et périmètres auxquels rattacher les objets métier."
+      "description": "Créer et gérer les mêmes périmètres en liste ou graphique, avec héritage, conformité et fournisseurs externes rattachés."
     },
     {
       "id": "fournisseurs",

@@ -14,8 +14,13 @@
       "date": "2026-10-19",
       "etape": "en-developpement",
       "motif": "Proposition graphique issue du croquis : cinq visuels, héritage et gestion partagée ; fournisseur externe à confirmer. Aucun ZIP/BAT ni intégration backend."
+    },
+    {
+      "date": "2026-10-19",
+      "etape": "en-developpement",
+      "motif": "v004 : fournisseur externe confirmé ; conformité ; liste et graphique réciproques ; composition symétrique. Version visuelle à valider. Aucun marqueur local implémentation ok."
     }
   ],
   "numero": "010",
-  "maquetteCourante": "maquettes/v003-gestion-graphique"
+  "maquetteCourante": "maquettes/v004-conformite-fournisseurs"
 }

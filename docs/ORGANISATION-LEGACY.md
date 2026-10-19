@@ -5,14 +5,14 @@ Trois dossiers correspondent aux trois étapes demandées par l’utilisateur. L
 | Dossier | Contenu | Condition de sortie |
 | --- | --- | --- |
 | [fonctionnalites-en-developpement](../fonctionnalites-en-developpement/README.md) | Maquettes et visuels en cours, prototypes testables, dossiers techniques préparatoires | Validation explicite de la version par l’utilisateur et dossier complet prêt |
-| [fonctionnalites-a-implementer](../fonctionnalites-a-implementer/README.md) | Maquettes validées et dossier complet pour l’IA de codage | Intégration terminée, version du code identifiée et vérifications consignées |
+| [fonctionnalites-a-implementer](../fonctionnalites-a-implementer/README.md) | Maquettes validées et dossier complet pour l’IA de codage | Lecture du marqueur « implémentation ok » confirmant la version livrée |
 | [fonctionnalites-implementees](../fonctionnalites-implementees/README.md) | Dossiers livrés avec preuves d’intégration et recette | Conservation de l’historique ; une évolution ouvre une nouvelle version en développement |
 
 ## 1. Concevoir et tester
 
 Commencer dans `fonctionnalites-en-developpement/<NNN-fonctionnalite>/`. Utiliser le [modèle](../fonctionnalites-en-developpement/_modele/README.md), créer une version `maquettes/vNNN-description/`, garder les versions utiles et les images. Renseigner le [catalogue commun](catalogue-fonctionnalites.json) et `suivi.json`.
 
-Publier les ZIP de test dans `downloads/` sur GitHub dès qu’ils sont testables, avec BAT, guide et empreinte SHA-256. Ne pas attendre la validation utilisateur pour publier. Une publication ou des tests réussis ne valent pas validation de la maquette.
+Publier les visuels sur GitHub. Depuis la consigne courante, ne générer aucun ZIP/BAT sans nouvelle demande explicite. Conserver les archives précédentes. Une publication ou des tests réussis ne valent pas validation de la maquette.
 
 Le [prototype transversal v2](../fonctionnalites-en-developpement/_prototype-transversal/README.md) couvre plusieurs fonctionnalités : conserver une source commune et indiquer la version et le périmètre concernés dans chaque dossier. Les [dossiers transversaux préparatoires](../fonctionnalites-en-developpement/_dossiers-transversaux/README.md) restent en développement. Leur nom « dossier d’implémentation » ne signifie pas qu’ils sont validés.
 
@@ -26,7 +26,7 @@ Après accord explicite de l’utilisateur, consigner dans `suivi.json` la date,
 - architecture, modèle de données, API/contrats, droits, migrations et compatibilité ;
 - dépendances, sources officielles, décisions et limites connues ;
 - plan de réalisation, recette, résultats réellement exécutés et prompt de codage ;
-- ZIP complet, lanceur, inventaire des fichiers et empreintes.
+- inventaire des fichiers et empreintes ; ZIP et lanceur uniquement sur nouvelle demande explicite.
 
 Déplacer ensuite **tout le dossier** dans `fonctionnalites-a-implementer/<NNN-fonctionnalite>/`. Mettre à jour chemins, liens, catalogue, manifestes et historique. Une validation partielle ne valide que son périmètre : laisser le reste en développement. Référencer les ressources communes par une version ou un SHA précis.
 
@@ -34,15 +34,20 @@ L’IA de codage travaille exclusivement sur **sa propre branche** ; `origin/leg
 
 ## 3. Clore l’intégration
 
-Quand l’intégration est terminée et vérifiée, consigner dans `suivi.json` la branche d’implémentation, le SHA exact, le périmètre livré, les résultats de recette et la référence de confirmation. Déplacer le dossier dans `fonctionnalites-implementees/<NNN-fonctionnalite>/` et actualiser le catalogue et les liens. Une maquette fonctionnelle seule ne constitue pas une implémentation dans l’application.
+À chaque reprise, rechercher et lire les marqueurs « implémentation ok » dans les dossiers de fonctionnalités, et dans la branche de codage si elle est accessible en lecture seule. Nom conseillé : `implementation/IMPLEMENTATION-OK.md`. Accepter également `implémentation ok`, avec ou sans extension, espaces, tirets ou accents.
 
-Les fonctions déjà présentes historiquement dans l’application ne prouvent pas que les nouvelles maquettes sont intégrées. Les 21 propositions actuelles restent donc en développement. Aucun dossier n’est déclaré prêt à coder ou implémenté par cette réorganisation.
+Si le fichier confirme la livraison de la version concernée, déplacer tout le dossier dans `fonctionnalites-implementees/<NNN-fonctionnalite>/`. Conserver le marqueur, son origine et les informations de livraison dans `suivi.json`, puis actualiser catalogue et liens. Ne pas annoncer des tests exécutés par Codex sur la seule foi du marqueur : distinguer déclaration de l’implémenteur et vérification indépendante. Une information absente est « non communiquée ».
+
+Un modèle vide ou une intention future n’est pas un marqueur de livraison. Lire la version concernée pour ne pas classer une évolution récente sur la base d’une ancienne confirmation. L’agent de codage écrit uniquement dans sa branche ; les changements de classement sur legacy restent à la charge de Codex.
+
+Informations recommandées dans le marqueur : numéro et nom de la fonctionnalité, version de maquette implémentée, périmètre livré, branche/SHA, date, contrôles exécutés et limites. Ne pas créer le fichier pour simuler une intégration.
+
+Le 19 octobre 2026, aucun marqueur n’a été trouvé dans les trois dossiers locaux ; aucun déplacement vers « implémentées » n’a donc été effectué.
 
 ## Contrôles et conservation
 
 ```sh
 python scripts/verifier_structure.py
-python scripts/packager_maquette.py ebios-rm
 ```
 
 Le catalogue est centralisé dans `docs/catalogue-fonctionnalites.json`, indépendant du dossier d’étape. `etape`, `dossier`, `suivi`, `maquetteCourante`, `tests` et `dossierImplementation` doivent rester cohérents. `suivi.json` conserve les décisions réelles et les transitions ; ne pas inventer de validation ou de recette.

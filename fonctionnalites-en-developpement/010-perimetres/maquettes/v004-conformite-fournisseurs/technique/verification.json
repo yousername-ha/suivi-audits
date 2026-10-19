@@ -1,0 +1,43 @@
+{
+  "status": "PASS",
+  "checks": [
+    "taux fictifs vérifiés ; HDS non évalué distinct de 0 % ; fournisseur externe absent du sélecteur de périmètres et lié à SUP-001",
+    "4 cartes ; héritage explicite B ; référentiels locaux C",
+    "défilement du contenu sans déplacement du menu ni du bandeau",
+    "union A+B : 3 plans distincts ; PA-01 commun compté une seule fois",
+    "fenêtre centrée et contenue dans le viewport",
+    "désactivation de l’héritage B sans mutation des référentiels A",
+    "création en mémoire, héritage du parent, texte saisi échappé",
+    "création et modification dans les deux sens : une même fiche et un même identifiant dans liste, graphique et sélecteur",
+    "rechargement : aucune persistance ni écriture métier",
+    "390 px : menu repliable, graphique défilant sans débordement de page",
+    "aucune erreur JavaScript pendant les parcours"
+  ],
+  "date": "2026-10-19",
+  "version": "v004-conformite-fournisseurs",
+  "environment": "Chromium / Playwright / Linux",
+  "viewports": [
+    [
+      1600,
+      900
+    ],
+    [
+      390,
+      844
+    ]
+  ],
+  "captureViewport": [
+    1600,
+    1340
+  ],
+  "backendIntegrationTested": false,
+  "claudeTestsExecuted": false,
+  "userValidation": null,
+  "localImplementationMarkersFound": [],
+  "sourceSha256": {
+    "index.html": "dae1830118d324d4c3384cd3aefe440943b5e5c9ac06179b135886c52863561b",
+    "perimetres.js": "a2e1ebe84c733ad72a812d2fa9833da0bc3c122fa82bcb6cf02bef4223d1144a",
+    "perimetres.css": "477b63fa48f2adc1d0c8b78bd24cb896654c146ab44537c0d373ea087b602fe8",
+    "technique/verifier.cjs": "e29409c2f702c1a527e2847b927b7e00cec66dea4280c20310eea7f958c9875a"
+  }
+}

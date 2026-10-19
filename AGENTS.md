@@ -88,3 +88,16 @@ Cette règle remplace l’ancienne organisation par dossier unique. Les proposit
 - La liste séparée `LISTE-FONCTIONNALITES.md` présente numéro, nom, description courte, étape et lien vers le dossier. Elle est générée depuis `docs/catalogue-fonctionnalites.json` par `python scripts/generer_liste_fonctionnalites.py`.
 - Pour une nouvelle fonctionnalité, attribuer `prochainNumero` (sur au moins trois chiffres), puis incrémenter ce compteur. Ne jamais réattribuer ni renuméroter un numéro existant. Conserver une entrée d’historique si une fonctionnalité est retirée.
 - Mettre à jour le catalogue, la liste, les liens et `suivi.json` après chaque création, changement de nom, description ou étape. Les dossiers préfixés `_` sont des ressources communes ou modèles, pas des fonctionnalités supplémentaires.
+
+## Consignes courantes — livraison et marqueur « implémentation ok » (19 octobre 2026)
+
+Ces instructions utilisateur remplacent les consignes antérieures contradictoires sur les livrables et le classement.
+
+- Produire et publier les visuels sur `legacy`. **Ne plus générer de ZIP ou BAT sans nouvelle demande explicite.** Conserver les archives historiques.
+- Quand la fonctionnalité est prête (version/périmètre validés et dossier technique complet), déplacer tout son dossier numéroté de `fonctionnalites-en-developpement/` vers `fonctionnalites-a-implementer/`, avec maquettes, sources, spécifications UI/UX, contrats, recette et prompt de codage. Ne pas laisser une fonctionnalité prête en développement.
+- À chaque reprise, rechercher puis **lire** les fichiers « implémentation ok » des fonctionnalités. Nom conseillé : `implementation/IMPLEMENTATION-OK.md` ; accepter aussi le nom littéral avec espaces/accents, sans imposer une extension. Ne pas créer soi-même un marqueur de livraison pour une simple maquette.
+- Lorsque le marqueur confirme l’implémentation de la version concernée, déplacer le dossier complet vers `fonctionnalites-implementees/`. Conserver le marqueur et consigner sa provenance et son contenu utile dans `suivi.json`. C’est une confirmation fournie par l’implémenteur, pas la preuve que Codex a exécuté ses tests. Mentionner « non communiqué » pour les résultats ou SHA absents ; ne pas en inventer.
+- Un modèle vide, un exemple ou une annonce de travaux futurs n’est pas une confirmation. Un marqueur limité à une version ne valide pas automatiquement une nouvelle version en développement.
+- Si le marqueur est accessible sur la branche de codage, le consulter en lecture seule depuis l’espace Codex ; aucune mutation de cette branche ni de l’espace Claude. L’agent de codage le publie sur sa propre branche ; Codex gère le classement documentaire sur `legacy`.
+- Mettre à jour catalogue, liste numérotée, liens, manifestes et historique lors des déplacements. Préserver les modifications locales non commitées.
+- Pour 010 : liste et graphique des périmètres sont deux vues des **mêmes objets métier**. Création/modification depuis l’une se répercute dans l’autre et les sélecteurs de la plateforme, via l’API et les identifiants existants. Aucun registre de périmètres parallèle. Le fournisseur externe est une fiche du registre fournisseurs rattachée à un ou plusieurs périmètres, jamais un enfant implicite.

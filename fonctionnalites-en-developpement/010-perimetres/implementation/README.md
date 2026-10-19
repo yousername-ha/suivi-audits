@@ -1,6 +1,6 @@
 # Implémentation — Périmètres
 
-**Proposition graphique v003 à valider. Aucun raccordement effectué.**
+**Proposition v004 à valider. Aucun raccordement effectué.**
 
 ## Correction du constat de compatibilité — 19 octobre 2026
 
@@ -18,13 +18,21 @@ Les fichiers de référence sont consultables au [commit Claude examiné](https:
 
 ## Consignes pour la future intégration
 
-1. Partir des [visuels v003](../maquettes/v003-gestion-graphique/README.md) une fois validés. Le dossier reste en développement jusque-là.
+1. Partir des [visuels v004](../maquettes/v004-conformite-fournisseurs/README.md) une fois validés. Le dossier reste en développement jusque-là.
 2. Réutiliser les fonctions partagées existantes ; ne pas recopier le modèle de démonstration JS dans le domaine métier. Utiliser les UUID réels et le versionnement serveur.
 3. Présenter les rattachements effectifs et leur origine ; ne pas confondre héritage, conformité, certification et droits d’accès. Une coupure d’héritage n’efface pas les preuves ou écarts historiques.
 4. Vérifier les contrats propres à chaque registre pour les associations multiples. Dédupliquer par identité d’objet. L’agrégation parent/enfant doit rester un choix explicite et respecter les accès serveur.
-5. Le responsable de suivi n’appartient pas au schéma strict `SmsiCreate` lu : résoudre son contrat avant de l’envoyer. La relation externe fournisseur et ses autorisations restent à confirmer ; ne pas détourner `parentId` pour représenter une relation de service.
+5. Le responsable de suivi n’appartient pas au schéma strict `SmsiCreate` lu : résoudre son contrat avant de l’envoyer. La relation fournisseur externe est confirmée par l’utilisateur. Réutiliser le registre fournisseur et ses rattachements existants ; ne pas détourner `parentId` pour représenter une relation de service.
 6. Conserver le menu et le bandeau fixes, les fenêtres centrées, le graphique défilant et les états d’erreur, vide, accès refusé, conflit de version et chargement. Le masquage d’un bouton ne remplace pas les contrôles serveur.
 
 La source de rendu couvre seulement les cas de démonstration ; les contrôles d’héritage complet, déplacement, suppression, droits et API restent à tester lors de l’intégration. Le graphique à positions fixes est une référence visuelle, pas le moteur d’agencement final.
 
 L’IA de codage travaille exclusivement sur **sa propre branche** ; `legacy` lui sert de référence en lecture. Aucun changement dans Claude, aucune fusion, CI, mise en production ou modification de la cartographie dynamique n’est autorisé par cette livraison.
+
+## Complément vérifié et contrat de réciprocité
+
+`apps/api/src/grc/suppliers.ts` maintient un registre fournisseur unique, ses évaluations et ses rattachements aux périmètres (`scopes`). Routes lues dans `apps/api/src/routes/grc.ts` : `/api/suppliers`, `/api/suppliers/:id/evaluations`, `/api/grc/:smsi/suppliers` et `/api/grc/:smsi/suppliers/:supplierId`. Les vues existantes comprennent `Fournisseurs.tsx` et `FournisseursPerimetre.tsx`. Tests non exécutés dans Claude.
+
+Les compteurs `mapped/requirements` du dashboard et la couverture des rapprochements ne sont pas des taux de conformité. Ne pas les renommer pour obtenir le nouvel indicateur.
+
+[Spécification de la collection unique, du rendu et de la recette](PERIMETRES-GRAPHIQUES.md). Le dossier final sera consolidé après validation puis déplacé vers « à implémenter ». À chaque reprise, lire le marqueur « implémentation ok » selon les règles globales avant un éventuel classement dans « implémentées ».

@@ -9,7 +9,7 @@ Commencer par l’[audit Codex / Claude du 18 octobre 2026](AUDIT-CONVERGENCE.md
 La [liste numérotée des fonctionnalités](../LISTE-FONCTIONNALITES.md), générée depuis le [catalogue JSON](../docs/catalogue-fonctionnalites.json), est la liste maintenue. Les versions et statuts ne sont plus recopiés dans ce README.
 
 - [Tester le prototype transversal](_prototype-transversal/README.md) : navigation et parcours EBIOS.
-- [010 — Périmètres](010-perimetres/README.md) : proposition visuelle ; héritage GHT non disponible dans le contrat Claude audité.
+- [010 — Périmètres](010-perimetres/README.md) : graphique et liste d’un même registre ; héritage, conformité et fournisseurs rattachés.
 - [012 — Apparence](012-administration-apparence/implementation/README.md) : réutiliser le réglage global existant.
 - [017 — Plans d’action](017-plans-action/README.md) et [021 — Registres d’écarts](021-registres-ecarts/README.md) : proposition commune ; lire les incompatibilités métier avant codage.
 - [019 — Configuration GRC](019-configuration-grc/README.md) : analyse ARM et propositions à confronter aux contrats réels.
@@ -20,4 +20,4 @@ La [liste numérotée des fonctionnalités](../LISTE-FONCTIONNALITES.md), géné
 
 [En développement](README.md) → [À implémenter](../fonctionnalites-a-implementer/README.md) → [Implémentées](../fonctionnalites-implementees/README.md).
 
-Conserver les numéros, les versions utiles et les fichiers non commitées. Une validation technique de maquette ne remplace ni l’accord utilisateur ni une preuve d’intégration. Les [règles d’organisation](../docs/ORGANISATION-LEGACY.md) restent applicables ; les instructions directes de l’utilisateur priment. Aucun dossier n’est déplacé par l’audit.
+Conserver les numéros, les versions utiles et les fichiers non commitées. Une validation technique de maquette ne remplace ni l’accord utilisateur ni une preuve d’intégration. Les [règles d’organisation](../docs/ORGANISATION-LEGACY.md) restent applicables ; les instructions directes de l’utilisateur priment. Appliquer le cycle courant : dossier prêt et validé vers « à implémenter », puis lecture du marqueur « implémentation ok » avant classement dans « implémentées ». Aucun marqueur local trouvé le 19 octobre 2026.

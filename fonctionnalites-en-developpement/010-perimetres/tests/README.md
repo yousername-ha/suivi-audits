@@ -1,6 +1,14 @@
 # Tests — Périmètres
 
-## v003 — exécutés le 19 octobre 2026
+## v004 — exécutés le 19 octobre 2026
+
+[Rapport v004](../maquettes/v004-conformite-fournisseurs/technique/verification.json) · [Script](../maquettes/v004-conformite-fournisseurs/technique/verifier.cjs).
+
+Onze contrôles passent : taux fictifs et non-évalué, identité fournisseur hors hiérarchie, héritage, défilement fixe, déduplication des plans, fenêtre centrée, modification de l’héritage, création et échappement des entrées, création/modification réciproques dans liste et graphique (même identifiant), remise à zéro au rechargement, mobile et absence d’erreurs JS. Les groupes détaillés figurent dans le rapport. Quatre captures en 1600 × 1340.
+
+Le contrôle de réciprocité a détecté un panneau partagé dupliqué au rafraîchissement ; le sélecteur DOM a été corrigé et le parcours complet a ensuite réussi. Aucune intégration backend ou synchronisation multi-session testée.
+
+## v003 — historique, exécutés le 19 octobre 2026
 
 [Rapport](../maquettes/v003-gestion-graphique/technique/verification.json) · [Script reproductible](../maquettes/v003-gestion-graphique/technique/verifier.cjs).
 

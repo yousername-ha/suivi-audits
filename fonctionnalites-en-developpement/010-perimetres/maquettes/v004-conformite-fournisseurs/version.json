@@ -1,0 +1,43 @@
+{
+  "fonctionnalite": "010-perimetres",
+  "version": "v004-conformite-fournisseurs",
+  "date": "2026-10-19",
+  "statut": "a-valider",
+  "validationUtilisateur": null,
+  "integrationBackend": false,
+  "zip": null,
+  "decisionsUtilisateur": [
+    "Fournisseur externe rattaché et présent dans la gestion des fournisseurs",
+    "Taux de conformité sur les cartes",
+    "Liste et cartographie : mêmes objets métier, création et modification réciproques",
+    "Disposition plus symétrique"
+  ],
+  "referenceClaudeLectureSeule": "284cb1e4ffbaee37e0952073db5659c2257c888e",
+  "visuels": [
+    {
+      "fichier": "visuels/01-cartes-conformite.png",
+      "titre": "Graphique symétrique, conformité et fournisseur externe",
+      "sha256": "a6c04ee22acfc618e88363ece9416f6630a28f66f41f158242735f72e40b50f5"
+    },
+    {
+      "fichier": "visuels/02-detail-conformite.png",
+      "titre": "Détail du taux de conformité",
+      "sha256": "4642fbf3a46e4f578c044c063f38787234164a795ffee4b7d98eb6ec9485bfe1"
+    },
+    {
+      "fichier": "visuels/03-fiche-fournisseur.png",
+      "titre": "Fiche du registre des fournisseurs",
+      "sha256": "d310e7770bacca71d25496f409a57989cc6879667fc17bf7e76fa2cbdc5f21b5"
+    },
+    {
+      "fichier": "visuels/04-liste-memes-perimetres.png",
+      "titre": "Liste : les mêmes périmètres que le graphique",
+      "sha256": "692b97c6f032266a5ec0d58d2d9d1ce2531a7ac48e04b11c5442049b0f279af9"
+    }
+  ],
+  "id": "v004-conformite-fournisseurs",
+  "references": [
+    "fonctionnalites-en-developpement/010-perimetres/maquettes/v004-conformite-fournisseurs/visuels/01-cartes-conformite.png"
+  ],
+  "versionPrecedente": "v003-gestion-graphique"
+}
