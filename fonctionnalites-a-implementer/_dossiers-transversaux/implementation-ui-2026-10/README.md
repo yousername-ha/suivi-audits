@@ -13,6 +13,12 @@
 
 Ces documents prévalent sur les prescriptions contradictoires des anciennes maquettes pour l’héritage et la navigation. Le [dossier commun](../../../fonctionnalites-en-developpement/_dossiers-transversaux/socle-astra/README.md) reste la référence complémentaire pour les conventions non remplacées. Ne pas importer des modèles fictifs dans le backend.
 
+## Ordre technique corrigé
+
+Audit → fondations existantes (périmètres, droits, annuaires, applicabilité, preuves/journal) → coque/menu → registres et héritage → plans d’action → écarts et liens correctifs → récurrences → cartes et compteurs → recette intégrée.
+
+Les [lots L0–L8](INTEGRATION-RECETTE.md#ordre-dintégration-et-conditions-de-passage) précisent les dépendances et conditions de passage. Les tests ont lieu à chaque lot. Les récurrences peuvent avancer indépendamment des écarts dès que leurs propres contrats sont prêts ; la structure du graphe peut précéder ses compteurs.
+
 ## État réel des références
 
 | N° | Référence à consulter | État constaté / portée |

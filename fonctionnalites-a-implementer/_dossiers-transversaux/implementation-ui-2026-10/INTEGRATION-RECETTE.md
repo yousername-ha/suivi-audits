@@ -46,15 +46,35 @@ Avant toute migration, inventorier les champs portés par les éléments, les ra
 
 Les anciens champs de périmètre peuvent représenter du contexte historique : ne pas les effacer sous prétexte qu’ils disparaissent de la saisie courante. Aucune migration n’est livrée par ce dossier, qui n’accède pas à la base utilisateur.
 
-## Incréments recommandés
+## Ordre d’intégration et conditions de passage
 
-1. Réauditer le SHA cible, cartographier routes/capacités/contrats et les composants à réutiliser.
-2. Coque, navigation proposée, alias, thème et scroll ; faire valider l’ordre avant remplacement global.
-3. Composant partagé de contexte hérité et adaptateurs des trois familles de registres ; API manquantes remontées explicitement.
-4. Plans d’action v004 sur les commandes réelles ; responsables typés selon contrat.
-5. Registres d’écarts, audit et liens correctifs ; conservation de clôture et contexte normatif.
-6. Récurrences : registres, séries, calendriers, fenêtres, réalisation et preuves immuables.
-7. Périmètres graphiques et compteurs, connectés aux mêmes objets ; aucune modification du module cartographique protégé.
+Cet ordre concerne les dépendances techniques, pas l’ordre d’affichage des menus. Les lots L0–L8 ci-dessous sont la référence commune du prompt. « Vérifier le socle » signifie réutiliser et tester les fonctions existantes dans la branche de codage ; cela n’autorise ni leur reconstruction ni une modification de Claude.
+
+| Lot | Intégration | Prérequis | Condition de passage / recette ciblée |
+| --- | --- | --- | --- |
+| L0 | Audit de la cible : branche, SHA, routes, modèles, composants, droits et données existantes | Aucun | Matrice présent/absent/incertain, contrats manquants identifiés, périmètre des changements fixé ; aucune fonction supposée à partir des seuls documents |
+| L1 | Vérification des fondations : périmètres et hiérarchie, droits multi-périmètres, annuaires personne/groupe/fonction, référentiels/applicabilité, audits existants, preuves versionnées et journal d’identité/horodatage | L0 | Contrats accessibles et tests ciblés de lecture/mutation autorisée/refusée. Plan de reprise des données préparé avant migration. Enregistrer séparément les dépendances prêtes et bloquées |
+| L2 | Coque graphique, composants partagés, thèmes, défilements, menu et alias | L0 et routes/capacités disponibles | R06, R15 et protection R18 ; pas de destination morte ou d’accès supplémentaire. Ordre du menu proposé à l’utilisateur avant remplacement global ; le travail sur les autres lots continue |
+| L3 | Registres d’actions, d’écarts et de récurrences : rattachements multiples, contexte hérité, sélection, filtres et mutations partagés | L1 pour périmètres/droits, composants L2 nécessaires | R01–R05 sur le socle de registres, répétés ensuite dans chaque module. Aucun périmètre indépendant saisi sur un enfant ; contexte historique préservé. Aucun chargement de données non autorisées |
+| L4 | Plans d’action et actions ponctuelles : référence 017 v004, dates, responsables, statuts, Timeline/Kanban/Liste | L3, annuaires et politique d’action vérifiés en L1 | R07–R08 et R01–R05 appliqués aux actions. Créer une action autonome avant d’intégrer sa création depuis un écart. Tester chaque mutation dans toutes les vues |
+| L5 | Écarts : registre, audit d’origine, exigences, liens vers les actions existantes, vérification/clôture et récidive liée | L3, L4 pour les liens correctifs, audits/applicabilité/preuves/journal vérifiés en L1 | R09–R10 et R01–R05 appliqués aux écarts. Parcours audit → écart → action → vérification ; aucune clôture ou conformité implicite |
+| L6 | Récurrences : registre, série, occurrences, calendriers iCal, fenêtres, réalisations et preuves | L3, mécanisme d’action/occurrence existant vérifié ; preuves/journal et commande de validation disponibles en L1 | D’abord configuration calendrier et prévisualisation des fenêtres, puis vues, enfin mutation OK/KO/NA et enchaînement. R11–R14 et R01–R05 appliqués aux tâches ; idempotence, refus et historique éprouvés |
+| L7 | Périmètres graphiques : raccordement final des cartes et compteurs de conformité, écarts, BIA/PCRA, tâches/actions en retard | Périmètres de L1 ; L4–L6 pour leurs compteurs ; contrats conformité/BIA/PCRA/fournisseurs existants vérifiés | R16–R18, mêmes IDs liste/graphe, absence de double comptage et projections d’accès correctes ; données absentes affichées indisponibles, jamais comme un zéro fictif |
+| L8 | Recette intégrée, accessibilité, responsive, non-régression et bilan de livraison | Lots du périmètre livré terminés | Parcours R01–R18 applicables, build/typage/lint/tests du dépôt, SHA et limites consignés. Aucun marqueur global si un module annoncé reste bloqué |
+
+### Dépendances à ne pas confondre
+
+- Les périmètres existent et doivent être vérifiés dès L1. Leur représentation graphique complète peut venir en L7. La structure du graphe (création/rattachement et synchronisation avec la liste) peut être travaillée après L1/L2 ; ses compteurs attendent leurs producteurs. Aucun moteur de périmètres n’est recréé pour le graphe.
+- L4 précède le raccordement des actions correctives en L5, mais les audits, exigences et décisions d’applicabilité sont des services existants à vérifier en L1. Pas besoin d’attendre une refonte de tout le module Conformité pour utiliser leurs contrats.
+- L6 n’attend pas la refonte complète des écarts. Les récurrences peuvent avancer après L3 et les contrats d’action/occurrence nécessaires, sans attendre L5. Une validation KO n’impose pas la création automatique d’un écart ; ce comportement n’a pas été demandé.
+- Les preuves, l’identité et le journal doivent être disponibles avant les mutations de clôture/réalisation qui les consomment. Leur écran central n’a pas besoin d’être refondu au préalable si les contrats existants répondent au besoin.
+- Le noyau partagé des registres porte l’héritage et les filtres ; les règles propres aux actions, aux écarts et aux récurrences restent dans leurs modules. Un composant commun ne doit pas supprimer leurs différences métier.
+
+### Exécution par incréments
+
+Un lot n’est pas déclaré terminé après sa seule capture visuelle : vérifier son parcours connecté et ses refus, puis consigner les résultats. La recette L8 complète les contrôles de chaque lot ; elle ne les remplace pas. Les R01–R18 ci-dessous sont une liste de scénarios, pas l’ordre de codage.
+
+Quand un contrat manque, consigner le producteur attendu, le besoin et le lot bloqué. Poursuivre uniquement les travaux indépendants ; ne pas brancher une mutation sur un mock ni modifier le backend Claude pour faire passer une recette. Une dépendance de L1 encore indisponible ne bloque pas toute la coque L2, mais bloque les opérations qui la nécessitent. Préserver l’interface existante tant que le parcours de remplacement n’a pas été vérifié.
 
 ## Recette minimale de l’implémentation
 

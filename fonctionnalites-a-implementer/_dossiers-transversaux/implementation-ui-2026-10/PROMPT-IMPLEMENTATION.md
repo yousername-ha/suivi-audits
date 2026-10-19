@@ -17,16 +17,21 @@ Le registre porte un ou plusieurs périmètres. Ses éléments les héritent : p
 
 Préserver les contextes et décisions historiques immuables. Un changement de registre ou de périmètres doit vérifier les droits, les liens et les conflits côté serveur. L’héritage de portée ne rend pas une exigence applicable à tous les périmètres. Aucun masquage UI ne remplace une autorisation.
 
-## Travail attendu
+## Travail attendu — ordre des intégrations
 
-1. Identifier ta branche, le SHA cible, les technologies, routes, composants, API, politiques et permissions déjà présents. Consulter Claude en lecture seule si accessible. Relever précisément les contrats manquants, sans déduire une fonction de sa documentation.
-2. Adapter le menu selon la proposition documentée : icônes colorées, chevrons, sept familles, Administration séparée, un accès canonique par objet et des vues internes. L’ordre reste à valider ; présenter le résultat avant de le considérer final. Préserver alias et droits, ne pas perdre de module spécialisé.
-3. Mettre en commun le contexte de registre et son héritage dans actions, écarts et tâches récurrentes. Les fixtures historiques 018 et 021 ne sont pas des modèles de données à copier.
-4. Raccorder les plans d’action à la référence 017 v004 : Timeline, Kanban, Liste & détail, dates de début/fin, quatre libellés demandés mappés au workflow, blocage motivé, responsable personne/groupe/fonction selon le contrat réel.
-5. Raccorder les écarts aux audits, registres, exigences et actions ; préserver clôture et récidive liée. Action terminée, écart clos et conformité évaluée sont des décisions différentes.
-6. Raccorder les récurrences : registres, périodicités/fenêtres, calendriers iCal, superpositions, réalisation OK/KO/NA, enchaînement et preuve dans le registre central. Auteur/horodatage serveur et validation immuable, commandes idempotentes.
-7. Intégrer les périmètres graphiques si les contrats sont disponibles, sans toucher au module cartographique dynamique protégé.
-8. Exécuter la recette, documenter les fichiers, composants réutilisés, SHA, résultats et limites.
+Suis les lots L0–L8 de la section « Ordre d’intégration et conditions de passage » dans `INTEGRATION-RECETTE.md`. Cet ordre technique est distinct de l’ordonnancement visuel du menu.
+
+1. **L0 — Audit de la cible.** Identifier ta branche, le SHA, les technologies, routes, composants, modèles, API et permissions déjà présents. Consulter Claude exclusivement en lecture seule si accessible. Distinguer implémentation prouvée, manque et incertitude.
+2. **L1 — Fondations existantes.** Vérifier d’abord les périmètres et leur hiérarchie, les accès multi-périmètres, les annuaires de responsables, les référentiels/applicabilité, les audits, les preuves versionnées et la traçabilité serveur. Préparer la reprise des données avant toute migration. Relever les contrats prêts et les blocages, sans reconstruire le socle.
+3. **L2 — Coque et navigation.** Réutiliser le design system, les deux thèmes, le menu fixe, les fenêtres centrales, les composants et défilements partagés. Mapper les destinations/alias aux routes et droits existants. Présenter l’ordre proposé avant son remplacement global ; continuer les lots indépendants pendant cette validation.
+4. **L3 — Registres et héritage commun.** Raccorder les registres d’actions, d’écarts et de récurrences aux périmètres autorisés, avec contexte hérité, filtres et contrôles de changement de registre. Les fixtures historiques 018/021 ne sont pas des modèles de données à copier. Tester les trois familles, puis répéter ces contrôles dans chaque module.
+5. **L4 — Plans d’action.** Intégrer 017 v004 : actions autonomes d’abord, dates début/fin, quatre libellés mappés au workflow, blocage motivé et responsable personne/groupe/fonction selon contrat. Timeline, Kanban et Liste & détail utilisent les mêmes objets et mutations.
+6. **L5 — Écarts et liens correctifs.** Réutiliser les audits et exigences vérifiés en L1, les registres de L3 et les actions de L4. Raccorder audit → écart → action → vérification ; préserver la clôture et créer un nouveau constat lié en cas de récidive. Action terminée, écart clos et conformité évaluée restent trois décisions distinctes.
+7. **L6 — Tâches récurrentes.** Raccorder registres, séries et occurrences au moteur existant ; intégrer d’abord calendriers iCal et fenêtres, puis les vues, enfin OK/KO/NA, preuves et enchaînement. La validation nécessite auteur/horodatage serveur, immutabilité et idempotence. L6 peut avancer sans attendre L5 si ses contrats d’action/occurrence, de preuves et de journal sont prêts.
+8. **L7 — Cartes de périmètres et synthèses.** Finaliser le graphe et ses compteurs quand les modules producteurs sont disponibles. Le CRUD des périmètres est déjà vérifié en L1 ; la structure du graphe peut avancer plus tôt. Réutiliser conformité/BIA/PCRA/fournisseurs existants, sans fausses données ni double comptage. Ne pas toucher au module cartographique dynamique protégé.
+9. **L8 — Recette complète et livraison.** Exécuter les parcours croisés et la non-régression, documenter SHA, fichiers, composants réutilisés, tests et limites. Les contrôles ciblés sont exécutés à chaque lot ; ne pas attendre L8 pour découvrir les erreurs d’intégration.
+
+Ne passe à une mutation dépendante que lorsque son contrat, ses autorisations et son comportement en erreur ont été vérifiés. Si un prérequis manque, noter le lot bloqué et poursuivre les tâches indépendantes ; ne pas présenter une simulation locale comme une intégration opérationnelle. L’ordre de la recette R01–R18 n’est pas l’ordre de développement.
 
 Ne recrée aucun moteur ou API concurrent. Si groupe/fonction, registres multi-périmètres ou validation immuable nécessitent un complément métier, formule le contrat manquant pour l’agent responsable et poursuis les lots indépendants ; ne masque pas l’absence avec un stockage navigateur. Les données fictives restent des fixtures de test.
 
