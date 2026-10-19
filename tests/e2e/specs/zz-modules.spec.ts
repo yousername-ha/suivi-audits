@@ -40,13 +40,18 @@ test('B1 : conserve la présence reçue au premier hello quand les droits sont i
 test('B1 : après reconnexion, recharge la présence filtrée actuelle', async ({ browser }) => {
   const { ctx, page, problems } = await open(browser);
   let refreshed = 0;
-  await page.route('**/api/events', (route) =>
-    route.fulfill({
+  let connexions = 0;
+  // Chaque reconnexion vide la présence puis la recharge : avec une reconnexion toutes les 250 ms, le texte attendu
+  // n'est visible que par intermittence (et rarement sur un poste lent). Une seule reconnexion rapide suffit à provoquer
+  // le rechargement ; le flux reste ensuite stable.
+  await page.route('**/api/events', (route) => {
+    connexions++;
+    return route.fulfill({
       status: 200,
       contentType: 'text/event-stream',
-      body: 'retry: 250\n\nevent: hello\ndata: {"presence":[]}\n\n',
-    }),
-  );
+      body: `retry: ${connexions === 1 ? 250 : 600000}\n\nevent: hello\ndata: {"presence":[]}\n\n`,
+    });
+  });
   await page.route('**/api/presence', (route) => {
     if (route.request().method() !== 'GET') return route.continue();
     refreshed++;
