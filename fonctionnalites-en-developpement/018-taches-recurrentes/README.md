@@ -44,3 +44,7 @@ Pastilles carrées élargies, ligne guide par tâche et défilement des échéan
 ## Dernière proposition — v007 : vues et réalisation en chaîne
 
 [Sept visuels et comportements](maquettes/v007-vues-validation-enchaine/README.md) · [Images](maquettes/v007-vues-validation-enchaine/images/). Timeline avec superpositions facultatives, kanban, liste à gauche et détail à droite, résultats visibles et tâche suivante après succès. Simulation à valider ; aucun ZIP ni BAT.
+
+## Dernière proposition — v008 : menu fixe et défilement borné
+
+[Visuels et comportement](maquettes/v008-defilement-zones-fixes/README.md) · [Neuf captures](maquettes/v008-defilement-zones-fixes/images/). Menu et en-tête fixes ; défilement indépendant du contenu, de la liste, du détail et des colonnes kanban. Aucun ZIP ni BAT.

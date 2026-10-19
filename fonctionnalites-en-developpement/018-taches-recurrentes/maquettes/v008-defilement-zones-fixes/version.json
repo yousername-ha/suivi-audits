@@ -1,0 +1,13 @@
+{
+  "id": "v008-defilement-zones-fixes",
+  "statut": "a-valider",
+  "type": "proposition-visuelle",
+  "date": "2026-10-19",
+  "sourceCommit": "8cf63ab9a151e7d8e781aaf105c1f37ba43ff55e",
+  "versionPrecedente": "v007-vues-validation-enchaine",
+  "validationUtilisateur": null,
+  "livraison": "images-uniquement",
+  "references": [
+    "references/style-08"
+  ]
+}
