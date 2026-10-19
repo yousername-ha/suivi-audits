@@ -64,6 +64,20 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
     'POST /api/mur/activer',
     // Catalogue de configuration GRC : droits contrôlés par le service (pilotage, paramètres ou administration), testés dans
     // config-grc.test.ts (401, 403, portée du périmètre, droits de publication).
+    // Registres et droits par ressource (ADR 0043) : l'autorisation (droits de module, périmètres, droits attribués) est évaluée
+    // par le service ; refus 404/403, rôles et groupes testés dans registres-droits.test.ts.
+    'GET /api/registres',
+    'POST /api/registres',
+    'GET /api/registres/:id',
+    'PATCH /api/registres/:id',
+    'PUT /api/registres/:id/perimetres',
+    'POST /api/registres/:id/archivage',
+    'GET /api/registres/:id/elements',
+    'GET /api/droits/:type/:id',
+    'PUT /api/droits/:type/:id',
+    'DELETE /api/droits/:type/:id/:droitId',
+    'POST /api/grc/:smsi/objects/:id/contribution',
+    'GET /api/grc/:smsi/objects/:id', // droit de lecture attribué sur un registre ou droits de module : évalué par le service
     'GET /api/config-grc/templates',
     'POST /api/config-grc/templates/:id/adopt',
     'GET /api/config-grc/items',

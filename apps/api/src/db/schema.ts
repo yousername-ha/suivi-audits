@@ -474,6 +474,7 @@ export const grcObjects = pgTable('grc_objects', {
   updatedBy: text('updated_by').notNull(),
   createdAt: tstz('created_at').notNull(),
   updatedAt: tstz('updated_at').notNull(),
+  registreId: uuid('registre_id'),
 });
 export const grcObjectVersions = pgTable('grc_object_versions', {
   id: uuid('id').primaryKey(),
@@ -1432,4 +1433,45 @@ export const grcRequirementAssessments = pgTable('grc_requirement_assessments', 
   reason: text('reason').notNull(),
   createdBy: text('created_by').notNull(),
   createdAt: tstz('created_at').notNull().defaultNow(),
+});
+
+/** Registres (ADR 0043, migration 029) : conteneurs d'actions, d'écarts ou de séries de tâches récurrentes. */
+export const registres = pgTable('registres', {
+  id: uuid('id').primaryKey(),
+  kind: text('kind').notNull(),
+  name: text('name').notNull(),
+  description: text('description').notNull(),
+  referenceSmsiId: uuid('reference_smsi_id').notNull(),
+  restricted: boolean('restricted').notNull(),
+  archived: boolean('archived').notNull(),
+  parDefaut: boolean('par_defaut').notNull(),
+  version: integer('version').notNull(),
+  createdBy: text('created_by').notNull(),
+  createdAt: tstz('created_at').notNull(),
+  updatedBy: text('updated_by').notNull(),
+  updatedAt: tstz('updated_at').notNull(),
+});
+
+/** Périmètres d'un registre ; les éléments du registre les héritent. */
+export const registrePerimetres = pgTable(
+  'registre_perimetres',
+  {
+    registreId: uuid('registre_id')
+      .notNull()
+      .references(() => registres.id),
+    smsiId: uuid('smsi_id').notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.registreId, t.smsiId] })],
+);
+
+/** Droits fins d'un utilisateur ou d'un groupe sur un registre ou un élément (lecteur, contributeur, gestionnaire). */
+export const droitsRessources = pgTable('droits_ressources', {
+  id: uuid('id').primaryKey(),
+  resourceType: text('resource_type').notNull(),
+  resourceId: uuid('resource_id').notNull(),
+  subjectType: text('subject_type').notNull(),
+  subjectId: uuid('subject_id').notNull(),
+  role: text('role').notNull(),
+  grantedBy: text('granted_by').notNull(),
+  grantedAt: tstz('granted_at').notNull(),
 });

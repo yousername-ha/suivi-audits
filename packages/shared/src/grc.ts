@@ -134,7 +134,13 @@ export const GrcRef = z
     }
   });
 export const GrcObjectBody = z
-  .object({ kind: z.enum(GRC_KINDS), name: label, data: z.record(z.string().max(100), z.unknown()).default({}) })
+  .object({
+    kind: z.enum(GRC_KINDS),
+    name: label,
+    data: z.record(z.string().max(100), z.unknown()).default({}),
+    /** Registre d'accueil (actions, écarts, séries) ; à défaut, le registre par défaut du périmètre. */
+    registreId: z.uuid().optional(),
+  })
   .strict();
 export type GrcObjectBody = z.infer<typeof GrcObjectBody>;
 export interface GrcObject {
@@ -151,6 +157,8 @@ export interface GrcObject {
   legacyKey: string | null;
   legacyId: string | null;
   archived: boolean;
+  /** Registre qui contient l'élément (actions, écarts, séries) ; null pour les autres types d'objets. */
+  registreId?: string | null;
 }
 /** Natures proposées à la création d'un périmètre : de simples suggestions, la nature reste un libellé libre. */
 export const NATURES_PERIMETRE = ['SMSI', 'SMQ', 'SMI'] as const;

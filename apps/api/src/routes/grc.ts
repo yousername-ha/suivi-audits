@@ -306,6 +306,9 @@ export const grcRoutes = [
   }),
   route({
     ...base,
+    // Session complète : un droit de lecture attribué sur un registre (ADR 0043) suffit sans droit de module ; le service
+    // refuse (403) tout objet qui n'est ni dans un registre accessible ni lisible par les droits de module et périmètres.
+    access: 'auth',
     method: 'GET',
     url: '/api/grc/:smsi/objects/:id',
     summary: 'Consulter une fiche',

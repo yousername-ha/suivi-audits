@@ -13,6 +13,7 @@ export * from './updates.js';
 
 export * from './business-policy.js';
 export * from './grc.js';
+export * from './registres.js';
 export * from './hierarchie-perimetres.js';
 export * from './couverture.js';
 export * from './risk-methods.js';
