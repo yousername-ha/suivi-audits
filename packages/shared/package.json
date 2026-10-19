@@ -33,7 +33,7 @@
     "gen:contract": "node scripts/gen-contract.mjs"
   },
   "dependencies": {
-    "zod": "4.6.5"
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@types/node": "26.6.5",

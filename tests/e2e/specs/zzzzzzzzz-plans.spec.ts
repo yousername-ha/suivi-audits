@@ -43,8 +43,14 @@ test('Plans : action de formation créée, calendrier, planning décalé au clav
     const barre = svg.getByRole('button', { name: new RegExp(titre) });
     await barre.focus();
     const decale = page.waitForResponse((r) => /\/api\/plans\/PL-FOR-\d+\/decalage$/.test(r.url()) && r.ok());
+    // La liste est relue après le décalage : on attend cette relecture avant d'ouvrir la fiche, sinon elle s'ouvre
+    // avec l'ancienne date.
+    const relue = page.waitForResponse(
+      (r) => r.request().method() === 'GET' && new URL(r.url()).pathname === '/api/plans' && r.ok(),
+    );
     await barre.press('ArrowRight');
     await decale;
+    await relue;
     await barre.press('Enter');
     await expect(page.getByRole('dialog').getByLabel('Date prévue')).toHaveValue(`${annee}-03-11`);
     await page.getByRole('dialog').getByRole('button', { name: 'Fermer' }).click();
