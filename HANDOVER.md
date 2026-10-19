@@ -7,8 +7,8 @@ préservée comme `main`). Les sections suivantes décrivent l'état de `feature
 
 Application auto-hébergée de suivi d’audit et de pilotage qualité/sécurité/HDS
 multi-référentiels. On ne doit pas imposer la création d’un SMSI pour un SMQ.
-Stack : Node 24+, pnpm 10.34.6, TypeScript 5.9.3, Fastify 5.12.5, React 19.3.0,
-Mantine 8.3.18, zod 4.6.5, PostgreSQL 18, Docker Compose, Caddy 2.11.7.
+Stack : Node 26+, pnpm 10.34.6, TypeScript 6.0.3, Fastify 5.12.7, React 19.3.1,
+Vite 8, Vitest 5, React Router 8, Mantine 9, zod 4.6.7, PostgreSQL 18, Docker Compose, Caddy 2.11.7.
 
 Architecture actuelle : `gateway → web → app → db` ; gateway sert la maintenance
 indépendante, updater exécute les mises à jour et l’exploitation. API/base isolées
