@@ -37,7 +37,9 @@ export default tseslint.config(
     files: ['apps/web/src/**/*.{ts,tsx}'],
     languageOptions: { globals: { ...globals.browser } },
     plugins: { 'react-hooks': reactHooks },
-    rules: { ...reactHooks.configs.recommended.rules },
+    // Mêmes contrôles qu'avec le plugin 5 (règles des hooks et dépendances) ; les règles « React Compiler » ajoutées en 7
+    // ne sont pas reprises ici (36 constats de conception à traiter séparément).
+    rules: { 'react-hooks/rules-of-hooks': 'error', 'react-hooks/exhaustive-deps': 'warn' },
   },
   {
     // Intégration de l'outil historique : script navigateur classique (ES5, sans module).

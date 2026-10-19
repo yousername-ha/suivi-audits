@@ -389,10 +389,9 @@ function corps(ref: string, n: MapNode, o: MapObject | undefined, st: EtatNoeud)
   if (tall || cont) {
     out.push(<rect key="ib" x={x + 14} y={y + 14} width={38} height={38} rx={10} className="c-doux" />);
     out.push(<Icone key="ic" k={ic} x={x + 22} y={y + 22} s={22} cls="c-accent-s" />);
-    let ty = y + 38;
+    let ty: number;
     if (c.code) {
       out.push(<Texte key="code" x={x + 62} y={y + 30} lines={[c.code]} fs={12.5} cls="c-accent-f" bold />);
-      ty = y + 30;
     }
     const tl = wrap(c.name, cont ? w - 80 : w - 28, 14, cont ? 1 : 3, true);
     if (cont) {
