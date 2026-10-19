@@ -3,17 +3,18 @@
 ## État courant et suite (18/10/2026)
 
 **Fait depuis la 3.4.0 (hors étiquette)** : hiérarchie des périmètres et héritage des référentiels (H1), tous les modules en
-tables (H2, migrations 022 à 027), couverture par exigence avec états et versions (H3), exports de revue de direction en
+tables (H2, migrations 022 à 028), couverture par exigence avec états et versions (H3), exports de revue de direction en
 Word, PowerPoint et Excel (H4), exports Excel par rubrique, retrait de l'écran `/legacy` ([ADR 0042](adr/0042-retrait-de-lecran-legacy.md)),
 consolidation documentaire (H5, ci-dessous).
 
 **Reste à faire, par ordre de priorité**
 
-1. Recette de l'ensemble sur le serveur du RSSI, puis étiquette de version (par le RSSI) portant les migrations 022 à 027.
+1. Recette de l'ensemble sur le serveur du RSSI, puis étiquette de version (par le RSSI) portant les migrations 022 à 028.
 2. Exports de comité à la charte du modèle interne (COPIL). Les exports Excel du pronostic, du clausier fournisseurs et du
    GAP applications sont repris ; ReCyF est couvert par la page Couverture.
-3. Normalisation des sous-structures encore en JSON (étapes du plan d'audit, valeurs d'indicateurs, tâches des écarts)
-   dans des tables liées ([ADR 0040](adr/0040-sortie-du-json-plat-modules-en-tables.md)).
+3. Normalisation des sous-structures encore en JSON dans des tables liées ([ADR 0040](adr/0040-sortie-du-json-plat-modules-en-tables.md)) :
+   tâches des écarts et valeurs d'indicateurs faites (migration 028) ; restent le plan d'audit (jours, personnes, créneaux) puis
+   les autres colonnes JSON du cœur (preuves de créneaux, contrôles des fournisseurs, sections des revues…).
 4. Décision à prendre : retirer l'import et l'export au format historique, ou les garder comme outil de sauvegarde ;
    retirer ou non `app/public/index.html` (référence de la CI et des tests de parité).
 5. Entretien : mise à jour de la pile (actions GitHub, versions majeures, Node 26), module Qualité ISO 9001

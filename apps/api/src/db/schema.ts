@@ -1200,6 +1200,20 @@ export const suiviEcarts = pgTable('suivi_ecarts', {
   extra: jsonb('extra').notNull().default({}),
 });
 
+/** Tâches d'un écart (migration 028) ; `parent_seq` renvoie à `suivi_ecarts.seq`, suppression en cascade. */
+export const suiviEcartsTaches = pgTable('suivi_ecarts_taches', {
+  seq: bigint('seq', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+  parentSeq: bigint('parent_seq', { mode: 'number' })
+    .notNull()
+    .references(() => suiviEcarts.seq, { onDelete: 'cascade' }),
+  position: integer('position').notNull(),
+  id: text('id'),
+  t: text('t'),
+  done: boolean('done'),
+  createdIso: text('created_iso'),
+  extra: jsonb('extra').notNull().default({}),
+});
+
 export const suiviProcessus = pgTable('suivi_processus', {
   seq: bigint('seq', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
   position: integer('position').notNull(),
@@ -1251,6 +1265,21 @@ export const suiviIndicateurs = pgTable('suivi_indicateurs', {
   actionDue: text('action_due'),
   category: text('category'),
   source: text('source'),
+  extra: jsonb('extra').notNull().default({}),
+});
+
+/** Valeurs d'un indicateur (migration 028) ; `parent_seq` renvoie à `suivi_indicateurs.seq`, suppression en cascade. */
+export const suiviIndicateursValeurs = pgTable('suivi_indicateurs_valeurs', {
+  seq: bigint('seq', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+  parentSeq: bigint('parent_seq', { mode: 'number' })
+    .notNull()
+    .references(() => suiviIndicateurs.seq, { onDelete: 'cascade' }),
+  position: integer('position').notNull(),
+  id: text('id'),
+  date: text('date'),
+  v: doublePrecision('v'),
+  note: text('note'),
+  hist: text('hist'),
   extra: jsonb('extra').notNull().default({}),
 });
 
