@@ -14,3 +14,5 @@ La v002 est disponible avec ses captures et son ZIP. Une validation utilisateur 
 [Proposition v005 — périodicités et fenêtres](v005-periodicites-fenetres/README.md) : cinq visuels à valider, sans ZIP ni BAT.
 
 [Proposition v006 — récurrence personnalisée et calendriers iCal](v006-recurrence-calendriers-ical/README.md) : six visuels à valider.
+
+[Proposition v007 — trois vues et enchaînement](v007-vues-validation-enchaine/README.md) : sept visuels à valider.

@@ -1,0 +1,20 @@
+{
+  "status": "passed",
+  "checks": [
+    "Deux affichages indépendants ; masquer ne modifie pas tâches, résultats ou exclusions",
+    "Kanban partagé et ouverture d’une carte dans la liste",
+    "Preuve requise manquante : aucun résultat enregistré ni passage à la suivante",
+    "OK enregistré avec preuve, acteur automatique et passage à la suivante",
+    "Enchaînement désactivé, KO visible et validation en lecture seule",
+    "Échec simulé : saisie conservée, aucune validation et aucun avancement",
+    "Fin de liste filtrée ; tâches bloquées et validées ignorées, autres registres intacts",
+    "Liste au-dessus du détail sur mobile sans débordement"
+  ],
+  "screenshots": 7,
+  "limits": [
+    "Validation en mémoire et auteur simulé, aucune garantie serveur",
+    "Aucun import iCal activé ; repères fériés illustratifs",
+    "Pas de persistance ni dépôt de fichier dans cette proposition",
+    "La future intégration doit gérer idempotence et trace immuable"
+  ]
+}

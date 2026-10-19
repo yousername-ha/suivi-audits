@@ -34,9 +34,14 @@
       "date": "2026-10-18",
       "etape": "en-developpement",
       "motif": "v006 : visuels custom et calendriers iCal, flux scolaire vérifié, source jours fériés distincte et conflit de fenêtre. Aucun import métier."
+    },
+    {
+      "date": "2026-10-19",
+      "etape": "en-developpement",
+      "motif": "v007 : sept visuels, timeline avec calendriers affichables, kanban et liste avec enchaînement simulé. Accord sur le principe ; captures à valider. Aucun ZIP ni BAT."
     }
   ],
   "numero": "018",
-  "candidate": "maquettes/v006-recurrence-calendriers-ical",
+  "candidate": "maquettes/v007-vues-validation-enchaine",
   "modeLivraison": "visuels-uniquement-sauf-demande-explicite"
 }

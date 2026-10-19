@@ -1,0 +1,14 @@
+{
+  "id": "v007-vues-validation-enchaine",
+  "statut": "a-valider",
+  "type": "proposition-visuelle",
+  "date": "2026-10-19",
+  "sourceCommit": "2103ec6c6411a8212712c91bd6919059fc9fe464",
+  "versionPrecedente": "v006-recurrence-calendriers-ical",
+  "validationUtilisateur": null,
+  "accordDePrincipe": "Trois vues et enchaînement approuvés ; visuels v007 à examiner",
+  "livraison": "images-uniquement",
+  "references": [
+    "references/style-08"
+  ]
+}

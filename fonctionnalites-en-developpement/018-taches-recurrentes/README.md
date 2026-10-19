@@ -40,3 +40,7 @@ Pastilles carrées élargies, ligne guide par tâche et défilement des échéan
 ## Dernière proposition — v006 : récurrence custom et iCal
 
 [Six visuels et principes](maquettes/v006-recurrence-calendriers-ical/README.md) · [Images](maquettes/v006-recurrence-calendriers-ical/images/). Récurrence personnalisée, calendriers scolaires/jours fériés dans la configuration et conflits d’exclusions. Aucun ZIP ni BAT ; règle de report à confirmer.
+
+## Dernière proposition — v007 : vues et réalisation en chaîne
+
+[Sept visuels et comportements](maquettes/v007-vues-validation-enchaine/README.md) · [Images](maquettes/v007-vues-validation-enchaine/images/). Timeline avec superpositions facultatives, kanban, liste à gauche et détail à droite, résultats visibles et tâche suivante après succès. Simulation à valider ; aucun ZIP ni BAT.
