@@ -31,8 +31,8 @@
     "@mantine/core": "8.3.18",
     "@mantine/hooks": "8.3.18",
     "@types/react": "19.3.0",
-    "react": "19.3.0",
-    "react-dom": "19.3.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
     "vitest": "4.1.11"
   }
 }
