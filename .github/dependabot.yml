@@ -1,0 +1,37 @@
+# Mise à jour automatique des dépendances : une proposition par semaine, ouverte comme demande de fusion vers
+# `claude-suivi-smsi` (branche de travail). Les correctifs et mineures d'un même écosystème sont groupés ; chaque
+# version majeure arrive seule pour pouvoir être relue et testée à part. Rien n'est fusionné sans la CI complète.
+# Hors périmètre volontairement : les images Docker (Node 26 et PostgreSQL 18 sont des choix de plateforme, voir
+# ADR 0035) et la bibliothèque de test Playwright, dont la version doit rester celle de l'image de la CI.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    target-branch: claude-suivi-smsi
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Europe/Paris
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'chore(deps)'
+    groups:
+      correctifs-et-mineures:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: '@playwright/test'
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: claude-suivi-smsi
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Europe/Paris
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: 'chore(ci)'
+    groups:
+      actions:
+        update-types: [minor, patch]

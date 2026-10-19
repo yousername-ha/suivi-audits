@@ -62,6 +62,15 @@ docker compose down && sudo rm -rf /srv/suivi-audits/donnees   # remise à zéro
 
 Rejouer le guide d'installation (comme la CI) : `node scripts/ci/guide-extraire.mjs docs/INSTALLATION.md nom_dns=localhost version=ci` produit le script exécuté par le job « guide ». Chaque bloc ```` ```bash ```` du guide doit porter un marqueur `<!-- ci: run -->`, `<!-- ci: skip — raison -->` ou `<!-- ci: instead: commande -->` (voir l'en-tête du script).
 
+## Mise à jour des dépendances
+
+Dependabot ([configuration](.github/dependabot.yml)) propose chaque lundi des demandes de fusion vers `claude-suivi-smsi` :
+un groupe pour les correctifs et mineures, une demande séparée par version majeure, et une pour les actions GitHub. Une
+demande n'est fusionnée qu'après la CI complète et, pour une majeure, la lecture de ses notes de version. Ne sont pas
+suivis : les images Docker (Node 26 et PostgreSQL 18 sont des choix de plateforme) et `@playwright/test`, dont la version
+doit rester celle de l'image Playwright de la CI. Mise à jour à la main des correctifs : `pnpm -r update`, puis la
+séquence de vérifications ci-dessus.
+
 ## Charte graphique et captures de référence
 - Couleurs, espacements, rayons et largeurs viennent de `packages/ui` (ADR 0011). Le test `apps/web/test/charte.test.ts` refuse toute valeur codée en dur dans l'interface.
 - Les pages Paramètres et Administration sont comparées à des captures de référence (1440, 768 et 390 px, clair et sombre), ainsi que le tableau de bord, une liste avec sa fiche, l'administration et les Paramètres de 390 à 3840 px (ADR 0012), dans `tests/e2e/specs/__captures__/`. Les éléments variables (dates, présence) portent les classes `horodatage` ou `presence-liste`, masquées dans les captures. Après une évolution visuelle voulue : `./tests/e2e/run-in-container.sh --update-snapshots`, puis relire les images modifiées dans la PR.
