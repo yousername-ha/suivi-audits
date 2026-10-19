@@ -1,6 +1,12 @@
 # Tests — Périmètres
 
-## v005 — exécutés le 19 octobre 2026
+## v006 — exécutés le 19 octobre 2026
+
+[Rapport](../maquettes/v006-ecarts-dashboard-compact/technique/verification.json) · [Script](../maquettes/v006-ecarts-dashboard-compact/technique/verifier.cjs).
+
+Couleurs calculées vérifiées, troisième catégorie présente, badges sans débordement. Comparaison v005/v006 dans le même navigateur : largeur des cartes inchangée, hauteur des périmètres réduite de 12 px, fournisseur réduit de 1 px en hauteur. Les contrôles existants de flux, réciprocité et compteurs passent également. Un premier contrôle avait détecté 2 px ajoutés au fournisseur par les bordures ; le padding a été corrigé et le contrôle a ensuite réussi. Aucune intégration backend testée.
+
+## v005 — historique, exécutés le 19 octobre 2026
 
 [Rapport v005](../maquettes/v005-flux-mini-dashboard/technique/verification.json) · [Script](../maquettes/v005-flux-mini-dashboard/technique/verifier.cjs).
 

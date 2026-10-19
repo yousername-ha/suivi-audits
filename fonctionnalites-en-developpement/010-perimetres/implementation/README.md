@@ -1,6 +1,6 @@
 # Implémentation — Périmètres
 
-**Proposition v005 à valider. Aucun raccordement effectué.**
+**Proposition v006 à valider. Aucun raccordement effectué.**
 
 ## Correction du constat de compatibilité — 19 octobre 2026
 
@@ -18,7 +18,7 @@ Les fichiers de référence sont consultables au [commit Claude examiné](https:
 
 ## Consignes pour la future intégration
 
-1. Partir des [visuels v005](../maquettes/v005-flux-mini-dashboard/README.md) une fois validés. Le dossier reste en développement jusque-là.
+1. Partir des [visuels v006](../maquettes/v006-ecarts-dashboard-compact/README.md) une fois validés. Le dossier reste en développement jusque-là.
 2. Réutiliser les fonctions partagées existantes ; ne pas recopier le modèle de démonstration JS dans le domaine métier. Utiliser les UUID réels et le versionnement serveur.
 3. Présenter les rattachements effectifs et leur origine ; ne pas confondre héritage, conformité, certification et droits d’accès. Une coupure d’héritage n’efface pas les preuves ou écarts historiques.
 4. Vérifier les contrats propres à chaque registre pour les associations multiples. Dédupliquer par identité d’objet. L’agrégation parent/enfant doit rester un choix explicite et respecter les accès serveur.

@@ -1,0 +1,89 @@
+{
+  "status": "PASS",
+  "checks": [
+    "majeurs rouges, mineurs orange foncé, points sensibles violets ; cartes de même largeur et moins hautes, badges sans débordement",
+    {
+      "dimensionsAvant": {
+        "A": {
+          "w": 300,
+          "h": 377
+        },
+        "B": {
+          "w": 300,
+          "h": 375
+        },
+        "C": {
+          "w": 300,
+          "h": 375
+        },
+        "F": {
+          "w": 280,
+          "h": 242
+        }
+      },
+      "dimensionsApres": {
+        "A": {
+          "w": 300,
+          "h": 365
+        },
+        "B": {
+          "w": 300,
+          "h": 363
+        },
+        "C": {
+          "w": 300,
+          "h": 363
+        },
+        "F": {
+          "w": 280,
+          "h": 241
+        }
+      }
+    },
+    "4 compteurs exacts, périmètre propre, exclusion archives/PCA/actions terminées/futures/sans date, détail et état vide",
+    "flux CSS actif dans le sens du chemin, flèche terminale, pause et réduction des animations",
+    "parent centré entre enfants et cartes sans chevauchement vertical",
+    "taux fictifs vérifiés ; HDS non évalué distinct de 0 % ; fournisseur externe absent du sélecteur de périmètres et lié à SUP-001",
+    "4 cartes ; héritage explicite B ; référentiels locaux C",
+    "défilement du contenu sans déplacement du menu ni du bandeau",
+    "union A+B : 3 plans distincts ; PA-01 commun compté une seule fois",
+    "fenêtre centrée et contenue dans le viewport",
+    "désactivation de l’héritage B sans mutation des référentiels A",
+    "création en mémoire, héritage du parent, texte saisi échappé",
+    "création et modification dans les deux sens : une même fiche et un même identifiant dans liste, graphique et sélecteur",
+    "rechargement : aucune persistance ni écriture métier",
+    "390 px : menu repliable, graphique défilant sans débordement de page",
+    "aucune erreur JavaScript pendant les parcours"
+  ],
+  "version": "v006-ecarts-dashboard-compact",
+  "date": "2026-10-19",
+  "viewports": [
+    [
+      1600,
+      900
+    ],
+    [
+      390,
+      844
+    ]
+  ],
+  "captures": {
+    "overview": [
+      1600,
+      1500
+    ],
+    "detail": [
+      1600,
+      1050
+    ],
+    "gifFrames": 24
+  },
+  "backendIntegrationTested": false,
+  "implementationMarkersFound": [],
+  "sourceSha256": {
+    "index.html": "b52ba6f033fa8f738eef782d1c78be52f00bc73c708938ef280d0ff71c3fb00c",
+    "perimetres.js": "5cbbfc58b71898f3cc4ada5a9ddb83db3590165de1d4ecfe2a5f04a2789024c5",
+    "perimetres.css": "c2fbf7f55942f64f94890fdfa47323c2eff2338788130e1b38e845464e035b37",
+    "technique/verifier.cjs": "72cb0ab6c42cc885e535aa2fd024ccb857aa241dae87e75bc05cb01542173b78"
+  }
+}

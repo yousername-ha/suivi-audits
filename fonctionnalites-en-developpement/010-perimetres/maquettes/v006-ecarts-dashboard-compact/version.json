@@ -1,0 +1,31 @@
+{
+  "id": "v006-ecarts-dashboard-compact",
+  "statut": "a-valider",
+  "versionPrecedente": "v005-flux-mini-dashboard",
+  "date": "2026-10-19",
+  "validationUtilisateur": null,
+  "integrationBackend": false,
+  "zip": null,
+  "references": [
+    "fonctionnalites-en-developpement/010-perimetres/maquettes/v006-ecarts-dashboard-compact/visuels/01-cartes-compactes-ecarts.png",
+    "fonctionnalites-en-developpement/010-perimetres/maquettes/v006-ecarts-dashboard-compact/visuels/02-detail-ecarts.png",
+    "fonctionnalites-en-developpement/010-perimetres/maquettes/v006-ecarts-dashboard-compact/visuels/03-flux-cartes-compactes.gif"
+  ],
+  "visuels": [
+    {
+      "fichier": "visuels/01-cartes-compactes-ecarts.png",
+      "titre": "Cartes compactes et trois catégories d’écarts",
+      "sha256": "1f56171f2a0f1906cd505ba5961ea68673db886d09664cb856891f086cfdedec"
+    },
+    {
+      "fichier": "visuels/02-detail-ecarts.png",
+      "titre": "Détail des écarts du périmètre",
+      "sha256": "a8d085595c950ce8ca0fff9f3e3dd4f18610ab4f4b490c452eb6c8c90314eafd"
+    },
+    {
+      "fichier": "visuels/03-flux-cartes-compactes.gif",
+      "titre": "Flux animé avec les cartes compactes",
+      "sha256": "76b209fb6e71fb37ca95b2ae788f536d9c3878726351e866f1a367a74528eddf"
+    }
+  ]
+}

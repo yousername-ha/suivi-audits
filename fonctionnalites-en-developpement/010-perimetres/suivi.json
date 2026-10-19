@@ -24,8 +24,13 @@
       "date": "2026-10-19",
       "etape": "en-developpement",
       "motif": "v005 : flux parent/enfant, ancrages recalculés et mini-tableau de bord BIA/PCRA/retards. Trois PNG et un GIF, version à valider."
+    },
+    {
+      "date": "2026-10-19",
+      "etape": "en-developpement",
+      "motif": "v006 : section Écarts ouverts sous la conformité ; majeurs rouges, mineurs orange foncé, points sensibles violets ; tuiles compactes, cartes réduites de 12 px sans élargissement."
     }
   ],
   "numero": "010",
-  "maquetteCourante": "maquettes/v005-flux-mini-dashboard"
+  "maquetteCourante": "maquettes/v006-ecarts-dashboard-compact"
 }

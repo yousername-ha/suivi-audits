@@ -131,7 +131,7 @@
     {
       "id": "perimetres",
       "titre": "Périmètres",
-      "maquetteCourante": "fonctionnalites-en-developpement/010-perimetres/maquettes/v005-flux-mini-dashboard",
+      "maquetteCourante": "fonctionnalites-en-developpement/010-perimetres/maquettes/v006-ecarts-dashboard-compact",
       "statutMaquette": "a-valider",
       "implementation": "a-suivre",
       "tests": "fonctionnalites-en-developpement/010-perimetres/tests/README.md",
