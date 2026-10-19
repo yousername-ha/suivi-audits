@@ -12,9 +12,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@mantine/core": "8.3.18",
-    "@mantine/hooks": "8.3.18",
-    "@mantine/notifications": "8.3.18",
+    "@mantine/core": "9.7.3",
+    "@mantine/hooks": "9.7.3",
+    "@mantine/notifications": "9.7.3",
     "@suivi/shared": "workspace:*",
     "@suivi/ui": "workspace:*",
     "@tanstack/react-query": "5.104.4",
