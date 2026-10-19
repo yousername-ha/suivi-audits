@@ -30,7 +30,7 @@ test('Configuration GRC : modèle adopté, échelle créée et publiée, mêmes 
     await page.getByRole('tab', { name: 'Matrices' }).click();
     await page.getByRole('button', { name: 'Ouvrir' }).first().click();
     await expect(page.getByText('grille complète')).toBeVisible();
-    await expect(page.getByRole('table', { name: 'Grille de la matrice' }).getByRole('textbox')).toHaveCount(9);
+    await expect(page.getByRole('table', { name: 'Grille de la matrice' }).getByRole('combobox')).toHaveCount(9);
     await page.screenshot({ path: 'test-results/cfg-grc-matrice.png', fullPage: true });
 
     // Échelle créée dans l'interface : 4 niveaux libellés, sans aucune valeur numérique.
@@ -38,9 +38,9 @@ test('Configuration GRC : modèle adopté, échelle créée et publiée, mêmes 
     await page.getByRole('button', { name: 'Nouvel élément : échelle' }).click();
     const nouveau = page.getByRole('dialog');
     await nouveau.getByRole('textbox', { name: 'Nom', exact: true }).fill('Gravité fictive de recette');
-    await nouveau.getByRole('textbox', { name: 'Catégorie', exact: true }).click();
+    await nouveau.getByRole('combobox', { name: 'Catégorie', exact: true }).click();
     await page.getByRole('option', { name: 'Gravité', exact: true }).click();
-    const niveaux = nouveau.getByRole('textbox', { name: /Libellés des niveaux/ });
+    const niveaux = nouveau.getByRole('combobox', { name: /Libellés des niveaux/ });
     for (const n of ['Mineure', 'Significative', 'Grave', 'Critique']) {
       await niveaux.fill(n);
       await niveaux.press('Enter');
@@ -72,7 +72,7 @@ test('Configuration GRC : modèle adopté, échelle créée et publiée, mêmes 
 
 async function choisir(page: Page, champ: string, option: string) {
   const dialogue = page.getByRole('dialog');
-  await dialogue.getByRole('textbox', { name: champ, exact: true }).click();
+  await dialogue.getByRole('combobox', { name: champ, exact: true }).click();
   await page.getByRole('option', { name: option, exact: true }).click();
 }
 
@@ -90,7 +90,7 @@ test('Atelier 2 : étude liée à la matrice du catalogue, pertinence proposée 
       })
     ).json();
     await page.goto('/pilotage/etudes');
-    await page.getByRole('textbox', { name: 'Périmètre affiché', exact: true }).click();
+    await page.getByRole('combobox', { name: 'Périmètre affiché', exact: true }).click();
     await page.getByRole('option', { name: s.name, exact: true }).click();
     await page.getByRole('button', { name: 'Nouvelle étude' }).click();
     let d = page.getByRole('dialog');
@@ -100,7 +100,7 @@ test('Atelier 2 : étude liée à la matrice du catalogue, pertinence proposée 
       'Matrice de pertinence des couples source de risque / objectif visé (atelier 2)',
       'Niveau de pertinence (ressources × motivation) (matrice_pertinence_sr_ov)',
     );
-    await expect(d.getByRole('textbox', { name: 'Version épinglée' })).toHaveValue('Version 1 (courante)');
+    await expect(d.getByRole('combobox', { name: 'Version épinglée' })).toHaveValue('Version 1 (courante)');
     await d.getByRole('button', { name: 'Enregistrer', exact: true }).click();
     await expect(d).toHaveCount(0);
     await page.getByRole('button', { name: 'Ouvrir l’étude' }).click();
@@ -114,7 +114,7 @@ test('Atelier 2 : étude liée à la matrice du catalogue, pertinence proposée 
     await choisir(page, 'Motivation', '++');
     await expect(d.getByRole('status')).toContainText('Moyenne');
     await d.getByRole('button', { name: 'Retenir la proposition' }).click();
-    await expect(d.getByRole('textbox', { name: 'Pertinence retenue' })).toHaveValue('Moyenne');
+    await expect(d.getByRole('combobox', { name: 'Pertinence retenue' })).toHaveValue('Moyenne');
     await d.getByRole('button', { name: 'Enregistrer', exact: true }).click();
     await expect(d).toHaveCount(0);
     expect(problems).toEqual([]);
@@ -195,12 +195,12 @@ test('Méthode ISO 27005 : échelles et matrice du catalogue épinglées, versio
     });
 
     await page.goto('/pilotage/configuration');
-    await page.getByRole('textbox', { name: 'Périmètre affiché', exact: true }).click();
+    await page.getByRole('combobox', { name: 'Périmètre affiché', exact: true }).click();
     await page.getByRole('option', { name: s.name, exact: true }).click();
     await page.getByRole('button', { name: 'Créer ISO 27005' }).click();
     await expect(page.getByText('Éléments du catalogue (facultatif)')).toBeVisible();
     const choisirIci = async (champ: string, option: string) => {
-      await page.getByRole('textbox', { name: champ, exact: true }).click();
+      await page.getByRole('combobox', { name: champ, exact: true }).click();
       await page.getByRole('option', { name: option, exact: true }).click();
     };
     await choisirIci('Échelle de la dimension « Gravité »', `Gravité ISO de recette (gravite_iso_${suffixe})`);

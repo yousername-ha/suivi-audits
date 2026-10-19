@@ -83,9 +83,9 @@ test('Incidents et cellule de crise : qualification, fiche, cellule, main couran
     // Cellule de crise : ouverture en exercice, main courante, check-list, échéance, clôture.
     await page.goto('/pilotage/crise-cellule');
     await page.getByRole('textbox', { name: 'Intitulé' }).fill('Exercice fictif');
-    await page.getByRole('textbox', { name: 'Scénario' }).click();
+    await page.getByRole('combobox', { name: 'Scénario' }).click();
     await page.getByRole('option', { name: 'Rançongiciel fictif' }).click();
-    await page.getByRole('textbox', { name: 'Exercice planifié lié' }).click();
+    await page.getByRole('combobox', { name: 'Exercice planifié lié' }).click();
     await page.getByRole('option', { name: /EXO-1/ }).click();
     await page.getByRole('button', { name: 'Ouvrir la cellule de crise' }).click();
     await expect(page.getByText('EXERCICE', { exact: true })).toBeVisible();

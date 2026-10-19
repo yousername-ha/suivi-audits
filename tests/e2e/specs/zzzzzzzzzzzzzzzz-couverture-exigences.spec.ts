@@ -74,7 +74,7 @@ test('Couverture : une exigence passe de non implémentée à testée, avec hist
 
     await page.goto('/pilotage/couverture');
     await expect(page.getByText(definition.name).first()).toBeVisible();
-    await page.getByRole('textbox', { name: 'Détail par exigence' }).click();
+    await page.getByRole('combobox', { name: 'Détail par exigence' }).click();
     await page.getByRole('option', { name: definition.name }).click();
     const ligne = page.getByRole('row', { name: /R1 · Exigence fictive à évaluer/ });
     await expect(ligne.getByText('Non implémenté')).toBeVisible();
@@ -82,9 +82,9 @@ test('Couverture : une exigence passe de non implémentée à testée, avec hist
     // Première version : applicable, mise en œuvre complète.
     await page.getByRole('button', { name: 'Évaluer l’exigence R1' }).click();
     const fiche = page.getByRole('dialog');
-    await fiche.getByRole('textbox', { name: 'Applicabilité', exact: true }).click();
+    await fiche.getByRole('combobox', { name: 'Applicabilité', exact: true }).click();
     await page.getByRole('option', { name: 'Applicable', exact: true }).click();
-    await fiche.getByRole('textbox', { name: 'Mise en œuvre', exact: true }).click();
+    await fiche.getByRole('combobox', { name: 'Mise en œuvre', exact: true }).click();
     await page.getByRole('option', { name: 'Complète' }).click();
     await fiche.getByRole('textbox', { name: 'Motif de cette version' }).fill('Mise en œuvre constatée');
     await fiche.getByRole('button', { name: 'Enregistrer une nouvelle version' }).click();
@@ -97,7 +97,7 @@ test('Couverture : une exigence passe de non implémentée à testée, avec hist
     await fiche.getByLabel('Date du test d’efficacité').fill('2026-10-10');
     await expect(fiche.getByRole('alert')).toContainText('vont ensemble');
     await expect(fiche.getByRole('button', { name: 'Enregistrer une nouvelle version' })).toBeDisabled();
-    await fiche.getByRole('textbox', { name: 'Résultat du test', exact: true }).click();
+    await fiche.getByRole('combobox', { name: 'Résultat du test', exact: true }).click();
     await page.getByRole('option', { name: 'Conforme', exact: true }).click();
     await fiche.getByRole('textbox', { name: 'Motif de cette version' }).fill('Test réalisé');
     await fiche.getByRole('button', { name: 'Enregistrer une nouvelle version' }).click();

@@ -41,9 +41,9 @@ test('DdA et évaluation par le clausier : niveaux, fiche, chapitres, points, no
     await expect(page.getByText('« Total » avec écart ouvert', { exact: false }).first()).toBeVisible();
     await expect(page.getByRole('img', { name: /Répartition des mesures applicables/ })).toBeVisible();
     await expect(page.getByText('NC-01', { exact: true })).toBeVisible();
-    await page.getByRole('textbox', { name: 'Niveau de A.5.19' }).click();
+    await page.getByRole('combobox', { name: 'Niveau de A.5.19' }).click();
     await page.getByRole('option', { name: 'Partiel', exact: true }).click();
-    await expect(page.getByRole('textbox', { name: 'Niveau de A.5.19' })).toHaveValue('Partiel');
+    await expect(page.getByRole('combobox', { name: 'Niveau de A.5.19' })).toHaveValue('Partiel');
     await page.getByText('Exclues', { exact: true }).click();
     await expect(page.getByText('Mesure fictive 5.2')).toBeVisible();
     await expect(page.getByText('Hors périmètre fictif')).toBeVisible();
@@ -63,10 +63,10 @@ test('DdA et évaluation par le clausier : niveaux, fiche, chapitres, points, no
     const avant = await page.getByText(/^\d+ points$/).innerText();
     await page.getByRole('checkbox', { name: /Dispositifs mobiles/ }).click();
     await expect(page.getByText(/^\d+ points$/)).not.toHaveText(avant);
-    await page.getByRole('textbox', { name: 'État du point O-1.1' }).click();
+    await page.getByRole('combobox', { name: 'État du point O-1.1' }).click();
     await page.getByRole('option', { name: 'Conforme', exact: true }).click();
     await expect(page.getByText('100 % conforme')).toBeVisible();
-    await page.getByRole('textbox', { name: 'État du point O-1.2' }).click();
+    await page.getByRole('combobox', { name: 'État du point O-1.2' }).click();
     await page.getByRole('option', { name: 'Non conforme', exact: true }).click();
     await expect(page.getByText('50 % conforme')).toBeVisible();
     await page.getByRole('button', { name: 'Créer les actions pour les écarts' }).click();

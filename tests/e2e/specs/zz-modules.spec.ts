@@ -104,7 +104,7 @@ test('B1 : désactiver le fournisseur facultatif audit conserve les paramètres 
   try {
     await apply([{ id: 'audit', enabled: false }]);
     await page.goto('/parametres/referentiels');
-    await expect(page.getByRole('textbox', { name: 'Référentiel complémentaire actif', exact: true })).toBeEnabled();
+    await expect(page.getByRole('combobox', { name: 'Référentiel complémentaire actif', exact: true })).toBeEnabled();
     await expect(
       page.getByRole('navigation', { name: 'Sections des paramètres' }).getByText('Cycle d’audit et années'),
     ).toHaveCount(0);

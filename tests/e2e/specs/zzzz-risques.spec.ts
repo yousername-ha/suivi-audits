@@ -16,7 +16,7 @@ async function appel(page: Page, method: 'POST' | 'PUT', path: string, data: unk
 }
 async function choisir(page: Page, champ: string, option: string) {
   const dialogue = page.getByRole('dialog');
-  await dialogue.getByRole('textbox', { name: champ, exact: true }).click();
+  await dialogue.getByRole('combobox', { name: champ, exact: true }).click();
   await page.getByRole('option', { name: option, exact: true }).click();
 }
 
@@ -48,7 +48,7 @@ test('Risques : étude EBIOS RM, atelier validé, risque issu du scénario et ac
 
     // Étude créée dans l'interface.
     await page.goto('/pilotage/etudes');
-    await page.getByRole('textbox', { name: 'Périmètre affiché', exact: true }).click();
+    await page.getByRole('combobox', { name: 'Périmètre affiché', exact: true }).click();
     await page.getByRole('option', { name: s.name, exact: true }).click();
     await expect(page.getByText('inspirée de la méthode EBIOS Risk Manager')).toBeVisible();
     await page.getByRole('button', { name: 'Nouvelle étude' }).click();
@@ -82,7 +82,7 @@ test('Risques : étude EBIOS RM, atelier validé, risque issu du scénario et ac
     await d.getByRole('textbox', { name: 'Observations et justification' }).fill('Atelier relu en séance de recette');
     await d.getByRole('textbox', { name: 'Rechercher un justificatif' }).fill('Prise');
     await choisir(page, 'Travaux réalisés et justificatifs', 'Prise en charge fictive');
-    await d.getByRole('textbox', { name: 'Travaux réalisés et justificatifs', exact: true }).press('Escape');
+    await d.getByRole('combobox', { name: 'Travaux réalisés et justificatifs', exact: true }).press('Escape');
     await d.getByRole('checkbox', { name: 'Je confirme l’enregistrement de cette décision' }).check();
     await d.getByRole('button', { name: 'Confirmer l’enregistrement' }).click();
     await expect(d).toHaveCount(0);

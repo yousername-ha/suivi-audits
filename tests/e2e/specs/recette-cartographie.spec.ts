@@ -515,7 +515,7 @@ test('13. nature d’un enjeu modifiée, disposition automatique : il change de 
     .locator('rect')
     .first()
     .click({ position: { x: 10, y: 10 } });
-  await p.getByRole('textbox', { name: 'Nature de l’enjeu' }).click();
+  await p.getByRole('combobox', { name: 'Nature de l’enjeu' }).click();
   await p.getByRole('option', { name: 'Enjeu interne' }).click();
   await expect(p.getByText('Nature de l’enjeu mise à jour')).toBeVisible();
   await p.getByRole('button', { name: 'Disposition automatique' }).click();
@@ -888,7 +888,7 @@ test('24. vue processus : processus créé dans la bande Réalisation, sous-proc
   const m = await menuSur(p, { x: rea.x + rea.width * 0.3, y: rea.y + rea.height * 0.6 });
   await m.getByRole('menuitem', { name: 'Processus', exact: true }).click();
   const d = await creer(p, 'Créer : Processus', 'Réaliser les services (fictif)');
-  await expect(d.getByRole('textbox', { name: 'Famille' })).toHaveValue('Réalisation');
+  await expect(d.getByRole('combobox', { name: 'Famille' })).toHaveValue('Réalisation');
   await d.getByRole('button', { name: 'Créer', exact: true }).click();
   await expect(noeud(p, 'process:PR1')).toHaveCount(1);
   const b = (await noeud(p, 'process:PR1').locator('rect').first().boundingBox())!;
@@ -896,7 +896,7 @@ test('24. vue processus : processus créé dans la bande Réalisation, sous-proc
   expect(b.y + b.height).toBeLessThan(rea.y + rea.height + 2);
   await deposer(p, 'subprocess', await pointVisible(p, 'process:PR1'));
   const d2 = p.getByRole('dialog', { name: 'Créer : Sous-processus' });
-  await expect(d2.getByRole('textbox', { name: 'Processus parent' })).toHaveValue(/^PR1 — /);
+  await expect(d2.getByRole('combobox', { name: 'Processus parent' })).toHaveValue(/^PR1 — /);
   await expect(d2.getByRole('textbox', { name: 'Code' })).toHaveAttribute('placeholder', 'PR1.1');
   await d2.getByRole('textbox', { name: 'Nom' }).fill('Étape fictive');
   await d2.getByRole('button', { name: 'Créer', exact: true }).click();

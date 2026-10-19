@@ -52,7 +52,7 @@ test('configuration : matrice réelle publiée sur mobile, historique stable et 
     original = await (await page.request.get(url)).json();
     await page.getByLabel('Nom de la configuration', { exact: true }).fill('Recette de la matrice organisationnelle');
     await page.getByRole('tab', { name: 'Calcul et matrice', exact: true }).click();
-    await page.getByRole('textbox', { name: 'Règle de calcul', exact: true }).click();
+    await page.getByRole('combobox', { name: 'Règle de calcul', exact: true }).click();
     await page.getByRole('option', { name: 'Matrice explicite', exact: true }).click();
     await page.getByLabel('Probabilité : Rare', { exact: true }).first().fill('8');
     await expect(page.getByRole('button', { name: 'Publier une nouvelle version', exact: true })).toBeDisabled();
