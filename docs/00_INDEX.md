@@ -38,6 +38,7 @@ Source de référence des chiffres/IDs/états :
 
 - [L1 — audit et correspondance ancien / nouveau](unification/L1-AUDIT-ET-CORRESPONDANCE.md)
 - [Plan d'évolution](unification/PLAN-EVOLUTION.md)
+- [Audit L0 — intégration des interfaces ASTRA (menu, registres, actions, écarts, récurrences)](unification/AUDIT-L0-INTEGRATION-UI-ASTRA.md)
 - [Cadrage du module Qualité ISO 9001](unification/CADRAGE-MODULE-QUALITE-9001.md) (réflexion, aucun code)
 - [Refonte GRC : configuration transversale et multiméthode](archive/refonte-grc/README.md) ([ADR 0038](adr/0038-socle-de-configuration-grc-transversal.md))
 
