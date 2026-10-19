@@ -229,7 +229,7 @@
     {
       "id": "plans-action",
       "titre": "Plans d’action",
-      "maquetteCourante": "fonctionnalites-en-developpement/017-plans-action/maquettes/v003-timeline-responsables",
+      "maquetteCourante": "fonctionnalites-en-developpement/017-plans-action/maquettes/v004-perimetres-herites",
       "statutMaquette": "a-valider",
       "implementation": "a-suivre",
       "tests": "fonctionnalites-en-developpement/017-plans-action/tests/README.md",

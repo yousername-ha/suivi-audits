@@ -44,6 +44,11 @@
       "date": "2026-10-19",
       "etape": "en-developpement",
       "motif": "v008 : correction du défilement, menu/en-tête fixes, hauteur bornée et listes indépendantes. Onze contrôles dont 100 cartes temporaires."
+    },
+    {
+      "date": "2026-10-19",
+      "etape": "en-developpement",
+      "motif": "Préparation du dossier technique transversal : Les périmètres appartiennent au registre, pas à chaque tâche. Les champs `scope` de la maquette v008 sont historiques ; résoudre le rattachement depuis le registre dans l’intégration, sans réécrire les validations passées."
     }
   ],
   "numero": "018",

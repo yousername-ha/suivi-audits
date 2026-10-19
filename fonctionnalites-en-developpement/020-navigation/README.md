@@ -5,3 +5,5 @@
 À valider : sept familles métier et Administration séparée. Aucune modification du menu de production dans cette livraison documentaire.
 
 [Liste numérotée des fonctionnalités](../../LISTE-FONCTIONNALITES.md).
+
+[Préparation technique courante et ordre proposé](../_dossiers-transversaux/implementation-ui-2026-10/README.md). Style retenu ; menu global non encore finalisé ni intégré.

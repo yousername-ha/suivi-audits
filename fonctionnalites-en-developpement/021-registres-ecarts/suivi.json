@@ -15,6 +15,11 @@
       "date": "2026-10-14",
       "etape": "en-developpement",
       "motif": "v002 : création directe d’un écart depuis un audit, dans un registre existant ou nouveau."
+    },
+    {
+      "date": "2026-10-19",
+      "etape": "en-developpement",
+      "motif": "Préparation du dossier technique transversal : Le registre porte un ou plusieurs périmètres, hérités par ses écarts. La v003 n’en gère qu’un : ne pas prendre cette limite comme règle cible. Ses anciens formulaires d’action avec périmètre indépendant sont remplacés par la règle commune et la référence 017 v004."
     }
   ]
 }

@@ -101,3 +101,10 @@ Ces instructions utilisateur remplacent les consignes antérieures contradictoir
 - Si le marqueur est accessible sur la branche de codage, le consulter en lecture seule depuis l’espace Codex ; aucune mutation de cette branche ni de l’espace Claude. L’agent de codage le publie sur sa propre branche ; Codex gère le classement documentaire sur `legacy`.
 - Mettre à jour catalogue, liste numérotée, liens, manifestes et historique lors des déplacements. Préserver les modifications locales non commitées.
 - Pour 010 : liste et graphique des périmètres sont deux vues des **mêmes objets métier**. Création/modification depuis l’une se répercute dans l’autre et les sélecteurs de la plateforme, via l’API et les identifiants existants. Aucun registre de périmètres parallèle. Le fournisseur externe est une fiche du registre fournisseurs rattachée à un ou plusieurs périmètres, jamais un enfant implicite.
+
+## Périmètres des registres — règle transversale confirmée le 19 octobre 2026
+
+- Un registre (plans d’action, écarts, tâches récurrentes) porte un ou plusieurs périmètres. Ses éléments héritent de ce rattachement ; aucune sélection indépendante de périmètre dans leurs formulaires.
+- Les fiches peuvent afficher les périmètres hérités en lecture seule. Le filtre global recherche les registres concernés et leurs éléments. L’héritage est résolu depuis le registre, sans copie métier divergente sur chaque élément.
+- Changer de registre actualise le contexte hérité ; les droits, liens, évaluations et traces historiques doivent être contrôlés par le serveur. Ne pas réécrire une validation immuable à la suite d’un changement de périmètre.
+- Cette règle corrige les anciennes maquettes : les conserver comme références historiques, pas comme règles concurrentes. Dossier courant : `fonctionnalites-en-developpement/_dossiers-transversaux/implementation-ui-2026-10/README.md`.

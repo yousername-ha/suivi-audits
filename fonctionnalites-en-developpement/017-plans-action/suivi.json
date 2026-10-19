@@ -19,8 +19,13 @@
       "date": "2026-10-19",
       "etape": "en-developpement",
       "motif": "v003 : style des tâches récurrentes, timeline par plan, quatre statuts, responsable personne/groupe/fonction ; 6 aperçus, 27 contrôles locaux. Proposition à valider, sans ZIP/BAT ni intégration backend."
+    },
+    {
+      "date": "2026-10-19",
+      "etape": "en-developpement",
+      "motif": "v004 : héritage des périmètres depuis le plan, sans sélection sur l’action ; 4 visuels, 35 contrôles locaux. Règle confirmée, validation visuelle globale non consignée."
     }
   ],
   "numero": "017",
-  "maquetteCourante": "v003-timeline-responsables"
+  "maquetteCourante": "v004-perimetres-herites"
 }

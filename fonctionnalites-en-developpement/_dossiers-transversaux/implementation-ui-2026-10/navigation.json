@@ -1,0 +1,327 @@
+{
+  "version": "2026-10-19",
+  "statut": "proposition-ordre-a-valider",
+  "regle": "Identifiants logiques de présentation. Mapper routes, capacités et alias au dépôt cible. Aucun droit implicite.",
+  "groups": [
+    {
+      "id": "pilotage",
+      "label": "Pilotage",
+      "iconColor": "turquoise",
+      "separated": false,
+      "destinations": [
+        {
+          "id": "overview",
+          "label": "Vue d’ensemble",
+          "route": null,
+          "capabilities": null,
+          "mappingStatus": "a-verifier",
+          "protectedExistingModule": false
+        },
+        {
+          "id": "objectives",
+          "label": "Objectifs & indicateurs",
+          "route": null,
+          "capabilities": null,
+          "mappingStatus": "a-verifier",
+          "protectedExistingModule": false
+        },
+        {
+          "id": "reports",
+          "label": "Rapports & comités",
+          "route": null,
+          "capabilities": null,
+          "mappingStatus": "a-verifier",
+          "protectedExistingModule": false
+        },
+        {
+          "id": "budgets",
+          "label": "Budgets & investissements",
+          "route": null,
+          "capabilities": null,
+          "mappingStatus": "a-verifier",
+          "protectedExistingModule": false
+        }
+      ]
+    },
+    {
+      "id": "organisation",
+      "label": "Organisation",
+      "iconColor": "violet",
+      "separated": false,
+      "destinations": [
+        {
+          "id": "context",
+          "label": "Contexte",
+          "route": null,
+          "capabilities": null,
+          "mappingStatus": "a-verifier",
+          "protectedExistingModule": false
+        },
+        {
+          "id": "scopes",
+          "label": "Périmètres",
+          "route": null,
+          "capabilities": null,
+          "mappingStatus": "a-verifier",
+          "protectedExistingModule": false
+        },
+        {
+          "id": "process-assets",
+          "label": "Processus & actifs",
+          "route": null,
+          "capabilities": null,
+          "mappingStatus": "a-verifier",
+          "protectedExistingModule": false
+        },
+        {
+          "id": "suppliers",
+          "label": "Fournisseurs",
+          "route": null,
+          "capabilities": null,
+          "mappingStatus": "a-verifier",
+          "protectedExistingModule": false
+        },
+        {
+          "id": "roles",
+          "label": "Rôles & responsabilités",
+          "route": null,
+          "capabilities": null,
+          "mappingStatus": "a-verifier",
+          "protectedExistingModule": false
+        },
+        {
+          "id": "smsi-maps",
+          "label": "Cartographies du SMSI",
+          "route": null,
+          "capabilities": null,
+          "mappingStatus": "a-verifier",
+          "protectedExistingModule": true
+        }
+      ]
+    },
+    {
+      "id": "risques",
+      "label": "Risques",
+      "iconColor": "rouge",
+      "separated": false,
+      "destinations": [
+        {
+          "id": "risks",
+          "label": "Registre des risques",
+          "route": null,
+          "capabilities": null,
+          "mappingStatus": "a-verifier",
+          "protectedExistingModule": false
+        },
+        {
+          "id": "studies",
+          "label": "Études & parcours",
+          "route": null,
+          "capabilities": null,
+          "mappingStatus": "a-verifier",
+          "protectedExistingModule": false
+        },
+        {
+          "id": "scenarios",
+          "label": "Scénarios",
+          "route": null,
+          "capabilities": null,
+          "mappingStatus": "a-verifier",
+          "protectedExistingModule": false
+        },
+        {
+          "id": "treatments",
+          "label": "Traitements",
+          "route": null,
+          "capabilities": null,
+          "mappingStatus": "a-verifier",
+          "protectedExistingModule": false
+        },
+        {
+          "id": "ai",
+          "label": "Gouvernance de l’IA",
+          "route": null,
+          "capabilities": null,
+          "mappingStatus": "a-verifier",
+          "protectedExistingModule": false
+        }
+      ]
+    },
+    {
+      "id": "conformite",
+      "label": "Conformité & audits",
+      "iconColor": "bleu",
+      "separated": false,
+      "destinations": [
+        {
+          "id": "compliance",
+          "label": "Conformité & applicabilité",
+          "route": null,
+          "capabilities": null,
+          "mappingStatus": "a-verifier",
+          "protectedExistingModule": false
+        },
+        {
+          "id": "audits",
+          "label": "Audits",
+          "route": null,
+          "capabilities": null,
+          "mappingStatus": "a-verifier",
+          "protectedExistingModule": false
+        },
+        {
+          "id": "gap-registers",
+          "label": "Registres d’écarts",
+          "route": null,
+          "capabilities": null,
+          "mappingStatus": "a-verifier",
+          "protectedExistingModule": false
+        },
+        {
+          "id": "care",
+          "label": "CaRE",
+          "route": null,
+          "capabilities": null,
+          "mappingStatus": "a-verifier",
+          "protectedExistingModule": false
+        },
+        {
+          "id": "has",
+          "label": "HAS",
+          "route": null,
+          "capabilities": null,
+          "mappingStatus": "a-verifier",
+          "protectedExistingModule": false
+        }
+      ]
+    },
+    {
+      "id": "actions",
+      "label": "Actions",
+      "iconColor": "sauge",
+      "separated": false,
+      "destinations": [
+        {
+          "id": "action-plans",
+          "label": "Plans d’action",
+          "route": null,
+          "capabilities": null,
+          "mappingStatus": "a-verifier",
+          "protectedExistingModule": false
+        },
+        {
+          "id": "recurring-registers",
+          "label": "Tâches récurrentes",
+          "route": null,
+          "capabilities": null,
+          "mappingStatus": "a-verifier",
+          "protectedExistingModule": false
+        },
+        {
+          "id": "training",
+          "label": "Programmes & formation",
+          "route": null,
+          "capabilities": null,
+          "mappingStatus": "a-verifier",
+          "protectedExistingModule": false
+        }
+      ]
+    },
+    {
+      "id": "resilience",
+      "label": "Résilience",
+      "iconColor": "ambre",
+      "separated": false,
+      "destinations": [
+        {
+          "id": "incidents",
+          "label": "Incidents & crise",
+          "route": null,
+          "capabilities": null,
+          "mappingStatus": "a-verifier",
+          "protectedExistingModule": false
+        },
+        {
+          "id": "continuity",
+          "label": "PCRA · continuité",
+          "route": null,
+          "capabilities": null,
+          "mappingStatus": "a-verifier",
+          "protectedExistingModule": false
+        },
+        {
+          "id": "backups",
+          "label": "CRRC · sauvegardes",
+          "route": null,
+          "capabilities": null,
+          "mappingStatus": "a-verifier",
+          "protectedExistingModule": false
+        }
+      ]
+    },
+    {
+      "id": "documents",
+      "label": "Documents",
+      "iconColor": "sauge",
+      "separated": false,
+      "destinations": [
+        {
+          "id": "evidence-documents",
+          "label": "Preuves & documents",
+          "route": null,
+          "capabilities": null,
+          "mappingStatus": "a-verifier",
+          "protectedExistingModule": false
+        }
+      ]
+    },
+    {
+      "id": "administration",
+      "label": "Administration",
+      "iconColor": "neutre",
+      "separated": true,
+      "destinations": [
+        {
+          "id": "grc-config",
+          "label": "Configuration GRC",
+          "route": null,
+          "capabilities": null,
+          "mappingStatus": "a-verifier",
+          "protectedExistingModule": false
+        },
+        {
+          "id": "accounts",
+          "label": "Comptes & habilitations",
+          "route": null,
+          "capabilities": null,
+          "mappingStatus": "a-verifier",
+          "protectedExistingModule": false
+        },
+        {
+          "id": "framework-admin",
+          "label": "Référentiels administrés",
+          "route": null,
+          "capabilities": null,
+          "mappingStatus": "a-verifier",
+          "protectedExistingModule": false
+        },
+        {
+          "id": "appearance",
+          "label": "Apparence",
+          "route": null,
+          "capabilities": null,
+          "mappingStatus": "a-verifier",
+          "protectedExistingModule": false
+        },
+        {
+          "id": "journal-data",
+          "label": "Journal & données",
+          "route": null,
+          "capabilities": null,
+          "mappingStatus": "a-verifier",
+          "protectedExistingModule": false
+        }
+      ]
+    }
+  ]
+}
