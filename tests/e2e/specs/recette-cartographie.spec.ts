@@ -909,6 +909,10 @@ test('24. vue processus : processus créé dans la bande Réalisation, sous-proc
 test('25. enjeu externe créé sur la carte : bande externe, réglages de la carte (CARTO-15, 19)', async () => {
   const p = bat.page;
   await p.getByRole('button', { name: 'Vue contexte' }).click();
+  // Le test précédent laisse la vue processus à l'écran : on attend que la carte contexte la remplace avant de viser
+  // un point du canevas, sinon le clic droit peut tomber pendant le changement de vue.
+  await expect(noeud(p, 'lane:rea')).toHaveCount(0);
+  await expect(noeud(p, 'isms')).toHaveCount(1);
   const m = await menuSur(p, await pointCanevas(p, 0.5, 0.12));
   await m.getByRole('menuitem', { name: 'Enjeu', exact: true }).click();
   await (
