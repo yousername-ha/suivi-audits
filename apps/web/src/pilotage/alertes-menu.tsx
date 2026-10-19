@@ -1,4 +1,4 @@
-/* Pastilles du menu du Pilotage : une pastille par groupe, collée au libellé, rouge quand un indicateur est mauvais
+/* Pastilles du menu : une pastille par destination et par famille, collée au libellé, rouge quand un indicateur est mauvais
    (indicateur non atteint, échéance dépassée), neutre pour un simple volume à traiter. Les nombres viennent de la
    synthèse déjà servie au tableau de bord (aucun calcul supplémentaire, aucune valeur estimée). */
 import { Badge, Group } from '@mantine/core';
@@ -19,44 +19,48 @@ export type AlertesMenu = Record<string, Alerte | undefined>;
 
 const pluriel = (n: number, un: string, plusieurs: string) => `${n} ${n > 1 ? plusieurs : un}`;
 
-/** Calcul pur (testé) : alertes par libellé de groupe du menu et total pour la racine « Pilotage ». */
+/** Calcul pur (testé) : alertes par identifiant de destination du menu (voir navigation.ts). */
 export function alertesDepuisSynthese(s: SyntheseApi | undefined, rapprochements: number): AlertesMenu {
   const alertes: AlertesMenu = {};
   if (rapprochements > 0)
-    alertes['Conformité'] = {
+    alertes['referentiels'] = {
       n: rapprochements,
       rouge: false,
       detail: pluriel(rapprochements, 'rapprochement à valider', 'rapprochements à valider'),
     };
   const mauvais = s?.indicateurs?.nonAtteints ?? 0;
   if (mauvais > 0)
-    alertes['Objectifs et indicateurs'] = {
+    alertes['objectifs'] = {
       n: mauvais,
       rouge: true,
       detail: pluriel(mauvais, 'indicateur non atteint', 'indicateurs non atteints'),
     };
   const retard = (s?.ecarts?.enRetard ?? 0) + (s?.pilotage?.actionsEnRetard ?? 0);
   if (retard > 0)
-    alertes['Écarts et actions'] = {
+    alertes['plan-actions'] = {
       n: retard,
       rouge: true,
       detail: pluriel(retard, 'échéance dépassée', 'échéances dépassées'),
     };
   const sansDecision = s?.pilotage?.risquesSansDecision ?? 0;
   if (sansDecision > 0)
-    alertes['Risques'] = {
+    alertes['risques'] = {
       n: sansDecision,
       rouge: false,
       detail: pluriel(sansDecision, 'risque sans décision', 'risques sans décision'),
     };
-  const liste = Object.values(alertes).filter((a): a is Alerte => !!a);
-  if (liste.length)
-    alertes['Pilotage'] = {
-      n: liste.reduce((t, a) => t + a.n, 0),
-      rouge: liste.some((a) => a.rouge),
-      detail: liste.map((a) => a.detail).join(', '),
-    };
   return alertes;
+}
+
+/** Alerte d'une famille : somme de celles de ses destinations visibles, rouge dès qu'une destination l'est. */
+export function alerteDeFamille(alertes: AlertesMenu, destinations: { id: string }[]): Alerte | undefined {
+  const liste = destinations.map((d) => alertes[d.id]).filter((a): a is Alerte => !!a);
+  if (!liste.length) return undefined;
+  return {
+    n: liste.reduce((t, a) => t + a.n, 0),
+    rouge: liste.some((a) => a.rouge),
+    detail: liste.map((a) => a.detail).join(', '),
+  };
 }
 
 /** Alertes du menu (vides sans droit de lecture du Pilotage). La synthèse est partagée avec le tableau de bord. */

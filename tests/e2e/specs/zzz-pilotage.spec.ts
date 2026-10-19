@@ -312,7 +312,11 @@ test('Pilotage E : BIA sur téléphone, plan relié et rapport imprimable sans d
   try {
     const root = await scope(page, 'QA-Pilotage-BIA-');
     await page.goto('/pilotage/bia');
-    await expect(page.getByRole('combobox', { name: 'Rubrique du pilotage', exact: true })).toBeVisible();
+    const rubriques = page.getByRole('navigation', { name: 'Rubriques : Continuité d’activité', exact: true });
+    await expect(rubriques.getByRole('link', { name: 'Impacts sur l’activité — BIA', exact: true })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
     await page.getByRole('button', { name: 'Ajouter analyse d’impact sur l’activité', exact: true }).click();
     const dialog = page.getByRole('dialog');
     await dialog.getByLabel('Intitulé', { exact: true }).fill('BIA activité de recette');

@@ -634,8 +634,8 @@
   padding: 0;
 }
 
-/* Navigation Pilotage : familles de l'ancien menu, palette et densité Sauge conservées. */
-.pilotage-nav-group .mantine-NavLink-label {
+/* Navigation : sept familles dépliables, palette et densité Sauge conservées. */
+.nav-destination .mantine-NavLink-label {
   white-space: normal;
 }
 .pilotage-progress {
@@ -644,21 +644,47 @@
   accent-color: var(--mantine-color-sauge-6);
 }
 @media (min-width: 36em) and (max-width: 63.99em) {
-  .shell-nav .pilotage-nav-group {
+  .shell-nav .nav-destination {
     display: none;
   }
 }
 
-/* Garder le contenu métier visible lorsque les rubriques du Pilotage sont dépliées. */
+/* Garder le contenu métier visible lorsque les destinations d'une famille sont dépliées. */
 @media (min-width: 64em) {
-  .shell-nav-inner:has(.pilotage-nav-root[data-active]) {
+  .shell-nav-inner {
     max-height: calc(100dvh - var(--suivi-entete-h) - 2 * var(--mantine-spacing-md));
     overflow-y: auto;
   }
-  .shell-nav-inner .pilotage-nav-group,
-  .pilotage-nav-group + div .mantine-NavLink-root {
+  .nav-destination.mantine-NavLink-root {
     padding-block: var(--mantine-spacing-xs);
   }
+}
+
+/* Rubriques d'une destination : onglets de navigation au-dessus de la page (remplacent la liste déroulante mobile). */
+.onglets-rubriques {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--mantine-spacing-2xs);
+  margin-bottom: var(--mantine-spacing-md);
+  border-bottom: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  overflow-x: auto;
+}
+.onglets-rubriques a {
+  flex: 0 0 auto;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  border-bottom: calc(var(--suivi-trait-l) * 2) solid transparent;
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-sm);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.onglets-rubriques a:hover {
+  color: var(--mantine-color-text);
+}
+.onglets-rubriques a[aria-current='page'] {
+  border-bottom-color: var(--mantine-color-sauge-6);
+  color: var(--mantine-color-text);
+  font-weight: 600;
 }
 
 /* ---------------------------------------------------------------- Construire de zéro (CARTO-15 à CARTO-19)

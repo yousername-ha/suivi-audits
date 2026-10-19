@@ -18,27 +18,41 @@ import {
 import { useDisclosure, useMediaQuery } from '@mantine/hooks';
 import {
   IconeAccueil,
+  IconeActions,
   IconeAdministration,
-  IconeCarte,
   IconeCompte,
+  IconeConformite,
   IconeDocuments,
   IconeMur,
+  IconeOrganisation,
   IconeParametres,
+  IconePilotage,
+  IconeResilience,
+  IconeRisques,
   IconeTheme,
 } from '@suivi/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { errorMessage } from '../api';
-import { PILOTAGE_NAV } from '../pilotage-navigation';
+import { famillesVisibles, localiser, type FamilleId } from '../navigation';
 import { logout as endSession } from '../logout';
-import { LibelleAlerte, useAlertesMenu } from '../pilotage/alertes-menu';
-import { LibelleAvecPastille } from '../pilotage/compteur-rapprochements';
+import { alerteDeFamille, LibelleAlerte, useAlertesMenu } from '../pilotage/alertes-menu';
+import { OngletsRubriques } from './OngletsRubriques';
 import { UpdateNotice } from './Updates';
 import { ErrorAlert } from './common';
 import { useLive } from '../realtime';
 import { canAdminArea, canReadBusiness, useCan, useMe, usePreferences } from '../session';
 
+const ICONES_FAMILLE: Record<FamilleId, () => ReactNode> = {
+  pilotage: IconePilotage,
+  organisation: IconeOrganisation,
+  risques: IconeRisques,
+  conformite: IconeConformite,
+  actions: IconeActions,
+  resilience: IconeResilience,
+  documents: IconeDocuments,
+};
 const SCHEME = { auto: 'auto', clair: 'light', sombre: 'dark' } as const;
 const THEME_SUIVANT = { clair: 'sombre', sombre: 'auto', auto: 'clair' } as const;
 const THEME_LIBELLE = { clair: 'clair', sombre: 'sombre', auto: 'automatique' } as const;
@@ -74,25 +88,22 @@ export function Layout({ children }: { children: ReactNode }) {
   const tablette = useMediaQuery('(min-width: 36em) and (max-width: 63.99em)');
 
   type Item = [string, string, () => ReactNode];
-  const items: Item[] = [['/', 'Tableau de bord', IconeAccueil]];
-  if (can('documents', 'lire')) items.push(['/documents', 'Documents et liens', IconeDocuments]);
-  if (can('cartographie', 'lire')) items.push(['/cartographie', 'Cartographie du SMSI', IconeCarte]);
-  if (can('ia', 'lire')) items.push(['/ia/evaluations', 'Évaluations IA', IconeDocuments]);
-  if (can('import_export', 'exporter')) items.push(['/exports', 'Exports Excel', IconeDocuments]);
-  items.push(['/account', 'Mon compte', IconeCompte]);
-  items.push(['/aide', 'Guide d’utilisation', IconeDocuments]);
-  if (can('parametres', 'lire')) items.push(['/parametres', 'Paramètres', IconeParametres]);
-  if (canAdminArea(can)) items.push(['/admin', 'Administration', IconeAdministration]);
-  if (canReadBusiness(can)) items.push(['/mur', 'Écran mural', IconeMur]);
+  const accueil: Item[] = [['/', 'Tableau de bord', IconeAccueil]];
+  const administration: Item[] = [];
+  if (can('parametres', 'lire')) administration.push(['/parametres', 'Paramètres', IconeParametres]);
+  if (canAdminArea(can)) administration.push(['/admin', 'Administration', IconeAdministration]);
+  const outils: Item[] = [['/account', 'Mon compte', IconeCompte]];
+  outils.push(['/aide', 'Guide d’utilisation', IconeDocuments]);
+  if (canReadBusiness(can)) outils.push(['/mur', 'Écran mural', IconeMur]);
   const active = (to: string) => (to === '/' ? loc.pathname === '/' : loc.pathname.startsWith(to));
   const alertes = useAlertesMenu();
-  // Une seule section dépliée à la fois : ouvrir un groupe du Pilotage referme le précédent. La page affichée déplie
-  // son groupe.
-  const groupeDeLaPage = PILOTAGE_NAV.find((g) => g.items.some((i) => loc.pathname === '/pilotage/' + i.id))?.label;
-  const [ouvert, setOuvert] = useState<string | null>(groupeDeLaPage ? 'p:' + groupeDeLaPage : null);
+  const familles = famillesVisibles(can);
+  // Une seule famille dépliée à la fois : ouvrir une famille referme la précédente. La page affichée déplie la sienne.
+  const familleDeLaPage = localiser(loc.pathname)?.famille.id;
+  const [ouvert, setOuvert] = useState<string | null>(familleDeLaPage ?? null);
   useEffect(() => {
-    if (groupeDeLaPage) setOuvert('p:' + groupeDeLaPage);
-  }, [groupeDeLaPage]);
+    if (familleDeLaPage) setOuvert(familleDeLaPage);
+  }, [familleDeLaPage]);
   const basculer = (cle: string, ouvre: boolean) =>
     setOuvert((courant) => (ouvre ? cle : courant === cle ? null : courant));
   const [logoutError, setLogoutError] = useState<string | null>(null);
@@ -134,52 +145,45 @@ export function Layout({ children }: { children: ReactNode }) {
     <nav aria-label="Navigation principale" className="shell-nav-inner">
       <Text className="nav-caption nav-annexe">Espace de travail</Text>
       <Stack gap="2xs">
-        {navigationItems(items.slice(0, 1))}
-        {canReadBusiness(can) && (
-          <NavLink
-            component={Link}
-            to="/pilotage"
-            className="pilotage-nav-root"
-            label={<LibelleAlerte libelle="Pilotage" alerte={alertes['Pilotage']} />}
-            leftSection={<IconeAdministration />}
-            active={active('/pilotage')}
-            opened={active('/pilotage')}
-            // Mantine empêche la navigation native d'un NavLink avec enfants lorsqu'il les déplie.
-            onClick={() => {
-              if (!active('/pilotage')) setOuvert(null);
-              nav('/pilotage');
-              close();
-            }}
-          >
-            {PILOTAGE_NAV.map((group) => {
-              const visible = group.items.filter(
-                (item) => can(item.module, 'lire') && (item.id !== 'carte' || can('pilotage', 'lire')),
-              );
-              if (!visible.length) return null;
-              return (
-                <NavLink
-                  key={group.label}
-                  label={<LibelleAlerte libelle={group.label} alerte={alertes[group.label]} />}
-                  className="pilotage-nav-group"
-                  opened={ouvert === 'p:' + group.label}
-                  onChange={(o) => basculer('p:' + group.label, o)}
-                >
-                  {visible.map((item) => (
-                    <NavLink
-                      key={item.id}
-                      component={Link}
-                      to={'/pilotage/' + item.id}
-                      label={item.id === 'rapprochements' ? <LibelleAvecPastille libelle={item.label} /> : item.label}
-                      active={loc.pathname === '/pilotage/' + item.id}
-                      onClick={close}
-                    />
-                  ))}
-                </NavLink>
-              );
-            })}
-          </NavLink>
-        )}
-        {navigationItems(items.slice(1))}
+        {navigationItems(accueil)}
+        {familles.map(({ famille, destinations }) => {
+          const Icone = ICONES_FAMILLE[famille.id];
+          const dansLaFamille = familleDeLaPage === famille.id;
+          return (
+            <NavLink
+              key={famille.id}
+              component={Link}
+              to={destinations[0]!.to}
+              className="nav-famille"
+              data-famille={famille.id}
+              label={<LibelleAlerte libelle={famille.label} alerte={alerteDeFamille(alertes, destinations)} />}
+              leftSection={<Icone />}
+              active={dansLaFamille}
+              opened={!tablette && ouvert === famille.id}
+              onChange={(o) => basculer(famille.id, o)}
+              // Tablette : le menu est replié en icônes, un clic mène à la première destination de la famille.
+              onClick={tablette ? () => close() : undefined}
+            >
+              {!tablette &&
+                destinations.map((d) => (
+                  <NavLink
+                    key={d.id}
+                    component={Link}
+                    to={d.to}
+                    className="nav-destination"
+                    label={<LibelleAlerte libelle={d.label} alerte={alertes[d.id]} />}
+                    active={localiser(loc.pathname)?.destination.id === d.id}
+                    onClick={close}
+                  />
+                ))}
+            </NavLink>
+          );
+        })}
+      </Stack>
+      <Stack gap="2xs" className="nav-administration">
+        <Text className="nav-caption nav-annexe">Compte et administration</Text>
+        {navigationItems(administration)}
+        {navigationItems(outils)}
       </Stack>
       <Stack mt="xl" gap="2xs" className="nav-footer">
         <div className="nav-signature nav-annexe">
@@ -269,6 +273,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <aside className="shell-nav">{navigation}</aside>
         <main className="shell-main app-main">
           <ErrorAlert error={logoutError} />
+          <OngletsRubriques />
           {children}
         </main>
       </div>

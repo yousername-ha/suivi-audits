@@ -20,7 +20,7 @@ test('jeu de test : menu, objectifs, fournisseurs, PESTEL, boîtes, carte des ri
   const page = await ctx.newPage(),
     problems = watchPage(page);
   try {
-    // Menu : pastilles collées aux libellés, rouges quand un indicateur est mauvais ; une seule section dépliée.
+    // Menu : pastilles collées aux libellés, rouges quand un indicateur est mauvais ; une seule famille dépliée.
     await page.goto('/pilotage/synthese');
     const nav = page.getByRole('navigation', { name: 'Navigation principale' });
     await expect(nav.locator('[data-alerte="rouge"]').first()).toBeVisible();
@@ -28,13 +28,18 @@ test('jeu de test : menu, objectifs, fournisseurs, PESTEL, boîtes, carte des ri
       /non atteint|échéance/,
     );
     await capture(page, '01-menu-pastilles');
-    // Une seule section dépliée : ouvrir « Fournisseurs » referme « Objectifs et indicateurs » (la racine Pilotage + 1 groupe).
-    await nav.getByText('Objectifs et indicateurs', { exact: true }).click();
-    await expect(nav.locator('.mantine-NavLink-children').filter({ visible: true })).toHaveCount(2);
-    await nav.getByText('Fournisseurs', { exact: true }).first().click();
-    await expect(nav.locator('.mantine-NavLink-children').filter({ visible: true })).toHaveCount(2);
+    // Sept familles ; celle de la page affichée est dépliée, ouvrir « Organisation » referme « Pilotage ».
+    await expect(nav.locator('.nav-famille')).toHaveCount(7);
+    await expect(nav.getByRole('link', { name: 'Objectifs et indicateurs' })).toBeVisible();
+    await nav.getByRole('link', { name: 'Organisation', exact: true }).click();
+    await expect(nav.locator('.mantine-NavLink-children').filter({ visible: true })).toHaveCount(1);
+    await expect(nav.getByRole('link', { name: 'Fournisseurs', exact: true })).toBeVisible();
+    await expect(nav.getByRole('link', { name: 'Objectifs et indicateurs' })).toBeHidden();
+    // Une destination de plusieurs rubriques affiche ses rubriques voisines au-dessus de la page.
+    await nav.getByRole('link', { name: 'Fournisseurs', exact: true }).click();
+    await expect(page).toHaveURL(/\/pilotage\/fournisseurs$/);
+    await expect(page.getByRole('navigation', { name: 'Rubriques : Fournisseurs' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Fournisseurs de l’organisation' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Objectifs', exact: true })).toBeHidden();
 
     // Objectifs : trois vues de l'ancienne interface, fiches, boîtes.
     await page.goto('/pilotage/processus');

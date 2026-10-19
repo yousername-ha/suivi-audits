@@ -75,3 +75,46 @@ export const IconeTheme = () => (
     <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" />
   </Icone>
 );
+
+/* Une icône par famille du menu ; la couleur vient des jetons --suivi-famille-* (styles.css), jamais du composant. */
+export const IconePilotage = () => (
+  <Icone>
+    <path d="M4 19a8 8 0 1 1 16 0" />
+    <path d="M12 19l4-6" />
+    <path d="M12 7v2M6.3 9.3l1.4 1.4M17.7 9.3l-1.4 1.4" />
+  </Icone>
+);
+export const IconeOrganisation = () => (
+  <Icone>
+    <rect x="9" y="3" width="6" height="5" rx="1" />
+    <rect x="3" y="16" width="6" height="5" rx="1" />
+    <rect x="15" y="16" width="6" height="5" rx="1" />
+    <path d="M12 8v4M6 16v-4h12v4" />
+  </Icone>
+);
+export const IconeRisques = () => (
+  <Icone>
+    <path d="M12 3l10 18H2z" />
+    <path d="M12 10v5M12 18h0" />
+  </Icone>
+);
+export const IconeConformite = () => (
+  <Icone>
+    <rect x="5" y="4" width="14" height="17" rx="1.5" />
+    <path d="M9 3h6v3H9z" />
+    <path d="M9 13l2 2 4-4" />
+  </Icone>
+);
+export const IconeActions = () => (
+  <Icone>
+    <path d="M5 21V4" />
+    <path d="M5 5h12l-2.5 4L17 13H5" />
+  </Icone>
+);
+export const IconeResilience = () => (
+  <Icone>
+    <circle cx="12" cy="12" r="9" />
+    <circle cx="12" cy="12" r="3.5" />
+    <path d="M5.6 5.6l3.9 3.9M14.5 14.5l3.9 3.9M18.4 5.6l-3.9 3.9M9.5 14.5l-3.9 3.9" />
+  </Icone>
+);
