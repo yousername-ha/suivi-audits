@@ -1,0 +1,32 @@
+{
+  "date": "2026-10-19",
+  "version": "v001-acces-visuels",
+  "statut": "reussi",
+  "checks": [
+    "Un registre détaillé à la fois",
+    "Collaborateur autorise les contributions, pas la création",
+    "Fenêtre de droits centrale",
+    "Un rôle direct lecteur ne retire pas le rôle du groupe",
+    "Ajustement local appliqué",
+    "Avant/après et motif présents dans le journal",
+    "Cumul des groupes avec un rôle direct plus faible",
+    "Toutes les origines de droits sont visibles",
+    "Retirer un rôle direct ne supprime pas les groupes",
+    "Impact groupe affiche le nombre réel de membres fictifs",
+    "Mutation de groupe reflétée chez son membre",
+    "Autre groupe conserve ses permissions",
+    "Le contexte autorisé reste nécessaire",
+    "Le rôle seul ne contourne pas la projection de registre",
+    "Registre d’écarts : pas de réalisation action/tâche",
+    "Filtre via les périmètres du registre",
+    "État vide explicite",
+    "Menu fixe pendant le défilement",
+    "Fenêtre contenue sur mobile",
+    "Escape ferme la fenêtre",
+    "Pas de débordement du contenu mobile",
+    "Pas d’erreur JavaScript"
+  ],
+  "errors": [],
+  "backendTeste": false,
+  "limites": "Simulation locale ; ne prouve pas les autorisations serveur, le futur rôle Collaborateur ou une immutabilité du journal."
+}

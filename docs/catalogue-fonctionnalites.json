@@ -298,6 +298,20 @@
       "dossierImplementation": "fonctionnalites-en-developpement/021-registres-ecarts/implementation/README.md",
       "suivi": "fonctionnalites-en-developpement/021-registres-ecarts/suivi.json",
       "archive": "downloads/ASTRA-021-registres-ecarts-v002.zip"
+    },
+    {
+      "id": "gestion-droits",
+      "numero": "022",
+      "titre": "Gestion des droits",
+      "description": "Comprendre et ajuster les accès par utilisateur, groupe et registre, avec un rôle Collaborateur limité aux contributions autorisées.",
+      "etape": "en-developpement",
+      "dossier": "fonctionnalites-en-developpement/022-gestion-droits",
+      "maquetteCourante": "fonctionnalites-en-developpement/022-gestion-droits/maquettes/v001-acces-visuels",
+      "statutMaquette": "a-valider",
+      "implementation": "a-suivre",
+      "tests": "fonctionnalites-en-developpement/022-gestion-droits/tests/README.md",
+      "dossierImplementation": "fonctionnalites-en-developpement/022-gestion-droits/implementation/README.md",
+      "suivi": "fonctionnalites-en-developpement/022-gestion-droits/suivi.json"
     }
   ],
   "cycle": [
@@ -305,5 +319,5 @@
     "a-implementer",
     "implementee"
   ],
-  "prochainNumero": 22
+  "prochainNumero": 23
 }

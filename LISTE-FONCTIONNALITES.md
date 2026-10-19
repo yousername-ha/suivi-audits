@@ -25,6 +25,7 @@ Numéros permanents : ils restent identiques lors du déplacement entre les troi
 | 019 | [Configuration GRC transversale](fonctionnalites-en-developpement/019-configuration-grc/README.md) | Partager les catégories, échelles, matrices et paramètres versionnés entre les parcours GRC. | En développement |
 | 020 | [Navigation simplifiée](fonctionnalites-en-developpement/020-navigation/README.md) | Simplifier les menus, conserver les icônes colorées et regrouper les accès sans doublons. | En développement |
 | 021 | [Registres d’écarts](fonctionnalites-en-developpement/021-registres-ecarts/README.md) | Regrouper les écarts par audit ou campagne et les relier aux exigences, actions correctives et à la conformité du périmètre. | En développement |
+| 022 | [Gestion des droits](fonctionnalites-en-developpement/022-gestion-droits/README.md) | Comprendre et ajuster les accès par utilisateur, groupe et registre, avec un rôle Collaborateur limité aux contributions autorisées. | En développement |
 
 [Règles de fonctionnement](docs/ORGANISATION-LEGACY.md) · [Catalogue source](docs/catalogue-fonctionnalites.json).
 

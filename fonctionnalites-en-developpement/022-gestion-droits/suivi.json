@@ -1,0 +1,16 @@
+{
+  "fonctionnalite": "gestion-droits",
+  "numero": "022",
+  "etape": "en-developpement",
+  "maquetteCourante": "v001-acces-visuels",
+  "validationUtilisateur": null,
+  "livraisonImplementation": null,
+  "integration": null,
+  "historique": [
+    {
+      "date": "2026-10-19",
+      "etape": "en-developpement",
+      "motif": "Nouvelle vue ciblée utilisateur/groupe et registre ; six aperçus, 22 contrôles locaux. Collaborateur conservateur à confirmer, aucune intégration backend."
+    }
+  ]
+}
