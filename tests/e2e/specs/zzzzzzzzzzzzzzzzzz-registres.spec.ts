@@ -67,9 +67,12 @@ test('Registres : registre créé, périmètre ajouté après aperçu de l’imp
     await page.getByRole('button', { name: 'Attribuer' }).click();
     const tableau = page.getByRole('region', { name: /Droits attribués sur le registre/ });
     await expect(tableau.getByText('Contributeur', { exact: true })).toBeVisible();
-    await tableau.getByRole('button', { name: /^Retirer le droit de/ }).click();
+    await tableau
+      .getByRole('row', { name: /Contributeur/ })
+      .getByRole('button', { name: /^Retirer le droit de/ })
+      .click();
     await page.getByRole('dialog').getByRole('button', { name: 'Confirmer' }).click();
-    await expect(tableau.getByText('Aucun droit attribué', { exact: false })).toBeVisible();
+    await expect(tableau.getByText('Contributeur', { exact: true })).toHaveCount(0);
 
     // Menu : la destination est dans la famille « Actions ».
     await page
