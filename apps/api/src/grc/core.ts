@@ -1,6 +1,9 @@
 import crypto from 'node:crypto';
 import {
   GRC_MODULES,
+  REGISTRE_KINDS,
+  registreKindOf,
+  ContributionAction,
   GrcObjectBody,
   GrcRef,
   grcReferences,
@@ -48,6 +51,7 @@ import { GrcSuppliers } from './suppliers.js';
 import { GrcRisks } from './risks.js';
 import { GrcStudyConfig } from './study-config.js';
 import { LegacyTasks } from './legacy-tasks.js';
+import { GrcRegistres } from './registres.js';
 import { GrcTasks } from './tasks.js';
 export const DEFAULT_SMSI = '00000000-0000-4000-8000-000000000001';
 /** Fiche de l'outil de suivi propre au périmètre commun. Les fournisseurs (`legacy:suppliers:`) sont à l'échelle de
@@ -61,7 +65,7 @@ const LECTURE_PILOTAGE: Permission[] = [
   'plan_audit:lire',
   'conformite:lire',
 ];
-export const objectColumns = `id,smsi_id AS "smsiId",kind,name,data,version,archived,legacy_key AS "legacyKey",legacy_id AS "legacyId",created_by AS "createdBy",updated_by AS "updatedBy",created_at AS "createdAt",updated_at AS "updatedAt"`;
+export const objectColumns = `id,smsi_id AS "smsiId",kind,name,data,version,archived,legacy_key AS "legacyKey",legacy_id AS "legacyId",registre_id AS "registreId",created_by AS "createdBy",updated_by AS "updatedBy",created_at AS "createdAt",updated_at AS "updatedAt"`;
 export type ObjectRow = Omit<GrcObject, 'createdAt' | 'updatedAt'> & { createdAt: Date; updatedAt: Date };
 export const objectDto = (r: ObjectRow): GrcObject => ({
   ...r,
@@ -146,6 +150,7 @@ export class Grc {
   readonly risks: GrcRisks;
   readonly studyConfig: GrcStudyConfig;
   readonly tasks: GrcTasks;
+  readonly registres: GrcRegistres;
   constructor(
     readonly db: Db,
     readonly legacy: LegacyStore,
@@ -162,6 +167,7 @@ export class Grc {
     this.risks = new GrcRisks(this);
     this.studyConfig = new GrcStudyConfig(this);
     this.tasks = new GrcTasks(this);
+    this.registres = new GrcRegistres(this);
   }
   async isAdmin(user: SessionUser, c?: Client) {
     return (await loadGrants(c ?? this.db.pool, user.id)).some(
@@ -173,6 +179,10 @@ export class Grc {
       `INSERT INTO grc_smsis(id,name,scope,visibility,business_version,created_by) VALUES($1,'Pilotage de l’organisation','Données historiques et nouvelles relations communes','instance',(SELECT version FROM business_policy_configuration WHERE id=1),'système') ON CONFLICT DO NOTHING`,
       [DEFAULT_SMSI],
     );
+    // Registres « Pilotage commun » (ADR 0043) : accueillent les éléments du périmètre commun, historiques compris.
+    await this.db.tx(async (c) => {
+      for (const kind of REGISTRE_KINDS) await this.registres.defautPour(c, DEFAULT_SMSI, kind);
+    });
   }
   async permission(user: SessionUser, module: Module, action: Action) {
     await this.modules.assert(module);
@@ -383,6 +393,15 @@ export class Grc {
     const s = await this.access(id, user);
     return this.business.version(s.businessVersion);
   }
+  /** Politique métier épinglée d'un périmètre, sans contrôle d'accès : l'appelant a déjà autorisé l'opération. */
+  async politiqueDe(smsi: string, c?: Client) {
+    const r = await (c ?? this.db.pool).query<{ v: number }>(
+      'SELECT business_version AS v FROM grc_smsis WHERE id=$1',
+      [smsi],
+    );
+    if (!r.rows[0]) throw new HttpError(404, 'Périmètre introuvable.');
+    return this.business.version(r.rows[0].v);
+  }
   async selectMethod(smsi: string, id: string, version: number, expected: number, user: SessionUser, ip: string) {
     await this.permission(user, 'pilotage', 'administrer');
     await this.risks.method(smsi, id, version, user);
@@ -468,6 +487,12 @@ export class Grc {
     return row ? objectDto(row) : null;
   }
   async object(smsi: string, id: string, user: SessionUser, write = false, c?: Client) {
+    const brut = await this.raw(id, c);
+    // Élément d'un registre : l'accès suit le registre (droits attribués, module, périmètres), pas un périmètre seul.
+    if (brut?.registreId && brut.smsiId === smsi) {
+      await this.registres.exigerElement(user, brut, write ? 'gerer' : 'lire', c);
+      return brut;
+    }
     await this.access(smsi, user, write, c);
     const o = await this.raw(id, c);
     if (!o || o.smsiId !== smsi) throw new HttpError(404, 'Objet introuvable.');
@@ -486,6 +511,8 @@ export class Grc {
     await this.permission(user, GRC_MODULES[kind], 'lire');
     const args: unknown[] = [smsi, kind, '%' + search.replace(/[\\%_]/g, '\\$&') + '%'];
     let where = 'smsi_id=$1 AND kind=$2 AND NOT archived AND name ILIKE $3';
+    const masques = await this.registres.inaccessibles(user, smsi);
+    if (masques.length) where += ` AND (registre_id IS NULL OR registre_id<>ALL($${args.push(masques)}::uuid[]))`;
     for (const [k, v] of Object.entries(filters)) {
       if (!['status', 'ownerId', 'domain', 'entity'].includes(k)) continue;
       if (v) {
@@ -547,7 +574,7 @@ export class Grc {
       throw new HttpError(413, 'Une fiche est limitée à 256 Ko.');
     if (kind === 'action') {
       const d = TaskData.parse(data);
-      const policy = (await this.policy(smsi, user)).definition;
+      const policy = (await this.politiqueDe(smsi, c)).definition;
       const state = policy.statuses.find((s) => s.id === d.status);
       if (!state || !policy.catalogues.actionCategories.some((x) => x.id === d.category))
         throw new HttpError(422, 'État ou catégorie inconnus de la politique publiée.');
@@ -584,7 +611,7 @@ export class Grc {
     }
     if (kind === 'task_series') {
       const d = SeriesData.parse(data);
-      const policy = (await this.policy(smsi, user)).definition;
+      const policy = (await this.politiqueDe(smsi, c)).definition;
       if (!policy.catalogues.actionCategories.some((x) => x.id === d.category))
         throw new HttpError(422, 'Catégorie de récurrence inconnue.');
       await this.checkOwner(smsi, d.ownerId, c);
@@ -718,12 +745,24 @@ export class Grc {
   }
   async createObject(smsi: string, input: GrcObjectBody, user: SessionUser, ip: string) {
     const body = GrcObjectBody.parse(input);
-    await this.access(smsi, user, true);
-    await this.permission(user, GRC_MODULES[body.kind], 'modifier');
+    const famille = registreKindOf(body.kind, body.data);
+    if (body.registreId && !famille) throw new HttpError(422, 'Ce type d’objet n’appartient à aucun registre.');
     return this.db.tx(async (c) => {
-      await this.access(smsi, user, true, c);
+      let registreId: string | null = null;
+      if (body.registreId) {
+        // Création dans un registre choisi : gestion du registre exigée, périmètre de référence = périmètre de l'URL.
+        const reg = await this.registres.brut(body.registreId, c);
+        if (!reg || reg.archived) throw new HttpError(404, 'Registre introuvable, archivé ou non accessible.');
+        if (reg.kind !== famille || reg.referenceId !== smsi)
+          throw new HttpError(422, 'Ce registre n’accueille pas ce type d’élément pour ce périmètre.');
+        await this.registres.exiger(user, reg, null, 'gerer', c, GRC_MODULES[body.kind]);
+        registreId = reg.id;
+      } else {
+        await this.access(smsi, user, true, c);
+        await this.permission(user, GRC_MODULES[body.kind], 'modifier');
+      }
       const data = await this.normalize(smsi, body.kind, body.data, user, c);
-      const o = await this.insert(c, smsi, body.kind, body.name, data, user, ip);
+      const o = await this.insert(c, smsi, body.kind, body.name, data, user, ip, registreId);
       await this.recordStudyUsage(c, o, user);
       return o;
     }, user.username);
@@ -736,11 +775,15 @@ export class Grc {
     data: unknown,
     user: { id?: string; username: string },
     ip: string,
+    registreId: string | null = null,
   ) {
+    // Tout élément d'une famille de registre en a un : à défaut de choix, le registre par défaut du périmètre.
+    const famille = registreKindOf(kind, isObject(data) ? data : {});
+    const registre = famille ? (registreId ?? (await this.registres.defautPour(c, smsi, famille))) : null;
     const row = (
       await c.query<ObjectRow>(
-        `INSERT INTO grc_objects(smsi_id,kind,module,name,data,created_by,updated_by) VALUES($1,$2,$3,$4,$5,$6,$6) RETURNING ${objectColumns}`,
-        [smsi, kind, GRC_MODULES[kind], name, data, user.username],
+        `INSERT INTO grc_objects(smsi_id,kind,module,name,data,created_by,updated_by,registre_id) VALUES($1,$2,$3,$4,$5,$6,$6,$7) RETURNING ${objectColumns}`,
+        [smsi, kind, GRC_MODULES[kind], name, data, user.username, registre],
       )
     ).rows[0]!;
     const o = objectDto(row);
@@ -757,6 +800,8 @@ export class Grc {
       if (!current || current.version !== expected)
         throw new HttpError(412, 'La fiche a changé. Rechargez avant de confirmer.');
       if (body.kind !== previous.kind || current.archived) throw new HttpError(409, 'Type immuable ou fiche archivée.');
+      if (body.registreId && body.registreId !== current.registreId)
+        throw new HttpError(422, 'Le registre d’un élément ne se change pas par une modification.');
       const data = await this.normalize(smsi, body.kind, body.data, user, c, current);
       const o = await this.write(c, current, body.name, data, user, ip, 'Modification');
       await this.recordStudyUsage(c, o, user);
@@ -793,10 +838,60 @@ export class Grc {
     await this.notify(c, next.id, next.version, next.smsiId, GRC_MODULES[next.kind], user.username);
     return next;
   }
+  /** Contribution à une action : avancement seulement (statut et compte rendu), jamais la définition de l'élément.
+      Réservée aux éléments d'un registre ; le rôle de contributeur suffit, sans droit de modification de module. */
+  async contribuer(
+    smsi: string,
+    id: string,
+    input: ContributionAction,
+    expected: number,
+    user: SessionUser,
+    ip: string,
+  ) {
+    const b = ContributionAction.parse(input);
+    return this.db.tx(async (c) => {
+      const current = await this.raw(id, c, true);
+      if (!current || current.smsiId !== smsi || !current.registreId) throw new HttpError(404, 'Objet introuvable.');
+      await this.registres.exigerElement(user, current, 'contribuer', c);
+      if (current.kind !== 'action') throw new HttpError(422, 'La contribution concerne les actions.');
+      if (current.archived) throw new HttpError(409, 'Fiche archivée.');
+      if (current.version !== expected) throw new HttpError(412, 'La fiche a changé. Rechargez avant de confirmer.');
+      const policy = (await this.politiqueDe(smsi, c)).definition;
+      const etat = policy.statuses.find((s) => s.id === b.status);
+      if (!etat) throw new HttpError(422, 'État inconnu de la politique publiée.');
+      if (
+        current.data.status !== b.status &&
+        !policy.transitions.some((t) => t.from === current.data.status && t.to === b.status)
+      )
+        throw new HttpError(409, 'Cette transition n’est pas autorisée par le workflow.');
+      const justification = b.justification ?? String(current.data.justification ?? '');
+      if (etat.terminal && justification.trim().length < 10)
+        throw new HttpError(422, 'Une clôture doit conserver sa justification.');
+      const dependances = Array.isArray(current.data.dependencies) ? (current.data.dependencies as string[]) : [];
+      if (etat.terminal && dependances.length) {
+        const ouvertes = (
+          await c.query<{ s: string }>("SELECT data->>'status' AS s FROM grc_objects WHERE id=ANY($1::uuid[])", [
+            dependances,
+          ])
+        ).rows.filter((r) => !policy.statuses.find((x) => x.id === r.s)?.terminal);
+        if (ouvertes.length) throw new HttpError(409, 'Terminez les dépendances avant de clôturer.');
+      }
+      return this.write(
+        c,
+        current,
+        current.name,
+        { ...current.data, status: b.status, justification },
+        user,
+        ip,
+        'Contribution : avancement',
+      );
+    }, user.username);
+  }
   async archive(smsi: string, id: string, expected: number, user: SessionUser, ip: string) {
     return this.db.tx(async (c) => {
       const current = await this.object(smsi, id, user, true, c);
-      await this.permission(user, GRC_MODULES[current.kind], 'supprimer');
+      if (current.registreId) await this.registres.exigerElement(user, current, 'gerer', c, 'supprimer');
+      else await this.permission(user, GRC_MODULES[current.kind], 'supprimer');
       await c.query('SELECT id FROM grc_objects WHERE id=$1 FOR UPDATE', [id]);
       const fresh = (await this.raw(id, c))!;
       if (fresh.version !== expected) throw new HttpError(412, 'Version obsolète.');

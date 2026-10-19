@@ -1,0 +1,158 @@
+/* Registres, périmètres hérités et droits par ressource (ADR 0043). Accès « auth » : l'autorisation réelle (droits de module,
+   périmètres, droits attribués) est évaluée par le service, jamais par l'affichage. */
+import {
+  ContributionAction,
+  DroitBody,
+  REGISTRE_KINDS,
+  RegistreBody,
+  RegistrePerimetresBody,
+  RegistreUpdate,
+} from '@suivi/shared';
+import { z } from 'zod';
+import type { Session } from '../auth.js';
+import { requireIfMatch, setEtag } from '../http/concurrency.js';
+import { route } from '../http/route.js';
+
+const base = { tags: ['Registres'], access: 'auth' as const };
+const registre = z.object({ id: z.uuid() });
+const ressource = z.object({ type: z.enum(['registre', 'objet']), id: z.uuid() });
+const objet = z.object({ smsi: z.uuid(), id: z.uuid() });
+
+export const registresRoutes = [
+  route({
+    ...base,
+    method: 'GET',
+    url: '/api/registres',
+    summary: 'Registres accessibles, avec le rôle et les droits de l’utilisateur',
+    query: z
+      .object({
+        perimetre: z.uuid().optional(),
+        kind: z.enum(REGISTRE_KINDS).optional(),
+        archives: z.enum(['true', 'false']).default('false'),
+      })
+      .strict(),
+    handler: async ({ svc, s, query }) => ({
+      items: await svc.grc.registres.list((s as Session).user, {
+        perimetre: query.perimetre,
+        kind: query.kind,
+        archives: query.archives === 'true',
+      }),
+    }),
+  }),
+  route({
+    ...base,
+    method: 'POST',
+    url: '/api/registres',
+    summary: 'Créer un registre portant un ou plusieurs périmètres',
+    body: RegistreBody,
+    status: 201,
+    handler: async ({ svc, s, body, ip, reply }) => {
+      const r = await svc.grc.registres.create(body, (s as Session).user, ip);
+      setEtag(reply, r.version);
+      return r;
+    },
+  }),
+  route({
+    ...base,
+    method: 'GET',
+    url: '/api/registres/:id',
+    summary: 'Consulter un registre',
+    params: registre,
+    handler: async ({ svc, s, params, reply }) => {
+      const r = await svc.grc.registres.get(params.id, (s as Session).user);
+      setEtag(reply, r.version);
+      return r;
+    },
+  }),
+  route({
+    ...base,
+    method: 'PATCH',
+    url: '/api/registres/:id',
+    summary: 'Renommer, décrire ou restreindre un registre',
+    params: registre,
+    body: RegistreUpdate,
+    handler: async ({ svc, s, params, body, ip, req, reply }) => {
+      const r = await svc.grc.registres.update(params.id, body, requireIfMatch(req), (s as Session).user, ip);
+      setEtag(reply, r.version);
+      return r;
+    },
+  }),
+  route({
+    ...base,
+    method: 'PUT',
+    url: '/api/registres/:id/perimetres',
+    summary: 'Changer les périmètres d’un registre (aperçu de l’impact, puis commande atomique)',
+    params: registre,
+    body: RegistrePerimetresBody,
+    handler: async ({ svc, s, params, body, ip, req }) =>
+      svc.grc.registres.setPerimetres(params.id, body, body.apercu ? 0 : requireIfMatch(req), (s as Session).user, ip),
+  }),
+  route({
+    ...base,
+    method: 'POST',
+    url: '/api/registres/:id/archivage',
+    summary: 'Archiver un registre sans toucher à ses éléments',
+    params: registre,
+    handler: async ({ svc, s, params, ip, req }) =>
+      svc.grc.registres.archive(params.id, requireIfMatch(req), (s as Session).user, ip),
+  }),
+  route({
+    ...base,
+    method: 'GET',
+    url: '/api/registres/:id/elements',
+    summary: 'Éléments d’un registre (périmètres hérités du registre)',
+    params: registre,
+    query: z
+      .object({
+        kind: z.enum(['action', 'nonconformity', 'task_series']).optional(),
+        search: z.string().max(200).default(''),
+        offset: z.coerce.number().int().min(0).max(1000000).default(0),
+      })
+      .strict(),
+    handler: async ({ svc, s, params, query }) =>
+      svc.grc.registres.elements(params.id, (s as Session).user, query.kind, query.search, query.offset),
+  }),
+  route({
+    ...base,
+    method: 'GET',
+    url: '/api/droits/:type/:id',
+    summary: 'Droits attribués sur un registre ou un élément (gestionnaires)',
+    params: ressource,
+    handler: async ({ svc, s, params }) => ({
+      items: await svc.grc.registres.droits(params.type, params.id, (s as Session).user),
+    }),
+  }),
+  route({
+    ...base,
+    method: 'PUT',
+    url: '/api/droits/:type/:id',
+    summary: 'Attribuer ou modifier le rôle d’un utilisateur ou d’un groupe',
+    params: ressource,
+    body: DroitBody,
+    handler: async ({ svc, s, params, body, ip }) =>
+      svc.grc.registres.accorder(params.type, params.id, body, (s as Session).user, ip),
+  }),
+  route({
+    ...base,
+    method: 'DELETE',
+    url: '/api/droits/:type/:id/:droitId',
+    summary: 'Retirer un droit',
+    params: ressource.extend({ droitId: z.uuid() }),
+    handler: async ({ svc, s, params, ip }) => {
+      await svc.grc.registres.retirer(params.type, params.id, params.droitId, (s as Session).user, ip);
+    },
+  }),
+  route({
+    ...base,
+    method: 'POST',
+    url: '/api/grc/:smsi/objects/:id/contribution',
+    summary: 'Contribuer à une action : avancement seulement (rôle de contributeur suffisant)',
+    params: objet,
+    body: ContributionAction,
+    handler: async ({ svc, s, params, body, ip, req, reply }) => {
+      const o = await svc.grc.contribuer(params.smsi, params.id, body, requireIfMatch(req), (s as Session).user, ip);
+      setEtag(reply, o.version);
+      return o;
+    },
+  }),
+];

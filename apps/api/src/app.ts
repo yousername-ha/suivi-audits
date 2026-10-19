@@ -23,6 +23,7 @@ import { environmentRoutes } from './routes/environment.js';
 import { riskAssessmentRoutes } from './routes/risk-assessments.js';
 import { businessPolicyRoutes } from './routes/business-policy.js';
 import { grcRoutes } from './routes/grc.js';
+import { registresRoutes } from './routes/registres.js';
 import { pilotageRoutes } from './routes/pilotage.js';
 import { affichageRoutes } from './routes/affichage.js';
 import { cartoRoutes } from './routes/carto.js';
@@ -117,6 +118,7 @@ export function allRoutes(): RouteDef[] {
     ...configGrcRoutes,
     ...historiqueRoutes,
     ...grcRoutes,
+    ...registresRoutes,
     ...pilotageRoutes,
     ...riskAssessmentRoutes,
     ...affichageRoutes,

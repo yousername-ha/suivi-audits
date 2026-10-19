@@ -164,6 +164,7 @@ export class GrcTasks {
               },
               { username: 'Automate SMSI' },
               '',
+              o.registreId ?? null,
             );
             await c.query('INSERT INTO grc_occurrences(series_id,slot,action_id) VALUES($1,$2,$3)', [
               id,
