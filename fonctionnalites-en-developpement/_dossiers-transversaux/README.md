@@ -6,4 +6,4 @@ Les consignes et le suivi propres à chaque fonctionnalité se trouvent dans [le
 
 ## Dossier courant — UI/UX et registres
 
-[Édition du 19 octobre 2026](implementation-ui-2026-10/README.md) : navigation, héritage transversal des périmètres, plans, écarts, récurrences, périmètres graphiques et prompt de codage. Statuts et limites explicités.
+[Édition du 19 octobre 2026](../../fonctionnalites-a-implementer/_dossiers-transversaux/implementation-ui-2026-10/README.md) : navigation, héritage transversal des périmètres, plans, écarts, récurrences, périmètres graphiques et prompt de codage. Statuts et limites explicités.

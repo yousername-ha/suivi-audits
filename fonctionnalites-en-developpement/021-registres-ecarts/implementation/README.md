@@ -14,4 +14,4 @@ Consolider le dossier final uniquement après validation utilisateur. Les API ex
 
 Le registre porte un ou plusieurs périmètres, hérités par ses écarts. La v003 n’en gère qu’un : ne pas prendre cette limite comme règle cible. Ses anciens formulaires d’action avec périmètre indépendant sont remplacés par la règle commune et la référence 017 v004.
 
-[Spécifications, intégration et prompt de codage](../../_dossiers-transversaux/implementation-ui-2026-10/README.md). Cette documentation ne signifie pas que la maquette historique ou le backend ont été modifiés.
+[Spécifications, intégration et prompt de codage](../../../fonctionnalites-a-implementer/_dossiers-transversaux/implementation-ui-2026-10/README.md). Cette documentation ne signifie pas que la maquette historique ou le backend ont été modifiés.

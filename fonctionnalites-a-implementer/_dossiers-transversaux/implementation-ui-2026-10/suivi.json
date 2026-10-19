@@ -1,0 +1,32 @@
+{
+  "id": "implementation-ui-2026-10",
+  "type": "dossier-technique-transversal",
+  "etape": "a-implementer",
+  "date": "2026-10-19",
+  "decisionUtilisateur": {
+    "texte": "T’es pas passé dans le dossier à implémenter .",
+    "portee": "Passage du dossier technique commun dans à implémenter."
+  },
+  "origine": "fonctionnalites-en-developpement/_dossiers-transversaux/implementation-ui-2026-10",
+  "destination": "fonctionnalites-a-implementer/_dossiers-transversaux/implementation-ui-2026-10",
+  "lotsReferences": [
+    "010",
+    "017",
+    "018",
+    "020",
+    "021"
+  ],
+  "integration": null,
+  "historique": [
+    {
+      "date": "2026-10-19",
+      "etape": "en-developpement",
+      "motif": "Préparation du dossier technique et publication des références."
+    },
+    {
+      "date": "2026-10-19",
+      "etape": "a-implementer",
+      "motif": "Déplacement complet demandé par l’utilisateur ; maintien des limites et contrats à confirmer."
+    }
+  ]
+}

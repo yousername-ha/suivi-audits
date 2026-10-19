@@ -25,4 +25,4 @@ Lire la [note technique de la timeline](../maquettes/v002-timeline-validations/T
 
 Les périmètres appartiennent au registre, pas à chaque tâche. Les champs `scope` de la maquette v008 sont historiques ; résoudre le rattachement depuis le registre dans l’intégration, sans réécrire les validations passées.
 
-[Spécifications, intégration et prompt de codage](../../_dossiers-transversaux/implementation-ui-2026-10/README.md). Cette documentation ne signifie pas que la maquette historique ou le backend ont été modifiés.
+[Spécifications, intégration et prompt de codage](../../../fonctionnalites-a-implementer/_dossiers-transversaux/implementation-ui-2026-10/README.md). Cette documentation ne signifie pas que la maquette historique ou le backend ont été modifiés.

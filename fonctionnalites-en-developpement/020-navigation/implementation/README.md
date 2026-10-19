@@ -6,4 +6,4 @@ Lire [le chapitre 12](../../_dossiers-transversaux/grc-transversal/v001-dossier-
 
 Le style est retenu ; l’ordonnancement et le mapping exhaustif des routes restent à valider. Le dossier courant propose un menu complet et distingue les menus partiels des maquettes ciblées.
 
-[Spécifications, intégration et prompt de codage](../../_dossiers-transversaux/implementation-ui-2026-10/README.md). Cette documentation ne signifie pas que la maquette historique ou le backend ont été modifiés.
+[Spécifications, intégration et prompt de codage](../../../fonctionnalites-a-implementer/_dossiers-transversaux/implementation-ui-2026-10/README.md). Cette documentation ne signifie pas que la maquette historique ou le backend ont été modifiés.

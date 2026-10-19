@@ -15,4 +15,4 @@ La cartographie dynamique reste protégée. Les exemples ANSSI ou fictifs des ma
 
 [Notes préparatoires v003 : UI, affectations et contrats vérifiés](PLANS-ACTION-V003.md). Dossier final à compléter après validation.
 
-**Instruction courante :** les périmètres sont portés par le plan et hérités par ses actions. Le [dossier transversal](../../_dossiers-transversaux/implementation-ui-2026-10/README.md) remplace sur ce point les notes v003 ; ne pas conserver leur sélection de périmètres dans les fiches d’action.
+**Instruction courante :** les périmètres sont portés par le plan et hérités par ses actions. Le [dossier transversal](../../../fonctionnalites-a-implementer/_dossiers-transversaux/implementation-ui-2026-10/README.md) remplace sur ce point les notes v003 ; ne pas conserver leur sélection de périmètres dans les fiches d’action.

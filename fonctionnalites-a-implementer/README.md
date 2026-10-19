@@ -1,11 +1,16 @@
 # Fonctionnalités à implémenter
 
-Aucune proposition n’a encore franchi la validation de sa version et la consolidation du dossier complet. Les travaux actuels sont en développement.
+## Dossier technique ASTRA — UI/UX et registres
 
-Après validation utilisateur, chaque dossier déplacé ici contiendra les maquettes validées, les visuels, les spécifications techniques, la recette et le prompt pour une IA travaillant uniquement sur sa propre branche.
+**Classé ici le 19 octobre 2026 sur demande explicite de l’utilisateur.**
 
-[Cycle et critères de passage](../docs/ORGANISATION-LEGACY.md) · [Développement](../fonctionnalites-en-developpement/README.md) · [Catalogue](../docs/catalogue-fonctionnalites.json)
+- [Ouvrir le dossier complet](_dossiers-transversaux/implementation-ui-2026-10/README.md).
+- [Prompt pour l’IA de codage](_dossiers-transversaux/implementation-ui-2026-10/PROMPT-IMPLEMENTATION.md).
+- [Spécifications UI/UX](_dossiers-transversaux/implementation-ui-2026-10/SPECIFICATIONS.md).
+- [Contrats et recette](_dossiers-transversaux/implementation-ui-2026-10/INTEGRATION-RECETTE.md).
 
-[Liste complète avec numéros et descriptions](../LISTE-FONCTIONNALITES.md).
+Le dossier commun couvre navigation, héritage des registres, plans d’action, écarts, tâches récurrentes et périmètres graphiques. Les références versionnées restent liées depuis le dossier ; ce classement n’annonce pas une intégration réalisée. L’agent de codage travaille uniquement sur sa propre branche.
 
-À chaque reprise, lire les fichiers « implémentation ok ». Une confirmation de livraison de la version concernée déclenche le déplacement du dossier complet vers `fonctionnalites-implementees/`, avec son marqueur et les informations disponibles. Aucun ZIP/BAT supplémentaire sans demande explicite.
+[Cycle et critères de passage](../docs/ORGANISATION-LEGACY.md) · [Développement](../fonctionnalites-en-developpement/README.md) · [Liste numérotée](../LISTE-FONCTIONNALITES.md).
+
+Lire les marqueurs « implémentation ok » à chaque reprise ; une confirmation de livraison de la version concernée déclenche le classement dans `fonctionnalites-implementees`. Aucun ZIP/BAT supplémentaire sans demande explicite.

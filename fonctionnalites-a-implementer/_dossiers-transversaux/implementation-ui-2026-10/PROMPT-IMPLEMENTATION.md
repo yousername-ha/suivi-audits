@@ -5,7 +5,7 @@ Tu dois intégrer les interfaces ASTRA à l’application existante, en réutili
 ## Source et limites de travail
 
 Lis d’abord le dossier GitHub de référence :
-https://github.com/yousername-ha/suivi-audits/tree/legacy/fonctionnalites-en-developpement/_dossiers-transversaux/implementation-ui-2026-10
+https://github.com/yousername-ha/suivi-audits/tree/legacy/fonctionnalites-a-implementer/_dossiers-transversaux/implementation-ui-2026-10
 
 Lis entièrement `README.md`, `SPECIFICATIONS.md`, `INTEGRATION-RECETTE.md`, `navigation.json`, puis les maquettes versionnées qu’ils désignent. En cas de contradiction avec un ancien document, cette édition prévaut pour les périmètres des registres et la proposition de navigation. Les règles métier réelles restent à vérifier dans le code cible ; signale tout conflit sans l’écraser.
 

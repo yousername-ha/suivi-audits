@@ -14,7 +14,7 @@ Commencer dans `fonctionnalites-en-developpement/<NNN-fonctionnalite>/`. Utilise
 
 Publier les visuels sur GitHub. Depuis la consigne courante, ne générer aucun ZIP/BAT sans nouvelle demande explicite. Conserver les archives précédentes. Une publication ou des tests réussis ne valent pas validation de la maquette.
 
-Le [prototype transversal v2](../fonctionnalites-en-developpement/_prototype-transversal/README.md) couvre plusieurs fonctionnalités : conserver une source commune et indiquer la version et le périmètre concernés dans chaque dossier. Les [dossiers transversaux préparatoires](../fonctionnalites-en-developpement/_dossiers-transversaux/README.md) restent en développement. Leur nom « dossier d’implémentation » ne signifie pas qu’ils sont validés.
+Le [prototype transversal v2](../fonctionnalites-en-developpement/_prototype-transversal/README.md) couvre plusieurs fonctionnalités : conserver une source commune et indiquer la version et le périmètre concernés dans chaque dossier. Les [dossiers transversaux préparatoires](../fonctionnalites-en-developpement/_dossiers-transversaux/README.md) restent en développement jusqu’à la demande de passage au codage. Le 19 octobre 2026, l’utilisateur a explicitement demandé le déplacement du [dossier technique UI/UX et registres](../fonctionnalites-a-implementer/_dossiers-transversaux/implementation-ui-2026-10/README.md) vers « à implémenter ». Ce dossier commun conserve ses liens vers les fonctionnalités numérotées et consigne sa décision de classement dans son propre `suivi.json`.
 
 ## 2. Valider et préparer le codage
 

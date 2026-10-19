@@ -2,7 +2,7 @@
 
 ## Sources techniques vérifiées et portée
 
-Référence de lecture : [arbre Claude 284cb1e](https://github.com/yousername-ha/suivi-audits/tree/284cb1e4ffbaee37e0952073db5659c2257c888e), copie consultée en lecture seule. Réauditer le SHA effectif avant codage ; ce dossier ne prétend pas décrire le dernier état distant. L’[audit du 18 octobre](../../AUDIT-CONVERGENCE.md) est une référence historique, pas une preuve de fraîcheur. En particulier son ancien constat d’absence de `parentId` est dépassé par l’instantané 284cb1e.
+Référence de lecture : [arbre Claude 284cb1e](https://github.com/yousername-ha/suivi-audits/tree/284cb1e4ffbaee37e0952073db5659c2257c888e), copie consultée en lecture seule. Réauditer le SHA effectif avant codage ; ce dossier ne prétend pas décrire le dernier état distant. L’[audit du 18 octobre](../../../fonctionnalites-en-developpement/AUDIT-CONVERGENCE.md) est une référence historique, pas une preuve de fraîcheur. En particulier son ancien constat d’absence de `parentId` est dépassé par l’instantané 284cb1e.
 
 | Source dans l’arbre consulté | Élément constaté | Conséquence |
 | --- | --- | --- |

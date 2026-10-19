@@ -11,6 +11,6 @@ Le plan porte un ou plusieurs périmètres ; ses actions les héritent. Aucun ch
 
 ![Fiche corrigée](visuels/02-action-perimetres-herites.png)
 
-[Sources autonomes](index.html) · [35 contrôles navigateur réussis](technique/verification.json) · [Dossier technique transversal courant](../../../_dossiers-transversaux/implementation-ui-2026-10/README.md).
+[Sources autonomes](index.html) · [35 contrôles navigateur réussis](technique/verification.json) · [Dossier technique transversal courant](../../../../fonctionnalites-a-implementer/_dossiers-transversaux/implementation-ui-2026-10/README.md).
 
 Ouvrir `index.html` localement pour tester. Données fictives en mémoire, réinitialisées au rechargement ; aucune connexion au backend. Le choix des périmètres reste dans le formulaire du plan. Le filtre global conserve le rôle de recherche des plans et de leurs actions. Les versions antérieures restent historiques. Aucun ZIP/BAT généré.
