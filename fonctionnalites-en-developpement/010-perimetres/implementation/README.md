@@ -1,18 +1,30 @@
 # Implémentation — Périmètres
 
-## Compatibilité vérifiée le 18 octobre 2026
+**Proposition graphique v003 à valider. Aucun raccordement effectué.**
 
-Le contrat Claude audité (`d044eb9`) fournit les périmètres et les rattachements de référentiels, mais aucun parent/enfant ni héritage. Le brouillon d’organigramme reste une simulation à valider. Ne pas ajouter `parentId` ou `cascade` au corps strict de l’API. Préparer le contrat de hiérarchie, droits des descendants et règles d’héritage avec le responsable métier avant raccordement.
+## Correction du constat de compatibilité — 19 octobre 2026
 
-Voir l’[audit de convergence](../../AUDIT-CONVERGENCE.md) et le [prompt courant](../../_dossiers-transversaux/socle-astra/PROMPT-IMPLEMENTATION.md).
+L’ancienne note fondée sur `d044eb9` indiquait l’absence de parent/enfant. Elle est remplacée par la lecture du snapshot Claude `284cb1e4ffbaee37e0952073db5659c2257c888e`, sans modification ni exécution dans cet espace.
 
-**État : intégration de cette proposition à suivre.** Le déplacement des dossiers n’implémente pas la maquette dans le moteur métier existant.
+| Élément vérifié dans le code source | Contrat constaté |
+| --- | --- |
+| `packages/shared/src/grc.ts` | `SmsiCreate` et `SmsiUpdate` acceptent `parentId`, `entityKind`, `inheritFrameworks`. `entityKind` : organisation, entite, perimetre. Schémas stricts. |
+| `packages/shared/src/hierarchie-perimetres.ts` | Parent sans cycle, profondeur maximale 8. Héritage explicite à chaque niveau ; rattachement local prioritaire pour le même référentiel, même désactivé. |
+| `apps/api/src/routes/grc.ts` | GET/POST `/api/grc/smsis` ; PATCH `/api/grc/smsis/:smsi`, version attendue dans `If-Match`. |
+| `apps/api/src/grc/core.ts` | Création réservée à `pilotage:administrer`, contrôle d’accès en écriture au parent, journalisation. |
+| `apps/api/test/perimetres-hierarchie.test.ts` | Tests présents pour cycles, accès, héritage, exceptions locales et couverture. **Sources lues, tests non exécutés dans ce travail.** |
 
-1. Lire la [maquette courante](../maquettes/v001-reference-08/README.md) et sa fiche de version.
-2. Lire le [dossier technique commun](../../_dossiers-transversaux/socle-astra/README.md), ses invariants et l’inventaire des menus.
-3. Appliquer uniquement le périmètre demandé pour cette fonctionnalité ; rattacher les éléments visuels aux objets et permissions réels.
-4. Exécuter les [contrôles de la fonctionnalité](../tests/README.md), puis documenter le SHA, les changements et les résultats.
+Les fichiers de référence sont consultables au [commit Claude examiné](https://github.com/yousername-ha/suivi-audits/tree/284cb1e4ffbaee37e0952073db5659c2257c888e). Vérifier à nouveau les contrats sur le commit de l’intégration.
 
-L’agent chargé de l’intégration doit travailler et publier exclusivement sur **sa propre branche dédiée**, en utilisant `legacy` comme référence en lecture. Le [prompt commun](../../_dossiers-transversaux/socle-astra/PROMPT-IMPLEMENTATION.md) conserve cette restriction. Cette réorganisation ne lance aucune intégration, CI, fusion ou mise en production.
+## Consignes pour la future intégration
 
-La cartographie dynamique reste protégée. Les exemples ANSSI ou fictifs des maquettes ne sont pas des données de production.
+1. Partir des [visuels v003](../maquettes/v003-gestion-graphique/README.md) une fois validés. Le dossier reste en développement jusque-là.
+2. Réutiliser les fonctions partagées existantes ; ne pas recopier le modèle de démonstration JS dans le domaine métier. Utiliser les UUID réels et le versionnement serveur.
+3. Présenter les rattachements effectifs et leur origine ; ne pas confondre héritage, conformité, certification et droits d’accès. Une coupure d’héritage n’efface pas les preuves ou écarts historiques.
+4. Vérifier les contrats propres à chaque registre pour les associations multiples. Dédupliquer par identité d’objet. L’agrégation parent/enfant doit rester un choix explicite et respecter les accès serveur.
+5. Le responsable de suivi n’appartient pas au schéma strict `SmsiCreate` lu : résoudre son contrat avant de l’envoyer. La relation externe fournisseur et ses autorisations restent à confirmer ; ne pas détourner `parentId` pour représenter une relation de service.
+6. Conserver le menu et le bandeau fixes, les fenêtres centrées, le graphique défilant et les états d’erreur, vide, accès refusé, conflit de version et chargement. Le masquage d’un bouton ne remplace pas les contrôles serveur.
+
+La source de rendu couvre seulement les cas de démonstration ; les contrôles d’héritage complet, déplacement, suppression, droits et API restent à tester lors de l’intégration. Le graphique à positions fixes est une référence visuelle, pas le moteur d’agencement final.
+
+L’IA de codage travaille exclusivement sur **sa propre branche** ; `legacy` lui sert de référence en lecture. Aucun changement dans Claude, aucune fusion, CI, mise en production ou modification de la cartographie dynamique n’est autorisé par cette livraison.

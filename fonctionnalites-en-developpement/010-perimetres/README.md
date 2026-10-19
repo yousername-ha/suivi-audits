@@ -2,13 +2,12 @@
 
 | Élément | Accès |
 | --- | --- |
-| Maquette courante | [v001-reference-08](maquettes/v001-reference-08/README.md) |
-| État de la maquette | **À valider** |
-| Contrôles et recette | [tests/](tests/README.md) |
-| Consignes d’intégration | [implementation/](implementation/README.md) |
+| Proposition courante | [v003 · Gestion graphique](maquettes/v003-gestion-graphique/README.md) |
+| Images | [5 aperçus PNG](maquettes/v003-gestion-graphique/visuels/) |
+| État | **À valider — aucune intégration backend** |
+| Contrôles | [Tests et limites](tests/README.md) |
+| Consignes d’intégration | [Contrats vérifiés](implementation/README.md) |
 
-Ce statut concerne la proposition visuelle, pas l’existence des fonctions historiques dans l’application.
+Organigramme, création d’enfants, référentiels hérités, écarts et registres partagés. Le fournisseur externe reste une hypothèse à valider. Livraison visuelle sans nouveau ZIP/BAT, conformément à la demande courante.
 
-[Catalogue des fonctionnalités](../README.md) · [Dossier technique commun](../_dossiers-transversaux/socle-astra/README.md).
-
-[Liste numérotée des fonctionnalités](../../LISTE-FONCTIONNALITES.md).
+[Historique des maquettes](maquettes/README.md) · [Catalogue](../README.md) · [Liste numérotée](../../LISTE-FONCTIONNALITES.md).

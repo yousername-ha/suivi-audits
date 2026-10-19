@@ -1,0 +1,40 @@
+{
+  "status": "PASS",
+  "checks": [
+    "4 cartes ; héritage explicite B ; référentiels locaux C",
+    "défilement du contenu sans déplacement du menu ni du bandeau",
+    "union A+B : 3 plans distincts ; PA-01 commun compté une seule fois",
+    "fenêtre centrée et contenue dans le viewport",
+    "désactivation de l’héritage B sans mutation des référentiels A",
+    "création en mémoire, héritage du parent, texte saisi échappé",
+    "rechargement : aucune persistance ni écriture métier",
+    "390 px : menu repliable, graphique défilant sans débordement de page",
+    "aucune erreur JavaScript pendant les parcours"
+  ],
+  "date": "2026-10-19",
+  "version": "v003-gestion-graphique",
+  "environment": "Chromium headless / Playwright / Linux",
+  "viewports": [
+    [
+      1600,
+      900
+    ],
+    [
+      390,
+      844
+    ]
+  ],
+  "captureViewport": [
+    1600,
+    1060
+  ],
+  "backendIntegrationTested": false,
+  "claudeTestsExecuted": false,
+  "userValidation": null,
+  "sourceSha256": {
+    "index.html": "e3725ccd830d109ec2d28fb8349a8c8ce297771588673fd4523197c1eb8a128d",
+    "perimetres.css": "0094621b0e3d18c66bc8f1167ca891817d10393767f14a4afe9bf4aa8d1a2700",
+    "perimetres.js": "7b014cbf395b12d543c1b22fe18aa8f36a8c4085f626716aec4953d355974481",
+    "technique/verifier.cjs": "6af469dd1392912cbf2a3340f422328c165ceb7ba6d43e53913bb32e4be29af8"
+  }
+}

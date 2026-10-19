@@ -1,0 +1,39 @@
+{
+  "fonctionnalite": "010-perimetres",
+  "version": "v003-gestion-graphique",
+  "date": "2026-10-19",
+  "statut": "a-valider",
+  "validationUtilisateur": null,
+  "type": "visuels-et-source-de-rendu",
+  "zip": null,
+  "hypotheseEnAttente": "Fournisseur : périmètre externe relié à A ou enfant de A ?",
+  "referenceClaudeLectureSeule": "284cb1e4ffbaee37e0952073db5659c2257c888e",
+  "integrationBackend": false,
+  "visuels": [
+    {
+      "fichier": "visuels/01-vue-graphique.png",
+      "titre": "Vue graphique de l’organisation",
+      "sha256": "e65db12ed05a7dc5f39369e20a2da5e991adf19f899960da544c9151bc64d8ea"
+    },
+    {
+      "fichier": "visuels/02-detail-perimetre.png",
+      "titre": "Détail d’un périmètre",
+      "sha256": "232b352361620ee2a5e964e72220337b4c6b00c2cf5e814c31104f3cc88b898f"
+    },
+    {
+      "fichier": "visuels/03-creation-enfant.png",
+      "titre": "Création d’un périmètre enfant",
+      "sha256": "27144f721016c7273b356ef2521ab53dbd4a68c1f4e30c8f6e0f53286237eaa3"
+    },
+    {
+      "fichier": "visuels/04-heritage-referentiels.png",
+      "titre": "Configuration de l’héritage",
+      "sha256": "1820acf4964568bbe85f93b1982ebd359e70afd42623468fcf2b6dfc30512c1a"
+    },
+    {
+      "fichier": "visuels/05-plans-associes.png",
+      "titre": "Plans d’action associés à un périmètre",
+      "sha256": "347fd6fce6c6d16dadbe205142d91047c19281aee1ecdffb25c358c6f07bae3b"
+    }
+  ]
+}

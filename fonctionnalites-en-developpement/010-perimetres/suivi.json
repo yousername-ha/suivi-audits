@@ -9,7 +9,13 @@
       "date": "2026-10-14",
       "etape": "en-developpement",
       "motif": "Organisation demandée par l’utilisateur ; proposition encore à valider."
+    },
+    {
+      "date": "2026-10-19",
+      "etape": "en-developpement",
+      "motif": "Proposition graphique issue du croquis : cinq visuels, héritage et gestion partagée ; fournisseur externe à confirmer. Aucun ZIP/BAT ni intégration backend."
     }
   ],
-  "numero": "010"
+  "numero": "010",
+  "maquetteCourante": "maquettes/v003-gestion-graphique"
 }
