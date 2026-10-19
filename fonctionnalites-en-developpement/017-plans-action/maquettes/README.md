@@ -1,9 +1,9 @@
 # Maquettes — Plans d’action
 
-| Version | État | Type |
+| Version | État | Contenu |
 | --- | --- | --- |
-| [v001-reference-08](v001-reference-08/README.md) | À valider | Aperçus statiques |
+| [v003-timeline-responsables](v003-timeline-responsables/README.md) | À valider · courante | Timeline, Kanban, Liste & détail, responsables typés |
+| [v002-registres-lies](v002-registres-lies/README.md) | Historique | Plans et registres d’écarts liés |
+| [v001-reference-08](v001-reference-08/README.md) | Historique | Référence visuelle 08 |
 
-La prochaine proposition prendra un nouveau numéro `v002-…`, avec ses captures et sa fiche `version.json`. Une validation utilisateur doit être consignée explicitement ; des tests techniques réussis ne valent pas validation visuelle.
-
-[Version courante v002 — plans et registres liés](v002-registres-lies/README.md).
+Prochaine version : v004. Conserver l’historique ; les tests ne valent pas validation utilisateur.

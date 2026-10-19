@@ -229,7 +229,7 @@
     {
       "id": "plans-action",
       "titre": "Plans d’action",
-      "maquetteCourante": "fonctionnalites-en-developpement/017-plans-action/maquettes/v002-registres-lies",
+      "maquetteCourante": "fonctionnalites-en-developpement/017-plans-action/maquettes/v003-timeline-responsables",
       "statutMaquette": "a-valider",
       "implementation": "a-suivre",
       "tests": "fonctionnalites-en-developpement/017-plans-action/tests/README.md",

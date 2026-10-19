@@ -12,6 +12,10 @@ Suivre aussi la [recette commune](../../_dossiers-transversaux/socle-astra/RECET
 
 ## Validation utilisateur
 
-**Non consignée pour cette version dans cette réorganisation.** Ajouter la décision explicite et sa date dans `maquettes/v001-reference-08/version.json` ; ne pas transformer automatiquement des tests réussis en validation.
+**Non consignée pour cette version dans cette réorganisation.** Ajouter la décision explicite et sa date dans le `version.json` de la version concernée ; ne pas transformer automatiquement des tests réussis en validation.
 
 Recette de la v002 partagée : [21 contrôles du prototype 021](../../021-registres-ecarts/tests/README.md).
+
+## v003 — 19 octobre 2026
+
+[27 contrôles navigateur réussis](../maquettes/v003-timeline-responsables/technique/verification.json) ; [script](../maquettes/v003-timeline-responsables/technique/verifier.cjs). Filtres, formulaires, affectation typée, synchronisation des vues, bornes mensuelles, texte échappé, défilements et fenêtre mobile. Les sources consultées côté Claude n’ont pas été exécutées. Aucune validation du backend ou des autorisations serveur.

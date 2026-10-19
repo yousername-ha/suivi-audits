@@ -14,7 +14,13 @@
       "date": "2026-10-14",
       "etape": "en-developpement",
       "motif": "Maquette v002 partagée avec 021 : plans multiples et liens vers plusieurs registres d’écarts."
+    },
+    {
+      "date": "2026-10-19",
+      "etape": "en-developpement",
+      "motif": "v003 : style des tâches récurrentes, timeline par plan, quatre statuts, responsable personne/groupe/fonction ; 6 aperçus, 27 contrôles locaux. Proposition à valider, sans ZIP/BAT ni intégration backend."
     }
   ],
-  "numero": "017"
+  "numero": "017",
+  "maquetteCourante": "v003-timeline-responsables"
 }
