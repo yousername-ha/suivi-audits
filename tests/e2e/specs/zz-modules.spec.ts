@@ -134,9 +134,7 @@ test('B1 : désactivation confirmée, cache renouvelé et réactivation des donn
   try {
     await page.goto('/admin/system');
     const card = page.getByRole('heading', { name: 'Activation des modules', exact: true }).locator('..');
-    await expect(
-      await destinationDocuments(page),
-    ).toBeVisible();
+    await expect(await destinationDocuments(page)).toBeVisible();
     await card.getByRole('checkbox', { name: 'Activer Documents et liens', exact: true }).uncheck();
     await card.getByRole('button', { name: 'Prévisualiser les conséquences' }).click();
     await expect(card.getByText('Désactivation : Documents et liens', { exact: true })).toBeVisible();
@@ -148,9 +146,7 @@ test('B1 : désactivation confirmée, cache renouvelé et réactivation des donn
       .toContain('documents');
     off = true;
     expect((await ctx.request.get('/api/documents')).status()).toBe(409);
-    await expect(
-      await destinationDocuments(page),
-    ).toHaveCount(0);
+    await expect(await destinationDocuments(page)).toHaveCount(0);
     expect((await (await ctx.request.get('/api/auth/me')).json()).stage).toBe('ok');
     await expect(card.getByRole('checkbox', { name: 'Activer Documents et liens', exact: true })).not.toBeChecked();
     await card.getByRole('checkbox', { name: 'Activer Documents et liens', exact: true }).check();
@@ -163,9 +159,7 @@ test('B1 : désactivation confirmée, cache renouvelé et réactivation des donn
       .not.toContain('documents');
     off = false;
     expect((await ctx.request.get('/api/documents')).status()).toBe(200);
-    await expect(
-      await destinationDocuments(page),
-    ).toBeVisible();
+    await expect(await destinationDocuments(page)).toBeVisible();
     expect(await (await ctx.request.get('/api/suivi/etat')).json()).toEqual(before);
     expect(problems).toEqual([]);
   } finally {
