@@ -37,7 +37,7 @@ test('Registres : registre créé, périmètre ajouté après aperçu de l’imp
     // Création.
     await page.getByRole('button', { name: 'Nouveau registre' }).click();
     const creation = page.getByRole('dialog');
-    await creation.getByLabel('Nom', { exact: true }).fill(nom);
+    await creation.getByRole('textbox', { name: /^Nom/ }).fill(nom);
     await creation.getByRole('combobox', { name: 'Périmètre de référence' }).click();
     await page.getByRole('option').first().click();
     await creation.getByRole('button', { name: 'Créer', exact: true }).click();
