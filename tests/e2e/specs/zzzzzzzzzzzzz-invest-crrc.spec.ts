@@ -144,19 +144,19 @@ test('Investissements et CRRC : lignes, comparaison, contrat, sauvegardes, resta
     // Restauration guidée.
     await page.goto('/pilotage/crrc-restaurations');
     await page.getByRole('button', { name: 'Sélectionner NAS compatibles S3' }).click();
-    await page.getByRole('textbox', { name: 'Ressource' }).click();
+    await page.getByRole('combobox', { name: 'Ressource' }).click();
     await page.getByRole('option').first().click();
-    await page.getByRole('textbox', { name: 'Point de restauration' }).click();
+    await page.getByRole('combobox', { name: 'Point de restauration' }).click();
     await page.getByRole('option').first().click();
     await page.getByRole('button', { name: 'Continuer →' }).click();
     await page.getByRole('button', { name: 'Continuer →' }).click();
     await page.getByRole('button', { name: 'Lancer la restauration' }).click();
     await page.getByRole('tab', { name: /^Historique/ }).click();
-    await expect(page.getByRole('textbox', { name: /^Statut de la restauration/ })).toHaveValue('Demandée');
+    await expect(page.getByRole('combobox', { name: /^Statut de la restauration/ })).toHaveValue('Demandée');
 
     // Alertes : résolution.
     await page.goto('/pilotage/crrc-alertes');
-    await page.getByRole('textbox', { name: 'Statut de l’alerte ALR-1' }).click();
+    await page.getByRole('combobox', { name: 'Statut de l’alerte ALR-1' }).click();
     await page.getByRole('option', { name: 'Résolue', exact: true }).click();
     await expect(page.getByText('Aucune alerte.')).toBeVisible();
     expect(problems).toEqual([]);

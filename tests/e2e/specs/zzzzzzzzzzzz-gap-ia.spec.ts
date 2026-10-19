@@ -110,10 +110,10 @@ test('GAP guidé, fiche, action ; conformité IA : usage, scénario, plan', asyn
     // Fiche de l'application : point partiel, action du registre des écarts.
     const fiche = page.getByRole('dialog');
     await expect(fiche.getByText(/^APP\d{2} — Service fictif/)).toBeVisible();
-    await expect(fiche.getByRole('textbox', { name: 'État du point G10' })).toHaveValue('Partiel');
+    await expect(fiche.getByRole('combobox', { name: 'État du point G10' })).toHaveValue('Partiel');
     await fiche.getByRole('textbox', { name: 'Constat du point G03' }).fill('Constat fictif');
     await fiche.getByRole('textbox', { name: 'Constat du point G03' }).blur();
-    await fiche.getByRole('textbox', { name: 'État du point G03' }).click();
+    await fiche.getByRole('combobox', { name: 'État du point G03' }).click();
     await page.getByRole('option', { name: 'Non conforme', exact: true }).click();
     await expect(fiche.getByText(/Plan d’action GAP-\d+/)).toBeVisible();
     await expect(fiche.getByText(/Action GAP-\d+/).first()).toBeVisible();
@@ -121,7 +121,7 @@ test('GAP guidé, fiche, action ; conformité IA : usage, scénario, plan', asyn
     await fiche.getByRole('textbox', { name: 'Point de contrôle' }).fill('Point ajouté fictif');
     await fiche.getByRole('textbox', { name: 'Point de contrôle' }).blur();
     await fiche.getByRole('button', { name: 'Ajouter', exact: true }).click();
-    await fiche.getByRole('textbox', { name: 'État du point C1' }).click();
+    await fiche.getByRole('combobox', { name: 'État du point C1' }).click();
     await page.getByRole('option', { name: 'Non conforme', exact: true }).click();
     await fiche.getByRole('button', { name: 'Créer l’action dans le registre des écarts' }).click();
     await expect(fiche.getByRole('button', { name: 'Créer l’action dans le registre des écarts' })).toHaveCount(0);
@@ -133,7 +133,7 @@ test('GAP guidé, fiche, action ; conformité IA : usage, scénario, plan', asyn
     await expect(page.getByText('Contexte fictif de la conformité IA')).toBeVisible();
     await page.getByRole('tab', { name: 'Usages de l’IA' }).click();
     await page.getByRole('button', { name: 'Ajouter un usage' }).click();
-    const presence = page.getByRole('textbox', { name: /^IA présente — EXT-IA-/ }).first();
+    const presence = page.getByRole('combobox', { name: /^IA présente — EXT-IA-/ }).first();
     await expect(presence).toHaveValue('À vérifier');
     await presence.click();
     await page.getByRole('option', { name: 'Oui', exact: true }).click();
@@ -142,15 +142,15 @@ test('GAP guidé, fiche, action ; conformité IA : usage, scénario, plan', asyn
     // Évaluation : la probabilité modifie l'indice (E01 : maturité 2, DSCP, probabilité 3 → 4).
     await page.getByRole('tab', { name: 'Évaluation des scénarios' }).click();
     await expect(page.getByText('Scénario fictif')).toBeVisible();
-    await page.getByRole('textbox', { name: 'Probabilité — E01' }).click();
+    await page.getByRole('combobox', { name: 'Probabilité — E01' }).click();
     await page.getByRole('option', { name: '5', exact: true }).click();
-    await expect(page.getByRole('textbox', { name: 'Probabilité — E01' })).toHaveValue('5');
+    await expect(page.getByRole('combobox', { name: 'Probabilité — E01' })).toHaveValue('5');
 
     // Plan : une étape terminée passe à 100 %.
     await page.getByRole('tab', { name: 'Plan d’action' }).click();
-    await page.getByRole('textbox', { name: 'Statut de l’étape 1' }).click();
+    await page.getByRole('combobox', { name: 'Statut de l’étape 1' }).click();
     await page.getByRole('option', { name: 'Terminé', exact: true }).click();
-    await expect(page.getByRole('textbox', { name: 'Avancement de l’étape 1' })).toHaveValue('100 %');
+    await expect(page.getByRole('combobox', { name: 'Avancement de l’étape 1' })).toHaveValue('100 %');
     expect(problems).toEqual([]);
   } finally {
     await ctx.close();

@@ -72,19 +72,19 @@ test('Pilotage : objet relié, correspondance revue, indicateurs et rapport comi
       );
     }
     await page.reload();
-    await page.getByRole('textbox', { name: 'Périmètre affiché', exact: true }).click();
+    await page.getByRole('combobox', { name: 'Périmètre affiché', exact: true }).click();
     await page.getByRole('option', { name: smsi.name, exact: true }).click();
     await page.goto('/pilotage/scenarios');
-    await page.getByRole('textbox', { name: 'Type de fiche', exact: true }).click();
+    await page.getByRole('combobox', { name: 'Type de fiche', exact: true }).click();
     await page.getByRole('option', { name: 'Bien support', exact: true }).click();
     await page.getByRole('button', { name: 'Créer bien support', exact: true }).click();
     const dialog = page.getByRole('dialog');
     await dialog.getByLabel('Intitulé', { exact: true }).fill('Bien support lié de recette');
     await dialog.getByLabel('Description', { exact: true }).fill('Objet du socle relié à un processus');
     await dialog.getByRole('tab', { name: 'Liens et justificatifs', exact: true }).click();
-    await dialog.getByRole('textbox', { name: 'Éléments liés', exact: true }).click();
+    await dialog.getByRole('combobox', { name: 'Éléments liés', exact: true }).click();
     await page.getByRole('option', { name: process.name, exact: true }).click();
-    await dialog.getByRole('textbox', { name: 'Éléments liés', exact: true }).press('Escape');
+    await dialog.getByRole('combobox', { name: 'Éléments liés', exact: true }).press('Escape');
     await dialog.getByRole('button', { name: 'Enregistrer', exact: true }).click();
     await expect(dialog).toHaveCount(0);
     const assets = await (await page.request.get(prefix + '/objects?kind=support_asset')).json();
@@ -94,9 +94,9 @@ test('Pilotage : objet relié, correspondance revue, indicateurs et rapport comi
       ['source', 'PSSI-source'],
       ['cible', 'PSSI-cible'],
     ]) {
-      await page.getByRole('textbox', { name: 'Référentiel ' + direction, exact: true }).click();
+      await page.getByRole('combobox', { name: 'Référentiel ' + direction, exact: true }).click();
       await page.getByRole('option', { name: framework!, exact: true }).click();
-      await page.getByRole('textbox', { name: 'Exigence ' + direction, exact: true }).click();
+      await page.getByRole('combobox', { name: 'Exigence ' + direction, exact: true }).click();
       await page.getByRole('option', { name: 'REQ1 · Revue de test', exact: true }).click();
     }
     await page
@@ -165,7 +165,7 @@ test('Pilotage : action réelle, cinq vues synchronisées, historique et clôtur
       timezone: 'Europe/Paris',
     });
     await page.reload();
-    await page.getByRole('textbox', { name: 'Périmètre affiché', exact: true }).click();
+    await page.getByRole('combobox', { name: 'Périmètre affiché', exact: true }).click();
     await page.getByRole('option', { name: smsi.name, exact: true }).click();
     await page.goto('/pilotage/actions');
     await page.getByRole('button', { name: 'Ajouter une action', exact: true }).click();
@@ -176,7 +176,7 @@ test('Pilotage : action réelle, cinq vues synchronisées, historique et clôtur
     await dialog.getByRole('button', { name: 'Enregistrer la fiche', exact: true }).click();
     await expect(dialog).toHaveCount(0);
     for (const name of ['Kanban', 'Calendrier', 'Planning / Gantt', 'Tableau de bord', 'Liste']) {
-      await page.getByRole('textbox', { name: 'Vue synchronisée', exact: true }).click();
+      await page.getByRole('combobox', { name: 'Vue synchronisée', exact: true }).click();
       await page.getByRole('option', { name, exact: true }).click();
       if (name === 'Tableau de bord') await expect(page.getByText('Total', { exact: true })).toBeVisible();
       else if (name === 'Planning / Gantt')
@@ -185,12 +185,12 @@ test('Pilotage : action réelle, cinq vues synchronisées, historique et clôtur
         await expect(page.getByRole('button', { name: 'Action synchronisée de recette', exact: true })).toBeVisible();
     }
     await page.getByRole('button', { name: 'Action synchronisée de recette', exact: true }).click();
-    await dialog.getByRole('textbox', { name: 'État de l’action', exact: true }).click();
+    await dialog.getByRole('combobox', { name: 'État de l’action', exact: true }).click();
     await page.getByRole('option', { name: 'En cours', exact: true }).click();
     await dialog.getByRole('button', { name: 'Enregistrer la fiche', exact: true }).click();
     await expect(dialog).toHaveCount(0);
     await page.getByRole('button', { name: 'Action synchronisée de recette', exact: true }).click();
-    await dialog.getByRole('textbox', { name: 'État de l’action', exact: true }).click();
+    await dialog.getByRole('combobox', { name: 'État de l’action', exact: true }).click();
     await page.getByRole('option', { name: 'Terminée', exact: true }).click();
     await dialog
       .getByLabel('Justification de clôture', { exact: true })
@@ -219,7 +219,7 @@ test('Pilotage : gabarit Excel réel, simulation, import atomique et doublon ref
       timezone: 'Europe/Paris',
     });
     await page.reload();
-    await page.getByRole('textbox', { name: 'Périmètre affiché', exact: true }).click();
+    await page.getByRole('combobox', { name: 'Périmètre affiché', exact: true }).click();
     await page.getByRole('option', { name: smsi.name, exact: true }).click();
     await page.goto('/pilotage/imports');
     const promise = page.waitForEvent('download');
@@ -304,7 +304,7 @@ test('Pilotage : EBIOS RM publié, appréciation conservée, cartographie et exp
       },
     });
     await page.reload();
-    await page.getByRole('textbox', { name: 'Périmètre affiché', exact: true }).click();
+    await page.getByRole('combobox', { name: 'Périmètre affiché', exact: true }).click();
     await page.getByRole('option', { name: smsi.name, exact: true }).click();
     await page.goto('/pilotage/risques');
     await page.getByRole('button', { name: 'Apprécier / réévaluer', exact: true }).click();

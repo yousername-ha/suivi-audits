@@ -2,7 +2,7 @@
    rotation facultative entre les vues. Lecture seule. Accessible avec une session (droit de lecture métier)
    ou depuis un appareil activé par un administrateur (/mur/activer#code). */
 import { Alert, Badge, Button, Center, Group, Loader, Select, Stack, Switch, Text, Title } from '@mantine/core';
-import { useFullscreen } from '@mantine/hooks';
+import { useFullscreenDocument } from '@mantine/hooks';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
@@ -62,7 +62,7 @@ export function MurPage() {
   const [revoque, setRevoque] = useState(false);
   const [onRevoque] = useState(() => () => setRevoque(true));
   const connecte = useFluxMur(onRevoque);
-  const { toggle: pleinEcran, fullscreen } = useFullscreen();
+  const { toggle: pleinEcran, fullscreen } = useFullscreenDocument();
   const [heure, setHeure] = useState(() => new Date());
   const q = useQuery({ queryKey: KEY, queryFn: () => get<SyntheseApi>('/api/mur/synthese'), refetchInterval: 300_000 });
 

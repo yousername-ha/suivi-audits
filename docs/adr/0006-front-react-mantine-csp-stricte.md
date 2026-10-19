@@ -6,7 +6,7 @@
 L'interface doit être moderne, accessible, utilisable au téléphone, en français, et respecter une CSP stricte : `script-src 'self'; style-src 'self'`, sans aucun script ni style en ligne.
 
 ## Décision
-- React 19, Vite, React Router, TanStack Query (cache invalidé par le temps réel) et Mantine 8 (composants accessibles).
+- React 19, Vite, React Router, TanStack Query (cache invalidé par le temps réel) et Mantine 9 (composants accessibles ; les listes déroulantes y portent le rôle `combobox`).
 - Mantine injecte normalement des balises `<style>`, que la CSP interdit. On le configure donc ainsi :
   - `withCssVariables={false}` et `withGlobalClasses={false}`. Les variables du thème et les classes `hiddenFrom`/`visibleFrom` sont générées dans un **fichier CSS statique** (`apps/web/scripts/mantine-css-vars.ts`) ;
   - pas d'`AppShell` : il injecte des styles de points de rupture. La mise en page est faite en CSS (`app.css`) ;

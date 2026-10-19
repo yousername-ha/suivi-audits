@@ -168,7 +168,7 @@ test('préférences d’affichage : enregistrées sur le serveur, appliquées pa
   const a = await context(browser, 1366, 768, 'light');
   const page = await a.newPage();
   await page.goto('/account');
-  await page.getByRole('textbox', { name: 'Taille d’affichage' }).click();
+  await page.getByRole('combobox', { name: 'Taille d’affichage' }).click();
   await page.getByRole('option', { name: '130 %' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-taille', '130');
   await a.close();

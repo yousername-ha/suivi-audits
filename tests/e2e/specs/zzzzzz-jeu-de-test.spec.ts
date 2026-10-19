@@ -78,7 +78,7 @@ test('jeu de test : menu, objectifs, fournisseurs, PESTEL, boîtes, carte des ri
     await expect(page.getByText('SaaS avec MFA')).toBeVisible();
     await capture(page, '07-fournisseurs');
     await page.getByRole('button', { name: 'Filtres', exact: true }).click();
-    await page.getByRole('textbox', { name: 'Situation' }).click();
+    await page.getByRole('combobox', { name: 'Situation' }).click();
     await page.getByRole('option', { name: 'Sans MFA', exact: true }).click();
     await expect(page.getByText('Logiciel de dossiers fictif')).toBeVisible();
     await expect(page.getByText('Hébergeur de données fictif')).toHaveCount(0);

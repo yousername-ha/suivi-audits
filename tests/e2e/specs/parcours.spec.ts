@@ -224,10 +224,10 @@ test('droits : groupe, rôle personnalisé, refus puis accord', async ({ browser
   await a.page.getByRole('button', { name: 'Nouveau groupe' }).click();
   const dlg = a.page.getByRole('dialog');
   await dlg.getByRole('textbox', { name: 'Nom', exact: true }).fill('Équipe de lecture');
-  await dlg.getByRole('textbox', { name: 'Rôles portés par le groupe' }).click();
+  await dlg.getByRole('combobox', { name: 'Rôles portés par le groupe' }).click();
   await a.page.getByRole('option', { name: 'Lecteur', exact: true }).click();
   await dlg.getByRole('textbox', { name: 'Nom', exact: true }).click(); // referme la liste
-  await dlg.getByRole('textbox', { name: 'Membres' }).click();
+  await dlg.getByRole('combobox', { name: 'Membres' }).click();
   await a.page.getByRole('option', { name: /Lectrice/ }).click();
   await dlg.getByRole('textbox', { name: 'Nom', exact: true }).click();
   await dlg.getByRole('button', { name: 'Créer' }).click();
@@ -266,7 +266,7 @@ test('droits : groupe, rôle personnalisé, refus puis accord', async ({ browser
     .getByRole('button', { name: 'Modifier' })
     .click();
   const dlg2 = a.page.getByRole('dialog');
-  await dlg2.getByRole('textbox', { name: 'Rôles portés par le groupe' }).click();
+  await dlg2.getByRole('combobox', { name: 'Rôles portés par le groupe' }).click();
   await a.page.getByRole('option', { name: 'Lecteur et liens' }).click();
   await dlg2.getByRole('textbox', { name: 'Nom', exact: true }).click();
   await dlg2.getByRole('button', { name: 'Enregistrer' }).click();

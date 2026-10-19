@@ -52,15 +52,15 @@ async function scope(page: Page, name: string) {
     timezone: 'Europe/Paris',
   });
   await page.reload();
-  await page.getByRole('textbox', { name: 'Périmètre affiché', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Périmètre affiché', exact: true }).click();
   await page.getByRole('option', { name: s.name, exact: true }).click();
   return '/api/grc/' + s.id;
 }
 async function choose(page: Page, label: string, value: string) {
-  await page.getByRole('textbox', { name: label, exact: true }).click();
+  await page.getByRole('combobox', { name: label, exact: true }).click();
   await page.getByRole('option', { name: value, exact: true }).click();
   if (['Travaux réalisés et justificatifs', 'Éléments liés'].includes(label))
-    await page.getByRole('textbox', { name: label, exact: true }).press('Escape');
+    await page.getByRole('combobox', { name: label, exact: true }).press('Escape');
 }
 test('Pilotage G/H : contrôle, preuve versionnée, constat et action corrective dans les registres', async ({
   browser,
@@ -88,7 +88,7 @@ test('Pilotage G/H : contrôle, preuve versionnée, constat et action corrective
     const proofDialog = page.getByRole('dialog');
     await proofDialog.getByLabel('Intitulé', { exact: true }).fill('Preuve qualité de recette');
     await choose(page, 'Versions des documents à examiner', docTitle + ' · preuve v1');
-    await proofDialog.getByRole('textbox', { name: 'Versions des documents à examiner', exact: true }).press('Escape');
+    await proofDialog.getByRole('combobox', { name: 'Versions des documents à examiner', exact: true }).press('Escape');
     await proofDialog.getByRole('button', { name: 'Enregistrer', exact: true }).click();
     await expect(proofDialog).toHaveCount(0);
     await page.getByRole('button', { name: 'Examiner', exact: true }).click();
@@ -137,7 +137,7 @@ test('Pilotage G/H : contrôle, preuve versionnée, constat et action corrective
       mask: [
         // Les pastilles du menu dépendent des données cumulées par les parcours précédents.
         page.getByRole('navigation', { name: 'Navigation principale' }),
-        page.getByRole('textbox', { name: 'Périmètre affiché', exact: true }),
+        page.getByRole('combobox', { name: 'Périmètre affiché', exact: true }),
         page.locator('.presence-bar'),
         page.locator('.live-badge'),
         page.locator('.app-version'),
@@ -312,7 +312,7 @@ test('Pilotage E : BIA sur téléphone, plan relié et rapport imprimable sans d
   try {
     const root = await scope(page, 'QA-Pilotage-BIA-');
     await page.goto('/pilotage/bia');
-    await expect(page.getByRole('textbox', { name: 'Rubrique du pilotage', exact: true })).toBeVisible();
+    await expect(page.getByRole('combobox', { name: 'Rubrique du pilotage', exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Ajouter analyse d’impact sur l’activité', exact: true }).click();
     const dialog = page.getByRole('dialog');
     await dialog.getByLabel('Intitulé', { exact: true }).fill('BIA activité de recette');
@@ -355,7 +355,7 @@ test('Pilotage E : BIA sur téléphone, plan relié et rapport imprimable sans d
       mask: [
         // Les pastilles du menu dépendent des données cumulées par les parcours précédents.
         page.getByRole('navigation', { name: 'Navigation principale' }),
-        page.getByRole('textbox', { name: 'Périmètre affiché', exact: true }),
+        page.getByRole('combobox', { name: 'Périmètre affiché', exact: true }),
         page.locator('.presence-bar'),
         page.locator('.live-badge'),
         page.locator('.app-version'),
