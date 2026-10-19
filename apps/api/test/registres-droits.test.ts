@@ -226,6 +226,14 @@ describe('registres et droits par ressource', () => {
       ).statusCode,
     ).toBe(403);
     expect((await contributeur.get(`/api/droits/registre/${registre}`)).statusCode).toBe(403);
+    // L'annuaire des titulaires n'est servi qu'à qui gère la ressource.
+    expect((await contributeur.get(`/api/droits/registre/${registre}/titulaires`)).statusCode).toBe(403);
+    const propose = (
+      await admin.get(`/api/droits/registre/${registre}/titulaires?q=${encodeURIComponent('%')}`)
+    ).json();
+    expect(propose.utilisateurs).toEqual([]);
+    const tous = (await admin.get(`/api/droits/registre/${registre}/titulaires`)).json();
+    expect(tous.utilisateurs.map((u: { id: string }) => u.id)).toContain(contributeurId);
   });
 
   it('un lecteur sans aucun droit de module consulte par un droit de lecture attribué', async () => {

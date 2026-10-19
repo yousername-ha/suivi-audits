@@ -124,6 +124,16 @@ export const registresRoutes = [
   }),
   route({
     ...base,
+    method: 'GET',
+    url: '/api/droits/:type/:id/titulaires',
+    summary: 'Utilisateurs et groupes proposables pour un droit (gestionnaires de la ressource)',
+    params: ressource,
+    query: z.object({ q: z.string().max(100).default('') }).strict(),
+    handler: async ({ svc, s, params, query }) =>
+      svc.grc.registres.titulaires(params.type, params.id, (s as Session).user, query.q),
+  }),
+  route({
+    ...base,
     method: 'PUT',
     url: '/api/droits/:type/:id',
     summary: 'Attribuer ou modifier le rôle d’un utilisateur ou d’un groupe',

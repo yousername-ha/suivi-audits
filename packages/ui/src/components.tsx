@@ -185,6 +185,7 @@ export function ConfirmButton({
   size?: string;
   variant?: string;
   disabled?: boolean;
+  'aria-label'?: string;
 }) {
   const [open, setOpen] = useState(false);
   return (

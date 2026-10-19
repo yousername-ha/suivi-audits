@@ -469,6 +469,26 @@ export class GrcRegistres {
       )
     ).rows.map((r) => ({ ...r, grantedAt: r.grantedAt.toISOString() }));
   }
+  /** Utilisateurs et groupes proposables à l'attribution d'un droit : réservé à qui gère la ressource (aucune liste d'annuaire
+      n'est servie aux autres). */
+  async titulaires(type: TypeRessource, id: string, user: SessionUser, q: string) {
+    await this.ressource(type, id, user);
+    const motif = '%' + q.replace(/[\\%_]/g, '\\$&') + '%';
+    const utilisateurs = (
+      await this.g.db.q<{ id: string; libelle: string }>(
+        `SELECT id,coalesce(nullif(display_name,''),username) AS libelle FROM users
+          WHERE NOT disabled AND (username ILIKE $1 OR display_name ILIKE $1) ORDER BY libelle LIMIT 20`,
+        [motif],
+      )
+    ).rows;
+    const groupes = (
+      await this.g.db.q<{ id: string; libelle: string }>(
+        'SELECT id,name AS libelle FROM groups WHERE name ILIKE $1 ORDER BY name LIMIT 20',
+        [motif],
+      )
+    ).rows;
+    return { utilisateurs, groupes };
+  }
   async accorder(type: TypeRessource, id: string, input: DroitBody, user: SessionUser, ip: string) {
     const b = DroitBody.parse(input);
     return this.g.db.tx(async (c) => {
