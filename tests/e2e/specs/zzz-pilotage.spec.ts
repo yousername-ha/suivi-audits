@@ -13,20 +13,34 @@ for (const width of [1440, 390]) {
     try {
       await page.goto('/');
       if (width < 576) await page.getByRole('button', { name: 'Ouvrir le menu' }).click();
+      // Sept familles : la famille se déplie, la destination mène à sa première rubrique.
       await page
         .getByRole('link', { name: /^Pilotage(\s|$)/ })
         .filter({ visible: true })
         .click();
-      await expect(page).toHaveURL(/\/pilotage$/);
+      await page
+        .getByRole('link', { name: /^Synthèse et périmètres(\s|$)/ })
+        .filter({ visible: true })
+        .click();
+      await expect(page).toHaveURL(/\/pilotage\/synthese$/);
       await expect(page.getByRole('heading', { name: 'Synthèse', exact: true })).toBeVisible();
+      await expect(page.getByRole('navigation', { name: 'Rubriques : Synthèse et périmètres' })).toBeVisible();
       if (width < 576) {
         await expect(page.getByRole('dialog')).toHaveCount(0);
         await page.getByRole('button', { name: 'Ouvrir le menu' }).click();
       }
-      await page.getByText('Contexte et responsabilités', { exact: true }).filter({ visible: true }).click();
-      await page.getByRole('link', { name: 'Périmètre et contexte', exact: true }).filter({ visible: true }).click();
+      await page.getByRole('link', { name: 'Organisation', exact: true }).filter({ visible: true }).click();
+      await page
+        .getByRole('link', { name: 'Contexte de l’organisation', exact: true })
+        .filter({ visible: true })
+        .click();
       await expect(page).toHaveURL(/\/pilotage\/contexte$/);
       await expect(page.getByRole('heading', { name: 'Périmètre et contexte', exact: true })).toBeVisible();
+      await page
+        .getByRole('navigation', { name: 'Rubriques : Contexte de l’organisation' })
+        .getByRole('link', { name: 'Parties intéressées' })
+        .click();
+      await expect(page).toHaveURL(/\/pilotage\/parties$/);
       expect(problems).toEqual([]);
     } finally {
       await ctx.close();
