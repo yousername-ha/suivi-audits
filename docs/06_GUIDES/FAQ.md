@@ -12,8 +12,8 @@ compatibilité, sans imposer ce parcours à l’utilisateur.
 
 L’écran /legacy est retiré (ADR 0042). Ses données sont dans les tables de la plateforme ; l’outil
 autonome reste téléchargeable, testable, sur la branche `archive/outil-legacy-autonome`. Les exports
-Excel sont dans « Exports Excel » ; ReCyF, le pronostic d’audit en export, le clausier fournisseurs et
-le GAP applications en export Excel ne sont pas encore repris.
+Excel (douze groupes plus le GAP applications, dont le pronostic de l’audit et les évaluations par le clausier) sont dans
+« Exports Excel » ; ReCyF n’a pas d’export dédié, la page Couverture le remplace.
 
 ## Une action terminée réduit-elle le risque résiduel ?
 

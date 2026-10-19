@@ -41,7 +41,7 @@ paramètres, administration (comptes, groupes, rôles, sessions, journal, versio
 - **Revue de direction** : compte rendu Word, support PowerPoint et classeur Excel générés par le serveur.
 - Import et export JSON au format historique (schéma 15), versions de l'état et restauration (administration).
 
-Pas encore repris en export : pronostic de l'audit, référentiel ReCyF, évaluations fournisseurs (clausier), GAP applications.
+Le pronostic de l'audit, les évaluations fournisseurs (clausier) et le GAP applications sont inclus. Le référentiel ReCyF n'a pas d'export dédié : la page Couverture et les référentiels natifs le remplacent.
 
 ## Droits et sécurité
 

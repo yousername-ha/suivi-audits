@@ -27,6 +27,8 @@ test('Exports Excel : un groupe en classique et en pro, export complet', async (
   };
   expect(await telecharger('Excel classique : Écarts et actions')).toMatch(/^export-ec-std-\d{4}-\d{2}-\d{2}\.xlsx$/);
   expect(await telecharger('Excel pro : Écarts et actions')).toMatch(/^export-ec-pro-\d{4}-\d{2}-\d{2}\.xlsx$/);
+  expect(await telecharger('Excel classique : GAP — Applications')).toMatch(/^export-apps-std-/);
+  expect(await telecharger("Excel pro : Gestion de l'audit")).toMatch(/^export-audit-pro-/);
   expect(await telecharger('Excel pro : export complet')).toMatch(/^export-all-pro-/);
   expect(problems).toEqual([]);
   await ctx.close();
