@@ -1,6 +1,28 @@
 /* Cœur de l'outil de suivi (listes) repris en tables (ADR 0040, lot H2d). Mêmes colonnes que la migration 026 et le schéma
    Drizzle ; à modifier ensemble. */
-import type { CollectionSpec } from './collection.js';
+import type { CollectionSpec, ListeSpec } from './collection.js';
+
+/** Tâches d'un écart (migration 028) : table liée à `suivi_ecarts`. */
+const TACHES_ECART: ListeSpec = {
+  table: 'suivi_ecarts_taches',
+  cols: [
+    { f: 'id', c: 'id', t: 'text' },
+    { f: 't', c: 't', t: 'text' },
+    { f: 'done', c: 'done', t: 'bool' },
+    { f: 'createdAt', c: 'created_iso', t: 'text' },
+  ],
+};
+/** Valeurs d'un indicateur (migration 028) : table liée à `suivi_indicateurs`. */
+const VALEURS_INDICATEUR: ListeSpec = {
+  table: 'suivi_indicateurs_valeurs',
+  cols: [
+    { f: 'id', c: 'id', t: 'text' },
+    { f: 'date', c: 'date', t: 'text' },
+    { f: 'v', c: 'v', t: 'num' },
+    { f: 'note', c: 'note', t: 'text' },
+    { f: 'hist', c: 'hist', t: 'text' },
+  ],
+};
 
 export const COLLECTIONS_COEUR: readonly CollectionSpec[] = [
   {
@@ -43,7 +65,7 @@ export const COLLECTIONS_COEUR: readonly CollectionSpec[] = [
       { f: 'text', c: 'text', t: 'text' },
       { f: 'desc', c: 'description', t: 'text' },
       { f: 'action', c: 'action', t: 'text' },
-      { f: 'tasks', c: 'tasks', t: 'json' },
+      { f: 'tasks', c: 'tasks', t: 'json', enfants: TACHES_ECART },
       { f: 'comment', c: 'comment', t: 'text' },
       { f: 'items', c: 'items', t: 'json' },
       { f: 'owner', c: 'owner', t: 'text' },
@@ -99,7 +121,7 @@ export const COLLECTIONS_COEUR: readonly CollectionSpec[] = [
       { f: 'lastReview', c: 'last_review', t: 'text' },
       { f: 'due', c: 'due', t: 'text' },
       { f: 'owner', c: 'owner', t: 'text' },
-      { f: 'values', c: 'valeurs', t: 'json' },
+      { f: 'values', c: 'valeurs', t: 'json', enfants: VALEURS_INDICATEUR },
       { f: 'dir', c: 'dir', t: 'text' },
       { f: 'freq', c: 'freq', t: 'text' },
       { f: 'calc', c: 'calc', t: 'text' },

@@ -46,6 +46,16 @@ tables. Conséquences : verrou global, aucune contrainte d'intégrité, aucune r
    étrangères. Les identifiants restent des textes tant que le module cible n'est pas lui-même repris. Les dates restent des textes
    (valeurs historiques parfois invalides) jusqu'à la normalisation de chaque module.
 
+10. **Sous-listes en tables liées** (lot H2f, migration 028) : une colonne `json` d'une collection peut déclarer `enfants`, une
+   table liée par `parent_seq` (clé étrangère, suppression en cascade) avec les mêmes règles que les collections : colonnes
+   typées nullables, `extra`, entrée non objet conservée (`extra.brut`), ordre (`position`). Une liste non vide est rangée dans la
+   table liée et la colonne du parent reste NULL ; une liste vide, ou une valeur d'un autre type, reste dans la colonne du parent ;
+   à la lecture, les lignes liées l'emportent, sinon la colonne. Les sous-listes peuvent à leur tour porter des sous-listes
+   (lecture et écriture récursives). Premières reprises : tâches d'un écart (`suivi_ecarts_taches`) et valeurs d'un indicateur
+   (`suivi_indicateurs_valeurs`). La migration copie sans toucher aux colonnes d'origine ; une version antérieure qui réécrit la
+   table parente supprime les lignes liées par cascade, donc ne lit jamais de lignes obsolètes. Un test compare la copie SQL et
+   l'écriture par la correspondance sur des données atypiques (`reprise-sous-listes.test.ts`).
+
 ## Conséquences
 
 - Les tests qui amorçaient un module par `PUT /api/legacy/state` doivent amorcer via la correspondance du module.
