@@ -10,6 +10,7 @@ export default async function setup() {
     throw new Error(
       `PostgreSQL de test injoignable (${(e as Error).message}). ` +
         'Lancer : docker run -d --name pgtest -e POSTGRES_PASSWORD=test -p 127.0.0.1:55432:5432 postgres:18-alpine',
+      { cause: e },
     );
   }
   const exists = await c.query('SELECT 1 FROM pg_roles WHERE rolname=$1', [APP_ROLE]);

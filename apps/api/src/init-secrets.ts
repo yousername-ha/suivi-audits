@@ -81,7 +81,7 @@ export function typeMontage(point: string, mountinfo: string): string | null {
 function controlerEmplacement(donnees: string, hote: string, projet: string | undefined) {
   const refus = cheminRefuse(hote);
   if (refus) arret(refus);
-  let mi = '';
+  let mi: string;
   try {
     mi = fs.readFileSync('/proc/self/mountinfo', 'utf8');
   } catch {

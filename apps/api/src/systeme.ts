@@ -60,7 +60,7 @@ export interface MiseAJour {
 /** Rapports de mise à jour (DATA_DIR/etat/mises-a-jour/*.json), du plus récent au plus ancien. */
 export function readUpdates(etatDir: string, max = 20): MiseAJour[] {
   const dir = path.join(etatDir, 'mises-a-jour');
-  let files: string[] = [];
+  let files: string[];
   try {
     files = readdirSync(dir).filter((f) => /^[\w.-]+\.json$/.test(f));
   } catch {
@@ -93,7 +93,7 @@ export function systemStatus(cfg: Config, now = new Date()) {
   const reussie = readJson(path.join(etat, 'sauvegardes', 'derniere-reussie.json'));
   const dispo = readJson(path.join(etat, 'version-disponible.json'));
   const ageH = reussie?.date ? (now.getTime() - new Date(str(reussie.date)).getTime()) / 3600e3 : null;
-  let disque: { libreOctets: number; totalOctets: number } | null = null;
+  let disque: { libreOctets: number; totalOctets: number } | null;
   try {
     const s = statfsSync(etat);
     disque = { libreOctets: s.bavail * s.bsize, totalOctets: s.blocks * s.bsize };

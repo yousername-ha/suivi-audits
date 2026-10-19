@@ -59,7 +59,7 @@ const systemRoutes = (all: () => RouteDef[]) => [
       // Uniquement depuis le conteneur lui-même (docker compose exec app …), jamais au travers du frontal.
       if (!/^(127\.0\.0\.1|::1|::ffff:127\.0\.0\.1)$/.test(req.raw.socket.remoteAddress ?? ''))
         throw new HttpError(404, 'Introuvable.');
-      let base = false;
+      let base: boolean;
       let attente: string[] = [];
       try {
         await svc.db.q('SELECT 1');
