@@ -69,7 +69,8 @@ test('Écart → audit d’origine → retour à la liste ; Timeline avec pério
     await expect(page).toHaveURL(/\/pilotage\/audits/);
     const fiche = page.getByRole('dialog');
     await expect(fiche.getByRole('textbox', { name: 'Intitulé' })).toHaveValue(nomAudit);
-    await fiche.getByRole('button', { name: 'Fermer' }).click();
+    await page.keyboard.press('Escape');
+    await expect(fiche).toBeHidden();
     await page.getByRole('link', { name: 'Retour à la page précédente' }).click();
     await expect(page).toHaveURL(/\/pilotage\/amelioration/);
     await expect(page.getByRole('textbox', { name: 'Rechercher', exact: true })).toHaveValue('contextuel');
