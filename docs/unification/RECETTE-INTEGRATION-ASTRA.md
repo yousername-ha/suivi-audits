@@ -52,13 +52,18 @@ Légende : **Présent** (parcours vérifié, accès et refus compris) · **Parti
 
 ## Commandes exécutées
 
-Sur le commit de la version, avec Node 24 en local et PostgreSQL 18 (conteneur) :
+Sur le commit de code `5d95560` (branche `claude-suivi-smsi`), avec Node 24 en local et PostgreSQL 18 (conteneur) :
 
 ```
 pnpm install --frozen-lockfile
-pnpm lint && pnpm format:check && pnpm -r typecheck
-pnpm test                       # shared, ui, web, API sur PostgreSQL 18
-# pile Docker complète (images construites depuis le commit), Playwright 1.56.1 dans l'image de la CI ; reproduit en local puis rejoué par le job « Images, sécurité et pile complète »
+prettier --check . ; eslint . --max-warnings 0 ; tsc --noEmit (shared, API, web)      # propres
+vitest : shared 507, ui 166, web 54, API 595 (71 fichiers, PostgreSQL 18)             # tous réussis
+node --test scripts/tests/publication.test.mjs ; verifier-changelog.mjs ; test_updates.py   # réussis
+# pile Docker complète construite depuis le commit, Playwright 1.56.1 dans l'image de la CI :
+#   suite complète : 187 parcours réussis, 2 ignorés, 3 échecs — les trois nouveaux parcours « menu au clavier »
+#   (attente erronée : Entrée déplie une famille, il n'y mène pas) et « contexte de retour » (mauvaise adresse de
+#   rubrique) ; corrigés, rejoués avec l'installation : 11 réussis ; les captures de l'écran Administration
+#   (onglet « Fonctions ») ont été régénérées.
 ```
 
-Résultats consignés dans la section de version du [journal des modifications](../../CHANGELOG.md) et dans les exécutions de CI de la pull request correspondante (six contrôles).
+Limite de cette preuve : la suite complète n'a pas été rejouée d'un seul tenant après les deux corrections de parcours ; le job « Images, sécurité et pile complète » de la pull request le fait sur le commit exact. Les résultats de CI sont consignés dans la pull request correspondante (six contrôles) et dans la section de version du [journal des modifications](../../CHANGELOG.md).
