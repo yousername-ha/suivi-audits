@@ -76,11 +76,14 @@ export function lignesCompteurs(
 
 export function CartesPerimetres({
   cartes,
+  total,
   affiche,
   onChoisir,
   onCreerEnfant,
 }: {
   cartes: readonly CartePerimetre[];
+  /** Total sans doublon sur l'ensemble des périmètres accessibles (jamais la somme des cartes). */
+  total?: CartePerimetre['compteurs'];
   affiche: string;
   onChoisir: (id: string) => void;
   /** Absent : la personne ne peut pas créer de périmètre. */
@@ -89,78 +92,96 @@ export function CartesPerimetres({
   const { places, largeur, hauteur } = disposer(cartes);
   if (!places.length) return <Text>Aucun périmètre accessible.</Text>;
   return (
-    <div className="table-wrap" role="region" aria-label="Graphe des périmètres, défilement possible" tabIndex={0}>
-      <svg
-        className="graphe-perimetres"
-        width={largeur}
-        height={hauteur}
-        viewBox={`0 0 ${largeur} ${hauteur}`}
-        role="group"
-        aria-label="Périmètres et leurs compteurs de synthèse"
-      >
-        {places
-          .filter((p) => p.parent)
-          .map((p) => {
-            const parent = places.find((q) => q.carte.id === p.parent)!;
-            const x1 = parent.x + LARGEUR / 2,
-              y1 = parent.y + HAUTEUR,
-              x2 = p.x + LARGEUR / 2,
-              y2 = p.y,
-              milieu = (y1 + y2) / 2;
-            return (
-              <path
-                key={p.carte.id}
-                className="graphe-lien"
-                d={`M${x1} ${y1} V${milieu} H${x2} V${y2}`}
-                fill="none"
-                aria-hidden="true"
-              />
-            );
-          })}
-        {places.map(({ carte, x, y }) => (
-          <foreignObject key={carte.id} x={x} y={y} width={LARGEUR} height={HAUTEUR}>
-            <div className="graphe-carte" role="group" aria-label={`Périmètre ${carte.name}`}>
-              <Text fw={600} lineClamp={1} title={carte.name}>
-                {carte.name}
-              </Text>
-              <Text size="xs" lineClamp={1}>
-                {LIBELLES_NIVEAU[carte.entityKind as NiveauPerimetre] ?? carte.entityKind}
-                {carte.nature ? ` · ${carte.nature}` : ''}
-              </Text>
-              <dl className="graphe-compteurs">
-                {lignesCompteurs(carte.compteurs).map((l) => (
-                  <div key={l.libelle}>
-                    <dt>{l.libelle}</dt>
-                    <dd className={l.alerte ? 'graphe-alerte' : undefined}>{l.valeur}</dd>
-                  </div>
-                ))}
-              </dl>
-              <Group gap="2xs" wrap="nowrap">
-                {carte.id !== affiche && (
-                  <Button
-                    size="compact-xs"
-                    variant="default"
-                    aria-label={`Afficher le périmètre ${carte.name} dans le Pilotage`}
-                    onClick={() => onChoisir(carte.id)}
-                  >
-                    Afficher
-                  </Button>
-                )}
-                {onCreerEnfant && (
-                  <Button
-                    size="compact-xs"
-                    variant="default"
-                    aria-label={`Ajouter un périmètre enfant à ${carte.name}`}
-                    onClick={() => onCreerEnfant(carte.id)}
-                  >
-                    Ajouter un enfant
-                  </Button>
-                )}
-              </Group>
-            </div>
-          </foreignObject>
-        ))}
-      </svg>
-    </div>
+    <>
+      {total && (
+        <dl className="graphe-total" aria-label="Total sans doublon sur tous les périmètres accessibles">
+          {lignesCompteurs(total)
+            .filter((l) => l.libelle !== 'Conformité')
+            .map((l) => (
+              <div key={l.libelle}>
+                <dt>Total · {l.libelle}</dt>
+                <dd className={l.alerte ? 'graphe-alerte' : undefined}>{l.valeur}</dd>
+              </div>
+            ))}
+          <Text size="xs">
+            Chaque élément n’est compté qu’une fois : un registre partagé entre plusieurs périmètres figure dans chacune
+            de leurs cartes, mais une seule fois ici.
+          </Text>
+        </dl>
+      )}
+      <div className="table-wrap" role="region" aria-label="Graphe des périmètres, défilement possible" tabIndex={0}>
+        <svg
+          className="graphe-perimetres"
+          width={largeur}
+          height={hauteur}
+          viewBox={`0 0 ${largeur} ${hauteur}`}
+          role="group"
+          aria-label="Périmètres et leurs compteurs de synthèse"
+        >
+          {places
+            .filter((p) => p.parent)
+            .map((p) => {
+              const parent = places.find((q) => q.carte.id === p.parent)!;
+              const x1 = parent.x + LARGEUR / 2,
+                y1 = parent.y + HAUTEUR,
+                x2 = p.x + LARGEUR / 2,
+                y2 = p.y,
+                milieu = (y1 + y2) / 2;
+              return (
+                <path
+                  key={p.carte.id}
+                  className="graphe-lien"
+                  d={`M${x1} ${y1} V${milieu} H${x2} V${y2}`}
+                  fill="none"
+                  aria-hidden="true"
+                />
+              );
+            })}
+          {places.map(({ carte, x, y }) => (
+            <foreignObject key={carte.id} x={x} y={y} width={LARGEUR} height={HAUTEUR}>
+              <div className="graphe-carte" role="group" aria-label={`Périmètre ${carte.name}`}>
+                <Text fw={600} lineClamp={1} title={carte.name}>
+                  {carte.name}
+                </Text>
+                <Text size="xs" lineClamp={1}>
+                  {LIBELLES_NIVEAU[carte.entityKind as NiveauPerimetre] ?? carte.entityKind}
+                  {carte.nature ? ` · ${carte.nature}` : ''}
+                </Text>
+                <dl className="graphe-compteurs">
+                  {lignesCompteurs(carte.compteurs).map((l) => (
+                    <div key={l.libelle}>
+                      <dt>{l.libelle}</dt>
+                      <dd className={l.alerte ? 'graphe-alerte' : undefined}>{l.valeur}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <Group gap="2xs" wrap="nowrap">
+                  {carte.id !== affiche && (
+                    <Button
+                      size="compact-xs"
+                      variant="default"
+                      aria-label={`Afficher le périmètre ${carte.name} dans le Pilotage`}
+                      onClick={() => onChoisir(carte.id)}
+                    >
+                      Afficher
+                    </Button>
+                  )}
+                  {onCreerEnfant && (
+                    <Button
+                      size="compact-xs"
+                      variant="default"
+                      aria-label={`Ajouter un périmètre enfant à ${carte.name}`}
+                      onClick={() => onCreerEnfant(carte.id)}
+                    >
+                      Ajouter un enfant
+                    </Button>
+                  )}
+                </Group>
+              </div>
+            </foreignObject>
+          ))}
+        </svg>
+      </div>
+    </>
   );
 }

@@ -25,7 +25,7 @@ import {
   aplatir,
   arbre,
   descendants,
-  type CartePerimetre,
+  type SyntheseCartes,
   type NiveauPerimetre,
 } from '@suivi/shared';
 import { DataTable, StatusChip } from '@suivi/ui';
@@ -84,7 +84,7 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
   // Les compteurs du graphe ne sont demandés que lorsqu'on l'affiche.
   const cartes = useQuery({
     queryKey: ['grc', 'perimetres', 'synthese'],
-    queryFn: () => get<CartePerimetre[]>('/api/grc/perimetres/synthese'),
+    queryFn: () => get<SyntheseCartes>('/api/grc/perimetres/synthese'),
     enabled: vue === 'graphe',
   });
   const ouvrir = (p: Perimetre | null, parentId: string | null = null) => {
@@ -171,7 +171,8 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
           <ErrorAlert error={cartes.error} />
           {cartes.data && (
             <CartesPerimetres
-              cartes={cartes.data}
+              cartes={cartes.data.cartes}
+              total={cartes.data.total}
               affiche={affiche}
               onChoisir={onChoisir}
               onCreerEnfant={admin ? (parentId) => ouvrir(null, parentId) : undefined}

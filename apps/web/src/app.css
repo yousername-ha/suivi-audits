@@ -1495,3 +1495,19 @@ rect.audit-niv-faible {
   color: var(--mantine-color-red-7);
   font-weight: 600;
 }
+.graphe-total {
+  margin: 0 0 var(--mantine-spacing-sm);
+  padding: var(--mantine-spacing-xs);
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  font-size: var(--mantine-font-size-sm);
+}
+.graphe-total div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-xs);
+}
+.graphe-total dt,
+.graphe-total dd {
+  margin: 0;
+}

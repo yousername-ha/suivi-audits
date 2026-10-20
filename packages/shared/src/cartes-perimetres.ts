@@ -2,7 +2,8 @@
    le droit de lire, ou que le périmètre ne peut pas produire, vaut `null` : l'écran affiche « indisponible », jamais un zéro
    fictif. Chaque élément n'est compté qu'une fois dans une carte : les occurrences de tâches récurrentes ne figurent que
    dans `recurrentes`, jamais dans `actions`. Une carte compte les éléments visibles dans son périmètre (les siens et ceux des
-   registres qui le portent) ; les cartes ne s'additionnent pas, un registre multi-périmètre apparaissant dans chacune. */
+   registres qui le portent) ; les cartes ne s'additionnent pas, un registre multi-périmètre apparaissant dans chacune : le total
+   de la synthèse compte chaque élément une seule fois. */
 
 export interface CompteurRetard {
   /** Éléments ouverts : ni archivés, ni dans un état terminal de la politique du périmètre. */
@@ -28,4 +29,10 @@ export interface CartePerimetre {
   nature: string;
   entityKind: string;
   compteurs: CarteCompteurs;
+}
+
+/** Réponse de la synthèse : une carte par périmètre accessible et le total sans doublon (jamais la somme des cartes). */
+export interface SyntheseCartes {
+  cartes: CartePerimetre[];
+  total: CarteCompteurs;
 }
