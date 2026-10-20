@@ -223,3 +223,40 @@ Le graphe de v005 est fictif. Les tests couvrent chaîne indirecte, cycle, fichi
 ### Livraison et recette v005
 
 Huit aperçus et 44 contrôles locaux : contact technique, séparation des usages, champs/profils mail, Teams sans envoi, groupes/profils, droits d’exemple, dépendances, partage, cycles et affichage mobile. [Résultats](../maquettes/v005-notifications-dependances/technique/verification.json). Aucun mail, message Teams, appel OAuth, changement de serveur ou effacement réel. Les préférences de la démo sont conservées en mémoire, pas persistées en base.
+
+## Complément v006 — Journaux, export et niveau technique
+
+Proposition à valider du 20 octobre 2026. Source : [maquette v006](../maquettes/v006-journaux-exports/README.md). Aucun journal réel lu ; aucun réglage de logger serveur appliqué.
+
+### Parcours et présentation
+
+Une carte « Journaux & traçabilité » dans Paramètres système ouvre une fenêtre centrale avec trois onglets :
+
+- **Traçabilité** : date de début/fin inclusives (UTC explicite), utilisateur et recherche ; date, acteur, action, objet et résultat ; téléchargement CSV ou JSON.
+- **Journaux techniques** : dates, service, niveau affiché et recherche ; téléchargement JSONL ou LOG texte. Le filtre de consultation ne change pas la collecte ; les événements Debug historiques restent consultables avec une collecte actuelle Info.
+- **Niveau de log** : Warning (avertissements et erreurs), Info (informations, avertissements et erreurs), Debug (détails et tous les niveaux). Info proposé par défaut. Debug temporaire avec motif et retour à Info après 15, 30, 60 ou 120 minutes : proposition de conception, pas une contrainte métier confirmée.
+
+Le niveau concerne exclusivement les nouveaux logs techniques. La traçabilité reste en ajout seul, indépendante du seuil technique et protégée du nettoyage ordinaire. Séparer le niveau appliqué du niveau sélectionné non enregistré. Les erreurs restent collectées. La maquette ne produit pas de nouveaux événements de logger, elle simule le réglage ; le retour à Info est résolu à la lecture de l'état expiré. En production, expiration persistée et appliquée côté serveur même si le navigateur est fermé ou le service redémarre.
+
+Les téléchargements de démonstration sont réels mais contiennent uniquement les fixtures. CSV avec échappement et neutralisation des cellules interprétables comme formules. JSON structuré, JSONL ligne par ligne, LOG lisible. Aucun ZIP ni BAT. Chaque export et changement de niveau ajoute une trace locale fictive ; le téléchargement n'efface jamais les sources. Rechargement = réinitialisation des données fictives.
+
+### Socle vérifié en lecture seule et écarts d'intégration
+
+Snapshot Claude consulté : `284cb1e4ffbaee37e0952073db5659c2257c888e`, `apps/api/src/routes/admin.ts`, section Journal d'audit. Il ne constitue pas une vérification de sa branche actuelle.
+
+`GET /api/admin/audit` existe avec `q`, `before`, `limit` (maximum 5000), `format=json|csv`. Lecture sous `administration:lire`. CSV exige en plus `administration:exporter`, enregistre `admin.audit_export` et renvoie `Cache-Control: no-store`. Les colonnes existantes sont `id, ts, username, ip, action, target, details`. Réutiliser ce service et son stockage ; ne pas créer un journal parallèle.
+
+Les filtres date et acteur dédiés, le résultat normalisé, le fichier JSON exporté avec une autorisation d'export équivalente et un export complet multi-pages ne sont pas démontrés par cette route. Le JSON actuel est une réponse de consultation ; ne pas présenter son téléchargement client comme soumis au contrôle CSV. Demander une extension explicite et cohérente au responsable backend. Le champ de résultat doit être dérivé des données réelles disponibles ; ne pas inventer un succès absent des traces.
+
+Aucun contrat de téléchargement global des journaux techniques ni de changement du niveau de logger n'a été établi dans l'inspection ciblée. Définir ces capacités avec le responsable du socle, sans inventer une route opérationnelle ni modifier Claude. La conception requiert : consultation paginée, filtres appliqués côté serveur, export autorisé complet sur une borne stable, état de génération et téléchargement, lecture du niveau effectif et demande de changement versionnée.
+
+### Exigences de raccordement
+
+- Distinguer consultation, export et modification du niveau dans les autorisations serveur. Un bouton masqué ne protège pas une route. Réexaminer l'accès au téléchargement, au moment de la génération et lors de la récupération.
+- Exporter tous les événements autorisés correspondant aux filtres, pas seulement la page. La limite actuelle de 5000 doit rester explicite tant que le traitement multi-pages n'existe pas. Pour gros volumes, proposer une préparation asynchrone avec état, borne temporelle, compte réel, échec/reprise et fichier temporaire à durée de vie limitée. Aucun résultat silencieusement tronqué.
+- Protéger les paramètres de recherche, éviter tout chemin de fichier fourni par le client ; liste de services autorisés. Limiter volume et fréquence d'export. Flux technique distinct du journal d'audit et des pièces justificatives.
+- Exclure mots de passe, clés, jetons, cookies, en-têtes d'autorisation, URL secrètes de Workflow et contenus de preuves dès la collecte. Expurger côté serveur avant affichage/export ; Debug ne doit jamais lever cette protection. Les fixtures sont préexpurgées et ne prouvent pas un mécanisme de masquage en production.
+- Tracer auteur, date, avant/après, motif et durée de changement ; tracer export, filtres non sensibles, nombre d'événements et résultat. Préserver le contenu historique et ses identifiants. Le téléchargement et l'exportabilité ne constituent pas une garantie cryptographique d'intégrité : celle-ci dépend du socle.
+- Relier la rotation/rétention des logs techniques à Historique & nettoyage, sans purge du journal d'audit par le réglage technique. Les archives en cours d'export doivent être protégées des suppressions concurrentes. Éviter d'enregistrer des journaux dans le registre des preuves sans demande explicite.
+- Prévoir accès refusé, absence de résultats, données indisponibles, erreur serveur, export trop volumineux/expiré, changement concurrent, refus d'application ou service incapable de changer à chaud. Afficher le niveau réellement appliqué par service ; ne pas afficher un succès avant confirmation serveur.
+- En production : tests serveur des permissions, pagination complète sans doublons, neutralisation CSV, absence de secrets, expiration Debug après redémarrage, journalisation des opérations et concurrence avec nettoyage. Ces tests ne sont pas couverts par la recette visuelle locale.

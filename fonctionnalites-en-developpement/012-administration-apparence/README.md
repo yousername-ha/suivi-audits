@@ -2,7 +2,7 @@
 
 | Élément | Accès |
 | --- | --- |
-| Maquette courante | [v005-notifications-dependances](maquettes/v005-notifications-dependances/README.md) |
+| Maquette courante | [v006-journaux-exports](maquettes/v005-notifications-dependances/README.md) |
 | État de la maquette | **À valider** |
 | Contrôles et recette | [tests/](tests/README.md) |
 | Consignes d’intégration | [implementation/](implementation/README.md) |
@@ -19,4 +19,6 @@ Proposition précédente : [échelles personnalisées et certificats v003](maque
 
 Proposition précédente : [historique et conservation v004](maquettes/v004-historique-conservation/README.md), avec quatre aperçus et 39 contrôles locaux. Aucun nettoyage réel.
 
-Dernière proposition : [notifications et dépendances v005](maquettes/v005-notifications-dependances/README.md), huit visuels et 44 contrôles locaux. Aucun envoi réel.
+Proposition précédente : [notifications et dépendances v005](maquettes/v005-notifications-dependances/README.md), huit visuels et 44 contrôles locaux. Aucun envoi réel.
+
+Dernière proposition : [journaux et téléchargements v006](maquettes/v006-journaux-exports/README.md), quatre visuels et 27 contrôles locaux. Téléchargements de données fictives uniquement.

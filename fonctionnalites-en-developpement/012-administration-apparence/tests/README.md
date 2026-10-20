@@ -29,3 +29,7 @@ Suivre aussi la [recette commune](../../_dossiers-transversaux/socle-astra/RECET
 ## v005 — 20 octobre 2026
 
 44 contrôles locaux réussis : contact technique, validation mail/OAuth de formulaire, profils serveur, Teams sans appel, notifications métier par groupe/profil, droits, cohérence des dépendances et fichiers partagés, cycles, recontrôle et mobile. [Résultats](../maquettes/v005-notifications-dependances/technique/verification.json) · [Script](../maquettes/v005-notifications-dependances/technique/verifier.cjs). Huit captures ; aucun transport mail/Teams, authentification, backend ou effacement réel testé.
+
+## Journaux et exports v006
+
+[27 contrôles locaux exécutés](../maquettes/v006-journaux-exports/technique/verification.json) : filtres combinés, dates inversées, export vide, téléchargements CSV/JSON/JSONL/LOG et lecture des contenus, protection CSV, séparation du filtre et de la collecte, changement tracé, motif Debug, expiration, conservation des événements, mobile, clavier et absence d’appel externe. Quatre captures. Aucun test du backend, de l’intégrité immuable réelle, des permissions serveur ou du logger de production.

@@ -29,8 +29,13 @@
       "date": "2026-10-20",
       "etape": "en-developpement",
       "motif": "v005 : contact technique, transports mail/Teams et préférences groupe/profil ; graphe de dépendances avant nettoyage ; huit visuels, 44 contrôles locaux, aucun envoi ni suppression réelle."
+    },
+    {
+      "date": "2026-10-20",
+      "etape": "en-developpement",
+      "motif": "v006 : export de traçabilité et de logs techniques, niveaux Info/Warning/Debug et diagnostic temporaire ; quatre visuels et 27 contrôles locaux, aucun journal réel consulté."
     }
   ],
   "numero": "012",
-  "maquetteCourante": "v005-notifications-dependances"
+  "maquetteCourante": "v006-journaux-exports"
 }

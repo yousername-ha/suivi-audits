@@ -131,3 +131,9 @@ Ces instructions utilisateur remplacent les consignes antérieures contradictoir
 - Contact technique dédié pour alertes de sauvegarde, mises à jour et exploitation. Les notifications métier (actions, tâches, rapports) sont configurées dans les groupes ou profils utilisateurs ; ne pas les ajouter automatiquement aux destinataires techniques.
 - Prévoir les connexions mail SMTP/SMTPS adaptées à Exchange Server, Exchange Online et Postfix, et Teams via Workflow. Secrets et URL protégés côté serveur ; aucun envoi réel autorisé par la seule conception de la maquette.
 - Avant nettoyage, contrôler le graphe des liens directs/indirects et les versions conservées, éviter les cascades, protéger les fichiers partagés et revérifier les dépendances au moment du traitement. Ne pas confondre suppression de fiche et suppression du fichier physique.
+
+## Journaux et niveaux — demande du 20 octobre 2026
+
+- Prévoir le téléchargement des journaux de traçabilité et des journaux techniques dans Paramètres système, avec filtres et formats adaptés.
+- Info, Warning et Debug règlent les logs techniques ; ne jamais désactiver ou réduire la traçabilité métier avec ce réglage. Préserver les traces historiques et contrôler les droits d'export côté serveur.
+- La maquette n'utilise que des données fictives. Réutiliser le journal d'audit existant du socle ; documenter les extensions nécessaires sans créer de moteur concurrent.

@@ -1,0 +1,36 @@
+{
+  "id": "v006-journaux-exports",
+  "statut": "a-valider",
+  "date": "2026-10-20",
+  "versionPrecedente": "v005-notifications-dependances",
+  "validationUtilisateur": null,
+  "integrationBackend": false,
+  "references": [
+    "fonctionnalites-en-developpement/012-administration-apparence/maquettes/v006-journaux-exports/visuels/01-parametres-systeme.png",
+    "fonctionnalites-en-developpement/012-administration-apparence/maquettes/v006-journaux-exports/visuels/02-tracabilite.png",
+    "fonctionnalites-en-developpement/012-administration-apparence/maquettes/v006-journaux-exports/visuels/03-journaux-techniques.png",
+    "fonctionnalites-en-developpement/012-administration-apparence/maquettes/v006-journaux-exports/visuels/04-niveau-debug.png"
+  ],
+  "visuels": [
+    {
+      "fichier": "visuels/01-parametres-systeme.png",
+      "titre": "Paramètres système — accès aux journaux",
+      "sha256": "449d89bf8703a1eabdd0304fffaab46c09ec5f32f96a1aa7d58addfe57cc8b2b"
+    },
+    {
+      "fichier": "visuels/02-tracabilite.png",
+      "titre": "Traçabilité — consultation et téléchargement",
+      "sha256": "80fb217f71c42bb39f2e9a9acdd7dd4e0764027586da2f761a479dc9635e3712"
+    },
+    {
+      "fichier": "visuels/03-journaux-techniques.png",
+      "titre": "Journaux techniques — filtres et téléchargement",
+      "sha256": "af7881d5cb04aafa74be8c08e99c4f0801673bfb552792fd80b891eccbb5edc9"
+    },
+    {
+      "fichier": "visuels/04-niveau-debug.png",
+      "titre": "Niveau de log — diagnostic Debug temporaire",
+      "sha256": "b5c8f24ef989df636fa91c882956693cc627f9faebbf39ef05e342b380b3cd25"
+    }
+  ]
+}
