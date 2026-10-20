@@ -246,9 +246,7 @@ switch (cmd) {
       comptes: users,
       documents: docs,
       documentRelu: docSha,
-      suivi: Object.fromEntries(
-        ['processes', 'suppliers', 'items'].map((k) => [k, (data[k] || []).length]),
-      ),
+      suivi: Object.fromEntries(['processes', 'suppliers', 'items'].map((k) => [k, (data[k] || []).length])),
       schema: data.schema,
     };
     writeFileSync(file, JSON.stringify({ ...snap, version: v?.version ?? null }, null, 2));
