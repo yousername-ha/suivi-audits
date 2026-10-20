@@ -3,7 +3,7 @@
 | Élément | Valeur |
 | --- | --- |
 | Numéro | implementation-ui-2026-10 (lots L0 à L8, scénarios R01 à R18) |
-| Version de référence | 3.6.0 (étiquette `v3.6.0` à poser par le RSSI sur `main` ; elle porte la 3.5.0, jamais publiée) |
+| Version de référence | 3.6.1 (étiquette `v3.6.1` à poser par le RSSI sur `main` ; elle porte la 3.5.0 et la 3.6.0, jamais publiées) |
 | Branche et commit de code évalué | `claude-suivi-smsi`, `5d95560` |
 | Base de référence lue | dossier `legacy` : `PROMPT-IMPLEMENTATION.md`, `INTEGRATION-RECETTE.md` (lecture seule, non modifié) |
 
@@ -18,7 +18,7 @@ restreints respectés par les listes, compteurs, calendrier, cartes et temps ré
 
 Preuve scénario par scénario : [recette R01 à R18](../../../../docs/unification/RECETTE-INTEGRATION-ASTRA.md).
 Décisions : [ADR 0043](../../../../docs/adr/0043-registres-perimetres-herites-et-droits-par-ressource.md).
-Migrations SQL additives : `022` à `032` (la 3.6.0 porte aussi les migrations de la 3.5.0).
+Migrations SQL additives : `022` à `032` (la 3.6.1 porte aussi les migrations de la 3.5.0).
 
 ## Commandes et résultats
 

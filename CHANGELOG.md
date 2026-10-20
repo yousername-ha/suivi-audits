@@ -7,15 +7,21 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 ### Notes de mise à jour
 Aucune action particulière, aucune migration pour le moment.
 
-## [3.6.0] — 2026-10-20
+## [3.6.1] — 2026-10-20
+
+**Correctif de publication de la 3.6.0.** L'étiquette `v3.6.0` a été poussée, mais sa publication a échoué : le contrôle de sécurité (Trivy) a refusé l'image de l'exécutant de mise à jour, dont l'outil de vérification des signatures (cosign) embarquait `klauspost/compress` 1.18.6 (CVE-2026-63209, gravité élevée, corrigée en 1.18.7). La 3.6.0 n'a donc jamais été publiée : aucune installation ne doit l'utiliser, et la mise à jour d'une installation passe directement à la 3.6.1, qui contient tout ce qui suit.
 
 **Intégration complète des interfaces ASTRA : déplacement entre registres, responsables personne, groupe ou fonction, plans d'actions conteneurs, écart depuis un audit et récidive, récurrences (fenêtres, jours exclus, calendriers iCalendar, enchaînement), graphe des périmètres et compteurs, registres restreints respectés partout, contexte de retour.** Les dix-huit scénarios de la [recette R01 à R18](docs/unification/RECETTE-INTEGRATION-ASTRA.md) sont réalisés. Cette version porte aussi la 3.5.0, préparée mais jamais publiée : elle contient les migrations SQL `022` à `032` à la suite de la 3.4.0 (la montée de version les applique dans l'ordre, après la sauvegarde automatique).
 
 ### Notes de mise à jour
+- **Cette version remplace la 3.6.0, non publiée** : voir ci-dessus ; elle ne change que l'image de l'exécutant, aucune migration de plus.
 - **Migration SQL `033_retrait_constats_historiques.sql` — suppression définitive des constats historiques** (décision du RSSI) : les anciens constats du périmètre commun (outil de suivi d'origine), leurs tâches, les liens qui y renvoient, les vues `v_findings` et `v_items` (qui ne lisaient plus que l'ancien JSON) et la révision des écarts sont **effacés**. Les écarts vivent désormais uniquement dans les registres. Le module Audit, le tableau de bord, les exports et la revue de direction relisent les **écarts natifs du périmètre commun** (vue en lecture seule) ; rien n'est repris automatiquement des anciens constats. La mise à jour sauvegarde la base avant d'appliquer la migration (`scripts/mettre-a-jour.sh`) : c'est le seul retour arrière possible.
 - **Migration SQL additive `031_fonctions_responsables.sql`** : deux tables, `fonctions` (nom unique parmi les fonctions actives, archivage) et `fonction_membres` (titulaires). Aucune donnée existante n'est modifiée ; aucune action sur le serveur.
 
 - **Migration SQL additive `032_plans_actions_conteneurs.sql`** : un plan d'actions (registre de la famille « plan d'actions ») gagne une période (début, fin), un statut (prévu, en cours, terminé, abandonné) et un responsable ; la fiche d'une action gagne un rang d'ordre. Les plans existants restent « prévus », sans date ni responsable ; leurs actions gardent leur ordre d'affichage actuel (les actions ordonnées passent en premier). Aucune action sur le serveur.
+
+### Corrigé
+- Image de l'exécutant de mise à jour : `klauspost/compress` passe en 1.18.7 dans cosign (compilé depuis ses sources avec les dépendances épinglées), ce qui rétablit la publication.
 
 ### Modifié
 - **Écarts : une seule source.** Plus de « constats existants » dans la liste des écarts : tout écart est une fiche de registre (déplaçable, classée, avec ses droits). L'audit d'origine (certification ou interne) devient un champ de la fiche (« Audit à l'origine ») et les mesures concernées se relient par les références de la fiche. Les créations d'écart faites depuis l'analyse d'écart (GAP), un incident, un exercice ou une évaluation de fournisseur créent un écart de registre dans le périmètre commun ; les tâches de ces anciens constats sont remplacées par la liste des points dans la description. L'import d'un fichier de l'ancien outil ignore ses constats et le signale dans le rapport. Le jeu de test charge de vrais écarts.
@@ -38,7 +44,12 @@ Aucune action particulière, aucune migration pour le moment.
 - **Déplacer un élément entre registres.** Une action, un écart ou une série (avec ses occurrences) se déplace vers un autre registre de la même famille : commande atomique `POST /api/grc/:smsi/objects/:id/deplacement` avec **aperçu d'impact** (périmètres avant et après, changement du périmètre de référence, liens conservés, liens qui ne peuvent pas suivre, obstacles comme un état inconnu du workflow cible ou un responsable non autorisé), motif obligatoire, `If-Match` et droit de gestion sur les deux registres. L'élément garde son identifiant ; ses anciennes versions restent rattachées à leur ancien périmètre ; les liens incompatibles ne sont retirés qu'avec confirmation explicite ; le déplacement est inscrit au journal d'audit. Panneau « Déplacer vers un autre registre » sur la fiche.
 - **Éléments par périmètre et registres choisis.** Nouvel onglet de l'écran Registres et route `GET /api/registres/elements` : on choisit un périmètre puis un ou plusieurs registres qui le portent ; la liste réunit leurs éléments sans doublon, limitée aux registres que la personne peut lire.
 
-## [3.5.0] — 2026-10-20 (préparée, jamais publiée : incluse dans la 3.6.0)
+## [3.6.0] — 2026-10-20 (étiquette poussée mais publication en échec, jamais publiée : incluse dans la 3.6.1)
+
+### Notes de mise à jour
+Version non publiée : ne pas l'installer. Ses notes sont celles de la 3.6.1 ci-dessus.
+
+## [3.5.0] — 2026-10-20 (préparée, jamais publiée : incluse dans la 3.6.1)
 
 **Registres, droits par ressource, menu à sept familles, validation des occurrences et reprise des écarts** (intégration partielle des interfaces ASTRA : voir [la recette R01 à R18](docs/unification/RECETTE-INTEGRATION-ASTRA.md)), avec les migrations SQL `022` à `030`, les montées de version majeures de la pile (TypeScript 6, Vite 8, Vitest 5, React Router 8, Mantine 9) et la normalisation en tables des modules.
 

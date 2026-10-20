@@ -6,7 +6,7 @@ RUN --mount=type=secret,id=build_ca --mount=type=cache,target=/go/pkg/mod --moun
     if [ -f /run/secrets/build_ca ]; then export SSL_CERT_FILE=/run/secrets/build_ca; fi; \
     export CGO_ENABLED=0 GOTOOLCHAIN=local; \
     mkdir /build-cosign && cd /build-cosign && go mod init suivi-cosign \
-    && go mod edit -require=github.com/sigstore/cosign/v3@v3.1.3 -require=golang.org/x/net@v0.60.0 -require=golang.org/x/mod@v0.40.0 -require=google.golang.org/grpc@v1.83.2 \
+    && go mod edit -require=github.com/sigstore/cosign/v3@v3.1.3 -require=golang.org/x/net@v0.60.0 -require=golang.org/x/mod@v0.40.0 -require=google.golang.org/grpc@v1.83.2 -require=github.com/klauspost/compress@v1.18.7 \
     && go build -mod=mod -o /go/bin/cosign github.com/sigstore/cosign/v3/cmd/cosign
 FROM alpine:3.24
 RUN --mount=type=secret,id=build_ca \
