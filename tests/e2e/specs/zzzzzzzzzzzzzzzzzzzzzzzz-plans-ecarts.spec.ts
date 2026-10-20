@@ -68,14 +68,15 @@ test('Plan d’actions : dates, statut, responsable et ordre des actions', async
     ).toBeVisible();
     await expect(page.getByText('En cours', { exact: true }).first()).toBeVisible();
 
+    // Sans ordre défini, la plus récemment modifiée vient d'abord : on descend la seconde créée.
     await page.getByRole('tab', { name: /Éléments/ }).click();
-    await page.getByRole('button', { name: `Monter Seconde ${suffixe}` }).click();
+    await page.getByRole('button', { name: `Descendre Seconde ${suffixe}` }).click();
     await expect
       .poll(async () => {
         const r = await page.request.get(`/api/registres/${plan.id}/elements`);
         return (await r.json()).items.map((o: { id: string }) => o.id);
       })
-      .toEqual([a2.id, a1.id]);
+      .toEqual([a1.id, a2.id]);
     expect(problems).toEqual([]);
   } finally {
     await ctx.close();
