@@ -24,8 +24,13 @@
       "date": "2026-10-20",
       "etape": "en-developpement",
       "motif": "v004 : historique et conservation, règles par catégorie, aperçu, corbeille et purge optionnelle ; quatre visuels et 39 contrôles locaux. Aucun nettoyage réel."
+    },
+    {
+      "date": "2026-10-20",
+      "etape": "en-developpement",
+      "motif": "v005 : contact technique, transports mail/Teams et préférences groupe/profil ; graphe de dépendances avant nettoyage ; huit visuels, 44 contrôles locaux, aucun envoi ni suppression réelle."
     }
   ],
   "numero": "012",
-  "maquetteCourante": "v004-historique-conservation"
+  "maquetteCourante": "v005-notifications-dependances"
 }

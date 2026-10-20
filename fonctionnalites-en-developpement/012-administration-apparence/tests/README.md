@@ -25,3 +25,7 @@ Suivre aussi la [recette commune](../../_dossiers-transversaux/socle-astra/RECET
 ## v004 — 20 octobre 2026
 
 39 contrôles locaux réussis : règles et durées, exclusions, dates invalides, mois calendaires, confirmations, recontrôles après prévisualisation, restauration protégée, délai avant purge, désactivation, mobile et présence des parcours échelles/certificats. [Résultats](../maquettes/v004-historique-conservation/technique/verification.json) · [Script](../maquettes/v004-historique-conservation/technique/verifier.cjs). Depuis la racine du dépôt, servir sur localhost:18782 ; chemins Playwright/Chromium configurables comme en v003. Quatre captures, aucun backend, suppression réelle ou performance testés.
+
+## v005 — 20 octobre 2026
+
+44 contrôles locaux réussis : contact technique, validation mail/OAuth de formulaire, profils serveur, Teams sans appel, notifications métier par groupe/profil, droits, cohérence des dépendances et fichiers partagés, cycles, recontrôle et mobile. [Résultats](../maquettes/v005-notifications-dependances/technique/verification.json) · [Script](../maquettes/v005-notifications-dependances/technique/verifier.cjs). Huit captures ; aucun transport mail/Teams, authentification, backend ou effacement réel testé.

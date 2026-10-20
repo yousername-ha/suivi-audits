@@ -125,3 +125,9 @@ Ces instructions utilisateur remplacent les consignes antérieures contradictoir
 - Prévoir une configuration du nettoyage automatique, activable globalement et par catégorie, avec délais propres aux pièces justificatives, écarts clôturés, actions terminées et autres contenus admissibles.
 - Séparer archivage, corbeille récupérable et purge optionnelle après délai. Conserver les usages protégés, les validations immuables et le journal d’audit. Réexaminer les statuts/liens avant traitement ; un aperçu ancien ne vaut pas autorisation de suppression.
 - La livraison actuelle est une maquette : aucune tâche serveur, suppression réelle ou opération sur les sauvegardes. Les durées et volumes sont fictifs ; aucun gain de performance n’est attesté par les visuels.
+
+## Notifications et dépendances — demande du 20 octobre 2026
+
+- Contact technique dédié pour alertes de sauvegarde, mises à jour et exploitation. Les notifications métier (actions, tâches, rapports) sont configurées dans les groupes ou profils utilisateurs ; ne pas les ajouter automatiquement aux destinataires techniques.
+- Prévoir les connexions mail SMTP/SMTPS adaptées à Exchange Server, Exchange Online et Postfix, et Teams via Workflow. Secrets et URL protégés côté serveur ; aucun envoi réel autorisé par la seule conception de la maquette.
+- Avant nettoyage, contrôler le graphe des liens directs/indirects et les versions conservées, éviter les cascades, protéger les fichiers partagés et revérifier les dépendances au moment du traitement. Ne pas confondre suppression de fiche et suppression du fichier physique.

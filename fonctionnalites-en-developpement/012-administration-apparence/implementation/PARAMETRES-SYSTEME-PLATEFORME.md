@@ -1,6 +1,6 @@
-# Paramètres système et plateforme — proposition v004
+# Paramètres système et plateforme — proposition v005
 
-Statut : maquette à valider, dossier préparatoire. [Galerie et sources courantes](../maquettes/v004-historique-conservation/README.md). Cette version étend 012, sans créer un second module d’administration concurrent. Elle ne remplace pas les fonctionnalités 019 Configuration GRC et 022 Gestion des droits : elle fournit leurs points d’entrée.
+Statut : maquette à valider, dossier préparatoire. [Galerie et sources courantes](../maquettes/v005-notifications-dependances/README.md). Cette version étend 012, sans créer un second module d’administration concurrent. Elle ne remplace pas les fonctionnalités 019 Configuration GRC et 022 Gestion des droits : elle fournit leurs points d’entrée.
 
 ## Navigation proposée
 
@@ -158,3 +158,68 @@ La recette d’intégration devra mesurer temps de requêtes, taille des index/t
 Quatre nouveaux aperçus et 39 contrôles locaux exécutés : règles indépendantes, dates calendaires, exclusions, confirmation, recontrôle avant passage, conservation en corbeille, restauration protégée, purge limitée, désactivation, absence d’appels API, mobile et conservation des entrées échelles/certificats. [Résultats](../maquettes/v004-historique-conservation/technique/verification.json). Aucun job réel créé, aucune donnée supprimée, aucune mesure de performance serveur.
 
 La version reste à valider, dans le dossier en développement. Après validation, compléter les contrats et recette du dossier avant déplacement vers « à implémenter », conformément au cycle existant.
+
+## Extension v005 — notifications techniques et métier séparées
+
+La demande distingue désormais le contact technique des préférences métier. Cette règle remplace la présentation générique antérieure « Notifications & rappels » : la carte système configure les moyens d’envoi et les alertes d’exploitation ; la carte plateforme oriente vers les préférences des groupes et profils. L’interprétation retenue de « Exchange s » est Exchange Server sur site.
+
+### Contact technique
+
+Champs nom et adresse mail ; alertes sélectionnables : sauvegarde échouée, mise à jour disponible, installation échouée, échéance de certificat et disque faible. Option de diffusion aussi vers le Workflow Teams technique. L’adresse ne reçoit pas les notifications d’actions, tâches et rapports par ce réglage. Si le même utilisateur reçoit un rappel métier, il doit être sélectionné par le mécanisme métier indépendamment de son rôle de contact technique.
+
+Les messages techniques ne contiennent pas de justificatif métier, secret, jeton ou trace brute sensible. Prévoir un identifiant d’opération et un lien vers un détail autorisé. Les erreurs du canal mail restent consultables dans l’application ; l’échec SMTP ne peut pas être notifié avec fiabilité par le même canal indisponible. Un canal secondaire indépendant, s’il est configuré, peut servir de secours sans boucle d’alertes.
+
+### Connexions d’envoi mail
+
+Les formulaires configurent l’application émettrice, pas les serveurs Exchange/Postfix eux-mêmes. Prévoir nom du profil, serveur, port, mode de transport, expéditeur, compte ou identité applicative, référence de coffre et état de vérification. SMTP avec STARTTLS obligatoire et SMTPS avec TLS implicite sont distincts ; ne jamais désactiver la validation du certificat ni dégrader silencieusement vers une connexion en clair.
+
+- **Exchange Server sur site / Postfix / SMTP générique** : hôte et port configurables, STARTTLS ou SMTPS selon le service réellement exposé ; compte SMTP ou relais préalablement autorisé côté serveur. Aucun relais ouvert n’est créé. Le choix du port ne détecte pas à lui seul les capacités du serveur.
+- **Exchange Online** : la proposition illustre SMTP AUTH avec OAuth, `smtp.office365.com`, STARTTLS et 587. Vérifier tenant/application, boîte autorisée, consentements, droits d’envoi et disponibilité de SMTP AUTH. Si ce dernier est désactivé, ce parcours ne fonctionnera pas ; choisir un mode pris en charge plutôt que basculer silencieusement d’authentification. Cette maquette ne couvre pas tous les modes de relais Microsoft 365. [Documentation Microsoft](https://learn.microsoft.com/en-us/exchange/mail-flow-best-practices/how-to-set-up-a-multifunction-device-or-application-to-send-email-using-microsoft-365-or-office-365).
+- Les flux OAuth et autorisations serveur exactes doivent suivre le client retenu. Les identifiants du tenant et de l’application ne sont pas des jetons ; les secrets/certificats d’identité sont conservés côté serveur. [Authentification OAuth SMTP officielle](https://learn.microsoft.com/en-us/exchange/client-developer/legacy-protocols/how-to-authenticate-an-imap-pop-smtp-application-by-using-oauth/).
+- STARTTLS et TLS implicite requièrent une configuration correspondante du serveur Postfix ; les champs proposés ne l’appliquent pas. [Documentation TLS de Postfix](https://www.postfix.org/TLS_README.html).
+
+Un contrôle réel devrait distinguer résolution réseau, connexion, TLS, authentification, acceptation SMTP et livraison finale : une acceptation SMTP ne garantit pas la réception. Prévoir un destinataire de test explicitement choisi et une action d’envoi confirmée dans le produit. Les boutons présents simulent uniquement la validation de champs, sans envoi.
+
+### Teams via Workflow
+
+Utiliser un Workflow avec déclencheur de réception de requête Teams et une destination définie dans le flux. Conserver nom, usage technique/métier, cible, propriétaire, copropriétaire de secours, mode d’authentification compatible avec le déclencheur et référence protégée de l’URL. Les workflows dépendent de leurs propriétaires ; prévoir la continuité de gestion. [Documentation Microsoft Teams](https://learn.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook?tabs=dotnet).
+
+Les deux connexions fictives sont distinctes : Exploitation pour les alertes techniques ; Infrastructure pour le métier. Les options Entra ou URL secrète ne constituent pas une promesse de compatibilité universelle : le backend doit vérifier le déclencheur et les autorisations réellement configurés. Ne pas remplacer le Workflow par un ancien connecteur entrant non demandé.
+
+Aucune URL secrète n’est affichée ni copiée dans un journal. Valider côté serveur l’URL, les redirections et l’accès réseau selon la politique d’installation. Une cible Teams partagée n’est pas équivalente à un utilisateur autorisé : vérifier son audience avant toute donnée métier. À défaut, refuser le contenu ou utiliser un signal neutre sans titre/compteur sensible, avec accès à l’objet contrôlé dans l’application.
+
+### Préférences des groupes et profils
+
+Événements proposés : actions attribuées/échéances, tâches ouvertes/en retard, rapports disponibles. Canaux : mail individuel et Workflow métier autorisé. Fréquence proposée : événement, synthèse quotidienne ou hebdomadaire avec heure UTC affichée. Les horaires sont des exemples, aucun envoi n’est planifié.
+
+Le profil propose Hériter de mes groupes, Personnaliser, Désactiver. Priorité proposée : réglage personnel explicite, sinon préférences des groupes. Cette priorité reste à valider ; ne pas confondre ce mécanisme avec le cumul des permissions RBAC de 022. Pour plusieurs groupes, définir le calcul d’événements/canaux et de fréquence, puis dédupliquer par événement/version, destinataire et canal. Une fréquence contradictoire ne doit pas provoquer plusieurs copies.
+
+Le moteur réel doit résoudre les personnes derrière les responsables groupe/fonction et vérifier leurs accès au registre et à ses périmètres au moment d’envoi. Recontrôler les droits lors d’une synthèse différée. Ne pas transmettre aux comptes suspendus/expirés, à des membres retirés ou à une liste collective non vérifiée. Un rappel ne crée jamais un droit d’accès. Les vues de maquette reposent sur un booléen de fixture pour un seul objet d’exemple, pas sur un moteur complet d’autorisation.
+
+Prévoir une file d’envoi, délais/reprises bornés, prévention des doublons, état par canal, erreurs expurgées et traçabilité. La conservation des objets s’applique aussi aux notifications en attente : si la source a changé ou disparu, revalider/annuler au lieu d’envoyer un ancien contenu. Ne pas supprimer une pièce encore référencée par un rapport conservé ou une opération d’envoi admissible.
+
+### Existant observé et contrats manquants
+
+Instantané Claude `284cb1e4ffbaee37e0952073db5659c2257c888e`, lecture seule. `packages/shared/src/settings.ts` contient une section notifications limitée aux jours d’échéance/convention et alertes d’import/droits. `apps/api/src/routes/settings.ts` expose GET/PUT par section avec permissions et versionnement. `apps/api/src/routes/grc.ts` expose les rappels personnels via `GET /api/grc/notifications` et leur lecture via `PUT /api/grc/notifications/:id/read`.
+
+Ces rappels internes ne prouvent pas un envoi externe. Le relevé ciblé dans API/shared ne démontre ni transport SMTP/OAuth/Teams, ni préférences d’envoi complètes par groupe/profil, ni contact technique dédié. La structure `techEmail` rencontrée dans des données CRRC ne constitue pas le contrat de contact technique de la plateforme. Réexaminer le code actuel de la branche cible avant développement, réutiliser l’annuaire et le socle de notifications, et faire fournir les extensions nécessaires sans créer un moteur concurrent.
+
+La configuration technique devrait exiger les autorisations d’administration appropriées ; un utilisateur ne règle que son profil, et l’édition de préférences de groupe nécessite une autorisation explicite. Les permissions exactes sont à confirmer côté serveur, elles ne résultent pas du simple emplacement d’un écran.
+
+## Extension v005 — cohérence des suppressions imbriquées
+
+La décision doit porter sur le graphe des références, pas uniquement le statut/date d’un objet visible. La maquette illustre Audit actif → Écart → Preuve, un parent clôturé avec justificatif rattaché, et un fichier physique partagé avec une version historique.
+
+- Explorer les références entrantes directes/indirectes, les références sortantes qui exigent une décision, et les versions/snapshots conservés. Ne pas limiter cette exploration au registre actuellement affiché ou aux lignes visibles. Une référence absente du cache n’est pas une preuve d’absence.
+- Un parcours avec cycle doit se terminer tout en conservant la protection. Le prototype utilise un ensemble de nœuds visités ; l’implémentation devra traiter de grands graphes côté serveur avec bornes et état indéterminé bloquant, sans ouvrir le navigateur à tous les objets.
+- Ne pas mettre automatiquement en corbeille un parent dont les éléments rattachés doivent être examinés. Un archivage préserve les liens et ne supprime pas les enfants. Aucune cascade implicite.
+- Le stockage physique doit être dédupliqué par identifiant de fichier. Tant qu’une autre version/objet conservé le référence, bloquer sa purge et exclure ses octets du volume récupérable. Une suppression de fiche ne suffit pas à libérer un blob.
+- Refaire les contrôles juste avant l’opération et après toute modification concurrente de statut, référence, protection ou politique. Transactions/contraintes et traitement physique fiable doivent empêcher un lien vers un fichier supprimé ou une suppression partielle incohérente.
+
+La politique actuelle reste conservatrice : une référence conservée bloque le retrait de sa cible ; l’archivage du parent ne libère pas implicitement la preuve. Le prototype peut sous-estimer le volume d’un groupe de fichiers partagés candidats plutôt que compter un gain non démontré. La règle exacte doit être validée avec les modèles du socle.
+
+Le graphe de v005 est fictif. Les tests couvrent chaîne indirecte, cycle, fichier partagé, retrait de dernière référence et apparition d’un lien après aperçu. Ils ne prouvent aucune protection de la base ou du stockage de production.
+
+### Livraison et recette v005
+
+Huit aperçus et 44 contrôles locaux : contact technique, séparation des usages, champs/profils mail, Teams sans envoi, groupes/profils, droits d’exemple, dépendances, partage, cycles et affichage mobile. [Résultats](../maquettes/v005-notifications-dependances/technique/verification.json). Aucun mail, message Teams, appel OAuth, changement de serveur ou effacement réel. Les préférences de la démo sont conservées en mémoire, pas persistées en base.

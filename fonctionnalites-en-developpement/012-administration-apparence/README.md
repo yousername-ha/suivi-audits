@@ -2,7 +2,7 @@
 
 | Élément | Accès |
 | --- | --- |
-| Maquette courante | [v004-historique-conservation](maquettes/v004-historique-conservation/README.md) |
+| Maquette courante | [v005-notifications-dependances](maquettes/v005-notifications-dependances/README.md) |
 | État de la maquette | **À valider** |
 | Contrôles et recette | [tests/](tests/README.md) |
 | Consignes d’intégration | [implementation/](implementation/README.md) |
@@ -17,4 +17,6 @@ Proposition du 20 octobre : deux pages de paramètres, système et plateforme, a
 
 Proposition précédente : [échelles personnalisées et certificats v003](maquettes/v003-echelles-certificats/README.md), avec six nouveaux visuels et 39 contrôles locaux.
 
-Dernière proposition : [historique et conservation v004](maquettes/v004-historique-conservation/README.md), avec quatre aperçus et 39 contrôles locaux. Aucun nettoyage réel.
+Proposition précédente : [historique et conservation v004](maquettes/v004-historique-conservation/README.md), avec quatre aperçus et 39 contrôles locaux. Aucun nettoyage réel.
+
+Dernière proposition : [notifications et dépendances v005](maquettes/v005-notifications-dependances/README.md), huit visuels et 44 contrôles locaux. Aucun envoi réel.

@@ -1,0 +1,60 @@
+{
+  "id": "v005-notifications-dependances",
+  "statut": "a-valider",
+  "date": "2026-10-20",
+  "versionPrecedente": "v004-historique-conservation",
+  "validationUtilisateur": null,
+  "integrationBackend": false,
+  "references": [
+    "fonctionnalites-en-developpement/012-administration-apparence/maquettes/v005-notifications-dependances/visuels/01-contact-technique.png",
+    "fonctionnalites-en-developpement/012-administration-apparence/maquettes/v005-notifications-dependances/visuels/02-exchange-online.png",
+    "fonctionnalites-en-developpement/012-administration-apparence/maquettes/v005-notifications-dependances/visuels/03-exchange-server.png",
+    "fonctionnalites-en-developpement/012-administration-apparence/maquettes/v005-notifications-dependances/visuels/04-postfix-smtps.png",
+    "fonctionnalites-en-developpement/012-administration-apparence/maquettes/v005-notifications-dependances/visuels/05-teams-workflow.png",
+    "fonctionnalites-en-developpement/012-administration-apparence/maquettes/v005-notifications-dependances/visuels/06-notifications-groupe.png",
+    "fonctionnalites-en-developpement/012-administration-apparence/maquettes/v005-notifications-dependances/visuels/07-notifications-profil.png",
+    "fonctionnalites-en-developpement/012-administration-apparence/maquettes/v005-notifications-dependances/visuels/08-dependances-suppression.png"
+  ],
+  "visuels": [
+    {
+      "fichier": "visuels/01-contact-technique.png",
+      "titre": "Contact et alertes techniques",
+      "sha256": "1123ad37906fcf5f23b7a872538e34ba850e4c12b62dc5df5c0595a8d49ad408"
+    },
+    {
+      "fichier": "visuels/02-exchange-online.png",
+      "titre": "Envoi mail : Exchange Online",
+      "sha256": "f63ec5b221afe964ef13414116d4d0e19d5a378a8f14c74388d9791de16e2b5f"
+    },
+    {
+      "fichier": "visuels/03-exchange-server.png",
+      "titre": "Envoi mail : Exchange Server sur site",
+      "sha256": "8c4b5c704cdf587da9fb397624aeedd8b31cf9ad2fdd9354ba06a9f2d7117467"
+    },
+    {
+      "fichier": "visuels/04-postfix-smtps.png",
+      "titre": "Envoi mail : Postfix / SMTPS",
+      "sha256": "f5ec0fd454943bd493bb5fcf979e82cd75ba36c96021e288e43c0be8f0963cdf"
+    },
+    {
+      "fichier": "visuels/05-teams-workflow.png",
+      "titre": "Teams via Workflow",
+      "sha256": "b3ba9fda3e1cb93b03dc59043c9a22bd14c53d5b506d9e209453203dd68f6436"
+    },
+    {
+      "fichier": "visuels/06-notifications-groupe.png",
+      "titre": "Notifications du groupe",
+      "sha256": "7f1e6392654d160f7a8f9926ce1f8ba2ddfe56fc0bacbe28def56a38b00731cc"
+    },
+    {
+      "fichier": "visuels/07-notifications-profil.png",
+      "titre": "Notifications du profil utilisateur",
+      "sha256": "12159ab47af778ea322048af9c7fe57d8f9e7c21084178ef7053b0e330c45afc"
+    },
+    {
+      "fichier": "visuels/08-dependances-suppression.png",
+      "titre": "Cohérence des suppressions et fichiers partagés",
+      "sha256": "15a2369fc4924b37950dc35a6441573e9ac4aa226a0446145e6fb963e2ee18e6"
+    }
+  ]
+}

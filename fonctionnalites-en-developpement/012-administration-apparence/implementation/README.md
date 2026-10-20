@@ -2,7 +2,7 @@
 
 ## Proposition du 20 octobre 2026
 
-[Paramètres système et plateforme — v004](PARAMETRES-SYSTEME-PLATEFORME.md) : deux pages à cartes, échelles personnalisables et trois modes de certificat, historique et conservation, à valider. Les notes ci-dessous restent le relevé historique de l’apparence.
+[Paramètres système et plateforme — v005](PARAMETRES-SYSTEME-PLATEFORME.md) : deux pages à cartes, échelles personnalisables et trois modes de certificat, historique/conservation, messagerie technique et préférences par groupe/profil, à valider. Les notes ci-dessous restent le relevé historique de l’apparence.
 
 ## Compatibilité vérifiée le 18 octobre 2026
 
