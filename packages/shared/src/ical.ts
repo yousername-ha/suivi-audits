@@ -4,9 +4,11 @@
    Un fichier qui contient une erreur n'est jamais appliqué, même en partie. */
 import { z } from 'zod';
 import { validDate } from './grc.js';
+import { developper, lireRegle } from './ical-repetition.js';
 
 export const ICAL_MAX_OCTETS = 262144;
 export const ICAL_MAX_JOURS = 1000;
+
 /** Un événement ne peut pas couvrir plus d'un an : au-delà, le fichier est considéré comme erroné. */
 const ICAL_MAX_DUREE = 366;
 
@@ -41,8 +43,9 @@ export interface ApercuCalendrier extends IcalLecture {
   applique: boolean;
 }
 
+const ajouterJours = (day: string, n: number) =>
+  new Date(Date.parse(day + 'T12:00:00Z') + n * 86400000).toISOString().slice(0, 10);
 const jourPrecedent = (day: string) => new Date(Date.parse(day + 'T12:00:00Z') - 86400000).toISOString().slice(0, 10);
-const jourSuivant = (day: string) => new Date(Date.parse(day + 'T12:00:00Z') + 86400000).toISOString().slice(0, 10);
 
 /** Dépliage RFC 5545 : une ligne qui commence par une espace ou une tabulation continue la précédente. */
 function lignes(texte: string): { n: number; texte: string }[] {
@@ -62,7 +65,9 @@ function dateIcs(valeur: string): { jour: string; avecHeure: boolean; minuit: bo
   return { jour, avecHeure: m[4] !== undefined, minuit: m[4] === '00' && m[5] === '00' && m[6] === '00' };
 }
 
-export function lireIcs(texte: string): IcalLecture {
+/** Les règles de répétition sont développées de un an avant `aujourdhui` jusqu'à cinq ans après. */
+export const ICAL_HORIZON_ANS = 5;
+export function lireIcs(texte: string, aujourdhui: string = new Date().toISOString().slice(0, 10)): IcalLecture {
   const jours = new Set<string>();
   const ignores: IcalLigne[] = [];
   const erreurs: IcalLigne[] = [];
@@ -98,13 +103,6 @@ export function lireIcs(texte: string): IcalLecture {
         ignores.push({ ligne: e.debut, message: 'Événement annulé, ignoré.' });
         continue;
       }
-      if (e.props.has('RRULE')) {
-        ignores.push({
-          ligne: e.debut,
-          message: 'Règle de répétition (RRULE) non prise en charge : ajoutez les dates réelles au calendrier.',
-        });
-        continue;
-      }
       const debutBrut = e.props.get('DTSTART');
       if (!debutBrut) {
         erreurs.push({ ligne: e.debut, message: 'Événement sans DTSTART.' });
@@ -133,7 +131,37 @@ export function lireIcs(texte: string): IcalLecture {
         erreurs.push({ ligne: e.debut, message: `Événement de plus de ${ICAL_MAX_DUREE} jours.` });
         continue;
       }
-      for (let j = debut.jour; j <= fin; j = jourSuivant(j)) jours.add(j);
+      const ajouter = (premier: string) => {
+        for (let k = 0; k < duree; k++) jours.add(ajouterJours(premier, k));
+      };
+      const brutRegle = e.props.get('RRULE');
+      if (!brutRegle) {
+        ajouter(debut.jour);
+        continue;
+      }
+      const lue = lireRegle(brutRegle);
+      if ('refus' in lue) {
+        ignores.push({
+          ligne: e.debut,
+          message: `Règle de répétition (RRULE) non prise en charge (${lue.refus}) : ajoutez les dates réelles au calendrier.`,
+        });
+        continue;
+      }
+      const horizon = aujourdhui;
+      const jusqu = `${Number(horizon.slice(0, 4)) + ICAL_HORIZON_ANS}${horizon.slice(4)}`;
+      const exclus = new Set(
+        (e.props.get('EXDATE') ?? '')
+          .split(',')
+          .map((v) => dateIcs(v)?.jour)
+          .filter((v): v is string => !!v),
+      );
+      const dev = developper(lue.regle, debut.jour, ajouterJours(aujourdhui, -366), jusqu);
+      for (const premier of dev.jours) if (!exclus.has(premier)) ajouter(premier);
+      if (dev.tronque)
+        ignores.push({
+          ligne: e.debut,
+          message: `Règle de répétition sans fin développée jusqu'au ${jusqu} (${ICAL_HORIZON_ANS} ans après aujourd'hui).`,
+        });
       continue;
     }
     if (evenement) {
@@ -141,7 +169,10 @@ export function lireIcs(texte: string): IcalLecture {
       if (i < 0) continue;
       const cle = ligne.slice(0, i).split(';')[0]!.trim().toUpperCase();
       // Pour DTSTART/DTEND, un paramètre `VALUE=DATE` ou `TZID=` précède les deux-points : seule la valeur compte.
-      if (!evenement.props.has(cle)) evenement.props.set(cle, ligne.slice(i + 1));
+      // EXDATE peut figurer plusieurs fois : les valeurs s'ajoutent ; pour les autres propriétés, la première l'emporte.
+      if (cle === 'EXDATE')
+        evenement.props.set(cle, [evenement.props.get(cle), ligne.slice(i + 1)].filter(Boolean).join(','));
+      else if (!evenement.props.has(cle)) evenement.props.set(cle, ligne.slice(i + 1));
     }
   }
   if (evenement) erreurs.push({ ligne: evenement.debut, message: 'VEVENT non terminé (END:VEVENT manquant).' });

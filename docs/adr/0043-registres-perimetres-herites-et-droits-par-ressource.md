@@ -79,4 +79,4 @@ rôle **contributeur** qui remplit (par exemple marque une tâche récurrente co
   d'actions » (migration 032) ; l'ordre est une commande de gestion, versionnée et journalisée.
 - **Cartes de périmètres** : chaque carte compte les éléments visibles dans son périmètre, les siens et ceux des registres qui le
   portent ; un élément n'est compté qu'une fois dans une carte, une occurrence de tâche récurrente que dans les récurrences ;
-  un registre multi-périmètre figure dans chacune de ses cartes, aucun total général n'est donc produit.
+  un registre multi-périmètre figure dans chacune de ses cartes ; la carte d'un périmètre parent affiche son total avec ses sous-périmètres, et un total général est affiché sous les cartes, chaque élément n'y étant compté qu'une fois (conformité non agrégée).

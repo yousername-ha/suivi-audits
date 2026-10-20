@@ -1,7 +1,7 @@
 /* Cartes de périmètres (R16, R17) : compteurs sans double comptage, indisponibles sans droit, registres restreints
    respectés, éléments hérités par registre. Données fictives. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import type { CartePerimetre } from '@suivi/shared';
+import type { SyntheseCartes } from '@suivi/shared';
 import { type Agent, createTestApp, login, makeUser, type TestApp } from './helpers.js';
 
 const action = (name: string, extra: Record<string, unknown> = {}, registreId?: string) => ({
@@ -31,11 +31,12 @@ describe('cartes de périmètres', () => {
   let membreUser: Awaited<ReturnType<typeof makeUser>>;
   let A: string, B: string;
   let regRestreint: string, regPartage: string;
-  const cartes = async (a: Agent) => {
+  const synthese = async (a: Agent) => {
     const r = await a.get('/api/grc/perimetres/synthese');
     if (r.statusCode !== 200) throw new Error(r.statusCode + ' ' + r.body);
-    return r.json() as CartePerimetre[];
+    return r.json() as SyntheseCartes;
   };
+  const cartes = async (a: Agent) => (await synthese(a)).cartes;
   const carte = async (a: Agent, id: string) => (await cartes(a)).find((c) => c.id === id)!;
 
   beforeAll(async () => {
@@ -168,5 +169,39 @@ describe('cartes de périmètres', () => {
     const ids = (await cartes(sansDroit)).map((c) => c.id);
     expect(ids).not.toContain(A);
     expect((await cartes(admin)).map((c) => c.id)).toEqual(expect.arrayContaining([A, B]));
+  });
+
+  it('le total compte chaque élément une seule fois, alors que les cartes comptent un registre partagé dans chacune', async () => {
+    const { cartes: liste, total } = await synthese(admin);
+    const a = liste.find((c) => c.id === A)!,
+      b = liste.find((c) => c.id === B)!;
+    // L'action du registre partagé A/B figure dans la carte de A et dans celle de B : la somme des cartes la compte deux fois.
+    expect(a.compteurs.actions!.ouverts + b.compteurs.actions!.ouverts).toBe(5);
+    // Total sur tous les périmètres accessibles (dont le périmètre commun) : le même élément n'y compte qu'une fois.
+    const ouvertesReelles = await t.svc.db.one<{ n: number }>(
+      `SELECT count(*)::int n FROM grc_objects WHERE kind='action' AND NOT archived AND data->>'seriesId' IS NULL
+         AND COALESCE(data->>'status','') NOT IN ('done','cancelled') AND smsi_id IN (SELECT id FROM grc_smsis)`,
+    );
+    expect(total.actions!.ouverts).toBe(ouvertesReelles!.n);
+    expect(total.conformite).toBeNull();
+  });
+
+  it('la carte parent compte son ensemble une seule fois, sans additionner les cartes enfants', async () => {
+    const liste = await cartes(admin);
+    const a = liste.find((c) => c.id === A)!,
+      b = liste.find((c) => c.id === B)!;
+    expect(a.sousPerimetres).toBe(1);
+    // Le registre partagé figure dans A et dans B : la somme des deux cartes (5) compterait deux fois son action.
+    expect(a.compteurs.actions!.ouverts + b.compteurs.actions!.ouverts).toBe(5);
+    expect(a.total.actions).toEqual({ ouverts: 4, enRetard: 2 });
+    expect(a.total.conformite).toBeNull();
+    // Sans sous-périmètre, le total de la carte est son propre décompte.
+    expect(b.sousPerimetres).toBe(0);
+    expect(b.total).toEqual(b.compteurs);
+  });
+
+  it('sans droit de lecture, le total est indisponible comme les cartes', async () => {
+    const { total } = await synthese(sansDroit);
+    expect(total).toEqual({ actions: null, recurrentes: null, ecarts: null, continuite: null, conformite: null });
   });
 });
