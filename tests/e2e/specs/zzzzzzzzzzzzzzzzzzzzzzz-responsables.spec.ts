@@ -25,7 +25,7 @@ test('Responsable : fonction créée en administration, désignée sur une actio
     const dialogue = page.getByRole('dialog');
     await dialogue.getByRole('textbox', { name: /^Nom/ }).fill(fonction);
     await dialogue.getByRole('textbox', { name: 'Description' }).fill('Fonction fictive de recette');
-    await dialogue.getByRole('textbox', { name: 'Titulaires' }).click();
+    await dialogue.getByRole('combobox', { name: 'Titulaires' }).click();
     await page.getByRole('option').first().click();
     await page.keyboard.press('Escape');
     await dialogue.getByRole('button', { name: 'Créer' }).click();
