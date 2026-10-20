@@ -64,7 +64,7 @@ rôle **contributeur** qui remplit (par exemple marque une tâche récurrente co
 - La validation OK/KO/NA d'une occurrence récurrente, avec preuve et immutabilité, reprendra le rôle de contributeur (lot L6).
 - Cette ADR ne modifie ni les routes ni l'interface de la cartographie dynamique.
 
-## Addendum du 20/10/2026 — limites levées dans la 3.6.0
+## Addendum du 20/10/2026 — limites levées dans la 3.6.1
 
 - **Déplacement d'un élément** : commande atomique avec aperçu d'impact, motif, `If-Match` et droit de gestion des deux
   registres (même famille) ; l'élément garde son identifiant, ses versions antérieures restent rattachées à leur ancien

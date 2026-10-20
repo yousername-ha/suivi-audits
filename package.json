@@ -1,7 +1,7 @@
 {
   "name": "suivi-audits",
   "type": "module",
-  "version": "3.6.0",
+  "version": "3.6.1",
   "private": true,
   "description": "Suivi des audits SMSI ISO 27001 / HDS — GCS Normand'e-Santé",
   "license": "UNLICENSED",

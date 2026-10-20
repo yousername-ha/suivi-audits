@@ -2,14 +2,14 @@
 
 ## État courant et suite (20/10/2026)
 
-**Fait dans la 3.6.0 (étiquette à poser ; elle porte la 3.5.0, jamais publiée)** : l'intégration ASTRA complète ([recette R01 à R18](unification/RECETTE-INTEGRATION-ASTRA.md)) — déplacement entre registres, responsables personne, groupe ou fonction, plans d'actions conteneurs, écart depuis un audit et récidive, récurrences (fenêtres, jours exclus, iCalendar, enchaînement), graphe des périmètres, registres restreints respectés, contexte de retour —, ainsi que : registres, périmètres hérités et droits par ressource ([ADR 0043](adr/0043-registres-perimetres-herites-et-droits-par-ressource.md)), menu à sept familles, contribution, Timeline, validation des occurrences, écarts classés et rouvrables et ainsi que : hiérarchie des périmètres et héritage des référentiels (H1), tous les modules en
+**Fait dans la 3.6.1 (étiquette à poser ; elle porte la 3.5.0 et la 3.6.0, jamais publiées)** : l'intégration ASTRA complète ([recette R01 à R18](unification/RECETTE-INTEGRATION-ASTRA.md)) — déplacement entre registres, responsables personne, groupe ou fonction, plans d'actions conteneurs, écart depuis un audit et récidive, récurrences (fenêtres, jours exclus, iCalendar, enchaînement), graphe des périmètres, registres restreints respectés, contexte de retour —, ainsi que : registres, périmètres hérités et droits par ressource ([ADR 0043](adr/0043-registres-perimetres-herites-et-droits-par-ressource.md)), menu à sept familles, contribution, Timeline, validation des occurrences, écarts classés et rouvrables et ainsi que : hiérarchie des périmètres et héritage des référentiels (H1), tous les modules en
 tables (H2, migrations 022 à 030), couverture par exigence avec états et versions (H3), exports de revue de direction en
 Word, PowerPoint et Excel (H4), exports Excel par rubrique, retrait de l'écran `/legacy` ([ADR 0042](adr/0042-retrait-de-lecran-legacy.md)),
 consolidation documentaire (H5, ci-dessous).
 
 **Reste à faire, par ordre de priorité**
 
-1. Recette de l'ensemble sur le serveur du RSSI, puis étiquette de version `v3.6.0` (par le RSSI) portant les migrations 022 à 032.
+1. Recette de l'ensemble sur le serveur du RSSI, puis étiquette de version `v3.6.1` (par le RSSI) portant les migrations 022 à 032.
 2. Exports de comité à la charte du modèle interne (COPIL). Les exports Excel du pronostic, du clausier fournisseurs et du
    GAP applications sont repris ; ReCyF est couvert par la page Couverture.
 3. Normalisation des sous-structures encore en JSON dans des tables liées ([ADR 0040](adr/0040-sortie-du-json-plat-modules-en-tables.md)) :
@@ -83,7 +83,7 @@ Modules repris : `years`, `yearLabels`, `nextYear`, `nextDate`, `internalDate`, 
 - [ ] `AUD-01` droits (modules `audit`, `ecarts`, `plan_audit` existants) ; `AUD-02` cycle de certification ; `AUD-03` référentiels en tables versionnées (ISO 27001 clauses 4 à 10, Annexe A, HDS), guide des preuves et questions.
 - [ ] `AUD-04` couverture AFNOR et interne, préparation par année ; `AUD-05` pronostic en parité avec l'outil historique ; `AUD-06` préparation de l'audit ; `AUD-07` couverture du cycle ; `AUD-08` fiche exigence.
 - [ ] `AUD-09` registre des écarts (clôture tracée, réouverture) ; `AUD-10` plan d'actions ; `AUD-11` plan d'audit par année.
-- [ ] `AUD-12` synthèse et graphiques ; `AUD-13` imports PRM02 et Tenacy (Tenacy repris en 3.6.0, voir le journal des modifications ; PRM02 à faire) ; `AUD-14` exports Excel, CSV, impression.
+- [ ] `AUD-12` synthèse et graphiques ; `AUD-13` imports PRM02 et Tenacy (Tenacy repris en 3.6.1, voir le journal des modifications ; PRM02 à faire) ; `AUD-14` exports Excel, CSV, impression.
 - [ ] `AUD-15` reprise legacy et passerelle d'ajout des écarts ; `AUD-16` temps réel, journal, performances.
 
 ## Phase 2 — Pilotage du SMSI
