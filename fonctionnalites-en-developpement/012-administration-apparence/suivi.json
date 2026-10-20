@@ -9,7 +9,13 @@
       "date": "2026-10-14",
       "etape": "en-developpement",
       "motif": "Organisation demandée par l’utilisateur ; proposition encore à valider."
+    },
+    {
+      "date": "2026-10-20",
+      "etape": "en-developpement",
+      "motif": "v002 : deux espaces système/plateforme, 15 cartes, six aperçus et 19 contrôles locaux ; proposition à valider, aucune opération réelle."
     }
   ],
-  "numero": "012"
+  "numero": "012",
+  "maquetteCourante": "v002-deux-espaces"
 }

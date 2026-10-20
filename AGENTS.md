@@ -108,3 +108,9 @@ Ces instructions utilisateur remplacent les consignes antérieures contradictoir
 - Les fiches peuvent afficher les périmètres hérités en lecture seule. Le filtre global recherche les registres concernés et leurs éléments. L’héritage est résolu depuis le registre, sans copie métier divergente sur chaque élément.
 - Changer de registre actualise le contexte hérité ; les droits, liens, évaluations et traces historiques doivent être contrôlés par le serveur. Ne pas réécrire une validation immuable à la suite d’un changement de périmètre.
 - Cette règle corrige les anciennes maquettes : les conserver comme références historiques, pas comme règles concurrentes. Dossier courant : `fonctionnalites-a-implementer/_dossiers-transversaux/implementation-ui-2026-10/README.md`.
+
+## Deux espaces de paramètres — proposition du 20 octobre 2026
+
+- La demande actuelle inclut la **conception des écrans** de sauvegarde/restauration, mises à jour, stack, statistiques de ressources et certificat dans « Paramètres système ». Elle ne lance aucune opération technique réelle.
+- « Paramètres plateforme » regroupe configuration métier (échelles, matrices, catalogues), utilisateurs/groupes/droits et préférences communes. La maquette 012 v002 fournit ces points d’entrée ; réutiliser 019 et 022, sans créer de gestion concurrente.
+- Deux entrées dans Administration sont proposées, avec cartes à icônes et détails centraux. L’ordonnancement reste à valider. Les métriques et états des captures sont fictifs.

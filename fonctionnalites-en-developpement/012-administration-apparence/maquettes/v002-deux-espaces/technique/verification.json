@@ -1,0 +1,28 @@
+{
+  "date": "2026-10-20",
+  "statut": "reussi",
+  "checks": [
+    "Deux entrées de paramètres dans le menu",
+    "Système : six cartes",
+    "Panneau central",
+    "Rétention invalide refusée",
+    "Planification conservée en mémoire de démonstration",
+    "Recherche ciblée",
+    "Aucun secret saisi dans la maquette TLS",
+    "État vide",
+    "Changement de page réinitialise la recherche",
+    "Plateforme : neuf cartes en trois groupes",
+    "Changement d’échelle",
+    "Brouillon conservé, aucune publication",
+    "Lien vers la maquette 022 existante",
+    "Les quinze cartes ouvrent un détail utilisable",
+    "Menu fixe et contenu indépendant",
+    "Pas de débordement horizontal mobile",
+    "Panneau contenu sur mobile",
+    "Rechargement réinitialise la simulation",
+    "Aucune erreur JavaScript"
+  ],
+  "errors": [],
+  "backendTeste": false,
+  "limites": "Données fictives, aucune opération système réelle, aucun contrôle exhaustif d’accessibilité."
+}

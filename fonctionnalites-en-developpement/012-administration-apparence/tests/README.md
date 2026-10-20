@@ -13,3 +13,7 @@ Suivre aussi la [recette commune](../../_dossiers-transversaux/socle-astra/RECET
 ## Validation utilisateur
 
 **Non consignée pour cette version dans cette réorganisation.** Ajouter la décision explicite et sa date dans `maquettes/v001-reference-08/version.json` ; ne pas transformer automatiquement des tests réussis en validation.
+
+## v002 — 20 octobre 2026
+
+19 contrôles locaux réussis : deux pages, 15 cartes, recherche/état vide, panneaux centraux, validation de rétention, brouillons en mémoire, lien vers 022, menu fixe et mobile. [Résultats](../maquettes/v002-deux-espaces/technique/verification.json) · [Script](../maquettes/v002-deux-espaces/technique/verifier.cjs). Aucun backend testé. Six captures produites ; valeurs fictives.

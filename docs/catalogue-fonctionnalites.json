@@ -159,7 +159,7 @@
     {
       "id": "administration-apparence",
       "titre": "Administration et apparence globale",
-      "maquetteCourante": "fonctionnalites-en-developpement/012-administration-apparence/maquettes/v001-reference-08",
+      "maquetteCourante": "fonctionnalites-en-developpement/012-administration-apparence/maquettes/v002-deux-espaces",
       "statutMaquette": "a-valider",
       "implementation": "a-suivre",
       "tests": "fonctionnalites-en-developpement/012-administration-apparence/tests/README.md",
@@ -168,7 +168,7 @@
       "dossier": "fonctionnalites-en-developpement/012-administration-apparence",
       "suivi": "fonctionnalites-en-developpement/012-administration-apparence/suivi.json",
       "numero": "012",
-      "description": "Administrer les paramètres, habilitations et choix d’apparence de l’application."
+      "description": "Présenter les paramètres système et métier en cartes : exploitation, stockage, certificat, échelles, comptes, droits et préférences globales."
     },
     {
       "id": "formation",

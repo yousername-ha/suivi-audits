@@ -1,5 +1,9 @@
 # Implémentation — Administration et apparence globale
 
+## Proposition du 20 octobre 2026
+
+[Paramètres système et plateforme — v002](PARAMETRES-SYSTEME-PLATEFORME.md) : deux pages à cartes, à valider. Les notes ci-dessous restent le relevé historique de l’apparence.
+
 ## Compatibilité vérifiée le 18 octobre 2026
 
 Le choix global `sage` / `clair` existe déjà dans Claude (`d044eb9`) : `GET/PUT /api/settings/apparence`, lecture via `/api/auth/me`, version/If-Match. Ne pas recréer les endpoints proposés dans l’ancien dossier. Vérifier la permission réelle `parametres:modifier` face à la demande d’accès administrateur exclusif, et la propagation aux sessions actives.

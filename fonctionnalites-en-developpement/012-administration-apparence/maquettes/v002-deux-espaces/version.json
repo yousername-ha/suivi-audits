@@ -1,0 +1,48 @@
+{
+  "id": "v002-deux-espaces",
+  "statut": "a-valider",
+  "date": "2026-10-20",
+  "versionPrecedente": "v001-reference-08",
+  "validationUtilisateur": null,
+  "integrationBackend": false,
+  "references": [
+    "fonctionnalites-en-developpement/012-administration-apparence/maquettes/v002-deux-espaces/visuels/01-parametres-systeme.png",
+    "fonctionnalites-en-developpement/012-administration-apparence/maquettes/v002-deux-espaces/visuels/02-parametres-plateforme.png",
+    "fonctionnalites-en-developpement/012-administration-apparence/maquettes/v002-deux-espaces/visuels/03-sauvegardes.png",
+    "fonctionnalites-en-developpement/012-administration-apparence/maquettes/v002-deux-espaces/visuels/04-echelles.png",
+    "fonctionnalites-en-developpement/012-administration-apparence/maquettes/v002-deux-espaces/visuels/05-certificat.png",
+    "fonctionnalites-en-developpement/012-administration-apparence/maquettes/v002-deux-espaces/visuels/06-mobile.png"
+  ],
+  "visuels": [
+    {
+      "fichier": "visuels/01-parametres-systeme.png",
+      "titre": "Paramètres système",
+      "sha256": "168c604798c120dffaa42d1e81b19057672b7db2c90e7050a06f17e0250becde"
+    },
+    {
+      "fichier": "visuels/02-parametres-plateforme.png",
+      "titre": "Paramètres de la plateforme",
+      "sha256": "4309704ebc4ad24ddb77280317b8ba802a1e58235740d7de42acf0b62c3b7ba6"
+    },
+    {
+      "fichier": "visuels/03-sauvegardes.png",
+      "titre": "Sauvegardes et restauration",
+      "sha256": "678ee0cf23bc8715a380bdc52788bf5fb1adfaed34ed386ec5dc0a370c0bcd3f"
+    },
+    {
+      "fichier": "visuels/04-echelles.png",
+      "titre": "Échelles d’évaluation",
+      "sha256": "1c7e9726d589d69d01daca8e153598748428e0f0c978944eb85eb8424f5c0283"
+    },
+    {
+      "fichier": "visuels/05-certificat.png",
+      "titre": "Certificat HTTPS",
+      "sha256": "8cb1c44c964a96a5162b778836c64d6a342dea9c27d46c74952dbe41f3bf35b4"
+    },
+    {
+      "fichier": "visuels/06-mobile.png",
+      "titre": "Vue mobile",
+      "sha256": "6695913577eef53869980617985fb9e7b64636b967ff2f917ca8b16b5e034d00"
+    }
+  ]
+}
