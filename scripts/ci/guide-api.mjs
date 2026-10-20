@@ -175,21 +175,21 @@ switch (cmd) {
     const sim = await call('POST', '/api/admin/import/simulate?mode=init', { body: buf, headers });
     if (!sim.report.affected.length) fail('la simulation ne prévoit aucune modification');
     const after = await legacyState();
-    if ((after.findings || []).length) fail('la simulation a écrit en base');
+    if ((after.processes || []).length) fail('la simulation a écrit en base');
     const sha = crypto.createHash('sha256').update(buf).digest('hex');
     if (sim.sha256 !== sha) fail('empreinte du fichier simulé incorrecte');
     await call('POST', `/api/admin/import/apply?mode=init&sha256=${sha}`, { body: buf, headers });
     const data = await legacyState();
     const expected = JSON.parse(buf.toString('utf8'));
-    for (const k of ['findings', 'processes', 'suppliers']) {
+    for (const k of ['processes', 'suppliers']) {
       if ((data[k] || []).length !== (expected[k] || []).length)
         fail(`après import, ${k} : ${(data[k] || []).length} élément(s), ${(expected[k] || []).length} attendu(s)`);
     }
     if (data.schema !== 15) fail(`schéma ${data.schema} après import, 15 attendu`);
-    st.findings = data.findings.length;
+    st.processes = data.processes.length;
     save(st);
     console.log(
-      `Étape 10 : simulation sans écriture, puis import appliqué (${sim.report.affected.length} module(s), ${st.findings} écart(s)).`,
+      `Étape 10 : simulation sans écriture, puis import appliqué (${sim.report.affected.length} module(s), ${st.processes} processus).`,
     );
     break;
   }
@@ -197,7 +197,7 @@ switch (cmd) {
     const st = load();
     await login(st);
     const data = await legacyState();
-    if ((data.findings || []).length !== st.findings) fail('données différentes après restauration');
+    if ((data.processes || []).length !== st.processes) fail('données différentes après restauration');
     const batches = await call('GET', '/api/admin/import');
     if (!batches.length) fail('historique des imports vide après restauration');
     const users = await call('GET', '/api/admin/users');
@@ -247,7 +247,7 @@ switch (cmd) {
       documents: docs,
       documentRelu: docSha,
       suivi: Object.fromEntries(
-        ['findings', 'processes', 'suppliers', 'items'].map((k) => [k, (data[k] || []).length]),
+        ['processes', 'suppliers', 'items'].map((k) => [k, (data[k] || []).length]),
       ),
       schema: data.schema,
     };
