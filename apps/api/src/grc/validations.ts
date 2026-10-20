@@ -4,8 +4,10 @@
    - Une occurrence validée ne change plus : la reprendre passe par une réouverture motivée (rôle de gestionnaire), inscrite
      au même journal. Rejouer une commande avec le même identifiant de requête renvoie l'enregistrement d'origine. */
 import {
+  fenetreOccurrence,
   GrcRef,
   ReouvertureOccurrenceBody,
+  SeriesData,
   ValidationOccurrenceBody,
   type EtatValidation,
   type GrcObject,
@@ -72,6 +74,21 @@ export class GrcValidations {
     if (o.archived) throw new HttpError(409, 'Occurrence archivée.');
     return o;
   }
+  /** La fenêtre de réalisation de la série décide : on ne valide ni avant son ouverture ni après sa fermeture. */
+  private async exigerFenetreOuverte(o: GrcObject, c: Client) {
+    const serie = await this.g.raw(String(o.data.seriesId), c);
+    const dueAt = typeof o.data.dueAt === 'string' ? o.data.dueAt : null;
+    if (!serie || serie.kind !== 'task_series' || !dueAt) return;
+    const f = fenetreOccurrence(SeriesData.parse(serie.data).recurrence, dueAt);
+    const date = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('fr-FR', { timeZone: 'UTC' }) : '');
+    if (f.etat === 'a_venir')
+      throw new HttpError(409, `La fenêtre de réalisation de cette occurrence n’ouvre que le ${date(f.ouvreLe)}.`);
+    if (f.etat === 'fermee')
+      throw new HttpError(
+        409,
+        `La fenêtre de réalisation de cette occurrence s’est fermée le ${date(f.fermeLe)} : demandez à un gestionnaire de la série d’élargir la fenêtre.`,
+      );
+  }
   async historique(smsi: string, id: string, user: SessionUser) {
     await this.occurrence(smsi, id, user, 'lire');
     const lignes = await this.lignes(id);
@@ -134,6 +151,7 @@ export class GrcValidations {
       const lignes = await this.lignes(id, c);
       if (etatDe(lignes) === 'validee')
         throw new HttpError(409, 'Cette occurrence est déjà validée : seule une réouverture motivée la reprend.');
+      await this.exigerFenetreOuverte(o, c);
       const l = await this.ajouter(
         c,
         o,

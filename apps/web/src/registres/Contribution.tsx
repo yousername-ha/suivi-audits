@@ -90,11 +90,13 @@ export function PanneauElement({
   object,
   policy,
   acces,
+  onOpenObject,
 }: {
   smsi: string;
   object: GrcObject;
   policy: BusinessPolicy;
   acces: AccesElement;
+  onOpenObject?: (o: GrcObject) => void;
 }) {
   return (
     <Stack gap="sm">
@@ -107,7 +109,7 @@ export function PanneauElement({
         <Contribuer smsi={smsi} object={object} policy={policy} />
       )}
       {object.kind === 'action' && typeof object.data.seriesId === 'string' && object.data.seriesId && (
-        <ValidationOccurrence smsi={smsi} object={object} acces={acces} />
+        <ValidationOccurrence smsi={smsi} object={object} acces={acces} onOpenObject={onOpenObject} />
       )}
       {acces.peut.gerer && peutEtreDeplace(object) && <DeplacerElement smsi={smsi} object={object} />}
       {acces.peut.gerer && (

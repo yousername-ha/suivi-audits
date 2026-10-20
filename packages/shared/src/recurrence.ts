@@ -70,9 +70,56 @@ export function recurrenceSlot(input: RecurrenceType, index: number) {
     date = new Date(stamp(year, month + 1, Math.min(d!, maxDay)));
   }
   if (!Number.isFinite(date.getTime()) || date.getUTCFullYear() > 9999) throw new Error('Échéance hors limites.');
-  const day = date.toISOString().slice(0, 10);
+  const nominal = date.toISOString().slice(0, 10);
+  const day = jourDisponible(r, nominal);
   if (r.until !== null && day > r.until) return null;
-  return { key: `${day}T${r.time}[${r.timezone}]`, local: day, dueAt: localDue(day, r.time, r.timezone) };
+  return {
+    key: `${day}T${r.time}[${r.timezone}]`,
+    local: day,
+    nominal,
+    decalee: day !== nominal,
+    dueAt: localDue(day, r.time, r.timezone),
+  };
+}
+const jourSuivant = (day: string) => new Date(Date.parse(day + 'T12:00:00Z') + 86400000).toISOString().slice(0, 10);
+const jourSemaine = (day: string) => new Date(day + 'T12:00:00Z').getUTCDay();
+/** Premier jour disponible à partir de `day` : les jours exclus (dates et jours de la semaine) sont sautés. Le report est
+    borné (un an) pour qu'une configuration absurde ne boucle jamais. */
+export function jourDisponible(r: Pick<RecurrenceType, 'excludedDays' | 'excludedWeekdays'>, day: string): string {
+  if (!r.excludedDays?.length && !r.excludedWeekdays?.length) return day;
+  const dates = new Set(r.excludedDays ?? []);
+  const semaine = new Set(r.excludedWeekdays ?? []);
+  let jour = day;
+  for (let i = 0; i < 366; i++) {
+    if (!dates.has(jour) && !semaine.has(jourSemaine(jour))) return jour;
+    jour = jourSuivant(jour);
+  }
+  throw new Error('Aucun jour disponible : trop de jours exclus.');
+}
+
+export type EtatFenetre = 'a_venir' | 'ouverte' | 'fermee';
+export interface FenetreOccurrence {
+  /** Début et fin de la fenêtre (ISO) ; nuls quand la série n'a pas de fenêtre. */
+  ouvreLe: string | null;
+  fermeLe: string | null;
+  etat: EtatFenetre;
+}
+/** Disponibilité d'une occurrence à un instant donné, d'après la fenêtre de sa série et l'échéance de l'occurrence. */
+export function fenetreOccurrence(
+  r: Pick<RecurrenceType, 'window'>,
+  dueAt: string,
+  maintenant: Date = new Date(),
+): FenetreOccurrence {
+  if (!r.window) return { ouvreLe: null, fermeLe: null, etat: 'ouverte' };
+  const echeance = Date.parse(dueAt);
+  const ouvre = echeance - r.window.openDays * 86400000;
+  const ferme = echeance + r.window.closeDays * 86400000;
+  const t = maintenant.getTime();
+  return {
+    ouvreLe: new Date(ouvre).toISOString(),
+    fermeLe: new Date(ferme).toISOString(),
+    etat: t < ouvre ? 'a_venir' : t > ferme ? 'fermee' : 'ouverte',
+  };
 }
 
 /** Prochaine occurrence d'une série à partir d'un jour donné (AAAA-MM-JJ) : nulle si la série est inactive, terminée ou

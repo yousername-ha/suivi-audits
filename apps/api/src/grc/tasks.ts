@@ -1,4 +1,12 @@
-import { recurrenceSlot, SeriesData } from '@suivi/shared';
+import {
+  CalendrierBody,
+  fenetreOccurrence,
+  ICAL_MAX_JOURS,
+  lireIcs,
+  recurrenceSlot,
+  SeriesData,
+  type ApercuCalendrier,
+} from '@suivi/shared';
 import type { SessionUser } from '../auth.js';
 import { HttpError } from '../http/errors.js';
 import { objectColumns, objectDto, type ObjectRow, type Grc } from './core.js';
@@ -71,15 +79,117 @@ export class GrcTasks {
     }
     return { summary: totals, byStatus: [...counts].map(([status, count]) => ({ status, count })) };
   }
+  /** Occurrences d'une série, de la plus récente à la plus ancienne, avec leur fenêtre de réalisation et l'état de leur
+      validation (journal immuable : migration 030). */
   async occurrences(smsi: string, id: string, user: SessionUser, before?: string) {
     const o = await this.g.object(smsi, id, user);
     if (o.kind !== 'task_series') throw new HttpError(422, 'Série attendue.');
-    return (
-      await this.g.db.q(
+    const lignes = (
+      await this.g.db.q<{
+        slot: string;
+        actionId: string;
+        name: string;
+        data: Record<string, unknown>;
+        version: number;
+      }>(
         `SELECT s.slot,s.action_id AS "actionId",o.name,o.data,o.version FROM grc_occurrences s JOIN grc_objects o ON o.id=s.action_id WHERE s.series_id=$1 AND ($2::text IS NULL OR s.slot<$2) ORDER BY s.slot DESC LIMIT 50`,
         [id, before ?? null],
       )
     ).rows;
+    return this.enrichir(o.data, lignes);
+  }
+  private async enrichir<T extends { actionId: string; data: Record<string, unknown> }>(
+    serie: Record<string, unknown>,
+    lignes: T[],
+    maintenant = new Date(),
+  ) {
+    const recurrence = SeriesData.parse(serie).recurrence;
+    const derniers = lignes.length
+      ? (
+          await this.g.db.q<{ id: string; kind: string; result: string | null }>(
+            `SELECT DISTINCT ON (objet_id) objet_id AS id,kind,result FROM occurrence_validations
+              WHERE objet_id=ANY($1::uuid[]) ORDER BY objet_id,seq DESC`,
+            [lignes.map((l) => l.actionId)],
+          )
+        ).rows
+      : [];
+    const parId = new Map(derniers.map((d) => [d.id, d]));
+    return lignes.map((l) => {
+      const d = parId.get(l.actionId);
+      const etat = !d ? 'ouverte' : d.kind === 'validation' ? 'validee' : 'rouverte';
+      const dueAt = typeof l.data.dueAt === 'string' ? l.data.dueAt : null;
+      return {
+        ...l,
+        fenetre: dueAt ? fenetreOccurrence(recurrence, dueAt, maintenant) : null,
+        validation: { etat, result: etat === 'validee' ? d!.result : null },
+      };
+    });
+  }
+  /** Occurrence suivante à traiter : la plus ancienne qui n'est pas validée et dont la fenêtre est ouverte (enchaînement
+      après une validation ; l'occurrence qu'on vient de traiter est écartée même si sa validation tarde à apparaître). */
+  async prochaine(smsi: string, id: string, user: SessionUser, apres?: string) {
+    const o = await this.g.object(smsi, id, user);
+    if (o.kind !== 'task_series') throw new HttpError(422, 'Série attendue.');
+    const lignes = (
+      await this.g.db.q<{
+        slot: string;
+        actionId: string;
+        name: string;
+        data: Record<string, unknown>;
+        version: number;
+      }>(
+        `SELECT s.slot,s.action_id AS "actionId",o.name,o.data,o.version FROM grc_occurrences s JOIN grc_objects o ON o.id=s.action_id
+          WHERE s.series_id=$1 AND NOT o.archived ORDER BY s.slot ASC LIMIT 1000`,
+        [id],
+      )
+    ).rows;
+    const occurrence = (await this.enrichir(o.data, lignes)).find(
+      (l) => l.actionId !== apres && l.validation.etat !== 'validee' && l.fenetre?.etat === 'ouverte',
+    );
+    return { occurrence: occurrence ?? null };
+  }
+  /** Import d'un calendrier iCalendar dans les jours exclus d'une série. L'aperçu décrit l'effet sans rien écrire ; l'import
+      est tout ou rien (une erreur dans le fichier ne modifie rien) et rejouer le même fichier n'ajoute aucun doublon. */
+  async importerCalendrier(
+    smsi: string,
+    id: string,
+    input: CalendrierBody,
+    expected: number,
+    user: SessionUser,
+    ip: string,
+  ): Promise<ApercuCalendrier> {
+    const b = CalendrierBody.parse(input);
+    const o = await this.g.object(smsi, id, user);
+    if (o.kind !== 'task_series') throw new HttpError(422, 'Série attendue.');
+    const recurrence = SeriesData.parse(o.data).recurrence;
+    const lecture = lireIcs(b.ics);
+    const presents = new Set(recurrence.excludedDays ?? []);
+    const nouveaux = lecture.jours.filter((j) => !presents.has(j));
+    const dejaPresents = lecture.jours.filter((j) => presents.has(j));
+    const total = presents.size + nouveaux.length;
+    if (total > ICAL_MAX_JOURS)
+      lecture.erreurs.push({ ligne: 1, message: `Une série ne peut pas exclure plus de ${ICAL_MAX_JOURS} jours.` });
+    const apercu: ApercuCalendrier = { ...lecture, nouveaux, dejaPresents, total, applique: false };
+    if (b.apercu) return apercu;
+    if (lecture.erreurs.length)
+      throw new HttpError(
+        422,
+        'Le calendrier contient des erreurs : rien n’a été importé. Corrigez le fichier puis réessayez.',
+      );
+    if (!nouveaux.length) return { ...apercu, total: presents.size };
+    await this.g.updateObject(
+      smsi,
+      id,
+      {
+        kind: 'task_series',
+        name: o.name,
+        data: { ...o.data, recurrence: { ...recurrence, excludedDays: [...presents, ...nouveaux].sort() } },
+      },
+      expected,
+      user,
+      ip,
+    );
+    return { ...apercu, applique: true };
   }
   async tick(now = new Date()) {
     // Verrou par série + clé d’occurrence unique : plusieurs instances peuvent travailler sans doublons.

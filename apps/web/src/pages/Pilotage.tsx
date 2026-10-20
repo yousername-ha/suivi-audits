@@ -497,6 +497,7 @@ export function PilotagePage() {
                 opened={opened}
                 onClose={() => setOpened(false)}
                 preset={preset}
+                onOpenObject={open}
               />
             ) : (
               <RecordEditor

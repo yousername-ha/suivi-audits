@@ -6,10 +6,12 @@ import { notifications } from '@mantine/notifications';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
 import {
+  fenetreOccurrence,
   RESULTAT_LABELS,
   RESULTATS_VALIDATION,
   type EtatValidation,
   type GrcObject,
+  type SeriesData,
   type ValidationDto,
 } from '@suivi/shared';
 import { DataTable } from '@suivi/ui';
@@ -24,14 +26,42 @@ const ETAT_LABELS: Record<EtatValidation, string> = {
 };
 const RESULTAT_OPTIONS = RESULTATS_VALIDATION.map((r) => ({ value: r, label: RESULTAT_LABELS[r] }));
 
+const dateFr = (iso: string) => new Date(iso).toLocaleDateString('fr-FR', { timeZone: 'UTC' });
+
+/** Fenêtre de réalisation de l'occurrence, calculée par le même moteur que le serveur (qui reste seul juge). */
+function EtatFenetre({ smsi, object }: { smsi: string; object: GrcObject }) {
+  const serie = useQuery({
+    queryKey: ['grc', smsi, 'serie', object.data.seriesId],
+    queryFn: () => get<GrcObject>(`/api/grc/${smsi}/objects/${String(object.data.seriesId)}`),
+  });
+  const dueAt = typeof object.data.dueAt === 'string' ? object.data.dueAt : null;
+  const recurrence = (serie.data?.data as Partial<SeriesData> | undefined)?.recurrence;
+  if (!recurrence?.window || !dueAt) return null;
+  const f = fenetreOccurrence(recurrence, dueAt);
+  const texte =
+    f.etat === 'a_venir'
+      ? `Fenêtre de réalisation : ouvre le ${dateFr(f.ouvreLe!)}`
+      : f.etat === 'fermee'
+        ? `Fenêtre de réalisation : fermée depuis le ${dateFr(f.fermeLe!)}`
+        : `Fenêtre de réalisation : ouverte jusqu’au ${dateFr(f.fermeLe!)}`;
+  return (
+    <Badge variant="light" color={f.etat === 'ouverte' ? 'teal' : 'orange'} aria-label={texte}>
+      {texte}
+    </Badge>
+  );
+}
+
 export function ValidationOccurrence({
   smsi,
   object,
   acces,
+  onOpenObject,
 }: {
   smsi: string;
   object: GrcObject;
   acces: AccesElement;
+  /** Ouvre une autre fiche : sert à enchaîner sur l'occurrence suivante. */
+  onOpenObject?: (o: GrcObject) => void;
 }) {
   const qc = useQueryClient();
   const cle = ['validations', object.id];
@@ -49,6 +79,21 @@ export function ValidationOccurrence({
   // Un identifiant par intention : il ne change qu'après un succès, pour qu'un rejeu ne duplique rien.
   const requete = useRef(crypto.randomUUID());
   const etat = journal.data?.etat ?? 'ouverte';
+  const suivante = async () => {
+    setErreur(null);
+    try {
+      const r = await get<{ occurrence: { actionId: string } | null }>(
+        `/api/grc/${smsi}/series/${String(object.data.seriesId)}/prochaine?apres=${object.id}`,
+      );
+      if (!r.occurrence) {
+        notifications.show({ color: 'gray', message: 'Aucune autre occurrence à traiter pour le moment.' });
+        return;
+      }
+      onOpenObject?.(await get<GrcObject>(`/api/grc/${smsi}/objects/${r.occurrence.actionId}`));
+    } catch (e) {
+      setErreur(e);
+    }
+  };
   const justifie = resultat === 'ok' || commentaire.trim().length >= 10;
   const envoyer = async (chemin: string, body: Record<string, unknown>, message: string) => {
     setEnvoi(true);
@@ -75,7 +120,13 @@ export function ValidationOccurrence({
           {ETAT_LABELS[etat]}
         </Badge>
       </Group>
+      <EtatFenetre smsi={smsi} object={object} />
       <ErrorAlert error={erreur ?? journal.error} />
+      {etat === 'validee' && onOpenObject && (
+        <Button variant="default" onClick={() => void suivante()}>
+          Occurrence suivante
+        </Button>
+      )}
       {etat !== 'validee' && acces.peut.contribuer && (
         <Stack gap="xs">
           <Select

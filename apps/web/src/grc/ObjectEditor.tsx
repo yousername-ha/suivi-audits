@@ -1,5 +1,6 @@
 import { Relations } from './Relations';
 import { PanneauElement, useAccesElement } from '../registres/Contribution';
+import { PlanningSerie } from './PlanningSerie';
 import {
   Alert,
   Button,
@@ -21,6 +22,7 @@ import {
   type BusinessPolicy,
   type GrcKind,
   type GrcObject,
+  type Recurrence,
   type RiskData,
   type RiskMethod,
   RISK_REF_KINDS,
@@ -120,6 +122,8 @@ const initial = (kind: GrcKind, policy: BusinessPolicy, method?: MethodVersion):
                                     ? { applicable: true, reason: '', implemented: false }
                                     : {}),
           };
+/** Champs de la récurrence que le composant « Planning de la série » édite : l'éditeur générique ne les montre pas. */
+const CHAMPS_PLANNING = ['window', 'excludedDays', 'excludedWeekdays'];
 export function ObjectEditor({
   smsi,
   policy,
@@ -128,6 +132,7 @@ export function ObjectEditor({
   opened,
   onClose,
   preset,
+  onOpenObject,
 }: {
   smsi: string;
   policy: BusinessPolicy;
@@ -137,6 +142,8 @@ export function ObjectEditor({
   onClose: () => void;
   /** Création préremplie (risque issu d'une étude EBIOS RM : intitulé, étude, scénario). */
   preset?: { name?: string; data?: Record<string, unknown> };
+  /** Ouvre une autre fiche (occurrence suivante d'une série après une validation). */
+  onOpenObject?: (o: GrcObject) => void;
 }) {
   const can = useCan(),
     qc = useQueryClient(),
@@ -372,7 +379,32 @@ export function ObjectEditor({
             {kind === 'task_series' && data.recurrence && (
               <>
                 <Text fw={600}>Récurrence et automatisation</Text>
-                <ConfigurationEditor value={data.recurrence} onChange={(v) => set('recurrence', v)} path="recurrence" />
+                <ConfigurationEditor
+                  value={Object.fromEntries(
+                    Object.entries(data.recurrence).filter(([k]) => !CHAMPS_PLANNING.includes(k)),
+                  )}
+                  onChange={(v) =>
+                    set('recurrence', {
+                      ...(v as Record<string, unknown>),
+                      ...Object.fromEntries(
+                        Object.entries(data.recurrence!).filter(([k]) => CHAMPS_PLANNING.includes(k)),
+                      ),
+                    })
+                  }
+                  path="recurrence"
+                />
+                <PlanningSerie
+                  smsi={smsi}
+                  serieId={object?.id ?? null}
+                  version={object?.version ?? null}
+                  recurrence={data.recurrence as Recurrence}
+                  onChange={(r) => set('recurrence', r)}
+                  onImporte={() => {
+                    void qc.invalidateQueries({ queryKey: ['grc', smsi] });
+                    onClose();
+                  }}
+                  readonly={readonly}
+                />
                 <MultiSelect
                   label="Objets SMSI liés à chaque occurrence"
                   searchable
@@ -520,7 +552,9 @@ export function ObjectEditor({
             {object?.id.startsWith('legacy:') ? 'Confirmer la réalisation dans la source' : 'Enregistrer la fiche'}
           </Button>
         )}
-        {object && acces && <PanneauElement smsi={smsi} object={object} policy={policy} acces={acces} />}
+        {object && acces && (
+          <PanneauElement smsi={smsi} object={object} policy={policy} acces={acces} onOpenObject={onOpenObject} />
+        )}
         {object && (
           <Relations smsi={smsi} source={object.id.startsWith('legacy:') ? object.id : 'object:' + object.id} />
         )}
