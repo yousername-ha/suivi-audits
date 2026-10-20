@@ -48,7 +48,7 @@ export class GrcTasks {
     const policy = (await this.g.policy(smsi, user)).definition;
     const closed = policy.statuses.filter((s) => s.terminal).map((s) => s.id);
     const summary = await this.g.db.one(
-      `SELECT count(*)::int total,count(*) FILTER(WHERE data->>'status'=ANY($2))::int closed,count(*) FILTER(WHERE NOT(data->>'status'=ANY($2)) AND data->>'dueAt'<$3)::int overdue,count(*) FILTER(WHERE data->>'ownerId' IS NULL)::int unassigned FROM grc_objects WHERE smsi_id=$1 AND kind='action' AND NOT archived`,
+      `SELECT count(*)::int total,count(*) FILTER(WHERE data->>'status'=ANY($2))::int closed,count(*) FILTER(WHERE NOT(data->>'status'=ANY($2)) AND data->>'dueAt'<$3)::int overdue,count(*) FILTER(WHERE data->>'ownerId' IS NULL AND COALESCE(data->'responsable','null'::jsonb)='null'::jsonb)::int unassigned FROM grc_objects WHERE smsi_id=$1 AND kind='action' AND NOT archived`,
       [smsi, closed, new Date().toISOString()],
     );
     const byStatus = (
@@ -65,7 +65,7 @@ export class GrcTasks {
       totals.total++;
       if (terminal) totals.closed++;
       if (!terminal && item.data.dueAt && String(item.data.dueAt) < new Date().toISOString()) totals.overdue++;
-      if (!item.data.ownerId) totals.unassigned++;
+      if (!item.data.ownerId && !item.data.responsable) totals.unassigned++;
       const status = String(item.data.status);
       counts.set(status, (counts.get(status) ?? 0) + 1);
     }
@@ -189,6 +189,24 @@ export class GrcTasks {
         `INSERT INTO grc_notifications(smsi_id,object_id,user_id,kind,due_key,title,message)
    SELECT o.smsi_id,o.id,u.id,'task_due',o.data->>'dueAt',p.definition->'notifications'->>'title',p.definition->'notifications'->>'message'
    FROM grc_objects o JOIN grc_smsis s ON s.id=o.smsi_id JOIN business_policy_versions p ON p.version=s.business_version JOIN users u ON u.id=(o.data->>'ownerId')::uuid
+   WHERE o.kind='action' AND NOT o.archived AND NOT u.disabled AND (u.expires_at IS NULL OR u.expires_at>now()) AND p.definition->'notifications'->>'enabled'='true'
+   AND NOT EXISTS(SELECT 1 FROM jsonb_array_elements(p.definition->'statuses') st WHERE st->>'id'=o.data->>'status' AND st->>'terminal'='true')
+   AND (o.data->>'dueAt')::timestamptz <= $1::timestamptz + make_interval(days => (o.data->>'reminderDays')::int)
+   AND (s.visibility='instance' OR EXISTS(SELECT 1 FROM grc_members m WHERE m.smsi_id=s.id AND m.user_id=u.id)) ON CONFLICT DO NOTHING`,
+        [now],
+      );
+      // Responsable de type groupe ou fonction : le rappel va aux personnes qui le composent aujourd'hui.
+      await c.query(
+        `INSERT INTO grc_notifications(smsi_id,object_id,user_id,kind,due_key,title,message)
+   SELECT o.smsi_id,o.id,u.id,'task_due',o.data->>'dueAt',p.definition->'notifications'->>'title',p.definition->'notifications'->>'message'
+   FROM grc_objects o JOIN grc_smsis s ON s.id=o.smsi_id JOIN business_policy_versions p ON p.version=s.business_version
+   JOIN LATERAL (
+     SELECT ug.user_id FROM user_groups ug WHERE o.data->'responsable'->>'type'='groupe' AND ug.group_id=(o.data->'responsable'->>'id')::uuid
+     UNION
+     SELECT fm.user_id FROM fonction_membres fm JOIN fonctions f ON f.id=fm.fonction_id
+      WHERE o.data->'responsable'->>'type'='fonction' AND NOT f.archived AND fm.fonction_id=(o.data->'responsable'->>'id')::uuid
+   ) r ON true
+   JOIN users u ON u.id=r.user_id
    WHERE o.kind='action' AND NOT o.archived AND NOT u.disabled AND (u.expires_at IS NULL OR u.expires_at>now()) AND p.definition->'notifications'->>'enabled'='true'
    AND NOT EXISTS(SELECT 1 FROM jsonb_array_elements(p.definition->'statuses') st WHERE st->>'id'=o.data->>'status' AND st->>'terminal'='true')
    AND (o.data->>'dueAt')::timestamptz <= $1::timestamptz + make_interval(days => (o.data->>'reminderDays')::int)

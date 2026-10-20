@@ -5,9 +5,10 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 ## [Non publié]
 
 ### Notes de mise à jour
-Aucune action particulière, aucune migration pour le moment.
+- **Migration SQL additive `031_fonctions_responsables.sql`** : deux tables, `fonctions` (nom unique parmi les fonctions actives, archivage) et `fonction_membres` (titulaires). Aucune donnée existante n'est modifiée ; aucune action sur le serveur.
 
 ### Ajouté
+- **Responsable : personne, groupe ou fonction.** Une action ou une série récurrente peut désormais être confiée à une personne (comme avant), à un **groupe** ou à une **fonction** de l'organisation (par exemple « Responsable qualité »). Nouvel onglet **Administration → Fonctions** (création, titulaires, archivage ; archiver une fonction laisse lisibles les fiches qui la désignent) et route `GET /api/grc/:smsi/responsables` (personnes autorisées dans le périmètre, groupes et fonctions). Le serveur refuse une double désignation et une cible inconnue ou sans titulaire actif ; les rappels d'échéance vont à tous les titulaires actifs ; une tâche confiée à un groupe ou à une fonction n'est plus comptée « sans responsable ». Le champ `ownerId` reste celui des personnes, rien n'est migré.
 - **Déplacer un élément entre registres.** Une action, un écart ou une série (avec ses occurrences) se déplace vers un autre registre de la même famille : commande atomique `POST /api/grc/:smsi/objects/:id/deplacement` avec **aperçu d'impact** (périmètres avant et après, changement du périmètre de référence, liens conservés, liens qui ne peuvent pas suivre, obstacles comme un état inconnu du workflow cible ou un responsable non autorisé), motif obligatoire, `If-Match` et droit de gestion sur les deux registres. L'élément garde son identifiant ; ses anciennes versions restent rattachées à leur ancien périmètre ; les liens incompatibles ne sont retirés qu'avec confirmation explicite ; le déplacement est inscrit au journal d'audit. Panneau « Déplacer vers un autre registre » sur la fiche.
 - **Éléments par périmètre et registres choisis.** Nouvel onglet de l'écran Registres et route `GET /api/registres/elements` : on choisit un périmètre puis un ou plusieurs registres qui le portent ; la liste réunit leurs éléments sans doublon, limitée aux registres que la personne peut lire.
 

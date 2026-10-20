@@ -4,7 +4,7 @@ import { useState } from 'react';
 import type { BusinessPolicy, GrcObject, TaskData } from '@suivi/shared';
 import { get } from '../api';
 import { ErrorAlert } from '../components/common';
-import { SelecteurResponsable, useResponsables } from '../components/selecteurs';
+import { libelleDesignation, SelecteurResponsable, useProposables } from '../components/selecteurs';
 import { Timeline } from './Timeline';
 const views = [
   { value: 'list', label: 'Liste' },
@@ -54,7 +54,7 @@ export function Tasks({
         byStatus: { status: string; count: number }[];
       }>(`/api/grc/${smsi}/tasks/dashboard`),
   });
-  const owners = useResponsables(smsi);
+  const proposables = useProposables(smsi);
   const items = (
     view === 'list' || view === 'kanban' || view === 'timeline'
       ? (all.data?.pages.flatMap((p) => p.items) ?? [])
@@ -147,10 +147,7 @@ export function Tasks({
                     {policy.statuses.find((s) => s.id === o.data.status)?.label ??
                       (o.data.status === 'done' ? 'Terminée (historique)' : 'À faire (historique)')}
                   </Table.Td>
-                  <Table.Td>
-                    {owners.data?.find((u) => u.id === o.data.ownerId)?.displayName ??
-                      String(o.data.ownerLabel || 'Non attribuée')}
-                  </Table.Td>
+                  <Table.Td>{libelleDesignation(o.data, proposables.data)}</Table.Td>
                   <Table.Td>
                     {o.data.dueAt ? new Date(String(o.data.dueAt)).toLocaleDateString('fr-FR') : 'Sans échéance'}
                   </Table.Td>

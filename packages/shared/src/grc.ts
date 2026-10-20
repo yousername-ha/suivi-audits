@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { NIVEAUX_PERIMETRE } from './hierarchie-perimetres.js';
 import type { Module } from './permissions.js';
+import { ResponsableRef } from './responsables.js';
 export const GRC_KINDS = [
   'framework',
   'requirement',
@@ -373,6 +374,8 @@ export const TaskData = z
     description: z.string().max(10000),
     status: GrcKey,
     ownerId: z.uuid().nullable(),
+    /** Responsable typé (personne, groupe ou fonction) ; pour une personne, `ownerId` en reprend l'identifiant. */
+    responsable: ResponsableRef.nullable().optional(),
     startAt: z.iso.datetime().nullable(),
     dueAt: z.iso.datetime().nullable(),
     priority: z.enum(['low', 'normal', 'high', 'urgent']),
@@ -393,6 +396,7 @@ export const SeriesData = z
   .object({
     description: z.string().max(10000),
     ownerId: z.uuid().nullable(),
+    responsable: ResponsableRef.nullable().optional(),
     category: GrcKey,
     priority: z.enum(['low', 'normal', 'high', 'urgent']),
     recurrence: Recurrence,

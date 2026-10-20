@@ -31,7 +31,7 @@ import { useCan } from '../session';
 import { ConfigurationEditor } from './ConfigurationEditor';
 import type { MethodVersion } from './Risks';
 import { ChampLien } from '../pilotage/Fields';
-import { SelecteurResponsable, useResponsables } from '../components/selecteurs';
+import { SelecteurResponsable, SelecteurResponsableTypé, useResponsables } from '../components/selecteurs';
 const initial = (kind: GrcKind, policy: BusinessPolicy, method?: MethodVersion): Record<string, unknown> =>
   kind === 'action'
     ? {
@@ -272,13 +272,22 @@ export function ObjectEditor({
               minRows={3}
               disabled={readonly}
             />
-            <SelecteurResponsable
-              smsi={smsi}
-              sansRecherche
-              value={typeof data.ownerId === 'string' ? data.ownerId : null}
-              onChange={(v) => set('ownerId', v)}
-              disabled={readonly}
-            />
+            {kind === 'action' || kind === 'task_series' ? (
+              <SelecteurResponsableTypé
+                smsi={smsi}
+                data={data}
+                onChange={(patch) => setData((old) => ({ ...old, ...patch }))}
+                disabled={readonly}
+              />
+            ) : (
+              <SelecteurResponsable
+                smsi={smsi}
+                sansRecherche
+                value={typeof data.ownerId === 'string' ? data.ownerId : null}
+                onChange={(v) => set('ownerId', v)}
+                disabled={readonly}
+              />
+            )}
             {(kind === 'action' || kind === 'task_series') && (
               <>
                 <Select

@@ -12,6 +12,7 @@ import { ConfirmButton, ErrorAlert, fmtDate, fmtOctets, PresenceBar } from '../c
 import { usePresence } from '../realtime';
 import { useCan } from '../session';
 import { GroupsPanel, RolesPanel, UsersPanel } from './AdminAccess';
+import { FonctionsPanel } from './AdminFonctions';
 import { ImportPanel } from './AdminImport';
 import { MursPanel } from './AdminMurs';
 import { BackupsPanel } from './AdminBackups';
@@ -23,6 +24,7 @@ import { OperationsPanel } from './AdminOperations';
 const TABS = [
   ['users', 'Utilisateurs', 'administration'],
   ['groups', 'Groupes', 'administration'],
+  ['fonctions', 'Fonctions', 'administration'],
   ['roles', 'Rôles', 'administration'],
   ['sessions', 'Sessions', 'administration'],
   ['audit', 'Journal', 'administration'],
@@ -68,6 +70,9 @@ export function AdminPage() {
         </Tabs.Panel>
         <Tabs.Panel value="groups" pt="md">
           <GroupsPanel />
+        </Tabs.Panel>
+        <Tabs.Panel value="fonctions" pt="md">
+          <FonctionsPanel />
         </Tabs.Panel>
         <Tabs.Panel value="roles" pt="md">
           <RolesPanel />

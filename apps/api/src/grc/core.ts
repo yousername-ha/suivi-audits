@@ -53,6 +53,7 @@ import { GrcStudyConfig } from './study-config.js';
 import { LegacyTasks } from './legacy-tasks.js';
 import { GrcRegistres } from './registres.js';
 import { GrcValidations } from './validations.js';
+import { GrcAnnuaires } from './annuaires.js';
 import { GrcTasks } from './tasks.js';
 export const DEFAULT_SMSI = '00000000-0000-4000-8000-000000000001';
 /** Fiche de l'outil de suivi propre au périmètre commun. Les fournisseurs (`legacy:suppliers:`) sont à l'échelle de
@@ -153,6 +154,7 @@ export class Grc {
   readonly tasks: GrcTasks;
   readonly registres: GrcRegistres;
   readonly validations: GrcValidations;
+  readonly annuaires: GrcAnnuaires;
   constructor(
     readonly db: Db,
     readonly legacy: LegacyStore,
@@ -171,6 +173,7 @@ export class Grc {
     this.tasks = new GrcTasks(this);
     this.registres = new GrcRegistres(this);
     this.validations = new GrcValidations(this);
+    this.annuaires = new GrcAnnuaires(this);
   }
   async isAdmin(user: SessionUser, c?: Client) {
     return (await loadGrants(c ?? this.db.pool, user.id)).some(
@@ -594,6 +597,7 @@ export class Grc {
         throw new HttpError(422, 'Une clôture doit conserver sa justification.');
       if (previous && (previous.data.seriesId !== d.seriesId || previous.data.occurrenceKey !== d.occurrenceKey))
         throw new HttpError(422, 'L’origine de l’occurrence est immuable.');
+      await this.annuaires.normaliser(smsi, d, c);
       await this.checkOwner(smsi, d.ownerId, c);
       if (new Set(d.dependencies).size !== d.dependencies.length) throw new HttpError(422, 'Dépendances dupliquées.');
       if (previous && d.dependencies.length) {
@@ -617,6 +621,7 @@ export class Grc {
       const policy = (await this.politiqueDe(smsi, c)).definition;
       if (!policy.catalogues.actionCategories.some((x) => x.id === d.category))
         throw new HttpError(422, 'Catégorie de récurrence inconnue.');
+      await this.annuaires.normaliser(smsi, d, c);
       await this.checkOwner(smsi, d.ownerId, c);
       for (const ref of d.refs) await this.resolve(smsi, ref, user, c);
       return d;
