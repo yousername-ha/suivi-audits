@@ -9,7 +9,6 @@ import {
   analyserValeurIndicateur,
   conformiteParReferentiel,
   detailMesures,
-  ecartsOuverts,
   etatIndicateur,
   indicateursSynthese,
   objectifsParProcessus,
@@ -209,12 +208,6 @@ describe('tableau de bord unifié : parité avec l’outil historique', () => {
       expect(vue.sansProcessus.map((o) => o.id)).toEqual(
         S.objectives.filter((o) => !o.processes.length).map((o) => o.id),
       );
-      const ouverts = S.findings.filter((f) => f.status !== 'Clos');
-      const e = ecartsOuverts(S);
-      expect(e.ouverts).toBe(ouverts.length);
-      expect(e.parType.reduce((n, t) => n + t.n, 0)).toBe(ouverts.length);
-      expect(e.actionsTotal).toBe(ouverts.flatMap((f) => f.tasks).length);
-      expect(e.actionsRealisees).toBe(ouverts.flatMap((f) => f.tasks).filter((t) => t.done).length);
     });
   }
 
@@ -224,7 +217,6 @@ describe('tableau de bord unifié : parité avec l’outil historique', () => {
     expect(plansAnnee({}, annee, aujourdhui).map((p) => p.realises + p.aVenir + p.enRetard)).toEqual(
       TYPES_PLAN.map(() => 0),
     );
-    expect(ecartsOuverts({})).toMatchObject({ ouverts: 0, actionsRealisees: 0, actionsTotal: 0 });
     expect(objectifsParProcessus({})).toEqual({ familles: [], sansProcessus: [] });
   });
 

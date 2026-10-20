@@ -83,7 +83,7 @@ Modules repris : `years`, `yearLabels`, `nextYear`, `nextDate`, `internalDate`, 
 - [ ] `AUD-01` droits (modules `audit`, `ecarts`, `plan_audit` existants) ; `AUD-02` cycle de certification ; `AUD-03` référentiels en tables versionnées (ISO 27001 clauses 4 à 10, Annexe A, HDS), guide des preuves et questions.
 - [ ] `AUD-04` couverture AFNOR et interne, préparation par année ; `AUD-05` pronostic en parité avec l'outil historique ; `AUD-06` préparation de l'audit ; `AUD-07` couverture du cycle ; `AUD-08` fiche exigence.
 - [ ] `AUD-09` registre des écarts (clôture tracée, réouverture) ; `AUD-10` plan d'actions ; `AUD-11` plan d'audit par année.
-- [ ] `AUD-12` synthèse et graphiques ; `AUD-13` imports PRM02 et Tenacy ; `AUD-14` exports Excel, CSV, impression.
+- [ ] `AUD-12` synthèse et graphiques ; `AUD-13` imports PRM02 et Tenacy (Tenacy repris en 3.6.0, voir le journal des modifications ; PRM02 à faire) ; `AUD-14` exports Excel, CSV, impression.
 - [ ] `AUD-15` reprise legacy et passerelle d'ajout des écarts ; `AUD-16` temps réel, journal, performances.
 
 ## Phase 2 — Pilotage du SMSI

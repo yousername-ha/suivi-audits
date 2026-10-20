@@ -361,37 +361,3 @@ export function plansHistoriques(state: Obj, type: string, aujourdhui: string): 
     }))
     .sort((a, b) => (b.debut || b.realiseLe).localeCompare(a.debut || a.realiseLe) || a.id.localeCompare(b.id));
 }
-
-/* ---------------------------------------------------------------- Écarts ouverts */
-
-export const TYPES_ECART = [
-  { type: 'NC maj', libelle: 'NC majeure' },
-  { type: 'NC min', libelle: 'NC mineure' },
-  { type: 'PS', libelle: 'Point sensible' },
-  { type: 'PP', libelle: 'Piste de progrès' },
-  { type: 'Remarque', libelle: 'Remarque' },
-] as const;
-
-export interface EcartsOuverts {
-  ouverts: number;
-  parType: { type: string; libelle: string; n: number }[];
-  actionsRealisees: number;
-  actionsTotal: number;
-}
-
-/** Écarts ouverts (statut différent de « Clos ») par type et actions de ces écarts, comme `viewDash`. */
-export function ecartsOuverts(state: Obj): EcartsOuverts {
-  const ouverts = arr(state.findings).filter((f) => f.status !== 'Clos');
-  const taches = ouverts.flatMap((f) => arr(f.tasks));
-  const connus = new Set<string>(TYPES_ECART.map((t) => t.type));
-  const autres = ouverts.filter((f) => !connus.has(str(f.type))).length;
-  return {
-    ouverts: ouverts.length,
-    parType: [
-      ...TYPES_ECART.map(({ type, libelle }) => ({ type, libelle, n: ouverts.filter((f) => f.type === type).length })),
-      ...(autres ? [{ type: '', libelle: 'Autre', n: autres }] : []),
-    ],
-    actionsRealisees: taches.filter((t) => t.done).length,
-    actionsTotal: taches.length,
-  };
-}

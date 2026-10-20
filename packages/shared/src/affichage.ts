@@ -1,7 +1,7 @@
 /* Affichage : préférences par personne (taille, densité, thème, colonnes), écrans muraux, synthèse du tableau de bord
    (calculée à partir de l'état de l'outil historique, déjà filtré selon les droits). */
 import { z } from 'zod';
-import { conformiteParReferentiel, ecartsOuverts, indicateursSynthese, plansAnnee } from './tableau-de-bord.js';
+import { conformiteParReferentiel, indicateursSynthese, plansAnnee } from './tableau-de-bord.js';
 import { BUSINESS_MODULES } from './permissions.js';
 
 /* ---------------------------------------------------------------- Préférences */
@@ -68,7 +68,9 @@ export const WallOut = z.object({
 });
 export type WallOut = z.infer<typeof WallOut>;
 
-/* ---------------------------------------------------------------- Synthèse (tableau de bord, écran mural) */
+/* ---------------------------------------------------------------- Synthèse (tableau de bord, écran mural) :
+   écarts, actions, récurrences, risques et continuité viennent des fiches de registre (tous les périmètres lisibles, hors
+   registres restreints non lisibles) ; mesures, conformité, indicateurs et plans viennent du suivi du SMSI. */
 export const Synthese = z.object({
   organisation: z.string(),
   genereLe: z.string(),
@@ -82,6 +84,7 @@ export const Synthese = z.object({
       aEcheance: z.number(),
       parStatut: z.record(z.string(), z.number()),
       parType: z.record(z.string(), z.number()),
+      parSource: z.record(z.string(), z.number()),
     })
     .nullable(),
   echeances: z.array(
@@ -92,6 +95,9 @@ export const Synthese = z.object({
       pilote: z.string(),
       statut: z.string(),
       enRetard: z.boolean(),
+      /** « Écart » ou « Action ». */
+      type: z.string(),
+      perimetre: z.string(),
     }),
   ),
   plan: z
@@ -141,7 +147,19 @@ export const Synthese = z.object({
       ),
     })
     .nullable(),
-  /** Objets du Pilotage (périmètre commun) : constats ouverts, risques, actions en retard. */
+  /** Actions autonomes (hors occurrences de tâches récurrentes) : ouvertes, en retard, terminées. */
+  actions: z
+    .object({ total: z.number(), ouvertes: z.number(), enRetard: z.number(), terminees: z.number() })
+    .nullable(),
+  /** Tâches récurrentes : séries actives et occurrences ouvertes ou en retard. */
+  recurrences: z
+    .object({ series: z.number(), occurrencesOuvertes: z.number(), occurrencesEnRetard: z.number() })
+    .nullable(),
+  /** Risques : total, sans appréciation validée, revue échue. */
+  risques: z.object({ total: z.number(), sansDecision: z.number(), revueEchue: z.number() }).nullable(),
+  /** Continuité : analyses d'impact (BIA) et plans de continuité. */
+  continuite: z.object({ bia: z.number(), plans: z.number() }).nullable(),
+  /** Compteurs du Pilotage utilisés par les alertes du menu : constats ouverts, risques, actions en retard. */
   pilotage: z
     .object({
       constatsOuverts: z.number().nullable(),
@@ -156,50 +174,17 @@ export type Synthese = z.infer<typeof Synthese>;
 type Obj = Record<string, unknown>;
 const arr = (v: unknown): Obj[] => (Array.isArray(v) ? (v.filter((x) => x && typeof x === 'object') as Obj[]) : []);
 const s = (v: unknown) => (typeof v === 'string' ? v : v == null ? '' : String(v));
-const CLOS = /^(clos|close|clôturé|soldé|levé)/i;
 
-/** Synthèse de l'état (déjà filtré selon les droits : un module masqué est vide). joursEcheance : horizon des échéances. */
+/** Synthèse des sections du suivi du SMSI (état déjà filtré selon les droits : un module masqué est vide). Les sections
+    issues des fiches de registre (écarts, échéances, actions, récurrences, risques, continuité) sont ajoutées par le serveur. */
 export function computeSynthese(
   state: Obj,
-  opts: { organisation: string; aujourdHui: Date; joursEcheance: number; lisible: (cle: string) => boolean },
+  opts: { organisation: string; aujourdHui: Date; lisible: (cle: string) => boolean },
 ): Synthese {
   const today = opts.aujourdHui.toISOString().slice(0, 10);
-  const horizon = new Date(opts.aujourdHui.getTime() + opts.joursEcheance * 86400e3).toISOString().slice(0, 10);
   const labels = (state.yearLabels && typeof state.yearLabels === 'object' ? state.yearLabels : {}) as Obj;
   const nextYear = typeof state.nextYear === 'number' ? state.nextYear : null;
 
-  let ecarts: Synthese['ecarts'] = null;
-  let echeances: Synthese['echeances'] = [];
-  if (opts.lisible('findings')) {
-    const f = arr(state.findings);
-    const ouverts = f.filter((x) => !CLOS.test(s(x.status)));
-    const count = (k: string) =>
-      f.reduce<Record<string, number>>(
-        (m, x) => ((m[s(x[k]) || 'Non renseigné'] = (m[s(x[k]) || 'Non renseigné'] ?? 0) + 1), m),
-        {},
-      );
-    const dues = ouverts.filter((x) => /^\d{4}-\d{2}-\d{2}/.test(s(x.due)));
-    ecarts = {
-      total: f.length,
-      ouverts: ouverts.length,
-      enRetard: dues.filter((x) => s(x.due).slice(0, 10) < today).length,
-      aEcheance: dues.filter((x) => s(x.due).slice(0, 10) >= today && s(x.due).slice(0, 10) <= horizon).length,
-      parStatut: count('status'),
-      parType: count('type'),
-    };
-    echeances = dues
-      .filter((x) => s(x.due).slice(0, 10) <= horizon)
-      .sort((a, b) => s(a.due).localeCompare(s(b.due)))
-      .slice(0, 12)
-      .map((x) => ({
-        id: s(x.id),
-        texte: s(x.text) || s(x.desc),
-        echeance: s(x.due).slice(0, 10),
-        pilote: s(x.owner),
-        statut: s(x.status),
-        enRetard: s(x.due).slice(0, 10) < today,
-      }));
-  }
   const plan = opts.lisible('plan') && state.plan && typeof state.plan === 'object' ? (state.plan as Obj) : null;
   const slots = arr(plan?.slots);
   let mesures: Synthese['mesures'] = null;
@@ -219,8 +204,8 @@ export function computeSynthese(
         ? { date: s(state.nextDate), annee: nextYear, libelle: nextYear ? s(labels[String(nextYear)]) : '' }
         : null,
     auditInterne: audit && s(state.internalDate) ? s(state.internalDate) : null,
-    ecarts,
-    echeances,
+    ecarts: null,
+    echeances: [],
     plan: plan
       ? {
           statut: s(plan.status),
@@ -233,7 +218,11 @@ export function computeSynthese(
       : null,
     mesures,
     conformite: opts.lisible('items') && opts.lisible('dda') ? conformiteParReferentiel(state) : null,
-    ecartsOuverts: opts.lisible('findings') ? ecartsOuverts(state) : null,
+    ecartsOuverts: null,
+    actions: null,
+    recurrences: null,
+    risques: null,
+    continuite: null,
     indicateurs: opts.lisible('indicators') ? indicateursSynthese(state) : null,
     plans: opts.lisible('plans')
       ? { annee: opts.aujourdHui.getFullYear(), types: plansAnnee(state, opts.aujourdHui.getFullYear(), today) }

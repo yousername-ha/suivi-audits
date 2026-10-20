@@ -14,6 +14,7 @@ import { useCan } from '../session';
 import { GroupsPanel, RolesPanel, UsersPanel } from './AdminAccess';
 import { FonctionsPanel } from './AdminFonctions';
 import { ImportPanel } from './AdminImport';
+import { ImportTenacyPanel } from './AdminImportTenacy';
 import { MursPanel } from './AdminMurs';
 import { BackupsPanel } from './AdminBackups';
 import { ModulesPanel } from './AdminModules';
@@ -90,7 +91,10 @@ export function AdminPage() {
           <MursPanel />
         </Tabs.Panel>
         <Tabs.Panel value="import" pt="md">
-          <ImportPanel />
+          <Stack gap="xl">
+            <ImportPanel />
+            <ImportTenacyPanel />
+          </Stack>
         </Tabs.Panel>
         <Tabs.Panel value="system" pt="md">
           <System />

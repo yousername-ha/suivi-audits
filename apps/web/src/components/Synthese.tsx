@@ -99,7 +99,7 @@ function Echeances({ s, large }: { s: Synthese; large?: boolean }) {
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>Échéance</Table.Th>
-                <Table.Th>Écart</Table.Th>
+                <Table.Th>Élément</Table.Th>
                 <Table.Th>Pilote</Table.Th>
               </Table.Tr>
             </Table.Thead>
@@ -109,7 +109,14 @@ function Echeances({ s, large }: { s: Synthese; large?: boolean }) {
                   <Table.Td className="nowrap">
                     {e.enRetard ? <StatusChip etat="erreur">{fmtJour(e.echeance)}</StatusChip> : fmtJour(e.echeance)}
                   </Table.Td>
-                  <Table.Td>{e.texte || e.id}</Table.Td>
+                  <Table.Td>
+                    <b>{e.type}</b> · {e.texte || e.id}
+                    {e.perimetre && (
+                      <Text size="xs" c="dimmed">
+                        {e.perimetre}
+                      </Text>
+                    )}
+                  </Table.Td>
                   <Table.Td>{e.pilote}</Table.Td>
                 </Table.Tr>
               ))}
@@ -266,33 +273,58 @@ function Plans({ s }: { s: Synthese }) {
   );
 }
 
-/** Compteurs du Pilotage (objets créés dans la nouvelle interface, périmètre commun). */
-function Pilotage({ s }: { s: Synthese }) {
-  const p = s.pilotage;
-  if (!p) return null;
+/** Actions et tâches récurrentes des registres (tous les périmètres lisibles, chaque élément compté une fois). */
+function Actions({ s }: { s: Synthese }) {
+  const a = s.actions,
+    r = s.recurrences;
+  if (!a && !r) return null;
   return (
-    <Carte titre="Pilotage" className="ecarts-carte">
+    <Carte titre="Actions et tâches récurrentes" className="ecarts-carte">
       <div className="chiffres-grille">
-        {p.constatsOuverts != null && <Chiffre valeur={p.constatsOuverts} libelle="constats ouverts" />}
-        {p.actionsEnRetard != null && (
+        {a && <Chiffre valeur={a.ouvertes} libelle="actions ouvertes" />}
+        {a && <Chiffre valeur={a.enRetard} libelle="actions en retard" etat={a.enRetard ? 'erreur' : undefined} />}
+        {r && <Chiffre valeur={r.series} libelle="séries actives" />}
+        {r && (
           <Chiffre
-            valeur={p.actionsEnRetard}
-            libelle="actions en retard"
-            etat={p.actionsEnRetard ? 'erreur' : undefined}
-          />
-        )}
-        {p.risques != null && <Chiffre valeur={p.risques} libelle="risques" />}
-        {p.risquesSansDecision != null && (
-          <Chiffre
-            valeur={p.risquesSansDecision}
-            libelle="sans appréciation validée"
-            etat={p.risquesSansDecision ? 'attention' : undefined}
+            valeur={r.occurrencesEnRetard}
+            libelle="occurrences en retard"
+            etat={r.occurrencesEnRetard ? 'erreur' : undefined}
           />
         )}
       </div>
-      <Text size="xs" c="dimmed" mt="xs">
-        Objets du Pilotage (périmètre commun) ; les écarts de l’outil de suivi sont comptés à part.
-      </Text>
+      {a && a.total > 0 && (
+        <Jauge
+          libelle="Actions terminées"
+          valeur={a.terminees}
+          max={a.total}
+          texte={`${a.terminees}/${a.total}`}
+          detail={`${r?.occurrencesOuvertes ?? 0} occurrence(s) ouverte(s)`}
+        />
+      )}
+    </Carte>
+  );
+}
+
+/** Risques et continuité d'activité. */
+function Risques({ s }: { s: Synthese }) {
+  const r = s.risques,
+    c = s.continuite;
+  if (!r && !c) return null;
+  return (
+    <Carte titre="Risques et continuité" className="ecarts-carte">
+      <div className="chiffres-grille">
+        {r && <Chiffre valeur={r.total} libelle="risques" />}
+        {r && (
+          <Chiffre
+            valeur={r.sansDecision}
+            libelle="sans appréciation validée"
+            etat={r.sansDecision ? 'attention' : undefined}
+          />
+        )}
+        {r && <Chiffre valeur={r.revueEchue} libelle="revues échues" etat={r.revueEchue ? 'attention' : undefined} />}
+        {c && <Chiffre valeur={c.bia} libelle="analyses d’impact (BIA)" />}
+        {c && <Chiffre valeur={c.plans} libelle="plans de continuité" />}
+      </div>
     </Carte>
   );
 }
@@ -305,7 +337,8 @@ export function CartesPilotage({ s }: { s: Synthese }) {
       <EcartsOuverts s={s} />
       <Conformite s={s} />
       <Plans s={s} />
-      <Pilotage s={s} />
+      <Actions s={s} />
+      <Risques s={s} />
     </div>
   );
 }
@@ -364,8 +397,11 @@ export function SyntheseCartes({ s, vue = 'synthese', extra }: { s: Synthese; vu
           <EcartsOuverts s={s} />
           <Indicateurs s={s} />
           <Plans s={s} />
-          <Pilotage s={s} />
+          <Actions s={s} />
+          <Risques s={s} />
           {e && <Repartition titre="Écarts par statut" valeurs={e.parStatut} />}
+          {e && <Repartition titre="Écarts par classification" valeurs={e.parType} />}
+          {e && <Repartition titre="Écarts par audit à l’origine" valeurs={e.parSource} />}
           {mesures}
           <Plan s={s} />
           <Echeances s={s} />
@@ -377,7 +413,8 @@ export function SyntheseCartes({ s, vue = 'synthese', extra }: { s: Synthese; vu
           {chiffres}
           <EcartsOuverts s={s} />
           {e && <Repartition titre="Écarts par statut" valeurs={e.parStatut} />}
-          <Pilotage s={s} />
+          {e && <Repartition titre="Écarts par classification" valeurs={e.parType} />}
+          <Actions s={s} />
           <Echeances s={s} />
         </>
       )}
