@@ -38,10 +38,12 @@ export class GrcTasks {
   async window(smsi: string, user: SessionUser, from: string, to: string) {
     await this.g.access(smsi, user);
     await this.g.permission(user, 'ecarts', 'lire');
+    // Les actions d'un registre restreint que la personne ne peut pas lire n'apparaissent pas (R05).
+    const masques = await this.g.registres.inaccessiblesPartout(user);
     const items = (
       await this.g.db.q<ObjectRow>(
-        `SELECT ${objectColumns} FROM grc_objects WHERE smsi_id=$1 AND kind='action' AND NOT archived AND (data->>'dueAt' IS NULL OR data->>'dueAt'>=$2 AND data->>'dueAt'<=$3) ORDER BY data->>'dueAt' NULLS LAST,id LIMIT 2001`,
-        [smsi, from, to],
+        `SELECT ${objectColumns} FROM grc_objects WHERE smsi_id=$1 AND kind='action' AND NOT archived AND (registre_id IS NULL OR NOT registre_id=ANY($4::uuid[])) AND (data->>'dueAt' IS NULL OR data->>'dueAt'>=$2 AND data->>'dueAt'<=$3) ORDER BY data->>'dueAt' NULLS LAST,id LIMIT 2001`,
+        [smsi, from, to, masques],
       )
     ).rows;
     const legacy = (await this.g.legacyTasks.list(smsi, user)).filter(
@@ -55,14 +57,15 @@ export class GrcTasks {
     await this.g.permission(user, 'ecarts', 'lire');
     const policy = (await this.g.policy(smsi, user)).definition;
     const closed = policy.statuses.filter((s) => s.terminal).map((s) => s.id);
+    const masques = await this.g.registres.inaccessiblesPartout(user);
     const summary = await this.g.db.one(
-      `SELECT count(*)::int total,count(*) FILTER(WHERE data->>'status'=ANY($2))::int closed,count(*) FILTER(WHERE NOT(data->>'status'=ANY($2)) AND data->>'dueAt'<$3)::int overdue,count(*) FILTER(WHERE data->>'ownerId' IS NULL AND COALESCE(data->'responsable','null'::jsonb)='null'::jsonb)::int unassigned FROM grc_objects WHERE smsi_id=$1 AND kind='action' AND NOT archived`,
-      [smsi, closed, new Date().toISOString()],
+      `SELECT count(*)::int total,count(*) FILTER(WHERE data->>'status'=ANY($2))::int closed,count(*) FILTER(WHERE NOT(data->>'status'=ANY($2)) AND data->>'dueAt'<$3)::int overdue,count(*) FILTER(WHERE data->>'ownerId' IS NULL AND COALESCE(data->'responsable','null'::jsonb)='null'::jsonb)::int unassigned FROM grc_objects WHERE smsi_id=$1 AND kind='action' AND NOT archived AND (registre_id IS NULL OR NOT registre_id=ANY($4::uuid[]))`,
+      [smsi, closed, new Date().toISOString(), masques],
     );
     const byStatus = (
       await this.g.db.q(
-        `SELECT data->>'status' status,count(*)::int count FROM grc_objects WHERE smsi_id=$1 AND kind='action' AND NOT archived GROUP BY data->>'status'`,
-        [smsi],
+        `SELECT data->>'status' status,count(*)::int count FROM grc_objects WHERE smsi_id=$1 AND kind='action' AND NOT archived AND (registre_id IS NULL OR NOT registre_id=ANY($2::uuid[])) GROUP BY data->>'status'`,
+        [smsi, masques],
       )
     ).rows;
     const legacy = await this.g.legacyTasks.list(smsi, user);

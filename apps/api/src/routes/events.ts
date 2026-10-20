@@ -51,7 +51,8 @@ export const eventRoutes = [
                 current &&
                 e.scope &&
                 e.module &&
-                (await svc.grc.visible({ ...current.user, rights }, e.scope, e.module))
+                (await svc.grc.visible({ ...current.user, rights }, e.scope, e.module)) &&
+                (await svc.grc.registres.lisiblePourEvenement({ ...current.user, rights }, e.id))
               )
                 send('change', e);
               return;

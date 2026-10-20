@@ -39,6 +39,7 @@ export async function dashboard(g: Grc, smsi: string, user: SessionUser) {
 
 /** Compteurs du périmètre commun pour le tableau de bord unifié et l'écran mural (UI-02) : constats natifs ouverts,
     risques (dont ceux sans appréciation validée) et actions en retard. Chaque compteur exige la lecture de son module ;
+    les éléments d'un registre restreint n'y figurent pas (l'écran partagé n'a pas de droit par registre) ;
     les statuts terminaux viennent de la politique métier du périmètre. Aucun détail d'objet n'est renvoyé. */
 export async function compteursCommuns(g: Grc, rights: Rights) {
   const s = await g.db.one<{ businessVersion: number }>(
@@ -56,7 +57,8 @@ export async function compteursCommuns(g: Grc, rights: Rights) {
        count(*) FILTER(WHERE kind='risk')::int risques,
        count(*) FILTER(WHERE kind='risk' AND NOT EXISTS(SELECT 1 FROM grc_risk_evaluations e WHERE e.risk_id=o.id AND e.decision='approved'))::int "sansDecision",
        count(*) FILTER(WHERE kind='action' AND NOT(COALESCE(data->>'status','')=ANY($2)) AND data->>'dueAt'<$3)::int retard
-     FROM grc_objects o WHERE smsi_id=$1 AND NOT archived AND kind IN ('nonconformity','risk','action')`,
+     FROM grc_objects o WHERE smsi_id=$1 AND NOT archived AND kind IN ('nonconformity','risk','action')
+       AND (registre_id IS NULL OR NOT registre_id IN (SELECT id FROM registres WHERE restricted))`,
     [DEFAULT_SMSI, closed, new Date().toISOString()],
   );
   return {

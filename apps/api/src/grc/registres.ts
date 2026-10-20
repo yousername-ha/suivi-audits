@@ -205,6 +205,30 @@ export class GrcRegistres {
     return masques;
   }
 
+  private readonly cacheEvenements = new Map<string, { registreId: string | null; restreint: boolean; a: number }>();
+  /** Un événement temps réel concernant un élément (ou un registre) ne part que vers qui peut lire le registre concerné : un
+      registre restreint ne laisse filtrer ni l'identifiant ni la version de ses éléments. Le registre d'un identifiant est
+      mis en cache quelques secondes ; seuls les registres restreints coûtent un contrôle de droits. */
+  async lisiblePourEvenement(user: SessionUser, id: string): Promise<boolean> {
+    if (!/^[0-9a-f-]{36}$/.test(id)) return true;
+    let m = this.cacheEvenements.get(id);
+    if (!m || Date.now() - m.a > 5000) {
+      const r = (
+        await this.g.db.q<{ registreId: string; restreint: boolean }>(
+          `SELECT g.registre_id AS "registreId", r.restricted AS restreint FROM grc_objects g JOIN registres r ON r.id=g.registre_id WHERE g.id=$1
+           UNION ALL SELECT r.id, r.restricted FROM registres r WHERE r.id=$1`,
+          [id],
+        )
+      ).rows[0];
+      m = { registreId: r?.registreId ?? null, restreint: !!r?.restreint, a: Date.now() };
+      if (this.cacheEvenements.size > 2000) this.cacheEvenements.clear();
+      this.cacheEvenements.set(id, m);
+    }
+    if (!m.restreint || !m.registreId) return true;
+    const reg = await this.brut(m.registreId);
+    return !reg || (await this.peut(user, reg, null, 'lire'));
+  }
+
   /* ----------------------------------------------------------------------------------------------------- registre */
   async dto(user: SessionUser, reg: RegistreRow, c?: Client): Promise<RegistreDto> {
     const admin = await this.g.isAdmin(user, c);

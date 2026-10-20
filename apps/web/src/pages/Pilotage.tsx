@@ -9,8 +9,9 @@ import {
   type Module,
 } from '@suivi/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
-import { Link, useParams, useNavigate } from 'react-router';
+import { notifications } from '@mantine/notifications';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useParams, useNavigate, useSearchParams } from 'react-router';
 import { api, get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
@@ -25,6 +26,7 @@ import { Imports } from '../grc/Imports';
 import { BusinessPolicyPanel } from '../grc/BusinessPolicy';
 import { MappingPanel, Registry } from './Grc';
 import { BusinessRegistry } from '../pilotage/Registry';
+import { cheminRetourSur } from '../retour';
 import { RecordEditor } from '../pilotage/RecordEditor';
 import { Decision } from '../pilotage/Decision';
 import { Members } from '../pilotage/Members';
@@ -148,7 +150,8 @@ const REGISTERS: Record<string, { kind: GrcKind; legacy?: string; description: s
 export function PilotagePage() {
   const { section = 'synthese' } = useParams(),
     can = useCan(),
-    navigate = useNavigate();
+    navigate = useNavigate(),
+    [params, setParams] = useSearchParams();
   const [selected, setSelected] = useState<string | null>(() => {
       try {
         return sessionStorage.getItem('pilotage-scope');
@@ -203,6 +206,29 @@ export function PilotagePage() {
     setKind(o.kind);
     setOpened(true);
   };
+  // Ouverture contextuelle (`?ouvrir=<fiche>`) depuis une autre page ; `?retour=` garde le chemin d'origine.
+  const retour = cheminRetourSur(params.get('retour'));
+  const ouvrirId = params.get('ouvrir');
+  const dejaOuverte = useRef<string | null>(null);
+  useEffect(() => {
+    if (!ouvrirId || !smsi || !policy.data || dejaOuverte.current === ouvrirId) return;
+    dejaOuverte.current = ouvrirId;
+    get<GrcObject>(`/api/grc/${smsi}/objects/${encodeURIComponent(ouvrirId)}`)
+      .then((o) => open(o))
+      .catch(() =>
+        notifications.show({ color: 'red', message: 'Fiche introuvable ou non accessible dans le périmètre affiché.' }),
+      )
+      .finally(() =>
+        setParams(
+          (p) => {
+            p.delete('ouvrir');
+            return p;
+          },
+          { replace: true },
+        ),
+      );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ouvrirId, smsi, policy.data]);
   const create = (k: GrcKind, init?: Record<string, unknown>) => {
     setEditing(null);
     setKind(k);
@@ -249,6 +275,11 @@ export function PilotagePage() {
         }
       />
       <Stack>
+        {retour && (
+          <Anchor component={Link} to={retour}>
+            ← Retour à la page précédente
+          </Anchor>
+        )}
         <ErrorAlert error={scopes.error ?? policy.error} />
         {(scopes.data?.length ?? 0) > 1 && (
           <Select

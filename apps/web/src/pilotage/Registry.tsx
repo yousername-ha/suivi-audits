@@ -10,12 +10,14 @@ import {
 } from '@suivi/shared';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useState } from 'react';
+import { Link, useLocation } from 'react-router';
 import { download, get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { Filtres } from '../components/Filtres';
 import { useCan } from '../session';
 import { OPERATION_LABELS } from './Decision';
 import { useResponsables } from '../components/selecteurs';
+import { idObjetDeRef, lienContexte } from '../retour';
 const STATES: Record<string, string> = {
   draft: 'À préparer',
   review: 'À valider',
@@ -85,6 +87,7 @@ export function BusinessRegistry({
   onSchedule?: (o: GrcObject) => void;
 }) {
   const can = useCan(),
+    emplacement = useLocation(),
     [search, setSearch] = useState(''),
     [history, setHistory] = useState<GrcObject | null>(null),
     [fEtat, setFEtat] = useState('all'),
@@ -212,6 +215,26 @@ export function BusinessRegistry({
             )}
             {writable && kind === 'nonconformity' && o.data.status === 'closed' && (
               <Menu.Item onClick={() => onDecision(o, 'reopen')}>Rouvrir le constat</Menu.Item>
+            )}
+            {kind === 'nonconformity' && idObjetDeRef(o.data.auditRef) && (
+              <Menu.Item
+                component={Link}
+                to={lienContexte('audits', idObjetDeRef(o.data.auditRef)!, emplacement.pathname + emplacement.search)}
+              >
+                Voir l’audit d’origine
+              </Menu.Item>
+            )}
+            {kind === 'nonconformity' && idObjetDeRef(o.data.recidiveRef) && (
+              <Menu.Item
+                component={Link}
+                to={lienContexte(
+                  'ecarts',
+                  idObjetDeRef(o.data.recidiveRef)!,
+                  emplacement.pathname + emplacement.search,
+                )}
+              >
+                Voir le constat précédent
+              </Menu.Item>
             )}
             {writable && kind === 'nonconformity' && o.data.status === 'closed' && !o.id.startsWith('legacy:') && (
               <Menu.Item
