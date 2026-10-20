@@ -2,7 +2,7 @@
    indicateurs et niveaux de la DdA, fiche d'une mesure, évaluation par le clausier (chapitres, points, note, action des
    écarts). Données fictives posées par l'API. */
 import { expect, test } from '@playwright/test';
-import { sessionAdmin, watchPage, ecrireEtat } from '../helpers';
+import { creerEcartCommun, sessionAdmin, watchPage, ecrireEtat } from '../helpers';
 
 test('DdA et évaluation par le clausier : niveaux, fiche, chapitres, points, note, écarts', async ({ browser }) => {
   const { state, csrf } = await sessionAdmin(browser);
@@ -28,19 +28,21 @@ test('DdA et évaluation par le clausier : niveaux, fiche, chapitres, points, no
         'A-5.1': { app: 'oui', level: 'Total', just: '', risk: '', actions: 'Action fictive', docs: '', comment: '' },
         'A-5.2': { app: 'non', level: '', just: 'Hors périmètre fictif', risk: '', actions: '', docs: '', comment: '' },
       },
-      findings: [
-        { id: 'NC-01', type: 'NC mineure', status: 'Ouvert', source: 'Audit', text: 'Écart fictif', items: ['A-5.1'] },
-      ],
       suppliers: [{ id: 'SUP01', name: 'Fournisseur fictif', hds: 'Non', mfa: 'Oui', sso: 'SAML' }],
       supEvals: [],
     });
     await ecrireEtat(ctx.request, csrf, s);
+    const ecart = await creerEcartCommun(ctx.request, csrf, {
+      name: 'Écart fictif',
+      classification: 'mineure',
+      items: ['A-5.1'],
+    });
 
     // DdA : indicateurs, incohérence, niveau modifié.
     await page.goto('/pilotage/dda-annexe-a');
     await expect(page.getByText('« Total » avec écart ouvert', { exact: false }).first()).toBeVisible();
     await expect(page.getByRole('img', { name: /Répartition des mesures applicables/ })).toBeVisible();
-    await expect(page.getByText('NC-01', { exact: true })).toBeVisible();
+    await expect(page.getByText(ecart, { exact: true })).toBeVisible();
     await page.getByRole('combobox', { name: 'Niveau de A.5.19' }).click();
     await page.getByRole('option', { name: 'Partiel', exact: true }).click();
     await expect(page.getByRole('combobox', { name: 'Niveau de A.5.19' })).toHaveValue('Partiel');
@@ -70,7 +72,7 @@ test('DdA et évaluation par le clausier : niveaux, fiche, chapitres, points, no
     await page.getByRole('option', { name: 'Non conforme', exact: true }).click();
     await expect(page.getByText('50 % conforme')).toBeVisible();
     await page.getByRole('button', { name: 'Créer les actions pour les écarts' }).click();
-    await expect(page.getByText(/Action FOU-01 créée avec 1 tâche/)).toBeVisible();
+    await expect(page.getByText(/Action FOU-01 créée avec 1 point/)).toBeVisible();
     await page.getByText('← Toutes les évaluations').click();
     await expect(page.getByRole('button', { name: 'Fournisseur fictif' })).toBeVisible();
     expect(problems).toEqual([]);

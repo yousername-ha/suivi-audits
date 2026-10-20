@@ -5,8 +5,8 @@ import { useQuery } from '@tanstack/react-query';
 import { get } from '../api';
 import { useCan } from '../session';
 
-export const PERIMETRE_COMMUN = '00000000-0000-4000-8000-000000000001';
-export function perimetreAffiche(): string {
+const PERIMETRE_COMMUN = '00000000-0000-4000-8000-000000000001';
+function perimetreAffiche(): string {
   try {
     return sessionStorage.getItem('pilotage-scope') || PERIMETRE_COMMUN;
   } catch {
@@ -27,7 +27,7 @@ export function useRapprochementsEnAttente(smsi?: string): number {
   return q.data?.pending ?? 0;
 }
 /** Pastille du menu : le nombre de rapprochements en attente, absente quand il n'y en a aucun. */
-export function PastilleRapprochements() {
+function PastilleRapprochements() {
   const n = useRapprochementsEnAttente();
   if (!n) return null;
   return (

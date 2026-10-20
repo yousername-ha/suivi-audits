@@ -215,6 +215,9 @@ export interface PlanOptions {
   envelope: boolean;
 }
 
+/** Modules de l'ancien outil qui n'existent plus : ignorés à l'import. */
+const CLES_RETIREES = ['findings', 'findingsRev'] as const;
+
 /** Calcule l'état résultant d'un import et son rapport. Ne modifie ni « current » ni « incoming ». */
 export function planImport(
   current: JsonObject | null,
@@ -224,6 +227,12 @@ export function planImport(
   const inc = migrateToSchema15(incoming);
   const cur = current ? migrateToSchema15(current) : null;
   const warnings: string[] = [];
+  // Les constats historiques n'existent plus comme module : les écarts se saisissent dans les registres.
+  if (Array.isArray(inc.findings) && inc.findings.length)
+    warnings.push(
+      `Les ${inc.findings.length} constat(s) historique(s) du fichier ne sont pas importés : les écarts se saisissent dans le registre des écarts.`,
+    );
+  for (const etat of [inc, cur]) if (etat) for (const cle of CLES_RETIREES) delete etat[cle];
   let next: JsonObject;
   const module = opts.module || null;
 

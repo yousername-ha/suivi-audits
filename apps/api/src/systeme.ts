@@ -58,7 +58,7 @@ export interface MiseAJour {
 }
 
 /** Rapports de mise à jour (DATA_DIR/etat/mises-a-jour/*.json), du plus récent au plus ancien. */
-export function readUpdates(etatDir: string, max = 20): MiseAJour[] {
+function readUpdates(etatDir: string, max = 20): MiseAJour[] {
   const dir = path.join(etatDir, 'mises-a-jour');
   let files: string[];
   try {
@@ -85,7 +85,7 @@ export function readUpdates(etatDir: string, max = 20): MiseAJour[] {
     });
 }
 
-export const BACKUP_MAX_AGE_HOURS = 48;
+const BACKUP_MAX_AGE_HOURS = 48;
 
 export function systemStatus(cfg: Config, now = new Date()) {
   const etat = cfg.etatDir;
@@ -130,4 +130,3 @@ export function systemStatus(cfg: Config, now = new Date()) {
       : null,
   };
 }
-export type SystemStatus = ReturnType<typeof systemStatus>;

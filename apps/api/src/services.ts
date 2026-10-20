@@ -12,6 +12,7 @@ import { mapsMapper } from './carto/maps.js';
 import { carteMapper, collectionMapper, groupeMapper } from './historique/tables/collection.js';
 import { COLLECTIONS } from './historique/tables/collections.js';
 import { COLLECTIONS_COEUR, CLES_REGLAGES } from './historique/tables/coeur.js';
+import { ecartsNatifsMapper } from './historique/ecarts-natifs.js';
 import { CARTES, GROUPES } from './historique/tables/groupes.js';
 import { reglagesMapper } from './historique/tables/reglages.js';
 import { investMapper } from './historique/tables/invest.js';
@@ -39,6 +40,7 @@ export function createServices(cfg: Config, log: Logger) {
   for (const spec of GROUPES) legacy.register(groupeMapper(spec));
   for (const spec of CARTES) legacy.register(carteMapper(spec));
   for (const spec of COLLECTIONS_COEUR) legacy.register(collectionMapper(spec));
+  legacy.register(ecartsNatifsMapper);
   legacy.registerBatch(reglagesMapper(CLES_REGLAGES));
   const settings = new Settings(cfg, db, legacy);
   const environment = new Environment(db);

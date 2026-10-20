@@ -16,7 +16,6 @@ test('Incidents et cellule de crise : qualification, fiche, cellule, main couran
     const s = await cur.json();
     Object.assign(s, {
       entityCategory: 'importante',
-      findings: [],
       incidents: [],
       plans: [{ id: 'EXO-1', type: 'exo', title: 'Exercice PRA fictif', status: 'Planifié' }],
       crisis: {

@@ -14,7 +14,6 @@ export type AgirCrrc = <R = unknown>(methode: string, chemin: string, corps?: un
 export const useCrrc = () => useModule<DonneesCrrc>('crrc', '/api/crrc');
 
 const ETAT: Record<NiveauCrrc, Etat> = { ok: 'succes', mid: 'attention', bad: 'erreur', na: 'neutre', info: 'info' };
-export const etatCrrc = (n: NiveauCrrc): Etat => ETAT[n];
 /** Pastille d'un libellé de l'outil historique (contrat, sauvegarde, restauration, alerte). */
 export const Pastille = ({ s }: { s: string }) => <StatusChip etat={ETAT[niveauCrrc(s)]}>{s || '–'}</StatusChip>;
 export const nomEtablissement = (e: EtatCrrc, id: string) => e.establishments.find((x) => x.id === id)?.name ?? '';

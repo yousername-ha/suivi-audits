@@ -60,7 +60,7 @@ const AIDES: Record<CfgKind, string> = {
     'Une liste de critères (par exemple disponibilité, intégrité, confidentialité) dont chacun a sa propre échelle.',
   taxonomy: 'Une taxonomie est une liste hiérarchique de catégories (catégories d’impact, de sources de risque…).',
 };
-export const CLE_FORMAT = /^[a-z][a-z0-9_]{0,63}$/;
+const CLE_FORMAT = /^[a-z][a-z0-9_]{0,63}$/;
 
 export function ConfigurationGrc({
   kind,

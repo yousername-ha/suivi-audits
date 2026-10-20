@@ -29,7 +29,7 @@ const aujourdhui = () => new Date().toISOString().slice(0, 10);
 export interface ResumeEvaluation extends EvaluationClausier {
   score: ScoreEvaluation;
 }
-export interface FournisseurEvaluation {
+interface FournisseurEvaluation {
   id: string;
   name: string;
   sso: string;
@@ -161,7 +161,7 @@ export class EvaluationsClausier {
     );
   }
 
-  /** Action du registre des écarts pour les points partiels ou non conformes (une tâche par point). */
+  /** Écart du registre des écarts pour les points partiels ou non conformes (un point par ligne de la description). */
   action(id: string, user: SessionUser, ip: string): Promise<{ id: string; action: string; taches: number }> {
     return this.r.modifier(
       user,
@@ -172,35 +172,23 @@ export class EvaluationsClausier {
         action: 'sup-eval.action-created',
         reference: (x: { id: string }) => `legacy:supEvals:${x.id}`,
       },
-      (data) => {
+      async (data, c) => {
         const e = this.trouver(data, id);
         const lue = lireEvaluationClausier(e)!;
         const ecarts = ecartsEvaluation(pointsEvaluation(CLAUSIER_2026, lue.cases), lue);
         if (!ecarts.length) throw new HttpError(409, 'Aucun écart dans cette évaluation.');
         const sp = entrees(data, 'suppliers').find((s) => s.id === lue.supplier);
         const fid = identifiantActionFournisseur(entrees(data, 'findings').map((f) => str(f.id)));
-        const maintenant = new Date().toISOString();
         const connus = new Set(entrees(data, 'items').map((x) => str(x.id)));
-        data.findings = [
-          ...(Array.isArray(data.findings) ? data.findings : []),
-          {
-            id: fid,
-            createdAt: maintenant,
-            source: 'Fournisseur',
-            year: new Date().getFullYear(),
-            type: 'PP',
-            status: 'Ouvert',
-            text: `Évaluation sécurité ${str(sp?.name)} : ${ecarts.length} point(s) à traiter`,
-            desc: '',
-            action: 'Obtenir les engagements du fournisseur',
-            tasks: ecarts.map((p) => ({ t: `Clausier ${p.id} : ${p.titre}`, done: false, createdAt: maintenant })),
-            comment: id,
-            items: ['A-5.19', 'A-5.20', 'A-5.21', 'A-5.22'].filter((x) => connus.has(x)),
-            owner: '',
-            due: '',
-            proof: '',
-          },
-        ];
+        await this.r.creerEcart(c, user, ip, {
+          id: fid,
+          name: `Évaluation sécurité ${str(sp?.name)} : ${ecarts.length} point(s) à traiter`,
+          description:
+            'Obtenir les engagements du fournisseur.\n' +
+            ecarts.map((p) => `- Clausier ${p.id} : ${p.titre}`).join('\n'),
+          findingType: 'opportunity',
+          items: ['A-5.19', 'A-5.20', 'A-5.21', 'A-5.22'].filter((x) => connus.has(x)),
+        });
         return { id, action: fid, taches: ecarts.length };
       },
     );

@@ -257,7 +257,7 @@ export const RISK_REF_KINDS: Partial<Record<GrcKind, Record<string, CibleRef[]>>
     riskRefs: ['object:risk'],
     measureRefs: ['object:measure', 'object:soa', 'legacy:items', 'legacy:soa'],
   },
-  nonconformity: { auditRef: ['object:audit'], recidiveRef: ['object:nonconformity', 'legacy:findings'] },
+  nonconformity: { auditRef: ['object:audit'], recidiveRef: ['object:nonconformity'] },
   risk: {
     studyRef: STUDY_REF,
     scenarioRef: ['object:operational_scenario'],

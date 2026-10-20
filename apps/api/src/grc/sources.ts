@@ -74,7 +74,6 @@ export async function sources(g: Grc, smsi: string, user: SessionUser, search: s
     const state = await g.legacy.recompose();
     const allowed: Record<string, Module> = {
       items: 'audit',
-      findings: 'ecarts',
       processes: 'pilotage',
       objectives: 'pilotage',
       indicators: 'pilotage',

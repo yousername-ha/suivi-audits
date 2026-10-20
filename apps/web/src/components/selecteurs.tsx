@@ -11,7 +11,7 @@ export interface Responsable {
   displayName: string;
   username: string;
 }
-export const libelleResponsable = (r: Pick<Responsable, 'displayName' | 'username'>) => r.displayName || r.username;
+const libelleResponsable = (r: Pick<Responsable, 'displayName' | 'username'>) => r.displayName || r.username;
 
 /** Personnes pouvant être désignées responsables dans un périmètre. */
 export const useResponsables = (smsi: string | undefined, enabled = true) =>
@@ -63,29 +63,6 @@ export const usePerimetres = (enabled = true) =>
     enabled,
   });
 
-export function SelecteurPerimetre({
-  value,
-  onChange,
-  disabled,
-  label = 'Périmètre',
-}: {
-  value: string | null;
-  onChange: (v: string | null) => void;
-  disabled?: boolean;
-  label?: string;
-}) {
-  const q = usePerimetres();
-  return (
-    <Select
-      label={label}
-      data={(q.data ?? []).map((p) => ({ value: p.id, label: p.name }))}
-      value={value}
-      onChange={onChange}
-      disabled={disabled}
-    />
-  );
-}
-
 /** Personnes, groupes et fonctions pouvant être désignés responsables dans un périmètre. */
 export const useProposables = (smsi: string | undefined, enabled = true) =>
   useQuery({
@@ -95,7 +72,7 @@ export const useProposables = (smsi: string | undefined, enabled = true) =>
   });
 
 /** Désignation portée par une fiche : une personne (`ownerId`) ou un groupe/une fonction (`responsable`). */
-export function designation(data: Record<string, unknown>): ResponsableRef | null {
+function designation(data: Record<string, unknown>): ResponsableRef | null {
   const r = data.responsable as ResponsableRef | null | undefined;
   if (r && typeof r === 'object') return r;
   return typeof data.ownerId === 'string' ? { type: 'utilisateur', id: data.ownerId } : null;

@@ -70,6 +70,8 @@ export const ImprovementData = common
     findingType: z.enum(['observation', 'nonconformity', 'opportunity']).default('nonconformity'),
     /** Classification d'un écart d'audit ; vide tant qu'elle n'est pas posée. */
     classification: z.enum(['', ...CLASSIFICATIONS_ECART]).default(''),
+    /** Audit à l'origine du constat : certification (AFNOR) ou audit interne ; alimente le module Audit et le tableau de bord. */
+    source: z.enum(['', 'AFNOR', 'Interne']).default(''),
     /** Audit dont le constat est issu et constat précédent d'une récidive (références typées, contrôlées par le serveur). */
     auditRef: GrcRef.nullable().optional(),
     recidiveRef: GrcRef.nullable().optional(),
@@ -621,6 +623,11 @@ export const PILOTAGE_FIELDS: Partial<Record<GrcKind, PilotageField[]>> = {
     field('classification', 'Classification', 'select', [
       { value: '', label: 'Non classé' },
       ...CLASSIFICATIONS_ECART.map((value) => ({ value, label: ECART_CLASSIFICATION_LABELS[value] })),
+    ]),
+    field('source', 'Audit à l’origine', 'select', [
+      { value: '', label: 'Non précisé' },
+      { value: 'AFNOR', label: 'Audit de certification' },
+      { value: 'Interne', label: 'Audit interne' },
     ]),
     lien('nonconformity', 'auditRef', 'Audit d’origine', 'Audit à l’origine du constat.'),
     lien('nonconformity', 'recidiveRef', 'Constat précédent (récidive)', 'Constat dont celui-ci est la récidive.'),

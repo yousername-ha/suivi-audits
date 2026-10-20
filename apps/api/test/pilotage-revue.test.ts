@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { ENTREES_REVUE } from '@suivi/shared';
 import { DEFAULT_SMSI } from '../src/grc/core.js';
-import { createTestApp, login, makeUser, type Agent, type TestApp } from './helpers.js';
+import { createTestApp, ecartCommun, login, makeUser, type Agent, type TestApp } from './helpers.js';
 
 let t: TestApp, a: Agent, ro: Agent;
 const racine = `/api/grc/${DEFAULT_SMSI}`;
@@ -53,6 +53,14 @@ describe('entrées de la revue de direction', () => {
         },
       })
     ).json();
+    // Trois constats natifs du périmètre commun : un ouvert en retard, un clos, une observation ouverte.
+    await ecartCommun(a, { name: 'Écart ouvert en retard', classification: 'mineure', dueAt: '2020-02-01' });
+    const clos = await ecartCommun(a, { name: 'Écart clos', classification: 'mineure' });
+    await t.svc.db.q("UPDATE grc_objects SET data=jsonb_set(data,'{status}',$2::jsonb) WHERE id=$1", [
+      clos.id,
+      JSON.stringify('closed'),
+    ]);
+    await ecartCommun(a, { name: 'Observation', findingType: 'observation' });
     await t.svc.db.tx(async (c) => {
       await c.query('SELECT 1 FROM app_state WHERE id=1 FOR UPDATE');
       const st = (await t.svc.legacy.recompose(c))!;
@@ -76,18 +84,6 @@ describe('entrées de la revue de direction', () => {
           },
           { id: 'IND2', obj: 'OBJ1', name: 'Délai', dir: '≤', target: 5, values: [{ date: '2026-06-01', v: 9 }] },
           { id: 'IND3', obj: 'OBJ1', name: 'Non mesuré', dir: '≤', target: 5, values: [] },
-        ],
-        findings: [
-          {
-            id: 'F1',
-            text: 'Écart ouvert en retard',
-            status: 'Ouvert',
-            due: '2020-02-01',
-            type: 'NC min',
-            source: 'Interne',
-          },
-          { id: 'F2', text: 'Écart clos', status: 'Clos', type: 'NC min', source: 'Interne' },
-          { id: 'F3', text: 'Observation', status: 'Ouvert', type: 'Observation', source: 'Interne' },
         ],
       });
       await t.svc.legacy.nativeWrite(c, st.data, { username: 'test' } as never, st.version);

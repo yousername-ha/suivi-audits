@@ -5,7 +5,7 @@ import { isObject, type Json, type JsonObject } from '@suivi/shared/legacy';
 import type { Client } from '../db/db.js';
 import type { ModuleMapper } from '../legacy/store.js';
 
-export const MAX_VERSIONS = 20;
+const MAX_VERSIONS = 20;
 export const MAP_NAMES: Record<MapView, string> = { context: 'Carte du contexte', process: 'Carte des processus' };
 const LAYOUT_KEYS = ['nodes', 'edges', 'hide', 'ignored', 'free'] as const;
 
@@ -25,7 +25,7 @@ export interface MapRow {
 }
 /** Champs legacy conservés : autres clés de la carte (updatedAt…), clés de disposition absentes à l'import,
  *  carte « vide » (réglages sans carte de contexte), versions absentes. */
-export interface MapExtra {
+interface MapExtra {
   champs?: JsonObject;
   absents?: string[];
   sansVersions?: boolean;
@@ -41,7 +41,7 @@ export interface VersionRow {
   extra: { id?: Json; at?: Json };
 }
 
-export const MAP_COLUMNS = `m.id, m.view, m.name, m.layout, m.settings, m.version, m.created_at, m.created_by, m.updated_at,
+const MAP_COLUMNS = `m.id, m.view, m.name, m.layout, m.settings, m.version, m.created_at, m.created_by, m.updated_at,
   m.updated_by, m.extra, (SELECT count(*)::int FROM map_versions v WHERE v.map_id = m.id) AS versions`;
 
 export async function listMaps(c: Pick<Client, 'query'>, withEmpty = false): Promise<MapRow[]> {
@@ -75,7 +75,7 @@ export async function trimVersions(c: Client, mapId: string): Promise<number> {
 const ACTOR = "COALESCE(NULLIF(current_setting('suivi.actor', true), ''), 'import')";
 
 /** S.maps reconstruit depuis les tables (undefined : aucune carte, la clé est absente de l'état). */
-export async function readLegacyMaps(c: Client): Promise<Json | undefined> {
+async function readLegacyMaps(c: Client): Promise<Json | undefined> {
   const rows = await listMaps(c, true);
   if (!rows.length) return undefined;
   const out: JsonObject = {};
@@ -104,7 +104,7 @@ export async function readLegacyMaps(c: Client): Promise<Json | undefined> {
 }
 
 /** Écrit S.maps dans les tables (import legacy, annulation d'un import). null ou absent : aucune carte. */
-export async function writeLegacyMaps(c: Client, value: Json | undefined, batchId: number | null): Promise<void> {
+async function writeLegacyMaps(c: Client, value: Json | undefined, batchId: number | null): Promise<void> {
   const S = isObject(value ?? null) ? (value as JsonObject) : null;
   const issueKind = S && isObject(S.issueKind ?? null) ? (S.issueKind as JsonObject) : null;
   const issues = S && Array.isArray(S.issues) ? (S.issues as Json[]) : null;

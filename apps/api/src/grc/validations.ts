@@ -40,7 +40,7 @@ const dto = (l: Ligne): ValidationDto => ({
   createdBy: l.createdBy,
   createdAt: l.createdAt.toISOString(),
 });
-export const etatDe = (lignes: { kind: 'validation' | 'reouverture' }[]): EtatValidation => {
+const etatDe = (lignes: { kind: 'validation' | 'reouverture' }[]): EtatValidation => {
   const derniere = lignes[lignes.length - 1];
   return !derniere ? 'ouverte' : derniere.kind === 'validation' ? 'validee' : 'rouverte';
 };

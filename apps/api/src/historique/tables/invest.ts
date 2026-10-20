@@ -44,7 +44,7 @@ interface LigneRow {
   extra: JsonObject;
 }
 
-export async function lireInvest(c: Client): Promise<Json | undefined> {
+async function lireInvest(c: Client): Promise<Json | undefined> {
   const reglages = (
     await c.query<{ base_year: number; extra: JsonObject }>('SELECT base_year, extra FROM invest_settings WHERE id=1')
   ).rows[0];

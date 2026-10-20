@@ -103,14 +103,7 @@ describe('registre des incidents', () => {
     expect(r.statusCode, r.body).toBe(201);
     expect(r.json().findingId).toBe('INC-AC-01');
     const s = await etat();
-    expect(s.findings[0]).toMatchObject({
-      id: 'INC-AC-01',
-      source: 'Incident',
-      type: 'PP',
-      status: 'Ouvert',
-      comment: incident,
-      items: ['A-5.27'],
-    });
+    expect(s.findings[0]).toMatchObject({ id: 'INC-AC-01', type: 'PP', status: 'Ouvert', items: ['A-5.27'] });
     expect((await writer.post(`/api/incidents/${incident}/action`)).statusCode).toBe(409);
     expect((await reader.get('/api/incidents')).json().ecarts).toEqual({ 'INC-AC-01': 'Ouvert' });
   });

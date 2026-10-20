@@ -68,7 +68,7 @@ rôle **contributeur** qui remplit (par exemple marque une tâche récurrente co
 
 - **Déplacement d'un élément** : commande atomique avec aperçu d'impact, motif, `If-Match` et droit de gestion des deux
   registres (même famille) ; l'élément garde son identifiant, ses versions antérieures restent rattachées à leur ancien
-  périmètre. Les constats historiques du périmètre commun, qui vivent dans des tables propres sans registre, ne se déplacent pas.
+  périmètre. Les constats historiques du périmètre commun, qui vivaient dans des tables propres sans registre, sont supprimés (migration 033) : tout écart est une fiche de registre, donc déplaçable.
 - **Registres restreints et compteurs** : le tableau de bord des tâches, le calendrier, les compteurs partagés, les cartes de
   périmètres et le flux temps réel n'exposent ni élément, ni identifiant, ni version d'un registre restreint à qui ne peut pas
   le lire. Les droits attribués rétablissent la lecture.

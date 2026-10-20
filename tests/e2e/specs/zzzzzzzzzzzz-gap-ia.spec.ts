@@ -26,7 +26,6 @@ test('GAP guidé, fiche, action ; conformité IA : usage, scénario, plan', asyn
     Object.assign(s, {
       items: [exigence('ISO-6.1.2', 'ISO', '6.1.2'), exigence('ISO-4.3', 'ISO', '4.3'), exigence('A-5.9', 'A', '5.9')],
       dda: {},
-      findings: [],
       suppliers: [{ id: 'SUP01', name: 'Fournisseur fictif du GAP' }],
       appGaps: [],
       ai: {

@@ -22,12 +22,12 @@ import { permanentAdminCount } from '../rights.js';
 import { base32, hashPassword, passwordProblems, verifyPassword, verifyTotp } from '../security/crypto.js';
 import type { Services } from '../services.js';
 
-export function checkPassword(svc: Services, pw: unknown, username: string) {
+function checkPassword(svc: Services, pw: unknown, username: string) {
   const p = passwordProblems(pw, svc.settings.get('securite').passwordMinLength, [username]);
   if (p.length) throw new HttpError(422, 'Mot de passe trop faible : ' + p.join(', ') + '.');
 }
 
-export function meOut(svc: Services, s: Session | null): MeOutT {
+function meOut(svc: Services, s: Session | null): MeOutT {
   return {
     stage: svc.auth.stage(s),
     csrf: s ? s.csrf : null,

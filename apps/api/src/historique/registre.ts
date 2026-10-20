@@ -2,7 +2,7 @@
    l'état historique (`app_state`), l'écran natif les lit et les modifie sous verrou, avec journal d'audit et notification
    temps réel. /legacy continue d'afficher les mêmes données (même source, aucune migration). Modèle des fournisseurs
    (ADR 0032) : registre historique + écran natif. */
-import type { Module } from '@suivi/shared';
+import { validDate, type Module } from '@suivi/shared';
 import { isObject, type JsonObject } from '@suivi/shared/legacy';
 import type { SessionUser } from '../auth.js';
 import type { Client } from '../db/db.js';
@@ -16,6 +16,29 @@ export interface EtatHistorique {
 
 export class RegistreHistorique {
   constructor(readonly g: Grc) {}
+
+  /** Crée un écart natif (non-conformité) dans le périmètre commun, dans la transaction en cours. Le droit des écarts est
+      contrôlé par l'appelant (`droits: ['ecarts']`). */
+  async creerEcart(c: Client, user: SessionUser, ip: string, e: NouvelEcart): Promise<string> {
+    // Seules les mesures qui existent dans l'état sont rattachées (une référence inconnue refuserait la création).
+    const connues = new Set(entrees((await this.g.legacy.recompose(c))?.data ?? {}, 'items').map((i) => String(i.id)));
+    const data = await this.g.normalize(
+      DEFAULT_SMSI,
+      'nonconformity',
+      {
+        description: e.description ?? '',
+        findingType: e.findingType,
+        origin: e.origin ?? 'other',
+        refs: (e.items ?? []).filter((i) => connues.has(i)).map((i) => 'legacy:items:' + i),
+        dueAt: e.dueAt && validDate(e.dueAt) ? e.dueAt : '',
+      },
+      user,
+      c,
+    );
+    const o = await this.g.insert(c, DEFAULT_SMSI, 'nonconformity', e.name.slice(0, 200), data, user, ip);
+    await c.query("UPDATE grc_objects SET legacy_key='findings', legacy_id=$2 WHERE id=$1", [o.id, e.id]);
+    return e.id;
+  }
 
   /** Lit l'état historique (modules repris compris) après contrôle du droit de lecture. */
   async lire(user: SessionUser, module: Module): Promise<EtatHistorique> {
@@ -49,6 +72,20 @@ export class RegistreHistorique {
       return resultat;
     }, user.username);
   }
+}
+
+/** Écart natif à créer depuis un module repris (GAP, incident, exercice, évaluation de fournisseur). */
+export interface NouvelEcart {
+  /** Identifiant lisible (GAP-01, INC-AC-01…), conservé pour retrouver l'écart depuis la fiche d'origine. */
+  id: string;
+  name: string;
+  description?: string;
+  findingType: 'observation' | 'opportunity' | 'nonconformity';
+  origin?: 'incident' | 'other';
+  /** Identifiants des mesures concernées (items de l'état). */
+  items?: string[];
+  /** Échéance AAAA-MM-JJ ; toute autre valeur est ignorée. */
+  dueAt?: string;
 }
 
 /** Entrées objet d'une clé tableau de l'état (les autres valeurs sont ignorées, jamais supprimées à la relecture). */

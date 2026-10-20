@@ -4,7 +4,7 @@
    corps Word qui ne se termine jamais par un tableau. */
 import { xlsx, zip } from './tabular.js';
 
-export interface SectionDocument {
+interface SectionDocument {
   titre: string;
   paragraphes: string[];
   tableau?: { entetes: string[]; lignes: string[][] };

@@ -54,7 +54,7 @@ interface ItemRow {
   createdAt: Date;
   updatedAt: Date;
 }
-export interface CfgItem {
+interface CfgItem {
   id: string;
   kind: CfgKind;
   key: string;

@@ -125,8 +125,7 @@ export class Gap {
     );
   }
 
-  /** État, constat, pilote ou échéance d'un point de la liste de contrôle. Un changement d'état met à jour la tâche
-      correspondante du plan d'action créé par le questionnaire guidé. */
+  /** État, constat, pilote ou échéance d'un point de la liste de contrôle. */
   async majPoint(id: string, ligne: string, input: unknown, user: SessionUser, ip: string): Promise<AppGap> {
     const body = LigneGapModification.parse(input);
     return this.r.modifier(
@@ -143,14 +142,6 @@ export class Gap {
           ...a,
           lines: { ...(isObject(a.lines) ? a.lines : {}), [ligne]: { ...avant, ...body } },
         }));
-        if (body.st && app.planFd) {
-          const fait = ['Conforme', 'Non applicable'].includes(body.st);
-          data.findings = (Array.isArray(data.findings) ? data.findings : []).map((f) =>
-            isObject(f) && f.id === app.planFd && Array.isArray(f.tasks)
-              ? { ...f, tasks: f.tasks.map((k) => (isObject(k) && k.t === point.t ? { ...k, done: fait } : k)) }
-              : f,
-          );
-        }
         return lireAppGap(suivant)!;
       },
     );
@@ -217,7 +208,7 @@ export class Gap {
         action: 'gap.finding-created',
         reference: (x) => `legacy:appGaps:${x.app.id}`,
       },
-      (data) => {
+      async (data, c) => {
         const brut = this.trouver(data, id);
         const app = lireAppGap(brut)!;
         const point = pointsGap(app).find((p) => p.id === ligne);
@@ -229,27 +220,14 @@ export class Gap {
         const v = app.lines[ligne] ?? {};
         if (v.fd) throw new HttpError(409, `Une action existe déjà : ${v.fd}.`);
         const ecart = identifiantEcartGap(entrees(data, 'findings').map((f) => str(f.id)));
-        const maintenant = new Date().toISOString();
-        data.findings = [
-          ...(Array.isArray(data.findings) ? data.findings : []),
-          {
-            id: ecart,
-            createdAt: maintenant,
-            source: 'GAP',
-            year: new Date().getFullYear(),
-            type: 'Remarque',
-            status: 'Ouvert',
-            text: `${app.name} : ${point.t}`,
-            desc: v.comment ?? '',
-            action: point.t,
-            tasks: [{ t: point.t, done: false, createdAt: maintenant }],
-            comment: `Analyse d'écart ${app.id} — point ${point.id}`,
-            items: point.refs.slice(),
-            owner: v.owner || app.owner,
-            due: v.due || app.target,
-            proof: '',
-          },
-        ];
+        await this.r.creerEcart(c, user, ip, {
+          id: ecart,
+          name: `${app.name} : ${point.t}`,
+          description: [v.comment ?? '', `Analyse d'écart ${app.id}, point ${point.id}.`].filter(Boolean).join('\n'),
+          findingType: 'observation',
+          items: point.refs.slice(),
+          dueAt: v.due || app.target,
+        });
         const suivante = this.remplacer(data, id, (a) => ({
           ...a,
           lines: {
@@ -279,7 +257,7 @@ export class Gap {
         action: 'gap.guided',
         reference: (x) => `legacy:appGaps:${x.app.id}`,
       },
-      async (data) => {
+      async (data, c) => {
         const q = questionnaireGap(b.answers);
         const maintenant = new Date().toISOString();
         const id = identifiantApp(entrees(data, 'appGaps').map((a) => str(a.id)));
@@ -341,26 +319,14 @@ export class Gap {
             (l) => !['Conforme', 'Non applicable'].includes(etatPointGap(app, l, new Set())),
           );
           plan = identifiantEcartGap(entrees(data, 'findings').map((f) => str(f.id)));
-          data.findings = [
-            ...(Array.isArray(data.findings) ? data.findings : []),
-            {
-              id: plan,
-              createdAt: maintenant,
-              source: 'GAP',
-              year: new Date().getFullYear(),
-              type: 'Remarque',
-              status: 'Ouvert',
-              text: `Intégration de « ${app.name} » au périmètre ISO 27001 / HDS`,
-              desc: b.desc,
-              action: 'Mettre en œuvre la liste de contrôle du GAP ' + id,
-              tasks: aFaire.map((l) => ({ t: l.t, done: false, createdAt: maintenant })),
-              comment: `Analyse d'écart ${id}`,
-              items: [...new Set(aFaire.flatMap((l) => l.refs))].filter((r) => connues.has(r)),
-              owner: b.owner,
-              due: b.target,
-              proof: '',
-            },
-          ];
+          await this.r.creerEcart(c, user, ip, {
+            id: plan,
+            name: `Intégration de « ${app.name} » au périmètre ISO 27001 / HDS`,
+            description: [b.desc, 'Points à traiter :', ...aFaire.map((l) => `- ${l.t}`)].filter(Boolean).join('\n'),
+            findingType: 'observation',
+            items: [...new Set(aFaire.flatMap((l) => l.refs))].filter((r) => connues.has(r)),
+            dueAt: b.target,
+          });
           for (const l of aFaire) lines[l.id] = { ...(lines[l.id] ?? {}), fd: plan };
           brut.planFd = plan;
           app = lireAppGap(brut)!;

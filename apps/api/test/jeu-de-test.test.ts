@@ -27,6 +27,7 @@ describe('jeu de données de test', () => {
       etat: 'oui',
       risques: 3,
       actions: 5,
+      ecarts: 6,
       serie: 1,
       opportunites: 3,
       criteres: 3,
@@ -40,6 +41,9 @@ describe('jeu de données de test', () => {
     // Ce que l'on retrouve par l'API, comme l'interface le fait.
     const etat = (await a.get('/api/suivi/etat')).json();
     expect(etat.processes).toHaveLength(6);
+    // Les six écarts du jeu sont des écarts de registre, relus comme constats par le module Audit.
+    expect(etat.findings).toHaveLength(6);
+    expect(etat.findings.filter((f: { status: string }) => f.status === 'Clos')).toHaveLength(1);
     expect(etat.indicators.filter((i: { calc?: string }) => i.calc)).toHaveLength(3);
     const synthese = (await a.get('/api/mur/synthese')).json();
     expect(synthese.indicateurs.nonAtteints).toBeGreaterThan(0);

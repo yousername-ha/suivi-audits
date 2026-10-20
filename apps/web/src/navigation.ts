@@ -198,7 +198,7 @@ export const FAMILLES: Famille[] = [
 
 type Can = (module: Module, action: Action) => boolean;
 
-export const rubriqueVisible = (r: Rubrique, can: Can) =>
+const rubriqueVisible = (r: Rubrique, can: Can) =>
   (!r.module || can(r.module, r.action)) && (!r.aussi || can(r.aussi[0], r.aussi[1]));
 
 /** Rubriques affichables d'une destination, dans l'ordre du menu. */

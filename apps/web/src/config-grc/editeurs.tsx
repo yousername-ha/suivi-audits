@@ -758,7 +758,7 @@ export function EditeurTaxonomie({
 }
 
 /* Ajout d'un critère (le type « critères » n'a pas d'autre point d'entrée). */
-export function AjouterCritere({ value, onChange, disabled }: Props<CriteriaDefinition>) {
+function AjouterCritere({ value, onChange, disabled }: Props<CriteriaDefinition>) {
   return (
     <Button
       variant="default"

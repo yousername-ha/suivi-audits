@@ -610,7 +610,7 @@ export function PromotionBouton({ smsi, id }: { smsi: string; id: string }) {
   );
 }
 
-export interface CandidatSuivi {
+interface CandidatSuivi {
   definition: { name: string; identifier: string; source: { status: string; organisation: string; version: string } };
   previewId: string;
   requirements: number;
@@ -625,7 +625,7 @@ export interface CandidatSuivi {
 /** Standards disponibles : lus dans l'outil de suivi (aucun texte normatif n'est fourni par l'application). Un geste les
     ajoute à la bibliothèque en version source verrouillée ; un standard dont les données sont incomplètes est indiqué
     sans alerte et sans bloquer les autres. */
-export function useStandards(actif: boolean) {
+function useStandards(actif: boolean) {
   return useQuery({
     queryKey: ['library', 'tracker-import'],
     queryFn: () => get<CandidatSuivi[]>('/api/library/tracker-import'),
@@ -633,7 +633,7 @@ export function useStandards(actif: boolean) {
     retry: false,
   });
 }
-export async function adopterStandard(identifier: string) {
+async function adopterStandard(identifier: string) {
   return api<{ id: string; version: number }>('POST', '/api/library/standards/adopt', { body: { identifier } });
 }
 function StandardsDisponibles({ onDone }: { onDone: () => unknown }) {

@@ -177,7 +177,6 @@ const LEGACY_KEY_MODULE: Record<string, Module | null> = {
   findings: 'ecarts',
   source: 'ecarts',
   closeDeadline: 'ecarts',
-  findingsRev: 'ecarts',
   plan: 'plan_audit',
   processes: 'pilotage',
   objectives: 'pilotage',

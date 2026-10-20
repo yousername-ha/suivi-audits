@@ -293,7 +293,7 @@ function DetailEvaluation({
                 onClick={async () => {
                   setMessage('');
                   const r = await agir<{ action: string; taches: number }>('POST', `${base}/action`);
-                  if (r) setMessage(`Action ${r.action} créée avec ${r.taches} tâche(s).`);
+                  if (r) setMessage(`Action ${r.action} créée avec ${r.taches} point(s) à traiter.`);
                 }}
               >
                 Créer les actions pour les écarts

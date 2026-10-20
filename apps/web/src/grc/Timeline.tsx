@@ -22,8 +22,8 @@ export interface Frise {
   /** Actions placées dont la barre est entièrement hors de la période affichée (non dessinées). */
   horsPeriode: GrcObject[];
 }
-export type RaisonDate = 'debut-apres-echeance' | 'date-illisible';
-export const RAISON_DATE_LABELS: Record<RaisonDate, string> = {
+type RaisonDate = 'debut-apres-echeance' | 'date-illisible';
+const RAISON_DATE_LABELS: Record<RaisonDate, string> = {
   'debut-apres-echeance': 'le début est postérieur à l’échéance',
   'date-illisible': 'une date est illisible',
 };

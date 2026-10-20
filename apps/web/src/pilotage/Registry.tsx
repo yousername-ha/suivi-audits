@@ -46,7 +46,7 @@ const STATES: Record<string, string> = {
   realised: 'Réalisée',
   dropped: 'Écartée',
 };
-export function stateLabel(value: unknown) {
+function stateLabel(value: unknown) {
   return STATES[String(value)] ?? String(value ?? '—');
 }
 type Page = { items: GrcObject[]; total: number; nextOffset: number | null };

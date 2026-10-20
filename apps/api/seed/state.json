@@ -2168,7 +2168,6 @@
       "notes": ""
     }
   ],
-  "findings": [],
   "source": "",
   "plan": {
     "status": "Projet",
@@ -2182,7 +2181,6 @@
     "people": []
   },
   "closeDeadline": "",
-  "findingsRev": 2,
   "dda": {},
   "hdsChap": {
     "HDS-01": "5. Exigences relatives au SMSI",

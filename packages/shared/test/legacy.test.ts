@@ -123,7 +123,12 @@ describe('planification d’un import', () => {
     const f = fixture();
     expect(isEmptyState(seed())).toBe(true);
     const { next, report } = planImport(seed(), f, { mode: 'init', sourceSchema: 14, envelope: false });
-    expect(canonical(next)).toEqual(canonical(migrateToSchema15(f)));
+    // Les constats historiques ne sont plus un module : ils sont ignorés et signalés.
+    const attendu = migrateToSchema15(f);
+    delete attendu.findings;
+    delete attendu.findingsRev;
+    expect(canonical(next)).toEqual(canonical(attendu));
+    expect(report.warnings.join(' ')).toContain('constat(s) historique(s)');
     expect(report.totals.created).toBeGreaterThan(0);
     expect(report.unknownPaths).toEqual(['$.suppliers[].MFA-001']);
   });
@@ -137,33 +142,33 @@ describe('planification d’un import', () => {
   it('Fusionner crée et met à jour sans rien supprimer', () => {
     const cur = migrateToSchema15(fixture());
     const inc = structuredClone(cur);
-    const findings = inc.findings as JsonObject[];
-    findings[0]!.status = 'Clos';
-    findings.splice(1, 1);
-    findings.push({ id: 'ID-NEW', source: 'Interne', text: 'nouveau' });
+    const processus = inc.processes as JsonObject[];
+    processus[0]!.name = 'Processus renommé';
+    processus.splice(1, 1);
+    processus.push({ id: 'PR-NEW', name: 'nouveau' });
     const { next, report } = planImport(cur, inc, { mode: 'merge', sourceSchema: 15, envelope: false });
-    const ids = (next.findings as JsonObject[]).map((x) => x.id);
-    expect(ids).toContain((cur.findings as JsonObject[])[1]!.id);
-    expect(ids).toContain('ID-NEW');
-    const m = report.modules.find((x) => x.module === 'findings')!;
+    const ids = (next.processes as JsonObject[]).map((x) => x.id);
+    expect(ids).toContain((cur.processes as JsonObject[])[1]!.id);
+    expect(ids).toContain('PR-NEW');
+    const m = report.modules.find((x) => x.module === 'processes')!;
     expect(m.collections[0]).toMatchObject({ created: 1, updated: 1, deleted: 0 });
-    expect(report.affected).toEqual(['findings']);
+    expect(report.affected).toEqual(['processes']);
   });
 
   it('Remplacer un module supprime les éléments absents et ne touche pas aux autres modules', () => {
     const cur = migrateToSchema15(fixture());
     const inc = structuredClone(cur);
-    (inc.findings as JsonObject[]).splice(0, 1);
     (inc.processes as JsonObject[]).splice(0, 1);
+    (inc.objectives as JsonObject[]).splice(0, 1);
     const { next, report } = planImport(cur, inc, {
       mode: 'replace',
-      module: 'findings',
+      module: 'processes',
       sourceSchema: 15,
       envelope: false,
     });
-    expect((next.findings as JsonObject[]).length).toBe((cur.findings as JsonObject[]).length - 1);
-    expect(next.processes).toEqual(cur.processes);
-    expect(report.modules.map((m) => m.module)).toEqual(['findings']);
+    expect((next.processes as JsonObject[]).length).toBe((cur.processes as JsonObject[]).length - 1);
+    expect(next.objectives).toEqual(cur.objectives);
+    expect(report.modules.map((m) => m.module)).toEqual(['processes']);
     expect(report.modules[0]!.collections[0]!.deleted).toBe(1);
   });
 
@@ -180,7 +185,7 @@ describe('planification d’un import', () => {
 
   it('signale les références cassées', () => {
     const { report } = planImport(seed(), fixture(), { mode: 'init', sourceSchema: 14, envelope: false });
-    expect(report.brokenRefs.some((r) => r.path.startsWith('$.findings['))).toBe(true);
+    expect(report.brokenRefs.length).toBeGreaterThan(0);
   });
 
   it('ne modifie pas ses entrées', () => {

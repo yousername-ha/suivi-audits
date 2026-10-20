@@ -1,4 +1,3 @@
-import crypto from 'node:crypto';
 import { GRC_MODULES, type GrcObject } from '@suivi/shared';
 import { isObject, type JsonObject } from '@suivi/shared/legacy';
 import type { SessionUser } from '../auth.js';
@@ -6,7 +5,7 @@ import type { Client } from '../db/db.js';
 import { DEFAULT_SMSI, hash, type Grc } from '../grc/core.js';
 import { HttpError } from '../http/errors.js';
 
-export const LEGACY_PILOTAGE = {
+const LEGACY_PILOTAGE = {
   scope: {
     kind: 'context',
     name: 'organisation',
@@ -46,7 +45,6 @@ export const LEGACY_PILOTAGE = {
     fields: { value: 'value', target: 'target', unit: 'unit', measuredAt: 'measuredAt' },
   },
   evidences: { kind: 'evidence', name: 'title', fields: { source: 'source', validUntil: 'review' } },
-  findings: { kind: 'nonconformity', name: 'text', fields: { cause: 'cause', dueAt: 'due', closureNote: 'closeNote' } },
   /** Déclaration d'applicabilité historique (lot U2) : une ligne par exigence de `items` (clauses ISO 27001,
       Annexe A, HDS), décision lue et écrite dans `dda[<id exigence>]`, sans copie. */
   dda: {
@@ -66,7 +64,7 @@ export const LEGACY_PILOTAGE = {
     },
   },
 } as const;
-export type LegacyPilotageKey = keyof typeof LEGACY_PILOTAGE;
+type LegacyPilotageKey = keyof typeof LEGACY_PILOTAGE;
 export class PilotageLegacy {
   constructor(readonly g: Grc) {}
   definition(key: string) {
@@ -110,7 +108,7 @@ export class PilotageLegacy {
     if (isObject(raw.pilotage)) Object.assign(data, raw.pilotage);
     else if (isObject(raw.links)) {
       data.refs = Object.entries(raw.links).flatMap(([origin, ids]) =>
-        ['items', 'findings', 'plans', 'recurring', 'indicators', 'suppliers'].includes(origin) && Array.isArray(ids)
+        ['items', 'plans', 'recurring', 'indicators', 'suppliers'].includes(origin) && Array.isArray(ids)
           ? ids.filter((id): id is string => typeof id === 'string').map((id) => `legacy:${origin}:${id}`)
           : [],
       );
@@ -150,12 +148,6 @@ export class PilotageLegacy {
       data.applicable = raw.app !== 'non';
       data.implemented = raw.level === 'Total';
       data.description = String(raw.comment ?? '');
-    }
-    if (key === 'findings') {
-      data.status =
-        raw.status === 'Clos' ? 'closed' : ((isObject(raw.pilotage) ? raw.pilotage.status : undefined) ?? 'open');
-      data.origin = isObject(raw.pilotage) ? raw.pilotage.origin : 'other';
-      data.effectiveness = isObject(raw.pilotage) ? (raw.pilotage.effectiveness ?? 'pending') : 'pending';
     }
     return {
       id: `legacy:${key}:${raw.id}`,
@@ -247,7 +239,7 @@ export class PilotageLegacy {
     } as JsonObject;
     if (isObject(raw.links) && Array.isArray(data.refs)) {
       next.links = { ...raw.links };
-      for (const key of ['items', 'findings', 'plans', 'recurring', 'indicators', 'suppliers'])
+      for (const key of ['items', 'plans', 'recurring', 'indicators', 'suppliers'])
         (next.links as JsonObject)[key] = data.refs
           .filter((r): r is string => typeof r === 'string' && r.startsWith(`legacy:${key}:`))
           .map((r) => r.split(':').slice(2).join(':'));
@@ -284,8 +276,6 @@ export class PilotageLegacy {
           },
         ];
     }
-    if (key === 'findings')
-      next.status = data.status === 'closed' ? 'Clos' : data.status === 'progress' ? 'En cours' : 'Ouvert';
     return next;
   }
   async save(
@@ -334,39 +324,5 @@ export class PilotageLegacy {
       user.username,
     );
     return result;
-  }
-  async createFinding(
-    c: Client,
-    smsi: string,
-    name: string,
-    input: Record<string, unknown>,
-    user: SessionUser,
-    ip: string,
-  ) {
-    await this.state(smsi, 'findings', user, c, true);
-    await c.query('SELECT id FROM app_state WHERE id=1 FOR UPDATE');
-    const state = (await this.g.legacy.recompose(c)) ?? { version: 0, data: {} as JsonObject };
-    const data = await this.g.normalize(smsi, 'nonconformity', input, user, c);
-    const raw = this.merge(
-      'findings',
-      {
-        id: crypto.randomUUID(),
-        tasks: [],
-        items: [],
-        status: 'Ouvert',
-        source: 'Autre',
-        type: 'Non-conformité',
-        createdAt: new Date().toISOString(),
-      },
-      name,
-      data,
-      user.username,
-    );
-    state.data.findings = [...(Array.isArray(state.data.findings) ? state.data.findings : []), raw];
-    const saved = await this.g.legacy.nativeWrite(c, state.data, user, state.version);
-    if (saved.conflict) throw new HttpError(412, 'Source historique modifiée.');
-    await this.g.db.audit(user, ip, 'pilotage.finding.created', String(raw.id), {}, c);
-    await this.g.notify(c, `legacy:findings:${raw.id}`, saved.version, smsi, 'ecarts', user.username);
-    return this.dto(smsi, 'findings', raw, saved.version);
   }
 }

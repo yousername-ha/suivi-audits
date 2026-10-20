@@ -160,31 +160,19 @@ export class Incidents {
         action: 'incident.action-created',
         reference: (x) => `legacy:incidents:${x.id}`,
       },
-      (data) => {
+      async (data, c) => {
         const i = this.trouver(data, id);
         if (str(i.findingId)) throw new HttpError(409, `Une action existe déjà : ${str(i.findingId)}.`);
         const fid = identifiantActionIncident(entrees(data, 'findings').map((f) => str(f.id)));
         const connus = new Set(entrees(data, 'items').map((x) => str(x.id)));
-        data.findings = [
-          ...(Array.isArray(data.findings) ? data.findings : []),
-          {
-            id: fid,
-            createdAt: new Date().toISOString(),
-            source: 'Incident',
-            year: new Date().getFullYear(),
-            type: 'PP',
-            status: 'Ouvert',
-            text: `Action issue de l’incident ${id} : ${str(i.title)}`,
-            desc: str(i.retex) || str(i.cause),
-            action: '',
-            tasks: [],
-            comment: id,
-            items: ['A-5.27'].filter((x) => connus.has(x)),
-            owner: str(i.owner),
-            due: '',
-            proof: '',
-          },
-        ];
+        await this.r.creerEcart(c, user, ip, {
+          id: fid,
+          name: `Action issue de l’incident ${id} : ${str(i.title)}`,
+          description: str(i.retex) || str(i.cause),
+          findingType: 'opportunity',
+          origin: 'incident',
+          items: ['A-5.27'].filter((x) => connus.has(x)),
+        });
         remplacerEntree(data, 'incidents', id, { ...i, findingId: fid });
         return { id, findingId: fid };
       },

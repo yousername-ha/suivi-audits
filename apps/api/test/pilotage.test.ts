@@ -44,8 +44,9 @@ async function decide(
     { 'if-match': `"${version}"` },
   );
 }
-async function legacyFinding() {
-  return (await a.get(base + '/pilotage/legacy/findings/' + finding.split(':').slice(2).join(':'))).json();
+/** Le constat généré par le contrôle est un écart natif du périmètre commun. */
+async function ecart() {
+  return (await a.get(base + '/objects/' + finding.slice('object:'.length))).json();
 }
 beforeAll(async () => {
   t = await createTestApp();
@@ -116,7 +117,7 @@ describe('Pilotage multi-référentiels G/H/K et début E', () => {
     await expect(t.svc.db.q('UPDATE pilotage_decisions SET note=$1', ['altéré'])).rejects.toThrow();
     await expect(t.svc.db.q('DELETE FROM pilotage_decisions')).rejects.toThrow();
   });
-  it('réalise un contrôle et génère un constat dans findings ainsi qu’une action liée, une seule fois', async () => {
+  it('réalise un contrôle et génère un constat dans le registre des écarts ainsi qu’une action liée, une seule fois', async () => {
     const c = await a.post(base + '/objects', {
       kind: 'control',
       name: 'Contrôle de conservation',
@@ -137,10 +138,9 @@ describe('Pilotage multi-référentiels G/H/K et début E', () => {
     });
     expect(r.statusCode, r.body).toBe(200);
     [finding, linkedAction] = r.json().generatedRefs;
-    expect(finding).toMatch(/^legacy:findings:/);
+    expect(finding).toMatch(/^object:/);
     expect(linkedAction).toMatch(/^object:/);
-    const state = await t.svc.legacy.recompose();
-    expect((state!.data.findings as { id: string }[]).some((f) => f.id === finding.split(':')[2])).toBe(true);
+    expect((await ecart()).kind).toBe('nonconformity');
     expect(
       (await a.get(base + '/links?ref=' + encodeURIComponent(finding)))
         .json()
@@ -169,23 +169,19 @@ describe('Pilotage multi-référentiels G/H/K et début E', () => {
     ).toBe(409);
   });
   it('garde la clôture, les causes, la vérification d’efficacité et les tâches réellement réalisées', async () => {
-    let f = await legacyFinding();
-    expect((await decide(f.id, 'close', 'completed', f.version)).statusCode).toBe(409);
+    let f = await ecart();
+    expect((await decide(finding, 'close', 'completed', f.version)).statusCode).toBe(409);
     const updated = await a.put(
-      base + '/pilotage/legacy/findings/' + finding.split(':')[2],
-      {
-        name: f.name,
-        sourceSha: f.data.sourceSha,
-        data: { ...clean(f.data), cause: 'Cause identifiée par analyse détaillée' },
-      },
+      base + '/objects/' + f.id,
+      { kind: 'nonconformity', name: f.name, data: { ...f.data, cause: 'Cause identifiée par analyse détaillée' } },
       { 'if-match': `"${f.version}"` },
     );
     expect(updated.statusCode, updated.body).toBe(200);
     f = updated.json();
-    const effect = await decide(f.id, 'effectiveness', 'effective', f.version);
+    const effect = await decide(finding, 'effectiveness', 'effective', f.version);
     expect(effect.statusCode, effect.body).toBe(200);
-    f = await legacyFinding();
-    expect((await decide(f.id, 'close', 'completed', f.version)).statusCode).toBe(409);
+    f = await ecart();
+    expect((await decide(finding, 'close', 'completed', f.version)).statusCode).toBe(409);
     const action = (await a.get(base + '/objects/' + linkedAction.slice(7))).json();
     const progress = await a.put(
       base + '/objects/' + action.id,
@@ -203,31 +199,31 @@ describe('Pilotage multi-référentiels G/H/K et début E', () => {
       { 'if-match': `"${progress.json().version}"` },
     );
     expect(closed.statusCode, closed.body).toBe(200);
-    const done = await decide(f.id, 'close', 'completed', f.version);
+    const done = await decide(finding, 'close', 'completed', f.version);
     expect(done.statusCode, done.body).toBe(200);
-    expect((await legacyFinding()).data.status).toBe('closed');
+    expect((await ecart()).data.status).toBe('closed');
     const report = await a.get(base + '/pilotage/improvement-indicators');
     expect(report.statusCode).toBe(200);
     expect(report.json().closed).toBeGreaterThan(0);
   });
   it('rouvre un constat clos avec un motif tracé : l’efficacité est à revérifier, aucune réouverture silencieuse', async () => {
-    let f = await legacyFinding();
+    let f = await ecart();
     expect(f.data.status).toBe('closed');
     // La modification ordinaire d'un constat clos reste refusée ; seule la décision de réouverture le rouvre.
     const direct = await a.put(
-      base + '/pilotage/legacy/findings/' + finding.split(':')[2],
-      { name: f.name, sourceSha: f.data.sourceSha, data: { ...clean(f.data), status: 'open' } },
+      base + '/objects/' + f.id,
+      { kind: 'nonconformity', name: f.name, data: { ...f.data, status: 'open' } },
       { 'if-match': `"${f.version}"` },
     );
     expect(direct.statusCode).toBeGreaterThanOrEqual(400);
-    const court = await decide(f.id, 'reopen', 'completed', f.version, { note: 'court' });
+    const court = await decide(finding, 'reopen', 'completed', f.version, { note: 'court' });
     expect(court.statusCode).toBe(422);
-    const rouvert = await decide(f.id, 'reopen', 'completed', f.version, {
+    const rouvert = await decide(finding, 'reopen', 'completed', f.version, {
       note: 'Récidive constatée lors de l’audit de surveillance.',
     });
     expect(rouvert.statusCode, rouvert.body).toBe(200);
     expect(rouvert.json().operation).toBe('reopen');
-    f = await legacyFinding();
+    f = await ecart();
     expect(f.data.status).toBe('open');
     expect(f.data.effectiveness).toBe('pending');
     // Le motif est au journal des décisions, la clôture d'origine aussi (journal immuable).
@@ -236,8 +232,8 @@ describe('Pilotage multi-référentiels G/H/K et début E', () => {
       .items.map((d: { operation: string }) => d.operation);
     expect(journal).toEqual(expect.arrayContaining(['close', 'reopen']));
     // Fermer de nouveau exige une nouvelle vérification d'efficacité ; on ne rouvre pas un constat déjà ouvert.
-    expect((await decide(f.id, 'close', 'completed', f.version)).statusCode).toBe(409);
-    expect((await decide(f.id, 'reopen', 'completed', f.version)).statusCode).toBe(409);
+    expect((await decide(finding, 'close', 'completed', f.version)).statusCode).toBe(409);
+    expect((await decide(finding, 'reopen', 'completed', f.version)).statusCode).toBe(409);
   });
   it('préserve les champs extra, les rôles sans ID, et les historiques de valeurs', async () => {
     await t.svc.db.tx(async (c) => {

@@ -162,14 +162,7 @@ export const pilotageRoutes = [
         )
       ).rows;
       const refs = objects.map((o) => 'object:' + o.id);
-      const key =
-        query.kind === 'nonconformity'
-          ? 'findings'
-          : query.kind === 'evidence'
-            ? 'evidences'
-            : query.kind === 'management_review'
-              ? 'reviews'
-              : null;
+      const key = query.kind === 'evidence' ? 'evidences' : query.kind === 'management_review' ? 'reviews' : null;
       const legacy = [];
       if (
         key &&
@@ -271,16 +264,6 @@ export const pilotageRoutes = [
         (s as Session).user,
         ip,
       ),
-  }),
-  route({
-    ...base,
-    method: 'POST',
-    url: '/api/grc/:smsi/pilotage/findings',
-    params: scope,
-    body: z.object({ name: z.string().trim().min(1).max(200), data: z.record(z.string(), z.unknown()) }).strict(),
-    summary: 'Ajouter un constat dans le registre existant des écarts',
-    handler: async ({ svc, s, params, body, ip }) =>
-      new Pilotage(svc.grc).createFinding(params.smsi, body.name, body.data, (s as Session).user, ip),
   }),
   route({
     ...base,

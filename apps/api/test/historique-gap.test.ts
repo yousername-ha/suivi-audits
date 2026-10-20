@@ -30,6 +30,7 @@ beforeAll(async () => {
   await poser((s) => {
     s.items = [
       item('ISO-4.3', 'ISO', '4.3'),
+      item('ISO-6.1.2', 'ISO', '6.1.2'),
       item('A-5.9', 'A', '5.9'),
       item('A-5.12', 'A', '5.12'),
       item('A-8.24', 'A', '8.24'),
@@ -115,14 +116,9 @@ describe('analyse d’écart', () => {
     expect(r.statusCode, r.body).toBe(200);
     expect(r.json().ecart).toBe('GAP-01');
     const f = (await etat()).findings.find((x: { id: string }) => x.id === 'GAP-01');
-    expect(f).toMatchObject({
-      source: 'GAP',
-      type: 'Remarque',
-      status: 'Ouvert',
-      owner: 'Pilote fictif',
-      due: '2026-12-01',
-      items: ['ISO-6.1.2'],
-    });
+    // L'action est un écart natif du périmètre commun, retrouvé par son identifiant lisible.
+    expect(f).toMatchObject({ type: 'Remarque', status: 'Ouvert', due: '2026-12-01', items: ['ISO-6.1.2'] });
+    expect(f.desc).toContain('Constat fictif');
     expect((await writer.post('/api/gap/APP01/points/G03/action')).statusCode).toBe(409);
   });
   it('supprime l’application sans toucher aux autres clés', async () => {
@@ -131,7 +127,7 @@ describe('analyse d’écart', () => {
     expect(id).toBe('APP02');
     expect((await writer.del(`/api/gap/${id}`)).statusCode).toBe(200);
     expect((await writer.del(`/api/gap/${id}`)).statusCode).toBe(404);
-    expect((await etat()).items).toHaveLength(5);
+    expect((await etat()).items).toHaveLength(6);
   });
 });
 
@@ -166,8 +162,8 @@ describe('questionnaire guidé', () => {
     expect(j).toMatchObject({ plan: 'GAP-02', fournisseur: 'SUP02', ia: 'EXT-IA-01' });
     const s = await etat();
     const plan = s.findings.find((x: { id: string }) => x.id === 'GAP-02');
-    expect(plan.tasks.length).toBeGreaterThan(10);
-    expect(plan.tasks.every((k: { done: boolean }) => k.done === false)).toBe(true);
+    expect(plan.desc.split('\n').filter((l: string) => l.startsWith('- ')).length).toBeGreaterThan(10);
+    expect(plan.status).toBe('Ouvert');
     expect(s.suppliers.find((x: { id: string }) => x.id === 'SUP02')).toMatchObject({
       name: 'Nouveau fournisseur fictif',
       saas: true,
@@ -182,20 +178,6 @@ describe('questionnaire guidé', () => {
       authz: 'En qualification',
     });
     expect(s.appGaps.find((x: { id: string }) => x.id === 'APP02').profile.at).toBeTruthy();
-  });
-  it('un changement d’état met à jour la tâche du plan d’action', async () => {
-    const avant = (await etat()).findings.find((x: { id: string }) => x.id === 'GAP-02');
-    const tache = avant.tasks.find((k: { t: string }) => k.t.startsWith('Sauvegarder les données'));
-    expect(tache.done).toBe(false);
-    expect((await writer.patch('/api/gap/APP02/points/G13', { st: 'Conforme' })).statusCode).toBe(200);
-    const apres = (await etat()).findings.find((x: { id: string }) => x.id === 'GAP-02');
-    expect(apres.tasks.find((k: { t: string }) => k.t.startsWith('Sauvegarder les données')).done).toBe(true);
-    expect((await writer.patch('/api/gap/APP02/points/G13', { st: 'Partiel' })).statusCode).toBe(200);
-    expect(
-      (await etat()).findings
-        .find((x: { id: string }) => x.id === 'GAP-02')
-        .tasks.find((k: { t: string }) => k.t.startsWith('Sauvegarder les données')).done,
-    ).toBe(false);
   });
   it('sans registre IA : il est initialisé vide puis l’usage y est inscrit', async () => {
     // Le module IA est repris dans des tables : on le vide par sa correspondance (supprimer la clé de l'état n'y suffit pas).

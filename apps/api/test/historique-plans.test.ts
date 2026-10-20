@@ -200,14 +200,7 @@ describe('actions croisées', () => {
     expect(r.statusCode, r.body).toBe(200);
     expect(r.json().ecart).toBe('EXO-01');
     const f = (await etat()).findings.find((x: { id: string }) => x.id === 'EXO-01');
-    expect(f).toMatchObject({
-      source: 'Exercice',
-      type: 'PP',
-      status: 'Ouvert',
-      owner: 'Pilote fictif',
-      desc: 'Retour fictif',
-      items: ['A-5.29', 'A-5.30'],
-    });
+    expect(f).toMatchObject({ type: 'PP', status: 'Ouvert', desc: 'Retour fictif', items: ['A-5.29', 'A-5.30'] });
     expect((await writer.post(`/api/plans/${p.id}/ecart`)).json().ecart).toBe('EXO-02');
     expect((await reader.get('/api/plans')).json().plans.find((x: { id: string }) => x.id === p.id).findings).toEqual([
       'EXO-01',

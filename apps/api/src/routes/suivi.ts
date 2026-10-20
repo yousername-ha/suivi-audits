@@ -13,7 +13,6 @@ export const validLegacyState = (o: unknown): o is JsonObject =>
   isObject(o as Json) &&
   (o as JsonObject).v === 1 &&
   Array.isArray((o as JsonObject).items) &&
-  Array.isArray((o as JsonObject).findings) &&
   Array.isArray((o as JsonObject).years);
 
 async function legacyState(svc: Services) {

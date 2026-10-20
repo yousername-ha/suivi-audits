@@ -2,16 +2,7 @@
    raisonnables, caractères de contrôle refusés (sauf tabulation et retours à la ligne dans les textes longs). Les
    dates sont au format AAAA-MM-JJ ; une date vide est `null`. */
 import { z } from 'zod';
-import {
-  COVERAGE_VALUES,
-  FINDING_SOURCES,
-  FINDING_STATUSES,
-  FINDING_TYPES,
-  PLAN_STATUSES,
-  PREP_VALUES,
-  SLOT_KINDS,
-} from './model.js';
-import { REOPEN_REASON_MAX } from './ecarts.js';
+import { COVERAGE_VALUES, PLAN_STATUSES, PREP_VALUES, SLOT_KINDS } from './model.js';
 
 /** Bornes des champs. */
 export const AUDIT_LIMITS = {
@@ -152,111 +143,6 @@ export const PreparationUpdateBody = z
 export const PreparationCopyBody = z.object({ from: Year, to: Year }).refine((b) => b.from !== b.to, {
   message: 'Années identiques.',
   path: ['to'],
-});
-
-/* ---------------------------------------------------------------- Écarts et tâches (AUD-09, AUD-10) */
-export const FindingTypeSchema = z.enum(FINDING_TYPES);
-export const FindingStatusSchema = z.enum(FINDING_STATUSES);
-export const FindingSourceSchema = z.enum(FINDING_SOURCES);
-
-export const TaskSchema = z.object({
-  id: z.string(),
-  text: z.string().max(AUDIT_LIMITS.task),
-  done: z.boolean(),
-  createdAt: z.string().nullable(),
-  due: z.iso.date().nullable(),
-  owner: z.string().max(AUDIT_LIMITS.owner).nullable(),
-  doneAt: z.string().nullable(),
-  doneBy: z.string().nullable(),
-});
-export type Task = z.infer<typeof TaskSchema>;
-export const TaskCreateBody = z.object({
-  text: texte(AUDIT_LIMITS.task).min(1, 'Action obligatoire.'),
-  due: OptionalDate.optional(),
-  owner: Owner.optional(),
-});
-export const TaskUpdateBody = z
-  .object({
-    text: texte(AUDIT_LIMITS.task).min(1, 'Action obligatoire.').optional(),
-    done: z.boolean().optional(),
-    due: OptionalDate.optional(),
-    owner: Owner.optional(),
-  })
-  .refine(auMoinsUn, RIEN);
-
-export const FindingSchema = z.object({
-  id: FindingId,
-  source: FindingSourceSchema,
-  year: Year,
-  type: FindingTypeSchema,
-  status: FindingStatusSchema,
-  title: z.string().max(AUDIT_LIMITS.title),
-  description: z.string().max(AUDIT_LIMITS.longText),
-  correctiveAction: z.string().max(AUDIT_LIMITS.action),
-  comment: z.string().max(AUDIT_LIMITS.note),
-  owner: z.string().max(AUDIT_LIMITS.owner),
-  dueDate: z.iso.date().nullable(),
-  proof: z.string().max(AUDIT_LIMITS.note),
-  requirements: z.array(RequirementId).max(AUDIT_LIMITS.requirementsPerFinding),
-  tasks: z.array(TaskSchema).max(AUDIT_LIMITS.tasksPerFinding),
-  closedAt: z.string().nullable(),
-  closedBy: z.string().nullable(),
-  ...Meta,
-});
-export type Finding = z.infer<typeof FindingSchema>;
-
-const findingFields = {
-  source: FindingSourceSchema,
-  year: Year,
-  type: FindingTypeSchema,
-  title: ligne(AUDIT_LIMITS.title),
-  description: texte(AUDIT_LIMITS.longText),
-  correctiveAction: texte(AUDIT_LIMITS.action),
-  comment: texte(AUDIT_LIMITS.note),
-  owner: Owner,
-  dueDate: OptionalDate,
-  proof: texte(AUDIT_LIMITS.note),
-  requirements: unique(RequirementId, AUDIT_LIMITS.requirementsPerFinding),
-};
-/** Création : identifiant attribué par le serveur (`F01`…) ; valeurs par défaut de l'outil historique. */
-export const FindingCreateBody = z.object({
-  source: findingFields.source.default('AFNOR'),
-  year: findingFields.year,
-  type: findingFields.type.default('PS'),
-  title: findingFields.title.default(''),
-  description: findingFields.description.default(''),
-  correctiveAction: findingFields.correctiveAction.default(''),
-  comment: findingFields.comment.default(''),
-  owner: findingFields.owner.default(''),
-  dueDate: findingFields.dueDate.optional(),
-  proof: findingFields.proof.default(''),
-  requirements: findingFields.requirements.default([]),
-  tasks: z.array(TaskCreateBody).max(AUDIT_LIMITS.tasksPerFinding).default([]),
-});
-/** Modification des champs (le statut passe par `FindingStatusBody`, qui applique les règles). */
-export const FindingUpdateBody = z
-  .object({
-    source: findingFields.source.optional(),
-    year: findingFields.year.optional(),
-    type: findingFields.type.optional(),
-    title: findingFields.title.optional(),
-    description: findingFields.description.optional(),
-    correctiveAction: findingFields.correctiveAction.optional(),
-    comment: findingFields.comment.optional(),
-    owner: findingFields.owner.optional(),
-    dueDate: findingFields.dueDate.optional(),
-    proof: findingFields.proof.optional(),
-    requirements: findingFields.requirements.optional(),
-  })
-  .refine(auMoinsUn, RIEN);
-/** Changement de statut ; quitter « Clos » exige un motif (réouverture). */
-export const FindingStatusBody = z.object({
-  status: FindingStatusSchema,
-  motif: texte(REOPEN_REASON_MAX).optional(),
-});
-export const FindingReopenBody = z.object({
-  motif: texte(REOPEN_REASON_MAX).min(1, 'Le motif de réouverture est obligatoire.'),
-  status: z.enum(['Ouvert', 'En cours']).default('En cours'),
 });
 
 /* ---------------------------------------------------------------- Plan d'audit (AUD-11) */

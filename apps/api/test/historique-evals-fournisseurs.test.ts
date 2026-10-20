@@ -88,9 +88,9 @@ describe('évaluations par le clausier', () => {
     expect(r.statusCode, r.body).toBe(201);
     expect(r.json()).toMatchObject({ action: 'FOU-01', taches: 2 });
     const f = (await etat()).findings[0];
-    expect(f).toMatchObject({ id: 'FOU-01', source: 'Fournisseur', type: 'PP', comment: ev, items: ['A-5.19'] });
-    expect(f.tasks).toHaveLength(2);
-    expect(f.tasks[0].t).toMatch(/^Clausier O-/);
+    expect(f).toMatchObject({ id: 'FOU-01', type: 'PP', items: ['A-5.19'] });
+    const points = f.desc.split('\n').filter((l: string) => l.startsWith('- Clausier O-'));
+    expect(points).toHaveLength(2);
     expect((await writer.post('/api/evaluations-clausier/EVAL-ancienne/action')).statusCode).toBe(409);
   });
   it('conserve les champs inconnus et supprime une évaluation', async () => {

@@ -173,6 +173,7 @@ describe('migration d’une base v2 existante, sans perte', () => {
       '030_validations_occurrences.sql',
       '031_fonctions_responsables.sql',
       '032_plans_actions_conteneurs.sql',
+      '033_retrait_constats_historiques.sql',
     ]);
     // Rôles v2 repris : admin → Administrateur, rw → Contributeur, ro → Lecteur ; colonne users.role supprimée.
     const mapped = await t.svc.db.q<{ username: string; role_id: string }>(
@@ -207,7 +208,8 @@ describe('migration d’une base v2 existante, sans perte', () => {
     expect(dl.rawPayload.equals(file)).toBe(true);
     const st = await a.get('/api/suivi/etat');
     expect(st.headers.etag).toBe('"v7"');
-    expect(st.json().findings[0].text).toBe('Écart de test');
+    // Les constats historiques sont retirés par la migration 033 : il n'en reste aucun (les écarts sont dans les registres).
+    expect(st.json().findings).toEqual([]);
     // L'état n'a pas été réinitialisé par l'amorçage (seed) : la base contenait déjà des données.
     expect((await t.svc.db.one<{ version: number }>('SELECT version FROM app_state'))!.version).toBe(7);
     await expect(t.svc.db.q('DELETE FROM audit_log')).rejects.toThrow(/ajout seul/);

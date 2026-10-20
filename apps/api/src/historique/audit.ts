@@ -93,7 +93,7 @@ const minutes = (t: string) => {
 };
 const heure = (n: number) => `${String(Math.floor(n / 60)).padStart(2, '0')}:${String(n % 60).padStart(2, '0')}`;
 /** Jour ouvré suivant (ni samedi ni dimanche) d'une date AAAA-MM-JJ. */
-export function jourOuvreSuivant(d: string): string {
+function jourOuvreSuivant(d: string): string {
   const x = new Date(d + 'T12:00:00Z');
   if (Number.isNaN(x.getTime())) return '';
   do x.setUTCDate(x.getUTCDate() + 1);

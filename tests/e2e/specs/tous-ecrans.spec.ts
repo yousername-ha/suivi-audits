@@ -3,7 +3,7 @@
    largeur exploitée sur les très grands écrans ; aucun défilement horizontal ; écran mural (activation, révocation).
    Exécutés après parcours.spec.ts (ordre alphabétique des fichiers, un seul worker). */
 import { expect, test, type Browser, type BrowserContext, type Page } from '@playwright/test';
-import { csrfOf, sessionAdmin, watchPage, ecrireEtat } from '../helpers';
+import { creerEcartCommun, csrfOf, sessionAdmin, watchPage } from '../helpers';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -43,13 +43,18 @@ test.beforeAll(async ({ browser }) => {
 
   // Données fictives figées : échéances loin dans le passé ou l'avenir, pour que les captures ne dépendent pas
   // de la date du jour.
-  const cur = await ctx.request.get('/api/suivi/etat');
-  const data = await cur.json();
-  data.findings = (data.findings as Record<string, unknown>[]).map((f, i) => ({
-    ...f,
-    due: i === 0 ? '2020-06-30' : '2099-12-31',
-  }));
-  await ecrireEtat(ctx.request, csrf, data);
+  await creerEcartCommun(ctx.request, csrf, {
+    name: 'Écart fictif en retard',
+    source: 'Interne',
+    classification: 'mineure',
+    dueAt: '2020-06-30',
+  });
+  await creerEcartCommun(ctx.request, csrf, {
+    name: 'Écart fictif à venir',
+    source: 'Interne',
+    classification: 'mineure',
+    dueAt: '2099-12-31',
+  });
 
   // Document fictif au contenu fixe (empreinte stable), ouvert dans la vue « liste avec fiche ».
   const up = await ctx.request.post('/api/documents', {

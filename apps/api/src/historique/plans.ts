@@ -24,7 +24,7 @@ const str = (v: unknown) => (typeof v === 'string' ? v : v == null ? '' : String
 /** Date du jour (AAAA-MM-JJ) en UTC, comme `suppliers.ts`. */
 const aujourdhui = () => new Date().toISOString().slice(0, 10);
 
-export interface MesurePlan {
+interface MesurePlan {
   id: string;
   ref: string;
   code: string;
@@ -223,7 +223,7 @@ export class Plans {
         action: 'plan.finding-created',
         reference: (x) => `legacy:plans:${x.plan.id}`,
       },
-      (data) => {
+      async (data, c) => {
         const plan = lireActionPlan(this.trouver(data, id))!;
         if (plan.type !== 'exo')
           throw new HttpError(422, 'Seul un exercice crée une action dans le registre des écarts.');
@@ -232,25 +232,13 @@ export class Plans {
         while (ecarts.some((f) => f.id === `EXO-${String(n).padStart(2, '0')}`)) n++;
         const ecart = `EXO-${String(n).padStart(2, '0')}`;
         const mesures = new Set(entrees(data, 'items').map((m) => str(m.id)));
-        const maintenant = new Date().toISOString();
-        const finding: JsonObject = {
+        await this.r.creerEcart(c, user, ip, {
           id: ecart,
-          createdAt: maintenant,
-          source: 'Exercice',
-          year: Number((plan.done || plan.start || aujourdhui()).slice(0, 4)),
-          type: 'PP',
-          status: 'Ouvert',
-          text: `Action issue de l’exercice « ${plan.title || plan.id} »`,
-          desc: plan.retex,
-          action: '',
-          tasks: [],
-          comment: `Exercice ${plan.id}`,
+          name: `Action issue de l’exercice « ${plan.title || plan.id} »`,
+          description: plan.retex,
+          findingType: 'opportunity',
           items: ['A-5.29', 'A-5.30'].filter((x) => mesures.has(x)),
-          owner: plan.owner,
-          due: '',
-          proof: plan.proof,
-        };
-        data.findings = [...(Array.isArray(data.findings) ? data.findings : []), finding];
+        });
         const suivant = this.remplacer(data, id, (b) => ({
           ...b,
           findings: [...(Array.isArray(b.findings) ? b.findings : []), ecart],

@@ -9,23 +9,16 @@ import { HttpError } from './http/errors.js';
 import type { LegacyStore } from './legacy/store.js';
 
 /** Sections stockées dans la table settings ; les autres (cycle, référentiels) vivent dans l'état legacy. */
-export const STORED_SECTIONS = [
-  'general',
-  'apparence',
-  'notifications',
-  'import_export',
-  'sauvegardes',
-  'securite',
-] as const;
+const STORED_SECTIONS = ['general', 'apparence', 'notifications', 'import_export', 'sauvegardes', 'securite'] as const;
 type Stored = (typeof STORED_SECTIONS)[number];
 const isStored = (s: SettingsSection): s is Stored => (STORED_SECTIONS as readonly string[]).includes(s);
 
-export const LEGACY_SECTION_KEYS = {
+const LEGACY_SECTION_KEYS = {
   cycle: ['years', 'yearLabels', 'nextYear', 'nextDate', 'internalDate', 'iso27001Certified'],
   referentiels: ['activeFw', 'entityCategory'],
 } as const;
 
-export function settingsDefaults(cfg: Config): { [K in Stored]: SettingsValues[K] } {
+function settingsDefaults(cfg: Config): { [K in Stored]: SettingsValues[K] } {
   return {
     general: {
       appName: cfg.appName,
