@@ -98,7 +98,7 @@ export function texteTenacy(brut: Cellule): string {
     .split('\n')) {
     const m = /^\s{2,}[*•-]\s+(.*)$/.exec(l);
     if (m && sortie.length) {
-      const p = sortie[sortie.length - 1]!.replace(/\s+$/, '');
+      const p = sortie[sortie.length - 1]!.trimEnd();
       sortie[sortie.length - 1] = p + (/:$/.test(p) ? ' ' : ' ; ') + m[1]!.trim();
     } else sortie.push(l);
   }
@@ -120,23 +120,25 @@ export function actionTenacy(texte: string) {
     .filter(Boolean);
   const puce = (l: string) => /^[-–•]/.test(l);
   const puces = lignes.filter(puce).map((l) => l.replace(/^[-–•]\s*/, ''));
-  const tete = lignes
+  const brute = lignes
     .filter((l) => !puce(l))
     .join(' ')
-    .replace(/\s*:\s*$/, '');
+    .trimEnd();
+  const tete = (brute.endsWith(':') ? brute.slice(0, -1) : brute).trimEnd();
   return { action: tete, taches: puces.length ? puces : tete ? [tete] : [] };
 }
 
 /** Code de mesure Tenacy ou de l'outil vers l'identifiant de mesure (ISO-4.1, A-5.15, HDS-04) ; nul si illisible. */
 export function codeMesureTenacy(brut: string): string | null {
-  const x = brut.trim().replace(/\s+/g, ' ');
+  // Espaces ramenés à un seul : les motifs ci-dessous n'ont ainsi aucune ambiguïté (pas de retour arrière coûteux).
+  const x = brut.slice(0, 100).trim().replace(/\s+/g, ' ');
   let m: RegExpExecArray | null;
-  if ((m = /^ISO-[\d-]+\s+(\d+(?:\.\d+)*)$/i.exec(x))) return 'ISO-' + m[1];
-  if ((m = /^HDS[-\d.]*\s+EXI\s*0*(\d+)$/i.exec(x))) return 'HDS-' + String(+m[1]!).padStart(2, '0');
-  if ((m = /^DDA-[A-Z]+\s+(\d+\.\d+)$/i.exec(x))) return 'A-' + m[1];
-  if ((m = /^(?:A\.|Annexe\s*A\s*)(\d+\.\d+)/i.exec(x))) return 'A-' + m[1];
-  if ((m = /^(?:HDS|EXI)\s*0*(\d+)/i.exec(x))) return 'HDS-' + String(+m[1]!).padStart(2, '0');
-  if ((m = /^(?:clause\s*)?(\d+(?:\.\d+)*)$/i.exec(x))) return 'ISO-' + m[1];
+  if ((m = /^ISO-[\d-]+ (\d+(?:\.\d+)*)$/i.exec(x))) return 'ISO-' + m[1];
+  if ((m = /^HDS[-\d.]* EXI ?(\d+)$/i.exec(x))) return 'HDS-' + String(+m[1]!).padStart(2, '0');
+  if ((m = /^DDA-[A-Z]+ (\d+\.\d+)$/i.exec(x))) return 'A-' + m[1];
+  if ((m = /^(?:A\.|Annexe A ?)(\d+\.\d+)/i.exec(x))) return 'A-' + m[1];
+  if ((m = /^(?:HDS|EXI) ?(\d+)/i.exec(x))) return 'HDS-' + String(+m[1]!).padStart(2, '0');
+  if ((m = /^(?:clause ?)?(\d+(?:\.\d+)*)$/i.exec(x))) return 'ISO-' + m[1];
   return null;
 }
 export function codesMesuresTenacy(brut: Cellule): string[] {
