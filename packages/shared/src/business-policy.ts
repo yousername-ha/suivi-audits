@@ -54,7 +54,7 @@ export const BusinessPolicy = z
     templates: z.array(named.extend({ category: key, text: z.string().max(10000) })).max(100),
     display: z
       .object({
-        defaultTaskView: z.enum(['kanban', 'list', 'calendar', 'gantt', 'dashboard']),
+        defaultTaskView: z.enum(['kanban', 'list', 'calendar', 'timeline', 'gantt', 'dashboard']),
         weekStartsOn: z.union([z.literal(0), z.literal(1)]),
         showClosed: z.boolean(),
       })

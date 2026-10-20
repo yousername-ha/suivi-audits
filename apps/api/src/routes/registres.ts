@@ -115,6 +115,14 @@ export const registresRoutes = [
   route({
     ...base,
     method: 'GET',
+    url: '/api/registres/elements/:id/acces',
+    summary: 'Accès effectif de l’utilisateur à un élément (lecture, contribution, gestion)',
+    params: registre,
+    handler: async ({ svc, s, params }) => svc.grc.registres.accesElement(params.id, (s as Session).user),
+  }),
+  route({
+    ...base,
+    method: 'GET',
     url: '/api/droits/:type/:id',
     summary: 'Droits attribués sur un registre ou un élément (gestionnaires)',
     params: ressource,

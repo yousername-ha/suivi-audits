@@ -226,6 +226,10 @@ describe('registres et droits par ressource', () => {
       ).statusCode,
     ).toBe(403);
     expect((await contributeur.get(`/api/droits/registre/${registre}`)).statusCode).toBe(403);
+    // L'accès effectif de l'élément reflète le rôle de contributeur : il lit et contribue sans gérer.
+    const acces = (await contributeur.get(`/api/registres/elements/${element}/acces`)).json();
+    expect(acces.peut).toEqual({ lire: true, contribuer: true, gerer: false });
+    expect(acces.role).toBe('contributeur');
     // L'annuaire des titulaires n'est servi qu'à qui gère la ressource.
     expect((await contributeur.get(`/api/droits/registre/${registre}/titulaires`)).statusCode).toBe(403);
     const propose = (

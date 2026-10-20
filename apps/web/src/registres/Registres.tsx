@@ -20,31 +20,15 @@ import { notifications } from '@mantine/notifications';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
-import {
-  REGISTRE_KINDS,
-  REGISTRE_LABELS,
-  ROLE_LABELS,
-  ROLES_RESSOURCE,
-  type GrcObject,
-  type RegistreDto,
-  type RoleRessource,
-} from '@suivi/shared';
+import { REGISTRE_KINDS, REGISTRE_LABELS, ROLE_LABELS, type GrcObject, type RegistreDto } from '@suivi/shared';
 import { ConfirmButton, DataTable, Page, PageHeader, StatusChip } from '@suivi/ui';
 import { api, get } from '../api';
 import { ErrorAlert, fmtDate } from '../components/common';
+import { Droits } from './Droits';
 
 interface Perimetre {
   id: string;
   name: string;
-}
-interface Droit {
-  id: string;
-  subjectType: 'utilisateur' | 'groupe';
-  subjectId: string;
-  role: RoleRessource;
-  libelle: string;
-  grantedBy: string;
-  grantedAt: string;
 }
 interface Impact {
   ajoutes: Perimetre[];
@@ -55,7 +39,6 @@ interface Impact {
   droits: number;
 }
 const KIND_OPTIONS = REGISTRE_KINDS.map((k) => ({ value: k, label: REGISTRE_LABELS[k] }));
-const ROLE_OPTIONS = ROLES_RESSOURCE.map((r) => ({ value: r, label: ROLE_LABELS[r] }));
 const ELEMENT_LABELS: Record<string, string> = {
   action: 'Action',
   nonconformity: 'Écart',
@@ -287,7 +270,7 @@ function FicheRegistre({ id }: { id: string }) {
             </Tabs.Panel>
             {r.peut.gerer && (
               <Tabs.Panel value="droits" pt="md">
-                <Droits id={id} />
+                <Droits type="registre" id={id} />
               </Tabs.Panel>
             )}
             {r.peut.gerer && (
@@ -478,127 +461,6 @@ function PerimetresRegistre({ r }: { r: RegistreDto }) {
           </Group>
         </Stack>
       </Modal>
-    </Stack>
-  );
-}
-
-function Droits({ id }: { id: string }) {
-  const qc = useQueryClient();
-  const droits = useQuery({
-    queryKey: ['droits', 'registre', id],
-    queryFn: () => get<{ items: Droit[] }>(`/api/droits/registre/${id}`),
-  });
-  const [recherche, setRecherche] = useState('');
-  const titulaires = useQuery({
-    queryKey: ['droits', 'registre', id, 'titulaires', recherche],
-    queryFn: () =>
-      get<{ utilisateurs: { id: string; libelle: string }[]; groupes: { id: string; libelle: string }[] }>(
-        `/api/droits/registre/${id}/titulaires?q=${encodeURIComponent(recherche)}`,
-      ),
-  });
-  const [titulaire, setTitulaire] = useState<string | null>(null);
-  const [role, setRole] = useState<string | null>('contributeur');
-  const [erreur, setErreur] = useState<unknown>(null);
-  const options = [
-    {
-      group: 'Utilisateurs',
-      items: (titulaires.data?.utilisateurs ?? []).map((u) => ({ value: `utilisateur:${u.id}`, label: u.libelle })),
-    },
-    {
-      group: 'Groupes',
-      items: (titulaires.data?.groupes ?? []).map((g) => ({ value: `groupe:${g.id}`, label: g.libelle })),
-    },
-  ];
-  const rafraichir = () => qc.invalidateQueries({ queryKey: ['droits', 'registre', id] });
-  const accorder = async () => {
-    if (!titulaire || !role) return;
-    const [subjectType, subjectId] = titulaire.split(':');
-    setErreur(null);
-    try {
-      await api('PUT', `/api/droits/registre/${id}`, { body: { subjectType, subjectId, role } });
-      setTitulaire(null);
-      await rafraichir();
-      notifications.show({ color: 'teal', message: 'Droit enregistré.' });
-    } catch (e) {
-      setErreur(e);
-    }
-  };
-  const retirer = async (d: Droit) => {
-    setErreur(null);
-    try {
-      await api('DELETE', `/api/droits/registre/${id}/${d.id}`);
-      await rafraichir();
-    } catch (e) {
-      setErreur(e);
-    }
-  };
-  return (
-    <Stack>
-      <Text>
-        Lecteur : consulte. Contributeur : renseigne l’avancement (statut, compte rendu) sans modifier la définition
-        d’un élément. Gestionnaire : modifie, archive et attribue les droits. Ces droits s’ajoutent aux droits de
-        module.
-      </Text>
-      <ErrorAlert error={erreur ?? droits.error} />
-      <DataTable label="Droits attribués sur le registre, défilement horizontal possible">
-        <Table>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Titulaire</Table.Th>
-              <Table.Th>Type</Table.Th>
-              <Table.Th>Rôle</Table.Th>
-              <Table.Th>Attribué par</Table.Th>
-              <Table.Th>Action</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {(droits.data?.items ?? []).map((d) => (
-              <Table.Tr key={d.id}>
-                <Table.Td>{d.libelle}</Table.Td>
-                <Table.Td>{d.subjectType === 'groupe' ? 'Groupe' : 'Utilisateur'}</Table.Td>
-                <Table.Td>{ROLE_LABELS[d.role]}</Table.Td>
-                <Table.Td>
-                  {d.grantedBy}, {fmtDate(d.grantedAt)}
-                </Table.Td>
-                <Table.Td>
-                  <ConfirmButton
-                    size="xs"
-                    variant="default"
-                    aria-label={`Retirer le droit de ${d.libelle}`}
-                    message={`${d.libelle} perd son rôle ${ROLE_LABELS[d.role].toLowerCase()} sur ce registre.`}
-                    onConfirm={() => retirer(d)}
-                  >
-                    Retirer
-                  </ConfirmButton>
-                </Table.Td>
-              </Table.Tr>
-            ))}
-            {droits.data && !droits.data.items.length && (
-              <Table.Tr>
-                <Table.Td colSpan={5}>
-                  Aucun droit attribué : l’accès suit les droits de module et les périmètres.
-                </Table.Td>
-              </Table.Tr>
-            )}
-          </Table.Tbody>
-        </Table>
-      </DataTable>
-      <Group align="end">
-        <Select
-          label="Utilisateur ou groupe"
-          searchable
-          placeholder="Rechercher…"
-          data={options}
-          value={titulaire}
-          onChange={setTitulaire}
-          onSearchChange={setRecherche}
-          filter={({ options: o }) => o}
-        />
-        <Select label="Rôle" allowDeselect={false} data={ROLE_OPTIONS} value={role} onChange={setRole} />
-        <Button disabled={!titulaire || !role} onClick={() => void accorder()}>
-          Attribuer
-        </Button>
-      </Group>
     </Stack>
   );
 }

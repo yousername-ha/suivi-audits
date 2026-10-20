@@ -5,10 +5,12 @@ import type { BusinessPolicy, GrcObject, TaskData } from '@suivi/shared';
 import { get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { SelecteurResponsable, useResponsables } from '../components/selecteurs';
+import { Timeline } from './Timeline';
 const views = [
   { value: 'list', label: 'Liste' },
   { value: 'kanban', label: 'Kanban' },
   { value: 'calendar', label: 'Calendrier' },
+  { value: 'timeline', label: 'Timeline' },
   { value: 'gantt', label: 'Planning / Gantt' },
   { value: 'dashboard', label: 'Tableau de bord' },
 ];
@@ -42,7 +44,7 @@ export function Tasks({
         `/api/grc/${smsi}/tasks?${new URLSearchParams({ search, offset: String(pageParam), ...(status ? { status } : {}), ...(owner ? { ownerId: owner } : {}) })}`,
       ),
     getNextPageParam: (p) => p.nextOffset ?? undefined,
-    enabled: view === 'list' || view === 'kanban',
+    enabled: view === 'list' || view === 'kanban' || view === 'timeline',
   });
   const summary = useQuery({
     queryKey: ['grc', smsi, 'task-dashboard'],
@@ -54,7 +56,9 @@ export function Tasks({
   });
   const owners = useResponsables(smsi);
   const items = (
-    view === 'list' || view === 'kanban' ? (all.data?.pages.flatMap((p) => p.items) ?? []) : (list.data?.items ?? [])
+    view === 'list' || view === 'kanban' || view === 'timeline'
+      ? (all.data?.pages.flatMap((p) => p.items) ?? [])
+      : (list.data?.items ?? [])
   ).filter(
     (o) =>
       o.name.toLowerCase().includes(search.toLowerCase()) &&
@@ -109,7 +113,7 @@ export function Tasks({
         onChange={(e) => setShowClosed(e.currentTarget.checked)}
       />
       <ErrorAlert error={list.error ?? all.error} />
-      {(view === 'list' || view === 'kanban') && all.hasNextPage && (
+      {(view === 'list' || view === 'kanban' || view === 'timeline') && all.hasNextPage && (
         <Button variant="light" onClick={() => void all.fetchNextPage()}>
           Charger les 50 actions suivantes
         </Button>
@@ -199,6 +203,7 @@ export function Tasks({
           {items.filter((o) => !o.data.dueAt).map(card)}
         </>
       )}
+      {view === 'timeline' && <Timeline items={items} policy={policy} onOpen={onOpen} />}
       {view === 'gantt' && (
         <div className="grc-planning">
           <svg
