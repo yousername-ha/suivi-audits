@@ -318,7 +318,12 @@ export class GrcRegistres {
   private async champsPlan(
     kind: RegistreKind,
     smsi: string,
-    v: { dateDebut: string | null; dateFin: string | null; statut: StatutPlanRegistre; responsable: ResponsableRef | null },
+    v: {
+      dateDebut: string | null;
+      dateFin: string | null;
+      statut: StatutPlanRegistre;
+      responsable: ResponsableRef | null;
+    },
     c: Client,
   ) {
     if (kind !== 'plan_actions') {
