@@ -1,14 +1,15 @@
 # État synthétique du projet
 
-## État au 18/10/2026
+## État au 20/10/2026
 
 | Sujet | État réel |
 | --- | --- |
 | Branches | `main` (version Docker unique), `claude-suivi-smsi` (travail, alignée sur `main`), `legacy` (outil autonome) ; archive testable de l'ancien outil sur `archive/outil-legacy-autonome` |
-| Dernière version publiée | `v3.4.0`. Non étiquetés : migrations `022` à `027` (hiérarchie, tables des modules, couverture), exports de revue et Excel, retrait de `/legacy` |
+| Dernière version | `v3.4.0` publiée ; **`v3.5.0` préparée** (étiquette à poser sur `main` par le RSSI) : migrations `022` à `030` (hiérarchie, tables des modules, couverture, registres et droits, validations d'occurrence), menu à sept familles, registres, Timeline, validation OK/KO/NA, écarts classés et rouvrables, pile à jour (TypeScript 6, Vite 8, Vitest 5, React Router 8, Mantine 9), retrait de `/legacy` |
+| Intégration ASTRA | **Partielle** : [recette R01 à R18](docs/unification/RECETTE-INTEGRATION-ASTRA.md) ; plans d'actions conteneurs, responsables groupe ou fonction, iCal et fenêtres, cartes de périmètres : non livrés |
 | Modules | Tous en tables PostgreSQL ; `app_state` ne garde que la version et le verrou ([ADR 0040](docs/adr/0040-sortie-du-json-plat-modules-en-tables.md)) |
 | Ancien outil | Écran `/legacy` retiré ([ADR 0042](docs/adr/0042-retrait-de-lecran-legacy.md)) ; import et export JSON, versions de l'état conservés |
-| Tests (local, 18/10) | shared 492, ui 166, web 27, API 526 (PostgreSQL 18) ; Playwright complet : 175 à 177 réussis, instabilité connue sur la déconnexion à deux onglets |
+| Tests (local, 20/10) | shared 495, ui 166, web 39, API 557+ (PostgreSQL 18) ; Playwright complet sur la pile Docker : 176 réussis, 2 ignorés (avant les trois parcours ajoutés, qui passent séparément) |
 | CI GitHub | six contrôles par PR (qualité, tests, CodeQL, guide d'installation, montée de version, pile complète) ; dernière PR fusionnée : #43 |
 | Non fait | Recette du RSSI sur son serveur ; étiquette de version (poussée par le RSSI) |
 
