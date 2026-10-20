@@ -105,7 +105,11 @@ test('Récurrences : fenêtre de réalisation, enchaînement et calendrier iCale
     await page.keyboard.press('Escape');
 
     // Calendrier iCalendar : fichier incorrect refusé en aperçu, puis fichier valide importé.
-    await page.getByRole('button', { name: titreCalendrier, exact: true }).first().click();
+    await page
+      .locator('.mantine-Card-root')
+      .filter({ hasText: titreCalendrier })
+      .getByRole('button', { name: 'Ouvrir la fiche' })
+      .click();
     fiche = page.getByRole('dialog');
     const planning = fiche.getByRole('group', { name: 'Planning de la série' });
     const zone = planning.getByRole('textbox', { name: 'Ou collez le contenu du calendrier' });
