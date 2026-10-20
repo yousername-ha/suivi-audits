@@ -33,16 +33,15 @@ for (const theme of ['light', 'dark'] as const) {
       await page.keyboard.press('Shift+Tab');
       await expect(famille).toBeFocused();
       expect(await focusVisible(page)).toBe(true);
+      // Entrée déplie la famille ; Tab mène à sa première destination, que Entrée ouvre.
+      await page.keyboard.press('Enter');
+      const destination = nav.getByRole('link', { name: 'Gestion des risques' });
+      await expect(destination).toBeVisible();
+      await page.keyboard.press('Tab');
+      await expect(destination).toBeFocused();
+      expect(await focusVisible(page)).toBe(true);
       await page.keyboard.press('Enter');
       await expect(page).toHaveURL(/\/pilotage\/risques/);
-      // La famille est dépliée : sa première destination est accessible à Tab, dans le menu.
-      await famille.focus();
-      await page.keyboard.press('Tab');
-      const dansLeMenu = await page.evaluate(
-        () => !!document.activeElement?.closest('nav[aria-label="Navigation principale"]'),
-      );
-      expect(dansLeMenu).toBe(true);
-      expect(await focusVisible(page)).toBe(true);
       expect(problems).toEqual([]);
     } finally {
       await ctx.close();

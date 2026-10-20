@@ -229,7 +229,7 @@ export function BusinessRegistry({
               <Menu.Item
                 component={Link}
                 to={lienContexte(
-                  'ecarts',
+                  'amelioration',
                   idObjetDeRef(o.data.recidiveRef)!,
                   emplacement.pathname + emplacement.search,
                 )}

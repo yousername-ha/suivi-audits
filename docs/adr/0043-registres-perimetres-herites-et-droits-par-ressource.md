@@ -1,6 +1,6 @@
 # ADR 0043 — Registres, périmètres hérités et droits par ressource
 
-**Statut** : proposée le 19/10/2026 (lot L3 de l'intégration des interfaces ASTRA, [audit L0](../unification/AUDIT-L0-INTEGRATION-UI-ASTRA.md)).
+**Statut** : acceptée le 20/10/2026 (proposée le 19/10/2026, lot L3 de l'intégration des interfaces ASTRA, [audit L0](../unification/AUDIT-L0-INTEGRATION-UI-ASTRA.md)) ; suites livrées dans la 3.6.0, voir l'addendum en fin de document.
 Complète l'[ADR 0010](0010-droits-rbac.md) (droits de module), l'[ADR 0039](0039-hierarchie-des-perimetres.md) (hiérarchie) et
 l'[ADR 0040](0040-sortie-du-json-plat-modules-en-tables.md).
 
@@ -63,3 +63,20 @@ rôle **contributeur** qui remplit (par exemple marque une tâche récurrente co
   ce périmètre. Le responsable de type groupe ou fonction fait l'objet d'un lot séparé.
 - La validation OK/KO/NA d'une occurrence récurrente, avec preuve et immutabilité, reprendra le rôle de contributeur (lot L6).
 - Cette ADR ne modifie ni les routes ni l'interface de la cartographie dynamique.
+
+## Addendum du 20/10/2026 — limites levées dans la 3.6.0
+
+- **Déplacement d'un élément** : commande atomique avec aperçu d'impact, motif, `If-Match` et droit de gestion des deux
+  registres (même famille) ; l'élément garde son identifiant, ses versions antérieures restent rattachées à leur ancien
+  périmètre. Les constats historiques du périmètre commun, qui vivent dans des tables propres sans registre, ne se déplacent pas.
+- **Registres restreints et compteurs** : le tableau de bord des tâches, le calendrier, les compteurs partagés, les cartes de
+  périmètres et le flux temps réel n'exposent ni élément, ni identifiant, ni version d'un registre restreint à qui ne peut pas
+  le lire. Les droits attribués rétablissent la lecture.
+- **Responsable de type groupe ou fonction** : `fonctions` et `fonction_membres` (migration 031) ; l'action ou la série porte
+  soit `ownerId` (personne), soit `responsable` (groupe ou fonction), jamais les deux ; le serveur résout les titulaires actifs
+  pour les rappels.
+- **Plan d'actions conteneur** : période, statut, responsable et actions ordonnées portés par le registre de la famille « plan
+  d'actions » (migration 032) ; l'ordre est une commande de gestion, versionnée et journalisée.
+- **Cartes de périmètres** : chaque carte compte les éléments visibles dans son périmètre, les siens et ceux des registres qui le
+  portent ; un élément n'est compté qu'une fois dans une carte, une occurrence de tâche récurrente que dans les récurrences ;
+  un registre multi-périmètre figure dans chacune de ses cartes, aucun total général n'est donc produit.

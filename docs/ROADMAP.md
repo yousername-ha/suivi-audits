@@ -2,14 +2,14 @@
 
 ## État courant et suite (20/10/2026)
 
-**Fait dans la 3.5.0 (étiquette à poser)** : registres, périmètres hérités et droits par ressource ([ADR 0043](adr/0043-registres-perimetres-herites-et-droits-par-ressource.md)), menu à sept familles, contribution, Timeline, validation des occurrences, écarts classés et rouvrables (intégration ASTRA partielle, [recette](unification/RECETTE-INTEGRATION-ASTRA.md)), ainsi que : hiérarchie des périmètres et héritage des référentiels (H1), tous les modules en
+**Fait dans la 3.6.0 (étiquette à poser ; elle porte la 3.5.0, jamais publiée)** : l'intégration ASTRA complète ([recette R01 à R18](unification/RECETTE-INTEGRATION-ASTRA.md)) — déplacement entre registres, responsables personne, groupe ou fonction, plans d'actions conteneurs, écart depuis un audit et récidive, récurrences (fenêtres, jours exclus, iCalendar, enchaînement), graphe des périmètres, registres restreints respectés, contexte de retour —, ainsi que : registres, périmètres hérités et droits par ressource ([ADR 0043](adr/0043-registres-perimetres-herites-et-droits-par-ressource.md)), menu à sept familles, contribution, Timeline, validation des occurrences, écarts classés et rouvrables et ainsi que : hiérarchie des périmètres et héritage des référentiels (H1), tous les modules en
 tables (H2, migrations 022 à 030), couverture par exigence avec états et versions (H3), exports de revue de direction en
 Word, PowerPoint et Excel (H4), exports Excel par rubrique, retrait de l'écran `/legacy` ([ADR 0042](adr/0042-retrait-de-lecran-legacy.md)),
 consolidation documentaire (H5, ci-dessous).
 
 **Reste à faire, par ordre de priorité**
 
-1. Recette de l'ensemble sur le serveur du RSSI, puis étiquette de version (par le RSSI) portant les migrations 022 à 030.
+1. Recette de l'ensemble sur le serveur du RSSI, puis étiquette de version `v3.6.0` (par le RSSI) portant les migrations 022 à 032.
 2. Exports de comité à la charte du modèle interne (COPIL). Les exports Excel du pronostic, du clausier fournisseurs et du
    GAP applications sont repris ; ReCyF est couvert par la page Couverture.
 3. Normalisation des sous-structures encore en JSON dans des tables liées ([ADR 0040](adr/0040-sortie-du-json-plat-modules-en-tables.md)) :

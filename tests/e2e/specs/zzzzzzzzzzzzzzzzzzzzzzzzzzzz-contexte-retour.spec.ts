@@ -21,7 +21,7 @@ test('Écart → audit d’origine → retour à la liste ; Timeline avec pério
     nomAudit = `Audit d’origine ${suffixe}`,
     nomEcart = `Écart contextuel ${suffixe}`;
   try {
-    await page.goto('/pilotage/ecarts');
+    await page.goto('/pilotage/amelioration');
     const p = await post(page, '/api/grc/smsis', {
       name: perimetre,
       nature: 'SMSI',
@@ -71,7 +71,7 @@ test('Écart → audit d’origine → retour à la liste ; Timeline avec pério
     await expect(fiche.getByRole('textbox', { name: 'Intitulé' })).toHaveValue(nomAudit);
     await fiche.getByRole('button', { name: 'Fermer' }).click();
     await page.getByRole('link', { name: 'Retour à la page précédente' }).click();
-    await expect(page).toHaveURL(/\/pilotage\/ecarts/);
+    await expect(page).toHaveURL(/\/pilotage\/amelioration/);
     await expect(page.getByRole('textbox', { name: 'Rechercher', exact: true })).toHaveValue('contextuel');
     // Le périmètre choisi est conservé : l'écart est toujours dans la liste.
     await expect(page.getByText(nomEcart, { exact: true }).first()).toBeVisible();

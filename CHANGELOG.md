@@ -5,6 +5,13 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 ## [Non publié]
 
 ### Notes de mise à jour
+Aucune action particulière, aucune migration pour le moment.
+
+## [3.6.0] — 2026-10-20
+
+**Intégration complète des interfaces ASTRA : déplacement entre registres, responsables personne, groupe ou fonction, plans d'actions conteneurs, écart depuis un audit et récidive, récurrences (fenêtres, jours exclus, calendriers iCalendar, enchaînement), graphe des périmètres et compteurs, registres restreints respectés partout, contexte de retour.** Les dix-huit scénarios de la [recette R01 à R18](docs/unification/RECETTE-INTEGRATION-ASTRA.md) sont réalisés. Cette version porte aussi la 3.5.0, préparée mais jamais publiée : elle contient les migrations SQL `022` à `032` à la suite de la 3.4.0 (la montée de version les applique dans l'ordre, après la sauvegarde automatique).
+
+### Notes de mise à jour
 - **Migration SQL additive `031_fonctions_responsables.sql`** : deux tables, `fonctions` (nom unique parmi les fonctions actives, archivage) et `fonction_membres` (titulaires). Aucune donnée existante n'est modifiée ; aucune action sur le serveur.
 
 - **Migration SQL additive `032_plans_actions_conteneurs.sql`** : un plan d'actions (registre de la famille « plan d'actions ») gagne une période (début, fin), un statut (prévu, en cours, terminé, abandonné) et un responsable ; la fiche d'une action gagne un rang d'ordre. Les plans existants restent « prévus », sans date ni responsable ; leurs actions gardent leur ordre d'affichage actuel (les actions ordonnées passent en premier). Aucune action sur le serveur.
@@ -21,7 +28,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 - **Déplacer un élément entre registres.** Une action, un écart ou une série (avec ses occurrences) se déplace vers un autre registre de la même famille : commande atomique `POST /api/grc/:smsi/objects/:id/deplacement` avec **aperçu d'impact** (périmètres avant et après, changement du périmètre de référence, liens conservés, liens qui ne peuvent pas suivre, obstacles comme un état inconnu du workflow cible ou un responsable non autorisé), motif obligatoire, `If-Match` et droit de gestion sur les deux registres. L'élément garde son identifiant ; ses anciennes versions restent rattachées à leur ancien périmètre ; les liens incompatibles ne sont retirés qu'avec confirmation explicite ; le déplacement est inscrit au journal d'audit. Panneau « Déplacer vers un autre registre » sur la fiche.
 - **Éléments par périmètre et registres choisis.** Nouvel onglet de l'écran Registres et route `GET /api/registres/elements` : on choisit un périmètre puis un ou plusieurs registres qui le portent ; la liste réunit leurs éléments sans doublon, limitée aux registres que la personne peut lire.
 
-## [3.5.0] — 2026-10-20
+## [3.5.0] — 2026-10-20 (préparée, jamais publiée : incluse dans la 3.6.0)
 
 **Registres, droits par ressource, menu à sept familles, validation des occurrences et reprise des écarts** (intégration partielle des interfaces ASTRA : voir [la recette R01 à R18](docs/unification/RECETTE-INTEGRATION-ASTRA.md)), avec les migrations SQL `022` à `030`, les montées de version majeures de la pile (TypeScript 6, Vite 8, Vitest 5, React Router 8, Mantine 9) et la normalisation en tables des modules.
 
