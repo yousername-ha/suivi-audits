@@ -14,6 +14,7 @@ import { authRoutes } from './routes/auth.js';
 import { documentRoutes } from './routes/documents.js';
 import { eventRoutes } from './routes/events.js';
 import { importRoutes } from './routes/import.js';
+import { tenacyRoutes } from './routes/tenacy.js';
 import { suiviRoutes } from './routes/suivi.js';
 import { exportSuiviRoutes } from './routes/export-suivi.js';
 import { settingsRoutes } from './routes/settings.js';
@@ -112,6 +113,7 @@ export function allRoutes(): RouteDef[] {
     ...suiviRoutes,
     ...exportSuiviRoutes,
     ...importRoutes,
+    ...tenacyRoutes,
     ...settingsRoutes,
     ...environmentRoutes,
     ...businessPolicyRoutes,

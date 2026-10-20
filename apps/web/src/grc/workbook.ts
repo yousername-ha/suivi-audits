@@ -124,7 +124,8 @@ function parseXml(text: string | undefined) {
   if (document.getElementsByTagName('parsererror').length) throw new Error('Feuille XML invalide.');
   return document;
 }
-export function readFrameworkWorkbook(bytes: Uint8Array) {
+/** Ouvre un classeur .xlsx (sans dépendance serveur) : `lignes(feuille)` rend les cellules en texte, formules refusées. */
+export function ouvrirClasseur(bytes: Uint8Array, maxColonnes = 20) {
   const files = readZip(bytes);
   const workbook = parseXml(files['xl/workbook.xml']),
     rels = parseXml(files['xl/_rels/workbook.xml.rels']);
@@ -150,7 +151,7 @@ export function readFrameworkWorkbook(bytes: Uint8Array) {
         const letters = /^[A-Z]+/.exec(ref)?.[0];
         if (!letters) throw new Error('Adresse de cellule invalide.');
         const index = [...letters].reduce((n, c) => n * 26 + c.charCodeAt(0) - 64, 0) - 1;
-        if (index > 20) throw new Error('Trop de colonnes.');
+        if (index >= maxColonnes) throw new Error('Trop de colonnes.');
         const value = cell.getElementsByTagName('v')[0]?.textContent ?? '';
         r[index] =
           cell.getAttribute('t') === 's'
@@ -164,6 +165,14 @@ export function readFrameworkWorkbook(bytes: Uint8Array) {
     if (out.length > 10001) throw new Error('Maximum 10 000 lignes métier par feuille.');
     return out;
   };
+  return {
+    lignes: rows,
+    feuilles: () => Array.from(workbook.getElementsByTagName('sheet')).map((s) => s.getAttribute('name') ?? ''),
+  };
+}
+export function readFrameworkWorkbook(bytes: Uint8Array) {
+  const classeur = ouvrirClasseur(bytes, 21);
+  const rows = classeur.lignes;
   const metadata = Object.fromEntries(
     rows('Métadonnées')
       .slice(1)
@@ -190,9 +199,7 @@ export function readFrameworkWorkbook(bytes: Uint8Array) {
           measureRefs: JSON.parse(r[5] || '[]'),
         })),
     },
-    mappings: Array.from(workbook.getElementsByTagName('sheet')).some(
-      (s) => s.getAttribute('name') === 'Correspondances',
-    )
+    mappings: classeur.feuilles().includes('Correspondances')
       ? rows('Correspondances')
           .slice(1)
           .filter((r) => r[0])

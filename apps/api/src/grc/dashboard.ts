@@ -1,6 +1,5 @@
 import type { SessionUser } from '../auth.js';
-import type { Rights } from '@suivi/shared';
-import { DEFAULT_SMSI, type Grc } from './core.js';
+import type { Grc } from './core.js';
 export async function dashboard(g: Grc, smsi: string, user: SessionUser) {
   await g.access(smsi, user);
   const policy = (await g.policy(smsi, user)).definition,
@@ -35,36 +34,4 @@ export async function dashboard(g: Grc, smsi: string, user: SessionUser) {
       )
     ).rows;
   return { sections, display: policy.dashboard };
-}
-
-/** Compteurs du périmètre commun pour le tableau de bord unifié et l'écran mural (UI-02) : constats natifs ouverts,
-    risques (dont ceux sans appréciation validée) et actions en retard. Chaque compteur exige la lecture de son module ;
-    les éléments d'un registre restreint n'y figurent pas (l'écran partagé n'a pas de droit par registre) ;
-    les statuts terminaux viennent de la politique métier du périmètre. Aucun détail d'objet n'est renvoyé. */
-export async function compteursCommuns(g: Grc, rights: Rights) {
-  const s = await g.db.one<{ businessVersion: number }>(
-    `SELECT business_version AS "businessVersion" FROM grc_smsis WHERE id=$1`,
-    [DEFAULT_SMSI],
-  );
-  if (!s) return null;
-  const ecarts = rights.can('ecarts', 'lire'),
-    pilotage = rights.can('pilotage', 'lire');
-  if (!ecarts && !pilotage) return null;
-  const policy = (await g.business.version(s.businessVersion)).definition;
-  const closed = policy.statuses.filter((x) => x.terminal).map((x) => x.id);
-  const r = await g.db.one<{ constats: number; risques: number; sansDecision: number; retard: number }>(
-    `SELECT count(*) FILTER(WHERE kind='nonconformity' AND COALESCE(data->>'status','open')<>'closed')::int constats,
-       count(*) FILTER(WHERE kind='risk')::int risques,
-       count(*) FILTER(WHERE kind='risk' AND NOT EXISTS(SELECT 1 FROM grc_risk_evaluations e WHERE e.risk_id=o.id AND e.decision='approved'))::int "sansDecision",
-       count(*) FILTER(WHERE kind='action' AND NOT(COALESCE(data->>'status','')=ANY($2)) AND data->>'dueAt'<$3)::int retard
-     FROM grc_objects o WHERE smsi_id=$1 AND NOT archived AND kind IN ('nonconformity','risk','action')
-       AND (registre_id IS NULL OR NOT registre_id IN (SELECT id FROM registres WHERE restricted))`,
-    [DEFAULT_SMSI, closed, new Date().toISOString()],
-  );
-  return {
-    constatsOuverts: ecarts ? (r?.constats ?? 0) : null,
-    risques: pilotage ? (r?.risques ?? 0) : null,
-    risquesSansDecision: pilotage ? (r?.sansDecision ?? 0) : null,
-    actionsEnRetard: ecarts ? (r?.retard ?? 0) : null,
-  };
 }

@@ -11,33 +11,38 @@ import {
 } from '@suivi/shared';
 import type { JsonObject } from '@suivi/shared/legacy';
 import { z } from 'zod';
-import type { Session } from '../auth.js';
+import type { Session, SessionUser } from '../auth.js';
 import { CSP_STRICT } from '../http/security.js';
 import { HttpError } from '../http/errors.js';
 import { route } from '../http/route.js';
 import type { Services } from '../services.js';
 import type { WallSession } from '../walls.js';
-import { compteursCommuns } from '../grc/dashboard.js';
+import { tableauDeBordNatif } from '../tableau-de-bord.js';
 import { redactLegacy } from './suivi.js';
 
 const PING_MS = 25_000;
 const RECHECK_MS = 60_000;
 
-/** Synthèse calculée à partir de l'état filtré selon les droits (personne ou écran mural). */
-export async function synthese(svc: Services, rights: Rights): Promise<Synthese> {
+/** Synthèse : sections du suivi du SMSI (état filtré selon les droits) et sections des fiches de registre, pour une
+    personne (`user`) ou un écran mural (sans personne : périmètre commun, registres non restreints). */
+export async function synthese(svc: Services, rights: Rights, user: SessionUser | null = null): Promise<Synthese> {
   rights = await svc.modules.rights(rights, true);
   const st = await svc.legacy.recompose();
   const data = redactLegacy((st?.data ?? {}) as JsonObject, rights);
+  const aujourdHui = new Date();
   const base = computeSynthese(data, {
     organisation: svc.settings.get('general').orgName,
-    aujourdHui: new Date(),
-    joursEcheance: svc.settings.get('notifications').echeancesJours || 30,
+    aujourdHui,
     lisible: (k) => {
       const m = legacyKeyModule(k);
       return !!m && rights.can(m, 'lire');
     },
   });
-  return { ...base, pilotage: await compteursCommuns(svc.grc, rights) };
+  const natif = await tableauDeBordNatif(svc.grc, rights, user, {
+    aujourdHui,
+    joursEcheance: svc.settings.get('notifications').echeancesJours || 30,
+  });
+  return { ...base, ...natif };
 }
 
 const viewerRights = (s: Session | null, wall: WallSession | null) => (wall ? wall.rights : (s as Session).user.rights);
@@ -148,7 +153,7 @@ export const affichageRoutes = [
     access: 'mur',
     response: Synthese.extend({ ecran: z.string().nullable() }),
     handler: async ({ svc, s, wall }) => ({
-      ...(await synthese(svc, viewerRights(s, wall))),
+      ...(await synthese(svc, viewerRights(s, wall), wall ? null : (s as Session).user)),
       ecran: wall ? wall.name : null,
     }),
   }),

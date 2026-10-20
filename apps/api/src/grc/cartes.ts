@@ -5,7 +5,9 @@ import type { CarteCompteurs, CartePerimetre, SyntheseCartes } from '@suivi/shar
 import type { SessionUser } from '../auth.js';
 import type { Grc } from './core.js';
 
-interface Ligne {
+export interface Ligne {
+  actionsTotal: number;
+  actionsTerminees: number;
   actionsOuvertes: number;
   actionsRetard: number;
   occurrencesOuvertes: number;
@@ -20,9 +22,11 @@ interface Ligne {
 /** Compteurs des éléments visibles dans au moins un des périmètres donnés : une ligne par élément, donc chaque élément n'est
     compté qu'une fois, même s'il apparaît dans plusieurs périmètres par un registre partagé. Un statut terminal vient de la
     politique métier du périmètre de l'élément. */
-async function compter(g: Grc, ids: string[], masques: string[], maintenant: string) {
+export async function compter(g: Grc, ids: string[], masques: string[], maintenant: string) {
   return g.db.one<Ligne>(
     `SELECT
+       count(*) FILTER (WHERE o.kind='action' AND o.data->>'seriesId' IS NULL)::int AS "actionsTotal",
+       count(*) FILTER (WHERE o.kind='action' AND o.data->>'seriesId' IS NULL AND COALESCE(o.data->>'status','')=ANY(t.ids))::int AS "actionsTerminees",
        count(*) FILTER (WHERE o.kind='action' AND o.data->>'seriesId' IS NULL AND NOT (COALESCE(o.data->>'status','')=ANY(t.ids)))::int AS "actionsOuvertes",
        count(*) FILTER (WHERE o.kind='action' AND o.data->>'seriesId' IS NULL AND NOT (COALESCE(o.data->>'status','')=ANY(t.ids)) AND o.data->>'dueAt'<$3)::int AS "actionsRetard",
        count(*) FILTER (WHERE o.kind='action' AND o.data->>'seriesId' IS NOT NULL AND NOT (COALESCE(o.data->>'status','')=ANY(t.ids)))::int AS "occurrencesOuvertes",
