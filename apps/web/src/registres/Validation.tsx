@@ -95,7 +95,7 @@ export function ValidationOccurrence({
           />
           <TextInput
             label="Référence de preuve"
-            description="Par exemple document:<identifiant> ; facultative."
+            description="Référence résolue par le serveur, par exemple une version de document ; facultative."
             value={preuve}
             onChange={(e) => setPreuve(e.currentTarget.value)}
           />

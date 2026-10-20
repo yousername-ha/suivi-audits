@@ -4,6 +4,7 @@
    - Une occurrence validée ne change plus : la reprendre passe par une réouverture motivée (rôle de gestionnaire), inscrite
      au même journal. Rejouer une commande avec le même identifiant de requête renvoie l'enregistrement d'origine. */
 import {
+  GrcRef,
   ReouvertureOccurrenceBody,
   ValidationOccurrenceBody,
   type EtatValidation,
@@ -125,6 +126,11 @@ export class GrcValidations {
       const o = await this.occurrence(smsi, id, user, 'contribuer', c, true);
       const rejoue = await this.rejeu(c, o, b.requestId, 'validation');
       if (rejoue) return { validation: dto(rejoue), etat: etatDe(await this.lignes(id, c)), rejoue: true };
+      // La preuve est une référence que le serveur sait résoudre (et que la personne a le droit de lire) : jamais un texte libre.
+      if (b.proofRef) {
+        if (!GrcRef.safeParse(b.proofRef).success) throw new HttpError(422, 'Référence de preuve invalide.');
+        await this.g.resolve(smsi, b.proofRef, user, c);
+      }
       const lignes = await this.lignes(id, c);
       if (etatDe(lignes) === 'validee')
         throw new HttpError(409, 'Cette occurrence est déjà validée : seule une réouverture motivée la reprend.');

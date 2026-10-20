@@ -29,7 +29,7 @@ const serie = {
 describe('validation des occurrences', () => {
   let t: TestApp;
   let admin: Agent, contributeur: Agent, lecteur: Agent;
-  let A: string, registre: string, occurrences: string[];
+  let A: string, registre: string, occurrences: string[], serieId: string;
   const rid = () => crypto.randomUUID();
   const valider = (a: Agent, id: string, data: Record<string, unknown>) =>
     a.post(`/api/grc/${A}/objects/${id}/validations`, data);
@@ -45,6 +45,7 @@ describe('validation des occurrences', () => {
     const s = await admin.post(`/api/grc/${A}/objects`, serie);
     expect(s.statusCode, s.body).toBe(200);
     registre = s.json().registreId;
+    serieId = s.json().id;
     await t.svc.grc.tasks.tick(new Date('2026-12-15T00:00:00Z'));
     occurrences = (
       await t.svc.db.q<{ id: string }>(
@@ -81,15 +82,23 @@ describe('validation des occurrences', () => {
     const r = await valider(contributeur, occurrences[0]!, {
       requestId,
       result: 'ok',
-      proofRef: 'document:abc',
+      proofRef: 'object:' + serieId,
       createdBy: 'usurpateur', // ignoré : champ inconnu refusé
     });
     expect(r.statusCode).toBe(422);
-    const ok = await valider(contributeur, occurrences[0]!, { requestId, result: 'ok', proofRef: 'document:abc' });
+    // Une preuve inconnue ou mal formée est refusée ; une référence résolue est acceptée.
+    for (const [proofRef, statut] of [
+      ['document:abc', 422],
+      ['object:00000000-0000-4000-8000-0000000000aa', 404],
+    ] as const)
+      expect(
+        (await valider(contributeur, occurrences[0]!, { requestId: rid(), result: 'ok', proofRef })).statusCode,
+      ).toBe(statut);
+    const ok = await valider(contributeur, occurrences[0]!, { requestId, result: 'ok', proofRef: 'object:' + serieId });
     expect(ok.statusCode, ok.body).toBe(201);
     expect(ok.json()).toMatchObject({ etat: 'validee', rejoue: false });
     expect(ok.json().validation).toMatchObject({ seq: 1, kind: 'validation', result: 'ok', createdBy: 'val_contrib' });
-    expect(ok.json().validation.proofRef).toBe('document:abc');
+    expect(ok.json().validation.proofRef).toBe('object:' + serieId);
     expect(Date.now() - Date.parse(ok.json().validation.createdAt)).toBeLessThan(60_000);
   });
 
