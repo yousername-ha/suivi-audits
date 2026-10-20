@@ -53,14 +53,14 @@ export function useEcriture(smsi: string) {
 }
 
 /** Cible saisie : « 90 % » → 0,9 ; un nombre reste un nombre ; sens « = » ou texte libre : conservé tel quel. */
-export function analyserCible(saisie: string, dir: string): string | number {
+function analyserCible(saisie: string, dir: string): string | number {
   const brut = saisie.trim().replace(/\s+/g, ' ');
   if (!brut || dir === '=') return brut;
   const n = parseFloat(brut.replace(',', '.').replace(/%/g, ''));
   if (Number.isNaN(n)) return brut;
   return brut.includes('%') ? Math.round(n * 10) / 1000 : n;
 }
-export const saisieCible = (ind: Ligne) =>
+const saisieCible = (ind: Ligne) =>
   typeof ind.target === 'number' && ind.target > 0 && ind.target <= 1
     ? formatValeurIndicateur(ind, ind.target)
     : texte(ind.target);

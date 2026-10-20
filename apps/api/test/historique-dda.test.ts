@@ -1,9 +1,10 @@
 /* Reprise de la déclaration d'applicabilité de l'outil de suivi (clé `dda`) : écritures natives sous verrou, clauses ISO
    obligatoires, texte de référence saisi par l'utilisateur, champs inconnus conservés. Données fictives. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createTestApp, login, makeUser, seedState, type Agent, type TestApp } from './helpers.js';
+import { createTestApp, ecartCommun, login, makeUser, seedState, type Agent, type TestApp } from './helpers.js';
 
 let t: TestApp, admin: Agent, reader: Agent, writer: Agent;
+const ecartIds: string[] = [];
 const etat = async () => (await admin.get('/api/suivi/etat')).json();
 
 beforeAll(async () => {
@@ -28,11 +29,11 @@ beforeAll(async () => {
     'A-5.1': { app: 'oui', level: 'Total', just: 'Justification fictive', inconnu: 'garder' },
     'ZZ-9': { app: 'oui' },
   };
-  s.findings = [
-    { id: 'NC-1', type: 'NC mineure', status: 'Ouvert', source: 'Audit', text: 'Écart fictif', items: ['A-5.1'] },
-    { id: 'NC-2', type: 'NC', status: 'Ouvert', source: 'Audit', text: 'Autre', items: ['HDS-1'] },
-  ];
   await seedState(t, s);
+  ecartIds.push(
+    (await ecartCommun(admin, { name: 'Écart fictif', classification: 'mineure', items: ['A-5.1'] })).id,
+    (await ecartCommun(admin, { name: 'Autre', items: ['HDS-1'] })).id,
+  );
 });
 afterAll(() => t.close());
 
@@ -43,7 +44,7 @@ describe('déclaration d’applicabilité', () => {
     expect(r.json().mesures.map((m: { id: string }) => m.id)).toEqual(['A-5.1', 'A-5.2']);
     expect(r.json().dda['A-5.1']).toMatchObject({ app: 'oui', level: 'Total', just: 'Justification fictive' });
     expect(Object.keys(r.json().dda)).toEqual(['A-5.1']);
-    expect(r.json().ecarts.map((e: { id: string }) => e.id)).toEqual(['NC-1']);
+    expect(r.json().ecarts.map((e: { id: string }) => e.id)).toEqual([ecartIds[0]]);
     expect((await reader.get('/api/dda?reference=X')).statusCode).toBe(422);
     expect((await (await login(t, await makeUser(t, 'dda_sans', null))).get('/api/dda?reference=A')).statusCode).toBe(
       403,

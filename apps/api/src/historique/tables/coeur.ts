@@ -2,16 +2,6 @@
    Drizzle ; à modifier ensemble. */
 import type { CollectionSpec, ListeSpec } from './collection.js';
 
-/** Tâches d'un écart (migration 028) : table liée à `suivi_ecarts`. */
-const TACHES_ECART: ListeSpec = {
-  table: 'suivi_ecarts_taches',
-  cols: [
-    { f: 'id', c: 'id', t: 'text' },
-    { f: 't', c: 't', t: 'text' },
-    { f: 'done', c: 'done', t: 'bool' },
-    { f: 'createdAt', c: 'created_iso', t: 'text' },
-  ],
-};
 /** Valeurs d'un indicateur (migration 028) : table liée à `suivi_indicateurs`. */
 const VALEURS_INDICATEUR: ListeSpec = {
   table: 'suivi_indicateurs_valeurs',
@@ -51,31 +41,6 @@ export const COLLECTIONS_COEUR: readonly CollectionSpec[] = [
       { f: 'owner', c: 'owner', t: 'text' },
       { f: 'notes', c: 'notes', t: 'text' },
       { f: 'remInterne', c: 'rem_interne', t: 'text' },
-    ],
-  },
-  {
-    key: 'findings',
-    table: 'suivi_ecarts',
-    cols: [
-      { f: 'id', c: 'id', t: 'text' },
-      { f: 'source', c: 'source', t: 'text' },
-      { f: 'year', c: 'year', t: 'num' },
-      { f: 'type', c: 'type', t: 'text' },
-      { f: 'status', c: 'status', t: 'text' },
-      { f: 'text', c: 'text', t: 'text' },
-      { f: 'desc', c: 'description', t: 'text' },
-      { f: 'action', c: 'action', t: 'text' },
-      { f: 'tasks', c: 'tasks', t: 'json', enfants: TACHES_ECART },
-      { f: 'comment', c: 'comment', t: 'text' },
-      { f: 'items', c: 'items', t: 'json' },
-      { f: 'owner', c: 'owner', t: 'text' },
-      { f: 'due', c: 'due', t: 'text' },
-      { f: 'proof', c: 'proof', t: 'text' },
-      { f: 'createdAt', c: 'created_iso', t: 'text' },
-      { f: 'tenacyName', c: 'tenacy_name', t: 'text' },
-      { f: 'tenacyStatus', c: 'tenacy_status', t: 'text' },
-      { f: 'tenacyCrit', c: 'tenacy_crit', t: 'text' },
-      { f: 'cause', c: 'cause', t: 'text' },
     ],
   },
   {
@@ -271,7 +236,6 @@ export const CLES_REGLAGES: readonly string[] = [
   'iso27001Certified',
   'source',
   'closeDeadline',
-  'findingsRev',
   'activeFw',
   'entityCategory',
   'hdsChap',

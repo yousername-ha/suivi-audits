@@ -1,6 +1,6 @@
-/* Sous-listes de l'outil de suivi en tables liées (ADR 0040, migration 028) : tâches d'un écart et valeurs d'un indicateur.
-   La copie SQL et l'écriture par la correspondance restituent exactement la valeur d'origine, entrées atypiques comprises.
-   Données fictives. */
+/* Sous-listes de l'outil de suivi en tables liées (ADR 0040, migration 028) : tâches d'un écart (jusqu'à leur retrait par la
+   migration 033) et valeurs d'un indicateur. La copie SQL et l'écriture par la correspondance restituent exactement la valeur
+   d'origine, entrées atypiques comprises. Données fictives. */
 import { copyFileSync, mkdtempSync, readdirSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -44,7 +44,7 @@ const ETAT: JsonObject = {
     { id: 'IND-3' },
   ],
 };
-const CLES = ['findings', 'indicators'];
+const CLES = ['indicators'];
 const spec = (k: string) => COLLECTIONS_COEUR.find((s) => s.key === k)!;
 
 describe('sous-listes en tables liées (migration 028)', () => {
@@ -59,7 +59,11 @@ describe('sous-listes en tables liées (migration 028)', () => {
       await t.svc.db.q("INSERT INTO app_state (id, version, data, sha256, updated_by) VALUES (1, 1, $1, 'x', 'v2')", [
         ETAT,
       ]);
-      expect(await t.svc.db.migrate()).toEqual(
+      // Jusqu'à la migration 032 : les écarts historiques et leurs tâches sont encore en tables.
+      const jusqua032 = mkdtempSync(path.join(os.tmpdir(), 'sl2-'));
+      for (const f of readdirSync(MIGRATIONS_DIR).filter((x) => x < '033'))
+        copyFileSync(path.join(MIGRATIONS_DIR, f), path.join(jusqua032, f));
+      expect(await t.svc.db.migrate(jusqua032)).toEqual(
         expect.arrayContaining(['026_coeur_suivi_tables.sql', '028_sous_listes_en_tables.sql']),
       );
       const etat = (await t.svc.legacy.recompose())!.data;
@@ -98,6 +102,13 @@ describe('sous-listes en tables liées (migration 028)', () => {
       // Non destructif : la colonne du parent garde la liste d'origine jusqu'au prochain enregistrement.
       const f1 = await t.svc.db.one<{ tasks: Json[] }>("SELECT tasks FROM suivi_ecarts WHERE id = 'F-1'");
       expect(f1!.tasks).toEqual((ETAT.findings as JsonObject[])[0]!.tasks);
+      // Migration 033 : les constats historiques, leurs tâches et la vue associée disparaissent.
+      expect(await t.svc.db.migrate()).toEqual(['033_retrait_constats_historiques.sql']);
+      for (const table of ['suivi_ecarts', 'suivi_ecarts_taches'])
+        expect((await t.svc.db.one(`SELECT to_regclass('${table}') AS r`))!.r).toBeNull();
+      for (const vue of ['v_findings', 'v_items'])
+        expect((await t.svc.db.one(`SELECT to_regclass('${vue}') AS r`))!.r).toBeNull();
+      expect((await t.svc.legacy.recompose())!.data.findings).toEqual([]);
     } finally {
       await t.close();
     }
@@ -111,28 +122,15 @@ describe('sous-listes en tables liées (migration 028)', () => {
       for (const k of CLES) expect(etat[k], k).toEqual(ETAT[k]);
       const n = async (table: string) =>
         Number((await t.svc.db.one<{ n: string }>(`SELECT count(*)::text AS n FROM ${table}`))!.n);
-      expect(await n('suivi_ecarts_taches')).toBe(5);
       expect(await n('suivi_indicateurs_valeurs')).toBe(4);
-      // Liste non vide : colonne du parent NULL ; liste vide : conservée dans la colonne.
-      const cols = (
-        await t.svc.db.q<{ id: string; tasks: unknown }>(
-          "SELECT id, tasks FROM suivi_ecarts WHERE id IN ('F-1','F-2','F-3') ORDER BY id",
-        )
-      ).rows;
-      expect(cols).toEqual([
-        { id: 'F-1', tasks: null },
-        { id: 'F-2', tasks: [] },
-        { id: 'F-3', tasks: 'texte' },
-      ]);
       // Réécriture : plus de ligne liée orpheline, l'ordre suit la nouvelle valeur.
-      const nouveau = [{ id: 'F-1', tasks: [{ t: 'B' }, { t: 'A' }] }];
-      await t.svc.db.tx((c) => ecrireCollection(c, spec('findings'), nouveau));
-      expect(await n('suivi_ecarts_taches')).toBe(2);
-      const relu = (await t.svc.legacy.recompose())!.data.findings;
-      expect(relu).toEqual(nouveau);
+      const nouveau = [{ id: 'IND-1', values: [{ v: 2 }, { v: 1 }] }];
+      await t.svc.db.tx((c) => ecrireCollection(c, spec('indicators'), nouveau));
+      expect(await n('suivi_indicateurs_valeurs')).toBe(2);
+      expect((await t.svc.legacy.recompose())!.data.indicators).toEqual(nouveau);
       // Vider le module supprime aussi les lignes liées.
-      await t.svc.db.tx((c) => ecrireCollection(c, spec('findings'), undefined));
-      expect(await n('suivi_ecarts_taches')).toBe(0);
+      await t.svc.db.tx((c) => ecrireCollection(c, spec('indicators'), undefined));
+      expect(await n('suivi_indicateurs_valeurs')).toBe(0);
     } finally {
       await t.close();
     }

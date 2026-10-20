@@ -87,7 +87,7 @@ export const LegacyStateSchema = loose({
   internalDate: optStr,
   groups: z.array(idObj({ ref: str, num: str, title: str })),
   items: z.array(Item),
-  findings: z.array(Finding),
+  findings: z.array(Finding).optional(),
   source: optStr,
   closeDeadline: optStr,
   findingsRev: num.optional(),

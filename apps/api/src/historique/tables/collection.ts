@@ -17,8 +17,8 @@ import type { Client } from '../../db/db.js';
 import { HttpError } from '../../http/errors.js';
 import type { ModuleMapper } from '../../legacy/store.js';
 
-export type ColType = 'text' | 'num' | 'bool' | 'json';
-export interface Col {
+type ColType = 'text' | 'num' | 'bool' | 'json';
+interface Col {
   /** Champ de l'état historique. */
   f: string;
   /** Colonne de la table. */
@@ -148,7 +148,7 @@ async function effacerPresence(c: Client, key: string) {
 }
 
 /* ---------------------------------------------------------------- liste */
-export async function lireCollection(c: Client, spec: CollectionSpec): Promise<Json | undefined> {
+async function lireCollection(c: Client, spec: CollectionSpec): Promise<Json | undefined> {
   const lignes = await lireEntrees(c, spec);
   if (!lignes.length)
     return (await c.query('SELECT 1 FROM suivi_presence WHERE cle=$1', [spec.key])).rowCount ? [] : undefined;
@@ -168,7 +168,7 @@ export async function ecrireCollection(c: Client, spec: CollectionSpec, value: J
 }
 
 /* ---------------------------------------------------------------- groupe */
-export async function lireGroupe(c: Client, spec: GroupeSpec): Promise<Json | undefined> {
+async function lireGroupe(c: Client, spec: GroupeSpec): Promise<Json | undefined> {
   const p = (
     await c.query<{ champs: string[]; reste: JsonObject }>('SELECT champs, reste FROM suivi_presence WHERE cle=$1', [
       spec.key,
@@ -206,7 +206,7 @@ export async function ecrireGroupe(c: Client, spec: GroupeSpec, value: Json | un
 }
 
 /* ---------------------------------------------------------------- carte */
-export async function lireCarte(c: Client, spec: CarteSpec): Promise<Json | undefined> {
+async function lireCarte(c: Client, spec: CarteSpec): Promise<Json | undefined> {
   const lignes = await lireEntrees(c, spec);
   if (!lignes.length)
     return (await c.query('SELECT 1 FROM suivi_presence WHERE cle=$1', [spec.key])).rowCount ? {} : undefined;

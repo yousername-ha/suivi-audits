@@ -130,14 +130,14 @@ test('import legacy : simulation, rapport, application, historique', async ({ br
   await page.getByRole('button', { name: 'Simuler l’import' }).click();
   const report = page.getByTestId('import-report');
   await expect(report).toContainText('Rapport de simulation');
-  await expect(report).toContainText('Écarts et actions');
+  await expect(report).toContainText('Processus');
   await expect(report).toContainText('$.suppliers[].MFA-001');
   await page.getByRole('button', { name: 'Appliquer l’import' }).click();
   await expect(page.getByText(/Import n°1 enregistré/)).toBeVisible();
   await expect(page.getByRole('cell', { name: 'initialiser' })).toBeVisible();
   // Les données importées sont relues depuis les tables.
   const state = await page.request.get('/api/suivi/etat');
-  expect((await state.json()).findings.length).toBe(2);
+  expect((await state.json()).processes.length).toBe(3);
   expect(problems).toEqual([]);
 });
 

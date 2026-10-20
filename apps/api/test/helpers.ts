@@ -193,6 +193,33 @@ export async function login(t: TestApp, u: TestUser): Promise<Agent> {
 
 export const fixturePath = path.join(REPO, 'tests/fixtures/legacy-fixture.json');
 
+/** Crée un écart natif dans le périmètre commun (ce que le module Audit lit comme constat de l'ancien format). */
+export async function ecartCommun(
+  a: Agent,
+  o: {
+    name: string;
+    classification?: 'majeure' | 'mineure' | 'point_sensible';
+    source?: 'AFNOR' | 'Interne';
+    items?: string[];
+    dueAt?: string;
+    findingType?: 'observation' | 'nonconformity' | 'opportunity';
+  },
+) {
+  const r = await a.post('/api/grc/00000000-0000-4000-8000-000000000001/objects', {
+    kind: 'nonconformity',
+    name: o.name,
+    data: {
+      findingType: o.findingType ?? 'nonconformity',
+      classification: o.classification ?? '',
+      source: o.source ?? '',
+      refs: (o.items ?? []).map((i) => 'legacy:items:' + i),
+      dueAt: o.dueAt ?? '',
+    },
+  });
+  if (r.statusCode >= 300) throw new Error(`écart commun : ${r.statusCode} ${r.body}`);
+  return r.json() as { id: string; version: number };
+}
+
 /** Amorce l'état historique d'un test : les modules repris vont dans leurs tables, le reste dans app_state (ADR 0040). */
 export async function seedState(t: TestApp, etat: Record<string, unknown>) {
   await t.svc.db.tx(async (c) => {

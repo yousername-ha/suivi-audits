@@ -35,14 +35,14 @@ export interface EvaluationCourante {
   notMeets: number;
   notAssessed: number;
 }
-export interface CertificatFournisseur {
+interface CertificatFournisseur {
   type: string;
   validUntil?: string;
   received?: string;
   scope?: string;
   location?: string;
 }
-export interface ControleFournisseur {
+interface ControleFournisseur {
   id?: string;
   t: string;
   ref?: string;
@@ -98,7 +98,7 @@ interface Historique {
   }[];
 }
 
-export const REPONSE: Record<string, string> = { oui: 'Répond', non: 'Ne répond pas', nonevalue: 'Non évalué' };
+const REPONSE: Record<string, string> = { oui: 'Répond', non: 'Ne répond pas', nonevalue: 'Non évalué' };
 const versOption = (m: boolean | null) => (m === true ? 'oui' : m === false ? 'non' : 'nonevalue');
 const depuisOption = (v: string | null) => (v === 'oui' ? true : v === 'non' ? false : null);
 const jour = (d: Date) => d.toISOString().slice(0, 10);

@@ -25,7 +25,7 @@ import {
 } from './security/setup-token.js';
 
 export const COOKIE_SECURE = '__Host-suivi_sid';
-export const COOKIE_PLAIN = 'suivi_sid';
+const COOKIE_PLAIN = 'suivi_sid';
 
 export interface SessionUser {
   id: string;

@@ -116,7 +116,6 @@ const REGISTERS: Record<string, { kind: GrcKind; legacy?: string; description: s
   mesures: { kind: 'measure', description: 'Suivez la mise en œuvre des mesures et leurs justificatifs.' },
   amelioration: {
     kind: 'nonconformity',
-    legacy: 'findings',
     description: 'Analysez les constats, suivez les actions et vérifiez leur efficacité avant clôture.',
   },
   preuves: {

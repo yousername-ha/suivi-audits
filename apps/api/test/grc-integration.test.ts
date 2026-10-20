@@ -238,20 +238,21 @@ it('bloque responsables expirés, catégories inconnues, références hors péri
 it('présente et réalise les actions historiques dans leur source, sans perdre les extras', async () => {
   const current = await a.get('/api/suivi/etat'),
     state = current.json();
-  state.findings = [
+  state.recurring = [
     {
       id: 'grc-historique',
-      text: 'Écart historique',
+      title: 'Tâche récurrente v2 à conserver',
       owner: 'Métier',
-      due: '2026-10-12',
+      start: '2026-10-12',
+      n: 1,
+      u: 'm',
       unknownExtra: { keep: true },
-      tasks: [{ t: 'Action v2 à conserver', done: false, extraTask: 42 }],
     },
   ];
   await seedState(t, state);
   const base = `/api/grc/${DEFAULT_SMSI}`,
     list = await a.get(base + '/tasks');
-  const legacy = list.json().items.find((o: { name: string }) => o.name === 'Action v2 à conserver');
+  const legacy = list.json().items.find((o: { name: string }) => o.name === 'Tâche récurrente v2 à conserver');
   expect(legacy).toBeTruthy();
   const summary = await a.get(base + '/tasks/dashboard');
   expect(summary.json().summary.total).toBeGreaterThanOrEqual(1);
@@ -268,9 +269,9 @@ it('présente et réalise les actions historiques dans leur source, sans perdre 
     { 'if-match': `"${legacy.version}"` },
   );
   expect(done.statusCode, done.body).toBe(200);
-  const source = (await a.get('/api/suivi/etat')).json().findings[0];
+  const source = (await a.get('/api/suivi/etat')).json().recurring[0];
   expect(source.unknownExtra).toEqual({ keep: true });
-  expect(source.tasks[0].extraTask).toBe(42);
-  expect(source.tasks[0].done).toBe(true);
+  expect(source.history[0]).toMatchObject({ date: '2026-10-10', by: expect.any(String) });
+  expect(source.last).toBe('2026-10-10');
   expect((await t.svc.db.q("SELECT id FROM grc_objects WHERE legacy_id='grc-historique'", [])).rowCount).toBe(0);
 });

@@ -37,9 +37,7 @@ const n = (v: number) => v.toLocaleString('fr-FR');
 const retard = (c: { ouverts: number; enRetard: number }) => `${n(c.ouverts)} ouverte(s) · ${n(c.enRetard)} en retard`;
 
 /** Lignes de compteurs d'une carte ; `null` : indisponible (droit manquant ou donnée non mesurable). */
-export function lignesCompteurs(
-  c: CartePerimetre['compteurs'],
-): { libelle: string; valeur: string; alerte: boolean }[] {
+function lignesCompteurs(c: CartePerimetre['compteurs']): { libelle: string; valeur: string; alerte: boolean }[] {
   const indisponible = 'indisponible';
   return [
     {

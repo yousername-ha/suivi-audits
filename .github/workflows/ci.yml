@@ -61,7 +61,7 @@ jobs:
           node -e '
             const fs = require("fs");
             const check = (label, s) => {
-              for (const k of ["findings", "suppliers", "processes"]) {
+              for (const k of ["suppliers", "processes"]) {
                 if (!Array.isArray(s[k]) || s[k].length) throw new Error(label + " : " + k + " doit être un tableau vide");
               }
               if (s.schema !== 14) throw new Error(label + " : schema attendu 14, trouvé " + s.schema);

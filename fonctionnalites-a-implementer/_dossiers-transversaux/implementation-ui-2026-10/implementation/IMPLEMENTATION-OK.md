@@ -29,7 +29,7 @@ request rejoue la suite complète sur le commit exact.
 
 ## Limites
 
-- Les constats historiques du périmètre commun (outil de suivi d'origine) ne sont pas des fiches de registre : ils ne se déplacent pas.
+- Les constats historiques de l'ancien outil ont été supprimés (migration 033) : tous les écarts sont des fiches de registre ; le module Audit relit les écarts natifs du périmètre commun.
 - Calendriers iCalendar : fichier ou texte seulement (aucune adresse distante consultée) ; règles de répétition (RRULE) usuelles développées, jours de rang compris (cinq ans en avant au plus), règles rares (BYSETPOS, etc.) signalées et laissées de côté ; heure et fuseau des événements ignorés.
 - Une carte de périmètre compte les éléments visibles dans son périmètre : un registre multi-périmètre figure dans chacune de ses cartes ; la carte d'un périmètre parent affiche son total avec ses sous-périmètres, et un total général est affiché sous les cartes : chaque élément n'y est compté qu'une fois.
 - Aucun fichier du module cartographique dynamique n'a été modifié.

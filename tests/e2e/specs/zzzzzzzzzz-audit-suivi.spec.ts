@@ -1,7 +1,7 @@
 /* Gestion de l'audit reprise de l'outil de suivi : carte du prochain audit, préparation, cycle, couverture, organisation
    (participants, jours, créneaux, planning). L'état d'audit fictif est posé par l'API. Données fictives. */
 import { expect, test } from '@playwright/test';
-import { sessionAdmin, watchPage, ecrireEtat } from '../helpers';
+import { creerEcartCommun, sessionAdmin, watchPage, ecrireEtat } from '../helpers';
 
 const exigence = (id: string, ref: string, num: string) => ({
   id,
@@ -35,20 +35,15 @@ test('Gestion de l’audit : carte, préparation, cycle, couverture et organisat
         exigence('ISO-4.1', 'ISO', '4.1'),
         exigence('HDS-01', 'HDS', '01'),
       ],
-      findings: [
-        {
-          id: 'F01',
-          source: 'AFNOR',
-          year: 2025,
-          type: 'NC min',
-          status: 'Ouvert',
-          text: 'Écart fictif',
-          items: ['A-5.1'],
-        },
-      ],
     });
     delete s.plan;
     await ecrireEtat(ctx.request, csrf, s);
+    await creerEcartCommun(ctx.request, csrf, {
+      name: 'Écart fictif',
+      source: 'AFNOR',
+      classification: 'mineure',
+      items: ['A-5.1'],
+    });
 
     // Carte du prochain audit : une case, sa fiche, la préparation.
     await page.goto('/pilotage/audit-pronostic');

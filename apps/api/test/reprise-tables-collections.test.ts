@@ -112,7 +112,6 @@ describe('migration 024 et correspondance générique', () => {
     'dda',
     'groups',
     'items',
-    'findings',
     'processes',
     'objectives',
     'indicators',

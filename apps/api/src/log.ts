@@ -2,7 +2,7 @@
    Les secrets (cookies, jetons, mots de passe) sont masqués. */
 import { pino, type Logger } from 'pino';
 
-export const REDACT = [
+const REDACT = [
   'req.headers.cookie',
   'req.headers.authorization',
   'req.headers["x-csrf-token"]',

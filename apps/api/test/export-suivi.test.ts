@@ -36,21 +36,6 @@ beforeAll(async () => {
   ro = await login(t, await makeUser(t, 'xs_ro', 'ro'));
   await seedState(t, {
     items: [{ id: 'm1', ref: 'A', num: '5.1', title: 'Politiques', afnor: {}, interne: {} }],
-    findings: [
-      {
-        id: 'E-1',
-        source: 'Interne',
-        year: 2026,
-        type: 'NC',
-        status: 'Ouvert',
-        text: 'Constat <fictif> & "test"',
-        items: ['m1'],
-        tasks: [
-          { t: 'Corriger', done: true },
-          { t: 'Vérifier', done: false },
-        ],
-      },
-    ],
     suppliers: [
       {
         id: 's1',
@@ -76,6 +61,13 @@ beforeAll(async () => {
     ],
     years: [2026],
   });
+  // Écart natif du périmètre commun, lié à la mesure : l'export le lit comme un constat de l'ancien format.
+  const ecart = await a.post('/api/grc/00000000-0000-4000-8000-000000000001/objects', {
+    kind: 'nonconformity',
+    name: 'Constat <fictif> & "test"',
+    data: { findingType: 'nonconformity', classification: 'mineure', refs: ['legacy:items:m1'] },
+  });
+  if (ecart.statusCode >= 300) throw new Error(ecart.statusCode + ' ' + ecart.body);
 });
 afterAll(() => t.close());
 
@@ -105,7 +97,6 @@ describe('GET /api/suivi/export', () => {
     expect(noms(b)).toEqual(['Registre des écarts', "Plan d'actions"]);
     const feuille = partie(b, 'xl/worksheets/sheet1.xml');
     expect(feuille).toContain('Constat &lt;fictif&gt; &amp; &quot;test&quot;');
-    expect(feuille).toContain('1/2'); // actions faites
     expect(feuille).toContain('A.5.1');
     expect(feuille).toContain('<autoFilter ref="A1:M2"/>');
   });

@@ -139,10 +139,6 @@ export async function usersOfRole(c: Q, roleId: string): Promise<string[]> {
   );
   return r.rows.map((x) => x.id);
 }
-export async function usersOfGroup(c: Q, groupId: string): Promise<string[]> {
-  const r = await c.query<{ id: string }>('SELECT user_id AS id FROM user_groups WHERE group_id = $1', [groupId]);
-  return r.rows.map((x) => x.id);
-}
 
 /** Un utilisateur ne peut pas modifier ses propres droits (ni directement, ni par un groupe ou un rôle qu'il détient). */
 export function assertNotSelf(actorId: string, affected: readonly string[]) {

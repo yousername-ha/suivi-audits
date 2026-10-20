@@ -1,7 +1,7 @@
 /* Reprise de la gestion de l'audit de l'outil de suivi : couverture du cycle, préparation, cycle, organisation de
    l'audit (jours, créneaux, personnes), lecture et écriture natives sous verrou, sans copie. Données fictives. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createTestApp, login, makeUser, seedState, type Agent, type TestApp } from './helpers.js';
+import { createTestApp, ecartCommun, login, makeUser, seedState, type Agent, type TestApp } from './helpers.js';
 
 let t: TestApp, admin: Agent, reader: Agent, writer: Agent, seulAudit: Agent;
 const etat = async () => (await admin.get('/api/suivi/etat')).json();
@@ -37,20 +37,10 @@ beforeAll(async () => {
       item('ISO-4.1', 'ISO', '4.1'),
       item('HDS-01', 'HDS', '01'),
     ],
-    findings: [
-      {
-        id: 'F01',
-        source: 'AFNOR',
-        year: 2025,
-        type: 'NC min',
-        status: 'Ouvert',
-        text: 'Écart fictif',
-        items: ['A-5.1'],
-      },
-    ],
   });
   delete s.plan;
   await seedState(t, s);
+  await ecartCommun(admin, { name: 'Écart fictif', source: 'AFNOR', classification: 'mineure', items: ['A-5.1'] });
 });
 afterAll(() => t.close());
 
@@ -61,7 +51,7 @@ describe('lecture', () => {
     expect(v.nextYear).toBe(2026);
     expect(v.yearLabels).toEqual({ '2025': 'Surveillance fictive' });
     expect(v.items.map((i: { id: string }) => i.id)).toEqual(['A-5.1', 'A-5.2', 'ISO-4.1', 'HDS-01']);
-    expect(v.findings[0]).toMatchObject({ id: 'F01', type: 'NC min', items: ['A-5.1'] });
+    expect(v.findings[0]).toMatchObject({ source: 'AFNOR', type: 'NC min', status: 'Ouvert', items: ['A-5.1'] });
     expect(v.plan).toMatchObject({ status: 'Projet', days: [], slots: [], people: [] });
   });
   it('ne montre l’organisation qu’avec le droit du plan d’audit', async () => {

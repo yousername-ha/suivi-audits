@@ -49,7 +49,7 @@ afterAll(() => t.close());
 describe('import legacy : validation et simulation', () => {
   it('la simulation n’écrit RIEN en base (toutes tables et séquences comparées)', async () => {
     const before = await dbFingerprint();
-    for (const q of ['mode=init', 'mode=merge', 'mode=replace&module=findings']) {
+    for (const q of ['mode=init', 'mode=merge', 'mode=replace&module=processes']) {
       const r = await simulate(fixtureBuf(), q);
       expect(r.statusCode, r.body).toBe(200);
     }
@@ -61,9 +61,11 @@ describe('import legacy : validation et simulation', () => {
     const r = (await simulate(fixtureBuf(), 'mode=init')).json();
     expect(r.sha256).toBe(sha(fixtureBuf()));
     expect(r.report.sourceSchema).toBe(14);
-    const findings = r.report.modules.find((m: { module: string }) => m.module === 'findings');
-    expect(findings.label).toBe('Écarts et actions');
-    expect(findings.collections[0]).toMatchObject({ path: '$.findings', created: 2 });
+    const processes = r.report.modules.find((m: { module: string }) => m.module === 'processes');
+    expect(processes.collections[0]).toMatchObject({ path: '$.processes', created: 3 });
+    // Les constats historiques du fichier ne sont plus un module : ils sont signalés et ignorés.
+    expect(r.report.modules.some((m: { module: string }) => m.module === 'findings')).toBe(false);
+    expect(r.report.warnings.join(' ')).toContain('2 constat(s) historique(s)');
     expect(r.report.unknownPaths).toEqual(['$.suppliers[].MFA-001']);
     expect(r.report.brokenRefs.length).toBeGreaterThan(0);
   });
@@ -116,8 +118,8 @@ describe('import legacy : application, aller-retour, annulation', () => {
     );
     expect(b!.status).toBe('applied');
     expect(b!.sha256).toBe(sha(fixtureBuf()));
-    expect(b!.raw_content.includes(Buffer.from('"findings"'))).toBe(false); // chiffré
-    expect(b!.modules).toContain('findings');
+    expect(b!.raw_content.includes(Buffer.from('"processes"'))).toBe(false); // chiffré
+    expect(b!.modules).toContain('processes');
     const saved = await t.svc.db.one<{ note: string }>('SELECT note FROM state_history WHERE version=$1', [
       versionBefore,
     ]);
@@ -138,7 +140,14 @@ describe('import legacy : application, aller-retour, annulation', () => {
     const env = r.json();
     expect(env).toMatchObject({ format: 'suivi-audits-legacy', formatVersion: 1, schema: 15 });
     expect(env.sha256).toBe(sha(JSON.stringify(env.data)));
-    expect(canonical(env.data as Json)).toEqual(canonical(migrateToSchema15(fixture())));
+    // Les constats historiques ne sont plus importés : l'export en donne la projection des écarts natifs (ici aucun).
+    const attendu = migrateToSchema15(fixture());
+    delete attendu.findings;
+    delete attendu.findingsRev;
+    const exporte = { ...(env.data as JsonObject) };
+    expect(exporte.findings).toEqual([]);
+    delete exporte.findings;
+    expect(canonical(exporte as Json)).toEqual(canonical(attendu));
     // L'enveloppe exportée se réimporte sans aucun changement.
     const again = (await simulate(Buffer.from(JSON.stringify(env)), 'mode=merge')).json();
     expect(again.report.affected).toEqual([]);
@@ -153,24 +162,24 @@ describe('import legacy : application, aller-retour, annulation', () => {
 
   it('Fusionner, puis Remplacer un module avec confirmation renforcée', async () => {
     const f = migrateToSchema15(fixture());
-    (f.findings as JsonObject[])[0]!.status = 'Clos';
-    (f.findings as JsonObject[]).push({ id: 'ID-900', source: 'Interne', year: 2026, text: 'Nouvel écart' });
+    (f.processes as JsonObject[])[0]!.name = 'Processus renommé';
+    (f.processes as JsonObject[]).push({ id: 'PR-900', name: 'Nouveau processus' });
     const buf = Buffer.from(JSON.stringify(f));
     const m = await apply(buf, 'mode=merge');
     expect(m.statusCode, m.body).toBe(201);
-    expect(m.json().report.affected).toEqual(['findings']);
+    expect(m.json().report.affected).toEqual(['processes']);
     expect(
-      m.json().report.modules.find((x: { module: string }) => x.module === 'findings').collections[0],
+      m.json().report.modules.find((x: { module: string }) => x.module === 'processes').collections[0],
     ).toMatchObject({ created: 1, updated: 1, deleted: 0 });
     const g = migrateToSchema15(fixture());
-    (g.findings as JsonObject[]).splice(1);
+    (g.processes as JsonObject[]).splice(1);
     const gbuf = Buffer.from(JSON.stringify(g));
-    expect((await apply(gbuf, 'mode=replace&module=findings')).statusCode).toBe(422); // sans confirmation
-    const rep = await apply(gbuf, 'mode=replace&module=findings&confirm=findings');
+    expect((await apply(gbuf, 'mode=replace&module=processes')).statusCode).toBe(422); // sans confirmation
+    const rep = await apply(gbuf, 'mode=replace&module=processes&confirm=processes');
     expect(rep.statusCode, rep.body).toBe(201);
-    expect(rep.json().report.modules[0].collections[0].deleted).toBe(2);
+    expect(rep.json().report.modules[0].collections[0].deleted).toBe(3);
     const st = (await a.get('/api/suivi/etat')).json();
-    expect(st.findings).toHaveLength(1);
+    expect(st.processes).toHaveLength(1);
   });
 
   it('annulation : refusée si le module a été modifié depuis, possible sinon', async () => {
@@ -181,11 +190,11 @@ describe('import legacy : application, aller-retour, annulation', () => {
     const prev = list[1]!;
     const ko = await a.post(`/api/admin/import/${prev.id}/undo`);
     expect(ko.statusCode).toBe(409);
-    expect(ko.json().modules).toEqual(['findings']);
+    expect(ko.json().modules).toEqual(['processes']);
     // Le dernier peut être annulé : le module retrouve son contenu d'avant.
     const ok = await a.post(`/api/admin/import/${last.id}/undo`);
     expect(ok.statusCode, ok.body).toBe(200);
-    expect((await a.get('/api/suivi/etat')).json().findings).toHaveLength(3);
+    expect((await a.get('/api/suivi/etat')).json().processes).toHaveLength(4);
     expect((await a.post(`/api/admin/import/${last.id}/undo`)).statusCode).toBe(409);
   });
 });

@@ -45,7 +45,7 @@ Légende : **Présent** (parcours vérifié, accès et refus compris) · **Parti
 
 ## Limites connues (reportées, non cachées)
 
-- Les constats historiques du périmètre commun (outil de suivi d'origine) ne sont pas des fiches de registre : ni déplacement, ni registre propre.
+- Les constats historiques de l'ancien outil ont été supprimés (migration 033) : les écarts sont tous des fiches de registre, donc déplaçables ; le module Audit relit les écarts du périmètre commun.
 - Calendriers iCalendar : fichier ou texte seulement ; règles de répétition rares (BYSETPOS, BYWEEKNO, BYYEARDAY, heures, etc.) signalées et non développées ; heure et fuseau des événements ignorés.
 - Les cartes de périmètres comptent les éléments visibles dans chaque périmètre ; un registre multi-périmètre figure donc dans chacune de ses cartes. Le total d'une carte parent et le total général comptent chaque élément une seule fois (conformité non agrégée).
 

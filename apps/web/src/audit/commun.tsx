@@ -8,7 +8,7 @@ export interface ExigenceAudit extends AuditItem {
   prep: string;
   owner: string;
 }
-export interface EcartAudit {
+interface EcartAudit {
   id: string;
   source: string;
   year: number;
@@ -32,7 +32,7 @@ export interface DonneesAudit {
   plan: AuditPlan | null;
 }
 
-export const CLE_AUDIT = ['audit-suivi'];
+const CLE_AUDIT = ['audit-suivi'];
 
 export function useAudit() {
   const q = useQuery({ queryKey: CLE_AUDIT, queryFn: () => get<DonneesAudit>('/api/audit-suivi') });
@@ -62,9 +62,4 @@ export const minutes = (t: string) => {
     .split(':')
     .map(Number);
   return (h || 0) * 60 + (m || 0);
-};
-export const REF_LABELS: Record<string, string> = {
-  ISO: 'ISO 27001 (clauses)',
-  A: 'ISO 27001 Annexe A',
-  HDS: 'HDS v2',
 };

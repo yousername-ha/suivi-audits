@@ -7,7 +7,7 @@ import { api, get } from '../api';
 import { ErrorAlert } from './common';
 import { useCan, useMe } from '../session';
 
-export function useUpdateState() {
+function useUpdateState() {
   return useQuery({ queryKey: ['updates'], queryFn: () => get<UpdateState>('/api/updates'), refetchInterval: 15000 });
 }
 function available(s?: UpdateState) {
@@ -17,7 +17,7 @@ function available(s?: UpdateState) {
   const i = a.findIndex((v, index) => v !== b[index]);
   return i >= 0 && a[i]! < b[i]!;
 }
-export function useUpdateAdmin() {
+function useUpdateAdmin() {
   const me = useMe();
   const can = useCan();
   return !!me.user?.roles.includes('Administrateur') && can('administration', 'administrer');

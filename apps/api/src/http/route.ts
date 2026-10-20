@@ -15,7 +15,7 @@ type Method = 'GET' | 'HEAD' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 /** public : sans session ; session : session ouverte à n'importe quelle étape ; auth : session complète
     (compte personnel) ; metier : au moins un module métier lisible ; mur : « metier » ou écran mural activé
     (vue /mur, lecture seule) ; « module:action » : permission exigée. */
-export type Access = 'public' | 'session' | 'auth' | 'metier' | 'mur' | Permission;
+type Access = 'public' | 'session' | 'auth' | 'metier' | 'mur' | Permission;
 
 export interface Ctx<B = unknown, Q = unknown, P = unknown> {
   req: FastifyRequest;

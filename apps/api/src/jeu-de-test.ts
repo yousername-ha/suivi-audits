@@ -378,68 +378,6 @@ export function etatJeuDeTest(): Json {
         ],
       },
     ],
-    findings: [
-      {
-        id: 'F1',
-        text: 'Procédure de revue des accès non appliquée',
-        source: 'Interne',
-        type: 'NC maj',
-        year: annee,
-        status: 'Ouvert',
-        due: decaler(-30),
-        cause: 'Charge de travail',
-      },
-      {
-        id: 'F2',
-        text: 'Documents non revus depuis deux ans',
-        source: 'Interne',
-        type: 'NC min',
-        year: annee,
-        status: 'En cours',
-        due: decaler(45),
-        cause: '',
-      },
-      {
-        id: 'F3',
-        text: 'Absence de sauvegarde testée',
-        source: 'AFNOR',
-        type: 'NC maj',
-        year: annee - 1,
-        status: 'Clos',
-        due: decaler(-200),
-        cause: 'Test non planifié',
-      },
-      {
-        id: 'F4',
-        text: 'Sensibilisation des nouveaux arrivants',
-        source: 'Interne',
-        type: 'Observation',
-        year: annee,
-        status: 'Ouvert',
-        due: decaler(90),
-        cause: '',
-      },
-      {
-        id: 'F5',
-        text: 'Pistes d’amélioration de l’accueil téléphonique',
-        source: 'Interne',
-        type: 'Opportunité',
-        year: annee,
-        status: 'Ouvert',
-        due: decaler(120),
-        cause: '',
-      },
-      {
-        id: 'F6',
-        text: 'Registre des prestataires incomplet',
-        source: 'Interne',
-        type: 'NC min',
-        year: annee,
-        status: 'Ouvert',
-        due: decaler(10),
-        cause: '',
-      },
-    ],
     plans: [
       {
         id: 'PL1',
@@ -541,6 +479,7 @@ export interface BilanChargement {
   methode: string | null;
   risques: number;
   actions: number;
+  ecarts: number;
   serie: number;
   opportunites: number;
   liens: number;
@@ -599,6 +538,7 @@ export async function chargerJeuDeTest(
       methode: null,
       risques: 0,
       actions: 0,
+      ecarts: 0,
       serie: 0,
       opportunites: 0,
       liens: 0,
@@ -753,6 +693,47 @@ export async function chargerJeuDeTest(
       );
       actions[cle] = c.id;
       bilan.actions++;
+    }
+    // Écarts du périmètre commun : de vrais écarts de registre, que le module Audit et le tableau de bord relisent.
+    for (const [nom, source, classification, type, statut, echeance, cause] of [
+      [
+        'Procédure de revue des accès non appliquée',
+        'Interne',
+        'majeure',
+        'nonconformity',
+        'open',
+        decaler(-30),
+        'Charge de travail',
+      ],
+      ['Documents non revus depuis deux ans', 'Interne', 'mineure', 'nonconformity', 'progress', decaler(45), ''],
+      [
+        'Absence de sauvegarde testée',
+        'AFNOR',
+        'majeure',
+        'nonconformity',
+        'closed',
+        decaler(-200),
+        'Test non planifié',
+      ],
+      ['Sensibilisation des nouveaux arrivants', 'Interne', '', 'observation', 'open', decaler(90), ''],
+      ['Pistes d’amélioration de l’accueil téléphonique', 'Interne', '', 'opportunity', 'open', decaler(120), ''],
+      ['Registre des prestataires incomplet', 'Interne', 'mineure', 'nonconformity', 'open', decaler(10), ''],
+    ] as const) {
+      const c = await exiger<{ id: string }>(
+        await appel('POST', `/api/grc/${commun}/objects`, {
+          kind: 'nonconformity',
+          name: nom,
+          data: { source, classification, findingType: type, dueAt: echeance, cause },
+        }),
+        `Écart « ${nom} »`,
+      );
+      // Un écart ne se crée pas clos : l'état clos du jeu de démonstration est posé directement (aucune preuve fictive à produire).
+      if (statut !== 'open')
+        await svc.db.q(`UPDATE grc_objects SET data=jsonb_set(data,'{status}',$2::jsonb) WHERE id=$1`, [
+          c.id,
+          JSON.stringify(statut),
+        ]);
+      bilan.ecarts++;
     }
     const serie = await exiger<{ id: string }>(
       await appel('POST', `/api/grc/${commun}/objects`, {

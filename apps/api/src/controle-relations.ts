@@ -34,7 +34,6 @@ export async function controleRelations(svc: Services): Promise<ControleRelation
     ['objectives', 'objectif'],
     ['indicators', 'indicateur'],
     ['suppliers', 'fournisseur'],
-    ['findings', 'constat'],
   ] as const) {
     const vus = new Set<string>();
     for (const r of lignes(state[cle])) {

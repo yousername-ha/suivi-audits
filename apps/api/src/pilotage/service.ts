@@ -2,7 +2,7 @@ import { EBIOS_ATELIERS, GRC_MODULES, JOURNEY_STEPS, PilotageRecord, SeriesData 
 import { isObject } from '@suivi/shared/legacy';
 import type { SessionUser } from '../auth.js';
 import type { Client } from '../db/db.js';
-import { DEFAULT_SMSI, hash, type Grc } from '../grc/core.js';
+import { hash, type Grc } from '../grc/core.js';
 import { HttpError } from '../http/errors.js';
 import { PilotageLegacy } from './legacy.js';
 
@@ -310,7 +310,7 @@ export class Pilotage {
           user,
           ip,
         );
-        generated.push(finding.id.startsWith('legacy:') ? finding.id : 'object:' + finding.id);
+        generated.push('object:' + finding.id);
       }
       if (input.createAction)
         generated.push(
@@ -370,14 +370,9 @@ export class Pilotage {
     }, user.username);
   }
   async finding(c: Client, smsi: string, name: string, data: Record<string, unknown>, user: SessionUser, ip: string) {
-    if (smsi === DEFAULT_SMSI) return this.legacy.createFinding(c, smsi, name, data, user, ip);
     await this.g.permission(user, 'ecarts', 'modifier');
     const normalized = await this.g.normalize(smsi, 'nonconformity', data, user, c);
     return this.g.insert(c, smsi, 'nonconformity', name, normalized, user, ip);
-  }
-  async createFinding(smsi: string, name: string, data: Record<string, unknown>, user: SessionUser, ip: string) {
-    await this.g.access(smsi, user, true);
-    return this.g.db.tx((c) => this.finding(c, smsi, name, data, user, ip), user.username);
   }
   async schedule(smsi: string, ref: string, recurrence: unknown, expected: number, user: SessionUser, ip: string) {
     return this.g.db.tx(async (c) => {
@@ -456,37 +451,15 @@ export class Pilotage {
         [smsi],
       )
     ).rows;
-    const state = smsi === DEFAULT_SMSI ? await this.g.legacy.recompose() : null;
-    const rows: Record<string, unknown>[] = this.legacy
-      .rows(state?.data ?? {}, 'findings')
-      .map((r) => ({ ...this.legacy.dto(smsi, 'findings', r, state?.version ?? 0).data, createdAt: r.createdAt }));
-    const durations = rows
-      .filter((r) => r.status === 'closed' && typeof r.createdAt === 'string' && typeof r.closedAt === 'string')
-      .map((r) => {
-        const start = new Date(String(r.createdAt));
-        return (
-          (Date.parse(String(r.closedAt)) -
-            Date.parse(
-              Number.isFinite(start.getTime()) ? start.toLocaleDateString('sv-SE', { timeZone: scope.timezone }) : '',
-            )) /
-          86400000
-        );
-      })
-      .filter((n) => Number.isFinite(n) && n >= 0);
     const causes = new Map(nativeCauses.slice(0, 1000).map((r) => [r.cause, r.count]));
-    for (const r of rows) {
-      const cause = String(r.cause ?? '').trim();
-      if (cause) causes.set(cause, (causes.get(cause) ?? 0) + 1);
-    }
-    const samples = native.samples + durations.length;
+    const samples = native.samples;
     return {
       tasks: (await this.g.tasks.dashboard(smsi, user)).summary,
-      findings: native.findings + rows.length,
-      closed: native.closed + rows.filter((r) => r.status === 'closed').length,
-      effective: native.effective + rows.filter((r) => r.effectiveness === 'effective').length,
-      verified:
-        native.verified + rows.filter((r) => ['effective', 'ineffective'].includes(String(r.effectiveness))).length,
-      meanDays: samples ? (native.days + durations.reduce((a, b) => a + b, 0)) / samples : null,
+      findings: native.findings,
+      closed: native.closed,
+      effective: native.effective,
+      verified: native.verified,
+      meanDays: samples ? native.days / samples : null,
       durationSamples: samples,
       repeatedCauses: [...causes].filter(([, n]) => n > 1).map(([cause, count]) => ({ cause, count })),
       causesTruncated: nativeCauses.length > 1000,

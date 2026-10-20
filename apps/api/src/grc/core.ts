@@ -58,7 +58,7 @@ import { GrcTasks } from './tasks.js';
 export const DEFAULT_SMSI = '00000000-0000-4000-8000-000000000001';
 /** Fiche de l'outil de suivi propre au périmètre commun. Les fournisseurs (`legacy:suppliers:`) sont à l'échelle de
     l'organisation (ADR 0032) : ils se relient depuis n'importe quel périmètre. */
-export const ficheHistorique = (ref: string) => ref.startsWith('legacy:') && !ref.startsWith('legacy:suppliers:');
+const ficheHistorique = (ref: string) => ref.startsWith('legacy:') && !ref.startsWith('legacy:suppliers:');
 /** Droits qui rendent un compte éligible comme responsable d'une fiche du pilotage. */
 const LECTURE_PILOTAGE: Permission[] = [
   'pilotage:lire',
@@ -992,11 +992,6 @@ export class Grc {
       if (!r) throw new HttpError(404, 'Exigence publiée introuvable.');
       return { ref, name: r.title, module: 'audit', kind: 'requirement', version: Number(version), data: r };
     }
-    if (ref.startsWith('legacy:tasks:')) {
-      const task = (await this.legacyTasks.list(smsi, user)).find((x) => x.id === ref);
-      if (!task) throw new HttpError(404, 'Action inaccessible.');
-      return { ref, name: task.name, module: 'ecarts', kind: 'action', version: task.version, data: task.data };
-    }
     if (ref.startsWith('document:')) {
       await this.permission(user, 'documents', 'lire');
       const [, id, version] = ref.split(':');
@@ -1026,7 +1021,6 @@ export class Grc {
       objectives: { module: 'pilotage', kind: 'objective', values: data.objectives },
       indicators: { module: 'pilotage', kind: 'indicator', values: data.indicators },
       suppliers: { module: 'fournisseurs', kind: 'supplier', values: data.suppliers },
-      findings: { module: 'ecarts', kind: 'nonconformity', values: data.findings },
       recurring: { module: 'pilotage', kind: 'task_series', values: data.recurring },
       incidents: { module: 'incidents', kind: 'incident', values: data.incidents },
       frameworks: { module: 'conformite', kind: 'framework', values: data.frameworks },
@@ -1093,7 +1087,6 @@ export class Grc {
       const state = (await this.legacy.recompose())?.data ?? {};
       for (const key of [
         'items',
-        'findings',
         'processes',
         'objectives',
         'indicators',

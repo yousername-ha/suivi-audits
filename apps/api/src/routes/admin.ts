@@ -146,7 +146,7 @@ export const adminRoutes = [
       (
         await svc.db.q(
           `SELECT version, updated_at, updated_by, note, sha256, import_batch_id, pg_column_size(data) AS bytes,
-                  jsonb_array_length(COALESCE(data->'items','[]')) AS items, jsonb_array_length(COALESCE(data->'findings','[]')) AS findings
+                  jsonb_array_length(COALESCE(data->'items','[]')) AS items
              FROM state_history ORDER BY version DESC LIMIT 500`,
         )
       ).rows,

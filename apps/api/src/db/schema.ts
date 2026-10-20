@@ -1178,45 +1178,6 @@ export const suiviMesures = pgTable('suivi_mesures', {
   extra: jsonb('extra').notNull().default({}),
 });
 
-export const suiviEcarts = pgTable('suivi_ecarts', {
-  seq: bigint('seq', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
-  position: integer('position').notNull(),
-  id: text('id'),
-  source: text('source'),
-  year: doublePrecision('year'),
-  type: text('type'),
-  status: text('status'),
-  text: text('text'),
-  description: text('description'),
-  action: text('action'),
-  tasks: jsonb('tasks'),
-  comment: text('comment'),
-  items: jsonb('items'),
-  owner: text('owner'),
-  due: text('due'),
-  proof: text('proof'),
-  createdIso: text('created_iso'),
-  tenacyName: text('tenacy_name'),
-  tenacyStatus: text('tenacy_status'),
-  tenacyCrit: text('tenacy_crit'),
-  cause: text('cause'),
-  extra: jsonb('extra').notNull().default({}),
-});
-
-/** Tâches d'un écart (migration 028) ; `parent_seq` renvoie à `suivi_ecarts.seq`, suppression en cascade. */
-export const suiviEcartsTaches = pgTable('suivi_ecarts_taches', {
-  seq: bigint('seq', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
-  parentSeq: bigint('parent_seq', { mode: 'number' })
-    .notNull()
-    .references(() => suiviEcarts.seq, { onDelete: 'cascade' }),
-  position: integer('position').notNull(),
-  id: text('id'),
-  t: text('t'),
-  done: boolean('done'),
-  createdIso: text('created_iso'),
-  extra: jsonb('extra').notNull().default({}),
-});
-
 export const suiviProcessus = pgTable('suivi_processus', {
   seq: bigint('seq', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
   position: integer('position').notNull(),

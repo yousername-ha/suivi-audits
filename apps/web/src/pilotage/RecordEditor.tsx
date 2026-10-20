@@ -130,9 +130,7 @@ export function RecordEditor({
           ifMatch: object.version,
           body: { name, data: clean, sourceSha: object.data.sourceSha },
         });
-      } else if (!object && kind === 'nonconformity')
-        await api('POST', `/api/grc/${smsi}/pilotage/findings`, { body: { name, data: clean } });
-      else
+      } else
         await api(object ? 'PUT' : 'POST', `/api/grc/${smsi}/objects${object ? '/' + object.id : ''}`, {
           ifMatch: object?.version,
           body: { kind, name, data: clean },

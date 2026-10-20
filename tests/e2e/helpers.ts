@@ -113,6 +113,35 @@ export async function sessionAdmin(
   return { state, csrf };
 }
 
+/** Crée un écart du périmètre commun (ce que le module Audit et le tableau de bord lisent comme constat). */
+export async function creerEcartCommun(
+  req: APIRequestContext,
+  csrf: string,
+  e: {
+    name: string;
+    source?: 'AFNOR' | 'Interne';
+    classification?: 'majeure' | 'mineure' | 'point_sensible';
+    items?: string[];
+    dueAt?: string;
+  },
+): Promise<string> {
+  const r = await req.post('/api/grc/00000000-0000-4000-8000-000000000001/objects', {
+    headers: { 'X-CSRF-Token': csrf },
+    data: {
+      kind: 'nonconformity',
+      name: e.name,
+      data: {
+        source: e.source ?? '',
+        classification: e.classification ?? '',
+        refs: (e.items ?? []).map((i) => 'legacy:items:' + i),
+        dueAt: e.dueAt ?? '',
+      },
+    },
+  });
+  if (!r.ok()) throw new Error(`écart commun : ${r.status()} ${await r.text()}`);
+  return ((await r.json()) as { id: string }).id;
+}
+
 /** Écrit l'état historique souhaité (ADR 0040) : les modules repris dans des tables passent par l'import « Remplacer un
     module » (seule voie d'écriture hors écrans natifs). */
 export async function ecrireEtat(req: APIRequestContext, csrf: string, souhaite: Record<string, unknown>) {
@@ -165,8 +194,13 @@ export async function ecrireEtat(req: APIRequestContext, csrf: string, souhaite:
   }
   // Plus d'écriture directe : une clé qui n'est portée par aucun module repris ne peut pas être posée par l'aide.
   const { data } = await lire();
+  // Les constats historiques n'existent plus comme module (les écarts sont des fiches de registre) : leur clé est ignorée.
+  const retirees = ['findings', 'findingsRev'];
   const inecrivables = Object.keys(souhaite).filter(
-    (k) => !repris.includes(k) && JSON.stringify(souhaite[k] ?? null) !== JSON.stringify(data[k] ?? null),
+    (k) =>
+      !repris.includes(k) &&
+      !retirees.includes(k) &&
+      JSON.stringify(souhaite[k] ?? null) !== JSON.stringify(data[k] ?? null),
   );
   if (inecrivables.length) throw new Error(`Clés non écrivables par l’aide de test : ${inecrivables.join(', ')}`);
 }

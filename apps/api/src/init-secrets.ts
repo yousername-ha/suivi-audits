@@ -28,7 +28,7 @@ const CLAMAV_UID = parseInt(process.env.CLAMAV_UID || '100', 10);
 const CLAMAV_GID = parseInt(process.env.CLAMAV_GID || '101', 10);
 
 /** Fichier témoin déposé par preparer-donnees.sh ou migrer-donnees-vers-dossier.sh. */
-export const MARQUEUR = '.suivi-audits-donnees';
+const MARQUEUR = '.suivi-audits-donnees';
 
 /** Emplacements interdits pour DATA_DIR sur le serveur (système, Docker, fichiers temporaires). */
 const INTERDITS = [

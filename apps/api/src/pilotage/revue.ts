@@ -180,7 +180,7 @@ export class PilotageRevue {
     faits.e.push(
       `Opportunités : ${parStatut('identified')} identifiée(s), ${parStatut('evaluated')} évaluée(s), ${parStatut('pursued')} poursuivie(s), ${parStatut('realised')} réalisée(s), ${parStatut('dropped')} écartée(s).`,
     );
-    const ameliorations = ecarts.filter((f) => /opportunit|observation/i.test(String(f.type ?? ''))).length;
+    const ameliorations = ecarts.filter((f) => ['observation', 'opportunity'].includes(String(f.findingType))).length;
     faits.f.push(
       `${pluriel(ameliorations, 'constat de type observation ou opportunité', 'constats de type observation ou opportunité')} ; ${parStatut('identified') + parStatut('evaluated')} opportunité(s) à traiter.`,
     );

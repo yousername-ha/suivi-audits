@@ -10,7 +10,7 @@ import { DEFAULT_SMSI, type Grc } from '../grc/core.js';
 import { HttpError } from '../http/errors.js';
 import type { Services } from '../services.js';
 
-export const PestelBody = z
+const PestelBody = z
   .object({
     assignments: z
       .record(z.string().regex(/^issue:[0-9a-z]{1,16}$/), z.string().max(40))

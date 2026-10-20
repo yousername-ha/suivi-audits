@@ -15,7 +15,7 @@ import { redactLegacy } from '../routes/suivi.js';
 import type { Services } from '../services.js';
 import { listMaps } from './maps.js';
 
-export interface CartoObjectSource {
+interface CartoObjectSource {
   /** Objets normalisés visibles par la personne (jamais d'objet d'un module qu'elle ne peut pas lire). */
   list(ctx: { rights: Rights }): Promise<CartoObject[]>;
   /** Relations métier dérivées (lecture seule sur la carte). */

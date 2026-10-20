@@ -62,7 +62,7 @@ sudo docker compose exec app setup-token           # jeton d'installation, puis 
 | Mise à jour | Administration → Système → Mise à jour ; pour le premier passage ou l’entretien serveur, suivre [INSTALLATION, section 12](docs/INSTALLATION.md) (sauvegarde et signatures). |
 | Antivirus | `CLAMAV_HOST=clamav` dans `.env`, puis `sudo docker compose --profile antivirus up -d` |
 
-Des vues SQL (`v_items`, `v_findings`, `v_documents`) permettent d'interroger les données en lecture, par exemple : `sudo docker compose exec -u postgres db psql -d suivi -c "SELECT * FROM v_findings"`.
+La vue SQL `v_documents` permet d'interroger les documents en lecture, par exemple : `sudo docker compose exec -u postgres db psql -d suivi -c "SELECT * FROM v_documents"`.
 
 ## Développement
 

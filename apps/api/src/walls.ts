@@ -10,8 +10,8 @@ import { isHttps } from './http/security.js';
 import { parseCookies } from './auth.js';
 import { sha256, token } from './security/crypto.js';
 
-export const WALL_COOKIE_SECURE = '__Host-suivi_mur';
-export const WALL_COOKIE_PLAIN = 'suivi_mur';
+const WALL_COOKIE_SECURE = '__Host-suivi_mur';
+const WALL_COOKIE_PLAIN = 'suivi_mur';
 const ACTIVATION_MS = 24 * 3600e3;
 
 export interface WallSession {

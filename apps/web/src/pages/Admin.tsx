@@ -254,7 +254,6 @@ interface VersionRow {
   note: string;
   bytes: number;
   items: number;
-  findings: number;
   import_batch_id: number | null;
 }
 function Versions() {
@@ -287,9 +286,7 @@ function Versions() {
                   <Table.Td className="nowrap">{fmtDate(v.updated_at)}</Table.Td>
                   <Table.Td>{v.updated_by}</Table.Td>
                   <Table.Td>{v.note}</Table.Td>
-                  <Table.Td className="nowrap">
-                    {v.items} mesures, {v.findings} écarts
-                  </Table.Td>
+                  <Table.Td className="nowrap">{v.items} mesures</Table.Td>
                   <Table.Td>
                     <Group gap="2xs" wrap="nowrap">
                       <Button

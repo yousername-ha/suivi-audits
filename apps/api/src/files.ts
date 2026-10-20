@@ -3,7 +3,7 @@ import net from 'node:net';
 import type { Config } from './config.js';
 
 type Sig = 'pdf' | 'zip' | 'ole' | 'png' | 'jpg' | 'gif' | 'text';
-export const FILE_TYPES: Record<string, { mime: string; sig: Sig }> = {
+const FILE_TYPES: Record<string, { mime: string; sig: Sig }> = {
   pdf: { mime: 'application/pdf', sig: 'pdf' },
   docx: { mime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', sig: 'zip' },
   xlsx: { mime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', sig: 'zip' },
@@ -50,7 +50,7 @@ function sigOk(kind: Sig, b: Buffer): boolean {
   }
 }
 
-export function cleanFilename(name: string): string {
+function cleanFilename(name: string): string {
   let n = String(name || '')
     .normalize('NFC')
     .replace(/[\\/]/g, '_')
