@@ -9,6 +9,7 @@ import { api, get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { Droits } from './Droits';
 import { ValidationOccurrence } from './Validation';
+import { DeplacerElement, peutEtreDeplace } from './Deplacement';
 
 export interface AccesElement {
   registreId: string;
@@ -108,6 +109,7 @@ export function PanneauElement({
       {object.kind === 'action' && typeof object.data.seriesId === 'string' && object.data.seriesId && (
         <ValidationOccurrence smsi={smsi} object={object} acces={acces} />
       )}
+      {acces.peut.gerer && peutEtreDeplace(object) && <DeplacerElement smsi={smsi} object={object} />}
       {acces.peut.gerer && (
         <Stack gap="xs">
           <Text fw={600}>Droits sur cet élément</Text>

@@ -6,9 +6,11 @@
 import {
   GRC_MODULES,
   RANG_ROLE,
+  DeplacementBody,
   RegistreBody,
   RegistrePerimetresBody,
   RegistreUpdate,
+  registreKindOf,
   DroitBody,
   REGISTRE_LABELS,
   ROLE_LABELS,
@@ -16,6 +18,7 @@ import {
   type Action,
   type Besoin,
   type GrcObject,
+  type ImpactDeplacement,
   type Module,
   type RegistreDto,
   type RegistreKind,
@@ -447,6 +450,162 @@ export class GrcRegistres {
       )
     ).rows.map(objectDto);
     return { registre: await this.dto(user, reg), items, total, nextOffset: offset + 50 < total ? offset + 50 : null };
+  }
+
+  /** Éléments des registres d'un périmètre, filtrés par registres choisis : chaque élément n'appartient qu'à un registre,
+      donc aucun doublon ; seuls les registres que l'utilisateur peut lire sont considérés. */
+  async elementsFiltres(
+    user: SessionUser,
+    f: { perimetre: string; registres: string[]; kind?: string; search: string; offset: number },
+  ) {
+    const visibles = (await this.list(user, { perimetre: f.perimetre })).filter(
+      (r) => f.registres.length === 0 || f.registres.includes(r.id),
+    );
+    const ids = visibles.map((r) => r.id);
+    if (!ids.length) return { registres: visibles, items: [] as GrcObject[], total: 0, nextOffset: null };
+    const args: unknown[] = [ids, '%' + f.search.replace(/[\\%_]/g, '\\$&') + '%'];
+    let where = 'registre_id=ANY($1::uuid[]) AND NOT archived AND name ILIKE $2';
+    if (f.kind) where += ` AND kind=$${args.push(f.kind)}`;
+    const total = Number(
+      (await this.g.db.one<{ n: number }>(`SELECT count(*)::int n FROM grc_objects WHERE ${where}`, args))!.n,
+    );
+    args.push(f.offset);
+    const items = (
+      await this.g.db.q<ObjectRow>(
+        `SELECT ${objectColumns} FROM grc_objects WHERE ${where} ORDER BY updated_at DESC,id LIMIT 50 OFFSET $${args.length}`,
+        args,
+      )
+    ).rows.map(objectDto);
+    return { registres: visibles, items, total, nextOffset: f.offset + 50 < total ? f.offset + 50 : null };
+  }
+
+  /* ---------------------------------------------------------------------------------------------- déplacement */
+  /** Déplace un élément (ou une série et ses occurrences) vers un autre registre de la même famille. Droits de gestion sur
+      les deux registres ; le périmètre de référence peut changer, d'où les contrôles : état du workflow cible, responsable
+      autorisé, liens vers d'autres périmètres. L'historique des versions reste celui d'origine. */
+  async deplacer(smsi: string, id: string, input: DeplacementBody, expected: number, user: SessionUser, ip: string) {
+    const b = DeplacementBody.parse(input);
+    return this.g.db.tx(async (c) => {
+      const o = await this.g.raw(id, c, true);
+      if (!o || o.smsiId !== smsi || !o.registreId) throw new HttpError(404, 'Élément introuvable ou non accessible.');
+      const source = await this.exigerElement(user, o, 'gerer', c);
+      if (o.archived) throw new HttpError(409, 'Élément archivé.');
+      const famille = registreKindOf(o.kind, o.data);
+      if (!famille || !['action', 'nonconformity', 'task_series'].includes(o.kind))
+        throw new HttpError(422, 'Cet élément ne se déplace pas.');
+      if (o.kind === 'action' && o.data.seriesId) throw new HttpError(422, 'Une occurrence se déplace avec sa série.');
+      const cible = await this.brut(b.registreId, c);
+      if (!cible) throw new HttpError(404, 'Registre introuvable ou non accessible.');
+      await this.exiger(user, cible, null, 'gerer', c, GRC_MODULES[o.kind]);
+      if (cible.archived) throw new HttpError(409, 'Registre cible archivé.');
+      if (cible.id === source.id) throw new HttpError(422, 'L’élément est déjà dans ce registre.');
+      if (cible.kind !== famille) throw new HttpError(422, 'Le registre cible n’est pas de la même famille.');
+      const membres = [o];
+      if (o.kind === 'task_series')
+        for (const r of (
+          await c.query<ObjectRow>(
+            `SELECT ${objectColumns} FROM grc_objects WHERE data->>'seriesId'=$1 AND kind='action' FOR UPDATE`,
+            [o.id],
+          )
+        ).rows)
+          membres.push(objectDto(r));
+      const ids = membres.map((m) => m.id);
+      const refs = ids.map((i) => 'object:' + i);
+      const nouveau = cible.referenceId;
+      const nomPerimetres = async (reg: RegistreRow) =>
+        (
+          await c.query<{ id: string; name: string }>(
+            'SELECT s.id,s.name FROM registre_perimetres p JOIN grc_smsis s ON s.id=p.smsi_id WHERE p.registre_id=$1 ORDER BY s.name',
+            [reg.id],
+          )
+        ).rows;
+      // Liens : ceux dont l'autre extrémité est une fiche d'un autre périmètre de référence ne peuvent pas suivre.
+      const liens = (
+        await c.query<{ id: string; source_ref: string; target_ref: string; type: string }>(
+          'SELECT id,source_ref,target_ref,type FROM grc_links WHERE source_id=ANY($1::uuid[]) OR source_ref=ANY($2) OR target_ref=ANY($2)',
+          [ids, refs],
+        )
+      ).rows;
+      const incompatibles: ImpactDeplacement['liensIncompatibles'] = [];
+      const incompatiblesIds: string[] = [];
+      for (const l of liens) {
+        const autre = refs.includes(l.source_ref) ? l.target_ref : l.source_ref;
+        if (!autre.startsWith('object:') || ids.includes(autre.slice(7))) continue;
+        const x = (
+          await c.query<{ smsi_id: string; name: string }>('SELECT smsi_id,name FROM grc_objects WHERE id=$1', [
+            autre.slice(7),
+          ])
+        ).rows[0];
+        if (x && x.smsi_id !== nouveau) {
+          incompatibles.push({ ref: autre, type: l.type, nom: x.name });
+          incompatiblesIds.push(l.id);
+        }
+      }
+      const problemes: string[] = [];
+      if (nouveau !== o.smsiId) {
+        const policy = (await this.g.politiqueDe(nouveau, c)).definition;
+        for (const m of membres)
+          if (m.kind === 'action' && !policy.statuses.some((s) => s.id === m.data.status))
+            problemes.push(`« ${m.name} » : état « ${String(m.data.status)} » inconnu du workflow du périmètre cible.`);
+        for (const m of membres)
+          try {
+            await this.g.checkOwner(nouveau, m.data.ownerId ?? null, c);
+          } catch {
+            problemes.push(`« ${m.name} » : le responsable n’est pas autorisé dans le périmètre cible.`);
+          }
+      }
+      const impact: ImpactDeplacement = {
+        depuis: { id: source.id, name: source.name, perimetres: await nomPerimetres(source) },
+        vers: { id: cible.id, name: cible.name, perimetres: await nomPerimetres(cible) },
+        elements: membres.length,
+        referenceChange: nouveau !== o.smsiId,
+        liensConserves: liens.length - incompatibles.length,
+        liensIncompatibles: incompatibles,
+        problemes,
+      };
+      if (b.apercu) return { apercu: true as const, impact, version: o.version };
+      if (!b.reason) throw new HttpError(422, 'Un motif de 10 caractères au moins est exigé.');
+      if (o.version !== expected) throw new HttpError(412, 'La fiche a changé. Rechargez avant de confirmer.');
+      if (problemes.length) throw new HttpError(422, 'Déplacement impossible : ' + problemes.join(' '));
+      if (incompatibles.length && !b.retirerLiensIncompatibles)
+        throw new HttpError(409, 'Des liens ne peuvent pas suivre le déplacement : confirmez leur retrait.');
+      if (incompatiblesIds.length) await c.query('DELETE FROM grc_links WHERE id=ANY($1::uuid[])', [incompatiblesIds]);
+      let deplace = o;
+      for (const m of membres) {
+        const row = (
+          await c.query<ObjectRow>(
+            `UPDATE grc_objects SET smsi_id=$2,registre_id=$3,version=version+1,updated_by=$4,updated_at=now() WHERE id=$1 RETURNING ${objectColumns}`,
+            [m.id, nouveau, cible.id, user.username],
+          )
+        ).rows[0]!;
+        const next = objectDto(row);
+        await this.g.snapshot(c, next, 'Déplacement : ' + b.reason);
+        if (m.id === o.id) deplace = next;
+      }
+      await c.query(
+        'UPDATE grc_links SET smsi_id=$2 WHERE source_id=ANY($1::uuid[]) OR source_ref=ANY($3) OR target_ref=ANY($3)',
+        [ids, nouveau, refs],
+      );
+      await c.query('UPDATE grc_notifications SET smsi_id=$2 WHERE object_id=ANY($1::uuid[])', [ids, nouveau]);
+      await this.g.db.audit(
+        user,
+        ip,
+        'registre.element.deplace',
+        o.id,
+        {
+          de: source.id,
+          vers: cible.id,
+          smsiAvant: o.smsiId,
+          smsiApres: nouveau,
+          elements: membres.length,
+          liensRetires: incompatiblesIds.length,
+          raison: b.reason,
+        },
+        c,
+      );
+      await this.g.notify(c, o.id, deplace.version, nouveau, GRC_MODULES[o.kind], user.username);
+      return { apercu: false as const, impact, element: deplace };
+    }, user.username);
   }
 
   /* ------------------------------------------------------------------------------------------------------ droits */

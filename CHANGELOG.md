@@ -7,6 +7,10 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 ### Notes de mise à jour
 Aucune action particulière, aucune migration pour le moment.
 
+### Ajouté
+- **Déplacer un élément entre registres.** Une action, un écart ou une série (avec ses occurrences) se déplace vers un autre registre de la même famille : commande atomique `POST /api/grc/:smsi/objects/:id/deplacement` avec **aperçu d'impact** (périmètres avant et après, changement du périmètre de référence, liens conservés, liens qui ne peuvent pas suivre, obstacles comme un état inconnu du workflow cible ou un responsable non autorisé), motif obligatoire, `If-Match` et droit de gestion sur les deux registres. L'élément garde son identifiant ; ses anciennes versions restent rattachées à leur ancien périmètre ; les liens incompatibles ne sont retirés qu'avec confirmation explicite ; le déplacement est inscrit au journal d'audit. Panneau « Déplacer vers un autre registre » sur la fiche.
+- **Éléments par périmètre et registres choisis.** Nouvel onglet de l'écran Registres et route `GET /api/registres/elements` : on choisit un périmètre puis un ou plusieurs registres qui le portent ; la liste réunit leurs éléments sans doublon, limitée aux registres que la personne peut lire.
+
 ## [3.5.0] — 2026-10-20
 
 **Registres, droits par ressource, menu à sept familles, validation des occurrences et reprise des écarts** (intégration partielle des interfaces ASTRA : voir [la recette R01 à R18](docs/unification/RECETTE-INTEGRATION-ASTRA.md)), avec les migrations SQL `022` à `030`, les montées de version majeures de la pile (TypeScript 6, Vite 8, Vitest 5, React Router 8, Mantine 9) et la normalisation en tables des modules.
