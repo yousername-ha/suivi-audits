@@ -1,5 +1,13 @@
 import { Badge, Button, Card, Group, Menu, Modal, Select, Stack, Table, Text, TextInput } from '@mantine/core';
-import { GRC_LABELS, GRC_MODULES, type GrcKind, type GrcObject, type PilotageRecord } from '@suivi/shared';
+import {
+  ECART_CLASSIFICATION_LABELS,
+  GRC_LABELS,
+  GRC_MODULES,
+  classificationEcart,
+  type GrcKind,
+  type GrcObject,
+  type PilotageRecord,
+} from '@suivi/shared';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { download, get } from '../api';
@@ -39,6 +47,25 @@ export function stateLabel(value: unknown) {
   return STATES[String(value)] ?? String(value ?? '—');
 }
 type Page = { items: GrcObject[]; total: number; nextOffset: number | null };
+/** Classification et lien de récidive d'un constat, affichés dans la liste (la classification de l'outil de suivi
+    historique est reprise telle quelle). */
+function EtiquettesEcart({ o, taille }: { o: GrcObject; taille?: 'xs' }) {
+  const classification = classificationEcart(o.data);
+  return (
+    <>
+      {classification && (
+        <Badge size={taille} variant="light" color={classification === 'majeure' ? 'red' : 'gray'}>
+          {ECART_CLASSIFICATION_LABELS[classification]}
+        </Badge>
+      )}
+      {typeof o.data.recidiveRef === 'string' && o.data.recidiveRef && (
+        <Badge size={taille} variant="light" color="orange">
+          Récidive
+        </Badge>
+      )}
+    </>
+  );
+}
 export function BusinessRegistry({
   smsi,
   kind,
@@ -182,6 +209,9 @@ export function BusinessRegistry({
             {editable && kind === 'nonconformity' && (
               <Menu.Item onClick={() => onDecision(o, 'close')}>Clôturer le constat</Menu.Item>
             )}
+            {writable && kind === 'nonconformity' && o.data.status === 'closed' && (
+              <Menu.Item onClick={() => onDecision(o, 'reopen')}>Rouvrir le constat</Menu.Item>
+            )}
             {editable &&
               [
                 'nonconformity',
@@ -321,6 +351,7 @@ export function BusinessRegistry({
                       Existant
                     </Badge>
                   )}
+                  {kind === 'nonconformity' && <EtiquettesEcart o={o} taille="xs" />}
                   {Array.isArray(o.data.auditedFrameworks) && (o.data.auditedFrameworks as unknown[]).length > 0 && (
                     <Badge size="xs" variant="light" color="encre">
                       {(o.data.auditedFrameworks as unknown[]).length > 1 ? 'Audit combiné : ' : 'Audit : '}
@@ -349,6 +380,7 @@ export function BusinessRegistry({
               <Text fw={600}>{o.name}</Text>
               <Text size="sm">{String(o.data.description ?? '').slice(0, 120)}</Text>
               {o.id.startsWith('legacy:') && <Badge variant="light">Existant</Badge>}
+              {kind === 'nonconformity' && <EtiquettesEcart o={o} />}
               <Text size="sm">
                 {state(o)} · {owner(o)}
               </Text>

@@ -93,8 +93,11 @@ export class Pilotage {
       }
       if (source.version !== expected) throw new HttpError(412, 'La fiche a changé. Rechargez avant de confirmer.');
       if (source.archived) throw new HttpError(409, 'La fiche est archivée.');
-      if (source.data.status === 'closed')
-        throw new HttpError(409, 'La fiche est close. Créez un nouveau constat pour une récidive.');
+      if (source.data.status === 'closed' && input.operation !== 'reopen')
+        throw new HttpError(
+          409,
+          'La fiche est close. Rouvrez le constat avec un motif, ou créez-en un nouveau pour une récidive.',
+        );
       if (input.date > new Date().toLocaleDateString('sv-SE', { timeZone: scope.timezone }))
         throw new HttpError(422, 'Une réalisation ne peut être datée dans le futur.');
       for (const r of input.refs) await this.g.resolve(smsi, r, user, c);
@@ -107,6 +110,7 @@ export class Pilotage {
         control_execution: ['control'],
         effectiveness: ['nonconformity'],
         close: ['nonconformity'],
+        reopen: ['nonconformity'],
         step_validation: ['journey', 'risk_study'],
         risk_acceptance: ['risk'],
         approval: ['bia', 'continuity_plan', 'management_review'],
@@ -187,6 +191,17 @@ export class Pilotage {
         data.status = 'closed';
         data.closedAt = input.date;
         data.closureNote = input.note;
+      }
+      if (input.operation === 'reopen') {
+        // Pas de réouverture silencieuse : le motif (note) est inscrit au journal des décisions et à l'historique de la
+        // fiche ; la clôture d'origine reste lisible dans le journal et ses versions. L'efficacité est à revérifier.
+        if (input.result !== 'completed') throw new HttpError(422, 'Réouverture attendue.');
+        if (data.status !== 'closed') throw new HttpError(409, 'Seul un constat clos peut être rouvert.');
+        data.status = 'open';
+        data.effectiveness = 'pending';
+        data.effectivenessNote = '';
+        data.closedAt = '';
+        data.closureNote = '';
       }
       if (input.operation === 'approval') {
         await this.g.permission(user, 'pilotage', 'administrer');

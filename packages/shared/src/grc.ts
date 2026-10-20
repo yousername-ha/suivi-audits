@@ -480,6 +480,8 @@ export const CHAMPS_REF_RISQUES = [
   'measureRefs',
   'scenarioRef',
   'assetRefs',
+  'auditRef',
+  'recidiveRef',
 ];
 
 export function grcReferences(data: Record<string, unknown>): string[] {

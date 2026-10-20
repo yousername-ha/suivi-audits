@@ -22,6 +22,7 @@ export const OPERATION_LABELS: Record<PilotageRecord['operation'], string> = {
   control_execution: 'Enregistrer le contrôle',
   effectiveness: 'Vérifier l’efficacité',
   close: 'Clôturer le constat',
+  reopen: 'Rouvrir le constat',
   step_validation: 'Valider les travaux de l’étape',
   approval: 'Valider la fiche',
   action_create: 'Créer une action suivie',

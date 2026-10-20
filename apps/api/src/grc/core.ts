@@ -657,7 +657,9 @@ export class Grc {
       await this.checkTypedRefs(smsi, kind, data, user, c);
       if (kind === 'risk_study') await this.checkStudyConfiguration(smsi, data, previous, c);
       if (kind === 'nonconformity' && previous?.data.status === 'closed')
-        throw new HttpError(409, 'Conservez la clôture : créez un nouveau constat pour une récidive.');
+        throw new HttpError(409, 'Conservez la clôture : rouvrez le constat avec un motif ou créez-en un nouveau.');
+      if (kind === 'nonconformity' && previous && data.recidiveRef === 'object:' + previous.id)
+        throw new HttpError(422, 'Un constat ne peut pas être la récidive de lui-même.');
       if (kind === 'control') {
         for (const field of ['result', 'performedAt', 'seriesRef'])
           if (data[field] !== previous?.data[field])

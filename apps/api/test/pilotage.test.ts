@@ -210,6 +210,35 @@ describe('Pilotage multi-référentiels G/H/K et début E', () => {
     expect(report.statusCode).toBe(200);
     expect(report.json().closed).toBeGreaterThan(0);
   });
+  it('rouvre un constat clos avec un motif tracé : l’efficacité est à revérifier, aucune réouverture silencieuse', async () => {
+    let f = await legacyFinding();
+    expect(f.data.status).toBe('closed');
+    // La modification ordinaire d'un constat clos reste refusée ; seule la décision de réouverture le rouvre.
+    const direct = await a.put(
+      base + '/pilotage/legacy/findings/' + finding.split(':')[2],
+      { name: f.name, sourceSha: f.data.sourceSha, data: { ...clean(f.data), status: 'open' } },
+      { 'if-match': `"${f.version}"` },
+    );
+    expect(direct.statusCode).toBeGreaterThanOrEqual(400);
+    const court = await decide(f.id, 'reopen', 'completed', f.version, { note: 'court' });
+    expect(court.statusCode).toBe(422);
+    const rouvert = await decide(f.id, 'reopen', 'completed', f.version, {
+      note: 'Récidive constatée lors de l’audit de surveillance.',
+    });
+    expect(rouvert.statusCode, rouvert.body).toBe(200);
+    expect(rouvert.json().operation).toBe('reopen');
+    f = await legacyFinding();
+    expect(f.data.status).toBe('open');
+    expect(f.data.effectiveness).toBe('pending');
+    // Le motif est au journal des décisions, la clôture d'origine aussi (journal immuable).
+    const journal = (await a.get(base + '/pilotage/history?ref=' + encodeURIComponent(finding)))
+      .json()
+      .items.map((d: { operation: string }) => d.operation);
+    expect(journal).toEqual(expect.arrayContaining(['close', 'reopen']));
+    // Fermer de nouveau exige une nouvelle vérification d'efficacité ; on ne rouvre pas un constat déjà ouvert.
+    expect((await decide(f.id, 'close', 'completed', f.version)).statusCode).toBe(409);
+    expect((await decide(f.id, 'reopen', 'completed', f.version)).statusCode).toBe(409);
+  });
   it('préserve les champs extra, les rôles sans ID, et les historiques de valeurs', async () => {
     await t.svc.db.tx(async (c) => {
       const state = await t.svc.legacy.recompose(c);
@@ -413,6 +442,35 @@ describe('Pilotage multi-référentiels G/H/K et début E', () => {
         )
       ).statusCode,
     ).toBe(409);
+  });
+  it('classe un constat, le relie à son constat précédent (récidive) et refuse les liens invalides', async () => {
+    const creer = (data: Record<string, unknown>) =>
+      a.post(base + '/objects', {
+        kind: 'nonconformity',
+        name: 'Constat classé',
+        data: { cause: 'Cause test', ...data },
+      });
+    const premier = await creer({ classification: 'majeure' });
+    expect(premier.statusCode, premier.body).toBe(200);
+    expect(premier.json().data.classification).toBe('majeure');
+    expect((await creer({ classification: 'grave' })).statusCode).toBe(422);
+    // La récidive pointe vers un constat ; l'audit d'origine doit être un audit, pas une autre fiche.
+    const recidive = await creer({ classification: 'mineure', recidiveRef: 'object:' + premier.json().id });
+    expect(recidive.statusCode, recidive.body).toBe(200);
+    expect(recidive.json().data.recidiveRef).toBe('object:' + premier.json().id);
+    expect((await creer({ auditRef: linkedAction })).statusCode).toBe(422);
+    expect((await creer({ recidiveRef: linkedAction })).statusCode).toBe(422);
+    // Un constat ne peut pas être la récidive de lui-même.
+    const soi = await a.put(
+      base + '/objects/' + premier.json().id,
+      {
+        kind: 'nonconformity',
+        name: 'Constat classé',
+        data: { ...premier.json().data, recidiveRef: 'object:' + premier.json().id },
+      },
+      { 'if-match': `"${premier.json().version}"` },
+    );
+    expect(soi.statusCode).toBe(422);
   });
   it('agrège 10 000 constats sans charger leurs fiches et annonce la limite de causes', async () => {
     const isolated = (

@@ -3,6 +3,25 @@ import { ENTREES_REVUE, SORTIES_REVUE, cleEntree } from './revue-direction.js';
 import { GrcRef, validDate, type GrcKind } from './grc.js';
 import { ECHELLE_GRAVITE, ECHELLE_VRAISEMBLANCE, RISK_REF_KINDS, RISK_SCHEMAS, type CibleRef } from './risques.js';
 
+/** Classification d'un écart : non-conformité majeure, mineure ou point sensible (point d'attention sans écart avéré). */
+export const CLASSIFICATIONS_ECART = ['majeure', 'mineure', 'point_sensible'] as const;
+export const ECART_CLASSIFICATION_LABELS: Record<(typeof CLASSIFICATIONS_ECART)[number], string> = {
+  majeure: 'Non-conformité majeure',
+  mineure: 'Non-conformité mineure',
+  point_sensible: 'Point sensible',
+};
+/** Classification d'un constat : celle posée sur la fiche, sinon celle de l'outil de suivi historique (champ `type` :
+    « NC maj », « NC min », « PS »). Absente (null) quand rien n'est renseigné. */
+const CLASSIFICATION_HISTORIQUE: Record<string, (typeof CLASSIFICATIONS_ECART)[number]> = {
+  'NC maj': 'majeure',
+  'NC min': 'mineure',
+  PS: 'point_sensible',
+};
+export function classificationEcart(data: Record<string, unknown>): (typeof CLASSIFICATIONS_ECART)[number] | null {
+  const posee = CLASSIFICATIONS_ECART.find((c) => c === data.classification);
+  if (posee) return posee;
+  return typeof data.type === 'string' ? (CLASSIFICATION_HISTORIQUE[data.type] ?? null) : null;
+}
 const text = z.string().max(10000);
 const date = z
   .string()
@@ -49,6 +68,11 @@ export const ImprovementData = common
   .extend({
     origin: z.enum(['audit', 'risk', 'incident', 'measure', 'control', 'review', 'other']).default('other'),
     findingType: z.enum(['observation', 'nonconformity', 'opportunity']).default('nonconformity'),
+    /** Classification d'un écart d'audit ; vide tant qu'elle n'est pas posée. */
+    classification: z.enum(['', ...CLASSIFICATIONS_ECART]).default(''),
+    /** Audit dont le constat est issu et constat précédent d'une récidive (références typées, contrôlées par le serveur). */
+    auditRef: GrcRef.nullable().optional(),
+    recidiveRef: GrcRef.nullable().optional(),
     cause: text.default(''),
     priority: z.enum(['low', 'normal', 'high', 'urgent']).default('normal'),
     dueAt: date,
@@ -167,6 +191,7 @@ export const PilotageRecord = z
       'control_execution',
       'effectiveness',
       'close',
+      'reopen',
       'step_validation',
       'approval',
       'action_create',
@@ -593,6 +618,12 @@ export const PILOTAGE_FIELDS: Partial<Record<GrcKind, PilotageField[]>> = {
         label: ['Audit', 'Risque', 'Incident', 'Mesure', 'Contrôle', 'Revue de direction', 'Autre'][i]!,
       })),
     ),
+    field('classification', 'Classification', 'select', [
+      { value: '', label: 'Non classé' },
+      ...CLASSIFICATIONS_ECART.map((value) => ({ value, label: ECART_CLASSIFICATION_LABELS[value] })),
+    ]),
+    lien('nonconformity', 'auditRef', 'Audit d’origine', 'Audit à l’origine du constat.'),
+    lien('nonconformity', 'recidiveRef', 'Constat précédent (récidive)', 'Constat dont celui-ci est la récidive.'),
     field('cause', 'Analyse des causes'),
     field('dueAt', 'Échéance', 'date'),
     field('priority', 'Priorité', 'select', [
