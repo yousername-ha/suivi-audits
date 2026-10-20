@@ -12,7 +12,9 @@ export interface Rubrique {
   id: string;
   label: string;
   to: string;
-  module: Module;
+  /** Droit de lecture du module ; absent : la rubrique est ouverte à toute personne connectée (l'API contrôle l'accès à
+      chaque ressource, par exemple les registres attribués par droit). */
+  module?: Module;
   action: Action;
   /** Second droit exigé (la cartographie des risques demande aussi la lecture du Pilotage). */
   aussi?: [Module, Action];
@@ -150,6 +152,9 @@ export const FAMILLES: Famille[] = [
       dest('amelioration', 'Amélioration continue', [p('amelioration')]),
       dest('plan-actions', 'Plan d’actions', [p('actions')]),
       dest('recurrences', 'Tâches récurrentes', [p('recurrences')]),
+      dest('registres', 'Registres et droits', [
+        { id: 'registres', label: 'Registres et droits', to: '/registres', action: 'lire', prefixe: true },
+      ]),
     ],
   },
   {
@@ -194,7 +199,7 @@ export const FAMILLES: Famille[] = [
 type Can = (module: Module, action: Action) => boolean;
 
 export const rubriqueVisible = (r: Rubrique, can: Can) =>
-  can(r.module, r.action) && (!r.aussi || can(r.aussi[0], r.aussi[1]));
+  (!r.module || can(r.module, r.action)) && (!r.aussi || can(r.aussi[0], r.aussi[1]));
 
 /** Rubriques affichables d'une destination, dans l'ordre du menu. */
 export const rubriquesVisibles = (d: Destination, can: Can) => d.rubriques.filter((r) => rubriqueVisible(r, can));

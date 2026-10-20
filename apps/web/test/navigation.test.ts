@@ -41,10 +41,14 @@ describe('navigation', () => {
   it('masque ce qui n’est pas lisible : destination et famille disparaissent', () => {
     const seulement = (m: Module) => (module: Module, a: Action) => module === m && a === 'lire';
     const doc = famillesVisibles(seulement('documents'));
-    expect(doc.map((f) => f.famille.id)).toEqual(['conformite', 'documents']);
+    // « Registres et droits » est ouvert à toute personne connectée : l'accès réel est décidé par l'API.
+    expect(doc.map((f) => f.famille.id)).toEqual(['conformite', 'actions', 'documents']);
     expect(doc.find((f) => f.famille.id === 'documents')?.destinations.map((d) => d.id)).toEqual(['documents']);
-    expect(famillesVisibles(() => false)).toEqual([]);
+    expect(famillesVisibles(() => false).map((f) => f.famille.id)).toEqual(['actions']);
     expect(famillesVisibles(tout)).toHaveLength(7);
+  });
+  it('conserve le droit de module de chaque rubrique du menu hors registres', () => {
+    for (const r of rubriques.filter((x) => x.id !== 'registres')) expect(r.module).toBeDefined();
   });
   it('la cartographie des risques demande aussi la lecture du Pilotage', () => {
     const sansPilotage = (m: Module) => m === 'cartographie';
