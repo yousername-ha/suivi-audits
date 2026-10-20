@@ -21,6 +21,7 @@ export * from './risk-methods.js';
 export * from './method-bindings.js';
 export * from './recurrence.js';
 export * from './ical.js';
+export * from './cartes-perimetres.js';
 export * from './pilotage.js';
 export * from './objectifs.js';
 export * from './pestel.js';

@@ -195,6 +195,16 @@ export class GrcRegistres {
     return masques;
   }
 
+  /** Tous les registres restreints que l'utilisateur ne peut pas lire, quel que soit leur périmètre de référence : leurs
+      éléments ne comptent dans aucun compteur qu'il consulte. */
+  async inaccessiblesPartout(user: SessionUser, c?: Client): Promise<string[]> {
+    if (await this.g.isAdmin(user, c)) return [];
+    const r = await this.q(c).query<RegistreRow>(`SELECT ${colonnes} FROM registres WHERE restricted`);
+    const masques: string[] = [];
+    for (const reg of r.rows) if (!(await this.peut(user, reg, null, 'lire', c))) masques.push(reg.id);
+    return masques;
+  }
+
   /* ----------------------------------------------------------------------------------------------------- registre */
   async dto(user: SessionUser, reg: RegistreRow, c?: Client): Promise<RegistreDto> {
     const admin = await this.g.isAdmin(user, c);

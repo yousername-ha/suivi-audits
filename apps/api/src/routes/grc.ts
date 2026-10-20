@@ -21,6 +21,7 @@ import {
   methodTemplate,
 } from '@suivi/shared';
 import type { Session } from '../auth.js';
+import { cartesPerimetres } from '../grc/cartes.js';
 import { dashboard } from '../grc/dashboard.js';
 import { etudeEbios, registreRisques } from '../grc/registre-risques.js';
 import { report } from '../grc/report.js';
@@ -207,6 +208,14 @@ export const grcRoutes = [
     url: '/api/grc/smsis',
     summary: 'SMSI accessibles',
     handler: async ({ svc, s }) => svc.grc.listSmsis((s as Session).user),
+  }),
+  route({
+    ...base,
+    method: 'GET',
+    url: '/api/grc/perimetres/synthese',
+    summary: 'Cartes de périmètres : compteurs de synthèse par périmètre accessible (null : indisponible)',
+    access: 'auth',
+    handler: async ({ svc, s }) => cartesPerimetres(svc.grc, (s as Session).user),
   }),
   route({
     ...base,
