@@ -159,7 +159,7 @@
     {
       "id": "administration-apparence",
       "titre": "Administration et apparence globale",
-      "maquetteCourante": "fonctionnalites-en-developpement/012-administration-apparence/maquettes/v003-echelles-certificats",
+      "maquetteCourante": "fonctionnalites-en-developpement/012-administration-apparence/maquettes/v004-historique-conservation",
       "statutMaquette": "a-valider",
       "implementation": "a-suivre",
       "tests": "fonctionnalites-en-developpement/012-administration-apparence/tests/README.md",
@@ -168,7 +168,7 @@
       "dossier": "fonctionnalites-en-developpement/012-administration-apparence",
       "suivi": "fonctionnalites-en-developpement/012-administration-apparence/suivi.json",
       "numero": "012",
-      "description": "Configurer le système et la plateforme : exploitation, stockage, certificats importés/autosignés/ACME, échelles personnalisables, comptes et préférences."
+      "description": "Configurer système et plateforme : exploitation, certificats, historique et nettoyage optionnel, échelles personnalisables, comptes et préférences."
     },
     {
       "id": "formation",

@@ -119,3 +119,9 @@ Ces instructions utilisateur remplacent les consignes antérieures contradictoir
 
 - Les échelles doivent permettre création, suppression adaptée à leur statut, ajout/retrait de niveaux, réordonnancement et personnalisation des valeurs, libellés, critères et couleurs. Préserver les versions publiées et leurs usages ; utiliser le catalogue existant.
 - Le parcours certificat comporte trois choix : import du certificat de l’organisation, génération autosignée, service Let’s Encrypt / ACME. La livraison actuelle reste une maquette ; aucune émission, clé, opération DNS ou installation réelle n’est autorisée implicitement par ce travail graphique.
+
+## Historique et conservation — demande du 20 octobre 2026
+
+- Prévoir une configuration du nettoyage automatique, activable globalement et par catégorie, avec délais propres aux pièces justificatives, écarts clôturés, actions terminées et autres contenus admissibles.
+- Séparer archivage, corbeille récupérable et purge optionnelle après délai. Conserver les usages protégés, les validations immuables et le journal d’audit. Réexaminer les statuts/liens avant traitement ; un aperçu ancien ne vaut pas autorisation de suppression.
+- La livraison actuelle est une maquette : aucune tâche serveur, suppression réelle ou opération sur les sauvegardes. Les durées et volumes sont fictifs ; aucun gain de performance n’est attesté par les visuels.

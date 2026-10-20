@@ -19,8 +19,13 @@
       "date": "2026-10-20",
       "etape": "en-developpement",
       "motif": "v003 : création/suppression et personnalisation des échelles ; certificat importé, autosigné ou ACME ; six visuels et 39 contrôles locaux, aucun backend modifié."
+    },
+    {
+      "date": "2026-10-20",
+      "etape": "en-developpement",
+      "motif": "v004 : historique et conservation, règles par catégorie, aperçu, corbeille et purge optionnelle ; quatre visuels et 39 contrôles locaux. Aucun nettoyage réel."
     }
   ],
   "numero": "012",
-  "maquetteCourante": "v003-echelles-certificats"
+  "maquetteCourante": "v004-historique-conservation"
 }

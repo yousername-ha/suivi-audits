@@ -21,3 +21,7 @@ Suivre aussi la [recette commune](../../_dossiers-transversaux/socle-astra/RECET
 ## v003 — 20 octobre 2026
 
 39 contrôles locaux réussis : création/duplication d’échelles, ajout/retrait/réordonnancement des niveaux, scores, couleurs, suppression confirmée et archivage, conservation des versions publiées, trois modes TLS et contrôles de formulaires. [Résultats](../maquettes/v003-echelles-certificats/technique/verification.json) · [Script](../maquettes/v003-echelles-certificats/technique/verifier.cjs). Lancer depuis la racine du dépôt avec un serveur localhost sur le port 18782 ; variables optionnelles `PREVIEW_URL`, `PLAYWRIGHT_MODULE`, `CHROMIUM_PATH`. Six captures ; aucun backend ni certificat réel testé.
+
+## v004 — 20 octobre 2026
+
+39 contrôles locaux réussis : règles et durées, exclusions, dates invalides, mois calendaires, confirmations, recontrôles après prévisualisation, restauration protégée, délai avant purge, désactivation, mobile et présence des parcours échelles/certificats. [Résultats](../maquettes/v004-historique-conservation/technique/verification.json) · [Script](../maquettes/v004-historique-conservation/technique/verifier.cjs). Depuis la racine du dépôt, servir sur localhost:18782 ; chemins Playwright/Chromium configurables comme en v003. Quatre captures, aucun backend, suppression réelle ou performance testés.

@@ -1,6 +1,6 @@
-# Paramètres système et plateforme — proposition v003
+# Paramètres système et plateforme — proposition v004
 
-Statut : maquette à valider, dossier préparatoire. [Galerie et sources courantes](../maquettes/v003-echelles-certificats/README.md). Cette version étend 012, sans créer un second module d’administration concurrent. Elle ne remplace pas les fonctionnalités 019 Configuration GRC et 022 Gestion des droits : elle fournit leurs points d’entrée.
+Statut : maquette à valider, dossier préparatoire. [Galerie et sources courantes](../maquettes/v004-historique-conservation/README.md). Cette version étend 012, sans créer un second module d’administration concurrent. Elle ne remplace pas les fonctionnalités 019 Configuration GRC et 022 Gestion des droits : elle fournit leurs points d’entrée.
 
 ## Navigation proposée
 
@@ -100,3 +100,61 @@ Conserver permissions serveur, MFA/CSRF, concurrence, chiffrement des secrets et
 39 contrôles locaux exécutés : personnalisation, suppression/archivage, conservation des snapshots, limites du contrat, import fictif, durée autosignée, choix ACME, joker HTTP/DNS, annuaire HTTPS, erreurs, mobile et absence d’appels API. [Résultats](../maquettes/v003-echelles-certificats/technique/verification.json). Aucune vérification cryptographique, connexion DNS, demande ACME, publication d’échelle ou modification réelle du serveur.
 
 Six nouveaux visuels remplacent les détails d’échelles/certificat de v002 comme référence courante. Les vues générales à cartes restent celles du même parcours. La version v002 est conservée à titre historique.
+
+## Extension v004 — historique, conservation et nettoyage
+
+Demande utilisateur : activer ou désactiver un nettoyage après un délai afin de maîtriser le volume de la plateforme. La carte « Historique & nettoyage » complète les paramètres système. Elle ouvre trois onglets : Règles, Prévisualisation, Journal & corbeille. Les autres paramètres restent dans le même parcours ; aucune nouvelle famille de menu principale.
+
+### Règles de la proposition
+
+Le réglage global est désactivé par défaut ; les catégories peuvent être préparées indépendamment. Enregistrer une activation passe par la prévisualisation et une confirmation explicite. Désactiver la politique suspend les futurs passages ; les catégories désactivées ne doivent plus être traitées, y compris leur purge automatique.
+
+| Catégorie | Début du délai | Exemple fictif | Traitement initial |
+|---|---|---|---|
+| Justificatifs | Retrait explicite, après contrôle des références | 24 mois | Corbeille |
+| Écarts | Dernière clôture effective | 36 mois | Archivage |
+| Actions | Fin effective avec statut terminé | 36 mois | Archivage |
+| Exports temporaires | Génération du fichier temporaire | 30 jours | Corbeille |
+| Journaux techniques | Rotation du segment de journal | 90 jours | Corbeille |
+
+Ces valeurs ne fixent aucune durée légale ou normative. Elles devront être décidées par l’organisation selon ses besoins de conservation. Une preuve utilisée par une évaluation ou un dossier conservé ne devient pas supprimable du seul fait de son ancienneté. Ne pas utiliser la date de création d’une action comme date de fin ni la date d’ajout d’un fichier comme date de retrait.
+
+La configuration illustrée accepte des durées entières positives en jours, mois et années. Les mois/années sont calendaires, avec ajustement au dernier jour du mois cible si nécessaire ; la recette couvre février et les années bissextiles. Une date absente/invalide exclut l’élément. Le passage proposé est quotidien, à une heure UTC explicite ; ce choix d’interface ne crée pas de tâche réelle.
+
+Trois étapes distinctes : archivage consultable dans les vues historiques, corbeille restaurable, suppression définitive. La purge est une seconde option, désactivée initialement, limitée à la corbeille créée par la politique et soumise à un délai de récupération séparé (30 jours fictifs). La maquette ne permet pas de purger un objet mis en corbeille au même passage. Une restauration remet l’élément à disposition et ajoute une protection pour éviter son retrait immédiat au prochain passage ; sa levée devra être une opération autorisée et tracée dans le produit.
+
+### Exclusions et intégrité
+
+Réévaluer au moment du traitement : statut actif/rouvert, références bloquantes, protection de conservation, date et politique encore applicables. Répéter ces contrôles avant purge. Le prototype traite toute référence de sa fixture comme bloquante ; le serveur devra résoudre les références métier réelles, les liens transversaux et les versions, et expliquer précisément le blocage.
+
+Les périmètres restent hérités des registres. Aucun changement de périmètre ne doit rendre invisible un lien qui protège une preuve. Préserver les validations immuables, les décisions, les versions d’échelles et les évaluations historiques. Le journal d’audit est distinct des journaux techniques : il n’est pas visé par cette politique. La rétention des sauvegardes reste dans son module dédié.
+
+Aucune suppression en cascade implicite d’un registre, de ses pièces ou d’un plan lié à un écart. Une clôture ne suffit pas à établir l’éligibilité. Pour les fichiers, examiner toutes les références, variantes et versions partageant un même objet de stockage ; le fichier physique n’est éliminable que s’il n’est plus référencé et n’est soumis à aucune protection.
+
+### Prévisualisation et traçabilité
+
+La prévisualisation liste les objets avec leur date de référence, traitement envisagé ou motif d’exclusion ; distinguer nombre d’archives, de mises en corbeille et de purges éligibles. Afficher la date du calcul, la version de politique et un état périmé si les règles ou objets changent. Un ancien aperçu n’autorise pas à ignorer les changements intervenus depuis.
+
+Dans le produit, conserver un journal serveur des changements de politique et passages : identifiant, version, déclencheur/acteur, dates, portée autorisée, états par étape, identifiants d’objets, motifs d’exclusion/échec, nombres et volumes réellement traités. Conserver une trace minimale de suppression sans dupliquer le contenu supprimé ni ses secrets. Prévoir pagination, filtres, consultation des détails et reprise des échecs. Le journal local de la maquette n’est ni immuable ni une preuve d’audit.
+
+### Code existant consulté en lecture seule
+
+Même instantané Claude `284cb1e4ffbaee37e0952073db5659c2257c888e`. Dans `apps/api/src/routes/documents.ts`, `DELETE /api/documents/:id` met en corbeille ; `purge=1` requiert un document déjà en corbeille et la permission supplémentaire `documents:administrer`. `POST /api/documents/:id/restore` restaure le document. Des événements d’audit sont écrits. La route observée montre une suppression de métadonnées SQL ; elle ne démontre pas à elle seule l’effacement des fichiers physiques ou la protection complète des liens.
+
+Ces routes ne constituent pas un moteur de rétention transversal. Aucun contrat de politique globale, planificateur, prévisualisation, corbeille des écarts/actions ou collecte des fichiers orphelins n’est confirmé par ce relevé. La politique de sauvegarde et la purge des sessions existantes sont des sujets différents. Ne pas appeler une suppression générique de document pour prétendre traiter un écart ou une action.
+
+Réutiliser services, permissions et traces existants après vérification dans la branche de codage actuelle. Faire préciser les capacités manquantes au socle métier avant raccordement, sans créer d’API concurrente. Les champs `stage`, `refs`, `hold` et `autoTrash` de cette maquette sont des fixtures, pas un schéma serveur prescrit.
+
+### Exécution et objectif de performance
+
+Le serveur devrait traiter des lots bornés, avec index adaptés aux statuts/dates, pagination stable, verrouillage contre les passages concurrents, idempotence, reprise sur incident et progression consultable. Ne pas charger tous les objets dans le navigateur. Recontrôler les droits et protections dans la transaction ; après engagement des métadonnées, la suppression physique doit suivre un travail fiable et rejouable, sans casser de référence.
+
+L’archivage peut alléger les vues courantes mais ne réduit pas automatiquement le disque ni les coûts de requête. La corbeille conserve les fichiers. La purge de lignes SQL ne garantit ni l’effacement des blobs ni la restitution immédiate de l’espace au système. Afficher séparément volumes potentiellement récupérables, volumes réellement supprimés et consommation observée après traitement ; ne pas compter plusieurs fois un fichier partagé. Aucune promesse de gain de performance à partir des chiffres fictifs.
+
+La recette d’intégration devra mesurer temps de requêtes, taille des index/tables et stockage avant/après sur un jeu représentatif. Tester notamment réouverture concurrente, ajout de preuve partagée, suspension de politique, droits insuffisants, annulation, verrou de conservation, restauration, perte/reprise du travail et cohérence après incident entre base et fichiers. L’activation réelle de suppression devra être validée dans le produit, pas déduite de l’approbation d’un visuel.
+
+### Livrable et recette v004
+
+Quatre nouveaux aperçus et 39 contrôles locaux exécutés : règles indépendantes, dates calendaires, exclusions, confirmation, recontrôle avant passage, conservation en corbeille, restauration protégée, purge limitée, désactivation, absence d’appels API, mobile et conservation des entrées échelles/certificats. [Résultats](../maquettes/v004-historique-conservation/technique/verification.json). Aucun job réel créé, aucune donnée supprimée, aucune mesure de performance serveur.
+
+La version reste à valider, dans le dossier en développement. Après validation, compléter les contrats et recette du dossier avant déplacement vers « à implémenter », conformément au cycle existant.
