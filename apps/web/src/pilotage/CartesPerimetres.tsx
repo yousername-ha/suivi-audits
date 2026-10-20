@@ -5,7 +5,7 @@ import { Button, Group, Text } from '@mantine/core';
 import { arbre, LIBELLES_NIVEAU, type CartePerimetre, type NiveauPerimetre } from '@suivi/shared';
 
 const LARGEUR = 264;
-const HAUTEUR = 188;
+const HAUTEUR = 284;
 const ECART_X = 24;
 const ECART_Y = 56;
 
@@ -155,6 +155,25 @@ export function CartesPerimetres({
                     </div>
                   ))}
                 </dl>
+                {carte.sousPerimetres > 0 && (
+                  <dl
+                    className="graphe-compteurs graphe-ensemble"
+                    role="group"
+                    aria-label={`Total de ${carte.name} avec ses sous-périmètres, chaque élément une seule fois`}
+                  >
+                    <Text size="xs" fw={600}>
+                      Total avec {n(carte.sousPerimetres)} sous-périmètre(s)
+                    </Text>
+                    {lignesCompteurs(carte.total)
+                      .filter((l) => l.libelle !== 'Conformité')
+                      .map((l) => (
+                        <div key={l.libelle}>
+                          <dt>{l.libelle}</dt>
+                          <dd className={l.alerte ? 'graphe-alerte' : undefined}>{l.valeur}</dd>
+                        </div>
+                      ))}
+                  </dl>
+                )}
                 <Group gap="2xs" wrap="nowrap">
                   {carte.id !== affiche && (
                     <Button

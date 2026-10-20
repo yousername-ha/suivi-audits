@@ -164,16 +164,59 @@ describe('règles de répétition (RRULE)', () => {
     const quotidien = developper(regleDe('FREQ=DAILY;INTERVAL=2;COUNT=3'), '2026-10-20', '2026-10-01', '2030-01-01');
     expect(quotidien.jours).toEqual(['2026-10-20', '2026-10-22', '2026-10-24']);
   });
+  it('développe un jour de rang du mois (premier lundi, dernier vendredi) et le dernier jour du mois', () => {
+    const premierLundi = developper(
+      regleDe('FREQ=MONTHLY;BYDAY=1MO;COUNT=3'),
+      '2026-10-01',
+      '2026-10-01',
+      '2030-01-01',
+    );
+    expect(premierLundi.jours).toEqual(['2026-10-05', '2026-11-02', '2026-12-07']);
+    const dernierVendredi = developper(
+      regleDe('FREQ=MONTHLY;BYDAY=-1FR;COUNT=2'),
+      '2026-10-01',
+      '2026-10-01',
+      '2030-01-01',
+    );
+    expect(dernierVendredi.jours).toEqual(['2026-10-30', '2026-11-27']);
+    const dernierJour = developper(
+      regleDe('FREQ=MONTHLY;BYMONTHDAY=-1;COUNT=3'),
+      '2026-01-31',
+      '2026-01-01',
+      '2030-01-01',
+    );
+    expect(dernierJour.jours).toEqual(['2026-01-31', '2026-02-28', '2026-03-31']);
+    const tousLesLundis = developper(
+      regleDe('FREQ=MONTHLY;BYDAY=MO;COUNT=5'),
+      '2026-10-01',
+      '2026-10-01',
+      '2030-01-01',
+    );
+    expect(tousLesLundis.jours).toEqual(['2026-10-05', '2026-10-12', '2026-10-19', '2026-10-26', '2026-11-02']);
+    // Quatrième jeudi de novembre, chaque année.
+    const annuel = developper(
+      regleDe('FREQ=YEARLY;BYMONTH=11;BYDAY=4TH;COUNT=2'),
+      '2026-11-26',
+      '2026-01-01',
+      '2030-01-01',
+    );
+    expect(annuel.jours).toEqual(['2026-11-26', '2027-11-25']);
+    // Un cinquième lundi inexistant est sauté.
+    const cinquieme = developper(regleDe('FREQ=MONTHLY;BYDAY=5MO;COUNT=2'), '2026-10-01', '2026-10-01', '2030-01-01');
+    expect(cinquieme.jours).toEqual(['2026-11-30', '2027-03-29']);
+  });
   it('refuse explicitement ce qu’il ne sait pas développer, sans rien deviner', () => {
     for (const r of [
-      'FREQ=MONTHLY;BYDAY=1MO',
+      'FREQ=MONTHLY;BYDAY=MO;BYSETPOS=1',
       'FREQ=YEARLY;BYSETPOS=1',
+      'FREQ=YEARLY;BYDAY=4TH',
+      'FREQ=MONTHLY;BYDAY=1MO;BYMONTHDAY=3',
+      'FREQ=WEEKLY;BYDAY=1MO',
       'FREQ=HOURLY',
-      'FREQ=MONTHLY;BYMONTHDAY=-1',
       'FREQ=WEEKLY;INTERVAL=0',
     ])
       expect('refus' in lireRegle(r)).toBe(true);
-    const l = lireIcs(evenement('20260301', 'FREQ=MONTHLY;BYDAY=1MO'), AUJ);
+    const l = lireIcs(evenement('20260301', 'FREQ=MONTHLY;BYSETPOS=1;BYDAY=MO'), AUJ);
     expect(l.jours).toEqual([]);
     expect(l.ignores[0]!.message).toContain('non prise en charge');
   });

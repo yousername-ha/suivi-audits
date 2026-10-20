@@ -1491,6 +1491,10 @@ rect.audit-niv-faible {
   margin: 0;
   text-align: end;
 }
+.graphe-ensemble {
+  padding-block-start: var(--mantine-spacing-2xs);
+  border-block-start: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+}
 .graphe-alerte {
   color: var(--mantine-color-red-7);
   font-weight: 600;

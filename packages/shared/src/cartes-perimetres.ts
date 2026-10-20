@@ -28,7 +28,13 @@ export interface CartePerimetre {
   parentId: string | null;
   nature: string;
   entityKind: string;
+  /** Éléments du périmètre lui-même (les siens et ceux des registres qui le portent). */
   compteurs: CarteCompteurs;
+  /** Le périmètre et ses sous-périmètres, chaque élément une seule fois : jamais la somme des cartes enfants. Égal à
+      `compteurs` sans sous-périmètre ; la conformité n'est pas agrégée. */
+  total: CarteCompteurs;
+  /** Nombre de sous-périmètres accessibles (descendants à tous niveaux) pris en compte dans `total`. */
+  sousPerimetres: number;
 }
 
 /** Réponse de la synthèse : une carte par périmètre accessible et le total sans doublon (jamais la somme des cartes). */

@@ -62,6 +62,10 @@ test('Graphe des périmètres : compteurs de la carte et création d’un enfant
     await dialogue.getByRole('button', { name: 'Créer', exact: true }).click();
     await expect(dialogue).toHaveCount(0);
     await expect(page.getByRole('group', { name: `Périmètre ${enfant}` })).toBeVisible();
+    // La carte parent affiche son total avec le sous-périmètre : l'action du parent n'est comptée qu'une fois.
+    const total = carte.getByRole('group', { name: /^Total de .* avec ses sous-périmètres/ });
+    await expect(total).toContainText('Total avec 1 sous-périmètre(s)');
+    await expect(total).toContainText('1 ouverte(s) · 1 en retard');
 
     // Même périmètre dans la liste, rattaché au parent, et dans les sélecteurs de l'API.
     await page.getByText('Liste', { exact: true }).click();

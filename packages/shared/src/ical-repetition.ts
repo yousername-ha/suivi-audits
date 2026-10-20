@@ -1,8 +1,9 @@
 /* Règles de répétition iCalendar (RRULE) d'un événement : développement en jours, pour les cas courants des calendriers de
    jours fériés et de fermetures. Pris en charge : FREQ DAILY, WEEKLY, MONTHLY, YEARLY avec INTERVAL, COUNT, UNTIL ; BYDAY
-   (jours simples) pour WEEKLY ; BYMONTHDAY (jours positifs) pour MONTHLY et YEARLY ; BYMONTH pour MONTHLY (filtre) et YEARLY.
-   Tout le reste (jour de rang « premier lundi », BYSETPOS, BYWEEKNO, BYYEARDAY, heures…) est refusé explicitement plutôt que
-   deviné : l'appelant le signale et laisse l'événement de côté. */
+   (jours simples) pour WEEKLY ; pour MONTHLY et YEARLY (avec BYMONTH) : BYMONTHDAY, positif ou négatif (-1 = dernier jour), ou
+   BYDAY, tous les lundis du mois ou avec un rang (1MO premier lundi, -1FR dernier vendredi). Tout le reste (BYSETPOS, BYWEEKNO,
+   BYYEARDAY, heures, BYDAY avec BYMONTHDAY…) est refusé explicitement plutôt que deviné : l'appelant le signale et laisse
+   l'événement de côté. */
 import { validDate } from './grc.js';
 
 export type Frequence = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
@@ -12,8 +13,8 @@ export interface RegleRepetition {
   count: number | null;
   /** Dernier jour de la règle (AAAA-MM-JJ). */
   until: string | null;
-  /** Jours de la semaine (0 = dimanche). */
-  byday: number[] | null;
+  /** Jours de la semaine (0 = dimanche), avec leur rang dans le mois pour MONTHLY et YEARLY (1 = premier, -1 = dernier). */
+  byday: { jour: number; rang: number | null }[] | null;
   bymonth: number[] | null;
   bymonthday: number[] | null;
 }
@@ -32,6 +33,30 @@ function jourIcs(valeur: string): string | null {
   if (!m) return null;
   const j = `${m[1]}-${m[2]}-${m[3]}`;
   return validDate(j) ? j : null;
+}
+
+const joursDansMois = (annee: number, mois: number) => new Date(Date.UTC(annee, mois, 0)).getUTCDate();
+
+/** Jours (AAAA-MM-JJ, croissants) d'un mois désignés par BYDAY ou BYMONTHDAY ; sans l'un ni l'autre, le jour de début. */
+function joursDuMois(regle: RegleRepetition, annee: number, mois: number, defaut: number): string[] {
+  const total = joursDansMois(annee, mois);
+  const numeros = new Set<number>();
+  if (regle.byday) {
+    for (const { jour, rang } of regle.byday) {
+      const memes: number[] = [];
+      for (let d = 1; d <= total; d++) if (new Date(Date.UTC(annee, mois - 1, d)).getUTCDay() === jour) memes.push(d);
+      if (rang === null) memes.forEach((d) => numeros.add(d));
+      else {
+        const d = rang > 0 ? memes[rang - 1] : memes[memes.length + rang];
+        if (d !== undefined) numeros.add(d);
+      }
+    }
+  } else
+    for (const d of regle.bymonthday ?? [defaut]) {
+      const n = d > 0 ? d : total + d + 1;
+      if (n >= 1 && n <= total) numeros.add(n); // 31 février : sauté, comme le veut la norme
+    }
+  return [...numeros].sort((a, b) => a - b).map((d) => `${annee}-${pad(mois)}-${pad(d)}`);
 }
 
 /** Lit une règle ; renvoie la règle, ou la raison pour laquelle elle n'est pas prise en charge. */
@@ -54,6 +79,7 @@ export function lireRegle(brut: string): { regle: RegleRepetition } | { refus: s
   const autorisees = new Set(['FREQ', 'INTERVAL', 'COUNT', 'UNTIL', ...PARTIES_IGNOREES]);
   if (freq === 'WEEKLY') autorisees.add('BYDAY');
   if (freq === 'MONTHLY' || freq === 'YEARLY') {
+    autorisees.add('BYDAY');
     autorisees.add('BYMONTHDAY');
     autorisees.add('BYMONTH');
   }
@@ -75,12 +101,28 @@ export function lireRegle(brut: string): { regle: RegleRepetition } | { refus: s
     const out = v.split(',').map(lire);
     return out.some((x) => x === null) ? undefined : (out as number[]);
   };
-  const byday = liste(parties.get('BYDAY'), (s) => JOURS_SEMAINE[s] ?? null);
+  const jourRang = (s: string) => {
+    const m = /^([+-]?\d{1,2})?(SU|MO|TU|WE|TH|FR|SA)$/.exec(s);
+    if (!m) return null;
+    const rang = m[1] === undefined ? null : Number(m[1]);
+    return rang !== null && (rang === 0 || Math.abs(rang) > 5) ? null : { jour: JOURS_SEMAINE[m[2]!]!, rang };
+  };
+  let byday: { jour: number; rang: number | null }[] | null | undefined = null;
+  if (parties.has('BYDAY')) {
+    const lus = parties.get('BYDAY')!.split(',').map(jourRang);
+    byday = lus.some((x) => x === null) ? undefined : (lus as { jour: number; rang: number | null }[]);
+  }
   const bymonth = liste(parties.get('BYMONTH'), (s) => (/^\d+$/.test(s) && +s >= 1 && +s <= 12 ? +s : null));
-  const bymonthday = liste(parties.get('BYMONTHDAY'), (s) => (/^\d+$/.test(s) && +s >= 1 && +s <= 31 ? +s : null));
-  if (byday === undefined) return { refus: 'BYDAY avec rang ou valeur inconnue non pris en charge' };
+  const bymonthday = liste(parties.get('BYMONTHDAY'), (s) =>
+    /^-?\d+$/.test(s) && +s !== 0 && Math.abs(+s) <= 31 ? +s : null,
+  );
+  if (byday === undefined) return { refus: 'BYDAY invalide (rang de 1 à 5, jour MO à SU)' };
   if (bymonth === undefined) return { refus: 'BYMONTH invalide' };
-  if (bymonthday === undefined) return { refus: 'BYMONTHDAY négatif ou invalide non pris en charge' };
+  if (bymonthday === undefined) return { refus: 'BYMONTHDAY invalide' };
+  if (freq === 'WEEKLY' && byday?.some((d) => d.rang !== null))
+    return { refus: 'BYDAY avec rang sur une règle hebdomadaire non pris en charge' };
+  if (byday && bymonthday) return { refus: 'BYDAY et BYMONTHDAY ensemble non pris en charge' };
+  if (freq === 'YEARLY' && byday && !bymonth) return { refus: 'BYDAY annuel sans BYMONTH non pris en charge' };
   return { regle: { freq: freq as Frequence, interval: interval!, count, until, byday, bymonth, bymonthday } };
 }
 
@@ -113,14 +155,13 @@ export function developper(regle: RegleRepetition, debut: string, depuis: string
   if (regle.freq === 'DAILY') {
     for (let k = 0; k < MAX_ITERATIONS; k++) if (!prendre(ajouterJours(debut, k * regle.interval))) break;
   } else if (regle.freq === 'WEEKLY') {
-    const jours = [...(regle.byday ?? [new Date(debut + 'T12:00:00Z').getUTCDay()])].sort(
+    const jours = [...(regle.byday?.map((d) => d.jour) ?? [new Date(debut + 'T12:00:00Z').getUTCDay()])].sort(
       (a, b) => ((a + 6) % 7) - ((b + 6) % 7),
     );
     const lundi = ajouterJours(debut, -((new Date(debut + 'T12:00:00Z').getUTCDay() + 6) % 7));
     boucle: for (let k = 0; k < MAX_ITERATIONS; k++)
       for (const d of jours) if (!prendre(ajouterJours(lundi, k * 7 * regle.interval + ((d + 6) % 7)))) break boucle;
   } else if (regle.freq === 'MONTHLY') {
-    const jours = [...(regle.bymonthday ?? [d0])].sort((a, b) => a - b);
     boucle: for (let k = 0; k < MAX_ITERATIONS; k++) {
       const indice = m0 - 1 + k * regle.interval;
       const annee = y0 + Math.floor(indice / 12),
@@ -129,22 +170,14 @@ export function developper(regle: RegleRepetition, debut: string, depuis: string
         if (`${annee}-${pad(mois)}-01` > fin) break;
         continue;
       }
-      for (const d of jours) {
-        const j = `${annee}-${pad(mois)}-${pad(d)}`;
-        if (validDate(j) && !prendre(j)) break boucle; // les jours impossibles (31 février) sont sautés, comme le veut la norme
-      }
+      for (const j of joursDuMois(regle, annee, mois, d0)) if (!prendre(j)) break boucle;
       if (`${annee}-${pad(mois)}-01` > fin) break;
     }
   } else {
     const mois = [...(regle.bymonth ?? [m0])].sort((a, b) => a - b);
-    const jours = [...(regle.bymonthday ?? [d0])].sort((a, b) => a - b);
     boucle: for (let k = 0; k < MAX_ITERATIONS; k++) {
       const annee = y0 + k * regle.interval;
-      for (const m of mois)
-        for (const d of jours) {
-          const j = `${annee}-${pad(m)}-${pad(d)}`;
-          if (validDate(j) && !prendre(j)) break boucle;
-        }
+      for (const m of mois) for (const j of joursDuMois(regle, annee, m, d0)) if (!prendre(j)) break boucle;
       if (`${annee}-01-01` > fin) break;
     }
   }

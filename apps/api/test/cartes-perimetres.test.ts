@@ -186,6 +186,20 @@ describe('cartes de périmètres', () => {
     expect(total.conformite).toBeNull();
   });
 
+  it('la carte parent compte son ensemble une seule fois, sans additionner les cartes enfants', async () => {
+    const liste = await cartes(admin);
+    const a = liste.find((c) => c.id === A)!,
+      b = liste.find((c) => c.id === B)!;
+    expect(a.sousPerimetres).toBe(1);
+    // Le registre partagé figure dans A et dans B : la somme des deux cartes (5) compterait deux fois son action.
+    expect(a.compteurs.actions!.ouverts + b.compteurs.actions!.ouverts).toBe(5);
+    expect(a.total.actions).toEqual({ ouverts: 4, enRetard: 2 });
+    expect(a.total.conformite).toBeNull();
+    // Sans sous-périmètre, le total de la carte est son propre décompte.
+    expect(b.sousPerimetres).toBe(0);
+    expect(b.total).toEqual(b.compteurs);
+  });
+
   it('sans droit de lecture, le total est indisponible comme les cartes', async () => {
     const { total } = await synthese(sansDroit);
     expect(total).toEqual({ actions: null, recurrentes: null, ecarts: null, continuite: null, conformite: null });

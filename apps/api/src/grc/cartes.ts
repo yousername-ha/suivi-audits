@@ -59,6 +59,14 @@ function versCompteurs(l: Ligne | null, ecarts: boolean, pilotage: boolean): Car
   return c;
 }
 
+/** Le périmètre et tous ses descendants accessibles (sans cycle : la hiérarchie en interdit). */
+function descendance(perimetres: { id: string; parentId?: string | null }[], racine: string): string[] {
+  const out = [racine];
+  for (let i = 0; i < out.length; i++)
+    for (const p of perimetres) if (p.parentId === out[i] && !out.includes(p.id)) out.push(p.id);
+  return out;
+}
+
 export async function cartesPerimetres(g: Grc, user: SessionUser): Promise<SyntheseCartes> {
   const perimetres = await g.listSmsis(user);
   const masques = await g.registres.inaccessiblesPartout(user);
@@ -90,6 +98,13 @@ export async function cartesPerimetres(g: Grc, user: SessionUser): Promise<Synth
       // Sans référentiel activé, la conformité n'est pas mesurable : indisponible, pas 0 %.
       if (c && c.referentiels > 0) compteurs.conformite = { couvertes: c.couvertes, exigences: c.exigences };
     }
+    // Total de la carte : le périmètre et ses sous-périmètres, chaque élément une seule fois (jamais la somme des cartes
+    // enfants). Sans sous-périmètre, c'est le décompte de la carte ; la conformité ne s'additionne pas.
+    const ensemble = descendance(perimetres, p.id);
+    const total: CarteCompteurs =
+      ensemble.length === 1 || !(ecarts || pilotage)
+        ? { ...compteurs, conformite: ensemble.length === 1 ? compteurs.conformite : null }
+        : versCompteurs(await compter(g, ensemble, masques, maintenant), ecarts, pilotage);
     out.push({
       id: p.id,
       name: p.name,
@@ -97,11 +112,13 @@ export async function cartesPerimetres(g: Grc, user: SessionUser): Promise<Synth
       nature: p.nature,
       entityKind: p.entityKind,
       compteurs,
+      total,
+      sousPerimetres: ensemble.length - 1,
     });
   }
-  // Total : chaque élément compté une seule fois sur l'ensemble des périmètres accessibles (jamais la somme des cartes, qui
+  // Total général : chaque élément compté une seule fois sur l'ensemble des périmètres accessibles (jamais la somme des cartes, qui
   // compterait deux fois un registre partagé). La conformité ne s'additionne pas : indisponible.
-  const total =
+  const general =
     (ecarts || pilotage) && perimetres.length
       ? versCompteurs(
           await compter(
@@ -114,5 +131,5 @@ export async function cartesPerimetres(g: Grc, user: SessionUser): Promise<Synth
           pilotage,
         )
       : versCompteurs(null, false, false);
-  return { cartes: out, total };
+  return { cartes: out, total: general };
 }
