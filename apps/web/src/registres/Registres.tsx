@@ -25,6 +25,7 @@ import { ConfirmButton, DataTable, Page, PageHeader, StatusChip } from '@suivi/u
 import { api, get } from '../api';
 import { ErrorAlert, fmtDate } from '../components/common';
 import { Droits } from './Droits';
+import { ElementsFiltres } from './ElementsFiltres';
 
 interface Perimetre {
   id: string;
@@ -87,58 +88,69 @@ function ListeRegistres() {
         description="Un registre rassemble des actions, des écarts ou des tâches récurrentes et porte leurs périmètres : les éléments les héritent sans copie. Les droits se donnent à une personne ou à un groupe sur un registre entier."
         actions={<Button onClick={() => setCreation(true)}>Nouveau registre</Button>}
       />
-      <Stack>
-        <Group align="end">
-          <Select
-            label="Famille"
-            clearable
-            placeholder="Toutes les familles"
-            data={KIND_OPTIONS}
-            value={kind}
-            onChange={setKind}
-          />
-          <Checkbox
-            label="Afficher les registres archivés"
-            checked={archives}
-            onChange={(e) => setArchives(e.currentTarget.checked)}
-          />
-        </Group>
-        <ErrorAlert error={liste.error} />
-        <DataTable label="Registres accessibles, défilement horizontal possible">
-          <Table>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Registre</Table.Th>
-                <Table.Th>Famille</Table.Th>
-                <Table.Th>Périmètres</Table.Th>
-                <Table.Th>Éléments</Table.Th>
-                <Table.Th>Votre accès</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {(liste.data?.items ?? []).map((r) => (
-                <Table.Tr key={r.id}>
-                  <Table.Td>
-                    <Text component={Link} to={`/registres/${r.id}`} fw={600}>
-                      {r.name}
-                    </Text>
-                    <Puces r={r} />
-                  </Table.Td>
-                  <Table.Td>{REGISTRE_LABELS[r.kind]}</Table.Td>
-                  <Table.Td>{perimetresTexte(r)}</Table.Td>
-                  <Table.Td>{r.elements}</Table.Td>
-                  <Table.Td>{roleTexte(r)}</Table.Td>
-                </Table.Tr>
-              ))}
-              {liste.data && !liste.data.items.length && (
-                <Table.Tr>
-                  <Table.Td colSpan={5}>Aucun registre accessible.</Table.Td>
-                </Table.Tr>
-              )}
-            </Table.Tbody>
-          </Table>
-        </DataTable>
-      </Stack>
+      <Tabs defaultValue="registres" keepMounted={false}>
+        <Tabs.List>
+          <Tabs.Tab value="registres">Registres</Tabs.Tab>
+          <Tabs.Tab value="elements">Éléments par périmètre</Tabs.Tab>
+        </Tabs.List>
+        <Tabs.Panel value="registres" pt="md">
+          <Stack>
+            <Group align="end">
+              <Select
+                label="Famille"
+                clearable
+                placeholder="Toutes les familles"
+                data={KIND_OPTIONS}
+                value={kind}
+                onChange={setKind}
+              />
+              <Checkbox
+                label="Afficher les registres archivés"
+                checked={archives}
+                onChange={(e) => setArchives(e.currentTarget.checked)}
+              />
+            </Group>
+            <ErrorAlert error={liste.error} />
+            <DataTable label="Registres accessibles, défilement horizontal possible">
+              <Table>
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>Registre</Table.Th>
+                    <Table.Th>Famille</Table.Th>
+                    <Table.Th>Périmètres</Table.Th>
+                    <Table.Th>Éléments</Table.Th>
+                    <Table.Th>Votre accès</Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
+                  {(liste.data?.items ?? []).map((r) => (
+                    <Table.Tr key={r.id}>
+                      <Table.Td>
+                        <Text component={Link} to={`/registres/${r.id}`} fw={600}>
+                          {r.name}
+                        </Text>
+                        <Puces r={r} />
+                      </Table.Td>
+                      <Table.Td>{REGISTRE_LABELS[r.kind]}</Table.Td>
+                      <Table.Td>{perimetresTexte(r)}</Table.Td>
+                      <Table.Td>{r.elements}</Table.Td>
+                      <Table.Td>{roleTexte(r)}</Table.Td>
+                    </Table.Tr>
+                  ))}
+                  {liste.data && !liste.data.items.length && (
+                    <Table.Tr>
+                      <Table.Td colSpan={5}>Aucun registre accessible.</Table.Td>
+                    </Table.Tr>
+                  )}
+                </Table.Tbody>
+              </Table>
+            </DataTable>
+          </Stack>
+        </Tabs.Panel>
+        <Tabs.Panel value="elements" pt="md">
+          <ElementsFiltres />
+        </Tabs.Panel>
+      </Tabs>
       <NouveauRegistre
         ouvert={creation}
         onClose={() => setCreation(false)}

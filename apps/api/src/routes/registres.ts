@@ -2,6 +2,7 @@
    périmètres, droits attribués) est évaluée par le service, jamais par l'affichage. */
 import {
   ContributionAction,
+  DeplacementBody,
   DroitBody,
   REGISTRE_KINDS,
   ReouvertureOccurrenceBody,
@@ -52,6 +53,25 @@ export const registresRoutes = [
       const r = await svc.grc.registres.create(body, (s as Session).user, ip);
       setEtag(reply, r.version);
       return r;
+    },
+  }),
+  route({
+    ...base,
+    method: 'GET',
+    url: '/api/registres/elements',
+    summary: 'Éléments des registres d’un périmètre, filtrés par registres choisis (sans doublon)',
+    query: z
+      .object({
+        perimetre: z.uuid(),
+        registres: z.string().max(2000).default(''),
+        kind: z.enum(['action', 'nonconformity', 'task_series']).optional(),
+        search: z.string().max(200).default(''),
+        offset: z.coerce.number().int().min(0).max(1000000).default(0),
+      })
+      .strict(),
+    handler: async ({ svc, s, query }) => {
+      const registres = query.registres ? query.registres.split(',').map((x) => z.uuid().parse(x.trim())) : [];
+      return svc.grc.registres.elementsFiltres((s as Session).user, { ...query, registres });
     },
   }),
   route({
@@ -204,5 +224,22 @@ export const registresRoutes = [
     status: 201,
     handler: async ({ svc, s, params, body, ip }) =>
       svc.grc.validations.rouvrir(params.smsi, params.id, body, (s as Session).user, ip),
+  }),
+  route({
+    ...base,
+    method: 'POST',
+    url: '/api/grc/:smsi/objects/:id/deplacement',
+    summary: 'Déplacer un élément vers un autre registre de la même famille (aperçu d’impact, puis commande motivée)',
+    params: objet,
+    body: DeplacementBody,
+    handler: async ({ svc, s, params, body, req, ip }) =>
+      svc.grc.registres.deplacer(
+        params.smsi,
+        params.id,
+        body,
+        body.apercu ? 0 : requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      ),
   }),
 ];

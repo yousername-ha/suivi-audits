@@ -157,3 +157,29 @@ export interface ValidationDto {
 }
 /** État d'une occurrence : jamais validée, validée (dernière entrée du journal) ou rouverte. */
 export type EtatValidation = 'ouverte' | 'validee' | 'rouverte';
+
+/** Déplacement d'un élément vers un autre registre de la même famille : commande atomique, avec aperçu d'impact puis
+    confirmation motivée. Une série se déplace avec ses occurrences. */
+export const DeplacementBody = z
+  .object({
+    registreId: z.uuid(),
+    /** Aperçu seul : calcule l'impact sans rien écrire. */
+    apercu: z.boolean().default(false),
+    /** Les liens vers des fiches d'un autre périmètre de référence ne survivent pas au déplacement : à retirer en connaissance de cause. */
+    retirerLiensIncompatibles: z.boolean().default(false),
+    reason: z.string().trim().min(10).max(1000).optional(),
+  })
+  .strict();
+export type DeplacementBody = z.infer<typeof DeplacementBody>;
+export interface ImpactDeplacement {
+  depuis: { id: string; name: string; perimetres: { id: string; name: string }[] };
+  vers: { id: string; name: string; perimetres: { id: string; name: string }[] };
+  /** Éléments déplacés (la série et ses occurrences comptent chacune). */
+  elements: number;
+  /** Le périmètre de référence change : politique métier, fuseau et appartenance se lisent désormais dans le nouveau. */
+  referenceChange: boolean;
+  liensConserves: number;
+  liensIncompatibles: { ref: string; type: string; nom: string }[];
+  /** Obstacles bloquants (état inconnu du workflow cible, responsable non autorisé…). */
+  problemes: string[];
+}
