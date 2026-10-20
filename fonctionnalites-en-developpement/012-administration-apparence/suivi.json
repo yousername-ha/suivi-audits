@@ -34,8 +34,13 @@
       "date": "2026-10-20",
       "etape": "en-developpement",
       "motif": "v006 : export de traçabilité et de logs techniques, niveaux Info/Warning/Debug et diagnostic temporaire ; quatre visuels et 27 contrôles locaux, aucun journal réel consulté."
+    },
+    {
+      "date": "2026-10-20",
+      "etape": "en-developpement",
+      "motif": "v007-echelles-partagees : catalogue de fixtures partagé, versions publiées explicites, cotations historiques préservées ; 21 contrôles locaux, aucun backend modifié."
     }
   ],
   "numero": "012",
-  "maquetteCourante": "v006-journaux-exports"
+  "maquetteCourante": "v007-echelles-partagees"
 }

@@ -32,7 +32,7 @@
     {
       "id": "ebios-rm",
       "titre": "EBIOS RM",
-      "maquetteCourante": "fonctionnalites-en-developpement/003-ebios-rm/maquettes/v001-parcours-anime",
+      "maquetteCourante": "fonctionnalites-en-developpement/003-ebios-rm/maquettes/v002-echelles-plateforme",
       "statutMaquette": "a-valider",
       "implementation": "a-suivre",
       "tests": "fonctionnalites-en-developpement/003-ebios-rm/tests/README.md",
@@ -159,7 +159,7 @@
     {
       "id": "administration-apparence",
       "titre": "Administration et apparence globale",
-      "maquetteCourante": "fonctionnalites-en-developpement/012-administration-apparence/maquettes/v006-journaux-exports",
+      "maquetteCourante": "fonctionnalites-en-developpement/012-administration-apparence/maquettes/v007-echelles-partagees",
       "statutMaquette": "a-valider",
       "implementation": "a-suivre",
       "tests": "fonctionnalites-en-developpement/012-administration-apparence/tests/README.md",

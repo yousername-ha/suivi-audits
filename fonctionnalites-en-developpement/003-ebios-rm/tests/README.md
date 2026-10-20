@@ -19,3 +19,7 @@ Suivre aussi la [recette commune](../../_dossiers-transversaux/socle-astra/RECET
 [Rapport des 18 étapes](2026-10-14-parcours-complet.json) · [Script reproductible](parcours-complet.cjs).
 
 Lancer un serveur sur `127.0.0.1:8769` dans la maquette courante, puis `node fonctionnalites-en-developpement/003-ebios-rm/tests/parcours-complet.cjs` depuis la racine. Le test utilise un profil Chromium temporaire ; les notes synthétiques ne sont pas livrées.
+
+## Échelles partagées — 20 octobre 2026
+
+[21 contrôles locaux](../maquettes/v002-echelles-plateforme/technique/verification.json) sur le parcours configuration → publication → sélection dans Risques/EBIOS → historique. Les résultats antérieurs restent attachés à leur version. Aucun test serveur.

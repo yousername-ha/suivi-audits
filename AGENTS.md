@@ -137,3 +137,9 @@ Ces instructions utilisateur remplacent les consignes antérieures contradictoir
 - Prévoir le téléchargement des journaux de traçabilité et des journaux techniques dans Paramètres système, avec filtres et formats adaptés.
 - Info, Warning et Debug règlent les logs techniques ; ne jamais désactiver ou réduire la traçabilité métier avec ce réglage. Préserver les traces historiques et contrôler les droits d'export côté serveur.
 - La maquette n'utilise que des données fictives. Réutiliser le journal d'audit existant du socle ; documenter les extensions nécessaires sans créer de moteur concurrent.
+
+## Échelles transversales — demande du 20 octobre 2026
+
+- Risques et EBIOS RM utilisent les échelles déclarées dans Paramètres plateforme, leurs versions publiées et identifiants de niveaux. Ne pas créer de barèmes concurrents ni imposer quatre niveaux.
+- Préserver les versions des évaluations historiques. Une nouvelle publication ou un archivage ne recalcule pas les résultats passés. La matrice/politique compatible détermine la criticité, pas un calcul frontend implicite.
+- Le partage local des maquettes 012 v007 / 003 v002 est illustratif ; l'intégration réutilise le catalogue de configuration et les services d'évaluation du socle.

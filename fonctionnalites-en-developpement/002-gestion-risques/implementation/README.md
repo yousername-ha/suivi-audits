@@ -14,3 +14,7 @@ La cartographie dynamique reste protégée. Les exemples ANSSI ou fictifs des ma
 ## Socle transversal — 14 octobre 2026
 
 Lire également [le dossier GRC fondé sur l’export ARM](../../_dossiers-transversaux/grc-transversal/v001-dossier-arm/README.md) pour les registres, configurations, méthodes, migrations et parcours. Cette proposition complète les spécifications visuelles sans annoncer une intégration réalisée.
+
+## Échelles communes — 20 octobre 2026
+
+Le registre utilise les versions des échelles publiées depuis Paramètres plateforme. [Parcours partagé avec EBIOS RM](../../003-ebios-rm/maquettes/v002-echelles-plateforme/README.md) et [contrat d’intégration](../../003-ebios-rm/implementation/ECHELLES-PLATEFORME.md). Les axes deviennent dynamiques ; les couleurs de criticité restent celles de la matrice publiée compatible. La maquette de matrice v001 reste la référence graphique historique.

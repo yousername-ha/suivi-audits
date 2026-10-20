@@ -2,7 +2,7 @@
 
 ## Proposition du 20 octobre 2026
 
-[Paramètres système et plateforme — v006](PARAMETRES-SYSTEME-PLATEFORME.md) : deux pages à cartes, échelles personnalisables et trois modes de certificat, historique/conservation, messagerie technique et préférences par groupe/profil, export des journaux et niveaux techniques, à valider. Les notes ci-dessous restent le relevé historique de l’apparence.
+[Paramètres système et plateforme — v007](PARAMETRES-SYSTEME-PLATEFORME.md) : deux pages à cartes, échelles personnalisables et trois modes de certificat, historique/conservation, messagerie technique et préférences par groupe/profil, export des journaux et niveaux techniques, à valider. Les notes ci-dessous restent le relevé historique de l’apparence.
 
 ## Compatibilité vérifiée le 18 octobre 2026
 
@@ -12,7 +12,7 @@ Voir l’[audit de convergence](../../AUDIT-CONVERGENCE.md) et le [prompt couran
 
 **État : intégration de cette proposition à suivre.** Le déplacement des dossiers n’implémente pas la maquette dans le moteur métier existant.
 
-1. Lire la [maquette courante](../maquettes/v006-journaux-exports/README.md) et sa fiche de version.
+1. Lire la [maquette courante](../maquettes/v007-echelles-partagees/README.md) et sa fiche de version.
 2. Lire le [dossier technique commun](../../_dossiers-transversaux/socle-astra/README.md), ses invariants et l’inventaire des menus.
 3. Appliquer uniquement le périmètre demandé pour cette fonctionnalité ; rattacher les éléments visuels aux objets et permissions réels.
 4. Exécuter les [contrôles de la fonctionnalité](../tests/README.md), puis documenter le SHA, les changements et les résultats.
@@ -20,3 +20,5 @@ Voir l’[audit de convergence](../../AUDIT-CONVERGENCE.md) et le [prompt couran
 L’agent chargé de l’intégration doit travailler et publier exclusivement sur **sa propre branche dédiée**, en utilisant `legacy` comme référence en lecture. Le [prompt commun](../../_dossiers-transversaux/socle-astra/PROMPT-IMPLEMENTATION.md) conserve cette restriction. Cette réorganisation ne lance aucune intégration, CI, fusion ou mise en production.
 
 La cartographie dynamique reste protégée. Les exemples ANSSI ou fictifs des maquettes ne sont pas des données de production.
+
+Complément courant : [Échelles communes — Risques et EBIOS RM](../../003-ebios-rm/implementation/ECHELLES-PLATEFORME.md).

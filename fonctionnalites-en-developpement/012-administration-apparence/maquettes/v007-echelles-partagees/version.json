@@ -1,0 +1,18 @@
+{
+  "id": "v007-echelles-partagees",
+  "statut": "a-valider",
+  "date": "2026-10-20",
+  "versionPrecedente": "v006-journaux-exports",
+  "validationUtilisateur": null,
+  "integrationBackend": false,
+  "references": [
+    "fonctionnalites-en-developpement/012-administration-apparence/maquettes/v007-echelles-partagees/visuels/01-publication-echelle.png"
+  ],
+  "visuels": [
+    {
+      "fichier": "visuels/01-publication-echelle.png",
+      "titre": "Publication d’une échelle partagée",
+      "sha256": "38f90852eeb5d0e30f6a0a1a43ec8224c4d4472685d873fa1188eb1c98066b04"
+    }
+  ]
+}

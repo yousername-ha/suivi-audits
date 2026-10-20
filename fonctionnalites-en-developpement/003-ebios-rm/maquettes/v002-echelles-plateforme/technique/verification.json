@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-20",
+  "result": "passed",
+  "checks": [
+    "Échelles non attribuées implicitement",
+    "Niveaux issus du catalogue commun",
+    "Matrice et niveaux synchronisés",
+    "Justification requise",
+    "Références et niveaux historisés",
+    "Lien configuration ouvre les échelles",
+    "Brouillon non exposé aux études",
+    "Nouvelle version publiée explicitement",
+    "Nouvelle version disponible sans recharger le serveur",
+    "Nombre de niveaux dynamique et libellés personnalisés",
+    "Matrice dimensionnée 5 × 4 sans barème inventé",
+    "Historique v1 inchangé après publication v2",
+    "Même sélecteur dans le registre des risques",
+    "Échelle archivée interdit une nouvelle cotation",
+    "Version archivée reste consultable dans historique",
+    "Accès aux échelles depuis atelier 1",
+    "Accès aux échelles depuis atelier 4",
+    "Scénario pédagogique toujours accessible",
+    "Cartes cotation contenues sur mobile",
+    "Historique restitué après navigation et rechargement",
+    "Aucune erreur JavaScript"
+  ],
+  "errors": [],
+  "backendTeste": false,
+  "limites": "Même origine navigateur et fixtures ; aucune API, cotation serveur, permission réelle ou intégrité cryptographique vérifiée."
+}
