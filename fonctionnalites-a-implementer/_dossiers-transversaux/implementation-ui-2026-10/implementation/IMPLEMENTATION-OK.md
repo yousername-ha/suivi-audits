@@ -30,9 +30,8 @@ request rejoue la suite complète sur le commit exact.
 ## Limites
 
 - Les constats historiques du périmètre commun (outil de suivi d'origine) ne sont pas des fiches de registre : ils ne se déplacent pas.
-- Calendriers iCalendar : fichier ou texte seulement (aucune adresse distante consultée) ; règles de répétition (RRULE) non développées ; heure et fuseau des événements ignorés.
-- Une carte de périmètre compte les éléments visibles dans son périmètre : un registre multi-périmètre figure dans chacune de ses cartes, aucun total général n'est produit.
-- Récidive : pas de parcours Playwright de bout en bout (un constat clos exige causes et preuves de vérification) ; la règle est couverte par `pilotage.test.ts`.
+- Calendriers iCalendar : fichier ou texte seulement (aucune adresse distante consultée) ; règles de répétition (RRULE) usuelles développées (cinq ans en avant au plus), règles rares signalées et laissées de côté ; heure et fuseau des événements ignorés.
+- Une carte de périmètre compte les éléments visibles dans son périmètre : un registre multi-périmètre figure dans chacune de ses cartes ; le total général affiché sous les cartes compte chaque élément une seule fois.
 - Aucun fichier du module cartographique dynamique n'a été modifié.
 
 Ce fichier atteste le tableau de la recette, pas l'absence de défaut ; la recette du RSSI sur son serveur reste à faire.
