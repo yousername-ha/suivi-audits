@@ -14,8 +14,13 @@
       "date": "2026-10-20",
       "etape": "en-developpement",
       "motif": "v002 : deux espaces système/plateforme, 15 cartes, six aperçus et 19 contrôles locaux ; proposition à valider, aucune opération réelle."
+    },
+    {
+      "date": "2026-10-20",
+      "etape": "en-developpement",
+      "motif": "v003 : création/suppression et personnalisation des échelles ; certificat importé, autosigné ou ACME ; six visuels et 39 contrôles locaux, aucun backend modifié."
     }
   ],
   "numero": "012",
-  "maquetteCourante": "v002-deux-espaces"
+  "maquetteCourante": "v003-echelles-certificats"
 }

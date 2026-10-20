@@ -1,6 +1,6 @@
-# Paramètres système et plateforme — proposition v002
+# Paramètres système et plateforme — proposition v003
 
-Statut : maquette à valider, dossier préparatoire. [Galerie et sources](../maquettes/v002-deux-espaces/README.md). Cette version étend 012, sans créer un second module d’administration concurrent. Elle ne remplace pas les fonctionnalités 019 Configuration GRC et 022 Gestion des droits : elle fournit leurs points d’entrée.
+Statut : maquette à valider, dossier préparatoire. [Galerie et sources courantes](../maquettes/v003-echelles-certificats/README.md). Cette version étend 012, sans créer un second module d’administration concurrent. Elle ne remplace pas les fonctionnalités 019 Configuration GRC et 022 Gestion des droits : elle fournit leurs points d’entrée.
 
 ## Navigation proposée
 
@@ -55,6 +55,48 @@ Les échelles publiées et évaluations historiques restent versionnées. Les ch
 
 Auditer les contrats actuels sur la branche de codage (L1), raccorder coque/navigation et écrans de consultation (L2), puis les formulaires et opérations autorisées avec leurs tests métier. Les composants de 019 et 022 sont réutilisés à leur place. Les nouveaux écrans ne bloquent pas arbitrairement les autres modules.
 
-La présente livraison propose une navigation et six aperçus. Dix-neuf contrôles locaux vérifient les interactions principales, la mémoire de simulation, le lien vers 022 et les dimensions. Aucun backend, exécutant système, déploiement, sauvegarde, restauration ou changement TLS n’a été testé. Le contraste et l’accessibilité complète restent à recetter.
+La présente livraison propose une navigation et six aperçus. La recette v002 comptait dix-neuf contrôles locaux vérifiant les interactions principales, la mémoire de simulation, le lien vers 022 et les dimensions. Aucun backend, exécutant système, déploiement, sauvegarde, restauration ou changement TLS n’a été testé. Le contraste et l’accessibilité complète restent à recetter.
 
 Après validation de cette version, finaliser contrats, scénarios de recette et prompt, puis déplacer le dossier entier vers « à implémenter ». L’IA de codage travaille uniquement sur sa propre branche ; Claude et legacy lui servent de références en lecture. Un marqueur d’implémentation vérifié sera nécessaire pour le classement « implémenté ».
+
+## Extension v003 — personnalisation des échelles
+
+Demande utilisateur confirmée : pouvoir ajouter/supprimer pour personnaliser les échelles, au-delà de libellés fixes. La maquette prévoit création, duplication, nom et nature, niveaux ajoutables/supprimables/réordonnables, score, couleur et description libre. Un niveau garde son identifiant lors d’un déplacement. La duplication crée de nouveaux identifiants.
+
+Le contrat lu dans `packages/shared/src/config-grc.ts` (`ScaleDefinition`, `ScaleLevel`) expose déjà niveaux, descriptions, valeurs, couleurs, nature et versions. Il impose 2 à 20 niveaux, identifiants uniques, valeurs renseignées strictement croissantes, score obligatoire en quantitatif. Les limites numériques sont reprises du schéma : −1 milliard à +1 milliard. La maquette applique ces règles ; élargir leur plage éventuelle relève d’une décision métier, pas d’une divergence silencieuse du frontend.
+
+Le champ « Description / critère » de chaque ligne représente la description libre du niveau. Les critères par dimension, l’unité, la catégorie, l’applicabilité, l’acceptabilité et l’effet du niveau existent aussi dans le contrat ; ne pas les effacer lors de l’édition d’un objet réel. Ils ne sont pas édités dans cette proposition ciblée. Conserver ces attributs dans l’adaptateur, ou les exposer dans un détail avancé lors de leur conception.
+
+Une modification de niveau constitue une nouvelle proposition de version, pas une réécriture de l’ancienne. Avant publication : appeler la prévisualisation et lire usages/impact ; vérifier les matrices et correspondances qui référencent les identifiants retirés. Les analyses historiques restent épinglées à leur version. Le nouveau nombre de niveaux n’impose pas de recalcul des anciennes évaluations.
+
+Supprimer : brouillon jamais publié seulement, avec confirmation. Archiver : échelle déjà publiée, conservée pour ses usages historiques et retirée des nouveaux choix. La suppression en masse ou une cascade vers les évaluations n’est pas prévue. La maquette illustre ces états avec des snapshots fictifs ; l’autorisation, la concurrence et l’intégrité appartiennent au serveur.
+
+## Extension v003 — les trois modes de certificat
+
+1. **Certificat fourni** : sélectionner certificat/chaîne PEM et clé PEM ; présenter après contrôle serveur domaine/SAN, dates, empreinte, chaîne et correspondance clé/certificat. Le prototype conserve uniquement les noms ; il ne lit pas le contenu des fichiers. Les formats chiffrés/PFX et passphrases ne sont pas présentés comme supportés par le contrat actuel.
+2. **Autosigné** : noms DNS/SAN, durée souhaitée, choix de clé illustratif. Faire générer la clé dans le service d’exploitation, jamais dans les fichiers de maquette. La durée et les algorithmes seront validés par la politique réelle. Prévoir confirmation et suivi du changement ; un autosigné ne devient pas automatiquement une autorité reconnue par les postes.
+3. **ACME** : Let’s Encrypt ou annuaire configurable ; staging/production pour Let’s Encrypt, liste de noms DNS, contact, validation HTTP-01 ou DNS-01 et renouvellement. Pour un autre service, résoudre son annuaire, ses conditions et capacités côté serveur. Le choix affiché n’atteste aucune compatibilité backend existante.
+
+HTTP-01 utilise le port 80 et ne délivre pas de certificat générique ; DNS-01 permet les noms génériques, nécessite la gestion du TXT et peut être automatisé via une API DNS compatible. Les identifiants doivent être limités au besoin et conservés côté serveur, pas dans le navigateur ou les logs. [Documentation officielle des challenges](https://letsencrypt.org/docs/challenge-types/).
+
+Prévoir un essai en staging avant émission de production. Les certificats staging ne sont pas reconnus par les magasins de confiance habituels ; ne pas les présenter comme un certificat de production. [Documentation officielle du staging](https://letsencrypt.org/docs/staging-environment/).
+
+Le prototype illustre les noms DNS. Ne pas en déduire le support ou l’absence de support des adresses IP par le produit final : vérifier le client, l’autorité et les contrats retenus. Les valeurs `example.org`/`exemple.test` sont des exemples, jamais des domaines à émettre réellement pour cette livraison.
+
+### Correspondance backend réellement observée
+
+Même instantané en lecture seule `284cb1e4ffbaee37e0952073db5659c2257c888e`. `OperationIn` dans `packages/shared/src/exploitation.ts` expose `tls_install` avec `certificate` et `privateKey`, ainsi que `tls_reset` avec confirmation. Le reset n’est pas assimilé à une génération autosignée personnalisable. `HostState` expose le mode TLS (`env`, `web`, `external`). `apps/api/src/operations.ts` refuse une modification incompatible avec une gestion serveur/externe.
+
+L’import doit donc réutiliser les opérations existantes en vérifiant la capacité de l’exécutant et HTTPS. Les contrats dédiés d’émission autosignée avec SAN/durée/type de clé et de compte/émission/renouvellement ACME ne sont pas démontrés par ce relevé. Demander leur prise en charge au socle métier avant raccordement ; ne pas leur inventer des endpoints. Si le TLS est géré par un proxy ou service externe, afficher le responsable et l’état, sans proposer un changement local impossible.
+
+### Parcours réel à finaliser
+
+Prévisualiser les changements, confirmer l’application puis suivre l’opération. Conserver le certificat actif jusqu’au succès du remplacement ; prévoir l’échec et le retour à la configuration précédente. Une demande acceptée ne vaut pas certificat installé. Pour ACME : journal de challenge, prochain renouvellement, erreurs, reprise et notification ; aucun renouvellement réussi fictif dans le produit.
+
+Conserver permissions serveur, MFA/CSRF, concurrence, chiffrement des secrets et audit sans secrets. L’annuaire ACME personnalisé doit être validé selon la politique réseau de l’installation ; HTTPS seul n’est pas une protection suffisante contre les requêtes serveur non autorisées. Les conditions de l’autorité doivent être présentées et acceptées dans le parcours réel. La case de la maquette ne réalise aucun acte auprès d’un service.
+
+### Recette v003
+
+39 contrôles locaux exécutés : personnalisation, suppression/archivage, conservation des snapshots, limites du contrat, import fictif, durée autosignée, choix ACME, joker HTTP/DNS, annuaire HTTPS, erreurs, mobile et absence d’appels API. [Résultats](../maquettes/v003-echelles-certificats/technique/verification.json). Aucune vérification cryptographique, connexion DNS, demande ACME, publication d’échelle ou modification réelle du serveur.
+
+Six nouveaux visuels remplacent les détails d’échelles/certificat de v002 comme référence courante. Les vues générales à cartes restent celles du même parcours. La version v002 est conservée à titre historique.

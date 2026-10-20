@@ -114,3 +114,8 @@ Ces instructions utilisateur remplacent les consignes antérieures contradictoir
 - La demande actuelle inclut la **conception des écrans** de sauvegarde/restauration, mises à jour, stack, statistiques de ressources et certificat dans « Paramètres système ». Elle ne lance aucune opération technique réelle.
 - « Paramètres plateforme » regroupe configuration métier (échelles, matrices, catalogues), utilisateurs/groupes/droits et préférences communes. La maquette 012 v002 fournit ces points d’entrée ; réutiliser 019 et 022, sans créer de gestion concurrente.
 - Deux entrées dans Administration sont proposées, avec cartes à icônes et détails centraux. L’ordonnancement reste à valider. Les métriques et états des captures sont fictifs.
+
+## Personnalisation des paramètres — complément du 20 octobre 2026
+
+- Les échelles doivent permettre création, suppression adaptée à leur statut, ajout/retrait de niveaux, réordonnancement et personnalisation des valeurs, libellés, critères et couleurs. Préserver les versions publiées et leurs usages ; utiliser le catalogue existant.
+- Le parcours certificat comporte trois choix : import du certificat de l’organisation, génération autosignée, service Let’s Encrypt / ACME. La livraison actuelle reste une maquette ; aucune émission, clé, opération DNS ou installation réelle n’est autorisée implicitement par ce travail graphique.
