@@ -475,6 +475,8 @@ export const grcObjects = pgTable('grc_objects', {
   createdAt: tstz('created_at').notNull(),
   updatedAt: tstz('updated_at').notNull(),
   registreId: uuid('registre_id'),
+  /** Position de l'action dans son plan (migration 032) ; vide : après les actions ordonnées. */
+  rang: integer('rang'),
 });
 export const grcObjectVersions = pgTable('grc_object_versions', {
   id: uuid('id').primaryKey(),
@@ -1450,6 +1452,11 @@ export const registres = pgTable('registres', {
   createdAt: tstz('created_at').notNull(),
   updatedBy: text('updated_by').notNull(),
   updatedAt: tstz('updated_at').notNull(),
+  /** Plan d'actions conteneur (migration 032). */
+  dateDebut: date('date_debut'),
+  dateFin: date('date_fin'),
+  statut: text('statut').notNull(),
+  responsable: jsonb('responsable'),
 });
 
 /** Périmètres d'un registre ; les éléments du registre les héritent. */

@@ -79,7 +79,8 @@ export function BusinessRegistry({
   kind: GrcKind;
   legacyKey?: string;
   onOpen: (o: GrcObject) => void;
-  onCreate: (k: GrcKind) => void;
+  /** `init` : valeurs préremplies de la fiche créée (par exemple l'audit d'origine ou le constat dont c'est la récidive). */
+  onCreate: (k: GrcKind, init?: Record<string, unknown>) => void;
   onDecision: (o: GrcObject, operation: PilotageRecord['operation']) => void;
   onSchedule?: (o: GrcObject) => void;
 }) {
@@ -211,6 +212,27 @@ export function BusinessRegistry({
             )}
             {writable && kind === 'nonconformity' && o.data.status === 'closed' && (
               <Menu.Item onClick={() => onDecision(o, 'reopen')}>Rouvrir le constat</Menu.Item>
+            )}
+            {writable && kind === 'nonconformity' && o.data.status === 'closed' && !o.id.startsWith('legacy:') && (
+              <Menu.Item
+                onClick={() =>
+                  onCreate('nonconformity', {
+                    name: `Récidive : ${o.name}`.slice(0, 200),
+                    recidiveRef: 'object:' + o.id,
+                    auditRef: o.data.auditRef ?? null,
+                    classification: o.data.classification ?? '',
+                    findingType: o.data.findingType,
+                    origin: o.data.origin,
+                  })
+                }
+              >
+                Déclarer une récidive
+              </Menu.Item>
+            )}
+            {kind === 'audit' && can('ecarts', 'modifier') && !o.id.startsWith('legacy:') && (
+              <Menu.Item onClick={() => onCreate('nonconformity', { auditRef: 'object:' + o.id, origin: 'audit' })}>
+                Constater un écart pour cet audit
+              </Menu.Item>
             )}
             {editable &&
               [

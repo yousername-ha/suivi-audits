@@ -22,7 +22,10 @@ import {
   type Module,
   type RegistreDto,
   type RegistreKind,
+  type ResponsableRef,
   type RoleRessource,
+  type StatutPlanRegistre,
+  OrdreBody,
 } from '@suivi/shared';
 import type { SessionUser } from '../auth.js';
 import type { Client } from '../db/db.js';
@@ -30,8 +33,8 @@ import { HttpError } from '../http/errors.js';
 import { DEFAULT_SMSI, objectColumns, objectDto, type ObjectRow, type Grc } from './core.js';
 
 const MODULE: Module = 'ecarts';
-const colonnes = `id,kind,name,description,reference_smsi_id AS "referenceId",restricted,archived,par_defaut AS "parDefaut",version`;
-const colonnesR = `r.id,r.kind,r.name,r.description,r.reference_smsi_id AS "referenceId",r.restricted,r.archived,r.par_defaut AS "parDefaut",r.version`;
+const colonnes = `id,kind,name,description,reference_smsi_id AS "referenceId",restricted,archived,par_defaut AS "parDefaut",version,to_char(date_debut,'YYYY-MM-DD') AS "dateDebut",to_char(date_fin,'YYYY-MM-DD') AS "dateFin",statut,responsable`;
+const colonnesR = `r.id,r.kind,r.name,r.description,r.reference_smsi_id AS "referenceId",r.restricted,r.archived,r.par_defaut AS "parDefaut",r.version,to_char(r.date_debut,'YYYY-MM-DD') AS "dateDebut",to_char(r.date_fin,'YYYY-MM-DD') AS "dateFin",r.statut,r.responsable`;
 export interface RegistreRow {
   id: string;
   kind: RegistreKind;
@@ -42,6 +45,10 @@ export interface RegistreRow {
   archived: boolean;
   parDefaut: boolean;
   version: number;
+  dateDebut: string | null;
+  dateFin: string | null;
+  statut: StatutPlanRegistre;
+  responsable: ResponsableRef | null;
 }
 type TypeRessource = 'registre' | 'objet';
 const unique = <T>(l: readonly T[]) => [...new Set(l)];
@@ -223,6 +230,13 @@ export class GrcRegistres {
         )
       ).rows[0]!.n,
     );
+    const avancement = (
+      await this.q(c).query<{ total: number; terminees: number }>(
+        `SELECT count(*)::int AS total, count(*) FILTER (WHERE data->>'status'='done')::int AS terminees
+           FROM grc_objects WHERE registre_id=$1 AND NOT archived AND kind='action'`,
+        [reg.id],
+      )
+    ).rows[0]!;
     return {
       id: reg.id,
       kind: reg.kind,
@@ -233,6 +247,11 @@ export class GrcRegistres {
       archived: reg.archived,
       parDefaut: reg.parDefaut,
       version: reg.version,
+      dateDebut: reg.dateDebut,
+      dateFin: reg.dateFin,
+      statut: reg.statut,
+      responsable: reg.responsable,
+      avancement,
       perimetres: visibles,
       autresPerimetres: ids.length - visibles.length,
       role: await this.roleDe(user, reg.id, null, c),
@@ -295,6 +314,22 @@ export class GrcRegistres {
     return cree.id;
   }
 
+  /** Champs d'un plan d'actions : refusés hors de cette famille ; un responsable doit exister et compter une personne active. */
+  private async champsPlan(
+    kind: RegistreKind,
+    smsi: string,
+    v: { dateDebut: string | null; dateFin: string | null; statut: StatutPlanRegistre; responsable: ResponsableRef | null },
+    c: Client,
+  ) {
+    if (kind !== 'plan_actions') {
+      if (v.dateDebut || v.dateFin || v.responsable || v.statut !== 'prevu')
+        throw new HttpError(422, 'Dates, statut et responsable ne concernent que les plans d’actions.');
+      return v;
+    }
+    if (v.responsable) await this.g.annuaires.resoudre(smsi, v.responsable, c);
+    return v;
+  }
+
   async create(input: RegistreBody, user: SessionUser, ip: string) {
     const b = RegistreBody.parse(input);
     await this.g.modules.assert(MODULE);
@@ -306,11 +341,23 @@ export class GrcRegistres {
         if (!user.rights.can(MODULE, 'modifier')) throw new HttpError(403, 'Droit requis : ecarts:modifier');
         for (const id of ids) await this.g.access(id, user, true, c);
       }
+      const plan = await this.champsPlan(b.kind, b.referenceId, b, c);
       const reg = (
         await c.query<RegistreRow>(
-          `INSERT INTO registres(kind,name,description,reference_smsi_id,restricted,created_by,updated_by)
-           VALUES($1,$2,$3,$4,$5,$6,$6) RETURNING ${colonnes}`,
-          [b.kind, b.name, b.description, b.referenceId, b.restreint, user.username],
+          `INSERT INTO registres(kind,name,description,reference_smsi_id,restricted,created_by,updated_by,date_debut,date_fin,statut,responsable)
+           VALUES($1,$2,$3,$4,$5,$6,$6,$7,$8,$9,$10) RETURNING ${colonnes}`,
+          [
+            b.kind,
+            b.name,
+            b.description,
+            b.referenceId,
+            b.restreint,
+            user.username,
+            plan.dateDebut,
+            plan.dateFin,
+            plan.statut,
+            plan.responsable ? JSON.stringify(plan.responsable) : null,
+          ],
         )
       ).rows[0]!;
       for (const id of ids)
@@ -334,13 +381,81 @@ export class GrcRegistres {
       await this.exiger(user, reg, null, 'gerer', c);
       if (reg.archived) throw new HttpError(409, 'Registre archivé.');
       if (reg.version !== expected) throw new HttpError(412, 'Le registre a changé. Rechargez avant de confirmer.');
+      const plan = await this.champsPlan(
+        reg.kind,
+        reg.referenceId,
+        {
+          dateDebut: b.dateDebut === undefined ? reg.dateDebut : b.dateDebut,
+          dateFin: b.dateFin === undefined ? reg.dateFin : b.dateFin,
+          statut: b.statut ?? reg.statut,
+          responsable: b.responsable === undefined ? reg.responsable : b.responsable,
+        },
+        c,
+      );
+      if (plan.dateDebut && plan.dateFin && plan.dateDebut > plan.dateFin)
+        throw new HttpError(422, 'La date de fin ne peut pas précéder la date de début.');
       const nouveau = (
         await c.query<RegistreRow>(
-          `UPDATE registres SET name=$2,description=$3,restricted=$4,version=version+1,updated_by=$5,updated_at=now() WHERE id=$1 RETURNING ${colonnes}`,
-          [id, b.name, b.description, b.restreint, user.username],
+          `UPDATE registres SET name=$2,description=$3,restricted=$4,date_debut=$6,date_fin=$7,statut=$8,responsable=$9,
+                  version=version+1,updated_by=$5,updated_at=now() WHERE id=$1 RETURNING ${colonnes}`,
+          [
+            id,
+            b.name,
+            b.description,
+            b.restreint,
+            user.username,
+            plan.dateDebut,
+            plan.dateFin,
+            plan.statut,
+            plan.responsable ? JSON.stringify(plan.responsable) : null,
+          ],
         )
       ).rows[0]!;
-      await this.g.db.audit(user, ip, 'registre.updated', id, { version: nouveau.version, restreint: b.restreint }, c);
+      await this.g.db.audit(
+        user,
+        ip,
+        'registre.updated',
+        id,
+        { version: nouveau.version, restreint: b.restreint, statut: plan.statut },
+        c,
+      );
+      await this.g.notify(c, id, nouveau.version, nouveau.referenceId, MODULE, user.username);
+      return this.dto(user, nouveau, c);
+    }, user.username);
+  }
+
+  /** Ordre des actions d'un plan : commande atomique (droit de gestion, `If-Match`) ; les actions citées prennent le rang de
+      leur position, les autres passent après. */
+  async ordonner(id: string, input: OrdreBody, expected: number, user: SessionUser, ip: string) {
+    const b = OrdreBody.parse(input);
+    return this.g.db.tx(async (c) => {
+      const reg = await this.brut(id, c, true);
+      if (!reg) throw new HttpError(404, 'Registre introuvable ou non accessible.');
+      await this.exiger(user, reg, null, 'gerer', c);
+      if (reg.archived) throw new HttpError(409, 'Registre archivé.');
+      if (reg.kind !== 'plan_actions') throw new HttpError(422, 'Seuls les plans d’actions ont des actions ordonnées.');
+      if (reg.version !== expected) throw new HttpError(412, 'Le registre a changé. Rechargez avant de confirmer.');
+      const ids = unique(b.ids);
+      if (ids.length !== b.ids.length) throw new HttpError(422, 'Une action est citée deux fois.');
+      const connues = (
+        await c.query(
+          "SELECT 1 FROM grc_objects WHERE registre_id=$1 AND kind='action' AND NOT archived AND id=ANY($2::uuid[])",
+          [id, ids],
+        )
+      ).rowCount;
+      if (connues !== ids.length) throw new HttpError(422, 'Une action citée n’appartient pas à ce plan.');
+      await c.query('UPDATE grc_objects SET rang=NULL WHERE registre_id=$1 AND rang IS NOT NULL', [id]);
+      await c.query(
+        `UPDATE grc_objects o SET rang=t.rang FROM unnest($1::uuid[]) WITH ORDINALITY AS t(id,rang) WHERE o.id=t.id`,
+        [ids],
+      );
+      const nouveau = (
+        await c.query<RegistreRow>(
+          `UPDATE registres SET version=version+1,updated_by=$2,updated_at=now() WHERE id=$1 RETURNING ${colonnes}`,
+          [id, user.username],
+        )
+      ).rows[0]!;
+      await this.g.db.audit(user, ip, 'registre.ordre', id, { actions: ids.length, version: nouveau.version }, c);
       await this.g.notify(c, id, nouveau.version, nouveau.referenceId, MODULE, user.username);
       return this.dto(user, nouveau, c);
     }, user.username);
@@ -445,7 +560,7 @@ export class GrcRegistres {
     args.push(offset);
     const items = (
       await this.g.db.q<ObjectRow>(
-        `SELECT ${objectColumns} FROM grc_objects WHERE ${where} ORDER BY updated_at DESC,id LIMIT 50 OFFSET $${args.length}`,
+        `SELECT ${objectColumns} FROM grc_objects WHERE ${where} ORDER BY rang NULLS LAST,updated_at DESC,id LIMIT 50 OFFSET $${args.length}`,
         args,
       )
     ).rows.map(objectDto);
@@ -472,7 +587,7 @@ export class GrcRegistres {
     args.push(f.offset);
     const items = (
       await this.g.db.q<ObjectRow>(
-        `SELECT ${objectColumns} FROM grc_objects WHERE ${where} ORDER BY updated_at DESC,id LIMIT 50 OFFSET $${args.length}`,
+        `SELECT ${objectColumns} FROM grc_objects WHERE ${where} ORDER BY rang NULLS LAST,updated_at DESC,id LIMIT 50 OFFSET $${args.length}`,
         args,
       )
     ).rows.map(objectDto);
@@ -574,7 +689,7 @@ export class GrcRegistres {
       for (const m of membres) {
         const row = (
           await c.query<ObjectRow>(
-            `UPDATE grc_objects SET smsi_id=$2,registre_id=$3,version=version+1,updated_by=$4,updated_at=now() WHERE id=$1 RETURNING ${objectColumns}`,
+            `UPDATE grc_objects SET smsi_id=$2,registre_id=$3,rang=NULL,version=version+1,updated_by=$4,updated_at=now() WHERE id=$1 RETURNING ${objectColumns}`,
             [m.id, nouveau, cible.id, user.username],
           )
         ).rows[0]!;
