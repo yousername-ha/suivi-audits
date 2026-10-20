@@ -52,6 +52,7 @@ import { GrcRisks } from './risks.js';
 import { GrcStudyConfig } from './study-config.js';
 import { LegacyTasks } from './legacy-tasks.js';
 import { GrcRegistres } from './registres.js';
+import { GrcValidations } from './validations.js';
 import { GrcTasks } from './tasks.js';
 export const DEFAULT_SMSI = '00000000-0000-4000-8000-000000000001';
 /** Fiche de l'outil de suivi propre au périmètre commun. Les fournisseurs (`legacy:suppliers:`) sont à l'échelle de
@@ -151,6 +152,7 @@ export class Grc {
   readonly studyConfig: GrcStudyConfig;
   readonly tasks: GrcTasks;
   readonly registres: GrcRegistres;
+  readonly validations: GrcValidations;
   constructor(
     readonly db: Db,
     readonly legacy: LegacyStore,
@@ -168,6 +170,7 @@ export class Grc {
     this.studyConfig = new GrcStudyConfig(this);
     this.tasks = new GrcTasks(this);
     this.registres = new GrcRegistres(this);
+    this.validations = new GrcValidations(this);
   }
   async isAdmin(user: SessionUser, c?: Client) {
     return (await loadGrants(c ?? this.db.pool, user.id)).some(

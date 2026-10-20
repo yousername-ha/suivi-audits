@@ -113,3 +113,47 @@ export interface RegistreDto {
   peut: Record<Besoin, boolean>;
   elements: number;
 }
+
+/** Validation d'une occurrence de tâche récurrente (migration 030) : résultat, compte rendu et référence de preuve. */
+export const RESULTATS_VALIDATION = ['ok', 'ko', 'na'] as const;
+export type ResultatValidation = (typeof RESULTATS_VALIDATION)[number];
+export const RESULTAT_LABELS: Record<ResultatValidation, string> = {
+  ok: 'Réalisée (OK)',
+  ko: 'Non réalisée (KO)',
+  na: 'Non applicable (NA)',
+};
+export const ValidationOccurrenceBody = z
+  .object({
+    /** Identifiant de requête fourni par le client : rejouer la commande ne crée pas de second enregistrement. */
+    requestId: z.uuid(),
+    result: z.enum(RESULTATS_VALIDATION),
+    comment: z.string().trim().max(5000).default(''),
+    /** Référence d'une preuve versionnée (par exemple `document:<id>`) ; facultative. */
+    proofRef: z.string().trim().max(500).default(''),
+  })
+  .strict()
+  .superRefine((v, c) => {
+    if (v.result !== 'ok' && v.comment.length < 10)
+      c.addIssue({
+        code: 'custom',
+        path: ['comment'],
+        message: 'Un KO ou un NA se justifie (10 caractères au moins).',
+      });
+  });
+export type ValidationOccurrenceBody = z.infer<typeof ValidationOccurrenceBody>;
+export const ReouvertureOccurrenceBody = z
+  .object({ requestId: z.uuid(), reason: z.string().trim().min(10).max(5000) })
+  .strict();
+export type ReouvertureOccurrenceBody = z.infer<typeof ReouvertureOccurrenceBody>;
+export interface ValidationDto {
+  id: string;
+  seq: number;
+  kind: 'validation' | 'reouverture';
+  result: ResultatValidation | null;
+  comment: string;
+  proofRef: string;
+  createdBy: string;
+  createdAt: string;
+}
+/** État d'une occurrence : jamais validée, validée (dernière entrée du journal) ou rouverte. */
+export type EtatValidation = 'ouverte' | 'validee' | 'rouverte';
