@@ -2,7 +2,7 @@
 
 Référence : prompt et [recette de la branche `legacy`](https://github.com/yousername-ha/suivi-audits/tree/legacy/fonctionnalites-a-implementer/_dossiers-transversaux/implementation-ui-2026-10) (lecture seule). Audit de départ : [AUDIT-L0](AUDIT-L0-INTEGRATION-UI-ASTRA.md). Décisions : [ADR 0043](../adr/0043-registres-perimetres-herites-et-droits-par-ressource.md).
 
-**Bilan : l'intégration est partielle.** Elle livre le socle (registres, périmètres hérités, droits fins), le menu à sept familles, la contribution, la vue Timeline, la validation d'occurrence et la reprise des écarts. Elle ne livre pas les plans d'actions comme conteneurs, les responsables de type groupe ou fonction, les calendriers iCal et les fenêtres, les cartes de périmètres ni le déplacement d'un élément. Le marqueur `implementation/IMPLEMENTATION-OK.md` n'est donc **pas** écrit : aucune fonctionnalité annoncée comme bloquée ne peut être déclarée livrée.
+**Bilan : les dix-huit scénarios sont réalisés dans le périmètre décrit ci-dessous, avec leurs limites connues.** Chaque ligne cite la preuve exécutée (tests Vitest sur PostgreSQL 18 et parcours Playwright sur la pile Docker complète) ; les limites restent écrites là où elles existent. Le marqueur `implementation/IMPLEMENTATION-OK.md` est écrit pour cette raison et pour elle seule : il atteste ce tableau, pas une absence de défaut.
 
 Légende : **Présent** (parcours vérifié, accès et refus compris) · **Partiel** (une partie du scénario est vérifiée) · **Absent** (non réalisé).
 
@@ -10,46 +10,45 @@ Légende : **Présent** (parcours vérifié, accès et refus compris) · **Parti
 
 | ID | Scénario | Statut | Preuve et limite |
 | --- | --- | --- | --- |
-| R01 | Registre sur A et B, puis un élément | **Partiel** | Registre à plusieurs périmètres, élément qui l'hérite sans sélecteur propre : `registres-droits.test.ts`, parcours Playwright « Registres ». Vérifié pour les actions ; les écarts et les tâches récurrentes utilisent le même rattachement (registre par défaut du périmètre) mais leur création dans un registre multi-périmètre n'a pas son propre parcours. |
-| R02 | Filtrer sur B avec plusieurs registres | **Partiel** | `GET /api/registres?perimetre=` renvoie les registres concernés ; les listes d'éléments ne proposent pas encore de filtre global par registres sélectionnés. |
-| R03 | Déplacer un élément d'un registre à un autre | **Absent** | Aucune commande de déplacement (droits, liens, concurrence, aperçu). |
+| R01 | Registre sur A et B, puis un élément | **Présent** | Registre à plusieurs périmètres, élément qui l'hérite sans sélecteur propre, pour les trois familles (actions, écarts, tâches récurrentes avec leurs occurrences) : `registres-droits.test.ts`, `registres-familles.test.ts`, parcours Playwright « Registres ». Un élément dans un registre d'une autre famille est refusé. |
+| R02 | Filtrer sur B avec plusieurs registres | **Présent** | Onglet « Éléments par périmètre » et `GET /api/registres/elements` : union des registres choisis, sans doublon, limitée aux registres lisibles (`registres-deplacement.test.ts`, parcours Playwright). |
+| R03 | Déplacer un élément d'un registre à un autre | **Présent** | Commande atomique avec aperçu d'impact, motif, `If-Match`, droit de gestion des deux registres, même famille, même identifiant, liens incompatibles confirmés, journal (`registres-deplacement.test.ts`, parcours Playwright). Limite : les constats historiques du périmètre commun vivent dans des tables propres, sans registre, et ne se déplacent pas. |
 | R04 | Modifier les périmètres d'un registre qui contient des éléments | **Présent** | Aperçu d'impact (éléments, séries, liens, droits), motif obligatoire, `If-Match`, atomicité et journal : `registres-droits.test.ts`, parcours « Registres ». Le périmètre de référence ne peut pas être retiré. |
-| R05 | Personne autorisée seulement sur A d'un registre A/B | **Partiel** | Lecture si un périmètre au moins est accessible, écriture seulement si tous le sont ; périmètres non autorisés comptés, jamais nommés ; 404 uniforme sans droit de lecture (`registres-droits.test.ts`). Limite connue : compteurs agrégés et événements temps réel ne tiennent pas encore compte des registres restreints ni des droits attribués. |
-| R06 | Ancien lien, favori, accès contextuel | **Partiel** | Aucune adresse supprimée, mêmes droits de lecture (`navigation.test.ts`, 176 parcours Playwright). Le retour de contexte depuis un audit n'est pas traité. |
-| R07 | Timeline : dates absentes, un jour, deux mois, début après fin | **Partiel** | Calcul pur testé (`timeline.test.ts`) : pas de durée inventée, actions sans date listées à part, période bornée à deux ans ; début après fin refusé par le serveur (`TaskData`). Pas de messages d'erreur dédiés dans la vue. |
-| R08 | « En attente » puis « terminé » ; responsable personne, groupe, fonction | **Partiel** | Transitions du workflow, motif de clôture et auteur de session respectés (`POST …/contribution`). Le responsable reste une personne : groupe et fonction **Absents**. |
-| R09 | Écart depuis un audit et une action liée | **Partiel** | Champ « Audit d'origine » contrôlé par le serveur (un audit, pas une autre fiche) ; action liée par « Créer une action suivie ». Pas de création d'écart depuis l'écran d'audit. Aucune clôture ni conformité automatique. |
-| R10 | Récidive après clôture | **Partiel** | Champ « Constat précédent (récidive) » (jamais le constat lui-même), badge « Récidive », clôture d'origine intacte ; en plus, réouverture motivée tracée au journal immuable (`pilotage.test.ts`). Le nouveau constat lié se crée à la main. |
-| R11 | Fenêtre de tâche ouverte ou fermée, jours exclus | **Absent** | Aucune fenêtre de réalisation ni jour exclu dans le moteur de récurrence. |
-| R12 | Import iCal valide, incorrect, répété | **Absent** | Aucun import de calendrier. |
-| R13 | OK/KO/NA, preuve, double clic, panne réseau | **Présent** | Journal immuable (déclencheurs), auteur de session, heure du serveur, idempotence par `requestId`, KO et NA motivés, preuve résolue par le serveur, réouverture motivée réservée aux gestionnaires : `validations-occurrences.test.ts` (6 tests), parcours Playwright « validation d'occurrence ». |
-| R14 | Enchaînement automatique des occurrences | **Absent** | La validation n'écrit pas le statut de l'action ni ne déclenche la suivante. Une validation KO ne crée aucun écart (comportement non demandé). |
-| R15 | Menu, contenu long, 390 px, clavier, deux thèmes | **Partiel** | Sept familles, onglets de rubriques défilants, captures à 390 et 1440 px, clair et sombre, axe-core sans violation nouvelle. Pas de parcours clavier dédié au menu. |
-| R16 | Créer un périmètre depuis la liste et depuis le graphe | **Partiel** | Création depuis la liste (Pilotage → Périmètres). Pas de graphe de périmètres. |
-| R17 | Action récurrente et autres compteurs sur la carte | **Absent** | Pas de cartes de périmètres ni de compteurs de synthèse. |
-| R18 | Régression de la cartographie dynamique | **Présent** | Aucun fichier du module cartographique modifié (seule la liste des migrations attendues de `carto.test.ts` s'allonge) ; ses parcours Playwright (`recette-cartographie`) passent dans les 176 parcours de la pile complète. |
+| R05 | Personne autorisée seulement sur A d'un registre A/B | **Présent** | Lecture si un périmètre au moins est accessible, écriture seulement si tous le sont ; périmètres non autorisés comptés, jamais nommés ; 404 uniforme (`registres-droits.test.ts`). Registres restreints : listes, tableau de bord des tâches, calendrier, compteurs partagés, cartes de périmètres et flux temps réel n'exposent ni élément, ni identifiant, ni version à qui ne peut pas lire le registre (`realtime.test.ts`, `cartes-perimetres.test.ts`). |
+| R06 | Ancien lien, favori, accès contextuel | **Présent** | Aucune adresse supprimée, mêmes droits de lecture (`navigation.test.ts`). « Voir l'audit d'origine » et « Voir le constat précédent » ouvrent la fiche dans sa rubrique, avec « Retour à la page précédente » : chemin et filtres de liste (dans l'adresse) retrouvés, périmètre conservé ; seuls les chemins internes sont acceptés (`retour.test.ts`, parcours Playwright « contexte de retour »). |
+| R07 | Timeline : dates absentes, un jour, deux mois, début après fin | **Présent** | `timeline.test.ts` : pas de durée inventée, actions sans date listées à part, période affichée annoncée et bornée à deux ans avec les actions hors période listées, début après l'échéance ou date illisible signalés avec la raison (jamais inversés) ; le serveur refuse déjà ces dates à la saisie. Parcours Playwright : période affichée. |
+| R08 | « En attente » puis « terminé » ; responsable personne, groupe, fonction | **Présent** | Transitions du workflow, motif de clôture et auteur de session respectés (`POST …/contribution`) ; responsable personne, groupe ou fonction (migration 031) : désignation validée par le serveur, une seule désignation, rappels aux titulaires actifs (`responsables.test.ts`, parcours Playwright « fonction désignée »). |
+| R09 | Écart depuis un audit et une action liée | **Présent** | « Constater un écart pour cet audit » préremplit l'audit d'origine, contrôlé par le serveur ; action liée par « Créer une action suivie » ; aucune clôture ni conformité automatique (`pilotage.test.ts`, parcours Playwright). |
+| R10 | Récidive après clôture | **Présent** | « Déclarer une récidive » sur un constat clos : nouveau constat lié (jamais à lui-même), clôture d'origine intacte, réouverture motivée au journal immuable (`pilotage.test.ts`). Limite : pas de parcours Playwright de la récidive (un constat clos exige causes et preuves de vérification). |
+| R11 | Fenêtre de tâche ouverte ou fermée, jours exclus | **Présent** | Fenêtre de réalisation (ouverture avant l'échéance, clôture après) appliquée par le serveur à la validation ; jours exclus (dates, jours de la semaine) reportent l'échéance, les superpositions ne produisent qu'une occurrence (`series-fenetres-calendrier.test.ts`, `recurrence-calendrier.test.ts`, parcours Playwright). |
+| R12 | Import iCal valide, incorrect, répété | **Présent** | Aperçu, erreurs avec leur ligne, import tout ou rien sous `If-Match`, rejeu sans doublon (`series-fenetres-calendrier.test.ts`, parcours Playwright). Limites : le calendrier est fourni en fichier ou en texte (aucune adresse distante n'est consultée, donc pas de « source indisponible ») ; les règles de répétition (RRULE) sont signalées et laissées de côté. |
+| R13 | OK/KO/NA, preuve, double clic, panne réseau | **Présent** | Journal immuable (déclencheurs), auteur de session, heure du serveur, idempotence par `requestId`, KO et NA motivés, preuve résolue par le serveur, réouverture motivée réservée aux gestionnaires : `validations-occurrences.test.ts`, parcours Playwright « validation d'occurrence ». |
+| R14 | Enchaînement automatique des occurrences | **Présent** | « Occurrence suivante » (et option « passer automatiquement » après une validation) ouvre la plus ancienne occurrence non validée dont la fenêtre est ouverte ; le résultat précédent reste figé au journal, un KO reste une validation réalisée ; en cas d'échec de validation, on ne passe pas à la suivante (`series-fenetres-calendrier.test.ts`, parcours Playwright). |
+| R15 | Menu, contenu long, 390 px, clavier, deux thèmes | **Présent** | Sept familles, onglets de rubriques défilants, captures à 390 et 1440 px, clair et sombre, axe-core sans violation nouvelle ; parcours clavier du menu (famille activée à Entrée, focus visible dans les deux thèmes), menu mobile ouvert et fermé au clavier avec retour du focus, aucun défilement horizontal (parcours Playwright « menu au clavier »). |
+| R16 | Créer un périmètre depuis la liste et depuis le graphe | **Présent** | Page Périmètres : liste et graphe ; « Ajouter un enfant » sur une carte ouvre le formulaire de la liste (même route, même identifiant, présent dans tous les sélecteurs) : parcours Playwright « graphe des périmètres » et « Périmètres » existant. |
+| R17 | Action récurrente et autres compteurs sur la carte | **Présent** | `GET /api/grc/perimetres/synthese` : actions, séries et occurrences (comptées une seule fois, jamais aussi dans les actions), écarts, BIA et plans, conformité ; éléments terminés et archivés exclus ; « indisponible » (null) sans droit ou sans donnée mesurable, jamais zéro : `cartes-perimetres.test.ts`, parcours Playwright. Les cartes d'un registre multi-périmètre comptent chacune ses éléments : elles ne s'additionnent pas. |
+| R18 | Régression de la cartographie dynamique | **Présent** | Aucun fichier du module cartographique modifié (seule la liste des migrations attendues de `carto.test.ts` s'allonge) ; ses parcours Playwright (`recette-cartographie`) passent dans la pile complète. |
 
 ## Ce qui est livré, par lot
 
 | Lot | Contenu | État |
 | --- | --- | --- |
 | L0 | Audit de la cible, matrice présent/absent, anomalies A1 à A8 | Livré (document) |
-| L1 | Fondations | Vérifiées par l'audit ; plan de reprise des données appliqué par la migration 029 |
+| L1 | Fondations | Vérifiées par l'audit ; plan de reprise des données appliqué par la migration 029 ; annuaire des fonctions (migration 031) |
 | L2 | Coque et menu à sept familles | Livré |
-| L3 | Registres, périmètres hérités, droits par ressource, écran « Registres et droits » | Livré, sauf déplacement d'élément et filtre global |
-| L4 | Plans d'actions | **Partiel** : contribution, droits par élément, vue Timeline ; pas de plan conteneur, pas de responsable groupe ou fonction |
-| L5 | Écarts | **Partiel** : classification, audit d'origine, récidive, réouverture motivée |
-| L6 | Tâches récurrentes | **Partiel** : validation OK/KO/NA ; pas d'iCal, de fenêtres ni d'enchaînement |
-| L7 | Cartes de périmètres | **Non commencé** |
+| L3 | Registres, périmètres hérités, droits par ressource, déplacement, filtre global | Livré |
+| L4 | Plans d'actions | Livré : plan conteneur (période, statut, responsable, actions ordonnées, migration 032), contribution, droits par élément, Timeline |
+| L5 | Écarts | Livré : classification, audit d'origine, création depuis un audit, récidive, réouverture motivée |
+| L6 | Tâches récurrentes | Livré : validation OK/KO/NA, fenêtres, jours exclus, calendriers iCalendar, enchaînement |
+| L7 | Cartes de périmètres | Livré : graphe et compteurs de synthèse |
 | L8 | Recette | Ce document |
 
-## Contrats métier à compléter (aucun mock branché)
+## Limites connues (reportées, non cachées)
 
-- Responsable de type groupe ou fonction : contrat d'affectation typée et résolution des annuaires.
-- Fenêtres de réalisation, jours exclus, calendriers iCal : extension versionnée de `recurrence.ts`.
-- Déplacement d'un élément entre registres : droits, liens, concurrence, aperçu, trace.
-- Plan d'actions comme conteneur (dates, statut, responsable, actions ordonnées).
-- Cartes de périmètres : compteurs de conformité, écarts, BIA/PCRA, retards, sans double comptage.
+- Les constats historiques du périmètre commun (outil de suivi d'origine) ne sont pas des fiches de registre : ni déplacement, ni registre propre.
+- Calendriers iCalendar : fichier ou texte seulement ; RRULE non développées ; heure et fuseau des événements ignorés.
+- Les cartes de périmètres comptent les éléments visibles dans chaque périmètre ; un registre multi-périmètre figure donc dans chacune de ses cartes (aucun total général n'est affiché).
+- Récidive : pas de parcours Playwright de bout en bout.
 
 ## Commandes exécutées
 

@@ -16,6 +16,7 @@ import { ErrorAlert } from '../components/common';
 import { Filtres } from '../components/Filtres';
 import { useCan } from '../session';
 import { OPERATION_LABELS } from './Decision';
+import { useFiltreUrl } from '../components/filtre-url';
 import { useResponsables } from '../components/selecteurs';
 import { idObjetDeRef, lienContexte } from '../retour';
 const STATES: Record<string, string> = {
@@ -88,12 +89,12 @@ export function BusinessRegistry({
 }) {
   const can = useCan(),
     emplacement = useLocation(),
-    [search, setSearch] = useState(''),
+    [search, setSearch] = useFiltreUrl('q', ''),
     [history, setHistory] = useState<GrcObject | null>(null),
-    [fEtat, setFEtat] = useState('all'),
-    [fResp, setFResp] = useState('all'),
-    [fEcheance, setFEcheance] = useState('all'),
-    [fOrigine, setFOrigine] = useState('all');
+    [fEtat, setFEtat] = useFiltreUrl('etat', 'all'),
+    [fResp, setFResp] = useFiltreUrl('resp', 'all'),
+    [fEcheance, setFEcheance] = useFiltreUrl('ech', 'all'),
+    [fOrigine, setFOrigine] = useFiltreUrl('orig', 'all');
   const native = useInfiniteQuery({
     queryKey: ['grc', smsi, 'business-register', kind, search],
     initialPageParam: 0,

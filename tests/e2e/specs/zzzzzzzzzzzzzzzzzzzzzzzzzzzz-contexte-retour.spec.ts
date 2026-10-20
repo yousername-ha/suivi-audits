@@ -61,6 +61,9 @@ test('Écart → audit d’origine → retour à la liste ; Timeline avec pério
     await page.reload();
     await page.getByRole('combobox', { name: 'Périmètre affiché', exact: true }).click();
     await page.getByRole('option', { name: perimetre, exact: true }).click();
+    // Un filtre saisi dans la liste fait partie du contexte : il est retrouvé au retour.
+    await page.getByRole('textbox', { name: 'Rechercher', exact: true }).fill('contextuel');
+    await expect(page).toHaveURL(/[?&]q=contextuel/);
     await page.getByRole('button', { name: `Autres actions pour ${nomEcart}` }).click();
     await page.getByRole('menuitem', { name: 'Voir l’audit d’origine' }).click();
     await expect(page).toHaveURL(/\/pilotage\/audits/);
@@ -69,6 +72,7 @@ test('Écart → audit d’origine → retour à la liste ; Timeline avec pério
     await fiche.getByRole('button', { name: 'Fermer' }).click();
     await page.getByRole('link', { name: 'Retour à la page précédente' }).click();
     await expect(page).toHaveURL(/\/pilotage\/ecarts/);
+    await expect(page.getByRole('textbox', { name: 'Rechercher', exact: true })).toHaveValue('contextuel');
     // Le périmètre choisi est conservé : l'écart est toujours dans la liste.
     await expect(page.getByText(nomEcart, { exact: true }).first()).toBeVisible();
 
