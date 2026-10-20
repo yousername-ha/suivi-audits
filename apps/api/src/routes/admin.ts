@@ -1,5 +1,5 @@
 /* Administration : sessions, journal d'audit, versions de l'état legacy, système (droits : routes/access.ts). */
-import { BackupsOut, BackupJobOut, BackupRequestIn, SystemeOut } from '@suivi/shared';
+import { BackupsOut, BackupJobOut, BackupRequestIn, FonctionBody, SystemeOut } from '@suivi/shared';
 import { z } from 'zod';
 import type { Session } from '../auth.js';
 import { HttpError } from '../http/errors.js';
@@ -10,6 +10,47 @@ import { systemStatus } from '../systeme.js';
 import { requireIfMatch } from '../http/concurrency.js';
 
 export const adminRoutes = [
+  /* ---------------------------------------------------------------- Fonctions (annuaire de responsables) */
+  route({
+    method: 'GET',
+    url: '/api/admin/fonctions',
+    summary: 'Fonctions de l’organisation et leurs titulaires',
+    tags: ['Administration'],
+    access: 'administration:lire',
+    handler: async ({ svc }) => svc.grc.annuaires.lister(),
+  }),
+  route({
+    method: 'POST',
+    url: '/api/admin/fonctions',
+    summary: 'Créer une fonction',
+    tags: ['Administration'],
+    access: 'administration:administrer',
+    body: FonctionBody,
+    status: 201,
+    handler: async ({ svc, s, body, ip }) => svc.grc.annuaires.creer(body, (s as Session).user, ip),
+  }),
+  route({
+    method: 'PUT',
+    url: '/api/admin/fonctions/:id',
+    summary: 'Modifier une fonction et ses titulaires',
+    tags: ['Administration'],
+    access: 'administration:administrer',
+    params: z.object({ id: z.uuid() }),
+    body: FonctionBody,
+    handler: async ({ svc, s, params, body, ip }) =>
+      svc.grc.annuaires.modifier(params.id, body, (s as Session).user, ip),
+  }),
+  route({
+    method: 'DELETE',
+    url: '/api/admin/fonctions/:id',
+    summary: 'Archiver une fonction (les fiches qui la désignent restent lisibles)',
+    tags: ['Administration'],
+    access: 'administration:administrer',
+    params: z.object({ id: z.uuid() }),
+    handler: async ({ svc, s, params, ip }) => {
+      await svc.grc.annuaires.archiver(params.id, (s as Session).user, ip);
+    },
+  }),
   /* ---------------------------------------------------------------- Sessions */
   route({
     method: 'GET',

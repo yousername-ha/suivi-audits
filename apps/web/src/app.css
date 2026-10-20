@@ -1456,3 +1456,42 @@ rect.audit-niv-faible {
 .hier-n8 {
   padding-inline-start: calc(var(--mantine-spacing-md) * 8 + var(--mantine-spacing-xs));
 }
+
+/* Graphe des périmètres : cartes de synthèse dans un SVG (positions en attributs, aucun style en ligne). */
+.graphe-perimetres {
+  display: block;
+  max-inline-size: none;
+}
+.graphe-lien {
+  stroke: var(--mantine-color-default-border);
+  stroke-width: var(--suivi-trait-l);
+}
+.graphe-carte {
+  box-sizing: border-box;
+  block-size: 100%;
+  padding: var(--mantine-spacing-xs);
+  background: var(--suivi-surface);
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  overflow: hidden;
+}
+.graphe-compteurs {
+  margin: var(--mantine-spacing-2xs) 0;
+  font-size: var(--mantine-font-size-xs);
+}
+.graphe-compteurs div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-xs);
+}
+.graphe-compteurs dt {
+  margin: 0;
+}
+.graphe-compteurs dd {
+  margin: 0;
+  text-align: end;
+}
+.graphe-alerte {
+  color: var(--mantine-color-red-7);
+  font-weight: 600;
+}

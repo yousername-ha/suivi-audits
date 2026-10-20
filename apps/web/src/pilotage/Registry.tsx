@@ -10,12 +10,15 @@ import {
 } from '@suivi/shared';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useState } from 'react';
+import { Link, useLocation } from 'react-router';
 import { download, get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { Filtres } from '../components/Filtres';
 import { useCan } from '../session';
 import { OPERATION_LABELS } from './Decision';
+import { useFiltreUrl } from '../components/filtre-url';
 import { useResponsables } from '../components/selecteurs';
+import { idObjetDeRef, lienContexte } from '../retour';
 const STATES: Record<string, string> = {
   draft: 'À préparer',
   review: 'À valider',
@@ -79,17 +82,19 @@ export function BusinessRegistry({
   kind: GrcKind;
   legacyKey?: string;
   onOpen: (o: GrcObject) => void;
-  onCreate: (k: GrcKind) => void;
+  /** `init` : valeurs préremplies de la fiche créée (par exemple l'audit d'origine ou le constat dont c'est la récidive). */
+  onCreate: (k: GrcKind, init?: Record<string, unknown>) => void;
   onDecision: (o: GrcObject, operation: PilotageRecord['operation']) => void;
   onSchedule?: (o: GrcObject) => void;
 }) {
   const can = useCan(),
-    [search, setSearch] = useState(''),
+    emplacement = useLocation(),
+    [search, setSearch] = useFiltreUrl('q', ''),
     [history, setHistory] = useState<GrcObject | null>(null),
-    [fEtat, setFEtat] = useState('all'),
-    [fResp, setFResp] = useState('all'),
-    [fEcheance, setFEcheance] = useState('all'),
-    [fOrigine, setFOrigine] = useState('all');
+    [fEtat, setFEtat] = useFiltreUrl('etat', 'all'),
+    [fResp, setFResp] = useFiltreUrl('resp', 'all'),
+    [fEcheance, setFEcheance] = useFiltreUrl('ech', 'all'),
+    [fOrigine, setFOrigine] = useFiltreUrl('orig', 'all');
   const native = useInfiniteQuery({
     queryKey: ['grc', smsi, 'business-register', kind, search],
     initialPageParam: 0,
@@ -211,6 +216,47 @@ export function BusinessRegistry({
             )}
             {writable && kind === 'nonconformity' && o.data.status === 'closed' && (
               <Menu.Item onClick={() => onDecision(o, 'reopen')}>Rouvrir le constat</Menu.Item>
+            )}
+            {kind === 'nonconformity' && idObjetDeRef(o.data.auditRef) && (
+              <Menu.Item
+                component={Link}
+                to={lienContexte('audits', idObjetDeRef(o.data.auditRef)!, emplacement.pathname + emplacement.search)}
+              >
+                Voir l’audit d’origine
+              </Menu.Item>
+            )}
+            {kind === 'nonconformity' && idObjetDeRef(o.data.recidiveRef) && (
+              <Menu.Item
+                component={Link}
+                to={lienContexte(
+                  'amelioration',
+                  idObjetDeRef(o.data.recidiveRef)!,
+                  emplacement.pathname + emplacement.search,
+                )}
+              >
+                Voir le constat précédent
+              </Menu.Item>
+            )}
+            {writable && kind === 'nonconformity' && o.data.status === 'closed' && !o.id.startsWith('legacy:') && (
+              <Menu.Item
+                onClick={() =>
+                  onCreate('nonconformity', {
+                    name: `Récidive : ${o.name}`.slice(0, 200),
+                    recidiveRef: 'object:' + o.id,
+                    auditRef: o.data.auditRef ?? null,
+                    classification: o.data.classification ?? '',
+                    findingType: o.data.findingType,
+                    origin: o.data.origin,
+                  })
+                }
+              >
+                Déclarer une récidive
+              </Menu.Item>
+            )}
+            {kind === 'audit' && can('ecarts', 'modifier') && !o.id.startsWith('legacy:') && (
+              <Menu.Item onClick={() => onCreate('nonconformity', { auditRef: 'object:' + o.id, origin: 'audit' })}>
+                Constater un écart pour cet audit
+              </Menu.Item>
             )}
             {editable &&
               [

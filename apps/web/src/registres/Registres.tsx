@@ -20,10 +20,21 @@ import { notifications } from '@mantine/notifications';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
-import { REGISTRE_KINDS, REGISTRE_LABELS, ROLE_LABELS, type GrcObject, type RegistreDto } from '@suivi/shared';
+import {
+  REGISTRE_KINDS,
+  REGISTRE_LABELS,
+  ROLE_LABELS,
+  STATUT_PLAN_REGISTRE_LABELS,
+  STATUTS_PLAN_REGISTRE,
+  type GrcObject,
+  type RegistreDto,
+  type ResponsableRef,
+  type StatutPlanRegistre,
+} from '@suivi/shared';
 import { ConfirmButton, DataTable, Page, PageHeader, StatusChip } from '@suivi/ui';
 import { api, get } from '../api';
 import { ErrorAlert, fmtDate } from '../components/common';
+import { libelleDesignation, SelecteurResponsableTypé, useProposables } from '../components/selecteurs';
 import { Droits } from './Droits';
 import { ElementsFiltres } from './ElementsFiltres';
 
@@ -51,6 +62,11 @@ const usePerimetres = () => useQuery({ queryKey: ['grc', 'smsis'], queryFn: () =
 function Puces({ r }: { r: RegistreDto }) {
   return (
     <Group gap="xs">
+      {r.kind === 'plan_actions' && (
+        <StatusChip etat={r.statut === 'termine' ? 'succes' : r.statut === 'abandonne' ? 'neutre' : 'info'}>
+          {STATUT_PLAN_REGISTRE_LABELS[r.statut]}
+        </StatusChip>
+      )}
       {r.parDefaut && <StatusChip etat="neutre">Par défaut</StatusChip>}
       {r.restreint && <StatusChip etat="attention">Restreint</StatusChip>}
       {r.archived && <StatusChip etat="neutre">Archivé</StatusChip>}
@@ -164,6 +180,28 @@ function ListeRegistres() {
   );
 }
 
+const dateFr = (d: string | null) => (d ? new Date(d + 'T00:00:00').toLocaleDateString('fr-FR') : null);
+
+/** Dates, responsable et avancement d'un plan d'actions (le plan est le conteneur ordonné de ses actions). */
+function ResumePlan({ r }: { r: RegistreDto }) {
+  const proposables = useProposables(r.referenceId, !!r.responsable);
+  const periode =
+    r.dateDebut || r.dateFin
+      ? `${r.dateDebut ? 'du ' + dateFr(r.dateDebut) : ''}${r.dateDebut && r.dateFin ? ' ' : ''}${r.dateFin ? 'au ' + dateFr(r.dateFin) : ''}`
+      : 'Sans période';
+  return (
+    <Group gap="xl" role="group" aria-label="Plan d’actions">
+      <Text size="sm">Période : {periode}</Text>
+      <Text size="sm">
+        Responsable :{' '}
+        {r.responsable ? libelleDesignation({ responsable: r.responsable }, proposables.data) : 'Non attribué'}
+      </Text>
+      <Text size="sm">
+        Avancement : {r.avancement.terminees} action(s) terminée(s) sur {r.avancement.total}
+      </Text>
+    </Group>
+  );
+}
 function NouveauRegistre({
   ouvert,
   onClose,
@@ -267,6 +305,7 @@ function FicheRegistre({ id }: { id: string }) {
         <Stack>
           <Puces r={r} />
           {r.description && <Text>{r.description}</Text>}
+          {r.kind === 'plan_actions' && <ResumePlan r={r} />}
           <Tabs defaultValue="elements" keepMounted={false}>
             <Tabs.List>
               <Tabs.Tab value="elements">Éléments ({r.elements})</Tabs.Tab>
@@ -275,7 +314,7 @@ function FicheRegistre({ id }: { id: string }) {
               {r.peut.gerer && <Tabs.Tab value="parametres">Paramètres</Tabs.Tab>}
             </Tabs.List>
             <Tabs.Panel value="elements" pt="md">
-              <Elements id={id} />
+              <Elements r={r} />
             </Tabs.Panel>
             <Tabs.Panel value="perimetres" pt="md">
               <PerimetresRegistre r={r} />
@@ -297,8 +336,11 @@ function FicheRegistre({ id }: { id: string }) {
   );
 }
 
-function Elements({ id }: { id: string }) {
+function Elements({ r }: { r: RegistreDto }) {
+  const id = r.id;
+  const qc = useQueryClient();
   const [recherche, setRecherche] = useState('');
+  const [erreurOrdre, setErreurOrdre] = useState<unknown>(null);
   const liste = useQuery({
     queryKey: ['registres', id, 'elements', recherche],
     queryFn: () =>
@@ -306,6 +348,22 @@ function Elements({ id }: { id: string }) {
         `/api/registres/${id}/elements?search=${encodeURIComponent(recherche)}`,
       ),
   });
+  const items = liste.data?.items ?? [];
+  const ordonnable =
+    r.kind === 'plan_actions' && r.peut.gerer && !r.archived && !recherche && liste.data?.total === items.length;
+  const deplacer = async (index: number, delta: -1 | 1) => {
+    const ids = items.map((o) => o.id);
+    const [a, b] = [ids[index]!, ids[index + delta]!];
+    ids[index] = b;
+    ids[index + delta] = a;
+    setErreurOrdre(null);
+    try {
+      await api('PUT', `/api/registres/${id}/ordre`, { body: { ids }, ifMatch: r.version });
+      await qc.invalidateQueries({ queryKey: ['registres'] });
+    } catch (e) {
+      setErreurOrdre(e);
+    }
+  };
   return (
     <Stack>
       <TextInput
@@ -314,6 +372,7 @@ function Elements({ id }: { id: string }) {
         onChange={(e) => setRecherche(e.currentTarget.value)}
       />
       <ErrorAlert error={liste.error} />
+      <ErrorAlert error={erreurOrdre} />
       <DataTable label="Éléments du registre, défilement horizontal possible">
         <Table>
           <Table.Thead>
@@ -322,20 +381,45 @@ function Elements({ id }: { id: string }) {
               <Table.Th>Type</Table.Th>
               <Table.Th>Statut</Table.Th>
               <Table.Th>Mis à jour</Table.Th>
+              {ordonnable && <Table.Th>Ordre</Table.Th>}
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {(liste.data?.items ?? []).map((o) => (
+            {items.map((o, i) => (
               <Table.Tr key={o.id}>
                 <Table.Td>{o.name}</Table.Td>
                 <Table.Td>{ELEMENT_LABELS[o.kind] ?? o.kind}</Table.Td>
                 <Table.Td>{typeof o.data.status === 'string' ? o.data.status : '—'}</Table.Td>
                 <Table.Td>{fmtDate(o.updatedAt)}</Table.Td>
+                {ordonnable && (
+                  <Table.Td>
+                    <Group gap="2xs" wrap="nowrap">
+                      <Button
+                        size="compact-sm"
+                        variant="default"
+                        disabled={i === 0}
+                        aria-label={`Monter ${o.name}`}
+                        onClick={() => void deplacer(i, -1)}
+                      >
+                        Monter
+                      </Button>
+                      <Button
+                        size="compact-sm"
+                        variant="default"
+                        disabled={i === items.length - 1}
+                        aria-label={`Descendre ${o.name}`}
+                        onClick={() => void deplacer(i, 1)}
+                      >
+                        Descendre
+                      </Button>
+                    </Group>
+                  </Table.Td>
+                )}
               </Table.Tr>
             ))}
             {liste.data && !liste.data.items.length && (
               <Table.Tr>
-                <Table.Td colSpan={4}>Aucun élément.</Table.Td>
+                <Table.Td colSpan={ordonnable ? 5 : 4}>Aucun élément.</Table.Td>
               </Table.Tr>
             )}
           </Table.Tbody>
@@ -483,13 +567,26 @@ function Parametres({ r }: { r: RegistreDto }) {
   const [name, setName] = useState(r.name);
   const [description, setDescription] = useState(r.description);
   const [restreint, setRestreint] = useState(r.restreint);
+  const [dateDebut, setDateDebut] = useState(r.dateDebut ?? '');
+  const [dateFin, setDateFin] = useState(r.dateFin ?? '');
+  const [statut, setStatut] = useState<StatutPlanRegistre>(r.statut);
+  const [responsable, setResponsable] = useState<ResponsableRef | null>(r.responsable);
   const [erreur, setErreur] = useState<unknown>(null);
   const [envoi, setEnvoi] = useState(false);
+  const plan = r.kind === 'plan_actions';
   const enregistrer = async () => {
     setEnvoi(true);
     setErreur(null);
     try {
-      await api('PATCH', `/api/registres/${r.id}`, { body: { name, description, restreint }, ifMatch: r.version });
+      await api('PATCH', `/api/registres/${r.id}`, {
+        body: {
+          name,
+          description,
+          restreint,
+          ...(plan ? { dateDebut: dateDebut || null, dateFin: dateFin || null, statut, responsable } : {}),
+        },
+        ifMatch: r.version,
+      });
       await qc.invalidateQueries({ queryKey: ['registres'] });
       notifications.show({ color: 'teal', message: 'Registre enregistré.' });
     } catch (e) {
@@ -519,6 +616,36 @@ function Parametres({ r }: { r: RegistreDto }) {
         value={description}
         onChange={(e) => setDescription(e.currentTarget.value)}
       />
+      {plan && (
+        <>
+          <Group grow align="flex-start">
+            <TextInput
+              type="date"
+              label="Début du plan"
+              value={dateDebut}
+              onChange={(e) => setDateDebut(e.currentTarget.value)}
+            />
+            <TextInput
+              type="date"
+              label="Fin du plan"
+              value={dateFin}
+              onChange={(e) => setDateFin(e.currentTarget.value)}
+            />
+          </Group>
+          <Select
+            label="Statut du plan"
+            allowDeselect={false}
+            data={STATUTS_PLAN_REGISTRE.map((v) => ({ value: v, label: STATUT_PLAN_REGISTRE_LABELS[v] }))}
+            value={statut}
+            onChange={(v) => v && setStatut(v as StatutPlanRegistre)}
+          />
+          <SelecteurResponsableTypé
+            smsi={r.referenceId}
+            data={{ responsable }}
+            onChange={(p) => setResponsable(p.ownerId ? { type: 'utilisateur', id: p.ownerId } : p.responsable)}
+          />
+        </>
+      )}
       <Checkbox
         label="Registre restreint"
         description="Seuls les droits attribués au registre (et les administrateurs) donnent accès."

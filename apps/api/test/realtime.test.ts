@@ -222,3 +222,65 @@ it('les événements GRC ne révèlent ni objets ni auteurs hors du SMSI autoris
     stream.close();
   }
 });
+
+it('un registre restreint ne laisse filtrer ni compteurs, ni calendrier, ni événements vers qui ne peut pas le lire (R05)', async () => {
+  const commun = '00000000-0000-4000-8000-000000000001';
+  const owner = await login(t, admin);
+  const action = (name: string, registreId?: string) => ({
+    kind: 'action',
+    name,
+    registreId,
+    data: {
+      description: '',
+      status: 'todo',
+      ownerId: null,
+      startAt: null,
+      dueAt: '2026-06-15T07:00:00.000Z',
+      priority: 'normal',
+      category: 'action',
+      justification: '',
+      reminderDays: 7,
+      dependencies: [],
+    },
+  });
+  const registre = (
+    await owner.post('/api/registres', {
+      kind: 'plan_actions',
+      name: 'Plan restreint SSE',
+      referenceId: commun,
+      restreint: true,
+    })
+  ).json();
+  const lecteur = await login(t, ro);
+  const avant = (await lecteur.get(`/api/grc/${commun}/tasks/dashboard`)).json().summary.total as number;
+  const stream = openStream(lecteur);
+  try {
+    expect(await stream.ready).toBe(200);
+    await stream.waitFor((e) => e.event === 'hello');
+    const secret = (await owner.post(`/api/grc/${commun}/objects`, action('Action restreinte', registre.id))).json();
+    const marker = (await owner.post(`/api/grc/${commun}/objects`, action('Action visible'))).json();
+    expect(
+      await stream.waitFor((e) => e.event === 'change' && (e.data as { id: string }).id === marker.id),
+    ).toBeTruthy();
+    expect(
+      stream.events.some(
+        (e) => JSON.stringify(e.data).includes(secret.id) || JSON.stringify(e.data).includes(registre.id),
+      ),
+    ).toBe(false);
+    // Compteurs et calendrier : l'action restreinte n'est comptée ni listée pour le lecteur, elle l'est pour l'administrateur.
+    const apres = (await lecteur.get(`/api/grc/${commun}/tasks/dashboard`)).json().summary.total as number;
+    expect(apres).toBe(avant + 1);
+    const fenetre = async (a: Agent) =>
+      (
+        (
+          await a.get(`/api/grc/${commun}/tasks/window?from=2026-06-01T00:00:00.000Z&to=2026-06-30T00:00:00.000Z`)
+        ).json() as {
+          items: { id: string }[];
+        }
+      ).items.map((o) => o.id);
+    expect(await fenetre(lecteur)).not.toContain(secret.id);
+    expect(await fenetre(owner)).toContain(secret.id);
+  } finally {
+    stream.close();
+  }
+});

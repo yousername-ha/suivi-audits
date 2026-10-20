@@ -8,6 +8,7 @@ import {
   Checkbox,
   Group,
   Modal,
+  SegmentedControl,
   Select,
   Stack,
   Table,
@@ -24,11 +25,13 @@ import {
   aplatir,
   arbre,
   descendants,
+  type CartePerimetre,
   type NiveauPerimetre,
 } from '@suivi/shared';
 import { DataTable, StatusChip } from '@suivi/ui';
 import { api, get } from '../api';
 import { ErrorAlert } from '../components/common';
+import { CartesPerimetres } from './CartesPerimetres';
 import { useCan } from '../session';
 import { ReferentielsDuPerimetre } from './Bibliotheque';
 import { Members } from './Members';
@@ -71,13 +74,20 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
     [formulaire, setFormulaire] = useState<{ edition: Perimetre | null; valeurs: Formulaire } | null>(null),
     [acces, setAcces] = useState<Perimetre | null>(null),
     [referentiels, setReferentiels] = useState<Perimetre | null>(null),
+    [vue, setVue] = useState<'liste' | 'graphe'>('liste'),
     [erreur, setErreur] = useState<unknown>(null),
     [envoi, setEnvoi] = useState(false);
   const liste = useQuery({
     queryKey: ['grc', 'smsis'],
     queryFn: () => get<Perimetre[]>('/api/grc/smsis'),
   });
-  const ouvrir = (p: Perimetre | null) => {
+  // Les compteurs du graphe ne sont demandés que lorsqu'on l'affiche.
+  const cartes = useQuery({
+    queryKey: ['grc', 'perimetres', 'synthese'],
+    queryFn: () => get<CartePerimetre[]>('/api/grc/perimetres/synthese'),
+    enabled: vue === 'graphe',
+  });
+  const ouvrir = (p: Perimetre | null, parentId: string | null = null) => {
     setErreur(null);
     setFormulaire({
       edition: p,
@@ -91,7 +101,7 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
             entityKind: p.entityKind,
             inheritFrameworks: p.inheritFrameworks,
           }
-        : VIDE,
+        : { ...VIDE, parentId },
     });
   };
   const enregistrer = async () => {
@@ -107,6 +117,7 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
         });
       else await api('POST', '/api/grc/smsis', { body: valeurs });
       await qc.invalidateQueries({ queryKey: ['grc', 'smsis'] });
+      await qc.invalidateQueries({ queryKey: ['grc', 'perimetres'] });
       setFormulaire(null);
     } catch (e) {
       setErreur(e);
@@ -142,87 +153,113 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
           {liste.data ? `${liste.data.length} périmètre(s) accessible(s)` : 'Chargement des périmètres…'}
           {!admin && ' · Création et modification réservées au rôle de Pilotage.'}
         </Text>
-        {admin && <Button onClick={() => ouvrir(null)}>Créer un périmètre</Button>}
+        <Group>
+          <SegmentedControl
+            aria-label="Présentation des périmètres"
+            value={vue}
+            onChange={(v) => setVue(v as 'liste' | 'graphe')}
+            data={[
+              { value: 'liste', label: 'Liste' },
+              { value: 'graphe', label: 'Graphe' },
+            ]}
+          />
+          {admin && <Button onClick={() => ouvrir(null)}>Créer un périmètre</Button>}
+        </Group>
       </Group>
-      <DataTable label="Périmètres de management, défilement horizontal possible">
-        <Table>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Nom</Table.Th>
-              <Table.Th>Nature</Table.Th>
-              <Table.Th>Périmètre</Table.Th>
-              <Table.Th>Accès</Table.Th>
-              <Table.Th>Fuseau</Table.Th>
-              <Table.Th>Actions</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {lignes.map(({ item: p, profondeur }) => (
-              <Table.Tr key={p.id}>
-                <Table.Td className={`hier-n${Math.min(profondeur, 8)}`}>
-                  <Text fw={600}>{p.name}</Text>
-                  <Text size="xs">
-                    {LIBELLES_NIVEAU[p.entityKind]}
-                    {p.parentId && nomParent(p.parentId) ? ` de ${nomParent(p.parentId)}` : ''}
-                    {p.inheritFrameworks ? ' · hérite des référentiels du parent' : ''}
-                  </Text>
-                  {p.id === affiche && <StatusChip etat="info">Affiché dans le Pilotage</StatusChip>}
-                </Table.Td>
-                <Table.Td>{p.nature ? <StatusChip etat="neutre">{p.nature}</StatusChip> : 'Non précisée'}</Table.Td>
-                <Table.Td>
-                  <Text lineClamp={2}>{p.scope || '—'}</Text>
-                </Table.Td>
-                <Table.Td>{p.visibility === 'instance' ? 'Toute l’organisation' : 'Membres seulement'}</Table.Td>
-                <Table.Td>{p.timezone}</Table.Td>
-                <Table.Td>
-                  <Group gap="xs">
-                    {p.id !== affiche && (
-                      <Button
-                        size="xs"
-                        variant="default"
-                        aria-label={`Afficher le périmètre ${p.name} dans le Pilotage`}
-                        onClick={() => onChoisir(p.id)}
-                      >
-                        Afficher
-                      </Button>
-                    )}
-                    {admin && (
-                      <Button
-                        size="xs"
-                        variant="default"
-                        aria-label={`Modifier le périmètre ${p.name}`}
-                        onClick={() => ouvrir(p)}
-                      >
-                        Modifier
-                      </Button>
-                    )}
-                    {can('conformite', 'lire') && (
-                      <Button
-                        size="xs"
-                        variant="default"
-                        aria-label={`Référentiels rattachés au périmètre ${p.name}`}
-                        onClick={() => setReferentiels(p)}
-                      >
-                        Référentiels
-                      </Button>
-                    )}
-                    {admin && p.visibility === 'restricted' && (
-                      <Button
-                        size="xs"
-                        variant="default"
-                        aria-label={`Gérer l’accès au périmètre ${p.name}`}
-                        onClick={() => setAcces(p)}
-                      >
-                        Accès
-                      </Button>
-                    )}
-                  </Group>
-                </Table.Td>
+      {vue === 'graphe' && (
+        <>
+          <ErrorAlert error={cartes.error} />
+          {cartes.data && (
+            <CartesPerimetres
+              cartes={cartes.data}
+              affiche={affiche}
+              onChoisir={onChoisir}
+              onCreerEnfant={admin ? (parentId) => ouvrir(null, parentId) : undefined}
+            />
+          )}
+        </>
+      )}
+      {vue === 'liste' && (
+        <DataTable label="Périmètres de management, défilement horizontal possible">
+          <Table>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Nom</Table.Th>
+                <Table.Th>Nature</Table.Th>
+                <Table.Th>Périmètre</Table.Th>
+                <Table.Th>Accès</Table.Th>
+                <Table.Th>Fuseau</Table.Th>
+                <Table.Th>Actions</Table.Th>
               </Table.Tr>
-            ))}
-          </Table.Tbody>
-        </Table>
-      </DataTable>
+            </Table.Thead>
+            <Table.Tbody>
+              {lignes.map(({ item: p, profondeur }) => (
+                <Table.Tr key={p.id}>
+                  <Table.Td className={`hier-n${Math.min(profondeur, 8)}`}>
+                    <Text fw={600}>{p.name}</Text>
+                    <Text size="xs">
+                      {LIBELLES_NIVEAU[p.entityKind]}
+                      {p.parentId && nomParent(p.parentId) ? ` de ${nomParent(p.parentId)}` : ''}
+                      {p.inheritFrameworks ? ' · hérite des référentiels du parent' : ''}
+                    </Text>
+                    {p.id === affiche && <StatusChip etat="info">Affiché dans le Pilotage</StatusChip>}
+                  </Table.Td>
+                  <Table.Td>{p.nature ? <StatusChip etat="neutre">{p.nature}</StatusChip> : 'Non précisée'}</Table.Td>
+                  <Table.Td>
+                    <Text lineClamp={2}>{p.scope || '—'}</Text>
+                  </Table.Td>
+                  <Table.Td>{p.visibility === 'instance' ? 'Toute l’organisation' : 'Membres seulement'}</Table.Td>
+                  <Table.Td>{p.timezone}</Table.Td>
+                  <Table.Td>
+                    <Group gap="xs">
+                      {p.id !== affiche && (
+                        <Button
+                          size="xs"
+                          variant="default"
+                          aria-label={`Afficher le périmètre ${p.name} dans le Pilotage`}
+                          onClick={() => onChoisir(p.id)}
+                        >
+                          Afficher
+                        </Button>
+                      )}
+                      {admin && (
+                        <Button
+                          size="xs"
+                          variant="default"
+                          aria-label={`Modifier le périmètre ${p.name}`}
+                          onClick={() => ouvrir(p)}
+                        >
+                          Modifier
+                        </Button>
+                      )}
+                      {can('conformite', 'lire') && (
+                        <Button
+                          size="xs"
+                          variant="default"
+                          aria-label={`Référentiels rattachés au périmètre ${p.name}`}
+                          onClick={() => setReferentiels(p)}
+                        >
+                          Référentiels
+                        </Button>
+                      )}
+                      {admin && p.visibility === 'restricted' && (
+                        <Button
+                          size="xs"
+                          variant="default"
+                          aria-label={`Gérer l’accès au périmètre ${p.name}`}
+                          onClick={() => setAcces(p)}
+                        >
+                          Accès
+                        </Button>
+                      )}
+                    </Group>
+                  </Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+        </DataTable>
+      )}
       <Modal
         opened={!!formulaire}
         onClose={() => setFormulaire(null)}

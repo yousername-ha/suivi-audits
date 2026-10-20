@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { NIVEAUX_PERIMETRE } from './hierarchie-perimetres.js';
 import type { Module } from './permissions.js';
+import { ResponsableRef } from './responsables.js';
 export const GRC_KINDS = [
   'framework',
   'requirement',
@@ -357,11 +358,35 @@ export const Recurrence = z
     count: z.number().int().min(1).max(100000).nullable(),
     reminderDays: z.number().int().min(0).max(365),
     active: z.boolean(),
+    /** Fenêtre de réalisation d'une occurrence autour de son échéance : ouverte `openDays` jours avant, fermée `closeDays`
+        jours après. Sans fenêtre, une occurrence reste ouverte tant qu'elle n'est pas validée. */
+    window: z
+      .object({ openDays: z.number().int().min(0).max(365), closeDays: z.number().int().min(0).max(365) })
+      .strict()
+      .nullable()
+      .optional(),
+    /** Jours exclus : une échéance qui tombe un jour exclu (date précise ou jour de la semaine, 0 = dimanche) est reportée
+        au prochain jour disponible ; deux échéances reportées sur le même jour n'en font qu'une. */
+    excludedDays: z
+      .array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/))
+      .max(1000)
+      .optional(),
+    excludedWeekdays: z.array(z.number().int().min(0).max(6)).max(6).optional(),
   })
   .strict()
   .superRefine((r, c) => {
     if (!validDate(r.start) || (r.until && (!validDate(r.until) || r.until < r.start)))
       c.addIssue({ code: 'custom', message: 'Dates réelles et fin postérieure au début requises.' });
+    if (r.excludedDays?.some((d) => !validDate(d)))
+      c.addIssue({ code: 'custom', path: ['excludedDays'], message: 'Jours exclus : dates réelles requises.' });
+    if (r.excludedDays && new Set(r.excludedDays).size !== r.excludedDays.length)
+      c.addIssue({
+        code: 'custom',
+        path: ['excludedDays'],
+        message: 'Jours exclus : un jour ne peut figurer deux fois.',
+      });
+    if (r.excludedWeekdays && new Set(r.excludedWeekdays).size !== r.excludedWeekdays.length)
+      c.addIssue({ code: 'custom', path: ['excludedWeekdays'], message: 'Jours de la semaine exclus en double.' });
   });
 export type Recurrence = z.infer<typeof Recurrence>;
 export function validDate(s: string) {
@@ -373,6 +398,8 @@ export const TaskData = z
     description: z.string().max(10000),
     status: GrcKey,
     ownerId: z.uuid().nullable(),
+    /** Responsable typé (personne, groupe ou fonction) ; pour une personne, `ownerId` en reprend l'identifiant. */
+    responsable: ResponsableRef.nullable().optional(),
     startAt: z.iso.datetime().nullable(),
     dueAt: z.iso.datetime().nullable(),
     priority: z.enum(['low', 'normal', 'high', 'urgent']),
@@ -393,6 +420,7 @@ export const SeriesData = z
   .object({
     description: z.string().max(10000),
     ownerId: z.uuid().nullable(),
+    responsable: ResponsableRef.nullable().optional(),
     category: GrcKey,
     priority: z.enum(['low', 'normal', 'high', 'urgent']),
     recurrence: Recurrence,

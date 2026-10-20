@@ -71,7 +71,7 @@ export function RecordEditor({
   const readonly = !can(GRC_MODULES[kind], 'modifier') || object?.data.status === 'closed';
   useEffect(() => {
     if (opened) {
-      setName(object?.name ?? '');
+      setName(object?.name ?? (typeof initial?.name === 'string' ? initial.name : ''));
       const d: Record<string, unknown> = object
         ? { ...object.data }
         : kind in PILOTAGE_SCHEMAS
@@ -93,6 +93,7 @@ export function RecordEditor({
                         ? null
                         : '';
       if (!object && initial) Object.assign(d, initial);
+      delete d.name;
       if (kind === 'evidence' && ['validated', 'rejected'].includes(String(d.status))) d.status = 'draft';
       if (['bia', 'continuity_plan', 'management_review'].includes(kind) && d.status === 'validated')
         d.status = 'draft';

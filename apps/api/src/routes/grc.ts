@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import {
+  CalendrierBody,
   EvaluationExigenceCorps,
   GRC_KINDS,
   GrcObjectBody,
@@ -20,6 +21,7 @@ import {
   methodTemplate,
 } from '@suivi/shared';
 import type { Session } from '../auth.js';
+import { cartesPerimetres } from '../grc/cartes.js';
 import { dashboard } from '../grc/dashboard.js';
 import { etudeEbios, registreRisques } from '../grc/registre-risques.js';
 import { report } from '../grc/report.js';
@@ -206,6 +208,14 @@ export const grcRoutes = [
     url: '/api/grc/smsis',
     summary: 'SMSI accessibles',
     handler: async ({ svc, s }) => svc.grc.listSmsis((s as Session).user),
+  }),
+  route({
+    ...base,
+    method: 'GET',
+    url: '/api/grc/perimetres/synthese',
+    summary: 'Cartes de périmètres : compteurs de synthèse par périmètre accessible (null : indisponible)',
+    access: 'auth',
+    handler: async ({ svc, s }) => cartesPerimetres(svc.grc, (s as Session).user),
   }),
   route({
     ...base,
@@ -405,6 +415,33 @@ export const grcRoutes = [
     query: z.object({ before: z.string().max(200).optional() }),
     handler: async ({ svc, s, params, query }) =>
       svc.grc.tasks.occurrences(params.smsi, params.id, (s as Session).user, query.before),
+  }),
+  route({
+    ...base,
+    method: 'GET',
+    url: '/api/grc/:smsi/series/:id/prochaine',
+    summary: 'Occurrence suivante à traiter (la plus ancienne non validée dont la fenêtre est ouverte)',
+    params: object,
+    query: z.object({ apres: z.uuid().optional() }).strict(),
+    handler: async ({ svc, s, params, query }) =>
+      svc.grc.tasks.prochaine(params.smsi, params.id, (s as Session).user, query.apres),
+  }),
+  route({
+    ...base,
+    method: 'POST',
+    url: '/api/grc/:smsi/series/:id/calendrier',
+    summary: 'Importer un calendrier iCalendar dans les jours exclus d’une série (aperçu, puis import tout ou rien)',
+    params: object,
+    body: CalendrierBody,
+    handler: async ({ svc, s, params, body, ip, req }) =>
+      svc.grc.tasks.importerCalendrier(
+        params.smsi,
+        params.id,
+        body,
+        body.apercu ? 0 : requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      ),
   }),
   route({
     ...base,

@@ -10,6 +10,7 @@ import {
   RegistreBody,
   RegistrePerimetresBody,
   RegistreUpdate,
+  OrdreBody,
 } from '@suivi/shared';
 import { z } from 'zod';
 import type { Session } from '../auth.js';
@@ -108,6 +109,19 @@ export const registresRoutes = [
     body: RegistrePerimetresBody,
     handler: async ({ svc, s, params, body, ip, req }) =>
       svc.grc.registres.setPerimetres(params.id, body, body.apercu ? 0 : requireIfMatch(req), (s as Session).user, ip),
+  }),
+  route({
+    ...base,
+    method: 'PUT',
+    url: '/api/registres/:id/ordre',
+    summary: 'Ordonner les actions d’un plan d’actions',
+    params: registre,
+    body: OrdreBody,
+    handler: async ({ svc, s, params, body, ip, req, reply }) => {
+      const r = await svc.grc.registres.ordonner(params.id, body, requireIfMatch(req), (s as Session).user, ip);
+      setEtag(reply, r.version);
+      return r;
+    },
   }),
   route({
     ...base,
@@ -241,5 +255,13 @@ export const registresRoutes = [
         (s as Session).user,
         ip,
       ),
+  }),
+  route({
+    ...base,
+    method: 'GET',
+    url: '/api/grc/:smsi/responsables',
+    summary: 'Responsables proposables dans un périmètre : personnes, groupes et fonctions',
+    params: z.object({ smsi: z.uuid() }),
+    handler: async ({ svc, s, params }) => svc.grc.annuaires.proposables(params.smsi, (s as Session).user),
   }),
 ];

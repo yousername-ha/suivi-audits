@@ -4,6 +4,7 @@
    groupe sur un registre entier ou sur un élément ; ils s'ajoutent aux droits de module et à l'appartenance aux périmètres. */
 import { z } from 'zod';
 import type { GrcKind } from './grc.js';
+import { ResponsableRef } from './responsables.js';
 
 /** Familles de registre : le plan d'actions (actions autonomes), le registre d'écarts, le registre de tâches récurrentes. */
 export const REGISTRE_KINDS = ['plan_actions', 'ecarts', 'recurrences'] as const;
@@ -45,6 +46,27 @@ export function registreKindOf(kind: GrcKind, data: Record<string, unknown> = {}
 }
 
 const nom = z.string().trim().min(1).max(200);
+
+/** Plan d'actions conteneur : statut propre au plan (distinct du statut de chacune de ses actions). */
+export const STATUTS_PLAN_REGISTRE = ['prevu', 'en_cours', 'termine', 'abandonne'] as const;
+export type StatutPlanRegistre = (typeof STATUTS_PLAN_REGISTRE)[number];
+export const STATUT_PLAN_REGISTRE_LABELS: Record<StatutPlanRegistre, string> = {
+  prevu: 'Prévu',
+  en_cours: 'En cours',
+  termine: 'Terminé',
+  abandonne: 'Abandonné',
+};
+const dateJour = z.iso.date();
+/** Champs d'un plan d'actions ; hors famille « plan d'actions », le serveur les refuse. */
+const champsPlan = {
+  dateDebut: dateJour.nullable(),
+  dateFin: dateJour.nullable(),
+  statut: z.enum(STATUTS_PLAN_REGISTRE),
+  responsable: ResponsableRef.nullable(),
+};
+const finApresDebut = (v: { dateDebut?: string | null; dateFin?: string | null }) =>
+  !v.dateDebut || !v.dateFin || v.dateDebut <= v.dateFin;
+const MESSAGE_DATES = { message: 'La date de fin ne peut pas précéder la date de début.', path: ['dateFin'] };
 export const RegistreBody = z
   .object({
     kind: z.enum(REGISTRE_KINDS),
@@ -56,13 +78,28 @@ export const RegistreBody = z
     perimetres: z.array(z.uuid()).max(50).default([]),
     /** Registre restreint : seuls les droits attribués (et les administrateurs) donnent accès. */
     restreint: z.boolean().default(false),
+    dateDebut: champsPlan.dateDebut.default(null),
+    dateFin: champsPlan.dateFin.default(null),
+    statut: champsPlan.statut.default('prevu'),
+    responsable: champsPlan.responsable.default(null),
   })
-  .strict();
+  .strict()
+  .refine(finApresDebut, MESSAGE_DATES);
 export type RegistreBody = z.infer<typeof RegistreBody>;
 
+/** Les champs d'un plan sont facultatifs : absents, ils gardent leur valeur ; `null` efface une date ou le responsable. */
 export const RegistreUpdate = z
-  .object({ name: nom, description: z.string().trim().max(2000), restreint: z.boolean() })
-  .strict();
+  .object({
+    name: nom,
+    description: z.string().trim().max(2000),
+    restreint: z.boolean(),
+    dateDebut: champsPlan.dateDebut.optional(),
+    dateFin: champsPlan.dateFin.optional(),
+    statut: champsPlan.statut.optional(),
+    responsable: champsPlan.responsable.optional(),
+  })
+  .strict()
+  .refine(finApresDebut, MESSAGE_DATES);
 export type RegistreUpdate = z.infer<typeof RegistreUpdate>;
 
 /** Changement des périmètres d'un registre : commande atomique, avec aperçu de l'impact puis confirmation. */
@@ -104,6 +141,12 @@ export interface RegistreDto {
   archived: boolean;
   parDefaut: boolean;
   version: number;
+  /** Plan d'actions seulement : dates, statut, responsable et avancement (actions terminées sur actions suivies). */
+  dateDebut: string | null;
+  dateFin: string | null;
+  statut: StatutPlanRegistre;
+  responsable: ResponsableRef | null;
+  avancement: { total: number; terminees: number };
   /** Périmètres du registre que l'utilisateur peut voir ; les autres ne sont pas nommés (voir `autresPerimetres`). */
   perimetres: { id: string; name: string }[];
   autresPerimetres: number;
@@ -183,3 +226,7 @@ export interface ImpactDeplacement {
   /** Obstacles bloquants (état inconnu du workflow cible, responsable non autorisé…). */
   problemes: string[];
 }
+
+/** Ordre des actions d'un plan : identifiants dans l'ordre voulu (les actions non citées passent après). */
+export const OrdreBody = z.object({ ids: z.array(z.uuid()).min(1).max(1000) }).strict();
+export type OrdreBody = z.infer<typeof OrdreBody>;

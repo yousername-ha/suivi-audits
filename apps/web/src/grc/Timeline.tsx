@@ -1,6 +1,6 @@
 /* Vue Timeline des actions : une barre par action, du début à l'échéance, sur une période qui défile (le Gantt mensuel
    ne montre qu'un mois). Les actions sans aucune date sont listées à part ; rien n'est inventé pour les placer. */
-import { Button, Group, Stack, Text } from '@mantine/core';
+import { Alert, Button, Group, Stack, Text } from '@mantine/core';
 import type { BusinessPolicy, GrcObject, TaskData } from '@suivi/shared';
 
 const JOUR = 86_400_000;
@@ -15,7 +15,18 @@ export interface Frise {
   /** Actions placées (au moins une date) et actions sans date. */
   placees: { objet: GrcObject; de: number; a: number }[];
   sansDate: GrcObject[];
+  /** Actions dont les dates ne se placent pas, avec la raison : jamais corrigées ni inversées en silence. */
+  incoherentes: { objet: GrcObject; raison: RaisonDate }[];
+  /** Vrai quand la période a été bornée à deux ans : des actions peuvent alors tomber hors de la période affichée. */
+  tronquee: boolean;
+  /** Actions placées dont la barre est entièrement hors de la période affichée (non dessinées). */
+  horsPeriode: GrcObject[];
 }
+export type RaisonDate = 'debut-apres-echeance' | 'date-illisible';
+export const RAISON_DATE_LABELS: Record<RaisonDate, string> = {
+  'debut-apres-echeance': 'le début est postérieur à l’échéance',
+  'date-illisible': 'une date est illisible',
+};
 const jourDe = (iso: string) => Math.floor(new Date(iso).getTime() / JOUR) * JOUR;
 
 /** Calcul pur (testé) : bornes de la période affichée et position de chaque action. Marge d'une semaine de chaque côté,
@@ -23,18 +34,42 @@ const jourDe = (iso: string) => Math.floor(new Date(iso).getTime() / JOUR) * JOU
 export function calculerFrise(items: GrcObject[], aujourdhui: number): Frise {
   const placees: Frise['placees'] = [];
   const sansDate: GrcObject[] = [];
+  const incoherentes: Frise['incoherentes'] = [];
   for (const objet of items) {
     const t = objet.data as Partial<TaskData>;
-    const dates = [t.startAt, t.dueAt].filter((d): d is string => typeof d === 'string' && !!d).map(jourDe);
-    if (!dates.length) sansDate.push(objet);
-    else placees.push({ objet, de: Math.min(...dates), a: Math.max(...dates) });
+    const brutes = [t.startAt, t.dueAt].filter((d): d is string => typeof d === 'string' && !!d);
+    if (!brutes.length) {
+      sansDate.push(objet);
+      continue;
+    }
+    const dates = brutes.map(jourDe);
+    if (dates.some((d) => !Number.isFinite(d))) {
+      incoherentes.push({ objet, raison: 'date-illisible' });
+      continue;
+    }
+    // Début et échéance renseignés : un début après l'échéance est une erreur de saisie, pas une barre à l'envers.
+    if (brutes.length === 2 && dates[0]! > dates[1]!) {
+      incoherentes.push({ objet, raison: 'debut-apres-echeance' });
+      continue;
+    }
+    placees.push({ objet, de: Math.min(...dates), a: Math.max(...dates) });
   }
   const jourAuj = Math.floor(aujourdhui / JOUR) * JOUR;
   const bornes = [...placees.flatMap((p) => [p.de, p.a]), jourAuj];
   const debut = Math.min(...bornes) - 7 * JOUR;
-  const fin = Math.min(Math.max(...bornes) + 7 * JOUR, debut + 730 * JOUR);
+  const finComplete = Math.max(...bornes) + 7 * JOUR;
+  const fin = Math.min(finComplete, debut + 730 * JOUR);
   placees.sort((x, y) => x.de - y.de || x.a - y.a);
-  return { debut, jours: Math.round((fin - debut) / JOUR) + 1, placees, sansDate };
+  const horsPeriode = placees.filter((p) => p.de > fin || p.a < debut).map((p) => p.objet);
+  return {
+    debut,
+    jours: Math.round((fin - debut) / JOUR) + 1,
+    placees: placees.filter((p) => !horsPeriode.includes(p.objet)),
+    sansDate,
+    incoherentes,
+    tronquee: finComplete > fin,
+    horsPeriode,
+  };
 }
 
 export function Timeline({
@@ -63,8 +98,32 @@ export function Timeline({
         libelle: d.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit', timeZone: 'UTC' }),
       });
   const aujourdhui = Math.floor(Date.now() / JOUR) * JOUR;
+  const fr = (jour: number) => new Date(jour).toLocaleDateString('fr-FR', { timeZone: 'UTC' });
   return (
     <Stack>
+      <Text size="sm">
+        Période affichée : du {fr(frise.debut)} au {fr(frise.debut + (frise.jours - 1) * JOUR)}.
+      </Text>
+      {frise.tronquee && (
+        <Alert color="orange" role="status">
+          La période est limitée à deux ans pour rester lisible : les échéances plus lointaines ne sont pas dessinées
+          {frise.horsPeriode.length ? ` (${frise.horsPeriode.length} action(s) hors période, listées ci-dessous)` : ''}.
+        </Alert>
+      )}
+      {frise.incoherentes.length > 0 && (
+        <Alert color="red" role="alert" title="Dates à corriger : ces actions ne peuvent pas être placées">
+          {frise.incoherentes.map(({ objet, raison }) => (
+            <Group key={objet.id} gap="xs">
+              <Text size="sm">
+                {objet.name} : {RAISON_DATE_LABELS[raison]}.
+              </Text>
+              <Button variant="subtle" size="compact-sm" onClick={() => onOpen(objet)}>
+                Corriger les dates
+              </Button>
+            </Group>
+          ))}
+        </Alert>
+      )}
       <div
         className="grc-timeline"
         role="region"
@@ -115,6 +174,18 @@ export function Timeline({
           })}
         </svg>
       </div>
+      {frise.horsPeriode.length > 0 && (
+        <Stack gap="xs">
+          <Text size="sm">Hors de la période affichée ({frise.horsPeriode.length})</Text>
+          <Group gap="xs">
+            {frise.horsPeriode.map((o) => (
+              <Button key={o.id} variant="subtle" size="compact-sm" onClick={() => onOpen(o)}>
+                {o.name}
+              </Button>
+            ))}
+          </Group>
+        </Stack>
+      )}
       {frise.sansDate.length > 0 && (
         <Stack gap="xs">
           <Text size="sm">Sans date de début ni d’échéance ({frise.sansDate.length})</Text>
