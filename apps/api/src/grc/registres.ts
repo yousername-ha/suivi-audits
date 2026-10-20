@@ -157,6 +157,22 @@ export class GrcRegistres {
     await this.exiger(user, reg, o.id, besoin, c, GRC_MODULES[o.kind], action);
     return reg;
   }
+  /** Accès effectif de l'utilisateur à un élément (toutes origines confondues), pour adapter l'écran : 404 s'il ne peut pas
+      lire. L'API refuse de toute façon ce qui dépasse ces droits. */
+  async accesElement(id: string, user: SessionUser) {
+    const o = (await this.q().query<ObjectRow>(`SELECT ${objectColumns} FROM grc_objects WHERE id=$1`, [id])).rows[0];
+    const reg = o?.registreId ? await this.brut(o.registreId) : null;
+    if (!o || !reg) throw new HttpError(404, 'Élément introuvable ou non accessible.');
+    const obj = objectDto(o);
+    const module = GRC_MODULES[obj.kind];
+    const peut = {
+      lire: await this.peut(user, reg, id, 'lire', undefined, module),
+      contribuer: await this.peut(user, reg, id, 'contribuer', undefined, module),
+      gerer: await this.peut(user, reg, id, 'gerer', undefined, module),
+    };
+    if (!peut.lire) throw new HttpError(404, 'Élément introuvable ou non accessible.');
+    return { registreId: reg.id, role: await this.roleDe(user, reg.id, id), peut };
+  }
   /** Registres restreints d'un périmètre que l'utilisateur ne peut pas lire : leurs éléments sont masqués des listes. */
   async inaccessibles(user: SessionUser, smsi: string, c?: Client): Promise<string[]> {
     if (await this.g.isAdmin(user, c)) return [];

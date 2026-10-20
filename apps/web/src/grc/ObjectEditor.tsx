@@ -1,4 +1,5 @@
 import { Relations } from './Relations';
+import { PanneauElement, useAccesElement } from '../registres/Contribution';
 import {
   Alert,
   Button,
@@ -227,7 +228,10 @@ export function ObjectEditor({
       setSaving(false);
     }
   };
-  const readonly = !can(object?.data.legacyRecurring ? 'pilotage' : GRC_MODULES[kind], 'modifier');
+  const acces = useAccesElement(object);
+  // Un droit de gestion attribué sur l'élément ou son registre suffit à modifier, sans droit de module.
+  const readonly =
+    !can(object?.data.legacyRecurring ? 'pilotage' : GRC_MODULES[kind], 'modifier') && !acces?.peut.gerer;
   return (
     <Modal opened={opened} onClose={onClose} title={`${object ? 'Fiche' : 'Créer'} — ${GRC_LABELS[kind]}`} size="xl">
       <Stack>
@@ -507,6 +511,7 @@ export function ObjectEditor({
             {object?.id.startsWith('legacy:') ? 'Confirmer la réalisation dans la source' : 'Enregistrer la fiche'}
           </Button>
         )}
+        {object && acces && <PanneauElement smsi={smsi} object={object} policy={policy} acces={acces} />}
         {object && (
           <Relations smsi={smsi} source={object.id.startsWith('legacy:') ? object.id : 'object:' + object.id} />
         )}

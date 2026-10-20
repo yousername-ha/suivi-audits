@@ -592,6 +592,26 @@
 .grc-calendar .mantine-Card-root {
   min-height: var(--grc-jour-hauteur);
 }
+.grc-timeline {
+  overflow-x: auto;
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+}
+.grc-timeline svg {
+  display: block;
+  font-size: var(--mantine-font-size-xs);
+  fill: var(--mantine-color-text);
+}
+.grc-timeline g[role='button'] {
+  cursor: pointer;
+}
+.grc-timeline__mois {
+  stroke: var(--mantine-color-default-border);
+}
+.grc-timeline__aujourdhui {
+  stroke: var(--mantine-color-red-6);
+  stroke-dasharray: 4 3;
+}
 .grc-planning {
   overflow-x: auto;
 }
