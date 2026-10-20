@@ -4,6 +4,8 @@ import {
   ContributionAction,
   DroitBody,
   REGISTRE_KINDS,
+  ReouvertureOccurrenceBody,
+  ValidationOccurrenceBody,
   RegistreBody,
   RegistrePerimetresBody,
   RegistreUpdate,
@@ -172,5 +174,35 @@ export const registresRoutes = [
       setEtag(reply, o.version);
       return o;
     },
+  }),
+  route({
+    ...base,
+    method: 'GET',
+    url: '/api/grc/:smsi/objects/:id/validations',
+    summary: 'Journal de validation d’une occurrence récurrente et son état',
+    params: objet,
+    handler: async ({ svc, s, params }) => svc.grc.validations.historique(params.smsi, params.id, (s as Session).user),
+  }),
+  route({
+    ...base,
+    method: 'POST',
+    url: '/api/grc/:smsi/objects/:id/validations',
+    summary: 'Valider une occurrence (OK, KO ou NA) : journal immuable, commande idempotente par requestId',
+    params: objet,
+    body: ValidationOccurrenceBody,
+    status: 201,
+    handler: async ({ svc, s, params, body, ip }) =>
+      svc.grc.validations.valider(params.smsi, params.id, body, (s as Session).user, ip),
+  }),
+  route({
+    ...base,
+    method: 'POST',
+    url: '/api/grc/:smsi/objects/:id/validations/reouverture',
+    summary: 'Rouvrir une occurrence validée, avec motif (gestionnaires)',
+    params: objet,
+    body: ReouvertureOccurrenceBody,
+    status: 201,
+    handler: async ({ svc, s, params, body, ip }) =>
+      svc.grc.validations.rouvrir(params.smsi, params.id, body, (s as Session).user, ip),
   }),
 ];

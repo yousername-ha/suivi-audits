@@ -8,6 +8,7 @@ import { ROLE_LABELS, type BusinessPolicy, type GrcObject, type RoleRessource } 
 import { api, get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { Droits } from './Droits';
+import { ValidationOccurrence } from './Validation';
 
 export interface AccesElement {
   registreId: string;
@@ -103,6 +104,9 @@ export function PanneauElement({
       )}
       {object.kind === 'action' && acces.peut.contribuer && !acces.peut.gerer && (
         <Contribuer smsi={smsi} object={object} policy={policy} />
+      )}
+      {object.kind === 'action' && typeof object.data.seriesId === 'string' && object.data.seriesId && (
+        <ValidationOccurrence smsi={smsi} object={object} acces={acces} />
       )}
       {acces.peut.gerer && (
         <Stack gap="xs">

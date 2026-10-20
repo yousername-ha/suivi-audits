@@ -52,6 +52,7 @@ import { GrcRisks } from './risks.js';
 import { GrcStudyConfig } from './study-config.js';
 import { LegacyTasks } from './legacy-tasks.js';
 import { GrcRegistres } from './registres.js';
+import { GrcValidations } from './validations.js';
 import { GrcTasks } from './tasks.js';
 export const DEFAULT_SMSI = '00000000-0000-4000-8000-000000000001';
 /** Fiche de l'outil de suivi propre au périmètre commun. Les fournisseurs (`legacy:suppliers:`) sont à l'échelle de
@@ -151,6 +152,7 @@ export class Grc {
   readonly studyConfig: GrcStudyConfig;
   readonly tasks: GrcTasks;
   readonly registres: GrcRegistres;
+  readonly validations: GrcValidations;
   constructor(
     readonly db: Db,
     readonly legacy: LegacyStore,
@@ -168,6 +170,7 @@ export class Grc {
     this.studyConfig = new GrcStudyConfig(this);
     this.tasks = new GrcTasks(this);
     this.registres = new GrcRegistres(this);
+    this.validations = new GrcValidations(this);
   }
   async isAdmin(user: SessionUser, c?: Client) {
     return (await loadGrants(c ?? this.db.pool, user.id)).some(
@@ -654,7 +657,9 @@ export class Grc {
       await this.checkTypedRefs(smsi, kind, data, user, c);
       if (kind === 'risk_study') await this.checkStudyConfiguration(smsi, data, previous, c);
       if (kind === 'nonconformity' && previous?.data.status === 'closed')
-        throw new HttpError(409, 'Conservez la clôture : créez un nouveau constat pour une récidive.');
+        throw new HttpError(409, 'Conservez la clôture : rouvrez le constat avec un motif ou créez-en un nouveau.');
+      if (kind === 'nonconformity' && previous && data.recidiveRef === 'object:' + previous.id)
+        throw new HttpError(422, 'Un constat ne peut pas être la récidive de lui-même.');
       if (kind === 'control') {
         for (const field of ['result', 'performedAt', 'seriesRef'])
           if (data[field] !== previous?.data[field])
