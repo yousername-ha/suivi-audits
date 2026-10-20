@@ -1,0 +1,17 @@
+{
+  "id": "v001-menu-epure",
+  "statut": "reference-implementation",
+  "type": "galerie-dossier",
+  "date": "2026-10-14",
+  "sourceCommit": "472a81fe315ac323d75a59db74e16b8d39a5b0e8",
+  "references": [
+    "fonctionnalites-en-developpement/_dossiers-transversaux/grc-transversal/v001-dossier-arm",
+    "references/style-08"
+  ],
+  "previousVersion": null,
+  "decisionUtilisateur": null,
+  "validationUtilisateur": {
+    "date": "2026-10-20",
+    "portee": "Référence de conception pour le périmètre transmis ; les limites de la maquette et décisions explicites du dossier prévalent."
+  }
+}

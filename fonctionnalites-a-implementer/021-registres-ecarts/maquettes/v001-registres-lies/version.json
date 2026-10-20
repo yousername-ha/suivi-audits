@@ -1,0 +1,19 @@
+{
+  "id": "v001-registres-lies",
+  "statut": "a-valider",
+  "type": "prototype-fonctionnel",
+  "date": "2026-10-14",
+  "sourceCommit": "4542eb07c2abe31e60fcc6fcf87bc23844698382",
+  "references": [
+    "references/style-08",
+    "fonctionnalites-a-implementer/017-plans-action"
+  ],
+  "versionPrecedente": null,
+  "validationUtilisateur": null,
+  "choixAValider": [
+    "Écart lié à plusieurs exigences",
+    "Plans transversaux à plusieurs registres",
+    "Règles de clôture et effet des classifications sur la conformité",
+    "Ordonnancement du menu"
+  ]
+}

@@ -143,3 +143,10 @@ Ces instructions utilisateur remplacent les consignes antérieures contradictoir
 - Risques et EBIOS RM utilisent les échelles déclarées dans Paramètres plateforme, leurs versions publiées et identifiants de niveaux. Ne pas créer de barèmes concurrents ni imposer quatre niveaux.
 - Préserver les versions des évaluations historiques. Une nouvelle publication ou un archivage ne recalcule pas les résultats passés. La matrice/politique compatible détermine la criticité, pas un calcul frontend implicite.
 - Le partage local des maquettes 012 v007 / 003 v002 est illustratif ; l'intégration réutilise le catalogue de configuration et les services d'évaluation du socle.
+
+## Dossiers techniques et contrôle de l’existant — accord du 20 octobre 2026
+
+- Périmètres approuvés pour transmission : 020, 019, 012, 022, 017, 021, 018, 002 et 003. Le 010 fait l’objet d’une confirmation séparée.
+- Avant de coder chaque fonctionnalité, l’IA doit rechercher ce qui est déjà implémenté dans sa branche, vérifier les comportements et tests, et fournir la preuve par exigence. Si conforme, conserver ; si partiel, compléter le manque ; si absent, réutiliser les briques existantes avant de créer. Documentation seule et CI d’un ancien SHA ne suffisent pas.
+- Le dossier technique courant consolide demandes, corrections et critères de recette avec des identifiants stables. L’IA n’a pas à relire la conversation ; les hypothèses restantes sont explicites.
+- Un déplacement vers « à implémenter » valide la transmission documentaire, pas une intégration ni un succès serveur. Aucun marqueur « implémentation ok » ne doit être créé pour cette seule préparation.

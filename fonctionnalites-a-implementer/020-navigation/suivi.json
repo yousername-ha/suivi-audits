@@ -1,0 +1,45 @@
+{
+  "fonctionnalite": "navigation",
+  "etape": "a-implementer",
+  "validationUtilisateur": {
+    "date": "2026-10-20",
+    "portee": "Préparation et transmission du dossier de la fonctionnalité, avec vérification préalable obligatoire de ce qui est déjà implémenté. Les propositions non arbitrées restent identifiées dans le dossier.",
+    "reference": "Accord utilisateur par numéro : 020/019 oui avec contrôle de l’existant ; 012/022/017/021/018/002/003 ok.",
+    "versionReference": "v001-menu-epure"
+  },
+  "livraisonImplementation": {
+    "date": "2026-10-20",
+    "dossier": "implementation/DOSSIER-IMPLEMENTATION.md",
+    "prompt": "implementation/PROMPT-IMPLEMENTATION.md",
+    "controleExistantObligatoire": true,
+    "integrationRealisee": false
+  },
+  "integration": null,
+  "historique": [
+    {
+      "date": "2026-10-14",
+      "etape": "en-developpement",
+      "motif": "Organisation demandée par l’utilisateur ; proposition encore à valider."
+    },
+    {
+      "date": "2026-10-19",
+      "etape": "en-developpement",
+      "motif": "Préparation du dossier technique transversal : Le style est retenu ; l’ordonnancement et le mapping exhaustif des routes restent à valider. Le dossier courant propose un menu complet et distingue les menus partiels des maquettes ciblées."
+    },
+    {
+      "date": "2026-10-20",
+      "etape": "a-implementer",
+      "motif": "Demandes et critères consolidés ; déplacement complet après accord utilisateur, contrôle de l’existant obligatoire avant codage. Aucun marqueur d’intégration trouvé."
+    }
+  ],
+  "numero": "020",
+  "retoursUtilisateur": [
+    {
+      "date": "2026-10-14",
+      "portee": "Style du menu",
+      "retour": "L’utilisateur apprécie le style du menu ; l’ordonnancement reste à revoir.",
+      "validationGlobale": false
+    }
+  ],
+  "maquetteCourante": "v001-menu-epure"
+}

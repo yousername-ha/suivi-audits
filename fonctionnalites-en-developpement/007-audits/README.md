@@ -13,6 +13,6 @@ Ce statut concerne la proposition visuelle, pas l’existence des fonctions hist
 
 [Liste numérotée des fonctionnalités](../../LISTE-FONCTIONNALITES.md).
 
-Parcours lié en développement : [registres d’écarts, plans et conformité](../021-registres-ecarts/README.md).
+Parcours lié en développement : [registres d’écarts, plans et conformité](../../fonctionnalites-a-implementer/021-registres-ecarts/README.md).
 
-Nouveau parcours testable : [Ajouter un écart directement depuis un audit](../021-registres-ecarts/maquettes/v002-creation-depuis-audit/README.md), avec registre existant ou nouveau.
+Nouveau parcours testable : [Ajouter un écart directement depuis un audit](../../fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v002-creation-depuis-audit/README.md), avec registre existant ou nouveau.

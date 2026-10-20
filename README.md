@@ -189,4 +189,4 @@ La correction des accents, des cartes et du compte de test est décrite dans
 
 ## Dossier GRC transversal et navigation simplifiée
 
-[Analyse ARM, architecture, douze chapitres techniques et prompt IA](fonctionnalites-en-developpement/_dossiers-transversaux/grc-transversal/v001-dossier-arm/README.md) · [Menu proposé](fonctionnalites-en-developpement/020-navigation/README.md) · [Téléchargements](downloads/README.md). Proposition documentaire et graphique du 14 octobre 2026, sans modification du moteur métier.
+[Analyse ARM, architecture, douze chapitres techniques et prompt IA](fonctionnalites-en-developpement/_dossiers-transversaux/grc-transversal/v001-dossier-arm/README.md) · [Menu proposé](fonctionnalites-a-implementer/020-navigation/README.md) · [Téléchargements](downloads/README.md). Proposition documentaire et graphique du 14 octobre 2026, sans modification du moteur métier.

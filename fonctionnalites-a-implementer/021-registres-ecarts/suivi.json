@@ -1,0 +1,42 @@
+{
+  "fonctionnalite": "registres-ecarts",
+  "numero": "021",
+  "etape": "a-implementer",
+  "validationUtilisateur": {
+    "date": "2026-10-20",
+    "portee": "Préparation et transmission du dossier de la fonctionnalité, avec vérification préalable obligatoire de ce qui est déjà implémenté. Les propositions non arbitrées restent identifiées dans le dossier.",
+    "reference": "Accord utilisateur par numéro : 020/019 oui avec contrôle de l’existant ; 012/022/017/021/018/002/003 ok.",
+    "versionReference": "v003-cloture-preservee"
+  },
+  "livraisonImplementation": {
+    "date": "2026-10-20",
+    "dossier": "implementation/DOSSIER-IMPLEMENTATION.md",
+    "prompt": "implementation/PROMPT-IMPLEMENTATION.md",
+    "controleExistantObligatoire": true,
+    "integrationRealisee": false
+  },
+  "integration": null,
+  "historique": [
+    {
+      "date": "2026-10-14",
+      "etape": "en-developpement",
+      "motif": "Demande de registres d’écarts, plans multiples et liens avec la conformité par périmètre."
+    },
+    {
+      "date": "2026-10-14",
+      "etape": "en-developpement",
+      "motif": "v002 : création directe d’un écart depuis un audit, dans un registre existant ou nouveau."
+    },
+    {
+      "date": "2026-10-19",
+      "etape": "en-developpement",
+      "motif": "Préparation du dossier technique transversal : Le registre porte un ou plusieurs périmètres, hérités par ses écarts. La v003 n’en gère qu’un : ne pas prendre cette limite comme règle cible. Ses anciens formulaires d’action avec périmètre indépendant sont remplacés par la règle commune et la référence 017 v004."
+    },
+    {
+      "date": "2026-10-20",
+      "etape": "a-implementer",
+      "motif": "Demandes et critères consolidés ; déplacement complet après accord utilisateur, contrôle de l’existant obligatoire avant codage. Aucun marqueur d’intégration trouvé."
+    }
+  ],
+  "maquetteCourante": "v003-cloture-preservee"
+}

@@ -1,0 +1,1901 @@
+{
+  "date": "2026-10-20",
+  "files": {
+    "fonctionnalites-a-implementer/020-navigation/README.md": {
+      "bytes": 1024,
+      "sha256": "5d34e55a62ba336df4e754bd5d6879d6823d11f206e4dd431d4fead62310d6a7"
+    },
+    "fonctionnalites-a-implementer/020-navigation/implementation/DOSSIER-IMPLEMENTATION.md": {
+      "bytes": 6460,
+      "sha256": "dce5e37023be97b85324f60318cd8183103f315cc183dde65c9f64e3e55cca0c"
+    },
+    "fonctionnalites-a-implementer/020-navigation/implementation/PROMPT-IMPLEMENTATION.md": {
+      "bytes": 1870,
+      "sha256": "7a0eeed1c1c0cecec4cb552a9a1c7106b6bcfde9a9852fbd072400d7eae33fe0"
+    },
+    "fonctionnalites-a-implementer/020-navigation/implementation/README.md": {
+      "bytes": 789,
+      "sha256": "e65976dbe6da141d185db6e0ab871737b2fd5a6460970f47f6776c76f3446968"
+    },
+    "fonctionnalites-a-implementer/020-navigation/maquettes/README.md": {
+      "bytes": 99,
+      "sha256": "8c414af971f7c9fa15c1e1d908e0e9ea8e10665d4c10b1336b401c0980441777"
+    },
+    "fonctionnalites-a-implementer/020-navigation/maquettes/v001-menu-epure/README.md": {
+      "bytes": 1222,
+      "sha256": "0645f54e135ac98ce3ebabdff96fab02a1df2a300c6de725ec8af094761d5001"
+    },
+    "fonctionnalites-a-implementer/020-navigation/maquettes/v001-menu-epure/version.json": {
+      "bytes": 596,
+      "sha256": "72e6289ae255ea8171b5cf99843ec6cd24f5448ef556d989d65b89ffe8a21e7d"
+    },
+    "fonctionnalites-a-implementer/020-navigation/suivi.json": {
+      "bytes": 1890,
+      "sha256": "aac2fb8f362b9cf419ca959716f28ed1bdcac55ae6fcf16657a391cb1340a1e1"
+    },
+    "fonctionnalites-a-implementer/020-navigation/tests/README.md": {
+      "bytes": 389,
+      "sha256": "87880e350e5a2a79928f65563ec15c9439d2a288f107053451b872cc3486014f"
+    },
+    "fonctionnalites-a-implementer/019-configuration-grc/README.md": {
+      "bytes": 1029,
+      "sha256": "aa9b9a0681c68d8d7532854ae4f7ce11d7ededf9bb49feb68214b6b796343b7f"
+    },
+    "fonctionnalites-a-implementer/019-configuration-grc/implementation/DOSSIER-IMPLEMENTATION.md": {
+      "bytes": 6728,
+      "sha256": "986ce84abb39b3a5e3c095ae9ddf3236b72160597a99f9ff9b0f4cc7e0bdb71d"
+    },
+    "fonctionnalites-a-implementer/019-configuration-grc/implementation/PROMPT-IMPLEMENTATION.md": {
+      "bytes": 1873,
+      "sha256": "acdfd3be4ab6fbbbc83cd8690a54afe5a58c572a91b8089911ced16704d6c82d"
+    },
+    "fonctionnalites-a-implementer/019-configuration-grc/implementation/README.md": {
+      "bytes": 790,
+      "sha256": "26080e99d1bc930ac32316c7d9fd66208652258ccc627c1b8bac727b8daafb87"
+    },
+    "fonctionnalites-a-implementer/019-configuration-grc/maquettes/README.md": {
+      "bytes": 101,
+      "sha256": "36b1acc4d5351a67fb186dd6caf98397ecacde7c40a1771a8036f0be3484760f"
+    },
+    "fonctionnalites-a-implementer/019-configuration-grc/maquettes/v001-dossier-arm/README.md": {
+      "bytes": 861,
+      "sha256": "8dc1e0d9fe3f170b00c6021bd6e468d27ef5e205a416bd5f686119edf94e5cfb"
+    },
+    "fonctionnalites-a-implementer/019-configuration-grc/maquettes/v001-dossier-arm/version.json": {
+      "bytes": 597,
+      "sha256": "525b2733e39981ee9e338d62914c0df59ba467911099a66887577c755eb2db9e"
+    },
+    "fonctionnalites-a-implementer/019-configuration-grc/suivi.json": {
+      "bytes": 1326,
+      "sha256": "8aa16e5b58d62bd0eeaaf7134b5994707f432d7b4efe91cc6e334a3f8a1f9cfd"
+    },
+    "fonctionnalites-a-implementer/019-configuration-grc/tests/README.md": {
+      "bytes": 427,
+      "sha256": "ede4916e8c464293fbb6b683548b25c736e7eebc29a225c458f46d87f2106477"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/README.md": {
+      "bytes": 1052,
+      "sha256": "bf9f18031c11f03e3bd33acf001d9de9c8edca5fc434c26fe6bdb041350e715f"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/implementation/DOSSIER-IMPLEMENTATION.md": {
+      "bytes": 9230,
+      "sha256": "69e913cf40a65268d579a385659b458ce5dad099cae742ad506d259900fa2051"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/implementation/PARAMETRES-SYSTEME-PLATEFORME.md": {
+      "bytes": 41330,
+      "sha256": "1d945dcbf46f8d190b9b337b7b720f3753e929d29bfb444c7cefd764768f9d3b"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/implementation/PROMPT-IMPLEMENTATION.md": {
+      "bytes": 1882,
+      "sha256": "e7cc5ed4db139499b21723b5ca34eb0d853b2c03634a2eb22bc64a1b90f39d61"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/implementation/README.md": {
+      "bytes": 797,
+      "sha256": "0b0a8b032a1a2c51620da9253e5dbfc5909d8a6f8c1ec2cdc9c6f13a927efecf"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/README.md": {
+      "bytes": 428,
+      "sha256": "f4a2878dde932745c6aba4a5729d55ccba27b3c6ecaf35323405ffbf716aa149"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v001-reference-08/README.md": {
+      "bytes": 386,
+      "sha256": "c606eb65e7c5fb8e1653f39700cafef7affa575d93a9858447c646c1a4e29ee0"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v001-reference-08/version.json": {
+      "bytes": 301,
+      "sha256": "ef28b8ef816f4a7d146322a090b7ae909e0130e129bb3d16d5178cd68883629f"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v002-deux-espaces/README.md": {
+      "bytes": 1831,
+      "sha256": "9cb8901d09d030f6e4dea653030c1bd85c30af115c61524dfa8332e04fc7d3ae"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v002-deux-espaces/index.html": {
+      "bytes": 4336,
+      "sha256": "508c69056c2011d590d3743b2a8055db7a12b560f19444f02a97c107cb44335b"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v002-deux-espaces/parametres.css": {
+      "bytes": 7519,
+      "sha256": "383e0e22775b9e7c5a41789d83e4d59c02a3886993892a1cc6f92fd51c09cc5a"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v002-deux-espaces/parametres.js": {
+      "bytes": 18753,
+      "sha256": "b3653279e4347ea8acbf334b4666279770660cceae362cffe12cb4fca7e98a75"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v002-deux-espaces/shell.css": {
+      "bytes": 4660,
+      "sha256": "4396c8a5d458196859566d8b02647ed456828644b41c2ce1ea46ddaca0b23238"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v002-deux-espaces/technique/verification.json": {
+      "bytes": 992,
+      "sha256": "e3dd72b663a4119030cb15cf70abae51a845ade6fdfa1cea9401d13309a26c8a"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v002-deux-espaces/technique/verifier.cjs": {
+      "bytes": 5598,
+      "sha256": "0e3b9e229afa7767e641888fb22cb546e025b1a4e52f10348630ba8f6240fb81"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v002-deux-espaces/version.json": {
+      "bytes": 2070,
+      "sha256": "29b26825617a541e7f3bc61c2e0c9db2db30a5915a280547e363fd68788e70ad"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v002-deux-espaces/visuels/01-parametres-systeme.png": {
+      "bytes": 224693,
+      "sha256": "168c604798c120dffaa42d1e81b19057672b7db2c90e7050a06f17e0250becde"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v002-deux-espaces/visuels/02-parametres-plateforme.png": {
+      "bytes": 238077,
+      "sha256": "4309704ebc4ad24ddb77280317b8ba802a1e58235740d7de42acf0b62c3b7ba6"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v002-deux-espaces/visuels/03-sauvegardes.png": {
+      "bytes": 260738,
+      "sha256": "678ee0cf23bc8715a380bdc52788bf5fb1adfaed34ed386ec5dc0a370c0bcd3f"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v002-deux-espaces/visuels/04-echelles.png": {
+      "bytes": 289660,
+      "sha256": "1c7e9726d589d69d01daca8e153598748428e0f0c978944eb85eb8424f5c0283"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v002-deux-espaces/visuels/05-certificat.png": {
+      "bytes": 191969,
+      "sha256": "8cb1c44c964a96a5162b778836c64d6a342dea9c27d46c74952dbe41f3bf35b4"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v002-deux-espaces/visuels/06-mobile.png": {
+      "bytes": 77760,
+      "sha256": "6695913577eef53869980617985fb9e7b64636b967ff2f917ca8b16b5e034d00"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v003-echelles-certificats/README.md": {
+      "bytes": 2950,
+      "sha256": "1d466fd15a9783e138e68889f9c94cdcc30da556c406f0567afc69055857745e"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v003-echelles-certificats/index.html": {
+      "bytes": 4379,
+      "sha256": "1d61053145b65c6c08a321748bfecb81e3821b61564f06e6068985126fa9607b"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v003-echelles-certificats/parametres.css": {
+      "bytes": 10758,
+      "sha256": "89c639955ccd9c090d2d09dfdf654819f28cd9d016f216836cea21109869d5d9"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v003-echelles-certificats/parametres.js": {
+      "bytes": 16879,
+      "sha256": "5d5e2160ffc6f292b6de66b56787edcf07d0871f6d3536d842d4a6b91508171f"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v003-echelles-certificats/personnalisation.js": {
+      "bytes": 17852,
+      "sha256": "98614e367ee2c53efbdfcf77d1950a9f826ca46a3fbc8881b460489e92865b25"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v003-echelles-certificats/shell.css": {
+      "bytes": 4660,
+      "sha256": "4396c8a5d458196859566d8b02647ed456828644b41c2ce1ea46ddaca0b23238"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v003-echelles-certificats/technique/verification.json": {
+      "bytes": 2025,
+      "sha256": "9a87aeebc79fef7b4840ac883ed8bddaad75e09028bd76a3d9f082556d50f689"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v003-echelles-certificats/technique/verifier.cjs": {
+      "bytes": 10599,
+      "sha256": "e732ee490ffb3483dea483544ff401f56b417c764e8429bbe39527f955d868c1"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v003-echelles-certificats/version.json": {
+      "bytes": 2283,
+      "sha256": "a9c3969a491af856024946bee8a0cc259801c0d1b1f9b50fd384cbc1d2a3f091"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v003-echelles-certificats/visuels/01-echelle-personnalisee.png": {
+      "bytes": 252984,
+      "sha256": "5b7253a09bf3456b870bb35a958e762138a7ce0e55af38ba3ea4c296a10af456"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v003-echelles-certificats/visuels/02-nouvelle-echelle.png": {
+      "bytes": 267704,
+      "sha256": "24cd3cf6531898f062775c0c0d7dde80a9a6eac352229a59f03a9a579841763a"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v003-echelles-certificats/visuels/03-import-certificat.png": {
+      "bytes": 230754,
+      "sha256": "6b65ee138f27d9363958121b541694450a037b3f27609d8a76d6bbd4822b9514"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v003-echelles-certificats/visuels/04-certificat-autosigne.png": {
+      "bytes": 230796,
+      "sha256": "34f9deaecb6f24dcd34591935c38ff32fe628136a90fa5abbbd37e30094afdeb"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v003-echelles-certificats/visuels/05-letsencrypt-acme.png": {
+      "bytes": 237333,
+      "sha256": "5e5ed0ef3c0383026ebc7f8417e3d789b82237ea30c2ef4e0bd1fdc0ab98be85"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v003-echelles-certificats/visuels/06-acme-dns.png": {
+      "bytes": 239200,
+      "sha256": "642093974ec0e071ec4fad7c227d991925d3ba8c6f2a5caddcf72f641820ecf2"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v004-historique-conservation/README.md": {
+      "bytes": 2480,
+      "sha256": "fe758a13274d950cf4d2d366680fe83d1e9a127246c9a44a3949187244f5577b"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v004-historique-conservation/conservation.js": {
+      "bytes": 17091,
+      "sha256": "ebaaf0be39eac027ce77886f665703a922481c1d40a1ece1000ea38d62b2fbda"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v004-historique-conservation/index.html": {
+      "bytes": 4418,
+      "sha256": "8d6f03fcae0156deeb76824c5b3c3a3a2d7b1442e00903782f6a83a1d3c433a7"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v004-historique-conservation/parametres.css": {
+      "bytes": 14375,
+      "sha256": "beb1a9509b10372772ecd20c89e036bb23296ba83277f0b664c12f1ae56f4f28"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v004-historique-conservation/parametres.js": {
+      "bytes": 17251,
+      "sha256": "1fff5e97fa83186602603b29ef48ca4c83768701efd24d05d99538bf12b92207"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v004-historique-conservation/personnalisation.js": {
+      "bytes": 17852,
+      "sha256": "98614e367ee2c53efbdfcf77d1950a9f826ca46a3fbc8881b460489e92865b25"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v004-historique-conservation/shell.css": {
+      "bytes": 4660,
+      "sha256": "4396c8a5d458196859566d8b02647ed456828644b41c2ce1ea46ddaca0b23238"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v004-historique-conservation/technique/verification.json": {
+      "bytes": 2174,
+      "sha256": "cc2b29a61fb52dbe1f6940f8fe13008a3789a2d218e34b60080b83fd06e978eb"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v004-historique-conservation/technique/verifier.cjs": {
+      "bytes": 9453,
+      "sha256": "ff7fdcfb42481eb8893560f412ec6b85fbc3533b3983bf0e44a24a883884a34d"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v004-historique-conservation/version.json": {
+      "bytes": 1674,
+      "sha256": "7ed7bc3213cea7c1f32426f2ab88fd87a694d8a14a64b0bd94a51b13a5f0146a"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v004-historique-conservation/visuels/01-regles-conservation.png": {
+      "bytes": 271305,
+      "sha256": "d155236d95bb36c53021b13b151cb4f0209cc933116776f659561187e3831d5e"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v004-historique-conservation/visuels/02-previsualisation.png": {
+      "bytes": 284230,
+      "sha256": "a4ba80ab809bc1a7243f3deedb2b63c3e4b76858c6a4b8e7ae55b5793bd1eb59"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v004-historique-conservation/visuels/03-journal-corbeille.png": {
+      "bytes": 275524,
+      "sha256": "2b491a8f9ef63ed6efeb16366ecade10313053bd03f46b22a464fb4980d0b578"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v004-historique-conservation/visuels/04-purge-optionnelle.png": {
+      "bytes": 272610,
+      "sha256": "af4d1590139ccab3ddcf9dd99d562034e98f079115baa5ec38dd42449c09d135"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v005-notifications-dependances/README.md": {
+      "bytes": 3519,
+      "sha256": "f6ebea091d129b520d41213a7e2b969a4c5139cb1c5bddcd8668f837faf33667"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v005-notifications-dependances/conservation.js": {
+      "bytes": 17083,
+      "sha256": "71f462be459c9ae2a7eb24f21be8caa51b4994c5701e48d78e4b7bd9df3bd1e8"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v005-notifications-dependances/dependances.js": {
+      "bytes": 4751,
+      "sha256": "6a13c45d5f75c13fe8cd519dc04871cedbf93c1500079a67eb08910d13a146f3"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v005-notifications-dependances/index.html": {
+      "bytes": 4496,
+      "sha256": "ae6d6a26d72c376c3553906b200c12afd0d88ea33ae24b48ed108c413057a665"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v005-notifications-dependances/notifications.js": {
+      "bytes": 18463,
+      "sha256": "490a691addd3b6cb02d19c5fdd409fcdd5551553b9d0ec462dcd0584846db0b8"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v005-notifications-dependances/parametres.css": {
+      "bytes": 16675,
+      "sha256": "29bbdd95ec0dc4f279395317cf3acdbd3aeb4e7259fbe46cceebad7b77f87dd0"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v005-notifications-dependances/parametres.js": {
+      "bytes": 17627,
+      "sha256": "e3200a1ae2fc3c85fed5c3a73a09a39fa92698dccb1301ee849cc8ffda11dc15"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v005-notifications-dependances/personnalisation.js": {
+      "bytes": 17852,
+      "sha256": "98614e367ee2c53efbdfcf77d1950a9f826ca46a3fbc8881b460489e92865b25"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v005-notifications-dependances/shell.css": {
+      "bytes": 4660,
+      "sha256": "4396c8a5d458196859566d8b02647ed456828644b41c2ce1ea46ddaca0b23238"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v005-notifications-dependances/technique/verification.json": {
+      "bytes": 2532,
+      "sha256": "bf52416c7822298da52a93b05bf80e150488ab924c978879aaf43fa0776edebb"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v005-notifications-dependances/technique/verifier.cjs": {
+      "bytes": 11808,
+      "sha256": "d9594ea297290ca6ca5cca46ad7e47591ffcc825bd2b06e7a792a276fdb88f02"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v005-notifications-dependances/version.json": {
+      "bytes": 2967,
+      "sha256": "6ac6472939f5d36c12166da348fb449fac919b79c722c46f4eec3343e8215c33"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v005-notifications-dependances/visuels/01-contact-technique.png": {
+      "bytes": 260364,
+      "sha256": "1123ad37906fcf5f23b7a872538e34ba850e4c12b62dc5df5c0595a8d49ad408"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v005-notifications-dependances/visuels/02-exchange-online.png": {
+      "bytes": 265331,
+      "sha256": "f63ec5b221afe964ef13414116d4d0e19d5a378a8f14c74388d9791de16e2b5f"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v005-notifications-dependances/visuels/03-exchange-server.png": {
+      "bytes": 260768,
+      "sha256": "8c4b5c704cdf587da9fb397624aeedd8b31cf9ad2fdd9354ba06a9f2d7117467"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v005-notifications-dependances/visuels/04-postfix-smtps.png": {
+      "bytes": 259267,
+      "sha256": "f5ec0fd454943bd493bb5fcf979e82cd75ba36c96021e288e43c0be8f0963cdf"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v005-notifications-dependances/visuels/05-teams-workflow.png": {
+      "bytes": 263945,
+      "sha256": "b3ba9fda3e1cb93b03dc59043c9a22bd14c53d5b506d9e209453203dd68f6436"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v005-notifications-dependances/visuels/06-notifications-groupe.png": {
+      "bytes": 273883,
+      "sha256": "7f1e6392654d160f7a8f9926ce1f8ba2ddfe56fc0bacbe28def56a38b00731cc"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v005-notifications-dependances/visuels/07-notifications-profil.png": {
+      "bytes": 270421,
+      "sha256": "12159ab47af778ea322048af9c7fe57d8f9e7c21084178ef7053b0e330c45afc"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v005-notifications-dependances/visuels/08-dependances-suppression.png": {
+      "bytes": 263108,
+      "sha256": "15a2369fc4924b37950dc35a6441573e9ac4aa226a0446145e6fb963e2ee18e6"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v006-journaux-exports/README.md": {
+      "bytes": 2010,
+      "sha256": "89bc28334acb250ad4364e04a2da9ac57d514b9623162f8a1d1cb92b79676663"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v006-journaux-exports/conservation.js": {
+      "bytes": 17083,
+      "sha256": "71f462be459c9ae2a7eb24f21be8caa51b4994c5701e48d78e4b7bd9df3bd1e8"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v006-journaux-exports/dependances.js": {
+      "bytes": 4751,
+      "sha256": "6a13c45d5f75c13fe8cd519dc04871cedbf93c1500079a67eb08910d13a146f3"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v006-journaux-exports/index.html": {
+      "bytes": 4531,
+      "sha256": "0bf73d6c5066ec77fa4404cc78eed889a4bcfdcd364dc93cc3148036f6c82fc2"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v006-journaux-exports/journaux.js": {
+      "bytes": 12051,
+      "sha256": "99265c02cc9edf67a312eb2fa1c6af1ecedf93f306c6f717bbc28b89932f15c6"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v006-journaux-exports/notifications.js": {
+      "bytes": 18463,
+      "sha256": "490a691addd3b6cb02d19c5fdd409fcdd5551553b9d0ec462dcd0584846db0b8"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v006-journaux-exports/parametres.css": {
+      "bytes": 19125,
+      "sha256": "4b7e955d233217b456a6a49d7755f441ae0c49dfff075a801d45a0308382980f"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v006-journaux-exports/parametres.js": {
+      "bytes": 17167,
+      "sha256": "bd8ff644597b7a39a42c2bbed5ef9e8d6a11dab38134972b2d25eb2467a6c930"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v006-journaux-exports/personnalisation.js": {
+      "bytes": 17852,
+      "sha256": "98614e367ee2c53efbdfcf77d1950a9f826ca46a3fbc8881b460489e92865b25"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v006-journaux-exports/shell.css": {
+      "bytes": 4660,
+      "sha256": "4396c8a5d458196859566d8b02647ed456828644b41c2ce1ea46ddaca0b23238"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v006-journaux-exports/technique/verification.json": {
+      "bytes": 1443,
+      "sha256": "06154fc3ace02697b7e35a5e11230c27d412d1829eb5e52100826c44b9f1601e"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v006-journaux-exports/technique/verifier.cjs": {
+      "bytes": 6773,
+      "sha256": "b8078b1d3ac4008238e8ade5f5f3dfd5b89a866262b038dde98b495fa43951e3"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v006-journaux-exports/version.json": {
+      "bytes": 1617,
+      "sha256": "f50fe2445ef2808d2be11a2e54c787f58c6f8fdeef3242069cd6cfdc03b8c12c"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v006-journaux-exports/visuels/01-parametres-systeme.png": {
+      "bytes": 246263,
+      "sha256": "449d89bf8703a1eabdd0304fffaab46c09ec5f32f96a1aa7d58addfe57cc8b2b"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v006-journaux-exports/visuels/02-tracabilite.png": {
+      "bytes": 267619,
+      "sha256": "80fb217f71c42bb39f2e9a9acdd7dd4e0764027586da2f761a479dc9635e3712"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v006-journaux-exports/visuels/03-journaux-techniques.png": {
+      "bytes": 268030,
+      "sha256": "af7881d5cb04aafa74be8c08e99c4f0801673bfb552792fd80b891eccbb5edc9"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v006-journaux-exports/visuels/04-niveau-debug.png": {
+      "bytes": 257834,
+      "sha256": "b5c8f24ef989df636fa91c882956693cc627f9faebbf39ef05e342b380b3cd25"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v007-echelles-partagees/README.md": {
+      "bytes": 1878,
+      "sha256": "bbb4888aedcd007b51229d1cad9694219a69ee3fe9e4977442614d33d7ec8e44"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v007-echelles-partagees/conservation.js": {
+      "bytes": 17083,
+      "sha256": "71f462be459c9ae2a7eb24f21be8caa51b4994c5701e48d78e4b7bd9df3bd1e8"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v007-echelles-partagees/dependances.js": {
+      "bytes": 4751,
+      "sha256": "6a13c45d5f75c13fe8cd519dc04871cedbf93c1500079a67eb08910d13a146f3"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v007-echelles-partagees/echelles-partagees.js": {
+      "bytes": 1558,
+      "sha256": "5b3f0bba02c2e86dc622a4895e2f68f73ccc94c75560726d75f9dc7c20aec563"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v007-echelles-partagees/index.html": {
+      "bytes": 4692,
+      "sha256": "aaedf0d14c3c8d95a73fa3d2f537276268544413aa5a3073d1e7373fab79b8fe"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v007-echelles-partagees/journaux.js": {
+      "bytes": 12051,
+      "sha256": "99265c02cc9edf67a312eb2fa1c6af1ecedf93f306c6f717bbc28b89932f15c6"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v007-echelles-partagees/notifications.js": {
+      "bytes": 18463,
+      "sha256": "490a691addd3b6cb02d19c5fdd409fcdd5551553b9d0ec462dcd0584846db0b8"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v007-echelles-partagees/parametres.css": {
+      "bytes": 19125,
+      "sha256": "4b7e955d233217b456a6a49d7755f441ae0c49dfff075a801d45a0308382980f"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v007-echelles-partagees/parametres.js": {
+      "bytes": 17167,
+      "sha256": "bd8ff644597b7a39a42c2bbed5ef9e8d6a11dab38134972b2d25eb2467a6c930"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v007-echelles-partagees/personnalisation.js": {
+      "bytes": 17544,
+      "sha256": "0bfa88979154fbc8655768e731d0aa189236daab823b12a79dd218174e5f024e"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v007-echelles-partagees/shell.css": {
+      "bytes": 4660,
+      "sha256": "4396c8a5d458196859566d8b02647ed456828644b41c2ce1ea46ddaca0b23238"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v007-echelles-partagees/technique/verification.json": {
+      "bytes": 1271,
+      "sha256": "a52d281674ec754575978693ab82d829cf463322fc6c56605a1557db13a4cf98"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v007-echelles-partagees/technique/verifier.cjs": {
+      "bytes": 5954,
+      "sha256": "47d5602542543d7fdc61592add1be432da864eda7b7bb59d6e9dd8e27c363de2"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v007-echelles-partagees/version.json": {
+      "bytes": 773,
+      "sha256": "7dd0556aed1d04e3c489e9c74014b63d42c3e3dcf70528da6942eed2085e4f58"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v007-echelles-partagees/visuels/01-publication-echelle.png": {
+      "bytes": 286892,
+      "sha256": "38f90852eeb5d0e30f6a0a1a43ec8224c4d4472685d873fa1188eb1c98066b04"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/suivi.json": {
+      "bytes": 2924,
+      "sha256": "8eefb3bb4ba858696aa909b826b98c8f5fa6f0d90fcb9718df7fc70a3f882344"
+    },
+    "fonctionnalites-a-implementer/012-administration-apparence/tests/README.md": {
+      "bytes": 4201,
+      "sha256": "daff482386a11391eb10a5762c8c283052ad57117653b9cc2f27c52e63d8d15b"
+    },
+    "fonctionnalites-a-implementer/022-gestion-droits/README.md": {
+      "bytes": 1035,
+      "sha256": "588c573c55d857fcde9b874f3442ca424f34c6801a4f67ffc3a788821d999f45"
+    },
+    "fonctionnalites-a-implementer/022-gestion-droits/implementation/DOSSIER-IMPLEMENTATION.md": {
+      "bytes": 6258,
+      "sha256": "16a8812ef41260398b5df521769e8b01c25604db53a67c5b75ddeeda836a88d7"
+    },
+    "fonctionnalites-a-implementer/022-gestion-droits/implementation/PROMPT-IMPLEMENTATION.md": {
+      "bytes": 1875,
+      "sha256": "8046776021c6ae626e74406a3a10199bd4f8b9ee812f0ddf875df19597147ca2"
+    },
+    "fonctionnalites-a-implementer/022-gestion-droits/implementation/README.md": {
+      "bytes": 792,
+      "sha256": "fe9ce5f3f7d51b4491be01febe5fc943dd0af0ec612cb6599d40ab5fcda49f29"
+    },
+    "fonctionnalites-a-implementer/022-gestion-droits/implementation/SPECIFICATIONS-DROITS.md": {
+      "bytes": 7933,
+      "sha256": "57860d68bf56834f89fb66b8845030b0380b8ac9109eaecb847f3b026b5ae922"
+    },
+    "fonctionnalites-a-implementer/022-gestion-droits/maquettes/README.md": {
+      "bytes": 109,
+      "sha256": "c279e8b1a64e21a06626b54da907de5e364920e47fa2a5e95341dd9717c79078"
+    },
+    "fonctionnalites-a-implementer/022-gestion-droits/maquettes/v001-acces-visuels/README.md": {
+      "bytes": 1842,
+      "sha256": "3417f0d1cd77c69da9bae97b2c03bf98c5c9b3b3dcc4d9098091da26d56cc8e1"
+    },
+    "fonctionnalites-a-implementer/022-gestion-droits/maquettes/v001-acces-visuels/droits.css": {
+      "bytes": 10344,
+      "sha256": "2cb7e5cb2738d2a56d063ad2f9774c30c30f9632f15adb019e782dda776d830f"
+    },
+    "fonctionnalites-a-implementer/022-gestion-droits/maquettes/v001-acces-visuels/droits.js": {
+      "bytes": 16382,
+      "sha256": "80d4cc21f5f21c57143ac96ed778a69f96d90143be4ea52bbbfecd5062a42f00"
+    },
+    "fonctionnalites-a-implementer/022-gestion-droits/maquettes/v001-acces-visuels/index.html": {
+      "bytes": 4939,
+      "sha256": "edd51943744be39a36252d69478913a0013425aaaefaed32394771aec67df24f"
+    },
+    "fonctionnalites-a-implementer/022-gestion-droits/maquettes/v001-acces-visuels/shell.css": {
+      "bytes": 4660,
+      "sha256": "4396c8a5d458196859566d8b02647ed456828644b41c2ce1ea46ddaca0b23238"
+    },
+    "fonctionnalites-a-implementer/022-gestion-droits/maquettes/v001-acces-visuels/technique/verification.json": {
+      "bytes": 1343,
+      "sha256": "55ad60652085d627aca685a2c943ab3efcfada6069e75315665ee9a90fd9baac"
+    },
+    "fonctionnalites-a-implementer/022-gestion-droits/maquettes/v001-acces-visuels/technique/verifier.cjs": {
+      "bytes": 5703,
+      "sha256": "9c650d992931dd2e2e5276d19c37a98223fada951ad712c5369bb57651f5cba7"
+    },
+    "fonctionnalites-a-implementer/022-gestion-droits/maquettes/v001-acces-visuels/version.json": {
+      "bytes": 2251,
+      "sha256": "7c3e524b504e86bb7778ca851a050b0121b4fce710e90f6343d727c78900b56a"
+    },
+    "fonctionnalites-a-implementer/022-gestion-droits/maquettes/v001-acces-visuels/visuels/01-droits-collaborateur.png": {
+      "bytes": 246265,
+      "sha256": "da37cad88b903ef98d56749424ae357ec5f0905de866e644cdb8168baf71c8b3"
+    },
+    "fonctionnalites-a-implementer/022-gestion-droits/maquettes/v001-acces-visuels/visuels/02-ajuster-un-role.png": {
+      "bytes": 316678,
+      "sha256": "1e7f66a2a5bc214371b168481f95b3a0e6c902eac811c527f338dc8a3abf2a2a"
+    },
+    "fonctionnalites-a-implementer/022-gestion-droits/maquettes/v001-acces-visuels/visuels/03-origine-des-droits.png": {
+      "bytes": 295880,
+      "sha256": "3df284cc8ec99244ecc9e59348149021ac877d09d594ac33a8ce571fc465dfca"
+    },
+    "fonctionnalites-a-implementer/022-gestion-droits/maquettes/v001-acces-visuels/visuels/04-droits-du-groupe.png": {
+      "bytes": 247751,
+      "sha256": "4607dd3676775d65ee2c063066080bf95bf484ceb30ae3f203fcf1ba846a01fe"
+    },
+    "fonctionnalites-a-implementer/022-gestion-droits/maquettes/v001-acces-visuels/visuels/05-tester-les-acces.png": {
+      "bytes": 332694,
+      "sha256": "3840ad326879f8b98bb19a6391c5934e30a0db2a30d0b7c3544f8c507c26a88d"
+    },
+    "fonctionnalites-a-implementer/022-gestion-droits/maquettes/v001-acces-visuels/visuels/06-droits-mobile.png": {
+      "bytes": 52644,
+      "sha256": "b0a768a1c7dd706a6b3eedbf5a53992b7ffbe90b662ee485e7bcc9dae7146193"
+    },
+    "fonctionnalites-a-implementer/022-gestion-droits/suivi.json": {
+      "bytes": 1411,
+      "sha256": "6b6ffdd2ecc0b083aa84f2439f3b64c7b6143884513cc20c8db7b65f7efa6347"
+    },
+    "fonctionnalites-a-implementer/022-gestion-droits/tests/README.md": {
+      "bytes": 1008,
+      "sha256": "1f4af054ac471a17399dd90d059a51b8a51c391270b276c540c2324ea7d9c12d"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/README.md": {
+      "bytes": 1047,
+      "sha256": "d1f8457a1437d10ebe1acdf3cc92a80841a2bf737a3fd9d450f4ad746403b533"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/implementation/DOSSIER-IMPLEMENTATION.md": {
+      "bytes": 6493,
+      "sha256": "523558d83879df4d9b3ae3f032a734e6533176556d540bb778f27da5f1280ec9"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/implementation/PLANS-ACTION-V003.md": {
+      "bytes": 6974,
+      "sha256": "1382ab4cdd2c546e9f6038c83b903ff0bbdd89f04197cbed05d45add834f948b"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/implementation/PROMPT-IMPLEMENTATION.md": {
+      "bytes": 1877,
+      "sha256": "744c0b4bb170b14a6f6d14dbf0c70f779eb7be87867cf86deea6d190c11c2e8e"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/implementation/README.md": {
+      "bytes": 797,
+      "sha256": "1aedb3750205791f155afa85d957df36e028e3e88fea35bb1dab5940a742d367"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/README.md": {
+      "bytes": 676,
+      "sha256": "221d2c57fdf763019c19c006d5c099f12f219a628ee9fc79dfb99a42ffe27337"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v001-reference-08/README.md": {
+      "bytes": 809,
+      "sha256": "9d3097728eb0b5f0b992ed4aed0984dd80fadd36432f739ba832df7fb2518b66"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v001-reference-08/version.json": {
+      "bytes": 602,
+      "sha256": "058a7fd3a29f5da269c5a233482b12d44c82fa09df4e7455610fb46fc3ed567d"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v002-registres-lies/README.md": {
+      "bytes": 616,
+      "sha256": "c35229f2e9311fcaecd9c098a1ef8841e034ca6388812b7624f230d858519cb1"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v002-registres-lies/version.json": {
+      "bytes": 363,
+      "sha256": "6aca8c152ba46fbbc3a1ada80922abdf1ded6952e54cfdf42b595728a43067b7"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v003-timeline-responsables/README.md": {
+      "bytes": 2554,
+      "sha256": "78f9baa031f5ffa10fb35701b93080e7150cb467f0ddb960ac7720ca5f1209e2"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v003-timeline-responsables/index.html": {
+      "bytes": 4756,
+      "sha256": "6bafae6ae180f488fe6321ec6040d58c7fc9b182b07b776fbd9b92de01ce8c86"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v003-timeline-responsables/plans.css": {
+      "bytes": 12465,
+      "sha256": "a7d3fbd7d630a326afb1a095d1f8ae1218208fabe60c55b9b3c555c6571eb462"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v003-timeline-responsables/plans.js": {
+      "bytes": 20638,
+      "sha256": "06fbb7d7618c29380e1281eef89990a047d451d1ddca8793d9a5a0da8d75f33f"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v003-timeline-responsables/shell.css": {
+      "bytes": 4660,
+      "sha256": "4396c8a5d458196859566d8b02647ed456828644b41c2ce1ea46ddaca0b23238"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v003-timeline-responsables/technique/verification.json": {
+      "bytes": 1438,
+      "sha256": "639013345753fe1f4da3a116a26bf34ac31a447760408b4ae59a606321e0e513"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v003-timeline-responsables/technique/verifier.cjs": {
+      "bytes": 7638,
+      "sha256": "fe56936a2ba4046ffd24d96a1bb83db85b987a93ee3cd5a722316f348946f811"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v003-timeline-responsables/version.json": {
+      "bytes": 2173,
+      "sha256": "a19ad753244f81fd2ba302002309d7d586cffaeaaba03eb23a9b84c7a6941e93"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v003-timeline-responsables/visuels/01-timeline-plans.png": {
+      "bytes": 257555,
+      "sha256": "a21d2b78d78dc35061a04b5807ecd86d1078167c34e6b99e7096e411a42fb681"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v003-timeline-responsables/visuels/02-action-en-attente.png": {
+      "bytes": 357806,
+      "sha256": "8da3d08c798df76d082d4ae183bd993336a7c712fa5744fe257e23449bc0e3e7"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v003-timeline-responsables/visuels/03-kanban-statuts.png": {
+      "bytes": 235125,
+      "sha256": "fd977e49277788acb9eb4898cdd664391d30275763e1805298470f1796918a01"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v003-timeline-responsables/visuels/04-liste-detail.png": {
+      "bytes": 241192,
+      "sha256": "ba9f004d1c206c0f8ced1a01dc34a207428b16098cc8bfbacc5da1af8f6a504d"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v003-timeline-responsables/visuels/05-creation-responsable-fonction.png": {
+      "bytes": 267266,
+      "sha256": "ee54c9d849f270909d7b7625d01fb5f2d1f81307282cf6feac686cee062422e0"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v003-timeline-responsables/visuels/06-timeline-mobile.png": {
+      "bytes": 58752,
+      "sha256": "9bff2592361c2e06fd9a40105481e0f6b854e6bad2637ffa45e01f4add413d4a"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v004-perimetres-herites/README.md": {
+      "bytes": 1720,
+      "sha256": "d0e396782fa1432da5bf1d07cd8286455229bba8186325bd9bb6ded911ad09be"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v004-perimetres-herites/index.html": {
+      "bytes": 4756,
+      "sha256": "bdfbc816a012bfb374023c347f2323f03bf260c579c320da3d0ece1b04788b11"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v004-perimetres-herites/plans.css": {
+      "bytes": 13034,
+      "sha256": "b2fb90f4c7a56d5e6c9b8a95dbef1759d8d2680f78c6991ac3051a603253167a"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v004-perimetres-herites/plans.js": {
+      "bytes": 21534,
+      "sha256": "3a4f15d2aaf7df0075bc075f819b7a135c2f37df4ace69fb04c877a5e767457a"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v004-perimetres-herites/shell.css": {
+      "bytes": 4660,
+      "sha256": "4396c8a5d458196859566d8b02647ed456828644b41c2ce1ea46ddaca0b23238"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v004-perimetres-herites/technique/verification.json": {
+      "bytes": 1852,
+      "sha256": "0d7b1a1ae28ce2140c2d420a3727a43bd70596f2694f55b2187537563d602a4f"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v004-perimetres-herites/technique/verifier.cjs": {
+      "bytes": 9902,
+      "sha256": "694642ac1d66c673dcf582c3dc1fb374ac08619c128d59098bd274d5f40b4328"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v004-perimetres-herites/version.json": {
+      "bytes": 1736,
+      "sha256": "8c2f0b660e24988bbd70d848d307731722b0b7fb04944da087282ff2d5803bfc"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v004-perimetres-herites/visuels/01-timeline-plans.png": {
+      "bytes": 257815,
+      "sha256": "81bcf9365ae0a9f14f16ac5a70f5224d7555ebc7a5c72453e34c29926e6de8fa"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v004-perimetres-herites/visuels/02-action-perimetres-herites.png": {
+      "bytes": 305738,
+      "sha256": "67ea5a82f0557f52ff6984cd99e03bf93ee6b0fae86f590063b6ada9d63d5d43"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v004-perimetres-herites/visuels/03-perimetres-du-plan.png": {
+      "bytes": 285281,
+      "sha256": "8b02033346394fdff354969aa4978fb62c337756c5745fdbd11f8607bc9fa67a"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v004-perimetres-herites/visuels/04-liste-heritage.png": {
+      "bytes": 229712,
+      "sha256": "819c3818258bf49f27f82b1eb9368a56fb0e76c291d1d3751013d984c273a274"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/suivi.json": {
+      "bytes": 2100,
+      "sha256": "0105d43a996f9a7f82d018c74cad39d1b4c6c5a42dae979f8ab0c13818c3b6a0"
+    },
+    "fonctionnalites-a-implementer/017-plans-action/tests/README.md": {
+      "bytes": 1966,
+      "sha256": "733a4fb03afc741d0a7b4a0cd82b6f5ee5aa1978a7792139443b8a9990634449"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/README.md": {
+      "bytes": 1037,
+      "sha256": "8ccdf5229cbcd65b81e2bfc434a14e68952a90ca796db79994fb573839231883"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/implementation/DOSSIER-IMPLEMENTATION.md": {
+      "bytes": 6431,
+      "sha256": "2dc6085da3bb1bbf92ac8dac40fbd7507b82d20d7c7f1e51c466ae039bad3192"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/implementation/PROMPT-IMPLEMENTATION.md": {
+      "bytes": 1869,
+      "sha256": "7c497c44e6d2deebdb7af930044f5a0e56fd653168b918c13299af171944bd6e"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/implementation/README.md": {
+      "bytes": 796,
+      "sha256": "2ddc541607d55a52f4a958e6cab08f782b443bf9cec19c6c9f6e48f8dc30e465"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/README.md": {
+      "bytes": 255,
+      "sha256": "e977ad24bc08cefcdf22364282f593a0342d1d062ddc8c151a1f1507b5f442b9"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v001-registres-lies/DEMARRER.bat": {
+      "bytes": 39,
+      "sha256": "0edbd8f5b22789c3f11971244871f1b36e23f9e710fdc8b25ca6429165ec81be"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v001-registres-lies/GUIDE-DE-TEST.md": {
+      "bytes": 3737,
+      "sha256": "028185d1afc90bcb87150debe3f59451c6b32e21f4d6a02c90c5fd2b4eee481e"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v001-registres-lies/LIRE-MOI.txt": {
+      "bytes": 915,
+      "sha256": "d1d1cd05f68569e935122e2c99eb053067958df595d4302d755704072c364d17"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v001-registres-lies/PROMPT-APRES-VALIDATION.md": {
+      "bytes": 1063,
+      "sha256": "bc562589ef501b3e7a557b86cd119440fdc0468b1ddfc17725c0066e1580a58c"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v001-registres-lies/README.md": {
+      "bytes": 715,
+      "sha256": "a99598ff8173adc751d45be86c7b5a4a0a9aa37d5b231ab4fd4128efac57f601"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v001-registres-lies/TECHNIQUE-MAQUETTE.md": {
+      "bytes": 6620,
+      "sha256": "2ced8c7a7d52a15803e955ae2ce6b4a0167c081fd9a6f8e38abe3a1da0e86177"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v001-registres-lies/app.js": {
+      "bytes": 43745,
+      "sha256": "940aab8f24bda615b10599f2bede1a8ba85403d276072a067aab89b4e76054f5"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v001-registres-lies/base.css": {
+      "bytes": 9524,
+      "sha256": "0d8abac2655fd646cce95593420257ef9e6c782f8aef2944cb99d493d4b0d3a1"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v001-registres-lies/images/01-registres-ecarts.png": {
+      "bytes": 194002,
+      "sha256": "d40e6a76aa652a8c98301693e4b4afe530e6cce46df9836416f3b065ddf2d180"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v001-registres-lies/images/02-registre-surveillance.png": {
+      "bytes": 177023,
+      "sha256": "054517e5606a315361b78d5c7d49ba3775a193c17b86f42e97fd9d4b836350dd"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v001-registres-lies/images/03-fiche-ecart.png": {
+      "bytes": 207403,
+      "sha256": "ba63e44063b71b6586ba536ae4815cdb8880f38a05dcef63c94af512144ed3b1"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v001-registres-lies/images/04-plans-action.png": {
+      "bytes": 166262,
+      "sha256": "cb0d87a848fbf4aeaaa46916da2f87243d09076fbd1e49bda421b64b4972b59f"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v001-registres-lies/images/05-plan-transversal.png": {
+      "bytes": 162961,
+      "sha256": "b101c894fecb3efe6aa9b5742e1884b220c5c8cd4200d29838439cfaa524e9bf"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v001-registres-lies/images/06-conformite-perimetre.png": {
+      "bytes": 243434,
+      "sha256": "bef9f574e6d2c42db3cb8b6f77aa58bd8767af9d8fbd21ef41300429db4d15dd"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v001-registres-lies/images/07-kanban.png": {
+      "bytes": 159496,
+      "sha256": "7a6cc1b44dbed278717b68afe2dba76f40d5271c1a3e1c13c0ff9323fc51273c"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v001-registres-lies/index.html": {
+      "bytes": 1090,
+      "sha256": "04dd2aed7304fa2d7bc10726e04e531c04d82be12381372a747ae3cf7f713c1f"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v001-registres-lies/prototype.css": {
+      "bytes": 6929,
+      "sha256": "7ac519ae0184a5694384c863a4f69527fcc2d936e045e72bea5ed2690467362a"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v001-registres-lies/registres.css": {
+      "bytes": 5505,
+      "sha256": "7e56fad860feb2c6f007419196f488174eb42068581f26e18320a3297fe958f7"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v001-registres-lies/seed.js": {
+      "bytes": 7280,
+      "sha256": "aa23838003cc688b720b5548601fa86714953d8dfe9fa738f1985e5ac6690e26"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v001-registres-lies/technique/manifest.json": {
+      "bytes": 3172,
+      "sha256": "d15c67dc13b1cb21e0d8066fd2e23fb7adf9c31bba296931527c968f11b4634a"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v001-registres-lies/technique/recette.json": {
+      "bytes": 1836,
+      "sha256": "1536cd898a02556e42a62ba417b80debcd03e447f968cbb66a0bbaac81aa6ed6"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v001-registres-lies/technique/registres.cjs": {
+      "bytes": 11665,
+      "sha256": "273c9db5c10fbec13c91be111e0de92bf72434faa670d74d0b84cb64fa045041"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v001-registres-lies/version.json": {
+      "bytes": 566,
+      "sha256": "f32d0fb3310a6d312d4e818501a12c8cdb1b919b861adfc3e0790c30fff925a7"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v002-creation-depuis-audit/DEMARRER.bat": {
+      "bytes": 39,
+      "sha256": "0edbd8f5b22789c3f11971244871f1b36e23f9e710fdc8b25ca6429165ec81be"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v002-creation-depuis-audit/GUIDE-DE-TEST.md": {
+      "bytes": 4710,
+      "sha256": "2ef247549a79cb56cb0c3472305cd5f8925279ef369bd2959b8b1d6f26683c67"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v002-creation-depuis-audit/LIRE-MOI.txt": {
+      "bytes": 915,
+      "sha256": "d1d1cd05f68569e935122e2c99eb053067958df595d4302d755704072c364d17"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v002-creation-depuis-audit/PROMPT-APRES-VALIDATION.md": {
+      "bytes": 1063,
+      "sha256": "bc562589ef501b3e7a557b86cd119440fdc0468b1ddfc17725c0066e1580a58c"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v002-creation-depuis-audit/README.md": {
+      "bytes": 1245,
+      "sha256": "98ce9bf8e8c6ecf0acc8d977d54dc12e6a7f23e3ad08cdddf0ea51aa2b29fa47"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v002-creation-depuis-audit/TECHNIQUE-MAQUETTE.md": {
+      "bytes": 7377,
+      "sha256": "cd10a069f07874da44f52124d7cca5a65df0576a60879f66d5dd0008c8f6dc26"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v002-creation-depuis-audit/app.js": {
+      "bytes": 46678,
+      "sha256": "f6b5c34587208f30eaf90efda9619b3628ccc5829c4f2664e1afe279e199d4d2"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v002-creation-depuis-audit/base.css": {
+      "bytes": 9524,
+      "sha256": "0d8abac2655fd646cce95593420257ef9e6c782f8aef2944cb99d493d4b0d3a1"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v002-creation-depuis-audit/images/01-registres-ecarts.png": {
+      "bytes": 194002,
+      "sha256": "d40e6a76aa652a8c98301693e4b4afe530e6cce46df9836416f3b065ddf2d180"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v002-creation-depuis-audit/images/02-registre-surveillance.png": {
+      "bytes": 177023,
+      "sha256": "054517e5606a315361b78d5c7d49ba3775a193c17b86f42e97fd9d4b836350dd"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v002-creation-depuis-audit/images/03-fiche-ecart.png": {
+      "bytes": 208599,
+      "sha256": "a6f967df803c896693592e3a6058a61e319bd47b3973ed9dfaa4d66d49c1ba6c"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v002-creation-depuis-audit/images/04-plans-action.png": {
+      "bytes": 166262,
+      "sha256": "cb0d87a848fbf4aeaaa46916da2f87243d09076fbd1e49bda421b64b4972b59f"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v002-creation-depuis-audit/images/05-plan-transversal.png": {
+      "bytes": 162961,
+      "sha256": "b101c894fecb3efe6aa9b5742e1884b220c5c8cd4200d29838439cfaa524e9bf"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v002-creation-depuis-audit/images/06-conformite-perimetre.png": {
+      "bytes": 243434,
+      "sha256": "bef9f574e6d2c42db3cb8b6f77aa58bd8767af9d8fbd21ef41300429db4d15dd"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v002-creation-depuis-audit/images/07-kanban.png": {
+      "bytes": 159496,
+      "sha256": "7a6cc1b44dbed278717b68afe2dba76f40d5271c1a3e1c13c0ff9323fc51273c"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v002-creation-depuis-audit/images/08-audits-ajouter-ecart.png": {
+      "bytes": 152269,
+      "sha256": "15a094729578cf6c80f035bdcf2bce5f245836e118c88bc2c7e746fad5bb09c7"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v002-creation-depuis-audit/images/09-creation-ecart-depuis-audit.png": {
+      "bytes": 177948,
+      "sha256": "0c949eec2be7d2824e7867fea47d6ce311e6158ea1584f2610994b648af83670"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v002-creation-depuis-audit/index.html": {
+      "bytes": 1090,
+      "sha256": "04dd2aed7304fa2d7bc10726e04e531c04d82be12381372a747ae3cf7f713c1f"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v002-creation-depuis-audit/prototype.css": {
+      "bytes": 6929,
+      "sha256": "7ac519ae0184a5694384c863a4f69527fcc2d936e045e72bea5ed2690467362a"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v002-creation-depuis-audit/registres.css": {
+      "bytes": 5505,
+      "sha256": "7e56fad860feb2c6f007419196f488174eb42068581f26e18320a3297fe958f7"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v002-creation-depuis-audit/seed.js": {
+      "bytes": 7280,
+      "sha256": "aa23838003cc688b720b5548601fa86714953d8dfe9fa738f1985e5ac6690e26"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v002-creation-depuis-audit/technique/manifest.json": {
+      "bytes": 3501,
+      "sha256": "42b133dc2f65cc7fbe3448dd2c5d740d6b150806c81bfd554c801406c824700b"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v002-creation-depuis-audit/technique/recette.json": {
+      "bytes": 2135,
+      "sha256": "6fc2f71e9b3e4d0d4e377fbeeacba09decd65e03880db8950ab95a754abfea93"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v002-creation-depuis-audit/technique/registres.cjs": {
+      "bytes": 14555,
+      "sha256": "6d6a055ab422b76467cb479e18af9cf6376c192629b504f252f1f1e0d2d19af4"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v002-creation-depuis-audit/version.json": {
+      "bytes": 590,
+      "sha256": "737e4b26fbeae09a7a0f0ce85f2a37c743ddbde8c11c88df0a3aae79c6669ac6"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v003-cloture-preservee/ASTRA-021-registres-ecarts-v003.zip": {
+      "bytes": 1980299,
+      "sha256": "bd2cdca018f5cb4e91a1e5f6e6eeacd3064a3bc66536285436aa30f77a76fae1"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v003-cloture-preservee/ASTRA-021-registres-ecarts-v003.zip.sha256": {
+      "bytes": 102,
+      "sha256": "eb9aaab3d807f631b8003f3602f9209aa196da17df518e37f313bac63ccbe4db"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v003-cloture-preservee/DEMARRER.bat": {
+      "bytes": 39,
+      "sha256": "0edbd8f5b22789c3f11971244871f1b36e23f9e710fdc8b25ca6429165ec81be"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v003-cloture-preservee/README.md": {
+      "bytes": 6336,
+      "sha256": "7506930835c7135fa6c78af60537f0ec0659019fb8a7c129a876fadad2c46d51"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v003-cloture-preservee/app.js": {
+      "bytes": 49427,
+      "sha256": "4a3363011dbb6b9d340790b9bb04a854ae54d8bb4b3115d4b022ab58bb3277a4"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v003-cloture-preservee/base.css": {
+      "bytes": 9524,
+      "sha256": "0d8abac2655fd646cce95593420257ef9e6c782f8aef2944cb99d493d4b0d3a1"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v003-cloture-preservee/images/01-registres-ecarts.png": {
+      "bytes": 194492,
+      "sha256": "41051c2672a7a983dda0ce9855a095bd9cfbfc7178ceaab3185bd49aa86814b2"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v003-cloture-preservee/images/02-registre-surveillance.png": {
+      "bytes": 177517,
+      "sha256": "dcff257508c410083ee6d8208b06f9db36ecdcad8079bc4fb04ba8a3e0748d3e"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v003-cloture-preservee/images/03-fiche-ecart.png": {
+      "bytes": 209776,
+      "sha256": "161f03e1e699143f41f338a1efd1d623504eebe47f86402bce21f83be768a8e2"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v003-cloture-preservee/images/04-plans-action.png": {
+      "bytes": 166829,
+      "sha256": "f49147680ad925aff5afd609b2caa4f403eba4ed27eb65bdd13ba9270c826098"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v003-cloture-preservee/images/05-plan-transversal.png": {
+      "bytes": 163446,
+      "sha256": "5cbd14c49f7bfac4e688bbad308e16744f25fb505de7af8503062fce9d869af9"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v003-cloture-preservee/images/06-conformite-perimetre.png": {
+      "bytes": 243908,
+      "sha256": "8851f2f7dc2a6201ecf563cda9090aa43fc8e39d0150af0367da9aa4a286a468"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v003-cloture-preservee/images/07-kanban.png": {
+      "bytes": 160049,
+      "sha256": "dd72544c19f8ddb286cd30bd929cb8d931ab8dd2b949341b62a3007e7b2b3c19"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v003-cloture-preservee/images/08-audits-ajouter-ecart.png": {
+      "bytes": 152724,
+      "sha256": "d7a1ea19a1c7392c7c936196ce0d453ea0e280d6197221e75aa5ca7706b756e5"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v003-cloture-preservee/images/09-creation-ecart-depuis-audit.png": {
+      "bytes": 178112,
+      "sha256": "0c87767e05e4502838062795a8dd5269d931ea11ff9a26052af149394611d7d3"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v003-cloture-preservee/images/10-nouveau-constat-lie.png": {
+      "bytes": 188068,
+      "sha256": "ee4037e4e2bad32d25997bb62f739028cda2901b2d8f9efe16878eb8f6283dc6"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v003-cloture-preservee/images/11-cloture-preservee.png": {
+      "bytes": 218580,
+      "sha256": "abebbe33be6ce448458d2ae0f0d0498a3755e36663aca6b0d721fe7c294fce2d"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v003-cloture-preservee/index.html": {
+      "bytes": 1090,
+      "sha256": "04dd2aed7304fa2d7bc10726e04e531c04d82be12381372a747ae3cf7f713c1f"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v003-cloture-preservee/prototype.css": {
+      "bytes": 6929,
+      "sha256": "7ac519ae0184a5694384c863a4f69527fcc2d936e045e72bea5ed2690467362a"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v003-cloture-preservee/registres.css": {
+      "bytes": 5505,
+      "sha256": "7e56fad860feb2c6f007419196f488174eb42068581f26e18320a3297fe958f7"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v003-cloture-preservee/seed.js": {
+      "bytes": 7280,
+      "sha256": "aa23838003cc688b720b5548601fa86714953d8dfe9fa738f1985e5ac6690e26"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v003-cloture-preservee/technique/manifest.json": {
+      "bytes": 2192,
+      "sha256": "ce6973e6a99bd689ba3a83499afffbc9b1fca5818445e087d654619acbefff0c"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v003-cloture-preservee/technique/recette.json": {
+      "bytes": 2558,
+      "sha256": "283371786eead5a9fc672ce9723593ca37e62084d0487d962d1b47560353d677"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v003-cloture-preservee/technique/registres.cjs": {
+      "bytes": 17526,
+      "sha256": "474b136862b842edb392977519b235f69cea6ad786d83b8d46cfa1081c0e891e"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v003-cloture-preservee/version.json": {
+      "bytes": 857,
+      "sha256": "448cb937dc49b59e9a788cea15564f5b3944b22de5f8427cd4760061608ea56d"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/suivi.json": {
+      "bytes": 1970,
+      "sha256": "40e8e239dec70a9bb053dc6dcbde01a95f349746288175a98fc1439a0eb91a3b"
+    },
+    "fonctionnalites-a-implementer/021-registres-ecarts/tests/README.md": {
+      "bytes": 1002,
+      "sha256": "2b38addcdc69704c5cad430e2b872678adf22fe7ee10cab92ba836cf961b0e6d"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/README.md": {
+      "bytes": 1059,
+      "sha256": "1e92587400a184218f8ed03bc57f523368793e5a21ace4a4cbea85e53c3b9611"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/implementation/DOSSIER-IMPLEMENTATION.md": {
+      "bytes": 8127,
+      "sha256": "8687e696909b1f03940d1b4cdaa392cb420dee91fd6db18db68bfa1b2eacbfa9"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/implementation/PROMPT-IMPLEMENTATION.md": {
+      "bytes": 1881,
+      "sha256": "e6cec42d08383fa742086c7faa71efcfaafd9f8cadbdf559ad9b25f56e58aaf0"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/implementation/README.md": {
+      "bytes": 801,
+      "sha256": "daf367f84da0fe243aa64b023182bef3ceb25612f1180a81df47a95caf4aa3c9"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/README.md": {
+      "bytes": 1295,
+      "sha256": "bfa78b65850d0b661695087b5c702cc48240f4236369baaf3b52aba9591240b4"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v001-reference-08/README.md": {
+      "bytes": 763,
+      "sha256": "7f6c01fd0b754caa9929a69dbbf4386816450ac0f1cb7c795bee7cde11b87038"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v001-reference-08/version.json": {
+      "bytes": 561,
+      "sha256": "a272f32b9bccae182326715d768d0e4a402f9f4b994f4765dc3a0046d7fe8ffc"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v002-timeline-validations/ASTRA-018-timeline-validations-v002.zip": {
+      "bytes": 1659127,
+      "sha256": "fda7984e1772dbf797e71705f0d4f6189de1a31e24115fa27b3fc8ec3a9a9fc8"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v002-timeline-validations/ASTRA-018-timeline-validations-v002.zip.sha256": {
+      "bytes": 106,
+      "sha256": "e4f64555a20630eb5736da3a8039a4041618609807787e16522844d9166cf671"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v002-timeline-validations/DEMARRER.bat": {
+      "bytes": 39,
+      "sha256": "0edbd8f5b22789c3f11971244871f1b36e23f9e710fdc8b25ca6429165ec81be"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v002-timeline-validations/README.md": {
+      "bytes": 4796,
+      "sha256": "8d24c9af121c673145977196a4a5739f2f4ae04f32f8a8ce7d1bd872f664dae9"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v002-timeline-validations/TECHNIQUE-MAQUETTE.md": {
+      "bytes": 8851,
+      "sha256": "3467089156d63a831ce6d2cf4c3b382f4a902cf860d5725629946e07e771add5"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v002-timeline-validations/app.js": {
+      "bytes": 21521,
+      "sha256": "9374b59da01e1f7e5291f4d517bfad4afac98c3f902d09897c1186ac08ee5b93"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v002-timeline-validations/base.css": {
+      "bytes": 9524,
+      "sha256": "0d8abac2655fd646cce95593420257ef9e6c782f8aef2944cb99d493d4b0d3a1"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v002-timeline-validations/images/01-timeline-mensuelle.png": {
+      "bytes": 211628,
+      "sha256": "5bdeaf4e25472d179be788adaaa176467587768882a8fe771e9e7cd01a3e1157"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v002-timeline-validations/images/02-panneau-validation.png": {
+      "bytes": 244201,
+      "sha256": "698246004ab30326de7d2a16fbba4f85adaf125c601336a181a9a78587f92b57"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v002-timeline-validations/images/03-validation-enregistree.png": {
+      "bytes": 231708,
+      "sha256": "06984d2bea46bcd0fdc808dd8349d28a6a428e99ad5e1073eec1dce9dad6ec8f"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v002-timeline-validations/images/04-confirmation-resultat-ko.png": {
+      "bytes": 230317,
+      "sha256": "c6068b202b064004bf47aedeb7bb63587c7b03b8ffe8e44acd8d7d9a00f8568a"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v002-timeline-validations/images/05-fiche-preuve-et-tracabilite.png": {
+      "bytes": 219387,
+      "sha256": "0aedef71bcc099475f8b7439d5763e1abaad7b89dd135ff63a232c785acb992a"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v002-timeline-validations/images/06-registre-des-preuves.png": {
+      "bytes": 188117,
+      "sha256": "b20bfd61e57d8a9ce15ab25dd0f7c08d8789a2ee0f997652045494860c2d7048"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v002-timeline-validations/images/07-journal-validations.png": {
+      "bytes": 295042,
+      "sha256": "da2df2f961ab9f615f21e33e0c540307beaa06cbdee1eac80f243c425b7cd24f"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v002-timeline-validations/images/08-timeline-mobile.png": {
+      "bytes": 94112,
+      "sha256": "6f192879672b185077a76794a35a4d6e5ac6c18ee41b3d26a90d5632c774d358"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v002-timeline-validations/index.html": {
+      "bytes": 4901,
+      "sha256": "28daae59f46dc28b7f6a547a8d642dc1210d89f73a3afa61bf93f4cdda02ac24"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v002-timeline-validations/model.js": {
+      "bytes": 6720,
+      "sha256": "90b375bd79140a0779113997c1e4493959716d3093e11738e066f8cdf72b1ec8"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v002-timeline-validations/technique/manifest.json": {
+      "bytes": 1907,
+      "sha256": "1def80f5a368ee5217285a436929e1c364cfe2bb45a3fd1e8604779f6beb6fb1"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v002-timeline-validations/technique/parcours.cjs": {
+      "bytes": 11369,
+      "sha256": "571f201ea0d24f79b0ba0d14fa94fc05d6468392c6c239f1f7ec57948434b9cc"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v002-timeline-validations/technique/recette.json": {
+      "bytes": 1676,
+      "sha256": "bf9993a4282282a69fdfd1817e1ceb88eeaa81cb499dca29006af65ca675af2c"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v002-timeline-validations/timeline.css": {
+      "bytes": 15631,
+      "sha256": "74c184a8f79b2bd39a45253b1c79908b7addcfee3fc989c5a4d9a3457064c688"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v002-timeline-validations/version.json": {
+      "bytes": 680,
+      "sha256": "4657e4e5e194c154146dd3f8c82b31f139cca52dec0f42be7e3a2d89d207ab67"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v003-registres-dialogues-centres/ASTRA-018-registres-dialogues-centres-v003.zip": {
+      "bytes": 2348492,
+      "sha256": "9aed878d319d3980889ed3071acf943f9cd0765911898b1efd7ae6a61413bda0"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v003-registres-dialogues-centres/ASTRA-018-registres-dialogues-centres-v003.zip.sha256": {
+      "bytes": 113,
+      "sha256": "9483d81e8199bb3444e5621f0bc89947028e7f96fef33b68df73ce08006a9124"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v003-registres-dialogues-centres/DEMARRER.bat": {
+      "bytes": 39,
+      "sha256": "0edbd8f5b22789c3f11971244871f1b36e23f9e710fdc8b25ca6429165ec81be"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v003-registres-dialogues-centres/README.md": {
+      "bytes": 6487,
+      "sha256": "860c736da632d8736d198448447767b3932e92bc38493dcfda0f28817864b463"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v003-registres-dialogues-centres/TECHNIQUE-MAQUETTE.md": {
+      "bytes": 10819,
+      "sha256": "1f39af8ddbfc87707eae7567cb4815c57af413440202d1deac68759a25fde68a"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v003-registres-dialogues-centres/app.js": {
+      "bytes": 24095,
+      "sha256": "0f107b5f78f75012ccb756e10c52fadbb6e2022ae8cc6852bead457e081d5a9f"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v003-registres-dialogues-centres/base.css": {
+      "bytes": 9524,
+      "sha256": "0d8abac2655fd646cce95593420257ef9e6c782f8aef2944cb99d493d4b0d3a1"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v003-registres-dialogues-centres/images/01-timeline-mensuelle.png": {
+      "bytes": 232954,
+      "sha256": "a27fa38f1deaaa6ca0c2dae4da7d92e2cb49bc652efe25d08bc607155845bc31"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v003-registres-dialogues-centres/images/02-panneau-validation.png": {
+      "bytes": 271211,
+      "sha256": "3eb19af577ae89e28f90184d3eb83774105fee368f343e67d97b8b34a873a301"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v003-registres-dialogues-centres/images/03-validation-enregistree.png": {
+      "bytes": 257429,
+      "sha256": "32d6a8684480d87bb3934f048bb997d42f314e2f3424878f6170d534d2273afc"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v003-registres-dialogues-centres/images/04-confirmation-resultat-ko.png": {
+      "bytes": 255687,
+      "sha256": "59c767fa50d50601c43cb225c673a2e68afc3cc319d2f23203c95e098a910c6b"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v003-registres-dialogues-centres/images/05-fiche-preuve-et-tracabilite.png": {
+      "bytes": 245680,
+      "sha256": "fd536060dc43730b8cf5bbae0540dfed5363032f9471eec4715ada9656101878"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v003-registres-dialogues-centres/images/06-registre-des-preuves.png": {
+      "bytes": 193532,
+      "sha256": "6bf79f505766768240e592e33b2f1955dd211f9205c838a1b0eb2d90755349bc"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v003-registres-dialogues-centres/images/07-journal-validations.png": {
+      "bytes": 303340,
+      "sha256": "70ae06f46dd5e3d21118492e5683cd5a1f16a237ad9c50984e3c4238e2b01381"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v003-registres-dialogues-centres/images/08-timeline-mobile.png": {
+      "bytes": 110298,
+      "sha256": "9d291d9f4d797f40559d9345b342dc666df6e369425e1098e6cd0fba7b966c2f"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v003-registres-dialogues-centres/images/09-selection-registres.png": {
+      "bytes": 249863,
+      "sha256": "e1591e871791b24281fc98746fee37b2eaa905ddf7bf14ead64ad61b616cc5bb"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v003-registres-dialogues-centres/images/10-timeline-deux-registres.png": {
+      "bytes": 215159,
+      "sha256": "bf648045187f7ebd3625d9cf1ec576d9eb05a6dfb6ba45144a9eabef26f0872d"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v003-registres-dialogues-centres/images/11-validation-mobile.png": {
+      "bytes": 56128,
+      "sha256": "f7a748ab0f9a1b81ae44e8a73000c7c66f07974a200ad35a31de99bda1337152"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v003-registres-dialogues-centres/index.html": {
+      "bytes": 5191,
+      "sha256": "25068d0c4743e613f1b44dc75cd17282f94acb427028bf354eb2e3f7343152ad"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v003-registres-dialogues-centres/model.js": {
+      "bytes": 7219,
+      "sha256": "03b5729badf0a32fdaa29bfb11c558722ef4c65c562e6b379df29e20da29f5cd"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v003-registres-dialogues-centres/technique/manifest.json": {
+      "bytes": 2149,
+      "sha256": "de386daae9731681c848d276cf3650091f8910805f6494ab0bb5d4473769c780"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v003-registres-dialogues-centres/technique/parcours.cjs": {
+      "bytes": 14519,
+      "sha256": "e6a4af43063f9dd57503f76b4cb5edd53f2a9412222da62b68b8848fc62df47e"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v003-registres-dialogues-centres/technique/recette.json": {
+      "bytes": 2245,
+      "sha256": "0c30afc4b94d6ef365cfdfec76294be12a1c33d30378276dbbe56f7094f146f8"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v003-registres-dialogues-centres/timeline.css": {
+      "bytes": 20220,
+      "sha256": "6a3368c112c26611bcd3e6c8b5a16ba50a23452c24be5727fcb89e135ad5ee86"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v003-registres-dialogues-centres/version.json": {
+      "bytes": 642,
+      "sha256": "fe70d192ac2d2ec980a01ef1c2fd5a48e2422a90aca9d77d191eae979031ef72"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v004-timeline-guides-fixes/ASTRA-018-timeline-guides-fixes-v004.zip": {
+      "bytes": 2578255,
+      "sha256": "5a8c0f714d19b0a4278402eec6fbfc5da80ac92b0effabe9e82cbc61f3c04d85"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v004-timeline-guides-fixes/ASTRA-018-timeline-guides-fixes-v004.zip.sha256": {
+      "bytes": 107,
+      "sha256": "9c3d221822f496bfaea136f48a5cfc0e5a82609e50d9005b25a3144503c5a471"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v004-timeline-guides-fixes/DEMARRER.bat": {
+      "bytes": 39,
+      "sha256": "0edbd8f5b22789c3f11971244871f1b36e23f9e710fdc8b25ca6429165ec81be"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v004-timeline-guides-fixes/README.md": {
+      "bytes": 7246,
+      "sha256": "1e2a33fb892df38bc0454fa39588086fe6fa68d1bc4116b6e012c970bf632398"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v004-timeline-guides-fixes/TECHNIQUE-MAQUETTE.md": {
+      "bytes": 11870,
+      "sha256": "69d774e0e5f12b0e5ce5ed3c82aa0dc1cde339eca7eedeea7919c9c3c91a7004"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v004-timeline-guides-fixes/app.js": {
+      "bytes": 24643,
+      "sha256": "7adb1e0691a718afcd357d3bf1c65cacd3dde1f4fcc8aa19275e93eefae1fa66"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v004-timeline-guides-fixes/base.css": {
+      "bytes": 9524,
+      "sha256": "0d8abac2655fd646cce95593420257ef9e6c782f8aef2944cb99d493d4b0d3a1"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v004-timeline-guides-fixes/images/01-timeline-mensuelle.png": {
+      "bytes": 230038,
+      "sha256": "206308b9f8a4afb373729e0441a35d58a31e3f4ace35a622b4d5acca5132ff36"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v004-timeline-guides-fixes/images/02-panneau-validation.png": {
+      "bytes": 273067,
+      "sha256": "9fea60567bf33d4fe189e2307deea66f57f5464f507ec18ab1166c3aba101008"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v004-timeline-guides-fixes/images/03-validation-enregistree.png": {
+      "bytes": 257414,
+      "sha256": "6706714d4fce92fa2d71200f7599e9a172e25706619646111fbff347640eb4dd"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v004-timeline-guides-fixes/images/04-confirmation-resultat-ko.png": {
+      "bytes": 258450,
+      "sha256": "47524a150f6c5f3c13efd2c74f4bea0fde69039b2148761250f4b051de8b9c91"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v004-timeline-guides-fixes/images/05-fiche-preuve-et-tracabilite.png": {
+      "bytes": 247868,
+      "sha256": "892a77ad9d02e0063dfbcbca6e22717073f7ff98b5c368468599f779a58aa283"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v004-timeline-guides-fixes/images/06-registre-des-preuves.png": {
+      "bytes": 193532,
+      "sha256": "6bf79f505766768240e592e33b2f1955dd211f9205c838a1b0eb2d90755349bc"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v004-timeline-guides-fixes/images/07-journal-validations.png": {
+      "bytes": 302916,
+      "sha256": "b5e99a5de0efa685dd876e459950ba2e46b20ada2bffba31613884c5cf32576b"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v004-timeline-guides-fixes/images/08-timeline-mobile.png": {
+      "bytes": 113724,
+      "sha256": "49238ead701854a71d08c0dbf59e4d575fdf07f2817cd7e29372de85e9c33efb"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v004-timeline-guides-fixes/images/09-selection-registres.png": {
+      "bytes": 251048,
+      "sha256": "c83a28b66a276a22f1b58e6c87bec0734cc0e7e49f20b8a2e44f2f528baefbca"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v004-timeline-guides-fixes/images/10-timeline-deux-registres.png": {
+      "bytes": 213697,
+      "sha256": "55635a8aecbb88ba3a0fd0337de02492fe2186a2d05184cee289b99409e90fb9"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v004-timeline-guides-fixes/images/11-validation-mobile.png": {
+      "bytes": 56128,
+      "sha256": "f7a748ab0f9a1b81ae44e8a73000c7c66f07974a200ad35a31de99bda1337152"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v004-timeline-guides-fixes/images/12-intitules-fixes-defilement.png": {
+      "bytes": 230620,
+      "sha256": "a6298b8c1fa8d307d7e76f546f87ce551d6d689cdfa548e7946655ba8cdb8f79"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v004-timeline-guides-fixes/index.html": {
+      "bytes": 5191,
+      "sha256": "25068d0c4743e613f1b44dc75cd17282f94acb427028bf354eb2e3f7343152ad"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v004-timeline-guides-fixes/model.js": {
+      "bytes": 7219,
+      "sha256": "03b5729badf0a32fdaa29bfb11c558722ef4c65c562e6b379df29e20da29f5cd"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v004-timeline-guides-fixes/technique/manifest.json": {
+      "bytes": 2263,
+      "sha256": "dec55df2594504857186e3e738dc71cae5e97e42e770376846863c55ff7a1f10"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v004-timeline-guides-fixes/technique/parcours.cjs": {
+      "bytes": 16197,
+      "sha256": "0523d163e406794b9b429e4bff4c3263b5cf8a00f2005872f50e907739d48eab"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v004-timeline-guides-fixes/technique/recette.json": {
+      "bytes": 2504,
+      "sha256": "6bab57f82f74fb61ec98635fe359284caa5d9d888390739382588364fe7d7ce8"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v004-timeline-guides-fixes/timeline.css": {
+      "bytes": 21810,
+      "sha256": "6ffc85949dff2ce7c83926a33c2d1c5450c362809889022dc7f2a0d4e78c7b25"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v004-timeline-guides-fixes/version.json": {
+      "bytes": 713,
+      "sha256": "740094659883d2cb5146be9c68af09b97f7a071c51ddaadea4691bd82c01dada"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v005-periodicites-fenetres/README.md": {
+      "bytes": 3017,
+      "sha256": "1d29058927bc7fe0a31b694239dfe05f92a0faed8ce401789f4ac10a41d267d5"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v005-periodicites-fenetres/base.css": {
+      "bytes": 9524,
+      "sha256": "0d8abac2655fd646cce95593420257ef9e6c782f8aef2944cb99d493d4b0d3a1"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v005-periodicites-fenetres/images/01-periodicites-et-fenetres.png": {
+      "bytes": 278019,
+      "sha256": "37def50d35eabc48247d41210d6925d024ea401655f028c33745b8edd00771e0"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v005-periodicites-fenetres/images/02-parametrage-mensuel.png": {
+      "bytes": 358498,
+      "sha256": "469dbaec71f3d62935c38e9eed65a9a6b8d93b5377623227186b13498d84bb3d"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v005-periodicites-fenetres/images/03-realisation-fenetre-ouverte.png": {
+      "bytes": 350600,
+      "sha256": "d36f4a23733f3e78516192c52aa1861be617637748868fb427b31d37f83ba062"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v005-periodicites-fenetres/images/04-focus-mensuel-jaune.png": {
+      "bytes": 218521,
+      "sha256": "404063773e68011f1182a3912b9e8dd4ce8cddb67376b8e63f06a453f2a24904"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v005-periodicites-fenetres/images/05-timeline-mobile.png": {
+      "bytes": 135142,
+      "sha256": "3d371213cfc21c96c235b34bd7b352f50a791ed08f8f184e182361c78f406e47"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v005-periodicites-fenetres/index.html": {
+      "bytes": 5105,
+      "sha256": "6c7d6a28af24ada5720f4600f8245af3d2461193b2feac33b3bb2e241147d72e"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v005-periodicites-fenetres/technique/capture.cjs": {
+      "bytes": 4106,
+      "sha256": "df2b3bbd8edff1a80b8c1dcdc6aab1e8073f6b57c45a18767606098d1ac751d6"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v005-periodicites-fenetres/technique/verification-visuels.json": {
+      "bytes": 616,
+      "sha256": "aafd3588b3cb883b728aeb1a443d576065d001dd7d0b18bb256175f7be0c33af"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v005-periodicites-fenetres/timeline.css": {
+      "bytes": 26436,
+      "sha256": "d4d062fe7928ea0d711a21b85c4e636bd560bdd421b045a40c51ed9ecd023214"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v005-periodicites-fenetres/version.json": {
+      "bytes": 357,
+      "sha256": "dd78a722f817a755a0e5cd4ffbd77f448c20207e20ff7e79b2f80970c06b0f6f"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v005-periodicites-fenetres/visuel.js": {
+      "bytes": 15128,
+      "sha256": "b3203a6a9f211aa9ebfe376ce6c6eea8708c8037fe7bafcfbe314472be358190"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v006-recurrence-calendriers-ical/README.md": {
+      "bytes": 5896,
+      "sha256": "88a8bc4f609d4352c76346d41ec82c38a663662f691d81c3be7eebdeda02832a"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v006-recurrence-calendriers-ical/base.css": {
+      "bytes": 9524,
+      "sha256": "0d8abac2655fd646cce95593420257ef9e6c782f8aef2944cb99d493d4b0d3a1"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v006-recurrence-calendriers-ical/calendriers.js": {
+      "bytes": 14584,
+      "sha256": "39cb1df238eead885590eea6cdc64ae4eab3714eb851f913c4eeaf51c211cfc7"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v006-recurrence-calendriers-ical/images/01-configuration-calendriers.png": {
+      "bytes": 231397,
+      "sha256": "4ec9559b3e4fd483e28cdce2307a1d0b96f0f2ddd69d801b53a09bd6f3b4b210"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v006-recurrence-calendriers-ical/images/02-apercu-import-scolaire.png": {
+      "bytes": 283295,
+      "sha256": "3c707b881eeece620648935574215a6521adb80a0017729f66223d46c8c2a789"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v006-recurrence-calendriers-ical/images/03-import-jours-feries.png": {
+      "bytes": 274348,
+      "sha256": "0b0a4104c571f4952caae8a96945338919cbbd7fde3c7f7bb3fa60365dc3a021"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v006-recurrence-calendriers-ical/images/04-recurrence-personnalisee.png": {
+      "bytes": 279768,
+      "sha256": "17522a6b684fbd82a1a58bf4f47ea45f19d305e3635eab0c2f4f40a32c0feadb"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v006-recurrence-calendriers-ical/images/05-conflit-vacances-fenetre.png": {
+      "bytes": 217489,
+      "sha256": "59bb9350c5b047ef6c8beb7e4c7636332f6f750ad9782c14c0a6ff73667e89fb"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v006-recurrence-calendriers-ical/images/06-calendriers-mobile.png": {
+      "bytes": 117302,
+      "sha256": "1ea6f86d4cd10cf32db8802de9df7b006d1f746525adb6d360f7c1e0054f32ef"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v006-recurrence-calendriers-ical/index.html": {
+      "bytes": 5432,
+      "sha256": "a5293bbfb426f39c1cd8d97760e295c8a67cf70ac357a05559de3b00f405da2a"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v006-recurrence-calendriers-ical/technique/capture.cjs": {
+      "bytes": 3254,
+      "sha256": "1eb9c57117e324eafad0449f4d36aeb082f966fcc834c6f2b1b8393ab65e498f"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v006-recurrence-calendriers-ical/technique/source-verifiee.json": {
+      "bytes": 668,
+      "sha256": "fd8ce9e4e925112258341915cc493aa4f1a8435b10ac42c383427187db2af182"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v006-recurrence-calendriers-ical/technique/verification-visuels.json": {
+      "bytes": 621,
+      "sha256": "673c77f00b5f780194c1199b9b3daeaee356e4a9b1929907004bca73ce16f6a3"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v006-recurrence-calendriers-ical/timeline.css": {
+      "bytes": 34389,
+      "sha256": "f4cc6dd5d1ead25fbccac01d51309f621fac260e5a153b2c919de7ca69656cb9"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v006-recurrence-calendriers-ical/version.json": {
+      "bytes": 363,
+      "sha256": "ae7aef6f5ec39997e21976d25b08cc4905cb5e163b0bc1e21226f83abb0080ff"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v007-vues-validation-enchaine/README.md": {
+      "bytes": 5430,
+      "sha256": "206fedcd50505f95aba98d6d40d3a8d97a5c58563a8c19b5770b6c84c0786075"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v007-vues-validation-enchaine/base.css": {
+      "bytes": 9524,
+      "sha256": "0d8abac2655fd646cce95593420257ef9e6c782f8aef2944cb99d493d4b0d3a1"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v007-vues-validation-enchaine/images/01-timeline-calendriers-superposes.png": {
+      "bytes": 330146,
+      "sha256": "a859724ce1e52ec770fe6ea053a6060451afc6ee91150897df423352fec1fdd7"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v007-vues-validation-enchaine/images/02-timeline-calendriers-masques.png": {
+      "bytes": 245662,
+      "sha256": "acb6d68771daa853f2a0a60709936aa0dd7d23d66561cc86885b8cb00b234d85"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v007-vues-validation-enchaine/images/03-vue-kanban.png": {
+      "bytes": 239209,
+      "sha256": "baba287e0bc6e2a3459e6686d85d418c83c2fe8b935cacd59b2baf3d80b65652"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v007-vues-validation-enchaine/images/04-liste-detail-avant-validation.png": {
+      "bytes": 245612,
+      "sha256": "d6b5218b1bc1331270700808b41816eebfaa5f2c4961b7e37a3fa76123160497"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v007-vues-validation-enchaine/images/05-validation-ok-tache-suivante.png": {
+      "bytes": 244706,
+      "sha256": "0152ab06fb516756b6568927ab458237e8aa61d481bf2e596839e4d44fbc3c07"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v007-vues-validation-enchaine/images/06-resultat-ko-lecture-seule.png": {
+      "bytes": 237274,
+      "sha256": "32ef4fabf11840cf713f3631feda7d5c78ef482a86ff2b409043744bd45ffec7"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v007-vues-validation-enchaine/images/07-liste-mobile.png": {
+      "bytes": 116722,
+      "sha256": "82789884d7bb7e81baa9badd54b85172d2db80bc4204446cc5fcbe15d02cab08"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v007-vues-validation-enchaine/index.html": {
+      "bytes": 5103,
+      "sha256": "ad2488b4647fb52952c80a42c31a272255881108161d6dd8c073960f82c414f4"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v007-vues-validation-enchaine/technique/capture.cjs": {
+      "bytes": 6073,
+      "sha256": "d51989f9becd009ba652c1e3057e01840eae424d63358af71afe21d2253762b2"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v007-vues-validation-enchaine/technique/verification-visuels.json": {
+      "bytes": 1008,
+      "sha256": "0d07e0899a60502041caed2f08f3ccba27bc11070d46accb905f14bb3d688918"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v007-vues-validation-enchaine/timeline.css": {
+      "bytes": 36695,
+      "sha256": "5d40468ee1e01e60774afc872955ff69d1d9af296b84bbb31930b963be813d0c"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v007-vues-validation-enchaine/version.json": {
+      "bytes": 457,
+      "sha256": "d5a7ddc069dcefa3f39cf42e78e3e72a5771a8e36a84333c42e50296c3fd02c0"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v007-vues-validation-enchaine/vues.js": {
+      "bytes": 17943,
+      "sha256": "8e754074c536eaac586168243626fdadbdab081f70805ac5e86de0f1e2de0a08"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v008-defilement-zones-fixes/README.md": {
+      "bytes": 7263,
+      "sha256": "fcbf9c09c20fadab7f722269b118873e0ba2c5a6081e42e22e798151ee4bde8e"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v008-defilement-zones-fixes/base.css": {
+      "bytes": 9524,
+      "sha256": "0d8abac2655fd646cce95593420257ef9e6c782f8aef2944cb99d493d4b0d3a1"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v008-defilement-zones-fixes/images/01-timeline-calendriers-superposes.png": {
+      "bytes": 256689,
+      "sha256": "faf1cfb046e119ca048be8cb5532114634ce2a4b610fdce99cc6ab3484799619"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v008-defilement-zones-fixes/images/02-timeline-calendriers-masques.png": {
+      "bytes": 203514,
+      "sha256": "37efad4d937527e225863e4930ebef77e07cc5f8e38e72e621e2903ad0fe140d"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v008-defilement-zones-fixes/images/03-vue-kanban.png": {
+      "bytes": 215230,
+      "sha256": "f89ab863c2fc6d4de8eff2573014822f3f791478b941425c31eeb029ab1d60a8"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v008-defilement-zones-fixes/images/04-liste-detail-avant-validation.png": {
+      "bytes": 239028,
+      "sha256": "ae308c1e2df4bd3cd0ca4e398a9a10cbb6b9be367a676eb9ed9cdc8d495f99aa"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v008-defilement-zones-fixes/images/05-validation-ok-tache-suivante.png": {
+      "bytes": 240756,
+      "sha256": "b3ab4fa8d47fa56e4013267c20742a668af460e85548be9d6056fbdb2bffc83c"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v008-defilement-zones-fixes/images/06-resultat-ko-lecture-seule.png": {
+      "bytes": 232308,
+      "sha256": "c6606412ff15ae4707319f16707d3f026485fda67e9351b7c634a91dc2748994"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v008-defilement-zones-fixes/images/07-liste-mobile.png": {
+      "bytes": 57991,
+      "sha256": "95b634700325b659dabc4bc583ab623dd33011efc3b485a42b6e626f07023c9b"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v008-defilement-zones-fixes/images/08-contenu-defile-menu-fixe.png": {
+      "bytes": 267343,
+      "sha256": "7ac17f75cdce76b86451acf47176972369ea091ecb1ddb2a5c375bcf33c75773"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v008-defilement-zones-fixes/images/09-liste-defilement-independant.png": {
+      "bytes": 235630,
+      "sha256": "4efe0e8ed3f4fc474f47141267bbc89e237a74c90bfa7ce536c1d7c00ac9e7f6"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v008-defilement-zones-fixes/index.html": {
+      "bytes": 5103,
+      "sha256": "ad2488b4647fb52952c80a42c31a272255881108161d6dd8c073960f82c414f4"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v008-defilement-zones-fixes/technique/capture.cjs": {
+      "bytes": 8095,
+      "sha256": "7ac83b4fa40e9d8d1ab00ba136b6916a0809f68d63d6ce92fffb91d860e12477"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v008-defilement-zones-fixes/technique/verification-visuels.json": {
+      "bytes": 1251,
+      "sha256": "f662c7e4f76771c7d64808590727ee9ca96987adba41b63ab491a1a8dfd30ba0"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v008-defilement-zones-fixes/timeline.css": {
+      "bytes": 38816,
+      "sha256": "61aaf1d1aa0ab232d3a5d4a8665c75ec1e3f5f4a3c7595c85cd4d7db9ec6ec8f"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v008-defilement-zones-fixes/version.json": {
+      "bytes": 551,
+      "sha256": "b85bb2fadd0a43546c85ccc558e947a7a1de349baab4cefb90ed5cf04b394670"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/maquettes/v008-defilement-zones-fixes/vues.js": {
+      "bytes": 18269,
+      "sha256": "9b8f9236c5291bcb03c6a9687ca1330768abd677d0a1c866c35a4ef6ed4fd5e2"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/suivi.json": {
+      "bytes": 3472,
+      "sha256": "1ef179712d6584ba61357766adfd70f8edf1d0e18370ab0b908ecceec4d0c77f"
+    },
+    "fonctionnalites-a-implementer/018-taches-recurrentes/tests/README.md": {
+      "bytes": 1681,
+      "sha256": "036c113e1d8102a38bf68abcdc8b65474c083f6f39efec8dd76270f8a51660c7"
+    },
+    "fonctionnalites-a-implementer/002-gestion-risques/README.md": {
+      "bytes": 1015,
+      "sha256": "509c5e5c2cea33e12ee6ffb9f2e1e44341b76e5e369251b12a4c11818d07db63"
+    },
+    "fonctionnalites-a-implementer/002-gestion-risques/implementation/DOSSIER-IMPLEMENTATION.md": {
+      "bytes": 6176,
+      "sha256": "54665a0d88a19676d7e8a9358e19916e597ca8e90ab759c006882347985468ac"
+    },
+    "fonctionnalites-a-implementer/002-gestion-risques/implementation/PROMPT-IMPLEMENTATION.md": {
+      "bytes": 1867,
+      "sha256": "82cb371a3262c3eb9b7332605eed7fb7d258951b9e1276d16150f83f16489803"
+    },
+    "fonctionnalites-a-implementer/002-gestion-risques/implementation/README.md": {
+      "bytes": 786,
+      "sha256": "e5df8243fa875420dac105c3811c2dad3db4c193114044e1119b0970ed056e6d"
+    },
+    "fonctionnalites-a-implementer/002-gestion-risques/maquettes/README.md": {
+      "bytes": 402,
+      "sha256": "0cc44efd5d773bf3cf69ecf259a32dbfec34fe439812ca8c047cbce22019b31a"
+    },
+    "fonctionnalites-a-implementer/002-gestion-risques/maquettes/v001-matrice/MANIFESTE.json": {
+      "bytes": 607,
+      "sha256": "def2b8f9ae8e3b49ef61e724e65a23449727891f5154fa584eebd0c93951ec0d"
+    },
+    "fonctionnalites-a-implementer/002-gestion-risques/maquettes/v001-matrice/README.md": {
+      "bytes": 1885,
+      "sha256": "cc89ad425916c724f9eaa19b9b2ab7e45376ffe37d55e3e0902a7c5dfc90076a"
+    },
+    "fonctionnalites-a-implementer/002-gestion-risques/maquettes/v001-matrice/images/001-matrice-corrigee-vue-complete.png": {
+      "bytes": 297379,
+      "sha256": "cb02bbbd40b4dec106dbee90b1904aa5f67fe7c99fae4e89680e8548970826f9"
+    },
+    "fonctionnalites-a-implementer/002-gestion-risques/maquettes/v001-matrice/images/002-matrice-corrigee-detail.png": {
+      "bytes": 46369,
+      "sha256": "c56be15ef96a4b5c5cabd8a11ceb6d563ef555dca96d9f91d0c9b5e6911a6c84"
+    },
+    "fonctionnalites-a-implementer/002-gestion-risques/maquettes/v001-matrice/technique/capture.cjs": {
+      "bytes": 7466,
+      "sha256": "e6935dd668656e08abe6851cfa98934df3e70cdf4f2311abfabba0019bb07650"
+    },
+    "fonctionnalites-a-implementer/002-gestion-risques/maquettes/v001-matrice/technique/preview.css": {
+      "bytes": 6711,
+      "sha256": "200ed92eafd100ba0edcb5ed3dda9d398bfd93021aebd496f9d6e92838f858fd"
+    },
+    "fonctionnalites-a-implementer/002-gestion-risques/maquettes/v001-matrice/technique/verification.json": {
+      "bytes": 1184,
+      "sha256": "de266bc9d2140b98c18a64e23a9dff50d202719be63d378884b7d6630205a718"
+    },
+    "fonctionnalites-a-implementer/002-gestion-risques/maquettes/v001-matrice/version.json": {
+      "bytes": 729,
+      "sha256": "03c3e8af9d202bba06ed7f2a96b4b1aad74dc32eb63e33eb7d31a570a6fbdb15"
+    },
+    "fonctionnalites-a-implementer/002-gestion-risques/suivi.json": {
+      "bytes": 1316,
+      "sha256": "0ce0f0d7975faf68cb085d40ea90a9784c33747d603108bf1e9bac087cbc24a9"
+    },
+    "fonctionnalites-a-implementer/002-gestion-risques/tests/README.md": {
+      "bytes": 1025,
+      "sha256": "9656b847f9672b2387abcae2e176e0763768feff45ddd21378e84a442fe5e84a"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/README.md": {
+      "bytes": 1037,
+      "sha256": "f42787c3c0ce4c9913a126e15e0e7b0123ed852e1b3d68a19900ed466accd1ef"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/implementation/DOSSIER-IMPLEMENTATION.md": {
+      "bytes": 8430,
+      "sha256": "aae7cf125a680496e84afc3d771cca1f71a9f4bd1b18de4ebc7e34931a5b24be"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/implementation/ECHELLES-PLATEFORME.md": {
+      "bytes": 6512,
+      "sha256": "0f3df897903af45c23d61750ca54a40b76c8614a03d88943235f18884307cd91"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/implementation/PROMPT-IMPLEMENTATION.md": {
+      "bytes": 1865,
+      "sha256": "8f0fdb1eb630dc62ce1f2e2d4bcf409279c8690c228c09da0364a34e5d8cadc5"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/implementation/README.md": {
+      "bytes": 798,
+      "sha256": "4a4d5c0bbe870e6672f11d4528f447f3125330d0972f021281da8f7de7fc9992"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/README.md": {
+      "bytes": 407,
+      "sha256": "2433106f45bfb81c42d999ca5a900d5371a47e10f77e439d8e8697f0dc3c5dac"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v001-parcours-anime/DEMARRER.bat": {
+      "bytes": 362,
+      "sha256": "f4f69e32ff46496fa665f38be0d72d0044122332686af4d65b0d7846c761b7b8"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v001-parcours-anime/LIRE-MOI.txt": {
+      "bytes": 1447,
+      "sha256": "00b0f029a23e908dff1fe3f31231f33a1f0face11fd5930885b997e8a2e14085"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v001-parcours-anime/PARCOURS-DE-TEST.md": {
+      "bytes": 4996,
+      "sha256": "2dd9b934638ee27cc62f89bc198937499889166be079664ab0ad2573584b3345"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v001-parcours-anime/README.md": {
+      "bytes": 3210,
+      "sha256": "15085cff0a6d68b73d0bded397ea815653b88827792749536d5c510769ccecc3"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v001-parcours-anime/SOURCES-PARCOURS.md": {
+      "bytes": 8877,
+      "sha256": "ded2c1be9f716f221522ca427315afe8ad1173b81310db236d334dfab488a49d"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v001-parcours-anime/SOURCES.md": {
+      "bytes": 4601,
+      "sha256": "fe7a1dcc5a9367497632caa3a86be6388615eb0d70317013f8ff224a1fcb4ab5"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v001-parcours-anime/TESTER-PARCOURS-COMPLET.bat": {
+      "bytes": 237,
+      "sha256": "c159920e04163e6a38b0bcb7a91cac33b1a8edf55291fca9d807f8691000bca7"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v001-parcours-anime/app.js": {
+      "bytes": 10224,
+      "sha256": "bd4fa29b1b50fefeb8d76f703aa02bc64b02bb7e55061ec3dce4029cb0453acb"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v001-parcours-anime/contenu.js": {
+      "bytes": 11783,
+      "sha256": "3495399686eadd24e41593f8dfbb9e3fd57f0dab9e7fe69bcabd3d6fc5ce18d0"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v001-parcours-anime/galerie.html": {
+      "bytes": 1573,
+      "sha256": "2052cc5ac04ff5fb94293e73c999c184005b7cb9606a17f9185d725dd8ef8d77"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v001-parcours-anime/images/01-suivi-risques.png": {
+      "bytes": 382001,
+      "sha256": "e29c80b77e3f4112d84af70dc7b8f0528fbdf7c7da081432f84ac2c9e8dadef2"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v001-parcours-anime/images/02-scenario-visuel.png": {
+      "bytes": 345460,
+      "sha256": "920bc041fd2dca1f452f9a6e0e221e50da033c8e974c78a56119d0bb1b27376b"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v001-parcours-anime/images/03-risque-laboratoire.png": {
+      "bytes": 381243,
+      "sha256": "7299e6e820ec195f4841e0849cdafeaf96b33ad5422e2800ae3ce21dba0cb38a"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v001-parcours-anime/images/04-risque-production.png": {
+      "bytes": 381358,
+      "sha256": "83121e5611ee971e64772b65df296d849fba7d550626c9d26367415219458366"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v001-parcours-anime/images/05-chemin-intrusion.png": {
+      "bytes": 365981,
+      "sha256": "0edab22da95d63a63020004b0ba7bb1378f60ce13b24bd153c95ae33f7d4a93b"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v001-parcours-anime/images/06-chemin-personnel.png": {
+      "bytes": 345148,
+      "sha256": "b2ded649c0b467a5092a8e15d2b419dd050cdef4785bb97d439550730c3069d5"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v001-parcours-anime/images/07-palette-pictogrammes.png": {
+      "bytes": 52509,
+      "sha256": "193343a2f114035c987dbf96a147385564ab54000bf720b0a048679688a25137"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v001-parcours-anime/index.html": {
+      "bytes": 3632,
+      "sha256": "f7cdd7597a9b8a212e40fb39ac400abaad6b6070e61bc2ae1e296e4fedc48292"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v001-parcours-anime/parcours-complet.html": {
+      "bytes": 300,
+      "sha256": "4dcce39fb0cee2a72ada2e6c8bb568470fd4c7faa03da3f2c6f0422c7a6bea0c"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v001-parcours-anime/pictogrammes.js": {
+      "bytes": 4211,
+      "sha256": "bb4cc6cc910e1841dbd6f71d179c5f0e06fd73d57069b855e6ca2e4e1bebf436"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v001-parcours-anime/style.css": {
+      "bytes": 24379,
+      "sha256": "1010648989e8db1a06767a54460ae2e994d0fecd0ba45739d069648ad67a12c8"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v001-parcours-anime/technique/capturer.cjs": {
+      "bytes": 5644,
+      "sha256": "de957b77ff5f48690b029dbff32b7780e3979b3f9241d7ff903575d57f54a87b"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v001-parcours-anime/technique/manifest.json": {
+      "bytes": 3881,
+      "sha256": "0f3dedc176520ef89d5b90afd40272b58d170faa1e343e9555472f32272bdc52"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v001-parcours-anime/technique/parcours-complet.json": {
+      "bytes": 1377,
+      "sha256": "416431f1185ebc1bbb69ad4a400b7608ef80c303345ca69c35f31b278aadf235"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v001-parcours-anime/technique/verification.json": {
+      "bytes": 654,
+      "sha256": "82ecb119b4536052d0f1537e6bc06db5684d2ef8b7a7fce113497080f502d3b0"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v001-parcours-anime/technique/vues.json": {
+      "bytes": 693,
+      "sha256": "cc58b0bc99e4beb5ab7ed9602691833a8a66a4bf22c3a5444bdc212d06e2c4f2"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v001-parcours-anime/version.json": {
+      "bytes": 304,
+      "sha256": "e3dbb9ca5fc3cb32150a2c04b39b80e306afa7e491453a96b950d20b4fb1945b"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v001-parcours-anime/vues.js": {
+      "bytes": 16542,
+      "sha256": "362100249e3b3d5003184d38b5095a74bfe408402eedbe9b16bb873533b515cb"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v002-echelles-plateforme/README.md": {
+      "bytes": 2148,
+      "sha256": "14e04d802db83b75f70de5564e5c680402cbce441fbe6023667993534d29269d"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v002-echelles-plateforme/app.js": {
+      "bytes": 10224,
+      "sha256": "bd4fa29b1b50fefeb8d76f703aa02bc64b02bb7e55061ec3dce4029cb0453acb"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v002-echelles-plateforme/contenu.js": {
+      "bytes": 11783,
+      "sha256": "3495399686eadd24e41593f8dfbb9e3fd57f0dab9e7fe69bcabd3d6fc5ce18d0"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v002-echelles-plateforme/echelles.css": {
+      "bytes": 3383,
+      "sha256": "a008ac87ce4d6119231c9c0e7e2db56836c714e6161fb777faecfa28ace531df"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v002-echelles-plateforme/echelles.js": {
+      "bytes": 9111,
+      "sha256": "626a963cbdefb2259ec789df84aaedfd913ca477b87af96a57ca9dc5d6fed180"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v002-echelles-plateforme/galerie.html": {
+      "bytes": 1734,
+      "sha256": "7d39257d1397ce1bb0e1200f05f134f0d94fb72a389b1304839b96d9f928578c"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v002-echelles-plateforme/index.html": {
+      "bytes": 3826,
+      "sha256": "b39803e7fc28302d24d3ea55b8292a987df4a3ffbf1aaa0809e0999629fc0274"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v002-echelles-plateforme/parcours-complet.html": {
+      "bytes": 300,
+      "sha256": "4dcce39fb0cee2a72ada2e6c8bb568470fd4c7faa03da3f2c6f0422c7a6bea0c"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v002-echelles-plateforme/pictogrammes.js": {
+      "bytes": 4211,
+      "sha256": "bb4cc6cc910e1841dbd6f71d179c5f0e06fd73d57069b855e6ca2e4e1bebf436"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v002-echelles-plateforme/style.css": {
+      "bytes": 24379,
+      "sha256": "1010648989e8db1a06767a54460ae2e994d0fecd0ba45739d069648ad67a12c8"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v002-echelles-plateforme/technique/verification.json": {
+      "bytes": 1271,
+      "sha256": "a52d281674ec754575978693ab82d829cf463322fc6c56605a1557db13a4cf98"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v002-echelles-plateforme/technique/verifier.cjs": {
+      "bytes": 5954,
+      "sha256": "47d5602542543d7fdc61592add1be432da864eda7b7bb59d6e9dd8e27c363de2"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v002-echelles-plateforme/version.json": {
+      "bytes": 1127,
+      "sha256": "7e943a7ccef2d9af82b3887b455a61fc8acc863aed7ec50a255bc31c31c4d33d"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v002-echelles-plateforme/visuels/01-cotation-echelles-plateforme.png": {
+      "bytes": 272146,
+      "sha256": "24cd6492a11cfc6cd0f17e3a467bffe29f312b99684736f8aecee84a384fb20f"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v002-echelles-plateforme/visuels/02-nouvelle-version-historique.png": {
+      "bytes": 255427,
+      "sha256": "0feda4b415e1b87d42384131c21c6debfb14b39ee4741b06c9a522a7d206e937"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v002-echelles-plateforme/vues.js": {
+      "bytes": 16542,
+      "sha256": "362100249e3b3d5003184d38b5095a74bfe408402eedbe9b16bb873533b515cb"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/suivi.json": {
+      "bytes": 1599,
+      "sha256": "c259b18256fccfa490b849533683843c8486c07fb540d2556318f0aa4373050c"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/tests/2026-10-14-parcours-complet.json": {
+      "bytes": 1377,
+      "sha256": "416431f1185ebc1bbb69ad4a400b7608ef80c303345ca69c35f31b278aadf235"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/tests/README.md": {
+      "bytes": 1879,
+      "sha256": "2dfcf5e4b18d201ca2bea28c95dccd117d307513142fa8a968c565a7849f9e1e"
+    },
+    "fonctionnalites-a-implementer/003-ebios-rm/tests/parcours-complet.cjs": {
+      "bytes": 5375,
+      "sha256": "375d193124abd09adc29d884f655ec66e59d6225da759066ce0e30d311a8a781"
+    }
+  }
+}

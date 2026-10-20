@@ -1,0 +1,62 @@
+{
+  "fonctionnalite": "administration-apparence",
+  "etape": "a-implementer",
+  "validationUtilisateur": {
+    "date": "2026-10-20",
+    "portee": "Préparation et transmission du dossier de la fonctionnalité, avec vérification préalable obligatoire de ce qui est déjà implémenté. Les propositions non arbitrées restent identifiées dans le dossier.",
+    "reference": "Accord utilisateur par numéro : 020/019 oui avec contrôle de l’existant ; 012/022/017/021/018/002/003 ok.",
+    "versionReference": "v007-echelles-partagees"
+  },
+  "livraisonImplementation": {
+    "date": "2026-10-20",
+    "dossier": "implementation/DOSSIER-IMPLEMENTATION.md",
+    "prompt": "implementation/PROMPT-IMPLEMENTATION.md",
+    "controleExistantObligatoire": true,
+    "integrationRealisee": false
+  },
+  "integration": null,
+  "historique": [
+    {
+      "date": "2026-10-14",
+      "etape": "en-developpement",
+      "motif": "Organisation demandée par l’utilisateur ; proposition encore à valider."
+    },
+    {
+      "date": "2026-10-20",
+      "etape": "en-developpement",
+      "motif": "v002 : deux espaces système/plateforme, 15 cartes, six aperçus et 19 contrôles locaux ; proposition à valider, aucune opération réelle."
+    },
+    {
+      "date": "2026-10-20",
+      "etape": "en-developpement",
+      "motif": "v003 : création/suppression et personnalisation des échelles ; certificat importé, autosigné ou ACME ; six visuels et 39 contrôles locaux, aucun backend modifié."
+    },
+    {
+      "date": "2026-10-20",
+      "etape": "en-developpement",
+      "motif": "v004 : historique et conservation, règles par catégorie, aperçu, corbeille et purge optionnelle ; quatre visuels et 39 contrôles locaux. Aucun nettoyage réel."
+    },
+    {
+      "date": "2026-10-20",
+      "etape": "en-developpement",
+      "motif": "v005 : contact technique, transports mail/Teams et préférences groupe/profil ; graphe de dépendances avant nettoyage ; huit visuels, 44 contrôles locaux, aucun envoi ni suppression réelle."
+    },
+    {
+      "date": "2026-10-20",
+      "etape": "en-developpement",
+      "motif": "v006 : export de traçabilité et de logs techniques, niveaux Info/Warning/Debug et diagnostic temporaire ; quatre visuels et 27 contrôles locaux, aucun journal réel consulté."
+    },
+    {
+      "date": "2026-10-20",
+      "etape": "en-developpement",
+      "motif": "v007-echelles-partagees : catalogue de fixtures partagé, versions publiées explicites, cotations historiques préservées ; 21 contrôles locaux, aucun backend modifié."
+    },
+    {
+      "date": "2026-10-20",
+      "etape": "a-implementer",
+      "motif": "Demandes et critères consolidés ; déplacement complet après accord utilisateur, contrôle de l’existant obligatoire avant codage. Aucun marqueur d’intégration trouvé."
+    }
+  ],
+  "numero": "012",
+  "maquetteCourante": "v007-echelles-partagees"
+}

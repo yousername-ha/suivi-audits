@@ -13,4 +13,4 @@ Ce statut concerne la proposition visuelle, pas l’existence des fonctions hist
 
 [Liste numérotée des fonctionnalités](../../LISTE-FONCTIONNALITES.md).
 
-Parcours lié en développement : [registres d’écarts, plans et conformité](../021-registres-ecarts/README.md).
+Parcours lié en développement : [registres d’écarts, plans et conformité](../../fonctionnalites-a-implementer/021-registres-ecarts/README.md).

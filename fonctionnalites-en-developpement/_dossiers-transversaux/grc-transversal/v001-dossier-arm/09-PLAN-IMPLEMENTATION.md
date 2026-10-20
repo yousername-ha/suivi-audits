@@ -18,7 +18,7 @@ Les lots 1–2 précèdent l’import validant et toute création d’étude nou
 
 ## Contrôles existants à réutiliser
 
-`tests/risk.test.cjs`, `tests/server_risk_test.py`, `tests/integration.test.cjs`, `tests/browser-risks.cjs` ; vérifier leurs commandes, dépendances et prérequis au SHA de travail avant exécution. Ajouter des tests au bon niveau, pas des assertions qui recopient simplement le code. Les tests de maquette dans `fonctionnalites-en-developpement/003-ebios-rm/tests/` restent des tests de prototype, distincts des tests métier.
+`tests/risk.test.cjs`, `tests/server_risk_test.py`, `tests/integration.test.cjs`, `tests/browser-risks.cjs` ; vérifier leurs commandes, dépendances et prérequis au SHA de travail avant exécution. Ajouter des tests au bon niveau, pas des assertions qui recopient simplement le code. Les tests de maquette dans `fonctionnalites-a-implementer/003-ebios-rm/tests/` restent des tests de prototype, distincts des tests métier.
 
 ## Compte rendu exigé par lot
 

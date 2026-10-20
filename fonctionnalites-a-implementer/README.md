@@ -1,16 +1,14 @@
 # Fonctionnalités à implémenter
 
-## Dossier technique ASTRA — UI/UX et registres
+**Neuf dossiers techniques transmis le 20 octobre 2026**, après accord sur leur périmètre. L’IA de codage doit vérifier l’existant dans sa branche avant toute modification et ne développer que les écarts constatés.
 
-**Classé ici le 19 octobre 2026 sur demande explicite de l’utilisateur.**
+- [Liste des neuf dossiers, spécifications et prompts](_dossiers-transversaux/implementation-ui-2026-10/DOSSIERS-2026-10-20.md).
+- [Contrôle obligatoire de l’existant et ordre de codage](_dossiers-transversaux/implementation-ui-2026-10/CONTROLE-EXISTANT-ET-CODAGE.md).
+- [Socle commun UI/UX et registres](_dossiers-transversaux/implementation-ui-2026-10/README.md).
+- [Liste numérotée maintenue](../LISTE-FONCTIONNALITES.md).
 
-- [Ouvrir le dossier complet](_dossiers-transversaux/implementation-ui-2026-10/README.md).
-- [Prompt pour l’IA de codage](_dossiers-transversaux/implementation-ui-2026-10/PROMPT-IMPLEMENTATION.md).
-- [Spécifications UI/UX](_dossiers-transversaux/implementation-ui-2026-10/SPECIFICATIONS.md).
-- [Contrats et recette](_dossiers-transversaux/implementation-ui-2026-10/INTEGRATION-RECETTE.md).
+Les dossiers complets 002, 003, 012, 017, 018, 019, 020, 021 et 022 sont ici. Les autres fonctionnalités restent à leur étape ; 010 attend une réponse spécifique. Aucun module n’est déclaré implémenté par cette livraison documentaire.
 
-Le dossier commun couvre navigation, héritage des registres, plans d’action, écarts, tâches récurrentes et périmètres graphiques. Les références versionnées restent liées depuis le dossier ; ce classement n’annonce pas une intégration réalisée. L’agent de codage travaille uniquement sur sa propre branche.
+L’IA travaille exclusivement sur sa propre branche. Legacy et Claude restent en lecture seule pour elle. Les sources et captures sont conservées, sans nouveau ZIP/BAT. Après intégration réellement vérifiée, un marqueur « implémentation ok » permettra le classement vers « implémentées » ; aucun marqueur n’est créé pour une simple préparation.
 
-[Cycle et critères de passage](../docs/ORGANISATION-LEGACY.md) · [Développement](../fonctionnalites-en-developpement/README.md) · [Liste numérotée](../LISTE-FONCTIONNALITES.md).
-
-Lire les marqueurs « implémentation ok » à chaque reprise ; une confirmation de livraison de la version concernée déclenche le classement dans `fonctionnalites-implementees`. Aucun ZIP/BAT supplémentaire sans demande explicite.
+[Cycle des fonctionnalités](../docs/ORGANISATION-LEGACY.md) · [En développement](../fonctionnalites-en-developpement/README.md) · [Implémentées](../fonctionnalites-implementees/README.md).

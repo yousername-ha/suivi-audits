@@ -1,5 +1,7 @@
 # Dossier technique d’implémentation — ASTRA UI/UX
 
+**Transmission courante du 20 octobre : [neuf dossiers et prompts](DOSSIERS-2026-10-20.md).** Le [contrôle de l’existant](CONTROLE-EXISTANT-ET-CODAGE.md) est obligatoire avant toute implémentation. Les sections datées du 19 octobre ci-dessous restent le socle de la navigation et des registres ; les dossiers spécifiques actuels les complètent.
+
 Édition du **19 octobre 2026**, préparée à la demande de l’utilisateur. Périmètre : navigation, registres et héritage des périmètres, plans d’action, tâches récurrentes, écarts et interfaces de périmètres. Les fonctionnalités historiques restantes sont à préserver.
 
 **Étape : à implémenter**, sur instruction explicite de l’utilisateur du 19 octobre 2026. Le dossier technique complet a été déplacé ici ; ce classement ne signifie pas que l’intégration est déjà réalisée. La règle d’héritage est confirmée. L’ordonnancement final du menu reste à valider. L’agent de codage utilise exclusivement sa propre branche.
@@ -24,10 +26,10 @@ Les [lots L0–L8](INTEGRATION-RECETTE.md#ordre-dintégration-et-conditions-de-p
 | N° | Référence à consulter | État constaté / portée |
 | --- | --- | --- |
 | 010 | [Périmètres v007](../../../fonctionnalites-en-developpement/010-perimetres/maquettes/v007-fond-uni/README.md) | Cartes, conformité, écarts et compteurs ; fond uni. Simulation graphique, pas un raccordement backend |
-| 017 | [Plans d’action v004](../../../fonctionnalites-en-developpement/017-plans-action/maquettes/v004-perimetres-herites/README.md) | Héritage du plan réalisé dans la maquette ; 35 contrôles locaux exécutés ; quatre nouveaux visuels |
-| 018 | [Tâches récurrentes v008](../../../fonctionnalites-en-developpement/018-taches-recurrentes/maquettes/v008-defilement-zones-fixes/README.md) | Référence UI pour timeline, liste, Kanban et réalisation ; les champs `scope` des fixtures par tâche sont **à remplacer** par l’héritage du registre lors de l’intégration |
-| 020 | [Navigation v001](../../../fonctionnalites-en-developpement/020-navigation/maquettes/v001-menu-epure/README.md) | Style apprécié ; sept familles proposées ; ordre global non validé. Les menus partiels des maquettes ne constituent pas l’inventaire complet |
-| 021 | [Écarts v003](../../../fonctionnalites-en-developpement/021-registres-ecarts/maquettes/v003-cloture-preservee/README.md) | Écart déjà rattaché à son registre ; registre limité à un périmètre dans cette maquette. Étendre au multi-périmètre dans le contrat réel ; ne pas recopier son ancien formulaire d’action |
+| 017 | [Plans d’action v004](../../017-plans-action/maquettes/v004-perimetres-herites/README.md) | Héritage du plan réalisé dans la maquette ; 35 contrôles locaux exécutés ; quatre nouveaux visuels |
+| 018 | [Tâches récurrentes v008](../../018-taches-recurrentes/maquettes/v008-defilement-zones-fixes/README.md) | Référence UI pour timeline, liste, Kanban et réalisation ; les champs `scope` des fixtures par tâche sont **à remplacer** par l’héritage du registre lors de l’intégration |
+| 020 | [Navigation v001](../../020-navigation/maquettes/v001-menu-epure/README.md) | Style apprécié ; sept familles proposées ; ordre global non validé. Les menus partiels des maquettes ne constituent pas l’inventaire complet |
+| 021 | [Écarts v003](../../021-registres-ecarts/maquettes/v003-cloture-preservee/README.md) | Écart déjà rattaché à son registre ; registre limité à un périmètre dans cette maquette. Étendre au multi-périmètre dans le contrat réel ; ne pas recopier son ancien formulaire d’action |
 
 Les résultats de recette des versions antérieures sont historiques. Seuls les tests cités avec leur version sont attestés. Aucune suite backend, aucun build React ni test de permissions serveur n’a été exécuté pour ce dossier.
 

@@ -1,0 +1,36 @@
+{
+  "id": "v004-historique-conservation",
+  "statut": "a-valider",
+  "date": "2026-10-20",
+  "versionPrecedente": "v003-echelles-certificats",
+  "validationUtilisateur": null,
+  "integrationBackend": false,
+  "references": [
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v004-historique-conservation/visuels/01-regles-conservation.png",
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v004-historique-conservation/visuels/02-previsualisation.png",
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v004-historique-conservation/visuels/03-journal-corbeille.png",
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v004-historique-conservation/visuels/04-purge-optionnelle.png"
+  ],
+  "visuels": [
+    {
+      "fichier": "visuels/01-regles-conservation.png",
+      "titre": "Règles et délais de conservation",
+      "sha256": "d155236d95bb36c53021b13b151cb4f0209cc933116776f659561187e3831d5e"
+    },
+    {
+      "fichier": "visuels/02-previsualisation.png",
+      "titre": "Prévisualisation des éléments et exclusions",
+      "sha256": "a4ba80ab809bc1a7243f3deedb2b63c3e4b76858c6a4b8e7ae55b5793bd1eb59"
+    },
+    {
+      "fichier": "visuels/03-journal-corbeille.png",
+      "titre": "Journal des passages et récupération depuis la corbeille",
+      "sha256": "2b491a8f9ef63ed6efeb16366ecade10313053bd03f46b22a464fb4980d0b578"
+    },
+    {
+      "fichier": "visuels/04-purge-optionnelle.png",
+      "titre": "Purge automatique optionnelle après délai de récupération",
+      "sha256": "af4d1590139ccab3ddcf9dd99d562034e98f079115baa5ec38dd42449c09d135"
+    }
+  ]
+}

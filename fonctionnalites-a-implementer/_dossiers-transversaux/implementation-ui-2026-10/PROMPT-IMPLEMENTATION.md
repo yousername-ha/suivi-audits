@@ -1,3 +1,5 @@
+> Avant ce prompt historique L0–L8, lire les [consignes courantes de contrôle de l’existant](CONTROLE-EXISTANT-ET-CODAGE.md) et le [dossier de la fonctionnalité](DOSSIERS-2026-10-20.md). Ne pas recoder ce qui est déjà implémenté et vérifié.
+
 # Prompt pour l’IA de codage
 
 Tu dois intégrer les interfaces ASTRA à l’application existante, en réutilisant son socle métier et son design system.

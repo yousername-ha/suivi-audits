@@ -1,0 +1,169 @@
+{
+  "date": "2026-10-20",
+  "sourceCommit": "684d075dc620cc58edb86267dc675257cc9d9690",
+  "statut": "reussi",
+  "dossiers": [
+    {
+      "numero": "020",
+      "versionReference": "v001-menu-epure",
+      "exigences": [
+        "020-01",
+        "020-02",
+        "020-03",
+        "020-04",
+        "020-05",
+        "020-06",
+        "020-07"
+      ],
+      "fichiersInventories": 9,
+      "controleExistantDansPrompt": true,
+      "marqueurImplementation": false
+    },
+    {
+      "numero": "019",
+      "versionReference": "v001-dossier-arm",
+      "exigences": [
+        "019-01",
+        "019-02",
+        "019-03",
+        "019-04",
+        "019-05",
+        "019-06",
+        "019-07"
+      ],
+      "fichiersInventories": 9,
+      "controleExistantDansPrompt": true,
+      "marqueurImplementation": false
+    },
+    {
+      "numero": "012",
+      "versionReference": "v007-echelles-partagees",
+      "exigences": [
+        "012-01",
+        "012-02",
+        "012-03",
+        "012-04",
+        "012-05",
+        "012-06",
+        "012-07",
+        "012-08",
+        "012-09",
+        "012-10",
+        "012-11",
+        "012-12",
+        "012-13",
+        "012-14"
+      ],
+      "fichiersInventories": 105,
+      "controleExistantDansPrompt": true,
+      "marqueurImplementation": false
+    },
+    {
+      "numero": "022",
+      "versionReference": "v001-acces-visuels",
+      "exigences": [
+        "022-01",
+        "022-02",
+        "022-03",
+        "022-04",
+        "022-05",
+        "022-06"
+      ],
+      "fichiersInventories": 22,
+      "controleExistantDansPrompt": true,
+      "marqueurImplementation": false
+    },
+    {
+      "numero": "017",
+      "versionReference": "v004-perimetres-herites",
+      "exigences": [
+        "017-01",
+        "017-02",
+        "017-03",
+        "017-04",
+        "017-05",
+        "017-06",
+        "017-07"
+      ],
+      "fichiersInventories": 38,
+      "controleExistantDansPrompt": true,
+      "marqueurImplementation": false
+    },
+    {
+      "numero": "021",
+      "versionReference": "v003-cloture-preservee",
+      "exigences": [
+        "021-01",
+        "021-02",
+        "021-03",
+        "021-04",
+        "021-05",
+        "021-06",
+        "021-07"
+      ],
+      "fichiersInventories": 80,
+      "controleExistantDansPrompt": true,
+      "marqueurImplementation": false
+    },
+    {
+      "numero": "018",
+      "versionReference": "v008-defilement-zones-fixes",
+      "exigences": [
+        "018-01",
+        "018-02",
+        "018-03",
+        "018-04",
+        "018-05",
+        "018-06",
+        "018-07",
+        "018-08",
+        "018-09",
+        "018-10",
+        "018-11"
+      ],
+      "fichiersInventories": 142,
+      "controleExistantDansPrompt": true,
+      "marqueurImplementation": false
+    },
+    {
+      "numero": "002",
+      "versionReference": "v001-matrice",
+      "exigences": [
+        "002-01",
+        "002-02",
+        "002-03",
+        "002-04",
+        "002-05",
+        "002-06"
+      ],
+      "fichiersInventories": 15,
+      "controleExistantDansPrompt": true,
+      "marqueurImplementation": false
+    },
+    {
+      "numero": "003",
+      "versionReference": "v002-echelles-plateforme",
+      "exigences": [
+        "003-01",
+        "003-02",
+        "003-03",
+        "003-04",
+        "003-05",
+        "003-06",
+        "003-07",
+        "003-08",
+        "003-09",
+        "003-10",
+        "003-11",
+        "003-12"
+      ],
+      "fichiersInventories": 54,
+      "controleExistantDansPrompt": true,
+      "marqueurImplementation": false
+    }
+  ],
+  "integrationBackend": false,
+  "limites": "Contrôle documentaire et conservation des fichiers. Ne vaut pas validation métier ni recette de l’application.",
+  "fichiersBinairesEtLanceursConserves": 153,
+  "nombreExigences": 77
+}

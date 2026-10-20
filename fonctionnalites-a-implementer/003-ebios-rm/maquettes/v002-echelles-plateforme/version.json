@@ -1,0 +1,27 @@
+{
+  "id": "v002-echelles-plateforme",
+  "statut": "reference-implementation",
+  "date": "2026-10-20",
+  "versionPrecedente": "v001-parcours-anime",
+  "validationUtilisateur": {
+    "date": "2026-10-20",
+    "portee": "Référence de conception pour le périmètre transmis ; les limites de la maquette et décisions explicites du dossier prévalent."
+  },
+  "integrationBackend": false,
+  "references": [
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v002-echelles-plateforme/visuels/01-cotation-echelles-plateforme.png",
+    "fonctionnalites-a-implementer/003-ebios-rm/maquettes/v002-echelles-plateforme/visuels/02-nouvelle-version-historique.png"
+  ],
+  "visuels": [
+    {
+      "fichier": "visuels/01-cotation-echelles-plateforme.png",
+      "titre": "Cotation avec les échelles de la plateforme",
+      "sha256": "24cd6492a11cfc6cd0f17e3a467bffe29f312b99684736f8aecee84a384fb20f"
+    },
+    {
+      "fichier": "visuels/02-nouvelle-version-historique.png",
+      "titre": "Nouvelle version et historique conservé",
+      "sha256": "0feda4b415e1b87d42384131c21c6debfb14b39ee4741b06c9a522a7d206e937"
+    }
+  ]
+}

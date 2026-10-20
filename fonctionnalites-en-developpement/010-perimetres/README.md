@@ -3,7 +3,7 @@
 | Élément | Accès |
 | --- | --- |
 | Proposition courante | [v007 · Fond uni](maquettes/v007-fond-uni/README.md) |
-| Images | [1 image + 1 GIF animé](maquettes/v007-fond-uni/visuels/) |
+| Images | [1 image + 1 GIF animé](maquettes/v007-fond-uni/visuels) |
 | État | **À valider — aucune intégration backend** |
 | Contrôles | [Tests et limites](tests/README.md) |
 | Consignes d’intégration | [Contrats vérifiés](implementation/README.md) |

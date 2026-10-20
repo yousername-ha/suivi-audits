@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-19",
+  "version": "2026-10-20",
   "statut": "proposition-ordre-a-valider",
   "regle": "Identifiants logiques de présentation. Mapper routes, capacités et alias au dépôt cible. Aucun droit implicite.",
   "groups": [
@@ -282,46 +282,40 @@
       "separated": true,
       "destinations": [
         {
-          "id": "grc-config",
-          "label": "Configuration GRC",
+          "id": "system-settings",
+          "label": "Paramètres système",
           "route": null,
           "capabilities": null,
           "mappingStatus": "a-verifier",
-          "protectedExistingModule": false
+          "protectedExistingModule": false,
+          "cards": [
+            "Sauvegardes et restauration",
+            "Mises à jour",
+            "Stack et ressources",
+            "Certificats",
+            "Historique et nettoyage",
+            "Messagerie et alertes techniques",
+            "Journaux et traçabilité"
+          ]
         },
         {
-          "id": "accounts",
-          "label": "Comptes & habilitations",
+          "id": "platform-settings",
+          "label": "Paramètres plateforme",
           "route": null,
           "capabilities": null,
           "mappingStatus": "a-verifier",
-          "protectedExistingModule": false
-        },
-        {
-          "id": "framework-admin",
-          "label": "Référentiels administrés",
-          "route": null,
-          "capabilities": null,
-          "mappingStatus": "a-verifier",
-          "protectedExistingModule": false
-        },
-        {
-          "id": "appearance",
-          "label": "Apparence",
-          "route": null,
-          "capabilities": null,
-          "mappingStatus": "a-verifier",
-          "protectedExistingModule": false
-        },
-        {
-          "id": "journal-data",
-          "label": "Journal & données",
-          "route": null,
-          "capabilities": null,
-          "mappingStatus": "a-verifier",
-          "protectedExistingModule": false
+          "protectedExistingModule": false,
+          "cards": [
+            "Échelles, matrices et catalogues GRC",
+            "Utilisateurs, groupes, fonctions et droits",
+            "Référentiels administrés",
+            "Apparence globale",
+            "Calendriers iCal",
+            "Notifications des groupes et profils"
+          ]
         }
       ]
     }
-  ]
+  ],
+  "noteAdministration": "20 octobre : les anciennes destinations administratives sont conservées en accès contextuels/alias selon le routeur cible, sans second menu concurrent."
 }

@@ -1,0 +1,50 @@
+{
+  "id": "v001-acces-visuels",
+  "statut": "reference-implementation",
+  "date": "2026-10-19",
+  "validationUtilisateur": {
+    "date": "2026-10-20",
+    "portee": "Référence de conception pour le périmètre transmis ; les limites de la maquette et décisions explicites du dossier prévalent."
+  },
+  "integrationBackend": false,
+  "references": [
+    "fonctionnalites-a-implementer/022-gestion-droits/maquettes/v001-acces-visuels/visuels/01-droits-collaborateur.png",
+    "fonctionnalites-a-implementer/022-gestion-droits/maquettes/v001-acces-visuels/visuels/02-ajuster-un-role.png",
+    "fonctionnalites-a-implementer/022-gestion-droits/maquettes/v001-acces-visuels/visuels/03-origine-des-droits.png",
+    "fonctionnalites-a-implementer/022-gestion-droits/maquettes/v001-acces-visuels/visuels/04-droits-du-groupe.png",
+    "fonctionnalites-a-implementer/022-gestion-droits/maquettes/v001-acces-visuels/visuels/05-tester-les-acces.png",
+    "fonctionnalites-a-implementer/022-gestion-droits/maquettes/v001-acces-visuels/visuels/06-droits-mobile.png"
+  ],
+  "visuels": [
+    {
+      "fichier": "visuels/01-droits-collaborateur.png",
+      "titre": "Vue ciblée du Collaborateur",
+      "sha256": "da37cad88b903ef98d56749424ae357ec5f0905de866e644cdb8168baf71c8b3"
+    },
+    {
+      "fichier": "visuels/02-ajuster-un-role.png",
+      "titre": "Ajuster un rôle : aperçu avant/après",
+      "sha256": "1e7f66a2a5bc214371b168481f95b3a0e6c902eac811c527f338dc8a3abf2a2a"
+    },
+    {
+      "fichier": "visuels/03-origine-des-droits.png",
+      "titre": "Comprendre les droits reçus des groupes",
+      "sha256": "3df284cc8ec99244ecc9e59348149021ac877d09d594ac33a8ce571fc465dfca"
+    },
+    {
+      "fichier": "visuels/04-droits-du-groupe.png",
+      "titre": "Droits d’un groupe",
+      "sha256": "4607dd3676775d65ee2c063066080bf95bf484ceb30ae3f203fcf1ba846a01fe"
+    },
+    {
+      "fichier": "visuels/05-tester-les-acces.png",
+      "titre": "Tester un accès : simulation",
+      "sha256": "3840ad326879f8b98bb19a6391c5934e30a0db2a30d0b7c3544f8c507c26a88d"
+    },
+    {
+      "fichier": "visuels/06-droits-mobile.png",
+      "titre": "Vue mobile",
+      "sha256": "b0a768a1c7dd706a6b3eedbf5a53992b7ffbe90b662ee485e7bcc9dae7146193"
+    }
+  ]
+}

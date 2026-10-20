@@ -1,0 +1,16 @@
+{
+  "id": "v001-matrice",
+  "statut": "reference-implementation",
+  "validationUtilisateur": {
+    "date": "2026-10-20",
+    "portee": "Référence de conception pour le périmètre transmis ; les limites de la maquette et décisions explicites du dossier prévalent."
+  },
+  "sourceCommit": "e4042009962bab09169624d7413f044addf737be",
+  "type": "apercus-statiques",
+  "references": [
+    "references/vues-modules/images/002-risks-risk-register.png",
+    "fonctionnalites-a-implementer/002-gestion-risques/maquettes/v001-matrice/images/002-matrice-corrigee-detail.png",
+    "fonctionnalites-a-implementer/002-gestion-risques/maquettes/v001-matrice/images/001-matrice-corrigee-vue-complete.png"
+  ],
+  "versionPrecedente": null
+}

@@ -10,10 +10,10 @@ La [liste numérotée des fonctionnalités](../LISTE-FONCTIONNALITES.md), géné
 
 - [Tester le prototype transversal](_prototype-transversal/README.md) : navigation et parcours EBIOS.
 - [010 — Périmètres](010-perimetres/README.md) : graphique et liste d’un même registre ; héritage, conformité et fournisseurs rattachés.
-- [012 — Apparence](012-administration-apparence/implementation/README.md) : réutiliser le réglage global existant.
-- [017 — Plans d’action](017-plans-action/README.md) et [021 — Registres d’écarts](021-registres-ecarts/README.md) : proposition commune ; lire les incompatibilités métier avant codage.
-- [019 — Configuration GRC](019-configuration-grc/README.md) : analyse ARM et propositions à confronter aux contrats réels.
-- [020 — Navigation](020-navigation/README.md) : style conservé, ordonnancement à valider.
+- [012 — Apparence](../fonctionnalites-a-implementer/012-administration-apparence/implementation/README.md) : réutiliser le réglage global existant.
+- [017 — Plans d’action](../fonctionnalites-a-implementer/017-plans-action/README.md) et [021 — Registres d’écarts](../fonctionnalites-a-implementer/021-registres-ecarts/README.md) : proposition commune ; lire les incompatibilités métier avant codage.
+- [019 — Configuration GRC](../fonctionnalites-a-implementer/019-configuration-grc/README.md) : analyse ARM et propositions à confronter aux contrats réels.
+- [020 — Navigation](../fonctionnalites-a-implementer/020-navigation/README.md) : style conservé, ordonnancement à valider.
 - [Téléchargements Windows](../downloads/README.md) : maquettes publiées, sans valeur de validation métier.
 
 ## Cycle de validation

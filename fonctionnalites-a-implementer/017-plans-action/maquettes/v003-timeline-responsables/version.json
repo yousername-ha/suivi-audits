@@ -1,0 +1,48 @@
+{
+  "id": "v003-timeline-responsables",
+  "statut": "a-valider",
+  "date": "2026-10-19",
+  "versionPrecedente": "v002-registres-lies",
+  "validationUtilisateur": null,
+  "integrationBackend": false,
+  "references": [
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v003-timeline-responsables/visuels/01-timeline-plans.png",
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v003-timeline-responsables/visuels/02-action-en-attente.png",
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v003-timeline-responsables/visuels/03-kanban-statuts.png",
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v003-timeline-responsables/visuels/04-liste-detail.png",
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v003-timeline-responsables/visuels/05-creation-responsable-fonction.png",
+    "fonctionnalites-a-implementer/017-plans-action/maquettes/v003-timeline-responsables/visuels/06-timeline-mobile.png"
+  ],
+  "visuels": [
+    {
+      "fichier": "visuels/01-timeline-plans.png",
+      "titre": "Timeline des plans et des actions",
+      "sha256": "a21d2b78d78dc35061a04b5807ecd86d1078167c34e6b99e7096e411a42fb681"
+    },
+    {
+      "fichier": "visuels/02-action-en-attente.png",
+      "titre": "Fiche centrale et motif du blocage",
+      "sha256": "8da3d08c798df76d082d4ae183bd993336a7c712fa5744fe257e23449bc0e3e7"
+    },
+    {
+      "fichier": "visuels/03-kanban-statuts.png",
+      "titre": "Kanban des quatre statuts",
+      "sha256": "fd977e49277788acb9eb4898cdd664391d30275763e1805298470f1796918a01"
+    },
+    {
+      "fichier": "visuels/04-liste-detail.png",
+      "titre": "Liste et détail de l’action",
+      "sha256": "ba9f004d1c206c0f8ced1a01dc34a207428b16098cc8bfbacc5da1af8f6a504d"
+    },
+    {
+      "fichier": "visuels/05-creation-responsable-fonction.png",
+      "titre": "Création et responsable de type fonction",
+      "sha256": "ee54c9d849f270909d7b7625d01fb5f2d1f81307282cf6feac686cee062422e0"
+    },
+    {
+      "fichier": "visuels/06-timeline-mobile.png",
+      "titre": "Timeline sur mobile",
+      "sha256": "9bff2592361c2e06fd9a40105481e0f6b854e6bad2637ffa45e01f4add413d4a"
+    }
+  ]
+}

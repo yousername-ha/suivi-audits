@@ -70,3 +70,9 @@ python scripts/verifier_structure.py
 ```
 
 Les répertoires `_modele`, `_dossiers-transversaux` et `_prototype-transversal` regroupent des ressources partagées et ne reçoivent pas de numéro de fonctionnalité.
+
+## Transmission du 20 octobre 2026
+
+Après accord sur les périmètres, les dossiers complets 002, 003, 012, 017, 018, 019, 020, 021 et 022 sont déplacés vers « à implémenter ». Le statut `reference-implementation` désigne les références graphiques de cette transmission ; il ne transforme pas une fixture en fonction serveur ni une hypothèse non arbitrée en règle métier. Chaque dossier contient les demandes consolidées, leurs critères de recette et un prompt imposant l’audit préalable de l’existant.
+
+[Point d’entrée de cette livraison](../fonctionnalites-a-implementer/_dossiers-transversaux/implementation-ui-2026-10/DOSSIERS-2026-10-20.md). Aucun marqueur de confirmation trouvé lors de cette reprise. Le dossier 010 reste en développement dans l’attente de sa confirmation séparée.

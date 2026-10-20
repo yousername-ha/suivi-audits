@@ -36,7 +36,7 @@ Cette règle concerne les modules organisés en registres ; elle ne signifie pas
 - Actions : plans d’action, tâches récurrentes, programmes/formation. « Toutes les actions » devient une vue filtrée des plans, pas une entrée concurrente.
 - Résilience : incidents/crise, PCRA/continuité, CRRC/sauvegardes.
 - Documents : preuves et documents via un accès central ; préserver leurs versions et restrictions métier.
-- Administration séparée en bas : configuration GRC, comptes/habilitations, référentiels administrés, apparence, journal/données.
+- Administration séparée en bas : Paramètres système et Paramètres plateforme. Leurs cartes donnent accès à l’exploitation, aux configurations GRC, aux comptes/habilitations, aux référentiels administrés, à l’apparence et aux journaux ; conserver les anciens accès autorisés comme alias/contextes.
 
 L’ordre ci-dessus est une **proposition à valider**. Le style est retenu. Une famille et un niveau de destinations ; détails dans les onglets de page. Une destination canonique par objet, liens contextuels depuis les autres modules. Chevrons orientés, icônes colorées, `aria-expanded`, entrée courante, focus visible. Un groupe ouvert par défaut, sans interdire l’accès clavier.
 

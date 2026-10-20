@@ -5,8 +5,8 @@ Numéros permanents : ils restent identiques lors du déplacement entre les troi
 | Numéro | Fonctionnalité | Description courte | Étape |
 | --- | --- | --- | --- |
 | 001 | [Tableau de bord](fonctionnalites-en-developpement/001-tableau-de-bord/README.md) | Présenter les indicateurs, échéances d’audit et écarts pour piloter le SMSI. | En développement |
-| 002 | [Gestion des risques](fonctionnalites-en-developpement/002-gestion-risques/README.md) | Centraliser les risques, leurs évaluations, matrices, traitements et décisions. | En développement |
-| 003 | [EBIOS RM](fonctionnalites-en-developpement/003-ebios-rm/README.md) | Guider les cinq ateliers EBIOS RM et relier événements, scénarios et traitement des risques. | En développement |
+| 002 | [Gestion des risques](fonctionnalites-a-implementer/002-gestion-risques/README.md) | Centraliser les risques, leurs évaluations, matrices, traitements et décisions. | À implémenter |
+| 003 | [EBIOS RM](fonctionnalites-a-implementer/003-ebios-rm/README.md) | Guider les cinq ateliers EBIOS RM et relier événements, scénarios et traitement des risques. | À implémenter |
 | 004 | [Conformité ISO 27001 et Annexe A](fonctionnalites-en-developpement/004-conformite/README.md) | Suivre les exigences ISO 27001 et les mesures de l’Annexe A, avec leurs preuves et évaluations. | En développement |
 | 005 | [Programme CaRE](fonctionnalites-en-developpement/005-care/README.md) | Suivre les objectifs, exigences, actions et justificatifs du programme CaRE. | En développement |
 | 006 | [Qualité HAS](fonctionnalites-en-developpement/006-has/README.md) | Organiser les évaluations, preuves et actions liées au référentiel qualité HAS. | En développement |
@@ -15,17 +15,17 @@ Numéros permanents : ils restent identiques lors du déplacement entre les troi
 | 009 | [Continuité PCRA / BIA / PCA / PRA](fonctionnalites-en-developpement/009-pcra/README.md) | Préparer le BIA, les plans PCA/PRA, les exercices et le suivi de la continuité. | En développement |
 | 010 | [Périmètres](fonctionnalites-en-developpement/010-perimetres/README.md) | Gérer les périmètres en liste ou graphique animé, avec conformité, BIA/PCRA, retards et fournisseurs rattachés. | En développement |
 | 011 | [Fournisseurs](fonctionnalites-en-developpement/011-fournisseurs/README.md) | Tenir le registre des fournisseurs et suivre leurs relations et enjeux de sécurité. | En développement |
-| 012 | [Administration et apparence globale](fonctionnalites-en-developpement/012-administration-apparence/README.md) | Configurer système et plateforme : exploitation, certificats, nettoyage cohérent, export des journaux et niveaux de log, mail/Teams et contact technique, préférences des groupes/profils, échelles. | En développement |
+| 012 | [Administration et apparence globale](fonctionnalites-a-implementer/012-administration-apparence/README.md) | Configurer système et plateforme : exploitation, certificats, nettoyage cohérent, export des journaux et niveaux de log, mail/Teams et contact technique, préférences des groupes/profils, échelles. | À implémenter |
 | 013 | [Formation](fonctionnalites-en-developpement/013-formation/README.md) | Suivre les actions de formation et de sensibilisation à la sécurité. | En développement |
 | 014 | [Incidents](fonctionnalites-en-developpement/014-incidents/README.md) | Enregistrer les incidents et suivre leur traitement, leurs enseignements et les actions associées. | En développement |
 | 015 | [Évaluations IA](fonctionnalites-en-developpement/015-evaluations-ia/README.md) | Documenter les évaluations liées aux usages de l’intelligence artificielle. | En développement |
 | 016 | [Contexte et parties intéressées](fonctionnalites-en-developpement/016-contexte/README.md) | Décrire le contexte du SMSI, les parties intéressées et leurs attentes. | En développement |
-| 017 | [Plans d’action](fonctionnalites-en-developpement/017-plans-action/README.md) | Créer plusieurs plans d’action, relier leurs actions aux registres d’écarts et suivre leur réalisation par périmètre. | En développement |
-| 018 | [Tâches récurrentes](fonctionnalites-en-developpement/018-taches-recurrentes/README.md) | Planifier les tâches périodiques et conserver l’historique de leurs exécutions. | En développement |
-| 019 | [Configuration GRC transversale](fonctionnalites-en-developpement/019-configuration-grc/README.md) | Partager les catégories, échelles, matrices et paramètres versionnés entre les parcours GRC. | En développement |
-| 020 | [Navigation simplifiée](fonctionnalites-en-developpement/020-navigation/README.md) | Simplifier les menus, conserver les icônes colorées et regrouper les accès sans doublons. | En développement |
-| 021 | [Registres d’écarts](fonctionnalites-en-developpement/021-registres-ecarts/README.md) | Regrouper les écarts par audit ou campagne et les relier aux exigences, actions correctives et à la conformité du périmètre. | En développement |
-| 022 | [Gestion des droits](fonctionnalites-en-developpement/022-gestion-droits/README.md) | Comprendre et ajuster les accès par utilisateur, groupe et registre, avec un rôle Collaborateur limité aux contributions autorisées. | En développement |
+| 017 | [Plans d’action](fonctionnalites-a-implementer/017-plans-action/README.md) | Créer plusieurs plans d’action, relier leurs actions aux registres d’écarts et suivre leur réalisation par périmètre. | À implémenter |
+| 018 | [Tâches récurrentes](fonctionnalites-a-implementer/018-taches-recurrentes/README.md) | Planifier les tâches périodiques et conserver l’historique de leurs exécutions. | À implémenter |
+| 019 | [Configuration GRC transversale](fonctionnalites-a-implementer/019-configuration-grc/README.md) | Partager les catégories, échelles, matrices et paramètres versionnés entre les parcours GRC. | À implémenter |
+| 020 | [Navigation simplifiée](fonctionnalites-a-implementer/020-navigation/README.md) | Simplifier les menus, conserver les icônes colorées et regrouper les accès sans doublons. | À implémenter |
+| 021 | [Registres d’écarts](fonctionnalites-a-implementer/021-registres-ecarts/README.md) | Regrouper les écarts par audit ou campagne et les relier aux exigences, actions correctives et à la conformité du périmètre. | À implémenter |
+| 022 | [Gestion des droits](fonctionnalites-a-implementer/022-gestion-droits/README.md) | Comprendre et ajuster les accès par utilisateur, groupe et registre, avec un rôle Collaborateur limité aux contributions autorisées. | À implémenter |
 
 [Règles de fonctionnement](docs/ORGANISATION-LEGACY.md) · [Catalogue source](docs/catalogue-fonctionnalites.json).
 

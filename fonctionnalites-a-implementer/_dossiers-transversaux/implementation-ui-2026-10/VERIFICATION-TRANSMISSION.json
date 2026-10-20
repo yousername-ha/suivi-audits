@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-20",
+  "statut": "reussi",
+  "checks": [
+    "003 : prototype charge après déplacement",
+    "012 : prototype charge après déplacement",
+    "017 : prototype charge après déplacement",
+    "018 : prototype charge après déplacement",
+    "021 : prototype charge après déplacement",
+    "022 : prototype charge après déplacement",
+    "019 / 020 : galerie commune conservée",
+    "002 : aperçu matriciel conservé et accessible",
+    "012 : composant partagé du catalogue chargé",
+    "012 : publication locale nouvelle version",
+    "Lien 012 → 003 fonctionne après déplacement",
+    "003 : catalogue réellement partagé avec 012",
+    "Lien inverse 003 → 012 conservé",
+    "Aucune ressource HTTP manquante dans les parcours ouverts",
+    "Aucune erreur JavaScript dans les parcours ouverts"
+  ],
+  "errors": [],
+  "failed": [],
+  "backendTeste": false,
+  "limites": "Contrôle de chargement et liaison catalogue après déplacement, pas une nouvelle recette métier complète ni un test serveur."
+}

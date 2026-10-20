@@ -1,0 +1,48 @@
+{
+  "id": "v003-echelles-certificats",
+  "statut": "a-valider",
+  "date": "2026-10-20",
+  "versionPrecedente": "v002-deux-espaces",
+  "validationUtilisateur": null,
+  "integrationBackend": false,
+  "references": [
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v003-echelles-certificats/visuels/01-echelle-personnalisee.png",
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v003-echelles-certificats/visuels/02-nouvelle-echelle.png",
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v003-echelles-certificats/visuels/03-import-certificat.png",
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v003-echelles-certificats/visuels/04-certificat-autosigne.png",
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v003-echelles-certificats/visuels/05-letsencrypt-acme.png",
+    "fonctionnalites-a-implementer/012-administration-apparence/maquettes/v003-echelles-certificats/visuels/06-acme-dns.png"
+  ],
+  "visuels": [
+    {
+      "fichier": "visuels/01-echelle-personnalisee.png",
+      "titre": "Échelle personnalisée : ajout et retrait de niveaux",
+      "sha256": "5b7253a09bf3456b870bb35a958e762138a7ce0e55af38ba3ea4c296a10af456"
+    },
+    {
+      "fichier": "visuels/02-nouvelle-echelle.png",
+      "titre": "Création d’une échelle métier",
+      "sha256": "24cd3cf6531898f062775c0c0d7dde80a9a6eac352229a59f03a9a579841763a"
+    },
+    {
+      "fichier": "visuels/03-import-certificat.png",
+      "titre": "Importer son propre certificat",
+      "sha256": "6b65ee138f27d9363958121b541694450a037b3f27609d8a76d6bbd4822b9514"
+    },
+    {
+      "fichier": "visuels/04-certificat-autosigne.png",
+      "titre": "Générer un certificat autosigné",
+      "sha256": "34f9deaecb6f24dcd34591935c38ff32fe628136a90fa5abbbd37e30094afdeb"
+    },
+    {
+      "fichier": "visuels/05-letsencrypt-acme.png",
+      "titre": "Let’s Encrypt / ACME : validation HTTP",
+      "sha256": "5e5ed0ef3c0383026ebc7f8417e3d789b82237ea30c2ef4e0bd1fdc0ab98be85"
+    },
+    {
+      "fichier": "visuels/06-acme-dns.png",
+      "titre": "ACME : validation DNS et domaine générique",
+      "sha256": "642093974ec0e071ec4fad7c227d991925d3ba8c6f2a5caddcf72f641820ecf2"
+    }
+  ]
+}

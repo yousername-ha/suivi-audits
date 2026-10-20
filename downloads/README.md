@@ -10,7 +10,7 @@
 
 Ouvrir « Scénario visuel » et sélectionner un chemin pour voir les flèches animées et les contours renforcés. Aucune installation de Python ou Node nécessaire. Cette archive contient la maquette, pas l’application métier complète.
 
-[Sources et captures](../fonctionnalites-en-developpement/003-ebios-rm/maquettes/v001-parcours-anime/README.md) · [Empreinte SHA-256](EBIOS-RM-maquette-Windows.sha256).
+[Sources et captures](../fonctionnalites-a-implementer/003-ebios-rm/maquettes/v001-parcours-anime/README.md) · [Empreinte SHA-256](EBIOS-RM-maquette-Windows.sha256).
 
 Pour les cinq ateliers et leurs 18 étapes, lancer **TESTER-PARCOURS-COMPLET.bat**. Le ZIP inclut un guide de test complet.
 
@@ -30,12 +30,12 @@ Extraire tout le ZIP, puis ouvrir `DEMARRER.bat` ou `index.html`. Menu simplifi�
 
 ## 021 — Registres d’écarts et plans d’action liés
 
-[**Télécharger le ZIP testable**](ASTRA-021-registres-ecarts-v001.zip) · [SHA-256](ASTRA-021-registres-ecarts-v001.sha256) · [Sept aperçus et guide](../fonctionnalites-en-developpement/021-registres-ecarts/maquettes/v001-registres-lies/README.md). Extraire tout, puis lancer `DEMARRER.bat`.
+[**Télécharger le ZIP testable**](ASTRA-021-registres-ecarts-v001.zip) · [SHA-256](ASTRA-021-registres-ecarts-v001.sha256) · [Sept aperçus et guide](../fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v001-registres-lies/README.md). Extraire tout, puis lancer `DEMARRER.bat`.
 
 Maquette ciblée à valider : registres d’écarts multiples, plans multiples, liens avec audits/exigences/périmètres, vérification de clôture et conformité distinctes. Données fictives ; HDS illustratif. La maquette EBIOS v2 reste disponible séparément.
 
 ## 021 — v002 : ajouter un écart depuis un audit
 
-[**Télécharger la version courante**](ASTRA-021-registres-ecarts-v002.zip) · [SHA-256](ASTRA-021-registres-ecarts-v002.sha256) · [Nouveaux aperçus](../fonctionnalites-en-developpement/021-registres-ecarts/maquettes/v002-creation-depuis-audit/README.md).
+[**Télécharger la version courante**](ASTRA-021-registres-ecarts-v002.zip) · [SHA-256](ASTRA-021-registres-ecarts-v002.sha256) · [Nouveaux aperçus](../fonctionnalites-a-implementer/021-registres-ecarts/maquettes/v002-creation-depuis-audit/README.md).
 
 Depuis Audits → Ajouter un écart : choisir un registre existant ou en créer un dans la même saisie. Audit et périmètre repris automatiquement. 24 contrôles exécutés, neuf captures ; toujours à valider. La v001 reste disponible plus haut.
