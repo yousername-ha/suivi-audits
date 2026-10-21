@@ -23,6 +23,9 @@ Relevé d'existant ASTRA du 21/10/2026 ([audit](docs/unification/AUDIT-ASTRA-202
 - **Graphe des périmètres.** Le rouge d'alerte est assez contrasté et les listes de définition sont valides (contrôle axe-core), en clair comme en sombre.
 
 ### Ajouté
+- **Couverture et ISO/IEC 27001.** Les clauses 4 à 10 sont obligatoires : le serveur refuse de les exclure (422), l'écran retire l'option « Exclue » (une copie personnalisée d'un référentiel ISO 27001 garde la règle). Une exclusion enregistrée avant la règle est ignorée dans le calcul et signalée. Les exigences dont l'applicabilité n'est pas tranchée sont comptées à part (« à déterminer ») et signalées « à revoir » sur l'écran Couverture et sur la carte du périmètre.
+
+### Ajouté
 Lots L2 et L3 du [prompt maître ASTRA](docs/unification/AUDIT-ASTRA-2026-10-21.md) (navigation, périmètres, droits) :
 - **Style Clair** appliqué en direct aux sessions déjà ouvertes quand l'administrateur le change ; contrastes du style Clair vérifiés (avec la feuille de styles).
 - **Menu fixe** : sa hauteur est bornée en tablette comme sur ordinateur, il défile seul ; inventaire de référence des rubriques, adresses et droits du menu (test).

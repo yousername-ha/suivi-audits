@@ -138,10 +138,12 @@ function lignesCompteurs(c: CartePerimetre['compteurs'], id: string, liens = tru
       valeur: c.couverture
         ? lien(
             'couverture',
-            `${n(c.couverture.testees)} testées ou validées / ${n(c.couverture.applicables)} applicables`,
+            `${n(c.couverture.testees)} testées ou validées / ${n(c.couverture.applicables)} applicables${
+              c.couverture.aDeterminer ? ` · ${n(c.couverture.aDeterminer)} à déterminer (à revoir)` : ''
+            }`,
           )
         : indisponible,
-      alerte: false,
+      alerte: !!c.couverture && c.couverture.aDeterminer > 0,
     },
   ];
 }

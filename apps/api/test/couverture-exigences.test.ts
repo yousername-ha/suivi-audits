@@ -99,7 +99,7 @@ describe('états de couverture', () => {
       ['R1', 'non_implemente', null],
       ['R2', 'non_implemente', null],
     ]);
-    expect(d.frameworks[0]!.etats).toMatchObject({ non_implemente: 2, applicables: 2 });
+    expect(d.frameworks[0]!.etats).toMatchObject({ non_implemente: 2, applicables: 2, aDeterminer: 2 });
   });
   it('progresse : partiel, implémenté, testé, puis validé métier par un administrateur du Pilotage', async () => {
     let r = await evaluer(parent, base, 0);
@@ -148,7 +148,11 @@ describe('états de couverture', () => {
       'R2',
     );
     expect(r.json().etat).toBe('non_applicable');
-    expect((await detail(parent)).frameworks[0]!.etats).toMatchObject({ non_applicable: 1, applicables: 1 });
+    expect((await detail(parent)).frameworks[0]!.etats).toMatchObject({
+      non_applicable: 1,
+      applicables: 1,
+      aDeterminer: 0,
+    });
   });
 });
 

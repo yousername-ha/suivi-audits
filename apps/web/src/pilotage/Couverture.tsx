@@ -35,7 +35,7 @@ interface Referentiel {
   covered: number;
   toValidate: number;
   uncovered: number;
-  etats: SyntheseEtats & { applicables: number };
+  etats: SyntheseEtats & { applicables: number; aDeterminer: number };
 }
 interface Detail {
   id: string;
@@ -44,6 +44,10 @@ interface Detail {
   measures: { ref: string; name: string }[];
   evaluation: (EvaluationExigence & { frameworkVersion: number }) | null;
   etat: EtatExigence;
+  /** Exigence obligatoire (clauses 4 à 10 de l'ISO/IEC 27001) : jamais excluable. */
+  obligatoire: boolean;
+  /** Une exclusion enregistrée avant l'interdiction : à corriger. */
+  exclusionIllicite: boolean;
   sansMesure: boolean;
 }
 const COULEUR_ETAT: Record<EtatExigence, Etat> = {
@@ -73,8 +77,8 @@ interface Formulaire {
   validationNote: string;
   reason: string;
 }
-const depuis = (e: Detail['evaluation']): Formulaire => ({
-  applicability: e?.applicability ?? 'a_determiner',
+const depuis = (e: Detail['evaluation'], obligatoire: boolean): Formulaire => ({
+  applicability: obligatoire && e?.applicability !== 'applicable' ? 'applicable' : (e?.applicability ?? 'a_determiner'),
   justification: e?.justification ?? '',
   implementation: e?.implementation ?? 'aucune',
   implementationNote: e?.implementationNote ?? '',
@@ -101,7 +105,7 @@ function Evaluation({
   const can = useCan(),
     qc = useQueryClient(),
     peutValider = can('pilotage', 'administrer'),
-    [f, setF] = useState<Formulaire>(depuis(ligne.evaluation)),
+    [f, setF] = useState<Formulaire>(depuis(ligne.evaluation, ligne.obligatoire)),
     [erreur, setErreur] = useState<unknown>(null),
     [envoi, setEnvoi] = useState(false);
   const historique = useQuery({
@@ -149,7 +153,15 @@ function Evaluation({
       <Select
         label="Applicabilité"
         allowDeselect={false}
-        data={APPLICABILITES.map((a) => ({ value: a, label: LIBELLES_APPLICABILITE[a] }))}
+        description={
+          ligne.obligatoire
+            ? 'Exigence obligatoire (ISO/IEC 27001, clauses 4 à 10) : elle ne peut pas être exclue.'
+            : undefined
+        }
+        data={APPLICABILITES.filter((a) => !(ligne.obligatoire && a === 'exclue')).map((a) => ({
+          value: a,
+          label: LIBELLES_APPLICABILITE[a],
+        }))}
         value={f.applicability}
         onChange={(v) => v && maj('applicability', v as Applicabilite)}
       />
@@ -298,6 +310,12 @@ export function Couverture({ smsi }: { smsi: string }) {
             <Text size="sm" c="dimmed">
               Version {f.version} · {f.requirements} exigence(s) · {f.etats.applicables} applicable(s) ou à déterminer
             </Text>
+            {f.etats.aDeterminer > 0 && (
+              <Alert color="orange" mt="sm" role="alert">
+                {f.etats.aDeterminer} exigence(s) à déterminer : leur applicabilité n’a pas encore été tranchée. À
+                revoir : chaque exigence doit être déclarée applicable ou exclue (avec justification).
+              </Alert>
+            )}
             <Group mt="sm" gap="xs">
               {ETATS_EXIGENCE.map((e) => (
                 <StatusChip key={e} etat={COULEUR_ETAT[e]}>
@@ -354,7 +372,16 @@ export function Couverture({ smsi }: { smsi: string }) {
                   <Table.Td>
                     <b>{r.id}</b> · {r.title}
                   </Table.Td>
-                  <Table.Td>{LIBELLES_APPLICABILITE[r.evaluation?.applicability ?? 'a_determiner']}</Table.Td>
+                  <Table.Td>
+                    {r.obligatoire ? (
+                      'Applicable (obligatoire)'
+                    ) : (r.evaluation?.applicability ?? 'a_determiner') === 'a_determiner' ? (
+                      <StatusChip etat="attention">À déterminer : à revoir</StatusChip>
+                    ) : (
+                      LIBELLES_APPLICABILITE[r.evaluation!.applicability]
+                    )}
+                    {r.exclusionIllicite && <StatusChip etat="erreur">Exclusion non permise</StatusChip>}
+                  </Table.Td>
                   <Table.Td>
                     <StatusChip etat={COULEUR_ETAT[r.etat]}>{LIBELLES_ETAT[r.etat]}</StatusChip>
                     {r.evaluation?.testResult === 'non_conforme' && (

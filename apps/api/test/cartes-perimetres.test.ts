@@ -298,11 +298,11 @@ describe('cartes de périmètres', () => {
       { 'if-match': '"0"' },
     );
     expect(evaluation.statusCode, evaluation.body).toBe(201);
-    const attendue = { referentiels: 1, exigences: 3, applicables: 3, testees: 1 };
+    const attendue = { referentiels: 1, exigences: 3, applicables: 3, testees: 1, aDeterminer: 2 };
     expect((await carte(admin, P)).compteurs.couverture).toEqual(attendue);
     // L'enfant hérite du référentiel du parent : sa carte n'affiche plus « indisponible », mais l'évaluation est propre à
     // chaque périmètre : celle du parent ne lui est pas attribuée.
-    expect((await carte(admin, Q)).compteurs.couverture).toEqual({ ...attendue, testees: 0 });
+    expect((await carte(admin, Q)).compteurs.couverture).toEqual({ ...attendue, testees: 0, aDeterminer: 3 });
     // Le total d'un parent ne somme pas des couvertures.
     expect((await carte(admin, P)).total.couverture).toBeNull();
   });

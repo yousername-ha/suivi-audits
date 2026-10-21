@@ -3,6 +3,7 @@
    l'API (contrôle avant écriture) et l'interface. Aucun taux de conformité : l'état décrit ce qui est établi, pas ce
    qui est certifié. */
 import { z } from 'zod';
+import type { FrameworkDefinition } from './grc.js';
 
 export const APPLICABILITES = ['a_determiner', 'applicable', 'exclue'] as const;
 export const MISES_EN_OEUVRE = ['aucune', 'partielle', 'complete'] as const;
@@ -44,6 +45,18 @@ export const LIBELLES_ETAT: Record<EtatExigence, string> = {
   valide_metier: 'Validé métier',
   non_applicable: 'Non applicable',
 };
+
+/** Clauses 4 à 10 de l'ISO/IEC 27001 : obligatoires, jamais excluables (seules les mesures de l'Annexe A le sont, par la
+    déclaration d'applicabilité, 6.1.3). Une copie personnalisée d'un référentiel ISO 27001 garde la règle. */
+const CLAUSES_OBLIGATOIRES = /^clause_(?:4|5|6|7|8|9|10)(?:_|$)/;
+export function exclusionInterdite(
+  def: Pick<FrameworkDefinition, 'identifier' | 'derivedFrom'>,
+  domaine: string,
+): boolean {
+  return /^iso-27001/.test(def.derivedFrom?.identifier ?? def.identifier) && CLAUSES_OBLIGATOIRES.test(domaine);
+}
+export const MESSAGE_EXCLUSION_INTERDITE =
+  'Cette exigence est obligatoire (clauses 4 à 10 de l’ISO/IEC 27001) : elle ne peut pas être exclue.';
 
 export interface EvaluationExigence {
   version: number;
@@ -127,10 +140,33 @@ export const EvaluationExigenceCorps = z
   });
 export type EvaluationExigenceCorps = z.infer<typeof EvaluationExigenceCorps>;
 
+/** Évaluation vue par la couverture : une exigence obligatoire n'est jamais exclue, même si une exclusion antérieure
+    existe (elle est alors comptée comme applicable et signalée). */
+export function evaluationEffective<T extends Pick<EvaluationExigence, 'applicability'>>(
+  e: T | null,
+  interdite: boolean,
+): T | null {
+  return e && interdite && e.applicability === 'exclue' ? { ...e, applicability: 'a_determiner' } : e;
+}
+
 export type SyntheseEtats = Record<EtatExigence, number>;
-/** Dénombrement par état. `applicables` exclut les exigences non applicables. */
-export function syntheseEtats(etats: readonly EtatExigence[]): SyntheseEtats & { applicables: number } {
+export interface EntreeSynthese {
+  etat: EtatExigence;
+  applicability: Applicabilite;
+  /** Exigence obligatoire : son applicabilité est acquise, elle n'est jamais « à déterminer ». */
+  obligatoire?: boolean;
+}
+/** Dénombrement par état. `applicables` exclut les exigences non applicables ; `aDeterminer` compte celles dont
+    l'applicabilité n'a pas encore été tranchée (à revoir : rien n'est établi à leur sujet). */
+export function syntheseEtats(
+  entrees: readonly (EtatExigence | EntreeSynthese)[],
+): SyntheseEtats & { applicables: number; aDeterminer: number } {
   const s = Object.fromEntries(ETATS_EXIGENCE.map((k) => [k, 0])) as SyntheseEtats;
-  for (const e of etats) s[e]++;
-  return { ...s, applicables: etats.length - s.non_applicable };
+  let aDeterminer = 0;
+  for (const x of entrees) {
+    const e = typeof x === 'string' ? { etat: x, applicability: 'applicable' as const } : x;
+    s[e.etat]++;
+    if (e.applicability === 'a_determiner' && !e.obligatoire) aDeterminer++;
+  }
+  return { ...s, applicables: entrees.length - s.non_applicable, aDeterminer };
 }

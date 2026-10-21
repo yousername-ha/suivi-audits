@@ -6,8 +6,10 @@
 import {
   effectivePermissions,
   etatExigence,
+  evaluationEffective,
+  exclusionInterdite,
   syntheseEtats,
-  type EtatExigence,
+  type EntreeSynthese,
   type FrameworkDefinition,
   type Permission,
   type RapprochementDecision,
@@ -408,15 +410,22 @@ export class GrcRapprochements {
       attached.map((a) => a.framework_id),
     );
     const frameworks = attached.map((a) => {
-      const reqs = defs.get(`${a.framework_id}:${a.version}`)?.definition.requirements ?? [];
+      const definition = defs.get(`${a.framework_id}:${a.version}`)?.definition;
+      const reqs = definition?.requirements ?? [];
       let covered = 0,
         pending = 0;
-      const etats: EtatExigence[] = [];
+      const etats: EntreeSynthese[] = [];
       for (const r of reqs) {
         const ref = requirementRef(a.framework_id, a.version, r.id);
         if (explicit.has(ref)) covered++;
         else if (toValidate.has(ref)) pending++;
-        etats.push(etatExigence(evaluations.get(`${a.framework_id}:${r.id}`) ?? null));
+        const obligatoire = !!definition && exclusionInterdite(definition, r.domain);
+        const evaluation = evaluationEffective(evaluations.get(`${a.framework_id}:${r.id}`) ?? null, obligatoire);
+        etats.push({
+          etat: etatExigence(evaluation),
+          applicability: evaluation?.applicability ?? 'a_determiner',
+          obligatoire,
+        });
       }
       return {
         frameworkId: a.framework_id,
@@ -434,10 +443,13 @@ export class GrcRapprochements {
       ? (() => {
           const a = attached.find((x) => x.framework_id === frameworkId);
           if (!a) throw new HttpError(404, 'Référentiel non rattaché à ce périmètre.');
-          return (defs.get(`${a.framework_id}:${a.version}`)?.definition.requirements ?? []).slice(0, 1000).map((r) => {
+          const definition = defs.get(`${a.framework_id}:${a.version}`)?.definition;
+          return (definition?.requirements ?? []).slice(0, 1000).map((r) => {
             const ref = requirementRef(a.framework_id, a.version, r.id);
             const measures = (explicit.get(ref) ?? []).map((m) => ({ ref: m, name: measureNames.get(m) ?? '' }));
-            const evaluation = evaluations.get(`${a.framework_id}:${r.id}`) ?? null;
+            const obligatoire = !!definition && exclusionInterdite(definition, r.domain);
+            const enregistree = evaluations.get(`${a.framework_id}:${r.id}`) ?? null;
+            const evaluation = evaluationEffective(enregistree, obligatoire);
             const etat = etatExigence(evaluation);
             return {
               id: r.id,
@@ -446,6 +458,8 @@ export class GrcRapprochements {
               measures,
               evaluation,
               etat,
+              obligatoire,
+              exclusionIllicite: obligatoire && enregistree?.applicability === 'exclue',
               // Une mise en œuvre déclarée sans mesure reliée : à justifier, jamais comptée comme preuve.
               sansMesure:
                 !measures.length &&

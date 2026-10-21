@@ -84,8 +84,8 @@ Légende des états : **Corrigé** (critère de l'audit satisfait et testé) · 
 
 ## Décisions en attente (celles de l'utilisateur)
 
-1. **Structure de l'Administration** (012-01, 020-05) : option A (deux entrées deviennent des pages d'accueil à cartes, alias conservés, recommandée) ou option B (fusion en une famille).
-2. **Définition de « conformité »** sur les cartes de périmètre (010-04) : (a) « Couverture » (recommandée, appliquée à titre provisoire), (b) taux évaluées/applicables, (c) autre.
+1. ~~Structure de l'Administration~~ **Décidé (21/10/2026)** : deux entrées, « Plateforme » (organisation, comptes, référentiels, échelles, apparence, notifications, écrans muraux, import/export) et « Configuration système » (sauvegardes, mises à jour, certificats, sécurité, sessions, journal d'audit, journaux techniques, modules, environnement), chacune en page d'accueil à cartes ; détails en fenêtres centrées ; anciennes adresses conservées en alias. À réaliser (012-01, 020-05).
+2. ~~Définition de « conformité »~~ **Décidé (21/10/2026)** : « Couverture » (testées ou validées / applicables), jamais présentée comme conformité ISO/IEC 27001. Les clauses 4 à 10 sont obligatoires donc non excluables ; une exigence « à déterminer » est comptée à part et signalée comme à revoir (appliqué dans le code).
 3. Modèle « collaborateur » et limite d'attribution (022-03).
 4. Canaux d'envoi (courriel, Teams), conservation et nettoyage automatique, certificats autosignés et ACME, niveaux de journalisation (012-07, 012-09 à 012-11, 012-13).
 5. Calendriers de plateforme (zones scolaires, jours fériés) et leur couche d'affichage (012-14, 018-08, 018-09).

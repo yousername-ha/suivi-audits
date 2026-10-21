@@ -29,7 +29,14 @@ export interface CarteCompteurs {
   /** Couverture des référentiels rattachés ou hérités du périmètre (même calcul que l'écran « Couverture ») : exigences
       applicables et, parmi elles, celles dont la mise en œuvre est testée ou validée. Ce n'est pas un taux de conformité.
       Null : droit manquant ou aucun référentiel effectif (indisponible, jamais 0 %). */
-  couverture: { referentiels: number; exigences: number; applicables: number; testees: number } | null;
+  couverture: {
+    referentiels: number;
+    exigences: number;
+    applicables: number;
+    testees: number;
+    /** Exigences dont l'applicabilité n'est pas encore tranchée : à revoir (comptées parmi les applicables). */
+    aDeterminer: number;
+  } | null;
 }
 export interface CartePerimetre {
   id: string;

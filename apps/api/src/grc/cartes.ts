@@ -123,6 +123,7 @@ export async function cartesPerimetres(g: Grc, user: SessionUser): Promise<Synth
           exigences: reels.reduce((t, f) => t + f.requirements, 0),
           applicables: reels.reduce((t, f) => t + f.etats.applicables, 0),
           testees: reels.reduce((t, f) => t + f.etats.teste + f.etats.valide_metier, 0),
+          aDeterminer: reels.reduce((t, f) => t + f.etats.aDeterminer, 0),
         };
     }
     // Total de la carte : le périmètre et ses sous-périmètres, chaque élément une seule fois (jamais la somme des cartes

@@ -3,6 +3,8 @@
    une preuve ou une mesure partagée entre référentiels ne rend jamais une autre exigence « testée » ou « validée ». */
 import {
   etatExigence,
+  exclusionInterdite,
+  MESSAGE_EXCLUSION_INTERDITE,
   type EvaluationExigenceCorps,
   type EtatExigence,
   type EvaluationExigence,
@@ -75,7 +77,10 @@ export class GrcEvaluationsExigences {
           [frameworkId, effectif.version],
         )
       ).rows[0]?.definition;
-      if (!def?.requirements.some((r) => r.id === requirementId)) throw new HttpError(404, 'Exigence inconnue.');
+      const exigence = def?.requirements.find((r) => r.id === requirementId);
+      if (!def || !exigence) throw new HttpError(404, 'Exigence inconnue.');
+      if (corps.applicability === 'exclue' && exclusionInterdite(def, exigence.domain))
+        throw new HttpError(422, MESSAGE_EXCLUSION_INTERDITE);
       const courante =
         (
           await c.query<{ version: number }>(
