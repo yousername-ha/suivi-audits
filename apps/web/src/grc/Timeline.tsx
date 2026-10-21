@@ -2,7 +2,7 @@
    ne montre qu'un mois). Les actions sans aucune date sont listées à part ; rien n'est inventé pour les placer. */
 import { Alert, Button, Group, Stack, Text } from '@mantine/core';
 import type { BusinessPolicy, GrcObject, TaskData } from '@suivi/shared';
-import { enRetard, libelleStatut, symboleStatut } from './etat-action';
+import { enRetard, libelleStatut, symboleStatut, validationDe } from './etat-action';
 
 const JOUR = 86_400_000;
 const LARGEUR_JOUR = 4;
@@ -79,7 +79,8 @@ function descriptionAction(o: GrcObject, policy: BusinessPolicy, retard: boolean
   const periode = [t.startAt && `du ${fr(jourDe(t.startAt))}`, t.dueAt && `échéance le ${fr(jourDe(t.dueAt))}`]
     .filter(Boolean)
     .join(', ');
-  return `${o.name}, ${libelleStatut(policy, o).toLowerCase()}${retard ? ', en retard' : ''}${periode ? ', ' + periode : ''}`;
+  const validation = validationDe(o);
+  return `${o.name}, ${libelleStatut(policy, o).toLowerCase()}${validation ? `, validée (${validation})` : ''}${retard ? ', en retard' : ''}${periode ? ', ' + periode : ''}`;
 }
 
 export function Timeline({
@@ -191,6 +192,7 @@ export function Timeline({
                 <title>{objet.name}</title>
                 <text x="5" y={y + 15}>
                   {symboleStatut(policy, objet.data.status)} {nom}
+                  {validationDe(objet) ? ` · ${validationDe(objet)}` : ''}
                 </text>
                 {retard && (
                   <text x={MARGE_GAUCHE - 8} y={y + 15} textAnchor="end" className="grc-timeline__retard">

@@ -37,7 +37,7 @@ Légende des états : **Corrigé** (critère de l'audit satisfait et testé) · 
 | 010-04 | Amélioré (*) | La carte reprend le calcul de l'écran Couverture (référentiels rattachés ou hérités, états communs) et s'appelle « Couverture » ; un enfant qui hérite n'affiche plus « indisponible » | Agrégation avec descendants, provenance et détail par référentiel | `cartes-perimetres.test.ts` |
 | 010-05 | Corrigé | Écarts ouverts ventilés en majeurs (rouge), mineurs (orange foncé), sensibles (violet), avec texte ; liens vers la liste filtrée | — | `cartes-perimetres.test.ts`, e2e `…-cartes-perimetres.spec.ts` |
 | 010-06 | Amélioré | Chaque compteur est un lien vers la liste du module, dans le même périmètre ; retard des écarts comparé à la date locale du périmètre | « Plans de continuité » regroupe PCA, PRA et PCRA (décision) ; mise en forme en quatre tuiles compactes | `cartes-perimetres.test.ts` |
-| 010-07 | Amélioré | Hauteur de carte agrandie pour ne rien tronquer | Test unitaire de `disposer`, capture avec libellés longs | — |
+| 010-07 | Amélioré | Hauteur de carte agrandie pour ne rien tronquer ; `disposer` testé (parent centré, aucune carte superposée, grand arbre, noms longs) | Capture de recette avec libellés longs | `disposition-perimetres.test.ts` |
 | 010-08 | Corrigé | Liaisons orientées (pointe de flèche), flux animé, pause/reprise, mouvement réduit respecté | — | e2e `…-cartes-perimetres.spec.ts` |
 | 010-09 | Amélioré | Fenêtres centrées ; graphe audité par axe-core, clair et sombre | Capture de recette | e2e `…-cartes-perimetres.spec.ts` |
 | 010-11 | Amélioré | État de chargement du graphe ; rechargement de la version après un 412 | Tests de double soumission et de seconde session | e2e `…-cartes-perimetres.spec.ts` |
@@ -56,7 +56,7 @@ Légende des états : **Corrigé** (critère de l'audit satisfait et testé) · 
 | --- | --- | --- | --- | --- |
 | 017-01 / 021-01 / 018-01 | Amélioré | Éléments d'un registre partagé listés sous chaque périmètre qui le porte et ouverts avec leur périmètre de référence ; sélecteur de registre à la création ; filtre « Registre » et filtres conservés dans l'adresse | Regroupement par registre dans la liste ; filtre multiple | `registres-droits.test.ts`, e2e `…-registres-partages.spec.ts`, `…-filtres-taches.spec.ts` |
 | 017-03 / 018-03 | Amélioré | Kanban à autant de colonnes que d'états de la politique, zone bornée, titres fixes | Test de volume sur le Kanban | e2e `…-timeline-lisible.spec.ts` (Timeline) |
-| 017-06 / 018-02 | Corrigé (017-06) / Amélioré | Timeline : intitulés fixes, zone bornée pour cent actions, état et retard en toutes lettres, légende | Guide horizontal et marqueur carré des occurrences | e2e `…-timeline-lisible.spec.ts` |
+| 017-06 / 018-02 | Corrigé (017-06) / Amélioré | Timeline : intitulés fixes, zone bornée pour cent actions, état, retard et validation (OK, KO, NA) en toutes lettres, légende | Guide horizontal et marqueur carré des occurrences | e2e `…-timeline-lisible.spec.ts` |
 | 017-07 | Amélioré | Liens entrants affichés : action liée par audit d'origine ou par récidive | — | `liens.test.ts` |
 | 021-05 | Amélioré | Test : un écart et une action reliés à une exigence, l'action terminée, laissent l'évaluation et l'état de l'exigence inchangés | Affichage du contexte d'applicabilité à côté du lien | `couverture-exigences.test.ts` |
 | 021-06 | Corrigé | Classification en rouge, orange foncé et violet, avec légende, en liste et en fiche | — | `etat-action.test.ts`, e2e |

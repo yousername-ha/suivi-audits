@@ -243,7 +243,16 @@ export function ObjectEditor({
   const readonly =
     !can(object?.data.legacyRecurring ? 'pilotage' : GRC_MODULES[kind], 'modifier') && !acces?.peut.gerer;
   return (
-    <Modal opened={opened} onClose={onClose} title={`${object ? 'Fiche' : 'Créer'} — ${GRC_LABELS[kind]}`} size="xl">
+    <Modal
+      opened={opened}
+      onClose={onClose}
+      title={`${object ? 'Fiche' : 'Créer'} — ${GRC_LABELS[kind]}`}
+      // Une occurrence de tâche récurrente s'ouvre dans une fenêtre centrale compacte (validation OK, KO, NA) ; les autres
+      // fiches, plus longues, gardent la grande fenêtre.
+      {...(object && typeof object.data.seriesId === 'string' && object.data.seriesId
+        ? ({ size: 'lg', centered: true } as const)
+        : ({ size: 'xl' } as const))}
+    >
       <Stack>
         <ErrorAlert error={error ?? owners.error ?? history.error} />
         {object?.id.startsWith('legacy:') ? (
