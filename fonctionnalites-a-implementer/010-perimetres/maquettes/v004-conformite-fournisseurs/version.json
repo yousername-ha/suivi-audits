@@ -37,7 +37,7 @@
   ],
   "id": "v004-conformite-fournisseurs",
   "references": [
-    "fonctionnalites-en-developpement/010-perimetres/maquettes/v004-conformite-fournisseurs/visuels/01-cartes-conformite.png"
+    "fonctionnalites-a-implementer/010-perimetres/maquettes/v004-conformite-fournisseurs/visuels/01-cartes-conformite.png"
   ],
   "versionPrecedente": "v003-gestion-graphique"
 }

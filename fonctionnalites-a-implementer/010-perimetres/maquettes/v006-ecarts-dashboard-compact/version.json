@@ -7,9 +7,9 @@
   "integrationBackend": false,
   "zip": null,
   "references": [
-    "fonctionnalites-en-developpement/010-perimetres/maquettes/v006-ecarts-dashboard-compact/visuels/01-cartes-compactes-ecarts.png",
-    "fonctionnalites-en-developpement/010-perimetres/maquettes/v006-ecarts-dashboard-compact/visuels/02-detail-ecarts.png",
-    "fonctionnalites-en-developpement/010-perimetres/maquettes/v006-ecarts-dashboard-compact/visuels/03-flux-cartes-compactes.gif"
+    "fonctionnalites-a-implementer/010-perimetres/maquettes/v006-ecarts-dashboard-compact/visuels/01-cartes-compactes-ecarts.png",
+    "fonctionnalites-a-implementer/010-perimetres/maquettes/v006-ecarts-dashboard-compact/visuels/02-detail-ecarts.png",
+    "fonctionnalites-a-implementer/010-perimetres/maquettes/v006-ecarts-dashboard-compact/visuels/03-flux-cartes-compactes.gif"
   ],
   "visuels": [
     {

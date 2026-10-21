@@ -6,10 +6,10 @@
   "integrationBackend": false,
   "date": "2026-10-19",
   "references": [
-    "fonctionnalites-en-developpement/010-perimetres/maquettes/v005-flux-mini-dashboard/visuels/01-cartes-dashboard.png",
-    "fonctionnalites-en-developpement/010-perimetres/maquettes/v005-flux-mini-dashboard/visuels/04-flux-parent-enfants.gif",
-    "fonctionnalites-en-developpement/010-perimetres/maquettes/v005-flux-mini-dashboard/visuels/02-actions-en-retard.png",
-    "fonctionnalites-en-developpement/010-perimetres/maquettes/v005-flux-mini-dashboard/visuels/03-bia-du-perimetre.png"
+    "fonctionnalites-a-implementer/010-perimetres/maquettes/v005-flux-mini-dashboard/visuels/01-cartes-dashboard.png",
+    "fonctionnalites-a-implementer/010-perimetres/maquettes/v005-flux-mini-dashboard/visuels/04-flux-parent-enfants.gif",
+    "fonctionnalites-a-implementer/010-perimetres/maquettes/v005-flux-mini-dashboard/visuels/02-actions-en-retard.png",
+    "fonctionnalites-a-implementer/010-perimetres/maquettes/v005-flux-mini-dashboard/visuels/03-bia-du-perimetre.png"
   ],
   "visuels": [
     {

@@ -146,7 +146,7 @@ Ces instructions utilisateur remplacent les consignes antérieures contradictoir
 
 ## Dossiers techniques et contrôle de l’existant — accord du 20 octobre 2026
 
-- Périmètres approuvés pour transmission : 020, 019, 012, 022, 017, 021, 018, 002 et 003. Le 010 fait l’objet d’une confirmation séparée.
+- Périmètres approuvés pour transmission : 020, 019, 012, 022, 010, 017, 021, 018, 002 et 003. Le 010 a été explicitement inclus par l’utilisateur ; l’ordre technique de référence est `fonctionnalites-a-implementer/_dossiers-transversaux/implementation-ui-2026-10/ORDRE-IMPLEMENTATION.md`.
 - Avant de coder chaque fonctionnalité, l’IA doit rechercher ce qui est déjà implémenté dans sa branche, vérifier les comportements et tests, et fournir la preuve par exigence. Si conforme, conserver ; si partiel, compléter le manque ; si absent, réutiliser les briques existantes avant de créer. Documentation seule et CI d’un ancien SHA ne suffisent pas.
 - Le dossier technique courant consolide demandes, corrections et critères de recette avec des identifiants stables. L’IA n’a pas à relire la conversation ; les hypothèses restantes sont explicites.
 - Un déplacement vers « à implémenter » valide la transmission documentaire, pas une intégration ni un succès serveur. Aucun marqueur « implémentation ok » ne doit être créé pour cette seule préparation.

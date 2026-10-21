@@ -1,6 +1,6 @@
 # Consignes de codage — contrôle de l’existant obligatoire
 
-Édition du 20 octobre 2026. L’utilisateur a approuvé la préparation des dossiers 020, 019, 012, 022, 017, 021, 018, 002 et 003 avec cette condition : **« L’IA qui code devra vérifier juste que c’est pas déjà implémenté. »** Le 010 fait l’objet d’une confirmation séparée. Les dossiers sont une livraison documentaire ; aucun module n’est déclaré intégré par ce classement.
+Édition du 20 octobre 2026. L’utilisateur a approuvé la préparation des dossiers 020, 010, 019, 012, 022, 017, 021, 018, 002 et 003 avec cette condition : **« L’IA qui code devra vérifier juste que c’est pas déjà implémenté. »** Le 010 a depuis été explicitement inclus ; ordre actualisé le 21 octobre 2026. Les dossiers sont une livraison documentaire ; aucun module n’est déclaré intégré par ce classement.
 
 ## 1. Avant toute modification : vérifier la branche cible
 
@@ -30,19 +30,7 @@ Conserver ces invariants transversaux :
 
 ## 3. Ordre de réalisation selon les dépendances
 
-| Lot | Travail | Condition pour continuer |
-| --- | --- | --- |
-| L0 | Audit de l’existant pour tous les dossiers | Matrice par exigence et changements nécessaires délimités |
-| L1 | Vérifier catalogue 019, périmètres, annuaires/droits, preuves, journaux, audit/applicabilité et services de risques | Contrats réels identifiés ; compléments manquants isolés |
-| L2 | Navigation 020 et coque ; pages de consultation 012/022 | Réutilisation des composants ; routes/alias et permissions préservés |
-| L3 | Registres multi-périmètres et contexte hérité | Contrat serveur de visibilité et déplacement validé ; historique conservé |
-| L4 | Plans d’action 017 puis liaisons d’écarts 021 | Actions et liens uniques, responsables et transitions contrôlés |
-| L5 | Récurrences 018 | Séries, calendrier/fenêtres, preuves et réalisation idempotente disponibles ; peut avancer sans attendre 021 |
-| L6 | Risques 002 et ateliers EBIOS 003 | Catalogue versionné, études, évaluations/décisions et liens de traitement disponibles ; peut avancer en parallèle de L4/L5 |
-| L7 | Mutations d’administration 012 et habilitations fines 022 | Capacités serveur confirmées ; essais isolés autorisés ; pas de faux succès |
-| L8 | Recette intégrée et compte rendu | Parcours positifs/négatifs et non-régressions au SHA livré |
-
-La disponibilité du backend est une condition de raccordement, pas une raison de reconstruire tout le socle. Continuer les adaptations indépendantes lorsqu’un contrat manque. Une évolution métier nécessaire est décrite précisément ; aucune mutation chez Claude. Aucun ordre visuel de menu n’est déduit de ce tableau.
+Suivre l’[ordre unique des dix dossiers — L0 à L11](ORDRE-IMPLEMENTATION.md). Il remplace les anciennes séquences L0–L8 et précise les prérequis, les travaux indépendants et les conditions de passage. Les numéros de fonctionnalités restent stables ; ils ne définissent pas leur ordre de codage.
 
 ## 4. Données, erreurs et contrôles
 

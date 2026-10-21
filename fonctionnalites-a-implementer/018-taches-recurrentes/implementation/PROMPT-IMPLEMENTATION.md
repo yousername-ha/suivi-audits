@@ -11,3 +11,7 @@ Respecte les données et historiques, les règles communes de registres/périmè
 Effectue les adaptations autorisées non bloquées, puis les critères de recette du dossier. Signale les contrats/décisions manquants et continue les parties indépendantes. Ne fusionne ni ne déploie automatiquement.
 
 Livre ton relevé d’existant, les changements ou l’absence justifiée de changement, ta branche et ton SHA, les tests exécutés et les limites. Crée un marqueur « implémentation ok » uniquement lorsque le périmètre de cette version est intégré et vérifié, avec les preuves prévues dans les consignes communes.
+
+## Ordre commun
+
+Suivre l’[ordre de codage des dix dossiers](../../_dossiers-transversaux/implementation-ui-2026-10/ORDRE-IMPLEMENTATION.md) et les lots associés à ce numéro. Aucun ancien ordre local ne remplace cette référence. Vérifier les prérequis avant mutation ; continuer les travaux indépendants si un contrat manque.

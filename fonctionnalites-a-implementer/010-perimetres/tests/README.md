@@ -1,5 +1,11 @@
 # Tests — Périmètres
 
+## Transmission du 21 octobre 2026
+
+[Script reproductible](verifier-transmission.cjs) · [Rapport de transmission](../../_dossiers-transversaux/implementation-ui-2026-10/VERIFICATION-ORDONNANCEMENT.json). Les parcours du prototype v007 déplacé passent sous Chromium, dont réciprocité liste/graphe, flux, couleurs, compteurs fictifs, mobile et fond uni. Ce contrôle ne valide aucun service backend.
+
+Depuis la racine du dépôt : `python -m http.server 19120 --bind 127.0.0.1`, puis `node fonctionnalites-a-implementer/010-perimetres/tests/verifier-transmission.cjs` avec Playwright disponible dans NODE_PATH et Chromium installé (CHROMIUM_PATH si nécessaire).
+
 ## v007 — contrôle visuel
 
 [Contrôle de capture](../maquettes/v007-fond-uni/verification.json) : aucun motif de fond, teinte conservée et aucune erreur JavaScript. Aucun nouveau test fonctionnel pour cette modification CSS.

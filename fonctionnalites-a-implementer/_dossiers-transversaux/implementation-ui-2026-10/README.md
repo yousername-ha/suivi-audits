@@ -1,6 +1,6 @@
 # Dossier technique d’implémentation — ASTRA UI/UX
 
-**Transmission courante du 20 octobre : [neuf dossiers et prompts](DOSSIERS-2026-10-20.md).** Le [contrôle de l’existant](CONTROLE-EXISTANT-ET-CODAGE.md) est obligatoire avant toute implémentation. Les sections datées du 19 octobre ci-dessous restent le socle de la navigation et des registres ; les dossiers spécifiques actuels les complètent.
+**Transmission actualisée le 21 octobre : [dix dossiers et prompts](DOSSIERS-2026-10-20.md).** Le [contrôle de l’existant](CONTROLE-EXISTANT-ET-CODAGE.md) est obligatoire avant toute implémentation. Les sections datées du 19 octobre ci-dessous restent le socle de la navigation et des registres ; les dossiers spécifiques actuels les complètent.
 
 Édition du **19 octobre 2026**, préparée à la demande de l’utilisateur. Périmètre : navigation, registres et héritage des périmètres, plans d’action, tâches récurrentes, écarts et interfaces de périmètres. Les fonctionnalités historiques restantes sont à préserver.
 
@@ -8,7 +8,7 @@
 
 ## Lire dans cet ordre
 
-1. [Spécifications UI/UX et règles communes](SPECIFICATIONS.md).
+1. [Ordre de codage des dix dossiers](ORDRE-IMPLEMENTATION.md), puis [Spécifications UI/UX et règles communes](SPECIFICATIONS.md).
 2. [Contrats, intégration et recette](INTEGRATION-RECETTE.md).
 3. [Arborescence de navigation proposée](navigation.json).
 4. [Prompt à donner à l’IA de codage](PROMPT-IMPLEMENTATION.md).
@@ -17,15 +17,13 @@ Ces documents prévalent sur les prescriptions contradictoires des anciennes maq
 
 ## Ordre technique corrigé
 
-Audit → fondations existantes (périmètres, droits, annuaires, applicabilité, preuves/journal) → coque/menu → registres et héritage → plans d’action → écarts et liens correctifs → récurrences → cartes et compteurs → recette intégrée.
-
-Les [lots L0–L8](INTEGRATION-RECETTE.md#ordre-dintégration-et-conditions-de-passage) précisent les dépendances et conditions de passage. Les tests ont lieu à chaque lot. Les récurrences peuvent avancer indépendamment des écarts dès que leurs propres contrats sont prêts ; la structure du graphe peut précéder ses compteurs.
+Lire l’[ordre unique des dix dossiers — L0 à L11](ORDRE-IMPLEMENTATION.md). Il distingue les fondations, les interfaces, les registres, les parcours métier et le raccordement final des compteurs. Les tests ont lieu à chaque incrément.
 
 ## État réel des références
 
 | N° | Référence à consulter | État constaté / portée |
 | --- | --- | --- |
-| 010 | [Périmètres v007](../../../fonctionnalites-en-developpement/010-perimetres/maquettes/v007-fond-uni/README.md) | Cartes, conformité, écarts et compteurs ; fond uni. Simulation graphique, pas un raccordement backend |
+| 010 | [Périmètres v007](../../010-perimetres/maquettes/v007-fond-uni/README.md) | Cartes, conformité, écarts et compteurs ; fond uni. Simulation graphique, pas un raccordement backend |
 | 017 | [Plans d’action v004](../../017-plans-action/maquettes/v004-perimetres-herites/README.md) | Héritage du plan réalisé dans la maquette ; 35 contrôles locaux exécutés ; quatre nouveaux visuels |
 | 018 | [Tâches récurrentes v008](../../018-taches-recurrentes/maquettes/v008-defilement-zones-fixes/README.md) | Référence UI pour timeline, liste, Kanban et réalisation ; les champs `scope` des fixtures par tâche sont **à remplacer** par l’héritage du registre lors de l’intégration |
 | 020 | [Navigation v001](../../020-navigation/maquettes/v001-menu-epure/README.md) | Style apprécié ; sept familles proposées ; ordre global non validé. Les menus partiels des maquettes ne constituent pas l’inventaire complet |

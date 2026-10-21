@@ -1,13 +1,16 @@
 {
   "id": "v007-fond-uni",
-  "statut": "a-valider",
+  "statut": "reference-implementation",
   "date": "2026-10-19",
   "versionPrecedente": "v006-ecarts-dashboard-compact",
-  "validationUtilisateur": null,
+  "validationUtilisateur": {
+    "date": "2026-10-21",
+    "portee": "Référence pour transmission du dossier 010 ; aucune intégration backend."
+  },
   "integrationBackend": false,
   "references": [
-    "fonctionnalites-en-developpement/010-perimetres/maquettes/v007-fond-uni/visuels/01-fond-uni.png",
-    "fonctionnalites-en-developpement/010-perimetres/maquettes/v007-fond-uni/visuels/02-flux-fond-uni.gif"
+    "fonctionnalites-a-implementer/010-perimetres/maquettes/v007-fond-uni/visuels/01-fond-uni.png",
+    "fonctionnalites-a-implementer/010-perimetres/maquettes/v007-fond-uni/visuels/02-flux-fond-uni.gif"
   ],
   "visuels": [
     {

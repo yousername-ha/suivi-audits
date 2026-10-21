@@ -13,7 +13,7 @@ Numéros permanents : ils restent identiques lors du déplacement entre les troi
 | 007 | [Audits et cibles](fonctionnalites-en-developpement/007-audits/README.md) | Préparer les audits, suivre les constats et organiser les échéances et cibles. | En développement |
 | 008 | [Preuves](fonctionnalites-en-developpement/008-preuves/README.md) | Centraliser les justificatifs et leurs liens avec les exigences, risques et actions. | En développement |
 | 009 | [Continuité PCRA / BIA / PCA / PRA](fonctionnalites-en-developpement/009-pcra/README.md) | Préparer le BIA, les plans PCA/PRA, les exercices et le suivi de la continuité. | En développement |
-| 010 | [Périmètres](fonctionnalites-en-developpement/010-perimetres/README.md) | Gérer les périmètres en liste ou graphique animé, avec conformité, BIA/PCRA, retards et fournisseurs rattachés. | En développement |
+| 010 | [Périmètres](fonctionnalites-a-implementer/010-perimetres/README.md) | Gérer les périmètres en liste ou graphique animé, avec conformité, BIA/PCRA, retards et fournisseurs rattachés. | À implémenter |
 | 011 | [Fournisseurs](fonctionnalites-en-developpement/011-fournisseurs/README.md) | Tenir le registre des fournisseurs et suivre leurs relations et enjeux de sécurité. | En développement |
 | 012 | [Administration et apparence globale](fonctionnalites-a-implementer/012-administration-apparence/README.md) | Configurer système et plateforme : exploitation, certificats, nettoyage cohérent, export des journaux et niveaux de log, mail/Teams et contact technique, préférences des groupes/profils, échelles. | À implémenter |
 | 013 | [Formation](fonctionnalites-en-developpement/013-formation/README.md) | Suivre les actions de formation et de sensibilisation à la sécurité. | En développement |

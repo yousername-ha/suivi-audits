@@ -1,6 +1,8 @@
-# 010 — Spécification préparatoire v007
+# 010 — Spécification détaillée v007
 
-**À valider. Source de rendu de maquette, pas code de production.**
+**Référence de transmission v007. Source de rendu de maquette, pas code de production.**
+
+Le [dossier courant](DOSSIER-IMPLEMENTATION.md) et le [prompt dédié](PROMPT-IMPLEMENTATION.md) imposent le contrôle de l’existant et complètent cette spécification.
 
 ## Objets et source unique
 
@@ -41,7 +43,7 @@ La maquette v005 calcule un agencement d’arbre et mesure les dimensions des ca
 7. Vérifier données volumineuses, disposition sans chevauchement, défilement, mobile, navigation clavier, focus des fenêtres et lecteur d’écran.
 8. Tester le mécanisme réel de rafraîchissement dans une seconde session selon le contrat retenu. Les tests de maquette actuels ne couvrent pas cette étape.
 
-## Prompt pour l’IA de codage, après validation
+## Consignes complémentaires pour l’IA de codage
 
 Travaille uniquement sur ta branche attribuée. Lis les instructions globales et la version validée de 010 sur legacy en lecture seule. Réutilise les services, schémas, permissions et composants existants du commit cible. Implémente les vues Liste et Graphique sur une collection et des mutations communes ; raccorde les cartes fournisseur au registre existant ; n’invente ni moteur de conformité ni doublon de périmètre. Respecte les visuels, états et cas de recette ci-dessus. Documente les contrats manquants et les tests réellement exécutés. À livraison terminée, crée sur ta branche `implementation/IMPLEMENTATION-OK.md`, en identifiant la fonctionnalité, la version livrée, la branche/SHA, les contrôles et les limites. Ne modifie pas legacy ni l’espace Claude. Codex lira ce marqueur pour déplacer le dossier documentaire vers « implémentées ».
 

@@ -1,0 +1,251 @@
+{
+  "date": "2026-10-21",
+  "sourceCommit": "1fdc974f7e0325fd4d6bddf2134f6712c3d172fc",
+  "statut": "reussi",
+  "integrationBackend": false,
+  "dossiers": [
+    {
+      "numero": "002",
+      "reference": "v001-matrice",
+      "exigences": [
+        "002-01",
+        "002-02",
+        "002-03",
+        "002-04",
+        "002-05",
+        "002-06"
+      ],
+      "fichiersInventories": 15,
+      "controleExistantDansPrompt": true,
+      "ordreCommunDansPrompt": true
+    },
+    {
+      "numero": "003",
+      "reference": "v002-echelles-plateforme",
+      "exigences": [
+        "003-01",
+        "003-02",
+        "003-03",
+        "003-04",
+        "003-05",
+        "003-06",
+        "003-07",
+        "003-08",
+        "003-09",
+        "003-10",
+        "003-11",
+        "003-12"
+      ],
+      "fichiersInventories": 54,
+      "controleExistantDansPrompt": true,
+      "ordreCommunDansPrompt": true
+    },
+    {
+      "numero": "010",
+      "reference": "v007-fond-uni",
+      "exigences": [
+        "010-01",
+        "010-02",
+        "010-03",
+        "010-04",
+        "010-05",
+        "010-06",
+        "010-07",
+        "010-08",
+        "010-09",
+        "010-10",
+        "010-11",
+        "010-12"
+      ],
+      "fichiersInventories": 63,
+      "controleExistantDansPrompt": true,
+      "ordreCommunDansPrompt": true
+    },
+    {
+      "numero": "012",
+      "reference": "v007-echelles-partagees",
+      "exigences": [
+        "012-01",
+        "012-02",
+        "012-03",
+        "012-04",
+        "012-05",
+        "012-06",
+        "012-07",
+        "012-08",
+        "012-09",
+        "012-10",
+        "012-11",
+        "012-12",
+        "012-13",
+        "012-14"
+      ],
+      "fichiersInventories": 105,
+      "controleExistantDansPrompt": true,
+      "ordreCommunDansPrompt": true
+    },
+    {
+      "numero": "017",
+      "reference": "v004-perimetres-herites",
+      "exigences": [
+        "017-01",
+        "017-02",
+        "017-03",
+        "017-04",
+        "017-05",
+        "017-06",
+        "017-07"
+      ],
+      "fichiersInventories": 38,
+      "controleExistantDansPrompt": true,
+      "ordreCommunDansPrompt": true
+    },
+    {
+      "numero": "018",
+      "reference": "v008-defilement-zones-fixes",
+      "exigences": [
+        "018-01",
+        "018-02",
+        "018-03",
+        "018-04",
+        "018-05",
+        "018-06",
+        "018-07",
+        "018-08",
+        "018-09",
+        "018-10",
+        "018-11"
+      ],
+      "fichiersInventories": 142,
+      "controleExistantDansPrompt": true,
+      "ordreCommunDansPrompt": true
+    },
+    {
+      "numero": "019",
+      "reference": "v001-dossier-arm",
+      "exigences": [
+        "019-01",
+        "019-02",
+        "019-03",
+        "019-04",
+        "019-05",
+        "019-06",
+        "019-07"
+      ],
+      "fichiersInventories": 9,
+      "controleExistantDansPrompt": true,
+      "ordreCommunDansPrompt": true
+    },
+    {
+      "numero": "020",
+      "reference": "v001-menu-epure",
+      "exigences": [
+        "020-01",
+        "020-02",
+        "020-03",
+        "020-04",
+        "020-05",
+        "020-06",
+        "020-07"
+      ],
+      "fichiersInventories": 9,
+      "controleExistantDansPrompt": true,
+      "ordreCommunDansPrompt": true
+    },
+    {
+      "numero": "021",
+      "reference": "v003-cloture-preservee",
+      "exigences": [
+        "021-01",
+        "021-02",
+        "021-03",
+        "021-04",
+        "021-05",
+        "021-06",
+        "021-07"
+      ],
+      "fichiersInventories": 80,
+      "controleExistantDansPrompt": true,
+      "ordreCommunDansPrompt": true
+    },
+    {
+      "numero": "022",
+      "reference": "v001-acces-visuels",
+      "exigences": [
+        "022-01",
+        "022-02",
+        "022-03",
+        "022-04",
+        "022-05",
+        "022-06"
+      ],
+      "fichiersInventories": 22,
+      "controleExistantDansPrompt": true,
+      "ordreCommunDansPrompt": true
+    }
+  ],
+  "limites": "Vérification documentaire, conservation des ressources et parcours de la maquette 010 sur fixtures ; aucune recette du backend ou de l’application intégrée.",
+  "fichiersBinairesEtLanceursConserves": 171,
+  "brouillonNonSuivi010PreserveEtExclu": true,
+  "nombreExigences": 89,
+  "parcoursMaquette010": {
+    "status": "PASS",
+    "checks": [
+      "v007 fond sans motif",
+      "majeurs rouges, mineurs orange foncé, points sensibles violets ; cartes de même largeur et moins hautes, badges sans débordement",
+      {
+        "dimensionsAvant": {
+          "A": {
+            "w": 300,
+            "h": 377
+          },
+          "B": {
+            "w": 300,
+            "h": 375
+          },
+          "C": {
+            "w": 300,
+            "h": 375
+          },
+          "F": {
+            "w": 280,
+            "h": 242
+          }
+        },
+        "dimensionsApres": {
+          "A": {
+            "w": 300,
+            "h": 365
+          },
+          "B": {
+            "w": 300,
+            "h": 363
+          },
+          "C": {
+            "w": 300,
+            "h": 363
+          },
+          "F": {
+            "w": 280,
+            "h": 241
+          }
+        }
+      },
+      "4 compteurs exacts, périmètre propre, exclusion archives/PCA/actions terminées/futures/sans date, détail et état vide",
+      "flux CSS actif dans le sens du chemin, flèche terminale, pause et réduction des animations",
+      "parent centré entre enfants et cartes sans chevauchement vertical",
+      "taux fictifs vérifiés ; HDS non évalué distinct de 0 % ; fournisseur externe absent du sélecteur de périmètres et lié à SUP-001",
+      "4 cartes ; héritage explicite B ; référentiels locaux C",
+      "défilement du contenu sans déplacement du menu ni du bandeau",
+      "union A+B : 3 plans distincts ; PA-01 commun compté une seule fois",
+      "fenêtre centrée et contenue dans le viewport",
+      "désactivation de l’héritage B sans mutation des référentiels A",
+      "création en mémoire, héritage du parent, texte saisi échappé",
+      "création et modification dans les deux sens : une même fiche et un même identifiant dans liste, graphique et sélecteur",
+      "rechargement : aucune persistance ni écriture métier",
+      "390 px : menu repliable, graphique défilant sans débordement de page",
+      "aucune erreur JavaScript pendant les parcours"
+    ]
+  },
+  "marqueurImplementationTrouve": false
+}

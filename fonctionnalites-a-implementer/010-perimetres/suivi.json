@@ -1,8 +1,19 @@
 {
   "fonctionnalite": "perimetres",
-  "etape": "en-developpement",
-  "validationUtilisateur": null,
-  "livraisonImplementation": null,
+  "etape": "a-implementer",
+  "validationUtilisateur": {
+    "date": "2026-10-21",
+    "reference": "Oui inclure la 010 et ordonnances de manière logique pour le codage l’ensemble",
+    "portee": "Transmission du dossier 010 et de sa référence v007 ; contrôle de l’existant avant codage.",
+    "versionReference": "v007-fond-uni"
+  },
+  "livraisonImplementation": {
+    "date": "2026-10-21",
+    "dossier": "implementation/DOSSIER-IMPLEMENTATION.md",
+    "prompt": "implementation/PROMPT-IMPLEMENTATION.md",
+    "controleExistantObligatoire": true,
+    "integrationRealisee": false
+  },
   "integration": null,
   "historique": [
     {
@@ -34,8 +45,13 @@
       "date": "2026-10-19",
       "etape": "en-developpement",
       "motif": "v007 : fond uni sans petits points, contrôle du rendu et nouveaux aperçus."
+    },
+    {
+      "date": "2026-10-21",
+      "etape": "a-implementer",
+      "motif": "Inclusion explicite de 010, dossier consolidé et ordre commun des dix fonctionnalités. Aucun marqueur de confirmation trouvé."
     }
   ],
   "numero": "010",
-  "maquetteCourante": "maquettes/v007-fond-uni"
+  "maquetteCourante": "v007-fond-uni"
 }

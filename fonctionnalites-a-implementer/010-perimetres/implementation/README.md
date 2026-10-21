@@ -1,6 +1,8 @@
 # Implémentation — Périmètres
 
-**Proposition v007 à valider. Aucun raccordement effectué.**
+**Transmission approuvée le 21 octobre 2026 — référence v007. Aucun raccordement effectué.**
+
+Lire le [dossier courant](DOSSIER-IMPLEMENTATION.md) et le [prompt de codage](PROMPT-IMPLEMENTATION.md) avant les constats historiques ci-dessous.
 
 ## Correction du constat de compatibilité — 19 octobre 2026
 
@@ -18,7 +20,7 @@ Les fichiers de référence sont consultables au [commit Claude examiné](https:
 
 ## Consignes pour la future intégration
 
-1. Partir des [visuels v007](../maquettes/v007-fond-uni/README.md) une fois validés. Le dossier reste en développement jusque-là.
+1. Partir des [visuels v007](../maquettes/v007-fond-uni/README.md) validés comme référence de transmission. Le dossier est désormais à implémenter.
 2. Réutiliser les fonctions partagées existantes ; ne pas recopier le modèle de démonstration JS dans le domaine métier. Utiliser les UUID réels et le versionnement serveur.
 3. Présenter les rattachements effectifs et leur origine ; ne pas confondre héritage, conformité, certification et droits d’accès. Une coupure d’héritage n’efface pas les preuves ou écarts historiques.
 4. Vérifier les contrats propres à chaque registre pour les associations multiples. Dédupliquer par identité d’objet. L’agrégation parent/enfant doit rester un choix explicite et respecter les accès serveur.
@@ -35,7 +37,7 @@ L’IA de codage travaille exclusivement sur **sa propre branche** ; `legacy` lu
 
 Les compteurs `mapped/requirements` du dashboard et la couverture des rapprochements ne sont pas des taux de conformité. Ne pas les renommer pour obtenir le nouvel indicateur.
 
-[Spécification de la collection unique, du rendu et de la recette](PERIMETRES-GRAPHIQUES.md). Le dossier final sera consolidé après validation puis déplacé vers « à implémenter ». À chaque reprise, lire le marqueur « implémentation ok » selon les règles globales avant un éventuel classement dans « implémentées ».
+[Spécification de la collection unique, du rendu et de la recette](PERIMETRES-GRAPHIQUES.md). Le dossier final est consolidé et classé dans « à implémenter ». À chaque reprise, lire le marqueur « implémentation ok » selon les règles globales avant un éventuel classement dans « implémentées ».
 
 ## Mini-tableau de bord — lecture complémentaire
 
