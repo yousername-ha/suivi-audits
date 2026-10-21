@@ -115,7 +115,7 @@ interface AdminSession {
   last_seen_at: string;
   current: boolean;
 }
-function Sessions() {
+export function Sessions() {
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ['admin', 'sessions'], queryFn: () => get<AdminSession[]>('/api/admin/sessions') });
   return (
@@ -182,7 +182,7 @@ interface AuditRow {
   details: Record<string, unknown>;
 }
 const PAGE_AUDIT = 200;
-function Audit() {
+export function Audit() {
   const can = useCan();
   const vide = { q: '', from: '', to: '', user: '' };
   const [saisie, setSaisie] = useState(vide);
@@ -317,7 +317,7 @@ interface VersionRow {
   items: number;
   import_batch_id: number | null;
 }
-function Versions() {
+export function Versions() {
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ['admin', 'versions'], queryFn: () => get<VersionRow[]>('/api/admin/versions') });
   return (
@@ -393,7 +393,7 @@ const RESULTATS: Record<string, [Etat, string]> = {
 };
 
 /** Rapports d’exploitation historiques ; les commandes intégrées sont dans UpdatesPanel. */
-function Exploitation() {
+export function Exploitation() {
   const q = useQuery({ queryKey: ['admin', 'systeme'], queryFn: () => get<SystemeOut>('/api/admin/systeme') });
   const s = q.data;
   if (!s) return <ErrorAlert error={q.error} />;
@@ -535,7 +535,31 @@ function Exploitation() {
   );
 }
 
-function System() {
+export function System() {
+  return (
+    <Stack>
+      <Exploitation />
+      <ModulesPanel />
+      <Card withBorder>
+        <Stack>
+          <Title order={2} size="h4">
+            Configuration de l’environnement
+          </Title>
+          <Text size="sm">
+            Échelles et matrices versionnées, simulation et historique. Les méthodes historiques restent conservées.
+          </Text>
+          <Button component={Link} to="/admin/environment" variant="light">
+            Configurer l’environnement
+          </Button>
+        </Stack>
+      </Card>
+      <DetailsTechniques />
+    </Stack>
+  );
+}
+
+/** Détails techniques du serveur (lecture seule), repris par l'écran Système et par la carte du même nom. */
+export function DetailsTechniques() {
   const q = useQuery({ queryKey: ['admin', 'info'], queryFn: () => get<Record<string, unknown>>('/api/admin/info') });
   const d = q.data;
   const rows: [string, unknown][] = d
@@ -556,47 +580,30 @@ function System() {
       ]
     : [];
   return (
-    <Stack>
-      <Exploitation />
-      <ModulesPanel />
-      <Card withBorder>
-        <Stack>
-          <Title order={2} size="h4">
-            Configuration de l’environnement
-          </Title>
-          <Text size="sm">
-            Échelles et matrices versionnées, simulation et historique. Les méthodes historiques restent conservées.
-          </Text>
-          <Button component={Link} to="/admin/environment" variant="light">
-            Configurer l’environnement
-          </Button>
-        </Stack>
-      </Card>
-      <Card withBorder>
-        <Title order={2} size="h4" mb="xs">
-          Détails techniques
-        </Title>
-        <ErrorAlert error={q.error} />
-        <div className="table-wrap" role="region" aria-label="Détails techniques" tabIndex={0}>
-          <Table>
-            <Table.Tbody>
-              {rows.map(([k, v]) => (
-                <Table.Tr key={k}>
-                  <Table.Th>{k}</Table.Th>
-                  <Table.Td className="mono">{String(v ?? '')}</Table.Td>
-                </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
-        </div>
-        <Text size="sm" c="dimmed" mt="sm">
-          Chiffres lus au moment de l’affichage, depuis le serveur et la base ; une valeur que le serveur ne mesure pas
-          s’affiche « Non disponible ». L’utilisation du processeur et de la mémoire n’est pas relevée.
-        </Text>
-        <Text size="sm" c="dimmed" mt="sm">
-          Documentation de l’API : <a href="/api/openapi.json">/api/openapi.json</a>
-        </Text>
-      </Card>
-    </Stack>
+    <Card withBorder>
+      <Title order={2} size="h4" mb="xs">
+        Détails techniques
+      </Title>
+      <ErrorAlert error={q.error} />
+      <div className="table-wrap" role="region" aria-label="Détails techniques" tabIndex={0}>
+        <Table>
+          <Table.Tbody>
+            {rows.map(([k, v]) => (
+              <Table.Tr key={k}>
+                <Table.Th>{k}</Table.Th>
+                <Table.Td className="mono">{String(v ?? '')}</Table.Td>
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
+      </div>
+      <Text size="sm" c="dimmed" mt="sm">
+        Chiffres lus au moment de l’affichage, depuis le serveur et la base ; une valeur que le serveur ne mesure pas
+        s’affiche « Non disponible ». L’utilisation du processeur et de la mémoire n’est pas relevée.
+      </Text>
+      <Text size="sm" c="dimmed" mt="sm">
+        Documentation de l’API : <a href="/api/openapi.json">/api/openapi.json</a>
+      </Text>
+    </Card>
   );
 }

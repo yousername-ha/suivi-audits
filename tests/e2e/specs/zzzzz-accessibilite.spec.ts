@@ -33,6 +33,8 @@ const ECRANS = [
   ['evaluations-ia', '/ia/evaluations'],
   ['aide', '/aide'],
   ['parametres', '/parametres'],
+  ['admin-plateforme', '/plateforme'],
+  ['admin-systeme-cartes', '/systeme'],
   ['admin-utilisateurs', '/admin/users'],
   ['admin-systeme', '/admin/system'],
 ] as const;

@@ -37,7 +37,7 @@ export function UpdateNotice() {
         </Anchor>
       )}
       {admin && (
-        <Anchor size="xs" component={Link} to="/admin/system#updates">
+        <Anchor size="xs" component={Link} to="/systeme/mises-a-jour">
           Mettre à jour
         </Anchor>
       )}

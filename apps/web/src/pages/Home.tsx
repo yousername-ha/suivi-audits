@@ -4,6 +4,7 @@ import { Button, Card, Stack, Text, Title, VisuallyHidden } from '@mantine/core'
 import { ErrorAlert, IconeAdministration, IconeDocuments, IconeHistorique, Page, PageHeader } from '@suivi/ui';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router';
+import { cartesVisibles } from '../administration-droits';
 import { get } from '../api';
 import { SyntheseCartes, type SyntheseApi } from '../components/Synthese';
 import { useLive, usePresence } from '../realtime';
@@ -115,9 +116,14 @@ export function HomePage() {
               Administration
             </Title>
             <Text size="sm" c="dimmed">
-              Comptes, sessions, journal d’audit, versions, import des données.
+              Plateforme (comptes, référentiels, import) et configuration système (sauvegardes, versions, journal
+              d’audit).
             </Text>
-            <Button component={Link} to="/admin" variant="light">
+            <Button
+              component={Link}
+              to={cartesVisibles(can, 'plateforme').length ? '/plateforme' : '/systeme'}
+              variant="light"
+            >
               Administrer
             </Button>
           </Stack>

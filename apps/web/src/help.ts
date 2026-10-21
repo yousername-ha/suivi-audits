@@ -197,7 +197,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     id: 'import',
     title: 'Simulation, import et historique',
     permission: 'import_export:lire',
-    link: '/admin/import',
+    link: '/plateforme/import',
     steps: [
       'Utilisez l’écran Import pour charger une sauvegarde JSON au format de l’outil de suivi. Commencez par la simulation et lisez le rapport.',
       'Vérifiez le mode d’import et ses conséquences avant l’application. Seuls les utilisateurs disposant des droits nécessaires peuvent appliquer les données.',
@@ -208,7 +208,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     id: 'parametres-apparence',
     title: 'Paramètres et apparence',
     permission: 'parametres:lire',
-    link: '/parametres',
+    link: '/plateforme',
     steps: [
       'Style global : dans Paramètres > Apparence, choisissez « Référence 08 — Sauge » (défaut) ou « Clair bleuté » pour tous les comptes ; l’aperçu s’affiche avant l’enregistrement. Le thème clair, sombre ou automatique reste un choix personnel.',
       'Thème et densité par défaut s’appliquent à toute personne qui n’a pas choisi ses propres préférences (Mon compte). Seule la permission d’écriture sur les paramètres permet de les modifier.',
@@ -218,7 +218,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     id: 'droits',
     title: 'Comptes, groupes et rôles',
     permission: 'administration:lire',
-    link: '/admin/users',
+    link: '/plateforme/utilisateurs',
     steps: [
       'Dans Administration, attribuez aux comptes les groupes et rôles correspondant à leur besoin réel.',
       'La matrice décrit les permissions par module et action. Les droits effectifs indiquent leur origine.',
@@ -230,7 +230,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     id: 'systeme',
     title: 'Sauvegardes, restauration et exploitation',
     permission: 'administration:lire',
-    link: '/admin/system',
+    link: '/systeme',
     steps: [
       'L’écran Système affiche les rapports d’exploitation, la version et la dernière sauvegarde connue. Dans Mise à jour de l’application, le rôle Administrateur peut vérifier les nouveautés puis confirmer une installation ; les autres comptes sont informés par le bandeau. Enregistrez vos modifications en cours : la page de maintenance suit les étapes réelles et vous ramène automatiquement à l’application après vérification. Un retour arrière est signalé et peut demander une reconnexion.',
       'Dans Certificats TLS, consultez sujet, émetteur, validité et empreinte. Caddy renouvelle les certificats internes/ACME. Le remplacement web nécessite une activation explicite : fournissez le certificat/chaîne et le fichier de clé, dont le contenu reste masqué. Un échec rétablit la configuration antérieure ; Revenir à .env désactive le couple web. Une terminaison TLS externe reste en lecture seule.',

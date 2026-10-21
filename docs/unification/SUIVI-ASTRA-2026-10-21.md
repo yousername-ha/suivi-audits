@@ -20,7 +20,7 @@ Légende des états : **Corrigé** (critère de l'audit satisfait et testé) · 
 | 020-01 | Amélioré | Inventaire de référence des rubriques, adresses et droits du menu ; familles avec `aria-expanded` | Épuration éventuelle des doublons de rubriques | `navigation.test.ts` |
 | 020-03 | Corrigé | Hauteur du menu bornée en tablette comme sur ordinateur, défilement propre | — | e2e `…-coque.spec.ts` |
 | 020-04 / 012-05 | Corrigé | Style Clair appliqué en direct aux sessions ouvertes ; contrastes Clair vérifiés (feuille de styles et jetons) | Capture de recette en clair sur tous les écrans | `contraste.test.ts`, e2e `…-coque.spec.ts` |
-| 020-05 / 012-01 | Décision | — | Deux pages d'entrée à cartes (décision 1) | — |
+| 020-05 / 012-01 | Amélioré | Deux entrées de menu « Plateforme » et « Configuration système », pages à cartes (icône, nom, synthèse), détail en fenêtre centrée à bordure visible, cartes filtrées par droit, anciennes adresses conservées | Journaux techniques (carte non créée : le serveur n'en expose pas) ; synthèses chiffrées seulement pour sauvegardes et versions | `administration-droits.test.ts`, e2e `…-administration-cartes.spec.ts`, axe sur `/plateforme` et `/systeme` |
 | 012-03 | Amélioré | « Non disponible » quand le serveur ne mesure pas ; volume des pièces ; date du relevé ; `/api/admin/info` testé | Versions de Caddy et ClamAV, répartition base/pièces/journaux | `security.test.ts` « informations système », e2e `…-journal-audit.spec.ts` |
 | 012-08 | Corrigé | La purge définitive d'un document cité comme preuve (fiche, lien, décision, validation) est refusée (409) | Parcours de graphe général (liés à 012-07) | `documents.test.ts` |
 | 012-12 | Amélioré | Filtres période et compte, pagination, export JSON sous le droit d'exportation (comme le CSV), export tracé avec ses filtres, troncature signalée | Journaux techniques (aucun puits lisible par l'API) | `security.test.ts` « journal d'audit », e2e `…-journal-audit.spec.ts` |
@@ -84,13 +84,13 @@ Légende des états : **Corrigé** (critère de l'audit satisfait et testé) · 
 
 ## Décisions en attente (celles de l'utilisateur)
 
-1. ~~Structure de l'Administration~~ **Décidé (21/10/2026)** : deux entrées, « Plateforme » (organisation, comptes, référentiels, échelles, apparence, notifications, écrans muraux, import/export) et « Configuration système » (sauvegardes, mises à jour, certificats, sécurité, sessions, journal d'audit, journaux techniques, modules, environnement), chacune en page d'accueil à cartes ; détails en fenêtres centrées ; anciennes adresses conservées en alias. À réaliser (012-01, 020-05).
+1. ~~Structure de l'Administration~~ **Décidé (21/10/2026)** : deux entrées, « Plateforme » (organisation, comptes, référentiels, échelles, apparence, notifications, écrans muraux, import/export) et « Configuration système » (sauvegardes, mises à jour, certificats, sécurité, sessions, journal d'audit, journaux techniques, modules, environnement), chacune en page d'accueil à cartes ; détails en fenêtres centrées ; anciennes adresses conservées en alias. Réalisé (012-01, 020-05) ; reste la carte « Journaux techniques » (012-12).
 2. ~~Définition de « conformité »~~ **Décidé (21/10/2026)** : « Couverture » (testées ou validées / applicables), jamais présentée comme conformité ISO/IEC 27001. Les clauses 4 à 10 sont obligatoires donc non excluables ; une exigence « à déterminer » est comptée à part et signalée comme à revoir (appliqué dans le code).
-3. Modèle « collaborateur » et limite d'attribution (022-03).
+3. ~~Modèle « collaborateur »~~ **Décidé (21/10/2026)** : membre d'un groupe qui a le droit sur le registre : tout le registre ; attribué directement sur une action : cette action seulement. À réaliser (022-03, taille L).
 4. Canaux d'envoi (courriel, Teams), conservation et nettoyage automatique, certificats autosignés et ACME, niveaux de journalisation (012-07, 012-09 à 012-11, 012-13).
 5. Calendriers de plateforme (zones scolaires, jours fériés) et leur couche d'affichage (012-14, 018-08, 018-09).
 6. Couche visuelle EBIOS RM : cercle, chemins, pictogrammes, flux animés (003-07 à 003-10).
-7. « Bimensuel » : deux fois par mois (deux séries) ou tous les deux mois (018-06) ; PCRA seul ou tous les plans de continuité (010-06) ; liens entre périmètres et condition de clôture.
+7. ~~« Bimensuel »~~ **Décidé (21/10/2026)** : tous les deux mois (mois × 2, comme trimestriel et semestriel) (018-06) ; ~~PCRA~~ **Décidé** : la tuile compte les plans de type PCRA seulement (010-06). Reste : liens entre périmètres et condition de clôture.
 8. Règle d'évaluation retenue commune au registre et à la matrice (002-01).
 
 ## Preuves exécutées
