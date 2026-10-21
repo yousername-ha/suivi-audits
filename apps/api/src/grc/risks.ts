@@ -317,12 +317,17 @@ export class GrcRisks {
     ownerId: string | null,
     user: SessionUser,
     ip: string,
+    registreId: string | null = null,
   ) {
     await this.g.permission(user, 'ecarts', 'modifier');
     return this.g.db.tx(async (c) => {
       const o = await this.g.object(smsi, id, user, true, c);
       if (o.kind !== 'treatment' || o.archived) throw new HttpError(422, 'Mesure de traitement active attendue.');
       await this.g.checkOwner(smsi, ownerId, c);
+      // Plan d'actions d'accueil : celui qui est choisi (gestion exigée), sinon le registre par défaut du périmètre.
+      const accueil = registreId
+        ? await this.g.registreDeCreation(c, smsi, 'action', 'plan_actions', registreId, user)
+        : null;
       const policy = (await this.g.policy(smsi, user)).definition;
       const action = await this.g.insert(
         c,
@@ -343,6 +348,7 @@ export class GrcRisks {
         },
         user,
         ip,
+        accueil,
       );
       await c.query(
         `INSERT INTO grc_links(smsi_id,source_id,source_ref,target_ref,type,note,created_by) VALUES($1,$2,$3,$4,'implements','Action issue du traitement ; risque résiduel inchangé',$5)`,

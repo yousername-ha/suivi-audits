@@ -169,11 +169,11 @@ export const grcRoutes = [
     params: scope,
     query: z.object({
       search: z.string().max(200).default(''),
-      /** Cibles d'un champ typé (« object:<type> » ou « legacy:<clé> », séparées par des virgules). */
+      /** Cibles d'un champ typé (« object:<type> », « legacy:<clé> » ou « requirement », séparées par des virgules). */
       cibles: z
         .string()
         .max(500)
-        .regex(/^((object|legacy):[a-z_]{2,40})(,(object|legacy):[a-z_]{2,40})*$/)
+        .regex(/^((object|legacy):[a-z_]{2,40}|requirement)(,((object|legacy):[a-z_]{2,40}|requirement))*$/)
         .optional(),
     }),
     handler: async ({ svc, s, params, query }) =>
@@ -1095,6 +1095,7 @@ export const grcRoutes = [
       name: z.string().trim().min(1).max(200),
       dueAt: z.iso.datetime().nullable(),
       ownerId: z.uuid().nullable(),
+      registreId: z.uuid().nullable().optional(),
     }),
     handler: async ({ svc, s, params, body, ip }) =>
       svc.grc.risks.treatmentAction(
@@ -1105,6 +1106,7 @@ export const grcRoutes = [
         body.ownerId,
         (s as Session).user,
         ip,
+        body.registreId ?? null,
       ),
   }),
   route({

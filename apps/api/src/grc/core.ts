@@ -15,6 +15,7 @@ import {
   GRC_LABELS,
   cibleAutorisee,
   referencesTypees,
+  RISK_REF_KINDS,
   relationAutorisee,
   RELATIONS,
   StudyConfiguration,
@@ -56,6 +57,15 @@ import { GrcValidations } from './validations.js';
 import { GrcAnnuaires } from './annuaires.js';
 import { GrcTasks } from './tasks.js';
 export const DEFAULT_SMSI = '00000000-0000-4000-8000-000000000001';
+/** Champs de liaison typés des risques (sauf l'appartenance à l'étude, trop large pour un lien) : une fiche citée par l'un
+    d'eux affiche ce lien dans l'autre sens (mesure ou exigence → traitement, risque → traitement…). */
+const CHAMPS_LIES = [
+  ...new Set(
+    Object.values(RISK_REF_KINDS)
+      .flatMap((champs) => Object.keys(champs ?? {}))
+      .filter((c) => c !== 'studyRef'),
+  ),
+];
 /** Fiche de l'outil de suivi propre au périmètre commun. Les fournisseurs (`legacy:suppliers:`) sont à l'échelle de
     l'organisation (ADR 0032) : ils se relient depuis n'importe quel périmètre. */
 const ficheHistorique = (ref: string) => ref.startsWith('legacy:') && !ref.startsWith('legacy:suppliers:');
@@ -771,24 +781,35 @@ export class Grc {
     const famille = registreKindOf(body.kind, body.data);
     if (body.registreId && !famille) throw new HttpError(422, 'Ce type d’objet n’appartient à aucun registre.');
     return this.db.tx(async (c) => {
-      let registreId: string | null = null;
-      if (body.registreId) {
-        // Création dans un registre choisi : gestion du registre exigée, périmètre de référence = périmètre de l'URL.
-        const reg = await this.registres.brut(body.registreId, c);
-        if (!reg || reg.archived) throw new HttpError(404, 'Registre introuvable, archivé ou non accessible.');
-        if (reg.kind !== famille || reg.referenceId !== smsi)
-          throw new HttpError(422, 'Ce registre n’accueille pas ce type d’élément pour ce périmètre.');
-        await this.registres.exiger(user, reg, null, 'gerer', c, GRC_MODULES[body.kind]);
-        registreId = reg.id;
-      } else {
-        await this.access(smsi, user, true, c);
-        await this.permission(user, GRC_MODULES[body.kind], 'modifier');
-      }
+      const registreId = await this.registreDeCreation(c, smsi, body.kind, famille, body.registreId, user);
       const data = await this.normalize(smsi, body.kind, body.data, user, c);
       const o = await this.insert(c, smsi, body.kind, body.name, data, user, ip, registreId);
       await this.recordStudyUsage(c, o, user);
       return o;
     }, user.username);
+  }
+  /** Registre d'accueil d'une création : celui qui est choisi (gestion du registre exigée, périmètre de référence = périmètre
+      de l'URL) ou, sans choix, le registre par défaut (droit de module et accès au périmètre exigés). */
+  async registreDeCreation(
+    c: Client,
+    smsi: string,
+    kind: GrcKind,
+    famille: ReturnType<typeof registreKindOf>,
+    registreId: string | null | undefined,
+    user: SessionUser,
+  ): Promise<string | null> {
+    if (!registreId) {
+      await this.access(smsi, user, true, c);
+      await this.permission(user, GRC_MODULES[kind], 'modifier');
+      return null;
+    }
+    if (!famille) throw new HttpError(422, 'Ce type d’objet n’appartient à aucun registre.');
+    const reg = await this.registres.brut(registreId, c);
+    if (!reg || reg.archived) throw new HttpError(404, 'Registre introuvable, archivé ou non accessible.');
+    if (reg.kind !== famille || reg.referenceId !== smsi)
+      throw new HttpError(422, 'Ce registre n’accueille pas ce type d’élément pour ce périmètre.');
+    await this.registres.exiger(user, reg, null, 'gerer', c, GRC_MODULES[kind]);
+    return reg.id;
   }
   async insert(
     c: Client,
@@ -1091,8 +1112,8 @@ export class Grc {
     ).rows;
     const parents = (
       await this.db.q<ObjectRow>(
-        `SELECT ${objectColumns} FROM grc_objects WHERE smsi_id=$1 AND NOT archived AND (jsonb_path_exists(data,'$.stages.*.values.*[*] ? (@ == $ref)',jsonb_build_object('ref',$2::text)) OR data->'refs' @> $3::jsonb OR data->'documentRefs' @> $3::jsonb OR data->>'auditRef'=$2 OR data->>'recidiveRef'=$2) ORDER BY id LIMIT 500`,
-        [smsi, ref, JSON.stringify([ref])],
+        `SELECT ${objectColumns} FROM grc_objects WHERE smsi_id=$1 AND NOT archived AND (jsonb_path_exists(data,'$.stages.*.values.*[*] ? (@ == $ref)',jsonb_build_object('ref',$2::text)) OR data->'refs' @> $3::jsonb OR data->'documentRefs' @> $3::jsonb OR data->>'auditRef'=$2 OR data->>'recidiveRef'=$2 OR EXISTS (SELECT 1 FROM unnest($4::text[]) f WHERE data->f @> $3::jsonb OR data->>f=$2)) ORDER BY id LIMIT 500`,
+        [smsi, ref, JSON.stringify([ref]), CHAMPS_LIES],
       )
     ).rows;
     const historicalParents: { source_ref: string; target_ref: string }[] = [];

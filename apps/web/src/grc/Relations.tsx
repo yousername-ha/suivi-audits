@@ -1,10 +1,19 @@
 import { Button, Card, Select, Stack, Text, Textarea, TextInput } from '@mantine/core';
-import { GRC_LABELS, libelleRelation, RELATIONS, TYPES_RELATION, type GrcKind } from '@suivi/shared';
+import {
+  GRC_LABELS,
+  libelleRelation,
+  RELATIONS,
+  relationsPossibles,
+  TYPES_RELATION,
+  type GrcKind,
+} from '@suivi/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { api, get } from '../api';
 import { ErrorAlert } from '../components/common';
-export function Relations({ smsi, source }: { smsi: string; source: string }) {
+/** sourceKind : type de la fiche source (absent pour une fiche historique) ; il permet de ne proposer que les relations que
+    le serveur accepte pour la paire source/cible. */
+export function Relations({ smsi, source, sourceKind }: { smsi: string; source: string; sourceKind?: string }) {
   const qc = useQueryClient(),
     [search, setSearch] = useState(''),
     [target, setTarget] = useState<string | null>(null),
@@ -33,10 +42,13 @@ export function Relations({ smsi, source }: { smsi: string; source: string }) {
       >(`/api/grc/${smsi}/links?ref=${encodeURIComponent(source)}`),
   });
   const kindCible = options.data?.items.find((r) => r.ref === target)?.kind;
-  const relationsCible = TYPES_RELATION.filter((t) => {
-    const c = RELATIONS[t].cibles;
-    return !kindCible || c === '*' || (c as readonly string[]).includes(kindCible);
-  });
+  const relationsCible =
+    sourceKind && kindCible
+      ? relationsPossibles(sourceKind, kindCible)
+      : TYPES_RELATION.filter((t) => {
+          const c = RELATIONS[t].cibles;
+          return !kindCible || c === '*' || (c as readonly string[]).includes(kindCible);
+        });
   const save = async () => {
     try {
       setError(null);

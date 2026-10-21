@@ -573,7 +573,11 @@ export function ObjectEditor({
           <PanneauElement smsi={smsi} object={object} policy={policy} acces={acces} onOpenObject={onOpenObject} />
         )}
         {object && (
-          <Relations smsi={smsi} source={object.id.startsWith('legacy:') ? object.id : 'object:' + object.id} />
+          <Relations
+            smsi={smsi}
+            source={object.id.startsWith('legacy:') ? object.id : 'object:' + object.id}
+            sourceKind={object.id.startsWith('legacy:') ? undefined : object.kind}
+          />
         )}
         {object && !object.id.startsWith('legacy:') && can(GRC_MODULES[kind], 'supprimer') && (
           <>

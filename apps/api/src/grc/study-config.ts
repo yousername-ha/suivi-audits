@@ -2,7 +2,14 @@
    éléments du catalogue à une version précise ; une version plus récente n'est jamais appliquée seule. L'aperçu mesure
    l'impact (cellules ou correspondances modifiées, niveaux déjà choisis qui n'existent plus) ; l'application est confirmée,
    motivée, journalisée, et ne réécrit aucune évaluation déjà saisie. */
-import { MappingDefinition, MatrixDefinition, ScaleDefinition, StudyConfiguration, type CfgRef } from '@suivi/shared';
+import {
+  evaluateMatrix,
+  MappingDefinition,
+  MatrixDefinition,
+  ScaleDefinition,
+  StudyConfiguration,
+  type CfgRef,
+} from '@suivi/shared';
 import type { SessionUser } from '../auth.js';
 import type { Client } from '../db/db.js';
 import { HttpError } from '../http/errors.js';
@@ -53,6 +60,27 @@ export class GrcStudyConfig {
     const s = ScaleDefinition.safeParse(await this.definition(c, ref));
     return new Set(s.success ? s.data.levels.map((l) => l.id) : []);
   }
+  /** Pertinence retenue d'un couple (dossier 003) : un choix différent de la proposition de la matrice se justifie, et un
+      niveau qui écarte le couple n'est pas compatible avec « retenu ». Contrôlé seulement quand le couple change. */
+  private async verifierPertinence(
+    m: MatrixDefinition,
+    data: Record<string, unknown>,
+    avant: Record<string, unknown> | undefined,
+    c: Client,
+  ) {
+    const champs = ['resourcesLevel', 'motivationLevel', 'relevanceLevel', 'justification', 'retained'];
+    if (champs.every((k) => data[k] === avant?.[k])) return;
+    const retenu = typeof data.relevanceLevel === 'string' && data.relevanceLevel ? data.relevanceLevel : null;
+    if (!retenu) return;
+    const texte = (k: string) => (typeof data[k] === 'string' && data[k] ? (data[k] as string) : null);
+    const propose = evaluateMatrix(m, texte('resourcesLevel'), texte('motivationLevel'))?.result ?? null;
+    if (propose && propose !== retenu && !String(data.justification ?? '').trim())
+      throw new HttpError(422, 'Justifiez la pertinence retenue : elle diffère de la proposition de la matrice.');
+    const echelle = ScaleDefinition.safeParse(await this.definition(c, m.result.scale));
+    const niveau = echelle.success ? echelle.data.levels.find((l) => l.id === retenu) : undefined;
+    if (data.retained === true && niveau?.effect === 'excluded')
+      throw new HttpError(422, 'Un couple dont la pertinence écarte le couple ne peut pas être retenu.');
+  }
   private async used(c: Client, smsi: string, studyId: string, kind: string) {
     return (
       await c.query<{ data: Record<string, unknown> }>(
@@ -96,6 +124,7 @@ export class GrcStudyConfig {
         ['relevanceLevel', m.result.scale],
       ] as const)
         if (data[champ] !== avant?.[champ]) controler(champ, data[champ], await this.levels(c, echelle));
+      await this.verifierPertinence(m, data, avant, c);
     }
     if (kind === 'feared_event' && conf.data.severityMapping) {
       const m = MappingDefinition.parse(await this.definition(c, conf.data.severityMapping));

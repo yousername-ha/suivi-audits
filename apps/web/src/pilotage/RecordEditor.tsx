@@ -252,7 +252,11 @@ export function RecordEditor({
                 disabled={readonly}
               />
               {object && (
-                <Relations smsi={smsi} source={object.id.startsWith('legacy:') ? object.id : 'object:' + object.id} />
+                <Relations
+                  smsi={smsi}
+                  source={object.id.startsWith('legacy:') ? object.id : 'object:' + object.id}
+                  sourceKind={object.id.startsWith('legacy:') ? undefined : kind}
+                />
               )}
             </Stack>
           </Tabs.Panel>

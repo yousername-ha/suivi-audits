@@ -37,6 +37,13 @@ Lots L4 à L8 (registres partagés, écarts, Timeline, récurrences) :
 - **Classification d'un écart** : rouge, orange foncé ou violet avec légende, en liste comme en fiche (couleur jamais seule).
 - **Périodicité d'une série** : sept préréglages (journalier à annuel, « tous les deux mois ») ou personnalisée, avec l'aperçu des cinq prochaines échéances calculées par le moteur (fins de mois, fuseau, jours exclus).
 - **Validation d'occurrence** visible dans les listes de tâches ; le bouton de validation explique pourquoi il est inactif hors de la fenêtre de validation.
+Lot L9 (dossiers 002 risques et 003 EBIOS RM) :
+- **Mesure d'un traitement = exigence d'un cadre publié** (ex. mesure de l'Annexe A) : acceptée par le serveur, proposée dans le sélecteur, lisible depuis l'exigence (lien dans l'autre sens) ; le lien ne modifie pas la couverture du cadre. Les relations proposées dans la fiche respectent celles que le serveur accepte pour la paire.
+- **Action de traitement** : fenêtre de saisie (nom, échéance, plan d'actions d'accueil) ; le plan choisi est contrôlé (gestion exigée, même famille, même périmètre de référence).
+- **Pertinence d'un couple SR/OV** : un choix différent de la proposition de la matrice exige une justification ; un couple dont le niveau écarte ne peut pas être « retenu » (règles serveur).
+- **Atelier 1** : socle de sécurité saisi dans la fiche de l'étude et restitué dans l'atelier ; gravité de l'échelle publiée affichée avec son libellé.
+- **Validation d'atelier** : un élément modifié après la validation la rend caduque (« modifié depuis la validation ») au lieu de laisser un faux état validé.
+- **Registre des risques** : filtre et colonne « Étude » ; tests des gardes d'approbation (résiduel inacceptable, étape non validée) et du drapeau de revue dépassée.
 
 ## [3.6.1] — 2026-10-20
 

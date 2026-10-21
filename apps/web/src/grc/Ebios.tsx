@@ -23,7 +23,7 @@ interface ObjetEtude {
   name: string;
   version: number;
   data: Record<string, unknown>;
-  calcul: { menace?: number | null; graviteProposee?: number | null };
+  calcul: { menace?: number | null; graviteProposee?: number | null; graviteCatalogue?: string | null };
 }
 interface VueEtude {
   etude: GrcObject;
@@ -34,6 +34,7 @@ interface VueEtude {
     kinds: GrcKind[];
     objets: ObjetEtude[];
     valide: boolean;
+    modifieDepuisValidation: boolean;
     validations: { step: string; result: string; date: string; by: string; sourceVersion: number }[];
   }[];
 }
@@ -47,7 +48,11 @@ function resume(o: ObjetEtude, noms: Map<string, string>) {
   const liste = (v: unknown) => (Array.isArray(v) && v.length ? v.map(nom).join(', ') : '—');
   switch (o.kind) {
     case 'feared_event':
-      return `Gravité ${niveau(o.data.gravity, ECHELLE_GRAVITE)} · valeur métier : ${nom(o.data.businessAssetRef)}`;
+      return `Gravité ${
+        o.calcul.graviteCatalogue
+          ? `« ${o.calcul.graviteCatalogue} » (échelle publiée)`
+          : niveau(o.data.gravity, ECHELLE_GRAVITE)
+      } · valeur métier : ${nom(o.data.businessAssetRef)}`;
     case 'sr_ov':
       return `${o.data.retained ? 'Retenu' : 'Non retenu'} · source : ${nom(o.data.sourceRef)}`;
     case 'ecosystem_party':
@@ -71,6 +76,32 @@ function resume(o: ObjetEtude, noms: Map<string, string>) {
     default:
       return String(o.data.description ?? '') || '—';
   }
+}
+
+const ETAT_SOCLE: Record<string, string> = { applied: 'Appliqué', partial: 'Partiellement appliqué', gap: 'Écart' };
+
+/** Socle de sécurité de l'étude (atelier 1) : référentiels appliqués et écarts constatés, saisis dans la fiche de l'étude. */
+function SocleSecurite({ socle }: { socle: unknown }) {
+  const lignes = Array.isArray(socle) ? (socle as { referential: string; status: string; gap?: string }[]) : [];
+  return (
+    <Stack gap={4} data-testid="socle-securite">
+      <Text fw={600} size="sm">
+        Socle de sécurité
+      </Text>
+      {lignes.length ? (
+        <ul aria-label="Socle de sécurité de l’étude">
+          {lignes.map((l, i) => (
+            <li key={i}>
+              {l.referential} : {ETAT_SOCLE[l.status] ?? l.status}
+              {l.gap ? ` — ${l.gap}` : ''}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <Text size="sm">Aucun socle renseigné : à saisir dans la fiche de l’étude.</Text>
+      )}
+    </Stack>
+  );
 }
 
 /** Matrice gravité × vraisemblance des scénarios opérationnels de l'étude (gravité du scénario stratégique). */
@@ -197,8 +228,13 @@ export function EtudesEbios({
           <Text fw={600}>{v.etude.name}</Text>
           <Group gap="xs">
             {v.ateliers.map((a) => (
-              <Badge key={a.id} variant={a.valide ? 'filled' : 'light'} color={a.valide ? 'suivi' : 'gray'}>
-                {a.id.toUpperCase()} {a.valide ? 'validé' : 'en cours'}
+              <Badge
+                key={a.id}
+                variant={a.valide ? 'filled' : 'light'}
+                color={a.valide ? 'suivi' : a.modifieDepuisValidation ? 'orange' : 'gray'}
+              >
+                {a.id.toUpperCase()}{' '}
+                {a.valide ? 'validé' : a.modifieDepuisValidation ? 'modifié depuis la validation' : 'en cours'}
               </Badge>
             ))}
           </Group>
@@ -215,6 +251,13 @@ export function EtudesEbios({
               <Tabs.Panel key={a.id} value={a.id} pt="md">
                 <Stack>
                   <Text size="sm">{a.aide}</Text>
+                  {a.id === 'a1' && <SocleSecurite socle={v.etude.data.baseline} />}
+                  {a.modifieDepuisValidation && (
+                    <Alert color="orange" title="Modifié depuis la validation">
+                      Un élément de cet atelier a changé après sa dernière validation : la validation ne vaut plus pour
+                      son contenu actuel. Validez de nouveau l’atelier après relecture.
+                    </Alert>
+                  )}
                   {modifier && (
                     <Group>
                       {a.kinds.map((k) => (
