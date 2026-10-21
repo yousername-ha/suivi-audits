@@ -18,6 +18,18 @@ Relevé d'existant ASTRA du 21/10/2026 ([audit](docs/unification/AUDIT-ASTRA-202
 - **Droits par ressource.** Le journal d'audit d'un droit accordé garde l'ancien rôle et un motif facultatif.
 - **Menu.** Les familles portent `aria-expanded`.
 - **Cartographie protégée.** Les mots-clés `export` retirés de quatre fichiers du module par l'épuration du 3.6.0 sont rétablis.
+- **Journal d'audit des droits.** Les créations, modifications et suppressions de comptes, groupes et rôles écrivent leur trace dans la même transaction que la modification : sans trace possible, la modification est annulée.
+- **Parent d'un périmètre.** Un parent inaccessible reçoit la même réponse qu'un parent inconnu (plus aucune fuite d'existence).
+- **Graphe des périmètres.** Le rouge d'alerte est assez contrasté et les listes de définition sont valides (contrôle axe-core), en clair comme en sombre.
+
+### Ajouté
+Lots L2 et L3 du [prompt maître ASTRA](docs/unification/AUDIT-ASTRA-2026-10-21.md) (navigation, périmètres, droits) :
+- **Style Clair** appliqué en direct aux sessions déjà ouvertes quand l'administrateur le change ; contrastes du style Clair vérifiés (avec la feuille de styles).
+- **Menu fixe** : sa hauteur est bornée en tablette comme sur ordinateur, il défile seul ; inventaire de référence des rubriques, adresses et droits du menu (test).
+- **Graphe des périmètres** : bouton « Modifier » (même formulaire que la liste), état de chargement, fenêtres centrées, rechargement de la version après un conflit (412), liaisons orientées avec pointe de flèche, flux animé qu'on met en pause (arrêté d'emblée en mouvement réduit), colonne des fournisseurs extérieurs rattachés (lien vers leur fiche).
+- **Vue des accès** (Registres) : pour une personne ou un groupe, le rôle par registre, son origine (direct ou groupe) et les droits réels calculés par le serveur ; recherche et pagination ; réservée aux droits d'administration.
+- **Attribution d'un droit** : fenêtre d'aperçu (rôle avant et après, personnes concernées, rôles qui subsistent, motif facultatif) avant confirmation.
+- **Délai de l'étape Playwright de la CI** porté à 30 minutes (la suite dure 26 minutes).
 
 ## [3.6.1] — 2026-10-20
 

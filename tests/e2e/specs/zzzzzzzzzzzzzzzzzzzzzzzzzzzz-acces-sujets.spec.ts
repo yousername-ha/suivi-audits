@@ -17,7 +17,7 @@ test('Vue des accès : une personne puis un groupe, droits effectifs et accessib
     await page.getByRole('tab', { name: 'Vue des accès' }).click();
     await expect(page.getByText('Choisissez une personne ou un groupe')).toBeVisible();
     await page.getByRole('combobox', { name: 'Personne' }).click();
-    await page.getByRole('option').first().click();
+    await page.getByRole('option', { name: 'Responsable SSI' }).click();
     const tableau = page.getByRole('region', { name: /Accès aux registres/ });
     await expect(tableau.getByRole('row').nth(1)).toBeVisible();
     // L'administrateur de la recette peut tout faire sur chaque registre, et la source est indiquée.
