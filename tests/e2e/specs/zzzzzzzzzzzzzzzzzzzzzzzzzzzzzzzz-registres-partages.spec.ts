@@ -76,11 +76,8 @@ test('Registre partagé : actions visibles sous le second périmètre, fiche ave
     await expect(registre).toContainText(nomA);
     await expect(registre).toContainText(nomB);
     await expect(fiche.getByRole('combobox', { name: /Périmètre/ })).toHaveCount(0);
-    await fiche
-      .getByRole('button', { name: 'Fermer la fiche' })
-      .first()
-      .click()
-      .catch(() => page.keyboard.press('Escape'));
+    await page.keyboard.press('Escape');
+    await expect(fiche).toHaveCount(0);
 
     // Sous le périmètre de référence : choix du registre d'accueil à la création.
     await page.getByRole('combobox', { name: 'Périmètre affiché', exact: true }).click();

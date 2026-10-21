@@ -593,17 +593,51 @@
   min-height: var(--grc-jour-hauteur);
 }
 .grc-timeline {
-  overflow-x: auto;
+  display: flex;
+  align-items: flex-start;
+  overflow: auto;
+  max-block-size: min(70vh, 42rem);
   border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
   border-radius: var(--mantine-radius-md);
 }
 .grc-timeline svg {
   display: block;
+  flex: none;
   font-size: var(--mantine-font-size-xs);
   fill: var(--mantine-color-text);
 }
-.grc-timeline g[role='button'] {
+/* Intitulés fixes : la colonne reste visible pendant le défilement horizontal de la période. */
+.grc-timeline__etiquettes {
+  position: sticky;
+  inset-inline-start: 0;
+  z-index: 1;
+  background: var(--mantine-color-body);
+  border-inline-end: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+}
+.grc-timeline__entete {
+  font-weight: 600;
+}
+.grc-timeline__ligne {
   cursor: pointer;
+}
+.grc-timeline__ligne:focus-visible text:first-of-type {
+  text-decoration: underline;
+}
+.grc-timeline__ligne:focus-visible {
+  outline: 2px solid var(--mantine-color-text);
+}
+.grc-timeline__retard,
+.grc-timeline__retard-legende {
+  fill: var(--mantine-color-red-light-color);
+  color: var(--mantine-color-red-light-color);
+  font-weight: 600;
+}
+.grc-timeline__barre {
+  cursor: pointer;
+}
+.grc-timeline__barre--retard {
+  stroke: var(--mantine-color-red-light-color);
+  stroke-width: 3;
 }
 .grc-timeline__mois {
   stroke: var(--mantine-color-default-border);

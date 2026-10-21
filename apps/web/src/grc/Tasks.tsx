@@ -5,6 +5,7 @@ import type { BusinessPolicy, GrcObject, TaskData } from '@suivi/shared';
 import { get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { libelleDesignation, SelecteurResponsable, useProposables } from '../components/selecteurs';
+import { enRetard } from './etat-action';
 import { Timeline } from './Timeline';
 const views = [
   { value: 'list', label: 'Liste' },
@@ -80,6 +81,11 @@ export function Tasks({
           · {String(o.data.priority)}
         </Text>
         <Text size="sm">{o.data.dueAt ? new Date(String(o.data.dueAt)).toLocaleString('fr-FR') : 'Sans échéance'}</Text>
+        {enRetard(o, policy) && (
+          <Badge variant="light" color="red">
+            ! En retard
+          </Badge>
+        )}
         {Boolean(o.data.seriesId) && <Badge variant="light">Occurrence récurrente</Badge>}
       </Stack>
     </Card>
@@ -150,6 +156,11 @@ export function Tasks({
                   <Table.Td>{libelleDesignation(o.data, proposables.data)}</Table.Td>
                   <Table.Td>
                     {o.data.dueAt ? new Date(String(o.data.dueAt)).toLocaleDateString('fr-FR') : 'Sans échéance'}
+                    {enRetard(o, policy) && (
+                      <Badge ml="xs" variant="light" color="red">
+                        ! En retard
+                      </Badge>
+                    )}
                   </Table.Td>
                 </Table.Tr>
               ))}
