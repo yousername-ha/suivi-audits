@@ -214,7 +214,7 @@ export function contrast(a: string, b: string): number {
   return (x + 0.05) / (y + 0.05);
 }
 
-/** Couleurs d'état de Mantine (rouge, orange, jaune, vert, sarcelle, bleu), assombries pour le contraste WCAG AA
+/** Couleurs d'état de Mantine (rouge, orange, jaune, vert, sarcelle, bleu, violet), assombries pour le contraste WCAG AA
     (l'audit d'accessibilité automatique a relevé 2,1 à 3,9 pour 4,5 attendus avec les nuances par défaut).
     fond : fond plein sous texte blanc ; survol : fond plein survolé ; texte : texte des variantes légère et contour
     sur la teinte de l'état (nuance 6 de Mantine, 10 à 15 % d'opacité) ; teinte : cette nuance 6. */
@@ -225,6 +225,7 @@ export const ETATS = {
   green: { fond: '#29833B', survol: '#247334', texte: '#206D2F', teinte: '#40C057' },
   teal: { fond: '#087F5B', survol: '#077050', texte: '#066A4C', teinte: '#12B886' },
   blue: { fond: '#1971C2', survol: '#1663AB', texte: '#145B9C', teinte: '#228BE6' },
+  violet: { fond: '#6741D9', survol: '#5B37C4', texte: '#5A2FB0', teinte: '#7950F2' },
 } as const;
 export type EtatCouleur = keyof typeof ETATS;
 

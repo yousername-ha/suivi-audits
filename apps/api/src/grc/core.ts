@@ -1091,7 +1091,7 @@ export class Grc {
     ).rows;
     const parents = (
       await this.db.q<ObjectRow>(
-        `SELECT ${objectColumns} FROM grc_objects WHERE smsi_id=$1 AND NOT archived AND (jsonb_path_exists(data,'$.stages.*.values.*[*] ? (@ == $ref)',jsonb_build_object('ref',$2::text)) OR data->'refs' @> $3::jsonb OR data->'documentRefs' @> $3::jsonb) ORDER BY id LIMIT 500`,
+        `SELECT ${objectColumns} FROM grc_objects WHERE smsi_id=$1 AND NOT archived AND (jsonb_path_exists(data,'$.stages.*.values.*[*] ? (@ == $ref)',jsonb_build_object('ref',$2::text)) OR data->'refs' @> $3::jsonb OR data->'documentRefs' @> $3::jsonb OR data->>'auditRef'=$2 OR data->>'recidiveRef'=$2) ORDER BY id LIMIT 500`,
         [smsi, ref, JSON.stringify([ref])],
       )
     ).rows;

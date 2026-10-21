@@ -50,6 +50,9 @@ function stateLabel(value: unknown) {
   return STATES[String(value)] ?? String(value ?? '—');
 }
 type Page = { items: GrcObject[]; total: number; nextOffset: number | null };
+/** Rouge : majeure ; orange foncé : mineure ; violet : point sensible. Le libellé est toujours écrit : la couleur ne porte
+    jamais seule l'information. */
+const COULEUR_CLASSIFICATION = { majeure: 'red', mineure: 'orange', point_sensible: 'violet' } as const;
 /** Classification et lien de récidive d'un constat, affichés dans la liste (la classification de l'outil de suivi
     historique est reprise telle quelle). */
 function EtiquettesEcart({ o, taille }: { o: GrcObject; taille?: 'xs' }) {
@@ -57,7 +60,7 @@ function EtiquettesEcart({ o, taille }: { o: GrcObject; taille?: 'xs' }) {
   return (
     <>
       {classification && (
-        <Badge size={taille} variant="light" color={classification === 'majeure' ? 'red' : 'gray'}>
+        <Badge size={taille} variant="light" color={COULEUR_CLASSIFICATION[classification]}>
           {ECART_CLASSIFICATION_LABELS[classification]}
         </Badge>
       )}
@@ -360,6 +363,16 @@ export function BusinessRegistry({
           : `${(native.data?.pages[0]?.total ?? 0) + (historical.data?.pages[0]?.total ?? 0)} `}
         {filtresActifs ? '' : kind === 'nonconformity' ? 'constats' : 'fiches'}
       </Text>
+      {kind === 'nonconformity' && (
+        <Group gap="xs" role="group" aria-label="Légende des classifications d’écart">
+          <Text size="xs">Classification :</Text>
+          {(Object.keys(COULEUR_CLASSIFICATION) as (keyof typeof COULEUR_CLASSIFICATION)[]).map((c) => (
+            <Badge key={c} size="xs" variant="light" color={COULEUR_CLASSIFICATION[c]}>
+              {ECART_CLASSIFICATION_LABELS[c]}
+            </Badge>
+          ))}
+        </Group>
+      )}
       {!rows.length && !native.isPending && (
         <Card withBorder>
           <Text>
