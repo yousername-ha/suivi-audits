@@ -4,7 +4,7 @@ import { Alert, Badge, Button, Card, Group, Stack, Table, Tabs, Text, TextInput,
 import type { SystemeOut } from '@suivi/shared';
 import { StatusChip, type Etat } from '@suivi/ui';
 import { notifications } from '@mantine/notifications';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { api, download, errorMessage, get } from '../api';
@@ -181,45 +181,97 @@ interface AuditRow {
   target: string;
   details: Record<string, unknown>;
 }
+const PAGE_AUDIT = 200;
 function Audit() {
-  const [q, setQ] = useState('');
-  const [applied, setApplied] = useState('');
-  const r = useQuery({
-    queryKey: ['admin', 'audit', applied],
-    queryFn: () => get<AuditRow[]>(`/api/admin/audit?limit=300${applied ? `&q=${encodeURIComponent(applied)}` : ''}`),
+  const can = useCan();
+  const vide = { q: '', from: '', to: '', user: '' };
+  const [saisie, setSaisie] = useState(vide);
+  const [filtres, setFiltres] = useState(vide);
+  const critere = (f: typeof vide) => new URLSearchParams(Object.entries(f).filter(([, v]) => v)).toString();
+  const r = useInfiniteQuery({
+    queryKey: ['admin', 'audit', filtres],
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) =>
+      get<AuditRow[]>(
+        `/api/admin/audit?limit=${PAGE_AUDIT}${pageParam ? `&before=${pageParam}` : ''}${critere(filtres) ? `&${critere(filtres)}` : ''}`,
+      ),
+    // Page pleine : il reste peut-être des entrées plus anciennes (la dernière page lue donne le curseur).
+    getNextPageParam: (derniere) => (derniere.length === PAGE_AUDIT ? derniere[derniere.length - 1]!.id : undefined),
   });
+  const lignes = r.data?.pages.flat() ?? [];
+  const exporter = (format: 'csv' | 'json') =>
+    download(
+      `/api/admin/audit?format=${format}${format === 'json' ? '&export=1' : ''}${critere(filtres) ? `&${critere(filtres)}` : ''}`,
+    );
   return (
     <Stack>
-      <Group align="flex-end">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            setApplied(q);
-          }}
-        >
-          <Group align="flex-end">
-            <TextInput
-              label="Rechercher"
-              placeholder="compte, action, cible, IP"
-              value={q}
-              onChange={(e) => setQ(e.currentTarget.value)}
-            />
-            <Button type="submit" variant="default">
-              Filtrer
-            </Button>
-          </Group>
-        </form>
-        <Button
-          variant="light"
-          onClick={() => download(`/api/admin/audit?format=csv${applied ? `&q=${encodeURIComponent(applied)}` : ''}`)}
-        >
-          Exporter en CSV
-        </Button>
-      </Group>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          setFiltres(saisie);
+        }}
+      >
+        <Group align="flex-end">
+          <TextInput
+            label="Rechercher"
+            placeholder="compte, action, cible, IP"
+            value={saisie.q}
+            onChange={(e) => setSaisie({ ...saisie, q: e.currentTarget.value })}
+          />
+          <TextInput
+            label="Compte"
+            placeholder="identifiant exact"
+            value={saisie.user}
+            onChange={(e) => setSaisie({ ...saisie, user: e.currentTarget.value })}
+          />
+          <TextInput
+            label="Du"
+            type="date"
+            value={saisie.from}
+            onChange={(e) => setSaisie({ ...saisie, from: e.currentTarget.value })}
+          />
+          <TextInput
+            label="Au"
+            type="date"
+            value={saisie.to}
+            onChange={(e) => setSaisie({ ...saisie, to: e.currentTarget.value })}
+          />
+          <Button type="submit" variant="default">
+            Filtrer
+          </Button>
+          <Button
+            variant="subtle"
+            onClick={() => {
+              setSaisie(vide);
+              setFiltres(vide);
+            }}
+          >
+            Réinitialiser
+          </Button>
+        </Group>
+      </form>
+      {can('administration', 'exporter') && (
+        <Group>
+          <Button variant="light" onClick={() => exporter('csv')}>
+            Exporter en CSV
+          </Button>
+          <Button variant="light" onClick={() => exporter('json')}>
+            Exporter en JSON
+          </Button>
+          <Text size="sm" c="dimmed">
+            Les exports reprennent les filtres ci-dessus et sont limités aux 5 000 entrées les plus récentes : resserrez
+            la période si le fichier atteint cette taille. Chaque export est tracé.
+          </Text>
+        </Group>
+      )}
       <Text size="sm" c="dimmed">
-        Journal en ajout seul : aucune entrée ne peut être modifiée ni supprimée.
+        Journal en ajout seul : aucune entrée ne peut être modifiée ni supprimée. Les journaux techniques du serveur ne
+        sont pas consultables ici.
       </Text>
       <ErrorAlert error={r.error} />
+      <Text size="sm">
+        {lignes.length} entrée(s) affichée(s){r.hasNextPage ? ' ; d’autres, plus anciennes, restent à charger' : ''}.
+      </Text>
       <Card withBorder p={0}>
         <div className="table-wrap" role="region" aria-label="Journal" tabIndex={0}>
           <Table striped>
@@ -233,7 +285,7 @@ function Audit() {
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {(r.data ?? []).map((a) => (
+              {lignes.map((a) => (
                 <Table.Tr key={a.id}>
                   <Table.Td className="nowrap">{fmtDate(a.ts)}</Table.Td>
                   <Table.Td>{a.username}</Table.Td>
@@ -246,6 +298,11 @@ function Audit() {
           </Table>
         </div>
       </Card>
+      {r.hasNextPage && (
+        <Button variant="default" loading={r.isFetchingNextPage} onClick={() => void r.fetchNextPage()}>
+          Charger les {PAGE_AUDIT} entrées plus anciennes
+        </Button>
+      )}
     </Stack>
   );
 }
@@ -405,6 +462,12 @@ function Exploitation() {
           <Text size="sm" className="mono">
             {s.donnees.chemin || '(emplacement non communiqué)'}
           </Text>
+          {!disque && (
+            <Group gap="xs" mt="xs">
+              <StatusChip etat="neutre">Non disponible</StatusChip>
+              <Text size="sm">Le serveur ne communique pas l’espace disque de ce dossier.</Text>
+            </Group>
+          )}
           {disque && libre != null && (
             <Stack gap="2xs" mt="xs">
               <Group gap="xs">
@@ -481,9 +544,11 @@ function System() {
         ['Node.js', d.node],
         ['PostgreSQL', d.postgres],
         ['Taille de la base', d.dbSize],
+        ['Volume des pièces (documents, versions comprises)', fmtOctets(Number(d.documentsBytes ?? 0))],
+        ['Relevé du', d.measuredAt ? fmtDate(String(d.measuredAt)) : 'Non disponible'],
         ['Migrations appliquées', (d.migrations as string[]).join(', ')],
         ['Temps réel', d.realtime],
-        ['Antivirus (ClamAV)', d.clamav],
+        ['Antivirus (ClamAV)', d.clamav ?? 'Non disponible'],
         ['Double authentification', d.mfaRequired ? 'obligatoire' : 'facultative'],
         ['Identifiant de la clé maître', d.keyId],
         ['Modules repris de l’ancienne interface', (d.legacyTakenOver as string[]).join(', ') || 'aucun (phase 0)'],
@@ -524,6 +589,10 @@ function System() {
             </Table.Tbody>
           </Table>
         </div>
+        <Text size="sm" c="dimmed" mt="sm">
+          Chiffres lus au moment de l’affichage, depuis le serveur et la base ; une valeur que le serveur ne mesure pas
+          s’affiche « Non disponible ». L’utilisation du processeur et de la mémoire n’est pas relevée.
+        </Text>
         <Text size="sm" c="dimmed" mt="sm">
           Documentation de l’API : <a href="/api/openapi.json">/api/openapi.json</a>
         </Text>

@@ -97,7 +97,8 @@ export function BusinessRegistry({
     [fEtat, setFEtat] = useFiltreUrl('etat', 'all'),
     [fResp, setFResp] = useFiltreUrl('resp', 'all'),
     [fEcheance, setFEcheance] = useFiltreUrl('ech', 'all'),
-    [fOrigine, setFOrigine] = useFiltreUrl('orig', 'all');
+    [fOrigine, setFOrigine] = useFiltreUrl('orig', 'all'),
+    [fClassif, setFClassif] = useFiltreUrl('classif', 'all');
   const native = useInfiniteQuery({
     queryKey: ['grc', smsi, 'business-register', kind, search],
     initialPageParam: 0,
@@ -167,12 +168,13 @@ export function BusinessRegistry({
       (fEtat === 'all' || state(o) === fEtat) &&
       (fResp === 'all' || owner(o) === fResp) &&
       (fOrigine === 'all' || (fOrigine === 'existant') === o.id.startsWith('legacy:')) &&
+      (fClassif === 'all' || (classificationEcart(o.data) ?? 'non_classe') === fClassif) &&
       (fEcheance === 'all' ||
         (fEcheance === 'sans' && !echeanceDe(o)) ||
         (fEcheance === 'retard' && !!echeanceDe(o) && echeanceDe(o) < aujourdhui && o.data.status !== 'closed') ||
         (fEcheance === 'avenir' && !!echeanceDe(o) && echeanceDe(o) >= aujourdhui)),
   );
-  const filtresActifs = [fEtat, fResp, fEcheance, fOrigine].filter((f) => f !== 'all').length;
+  const filtresActifs = [fEtat, fResp, fEcheance, fOrigine, fClassif].filter((f) => f !== 'all').length;
   const actions = (o: GrcObject) => {
     const editable = writable && o.data.status !== 'closed';
     const primary =
@@ -305,6 +307,7 @@ export function BusinessRegistry({
               setFResp('all');
               setFEcheance('all');
               setFOrigine('all');
+              setFClassif('all');
             }}
           >
             <Select
@@ -333,6 +336,19 @@ export function BusinessRegistry({
               value={fEcheance}
               onChange={(v) => setFEcheance(v ?? 'all')}
             />
+            {kind === 'nonconformity' && (
+              <Select
+                label="Classification"
+                allowDeselect={false}
+                data={[
+                  { value: 'all', label: 'Toutes' },
+                  ...Object.entries(ECART_CLASSIFICATION_LABELS).map(([value, label]) => ({ value, label })),
+                  { value: 'non_classe', label: 'Non classé' },
+                ]}
+                value={fClassif}
+                onChange={(v) => setFClassif(v ?? 'all')}
+              />
+            )}
             <Select
               label="Origine"
               allowDeselect={false}

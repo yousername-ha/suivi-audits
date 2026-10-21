@@ -151,7 +151,10 @@ export function PilotagePage() {
     can = useCan(),
     navigate = useNavigate(),
     [params, setParams] = useSearchParams();
+  // `?perimetre=<id>` (lien d'une carte de périmètre) l'emporte sur le dernier choix mémorisé.
+  const perimetreUrl = params.get('perimetre');
   const [selected, setSelected] = useState<string | null>(() => {
+      if (perimetreUrl) return perimetreUrl;
       try {
         return sessionStorage.getItem('pilotage-scope');
       } catch {
@@ -172,6 +175,9 @@ export function PilotagePage() {
     [schedule, setSchedule] = useState<GrcObject | null>(null),
     [initial, setInitial] = useState<Record<string, unknown> | undefined>(undefined),
     [preset, setPreset] = useState<{ name?: string; data?: Record<string, unknown> } | undefined>(undefined);
+  useEffect(() => {
+    if (perimetreUrl) setSelected(perimetreUrl);
+  }, [perimetreUrl]);
   const scopes = useQuery({
     queryKey: ['grc', 'smsis'],
     queryFn: () => get<{ id: string; name: string }[]>('/api/grc/smsis'),

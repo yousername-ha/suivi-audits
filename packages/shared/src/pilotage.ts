@@ -455,6 +455,8 @@ export const PILOTAGE_FIELDS: Partial<Record<GrcKind, PilotageField[]>> = {
     niveauChamp('maturity', 'Maturité cyber', ECHELLE_CRITERE),
     niveauChamp('trust', 'Confiance', ECHELLE_CRITERE),
     field('measures', 'Mesures de sécurité sur l’écosystème'),
+    lien('ecosystem_party', 'measureRefs', 'Mesures associées (références)'),
+    field('dangerJustification', 'Justification de la dangerosité'),
   ],
   feared_event: [
     etude('feared_event'),

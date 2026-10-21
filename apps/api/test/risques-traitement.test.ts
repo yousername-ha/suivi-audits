@@ -126,6 +126,32 @@ describe('mesure d’un traitement : exigence d’un cadre publié', () => {
   });
 });
 
+describe('partie prenante de l’écosystème (atelier 3)', () => {
+  it('référence ses mesures (exigence publiée) sans copie, et refuse une cible d’un autre type', async () => {
+    const etude = (
+      await a.post(root() + '/objects', {
+        kind: 'risk_study',
+        name: 'Étude de l’écosystème',
+        data: { objective: 'Recette', scope: 'Service fictif' },
+      })
+    ).json();
+    const partie = (data: Record<string, unknown>) =>
+      a.post(root() + '/objects', {
+        kind: 'ecosystem_party',
+        name: 'Prestataire fictif',
+        data: { studyRef: 'object:' + etude.id, category: 'prestataire', ...data },
+      });
+    const ok = await partie({
+      measureRefs: [`requirement:${cadre}:1:A.5.1`],
+      dangerJustification: 'Accès distant permanent, maturité faible',
+    });
+    expect(ok.statusCode, ok.body).toBe(200);
+    expect(ok.json().data.measureRefs).toEqual([`requirement:${cadre}:1:A.5.1`]);
+    const refus = await partie({ measureRefs: ['object:' + etude.id] });
+    expect(refus.statusCode).toBe(422);
+  });
+});
+
 describe('action de traitement : plan d’accueil', () => {
   it('place l’action dans le plan choisi si l’on en a la gestion, refuse sinon', async () => {
     const traitement = (

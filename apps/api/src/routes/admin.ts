@@ -88,7 +88,8 @@ export const adminRoutes = [
   route({
     method: 'GET',
     url: '/api/admin/audit',
-    summary: 'Journal d’audit (en ajout seul), recherche et pagination ; format=csv pour l’export',
+    summary:
+      'Journal d’audit (en ajout seul) : recherche, période, compte, pagination ; format=csv ou format=json&export=1 pour l’export (droit d’exportation, tracé)',
     tags: ['Administration'],
     access: 'administration:lire',
     query: z.object({
@@ -96,10 +97,28 @@ export const adminRoutes = [
       before: z.coerce.number().int().positive().optional(),
       limit: z.coerce.number().int().min(1).max(5000).optional(),
       format: z.enum(['json', 'csv']).optional(),
+      /** json + export=1 : fichier téléchargeable, réservé au droit d'exportation (la liste affichée n'exige que la lecture). */
+      export: z.enum(['1']).optional(),
+      /** Période (jours calendaires UTC, bornes incluses) et compte. */
+      from: z.iso.date().optional(),
+      to: z.iso.date().optional(),
+      user: z.string().trim().max(100).optional(),
     }),
     handler: async ({ svc, s, ip, query, reply }) => {
       const where: string[] = [];
       const args: unknown[] = [];
+      if (query.from) {
+        args.push(query.from);
+        where.push(`ts >= $${args.length}::date`);
+      }
+      if (query.to) {
+        args.push(query.to);
+        where.push(`ts < ($${args.length}::date + 1)`);
+      }
+      if (query.user) {
+        args.push(query.user);
+        where.push(`username = $${args.length}`);
+      }
       if (query.before) {
         args.push(query.before);
         where.push(`id < $${args.length}`);
@@ -114,9 +133,28 @@ export const adminRoutes = [
         `SELECT id, ts, username, ip::text, action, target, details FROM audit_log ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY id DESC LIMIT ${limit}`,
         args,
       );
-      if (query.format !== 'csv') return r.rows;
+      // Troncature signalée : la page est pleine, il reste des entrées plus anciennes (pagination par `before`, ou période à resserrer).
+      const tronque = r.rowCount === limit;
+      if (tronque) reply.header('X-Journal-Tronque', '1');
+      const exportJson = query.format === 'json' && query.export === '1';
+      if (query.format !== 'csv' && !exportJson) return r.rows;
       svc.auth.requirePermission(s, 'administration:exporter');
-      await svc.db.audit((s as Session).user, ip, 'admin.audit_export', '', { rows: r.rowCount });
+      await svc.db.audit((s as Session).user, ip, 'admin.audit_export', '', {
+        rows: r.rowCount,
+        format: exportJson ? 'json' : 'csv',
+        truncated: tronque,
+        filters: { from: query.from ?? null, to: query.to ?? null, user: query.user ?? null, q: query.q ?? null },
+      });
+      if (exportJson) {
+        reply
+          .header('Content-Type', 'application/json; charset=utf-8')
+          .header(
+            'Content-Disposition',
+            `attachment; filename="journal-audit-${new Date().toISOString().slice(0, 10)}.json"`,
+          )
+          .header('Cache-Control', 'no-store');
+        return reply.send(JSON.stringify(r.rows));
+      }
       const cols = ['id', 'ts', 'username', 'ip', 'action', 'target', 'details'];
       const body =
         '﻿' +
@@ -254,6 +292,10 @@ export const adminRoutes = [
       const pg = await svc.db.one<{ server_version: string }>('SHOW server_version');
       const size = await svc.db.one<{ s: string }>('SELECT pg_size_pretty(pg_database_size(current_database())) AS s');
       const st = await svc.db.one('SELECT version, updated_at, updated_by FROM app_state WHERE id=1');
+      // Volume des pièces (taille en clair des versions de documents, corbeille comprise) : la base est la seule source des fichiers.
+      const pieces = await svc.db.one<{ octets: string }>(
+        'SELECT COALESCE(sum(size),0)::text AS octets FROM document_versions',
+      );
       const counts = await svc.db.one(`SELECT (SELECT count(*) FROM users)::int AS users,
         (SELECT count(*) FROM documents WHERE deleted_at IS NULL)::int AS documents,
         (SELECT count(*) FROM links WHERE deleted_at IS NULL)::int AS links,
@@ -269,6 +311,9 @@ export const adminRoutes = [
         node: process.version,
         postgres: pg?.server_version,
         dbSize: size?.s,
+        documentsBytes: Number(pieces?.octets ?? 0),
+        /** Date du relevé : ces chiffres sont lus à la demande, ils ne sont pas mis en cache. */
+        measuredAt: new Date().toISOString(),
         state: st,
         counts,
         migrations,

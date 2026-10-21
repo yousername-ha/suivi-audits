@@ -1542,8 +1542,15 @@ rect.audit-niv-faible {
   justify-content: space-between;
   gap: var(--mantine-spacing-xs);
 }
+.graphe-compteurs div {
+  flex-wrap: wrap;
+}
 .graphe-compteurs dt {
   margin: 0;
+}
+.graphe-compteurs .graphe-detail {
+  flex-basis: 100%;
+  text-align: start;
 }
 .graphe-compteurs dd {
   margin: 0;

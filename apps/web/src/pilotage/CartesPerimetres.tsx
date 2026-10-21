@@ -1,13 +1,13 @@
 /* Graphe des périmètres : un arbre (parent → enfants) de cartes de synthèse. Les compteurs viennent du serveur
    (`GET /api/grc/perimetres/synthese`) : un compteur absent s'affiche « indisponible », jamais comme un zéro. La création
    passe par le même formulaire que la liste (même route, même identifiant) ; le graphe n'a pas de modèle propre. */
-import { Anchor, Button, Group, Loader, Text } from '@mantine/core';
-import { useState } from 'react';
+import { Anchor, Badge, Button, Group, Loader, Text } from '@mantine/core';
+import { useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import { arbre, LIBELLES_NIVEAU, type CartePerimetre, type NiveauPerimetre } from '@suivi/shared';
 
 const LARGEUR = 264;
-const HAUTEUR = 284;
+const HAUTEUR = 336;
 const ECART_X = 24;
 const ECART_Y = 56;
 const LARGEUR_FOURNISSEUR = 216;
@@ -48,37 +48,98 @@ export function disposer(cartes: readonly CartePerimetre[]) {
 
 const n = (v: number) => v.toLocaleString('fr-FR');
 const retard = (c: { ouverts: number; enRetard: number }) => `${n(c.ouverts)} ouverte(s) · ${n(c.enRetard)} en retard`;
+/** Page de pilotage du périmètre d'une carte : le périmètre est repris de l'adresse, la liste est celle du module. */
+const vers = (section: string, id: string, filtre = '') => `/pilotage/${section}?perimetre=${id}${filtre}`;
 
-/** Lignes de compteurs d'une carte ; `null` : indisponible (droit manquant ou donnée non mesurable). */
-function lignesCompteurs(c: CartePerimetre['compteurs']): { libelle: string; valeur: string; alerte: boolean }[] {
+interface LigneCompteur {
+  libelle: string;
+  valeur: ReactNode;
+  alerte: boolean;
+  /** Section de Pilotage qui liste ces éléments (même périmètre) ; absent : ligne de texte. */
+  section?: string;
+  detail?: ReactNode;
+}
+const CLASSES = [
+  ['majeure', 'Majeurs', 'red'],
+  ['mineure', 'Mineurs', 'orange'],
+  ['point_sensible', 'Sensibles', 'violet'],
+] as const;
+
+/** Lignes de compteurs d'une carte ; `null` : indisponible (droit manquant ou donnée non mesurable). Un compteur est un lien
+    vers la liste du module, dans le même périmètre : les chiffres d'une carte se retrouvent à l'identique dans la liste. */
+function lignesCompteurs(c: CartePerimetre['compteurs'], id: string, liens = true): LigneCompteur[] {
   const indisponible = 'indisponible';
+  const lien = (section: string, texte: ReactNode) =>
+    liens ? (
+      <Anchor component={Link} to={vers(section, id)} size="xs">
+        {texte}
+      </Anchor>
+    ) : (
+      texte
+    );
   return [
     {
       libelle: 'Actions',
-      valeur: c.actions ? retard(c.actions) : indisponible,
+      valeur: c.actions ? lien('actions', retard(c.actions)) : indisponible,
       alerte: !!c.actions && c.actions.enRetard > 0,
     },
     {
       libelle: 'Tâches récurrentes',
       valeur: c.recurrentes
-        ? `${n(c.recurrentes.series)} série(s) · ${retard(c.recurrentes.occurrences)}`
+        ? lien('recurrences', `${n(c.recurrentes.series)} série(s) · ${retard(c.recurrentes.occurrences)}`)
         : indisponible,
       alerte: !!c.recurrentes && c.recurrentes.occurrences.enRetard > 0,
     },
     {
-      libelle: 'Écarts',
-      valeur: c.ecarts ? `${n(c.ecarts.ouverts)} ouvert(s) · ${n(c.ecarts.enRetard)} en retard` : indisponible,
+      libelle: 'Écarts ouverts',
+      valeur: c.ecarts ? lien('amelioration', retard(c.ecarts)) : indisponible,
       alerte: !!c.ecarts && c.ecarts.enRetard > 0,
+      detail: c.ecarts && (
+        <Group gap={4} wrap="wrap" role="group" aria-label="Écarts ouverts par classification">
+          {CLASSES.map(([cle, libelle, couleur]) =>
+            liens ? (
+              <Badge
+                key={cle}
+                component={Link}
+                to={vers('amelioration', id, `&classif=${cle}`)}
+                size="xs"
+                variant="light"
+                color={couleur}
+              >
+                {libelle} {n(c.ecarts!.parClassification[cle])}
+              </Badge>
+            ) : (
+              <Badge key={cle} size="xs" variant="light" color={couleur}>
+                {libelle} {n(c.ecarts!.parClassification[cle])}
+              </Badge>
+            ),
+          )}
+          {c.ecarts.parClassification.non_classe > 0 && (
+            <Badge size="xs" variant="outline" color="gray">
+              Non classés {n(c.ecarts.parClassification.non_classe)}
+            </Badge>
+          )}
+        </Group>
+      ),
     },
     {
       libelle: 'Continuité',
-      valeur: c.continuite ? `${n(c.continuite.bia)} BIA · ${n(c.continuite.plans)} plan(s)` : indisponible,
+      valeur: c.continuite ? (
+        <>
+          {lien('bia', `${n(c.continuite.bia)} BIA`)} · {lien('continuite', `${n(c.continuite.plans)} plan(s)`)}
+        </>
+      ) : (
+        indisponible
+      ),
       alerte: false,
     },
     {
-      libelle: 'Conformité',
-      valeur: c.conformite
-        ? `${n(c.conformite.couvertes)} / ${n(c.conformite.exigences)} exigences couvertes`
+      libelle: 'Couverture',
+      valeur: c.couverture
+        ? lien(
+            'couverture',
+            `${n(c.couverture.testees)} testées ou validées / ${n(c.couverture.applicables)} applicables`,
+          )
         : indisponible,
       alerte: false,
     },
@@ -128,8 +189,8 @@ export function CartesPerimetres({
       {total && (
         <section className="graphe-total" aria-label="Total sans doublon sur tous les périmètres accessibles">
           <dl>
-            {lignesCompteurs(total)
-              .filter((l) => l.libelle !== 'Conformité')
+            {lignesCompteurs(total, affiche, false)
+              .filter((l) => l.libelle !== 'Couverture')
               .map((l) => (
                 <div key={l.libelle}>
                   <dt>Total · {l.libelle}</dt>
@@ -234,10 +295,11 @@ export function CartesPerimetres({
                   {carte.nature ? ` · ${carte.nature}` : ''}
                 </Text>
                 <dl className="graphe-compteurs">
-                  {lignesCompteurs(carte.compteurs).map((l) => (
+                  {lignesCompteurs(carte.compteurs, carte.id).map((l) => (
                     <div key={l.libelle}>
                       <dt>{l.libelle}</dt>
                       <dd className={l.alerte ? 'graphe-alerte' : undefined}>{l.valeur}</dd>
+                      {l.detail && <dd className="graphe-detail">{l.detail}</dd>}
                     </div>
                   ))}
                 </dl>
@@ -251,8 +313,8 @@ export function CartesPerimetres({
                       Total avec {n(carte.sousPerimetres)} sous-périmètre(s)
                     </Text>
                     <dl className="graphe-compteurs">
-                      {lignesCompteurs(carte.total)
-                        .filter((l) => l.libelle !== 'Conformité')
+                      {lignesCompteurs(carte.total, carte.id, false)
+                        .filter((l) => l.libelle !== 'Couverture')
                         .map((l) => (
                           <div key={l.libelle}>
                             <dt>{l.libelle}</dt>

@@ -181,6 +181,10 @@ export const EcosystemPartyData = common
     maturity: niveau,
     trust: niveau,
     measures: text.default(''),
+    /** Mesures de l'écosystème, par référence (mesure, exigence d'un cadre publié) : pas de copie du texte. */
+    measureRefs: refs,
+    /** Pourquoi les critères retenus donnent cette dangerosité (indice de menace contextualisé). */
+    dangerJustification: text.default(''),
   })
   .passthrough();
 export const StrategicScenarioData = common
@@ -241,7 +245,11 @@ export const RISK_REF_KINDS: Partial<Record<GrcKind, Record<string, CibleRef[]>>
   feared_event: { studyRef: STUDY_REF, businessAssetRef: ['object:business_asset'] },
   risk_source: { studyRef: STUDY_REF },
   sr_ov: { studyRef: STUDY_REF, sourceRef: ['object:risk_source'] },
-  ecosystem_party: { studyRef: STUDY_REF, supplierRef: ['legacy:suppliers'] },
+  ecosystem_party: {
+    studyRef: STUDY_REF,
+    supplierRef: ['legacy:suppliers'],
+    measureRefs: ['object:measure', 'object:soa', 'requirement', 'legacy:items', 'legacy:soa'],
+  },
   strategic_scenario: {
     studyRef: STUDY_REF,
     srOvRef: ['object:sr_ov'],

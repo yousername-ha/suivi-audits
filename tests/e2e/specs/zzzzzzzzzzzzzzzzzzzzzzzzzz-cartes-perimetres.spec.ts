@@ -179,6 +179,52 @@ test('Graphe des périmètres : modification depuis le graphe, flèches et flux,
   }
 });
 
+test('Graphe des périmètres : écarts par classification, compteurs cliquables vers la liste du même périmètre', async ({
+  browser,
+}) => {
+  const ctx = await browser.newContext({ storageState: (await sessionAdmin(browser)).state, ignoreHTTPSErrors: true });
+  const page = await ctx.newPage(),
+    problems = watchPage(page);
+  const suffixe = Date.now().toString(36),
+    nom = `Périmètre classes ${suffixe}`;
+  try {
+    await page.goto('/pilotage/perimetres');
+    const p = await post(page, '/api/grc/smsis', {
+      name: nom,
+      nature: 'SMSI',
+      scope: 'Fixture de recette',
+      timezone: 'Europe/Paris',
+      parentId: null,
+      entityKind: 'perimetre',
+      inheritFrameworks: false,
+    });
+    const ecart = (name: string, data: Record<string, unknown>) =>
+      post(page, `/api/grc/${p.id}/objects`, { kind: 'nonconformity', name, data: { cause: 'c', ...data } });
+    await ecart(`Majeur ${suffixe}`, { classification: 'majeure' });
+    await ecart(`Mineur ${suffixe}`, { classification: 'mineure' });
+    await ecart(`Sensible ${suffixe}`, { classification: 'point_sensible' });
+
+    await page.reload();
+    await page.getByText('Graphe', { exact: true }).click();
+    const carte = page.getByRole('group', { name: `Périmètre ${nom}` });
+    const classes = carte.getByRole('group', { name: 'Écarts ouverts par classification' });
+    await expect(classes).toContainText('Majeurs 1');
+    await expect(classes).toContainText('Mineurs 1');
+    await expect(classes).toContainText('Sensibles 1');
+
+    // Le compteur mène à la liste filtrée du même périmètre : on y retrouve exactement le constat comptabilisé.
+    await classes.getByRole('link', { name: /Majeurs 1/ }).click();
+    await expect(page).toHaveURL(/\/pilotage\/amelioration\?perimetre=.*classif=majeure/);
+    await expect(page.getByRole('combobox', { name: 'Périmètre affiché', exact: true })).toHaveValue(nom);
+    // Tableau et liste mobile coexistent dans la page : le premier exemplaire suffit à prouver la présence.
+    await expect(page.getByText(`Majeur ${suffixe}`, { exact: true }).first()).toBeVisible();
+    await expect(page.getByText(`Mineur ${suffixe}`, { exact: true })).toHaveCount(0);
+    expect(problems).toEqual([]);
+  } finally {
+    await ctx.close();
+  }
+});
+
 test('Graphe des périmètres : mouvement réduit, flux arrêté d’emblée', async ({ browser }) => {
   const ctx = await browser.newContext({
     storageState: (await sessionAdmin(browser)).state,
