@@ -74,10 +74,9 @@ for (const [nom, largeur, hauteur] of [
             );
           }),
         );
-      await page.reload();
+      await page.goto('/pilotage/actions');
       await page.getByRole('combobox', { name: 'Périmètre affiché', exact: true }).click();
       await page.getByRole('option', { name: `Périmètre frise ${nom} ${suffixe}`, exact: true }).click();
-      await page.goto('/pilotage/actions');
       await page.getByRole('combobox', { name: 'Vue synchronisée' }).click();
       await page.getByRole('option', { name: 'Timeline', exact: true }).click();
       const frise = page.getByRole('region', { name: /Timeline des actions/ });

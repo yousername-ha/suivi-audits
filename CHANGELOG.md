@@ -30,6 +30,13 @@ Lots L2 et L3 du [prompt maître ASTRA](docs/unification/AUDIT-ASTRA-2026-10-21.
 - **Vue des accès** (Registres) : pour une personne ou un groupe, le rôle par registre, son origine (direct ou groupe) et les droits réels calculés par le serveur ; recherche et pagination ; réservée aux droits d'administration.
 - **Attribution d'un droit** : fenêtre d'aperçu (rôle avant et après, personnes concernées, rôles qui subsistent, motif facultatif) avant confirmation.
 - **Délai de l'étape Playwright de la CI** porté à 30 minutes (la suite dure 26 minutes).
+Lots L4 à L8 (registres partagés, écarts, Timeline, récurrences) :
+- **Registres partagés** : les éléments d'un registre rattaché à plusieurs périmètres sont listés (actions, écarts, séries, tâches, tableau de bord) sous chacun de ces périmètres et s'ouvrent avec leur propre périmètre de référence ; sélecteur de registre à la création (rattachement hérité affiché avant l'enregistrement).
+- **Liens entrants** d'un élément : une action liée par audit d'origine ou par récidive affiche aussi l'écart qui la référence.
+- **Timeline** : intitulés fixes pendant le défilement horizontal, zone verticale bornée pour cent actions, état et retard dits en toutes lettres, légende.
+- **Classification d'un écart** : rouge, orange foncé ou violet avec légende, en liste comme en fiche (couleur jamais seule).
+- **Périodicité d'une série** : sept préréglages (journalier à annuel, « tous les deux mois ») ou personnalisée, avec l'aperçu des cinq prochaines échéances calculées par le moteur (fins de mois, fuseau, jours exclus).
+- **Validation d'occurrence** visible dans les listes de tâches ; le bouton de validation explique pourquoi il est inactif hors de la fenêtre de validation.
 
 ## [3.6.1] — 2026-10-20
 

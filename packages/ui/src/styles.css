@@ -1790,6 +1790,9 @@ html[data-style='clair'][data-mantine-color-scheme='light'] {
   flex-shrink: 0;
 }
 .shell-nav .nav-pastille[data-alerte='rouge'] {
-  background: var(--mantine-color-red-7);
-  color: var(--mantine-color-white);
+  /* #c92a2a (jeton « red.fond ») : 5,9:1 avec le texte blanc, contre 3,8:1 pour le rouge de base de Mantine. */
+  --badge-bg: #c92a2a;
+  --badge-color: #fff;
+  background: #c92a2a;
+  color: #fff;
 }

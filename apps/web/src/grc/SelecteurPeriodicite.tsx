@@ -2,6 +2,7 @@
    calculées par le moteur de récurrence (fins de mois, fuseau, jours exclus). Il écrit l'unité et l'intervalle ; les autres
    réglages de la série restent ceux de la fiche. */
 import { Group, NumberInput, Select, Stack, Text } from '@mantine/core';
+import { useState } from 'react';
 import {
   apercuOccurrences,
   appliquerPeriodicite,
@@ -23,7 +24,10 @@ export function SelecteurPeriodicite({
   onChange: (r: Recurrence) => void;
   disabled?: boolean;
 }) {
-  const choix = periodiciteDe(value);
+  // « Personnalisée » est un mode choisi par la personne : l'unité et l'intervalle courants peuvent encore correspondre à un
+  // préréglage (ex. tous les 3 mois) sans qu'elle ait quitté la saisie libre.
+  const [libre, setLibre] = useState(false);
+  const choix = libre ? PERIODICITE_PERSONNALISEE : periodiciteDe(value);
   const apercu = apercuOccurrences(value, 5);
   return (
     <Stack gap="xs">
@@ -37,7 +41,11 @@ export function SelecteurPeriodicite({
             { value: PERIODICITE_PERSONNALISEE, label: 'Personnalisée' },
           ]}
           value={choix}
-          onChange={(v) => v && onChange(appliquerPeriodicite(value, v))}
+          onChange={(v) => {
+            if (!v) return;
+            setLibre(v === PERIODICITE_PERSONNALISEE);
+            onChange(appliquerPeriodicite(value, v));
+          }}
           disabled={disabled}
         />
         {choix === PERIODICITE_PERSONNALISEE && (

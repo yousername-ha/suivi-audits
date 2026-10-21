@@ -526,10 +526,11 @@ describe('non-régression des données existantes', () => {
 
 describe('séparation modifier / administrer (019-04)', () => {
   it('un rôle qui modifie sans administrer enregistre un brouillon mais ne publie pas', async () => {
-    const role = (await admin.post('/api/admin/roles', { from: 'rssi', name: 'Configuration sans publication' })).json();
+    const role = (
+      await admin.post('/api/admin/roles', { from: 'rssi', name: 'Configuration sans publication' })
+    ).json();
     const permissions = (role.permissions as string[]).filter((p) => p !== 'parametres:administrer');
-    for (const p of ['parametres:lire', 'parametres:modifier'])
-      if (!permissions.includes(p)) permissions.push(p);
+    for (const p of ['parametres:lire', 'parametres:modifier']) if (!permissions.includes(p)) permissions.push(p);
     const maj = await admin.patch(`/api/admin/roles/${role.id}`, { permissions }, { 'if-match': `"${role.version}"` });
     expect(maj.statusCode, maj.body).toBe(200);
     const user = await makeUser(t, 'cfg_sans_publication', null);
