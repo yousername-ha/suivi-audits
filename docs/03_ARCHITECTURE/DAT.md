@@ -56,7 +56,7 @@ Query invalide les données concernées. If-Match protège les mises à jour.
 | TanStack Query / React Router | 5.104.1 / 7.18.4                                                            |
 | Vite / Vitest / Playwright    | 7.3.7 / 3.2.7 / 1.56.1                                                      |
 | PostgreSQL                    | 17, image 17-alpine                                                         |
-| Caddy                         | 2.11.7, recompilé avec Go 1.26.9                                            |
+| Caddy                         | 2.11.7, recompilé avec Go 1.26.10                                            |
 | Trivy                         | 0.75.0 dans le workflow CI                                                  |
 
 Versions déclarées/épinglées dans package.json/lockfiles/Dockerfiles ; elles ne

@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Exécutant sans serveur HTTP ; les demandes viennent exclusivement de la CLI locale authentifiée.
-ARG GO_IMAGE=golang:1.26.9-alpine
+ARG GO_IMAGE=golang:1.26.10-alpine
 FROM ${GO_IMAGE} AS cosign
 RUN --mount=type=secret,id=build_ca --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build \
     if [ -f /run/secrets/build_ca ]; then export SSL_CERT_FILE=/run/secrets/build_ca; fi; \

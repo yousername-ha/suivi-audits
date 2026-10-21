@@ -3,7 +3,7 @@
 # Caddy s'exécute sans privilège (utilisateur caddy, ports internes 8080 et 8443).
 ARG NODE_IMAGE=node:26-alpine
 ARG CADDY_IMAGE=caddy:2.11.7-alpine
-ARG GO_IMAGE=golang:1.26.9-alpine
+ARG GO_IMAGE=golang:1.26.10-alpine
 
 # Même Caddy et modules standards, compilés avec la bibliothèque Go corrigée.
 # Les modules sont vérifiés par Go (sum.golang.org) ; aucune toolchain secondaire téléchargée.
