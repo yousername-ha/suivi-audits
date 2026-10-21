@@ -238,6 +238,41 @@ describe('matrices, correspondances et références épinglées', () => {
     await saveDraft(rssi, gravite, scale('Gravité matrice', ['g1', 'g2', 'g3', 'g4']));
     expect((await preview(rssi, gravite)).impact.pinnedConsumers).toBe(0);
   });
+  it('une matrice 5 × 4 se publie et remplace une 4 × 4 sans toucher à l’ancienne version (019-06)', async () => {
+    const gravite4 = (await published(rssi, 'scale', 'g4x4', scale('Gravité 4', ['g1', 'g2', 'g3', 'g4']))).id;
+    const vrais4 = (
+      await published(rssi, 'scale', 'v4x4', scale('Vraisemblance 4', ['v1', 'v2', 'v3', 'v4'], 'likelihood'))
+    ).id;
+    const niv = (await published(rssi, 'scale', 'n4x4', scale('Niveaux 4', ['bas', 'haut'], 'criticality'))).id;
+    const grille = (rows: string[], colonnes: string[]) =>
+      rows.flatMap((row, i) =>
+        colonnes.map((column, j) => ({ row, column, result: i + j >= rows.length ? 'haut' : 'bas' })),
+      );
+    const rows4 = ['g1', 'g2', 'g3', 'g4'],
+      colonnes = ['v1', 'v2', 'v3', 'v4'];
+    const m = await published(rssi, 'matrix', 'mat4x4', matrixOf(gravite4, vrais4, niv, grille(rows4, colonnes)));
+    // La gravité passe à cinq niveaux : nouvelle version de l'échelle, puis de la matrice (cinq lignes, quatre colonnes).
+    await saveDraft(rssi, gravite4, scale('Gravité 4', [...rows4, 'g5']));
+    expect((await publishWith(rssi, gravite4, 'Cinquième niveau de gravité')).statusCode).toBe(200);
+    const cinq = [...rows4, 'g5'];
+    await saveDraft(rssi, m.id, {
+      ...matrixOf(gravite4, vrais4, niv, grille(cinq, colonnes)),
+      rows: { scale: { item: gravite4, version: 2 }, label: 'Gravité' },
+    });
+    expect((await publishWith(rssi, m.id, 'Matrice à cinq lignes')).statusCode).toBe(200);
+    const v1 = (await rssi.get(`${base}/items/${m.id}/versions/1`)).json().definition;
+    const v2 = (await rssi.get(`${base}/items/${m.id}/versions/2`)).json().definition;
+    expect(v1.cells).toHaveLength(16);
+    expect(v2.cells).toHaveLength(20);
+    expect(v1.rows.scale).toEqual({ item: gravite4, version: 1 });
+    expect(v2.rows.scale).toEqual({ item: gravite4, version: 2 });
+    // Une cellule manquante de la 5 × 4 est refusée.
+    await saveDraft(rssi, m.id, {
+      ...matrixOf(gravite4, vrais4, niv, grille(cinq, colonnes).slice(1)),
+      rows: { scale: { item: gravite4, version: 2 }, label: 'Gravité' },
+    });
+    expect((await preview(rssi, m.id)).valid).toBe(false);
+  });
   it('correspondance exhaustive, puis critères rattachés à une échelle chacun', async () => {
     const mapping = {
       name: 'Vraisemblance → niveaux',
@@ -486,5 +521,32 @@ describe('non-régression des données existantes', () => {
     expect(detail.versions.map((v: { version: number }) => v.version)).toEqual([2, 1]);
     expect(detail.versions[0]).toMatchObject({ createdBy: 'cfg_rssi' });
     expect(detail.versions[0].reason).toMatch(/Suppression/);
+  });
+});
+
+describe('séparation modifier / administrer (019-04)', () => {
+  it('un rôle qui modifie sans administrer enregistre un brouillon mais ne publie pas', async () => {
+    const role = (await admin.post('/api/admin/roles', { from: 'rssi', name: 'Configuration sans publication' })).json();
+    const permissions = (role.permissions as string[]).filter((p) => p !== 'parametres:administrer');
+    for (const p of ['parametres:lire', 'parametres:modifier'])
+      if (!permissions.includes(p)) permissions.push(p);
+    const maj = await admin.patch(`/api/admin/roles/${role.id}`, { permissions }, { 'if-match': `"${role.version}"` });
+    expect(maj.statusCode, maj.body).toBe(200);
+    const user = await makeUser(t, 'cfg_sans_publication', null);
+    await t.svc.db.q('INSERT INTO user_roles(user_id, role_id, modules) VALUES ($1,$2,NULL)', [user.id, role.id]);
+    const editeur = await login(t, user);
+    const c = await create(editeur, 'scale', 'sans_publication', scale('Brouillon sans publication'));
+    expect(c.statusCode, c.body).toBe(201);
+    const id = (c.json() as Item).id;
+    const p = await editeur.post(`${base}/items/${id}/preview`);
+    expect(p.statusCode).toBe(200);
+    const r = await editeur.post(
+      `${base}/items/${id}/publish`,
+      { previewId: p.json().previewId, reason: 'Publication tentée sans le droit', confirm: 'PUBLIER' },
+      { 'if-match': await etagOf(editeur, id) },
+    );
+    expect(r.statusCode).toBe(403);
+    // L'administrateur, lui, publie le même brouillon.
+    expect((await publishWith(admin, id)).statusCode).toBe(200);
   });
 });

@@ -115,6 +115,48 @@ describe('méthodes épinglées au catalogue', () => {
     }
   });
 
+  it('archiver les éléments du catalogue ne change ni la méthode publiée ni un risque déjà apprécié (019-03)', async () => {
+    const c = await catalogue('archive');
+    const publiee = (await publishMethod(bound(c))).json();
+    const methodId = (publiee.methodId ?? publiee.id) as string;
+    const corps = (nom: string) => ({
+      kind: 'risk',
+      name: nom,
+      data: {
+        description: 'Risque de contrôle',
+        code: 'RA',
+        ownerId: null,
+        methodId,
+        methodVersion: 1,
+        domain: 'information',
+        entity: 'Entité A',
+        scope: 'Hébergement',
+        strategy: 'reduce',
+        acceptanceReason: '',
+        reviewAt: '2026-10-12',
+        stages: {},
+      },
+    });
+    const r = await rssi.post(root() + '/objects', corps('Risque avant archivage'));
+    expect(r.statusCode, r.body).toBe(200);
+    const instantane = async () => {
+      const carte = (await rssi.get(root() + `/risk-map?methodId=${methodId}`)).json() as Record<string, unknown>;
+      delete carte.generatedAt; // seul l'horodatage de la lecture change
+      return {
+        carte,
+        evaluations: (await rssi.get(root() + `/risks/${r.json().id}/evaluations`)).json(),
+        methode: (await rssi.get(root() + `/methods/${methodId}/history`)).json(),
+      };
+    };
+    const avant = await instantane();
+    for (const id of [c.matrix, c.impact, c.vrais, c.niveaux])
+      expect((await rssi.post(`${cfg}/items/${id}/archive`)).statusCode).toBe(200);
+    const apres = await instantane();
+    expect(apres).toEqual(avant);
+    // La méthode publiée reste utilisable : un nouveau risque se crée toujours avec ses niveaux figés.
+    expect((await rssi.post(root() + '/objects', corps('Risque après archivage'))).statusCode).toBe(200);
+  });
+
   it('la version 2 d’une échelle ne change pas la méthode publiée ; une nouvelle version de méthode peut l’adopter', async () => {
     const c = await catalogue('b');
     const first = (await publishMethod(bound(c))).json();
