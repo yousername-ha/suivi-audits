@@ -94,4 +94,23 @@ describe('clauses 4 à 10 de l’ISO/IEC 27001', () => {
     expect(r.statusCode, r.body).toBe(201);
     expect((await couverture()).frameworks[0]!.etats).toMatchObject({ applicables: 2, aDeterminer: 0 });
   });
+  it('une clause est « pas encore conforme » jusqu’à une mise en œuvre complète et un test conforme', async () => {
+    expect((await couverture()).frameworks[0]!.etats).toMatchObject({ obligatoiresNonConformes: 1 });
+    const partielle = await evaluer('C6', { applicability: 'applicable' });
+    expect(partielle.statusCode, partielle.body).toBe(201);
+    expect((await couverture()).frameworks[0]!.etats).toMatchObject({ obligatoiresNonConformes: 1 });
+    const conforme = await evaluer(
+      'C6',
+      {
+        applicability: 'applicable',
+        implementation: 'complete',
+        testedAt: '2026-10-20',
+        testResult: 'conforme',
+        testRef: 'document:fictif:1',
+      },
+      1,
+    );
+    expect(conforme.statusCode, conforme.body).toBe(201);
+    expect((await couverture()).frameworks[0]!.etats).toMatchObject({ obligatoiresNonConformes: 0, teste: 1 });
+  });
 });

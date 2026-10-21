@@ -36,6 +36,8 @@ export interface CarteCompteurs {
     testees: number;
     /** Exigences dont l'applicabilité n'est pas encore tranchée : à revoir (comptées parmi les applicables). */
     aDeterminer: number;
+    /** Clauses obligatoires (4 à 10 de l'ISO/IEC 27001) pas encore conformes : à traiter. */
+    obligatoiresNonConformes: number;
   } | null;
 }
 export interface CartePerimetre {

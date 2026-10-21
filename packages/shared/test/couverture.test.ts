@@ -4,6 +4,7 @@ import {
   EvaluationExigenceCorps,
   etatExigence,
   evaluationEffective,
+  exigenceConforme,
   exclusionInterdite,
   incoherencesEvaluation,
   syntheseEtats,
@@ -125,5 +126,23 @@ describe('exigences obligatoires et applicabilité à déterminer', () => {
       { etat: 'non_applicable', applicability: 'exclue' },
     ]);
     expect(s).toMatchObject({ applicables: 3, aDeterminer: 1, teste: 1, non_applicable: 1 });
+  });
+});
+
+describe('clauses obligatoires pas encore conformes', () => {
+  it('une exigence est conforme quand elle est testée ou validée', () => {
+    expect(
+      ['non_implemente', 'partiel', 'implemente', 'teste', 'valide_metier'].map((e) => exigenceConforme(e as never)),
+    ).toEqual([false, false, false, true, true]);
+  });
+  it('compte les clauses obligatoires pas encore conformes, pas les mesures de l’Annexe A', () => {
+    const s = syntheseEtats([
+      { etat: 'partiel', applicability: 'applicable', obligatoire: true },
+      { etat: 'teste', applicability: 'applicable', obligatoire: true },
+      { etat: 'valide_metier', applicability: 'applicable', obligatoire: true },
+      { etat: 'non_implemente', applicability: 'a_determiner', obligatoire: true },
+      { etat: 'non_implemente', applicability: 'applicable' },
+    ]);
+    expect(s.obligatoiresNonConformes).toBe(2);
   });
 });
