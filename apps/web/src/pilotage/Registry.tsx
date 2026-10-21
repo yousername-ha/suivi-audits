@@ -397,6 +397,11 @@ export function BusinessRegistry({
                       Existant
                     </Badge>
                   )}
+                  {o.smsiId !== smsi && !o.id.startsWith('legacy:') && (
+                    <Badge size="xs" variant="light" color="encre">
+                      Registre partagé avec ce périmètre
+                    </Badge>
+                  )}
                   {kind === 'nonconformity' && <EtiquettesEcart o={o} taille="xs" />}
                   {Array.isArray(o.data.auditedFrameworks) && (o.data.auditedFrameworks as unknown[]).length > 0 && (
                     <Badge size="xs" variant="light" color="encre">
@@ -426,6 +431,11 @@ export function BusinessRegistry({
               <Text fw={600}>{o.name}</Text>
               <Text size="sm">{String(o.data.description ?? '').slice(0, 120)}</Text>
               {o.id.startsWith('legacy:') && <Badge variant="light">Existant</Badge>}
+              {o.smsiId !== smsi && !o.id.startsWith('legacy:') && (
+                <Badge variant="light" color="encre">
+                  Registre partagé avec ce périmètre
+                </Badge>
+              )}
               {kind === 'nonconformity' && <EtiquettesEcart o={o} />}
               <Text size="sm">
                 {state(o)} · {owner(o)}

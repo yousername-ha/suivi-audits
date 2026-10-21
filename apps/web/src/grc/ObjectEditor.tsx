@@ -1,5 +1,6 @@
 import { Relations } from './Relations';
 import { PanneauElement, useAccesElement } from '../registres/Contribution';
+import { SelecteurRegistre } from '../registres/SelecteurRegistre';
 import { PlanningSerie } from './PlanningSerie';
 import {
   Alert,
@@ -153,6 +154,7 @@ export function ObjectEditor({
     [saving, setSaving] = useState(false),
     [archiveConfirm, setArchiveConfirm] = useState(false),
     [date, setDate] = useState(new Date().toISOString().slice(0, 10)),
+    [registreId, setRegistreId] = useState<string | null>(null),
     [legacyComment, setLegacyComment] = useState(''),
     [proof, setProof] = useState('');
   const owners = useResponsables(smsi);
@@ -225,7 +227,7 @@ export function ObjectEditor({
       } else
         await api(object ? 'PUT' : 'POST', `/api/grc/${smsi}/objects${object ? '/' + object.id : ''}`, {
           ifMatch: object?.version,
-          body: { kind, name, data },
+          body: { kind, name, data, ...(!object && registreId ? { registreId } : {}) },
         });
       await qc.invalidateQueries({ queryKey: ['grc', smsi] });
       onClose();
@@ -277,6 +279,15 @@ export function ObjectEditor({
               value={String(data.description ?? '')}
               onChange={(e) => set('description', e.currentTarget.value)}
               minRows={3}
+              disabled={readonly}
+            />
+            <SelecteurRegistre
+              smsi={smsi}
+              kind={kind}
+              data={data}
+              object={object}
+              value={registreId}
+              onChange={setRegistreId}
               disabled={readonly}
             />
             {kind === 'action' || kind === 'task_series' ? (

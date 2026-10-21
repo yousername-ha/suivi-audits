@@ -201,6 +201,19 @@ export class GrcRegistres {
     return masques;
   }
 
+  /** Registres lisibles qui portent ce périmètre sans en être la référence (registre multi-périmètre) : leurs éléments
+      apparaissent aussi dans les vues de ce périmètre, sans doublon ni copie. Un registre archivé ou illisible n'y figure pas. */
+  async partagesLisibles(user: SessionUser, smsi: string, c?: Client): Promise<string[]> {
+    const r = await this.q(c).query<RegistreRow>(
+      `SELECT ${colonnesR} FROM registres r JOIN registre_perimetres p ON p.registre_id=r.id
+        WHERE p.smsi_id=$1 AND r.reference_smsi_id<>$1 AND NOT r.archived`,
+      [smsi],
+    );
+    const ids: string[] = [];
+    for (const reg of r.rows) if (await this.peut(user, reg, null, 'lire', c)) ids.push(reg.id);
+    return ids;
+  }
+
   /** Tous les registres restreints que l'utilisateur ne peut pas lire, quel que soit leur périmètre de référence : leurs
       éléments ne comptent dans aucun compteur qu'il consulte. */
   async inaccessiblesPartout(user: SessionUser, c?: Client): Promise<string[]> {

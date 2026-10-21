@@ -520,7 +520,7 @@ export function PilotagePage() {
             {['action', 'task_series', 'risk'].includes(kind) ? (
               <ObjectEditor
                 key={editing?.id ?? kind + smsi}
-                smsi={smsi}
+                smsi={editing && !editing.id.startsWith('legacy:') ? editing.smsiId : smsi}
                 policy={policy.data.definition}
                 kind={kind}
                 object={editing}
@@ -532,7 +532,7 @@ export function PilotagePage() {
             ) : (
               <RecordEditor
                 key={editing?.id ?? kind + smsi}
-                smsi={smsi}
+                smsi={editing && !editing.id.startsWith('legacy:') ? editing.smsiId : smsi}
                 policy={policy.data.definition}
                 kind={kind}
                 object={editing}
@@ -543,7 +543,7 @@ export function PilotagePage() {
             )}
             <RiskEvaluation smsi={smsi} risk={evaluation} onClose={() => setEvaluation(null)} />
             <Decision
-              smsi={smsi}
+              smsi={decision?.object && !decision.object.id.startsWith('legacy:') ? decision.object.smsiId : smsi}
               object={decision?.object ?? null}
               operation={decision?.operation ?? 'proof_review'}
               step={decision?.step}

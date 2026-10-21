@@ -142,6 +142,39 @@ describe('registres et droits par ressource', () => {
     ).toBe(403);
   });
 
+  it('un registre partagé : ses éléments apparaissent aussi sous le second périmètre, une seule fois (R02)', async () => {
+    const mb = await makeUser(t, 'reg_membre_b', 'rw');
+    expect((await admin.put(`/api/grc/${B}/members`, { userId: mb.id, write: true })).statusCode).toBe(204);
+    const membreB = await login(t, mb);
+    // Vue native des actions du périmètre B : l'élément du registre A+B y figure, une seule fois, avec son périmètre de référence.
+    const sousB = (await membreB.get(`/api/grc/${B}/objects?kind=action`)).json();
+    const lignes = sousB.items.filter((i: { id: string }) => i.id === element);
+    expect(lignes).toHaveLength(1);
+    expect(lignes[0].smsiId).toBe(A);
+    // Le tableau des actions et la fenêtre de planning le comptent aussi sous B.
+    const tableau = (await membreB.get(`/api/grc/${B}/tasks`)).json();
+    expect(tableau.items.some((i: { id: string }) => i.id === element)).toBe(true);
+    const fenetre = (
+      await membreB.get(`/api/grc/${B}/tasks/window?from=2000-01-01T00:00:00.000Z&to=2100-01-01T00:00:00.000Z`)
+    ).json();
+    expect(fenetre.items.filter((i: { id: string }) => i.id === element)).toHaveLength(1);
+    const resume = (await membreB.get(`/api/grc/${B}/tasks/dashboard`)).json();
+    expect(resume.summary.total).toBeGreaterThanOrEqual(1);
+    // Sous le périmètre de référence, l'élément n'est pas compté deux fois.
+    const sousA = (await admin.get(`/api/grc/${A}/objects?kind=action`)).json();
+    expect(sousA.items.filter((i: { id: string }) => i.id === element)).toHaveLength(1);
+    // Il se lit et se modifie avec son périmètre de référence (accès par le registre, pas par le seul périmètre B).
+    expect((await membreB.get(`/api/grc/${A}/objects/${element}`)).statusCode).toBe(200);
+    // Une personne qui ne voit pas le registre ne voit pas ses éléments sous B non plus.
+    expect(
+      (await lecteurSansModule.get(`/api/grc/${B}/objects?kind=action`)).statusCode === 200
+        ? (await lecteurSansModule.get(`/api/grc/${B}/objects?kind=action`))
+            .json()
+            .items.some((i: { id: string }) => i.id === element)
+        : false,
+    ).toBe(false);
+  });
+
   it('un utilisateur sans droit sur A ni B ne voit pas le registre (404, aucune fuite)', async () => {
     expect((await contributeur.get(`/api/registres/${registre}`)).statusCode).toBe(404);
     expect((await contributeur.get(`/api/registres/${registre}/elements`)).statusCode).toBe(404);

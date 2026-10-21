@@ -520,7 +520,14 @@ export class Grc {
     await this.access(smsi, user);
     await this.permission(user, GRC_MODULES[kind], 'lire');
     const args: unknown[] = [smsi, kind, '%' + search.replace(/[\\%_]/g, '\\$&') + '%'];
-    let where = 'smsi_id=$1 AND kind=$2 AND NOT archived AND name ILIKE $3';
+    // Éléments des registres partagés avec ce périmètre (référence ailleurs) : visibles aussi ici, une seule fois.
+    const partages = ['action', 'nonconformity', 'task_series'].includes(kind)
+      ? await this.registres.partagesLisibles(user, smsi)
+      : [];
+    const dansLePerimetre = partages.length
+      ? `(smsi_id=$1 OR registre_id=ANY($${args.push(partages)}::uuid[]))`
+      : 'smsi_id=$1';
+    let where = `${dansLePerimetre} AND kind=$2 AND NOT archived AND name ILIKE $3`;
     const masques = await this.registres.inaccessibles(user, smsi);
     if (masques.length) where += ` AND (registre_id IS NULL OR registre_id<>ALL($${args.push(masques)}::uuid[]))`;
     for (const [k, v] of Object.entries(filters)) {
