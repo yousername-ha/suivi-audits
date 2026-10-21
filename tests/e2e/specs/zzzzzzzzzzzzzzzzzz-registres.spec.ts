@@ -65,6 +65,7 @@ test('Registres : registre créé, périmètre ajouté après aperçu de l’imp
     await page.getByRole('combobox', { name: 'Utilisateur ou groupe' }).click();
     await page.getByRole('option').first().click();
     await page.getByRole('button', { name: 'Attribuer' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Confirmer l’attribution' }).click();
     const tableau = page.getByRole('region', { name: /Droits attribués sur le registre/ });
     await expect(tableau.getByText('Contributeur', { exact: true })).toBeVisible();
     await tableau

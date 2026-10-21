@@ -386,6 +386,54 @@ describe('registres et droits par ressource', () => {
     expect((await vue('utilisateur', '00000000-0000-4000-8000-0000000000ff')).statusCode).toBe(404);
   });
 
+  it('aperçu d’une attribution : avant/après, personnes concernées, rôles qui subsistent, sans rien écrire (022-02)', async () => {
+    const nb = async () =>
+      Number((await t.svc.db.one<{ n: string }>('SELECT count(*)::text AS n FROM droits_ressources'))!.n);
+    const avant = await nb();
+    // Une personne du groupe de recette reçoit un rôle direct plus faible : le rôle du groupe subsiste.
+    const personne = await admin.put(`/api/droits/registre/${registre}`, {
+      subjectType: 'utilisateur',
+      subjectId: deGroupeId,
+      role: 'lecteur',
+      apercu: true,
+    });
+    expect(personne.statusCode).toBe(200);
+    expect(personne.json()).toMatchObject({
+      apercu: true,
+      avant: null,
+      apres: 'lecteur',
+      personnes: 1,
+      inchange: false,
+      subsistants: [{ role: 'contributeur', libelle: 'Groupe Équipe de recette' }],
+    });
+    // Un groupe : le nombre de membres actifs est annoncé.
+    const groupe = await admin.put(`/api/droits/registre/${registre}`, {
+      subjectType: 'groupe',
+      subjectId: groupeId,
+      role: 'gestionnaire',
+      apercu: true,
+    });
+    expect(groupe.json()).toMatchObject({
+      avant: 'contributeur',
+      apres: 'gestionnaire',
+      personnes: 1,
+      inchange: false,
+    });
+    // Aucun droit écrit, aucune ligne de journal d'attribution supplémentaire.
+    expect(await nb()).toBe(avant);
+    // Réservé aux gestionnaires de la ressource, comme l'attribution elle-même.
+    expect(
+      (
+        await contributeur.put(`/api/droits/registre/${registre}`, {
+          subjectType: 'utilisateur',
+          subjectId: deGroupeId,
+          role: 'lecteur',
+          apercu: true,
+        })
+      ).statusCode,
+    ).toBe(403);
+  });
+
   it('le journal garde le rôle précédent et le motif quand un droit est modifié', async () => {
     const nouveau = await makeUser(t, 'reg_journal', null);
     const put = (role: string, motif?: string) =>

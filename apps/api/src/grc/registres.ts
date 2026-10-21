@@ -18,6 +18,7 @@ import {
   ROLE_LABELS,
   roleSuffit,
   type AccesSujetPage,
+  type ApercuDroit,
   type AccesSujetRegistre,
   type Action,
   type Besoin,
@@ -978,6 +979,67 @@ export class GrcRegistres {
       );
       return { id: r.id };
     }, user.username);
+  }
+  /** Aperçu d'une attribution : rôle avant et après, personnes concernées, rôles qui subsistent. N'écrit rien. */
+  async apercuDroit(type: TypeRessource, id: string, input: DroitBody, user: SessionUser): Promise<ApercuDroit> {
+    const b = DroitBody.parse(input);
+    await this.ressource(type, id, user);
+    const titulaire =
+      b.subjectType === 'utilisateur'
+        ? await this.g.db.one<{ libelle: string }>(
+            "SELECT coalesce(nullif(display_name,''),username) AS libelle FROM users WHERE id=$1 AND NOT disabled",
+            [b.subjectId],
+          )
+        : await this.g.db.one<{ libelle: string }>('SELECT name AS libelle FROM groups WHERE id=$1', [b.subjectId]);
+    if (!titulaire) throw new HttpError(422, 'Titulaire du droit introuvable.');
+    const avant =
+      (
+        await this.g.db.one<{ role: RoleRessource }>(
+          'SELECT role FROM droits_ressources WHERE resource_type=$1 AND resource_id=$2 AND subject_type=$3 AND subject_id=$4',
+          [type, id, b.subjectType, b.subjectId],
+        )
+      )?.role ?? null;
+    let personnes = 1;
+    let subsistants: ApercuDroit['subsistants'] = [];
+    let dejaPlusEleves = 0;
+    if (b.subjectType === 'utilisateur') {
+      subsistants = (
+        await this.g.db.q<{ role: RoleRessource; libelle: string }>(
+          `SELECT d.role, g.name AS libelle FROM droits_ressources d JOIN groups g ON g.id=d.subject_id
+            WHERE d.resource_type=$1 AND d.resource_id=$2 AND d.subject_type='groupe'
+              AND d.subject_id IN (SELECT group_id FROM user_groups WHERE user_id=$3) ORDER BY g.name`,
+          [type, id, b.subjectId],
+        )
+      ).rows.map((r) => ({ role: r.role, libelle: `Groupe ${r.libelle}` }));
+    } else {
+      personnes = Number(
+        (await this.g.db.one<{ n: string }>(
+          `SELECT count(*)::text AS n FROM user_groups ug JOIN users u ON u.id=ug.user_id
+              WHERE ug.group_id=$1 AND NOT u.disabled AND (u.expires_at IS NULL OR u.expires_at>now())`,
+          [b.subjectId],
+        ))!.n,
+      );
+      dejaPlusEleves = Number(
+        (await this.g.db.one<{ n: string }>(
+          `SELECT count(DISTINCT d.subject_id)::text AS n FROM droits_ressources d
+              WHERE d.resource_type=$1 AND d.resource_id=$2 AND d.subject_type='utilisateur'
+                AND d.subject_id IN (SELECT user_id FROM user_groups WHERE group_id=$3)
+                AND CASE d.role WHEN 'lecteur' THEN 1 WHEN 'contributeur' THEN 2 ELSE 3 END >
+                    CASE $4::text WHEN 'lecteur' THEN 1 WHEN 'contributeur' THEN 2 ELSE 3 END`,
+          [type, id, b.subjectId, b.role],
+        ))!.n,
+      );
+    }
+    return {
+      apercu: true,
+      titulaire: { type: b.subjectType, id: b.subjectId, libelle: titulaire.libelle },
+      avant,
+      apres: b.role,
+      personnes,
+      subsistants,
+      dejaPlusEleves,
+      inchange: avant === b.role,
+    };
   }
   async retirer(type: TypeRessource, id: string, droitId: string, user: SessionUser, ip: string) {
     return this.g.db.tx(async (c) => {

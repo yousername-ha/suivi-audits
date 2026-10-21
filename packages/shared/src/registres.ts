@@ -120,9 +120,25 @@ export const DroitBody = z
     role: z.enum(ROLES_RESSOURCE),
     /** Motif facultatif, conservé au journal d'audit avec l'ancien rôle. */
     motif: z.string().trim().max(500).optional(),
+    /** Aperçu seul : calcule l'effet de l'attribution sans rien écrire. */
+    apercu: z.boolean().default(false),
   })
   .strict();
 export type DroitBody = z.infer<typeof DroitBody>;
+/** Effet d'une attribution de droit, calculé par le serveur avant confirmation. */
+export interface ApercuDroit {
+  apercu: true;
+  titulaire: { type: 'utilisateur' | 'groupe'; id: string; libelle: string };
+  avant: RoleRessource | null;
+  apres: RoleRessource;
+  /** Personnes touchées : 1 pour un compte, le nombre de membres actifs pour un groupe. */
+  personnes: number;
+  /** Autres rôles que le titulaire garde sur la ressource (par ses groupes), qui continuent de s'appliquer. */
+  subsistants: { role: RoleRessource; libelle: string }[];
+  /** Pour un groupe : membres qui ont déjà un rôle direct plus élevé (leur rôle ne change pas). */
+  dejaPlusEleves: number;
+  inchange: boolean;
+}
 
 /** Contribution à une action : avancement seulement (statut et compte rendu), jamais la définition. */
 export const ContributionAction = z

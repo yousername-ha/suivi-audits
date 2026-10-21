@@ -206,7 +206,9 @@ export const registresRoutes = [
     params: ressource,
     body: DroitBody,
     handler: async ({ svc, s, params, body, ip }) =>
-      svc.grc.registres.accorder(params.type, params.id, body, (s as Session).user, ip),
+      body.apercu
+        ? svc.grc.registres.apercuDroit(params.type, params.id, body, (s as Session).user)
+        : svc.grc.registres.accorder(params.type, params.id, body, (s as Session).user, ip),
   }),
   route({
     ...base,
