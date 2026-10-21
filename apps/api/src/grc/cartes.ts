@@ -19,6 +19,11 @@ export interface Ligne {
   plans: number;
 }
 
+/** Fragment SQL : l'occurrence `o` a été validée (OK, KO ou NA) et ne s'est pas vue rouvrir depuis (journal immuable, migration
+    030). Une occurrence validée n'est ni « en retard » ni rappelée, même si son statut d'action n'est pas terminal. */
+export const OCCURRENCE_VALIDEE = `EXISTS (SELECT 1 FROM occurrence_validations ov WHERE ov.objet_id=o.id AND ov.kind='validation'
+  AND ov.seq=(SELECT max(seq) FROM occurrence_validations ox WHERE ox.objet_id=o.id))`;
+
 /** Compteurs des éléments visibles dans au moins un des périmètres donnés : une ligne par élément, donc chaque élément n'est
     compté qu'une fois, même s'il apparaît dans plusieurs périmètres par un registre partagé. Un statut terminal vient de la
     politique métier du périmètre de l'élément. */
@@ -29,8 +34,8 @@ export async function compter(g: Grc, ids: string[], masques: string[], maintena
        count(*) FILTER (WHERE o.kind='action' AND o.data->>'seriesId' IS NULL AND COALESCE(o.data->>'status','')=ANY(t.ids))::int AS "actionsTerminees",
        count(*) FILTER (WHERE o.kind='action' AND o.data->>'seriesId' IS NULL AND NOT (COALESCE(o.data->>'status','')=ANY(t.ids)))::int AS "actionsOuvertes",
        count(*) FILTER (WHERE o.kind='action' AND o.data->>'seriesId' IS NULL AND NOT (COALESCE(o.data->>'status','')=ANY(t.ids)) AND o.data->>'dueAt'<$3)::int AS "actionsRetard",
-       count(*) FILTER (WHERE o.kind='action' AND o.data->>'seriesId' IS NOT NULL AND NOT (COALESCE(o.data->>'status','')=ANY(t.ids)))::int AS "occurrencesOuvertes",
-       count(*) FILTER (WHERE o.kind='action' AND o.data->>'seriesId' IS NOT NULL AND NOT (COALESCE(o.data->>'status','')=ANY(t.ids)) AND o.data->>'dueAt'<$3)::int AS "occurrencesRetard",
+       count(*) FILTER (WHERE o.kind='action' AND o.data->>'seriesId' IS NOT NULL AND NOT (COALESCE(o.data->>'status','')=ANY(t.ids)) AND NOT ${OCCURRENCE_VALIDEE})::int AS "occurrencesOuvertes",
+       count(*) FILTER (WHERE o.kind='action' AND o.data->>'seriesId' IS NOT NULL AND NOT (COALESCE(o.data->>'status','')=ANY(t.ids)) AND NOT ${OCCURRENCE_VALIDEE} AND o.data->>'dueAt'<$3)::int AS "occurrencesRetard",
        count(*) FILTER (WHERE o.kind='task_series' AND o.data->'recurrence'->>'active'='true')::int AS "seriesActives",
        count(*) FILTER (WHERE o.kind='nonconformity' AND COALESCE(o.data->>'status','open')<>'closed')::int AS "ecartsOuverts",
        count(*) FILTER (WHERE o.kind='nonconformity' AND COALESCE(o.data->>'status','open')<>'closed' AND NULLIF(o.data->>'dueAt','')<substr($3,1,10))::int AS "ecartsRetard",

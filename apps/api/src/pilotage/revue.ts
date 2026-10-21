@@ -75,10 +75,11 @@ export class PilotageRevue {
       if (ids.length) {
         const politique = (await this.g.policy(smsi, user)).definition;
         const clos = new Set(politique.statuses.filter((s) => s.terminal).map((s) => s.id));
+        const masques = await this.g.registres.inaccessibles(user, smsi);
         const actions = (
           await this.g.db.q<{ status: string; due: string | null }>(
-            `SELECT data->>'status' AS status,data->>'dueAt' AS due FROM grc_objects WHERE smsi_id=$1 AND id=ANY($2::uuid[]) AND kind='action'`,
-            [smsi, ids],
+            `SELECT data->>'status' AS status,data->>'dueAt' AS due FROM grc_objects WHERE smsi_id=$1 AND id=ANY($2::uuid[]) AND kind='action' AND (registre_id IS NULL OR registre_id<>ALL($3::uuid[]))`,
+            [smsi, ids, masques],
           )
         ).rows;
         const ouvertes = actions.filter((a) => !clos.has(a.status));

@@ -126,7 +126,7 @@ const PUCE_TEINTE: Record<Puce, string> = {
   bad: 'rouge',
   gen: 'orange',
 };
-const chipW = (l: string, k: Puce) => Math.round(String(l).length * 5.85 + (k === 'in' ? 27 : 16));
+export const chipW = (l: string, k: Puce) => Math.round(String(l).length * 5.85 + (k === 'in' ? 27 : 16));
 function Pastille({ x, y, l, k }: { x: number; y: number; l: string; k: Puce }) {
   const w = chipW(l, k);
   return (

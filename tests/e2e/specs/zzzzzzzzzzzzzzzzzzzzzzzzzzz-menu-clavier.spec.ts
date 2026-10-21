@@ -28,6 +28,7 @@ for (const theme of ['light', 'dark'] as const) {
       await page.goto('/');
       const nav = page.getByRole('navigation', { name: 'Navigation principale' });
       const famille = nav.getByRole('link', { name: /^Risques/ }).first();
+      await expect(famille).toHaveAttribute('aria-expanded', 'false');
       await famille.focus();
       await page.keyboard.press('Tab');
       await page.keyboard.press('Shift+Tab');
@@ -37,6 +38,7 @@ for (const theme of ['light', 'dark'] as const) {
       await page.keyboard.press('Enter');
       const destination = nav.getByRole('link', { name: 'Gestion des risques' });
       await expect(destination).toBeVisible();
+      await expect(famille).toHaveAttribute('aria-expanded', 'true');
       await page.keyboard.press('Tab');
       await expect(destination).toBeFocused();
       expect(await focusVisible(page)).toBe(true);

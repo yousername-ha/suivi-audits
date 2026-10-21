@@ -71,13 +71,23 @@ describe('étude liée à une matrice de pertinence', () => {
       name: 'Couple fictif',
       data: {
         studyRef: 'object:' + e.json().id,
-        resourcesLevel: 'niveau_2',
-        motivationLevel: 'niveau_3',
-        relevanceLevel: 'moyenne',
+        resourcesLevel: 'n2',
+        motivationLevel: 'n3',
+        relevanceLevel: 'medium',
       },
     });
     expect(couple.statusCode, couple.body).toBe(200);
-    expect(couple.json().data.relevanceLevel).toBe('moyenne');
+    expect(couple.json().data.relevanceLevel).toBe('medium');
+    // Un niveau qui n'existe pas dans l'échelle épinglée est refusé par le serveur, champ par champ.
+    for (const champ of ['resourcesLevel', 'motivationLevel', 'relevanceLevel']) {
+      const refus = await a.post(root() + '/objects', {
+        kind: 'sr_ov',
+        name: 'Couple hors échelle',
+        data: { studyRef: 'object:' + e.json().id, [champ]: 'niveau_inconnu' },
+      });
+      expect(refus.statusCode, champ).toBe(422);
+      expect(refus.body).toContain(champ);
+    }
   });
 
   it('archiver la matrice interdit une nouvelle liaison mais pas la modification d’une étude déjà liée', async () => {
@@ -160,6 +170,25 @@ describe('étude liée à une correspondance impact → gravité (atelier 1)', (
     expect(er.json().data.impactLevels).toHaveLength(2);
   });
 
+  it('refuse une gravité ou un niveau d’impact absents des échelles épinglées', async () => {
+    const e = await etude({ severityMapping: correspondance }, 'Étude niveaux hors échelle');
+    const creer = (data: Record<string, unknown>) =>
+      a.post(root() + '/objects', {
+        kind: 'feared_event',
+        name: 'Événement hors échelle',
+        data: { studyRef: 'object:' + e.json().id, ...data },
+      });
+    const gravite = await creer({ severityLevel: 'g9' });
+    expect(gravite.statusCode, gravite.body).toBe(422);
+    expect(gravite.body).toContain('severityLevel');
+    const impact = await creer({ impactLevels: [{ category: null, level: 'i9' }] });
+    expect(impact.statusCode, impact.body).toBe(422);
+    expect(impact.body).toContain('impactLevels');
+    expect((await creer({ severityLevel: 'g2', impactLevels: [{ category: null, level: 'i1' }] })).statusCode).toBe(
+      200,
+    );
+  });
+
   it('refuse un élément qui n’est pas une correspondance et un champ inconnu dans un impact', async () => {
     const mauvais = await etude({ severityMapping: matrice });
     expect(mauvais.statusCode).toBe(422);
@@ -211,7 +240,7 @@ describe('migration explicite d’une étude vers une nouvelle version de config
     const couple = await a.post(root() + '/objects', {
       kind: 'sr_ov',
       name: 'Couple migré',
-      data: { studyRef, resourcesLevel: 'niveau_2', motivationLevel: 'niveau_3', relevanceLevel: 'moyenne' },
+      data: { studyRef, resourcesLevel: 'n2', motivationLevel: 'n3', relevanceLevel: 'medium' },
     });
     expect(couple.statusCode, couple.body).toBe(200);
     const url = `${root()}/studies/${e.json().id}/configuration-migration`;
@@ -262,6 +291,6 @@ describe('migration explicite d’une étude vers une nouvelle version de config
     expect((await a.post(url, corps, { 'if-match': `"${ok.json().version}"` })).statusCode).toBe(422);
     expect((await usages(matrice.item)).some((u) => u.consumerId === e.json().id)).toBe(true);
     const relu = (await a.get(`${root()}/objects/${couple.json().id}`)).json();
-    expect(relu.data.relevanceLevel).toBe('moyenne');
+    expect(relu.data.relevanceLevel).toBe('medium');
   });
 });

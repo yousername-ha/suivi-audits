@@ -118,6 +118,8 @@ export const DroitBody = z
     subjectType: z.enum(TYPES_SUJET),
     subjectId: z.uuid(),
     role: z.enum(ROLES_RESSOURCE),
+    /** Motif facultatif, conservé au journal d'audit avec l'ancien rôle. */
+    motif: z.string().trim().max(500).optional(),
   })
   .strict();
 export type DroitBody = z.infer<typeof DroitBody>;

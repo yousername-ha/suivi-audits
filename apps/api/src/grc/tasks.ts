@@ -10,6 +10,7 @@ import {
 import type { SessionUser } from '../auth.js';
 import { HttpError } from '../http/errors.js';
 import { objectColumns, objectDto, type ObjectRow, type Grc } from './core.js';
+import { OCCURRENCE_VALIDEE } from './cartes.js';
 
 export class GrcTasks {
   constructor(private readonly g: Grc) {}
@@ -21,6 +22,7 @@ export class GrcTasks {
     filters: { status?: string; ownerId?: string },
   ) {
     const native = await this.g.listObjects(smsi, user, 'action', search, offset, filters);
+    native.items = await this.avecValidation(native.items);
     const legacy = (await this.g.legacyTasks.list(smsi, user)).filter(
       (o) =>
         o.name.toLowerCase().includes(search.toLowerCase()) &&
@@ -50,7 +52,28 @@ export class GrcTasks {
       (o) => !o.data.dueAt || (String(o.data.dueAt) >= from && String(o.data.dueAt) <= to),
     );
     if (items.length + legacy.length > 2000) throw new HttpError(422, 'Réduisez la période : plus de 2 000 actions.');
-    return { items: [...items.map(objectDto), ...legacy], from, to };
+    return { items: [...(await this.avecValidation(items.map(objectDto))), ...legacy], from, to };
+  }
+  /** Joint à chaque occurrence de série sa dernière décision de validation (OK, KO, NA) ou sa réouverture : les vues de
+      tâches montrent ainsi l'état réel de l'occurrence, que le statut d'action ne dit pas. */
+  private async avecValidation<T extends { id: string; data: Record<string, unknown> }>(items: T[]) {
+    const ids = items.filter((o) => o.data.seriesId).map((o) => o.id);
+    if (!ids.length) return items;
+    const lignes = (
+      await this.g.db.q<{ id: string; kind: string; result: string | null; at: Date; by: string }>(
+        `SELECT DISTINCT ON (objet_id) objet_id AS id, kind, result, created_at AS at, created_by AS by
+           FROM occurrence_validations WHERE objet_id=ANY($1::uuid[]) ORDER BY objet_id, seq DESC`,
+        [ids],
+      )
+    ).rows;
+    const parId = new Map(lignes.map((l) => [l.id, l]));
+    return items.map((o) => {
+      const l = parId.get(o.id);
+      return {
+        ...o,
+        validation: l && l.kind === 'validation' ? { result: l.result, at: l.at.toISOString(), by: l.by } : null,
+      };
+    });
   }
   async dashboard(smsi: string, user: SessionUser) {
     await this.g.access(smsi, user);
@@ -59,7 +82,7 @@ export class GrcTasks {
     const closed = policy.statuses.filter((s) => s.terminal).map((s) => s.id);
     const masques = await this.g.registres.inaccessiblesPartout(user);
     const summary = await this.g.db.one(
-      `SELECT count(*)::int total,count(*) FILTER(WHERE data->>'status'=ANY($2))::int closed,count(*) FILTER(WHERE NOT(data->>'status'=ANY($2)) AND data->>'dueAt'<$3)::int overdue,count(*) FILTER(WHERE data->>'ownerId' IS NULL AND COALESCE(data->'responsable','null'::jsonb)='null'::jsonb)::int unassigned FROM grc_objects WHERE smsi_id=$1 AND kind='action' AND NOT archived AND (registre_id IS NULL OR NOT registre_id=ANY($4::uuid[]))`,
+      `SELECT count(*)::int total,count(*) FILTER(WHERE o.data->>'status'=ANY($2))::int closed,count(*) FILTER(WHERE NOT(o.data->>'status'=ANY($2)) AND NOT ${OCCURRENCE_VALIDEE} AND o.data->>'dueAt'<$3)::int overdue,count(*) FILTER(WHERE o.data->>'ownerId' IS NULL AND COALESCE(o.data->'responsable','null'::jsonb)='null'::jsonb)::int unassigned FROM grc_objects o WHERE o.smsi_id=$1 AND o.kind='action' AND NOT o.archived AND (o.registre_id IS NULL OR NOT o.registre_id=ANY($4::uuid[]))`,
       [smsi, closed, new Date().toISOString(), masques],
     );
     const byStatus = (
@@ -265,6 +288,8 @@ export class GrcTasks {
                 description: d.description,
                 status,
                 ownerId: d.ownerId,
+                // Une série confiée à un groupe ou à une fonction le reste pour chacune de ses occurrences.
+                ...(d.responsable ? { responsable: d.responsable } : {}),
                 startAt: null,
                 dueAt: slot.dueAt,
                 priority: d.priority,
@@ -304,6 +329,7 @@ export class GrcTasks {
    FROM grc_objects o JOIN grc_smsis s ON s.id=o.smsi_id JOIN business_policy_versions p ON p.version=s.business_version JOIN users u ON u.id=(o.data->>'ownerId')::uuid
    WHERE o.kind='action' AND NOT o.archived AND NOT u.disabled AND (u.expires_at IS NULL OR u.expires_at>now()) AND p.definition->'notifications'->>'enabled'='true'
    AND NOT EXISTS(SELECT 1 FROM jsonb_array_elements(p.definition->'statuses') st WHERE st->>'id'=o.data->>'status' AND st->>'terminal'='true')
+   AND NOT ${OCCURRENCE_VALIDEE}
    AND (o.data->>'dueAt')::timestamptz <= $1::timestamptz + make_interval(days => (o.data->>'reminderDays')::int)
    AND (s.visibility='instance' OR EXISTS(SELECT 1 FROM grc_members m WHERE m.smsi_id=s.id AND m.user_id=u.id)) ON CONFLICT DO NOTHING`,
         [now],
@@ -322,6 +348,7 @@ export class GrcTasks {
    JOIN users u ON u.id=r.user_id
    WHERE o.kind='action' AND NOT o.archived AND NOT u.disabled AND (u.expires_at IS NULL OR u.expires_at>now()) AND p.definition->'notifications'->>'enabled'='true'
    AND NOT EXISTS(SELECT 1 FROM jsonb_array_elements(p.definition->'statuses') st WHERE st->>'id'=o.data->>'status' AND st->>'terminal'='true')
+   AND NOT ${OCCURRENCE_VALIDEE}
    AND (o.data->>'dueAt')::timestamptz <= $1::timestamptz + make_interval(days => (o.data->>'reminderDays')::int)
    AND (s.visibility='instance' OR EXISTS(SELECT 1 FROM grc_members m WHERE m.smsi_id=s.id AND m.user_id=u.id)) ON CONFLICT DO NOTHING`,
         [now],

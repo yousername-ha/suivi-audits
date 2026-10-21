@@ -20,10 +20,15 @@ export class Pilotage {
   }
   async history(smsi: string, ref: string, user: SessionUser, before?: string) {
     await this.source(smsi, ref, user);
+    // Le journal des décisions est immuable : après le déplacement d'un élément vers un autre périmètre de référence, ses
+    // décisions gardent le périmètre d'origine. L'accès à l'élément vient d'être contrôlé : on lit par sa référence.
+    const args: unknown[] = [ref, before ?? null];
+    let where = 'source_ref=$1 AND ($2::timestamptz IS NULL OR created_at<$2)';
+    if (!ref.startsWith('object:')) where += ` AND smsi_id=$${args.push(smsi)}`;
     const rows = (
       await this.g.db.q(
-        `SELECT ${columns} FROM pilotage_decisions WHERE smsi_id=$1 AND source_ref=$2 AND ($3::timestamptz IS NULL OR created_at<$3) ORDER BY created_at DESC,id DESC LIMIT 50`,
-        [smsi, ref, before ?? null],
+        `SELECT ${columns} FROM pilotage_decisions WHERE ${where} ORDER BY created_at DESC,id DESC LIMIT 50`,
+        args,
       )
     ).rows;
     const refs: string[] = [...new Set(rows.flatMap((r) => (Array.isArray(r.refs) ? (r.refs as string[]) : [])))];
@@ -433,6 +438,7 @@ export class Pilotage {
   async indicators(smsi: string, user: SessionUser) {
     await this.g.permission(user, 'ecarts', 'lire');
     const scope = await this.g.access(smsi, user);
+    const masques = await this.g.registres.inaccessibles(user, smsi);
     const native = (await this.g.db.one<{
       findings: number;
       closed: number;
@@ -441,14 +447,14 @@ export class Pilotage {
       days: number;
       samples: number;
     }>(
-      `WITH findings AS (SELECT data,CASE WHEN pg_input_is_valid(NULLIF(data->>'closedAt',''),'date') THEN (data->>'closedAt')::date-(created_at AT TIME ZONE $2)::date END days FROM grc_objects WHERE smsi_id=$1 AND kind='nonconformity' AND NOT archived)
+      `WITH findings AS (SELECT data,CASE WHEN pg_input_is_valid(NULLIF(data->>'closedAt',''),'date') THEN (data->>'closedAt')::date-(created_at AT TIME ZONE $2)::date END days FROM grc_objects WHERE smsi_id=$1 AND kind='nonconformity' AND NOT archived AND (registre_id IS NULL OR registre_id<>ALL($3::uuid[])))
        SELECT count(*)::int findings,count(*) FILTER(WHERE data->>'status'='closed')::int closed,count(*) FILTER(WHERE data->>'effectiveness'='effective')::int effective,count(*) FILTER(WHERE data->>'effectiveness' IN ('effective','ineffective'))::int verified,COALESCE(sum(days) FILTER(WHERE data->>'status'='closed' AND days>=0),0)::float8 days,count(*) FILTER(WHERE data->>'status'='closed' AND days>=0)::int samples FROM findings`,
-      [smsi, scope.timezone],
+      [smsi, scope.timezone, masques],
     ))!;
     const nativeCauses = (
       await this.g.db.q<{ cause: string; count: number }>(
-        `SELECT trim(data->>'cause') cause,count(*)::int count FROM grc_objects WHERE smsi_id=$1 AND kind='nonconformity' AND NOT archived AND trim(COALESCE(data->>'cause',''))<>'' GROUP BY trim(data->>'cause') ORDER BY count DESC,cause LIMIT 1001`,
-        [smsi],
+        `SELECT trim(data->>'cause') cause,count(*)::int count FROM grc_objects WHERE smsi_id=$1 AND kind='nonconformity' AND NOT archived AND trim(COALESCE(data->>'cause',''))<>'' AND (registre_id IS NULL OR registre_id<>ALL($2::uuid[])) GROUP BY trim(data->>'cause') ORDER BY count DESC,cause LIMIT 1001`,
+        [smsi, masques],
       )
     ).rows;
     const causes = new Map(nativeCauses.slice(0, 1000).map((r) => [r.cause, r.count]));

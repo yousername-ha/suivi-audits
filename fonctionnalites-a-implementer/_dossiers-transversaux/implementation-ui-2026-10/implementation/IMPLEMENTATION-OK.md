@@ -1,4 +1,9 @@
-# Confirmation d'implémentation — interfaces ASTRA (dossier implementation-ui-2026-10)
+# Bilan d'implémentation — interfaces ASTRA (dossier implementation-ui-2026-10)
+
+> **Bilan partiel.** Ce fichier atteste les scénarios R01 à R18, pas la totalité des 89 exigences numérotées des dix dossiers :
+> le [relevé du 21/10/2026](../../../../docs/unification/AUDIT-ASTRA-2026-10-21.md) classe 9 exigences « vérifiées », 13 « présentes non
+> validées », 58 « partielles » et 9 « absentes » (état de `main` 3.6.1, avant les corrections listées dans ce relevé). Il ne vaut
+> donc pas confirmation de livraison complète.
 
 | Élément | Valeur |
 | --- | --- |

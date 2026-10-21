@@ -32,6 +32,7 @@ export class PilotageBoites {
     const lire = (m: 'ecarts' | 'pilotage') => user.rights.can(m, 'lire');
     const politique = (await this.g.policy(smsi, user)).definition;
     const clos = new Set(politique.statuses.filter((s) => s.terminal).map((s) => s.id));
+    const masques = await this.g.registres.inaccessibles(user, smsi);
     const objets = (
       await this.g.db.q<{
         id: string;
@@ -42,8 +43,8 @@ export class PilotageBoites {
         recurrence: unknown;
       }>(
         `SELECT id,kind,data->>'status' AS status,data->>'dueAt' AS due,data->'refs' AS refs,data->'recurrence' AS recurrence
-           FROM grc_objects WHERE smsi_id=$1 AND NOT archived AND kind IN ('action','risk','task_series') LIMIT 20000`,
-        [smsi],
+           FROM grc_objects WHERE smsi_id=$1 AND NOT archived AND kind IN ('action','risk','task_series') AND (registre_id IS NULL OR registre_id<>ALL($2::uuid[])) LIMIT 20000`,
+        [smsi, masques],
       )
     ).rows;
     const liens = (
