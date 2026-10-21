@@ -1,10 +1,13 @@
 import { Alert, Badge, Button, Card, Checkbox, Group, Select, Stack, Table, Text, TextInput } from '@mantine/core';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
-import type { BusinessPolicy, GrcObject, TaskData } from '@suivi/shared';
+import { useEffect } from 'react';
+import type { BusinessPolicy, GrcObject, RegistreDto, TaskData } from '@suivi/shared';
+import { useFiltreUrl } from '../components/filtre-url';
 import { get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { libelleDesignation, SelecteurResponsable, useProposables } from '../components/selecteurs';
+import { definirListeCourante } from '../registres/liste-courante';
+import { enRetard, validationDe } from './etat-action';
 import { Timeline } from './Timeline';
 const views = [
   { value: 'list', label: 'Liste' },
@@ -23,12 +26,26 @@ export function Tasks({
   policy: BusinessPolicy;
   onOpen: (o: GrcObject) => void;
 }) {
-  const [view, setView] = useState(policy.display.defaultTaskView),
-    [month, setMonth] = useState(new Date().toISOString().slice(0, 7)),
-    [search, setSearch] = useState(''),
-    [owner, setOwner] = useState<string | null>(null),
-    [status, setStatus] = useState<string | null>(null),
-    [showClosed, setShowClosed] = useState(policy.display.showClosed);
+  // Filtres conservés dans l'adresse (retour depuis une fiche, lien partagé) : vue, mois, recherche, responsable, état, registre.
+  const [vue, setVue] = useFiltreUrl('tvue', policy.display.defaultTaskView),
+    [month, setMonth] = useFiltreUrl('tmois', new Date().toISOString().slice(0, 7)),
+    [search, setSearch] = useFiltreUrl('tq', ''),
+    [responsable, setResponsable] = useFiltreUrl('tresp', ''),
+    [etat, setEtat] = useFiltreUrl('tetat', ''),
+    [registre, setRegistre] = useFiltreUrl('treg', ''),
+    [clos, setClos] = useFiltreUrl('tclos', policy.display.showClosed ? '1' : '0');
+  const view = vue as (typeof views)[number]['value'],
+    setView = setVue,
+    owner = responsable || null,
+    setOwner = (v: string | null) => setResponsable(v ?? ''),
+    status = etat || null,
+    setStatus = (v: string | null) => setEtat(v ?? ''),
+    showClosed = clos === '1',
+    setShowClosed = (v: boolean) => setClos(v ? '1' : '0');
+  const registres = useQuery({
+    queryKey: ['registres', 'filtre-taches', smsi],
+    queryFn: () => get<{ items: RegistreDto[] }>('/api/registres?archives=false'),
+  });
   const first = new Date(month + '-01T00:00:00Z'),
     last = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + 1, 0, 23, 59, 59));
   const list = useQuery({
@@ -63,11 +80,18 @@ export function Tasks({
     (o) =>
       o.name.toLowerCase().includes(search.toLowerCase()) &&
       (!owner || o.data.ownerId === owner) &&
+      (!registre || o.registreId === registre) &&
       (!status || o.data.status === status) &&
       (showClosed ||
         (!(o.data.legacy && o.data.status === 'done') &&
           !policy.statuses.find((s) => s.id === o.data.status)?.terminal)),
   );
+  // La liste affichée (ordre et filtres compris) sert à enchaîner la validation sur l'occurrence suivante de cette liste.
+  const idsAffiches = items.map((o) => o.id).join(',');
+  useEffect(() => {
+    definirListeCourante(idsAffiches ? idsAffiches.split(',') : []);
+    return () => definirListeCourante([]);
+  }, [idsAffiches]);
   const card = (o: GrcObject) => (
     <Card withBorder key={o.id}>
       <Stack gap="xs">
@@ -80,7 +104,17 @@ export function Tasks({
           · {String(o.data.priority)}
         </Text>
         <Text size="sm">{o.data.dueAt ? new Date(String(o.data.dueAt)).toLocaleString('fr-FR') : 'Sans échéance'}</Text>
+        {enRetard(o, policy) && (
+          <Badge variant="light" color="red">
+            ! En retard
+          </Badge>
+        )}
         {Boolean(o.data.seriesId) && <Badge variant="light">Occurrence récurrente</Badge>}
+        {validationDe(o) && (
+          <Badge variant="light" color="teal">
+            Validée : {validationDe(o)}
+          </Badge>
+        )}
       </Stack>
     </Card>
   );
@@ -99,6 +133,16 @@ export function Tasks({
         />
         <TextInput label="Rechercher une action" value={search} onChange={(e) => setSearch(e.currentTarget.value)} />
         <SelecteurResponsable smsi={smsi} value={owner} onChange={setOwner} sansRecherche />
+        <Select
+          label="Registre"
+          description="Plans d’actions et tâches récurrentes que vous pouvez lire."
+          clearable
+          value={registre || null}
+          onChange={(v) => setRegistre(v ?? '')}
+          data={(registres.data?.items ?? [])
+            .filter((r) => r.kind === 'plan_actions' || r.kind === 'recurrences')
+            .map((r) => ({ value: r.id, label: r.name }))}
+        />
         <Select
           label="État"
           clearable
@@ -150,6 +194,16 @@ export function Tasks({
                   <Table.Td>{libelleDesignation(o.data, proposables.data)}</Table.Td>
                   <Table.Td>
                     {o.data.dueAt ? new Date(String(o.data.dueAt)).toLocaleDateString('fr-FR') : 'Sans échéance'}
+                    {enRetard(o, policy) && (
+                      <Badge ml="xs" variant="light" color="red">
+                        ! En retard
+                      </Badge>
+                    )}
+                    {validationDe(o) && (
+                      <Badge ml="xs" variant="light" color="teal">
+                        Validée : {validationDe(o)}
+                      </Badge>
+                    )}
                   </Table.Td>
                 </Table.Tr>
               ))}
@@ -158,10 +212,10 @@ export function Tasks({
         </Table.ScrollContainer>
       )}
       {view === 'kanban' && (
-        <div className="grc-kanban">
+        <div className="grc-kanban" role="region" aria-label="Kanban des actions, défilement possible" tabIndex={0}>
           {policy.statuses.map((s) => (
-            <Stack key={s.id}>
-              <Text fw={600}>
+            <Stack key={s.id} role="group" aria-label={`Colonne ${s.label}`}>
+              <Text fw={600} className="grc-kanban__titre">
                 {s.label} ({items.filter((o) => o.data.status === s.id).length})
               </Text>
               {items.filter((o) => o.data.status === s.id).map(card)}

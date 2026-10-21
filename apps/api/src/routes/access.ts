@@ -226,13 +226,15 @@ export const accessRoutes = [
           await setUserRoles(c, u.id, body.roles);
           await setUserGroups(c, u.id, body.groups);
           await assertScopedRoles(c, [u.id]);
-          return { id: u.id, after: await rightsSnapshot(c, [u.id]) };
+          const after = await rightsSnapshot(c, [u.id]);
+          await svc.db.audit(sess.user, ip, 'admin.user_create', body.username, { after }, c);
+          return { id: u.id, after };
         }, sess.user.username)
         .catch((e: { code?: string }) => {
           if (e.code === '23505') throw new HttpError(409, 'Cet identifiant existe déjà.');
           throw e;
         });
-      await svc.db.audit(sess.user, ip, 'admin.user_create', body.username, { after });
+      void after;
       return { id, temporaryPassword: pw };
     },
   }),
@@ -278,7 +280,7 @@ export const accessRoutes = [
         m.failed_logins = 0;
         m.locked_until = null;
       }
-      const { out, before, after } = await svc.db.tx(async (c) => {
+      const { out } = await svc.db.tx(async (c) => {
         const cur = await userById(c, params.id);
         if (!cur) throw new HttpError(404, 'Compte introuvable.');
         if (cur.version !== expected) throw conflict(cur as unknown as { version: number });
@@ -296,17 +298,18 @@ export const accessRoutes = [
           await assertAdminRemains(c);
           await cutSessions(c, [params.id]);
         }
-        return {
-          out: (await userById(c, params.id))!,
-          before,
-          after: rightsChange ? await rightsSnapshot(c, [params.id]) : null,
-        };
+        const out = (await userById(c, params.id))!;
+        const after = rightsChange ? await rightsSnapshot(c, [params.id]) : null;
+        await svc.db.audit(
+          sess.user,
+          ip,
+          'admin.user_update',
+          out.username,
+          { changes: Object.keys(m), ...(rightsChange ? { before, after } : {}), version: out.version },
+          c,
+        );
+        return { out };
       }, sess.user.username);
-      await svc.db.audit(sess.user, ip, 'admin.user_update', out.username, {
-        changes: Object.keys(m),
-        ...(rightsChange ? { before, after } : {}),
-        version: out.version,
-      });
       setEtag(reply, out.version);
       return out;
     },
@@ -330,8 +333,8 @@ export const accessRoutes = [
         );
         if (!r.rowCount) throw new HttpError(404, 'Compte introuvable.');
         await svc.auth.destroyUserSessions(params.id, null, c);
+        await svc.db.audit(sess.user, ip, 'admin.user_password_reset', params.id, {}, c);
       }, sess.user.username);
-      await svc.db.audit(sess.user, ip, 'admin.user_password_reset', params.id);
       return { temporaryPassword: pw };
     },
   }),
@@ -351,8 +354,8 @@ export const accessRoutes = [
         );
         if (!r.rowCount) throw new HttpError(404, 'Compte introuvable.');
         await svc.auth.destroyUserSessions(params.id, null, c);
+        await svc.db.audit(sess.user, ip, 'admin.user_mfa_reset', params.id, {}, c);
       }, sess.user.username);
-      await svc.db.audit(sess.user, ip, 'admin.user_mfa_reset', params.id);
       return undefined;
     },
   }),
@@ -366,14 +369,13 @@ export const accessRoutes = [
     handler: async ({ svc, s, ip, params }) => {
       const sess = s as Session;
       if (params.id === sess.user.id) throw new HttpError(409, 'Vous ne pouvez pas supprimer votre propre compte.');
-      const { name, before } = await svc.db.tx(async (c) => {
+      await svc.db.tx(async (c) => {
         const before = await rightsSnapshot(c, [params.id]);
         const r = await c.query<{ username: string }>('DELETE FROM users WHERE id=$1 RETURNING username', [params.id]);
         if (!r.rowCount) throw new HttpError(404, 'Compte introuvable.');
         await assertAdminRemains(c);
-        return { name: r.rows[0]!.username, before };
+        await svc.db.audit(sess.user, ip, 'admin.user_delete', r.rows[0]!.username, { before, after: null }, c);
       }, sess.user.username);
-      await svc.db.audit(sess.user, ip, 'admin.user_delete', name, { before, after: null });
       return undefined;
     },
   }),
@@ -457,10 +459,11 @@ export const accessRoutes = [
           await setGroupRoles(c, g.id, body.roles);
           await setGroupMembers(c, g.id, body.members);
           await cutSessions(c, body.roles.length ? body.members : []);
-          return (await groupById(c, g.id))!;
+          const created = (await groupById(c, g.id))!;
+          await svc.db.audit(sess.user, ip, 'admin.group_create', created.name, { after: groupSnap(created) }, c);
+          return created;
         }, sess.user.username)
         .catch(uniqueName('groupe'));
-      await svc.db.audit(sess.user, ip, 'admin.group_create', out.name, { after: groupSnap(out) });
       return out;
     },
   }),
@@ -476,7 +479,7 @@ export const accessRoutes = [
     handler: async ({ svc, s, ip, req, reply, params, body }) => {
       const sess = s as Session;
       const expected = requireIfMatch(req);
-      const { out, before } = await svc.db
+      const { out } = await svc.db
         .tx(async (c) => {
           const cur = await groupById(c, params.id);
           if (!cur) throw new HttpError(404, 'Groupe introuvable.');
@@ -508,13 +511,18 @@ export const accessRoutes = [
           if (body.members) await setGroupMembers(c, params.id, body.members);
           await assertAdminRemains(c);
           await cutSessions(c, effective);
-          return { out: (await groupById(c, params.id))!, before: cur };
+          const updated = (await groupById(c, params.id))!;
+          await svc.db.audit(
+            sess.user,
+            ip,
+            'admin.group_update',
+            updated.name,
+            { before: groupSnap(cur), after: groupSnap(updated) },
+            c,
+          );
+          return { out: updated };
         }, sess.user.username)
         .catch(uniqueName('groupe'));
-      await svc.db.audit(sess.user, ip, 'admin.group_update', out.name, {
-        before: groupSnap(before),
-        after: groupSnap(out),
-      });
       setEtag(reply, out.version);
       return out;
     },
@@ -528,7 +536,7 @@ export const accessRoutes = [
     params: IdParams,
     handler: async ({ svc, s, ip, params }) => {
       const sess = s as Session;
-      const before = await svc.db.tx(async (c) => {
+      await svc.db.tx(async (c) => {
         const cur = await groupById(c, params.id);
         if (!cur) throw new HttpError(404, 'Groupe introuvable.');
         const affected = cur.roles.length ? cur.members.map((m) => m.id) : [];
@@ -536,9 +544,8 @@ export const accessRoutes = [
         await c.query('DELETE FROM groups WHERE id = $1', [params.id]);
         await assertAdminRemains(c);
         await cutSessions(c, affected);
-        return cur;
+        await svc.db.audit(sess.user, ip, 'admin.group_delete', cur.name, { before: groupSnap(cur), after: null }, c);
       }, sess.user.username);
-      await svc.db.audit(sess.user, ip, 'admin.group_delete', before.name, { before: groupSnap(before), after: null });
       return undefined;
     },
   }),
@@ -596,13 +603,18 @@ export const accessRoutes = [
              VALUES ($1, $2, $3, false, $4, $5, $6, $6)`,
             [id, body.name, body.description ?? src.description, src.permissions, src.id, sess.user.username],
           );
-          return (await roleById(c, id))!;
+          const created = (await roleById(c, id))!;
+          await svc.db.audit(
+            sess.user,
+            ip,
+            'admin.role_create',
+            created.name,
+            { from: body.from, after: { permissions: created.permissions } },
+            c,
+          );
+          return created;
         }, sess.user.username)
         .catch(uniqueName('rôle'));
-      await svc.db.audit(sess.user, ip, 'admin.role_create', out.name, {
-        from: body.from,
-        after: { permissions: out.permissions },
-      });
       return out;
     },
   }),
@@ -619,7 +631,7 @@ export const accessRoutes = [
       const sess = s as Session;
       const expected = requireIfMatch(req);
       if (isSystemRole(params.id)) throw new HttpError(409, 'Un rôle prédéfini n’est pas modifiable : dupliquez-le.');
-      const { out, before } = await svc.db
+      const { out } = await svc.db
         .tx(async (c) => {
           const cur = await roleById(c, params.id);
           if (!cur) throw new HttpError(404, 'Rôle introuvable.');
@@ -637,13 +649,21 @@ export const accessRoutes = [
           );
           await assertAdminRemains(c);
           await cutSessions(c, affected);
-          return { out: (await roleById(c, params.id))!, before: cur };
+          const updated = (await roleById(c, params.id))!;
+          await svc.db.audit(
+            sess.user,
+            ip,
+            'admin.role_update',
+            updated.name,
+            {
+              before: { name: cur.name, permissions: cur.permissions },
+              after: { name: updated.name, permissions: updated.permissions },
+            },
+            c,
+          );
+          return { out: updated };
         }, sess.user.username)
         .catch(uniqueName('rôle'));
-      await svc.db.audit(sess.user, ip, 'admin.role_update', out.name, {
-        before: { name: before.name, permissions: before.permissions },
-        after: { name: out.name, permissions: out.permissions },
-      });
       setEtag(reply, out.version);
       return out;
     },
@@ -658,7 +678,7 @@ export const accessRoutes = [
     handler: async ({ svc, s, ip, params }) => {
       const sess = s as Session;
       if (isSystemRole(params.id)) throw new HttpError(409, 'Un rôle prédéfini ne peut pas être supprimé.');
-      const before = await svc.db.tx(async (c) => {
+      await svc.db.tx(async (c) => {
         const cur = await roleById(c, params.id);
         if (!cur) throw new HttpError(404, 'Rôle introuvable.');
         const affected = await usersOfRole(c, params.id);
@@ -666,12 +686,15 @@ export const accessRoutes = [
         await c.query('DELETE FROM roles WHERE id = $1', [params.id]);
         await assertAdminRemains(c);
         await cutSessions(c, affected);
-        return cur;
+        await svc.db.audit(
+          sess.user,
+          ip,
+          'admin.role_delete',
+          cur.name,
+          { before: { permissions: cur.permissions, users: cur.users, groups: cur.groups }, after: null },
+          c,
+        );
       }, sess.user.username);
-      await svc.db.audit(sess.user, ip, 'admin.role_delete', before.name, {
-        before: { permissions: before.permissions, users: before.users, groups: before.groups },
-        after: null,
-      });
       return undefined;
     },
   }),

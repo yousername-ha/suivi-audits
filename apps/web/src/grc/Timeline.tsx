@@ -2,10 +2,11 @@
    ne montre qu'un mois). Les actions sans aucune date sont listées à part ; rien n'est inventé pour les placer. */
 import { Alert, Button, Group, Stack, Text } from '@mantine/core';
 import type { BusinessPolicy, GrcObject, TaskData } from '@suivi/shared';
+import { enRetard, libelleStatut, symboleStatut, validationDe } from './etat-action';
 
 const JOUR = 86_400_000;
 const LARGEUR_JOUR = 4;
-const MARGE_GAUCHE = 260;
+const MARGE_GAUCHE = 280;
 const HAUTEUR_LIGNE = 34;
 
 export interface Frise {
@@ -72,6 +73,16 @@ export function calculerFrise(items: GrcObject[], aujourdhui: number): Frise {
   };
 }
 
+/** Phrase lue pour une action : intitulé, état, retard et période (jamais la couleur seule). */
+function descriptionAction(o: GrcObject, policy: BusinessPolicy, retard: boolean, fr: (jour: number) => string) {
+  const t = o.data as Partial<TaskData>;
+  const periode = [t.startAt && `du ${fr(jourDe(t.startAt))}`, t.dueAt && `échéance le ${fr(jourDe(t.dueAt))}`]
+    .filter(Boolean)
+    .join(', ');
+  const validation = validationDe(o);
+  return `${o.name}, ${libelleStatut(policy, o).toLowerCase()}${validation ? `, validée (${validation})` : ''}${retard ? ', en retard' : ''}${periode ? ', ' + periode : ''}`;
+}
+
 export function Timeline({
   items,
   policy,
@@ -81,9 +92,10 @@ export function Timeline({
   policy: BusinessPolicy;
   onOpen: (o: GrcObject) => void;
 }) {
-  const frise = calculerFrise(items, Date.now());
-  const x = (jour: number) => MARGE_GAUCHE + ((jour - frise.debut) / JOUR) * LARGEUR_JOUR;
-  const largeur = MARGE_GAUCHE + frise.jours * LARGEUR_JOUR + 20;
+  const maintenant = Date.now();
+  const frise = calculerFrise(items, maintenant);
+  const x = (jour: number) => ((jour - frise.debut) / JOUR) * LARGEUR_JOUR;
+  const largeurFrise = frise.jours * LARGEUR_JOUR + 20;
   const hauteur = frise.placees.length * HAUTEUR_LIGNE + 56;
   // Un repère par mois, au premier jour du mois.
   const mois: { jour: number; libelle: string }[] = [];
@@ -97,13 +109,39 @@ export function Timeline({
         jour: d.getTime(),
         libelle: d.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit', timeZone: 'UTC' }),
       });
-  const aujourdhui = Math.floor(Date.now() / JOUR) * JOUR;
+  const aujourdhui = Math.floor(maintenant / JOUR) * JOUR;
   const fr = (jour: number) => new Date(jour).toLocaleDateString('fr-FR', { timeZone: 'UTC' });
+  const ouvrir = (objet: GrcObject) => ({
+    role: 'button' as const,
+    tabIndex: 0,
+    onClick: () => onOpen(objet),
+    onKeyDown: (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        onOpen(objet);
+      }
+    },
+  });
   return (
     <Stack>
       <Text size="sm">
         Période affichée : du {fr(frise.debut)} au {fr(frise.debut + (frise.jours - 1) * JOUR)}.
       </Text>
+      <Group gap="md" role="group" aria-label="Légende : état de l’action, symbole et couleur de la barre">
+        {policy.statuses.map((st) => (
+          <Group key={st.id} gap="xs" wrap="nowrap">
+            <svg width="14" height="14" aria-hidden="true">
+              <rect width="14" height="14" rx="3" fill={st.color} />
+            </svg>
+            <Text size="xs">
+              {symboleStatut(policy, st.id)} {st.label}
+            </Text>
+          </Group>
+        ))}
+        <Text size="xs" className="grc-timeline__retard-legende">
+          ! En retard : barre cerclée de rouge
+        </Text>
+      </Group>
       {frise.tronquee && (
         <Alert color="orange" role="status">
           La période est limitée à deux ans pour rester lisible : les échéances plus lointaines ne sont pas dessinées
@@ -128,9 +166,50 @@ export function Timeline({
         className="grc-timeline"
         role="region"
         tabIndex={0}
-        aria-label="Timeline des actions, défilement horizontal possible"
+        aria-label="Timeline des actions, défilement possible dans les deux sens"
       >
-        <svg role="img" aria-label="Timeline des actions, du début à l’échéance" width={largeur} height={hauteur}>
+        <svg
+          className="grc-timeline__etiquettes"
+          role="group"
+          aria-label="Intitulés des actions"
+          width={MARGE_GAUCHE}
+          height={hauteur}
+        >
+          <text x="5" y="20" className="grc-timeline__entete">
+            Action · état
+          </text>
+          {frise.placees.map(({ objet }, i) => {
+            const y = 36 + i * HAUTEUR_LIGNE;
+            const retard = enRetard(objet, policy, maintenant);
+            const nom = objet.name.length > 28 ? objet.name.slice(0, 27) + '…' : objet.name;
+            return (
+              <g
+                key={objet.id}
+                {...ouvrir(objet)}
+                aria-label={descriptionAction(objet, policy, retard, fr)}
+                className="grc-timeline__ligne"
+              >
+                <title>{objet.name}</title>
+                <text x="5" y={y + 15}>
+                  {symboleStatut(policy, objet.data.status)} {nom}
+                  {validationDe(objet) ? ` · ${validationDe(objet)}` : ''}
+                </text>
+                {retard && (
+                  <text x={MARGE_GAUCHE - 8} y={y + 15} textAnchor="end" className="grc-timeline__retard">
+                    ! En retard
+                  </text>
+                )}
+              </g>
+            );
+          })}
+        </svg>
+        <svg
+          className="grc-timeline__frise"
+          role="img"
+          aria-label="Barres du début à l’échéance de chaque action"
+          width={largeurFrise}
+          height={hauteur}
+        >
           {mois.map((m) => (
             <g key={m.jour}>
               <line x1={x(m.jour)} x2={x(m.jour)} y1="28" y2={hauteur} className="grc-timeline__mois" />
@@ -144,23 +223,9 @@ export function Timeline({
             const t = objet.data as Partial<TaskData>;
             const y = 36 + i * HAUTEUR_LIGNE;
             const couleur = policy.statuses.find((s) => s.id === t.status)?.color ?? 'var(--carte-vert-accent)';
+            const retard = enRetard(objet, policy, maintenant);
             return (
-              <g
-                key={objet.id}
-                role="button"
-                tabIndex={0}
-                aria-label={objet.name}
-                onClick={() => onOpen(objet)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    onOpen(objet);
-                  }
-                }}
-              >
-                <text x="5" y={y + 15}>
-                  {objet.name.length > 34 ? objet.name.slice(0, 33) + '…' : objet.name}
-                </text>
+              <g key={objet.id} aria-hidden="true">
                 <rect
                   x={x(de)}
                   y={y}
@@ -168,6 +233,8 @@ export function Timeline({
                   height="22"
                   rx="5"
                   fill={couleur}
+                  className={retard ? 'grc-timeline__barre grc-timeline__barre--retard' : 'grc-timeline__barre'}
+                  onClick={() => onOpen(objet)}
                 />
               </g>
             );

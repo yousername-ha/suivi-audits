@@ -20,6 +20,7 @@ export * from './couverture.js';
 export * from './risk-methods.js';
 export * from './method-bindings.js';
 export * from './recurrence.js';
+export * from './periodicites.js';
 export * from './ical.js';
 export * from './ical-repetition.js';
 export * from './cartes-perimetres.js';

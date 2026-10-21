@@ -23,6 +23,8 @@ interface Ligne {
   decisionAcceptation: { result: string; until: string | null; date: string; by: string } | null;
   prochaineRevue: string | null;
   enRetard: boolean;
+  /** Référence « object:<id> » de l'étude dont le risque est issu. */
+  etude: string | null;
 }
 
 const DEMARCHES: Record<string, string> = {
@@ -64,18 +66,25 @@ export function RegistreRisques({
   const [demarche, setDemarche] = useState<string | null>(null),
     [strategie, setStrategie] = useState<string | null>(null),
     [acceptation, setAcceptation] = useState<string | null>(null),
+    [etude, setEtude] = useState<string | null>(null),
     [retard, setRetard] = useState(false),
     [recherche, setRecherche] = useState('');
   const params = new URLSearchParams();
   if (demarche) params.set('demarche', demarche);
   if (strategie) params.set('strategie', strategie);
   if (acceptation) params.set('acceptation', acceptation);
+  if (etude) params.set('etude', etude);
   if (retard) params.set('enRetard', '1');
   if (recherche) params.set('recherche', recherche);
   const q = useQuery({
     queryKey: ['grc', smsi, 'risk-register', params.toString()],
     queryFn: () => get<{ items: Ligne[]; tronque: boolean }>(`/api/grc/${smsi}/risks/register?${params}`),
   });
+  const etudes = useQuery({
+    queryKey: ['grc', smsi, 'objects', 'risk_study'],
+    queryFn: () => get<{ items: GrcObject[] }>(`/api/grc/${smsi}/objects?kind=risk_study`),
+  });
+  const nomEtude = new Map((etudes.data?.items ?? []).map((e) => ['object:' + e.id, e.name] as const));
   const objet = (id: string) => get<GrcObject>(`/api/grc/${smsi}/objects/${id}`);
   return (
     <>
@@ -87,6 +96,13 @@ export function RegistreRisques({
           data={Object.entries(DEMARCHES).map(([value, label]) => ({ value, label }))}
           value={demarche}
           onChange={setDemarche}
+        />
+        <Select
+          label="Étude"
+          clearable
+          data={(etudes.data?.items ?? []).map((e) => ({ value: e.id, label: e.name }))}
+          value={etude}
+          onChange={setEtude}
         />
         <Select
           label="Option de traitement"
@@ -116,6 +132,7 @@ export function RegistreRisques({
               <Table.Tr>
                 <Table.Th>Risque</Table.Th>
                 <Table.Th className="col-p2">Démarche</Table.Th>
+                <Table.Th className="col-p3">Étude</Table.Th>
                 <Table.Th>Brut</Table.Th>
                 <Table.Th>Résiduel</Table.Th>
                 <Table.Th className="col-p2">Option</Table.Th>
@@ -132,6 +149,7 @@ export function RegistreRisques({
                     {r.name}
                   </Table.Td>
                   <Table.Td className="col-p2">{r.demarche ? (DEMARCHES[r.demarche] ?? r.demarche) : '—'}</Table.Td>
+                  <Table.Td className="col-p3">{r.etude ? (nomEtude.get(r.etude) ?? 'Étude liée') : '—'}</Table.Td>
                   <Table.Td>{r.brut ?? 'Non apprécié'}</Table.Td>
                   <Table.Td>
                     {r.residuel ?? '—'}

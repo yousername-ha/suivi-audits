@@ -376,7 +376,7 @@ function FicheChargee({ item, onClose }: { item: ElementDetail; onClose: () => v
           dialogue === 'supprimer'
             ? 'Ce brouillon, jamais publié, sera supprimé définitivement.'
             : dialogue === 'archiver'
-              ? 'L’élément n’acceptera plus de nouvel usage ; les usages existants et leurs versions sont conservés.'
+              ? `L’élément n’acceptera plus de nouvel usage ; ses ${item.usages} usage(s) actuel(s) et leurs versions sont conservés, et les évaluations passées gardent leurs niveaux et leurs libellés.`
               : 'L’élément redevient utilisable.'
         }
         confirmLabel={dialogue === 'supprimer' ? 'Supprimer' : dialogue === 'archiver' ? 'Archiver' : 'Restaurer'}

@@ -50,6 +50,9 @@ function stateLabel(value: unknown) {
   return STATES[String(value)] ?? String(value ?? '—');
 }
 type Page = { items: GrcObject[]; total: number; nextOffset: number | null };
+/** Rouge : majeure ; orange foncé : mineure ; violet : point sensible. Le libellé est toujours écrit : la couleur ne porte
+    jamais seule l'information. */
+const COULEUR_CLASSIFICATION = { majeure: 'red', mineure: 'orange', point_sensible: 'violet' } as const;
 /** Classification et lien de récidive d'un constat, affichés dans la liste (la classification de l'outil de suivi
     historique est reprise telle quelle). */
 function EtiquettesEcart({ o, taille }: { o: GrcObject; taille?: 'xs' }) {
@@ -57,7 +60,7 @@ function EtiquettesEcart({ o, taille }: { o: GrcObject; taille?: 'xs' }) {
   return (
     <>
       {classification && (
-        <Badge size={taille} variant="light" color={classification === 'majeure' ? 'red' : 'gray'}>
+        <Badge size={taille} variant="light" color={COULEUR_CLASSIFICATION[classification]}>
           {ECART_CLASSIFICATION_LABELS[classification]}
         </Badge>
       )}
@@ -94,7 +97,8 @@ export function BusinessRegistry({
     [fEtat, setFEtat] = useFiltreUrl('etat', 'all'),
     [fResp, setFResp] = useFiltreUrl('resp', 'all'),
     [fEcheance, setFEcheance] = useFiltreUrl('ech', 'all'),
-    [fOrigine, setFOrigine] = useFiltreUrl('orig', 'all');
+    [fOrigine, setFOrigine] = useFiltreUrl('orig', 'all'),
+    [fClassif, setFClassif] = useFiltreUrl('classif', 'all');
   const native = useInfiniteQuery({
     queryKey: ['grc', smsi, 'business-register', kind, search],
     initialPageParam: 0,
@@ -164,12 +168,13 @@ export function BusinessRegistry({
       (fEtat === 'all' || state(o) === fEtat) &&
       (fResp === 'all' || owner(o) === fResp) &&
       (fOrigine === 'all' || (fOrigine === 'existant') === o.id.startsWith('legacy:')) &&
+      (fClassif === 'all' || (classificationEcart(o.data) ?? 'non_classe') === fClassif) &&
       (fEcheance === 'all' ||
         (fEcheance === 'sans' && !echeanceDe(o)) ||
         (fEcheance === 'retard' && !!echeanceDe(o) && echeanceDe(o) < aujourdhui && o.data.status !== 'closed') ||
         (fEcheance === 'avenir' && !!echeanceDe(o) && echeanceDe(o) >= aujourdhui)),
   );
-  const filtresActifs = [fEtat, fResp, fEcheance, fOrigine].filter((f) => f !== 'all').length;
+  const filtresActifs = [fEtat, fResp, fEcheance, fOrigine, fClassif].filter((f) => f !== 'all').length;
   const actions = (o: GrcObject) => {
     const editable = writable && o.data.status !== 'closed';
     const primary =
@@ -302,6 +307,7 @@ export function BusinessRegistry({
               setFResp('all');
               setFEcheance('all');
               setFOrigine('all');
+              setFClassif('all');
             }}
           >
             <Select
@@ -330,6 +336,19 @@ export function BusinessRegistry({
               value={fEcheance}
               onChange={(v) => setFEcheance(v ?? 'all')}
             />
+            {kind === 'nonconformity' && (
+              <Select
+                label="Classification"
+                allowDeselect={false}
+                data={[
+                  { value: 'all', label: 'Toutes' },
+                  ...Object.entries(ECART_CLASSIFICATION_LABELS).map(([value, label]) => ({ value, label })),
+                  { value: 'non_classe', label: 'Non classé' },
+                ]}
+                value={fClassif}
+                onChange={(v) => setFClassif(v ?? 'all')}
+              />
+            )}
             <Select
               label="Origine"
               allowDeselect={false}
@@ -360,6 +379,16 @@ export function BusinessRegistry({
           : `${(native.data?.pages[0]?.total ?? 0) + (historical.data?.pages[0]?.total ?? 0)} `}
         {filtresActifs ? '' : kind === 'nonconformity' ? 'constats' : 'fiches'}
       </Text>
+      {kind === 'nonconformity' && (
+        <Group gap="xs" role="group" aria-label="Légende des classifications d’écart">
+          <Text size="xs">Classification :</Text>
+          {(Object.keys(COULEUR_CLASSIFICATION) as (keyof typeof COULEUR_CLASSIFICATION)[]).map((c) => (
+            <Badge key={c} size="xs" variant="light" color={COULEUR_CLASSIFICATION[c]}>
+              {ECART_CLASSIFICATION_LABELS[c]}
+            </Badge>
+          ))}
+        </Group>
+      )}
       {!rows.length && !native.isPending && (
         <Card withBorder>
           <Text>
@@ -397,6 +426,11 @@ export function BusinessRegistry({
                       Existant
                     </Badge>
                   )}
+                  {o.smsiId !== smsi && !o.id.startsWith('legacy:') && (
+                    <Badge size="xs" variant="light" color="encre">
+                      Registre partagé avec ce périmètre
+                    </Badge>
+                  )}
                   {kind === 'nonconformity' && <EtiquettesEcart o={o} taille="xs" />}
                   {Array.isArray(o.data.auditedFrameworks) && (o.data.auditedFrameworks as unknown[]).length > 0 && (
                     <Badge size="xs" variant="light" color="encre">
@@ -426,6 +460,11 @@ export function BusinessRegistry({
               <Text fw={600}>{o.name}</Text>
               <Text size="sm">{String(o.data.description ?? '').slice(0, 120)}</Text>
               {o.id.startsWith('legacy:') && <Badge variant="light">Existant</Badge>}
+              {o.smsiId !== smsi && !o.id.startsWith('legacy:') && (
+                <Badge variant="light" color="encre">
+                  Registre partagé avec ce périmètre
+                </Badge>
+              )}
               {kind === 'nonconformity' && <EtiquettesEcart o={o} />}
               <Text size="sm">
                 {state(o)} · {owner(o)}

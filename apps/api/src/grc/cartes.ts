@@ -15,6 +15,9 @@ export interface Ligne {
   seriesActives: number;
   ecartsOuverts: number;
   ecartsRetard: number;
+  ecartsMajeurs: number;
+  ecartsMineurs: number;
+  ecartsSensibles: number;
   bia: number;
   plans: number;
 }
@@ -23,6 +26,13 @@ export interface Ligne {
     030). Une occurrence validée n'est ni « en retard » ni rappelée, même si son statut d'action n'est pas terminal. */
 export const OCCURRENCE_VALIDEE = `EXISTS (SELECT 1 FROM occurrence_validations ov WHERE ov.objet_id=o.id AND ov.kind='validation'
   AND ov.seq=(SELECT max(seq) FROM occurrence_validations ox WHERE ox.objet_id=o.id))`;
+
+/** Fragment SQL : classification d'un écart (celle de la fiche, sinon celle de l'outil de suivi historique : champ `type`),
+    comme `classificationEcart` côté partagé ; NULL quand rien n'est renseigné. */
+const CLASSIFICATION = `CASE COALESCE(NULLIF(o.data->>'classification',''),
+    CASE o.data->>'type' WHEN 'NC maj' THEN 'majeure' WHEN 'NC min' THEN 'mineure' WHEN 'PS' THEN 'point_sensible' END)
+  WHEN 'majeure' THEN 'majeure' WHEN 'mineure' THEN 'mineure' WHEN 'point_sensible' THEN 'point_sensible' END`;
+const ECART_OUVERT = `o.kind='nonconformity' AND COALESCE(o.data->>'status','open')<>'closed'`;
 
 /** Compteurs des éléments visibles dans au moins un des périmètres donnés : une ligne par élément, donc chaque élément n'est
     compté qu'une fois, même s'il apparaît dans plusieurs périmètres par un registre partagé. Un statut terminal vient de la
@@ -37,8 +47,11 @@ export async function compter(g: Grc, ids: string[], masques: string[], maintena
        count(*) FILTER (WHERE o.kind='action' AND o.data->>'seriesId' IS NOT NULL AND NOT (COALESCE(o.data->>'status','')=ANY(t.ids)) AND NOT ${OCCURRENCE_VALIDEE})::int AS "occurrencesOuvertes",
        count(*) FILTER (WHERE o.kind='action' AND o.data->>'seriesId' IS NOT NULL AND NOT (COALESCE(o.data->>'status','')=ANY(t.ids)) AND NOT ${OCCURRENCE_VALIDEE} AND o.data->>'dueAt'<$3)::int AS "occurrencesRetard",
        count(*) FILTER (WHERE o.kind='task_series' AND o.data->'recurrence'->>'active'='true')::int AS "seriesActives",
-       count(*) FILTER (WHERE o.kind='nonconformity' AND COALESCE(o.data->>'status','open')<>'closed')::int AS "ecartsOuverts",
-       count(*) FILTER (WHERE o.kind='nonconformity' AND COALESCE(o.data->>'status','open')<>'closed' AND NULLIF(o.data->>'dueAt','')<substr($3,1,10))::int AS "ecartsRetard",
+       count(*) FILTER (WHERE ${ECART_OUVERT})::int AS "ecartsOuverts",
+       count(*) FILTER (WHERE ${ECART_OUVERT} AND NULLIF(o.data->>'dueAt','')<to_char($3::timestamptz AT TIME ZONE s.timezone,'YYYY-MM-DD'))::int AS "ecartsRetard",
+       count(*) FILTER (WHERE ${ECART_OUVERT} AND ${CLASSIFICATION}='majeure')::int AS "ecartsMajeurs",
+       count(*) FILTER (WHERE ${ECART_OUVERT} AND ${CLASSIFICATION}='mineure')::int AS "ecartsMineurs",
+       count(*) FILTER (WHERE ${ECART_OUVERT} AND ${CLASSIFICATION}='point_sensible')::int AS "ecartsSensibles",
        count(*) FILTER (WHERE o.kind='bia')::int AS bia,
        count(*) FILTER (WHERE o.kind='continuity_plan')::int AS plans
      FROM grc_objects o
@@ -54,7 +67,7 @@ export async function compter(g: Grc, ids: string[], masques: string[], maintena
   );
 }
 function versCompteurs(l: Ligne | null, ecarts: boolean, pilotage: boolean): CarteCompteurs {
-  const c: CarteCompteurs = { actions: null, recurrentes: null, ecarts: null, continuite: null, conformite: null };
+  const c: CarteCompteurs = { actions: null, recurrentes: null, ecarts: null, continuite: null, couverture: null };
   if (!l) return c;
   if (ecarts) {
     c.actions = { ouverts: l.actionsOuvertes, enRetard: l.actionsRetard };
@@ -62,7 +75,16 @@ function versCompteurs(l: Ligne | null, ecarts: boolean, pilotage: boolean): Car
       series: l.seriesActives,
       occurrences: { ouverts: l.occurrencesOuvertes, enRetard: l.occurrencesRetard },
     };
-    c.ecarts = { ouverts: l.ecartsOuverts, enRetard: l.ecartsRetard };
+    c.ecarts = {
+      ouverts: l.ecartsOuverts,
+      enRetard: l.ecartsRetard,
+      parClassification: {
+        majeure: l.ecartsMajeurs,
+        mineure: l.ecartsMineurs,
+        point_sensible: l.ecartsSensibles,
+        non_classe: l.ecartsOuverts - l.ecartsMajeurs - l.ecartsMineurs - l.ecartsSensibles,
+      },
+    };
   }
   if (pilotage) c.continuite = { bia: l.bia, plans: l.plans };
   return c;
@@ -90,29 +112,26 @@ export async function cartesPerimetres(g: Grc, user: SessionUser): Promise<Synth
         ? versCompteurs(await compter(g, [p.id], masques, maintenant), ecarts, pilotage)
         : versCompteurs(null, false, false);
     if (conformite) {
-      const c = await g.db.one<{ couvertes: number; exigences: number; referentiels: number }>(
-        `WITH publications AS (
-           SELECT DISTINCT ON (framework_id) framework_id,version,definition FROM grc_framework_versions
-            WHERE smsi_id=$1 ORDER BY framework_id,version DESC)
-         SELECT COALESCE(sum(jsonb_array_length(pub.definition->'requirements')),0)::int AS exigences,
-                COALESCE(sum((SELECT count(DISTINCT m.data->'target'->>'requirementId') FROM grc_objects m
-                   WHERE m.smsi_id=$1 AND m.kind='mapping' AND NOT m.archived AND m.data->>'status'='validated'
-                     AND m.data->'target'->>'frameworkId'=o.id::text AND (m.data->'target'->>'version')::int=pub.version
-                     AND m.data->>'type'<>'none')),0)::int AS couvertes,
-                count(*)::int AS referentiels
-           FROM grc_objects o JOIN publications pub ON pub.framework_id=o.id
-          WHERE o.smsi_id=$1 AND o.kind='framework' AND NOT o.archived AND o.data->>'enabled'='true'`,
-        [p.id],
+      // Même calcul que l'écran « Couverture » : référentiels rattachés ou hérités du périmètre, états d'exigence communs.
+      const reels = await g.rapprochements.coverage(p.id, user).then(
+        (v) => v.frameworks,
+        () => [], // périmètre non lisible pour la couverture : indisponible, jamais un zéro
       );
-      // Sans référentiel activé, la conformité n'est pas mesurable : indisponible, pas 0 %.
-      if (c && c.referentiels > 0) compteurs.conformite = { couvertes: c.couvertes, exigences: c.exigences };
+      if (reels.length)
+        compteurs.couverture = {
+          referentiels: reels.length,
+          exigences: reels.reduce((t, f) => t + f.requirements, 0),
+          applicables: reels.reduce((t, f) => t + f.etats.applicables, 0),
+          testees: reels.reduce((t, f) => t + f.etats.teste + f.etats.valide_metier, 0),
+          aDeterminer: reels.reduce((t, f) => t + f.etats.aDeterminer, 0),
+        };
     }
     // Total de la carte : le périmètre et ses sous-périmètres, chaque élément une seule fois (jamais la somme des cartes
-    // enfants). Sans sous-périmètre, c'est le décompte de la carte ; la conformité ne s'additionne pas.
+    // enfants). Sans sous-périmètre, c'est le décompte de la carte ; la couverture ne s'additionne pas.
     const ensemble = descendance(perimetres, p.id);
     const total: CarteCompteurs =
       ensemble.length === 1 || !(ecarts || pilotage)
-        ? { ...compteurs, conformite: ensemble.length === 1 ? compteurs.conformite : null }
+        ? { ...compteurs, couverture: ensemble.length === 1 ? compteurs.couverture : null }
         : versCompteurs(await compter(g, ensemble, masques, maintenant), ecarts, pilotage);
     out.push({
       id: p.id,
@@ -126,7 +145,7 @@ export async function cartesPerimetres(g: Grc, user: SessionUser): Promise<Synth
     });
   }
   // Total général : chaque élément compté une seule fois sur l'ensemble des périmètres accessibles (jamais la somme des cartes, qui
-  // compterait deux fois un registre partagé). La conformité ne s'additionne pas : indisponible.
+  // compterait deux fois un registre partagé). La couverture ne s'additionne pas : indisponible.
   const general =
     (ecarts || pilotage) && perimetres.length
       ? versCompteurs(

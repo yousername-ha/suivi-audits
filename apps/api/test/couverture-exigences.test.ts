@@ -99,7 +99,7 @@ describe('états de couverture', () => {
       ['R1', 'non_implemente', null],
       ['R2', 'non_implemente', null],
     ]);
-    expect(d.frameworks[0]!.etats).toMatchObject({ non_implemente: 2, applicables: 2 });
+    expect(d.frameworks[0]!.etats).toMatchObject({ non_implemente: 2, applicables: 2, aDeterminer: 2 });
   });
   it('progresse : partiel, implémenté, testé, puis validé métier par un administrateur du Pilotage', async () => {
     let r = await evaluer(parent, base, 0);
@@ -148,7 +148,11 @@ describe('états de couverture', () => {
       'R2',
     );
     expect(r.json().etat).toBe('non_applicable');
-    expect((await detail(parent)).frameworks[0]!.etats).toMatchObject({ non_applicable: 1, applicables: 1 });
+    expect((await detail(parent)).frameworks[0]!.etats).toMatchObject({
+      non_applicable: 1,
+      applicables: 1,
+      aDeterminer: 0,
+    });
   });
 });
 
@@ -205,5 +209,65 @@ describe('périmètres hiérarchiques', () => {
     await admin.put(`/api/grc/${enfant}/framework-attachments/${fw}`, { version: 1, confirm: 'RATTACHER' });
     await admin.put(`/api/grc/${enfant}/framework-attachments/${fw}/activation`, { enabled: false });
     expect((await evaluer(enfant, base, 1)).statusCode).toBe(404);
+  });
+});
+
+describe('liens et réalisations : aucune évaluation automatique', () => {
+  it('un écart et une action reliés à une exigence, puis l’action terminée, laissent l’évaluation et l’état inchangés', async () => {
+    const exigence = `requirement:${fw}:1:R1`;
+    // L'état d'exigence et l'évaluation ne dépendent que des évaluations saisies : le rattachement de mesures s'affiche à
+    // côté (couverture de traçabilité), il ne change ni l'un ni l'autre.
+    const lire = async () => {
+      const d = (await detail(parent)).detail[0]!;
+      return { etat: d.etat, evaluation: d.evaluation, historique: (await admin.get(url(parent))).json() };
+    };
+    const avant = await lire();
+    const ecart = await admin.post(`/api/grc/${parent}/objects`, {
+      kind: 'nonconformity',
+      name: 'Écart sur l’exigence',
+      data: { cause: 'Cause de recette', refs: [exigence] },
+    });
+    expect(ecart.statusCode, ecart.body).toBe(200);
+    const action = await admin.post(`/api/grc/${parent}/objects`, {
+      kind: 'action',
+      name: 'Action sur l’exigence',
+      data: {
+        description: '',
+        status: 'todo',
+        ownerId: null,
+        startAt: null,
+        dueAt: null,
+        priority: 'normal',
+        category: 'action',
+        justification: '',
+        reminderDays: 7,
+        dependencies: [],
+      },
+    });
+    expect(action.statusCode, action.body).toBe(200);
+    const lien = await admin.post(`/api/grc/${parent}/links`, {
+      source: 'object:' + action.json().id,
+      target: exigence,
+      type: 'implements',
+      note: 'Met en œuvre l’exigence',
+    });
+    expect(lien.statusCode, lien.body).toBe(200);
+    // L'action avance puis se termine : ni l'écart ni l'évaluation de l'exigence ne bougent d'eux-mêmes.
+    let o = action.json();
+    for (const [status, justification] of [
+      ['progress', ''],
+      ['done', 'Mesure vérifiée et preuve disponible'],
+    ] as const) {
+      const r = await admin.put(
+        `/api/grc/${parent}/objects/${o.id}`,
+        { kind: 'action', name: o.name, data: { ...o.data, status, justification } },
+        { 'if-match': `"${o.version}"` },
+      );
+      expect(r.statusCode, r.body).toBe(200);
+      o = r.json();
+    }
+    expect(await lire()).toEqual(avant);
+    const ecartApres = (await admin.get(`/api/grc/${parent}/objects/${ecart.json().id}`)).json();
+    expect(ecartApres.data.status ?? 'open').not.toBe('closed');
   });
 });

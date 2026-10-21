@@ -578,10 +578,22 @@
 }
 .grc-kanban {
   display: grid;
-  grid-template-columns: repeat(5, minmax(var(--grc-colonne-min), 1fr));
+  /* Autant de colonnes que d'états de la politique (jusqu'à 20) ; la zone est bornée et défile seule, les titres restent
+     visibles. */
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(var(--grc-colonne-min), 1fr);
+  align-items: start;
   gap: var(--mantine-spacing-md);
-  overflow-x: auto;
+  overflow: auto;
+  max-block-size: var(--grc-zone-hauteur);
   padding-bottom: var(--mantine-spacing-md);
+}
+.grc-kanban__titre {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+  padding-block: var(--mantine-spacing-2xs);
+  background: var(--mantine-color-body);
 }
 .grc-calendar {
   display: grid;
@@ -593,17 +605,51 @@
   min-height: var(--grc-jour-hauteur);
 }
 .grc-timeline {
-  overflow-x: auto;
+  display: flex;
+  align-items: flex-start;
+  overflow: auto;
+  max-block-size: var(--grc-zone-hauteur);
   border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
   border-radius: var(--mantine-radius-md);
 }
 .grc-timeline svg {
   display: block;
+  flex: none;
   font-size: var(--mantine-font-size-xs);
   fill: var(--mantine-color-text);
 }
-.grc-timeline g[role='button'] {
+/* Intitulés fixes : la colonne reste visible pendant le défilement horizontal de la période. */
+.grc-timeline__etiquettes {
+  position: sticky;
+  inset-inline-start: 0;
+  z-index: 1;
+  background: var(--mantine-color-body);
+  border-inline-end: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+}
+.grc-timeline__entete {
+  font-weight: 600;
+}
+.grc-timeline__ligne {
   cursor: pointer;
+}
+.grc-timeline__ligne:focus-visible text:first-of-type {
+  text-decoration: underline;
+}
+.grc-timeline__ligne:focus-visible {
+  outline: var(--suivi-trait-focus) solid var(--mantine-color-text);
+}
+.grc-timeline__retard,
+.grc-timeline__retard-legende {
+  fill: var(--mantine-color-red-light-color);
+  color: var(--mantine-color-red-light-color);
+  font-weight: 600;
+}
+.grc-timeline__barre {
+  cursor: pointer;
+}
+.grc-timeline__barre--retard {
+  stroke: var(--mantine-color-red-light-color);
+  stroke-width: 3;
 }
 .grc-timeline__mois {
   stroke: var(--mantine-color-default-border);
@@ -669,12 +715,14 @@
   }
 }
 
-/* Garder le contenu métier visible lorsque les destinations d'une famille sont dépliées. */
-@media (min-width: 64em) {
+/* Menu fixe : sa hauteur est bornée (tablette comprise) et il défile seul, sans entraîner la page. */
+@media (min-width: 36em) {
   .shell-nav-inner {
     max-height: calc(100dvh - var(--suivi-entete-h) - 2 * var(--mantine-spacing-md));
     overflow-y: auto;
   }
+}
+@media (min-width: 64em) {
   .nav-destination.mantine-NavLink-root {
     padding-block: var(--mantine-spacing-xs);
   }
@@ -1466,6 +1514,28 @@ rect.audit-niv-faible {
   stroke: var(--mantine-color-default-border);
   stroke-width: var(--suivi-trait-l);
 }
+.graphe-lien--flux {
+  stroke-dasharray: 6 6;
+  animation: graphe-flux 1s linear infinite;
+}
+@keyframes graphe-flux {
+  to {
+    stroke-dashoffset: -12;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .graphe-lien--flux {
+    animation: none;
+  }
+}
+.graphe-fleche {
+  fill: var(--mantine-color-dimmed);
+}
+.graphe-lien-fournisseur {
+  stroke: var(--mantine-color-dimmed);
+  stroke-width: var(--suivi-trait-l);
+  stroke-dasharray: 2 4;
+}
 .graphe-carte {
   box-sizing: border-box;
   block-size: 100%;
@@ -1484,8 +1554,15 @@ rect.audit-niv-faible {
   justify-content: space-between;
   gap: var(--mantine-spacing-xs);
 }
+.graphe-compteurs div {
+  flex-wrap: wrap;
+}
 .graphe-compteurs dt {
   margin: 0;
+}
+.graphe-compteurs .graphe-detail {
+  flex-basis: 100%;
+  text-align: start;
 }
 .graphe-compteurs dd {
   margin: 0;
@@ -1496,7 +1573,7 @@ rect.audit-niv-faible {
   border-block-start: var(--suivi-trait-l) solid var(--mantine-color-default-border);
 }
 .graphe-alerte {
-  color: var(--mantine-color-red-7);
+  color: var(--mantine-color-red-light-color);
   font-weight: 600;
 }
 .graphe-total {
@@ -1505,6 +1582,9 @@ rect.audit-niv-faible {
   border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
   border-radius: var(--mantine-radius-md);
   font-size: var(--mantine-font-size-sm);
+}
+.graphe-total dl {
+  margin: 0;
 }
 .graphe-total div {
   display: flex;

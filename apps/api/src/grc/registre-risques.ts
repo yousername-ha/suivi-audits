@@ -6,6 +6,9 @@ import {
   etatAcceptation,
   graviteProposee,
   indiceMenace,
+  MappingDefinition,
+  ScaleDefinition,
+  StudyConfiguration,
   type EtatAcceptation,
   type GrcKind,
 } from '@suivi/shared';
@@ -96,15 +99,25 @@ export async function etudeEbios(g: Grc, smsi: string, id: string, user: Session
   const ref = 'object:' + id;
   const kinds = [...new Set(EBIOS_ATELIERS.flatMap((a) => a.kinds as readonly GrcKind[]))];
   const objets = (
-    await g.db.q<{ id: string; kind: GrcKind; name: string; version: number; data: Record<string, unknown> }>(
-      `SELECT id,kind,name,version,data FROM grc_objects WHERE smsi_id=$1 AND NOT archived AND kind=ANY($2) AND data->>'studyRef'=$3
+    await g.db.q<{
+      id: string;
+      kind: GrcKind;
+      name: string;
+      version: number;
+      data: Record<string, unknown>;
+      updatedAt: string;
+    }>(
+      `SELECT id,kind,name,version,data,updated_at AS "updatedAt" FROM grc_objects WHERE smsi_id=$1 AND NOT archived AND kind=ANY($2) AND data->>'studyRef'=$3
        ORDER BY kind,name,id LIMIT 2000`,
       [smsi, kinds, ref],
     )
   ).rows;
   const parId = new Map(objets.map((o) => ['object:' + o.id, o]));
+  const gravites = await libellesGravite(g, etude.data.configuration);
   const enrichi = objets.map((o) => {
     const calcul: Record<string, unknown> = {};
+    if (o.kind === 'feared_event' && typeof o.data.severityLevel === 'string')
+      calcul.graviteCatalogue = gravites.get(o.data.severityLevel) ?? null;
     if (o.kind === 'ecosystem_party') calcul.menace = indiceMenace(o.data as Parameters<typeof indiceMenace>[0]);
     if (o.kind === 'strategic_scenario') {
       const refs = Array.isArray(o.data.fearedEventRefs) ? (o.data.fearedEventRefs as string[]) : [];
@@ -118,22 +131,50 @@ export async function etudeEbios(g: Grc, smsi: string, id: string, user: Session
     return { ...o, calcul };
   });
   const validations = (
-    await g.db.q<{ step: string; result: string; date: string; by: string; sourceVersion: number }>(
-      `SELECT step,result,performed_on::text AS date,created_by AS by,source_version AS "sourceVersion" FROM pilotage_decisions
+    await g.db.q<{ step: string; result: string; date: string; by: string; sourceVersion: number; at: string }>(
+      `SELECT step,result,performed_on::text AS date,created_by AS by,source_version AS "sourceVersion",created_at AS at FROM pilotage_decisions
        WHERE smsi_id=$1 AND source_ref=$2 AND operation='step_validation' ORDER BY created_at`,
       [smsi, ref],
     )
   ).rows;
   return {
     etude,
-    ateliers: EBIOS_ATELIERS.map((a) => ({
-      id: a.id,
-      label: a.label,
-      aide: a.aide,
-      kinds: a.kinds,
-      objets: enrichi.filter((o) => (a.kinds as readonly string[]).includes(o.kind)),
-      valide: validations.some((v) => v.step === a.id && v.sourceVersion === etude.version),
-      validations: validations.filter((v) => v.step === a.id),
-    })),
+    ateliers: EBIOS_ATELIERS.map((a) => {
+      const objetsAtelier = enrichi.filter((o) => (a.kinds as readonly string[]).includes(o.kind));
+      const courantes = validations.filter((v) => v.step === a.id && v.sourceVersion === etude.version);
+      const derniere = courantes.at(-1);
+      // Un élément modifié (ou ajouté) après la dernière validation la rend caduque : jamais de faux « validé ».
+      const modifie =
+        !!derniere && objetsAtelier.some((o) => new Date(o.updatedAt).getTime() > new Date(derniere.at).getTime());
+      return {
+        id: a.id,
+        label: a.label,
+        aide: a.aide,
+        kinds: a.kinds,
+        objets: objetsAtelier,
+        valide: !!derniere && !modifie,
+        modifieDepuisValidation: modifie,
+        validations: validations.filter((v) => v.step === a.id),
+      };
+    }),
   };
+}
+
+/** Libellés des niveaux de gravité de l'échelle d'arrivée de la correspondance épinglée par l'étude (vide sans liaison). */
+async function libellesGravite(g: Grc, configuration: unknown) {
+  const noms = new Map<string, string>();
+  const conf = StudyConfiguration.safeParse(configuration);
+  if (!conf.success || !conf.data.severityMapping) return noms;
+  const def = async (ref: { item: string; version: number }) =>
+    (
+      await g.db.one<{ definition: unknown }>('SELECT definition FROM cfg_versions WHERE item_id=$1 AND version=$2', [
+        ref.item,
+        ref.version,
+      ])
+    )?.definition;
+  const mapping = MappingDefinition.safeParse(await def(conf.data.severityMapping));
+  if (!mapping.success) return noms;
+  const echelle = ScaleDefinition.safeParse(await def(mapping.data.to));
+  if (echelle.success) for (const l of echelle.data.levels) noms.set(l.id, l.label);
+  return noms;
 }

@@ -6,6 +6,8 @@
 import {
   GRC_MODULES,
   RANG_ROLE,
+  Rights,
+  effectivePermissions,
   DeplacementBody,
   RegistreBody,
   RegistrePerimetresBody,
@@ -15,6 +17,9 @@ import {
   REGISTRE_LABELS,
   ROLE_LABELS,
   roleSuffit,
+  type AccesSujetPage,
+  type ApercuDroit,
+  type AccesSujetRegistre,
   type Action,
   type Besoin,
   type GrcObject,
@@ -29,6 +34,7 @@ import {
 } from '@suivi/shared';
 import type { SessionUser } from '../auth.js';
 import type { Client } from '../db/db.js';
+import { loadGrants } from '../rights.js';
 import { HttpError } from '../http/errors.js';
 import { DEFAULT_SMSI, objectColumns, objectDto, type ObjectRow, type Grc } from './core.js';
 
@@ -193,6 +199,19 @@ export class GrcRegistres {
     const masques: string[] = [];
     for (const reg of r.rows) if (!(await this.peut(user, reg, null, 'lire', c))) masques.push(reg.id);
     return masques;
+  }
+
+  /** Registres lisibles qui portent ce périmètre sans en être la référence (registre multi-périmètre) : leurs éléments
+      apparaissent aussi dans les vues de ce périmètre, sans doublon ni copie. Un registre archivé ou illisible n'y figure pas. */
+  async partagesLisibles(user: SessionUser, smsi: string, c?: Client): Promise<string[]> {
+    const r = await this.q(c).query<RegistreRow>(
+      `SELECT ${colonnesR} FROM registres r JOIN registre_perimetres p ON p.registre_id=r.id
+        WHERE p.smsi_id=$1 AND r.reference_smsi_id<>$1 AND NOT r.archived`,
+      [smsi],
+    );
+    const ids: string[] = [];
+    for (const reg of r.rows) if (await this.peut(user, reg, null, 'lire', c)) ids.push(reg.id);
+    return ids;
   }
 
   /** Tous les registres restreints que l'utilisateur ne peut pas lire, quel que soit leur périmètre de référence : leurs
@@ -798,6 +817,121 @@ export class GrcRegistres {
       )
     ).rows.map((r) => ({ ...r, grantedAt: r.grantedAt.toISOString() }));
   }
+  /** Vue des accès d'une personne ou d'un groupe : pour chaque registre, le rôle attribué (et son origine) et, pour une
+      personne, les droits effectifs calculés par le serveur avec les contrôles réels. Réservée aux administrateurs des
+      droits ; paginée et filtrable par nom de registre. Les registres archivés sont exclus. */
+  async accesDuSujet(
+    type: 'utilisateur' | 'groupe',
+    id: string,
+    f: { q: string; limite: number; decalage: number },
+  ): Promise<AccesSujetPage> {
+    const sujet =
+      type === 'utilisateur'
+        ? await this.g.db.one<{ id: string; libelle: string; username: string }>(
+            "SELECT id, coalesce(nullif(display_name,''),username) AS libelle, username FROM users WHERE id=$1",
+            [id],
+          )
+        : await this.g.db.one<{ id: string; libelle: string; username: string }>(
+            'SELECT id, name AS libelle, name AS username FROM groups WHERE id=$1',
+            [id],
+          );
+    if (!sujet) throw new HttpError(404, type === 'utilisateur' ? 'Compte introuvable.' : 'Groupe introuvable.');
+    const motif = '%' + f.q.replace(/[\\%_]/g, '\\$&') + '%';
+    const filtre = 'NOT r.archived AND r.name ILIKE $1';
+    const total = Number(
+      (await this.g.db.one<{ n: string }>(`SELECT count(*)::text AS n FROM registres r WHERE ${filtre}`, [motif]))!.n,
+    );
+    const regs = (
+      await this.g.db.q<RegistreRow>(
+        `SELECT ${colonnesR} FROM registres r WHERE ${filtre} ORDER BY r.kind, r.name, r.id LIMIT $2 OFFSET $3`,
+        [motif, f.limite, f.decalage],
+      )
+    ).rows;
+    const ids = regs.map((r) => r.id);
+    // Rôles attribués, directement ou par un groupe (pour un groupe : les siens seulement).
+    const droits = ids.length
+      ? (
+          await this.g.db.q<{ registre: string; role: RoleRessource; direct: boolean; groupe: string | null }>(
+            type === 'utilisateur'
+              ? `SELECT d.resource_id AS registre, d.role, d.subject_type='utilisateur' AS direct, g.name AS groupe
+                   FROM droits_ressources d LEFT JOIN groups g ON d.subject_type='groupe' AND g.id=d.subject_id
+                  WHERE d.resource_type='registre' AND d.resource_id = ANY($1::uuid[])
+                    AND ((d.subject_type='utilisateur' AND d.subject_id=$2)
+                      OR (d.subject_type='groupe' AND d.subject_id IN (SELECT group_id FROM user_groups WHERE user_id=$2)))`
+              : `SELECT d.resource_id AS registre, d.role, false AS direct, g.name AS groupe
+                   FROM droits_ressources d JOIN groups g ON g.id=d.subject_id
+                  WHERE d.resource_type='registre' AND d.resource_id = ANY($1::uuid[])
+                    AND d.subject_type='groupe' AND d.subject_id=$2`,
+            [ids, id],
+          )
+        ).rows
+      : [];
+    const perimetres = ids.length
+      ? (
+          await this.g.db.q<{ registre: string; id: string; name: string }>(
+            `SELECT p.registre_id AS registre, s.id, s.name FROM registre_perimetres p JOIN grc_smsis s ON s.id=p.smsi_id
+              WHERE p.registre_id = ANY($1::uuid[]) ORDER BY s.name`,
+            [ids],
+          )
+        ).rows
+      : [];
+    // La personne telle que les contrôles la voient : mêmes droits de module, mêmes périmètres, mêmes administrateurs.
+    const personne: SessionUser | null =
+      type === 'utilisateur'
+        ? ({
+            id: sujet.id,
+            username: sujet.username,
+            displayName: sujet.libelle,
+            roles: [],
+            rights: new Rights(effectivePermissions(await loadGrants(this.g.db.pool, sujet.id)).keys()),
+          } as unknown as SessionUser)
+        : null;
+    const admin = personne ? await this.g.isAdmin(personne) : false;
+    const items: AccesSujetRegistre[] = [];
+    for (const reg of regs) {
+      const mes = droits.filter((d) => d.registre === reg.id);
+      let role: RoleRessource | null = null;
+      for (const d of mes) if (!role || RANG_ROLE[d.role] > RANG_ROLE[role]) role = d.role;
+      const peut = personne
+        ? {
+            lire: await this.peut(personne, reg, null, 'lire'),
+            contribuer: await this.peut(personne, reg, null, 'contribuer'),
+            gerer: await this.peut(personne, reg, null, 'gerer'),
+          }
+        : undefined;
+      const source: AccesSujetRegistre['source'] = admin
+        ? 'administrateur'
+        : role
+          ? 'role'
+          : peut?.lire
+            ? 'module'
+            : 'aucune';
+      items.push({
+        registre: {
+          id: reg.id,
+          name: reg.name,
+          kind: reg.kind,
+          restreint: reg.restricted,
+          perimetres: perimetres.filter((p) => p.registre === reg.id).map(({ id: pid, name }) => ({ id: pid, name })),
+        },
+        role,
+        origines: mes.map((d) =>
+          d.direct
+            ? { type: 'direct', libelle: 'Attribué directement' }
+            : { type: 'groupe', libelle: d.groupe ?? 'Groupe supprimé' },
+        ),
+        ...(peut ? { peut } : {}),
+        source,
+      });
+    }
+    return {
+      sujet: { type, id: sujet.id, libelle: sujet.libelle },
+      total,
+      limite: f.limite,
+      decalage: f.decalage,
+      items,
+    };
+  }
   /** Utilisateurs et groupes proposables à l'attribution d'un droit : réservé à qui gère la ressource (aucune liste d'annuaire
       n'est servie aux autres). */
   async titulaires(type: TypeRessource, id: string, user: SessionUser, q: string) {
@@ -858,6 +992,67 @@ export class GrcRegistres {
       );
       return { id: r.id };
     }, user.username);
+  }
+  /** Aperçu d'une attribution : rôle avant et après, personnes concernées, rôles qui subsistent. N'écrit rien. */
+  async apercuDroit(type: TypeRessource, id: string, input: DroitBody, user: SessionUser): Promise<ApercuDroit> {
+    const b = DroitBody.parse(input);
+    await this.ressource(type, id, user);
+    const titulaire =
+      b.subjectType === 'utilisateur'
+        ? await this.g.db.one<{ libelle: string }>(
+            "SELECT coalesce(nullif(display_name,''),username) AS libelle FROM users WHERE id=$1 AND NOT disabled",
+            [b.subjectId],
+          )
+        : await this.g.db.one<{ libelle: string }>('SELECT name AS libelle FROM groups WHERE id=$1', [b.subjectId]);
+    if (!titulaire) throw new HttpError(422, 'Titulaire du droit introuvable.');
+    const avant =
+      (
+        await this.g.db.one<{ role: RoleRessource }>(
+          'SELECT role FROM droits_ressources WHERE resource_type=$1 AND resource_id=$2 AND subject_type=$3 AND subject_id=$4',
+          [type, id, b.subjectType, b.subjectId],
+        )
+      )?.role ?? null;
+    let personnes = 1;
+    let subsistants: ApercuDroit['subsistants'] = [];
+    let dejaPlusEleves = 0;
+    if (b.subjectType === 'utilisateur') {
+      subsistants = (
+        await this.g.db.q<{ role: RoleRessource; libelle: string }>(
+          `SELECT d.role, g.name AS libelle FROM droits_ressources d JOIN groups g ON g.id=d.subject_id
+            WHERE d.resource_type=$1 AND d.resource_id=$2 AND d.subject_type='groupe'
+              AND d.subject_id IN (SELECT group_id FROM user_groups WHERE user_id=$3) ORDER BY g.name`,
+          [type, id, b.subjectId],
+        )
+      ).rows.map((r) => ({ role: r.role, libelle: `Groupe ${r.libelle}` }));
+    } else {
+      personnes = Number(
+        (await this.g.db.one<{ n: string }>(
+          `SELECT count(*)::text AS n FROM user_groups ug JOIN users u ON u.id=ug.user_id
+              WHERE ug.group_id=$1 AND NOT u.disabled AND (u.expires_at IS NULL OR u.expires_at>now())`,
+          [b.subjectId],
+        ))!.n,
+      );
+      dejaPlusEleves = Number(
+        (await this.g.db.one<{ n: string }>(
+          `SELECT count(DISTINCT d.subject_id)::text AS n FROM droits_ressources d
+              WHERE d.resource_type=$1 AND d.resource_id=$2 AND d.subject_type='utilisateur'
+                AND d.subject_id IN (SELECT user_id FROM user_groups WHERE group_id=$3)
+                AND CASE d.role WHEN 'lecteur' THEN 1 WHEN 'contributeur' THEN 2 ELSE 3 END >
+                    CASE $4::text WHEN 'lecteur' THEN 1 WHEN 'contributeur' THEN 2 ELSE 3 END`,
+          [type, id, b.subjectId, b.role],
+        ))!.n,
+      );
+    }
+    return {
+      apercu: true,
+      titulaire: { type: b.subjectType, id: b.subjectId, libelle: titulaire.libelle },
+      avant,
+      apres: b.role,
+      personnes,
+      subsistants,
+      dejaPlusEleves,
+      inchange: avant === b.role,
+    };
   }
   async retirer(type: TypeRessource, id: string, droitId: string, user: SessionUser, ip: string) {
     return this.g.db.tx(async (c) => {

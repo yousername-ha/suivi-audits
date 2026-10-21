@@ -265,6 +265,65 @@ describe('journal d’audit', () => {
   });
 });
 
+describe('journal d’audit : filtres, export JSON, troncature', () => {
+  it('filtre par compte et par période (jours inclus)', async () => {
+    await t.svc.db.audit({ username: 'filtre_a' }, null, 'test.filtre');
+    await t.svc.db.audit({ username: 'filtre_b' }, null, 'test.filtre');
+    const a = await login(t, admin);
+    const aujourdhui = new Date().toISOString().slice(0, 10);
+    const noms = async (q: string) =>
+      ((await a.get('/api/admin/audit?limit=500&' + q)).json() as { username: string }[]).map((x) => x.username);
+    expect(new Set(await noms('user=filtre_a'))).toEqual(new Set(['filtre_a']));
+    expect(await noms(`from=${aujourdhui}&to=${aujourdhui}&user=filtre_b`)).toContain('filtre_b');
+    expect(await noms('from=2999-01-01')).toEqual([]);
+    expect(await noms('to=2000-01-01')).toEqual([]);
+    expect((await a.get('/api/admin/audit?from=pas-une-date')).statusCode).toBe(422);
+  });
+
+  it('signale la troncature : page pleine, il reste des entrées plus anciennes', async () => {
+    const a = await login(t, admin);
+    const pleine = await a.get('/api/admin/audit?limit=1');
+    expect(pleine.headers['x-journal-tronque']).toBe('1');
+    const large = await a.get('/api/admin/audit?limit=5000');
+    expect(large.headers['x-journal-tronque']).toBeUndefined();
+  });
+
+  it('export JSON et CSV réservés au droit d’exportation, tracés avec leur filtre ; la lecture seule voit la liste', async () => {
+    await t.svc.db.q(
+      "INSERT INTO roles(id,name,permissions) VALUES ('journal_lecteur','Lecture du journal',ARRAY['administration:lire'])",
+    );
+    const lecteurJournal = await makeUser(t, 'journal_lecteur', 'journal_lecteur');
+    const l = await login(t, lecteurJournal);
+    expect((await l.get('/api/admin/audit')).statusCode).toBe(200);
+    expect((await l.get('/api/admin/audit?format=csv')).statusCode).toBe(403);
+    expect((await l.get('/api/admin/audit?format=json&export=1')).statusCode).toBe(403);
+    const a = await login(t, admin);
+    const r = await a.get('/api/admin/audit?format=json&export=1&user=filtre_a');
+    expect(r.statusCode, r.body).toBe(200);
+    expect(r.headers['content-type']).toMatch(/application\/json/);
+    expect(r.headers['content-disposition']).toMatch(/attachment; filename="journal-audit-.*\.json"/);
+    expect(r.headers['cache-control']).toBe('no-store');
+    expect((r.json() as { username: string }[]).every((x) => x.username === 'filtre_a')).toBe(true);
+    const trace = await t.svc.db.one<{ details: { format: string; filters: { user: string | null } } }>(
+      "SELECT details FROM audit_log WHERE action='admin.audit_export' ORDER BY id DESC LIMIT 1",
+    );
+    expect(trace!.details).toMatchObject({ format: 'json', filters: { user: 'filtre_a' } });
+  });
+});
+
+describe('informations système', () => {
+  it('réservées à la lecture de l’administration, avec les volumes réels et la date du relevé', async () => {
+    expect((await (await login(t, rw)).get('/api/admin/info')).statusCode).toBe(403);
+    const info = (await (await login(t, admin)).get('/api/admin/info')).json();
+    expect(info.postgres).toMatch(/^\d+/);
+    expect(info.node).toBe(process.version);
+    expect(info.dbSize).toBeTruthy();
+    expect(info.documentsBytes).toEqual(expect.any(Number));
+    expect(Number.isNaN(Date.parse(info.measuredAt))).toBe(false);
+    expect(info.counts).toMatchObject({ users: expect.any(Number), audit: expect.any(Number) });
+  });
+});
+
 describe('OpenAPI', () => {
   it('décrit les routes avec leur niveau d’accès', async () => {
     const a = await login(t, rw);

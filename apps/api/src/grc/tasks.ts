@@ -42,10 +42,11 @@ export class GrcTasks {
     await this.g.permission(user, 'ecarts', 'lire');
     // Les actions d'un registre restreint que la personne ne peut pas lire n'apparaissent pas (R05).
     const masques = await this.g.registres.inaccessiblesPartout(user);
+    const partages = await this.g.registres.partagesLisibles(user, smsi);
     const items = (
       await this.g.db.q<ObjectRow>(
-        `SELECT ${objectColumns} FROM grc_objects WHERE smsi_id=$1 AND kind='action' AND NOT archived AND (registre_id IS NULL OR NOT registre_id=ANY($4::uuid[])) AND (data->>'dueAt' IS NULL OR data->>'dueAt'>=$2 AND data->>'dueAt'<=$3) ORDER BY data->>'dueAt' NULLS LAST,id LIMIT 2001`,
-        [smsi, from, to, masques],
+        `SELECT ${objectColumns} FROM grc_objects WHERE (smsi_id=$1 OR registre_id=ANY($5::uuid[])) AND kind='action' AND NOT archived AND (registre_id IS NULL OR NOT registre_id=ANY($4::uuid[])) AND (data->>'dueAt' IS NULL OR data->>'dueAt'>=$2 AND data->>'dueAt'<=$3) ORDER BY data->>'dueAt' NULLS LAST,id LIMIT 2001`,
+        [smsi, from, to, masques, partages],
       )
     ).rows;
     const legacy = (await this.g.legacyTasks.list(smsi, user)).filter(
@@ -81,14 +82,15 @@ export class GrcTasks {
     const policy = (await this.g.policy(smsi, user)).definition;
     const closed = policy.statuses.filter((s) => s.terminal).map((s) => s.id);
     const masques = await this.g.registres.inaccessiblesPartout(user);
+    const partages = await this.g.registres.partagesLisibles(user, smsi);
     const summary = await this.g.db.one(
-      `SELECT count(*)::int total,count(*) FILTER(WHERE o.data->>'status'=ANY($2))::int closed,count(*) FILTER(WHERE NOT(o.data->>'status'=ANY($2)) AND NOT ${OCCURRENCE_VALIDEE} AND o.data->>'dueAt'<$3)::int overdue,count(*) FILTER(WHERE o.data->>'ownerId' IS NULL AND COALESCE(o.data->'responsable','null'::jsonb)='null'::jsonb)::int unassigned FROM grc_objects o WHERE o.smsi_id=$1 AND o.kind='action' AND NOT o.archived AND (o.registre_id IS NULL OR NOT o.registre_id=ANY($4::uuid[]))`,
-      [smsi, closed, new Date().toISOString(), masques],
+      `SELECT count(*)::int total,count(*) FILTER(WHERE o.data->>'status'=ANY($2))::int closed,count(*) FILTER(WHERE NOT(o.data->>'status'=ANY($2)) AND NOT ${OCCURRENCE_VALIDEE} AND o.data->>'dueAt'<$3)::int overdue,count(*) FILTER(WHERE o.data->>'ownerId' IS NULL AND COALESCE(o.data->'responsable','null'::jsonb)='null'::jsonb)::int unassigned FROM grc_objects o WHERE (o.smsi_id=$1 OR o.registre_id=ANY($5::uuid[])) AND o.kind='action' AND NOT o.archived AND (o.registre_id IS NULL OR NOT o.registre_id=ANY($4::uuid[]))`,
+      [smsi, closed, new Date().toISOString(), masques, partages],
     );
     const byStatus = (
       await this.g.db.q(
-        `SELECT data->>'status' status,count(*)::int count FROM grc_objects WHERE smsi_id=$1 AND kind='action' AND NOT archived AND (registre_id IS NULL OR NOT registre_id=ANY($2::uuid[])) GROUP BY data->>'status'`,
-        [smsi, masques],
+        `SELECT data->>'status' status,count(*)::int count FROM grc_objects WHERE (smsi_id=$1 OR registre_id=ANY($3::uuid[])) AND kind='action' AND NOT archived AND (registre_id IS NULL OR NOT registre_id=ANY($2::uuid[])) GROUP BY data->>'status'`,
+        [smsi, masques, partages],
       )
     ).rows;
     const legacy = await this.g.legacyTasks.list(smsi, user);
@@ -173,6 +175,33 @@ export class GrcTasks {
       (l) => l.actionId !== apres && l.validation.etat !== 'validee' && l.fenetre?.etat === 'ouverte',
     );
     return { occurrence: occurrence ?? null };
+  }
+  /** Occurrence suivante dans la liste courante (ids ordonnés par le client, toutes séries confondues) : la première, après
+      `apres`, qui n'est pas validée, dont la fenêtre est ouverte et que la personne peut lire. Une occurrence illisible ou
+      absente de la base est ignorée ; rien n'est validé ni modifié. */
+  async prochaineDansListe(smsi: string, liste: string[], apres: string, user: SessionUser) {
+    await this.g.access(smsi, user);
+    const ids = [...new Set(liste)].slice(0, 500);
+    const debut = ids.indexOf(apres);
+    const series = new Map<string, Record<string, unknown> | null>();
+    for (const id of ids.slice(debut + 1)) {
+      const o = await this.g.raw(id);
+      if (!o || o.archived || o.kind !== 'action' || typeof o.data.seriesId !== 'string' || !o.registreId) continue;
+      try {
+        await this.g.registres.exigerElement(user, o, 'lire');
+      } catch {
+        continue;
+      }
+      const serieId = o.data.seriesId;
+      if (!series.has(serieId)) series.set(serieId, (await this.g.raw(serieId))?.data ?? null);
+      const donneesSerie = series.get(serieId);
+      const dueAt = typeof o.data.dueAt === 'string' ? o.data.dueAt : null;
+      if (!donneesSerie || !dueAt) continue;
+      const [ligne] = await this.enrichir(donneesSerie, [{ actionId: id, data: o.data }]);
+      if (ligne!.validation.etat !== 'validee' && ligne!.fenetre?.etat === 'ouverte')
+        return { occurrence: { actionId: id, name: o.name } };
+    }
+    return { occurrence: null };
   }
   /** Import d'un calendrier iCalendar dans les jours exclus d'une série. L'aperçu décrit l'effet sans rien écrire ; l'import
       est tout ou rien (une erreur dans le fichier ne modifie rien) et rejouer le même fichier n'ajoute aucun doublon. */

@@ -34,7 +34,9 @@ import {
 import { ConfirmButton, DataTable, Page, PageHeader, StatusChip } from '@suivi/ui';
 import { api, get } from '../api';
 import { ErrorAlert, fmtDate } from '../components/common';
+import { useCan } from '../session';
 import { libelleDesignation, SelecteurResponsableTypé, useProposables } from '../components/selecteurs';
+import { AccesSujets } from './AccesSujets';
 import { Droits } from './Droits';
 import { ElementsFiltres } from './ElementsFiltres';
 
@@ -88,6 +90,7 @@ export function RegistresPage() {
 
 /* ------------------------------------------------------------------------------------------------------- liste */
 function ListeRegistres() {
+  const can = useCan();
   const nav = useNavigate();
   const qc = useQueryClient();
   const [kind, setKind] = useState<string | null>(null);
@@ -108,7 +111,13 @@ function ListeRegistres() {
         <Tabs.List>
           <Tabs.Tab value="registres">Registres</Tabs.Tab>
           <Tabs.Tab value="elements">Éléments par périmètre</Tabs.Tab>
+          {can('administration', 'lire') && <Tabs.Tab value="acces">Vue des accès</Tabs.Tab>}
         </Tabs.List>
+        {can('administration', 'lire') && (
+          <Tabs.Panel value="acces" pt="md">
+            <AccesSujets />
+          </Tabs.Panel>
+        )}
         <Tabs.Panel value="registres" pt="md">
           <Stack>
             <Group align="end">

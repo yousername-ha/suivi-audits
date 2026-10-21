@@ -104,6 +104,67 @@ describe('SMSI, permissions et décisions', () => {
     );
     await expect(t.svc.db.q('UPDATE grc_risk_evaluations SET rationale=$1', ['Altération'])).rejects.toThrow();
   });
+  it('refuse d’approuver une appréciation dont le résiduel est inacceptable quand l’option est « accepter »', async () => {
+    // Méthode sans champ obligatoire : les étapes se valident sans saisie, seul le critère d'acceptabilité est en jeu.
+    const modele = methodTemplate('ebios_rm');
+    const definition = {
+      ...modele,
+      name: 'Méthode de recette sans champ obligatoire',
+      fields: modele.fields.map((f) => ({ ...f, required: false })),
+    };
+    const p = await a.post(root() + '/methods/preview', { id: null, definition });
+    expect(p.statusCode, p.body).toBe(200);
+    const pub = await a.post(
+      root() + '/methods/publish',
+      {
+        id: null,
+        definition,
+        previewId: p.json().previewId,
+        reason: 'Politique approuvée pour la recette',
+        confirm: 'PUBLIER',
+      },
+      { 'if-match': '"0"' },
+    );
+    expect(pub.statusCode, pub.body).toBe(200);
+    const methodeId = pub.json().methodId as string;
+    const etapes = Object.fromEntries(
+      definition.stages.map((e) => [e.id, { status: 'validated', values: {}, comment: '' }]),
+    );
+    const r = await a.post(root() + '/objects', {
+      kind: 'risk',
+      name: 'Risque à accepter',
+      data: {
+        description: 'Analyse',
+        code: 'R02',
+        ownerId: null,
+        methodId: methodeId,
+        methodVersion: 1,
+        domain: 'SSI',
+        entity: 'Entité',
+        scope: 'Périmètre',
+        strategy: 'accept',
+        acceptanceReason: 'Raison documentée',
+        reviewAt: '2027-01-01',
+        stages: etapes,
+      },
+    });
+    expect(r.statusCode, r.body).toBe(200);
+    const maximum = { dimensions: { severity: 'impact_4' }, likelihood: 'likelihood_4', level: null, inputs: {} };
+    const forte = await a.post(root() + `/risks/${r.json().id}/preview`, {
+      ratings: { gross: maximum, residual: maximum },
+      rationale: 'Analyse documentée et conservée',
+      decision: 'approved',
+    });
+    expect(forte.statusCode, forte.body).toBe(409);
+    expect(forte.body).toMatch(/acceptabilité/);
+    // Un résiduel acceptable est approuvable, et un brouillon n'est jamais bloqué par ce critère.
+    const brouillon = await a.post(root() + `/risks/${r.json().id}/preview`, {
+      ratings: { gross: maximum, residual: maximum },
+      rationale: 'Analyse documentée et conservée',
+      decision: 'draft',
+    });
+    expect(brouillon.statusCode, brouillon.body).toBe(200);
+  });
   it('projette le registre et ses méthodes, sans fuite ni copie modifiable', async () => {
     const r = await a.get(root() + '/risk-map');
     expect(r.statusCode, r.body).toBe(200);

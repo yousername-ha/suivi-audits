@@ -67,6 +67,10 @@ test('Actions : Timeline avec barre datée, puis droit de contributeur attribué
     await fiche.getByRole('combobox', { name: 'Utilisateur ou groupe' }).click();
     await page.getByRole('option').first().click();
     await fiche.getByRole('button', { name: 'Attribuer' }).click();
+    await page
+      .getByRole('dialog', { name: /Attribuer un droit/ })
+      .getByRole('button', { name: 'Confirmer l’attribution' })
+      .click();
     await expect(
       fiche.getByRole('region', { name: /Droits attribués sur l’élément/ }).getByText('Contributeur'),
     ).toBeVisible();

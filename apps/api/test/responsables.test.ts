@@ -140,4 +140,37 @@ describe('responsables typés', () => {
     // La fiche existante reste lisible.
     expect((await admin.get(`/api/grc/${S}/objects/${a.json().id}`)).statusCode).toBe(200);
   });
+
+  it('désigner ou changer un responsable ne modifie aucun droit (022-04)', async () => {
+    const droits = async () =>
+      JSON.stringify(
+        await Promise.all(
+          [
+            'SELECT user_id, role_id, modules FROM user_roles ORDER BY 1,2',
+            'SELECT group_id, role_id FROM group_roles ORDER BY 1,2',
+            'SELECT resource_id, subject_type, subject_id, role FROM droits_ressources ORDER BY 1,2,3,4',
+            'SELECT smsi_id, user_id, can_write FROM grc_members ORDER BY 1,2',
+            'SELECT user_id, group_id FROM user_groups ORDER BY 1,2',
+          ].map(async (q) => (await t.svc.db.q(q)).rows),
+        ),
+      );
+    const avant = await droits();
+    const a = await creer({ responsable: { type: 'groupe', id: groupe } });
+    expect(a.statusCode, a.body).toBe(200);
+    const version = () => admin.get(`/api/grc/${S}/objects/${a.json().id}`);
+    for (const responsable of [
+      { type: 'fonction', id: fonction },
+      { type: 'utilisateur', id: u2 },
+    ]) {
+      const lu = await version();
+      const maj = await admin.put(
+        `/api/grc/${S}/objects/${a.json().id}`,
+        { kind: 'action', name: 'Action de recette', data: donnees({ responsable }) },
+        { 'if-match': String(lu.headers.etag) },
+      );
+      expect(maj.statusCode, maj.body).toBe(200);
+    }
+    // Ni rôle, ni appartenance, ni droit de ressource : le responsable n'est pas une habilitation.
+    expect(await droits()).toBe(avant);
+  });
 });

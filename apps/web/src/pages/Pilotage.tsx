@@ -151,7 +151,10 @@ export function PilotagePage() {
     can = useCan(),
     navigate = useNavigate(),
     [params, setParams] = useSearchParams();
+  // `?perimetre=<id>` (lien d'une carte de périmètre) l'emporte sur le dernier choix mémorisé.
+  const perimetreUrl = params.get('perimetre');
   const [selected, setSelected] = useState<string | null>(() => {
+      if (perimetreUrl) return perimetreUrl;
       try {
         return sessionStorage.getItem('pilotage-scope');
       } catch {
@@ -172,6 +175,9 @@ export function PilotagePage() {
     [schedule, setSchedule] = useState<GrcObject | null>(null),
     [initial, setInitial] = useState<Record<string, unknown> | undefined>(undefined),
     [preset, setPreset] = useState<{ name?: string; data?: Record<string, unknown> } | undefined>(undefined);
+  useEffect(() => {
+    if (perimetreUrl) setSelected(perimetreUrl);
+  }, [perimetreUrl]);
   const scopes = useQuery({
     queryKey: ['grc', 'smsis'],
     queryFn: () => get<{ id: string; name: string }[]>('/api/grc/smsis'),
@@ -520,7 +526,7 @@ export function PilotagePage() {
             {['action', 'task_series', 'risk'].includes(kind) ? (
               <ObjectEditor
                 key={editing?.id ?? kind + smsi}
-                smsi={smsi}
+                smsi={editing && !editing.id.startsWith('legacy:') ? editing.smsiId : smsi}
                 policy={policy.data.definition}
                 kind={kind}
                 object={editing}
@@ -532,7 +538,7 @@ export function PilotagePage() {
             ) : (
               <RecordEditor
                 key={editing?.id ?? kind + smsi}
-                smsi={smsi}
+                smsi={editing && !editing.id.startsWith('legacy:') ? editing.smsiId : smsi}
                 policy={policy.data.definition}
                 kind={kind}
                 object={editing}
@@ -543,7 +549,7 @@ export function PilotagePage() {
             )}
             <RiskEvaluation smsi={smsi} risk={evaluation} onClose={() => setEvaluation(null)} />
             <Decision
-              smsi={smsi}
+              smsi={decision?.object && !decision.object.id.startsWith('legacy:') ? decision.object.smsiId : smsi}
               object={decision?.object ?? null}
               operation={decision?.operation ?? 'proof_review'}
               step={decision?.step}

@@ -29,9 +29,9 @@ import {
   type NiveauPerimetre,
 } from '@suivi/shared';
 import { DataTable, StatusChip } from '@suivi/ui';
-import { api, get } from '../api';
+import { api, ApiError, get } from '../api';
 import { ErrorAlert } from '../components/common';
-import { CartesPerimetres } from './CartesPerimetres';
+import { CartesPerimetres, type FournisseurRattache } from './CartesPerimetres';
 import { useCan } from '../session';
 import { ReferentielsDuPerimetre } from './Bibliotheque';
 import { Members } from './Members';
@@ -87,6 +87,11 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
     queryFn: () => get<SyntheseCartes>('/api/grc/perimetres/synthese'),
     enabled: vue === 'graphe',
   });
+  const fournisseurs = useQuery({
+    queryKey: ['suppliers'],
+    queryFn: () => get<FournisseurRattache[]>('/api/suppliers'),
+    enabled: vue === 'graphe' && can('fournisseurs', 'lire'),
+  });
   const ouvrir = (p: Perimetre | null, parentId: string | null = null) => {
     setErreur(null);
     setFormulaire({
@@ -124,6 +129,21 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
     } finally {
       setEnvoi(false);
     }
+  };
+  /** Après un 412 : reprend la version enregistrée par l'autre session, en gardant la saisie en cours. */
+  const recharger = async () => {
+    const edition = formulaire?.edition;
+    if (!edition) return;
+    const frais = (
+      await qc.fetchQuery({
+        queryKey: ['grc', 'smsis'],
+        queryFn: () => get<Perimetre[]>('/api/grc/smsis'),
+        staleTime: 0,
+      })
+    ).find((x) => x.id === edition.id);
+    if (!frais) return setFormulaire(null);
+    setErreur(null);
+    setFormulaire((f) => (f ? { ...f, edition: frais } : f));
   };
   const champ =
     <K extends keyof Formulaire>(k: K) =>
@@ -169,10 +189,20 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
       {vue === 'graphe' && (
         <>
           <ErrorAlert error={cartes.error} />
-          {cartes.data && (
+          {(cartes.isLoading || cartes.data) && (
             <CartesPerimetres
-              cartes={cartes.data.cartes}
-              total={cartes.data.total}
+              chargement={cartes.isLoading}
+              fournisseurs={can('fournisseurs', 'lire') ? fournisseurs.data : undefined}
+              onModifier={
+                admin
+                  ? (id) => {
+                      const p = (liste.data ?? []).find((x) => x.id === id);
+                      if (p) ouvrir(p);
+                    }
+                  : undefined
+              }
+              cartes={cartes.data?.cartes ?? []}
+              total={cartes.data?.total}
               affiche={affiche}
               onChoisir={onChoisir}
               onCreerEnfant={admin ? (parentId) => ouvrir(null, parentId) : undefined}
@@ -262,6 +292,8 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
         </DataTable>
       )}
       <Modal
+        centered
+        size="lg"
         opened={!!formulaire}
         onClose={() => setFormulaire(null)}
         title={formulaire?.edition ? 'Modifier le périmètre' : 'Créer un périmètre'}
@@ -269,6 +301,11 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
         {formulaire && (
           <Stack>
             <ErrorAlert error={erreur} />
+            {erreur instanceof ApiError && erreur.status === 412 && formulaire.edition && (
+              <Button variant="light" onClick={recharger}>
+                Recharger la dernière version
+              </Button>
+            )}
             <TextInput
               label="Nom"
               required
@@ -341,11 +378,17 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
         opened={!!referentiels}
         onClose={() => setReferentiels(null)}
         size="lg"
+        centered
         title={referentiels ? `Référentiels du périmètre ${referentiels.name}` : ''}
       >
         {referentiels && <ReferentielsDuPerimetre smsi={referentiels.id} />}
       </Modal>
-      <Modal opened={!!acces} onClose={() => setAcces(null)} title={acces ? `Accès au périmètre ${acces.name}` : ''}>
+      <Modal
+        centered
+        opened={!!acces}
+        onClose={() => setAcces(null)}
+        title={acces ? `Accès au périmètre ${acces.name}` : ''}
+      >
         {acces && <Members smsi={acces.id} />}
       </Modal>
     </Stack>

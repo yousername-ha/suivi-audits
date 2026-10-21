@@ -1,5 +1,7 @@
 import { Relations } from './Relations';
 import { PanneauElement, useAccesElement } from '../registres/Contribution';
+import { SelecteurRegistre } from '../registres/SelecteurRegistre';
+import { SelecteurPeriodicite } from './SelecteurPeriodicite';
 import { PlanningSerie } from './PlanningSerie';
 import {
   Alert,
@@ -153,6 +155,7 @@ export function ObjectEditor({
     [saving, setSaving] = useState(false),
     [archiveConfirm, setArchiveConfirm] = useState(false),
     [date, setDate] = useState(new Date().toISOString().slice(0, 10)),
+    [registreId, setRegistreId] = useState<string | null>(null),
     [legacyComment, setLegacyComment] = useState(''),
     [proof, setProof] = useState('');
   const owners = useResponsables(smsi);
@@ -225,7 +228,7 @@ export function ObjectEditor({
       } else
         await api(object ? 'PUT' : 'POST', `/api/grc/${smsi}/objects${object ? '/' + object.id : ''}`, {
           ifMatch: object?.version,
-          body: { kind, name, data },
+          body: { kind, name, data, ...(!object && registreId ? { registreId } : {}) },
         });
       await qc.invalidateQueries({ queryKey: ['grc', smsi] });
       onClose();
@@ -240,7 +243,16 @@ export function ObjectEditor({
   const readonly =
     !can(object?.data.legacyRecurring ? 'pilotage' : GRC_MODULES[kind], 'modifier') && !acces?.peut.gerer;
   return (
-    <Modal opened={opened} onClose={onClose} title={`${object ? 'Fiche' : 'Créer'} — ${GRC_LABELS[kind]}`} size="xl">
+    <Modal
+      opened={opened}
+      onClose={onClose}
+      title={`${object ? 'Fiche' : 'Créer'} — ${GRC_LABELS[kind]}`}
+      // Une occurrence de tâche récurrente s'ouvre dans une fenêtre centrale compacte (validation OK, KO, NA) ; les autres
+      // fiches, plus longues, gardent la grande fenêtre.
+      {...(object && typeof object.data.seriesId === 'string' && object.data.seriesId
+        ? ({ size: 'lg', centered: true } as const)
+        : ({ size: 'xl' } as const))}
+    >
       <Stack>
         <ErrorAlert error={error ?? owners.error ?? history.error} />
         {object?.id.startsWith('legacy:') ? (
@@ -277,6 +289,15 @@ export function ObjectEditor({
               value={String(data.description ?? '')}
               onChange={(e) => set('description', e.currentTarget.value)}
               minRows={3}
+              disabled={readonly}
+            />
+            <SelecteurRegistre
+              smsi={smsi}
+              kind={kind}
+              data={data}
+              object={object}
+              value={registreId}
+              onChange={setRegistreId}
               disabled={readonly}
             />
             {kind === 'action' || kind === 'task_series' ? (
@@ -379,6 +400,11 @@ export function ObjectEditor({
             {kind === 'task_series' && data.recurrence && (
               <>
                 <Text fw={600}>Récurrence et automatisation</Text>
+                <SelecteurPeriodicite
+                  value={data.recurrence as Recurrence}
+                  onChange={(r) => set('recurrence', r)}
+                  disabled={readonly}
+                />
                 <ConfigurationEditor
                   value={Object.fromEntries(
                     Object.entries(data.recurrence).filter(([k]) => !CHAMPS_PLANNING.includes(k)),
@@ -556,7 +582,11 @@ export function ObjectEditor({
           <PanneauElement smsi={smsi} object={object} policy={policy} acces={acces} onOpenObject={onOpenObject} />
         )}
         {object && (
-          <Relations smsi={smsi} source={object.id.startsWith('legacy:') ? object.id : 'object:' + object.id} />
+          <Relations
+            smsi={smsi}
+            source={object.id.startsWith('legacy:') ? object.id : 'object:' + object.id}
+            sourceKind={object.id.startsWith('legacy:') ? undefined : object.kind}
+          />
         )}
         {object && !object.id.startsWith('legacy:') && can(GRC_MODULES[kind], 'supprimer') && (
           <>

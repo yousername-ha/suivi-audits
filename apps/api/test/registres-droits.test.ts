@@ -4,7 +4,7 @@
 import { copyFileSync, mkdtempSync, readdirSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { businessDefaults } from '@suivi/shared';
+import { businessDefaults, type AccesSujetRegistre } from '@suivi/shared';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { MIGRATIONS_DIR } from '../src/db/db.js';
 import { DEFAULT_SMSI } from '../src/grc/core.js';
@@ -142,6 +142,39 @@ describe('registres et droits par ressource', () => {
     ).toBe(403);
   });
 
+  it('un registre partagé : ses éléments apparaissent aussi sous le second périmètre, une seule fois (R02)', async () => {
+    const mb = await makeUser(t, 'reg_membre_b', 'rw');
+    expect((await admin.put(`/api/grc/${B}/members`, { userId: mb.id, write: true })).statusCode).toBe(204);
+    const membreB = await login(t, mb);
+    // Vue native des actions du périmètre B : l'élément du registre A+B y figure, une seule fois, avec son périmètre de référence.
+    const sousB = (await membreB.get(`/api/grc/${B}/objects?kind=action`)).json();
+    const lignes = sousB.items.filter((i: { id: string }) => i.id === element);
+    expect(lignes).toHaveLength(1);
+    expect(lignes[0].smsiId).toBe(A);
+    // Le tableau des actions et la fenêtre de planning le comptent aussi sous B.
+    const tableau = (await membreB.get(`/api/grc/${B}/tasks`)).json();
+    expect(tableau.items.some((i: { id: string }) => i.id === element)).toBe(true);
+    const fenetre = (
+      await membreB.get(`/api/grc/${B}/tasks/window?from=2000-01-01T00:00:00.000Z&to=2100-01-01T00:00:00.000Z`)
+    ).json();
+    expect(fenetre.items.filter((i: { id: string }) => i.id === element)).toHaveLength(1);
+    const resume = (await membreB.get(`/api/grc/${B}/tasks/dashboard`)).json();
+    expect(resume.summary.total).toBeGreaterThanOrEqual(1);
+    // Sous le périmètre de référence, l'élément n'est pas compté deux fois.
+    const sousA = (await admin.get(`/api/grc/${A}/objects?kind=action`)).json();
+    expect(sousA.items.filter((i: { id: string }) => i.id === element)).toHaveLength(1);
+    // Il se lit et se modifie avec son périmètre de référence (accès par le registre, pas par le seul périmètre B).
+    expect((await membreB.get(`/api/grc/${A}/objects/${element}`)).statusCode).toBe(200);
+    // Une personne qui ne voit pas le registre ne voit pas ses éléments sous B non plus.
+    expect(
+      (await lecteurSansModule.get(`/api/grc/${B}/objects?kind=action`)).statusCode === 200
+        ? (await lecteurSansModule.get(`/api/grc/${B}/objects?kind=action`))
+            .json()
+            .items.some((i: { id: string }) => i.id === element)
+        : false,
+    ).toBe(false);
+  });
+
   it('un utilisateur sans droit sur A ni B ne voit pas le registre (404, aucune fuite)', async () => {
     expect((await contributeur.get(`/api/registres/${registre}`)).statusCode).toBe(404);
     expect((await contributeur.get(`/api/registres/${registre}/elements`)).statusCode).toBe(404);
@@ -240,6 +273,55 @@ describe('registres et droits par ressource', () => {
     expect(tous.utilisateurs.map((u: { id: string }) => u.id)).toContain(contributeurId);
   });
 
+  it('un contributeur de ressource ne crée, ne déplace, n’archive et ne ré-attribue rien (022-03)', async () => {
+    const intact = async () =>
+      Number(
+        (await t.svc.db.one<{ n: string }>('SELECT count(*)::text AS n FROM grc_objects WHERE registre_id=$1', [
+          registre,
+        ]))!.n,
+      );
+    const avant = await intact();
+    const v = await version(registre);
+    // Création d'un élément dans le registre.
+    const creation = await contributeur.post(`/api/grc/${A}/objects`, {
+      ...action('Créée par un contributeur'),
+      registreId: registre,
+    });
+    expect(creation.statusCode).toBe(403);
+    // Déplacement, archivage, périmètres, ordre, définition du registre.
+    expect(
+      (
+        await contributeur.post(`/api/grc/${A}/objects/${element}/deplacement`, {
+          registreId: registre,
+          apercu: true,
+        })
+      ).statusCode,
+    ).toBe(403);
+    expect(
+      (await contributeur.put(`/api/registres/${registre}/perimetres`, { perimetres: [A], apercu: true })).statusCode,
+    ).toBe(403);
+    expect(
+      (
+        await contributeur.req('POST', `/api/registres/${registre}/archivage`, {
+          json: { archived: true, reason: 'Tentative non autorisée' },
+          headers: await ifMatch(registre),
+        })
+      ).statusCode,
+    ).toBe(403);
+    expect(
+      (
+        await contributeur.patch(
+          `/api/registres/${registre}`,
+          { name: 'Renommé', description: '', restreint: false },
+          await ifMatch(registre),
+        )
+      ).statusCode,
+    ).toBe(403);
+    // Rien n'a changé.
+    expect(await intact()).toBe(avant);
+    expect(await version(registre)).toBe(v);
+  });
+
   it('un lecteur sans aucun droit de module consulte par un droit de lecture attribué', async () => {
     expect((await lecteurSansModule.get(`/api/registres/${registre}`)).statusCode).toBe(404);
     await admin.put(`/api/droits/registre/${registre}`, {
@@ -296,6 +378,93 @@ describe('registres et droits par ressource', () => {
       registre,
     ]);
     expect(journal.rowCount).toBeGreaterThanOrEqual(3);
+  });
+
+  it('vue des accès d’un sujet : rôle, origine et droits effectifs calculés par le serveur (022-01)', async () => {
+    const vue = (type: string, id: string, qs = '') => admin.get(`/api/droits/sujets/${type}/${id}/registres${qs}`);
+    const ligne = (j: { items: AccesSujetRegistre[] }) => j.items.find((i) => i.registre.id === registre)!;
+    // Personne dotée d'un rôle direct (contributeur) : le serveur le restitue avec ce qu'elle peut vraiment faire.
+    const direct = (await vue('utilisateur', contributeurId)).json();
+    expect(ligne(direct)).toMatchObject({
+      role: 'contributeur',
+      source: 'role',
+      peut: { lire: true, contribuer: true, gerer: false },
+    });
+    expect(ligne(direct).origines).toEqual([{ type: 'direct', libelle: 'Attribué directement' }]);
+    // Personne dont le rôle vient d'un groupe : l'origine nomme le groupe.
+    const parGroupe = (await vue('utilisateur', deGroupeId)).json();
+    expect(ligne(parGroupe).origines).toEqual([{ type: 'groupe', libelle: 'Équipe de recette' }]);
+    expect(ligne(parGroupe).peut).toMatchObject({ lire: true, contribuer: true, gerer: false });
+    // Le groupe lui-même : ses rôles, sans droits effectifs de personne.
+    const groupe = (await vue('groupe', groupeId)).json();
+    expect(ligne(groupe)).toMatchObject({ role: 'contributeur', source: 'role' });
+    expect(ligne(groupe).peut).toBeUndefined();
+    // Membre d'un périmètre sans rôle de ressource : l'accès vient des droits de module et du périmètre.
+    const parModule = (await vue('utilisateur', membreAId)).json();
+    expect(ligne(parModule)).toMatchObject({ role: null, source: 'module' });
+    // Compte sans droit de module ni rôle de ressource : aucun accès.
+    const vide = await makeUser(t, 'reg_sans_acces', null);
+    const lecteurVide = (await vue('utilisateur', vide.id)).json();
+    expect(ligne(lecteurVide)).toMatchObject({ role: null, source: 'aucune', peut: { lire: false } });
+    // Pagination et recherche par nom.
+    const page = (await vue('utilisateur', contributeurId, '?limite=1')).json();
+    expect(page.items).toHaveLength(1);
+    expect(page.total).toBeGreaterThan(1);
+    const filtre = (await vue('utilisateur', contributeurId, `?q=${encodeURIComponent('Plan A+B')}`)).json();
+    expect(filtre.items.every((i: { registre: { name: string } }) => i.registre.name.includes('Plan A+B'))).toBe(true);
+    expect(filtre.total).toBe(filtre.items.length);
+    // Réservée aux droits d'administration : ni le contributeur, ni un membre de périmètre ; sujet inconnu : 404.
+    expect((await contributeur.get(`/api/droits/sujets/utilisateur/${contributeurId}/registres`)).statusCode).toBe(403);
+    expect((await membreA.get(`/api/droits/sujets/groupe/${groupeId}/registres`)).statusCode).toBe(403);
+    expect((await vue('utilisateur', '00000000-0000-4000-8000-0000000000ff')).statusCode).toBe(404);
+  });
+
+  it('aperçu d’une attribution : avant/après, personnes concernées, rôles qui subsistent, sans rien écrire (022-02)', async () => {
+    const nb = async () =>
+      Number((await t.svc.db.one<{ n: string }>('SELECT count(*)::text AS n FROM droits_ressources'))!.n);
+    const avant = await nb();
+    // Une personne du groupe de recette reçoit un rôle direct plus faible : le rôle du groupe subsiste.
+    const personne = await admin.put(`/api/droits/registre/${registre}`, {
+      subjectType: 'utilisateur',
+      subjectId: deGroupeId,
+      role: 'lecteur',
+      apercu: true,
+    });
+    expect(personne.statusCode).toBe(200);
+    expect(personne.json()).toMatchObject({
+      apercu: true,
+      avant: null,
+      apres: 'lecteur',
+      personnes: 1,
+      inchange: false,
+      subsistants: [{ role: 'contributeur', libelle: 'Groupe Équipe de recette' }],
+    });
+    // Un groupe : le nombre de membres actifs est annoncé.
+    const groupe = await admin.put(`/api/droits/registre/${registre}`, {
+      subjectType: 'groupe',
+      subjectId: groupeId,
+      role: 'gestionnaire',
+      apercu: true,
+    });
+    expect(groupe.json()).toMatchObject({
+      avant: 'contributeur',
+      apres: 'gestionnaire',
+      personnes: 1,
+      inchange: false,
+    });
+    // Aucun droit écrit, aucune ligne de journal d'attribution supplémentaire.
+    expect(await nb()).toBe(avant);
+    // Réservé aux gestionnaires de la ressource, comme l'attribution elle-même.
+    expect(
+      (
+        await contributeur.put(`/api/droits/registre/${registre}`, {
+          subjectType: 'utilisateur',
+          subjectId: deGroupeId,
+          role: 'lecteur',
+          apercu: true,
+        })
+      ).statusCode,
+    ).toBe(403);
   });
 
   it('le journal garde le rôle précédent et le motif quand un droit est modifié', async () => {

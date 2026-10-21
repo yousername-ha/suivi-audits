@@ -53,6 +53,18 @@ test('Tâches récurrentes : occurrence validée KO avec compte rendu, puis rouv
         },
       },
     });
+    // Document de preuve déposé par l'administrateur (version 1) : la validation le cite, elle ne le copie pas.
+    const depot = await page.request.post('/api/documents', {
+      headers: {
+        Origin: new URL(page.url()).origin,
+        'X-CSRF-Token': await csrfOf(page.request),
+        'x-file-name': 'preuve-revue.txt',
+        'x-meta': encodeURIComponent(JSON.stringify({ title: `Preuve de revue ${suffixe}` })),
+        'Content-Type': 'application/octet-stream',
+      },
+      data: Buffer.from('Justificatif de recette'),
+    });
+    expect(depot.ok(), await depot.text()).toBe(true);
     // L'occurrence apparaît à la prochaine passe de l'automate.
     await expect
       .poll(
@@ -76,9 +88,13 @@ test('Tâches récurrentes : occurrence validée KO avec compte rendu, puis rouv
     await page.getByRole('option', { name: 'Non réalisée (KO)' }).click();
     await expect(panneau.getByRole('button', { name: 'Enregistrer la validation' })).toBeDisabled();
     await panneau.getByLabel('Compte rendu').fill('Contrôle non réalisé faute de ressource.');
+    // Preuve : sélection d'une version de document (jamais une saisie libre) ; le journal en restitue l'intitulé.
+    await panneau.getByRole('combobox', { name: 'Preuve' }).click();
+    await page.getByRole('option', { name: new RegExp(`Preuve de revue ${suffixe}`) }).click();
     await panneau.getByRole('button', { name: 'Enregistrer la validation' }).click();
     await expect(panneau.getByText('Validée', { exact: true })).toBeVisible();
     await expect(panneau.getByRole('cell', { name: 'Non réalisée (KO)' })).toBeVisible();
+    await expect(panneau.getByRole('cell', { name: new RegExp(`Preuve de revue ${suffixe}`) })).toBeVisible();
     // Une occurrence validée ne se valide plus : seule la réouverture motivée est proposée.
     await expect(panneau.getByRole('button', { name: 'Enregistrer la validation' })).toHaveCount(0);
     await panneau.getByLabel('Motif de la réouverture').fill('Ressource disponible, contrôle à refaire.');

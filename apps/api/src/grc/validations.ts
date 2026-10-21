@@ -92,7 +92,17 @@ export class GrcValidations {
   async historique(smsi: string, id: string, user: SessionUser) {
     await this.occurrence(smsi, id, user, 'lire');
     const lignes = await this.lignes(id);
-    return { etat: etatDe(lignes), items: lignes.map(dto) };
+    // Intitulé des preuves, résolu avec les droits de la personne : une preuve qu'elle ne peut pas lire reste une référence.
+    const noms = new Map<string, string | null>();
+    for (const ref of new Set(lignes.map((l) => l.proofRef).filter(Boolean)))
+      noms.set(
+        ref,
+        await this.g.resolve(smsi, ref, user).then(
+          (r) => r.name,
+          () => null,
+        ),
+      );
+    return { etat: etatDe(lignes), items: lignes.map((l) => ({ ...dto(l), proofName: noms.get(l.proofRef) ?? null })) };
   }
   private async ajouter(
     c: Client,
@@ -146,7 +156,10 @@ export class GrcValidations {
       // La preuve est une référence que le serveur sait résoudre (et que la personne a le droit de lire) : jamais un texte libre.
       if (b.proofRef) {
         if (!GrcRef.safeParse(b.proofRef).success) throw new HttpError(422, 'Référence de preuve invalide.');
-        await this.g.resolve(smsi, b.proofRef, user, c);
+        const preuve = await this.g.resolve(smsi, b.proofRef, user, c);
+        // Une preuve est une version de document ou une fiche de preuve : pas n'importe quel objet.
+        if (!b.proofRef.startsWith('document:') && !(b.proofRef.startsWith('object:') && preuve.kind === 'evidence'))
+          throw new HttpError(422, 'La preuve est une version de document ou une fiche de preuve.');
       }
       const lignes = await this.lignes(id, c);
       if (etatDe(lignes) === 'validee')

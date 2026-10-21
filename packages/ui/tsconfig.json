@@ -6,7 +6,8 @@
     "moduleResolution": "Bundler",
     "jsx": "react-jsx",
     "noEmit": true,
-    "allowImportingTsExtensions": true
+    "allowImportingTsExtensions": true,
+    "types": ["node"]
   },
   "include": ["src", "test"]
 }

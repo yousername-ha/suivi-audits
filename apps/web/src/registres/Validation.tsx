@@ -1,7 +1,7 @@
 /* Validation d'une occurrence de tâche récurrente : OK, KO ou NA avec compte rendu et référence de preuve, journal
    immuable, réouverture motivée (migration 030). Chaque commande porte un identifiant de requête : un double clic ou un
    rejeu réseau n'enregistre rien de plus. */
-import { Badge, Button, Checkbox, Group, Select, Stack, Table, Text, Textarea, TextInput } from '@mantine/core';
+import { Badge, Button, Checkbox, Group, Select, Stack, Table, Text, Textarea } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
@@ -18,6 +18,7 @@ import { DataTable } from '@suivi/ui';
 import { api, get } from '../api';
 import { ErrorAlert, fmtDate } from '../components/common';
 import type { AccesElement } from './Contribution';
+import { listeCourante } from './liste-courante';
 
 const ETAT_LABELS: Record<EtatValidation, string> = {
   ouverte: 'À valider',
@@ -29,7 +30,7 @@ const RESULTAT_OPTIONS = RESULTATS_VALIDATION.map((r) => ({ value: r, label: RES
 const dateFr = (iso: string) => new Date(iso).toLocaleDateString('fr-FR', { timeZone: 'UTC' });
 
 /** Fenêtre de réalisation de l'occurrence, calculée par le même moteur que le serveur (qui reste seul juge). */
-function EtatFenetre({ smsi, object }: { smsi: string; object: GrcObject }) {
+function useFenetre(smsi: string, object: GrcObject) {
   const serie = useQuery({
     queryKey: ['grc', smsi, 'serie', object.data.seriesId],
     queryFn: () => get<GrcObject>(`/api/grc/${smsi}/objects/${String(object.data.seriesId)}`),
@@ -44,10 +45,43 @@ function EtatFenetre({ smsi, object }: { smsi: string; object: GrcObject }) {
       : f.etat === 'fermee'
         ? `Fenêtre de réalisation : fermée depuis le ${dateFr(f.fermeLe!)}`
         : `Fenêtre de réalisation : ouverte jusqu’au ${dateFr(f.fermeLe!)}`;
+  return { etat: f.etat, texte };
+}
+function EtatFenetre({ fenetre }: { fenetre: { etat: string; texte: string } | null }) {
+  if (!fenetre) return null;
   return (
-    <Badge variant="light" color={f.etat === 'ouverte' ? 'teal' : 'orange'} aria-label={texte}>
-      {texte}
+    <Badge variant="light" color={fenetre.etat === 'ouverte' ? 'teal' : 'orange'} aria-label={fenetre.texte}>
+      {fenetre.texte}
     </Badge>
+  );
+}
+
+/** Sélecteur de preuve : versions de documents et fiches de preuve que la personne peut lire (recherche côté serveur). */
+function SelecteurPreuve({ smsi, value, onChange }: { smsi: string; value: string; onChange: (ref: string) => void }) {
+  const [recherche, setRecherche] = useState('');
+  const q = useQuery({
+    queryKey: ['grc', smsi, 'sources', 'preuves', recherche],
+    queryFn: () =>
+      get<{ items: { ref: string; name: string }[] }>(
+        `/api/grc/${smsi}/sources?search=${encodeURIComponent(recherche)}&cibles=${encodeURIComponent('document,object:evidence')}`,
+      ),
+  });
+  const options = (q.data?.items ?? []).map((i) => ({ value: i.ref, label: i.name }));
+  if (value && !options.some((o) => o.value === value)) options.push({ value, label: 'Preuve choisie' });
+  return (
+    <Select
+      label="Preuve"
+      description="Version d’un document ou fiche de preuve que vous pouvez consulter ; facultative."
+      placeholder="Rechercher un document…"
+      searchable
+      clearable
+      data={options}
+      value={value || null}
+      onChange={(v) => onChange(v ?? '')}
+      onSearchChange={setRecherche}
+      filter={({ options: o }) => o}
+      nothingFoundMessage="Aucune preuve accessible ne correspond."
+    />
   );
 }
 
@@ -70,6 +104,7 @@ export function ValidationOccurrence({
     queryFn: () =>
       get<{ etat: EtatValidation; items: ValidationDto[] }>(`/api/grc/${smsi}/objects/${object.id}/validations`),
   });
+  const fenetre = useFenetre(smsi, object);
   const [resultat, setResultat] = useState<string | null>('ok');
   const [commentaire, setCommentaire] = useState('');
   const [preuve, setPreuve] = useState('');
@@ -90,8 +125,12 @@ export function ValidationOccurrence({
   const suivante = async () => {
     setErreur(null);
     try {
+      // La liste courante de la personne (filtres compris) prime quand elle contient cette occurrence ; sinon, la série.
+      const liste = listeCourante();
       const r = await get<{ occurrence: { actionId: string } | null }>(
-        `/api/grc/${smsi}/series/${String(object.data.seriesId)}/prochaine?apres=${object.id}`,
+        liste.includes(object.id)
+          ? `/api/grc/${smsi}/occurrences/prochaine?apres=${object.id}&liste=${liste.join(',')}`
+          : `/api/grc/${smsi}/series/${String(object.data.seriesId)}/prochaine?apres=${object.id}`,
       );
       if (!r.occurrence) {
         notifications.show({ color: 'gray', message: 'Aucune autre occurrence à traiter pour le moment.' });
@@ -129,7 +168,7 @@ export function ValidationOccurrence({
           {ETAT_LABELS[etat]}
         </Badge>
       </Group>
-      <EtatFenetre smsi={smsi} object={object} />
+      <EtatFenetre fenetre={fenetre} />
       <ErrorAlert error={erreur ?? journal.error} />
       {etat === 'validee' && onOpenObject && (
         <Button variant="default" onClick={() => void suivante()}>
@@ -167,15 +206,17 @@ export function ValidationOccurrence({
             value={commentaire}
             onChange={(e) => setCommentaire(e.currentTarget.value)}
           />
-          <TextInput
-            label="Référence de preuve"
-            description="Référence résolue par le serveur, par exemple une version de document ; facultative."
-            value={preuve}
-            onChange={(e) => setPreuve(e.currentTarget.value)}
-          />
+          <SelecteurPreuve smsi={smsi} value={preuve} onChange={setPreuve} />
+          {fenetre && fenetre.etat !== 'ouverte' && (
+            <Text size="sm" role="status">
+              {fenetre.etat === 'a_venir'
+                ? 'La validation n’est pas encore possible : la fenêtre de réalisation n’est pas ouverte.'
+                : 'La validation n’est plus possible : la fenêtre de réalisation est fermée.'}
+            </Text>
+          )}
           <Button
             loading={envoi}
-            disabled={!resultat || !justifie}
+            disabled={!resultat || !justifie || (!!fenetre && fenetre.etat !== 'ouverte')}
             onClick={() =>
               void envoyer(
                 '',
@@ -228,7 +269,7 @@ export function ValidationOccurrence({
                   <Table.Td>{l.seq}</Table.Td>
                   <Table.Td>{l.result ? RESULTAT_LABELS[l.result] : 'Réouverture'}</Table.Td>
                   <Table.Td>{l.comment || '—'}</Table.Td>
-                  <Table.Td>{l.proofRef || '—'}</Table.Td>
+                  <Table.Td>{l.proofRef ? (l.proofName ?? `${l.proofRef} (non consultable)`) : '—'}</Table.Td>
                   <Table.Td>
                     {l.createdBy}, {fmtDate(l.createdAt)}
                   </Table.Td>

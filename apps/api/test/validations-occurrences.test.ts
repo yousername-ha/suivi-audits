@@ -3,6 +3,12 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { type Agent, createTestApp, login, makeUser, type TestApp } from './helpers.js';
 
+const PDF = Buffer.from('%PDF-1.4\n% test\n1 0 obj << >> endobj\ntrailer << >>\n%%EOF\n');
+const deposer = (a: Agent, nom: string) =>
+  a.req('POST', '/api/documents', {
+    body: PDF,
+    headers: { 'x-file-name': encodeURIComponent(nom), 'x-meta': encodeURIComponent('{}') },
+  });
 const serie = {
   kind: 'task_series',
   name: 'Revue trimestrielle des accès',
@@ -29,7 +35,7 @@ const serie = {
 describe('validation des occurrences', () => {
   let t: TestApp;
   let admin: Agent, contributeur: Agent, lecteur: Agent;
-  let A: string, registre: string, occurrences: string[], serieId: string;
+  let A: string, registre: string, occurrences: string[], serieId: string, preuve: string;
   const rid = () => crypto.randomUUID();
   const valider = (a: Agent, id: string, data: Record<string, unknown>) =>
     a.post(`/api/grc/${A}/objects/${id}/validations`, data);
@@ -42,6 +48,9 @@ describe('validation des occurrences', () => {
     const l = await makeUser(t, 'val_lecteur', null);
     lecteur = await login(t, l);
     A = (await admin.post('/api/grc/smsis', { name: 'Périmètre V', scope: 'V', timezone: 'Europe/Paris' })).json().id;
+    const doc = await deposer(admin, 'Compte rendu de revue.pdf');
+    expect(doc.statusCode, doc.body).toBe(201);
+    preuve = `document:${doc.json().id}:1`;
     const s = await admin.post(`/api/grc/${A}/objects`, serie);
     expect(s.statusCode, s.body).toBe(200);
     registre = s.json().registreId;
@@ -82,7 +91,7 @@ describe('validation des occurrences', () => {
     const r = await valider(contributeur, occurrences[0]!, {
       requestId,
       result: 'ok',
-      proofRef: 'object:' + serieId,
+      proofRef: preuve,
       createdBy: 'usurpateur', // ignoré : champ inconnu refusé
     });
     expect(r.statusCode).toBe(422);
@@ -90,15 +99,22 @@ describe('validation des occurrences', () => {
     for (const [proofRef, statut] of [
       ['document:abc', 422],
       ['object:00000000-0000-4000-8000-0000000000aa', 404],
+      // Une fiche qui n'est pas une preuve (ici la série elle-même) n'est pas acceptée comme preuve.
+      ['object:' + serieId, 422],
     ] as const)
       expect(
         (await valider(contributeur, occurrences[0]!, { requestId: rid(), result: 'ok', proofRef })).statusCode,
       ).toBe(statut);
-    const ok = await valider(contributeur, occurrences[0]!, { requestId, result: 'ok', proofRef: 'object:' + serieId });
+    const ok = await valider(contributeur, occurrences[0]!, { requestId, result: 'ok', proofRef: preuve });
     expect(ok.statusCode, ok.body).toBe(201);
     expect(ok.json()).toMatchObject({ etat: 'validee', rejoue: false });
     expect(ok.json().validation).toMatchObject({ seq: 1, kind: 'validation', result: 'ok', createdBy: 'val_contrib' });
-    expect(ok.json().validation.proofRef).toBe('object:' + serieId);
+    expect(ok.json().validation.proofRef).toBe(preuve);
+    // Le journal restitue l'intitulé de la preuve à qui peut la lire, la seule référence à qui ne le peut pas.
+    const lu = (await contributeur.get(`/api/grc/${A}/objects/${occurrences[0]}/validations`)).json();
+    expect(lu.items[0].proofName).toMatch(/Compte rendu de revue/);
+    const sansDroit = (await lecteur.get(`/api/grc/${A}/objects/${occurrences[0]}/validations`)).json();
+    expect(sansDroit.items[0]).toMatchObject({ proofRef: preuve, proofName: null });
     expect(Date.now() - Date.parse(ok.json().validation.createdAt)).toBeLessThan(60_000);
   });
 
@@ -224,5 +240,40 @@ describe('validation des occurrences', () => {
     expect(
       (await valider(admin, '00000000-0000-4000-8000-0000000000aa', { requestId: rid(), result: 'ok' })).statusCode,
     ).toBe(404);
+  });
+
+  it('l’occurrence suivante se cherche dans la liste courante, toutes séries confondues, sans rien valider', async () => {
+    const autre = await admin.post(`/api/grc/${A}/objects`, {
+      ...serie,
+      name: 'Seconde série de la liste',
+      data: { ...serie.data, recurrence: { ...serie.data.recurrence, count: 2 } },
+    });
+    expect(autre.statusCode, autre.body).toBe(200);
+    await t.svc.grc.tasks.tick(new Date('2026-12-15T00:00:00Z'));
+    const b = (
+      await t.svc.db.q<{ id: string }>(
+        "SELECT id FROM grc_objects WHERE data->>'seriesId'=$1 ORDER BY data->>'dueAt'",
+        [autre.json().id],
+      )
+    ).rows.map((r) => r.id);
+    expect(b.length).toBeGreaterThanOrEqual(1);
+    const a = occurrences;
+    // Liste de la personne : une occurrence de la première série, une de la seconde, une autre de la première.
+    const liste = [a[0]!, b[0]!, a[a.length - 1]!];
+    const suivante = async (apres: string, ids = liste) =>
+      (await admin.get(`/api/grc/${A}/occurrences/prochaine?apres=${apres}&liste=${ids.join(',')}`)).json();
+    // La suivante est celle de l'autre série, pas la suivante de la même série.
+    expect((await suivante(a[0]!)).occurrence.actionId).toBe(b[0]);
+    // Une occurrence déjà validée est sautée ; en fin de liste, il n'y en a plus.
+    const etatAvant = (await admin.get(`/api/grc/${A}/objects/${b[0]}/validations`)).json().etat;
+    expect(etatAvant).toBe('ouverte');
+    await valider(admin, b[0]!, { requestId: rid(), result: 'ok' });
+    const apres = await suivante(a[0]!);
+    expect(apres.occurrence.actionId).toBe(a[a.length - 1]);
+    expect((await suivante(a[a.length - 1]!)).occurrence).toBeNull();
+    // Consulter la suivante ne valide rien.
+    expect((await admin.get(`/api/grc/${A}/objects/${a[a.length - 1]}/validations`)).json().etat).toBe('ouverte');
+    // Une liste mal formée est refusée ; un identifiant d'une occurrence illisible est ignoré sans fuite.
+    expect((await admin.get(`/api/grc/${A}/occurrences/prochaine?apres=${a[0]}&liste=pas-un-id`)).statusCode).toBe(422);
   });
 });

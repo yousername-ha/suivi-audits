@@ -18,6 +18,46 @@ Relevé d'existant ASTRA du 21/10/2026 ([audit](docs/unification/AUDIT-ASTRA-202
 - **Droits par ressource.** Le journal d'audit d'un droit accordé garde l'ancien rôle et un motif facultatif.
 - **Menu.** Les familles portent `aria-expanded`.
 - **Cartographie protégée.** Les mots-clés `export` retirés de quatre fichiers du module par l'épuration du 3.6.0 sont rétablis.
+- **Journal d'audit des droits.** Les créations, modifications et suppressions de comptes, groupes et rôles écrivent leur trace dans la même transaction que la modification : sans trace possible, la modification est annulée.
+- **Parent d'un périmètre.** Un parent inaccessible reçoit la même réponse qu'un parent inconnu (plus aucune fuite d'existence).
+- **Graphe des périmètres.** Le rouge d'alerte est assez contrasté et les listes de définition sont valides (contrôle axe-core), en clair comme en sombre.
+
+### Ajouté
+- **Couverture et ISO/IEC 27001.** Les clauses 4 à 10 sont obligatoires : le serveur refuse de les exclure (422), l'écran retire l'option « Exclue » (une copie personnalisée d'un référentiel ISO 27001 garde la règle). Une exclusion enregistrée avant la règle est ignorée dans le calcul et signalée. Les exigences dont l'applicabilité n'est pas tranchée sont comptées à part (« à déterminer ») et signalées « à revoir » sur l'écran Couverture et sur la carte du périmètre.
+
+### Ajouté
+Lots L2 et L3 du [prompt maître ASTRA](docs/unification/AUDIT-ASTRA-2026-10-21.md) (navigation, périmètres, droits) :
+- **Style Clair** appliqué en direct aux sessions déjà ouvertes quand l'administrateur le change ; contrastes du style Clair vérifiés (avec la feuille de styles).
+- **Menu fixe** : sa hauteur est bornée en tablette comme sur ordinateur, il défile seul ; inventaire de référence des rubriques, adresses et droits du menu (test).
+- **Graphe des périmètres** : bouton « Modifier » (même formulaire que la liste), état de chargement, fenêtres centrées, rechargement de la version après un conflit (412), liaisons orientées avec pointe de flèche, flux animé qu'on met en pause (arrêté d'emblée en mouvement réduit), colonne des fournisseurs extérieurs rattachés (lien vers leur fiche).
+- **Vue des accès** (Registres) : pour une personne ou un groupe, le rôle par registre, son origine (direct ou groupe) et les droits réels calculés par le serveur ; recherche et pagination ; réservée aux droits d'administration.
+- **Attribution d'un droit** : fenêtre d'aperçu (rôle avant et après, personnes concernées, rôles qui subsistent, motif facultatif) avant confirmation.
+- **Délai de l'étape Playwright de la CI** porté à 30 minutes (la suite dure 26 minutes).
+Lots L4 à L8 (registres partagés, écarts, Timeline, récurrences) :
+- **Registres partagés** : les éléments d'un registre rattaché à plusieurs périmètres sont listés (actions, écarts, séries, tâches, tableau de bord) sous chacun de ces périmètres et s'ouvrent avec leur propre périmètre de référence ; sélecteur de registre à la création (rattachement hérité affiché avant l'enregistrement).
+- **Liens entrants** d'un élément : une action liée par audit d'origine ou par récidive affiche aussi l'écart qui la référence.
+- **Timeline** : intitulés fixes pendant le défilement horizontal, zone verticale bornée pour cent actions, état et retard dits en toutes lettres, légende.
+- **Classification d'un écart** : rouge, orange foncé ou violet avec légende, en liste comme en fiche (couleur jamais seule).
+- **Périodicité d'une série** : sept préréglages (journalier à annuel, « tous les deux mois ») ou personnalisée, avec l'aperçu des cinq prochaines échéances calculées par le moteur (fins de mois, fuseau, jours exclus).
+- **Validation d'occurrence** visible dans les listes de tâches ; le bouton de validation explique pourquoi il est inactif hors de la fenêtre de validation.
+Lot L9 (dossiers 002 risques et 003 EBIOS RM) :
+- **Mesure d'un traitement = exigence d'un cadre publié** (ex. mesure de l'Annexe A) : acceptée par le serveur, proposée dans le sélecteur, lisible depuis l'exigence (lien dans l'autre sens) ; le lien ne modifie pas la couverture du cadre. Les relations proposées dans la fiche respectent celles que le serveur accepte pour la paire.
+- **Action de traitement** : fenêtre de saisie (nom, échéance, plan d'actions d'accueil) ; le plan choisi est contrôlé (gestion exigée, même famille, même périmètre de référence).
+- **Pertinence d'un couple SR/OV** : un choix différent de la proposition de la matrice exige une justification ; un couple dont le niveau écarte ne peut pas être « retenu » (règles serveur).
+- **Atelier 1** : socle de sécurité saisi dans la fiche de l'étude et restitué dans l'atelier ; gravité de l'échelle publiée affichée avec son libellé.
+- **Validation d'atelier** : un élément modifié après la validation la rend caduque (« modifié depuis la validation ») au lieu de laisser un faux état validé.
+- **Registre des risques** : filtre et colonne « Étude » ; tests des gardes d'approbation (résiduel inacceptable, étape non validée) et du drapeau de revue dépassée.
+Lot L8 (suite) :
+- **Preuve d'une validation** : version d'un document ou fiche de preuve choisie dans une liste (plus de saisie libre) ; le serveur refuse tout autre objet ; le journal affiche l'intitulé de la preuve selon les droits de la personne.
+- **Occurrence suivante** : elle se cherche dans la liste courante de la personne (filtres compris), toutes séries confondues ; aucune validation automatique.
+- **Kanban** : autant de colonnes que d'états de la politique, zone bornée à défilement propre, titres de colonnes fixes.
+- **Écran des tâches** : filtre « Registre » (plans d'actions et tâches récurrentes lisibles) ; vue, mois, recherche, responsable, état, registre et option « clos » sont conservés dans l'adresse (retour depuis une fiche, rechargement, lien partagé).
+- **Timeline** : le résultat de validation d'une occurrence (OK, KO, NA) est dit dans l'intitulé et dans la description lue par les lecteurs d'écran.
+Lot L10 (dossiers 010 cartes de périmètres et 012 exploitation) :
+- **Cartes de périmètres** : la couverture reprend le calcul de l'écran Couverture (référentiels rattachés ou hérités, états d'exigence communs) et s'appelle « Couverture » : ce n'est pas un taux de conformité (un enfant qui hérite d'un référentiel n'affiche plus « indisponible »). Les écarts ouverts sont ventilés en majeurs, mineurs et sensibles (classification de la fiche ou de l'outil historique) ; chaque compteur est un lien vers la liste du même périmètre (`?perimetre=`), les classes filtrent la liste des écarts (`?classif=`). Le retard d'un écart se compare à la date locale du périmètre.
+- **Journal d'audit** : filtres par période et par compte, pagination, export JSON réservé au droit d'exportation (comme le CSV), export tracé avec ses filtres, troncature signalée (en-tête `X-Journal-Tronque`, mention à l'écran).
+- **Détails techniques** : volume des pièces, date du relevé, « Non disponible » quand le serveur ne mesure pas une valeur ; test de `/api/admin/info`.
+- **Certificat TLS** : « Contrôler le certificat » avant installation (aperçu en lecture seule : format, validité, chaîne, hôte, clé, empreinte et noms), sans rien conserver ; l'installation reste confirmée et contrôlée par le serveur.
 
 ## [3.6.1] — 2026-10-20
 

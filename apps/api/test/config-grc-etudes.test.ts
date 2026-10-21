@@ -74,6 +74,7 @@ describe('étude liée à une matrice de pertinence', () => {
         resourcesLevel: 'n2',
         motivationLevel: 'n3',
         relevanceLevel: 'medium',
+        justification: 'Choix de l’analyste, argumenté pour la recette',
       },
     });
     expect(couple.statusCode, couple.body).toBe(200);
@@ -88,6 +89,38 @@ describe('étude liée à une matrice de pertinence', () => {
       expect(refus.statusCode, champ).toBe(422);
       expect(refus.body).toContain(champ);
     }
+  });
+
+  it('exige une justification quand la pertinence retenue diffère de la proposition, et refuse « retenu » sur un couple écarté', async () => {
+    const e = await etude({ relevanceMatrix: matrice }, 'Étude de la pertinence retenue');
+    const base = { studyRef: 'object:' + e.json().id, resourcesLevel: 'n3', motivationLevel: 'n3' };
+    const creer = (data: Record<string, unknown>) =>
+      a.post(root() + '/objects', { kind: 'sr_ov', name: 'Couple', data: { ...base, ...data } });
+    // La proposition suit la matrice : la retenir telle quelle ne demande aucune justification.
+    const propose = (await creer({ relevanceLevel: 'high' })).json();
+    expect(propose.data.relevanceLevel).toBe('high');
+    // Un choix différent sans justification est refusé, avec justification il est accepté.
+    const sans = await creer({ relevanceLevel: 'low' });
+    expect(sans.statusCode, sans.body).toBe(422);
+    expect(sans.body).toMatch(/Justifiez/);
+    const avec = await creer({ relevanceLevel: 'low', justification: 'Source sans objectif crédible ici' });
+    expect(avec.statusCode, avec.body).toBe(200);
+    // Un couple dont le niveau écarte ne peut pas être « retenu » ; non retenu, il est accepté.
+    const source = (
+      await a.post(root() + '/objects', {
+        kind: 'risk_source',
+        name: 'Source fictive',
+        data: { studyRef: base.studyRef, category: 'crime' },
+      })
+    ).json();
+    const retenu = await creer({
+      relevanceLevel: 'low',
+      retained: true,
+      sourceRef: 'object:' + source.id,
+      justification: 'Choix argumenté',
+    });
+    expect(retenu.statusCode, retenu.body).toBe(422);
+    expect(retenu.body).toMatch(/écarte/);
   });
 
   it('archiver la matrice interdit une nouvelle liaison mais pas la modification d’une étude déjà liée', async () => {
@@ -240,7 +273,13 @@ describe('migration explicite d’une étude vers une nouvelle version de config
     const couple = await a.post(root() + '/objects', {
       kind: 'sr_ov',
       name: 'Couple migré',
-      data: { studyRef, resourcesLevel: 'n2', motivationLevel: 'n3', relevanceLevel: 'medium' },
+      data: {
+        studyRef,
+        resourcesLevel: 'n2',
+        motivationLevel: 'n3',
+        relevanceLevel: 'medium',
+        justification: 'Choix de l’analyste, argumenté pour la recette',
+      },
     });
     expect(couple.statusCode, couple.body).toBe(200);
     const url = `${root()}/studies/${e.json().id}/configuration-migration`;

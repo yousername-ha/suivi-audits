@@ -1,6 +1,13 @@
 /* Évaluation des exigences : états de couverture et cohérence des dimensions. Données fictives. */
 import { describe, expect, it } from 'vitest';
-import { EvaluationExigenceCorps, etatExigence, incoherencesEvaluation, syntheseEtats } from '../src/couverture.js';
+import {
+  EvaluationExigenceCorps,
+  etatExigence,
+  evaluationEffective,
+  exclusionInterdite,
+  incoherencesEvaluation,
+  syntheseEtats,
+} from '../src/couverture.js';
 
 const base = {
   applicability: 'applicable' as const,
@@ -87,5 +94,36 @@ describe('synthèse', () => {
   it('dénombre par état et exclut les non applicables du total applicable', () => {
     const s = syntheseEtats(['non_implemente', 'partiel', 'teste', 'non_applicable', 'non_applicable']);
     expect(s).toMatchObject({ non_implemente: 1, partiel: 1, teste: 1, non_applicable: 2, applicables: 3 });
+  });
+});
+
+describe('exigences obligatoires et applicabilité à déterminer', () => {
+  const iso = { identifier: 'iso-27001-2022' };
+  it('les clauses 4 à 10 de l’ISO 27001 ne sont pas excluables, l’Annexe A l’est', () => {
+    for (const n of [4, 5, 6, 7, 8, 9, 10]) expect(exclusionInterdite(iso, `clause_${n}`)).toBe(true);
+    expect(exclusionInterdite(iso, 'clause_11')).toBe(false);
+    expect(exclusionInterdite(iso, 'annexe_a_5')).toBe(false);
+    expect(exclusionInterdite({ identifier: 'autre' }, 'clause_4')).toBe(false);
+  });
+  it('une copie d’un référentiel ISO 27001 garde la règle', () => {
+    const copie = {
+      identifier: 'ma-copie',
+      derivedFrom: { identifier: 'iso-27001-2022', name: 'ISO', version: 1 },
+    };
+    expect(exclusionInterdite(copie, 'clause_9')).toBe(true);
+  });
+  it('une exclusion antérieure sur une clause est ignorée par la couverture', () => {
+    const e = { applicability: 'exclue' as const };
+    expect(evaluationEffective(e, true)?.applicability).toBe('a_determiner');
+    expect(evaluationEffective(e, false)).toBe(e);
+  });
+  it('compte à part les exigences à déterminer, hors exigences obligatoires', () => {
+    const s = syntheseEtats([
+      { etat: 'non_implemente', applicability: 'a_determiner' },
+      { etat: 'non_implemente', applicability: 'a_determiner', obligatoire: true },
+      { etat: 'teste', applicability: 'applicable' },
+      { etat: 'non_applicable', applicability: 'exclue' },
+    ]);
+    expect(s).toMatchObject({ applicables: 3, aDeterminer: 1, teste: 1, non_applicable: 1 });
   });
 });

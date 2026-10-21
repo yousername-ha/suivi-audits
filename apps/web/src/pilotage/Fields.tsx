@@ -16,6 +16,7 @@ import { useState } from 'react';
 import { get } from '../api';
 import { BlocGravite, useGravite } from '../config-grc/Gravite';
 import { BlocPertinence, ConfigurationEtude, usePertinence } from '../config-grc/Pertinence';
+import { SocleEditeur } from '../grc/SocleEditeur';
 export interface Source {
   ref: string;
   name: string;
@@ -265,6 +266,9 @@ export function Fields({
   return (
     <Stack>
       {fields.map(input)}
+      {kind === 'risk_study' && (
+        <SocleEditeur value={data.baseline} onChange={(v) => onChange('baseline', v)} readonly={readonly} />
+      )}
       {kind === 'risk_study' && (
         <ConfigurationEtude
           value={data.configuration}

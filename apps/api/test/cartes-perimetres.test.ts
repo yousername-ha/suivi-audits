@@ -1,7 +1,7 @@
 /* Cartes de périmètres (R16, R17) : compteurs sans double comptage, indisponibles sans droit, registres restreints
    respectés, éléments hérités par registre. Données fictives. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import type { SyntheseCartes } from '@suivi/shared';
+import type { FrameworkDefinition, SyntheseCartes } from '@suivi/shared';
 import { type Agent, createTestApp, login, makeUser, type TestApp } from './helpers.js';
 
 const action = (name: string, extra: Record<string, unknown> = {}, registreId?: string) => ({
@@ -22,6 +22,30 @@ const action = (name: string, extra: Record<string, unknown> = {}, registreId?: 
     ...extra,
   },
 });
+const definition: FrameworkDefinition = {
+  name: 'Référentiel de carte',
+  identifier: 'CARTE-FICTIF',
+  source: {
+    organisation: 'Organisation fictive',
+    document: 'Document de recette',
+    url: 'https://example.invalid/carte',
+    version: '1',
+    date: '2026-10-21',
+    license: 'Données fictives de test',
+    verifiedAt: '',
+    normative: false,
+    status: 'organisation',
+  },
+  domains: [{ id: 'd', label: 'Domaine' }],
+  requirements: ['R1', 'R2', 'R3'].map((id) => ({
+    id,
+    domain: 'd',
+    title: `Exigence ${id}`,
+    description: 'Fictif',
+    applicability: '',
+    measureRefs: [],
+  })),
+};
 const passe = new Date(Date.now() - 20 * 86400000).toISOString();
 const futur = new Date(Date.now() + 20 * 86400000).toISOString();
 
@@ -38,6 +62,8 @@ describe('cartes de périmètres', () => {
   };
   const cartes = async (a: Agent) => (await synthese(a)).cartes;
   const carte = async (a: Agent, id: string) => (await cartes(a)).find((c) => c.id === id)!;
+  const p = async (n: string, parentId: string | null = null) =>
+    (await admin.post('/api/grc/smsis', { name: n, scope: n, timezone: 'Europe/Paris', parentId })).json().id as string;
 
   beforeAll(async () => {
     t = await createTestApp();
@@ -45,9 +71,6 @@ describe('cartes de périmètres', () => {
     const m = (membreUser = await makeUser(t, 'car_membre', 'ro'));
     membre = await login(t, m);
     sansDroit = await login(t, await makeUser(t, 'car_sans', 'ro', { modules: ['audit'] }));
-    const p = async (n: string, parentId: string | null = null) =>
-      (await admin.post('/api/grc/smsis', { name: n, scope: n, timezone: 'Europe/Paris', parentId })).json()
-        .id as string;
     A = await p('Périmètre carte A');
     B = await p('Périmètre carte B', A);
     for (const id of [A, B]) await admin.put(`/api/grc/${id}/members`, { userId: m.id, write: false });
@@ -115,16 +138,20 @@ describe('cartes de périmètres', () => {
     expect(a.compteurs.actions!.ouverts).toBe(4);
   });
 
-  it('compte les écarts ouverts, la continuité et laisse la conformité indisponible sans référentiel activé', async () => {
+  it('compte les écarts ouverts, la continuité et laisse la couverture indisponible sans référentiel effectif', async () => {
     const a = await carte(admin, A);
-    expect(a.compteurs.ecarts).toEqual({ ouverts: 1, enRetard: 0 });
+    expect(a.compteurs.ecarts).toMatchObject({ ouverts: 1, enRetard: 0 });
     expect(a.compteurs.continuite).toEqual({ bia: 1, plans: 0 });
-    expect(a.compteurs.conformite).toBeNull();
+    expect(a.compteurs.couverture).toBeNull();
   });
 
   it('un périmètre vide affiche des zéros réels, pas des valeurs indisponibles', async () => {
     const b = await carte(admin, B);
-    expect(b.compteurs.ecarts).toEqual({ ouverts: 0, enRetard: 0 });
+    expect(b.compteurs.ecarts).toEqual({
+      ouverts: 0,
+      enRetard: 0,
+      parClassification: { majeure: 0, mineure: 0, point_sensible: 0, non_classe: 0 },
+    });
     expect(b.compteurs.continuite).toEqual({ bia: 0, plans: 0 });
     expect(b.parentId).toBe(A);
   });
@@ -161,7 +188,7 @@ describe('cartes de périmètres', () => {
         recurrentes: null,
         ecarts: null,
         continuite: null,
-        conformite: null,
+        couverture: null,
       });
   });
 
@@ -183,7 +210,7 @@ describe('cartes de périmètres', () => {
          AND COALESCE(data->>'status','') NOT IN ('done','cancelled') AND smsi_id IN (SELECT id FROM grc_smsis)`,
     );
     expect(total.actions!.ouverts).toBe(ouvertesReelles!.n);
-    expect(total.conformite).toBeNull();
+    expect(total.couverture).toBeNull();
   });
 
   it('la carte parent compte son ensemble une seule fois, sans additionner les cartes enfants', async () => {
@@ -194,14 +221,94 @@ describe('cartes de périmètres', () => {
     // Le registre partagé figure dans A et dans B : la somme des deux cartes (5) compterait deux fois son action.
     expect(a.compteurs.actions!.ouverts + b.compteurs.actions!.ouverts).toBe(5);
     expect(a.total.actions).toEqual({ ouverts: 4, enRetard: 2 });
-    expect(a.total.conformite).toBeNull();
+    expect(a.total.couverture).toBeNull();
     // Sans sous-périmètre, le total de la carte est son propre décompte.
     expect(b.sousPerimetres).toBe(0);
     expect(b.total).toEqual(b.compteurs);
   });
 
+  it('ventile les écarts ouverts par classification (fiche ou outil historique), sans compter les clos', async () => {
+    const C = await p('Périmètre classes');
+    const ecart = (name: string, data: Record<string, unknown>) =>
+      admin.post(`/api/grc/${C}/objects`, { kind: 'nonconformity', name, data: { cause: 'c', ...data } });
+    await ecart('Majeur', { classification: 'majeure' });
+    await ecart('Mineur', { classification: 'mineure' });
+    await ecart('Sensible historique', { type: 'PS' });
+    await ecart('Sans classification', {});
+    await ecart('Majeur clos', { classification: 'majeure', status: 'closed' });
+    const c = await carte(admin, C);
+    expect(c.compteurs.ecarts).toEqual({
+      ouverts: 4,
+      enRetard: 0,
+      parClassification: { majeure: 1, mineure: 1, point_sensible: 1, non_classe: 1 },
+    });
+  });
+
+  it('l’échéance d’un écart se compare à la date locale du périmètre, pas à celle de l’UTC', async () => {
+    const jourLocal = (fuseau: string) => new Intl.DateTimeFormat('en-CA', { timeZone: fuseau }).format(new Date()); // AAAA-MM-JJ
+    const jourUtc = new Date().toISOString().slice(0, 10);
+    for (const fuseau of ['Pacific/Kiritimati', 'Pacific/Pago_Pago']) {
+      const id = (await admin.post('/api/grc/smsis', { name: `Fuseau ${fuseau}`, scope: 'f', timezone: fuseau })).json()
+        .id as string;
+      await admin.post(`/api/grc/${id}/objects`, {
+        kind: 'nonconformity',
+        name: 'Échéance du jour UTC',
+        data: { cause: 'c', dueAt: jourUtc },
+      });
+      const attendu = jourUtc < jourLocal(fuseau) ? 1 : 0;
+      expect((await carte(admin, id)).compteurs.ecarts!.enRetard, fuseau).toBe(attendu);
+    }
+  });
+
+  it('la couverture suit l’écran Couverture : référentiel rattaché et hérité, états communs, jamais agrégée', async () => {
+    const pub = await admin.post('/api/library/frameworks/preview', { id: null, definition });
+    const publie = await admin.post(
+      '/api/library/frameworks/publish',
+      { id: null, definition, previewId: pub.json().previewId, reason: 'Publication fictive', confirm: 'PUBLIER' },
+      { 'if-match': '"0"' },
+    );
+    expect(publie.statusCode, publie.body).toBe(200);
+    const fw = publie.json().id as string;
+    const P = await p('Périmètre couvert');
+    const Q = (
+      await admin.post('/api/grc/smsis', {
+        name: 'Enfant qui hérite',
+        scope: 'q',
+        timezone: 'Europe/Paris',
+        parentId: P,
+        inheritFrameworks: true,
+      })
+    ).json().id as string;
+    const rattache = await admin.put(`/api/grc/${P}/framework-attachments/${fw}`, {
+      version: 1,
+      confirm: 'RATTACHER',
+    });
+    expect(rattache.statusCode, rattache.body).toBe(200);
+    // Une exigence testée conforme : elle compte parmi les « testées ou validées ».
+    const evaluation = await admin.post(
+      `/api/grc/${P}/exigences/${fw}/R1/evaluations`,
+      {
+        applicability: 'applicable',
+        implementation: 'complete',
+        testedAt: '2026-10-20',
+        testResult: 'conforme',
+        reason: 'Revue de recette',
+        confirm: 'EVALUER',
+      },
+      { 'if-match': '"0"' },
+    );
+    expect(evaluation.statusCode, evaluation.body).toBe(201);
+    const attendue = { referentiels: 1, exigences: 3, applicables: 3, testees: 1, aDeterminer: 2 };
+    expect((await carte(admin, P)).compteurs.couverture).toEqual(attendue);
+    // L'enfant hérite du référentiel du parent : sa carte n'affiche plus « indisponible », mais l'évaluation est propre à
+    // chaque périmètre : celle du parent ne lui est pas attribuée.
+    expect((await carte(admin, Q)).compteurs.couverture).toEqual({ ...attendue, testees: 0, aDeterminer: 3 });
+    // Le total d'un parent ne somme pas des couvertures.
+    expect((await carte(admin, P)).total.couverture).toBeNull();
+  });
+
   it('sans droit de lecture, le total est indisponible comme les cartes', async () => {
     const { total } = await synthese(sansDroit);
-    expect(total).toEqual({ actions: null, recurrentes: null, ecarts: null, continuite: null, conformite: null });
+    expect(total).toEqual({ actions: null, recurrentes: null, ecarts: null, continuite: null, couverture: null });
   });
 });

@@ -181,6 +181,10 @@ export const EcosystemPartyData = common
     maturity: niveau,
     trust: niveau,
     measures: text.default(''),
+    /** Mesures de l'écosystème, par référence (mesure, exigence d'un cadre publié) : pas de copie du texte. */
+    measureRefs: refs,
+    /** Pourquoi les critères retenus donnent cette dangerosité (indice de menace contextualisé). */
+    dangerJustification: text.default(''),
   })
   .passthrough();
 export const StrategicScenarioData = common
@@ -227,8 +231,9 @@ export const RISK_SCHEMAS = {
 
 /* ---------------------------------------------------------------- Références typées */
 
-/** Cible autorisée : « object:<type> » ou « legacy:<clé historique> ». */
-export type CibleRef = `object:${GrcKind}` | `legacy:${string}`;
+/** Cible autorisée : « object:<type> », « legacy:<clé historique> » ou « requirement » (exigence d'un cadre publié,
+    par exemple une mesure de l'Annexe A de l'ISO/IEC 27001:2022 : le lien ne vaut pas conformité). */
+export type CibleRef = `object:${GrcKind}` | `legacy:${string}` | 'requirement';
 const PROCESSUS: CibleRef[] = ['object:process', 'legacy:processes'];
 export const STUDY_REF: CibleRef[] = ['object:risk_study'];
 
@@ -240,7 +245,11 @@ export const RISK_REF_KINDS: Partial<Record<GrcKind, Record<string, CibleRef[]>>
   feared_event: { studyRef: STUDY_REF, businessAssetRef: ['object:business_asset'] },
   risk_source: { studyRef: STUDY_REF },
   sr_ov: { studyRef: STUDY_REF, sourceRef: ['object:risk_source'] },
-  ecosystem_party: { studyRef: STUDY_REF, supplierRef: ['legacy:suppliers'] },
+  ecosystem_party: {
+    studyRef: STUDY_REF,
+    supplierRef: ['legacy:suppliers'],
+    measureRefs: ['object:measure', 'object:soa', 'requirement', 'legacy:items', 'legacy:soa'],
+  },
   strategic_scenario: {
     studyRef: STUDY_REF,
     srOvRef: ['object:sr_ov'],
@@ -255,7 +264,7 @@ export const RISK_REF_KINDS: Partial<Record<GrcKind, Record<string, CibleRef[]>>
   treatment: {
     studyRef: STUDY_REF,
     riskRefs: ['object:risk'],
-    measureRefs: ['object:measure', 'object:soa', 'legacy:items', 'legacy:soa'],
+    measureRefs: ['object:measure', 'object:soa', 'requirement', 'legacy:items', 'legacy:soa'],
   },
   nonconformity: { auditRef: ['object:audit'], recidiveRef: ['object:nonconformity'] },
   risk: {
@@ -282,6 +291,7 @@ export function referencesTypees(kind: GrcKind, data: Record<string, unknown>) {
 export function cibleAutorisee(ref: string, objKind: GrcKind | null, cibles: readonly CibleRef[]) {
   if (ref.startsWith('object:')) return !!objKind && cibles.includes(`object:${objKind}`);
   if (ref.startsWith('legacy:')) return cibles.includes(`legacy:${ref.split(':')[1]}`);
+  if (ref.startsWith('requirement:')) return cibles.includes('requirement');
   return false;
 }
 

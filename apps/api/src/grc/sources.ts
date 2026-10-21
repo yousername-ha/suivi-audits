@@ -20,7 +20,8 @@ export async function sources(g: Grc, smsi: string, user: SessionUser, search: s
       [smsi, modules, pattern, typesObjets ?? null, masques],
     )
   ).rows;
-  if (!cibles && user.rights.can('documents', 'lire'))
+  // Versions de documents (preuves) : proposées sans filtre, ou quand le champ typé les autorise.
+  if ((!cibles || cibles.includes('document')) && user.rights.can('documents', 'lire'))
     objects.push(
       ...(
         await g.db.q<{ ref: string; name: string; kind: string }>(
@@ -29,7 +30,12 @@ export async function sources(g: Grc, smsi: string, user: SessionUser, search: s
         )
       ).rows,
     );
-  if (!cibles && user.rights.can('audit', 'lire') && user.rights.can('conformite', 'lire')) {
+  // Exigences publiées : proposées sans filtre, ou quand le champ typé les autorise (mesures d'un traitement).
+  if (
+    (!cibles || cibles.includes('requirement')) &&
+    user.rights.can('audit', 'lire') &&
+    user.rights.can('conformite', 'lire')
+  ) {
     const publications = (
       await g.db.q<{
         framework_id: string;

@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { api, get, saveBlob } from '../api';
 import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
+import { ActionDeTraitement } from '../grc/ActionDeTraitement';
 import { MappingForm } from '../grc/MappingForm';
 export function Registry({
   smsi,
@@ -26,8 +27,7 @@ export function Registry({
   const can = useCan(),
     [kind, setKind] = useState<GrcKind>(choices?.[0] ?? 'measure'),
     [search, setSearch] = useState(''),
-    [error, setError] = useState<unknown>(null),
-    qc = useQueryClient();
+    [traitement, setTraitement] = useState<GrcObject | null>(null);
   const k = fixedKind ?? kind;
   const list = useInfiniteQuery({
     queryKey: ['grc', smsi, 'objects', k, search],
@@ -61,7 +61,7 @@ export function Registry({
         value={search}
         onChange={(e) => setSearch(e.currentTarget.value)}
       />
-      <ErrorAlert error={error ?? list.error} />
+      <ErrorAlert error={list.error} />
       <Text size="sm">{list.data?.pages[0]?.total ?? 0} fiches</Text>
       {list.data?.pages
         .flatMap((p) => p.items)
@@ -82,21 +82,7 @@ export function Registry({
                 </Button>
                 {o.kind === 'risk' && <Button onClick={() => onEvaluation(o)}>Apprécier / réévaluer</Button>}
                 {o.kind === 'treatment' && can('ecarts', 'modifier') && (
-                  <Button
-                    onClick={async () => {
-                      try {
-                        const action = await api<GrcObject>('POST', `/api/grc/${smsi}/treatments/${o.id}/action`, {
-                          body: { name: 'Mettre en œuvre : ' + o.name, dueAt: null, ownerId: o.data.ownerId ?? null },
-                        });
-                        await qc.invalidateQueries({ queryKey: ['grc', smsi] });
-                        onOpen(action);
-                      } catch (e) {
-                        setError(e);
-                      }
-                    }}
-                  >
-                    Générer une action de traitement
-                  </Button>
+                  <Button onClick={() => setTraitement(o)}>Générer une action de traitement</Button>
                 )}
               </Group>
             </Stack>
@@ -106,6 +92,19 @@ export function Registry({
         <Button variant="light" onClick={() => void list.fetchNextPage()}>
           Charger les 50 suivantes
         </Button>
+      )}
+      {traitement && (
+        <ActionDeTraitement
+          key={traitement.id}
+          smsi={smsi}
+          traitement={traitement}
+          opened
+          onClose={() => setTraitement(null)}
+          onCree={(action) => {
+            setTraitement(null);
+            onOpen(action);
+          }}
+        />
       )}
     </Stack>
   );

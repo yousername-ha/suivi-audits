@@ -199,12 +199,37 @@ describe('Pilotage multi-référentiels G/H/K et début E', () => {
       { 'if-match': `"${progress.json().version}"` },
     );
     expect(closed.statusCode, closed.body).toBe(200);
+    // Terminer l'action ne clôt pas l'écart : il reste ouvert, avec les mêmes causes et la même vérification (017-07).
+    const apresAction = await ecart();
+    expect(apresAction.data.status).not.toBe('closed');
+    expect(apresAction.version).toBe(f.version);
     const done = await decide(finding, 'close', 'completed', f.version);
     expect(done.statusCode, done.body).toBe(200);
     expect((await ecart()).data.status).toBe('closed');
     const report = await a.get(base + '/pilotage/improvement-indicators');
     expect(report.statusCode).toBe(200);
     expect(report.json().closed).toBeGreaterThan(0);
+  });
+  it('rouvrir l’action liée ne rouvre pas un écart clos : la clôture reste intacte (017-07)', async () => {
+    const f = await ecart();
+    expect(f.data.status).toBe('closed');
+    const avantEvaluations = (await t.svc.db.one<{ n: string }>(
+      'SELECT count(*)::text AS n FROM grc_requirement_assessments',
+    ))!.n;
+    const action = (await a.get(base + '/objects/' + linkedAction.slice(7))).json();
+    const rouverte = await a.put(
+      base + '/objects/' + action.id,
+      { kind: 'action', name: action.name, data: { ...action.data, status: 'progress' } },
+      { 'if-match': `"${action.version}"` },
+    );
+    expect(rouverte.statusCode, rouverte.body).toBe(200);
+    const apres = await ecart();
+    expect(apres.data.status).toBe('closed');
+    expect(apres.version).toBe(f.version);
+    // Aucune évaluation d'exigence n'est écrite ni modifiée par la réouverture d'une action.
+    const evaluations = async () =>
+      (await t.svc.db.one<{ n: string }>('SELECT count(*)::text AS n FROM grc_requirement_assessments'))!.n;
+    expect(await evaluations()).toBe(avantEvaluations);
   });
   it('rouvre un constat clos avec un motif tracé : l’efficacité est à revérifier, aucune réouverture silencieuse', async () => {
     let f = await ecart();
@@ -454,6 +479,16 @@ describe('Pilotage multi-référentiels G/H/K et début E', () => {
     const recidive = await creer({ classification: 'mineure', recidiveRef: 'object:' + premier.json().id });
     expect(recidive.statusCode, recidive.body).toBe(200);
     expect(recidive.json().data.recidiveRef).toBe('object:' + premier.json().id);
+    // La récidive se lit des deux côtés : le constat précédent voit son entrant (021-01, 021-07).
+    const liensDuPremier = (
+      await a.get(base + '/links?ref=' + encodeURIComponent('object:' + premier.json().id))
+    ).json();
+    expect(
+      liensDuPremier.some(
+        (l: { sens: string; other: { ref: string } }) =>
+          l.sens === 'entrant' && l.other.ref === 'object:' + recidive.json().id,
+      ),
+    ).toBe(true);
     expect((await creer({ auditRef: linkedAction })).statusCode).toBe(422);
     expect((await creer({ recidiveRef: linkedAction })).statusCode).toBe(422);
     // Un constat ne peut pas être la récidive de lui-même.

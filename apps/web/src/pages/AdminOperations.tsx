@@ -60,6 +60,19 @@ const DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dima
   label,
 }));
 
+interface ApercuCertificat {
+  ok: boolean;
+  controles: { id: string; libelle: string; ok: boolean; detail: string }[];
+  certificat: {
+    subject: string;
+    issuer: string;
+    validFrom: string;
+    validTo: string;
+    fingerprint: string;
+    alternatifs: string[];
+  } | null;
+}
+
 export function OperationsPanel() {
   const q = useQuery({
     queryKey: KEY,
@@ -82,6 +95,18 @@ export function OperationsPanel() {
   const [confirmation, setConfirmation] = useState('');
   const [certificate, setCertificate] = useState<File | null>(null);
   const [key, setKey] = useState<File | null>(null);
+  const [apercu, setApercu] = useState<ApercuCertificat | null>(null);
+  const controler = async () => {
+    if (!certificate) return;
+    setError(null);
+    try {
+      const [pem, privateKey] = await Promise.all([certificate.text(), key ? key.text() : Promise.resolve(undefined)]);
+      setApercu(await post<ApercuCertificat>('/api/admin/exploitation/tls/apercu', { certificate: pem, privateKey }));
+    } catch (e) {
+      setApercu(null);
+      setError(e);
+    }
+  };
   const ids = useRef(new Map<string, string>());
   const seen = useRef(new Map<string, string>());
   const initialized = useRef(false);
@@ -411,6 +436,7 @@ export function OperationsPanel() {
                 disabled={disabled}
                 onChange={(f) => {
                   setCertificate(f);
+                  setApercu(null);
                   ids.current.delete('tls_install');
                 }}
               />
@@ -421,6 +447,7 @@ export function OperationsPanel() {
                 disabled={disabled}
                 onChange={(f) => {
                   setKey(f);
+                  setApercu(null);
                   ids.current.delete('tls_install');
                 }}
               />
@@ -428,6 +455,37 @@ export function OperationsPanel() {
                 La clé est transmise par HTTPS, chiffrée à réception et jamais retournée ou affichée. Les clés protégées
                 par mot de passe ne sont pas acceptées.
               </Text>
+              <Group>
+                <Button variant="default" disabled={disabled || !certificate} onClick={() => void controler()}>
+                  Contrôler le certificat
+                </Button>
+              </Group>
+              {apercu && (
+                <Stack gap="2xs" role="group" aria-label="Contrôles du certificat avant installation">
+                  <Text size="sm" fw={600}>
+                    {apercu.ok
+                      ? 'Contrôles réussis : le certificat peut être installé.'
+                      : 'Un contrôle a échoué : l’installation serait refusée.'}
+                  </Text>
+                  <ul>
+                    {apercu.controles.map((c) => (
+                      <li key={c.id}>
+                        {c.ok ? '✓' : '✗'} {c.libelle} : {c.detail}
+                      </li>
+                    ))}
+                  </ul>
+                  {apercu.certificat && (
+                    <Text size="sm">
+                      Sujet : {apercu.certificat.subject || '(vide)'} · Émetteur : {apercu.certificat.issuer} · Valide
+                      du {fmtDate(apercu.certificat.validFrom)} au {fmtDate(apercu.certificat.validTo)} · Noms :{' '}
+                      {apercu.certificat.alternatifs.join(', ') || 'aucun'}
+                    </Text>
+                  )}
+                  <Text size="sm" className="mono">
+                    {apercu.certificat ? `Empreinte SHA-256 : ${apercu.certificat.fingerprint}` : ''}
+                  </Text>
+                </Stack>
+              )}
               <Group>
                 <ConfirmButton
                   color="red"

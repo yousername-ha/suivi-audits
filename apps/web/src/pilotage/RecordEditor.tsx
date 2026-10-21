@@ -29,6 +29,7 @@ import { Fields, type Source } from './Fields';
 import { Relations } from '../grc/Relations';
 import { MigrationEtude } from '../config-grc/MigrationEtude';
 import { SelecteurResponsable, useResponsables } from '../components/selecteurs';
+import { SelecteurRegistre } from '../registres/SelecteurRegistre';
 export function RecordEditor({
   smsi,
   kind,
@@ -52,6 +53,7 @@ export function RecordEditor({
   const [name, setName] = useState(''),
     [data, setData] = useState<Record<string, unknown>>({}),
     [search, setSearch] = useState(''),
+    [registreId, setRegistreId] = useState<string | null>(null),
     [error, setError] = useState<unknown>(null),
     [saving, setSaving] = useState(false);
   const sources = useQuery({
@@ -133,7 +135,7 @@ export function RecordEditor({
       } else
         await api(object ? 'PUT' : 'POST', `/api/grc/${smsi}/objects${object ? '/' + object.id : ''}`, {
           ifMatch: object?.version,
-          body: { kind, name, data: clean },
+          body: { kind, name, data: clean, ...(!object && registreId ? { registreId } : {}) },
         });
       await qc.invalidateQueries({ queryKey: ['grc', smsi] });
       onClose();
@@ -181,6 +183,15 @@ export function RecordEditor({
                 label="Description"
                 value={String(data.description ?? '')}
                 onChange={(e) => set('description', e.currentTarget.value)}
+                disabled={readonly}
+              />
+              <SelecteurRegistre
+                smsi={smsi}
+                kind={kind}
+                data={data}
+                object={object}
+                value={registreId}
+                onChange={setRegistreId}
                 disabled={readonly}
               />
               <SelecteurResponsable
@@ -241,7 +252,11 @@ export function RecordEditor({
                 disabled={readonly}
               />
               {object && (
-                <Relations smsi={smsi} source={object.id.startsWith('legacy:') ? object.id : 'object:' + object.id} />
+                <Relations
+                  smsi={smsi}
+                  source={object.id.startsWith('legacy:') ? object.id : 'object:' + object.id}
+                  sourceKind={object.id.startsWith('legacy:') ? undefined : kind}
+                />
               )}
             </Stack>
           </Tabs.Panel>

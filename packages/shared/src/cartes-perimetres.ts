@@ -10,17 +10,33 @@ export interface CompteurRetard {
   ouverts: number;
   enRetard: number;
 }
+/** Écarts ouverts par classification (celle de la fiche, sinon celle de l'outil de suivi historique). */
+export interface EcartsParClassification {
+  majeure: number;
+  mineure: number;
+  point_sensible: number;
+  non_classe: number;
+}
 export interface CarteCompteurs {
   /** Actions autonomes (hors occurrences de tâches récurrentes). */
   actions: CompteurRetard | null;
   /** Séries actives et occurrences ouvertes de tâches récurrentes. */
   recurrentes: { series: number; occurrences: CompteurRetard } | null;
-  /** Constats (écarts) non clos. */
-  ecarts: CompteurRetard | null;
-  /** Analyses d'impact (BIA) et plans de continuité (PCRA) non archivés. */
+  /** Constats (écarts) non clos, avec leur ventilation par classification. */
+  ecarts: (CompteurRetard & { parClassification: EcartsParClassification }) | null;
+  /** Analyses d'impact (BIA) et plans de continuité (PCA, PRA, PCRA) non archivés. */
   continuite: { bia: number; plans: number } | null;
-  /** Exigences couvertes par un rapprochement validé, sur les référentiels activés du périmètre. */
-  conformite: { couvertes: number; exigences: number } | null;
+  /** Couverture des référentiels rattachés ou hérités du périmètre (même calcul que l'écran « Couverture ») : exigences
+      applicables et, parmi elles, celles dont la mise en œuvre est testée ou validée. Ce n'est pas un taux de conformité.
+      Null : droit manquant ou aucun référentiel effectif (indisponible, jamais 0 %). */
+  couverture: {
+    referentiels: number;
+    exigences: number;
+    applicables: number;
+    testees: number;
+    /** Exigences dont l'applicabilité n'est pas encore tranchée : à revoir (comptées parmi les applicables). */
+    aDeterminer: number;
+  } | null;
 }
 export interface CartePerimetre {
   id: string;
@@ -31,7 +47,7 @@ export interface CartePerimetre {
   /** Éléments du périmètre lui-même (les siens et ceux des registres qui le portent). */
   compteurs: CarteCompteurs;
   /** Le périmètre et ses sous-périmètres, chaque élément une seule fois : jamais la somme des cartes enfants. Égal à
-      `compteurs` sans sous-périmètre ; la conformité n'est pas agrégée. */
+      `compteurs` sans sous-périmètre ; la couverture n'est pas agrégée. */
   total: CarteCompteurs;
   /** Nombre de sous-périmètres accessibles (descendants à tous niveaux) pris en compte dans `total`. */
   sousPerimetres: number;

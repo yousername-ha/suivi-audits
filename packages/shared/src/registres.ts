@@ -120,9 +120,25 @@ export const DroitBody = z
     role: z.enum(ROLES_RESSOURCE),
     /** Motif facultatif, conservé au journal d'audit avec l'ancien rôle. */
     motif: z.string().trim().max(500).optional(),
+    /** Aperçu seul : calcule l'effet de l'attribution sans rien écrire. */
+    apercu: z.boolean().default(false),
   })
   .strict();
 export type DroitBody = z.infer<typeof DroitBody>;
+/** Effet d'une attribution de droit, calculé par le serveur avant confirmation. */
+export interface ApercuDroit {
+  apercu: true;
+  titulaire: { type: 'utilisateur' | 'groupe'; id: string; libelle: string };
+  avant: RoleRessource | null;
+  apres: RoleRessource;
+  /** Personnes touchées : 1 pour un compte, le nombre de membres actifs pour un groupe. */
+  personnes: number;
+  /** Autres rôles que le titulaire garde sur la ressource (par ses groupes), qui continuent de s'appliquer. */
+  subsistants: { role: RoleRessource; libelle: string }[];
+  /** Pour un groupe : membres qui ont déjà un rôle direct plus élevé (leur rôle ne change pas). */
+  dejaPlusEleves: number;
+  inchange: boolean;
+}
 
 /** Contribution à une action : avancement seulement (statut et compte rendu), jamais la définition. */
 export const ContributionAction = z
@@ -197,6 +213,9 @@ export interface ValidationDto {
   result: ResultatValidation | null;
   comment: string;
   proofRef: string;
+  /** Intitulé de la preuve (titre du document et version, ou nom de la fiche), résolu avec les droits de la personne ;
+      null : la preuve n'est pas lisible par elle (la référence reste affichée). */
+  proofName?: string | null;
   createdBy: string;
   createdAt: string;
 }
@@ -232,3 +251,34 @@ export interface ImpactDeplacement {
 /** Ordre des actions d'un plan : identifiants dans l'ordre voulu (les actions non citées passent après). */
 export const OrdreBody = z.object({ ids: z.array(z.uuid()).min(1).max(1000) }).strict();
 export type OrdreBody = z.infer<typeof OrdreBody>;
+
+/* ---------------------------------------------------------------------------------------- Vue des accès d'un sujet */
+/** Origine d'un rôle de ressource : attribué à la personne elle-même ou reçu d'un groupe. */
+export interface OrigineDroit {
+  type: 'direct' | 'groupe';
+  libelle: string;
+}
+/** Accès d'une personne ou d'un groupe à un registre, tel que le serveur le calcule (jamais déduit par l'écran). */
+export interface AccesSujetRegistre {
+  registre: {
+    id: string;
+    name: string;
+    kind: RegistreKind;
+    restreint: boolean;
+    perimetres: { id: string; name: string }[];
+  };
+  /** Rôle de ressource le plus élevé, ou null s'il n'y en a aucun. */
+  role: RoleRessource | null;
+  origines: OrigineDroit[];
+  /** Droits effectifs d'une personne (rôle de ressource, droits de module, périmètres) ; absent pour un groupe. */
+  peut?: { lire: boolean; contribuer: boolean; gerer: boolean };
+  /** D'où vient le droit de lecture : administrateur, rôle de ressource, droits de module et périmètres, ou aucun. */
+  source: 'administrateur' | 'role' | 'module' | 'aucune';
+}
+export interface AccesSujetPage {
+  sujet: { type: 'utilisateur' | 'groupe'; id: string; libelle: string };
+  total: number;
+  limite: number;
+  decalage: number;
+  items: AccesSujetRegistre[];
+}

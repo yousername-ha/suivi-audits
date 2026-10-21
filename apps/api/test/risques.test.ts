@@ -219,6 +219,45 @@ describe('étude EBIOS RM : ateliers d’objets typés', () => {
     expect(v.ateliers.map((x: { valide: boolean }) => x.valide)).toEqual([true, true, false, false, false]);
     await expect(t.svc.db.q("UPDATE pilotage_decisions SET note='Altération'")).rejects.toThrow();
   });
+  it('une modification postérieure à la validation la rend caduque : jamais de faux « validé »', async () => {
+    const avant = (await a.get(root() + '/risk-studies/' + ids.etude)).json();
+    expect(avant.ateliers[0].valide).toBe(true);
+    expect(avant.ateliers[0].modifieDepuisValidation).toBe(false);
+    const vm = (await a.get(root() + '/objects/' + ids.vm)).json();
+    const maj = await a.put(
+      root() + '/objects/' + ids.vm,
+      { kind: vm.kind, name: vm.name, data: { ...vm.data, mission: 'Mission précisée après la validation' } },
+      { 'if-match': `"${vm.version}"` },
+    );
+    expect(maj.statusCode, maj.body).toBe(200);
+    const apres = (await a.get(root() + '/risk-studies/' + ids.etude)).json();
+    expect(apres.ateliers[0].valide).toBe(false);
+    expect(apres.ateliers[0].modifieDepuisValidation).toBe(true);
+    // L'atelier suivant, non touché, reste validé ; l'historique des validations est conservé.
+    expect(apres.ateliers[1].valide).toBe(true);
+    expect(apres.ateliers[0].validations).toHaveLength(1);
+  });
+  it('conserve le socle de sécurité de l’étude (atelier 1) et le restitue dans la vue', async () => {
+    const etude = (await a.get(root() + '/objects/' + ids.etude)).json();
+    const socle = [
+      { referential: 'Socle fictif', status: 'partial', gap: 'Journalisation à compléter', requirementRefs: [] },
+    ];
+    const maj = await a.put(
+      root() + '/objects/' + ids.etude,
+      { kind: etude.kind, name: etude.name, data: { ...etude.data, baseline: socle } },
+      { 'if-match': `"${etude.version}"` },
+    );
+    expect(maj.statusCode, maj.body).toBe(200);
+    const vue = (await a.get(root() + '/risk-studies/' + ids.etude)).json();
+    expect(vue.etude.data.baseline).toEqual(socle);
+    // Un état de socle inconnu est refusé par le serveur.
+    const refus = await a.put(
+      root() + '/objects/' + ids.etude,
+      { kind: etude.kind, name: etude.name, data: { ...etude.data, baseline: [{ ...socle[0], status: 'conforme' }] } },
+      { 'if-match': `"${maj.json().version}"` },
+    );
+    expect(refus.statusCode).toBe(422);
+  });
 });
 
 describe('risque du registre : processus ISO/IEC 27005 et acceptation formelle', () => {
@@ -275,6 +314,11 @@ describe('risque du registre : processus ISO/IEC 27005 et acceptation formelle',
     expect(reg.json().items[0]).toMatchObject({ demarche: 'iso27005', strategie: 'accept', acceptation: 'acceptee' });
     expect((await a.get(root() + '/risks/register?acceptation=a_decider')).json().items).toEqual([]);
     expect((await a.get(root() + '/risks/register?etude=' + ids.etude)).json().items).toHaveLength(1);
+    // Le drapeau « revue en retard » suit la date de prochaine revue, et le filtre ne garde que les risques en retard.
+    const item = reg.json().items[0] as { prochaineRevue: string | null; enRetard: boolean };
+    expect(item.enRetard).toBe(!!item.prochaineRevue && item.prochaineRevue < new Date().toISOString().slice(0, 10));
+    const enRetard = (await a.get(root() + '/risks/register?enRetard=1')).json().items as { enRetard: boolean }[];
+    expect(enRetard.every((x) => x.enRetard)).toBe(true);
   });
 
   it('une option autre qu’« accepter » ne peut pas recevoir d’acceptation', async () => {
