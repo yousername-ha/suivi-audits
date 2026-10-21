@@ -18,7 +18,7 @@ const KEYS: Record<string, string[][]> = {
     ['admin', 'sessions'],
     ['account', 'sessions'],
   ],
-  settings: [['setup'], ['synthese'], ['settings'], ['carto', 'objects']],
+  settings: [['setup'], ['synthese'], ['settings'], ['carto', 'objects'], ME_KEY as unknown as string[]],
   legacy_state: [
     ['ia', 'evaluations'],
     ['grc'],

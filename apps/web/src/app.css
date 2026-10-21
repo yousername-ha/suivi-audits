@@ -669,12 +669,14 @@
   }
 }
 
-/* Garder le contenu métier visible lorsque les destinations d'une famille sont dépliées. */
-@media (min-width: 64em) {
+/* Menu fixe : sa hauteur est bornée (tablette comprise) et il défile seul, sans entraîner la page. */
+@media (min-width: 36em) {
   .shell-nav-inner {
     max-height: calc(100dvh - var(--suivi-entete-h) - 2 * var(--mantine-spacing-md));
     overflow-y: auto;
   }
+}
+@media (min-width: 64em) {
   .nav-destination.mantine-NavLink-root {
     padding-block: var(--mantine-spacing-xs);
   }

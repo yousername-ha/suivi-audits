@@ -228,6 +228,9 @@ export const ETATS = {
 } as const;
 export type EtatCouleur = keyof typeof ETATS;
 
+/** Fonds du style global « Clair » (Paramètres > Apparence), posés par `html[data-style='clair']` en mode clair. */
+export const STYLE_CLAIR = { page: '#f7f9fb', surfaceDouce: '#f0f4f7' } as const;
+
 /** Couleur obtenue en posant `couleur` à l'opacité `alpha` sur `fond` (variantes légères de Mantine). */
 export function melange(couleur: string, alpha: number, fond: string): string {
   const v = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
@@ -255,6 +258,22 @@ export const COUPLES_CONTRASTE: { nom: string; texte: string; fond: string; seui
   { nom: 'accent violet (clair)', texte: '#FFFFFF', fond: VIOLET[7], seuil: 4.5 },
   { nom: 'puce légère verte (clair)', texte: VERT[8], fond: VERT[0], seuil: 4.5 },
   { nom: 'puce légère violette (clair)', texte: VIOLET[7], fond: VIOLET[0], seuil: 4.5 },
+  ...(
+    [
+      ['page', STYLE_CLAIR.page],
+      ['surface douce', STYLE_CLAIR.surfaceDouce],
+    ] as const
+  ).flatMap(([nom, fond]) => [
+    { nom: `style Clair : texte sur ${nom}`, texte: FONDS.clair.texte, fond, seuil: 4.5 },
+    { nom: `style Clair : texte secondaire sur ${nom}`, texte: FONDS.clair.secondaire, fond, seuil: 4.5 },
+    { nom: `style Clair : lien vert sur ${nom}`, texte: VERT[8], fond, seuil: 4.5 },
+    ...(Object.keys(ETATS) as EtatCouleur[]).map((k) => ({
+      nom: `style Clair : état ${k}, texte léger sur ${nom}, teinte 15 %`,
+      texte: ETATS[k].texte,
+      fond: melange(ETATS[k].teinte, 0.15, fond),
+      seuil: 4.5,
+    })),
+  ]),
   { nom: 'texte sur fond de page (sombre)', texte: FONDS.sombre.texte, fond: FONDS.sombre.page, seuil: 4.5 },
   { nom: 'texte sur surface (sombre)', texte: FONDS.sombre.texte, fond: FONDS.sombre.surface, seuil: 4.5 },
   {
