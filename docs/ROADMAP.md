@@ -9,7 +9,7 @@ consolidation documentaire (H5, ci-dessous).
 
 **Reste à faire, par ordre de priorité**
 
-1. Recette de l'ensemble sur le serveur du RSSI, puis étiquette de version `v3.6.1` (par le RSSI) portant les migrations 022 à 032.
+1. Recette de l'ensemble sur le serveur du RSSI, puis étiquette de version `v4.1.0` (par le RSSI) portant la migration 034 (la 3.6.1, publiée, portait les migrations 022 à 033).
 2. Exports de comité à la charte du modèle interne (COPIL). Les exports Excel du pronostic, du clausier fournisseurs et du
    GAP applications sont repris ; ReCyF est couvert par la page Couverture.
 3. Normalisation des sous-structures encore en JSON dans des tables liées ([ADR 0040](adr/0040-sortie-du-json-plat-modules-en-tables.md)) :

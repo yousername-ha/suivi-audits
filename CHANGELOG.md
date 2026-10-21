@@ -5,7 +5,15 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 ## [Non publié]
 
 ### Notes de mise à jour
-Aucune action particulière. Migration additive `034_journal_technique.sql` (table du niveau de journalisation), appliquée au démarrage.
+Aucune action particulière, aucune migration.
+
+## [4.1.0] — 2026-10-21
+
+**Administration en deux pages à cartes, journaux techniques, couverture ISO/IEC 27001 clause par clause et corrections du prompt maître ASTRA du 21/10/2026.** Les entrées de menu « Paramètres » et « Administration » deviennent « Plateforme » et « Configuration système » (les adresses `/parametres/…` et `/admin/…` restent valables).
+
+### Notes de mise à jour
+- Aucune action sur le serveur : la mise à jour applique la migration additive `034_journal_technique.sql` (table du niveau de journalisation) au démarrage, après la sauvegarde automatique de `scripts/mettre-a-jour.sh`.
+- Les personnes habituées aux menus « Paramètres » et « Administration » les retrouvent sous « Plateforme » (organisation, comptes, référentiels, échelles, apparence, import et export) et « Configuration système » (sauvegardes, mises à jour, sécurité, sessions, journaux).
 
 ### Corrigé
 Relevé d'existant ASTRA du 21/10/2026 ([audit](docs/unification/AUDIT-ASTRA-2026-10-21.md)) : corrections de confidentialité et d'intégrité, chacune avec un test.
