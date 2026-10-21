@@ -1,6 +1,7 @@
 import { Relations } from './Relations';
 import { PanneauElement, useAccesElement } from '../registres/Contribution';
 import { SelecteurRegistre } from '../registres/SelecteurRegistre';
+import { SelecteurPeriodicite } from './SelecteurPeriodicite';
 import { PlanningSerie } from './PlanningSerie';
 import {
   Alert,
@@ -390,6 +391,11 @@ export function ObjectEditor({
             {kind === 'task_series' && data.recurrence && (
               <>
                 <Text fw={600}>Récurrence et automatisation</Text>
+                <SelecteurPeriodicite
+                  value={data.recurrence as Recurrence}
+                  onChange={(r) => set('recurrence', r)}
+                  disabled={readonly}
+                />
                 <ConfigurationEditor
                   value={Object.fromEntries(
                     Object.entries(data.recurrence).filter(([k]) => !CHAMPS_PLANNING.includes(k)),

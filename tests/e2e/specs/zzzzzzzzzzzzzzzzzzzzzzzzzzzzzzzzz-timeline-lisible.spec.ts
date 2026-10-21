@@ -41,6 +41,7 @@ for (const [nom, largeur, hauteur] of [
       viewport: { width: largeur, height: hauteur },
       reducedMotion: 'reduce',
     });
+    test.setTimeout(180_000);
     const page = await ctx.newPage(),
       problems = watchPage(page);
     const suffixe = Date.now().toString(36);
@@ -56,16 +57,22 @@ for (const [nom, largeur, hauteur] of [
         inheritFrameworks: false,
       });
       const maintenant = Date.now();
-      for (let i = 0; i < 100; i++)
-        await post(
-          page,
-          `/api/grc/${p.id}/objects`,
-          action(
-            `Action ${String(i).padStart(3, '0')} ${suffixe}`,
-            maintenant + (i - 60) * 3 * JOUR,
-            maintenant + (i - 55) * 3 * JOUR,
-            i % 4 === 0 ? 'progress' : 'todo',
-          ),
+      // Cent actions créées par lots de dix : la création séquentielle dépasserait le délai du test.
+      for (let lot = 0; lot < 10; lot++)
+        await Promise.all(
+          Array.from({ length: 10 }, (_, k) => {
+            const i = lot * 10 + k;
+            return post(
+              page,
+              `/api/grc/${p.id}/objects`,
+              action(
+                `Action ${String(i).padStart(3, '0')} ${suffixe}`,
+                maintenant + (i - 60) * 3 * JOUR,
+                maintenant + (i - 55) * 3 * JOUR,
+                i % 4 === 0 ? 'progress' : 'todo',
+              ),
+            );
+          }),
         );
       await page.reload();
       await page.getByRole('combobox', { name: 'Périmètre affiché', exact: true }).click();

@@ -29,7 +29,7 @@ const RESULTAT_OPTIONS = RESULTATS_VALIDATION.map((r) => ({ value: r, label: RES
 const dateFr = (iso: string) => new Date(iso).toLocaleDateString('fr-FR', { timeZone: 'UTC' });
 
 /** Fenêtre de réalisation de l'occurrence, calculée par le même moteur que le serveur (qui reste seul juge). */
-function EtatFenetre({ smsi, object }: { smsi: string; object: GrcObject }) {
+function useFenetre(smsi: string, object: GrcObject) {
   const serie = useQuery({
     queryKey: ['grc', smsi, 'serie', object.data.seriesId],
     queryFn: () => get<GrcObject>(`/api/grc/${smsi}/objects/${String(object.data.seriesId)}`),
@@ -44,9 +44,13 @@ function EtatFenetre({ smsi, object }: { smsi: string; object: GrcObject }) {
       : f.etat === 'fermee'
         ? `Fenêtre de réalisation : fermée depuis le ${dateFr(f.fermeLe!)}`
         : `Fenêtre de réalisation : ouverte jusqu’au ${dateFr(f.fermeLe!)}`;
+  return { etat: f.etat, texte };
+}
+function EtatFenetre({ fenetre }: { fenetre: { etat: string; texte: string } | null }) {
+  if (!fenetre) return null;
   return (
-    <Badge variant="light" color={f.etat === 'ouverte' ? 'teal' : 'orange'} aria-label={texte}>
-      {texte}
+    <Badge variant="light" color={fenetre.etat === 'ouverte' ? 'teal' : 'orange'} aria-label={fenetre.texte}>
+      {fenetre.texte}
     </Badge>
   );
 }
@@ -70,6 +74,7 @@ export function ValidationOccurrence({
     queryFn: () =>
       get<{ etat: EtatValidation; items: ValidationDto[] }>(`/api/grc/${smsi}/objects/${object.id}/validations`),
   });
+  const fenetre = useFenetre(smsi, object);
   const [resultat, setResultat] = useState<string | null>('ok');
   const [commentaire, setCommentaire] = useState('');
   const [preuve, setPreuve] = useState('');
@@ -129,7 +134,7 @@ export function ValidationOccurrence({
           {ETAT_LABELS[etat]}
         </Badge>
       </Group>
-      <EtatFenetre smsi={smsi} object={object} />
+      <EtatFenetre fenetre={fenetre} />
       <ErrorAlert error={erreur ?? journal.error} />
       {etat === 'validee' && onOpenObject && (
         <Button variant="default" onClick={() => void suivante()}>
@@ -173,9 +178,16 @@ export function ValidationOccurrence({
             value={preuve}
             onChange={(e) => setPreuve(e.currentTarget.value)}
           />
+          {fenetre && fenetre.etat !== 'ouverte' && (
+            <Text size="sm" role="status">
+              {fenetre.etat === 'a_venir'
+                ? 'La validation n’est pas encore possible : la fenêtre de réalisation n’est pas ouverte.'
+                : 'La validation n’est plus possible : la fenêtre de réalisation est fermée.'}
+            </Text>
+          )}
           <Button
             loading={envoi}
-            disabled={!resultat || !justifie}
+            disabled={!resultat || !justifie || (!!fenetre && fenetre.etat !== 'ouverte')}
             onClick={() =>
               void envoyer(
                 '',

@@ -5,7 +5,7 @@ import type { BusinessPolicy, GrcObject, TaskData } from '@suivi/shared';
 import { get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { libelleDesignation, SelecteurResponsable, useProposables } from '../components/selecteurs';
-import { enRetard } from './etat-action';
+import { enRetard, validationDe } from './etat-action';
 import { Timeline } from './Timeline';
 const views = [
   { value: 'list', label: 'Liste' },
@@ -87,6 +87,11 @@ export function Tasks({
           </Badge>
         )}
         {Boolean(o.data.seriesId) && <Badge variant="light">Occurrence récurrente</Badge>}
+        {validationDe(o) && (
+          <Badge variant="light" color="teal">
+            Validée : {validationDe(o)}
+          </Badge>
+        )}
       </Stack>
     </Card>
   );
@@ -159,6 +164,11 @@ export function Tasks({
                     {enRetard(o, policy) && (
                       <Badge ml="xs" variant="light" color="red">
                         ! En retard
+                      </Badge>
+                    )}
+                    {validationDe(o) && (
+                      <Badge ml="xs" variant="light" color="teal">
+                        Validée : {validationDe(o)}
                       </Badge>
                     )}
                   </Table.Td>

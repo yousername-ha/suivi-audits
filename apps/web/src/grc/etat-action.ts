@@ -28,3 +28,12 @@ export function enRetard(o: GrcObject, policy: BusinessPolicy, maintenant = Date
   const validation = (o as GrcObject & { validation?: { result?: string } | null }).validation;
   return !validation;
 }
+
+const RESULTATS: Record<string, string> = { ok: 'OK', ko: 'KO', na: 'NA' };
+/** Résultat de la dernière validation d'une occurrence récurrente (OK, KO ou NA), ou null : la carte dit ce que le
+    statut d'action ne dit pas. */
+export function validationDe(o: GrcObject): string | null {
+  const validation = (o as GrcObject & { validation?: { result?: string } | null }).validation;
+  const r = validation?.result;
+  return r ? (RESULTATS[r.toLowerCase()] ?? r.toUpperCase()) : null;
+}

@@ -1,7 +1,7 @@
 /* Retard et symbole d'une action : dérivés, jamais portés par la couleur seule. */
 import { businessDefaults, type GrcObject } from '@suivi/shared';
 import { describe, expect, it } from 'vitest';
-import { enRetard, libelleStatut, symboleStatut } from '../src/grc/etat-action';
+import { enRetard, libelleStatut, symboleStatut, validationDe } from '../src/grc/etat-action';
 
 const policy = businessDefaults();
 const NOW = Date.parse('2026-10-21T10:00:00Z');
@@ -44,5 +44,15 @@ describe('symbole et libellé du statut', () => {
   });
   it('le libellé vient de la politique publiée', () => {
     expect(libelleStatut(policy, action({ status: 'blocked' }))).toBe('Bloquée');
+  });
+});
+
+describe('validationDe', () => {
+  it('lit le résultat de la dernière validation, sans rien inventer', () => {
+    expect(validationDe(action({}, { validation: { result: 'ok' } }))).toBe('OK');
+    expect(validationDe(action({}, { validation: { result: 'KO' } }))).toBe('KO');
+    expect(validationDe(action({}, { validation: { result: 'na' } }))).toBe('NA');
+    expect(validationDe(action({}, { validation: null }))).toBeNull();
+    expect(validationDe(action({}))).toBeNull();
   });
 });
