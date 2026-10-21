@@ -149,6 +149,10 @@ export function evaluationEffective<T extends Pick<EvaluationExigence, 'applicab
   return e && interdite && e.applicability === 'exclue' ? { ...e, applicability: 'a_determiner' } : e;
 }
 
+/** Une exigence obligatoire est « conforme » (évaluation interne, pas une attestation) quand sa mise en œuvre est complète
+    et que son test d'efficacité est conforme : états « testé » et « validé métier ». */
+export const exigenceConforme = (etat: EtatExigence): boolean => etat === 'teste' || etat === 'valide_metier';
+
 export type SyntheseEtats = Record<EtatExigence, number>;
 export interface EntreeSynthese {
   etat: EtatExigence;
@@ -157,16 +161,19 @@ export interface EntreeSynthese {
   obligatoire?: boolean;
 }
 /** Dénombrement par état. `applicables` exclut les exigences non applicables ; `aDeterminer` compte celles dont
-    l'applicabilité n'a pas encore été tranchée (à revoir : rien n'est établi à leur sujet). */
+    l'applicabilité n'a pas encore été tranchée (à revoir : rien n'est établi à leur sujet) ; `obligatoiresNonConformes`
+    compte les exigences obligatoires (clauses 4 à 10) pas encore conformes. */
 export function syntheseEtats(
   entrees: readonly (EtatExigence | EntreeSynthese)[],
-): SyntheseEtats & { applicables: number; aDeterminer: number } {
+): SyntheseEtats & { applicables: number; aDeterminer: number; obligatoiresNonConformes: number } {
   const s = Object.fromEntries(ETATS_EXIGENCE.map((k) => [k, 0])) as SyntheseEtats;
-  let aDeterminer = 0;
+  let aDeterminer = 0,
+    obligatoiresNonConformes = 0;
   for (const x of entrees) {
     const e = typeof x === 'string' ? { etat: x, applicability: 'applicable' as const } : x;
     s[e.etat]++;
     if (e.applicability === 'a_determiner' && !e.obligatoire) aDeterminer++;
+    if (e.obligatoire && !exigenceConforme(e.etat)) obligatoiresNonConformes++;
   }
-  return { ...s, applicables: entrees.length - s.non_applicable, aDeterminer };
+  return { ...s, applicables: entrees.length - s.non_applicable, aDeterminer, obligatoiresNonConformes };
 }

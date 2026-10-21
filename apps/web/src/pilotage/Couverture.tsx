@@ -14,6 +14,7 @@ import {
   LIBELLES_RESULTAT_TEST,
   MISES_EN_OEUVRE,
   RESULTATS_TEST,
+  exigenceConforme,
   incoherencesEvaluation,
   type Applicabilite,
   type EtatExigence,
@@ -35,7 +36,7 @@ interface Referentiel {
   covered: number;
   toValidate: number;
   uncovered: number;
-  etats: SyntheseEtats & { applicables: number; aDeterminer: number };
+  etats: SyntheseEtats & { applicables: number; aDeterminer: number; obligatoiresNonConformes: number };
 }
 interface Detail {
   id: string;
@@ -310,6 +311,13 @@ export function Couverture({ smsi }: { smsi: string }) {
             <Text size="sm" c="dimmed">
               Version {f.version} · {f.requirements} exigence(s) · {f.etats.applicables} applicable(s) ou à déterminer
             </Text>
+            {f.etats.obligatoiresNonConformes > 0 && (
+              <Alert color="red" mt="sm" role="alert">
+                {f.etats.obligatoiresNonConformes} clause(s) obligatoire(s) (4 à 10) pas encore conforme(s). Une clause
+                est conforme quand sa mise en œuvre est complète et son test d’efficacité conforme ; elle ne peut pas
+                être exclue.
+              </Alert>
+            )}
             {f.etats.aDeterminer > 0 && (
               <Alert color="orange" mt="sm" role="alert">
                 {f.etats.aDeterminer} exigence(s) à déterminer : leur applicabilité n’a pas encore été tranchée. À
@@ -381,6 +389,14 @@ export function Couverture({ smsi }: { smsi: string }) {
                       LIBELLES_APPLICABILITE[r.evaluation!.applicability]
                     )}
                     {r.exclusionIllicite && <StatusChip etat="erreur">Exclusion non permise</StatusChip>}
+                    {r.obligatoire &&
+                      (exigenceConforme(r.etat) ? (
+                        <StatusChip etat="succes">Clause conforme</StatusChip>
+                      ) : (
+                        <StatusChip etat={r.evaluation?.testResult === 'non_conforme' ? 'erreur' : 'attention'}>
+                          Clause pas encore conforme
+                        </StatusChip>
+                      ))}
                   </Table.Td>
                   <Table.Td>
                     <StatusChip etat={COULEUR_ETAT[r.etat]}>{LIBELLES_ETAT[r.etat]}</StatusChip>
