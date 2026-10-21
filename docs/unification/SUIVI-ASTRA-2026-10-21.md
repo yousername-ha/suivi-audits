@@ -99,3 +99,14 @@ Légende des états : **Corrigé** (critère de l'audit satisfait et testé) · 
 - Tests Vitest sur PostgreSQL 18 (conteneur) : suites ciblées de chaque lot rejouées sur la copie de travail ; la suite complète de l'API est rejouée avant chaque publication.
 - Parcours Playwright (conteneur `mcr.microsoft.com/playwright:v1.56.1-noble`) sur la pile Docker construite depuis le commit : cartes de périmètres, coque, Timeline (cent actions), périodicité, registres partagés, journal d'audit, traitement. La suite complète de 26 minutes tourne dans la CI de la pull request.
 - Qualité : `prettier --check`, `eslint --max-warnings 0`, `tsc --noEmit` (shared, API, web).
+
+## Idée « Processus en cartes » (cadrée le 21/10/2026, à réaliser après la version 4.0.0)
+
+Onglet Processus de la famille Organisation, en cartes au design épuré ; la cartographie des processus est générée à partir de ces cartes. Décisions de l'utilisateur :
+
+1. **Source unique** : un processus existe une fois ; la cartographie devient une vue des processus. Créé dans la cartographie, il apparaît en carte, et inversement.
+2. **Types** : le registre des types de processus (métier, opérationnel, support…) se trouve dans la Plateforme avec les autres registres et échelles ; il remplace les familles actuelles « Pilotage / Réalisation / Support », reprises comme types de départ, avec migration des processus existants.
+3. **Rattachements** : SWOT, objectifs, indicateurs, risques et fournisseurs.
+4. **Multiplicité** : un élément peut être rattaché à plusieurs processus (relation N–N).
+5. **Imbrication** : les cartes sont imbriquées (processus et sous-processus).
+6. **Disposition** : automatique (colonnes par type), avec ajustement manuel mémorisé ; un nouveau processus s'ajoute sans déplacer les autres.
