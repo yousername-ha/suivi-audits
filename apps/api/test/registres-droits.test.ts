@@ -4,7 +4,7 @@
 import { copyFileSync, mkdtempSync, readdirSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { businessDefaults } from '@suivi/shared';
+import { businessDefaults, type AccesSujetRegistre } from '@suivi/shared';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { MIGRATIONS_DIR } from '../src/db/db.js';
 import { DEFAULT_SMSI } from '../src/grc/core.js';
@@ -349,7 +349,7 @@ describe('registres et droits par ressource', () => {
 
   it('vue des accès d’un sujet : rôle, origine et droits effectifs calculés par le serveur (022-01)', async () => {
     const vue = (type: string, id: string, qs = '') => admin.get(`/api/droits/sujets/${type}/${id}/registres${qs}`);
-    const ligne = (j: { items: { registre: { id: string } }[] }) => j.items.find((i) => i.registre.id === registre)!;
+    const ligne = (j: { items: AccesSujetRegistre[] }) => j.items.find((i) => i.registre.id === registre)!;
     // Personne dotée d'un rôle direct (contributeur) : le serveur le restitue avec ce qu'elle peut vraiment faire.
     const direct = (await vue('utilisateur', contributeurId)).json();
     expect(ligne(direct)).toMatchObject({
