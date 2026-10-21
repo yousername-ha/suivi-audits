@@ -585,7 +585,7 @@
   align-items: start;
   gap: var(--mantine-spacing-md);
   overflow: auto;
-  max-block-size: min(70vh, 42rem);
+  max-block-size: var(--grc-zone-hauteur);
   padding-bottom: var(--mantine-spacing-md);
 }
 .grc-kanban__titre {
@@ -608,7 +608,7 @@
   display: flex;
   align-items: flex-start;
   overflow: auto;
-  max-block-size: min(70vh, 42rem);
+  max-block-size: var(--grc-zone-hauteur);
   border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
   border-radius: var(--mantine-radius-md);
 }
@@ -636,7 +636,7 @@
   text-decoration: underline;
 }
 .grc-timeline__ligne:focus-visible {
-  outline: 2px solid var(--mantine-color-text);
+  outline: var(--suivi-trait-focus) solid var(--mantine-color-text);
 }
 .grc-timeline__retard,
 .grc-timeline__retard-legende {

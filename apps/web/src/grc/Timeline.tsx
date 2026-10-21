@@ -129,7 +129,7 @@ export function Timeline({
       </Text>
       <Group gap="md" role="group" aria-label="Légende : état de l’action, symbole et couleur de la barre">
         {policy.statuses.map((st) => (
-          <Group key={st.id} gap={6} wrap="nowrap">
+          <Group key={st.id} gap="xs" wrap="nowrap">
             <svg width="14" height="14" aria-hidden="true">
               <rect width="14" height="14" rx="3" fill={st.color} />
             </svg>

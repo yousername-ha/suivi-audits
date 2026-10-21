@@ -84,13 +84,13 @@ test('Récurrences : fenêtre de réalisation, enchaînement et calendrier iCale
           name: new RegExp(new Date(Date.now() + decalage * 86_400_000).toLocaleDateString('fr-FR')),
         })
         .getByRole('button', { name: titre, exact: true });
-    // Occurrence à venir : la fenêtre n'est pas ouverte, le serveur refuse la validation et le dit.
+    // Occurrence à venir : la fenêtre n'est pas ouverte, le bouton est désactivé et dit pourquoi (le serveur refuserait aussi).
     await ligne(4).click();
     let fiche = page.getByRole('dialog');
     let panneau = fiche.getByRole('group', { name: 'Validation de l’occurrence' });
     await expect(panneau.getByText(/Fenêtre de réalisation : ouvre le/)).toBeVisible();
-    await panneau.getByRole('button', { name: 'Enregistrer la validation' }).click();
-    await expect(panneau.getByRole('alert')).toContainText('n’ouvre que');
+    await expect(panneau.getByRole('button', { name: 'Enregistrer la validation' })).toBeDisabled();
+    await expect(panneau.getByRole('status')).toContainText('fenêtre de réalisation n’est pas ouverte');
     await page.keyboard.press('Escape');
 
     // Occurrence dans la fenêtre : validation OK, puis enchaînement (aucune autre n'est encore ouverte).

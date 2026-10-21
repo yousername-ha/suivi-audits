@@ -33,9 +33,12 @@ describe('disposer', () => {
     const { places, largeur } = disposer(cartes);
     expect(places).toHaveLength(cartes.length);
     // Deux cartes d'un même niveau ne se recouvrent pas : leurs abscisses diffèrent d'au moins une largeur de carte.
-    const parNiveau = Map.groupBy(places, (p) => p.y);
-    for (const niveau of parNiveau.values()) {
-      const xs = niveau.map((p) => p.x).sort((a, b) => a - b);
+    const niveaux = [...new Set(places.map((p) => p.y))];
+    for (const y of niveaux) {
+      const xs = places
+        .filter((p) => p.y === y)
+        .map((p) => p.x)
+        .sort((a, b) => a - b);
       for (let i = 1; i < xs.length; i++) expect(xs[i]! - xs[i - 1]!).toBeGreaterThanOrEqual(264);
     }
     expect(Math.max(...places.map((p) => p.x)) + 264).toBeLessThanOrEqual(largeur);

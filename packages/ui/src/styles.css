@@ -41,6 +41,8 @@
   --suivi-marque: 1.875rem;
   --suivi-qr: 12.5rem;
   --suivi-trait-l: 1px;
+  --suivi-trait-focus: 2px;
+  --grc-zone-hauteur: min(70vh, 42rem); /* zones à défilement propre : timeline, Kanban */
   --suivi-nav-repliee: 4.25rem;
   --suivi-marge-page: clamp(0.75rem, 0.5rem + 1vw, 2.5rem);
   --suivi-carte-min: 24rem; /* cartes de tableau de bord : 320 à 480 px environ */

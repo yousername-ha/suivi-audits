@@ -95,7 +95,7 @@ function lignesCompteurs(c: CartePerimetre['compteurs'], id: string, liens = tru
       valeur: c.ecarts ? lien('amelioration', retard(c.ecarts)) : indisponible,
       alerte: !!c.ecarts && c.ecarts.enRetard > 0,
       detail: c.ecarts && (
-        <Group gap={4} wrap="wrap" role="group" aria-label="Écarts ouverts par classification">
+        <Group gap="2xs" wrap="wrap" role="group" aria-label="Écarts ouverts par classification">
           {CLASSES.map(([cle, libelle, couleur]) =>
             liens ? (
               <Badge

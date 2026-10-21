@@ -84,7 +84,7 @@ const ETAT_SOCLE: Record<string, string> = { applied: 'Appliqué', partial: 'Par
 function SocleSecurite({ socle }: { socle: unknown }) {
   const lignes = Array.isArray(socle) ? (socle as { referential: string; status: string; gap?: string }[]) : [];
   return (
-    <Stack gap={4} data-testid="socle-securite">
+    <Stack gap="2xs" data-testid="socle-securite">
       <Text fw={600} size="sm">
         Socle de sécurité
       </Text>
