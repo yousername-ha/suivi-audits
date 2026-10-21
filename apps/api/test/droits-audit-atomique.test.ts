@@ -1,7 +1,7 @@
 /* Traçabilité des droits (022-05, 022-06) : le journal d'une modification de comptes, groupes ou rôles est écrit dans la
    même transaction que la modification (aucune modification sans trace) ; un 412 protège groupes et rôles. */
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { Agent, createTestApp, login, makeUser, type TestApp, type TestUser } from './helpers.js';
+import { type Agent, createTestApp, login, makeUser, type TestApp, type TestUser } from './helpers.js';
 
 let t: TestApp;
 let admin: TestUser;
@@ -86,13 +86,19 @@ describe('concurrence sur les droits (412)', () => {
     expect(maj.statusCode).toBe(200);
     const perime = await A.patch(`/api/admin/groups/${g.id}`, { description: 'b' }, { 'if-match': `"${g.version}"` });
     expect(perime.statusCode).toBe(412);
-    expect((await t.svc.db.one<{ description: string }>('SELECT description FROM groups WHERE id=$1', [g.id]))!.description).toBe('a');
+    expect(
+      (await t.svc.db.one<{ description: string }>('SELECT description FROM groups WHERE id=$1', [g.id]))!.description,
+    ).toBe('a');
     expect((await A.patch(`/api/admin/groups/${g.id}`, { description: 'c' })).statusCode).toBe(428);
 
     const role = (await A.post('/api/admin/roles', { from: 'lecteur', name: 'Rôle versionné' })).json();
     const ok = await A.patch(`/api/admin/roles/${role.id}`, { description: 'a' }, { 'if-match': `"${role.version}"` });
     expect(ok.statusCode).toBe(200);
-    const ancien = await A.patch(`/api/admin/roles/${role.id}`, { description: 'b' }, { 'if-match': `"${role.version}"` });
+    const ancien = await A.patch(
+      `/api/admin/roles/${role.id}`,
+      { description: 'b' },
+      { 'if-match': `"${role.version}"` },
+    );
     expect(ancien.statusCode).toBe(412);
     expect((await A.patch(`/api/admin/roles/${role.id}`, { description: 'c' })).statusCode).toBe(428);
   });

@@ -281,6 +281,11 @@ export class Grc {
   }
   /** Contrôle d'un rattachement : parent connu, accessible en écriture, sans boucle ni profondeur excessive. */
   private async verifierParent(id: string, parentId: string, user: SessionUser, c: Client) {
+    // L'accès est contrôlé avant tout le reste : un parent inaccessible reçoit la même réponse qu'un parent inconnu.
+    await this.access(parentId, user, true, c).catch((e: unknown) => {
+      if (e instanceof HttpError && e.status === 404) throw new HttpError(422, MESSAGES_REFUS.inconnu);
+      throw e;
+    });
     const noeuds = (
       await c.query<NoeudPerimetre>(
         'SELECT id,parent_id AS "parentId",inherit_frameworks AS "inheritFrameworks" FROM grc_smsis',
@@ -288,7 +293,6 @@ export class Grc {
     ).rows;
     const refus = refusRattachement(noeuds, id, parentId);
     if (refus) throw new HttpError(422, MESSAGES_REFUS[refus]);
-    await this.access(parentId, user, true, c);
   }
   /** Référentiels effectifs d'un périmètre : les siens et ceux hérités (chaîne d'héritage explicite), le plus proche l'emporte. */
   async effectiveFrameworks(smsi: string, c?: Client): Promise<RattachementReferentiel[]> {

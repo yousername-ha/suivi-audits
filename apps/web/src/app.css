@@ -1468,6 +1468,28 @@ rect.audit-niv-faible {
   stroke: var(--mantine-color-default-border);
   stroke-width: var(--suivi-trait-l);
 }
+.graphe-lien--flux {
+  stroke-dasharray: 6 6;
+  animation: graphe-flux 1s linear infinite;
+}
+@keyframes graphe-flux {
+  to {
+    stroke-dashoffset: -12;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .graphe-lien--flux {
+    animation: none;
+  }
+}
+.graphe-fleche {
+  fill: var(--mantine-color-dimmed);
+}
+.graphe-lien-fournisseur {
+  stroke: var(--mantine-color-dimmed);
+  stroke-width: var(--suivi-trait-l);
+  stroke-dasharray: 2 4;
+}
 .graphe-carte {
   box-sizing: border-box;
   block-size: 100%;

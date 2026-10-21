@@ -240,6 +240,55 @@ describe('registres et droits par ressource', () => {
     expect(tous.utilisateurs.map((u: { id: string }) => u.id)).toContain(contributeurId);
   });
 
+  it('un contributeur de ressource ne crée, ne déplace, n’archive et ne ré-attribue rien (022-03)', async () => {
+    const intact = async () =>
+      Number(
+        (await t.svc.db.one<{ n: string }>('SELECT count(*)::text AS n FROM grc_objects WHERE registre_id=$1', [
+          registre,
+        ]))!.n,
+      );
+    const avant = await intact();
+    const v = await version(registre);
+    // Création d'un élément dans le registre.
+    const creation = await contributeur.post(`/api/grc/${A}/objects`, {
+      ...action('Créée par un contributeur'),
+      registreId: registre,
+    });
+    expect(creation.statusCode).toBe(403);
+    // Déplacement, archivage, périmètres, ordre, définition du registre.
+    expect(
+      (
+        await contributeur.post(`/api/grc/${A}/objects/${element}/deplacement`, {
+          registreId: registre,
+          apercu: true,
+        })
+      ).statusCode,
+    ).toBe(403);
+    expect(
+      (await contributeur.put(`/api/registres/${registre}/perimetres`, { perimetres: [A], apercu: true })).statusCode,
+    ).toBe(403);
+    expect(
+      (
+        await contributeur.req('POST', `/api/registres/${registre}/archivage`, {
+          json: { archived: true, reason: 'Tentative non autorisée' },
+          headers: await ifMatch(registre),
+        })
+      ).statusCode,
+    ).toBe(403);
+    expect(
+      (
+        await contributeur.patch(
+          `/api/registres/${registre}`,
+          { name: 'Renommé', description: '', restreint: false },
+          await ifMatch(registre),
+        )
+      ).statusCode,
+    ).toBe(403);
+    // Rien n'a changé.
+    expect(await intact()).toBe(avant);
+    expect(await version(registre)).toBe(v);
+  });
+
   it('un lecteur sans aucun droit de module consulte par un droit de lecture attribué', async () => {
     expect((await lecteurSansModule.get(`/api/registres/${registre}`)).statusCode).toBe(404);
     await admin.put(`/api/droits/registre/${registre}`, {

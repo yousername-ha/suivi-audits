@@ -47,7 +47,12 @@ for (const [nom, largeur, hauteur] of AFFICHAGES) {
       const selecteurs = largeur >= 576 ? ['.shell-top', '.shell-nav-inner'] : ['.shell-top'];
       const { avant, apres } = await positionsApresDefilement(page, selecteurs);
       expect(avant.every((v) => Number.isFinite(v))).toBe(true);
-      expect(apres).toEqual(avant);
+      // L'en-tête ne bouge pas ; le menu (collant) reste visible, sous l'en-tête, sans s'éloigner de sa position de départ.
+      expect(apres[0]).toBe(avant[0]);
+      if (largeur >= 576) {
+        expect(apres[1]).toBeGreaterThanOrEqual(0);
+        expect(apres[1]).toBeLessThanOrEqual(avant[1]!);
+      }
       if (largeur >= 576) {
         // Le menu est borné à la hauteur de la fenêtre et défile seul s'il est plus long.
         const borne = await page.evaluate(() => {
@@ -73,7 +78,13 @@ test('Style Clair : enregistré par l’administrateur, appliqué sans rechargem
 }) => {
   const etat = (await sessionAdmin(browser)).state;
   const ouvrir = (viewport = { width: 1366, height: 768 }) =>
-    browser.newContext({ storageState: etat, ignoreHTTPSErrors: true, viewport, colorScheme: 'light' });
+    browser.newContext({
+      storageState: etat,
+      ignoreHTTPSErrors: true,
+      viewport,
+      colorScheme: 'light',
+      reducedMotion: 'reduce', // comme le contrôle axe des autres écrans : les transitions d'entrée faussent les contrastes
+    });
   const [a, b] = [await ouvrir(), await ouvrir()];
   const [pa, pb] = [await a.newPage(), await b.newPage()];
   const problems = watchPage(pb);
@@ -93,7 +104,14 @@ test('Style Clair : enregistré par l’administrateur, appliqué sans rechargem
       await expect(pb.locator('html')).toHaveAttribute('data-style', 'clair');
       const r = await new AxeBuilder({ page: pb }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
       expect(
-        r.violations.map((v) => `${v.id} (${v.nodes.length})`),
+        r.violations.map(
+          (v) =>
+            `${v.id} (${v.nodes.length}) : ` +
+            v.nodes
+              .slice(0, 6)
+              .map((n) => `${n.target.join(' ')} ${JSON.stringify(n.any[0]?.data ?? {})}`)
+              .join(' | '),
+        ),
         url,
       ).toEqual([]);
     }
