@@ -578,10 +578,22 @@
 }
 .grc-kanban {
   display: grid;
-  grid-template-columns: repeat(5, minmax(var(--grc-colonne-min), 1fr));
+  /* Autant de colonnes que d'états de la politique (jusqu'à 20) ; la zone est bornée et défile seule, les titres restent
+     visibles. */
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(var(--grc-colonne-min), 1fr);
+  align-items: start;
   gap: var(--mantine-spacing-md);
-  overflow-x: auto;
+  overflow: auto;
+  max-block-size: min(70vh, 42rem);
   padding-bottom: var(--mantine-spacing-md);
+}
+.grc-kanban__titre {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+  padding-block: var(--mantine-spacing-2xs);
+  background: var(--mantine-color-body);
 }
 .grc-calendar {
   display: grid;

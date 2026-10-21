@@ -1,0 +1,98 @@
+# Suivi d'avancement du prompt maître ASTRA du 21/10/2026 (état honnête)
+
+Ce document tient à jour l'[audit du 21/10/2026](AUDIT-ASTRA-2026-10-21.md) (89 exigences, dix dossiers) à mesure que l'ordre de
+codage L0 à L11 avance. Il ne remplace ni l'audit (état de départ, sur `main` 3.6.1) ni la [recette R01 à R18](RECETTE-INTEGRATION-ASTRA.md).
+
+**Aucun marqueur `IMPLEMENTATION-OK` n'est posé pour ce prompt** : des exigences restent partielles ou absentes, et plusieurs attendent
+une décision de l'utilisateur (section « Décisions en attente »). Un état « corrigé » ci-dessous veut dire : le code est livré sur la
+branche, avec un test qui échoue sans lui ; la colonne « Preuve » dit lequel. Rien n'est « vérifié » sur `main` tant que la CI de la
+pull request correspondante n'est pas verte sur le commit exact.
+
+Légende des états : **Corrigé** (critère de l'audit satisfait et testé) · **Amélioré** (écart réduit, critère restant écrit) ·
+**Inchangé** (rien n'a été touché) · **Décision** (bloqué par une décision de l'utilisateur).
+
+## Ce qui a changé depuis l'audit, par exigence
+
+### 020 Navigation et 012 Paramètres
+
+| ID | État | Ce qui a été fait | Reste | Preuve |
+| --- | --- | --- | --- | --- |
+| 020-01 | Amélioré | Inventaire de référence des rubriques, adresses et droits du menu ; familles avec `aria-expanded` | Épuration éventuelle des doublons de rubriques | `navigation.test.ts` |
+| 020-03 | Corrigé | Hauteur du menu bornée en tablette comme sur ordinateur, défilement propre | — | e2e `…-coque.spec.ts` |
+| 020-04 / 012-05 | Corrigé | Style Clair appliqué en direct aux sessions ouvertes ; contrastes Clair vérifiés (feuille de styles et jetons) | Capture de recette en clair sur tous les écrans | `contraste.test.ts`, e2e `…-coque.spec.ts` |
+| 020-05 / 012-01 | Décision | — | Deux pages d'entrée à cartes (décision 1) | — |
+| 012-03 | Amélioré | « Non disponible » quand le serveur ne mesure pas ; volume des pièces ; date du relevé ; `/api/admin/info` testé | Versions de Caddy et ClamAV, répartition base/pièces/journaux | `security.test.ts` « informations système », e2e `…-journal-audit.spec.ts` |
+| 012-08 | Corrigé | La purge définitive d'un document cité comme preuve (fiche, lien, décision, validation) est refusée (409) | Parcours de graphe général (liés à 012-07) | `documents.test.ts` |
+| 012-12 | Amélioré | Filtres période et compte, pagination, export JSON sous le droit d'exportation (comme le CSV), export tracé avec ses filtres, troncature signalée | Journaux techniques (aucun puits lisible par l'API) | `security.test.ts` « journal d'audit », e2e `…-journal-audit.spec.ts` |
+| 012-02, 012-04, 012-06 | Inchangé | — | Aperçu de certificat, modes autosigné et ACME, catalogue `environment` | — |
+| 012-07, 012-09, 012-10, 012-11, 012-13, 012-14 | Décision | — | Nettoyage automatique, contact technique, canaux de notification, SMTP/Teams, niveaux de journalisation, calendriers de plateforme | — |
+
+### 010 Périmètres graphiques et 022 Droits
+
+| ID | État | Ce qui a été fait | Reste | Preuve |
+| --- | --- | --- | --- | --- |
+| 010-01 | Corrigé | « Modifier » depuis le graphe (même formulaire, même identifiant) | Test de double clic | e2e `…-cartes-perimetres.spec.ts` |
+| 010-03 | Corrigé | Colonne « Fournisseur extérieur » (lien vers la fiche, jamais un parent) | — | e2e `…-cartes-perimetres.spec.ts` |
+| 010-04 | Amélioré (*) | La carte reprend le calcul de l'écran Couverture (référentiels rattachés ou hérités, états communs) et s'appelle « Couverture » ; un enfant qui hérite n'affiche plus « indisponible » | Agrégation avec descendants, provenance et détail par référentiel | `cartes-perimetres.test.ts` |
+| 010-05 | Corrigé | Écarts ouverts ventilés en majeurs (rouge), mineurs (orange foncé), sensibles (violet), avec texte ; liens vers la liste filtrée | — | `cartes-perimetres.test.ts`, e2e `…-cartes-perimetres.spec.ts` |
+| 010-06 | Amélioré | Chaque compteur est un lien vers la liste du module, dans le même périmètre ; retard des écarts comparé à la date locale du périmètre | « Plans de continuité » regroupe PCA, PRA et PCRA (décision) ; mise en forme en quatre tuiles compactes | `cartes-perimetres.test.ts` |
+| 010-07 | Amélioré | Hauteur de carte agrandie pour ne rien tronquer | Test unitaire de `disposer`, capture avec libellés longs | — |
+| 010-08 | Corrigé | Liaisons orientées (pointe de flèche), flux animé, pause/reprise, mouvement réduit respecté | — | e2e `…-cartes-perimetres.spec.ts` |
+| 010-09 | Amélioré | Fenêtres centrées ; graphe audité par axe-core, clair et sombre | Capture de recette | e2e `…-cartes-perimetres.spec.ts` |
+| 010-11 | Amélioré | État de chargement du graphe ; rechargement de la version après un 412 | Tests de double soumission et de seconde session | e2e `…-cartes-perimetres.spec.ts` |
+| 010-12 | Corrigé | Les quatre fichiers du module cartographique dont le mot-clé `export` avait été retiré sont rétablis | Marqueur 010 à poser en dernier | `carto.test.ts` |
+| 010-10 | Décision | — | Registres par défaut créés paresseusement (ADR 0043) : garder ou exiger un choix | — |
+| 022-01 | Corrigé | Vue des accès (Registres) : rôle par registre pour une personne ou un groupe, origine, pagination | — | e2e `…-acces-sujets.spec.ts`, `registres-droits.test.ts` |
+| 022-02 | Corrigé | Fenêtre d'aperçu avant confirmation (rôle avant/après, personnes concernées, rôles qui subsistent, motif) | — | `registres-droits.test.ts` |
+| 022-05 | Corrigé | La trace des droits est écrite dans la même transaction que la modification | — | `droits-audit-atomique.test.ts` |
+| 022-03 | Décision | — | Modèle « collaborateur » et limite d'attribution | — |
+
+(*) Provisoire : la mesure « Couverture » est l'option recommandée de la décision « conformité » ; elle est reprise ici faute de réponse.
+
+### 017 Plans, 021 Écarts, 018 Tâches récurrentes
+
+| ID | État | Ce qui a été fait | Reste | Preuve |
+| --- | --- | --- | --- | --- |
+| 017-01 / 021-01 / 018-01 | Amélioré | Éléments d'un registre partagé listés sous chaque périmètre qui le porte et ouverts avec leur périmètre de référence ; sélecteur de registre à la création | Regroupement par registre dans la liste | `registres-droits.test.ts`, e2e `…-registres-partages.spec.ts` |
+| 017-03 / 018-03 | Amélioré | Kanban à autant de colonnes que d'états de la politique, zone bornée, titres fixes | Test de volume sur le Kanban | e2e `…-timeline-lisible.spec.ts` (Timeline) |
+| 017-06 / 018-02 | Corrigé (017-06) / Amélioré | Timeline : intitulés fixes, zone bornée pour cent actions, état et retard en toutes lettres, légende | Guide horizontal et marqueur carré des occurrences | e2e `…-timeline-lisible.spec.ts` |
+| 017-07 | Amélioré | Liens entrants affichés : action liée par audit d'origine ou par récidive | — | `liens.test.ts` |
+| 021-06 | Corrigé | Classification en rouge, orange foncé et violet, avec légende, en liste et en fiche | — | `etat-action.test.ts`, e2e |
+| 018-04 | Amélioré | Bouton de validation expliqué (désactivé hors fenêtre) | Gabarit compact, test mobile | e2e `…-validation-occurrence.spec.ts` |
+| 018-05 | Corrigé | La preuve est une version de document ou une fiche de preuve (sélecteur, refus des autres objets) ; le journal affiche son intitulé selon les droits | Droit par document (décision de l'audit § 5) | `validations-occurrences.test.ts` |
+| 018-06 | Corrigé | Sept préréglages (dont « Tous les deux mois ») ou personnalisé, aperçu des cinq prochaines échéances, choix « Personnalisée » effectif | « Bimensuel » = deux fois par mois : deux séries (décision 7) | e2e `…-periodicite.spec.ts` |
+| 018-10 | Amélioré | Validation (OK, KO, NA) visible dans les listes de tâches ; une occurrence validée n'est plus « en retard » | Gabarit maître-détail (décision de l'audit § 5) | `etat-action.test.ts` |
+| 018-11 | Amélioré | « Occurrence suivante » cherche dans la liste courante (filtres compris), toutes séries confondues ; aucune validation automatique | Test e2e de la case d'enchaînement | `validations-occurrences.test.ts` |
+| 018-08, 018-09 | Décision | — | Calendriers de plateforme (zones A/B/C, fériés) et couche d'affichage | — |
+
+### 002 Risques et 003 EBIOS RM
+
+| ID | État | Ce qui a été fait | Reste | Preuve |
+| --- | --- | --- | --- | --- |
+| 002-01 | Amélioré | Filtre et colonne « Étude » ; drapeau « revue dépassée » testé | Règle commune registre/carte pour l'évaluation retenue (décision 8) | `risques.test.ts` |
+| 002-02 | Amélioré | Mesure d'un traitement = exigence d'un cadre publié (ex. Annexe A), proposée dans le sélecteur, lisible depuis l'exigence ; le lien ne modifie pas la couverture ; relations proposées = celles que le serveur accepte | Affichage de l'applicabilité à côté du lien | `risques-traitement.test.ts` |
+| 002-05 | Corrigé | Action de traitement avec choix du plan d'accueil (gestion exigée, même famille) ; étude archivée sans effet sur les évaluations | — | `risques-traitement.test.ts`, e2e `…-risques-traitement.spec.ts` |
+| 003-01 | Amélioré | Une modification postérieure à la validation d'un atelier la rend caduque (« modifié depuis la validation ») | Schémas illustrés ; test de reprise après rechargement | `risques.test.ts` |
+| 003-02 | Amélioré | Socle de sécurité saisi et restitué ; gravité de l'échelle publiée affichée avec son libellé ; niveaux contrôlés par le serveur | Barème local résiduel (gravité en dur) | `risques.test.ts`, e2e `…-risques-traitement.spec.ts` |
+| 003-03 | Corrigé | Pertinence retenue différente de la proposition : justification exigée ; un couple dont le niveau écarte ne peut pas être « retenu » | — | `config-grc-etudes.test.ts` |
+| 003-04 | Amélioré | Mesures de l'écosystème par référence ; justification de la dangerosité | Formule et échelle des critères en dur | `risques-traitement.test.ts` |
+| 003-06 | Amélioré | Gardes testées : résiduel inacceptable avec option « accepter », étape non validée | Synthèse de l'atelier 5 ; validation de l'atelier 5 | `grc.test.ts` |
+| 003-05, 003-11 | Inchangé | — | Vraisemblance et gravité du scénario dans `StudyConfiguration` (échelles épinglées) | — |
+| 003-07, 003-08, 003-09, 003-10 | Décision | — | Couche visuelle EBIOS (cercle, chemins, pictogrammes, flux) | — |
+
+## Décisions en attente (celles de l'utilisateur)
+
+1. **Structure de l'Administration** (012-01, 020-05) : option A (deux entrées deviennent des pages d'accueil à cartes, alias conservés, recommandée) ou option B (fusion en une famille).
+2. **Définition de « conformité »** sur les cartes de périmètre (010-04) : (a) « Couverture » (recommandée, appliquée à titre provisoire), (b) taux évaluées/applicables, (c) autre.
+3. Modèle « collaborateur » et limite d'attribution (022-03).
+4. Canaux d'envoi (courriel, Teams), conservation et nettoyage automatique, certificats autosignés et ACME, niveaux de journalisation (012-07, 012-09 à 012-11, 012-13).
+5. Calendriers de plateforme (zones scolaires, jours fériés) et leur couche d'affichage (012-14, 018-08, 018-09).
+6. Couche visuelle EBIOS RM : cercle, chemins, pictogrammes, flux animés (003-07 à 003-10).
+7. « Bimensuel » : deux fois par mois (deux séries) ou tous les deux mois (018-06) ; PCRA seul ou tous les plans de continuité (010-06) ; liens entre périmètres et condition de clôture.
+8. Règle d'évaluation retenue commune au registre et à la matrice (002-01).
+
+## Preuves exécutées
+
+- Tests Vitest sur PostgreSQL 18 (conteneur) : suites ciblées de chaque lot rejouées sur la copie de travail ; la suite complète de l'API est rejouée avant chaque publication.
+- Parcours Playwright (conteneur `mcr.microsoft.com/playwright:v1.56.1-noble`) sur la pile Docker construite depuis le commit : cartes de périmètres, coque, Timeline (cent actions), périodicité, registres partagés, journal d'audit, traitement. La suite complète de 26 minutes tourne dans la CI de la pull request.
+- Qualité : `prettier --check`, `eslint --max-warnings 0`, `tsc --noEmit` (shared, API, web).

@@ -213,6 +213,9 @@ export interface ValidationDto {
   result: ResultatValidation | null;
   comment: string;
   proofRef: string;
+  /** Intitulé de la preuve (titre du document et version, ou nom de la fiche), résolu avec les droits de la personne ;
+      null : la preuve n'est pas lisible par elle (la référence reste affichée). */
+  proofName?: string | null;
   createdBy: string;
   createdAt: string;
 }

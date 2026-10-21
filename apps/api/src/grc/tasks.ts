@@ -176,6 +176,33 @@ export class GrcTasks {
     );
     return { occurrence: occurrence ?? null };
   }
+  /** Occurrence suivante dans la liste courante (ids ordonnés par le client, toutes séries confondues) : la première, après
+      `apres`, qui n'est pas validée, dont la fenêtre est ouverte et que la personne peut lire. Une occurrence illisible ou
+      absente de la base est ignorée ; rien n'est validé ni modifié. */
+  async prochaineDansListe(smsi: string, liste: string[], apres: string, user: SessionUser) {
+    await this.g.access(smsi, user);
+    const ids = [...new Set(liste)].slice(0, 500);
+    const debut = ids.indexOf(apres);
+    const series = new Map<string, Record<string, unknown> | null>();
+    for (const id of ids.slice(debut + 1)) {
+      const o = await this.g.raw(id);
+      if (!o || o.archived || o.kind !== 'action' || typeof o.data.seriesId !== 'string' || !o.registreId) continue;
+      try {
+        await this.g.registres.exigerElement(user, o, 'lire');
+      } catch {
+        continue;
+      }
+      const serieId = o.data.seriesId;
+      if (!series.has(serieId)) series.set(serieId, (await this.g.raw(serieId))?.data ?? null);
+      const donneesSerie = series.get(serieId);
+      const dueAt = typeof o.data.dueAt === 'string' ? o.data.dueAt : null;
+      if (!donneesSerie || !dueAt) continue;
+      const [ligne] = await this.enrichir(donneesSerie, [{ actionId: id, data: o.data }]);
+      if (ligne!.validation.etat !== 'validee' && ligne!.fenetre?.etat === 'ouverte')
+        return { occurrence: { actionId: id, name: o.name } };
+    }
+    return { occurrence: null };
+  }
   /** Import d'un calendrier iCalendar dans les jours exclus d'une série. L'aperçu décrit l'effet sans rien écrire ; l'import
       est tout ou rien (une erreur dans le fichier ne modifie rien) et rejouer le même fichier n'ajoute aucun doublon. */
   async importerCalendrier(

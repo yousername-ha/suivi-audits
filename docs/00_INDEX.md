@@ -40,6 +40,7 @@ Source de référence des chiffres/IDs/états :
 - [Plan d'évolution](unification/PLAN-EVOLUTION.md)
 - [Audit L0 — intégration des interfaces ASTRA (menu, registres, actions, écarts, récurrences)](unification/AUDIT-L0-INTEGRATION-UI-ASTRA.md)
 - [Audit ASTRA du 21/10/2026 — relevé d'existant par exigence des dix dossiers](unification/AUDIT-ASTRA-2026-10-21.md)
+- [Suivi d'avancement du prompt maître ASTRA du 21/10/2026 (état honnête, décisions en attente)](unification/SUIVI-ASTRA-2026-10-21.md)
 - [Recette de l'intégration ASTRA (R01 à R18) et bilan par lot](unification/RECETTE-INTEGRATION-ASTRA.md)
 - [Cadrage du module Qualité ISO 9001](unification/CADRAGE-MODULE-QUALITE-9001.md) (réflexion, aucun code)
 - [Refonte GRC : configuration transversale et multiméthode](archive/refonte-grc/README.md) ([ADR 0038](adr/0038-socle-de-configuration-grc-transversal.md))

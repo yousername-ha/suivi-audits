@@ -169,11 +169,13 @@ export const grcRoutes = [
     params: scope,
     query: z.object({
       search: z.string().max(200).default(''),
-      /** Cibles d'un champ typé (« object:<type> », « legacy:<clé> » ou « requirement », séparées par des virgules). */
+      /** Cibles d'un champ typé (« object:<type> », « legacy:<clé> », « requirement » ou « document » (versions de documents), séparées par des virgules). */
       cibles: z
         .string()
         .max(500)
-        .regex(/^((object|legacy):[a-z_]{2,40}|requirement)(,((object|legacy):[a-z_]{2,40}|requirement))*$/)
+        .regex(
+          /^((object|legacy):[a-z_]{2,40}|requirement|document)(,((object|legacy):[a-z_]{2,40}|requirement|document))*$/,
+        )
         .optional(),
     }),
     handler: async ({ svc, s, params, query }) =>
@@ -425,6 +427,25 @@ export const grcRoutes = [
     query: z.object({ apres: z.uuid().optional() }).strict(),
     handler: async ({ svc, s, params, query }) =>
       svc.grc.tasks.prochaine(params.smsi, params.id, (s as Session).user, query.apres),
+  }),
+  route({
+    ...base,
+    method: 'GET',
+    url: '/api/grc/:smsi/occurrences/prochaine',
+    summary:
+      'Occurrence suivante à traiter dans la liste courante de la personne (ordre conservé, toutes séries confondues)',
+    params: scope,
+    query: z
+      .object({
+        apres: z.uuid(),
+        liste: z
+          .string()
+          .max(40_000)
+          .regex(/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}(,[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12})*$/),
+      })
+      .strict(),
+    handler: async ({ svc, s, params, query }) =>
+      svc.grc.tasks.prochaineDansListe(params.smsi, query.liste.split(','), query.apres, (s as Session).user),
   }),
   route({
     ...base,

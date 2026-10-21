@@ -1,10 +1,11 @@
 import { Alert, Badge, Button, Card, Checkbox, Group, Select, Stack, Table, Text, TextInput } from '@mantine/core';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { BusinessPolicy, GrcObject, TaskData } from '@suivi/shared';
 import { get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { libelleDesignation, SelecteurResponsable, useProposables } from '../components/selecteurs';
+import { definirListeCourante } from '../registres/liste-courante';
 import { enRetard, validationDe } from './etat-action';
 import { Timeline } from './Timeline';
 const views = [
@@ -69,6 +70,12 @@ export function Tasks({
         (!(o.data.legacy && o.data.status === 'done') &&
           !policy.statuses.find((s) => s.id === o.data.status)?.terminal)),
   );
+  // La liste affichée (ordre et filtres compris) sert à enchaîner la validation sur l'occurrence suivante de cette liste.
+  const idsAffiches = items.map((o) => o.id).join(',');
+  useEffect(() => {
+    definirListeCourante(idsAffiches ? idsAffiches.split(',') : []);
+    return () => definirListeCourante([]);
+  }, [idsAffiches]);
   const card = (o: GrcObject) => (
     <Card withBorder key={o.id}>
       <Stack gap="xs">
@@ -179,10 +186,10 @@ export function Tasks({
         </Table.ScrollContainer>
       )}
       {view === 'kanban' && (
-        <div className="grc-kanban">
+        <div className="grc-kanban" role="region" aria-label="Kanban des actions, défilement possible" tabIndex={0}>
           {policy.statuses.map((s) => (
-            <Stack key={s.id}>
-              <Text fw={600}>
+            <Stack key={s.id} role="group" aria-label={`Colonne ${s.label}`}>
+              <Text fw={600} className="grc-kanban__titre">
                 {s.label} ({items.filter((o) => o.data.status === s.id).length})
               </Text>
               {items.filter((o) => o.data.status === s.id).map(card)}

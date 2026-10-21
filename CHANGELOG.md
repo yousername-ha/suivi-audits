@@ -44,6 +44,10 @@ Lot L9 (dossiers 002 risques et 003 EBIOS RM) :
 - **Atelier 1** : socle de sécurité saisi dans la fiche de l'étude et restitué dans l'atelier ; gravité de l'échelle publiée affichée avec son libellé.
 - **Validation d'atelier** : un élément modifié après la validation la rend caduque (« modifié depuis la validation ») au lieu de laisser un faux état validé.
 - **Registre des risques** : filtre et colonne « Étude » ; tests des gardes d'approbation (résiduel inacceptable, étape non validée) et du drapeau de revue dépassée.
+Lot L8 (suite) :
+- **Preuve d'une validation** : version d'un document ou fiche de preuve choisie dans une liste (plus de saisie libre) ; le serveur refuse tout autre objet ; le journal affiche l'intitulé de la preuve selon les droits de la personne.
+- **Occurrence suivante** : elle se cherche dans la liste courante de la personne (filtres compris), toutes séries confondues ; aucune validation automatique.
+- **Kanban** : autant de colonnes que d'états de la politique, zone bornée à défilement propre, titres de colonnes fixes.
 Lot L10 (dossiers 010 cartes de périmètres et 012 exploitation) :
 - **Cartes de périmètres** : la couverture reprend le calcul de l'écran Couverture (référentiels rattachés ou hérités, états d'exigence communs) et s'appelle « Couverture » : ce n'est pas un taux de conformité (un enfant qui hérite d'un référentiel n'affiche plus « indisponible »). Les écarts ouverts sont ventilés en majeurs, mineurs et sensibles (classification de la fiche ou de l'outil historique) ; chaque compteur est un lien vers la liste du même périmètre (`?perimetre=`), les classes filtrent la liste des écarts (`?classif=`). Le retard d'un écart se compare à la date locale du périmètre.
 - **Journal d'audit** : filtres par période et par compte, pagination, export JSON réservé au droit d'exportation (comme le CSV), export tracé avec ses filtres, troncature signalée (en-tête `X-Journal-Tronque`, mention à l'écran).
