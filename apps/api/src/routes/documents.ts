@@ -369,16 +369,43 @@ export const documentRoutes = [
       const sess = s as Session;
       const purge = query.purge === '1';
       if (purge) svc.auth.requirePermission(sess, 'documents:administrer');
-      const r = await svc.db.tx(
-        (c) =>
-          purge
-            ? c.query('DELETE FROM documents WHERE id=$1 AND deleted_at IS NOT NULL', [params.id])
-            : c.query(
-                'UPDATE documents SET deleted_at=now(), deleted_by=$2, version = version + 1 WHERE id=$1 AND deleted_at IS NULL',
-                [params.id, sess.user.username],
-              ),
-        sess.user.username,
-      );
+      const r = await svc.db.tx(async (c) => {
+        if (purge) {
+          // Une version de document citée comme preuve (fiche, lien, décision, validation d'occurrence) ne se purge pas :
+          // l'historique des preuves est conservé.
+          const usages = (
+            await c.query<{ liens: number; fiches: number; decisions: number; validations: number }>(
+              `SELECT (SELECT count(*)::int FROM grc_links WHERE source_ref LIKE $1 OR target_ref LIKE $1) liens,
+                        (SELECT count(*)::int FROM grc_objects WHERE data::text LIKE $2) fiches,
+                        (SELECT count(*)::int FROM pilotage_decisions WHERE refs::text LIKE $2 OR snapshot::text LIKE $2) decisions,
+                        (SELECT count(*)::int FROM occurrence_validations WHERE proof_ref LIKE $1) validations`,
+              [`document:${params.id}:%`, `%document:${params.id}:%`],
+            )
+          ).rows[0]!;
+          const total = usages.liens + usages.fiches + usages.decisions + usages.validations;
+          if (total)
+            throw new HttpError(
+              409,
+              'Ce document est cité comme preuve (' +
+                [
+                  usages.fiches && `${usages.fiches} fiche(s)`,
+                  usages.liens && `${usages.liens} lien(s)`,
+                  usages.decisions && `${usages.decisions} décision(s)`,
+                  usages.validations && `${usages.validations} validation(s)`,
+                ]
+                  .filter(Boolean)
+                  .join(', ') +
+                ') : il reste dans la corbeille, sa suppression définitive est refusée.',
+              { reason: 'document_reference', usages },
+            );
+        }
+        return purge
+          ? c.query('DELETE FROM documents WHERE id=$1 AND deleted_at IS NOT NULL', [params.id])
+          : c.query(
+              'UPDATE documents SET deleted_at=now(), deleted_by=$2, version = version + 1 WHERE id=$1 AND deleted_at IS NULL',
+              [params.id, sess.user.username],
+            );
+      }, sess.user.username);
       if (!r.rowCount)
         throw new HttpError(
           404,

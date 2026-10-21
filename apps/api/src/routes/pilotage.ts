@@ -155,10 +155,12 @@ export const pilotageRoutes = [
       await g.permission(user, 'import_export', 'exporter');
       await g.permission(user, GRC_MODULES[query.kind], 'exporter');
       await g.permission(user, GRC_MODULES[query.kind], 'lire');
+      // Les éléments d'un registre restreint que la personne ne peut pas lire ne sortent pas dans l'export.
+      const masques = await g.registres.inaccessibles(user, params.smsi);
       const objects = (
         await svc.db.q(
-          'SELECT id,name,kind,data,version,created_by,updated_by,created_at,updated_at FROM grc_objects WHERE smsi_id=$1 AND kind=$2 AND NOT archived ORDER BY id LIMIT 1000',
-          [params.smsi, query.kind],
+          'SELECT id,name,kind,data,version,created_by,updated_by,created_at,updated_at FROM grc_objects WHERE smsi_id=$1 AND kind=$2 AND NOT archived AND (registre_id IS NULL OR registre_id<>ALL($3::uuid[])) ORDER BY id LIMIT 1000',
+          [params.smsi, query.kind, masques],
         )
       ).rows;
       const refs = objects.map((o) => 'object:' + o.id);
@@ -179,8 +181,8 @@ export const pilotageRoutes = [
       }
       const decisions = (
         await svc.db.q(
-          'SELECT * FROM pilotage_decisions WHERE smsi_id=$1 AND source_ref=ANY($2) ORDER BY created_at DESC LIMIT 1000',
-          [params.smsi, refs],
+          'SELECT * FROM pilotage_decisions WHERE source_ref=ANY($1) ORDER BY created_at DESC LIMIT 1000',
+          [refs],
         )
       ).rows;
       await svc.db.audit(user, ip, 'pilotage.register.exported', params.smsi, {

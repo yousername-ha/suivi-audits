@@ -65,6 +65,53 @@ export class GrcStudyConfig {
     return [...new Set(used.filter((x): x is string => typeof x === 'string' && x !== ''))].filter((x) => !keep.has(x));
   }
 
+  /** Les niveaux saisis dans une fiche de l'étude (couple SR/OV, événement redouté) doivent exister dans les échelles que
+      l'étude a épinglées. Seuls les niveaux modifiés sont contrôlés : une évaluation passée n'est jamais réécrite. */
+  async verifierNiveaux(
+    smsi: string,
+    kind: 'sr_ov' | 'feared_event',
+    data: Record<string, unknown>,
+    avant: Record<string, unknown> | undefined,
+    c: Client,
+  ) {
+    if (typeof data.studyRef !== 'string' || !data.studyRef.startsWith('object:')) return;
+    const study = (
+      await c.query<{ data: Record<string, unknown> }>(
+        "SELECT data FROM grc_objects WHERE id=$1 AND smsi_id=$2 AND kind='risk_study'",
+        [data.studyRef.slice(7), smsi],
+      )
+    ).rows[0];
+    const conf = StudyConfiguration.safeParse(study?.data.configuration);
+    if (!conf.success) return;
+    const controler = (champ: string, valeur: unknown, permis: Set<string>) => {
+      if (typeof valeur !== 'string' || !valeur) return;
+      if (!permis.has(valeur))
+        throw new HttpError(422, `Niveau « ${valeur} » absent de l’échelle épinglée par l’étude (${champ}).`);
+    };
+    if (kind === 'sr_ov' && conf.data.relevanceMatrix) {
+      const m = MatrixDefinition.parse(await this.definition(c, conf.data.relevanceMatrix));
+      for (const [champ, echelle] of [
+        ['resourcesLevel', m.rows.scale],
+        ['motivationLevel', m.columns.scale],
+        ['relevanceLevel', m.result.scale],
+      ] as const)
+        if (data[champ] !== avant?.[champ]) controler(champ, data[champ], await this.levels(c, echelle));
+    }
+    if (kind === 'feared_event' && conf.data.severityMapping) {
+      const m = MappingDefinition.parse(await this.definition(c, conf.data.severityMapping));
+      if (data.severityLevel !== avant?.severityLevel)
+        controler('severityLevel', data.severityLevel, await this.levels(c, m.to));
+      const anciens = new Set(
+        (Array.isArray(avant?.impactLevels) ? (avant.impactLevels as { level?: unknown }[]) : []).map((i) =>
+          String(i.level),
+        ),
+      );
+      const impacts = Array.isArray(data.impactLevels) ? (data.impactLevels as { level?: unknown }[]) : [];
+      const permis = await this.levels(c, m.from);
+      for (const i of impacts) if (!anciens.has(String(i.level))) controler('impactLevels', i.level, permis);
+    }
+  }
+
   async preview(smsi: string, id: string, user: SessionUser, c?: Client) {
     const conn = c ?? (this.g.db.pool as unknown as Client);
     const study = await this.g.object(smsi, id, user, false, c);

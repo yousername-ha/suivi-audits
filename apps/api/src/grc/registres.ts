@@ -827,6 +827,12 @@ export class GrcRegistres {
           ? await c.query('SELECT 1 FROM users WHERE id=$1 AND NOT disabled', [b.subjectId])
           : await c.query('SELECT 1 FROM groups WHERE id=$1', [b.subjectId]);
       if (!existe.rowCount) throw new HttpError(422, 'Titulaire du droit introuvable.');
+      const avant = (
+        await c.query<{ role: string }>(
+          'SELECT role FROM droits_ressources WHERE resource_type=$1 AND resource_id=$2 AND subject_type=$3 AND subject_id=$4 FOR UPDATE',
+          [type, id, b.subjectType, b.subjectId],
+        )
+      ).rows[0];
       const r = (
         await c.query<{ id: string }>(
           `INSERT INTO droits_ressources(resource_type,resource_id,subject_type,subject_id,role,granted_by)
@@ -841,7 +847,13 @@ export class GrcRegistres {
         ip,
         'droit.accorde',
         id,
-        { ressource: type, titulaire: `${b.subjectType}:${b.subjectId}`, role: b.role },
+        {
+          ressource: type,
+          titulaire: `${b.subjectType}:${b.subjectId}`,
+          role: b.role,
+          ancienRole: avant?.role ?? null,
+          ...(b.motif ? { motif: b.motif } : {}),
+        },
         c,
       );
       return { id: r.id };

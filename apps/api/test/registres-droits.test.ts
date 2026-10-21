@@ -298,6 +298,33 @@ describe('registres et droits par ressource', () => {
     expect(journal.rowCount).toBeGreaterThanOrEqual(3);
   });
 
+  it('le journal garde le rôle précédent et le motif quand un droit est modifié', async () => {
+    const nouveau = await makeUser(t, 'reg_journal', null);
+    const put = (role: string, motif?: string) =>
+      admin.put(`/api/droits/registre/${registre}`, {
+        subjectType: 'utilisateur',
+        subjectId: nouveau.id,
+        role,
+        ...(motif ? { motif } : {}),
+      });
+    expect((await put('lecteur')).statusCode).toBe(200);
+    expect((await put('contributeur', 'Renfort sur le plan de la semaine')).statusCode).toBe(200);
+    const journal = (
+      await t.svc.db.q<{ details: { ancienRole: string | null; role: string; motif?: string; titulaire: string } }>(
+        "SELECT details FROM audit_log WHERE action='droit.accorde' AND target=$1 AND details->>'titulaire'=$2 ORDER BY id",
+        [registre, 'utilisateur:' + nouveau.id],
+      )
+    ).rows.map((r) => r.details);
+    expect(journal).toEqual([
+      expect.objectContaining({ role: 'lecteur', ancienRole: null }),
+      expect.objectContaining({
+        role: 'contributeur',
+        ancienRole: 'lecteur',
+        motif: 'Renfort sur le plan de la semaine',
+      }),
+    ]);
+  });
+
   it('un droit sur un seul élément ne donne pas le registre', async () => {
     const dto = (
       await admin.post(`/api/grc/${A}/objects`, { ...action('Action isolée'), registreId: registre })

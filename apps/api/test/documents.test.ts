@@ -73,6 +73,28 @@ describe('documents : dépôt, chiffrement, intégrité', () => {
     expect((await b.del(`/api/documents/${d.id}?purge=1`)).statusCode).toBe(204);
   });
 
+  it('purge : un document cité comme preuve reste dans la corbeille, un document non cité se purge', async () => {
+    const d = (await upload(a, 'preuve-citee.txt', Buffer.from('preuve'))).json();
+    const preuve = await b.post('/api/grc/00000000-0000-4000-8000-000000000001/objects', {
+      kind: 'evidence',
+      name: 'Preuve citant le document',
+      data: { source: 'Document partagé', documentRefs: [`document:${d.id}:1`], refs: [] },
+    });
+    expect(preuve.statusCode, preuve.body).toBe(200);
+    const rssi = await login(t, await makeUser(t, 'rssi-purge', 'rssi'));
+    expect((await rssi.del(`/api/documents/${d.id}`)).statusCode).toBe(204);
+    const refus = await b.del(`/api/documents/${d.id}?purge=1`);
+    expect(refus.statusCode, refus.body).toBe(409);
+    expect(refus.json().error).toMatch(/cité comme preuve \(1 fiche/);
+    // Le document est toujours dans la corbeille et se restaure.
+    expect((await rssi.post(`/api/documents/${d.id}/restore`)).statusCode).toBe(204);
+    expect((await rssi.del(`/api/documents/${d.id}`)).statusCode).toBe(204);
+    // Sans citation, la purge reste possible.
+    const libre = (await upload(a, 'non-cite.txt', Buffer.from('libre'))).json();
+    expect((await rssi.del(`/api/documents/${libre.id}`)).statusCode).toBe(204);
+    expect((await b.del(`/api/documents/${libre.id}?purge=1`)).statusCode).toBe(204);
+  });
+
   it('nouvelle version : incrémente la version du document', async () => {
     const d = (await upload(a, 'v.txt', Buffer.from('v1'))).json();
     const r = await a.req('POST', `/api/documents/${d.id}/versions`, {

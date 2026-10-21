@@ -93,7 +93,7 @@ export interface ExportCtx {
 }
 
 /** Dessin SVG autonome de la carte (couleurs claires recopiées en attributs). */
-function exportSvg(c: ExportCtx): { svg: string; W: number; H: number } {
+export function exportSvg(c: ExportCtx): { svg: string; W: number; H: number } {
   const bb = boundingBox(c.scene.nodes.map(([, n]) => n));
   const pad = 40,
     head = 78,
@@ -241,7 +241,7 @@ const octets = (dataUrl: string) => {
 };
 
 /** PDF A3 paysage contenant une image JPEG (même construction que la bêta). */
-function pdfA3(jpg: Uint8Array, iw: number, ih: number, title: string): Uint8Array<ArrayBuffer> {
+export function pdfA3(jpg: Uint8Array, iw: number, ih: number, title: string): Uint8Array<ArrayBuffer> {
   const PW = 1190.55,
     PH = 841.89,
     m = 24,

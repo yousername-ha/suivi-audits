@@ -12,10 +12,12 @@ export async function sources(g: Grc, smsi: string, user: SessionUser, search: s
     user.rights.can(m as Module, 'lire'),
   );
   const pattern = '%' + search.replace(/[\\%_]/g, '\\$&') + '%';
+  // Un registre restreint illisible ne propose aucun de ses éléments comme référence.
+  const masques = await g.registres.inaccessibles(user, smsi);
   const objects = (
     await g.db.q<{ ref: string; name: string; kind: string }>(
-      `SELECT 'object:'||id ref,name,kind FROM grc_objects WHERE smsi_id=$1 AND NOT archived AND module=ANY($2) AND name ILIKE $3 AND ($4::text[] IS NULL OR kind=ANY($4)) ORDER BY name,id LIMIT 100`,
-      [smsi, modules, pattern, typesObjets ?? null],
+      `SELECT 'object:'||id ref,name,kind FROM grc_objects WHERE smsi_id=$1 AND NOT archived AND module=ANY($2) AND name ILIKE $3 AND ($4::text[] IS NULL OR kind=ANY($4)) AND (registre_id IS NULL OR registre_id<>ALL($5::uuid[])) ORDER BY name,id LIMIT 100`,
+      [smsi, modules, pattern, typesObjets ?? null, masques],
     )
   ).rows;
   if (!cibles && user.rights.can('documents', 'lire'))

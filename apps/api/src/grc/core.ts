@@ -661,6 +661,8 @@ export class Grc {
       data = PILOTAGE_SCHEMAS[kind as keyof typeof PILOTAGE_SCHEMAS].parse(data);
       await this.checkTypedRefs(smsi, kind, data, user, c);
       if (kind === 'risk_study') await this.checkStudyConfiguration(smsi, data, previous, c);
+      if (kind === 'sr_ov' || kind === 'feared_event')
+        await this.studyConfig.verifierNiveaux(smsi, kind, data, previous?.data, c);
       if (kind === 'nonconformity' && previous?.data.status === 'closed')
         throw new HttpError(409, 'Conservez la clôture : rouvrez le constat avec un motif ou créez-en un nouveau.');
       if (kind === 'nonconformity' && previous && data.recidiveRef === 'object:' + previous.id)

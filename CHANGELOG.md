@@ -5,7 +5,19 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 ## [Non publié]
 
 ### Notes de mise à jour
-Aucune action particulière, aucune migration pour le moment.
+Aucune action particulière, aucune migration.
+
+### Corrigé
+Relevé d'existant ASTRA du 21/10/2026 ([audit](docs/unification/AUDIT-ASTRA-2026-10-21.md)) : corrections de confidentialité et d'intégrité, chacune avec un test.
+- **Registres restreints.** L'export du registre (`pilotage/export`), le sélecteur de références, les boîtes de pilotage, la revue de direction et les indicateurs d'amélioration ne laissent plus rien filtrer d'un registre que la personne ne peut pas lire.
+- **Responsable d'une série.** Les occurrences générées reprennent le responsable de leur série, y compris un groupe ou une fonction (elles étaient comptées « sans responsable » et ne déclenchaient pas les rappels de ce groupe).
+- **Historique d'un écart déplacé.** Les décisions d'un écart restent lisibles (fiche et export) après son déplacement vers un registre dont le périmètre de référence est autre.
+- **Niveaux d'une étude EBIOS RM.** Le serveur refuse un niveau (ressources, motivation, pertinence, gravité, impacts) qui n'existe pas dans les échelles épinglées par l'étude ; seuls les niveaux modifiés sont contrôlés, les évaluations passées ne sont jamais réécrites.
+- **Occurrences validées.** Les listes de tâches portent la validation (OK, KO, NA) de chaque occurrence ; une occurrence validée n'est plus comptée « en retard » (tableau de bord, cartes de périmètres, tableau des tâches) ni rappelée, et une réouverture la remet en jeu. Son statut d'action n'est pas modifié.
+- **Documents.** La suppression définitive d'un document cité comme preuve (fiche, lien, décision, validation d'occurrence) est refusée (409) : il reste dans la corbeille.
+- **Droits par ressource.** Le journal d'audit d'un droit accordé garde l'ancien rôle et un motif facultatif.
+- **Menu.** Les familles portent `aria-expanded`.
+- **Cartographie protégée.** Les mots-clés `export` retirés de quatre fichiers du module par l'épuration du 3.6.0 sont rétablis.
 
 ## [3.6.1] — 2026-10-20
 

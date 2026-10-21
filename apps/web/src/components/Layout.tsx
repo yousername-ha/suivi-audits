@@ -159,6 +159,7 @@ export function Layout({ children }: { children: ReactNode }) {
               label={<LibelleAlerte libelle={famille.label} alerte={alerteDeFamille(alertes, destinations)} />}
               leftSection={<Icone />}
               active={dansLaFamille}
+              aria-expanded={!tablette && ouvert === famille.id}
               opened={!tablette && ouvert === famille.id}
               onChange={(o) => basculer(famille.id, o)}
               // Tablette : le menu est replié en icônes, un clic mène à la première destination de la famille.

@@ -125,7 +125,8 @@ describe('responsables typés', () => {
     expect(sans.statusCode).toBe(200);
     const apres = (await admin.get(`/api/grc/${S}/tasks/dashboard`)).json();
     expect(apres.summary.unassigned).toBe(tableau.summary.unassigned + 1);
-    expect(tableau.summary.unassigned).toBe(1); // seule l'action sans désignation du test précédent
+    // L'occurrence de la série confiée à la fonction (test précédent) garde son responsable : aucune action n'est « sans responsable ».
+    expect(tableau.summary.unassigned).toBe(0);
   });
 
   it('une fonction archivée n’est plus proposée et ne peut plus être désignée', async () => {
