@@ -54,7 +54,7 @@ Légende des états : **Corrigé** (critère de l'audit satisfait et testé) · 
 
 | ID | État | Ce qui a été fait | Reste | Preuve |
 | --- | --- | --- | --- | --- |
-| 017-01 / 021-01 / 018-01 | Amélioré | Éléments d'un registre partagé listés sous chaque périmètre qui le porte et ouverts avec leur périmètre de référence ; sélecteur de registre à la création | Regroupement par registre dans la liste | `registres-droits.test.ts`, e2e `…-registres-partages.spec.ts` |
+| 017-01 / 021-01 / 018-01 | Amélioré | Éléments d'un registre partagé listés sous chaque périmètre qui le porte et ouverts avec leur périmètre de référence ; sélecteur de registre à la création ; filtre « Registre » et filtres conservés dans l'adresse | Regroupement par registre dans la liste ; filtre multiple | `registres-droits.test.ts`, e2e `…-registres-partages.spec.ts`, `…-filtres-taches.spec.ts` |
 | 017-03 / 018-03 | Amélioré | Kanban à autant de colonnes que d'états de la politique, zone bornée, titres fixes | Test de volume sur le Kanban | e2e `…-timeline-lisible.spec.ts` (Timeline) |
 | 017-06 / 018-02 | Corrigé (017-06) / Amélioré | Timeline : intitulés fixes, zone bornée pour cent actions, état et retard en toutes lettres, légende | Guide horizontal et marqueur carré des occurrences | e2e `…-timeline-lisible.spec.ts` |
 | 017-07 | Amélioré | Liens entrants affichés : action liée par audit d'origine ou par récidive | — | `liens.test.ts` |
