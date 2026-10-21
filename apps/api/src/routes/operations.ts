@@ -3,6 +3,7 @@ import { BackupPolicyIn, BackupPolicyOut, ExploitationOut, OperationIn, Operatio
 import { z } from 'zod';
 import { route } from '../http/route.js';
 import { requireIfMatch } from '../http/concurrency.js';
+import { apercuCertificat } from '../certificates.js';
 import { HttpError } from '../http/errors.js';
 
 export const operationRoutes = [
@@ -38,6 +39,22 @@ export const operationRoutes = [
       if (body.kind === 'tls_install' && req.protocol !== 'https')
         throw new HttpError(422, 'Une connexion HTTPS est requise pour transmettre une clé privée.');
       return svc.operations.request(body, s!.user, ip);
+    },
+  }),
+  route({
+    method: 'POST',
+    url: '/api/admin/exploitation/tls/apercu',
+    summary:
+      'Contrôler un certificat avant installation (lecture seule : rien n’est conservé, la clé n’est jamais renvoyée)',
+    tags: ['Administration'],
+    access: 'administration:administrer',
+    body: z
+      .object({ certificate: z.string().min(100).max(65536), privateKey: z.string().min(100).max(16384).optional() })
+      .strict(),
+    handler: async ({ svc, req, body }) => {
+      if (body.privateKey && req.protocol !== 'https')
+        throw new HttpError(422, 'Une connexion HTTPS est requise pour transmettre une clé privée.');
+      return apercuCertificat(body.certificate, new URL(svc.cfg.publicUrl).hostname, body.privateKey);
     },
   }),
   route({

@@ -52,6 +52,7 @@ Lot L10 (dossiers 010 cartes de périmètres et 012 exploitation) :
 - **Cartes de périmètres** : la couverture reprend le calcul de l'écran Couverture (référentiels rattachés ou hérités, états d'exigence communs) et s'appelle « Couverture » : ce n'est pas un taux de conformité (un enfant qui hérite d'un référentiel n'affiche plus « indisponible »). Les écarts ouverts sont ventilés en majeurs, mineurs et sensibles (classification de la fiche ou de l'outil historique) ; chaque compteur est un lien vers la liste du même périmètre (`?perimetre=`), les classes filtrent la liste des écarts (`?classif=`). Le retard d'un écart se compare à la date locale du périmètre.
 - **Journal d'audit** : filtres par période et par compte, pagination, export JSON réservé au droit d'exportation (comme le CSV), export tracé avec ses filtres, troncature signalée (en-tête `X-Journal-Tronque`, mention à l'écran).
 - **Détails techniques** : volume des pièces, date du relevé, « Non disponible » quand le serveur ne mesure pas une valeur ; test de `/api/admin/info`.
+- **Certificat TLS** : « Contrôler le certificat » avant installation (aperçu en lecture seule : format, validité, chaîne, hôte, clé, empreinte et noms), sans rien conserver ; l'installation reste confirmée et contrôlée par le serveur.
 
 ## [3.6.1] — 2026-10-20
 

@@ -341,6 +341,37 @@ describe('Lot A : pilotage opérationnel', () => {
       ).statusCode,
     ).toBe(422);
   });
+  it('aperçu d’un certificat : contrôles détaillés en lecture seule, rien de conservé, clé jamais restituée', async () => {
+    const avant = (await t.svc.db.one<{ n: number }>('SELECT count(*)::int n FROM operation_jobs'))!.n;
+    const ok = await a.post('/api/admin/exploitation/tls/apercu', { certificate: pem, privateKey: key });
+    expect(ok.statusCode, ok.body).toBe(200);
+    expect(ok.json()).toMatchObject({ ok: true, certificat: { alternatifs: ['DNS:suivi.test'] } });
+    expect(ok.json().controles.map((c: { id: string; ok: boolean }) => [c.id, c.ok])).toEqual([
+      ['format', true],
+      ['validite', true],
+      ['chaine', true],
+      ['hote', true],
+      ['cle', true],
+    ]);
+    // Aucune opération créée, aucune clé dans la réponse ni dans le journal.
+    expect(ok.body).not.toContain('PRIVATE KEY');
+    expect((await t.svc.db.one<{ n: number }>('SELECT count(*)::int n FROM operation_jobs'))!.n).toBe(avant);
+    expect((await a.get('/api/admin/audit')).body).not.toContain('PRIVATE KEY');
+    // Un certificat qui ne couvre pas l'hôte, une clé différente, un fichier qui n'est pas un PEM : chaque contrôle le dit.
+    const autreCle = path.join(dir, 'autre-cle.pem');
+    execFileSync('openssl', ['genpkey', '-algorithm', 'ED25519', '-out', autreCle], { stdio: 'ignore' });
+    const mauvaiseCle = await a.post('/api/admin/exploitation/tls/apercu', {
+      certificate: pem,
+      privateKey: readFileSync(autreCle, 'utf8'),
+    });
+    expect(mauvaiseCle.json().ok).toBe(false);
+    expect(mauvaiseCle.json().controles.find((c: { id: string }) => c.id === 'cle')).toMatchObject({ ok: false });
+    const illisible = await a.post('/api/admin/exploitation/tls/apercu', { certificate: 'x'.repeat(200) });
+    expect(illisible.json()).toMatchObject({ ok: false, certificat: null });
+    expect(illisible.json().controles[0]).toMatchObject({ id: 'format', ok: false });
+    // Réservé à l'administration (la lecture seule n'y a pas accès).
+    expect((await reader.post('/api/admin/exploitation/tls/apercu', { certificate: pem })).statusCode).toBe(403);
+  });
   it('TLS : certificat expiré et clé chiffrée refusés avant insertion', async () => {
     const encrypted = path.join(dir, 'encrypted.key');
     execFileSync(

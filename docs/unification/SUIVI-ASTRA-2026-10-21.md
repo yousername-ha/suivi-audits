@@ -24,7 +24,8 @@ Légende des états : **Corrigé** (critère de l'audit satisfait et testé) · 
 | 012-03 | Amélioré | « Non disponible » quand le serveur ne mesure pas ; volume des pièces ; date du relevé ; `/api/admin/info` testé | Versions de Caddy et ClamAV, répartition base/pièces/journaux | `security.test.ts` « informations système », e2e `…-journal-audit.spec.ts` |
 | 012-08 | Corrigé | La purge définitive d'un document cité comme preuve (fiche, lien, décision, validation) est refusée (409) | Parcours de graphe général (liés à 012-07) | `documents.test.ts` |
 | 012-12 | Amélioré | Filtres période et compte, pagination, export JSON sous le droit d'exportation (comme le CSV), export tracé avec ses filtres, troncature signalée | Journaux techniques (aucun puits lisible par l'API) | `security.test.ts` « journal d'audit », e2e `…-journal-audit.spec.ts` |
-| 012-02, 012-04, 012-06 | Inchangé | — | Aperçu de certificat, modes autosigné et ACME, catalogue `environment` | — |
+| 012-04 | Amélioré | Aperçu en lecture seule du certificat avant installation (format, validité, chaîne, hôte, clé, empreinte, noms) | Modes autosigné et ACME (décision 4) | `operations.test.ts`, e2e `y-exploitation.spec.ts` |
+| 012-02, 012-06 | Inchangé | — | Catalogue `environment` à relier ou masquer | — |
 | 012-07, 012-09, 012-10, 012-11, 012-13, 012-14 | Décision | — | Nettoyage automatique, contact technique, canaux de notification, SMTP/Teams, niveaux de journalisation, calendriers de plateforme | — |
 
 ### 010 Périmètres graphiques et 022 Droits
@@ -57,6 +58,7 @@ Légende des états : **Corrigé** (critère de l'audit satisfait et testé) · 
 | 017-03 / 018-03 | Amélioré | Kanban à autant de colonnes que d'états de la politique, zone bornée, titres fixes | Test de volume sur le Kanban | e2e `…-timeline-lisible.spec.ts` (Timeline) |
 | 017-06 / 018-02 | Corrigé (017-06) / Amélioré | Timeline : intitulés fixes, zone bornée pour cent actions, état et retard en toutes lettres, légende | Guide horizontal et marqueur carré des occurrences | e2e `…-timeline-lisible.spec.ts` |
 | 017-07 | Amélioré | Liens entrants affichés : action liée par audit d'origine ou par récidive | — | `liens.test.ts` |
+| 021-05 | Amélioré | Test : un écart et une action reliés à une exigence, l'action terminée, laissent l'évaluation et l'état de l'exigence inchangés | Affichage du contexte d'applicabilité à côté du lien | `couverture-exigences.test.ts` |
 | 021-06 | Corrigé | Classification en rouge, orange foncé et violet, avec légende, en liste et en fiche | — | `etat-action.test.ts`, e2e |
 | 018-04 | Amélioré | Bouton de validation expliqué (désactivé hors fenêtre) | Gabarit compact, test mobile | e2e `…-validation-occurrence.spec.ts` |
 | 018-05 | Corrigé | La preuve est une version de document ou une fiche de preuve (sélecteur, refus des autres objets) ; le journal affiche son intitulé selon les droits | Droit par document (décision de l'audit § 5) | `validations-occurrences.test.ts` |
