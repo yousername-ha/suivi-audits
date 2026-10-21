@@ -157,6 +157,28 @@ export const registresRoutes = [
     handler: async ({ svc, s, params }) => svc.grc.registres.accesElement(params.id, (s as Session).user),
   }),
   route({
+    tags: ['Registres'],
+    access: 'administration:lire' as const,
+    method: 'GET',
+    url: '/api/droits/sujets/:type/:id/registres',
+    summary:
+      'Vue des accès d’une personne ou d’un groupe : rôle par registre, origine et droits effectifs (calculés par le serveur)',
+    params: z.object({ type: z.enum(['utilisateur', 'groupe']), id: z.uuid() }),
+    query: z
+      .object({
+        q: z.string().max(100).default(''),
+        limite: z.coerce.number().int().min(1).max(100).default(25),
+        decalage: z.coerce.number().int().min(0).max(100_000).default(0),
+      })
+      .strict(),
+    handler: async ({ svc, params, query }) =>
+      svc.grc.registres.accesDuSujet(params.type, params.id, {
+        q: query.q,
+        limite: query.limite,
+        decalage: query.decalage,
+      }),
+  }),
+  route({
     ...base,
     method: 'GET',
     url: '/api/droits/:type/:id',

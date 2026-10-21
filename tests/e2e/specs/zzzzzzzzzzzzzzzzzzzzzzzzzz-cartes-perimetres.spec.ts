@@ -163,7 +163,16 @@ test('Graphe des périmètres : modification depuis le graphe, flèches et flux,
     expect(smsis.find((x) => x.id === p.id)?.name).toBe(renomme);
 
     const axe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
-    expect(axe.violations.map((v) => `${v.id} (${v.nodes.length})`)).toEqual([]);
+    expect(
+      axe.violations.map(
+        (v) =>
+          `${v.id} (${v.nodes.length}) : ` +
+          v.nodes
+            .slice(0, 4)
+            .map((n) => `${n.target.join(' ')} ${JSON.stringify(n.any[0]?.data ?? {})}`)
+            .join(' | '),
+      ),
+    ).toEqual([]);
     expect(problems).toEqual([]);
   } finally {
     await ctx.close();

@@ -232,3 +232,34 @@ export interface ImpactDeplacement {
 /** Ordre des actions d'un plan : identifiants dans l'ordre voulu (les actions non citées passent après). */
 export const OrdreBody = z.object({ ids: z.array(z.uuid()).min(1).max(1000) }).strict();
 export type OrdreBody = z.infer<typeof OrdreBody>;
+
+/* ---------------------------------------------------------------------------------------- Vue des accès d'un sujet */
+/** Origine d'un rôle de ressource : attribué à la personne elle-même ou reçu d'un groupe. */
+export interface OrigineDroit {
+  type: 'direct' | 'groupe';
+  libelle: string;
+}
+/** Accès d'une personne ou d'un groupe à un registre, tel que le serveur le calcule (jamais déduit par l'écran). */
+export interface AccesSujetRegistre {
+  registre: {
+    id: string;
+    name: string;
+    kind: RegistreKind;
+    restreint: boolean;
+    perimetres: { id: string; name: string }[];
+  };
+  /** Rôle de ressource le plus élevé, ou null s'il n'y en a aucun. */
+  role: RoleRessource | null;
+  origines: OrigineDroit[];
+  /** Droits effectifs d'une personne (rôle de ressource, droits de module, périmètres) ; absent pour un groupe. */
+  peut?: { lire: boolean; contribuer: boolean; gerer: boolean };
+  /** D'où vient le droit de lecture : administrateur, rôle de ressource, droits de module et périmètres, ou aucun. */
+  source: 'administrateur' | 'role' | 'module' | 'aucune';
+}
+export interface AccesSujetPage {
+  sujet: { type: 'utilisateur' | 'groupe'; id: string; libelle: string };
+  total: number;
+  limite: number;
+  decalage: number;
+  items: AccesSujetRegistre[];
+}

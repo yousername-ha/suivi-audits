@@ -347,6 +347,45 @@ describe('registres et droits par ressource', () => {
     expect(journal.rowCount).toBeGreaterThanOrEqual(3);
   });
 
+  it('vue des accès d’un sujet : rôle, origine et droits effectifs calculés par le serveur (022-01)', async () => {
+    const vue = (type: string, id: string, qs = '') => admin.get(`/api/droits/sujets/${type}/${id}/registres${qs}`);
+    const ligne = (j: { items: { registre: { id: string } }[] }) => j.items.find((i) => i.registre.id === registre)!;
+    // Personne dotée d'un rôle direct (contributeur) : le serveur le restitue avec ce qu'elle peut vraiment faire.
+    const direct = (await vue('utilisateur', contributeurId)).json();
+    expect(ligne(direct)).toMatchObject({
+      role: 'contributeur',
+      source: 'role',
+      peut: { lire: true, contribuer: true, gerer: false },
+    });
+    expect(ligne(direct).origines).toEqual([{ type: 'direct', libelle: 'Attribué directement' }]);
+    // Personne dont le rôle vient d'un groupe : l'origine nomme le groupe.
+    const parGroupe = (await vue('utilisateur', deGroupeId)).json();
+    expect(ligne(parGroupe).origines).toEqual([{ type: 'groupe', libelle: 'Équipe de recette' }]);
+    expect(ligne(parGroupe).peut).toMatchObject({ lire: true, contribuer: true, gerer: false });
+    // Le groupe lui-même : ses rôles, sans droits effectifs de personne.
+    const groupe = (await vue('groupe', groupeId)).json();
+    expect(ligne(groupe)).toMatchObject({ role: 'contributeur', source: 'role' });
+    expect(ligne(groupe).peut).toBeUndefined();
+    // Membre d'un périmètre sans rôle de ressource : l'accès vient des droits de module et du périmètre.
+    const parModule = (await vue('utilisateur', membreAId)).json();
+    expect(ligne(parModule)).toMatchObject({ role: null, source: 'module' });
+    // Compte sans droit de module ni rôle de ressource : aucun accès.
+    const vide = await makeUser(t, 'reg_sans_acces', null);
+    const lecteurVide = (await vue('utilisateur', vide.id)).json();
+    expect(ligne(lecteurVide)).toMatchObject({ role: null, source: 'aucune', peut: { lire: false } });
+    // Pagination et recherche par nom.
+    const page = (await vue('utilisateur', contributeurId, '?limite=1')).json();
+    expect(page.items).toHaveLength(1);
+    expect(page.total).toBeGreaterThan(1);
+    const filtre = (await vue('utilisateur', contributeurId, `?q=${encodeURIComponent('Plan A+B')}`)).json();
+    expect(filtre.items.every((i: { registre: { name: string } }) => i.registre.name.includes('Plan A+B'))).toBe(true);
+    expect(filtre.total).toBe(filtre.items.length);
+    // Réservée aux droits d'administration : ni le contributeur, ni un membre de périmètre ; sujet inconnu : 404.
+    expect((await contributeur.get(`/api/droits/sujets/utilisateur/${contributeurId}/registres`)).statusCode).toBe(403);
+    expect((await membreA.get(`/api/droits/sujets/groupe/${groupeId}/registres`)).statusCode).toBe(403);
+    expect((await vue('utilisateur', '00000000-0000-4000-8000-0000000000ff')).statusCode).toBe(404);
+  });
+
   it('le journal garde le rôle précédent et le motif quand un droit est modifié', async () => {
     const nouveau = await makeUser(t, 'reg_journal', null);
     const put = (role: string, motif?: string) =>

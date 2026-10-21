@@ -126,20 +126,22 @@ export function CartesPerimetres({
         </Button>
       </Group>
       {total && (
-        <dl className="graphe-total" aria-label="Total sans doublon sur tous les périmètres accessibles">
-          {lignesCompteurs(total)
-            .filter((l) => l.libelle !== 'Conformité')
-            .map((l) => (
-              <div key={l.libelle}>
-                <dt>Total · {l.libelle}</dt>
-                <dd className={l.alerte ? 'graphe-alerte' : undefined}>{l.valeur}</dd>
-              </div>
-            ))}
+        <section className="graphe-total" aria-label="Total sans doublon sur tous les périmètres accessibles">
+          <dl>
+            {lignesCompteurs(total)
+              .filter((l) => l.libelle !== 'Conformité')
+              .map((l) => (
+                <div key={l.libelle}>
+                  <dt>Total · {l.libelle}</dt>
+                  <dd className={l.alerte ? 'graphe-alerte' : undefined}>{l.valeur}</dd>
+                </div>
+              ))}
+          </dl>
           <Text size="xs">
             Chaque élément n’est compté qu’une fois : un registre partagé entre plusieurs périmètres figure dans chacune
             de leurs cartes, mais une seule fois ici.
           </Text>
-        </dl>
+        </section>
       )}
       <div className="table-wrap" role="region" aria-label="Graphe des périmètres, défilement possible" tabIndex={0}>
         <svg
@@ -240,23 +242,25 @@ export function CartesPerimetres({
                   ))}
                 </dl>
                 {carte.sousPerimetres > 0 && (
-                  <dl
-                    className="graphe-compteurs graphe-ensemble"
+                  <div
+                    className="graphe-ensemble"
                     role="group"
                     aria-label={`Total de ${carte.name} avec ses sous-périmètres, chaque élément une seule fois`}
                   >
                     <Text size="xs" fw={600}>
                       Total avec {n(carte.sousPerimetres)} sous-périmètre(s)
                     </Text>
-                    {lignesCompteurs(carte.total)
-                      .filter((l) => l.libelle !== 'Conformité')
-                      .map((l) => (
-                        <div key={l.libelle}>
-                          <dt>{l.libelle}</dt>
-                          <dd className={l.alerte ? 'graphe-alerte' : undefined}>{l.valeur}</dd>
-                        </div>
-                      ))}
-                  </dl>
+                    <dl className="graphe-compteurs">
+                      {lignesCompteurs(carte.total)
+                        .filter((l) => l.libelle !== 'Conformité')
+                        .map((l) => (
+                          <div key={l.libelle}>
+                            <dt>{l.libelle}</dt>
+                            <dd className={l.alerte ? 'graphe-alerte' : undefined}>{l.valeur}</dd>
+                          </div>
+                        ))}
+                    </dl>
+                  </div>
                 )}
                 <Group gap="2xs" wrap="nowrap">
                   {carte.id !== affiche && (

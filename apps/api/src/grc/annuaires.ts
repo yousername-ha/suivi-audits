@@ -1,6 +1,7 @@
 /* Annuaires de responsables : personnes, groupes et fonctions (migration 031). Le serveur est seul juge : un responsable
    de type groupe ou fonction doit exister et compter au moins une personne active ; pour une personne, l'identifiant
-   historique `ownerId` reste la source des droits et des rappels. Les rappels d'un groupe ou d'une fonction vont aux
+   historique `ownerId` reste la source des rappels. Un responsable n'est jamais une habilitation : désigner ou changer
+   un responsable n'écrit dans aucune table de rôles, de groupes ou de droits de ressource. Les rappels d'un groupe ou d'une fonction vont aux
    personnes qui le composent au moment de l'envoi. */
 import { FonctionBody, type FonctionDto, type ResponsableRef, type ResponsablesProposables } from '@suivi/shared';
 import type { SessionUser } from '../auth.js';

@@ -1520,7 +1520,7 @@ rect.audit-niv-faible {
   border-block-start: var(--suivi-trait-l) solid var(--mantine-color-default-border);
 }
 .graphe-alerte {
-  color: var(--mantine-color-red-7);
+  color: var(--mantine-color-red-light-color);
   font-weight: 600;
 }
 .graphe-total {
@@ -1529,6 +1529,9 @@ rect.audit-niv-faible {
   border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
   border-radius: var(--mantine-radius-md);
   font-size: var(--mantine-font-size-sm);
+}
+.graphe-total dl {
+  margin: 0;
 }
 .graphe-total div {
   display: flex;

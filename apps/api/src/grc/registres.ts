@@ -6,6 +6,8 @@
 import {
   GRC_MODULES,
   RANG_ROLE,
+  Rights,
+  effectivePermissions,
   DeplacementBody,
   RegistreBody,
   RegistrePerimetresBody,
@@ -15,6 +17,8 @@ import {
   REGISTRE_LABELS,
   ROLE_LABELS,
   roleSuffit,
+  type AccesSujetPage,
+  type AccesSujetRegistre,
   type Action,
   type Besoin,
   type GrcObject,
@@ -29,6 +33,7 @@ import {
 } from '@suivi/shared';
 import type { SessionUser } from '../auth.js';
 import type { Client } from '../db/db.js';
+import { loadGrants } from '../rights.js';
 import { HttpError } from '../http/errors.js';
 import { DEFAULT_SMSI, objectColumns, objectDto, type ObjectRow, type Grc } from './core.js';
 
@@ -797,6 +802,121 @@ export class GrcRegistres {
         [type, id],
       )
     ).rows.map((r) => ({ ...r, grantedAt: r.grantedAt.toISOString() }));
+  }
+  /** Vue des accès d'une personne ou d'un groupe : pour chaque registre, le rôle attribué (et son origine) et, pour une
+      personne, les droits effectifs calculés par le serveur avec les contrôles réels. Réservée aux administrateurs des
+      droits ; paginée et filtrable par nom de registre. Les registres archivés sont exclus. */
+  async accesDuSujet(
+    type: 'utilisateur' | 'groupe',
+    id: string,
+    f: { q: string; limite: number; decalage: number },
+  ): Promise<AccesSujetPage> {
+    const sujet =
+      type === 'utilisateur'
+        ? await this.g.db.one<{ id: string; libelle: string; username: string }>(
+            "SELECT id, coalesce(nullif(display_name,''),username) AS libelle, username FROM users WHERE id=$1",
+            [id],
+          )
+        : await this.g.db.one<{ id: string; libelle: string; username: string }>(
+            'SELECT id, name AS libelle, name AS username FROM groups WHERE id=$1',
+            [id],
+          );
+    if (!sujet) throw new HttpError(404, type === 'utilisateur' ? 'Compte introuvable.' : 'Groupe introuvable.');
+    const motif = '%' + f.q.replace(/[\\%_]/g, '\\$&') + '%';
+    const filtre = 'NOT r.archived AND r.name ILIKE $1';
+    const total = Number(
+      (await this.g.db.one<{ n: string }>(`SELECT count(*)::text AS n FROM registres r WHERE ${filtre}`, [motif]))!.n,
+    );
+    const regs = (
+      await this.g.db.q<RegistreRow>(
+        `SELECT ${colonnesR} FROM registres r WHERE ${filtre} ORDER BY r.kind, r.name, r.id LIMIT $2 OFFSET $3`,
+        [motif, f.limite, f.decalage],
+      )
+    ).rows;
+    const ids = regs.map((r) => r.id);
+    // Rôles attribués, directement ou par un groupe (pour un groupe : les siens seulement).
+    const droits = ids.length
+      ? (
+          await this.g.db.q<{ registre: string; role: RoleRessource; direct: boolean; groupe: string | null }>(
+            type === 'utilisateur'
+              ? `SELECT d.resource_id AS registre, d.role, d.subject_type='utilisateur' AS direct, g.name AS groupe
+                   FROM droits_ressources d LEFT JOIN groups g ON d.subject_type='groupe' AND g.id=d.subject_id
+                  WHERE d.resource_type='registre' AND d.resource_id = ANY($1::uuid[])
+                    AND ((d.subject_type='utilisateur' AND d.subject_id=$2)
+                      OR (d.subject_type='groupe' AND d.subject_id IN (SELECT group_id FROM user_groups WHERE user_id=$2)))`
+              : `SELECT d.resource_id AS registre, d.role, false AS direct, g.name AS groupe
+                   FROM droits_ressources d JOIN groups g ON g.id=d.subject_id
+                  WHERE d.resource_type='registre' AND d.resource_id = ANY($1::uuid[])
+                    AND d.subject_type='groupe' AND d.subject_id=$2`,
+            [ids, id],
+          )
+        ).rows
+      : [];
+    const perimetres = ids.length
+      ? (
+          await this.g.db.q<{ registre: string; id: string; name: string }>(
+            `SELECT p.registre_id AS registre, s.id, s.name FROM registre_perimetres p JOIN grc_smsis s ON s.id=p.smsi_id
+              WHERE p.registre_id = ANY($1::uuid[]) ORDER BY s.name`,
+            [ids],
+          )
+        ).rows
+      : [];
+    // La personne telle que les contrôles la voient : mêmes droits de module, mêmes périmètres, mêmes administrateurs.
+    const personne: SessionUser | null =
+      type === 'utilisateur'
+        ? ({
+            id: sujet.id,
+            username: sujet.username,
+            displayName: sujet.libelle,
+            roles: [],
+            rights: new Rights(effectivePermissions(await loadGrants(this.g.db.pool, sujet.id)).keys()),
+          } as unknown as SessionUser)
+        : null;
+    const admin = personne ? await this.g.isAdmin(personne) : false;
+    const items: AccesSujetRegistre[] = [];
+    for (const reg of regs) {
+      const mes = droits.filter((d) => d.registre === reg.id);
+      let role: RoleRessource | null = null;
+      for (const d of mes) if (!role || RANG_ROLE[d.role] > RANG_ROLE[role]) role = d.role;
+      const peut = personne
+        ? {
+            lire: await this.peut(personne, reg, null, 'lire'),
+            contribuer: await this.peut(personne, reg, null, 'contribuer'),
+            gerer: await this.peut(personne, reg, null, 'gerer'),
+          }
+        : undefined;
+      const source: AccesSujetRegistre['source'] = admin
+        ? 'administrateur'
+        : role
+          ? 'role'
+          : peut?.lire
+            ? 'module'
+            : 'aucune';
+      items.push({
+        registre: {
+          id: reg.id,
+          name: reg.name,
+          kind: reg.kind,
+          restreint: reg.restricted,
+          perimetres: perimetres.filter((p) => p.registre === reg.id).map(({ id: pid, name }) => ({ id: pid, name })),
+        },
+        role,
+        origines: mes.map((d) =>
+          d.direct
+            ? { type: 'direct', libelle: 'Attribué directement' }
+            : { type: 'groupe', libelle: d.groupe ?? 'Groupe supprimé' },
+        ),
+        ...(peut ? { peut } : {}),
+        source,
+      });
+    }
+    return {
+      sujet: { type, id: sujet.id, libelle: sujet.libelle },
+      total,
+      limite: f.limite,
+      decalage: f.decalage,
+      items,
+    };
   }
   /** Utilisateurs et groupes proposables à l'attribution d'un droit : réservé à qui gère la ressource (aucune liste d'annuaire
       n'est servie aux autres). */
