@@ -116,7 +116,7 @@ export function SettingsPage() {
 }
 
 /* ---------------------------------------------------------------- Chargement et enregistrement d'une section */
-function SectionLoader({ section, onDirty }: { section: SettingsSection; onDirty: (d: boolean) => void }) {
+export function SectionLoader({ section, onDirty }: { section: SettingsSection; onDirty: (d: boolean) => void }) {
   const q = useQuery({
     queryKey: ['settings', section],
     queryFn: () => get<SettingsSectionOut>(`/api/settings/${section}`),

@@ -162,6 +162,12 @@ export async function buildApp(svc: Services): Promise<FastifyInstance> {
       .then((names) => names.length && svc.log.info({ accounts: names }, 'accounts expired'))
       .catch((e: Error) => svc.log.warn({ err: e.message }, 'account expiry failed'));
   void expire();
+  // Niveau de journalisation enregistré, puis fin automatique du niveau debug temporaire.
+  svc.journalTechnique
+    .charger()
+    .catch((e: Error) => svc.log.warn({ err: e.message }, 'journal technique: configuration non lue'));
+  const debugEchu = setInterval(() => svc.journalTechnique.expirer().catch(() => {}), 30e3);
+  debugEchu.unref();
   const expiry = setInterval(expire, 5 * 60e3);
   expiry.unref();
   app.addHook('onClose', async () => {
@@ -169,6 +175,7 @@ export async function buildApp(svc: Services): Promise<FastifyInstance> {
     await svc.modules.end();
     clearInterval(purge);
     clearInterval(expiry);
+    clearInterval(debugEchu);
   });
   return app;
 }

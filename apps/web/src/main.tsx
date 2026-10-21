@@ -13,6 +13,7 @@ import { ApiError } from './api';
 import { Layout } from './components/Layout';
 import { AccountPage } from './pages/Account';
 import { AdminPage } from './pages/Admin';
+import { PageCartes } from './pages/Administration';
 import { CartographiePage } from './pages/Cartographie';
 import { ConfigurationGrcPage } from './pages/ConfigurationGrc';
 import { DocumentsPage } from './pages/Documents';
@@ -93,6 +94,8 @@ const router = createBrowserRouter([
       { path: '/exports', element: <ExportsPage /> },
       { path: '/registres/:id?', element: <RegistresPage /> },
       { path: '/aide', element: <HelpPage /> },
+      { path: '/plateforme/:carte?', element: <PageCartes cote="plateforme" /> },
+      { path: '/systeme/:carte?', element: <PageCartes cote="systeme" /> },
       { path: '/parametres/configuration-grc/:kind?', element: <ConfigurationGrcPage /> },
       { path: '/parametres/:section?', element: <SettingsPage /> },
     ],

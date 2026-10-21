@@ -35,6 +35,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { errorMessage } from '../api';
+import { ALIAS_ADMINISTRATION, cartesVisibles } from '../administration-droits';
 import { famillesVisibles, localiser, type FamilleId } from '../navigation';
 import { logout as endSession } from '../logout';
 import { alerteDeFamille, LibelleAlerte, useAlertesMenu } from '../pilotage/alertes-menu';
@@ -42,7 +43,7 @@ import { OngletsRubriques } from './OngletsRubriques';
 import { UpdateNotice } from './Updates';
 import { ErrorAlert } from './common';
 import { useLive } from '../realtime';
-import { canAdminArea, canReadBusiness, useCan, useMe, usePreferences } from '../session';
+import { canReadBusiness, useCan, useMe, usePreferences } from '../session';
 
 const ICONES_FAMILLE: Record<FamilleId, () => ReactNode> = {
   pilotage: IconePilotage,
@@ -90,12 +91,18 @@ export function Layout({ children }: { children: ReactNode }) {
   type Item = [string, string, () => ReactNode];
   const accueil: Item[] = [['/', 'Tableau de bord', IconeAccueil]];
   const administration: Item[] = [];
-  if (can('parametres', 'lire')) administration.push(['/parametres', 'Paramètres', IconeParametres]);
-  if (canAdminArea(can)) administration.push(['/admin', 'Administration', IconeAdministration]);
+  if (cartesVisibles(can, 'plateforme').length > 0) administration.push(['/plateforme', 'Plateforme', IconeParametres]);
+  if (cartesVisibles(can, 'systeme').length > 0)
+    administration.push(['/systeme', 'Configuration système', IconeAdministration]);
   const outils: Item[] = [['/account', 'Mon compte', IconeCompte]];
   outils.push(['/aide', 'Guide d’utilisation', IconeDocuments]);
   if (canReadBusiness(can)) outils.push(['/mur', 'Écran mural', IconeMur]);
-  const active = (to: string) => (to === '/' ? loc.pathname === '/' : loc.pathname.startsWith(to));
+  const active = (to: string) =>
+    to === '/'
+      ? loc.pathname === '/'
+      : ALIAS_ADMINISTRATION[to]
+        ? ALIAS_ADMINISTRATION[to].test(loc.pathname)
+        : loc.pathname.startsWith(to);
   const alertes = useAlertesMenu();
   const familles = famillesVisibles(can);
   // Une seule famille dépliée à la fois : ouvrir une famille referme la précédente. La page affichée déplie la sienne.

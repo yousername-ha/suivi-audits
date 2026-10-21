@@ -59,7 +59,7 @@ sudo docker compose exec app setup-token           # jeton d'installation, puis 
 | Administrateur de secours | `sudo docker compose exec app setup-token --recovery` |
 | Sauvegarde chiffrée | `sudo BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass ./scripts/backup.sh /srv/sauvegardes/suivi-audits` |
 | Restauration | `sudo BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass ./scripts/restore.sh <archive>.tar.enc` |
-| Mise à jour | Administration → Système → Mise à jour ; pour le premier passage ou l’entretien serveur, suivre [INSTALLATION, section 12](docs/INSTALLATION.md) (sauvegarde et signatures). |
+| Mise à jour | Configuration système → Mises à jour et versions ; pour le premier passage ou l’entretien serveur, suivre [INSTALLATION, section 12](docs/INSTALLATION.md) (sauvegarde et signatures). |
 | Antivirus | `CLAMAV_HOST=clamav` dans `.env`, puis `sudo docker compose --profile antivirus up -d` |
 
 La vue SQL `v_documents` permet d'interroger les documents en lecture, par exemple : `sudo docker compose exec -u postgres db psql -d suivi -c "SELECT * FROM v_documents"`.

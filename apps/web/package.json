@@ -1,6 +1,6 @@
 {
   "name": "@suivi/web",
-  "version": "3.6.1",
+  "version": "4.1.0",
   "private": true,
   "type": "module",
   "description": "Interface web du suivi des audits SMSI (React, Vite, Mantine)",
