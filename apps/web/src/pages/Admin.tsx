@@ -265,8 +265,8 @@ export function Audit() {
         </Group>
       )}
       <Text size="sm" c="dimmed">
-        Journal en ajout seul : aucune entrée ne peut être modifiée ni supprimée. Les journaux techniques du serveur ne
-        sont pas consultables ici.
+        Journal en ajout seul : aucune entrée ne peut être modifiée ni supprimée. Les journaux techniques du serveur se
+        consultent dans la carte « Journaux techniques » de la Configuration système.
       </Text>
       <ErrorAlert error={r.error} />
       <Text size="sm">

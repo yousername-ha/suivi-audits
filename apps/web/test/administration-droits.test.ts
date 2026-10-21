@@ -31,6 +31,7 @@ describe('cartes de l’Administration : droits', () => {
       'certificats',
       'sessions',
       'journal',
+      'journaux-techniques',
       'modules',
       'environnement',
       'details',

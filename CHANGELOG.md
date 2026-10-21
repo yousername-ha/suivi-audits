@@ -5,7 +5,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 ## [Non publié]
 
 ### Notes de mise à jour
-Aucune action particulière, aucune migration.
+Aucune action particulière. Migration additive `034_journal_technique.sql` (table du niveau de journalisation), appliquée au démarrage.
 
 ### Corrigé
 Relevé d'existant ASTRA du 21/10/2026 ([audit](docs/unification/AUDIT-ASTRA-2026-10-21.md)) : corrections de confidentialité et d'intégrité, chacune avec un test.
@@ -24,6 +24,7 @@ Relevé d'existant ASTRA du 21/10/2026 ([audit](docs/unification/AUDIT-ASTRA-202
 
 ### Ajouté
 - **Couverture et ISO/IEC 27001.** Les clauses 4 à 10 sont obligatoires : le serveur refuse de les exclure (422), l'écran retire l'option « Exclue » (une copie personnalisée d'un référentiel ISO 27001 garde la règle). Une exclusion enregistrée avant la règle est ignorée dans le calcul et signalée. Les exigences dont l'applicabilité n'est pas tranchée sont comptées à part (« à déterminer ») et signalées « à revoir » sur l'écran Couverture et sur la carte du périmètre.
+- **Journaux techniques.** Nouvelle carte de la Configuration système : niveau de journalisation du serveur réglable à chaud (avertissement ou info en permanence ; debug toujours temporaire, 24 heures au plus), niveau réellement appliqué affiché, erreurs toujours collectées, journal d'audit indépendant. Les dernières entrées (5 000 en mémoire, secrets masqués) se filtrent par niveau et par texte ; le téléchargement NDJSON exige le droit d'exportation et est tracé. Chaque changement de niveau est audité.
 - **Administration en deux pages à cartes.** Le menu propose « Plateforme » (organisation, comptes, référentiels, échelles, apparence, notifications, écrans muraux, import et export) et « Configuration système » (sauvegardes, mises à jour, certificats, sécurité, sessions, journal d'audit, modules, environnement, détails techniques). Chaque carte (icône, nom, résumé) ouvre son détail dans une fenêtre centrée à bordure visible ; elle n'apparaît qu'avec le droit de lecture correspondant. Les adresses `/parametres/…` et `/admin/…` restent valables.
 - **Clauses 4 à 10 conformes ou pas encore.** Chaque clause obligatoire est signalée « conforme » (mise en œuvre complète et test d'efficacité conforme) ou « pas encore conforme » ; une alerte rouge compte celles qui ne le sont pas encore, sur l'écran Couverture et sur la carte du périmètre. Évaluation interne, pas une attestation.
 

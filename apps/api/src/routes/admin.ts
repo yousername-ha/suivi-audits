@@ -2,6 +2,8 @@
 import { BackupsOut, BackupJobOut, BackupRequestIn, FonctionBody, SystemeOut } from '@suivi/shared';
 import { z } from 'zod';
 import type { Session } from '../auth.js';
+import { DUREE_DEBUG_MAX_MINUTES } from '../journal-technique.js';
+import { NIVEAUX_TECHNIQUES } from '../log.js';
 import { HttpError } from '../http/errors.js';
 import { route } from '../http/route.js';
 import { csvCell } from '../export/tabular.js';
@@ -171,6 +173,73 @@ export const adminRoutes = [
         .header('Cache-Control', 'no-store');
       return reply.send(body);
     },
+  }),
+
+  /* ---------------------------------------------------------------- Journaux techniques */
+  route({
+    method: 'GET',
+    url: '/api/admin/journaux-techniques',
+    summary:
+      'Journaux techniques du serveur : état du niveau et dernières entrées (niveau minimal, recherche, pagination) ; format=ndjson&export=1 pour le téléchargement (droit d’exportation, tracé)',
+    tags: ['Administration'],
+    access: 'administration:lire',
+    query: z.object({
+      niveau: z.enum(NIVEAUX_TECHNIQUES).optional(),
+      q: z.string().trim().max(200).optional(),
+      avant: z.coerce.number().int().positive().optional(),
+      limite: z.coerce.number().int().min(1).max(5000).optional(),
+      format: z.enum(['json', 'ndjson']).optional(),
+      export: z.enum(['1']).optional(),
+    }),
+    handler: async ({ svc, s, ip, query, reply }) => {
+      const exporter = query.format === 'ndjson' && query.export === '1';
+      const { entrees, reste } = svc.journalTechnique.lire({
+        niveauMin: query.niveau,
+        q: query.q,
+        avant: query.avant,
+        limite: query.limite ?? (exporter ? 5000 : 200),
+      });
+      if (!exporter) return { etat: svc.journalTechnique.etat(), entrees, reste };
+      svc.auth.requirePermission(s, 'administration:exporter');
+      await svc.db.audit((s as Session).user, ip, 'admin.journal_technique_export', '', {
+        rows: entrees.length,
+        truncated: reste,
+        filters: { niveau: query.niveau ?? null, q: query.q ?? null },
+      });
+      reply
+        .header('Content-Type', 'application/x-ndjson; charset=utf-8')
+        .header(
+          'Content-Disposition',
+          `attachment; filename="journaux-techniques-${new Date().toISOString().slice(0, 10)}.ndjson"`,
+        )
+        .header('Cache-Control', 'no-store');
+      if (reste) reply.header('X-Journal-Tronque', '1');
+      // Ordre chronologique dans le fichier : les plus anciennes entrées d'abord.
+      return reply.send(
+        [...entrees]
+          .reverse()
+          .map((e) => JSON.stringify(e))
+          .join('\n') + '\n',
+      );
+    },
+  }),
+  route({
+    method: 'PUT',
+    url: '/api/admin/journaux-techniques/niveau',
+    summary:
+      'Niveau de journalisation du serveur : warn ou info (permanents), debug (temporaire, 24 heures au plus). Les erreurs sont toujours collectées ; le journal d’audit est indépendant',
+    tags: ['Administration'],
+    access: 'administration:administrer',
+    body: z
+      .object({
+        niveau: z.enum(['debug', 'info', 'warn']),
+        dureeMinutes: z.number().int().min(5).max(DUREE_DEBUG_MAX_MINUTES).optional(),
+        reason: z.string().trim().max(500).default(''),
+        confirm: z.literal('APPLIQUER'),
+      })
+      .strict(),
+    handler: async ({ svc, s, ip, body }) =>
+      svc.journalTechnique.modifier(body.niveau, body.dureeMinutes, body.reason, (s as Session).user, ip),
   }),
 
   /* ---------------------------------------------------------------- Versions de l'état legacy */

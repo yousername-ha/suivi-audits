@@ -56,12 +56,30 @@ test('Administration : deux pages à cartes, détail en fenêtre centrée, ancie
       'Sécurité',
       'Sessions actives',
       'Journal d’audit',
+      'Journaux techniques',
       'Modules',
       'Détails techniques',
     ])
       await expect(page.getByRole('heading', { name: titre, level: 2 })).toBeVisible();
     await page.getByRole('link', { name: /^Journal d’audit/ }).click();
     await expect(page.getByRole('dialog', { name: 'Journal d’audit' })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page).toHaveURL(/\/systeme$/);
+
+    // Journaux techniques : état appliqué, débogage temporaire puis retour au seuil permanent, téléchargement.
+    await page.getByRole('link', { name: /^Journaux techniques/ }).click();
+    const journaux = page.getByRole('dialog', { name: 'Journaux techniques' });
+    await expect(journaux.getByText('Niveau appliqué par le serveur :')).toBeVisible();
+    await expect(journaux.getByRole('button', { name: 'Télécharger (NDJSON)' })).toBeVisible();
+    await journaux.getByRole('button', { name: 'Activer le débogage' }).click();
+    await expect(journaux.getByText('Débogage temporaire actif')).toBeVisible();
+    await journaux.getByRole('button', { name: 'Appliquer le seuil' }).click();
+    await expect(journaux.getByText('Débogage temporaire actif')).toBeHidden();
+    const [fichier] = await Promise.all([
+      page.waitForEvent('download'),
+      journaux.getByRole('button', { name: 'Télécharger (NDJSON)' }).click(),
+    ]);
+    expect(fichier.suggestedFilename()).toMatch(/^journaux-techniques-\d{4}-\d{2}-\d{2}\.ndjson$/);
     await page.keyboard.press('Escape');
     await expect(page).toHaveURL(/\/systeme$/);
 

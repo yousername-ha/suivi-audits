@@ -17,6 +17,7 @@ import { DetailsTechniques, Audit, Sessions, Versions } from './Admin';
 import { GroupsPanel, RolesPanel, UsersPanel } from './AdminAccess';
 import { BackupsPanel } from './AdminBackups';
 import { FonctionsPanel } from './AdminFonctions';
+import { JournauxTechniquesPanel } from './AdminJournauxTechniques';
 import { ImportPanel } from './AdminImport';
 import { ImportTenacyPanel } from './AdminImportTenacy';
 import { ModulesPanel } from './AdminModules';
@@ -44,6 +45,7 @@ type Icone =
   | 'bouclier'
   | 'horloge'
   | 'journal'
+  | 'logs'
   | 'modules'
   | 'terminal';
 
@@ -239,6 +241,15 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     detail: () => <Audit />,
   },
   {
+    id: 'journaux-techniques',
+    cote: 'systeme',
+    titre: 'Journaux techniques',
+    resume: 'Entrées du serveur par niveau (debug, info, avertissement, erreur), réglage du niveau, téléchargement.',
+    icone: 'logs',
+    teinte: 'rouge',
+    detail: () => <JournauxTechniquesPanel />,
+  },
+  {
     id: 'modules',
     cote: 'systeme',
     titre: 'Modules',
@@ -313,6 +324,7 @@ const TRACES: Record<Icone, ReactNode> = {
   horloge: <path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2" />,
   journal: <path d="M6 3h9l4 4v14H6zM9 12h7M9 16h7M9 8h3" />,
   modules: <path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" />,
+  logs: <path d="M4 6h16M4 12h10M4 18h14M19 12h0" />,
   terminal: <path d="M3 5h18v14H3zM7 10l3 2-3 2M12 15h5" />,
 };
 
