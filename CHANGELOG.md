@@ -24,6 +24,8 @@ Aucune action particulière, aucune migration.
 
 ## [4.1.0] — 2026-10-21
 
+> Cette version n'a pas reçu d'étiquette : elle est publiée avec la [4.2.0](#420--2026-10-22). Le passage de la 3.6.1 à la 4.2.0 applique donc les migrations `034` et `035` à la suite, et reprend les notes de mise à jour des deux sections.
+
 **Administration en deux pages à cartes, journaux techniques, couverture ISO/IEC 27001 clause par clause et corrections du prompt maître ASTRA du 21/10/2026.** Les entrées de menu « Paramètres » et « Administration » deviennent « Plateforme » et « Configuration système » (les adresses `/parametres/…` et `/admin/…` restent valables).
 
 ### Notes de mise à jour
