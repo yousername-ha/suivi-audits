@@ -12,6 +12,7 @@ export const PILOTAGE_NAV = [
     label: 'Contexte et responsabilités',
     items: [
       { id: 'contexte', label: 'Périmètre et contexte', module: 'pilotage' },
+      { id: 'processus-cartes', label: 'Processus', module: 'pilotage' },
       { id: 'parties', label: 'Parties intéressées', module: 'pilotage' },
       { id: 'swot', label: 'SWOT par processus', module: 'pilotage' },
       { id: 'pestel', label: 'PESTEL des enjeux externes', module: 'pilotage' },
@@ -21,7 +22,7 @@ export const PILOTAGE_NAV = [
   {
     label: 'Objectifs et indicateurs',
     items: [
-      { id: 'processus', label: 'Processus', module: 'pilotage' },
+      { id: 'processus', label: 'Objectifs par processus', module: 'pilotage' },
       { id: 'objectifs', label: 'Objectifs', module: 'pilotage' },
       { id: 'indicateurs', label: 'Indicateurs', module: 'pilotage' },
     ],

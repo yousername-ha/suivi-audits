@@ -75,6 +75,7 @@ export const FAMILLES: Famille[] = [
     label: 'Organisation',
     destinations: [
       dest('contexte', 'Contexte de l’organisation', [p('contexte'), p('parties'), p('swot'), p('pestel')]),
+      dest('processus', 'Processus', [p('processus-cartes')]),
       dest('responsabilites', 'Rôles et responsabilités', [p('responsabilites')]),
       dest('cartographie', 'Cartographie du SMSI', [
         page('cartographie', 'Cartographie du SMSI', '/cartographie', 'cartographie', 'lire', true),

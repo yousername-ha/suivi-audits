@@ -46,6 +46,7 @@ import { EtudesEbios } from '../grc/Ebios';
 import { ConfigurationGrc } from '../config-grc/ConfigurationGrc';
 import { RegistreRisques } from '../grc/RegistreRisques';
 import { ObjectifsProcessus } from '../pilotage/ObjectifsProcessus';
+import { CartesProcessus } from '../processus/CartesProcessus';
 import { Pestel, SynthesePartiesBandeau } from '../pilotage/Pestel';
 import { PreparationRevue } from '../pilotage/PreparationRevue';
 import { SeriesProposees } from '../pilotage/SeriesProposees';
@@ -329,6 +330,7 @@ export function PilotagePage() {
                   can('import_export', 'exporter') && <ExportRegister smsi={smsi} kind={config.kind} />}
               </>
             )}
+            {section === 'processus-cartes' && smsi === SOCLE && <CartesProcessus smsi={smsi} />}
             {section === 'synthese' && (
               <>
                 {smsi && <BandeauRapprochements smsi={smsi} />}

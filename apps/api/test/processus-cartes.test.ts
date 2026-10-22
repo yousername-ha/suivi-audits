@@ -100,4 +100,29 @@ describe('processus en cartes', () => {
     const r = await lire(lecteur);
     expect(r.processus).toHaveLength(3);
   });
+
+  it('réciprocité : un processus créé sur la carte apparaît dans la cartographie, et inversement', async () => {
+    const depuisCarte = await admin.post(`${racine}/pilotage/objectifs/processes`, {
+      name: 'Processus créé sur une carte',
+      family: 'Support',
+      owner: 'DSI',
+    });
+    expect(depuisCarte.statusCode, depuisCarte.body).toBe(200);
+    const objets = async () =>
+      ((await admin.get('/api/carto/objects')).json() as { objects: { ref: string; name: string; family?: string }[] })
+        .objects;
+    const vueCarto = (await objets()).find((o) => o.ref === 'process:' + depuisCarte.json().id);
+    expect(vueCarto, 'le processus de la carte figure dans la cartographie').toMatchObject({
+      name: 'Processus créé sur une carte',
+      family: 'Support',
+    });
+    const depuisCartographie = await admin.post('/api/carto/objects', {
+      type: 'process',
+      name: 'Processus dessiné dans la cartographie',
+      family: 'Réalisation',
+    });
+    expect(depuisCartographie.statusCode, depuisCartographie.body).toBe(201);
+    const carteCreee = (await lire()).processus.find((p) => p.name === 'Processus dessiné dans la cartographie');
+    expect(carteCreee, 'le processus de la cartographie figure en carte').toMatchObject({ family: 'Réalisation' });
+  });
 });
