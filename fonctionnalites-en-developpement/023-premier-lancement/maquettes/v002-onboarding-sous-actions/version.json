@@ -1,0 +1,22 @@
+{
+  "id": "v002-onboarding-sous-actions",
+  "statut": "a-valider",
+  "date": "2026-10-22",
+  "versionPrecedente": "v001-parcours-guide",
+  "validationUtilisateur": null,
+  "integrationBackend": false,
+  "references": [
+    "/workspace/suivi-audits/fonctionnalites-en-developpement/023-premier-lancement/maquettes/v002-onboarding-sous-actions/images/01-onboarding-apres-admin.png",
+    "/workspace/suivi-audits/fonctionnalites-en-developpement/023-premier-lancement/maquettes/v002-onboarding-sous-actions/images/02-organisation-onboarding.png"
+  ],
+  "visuels": [
+    {
+      "fichier": "images/01-onboarding-apres-admin.png",
+      "sha256": "e6508bd4f6bc15226229b258c2d325e9f9024b6b8e25f282e2c54141ea5e954a"
+    },
+    {
+      "fichier": "images/02-organisation-onboarding.png",
+      "sha256": "81760f6d32bdc2226d15e23edae561bf2eae68a74526b7fd0a206e285c4ae014"
+    }
+  ]
+}

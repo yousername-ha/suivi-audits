@@ -1,5 +1,16 @@
 # 023 — Premier lancement : règles de conception
 
+## Précision utilisateur — onboarding après création administrateur (v002)
+
+Le premier lancement est le **parcours d’onboarding après installation et création du compte administrateur**, avant l’usage courant de la plateforme. L’écran ne représente ni un installateur, ni la création du compte, ni un menu de configuration métier à visiter pour la première fois. Le menu latéral est retiré de cette présentation pour concentrer l’attention sur l’assistant.
+
+Contrat à raccorder : lorsque l’installation et le compte initial sont confirmés par le serveur, proposer l’onboarding à l’administrateur authentifié autorisé. Si le setup existant revient à la connexion, ouvrir l’assistant après cette première authentification ; ne pas contourner la connexion. Ne pas se baser sur une URL, un paramètre navigateur ou une simple présence d’organisation.
+
+Prévoir un état de configuration métier au niveau plateforme (non commencé, brouillon, reporté, terminé), distinct de l’état de création du compte et soumis aux droits réels. Après report ou fin, ne pas forcer l’assistant à chaque connexion ou pour chaque nouvel utilisateur ; permettre une reprise volontaire depuis Paramètres plateforme. Une reprise ne doit ni recréer l’administrateur ni effacer la configuration existante. Ces états et commandes doivent être recherchés dans le socle avant toute création de modèle/API.
+
+La v002 illustre le contexte post-admin ; le bandeau « installation terminée / administrateur créé » repose sur le scénario fictif, pas sur une interrogation du serveur. Report et reprise sont testables localement. La version initiale reste historique.
+
+
 ## Demandes traduites
 
 1. Assistant central : modèle → organisation/premier périmètre → référentiels → impact/sévérité/probabilité → aperçu et confirmation.

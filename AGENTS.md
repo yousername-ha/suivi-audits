@@ -156,3 +156,8 @@ Ces instructions utilisateur remplacent les consignes antérieures contradictoir
 - 023 : assistant de configuration métier entièrement facultatif, reprenable, avec modèles personnalisables et échelles du catalogue commun. Ne pas contourner l’installation/authentification initiale, ne pas écraser une configuration existante.
 - 024 : arbre de progression ISO 27001/HDS, sourcé officiellement ; progression distincte de la conformité et de la certification. Les dépendances de travail et modèles UI ne sont pas des prescriptions normatives. Lire les limites et sources avant tout enrichissement.
 - Les deux propositions restent en développement jusqu’à validation. Aucun ZIP/BAT ni passage automatique à implémenter.
+
+## Onboarding et sous-actions — précision du 22 octobre 2026
+
+- Premier lancement = onboarding après installation et création de l’administrateur, une fois l’accès authentifié établi ; report complet et reprise ultérieure depuis les paramètres, sans forcer chaque utilisateur à repasser l’assistant.
+- Parcours 024 : chaque étape se déplie/replie en sous-actions, avec icône, description et attendu au clic dans une fenêtre centrale. Les attendus restent sourcés et ne créent pas de critères normatifs supposés.

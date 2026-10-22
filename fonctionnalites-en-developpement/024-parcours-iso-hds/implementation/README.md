@@ -1,5 +1,18 @@
 # 024 — Parcours ISO 27001 / HDS : règles de conception
 
+## Précision utilisateur — sous-actions dépliables et attendus (v002)
+
+Chaque étape du parcours possède désormais un bouton avec chevron et nombre de sous-actions. Déplier/replier ne change aucun état de progression. Les 26 sous-actions issues des repères de v001 affichent une petite icône et une description courte ; un clic ouvre une fiche centrale « L’attendu », avec exemple de livrable, destination métier et lien vers la référence de l’étape.
+
+- L’arbre recalcule les positions des rangées et les liaisons après dépliage. Les cartes d’une rangée restent alignées ; les rangées suivantes se décalent sans collision. « Tout replier » est disponible.
+- Le dépliage fonctionne aussi dans la branche HDS et dans la vue liste. Pas de bouton interactif imbriqué dans un autre bouton. `aria-expanded`, `aria-controls`, clavier, fermeture par Échap et retour du focus sont conservés.
+- Une sous-action peut être marquée préparée dans la démonstration. Cette action alimente le même repère de préparation que l’étape ; elle ne clôture pas l’étape ni n’attribue une conformité. Une modification d’un repère revu remet l’étape à revoir dans la simulation.
+- L’attendu et les exemples de livrables sont des aides de travail proposées, reliées aux références déjà documentées. Ne pas présenter chaque format proposé comme un document obligatoire ni ces 26 aides comme la couverture exhaustive de la norme. La vérification normative détaillée reste soumise aux limites de sources de v001.
+- Réutiliser en production le même ID de travail/document, ses versions, les décisions et droits serveur. Les accordéons sont de l’état d’interface ; les traces de revue ne doivent jamais dépendre de leur état ouvert/fermé.
+
+Le détail de chaque sous-action est dans `contenu.js` de v002 (ID stable, icône, titre, description, attendu, exemple de livrable, index du repère existant). Les champs de texte doivent être échappés si leur contenu devient configurable. Aucune API métier nouvelle n’est revendiquée.
+
+
 ## Demandes traduites
 
 1. Arbre de progression inspiré visuellement des arbres de compétences : jalons, branches, états marqués et liaison des travaux ; style 08 conservé, sans récompense assimilée à une certification.

@@ -2,7 +2,7 @@
   "numero": "024",
   "fonctionnalite": "parcours-iso-hds",
   "etape": "en-developpement",
-  "maquetteCourante": "v001-parcours-guide",
+  "maquetteCourante": "v002-onboarding-sous-actions",
   "validationUtilisateur": null,
   "livraisonImplementation": null,
   "integration": null,
@@ -11,6 +11,11 @@
       "date": "2026-10-22",
       "etape": "en-developpement",
       "motif": "Nouvelle demande utilisateur ; proposition interactive et visuelle sourcée, à valider."
+    },
+    {
+      "date": "2026-10-22",
+      "etape": "en-developpement",
+      "motif": "Précision utilisateur : onboarding après installation et création admin ; sous-actions dépliables, icône, description et attendu au clic."
     }
   ]
 }
