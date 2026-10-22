@@ -161,3 +161,8 @@ Ces instructions utilisateur remplacent les consignes antérieures contradictoir
 
 - Premier lancement = onboarding après installation et création de l’administrateur, une fois l’accès authentifié établi ; report complet et reprise ultérieure depuis les paramètres, sans forcer chaque utilisateur à repasser l’assistant.
 - Parcours 024 : chaque étape se déplie/replie en sous-actions, avec icône, description et attendu au clic dans une fenêtre centrale. Les attendus restent sourcés et ne créent pas de critères normatifs supposés.
+
+## Parcours intégré à la plateforme — précision du 22 octobre 2026
+
+- Tout élément métier du parcours ISO/HDS doit être accessible dans le module correspondant de la plateforme, avec les mêmes identifiants, versions et permissions. Créations et modifications sont réciproques ; retrouver le travail existant sans duplication.
+- Le parcours guide vers les fiches/formulaires existants. Il ne crée pas de registre concurrent, ne contourne pas l’héritage des périmètres et ne confond pas synchronisation, préparation, revue et conformité. Vérifier les contrats réels avant codage ; voir les critères 024-INT-01 à 06 du dossier 024.

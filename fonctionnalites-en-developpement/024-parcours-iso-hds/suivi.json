@@ -16,6 +16,11 @@
       "date": "2026-10-22",
       "etape": "en-developpement",
       "motif": "Précision utilisateur : onboarding après installation et création admin ; sous-actions dépliables, icône, description et attendu au clic."
+    },
+    {
+      "date": "2026-10-22",
+      "etape": "en-developpement",
+      "motif": "Précision utilisateur : tous les éléments du parcours se retrouvent dans les modules de la plateforme ; mêmes objets et synchronisation réciproque, sans doublon. Critères 024-INT-01 à 06 documentés ; raccordement serveur à réaliser."
     }
   ]
 }

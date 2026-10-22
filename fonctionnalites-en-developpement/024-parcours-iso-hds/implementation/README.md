@@ -13,6 +13,19 @@ Chaque étape du parcours possède désormais un bouton avec chevron et nombre d
 Le détail de chaque sous-action est dans `contenu.js` de v002 (ID stable, icône, titre, description, attendu, exemple de livrable, index du repère existant). Les champs de texte doivent être échappés si leur contenu devient configurable. Aucune API métier nouvelle n’est revendiquée.
 
 
+## Règle confirmée — un parcours intégré aux modules de la plateforme
+
+Le parcours est une vue guidée des fonctionnalités de la plateforme. Tout travail réalisé dans le parcours doit être accessible et gérable dans le module correspondant, indépendamment de l’arbre. Il ne constitue pas un registre métier parallèle.
+
+- **024-INT-01 — Objets communs.** Chaque sous-action référence les objets réels par leurs identifiants et versions : organisation, périmètres, échelles, risques, applicabilité, objectifs, documents/preuves, audits, écarts, plans d’action et revues selon le travail concerné. Réutiliser d’abord les objets existants ; ne pas les recopier pour alimenter le parcours.
+- **024-INT-02 — Création et modification réciproques.** Depuis une sous-action, ouvrir la fiche ou le formulaire du module, avec le contexte autorisé. Une création réussie apparaît dans le module et dans le parcours avec le même identifiant. Une modification effectuée directement dans le module est reflétée dans le parcours après relecture des données serveur. Aucun succès ne doit être affiché avant confirmation de l’enregistrement.
+- **024-INT-03 — Travaux déjà réalisés.** À l’ouverture du parcours, retrouver les éléments existants pour le périmètre choisi et proposer leur association lorsqu’elle exige un choix. Ne pas obliger l’utilisateur à refaire un travail déjà présent. L’existence d’un objet ne suffit pas à déclarer une étape revue ou une exigence conforme.
+- **024-INT-04 — Règles partagées.** Conserver les permissions serveur, versions, auteurs et historiques du module d’origine. Les actions, écarts et tâches héritent des périmètres de leurs registres ; le parcours n’ajoute pas de sélecteur de périmètre concurrent. Les preuves proviennent du registre commun et restent liées à leur version. Une évolution peut nécessiter une nouvelle revue sans réécrire les décisions historiques.
+- **024-INT-05 — Contrats vérifiés avant codage.** Pour chaque sous-action, identifier le module cible, la route existante, le type d’objet, la commande de création/modification et les permissions. Vérifier ce qui fonctionne déjà dans la branche de l’IA qui code. Si une fonction manque, documenter le besoin et son intégration dans la plateforme ; ne pas la simuler comme opérationnelle dans le parcours. Les accordéons et préférences d’affichage peuvent rester propres au parcours, pas les données métier.
+- **024-INT-06 — Recette d’intégration.** Vérifier une création depuis le parcours puis sa consultation dans le module, le chemin inverse, la mise à jour réciproque, la reprise d’éléments préexistants sans doublon, les accès refusés, les conflits de version et la conservation des preuves/historiques. Vérifier que ces opérations ne valident pas automatiquement la conformité.
+
+**État actuel :** ces règles décrivent l’intégration attendue. La v002 est une maquette locale avec destinations prévues et données fictives ; elle n’est pas encore raccordée aux modules serveur.
+
 ## Demandes traduites
 
 1. Arbre de progression inspiré visuellement des arbres de compétences : jalons, branches, états marqués et liaison des travaux ; style 08 conservé, sans récompense assimilée à une certification.
