@@ -18,7 +18,7 @@ test('Processus : cartes par type, sous-processus, rattachement d’un objectif,
     enfant = `Admission ${suffixe}`,
     objectif = `Réduire les délais ${suffixe}`;
   try {
-    await page.goto('/');
+    await page.goto('/pilotage/contexte');
     const socle = '00000000-0000-4000-8000-000000000001';
     const r = await page.request.post(`/api/grc/${socle}/pilotage/objectifs/objectives`, {
       headers: { Origin: new URL(page.url()).origin, 'X-CSRF-Token': await csrfOf(page.request) },
@@ -27,7 +27,6 @@ test('Processus : cartes par type, sous-processus, rattachement d’un objectif,
     expect(r.ok(), await r.text()).toBe(true);
 
     // Menu : l'onglet « Processus » est dans Organisation.
-    await page.getByRole('button', { name: /^Organisation/ }).click();
     await page.getByRole('link', { name: 'Processus', exact: true }).click();
     await expect(page).toHaveURL(/\/pilotage\/processus-cartes$/);
     await expect(page.getByRole('heading', { name: 'Processus', level: 1 })).toBeVisible();
@@ -43,12 +42,12 @@ test('Processus : cartes par type, sous-processus, rattachement d’un objectif,
     await expect(fiche).toBeVisible();
 
     // Rattachement d'un objectif, puis détachement.
-    await fiche.getByRole('textbox', { name: 'Rattacher : Objectifs' }).click();
+    await fiche.getByRole('combobox', { name: 'Rattacher : Objectifs' }).click();
     await page.getByRole('option', { name: objectif }).click();
     await expect(fiche.getByText(objectif).first()).toBeVisible();
     await fiche.getByRole('button', { name: `Détacher ${objectif}` }).click();
     await expect(fiche.getByRole('button', { name: `Détacher ${objectif}` })).toBeHidden();
-    await fiche.getByRole('textbox', { name: 'Rattacher : Objectifs' }).click();
+    await fiche.getByRole('combobox', { name: 'Rattacher : Objectifs' }).click();
     await page.getByRole('option', { name: objectif }).click();
     await expect(fiche.getByRole('button', { name: `Détacher ${objectif}` })).toBeVisible();
     await page.keyboard.press('Escape');
@@ -60,7 +59,9 @@ test('Processus : cartes par type, sous-processus, rattachement d’un objectif,
     await sous.getByLabel('Processus parent (pour un sous-processus)').click();
     await page.getByRole('option', { name: new RegExp(racine) }).click();
     await sous.getByRole('button', { name: 'Créer' }).click();
+    await expect(page.getByRole('dialog', { name: new RegExp(enfant) })).toBeVisible();
     await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
     const section = page.getByRole('region', { name: 'Réalisation' });
     const carte = section.locator('.carte-processus', { hasText: racine });
     await expect(carte).toBeVisible();

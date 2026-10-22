@@ -1,7 +1,7 @@
 /* Processus en cartes (Organisation) : une carte par processus, classées par type du registre de la Plateforme, avec leurs
    sous-processus. Une carte ouvre sa fiche : identité (type, pilote, finalité) et rattachements (objectifs, indicateurs, SWOT,
    risques, fournisseurs). Les rattachements restent à leur source ; la cartographie se génère de ces mêmes processus. */
-import { Badge, Button, Card, Collapse, Group, Select, SimpleGrid, Stack, Text, TextInput, Title } from '@mantine/core';
+import { Badge, Button, Card, Group, Select, Stack, Text, TextInput, Title } from '@mantine/core';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import {
@@ -84,7 +84,7 @@ function CarteSimple({
           >
             {ouverte ? 'Masquer' : 'Afficher'} les sous-processus ({enfants.length})
           </Button>
-          <Collapse expanded={ouverte}>
+          {ouverte && (
             <Stack gap="xs" className="carte-processus__enfants">
               {enfants.map((e) => (
                 <button key={e.id} type="button" className="carte-processus__enfant" onClick={() => ouvrir(e.id)}>
@@ -98,7 +98,7 @@ function CarteSimple({
                 </button>
               ))}
             </Stack>
-          </Collapse>
+          )}
         </>
       )}
     </Card>
@@ -185,11 +185,7 @@ export function CartesProcessus({ smsi }: { smsi: string }) {
               {s.type.description}
             </Text>
           )}
-          <SimpleGrid
-            cols={{ base: 1, sm: 2, lg: 3 }}
-            className="grille-processus"
-            data-teinte={s.type?.tint ?? 'gris'}
-          >
+          <div className="grille-cartes grille-processus" data-teinte={s.type?.tint ?? 'gris'}>
             {s.racines.map((p) => (
               <CarteSimple
                 key={p.id}
@@ -200,7 +196,7 @@ export function CartesProcessus({ smsi }: { smsi: string }) {
                 bascule={() => setDeplies((d) => ({ ...d, [p.id]: !d[p.id] }))}
               />
             ))}
-          </SimpleGrid>
+          </div>
         </section>
       ))}
       {courante && q.data && (
