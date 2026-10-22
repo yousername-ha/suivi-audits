@@ -1658,3 +1658,99 @@ rect.audit-niv-faible {
 .fenetre-admin {
   border: var(--suivi-trait-focus) solid var(--suivi-trait);
 }
+
+/* Teinte d'un type de processus : pastille de couleur du registre des types. */
+.pastille-teinte {
+  display: inline-block;
+  inline-size: var(--mantine-spacing-sm);
+  block-size: var(--mantine-spacing-sm);
+  border-radius: 50%;
+  background: var(--mantine-color-gray-5);
+  flex: none;
+}
+.pastille-teinte[data-teinte='vert'] {
+  background: var(--mantine-color-green-6);
+}
+.pastille-teinte[data-teinte='bleu'] {
+  background: var(--mantine-color-blue-6);
+}
+.pastille-teinte[data-teinte='violet'] {
+  background: var(--mantine-color-violet-6);
+}
+.pastille-teinte[data-teinte='orange'] {
+  background: var(--mantine-color-orange-6);
+}
+.pastille-teinte[data-teinte='rouge'] {
+  background: var(--mantine-color-red-6);
+}
+
+/* Processus en cartes : sections par type (teinte du registre), cartes épurées, sous-processus dépliables. */
+.section-processus {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-xs);
+  margin-top: var(--mantine-spacing-md);
+}
+.grille-processus {
+  --teinte-processus: var(--mantine-color-gray-5);
+}
+.grille-processus[data-teinte='vert'] {
+  --teinte-processus: var(--mantine-color-green-6);
+}
+.grille-processus[data-teinte='bleu'] {
+  --teinte-processus: var(--mantine-color-blue-6);
+}
+.grille-processus[data-teinte='violet'] {
+  --teinte-processus: var(--mantine-color-violet-6);
+}
+.grille-processus[data-teinte='orange'] {
+  --teinte-processus: var(--mantine-color-orange-6);
+}
+.grille-processus[data-teinte='rouge'] {
+  --teinte-processus: var(--mantine-color-red-6);
+}
+.carte-processus {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-xs);
+  border-inline-start: var(--suivi-trait-focus) solid var(--teinte-processus);
+}
+.carte-processus:hover {
+  box-shadow: var(--suivi-ombre);
+}
+.carte-processus__corps,
+.carte-processus__enfant {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-2xs);
+  align-items: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.carte-processus__corps:focus-visible,
+.carte-processus__enfant:focus-visible {
+  outline: var(--suivi-trait-focus) solid var(--mantine-primary-color-filled);
+  outline-offset: var(--suivi-trait-focus);
+}
+.carte-processus__finalite {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.carte-processus__enfants {
+  padding-block-start: var(--mantine-spacing-xs);
+}
+.carte-processus__enfant {
+  padding: var(--mantine-spacing-xs);
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+}
+.carte-processus__bascule {
+  align-self: flex-start;
+}

@@ -18,6 +18,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { formatValeurIndicateur } from '@suivi/shared';
+import { optionsTypesProcessus, useTypesProcessus } from '../processus/types';
 import { ConfirmButton, DataTable } from '@suivi/ui';
 import { api } from '../api';
 import { ErrorAlert } from '../components/common';
@@ -82,6 +83,7 @@ export function FicheProcessus({
   onClose: () => void;
 }) {
   const id = texte(processus.id),
+    types = useTypesProcessus(),
     { ecrire, erreur } = useEcriture(smsi),
     [v, setV] = useState({
       name: texte(processus.name),
@@ -139,10 +141,10 @@ export function FicheProcessus({
         </Group>
         <Group grow align="flex-start">
           <Select
-            label="Famille"
+            label="Type de processus"
             clearable
             disabled={!modifiable}
-            data={['Management', 'Réalisation', 'Support']}
+            data={optionsTypesProcessus(types.data, v.family)}
             value={v.family || null}
             onChange={(f) => setV({ ...v, family: f ?? '' })}
           />

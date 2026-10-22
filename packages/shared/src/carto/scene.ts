@@ -10,24 +10,27 @@ import {
   type MapView,
   type Referentiel,
   type RelationType,
+  familles,
   isFrame,
 } from './model.js';
 import type { ObjectLookup } from './objects.js';
 
-export const PRESETS: Record<MapView, { k: string; l: string; ic: string }[]> = {
-  context: [
+const PRESETS_CONTEXTE: { k: string; l: string; ic: string }[] = [
+  { k: 'all', l: 'Globale', ic: 'globe' },
+  { k: 'scope', l: 'Périmètre', ic: 'frame' },
+  { k: 'pi', l: 'Parties intéressées', ic: 'users' },
+  { k: 'issues', l: 'Enjeux', ic: 'target' },
+];
+/** Préréglages d'une vue ; ceux de la vue processus suivent les types du registre de la Plateforme. */
+export function presetsDe(view: MapView): { k: string; l: string; ic: string }[] {
+  if (view === 'context') return PRESETS_CONTEXTE;
+  return [
     { k: 'all', l: 'Globale', ic: 'globe' },
-    { k: 'scope', l: 'Périmètre', ic: 'frame' },
-    { k: 'pi', l: 'Parties intéressées', ic: 'users' },
-    { k: 'issues', l: 'Enjeux', ic: 'target' },
-  ],
-  process: [
-    { k: 'all', l: 'Globale', ic: 'globe' },
-    { k: 'pil', l: 'Pilotage', ic: 'compass' },
-    { k: 'rea', l: 'Réalisation', ic: 'gear' },
-    { k: 'sup', l: 'Support', ic: 'tools' },
-  ],
-};
+    ...familles()
+      .filter((f) => f.k !== 'oth')
+      .map((f) => ({ k: f.k, l: f.court, ic: f.ic })),
+  ];
+}
 
 const IN_SCOPE_TYPES = new Set(['process', 'subprocess', 'application', 'infrastructure', 'site']);
 /** L'objet reste-t-il net avec ce préréglage (sinon : atténué, jamais déplacé) ? */
@@ -43,7 +46,7 @@ export function presetMatch(view: MapView, preset: string, o: MapObject | undefi
       return ['isms', 'scope', 'band', 'external_issue', 'internal_issue', 'process'].includes(o.type);
     return true;
   }
-  const k = ({ pil: 'Management', rea: 'Réalisation', sup: 'Support' } as Record<string, string>)[preset];
+  const k = familles().find((f) => f.k === preset && f.k !== 'oth')?.family;
   if (o.type === 'lane') return isFrame(o) && o.fam === k;
   if (o.type === 'process' || o.type === 'subprocess') return !isFrame(o) && o.family === k;
   return true;

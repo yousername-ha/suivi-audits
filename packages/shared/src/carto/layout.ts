@@ -1,6 +1,14 @@
 /* Dispositions automatiques (CARTO-05) : portage à l'identique de mbDefSize, mbLayoutContext et mbLayoutProcess.
    Fonctions pures : mêmes positions que la bêta pour un même jeu d'entrée (tests de parité). */
-import { type CartoObject, type MapNode, type MapObject, type MapView, CONTAINER_TYPES, familyOf } from './model.js';
+import {
+  type CartoObject,
+  type MapNode,
+  type MapObject,
+  type MapView,
+  CONTAINER_TYPES,
+  familles,
+  familyOf,
+} from './model.js';
 
 export interface Rect {
   x: number;
@@ -140,8 +148,8 @@ export function layoutProcess(refs: Iterable<string>, objs: ReadonlyMap<string, 
   const top = L.filter((o) => o.type === 'process').sort(byCode);
   const kids = (p: CartoObject) => L.filter((o) => o.type === 'subprocess' && o.parent === p.ref).sort(byCode);
   const orphans = L.filter((o) => o.type === 'subprocess' && !set.has(o.parent ?? ''));
-  const lanes = (['pil', 'rea', 'sup', 'oth'] as const)
-    .map((k) => ({ k, list: top.filter((o) => familyOf(o.family).k === k).concat(k === 'oth' ? orphans : []) }))
+  const lanes = familles()
+    .map(({ k }) => ({ k, list: top.filter((o) => familyOf(o.family).k === k).concat(k === 'oth' ? orphans : []) }))
     .filter((l) => l.list.length);
   const GW = 44,
     pad = 28,

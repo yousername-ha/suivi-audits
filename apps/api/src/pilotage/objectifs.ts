@@ -2,6 +2,7 @@
    l'état de l'outil de suivi (aucune copie), sous verrou et avec le journal d'audit. Mêmes identifiants et mêmes règles que
    l'outil historique (PR1, OBJ1, IND1 ; suppression d'un objectif = suppression de ses indicateurs). Aucune valeur n'est
    inventée : les champs ISO 9001 (4.4.1, 6.2.2, 9.1.1) restent vides tant qu'ils ne sont pas saisis. */
+import { verifierTypeProcessus } from '../types-processus.js';
 import {
   GRC_MODULES,
   IndicateurBody,
@@ -92,6 +93,7 @@ export class PilotageObjectifs {
         body.obj = typeof body.obj === 'string' ? body.obj : String(objectifs[0]!.id);
       }
       this.verifier(state.data, cle, body);
+      if (cle === 'processes') await verifierTypeProcessus(c, body.family);
       let k = 1;
       while (lignes.some((r) => r.id === PREFIXE[cle] + k)) k++;
       const id = PREFIXE[cle] + k;
@@ -115,6 +117,7 @@ export class PilotageObjectifs {
       const avant = lignes.find((r) => r.id === id);
       if (!avant) throw new HttpError(404, `${LIBELLE[cle]} introuvable.`);
       this.verifier(state.data, cle, body);
+      if (cle === 'processes') await verifierTypeProcessus(c, body.family, avant.family);
       const patch = { ...body };
       state.data[cle] = lignes.map((r) => (r === avant ? this.ecrire(r, patch, user.username) : r));
       await this.enregistrer(c, state, user, ip, `pilotage.${cle}.updated`, `legacy:${cle}:${id}`);

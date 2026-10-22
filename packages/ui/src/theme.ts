@@ -9,6 +9,7 @@ import {
   defaultCssVariablesResolver,
   Drawer,
   Modal,
+  Notification,
   Table,
   type CSSVariablesResolver,
 } from '@mantine/core';
@@ -54,6 +55,10 @@ export const theme = createTheme({
     // Un lien ne doit pas se distinguer par la seule couleur (WCAG 1.4.1) : souligné en permanence.
     Anchor: Anchor.extend({ defaultProps: { underline: 'always' } }),
     Table: Table.extend({ defaultProps: { verticalSpacing: 'xs', highlightOnHover: true } }),
+    // Le bouton de fermeture d'une notification doit avoir un nom accessible (WCAG 4.1.2).
+    Notification: Notification.extend({
+      defaultProps: { closeButtonProps: { 'aria-label': 'Fermer la notification' } },
+    }),
   },
 });
 

@@ -7,6 +7,21 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 ### Notes de mise à jour
 Aucune action particulière, aucune migration.
 
+## [4.2.0] — 2026-10-22
+
+**Processus en cartes et types de processus définis dans la Plateforme** ([ADR 0044](docs/adr/0044-processus-en-cartes-et-types-de-processus.md)).
+
+### Notes de mise à jour
+- Aucune action sur le serveur : la mise à jour applique la migration additive `035_types_processus.sql` (table des types de processus, trois types de départ) au démarrage, après la sauvegarde automatique de `scripts/mettre-a-jour.sh`. Les processus existants gardent leur classement : « Pilotage », « Réalisation » et « Support » sont les types de départ.
+
+### Ajouté
+- **Processus en cartes** (Organisation > Processus) : une carte par processus, classée par type, avec ses sous-processus, recherche et filtre par type. Une carte ouvre une fiche (type, pilote, finalité) et les rattachements : objectifs, indicateurs, SWOT, risques et fournisseurs, un même élément pouvant dépendre de plusieurs processus. L'ancien onglet devient « Objectifs par processus ».
+- **Types de processus** (Plateforme > Types de processus) : libellé, description, teinte, ordre, archivage ; un type utilisé se range aux archives au lieu d'être supprimé.
+- **Source unique avec la cartographie** : un processus créé dans l'une apparaît dans l'autre ; les bandes de la vue processus, leurs préréglages et leurs teintes suivent les types de la Plateforme (les cartes déjà enregistrées gardent leurs bandes).
+
+### Corrigé
+- Le bouton de fermeture des notifications a un nom accessible (« Fermer la notification »).
+
 ## [4.1.0] — 2026-10-21
 
 **Administration en deux pages à cartes, journaux techniques, couverture ISO/IEC 27001 clause par clause et corrections du prompt maître ASTRA du 21/10/2026.** Les entrées de menu « Paramètres » et « Administration » deviennent « Plateforme » et « Configuration système » (les adresses `/parametres/…` et `/admin/…` restent valables).

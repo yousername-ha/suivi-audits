@@ -4,6 +4,7 @@ import type { Session } from '../auth.js';
 import { Pilotage } from '../pilotage/service.js';
 import { PilotageObjectifs } from '../pilotage/objectifs.js';
 import { PilotageBoites } from '../pilotage/boites.js';
+import { PilotageProcessusCartes } from '../pilotage/processus-cartes.js';
 import { PilotagePestel } from '../pilotage/pestel.js';
 import { PilotageRevue } from '../pilotage/revue.js';
 import { HttpError } from '../http/errors.js';
@@ -80,6 +81,18 @@ export const pilotageRoutes = [
     params: scope,
     summary: 'Boîtes de pilotage par processus : actions, risques et séries rattachés, prochaine échéance récurrente',
     handler: async ({ svc, s, params }) => new PilotageBoites(svc.grc).lister(params.smsi, (s as Session).user),
+  }),
+  route({
+    ...base,
+    method: 'GET',
+    url: '/api/grc/:smsi/pilotage/processus-cartes',
+    params: scope,
+    summary:
+      'Processus en cartes : types du registre, processus et leurs rattachements (objectifs, indicateurs, SWOT, risques, fournisseurs), éléments rattachables',
+    handler: async ({ svc, s, params }) => ({
+      types: await svc.typesProcessus.lister(),
+      ...(await new PilotageProcessusCartes(svc.grc).lire(params.smsi, (s as Session).user)),
+    }),
   }),
   route({
     ...base,

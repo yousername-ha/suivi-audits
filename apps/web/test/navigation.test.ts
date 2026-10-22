@@ -23,6 +23,7 @@ const INVENTAIRE = [
   'organisation|contexte|parties|/pilotage/parties|pilotage|lire',
   'organisation|contexte|swot|/pilotage/swot|pilotage|lire',
   'organisation|contexte|pestel|/pilotage/pestel|pilotage|lire',
+  'organisation|processus|processus-cartes|/pilotage/processus-cartes|pilotage|lire',
   'organisation|responsabilites|responsabilites|/pilotage/responsabilites|pilotage|lire',
   'organisation|cartographie|cartographie|/cartographie|cartographie|lire',
   'organisation|fournisseurs|fournisseurs|/pilotage/fournisseurs|fournisseurs|lire',

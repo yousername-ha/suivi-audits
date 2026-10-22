@@ -103,7 +103,11 @@ describe('sous-listes en tables liées (migration 028)', () => {
       const f1 = await t.svc.db.one<{ tasks: Json[] }>("SELECT tasks FROM suivi_ecarts WHERE id = 'F-1'");
       expect(f1!.tasks).toEqual((ETAT.findings as JsonObject[])[0]!.tasks);
       // Migration 033 : les constats historiques, leurs tâches et la vue associée disparaissent.
-      expect(await t.svc.db.migrate()).toEqual(['033_retrait_constats_historiques.sql', '034_journal_technique.sql']);
+      expect(await t.svc.db.migrate()).toEqual([
+        '033_retrait_constats_historiques.sql',
+        '034_journal_technique.sql',
+        '035_types_processus.sql',
+      ]);
       for (const table of ['suivi_ecarts', 'suivi_ecarts_taches'])
         expect((await t.svc.db.one(`SELECT to_regclass('${table}') AS r`))!.r).toBeNull();
       for (const vue of ['v_findings', 'v_items'])

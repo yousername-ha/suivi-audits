@@ -28,6 +28,7 @@ import { Grc } from './grc/core.js';
 import { Walls } from './walls.js';
 import { Historique } from './historique/index.js';
 import { JournalTechnique } from './journal-technique.js';
+import { TypesProcessus } from './types-processus.js';
 
 export function createServices(cfg: Config, log: Logger) {
   const db = new Db(cfg.db, log);
@@ -69,6 +70,7 @@ export function createServices(cfg: Config, log: Logger) {
     operations: new Operations(cfg, db, vault),
     walls: new Walls(cfg, db),
     journalTechnique: new JournalTechnique(db, log),
+    typesProcessus: new TypesProcessus(db),
     auth: new Auth(cfg, db, vault, () => settings.get('securite')),
     bus,
     presence: new Presence(db, bus),

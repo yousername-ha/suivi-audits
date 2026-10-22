@@ -100,7 +100,7 @@ Légende des états : **Corrigé** (critère de l'audit satisfait et testé) · 
 - Parcours Playwright (conteneur `mcr.microsoft.com/playwright:v1.56.1-noble`) sur la pile Docker construite depuis le commit : cartes de périmètres, coque, Timeline (cent actions), périodicité, registres partagés, journal d'audit, traitement. La suite complète de 26 minutes tourne dans la CI de la pull request.
 - Qualité : `prettier --check`, `eslint --max-warnings 0`, `tsc --noEmit` (shared, API, web).
 
-## Idée « Processus en cartes » (cadrée le 21/10/2026, à réaliser après la version 4.0.0)
+## Idée « Processus en cartes » (cadrée le 21/10/2026, réalisée dans la 4.2.0 — [ADR 0044](../adr/0044-processus-en-cartes-et-types-de-processus.md))
 
 Onglet Processus de la famille Organisation, en cartes au design épuré ; la cartographie des processus est générée à partir de ces cartes. Décisions de l'utilisateur :
 

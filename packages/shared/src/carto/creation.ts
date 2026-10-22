@@ -107,7 +107,8 @@ export const CreateObjectBody = z.discriminatedUnion('type', [
     type: z.literal('process'),
     name: nom,
     code: vide(code),
-    family: z.enum(PROCESS_FAMILIES),
+    /** Code d'un type du registre des types de processus (contrôlé par le serveur). */
+    family: texte(60).min(1),
     owner: vide(texte(120)),
   }),
   z.object({

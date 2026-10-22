@@ -142,7 +142,8 @@ describe('création dans la plateforme (CARTO-15)', () => {
     expect(CreateObjectBody.safeParse({ type: 'site', name: '  ' }).success).toBe(false);
     expect(CreateObjectBody.safeParse({ type: 'site', name: 'a\u0007b' }).success).toBe(false);
     expect(CreateObjectBody.safeParse({ type: 'stakeholder', name: 'x', category: 'Inventée' }).success).toBe(false);
-    expect(CreateObjectBody.safeParse({ type: 'process', name: 'x', family: 'Autre' }).success).toBe(false);
+    // la famille est un type du registre de la Plateforme : sa validité est vérifiée côté API, pas ici.
+    expect(CreateObjectBody.safeParse({ type: 'process', name: 'x', family: '' }).success).toBe(false);
     expect(CreateObjectBody.safeParse({ type: 'process', name: 'x', family: 'Support', code: 'a b' }).success).toBe(
       false,
     );
