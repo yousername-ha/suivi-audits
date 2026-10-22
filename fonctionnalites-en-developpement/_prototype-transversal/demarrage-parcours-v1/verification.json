@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-22",
+  "status": "PASS",
+  "checks": [
+    "Passer totalement sans appliquer de configuration",
+    "Choix de report conservé au rechargement",
+    "Trois échelles issues du catalogue partagé",
+    "Confirmation explicite requise avant application simulée",
+    "Choix appliqués uniquement à la démonstration",
+    "Reporter à nouveau conserve les choix précédemment appliqués",
+    "11 nœuds ISO et 5 compléments HDS",
+    "Revue impossible sans repères et document de démonstration",
+    "Soumission distincte de la revue",
+    "Avancement mis à jour sans taux de conformité",
+    "Progression isolée par périmètre",
+    "Masquer HDS ne modifie pas ses données",
+    "Vue liste couvre les mêmes 16 étapes",
+    "Sources officielles accessibles dans une fenêtre centrale",
+    "Menu fixe pendant le défilement du contenu",
+    "Pas de débordement horizontal de la page sur mobile",
+    "Menu mobile accessible",
+    "Assistant utilisable sur mobile",
+    "Aucune erreur JavaScript",
+    "Aucune ressource HTTP manquante"
+  ],
+  "errors": [],
+  "failed": [],
+  "backendTeste": false,
+  "limites": "Prototypes locaux sur données fictives ; aucune conformité, certification ou intégration métier validée."
+}

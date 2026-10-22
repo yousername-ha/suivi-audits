@@ -1,0 +1,16 @@
+{
+  "numero": "024",
+  "fonctionnalite": "parcours-iso-hds",
+  "etape": "en-developpement",
+  "maquetteCourante": "v001-parcours-guide",
+  "validationUtilisateur": null,
+  "livraisonImplementation": null,
+  "integration": null,
+  "historique": [
+    {
+      "date": "2026-10-22",
+      "etape": "en-developpement",
+      "motif": "Nouvelle demande utilisateur ; proposition interactive et visuelle sourcée, à valider."
+    }
+  ]
+}

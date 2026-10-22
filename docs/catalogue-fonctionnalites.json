@@ -312,6 +312,34 @@
       "tests": "fonctionnalites-a-implementer/022-gestion-droits/tests/README.md",
       "dossierImplementation": "fonctionnalites-a-implementer/022-gestion-droits/implementation/README.md",
       "suivi": "fonctionnalites-a-implementer/022-gestion-droits/suivi.json"
+    },
+    {
+      "id": "premier-lancement",
+      "numero": "023",
+      "titre": "Premier lancement de la plateforme",
+      "description": "Configurer ou reporter organisation, référentiels et échelles à partir de modèles personnalisables.",
+      "etape": "en-developpement",
+      "dossier": "fonctionnalites-en-developpement/023-premier-lancement",
+      "maquetteCourante": "fonctionnalites-en-developpement/023-premier-lancement/maquettes/v001-parcours-guide",
+      "statutMaquette": "a-valider",
+      "implementation": "a-suivre",
+      "tests": "fonctionnalites-en-developpement/023-premier-lancement/tests/README.md",
+      "dossierImplementation": "fonctionnalites-en-developpement/023-premier-lancement/implementation/README.md",
+      "suivi": "fonctionnalites-en-developpement/023-premier-lancement/suivi.json"
+    },
+    {
+      "id": "parcours-iso-hds",
+      "numero": "024",
+      "titre": "Parcours guidé ISO 27001 / HDS",
+      "description": "Visualiser les travaux du SMSI comme un arbre de progression, avec compléments HDS, sources et revue distincte de la conformité.",
+      "etape": "en-developpement",
+      "dossier": "fonctionnalites-en-developpement/024-parcours-iso-hds",
+      "maquetteCourante": "fonctionnalites-en-developpement/024-parcours-iso-hds/maquettes/v001-parcours-guide",
+      "statutMaquette": "a-valider",
+      "implementation": "a-suivre",
+      "tests": "fonctionnalites-en-developpement/024-parcours-iso-hds/tests/README.md",
+      "dossierImplementation": "fonctionnalites-en-developpement/024-parcours-iso-hds/implementation/README.md",
+      "suivi": "fonctionnalites-en-developpement/024-parcours-iso-hds/suivi.json"
     }
   ],
   "cycle": [
@@ -319,5 +347,5 @@
     "a-implementer",
     "implementee"
   ],
-  "prochainNumero": 23
+  "prochainNumero": 25
 }

@@ -26,6 +26,8 @@ Numéros permanents : ils restent identiques lors du déplacement entre les troi
 | 020 | [Navigation simplifiée](fonctionnalites-a-implementer/020-navigation/README.md) | Simplifier les menus, conserver les icônes colorées et regrouper les accès sans doublons. | À implémenter |
 | 021 | [Registres d’écarts](fonctionnalites-a-implementer/021-registres-ecarts/README.md) | Regrouper les écarts par audit ou campagne et les relier aux exigences, actions correctives et à la conformité du périmètre. | À implémenter |
 | 022 | [Gestion des droits](fonctionnalites-a-implementer/022-gestion-droits/README.md) | Comprendre et ajuster les accès par utilisateur, groupe et registre, avec un rôle Collaborateur limité aux contributions autorisées. | À implémenter |
+| 023 | [Premier lancement de la plateforme](fonctionnalites-en-developpement/023-premier-lancement/README.md) | Configurer ou reporter organisation, référentiels et échelles à partir de modèles personnalisables. | En développement |
+| 024 | [Parcours guidé ISO 27001 / HDS](fonctionnalites-en-developpement/024-parcours-iso-hds/README.md) | Visualiser les travaux du SMSI comme un arbre de progression, avec compléments HDS, sources et revue distincte de la conformité. | En développement |
 
 [Règles de fonctionnement](docs/ORGANISATION-LEGACY.md) · [Catalogue source](docs/catalogue-fonctionnalites.json).
 

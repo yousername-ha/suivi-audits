@@ -1,0 +1,31 @@
+{
+  "id": "v001-parcours-guide",
+  "statut": "a-valider",
+  "date": "2026-10-22",
+  "validationUtilisateur": null,
+  "integrationBackend": false,
+  "references": [
+    "fonctionnalites-en-developpement/023-premier-lancement/maquettes/v001-parcours-guide/images/01-modeles-demarrage.png",
+    "fonctionnalites-en-developpement/023-premier-lancement/maquettes/v001-parcours-guide/images/02-organisation-perimetre.png",
+    "fonctionnalites-en-developpement/023-premier-lancement/maquettes/v001-parcours-guide/images/03-echelles-partagees.png",
+    "fonctionnalites-en-developpement/023-premier-lancement/maquettes/v001-parcours-guide/images/04-recapitulatif.png"
+  ],
+  "visuels": [
+    {
+      "fichier": "images/01-modeles-demarrage.png",
+      "sha256": "93baef62a87c1be38cb2d69e504de1f245c193f98c8bb16025b31e3da5ef4c0a"
+    },
+    {
+      "fichier": "images/02-organisation-perimetre.png",
+      "sha256": "470adef4fe42463e1119874baa6aeb89e0af5c3259602651b705828bdafba0e0"
+    },
+    {
+      "fichier": "images/03-echelles-partagees.png",
+      "sha256": "ce443f15d095479f133dcc997fc57f83d29d6eef20b1c05cd567329df5ca1851"
+    },
+    {
+      "fichier": "images/04-recapitulatif.png",
+      "sha256": "29b6cd333536ee2004c2062fa6216c725f678b5d595d57f016a7be4eba534fad"
+    }
+  ]
+}

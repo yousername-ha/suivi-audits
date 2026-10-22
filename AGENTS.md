@@ -150,3 +150,9 @@ Ces instructions utilisateur remplacent les consignes antérieures contradictoir
 - Avant de coder chaque fonctionnalité, l’IA doit rechercher ce qui est déjà implémenté dans sa branche, vérifier les comportements et tests, et fournir la preuve par exigence. Si conforme, conserver ; si partiel, compléter le manque ; si absent, réutiliser les briques existantes avant de créer. Documentation seule et CI d’un ancien SHA ne suffisent pas.
 - Le dossier technique courant consolide demandes, corrections et critères de recette avec des identifiants stables. L’IA n’a pas à relire la conversation ; les hypothèses restantes sont explicites.
 - Un déplacement vers « à implémenter » valide la transmission documentaire, pas une intégration ni un succès serveur. Aucun marqueur « implémentation ok » ne doit être créé pour cette seule préparation.
+
+## Premier lancement et parcours SMSI — 22 octobre 2026
+
+- 023 : assistant de configuration métier entièrement facultatif, reprenable, avec modèles personnalisables et échelles du catalogue commun. Ne pas contourner l’installation/authentification initiale, ne pas écraser une configuration existante.
+- 024 : arbre de progression ISO 27001/HDS, sourcé officiellement ; progression distincte de la conformité et de la certification. Les dépendances de travail et modèles UI ne sont pas des prescriptions normatives. Lire les limites et sources avant tout enrichissement.
+- Les deux propositions restent en développement jusqu’à validation. Aucun ZIP/BAT ni passage automatique à implémenter.
