@@ -2,7 +2,7 @@
   "numero": "024",
   "fonctionnalite": "parcours-iso-hds",
   "etape": "en-developpement",
-  "maquetteCourante": "v002-onboarding-sous-actions",
+  "maquetteCourante": "v003-arbre-organique",
   "validationUtilisateur": null,
   "livraisonImplementation": null,
   "integration": null,
@@ -21,6 +21,11 @@
       "date": "2026-10-22",
       "etape": "en-developpement",
       "motif": "Précision utilisateur : tous les éléments du parcours se retrouvent dans les modules de la plateforme ; mêmes objets et synchronisation réciproque, sans doublon. Critères 024-INT-01 à 06 documentés ; raccordement serveur à réaliser."
+    },
+    {
+      "date": "2026-10-22",
+      "etape": "en-developpement",
+      "motif": "Alternative arbre organique demandée en maquette fonctionnelle : HTML autonome, 16 étapes/26 sous-actions, progression locale, vues et modules simulés partageant les mêmes repères. 40 contrôles Chromium réussis via HTTP local. Apparence à valider, pas de backend ni ZIP/BAT."
     }
   ]
 }

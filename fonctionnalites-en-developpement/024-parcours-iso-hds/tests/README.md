@@ -9,3 +9,9 @@ Servir la racine du dépôt sur `http://127.0.0.1:19120`. Installer Playwright �
 ## v002 — onboarding et sous-actions
 
 [24 contrôles exécutés](../../_prototype-transversal/demarrage-parcours-v2/verification.json) · [Script](../../_prototype-transversal/demarrage-parcours-v2/verifier.cjs). Dépliage/repliage, repositionnement sans collision, attendu spécifique, liens officiels, clavier et retour du focus, vue liste, mobile, report et reprise du brouillon. Le déclenchement automatique côté serveur après création admin n’est pas implémenté dans cette maquette.
+
+## v003 — arbre organique fonctionnel
+
+[40 contrôles exécutés](../maquettes/v003-arbre-organique/verification.json) · [Script reproductible](../maquettes/v003-arbre-organique/verifier.cjs). Tests Chromium sur HTTP local : 16 fiches et 26 sous-actions, revue, synchronisation locale entre parcours et module simulé, persistance, isolation des périmètres, recherche, HDS, zoom, clavier, menu fixe, mobile, mouvement réduit et refus de stockage.
+
+Servir la racine du dépôt à `http://127.0.0.1:19120`, puis lancer le script avec Node et Playwright installé hors du dépôt. `ASTRA_PREVIEW_URL` permet de changer l’URL. Chromium attendu à `/usr/bin/chromium`. Aucun appel backend ni test Windows réel. L’ouverture `file://` est bloquée par la politique de ce navigateur géré ; elle n’a pas été contournée. L’HTML ne charge aucune ressource externe pour fonctionner.

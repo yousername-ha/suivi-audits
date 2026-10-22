@@ -1,5 +1,15 @@
 # 024 — Parcours ISO 27001 / HDS : règles de conception
 
+## Alternative fonctionnelle v003 — arbre organique
+
+La nouvelle variante reprend les identifiants et contenus sourcés de v002. Quatre branches graphiques : cadrer, maîtriser, évaluer/améliorer, compléments HDS. Leurs courbes ne représentent pas un nouvel ordre normatif ni des verrous. Chaque étape ouvre une fiche centrale avec sous-actions dépliables, attendu, exemple de livrable et source. Le menu reste fixe, le contenu défile séparément, la liste propose une recherche. Respect du mouvement réduit pour les flux visuels.
+
+L’HTML autonome embarque CSS, SVG et JavaScript. Un stockage local propre à v003 isole les essais par périmètre. Les modules de démonstration et l’arbre partagent les mêmes repères et notes : les modifications sont réciproques, sans copie. Ces fiches simulées servent à tester la règle 024-INT, elles ne sont pas des modules métier à réimplémenter en production. Les routes, permissions, objets et revues serveur restent à auditer et à raccorder selon les critères ci-dessous. Aucun backend Claude modifié.
+
+Les statuts vont de « à préparer » à « en cours », « à revoir », puis « revu · démo ». La revue simulée exige les repères cochés et la preuve fictive pour tester l’interface uniquement ; ce mécanisme ne doit pas être repris comme critère suffisant de conformité. Une modification après revue remet à revoir. Aucune preuve réelle ni journal immuable n’est produit.
+
+40 contrôles exécutés : arbre/liste, attendus des 16 étapes, revue, sauvegarde, réciprocité des repères, isolation, filtrage HDS, zoom, clavier, responsive et stockage indisponible. Tests via HTTP local ; ouverture directe `file://` bloquée par la politique du navigateur de cet environnement, donc non vérifiée ici. Version en développement, à valider, sans ZIP/BAT.
+
 ## Précision utilisateur — sous-actions dépliables et attendus (v002)
 
 Chaque étape du parcours possède désormais un bouton avec chevron et nombre de sous-actions. Déplier/replier ne change aucun état de progression. Les 26 sous-actions issues des repères de v001 affichent une petite icône et une description courte ; un clic ouvre une fiche centrale « L’attendu », avec exemple de livrable, destination métier et lien vers la référence de l’étape.

@@ -1,5 +1,7 @@
 # 024 — Parcours guidé ISO 27001 / HDS
 
-**Proposition à valider, non intégrée.** Visualiser les travaux du SMSI comme un arbre de progression, avec compléments HDS, sources et revue distincte de la conformité.
+**Maquette fonctionnelle à valider, non intégrée au backend.** Arbre organique à branches colorées, 16 étapes et 26 sous-actions, fiches d’attendus et progression locale. Les données du parcours et des modules de démonstration sont communes.
 
-[Visuels et prototype](maquettes/v002-onboarding-sous-actions/README.md) · [Règles et limites](implementation/README.md) · [Tests](tests/README.md) · [Galerie des deux parcours](../_prototype-transversal/demarrage-parcours-v2/README.md).
+[Tester et voir les aperçus — v003](maquettes/v003-arbre-organique/README.md) · [Règles et limites](implementation/README.md) · [Tests](tests/README.md).
+
+[Version précédente v002](maquettes/v002-onboarding-sous-actions/README.md) · [Galerie onboarding et parcours v002](../_prototype-transversal/demarrage-parcours-v2/README.md).
