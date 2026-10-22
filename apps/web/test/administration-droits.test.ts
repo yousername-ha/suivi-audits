@@ -24,7 +24,14 @@ describe('cartes de l’Administration : droits', () => {
   });
   it('l’administration seule ouvre comptes et exploitation, pas les réglages', () => {
     const peut = avec(['administration', 'lire']);
-    expect(cartesVisibles(peut, 'plateforme')).toEqual(['utilisateurs', 'groupes', 'fonctions', 'roles', 'murs']);
+    expect(cartesVisibles(peut, 'plateforme')).toEqual([
+      'utilisateurs',
+      'groupes',
+      'fonctions',
+      'roles',
+      'types-processus',
+      'murs',
+    ]);
     expect(cartesVisibles(peut, 'systeme')).toEqual([
       'sauvegardes',
       'mises-a-jour',

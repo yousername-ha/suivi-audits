@@ -1,5 +1,14 @@
 /* Administration : sessions, journal d'audit, versions de l'état legacy, système (droits : routes/access.ts). */
-import { BackupsOut, BackupJobOut, BackupRequestIn, FonctionBody, SystemeOut } from '@suivi/shared';
+import {
+  BackupsOut,
+  BackupJobOut,
+  BackupRequestIn,
+  FonctionBody,
+  OrdreTypesProcessus,
+  SystemeOut,
+  TypeProcessusBody,
+  TypeProcessusPatch,
+} from '@suivi/shared';
 import { z } from 'zod';
 import type { Session } from '../auth.js';
 import { DUREE_DEBUG_MAX_MINUTES } from '../journal-technique.js';
@@ -172,6 +181,57 @@ export const adminRoutes = [
         )
         .header('Cache-Control', 'no-store');
       return reply.send(body);
+    },
+  }),
+
+  /* ---------------------------------------------------------------- Types de processus */
+  route({
+    method: 'GET',
+    url: '/api/types-processus',
+    summary: 'Registre des types de processus (libellés et teintes : lisible par toute personne connectée)',
+    tags: ['Administration'],
+    access: 'auth',
+    handler: async ({ svc }) => svc.typesProcessus.lister(),
+  }),
+  route({
+    method: 'POST',
+    url: '/api/types-processus',
+    summary: 'Créer un type de processus (le code se déduit du libellé et ne change plus)',
+    tags: ['Administration'],
+    access: 'administration:administrer',
+    body: TypeProcessusBody,
+    status: 201,
+    handler: async ({ svc, s, ip, body }) => svc.typesProcessus.creer(body, (s as Session).user, ip),
+  }),
+  route({
+    method: 'PUT',
+    url: '/api/types-processus/ordre',
+    summary: 'Ordre d’affichage des types de processus (liste complète des identifiants)',
+    tags: ['Administration'],
+    access: 'administration:administrer',
+    body: OrdreTypesProcessus,
+    handler: async ({ svc, s, ip, body }) => svc.typesProcessus.ordonner(body.ids, (s as Session).user, ip),
+  }),
+  route({
+    method: 'PUT',
+    url: '/api/types-processus/:id',
+    summary: 'Modifier ou archiver un type de processus',
+    tags: ['Administration'],
+    access: 'administration:administrer',
+    params: z.object({ id: z.uuid() }),
+    body: TypeProcessusPatch,
+    handler: async ({ svc, s, ip, params, body }) =>
+      svc.typesProcessus.modifier(params.id, body, (s as Session).user, ip),
+  }),
+  route({
+    method: 'DELETE',
+    url: '/api/types-processus/:id',
+    summary: 'Supprimer un type de processus qu’aucun processus ne porte',
+    tags: ['Administration'],
+    access: 'administration:administrer',
+    params: z.object({ id: z.uuid() }),
+    handler: async ({ svc, s, ip, params }) => {
+      await svc.typesProcessus.supprimer(params.id, (s as Session).user, ip);
     },
   }),
 

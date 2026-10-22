@@ -23,6 +23,7 @@ import { ImportTenacyPanel } from './AdminImportTenacy';
 import { ModulesPanel } from './AdminModules';
 import { MursPanel } from './AdminMurs';
 import { OperationsPanel } from './AdminOperations';
+import { TypesProcessusPanel } from './AdminTypesProcessus';
 import { SectionLoader } from './Settings';
 
 type Teinte = 'vert' | 'bleu' | 'violet' | 'orange' | 'rouge' | 'gris';
@@ -133,6 +134,15 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     icone: 'cle',
     teinte: 'rouge',
     detail: () => <RolesPanel />,
+  },
+  {
+    id: 'types-processus',
+    cote: 'plateforme',
+    titre: 'Types de processus',
+    resume: 'Pilotage, réalisation, support ou vos propres types : classement des processus et de la cartographie.',
+    icone: 'fonction',
+    teinte: 'violet',
+    detail: () => <TypesProcessusPanel />,
   },
   {
     id: 'apparence',

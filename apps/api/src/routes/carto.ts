@@ -1,6 +1,7 @@
 /* Cartographie du SMSI (CARTO-01 à CARTO-19, ADR 0013 et 0016) : objets de la plateforme (lecture, création et
    renommage depuis la carte), cartes, versions, nature des enjeux, journal des exports. Chaque route déclare sa permission « cartographie:* » ; un enregistrement exige
    If-Match (412 si la carte a changé, avec l'auteur et la date). */
+import { verifierTypeProcessus } from '../types-processus.js';
 import { Uuid, perm } from '@suivi/shared';
 import {
   CREATABLE,
@@ -163,6 +164,7 @@ export const cartoRoutes = [
       if (def.module !== 'cartographie' && !sess.user.rights.can(def.module, 'modifier'))
         throw permissionDenied(perm(def.module, 'modifier'));
       const now = new Date().toISOString();
+      if (body.type === 'process') await verifierTypeProcessus(svc.db.pool, body.family);
       try {
         let out: { ref: string; name: string };
         if (body.type === 'issue') {

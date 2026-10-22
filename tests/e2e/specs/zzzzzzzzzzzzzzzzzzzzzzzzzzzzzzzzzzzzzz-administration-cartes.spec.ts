@@ -47,6 +47,25 @@ test('Administration : deux pages à cartes, détail en fenêtre centrée, ancie
     await expect(fenetre).toBeHidden();
     await expect(page).toHaveURL(/\/plateforme$/);
 
+    // Types de processus : registre de la Plateforme (création, archivage, suppression d'un type inutilisé).
+    const suffixe = Date.now().toString(36);
+    await page.getByRole('link', { name: /^Types de processus/ }).click();
+    const types = page.getByRole('dialog', { name: 'Types de processus' });
+    await expect(types.getByRole('cell', { name: 'Pilotage', exact: true }).first()).toBeVisible();
+    await types.getByRole('button', { name: 'Nouveau type' }).click();
+    const formulaire = page.getByRole('dialog', { name: 'Nouveau type de processus' });
+    await formulaire.getByLabel('Libellé').fill(`Métier ${suffixe}`);
+    await formulaire.getByRole('button', { name: 'Enregistrer' }).click();
+    const ligne = types.getByRole('row', { name: new RegExp(`Métier ${suffixe}`) });
+    await expect(ligne).toBeVisible();
+    await ligne.getByRole('button', { name: 'Archiver' }).click();
+    await expect(ligne.getByText('Archivé')).toBeVisible();
+    await ligne.getByRole('button', { name: 'Supprimer' }).click();
+    await page.getByRole('dialog', { name: 'Confirmation' }).getByRole('button', { name: 'Confirmer' }).click();
+    await expect(ligne).toBeHidden();
+    await page.keyboard.press('Escape');
+    await expect(page).toHaveURL(/\/plateforme$/);
+
     // Page « Configuration système ».
     await menu.getByRole('link', { name: 'Configuration système', exact: true }).click();
     await expect(page).toHaveURL(/\/systeme$/);

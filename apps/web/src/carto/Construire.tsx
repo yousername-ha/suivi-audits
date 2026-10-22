@@ -20,8 +20,6 @@ import {
 import {
   CREATABLE,
   PI_CATEGORIES,
-  PROCESS_FAMILIES,
-  PROCESS_FAMILY_LABELS,
   TINTS,
   TINT_LABELS,
   TYPE_LABELS,
@@ -34,6 +32,7 @@ import {
   type Tint,
 } from '@suivi/shared/carto';
 import { ErrorAlert } from '@suivi/ui';
+import { optionsTypesProcessus, useTypesProcessus } from '../processus/types';
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import type { Point } from './Canevas';
 import { Icone } from './rendu';
@@ -265,7 +264,7 @@ export interface DemandeCreation {
   item: Exclude<ElementPalette, { k: 'obj' }>;
   monde: Point;
   /** Famille ou processus parent déduits du point visé (bande ou processus sous le pointeur). */
-  famille?: (typeof PROCESS_FAMILIES)[number];
+  famille?: string;
   parent?: string;
 }
 
@@ -282,6 +281,7 @@ export function Creation({
   onCreate: (body: CreateObjectInput, completer: boolean) => Promise<void>;
   onCreateFree: (kind: 'note' | 'frame', text: string, tint: Tint) => void;
 }) {
+  const types = useTypesProcessus();
   const [f, setF] = useState<Record<string, string | boolean>>({});
   const [erreur, setErreur] = useState<unknown>(null);
   const [envoi, setEnvoi] = useState(false);
@@ -504,7 +504,7 @@ export function Creation({
             <Select
               label="Famille"
               required
-              data={PROCESS_FAMILIES.map((x) => ({ value: x, label: PROCESS_FAMILY_LABELS[x] }))}
+              data={optionsTypesProcessus(types.data)}
               value={s('family')}
               onChange={(v) => set('family', v ?? 'Réalisation')}
               allowDeselect={false}

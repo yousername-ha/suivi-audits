@@ -1658,3 +1658,28 @@ rect.audit-niv-faible {
 .fenetre-admin {
   border: var(--suivi-trait-focus) solid var(--suivi-trait);
 }
+
+/* Teinte d'un type de processus : pastille de couleur du registre des types. */
+.pastille-teinte {
+  display: inline-block;
+  inline-size: var(--mantine-spacing-sm);
+  block-size: var(--mantine-spacing-sm);
+  border-radius: 50%;
+  background: var(--mantine-color-gray-5);
+  flex: none;
+}
+.pastille-teinte[data-teinte='vert'] {
+  background: var(--mantine-color-green-6);
+}
+.pastille-teinte[data-teinte='bleu'] {
+  background: var(--mantine-color-blue-6);
+}
+.pastille-teinte[data-teinte='violet'] {
+  background: var(--mantine-color-violet-6);
+}
+.pastille-teinte[data-teinte='orange'] {
+  background: var(--mantine-color-orange-6);
+}
+.pastille-teinte[data-teinte='rouge'] {
+  background: var(--mantine-color-red-6);
+}
