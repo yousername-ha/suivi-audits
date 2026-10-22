@@ -12,7 +12,8 @@ import {
   type ScopeState,
   type FreeElement,
   type Tint,
-  FAMILIES,
+  familyByKey,
+  familles,
 } from './model.js';
 
 /* ---------------------------------------------------------------- Lecture prudente de l'état legacy */
@@ -459,19 +460,19 @@ export function deriveRelations(M: ReadonlyMap<string, CartoObject>): DerivedRel
 }
 
 /* ---------------------------------------------------------------- Cadres propres à la carte */
-const LANE_FAMILY: Record<string, keyof typeof FAMILIES> = { pil: 'pil', rea: 'rea', sup: 'sup', oth: 'oth' };
 /** Cadre propre à la carte (`lane:*`, `band:*`, `zone:out`), ou null. */
 export function mapOnlyObject(ref: string): FrameObject | null {
   const [k, v] = String(ref).split(':');
   if (k === 'lane') {
-    const f = FAMILIES[LANE_FAMILY[v ?? ''] ?? 'oth'];
-    // Bêta : MB_LANE_FAM[v] (undefined pour une valeur inconnue) → famille « Autres ».
+    const f = familyByKey(v);
+    const connue = familles().some((x) => x.k === v);
+    // Bêta : valeur inconnue → famille « Autres ».
     return {
       ref,
       type: 'lane',
       name: f.l,
       sub: f.sub,
-      fam: LANE_FAMILY[v ?? ''] ? f.family : undefined,
+      fam: connue ? f.family : undefined,
       mapOnly: true,
     };
   }

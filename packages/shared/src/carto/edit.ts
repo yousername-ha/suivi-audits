@@ -14,6 +14,7 @@ import {
   type RelationType,
   type Tint,
   emptyLayout,
+  familles,
   familyOf,
   isFreeRef,
   isMapOnlyRef,
@@ -476,9 +477,11 @@ export function blankLayout(view: MapView): MapLayout {
     l.nodes.scope = { x: 0, y: 0, w: 1100, h: 620, label: '' };
     l.nodes.isms = { x: 400, y: 252, w: 300, h: 116, label: '' };
   } else
-    (['pil', 'rea', 'sup'] as const).forEach((k, i) => {
-      l.nodes['lane:' + k] = { x: 0, y: i * 330, w: 1400, h: 260, label: '' };
-    });
+    familles()
+      .filter((f) => f.k !== 'oth')
+      .forEach(({ k }, i) => {
+        l.nodes['lane:' + k] = { x: 0, y: i * 330, w: 1400, h: 260, label: '' };
+      });
   return l;
 }
 

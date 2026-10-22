@@ -161,7 +161,6 @@ const scopeChip = (o: CartoObject): [string, Puce] | null =>
         : null;
 
 /* ---------------------------------------------------------------- Teintes */
-const FAMILLE_TEINTE: Record<string, string> = { pil: 'violet', rea: 'bleu', sup: 'vert', oth: 'gris' };
 /** Teinte d'un objet (classe ct-*) : couleur d'accent, pastille, fond et bordure. */
 export function teinteOf(o: MapObject | undefined): string {
   if (!o) return 'gris';
@@ -184,13 +183,13 @@ export function teinteOf(o: MapObject | undefined): string {
     case 'frame':
       return (isFrame(o) && o.tint) || (o.type === 'note' ? 'orange' : 'gris');
     case 'lane':
-      return FAMILLE_TEINTE[familyOf(isFrame(o) ? o.fam : undefined).k]!;
+      return familyOf(isFrame(o) ? o.fam : undefined).tint;
     case 'stakeholder':
     case 'supplier':
       return 'violet';
     case 'process':
     case 'subprocess':
-      return FAMILLE_TEINTE[familyOf((o as CartoObject).family).k]!;
+      return familyOf((o as CartoObject).family).tint;
   }
 }
 export const iconOf = (o: MapObject | undefined): string => {

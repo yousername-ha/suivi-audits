@@ -2,7 +2,8 @@
    légende et chiffres clés. Les préréglages atténuent sans jamais déplacer. */
 import { Button, Card, Group, Stack, Switch, Text, Title } from '@mantine/core';
 import {
-  PRESETS,
+  familles,
+  presetsDe,
   REFERENTIELS,
   type CartoObject,
   type MapLayout,
@@ -91,9 +92,9 @@ export function Panneau(p: PanneauProps) {
         ]
       : [
           ['Processus', n((o) => o.type === 'process')],
-          ['Pilotage', n((o) => o.type === 'process' && o.family === 'Management')],
-          ['Réalisation', n((o) => o.type === 'process' && o.family === 'Réalisation')],
-          ['Support', n((o) => o.type === 'process' && o.family === 'Support')],
+          ...familles()
+            .filter((f) => f.k !== 'oth')
+            .map((f): [string, number] => [f.court, n((o) => o.type === 'process' && o.family === f.family)]),
           ['Sous-processus', n((o) => o.type === 'subprocess')],
           ['Propositions à valider', p.layout ? p.layout.edges.filter((e) => e.gen).length : 0],
         ];
@@ -132,7 +133,7 @@ export function Panneau(p: PanneauProps) {
           Vue
         </Title>
         <div className="carte-prereglages" role="group" aria-label="Préréglages de vue">
-          {PRESETS[p.view].map((x) => (
+          {presetsDe(p.view).map((x) => (
             <Button
               key={x.k}
               size="xs"

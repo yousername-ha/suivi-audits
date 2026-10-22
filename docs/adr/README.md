@@ -47,3 +47,4 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0041](0041-evaluation-des-exigences-et-couverture.md) | Évaluation des exigences : applicabilité, mise en œuvre, test d'efficacité, validation métier et état de couverture | Proposée |
 | [0042](0042-retrait-de-lecran-legacy.md) | Retrait de l'écran /legacy : lecture par /api/suivi, exports Excel natifs, import conservé | Proposée |
 | [0043](0043-registres-perimetres-herites-et-droits-par-ressource.md) | Registres, périmètres hérités et droits par ressource (lecteur, contributeur, gestionnaire) | Acceptée |
+| [0044](0044-processus-en-cartes-et-types-de-processus.md) | Processus en cartes, registre des types de processus et cartographie qui le suit | Acceptée |

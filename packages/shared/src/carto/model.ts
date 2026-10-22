@@ -75,50 +75,109 @@ export const TYPE_ICONS: Partial<Record<NodeType | 'missing', string>> = {
 };
 
 /* ---------------------------------------------------------------- Familles de processus */
-export const FAMILY_KEYS = ['pil', 'rea', 'sup', 'oth'] as const;
-export type FamilyKey = (typeof FAMILY_KEYS)[number];
+/* Les familles sont les types du registre de la Plateforme (pilotage, réalisation, support ou types définis par
+   l'organisation). Sans registre fourni (tests, premier affichage), les trois types de départ s'appliquent. Les clés
+   `pil`, `rea` et `sup` des types de départ restent celles des cartes déjà enregistrées (`lane:pil`…). */
+export type FamilyKey = string;
 export interface FamilyDef {
   k: FamilyKey;
-  /** Valeur du champ « famille » dans la plateforme. */
+  /** Valeur du champ « famille » dans la plateforme (code du type). */
   family: string;
   l: string;
+  /** Libellé court (préréglage de la carte) : celui du type du registre. */
+  court: string;
   sub: string;
   ic: string;
+  /** Teinte de la bande et des processus de cette famille. */
+  tint: Tint;
 }
-export const FAMILIES: Record<FamilyKey, FamilyDef> = {
-  pil: {
+/** Type du registre, tel que le serveur le fournit. */
+export interface TypeFamille {
+  code: string;
+  label: string;
+  description: string;
+  tint: string;
+  archived: boolean;
+}
+const GRAINES: readonly (FamilyDef & { libelle: string })[] = [
+  {
     k: 'pil',
     family: 'Management',
+    libelle: 'Pilotage',
+    court: 'Pilotage',
     l: 'Processus de pilotage',
     sub: 'Diriger, piloter et améliorer le système de management',
     ic: 'compass',
+    tint: 'violet',
   },
-  rea: {
+  {
     k: 'rea',
     family: 'Réalisation',
+    libelle: 'Réalisation',
+    court: 'Réalisation',
     l: 'Processus de réalisation',
     sub: 'Concevoir, déployer et exploiter les services et usages',
     ic: 'gear',
+    tint: 'bleu',
   },
-  sup: {
+  {
     k: 'sup',
     family: 'Support',
+    libelle: 'Support',
+    court: 'Support',
     l: 'Processus de support',
     sub: 'Fournir les ressources et fonctions support',
     ic: 'tools',
+    tint: 'vert',
   },
-  oth: {
-    k: 'oth',
-    family: '',
-    l: 'Autres processus',
-    sub: 'Famille non renseignée dans la plateforme',
-    ic: 'layers',
-  },
+];
+const AUTRES: FamilyDef = {
+  k: 'oth',
+  family: '',
+  court: 'Autres',
+  l: 'Autres processus',
+  sub: 'Famille non renseignée dans la plateforme',
+  ic: 'layers',
+  tint: 'gris',
 };
+let courantes: readonly FamilyDef[] = [...GRAINES, AUTRES];
+
+/** Familles affichées, dans l'ordre du registre, « Autres processus » en dernier. */
+export const familles = (): readonly FamilyDef[] => courantes;
+/** Famille d'une bande (`lane:<clé>`) ; « Autres processus » si la clé est inconnue. */
+export const familyByKey = (k: string | undefined): FamilyDef => courantes.find((f) => f.k === k) ?? AUTRES;
 /** Famille d'un processus d'après son champ « famille » (valeur inconnue : « Autres processus »). */
 export function familyOf(family: string | undefined): FamilyDef {
-  for (const f of Object.values(FAMILIES)) if (f.family && f.family === family) return f;
-  return FAMILIES.oth;
+  return courantes.find((f) => f.family && f.family === family) ?? AUTRES;
+}
+const cleDeBande = (code: string) =>
+  'x_' +
+  code
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^A-Za-z0-9]+/g, '_');
+/** Adopte les types du registre comme familles de la carte (liste vide : types de départ). */
+export function definirFamilles(types: readonly TypeFamille[] | undefined): void {
+  if (!types?.length) {
+    courantes = [...GRAINES, AUTRES];
+    return;
+  }
+  const tints = new Set<string>(TINTS);
+  courantes = [
+    ...types.map((t): FamilyDef => {
+      const graine = GRAINES.find((g) => g.family === t.code);
+      return {
+        k: graine?.k ?? cleDeBande(t.code),
+        family: t.code,
+        court: t.label,
+        l: graine && t.label === graine.libelle ? graine.l : `Processus : ${t.label}`,
+        sub: t.description || graine?.sub || 'Type de processus défini dans la Plateforme',
+        ic: graine?.ic ?? 'layers',
+        tint: (tints.has(t.tint) ? t.tint : 'gris') as Tint,
+      };
+    }),
+    AUTRES,
+  ];
 }
 
 /* ---------------------------------------------------------------- Relations */

@@ -38,6 +38,7 @@ import {
   canRename,
   cartoContext,
   computeScene,
+  definirFamilles,
   defaultGenerateOptions,
   deleteEdge,
   distributeNodes,
@@ -79,6 +80,7 @@ import {
 } from '@suivi/shared/carto';
 import { ConfirmDialog, ErrorAlert, IconeCarte, Page, PageHeader, SANTE } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTypesProcessus } from '../processus/types';
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { useBlocker, useNavigate, useParams } from 'react-router';
 import { api, ApiError, errorMessage, get } from '../api';
@@ -130,7 +132,7 @@ const dateHeure = (d: string) => {
   return `${x.toLocaleDateString('fr-FR')} à ${x.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
 };
 
-export function CartographiePage() {
+function CartographieContenu() {
   const params = useParams();
   const nav = useNavigate();
   const qc = useQueryClient();
@@ -1479,4 +1481,19 @@ export function CartographiePage() {
       )}
     </Page>
   );
+}
+
+/* Les bandes de la vue processus suivent les types du registre de la Plateforme : on les adopte avant tout calcul de
+   scène (synchrone, avant le rendu) et on remonte le contenu quand le registre change. */
+export function CartographiePage() {
+  const types = useTypesProcessus();
+  if (types.isPending)
+    return (
+      <Center mih="40vh">
+        <Loader />
+      </Center>
+    );
+  definirFamilles(types.data);
+  const signature = (types.data ?? []).map((t) => `${t.code}|${t.label}|${t.tint}|${t.rank}`).join(';');
+  return <CartographieContenu key={signature} />;
 }
