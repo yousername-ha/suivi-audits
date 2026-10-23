@@ -65,7 +65,7 @@
     {
       "date": "2026-10-23",
       "etape": "en-developpement",
-      "motif": "v011 corrige une coupure dans la branche Maîtriser et active par défaut le mouvement sur la maquette, avec flux colorés plus lisibles et brume ascendante renforcée. HTML autonome régénéré, syntaxe JavaScript et diff vérifiés. Site version 7 déployée avec succès, accès public revérifié."
+      "motif": "v011 corrige une coupure dans la branche Maîtriser et active par défaut le mouvement sur la maquette, avec flux colorés plus lisibles et brume ascendante renforcée. À la première visite, l’ancien réglage local migre une fois vers Animées. HTML autonome régénéré, syntaxe JavaScript et diff vérifiés. Site version 8 déployée avec succès, accès public revérifié."
     }
   ]
 }

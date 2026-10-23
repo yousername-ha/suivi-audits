@@ -2,7 +2,7 @@
 
 ## v011 — continuité et animations du parcours
 
-Relier la courbe jaune « Maîtriser » en continu entre ses points ; un simple segment `M` SVG démarrait auparavant une seconde sous-courbe et laissait une coupure visible. Garder les traits de flux en pointillés dans la couleur calculée de leur branche. Les couches CSS de brume doivent avoir `content`, être positionnées sans capter les interactions, et monter du bas vers le haut. Les animations démarrent activées parce que l’utilisateur demande à les voir ; conserver les choix explicites « Automatiques » et « Arrêtées ». Le mode « Automatiques » respecte `prefers-reduced-motion`, tandis que le choix explicite « Animées » force les effets. Cette retouche ne modifie ni le contenu ISO/HDS ni les fonctions métier.
+Relier la courbe jaune « Maîtriser » en continu entre ses points ; un simple segment `M` SVG démarrait auparavant une seconde sous-courbe et laissait une coupure visible. Garder les traits de flux en pointillés dans la couleur calculée de leur branche. Les couches CSS de brume doivent avoir `content`, être positionnées sans capter les interactions, et monter du bas vers le haut. Les animations démarrent activées parce que l’utilisateur demande à les voir ; effectuer une migration unique de l’ancien réglage mémorisé vers « Animées » afin qu’un précédent mode automatique/arrêté ne masque pas cette correction. Conserver ensuite les choix explicites « Automatiques » et « Arrêtées ». Le mode « Automatiques » respecte `prefers-reduced-motion`, tandis que le choix explicite « Animées » force les effets. Cette retouche ne modifie ni le contenu ISO/HDS ni les fonctions métier.
 
 ## v010 — filigrane Gondor
 

@@ -2,7 +2,7 @@
 
 ## v011 — branche et animations
 
-La courbe jaune de « Maîtriser » est raccordée sans rupture. La version utilise un flux en pointillés de la couleur de chaque branche, une brume CSS définie par pseudo-éléments (avec contenu et animation ascendante) et active le mode animé par défaut. La préférence « Automatiques » respecte toujours `prefers-reduced-motion`; l’option « Animées » permet un mouvement explicite. Contrôles : page autonome régénérée, `node --check app.js` et `git diff --check` réussis ; aucune recette automatisée d’interaction ni essai sur téléphone physique. Le Site v7 est déployé et son accès public est vérifié.
+La courbe jaune de « Maîtriser » est raccordée sans rupture. La version utilise un flux en pointillés de la couleur de chaque branche, une brume CSS définie par pseudo-éléments (avec contenu et animation ascendante) et active le mode animé par défaut. À la première visite de v011, un ancien choix local est migré une seule fois vers « Animées », selon la demande. La préférence « Automatiques » respecte ensuite `prefers-reduced-motion`; l’option « Arrêtées » reste disponible. Contrôles : page autonome régénérée, `node --check app.js` et `git diff --check` réussis ; aucune recette automatisée d’interaction ni essai sur téléphone physique. Le Site v8 est déployé et son accès public est vérifié.
 
 ## v010 — filigrane Gondor
 
