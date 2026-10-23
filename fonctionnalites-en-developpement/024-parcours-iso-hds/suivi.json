@@ -2,7 +2,7 @@
   "numero": "024",
   "fonctionnalite": "parcours-iso-hds",
   "etape": "en-developpement",
-  "maquetteCourante": "v010-gondor-public",
+  "maquetteCourante": "v011-animations-visibles",
   "validationUtilisateur": null,
   "livraisonImplementation": null,
   "integration": null,
@@ -61,6 +61,11 @@
       "date": "2026-10-23",
       "etape": "en-developpement",
       "motif": "v010 intègre un motif Gondor transparent en filigrane derrière la maquette interactive et produit un HTML autonome. Déploiement Sites version 6 réussi (commit e7868951b1ffccbd49c7e2861b96cd075d43484b) ; l’accès public est confirmé et vérifié."
+    },
+    {
+      "date": "2026-10-23",
+      "etape": "en-developpement",
+      "motif": "v011 corrige une coupure dans la branche Maîtriser et active par défaut le mouvement sur la maquette, avec flux colorés plus lisibles et brume ascendante renforcée. HTML autonome régénéré, syntaxe JavaScript et diff vérifiés. Site version 7 déployée avec succès, accès public revérifié."
     }
   ]
 }

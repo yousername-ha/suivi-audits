@@ -1,5 +1,9 @@
 # Contrôles de la maquette
 
+## v011 — branche et animations
+
+La courbe jaune de « Maîtriser » est raccordée sans rupture. La version utilise un flux en pointillés de la couleur de chaque branche, une brume CSS définie par pseudo-éléments (avec contenu et animation ascendante) et active le mode animé par défaut. La préférence « Automatiques » respecte toujours `prefers-reduced-motion`; l’option « Animées » permet un mouvement explicite. Contrôles : page autonome régénérée, `node --check app.js` et `git diff --check` réussis ; aucune recette automatisée d’interaction ni essai sur téléphone physique. Le Site v7 est déployé et son accès public est vérifié.
+
 ## v010 — filigrane Gondor
 
 Aucune nouvelle recette automatique n’a été ajoutée ou exécutée pour cette retouche décorative. La page autonome embarque l’image Gondor ; le déploiement Sites v010 (version 6) est confirmé, et le mode d’accès public a été vérifié.
