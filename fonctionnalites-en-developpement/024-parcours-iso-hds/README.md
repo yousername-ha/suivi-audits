@@ -1,1 +1,9 @@
-YªçŠx-®éÜj×¢ëiºÚ+Š§j[h‘éÜ¢éíÛŸ¢Ö¥¢ëiºÙbë5# 024 â¹ŞÚ$z{-®éÜj×RæÖB’à
+# 024 â€” Parcours guidÃ© ISO 27001 / HDS
+
+**Maquette fonctionnelle Ã  valider, non intÃ©grÃ©e au backend.** v010 : ajout dâ€™un motif Gondor transparent en filigrane, derriÃ¨re lâ€™arbre interactif. Les animations, branches, cartes et interactions de v009 sont conservÃ©es.
+
+[Ouvrir la maquette v010 en accÃ¨s public](https://astra-parcours-apercu.earlycedar65.chatgpt.site).
+
+[DÃ©tails â€” v010](maquettes/v010-gondor-public/README.md) Â· [DÃ©tails â€” v009](maquettes/v009-tronc-cartes/README.md) Â· [RÃ¨gles techniques](implementation/README.md) Â· [Historique des vÃ©rifications](tests/README.md).
+
+[Animations v005](maquettes/v005-brume-lueurs/README.md) Â· [Graphisme v004](maquettes/v004-style-reference/README.md).

@@ -1,1 +1,20 @@
-YªçŠx-®éÜj×¢ëiºÚ+Š§j[h‘éÜ¢éíãÍÓ¢Ö¥¢ëiºÙbë5# 024 Â¾;òÚ$z{-®éÜj×f÷W&æ’à
+# 024 Â· Arbre de progression avec filigrane Gondor â€” v010
+
+**Maquette fonctionnelle Ã  valider, sans intÃ©gration backend.**
+
+Cette version conserve le parcours interactif et son graphisme de rÃ©fÃ©rence, en ajoutant derriÃ¨re lâ€™arbre un motif Gondor isolÃ©, transparent et discret. Le motif ne recouvre ni les textes, ni les cercles, ni les contrÃ´les et ne capte aucun clic. Les animations, les sous-branches, les cartes et les attendus restent interactifs.
+
+- `index.html` est autonome : styles, scripts, SVG et motif graphique sont intÃ©grÃ©s au fichier.
+- `app.js` et `style.css` sont les sources lisibles de la maquette.
+- `assets/gondor.png` est le motif dÃ©coratif transparent.
+- `construire.py` rÃ©gÃ©nÃ¨re la page autonome Ã  partir des sources et de lâ€™image.
+
+La progression et les contenus restent des donnÃ©es de dÃ©monstration conservÃ©es localement dans le navigateur. Cette maquette ne modifie pas la plateforme et nâ€™est pas raccordÃ©e au backend.
+
+## AperÃ§u
+
+La maquette v010 est publiÃ©e sur le [site public ASTRA](https://astra-parcours-apercu.earlycedar65.chatgpt.site), version 6. AccÃ¨s vÃ©rifiÃ© en mode public.
+
+## Historique et validation
+
+v010 est la proposition courante Ã  valider. DÃ©ploiement Sites rÃ©ussi le 23 octobre 2026 (commit source `e7868951b1ffccbd49c7e2861b96cd075d43484b`). Voir [v009](../v009-tronc-cartes/README.md) pour les interactions et corrections antÃ©rieures. Aucun ZIP/BAT nâ€™est fourni.
