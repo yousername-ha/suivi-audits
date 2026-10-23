@@ -1,9 +1,1 @@
-# 024 â€” Parcours guidÃ© ISO 27001 / HDS
-
-**Maquette fonctionnelle Ã  valider, non intÃ©grÃ©e au backend.** v009 : commandes centrÃ©es, bouclier abaissÃ© avec tronc dÃ©gagÃ©, cartes fermables par croix, clic extÃ©rieur et Ã‰chap ; animations conservÃ©es.
-
-[Ouvrir lâ€™aperÃ§u privÃ© sur tÃ©lÃ©phone](https://astra-parcours-apercu.earlycedar65.chatgpt.site) â€” aucun tÃ©lÃ©chargement nÃ©cessaire.
-
-[DÃ©tails et recette â€” v009](maquettes/v009-tronc-cartes/README.md) Â· [RÃ¨gles techniques](implementation/README.md) Â· [Tests](tests/README.md).
-
-[Animations v005](maquettes/v005-brume-lueurs/README.md) Â· [Graphisme v004](maquettes/v004-style-reference/README.md).
+YªçŠx-®éÜj×¢ëiºÚ+Š§j[h‘éÜ¢éíÛŸ¢Ö¥¢ëiºÙbë5# 024 â¹ŞÚ$z{-®éÜj×RæÖB’à
