@@ -2,7 +2,7 @@
   "numero": "024",
   "fonctionnalite": "parcours-iso-hds",
   "etape": "en-developpement",
-  "maquetteCourante": "v005-brume-lueurs",
+  "maquetteCourante": "v006-sous-branches",
   "validationUtilisateur": null,
   "livraisonImplementation": null,
   "integration": null,
@@ -36,6 +36,11 @@
       "date": "2026-10-23",
       "etape": "en-developpement",
       "motif": "Animations seules sur le style v004 : brume, lueurs des branches et cercles, arrêt manuel et mouvement réduit. Aperçu privé Sites demandé pour consultation sur téléphone ; aucune intégration backend. 65 contrôles réussis ; déploiement privé Sites confirmé réussi le 23 octobre 2026."
+    },
+    {
+      "date": "2026-10-23",
+      "etape": "en-developpement",
+      "motif": "Demande de lueurs visibles et de sous-branches animées via un plus distinct du cercle parent. Ajout des enfants vers les sous-actions existantes et des modes d’animation explicites ; même Site privé de validation. 109 contrôles réussis ; chevauchement Audit corrigé et carte amenée dans la vue sur téléphone. Publication privée Sites confirmée réussie."
     }
   ]
 }

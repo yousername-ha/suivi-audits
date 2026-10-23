@@ -1,5 +1,15 @@
 # 024 — Parcours ISO 27001 / HDS : règles de conception
 
+## Sous-branches v006 — correction de visibilité et interaction parent/enfants
+
+La demande ajoute une commande « + » distincte du cercle. Elle déplie les sous-actions sous forme de cercles enfants reliés au parent, avec tracé progressif et apparition animée. « − » replie. Le clic parent garde sa carte ; le clic enfant ouvre l’attendu existant. Une seule branche est dépliée à la fois, sans déplacer la composition de base. Les autres nœuds s’atténuent pendant le dépliage. Sur mobile, agrandir les cibles tactiles et conserver un canevas défilant.
+
+Les enfants utilisent les identifiants de v002, sans duplication ni nouveaux attendus. `aria-expanded`, `aria-controls`, libellés accessibles et retour du focus doivent suivre l’état réel. Les éléments repliés ne sont ni cliquables ni présents dans l’ordre de tabulation. Annuler la fermeture différée lors d’un changement rapide de branche pour ne pas fermer le nouvel affichage. Le dépliage ne crée aucun effet métier.
+
+Diagnostic : l’HTML privé servi correspondait à v005 et contenait ses règles d’animation. La cause sur le téléphone réel n’est pas démontrée. Les effets étaient peu contrastés ; les préférences système peuvent les supprimer. Renforcer la brume et le filet lumineux, afficher l’état et proposer Automatiques / Animées / Arrêtées. Automatiques respecte `prefers-reduced-motion` ; Animées nécessite le choix explicite de l’utilisateur ; Arrêtées supprime les effets. La préférence persiste et la pause en arrière-plan demeure.
+
+La correction est une version de maquette, non une intégration serveur. Conserver toutes les versions utiles et republier sur le même Site privé. Les résultats réels de recette et la publication sont consignés dans le dossier v006.
+
 ## Animations v005 et aperçu hébergé — 23 octobre 2026
 
 Demande : conserver exactement le graphisme de v004, animer légèrement la brume de fond, les branches et les cercles, et proposer un lien consultable sur téléphone sans téléchargement. Seuls des pseudo-éléments et traits SVG décoratifs sont ajoutés, sans capter les clics ni déplacer les éléments. Durées lentes, pas de flash ni mouvement du texte.

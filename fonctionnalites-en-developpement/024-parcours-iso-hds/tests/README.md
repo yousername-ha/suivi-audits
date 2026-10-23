@@ -23,3 +23,7 @@ Servir la racine du dépôt à `http://127.0.0.1:19120`, puis lancer le script a
 ## v005 — animations discrètes
 
 [Rapport exécuté](../maquettes/v005-brume-lueurs/verification.json) · [Script](../maquettes/v005-brume-lueurs/verifier.cjs). La recette de v004 est reprise et complétée par la comparaison géométrique, la présence de brume, le déplacement mesuré des lueurs, les halos, l’arrêt manuel, sa persistance et le mouvement réduit. Les assertions attendent les changements effectifs de styles et la fermeture du dialogue. Hébergement privé validé séparément par le service Sites.
+
+## v006 — plus/minus et enfants
+
+[Rapport exécuté](../maquettes/v006-sous-branches/verification.json) · [Script](../maquettes/v006-sous-branches/verifier.cjs). Recette existante complétée par les 11 commandes de dépliage, leurs liens et enfants, une seule branche ouverte, absence de collision avec la carte, clic parent distinct du plus, attendus enfants, retour du focus, repli, clavier, changements rapides, modes d’animation et interaction mobile. Aucun essai sur téléphone physique revendiqué.
