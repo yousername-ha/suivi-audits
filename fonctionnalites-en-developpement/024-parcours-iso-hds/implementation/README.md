@@ -1,5 +1,15 @@
 # 024 — Parcours ISO 27001 / HDS : règles de conception
 
+## Lisibilité v007 — petites commandes et prévention des collisions
+
+- **024-UI-PLUS-01** : disque « + / − » de 18 px ; cible d’interaction 32 px, 40 px en tactile avant mise à l’échelle. Conserver le focus clavier et les attributs ARIA.
+- **024-UI-PLUS-02** : mesurer les rectangles complets des libellés, cercles, titres de branches, carte et commandes dans le repère non mis à l’échelle du canevas. Placer chaque enfant dans l’espace libre, en réservant aussi les enfants déjà placés.
+- **024-UI-PLUS-03** : acheminer les liaisons hors des textes et des cartes. Réserver également le propre libellé de l’enfant. La maquette utilise une grille de 8 px à huit directions, simplifie les segments visibles et arrondit les angles ; elle favorise les trajets courts. Ce routage concerne uniquement ce parcours, jamais le module cartographique historique.
+- **024-UI-PLUS-04** : recalculer après rendu/changement de carte/redimensionnement ; animer l’apparition sur place pour ne pas traverser les mots. Les données, attendus, couleurs et composition initiale sont conservés. Ne pas masquer les libellés pour résoudre une collision.
+
+Recette : 109 contrôles fonctionnels et 69 de placement exécutés dans Chromium ; 66 combinaisons branche/carte/bureau-tactile. Maintenir ces critères lors du raccordement aux composants réels. Cette version reste à valider, sans intégration backend.
+
+
 ## Sous-branches v006 — correction de visibilité et interaction parent/enfants
 
 La demande ajoute une commande « + » distincte du cercle. Elle déplie les sous-actions sous forme de cercles enfants reliés au parent, avec tracé progressif et apparition animée. « − » replie. Le clic parent garde sa carte ; le clic enfant ouvre l’attendu existant. Une seule branche est dépliée à la fois, sans déplacer la composition de base. Les autres nœuds s’atténuent pendant le dépliage. Sur mobile, agrandir les cibles tactiles et conserver un canevas défilant.

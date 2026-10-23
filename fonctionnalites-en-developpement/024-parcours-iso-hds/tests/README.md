@@ -27,3 +27,8 @@ Servir la racine du dépôt à `http://127.0.0.1:19120`, puis lancer le script a
 ## v006 — plus/minus et enfants
 
 [Rapport exécuté](../maquettes/v006-sous-branches/verification.json) · [Script](../maquettes/v006-sous-branches/verifier.cjs). Recette existante complétée par les 11 commandes de dépliage, leurs liens et enfants, une seule branche ouverte, absence de collision avec la carte, clic parent distinct du plus, attendus enfants, retour du focus, repli, clavier, changements rapides, modes d’animation et interaction mobile. Aucun essai sur téléphone physique revendiqué.
+
+
+## v007 — petits plus et dépliage lisible
+
+[109 contrôles fonctionnels](../maquettes/v007-depliage-lisible/verification.json) et [69 contrôles de placement](../maquettes/v007-depliage-lisible/verification-placement.json) réussis. Les 66 combinaisons couvrent 11 branches × 3 cartes × bureau/tactile : rectangles enfants et textes sans collision, liaisons échantillonnées hors des libellés, disque 18 px et cible tactile 40 px. Scripts `verifier.cjs` et `verifier-placement.cjs` dans cette version ; mêmes prérequis que v006. Captures bureau/mobile inspectées. Pas d’essai sur téléphone physique ni d’intégration serveur.
