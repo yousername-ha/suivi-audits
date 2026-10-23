@@ -37,3 +37,8 @@ Servir la racine du dépôt à `http://127.0.0.1:19120`, puis lancer le script a
 ## v008 — écartement et effets demandés
 
 [109 contrôles fonctionnels](../maquettes/v008-branches-vivantes/verification.json), [69 de placement](../maquettes/v008-branches-vivantes/verification-placement.json) et [14 d’animation](../maquettes/v008-branches-vivantes/verification-animations.json). Mesures temporelles des positions et courbes, retour après repli, direction ascendante de la brume, couleurs calculées des flux et halos parent/enfant/racine. Contrôle des 11 branches, plusieurs cartes et affichages bureau/tactile, animations réduites et désactivées. Chromium local, aucune intégration backend ni essai sur téléphone physique.
+
+
+## v009 — centrage, tronc et fermeture
+
+[109 contrôles fonctionnels](../maquettes/v009-tronc-cartes/verification.json), [69 de placement](../maquettes/v009-tronc-cartes/verification-placement.json), [14 d’animation](../maquettes/v009-tronc-cartes/verification-animations.json) et [30 cartes/centrage](../maquettes/v009-tronc-cartes/verification-cartes.json). Mesure des centres SVG/disques, tronc, croix, clic fond, Échap, réouverture, clic interne, glissement et focus ; bureau/tactile Chromium local. La recherche attend la fermeture effective du dialogue. Aucun essai sur téléphone physique.

@@ -1,0 +1,40 @@
+{
+  "date": "2026-10-23",
+  "resultat": "reussi",
+  "nombre": 30,
+  "tests": [
+    "Symboles + centrés dans les disques · bureau",
+    "Bouclier abaissé et tronc de 120 px · bureau",
+    "Croix ferme la carte · bureau",
+    "Focus rendu au cercle · bureau",
+    "Liaison de carte masquée · bureau",
+    "Clic cercle rouvre la carte · bureau",
+    "Interaction intérieure ne ferme pas la carte · bureau",
+    "Clic sur fond ferme la carte · bureau",
+    "Dépliage indépendant de la fermeture · bureau",
+    "Échap ferme la carte compacte · bureau",
+    "Clic intérieur conserve la fenêtre · bureau",
+    "Clic extérieur ferme la fenêtre détaillée · bureau",
+    "Un glissement intérieur vers extérieur ne ferme pas · bureau",
+    "Croix de la fenêtre détaillée conservée · bureau",
+    "Aucune erreur JS · bureau",
+    "Symboles + centrés dans les disques · tactile",
+    "Bouclier abaissé et tronc de 120 px · tactile",
+    "Croix ferme la carte · tactile",
+    "Focus rendu au cercle · tactile",
+    "Liaison de carte masquée · tactile",
+    "Clic cercle rouvre la carte · tactile",
+    "Interaction intérieure ne ferme pas la carte · tactile",
+    "Clic sur fond ferme la carte · tactile",
+    "Dépliage indépendant de la fermeture · tactile",
+    "Échap ferme la carte compacte · tactile",
+    "Clic intérieur conserve la fenêtre · tactile",
+    "Clic extérieur ferme la fenêtre détaillée · tactile",
+    "Un glissement intérieur vers extérieur ne ferme pas · tactile",
+    "Croix de la fenêtre détaillée conservée · tactile",
+    "Aucune erreur JS · tactile"
+  ],
+  "limites": [
+    "Chromium local, bureau et tactile simulé. Pas de téléphone physique."
+  ]
+}

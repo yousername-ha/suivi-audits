@@ -2,7 +2,7 @@
   "numero": "024",
   "fonctionnalite": "parcours-iso-hds",
   "etape": "en-developpement",
-  "maquetteCourante": "v008-branches-vivantes",
+  "maquetteCourante": "v009-tronc-cartes",
   "validationUtilisateur": null,
   "livraisonImplementation": null,
   "integration": null,
@@ -51,6 +51,11 @@
       "date": "2026-10-23",
       "etape": "en-developpement",
       "motif": "Rendu v007 rejeté visuellement. v008 ouvre un espace animé entre les branches, place les enfants en éventail, fait monter la brume et ajoute un halo au clic ; flux de même couleur que chaque branche. Même aperçu privé, proposition à valider."
+    },
+    {
+      "date": "2026-10-23",
+      "etape": "en-developpement",
+      "motif": "Commandes vectorielles centrées ; bouclier descendu et tronc ajouté ; cartes refermables par croix, fond et clavier. 222 contrôles locaux réussis. Partage 24 h non pris en charge nativement, aucun accès ajouté. Variantes Gondor séparées en propositions visuelles."
     }
   ]
 }

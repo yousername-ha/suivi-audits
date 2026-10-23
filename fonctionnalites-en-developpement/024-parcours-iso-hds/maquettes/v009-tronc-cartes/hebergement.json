@@ -1,0 +1,13 @@
+{
+  "project_id": "appgprj_6adb36e401b88191acfa63f3a99475fc",
+  "version_id": "appgprj_6adb36e401b88191acfa63f3a99475fc~appgver_593966e642648191895774de0b1e35cb",
+  "deployment_id": "appgdep_6adba85970a8819182fc97a6bac8bda4",
+  "source_commit": "5a0c4a85b49798fa35e88c6e8b3048ea908eb2d6",
+  "url": "https://astra-parcours-apercu.earlycedar65.chatgpt.site",
+  "statut": "succeeded",
+  "audience": "owner-private",
+  "publication": "2026-10-23",
+  "expirationAutomatique": null,
+  "sha256_html": "48b12059d1be293ae7dc3026a02dbee1890efe5d494dc61c92ee52f61a3476fe",
+  "limites": "Maquette à données fictives, sans API réelle. Pas de téléphone physique testé. Variantes Gondor non déployées, propositions en images uniquement."
+}

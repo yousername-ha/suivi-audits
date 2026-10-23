@@ -1,5 +1,15 @@
 # 024 — Parcours ISO 27001 / HDS : règles de conception
 
+## Tronc et cartes v009 — corrections demandées
+
+- **024-UI-CENTER-01** : remplacer le glyphe textuel « + / − » par un tracé SVG centré au même point que le disque. Conserver dimensions, zone tactile, focus et ARIA. Vérifier les centres réels sur bureau et tactile.
+- **024-UI-TRUNK-01** : abaisser le bouclier de 120 px dans le repère de dessin et ajouter un tronc entre la jonction et le bouclier. Adapter hauteur, cadrage et défilement, sans déplacer arbitrairement les modules ou modifier leurs liens.
+- **024-UI-DISMISS-01** : carte compacte fermable par croix, clic sur fond et Échap ; sa liaison disparaît aussi. Un clic parent la rouvre. Ne pas confondre replier le contenu avec fermer la carte. Fermer ne change ni les registres ni la progression.
+- **024-UI-DISMISS-02** : fermeture de la fenêtre détaillée par croix ou clic extérieur. Ne pas fermer lors d’une interaction interne ou d’un glissement vers l’extérieur. Préserver le retour du focus. Les fenêtres métier réelles doivent conserver leur politique de brouillon ; aucune validation automatique à la fermeture.
+
+Le partage privé nominatif est disponible sur l’aperçu, mais aucune expiration automatique à 24 h n’est exposée par l’outil. Ne pas annoncer de lien temporaire sécurisé sans contrôle serveur réel. Les propositions Gondor ultérieures restent des images à valider, pas une décision d’intégration graphique.
+
+
 ## Branches vivantes v008 — remplace le routage graphique v007
 
 L’utilisateur rejette le rendu des détours v007. Conserver les versions historiques, mais utiliser v008 comme proposition courante : déplacement des grandes branches pour créer l’espace nécessaire, enfants proches du parent et courbes simples.
