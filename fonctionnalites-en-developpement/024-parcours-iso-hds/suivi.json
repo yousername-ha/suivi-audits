@@ -2,7 +2,7 @@
   "numero": "024",
   "fonctionnalite": "parcours-iso-hds",
   "etape": "en-developpement",
-  "maquetteCourante": "v003-arbre-organique",
+  "maquetteCourante": "v004-style-reference",
   "validationUtilisateur": null,
   "livraisonImplementation": null,
   "integration": null,
@@ -26,6 +26,11 @@
       "date": "2026-10-22",
       "etape": "en-developpement",
       "motif": "Alternative arbre organique demandée en maquette fonctionnelle : HTML autonome, 16 étapes/26 sous-actions, progression locale, vues et modules simulés partageant les mêmes repères. 40 contrôles Chromium réussis via HTTP local. Apparence à valider, pas de backend ni ZIP/BAT."
+    },
+    {
+      "date": "2026-10-23",
+      "etape": "en-developpement",
+      "motif": "Reprise fonctionnelle fidèle à la composition graphique fournie : branches végétales, libellés latéraux, fiche compacte supérieure droite. 11 raccourcis graphiques ; 16 étapes/26 sous-actions conservées en liste. 56 contrôles Chromium via HTTP local. À valider ; pas de ZIP/BAT ni backend."
     }
   ]
 }

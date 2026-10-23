@@ -1,0 +1,42 @@
+{
+  "id": "v004-style-reference",
+  "statut": "a-valider",
+  "date": "2026-10-23",
+  "versionPrecedente": "v003-arbre-organique",
+  "validationUtilisateur": null,
+  "integrationBackend": false,
+  "references": [
+    "fonctionnalites-en-developpement/024-parcours-iso-hds/maquettes/v004-style-reference/images/01-reference-fonctionnelle.png",
+    "fonctionnalites-en-developpement/024-parcours-iso-hds/maquettes/v004-style-reference/images/02-attendu-central.png",
+    "fonctionnalites-en-developpement/024-parcours-iso-hds/maquettes/v004-style-reference/images/03-liste-complete.png",
+    "fonctionnalites-en-developpement/024-parcours-iso-hds/maquettes/v004-style-reference/images/04-selection-hds.png",
+    "fonctionnalites-en-developpement/024-parcours-iso-hds/maquettes/v004-style-reference/images/05-liste-mobile.png",
+    "fonctionnalites-en-developpement/024-parcours-iso-hds/maquettes/v004-style-reference/images/06-attendu-mobile.png"
+  ],
+  "visuels": [
+    {
+      "fichier": "images/01-reference-fonctionnelle.png",
+      "sha256": "d5e748f184698a61fc0ac562ca0ae2d601aeca3fbb716b48049b3b2407a8cf36"
+    },
+    {
+      "fichier": "images/02-attendu-central.png",
+      "sha256": "b30a10c0af053792c34576ceeccd2f537d25920a59690da80036cf88549bb8ba"
+    },
+    {
+      "fichier": "images/03-liste-complete.png",
+      "sha256": "2113cb1f84f73f582ff845ad23fad4ef9c37e16a7911b2272eab42782e55e1ee"
+    },
+    {
+      "fichier": "images/04-selection-hds.png",
+      "sha256": "2beae28eeebff9677f7da8b9b72c8dda1da5858f47ad79322427857d482ff72b"
+    },
+    {
+      "fichier": "images/05-liste-mobile.png",
+      "sha256": "12c82f1c1044d649f71f125f8915f174791d13fbbaed9936429cba77f7c2721b"
+    },
+    {
+      "fichier": "images/06-attendu-mobile.png",
+      "sha256": "19c1c7e235a9477445563e35eae21e89d94ac9a939632ca432aa16000c7d1e71"
+    }
+  ]
+}

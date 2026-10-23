@@ -1,5 +1,15 @@
 # 024 — Parcours ISO 27001 / HDS : règles de conception
 
+## Reprise du style de référence v004 — 23 octobre 2026
+
+La demande porte sur la fidélité à l’image : en-tête compact, menu vert, courbes végétales et feuilles, halos, libellés à droite des cercles, racine et fiche compacte située en haut à droite. Le choix d’un nœud actualise cette fiche ; l’attendu détaillé et le suivi/revue s’ouvrent dans une fenêtre centrale. Le formulaire de revue et les données communes aux modules simulés sont conservés.
+
+La composition synthétique utilise 11 raccourcis graphiques vers les objets existants, sans retrancher des travaux : la liste conserve 16 étapes et 26 sous-actions. Contexte/Périmètre ciblent `context`, Applicabilité/Traitement ciblent `treatment`. Les deux lignes Identifier/Évaluer pointent vers `risk-2` ; elles ne doivent ni dupliquer l’évaluation ni augmenter la progression. La branche HDS garde ses cinq étapes dans la liste. Ces regroupements sont des décisions UI, pas des prescriptions normatives.
+
+Le dessin SVG se dimensionne proportionnellement et reste défilant sur les petits écrans. Le menu est fixe. Les raccourcis HDS et la configuration de démonstration se règlent depuis Administration. Les couleurs de sélection suivent chaque branche, les états restent différenciés par leurs symboles et libellés. Aucun nouvel ordre bloquant, moteur de risques, objet ou API métier n’est créé.
+
+Stockage isolé `astra-parcours-reference-v4`, sans migration des essais précédents. Recette : 56 contrôles Chromium via HTTP local, captures 1280 × 720 et mobile ; pas de test Windows ou `file://`. Aucune intégration serveur. v003 conservée pour l’historique, v004 en développement à valider. Pas de ZIP/BAT.
+
 ## Alternative fonctionnelle v003 — arbre organique
 
 La nouvelle variante reprend les identifiants et contenus sourcés de v002. Quatre branches graphiques : cadrer, maîtriser, évaluer/améliorer, compléments HDS. Leurs courbes ne représentent pas un nouvel ordre normatif ni des verrous. Chaque étape ouvre une fiche centrale avec sous-actions dépliables, attendu, exemple de livrable et source. Le menu reste fixe, le contenu défile séparément, la liste propose une recherche. Respect du mouvement réduit pour les flux visuels.

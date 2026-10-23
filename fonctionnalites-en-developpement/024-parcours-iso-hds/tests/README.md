@@ -15,3 +15,7 @@ Servir la racine du dépôt sur `http://127.0.0.1:19120`. Installer Playwright �
 [40 contrôles exécutés](../maquettes/v003-arbre-organique/verification.json) · [Script reproductible](../maquettes/v003-arbre-organique/verifier.cjs). Tests Chromium sur HTTP local : 16 fiches et 26 sous-actions, revue, synchronisation locale entre parcours et module simulé, persistance, isolation des périmètres, recherche, HDS, zoom, clavier, menu fixe, mobile, mouvement réduit et refus de stockage.
 
 Servir la racine du dépôt à `http://127.0.0.1:19120`, puis lancer le script avec Node et Playwright installé hors du dépôt. `ASTRA_PREVIEW_URL` permet de changer l’URL. Chromium attendu à `/usr/bin/chromium`. Aucun appel backend ni test Windows réel. L’ouverture `file://` est bloquée par la politique de ce navigateur géré ; elle n’a pas été contournée. L’HTML ne charge aucune ressource externe pour fonctionner.
+
+## v004 — style de référence fonctionnel
+
+[56 contrôles exécutés](../maquettes/v004-style-reference/verification.json) · [Script reproductible](../maquettes/v004-style-reference/verifier.cjs). Composition 1280 × 720, sélection des 11 raccourcis, fiche compacte repliable, attendus centraux, 16 étapes/26 sous-actions conservées dans la liste, préparation/revue, données réciproques, persistance, isolation, filtre HDS, clavier, reset, mobile et stockage refusé. Exécution via HTTP local avec Chromium, aucune intégration backend ou vérification Windows revendiquée.
