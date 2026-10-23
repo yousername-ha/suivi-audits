@@ -19,3 +19,7 @@ Servir la racine du dépôt à `http://127.0.0.1:19120`, puis lancer le script a
 ## v004 — style de référence fonctionnel
 
 [56 contrôles exécutés](../maquettes/v004-style-reference/verification.json) · [Script reproductible](../maquettes/v004-style-reference/verifier.cjs). Composition 1280 × 720, sélection des 11 raccourcis, fiche compacte repliable, attendus centraux, 16 étapes/26 sous-actions conservées dans la liste, préparation/revue, données réciproques, persistance, isolation, filtre HDS, clavier, reset, mobile et stockage refusé. Exécution via HTTP local avec Chromium, aucune intégration backend ou vérification Windows revendiquée.
+
+## v005 — animations discrètes
+
+[Rapport exécuté](../maquettes/v005-brume-lueurs/verification.json) · [Script](../maquettes/v005-brume-lueurs/verifier.cjs). La recette de v004 est reprise et complétée par la comparaison géométrique, la présence de brume, le déplacement mesuré des lueurs, les halos, l’arrêt manuel, sa persistance et le mouvement réduit. Les assertions attendent les changements effectifs de styles et la fermeture du dialogue. Hébergement privé validé séparément par le service Sites.

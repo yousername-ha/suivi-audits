@@ -334,7 +334,7 @@
       "description": "Visualiser les travaux du SMSI comme un arbre de progression, avec compléments HDS, sources et revue distincte de la conformité.",
       "etape": "en-developpement",
       "dossier": "fonctionnalites-en-developpement/024-parcours-iso-hds",
-      "maquetteCourante": "fonctionnalites-en-developpement/024-parcours-iso-hds/maquettes/v004-style-reference",
+      "maquetteCourante": "fonctionnalites-en-developpement/024-parcours-iso-hds/maquettes/v005-brume-lueurs",
       "statutMaquette": "a-valider",
       "implementation": "a-suivre",
       "tests": "fonctionnalites-en-developpement/024-parcours-iso-hds/tests/README.md",

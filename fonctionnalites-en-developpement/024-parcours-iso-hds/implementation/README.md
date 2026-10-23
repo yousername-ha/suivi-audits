@@ -1,5 +1,13 @@
 # 024 — Parcours ISO 27001 / HDS : règles de conception
 
+## Animations v005 et aperçu hébergé — 23 octobre 2026
+
+Demande : conserver exactement le graphisme de v004, animer légèrement la brume de fond, les branches et les cercles, et proposer un lien consultable sur téléphone sans téléchargement. Seuls des pseudo-éléments et traits SVG décoratifs sont ajoutés, sans capter les clics ni déplacer les éléments. Durées lentes, pas de flash ni mouvement du texte.
+
+La brume utilise des dégradés floutés animés en transformation/opacité ; les lueurs suivent les mêmes courbes SVG avec un tireté mobile et des halos. Les cercles pulsent par opacité de leur halo. Un réglage dans Administration désactive les animations, `prefers-reduced-motion` les supprime, et `visibilitychange` suspend les animations dans un onglet masqué. Aucun nouveau module ou modèle métier.
+
+Le nouvel hébergement est une copie privée de validation via Sites, explicitement demandée par l’utilisateur. Il n’est pas le déploiement de l’application GRC : données fictives locales, aucune API, aucun secret, aucun export de données de plateforme. Aucun délai d’expiration automatique n’est garanti par l’outil de publication disponible ; ne pas annoncer une suppression programmée non configurée. Aucun ZIP/BAT livré. Versions précédentes et branche legacy conservées.
+
 ## Reprise du style de référence v004 — 23 octobre 2026
 
 La demande porte sur la fidélité à l’image : en-tête compact, menu vert, courbes végétales et feuilles, halos, libellés à droite des cercles, racine et fiche compacte située en haut à droite. Le choix d’un nœud actualise cette fiche ; l’attendu détaillé et le suivi/revue s’ouvrent dans une fenêtre centrale. Le formulaire de revue et les données communes aux modules simulés sont conservés.

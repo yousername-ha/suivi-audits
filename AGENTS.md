@@ -166,3 +166,9 @@ Ces instructions utilisateur remplacent les consignes antérieures contradictoir
 
 - Tout élément métier du parcours ISO/HDS doit être accessible dans le module correspondant de la plateforme, avec les mêmes identifiants, versions et permissions. Créations et modifications sont réciproques ; retrouver le travail existant sans duplication.
 - Le parcours guide vers les fiches/formulaires existants. Il ne crée pas de registre concurrent, ne contourne pas l’héritage des périmètres et ne confond pas synchronisation, préparation, revue et conformité. Vérifier les contrats réels avant codage ; voir les critères 024-INT-01 à 06 du dossier 024.
+
+## Aperçu mobile hébergé — autorisation du 23 octobre 2026
+
+- L’utilisateur demande un hébergement temporaire de validation de la maquette 024 pour consultation sur téléphone, sans téléchargement. Publication privée via Sites autorisée pour cet aperçu isolé ; elle ne déploie pas l’application GRC et ne change pas les restrictions des autres branches.
+- Identité et URL dans `fonctionnalites-en-developpement/024-parcours-iso-hds/maquettes/v005-brume-lueurs/hebergement.json`. Réutiliser ce Site pour ses mises à jour ; ne jamais publier de secret, donnée métier réelle ou credential. Aucun délai d’expiration automatique n’est configuré : ne pas en promettre un.
+- Le style v004 est conservé ; v005 ajoute uniquement brume et lueurs discrètes, désactivables et respectant le mouvement réduit. Aucun ZIP/BAT livré à l’utilisateur.
