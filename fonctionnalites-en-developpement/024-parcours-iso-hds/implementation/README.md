@@ -1,5 +1,18 @@
 # 024 — Parcours ISO 27001 / HDS : règles de conception
 
+## Branches vivantes v008 — remplace le routage graphique v007
+
+L’utilisateur rejette le rendu des détours v007. Conserver les versions historiques, mais utiliser v008 comme proposition courante : déplacement des grandes branches pour créer l’espace nécessaire, enfants proches du parent et courbes simples.
+
+- **024-UI-SPREAD-01** : ouvrir une zone latérale réservée à la branche sélectionnée ; déplacer de façon cohérente cercles, textes, feuilles et courbes. Interpoler leur géométrie pendant 600 ms et restituer la position au repli. Les enfants apparaissent ensuite, sans traverser les textes. Un changement rapide annule la transition précédente.
+- **024-UI-SPREAD-02** : raccorder les enfants en éventail, avec courbes de Bézier arrivant sur le côté du cercle, hors du libellé. Cadrer l’ensemble sur bureau ; conserver le défilement indépendant sur téléphone et les petits boutons accessibles. Une seule branche ouverte, aucune mutation métier.
+- **024-UI-MOTION-01** : brume du bas vers le haut, deux nappes décalées, disparition en haut avant recommencement en bas. Pas d’alternance qui fait redescendre la fumée.
+- **024-UI-MOTION-02** : au clic parent, enfant ou racine, émettre un halo ponctuel coloré. Préserver carte, attendu, clavier et retour du focus. Le halo ne représente pas une validation métier.
+- **024-UI-MOTION-03** : la couleur calculée du flux doit être celle du trait de branche ; supprimer la surcharge blanche de v006/v007. Arrêt manuel et mouvement réduit doivent toujours être respectés.
+
+Le mécanisme est limité à la maquette 024 ; ne pas modifier la cartographie dynamique du module cartographique. Tests locaux et limites dans v008. Cette correction graphique reste à valider, sans intégration serveur.
+
+
 ## Lisibilité v007 — petites commandes et prévention des collisions
 
 - **024-UI-PLUS-01** : disque « + / − » de 18 px ; cible d’interaction 32 px, 40 px en tactile avant mise à l’échelle. Conserver le focus clavier et les attributs ARIA.

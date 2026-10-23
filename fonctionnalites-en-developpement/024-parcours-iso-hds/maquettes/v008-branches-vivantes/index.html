@@ -1,0 +1,803 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>ASTRA · Parcours ISO / HDS · Maquette interactive</title><style>:root{font-family:Inter,Segoe UI,Arial,sans-serif;color:#183a36;background:#f1f5f2;font-size:14px;--mint:#65e5bd;--gold:#f4d16f;--blue:#82c9f4;--purple:#c4a1f4}*{box-sizing:border-box}body{margin:0}button,select,textarea,input{font:inherit}button,select{cursor:pointer}button,a,select,textarea,input{outline-offset:4px}button:focus-visible,a:focus-visible,select:focus-visible{outline:3px solid #e3aa24}button{border:1px solid #c7d7d0;border-radius:9px;background:#fff;color:inherit;padding:10px 14px}button:hover{filter:brightness(.94)}button:disabled{cursor:default;opacity:.55}a{color:#096d79}h1,h2,h3,p{margin:0}p{line-height:1.55}small{font-size:12px}.muted{color:#5b716b}.icon{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.sidebar{position:fixed;inset:0 auto 0 0;width:216px;background:linear-gradient(155deg,#153f35,#092e2a);color:#ccded6;display:flex;flex-direction:column;padding:27px 16px;z-index:2}.brand{display:flex;gap:12px;align-items:center;color:white;margin:0 8px 40px;font-size:23px;letter-spacing:1px}.brand .icon{width:36px;height:36px;color:#62dfce}.brand small{display:block;font-size:11px;font-weight:400;color:#b3d0c3;letter-spacing:0;margin-top:4px}.nav-label{font-size:10px;letter-spacing:1.4px;margin:0 12px 15px;color:#9dbdb0}.sidebar nav{display:grid;gap:8px}.sidebar a,.sidebar .active{display:flex;gap:12px;align-items:center;text-decoration:none;color:inherit;border-radius:9px;padding:13px 12px;font-size:12px}.sidebar a:hover{background:#285348}.sidebar .active{background:#235f52;color:#fff;border-left:3px solid #57dbc2;font-weight:600}.sidebar .active .icon{color:#63e3cb}.side-note{font-size:11px;line-height:1.6;margin-top:auto;padding:16px 12px;color:#bed2ca}.workspace{margin-left:216px;height:100dvh;display:flex;flex-direction:column;overflow:hidden}.topbar{flex:none;padding:20px 26px 16px;border-bottom:1px solid #cedbd5;background:#f5f8f5;display:flex;justify-content:space-between;gap:14px;align-items:center}.eyebrow{text-transform:uppercase;letter-spacing:1.4px;font-size:10px;font-weight:700;color:#607a70;margin-bottom:8px}h1{font-size:24px;letter-spacing:-.7px}.subtitle{font-size:12px;color:#567067;margin-top:7px}.badge{display:inline-flex;border-radius:20px;padding:5px 10px;font-size:11px;background:#e6eee8;color:#345b4e}.top-actions{display:flex;align-items:center;gap:12px}.scope-label{display:grid;gap:5px;font-size:10px}.scope-label select{padding:9px;border:1px solid #c9d9d2;border-radius:7px;background:#fff;max-width:235px}.toolbar{background:#fff;padding:12px 26px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;border-bottom:1px solid #dbe3de}.tabs{display:flex;background:#eef3ef;padding:3px;border-radius:9px}.tabs button{border:none;background:transparent;padding:8px 12px}.tabs [aria-pressed=true]{background:#174c42;color:#fff}.toolbar label{font-size:12px;display:flex;gap:7px;align-items:center}.toolbar .spacer{flex:1}.toolbar button{font-size:12px}.progress-label{color:#546d64;font-size:12px}.content{flex:1;overflow:auto;min-height:0;background:#081f1e}.canvas-scroll{overflow:auto;min-height:100%;position:relative;background:radial-gradient(ellipse at 35% 62%,#103f34 0%,#0a2425 40%,#071c20 78%)}.canvas{position:relative;width:1200px;height:850px;transform-origin:top left;margin:auto}.canvas-wrap{min-width:1200px;min-height:850px}.tree-svg{position:absolute;inset:0;width:1200px;height:850px;pointer-events:none}.branch-line{fill:none;stroke-width:3;opacity:.8;stroke-linecap:round}.branch-line.selected{stroke-width:5;opacity:1;filter:drop-shadow(0 0 5px #ffffff30)}.branch-flow{fill:none;stroke-width:2;stroke-dasharray:4 18;stroke:#fff;opacity:.5;animation:flow 4s linear infinite;pointer-events:none}@keyframes flow{to{stroke-dashoffset:-88}}.tree-node{position:absolute;width:160px;transform:translate(-50%,-50%);background:transparent!important;border:0;color:#eff9f5;padding:0;display:grid;justify-items:center;gap:7px;line-height:1.3;z-index:1}.orb{width:56px;height:56px;display:grid;place-items:center;border:2px solid var(--tone);border-radius:50%;background:#0c292a;position:relative;color:var(--tone);box-shadow:0 0 18px color-mix(in srgb,var(--tone) 10%,transparent)}.orb .icon{width:25px;height:25px}.tree-node:hover .orb,.tree-node:focus-visible .orb{box-shadow:0 0 22px color-mix(in srgb,var(--tone) 40%,transparent);transform:scale(1.07)}.tree-node.selected .orb{box-shadow:0 0 0 5px color-mix(in srgb,var(--tone) 15%,transparent),0 0 25px color-mix(in srgb,var(--tone) 35%,transparent);border-width:3px}.tree-node.done .orb{background:var(--tone);color:#0b302a}.node-title{font-size:12px;font-weight:600;max-width:158px;text-shadow:0 1px 5px #031a18}.node-count{font-size:10px;color:#b8cdc7}.node-state{position:absolute;right:-5px;top:-5px;width:20px;height:20px;display:grid;place-items:center;background:#10352f;border:1px solid var(--tone);border-radius:50%;font-size:11px;color:var(--tone)}.branch-title{position:absolute;text-align:center;transform:translateX(-50%);width:250px;pointer-events:none}.branch-title strong{font-size:15px;letter-spacing:1.3px;color:var(--tone)}.branch-title p{font-size:11px;color:#abc6bd;margin-top:6px}.root-node{position:absolute;left:600px;top:686px;transform:translateX(-50%);border:0;background:transparent;color:#fff;display:grid;justify-items:center;gap:9px}.root-node .orb{width:70px;height:70px;--tone:#81e2c1;border-width:3px;background:#1b5548;box-shadow:0 0 35px #5de0b333}.root-node small{color:#c0d7ce}.map-note{position:absolute;left:30px;top:25px;color:#b4ccc2;font-size:11px}.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:11px}.canvas-scroll>.legend{position:sticky;bottom:0;background:#092724ee;color:#d1e6dd;padding:13px 24px;border-top:1px solid #26483f;z-index:1}.legend span{display:flex;align-items:center;gap:7px}.legend i{width:10px;height:10px;border-radius:50%;border:2px solid #c7d9d2;display:inline-block}.legend .progress{border-color:#72d0f2}.legend .review{border-color:#f4c769}.legend .done{background:#75e2b6;border-color:#75e2b6}.foot{padding:10px 24px;background:#f5f7f4;font-size:10px;color:#5d746b;display:flex;gap:14px;justify-content:space-between;flex:none}.list{padding:24px;background:#f0f5f1;min-height:100%;display:grid;align-content:start;gap:12px}.list-card{background:#fff;border:1px solid #d1ded7;border-left:4px solid var(--tone);border-radius:12px;padding:18px;display:flex;align-items:center;gap:15px}.list-card>div{flex:1}.list-card h3{font-size:15px}.list-card p{font-size:12px;color:#5d7169;margin-top:5px}.pill{padding:5px 9px;border-radius:16px;background:#edf3ee;font-size:11px;white-space:nowrap}.pill.review{background:#fff0cb;color:#76520b}.pill.done{background:#d9f2e5;color:#14583d}.pill.progress{background:#dcf1fa;color:#205875}dialog{border:1.5px solid #7c9d91;border-radius:17px;padding:28px;color:#183a36;width:min(650px,calc(100vw - 28px));max-height:calc(100dvh - 48px);overflow:auto;box-shadow:0 25px 90px #0005}dialog::backdrop{background:#031c24a8;backdrop-filter:blur(4px)}dialog h2{font-size:23px;margin:5px 35px 8px 0}dialog .close{position:absolute;right:16px;top:16px;border:0;background:#eef3ef;padding:5px 11px;font-size:22px}.dialog-meta{display:flex;gap:9px;flex-wrap:wrap;margin:16px 0}.hint{border:1px solid #ceded6;background:#f0f5f0;border-radius:9px;padding:12px;font-size:12px;line-height:1.6;margin:13px 0}.subaction{border:1px solid #d2ded7;border-radius:10px;margin:9px 0;overflow:hidden}.subaction summary{cursor:pointer;display:flex;gap:11px;align-items:center;padding:13px;list-style:none;font-size:13px}.subaction summary::-webkit-details-marker{display:none}.subaction summary:after{content:'⌄';margin-left:auto;font-size:18px}.subaction[open] summary:after{content:'⌃'}.subaction summary .icon{color:#16857d;flex:none}.subaction small{display:block;font-size:11px;color:#5d7369;margin-top:4px}.subaction .expected{border-top:1px solid #e0e8e2;padding:16px;background:#f7f9f6}.expected p{font-size:13px}.expected h4{margin:0 0 9px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#46675a}.deliverable{padding:11px;background:#eaf0ea;margin:12px 0;border-radius:7px;font-size:12px}.check{display:flex;align-items:flex-start;gap:9px;font-size:12px;line-height:1.5;cursor:pointer}.check input{accent-color:#117c6d;width:16px;height:16px;flex:none}.dialog-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:20px;padding-top:17px;border-top:1px solid #d5e0d9}.primary{background:#126c61;color:#fff;border-color:#126c61}.proof{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px;border:1px dashed #a5baae;border-radius:8px;margin:16px 0;font-size:12px}.proof button{font-size:11px}.source-link{font-size:12px}.module-note{font-size:11px;color:#61736b;margin-top:12px}.notes{display:grid;gap:8px;font-size:12px;margin-top:15px}.notes textarea{padding:11px;border:1px solid #a8beb2;border-radius:8px;resize:vertical;min-height:80px}.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);z-index:5;background:#153d33;color:#fff;padding:14px 20px;border:1px solid #8ebba9;border-radius:10px;box-shadow:0 5px 22px #0004;max-width:90vw;font-size:12px}.module-list{display:grid;gap:7px;max-height:46vh;overflow:auto;margin:15px 0}.module-list button{display:flex;justify-content:space-between;text-align:left;align-items:center;gap:10px}.notice{position:fixed;top:0;left:0;right:0;background:#fff2c8;color:#604619;padding:10px;z-index:10;text-align:center;font-size:12px}.search{padding:8px 10px;border:1px solid #bfd1c6;border-radius:7px;min-width:190px}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}@media(min-width:1700px){.canvas{width:1200px}}@media(max-width:1000px){.sidebar{width:74px;padding:24px 8px}.sidebar .brand{margin:0 8px 30px}.brand b,.sidebar nav span,.nav-label,.side-note{display:none}.sidebar nav a,.sidebar .active{justify-content:center;padding:13px 6px}.workspace{margin-left:74px}.topbar{padding:16px}.top-actions .badge{display:none}.toolbar{padding:10px 16px}.topbar h1{font-size:21px}.subtitle{max-width:290px}.foot{font-size:9px;padding:9px 14px}}@media(max-width:600px){.sidebar{width:56px;padding:20px 4px}.sidebar .brand{margin:0 4px 28px}.brand .icon{width:30px}.workspace{margin-left:56px}.topbar{align-items:flex-start;flex-direction:column;gap:10px;padding:14px}.topbar h1{font-size:20px}.top-actions{width:100%}.scope-label{width:100%}.scope-label select{max-width:none}.subtitle{display:none}.toolbar{gap:8px;padding:9px}.toolbar .spacer{display:none}.toolbar .progress-label{width:100%}.toolbar button{padding:8px}.foot span:last-child{display:none}.list{padding:12px}.list-card{flex-wrap:wrap;padding:13px}.list-card>div{min-width:170px}dialog{padding:22px 17px}.dialog-actions button{flex:1}.proof{flex-wrap:wrap}.toolbar .zoom{display:none}.list-card .icon{display:none}}@media(prefers-reduced-motion:reduce){body:not(.motion-force) *,body:not(.motion-force) *:before,body:not(.motion-force) *:after{animation:none!important;scroll-behavior:auto!important}}
+/* v004 — composition de la référence, canevas 1109 × 607. */
+:root{font-family:'Segoe UI',Arial,sans-serif;color:#152a32}.sidebar{width:171px;padding:16px 0;background:linear-gradient(115deg,#06342d,#002b28);color:#c5d9d5}.brand{gap:6px;margin:0 14px 22px;font-size:23px;letter-spacing:1px}.astra-logo{width:36px;height:36px;flex:none}.brand small{font-size:11px;margin-top:3px;letter-spacing:.3px}.sidebar nav{gap:1px}.sidebar a,.sidebar .active{font-size:11px;padding:12px 20px;border-radius:0;gap:13px;min-height:45px}.sidebar .icon{width:18px;height:18px;stroke-width:1.6}.sidebar a:nth-child(2) .icon{color:#8ddacf}.sidebar .active{border-left:2px solid #2ce7c3;border-radius:0 7px 7px 0;background:linear-gradient(90deg,#064b43,#073b38);padding-left:18px;box-shadow:inset 0 0 24px #44eccc08}.workspace{margin-left:171px}.topbar{height:69px;padding:12px 22px 12px 30px;background:linear-gradient(110deg,#f6f9f5,#eef6f2);gap:10px;border-bottom:1px solid #bacdc2}h1{font-size:23px;font-weight:700;letter-spacing:-.6px;color:#102632;white-space:nowrap}.subtitle{font-size:12px;color:#475561;margin-top:2px;white-space:nowrap}.top-actions{gap:13px;flex-shrink:0}.top-actions>select{padding:7px 10px;font-size:11px;border:1px solid #dbe4dd;border-radius:6px;background:#fff;max-width:185px;color:#192d35}.tabs{border:1px solid #d9e3dc;background:transparent;padding:2px;border-radius:9px;gap:2px}.tabs button{font-size:11px;padding:6px 10px;display:flex;align-items:center;gap:7px;border-radius:7px}.tabs .icon{width:20px;height:20px}.tabs [aria-pressed=true]{background:linear-gradient(#155a56,#003634);box-shadow:inset 0 0 0 1px #46978f,0 0 7px #155a5622}.demo-label{font-size:9px;color:#536270;white-space:nowrap}.avatar{width:29px;height:29px;padding:0;border-radius:50%;border:1px solid #87b5a6;outline:3px solid #e3ebe5;background:#073a34;color:#d9f5e7;font-size:10px;margin-left:3px}.content{background:#00201f;min-height:0}.canvas-scroll{height:100%;min-height:0;background:radial-gradient(ellipse at 32% 72%,#073f32 0,transparent 40%),radial-gradient(ellipse at 46% 32%,#082f2b 0,transparent 52%),linear-gradient(125deg,#002724,#001516);display:block}.reference-wrap{position:relative;margin:auto;min-width:0;min-height:0}.reference-canvas{width:1109px;height:607px;transform-origin:top left;margin:0;isolation:isolate}.tree-svg{width:1109px;height:607px}.card-connector{fill:none;stroke-width:1;opacity:.7}.tree-node{width:56px;height:56px;padding:0;display:block;transform:translate(-50%,-50%);text-align:left;overflow:visible}.tree-node .orb{width:56px;height:56px;background:radial-gradient(circle at 35% 35%,#163a34,#082523);border-width:3px;color:var(--tone);box-shadow:inset 0 0 9px color-mix(in srgb,var(--tone) 18%,transparent),0 0 14px color-mix(in srgb,var(--tone) 34%,transparent)}.tree-node.done .orb{background:radial-gradient(circle at 35% 35%,#236250,#063b30);color:#b4ffe5}.tree-node .orb .icon{width:30px;height:30px;stroke-width:1.8}.tree-node.selected .orb{background:radial-gradient(circle at 45% 40%,#685822,#25311d);border-color:#ffe287;box-shadow:0 0 0 6px #ffdf6725,0 0 24px #f7cb6e88,inset 0 0 10px #f7cb6e33}.tree-node.selected .node-title{color:#f9dc77}.tree-node .node-title{position:absolute;left:72px;top:50%;transform:translateY(-50%);font-size:10px;font-weight:500;text-shadow:0 1px 4px #001512;width:115px;max-width:none;line-height:1.25;color:#f0faf5}.node-state{width:13px;height:13px;right:-8px;top:-7px;font-size:10px;border:1.3px solid #d0ddd9;color:#d0ddd9;background:#082523}.tree-node.done .node-state{border-color:var(--tone);color:var(--tone);width:17px;height:17px;right:-4px;top:-5px}.tree-node.progress .node-state{border-color:var(--tone);color:var(--tone)}.branch-title{transform:translateX(-50%);width:230px;line-height:1.1}.branch-title strong{font-size:15px;letter-spacing:1px}.branch-title p{font-size:11px;line-height:1.3;margin-top:5px;color:#b1d5ce}.frame-title{left:205px;top:411px;--tone:#69e7c5}.control-title{left:430px;top:350px;--tone:#f5ce66}.control-title p{color:#f0d994}.improve-title{left:678px;top:417px;--tone:#82c9f6}.hds-title{left:922px;top:474px;--tone:#c99cf5}.hds-title strong{letter-spacing:0;text-transform:none}.hds-title p{color:#c9b4dc}.root-node{left:437px;top:471px;padding:0;gap:4px;transform:translateX(-50%)}.root-node .orb{width:79px;height:79px;border:3px solid #caffdf;background:radial-gradient(circle,#09563e,#043b2c);outline:3px solid #4ad9a866;box-shadow:0 0 22px #95ffb788,inset 0 0 14px #d0ffe333}.root-node .orb .icon{width:47px;height:47px;stroke-width:1.7}.root-node b{font-size:10px;font-weight:600;border:1px solid #267b66;border-radius:22px;background:#00372f;padding:9px 18px;box-shadow:0 0 15px #3bd8ad44;white-space:nowrap}.reference-canvas>.legend{position:absolute;left:751px;bottom:16px;border:1px solid #34564d;border-radius:10px;background:#001614a8;color:#d4e4df;font-size:9px;padding:10px 12px;gap:17px;flex-wrap:nowrap}.legend span{gap:6px;white-space:nowrap}.legend i{width:13px;height:13px}.legend .done{position:relative}.legend .done:after{content:'✓';font-size:9px;position:absolute;left:0;top:-3px;color:#002c24}.all-steps{position:absolute;bottom:18px;left:30px;padding:7px 10px;font-size:10px;background:#123a3080;border:1px solid #42746466;color:#bdd7cc}.all-steps span{padding-left:12px}.foot{height:44px;padding:12px 24px;align-items:center;color:#6a7482;font-size:9px;background:#f4f7f3;flex:none}.compact-card{position:absolute;left:735px;top:15px;width:350px;border:1px solid #c7d8bd;border-radius:11px;background:linear-gradient(130deg,#fff,#f8faf7);padding:12px 15px 10px;box-shadow:0 0 15px #d6ec8c24,0 8px 30px #0004;z-index:2}.card-heading{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:none;padding:0 0 9px}.card-icon{width:35px;height:35px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--tone) 35%,#fff);color:#263333;flex:none}.card-icon .icon{width:24px;height:24px}.card-heading strong{font-size:14px;letter-spacing:-.2px;font-weight:700}.card-heading>span:nth-child(2){flex:1}.compact-status{display:table;border-radius:12px;background:#f9edca;color:#946313;padding:2px 8px;font-size:9px;margin-top:4px}.compact-status:before{content:'○';margin-right:5px;font-size:11px}.compact-status.done{background:#e0f4e8;color:#276146}.compact-status.done:before{content:'✓'}.chevron{font-size:17px;color:#192b32;align-self:flex-start;padding-top:7px}.compact-subs{background:#f0f4f0;border-radius:9px;padding:8px}.subs-title{padding:0 0 7px;border:0;border-radius:0;background:none;font-weight:600;font-size:11px;display:flex;width:100%;align-items:center;gap:9px}.compact-row{display:flex;align-items:center;gap:9px;width:100%;text-align:left;padding:8px 6px;margin-top:4px;border:1px solid #e7edeb;background:linear-gradient(100deg,#fbfcff,#fff);border-radius:8px;min-height:44px}.row-icon{width:28px;height:28px;display:grid;place-items:center;border-radius:50%;flex:none}.row-icon .icon{width:18px;height:18px}.tone-0{background:#d6ecff;color:#126bb2}.tone-1{background:#b9f3d7;color:#0b654e}.tone-2{background:#ecd2ff;color:#672b97}.compact-row b{display:block;font-size:10px;color:#142e36;line-height:1.3}.compact-row small{display:block;font-size:8px;color:#6d7f87;margin-top:3px;line-height:1.2}.compact-row>span:nth-child(2){flex:1;min-width:0}.expected-link{border:1px solid #c3e1ec;background:#edfaff;color:#28728a;font-size:8px;padding:6px 6px;border-radius:4px;white-space:nowrap}.row-chevron{color:#7b9f9b;font-size:16px;padding:0 3px;opacity:0}.compact-row:hover .row-chevron,.compact-row:focus-visible .row-chevron{opacity:1}.compact-module{background:linear-gradient(110deg,#07838d,#006b75);border:1px solid #208c94;color:white;padding:8px;width:100%;margin-top:9px;font-size:10px;border-radius:6px;font-weight:600}.full-step{width:100%;text-align:left;display:flex;justify-content:space-between;border:0;background:none;font-size:9px;padding:7px 2px 0;color:#5c7375}.list{padding:22px}.reference-canvas [hidden]{display:none!important}.tree-node:focus-visible{outline-offset:8px;border-radius:50%}.topbar .tabs button:focus-visible{outline-offset:2px}
+@media(min-width:1500px){.sidebar{width:200px}.workspace{margin-left:200px}.topbar{height:78px}.brand{font-size:26px}.sidebar a,.sidebar .active{font-size:12px;padding-top:15px;padding-bottom:15px}.foot{height:45px}}
+@media(max-width:1150px) and (min-width:701px){.top-actions{gap:7px}.demo-label{display:none}.topbar{padding-left:18px}.topbar h1{font-size:20px}.subtitle{font-size:11px}.top-actions>select{max-width:160px}}
+@media(max-width:1000px){.sidebar{width:74px;padding:18px 5px}.brand{margin:0 7px 25px}.sidebar nav a,.sidebar .active{padding:13px 10px}.workspace{margin-left:74px}.reference-wrap{margin:0 auto}.topbar h1{font-size:20px}.top-actions{width:auto}.topbar .subtitle{display:block;max-width:none}.foot{font-size:8px}.sidebar nav a{justify-content:center}}
+@media(max-width:700px){.sidebar{width:56px;padding:18px 3px}.brand{margin:0 4px 22px}.astra-logo{width:35px}.workspace{margin-left:56px}.topbar{height:auto;min-height:112px;padding:12px;flex-direction:column;gap:12px;align-items:flex-start}.topbar h1{font-size:19px;white-space:normal}.topbar .subtitle{display:none}.top-actions{width:100%;gap:6px;justify-content:space-between}.top-actions>select{max-width:145px;font-size:10px;padding:6px}.tabs button{padding:5px;font-size:10px;gap:3px}.tabs .icon{width:15px;height:15px}.demo-label,.avatar{display:none}.sidebar a,.sidebar .active{padding:12px 8px}.reference-wrap{margin:0}.foot{height:39px;padding:8px 12px;font-size:8px}.foot span:last-child{display:none}.list{padding:12px}.root-node b{font-size:10px}}
+
+@media(min-width:1001px){.sidebar .active{padding-right:5px;gap:10px;font-size:10.5px;white-space:nowrap}}
+.compact-subs{padding:6px}.compact-row{min-height:42px;padding:6px;margin-top:4px}.card-heading{padding-bottom:7px}.full-step{padding-top:4px;font-size:8px}.compact-module{margin-top:8px}.compact-card{padding-bottom:8px}
+
+.tree-node.selected .orb{border-color:var(--tone);background:radial-gradient(circle at 45% 40%,color-mix(in srgb,var(--tone) 28%,#122c24),#123028);box-shadow:0 0 0 6px color-mix(in srgb,var(--tone) 15%,transparent),0 0 24px color-mix(in srgb,var(--tone) 50%,transparent),inset 0 0 10px color-mix(in srgb,var(--tone) 20%,transparent)}.tree-node.selected .node-title{color:var(--tone)}
+
+/* v005 : effets seuls, aucun changement de géométrie ou de palette. */
+.reference-canvas:before,.reference-canvas:after{content:'';position:absolute;inset:5% 0 4%;pointer-events:none;z-index:-1;opacity:.16;background:radial-gradient(ellipse 47% 13% at 26% 70%,#58ab8d77,transparent 75%),radial-gradient(ellipse 40% 10% at 74% 46%,#78c3ad55,transparent 72%);filter:blur(16px);animation:mist-drift 32s ease-in-out infinite alternate;will-change:transform,opacity}
+.reference-canvas:after{inset:12% 0 0;background:radial-gradient(ellipse 45% 9% at 63% 76%,#8dd8b566,transparent 76%),radial-gradient(ellipse 36% 11% at 25% 36%,#388f7d55,transparent 72%);animation-name:mist-return;animation-duration:41s;animation-delay:-17s}
+@keyframes mist-drift{from{transform:translate(-12px,14px) scale(.98);opacity:.12}to{transform:translate(19px,-13px) scale(1.04);opacity:.28}}
+@keyframes mist-return{from{transform:translate(22px,8px) scale(1.03);opacity:.10}to{transform:translate(-16px,-10px) scale(.98);opacity:.23}}
+.branch-aura{animation:branch-breathe 8s ease-in-out infinite alternate;pointer-events:none}
+.branch-aura:nth-of-type(3n){animation-delay:-3s}.branch-aura:nth-of-type(4n){animation-delay:-5s}
+@keyframes branch-breathe{from{opacity:.12}to{opacity:.30}}
+.branch-wisp{stroke-dasharray:5 95;stroke-dashoffset:100;opacity:.5;animation:branch-travel 18s linear infinite;pointer-events:none;filter:drop-shadow(0 0 3px currentColor)}
+.branch-wisp:nth-of-type(3n){animation-delay:-7s}.branch-wisp:nth-of-type(4n){animation-delay:-11s}
+@keyframes branch-travel{from{stroke-dashoffset:100;opacity:.1}15%,85%{opacity:.5}to{stroke-dashoffset:0;opacity:.1}}
+.tree-node .orb:after,.root-node .orb:after{content:'';position:absolute;inset:-6px;border:1px solid var(--tone,#8cf1c8);border-radius:50%;opacity:.12;box-shadow:0 0 12px color-mix(in srgb,var(--tone,#8cf1c8) 35%,transparent);pointer-events:none;animation:orb-breathe 6s ease-in-out infinite alternate}
+.tree-node:nth-of-type(2n) .orb:after{animation-delay:-2s}.tree-node:nth-of-type(3n) .orb:after{animation-delay:-4s}.root-node .orb:after{animation-duration:8s}
+@keyframes orb-breathe{from{opacity:.06}to{opacity:.48}}
+.motion-paused *, .motion-paused *:before,.motion-paused *:after{animation-play-state:paused!important}
+.motion-off .reference-canvas:before,.motion-off .reference-canvas:after,.motion-off .branch-wisp,.motion-off .orb:after{display:none!important}
+.motion-off .branch-aura{animation:none!important;opacity:.2}
+@media(prefers-reduced-motion:reduce){body:not(.motion-force) .reference-canvas:before,body:not(.motion-force) .reference-canvas:after,body:not(.motion-force) .branch-wisp,body:not(.motion-force) .orb:after{display:none!important}body:not(.motion-force) .branch-aura{animation:none!important;opacity:.2}}
+
+/* v006 : intensité visible sur téléphone, sous-branches à commandes séparées. */
+.reference-canvas:before{z-index:0;opacity:.4;animation-duration:15s;background:radial-gradient(ellipse 47% 13% at 26% 70%,#7ce3bc99,transparent 75%),radial-gradient(ellipse 40% 10% at 74% 46%,#86dcc388,transparent 72%)}
+.reference-canvas:after{z-index:0;animation-duration:21s;opacity:.35}
+@keyframes mist-drift{from{transform:translate(-28px,21px) scale(.95);opacity:.22}to{transform:translate(35px,-22px) scale(1.06);opacity:.48}}
+@keyframes mist-return{from{transform:translate(30px,15px) scale(1.05);opacity:.18}to{transform:translate(-27px,-15px) scale(.97);opacity:.4}}
+.branch-wisp{stroke:#eaffdf;stroke-width:4;stroke-dasharray:4 96;animation-duration:8s;filter:drop-shadow(0 0 3px #e8ffe5)}
+@keyframes branch-travel{from{stroke-dashoffset:100;opacity:.45}20%,80%{opacity:.95}to{stroke-dashoffset:0;opacity:.45}}
+.branch-aura{animation-duration:4s}.tree-node .orb:after{animation-duration:3.2s;box-shadow:0 0 17px color-mix(in srgb,var(--tone) 60%,transparent)}
+@keyframes orb-breathe{from{opacity:.12}to{opacity:.78}}
+.branch-toggle{position:absolute;width:32px;height:32px;padding:0;border-radius:50%;background:#0b302b;color:var(--tone);border:1.5px solid var(--tone);font-size:22px;line-height:28px;z-index:5;display:grid;place-items:center;box-shadow:0 2px 10px #001c18aa;touch-action:manipulation}
+.branch-toggle:hover,.branch-toggle[aria-expanded=true]{background:#1c5042;box-shadow:0 0 12px color-mix(in srgb,var(--tone) 35%,transparent)}
+.child-cluster{position:absolute;inset:0;pointer-events:none;z-index:4}.child-links{position:absolute;inset:0;width:1109px;height:607px;overflow:visible;pointer-events:none}
+.child-links path{fill:none;stroke:var(--tone);stroke-width:2;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:0;filter:drop-shadow(0 0 3px color-mix(in srgb,var(--tone) 50%,transparent));animation:child-draw 450ms ease-out both;animation-delay:var(--delay)}
+@keyframes child-draw{from{stroke-dashoffset:1;opacity:.2}to{stroke-dashoffset:0;opacity:1}}
+.child-node{position:absolute;transform:translate(-50%,-18px);width:96px;padding:0;border:0;background:none!important;color:#e6f6ee;display:flex;flex-direction:column;align-items:center;gap:5px;pointer-events:auto;z-index:1;animation:child-grow 440ms cubic-bezier(.2,.7,.25,1) both;animation-delay:var(--delay);touch-action:manipulation}
+.child-orb{width:36px;height:36px;display:grid;place-items:center;border:2px solid var(--tone);border-radius:50%;background:#0c302a;color:var(--tone);box-shadow:0 0 12px color-mix(in srgb,var(--tone) 30%,transparent);position:relative}
+.child-orb .icon{width:19px;height:19px}.child-orb i{position:absolute;font-size:10px;right:-3px;top:-6px;font-style:normal;color:var(--tone)}
+.child-node>span:last-child{font-size:10px;line-height:1.3;text-align:center;background:#092b26ed;border:1px solid #52706466;border-radius:5px;padding:4px 5px;max-width:96px}
+@keyframes child-grow{from{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-18px + var(--dy))) scale(.15)}to{opacity:1;transform:translate(-50%,-18px) scale(1)}}
+.child-cluster.closing .child-node{animation:child-shrink 210ms ease-in both;animation-delay:0ms;pointer-events:none}.child-cluster.closing .child-links path{animation:child-erase 210ms ease-in both;animation-delay:0ms}
+@keyframes child-shrink{to{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-18px + var(--dy))) scale(.15)}}
+@keyframes child-erase{to{stroke-dashoffset:1;opacity:0}}
+.has-children .tree-node:not(.expanded-parent){opacity:.48}.has-children .branch-title{opacity:.55}.tree-node.expanded-parent{z-index:5}
+.motion-indicator{position:absolute;left:190px;bottom:18px;border:1px solid #42746488;background:#10372e;color:#c9edda;font-size:10px;padding:7px 10px;z-index:2}.motion-select{display:grid;gap:8px;margin-top:18px;font-size:13px}.motion-select select{padding:10px;border:1px solid #9db9aa;border-radius:8px;background:#f4f8f4;max-width:100%}
+.motion-off .child-node,.motion-off .child-links path{animation:none!important}
+.reference-canvas .branch-title,.reference-canvas>.root-node{z-index:1}
+@media(pointer:coarse){.branch-toggle{width:42px;height:42px;font-size:24px;margin:-5px 0 0 -5px}.child-orb{width:42px;height:42px}.child-node{min-height:48px}}
+
+/* v007 — petit symbole, cible tactile transparente ; textes jamais masqués. */
+.branch-toggle{width:32px;height:32px;background:transparent!important;border:0;box-shadow:none!important;font-size:0;line-height:0;isolation:isolate}
+.branch-toggle:before{content:'';position:absolute;left:7px;top:7px;width:18px;height:18px;box-sizing:border-box;border:1px solid var(--tone);border-radius:50%;background:#0b302b;z-index:-1;pointer-events:none}
+.branch-toggle:after{content:'+';font-size:14px;line-height:18px;pointer-events:none}.branch-toggle[aria-expanded=true]:after{content:'−'}
+.branch-toggle:hover:before,.branch-toggle[aria-expanded=true]:before{background:#205344;box-shadow:0 0 6px color-mix(in srgb,var(--tone) 25%,transparent)}
+@keyframes child-grow{from{opacity:0;transform:translate(-50%,-18px) scale(.85)}to{opacity:1;transform:translate(-50%,-18px) scale(1)}}
+@keyframes child-shrink{to{opacity:0;transform:translate(-50%,-18px) scale(.85)}}
+.has-children .tree-node:not(.expanded-parent){opacity:.75}.has-children .branch-title{opacity:1}
+@media(pointer:coarse){.branch-toggle{width:40px;height:40px;margin:-4px 0 0 -4px;font-size:0}.branch-toggle:before{left:11px;top:11px;width:18px;height:18px}.branch-toggle:after{font-size:14px}}
+
+/* v008 — espace réellement ouvert entre les branches ; fumée ascendante. */
+.reference-canvas:before,.reference-canvas:after{inset:auto 0 0;height:95%;z-index:0;transform-origin:50% 100%;background:radial-gradient(ellipse 16% 32% at 25% 100%,#68d7b567,transparent 75%),radial-gradient(ellipse 20% 40% at 55% 110%,#82ddc65c,transparent 78%),radial-gradient(ellipse 17% 34% at 83% 100%,#49af9b50,transparent 76%);filter:blur(20px);animation:mist-rise 15s linear infinite;opacity:0}
+.reference-canvas:after{animation:mist-rise 19s linear infinite;animation-delay:-9s;background:radial-gradient(ellipse 22% 38% at 38% 100%,#8acbb65e,transparent 78%),radial-gradient(ellipse 17% 42% at 70% 110%,#64cab55e,transparent 80%)}
+@keyframes mist-rise{0%{transform:translateY(155px) scaleX(.85);opacity:0}18%{opacity:.5}70%{opacity:.32}100%{transform:translateY(-530px) scaleX(1.2);opacity:0}}
+.branch-wisp{stroke:var(--branch-color);color:var(--branch-color);filter:drop-shadow(0 0 4px var(--branch-color));stroke-width:5}
+.tree-node .orb:before,.root-node .orb:before,.child-orb:before{content:'';position:absolute;inset:-5px;pointer-events:none;border-radius:50%;border:2px solid var(--tone);opacity:0;box-shadow:0 0 22px var(--tone),inset 0 0 12px var(--tone)}
+.click-glow .orb:before,.click-glow .child-orb:before{animation:click-radiance 950ms ease-out both}
+@keyframes click-radiance{0%{transform:scale(.85);opacity:.95}35%{opacity:.9}100%{transform:scale(1.85);opacity:0}}
+.tree-node.selected .orb{box-shadow:0 0 0 5px color-mix(in srgb,var(--tone) 18%,transparent),0 0 30px color-mix(in srgb,var(--tone) 70%,transparent),inset 0 0 16px color-mix(in srgb,var(--tone) 35%,transparent)}
+.child-node>span:last-child{font-size:11px;line-height:1.3;padding:3px 4px;background:#092b26d9;border-color:transparent}
+.has-children .tree-node:not(.expanded-parent){opacity:.9}
+.has-children .child-node{animation-delay:var(--delay)}
+@media(prefers-reduced-motion:reduce){body:not(.motion-force) .child-node,body:not(.motion-force) .child-links path,body:not(.motion-force) .click-glow .orb:before,body:not(.motion-force) .click-glow .child-orb:before{animation:none!important}}
+.motion-off .click-glow .orb:before,.motion-off .click-glow .child-orb:before{animation:none!important}
+
+.reference-canvas:before{animation-delay:-3s}
+.has-children .node-title{font-size:12px}
+</style></head><body><noscript>Activez JavaScript pour tester cette maquette.</noscript><div id="app"></div><dialog id="dialog" aria-labelledby="dialog-title"></dialog><div id="toast" class="toast" role="status" aria-live="polite" hidden></div><script>window.ParcoursNodes = [
+  {
+    "id": "context",
+    "title": "Définir le cadre",
+    "sub": "Contexte · Parties intéressées · Périmètre",
+    "ref": "ISO 27001 · 4.1–4.4",
+    "source": "https://www.iso.org/standard/27001",
+    "icon": "♧",
+    "x": 380,
+    "y": 20,
+    "deps": [],
+    "artifacts": [
+      "Périmètre documenté",
+      "Contexte et attentes à examiner"
+    ],
+    "module": "Organisation / Périmètres",
+    "status": "done",
+    "type": "iso",
+    "row": 0,
+    "actions": [
+      {
+        "id": "context-1",
+        "icon": "♧",
+        "title": "Décrire le périmètre",
+        "description": "Préciser ce que couvre le SMSI.",
+        "expected": "Un périmètre documenté et relié à l’organisation, qui permet de comprendre les activités, entités et limites retenues.",
+        "deliverable": "Fiche périmètre et document de portée",
+        "artifactIndex": 0
+      },
+      {
+        "id": "context-2",
+        "icon": "◎",
+        "title": "Examiner le contexte",
+        "description": "Recenser les enjeux et les attentes.",
+        "expected": "Une synthèse reliée au périmètre pour examiner le contexte et les parties intéressées, incluant l’examen des enjeux climatiques pertinents.",
+        "deliverable": "Synthèse de contexte et attentes",
+        "artifactIndex": 1
+      }
+    ]
+  },
+  {
+    "id": "govern",
+    "title": "Engager la direction",
+    "sub": "Politique · Responsabilités",
+    "ref": "ISO 27001 · 5.1–5.3",
+    "source": "https://www.iso.org/standard/27001",
+    "icon": "⚑",
+    "x": 180,
+    "y": 130,
+    "deps": [
+      "context"
+    ],
+    "artifacts": [
+      "Politique associée",
+      "Rôles et responsabilités documentés"
+    ],
+    "module": "Organisation / Gouvernance",
+    "status": "done",
+    "type": "iso",
+    "row": 1,
+    "actions": [
+      {
+        "id": "govern-1",
+        "icon": "⚑",
+        "title": "Préparer la politique",
+        "description": "Relier les orientations de la direction.",
+        "expected": "Une politique identifiée, versionnée et présentable à la direction pour sa revue ; la validation réelle reste à tracer dans les services métier.",
+        "deliverable": "Politique et référence de décision",
+        "artifactIndex": 0
+      },
+      {
+        "id": "govern-2",
+        "icon": "♙",
+        "title": "Définir les responsabilités",
+        "description": "Clarifier qui porte chaque rôle.",
+        "expected": "Une description des rôles et responsabilités liée aux personnes, groupes ou fonctions de l’organisation.",
+        "deliverable": "Matrice de responsabilités ou fiches de rôles",
+        "artifactIndex": 1
+      }
+    ]
+  },
+  {
+    "id": "support",
+    "title": "Mobiliser les moyens",
+    "sub": "Compétences · Communication · Documents",
+    "ref": "ISO 27001 · 7.1–7.5",
+    "source": "https://www.iso.org/standard/27001",
+    "icon": "♙",
+    "x": 580,
+    "y": 130,
+    "deps": [
+      "context"
+    ],
+    "artifacts": [
+      "Ressources et compétences examinées",
+      "Documents de travail référencés"
+    ],
+    "module": "Organisation / Ressources",
+    "status": "progress",
+    "type": "iso",
+    "row": 1,
+    "actions": [
+      {
+        "id": "support-1",
+        "icon": "♙",
+        "title": "Examiner les moyens",
+        "description": "Ressources et compétences à mobiliser.",
+        "expected": "Une vue des moyens et compétences à examiner pour les travaux du SMSI, avec les éléments existants et les besoins identifiés.",
+        "deliverable": "État des moyens et éléments de compétence",
+        "artifactIndex": 0
+      },
+      {
+        "id": "support-2",
+        "icon": "▤",
+        "title": "Relier les documents",
+        "description": "Retrouver les versions utiles au travail.",
+        "expected": "Des références aux documents de travail dans le registre existant, avec leur version et leur contexte d’utilisation.",
+        "deliverable": "Documents liés au registre central",
+        "artifactIndex": 1
+      }
+    ]
+  },
+  {
+    "id": "risk",
+    "title": "Apprécier les risques",
+    "sub": "Méthode · Critères · Évaluation",
+    "ref": "ISO 27001 · 6.1.1–6.1.2 ; 8.2",
+    "source": "https://www.iso.org/standard/27001",
+    "icon": "△",
+    "x": 180,
+    "y": 240,
+    "deps": [
+      "context",
+      "govern"
+    ],
+    "artifacts": [
+      "Critères de risque référencés",
+      "Évaluations liées au périmètre"
+    ],
+    "module": "Risques / Registre",
+    "status": "progress",
+    "type": "iso",
+    "row": 2,
+    "actions": [
+      {
+        "id": "risk-1",
+        "icon": "▥",
+        "title": "Poser les critères",
+        "description": "Utiliser les échelles et critères retenus.",
+        "expected": "Une méthode et des critères de risque identifiables, utilisant les versions du catalogue et les décisions d’acceptation retenues par l’organisation.",
+        "deliverable": "Méthode et références de configuration",
+        "artifactIndex": 0
+      },
+      {
+        "id": "risk-2",
+        "icon": "△",
+        "title": "Relier les évaluations",
+        "description": "Retrouver les risques du périmètre.",
+        "expected": "Des évaluations reliées aux risques du périmètre, avec leurs versions et les éléments permettant leur examen.",
+        "deliverable": "Registre et évaluations associées",
+        "artifactIndex": 1
+      }
+    ]
+  },
+  {
+    "id": "objectives",
+    "title": "Fixer les objectifs",
+    "sub": "Objectifs · Évolution du SMSI",
+    "ref": "ISO 27001 · 6.2–6.3",
+    "source": "https://www.iso.org/standard/27001",
+    "icon": "◎",
+    "x": 580,
+    "y": 240,
+    "deps": [
+      "govern"
+    ],
+    "artifacts": [
+      "Objectifs et suivi préparés",
+      "Modifications du SMSI examinées"
+    ],
+    "module": "Pilotage / Objectifs",
+    "status": "todo",
+    "type": "iso",
+    "row": 2,
+    "actions": [
+      {
+        "id": "objectives-1",
+        "icon": "◎",
+        "title": "Préparer les objectifs",
+        "description": "Relier objectifs et suivi.",
+        "expected": "Des objectifs accompagnés des éléments prévus pour leur suivi dans les modules de pilotage existants.",
+        "deliverable": "Objectifs et suivi associé",
+        "artifactIndex": 0
+      },
+      {
+        "id": "objectives-2",
+        "icon": "↻",
+        "title": "Examiner les changements",
+        "description": "Anticiper les évolutions du SMSI.",
+        "expected": "Les changements du SMSI identifiés et les éléments préparant leur examen, sans modifier silencieusement les décisions passées.",
+        "deliverable": "Relevé des modifications envisagées",
+        "artifactIndex": 1
+      }
+    ]
+  },
+  {
+    "id": "treatment",
+    "title": "Choisir le traitement",
+    "sub": "Plan · Applicabilité · Risques résiduels",
+    "ref": "ISO 27001 · 6.1.3 ; Annexe A",
+    "source": "https://www.iso.org/standard/27001",
+    "icon": "♢",
+    "x": 180,
+    "y": 350,
+    "deps": [
+      "risk"
+    ],
+    "artifacts": [
+      "Plan de traitement associé",
+      "Déclaration d’applicabilité référencée",
+      "Approbations des propriétaires de risques à recueillir"
+    ],
+    "module": "Risques / Traitement & SoA",
+    "status": "todo",
+    "type": "iso",
+    "row": 3,
+    "actions": [
+      {
+        "id": "treatment-1",
+        "icon": "✓",
+        "title": "Construire le traitement",
+        "description": "Relier les mesures aux travaux prévus.",
+        "expected": "Un plan de traitement relié aux risques et aux mesures retenues, avec les actions qui permettent d’en suivre la réalisation.",
+        "deliverable": "Plan de traitement et actions liées",
+        "artifactIndex": 0
+      },
+      {
+        "id": "treatment-2",
+        "icon": "♢",
+        "title": "Préparer l’applicabilité",
+        "description": "Documenter le choix des mesures.",
+        "expected": "Une déclaration d’applicabilité versionnée permettant de retrouver les mesures retenues, leur justification et les exclusions à examiner.",
+        "deliverable": "SoA / déclaration d’applicabilité",
+        "artifactIndex": 1
+      },
+      {
+        "id": "treatment-3",
+        "icon": "♙",
+        "title": "Recueillir les décisions",
+        "description": "Faire examiner le traitement et le résiduel.",
+        "expected": "Des références aux décisions des propriétaires de risques sur le traitement et les risques résiduels. Une case de cette maquette ne remplace pas ces décisions.",
+        "deliverable": "Décisions liées aux risques",
+        "artifactIndex": 2
+      }
+    ]
+  },
+  {
+    "id": "operate",
+    "title": "Mettre en œuvre",
+    "sub": "Opérations · Mesures · Traitement",
+    "ref": "ISO 27001 · 8.1 ; 8.3",
+    "source": "https://www.iso.org/standard/27001",
+    "icon": "⚙",
+    "x": 580,
+    "y": 350,
+    "deps": [
+      "treatment",
+      "support",
+      "objectives"
+    ],
+    "artifacts": [
+      "Mesures et travaux liés",
+      "Enregistrements opérationnels référencés"
+    ],
+    "module": "Actions / Plans d’action",
+    "status": "todo",
+    "type": "iso",
+    "row": 3,
+    "actions": [
+      {
+        "id": "operate-1",
+        "icon": "⚙",
+        "title": "Suivre les mesures",
+        "description": "Raccorder les travaux opérationnels.",
+        "expected": "Les mesures et travaux associés sont identifiables depuis les plans existants, avec leur avancement et leurs liens.",
+        "deliverable": "Mesures et plans d’action",
+        "artifactIndex": 0
+      },
+      {
+        "id": "operate-2",
+        "icon": "▤",
+        "title": "Conserver les enregistrements",
+        "description": "Retrouver les résultats opérationnels.",
+        "expected": "Les enregistrements utiles à l’examen des opérations sont référencés et retrouvables dans les registres existants.",
+        "deliverable": "Enregistrements opérationnels liés",
+        "artifactIndex": 1
+      }
+    ]
+  },
+  {
+    "id": "audit",
+    "title": "Auditer le SMSI",
+    "sub": "Audit interne",
+    "ref": "ISO 27001 · 9.2",
+    "source": "https://www.iso.org/standard/27001",
+    "icon": "▤",
+    "x": 180,
+    "y": 460,
+    "deps": [
+      "operate"
+    ],
+    "artifacts": [
+      "Programme et résultats d’audit référencés",
+      "Constats liés au registre des écarts"
+    ],
+    "module": "Conformité & audits / Audits",
+    "status": "todo",
+    "type": "iso",
+    "row": 4,
+    "actions": [
+      {
+        "id": "audit-1",
+        "icon": "▤",
+        "title": "Préparer et suivre l’audit",
+        "description": "Relier programme et résultats.",
+        "expected": "Les références du programme d’audit interne et de ses résultats sont associées au périmètre concerné.",
+        "deliverable": "Programme et rapport d’audit",
+        "artifactIndex": 0
+      },
+      {
+        "id": "audit-2",
+        "icon": "△",
+        "title": "Relier les constats",
+        "description": "Retrouver les suites de l’audit.",
+        "expected": "Les constats et leurs suites sont retrouvables dans les registres d’écarts et d’actions, sans recopier les mêmes objets.",
+        "deliverable": "Constats et liens correctifs",
+        "artifactIndex": 1
+      }
+    ]
+  },
+  {
+    "id": "measure",
+    "title": "Mesurer les résultats",
+    "sub": "Indicateurs · Analyse",
+    "ref": "ISO 27001 · 9.1",
+    "source": "https://www.iso.org/standard/27001",
+    "icon": "▥",
+    "x": 580,
+    "y": 460,
+    "deps": [
+      "operate",
+      "objectives"
+    ],
+    "artifacts": [
+      "Indicateurs et résultats référencés"
+    ],
+    "module": "Pilotage / Indicateurs",
+    "status": "todo",
+    "type": "iso",
+    "row": 4,
+    "actions": [
+      {
+        "id": "measure-1",
+        "icon": "▥",
+        "title": "Examiner les indicateurs",
+        "description": "Relier mesures, résultats et analyse.",
+        "expected": "Les indicateurs suivis, leurs résultats et les éléments d’analyse sont accessibles depuis le pilotage du périmètre.",
+        "deliverable": "Indicateurs et résultats référencés",
+        "artifactIndex": 0
+      }
+    ]
+  },
+  {
+    "id": "review",
+    "title": "Réunir la direction",
+    "sub": "Revue et décisions",
+    "ref": "ISO 27001 · 9.3",
+    "source": "https://www.iso.org/standard/27001",
+    "icon": "♧",
+    "x": 380,
+    "y": 570,
+    "deps": [
+      "audit",
+      "measure"
+    ],
+    "artifacts": [
+      "Revue et décisions documentées"
+    ],
+    "module": "Pilotage / Revue de direction",
+    "status": "todo",
+    "type": "iso",
+    "row": 5,
+    "actions": [
+      {
+        "id": "review-1",
+        "icon": "♙",
+        "title": "Préparer la revue",
+        "description": "Rassembler les éléments et décisions.",
+        "expected": "Les éléments présentés à la direction et les décisions issues de la revue sont documentés et liés aux travaux concernés.",
+        "deliverable": "Dossier de revue et décisions",
+        "artifactIndex": 0
+      }
+    ]
+  },
+  {
+    "id": "improve",
+    "title": "Améliorer dans la durée",
+    "sub": "Corrections · Amélioration continue",
+    "ref": "ISO 27001 · 10.1–10.2",
+    "source": "https://www.iso.org/standard/27001",
+    "icon": "↻",
+    "x": 380,
+    "y": 680,
+    "deps": [
+      "review"
+    ],
+    "artifacts": [
+      "Actions correctives liées",
+      "Efficacité et amélioration suivies"
+    ],
+    "module": "Actions / Amélioration",
+    "status": "todo",
+    "type": "iso",
+    "row": 6,
+    "actions": [
+      {
+        "id": "improve-1",
+        "icon": "✓",
+        "title": "Suivre les corrections",
+        "description": "Relier les suites aux constats.",
+        "expected": "Les actions correctives sont liées aux écarts concernés et suivies sans effacer le constat ou la clôture historique.",
+        "deliverable": "Écarts et actions correctives",
+        "artifactIndex": 0
+      },
+      {
+        "id": "improve-2",
+        "icon": "↻",
+        "title": "Examiner l’efficacité",
+        "description": "Préparer le cycle d’amélioration suivant.",
+        "expected": "Les résultats de suivi permettent d’examiner l’efficacité des corrections et les améliorations à poursuivre.",
+        "deliverable": "Éléments de suivi et conclusions",
+        "artifactIndex": 1
+      }
+    ]
+  },
+  {
+    "id": "hds-scope",
+    "title": "Qualifier les activités",
+    "sub": "Déterminer le champ HDS",
+    "ref": "HDS v2.0 · §3 ; §5.4",
+    "source": "https://esante.gouv.fr/sites/default/files/media_entity/documents/referentiel_certification_hds---fr--v2.pdf",
+    "icon": "✦",
+    "deps": [
+      "context"
+    ],
+    "artifacts": [
+      "Activités et périmètre à examiner"
+    ],
+    "module": "Conformité / HDS",
+    "status": "todo",
+    "type": "hds",
+    "row": null,
+    "actions": [
+      {
+        "id": "hds-scope-1",
+        "icon": "♧",
+        "title": "Qualifier le champ HDS",
+        "description": "Examiner activités, données et rôle.",
+        "expected": "Une analyse du champ HDS pour les activités du périmètre, en s’appuyant sur le chapitre 3 du référentiel ANS ; aucune conclusion déduite du seul secteur santé.",
+        "deliverable": "Analyse d’applicabilité à instruire",
+        "artifactIndex": 0
+      }
+    ]
+  },
+  {
+    "id": "hds-smsi",
+    "title": "Compléter le SMSI",
+    "sub": "Relier les compléments HDS au socle",
+    "ref": "HDS v2.0 · §5",
+    "source": "https://esante.gouv.fr/sites/default/files/media_entity/documents/referentiel_certification_hds---fr--v2.pdf",
+    "icon": "✦",
+    "deps": [
+      "risk",
+      "support"
+    ],
+    "artifacts": [
+      "Exigences HDS liées aux travaux SMSI"
+    ],
+    "module": "Conformité / HDS",
+    "status": "todo",
+    "type": "hds",
+    "row": null,
+    "actions": [
+      {
+        "id": "hds-smsi-1",
+        "icon": "♢",
+        "title": "Relier les compléments",
+        "description": "Associer HDS aux travaux du SMSI.",
+        "expected": "Les compléments du chapitre 5 sont reliés aux travaux ISO correspondants, sans créer un second jeu de preuves.",
+        "deliverable": "Correspondances et documents existants",
+        "artifactIndex": 0
+      }
+    ]
+  },
+  {
+    "id": "hds-contract",
+    "title": "Examiner les contrats",
+    "sub": "Clients · Prestations · Sous-traitants",
+    "ref": "HDS v2.0 · §6",
+    "source": "https://esante.gouv.fr/sites/default/files/media_entity/documents/referentiel_certification_hds---fr--v2.pdf",
+    "icon": "✦",
+    "deps": [
+      "hds-scope"
+    ],
+    "artifacts": [
+      "Contrats et responsabilités à examiner"
+    ],
+    "module": "Conformité / HDS",
+    "status": "todo",
+    "type": "hds",
+    "row": null,
+    "actions": [
+      {
+        "id": "hds-contract-1",
+        "icon": "▤",
+        "title": "Examiner les engagements",
+        "description": "Retrouver contrats et responsabilités.",
+        "expected": "Les contrats et responsabilités sont disponibles pour un examen au regard du chapitre 6, sur le périmètre effectivement étudié.",
+        "deliverable": "Contrats et répartition des responsabilités",
+        "artifactIndex": 0
+      }
+    ]
+  },
+  {
+    "id": "hds-sovereignty",
+    "title": "Examiner la souveraineté",
+    "sub": "Données · Accès · Transparence",
+    "ref": "HDS v2.0 · §7–8",
+    "source": "https://esante.gouv.fr/sites/default/files/media_entity/documents/referentiel_certification_hds---fr--v2.pdf",
+    "icon": "✦",
+    "deps": [
+      "hds-scope"
+    ],
+    "artifacts": [
+      "Éléments de localisation et garanties référencés"
+    ],
+    "module": "Conformité / HDS",
+    "status": "todo",
+    "type": "hds",
+    "row": null,
+    "actions": [
+      {
+        "id": "hds-sovereignty-1",
+        "icon": "◎",
+        "title": "Documenter les garanties",
+        "description": "Examiner localisation et conditions d’accès.",
+        "expected": "Les informations à examiner selon les chapitres 7 et 8 sont rassemblées : localisation, conditions d’accès et garanties présentées.",
+        "deliverable": "Éléments de localisation et garanties",
+        "artifactIndex": 0
+      }
+    ]
+  },
+  {
+    "id": "hds-cert",
+    "title": "Préparer la certification",
+    "sub": "Organisme certificateur · Audits externes",
+    "ref": "HDS v2.0 · §4",
+    "source": "https://esante.gouv.fr/sites/default/files/media_entity/documents/referentiel_certification_hds---fr--v2.pdf",
+    "icon": "✦",
+    "deps": [
+      "hds-smsi",
+      "hds-contract",
+      "hds-sovereignty",
+      "review"
+    ],
+    "artifacts": [
+      "Dossier à présenter à l’organisme certificateur"
+    ],
+    "module": "Conformité / HDS",
+    "status": "todo",
+    "type": "hds",
+    "row": null,
+    "actions": [
+      {
+        "id": "hds-cert-1",
+        "icon": "✦",
+        "title": "Préparer le dossier",
+        "description": "Organiser l’échange avec le certificateur.",
+        "expected": "Un dossier permettant de présenter le périmètre et ses éléments à l’organisme certificateur. L’application ne prend aucune décision de certification.",
+        "deliverable": "Dossier de préparation de l’audit externe",
+        "artifactIndex": 0
+      }
+    ]
+  }
+];
+
+(()=>{'use strict';
+const nodes=window.ParcoursNodes,esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const key='astra-parcours-reference-v4',labels={todo:'À préparer',progress:'En cours',review:'À revoir',done:'Revu · démo'},symbols={todo:'○',progress:'◐',review:'!',done:'✓'};
+const icons={shield:'M12 3 4 6v6c0 5 8 9 8 9s8-4 8-9V6Z M8 12l3 3 5-6',context:'M12 3v18 M3 12h18 M18 6a8.5 8.5 0 1 1-12 0',govern:'M8 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6 M16 11a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5 M2 21v-3a6 6 0 0 1 12 0v3 M16 14a5 5 0 0 1 6 5v2',support:'M4 8h16v13H4Z M8 8V4h8v4 M4 13h16 M10 12v3h4v-3',risk:'M12 3 2 21h20Z M12 9v5 M12 17v1',objectives:'M21 12a9 9 0 1 1-9-9 M17 12a5 5 0 1 1-5-5 M12 12l9-9 M16 3h5v5',treatment:'M5 3h11l3 3v15H5Z M8 9h8 M8 13h8 M8 17h5',operate:'M4 4h6v6H4Z M14 4h6v6h-6Z M4 14h6v6H4Z M14 14h6v6h-6Z',audit:'M8 5H5v16h14V5h-3 M8 3h8v4H8Z M8 14l3 3 5-6',measure:'M4 20V10h4v10 M10 20V4h4v16 M16 20v-7h4v7',review:'M4 4h16v13H9l-5 4Z M8 8h8 M8 12h5',improve:'M20 8A8 8 0 1 0 20 16 M20 3v5h-5 M8 12l3 3 5-6',hds:'M4 4h16v6H4Z M4 14h16v6H4Z M7 7h1 M7 17h1',home:'M3 11 12 3l9 8 M5 10v11h5v-7h4v7h5V10',map:'M3 5l6-2 6 3 6-2v16l-6 2-6-3-6 2Z M9 3v16 M15 6v16',tree:'M12 3v6 M5 15V9h14v6 M2 16h6v5H2Z M9 1h6v4H9Z M16 16h6v5h-6Z',settings:'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M12 2v3 M12 19v3 M2 12h3 M19 12h3 M5 5l2 2 M17 17l2 2 M5 19l2-2 M17 7l2-2'};
+function icon(id){return `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="${icons[id]||icons.hds}"/></svg>`}
+const groups=[{id:'frame',name:'CADRER',sub:'Poser les fondations du SMSI',color:'#65e5bd',x:178,nodes:['context','govern','support','objectives']},{id:'control',name:'MAÎTRISER',sub:'Apprécier et traiter les risques',color:'#f4d16f',x:458,nodes:['risk','treatment','operate']},{id:'improve',name:'ÉVALUER & AMÉLIORER',sub:'Examiner, décider et progresser',color:'#82c9f4',x:744,nodes:['measure','audit','review','improve']},{id:'hds',name:'COMPLÉMENTS HDS',sub:'Selon les activités du périmètre',color:'#c4a1f4',x:1030,nodes:['hds-scope','hds-smsi','hds-contract','hds-sovereignty','hds-cert']}];
+const positions={context:[130,542],govern:[245,405],support:[115,266],objectives:[235,137],risk:[455,539],treatment:[405,351],operate:[485,160],measure:[755,540],audit:[690,403],review:[805,265],improve:[705,137],'hds-scope':[1040,550],'hds-smsi':[1100,435],'hds-contract':[1000,325],'hds-sovereignty':[1100,218],'hds-cert':[1010,110]};
+const group=n=>groups.find(g=>g.nodes.includes(n.id));let state={scope:'ght',view:'tree',hds:true,zoom:1,motion:true,records:{}},selected='risk',lastFocus='',query='';
+try{const s=JSON.parse(localStorage.getItem(key));if(s&&['ght','hospital'].includes(s.scope)&&s.records&&typeof s.records==='object'){state={...state,...s};if(!['tree','list'].includes(state.view))state.view='tree';state.zoom=[.8,1,1.2].includes(state.zoom)?state.zoom:1;}}catch{}
+let timer;function toast(s){const t=document.querySelector('#toast');t.textContent=s;t.hidden=false;clearTimeout(timer);timer=setTimeout(()=>t.hidden=true,4500)}
+function save(){try{localStorage.setItem(key,JSON.stringify(state))}catch{toast('Sauvegarde locale indisponible : les changements restent en mémoire pour cette session.')}}
+function record(n){const id=state.scope+':'+n.id;if(!state.records[id])state.records[id]={status:state.scope==='ght'?n.status:'todo',checks:n.artifacts.map(()=>state.scope==='ght'&&n.status==='done'),proof:state.scope==='ght'&&n.status==='done',notes:''};const r=state.records[id];if(!labels[r.status])r.status='todo';return r}
+function visible(){return nodes.filter(n=>(state.hds||n.type==='iso')&&(!query||[n.title,n.sub,n.module].join(' ').toLocaleLowerCase('fr').includes(query.toLocaleLowerCase('fr'))))}
+function summary(n){const r=record(n);return `${r.checks.filter(Boolean).length}/${n.artifacts.length} repères · ${labels[r.status]}`}
+const displays=[
+ {id:'context',key:'context-view',label:'Contexte',x:148,y:333,ic:'audit',tone:'#64eec6',action:1},
+ {id:'context',key:'perimeter-view',label:'Périmètre',x:155,y:238,ic:'objectives',tone:'#64eec6',action:0},
+ {id:'govern',key:'govern',label:'Gouvernance',x:125,y:123,ic:'govern',tone:'#64eec6'},
+ {id:'treatment',key:'soa-view',label:'Applicabilité',x:400,y:92,ic:'treatment',tone:'#f7d465',action:1},
+ {id:'risk',key:'risk',label:'Risques',x:402,y:185,ic:'risk',tone:'#f7d465'},
+ {id:'treatment',key:'treatment',label:'Traitement',x:400,y:268,ic:'settings',tone:'#f7d465'},
+ {id:'audit',key:'audit',label:'Audits',x:620,y:344,ic:'audit',tone:'#7fcafa'},
+ {id:'review',key:'review',label:'Revue',x:630,y:242,ic:'review',tone:'#7fcafa'},
+ {id:'improve',key:'improve',label:'Actions<br>correctives',x:610,y:140,ic:'measure',tone:'#7fcafa'},
+ {id:'hds-contract',key:'hds-contract',label:'Contrats',x:850,y:355,ic:'handshake',tone:'#c699f7'},
+ {id:'hds-scope',key:'hds-scope',label:'Activités',x:873,y:432,ic:'hds',tone:'#c699f7'}
+];
+icons.handshake='M2 9l5-5 5 2 5-2 5 5-7 10-4-1-7-7 M7 4l-5 5 3 4 M12 6l-4 4 3 2 3-3 5 5 M8 14l4 4 M11 12l5 5';
+let selectedDisplay='risk',cardCollapsed=false,expandedBranch=null,closingBranch=null,branchTimer=null;
+function leaf(x,y,rotation,color,size=1){return `<path d="M0 0 C-12-6 -17-15 -12-23 C2-20 7-10 0 0Z" data-leaf-x="${x}" data-leaf-y="${y}" data-rotation="${rotation}" data-size="${size}" transform="translate(${x} ${y}) rotate(${rotation}) scale(${size})" fill="${color}" opacity=".62"/>`}
+function tree(){const d=displays.find(d=>d.key===selectedDisplay)||displays[4],paths=[
+ ['#5be6b8','M437 511 C420 410 326 475 284 401 C258 347 231 377 210 321 C195 270 143 296 155 238 C176 186 114 185 130 147 C129 134 125 130 125 123'],
+ ['#5be6b8','M284 401 C259 352 225 365 196 372 C169 381 147 362 148 333'],
+ ['#f5cf62','M437 510 C444 438 381 439 386 393 M405 350 C467 315 389 306 400 268 C345 245 383 216 402 185 C434 140 347 162 368 120 C385 91 400 92 400 92'],
+ ['#76c2f6','M437 510 C453 421 518 464 552 402 C577 358 573 356 620 344 M552 402 C571 330 653 314 630 242 C616 206 565 212 592 164 C600 151 610 140 610 140'],
+ ['#ba87ef','M437 510 C533 421 639 567 763 460 C804 426 768 380 850 355 M785 433 C809 409 848 453 873 432']
+ ];return `<div class="canvas-scroll" tabindex="0" aria-label="Arbre défilant"><div class="reference-wrap"><div class="canvas reference-canvas ${expandedBranch?'has-children':''}"><svg class="tree-svg" viewBox="0 0 1109 607" aria-hidden="true"><defs><filter id="glow"><feGaussianBlur stdDeviation="5"/></filter><filter id="mist"><feGaussianBlur stdDeviation="14"/></filter><linearGradient id="root-glow"><stop stop-color="#64efc4"/><stop offset="1" stop-color="#d8ffe9"/></linearGradient></defs><g opacity=".13" filter="url(#mist)" stroke="#6ae2bd" stroke-width="14" fill="none"><path d="M-30 470 C200 610 170 420 350 525 S700 580 730 490"/><path d="M60 530 C200 435 260 568 420 530"/></g>${paths.filter((_,i)=>state.hds||i!==4).map(([c,path])=>`<path class="branch-aura" d="${path}" fill="none" stroke="${c}" stroke-width="10" opacity=".2" filter="url(#glow)"/><path d="${path}" fill="none" stroke="${c}" stroke-width="3.8" stroke-linecap="round"/><path class="branch-wisp" style="--branch-color:${c}" pathLength="100" d="${path}" fill="none" stroke="${c}" stroke-width="5" stroke-linecap="round"/>`).join('')}${leaf(105,157,-25,'#63e9bc')}${leaf(300,372,70,'#63e9bc')}${leaf(267,353,-30,'#63e9bc')}${leaf(374,108,0,'#f5cf62')}${leaf(354,246,-25,'#f5cf62')}${leaf(371,202,-35,'#f5cf62',.7)}${leaf(438,316,70,'#f5cf62')}${leaf(395,409,-45,'#f5cf62')}${leaf(563,368,25,'#76c2f6')}${leaf(607,389,95,'#76c2f6')}${leaf(596,221,-45,'#76c2f6')}${leaf(603,188,75,'#76c2f6',.8)}${state.hds?leaf(817,369,20,'#ba87ef')+leaf(793,457,5,'#ba87ef'):''}<path class="card-connector" d="M${d.x+24} ${d.y-24} C${d.x+150} ${d.y-24} 505 34 590 34 L735 34" stroke="${d.tone}"/><circle cx="734" cy="34" r="2.5" fill="#fff6d0"/></svg>${displays.filter(d=>state.hds||!d.id.startsWith('hds')).map(d=>{const n=nodes.find(n=>n.id===d.id),r=record(n);return `<button class="tree-node ${r.status} ${expandedBranch===d.key?'expanded-parent':''} ${selectedDisplay===d.key?'selected':''}" data-display="${d.key}" style="left:${d.x}px;top:${d.y}px;--tone:${d.tone}" aria-label="${d.label.replace('<br>',' ')} — ${labels[r.status]}"><span class="orb">${icon(d.ic)}<span class="node-state">${symbols[r.status]}</span></span><span class="node-title">${d.label}</span></button><button class="branch-toggle" data-expand-branch="${d.key}" style="left:${d.x+10}px;top:${d.y+12}px;--tone:${d.tone}" aria-expanded="${expandedBranch===d.key}" aria-controls="children-${d.key}" aria-label="${expandedBranch===d.key?'Replier':'Déplier'} les sous-actions : ${d.label.replace('<br>',' ')}">${expandedBranch===d.key?'−':'+'}</button>`}).join('')}${childrenLayer()}<div class="branch-title frame-title"><strong>CADRER</strong><p>Poser les fondations<br>de votre démarche</p></div><div class="branch-title control-title"><strong>MAÎTRISER</strong><p>Piloter et traiter<br>vos risques</p></div><div class="branch-title improve-title"><strong>ÉVALUER & AMÉLIORER</strong><p>Mesurer la performance<br>et progresser</p></div>${state.hds?'<div class="branch-title hds-title"><strong>Compléments HDS</strong><p>Spécificités relatives<br>à l’hébergement des données de santé</p></div>':''}<button class="root-node" id="root"><span class="orb">${icon('shield')}</span><b>Démarrer le parcours</b></button>${compactCard()}<div class="legend"><span><i></i>À préparer</span><span><i class="progress"></i>En cours</span><span><i class="review"></i>À revoir</span><span><i class="done"></i>Revu</span></div><button class="all-steps" id="all-steps">Toutes les étapes · 16 <span>→</span></button><button class="motion-indicator" id="motion-status" aria-label="Réglage des animations">${motionLabel()}</button></div></div></div>`}
+function branchActions(d){const n=nodes.find(n=>n.id===d.id);return n.actions.map((a,i)=>({...a,i})).filter(a=>d.action===undefined||a.i===d.action)}
+function childrenLayer(){return displays.map(d=>{const open=expandedBranch===d.key,actions=branchActions(d);return `<section id="children-${d.key}" class="child-cluster ${closingBranch===d.key?'closing':''}" aria-label="Sous-actions de ${d.label.replace('<br>',' ')}" ${open?'':'hidden'} style="--tone:${d.tone};--origin-x:${d.x}px;--origin-y:${d.y}px"><svg class="child-links" viewBox="0 0 1109 607" aria-hidden="true">${actions.map((a,j)=>{const [x,y]=[d.x,d.y];return `<path pathLength="1" d="M${d.x} ${d.y} C${(d.x+x)/2} ${d.y},${(d.x+x)/2} ${y},${x} ${y}" style="--delay:${600+j*85}ms"/>`}).join('')}</svg>${actions.map((a,j)=>{const [x,y]=[d.x,d.y],n=nodes.find(n=>n.id===d.id);return `<button class="child-node" data-child="${d.key}:${a.i}" aria-label="${esc(a.title)} : voir l’attendu" style="left:${x}px;top:${y}px;--dx:${d.x-x}px;--dy:${d.y-y}px;--delay:${650+j*85}ms"><span class="child-orb">${icon(j===0?'treatment':j===1?'operate':'review')}<i>${record(n).checks[a.artifactIndex]?'✓':''}</i></span><span class="child-label">${esc(a.title)}</span></button>`}).join('')}</section>`}).join('')}
+const motionQuery=matchMedia('(prefers-reduced-motion: reduce)');
+function motionMode(){return state.motionMode|| (state.motion===false?'off':'auto')}
+function motionLabel(){return motionMode()==='off'?'Ⅱ Animations arrêtées':motionMode()==='auto'&&motionQuery.matches?'◌ Animations réduites':'● Animations actives'}
+function applyMotion(){const mode=motionMode();document.body.classList.toggle('motion-off',mode==='off');document.body.classList.toggle('motion-force',mode==='on');document.body.classList.toggle('motion-paused',document.hidden);const label=document.querySelector('#motion-status');if(label)label.textContent=motionLabel()}
+motionQuery.addEventListener('change',applyMotion);
+function toggleChildren(key){const before=snapshotTree();const scroll=document.querySelector('.canvas-scroll'),position=scroll?{x:scroll.scrollLeft,y:scroll.scrollTop}:null;clearTimeout(branchTimer);if(expandedBranch===key){closingBranch=key;const layer=document.getElementById('children-'+key);layer?.classList.add('closing');layer?.setAttribute('inert','');branchTimer=setTimeout(()=>{expandedBranch=null;closingBranch=null;render();animateTree(before);document.querySelector(`[data-expand-branch="${key}"]`)?.focus({preventScroll:true});if(position){const el=document.querySelector('.canvas-scroll');el.scrollLeft=position.x;el.scrollTop=position.y}},motionMode()==='off'||motionMode()==='auto'&&motionQuery.matches?0:220)}else{expandedBranch=key;closingBranch=null;render();animateTree(before);const toggle=document.querySelector(`[data-expand-branch="${key}"]`);toggle?.focus({preventScroll:true});if(position){const el=document.querySelector('.canvas-scroll');el.scrollLeft=position.x;el.scrollTop=position.y}if(innerWidth<700)document.querySelector(`#children-${key} .child-node`)?.scrollIntoView({block:'nearest',inline:'nearest',behavior:'auto'})}}
+// A reserved lane opens beside the selected branch. The whole tree makes room;
+// children remain a compact fan, with smooth direct curves instead of obstacle routing.
+let geometryFrame=0;
+function spreadMap(){
+ const d=displays.find(d=>d.key===expandedBranch),cut=!d?Infinity:d.x<200?0:d.x<500?300:d.x<750?520:760;
+ return {open:!!d,cut,x:x=>{const t=Math.max(0,Math.min(1,(x-cut+70)/140));return x+230*t*t*(3-2*t)},width:d?1369:1109};
+}
+function warpPath(path,move){let axis=0;return path.replace(/-?\d+(?:\.\d+)?/g,n=>{const value=Number(n);return String(axis++%2===0?move(value):value)})}
+function layoutChildren(){
+ const canvas=document.querySelector('.reference-canvas');if(!canvas)return;
+ const map=spreadMap();canvas.style.width=map.width+'px';
+ const svg=canvas.querySelector('.tree-svg');svg.style.width=map.width+'px';svg.setAttribute('viewBox',`0 0 ${map.width} 607`);
+ for(const el of svg.querySelectorAll(':scope>path:not([data-leaf-x]):not(.card-connector)')){
+  if(!el.dataset.basePath)el.dataset.basePath=el.getAttribute('d');el.setAttribute('d',warpPath(el.dataset.basePath,map.x));
+ }
+ for(const el of svg.querySelectorAll('[data-leaf-x]'))el.setAttribute('transform',`translate(${map.x(+el.dataset.leafX)} ${el.dataset.leafY}) rotate(${el.dataset.rotation}) scale(${el.dataset.size})`);
+ for(const d of displays){
+  const parent=canvas.querySelector(`[data-display="${d.key}"]`),toggle=canvas.querySelector(`[data-expand-branch="${d.key}"]`);
+  if(parent)parent.style.left=map.x(d.x)+'px';if(toggle)toggle.style.left=map.x(d.x)+10+'px';
+ }
+ for(const [selector,x]of [['.frame-title',205],['.control-title',430],['.improve-title',678],['.hds-title',922],['.root-node',437]])canvas.querySelector(selector)?.style.setProperty('left',map.x(x)+'px');
+ const card=canvas.querySelector('.compact-card');card.style.left=(map.open?995:735)+'px';
+ canvas.querySelector('.legend').style.left=(map.open?1011:751)+'px';
+ const selected=displays.find(d=>d.key===selectedDisplay),sx=map.x(selected.x),cx=map.open?995:735;
+ const connector=svg.querySelector('.card-connector');
+ if(selected.x>700){const bottom=15+card.offsetHeight;connector.setAttribute('d',`M${sx} ${selected.y-28} C${sx} ${selected.y-65} ${sx} ${bottom+20} ${sx} ${bottom}`);svg.querySelector(':scope>circle').setAttribute('cx',sx);svg.querySelector(':scope>circle').setAttribute('cy',bottom)}
+ else{connector.setAttribute('d',`M${sx+24} ${selected.y-24} C${sx+150} ${selected.y-24} ${cx-230} 34 ${cx-145} 34 L${cx} 34`);svg.querySelector(':scope>circle').setAttribute('cx',cx-1);svg.querySelector(':scope>circle').setAttribute('cy',34)}
+ const scale=parseFloat(canvas.style.transform.replace(/[^\d.]/g,''))||1;
+ document.querySelector('.reference-wrap').style.width=map.width*scale+'px';
+ if(!expandedBranch)return;
+ const d=displays.find(d=>d.key===expandedBranch),layer=document.getElementById('children-'+d.key),children=[...layer.querySelectorAll('.child-node')],paths=[...layer.querySelectorAll('.child-links path')],px=map.x(d.x),cxChild=px-160;
+ const step=100,first=Math.max(50,Math.min(d.y-(children.length-1)*step/2,430-(children.length-1)*step));
+ const links=layer.querySelector('.child-links');links.style.width=map.width+'px';links.setAttribute('viewBox',`0 0 ${map.width} 607`);
+ children.forEach((child,i)=>{
+  const y=first+i*step;child.style.left=cxChild+'px';child.style.top=y+'px';child.style.setProperty('--dx',(px-cxChild)+'px');child.style.setProperty('--dy',(d.y-y)+'px');
+  // Approach each child from its right, so the connector never crosses its caption.
+  paths[i].setAttribute('d',`M${px-25} ${d.y} C${px-76} ${d.y} ${cxChild+70} ${y} ${cxChild+18} ${y}`);
+ });layer.dataset.layout='ready';
+}
+function snapshotTree(){
+ const root=document.querySelector('.reference-canvas');if(!root)return null;
+ const selectors=['[data-display]','[data-expand-branch]','.branch-title','.root-node','.compact-card','.legend'];
+ return {scale:getComputedStyle(root).transform,positions:selectors.flatMap(s=>[...root.querySelectorAll(s)].map((el,i)=>({selector:s,index:i,left:parseFloat(getComputedStyle(el).left),top:parseFloat(getComputedStyle(el).top)}))),paths:[...root.querySelectorAll('.tree-svg>path:not([data-leaf-x]):not(.card-connector)')].map(e=>e.getAttribute('d')),leaves:[...root.querySelectorAll('[data-leaf-x]')].map(e=>e.getAttribute('transform'))};
+}
+function animateTree(before){
+ cancelAnimationFrame(geometryFrame);if(!before||motionMode()==='off'||motionMode()==='auto'&&motionQuery.matches)return;
+ const root=document.querySelector('.reference-canvas');if(!root)return;
+ root.animate([{transform:before.scale},{transform:getComputedStyle(root).transform}],{duration:600,easing:'cubic-bezier(.22,.7,.2,1)'});
+ for(const item of before.positions){const el=root.querySelectorAll(item.selector)[item.index];if(!el)continue;const style=getComputedStyle(el),dx=item.left-parseFloat(style.left),dy=item.top-parseFloat(style.top);if(dx||dy)el.animate([{transform:`translate(${dx}px,${dy}px) ${style.transform==='none'?'':style.transform}`},{transform:style.transform}],{duration:600,easing:'cubic-bezier(.22,.7,.2,1)'})}
+ const paths=[...root.querySelectorAll('.tree-svg>path:not([data-leaf-x]):not(.card-connector)')].map((el,i)=>({el,from:before.paths[i],to:el.getAttribute('d')}));
+ const leaves=[...root.querySelectorAll('[data-leaf-x]')].map((el,i)=>({el,from:before.leaves[i],to:el.getAttribute('transform')}));
+ const interpolate=(a,b,t)=>{const values=a?.match(/-?\d+(?:\.\d+)?/g)?.map(Number),end=b.match(/-?\d+(?:\.\d+)?/g);if(!values||values.length!==end.length)return b;let i=0;return b.replace(/-?\d+(?:\.\d+)?/g,n=>{const v=values[i++];return (v+(Number(n)-v)*t).toFixed(3)})};
+ const start=performance.now();const tick=now=>{if(!root.isConnected)return;const t=Math.min(1,(now-start)/600),ease=1-Math.pow(1-t,3);paths.forEach(p=>p.el.setAttribute('d',interpolate(p.from,p.to,ease)));leaves.forEach(p=>p.el.setAttribute('transform',interpolate(p.from,p.to,ease)));if(t<1)geometryFrame=requestAnimationFrame(tick)};tick(start);
+}
+
+function compactCard(){const d=displays.find(d=>d.key===selectedDisplay)||displays[4],n=nodes.find(n=>n.id===d.id),r=record(n);let rows=n.actions.map((a,i)=>({title:a.title,description:a.description,i,ic:i===0?'treatment':i===1?'operate':'measure'}));if(n.id==='risk')rows=[{title:'Définir les critères',description:'Échelles de la plateforme',i:0,ic:'treatment'},{title:'Identifier les risques',description:'Registre des risques',i:1,ic:'operate'},{title:'Évaluer et prioriser',description:'Analyse du périmètre',i:1,ic:'measure'}];if(d.action!==undefined)rows=rows.filter(x=>x.i===d.action);return `<section class="compact-card" aria-label="Étape sélectionnée"><button id="collapse-card" class="card-heading" aria-expanded="${!cardCollapsed}" aria-controls="card-content"><span class="card-icon" style="--tone:${d.tone}">${icon(d.ic)}</span><span><strong>${n.id==='risk'?'Évaluer les risques':d.label.replace('<br>',' ')}</strong><small class="compact-status ${r.status}">${r.status==='progress'?'En préparation':labels[r.status].replace(' · démo','')}</small></span><span class="chevron">${cardCollapsed?'⌄':'⌃'}</span></button><div id="card-content" ${cardCollapsed?'hidden':''}><div class="compact-subs"><button class="subs-title" id="sub-toggle" aria-expanded="true" aria-controls="compact-rows">Sous-actions <span>⌄</span></button><div id="compact-rows">${rows.map((a,j)=>`<button class="compact-row" data-expected="${a.i}"><span class="row-icon tone-${j}">${icon(a.ic)}</span><span><b>${esc(a.title)}</b><small>${esc(a.description)}</small></span>${j===0?'<span class="expected-link">Voir l’attendu ›</span>':'<span class="row-chevron">›</span>'}</button>`).join('')}</div></div><button id="compact-module" class="compact-module">→ &nbsp; Ouvrir le module ${n.id==='risk'?'Risques':'associé'}</button><button id="full-step" class="full-step">Suivi & revue de l’étape <span>→</span></button></div></section>`}
+function fitCanvas(){const display=displays.find(d=>d.key===selectedDisplay),card=document.querySelector('.compact-card');if(display?.x>700&&card){const bottom=15+card.offsetHeight;document.querySelector('.card-connector')?.setAttribute('d',`M${display.x} ${display.y-28} C${display.x} ${display.y-80} ${display.x} ${bottom+25} ${display.x} ${bottom}`);const endpoint=document.querySelector('.tree-svg>circle');endpoint?.setAttribute('cx',display.x);endpoint?.setAttribute('cy',bottom)}const wrap=document.querySelector('.reference-wrap');if(!wrap)return;const content=document.querySelector('#content'),scale=Math.max(.72,Math.min(content.clientWidth/spreadMap().width,content.clientHeight/607));wrap.style.width=1109*scale+'px';wrap.style.height=607*scale+'px';wrap.querySelector('.canvas').style.transform=`scale(${scale})`;layoutChildren()}
+window.addEventListener('resize',fitCanvas);
+function bindReference(){document.querySelectorAll('[data-expand-branch]').forEach(b=>b.onclick=()=>toggleChildren(b.dataset.expandBranch));document.querySelectorAll('[data-child]').forEach(b=>b.onclick=()=>{const [key,i]=b.dataset.child.split(':'),d=displays.find(d=>d.key===key);lastFocus=`[data-child="${b.dataset.child}"]`;openNode(d.id);document.querySelector(`[data-child="${key}:${i}"]`)?.classList.add('click-glow');const detail=dialog.querySelectorAll('details')[Number(i)];if(detail){detail.open=true;detail.querySelector('summary').focus()}});document.querySelector('#motion-status')?.addEventListener('click',options);document.querySelectorAll('[data-display]').forEach(b=>b.onclick=()=>{selectedDisplay=b.dataset.display;selected=displays.find(d=>d.key===selectedDisplay).id;lastFocus=`[data-display="${selectedDisplay}"]`;cardCollapsed=false;render();document.querySelector(lastFocus)?.classList.add('click-glow');document.querySelector(lastFocus)?.focus({preventScroll:true});if(innerWidth<700)document.querySelector('.compact-card')?.scrollIntoView({inline:'nearest',block:'nearest',behavior:motionMode()==='off'||motionMode()==='auto'&&motionQuery.matches?'auto':'smooth'})});const n=nodes.find(n=>n.id===(displays.find(d=>d.key===selectedDisplay)?.id||'risk'));document.querySelector('#collapse-card')?.addEventListener('click',()=>{cardCollapsed=!cardCollapsed;render();document.querySelector('#collapse-card').focus()});document.querySelector('#sub-toggle')?.addEventListener('click',e=>{const button=e.currentTarget,rows=document.querySelector('#compact-rows');rows.hidden=!rows.hidden;button.setAttribute('aria-expanded',String(!rows.hidden));fitCanvas()});document.querySelectorAll('[data-expected]').forEach(b=>b.onclick=()=>{lastFocus=`[data-expected="${b.dataset.expected}"]`;openNode(n.id);const detail=dialog.querySelectorAll('details')[Number(b.dataset.expected)];if(detail){detail.open=true;detail.querySelector('summary').focus()}});document.querySelector('#compact-module')?.addEventListener('click',()=>{lastFocus='#compact-module';moduleView(n.id)});document.querySelector('#full-step')?.addEventListener('click',()=>{lastFocus='#full-step';openNode(n.id)});document.querySelector('#all-steps')?.addEventListener('click',()=>{state.view='list';save();render();document.querySelector('[data-view="list"]').focus()});fitCanvas()}
+function list(){return `<div class="list"><label class="sr-only" for="search">Rechercher une étape</label><input id="search" class="search" placeholder="Rechercher une étape ou un module…" value="${esc(query)}">${visible().map(n=>`<article class="list-card" style="--tone:${group(n).color}">${icon(n.id)}<div><h3>${esc(n.title)}</h3><p>${esc(n.sub)} · ${esc(n.ref)}</p><p>${summary(n)}</p></div><span class="pill ${record(n).status}">${labels[record(n).status]}</span><button data-node="${n.id}">Explorer →</button></article>`).join('')||'<p>Aucune étape ne correspond à votre recherche.</p>'}</div>`}
+const logo=`<svg class="astra-logo" viewBox="0 0 40 40" aria-hidden="true"><path fill="#5ce6c3" d="M20 2 31 21 13 14Z"/><path fill="#1ccdb9" d="M13 14 20 26 2 35 8 22Z"/><path fill="#087e7b" d="m20 26 11-5 7 14-13-2Z"/></svg>`;
+function render(){applyMotion();document.querySelector('#app').innerHTML=`<aside class="sidebar"><div class="brand">${logo}<b>ASTRA<small>Suivi du SMSI</small></b></div><nav aria-label="Navigation"><a href="#modules" data-nav="all" title="Vue d’ensemble · démo">${icon('home')}<span>Vue d’ensemble</span></a><a href="#modules" data-nav="context" title="Périmètres · démo">${icon('tree')}<span>Périmètres</span></a><a href="#modules" data-nav="treatment" title="Conformité · démo">${icon('treatment')}<span>Conformité</span></a><a href="#modules" data-nav="risk" title="Risques · démo">${icon('risk')}<span>Risques</span></a><a href="#modules" data-nav="operate" title="Plans d’action · démo">${icon('audit')}<span>Plans d’action</span></a><span class="active" aria-current="page">${icon('tree')}<span>Parcours ISO / HDS</span></span><a href="#options" id="nav-options">${icon('settings')}<span>Administration</span></a></nav></aside><div class="workspace"><header class="topbar"><div><h1>Parcours ISO 27001 / HDS</h1><p class="subtitle">Une vue guidée des modules de votre plateforme</p></div><div class="top-actions"><label class="sr-only" for="scope">Périmètre de démonstration</label><select id="scope"><option value="ght">GHT · Périmètre principal</option><option value="hospital">Établissement B · Démo</option></select><div class="tabs"><button data-view="tree" aria-pressed="${state.view==='tree'}">${icon('tree')} Arbre</button><button data-view="list" aria-pressed="${state.view==='list'}">☷ &nbsp; Liste</button></div><span class="demo-label">ⓘ &nbsp; Données de démonstration</span><button class="avatar" id="options" aria-label="Options de la maquette">JD</button></div></header><main id="content" class="content" aria-label="Parcours">${state.view==='tree'?tree():list()}</main><footer class="foot"><span>ⓘ &nbsp; Progression du travail ≠ conformité ou certification</span><span>Organisation visuelle proposée · Étapes consultables librement</span></footer></div>`;
+document.querySelector('#scope').value=state.scope;document.querySelector('#scope').onchange=e=>{state.scope=e.target.value;save();render()};document.querySelectorAll('[data-node]').forEach(b=>b.onclick=()=>{lastFocus=`[data-node="${b.dataset.node}"]`;openNode(b.dataset.node)});document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{state.view=b.dataset.view;query='';save();render();document.querySelector(`[data-view="${state.view}"]`).focus()});document.querySelector('#options').onclick=options;document.querySelector('#nav-options').onclick=e=>{e.preventDefault();options()};document.querySelectorAll('[data-nav]').forEach(b=>b.onclick=e=>{e.preventDefault();lastFocus=`[data-nav="${b.dataset.nav}"]`;b.dataset.nav==='all'?modules():moduleView(b.dataset.nav)});document.querySelector('#root')?.addEventListener('click',()=>{lastFocus='#root';openNode('context');document.querySelector('#root')?.classList.add('click-glow')});document.querySelector('#search')?.addEventListener('input',e=>{query=e.target.value;const p=e.target.selectionStart;render();const s=document.querySelector('#search');s.focus();s.setSelectionRange(p,p)});bindReference()}
+function options(){lastFocus='#options';show(`<div class="eyebrow">Administration · Maquette uniquement</div><h2 id="dialog-title">Options du parcours</h2><div class="hint">Données fictives et stockage local. Aucune modification de la plateforme réelle.</div><label class="check"><input id="hds" type="checkbox" ${state.hds?'checked':''}>Afficher les compléments HDS dans l’arbre et la liste</label><label class="motion-select" for="motion">Animations<select id="motion"><option value="auto">Automatiques · préférence du téléphone</option><option value="on">Animées · activer explicitement</option><option value="off">Arrêtées</option></select></label><p class="module-note" id="motion-explanation">${motionQuery.matches?'Votre navigateur demande de réduire les animations. Le mode automatique respecte ce réglage ; vous pouvez choisir explicitement le mode animé.':'La brume, les branches et les cercles sont animés en mode automatique.'}</p><div class="dialog-actions"><button id="sources">Sources & limites</button><button id="reset">Réinitialiser l’essai</button></div>`);document.querySelector('#hds').onchange=e=>{state.hds=e.target.checked;if(!state.hds&&expandedBranch?.startsWith('hds'))expandedBranch=null;if(!state.hds&&selected.startsWith('hds')){selected='risk';selectedDisplay='risk'}save();render();toast('Affichage modifié, sans décision d’applicabilité HDS.')};document.querySelector('#motion').value=motionMode();document.querySelector('#motion').onchange=e=>{state.motionMode=e.target.value;applyMotion();save()};document.querySelector('#sources').onclick=sources;document.querySelector('#reset').onclick=reset}
+const dialog=document.querySelector('#dialog');function show(html){dialog.innerHTML=`<button class="close" data-close aria-label="Fermer">×</button>${html}`;dialog.querySelector('[data-close]').onclick=()=>dialog.close();if(!dialog.open)dialog.showModal();dialog.scrollTop=0}dialog.addEventListener('close',()=>{render();if(lastFocus)document.querySelector(lastFocus)?.focus({preventScroll:true})});
+function openNode(id){selected=id;const display=displays.find(d=>d.id===id);if(display&&!displays.some(d=>d.key===selectedDisplay&&d.id===id))selectedDisplay=display.key;const n=nodes.find(n=>n.id===id),r=record(n);render();show(`<div class="eyebrow">${group(n).name} · ${state.scope==='ght'?'GHT A':'Établissement B'}</div><h2 id="dialog-title">${esc(n.title)}</h2><p class="muted">${esc(n.sub)}</p><div class="dialog-meta"><span class="pill ${r.status}" id="status-label">${labels[r.status]}</span><span class="pill">${esc(n.ref)}</span></div><p class="muted" style="font-size:12px">Dépliez une sous-action pour consulter l’attendu et préparer votre travail.</p>${n.actions.map((a,i)=>`<details class="subaction" data-action="${a.id}"><summary>${icon(n.id)}<span><b>${esc(a.title)}</b><small>${esc(a.description)}</small></span><span class="prepared-indicator" aria-label="${r.checks[a.artifactIndex]?'Préparée':'À préparer'}">${r.checks[a.artifactIndex]?'✓':''}</span></summary><div class="expected"><h4>L’attendu</h4><p>${esc(a.expected)}</p><div class="deliverable"><b>Exemple de livrable</b><p>${esc(a.deliverable)}</p><small>Format proposé, non imposé par la norme.</small></div><label class="check"><input type="checkbox" data-check="${a.artifactIndex}" ${r.checks[a.artifactIndex]?'checked':''}>Repère préparé · simulation locale</label></div></details>`).join('')}${r.notes?`<div class="hint" id="shared-note"><b>Note commune au module</b><p>${esc(r.notes)}</p></div>`:''}<div class="proof"><span id="proof-label">${r.proof?'PRE-DEMO-001 · Document fictif lié':'Aucune preuve liée dans la démo'}</span><button id="proof">${r.proof?'Retirer le lien démo':'Associer une preuve démo'}</button></div><a class="source-link" href="${esc(n.source)}" target="_blank" rel="noopener noreferrer">Consulter la référence officielle ↗</a><div class="hint">À retrouver dans <b>${esc(n.module)}</b>.<br>Mêmes objets et mêmes droits dans la future intégration. Ici, seul un espace de démonstration est disponible.</div><div class="dialog-actions"><button id="module">Ouvrir le module · démo</button><button id="start">Mettre en cours</button><button id="submit" class="primary">Préparer la revue</button>${r.status==='review'?'<button id="review" class="primary">Confirmer la revue · démo</button>':''}${r.status==='done'?'<button id="reopen">Remettre à revoir</button>':''}</div><p class="module-note">Cocher ces repères ne démontre pas la conformité. Le texte applicable, les preuves réelles et la revue restent nécessaires.</p>`);
+dialog.querySelectorAll('[data-check]').forEach(c=>c.onchange=()=>{r.checks[Number(c.dataset.check)]=c.checked;if(r.status==='done')r.status='review';else if(r.status==='todo')r.status='progress';save();dialog.querySelector('#status-label').textContent=labels[r.status];const indicator=c.closest('details').querySelector('.prepared-indicator');indicator.textContent=c.checked?'✓':'';indicator.setAttribute('aria-label',c.checked?'Préparée':'À préparer')});dialog.querySelector('#proof').onclick=()=>{r.proof=!r.proof;if(r.status==='done')r.status='review';save();openNode(id);dialog.querySelector('#proof').focus()};dialog.querySelector('#module').onclick=()=>moduleView(id);dialog.querySelector('#start').onclick=()=>{r.status='progress';save();openNode(id);dialog.querySelector('#start').focus()};dialog.querySelector('#submit').onclick=()=>{if(!r.checks.every(Boolean)||!r.proof){toast('Pour cet essai, préparez tous les repères et associez la preuve fictive.');return}r.status='review';save();openNode(id);dialog.querySelector('#review').focus()};dialog.querySelector('#review')?.addEventListener('click',()=>{if(!r.checks.every(Boolean)||!r.proof){toast('Repères ou preuve manquants pour cette simulation.');return}r.status='done';save();openNode(id);toast('Revue simulée enregistrée. Aucune conformité attribuée.')});dialog.querySelector('#reopen')?.addEventListener('click',()=>{r.status='review';save();openNode(id)})}
+function moduleView(id){const n=nodes.find(n=>n.id===id),r=record(n);show(`<div class="eyebrow">Module de démonstration · données communes au parcours</div><h2 id="dialog-title">${esc(n.module)}</h2><div class="hint">Simulation du raccordement, sans API métier. Cette fiche partage le même enregistrement local que l’étape du parcours ; elle ne remplace pas le véritable module.</div><h3>${esc(n.title)}</h3><div class="dialog-meta"><span class="pill">DEMO-${esc(state.scope)}-${esc(n.id)}</span><span class="pill ${r.status}">${labels[r.status]}</span></div>${n.artifacts.map((a,i)=>`<label class="check" style="margin:12px 0"><input type="checkbox" data-module-check="${i}" ${r.checks[i]?'checked':''}>${esc(a)}</label>`).join('')}<label class="notes">Note de travail fictive<textarea id="notes" maxlength="2000" placeholder="Votre note locale, commune aux deux vues…">${esc(r.notes||'')}</textarea></label><p class="module-note">Ne saisissez aucune donnée sensible dans cette démonstration.</p><div class="dialog-actions"><button id="back-node">Retour au parcours</button><button id="save-module" class="primary">Enregistrer dans la démo</button></div>`);dialog.querySelector('#back-node').onclick=()=>openNode(id);dialog.querySelector('#save-module').onclick=()=>{const next=[...dialog.querySelectorAll('[data-module-check]')].map(c=>c.checked),notes=dialog.querySelector('#notes').value,changed=JSON.stringify(next)!==JSON.stringify(r.checks)||notes!==r.notes;r.checks=next;r.notes=notes;if(changed&&r.status==='done')r.status='review';else if(changed&&r.status==='todo')r.status='progress';save();moduleView(id);dialog.querySelector('#save-module').focus();toast('Enregistrement local mis à jour, également visible dans le parcours.')}}
+function modules(){show(`<div class="eyebrow">Vue d’ensemble · simulation</div><h2 id="dialog-title">Les travaux du périmètre</h2><p class="muted">Retrouvez les mêmes repères depuis les modules et depuis le parcours.</p><div class="module-list">${nodes.map(n=>`<button data-module="${n.id}"><span><b>${esc(n.title)}</b><br><small>${esc(n.module)}</small></span><span>${summary(n)}</span></button>`).join('')}</div>`);dialog.querySelectorAll('[data-module]').forEach(b=>b.onclick=()=>moduleView(b.dataset.module))}
+function sources(){show(`<div class="eyebrow">Sources & limites</div><h2 id="dialog-title">Un parcours guidé, pas une certification</h2><p>Les 16 étapes et 26 sous-actions reprennent le contenu de la maquette v002. L’arbre est une organisation visuelle proposée ; ses branches ne sont pas des prérequis normatifs.</p><div class="hint">La progression, les repères cochés et la preuve fictive ne démontrent ni la conformité ni la suffisance des preuves. Vérifier le texte ISO détenu sous licence et le référentiel HDS applicable.</div><p><a href="https://www.iso.org/standard/27001" target="_blank" rel="noopener noreferrer">ISO/IEC 27001:2022 ↗</a></p><p><a href="https://www.iso.org/standard/88435.html" target="_blank" rel="noopener noreferrer">Amendement 1:2024 ↗</a></p><p><a href="https://esante.gouv.fr/sites/default/files/media_entity/documents/referentiel_certification_hds---fr--v2.pdf" target="_blank" rel="noopener noreferrer">ANS · Référentiel HDS v2.0 ↗</a></p><p><a href="https://esante.gouv.fr/ens/offre/hds" target="_blank" rel="noopener noreferrer">ANS · Certification HDS ↗</a></p><p class="module-note">Sources héritées du dossier documenté le 22 octobre 2026. Il ne s’agit pas d’une couverture exhaustive exigence par exigence. L’arbre n’impose pas EBIOS RM.</p>`)}
+function reset(){lastFocus='#options';show(`<h2 id="dialog-title">Réinitialiser cette maquette ?</h2><p>La progression et les notes des deux périmètres fictifs de cette version seront effacées. Les autres maquettes sont conservées.</p><div class="dialog-actions"><button id="cancel-reset">Annuler</button><button id="confirm-reset">Réinitialiser l’essai</button></div>`);document.querySelector('#cancel-reset').onclick=()=>dialog.close();document.querySelector('#confirm-reset').onclick=()=>{state.records={};save();dialog.close();toast('La démonstration a été réinitialisée.')};document.querySelector('#cancel-reset').focus()}
+document.addEventListener('visibilitychange',()=>document.body.classList.toggle('motion-paused',document.hidden));
+render();
+})();
+</script></body></html>

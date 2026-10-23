@@ -1,0 +1,13 @@
+{
+  "project_id": "appgprj_6adb36e401b88191acfa63f3a99475fc",
+  "version_id": "appgprj_6adb36e401b88191acfa63f3a99475fc~appgver_3e76cba1b5d48191b1ee112ed35f4bea",
+  "deployment_id": "appgdep_6adba4560010819181090d019cd8f577",
+  "source_commit": "a4375b6df6cef81eb8ed619439108c0764fd012b",
+  "url": "https://astra-parcours-apercu.earlycedar65.chatgpt.site",
+  "statut": "succeeded",
+  "audience": "owner-private",
+  "publication": "2026-10-23",
+  "expirationAutomatique": null,
+  "sha256_html": "e29fd1bb564b882576b17daec16dcba08398f61a59a8c9302ffa79bf73de0360",
+  "limites": "Maquette à données fictives, sans API réelle. Pas de test sur le téléphone physique de l’utilisateur."
+}

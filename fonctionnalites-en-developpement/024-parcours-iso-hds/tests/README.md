@@ -32,3 +32,8 @@ Servir la racine du dépôt à `http://127.0.0.1:19120`, puis lancer le script a
 ## v007 — petits plus et dépliage lisible
 
 [109 contrôles fonctionnels](../maquettes/v007-depliage-lisible/verification.json) et [69 contrôles de placement](../maquettes/v007-depliage-lisible/verification-placement.json) réussis. Les 66 combinaisons couvrent 11 branches × 3 cartes × bureau/tactile : rectangles enfants et textes sans collision, liaisons échantillonnées hors des libellés, disque 18 px et cible tactile 40 px. Scripts `verifier.cjs` et `verifier-placement.cjs` dans cette version ; mêmes prérequis que v006. Captures bureau/mobile inspectées. Pas d’essai sur téléphone physique ni d’intégration serveur.
+
+
+## v008 — écartement et effets demandés
+
+[109 contrôles fonctionnels](../maquettes/v008-branches-vivantes/verification.json), [69 de placement](../maquettes/v008-branches-vivantes/verification-placement.json) et [14 d’animation](../maquettes/v008-branches-vivantes/verification-animations.json). Mesures temporelles des positions et courbes, retour après repli, direction ascendante de la brume, couleurs calculées des flux et halos parent/enfant/racine. Contrôle des 11 branches, plusieurs cartes et affichages bureau/tactile, animations réduites et désactivées. Chromium local, aucune intégration backend ni essai sur téléphone physique.

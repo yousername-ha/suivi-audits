@@ -1,0 +1,24 @@
+{
+  "date": "2026-10-23",
+  "resultat": "reussi",
+  "nombre": 14,
+  "tests": [
+    "Brume ascendante : Y diminue réellement",
+    "La brume ne redescend pas en alternance",
+    "Chaque flux reprend exactement la couleur de sa branche",
+    "Clic cercle : halo ponctuel déclenché",
+    "Halo visible pendant le clic",
+    "La branche s’écarte effectivement",
+    "Le déplacement est animé, pas un saut",
+    "Les courbes évoluent pendant l’écartement",
+    "L’arbre tient dans la largeur bureau après cadrage",
+    "Le repli retrouve la position initiale",
+    "Halo également sur la racine",
+    "Halo également sur le cercle enfant",
+    "Mouvement réduit : espace disponible immédiatement",
+    "Aucune erreur JavaScript"
+  ],
+  "limites": [
+    "Chromium local. Pas de test sur appareil physique."
+  ]
+}

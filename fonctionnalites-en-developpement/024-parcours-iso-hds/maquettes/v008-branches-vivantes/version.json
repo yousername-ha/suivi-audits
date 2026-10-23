@@ -1,0 +1,62 @@
+{
+  "id": "v008-branches-vivantes",
+  "statut": "a-valider",
+  "date": "2026-10-23",
+  "versionPrecedente": "v007-depliage-lisible",
+  "validationUtilisateur": null,
+  "integrationBackend": false,
+  "references": [
+    "fonctionnalites-en-developpement/024-parcours-iso-hds/maquettes/v008-branches-vivantes/images/01-reference-fonctionnelle.png",
+    "fonctionnalites-en-developpement/024-parcours-iso-hds/maquettes/v008-branches-vivantes/images/02-attendu-central.png",
+    "fonctionnalites-en-developpement/024-parcours-iso-hds/maquettes/v008-branches-vivantes/images/03-liste-complete.png",
+    "fonctionnalites-en-developpement/024-parcours-iso-hds/maquettes/v008-branches-vivantes/images/04-selection-hds.png",
+    "fonctionnalites-en-developpement/024-parcours-iso-hds/maquettes/v008-branches-vivantes/images/05-liste-mobile.png",
+    "fonctionnalites-en-developpement/024-parcours-iso-hds/maquettes/v008-branches-vivantes/images/06-attendu-mobile.png",
+    "fonctionnalites-en-developpement/024-parcours-iso-hds/maquettes/v008-branches-vivantes/images/07-sous-branches-risques.png",
+    "fonctionnalites-en-developpement/024-parcours-iso-hds/maquettes/v008-branches-vivantes/images/08-sous-branches-traitement.png",
+    "fonctionnalites-en-developpement/024-parcours-iso-hds/maquettes/v008-branches-vivantes/images/09-sous-branches-mobile.png",
+    "fonctionnalites-en-developpement/024-parcours-iso-hds/maquettes/v008-branches-vivantes/images/10-ecartement-anime.png"
+  ],
+  "visuels": [
+    {
+      "fichier": "images/01-reference-fonctionnelle.png",
+      "sha256": "3c3b21014b936d70682f1f0c9c0940d6932a01960b444e4a772d9f04acee52e1"
+    },
+    {
+      "fichier": "images/02-attendu-central.png",
+      "sha256": "9b587a60627849349affea1b4f961f8ae1540eb2d31bd72e559d27d3e0d4183d"
+    },
+    {
+      "fichier": "images/03-liste-complete.png",
+      "sha256": "ee2b1b411828d5280fe3795fbd7c1a0ffcce9f1dcea2d23f0811c72d8f691bed"
+    },
+    {
+      "fichier": "images/04-selection-hds.png",
+      "sha256": "807dbd6aa6a9aa30f59068a859a4ef462cb1f9f600e68d2c6bb35424710fbb8c"
+    },
+    {
+      "fichier": "images/05-liste-mobile.png",
+      "sha256": "12c82f1c1044d649f71f125f8915f174791d13fbbaed9936429cba77f7c2721b"
+    },
+    {
+      "fichier": "images/06-attendu-mobile.png",
+      "sha256": "19c1c7e235a9477445563e35eae21e89d94ac9a939632ca432aa16000c7d1e71"
+    },
+    {
+      "fichier": "images/07-sous-branches-risques.png",
+      "sha256": "ea753f345e58a714d6074822df930deb1da82f2f8ddccf5f9295ff7b47f1887c"
+    },
+    {
+      "fichier": "images/08-sous-branches-traitement.png",
+      "sha256": "c8db07f11182269a7633354dd09c5e6c778244a73ab6311e9a6f43eac3e31f57"
+    },
+    {
+      "fichier": "images/09-sous-branches-mobile.png",
+      "sha256": "4400d00ee329900b55253e5f1e424004835d20855ea70483f622052b2cd85aa0"
+    },
+    {
+      "fichier": "images/10-ecartement-anime.png",
+      "sha256": "c28e462837b91504fcac75758bc4c15a36e884c518d1db6a3d047c952ed0bbe8"
+    }
+  ]
+}
