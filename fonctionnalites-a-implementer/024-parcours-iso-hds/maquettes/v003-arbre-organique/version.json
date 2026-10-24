@@ -1,0 +1,47 @@
+{
+  "id": "v003-arbre-organique",
+  "statut": "a-valider",
+  "date": "2026-10-22",
+  "versionPrecedente": "v002-onboarding-sous-actions",
+  "validationUtilisateur": null,
+  "integrationBackend": false,
+  "references": [
+    "fonctionnalites-a-implementer/024-parcours-iso-hds/maquettes/v003-arbre-organique/images/00-reference-graphique.png",
+    "fonctionnalites-a-implementer/024-parcours-iso-hds/maquettes/v003-arbre-organique/images/01-arbre-interactif.png",
+    "fonctionnalites-a-implementer/024-parcours-iso-hds/maquettes/v003-arbre-organique/images/02-sous-action-attendu.png",
+    "fonctionnalites-a-implementer/024-parcours-iso-hds/maquettes/v003-arbre-organique/images/03-liste-etapes.png",
+    "fonctionnalites-a-implementer/024-parcours-iso-hds/maquettes/v003-arbre-organique/images/04-module-partage-demo.png",
+    "fonctionnalites-a-implementer/024-parcours-iso-hds/maquettes/v003-arbre-organique/images/05-liste-mobile.png",
+    "fonctionnalites-a-implementer/024-parcours-iso-hds/maquettes/v003-arbre-organique/images/06-attendu-mobile.png"
+  ],
+  "visuels": [
+    {
+      "fichier": "images/00-reference-graphique.png",
+      "sha256": "292edde24f120d3b1d7328da848e10ce2b0d31ce8e248d7a79e6bdb6866f2df0"
+    },
+    {
+      "fichier": "images/01-arbre-interactif.png",
+      "sha256": "0e16b28c6c128b8852337aa32d331b50a4ddf87fd35c78c0cf8a40358042dc3e"
+    },
+    {
+      "fichier": "images/02-sous-action-attendu.png",
+      "sha256": "0441ead73936f40d14ec00683c440d447ffb13a2441fa6b3718344ce1c20394d"
+    },
+    {
+      "fichier": "images/03-liste-etapes.png",
+      "sha256": "3f8637eada1b396a445fe111f1fb67bc3e6b48fbd0834e96370216bb233a020f"
+    },
+    {
+      "fichier": "images/04-module-partage-demo.png",
+      "sha256": "8138f5e8288ec1da47ef52afad5b5c62c6073785b9e67e58243a5cfe9f65e066"
+    },
+    {
+      "fichier": "images/05-liste-mobile.png",
+      "sha256": "0742cd3835ddd23723dd775b775c2fcd61a0c26587e07293c4728a6767e4071f"
+    },
+    {
+      "fichier": "images/06-attendu-mobile.png",
+      "sha256": "18e3b042daf4aeb3312fe0a8d405d9fcd395ab2e0828d2d740006bbb7157a6f7"
+    }
+  ]
+}

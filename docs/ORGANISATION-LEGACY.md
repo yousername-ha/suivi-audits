@@ -76,3 +76,7 @@ Les répertoires `_modele`, `_dossiers-transversaux` et `_prototype-transversal`
 Après accord sur les périmètres, les dossiers complets 002, 003, 012, 017, 018, 019, 020, 021 et 022 sont déplacés vers « à implémenter ». Le statut `reference-implementation` désigne les références graphiques de cette transmission ; il ne transforme pas une fixture en fonction serveur ni une hypothèse non arbitrée en règle métier. Chaque dossier contient les demandes consolidées, leurs critères de recette et un prompt imposant l’audit préalable de l’existant.
 
 [Point d’entrée de cette livraison](../fonctionnalites-a-implementer/_dossiers-transversaux/implementation-ui-2026-10/DOSSIERS-2026-10-20.md). Aucun marqueur de confirmation trouvé lors de cette reprise. Le dossier 010 reste en développement dans l’attente de sa confirmation séparée.
+
+## Transmission distincte du 24 octobre 2026 — fonctionnalité 024
+
+À la demande explicite de l’utilisateur, le dossier [024 — Parcours guidé ISO 27001 / HDS](../fonctionnalites-a-implementer/024-parcours-iso-hds/README.md) a été déplacé depuis « en développement » après consolidation du dossier technique et du prompt de codage. La maquette v011 et son aperçu public servent de référence visuelle. L’IA de codage doit vérifier l’existant sur sa propre branche et ne développer que les écarts. Ce classement transmet les spécifications ; il ne constate aucune intégration au produit. Aucun marqueur `IMPLEMENTATION-OK.md` valide n’a été trouvé et le dossier reste « à implémenter ».

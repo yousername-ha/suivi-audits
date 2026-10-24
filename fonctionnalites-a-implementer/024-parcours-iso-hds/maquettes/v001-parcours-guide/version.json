@@ -1,0 +1,36 @@
+{
+  "id": "v001-parcours-guide",
+  "statut": "a-valider",
+  "date": "2026-10-22",
+  "validationUtilisateur": null,
+  "integrationBackend": false,
+  "references": [
+    "fonctionnalites-a-implementer/024-parcours-iso-hds/maquettes/v001-parcours-guide/images/01-arbre-iso-hds.png",
+    "fonctionnalites-a-implementer/024-parcours-iso-hds/maquettes/v001-parcours-guide/images/02-etape-traitement.png",
+    "fonctionnalites-a-implementer/024-parcours-iso-hds/maquettes/v001-parcours-guide/images/03-branche-hds.png",
+    "fonctionnalites-a-implementer/024-parcours-iso-hds/maquettes/v001-parcours-guide/images/04-vue-liste.png",
+    "fonctionnalites-a-implementer/024-parcours-iso-hds/maquettes/v001-parcours-guide/images/05-mobile.png"
+  ],
+  "visuels": [
+    {
+      "fichier": "images/01-arbre-iso-hds.png",
+      "sha256": "d89749c73d37696f4fecbb186ea0f9ebe7899c2830aa1251cf95af7d64d476c6"
+    },
+    {
+      "fichier": "images/02-etape-traitement.png",
+      "sha256": "178913d3e920692a7baa1c71d63d42ddda29dc1c01febdc2805f4ab225645b88"
+    },
+    {
+      "fichier": "images/03-branche-hds.png",
+      "sha256": "7189379c8af6a797ce6dd0deaadc3f2ac58a24da6d2eeb1e1a0e9f26e93fc9e6"
+    },
+    {
+      "fichier": "images/04-vue-liste.png",
+      "sha256": "f34181e05ddb60b1a015916dc51c294d4e703c12df62610c86941f19ad645245"
+    },
+    {
+      "fichier": "images/05-mobile.png",
+      "sha256": "f64464d36e041221e90742afa81532fb7734dd4431571f2248c17f5d084e355d"
+    }
+  ]
+}

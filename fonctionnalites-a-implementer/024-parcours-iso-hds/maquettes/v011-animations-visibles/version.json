@@ -1,0 +1,13 @@
+{
+  "id": "v011-animations-visibles",
+  "statut": "reference-implementation",
+  "date": "2026-10-23",
+  "versionPrecedente": "v010-gondor-public",
+  "validationUtilisateur": "Référence graphique v011 retenue pour préparer le dossier technique le 24 octobre 2026.",
+  "integrationBackend": false,
+  "references": [
+    "fonctionnalites-a-implementer/024-parcours-iso-hds/maquettes/v011-animations-visibles/README.md",
+    "fonctionnalites-a-implementer/024-parcours-iso-hds/maquettes/v011-animations-visibles/index.html",
+    "fonctionnalites-a-implementer/024-parcours-iso-hds/maquettes/v011-animations-visibles/assets/gondor.png"
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "id": "v006-sous-branches",
+  "statut": "a-valider",
+  "date": "2026-10-23",
+  "versionPrecedente": "v005-brume-lueurs",
+  "validationUtilisateur": null,
+  "integrationBackend": false,
+  "references": [
+    "fonctionnalites-a-implementer/024-parcours-iso-hds/maquettes/v006-sous-branches/images/01-reference-fonctionnelle.png",
+    "fonctionnalites-a-implementer/024-parcours-iso-hds/maquettes/v006-sous-branches/images/02-attendu-central.png",
+    "fonctionnalites-a-implementer/024-parcours-iso-hds/maquettes/v006-sous-branches/images/03-liste-complete.png",
+    "fonctionnalites-a-implementer/024-parcours-iso-hds/maquettes/v006-sous-branches/images/04-selection-hds.png",
+    "fonctionnalites-a-implementer/024-parcours-iso-hds/maquettes/v006-sous-branches/images/05-liste-mobile.png",
+    "fonctionnalites-a-implementer/024-parcours-iso-hds/maquettes/v006-sous-branches/images/06-attendu-mobile.png",
+    "fonctionnalites-a-implementer/024-parcours-iso-hds/maquettes/v006-sous-branches/images/07-sous-branches-risques.png",
+    "fonctionnalites-a-implementer/024-parcours-iso-hds/maquettes/v006-sous-branches/images/08-sous-branches-traitement.png",
+    "fonctionnalites-a-implementer/024-parcours-iso-hds/maquettes/v006-sous-branches/images/09-sous-branches-mobile.png"
+  ],
+  "visuels": [
+    {
+      "fichier": "images/01-reference-fonctionnelle.png",
+      "sha256": "d3bb2a4219a7f98d5ad837658556dfd08265c3e14469a575d7d9ec177748a6d8"
+    },
+    {
+      "fichier": "images/02-attendu-central.png",
+      "sha256": "7b3adaf8527f6415fb6665313ff9d6af62dc7d2013d6cb9fb60f8e1aa2950f43"
+    },
+    {
+      "fichier": "images/03-liste-complete.png",
+      "sha256": "ee2b1b411828d5280fe3795fbd7c1a0ffcce9f1dcea2d23f0811c72d8f691bed"
+    },
+    {
+      "fichier": "images/04-selection-hds.png",
+      "sha256": "2a79105b5e3c794407e7bc6a2970bed3794adc38803cebaf70ea00d1092898b8"
+    },
+    {
+      "fichier": "images/05-liste-mobile.png",
+      "sha256": "12c82f1c1044d649f71f125f8915f174791d13fbbaed9936429cba77f7c2721b"
+    },
+    {
+      "fichier": "images/06-attendu-mobile.png",
+      "sha256": "19c1c7e235a9477445563e35eae21e89d94ac9a939632ca432aa16000c7d1e71"
+    },
+    {
+      "fichier": "images/07-sous-branches-risques.png",
+      "sha256": "f6a9745535b44ca3c8953c367aea2b6332f9601e7cf9c27ec515fb443f9a155c"
+    },
+    {
+      "fichier": "images/08-sous-branches-traitement.png",
+      "sha256": "296cd0ab7af7a9b4987ab4c0ac04aa93b46360d7802a387f5f364ec95e5edda7"
+    },
+    {
+      "fichier": "images/09-sous-branches-mobile.png",
+      "sha256": "4a87eb8ad79b23a62bcdcf8e4e27d2562d4cebfdeae2fbd68bd09aff3b507ea1"
+    }
+  ]
+}

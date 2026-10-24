@@ -1,0 +1,47 @@
+{
+  "id": "v005-brume-lueurs",
+  "statut": "a-valider",
+  "date": "2026-10-23",
+  "versionPrecedente": "v004-style-reference",
+  "validationUtilisateur": null,
+  "integrationBackend": false,
+  "references": [
+    "fonctionnalites-a-implementer/024-parcours-iso-hds/maquettes/v005-brume-lueurs/images/01-reference-fonctionnelle.png",
+    "fonctionnalites-a-implementer/024-parcours-iso-hds/maquettes/v005-brume-lueurs/images/02-attendu-central.png",
+    "fonctionnalites-a-implementer/024-parcours-iso-hds/maquettes/v005-brume-lueurs/images/03-liste-complete.png",
+    "fonctionnalites-a-implementer/024-parcours-iso-hds/maquettes/v005-brume-lueurs/images/04-selection-hds.png",
+    "fonctionnalites-a-implementer/024-parcours-iso-hds/maquettes/v005-brume-lueurs/images/05-liste-mobile.png",
+    "fonctionnalites-a-implementer/024-parcours-iso-hds/maquettes/v005-brume-lueurs/images/06-attendu-mobile.png",
+    "fonctionnalites-a-implementer/024-parcours-iso-hds/maquettes/v005-brume-lueurs/images/07-brume-lueurs.png"
+  ],
+  "visuels": [
+    {
+      "fichier": "images/01-reference-fonctionnelle.png",
+      "sha256": "d5e748f184698a61fc0ac562ca0ae2d601aeca3fbb716b48049b3b2407a8cf36"
+    },
+    {
+      "fichier": "images/02-attendu-central.png",
+      "sha256": "b30a10c0af053792c34576ceeccd2f537d25920a59690da80036cf88549bb8ba"
+    },
+    {
+      "fichier": "images/03-liste-complete.png",
+      "sha256": "ee2b1b411828d5280fe3795fbd7c1a0ffcce9f1dcea2d23f0811c72d8f691bed"
+    },
+    {
+      "fichier": "images/04-selection-hds.png",
+      "sha256": "2beae28eeebff9677f7da8b9b72c8dda1da5858f47ad79322427857d482ff72b"
+    },
+    {
+      "fichier": "images/05-liste-mobile.png",
+      "sha256": "12c82f1c1044d649f71f125f8915f174791d13fbbaed9936429cba77f7c2721b"
+    },
+    {
+      "fichier": "images/06-attendu-mobile.png",
+      "sha256": "19c1c7e235a9477445563e35eae21e89d94ac9a939632ca432aa16000c7d1e71"
+    },
+    {
+      "fichier": "images/07-brume-lueurs.png",
+      "sha256": "96d32994a06b2149bb8386da134759f2f916ddc59c67c9b1d0da7b7def84cfcc"
+    }
+  ]
+}

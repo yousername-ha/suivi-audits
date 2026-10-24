@@ -14,6 +14,7 @@ La [liste numérotée des fonctionnalités](../LISTE-FONCTIONNALITES.md), géné
 - [017 — Plans d’action](../fonctionnalites-a-implementer/017-plans-action/README.md) et [021 — Registres d’écarts](../fonctionnalites-a-implementer/021-registres-ecarts/README.md) : proposition commune ; lire les incompatibilités métier avant codage.
 - [019 — Configuration GRC](../fonctionnalites-a-implementer/019-configuration-grc/README.md) : analyse ARM et propositions à confronter aux contrats réels.
 - [020 — Navigation](../fonctionnalites-a-implementer/020-navigation/README.md) : style conservé, ordonnancement à valider.
+- [024 — Parcours guidé ISO 27001 / HDS](../fonctionnalites-a-implementer/024-parcours-iso-hds/README.md) : dossier technique prêt, référence v011.
 - [Téléchargements Windows](../downloads/README.md) : maquettes publiées, sans valeur de validation métier.
 
 ## Cycle de validation
