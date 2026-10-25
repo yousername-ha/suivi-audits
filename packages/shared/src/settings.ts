@@ -11,6 +11,7 @@ export const SETTINGS_SECTIONS = [
   'notifications',
   'import_export',
   'sauvegardes',
+  'conservation',
   'securite',
 ] as const;
 export type SettingsSection = (typeof SETTINGS_SECTIONS)[number];
@@ -23,6 +24,7 @@ export const SETTINGS_LABELS: Record<SettingsSection, string> = {
   notifications: 'Notifications',
   import_export: 'Import et export',
   sauvegardes: 'Sauvegardes',
+  conservation: 'Conservation',
   securite: 'Sécurité',
 };
 
@@ -35,6 +37,7 @@ export const SETTINGS_WRITE: Record<SettingsSection, Permission> = {
   notifications: 'parametres:modifier',
   import_export: 'parametres:modifier',
   sauvegardes: 'parametres:modifier',
+  conservation: 'parametres:modifier',
   securite: 'parametres:administrer',
 };
 
@@ -88,6 +91,14 @@ export const SauvegardesSettings = z.object({
   dernierTestRestauration: optDate,
   frequenceTestMois: z.number().int().min(1).max(36),
 });
+/** Durées de conservation (décision 2 du 25/10/2026) : nombre de jours après lesquels un élément devient candidat à une purge ;
+    `null` = conservation sans limite. Aucune purge n'est automatique : ces durées ne servent qu'à l'aperçu de ce qui serait purgé. */
+const joursConservation = z.number().int().min(1).max(3650).nullable();
+export const ConservationSettings = z.object({
+  documentsCorbeilleJours: joursConservation,
+  rappelsLusJours: joursConservation,
+  elementsArchivesJours: joursConservation,
+});
 /** Politique de sécurité : bornes non négociables (mot de passe ≥ 12, double authentification toujours obligatoire). */
 export const SecuriteSettings = z.object({
   passwordMinLength: z.number().int().min(12, 'Au moins 12 caractères.').max(64),
@@ -106,6 +117,7 @@ export const SETTINGS_SCHEMAS = {
   notifications: NotificationsSettings,
   import_export: ImportExportSettings,
   sauvegardes: SauvegardesSettings,
+  conservation: ConservationSettings,
   securite: SecuriteSettings,
 } as const;
 export type SettingsValues = { [K in SettingsSection]: z.infer<(typeof SETTINGS_SCHEMAS)[K]> };
@@ -119,3 +131,25 @@ export const SettingsSectionOut = z.object({
   info: z.record(z.string(), z.unknown()).optional(),
 });
 export type SettingsSectionOut = z.infer<typeof SettingsSectionOut>;
+
+export const CATEGORIES_CONSERVATION = ['documents_corbeille', 'rappels_lus', 'elements_archives'] as const;
+export type CategorieConservation = (typeof CATEGORIES_CONSERVATION)[number];
+export interface CategorieApercuConservation {
+  id: CategorieConservation;
+  label: string;
+  /** Durée réglée (jours) ; nul : conservation sans limite, rien n'est candidat. */
+  days: number | null;
+  /** Éléments plus anciens que la durée ; nul quand la durée n'est pas réglée. */
+  candidates: number | null;
+  /** Parmi eux, ceux qu'une règle de conservation protège (document cité comme preuve). */
+  protectedCount: number;
+  /** Date du plus ancien candidat. */
+  oldest: string | null;
+  /** Ce que le produit permet de faire de ces éléments aujourd'hui. */
+  note: string;
+}
+export interface ApercuConservation {
+  generatedAt: string;
+  automaticPurge: false;
+  categories: CategorieApercuConservation[];
+}

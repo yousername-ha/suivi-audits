@@ -137,6 +137,15 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     detail: () => <RolesPanel />,
   },
   {
+    id: 'conservation',
+    cote: 'plateforme',
+    titre: 'Conservation',
+    resume: 'Durées de conservation et aperçu de ce qui serait purgé. Aucune suppression automatique.',
+    icone: 'horloge',
+    teinte: 'orange',
+    detail: (m) => <SectionLoader section="conservation" onDirty={m} />,
+  },
+  {
     id: 'calendriers',
     cote: 'plateforme',
     titre: 'Calendriers',

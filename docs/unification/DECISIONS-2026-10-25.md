@@ -5,7 +5,7 @@ Réponses données une par une aux quinze décisions en attente du [suivi ASTRA]
 | N° | Sujet | Décision | Suite |
 | --- | --- | --- | --- |
 | 1 | Canaux d'envoi (012-09 à 012-11) | SMTP / SMTPS seulement. Le reste (Teams, autres canaux) va dans le [fichier d'idées](../08_PILOTAGE/IDEES.md). | Configuration SMTP/SMTPS, contact technique, envoi de test honnête |
-| 2 | Conservation et nettoyage (012-07, 012-10) | Durées de conservation configurables, **sans purge automatique** ; aperçu de ce qui serait purgé. | Réglages de durées et aperçu ; aucune suppression automatique |
+| 2 | Conservation et nettoyage (012-07, 012-10) | Durées de conservation configurables, **sans purge automatique** ; aperçu de ce qui serait purgé. | Réglages de durées et aperçu ; aucune suppression automatique **Réalisé** ([ADR 0048](../adr/0048-conservation-sans-purge-automatique.md)) : durées par catégorie et aperçu, sans aucune purge ni planificateur. |
 | 3 | Certificats (012-04) | Autosigné **et** ACME. | Deux modes de génération en plus de l'import |
 | 4 | Calendriers de plateforme (012-14, 018-08, 018-09) | Jours fériés français et import iCal ; pas de zones scolaires ; mise à jour annuelle à la charge de l'administrateur. | Calendrier de plateforme des fériés ; zones scolaires au fichier d'idées **Réalisé en partie** ([ADR 0047](../adr/0047-calendriers-de-plateforme.md)) : calendriers, fériés calculés, import iCal, reprise par les séries. Reste la couche d'affichage (018-09). |
 | 5 | Couche visuelle EBIOS RM (003-07 à 003-10) | Oui, dans le style du parcours 024. | Cercle, chemins, pictogrammes, flux, mouvement réglable |

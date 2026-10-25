@@ -51,3 +51,4 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0045](0045-parcours-guide-iso-hds.md) | Parcours guidé ISO 27001 / HDS : vue de navigation sans registre parallèle | Acceptée |
 | [0046](0046-retrait-du-catalogue-environnement.md) | Retrait du catalogue « Environnement » et des évaluations IA versionnées | Acceptée |
 | [0047](0047-calendriers-de-plateforme.md) | Calendriers de plateforme : jours fériés français calculés et iCalendar importés par l'administrateur | Acceptée |
+| [0048](0048-conservation-sans-purge-automatique.md) | Conservation : durées réglables, aperçu, aucune purge automatique | Acceptée |

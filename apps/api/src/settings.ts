@@ -9,7 +9,15 @@ import { HttpError } from './http/errors.js';
 import type { LegacyStore } from './legacy/store.js';
 
 /** Sections stockées dans la table settings ; les autres (cycle, référentiels) vivent dans l'état legacy. */
-const STORED_SECTIONS = ['general', 'apparence', 'notifications', 'import_export', 'sauvegardes', 'securite'] as const;
+const STORED_SECTIONS = [
+  'general',
+  'apparence',
+  'notifications',
+  'import_export',
+  'sauvegardes',
+  'conservation',
+  'securite',
+] as const;
 type Stored = (typeof STORED_SECTIONS)[number];
 const isStored = (s: SettingsSection): s is Stored => (STORED_SECTIONS as readonly string[]).includes(s);
 
@@ -33,6 +41,7 @@ function settingsDefaults(cfg: Config): { [K in Stored]: SettingsValues[K] } {
     notifications: { echeancesJours: 30, conventionJours: 90, alerterImports: true, alerterDroits: true },
     import_export: { formatRevue: 'xlsx' },
     sauvegardes: { emplacement: '/srv/sauvegardes/suivi-audits', dernierTestRestauration: '', frequenceTestMois: 12 },
+    conservation: { documentsCorbeilleJours: null, rappelsLusJours: null, elementsArchivesJours: null },
     securite: {
       passwordMinLength: Math.max(12, cfg.passwordMinLength),
       sessionIdleMinutes: Math.min(240, Math.max(5, cfg.session.idleMinutes)),

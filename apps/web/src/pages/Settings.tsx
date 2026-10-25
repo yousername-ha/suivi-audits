@@ -22,7 +22,13 @@ import {
   TextInput,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { SETTINGS_LABELS, SETTINGS_SECTIONS, type SettingsSection, type SettingsSectionOut } from '@suivi/shared';
+import {
+  SETTINGS_LABELS,
+  SETTINGS_SECTIONS,
+  type ApercuConservation,
+  type SettingsSection,
+  type SettingsSectionOut,
+} from '@suivi/shared';
 import { ConfirmDialog, FormSection, Page, PageHeader, StatusChip } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState, type ReactNode } from 'react';
@@ -41,6 +47,8 @@ const DESCRIPTIONS: Record<SettingsSection, string> = {
   import_export: 'Reprise des données de l’ancien outil et exports.',
   sauvegardes:
     'Suivi des sauvegardes et des tests de restauration (les sauvegardes elles-mêmes sont faites sur le serveur).',
+  conservation:
+    'Durées de conservation par catégorie. Aucune suppression n’est automatique : les durées servent à l’aperçu de ce qui serait candidat à une purge.',
   securite: 'Politique de mots de passe, durée des sessions et double authentification.',
 };
 
@@ -225,6 +233,91 @@ function Num({
   );
 }
 
+/** Une durée de conservation : « sans limite » (nul) ou un nombre de jours. */
+function DureeConservation({ p, k, label }: { p: P; k: string; label: string }) {
+  const v = p.values[k];
+  const limitee = typeof v === 'number';
+  return (
+    <Group align="flex-end" gap="md">
+      <Switch
+        label={`${label} : limiter la durée`}
+        checked={limitee}
+        disabled={p.ro}
+        onChange={(e) => p.set(k, e.currentTarget.checked ? 365 : null)}
+      />
+      {limitee && (
+        <NumberInput
+          aria-label={`${label} : durée en jours`}
+          label="Durée (jours)"
+          value={v}
+          min={1}
+          max={3650}
+          allowDecimal={false}
+          disabled={p.ro}
+          onChange={(n) => p.set(k, typeof n === 'number' ? n : 365)}
+        />
+      )}
+      {!limitee && (
+        <Text size="sm" c="dimmed">
+          Conservation sans limite
+        </Text>
+      )}
+    </Group>
+  );
+}
+
+/** Aperçu de ce qui serait candidat à une purge, d'après les durées enregistrées (lecture seule). */
+function ApercuConservationPanel() {
+  const section = useQuery({
+    queryKey: ['settings', 'conservation'],
+    queryFn: () => get<SettingsSectionOut>('/api/settings/conservation'),
+  });
+  const version = section.data?.version ?? 0;
+  const q = useQuery({
+    queryKey: ['settings', 'conservation', 'apercu', version],
+    queryFn: () => get<ApercuConservation>('/api/settings/conservation/apercu'),
+    enabled: !!section.data,
+  });
+  return (
+    <Stack gap="xs" role="region" aria-label="Aperçu de conservation">
+      <Text fw={600}>Aperçu de ce qui serait purgé</Text>
+      <Text size="sm" c="dimmed">
+        D’après les durées enregistrées. Enregistrez vos modifications pour mettre l’aperçu à jour.
+      </Text>
+      <ErrorAlert error={q.error} />
+      {q.data && (
+        <Table withTableBorder>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Catégorie</Table.Th>
+              <Table.Th>Durée</Table.Th>
+              <Table.Th>Candidats</Table.Th>
+              <Table.Th>Dont protégés</Table.Th>
+              <Table.Th>Plus ancien</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {q.data.categories.map((c) => (
+              <Table.Tr key={c.id}>
+                <Table.Td>
+                  {c.label}
+                  <Text size="xs" c="dimmed">
+                    {c.note}
+                  </Text>
+                </Table.Td>
+                <Table.Td>{c.days === null ? 'Sans limite' : `${c.days} jours`}</Table.Td>
+                <Table.Td>{c.candidates === null ? '—' : c.candidates}</Table.Td>
+                <Table.Td>{c.candidates === null ? '—' : c.protectedCount}</Table.Td>
+                <Table.Td>{c.oldest ? new Date(c.oldest).toLocaleDateString('fr-FR') : '—'}</Table.Td>
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
+      )}
+    </Stack>
+  );
+}
+
 /** Style global de l'instance : aperçu local tant que la section n'est pas enregistrée ; abandonné en quittant le panneau. */
 function StyleGlobal({ p }: { p: P }) {
   const enregistre = useMe().appearance.style;
@@ -346,6 +439,18 @@ const SECTIONS: Record<SettingsSection, (p: P) => ReactNode> = {
       <CopyCommand
         command={`sudo BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass ./scripts/backup.sh ${str(p.values.emplacement) || '/srv/sauvegardes/suivi-audits'}`}
       />
+    </Stack>
+  ),
+  conservation: (p) => (
+    <Stack>
+      <Alert color="blue" title="Aucune suppression automatique">
+        Régler une durée ne supprime rien. L’aperçu ci-dessous dit seulement ce qui serait candidat à une purge. Le
+        journal d’audit est immuable et n’est jamais concerné.
+      </Alert>
+      <DureeConservation p={p} k="documentsCorbeilleJours" label="Documents dans la corbeille" />
+      <DureeConservation p={p} k="rappelsLusJours" label="Rappels déjà lus" />
+      <DureeConservation p={p} k="elementsArchivesJours" label="Éléments archivés (fiches, registres)" />
+      <ApercuConservationPanel />
     </Stack>
   ),
   securite: (p) => (
