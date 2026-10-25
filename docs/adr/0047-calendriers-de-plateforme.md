@@ -19,7 +19,7 @@ Les **séries de tâches** reprennent ces jours : à l'import d'un calendrier da
 
 - Les **zones scolaires** (A, B, C, Corse) ne sont pas gérées, par décision ; elles sont au [fichier d'idées](../08_PILOTAGE/IDEES.md).
 - La reprise est une **copie** : une mise à jour ultérieure du calendrier de plateforme n'est pas répercutée sur les séries qui l'ont déjà reprise. Une référence vivante demanderait que le moteur de récurrence lise les calendriers à chaque calcul ; elle est écartée pour cette livraison.
-- La **couche d'affichage** des fériés derrière les tâches (018-09, Timeline et Calendrier) reste à faire.
+- La **couche d'affichage** des fériés derrière les tâches est faite (voir l'addendum ci-dessous).
 - Les libellés des jours importés par iCalendar ne sont pas conservés (le lecteur ne retient que les dates).
 
 ## Conséquences
@@ -27,3 +27,8 @@ Les **séries de tâches** reprennent ces jours : à l'import d'un calendrier da
 - Migration additive `039_calendriers_plateforme.sql` : `calendriers_plateforme`, `calendriers_plateforme_jours`, `calendriers_plateforme_journal` (immuable).
 - Routes sous `/api/calendriers-plateforme` ; lecture ouverte à toute personne connectée (les séries en ont besoin), écritures réservées au droit `administration:administrer`.
 - `CalendrierBody` (série) accepte `ics` ou `calendrier` (+ `annee`), jamais les deux.
+
+## Addendum — couche d'affichage (018-09)
+
+Dans la page des tâches, les vues **Calendrier** et **Timeline** proposent deux bascules distinctes, « Jours fériés en fond » et « Autres calendriers en fond », conservées dans l'adresse comme les autres filtres. La Timeline dessine une bande par jour derrière les barres (titre au survol, liste écrite sous l'en-tête), le Calendrier écrit « Férié : … » ou « Fermé : … » dans la case du jour : l'information ne repose jamais sur la couleur seule. **Le fond est un repère** : l'afficher ou le masquer ne modifie ni une échéance, ni une occurrence, ni la possibilité de réaliser une tâche un jour exclu par une série. Rien n'est chargé tant qu'aucune bascule n'est cochée. Les zones scolaires restent hors périmètre (décision 4).
+

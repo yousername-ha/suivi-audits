@@ -27,6 +27,7 @@ import { DataTable, StatusChip, type Etat } from '@suivi/ui';
 import { api, get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
+import { PlanEcarts } from './PlanEcarts';
 
 interface Referentiel {
   frameworkId: string;
@@ -278,7 +279,8 @@ export function Couverture({ smsi }: { smsi: string }) {
   const can = useCan(),
     [choix, setChoix] = useState<string | null>(null),
     [filtre, setFiltre] = useState<string | null>(null),
-    [ouverte, setOuverte] = useState<Detail | null>(null);
+    [ouverte, setOuverte] = useState<Detail | null>(null),
+    [plan, setPlan] = useState(false);
   const q = useQuery({
     queryKey: ['grc', smsi, 'couverture', choix],
     queryFn: () =>
@@ -349,6 +351,11 @@ export function Couverture({ smsi }: { smsi: string }) {
             value={choix}
             onChange={setChoix}
           />
+          {choix && can('ecarts', 'modifier') && (
+            <Button variant="default" onClick={() => setPlan(true)}>
+              Créer le plan d’action des écarts
+            </Button>
+          )}
           {choix && (
             <Select
               label="Filtrer par état"
@@ -429,6 +436,7 @@ export function Couverture({ smsi }: { smsi: string }) {
           </Table>
         </DataTable>
       )}
+      {plan && choix && <PlanEcarts smsi={smsi} frameworkId={choix} onClose={() => setPlan(false)} />}
       <Modal
         opened={!!ouverte}
         onClose={() => setOuverte(null)}

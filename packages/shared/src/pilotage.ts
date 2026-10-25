@@ -82,6 +82,8 @@ export const ImprovementData = common
     effectiveness: z.enum(['pending', 'effective', 'ineffective']).default('pending'),
     effectivenessNote: text.default(''),
     closureNote: text.default(''),
+    /** Motif écrit d'une clôture prononcée malgré des liens ouverts (décision 7 du 25/10/2026) ; vide sinon. */
+    closureOpenLinksReason: text.default(''),
     closedAt: date,
   })
   .passthrough();
@@ -211,6 +213,13 @@ export const PilotageRecord = z
     until: z
       .string()
       .refine((s) => !s || validDate(s), 'Date invalide.')
+      .default(''),
+    /** Clôture (opération close) malgré des liens ouverts : motif écrit, tracé au journal. Vide : la clôture est refusée. */
+    openLinksReason: z
+      .string()
+      .trim()
+      .max(2000)
+      .refine((s) => !s || s.length >= 15, 'Le motif écrit doit comporter au moins 15 caractères.')
       .default(''),
     confirm: z.literal('ENREGISTRER'),
   })

@@ -2,7 +2,8 @@
    d'action et politiques. Les données restent dans l'état historique (clé `ai`) ; l'écran modifie le registre (ajout,
    suppression, qualification), l'évaluation (périmètre, probabilité, maturité), l'avancement du plan et le statut des
    politiques. Aucun usage, scénario, étape ni politique n'est fourni par défaut. */
-import { Button, Card, Checkbox, Group, Stack, Table, Tabs, Text } from '@mantine/core';
+import { Alert, Button, Card, Checkbox, Group, Stack, Table, Tabs, Text } from '@mantine/core';
+import { useQuery } from '@tanstack/react-query';
 import {
   AUTORISATIONS_IA,
   AVANCEMENTS_IA,
@@ -20,6 +21,7 @@ import {
   type NiveauIa,
 } from '@suivi/shared';
 import { ConfirmButton, DataTable, StatusChip, type Etat } from '@suivi/ui';
+import { get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { ChampChoix, ChampTexte, ChampZone, useModule } from '../historique/champs';
 import { useCan } from '../session';
@@ -37,9 +39,23 @@ export function ConformiteIa() {
     modifiable = can('ia', 'modifier'),
     { d, agir, erreur } = useModule<{ version: number; ia: DonneesIa | null }>('ia', '/api/ia');
   const ia = d?.ia;
+  // Kit IA importé (ADR 0055) : le suivi des contrôles passe par le référentiel ; l'accès refusé n'est pas une erreur ici.
+  const kit = useQuery({
+    queryKey: ['library', 'ia-kit'],
+    queryFn: () => get<{ importe: boolean }>('/api/library/ia-kit'),
+    retry: false,
+    enabled: can('conformite', 'lire'),
+  });
   return (
     <Stack>
       <ErrorAlert error={erreur} />
+      {kit.data?.importe && (
+        <Alert color="blue" title="Le kit IA est importé" data-testid="ia-kit-renvoi">
+          Les contrôles IA se suivent désormais dans le référentiel « Contrôles IA internes » (page Couverture du
+          périmètre) : les points de cette page n’y sont plus saisis. Les données ci-dessous restent consultables ; rien
+          n’est supprimé automatiquement.
+        </Alert>
+      )}
       <div>
         <Text fw={600}>Conformité IA</Text>
         {ia?.context && (

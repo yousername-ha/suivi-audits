@@ -3,6 +3,7 @@
    validations d'ateliers). Lecture seule ; toutes les écritures passent par les objets GRC et les décisions. */
 import {
   EBIOS_ATELIERS,
+  ecartMatriceCourante,
   etatAcceptation,
   graviteProposee,
   indiceMenace,
@@ -11,6 +12,7 @@ import {
   StudyConfiguration,
   type EtatAcceptation,
   type GrcKind,
+  type RiskMethod,
 } from '@suivi/shared';
 import type { SessionUser } from '../auth.js';
 import { HttpError } from '../http/errors.js';
@@ -21,6 +23,7 @@ export interface FiltresRegistre {
   strategie?: string;
   acceptation?: EtatAcceptation;
   enRetard?: boolean;
+  ecart?: boolean;
   etude?: string;
   recherche?: string;
 }
@@ -34,6 +37,9 @@ interface Ligne {
   evaluation: {
     result: Record<string, { label?: string; level?: string; acceptability?: string }>;
     decision: string;
+    ratings: unknown;
+    methodId: string;
+    methodVersion: number;
   } | null;
   acceptance: { result: string; until: string | null; date: string; by: string } | null;
 }
@@ -48,7 +54,8 @@ export async function registreRisques(g: Grc, smsi: string, user: SessionUser, f
   const rows = (
     await g.db.q<Ligne>(
       `SELECT o.id,o.name,o.version,o.data,m.definition->>'family' AS family,
-        (SELECT jsonb_build_object('result',e.result,'decision',e.decision) FROM grc_risk_evaluations e
+        (SELECT jsonb_build_object('result',e.result,'decision',e.decision,'ratings',e.ratings,'methodId',mv.method_id,'methodVersion',mv.version)
+          FROM grc_risk_evaluations e JOIN grc_method_versions mv ON mv.id=e.method_version_id
           WHERE e.risk_id=o.id ORDER BY (e.decision='approved') DESC,e.revision DESC LIMIT 1) AS evaluation,
         (SELECT jsonb_build_object('result',d.result,'until',d.terms->>'until','date',d.performed_on::text,'by',d.created_by)
           FROM pilotage_decisions d WHERE d.smsi_id=o.smsi_id AND d.source_ref='object:'||o.id AND d.operation='risk_acceptance'
@@ -64,6 +71,19 @@ export async function registreRisques(g: Grc, smsi: string, user: SessionUser, f
     )
   ).rows;
   const aujourdhui = jour();
+  // Version la plus récente de chaque méthode utilisée : « matrice courante » à laquelle on compare, sans rien recalculer.
+  const methodes = [...new Set(rows.flatMap((r) => (r.evaluation ? [r.evaluation.methodId] : [])))];
+  const courantes = new Map(
+    methodes.length
+      ? (
+          await g.db.q<{ methodId: string; version: number; definition: unknown }>(
+            `SELECT DISTINCT ON (method_id) method_id AS "methodId",version,definition FROM grc_method_versions
+             WHERE smsi_id=$1 AND method_id=ANY($2::uuid[]) ORDER BY method_id,version DESC`,
+            [smsi, methodes],
+          )
+        ).rows.map((m) => [m.methodId, { version: m.version, definition: m.definition as RiskMethod }] as const)
+      : [],
+  );
   const items = rows
     .map((r) => {
       const res = r.evaluation?.result ?? {};
@@ -86,9 +106,26 @@ export async function registreRisques(g: Grc, smsi: string, user: SessionUser, f
         prochaineRevue: revue,
         enRetard: !!revue && revue < aujourdhui,
         etude: typeof r.data.studyRef === 'string' ? r.data.studyRef : null,
+        /** Le niveau enregistré fait foi ; l'écart avec la matrice courante est seulement signalé (ADR 0052). */
+        ecartMatrice: (() => {
+          const courante = r.evaluation && courantes.get(r.evaluation.methodId);
+          return r.evaluation && courante
+            ? ecartMatriceCourante({
+                result: r.evaluation.result,
+                ratings: r.evaluation.ratings,
+                versionEnregistree: r.evaluation.methodVersion,
+                courante,
+              })
+            : null;
+        })(),
       };
     })
-    .filter((x) => (!f.acceptation || x.acceptation === f.acceptation) && (!f.enRetard || x.enRetard));
+    .filter(
+      (x) =>
+        (!f.acceptation || x.acceptation === f.acceptation) &&
+        (!f.enRetard || x.enRetard) &&
+        (!f.ecart || x.ecartMatrice !== null),
+    );
   return { items, tronque: rows.length >= 500 };
 }
 
@@ -112,11 +149,39 @@ export async function etudeEbios(g: Grc, smsi: string, id: string, user: Session
       [smsi, kinds, ref],
     )
   ).rows;
+  // Sources de la bibliothèque de risques (sans étude propriétaire) référencées par les couples de l'étude : lues, pas copiées.
+  const propres = new Set(objets.map((o) => o.id));
+  const idsBibliotheque = [
+    ...new Set(
+      objets
+        .filter((o) => o.kind === 'sr_ov' && typeof o.data.sourceRef === 'string')
+        .map((o) => String(o.data.sourceRef).replace(/^object:/, ''))
+        .filter((id) => /^[0-9a-f-]{36}$/.test(id) && !propres.has(id)),
+    ),
+  ];
+  const bibliotheque = idsBibliotheque.length
+    ? (
+        await g.db.q<(typeof objets)[number] & { archived: boolean }>(
+          `SELECT id,kind,name,version,data,updated_at AS "updatedAt",archived FROM grc_objects
+           WHERE smsi_id=$1 AND kind='risk_source' AND id=ANY($2::uuid[]) AND COALESCE(data->>'studyRef','')=''`,
+          [smsi, idsBibliotheque],
+        )
+      ).rows
+    : [];
+  const versionsBibliotheque = new Map(bibliotheque.map((o) => ['object:' + o.id, o.version]));
+  objets.push(...bibliotheque);
   const parId = new Map(objets.map((o) => ['object:' + o.id, o]));
   const gravites = await libellesGravite(g, etude.data.configuration);
   const echelles = await libellesEchellesScenario(g, etude.data.configuration);
   const enrichi = objets.map((o) => {
     const calcul: Record<string, unknown> = {};
+    if (versionsBibliotheque.has('object:' + o.id)) calcul.bibliotheque = true;
+    if (o.kind === 'sr_ov') {
+      const courante = versionsBibliotheque.get(String(o.data.sourceRef ?? ''));
+      const choisie = typeof o.data.sourceVersion === 'number' ? o.data.sourceVersion : null;
+      // Source de la bibliothèque modifiée depuis le choix du couple : à relire, rien n'est changé en silence.
+      if (courante !== undefined) calcul.sourceModifiee = choisie === null || courante > choisie ? courante : null;
+    }
     if (o.kind === 'feared_event' && typeof o.data.severityLevel === 'string')
       calcul.graviteCatalogue = gravites.get(o.data.severityLevel) ?? null;
     if (o.kind === 'ecosystem_party') calcul.menace = indiceMenace(o.data as Parameters<typeof indiceMenace>[0]);
@@ -202,4 +267,43 @@ async function libellesGravite(g: Grc, configuration: unknown) {
   const echelle = ScaleDefinition.safeParse(await def(mapping.data.to));
   if (echelle.success) for (const l of echelle.data.levels) noms.set(l.id, l.label);
   return noms;
+}
+
+/** Bibliothèque partagée des sources de risque du périmètre : sources sans étude propriétaire, réutilisables par toutes les
+    études par référence, avec le nombre de couples qui s'y rattachent. Les cotations restent propres à chaque étude. */
+export async function bibliothequeSources(g: Grc, smsi: string, user: SessionUser) {
+  await g.access(smsi, user);
+  await g.permission(user, 'pilotage', 'lire');
+  const rows = (
+    await g.db.q<{
+      id: string;
+      name: string;
+      version: number;
+      data: Record<string, unknown>;
+      usages: number;
+      etudes: number;
+    }>(
+      `SELECT o.id,o.name,o.version,o.data,
+        (SELECT count(*)::int FROM grc_objects c WHERE c.smsi_id=o.smsi_id AND c.kind='sr_ov' AND NOT c.archived AND c.data->>'sourceRef'='object:'||o.id) AS usages,
+        (SELECT count(DISTINCT c.data->>'studyRef')::int FROM grc_objects c WHERE c.smsi_id=o.smsi_id AND c.kind='sr_ov' AND NOT c.archived AND c.data->>'sourceRef'='object:'||o.id) AS etudes
+       FROM grc_objects o
+       WHERE o.smsi_id=$1 AND o.kind='risk_source' AND NOT o.archived AND COALESCE(o.data->>'studyRef','')=''
+       ORDER BY o.name,o.id LIMIT 500`,
+      [smsi],
+    )
+  ).rows;
+  return {
+    items: rows.map((r) => ({
+      id: r.id,
+      name: r.name,
+      version: r.version,
+      category: String(r.data.category ?? ''),
+      motive: String(r.data.motive ?? ''),
+      resources: String(r.data.resources ?? ''),
+      targetObjective: String(r.data.targetObjective ?? ''),
+      usages: r.usages,
+      etudes: r.etudes,
+    })),
+    tronque: rows.length >= 500,
+  };
 }

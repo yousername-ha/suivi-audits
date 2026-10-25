@@ -45,8 +45,10 @@ import { loadGrants } from '../rights.js';
 import { validDate } from '@suivi/shared';
 import { GrcFrameworks } from './frameworks.js';
 import { GrcLibrary } from './library.js';
+import { GrcKitIa } from './kit-ia.js';
 import { GrcLibraryMappings } from './library-mappings.js';
 import { GrcEvaluationsExigences } from './evaluations-exigences.js';
+import { GrcPlanEcarts } from './plan-ecarts.js';
 import { GrcRapprochements } from './rapprochements.js';
 import { GrcSuppliers } from './suppliers.js';
 import { GrcRisks } from './risks.js';
@@ -160,7 +162,9 @@ export class Grc {
   readonly frameworks: GrcFrameworks;
   readonly library: GrcLibrary;
   readonly libraryMappings: GrcLibraryMappings;
+  readonly kitIa: GrcKitIa;
   readonly rapprochements: GrcRapprochements;
+  readonly planEcarts: GrcPlanEcarts;
   readonly evaluations: GrcEvaluationsExigences;
   readonly suppliers: GrcSuppliers;
   readonly risks: GrcRisks;
@@ -181,7 +185,9 @@ export class Grc {
     this.frameworks = new GrcFrameworks(this);
     this.library = new GrcLibrary(this);
     this.libraryMappings = new GrcLibraryMappings(this);
+    this.kitIa = new GrcKitIa(this);
     this.rapprochements = new GrcRapprochements(this);
+    this.planEcarts = new GrcPlanEcarts(this);
     this.evaluations = new GrcEvaluationsExigences(this);
     this.suppliers = new GrcSuppliers(this);
     this.risks = new GrcRisks(this);
@@ -720,7 +726,10 @@ export class Grc {
       ) {
         throw new HttpError(422, 'Utilisez la commande de vérification ou validation pour conserver la décision.');
       }
-      if (kind === 'nonconformity' && (data.closedAt || data.closureNote || data.effectivenessNote))
+      if (
+        kind === 'nonconformity' &&
+        (data.closedAt || data.closureNote || data.effectivenessNote || data.closureOpenLinksReason)
+      )
         throw new HttpError(422, 'La clôture et l’efficacité sont enregistrées par une décision dédiée.');
       if (
         kind === 'continuity_exercise' &&

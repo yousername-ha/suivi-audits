@@ -210,6 +210,73 @@ describe('Pilotage multi-référentiels G/H/K et début E', () => {
     expect(report.statusCode).toBe(200);
     expect(report.json().closed).toBeGreaterThan(0);
   });
+  it('clôture avec liens ouverts : refusée sans motif écrit, acceptée avec un motif tracé, réinitialisé à la réouverture (décision 7)', async () => {
+    const c = await a.post(base + '/objects', {
+      kind: 'control',
+      name: 'Contrôle à clôture dérogatoire',
+      data: {
+        objective: 'Vérifier',
+        scope: 'Recette',
+        method: 'Comparer les pièces',
+        criteria: 'Aucune perte',
+        dueAt: '2026-10-10',
+        refs: [document],
+      },
+    });
+    expect(c.statusCode, c.body).toBe(200);
+    const r = await decide('object:' + c.json().id, 'control_execution', 'fail', 1, {
+      createFinding: true,
+      createAction: true,
+    });
+    expect(r.statusCode, r.body).toBe(200);
+    const [ecart2, action2] = r.json().generatedRefs as string[];
+    const lire = async () => (await a.get(base + '/objects/' + ecart2!.slice(7))).json();
+    let f = await lire();
+    f = (
+      await a.put(
+        base + '/objects/' + f.id,
+        { kind: 'nonconformity', name: f.name, data: { ...f.data, cause: 'Cause identifiée par analyse détaillée' } },
+        { 'if-match': `"${f.version}"` },
+      )
+    ).json();
+    expect((await decide(ecart2!, 'effectiveness', 'effective', f.version)).statusCode).toBe(200);
+    f = await lire();
+    // Sans motif : refus explicite, qui dit ce qui reste ouvert.
+    const refus = await decide(ecart2!, 'close', 'completed', f.version);
+    expect(refus.statusCode).toBe(409);
+    expect(refus.json().error).toContain('Des liens restent ouverts (1 action(s) liée(s) non terminée(s)');
+    // Un motif trop court n'est pas un motif écrit.
+    expect((await decide(ecart2!, 'close', 'completed', f.version, { openLinksReason: 'court' })).statusCode).toBe(422);
+    expect((await lire()).data.status).not.toBe('closed');
+    // Avec un motif écrit : la clôture est prononcée, le motif et ce qui restait ouvert sont conservés.
+    const motif = 'Action reprise au plan annuel, clôture décidée en revue de direction.';
+    const ok = await decide(ecart2!, 'close', 'completed', f.version, { openLinksReason: motif });
+    expect(ok.statusCode, ok.body).toBe(200);
+    expect(ok.json().terms.openLinks).toMatchObject({ reason: motif, tasks: 0 });
+    expect(ok.json().terms.openLinks.actions).toEqual([{ ref: action2, name: expect.any(String) }]);
+    f = await lire();
+    expect(f.data).toMatchObject({ status: 'closed', closureOpenLinksReason: motif });
+    // L'action liée reste ouverte et suivie : la clôture ne la termine pas.
+    expect((await a.get(base + '/objects/' + action2!.slice(7))).json().data.status).not.toBe('done');
+    const audit = (await a.get('/api/admin/audit')).body;
+    expect(audit).toContain('closedWithOpenLinks');
+    // Ce champ ne s'écrit pas à la main.
+    expect(
+      (
+        await a.put(
+          base + '/objects/' + f.id,
+          { kind: 'nonconformity', name: f.name, data: { ...f.data, closureOpenLinksReason: 'Forcé' } },
+          { 'if-match': `"${f.version}"` },
+        )
+      ).statusCode,
+    ).toBeGreaterThanOrEqual(400);
+    // La réouverture efface le motif sur la fiche ; la décision d'origine reste au journal.
+    const rouvert = await decide(ecart2!, 'reopen', 'completed', f.version, {
+      note: 'Réouverture : l’action liée n’est toujours pas terminée.',
+    });
+    expect(rouvert.statusCode, rouvert.body).toBe(200);
+    expect((await lire()).data.closureOpenLinksReason).toBe('');
+  });
   it('rouvrir l’action liée ne rouvre pas un écart clos : la clôture reste intacte (017-07)', async () => {
     const f = await ecart();
     expect(f.data.status).toBe('closed');

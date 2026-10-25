@@ -462,14 +462,14 @@ export class GrcRisks {
     args.push(filters.limit ?? 500);
     const rows = (
       await this.g.db.q<ObjectRow & { assessment: Record<string, unknown> | null; method: RiskMethod | null }>(
-        `SELECT o.id,o.smsi_id AS "smsiId",o.kind,o.name,o.data,o.version,o.archived,o.legacy_key AS "legacyKey",o.legacy_id AS "legacyId",o.created_by AS "createdBy",o.updated_by AS "updatedBy",o.created_at AS "createdAt",o.updated_at AS "updatedAt",to_jsonb(e) assessment,m.definition method FROM ${baseRows} LEFT JOIN LATERAL(SELECT * FROM grc_risk_evaluations e WHERE e.risk_id=o.id AND e.created_at<=$2::timestamptz ORDER BY revision DESC LIMIT 1)e ON true LEFT JOIN grc_method_versions m ON m.id=e.method_version_id WHERE ${where} ORDER BY o.name,o.id LIMIT $${args.length}`,
+        `SELECT o.id,o.smsi_id AS "smsiId",o.kind,o.name,o.data,o.version,o.archived,o.legacy_key AS "legacyKey",o.legacy_id AS "legacyId",o.created_by AS "createdBy",o.updated_by AS "updatedBy",o.created_at AS "createdAt",o.updated_at AS "updatedAt",to_jsonb(e) assessment,m.definition method FROM ${baseRows} LEFT JOIN LATERAL(SELECT * FROM grc_risk_evaluations e WHERE e.risk_id=o.id AND e.created_at<=$2::timestamptz ORDER BY (e.decision='approved') DESC,revision DESC LIMIT 1)e ON true LEFT JOIN grc_method_versions m ON m.id=e.method_version_id WHERE ${where} ORDER BY o.name,o.id LIMIT $${args.length}`,
         args,
       )
     ).rows;
     const previousRows = filters.compareAt
       ? (
           await this.g.db.q<{ risk_id: string; result: unknown; method_version_id: string; revision: number }>(
-            `SELECT DISTINCT ON(risk_id) risk_id,result,method_version_id,revision FROM grc_risk_evaluations WHERE smsi_id=$1 AND risk_id=ANY($2::uuid[]) AND created_at<=$3::timestamptz ORDER BY risk_id,revision DESC`,
+            `SELECT DISTINCT ON(risk_id) risk_id,result,method_version_id,revision FROM grc_risk_evaluations WHERE smsi_id=$1 AND risk_id=ANY($2::uuid[]) AND created_at<=$3::timestamptz ORDER BY risk_id,(decision='approved') DESC,revision DESC`,
             [smsi, rows.map((r) => r.id), filters.compareAt],
           )
         ).rows

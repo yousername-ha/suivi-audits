@@ -9,6 +9,7 @@ import { ConfirmButton, DataTable, StatusChip } from '@suivi/ui';
 import { api, get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
+import { KitIa } from './KitIa';
 
 interface Referentiel {
   id: string;
@@ -103,6 +104,7 @@ export function Bibliotheque() {
         {modifier && <Button onClick={() => setImport({ cible: null })}>Importer un référentiel</Button>}
       </Group>
       {modifier && <StandardsDisponibles onDone={() => qc.invalidateQueries({ queryKey: ['library'] })} />}
+      <KitIa />
       <DataTable label="Référentiels de la bibliothèque, défilement horizontal possible">
         <Table>
           <Table.Thead>

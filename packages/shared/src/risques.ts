@@ -159,6 +159,8 @@ export const RiskSourceData = common
 export const SrOvData = common
   .extend({
     sourceRef: ref,
+    /** Version de la source de la bibliothèque au moment du choix ; sert à signaler qu'elle a changé depuis. */
+    sourceVersion: z.number().int().positive().nullable().default(null),
     objective: z.string().max(2000).default(''),
     motivation: niveau,
     resources: niveau,

@@ -171,6 +171,7 @@ export class Pilotage {
         data.effectivenessNote = input.note;
         data.status = input.result === 'effective' ? 'effectiveness' : 'progress';
       }
+      let closeTerms: Record<string, unknown> | null = null;
       if (input.operation === 'close') {
         if (input.result !== 'completed' || data.effectiveness !== 'effective' || !String(data.cause ?? '').trim())
           throw new HttpError(409, 'Analyser les causes et vérifier une efficacité positive avant clôture.');
@@ -184,14 +185,35 @@ export class Pilotage {
         const policy = (await this.g.policy(smsi, user)).definition;
         const terminal = policy.statuses.filter((s) => s.terminal).map((s) => s.id);
         const pending = (
-          await c.query(
-            `SELECT 1 FROM grc_objects a WHERE a.smsi_id=$1 AND a.kind='action' AND NOT(a.data->>'status'=ANY($3)) AND EXISTS(SELECT 1 FROM grc_links l WHERE l.smsi_id=$1 AND ((l.source_ref='object:'||a.id AND l.target_ref=$2) OR (l.target_ref='object:'||a.id AND l.source_ref=$2))) LIMIT 1`,
+          await c.query<{ id: string; name: string; registre_id: string | null }>(
+            `SELECT a.id,a.name,a.registre_id FROM grc_objects a WHERE a.smsi_id=$1 AND a.kind='action' AND NOT(a.data->>'status'=ANY($3)) AND EXISTS(SELECT 1 FROM grc_links l WHERE l.smsi_id=$1 AND ((l.source_ref='object:'||a.id AND l.target_ref=$2) OR (l.target_ref='object:'||a.id AND l.source_ref=$2))) ORDER BY a.name,a.id LIMIT 50`,
             [smsi, ref, terminal],
           )
-        ).rowCount;
+        ).rows;
+        const masques = new Set(await this.g.registres.inaccessibles(user, smsi, c));
         const tasks = Array.isArray(data.tasks) ? data.tasks : [];
-        if (pending || tasks.some((t) => isObject(t) && t.done !== true))
-          throw new HttpError(409, 'Terminez les actions liées avant de clôturer.');
+        const tasksOpen = tasks.filter((t) => isObject(t) && t.done !== true).length;
+        if (pending.length || tasksOpen) {
+          // Décision 7 : la clôture reste refusée tant qu'un lien est ouvert, sauf motif écrit, conservé avec la décision.
+          if (!input.openLinksReason)
+            throw new HttpError(
+              409,
+              `Des liens restent ouverts (${pending.length} action(s) liée(s) non terminée(s), ${tasksOpen} tâche(s) à faire) : terminez-les, ou clôturez avec un motif écrit.`,
+            );
+          data.closureOpenLinksReason = input.openLinksReason;
+          closeTerms = {
+            openLinks: {
+              reason: input.openLinksReason,
+              // Une action d'un registre restreint illisible pour l'auteur compte, mais son nom n'est pas recopié dans la décision.
+              actions: pending.map((a) =>
+                a.registre_id && masques.has(a.registre_id)
+                  ? { ref: 'object:' + a.id, name: '' }
+                  : { ref: 'object:' + a.id, name: a.name },
+              ),
+              tasks: tasksOpen,
+            },
+          };
+        }
         if (data.status === 'closed') throw new HttpError(409, 'Constat déjà clos.');
         data.status = 'closed';
         data.closedAt = input.date;
@@ -207,6 +229,7 @@ export class Pilotage {
         data.effectivenessNote = '';
         data.closedAt = '';
         data.closureNote = '';
+        data.closureOpenLinksReason = '';
       }
       if (input.operation === 'approval') {
         await this.g.permission(user, 'pilotage', 'administrer');
@@ -233,7 +256,7 @@ export class Pilotage {
         data.status = input.result === 'accepted' ? 'validated' : 'draft';
         data.justification = input.note;
       }
-      let terms: Record<string, unknown> = {};
+      let terms: Record<string, unknown> = closeTerms ?? {};
       if (input.operation === 'risk_acceptance') {
         await this.g.permission(user, 'pilotage', 'administrer');
         if (!['accepted', 'rejected'].includes(input.result))
@@ -367,7 +390,12 @@ export class Pilotage {
         ip,
         'pilotage.' + input.operation,
         ref,
-        { decisionId: row.id, result: input.result, generated },
+        {
+          decisionId: row.id,
+          result: input.result,
+          generated,
+          ...(closeTerms ? { closedWithOpenLinks: true } : {}),
+        },
         c,
       );
       await this.g.notify(c, ref, source.version, smsi, GRC_MODULES[source.kind], user.username);

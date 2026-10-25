@@ -61,7 +61,7 @@ Légende des états : **Corrigé** (critère de l'audit satisfait et testé) · 
 | 017-01 / 021-01 / 018-01 | Amélioré | Éléments d'un registre partagé listés sous chaque périmètre qui le porte et ouverts avec leur périmètre de référence ; sélecteur de registre à la création ; filtre « Registre » et filtres conservés dans l'adresse | Regroupement par registre dans la liste ; filtre multiple | `registres-droits.test.ts`, e2e `…-registres-partages.spec.ts`, `…-filtres-taches.spec.ts` |
 | 017-03 / 018-03 | Amélioré | Kanban à autant de colonnes que d'états de la politique, zone bornée, titres fixes | Test de volume sur le Kanban | e2e `…-timeline-lisible.spec.ts` (Timeline) |
 | 017-06 / 018-02 | Corrigé | Timeline : intitulés fixes, zone bornée pour cent actions, état, retard et validation (OK, KO, NA) en toutes lettres, légende ; guide pointillé par ligne et carré d'occurrence (jaune en attente, puis vert OK, rouge KO, gris NA) | — | e2e `…-timeline-lisible.spec.ts` |
-| 017-07 | Amélioré | Liens entrants affichés : action liée par audit d'origine ou par récidive | — | `liens.test.ts` |
+| 017-07 | Amélioré | Liens entrants affichés : action liée par audit d'origine ou par récidive ; clôture refusée tant qu'une action liée ou une tâche est ouverte, sauf motif écrit tracé ([ADR 0053](../adr/0053-cloture-avec-liens-ouverts.md)) | Les liens vers d'autres écarts, risques ou plans ne bloquent pas la clôture | `liens.test.ts`, `pilotage.test.ts`, e2e `…-cloture-liens-ouverts.spec.ts` |
 | 021-05 | Amélioré | Test : un écart et une action reliés à une exigence, l'action terminée, laissent l'évaluation et l'état de l'exigence inchangés | — (le contexte d'applicabilité s'affiche à côté du lien vers une exigence) | `couverture-exigences.test.ts`, `risques-traitement.test.ts` |
 | 021-06 | Corrigé | Classification en rouge, orange foncé et violet, avec légende, en liste et en fiche | — | `etat-action.test.ts`, e2e |
 | 018-04 | Amélioré | Bouton de validation expliqué (désactivé hors fenêtre) | Gabarit compact, test mobile | e2e `…-validation-occurrence.spec.ts` |
@@ -70,13 +70,13 @@ Légende des états : **Corrigé** (critère de l'audit satisfait et testé) · 
 | 018-10 | Amélioré | Validation (OK, KO, NA) visible dans les listes de tâches ; une occurrence validée n'est plus « en retard » | Gabarit maître-détail (décision de l'audit § 5) | `etat-action.test.ts` |
 | 018-11 | Amélioré | « Occurrence suivante » cherche dans la liste courante (filtres compris), toutes séries confondues ; aucune validation automatique | Test e2e de la case d'enchaînement | `validations-occurrences.test.ts` |
 | 018-08 | Amélioré | Fériés français et iCal en plateforme, avec provenance (journal) et import répété sans perte | Vacances scolaires A/B/C/Corse (écartées) | `calendriers-plateforme.test.ts` |
-| 018-09 | Décision | — | Couche d'affichage des fériés derrière les tâches (Timeline, Calendrier) | — |
+| 018-09 | Amélioré | Fériés et autres calendriers de plateforme affichables en fond (Timeline, Calendrier), bascules séparées, jours écrits en toutes lettres | Zones scolaires (écartées) | `jours-de-fond.test.ts`, e2e `jours-de-fond` |
 
 ### 002 Risques et 003 EBIOS RM
 
 | ID | État | Ce qui a été fait | Reste | Preuve |
 | --- | --- | --- | --- | --- |
-| 002-01 | Amélioré | Filtre et colonne « Étude » ; drapeau « revue dépassée » testé | Règle commune registre/carte pour l'évaluation retenue (décision 8) | `risques.test.ts` |
+| 002-01 | Amélioré | Filtre et colonne « Étude » ; drapeau « revue dépassée » testé ; règle commune registre/carte/matrice pour l'évaluation retenue (approuvée en priorité) ; écart avec la matrice courante signalé sans recalcul ([ADR 0052](../adr/0052-registre-fait-foi-matrice-bareme.md)) | Pas de signalement dans la carte ni la matrice colorée ; pas de réévaluation en masse | `risques.test.ts`, `grc.test.ts`, `ecart-matrice.test.ts`, `registre-risques-ecart.test.ts` |
 | 002-02 | Amélioré | Mesure d'un traitement = exigence d'un cadre publié (ex. Annexe A), proposée dans le sélecteur, lisible depuis l'exigence ; le lien ne modifie pas la couverture ; relations proposées = celles que le serveur accepte | — (l'applicabilité de l'exigence dans le périmètre est lue à côté du lien, sans effet sur la couverture) | `risques-traitement.test.ts` |
 | 002-05 | Corrigé | Action de traitement avec choix du plan d'accueil (gestion exigée, même famille) ; étude archivée sans effet sur les évaluations | — | `risques-traitement.test.ts`, e2e `…-risques-traitement.spec.ts` |
 | 003-01 | Amélioré | Une modification postérieure à la validation d'un atelier la rend caduque (« modifié depuis la validation ») | Schémas illustrés ; test de reprise après rechargement | `risques.test.ts` |
@@ -89,6 +89,7 @@ Légende des états : **Corrigé** (critère de l'audit satisfait et testé) · 
 | 003-08 | Amélioré | Chemins stratégiques (source → parties prenantes → événements), choix, alternatives, aller-retour avec la synthèse ; chemins incomplets non dessinés | Pas d'éditeur graphique ; séquence opérationnelle en texte libre | idem |
 | 003-09 | Amélioré | Sept pictogrammes indicatifs d'après la catégorie, libellé écrit, sans reclasser la source | Reconnaissance par mots-clés | idem |
 | 003-10 | Amélioré | Flux et contour épais sur le chemin choisi seulement ; pause, Animées/Automatiques/Arrêtées, mouvement réduit | — | idem |
+| 019-07 (SR/OV) | Amélioré | Bibliothèque partagée de sources de risque : choix par référence dans une étude, version retenue, dérive signalée, cotations propres à l'étude ([ADR 0054](../adr/0054-bibliotheque-sources-de-risque.md)) | Propre à un périmètre (pas d'héritage ni de bibliothèque d'organisation) ; objectifs visés non catalogués | `risques.test.ts`, e2e `zzzz-bibliotheque-sources.spec.ts` |
 
 ## Décisions de l'utilisateur
 
@@ -98,10 +99,16 @@ Les quinze décisions restantes ont été tranchées le 25/10/2026 : voir [DECIS
 2. ~~Définition de « conformité »~~ **Décidé (21/10/2026)** : « Couverture » (testées ou validées / applicables), jamais présentée comme conformité ISO/IEC 27001. Les clauses 4 à 10 sont obligatoires donc non excluables ; une exigence « à déterminer » est comptée à part et signalée comme à revoir (appliqué dans le code).
 3. ~~Modèle « collaborateur »~~ **Décidé (21/10/2026)** : membre d'un groupe qui a le droit sur le registre : tout le registre ; attribué directement sur une action : cette action seulement. Réalisé (022-03).
 4. ~~Canaux d'envoi (courriel, Teams), conservation et nettoyage automatique, certificats autosignés et ACME~~ **Décidé (25/10/2026)**, réalisé en partie (012-04, 012-07, 012-09 à 012-11). Les niveaux de journalisation (012-13) sont réalisés.
-5. Calendriers de plateforme (zones scolaires, jours fériés) et leur couche d'affichage (012-14, 018-08, 018-09).
+5. ~~Calendriers de plateforme et leur couche d'affichage (012-14, 018-08, 018-09)~~ **Décidé (25/10/2026)** et réalisé : fériés et iCal ([ADR 0047](../adr/0047-calendriers-de-plateforme.md)), couche d'affichage en fond (addendum) ; zones scolaires écartées.
 6. ~~Couche visuelle EBIOS RM : cercle, chemins, pictogrammes, flux animés (003-07 à 003-10)~~ **Décidé (25/10/2026)** et réalisé ([ADR 0051](../adr/0051-couche-visuelle-ebios.md)).
-7. ~~« Bimensuel »~~ **Décidé (21/10/2026)** : tous les deux mois (mois × 2, comme trimestriel et semestriel) (018-06) ; ~~PCRA~~ **Décidé** : la tuile compte les plans de type PCRA seulement (010-06). Reste : liens entre périmètres et condition de clôture.
-8. Règle d'évaluation retenue commune au registre et à la matrice (002-01).
+7. ~~« Bimensuel »~~ **Décidé (21/10/2026)** : tous les deux mois (mois × 2, comme trimestriel et semestriel) (018-06) ; ~~PCRA~~ **Décidé** : la tuile compte les plans de type PCRA seulement (010-06). ~~Reste : liens entre périmètres et condition de clôture.~~ **Décidé (25/10/2026)** : clôture refusée tant qu'un lien est ouvert, sauf motif écrit tracé ([ADR 0053](../adr/0053-cloture-avec-liens-ouverts.md)).
+8. ~~Règle d'évaluation retenue commune au registre et à la matrice (002-01)~~ **Décidé (25/10/2026)** et réalisé ([ADR 0052](../adr/0052-registre-fait-foi-matrice-bareme.md)).
+
+## Bilan de la livraison du 25/10/2026 (état honnête)
+
+Livré sur la branche de travail avec tests : couche visuelle EBIOS (ADR 0051), écart registre/matrice (0052), clôture avec liens ouverts (0053), bibliothèque de sources de risque (0054), kit d'intégration IA (0055), assistant « Analyser un service » et plan des écarts (0056), fériés en fond (0047, addendum), courriel (0049), certificats TLS (0050).
+
+Non fait ou limité, à décider ou à poursuivre : notifications métier par groupe ou profil (012-10) ; registres par défaut paresseux (010-04/010-10) ; remplacement des points IA du questionnaire par le kit ; suppression de la page « Conformité IA » (renvoi seulement, aucune donnée supprimée) ; envoi automatique de courriels ; émission ACME et envoi SMTP non constatés contre des serveurs réels ; référentiel officiel IA de l'ANSSI (accès réseau). **Aucun marqueur `IMPLEMENTATION-OK` n'est posé.**
 
 ## Preuves exécutées
 

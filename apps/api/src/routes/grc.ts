@@ -18,12 +18,13 @@ import {
   SupplierFollowUpBody,
   SupplierUpdateBody,
   LinkBody,
+  PlanEcartsCorps,
   methodTemplate,
 } from '@suivi/shared';
 import type { Session } from '../auth.js';
 import { cartesPerimetres } from '../grc/cartes.js';
 import { dashboard } from '../grc/dashboard.js';
-import { etudeEbios, registreRisques } from '../grc/registre-risques.js';
+import { bibliothequeSources, etudeEbios, registreRisques } from '../grc/registre-risques.js';
 import { report } from '../grc/report.js';
 import { sources } from '../grc/sources.js';
 import { route } from '../http/route.js';
@@ -643,6 +644,42 @@ export const grcRoutes = [
     ...base,
     access: 'conformite:lire' as const,
     method: 'GET',
+    url: '/api/library/ia-kit',
+    summary: 'Dernier kit IA importé : version, annexes de veille (statut juridique à revérifier)',
+    handler: async ({ svc, s }) => svc.grc.kitIa.dernier((s as Session).user),
+  }),
+  route({
+    ...base,
+    access: 'conformite:modifier' as const,
+    method: 'POST',
+    url: '/api/library/ia-kit/preview',
+    bodyLimit: 4 * 1024 * 1024,
+    summary: 'Aperçu de l’import du kit IA (lecture seule : contrôles, correspondances résolues, annexes)',
+    body: z.object({ kit: z.unknown() }).strict(),
+    handler: async ({ svc, s, body }) => svc.grc.kitIa.apercu(body.kit, (s as Session).user),
+  }),
+  route({
+    ...base,
+    access: 'conformite:modifier' as const,
+    method: 'POST',
+    url: '/api/library/ia-kit/import',
+    bodyLimit: 4 * 1024 * 1024,
+    summary: 'Importer le kit IA : référentiel de la bibliothèque, correspondances proposées, annexes (idempotent)',
+    body: z
+      .object({
+        kit: z.unknown(),
+        previewId: z.string().min(1).max(200),
+        reason: z.string().trim().min(10).max(2000),
+        confirm: z.literal('IMPORTER'),
+      })
+      .strict(),
+    handler: async ({ svc, s, body, ip }) =>
+      svc.grc.kitIa.importer(body.kit, body.previewId, body.reason, (s as Session).user, ip),
+  }),
+  route({
+    ...base,
+    access: 'conformite:lire' as const,
+    method: 'GET',
     url: '/api/library/mappings',
     summary: 'Correspondances organisationnelles entre exigences de la bibliothèque',
     query: z.object({
@@ -864,6 +901,27 @@ export const grcRoutes = [
     query: z.object({ frameworkId: z.uuid().optional() }),
     handler: async ({ svc, s, params, query }) =>
       svc.grc.rapprochements.coverage(params.smsi, (s as Session).user, query.frameworkId),
+  }),
+  route({
+    ...base,
+    method: 'GET',
+    url: '/api/grc/:smsi/plan-ecarts',
+    summary: 'Aperçu du plan d’action des écarts d’un référentiel (lecture seule)',
+    params: scope,
+    query: z.object({ frameworkId: z.uuid() }),
+    handler: async ({ svc, s, params, query }) =>
+      svc.grc.planEcarts.apercu(params.smsi, query.frameworkId, (s as Session).user),
+  }),
+  route({
+    ...base,
+    method: 'POST',
+    url: '/api/grc/:smsi/plan-ecarts',
+    summary: 'Créer les actions manquantes pour des exigences en écart (idempotent)',
+    params: scope,
+    status: 201,
+    body: PlanEcartsCorps,
+    handler: async ({ svc, s, params, body, ip }) =>
+      svc.grc.planEcarts.creer(params.smsi, body, (s as Session).user, ip),
   }),
   route({
     ...base,
@@ -1143,12 +1201,26 @@ export const grcRoutes = [
         strategie: z.enum(['reduce', 'accept', 'transfer', 'avoid', 'treated']).optional(),
         acceptation: z.enum(['sans_objet', 'a_decider', 'acceptee', 'refusee', 'echue']).optional(),
         enRetard: z.enum(['1']).optional(),
+        ecart: z.enum(['1']).optional(),
         etude: z.uuid().optional(),
         recherche: z.string().max(200).optional(),
       })
       .strict(),
     handler: async ({ svc, s, params, query }) =>
-      registreRisques(svc.grc, params.smsi, (s as Session).user, { ...query, enRetard: query.enRetard === '1' }),
+      registreRisques(svc.grc, params.smsi, (s as Session).user, {
+        ...query,
+        enRetard: query.enRetard === '1',
+        ecart: query.ecart === '1',
+      }),
+  }),
+  route({
+    tags: ['SMSI GRC'],
+    access: 'pilotage:lire',
+    method: 'GET',
+    url: '/api/grc/:smsi/risk-library',
+    summary: 'Bibliothèque partagée des sources de risque du périmètre, avec leur usage par les études (décision 10)',
+    params: scope,
+    handler: async ({ svc, s, params }) => bibliothequeSources(svc.grc, params.smsi, (s as Session).user),
   }),
   route({
     tags: ['SMSI GRC'],

@@ -238,6 +238,17 @@ export const FrameworkDefinition = z
             description: z.string().max(20000),
             applicability: z.string().max(2000),
             measureRefs: z.array(GrcRef).max(100).default([]),
+            /** Champs facultatifs des contrôles de l'organisation (kit IA, ADR 0055) ; absents des référentiels officiels. */
+            auditQuestion: z.string().max(2000).optional(),
+            expectedEvidence: z.string().max(2000).optional(),
+            eligibleScopes: z
+              .array(z.enum(['external', 'business']))
+              .max(2)
+              .optional(),
+            priority: z.string().max(40).optional(),
+            ownerFunction: z.string().max(200).optional(),
+            reviewFrequency: z.string().max(100).optional(),
+            themeIso42001: z.string().max(200).optional(),
           })
           .strict(),
       )

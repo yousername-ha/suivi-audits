@@ -49,6 +49,7 @@ const INVENTAIRE = [
   'conformite|referentiels|correspondances|/pilotage/correspondances|conformite|lire',
   'conformite|referentiels|rapprochements|/pilotage/rapprochements|conformite|lire',
   'conformite|referentiels|couverture|/pilotage/couverture|conformite|lire',
+  'conformite|referentiels|analyser-service|/pilotage/analyser-service|conformite|lire',
   'conformite|referentiels|gap-applications|/pilotage/gap-applications|conformite|lire',
   'conformite|referentiels|correspondances-bibliotheque|/pilotage/correspondances-bibliotheque|conformite|lire',
   'conformite|applicabilite|dda-iso|/pilotage/dda-iso|audit|lire',
