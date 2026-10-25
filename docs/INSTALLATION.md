@@ -378,17 +378,9 @@ CADDY_TLS=internal
 APP_VERSION=3.0.0
 ```
 
-**6.4 Choisir le certificat HTTPS.** Deux possibilités :
+**6.4 Certificat HTTPS.** Ne faites rien maintenant : le serveur démarre avec un **certificat interne** (`CADDY_TLS=internal`, réglage par défaut) qu'il crée lui-même. Le certificat définitif se choisit **dans l'application**, une fois connecté (Administration, Système, Certificats TLS), sans fichier à modifier : autorité interne du serveur, **ACME** (certificat publiquement fiable, renouvelé seul, qui demande un nom public et les ports 80 et 443 joignables depuis Internet) ou **certificat de votre PKI** (déposé depuis l'application). Voir l'étape 11.7.
 
-| Choix | Quand | Ce qu'il faut faire |
-|---|---|---|
-| **Certificat interne** (`CADDY_TLS=internal`, réglage par défaut) | Pour démarrer, ou sans PKI | Rien. Le serveur crée sa propre autorité. Les navigateurs afficheront un avertissement tant que son certificat racine n'est pas installé sur les postes (étape 8.3). |
-| **Certificat de votre PKI** (recommandé en production) | L'équipe PKI vous a fourni un certificat pour le nom DNS | Voir ci-dessous. |
-
-Pour utiliser le certificat de votre PKI :
-1. Faites déposer dans `/opt/suivi-audits/certs/` deux fichiers : `fullchain.pem` (le certificat suivi de la chaîne) et `privkey.pem` (la clé privée, **non protégée par mot de passe**).
-2. Dans `.env` (avec `sudo nano .env`), remplacez `CADDY_TLS=internal` par `CADDY_TLS=/certs/fullchain.pem /certs/privkey.pem`.
-3. Rendez les fichiers lisibles par le conteneur web (utilisateur 1001), et par lui seul : `sudo chown 1001:1001 certs/*.pem && sudo chmod 400 certs/privkey.pem`.
+Si l'équipe infrastructure impose un réglage de départ par fichier (certificat de la PKI avant tout accès à l'application), il reste possible : déposez `fullchain.pem` et `privkey.pem` (clé **non protégée par mot de passe**) dans `/opt/suivi-audits/certs/`, remplacez `CADDY_TLS=internal` par `CADDY_TLS=/certs/fullchain.pem /certs/privkey.pem` dans `.env`, puis `sudo chown 1001:1001 certs/*.pem && sudo chmod 400 certs/privkey.pem`. Ce réglage est celui auquel l'application revient quand on choisit « Revenir au réglage de départ ».
 
 **6.5 Vérifier le DNS.** Le nom doit renvoyer l'adresse IP du serveur :
 
@@ -503,7 +495,7 @@ sudo docker compose exec app setup-token
 
 **8.3 Avertissement « Votre connexion n'est pas privée »** (avec `CADDY_TLS=internal` uniquement). C'est **attendu** : le certificat a été créé par le serveur lui-même, et votre poste ne le connaît pas encore.
 - Pour avancer maintenant : cliquez sur **Paramètres avancés**, puis sur **Continuer vers le site**.
-- Pour une installation durable, installez le certificat racine du serveur sur les postes. Récupérez-le d'abord sur le serveur :
+- Pour une installation durable, installez le certificat racine du serveur sur les postes. Une fois connecté, l'application le propose au téléchargement (Administration, Système, Certificats TLS, « Télécharger le certificat racine »). Sur le serveur, vous pouvez aussi le récupérer ainsi :
 
 <!-- ci: run -->
 ```bash
@@ -803,9 +795,16 @@ Les demandes anciennes réintroduites depuis une archive sont neutralisées ; au
 
 ### 11.7 Certificats TLS et priorité explicite
 
-Caddy termine TLS. Par défaut, `TLS_WEB_MANAGEMENT=0` et `.env`/`CADDY_TLS` restent seuls responsables. Pour permettre le remplacement web, régler `TLS_WEB_MANAGEMENT=1` et `TLS_TERMINATION=caddy` dans `.env`, puis recréer le frontal avec `docker compose up -d gateway`. Si TLS est terminé par un ingress/proxy extérieur, régler `TLS_TERMINATION=external` : observation du certificat public sur SITE_ADDRESS:443, aucune modification proposée. L'accès d'observation doit être permis depuis l'hôte ; aucune sortie Internet n'est donnée à l'API.
+Caddy termine TLS. **Le mode de certificat se choisit dans l'application** (Administration, Système, Certificats TLS), sans fichier à modifier ([ADR 0050](adr/0050-certificats-depuis-l-interface.md)) :
 
-Priorité : un couple web actif **et** l'activation serveur sélectionnent les chemins fixes `/certs-web/cert.pem` et `key.pem`. Sinon Caddy utilise exactement `CADDY_TLS` dans `.env`. Le marqueur `secrets/tls-web/mode`, sauvegardé avec le couple, ne contient que web/env ; aucun shell ni fichier de configuration fourni par un utilisateur n'est interprété. Revenir à .env est confirmé, vérifié et journalisé ; le fichier .env n'est jamais modifié par une demande web. Caddy continue les renouvellements internes/ACME ; les certificats manuels sont remplacés par leur gestionnaire. Aucun bouton ne prétend forcer un renouvellement ACME non pris en charge par le moteur.
+- **Autorité interne du serveur (autosigné)** : le serveur signe son propre certificat. L'application propose de télécharger le certificat racine à installer sur les postes (étape 8.3).
+- **ACME** : indiquez un courriel de contact (et, si besoin, l'adresse d'un autre serveur ACME publiquement fiable ; vide = Let's Encrypt). Le serveur obtient le certificat, le contrôle (chaîne publiquement fiable exigée) et le renouvelle seul. Prérequis : le nom du serveur est public, les ports 80 et 443 sont joignables depuis Internet et le serveur peut joindre le serveur ACME. Si l'émission échoue, la configuration précédente est rétablie et le journal dit pourquoi. Un serveur ACME privé n'est pas pris en charge.
+- **Certificat fourni** : certificat/chaîne PEM et clé PEM non chiffrée, contrôlés ensemble avant installation.
+- **Réglage de départ** : « Revenir au réglage de départ » rend la main à `CADDY_TLS` dans `.env`. Tant qu'aucun mode n'est choisi dans l'application, `.env` reste seul responsable.
+
+La gestion depuis l'application est active par défaut. `TLS_WEB_MANAGEMENT=0` dans `.env` l'interdit ; si TLS est terminé par un ingress/proxy extérieur, régler `TLS_TERMINATION=external` : observation du certificat public sur SITE_ADDRESS:443, aucune modification proposée. L'accès d'observation doit être permis depuis l'hôte ; aucune sortie Internet n'est donnée à l'API.
+
+Priorité : le marqueur `secrets/tls-web/mode` (sauvegardé avec le couple, il ne contient que `web`, `env`, `interne` ou `acme`) sélectionne le mode. Pour `web`, les chemins fixes `/certs-web/cert.pem` et `key.pem` ; pour `acme`, le fichier `secrets/tls-web/acme` (deux lignes, courriel puis adresse `https://…`, revalidées au démarrage du frontal) ; sinon Caddy utilise exactement `CADDY_TLS` dans `.env`. Aucun shell ni fichier de configuration fourni par un utilisateur n'est interprété. Le fichier `.env` n'est jamais modifié par une demande web. Caddy ne reçoit qu'un seul émetteur ACME (pas de serveur de secours). Aucun bouton ne prétend forcer un renouvellement : Caddy renouvelle seul.
 
 Le certificat/chaîne PEM et la clé PEM non chiffrée sont contrôlés ensemble (format, validité, hôte, clé publique et chaîne). La clé est scellée avec Vault en base, déchiffrée seulement par la CLI hôte, écrite dans `DATA_DIR/secrets/tls-web` (uid Caddy 1001, fichiers 0400) et incluse dans les sauvegardes chiffrées. Son contenu n'est pas rendu dans l'interface, l'API de lecture, les notifications ou l'audit ; il est effacé de la demande terminée/annulée. Ne pas copier de clé dans les journaux, arguments CLI ou fichiers d'état publics. Conserver les permissions et les sauvegardes externalisées.
 

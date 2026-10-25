@@ -53,3 +53,4 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0047](0047-calendriers-de-plateforme.md) | Calendriers de plateforme : jours fériés français calculés et iCalendar importés par l'administrateur | Acceptée |
 | [0048](0048-conservation-sans-purge-automatique.md) | Conservation : durées réglables, aperçu, aucune purge automatique | Acceptée |
 | [0049](0049-courriel-et-sortie-reseau-optionnelle.md) | Courriel SMTP/SMTPS envoyé par l'exécutant d'exploitation, tout dans l'interface | Acceptée |
+| [0050](0050-certificats-depuis-l-interface.md) | Certificats TLS (autorité interne, ACME, certificat fourni) choisis dans l'interface | Acceptée |

@@ -17,6 +17,7 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import {
+  ACME_PAR_DEFAUT,
   nextBackupAt,
   type BackupPolicyOut,
   type BackupsOut,
@@ -27,7 +28,7 @@ import {
 import { StatusChip, type Etat } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
-import { api, errorMessage, get, post } from '../api';
+import { api, errorMessage, get, post, saveBlob } from '../api';
 import { ConfirmButton, ErrorAlert, fmtDate, fmtOctets } from '../components/common';
 import { useCan } from '../session';
 
@@ -54,6 +55,15 @@ const KINDS: Record<OperationOut['kind'], string> = {
   restore: 'Restauration',
   tls_install: 'Remplacement TLS',
   tls_reset: 'Retour TLS à .env',
+  tls_internal: 'Certificat de l’autorité interne',
+  tls_acme: 'Certificat ACME',
+};
+const MODES_TLS: Record<string, string> = {
+  env: 'réglage de départ du serveur (.env)',
+  web: 'certificat fourni',
+  interne: 'autorité interne du serveur (autosigné)',
+  acme: 'ACME',
+  external: 'infrastructure externe',
 };
 const DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'].map((label, i) => ({
   value: String(i + 1),
@@ -96,6 +106,8 @@ export function OperationsPanel() {
   const [certificate, setCertificate] = useState<File | null>(null);
   const [key, setKey] = useState<File | null>(null);
   const [apercu, setApercu] = useState<ApercuCertificat | null>(null);
+  const [acmeEmail, setAcmeEmail] = useState('');
+  const [acmeServeur, setAcmeServeur] = useState('');
   const controler = async () => {
     if (!certificate) return;
     setError(null);
@@ -144,7 +156,9 @@ export function OperationsPanel() {
       | Omit<Extract<OperationIn, { kind: 'verify' }>, 'requestId'>
       | Omit<Extract<OperationIn, { kind: 'restore' }>, 'requestId'>
       | Omit<Extract<OperationIn, { kind: 'tls_install' }>, 'requestId'>
-      | Omit<Extract<OperationIn, { kind: 'tls_reset' }>, 'requestId'>,
+      | Omit<Extract<OperationIn, { kind: 'tls_reset' }>, 'requestId'>
+      | Omit<Extract<OperationIn, { kind: 'tls_internal' }>, 'requestId'>
+      | Omit<Extract<OperationIn, { kind: 'tls_acme' }>, 'requestId'>,
   ) =>
     update(async () => {
       const k = input.kind + ('archiveId' in input ? ':' + input.archiveId : '');
@@ -380,14 +394,12 @@ export function OperationsPanel() {
             Certificats TLS
           </Title>
           <Text size="sm">
-            Configuration active :{' '}
-            {host?.tlsMode === 'web'
-              ? 'certificat web'
+            Mode actif : {MODES_TLS[host?.tlsMode ?? 'env']}.{' '}
+            {host?.tlsManaged
+              ? 'Le mode se choisit ci-dessous, sans fichier à modifier sur le serveur.'
               : host?.tlsMode === 'external'
-                ? 'infrastructure externe'
-                : '.env'}
-            . La gestion web nécessite une activation explicite sur le serveur. Sans certificat web actif, CADDY_TLS
-            dans .env reste prioritaire.
+                ? 'TLS est terminé par une infrastructure extérieure : le certificat est seulement observé.'
+                : 'La modification depuis l’application est désactivée sur ce serveur.'}
           </Text>
           {cert ? (
             <>
@@ -424,11 +436,84 @@ export function OperationsPanel() {
             </Text>
           )}
           <Text size="sm">
-            Caddy assure le renouvellement des certificats internes et ACME. Les certificats fournis manuellement
-            nécessitent un remplacement. Une infrastructure TLS externe conserve sa propre procédure de gestion.
+            Caddy renouvelle seul les certificats de l’autorité interne et ACME. Un certificat fourni doit être remplacé
+            avant son expiration. Une infrastructure TLS externe conserve sa propre procédure de gestion.
           </Text>
           {admin && host?.tlsManaged && host.tlsMode !== 'external' && (
             <>
+              <Title order={3} size="h5">
+                Autorité interne du serveur (autosigné)
+              </Title>
+              <Text size="sm">
+                Le serveur signe lui-même son certificat. Les navigateurs afficheront un avertissement tant que le
+                certificat racine n’est pas installé sur les postes : téléchargez-le ci-dessous.
+              </Text>
+              <Group>
+                <ConfirmButton
+                  disabled={disabled || host.tlsMode === 'interne'}
+                  message="Utiliser le certificat de l’autorité interne ? Le frontal est redémarré, contrôlé, puis la configuration précédente est rétablie en cas d’échec."
+                  onConfirm={() => void request({ kind: 'tls_internal', confirmation: 'APPLIQUER' })}
+                >
+                  Utiliser l’autorité interne
+                </ConfirmButton>
+                {host.racineInterne && (
+                  <Button
+                    variant="default"
+                    onClick={() =>
+                      saveBlob('autorite-interne-racine.crt', host.racineInterne ?? '', 'application/x-x509-ca-cert')
+                    }
+                  >
+                    Télécharger le certificat racine
+                  </Button>
+                )}
+              </Group>
+              <Title order={3} size="h5">
+                ACME (renouvellement automatique)
+              </Title>
+              <Text size="sm">
+                Le serveur obtient et renouvelle seul un certificat publiquement fiable. Il faut que le nom du serveur
+                soit public et que les ports 80 et 443 soient joignables depuis Internet (le serveur doit aussi pouvoir
+                joindre le serveur ACME). L’opération échoue proprement sinon, et la configuration précédente est
+                rétablie.
+              </Text>
+              {host.acme && (
+                <Text size="sm">
+                  Réglage ACME en vigueur : {host.acme.email} · {host.acme.directory}
+                </Text>
+              )}
+              <TextInput
+                label="Adresse de courriel de contact ACME"
+                type="email"
+                value={acmeEmail}
+                disabled={disabled}
+                onChange={(e) => setAcmeEmail(e.currentTarget.value)}
+              />
+              <TextInput
+                label="Serveur ACME (laisser vide pour Let’s Encrypt)"
+                placeholder={ACME_PAR_DEFAUT}
+                value={acmeServeur}
+                disabled={disabled}
+                onChange={(e) => setAcmeServeur(e.currentTarget.value)}
+              />
+              <Group>
+                <ConfirmButton
+                  disabled={disabled || !acmeEmail.trim()}
+                  message="Passer en ACME ? Le serveur contactera le serveur ACME, le frontal sera redémarré et contrôlé. La configuration précédente est rétablie en cas d’échec."
+                  onConfirm={() =>
+                    void request({
+                      kind: 'tls_acme',
+                      email: acmeEmail.trim(),
+                      directory: acmeServeur.trim() || ACME_PAR_DEFAUT,
+                      confirmation: 'APPLIQUER',
+                    })
+                  }
+                >
+                  Obtenir un certificat ACME
+                </ConfirmButton>
+              </Group>
+              <Title order={3} size="h5">
+                Certificat fourni
+              </Title>
               <FileInput
                 label="Certificat et chaîne PEM"
                 accept=".pem,.crt,.cer"
@@ -520,11 +605,11 @@ export function OperationsPanel() {
                   Remplacer le certificat
                 </ConfirmButton>
                 <ConfirmButton
-                  disabled={disabled || host.tlsMode !== 'web'}
-                  message="Revenir à CADDY_TLS dans .env ? Le certificat web sera désactivé après validation du frontal."
+                  disabled={disabled || host.tlsMode === 'env'}
+                  message="Revenir au réglage de départ du serveur (CADDY_TLS dans .env) ? Le mode choisi ici sera désactivé après validation du frontal."
                   onConfirm={() => void request({ kind: 'tls_reset', confirmation: 'REVENIR' })}
                 >
-                  Revenir à .env
+                  Revenir au réglage de départ
                 </ConfirmButton>
               </Group>
             </>

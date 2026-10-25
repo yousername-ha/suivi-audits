@@ -157,6 +157,10 @@ export class Operations {
           const cert = certificateInfo(p.certificate, new URL(this.cfg.publicUrl).hostname, p.privateKey);
           payload = { certificate: p.certificate, fingerprint: cert.fingerprint };
           secret = this.vault.sealSmall(Buffer.from(p.privateKey), `operation:${id}`);
+        } else if (p.kind === 'tls_internal') {
+          payload = { mode: 'interne' };
+        } else if (p.kind === 'tls_acme') {
+          payload = { mode: 'acme', email: p.email, directory: p.directory };
         }
       }
       const r = (
@@ -180,7 +184,12 @@ export class Operations {
         ip,
         `operation.${p.kind}.request`,
         id,
-        { archiveId: r.archive_id, sha256: r.sha256, fingerprint: payload.fingerprint ?? null },
+        {
+          archiveId: r.archive_id,
+          sha256: r.sha256,
+          fingerprint: payload.fingerprint ?? null,
+          ...(payload.mode ? { mode: payload.mode, directory: payload.directory ?? null } : {}),
+        },
         c,
       );
       return out(r);

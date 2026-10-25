@@ -274,6 +274,52 @@ describe('Lot A : pilotage opérationnel', () => {
         .statusCode,
     ).toBe(409);
   });
+  it('autorité interne et ACME : réglages validés, transmis à l’exécutant, aucun secret', async () => {
+    publish();
+    const url = '/api/admin/exploitation/operations';
+    for (const bad of [
+      { kind: 'tls_internal', confirmation: 'OUI' },
+      { kind: 'tls_acme', email: 'pas-un-courriel', confirmation: 'APPLIQUER' },
+      { kind: 'tls_acme', email: 'rssi@exemple.fr -e X=1', confirmation: 'APPLIQUER' },
+      { kind: 'tls_acme', email: 'rssi@exemple.fr', directory: 'http://acme.exemple.fr/d', confirmation: 'APPLIQUER' },
+      { kind: 'tls_acme', email: 'rssi@exemple.fr', directory: 'https://a.fr/x y;rm', confirmation: 'APPLIQUER' },
+      { kind: 'tls_acme', email: 'rssi@exemple.fr', confirmation: 'APPLIQUER', extra: 1 },
+    ])
+      expect((await a.post(url, { requestId: randomUUID(), ...bad })).statusCode).toBe(422);
+    const termine = async (id: string, kind: string) => {
+      publish({ jobs: [{ ...verified(), id, kind, archiveId: null, sha256: null, status: 'reussie' }] });
+      await t.svc.operations.synchronize();
+    };
+    const interne = await a.post(url, { requestId: randomUUID(), kind: 'tls_internal', confirmation: 'APPLIQUER' });
+    expect(interne.statusCode).toBe(202);
+    const jobInterne = await t.svc.operations.claim();
+    expect(jobInterne!.payload).toEqual({ mode: 'interne' });
+    expect(jobInterne).not.toHaveProperty('privateKey');
+    await termine(interne.json().id, 'tls_internal');
+    const acme = await a.post(url, {
+      requestId: randomUUID(),
+      kind: 'tls_acme',
+      email: 'rssi@exemple.fr',
+      confirmation: 'APPLIQUER',
+    });
+    expect(acme.statusCode).toBe(202);
+    const jobAcme = await t.svc.operations.claim();
+    expect(jobAcme!.payload).toEqual({
+      mode: 'acme',
+      email: 'rssi@exemple.fr',
+      directory: 'https://acme-v02.api.letsencrypt.org/directory',
+    });
+    expect(jobAcme).not.toHaveProperty('privateKey');
+    await termine(acme.json().id, 'tls_acme');
+    expect((await a.get('/api/admin/audit')).body).toContain('operation.tls_acme.request');
+    publish({ tlsMode: 'acme', acme: { email: 'rssi@exemple.fr', directory: 'https://a.fr/d' } });
+    expect((await a.get('/api/admin/exploitation')).json().host.tlsMode).toBe('acme');
+    publish({ tlsMode: 'external' });
+    expect(
+      (await a.post(url, { requestId: randomUUID(), kind: 'tls_internal', confirmation: 'APPLIQUER' })).statusCode,
+    ).toBe(409);
+    publish();
+  });
   it('clé TLS scellée, jamais dans sorties/audit, et détruite après achèvement', async () => {
     const response = await a.post('/api/admin/exploitation/operations', {
       requestId: randomUUID(),
