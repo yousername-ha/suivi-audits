@@ -14,7 +14,7 @@ import {
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import type { GrcObject, PilotageRecord } from '@suivi/shared';
-import { api, get } from '../api';
+import { api, errorMessage, get } from '../api';
 import { ErrorAlert } from '../components/common';
 import type { Source } from './Fields';
 export const OPERATION_LABELS: Record<PilotageRecord['operation'], string> = {
@@ -53,6 +53,8 @@ export function Decision({
     [action, setAction] = useState(false),
     [confirmed, setConfirmed] = useState(false),
     [until, setUntil] = useState(''),
+    [liensOuverts, setLiensOuverts] = useState(false),
+    [motifLiens, setMotifLiens] = useState(''),
     [requestId, setRequestId] = useState('');
   const sources = useQuery({
     queryKey: ['grc', smsi, 'sources', search],
@@ -82,6 +84,8 @@ export function Decision({
       setAction(operation === 'action_create');
       setConfirmed(false);
       setUntil('');
+      setLiensOuverts(false);
+      setMotifLiens('');
       setRequestId(crypto.randomUUID());
     }
   }, [object, operation, step]);
@@ -132,6 +136,7 @@ export function Decision({
             createFinding: finding,
             createAction: action,
             ...(acceptation ? { until } : {}),
+            ...(operation === 'close' && liensOuverts ? { openLinksReason: motifLiens } : {}),
             confirm: 'ENREGISTRER',
           },
         },
@@ -139,6 +144,8 @@ export function Decision({
       await qc.invalidateQueries({ queryKey: ['grc', smsi] });
       onClose();
     } catch (e) {
+      // Décision 7 : la clôture est refusée tant qu'un lien est ouvert ; un motif écrit permet de la prononcer quand même.
+      if (operation === 'close' && errorMessage(e).startsWith('Des liens restent ouverts')) setLiensOuverts(true);
       setError(e);
     } finally {
       setSaving(false);
@@ -219,6 +226,15 @@ export function Decision({
             onChange={(e) => setAction(e.currentTarget.checked)}
           />
         )}
+        {liensOuverts && (
+          <Textarea
+            label="Motif écrit de la clôture malgré les liens ouverts"
+            description="Sans motif, la clôture reste refusée. Le motif est conservé avec la décision, sur la fiche et au journal d’audit ; les actions et tâches ouvertes restent suivies."
+            value={motifLiens}
+            onChange={(e) => setMotifLiens(e.currentTarget.value)}
+            error={motifLiens.trim() && motifLiens.trim().length < 15 ? 'Au moins 15 caractères.' : undefined}
+          />
+        )}
         <Alert>La décision et les versions examinées sont conservées dans l’historique.</Alert>
         <Checkbox
           label="Je confirme l’enregistrement de cette décision"
@@ -231,7 +247,12 @@ export function Decision({
           </Button>
           <Button
             loading={saving}
-            disabled={!confirmed || note.trim().length < 10 || (acceptation && result === 'accepted' && !until)}
+            disabled={
+              !confirmed ||
+              note.trim().length < 10 ||
+              (acceptation && result === 'accepted' && !until) ||
+              (liensOuverts && motifLiens.trim().length < 15)
+            }
             onClick={() => void save()}
           >
             Confirmer l’enregistrement

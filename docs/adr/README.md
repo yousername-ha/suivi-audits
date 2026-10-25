@@ -56,3 +56,4 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0050](0050-certificats-depuis-l-interface.md) | Certificats TLS (autorité interne, ACME, certificat fourni) choisis dans l'interface | Acceptée |
 | [0051](0051-couche-visuelle-ebios.md) | Couche visuelle EBIOS RM : chemins, pictogrammes, cercle, flux animés | Acceptée |
 | [0052](0052-registre-fait-foi-matrice-bareme.md) | Le registre fait foi ; la matrice et les échelles sont des barèmes, l'écart est signalé | Acceptée |
+| [0053](0053-cloture-avec-liens-ouverts.md) | Clôture d'un écart avec des liens ouverts : refus, sauf motif écrit tracé | Acceptée |

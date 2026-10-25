@@ -720,7 +720,10 @@ export class Grc {
       ) {
         throw new HttpError(422, 'Utilisez la commande de vérification ou validation pour conserver la décision.');
       }
-      if (kind === 'nonconformity' && (data.closedAt || data.closureNote || data.effectivenessNote))
+      if (
+        kind === 'nonconformity' &&
+        (data.closedAt || data.closureNote || data.effectivenessNote || data.closureOpenLinksReason)
+      )
         throw new HttpError(422, 'La clôture et l’efficacité sont enregistrées par une décision dédiée.');
       if (
         kind === 'continuity_exercise' &&

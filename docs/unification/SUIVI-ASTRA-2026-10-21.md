@@ -61,7 +61,7 @@ Légende des états : **Corrigé** (critère de l'audit satisfait et testé) · 
 | 017-01 / 021-01 / 018-01 | Amélioré | Éléments d'un registre partagé listés sous chaque périmètre qui le porte et ouverts avec leur périmètre de référence ; sélecteur de registre à la création ; filtre « Registre » et filtres conservés dans l'adresse | Regroupement par registre dans la liste ; filtre multiple | `registres-droits.test.ts`, e2e `…-registres-partages.spec.ts`, `…-filtres-taches.spec.ts` |
 | 017-03 / 018-03 | Amélioré | Kanban à autant de colonnes que d'états de la politique, zone bornée, titres fixes | Test de volume sur le Kanban | e2e `…-timeline-lisible.spec.ts` (Timeline) |
 | 017-06 / 018-02 | Corrigé | Timeline : intitulés fixes, zone bornée pour cent actions, état, retard et validation (OK, KO, NA) en toutes lettres, légende ; guide pointillé par ligne et carré d'occurrence (jaune en attente, puis vert OK, rouge KO, gris NA) | — | e2e `…-timeline-lisible.spec.ts` |
-| 017-07 | Amélioré | Liens entrants affichés : action liée par audit d'origine ou par récidive | — | `liens.test.ts` |
+| 017-07 | Amélioré | Liens entrants affichés : action liée par audit d'origine ou par récidive ; clôture refusée tant qu'une action liée ou une tâche est ouverte, sauf motif écrit tracé ([ADR 0053](../adr/0053-cloture-avec-liens-ouverts.md)) | Les liens vers d'autres écarts, risques ou plans ne bloquent pas la clôture | `liens.test.ts`, `pilotage.test.ts`, e2e `…-cloture-liens-ouverts.spec.ts` |
 | 021-05 | Amélioré | Test : un écart et une action reliés à une exigence, l'action terminée, laissent l'évaluation et l'état de l'exigence inchangés | — (le contexte d'applicabilité s'affiche à côté du lien vers une exigence) | `couverture-exigences.test.ts`, `risques-traitement.test.ts` |
 | 021-06 | Corrigé | Classification en rouge, orange foncé et violet, avec légende, en liste et en fiche | — | `etat-action.test.ts`, e2e |
 | 018-04 | Amélioré | Bouton de validation expliqué (désactivé hors fenêtre) | Gabarit compact, test mobile | e2e `…-validation-occurrence.spec.ts` |
@@ -100,7 +100,7 @@ Les quinze décisions restantes ont été tranchées le 25/10/2026 : voir [DECIS
 4. ~~Canaux d'envoi (courriel, Teams), conservation et nettoyage automatique, certificats autosignés et ACME~~ **Décidé (25/10/2026)**, réalisé en partie (012-04, 012-07, 012-09 à 012-11). Les niveaux de journalisation (012-13) sont réalisés.
 5. Calendriers de plateforme (zones scolaires, jours fériés) et leur couche d'affichage (012-14, 018-08, 018-09).
 6. ~~Couche visuelle EBIOS RM : cercle, chemins, pictogrammes, flux animés (003-07 à 003-10)~~ **Décidé (25/10/2026)** et réalisé ([ADR 0051](../adr/0051-couche-visuelle-ebios.md)).
-7. ~~« Bimensuel »~~ **Décidé (21/10/2026)** : tous les deux mois (mois × 2, comme trimestriel et semestriel) (018-06) ; ~~PCRA~~ **Décidé** : la tuile compte les plans de type PCRA seulement (010-06). Reste : liens entre périmètres et condition de clôture.
+7. ~~« Bimensuel »~~ **Décidé (21/10/2026)** : tous les deux mois (mois × 2, comme trimestriel et semestriel) (018-06) ; ~~PCRA~~ **Décidé** : la tuile compte les plans de type PCRA seulement (010-06). ~~Reste : liens entre périmètres et condition de clôture.~~ **Décidé (25/10/2026)** : clôture refusée tant qu'un lien est ouvert, sauf motif écrit tracé ([ADR 0053](../adr/0053-cloture-avec-liens-ouverts.md)).
 8. Règle d'évaluation retenue commune au registre et à la matrice (002-01).
 
 ## Preuves exécutées
