@@ -30,7 +30,6 @@ const ECRANS = [
   ['pilotage-objectifs', '/pilotage/objectifs'],
   ['pilotage-audits', '/pilotage/audits'],
   ['pilotage-exercices', '/pilotage/exercices'],
-  ['evaluations-ia', '/ia/evaluations'],
   ['aide', '/aide'],
   ['parametres', '/parametres'],
   ['admin-plateforme', '/plateforme'],
