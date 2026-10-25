@@ -676,6 +676,22 @@
 .grc-timeline__mois {
   stroke: var(--mantine-color-default-border);
 }
+.grc-timeline__fond {
+  opacity: 0.35;
+  pointer-events: none;
+}
+.grc-timeline__fond--feries {
+  fill: var(--mantine-color-orange-3);
+}
+.grc-timeline__fond--autres {
+  fill: var(--mantine-color-blue-3);
+}
+.grc-calendar .grc-calendar__fond {
+  background: var(--mantine-color-orange-light);
+}
+.grc-calendar__fond-libelle {
+  color: var(--mantine-color-text);
+}
 .grc-timeline__aujourdhui {
   stroke: var(--mantine-color-red-6);
   stroke-dasharray: 4 3;

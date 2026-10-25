@@ -3,6 +3,7 @@
 import { Alert, Button, Group, Stack, Text } from '@mantine/core';
 import type { BusinessPolicy, GrcObject, TaskData } from '@suivi/shared';
 import { enRetard, libelleStatut, symboleStatut, validationDe } from './etat-action';
+import type { JourFond } from './jours-de-fond';
 
 const JOUR = 86_400_000;
 const LARGEUR_JOUR = 4;
@@ -94,10 +95,13 @@ export function Timeline({
   items,
   policy,
   onOpen,
+  fond = [],
 }: {
   items: GrcObject[];
   policy: BusinessPolicy;
   onOpen: (o: GrcObject) => void;
+  /** Jours de fond (fériés, fermetures) : repères derrière les barres, sans effet sur les actions. */
+  fond?: readonly JourFond[];
 }) {
   const maintenant = Date.now();
   const frise = calculerFrise(items, maintenant);
@@ -117,6 +121,11 @@ export function Timeline({
         libelle: d.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit', timeZone: 'UTC' }),
       });
   const aujourdhui = Math.floor(maintenant / JOUR) * JOUR;
+  const finFrise = frise.debut + (frise.jours - 1) * JOUR;
+  // Les jours de fond tombant dans la période affichée, une bande par jour et par famille (deux familles peuvent se superposer).
+  const fondVisible = fond
+    .map((j) => ({ ...j, jour: Date.parse(j.date + 'T00:00:00Z') }))
+    .filter((j) => Number.isFinite(j.jour) && j.jour >= frise.debut && j.jour <= finFrise);
   const fr = (jour: number) => new Date(jour).toLocaleDateString('fr-FR', { timeZone: 'UTC' });
   const ouvrir = (objet: GrcObject) => ({
     role: 'button' as const,
@@ -160,6 +169,15 @@ export function Timeline({
           ! En retard : barre cerclée de rouge
         </Text>
       </Group>
+      {fondVisible.length > 0 && (
+        <Text size="xs" data-testid="timeline-fond">
+          Jours de fond dans la période ({fondVisible.length}) :{' '}
+          {fondVisible
+            .map((j) => `${fr(j.jour)} ${j.label} (${j.famille === 'feries' ? 'férié' : 'fermeture'})`)
+            .join(' ; ')}
+          .
+        </Text>
+      )}
       {frise.tronquee && (
         <Alert color="orange" role="status">
           La période est limitée à deux ans pour rester lisible : les échéances plus lointaines ne sont pas dessinées
@@ -228,6 +246,19 @@ export function Timeline({
           width={largeurFrise}
           height={hauteur}
         >
+          {fondVisible.map((j) => (
+            <rect
+              key={j.date + j.calendrier}
+              x={x(j.jour)}
+              y="28"
+              width={LARGEUR_JOUR}
+              height={hauteur - 28}
+              className={`grc-timeline__fond grc-timeline__fond--${j.famille}`}
+              data-fond={j.famille}
+            >
+              <title>{`${fr(j.jour)} — ${j.label}`}</title>
+            </rect>
+          ))}
           {mois.map((m) => (
             <g key={m.jour}>
               <line x1={x(m.jour)} x2={x(m.jour)} y1="28" y2={hauteur} className="grc-timeline__mois" />

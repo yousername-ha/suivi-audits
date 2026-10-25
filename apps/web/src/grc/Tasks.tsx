@@ -8,6 +8,7 @@ import { ErrorAlert } from '../components/common';
 import { libelleDesignation, SelecteurResponsable, useProposables } from '../components/selecteurs';
 import { definirListeCourante } from '../registres/liste-courante';
 import { enRetard, validationDe } from './etat-action';
+import { BasculesFond, useJoursDeFond, type FamilleFond } from './jours-de-fond';
 import { Timeline } from './Timeline';
 const views = [
   { value: 'list', label: 'Liste' },
@@ -33,7 +34,9 @@ export function Tasks({
     [responsable, setResponsable] = useFiltreUrl('tresp', ''),
     [etat, setEtat] = useFiltreUrl('tetat', ''),
     [registre, setRegistre] = useFiltreUrl('treg', ''),
-    [clos, setClos] = useFiltreUrl('tclos', policy.display.showClosed ? '1' : '0');
+    [clos, setClos] = useFiltreUrl('tclos', policy.display.showClosed ? '1' : '0'),
+    [feries, setFeries] = useFiltreUrl('tferies', '0'),
+    [fermetures, setFermetures] = useFiltreUrl('tfermetures', '0');
   const view = vue as (typeof views)[number]['value'],
     setView = setVue,
     owner = responsable || null,
@@ -42,6 +45,9 @@ export function Tasks({
     setStatus = (v: string | null) => setEtat(v ?? ''),
     showClosed = clos === '1',
     setShowClosed = (v: boolean) => setClos(v ? '1' : '0');
+  const fondActif = { feries: feries === '1', autres: fermetures === '1' },
+    fond = useJoursDeFond(fondActif),
+    basculerFond = (f: FamilleFond, actif: boolean) => (f === 'feries' ? setFeries : setFermetures)(actif ? '1' : '0');
   const registres = useQuery({
     queryKey: ['registres', 'filtre-taches', smsi],
     queryFn: () => get<{ items: RegistreDto[] }>('/api/registres?archives=false'),
@@ -156,6 +162,12 @@ export function Tasks({
         checked={showClosed}
         onChange={(e) => setShowClosed(e.currentTarget.checked)}
       />
+      {(view === 'calendar' || view === 'timeline') && (
+        <>
+          <BasculesFond actives={fondActif} onChange={basculerFond} />
+          <ErrorAlert error={fond.erreur} />
+        </>
+      )}
       <ErrorAlert error={list.error ?? all.error} />
       {(view === 'list' || view === 'kanban' || view === 'timeline') && all.hasNextPage && (
         <Button variant="light" onClick={() => void all.fetchNextPage()}>
@@ -238,8 +250,19 @@ export function Tasks({
               <div key={'empty' + i} />
             ))}
             {days.map((d) => (
-              <Card withBorder key={d}>
+              <Card
+                withBorder
+                key={d}
+                className={fond.jours.some((j) => j.date === d) ? 'grc-calendar__fond' : undefined}
+              >
                 <Text fw={600}>{d.slice(-2)}</Text>
+                {fond.jours
+                  .filter((j) => j.date === d)
+                  .map((j) => (
+                    <Text key={j.calendrier + j.label} size="xs" className="grc-calendar__fond-libelle">
+                      {j.famille === 'feries' ? 'Férié' : 'Fermé'} : {j.label}
+                    </Text>
+                  ))}
                 {items
                   .filter((o) => String(o.data.dueAt).startsWith(d))
                   .map((o) => (
@@ -254,7 +277,7 @@ export function Tasks({
           {items.filter((o) => !o.data.dueAt).map(card)}
         </>
       )}
-      {view === 'timeline' && <Timeline items={items} policy={policy} onOpen={onOpen} />}
+      {view === 'timeline' && <Timeline items={items} policy={policy} onOpen={onOpen} fond={fond.jours} />}
       {view === 'gantt' && (
         <div className="grc-planning">
           <svg

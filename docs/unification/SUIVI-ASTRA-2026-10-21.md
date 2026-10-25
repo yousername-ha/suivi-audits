@@ -70,7 +70,7 @@ Légende des états : **Corrigé** (critère de l'audit satisfait et testé) · 
 | 018-10 | Amélioré | Validation (OK, KO, NA) visible dans les listes de tâches ; une occurrence validée n'est plus « en retard » | Gabarit maître-détail (décision de l'audit § 5) | `etat-action.test.ts` |
 | 018-11 | Amélioré | « Occurrence suivante » cherche dans la liste courante (filtres compris), toutes séries confondues ; aucune validation automatique | Test e2e de la case d'enchaînement | `validations-occurrences.test.ts` |
 | 018-08 | Amélioré | Fériés français et iCal en plateforme, avec provenance (journal) et import répété sans perte | Vacances scolaires A/B/C/Corse (écartées) | `calendriers-plateforme.test.ts` |
-| 018-09 | Décision | — | Couche d'affichage des fériés derrière les tâches (Timeline, Calendrier) | — |
+| 018-09 | Amélioré | Fériés et autres calendriers de plateforme affichables en fond (Timeline, Calendrier), bascules séparées, jours écrits en toutes lettres | Zones scolaires (écartées) | `jours-de-fond.test.ts`, e2e `jours-de-fond` |
 
 ### 002 Risques et 003 EBIOS RM
 
