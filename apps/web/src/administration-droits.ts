@@ -31,7 +31,6 @@ export const DROITS_CARTES: readonly { id: string; cote: Cote; peut: (can: Peut)
   { id: 'journal', cote: 'systeme', peut: administration },
   { id: 'journaux-techniques', cote: 'systeme', peut: administration },
   { id: 'modules', cote: 'systeme', peut: administration },
-  { id: 'environnement', cote: 'systeme', peut: administration },
   { id: 'details', cote: 'systeme', peut: administration },
 ];
 

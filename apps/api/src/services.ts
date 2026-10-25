@@ -21,8 +21,6 @@ import { Bus, Presence } from './realtime.js';
 import { Vault } from './security/crypto.js';
 import { Settings } from './settings.js';
 import { ConfigGrc } from './config-grc.js';
-import { Environment } from './environment.js';
-import { RiskAssessments } from './risk-assessments.js';
 import { BusinessPolicies } from './business-policy.js';
 import { Grc } from './grc/core.js';
 import { Walls } from './walls.js';
@@ -45,7 +43,6 @@ export function createServices(cfg: Config, log: Logger) {
   legacy.register(ecartsNatifsMapper);
   legacy.registerBatch(reglagesMapper(CLES_REGLAGES));
   const settings = new Settings(cfg, db, legacy);
-  const environment = new Environment(db);
   const businessPolicies = new BusinessPolicies(db);
   const modules = new Modules(cfg.db, db);
   const grc = new Grc(db, legacy, businessPolicies, modules);
@@ -58,12 +55,10 @@ export function createServices(cfg: Config, log: Logger) {
     db,
     vault,
     settings,
-    environment,
     businessPolicies,
     grc,
     configGrc,
     historique,
-    riskAssessments: new RiskAssessments(db, legacy, environment),
     modules,
     updates: new Updates(cfg, db),
     backups: new Backups(cfg, db),

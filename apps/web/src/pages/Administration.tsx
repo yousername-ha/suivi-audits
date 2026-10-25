@@ -269,16 +269,6 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     detail: () => <ModulesPanel />,
   },
   {
-    id: 'environnement',
-    cote: 'systeme',
-    titre: 'Environnement (usages de l’IA)',
-    resume:
-      'Échelles et matrice des seules évaluations des usages de l’IA, simulation et historique. Les autres analyses utilisent « Échelles et matrices (GRC) ».',
-    icone: 'echelles',
-    teinte: 'violet',
-    lien: '/admin/environment',
-  },
-  {
     id: 'details',
     cote: 'systeme',
     titre: 'Détails techniques',

@@ -57,7 +57,6 @@ const INVENTAIRE = [
   'conformite|applicabilite|applicabilite|/pilotage/applicabilite|pilotage|lire',
   'conformite|applicabilite|mesures|/pilotage/mesures|audit|lire',
   'conformite|ia|conformite-ia|/pilotage/conformite-ia|ia|lire',
-  'conformite|ia|ia-evaluations|/ia/evaluations|ia|lire',
   'conformite|audits|audit-pronostic|/pilotage/audit-pronostic|audit|lire',
   'conformite|audits|audit-couverture|/pilotage/audit-couverture|audit|lire',
   'conformite|audits|audit-deroule|/pilotage/audit-deroule|plan_audit|lire',
@@ -127,7 +126,6 @@ describe('navigation', () => {
     const par = Object.fromEntries(rubriques.map((r) => [r.to, r]));
     expect(par['/documents']).toMatchObject({ module: 'documents' });
     expect(par['/cartographie']).toMatchObject({ module: 'cartographie' });
-    expect(par['/ia/evaluations']).toMatchObject({ module: 'ia' });
     expect(par['/exports']).toMatchObject({ module: 'import_export', action: 'exporter' });
   });
   it('masque ce qui n’est pas lisible : destination et famille disparaissent', () => {

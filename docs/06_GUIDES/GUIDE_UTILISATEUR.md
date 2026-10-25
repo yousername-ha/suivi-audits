@@ -350,51 +350,11 @@ et le cas TEST-014.
 
 ## FCT-015 — Configuration des échelles et matrices
 
-Objectif : Simulation, matrices explicites, publication immuable, concurrence et refus des brouillons incohérents.
-
-État : **VALIDÉ AUTOMATIQUEMENT**, uniquement dans ce périmètre.
-Accès : **/admin/environment**.
-Profils : Session complète, lecture du domaine administration ; opérations soumises aux permissions modifier/exporter/administrer et au périmètre. Une validation peut exiger un rôle de validation distinct.
-Prérequis : module activé, accès au périmètre et données nécessaires disponibles ;
-un environnement de recette autorisé pour les opérations sensibles.
-
-1. Ouvrir Administration → Système → Configurer l’environnement.
-2. Préparer échelles/dimensions/seuils et calcul produit, somme ou matrice selon ce formulaire.
-3. Lancer la simulation, corriger les incohérences puis motiver et confirmer PUBLIER.
-4. Relire la version et l’historique ; en cas de conflit conserver le brouillon et recharger explicitement.
-
-Champs/paramètres : Champs exacts dans le formulaire courant ou le contrat API ; pour une famille historique, inventaire détaillé restant à recetter.
-Résultat attendu : fiche/décision/rapport dans la source décrite, visible selon
-les droits ; le résultat serveur prime sur l’affichage du bouton.
-Erreurs : voir section commune ci-dessous ; conservation du brouillon en cas
-de conflit, refus de validation si conditions métier manquantes.
-Restriction : Recette du serveur utilisateur non reçue.
-Fonctions liées : voir la [matrice](../02_FONCTIONNALITES/MATRICE_TRACABILITE.md)
-et le cas TEST-015.
+Retirée (décision du 25/10/2026, [ADR 0046](../adr/0046-retrait-du-catalogue-environnement.md)) : les échelles et matrices se publient dans Configuration GRC ; l’analyse d’écart d’un service ou d’un usage de l’IA se fait dans « Applications à intégrer ».
 
 ## FCT-016 — Décisions IA versionnées B2b
 
-Objectif : Décision immuable liée à la source IA et à une configuration choisie ; calcul aiEval et source historique conservés.
-
-État : **VALIDÉ AUTOMATIQUEMENT**, uniquement dans ce périmètre.
-Accès : **/ia/evaluations**.
-Profils : Session complète, lecture du domaine ia ; opérations soumises aux permissions modifier/exporter/administrer et au périmètre. Une validation peut exiger un rôle de validation distinct.
-Prérequis : module activé, accès au périmètre et données nécessaires disponibles ;
-un environnement de recette autorisé pour les opérations sensibles.
-
-1. Créer ou identifier l’évaluation source dans le registre IA historique.
-2. Ouvrir /ia/evaluations, sélectionner la source et une configuration publiée.
-3. Renseigner l’appréciation et la justification puis confirmer la décision.
-4. Consulter résultat/version/snapshot ; modifier la source ne réécrit pas une décision antérieure.
-
-Champs/paramètres : Champs exacts dans le formulaire courant ou le contrat API ; pour une famille historique, inventaire détaillé restant à recetter.
-Résultat attendu : fiche/décision/rapport dans la source décrite, visible selon
-les droits ; le résultat serveur prime sur l’affichage du bouton.
-Erreurs : voir section commune ci-dessous ; conservation du brouillon en cas
-de conflit, refus de validation si conditions métier manquantes.
-Restriction : Ne constitue pas la reprise complète du registre IA (FCT-032).
-Fonctions liées : voir la [matrice](../02_FONCTIONNALITES/MATRICE_TRACABILITE.md)
-et le cas TEST-016.
+Retirée (décision du 25/10/2026, [ADR 0046](../adr/0046-retrait-du-catalogue-environnement.md)) : les échelles et matrices se publient dans Configuration GRC ; l’analyse d’écart d’un service ou d’un usage de l’IA se fait dans « Applications à intégrer ».
 
 ## FCT-017 — Catalogue métier et politiques
 
@@ -765,7 +725,7 @@ et le cas TEST-031.
 Objectif : B2b ajoute des décisions ; registre/plans/politiques complets restent historiques.
 
 État : **PARTIEL**, uniquement dans ce périmètre.
-Accès : **Pilotage → IA ; /ia/evaluations**.
+Accès : **Pilotage → IA**.
 Profils : Session complète, lecture du domaine ia ; opérations soumises aux permissions modifier/exporter/administrer et au périmètre. Une validation peut exiger un rôle de validation distinct.
 Prérequis : module activé, accès au périmètre et données nécessaires disponibles ;
 un environnement de recette autorisé pour les opérations sensibles.

@@ -34,8 +34,6 @@ const KEYS: Record<string, string[][]> = {
   wall_screens: [['admin', 'murs']],
   groups: [['admin']],
   roles: [['admin']],
-  environment_configuration: [['admin', 'environment']],
-  risk_assessments: [['ia', 'evaluations']],
   import_batches: [['admin', 'imports']],
 };
 

@@ -219,33 +219,11 @@ par existence du code.
 
 ## TEST-015 — Configuration des échelles et matrices
 
-- Fonction : FCT-015 ; priorité : P2.
-- Prérequis : Jeu fictif ; rôles adaptés ; environnement dédié si API ou Docker.
-- Données : Données synthétiques et identifiants créés par le test ; aucune donnée de production.
-- Procédure :
-  1. Identifier version/commit, permissions et environnement isolé.
-  2. Simulation, matrices explicites, publication immuable, concurrence et refus des brouillons incohérents.
-  3. Relever le résultat effectif, l’erreur éventuelle et les réserves, sans secret.
-- Résultat attendu : Simulation, matrices explicites, publication immuable, concurrence et refus des brouillons incohérents.
-- Type / automatisation : AUTOMATISÉ ; EXISTANTE.
-- Code de référence : [apps/api/test/environment.test.ts](../../apps/api/test/environment.test.ts) ; [tests/e2e/specs/zz-environment.spec.ts](../../tests/e2e/specs/zz-environment.spec.ts)
-- Dernier statut : PASSÉ ; preuve : EXE-015.
-- Limite : Recette du serveur utilisateur non reçue.
+Retiré : le catalogue « Environnement » et les évaluations IA versionnées qui s’y rattachaient ont été supprimés (décision du 25/10/2026, [ADR 0046](../adr/0046-retrait-du-catalogue-environnement.md)).
 
 ## TEST-016 — Décisions IA versionnées B2b
 
-- Fonction : FCT-016 ; priorité : P2.
-- Prérequis : Jeu fictif ; rôles adaptés ; environnement dédié si API ou Docker.
-- Données : Données synthétiques et identifiants créés par le test ; aucune donnée de production.
-- Procédure :
-  1. Identifier version/commit, permissions et environnement isolé.
-  2. Décision immuable liée à la source IA et à une configuration choisie ; calcul aiEval et source historique conservés.
-  3. Relever le résultat effectif, l’erreur éventuelle et les réserves, sans secret.
-- Résultat attendu : Décision immuable liée à la source IA et à une configuration choisie ; calcul aiEval et source historique conservés.
-- Type / automatisation : AUTOMATISÉ ; EXISTANTE.
-- Code de référence : [apps/api/test/risk-assessments.test.ts](../../apps/api/test/risk-assessments.test.ts) ; [tests/e2e/specs/zz-ia-evaluations.spec.ts](../../tests/e2e/specs/zz-ia-evaluations.spec.ts)
-- Dernier statut : PASSÉ ; preuve : EXE-015.
-- Limite : Ne constitue pas la reprise complète du registre IA (FCT-032).
+Retiré : le catalogue « Environnement » et les évaluations IA versionnées qui s’y rattachaient ont été supprimés (décision du 25/10/2026, [ADR 0046](../adr/0046-retrait-du-catalogue-environnement.md)).
 
 ## TEST-017 — Catalogue métier et politiques
 

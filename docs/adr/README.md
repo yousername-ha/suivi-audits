@@ -49,3 +49,4 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0043](0043-registres-perimetres-herites-et-droits-par-ressource.md) | Registres, périmètres hérités et droits par ressource (lecteur, contributeur, gestionnaire) | Acceptée |
 | [0044](0044-processus-en-cartes-et-types-de-processus.md) | Processus en cartes, registre des types de processus et cartographie qui le suit | Acceptée |
 | [0045](0045-parcours-guide-iso-hds.md) | Parcours guidé ISO 27001 / HDS : vue de navigation sans registre parallèle | Acceptée |
+| [0046](0046-retrait-du-catalogue-environnement.md) | Retrait du catalogue « Environnement » et des évaluations IA versionnées | Acceptée |

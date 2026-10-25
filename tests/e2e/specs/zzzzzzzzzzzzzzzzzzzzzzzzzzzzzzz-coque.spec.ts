@@ -102,6 +102,8 @@ test('Style Clair : enregistré par l’administrateur, appliqué sans rechargem
     for (const url of ['/', '/parametres', '/pilotage/synthese']) {
       await pb.goto(url);
       await expect(pb.locator('html')).toHaveAttribute('data-style', 'clair');
+      // Un indicateur de chargement encore affiché n'est pas l'écran : on attend la fin du chargement avant le contrôle.
+      await expect(pb.locator('.mantine-Loader-root')).toHaveCount(0, { timeout: 15_000 });
       const r = await new AxeBuilder({ page: pb }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
       expect(
         r.violations.map(

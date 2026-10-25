@@ -506,13 +506,11 @@ describe('modèle adopté à la demande', () => {
 });
 
 describe('non-régression des données existantes', () => {
-  it('le catalogue n’altère ni l’état historique, ni l’environnement, ni les méthodes déjà publiées', async () => {
+  it('le catalogue n’altère ni l’état historique, ni les méthodes déjà publiées', async () => {
     const legacy = await t.svc.db.one('SELECT data,version,sha256 FROM app_state WHERE id=1');
-    const env = await t.svc.db.one('SELECT count(*)::int n FROM environment_versions');
     const methods = await t.svc.db.one('SELECT count(*)::int n FROM grc_method_versions');
     await published(rssi, 'scale', 'sans_effet_de_bord', scale('Sans effet de bord'));
     expect(await t.svc.db.one('SELECT data,version,sha256 FROM app_state WHERE id=1')).toEqual(legacy);
-    expect(await t.svc.db.one('SELECT count(*)::int n FROM environment_versions')).toEqual(env);
     expect(await t.svc.db.one('SELECT count(*)::int n FROM grc_method_versions')).toEqual(methods);
   });
   it('conserve l’historique complet : une version par publication, motif et auteur', async () => {

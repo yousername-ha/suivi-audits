@@ -131,10 +131,7 @@ export const FAMILLES: Famille[] = [
         p('applicabilite'),
         p('mesures'),
       ]),
-      dest('ia', 'Intelligence artificielle', [
-        p('conformite-ia'),
-        page('ia-evaluations', 'Évaluations IA', '/ia/evaluations', 'ia'),
-      ]),
+      dest('ia', 'Intelligence artificielle', [p('conformite-ia')]),
       dest('audits', 'Gestion de l’audit', [
         p('audit-pronostic'),
         p('audit-couverture'),

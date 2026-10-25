@@ -109,9 +109,9 @@ code=str((int.from_bytes(raw[offset:offset+4],'big')&0x7fffffff)%1000000).zfill(
 call('POST','/api/auth/mfa',{'code':code})
 csrf=call('GET','/api/auth/me')['csrf']
 before=json.loads(compose('exec','-T','app','suivi','controle-donnees',cwd=repo))
-def environment_snapshot():
-    return json.loads(compose('exec','-T','-u','postgres','db','psql','-d','suivi','-Atc',"SELECT jsonb_build_object('current',(SELECT version FROM environment_configuration WHERE id=1),'versions',(SELECT jsonb_agg(to_jsonb(v) ORDER BY version) FROM environment_versions v),'assessments',(SELECT jsonb_agg(to_jsonb(a) ORDER BY source_id,revision) FROM risk_assessments a),'business',(SELECT jsonb_agg(to_jsonb(b) ORDER BY version) FROM business_policy_versions b),'smsis',(SELECT jsonb_agg(to_jsonb(s) ORDER BY id) FROM grc_smsis s),'objects',(SELECT jsonb_agg(to_jsonb(o) ORDER BY id) FROM grc_objects o),'methods',(SELECT jsonb_agg(to_jsonb(m) ORDER BY id) FROM grc_method_versions m),'evaluations',(SELECT jsonb_agg(to_jsonb(e) ORDER BY id) FROM grc_risk_evaluations e),'links',(SELECT jsonb_agg(to_jsonb(l) ORDER BY id) FROM grc_links l),'objectVersions',(SELECT jsonb_agg(to_jsonb(v) ORDER BY id) FROM grc_object_versions v))::text",cwd=repo))
-before_environment=environment_snapshot()
+def donnees_snapshot():
+    return json.loads(compose('exec','-T','-u','postgres','db','psql','-d','suivi','-Atc',"SELECT jsonb_build_object('business',(SELECT jsonb_agg(to_jsonb(b) ORDER BY version) FROM business_policy_versions b),'smsis',(SELECT jsonb_agg(to_jsonb(s) ORDER BY id) FROM grc_smsis s),'objects',(SELECT jsonb_agg(to_jsonb(o) ORDER BY id) FROM grc_objects o),'methods',(SELECT jsonb_agg(to_jsonb(m) ORDER BY id) FROM grc_method_versions m),'evaluations',(SELECT jsonb_agg(to_jsonb(e) ORDER BY id) FROM grc_risk_evaluations e),'links',(SELECT jsonb_agg(to_jsonb(l) ORDER BY id) FROM grc_links l),'objectVersions',(SELECT jsonb_agg(to_jsonb(v) ORDER BY id) FROM grc_object_versions v))::text",cwd=repo))
+before_environment=donnees_snapshot()
 data=Path(re.search(r'^DATA_DIR=(.*)$',original_env,re.M).group(1).strip('"\'')) if re.search(r'^DATA_DIR=(.*)$',original_env,re.M) else Path('/srv/suivi-audits/donnees')
 spec=importlib.util.spec_from_file_location('update_worker',repo/'scripts/update-worker.py'); m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
 os.environ.update(REPO=str(repo),DATA_DIR=str(data),PWD=str(repo));os.environ.pop('APP_VERSION',None)
@@ -168,7 +168,7 @@ try:
     updater=compose('ps','-q','updater',cwd=repo).strip()
     assert run(['docker','inspect','-f','{{.Config.Image}}',updater]).strip().endswith(':99.0.0')
     assert json.loads(compose('exec','-T','app','suivi','controle-donnees',cwd=repo))==before
-    assert environment_snapshot()==before_environment
+    assert donnees_snapshot()==before_environment
     assert compose('exec','-T','-u','postgres','db','psql','-d','suivi','-Atc','SELECT count(*) FROM recette_update_temoin',cwd=repo).strip()=='1'
     assert compose('exec','-T','-u','postgres','db','psql','-d','suivi','-Atc',f"SELECT status FROM update_jobs WHERE id='{requested['id']}'",cwd=repo).strip()=='success'
     print('Mise à jour API 98 -> 99 : sauvegarde chiffrée, migration réelle, données identiques, exécutant remplacé, frontal intact.')
@@ -195,7 +195,7 @@ try:
     with patch.object(m.subprocess,'Popen',side_effect=local_popen):worker.locked_operation(lambda:worker.install(claimed))
     assert worker.state['status']=='rolled_back' and not worker.state['maintenance']
     assert worker.state['installed']=='98.0.0'
-    assert environment_snapshot()==before_environment
+    assert donnees_snapshot()==before_environment
     assert compose('exec','-T','-u','postgres','db','psql','-d','suivi','-Atc',f"SELECT status FROM update_jobs WHERE id='{requested['id']}'",cwd=repo).strip()=='rolled_back'
     assert json.loads(compose('exec','-T','app','suivi','controle-donnees',cwd=repo))==before
     assert compose('exec','-T','-u','postgres','db','psql','-d','suivi','-Atc',"SELECT to_regclass('recette_update_temoin') IS NULL",cwd=repo).strip()=='t'

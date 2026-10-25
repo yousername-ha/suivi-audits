@@ -1,6 +1,6 @@
 # ADR 0021 — Échelles et matrices organisationnelles immuables (B2a)
 
-Statut : accepté sur la branche de travail.
+Statut : **retiré le 25/10/2026** ([ADR 0046](0046-retrait-du-catalogue-environnement.md)) ; accepté à l’origine sur la branche de travail.
 
 La configuration métier centrale est distincte des réglages de sécurité/identité existants et de l'état v2. La migration additive 010 crée un registre de versions immuables et un pointeur vers la publication courante. L'initialisation idempotente conserve toute publication déjà présente ; la configuration initiale ne modifie aucune évaluation historique. Les triggers refusent modification, suppression et troncature des définitions publiées.
 
