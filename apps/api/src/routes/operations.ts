@@ -29,7 +29,8 @@ export const operationRoutes = [
   route({
     method: 'POST',
     url: '/api/admin/exploitation/operations',
-    summary: 'Demander vérification, restauration confirmée ou changement TLS',
+    summary:
+      'Demander vérification, restauration confirmée ou changement TLS (certificat fourni, autorité interne, ACME)',
     tags: ['Administration'],
     access: 'administration:administrer',
     body: OperationIn,

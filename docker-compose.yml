@@ -139,7 +139,7 @@ services:
     environment:
       SITE_ADDRESS: ${SITE_ADDRESS:?Renseigner SITE_ADDRESS dans .env}
       CADDY_TLS: ${CADDY_TLS:-internal}
-      TLS_WEB_MANAGEMENT: ${TLS_WEB_MANAGEMENT:-0}
+      TLS_WEB_MANAGEMENT: ${TLS_WEB_MANAGEMENT:-1}
       TLS_TERMINATION: ${TLS_TERMINATION:-caddy}
       WEB_INTERNAL: '1'
     volumes:
@@ -165,7 +165,7 @@ services:
     environment:
       SITE_ADDRESS: ${SITE_ADDRESS}
       CADDY_TLS: ${CADDY_TLS:-internal}
-      TLS_WEB_MANAGEMENT: ${TLS_WEB_MANAGEMENT:-0}
+      TLS_WEB_MANAGEMENT: ${TLS_WEB_MANAGEMENT:-1}
       TLS_TERMINATION: ${TLS_TERMINATION:-caddy}
     ports:
       - '${BIND_ADDR:-0.0.0.0}:${HTTPS_PORT:-443}:8443'

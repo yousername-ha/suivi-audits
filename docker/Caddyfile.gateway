@@ -5,6 +5,11 @@
 	admin off
 	# Conteneur en lecture seule : ne pas tenter d'installer la racine interne dans le magasin de confiance.
 	skip_install_trust
+	# Serveur ACME : Let's Encrypt par défaut, ou celui choisi dans l'interface (mode ACME). Un seul émetteur : Caddy n'ajoute
+	# pas de serveur de secours (ZeroSSL) que l'exploitant n'aurait pas choisi.
+	cert_issuer acme {
+		dir {$ACME_CA:https://acme-v02.api.letsencrypt.org/directory}
+	}
 	http_port 8080
 	https_port 8443
 	# Redirection HTTP -> HTTPS gérée ci-dessous (sans le port interne 8443 dans l'adresse).

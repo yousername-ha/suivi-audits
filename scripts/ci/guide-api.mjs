@@ -290,7 +290,6 @@ switch (cmd) {
       worker();
       return job;
     };
-    root(['sed', '-i', 's/^TLS_WEB_MANAGEMENT=.*/TLS_WEB_MANAGEMENT=1/', '.env']);
     root(['docker', 'compose', 'up', '-d', 'web']);
     worker();
     await login(st);
@@ -489,8 +488,21 @@ switch (cmd) {
       job = await operation({ kind: 'tls_reset', confirmation: 'REVENIR' });
       if ((await result(job.id)).status !== 'reussie') fail('retour à .env réel en échec');
       if ((await call('GET', '/api/admin/exploitation')).host.tlsMode !== 'env') fail('mode .env non rétabli');
+
+      // D3 : autorité interne choisie depuis l'interface (aucun fichier à modifier), racine publique exposée, puis retour.
+      job = await operation({ kind: 'tls_internal', confirmation: 'APPLIQUER' });
+      if ((await result(job.id)).status !== 'reussie') fail('mode autorité interne réel en échec');
+      e = await call('GET', '/api/admin/exploitation');
+      if (e.host.tlsMode !== 'interne') fail('mode autorité interne non appliqué');
+      if (e.host.racineInterne?.trim() !== root(['cat', `${ca}root.crt`]).trim())
+        fail('racine interne exposée incohérente');
+      if (JSON.stringify(e).includes('PRIVATE KEY')) fail('clé privée dans état public (autorité interne)');
+      if (root(['cat', '.env']) !== envBefore) fail('.env modifié par la demande autorité interne');
+      job = await operation({ kind: 'tls_reset', confirmation: 'REVENIR' });
+      if ((await result(job.id)).status !== 'reussie')
+        fail('retour au réglage de départ après autorité interne en échec');
       console.log(
-        'Lot A : remplacement TLS, clé cohérente, certificat servi, retour arrière et retour à .env réels ; aucun secret dans état public.',
+        'Lot A : remplacement TLS, clé cohérente, certificat servi, retour arrière et retour à .env réels ; autorité interne choisie depuis l’interface ; aucun secret dans état public.',
       );
     } finally {
       root(['rm', '-rf', temp]);
