@@ -1,6 +1,7 @@
 /* Registres, périmètres hérités et droits par ressource (ADR 0043). Accès « auth » : l'autorisation réelle (droits de module,
    périmètres, droits attribués) est évaluée par le service, jamais par l'affichage. */
 import {
+  CommentaireElementBody,
   ContributionAction,
   DeplacementBody,
   DroitBody,
@@ -11,6 +12,7 @@ import {
   RegistrePerimetresBody,
   RegistreUpdate,
   OrdreBody,
+  PreuveElementBody,
 } from '@suivi/shared';
 import { z } from 'zod';
 import type { Session } from '../auth.js';
@@ -262,6 +264,36 @@ export const registresRoutes = [
     status: 201,
     handler: async ({ svc, s, params, body, ip }) =>
       svc.grc.validations.rouvrir(params.smsi, params.id, body, (s as Session).user, ip),
+  }),
+  route({
+    ...base,
+    method: 'GET',
+    url: '/api/grc/:smsi/objects/:id/contributions',
+    summary: 'Commentaires et preuves joints à une action par ses collaborateurs',
+    params: objet,
+    handler: async ({ svc, s, params }) => svc.grc.contributions.lister(params.smsi, params.id, (s as Session).user),
+  }),
+  route({
+    ...base,
+    method: 'POST',
+    url: '/api/grc/:smsi/objects/:id/contributions/commentaire',
+    summary: 'Commenter une action (rôle de contributeur) : journal immuable, commande idempotente par requestId',
+    params: objet,
+    body: CommentaireElementBody,
+    status: 201,
+    handler: async ({ svc, s, params, body, ip }) =>
+      svc.grc.contributions.commenter(params.smsi, params.id, body, (s as Session).user, ip),
+  }),
+  route({
+    ...base,
+    method: 'POST',
+    url: '/api/grc/:smsi/objects/:id/contributions/preuve',
+    summary: 'Joindre une preuve lisible à une action (rôle de contributeur) : journal immuable, idempotent',
+    params: objet,
+    body: PreuveElementBody,
+    status: 201,
+    handler: async ({ svc, s, params, body, ip }) =>
+      svc.grc.contributions.joindrePreuve(params.smsi, params.id, body, (s as Session).user, ip),
   }),
   route({
     ...base,

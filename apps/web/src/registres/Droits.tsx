@@ -101,9 +101,9 @@ export function Droits({ type, id }: { type: 'registre' | 'objet'; id: string })
   return (
     <Stack>
       <Text>
-        Lecteur : consulte. Contributeur : renseigne l’avancement (statut, compte rendu) sans modifier la définition
-        d’un élément. Gestionnaire : modifie, archive et attribue les droits. Ces droits s’ajoutent aux droits de
-        module.
+        Lecteur : consulte. Contributeur (collaborateur) : renseigne l’avancement (statut, compte rendu), commente et
+        joint une preuve sans modifier la définition d’un élément. Gestionnaire : modifie, archive et attribue les
+        droits. Ces droits s’ajoutent aux droits de module.
       </Text>
       <ErrorAlert error={erreur ?? droits.error} />
       <DataTable label={`Droits attribués sur ${cible}, défilement horizontal possible`}>

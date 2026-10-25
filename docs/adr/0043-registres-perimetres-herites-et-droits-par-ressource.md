@@ -64,6 +64,23 @@ rôle **contributeur** qui remplit (par exemple marque une tâche récurrente co
 - La validation OK/KO/NA d'une occurrence récurrente, avec preuve et immutabilité, reprendra le rôle de contributeur (lot L6).
 - Cette ADR ne modifie ni les routes ni l'interface de la cartographie dynamique.
 
+## Addendum du 22/10/2026 — le collaborateur (dossier 022-03)
+
+Décision du RSSI (21/10/2026) : le « collaborateur » est le **rôle de contributeur** de cette ADR, sans nouveau rôle ; un membre
+d'un groupe qui a le droit sur le registre contribue à tout le registre, une personne à qui une action est attribuée directement
+ne contribue qu'à cette action (le droit par élément, déjà décrit plus haut). Ce qui manquait est livré :
+
+- **Commentaire et preuve** : `POST …/objects/:id/contributions/commentaire` et `…/preuve`, `GET …/contributions` (migration 036,
+  table `contributions_elements`). Rôle de contributeur requis pour écrire, de lecteur pour consulter ; 404 sans accès, 403 pour un
+  lecteur. Seules les actions (occurrences comprises) reçoivent des contributions, jamais une action archivée.
+- **Preuve** : version de document ou fiche de preuve que la personne peut lire (même contrôle que la validation d'occurrence,
+  partagé dans `exigerPreuve`) ; sans le droit de lire les documents, elle peut commenter mais pas joindre.
+- **Journal immuable** (aucune mise à jour ni suppression, même en base), auteur et horodatage fixés par le serveur, commande
+  idempotente par `requestId`, trace d'audit `element.commentaire` et `element.preuve`. Les contributions ne touchent ni la
+  version ni les champs de l'action.
+- **Refus testés** (`collaborateur.test.ts`) : création d'action, de série et d'écart, modification, suppression, attribution de
+  droits, changement de périmètres, autre action du registre pour un droit attribué sur une seule action.
+
 ## Addendum du 20/10/2026 — limites levées dans la 3.6.1
 
 - **Déplacement d'un élément** : commande atomique avec aperçu d'impact, motif, `If-Match` et droit de gestion des deux

@@ -126,7 +126,7 @@ function lignesCompteurs(c: CartePerimetre['compteurs'], id: string, liens = tru
       libelle: 'Continuité',
       valeur: c.continuite ? (
         <>
-          {lien('bia', `${n(c.continuite.bia)} BIA`)} · {lien('continuite', `${n(c.continuite.plans)} plan(s)`)}
+          {lien('bia', `${n(c.continuite.bia)} BIA`)} · {lien('continuite', `${n(c.continuite.pcra)} PCRA`)}
         </>
       ) : (
         indisponible

@@ -37,7 +37,7 @@ Légende des états : **Corrigé** (critère de l'audit satisfait et testé) · 
 | 010-03 | Corrigé | Colonne « Fournisseur extérieur » (lien vers la fiche, jamais un parent) | — | e2e `…-cartes-perimetres.spec.ts` |
 | 010-04 | Amélioré (*) | La carte reprend le calcul de l'écran Couverture (référentiels rattachés ou hérités, états communs) et s'appelle « Couverture » ; un enfant qui hérite n'affiche plus « indisponible » | Agrégation avec descendants, provenance et détail par référentiel | `cartes-perimetres.test.ts` |
 | 010-05 | Corrigé | Écarts ouverts ventilés en majeurs (rouge), mineurs (orange foncé), sensibles (violet), avec texte ; liens vers la liste filtrée | — | `cartes-perimetres.test.ts`, e2e `…-cartes-perimetres.spec.ts` |
-| 010-06 | Amélioré | Chaque compteur est un lien vers la liste du module, dans le même périmètre ; retard des écarts comparé à la date locale du périmètre | « Plans de continuité » regroupe PCA, PRA et PCRA (décision) ; mise en forme en quatre tuiles compactes | `cartes-perimetres.test.ts` |
+| 010-06 | Amélioré | Chaque compteur est un lien vers la liste du module, dans le même périmètre ; retard des écarts comparé à la date locale du périmètre | La tuile ne compte plus que les plans de type PCRA (décision 7) ; mise en forme en quatre tuiles compactes | `cartes-perimetres.test.ts` |
 | 010-07 | Amélioré | Hauteur de carte agrandie pour ne rien tronquer ; `disposer` testé (parent centré, aucune carte superposée, grand arbre, noms longs) | Capture de recette avec libellés longs | `disposition-perimetres.test.ts` |
 | 010-08 | Corrigé | Liaisons orientées (pointe de flèche), flux animé, pause/reprise, mouvement réduit respecté | — | e2e `…-cartes-perimetres.spec.ts` |
 | 010-09 | Amélioré | Fenêtres centrées ; graphe audité par axe-core, clair et sombre | Capture de recette | e2e `…-cartes-perimetres.spec.ts` |
@@ -47,7 +47,7 @@ Légende des états : **Corrigé** (critère de l'audit satisfait et testé) · 
 | 022-01 | Corrigé | Vue des accès (Registres) : rôle par registre pour une personne ou un groupe, origine, pagination | — | e2e `…-acces-sujets.spec.ts`, `registres-droits.test.ts` |
 | 022-02 | Corrigé | Fenêtre d'aperçu avant confirmation (rôle avant/après, personnes concernées, rôles qui subsistent, motif) | — | `registres-droits.test.ts` |
 | 022-05 | Corrigé | La trace des droits est écrite dans la même transaction que la modification | — | `droits-audit-atomique.test.ts` |
-| 022-03 | Décision | — | Modèle « collaborateur » et limite d'attribution | — |
+| 022-03 | Corrigé | Le collaborateur est le rôle de contributeur : droit de registre (direct ou par groupe) = tout le registre, droit sur une action = cette action seulement ; commentaire et preuve jointe à une action (migration 036, journal immuable, idempotent) ; refus de création, modification, suppression, droits et périmètres testés | Un rôle nommé « Collaborateur » n'existe pas : le libellé reste « Contributeur » | `collaborateur.test.ts`, e2e `…-collaborateur.spec.ts` |
 
 (*) Provisoire : la mesure « Couverture » est l'option recommandée de la décision « conformité » ; elle est reprise ici faute de réponse.
 
@@ -63,7 +63,7 @@ Légende des états : **Corrigé** (critère de l'audit satisfait et testé) · 
 | 021-06 | Corrigé | Classification en rouge, orange foncé et violet, avec légende, en liste et en fiche | — | `etat-action.test.ts`, e2e |
 | 018-04 | Amélioré | Bouton de validation expliqué (désactivé hors fenêtre) | Gabarit compact, test mobile | e2e `…-validation-occurrence.spec.ts` |
 | 018-05 | Corrigé | La preuve est une version de document ou une fiche de preuve (sélecteur, refus des autres objets) ; le journal affiche son intitulé selon les droits | Droit par document (décision de l'audit § 5) | `validations-occurrences.test.ts` |
-| 018-06 | Corrigé | Sept préréglages (dont « Tous les deux mois ») ou personnalisé, aperçu des cinq prochaines échéances, choix « Personnalisée » effectif | « Bimensuel » = deux fois par mois : deux séries (décision 7) | e2e `…-periodicite.spec.ts` |
+| 018-06 | Corrigé | Sept préréglages (dont « Tous les deux mois ») ou personnalisé, aperçu des cinq prochaines échéances, choix « Personnalisée » effectif | — (« bimensuel » retenu comme « tous les deux mois », décision 7) | e2e `…-periodicite.spec.ts` |
 | 018-10 | Amélioré | Validation (OK, KO, NA) visible dans les listes de tâches ; une occurrence validée n'est plus « en retard » | Gabarit maître-détail (décision de l'audit § 5) | `etat-action.test.ts` |
 | 018-11 | Amélioré | « Occurrence suivante » cherche dans la liste courante (filtres compris), toutes séries confondues ; aucune validation automatique | Test e2e de la case d'enchaînement | `validations-occurrences.test.ts` |
 | 018-08, 018-09 | Décision | — | Calendriers de plateforme (zones A/B/C, fériés) et couche d'affichage | — |
@@ -87,7 +87,7 @@ Légende des états : **Corrigé** (critère de l'audit satisfait et testé) · 
 
 1. ~~Structure de l'Administration~~ **Décidé (21/10/2026)** : deux entrées, « Plateforme » (organisation, comptes, référentiels, échelles, apparence, notifications, écrans muraux, import/export) et « Configuration système » (sauvegardes, mises à jour, certificats, sécurité, sessions, journal d'audit, journaux techniques, modules, environnement), chacune en page d'accueil à cartes ; détails en fenêtres centrées ; anciennes adresses conservées en alias. Réalisé (012-01, 020-05).
 2. ~~Définition de « conformité »~~ **Décidé (21/10/2026)** : « Couverture » (testées ou validées / applicables), jamais présentée comme conformité ISO/IEC 27001. Les clauses 4 à 10 sont obligatoires donc non excluables ; une exigence « à déterminer » est comptée à part et signalée comme à revoir (appliqué dans le code).
-3. ~~Modèle « collaborateur »~~ **Décidé (21/10/2026)** : membre d'un groupe qui a le droit sur le registre : tout le registre ; attribué directement sur une action : cette action seulement. À réaliser (022-03, taille L).
+3. ~~Modèle « collaborateur »~~ **Décidé (21/10/2026)** : membre d'un groupe qui a le droit sur le registre : tout le registre ; attribué directement sur une action : cette action seulement. Réalisé (022-03).
 4. Canaux d'envoi (courriel, Teams), conservation et nettoyage automatique, certificats autosignés et ACME (012-07, 012-09 à 012-11). Les niveaux de journalisation (012-13) sont réalisés.
 5. Calendriers de plateforme (zones scolaires, jours fériés) et leur couche d'affichage (012-14, 018-08, 018-09).
 6. Couche visuelle EBIOS RM : cercle, chemins, pictogrammes, flux animés (003-07 à 003-10).

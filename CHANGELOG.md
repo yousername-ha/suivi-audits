@@ -5,7 +5,14 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 ## [Non publié]
 
 ### Notes de mise à jour
-Aucune action particulière, aucune migration.
+Aucune action sur le serveur : la mise à jour applique la migration additive `036_contributions_elements.sql` (journal des commentaires et preuves d'une action) au démarrage, après la sauvegarde automatique de `scripts/mettre-a-jour.sh`.
+
+### Ajouté
+- **Collaborateur** (dossier 022-03) : une personne qui a le rôle de contributeur sur une action peut la commenter et y joindre une preuve qu'elle a le droit de lire (version de document ou fiche de preuve), sans pouvoir modifier l'action. Un droit attribué sur une seule action ne donne accès qu'à cette action ; un droit de registre (en direct ou par un groupe) couvre tout le registre. Journal immuable, commandes idempotentes, auteur et heure fixés par le serveur. Le détail est dans l'addendum de l'[ADR 0043](docs/adr/0043-registres-perimetres-herites-et-droits-par-ressource.md). La suite `collaborateur.test.ts` vérifie aussi les refus : création, modification, suppression, droits et périmètres.
+
+### Modifié
+- **Tuile « Continuité »** (cartes de périmètres et synthèse) : seuls les plans de type PCRA sont comptés, sous le libellé « PCRA » ; un PCA ou un PRA seul n'en est pas un.
+- La fenêtre de fiche d'un élément a un bouton de fermeture nommé (« Fermer la fiche de l’élément »).
 
 ### Sécurité
 - Dépendance `fast-uri` (via Fastify) passée en 3.1.9 et 4.2.3 : correctif de huit avis récents (confusion d'hôte, usurpation de schéma ; GHSA-w74x-v6f9-j3xg, GHSA-wjr9-j795-jxcr) que `pnpm audit` signalait. Aucun changement de code.

@@ -45,6 +45,15 @@ const etatDe = (lignes: { kind: 'validation' | 'reouverture' }[]): EtatValidatio
   return !derniere ? 'ouverte' : derniere.kind === 'validation' ? 'validee' : 'rouverte';
 };
 
+/** La preuve est une référence que le serveur sait résoudre (et que la personne a le droit de lire) : jamais un texte libre.
+    C'est une version de document ou une fiche de preuve, pas n'importe quel objet. */
+export async function exigerPreuve(g: Grc, smsi: string, proofRef: string, user: SessionUser, c?: Client) {
+  if (!GrcRef.safeParse(proofRef).success) throw new HttpError(422, 'Référence de preuve invalide.');
+  const preuve = await g.resolve(smsi, proofRef, user, c);
+  if (!proofRef.startsWith('document:') && !(proofRef.startsWith('object:') && preuve.kind === 'evidence'))
+    throw new HttpError(422, 'La preuve est une version de document ou une fiche de preuve.');
+}
+
 export class GrcValidations {
   constructor(private readonly g: Grc) {}
   private q(c?: Client) {
@@ -153,14 +162,7 @@ export class GrcValidations {
       const o = await this.occurrence(smsi, id, user, 'contribuer', c, true);
       const rejoue = await this.rejeu(c, o, b.requestId, 'validation');
       if (rejoue) return { validation: dto(rejoue), etat: etatDe(await this.lignes(id, c)), rejoue: true };
-      // La preuve est une référence que le serveur sait résoudre (et que la personne a le droit de lire) : jamais un texte libre.
-      if (b.proofRef) {
-        if (!GrcRef.safeParse(b.proofRef).success) throw new HttpError(422, 'Référence de preuve invalide.');
-        const preuve = await this.g.resolve(smsi, b.proofRef, user, c);
-        // Une preuve est une version de document ou une fiche de preuve : pas n'importe quel objet.
-        if (!b.proofRef.startsWith('document:') && !(b.proofRef.startsWith('object:') && preuve.kind === 'evidence'))
-          throw new HttpError(422, 'La preuve est une version de document ou une fiche de preuve.');
-      }
+      if (b.proofRef) await exigerPreuve(this.g, smsi, b.proofRef, user, c);
       const lignes = await this.lignes(id, c);
       if (etatDe(lignes) === 'validee')
         throw new HttpError(409, 'Cette occurrence est déjà validée : seule une réouverture motivée la reprend.');

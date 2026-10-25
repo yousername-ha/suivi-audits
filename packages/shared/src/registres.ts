@@ -222,6 +222,38 @@ export interface ValidationDto {
 /** État d'une occurrence : jamais validée, validée (dernière entrée du journal) ou rouverte. */
 export type EtatValidation = 'ouverte' | 'validee' | 'rouverte';
 
+/** Contributions d'un collaborateur à une action (migration 036) : commentaire et preuve jointe, journal immuable. Le rôle de
+    contributeur suffit ; ni l'un ni l'autre ne modifie la définition de l'action. Une preuve est une version de document ou
+    une fiche de preuve que la personne a le droit de lire. */
+export const CommentaireElementBody = z
+  .object({
+    /** Identifiant de requête fourni par le client : rejouer la commande ne crée pas de second enregistrement. */
+    requestId: z.uuid(),
+    comment: z.string().trim().min(1).max(5000),
+  })
+  .strict();
+export type CommentaireElementBody = z.infer<typeof CommentaireElementBody>;
+export const PreuveElementBody = z
+  .object({
+    requestId: z.uuid(),
+    /** Référence d'une preuve versionnée (par exemple `document:<id>`) ou d'une fiche de preuve (`object:<id>`). */
+    proofRef: z.string().trim().min(1).max(500),
+    comment: z.string().trim().max(5000).default(''),
+  })
+  .strict();
+export type PreuveElementBody = z.infer<typeof PreuveElementBody>;
+export interface ContributionElementDto {
+  id: string;
+  seq: number;
+  kind: 'commentaire' | 'preuve';
+  comment: string;
+  proofRef: string;
+  /** Intitulé de la preuve résolu avec les droits de la personne ; null : non lisible (la référence reste affichée). */
+  proofName?: string | null;
+  createdBy: string;
+  createdAt: string;
+}
+
 /** Déplacement d'un élément vers un autre registre de la même famille : commande atomique, avec aperçu d'impact puis
     confirmation motivée. Une série se déplace avec ses occurrences. */
 export const DeplacementBody = z

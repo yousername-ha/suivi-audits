@@ -247,6 +247,7 @@ export function ObjectEditor({
       opened={opened}
       onClose={onClose}
       title={`${object ? 'Fiche' : 'Créer'} — ${GRC_LABELS[kind]}`}
+      closeButtonProps={{ 'aria-label': 'Fermer la fiche de l’élément' }}
       // Une occurrence de tâche récurrente s'ouvre dans une fenêtre centrale compacte (validation OK, KO, NA) ; les autres
       // fiches, plus longues, gardent la grande fenêtre.
       {...(object && typeof object.data.seriesId === 'string' && object.data.seriesId

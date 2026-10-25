@@ -68,6 +68,8 @@ test('Processus : cartes par type, sous-processus, rattachement d’un objectif,
     await expect(carte.getByText('Objectifs 1')).toBeVisible();
     await carte.getByRole('button', { name: /Afficher les sous-processus \(1\)/ }).click();
     await expect(carte.getByText(enfant)).toBeVisible();
+    // Une notification en cours de fondu n'a pas son contraste final : on attend qu'elle ait disparu avant l'analyse.
+    await expect(page.locator('.mantine-Notification-root')).toHaveCount(0, { timeout: 15_000 });
     expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
 
     // Réciprocité : le processus créé ici figure dans la cartographie.
