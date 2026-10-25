@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { ROLE_LABELS, type BusinessPolicy, type GrcObject, type RoleRessource } from '@suivi/shared';
 import { api, get } from '../api';
 import { ErrorAlert } from '../components/common';
+import { ContributionsAction } from './ContributionsAction';
 import { Droits } from './Droits';
 import { ValidationOccurrence } from './Validation';
 import { DeplacerElement, peutEtreDeplace } from './Deplacement';
@@ -108,6 +109,7 @@ export function PanneauElement({
       {object.kind === 'action' && acces.peut.contribuer && !acces.peut.gerer && (
         <Contribuer smsi={smsi} object={object} policy={policy} />
       )}
+      {object.kind === 'action' && acces.peut.lire && <ContributionsAction smsi={smsi} object={object} acces={acces} />}
       {object.kind === 'action' && typeof object.data.seriesId === 'string' && object.data.seriesId && (
         <ValidationOccurrence smsi={smsi} object={object} acces={acces} onOpenObject={onOpenObject} />
       )}

@@ -57,7 +57,15 @@ function EtatFenetre({ fenetre }: { fenetre: { etat: string; texte: string } | n
 }
 
 /** Sélecteur de preuve : versions de documents et fiches de preuve que la personne peut lire (recherche côté serveur). */
-function SelecteurPreuve({ smsi, value, onChange }: { smsi: string; value: string; onChange: (ref: string) => void }) {
+export function SelecteurPreuve({
+  smsi,
+  value,
+  onChange,
+}: {
+  smsi: string;
+  value: string;
+  onChange: (ref: string) => void;
+}) {
   const [recherche, setRecherche] = useState('');
   const q = useQuery({
     queryKey: ['grc', smsi, 'sources', 'preuves', recherche],

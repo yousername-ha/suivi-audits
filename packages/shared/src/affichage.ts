@@ -158,7 +158,7 @@ export const Synthese = z.object({
   /** Risques : total, sans appréciation validée, revue échue. */
   risques: z.object({ total: z.number(), sansDecision: z.number(), revueEchue: z.number() }).nullable(),
   /** Continuité : analyses d'impact (BIA) et plans de continuité. */
-  continuite: z.object({ bia: z.number(), plans: z.number() }).nullable(),
+  continuite: z.object({ bia: z.number(), pcra: z.number() }).nullable(),
   /** Compteurs du Pilotage utilisés par les alertes du menu : constats ouverts, risques, actions en retard. */
   pilotage: z
     .object({
