@@ -14,6 +14,9 @@ Aucune action sur le serveur : la mise à jour applique la migration additive `0
 
 - **Échelles des scénarios EBIOS RM** (dossier 003-05 et 003-11, addendum de l'[ADR 0038](docs/adr/0038-socle-de-configuration-grc-transversal.md)) : une étude peut épingler, à une version précise, une échelle de gravité des scénarios stratégiques et une échelle de vraisemblance des scénarios opérationnels. Le niveau retenu se choisit sur cette échelle publiée, le serveur refuse un niveau qui n'en fait pas partie, la synthèse de l'atelier affiche le libellé publié, et la migration d'étude mesure les niveaux retirés ou renommés sans réécrire aucun scénario. Une étude sans épinglage garde l'échelle d'origine à quatre niveaux. Aucune migration SQL.
 
+- **Liens vers une exigence** : la relation affiche l'applicabilité de l'exigence dans le périmètre (applicable, exclue, à déterminer, non évaluée) quand la personne peut lire la conformité ; le lien ne change ni l'applicabilité ni la couverture (002-02, 021-05).
+- **Timeline des actions** : guide pointillé par ligne et carrés d'occurrence (jaune en attente de validation, puis vert OK, rouge KO, gris NA), avec légende (018-02).
+
 ### Modifié
 - **Administration** : la carte « Environnement » devient « Environnement (usages de l'IA) » et la page dit que ce catalogue est distinct de la Configuration GRC (rien n'est partagé, chaque évaluation garde sa version).
 - **Tuile « Continuité »** (cartes de périmètres et synthèse) : seuls les plans de type PCRA sont comptés, sous le libellé « PCRA » ; un PCA ou un PRA seul n'en est pas un.

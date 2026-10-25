@@ -106,6 +106,9 @@ for (const [nom, largeur, hauteur] of [
       await expect(enRetard).toBeVisible();
       await expect(page.getByRole('group', { name: /Légende/ })).toContainText('En retard');
       expect(await enRetard.getAttribute('aria-label')).toMatch(/à faire|en cours/i);
+      // Un guide pointillé relie chaque ligne à sa barre ; la légende dit le sens des carrés d'occurrence.
+      expect(await frise.locator('.grc-timeline__guide').count()).toBeGreaterThanOrEqual(100);
+      await expect(page.getByRole('group', { name: /Légende/ })).toContainText('Occurrence : jaune en attente');
 
       // Aucun défilement horizontal de la page.
       const debordement = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);

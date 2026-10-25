@@ -8,6 +8,13 @@ const JOUR = 86_400_000;
 const LARGEUR_JOUR = 4;
 const MARGE_GAUCHE = 280;
 const HAUTEUR_LIGNE = 34;
+/** Couleur du carré d'une occurrence et de son guide, selon sa validation (même teintes que le CSS des carrés). */
+const COULEUR_OCCURRENCE: Record<string, string> = {
+  attente: 'var(--mantine-color-yellow-5)',
+  ok: 'var(--mantine-color-green-8)',
+  ko: 'var(--mantine-color-red-8)',
+  na: 'var(--mantine-color-gray-6)',
+};
 
 export interface Frise {
   /** Premier jour affiché (minuit UTC) et nombre de jours. */
@@ -138,6 +145,17 @@ export function Timeline({
             </Text>
           </Group>
         ))}
+        <Group gap="xs" wrap="nowrap">
+          <svg width="14" height="14" aria-hidden="true">
+            <rect
+              width="14"
+              height="14"
+              rx="2"
+              className="grc-timeline__occurrence grc-timeline__occurrence--attente"
+            />
+          </svg>
+          <Text size="xs">Occurrence : jaune en attente de validation, puis vert (OK), rouge (KO) ou gris (NA)</Text>
+        </Group>
         <Text size="xs" className="grc-timeline__retard-legende">
           ! En retard : barre cerclée de rouge
         </Text>
@@ -224,18 +242,45 @@ export function Timeline({
             const y = 36 + i * HAUTEUR_LIGNE;
             const couleur = policy.statuses.find((s) => s.id === t.status)?.color ?? 'var(--carte-vert-accent)';
             const retard = enRetard(objet, policy, maintenant);
+            const occurrence = typeof t.occurrenceKey === 'string' && t.occurrenceKey !== '';
+            const resultat = validationDe(objet);
+            // Une occurrence est un carré à son échéance : jaune tant qu'elle attend sa validation, puis vert (OK), rouge (KO)
+            // ou gris (NA). Le texte et le symbole de la colonne de gauche disent la même chose.
+            const classeOccurrence = resultat
+              ? `grc-timeline__occurrence grc-timeline__occurrence--${resultat.toLowerCase()}`
+              : 'grc-timeline__occurrence grc-timeline__occurrence--attente';
             return (
               <g key={objet.id} aria-hidden="true">
-                <rect
-                  x={x(de)}
-                  y={y}
-                  width={Math.max(8, x(a) - x(de) + LARGEUR_JOUR)}
-                  height="22"
-                  rx="5"
-                  fill={couleur}
-                  className={retard ? 'grc-timeline__barre grc-timeline__barre--retard' : 'grc-timeline__barre'}
-                  onClick={() => onOpen(objet)}
+                <line
+                  x1="0"
+                  x2={x(occurrence ? a : de)}
+                  y1={y + 11}
+                  y2={y + 11}
+                  stroke={occurrence ? COULEUR_OCCURRENCE[resultat?.toLowerCase() ?? 'attente'] : couleur}
+                  className="grc-timeline__guide"
                 />
+                {occurrence ? (
+                  <rect
+                    x={x(a)}
+                    y={y}
+                    width="22"
+                    height="22"
+                    rx="2"
+                    className={retard ? `${classeOccurrence} grc-timeline__barre--retard` : classeOccurrence}
+                    onClick={() => onOpen(objet)}
+                  />
+                ) : (
+                  <rect
+                    x={x(de)}
+                    y={y}
+                    width={Math.max(8, x(a) - x(de) + LARGEUR_JOUR)}
+                    height="22"
+                    rx="5"
+                    fill={couleur}
+                    className={retard ? 'grc-timeline__barre grc-timeline__barre--retard' : 'grc-timeline__barre'}
+                    onClick={() => onOpen(objet)}
+                  />
+                )}
               </g>
             );
           })}

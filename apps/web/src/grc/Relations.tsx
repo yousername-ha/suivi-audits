@@ -11,6 +11,12 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { api, get } from '../api';
 import { ErrorAlert } from '../components/common';
+const APPLICABILITE: Record<string, string> = {
+  applicable: 'applicable',
+  exclue: 'exclue',
+  a_determiner: 'à déterminer',
+  non_evaluee: 'non évaluée',
+};
 /** sourceKind : type de la fiche source (absent pour une fiche historique) ; il permet de ne proposer que les relations que
     le serveur accepte pour la paire source/cible. */
 export function Relations({ smsi, source, sourceKind }: { smsi: string; source: string; sourceKind?: string }) {
@@ -37,7 +43,7 @@ export function Relations({ smsi, source, sourceKind }: { smsi: string; source: 
           note: string;
           derived?: boolean;
           sens?: 'sortant' | 'entrant';
-          other: { ref: string; name: string; kind: string; archived?: boolean };
+          other: { ref: string; name: string; kind: string; archived?: boolean; applicabilite?: string | null };
         }[]
       >(`/api/grc/${smsi}/links?ref=${encodeURIComponent(source)}`),
   });
@@ -104,6 +110,12 @@ export function Relations({ smsi, source, sourceKind }: { smsi: string; source: 
             {GRC_LABELS[l.other.kind as GrcKind] ?? 'Donnée existante'}
             {l.other.archived ? ' (archivé)' : ''}
           </Text>
+          {l.other.kind === 'requirement' && l.other.applicabilite && (
+            <Text size="sm">
+              Applicabilité dans ce périmètre : {APPLICABILITE[l.other.applicabilite] ?? l.other.applicabilite}. Le lien
+              ne change ni l’applicabilité ni la couverture.
+            </Text>
+          )}
           {l.note && <Text size="sm">{l.note}</Text>}
           {l.derived ? (
             <Text size="sm">Modifier cette référence dans la fiche source.</Text>

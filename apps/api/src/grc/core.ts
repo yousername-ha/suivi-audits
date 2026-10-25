@@ -1173,13 +1173,34 @@ export class Grc {
         visible.push({
           ...r,
           sens: r.source_ref === ref ? ('sortant' as const) : ('entrant' as const),
-          other: { ref: other.ref, name: other.name, kind: other.kind, archived: other.archived === true },
+          other: {
+            ref: other.ref,
+            name: other.name,
+            kind: other.kind,
+            archived: other.archived === true,
+            ...(other.kind === 'requirement'
+              ? { applicabilite: await this.applicabiliteExigence(smsi, other.ref, user) }
+              : {}),
+          },
         });
       } catch {
         /* Aucun libellé ni identifiant inaccessible transmis. */
       }
     }
     return visible;
+  }
+  /** Applicabilité de l'exigence dans CE périmètre (version courante de son évaluation), pour la lire à côté d'un lien ; un
+      lien ne vaut ni couverture ni conformité. Null sans droit de lecture de la conformité ; « non évaluée » sans évaluation. */
+  private async applicabiliteExigence(smsi: string, ref: string, user: SessionUser) {
+    if (!user.rights.can('conformite', 'lire')) return null;
+    const [, frameworkId, , ...rest] = ref.split(':');
+    const e = (
+      await this.db.q<{ applicability: string }>(
+        'SELECT applicability FROM grc_requirement_assessments WHERE smsi_id=$1 AND framework_id=$2 AND requirement_id=$3 ORDER BY version DESC LIMIT 1',
+        [smsi, frameworkId, rest.join(':')],
+      )
+    ).rows[0];
+    return e?.applicability ?? 'non_evaluee';
   }
   async link(smsi: string, source: string, target: string, type: string, note: string, user: SessionUser, ip: string) {
     await this.access(smsi, user, true);

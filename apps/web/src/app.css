@@ -651,6 +651,28 @@
   stroke: var(--mantine-color-red-light-color);
   stroke-width: 3;
 }
+.grc-timeline__guide {
+  stroke-dasharray: 2 4;
+  stroke-width: 1.5;
+  opacity: 0.55;
+}
+.grc-timeline__occurrence {
+  cursor: pointer;
+  stroke: var(--mantine-color-dark-8);
+  stroke-width: 1.5;
+}
+.grc-timeline__occurrence--attente {
+  fill: var(--mantine-color-yellow-5);
+}
+.grc-timeline__occurrence--ok {
+  fill: var(--mantine-color-green-8);
+}
+.grc-timeline__occurrence--ko {
+  fill: var(--mantine-color-red-8);
+}
+.grc-timeline__occurrence--na {
+  fill: var(--mantine-color-gray-6);
+}
 .grc-timeline__mois {
   stroke: var(--mantine-color-default-border);
 }
