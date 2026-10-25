@@ -373,6 +373,16 @@ export const QUESTIONS_GAP: readonly QuestionGap[] = [
   { k: 'logs', l: 'Les journaux peuvent-ils être envoyés vers le SIEM du GCS ?', o: ['Oui', 'Non', 'Inconnu'] },
   { k: 'ia', l: 'Le service embarque-t-il de l’intelligence artificielle ?', o: ['Oui', 'Non', 'Inconnu'] },
   {
+    k: 'iaDonnees',
+    l: 'Si le service embarque de l’IA : quelles données peuvent y être saisies ?',
+    o: ['Aucune donnée sensible', 'Données personnelles (hors santé)', 'Données de santé (DSCP)', 'Inconnu'],
+  },
+  {
+    k: 'iaEntrainement',
+    l: 'Si le service embarque de l’IA : le fournisseur réutilise-t-il les données saisies pour entraîner ses modèles ?',
+    o: ['Non, garanti par contrat', 'Oui', 'Inconnu'],
+  },
+  {
     k: 'spec',
     l: 'Cas particuliers',
     multi: true,
@@ -520,8 +530,56 @@ export function questionnaireGap(A: ReponsesGap): ResultatQuestionnaire {
       ['A-8.25', 'A-8.28', 'A-8.29', 'A-8.31'],
       'Appliquer le développement sécurisé : revue de code, tests de sécurité, environnements séparés',
     );
-  if (A.ia === 'Oui')
-    C('spec', ['A-5.9'], 'Inscrire l’usage au registre IA et l’évaluer (GAP IA, règlement européen sur l’IA)');
+  if (A.ia === 'Oui') {
+    // Points propres à l'organisation pour rester conforme à l'ISO/IEC 27001 et à l'HDS quand le service embarque de l'IA :
+    // ce ne sont pas des exigences d'un référentiel officiel. Les références renvoient aux points de l'outil (Annexe A, clauses, HDS).
+    C(
+      'spec',
+      ['A-5.9', 'A-5.12'],
+      'Inscrire l’usage au registre IA et classifier les informations qui peuvent y être saisies',
+    );
+    C(
+      'spec',
+      ['A-5.10', 'A-6.3'],
+      'Fixer une règle d’usage de l’IA (services autorisés, données interdites, relecture humaine des réponses) et sensibiliser les utilisateurs',
+    );
+    C(
+      'spec',
+      ['ISO-6.1.2'],
+      'Intégrer à l’appréciation des risques ceux propres à l’IA : fuite des données saisies, réponses erronées, injection de consignes, dépendance au fournisseur',
+    );
+    const entrainement = A.iaEntrainement;
+    C(
+      'spec',
+      ['A-5.19', 'A-5.20', 'A-5.23'],
+      'Encadrer par contrat l’usage des données saisies : pas d’entraînement des modèles, durée de conservation, sous-traitants, réversibilité',
+      entrainement === 'Non, garanti par contrat' ? 'Conforme' : entrainement === 'Oui' ? 'Non conforme' : null,
+      entrainement === 'Oui'
+        ? 'Le fournisseur réutilise les données saisies pour entraîner ses modèles : à refuser ou à encadrer par contrat.'
+        : entrainement === 'Non, garanti par contrat'
+          ? 'Absence d’entraînement sur les données saisies garantie par contrat.'
+          : 'Réutilisation des données saisies par le fournisseur : à vérifier.',
+    );
+    C('spec', ['A-8.15', 'A-8.16'], 'Journaliser les usages de l’IA et superviser les usages non autorisés');
+    C(
+      'spec',
+      ['A-5.31'],
+      'Vérifier les exigences légales : règlement européen sur l’IA (niveau de risque du système) et RGPD',
+    );
+    if (A.iaDonnees === 'Données de santé (DSCP)') {
+      const sansHds =
+        Array.isArray(A.certs) && A.certs.length > 0 && !A.certs.includes('HDS') && !A.certs.includes('Inconnu');
+      C(
+        'hds',
+        ['HDS-04', 'HDS-28'],
+        'Données de santé saisies dans l’IA : service couvert par un hébergement certifié HDS, stockage dans l’Espace économique européen',
+        sansHds ? 'Non conforme' : null,
+        sansHds
+          ? 'Des données de santé peuvent être saisies alors que le fournisseur ne déclare pas de certificat HDS.'
+          : 'Certificat HDS et lieu de stockage du service d’IA : à vérifier.',
+      );
+    }
+  }
   if (has('spec', 'Dispositif médical connecté'))
     C(
       'spec',
