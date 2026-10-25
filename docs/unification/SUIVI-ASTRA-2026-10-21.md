@@ -83,7 +83,9 @@ Légende des états : **Corrigé** (critère de l'audit satisfait et testé) · 
 | 003-05, 003-11 | Amélioré | `StudyConfiguration` épingle une échelle de vraisemblance (scénarios opérationnels) et une échelle de gravité (scénarios stratégiques), avec contrôle serveur du niveau retenu, aperçu et migration explicites, libellé publié dans la synthèse ; études sans épinglage inchangées ([ADR 0038](../adr/0038-socle-de-configuration-grc-transversal.md), addendum) | Échelle des critères des parties prenantes (`ECHELLE_CRITERE`) toujours locale ; structuration des opérations (décision métier) | `config-grc-echelles-scenario.test.ts` (4), e2e `…-echelles-scenarios.spec.ts` |
 | 003-07, 003-08, 003-09, 003-10 | Décision | — | Couche visuelle EBIOS (cercle, chemins, pictogrammes, flux) | — |
 
-## Décisions en attente (celles de l'utilisateur)
+## Décisions de l'utilisateur
+
+Les quinze décisions restantes ont été tranchées le 25/10/2026 : voir [DECISIONS-2026-10-25.md](DECISIONS-2026-10-25.md). La liste ci-dessous garde l'historique de leur énoncé.
 
 1. ~~Structure de l'Administration~~ **Décidé (21/10/2026)** : deux entrées, « Plateforme » (organisation, comptes, référentiels, échelles, apparence, notifications, écrans muraux, import/export) et « Configuration système » (sauvegardes, mises à jour, certificats, sécurité, sessions, journal d'audit, journaux techniques, modules, environnement), chacune en page d'accueil à cartes ; détails en fenêtres centrées ; anciennes adresses conservées en alias. Réalisé (012-01, 020-05).
 2. ~~Définition de « conformité »~~ **Décidé (21/10/2026)** : « Couverture » (testées ou validées / applicables), jamais présentée comme conformité ISO/IEC 27001. Les clauses 4 à 10 sont obligatoires donc non excluables ; une exigence « à déterminer » est comptée à part et signalée comme à revoir (appliqué dans le code).
