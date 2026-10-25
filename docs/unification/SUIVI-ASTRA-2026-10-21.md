@@ -89,6 +89,7 @@ Légende des états : **Corrigé** (critère de l'audit satisfait et testé) · 
 | 003-08 | Amélioré | Chemins stratégiques (source → parties prenantes → événements), choix, alternatives, aller-retour avec la synthèse ; chemins incomplets non dessinés | Pas d'éditeur graphique ; séquence opérationnelle en texte libre | idem |
 | 003-09 | Amélioré | Sept pictogrammes indicatifs d'après la catégorie, libellé écrit, sans reclasser la source | Reconnaissance par mots-clés | idem |
 | 003-10 | Amélioré | Flux et contour épais sur le chemin choisi seulement ; pause, Animées/Automatiques/Arrêtées, mouvement réduit | — | idem |
+| 019-07 (SR/OV) | Amélioré | Bibliothèque partagée de sources de risque : choix par référence dans une étude, version retenue, dérive signalée, cotations propres à l'étude ([ADR 0054](../adr/0054-bibliotheque-sources-de-risque.md)) | Propre à un périmètre (pas d'héritage ni de bibliothèque d'organisation) ; objectifs visés non catalogués | `risques.test.ts`, e2e `zzzz-bibliotheque-sources.spec.ts` |
 
 ## Décisions de l'utilisateur
 

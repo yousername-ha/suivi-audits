@@ -1,7 +1,7 @@
 /* Études EBIOS RM (lot U3, ADR 0027) : liste des études, puis une étude par atelier. Chaque élément est un objet
    typé rattaché à l'étude ; la validation d'un atelier est une décision tracée ; un scénario opérationnel donne un
    risque du registre avec sa filiation. Démarche inspirée du guide de l'ANSSI, sans conformité revendiquée. */
-import { Alert, Badge, Button, Card, Group, Stack, Table, Tabs, Text } from '@mantine/core';
+import { Alert, Badge, Button, Card, Group, Modal, Select, Stack, Table, Tabs, Text } from '@mantine/core';
 import {
   ECHELLE_GRAVITE,
   ECHELLE_VRAISEMBLANCE,
@@ -11,9 +11,9 @@ import {
   type PilotageRecord,
 } from '@suivi/shared';
 import { DataTable, StatusChip } from '@suivi/ui';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { get } from '../api';
+import { api, get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
 import { Chemins } from './ebios-visuel/Chemins';
@@ -33,7 +33,22 @@ interface ObjetEtude {
     graviteCatalogue?: string | null;
     graviteScenarioCatalogue?: string | null;
     vraisemblanceCatalogue?: string | null;
+    /** Source de la bibliothèque partagée (sans étude propriétaire), lue par référence. */
+    bibliotheque?: boolean;
+    /** Version actuelle de la source de la bibliothèque quand elle a changé depuis le choix du couple. */
+    sourceModifiee?: number | null;
   };
+}
+interface SourceBibliotheque {
+  id: string;
+  name: string;
+  version: number;
+  category: string;
+  motive: string;
+  resources: string;
+  targetObjective: string;
+  usages: number;
+  etudes: number;
 }
 interface VueEtude {
   etude: GrcObject;
@@ -122,6 +137,80 @@ function SocleSecurite({ socle }: { socle: unknown }) {
   );
 }
 
+/** Bibliothèque partagée des sources de risque du périmètre (décision 10) : sources sans étude propriétaire, réutilisées par
+    référence dans les couples des études ; les cotations (motivation, ressources, pertinence) restent propres à chaque étude. */
+function BibliothequeSources({
+  smsi,
+  onOpen,
+  onCreate,
+}: {
+  smsi: string;
+  onOpen: (o: GrcObject) => void;
+  onCreate: (kind: GrcKind, initial?: Record<string, unknown>) => void;
+}) {
+  const can = useCan();
+  const q = useQuery({
+    queryKey: ['grc', smsi, 'risk-library'],
+    queryFn: () => get<{ items: SourceBibliotheque[] }>(`/api/grc/${smsi}/risk-library`),
+  });
+  return (
+    <Card withBorder>
+      <Stack gap="xs">
+        <Group justify="space-between">
+          <Text fw={600}>Bibliothèque de sources de risque</Text>
+          {can('pilotage', 'modifier') && (
+            <Button size="xs" variant="light" onClick={() => onCreate('risk_source')}>
+              Ajouter une source à la bibliothèque
+            </Button>
+          )}
+        </Group>
+        <Text size="sm">
+          Les sources de la bibliothèque sont partagées par toutes les études du périmètre : une étude les choisit au
+          lieu de les ressaisir, et les cotations de chaque couple restent propres à l’étude.
+        </Text>
+        <ErrorAlert error={q.error} />
+        {q.data && !q.data.items.length && <Text size="sm">Aucune source dans la bibliothèque.</Text>}
+        {!!q.data?.items.length && (
+          <DataTable label="Bibliothèque de sources de risque">
+            <Table>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Source</Table.Th>
+                  <Table.Th>Catégorie</Table.Th>
+                  <Table.Th>Version</Table.Th>
+                  <Table.Th>Utilisation</Table.Th>
+                  <Table.Th>Actions</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {q.data.items.map((s) => (
+                  <Table.Tr key={s.id}>
+                    <Table.Td>{s.name}</Table.Td>
+                    <Table.Td>{s.category || '—'}</Table.Td>
+                    <Table.Td>{s.version}</Table.Td>
+                    <Table.Td>
+                      {s.usages ? `${s.usages} couple(s) dans ${s.etudes} étude(s)` : 'Pas encore utilisée'}
+                    </Table.Td>
+                    <Table.Td>
+                      <Button
+                        size="xs"
+                        variant="default"
+                        onClick={() => void get<GrcObject>(`/api/grc/${smsi}/objects/${s.id}`).then(onOpen)}
+                      >
+                        Ouvrir
+                      </Button>
+                    </Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
+          </DataTable>
+        )}
+      </Stack>
+    </Card>
+  );
+}
+
 export function EtudesEbios({
   smsi,
   onOpen,
@@ -140,6 +229,9 @@ export function EtudesEbios({
   const [onglet, setOnglet] = useState<string>('a1');
   const [cheminChoisi, setCheminChoisi] = useState<string | null>(null);
   const [scenarioChoisi, setScenarioChoisi] = useState<string | null>(null);
+  const [choixBibliotheque, setChoixBibliotheque] = useState(false);
+  const [sourceChoisie, setSourceChoisie] = useState<string | null>(null);
+  const qc = useQueryClient();
   const etudes = useQuery({
     queryKey: ['grc', smsi, 'objects', 'risk_study'],
     queryFn: () => get<{ items: GrcObject[] }>(`/api/grc/${smsi}/objects?kind=risk_study`),
@@ -150,6 +242,20 @@ export function EtudesEbios({
     enabled: !!choisie,
   });
   const ouvrir = async (id: string) => onOpen(await get<GrcObject>(`/api/grc/${smsi}/objects/${id}`));
+  const bibliotheque = useQuery({
+    queryKey: ['grc', smsi, 'risk-library'],
+    queryFn: () => get<{ items: SourceBibliotheque[] }>(`/api/grc/${smsi}/risk-library`),
+    enabled: !!choisie,
+  });
+  /** Le couple a été relu après l'évolution de la source de la bibliothèque : la version retenue passe à la version actuelle. */
+  const marquerRelue = async (o: ObjetEtude) => {
+    const fiche = await get<GrcObject>(`/api/grc/${smsi}/objects/${o.id}`);
+    await api('PUT', `/api/grc/${smsi}/objects/${o.id}`, {
+      ifMatch: fiche.version,
+      body: { kind: fiche.kind, name: fiche.name, data: { ...fiche.data, sourceVersion: o.calcul.sourceModifiee } },
+    });
+    await qc.invalidateQueries({ queryKey: ['grc', smsi, 'risk-study', choisie] });
+  };
   const modifier = can('pilotage', 'modifier');
   if (!choisie)
     return (
@@ -165,6 +271,7 @@ export function EtudesEbios({
           </Group>
         )}
         {etudes.data && !etudes.data.items.length && <Text>Aucune étude pour ce périmètre.</Text>}
+        <BibliothequeSources smsi={smsi} onOpen={onOpen} onCreate={onCreate} />
         <div className="grc-dashboard-grid">
           {etudes.data?.items.map((e) => (
             <Card key={e.id} withBorder>
@@ -189,8 +296,60 @@ export function EtudesEbios({
   const noms = new Map((v?.ateliers ?? []).flatMap((a) => a.objets.map((o) => ['object:' + o.id, o.name] as const)));
   const etudeRef = 'object:' + choisie;
   const tousObjets = (v?.ateliers ?? []).flatMap((a) => a.objets);
+  const sourceDeBibliotheque = bibliotheque.data?.items.find((x) => x.id === sourceChoisie);
   return (
     <Stack>
+      <Modal
+        opened={choixBibliotheque}
+        onClose={() => setChoixBibliotheque(false)}
+        title="Choisir une source dans la bibliothèque"
+        closeButtonProps={{ 'aria-label': 'Fermer le choix de la source' }}
+      >
+        <Stack>
+          <Text size="sm">
+            Le couple source / objectif visé de l’étude référence la source de la bibliothèque (rien n’est copié) ; ses
+            cotations restent propres à cette étude.
+          </Text>
+          <ErrorAlert error={bibliotheque.error} />
+          {bibliotheque.data && !bibliotheque.data.items.length && (
+            <Text size="sm">La bibliothèque est vide : ajoutez-y une source depuis la liste des études.</Text>
+          )}
+          <Select
+            label="Source de risque"
+            searchable
+            data={(bibliotheque.data?.items ?? []).map((x) => ({
+              value: x.id,
+              label: x.category ? `${x.name} (${x.category})` : x.name,
+            }))}
+            value={sourceChoisie}
+            onChange={setSourceChoisie}
+          />
+          {sourceDeBibliotheque?.targetObjective && (
+            <Text size="sm">Objectif visé proposé : {sourceDeBibliotheque.targetObjective}</Text>
+          )}
+          <Group justify="flex-end">
+            <Button variant="default" onClick={() => setChoixBibliotheque(false)}>
+              Annuler
+            </Button>
+            <Button
+              disabled={!sourceDeBibliotheque}
+              onClick={() => {
+                if (!sourceDeBibliotheque) return;
+                setChoixBibliotheque(false);
+                setSourceChoisie(null);
+                onCreate('sr_ov', {
+                  studyRef: etudeRef,
+                  sourceRef: 'object:' + sourceDeBibliotheque.id,
+                  sourceVersion: sourceDeBibliotheque.version,
+                  objective: sourceDeBibliotheque.targetObjective,
+                });
+              }}
+            >
+              Créer le couple
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
       <Group>
         <Button variant="default" onClick={() => setChoisie(null)}>
           Toutes les études
@@ -245,6 +404,11 @@ export function EtudesEbios({
                           {`Ajouter : ${GRC_LABELS[k]}`}
                         </Button>
                       ))}
+                      {a.id === 'a2' && (
+                        <Button size="xs" variant="default" onClick={() => setChoixBibliotheque(true)}>
+                          Choisir une source dans la bibliothèque
+                        </Button>
+                      )}
                     </Group>
                   )}
                   {a.objets.length ? (
@@ -272,6 +436,23 @@ export function EtudesEbios({
                                   </Group>
                                 ) : (
                                   o.name
+                                )}
+                                {o.calcul.bibliotheque && (
+                                  <Badge ml="xs" variant="light" color="gray">
+                                    Bibliothèque
+                                  </Badge>
+                                )}
+                                {o.kind === 'sr_ov' && o.calcul.sourceModifiee != null && (
+                                  <Group gap="xs" mt="2xs">
+                                    <Badge variant="light" color="orange">
+                                      Source modifiée depuis le choix (version {o.calcul.sourceModifiee})
+                                    </Badge>
+                                    {modifier && (
+                                      <Button size="compact-xs" variant="subtle" onClick={() => void marquerRelue(o)}>
+                                        Marquer comme relue
+                                      </Button>
+                                    )}
+                                  </Group>
                                 )}
                               </Table.Td>
                               <Table.Td>{GRC_LABELS[o.kind]}</Table.Td>

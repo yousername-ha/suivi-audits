@@ -103,6 +103,7 @@ export function RecordEditor({
         d.effectiveness = 'pending';
         d.effectivenessNote = '';
         d.closureNote = '';
+        d.closureOpenLinksReason = '';
         d.closedAt = '';
       }
       if (kind === 'control' && !d.frequency) d.frequency = policy.catalogues.frequencies[0]!.id;

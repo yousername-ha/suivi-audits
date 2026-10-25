@@ -23,7 +23,7 @@ import {
 import type { Session } from '../auth.js';
 import { cartesPerimetres } from '../grc/cartes.js';
 import { dashboard } from '../grc/dashboard.js';
-import { etudeEbios, registreRisques } from '../grc/registre-risques.js';
+import { bibliothequeSources, etudeEbios, registreRisques } from '../grc/registre-risques.js';
 import { report } from '../grc/report.js';
 import { sources } from '../grc/sources.js';
 import { route } from '../http/route.js';
@@ -1154,6 +1154,15 @@ export const grcRoutes = [
         enRetard: query.enRetard === '1',
         ecart: query.ecart === '1',
       }),
+  }),
+  route({
+    tags: ['SMSI GRC'],
+    access: 'pilotage:lire',
+    method: 'GET',
+    url: '/api/grc/:smsi/risk-library',
+    summary: 'Bibliothèque partagée des sources de risque du périmètre, avec leur usage par les études (décision 10)',
+    params: scope,
+    handler: async ({ svc, s, params }) => bibliothequeSources(svc.grc, params.smsi, (s as Session).user),
   }),
   route({
     tags: ['SMSI GRC'],

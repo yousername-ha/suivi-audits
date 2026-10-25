@@ -260,6 +260,62 @@ describe('étude EBIOS RM : ateliers d’objets typés', () => {
   });
 });
 
+describe('bibliothèque partagée des sources de risque (décision 10)', () => {
+  it('une source sans étude est réutilisée par référence, versionnée, avec son usage et sa dérive signalés', async () => {
+    const source = await creer(a, 'risk_source', 'Groupe criminel de la bibliothèque', {
+      category: 'Criminel organisé',
+      motive: 'Gain financier',
+      targetObjective: 'Chiffrer les données et exiger une rançon',
+    });
+    expect(source.statusCode, source.body).toBe(200);
+    const id = source.json().id as string;
+    let lib = (await a.get(root() + '/risk-library')).json();
+    expect(lib.items.find((x: { id: string }) => x.id === id)).toMatchObject({
+      name: 'Groupe criminel de la bibliothèque',
+      category: 'Criminel organisé',
+      usages: 0,
+      etudes: 0,
+      version: 1,
+    });
+    // Une source propre à une étude n'est pas dans la bibliothèque.
+    expect(lib.items.some((x: { id: string }) => x.id === ids.sr)).toBe(false);
+    // Le couple de l'étude référence la source de la bibliothèque : lecture, pas copie.
+    const couple = await creer(a, 'sr_ov', 'Couple issu de la bibliothèque', {
+      studyRef: ref('etude'),
+      sourceRef: 'object:' + id,
+      sourceVersion: 1,
+      objective: 'Chiffrer les données et exiger une rançon',
+    });
+    expect(couple.statusCode, couple.body).toBe(200);
+    lib = (await a.get(root() + '/risk-library')).json();
+    expect(lib.items.find((x: { id: string }) => x.id === id)).toMatchObject({ usages: 1, etudes: 1 });
+    const vue = async () =>
+      (await a.get(root() + '/risk-studies/' + ids.etude)).json() as {
+        ateliers: { id: string; objets: { id: string; kind: string; calcul: Record<string, unknown> }[] }[];
+      };
+    let a2 = (await vue()).ateliers.find((x) => x.id === 'a2')!;
+    expect(a2.objets.find((o) => o.id === id)?.calcul.bibliotheque).toBe(true);
+    expect(a2.objets.find((o) => o.id === couple.json().id)?.calcul.sourceModifiee ?? null).toBeNull();
+    // La source évolue : nouvelle version, la dérive est signalée sur le couple, rien n'est modifié en silence.
+    const maj = await a.put(
+      root() + '/objects/' + id,
+      {
+        kind: 'risk_source',
+        name: 'Groupe criminel de la bibliothèque',
+        data: { ...source.json().data, motive: 'Gain et revente' },
+      },
+      { 'if-match': '"1"' },
+    );
+    expect(maj.statusCode, maj.body).toBe(200);
+    a2 = (await vue()).ateliers.find((x) => x.id === 'a2')!;
+    expect(a2.objets.find((o) => o.id === couple.json().id)?.calcul.sourceModifiee).toBe(2);
+    expect((await a.get(root() + '/objects/' + couple.json().id)).json().data.sourceVersion).toBe(1);
+    // Droits : un compte sans accès au périmètre ne lit pas la bibliothèque.
+    expect((await ro.get(root() + '/risk-library')).statusCode).toBe(404);
+    expect((await ro.get(`/api/grc/${DEFAULT_SMSI}/risk-library`)).statusCode).toBe(200);
+  });
+});
+
 describe('risque du registre : processus ISO/IEC 27005 et acceptation formelle', () => {
   let methodId: string, riskId: string;
   it('publie une méthode et crée un risque issu de l’étude, avec identification ISO', async () => {
