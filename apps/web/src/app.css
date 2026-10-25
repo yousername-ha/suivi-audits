@@ -2346,3 +2346,161 @@ rect.audit-niv-faible {
 .parcours-liste__etape {
   border-inline-start: var(--suivi-trait-focus) solid var(--teinte-texte);
 }
+
+/* Couche visuelle EBIOS RM (décision 5, 003-07 à 003-10) : aucune couleur ni position ne porte un score ; les valeurs sont
+   écrites à côté. Animations décoratives, désactivées par la pause, le réglage « Arrêtées » et le mouvement réduit. */
+.ebios-chemins__liste {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mantine-spacing-xs);
+}
+.ebios-chemins__toile {
+  overflow-x: auto;
+  border: var(--suivi-trait-l) solid var(--suivi-trait);
+  border-radius: var(--mantine-radius-md);
+  background: var(--suivi-surface-douce);
+}
+.ebios-chemins__toile > svg {
+  display: block;
+  min-width: var(--ebios-toile-min);
+  width: 100%;
+  height: auto;
+}
+.ebios-colonne {
+  fill: var(--mantine-color-dimmed);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.ebios-noeud rect {
+  fill: var(--mantine-color-body);
+  stroke: var(--suivi-trait);
+  stroke-width: 1.2;
+}
+.ebios-noeud--choisi rect {
+  stroke: var(--carte-bleu-accent);
+  stroke-width: 2.6;
+}
+.ebios-noeud__nom {
+  fill: var(--mantine-color-text);
+}
+.ebios-noeud__detail {
+  fill: var(--mantine-color-dimmed);
+}
+.ebios-noeud .ebios-picto {
+  color: var(--mantine-color-text);
+}
+.ebios-picto {
+  flex: none;
+  vertical-align: middle;
+}
+.ebios-lien {
+  fill: none;
+  stroke: var(--suivi-trait);
+  stroke-width: 1.6;
+}
+.ebios-lien--choisi {
+  stroke: var(--carte-bleu-accent);
+  stroke-width: 4;
+}
+.ebios-fleche {
+  fill: var(--suivi-trait);
+}
+.ebios-fleche--choisie {
+  fill: var(--carte-bleu-accent);
+}
+.ebios-flux {
+  fill: none;
+  stroke: var(--mantine-color-body);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 3 7;
+  opacity: 0.85;
+  pointer-events: none;
+}
+.ebios-chemins[data-anime='oui'] .ebios-flux {
+  animation: ebios-flux 1.4s linear infinite;
+}
+@keyframes ebios-flux {
+  from {
+    stroke-dashoffset: 10;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.ebios-legende-pictos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--mantine-font-size-xs);
+}
+.ebios-legende-pictos li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mantine-spacing-2xs);
+}
+.ebios-synthese {
+  display: grid;
+  gap: var(--mantine-spacing-md);
+  grid-template-columns: minmax(0, var(--ebios-cercle-largeur)) minmax(0, 1fr);
+  align-items: start;
+}
+@media (max-width: 48em) {
+  .ebios-synthese {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.ebios-cercle svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.ebios-cercle .graph-legende-ligne li {
+  align-items: center;
+  gap: var(--mantine-spacing-2xs);
+}
+.ebios-cercle__anneau {
+  fill: none;
+  stroke: var(--suivi-trait);
+  stroke-width: 1.4;
+  stroke-dasharray: 2 5;
+}
+.ebios-cercle__centre {
+  text-anchor: middle;
+  fill: var(--mantine-color-text);
+}
+.ebios-cercle__sous-centre {
+  text-anchor: middle;
+  fill: var(--mantine-color-dimmed);
+}
+.ebios-point {
+  cursor: pointer;
+}
+.ebios-point circle {
+  stroke: var(--mantine-color-body);
+  stroke-width: 2;
+}
+.ebios-point--choisi circle {
+  stroke: var(--mantine-color-text);
+  stroke-width: 3;
+}
+.ebios-point--masque {
+  opacity: 0.22;
+}
+.ebios-point:focus-visible {
+  outline: var(--suivi-trait-focus) solid var(--carte-bleu-accent);
+  outline-offset: var(--suivi-trait-focus);
+}
+.ebios-point__rang {
+  text-anchor: middle;
+  fill: var(--mantine-color-white);
+  stroke: none;
+  pointer-events: none;
+}
+.ebios-ligne--choisie > td,
+.ebios-ligne--choisie > th {
+  background: var(--suivi-surface-douce);
+}

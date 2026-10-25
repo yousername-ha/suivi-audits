@@ -16,6 +16,10 @@ import { useState } from 'react';
 import { get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
+import { Chemins } from './ebios-visuel/Chemins';
+import { familleSource } from './ebios-visuel/modele';
+import { libelleFamille, PictoSource } from './ebios-visuel/Pictos';
+import { Synthese } from './ebios-visuel/Synthese';
 
 interface ObjetEtude {
   id: string;
@@ -118,49 +122,6 @@ function SocleSecurite({ socle }: { socle: unknown }) {
   );
 }
 
-/** Matrice gravité × vraisemblance des scénarios opérationnels de l'étude (gravité du scénario stratégique). */
-function Matrice({ vue }: { vue: VueEtude }) {
-  const tous = vue.ateliers.flatMap((a) => a.objets);
-  const parRef = new Map(tous.map((o) => ['object:' + o.id, o]));
-  const cases = new Map<string, string[]>();
-  for (const o of tous.filter((x) => x.kind === 'operational_scenario')) {
-    const s = parRef.get(String(o.data.strategicScenarioRef ?? ''));
-    const g = typeof s?.data.gravity === 'number' ? s.data.gravity : null;
-    const v = typeof o.data.likelihood === 'number' ? o.data.likelihood : null;
-    if (g && v) cases.set(`${g}-${v}`, [...(cases.get(`${g}-${v}`) ?? []), o.name]);
-  }
-  if (!cases.size)
-    return (
-      <Text size="sm">
-        La matrice apparaît dès qu’un scénario opérationnel a une vraisemblance et un scénario stratégique gradué.
-      </Text>
-    );
-  return (
-    <DataTable label="Scénarios opérationnels par gravité et vraisemblance">
-      <Table>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>Gravité \ vraisemblance</Table.Th>
-            {ECHELLE_VRAISEMBLANCE.map((l, i) => (
-              <Table.Th key={l}>{`V${i + 1}`}</Table.Th>
-            ))}
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {[4, 3, 2, 1].map((g) => (
-            <Table.Tr key={g}>
-              <Table.Th scope="row">{`G${g} — ${ECHELLE_GRAVITE[g - 1]}`}</Table.Th>
-              {[1, 2, 3, 4].map((v) => (
-                <Table.Td key={v}>{(cases.get(`${g}-${v}`) ?? []).join(', ')}</Table.Td>
-              ))}
-            </Table.Tr>
-          ))}
-        </Table.Tbody>
-      </Table>
-    </DataTable>
-  );
-}
-
 export function EtudesEbios({
   smsi,
   onOpen,
@@ -176,6 +137,9 @@ export function EtudesEbios({
 }) {
   const can = useCan();
   const [choisie, setChoisie] = useState<string | null>(null);
+  const [onglet, setOnglet] = useState<string>('a1');
+  const [cheminChoisi, setCheminChoisi] = useState<string | null>(null);
+  const [scenarioChoisi, setScenarioChoisi] = useState<string | null>(null);
   const etudes = useQuery({
     queryKey: ['grc', smsi, 'objects', 'risk_study'],
     queryFn: () => get<{ items: GrcObject[] }>(`/api/grc/${smsi}/objects?kind=risk_study`),
@@ -224,6 +188,7 @@ export function EtudesEbios({
   const v = vue.data;
   const noms = new Map((v?.ateliers ?? []).flatMap((a) => a.objets.map((o) => ['object:' + o.id, o.name] as const)));
   const etudeRef = 'object:' + choisie;
+  const tousObjets = (v?.ateliers ?? []).flatMap((a) => a.objets);
   return (
     <Stack>
       <Group>
@@ -252,14 +217,15 @@ export function EtudesEbios({
               </Badge>
             ))}
           </Group>
-          <Tabs defaultValue="a1" keepMounted={false}>
+          <Tabs value={onglet} onChange={(t) => t && setOnglet(t)} keepMounted={false}>
             <Tabs.List>
               {v.ateliers.map((a) => (
                 <Tabs.Tab key={a.id} value={a.id}>
                   {a.label.replace(/^Atelier (\d) — /, '$1. ')}
                 </Tabs.Tab>
               ))}
-              <Tabs.Tab value="matrice">Matrice</Tabs.Tab>
+              <Tabs.Tab value="synthese">Suivi, matrice et cercle</Tabs.Tab>
+              <Tabs.Tab value="chemins">Chemins</Tabs.Tab>
             </Tabs.List>
             {v.ateliers.map((a) => (
               <Tabs.Panel key={a.id} value={a.id} pt="md">
@@ -295,7 +261,19 @@ export function EtudesEbios({
                         <Table.Tbody>
                           {a.objets.map((o) => (
                             <Table.Tr key={o.id}>
-                              <Table.Td>{o.name}</Table.Td>
+                              <Table.Td>
+                                {o.kind === 'risk_source' ? (
+                                  <Group gap="xs" wrap="nowrap">
+                                    <PictoSource famille={familleSource(o.data.category)} />
+                                    <span>{o.name}</span>
+                                    <Text span size="xs" c="dimmed">
+                                      (pictogramme indicatif : {libelleFamille(familleSource(o.data.category))})
+                                    </Text>
+                                  </Group>
+                                ) : (
+                                  o.name
+                                )}
+                              </Table.Td>
                               <Table.Td>{GRC_LABELS[o.kind]}</Table.Td>
                               <Table.Td>{resume(o, noms)}</Table.Td>
                               <Table.Td>
@@ -348,8 +326,50 @@ export function EtudesEbios({
                 </Stack>
               </Tabs.Panel>
             ))}
-            <Tabs.Panel value="matrice" pt="md">
-              <Matrice vue={v} />
+            <Tabs.Panel value="synthese" pt="md">
+              <Synthese
+                objets={tousObjets}
+                choisi={scenarioChoisi}
+                onChoisir={setScenarioChoisi}
+                onOuvrir={(id) => void ouvrir(id)}
+                onVoirChemin={(r) => {
+                  setCheminChoisi(r);
+                  setOnglet('chemins');
+                }}
+                actions={
+                  modifier
+                    ? (l) => (
+                        <Button
+                          size="xs"
+                          variant="light"
+                          onClick={() => {
+                            const o = tousObjets.find((x) => x.id === l.id);
+                            if (o)
+                              onCreateRisk('Risque : ' + o.name, {
+                                studyRef: etudeRef,
+                                scenarioRef: 'object:' + o.id,
+                                description: String(o.data.attackSequence ?? ''),
+                              });
+                          }}
+                        >
+                          Créer le risque
+                        </Button>
+                      )
+                    : undefined
+                }
+              />
+            </Tabs.Panel>
+            <Tabs.Panel value="chemins" pt="md">
+              <Chemins
+                objets={tousObjets}
+                choisi={cheminChoisi}
+                onChoisir={setCheminChoisi}
+                onOuvrir={(id) => void ouvrir(id)}
+                onVoirSynthese={(r) => {
+                  setScenarioChoisi(r);
+                  setOnglet('synthese');
+                }}
+              />
             </Tabs.Panel>
           </Tabs>
         </>

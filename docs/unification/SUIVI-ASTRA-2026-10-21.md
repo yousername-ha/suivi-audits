@@ -85,7 +85,10 @@ Légende des états : **Corrigé** (critère de l'audit satisfait et testé) · 
 | 003-04 | Amélioré | Mesures de l'écosystème par référence ; justification de la dangerosité | Formule et échelle des critères en dur | `risques-traitement.test.ts` |
 | 003-06 | Amélioré | Gardes testées : résiduel inacceptable avec option « accepter », étape non validée | Synthèse de l'atelier 5 ; validation de l'atelier 5 | `grc.test.ts` |
 | 003-05, 003-11 | Amélioré | `StudyConfiguration` épingle une échelle de vraisemblance (scénarios opérationnels) et une échelle de gravité (scénarios stratégiques), avec contrôle serveur du niveau retenu, aperçu et migration explicites, libellé publié dans la synthèse ; études sans épinglage inchangées ([ADR 0038](../adr/0038-socle-de-configuration-grc-transversal.md), addendum) | Échelle des critères des parties prenantes (`ECHELLE_CRITERE`) toujours locale ; structuration des opérations (décision métier) | `config-grc-echelles-scenario.test.ts` (4), e2e `…-echelles-scenarios.spec.ts` |
-| 003-07, 003-08, 003-09, 003-10 | Décision | — | Couche visuelle EBIOS (cercle, chemins, pictogrammes, flux) | — |
+| 003-07 | Amélioré | Suivi en liste, matrice et cercle avec sélection et filtres communs ; non placés dits explicitement ([ADR 0051](../adr/0051-couche-visuelle-ebios.md)) | Matrice colorée du registre non fusionnée ; rang numérique 1-4 seulement | `ebios-visuel.test.ts`, e2e `zzzz-ebios-visuel.spec.ts` |
+| 003-08 | Amélioré | Chemins stratégiques (source → parties prenantes → événements), choix, alternatives, aller-retour avec la synthèse ; chemins incomplets non dessinés | Pas d'éditeur graphique ; séquence opérationnelle en texte libre | idem |
+| 003-09 | Amélioré | Sept pictogrammes indicatifs d'après la catégorie, libellé écrit, sans reclasser la source | Reconnaissance par mots-clés | idem |
+| 003-10 | Amélioré | Flux et contour épais sur le chemin choisi seulement ; pause, Animées/Automatiques/Arrêtées, mouvement réduit | — | idem |
 
 ## Décisions de l'utilisateur
 
@@ -96,7 +99,7 @@ Les quinze décisions restantes ont été tranchées le 25/10/2026 : voir [DECIS
 3. ~~Modèle « collaborateur »~~ **Décidé (21/10/2026)** : membre d'un groupe qui a le droit sur le registre : tout le registre ; attribué directement sur une action : cette action seulement. Réalisé (022-03).
 4. ~~Canaux d'envoi (courriel, Teams), conservation et nettoyage automatique, certificats autosignés et ACME~~ **Décidé (25/10/2026)**, réalisé en partie (012-04, 012-07, 012-09 à 012-11). Les niveaux de journalisation (012-13) sont réalisés.
 5. Calendriers de plateforme (zones scolaires, jours fériés) et leur couche d'affichage (012-14, 018-08, 018-09).
-6. Couche visuelle EBIOS RM : cercle, chemins, pictogrammes, flux animés (003-07 à 003-10).
+6. ~~Couche visuelle EBIOS RM : cercle, chemins, pictogrammes, flux animés (003-07 à 003-10)~~ **Décidé (25/10/2026)** et réalisé ([ADR 0051](../adr/0051-couche-visuelle-ebios.md)).
 7. ~~« Bimensuel »~~ **Décidé (21/10/2026)** : tous les deux mois (mois × 2, comme trimestriel et semestriel) (018-06) ; ~~PCRA~~ **Décidé** : la tuile compte les plans de type PCRA seulement (010-06). Reste : liens entre périmètres et condition de clôture.
 8. Règle d'évaluation retenue commune au registre et à la matrice (002-01).
 
