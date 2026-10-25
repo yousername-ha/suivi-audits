@@ -20,8 +20,6 @@ import { exportSuiviRoutes } from './routes/export-suivi.js';
 import { settingsRoutes } from './routes/settings.js';
 import { configGrcRoutes } from './routes/config-grc.js';
 import { historiqueRoutes } from './routes/historique.js';
-import { environmentRoutes } from './routes/environment.js';
-import { riskAssessmentRoutes } from './routes/risk-assessments.js';
 import { businessPolicyRoutes } from './routes/business-policy.js';
 import { grcRoutes } from './routes/grc.js';
 import { registresRoutes } from './routes/registres.js';
@@ -115,14 +113,12 @@ export function allRoutes(): RouteDef[] {
     ...importRoutes,
     ...tenacyRoutes,
     ...settingsRoutes,
-    ...environmentRoutes,
     ...businessPolicyRoutes,
     ...configGrcRoutes,
     ...historiqueRoutes,
     ...grcRoutes,
     ...registresRoutes,
     ...pilotageRoutes,
-    ...riskAssessmentRoutes,
     ...affichageRoutes,
     ...cartoRoutes,
   );

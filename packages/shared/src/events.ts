@@ -16,8 +16,6 @@ export const ENTITIES = [
   'wall_screens',
   'maps',
   'module_activation',
-  'environment_configuration',
-  'risk_assessments',
   'grc',
   'config_grc',
 ] as const;
@@ -38,8 +36,6 @@ export const ENTITY_PERMISSION: Record<Entity, Permission | 'metier'> = {
   wall_screens: 'administration:lire',
   maps: 'cartographie:lire',
   module_activation: 'administration:lire',
-  environment_configuration: 'administration:lire',
-  risk_assessments: 'ia:lire',
   grc: 'metier',
   config_grc: 'metier',
 };

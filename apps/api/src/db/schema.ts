@@ -390,38 +390,6 @@ export const updateJobs = pgTable('update_jobs', {
   finishedAt: tstz('finished_at'),
 });
 
-export const environmentVersions = pgTable('environment_versions', {
-  version: integer('version').primaryKey(),
-  definition: jsonb('definition').notNull(),
-  reason: text('reason').notNull(),
-  createdAt: tstz('created_at').notNull().defaultNow(),
-  createdBy: text('created_by').notNull(),
-});
-export const environmentConfiguration = pgTable('environment_configuration', {
-  id: integer('id').primaryKey(),
-  version: integer('version')
-    .notNull()
-    .references(() => environmentVersions.version),
-});
-export const riskAssessments = pgTable('risk_assessments', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  requestId: uuid('request_id').notNull().unique(),
-  sourceId: text('source_id').notNull(),
-  sourceSha: text('source_sha').notNull(),
-  sourceSnapshot: jsonb('source_snapshot').notNull(),
-  configurationVersion: integer('configuration_version')
-    .notNull()
-    .references(() => environmentVersions.version),
-  revision: integer('revision').notNull(),
-  ratings: jsonb('ratings').notNull(),
-  result: jsonb('result').notNull(),
-  previewId: text('preview_id').notNull(),
-  rationale: text('rationale').notNull(),
-  userId: uuid('user_id').notNull(),
-  createdAt: tstz('created_at').notNull().defaultNow(),
-  createdBy: text('created_by').notNull(),
-});
-
 /* Socle métier et publications immuables du pilotage SMSI (012–013). */
 export const businessPolicyVersions = pgTable('business_policy_versions', {
   version: integer('version').primaryKey(),

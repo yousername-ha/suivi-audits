@@ -5,6 +5,8 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 ## [Non publié]
 
 ### Notes de mise à jour
+
+La migration `037_retrait_environnement.sql` **supprime définitivement** les tables du catalogue « Environnement » (`environment_versions`, `environment_configuration`) et des évaluations IA versionnées (`risk_assessments`), sur décision du 25/10/2026 ([ADR 0046](docs/adr/0046-retrait-du-catalogue-environnement.md)). La sauvegarde automatique de `scripts/mettre-a-jour.sh` la précède ; aucune autre donnée n'est touchée (registre IA et évaluations de l'outil de suivi, journal d'audit, Configuration GRC).
 Aucune action sur le serveur : la mise à jour applique la migration additive `036_contributions_elements.sql` (journal des commentaires et preuves d'une action) au démarrage, après la sauvegarde automatique de `scripts/mettre-a-jour.sh`.
 
 ### Ajouté
@@ -17,6 +19,9 @@ Aucune action sur le serveur : la mise à jour applique la migration additive `0
 
 - **Liens vers une exigence** : la relation affiche l'applicabilité de l'exigence dans le périmètre (applicable, exclue, à déterminer, non évaluée) quand la personne peut lire la conformité ; le lien ne change ni l'applicabilité ni la couverture (002-02, 021-05).
 - **Timeline des actions** : guide pointillé par ligne et carrés d'occurrence (jaune en attente de validation, puis vert OK, rouge KO, gris NA), avec légende (018-02).
+
+### Retiré
+- **Catalogue « Environnement » et évaluations IA versionnées** : écrans (Configuration système → Environnement, Pilotage → Intelligence artificielle → Évaluations IA), routes `/api/admin/environment*` et `/api/ia/evaluations*` (sauf la modification des scénarios de l'outil de suivi), aide et tests. Les échelles et matrices se publient uniquement dans la Configuration GRC ; l'analyse d'écart d'un service ou d'un usage de l'IA se fait dans « Applications à intégrer ».
 
 ### Modifié
 - **Administration** : la carte « Environnement » devient « Environnement (usages de l'IA) » et la page dit que ce catalogue est distinct de la Configuration GRC (rien n'est partagé, chaque évaluation garde sa version).

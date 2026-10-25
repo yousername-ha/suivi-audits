@@ -1,6 +1,6 @@
 # ADR 0022 — Décisions IA versionnées sur les sources historiques
 
-Statut : acceptée. Date : 2026-10-10. Périmètre : B2b.
+Statut : **retirée le 25/10/2026** ([ADR 0046](0046-retrait-du-catalogue-environnement.md)) ; acceptée à l’origine. Date : 2026-10-10. Périmètre : B2b.
 
 ## Contexte
 

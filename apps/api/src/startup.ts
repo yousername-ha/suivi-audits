@@ -20,7 +20,6 @@ export async function seedState(svc: Services): Promise<boolean> {
 export async function prepareDatabase(svc: Services, opts: { issueToken?: boolean } = {}) {
   await svc.db.waitReady();
   await svc.db.migrate();
-  await svc.environment.initialize();
   await svc.businessPolicies.initialize();
   await svc.grc.initialize();
   await seedState(svc);

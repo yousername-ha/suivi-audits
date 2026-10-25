@@ -19,7 +19,6 @@ import { ConfigurationGrcPage } from './pages/ConfigurationGrc';
 import { DocumentsPage } from './pages/Documents';
 const PilotagePage = lazy(() => import('./pages/Pilotage').then((m) => ({ default: m.PilotagePage })));
 import { HomePage } from './pages/Home';
-import { IaEvaluationsPage } from './pages/IaEvaluations';
 import { ExportsPage } from './pages/Exports';
 import { RegistresPage } from './registres/Registres';
 import { HelpPage } from './pages/Help';
@@ -90,7 +89,6 @@ const router = createBrowserRouter([
         ),
       },
       { path: '/grc', element: <Navigate to="/pilotage" replace /> },
-      { path: '/ia/evaluations', element: <IaEvaluationsPage /> },
       { path: '/exports', element: <ExportsPage /> },
       { path: '/registres/:id?', element: <RegistresPage /> },
       { path: '/aide', element: <HelpPage /> },

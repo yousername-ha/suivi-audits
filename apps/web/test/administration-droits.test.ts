@@ -40,7 +40,6 @@ describe('cartes de l’Administration : droits', () => {
       'journal',
       'journaux-techniques',
       'modules',
-      'environnement',
       'details',
     ]);
   });
@@ -83,7 +82,6 @@ describe('cartes de l’Administration : droits', () => {
       'import',
       'certificats',
       'modules',
-      'environnement',
     ])
       expect(ids.has(onglet), onglet).toBe(true);
     expect(cartesVisibles(tout, 'plateforme').length + cartesVisibles(tout, 'systeme').length).toBe(
@@ -113,7 +111,6 @@ describe('entrées de menu : anciennes adresses', () => {
       '/admin/system',
       '/admin/audit',
       '/admin/sessions',
-      '/admin/environment',
       '/parametres/securite',
       '/parametres/sauvegardes',
     ])

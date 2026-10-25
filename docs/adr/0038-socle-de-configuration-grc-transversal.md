@@ -51,4 +51,4 @@ La configuration d'une étude (`StudyConfiguration`) gagne deux liaisons faculta
 
 Reste hors de ce lot : l'échelle des critères des parties prenantes (`ECHELLE_CRITERE`, 003-04) et la gravité des événements redoutés sans correspondance, qui gardent leur barème local.
 
-Le catalogue `environment` (ADR 0021) reste distinct : il ne sert qu'aux évaluations des usages de l'IA. L'interface le dit désormais (carte « Environnement (usages de l'IA) » et encart de la page), sans migration ni lien entre les deux catalogues ; leur rapprochement éventuel reste une décision de données à prendre séparément (012-06).
+Le catalogue `environment` (ADR 0021), qui ne servait qu'aux évaluations des usages de l'IA, a été supprimé le 25/10/2026 avec ces évaluations ([ADR 0046](0046-retrait-du-catalogue-environnement.md)) : la Configuration GRC est le seul catalogue d'échelles et de matrices (012-06).
