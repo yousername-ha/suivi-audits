@@ -16,8 +16,8 @@ Réponses données une par une aux quinze décisions en attente du [suivi ASTRA]
 | 10 | SR/OV (019-07) | Bibliothèque partagée réutilisable (et non propres à chaque étude). | À concevoir : catalogue versionné, droits, référence depuis les études |
 | 11 | Droit sur une preuve (018-05) | Celui du module Documents. | Rien |
 | 12 | Maître-détail des tâches (018-10) | Non, garder la fenêtre centrée. | Rien |
-| 13 | Parcours 024 : associations | Oui, créer les associations fiche/preuve ↔ sous-action. | Table versionnée et journalisée, droits, interface (nouvelle migration) |
-| 14 | Parcours 024 : applicabilité HDS | Oui, lecture seule, avec la source. Jamais déduite du secteur de santé. | Lecture des évaluations d'exigences du périmètre |
+| 13 | Parcours 024 : associations | Oui, créer les associations fiche/preuve ↔ sous-action. | **Réalisé** : table journal immuable (migration 038), droits, interface, tests |
+| 14 | Parcours 024 : applicabilité HDS | Oui, lecture seule, avec la source. Jamais déduite du secteur de santé. | **Réalisé** : lecture des évaluations d'exigences du périmètre |
 | 15 | Rôle collaborateur | Garder « Contributeur ». | Rien |
 
 Rappel : l'étiquette `v4.5.0` sera posée par l'utilisateur quand tout sera implémenté.

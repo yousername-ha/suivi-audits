@@ -4,6 +4,7 @@
    sont stables ; aucun état de progression ni de conformité n'est porté ici. Les regroupements et l'ordre sont des aides de
    travail proposées, pas une séquence normative : ISO/IEC 27001 n'impose ni cet ordre ni EBIOS RM, et une étape parcourue, une
    preuve attachée ou une action close n'établit ni revue, ni conformité, ni certification. */
+import { z } from 'zod';
 import type { GrcKind } from './grc.js';
 import type { Module } from './permissions.js';
 
@@ -684,3 +685,55 @@ export const etapesAffichees = (hds: boolean) => ETAPES_PARCOURS.filter((e) => h
 /** Étapes qu'aucun raccourci graphique ne désigne : elles restent accessibles depuis la bande « autres étapes » et la liste. */
 export const etapesSansRaccourci = (hds: boolean) =>
   etapesAffichees(hds).filter((e) => !RACCOURCIS_PARCOURS.some((r) => r.etape === e.id));
+
+/* ------------------------------------------------------------------------------ associations (migration 038)
+   Association explicite d'une fiche ou d'une preuve existante à une sous-action, dans un périmètre. Journal immuable : associer,
+   puis éventuellement retirer avec un motif. L'association ne modifie pas la cible et ne vaut ni revue, ni conformité. */
+const refCible = z
+  .string()
+  .trim()
+  .min(1)
+  .max(500)
+  .regex(
+    /^(object:[0-9a-f-]{36}|document:[0-9a-f-]{36}:\d+)$/,
+    'Une fiche (object:…) ou une version de document (document:…:n) est attendue.',
+  );
+export const AssociationParcoursBody = z
+  .object({
+    /** Identifiant de requête fourni par le client : rejouer la commande ne crée pas de second enregistrement. */
+    requestId: z.uuid(),
+    sousAction: z.string().trim().min(1).max(100),
+    ref: refCible,
+    note: z.string().trim().max(500).default(''),
+  })
+  .strict();
+export type AssociationParcoursBody = z.infer<typeof AssociationParcoursBody>;
+export const RetraitAssociationBody = z
+  .object({
+    requestId: z.uuid(),
+    sousAction: z.string().trim().min(1).max(100),
+    ref: refCible,
+    reason: z.string().trim().min(5).max(500),
+  })
+  .strict();
+export type RetraitAssociationBody = z.infer<typeof RetraitAssociationBody>;
+export interface AssociationParcoursDto {
+  sousAction: string;
+  ref: string;
+  /** Intitulé résolu avec les droits de la personne ; null : non lisible (la référence reste affichée). */
+  name: string | null;
+  kind: string | null;
+  note: string;
+  associePar: string;
+  associeLe: string;
+}
+/** Applicabilité, dans le périmètre, des exigences du référentiel HDS qui lui est rattaché (lecture seule). */
+export interface ApplicabiliteHdsDto {
+  /** Référentiel HDS rattaché et actif, ou null : aucune applicabilité n'est alors déduite (jamais du secteur de santé). */
+  referentiel: { id: string; name: string; version: number; heritage: boolean } | null;
+  total: number;
+  applicable: number;
+  exclue: number;
+  aDeterminer: number;
+  nonEvaluee: number;
+}

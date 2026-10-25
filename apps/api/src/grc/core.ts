@@ -54,6 +54,7 @@ import { GrcStudyConfig } from './study-config.js';
 import { LegacyTasks } from './legacy-tasks.js';
 import { GrcRegistres } from './registres.js';
 import { GrcContributions } from './contributions.js';
+import { GrcParcours } from './parcours.js';
 import { GrcValidations } from './validations.js';
 import { GrcAnnuaires } from './annuaires.js';
 import { GrcTasks } from './tasks.js';
@@ -168,6 +169,7 @@ export class Grc {
   readonly registres: GrcRegistres;
   readonly validations: GrcValidations;
   readonly contributions: GrcContributions;
+  readonly parcours: GrcParcours;
   readonly annuaires: GrcAnnuaires;
   constructor(
     readonly db: Db,
@@ -188,6 +190,7 @@ export class Grc {
     this.registres = new GrcRegistres(this);
     this.validations = new GrcValidations(this);
     this.contributions = new GrcContributions(this);
+    this.parcours = new GrcParcours(this);
     this.annuaires = new GrcAnnuaires(this);
   }
   async isAdmin(user: SessionUser, c?: Client) {
