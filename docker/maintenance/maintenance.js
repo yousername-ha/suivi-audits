@@ -25,6 +25,13 @@
       /* Une adresse mal formée revient à l'accueil ; elle ne doit pas interrompre le suivi. */
     }
   }
+  /* Ouverte juste après la confirmation : le service de mise à jour n'a pas encore pris la demande en charge, l'état
+     publié est encore celui d'avant. On attend sa prise en charge (deux minutes au plus) sans renvoyer vers l'application. */
+  const requested = /^[0-9a-f-]{36}$/.test(new URLSearchParams(location.search).get('demande') || '')
+    ? new URLSearchParams(location.search).get('demande')
+    : null;
+  const openedAt = Date.now();
+  let seen = false;
   let returned = false;
   async function tick() {
     try {
@@ -32,16 +39,23 @@
       if (!response.ok) throw new Error('status');
       const state = await response.json();
       get('connection').hidden = true;
-      const failed = ['failed', 'rolled_back', 'intervention'].includes(state.status);
-      get('title').textContent =
-        state.status === 'intervention'
+      if (requested && state.id === requested) seen = true;
+      const waiting = !!requested && !seen && Date.now() - openedAt < 120000;
+      const failed = !waiting && ['failed', 'rolled_back', 'intervention'].includes(state.status);
+      // Préparation en cours côté service (avant l'arrêt de l'application) : ne pas revenir à l'application.
+      const active = ['queued', 'running'].includes(state.status) && Date.now() - Date.parse(state.updatedAt) < 120000;
+      get('title').textContent = waiting
+        ? 'Mise à jour en cours'
+        : state.status === 'intervention'
           ? 'Une intervention est nécessaire'
           : failed
             ? 'La mise à jour n’a pas été installée'
             : state.status === 'success'
               ? 'Votre espace est prêt'
               : 'Mise à jour en cours';
-      get('message').textContent = state.message || 'Nous préparons le retour de votre espace de travail.';
+      get('message').textContent = waiting
+        ? 'Demande enregistrée. Le service de mise à jour prépare l’installation ; cette page se met à jour toute seule.'
+        : state.message || 'Nous préparons le retour de votre espace de travail.';
       get('versions').textContent = state.target
         ? `Version ${state.installed} → ${state.target}`
         : `Version ${state.installed || 'en service'}`;
@@ -49,10 +63,10 @@
       get('animation').hidden = state.status === 'intervention' || (!state.maintenance && failed);
       document.querySelectorAll('[data-phase]').forEach((element) => {
         const index = phases.indexOf(element.dataset.phase);
-        const current = phases.indexOf(state.phase);
+        const current = phases.indexOf(waiting ? 'preparing' : state.phase);
         element.className = index < current ? 'done' : index === current ? 'current' : '';
       });
-      if (!state.maintenance && state.status !== 'intervention') {
+      if (!state.maintenance && state.status !== 'intervention' && !waiting && !active) {
         const health = await fetch('/healthz', { cache: 'no-store', signal: AbortSignal.timeout(5000) });
         if (health.ok && (await health.text()).trim() === 'ok') {
           if (failed) {

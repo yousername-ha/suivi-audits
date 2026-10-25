@@ -7,6 +7,9 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 ### Notes de mise à jour
 Aucune action particulière, aucune migration.
 
+### Modifié
+- **Mises à jour** (Configuration système > Mises à jour) : « Vérifier les mises à jour » affiche une vérification en cours (indicateur et bouton occupé), suit l'état du service seconde après seconde et annonce le résultat (nouvelle version, aucune nouvelle version, ou GitHub indisponible). Après la confirmation « METTRE À JOUR », l'écran de mise à jour s'ouvre immédiatement et attend la prise en charge de la demande par le service, au lieu de laisser la page muette jusqu'au début de la maintenance.
+
 ## [4.2.0] — 2026-10-22
 
 **Processus en cartes et types de processus définis dans la Plateforme** ([ADR 0044](docs/adr/0044-processus-en-cartes-et-types-de-processus.md)).

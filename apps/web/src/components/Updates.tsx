@@ -1,4 +1,4 @@
-import { Anchor, Button, Card, Group, Stack, Text, TextInput, Title } from '@mantine/core';
+import { Alert, Anchor, Button, Card, Group, Loader, Stack, Text, TextInput, Title } from '@mantine/core';
 import { useQuery } from '@tanstack/react-query';
 import type { UpdateState } from '@suivi/shared';
 import { useEffect, useRef, useState } from 'react';
@@ -6,6 +6,10 @@ import { Link } from 'react-router';
 import { api, get } from '../api';
 import { ErrorAlert } from './common';
 import { useCan, useMe } from '../session';
+
+const ATTENTE_MAX_MS = 90_000;
+const PAS_DE_SUIVI_MS = 1000;
+const attendre = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 function useUpdateState() {
   return useQuery({ queryKey: ['updates'], queryFn: () => get<UpdateState>('/api/updates'), refetchInterval: 15000 });
@@ -51,9 +55,12 @@ export function UpdatesPanel() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [queued, setQueued] = useState<string | null>(null);
+  const [verification, setVerification] = useState(false);
+  const [resultat, setResultat] = useState<{ ton: 'info' | 'erreur'; texte: string } | null>(null);
   const id = useRef<string | null>(null);
   const s = q.data;
-  const busy = pending || !!queued || !!s?.maintenance || s?.status === 'queued' || s?.status === 'running';
+  const busy =
+    pending || verification || !!queued || !!s?.maintenance || s?.status === 'queued' || s?.status === 'running';
   useEffect(() => {
     if (queued && s?.id === queued && ['success', 'failed', 'rolled_back', 'intervention'].includes(s.status)) {
       setQueued(null);
@@ -61,16 +68,49 @@ export function UpdatesPanel() {
       setConfirm('');
     }
   }, [queued, s?.id, s?.status]);
+  /* La vérification est confiée au service de mise à jour : on suit son état seconde après seconde, au lieu d'attendre
+     la prochaine lecture périodique, et on annonce le résultat. */
   async function check() {
     setPending(true);
+    setVerification(true);
     setError(null);
+    setResultat(null);
+    const avant = s?.checkedAt ?? null;
     try {
       await api('POST', '/api/admin/updates/check');
-      await q.refetch();
+      setPending(false);
+      const debut = Date.now();
+      let vuEnCours = false;
+      for (;;) {
+        await attendre(PAS_DE_SUIVI_MS);
+        const etat = (await q.refetch()).data;
+        if (etat) {
+          vuEnCours ||= etat.checking || etat.phase === 'checking';
+          const termine = !etat.checking && etat.phase !== 'checking';
+          if (termine && (etat.checkedAt !== avant || etat.checkError || vuEnCours)) {
+            setResultat(
+              etat.checkError
+                ? { ton: 'erreur', texte: 'La vérification a échoué : GitHub est temporairement indisponible.' }
+                : available(etat)
+                  ? { ton: 'info', texte: `Une nouvelle version est disponible : ${etat.available}.` }
+                  : { ton: 'info', texte: 'Vérification terminée : aucune nouvelle version.' },
+            );
+            break;
+          }
+        }
+        if (Date.now() - debut > ATTENTE_MAX_MS) {
+          setResultat({
+            ton: 'info',
+            texte: 'La vérification prend plus de temps que prévu. Le résultat s’affichera ici dès qu’il est connu.',
+          });
+          break;
+        }
+      }
     } catch (e) {
       setError(e);
     } finally {
       setPending(false);
+      setVerification(false);
     }
   }
   async function install() {
@@ -83,7 +123,10 @@ export function UpdatesPanel() {
         body: { requestId: id.current, version: s.available, confirm },
       });
       setQueued(response.id);
-      await q.refetch();
+      // L'écran de mise à jour s'ouvre tout de suite : il attend la prise en charge de la demande par le service.
+      const retour = encodeURIComponent('/systeme/mises-a-jour');
+      window.location.assign(`/update/?next=${retour}&demande=${encodeURIComponent(response.id)}`);
+      return;
     } catch (e) {
       setError(e);
     } finally {
@@ -123,19 +166,37 @@ export function UpdatesPanel() {
             {s.message}
           </Text>
         )}
-        {queued && (
-          <Text size="sm">
-            Demande enregistrée. La page de maintenance s’ouvrira automatiquement après préparation.
-          </Text>
-        )}
+        {queued && <Text size="sm">Demande enregistrée. Ouverture de l’écran de mise à jour…</Text>}
         {!s?.ready && <Text size="sm">Le service de mise à jour n’est pas disponible actuellement.</Text>}
         {admin && (
           <>
             <Group>
-              <Button variant="default" disabled={busy || !s?.ready || s?.checking} onClick={() => void check()}>
+              <Button
+                variant="default"
+                loading={verification}
+                disabled={busy || !s?.ready || s?.checking}
+                onClick={() => void check()}
+              >
                 Vérifier les mises à jour
               </Button>
+              {verification && (
+                <Group gap="xs" role="status">
+                  <Loader size="xs" aria-hidden="true" />
+                  <Text size="sm">Vérification des nouvelles versions en cours…</Text>
+                </Group>
+              )}
             </Group>
+            {resultat && (
+              <Alert
+                color={resultat.ton === 'erreur' ? 'red' : 'blue'}
+                role="status"
+                withCloseButton
+                closeButtonLabel="Masquer le résultat"
+                onClose={() => setResultat(null)}
+              >
+                {resultat.texte}
+              </Alert>
+            )}
             {available(s) && (
               <>
                 <Text size="sm">
