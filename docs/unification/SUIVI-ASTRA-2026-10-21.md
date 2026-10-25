@@ -99,10 +99,16 @@ Les quinze décisions restantes ont été tranchées le 25/10/2026 : voir [DECIS
 2. ~~Définition de « conformité »~~ **Décidé (21/10/2026)** : « Couverture » (testées ou validées / applicables), jamais présentée comme conformité ISO/IEC 27001. Les clauses 4 à 10 sont obligatoires donc non excluables ; une exigence « à déterminer » est comptée à part et signalée comme à revoir (appliqué dans le code).
 3. ~~Modèle « collaborateur »~~ **Décidé (21/10/2026)** : membre d'un groupe qui a le droit sur le registre : tout le registre ; attribué directement sur une action : cette action seulement. Réalisé (022-03).
 4. ~~Canaux d'envoi (courriel, Teams), conservation et nettoyage automatique, certificats autosignés et ACME~~ **Décidé (25/10/2026)**, réalisé en partie (012-04, 012-07, 012-09 à 012-11). Les niveaux de journalisation (012-13) sont réalisés.
-5. Calendriers de plateforme (zones scolaires, jours fériés) et leur couche d'affichage (012-14, 018-08, 018-09).
+5. ~~Calendriers de plateforme et leur couche d'affichage (012-14, 018-08, 018-09)~~ **Décidé (25/10/2026)** et réalisé : fériés et iCal ([ADR 0047](../adr/0047-calendriers-de-plateforme.md)), couche d'affichage en fond (addendum) ; zones scolaires écartées.
 6. ~~Couche visuelle EBIOS RM : cercle, chemins, pictogrammes, flux animés (003-07 à 003-10)~~ **Décidé (25/10/2026)** et réalisé ([ADR 0051](../adr/0051-couche-visuelle-ebios.md)).
 7. ~~« Bimensuel »~~ **Décidé (21/10/2026)** : tous les deux mois (mois × 2, comme trimestriel et semestriel) (018-06) ; ~~PCRA~~ **Décidé** : la tuile compte les plans de type PCRA seulement (010-06). ~~Reste : liens entre périmètres et condition de clôture.~~ **Décidé (25/10/2026)** : clôture refusée tant qu'un lien est ouvert, sauf motif écrit tracé ([ADR 0053](../adr/0053-cloture-avec-liens-ouverts.md)).
-8. Règle d'évaluation retenue commune au registre et à la matrice (002-01).
+8. ~~Règle d'évaluation retenue commune au registre et à la matrice (002-01)~~ **Décidé (25/10/2026)** et réalisé ([ADR 0052](../adr/0052-registre-fait-foi-matrice-bareme.md)).
+
+## Bilan de la livraison du 25/10/2026 (état honnête)
+
+Livré sur la branche de travail avec tests : couche visuelle EBIOS (ADR 0051), écart registre/matrice (0052), clôture avec liens ouverts (0053), bibliothèque de sources de risque (0054), kit d'intégration IA (0055), assistant « Analyser un service » et plan des écarts (0056), fériés en fond (0047, addendum), courriel (0049), certificats TLS (0050).
+
+Non fait ou limité, à décider ou à poursuivre : notifications métier par groupe ou profil (012-10) ; registres par défaut paresseux (010-04/010-10) ; remplacement des points IA du questionnaire par le kit ; suppression de la page « Conformité IA » (renvoi seulement, aucune donnée supprimée) ; envoi automatique de courriels ; émission ACME et envoi SMTP non constatés contre des serveurs réels ; référentiel officiel IA de l'ANSSI (accès réseau). **Aucun marqueur `IMPLEMENTATION-OK` n'est posé.**
 
 ## Preuves exécutées
 
