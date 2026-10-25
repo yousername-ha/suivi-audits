@@ -16,7 +16,7 @@ const section = async (a: Agent, s: string) => {
 };
 
 describe('paramètres', () => {
-  it('neuf sections, valeurs par défaut issues de la configuration', async () => {
+  it('dix sections, valeurs par défaut issues de la configuration', async () => {
     const r = await A.get('/api/settings');
     expect(r.statusCode).toBe(200);
     expect(r.json().map((x: { section: string }) => x.section)).toEqual([
@@ -28,6 +28,7 @@ describe('paramètres', () => {
       'import_export',
       'sauvegardes',
       'conservation',
+      'courriel',
       'securite',
     ]);
     const g = await section(A, 'general');

@@ -1,5 +1,6 @@
 /* Page Paramètres : lecture et enregistrement par section (permission « paramètres »), logo de l'organisation. */
 import {
+  CourrielMotDePasseBody,
   SETTINGS_SECTIONS,
   SETTINGS_WRITE,
   SettingsSectionOut,
@@ -61,6 +62,8 @@ async function info(svc: Services, s: SettingsSection, values: Record<string, un
       next.setMonth(next.getMonth() + v.frequenceTestMois);
       return { prochainTest: next.toISOString().slice(0, 10), enRetard: next < new Date() };
     }
+    case 'courriel':
+      return { motDePasseDefini: await svc.courriel.motDePasseDefini() };
     case 'securite':
       return { mfaObligatoire: true };
     default:
@@ -109,6 +112,60 @@ export const settingsRoutes = [
     access: 'parametres:lire',
     handler: async ({ svc }) =>
       svc.conservation.apercu((await svc.settings.read('conservation')).values as SettingsValues['conservation']),
+  }),
+  route({
+    method: 'PUT',
+    url: '/api/settings/courriel/mot-de-passe',
+    summary: 'Enregistrer le mot de passe du compte SMTP (scellé par le coffre, jamais relu)',
+    tags: ['Paramètres'],
+    access: 'parametres:administrer',
+    body: CourrielMotDePasseBody,
+    status: 204,
+    handler: async ({ svc, s, body, ip }) => {
+      await svc.courriel.definirMotDePasse(body.password, (s as Session).user, ip);
+    },
+  }),
+  route({
+    method: 'DELETE',
+    url: '/api/settings/courriel/mot-de-passe',
+    summary: 'Supprimer le mot de passe du compte SMTP',
+    tags: ['Paramètres'],
+    access: 'parametres:administrer',
+    handler: async ({ svc, s, ip }) => {
+      await svc.courriel.retirerMotDePasse((s as Session).user, ip);
+    },
+  }),
+  route({
+    method: 'POST',
+    url: '/api/settings/courriel/test',
+    summary:
+      'Demander un message de test réel au contact technique ; l’exécutant du serveur l’envoie (étapes détaillées, aucun secret)',
+    tags: ['Paramètres'],
+    access: 'parametres:administrer',
+    status: 202,
+    handler: async ({ svc, s, ip }) => {
+      if (!svc.limits.courrielTest((s as Session).user.id ?? 'x'))
+        throw new HttpError(429, 'Trop d’essais. Réessayez dans quelques minutes.');
+      const c = (await svc.settings.read('courriel')).values as SettingsValues['courriel'];
+      return svc.courriel.demanderTest(c, (s as Session).user, ip);
+    },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/settings/courriel/test',
+    summary: 'Dernière demande de message de test, avec son état et sa trace',
+    tags: ['Paramètres'],
+    access: 'parametres:administrer',
+    handler: async ({ svc }) => svc.courriel.derniere(),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/settings/courriel/test/:id',
+    summary: 'État d’une demande de message de test',
+    tags: ['Paramètres'],
+    access: 'parametres:administrer',
+    params: z.object({ id: z.uuid() }),
+    handler: async ({ svc, params }) => svc.courriel.lireDemande(params.id),
   }),
   route({
     method: 'GET',

@@ -8,6 +8,7 @@ import {
   FileButton,
   Group,
   Image,
+  PasswordInput,
   NavLink,
   NumberInput,
   Radio,
@@ -26,6 +27,7 @@ import {
   SETTINGS_LABELS,
   SETTINGS_SECTIONS,
   type ApercuConservation,
+  type TestCourrielDto,
   type SettingsSection,
   type SettingsSectionOut,
 } from '@suivi/shared';
@@ -47,6 +49,8 @@ const DESCRIPTIONS: Record<SettingsSection, string> = {
   import_export: 'Reprise des données de l’ancien outil et exports.',
   sauvegardes:
     'Suivi des sauvegardes et des tests de restauration (les sauvegardes elles-mêmes sont faites sur le serveur).',
+  courriel:
+    'Envoi de courriels par SMTP ou SMTPS, contact technique et message de test réel. Le mot de passe est scellé et jamais relu.',
   conservation:
     'Durées de conservation par catégorie. Aucune suppression n’est automatique : les durées servent à l’aperçu de ce qui serait candidat à une purge.',
   securite: 'Politique de mots de passe, durée des sessions et double authentification.',
@@ -230,6 +234,177 @@ function Num({
       allowDecimal={false}
       disabled={p.ro}
     />
+  );
+}
+
+/** Courriel : paramètres SMTP/SMTPS, mot de passe scellé (écriture seule) et message de test réel vers le contact technique. */
+function CourrielForm({ p }: { p: P }) {
+  const [defini, setDefini] = useState(p.info.motDePasseDefini === true);
+  const [mdp, setMdp] = useState('');
+  const [envoi, setEnvoi] = useState(false);
+  const [test, setTest] = useState<TestCourrielDto | null>(null);
+  const enCours = test?.status === 'en_attente' || test?.status === 'en_cours';
+  useEffect(() => {
+    if (!test || !enCours) return;
+    const id = window.setInterval(() => {
+      get<TestCourrielDto>(`/api/settings/courriel/test/${test.id}`)
+        .then(setTest)
+        .catch(() => undefined);
+    }, 2000);
+    return () => window.clearInterval(id);
+  }, [test, enCours]);
+  const [erreur, setErreur] = useState<unknown>(null);
+  const agir = async (fn: () => Promise<void>) => {
+    setEnvoi(true);
+    setErreur(null);
+    try {
+      await fn();
+    } catch (e) {
+      setErreur(e);
+    } finally {
+      setEnvoi(false);
+    }
+  };
+  return (
+    <Stack>
+      <Alert color="blue" title="L’exécutant d’exploitation envoie les courriels">
+        Le serveur d’application n’a pas d’accès à Internet : c’est l’exécutant d’exploitation du serveur (le même que
+        pour les sauvegardes) qui se connecte au serveur SMTP. Tout se règle ici, sans fichier à modifier.
+      </Alert>
+      <Switch
+        label="Activer l’envoi de courriels"
+        checked={p.values.actif === true}
+        onChange={(e) => p.set('actif', e.currentTarget.checked)}
+        disabled={p.ro}
+      />
+      <div className="grille-formulaire__champs">
+        <Text2 p={p} k="hote" label="Serveur SMTP (nom d’hôte)" />
+        <Num p={p} k="port" label="Port" min={1} max={65535} />
+        <Select
+          label="Chiffrement"
+          description="Un échange sans chiffrement n’est pas proposé."
+          allowDeselect={false}
+          data={[
+            { value: 'starttls', label: 'SMTP avec STARTTLS (en général port 587)' },
+            { value: 'smtps', label: 'SMTPS, TLS implicite (en général port 465)' },
+          ]}
+          value={str(p.values.securite) || 'starttls'}
+          onChange={(v) => v && p.set('securite', v)}
+          disabled={p.ro}
+        />
+        <Text2 p={p} k="utilisateur" label="Compte (laisser vide pour un relais sans authentification)" />
+        <Text2 p={p} k="expediteur" label="Adresse d’expédition" type="email" />
+        <Text2
+          p={p}
+          k="contactTechnique"
+          label="Contact technique"
+          type="email"
+          description="Reçoit les alertes d’exploitation et le message de test ; distinct des rappels métier."
+        />
+      </div>
+      <Textarea
+        label="Autorité de certification du serveur SMTP (facultatif)"
+        description="Pour un relais interne dont le certificat est signé par une autorité privée : collez son certificat PEM. Vide : autorités reconnues du système."
+        autosize
+        minRows={2}
+        maxRows={8}
+        value={str(p.values.autoriteCertification)}
+        onChange={(e) => p.set('autoriteCertification', e.currentTarget.value)}
+        disabled={p.ro}
+        spellCheck={false}
+      />
+      <Stack gap="xs" role="group" aria-label="Mot de passe du compte SMTP">
+        <Text fw={600}>Mot de passe du compte</Text>
+        <Text size="sm" c="dimmed">
+          {defini ? 'Un mot de passe est enregistré (scellé, jamais affiché).' : 'Aucun mot de passe enregistré.'}
+        </Text>
+        {!p.ro && (
+          <Group align="flex-end">
+            <PasswordInput
+              label={defini ? 'Nouveau mot de passe' : 'Mot de passe'}
+              value={mdp}
+              onChange={(e) => setMdp(e.currentTarget.value)}
+              autoComplete="new-password"
+            />
+            <Button
+              variant="default"
+              loading={envoi}
+              disabled={!mdp}
+              onClick={() =>
+                void agir(async () => {
+                  await api('PUT', '/api/settings/courriel/mot-de-passe', { body: { password: mdp } });
+                  setMdp('');
+                  setDefini(true);
+                  notifications.show({ color: 'teal', message: 'Mot de passe enregistré.' });
+                })
+              }
+            >
+              Enregistrer le mot de passe
+            </Button>
+            {defini && (
+              <Button
+                variant="light"
+                color="red"
+                loading={envoi}
+                onClick={() =>
+                  void agir(async () => {
+                    await api('DELETE', '/api/settings/courriel/mot-de-passe');
+                    setDefini(false);
+                    notifications.show({ color: 'teal', message: 'Mot de passe supprimé.' });
+                  })
+                }
+              >
+                Supprimer
+              </Button>
+            )}
+          </Group>
+        )}
+      </Stack>
+      {!p.ro && (
+        <Stack gap="xs" role="group" aria-label="Message de test">
+          <Text fw={600}>Message de test</Text>
+          <Text size="sm" c="dimmed">
+            Envoie un vrai message au contact technique, avec les paramètres enregistrés. Enregistrez d’abord vos
+            modifications.
+          </Text>
+          <ErrorAlert error={erreur} />
+          <Group>
+            <Button
+              loading={envoi || enCours}
+              onClick={() =>
+                void agir(async () => {
+                  setTest(await api<TestCourrielDto>('POST', '/api/settings/courriel/test'));
+                })
+              }
+            >
+              Envoyer un message de test
+            </Button>
+          </Group>
+          {test && (
+            <Stack gap="2xs" role="region" aria-label="Résultat du test">
+              {test.status === 'en_attente' && (
+                <Text size="sm">
+                  Demande envoyée à l’exécutant d’exploitation du serveur : il la prend en charge à son prochain passage
+                  (en général moins d’une minute).
+                </Text>
+              )}
+              {test.status === 'en_cours' && <Text size="sm">Envoi en cours…</Text>}
+              {test.status === 'reussie' && <StatusChip etat="succes">Message accepté par le serveur</StatusChip>}
+              {test.status === 'echec' && (
+                <Alert color="red" role="alert" title="L’envoi a échoué">
+                  {test.error}
+                </Alert>
+              )}
+              {test.steps.map((e, i) => (
+                <Text key={i} size="sm">
+                  {e.ok ? 'OK' : 'Échec'} · {e.step} : {e.detail}
+                </Text>
+              ))}
+            </Stack>
+          )}
+        </Stack>
+      )}
+    </Stack>
   );
 }
 
@@ -453,6 +628,7 @@ const SECTIONS: Record<SettingsSection, (p: P) => ReactNode> = {
       <ApercuConservationPanel />
     </Stack>
   ),
+  courriel: (p) => <CourrielForm p={p} />,
   securite: (p) => (
     <Stack>
       <div className="grille-formulaire__champs">

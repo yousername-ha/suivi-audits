@@ -52,3 +52,4 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0046](0046-retrait-du-catalogue-environnement.md) | Retrait du catalogue « Environnement » et des évaluations IA versionnées | Acceptée |
 | [0047](0047-calendriers-de-plateforme.md) | Calendriers de plateforme : jours fériés français calculés et iCalendar importés par l'administrateur | Acceptée |
 | [0048](0048-conservation-sans-purge-automatique.md) | Conservation : durées réglables, aperçu, aucune purge automatique | Acceptée |
+| [0049](0049-courriel-et-sortie-reseau-optionnelle.md) | Courriel SMTP/SMTPS envoyé par l'exécutant d'exploitation, tout dans l'interface | Acceptée |

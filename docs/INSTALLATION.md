@@ -812,6 +812,10 @@ Le certificat/chaîne PEM et la clé PEM non chiffrée sont contrôlés ensemble
 L'exécutant valide Caddy, recrée le frontal, vérifie le certificat réellement servi avec l'hôte attendu et la santé. Un échec rétablit le couple/mode antérieur ; une interruption du retour arrière exige la reprise manuelle ci-dessus. Les métadonnées de simple observation (sujet, émetteur, validité, empreinte) ne constituent pas une attestation de confiance PKI. Une expiration à trente jours ou moins déclenche une alerte dans l'interface. Une restauration réattribue aussi les droits des clés TLS sauvegardées avant redémarrage.
 
 
+### 11.8 Envoi de courriels
+
+Aucune étape d'installation supplémentaire : l'envoi de courriels (message de test et, plus tard, alertes d'exploitation au contact technique) se règle entièrement dans l'application, sous Administration, Configuration système, Courriel ([ADR 0049](adr/0049-courriel-et-sortie-reseau-optionnelle.md)). Le conteneur de l'API n'a toujours aucun accès à Internet : c'est l'exécutant d'exploitation du serveur, installé à l'étape 11.6, qui se connecte au serveur SMTP, sous un compte sans privilège, avec les paramètres saisis dans l'interface. Il doit donc pouvoir joindre le relais SMTP depuis le serveur ; si votre pare-feu le bloque, le message de test échoue avec une explication. L'authentification prend en charge PLAIN et LOGIN ; XOAUTH2 (Exchange Online avec authentification moderne) n'est pas pris en charge.
+
 ## 12. Mettre à jour
 
 ### Configuration de l’environnement (retirée)
