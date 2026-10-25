@@ -30,6 +30,7 @@ describe('cartes de l’Administration : droits', () => {
       'fonctions',
       'roles',
       'types-processus',
+      'calendriers',
       'murs',
     ]);
     expect(cartesVisibles(peut, 'systeme')).toEqual([

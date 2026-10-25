@@ -41,6 +41,8 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
     'GET /api/version',
     'GET /api/updates', // Versions et état uniquement : aucune commande.
     'GET /api/types-processus', // Libellés et teintes du registre : nécessaires aux écrans qui classent un processus ; aucune donnée métier.
+    'GET /api/calendriers-plateforme', // Noms, années couvertes et jours fériés : nécessaires aux séries de tâches qui les reprennent ; aucune donnée métier.
+    'GET /api/calendriers-plateforme/:id/jours',
     'GET /api/modules', // Métadonnées d'activation accessibles à toute session complète ; aucun contenu métier.
     'GET /api/openapi.json',
     'GET /api/auth/me',

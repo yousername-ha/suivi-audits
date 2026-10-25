@@ -16,6 +16,7 @@ import { useCan } from '../session';
 import { DetailsTechniques, Audit, Sessions, Versions } from './Admin';
 import { GroupsPanel, RolesPanel, UsersPanel } from './AdminAccess';
 import { BackupsPanel } from './AdminBackups';
+import { CalendriersPanel } from './AdminCalendriers';
 import { FonctionsPanel } from './AdminFonctions';
 import { JournauxTechniquesPanel } from './AdminJournauxTechniques';
 import { ImportPanel } from './AdminImport';
@@ -134,6 +135,15 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     icone: 'cle',
     teinte: 'rouge',
     detail: () => <RolesPanel />,
+  },
+  {
+    id: 'calendriers',
+    cote: 'plateforme',
+    titre: 'Calendriers',
+    resume: 'Jours fériés français et calendriers iCalendar réutilisés par les séries de tâches.',
+    icone: 'calendrier',
+    teinte: 'bleu',
+    detail: () => <CalendriersPanel />,
   },
   {
     id: 'types-processus',
@@ -420,6 +430,7 @@ export function PageCartes({ cote }: { cote: Cote }) {
         ))}
       </div>
       <Modal
+        closeButtonProps={{ 'aria-label': `Fermer ${ouverte?.titre ?? 'la fenêtre'}` }}
         opened={!!ouverte}
         onClose={() => (modifie ? setQuitter(true) : fermer())}
         title={ouverte?.titre}

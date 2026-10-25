@@ -203,6 +203,18 @@ export class GrcTasks {
     }
     return { occurrence: null };
   }
+  /** Jours d'un calendrier de plateforme (d'une année, ou tous), copiés dans la série à la date de l'import. */
+  private async joursPlateforme(calendrier: string, annee?: number): Promise<string[]> {
+    const existe = await this.g.db.q('SELECT 1 FROM calendriers_plateforme WHERE id=$1', [calendrier]);
+    if (!existe.rowCount) throw new HttpError(404, 'Calendrier de plateforme inconnu.');
+    return (
+      await this.g.db.q<{ d: string }>(
+        `SELECT to_char(day,'YYYY-MM-DD') d FROM calendriers_plateforme_jours
+          WHERE calendrier_id=$1 AND ($2::int IS NULL OR extract(year FROM day)=$2) ORDER BY day`,
+        [calendrier, annee ?? null],
+      )
+    ).rows.map((r) => r.d);
+  }
   /** Import d'un calendrier iCalendar dans les jours exclus d'une série. L'aperçu décrit l'effet sans rien écrire ; l'import
       est tout ou rien (une erreur dans le fichier ne modifie rien) et rejouer le même fichier n'ajoute aucun doublon. */
   async importerCalendrier(
@@ -217,7 +229,14 @@ export class GrcTasks {
     const o = await this.g.object(smsi, id, user);
     if (o.kind !== 'task_series') throw new HttpError(422, 'Série attendue.');
     const recurrence = SeriesData.parse(o.data).recurrence;
-    const lecture = lireIcs(b.ics);
+    const lecture = b.calendrier
+      ? { jours: await this.joursPlateforme(b.calendrier, b.annee), ignores: [], erreurs: [] }
+      : lireIcs(b.ics!);
+    if (b.calendrier && !lecture.jours.length)
+      throw new HttpError(
+        422,
+        'Ce calendrier ne porte aucun jour pour cette période : l’administrateur doit d’abord générer ou importer ses jours.',
+      );
     const presents = new Set(recurrence.excludedDays ?? []);
     const nouveaux = lecture.jours.filter((j) => !presents.has(j));
     const dejaPresents = lecture.jours.filter((j) => presents.has(j));

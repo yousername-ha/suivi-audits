@@ -26,6 +26,7 @@ import { Grc } from './grc/core.js';
 import { Walls } from './walls.js';
 import { Historique } from './historique/index.js';
 import { JournalTechnique } from './journal-technique.js';
+import { CalendriersPlateforme } from './calendriers-plateforme.js';
 import { TypesProcessus } from './types-processus.js';
 
 export function createServices(cfg: Config, log: Logger) {
@@ -66,6 +67,7 @@ export function createServices(cfg: Config, log: Logger) {
     walls: new Walls(cfg, db),
     journalTechnique: new JournalTechnique(db, log),
     typesProcessus: new TypesProcessus(db),
+    calendriers: new CalendriersPlateforme(db),
     auth: new Auth(cfg, db, vault, () => settings.get('securite')),
     bus,
     presence: new Presence(db, bus),
