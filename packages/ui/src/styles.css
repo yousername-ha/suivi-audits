@@ -70,6 +70,8 @@
   --parcours-texte-enfant: 0.8125rem;
   --parcours-titre: 1.0625rem;
   --parcours-halo-duree: 950ms;
+  --ebios-toile-min: 40rem;
+  --ebios-cercle-largeur: 20rem;
 }
 
 /* ---------------------------------------------------------------- Taille d'affichage et typographie fluide
