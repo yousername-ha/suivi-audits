@@ -643,6 +643,42 @@ export const grcRoutes = [
     ...base,
     access: 'conformite:lire' as const,
     method: 'GET',
+    url: '/api/library/ia-kit',
+    summary: 'Dernier kit IA importé : version, annexes de veille (statut juridique à revérifier)',
+    handler: async ({ svc, s }) => svc.grc.kitIa.dernier((s as Session).user),
+  }),
+  route({
+    ...base,
+    access: 'conformite:modifier' as const,
+    method: 'POST',
+    url: '/api/library/ia-kit/preview',
+    bodyLimit: 4 * 1024 * 1024,
+    summary: 'Aperçu de l’import du kit IA (lecture seule : contrôles, correspondances résolues, annexes)',
+    body: z.object({ kit: z.unknown() }).strict(),
+    handler: async ({ svc, s, body }) => svc.grc.kitIa.apercu(body.kit, (s as Session).user),
+  }),
+  route({
+    ...base,
+    access: 'conformite:modifier' as const,
+    method: 'POST',
+    url: '/api/library/ia-kit/import',
+    bodyLimit: 4 * 1024 * 1024,
+    summary: 'Importer le kit IA : référentiel de la bibliothèque, correspondances proposées, annexes (idempotent)',
+    body: z
+      .object({
+        kit: z.unknown(),
+        previewId: z.string().min(1).max(200),
+        reason: z.string().trim().min(10).max(2000),
+        confirm: z.literal('IMPORTER'),
+      })
+      .strict(),
+    handler: async ({ svc, s, body, ip }) =>
+      svc.grc.kitIa.importer(body.kit, body.previewId, body.reason, (s as Session).user, ip),
+  }),
+  route({
+    ...base,
+    access: 'conformite:lire' as const,
+    method: 'GET',
     url: '/api/library/mappings',
     summary: 'Correspondances organisationnelles entre exigences de la bibliothèque',
     query: z.object({
