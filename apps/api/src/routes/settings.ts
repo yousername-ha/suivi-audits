@@ -102,6 +102,16 @@ export const settingsRoutes = [
   }),
   route({
     method: 'GET',
+    url: '/api/settings/conservation/apercu',
+    summary:
+      'Aperçu de conservation : ce qui serait candidat à une purge selon les durées réglées (lecture seule, aucune purge automatique)',
+    tags: ['Paramètres'],
+    access: 'parametres:lire',
+    handler: async ({ svc }) =>
+      svc.conservation.apercu((await svc.settings.read('conservation')).values as SettingsValues['conservation']),
+  }),
+  route({
+    method: 'GET',
     url: '/api/settings/:section',
     summary: 'Paramètres : une section (ETag = version)',
     tags: ['Paramètres'],

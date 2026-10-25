@@ -20,6 +20,7 @@ export const DROITS_CARTES: readonly { id: string; cote: Cote; peut: (can: Peut)
   { id: 'roles', cote: 'plateforme', peut: administration },
   { id: 'types-processus', cote: 'plateforme', peut: administration },
   { id: 'calendriers', cote: 'plateforme', peut: administration },
+  { id: 'conservation', cote: 'plateforme', peut: parametres },
   { id: 'apparence', cote: 'plateforme', peut: parametres },
   { id: 'notifications', cote: 'plateforme', peut: parametres },
   { id: 'murs', cote: 'plateforme', peut: administration },

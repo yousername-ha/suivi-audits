@@ -46,7 +46,13 @@ describe('cartes de l’Administration : droits', () => {
   });
   it('les réglages seuls ouvrent les sections de paramètres', () => {
     const peut = avec(['parametres', 'lire']);
-    expect(cartesVisibles(peut, 'plateforme')).toEqual(['general', 'echelles', 'apparence', 'notifications']);
+    expect(cartesVisibles(peut, 'plateforme')).toEqual([
+      'general',
+      'echelles',
+      'conservation',
+      'apparence',
+      'notifications',
+    ]);
     expect(cartesVisibles(peut, 'systeme')).toEqual(['securite']);
   });
   it('les sections liées à un module exigent aussi ce module', () => {
@@ -68,6 +74,7 @@ describe('cartes de l’Administration : droits', () => {
       notifications: 'notifications',
       import_export: 'import',
       sauvegardes: 'sauvegardes',
+      conservation: 'conservation',
       securite: 'securite',
     };
     for (const s of SETTINGS_SECTIONS) expect(ids.has(sections[s]!), s).toBe(true);

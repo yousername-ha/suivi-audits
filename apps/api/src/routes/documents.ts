@@ -18,6 +18,7 @@ import { scanFile, validateFile, type FileRejected } from '../files.js';
 import { conflict, requireIfMatch, setEtag } from '../http/concurrency.js';
 import { HttpError } from '../http/errors.js';
 import { route, type Ctx } from '../http/route.js';
+import { totalUsages, usagesPreuve } from '../documents-usage.js';
 import { CSP_FILE } from '../http/security.js';
 import { sha256hex } from '../security/crypto.js';
 import type { Services } from '../services.js';
@@ -373,16 +374,8 @@ export const documentRoutes = [
         if (purge) {
           // Une version de document citée comme preuve (fiche, lien, décision, validation d'occurrence) ne se purge pas :
           // l'historique des preuves est conservé.
-          const usages = (
-            await c.query<{ liens: number; fiches: number; decisions: number; validations: number }>(
-              `SELECT (SELECT count(*)::int FROM grc_links WHERE source_ref LIKE $1 OR target_ref LIKE $1) liens,
-                        (SELECT count(*)::int FROM grc_objects WHERE data::text LIKE $2) fiches,
-                        (SELECT count(*)::int FROM pilotage_decisions WHERE refs::text LIKE $2 OR snapshot::text LIKE $2) decisions,
-                        (SELECT count(*)::int FROM occurrence_validations WHERE proof_ref LIKE $1) validations`,
-              [`document:${params.id}:%`, `%document:${params.id}:%`],
-            )
-          ).rows[0]!;
-          const total = usages.liens + usages.fiches + usages.decisions + usages.validations;
+          const usages = await usagesPreuve(c, params.id);
+          const total = totalUsages(usages);
           if (total)
             throw new HttpError(
               409,

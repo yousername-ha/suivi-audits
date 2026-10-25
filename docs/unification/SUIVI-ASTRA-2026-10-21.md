@@ -28,7 +28,8 @@ Légende des états : **Corrigé** (critère de l'audit satisfait et testé) · 
 | 012-02, 012-06 | Corrigé | Le catalogue `environment` (usages de l'IA) et ses évaluations sont supprimés ([ADR 0046](../adr/0046-retrait-du-catalogue-environnement.md), migration 037) : la Configuration GRC est le seul catalogue d'échelles et de matrices | — | `migrations.test.ts`, suite API complète |
 | 012-13 | Amélioré | Carte « Journaux techniques » : niveau réglable à chaud (avertissement, info ; debug toujours temporaire, 24 h au plus), niveau appliqué lu sur le serveur, erreurs toujours collectées, journal d'audit indépendant, dernières entrées filtrables, téléchargement NDJSON sous le droit d'exportation (tracé), secrets masqués | Rétention limitée aux 5 000 dernières entrées en mémoire (la sortie du conteneur reste la source complète) | `journaux-techniques.test.ts` (8), e2e `…-administration-cartes.spec.ts` |
 | 012-14 | Amélioré | Calendriers de plateforme : fériés français calculés, import iCal, mise à jour annuelle signalée, reprise par les séries ([ADR 0047](../adr/0047-calendriers-de-plateforme.md)) | Zones scolaires (écartées par décision) ; référence vivante des séries | `calendriers-plateforme.test.ts`, `jours-feries.test.ts` |
-| 012-07, 012-09, 012-10, 012-11 | Décision | — | Nettoyage automatique, contact technique, canaux de notification, SMTP/Teams | — |
+| 012-07 | Amélioré | Durées de conservation par catégorie et aperçu de ce qui serait purgé ([ADR 0048](../adr/0048-conservation-sans-purge-automatique.md)) | Purge elle-même (écartée : aucune suppression automatique) ; motifs d'exclusion | `conservation.test.ts` |
+| 012-09, 012-10, 012-11 | Décision | — | Contact technique, canaux de notification, SMTP/Teams | — |
 
 ### 010 Périmètres graphiques et 022 Droits
 
