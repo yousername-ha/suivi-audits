@@ -25,7 +25,7 @@ Légende des états : **Corrigé** (critère de l'audit satisfait et testé) · 
 | 012-08 | Corrigé | La purge définitive d'un document cité comme preuve (fiche, lien, décision, validation) est refusée (409) | Parcours de graphe général (liés à 012-07) | `documents.test.ts` |
 | 012-12 | Amélioré | Filtres période et compte, pagination, export JSON sous le droit d'exportation (comme le CSV), export tracé avec ses filtres, troncature signalée | Rien : la carte « Journaux techniques » (012-13) donne désormais accès aux entrées du serveur | `security.test.ts` « journal d'audit », e2e `…-journal-audit.spec.ts` |
 | 012-04 | Amélioré | Aperçu en lecture seule du certificat avant installation (format, validité, chaîne, hôte, clé, empreinte, noms) | Modes autosigné et ACME (décision 4) | `operations.test.ts`, e2e `y-exploitation.spec.ts` |
-| 012-02, 012-06 | Inchangé | — | Catalogue `environment` à relier ou masquer | — |
+| 012-02, 012-06 | Amélioré | Le catalogue `environment` (usages de l'IA seulement) est nommé comme tel : carte « Environnement (usages de l'IA) » et encart renvoyant vers la Configuration GRC | Rapprochement ou migration des deux catalogues (décision de données, ADR 0038 addendum) | e2e `zz-environment.spec.ts` (page inchangée) |
 | 012-13 | Amélioré | Carte « Journaux techniques » : niveau réglable à chaud (avertissement, info ; debug toujours temporaire, 24 h au plus), niveau appliqué lu sur le serveur, erreurs toujours collectées, journal d'audit indépendant, dernières entrées filtrables, téléchargement NDJSON sous le droit d'exportation (tracé), secrets masqués | Rétention limitée aux 5 000 dernières entrées en mémoire (la sortie du conteneur reste la source complète) | `journaux-techniques.test.ts` (8), e2e `…-administration-cartes.spec.ts` |
 | 012-07, 012-09, 012-10, 012-11, 012-14 | Décision | — | Nettoyage automatique, contact technique, canaux de notification, SMTP/Teams, calendriers de plateforme | — |
 
@@ -80,7 +80,7 @@ Légende des états : **Corrigé** (critère de l'audit satisfait et testé) · 
 | 003-03 | Corrigé | Pertinence retenue différente de la proposition : justification exigée ; un couple dont le niveau écarte ne peut pas être « retenu » | — | `config-grc-etudes.test.ts` |
 | 003-04 | Amélioré | Mesures de l'écosystème par référence ; justification de la dangerosité | Formule et échelle des critères en dur | `risques-traitement.test.ts` |
 | 003-06 | Amélioré | Gardes testées : résiduel inacceptable avec option « accepter », étape non validée | Synthèse de l'atelier 5 ; validation de l'atelier 5 | `grc.test.ts` |
-| 003-05, 003-11 | Inchangé | — | Vraisemblance et gravité du scénario dans `StudyConfiguration` (échelles épinglées) | — |
+| 003-05, 003-11 | Amélioré | `StudyConfiguration` épingle une échelle de vraisemblance (scénarios opérationnels) et une échelle de gravité (scénarios stratégiques), avec contrôle serveur du niveau retenu, aperçu et migration explicites, libellé publié dans la synthèse ; études sans épinglage inchangées ([ADR 0038](../adr/0038-socle-de-configuration-grc-transversal.md), addendum) | Échelle des critères des parties prenantes (`ECHELLE_CRITERE`) toujours locale ; structuration des opérations (décision métier) | `config-grc-echelles-scenario.test.ts` (4), e2e `…-echelles-scenarios.spec.ts` |
 | 003-07, 003-08, 003-09, 003-10 | Décision | — | Couche visuelle EBIOS (cercle, chemins, pictogrammes, flux) | — |
 
 ## Décisions en attente (celles de l'utilisateur)

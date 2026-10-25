@@ -77,6 +77,10 @@ export const StudyConfiguration = z
     relevanceMatrix: CfgRef.nullable().default(null),
     /** Correspondance impact → gravité (atelier 1) : l'échelle de départ porte les niveaux d'impact, celle d'arrivée la gravité. */
     severityMapping: CfgRef.nullable().default(null),
+    /** Échelle de vraisemblance des scénarios opérationnels (atelier 4). */
+    likelihoodScale: CfgRef.nullable().default(null),
+    /** Échelle de gravité des scénarios stratégiques (atelier 3). */
+    scenarioSeverityScale: CfgRef.nullable().default(null),
   })
   .strict();
 export type StudyConfiguration = z.infer<typeof StudyConfiguration>;
@@ -195,6 +199,8 @@ export const StrategicScenarioData = common
     attackPath: text.default(''),
     ecosystem: z.string().max(10000).optional(),
     gravity: niveau,
+    /** Gravité retenue sur l'échelle publiée que l'étude a épinglée (remplace `gravity` quand l'étude en épingle une). */
+    severityLevel: GrcKey.nullable().default(null),
   })
   .passthrough();
 export const OperationalScenarioData = common
@@ -203,6 +209,8 @@ export const OperationalScenarioData = common
     supportAssetRefs: refs,
     attackSequence: text.default(''),
     likelihood: z.union([niveau, z.string().max(10000)]).default(null),
+    /** Vraisemblance retenue sur l'échelle publiée que l'étude a épinglée (remplace `likelihood` quand l'étude en épingle une). */
+    likelihoodLevel: GrcKey.nullable().default(null),
   })
   .passthrough();
 export const TreatmentData = common

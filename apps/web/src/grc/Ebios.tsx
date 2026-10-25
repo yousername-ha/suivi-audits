@@ -23,7 +23,13 @@ interface ObjetEtude {
   name: string;
   version: number;
   data: Record<string, unknown>;
-  calcul: { menace?: number | null; graviteProposee?: number | null; graviteCatalogue?: string | null };
+  calcul: {
+    menace?: number | null;
+    graviteProposee?: number | null;
+    graviteCatalogue?: string | null;
+    graviteScenarioCatalogue?: string | null;
+    vraisemblanceCatalogue?: string | null;
+  };
 }
 interface VueEtude {
   etude: GrcObject;
@@ -60,11 +66,19 @@ function resume(o: ObjetEtude, noms: Map<string, string>) {
         ? 'Indice de menace : critères à compléter'
         : `Indice de menace : ${o.calcul.menace}`;
     case 'strategic_scenario':
-      return `Gravité ${niveau(o.data.gravity, ECHELLE_GRAVITE)}${
+      return `Gravité ${
+        o.calcul.graviteScenarioCatalogue
+          ? `« ${o.calcul.graviteScenarioCatalogue} » (échelle publiée)`
+          : niveau(o.data.gravity, ECHELLE_GRAVITE)
+      }${
         o.calcul.graviteProposee ? ` (proposée : ${niveau(o.calcul.graviteProposee, ECHELLE_GRAVITE)})` : ''
       } · couple : ${nom(o.data.srOvRef)}`;
     case 'operational_scenario':
-      return `Vraisemblance ${niveau(o.data.likelihood, ECHELLE_VRAISEMBLANCE)} · scénario : ${nom(o.data.strategicScenarioRef)}`;
+      return `Vraisemblance ${
+        o.calcul.vraisemblanceCatalogue
+          ? `« ${o.calcul.vraisemblanceCatalogue} » (échelle publiée)`
+          : niveau(o.data.likelihood, ECHELLE_VRAISEMBLANCE)
+      } · scénario : ${nom(o.data.strategicScenarioRef)}`;
     case 'support_asset':
       return `Valeurs métier : ${liste(o.data.businessAssetRefs)}`;
     case 'business_asset':

@@ -15,7 +15,12 @@ import type { Client } from '../db/db.js';
 import { HttpError } from '../http/errors.js';
 import { hash, type Grc } from './core.js';
 
-type Slot = 'relevanceMatrix' | 'severityMapping';
+type Slot = 'relevanceMatrix' | 'severityMapping' | 'likelihoodScale' | 'scenarioSeverityScale';
+/** Échelles épinglées par l'étude pour les scénarios : type de fiche et champ qui porte le niveau retenu. */
+const ECHELLES_SCENARIO = {
+  likelihoodScale: { kind: 'operational_scenario', champ: 'likelihoodLevel' },
+  scenarioSeverityScale: { kind: 'strategic_scenario', champ: 'severityLevel' },
+} as const;
 interface CfgRow {
   key: string;
   state: string;
@@ -97,7 +102,7 @@ export class GrcStudyConfig {
       l'étude a épinglées. Seuls les niveaux modifiés sont contrôlés : une évaluation passée n'est jamais réécrite. */
   async verifierNiveaux(
     smsi: string,
-    kind: 'sr_ov' | 'feared_event',
+    kind: 'sr_ov' | 'feared_event' | 'strategic_scenario' | 'operational_scenario',
     data: Record<string, unknown>,
     avant: Record<string, unknown> | undefined,
     c: Client,
@@ -126,6 +131,14 @@ export class GrcStudyConfig {
         if (data[champ] !== avant?.[champ]) controler(champ, data[champ], await this.levels(c, echelle));
       await this.verifierPertinence(m, data, avant, c);
     }
+    for (const [slot, cible] of Object.entries(ECHELLES_SCENARIO) as [
+      keyof typeof ECHELLES_SCENARIO,
+      (typeof ECHELLES_SCENARIO)[keyof typeof ECHELLES_SCENARIO],
+    ][]) {
+      const ref = conf.data[slot];
+      if (kind === cible.kind && ref && data[cible.champ] !== avant?.[cible.champ])
+        controler(cible.champ, data[cible.champ], await this.levels(c, ref));
+    }
     if (kind === 'feared_event' && conf.data.severityMapping) {
       const m = MappingDefinition.parse(await this.definition(c, conf.data.severityMapping));
       if (data.severityLevel !== avant?.severityLevel)
@@ -150,6 +163,10 @@ export class GrcStudyConfig {
     if (conf.success) {
       if (conf.data.relevanceMatrix) pins.push(await this.matrixImpact(conn, smsi, id, conf.data.relevanceMatrix));
       if (conf.data.severityMapping) pins.push(await this.mappingImpact(conn, smsi, id, conf.data.severityMapping));
+      for (const slot of Object.keys(ECHELLES_SCENARIO) as (keyof typeof ECHELLES_SCENARIO)[]) {
+        const ref = conf.data[slot];
+        if (ref) pins.push(await this.echelleImpact(conn, smsi, id, ref, slot));
+      }
     }
     const upToDate = pins.every((p) => !p.changed);
     return {
@@ -252,6 +269,46 @@ export class GrcStudyConfig {
       resultsChanged,
       orphans,
       evaluations,
+    };
+  }
+
+  /** Échelle de vraisemblance ou de gravité des scénarios : « résultats modifiés » = niveaux ajoutés, retirés ou renommés ;
+      les niveaux déjà retenus dans les scénarios de l'étude qui n'existent plus sont signalés, jamais réécrits. */
+  private async echelleImpact(
+    c: Client,
+    smsi: string,
+    studyId: string,
+    ref: CfgRef,
+    slot: keyof typeof ECHELLES_SCENARIO,
+  ): Promise<PinImpact> {
+    const item = await this.item(c, ref.item);
+    const to = item.currentVersion;
+    const lire = async (r: CfgRef) => {
+      const s = ScaleDefinition.safeParse(await this.definition(c, r));
+      return new Map(s.success ? s.data.levels.map((l) => [l.id, l.label]) : []);
+    };
+    const avant = await lire(ref);
+    const apres = await lire({ item: ref.item, version: to });
+    let resultsChanged = 0;
+    for (const k of new Set([...avant.keys(), ...apres.keys()])) if (avant.get(k) !== apres.get(k)) resultsChanged++;
+    const { kind, champ } = ECHELLES_SCENARIO[slot];
+    const fiches = await this.used(c, smsi, studyId, kind);
+    const orphans: Record<string, string[]> = {};
+    const absents = this.missing(
+      fiches.map((d) => d[champ]),
+      new Set(apres.keys()),
+    );
+    if (absents.length) orphans[champ] = absents;
+    return {
+      slot,
+      key: item.key,
+      from: ref.version,
+      to,
+      changed: to > ref.version,
+      archived: item.state === 'archived',
+      resultsChanged,
+      orphans,
+      evaluations: fiches.filter((d) => d[champ]).length,
     };
   }
 
