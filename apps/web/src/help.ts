@@ -110,6 +110,18 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
   },
   {
+    id: 'parcours-iso',
+    title: 'Parcours ISO 27001 / HDS',
+    permission: 'pilotage:lire',
+    link: '/pilotage/parcours-iso',
+    steps: [
+      'Le parcours est une autre porte d’entrée vers vos modules : l’arbre (11 raccourcis) et la liste (16 étapes, 26 sous-actions) couvrent les mêmes travaux. Le périmètre affiché est celui du Pilotage ; changez-le avec le sélecteur de périmètre.',
+      'Cliquez un cercle pour voir l’étape, le bouton « + » pour déplier ses sous-actions, puis une sous-action pour lire l’attendu. Les travaux déjà présents dans le périmètre sont retrouvés et s’ouvrent dans leur module, avec le même identifiant.',
+      'Le parcours n’écrit rien : créez et modifiez dans les modules, la vue se met à jour. La présence de travaux n’est ni une revue, ni une conformité, ni une certification.',
+      'Les compléments HDS peuvent être masqués : c’est un réglage d’affichage, il ne change aucune décision d’applicabilité. Les animations se règlent (animées, automatiques selon le système, arrêtées).',
+    ],
+  },
+  {
     id: 'continuite',
     title: 'BIA, continuité, reprise et exercices',
     permission: 'pilotage:lire',

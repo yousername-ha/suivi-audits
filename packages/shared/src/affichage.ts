@@ -40,6 +40,15 @@ export const Preferences = z.object({
       panneau: z.boolean().optional(),
     })
     .default({}),
+  /** Parcours guidé ISO / HDS (024) : vue, affichage des compléments HDS et réglage des animations. Ce sont des préférences
+      d'affichage : masquer HDS ne change aucune décision d'applicabilité ni aucune donnée. */
+  parcoursIso: z
+    .object({
+      vue: z.enum(['arbre', 'liste']).optional(),
+      hds: z.boolean().optional(),
+      mouvement: z.enum(['animees', 'automatique', 'arretees']).optional(),
+    })
+    .default({}),
 });
 export type Preferences = z.infer<typeof Preferences>;
 export const DEFAULT_PREFERENCES: Preferences = Preferences.parse({});
