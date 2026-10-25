@@ -177,3 +177,20 @@ export function syntheseEtats(
   }
   return { ...s, applicables: entrees.length - s.non_applicable, aDeterminer, obligatoiresNonConformes };
 }
+
+/** Plan d'action des écarts (ADR 0056) : actions créées en lot pour des exigences applicables non implémentées ou
+    partielles. Les identifiants viennent de l'aperçu ; le serveur recalcule l'éligibilité au moment de la création. */
+export const PlanEcartsCorps = z
+  .object({
+    frameworkId: z.uuid(),
+    requirementIds: z.array(z.string().trim().min(1).max(200)).min(1).max(200),
+    registreId: z.uuid().nullish(),
+    ownerId: z.uuid().nullish(),
+    dueAt: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date invalide (AAAA-MM-JJ).')
+      .nullish(),
+    confirm: z.literal('CREER'),
+  })
+  .strict();
+export type PlanEcartsCorps = z.infer<typeof PlanEcartsCorps>;

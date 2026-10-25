@@ -18,6 +18,7 @@ import {
   SupplierFollowUpBody,
   SupplierUpdateBody,
   LinkBody,
+  PlanEcartsCorps,
   methodTemplate,
 } from '@suivi/shared';
 import type { Session } from '../auth.js';
@@ -900,6 +901,27 @@ export const grcRoutes = [
     query: z.object({ frameworkId: z.uuid().optional() }),
     handler: async ({ svc, s, params, query }) =>
       svc.grc.rapprochements.coverage(params.smsi, (s as Session).user, query.frameworkId),
+  }),
+  route({
+    ...base,
+    method: 'GET',
+    url: '/api/grc/:smsi/plan-ecarts',
+    summary: 'Aperçu du plan d’action des écarts d’un référentiel (lecture seule)',
+    params: scope,
+    query: z.object({ frameworkId: z.uuid() }),
+    handler: async ({ svc, s, params, query }) =>
+      svc.grc.planEcarts.apercu(params.smsi, query.frameworkId, (s as Session).user),
+  }),
+  route({
+    ...base,
+    method: 'POST',
+    url: '/api/grc/:smsi/plan-ecarts',
+    summary: 'Créer les actions manquantes pour des exigences en écart (idempotent)',
+    params: scope,
+    status: 201,
+    body: PlanEcartsCorps,
+    handler: async ({ svc, s, params, body, ip }) =>
+      svc.grc.planEcarts.creer(params.smsi, body, (s as Session).user, ip),
   }),
   route({
     ...base,

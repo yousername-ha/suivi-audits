@@ -121,6 +121,7 @@ export const FAMILLES: Famille[] = [
         p('correspondances'),
         p('rapprochements'),
         p('couverture'),
+        p('analyser-service'),
         p('gap-applications'),
         p('correspondances-bibliotheque'),
       ]),

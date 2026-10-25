@@ -48,6 +48,7 @@ import { GrcLibrary } from './library.js';
 import { GrcKitIa } from './kit-ia.js';
 import { GrcLibraryMappings } from './library-mappings.js';
 import { GrcEvaluationsExigences } from './evaluations-exigences.js';
+import { GrcPlanEcarts } from './plan-ecarts.js';
 import { GrcRapprochements } from './rapprochements.js';
 import { GrcSuppliers } from './suppliers.js';
 import { GrcRisks } from './risks.js';
@@ -163,6 +164,7 @@ export class Grc {
   readonly libraryMappings: GrcLibraryMappings;
   readonly kitIa: GrcKitIa;
   readonly rapprochements: GrcRapprochements;
+  readonly planEcarts: GrcPlanEcarts;
   readonly evaluations: GrcEvaluationsExigences;
   readonly suppliers: GrcSuppliers;
   readonly risks: GrcRisks;
@@ -185,6 +187,7 @@ export class Grc {
     this.libraryMappings = new GrcLibraryMappings(this);
     this.kitIa = new GrcKitIa(this);
     this.rapprochements = new GrcRapprochements(this);
+    this.planEcarts = new GrcPlanEcarts(this);
     this.evaluations = new GrcEvaluationsExigences(this);
     this.suppliers = new GrcSuppliers(this);
     this.risks = new GrcRisks(this);
