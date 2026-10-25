@@ -50,10 +50,12 @@ test('mise à jour : bandeau permanent et confirmation explicite dans le style e
     await expect(install).toBeDisabled();
     await page.getByLabel('Taper METTRE À JOUR pour confirmer').fill('METTRE À JOUR');
     await install.click();
-    await expect(page.getByText('Demande enregistrée.', { exact: false })).toBeVisible();
+    // L'écran de mise à jour s'ouvre tout de suite, sans attendre la prise en charge de la demande par le service.
+    await expect(page).toHaveURL(/\/update\/\?.*demande=00000000-0000-4000-8000-000000000001/);
+    await expect(page.getByRole('heading', { name: 'Mise à jour en cours' })).toBeVisible();
+    await expect(page.getByRole('status')).toContainText('Demande enregistrée.');
     expect(requests).toHaveLength(1);
     expect(requests[0]).toMatchObject({ version: '3.1.0', confirm: 'METTRE À JOUR' });
-    await expect(install).toBeDisabled();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
     expect(problems).toEqual([]);
   } finally {
@@ -87,28 +89,83 @@ test('mise à jour : après échec de préparation, une nouvelle confirmation cr
   browser,
 }) => {
   const { ctx, page, problems } = await open(browser);
+  const jobId = '00000000-0000-4000-8000-000000000002';
   let current = state();
   const requests: { requestId: string }[] = [];
-  const jobId = '00000000-0000-4000-8000-000000000002';
   await page.route('**/api/updates', (route) => route.fulfill({ json: current }));
+  await page.route('**/update/status.json', (route) => route.fulfill({ json: current }));
   await page.route('**/api/admin/updates/install', async (route) => {
     requests.push(route.request().postDataJSON());
     await route.fulfill({ status: 202, json: { id: jobId, status: 'queued' } });
   });
   try {
     await page.goto('/admin/system');
-    const confirm = page.getByLabel('Taper METTRE À JOUR pour confirmer');
-    const install = page.getByRole('button', { name: 'Installer la version 3.1.0' });
-    await confirm.fill('METTRE À JOUR');
-    await install.click();
-    await expect(page.getByText('Demande enregistrée.', { exact: false })).toBeVisible();
+    await page.getByLabel('Taper METTRE À JOUR pour confirmer').fill('METTRE À JOUR');
+    await page.getByRole('button', { name: 'Installer la version 3.1.0' }).click();
+    // Attente de la prise en charge, puis le service signale l'échec de la préparation.
+    await expect(page.getByRole('heading', { name: 'Mise à jour en cours' })).toBeVisible();
     current = state({ id: jobId, target: '3.1.0', status: 'failed', message: 'Préparation interrompue.' });
-    await expect(confirm).toHaveValue('', { timeout: 20000 });
-    await expect(install).toBeDisabled();
+    await expect(page.getByRole('heading', { name: 'La mise à jour n’a pas été installée' })).toBeVisible();
+    await page.getByRole('link', { name: 'Consulter le résultat dans l’application' }).click();
+    await expect(page).toHaveURL(/\/systeme\/mises-a-jour$/);
+    const confirm = page.getByLabel('Taper METTRE À JOUR pour confirmer');
+    await expect(confirm).toHaveValue('');
     await confirm.fill('METTRE À JOUR');
-    await install.click();
+    await page.getByRole('button', { name: 'Installer la version 3.1.0' }).click();
     await expect.poll(() => requests.length).toBe(2);
     expect(requests[1]!.requestId).not.toBe(requests[0]!.requestId);
+    expect(problems).toEqual([]);
+  } finally {
+    await ctx.close();
+  }
+});
+test('mise à jour : la vérification montre qu’elle est en cours puis annonce le résultat', async ({ browser }) => {
+  const { ctx, page, problems } = await open(browser);
+  let current = state({ checkedAt: '2026-10-01T08:00:00.000Z', available: null, message: '' });
+  await page.route('**/api/updates', (route) => route.fulfill({ json: current }));
+  await page.route('**/api/admin/updates/check', async (route) => {
+    current = state({ checking: true, phase: 'checking', status: 'running', checkedAt: current.checkedAt });
+    await route.fulfill({ status: 202, json: { id: '00000000-0000-4000-8000-000000000003', status: 'queued' } });
+    setTimeout(() => {
+      current = state({ available: '3.1.0', checkedAt: new Date().toISOString() });
+    }, 2500);
+  });
+  try {
+    await page.goto('/systeme/mises-a-jour');
+    const verifier = page.getByRole('button', { name: 'Vérifier les mises à jour' });
+    await verifier.click();
+    await expect(page.getByText('Vérification des nouvelles versions en cours…')).toBeVisible();
+    await expect(verifier).toBeDisabled();
+    await expect(page.getByText('Une nouvelle version est disponible : 3.1.0.')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText('Vérification des nouvelles versions en cours…')).toHaveCount(0);
+    expect(problems).toEqual([]);
+  } finally {
+    await ctx.close();
+  }
+});
+test('mise à jour : l’écran de maintenance ouvert après confirmation attend la prise en charge sans revenir à l’application', async ({
+  browser,
+}) => {
+  const { ctx, page, problems } = await open(browser, 390);
+  const jobId = '00000000-0000-4000-8000-000000000004';
+  let current = state({ status: 'success', phase: 'complete', id: '00000000-0000-4000-8000-000000000009' });
+  await page.route('**/update/status.json', (route) => route.fulfill({ json: current }));
+  try {
+    await page.goto(`/update/?next=%2Fdocuments&demande=${jobId}`);
+    await expect(page.getByRole('heading', { name: 'Mise à jour en cours' })).toBeVisible();
+    await expect(page.getByRole('status')).toContainText('Demande enregistrée.');
+    await page.waitForTimeout(6000);
+    await expect(page).toHaveURL(/\/update\//);
+    current = state({
+      id: jobId,
+      target: '3.1.0',
+      maintenance: true,
+      status: 'running',
+      phase: 'backup',
+      message: 'Sauvegarde de sécurité de vos données.',
+      startedAt: new Date().toISOString(),
+    });
+    await expect(page.getByRole('status')).toContainText('Sauvegarde de sécurité', { timeout: 10000 });
     expect(problems).toEqual([]);
   } finally {
     await ctx.close();
