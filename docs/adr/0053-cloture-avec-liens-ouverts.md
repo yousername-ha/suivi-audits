@@ -2,7 +2,7 @@
 
 - Statut : acceptée
 - Date : 2026-10-25
-- Contexte : décision 7 du 25/10/2026 (dossiers 017-07 et 021-07) ; la clôture d'un écart est une décision immuable ([ADR 0027](0027-gestion-des-risques-ebios-et-iso27005.md)).
+- Contexte : décision 7 du 25/10/2026 (dossiers 017-07 et 021-07) ; la clôture d'un écart est une décision immuable ([ADR 0027](0027-risques-ebios-rm-iso27005.md)).
 
 ## Décision
 
