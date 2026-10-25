@@ -116,6 +116,14 @@ describe('mesure d’un traitement : exigence d’un cadre publié', () => {
     const liens = await a.get(root() + '/links?ref=' + encodeURIComponent(`requirement:${cadre}:1:A.5.1`));
     expect(liens.statusCode, liens.body).toBe(200);
     expect(liens.json().some((l: { other: { ref: string } }) => l.other.ref === 'object:' + ok.json().id)).toBe(true);
+    // Depuis le traitement, l'exigence est lue avec son applicabilité dans CE périmètre (ici : aucune évaluation), sans effet
+    // sur la couverture.
+    const sortants = await a.get(root() + '/links?ref=' + encodeURIComponent('object:' + ok.json().id));
+    const exigence = (
+      sortants.json() as { other: { ref: string; kind: string; applicabilite?: string | null } }[]
+    ).find((l) => l.other.ref === `requirement:${cadre}:1:A.5.1`);
+    expect(exigence?.other).toMatchObject({ kind: 'requirement', applicabilite: 'non_evaluee' });
+    expect(await couverture()).toEqual(avant);
   });
   it('propose les exigences publiées dans le sélecteur du champ typé', async () => {
     const r = await a.get(
