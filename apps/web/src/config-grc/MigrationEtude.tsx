@@ -14,7 +14,7 @@ interface Apercu {
   upToDate: boolean;
   previewId: string;
   pins: {
-    slot: 'relevanceMatrix' | 'severityMapping';
+    slot: 'relevanceMatrix' | 'severityMapping' | 'likelihoodScale' | 'scenarioSeverityScale';
     key: string;
     from: number;
     to: number;
@@ -25,13 +25,19 @@ interface Apercu {
     evaluations: number;
   }[];
 }
-const SLOT = { relevanceMatrix: 'Matrice de pertinence', severityMapping: 'Correspondance impact → gravité' } as const;
+const SLOT = {
+  relevanceMatrix: 'Matrice de pertinence',
+  severityMapping: 'Correspondance impact → gravité',
+  likelihoodScale: 'Échelle de vraisemblance des scénarios',
+  scenarioSeverityScale: 'Échelle de gravité des scénarios',
+} as const;
 const CHAMPS: Record<string, string> = {
   resourcesLevel: 'ressources',
   motivationLevel: 'motivation',
   relevanceLevel: 'pertinence retenue',
   impactLevels: 'impacts',
   severityLevel: 'gravité retenue',
+  likelihoodLevel: 'vraisemblance retenue',
 };
 
 export function MigrationEtude({

@@ -143,12 +143,14 @@ export interface MethodBindingsResolver {
 }
 /** Éléments du catalogue épinglés par une étude (champ facultatif `configuration`) : matrice de pertinence et correspondance
     impact → gravité. */
-const studyPins = (data: Record<string, unknown>): { ref: CfgRef; kind: 'matrix' | 'mapping' }[] => {
+const studyPins = (data: Record<string, unknown>): { ref: CfgRef; kind: 'matrix' | 'mapping' | 'scale' }[] => {
   const c = StudyConfiguration.safeParse(data.configuration);
   if (!c.success) return [];
   return [
     ...(c.data.relevanceMatrix ? [{ ref: c.data.relevanceMatrix, kind: 'matrix' as const }] : []),
     ...(c.data.severityMapping ? [{ ref: c.data.severityMapping, kind: 'mapping' as const }] : []),
+    ...(c.data.likelihoodScale ? [{ ref: c.data.likelihoodScale, kind: 'scale' as const }] : []),
+    ...(c.data.scenarioSeverityScale ? [{ ref: c.data.scenarioSeverityScale, kind: 'scale' as const }] : []),
   ];
 };
 export class Grc {
@@ -685,7 +687,12 @@ export class Grc {
       data = PILOTAGE_SCHEMAS[kind as keyof typeof PILOTAGE_SCHEMAS].parse(data);
       await this.checkTypedRefs(smsi, kind, data, user, c);
       if (kind === 'risk_study') await this.checkStudyConfiguration(smsi, data, previous, c);
-      if (kind === 'sr_ov' || kind === 'feared_event')
+      if (
+        kind === 'sr_ov' ||
+        kind === 'feared_event' ||
+        kind === 'strategic_scenario' ||
+        kind === 'operational_scenario'
+      )
         await this.studyConfig.verifierNiveaux(smsi, kind, data, previous?.data, c);
       if (kind === 'nonconformity' && previous?.data.status === 'closed')
         throw new HttpError(409, 'Conservez la clôture : rouvrez le constat avec un motif ou créez-en un nouveau.');
@@ -764,7 +771,8 @@ export class Grc {
         ref,
         kind,
         'ebios_rm',
-        before.find((x) => x.kind === kind)?.ref ?? null,
+        // « Déjà épinglé » : même élément déjà lié par l'étude (un archivage ultérieur ne bloque pas une étude qui l'utilise).
+        before.find((x) => x.ref.item === ref.item && x.ref.version === ref.version)?.ref ?? null,
         c,
       );
   }

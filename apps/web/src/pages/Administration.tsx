@@ -271,8 +271,9 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
   {
     id: 'environnement',
     cote: 'systeme',
-    titre: 'Environnement',
-    resume: 'Échelles et matrices d’environnement, simulation et historique.',
+    titre: 'Environnement (usages de l’IA)',
+    resume:
+      'Échelles et matrice des seules évaluations des usages de l’IA, simulation et historique. Les autres analyses utilisent « Échelles et matrices (GRC) ».',
     icone: 'echelles',
     teinte: 'violet',
     lien: '/admin/environment',

@@ -38,3 +38,17 @@ sans valeur administrable codée en dur, sans dupliquer les registres et sans ca
 - L'interface d'administration, les sélecteurs mutualisés, la liaison d'analyse, la migration explicite et les ateliers EBIOS sur
   catalogue sont des lots suivants ([plan](../archive/refonte-grc/05-PLAN-IMPLEMENTATION.md)).
 - Points à arbitrer : [plan](../archive/refonte-grc/05-PLAN-IMPLEMENTATION.md) § 3.
+
+## Addendum (25/10/2026) — échelles des scénarios EBIOS RM épinglées par l'étude (dossier 003-05 et 003-11)
+
+La configuration d'une étude (`StudyConfiguration`) gagne deux liaisons facultatives, de type échelle : `scenarioSeverityScale` (gravité des scénarios stratégiques, atelier 3) et `likelihoodScale` (vraisemblance des scénarios opérationnels, atelier 4). Elles suivent le mécanisme de la matrice de pertinence et de la correspondance impact → gravité : élément et version précis, vérifiés à l'enregistrement (existence, type, visibilité, famille `ebios_rm`, archivage), usage « analyse » enregistré, migration explicite avec aperçu d'impact.
+
+- Le niveau retenu est porté par deux champs nouveaux, `severityLevel` (scénario stratégique) et `likelihoodLevel` (scénario opérationnel). Les champs d'origine `gravity` et `likelihood` ne sont ni supprimés ni réécrits : ils continuent de servir aux études sans épinglage, et leur valeur déjà saisie dans une étude épinglée est conservée (l'interface le dit).
+- Le serveur refuse un niveau absent de l'échelle épinglée, seulement quand le niveau change (une évaluation passée n'est jamais réécrite).
+- L'aperçu de migration mesure les niveaux ajoutés, retirés ou renommés (« résultats modifiés ») et signale les niveaux retenus qui n'existent plus dans la nouvelle version ; l'application ne réécrit aucun scénario.
+- La vue de l'étude renvoie le libellé publié du niveau retenu, que la synthèse de l'atelier affiche avec la mention « échelle publiée ».
+- Aucune migration SQL : les données restent dans les fiches existantes (JSON validé par le schéma partagé).
+
+Reste hors de ce lot : l'échelle des critères des parties prenantes (`ECHELLE_CRITERE`, 003-04) et la gravité des événements redoutés sans correspondance, qui gardent leur barème local.
+
+Le catalogue `environment` (ADR 0021) reste distinct : il ne sert qu'aux évaluations des usages de l'IA. L'interface le dit désormais (carte « Environnement (usages de l'IA) » et encart de la page), sans migration ni lien entre les deux catalogues ; leur rapprochement éventuel reste une décision de données à prendre séparément (012-06).

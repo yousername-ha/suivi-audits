@@ -1,5 +1,6 @@
 import {
   Alert,
+  Anchor,
   Badge,
   Button,
   Card,
@@ -19,6 +20,7 @@ import { EnvironmentDefinition, type EnvironmentVersion, type RiskExample, type 
 import { ConfirmDialog } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router';
 import { api, get } from '../api';
 import { ErrorAlert, fmtDate } from '../components/common';
 import { useCan } from '../session';
@@ -168,6 +170,14 @@ function Editor({ current }: { current: EnvironmentVersion }) {
         Échelles et matrice pour de nouveaux usages. Les évaluations et calculs de l’outil historique restent inchangés.
         Ce simulateur ne crée pas d’évaluation métier.
       </Text>
+      <Alert variant="light" color="gray" title="Un catalogue distinct de la Configuration GRC">
+        Cette configuration ne sert qu’aux évaluations des usages de l’IA (Pilotage). Les échelles, matrices et
+        correspondances des risques, des études EBIOS RM et des méthodes sont publiées dans{' '}
+        <Anchor component={Link} to="/parametres/configuration-grc">
+          Configuration GRC
+        </Anchor>{' '}
+        : rien n’est partagé entre les deux, et chaque évaluation garde la version qu’elle a utilisée.
+      </Alert>
       <Group>
         <Badge variant="light">Version publiée : {current.version}</Badge>
         {dirty && <Badge variant="light">Brouillon non publié</Badge>}

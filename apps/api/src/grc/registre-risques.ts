@@ -114,11 +114,16 @@ export async function etudeEbios(g: Grc, smsi: string, id: string, user: Session
   ).rows;
   const parId = new Map(objets.map((o) => ['object:' + o.id, o]));
   const gravites = await libellesGravite(g, etude.data.configuration);
+  const echelles = await libellesEchellesScenario(g, etude.data.configuration);
   const enrichi = objets.map((o) => {
     const calcul: Record<string, unknown> = {};
     if (o.kind === 'feared_event' && typeof o.data.severityLevel === 'string')
       calcul.graviteCatalogue = gravites.get(o.data.severityLevel) ?? null;
     if (o.kind === 'ecosystem_party') calcul.menace = indiceMenace(o.data as Parameters<typeof indiceMenace>[0]);
+    if (o.kind === 'strategic_scenario' && typeof o.data.severityLevel === 'string')
+      calcul.graviteScenarioCatalogue = echelles.gravite.get(o.data.severityLevel) ?? null;
+    if (o.kind === 'operational_scenario' && typeof o.data.likelihoodLevel === 'string')
+      calcul.vraisemblanceCatalogue = echelles.vraisemblance.get(o.data.likelihoodLevel) ?? null;
     if (o.kind === 'strategic_scenario') {
       const refs = Array.isArray(o.data.fearedEventRefs) ? (o.data.fearedEventRefs as string[]) : [];
       calcul.graviteProposee = graviteProposee(
@@ -157,6 +162,26 @@ export async function etudeEbios(g: Grc, smsi: string, id: string, user: Session
         validations: validations.filter((v) => v.step === a.id),
       };
     }),
+  };
+}
+
+/** Libellés des niveaux des échelles de vraisemblance et de gravité des scénarios épinglées par l'étude (vides sans liaison). */
+async function libellesEchellesScenario(g: Grc, configuration: unknown) {
+  const conf = StudyConfiguration.safeParse(configuration);
+  const lire = async (ref: { item: string; version: number } | null | undefined) => {
+    const noms = new Map<string, string>();
+    if (!ref) return noms;
+    const def = await g.db.one<{ definition: unknown }>(
+      'SELECT definition FROM cfg_versions WHERE item_id=$1 AND version=$2',
+      [ref.item, ref.version],
+    );
+    const echelle = ScaleDefinition.safeParse(def?.definition);
+    if (echelle.success) for (const l of echelle.data.levels) noms.set(l.id, l.label);
+    return noms;
+  };
+  return {
+    vraisemblance: await lire(conf.success ? conf.data.likelihoodScale : null),
+    gravite: await lire(conf.success ? conf.data.scenarioSeverityScale : null),
   };
 }
 

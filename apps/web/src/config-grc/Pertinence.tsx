@@ -41,9 +41,13 @@ export function ConfigurationEtude({
   const conf = (value as Partial<StudyConfiguration> | null | undefined) ?? {};
   const relevanceMatrix = conf.relevanceMatrix ?? null;
   const severityMapping = conf.severityMapping ?? null;
+  const scenarioSeverityScale = conf.scenarioSeverityScale ?? null;
+  const likelihoodScale = conf.likelihoodScale ?? null;
   const maj = (patch: Partial<StudyConfiguration>) => {
-    const next = { relevanceMatrix, severityMapping, ...patch };
-    onChange(next.relevanceMatrix || next.severityMapping ? next : null);
+    const next = { relevanceMatrix, severityMapping, scenarioSeverityScale, likelihoodScale, ...patch };
+    onChange(
+      next.relevanceMatrix || next.severityMapping || next.scenarioSeverityScale || next.likelihoodScale ? next : null,
+    );
   };
   return (
     <Stack>
@@ -65,6 +69,24 @@ export function ConfigurationEtude({
         disabled={readonly}
         value={relevanceMatrix}
         onChange={(r: CfgRef | null) => maj({ relevanceMatrix: r })}
+      />
+      <SelecteurElement
+        label="Échelle de gravité des scénarios stratégiques (atelier 3)"
+        description="Facultative. Sans échelle épinglée, les scénarios gardent l’échelle d’origine à quatre niveaux."
+        kind="scale"
+        family="ebios_rm"
+        disabled={readonly}
+        value={scenarioSeverityScale}
+        onChange={(r: CfgRef | null) => maj({ scenarioSeverityScale: r })}
+      />
+      <SelecteurElement
+        label="Échelle de vraisemblance des scénarios opérationnels (atelier 4)"
+        description="Facultative. Épinglée à une version précise : la modifier plus tard ne change pas cette étude."
+        kind="scale"
+        family="ebios_rm"
+        disabled={readonly}
+        value={likelihoodScale}
+        onChange={(r: CfgRef | null) => maj({ likelihoodScale: r })}
       />
     </Stack>
   );
