@@ -1143,12 +1143,17 @@ export const grcRoutes = [
         strategie: z.enum(['reduce', 'accept', 'transfer', 'avoid', 'treated']).optional(),
         acceptation: z.enum(['sans_objet', 'a_decider', 'acceptee', 'refusee', 'echue']).optional(),
         enRetard: z.enum(['1']).optional(),
+        ecart: z.enum(['1']).optional(),
         etude: z.uuid().optional(),
         recherche: z.string().max(200).optional(),
       })
       .strict(),
     handler: async ({ svc, s, params, query }) =>
-      registreRisques(svc.grc, params.smsi, (s as Session).user, { ...query, enRetard: query.enRetard === '1' }),
+      registreRisques(svc.grc, params.smsi, (s as Session).user, {
+        ...query,
+        enRetard: query.enRetard === '1',
+        ecart: query.ecart === '1',
+      }),
   }),
   route({
     tags: ['SMSI GRC'],

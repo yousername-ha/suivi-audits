@@ -55,3 +55,4 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0049](0049-courriel-et-sortie-reseau-optionnelle.md) | Courriel SMTP/SMTPS envoyé par l'exécutant d'exploitation, tout dans l'interface | Acceptée |
 | [0050](0050-certificats-depuis-l-interface.md) | Certificats TLS (autorité interne, ACME, certificat fourni) choisis dans l'interface | Acceptée |
 | [0051](0051-couche-visuelle-ebios.md) | Couche visuelle EBIOS RM : chemins, pictogrammes, cercle, flux animés | Acceptée |
+| [0052](0052-registre-fait-foi-matrice-bareme.md) | Le registre fait foi ; la matrice et les échelles sont des barèmes, l'écart est signalé | Acceptée |

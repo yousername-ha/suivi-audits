@@ -76,7 +76,7 @@ Légende des états : **Corrigé** (critère de l'audit satisfait et testé) · 
 
 | ID | État | Ce qui a été fait | Reste | Preuve |
 | --- | --- | --- | --- | --- |
-| 002-01 | Amélioré | Filtre et colonne « Étude » ; drapeau « revue dépassée » testé | Règle commune registre/carte pour l'évaluation retenue (décision 8) | `risques.test.ts` |
+| 002-01 | Amélioré | Filtre et colonne « Étude » ; drapeau « revue dépassée » testé ; règle commune registre/carte/matrice pour l'évaluation retenue (approuvée en priorité) ; écart avec la matrice courante signalé sans recalcul ([ADR 0052](../adr/0052-registre-fait-foi-matrice-bareme.md)) | Pas de signalement dans la carte ni la matrice colorée ; pas de réévaluation en masse | `risques.test.ts`, `grc.test.ts`, `ecart-matrice.test.ts`, `registre-risques-ecart.test.ts` |
 | 002-02 | Amélioré | Mesure d'un traitement = exigence d'un cadre publié (ex. Annexe A), proposée dans le sélecteur, lisible depuis l'exigence ; le lien ne modifie pas la couverture ; relations proposées = celles que le serveur accepte | — (l'applicabilité de l'exigence dans le périmètre est lue à côté du lien, sans effet sur la couverture) | `risques-traitement.test.ts` |
 | 002-05 | Corrigé | Action de traitement avec choix du plan d'accueil (gestion exigée, même famille) ; étude archivée sans effet sur les évaluations | — | `risques-traitement.test.ts`, e2e `…-risques-traitement.spec.ts` |
 | 003-01 | Amélioré | Une modification postérieure à la validation d'un atelier la rend caduque (« modifié depuis la validation ») | Schémas illustrés ; test de reprise après rechargement | `risques.test.ts` |

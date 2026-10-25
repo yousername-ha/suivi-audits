@@ -3,6 +3,7 @@
    validations d'ateliers). Lecture seule ; toutes les écritures passent par les objets GRC et les décisions. */
 import {
   EBIOS_ATELIERS,
+  ecartMatriceCourante,
   etatAcceptation,
   graviteProposee,
   indiceMenace,
@@ -11,6 +12,7 @@ import {
   StudyConfiguration,
   type EtatAcceptation,
   type GrcKind,
+  type RiskMethod,
 } from '@suivi/shared';
 import type { SessionUser } from '../auth.js';
 import { HttpError } from '../http/errors.js';
@@ -21,6 +23,7 @@ export interface FiltresRegistre {
   strategie?: string;
   acceptation?: EtatAcceptation;
   enRetard?: boolean;
+  ecart?: boolean;
   etude?: string;
   recherche?: string;
 }
@@ -34,6 +37,9 @@ interface Ligne {
   evaluation: {
     result: Record<string, { label?: string; level?: string; acceptability?: string }>;
     decision: string;
+    ratings: unknown;
+    methodId: string;
+    methodVersion: number;
   } | null;
   acceptance: { result: string; until: string | null; date: string; by: string } | null;
 }
@@ -48,7 +54,8 @@ export async function registreRisques(g: Grc, smsi: string, user: SessionUser, f
   const rows = (
     await g.db.q<Ligne>(
       `SELECT o.id,o.name,o.version,o.data,m.definition->>'family' AS family,
-        (SELECT jsonb_build_object('result',e.result,'decision',e.decision) FROM grc_risk_evaluations e
+        (SELECT jsonb_build_object('result',e.result,'decision',e.decision,'ratings',e.ratings,'methodId',mv.method_id,'methodVersion',mv.version)
+          FROM grc_risk_evaluations e JOIN grc_method_versions mv ON mv.id=e.method_version_id
           WHERE e.risk_id=o.id ORDER BY (e.decision='approved') DESC,e.revision DESC LIMIT 1) AS evaluation,
         (SELECT jsonb_build_object('result',d.result,'until',d.terms->>'until','date',d.performed_on::text,'by',d.created_by)
           FROM pilotage_decisions d WHERE d.smsi_id=o.smsi_id AND d.source_ref='object:'||o.id AND d.operation='risk_acceptance'
@@ -64,6 +71,19 @@ export async function registreRisques(g: Grc, smsi: string, user: SessionUser, f
     )
   ).rows;
   const aujourdhui = jour();
+  // Version la plus récente de chaque méthode utilisée : « matrice courante » à laquelle on compare, sans rien recalculer.
+  const methodes = [...new Set(rows.flatMap((r) => (r.evaluation ? [r.evaluation.methodId] : [])))];
+  const courantes = new Map(
+    methodes.length
+      ? (
+          await g.db.q<{ methodId: string; version: number; definition: unknown }>(
+            `SELECT DISTINCT ON (method_id) method_id AS "methodId",version,definition FROM grc_method_versions
+             WHERE smsi_id=$1 AND method_id=ANY($2::uuid[]) ORDER BY method_id,version DESC`,
+            [smsi, methodes],
+          )
+        ).rows.map((m) => [m.methodId, { version: m.version, definition: m.definition as RiskMethod }] as const)
+      : [],
+  );
   const items = rows
     .map((r) => {
       const res = r.evaluation?.result ?? {};
@@ -86,9 +106,26 @@ export async function registreRisques(g: Grc, smsi: string, user: SessionUser, f
         prochaineRevue: revue,
         enRetard: !!revue && revue < aujourdhui,
         etude: typeof r.data.studyRef === 'string' ? r.data.studyRef : null,
+        /** Le niveau enregistré fait foi ; l'écart avec la matrice courante est seulement signalé (ADR 0052). */
+        ecartMatrice: (() => {
+          const courante = r.evaluation && courantes.get(r.evaluation.methodId);
+          return r.evaluation && courante
+            ? ecartMatriceCourante({
+                result: r.evaluation.result,
+                ratings: r.evaluation.ratings,
+                versionEnregistree: r.evaluation.methodVersion,
+                courante,
+              })
+            : null;
+        })(),
       };
     })
-    .filter((x) => (!f.acceptation || x.acceptation === f.acceptation) && (!f.enRetard || x.enRetard));
+    .filter(
+      (x) =>
+        (!f.acceptation || x.acceptation === f.acceptation) &&
+        (!f.enRetard || x.enRetard) &&
+        (!f.ecart || x.ecartMatrice !== null),
+    );
   return { items, tronque: rows.length >= 500 };
 }
 

@@ -260,6 +260,45 @@ export function evaluateMethod(method: RiskMethod, rating: MethodRating) {
   if (!result) throw new Error('Choisissez un niveau de risque explicite de cette méthode.');
   return { level: result.id, label: result.label, color: result.color, acceptability: result.acceptability, score };
 }
+/** Écart entre le niveau enregistré d'un risque et celui que donnerait la méthode courante (version publiée la plus récente). */
+export interface EcartMatrice {
+  etat: 'ecart' | 'non_comparable';
+  versionEnregistree: number;
+  versionCourante: number;
+  enregistre: { brut: string | null; residuel: string | null };
+  courant: { brut: string | null; residuel: string | null } | null;
+}
+type Resultat = Record<string, { level?: string; label?: string } | undefined>;
+/** Compare, sans rien modifier, les niveaux enregistrés (le registre fait foi) à ceux que donneraient les mêmes
+    cotations avec la version courante de la méthode. `null` : même version, ou mêmes niveaux. `non_comparable` : les
+    échelles ont changé au point que les cotations enregistrées n'existent plus dans la méthode courante. */
+export function ecartMatriceCourante(args: {
+  result: Resultat;
+  ratings: unknown;
+  versionEnregistree: number;
+  courante: { version: number; definition: RiskMethod };
+}): EcartMatrice | null {
+  const { result, versionEnregistree, courante } = args;
+  if (versionEnregistree >= courante.version) return null;
+  const label = (k: 'gross' | 'residual') => result[k]?.label ?? result[k]?.level ?? null;
+  const base = {
+    versionEnregistree,
+    versionCourante: courante.version,
+    enregistre: { brut: label('gross'), residuel: label('residual') },
+  };
+  const parsed = RiskRatings.safeParse(args.ratings);
+  if (!parsed.success) return { etat: 'non_comparable', ...base, courant: null };
+  try {
+    const gross = evaluateMethod(courante.definition, parsed.data.gross);
+    const residual = evaluateMethod(courante.definition, parsed.data.residual);
+    const different =
+      (result.gross?.level !== undefined && result.gross.level !== gross.level) ||
+      (result.residual?.level !== undefined && result.residual.level !== residual.level);
+    return different ? { etat: 'ecart', ...base, courant: { brut: gross.label, residuel: residual.label } } : null;
+  } catch {
+    return { etat: 'non_comparable', ...base, courant: null };
+  }
+}
 /** Modèles organisationnels à relire et publier ; aucun contenu normatif sous licence n’est reproduit. */
 export function methodTemplate(family: RiskMethod['family']): RiskMethod {
   const names = {

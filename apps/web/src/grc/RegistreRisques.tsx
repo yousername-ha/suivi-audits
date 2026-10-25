@@ -1,7 +1,7 @@
 /* Registre des risques (lot U3, ADR 0027) : niveaux brut et résiduel de la dernière appréciation, option de
    traitement, état d'acceptation (décision formelle), prochaine revue ; filtres appliqués par le serveur. */
 import { Button, Group, Select, Table, Text, TextInput } from '@mantine/core';
-import { ETATS_ACCEPTATION, type EtatAcceptation, type GrcObject } from '@suivi/shared';
+import { ETATS_ACCEPTATION, type EcartMatrice, type EtatAcceptation, type GrcObject } from '@suivi/shared';
 import { DataTable, StatusChip, type Etat } from '@suivi/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -25,6 +25,8 @@ interface Ligne {
   enRetard: boolean;
   /** Référence « object:<id> » de l'étude dont le risque est issu. */
   etude: string | null;
+  /** Écart entre le niveau enregistré et la matrice courante : signalé, jamais recalculé (le registre fait foi). */
+  ecartMatrice: EcartMatrice | null;
 }
 
 const DEMARCHES: Record<string, string> = {
@@ -68,6 +70,7 @@ export function RegistreRisques({
     [acceptation, setAcceptation] = useState<string | null>(null),
     [etude, setEtude] = useState<string | null>(null),
     [retard, setRetard] = useState(false),
+    [ecart, setEcart] = useState(false),
     [recherche, setRecherche] = useState('');
   const params = new URLSearchParams();
   if (demarche) params.set('demarche', demarche);
@@ -75,6 +78,7 @@ export function RegistreRisques({
   if (acceptation) params.set('acceptation', acceptation);
   if (etude) params.set('etude', etude);
   if (retard) params.set('enRetard', '1');
+  if (ecart) params.set('ecart', '1');
   if (recherche) params.set('recherche', recherche);
   const q = useQuery({
     queryKey: ['grc', smsi, 'risk-register', params.toString()],
@@ -121,6 +125,9 @@ export function RegistreRisques({
         <Button variant={retard ? 'filled' : 'default'} onClick={() => setRetard((x) => !x)}>
           Revue dépassée
         </Button>
+        <Button variant={ecart ? 'filled' : 'default'} aria-pressed={ecart} onClick={() => setEcart((x) => !x)}>
+          Écart avec la matrice
+        </Button>
       </Group>
       <ErrorAlert error={q.error} />
       {q.data?.tronque && <Text size="sm">Seuls les 500 premiers risques sont affichés : précisez les filtres.</Text>}
@@ -154,6 +161,7 @@ export function RegistreRisques({
                   <Table.Td>
                     {r.residuel ?? '—'}
                     {r.residuel && !r.appreciationValidee ? ' (brouillon)' : ''}
+                    {r.ecartMatrice && <EcartMatriceNote ecart={r.ecartMatrice} />}
                   </Table.Td>
                   <Table.Td className="col-p2">{OPTIONS[r.strategie] ?? r.strategie}</Table.Td>
                   <Table.Td>
@@ -196,5 +204,22 @@ export function RegistreRisques({
         </DataTable>
       )}
     </>
+  );
+}
+
+/** Signalement d'un écart avec la matrice courante : le niveau enregistré est conservé, rien n'est recalculé. */
+export function EcartMatriceNote({ ecart }: { ecart: EcartMatrice }) {
+  return (
+    <div data-testid="ecart-matrice">
+      <StatusChip etat="attention">
+        {ecart.etat === 'ecart' ? 'Écart avec la matrice courante' : 'Matrice courante non comparable'}
+      </StatusChip>
+      <Text size="xs" c="dimmed">
+        {ecart.etat === 'ecart' && ecart.courant
+          ? `Enregistré (méthode v${ecart.versionEnregistree}) : brut ${ecart.enregistre.brut ?? '—'}, résiduel ${ecart.enregistre.residuel ?? '—'}. Avec la méthode v${ecart.versionCourante} : brut ${ecart.courant.brut ?? '—'}, résiduel ${ecart.courant.residuel ?? '—'}. `
+          : `Les cotations enregistrées (méthode v${ecart.versionEnregistree}) n’existent plus dans la méthode v${ecart.versionCourante}. `}
+        Le niveau enregistré fait foi ; réévaluez le risque pour l’aligner.
+      </Text>
+    </div>
   );
 }

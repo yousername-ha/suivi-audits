@@ -104,6 +104,41 @@ describe('SMSI, permissions et décisions', () => {
     );
     await expect(t.svc.db.q('UPDATE grc_risk_evaluations SET rationale=$1', ['Altération'])).rejects.toThrow();
   });
+  it('signale l’écart avec la matrice courante sans jamais recalculer le niveau enregistré (le registre fait foi)', async () => {
+    const avant = (await a.get(root() + `/risks/${riskId}/evaluations`)).json() as {
+      result: unknown;
+      revision: number;
+    }[];
+    expect((await a.get(root() + '/risks/register')).json().items[0].ecartMatrice).toBeNull();
+    // Version 2 de la méthode : la case de la cotation enregistrée change de niveau.
+    const v2 = methodTemplate('ebios_rm');
+    if (v2.calculation.kind !== 'matrix') throw new Error('matrice attendue');
+    for (const c of v2.calculation.cells)
+      if (c.impact === 'impact_2' && c.likelihood === 'likelihood_2') c.level = 'high';
+    const p = await a.post(root() + '/methods/preview', { id: methodId, definition: v2 });
+    expect(p.statusCode, p.body).toBe(200);
+    const pub = await a.post(
+      root() + '/methods/publish',
+      {
+        id: methodId,
+        definition: v2,
+        previewId: p.json().previewId,
+        reason: 'Matrice révisée pour la recette',
+        confirm: 'PUBLIER',
+      },
+      { 'if-match': '"1"' },
+    );
+    expect(pub.statusCode, pub.body).toBe(200);
+    const reg = (await a.get(root() + '/risks/register')).json().items.find((x: { id: string }) => x.id === riskId);
+    expect(reg.ecartMatrice).toMatchObject({ etat: 'ecart', versionEnregistree: 1, versionCourante: 2 });
+    expect(reg.ecartMatrice.courant.residuel).not.toBe(reg.ecartMatrice.enregistre.residuel);
+    expect((await a.get(root() + '/risks/register?ecart=1')).json().items.map((x: { id: string }) => x.id)).toContain(
+      riskId,
+    );
+    // Rien n'est recalculé : le niveau affiché reste celui de l'appréciation enregistrée, l'historique est inchangé.
+    expect(reg.residuel).toBe(reg.ecartMatrice.enregistre.residuel);
+    expect((await a.get(root() + `/risks/${riskId}/evaluations`)).json()).toEqual(avant);
+  });
   it('refuse d’approuver une appréciation dont le résiduel est inacceptable quand l’option est « accepter »', async () => {
     // Méthode sans champ obligatoire : les étapes se valident sans saisie, seul le critère d'acceptabilité est en jeu.
     const modele = methodTemplate('ebios_rm');
