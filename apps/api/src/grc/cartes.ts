@@ -19,7 +19,7 @@ export interface Ligne {
   ecartsMineurs: number;
   ecartsSensibles: number;
   bia: number;
-  plans: number;
+  pcra: number;
 }
 
 /** Fragment SQL : l'occurrence `o` a été validée (OK, KO ou NA) et ne s'est pas vue rouvrir depuis (journal immuable, migration
@@ -53,7 +53,7 @@ export async function compter(g: Grc, ids: string[], masques: string[], maintena
        count(*) FILTER (WHERE ${ECART_OUVERT} AND ${CLASSIFICATION}='mineure')::int AS "ecartsMineurs",
        count(*) FILTER (WHERE ${ECART_OUVERT} AND ${CLASSIFICATION}='point_sensible')::int AS "ecartsSensibles",
        count(*) FILTER (WHERE o.kind='bia')::int AS bia,
-       count(*) FILTER (WHERE o.kind='continuity_plan')::int AS plans
+       count(*) FILTER (WHERE o.kind='continuity_plan' AND o.data->>'planType'='pcra')::int AS pcra
      FROM grc_objects o
      JOIN grc_smsis s ON s.id=o.smsi_id
      JOIN business_policy_versions v ON v.version=s.business_version
@@ -86,7 +86,7 @@ function versCompteurs(l: Ligne | null, ecarts: boolean, pilotage: boolean): Car
       },
     };
   }
-  if (pilotage) c.continuite = { bia: l.bia, plans: l.plans };
+  if (pilotage) c.continuite = { bia: l.bia, pcra: l.pcra };
   return c;
 }
 

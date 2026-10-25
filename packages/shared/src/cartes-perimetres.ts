@@ -24,8 +24,9 @@ export interface CarteCompteurs {
   recurrentes: { series: number; occurrences: CompteurRetard } | null;
   /** Constats (écarts) non clos, avec leur ventilation par classification. */
   ecarts: (CompteurRetard & { parClassification: EcartsParClassification }) | null;
-  /** Analyses d'impact (BIA) et plans de continuité (PCA, PRA, PCRA) non archivés. */
-  continuite: { bia: number; plans: number } | null;
+  /** Analyses d'impact (BIA) et plans de continuité et de reprise d'activité (PCRA) non archivés. Seuls les plans de type
+      PCRA sont comptés (décision du 21/10/2026) : un PCA ou un PRA seul n'est pas un PCRA. */
+  continuite: { bia: number; pcra: number } | null;
   /** Couverture des référentiels rattachés ou hérités du périmètre (même calcul que l'écran « Couverture ») : exigences
       applicables et, parmi elles, celles dont la mise en œuvre est testée ou validée. Ce n'est pas un taux de conformité.
       Null : droit manquant ou aucun référentiel effectif (indisponible, jamais 0 %). */

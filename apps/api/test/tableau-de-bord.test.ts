@@ -128,7 +128,7 @@ describe('tableau de bord natif', () => {
   it('risques et continuité', async () => {
     const s = await synthese(admin);
     expect(s.risques).toMatchObject({ total: 1, sansDecision: 1 });
-    expect(s.continuite).toEqual({ bia: 1, plans: 0 });
+    expect(s.continuite).toEqual({ bia: 1, pcra: 0 });
     expect(s.pilotage).toMatchObject({ constatsOuverts: 4, risques: 1, actionsEnRetard: 1 });
   });
 
