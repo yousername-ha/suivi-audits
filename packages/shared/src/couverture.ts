@@ -189,6 +189,10 @@ export const PlanEcartsCorps = z
     dueAt: z
       .string()
       .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date invalide (AAAA-MM-JJ).')
+      .refine((d) => {
+        const t = new Date(d + 'T12:00:00Z');
+        return Number.isFinite(t.getTime()) && t.toISOString().slice(0, 10) === d;
+      }, 'Date inexistante.')
       .nullish(),
     confirm: z.literal('CREER'),
   })

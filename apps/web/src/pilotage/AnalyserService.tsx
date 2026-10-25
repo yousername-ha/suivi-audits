@@ -91,9 +91,9 @@ export function AnalyserService({ smsi, onChoisir }: { smsi: string; onChoisir: 
         },
       });
       setCree(p);
-      await qc.invalidateQueries({ queryKey: ['grc', 'smsis'] });
-      await qc.invalidateQueries({ queryKey: ['grc', 'perimetres'] });
-      setEtape(2);
+      setEtape(2); // d'abord : un échec d'actualisation ne doit pas permettre de créer le service une deuxième fois
+      void qc.invalidateQueries({ queryKey: ['grc', 'smsis'] });
+      void qc.invalidateQueries({ queryKey: ['grc', 'perimetres'] });
     } catch (e) {
       setErreur(e);
     } finally {

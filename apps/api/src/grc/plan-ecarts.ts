@@ -114,11 +114,9 @@ export class GrcPlanEcarts {
         );
         if (deja.rowCount) continue;
         const name = coupe(`Mettre en œuvre : ${e.title}`, 200);
-        const action = await this.g.insert(
-          cx,
+        const donnees = await this.g.normalize(
           smsi,
           'action',
-          name,
           {
             description: coupe(
               `${c.definition.name} — ${e.id} : ${e.title}. Écart constaté : ${e.etat === 'partiel' ? 'partiellement implémenté' : 'non implémenté'}.`,
@@ -127,7 +125,7 @@ export class GrcPlanEcarts {
             status: policy.statuses[0]!.id,
             ownerId: corps.ownerId ?? null,
             startAt: null,
-            dueAt: corps.dueAt ?? null,
+            dueAt: corps.dueAt ? corps.dueAt + 'T09:00:00Z' : null,
             priority: 'normal',
             category: policy.catalogues.actionCategories[0]!.id,
             justification: '',
@@ -135,9 +133,9 @@ export class GrcPlanEcarts {
             dependencies: [],
           },
           user,
-          ip,
-          accueil,
+          cx,
         );
+        const action = await this.g.insert(cx, smsi, 'action', name, donnees, user, ip, accueil);
         await cx.query(
           `INSERT INTO grc_links(smsi_id,source_id,source_ref,target_ref,type,note,created_by) VALUES($1,$2,$3,$4,'implements',$5,$6)`,
           [
@@ -151,14 +149,15 @@ export class GrcPlanEcarts {
         );
         out.push({ id: action.id, name });
       }
-      await this.g.db.audit(
-        user,
-        ip,
-        'grc.plan_ecarts.created',
-        corps.frameworkId,
-        { smsiId: smsi, version: c.eff.version, creees: out.length, demandees: voulues.size },
-        cx,
-      );
+      if (out.length)
+        await this.g.db.audit(
+          user,
+          ip,
+          'grc.plan_ecarts.created',
+          corps.frameworkId,
+          { smsiId: smsi, version: c.eff.version, creees: out.length, demandees: voulues.size },
+          cx,
+        );
       return out;
     }, user.username);
     return {

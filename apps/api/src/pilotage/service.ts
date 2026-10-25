@@ -185,11 +185,12 @@ export class Pilotage {
         const policy = (await this.g.policy(smsi, user)).definition;
         const terminal = policy.statuses.filter((s) => s.terminal).map((s) => s.id);
         const pending = (
-          await c.query<{ id: string; name: string }>(
-            `SELECT a.id,a.name FROM grc_objects a WHERE a.smsi_id=$1 AND a.kind='action' AND NOT(a.data->>'status'=ANY($3)) AND EXISTS(SELECT 1 FROM grc_links l WHERE l.smsi_id=$1 AND ((l.source_ref='object:'||a.id AND l.target_ref=$2) OR (l.target_ref='object:'||a.id AND l.source_ref=$2))) ORDER BY a.name,a.id LIMIT 50`,
+          await c.query<{ id: string; name: string; registre_id: string | null }>(
+            `SELECT a.id,a.name,a.registre_id FROM grc_objects a WHERE a.smsi_id=$1 AND a.kind='action' AND NOT(a.data->>'status'=ANY($3)) AND EXISTS(SELECT 1 FROM grc_links l WHERE l.smsi_id=$1 AND ((l.source_ref='object:'||a.id AND l.target_ref=$2) OR (l.target_ref='object:'||a.id AND l.source_ref=$2))) ORDER BY a.name,a.id LIMIT 50`,
             [smsi, ref, terminal],
           )
         ).rows;
+        const masques = new Set(await this.g.registres.inaccessibles(user, smsi, c));
         const tasks = Array.isArray(data.tasks) ? data.tasks : [];
         const tasksOpen = tasks.filter((t) => isObject(t) && t.done !== true).length;
         if (pending.length || tasksOpen) {
@@ -203,7 +204,12 @@ export class Pilotage {
           closeTerms = {
             openLinks: {
               reason: input.openLinksReason,
-              actions: pending.map((a) => ({ ref: 'object:' + a.id, name: a.name })),
+              // Une action d'un registre restreint illisible pour l'auteur compte, mais son nom n'est pas recopié dans la décision.
+              actions: pending.map((a) =>
+                a.registre_id && masques.has(a.registre_id)
+                  ? { ref: 'object:' + a.id, name: '' }
+                  : { ref: 'object:' + a.id, name: a.name },
+              ),
               tasks: tasksOpen,
             },
           };

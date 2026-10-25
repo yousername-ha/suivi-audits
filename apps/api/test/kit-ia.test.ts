@@ -120,6 +120,13 @@ describe('kit IA', () => {
     expect((await apercu(inconnu)).statusCode).toBe(422);
   });
 
+  it('refuse le caractère nul, que PostgreSQL ne saurait pas stocker dans les annexes', async () => {
+    const k = { ...kit(), actions: [{ id: 'A1', source_ref: 'S1', suggestion_fr: 'Action\u0000piégée' }] };
+    const r = await apercu(k);
+    expect(r.statusCode).toBe(422);
+    expect(r.body).toMatch(/nul/);
+  });
+
   it('réserve l’aperçu et l’import aux personnes qui modifient la conformité', async () => {
     expect((await lecteur.post('/api/library/ia-kit/preview', { kit: kit() })).statusCode).toBe(403);
     const p = await apercu(kit());
@@ -164,9 +171,11 @@ describe('kit IA', () => {
     expect(p3.correspondances.nouvelles).toBe(4);
     expect(p3.correspondances.nonResolues.map((x: { indication: string }) => x.indication)).toEqual(['A.9.9']);
     expect(p3.dejaImporte).toBe(false);
+    expect(p3.referentiel.identique).toBe(true);
     const r3 = await importer(k, p3.referentiel.previewId);
     expect(r3.statusCode, r3.body).toBe(200);
     expect(r3.json().mappings).toBe(4);
+    expect(r3.json().version).toBe(1); // le rejeu après import tardif ne republie pas le référentiel
 
     const fw = r3.json().frameworkId as string;
     const liste = (await admin.get(`/api/library/mappings?frameworkId=${fw}`)).json() as {

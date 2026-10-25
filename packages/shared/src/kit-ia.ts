@@ -171,6 +171,10 @@ export function kitVersReferentiel(b: KitIaBundle): LibraryFrameworkDefinition {
 }
 
 /* --------------------------------------------------------------------------- résolution des indications */
+/** Plafond de jetons lus dans une indication : une indication du kit désigne quelques articles, pas une plage entière. */
+export const MAX_JETONS = 10;
+/** Plafond de correspondances rattachées par import (chacune écrit sa propre trace d'audit, immuable). */
+export const MAX_CORRESPONDANCES_RESOLUES = 2000;
 export interface ExigenceCible {
   id: string;
   domain: string;
@@ -182,15 +186,17 @@ export function jetonsIso(indication: string): { annexe: string[]; clause: strin
   const clause = [
     ...indication.matchAll(/§\s*(\d{1,2}(?:\.\d{1,2}){0,2})(?:\s*[-–]\s*(\d{1,2}(?:\.\d{1,2}){0,2}))?/g),
   ].flatMap((m) => (m[2] ? [m[1]!, m[2]] : [m[1]!]));
-  return { annexe: [...new Set(annexe)], clause: [...new Set(clause)] };
+  return { annexe: [...new Set(annexe)].slice(0, MAX_JETONS), clause: [...new Set(clause)].slice(0, MAX_JETONS) };
 }
 /** Numéros « EXI nn » d'une indication HDS : « EXI 02-04 si hébergeur » → 02, 03, 04. */
 export function jetonsHds(indication: string): string[] {
-  const m = /EXI\s*(\d{2})(?:\s*[-–]\s*(\d{2}))?/i.exec(indication);
-  if (!m) return [];
-  const a = Number(m[1]);
-  const b = m[2] ? Number(m[2]) : a;
-  return Array.from({ length: Math.max(0, Math.min(b, a + 40) - a + 1) }, (_, i) => String(a + i).padStart(2, '0'));
+  const jetons: string[] = [];
+  for (const m of indication.matchAll(/EXI\s*(\d{2})(?:\s*[-–]\s*(\d{2}))?/gi)) {
+    const a = Number(m[1]);
+    const b = m[2] ? Number(m[2]) : a;
+    for (let n = a; n <= Math.min(b, a + MAX_JETONS - 1); n++) jetons.push(String(n).padStart(2, '0'));
+  }
+  return [...new Set(jetons)].slice(0, MAX_JETONS);
 }
 const numero = (titre: string) => /^\s*(?:A[.-]\s*)?(\d{1,2}(?:\.\d{1,2}){0,2})\b/.exec(titre)?.[1] ?? null;
 /** Exigences d'un référentiel ISO de la bibliothèque correspondant à un jeton : l'Annexe A se reconnaît à son domaine,
@@ -204,4 +210,28 @@ export function cibleIso(exigences: readonly ExigenceCible[], type: 'annexe' | '
 export function cibleHds(exigences: readonly ExigenceCible[], jeton: string): string[] {
   const motif = new RegExp(`\\bEXI[\\s_-]*0*${Number(jeton)}\\b`, 'i');
   return exigences.filter((e) => motif.test(e.title) || motif.test(e.id)).map((e) => e.id);
+}
+
+/** Index des exigences par numéro, calculé une fois par référentiel cible (la résolution ne reparcourt plus la liste). */
+export function indexIso(exigences: readonly ExigenceCible[]): {
+  annexe: Map<string, string[]>;
+  clause: Map<string, string[]>;
+} {
+  const index = { annexe: new Map<string, string[]>(), clause: new Map<string, string[]>() };
+  for (const e of exigences) {
+    const type = /^annexe_a/.test(e.domain) ? 'annexe' : /^clause_/.test(e.domain) ? 'clause' : null;
+    const n = numero(e.title) ?? numero(e.id);
+    if (type && n) index[type].set(n, [...(index[type].get(n) ?? []), e.id]);
+  }
+  return index;
+}
+export function indexHds(exigences: readonly ExigenceCible[]): Map<string, string[]> {
+  const index = new Map<string, string[]>();
+  for (const e of exigences) {
+    const trouves = new Set<string>();
+    for (const m of `${e.title} ${e.id}`.matchAll(/\bEXI[\s_-]*0*(\d{1,3})\b/gi))
+      trouves.add(String(Number(m[1])).padStart(2, '0'));
+    for (const n of trouves) index.set(n, [...(index.get(n) ?? []), e.id]);
+  }
+  return index;
 }

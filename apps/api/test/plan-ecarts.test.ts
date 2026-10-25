@@ -90,12 +90,23 @@ describe('plan d’action des écarts', () => {
     const autre = await admin.get(`/api/grc/${smsi}/plan-ecarts?frameworkId=00000000-0000-4000-8000-000000000000`);
     expect(autre.statusCode).toBe(404);
     expect((await creer(['INCONNUE'])).statusCode).toBe(422);
+    expect((await creer(['R1'], { dueAt: '2026-99-99' })).statusCode).toBe(422);
   });
 
   it('crée une action liée par exigence en écart, ignore les autres, et rejouer n’ajoute rien', async () => {
     const r = await creer(['R1', 'R2', 'R3', 'R5'], { dueAt: '2027-03-31' });
     expect(r.statusCode, r.body).toBe(201);
     expect(r.json()).toMatchObject({ creees: 2, dejaCouvertes: 0, horsEcart: 2 });
+    // L'action créée reste modifiable (échéance au format attendu) : sa relecture et sa modification passent.
+    const premiere = r.json().actions[0] as { id: string };
+    const fiche = (await admin.get(`/api/grc/${smsi}/objects/${premiere.id}`)).json();
+    expect(fiche.data.dueAt).toBe('2027-03-31T09:00:00Z');
+    const maj = await admin.put(
+      `/api/grc/${smsi}/objects/${premiere.id}`,
+      { kind: 'action', name: fiche.name, data: fiche.data },
+      { 'if-match': `"${fiche.version}"` },
+    );
+    expect(maj.statusCode, maj.body).toBe(200);
     const noms = r.json().actions.map((x: { name: string }) => x.name);
     expect(noms).toEqual(['Mettre en œuvre : Exigence R1', 'Mettre en œuvre : Exigence R2']);
 

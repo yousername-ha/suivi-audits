@@ -63,6 +63,7 @@ export function assembler(fichiers: readonly { nom: string; texte: string }[]): 
       continue;
     }
     if (Array.isArray(json)) {
+      if (!json.length) continue; // liste vide : rien à importer pour cette rubrique, ce n'est pas une erreur
       const rubrique = reconnaitre(json);
       if (rubrique) poser(rubrique, json, nom);
       else problemes.push(`${nom} : liste non reconnue (aucune rubrique du kit ne correspond à ses champs).`);

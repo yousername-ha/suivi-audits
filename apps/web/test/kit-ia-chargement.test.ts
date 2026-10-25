@@ -12,6 +12,8 @@ describe('chargement du kit IA', () => {
     expect(reconnaitre([{ title: 't', url: 'https://example.invalid' }])).toBe('sources');
     expect(reconnaitre([{ autre: 1 }])).toBeNull();
     expect(reconnaitre([])).toBeNull();
+    // Une liste vide est ignorée sans bloquer les autres fichiers.
+    expect(assembler([f('vide.json', []), f('c.json', [controle])]).problemes).toEqual([]);
   });
 
   it('assemble plusieurs fichiers en un kit', () => {

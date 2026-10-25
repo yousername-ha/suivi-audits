@@ -4,9 +4,10 @@
 import { createHash } from 'node:crypto';
 import {
   KIT_IA_IDENTIFIANT,
+  MAX_CORRESPONDANCES_RESOLUES,
   KitIaBundle,
-  cibleHds,
-  cibleIso,
+  indexHds,
+  indexIso,
   jetonsHds,
   jetonsIso,
   kitVersReferentiel,
@@ -18,7 +19,21 @@ import type { Grc } from './core.js';
 const URL_ISO = 'https://www.iso.org/fr/standard/27001';
 const URL_HDS =
   'https://esante.gouv.fr/services/hebergeurs-de-donnees-de-sante/les-referentiels-de-la-procedure-de-certification';
-const empreinte = (v: unknown) => createHash('sha256').update(JSON.stringify(v)).digest('hex');
+/** Forme canonique : clés triées à tous les niveaux (jsonb réordonne les clés, la comparaison ne doit pas en dépendre). */
+const canon = (v: unknown): unknown =>
+  Array.isArray(v)
+    ? v.map(canon)
+    : v && typeof v === 'object'
+      ? Object.fromEntries(
+          Object.entries(v as Record<string, unknown>)
+            .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+            .map(([k, x]) => [k, canon(x)]),
+        )
+      : v;
+const empreinte = (v: unknown) =>
+  createHash('sha256')
+    .update(JSON.stringify(canon(v)))
+    .digest('hex');
 
 interface Correspondance {
   controle: string;
@@ -39,10 +54,15 @@ export class GrcKitIa {
 
   /** Référentiel de la bibliothèque dont l'identifiant commence par le préfixe donné (version courante). */
   private async cible(prefixe: string, user: SessionUser) {
-    const f = (await this.g.library.list(user)).find((x) => x.identifier.startsWith(prefixe));
+    // Identifiant exact ou suivi d'un tiret ; une copie de l'organisation ne passe qu'après la version source.
+    const candidats = (await this.g.library.list(user)).filter(
+      (x) => x.identifier === prefixe || x.identifier.startsWith(prefixe + '-'),
+    );
+    const f = candidats.find((x) => x.locked) ?? candidats[0];
     if (!f) return null;
     const v = await this.g.library.version(f.id, f.version, user);
-    return { frameworkId: f.id, version: f.version, exigences: v.definition.requirements };
+    const exigences = v.definition.requirements;
+    return { frameworkId: f.id, version: f.version, indexIso: indexIso(exigences), indexHds: indexHds(exigences) };
   }
 
   private async resoudre(b: KitIaBundle, user: SessionUser) {
@@ -69,16 +89,21 @@ export class GrcKitIa {
           ? (() => {
               const j = jetonsIso(m.reference_hint_raw);
               return [
-                ...j.annexe.flatMap((t) => cibleIso(cible.exigences, 'annexe', t)),
-                ...j.clause.flatMap((t) => cibleIso(cible.exigences, 'clause', t)),
+                ...j.annexe.flatMap((t) => cible.indexIso.annexe.get(t) ?? []),
+                ...j.clause.flatMap((t) => cible.indexIso.clause.get(t) ?? []),
               ];
             })()
-          : jetonsHds(m.reference_hint_raw).flatMap((t) => cibleHds(cible.exigences, t));
+          : jetonsHds(m.reference_hint_raw).flatMap((t) => cible.indexHds.get(t) ?? []);
       if (!ids.length) {
         nonResolues.push({ ...base, raison: 'Aucune exigence reconnue pour cette indication.' });
         continue;
       }
       for (const id of new Set(ids)) {
+        if (vus.size >= MAX_CORRESPONDANCES_RESOLUES)
+          throw new HttpError(
+            422,
+            `Trop de correspondances rattachables (plus de ${MAX_CORRESPONDANCES_RESOLUES}) : resserrez les indications du kit.`,
+          );
         const cle = `${m.internal_control_id}>${cible.frameworkId}:${id}`;
         if (vus.has(cle)) continue;
         vus.add(cle);
@@ -95,6 +120,9 @@ export class GrcKitIa {
   }
 
   private analyser(input: unknown) {
+    // Le caractère nul passe la validation du schéma mais PostgreSQL le refuse dans un jsonb : refus net, avant toute écriture.
+    if (JSON.stringify(input ?? null).includes('\\u0000'))
+      throw new HttpError(422, 'Kit invalide : caractère nul interdit.');
     const parsed = KitIaBundle.safeParse(input);
     if (!parsed.success)
       throw new HttpError(
@@ -109,6 +137,10 @@ export class GrcKitIa {
   }
 
   async apercu(input: unknown, user: SessionUser) {
+    return (await this.calculer(input, user)).apercu;
+  }
+
+  private async calculer(input: unknown, user: SessionUser) {
     await this.g.permission(user, 'conformite', 'modifier');
     const b = this.analyser(input);
     const definition = kitVersReferentiel(b);
@@ -119,14 +151,23 @@ export class GrcKitIa {
     const sha = empreinte(b);
     const dejaTrace = !!(await this.g.db.one('SELECT 1 FROM lib_kit_ia WHERE sha256=$1', [sha]));
     const { resolues, nonResolues, themes } = await this.resoudre(b, user);
+    // Version du référentiel IA que l'import écrirait : la courante si le contenu est identique, la suivante sinon.
+    const versionSource = identique ? existant!.version : (existant?.version ?? 0) + 1;
     const existantes = existant
-      ? (await this.g.libraryMappings.list(user, { frameworkId: existant.id })).filter((m) => m.status !== 'withdrawn')
+      ? (
+          await this.g.db.q<{ s: string; sv: number; tf: string; tv: number; tr: string }>(
+            `SELECT source_requirement_id AS s,source_version AS sv,target_framework_id AS tf,target_version AS tv,target_requirement_id AS tr
+               FROM lib_mappings WHERE source_framework_id=$1 AND status<>'withdrawn'`,
+            [existant.id],
+          )
+        ).rows
       : [];
-    const dejaPresentes = new Set(
-      existantes.map((m) => `${m.source.requirementId}>${m.target.frameworkId}:${m.target.requirementId}`),
-    );
+    const dejaPresentes = new Set(existantes.map((m) => `${m.s}@${m.sv}>${m.tf}@${m.tv}:${m.tr}`));
     const nouvelles = resolues.filter(
-      (m) => !dejaPresentes.has(`${m.controle}>${m.cible.frameworkId}:${m.cible.requirementId}`),
+      (m) =>
+        !dejaPresentes.has(
+          `${m.controle}@${versionSource}>${m.cible.frameworkId}@${m.cible.version}:${m.cible.requirementId}`,
+        ),
     ).length;
     // Déjà importé : même contenu et rien de nouveau à rattacher (un référentiel cible importé depuis permet de compléter).
     const dejaImporte = dejaTrace && nouvelles === 0;
@@ -149,7 +190,7 @@ export class GrcKitIa {
           ]
         : []),
     ];
-    return {
+    const apercu = {
       version: b.version,
       sha256: sha,
       dejaImporte,
@@ -186,11 +227,11 @@ export class GrcKitIa {
       },
       avertissements,
     };
+    return { b, apercu, resolues };
   }
 
   async importer(input: unknown, previewId: string, reason: string, user: SessionUser, ip: string) {
-    const b = this.analyser(input);
-    const apercu = await this.apercu(input, user);
+    const { b, apercu, resolues } = await this.calculer(input, user);
     if (apercu.referentiel.previewId !== previewId)
       throw new HttpError(422, 'Relancez l’aperçu : le contenu a changé.');
     if (apercu.dejaImporte)
@@ -216,7 +257,6 @@ export class GrcKitIa {
       frameworkId = pub.id;
       version = pub.version;
     }
-    const { resolues } = await this.resoudre(b, user);
     let crees = 0;
     let ignorees = 0;
     for (const m of resolues) {

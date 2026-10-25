@@ -15,7 +15,8 @@
 
 ## Ce qui n'est pas fait
 
-- Le responsable des actions n'est pas choisi dans le lot (à préciser action par action) ; l'échéance est commune.
+- L'interface ne choisit pas le responsable des actions (à préciser action par action ; l'API accepte un responsable valide) ; l'échéance est commune (date créée à 9 h UTC, comme les autres imports).
+- L'aperçu compte aussi les actions déjà liées qui appartiennent à un registre restreint que l'appelant ne peut pas lire : le dédoublonnage doit rester global, au prix d'une fuite d'existence minime (un nombre, aucun nom).
 - Une action terminée mais dont l'exigence reste en écart ne reçoit pas de nouvelle action automatiquement : l'écart se constate en réévaluant l'exigence.
 - La qualification n'est pas un champ structuré du périmètre : elle est écrite dans son texte, lisible mais non filtrable.
 - Les points IA du questionnaire « Applications à intégrer » ne sont pas encore remplacés par le kit.
