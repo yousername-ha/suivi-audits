@@ -1754,3 +1754,573 @@ rect.audit-niv-faible {
 .carte-processus__bascule {
   align-self: flex-start;
 }
+
+/* ---------------------------------------------------------------- Parcours ISO 27001 / HDS (dossier 024, maquette v011)
+   Toile sombre fixe (fond Gondor décoratif et brume), branches colorées par jetons du thème. Les animations ne s'appliquent
+   que si `data-anime='oui'` (réglage « Animées », ou « Automatiques » sans mouvement réduit) et si l'onglet est visible ;
+   elles sont purement décoratives. Aucun style en ligne : la géométrie est dans le dessin SVG. */
+[data-branche='cadrer'] {
+  --teinte: var(--mantine-color-teal-3);
+  --teinte-texte: var(--mantine-color-teal-text);
+}
+[data-branche='maitriser'] {
+  --teinte: var(--mantine-color-yellow-3);
+  --teinte-texte: var(--mantine-color-yellow-text);
+}
+[data-branche='evaluer'] {
+  --teinte: var(--mantine-color-blue-3);
+  --teinte-texte: var(--mantine-color-blue-text);
+}
+[data-branche='hds'] {
+  --teinte: var(--mantine-color-violet-3);
+  --teinte-texte: var(--mantine-color-violet-text);
+}
+.parcours-arbre {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-xs);
+}
+.parcours-arbre__defilement {
+  overflow: auto;
+  border-radius: var(--mantine-radius-lg);
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+}
+.parcours-arbre__defilement:focus-visible {
+  outline: var(--suivi-trait-focus) solid var(--mantine-color-text);
+  outline-offset: calc(-1 * var(--suivi-trait-focus));
+}
+.parcours-arbre__toile {
+  position: relative;
+  min-width: var(--parcours-toile-min);
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(
+      ellipse at 32% 72%,
+      color-mix(in srgb, var(--mantine-color-teal-9) 55%, transparent),
+      transparent 40%
+    ),
+    radial-gradient(
+      ellipse at 46% 32%,
+      color-mix(in srgb, var(--mantine-color-teal-9) 40%, transparent),
+      transparent 52%
+    ),
+    linear-gradient(125deg, var(--mantine-color-dark-8), var(--mantine-color-dark-9));
+}
+.parcours-arbre__gondor {
+  position: absolute;
+  left: 8.75%;
+  top: 1.6%;
+  width: 61.3%;
+  height: 93.6%;
+  object-fit: fill;
+  opacity: 0.26;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 6%, black 88%, transparent 100%);
+}
+.parcours-arbre__toile::before,
+.parcours-arbre__toile::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 95%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transform-origin: 50% 100%;
+  filter: blur(1em);
+  background:
+    radial-gradient(
+      ellipse 16% 32% at 25% 100%,
+      color-mix(in srgb, var(--mantine-color-teal-4) 40%, transparent),
+      transparent 75%
+    ),
+    radial-gradient(
+      ellipse 20% 40% at 55% 110%,
+      color-mix(in srgb, var(--mantine-color-teal-3) 36%, transparent),
+      transparent 78%
+    ),
+    radial-gradient(
+      ellipse 17% 34% at 83% 100%,
+      color-mix(in srgb, var(--mantine-color-teal-5) 32%, transparent),
+      transparent 75%
+    );
+}
+.parcours-arbre__toile::after {
+  background:
+    radial-gradient(
+      ellipse 22% 38% at 38% 100%,
+      color-mix(in srgb, var(--mantine-color-teal-2) 34%, transparent),
+      transparent 78%
+    ),
+    radial-gradient(
+      ellipse 17% 42% at 70% 110%,
+      color-mix(in srgb, var(--mantine-color-teal-4) 34%, transparent),
+      transparent 80%
+    );
+}
+.parcours-arbre[data-anime='oui'][data-visible='true'] .parcours-arbre__toile::before {
+  animation: parcours-brume 15s linear infinite;
+}
+.parcours-arbre[data-anime='oui'][data-visible='true'] .parcours-arbre__toile::after {
+  animation: parcours-brume 19s linear infinite;
+  animation-delay: -9s;
+}
+@keyframes parcours-brume {
+  0% {
+    transform: translateY(22%) scaleX(0.85);
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.5;
+  }
+  70% {
+    opacity: 0.32;
+  }
+  100% {
+    transform: translateY(-75%) scaleX(1.2);
+    opacity: 0;
+  }
+}
+.parcours-arbre__dessin {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.parcours-fond {
+  fill: transparent;
+}
+.parcours-aura {
+  fill: none;
+  stroke: var(--teinte);
+  stroke-width: 10;
+  opacity: 0.2;
+}
+.parcours-branche {
+  fill: none;
+  stroke: var(--teinte);
+  stroke-width: 3.8;
+  stroke-linecap: round;
+}
+.parcours-flux {
+  fill: none;
+  stroke: var(--teinte);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-dasharray: 4 96;
+  stroke-dashoffset: 100;
+  opacity: 0;
+  pointer-events: none;
+}
+.parcours-arbre[data-anime='oui'][data-visible='true'] .parcours-flux {
+  animation: parcours-flux 8s linear infinite;
+  filter: drop-shadow(0 0 0.25em var(--teinte));
+}
+@keyframes parcours-flux {
+  from {
+    stroke-dashoffset: 100;
+    opacity: 0.45;
+  }
+  20%,
+  80% {
+    opacity: 0.95;
+  }
+  to {
+    stroke-dashoffset: 0;
+    opacity: 0.45;
+  }
+}
+.parcours-feuille {
+  fill: var(--teinte);
+  opacity: 0.62;
+}
+.parcours-titre-branche {
+  fill: var(--teinte);
+  font-size: var(--parcours-titre);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.parcours-titre-branche__ligne {
+  fill: var(--mantine-color-gray-3);
+  font-size: var(--parcours-texte-enfant);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.parcours-orbe {
+  fill: color-mix(in srgb, var(--teinte) 22%, var(--mantine-color-dark-8));
+  stroke: var(--teinte);
+  stroke-width: 3;
+}
+.parcours-orbe--enfant {
+  stroke-width: 2.4;
+}
+.parcours-racine__cercle {
+  fill: color-mix(in srgb, var(--mantine-color-teal-9) 70%, var(--mantine-color-dark-9));
+  stroke: var(--mantine-color-teal-1);
+  stroke-width: 3;
+}
+.parcours-racine {
+  --teinte: var(--mantine-color-teal-3);
+}
+.parcours-noeud__bouton,
+.parcours-racine,
+.parcours-bascule,
+.parcours-enfant__bouton {
+  cursor: pointer;
+  outline: none;
+}
+.parcours-noeud[data-choisi] .parcours-orbe {
+  fill: color-mix(in srgb, var(--teinte) 40%, var(--mantine-color-dark-8));
+  stroke-width: 4;
+}
+.parcours-noeud[data-choisi] .parcours-anneau {
+  opacity: 0.5;
+}
+.parcours-noeud__bouton:focus-visible .parcours-orbe,
+.parcours-enfant__bouton:focus-visible .parcours-orbe,
+.parcours-racine:focus-visible .parcours-racine__cercle {
+  stroke: var(--mantine-color-white);
+  stroke-width: 5;
+}
+.parcours-bascule:focus-visible .parcours-bascule__disque {
+  stroke: var(--mantine-color-white);
+  stroke-width: 3;
+}
+.parcours-zone,
+.parcours-bascule__zone {
+  fill: transparent;
+}
+.parcours-pictogramme {
+  fill: none;
+  stroke: var(--teinte);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+.parcours-racine .parcours-pictogramme {
+  stroke: var(--mantine-color-teal-0);
+  stroke-width: 1.2;
+}
+.parcours-libelle {
+  fill: var(--teinte);
+  font-size: var(--parcours-texte);
+  font-weight: 500;
+  stroke: var(--mantine-color-dark-9);
+  stroke-width: 3;
+  stroke-linejoin: round;
+  paint-order: stroke;
+  pointer-events: none;
+}
+.parcours-racine .parcours-libelle {
+  fill: var(--mantine-color-teal-0);
+}
+.parcours-libelle--enfant {
+  font-size: var(--parcours-texte-enfant);
+}
+.parcours-anneau {
+  fill: none;
+  stroke: var(--teinte);
+  stroke-width: 1;
+  opacity: 0.14;
+  pointer-events: none;
+}
+.parcours-arbre[data-anime='oui'][data-visible='true'] .parcours-anneau {
+  animation: parcours-respire 6s ease-in-out infinite alternate;
+}
+@keyframes parcours-respire {
+  from {
+    opacity: 0.1;
+  }
+  to {
+    opacity: 0.7;
+  }
+}
+.parcours-presence {
+  fill: var(--mantine-color-gray-4);
+  font-size: var(--parcours-texte-enfant);
+  stroke: var(--mantine-color-dark-9);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  paint-order: stroke;
+  pointer-events: none;
+}
+.parcours-presence[data-presence='presents'],
+.parcours-presence-legende[data-presence='presents'] {
+  fill: var(--mantine-color-teal-3);
+  color: var(--mantine-color-teal-text);
+}
+.parcours-presence[data-presence='indisponible'],
+.parcours-presence-legende[data-presence='indisponible'] {
+  fill: var(--mantine-color-orange-4);
+  color: var(--mantine-color-orange-text);
+}
+.parcours-noeud[data-estompe='oui'] {
+  opacity: 0.55;
+}
+.parcours-halo {
+  fill: none;
+  stroke: var(--teinte);
+  stroke-width: 2;
+  transform-box: fill-box;
+  transform-origin: center;
+  pointer-events: none;
+}
+.parcours-arbre[data-anime='oui'] .parcours-halo {
+  animation: parcours-halo var(--parcours-halo-duree) ease-out both;
+}
+.parcours-arbre[data-anime='non'] .parcours-halo {
+  display: none;
+}
+@keyframes parcours-halo {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.95;
+  }
+  35% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.85);
+    opacity: 0;
+  }
+}
+.parcours-bascule__disque {
+  fill: var(--mantine-color-dark-8);
+  stroke: var(--teinte);
+  stroke-width: 1.4;
+}
+.parcours-bascule__trait {
+  fill: none;
+  stroke: var(--teinte);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+.parcours-bascule:hover .parcours-bascule__disque,
+.parcours-bascule[aria-expanded='true'] .parcours-bascule__disque {
+  fill: color-mix(in srgb, var(--teinte) 30%, var(--mantine-color-dark-8));
+}
+.parcours-enfant__lien {
+  fill: none;
+  stroke: var(--teinte);
+  stroke-width: 2;
+  stroke-dasharray: 1;
+  opacity: 0.8;
+  pointer-events: none;
+}
+.parcours-enfant__apparition {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.parcours-arbre[data-anime='oui'] .parcours-enfant__lien {
+  animation: parcours-trace 0.6s ease both;
+}
+.parcours-arbre[data-anime='oui'] .parcours-enfant__apparition {
+  animation: parcours-pousse 0.5s ease 0.35s both;
+}
+@keyframes parcours-trace {
+  from {
+    stroke-dashoffset: 1;
+    opacity: 0.2;
+  }
+  to {
+    stroke-dashoffset: 0;
+    opacity: 0.8;
+  }
+}
+@keyframes parcours-pousse {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.parcours-carte {
+  position: absolute;
+  right: 2%;
+  top: 2%;
+  z-index: 3;
+  width: var(--parcours-carte-l);
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-xs);
+  padding: var(--mantine-spacing-sm);
+  background: var(--mantine-color-body);
+  color: var(--mantine-color-text);
+  border: var(--suivi-trait-l) solid var(--teinte);
+  border-radius: var(--mantine-radius-md);
+  box-shadow: var(--suivi-ombre-haute);
+}
+.parcours-carte__fermer {
+  position: absolute;
+  right: var(--mantine-spacing-xs);
+  top: var(--mantine-spacing-xs);
+  display: grid;
+  place-items: center;
+  width: 2.25em;
+  height: 2.25em;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  color: inherit;
+}
+.parcours-carte__fermer svg {
+  width: 1em;
+  height: 1em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+.parcours-carte__fermer:hover {
+  background: var(--mantine-color-default-hover);
+}
+.parcours-carte__fermer:focus-visible,
+.parcours-carte__ligne:focus-visible,
+.parcours-sousaction__titre:focus-visible,
+.parcours-puce:focus-visible,
+.parcours-toutes:focus-visible {
+  outline: var(--suivi-trait-focus) solid var(--mantine-color-text);
+  outline-offset: var(--suivi-trait-focus);
+}
+.parcours-carte__entete {
+  padding-inline-end: 2.5em;
+}
+.parcours-carte__icone {
+  flex: none;
+  width: 2em;
+  height: 2em;
+  fill: none;
+  stroke: var(--teinte-texte);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.parcours-carte__ligne,
+.parcours-sousaction__titre {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  width: 100%;
+  padding: var(--mantine-spacing-xs);
+  text-align: start;
+  background: transparent;
+  color: inherit;
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  cursor: pointer;
+  font: inherit;
+}
+.parcours-carte__ligne:hover,
+.parcours-sousaction__titre:hover {
+  background: var(--mantine-color-default-hover);
+}
+.parcours-carte__ligne-texte,
+.parcours-sousaction__texte {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+.parcours-carte__ligne small,
+.parcours-sousaction__texte small {
+  color: var(--mantine-color-dimmed);
+}
+.parcours-carte__voir {
+  flex: none;
+  color: var(--teinte-texte);
+  font-size: var(--mantine-font-size-xs);
+}
+.parcours-sousaction {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-xs);
+}
+.parcours-sousaction__contenu {
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  border-inline-start: var(--suivi-trait-focus) solid var(--mantine-color-default-border);
+}
+.parcours-sousaction__presence {
+  flex: none;
+}
+.parcours-chevron {
+  flex: none;
+  font-weight: 700;
+}
+.parcours-travaux {
+  margin: 0;
+  padding-inline-start: 1.25em;
+}
+.parcours-arbre__pied {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+}
+.parcours-legende {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mantine-spacing-md);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--mantine-font-size-xs);
+}
+.parcours-autres {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  font-size: var(--mantine-font-size-xs);
+}
+.parcours-puce,
+.parcours-toutes {
+  padding: var(--mantine-spacing-3xs, 0.25em) var(--mantine-spacing-sm);
+  background: transparent;
+  color: var(--teinte-texte, inherit);
+  border: var(--suivi-trait-l) solid var(--teinte-texte, var(--mantine-color-default-border));
+  border-radius: var(--mantine-radius-xl);
+  cursor: pointer;
+  font: inherit;
+}
+.parcours-toutes {
+  margin-inline-start: auto;
+  color: var(--mantine-color-text);
+  border-color: var(--mantine-color-default-border);
+}
+.parcours-puce:hover,
+.parcours-toutes:hover {
+  background: var(--mantine-color-default-hover);
+}
+.parcours-sr-only {
+  position: absolute;
+  width: var(--suivi-trait-l);
+  height: var(--suivi-trait-l);
+  margin: calc(-1 * var(--suivi-trait-l));
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.parcours-liste__branche {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-sm);
+}
+.parcours-liste__branche > h2 {
+  color: var(--teinte-texte);
+}
+.parcours-liste__etape {
+  border-inline-start: var(--suivi-trait-focus) solid var(--teinte-texte);
+}

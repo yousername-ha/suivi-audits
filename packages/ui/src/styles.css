@@ -62,6 +62,14 @@
   --carte-icone: 1.5rem;
   --carte-recherche: 17rem;
   --carte-vide-icone: 2.5rem;
+  /* Parcours ISO / HDS (024) : largeur minimale de la toile (l'arbre garde une échelle lisible, la zone défile), carte
+     compacte et tailles de texte dans le dessin. */
+  --parcours-toile-min: 62rem;
+  --parcours-carte-l: min(22rem, 92%);
+  --parcours-texte: 0.9375rem;
+  --parcours-texte-enfant: 0.8125rem;
+  --parcours-titre: 1.0625rem;
+  --parcours-halo-duree: 950ms;
 }
 
 /* ---------------------------------------------------------------- Taille d'affichage et typographie fluide

@@ -19,6 +19,7 @@ import { PILOTAGE_LABELS } from '../pilotage-navigation';
 import { Overview } from '../grc/Overview';
 import { Tasks } from '../grc/Tasks';
 import { ObjectEditor } from '../grc/ObjectEditor';
+import { ParcoursIso } from '../parcours-iso/ParcoursIso';
 import { Publication } from '../grc/Publication';
 import { RiskEvaluation } from '../grc/Risks';
 import { RiskMap } from '../grc/RiskMap';
@@ -331,6 +332,7 @@ export function PilotagePage() {
               </>
             )}
             {section === 'processus-cartes' && smsi === SOCLE && <CartesProcessus smsi={smsi} />}
+            {section === 'parcours-iso' && <ParcoursIso key={smsi} smsi={smsi} />}
             {section === 'synthese' && (
               <>
                 {smsi && <BandeauRapprochements smsi={smsi} />}

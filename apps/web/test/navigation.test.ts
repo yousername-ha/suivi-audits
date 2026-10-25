@@ -12,6 +12,7 @@ const rubriques = FAMILLES.flatMap((f) => f.destinations.flatMap((d) => d.rubriq
 const INVENTAIRE = [
   'pilotage|synthese|synthese|/pilotage/synthese|pilotage|lire',
   'pilotage|synthese|parcours|/pilotage/parcours|pilotage|lire',
+  'pilotage|synthese|parcours-iso|/pilotage/parcours-iso|pilotage|lire',
   'pilotage|synthese|perimetres|/pilotage/perimetres|pilotage|lire',
   'pilotage|objectifs|processus|/pilotage/processus|pilotage|lire',
   'pilotage|objectifs|objectifs|/pilotage/objectifs|pilotage|lire',

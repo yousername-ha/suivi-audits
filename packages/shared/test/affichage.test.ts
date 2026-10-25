@@ -58,6 +58,7 @@ describe('préférences', () => {
       theme: 'organisation',
       colonnes: {},
       cartographie: {},
+      parcoursIso: {},
     });
     expect(Preferences.safeParse({ taille: '200' }).success).toBe(false);
     expect(Preferences.safeParse({ cartographie: { viewport: { context: { x: 0, y: 0, k: 9 } } } }).success).toBe(
