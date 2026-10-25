@@ -293,3 +293,70 @@ test('Parcours ISO / HDS : animations réglables, mouvement réduit respecté, m
     await ctx.close();
   }
 });
+
+test('Parcours ISO / HDS : fiche associée à une sous-action, conservée, retirée avec motif, applicabilité HDS lue', async ({
+  browser,
+}) => {
+  test.setTimeout(120_000);
+  const { ctx, page, problems } = await ouvrir(browser);
+  const suffixe = Date.now().toString(36);
+  const titre = `Action associée ${suffixe}`;
+  try {
+    await page.goto('/pilotage/parcours-iso');
+    await etatInitial(page);
+    const perimetre = await post(page, '/api/grc/smsis', {
+      name: `Périmètre associations ${suffixe}`,
+      nature: 'SMSI',
+      scope: 'Fixture de recette',
+      timezone: 'Europe/Paris',
+      parentId: null,
+      entityKind: 'perimetre',
+      inheritFrameworks: false,
+    });
+    await post(page, `/api/grc/${perimetre.id}/objects`, action(titre));
+    await page.reload();
+    await page.getByRole('combobox', { name: 'Périmètre affiché', exact: true }).click();
+    await page.getByRole('option', { name: perimetre.name, exact: true }).click();
+    await vue(page, 'Liste');
+    await page.locator('button[data-sousaction="objectives-2"]').click();
+    const panneau = page.locator('#liste-objectives-2');
+    const groupe = panneau.getByRole('group', { name: /Fiches et preuves associées/ });
+    await expect(groupe.getByText('Aucune fiche ni preuve associée.')).toBeVisible();
+
+    // Association : la fiche est proposée par son intitulé, puis conservée après rechargement.
+    await groupe.getByRole('combobox', { name: 'Associer une fiche ou une preuve existante' }).click();
+    await page.getByRole('option', { name: new RegExp(titre) }).click();
+    await groupe.getByRole('textbox', { name: /Note/ }).fill('Prépare cette sous-action');
+    await groupe.getByRole('button', { name: 'Associer', exact: true }).click();
+    await expect(groupe.getByText(titre)).toBeVisible();
+    await expect(groupe.getByText('Prépare cette sous-action')).toBeVisible();
+    // Conservée côté serveur (journal), indépendamment de l'écran.
+    const apres = await (await page.request.get(`/api/grc/${perimetre.id}/parcours/associations`)).json();
+    expect(apres.items).toHaveLength(1);
+    expect(apres.items[0]).toMatchObject({
+      sousAction: 'objectives-2',
+      name: titre,
+      note: 'Prépare cette sous-action',
+    });
+
+    // Retrait : un motif est exigé ; l'historique reste côté serveur, la fiche n'est pas touchée.
+    await groupe.getByRole('button', { name: new RegExp(`Retirer l’association de ${titre}`) }).click();
+    const confirmer = groupe.getByRole('button', { name: 'Confirmer le retrait' });
+    await expect(confirmer).toBeDisabled();
+    await groupe.getByRole('textbox', { name: /Motif du retrait/ }).fill('Associée par erreur');
+    await confirmer.click();
+    await expect(groupe.getByText('Aucune fiche ni preuve associée.')).toBeVisible();
+    const fiches = await (await page.request.get(`/api/grc/${perimetre.id}/objects?kind=action`)).json();
+    expect(fiches.items.map((o: { name: string }) => o.name)).toContain(titre);
+
+    // Applicabilité HDS : lue dans le périmètre, jamais déduite (aucun référentiel HDS n'y est rattaché).
+    await page.locator('button[data-sousaction="hds-scope-1"]').click();
+    await expect(
+      page.locator('#liste-hds-scope-1').getByText(/aucun référentiel HDS n’est rattaché et actif dans ce périmètre/),
+    ).toBeVisible();
+    expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
+    expect(problems).toEqual([]);
+  } finally {
+    await ctx.close();
+  }
+});

@@ -22,6 +22,7 @@ import { configGrcRoutes } from './routes/config-grc.js';
 import { historiqueRoutes } from './routes/historique.js';
 import { businessPolicyRoutes } from './routes/business-policy.js';
 import { grcRoutes } from './routes/grc.js';
+import { parcoursRoutes } from './routes/parcours.js';
 import { registresRoutes } from './routes/registres.js';
 import { pilotageRoutes } from './routes/pilotage.js';
 import { affichageRoutes } from './routes/affichage.js';
@@ -118,6 +119,7 @@ export function allRoutes(): RouteDef[] {
     ...historiqueRoutes,
     ...grcRoutes,
     ...registresRoutes,
+    ...parcoursRoutes,
     ...pilotageRoutes,
     ...affichageRoutes,
     ...cartoRoutes,

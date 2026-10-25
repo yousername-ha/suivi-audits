@@ -5,6 +5,7 @@ import { Link } from 'react-router';
 import { GRC_LABELS, type EtapeParcours, type SousActionParcours } from '@suivi/shared';
 import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
+import { ApplicabiliteHds, AssociationsSousAction } from './Associations';
 import { lienModule, resoudreDestination } from './destinations';
 import { LIBELLE_PRESENCE, presence, type TravauxDuType } from './travaux';
 
@@ -147,6 +148,8 @@ export function SousActionDetail({
             </Text>
           </div>
           <TravauxPresents smsi={smsi} sousAction={sousAction} travaux={travaux} />
+          <AssociationsSousAction smsi={smsi} sousAction={sousAction} />
+          {etape.branche === 'hds' && <ApplicabiliteHds smsi={smsi} />}
           {dest && (
             <Group>
               {can(dest.module, 'lire') ? (
