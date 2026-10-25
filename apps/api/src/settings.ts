@@ -16,6 +16,7 @@ const STORED_SECTIONS = [
   'import_export',
   'sauvegardes',
   'conservation',
+  'courriel',
   'securite',
 ] as const;
 type Stored = (typeof STORED_SECTIONS)[number];
@@ -42,6 +43,16 @@ function settingsDefaults(cfg: Config): { [K in Stored]: SettingsValues[K] } {
     import_export: { formatRevue: 'xlsx' },
     sauvegardes: { emplacement: '/srv/sauvegardes/suivi-audits', dernierTestRestauration: '', frequenceTestMois: 12 },
     conservation: { documentsCorbeilleJours: null, rappelsLusJours: null, elementsArchivesJours: null },
+    courriel: {
+      actif: false,
+      hote: '',
+      port: 587,
+      securite: 'starttls',
+      utilisateur: '',
+      expediteur: '',
+      contactTechnique: '',
+      autoriteCertification: '',
+    },
     securite: {
       passwordMinLength: Math.max(12, cfg.passwordMinLength),
       sessionIdleMinutes: Math.min(240, Math.max(5, cfg.session.idleMinutes)),

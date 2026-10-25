@@ -220,6 +220,15 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     ),
   },
   {
+    id: 'courriel',
+    cote: 'systeme',
+    titre: 'Courriel',
+    resume: 'Serveur SMTP/SMTPS, contact technique et message de test.',
+    icone: 'cloche',
+    teinte: 'bleu',
+    detail: (m) => <SectionLoader section="courriel" onDirty={m} />,
+  },
+  {
     id: 'mises-a-jour',
     cote: 'systeme',
     titre: 'Mises à jour et versions',

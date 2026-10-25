@@ -7,6 +7,6 @@ it('exécute le protocole hôte, les sauvegardes de sécurité, les interruption
   const r = await promisify(execFile)('python3', [path.join(REPO, 'scripts/tests/test_exploitation.py')], {
     timeout: 60000,
   });
-  expect(r.stderr).toContain('Ran 15 tests');
+  expect(r.stderr).toContain('Ran 18 tests');
   expect(r.stderr).toMatch(/\nOK\n/);
 }, 65000);

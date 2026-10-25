@@ -53,7 +53,7 @@ describe('cartes de l’Administration : droits', () => {
       'apparence',
       'notifications',
     ]);
-    expect(cartesVisibles(peut, 'systeme')).toEqual(['securite']);
+    expect(cartesVisibles(peut, 'systeme')).toEqual(['courriel', 'securite']);
   });
   it('les sections liées à un module exigent aussi ce module', () => {
     const base = avec(['parametres', 'lire']);
@@ -75,6 +75,7 @@ describe('cartes de l’Administration : droits', () => {
       import_export: 'import',
       sauvegardes: 'sauvegardes',
       conservation: 'conservation',
+      courriel: 'courriel',
       securite: 'securite',
     };
     for (const s of SETTINGS_SECTIONS) expect(ids.has(sections[s]!), s).toBe(true);
