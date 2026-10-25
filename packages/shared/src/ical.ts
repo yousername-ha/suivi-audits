@@ -27,11 +27,20 @@ export interface IcalLecture {
 
 export const CalendrierBody = z
   .object({
-    ics: z.string().min(1).max(ICAL_MAX_OCTETS),
+    ics: z.string().min(1).max(ICAL_MAX_OCTETS).optional(),
+    /** Calendrier de plateforme dont les jours (d'une année, ou tous) sont repris dans la série : une copie, à la date de l'import. */
+    calendrier: z.uuid().optional(),
+    annee: z.number().int().min(1583).max(2200).optional(),
     /** Aperçu seul : décrit ce qui serait ajouté, sans rien écrire. */
     apercu: z.boolean().default(true),
   })
-  .strict();
+  .strict()
+  .refine((b) => (b.ics === undefined) !== (b.calendrier === undefined), {
+    message: 'Indiquez un fichier iCalendar ou un calendrier de plateforme, pas les deux.',
+  })
+  .refine((b) => b.annee === undefined || b.calendrier !== undefined, {
+    message: 'L’année ne s’applique qu’à un calendrier de plateforme.',
+  });
 export type CalendrierBody = z.infer<typeof CalendrierBody>;
 export interface ApercuCalendrier extends IcalLecture {
   /** Jours du fichier absents de la série, ajoutés par l'import. */

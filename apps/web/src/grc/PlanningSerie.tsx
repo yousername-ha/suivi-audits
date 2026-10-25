@@ -9,15 +9,23 @@ import {
   Group,
   MultiSelect,
   NumberInput,
+  Select,
   Stack,
   TagsInput,
   Text,
   Textarea,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { ICAL_MAX_OCTETS, validDate, type ApercuCalendrier, type Recurrence } from '@suivi/shared';
+import {
+  ICAL_MAX_OCTETS,
+  validDate,
+  type ApercuCalendrier,
+  type CalendrierPlateformeDto,
+  type Recurrence,
+} from '@suivi/shared';
+import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { api } from '../api';
+import { api, get } from '../api';
 import { ErrorAlert } from '../components/common';
 
 const JOURS_SEMAINE = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'].map((label, i) => ({
@@ -62,15 +70,30 @@ export function PlanningSerie({
     }
     setTexte(await f.text());
   };
-  const envoyer = async (appliquer: boolean) => {
+  const [origine, setOrigine] = useState<'fichier' | 'plateforme' | null>(null);
+  const [calId, setCalId] = useState<string | null>(null);
+  const [anneeSel, setAnneeSel] = useState<string | null>(null);
+  const calendriers = useQuery({
+    queryKey: ['calendriers-plateforme'],
+    queryFn: () => get<CalendrierPlateformeDto[]>('/api/calendriers-plateforme'),
+    enabled: !readonly && !!serieId,
+  });
+  const avecJours = (calendriers.data ?? []).filter((c) => c.years.length > 0);
+  const calChoisi = avecJours.find((c) => c.id === calId) ?? null;
+  const envoyer = async (appliquer: boolean, source: 'fichier' | 'plateforme' = 'fichier') => {
     setEnvoi(true);
     setErreur(null);
     try {
+      const corps =
+        source === 'plateforme'
+          ? { calendrier: calId, annee: anneeSel ? Number(anneeSel) : undefined, apercu: !appliquer }
+          : { ics: texte, apercu: !appliquer };
       const r = await api<ApercuCalendrier>('POST', `/api/grc/${smsi}/series/${serieId}/calendrier`, {
-        body: { ics: texte, apercu: !appliquer },
+        body: corps,
         ifMatch: appliquer ? version! : undefined,
       });
       setApercu(r);
+      setOrigine(source);
       if (appliquer && r.applique) {
         notifications.show({ color: 'teal', message: `${r.nouveaux.length} jour(s) exclu(s) ajouté(s).` });
         onImporte();
@@ -138,6 +161,74 @@ export function PlanningSerie({
         disabled={readonly}
         onChange={(v) => onChange({ ...recurrence, excludedDays: [...new Set(v.filter(validDate))].sort() })}
       />
+      {enregistree && !readonly && (
+        <Stack gap="xs" role="group" aria-label="Calendrier de la plateforme">
+          <Text fw={600}>Reprendre un calendrier de la plateforme</Text>
+          {avecJours.length === 0 ? (
+            <Text size="sm" c="dimmed">
+              Aucun calendrier de plateforme ne porte encore de jours. L’administrateur les tient dans Administration,
+              Plateforme, Calendriers.
+            </Text>
+          ) : (
+            <>
+              <Text size="sm" c="dimmed">
+                Les jours sont copiés dans cette série à la date de l’opération : une mise à jour ultérieure du
+                calendrier de la plateforme n’est pas répercutée d’elle-même.
+              </Text>
+              <Group grow align="flex-start">
+                <Select
+                  label="Calendrier de la plateforme"
+                  data={avecJours.map((c) => ({ value: c.id, label: c.name }))}
+                  value={calId}
+                  onChange={(v) => {
+                    setCalId(v);
+                    setAnneeSel(null);
+                    setApercu(null);
+                  }}
+                />
+                <Select
+                  label="Année"
+                  placeholder="Toutes les années"
+                  clearable
+                  disabled={!calChoisi}
+                  data={(calChoisi?.years ?? []).map((y) => ({
+                    value: String(y.year),
+                    label: `${y.year} (${y.days} jours)`,
+                  }))}
+                  value={anneeSel}
+                  onChange={(v) => {
+                    setAnneeSel(v);
+                    setApercu(null);
+                  }}
+                />
+              </Group>
+              <Group>
+                <Button
+                  variant="default"
+                  loading={envoi}
+                  disabled={!calId}
+                  onClick={() => void envoyer(false, 'plateforme')}
+                >
+                  Prévisualiser ces jours
+                </Button>
+                <Button
+                  loading={envoi}
+                  disabled={
+                    origine !== 'plateforme' ||
+                    !apercu ||
+                    apercu.erreurs.length > 0 ||
+                    apercu.nouveaux.length === 0 ||
+                    !calId
+                  }
+                  onClick={() => void envoyer(true, 'plateforme')}
+                >
+                  Ajouter ces jours à la série
+                </Button>
+              </Group>
+            </>
+          )}
+        </Stack>
+      )}
       <Text fw={600}>Importer un calendrier iCalendar</Text>
       {!enregistree ? (
         <Alert>Enregistrez d’abord la série : l’import ajoute ses jours à la série enregistrée.</Alert>
@@ -169,7 +260,7 @@ export function PlanningSerie({
               </Button>
               <Button
                 loading={envoi}
-                disabled={!apercu || apercu.erreurs.length > 0 || apercu.nouveaux.length === 0}
+                disabled={origine !== 'fichier' || !apercu || apercu.erreurs.length > 0 || apercu.nouveaux.length === 0}
                 onClick={() => void envoyer(true)}
               >
                 Importer ces jours

@@ -46,3 +46,5 @@ export * from './tenacy.js';
 export * from './types-processus.js';
 export * from './processus-cartes.js';
 export * from './parcours-iso.js';
+export * from './jours-feries.js';
+export * from './calendriers-plateforme.js';

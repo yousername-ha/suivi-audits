@@ -27,7 +27,8 @@ Légende des états : **Corrigé** (critère de l'audit satisfait et testé) · 
 | 012-04 | Amélioré | Aperçu en lecture seule du certificat avant installation (format, validité, chaîne, hôte, clé, empreinte, noms) | Modes autosigné et ACME (décision 4) | `operations.test.ts`, e2e `y-exploitation.spec.ts` |
 | 012-02, 012-06 | Corrigé | Le catalogue `environment` (usages de l'IA) et ses évaluations sont supprimés ([ADR 0046](../adr/0046-retrait-du-catalogue-environnement.md), migration 037) : la Configuration GRC est le seul catalogue d'échelles et de matrices | — | `migrations.test.ts`, suite API complète |
 | 012-13 | Amélioré | Carte « Journaux techniques » : niveau réglable à chaud (avertissement, info ; debug toujours temporaire, 24 h au plus), niveau appliqué lu sur le serveur, erreurs toujours collectées, journal d'audit indépendant, dernières entrées filtrables, téléchargement NDJSON sous le droit d'exportation (tracé), secrets masqués | Rétention limitée aux 5 000 dernières entrées en mémoire (la sortie du conteneur reste la source complète) | `journaux-techniques.test.ts` (8), e2e `…-administration-cartes.spec.ts` |
-| 012-07, 012-09, 012-10, 012-11, 012-14 | Décision | — | Nettoyage automatique, contact technique, canaux de notification, SMTP/Teams, calendriers de plateforme | — |
+| 012-14 | Amélioré | Calendriers de plateforme : fériés français calculés, import iCal, mise à jour annuelle signalée, reprise par les séries ([ADR 0047](../adr/0047-calendriers-de-plateforme.md)) | Zones scolaires (écartées par décision) ; référence vivante des séries | `calendriers-plateforme.test.ts`, `jours-feries.test.ts` |
+| 012-07, 012-09, 012-10, 012-11 | Décision | — | Nettoyage automatique, contact technique, canaux de notification, SMTP/Teams | — |
 
 ### 010 Périmètres graphiques et 022 Droits
 
@@ -66,7 +67,8 @@ Légende des états : **Corrigé** (critère de l'audit satisfait et testé) · 
 | 018-06 | Corrigé | Sept préréglages (dont « Tous les deux mois ») ou personnalisé, aperçu des cinq prochaines échéances, choix « Personnalisée » effectif | — (« bimensuel » retenu comme « tous les deux mois », décision 7) | e2e `…-periodicite.spec.ts` |
 | 018-10 | Amélioré | Validation (OK, KO, NA) visible dans les listes de tâches ; une occurrence validée n'est plus « en retard » | Gabarit maître-détail (décision de l'audit § 5) | `etat-action.test.ts` |
 | 018-11 | Amélioré | « Occurrence suivante » cherche dans la liste courante (filtres compris), toutes séries confondues ; aucune validation automatique | Test e2e de la case d'enchaînement | `validations-occurrences.test.ts` |
-| 018-08, 018-09 | Décision | — | Calendriers de plateforme (zones A/B/C, fériés) et couche d'affichage | — |
+| 018-08 | Amélioré | Fériés français et iCal en plateforme, avec provenance (journal) et import répété sans perte | Vacances scolaires A/B/C/Corse (écartées) | `calendriers-plateforme.test.ts` |
+| 018-09 | Décision | — | Couche d'affichage des fériés derrière les tâches (Timeline, Calendrier) | — |
 
 ### 002 Risques et 003 EBIOS RM
 
