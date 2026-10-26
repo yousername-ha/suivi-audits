@@ -269,7 +269,7 @@ describe('cartes de périmètres', () => {
     }
   });
 
-  it('la couverture suit l’écran Couverture : référentiel rattaché et hérité, états communs, jamais agrégée', async () => {
+  it('la couverture suit l’écran Couverture : référentiel rattaché et hérité, états communs, agrégée avec les sous-périmètres, provenance et détail par référentiel', async () => {
     const pub = await admin.post('/api/library/frameworks/preview', { id: null, definition });
     const publie = await admin.post(
       '/api/library/frameworks/publish',
@@ -307,20 +307,63 @@ describe('cartes de périmètres', () => {
       { 'if-match': '"0"' },
     );
     expect(evaluation.statusCode, evaluation.body).toBe(201);
-    const attendue = {
+    const chiffres = (testees: number, aDeterminer: number) => ({
       referentiels: 1,
       exigences: 3,
       applicables: 3,
-      testees: 1,
-      aDeterminer: 2,
+      testees,
+      aDeterminer,
       obligatoiresNonConformes: 0,
-    };
-    expect((await carte(admin, P)).compteurs.couverture).toEqual(attendue);
+      perimetres: 1,
+      nonLus: 0,
+    });
+    const ligne = (
+      testees: number,
+      aDeterminer: number,
+      provenance: 'rattache' | 'herite',
+      origine: string | null,
+    ) => ({
+      referentielId: fw,
+      version: 1,
+      perimetres: 1,
+      exigences: 3,
+      applicables: 3,
+      testees,
+      aDeterminer,
+      obligatoiresNonConformes: 0,
+      provenance,
+      origine,
+    });
+    const propre = (await carte(admin, P)).compteurs.couverture!;
+    expect(propre).toMatchObject(chiffres(1, 2));
+    // Provenance : rattaché sur le périmètre lui-même.
+    expect(propre.parReferentiel).toHaveLength(1);
+    expect(propre.parReferentiel[0]).toMatchObject(ligne(1, 2, 'rattache', null));
     // L'enfant hérite du référentiel du parent : sa carte n'affiche plus « indisponible », mais l'évaluation est propre à
-    // chaque périmètre : celle du parent ne lui est pas attribuée.
-    expect((await carte(admin, Q)).compteurs.couverture).toEqual({ ...attendue, testees: 0, aDeterminer: 3 });
-    // Le total d'un parent ne somme pas des couvertures.
-    expect((await carte(admin, P)).total.couverture).toBeNull();
+    // chaque périmètre : celle du parent ne lui est pas attribuée. Sa provenance nomme le parent (lisible).
+    const enfant = (await carte(admin, Q)).compteurs.couverture!;
+    expect(enfant).toMatchObject(chiffres(0, 3));
+    expect(enfant.parReferentiel[0]).toMatchObject(ligne(0, 3, 'herite', 'Périmètre couvert'));
+    // Le total du parent additionne explicitement la couverture de chaque périmètre de l'ensemble (une exigence compte une fois
+    // par périmètre où elle est évaluée), avec le détail par référentiel.
+    const total = (await carte(admin, P)).total.couverture!;
+    expect(total).toMatchObject({
+      referentiels: 1,
+      exigences: 6,
+      applicables: 6,
+      testees: 1,
+      aDeterminer: 5,
+      obligatoiresNonConformes: 0,
+      perimetres: 2,
+      nonLus: 0,
+    });
+    expect(total.parReferentiel).toHaveLength(1);
+    expect(total.parReferentiel[0]).toMatchObject({ referentielId: fw, perimetres: 2, exigences: 6, testees: 1 });
+    expect(total.parReferentiel[0]).not.toHaveProperty('provenance');
+    // Un enfant sans sous-périmètre : son total est sa propre carte.
+    expect((await carte(admin, Q)).total.couverture).toMatchObject(chiffres(0, 3));
+    // Le total général (tous périmètres) n'agrège pas la couverture.
+    expect((await synthese(admin)).total.couverture).toBeNull();
   });
 
   it('sans droit de lecture, le total est indisponible comme les cartes', async () => {

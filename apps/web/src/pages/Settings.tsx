@@ -302,6 +302,22 @@ function CourrielForm({ p }: { p: P }) {
           type="email"
           description="Reçoit les alertes d’exploitation et le message de test ; distinct des rappels métier."
         />
+        <Num
+          p={p}
+          k="relanceEssais"
+          label="Essais par notification"
+          min={1}
+          max={10}
+          description="Premier envoi compris. 1 : aucune relance. Une notification dont l’envoi échoue de façon passagère est renvoyée automatiquement."
+        />
+        <Num
+          p={p}
+          k="relanceDelaiMinutes"
+          label="Délai avant la première relance (minutes)"
+          min={1}
+          max={1440}
+          description="Doublé à chaque nouvel échec, sans dépasser 24 heures."
+        />
       </div>
       <Textarea
         label="Autorité de certification du serveur SMTP (facultatif)"

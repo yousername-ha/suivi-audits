@@ -27,6 +27,7 @@ interface EtatEnvois {
   courriel: CanalCourrielDto;
   envois: {
     enAttente: number;
+    relances: number;
     envoyees: number;
     echecs: number;
     derniereErreur: string | null;
@@ -70,6 +71,11 @@ export function NotificationsPanel() {
           <Badge variant="light" color="gray">
             {e.enAttente} en attente
           </Badge>
+          {e.relances > 0 && (
+            <Badge variant="light" color="yellow">
+              dont {e.relances} à relancer
+            </Badge>
+          )}
           <Badge variant="light" color={e.echecs ? 'red' : 'gray'}>
             {e.echecs} échec{e.echecs > 1 ? 's' : ''}
           </Badge>

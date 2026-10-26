@@ -489,6 +489,129 @@ describe('notifications métier', () => {
       );
       expect(n).toBeTruthy();
     });
+    describe('relance automatique (ADR 0059)', () => {
+      const echec = { ok: false, steps: [], error: 'Connexion refusée.' };
+      const reglages = async (essais: number, delai: number) =>
+        ({
+          ...(await t.svc.settings.read('courriel')).values,
+          relanceEssais: essais,
+          relanceDelaiMinutes: delai,
+        }) as never;
+      const ligne = (id: string) =>
+        t.svc.db.one<{ status: string; attempts: number; minutes: number; to_address: string; error: string | null }>(
+          `SELECT status, attempts, to_address, result->>'error' AS error,
+                  (extract(epoch FROM next_attempt_at - now())/60)::float8 AS minutes FROM courriel_jobs WHERE id=$1`,
+          [id],
+        );
+      const nouvelleDemande = async (nom: string) => {
+        await t.svc.db.q(
+          "UPDATE courriel_jobs SET status='echec', finished_at=now() WHERE kind='notification' AND status IN ('en_attente','en_cours')",
+        );
+        await creerAction(nom, ids.C!);
+        await t.svc.grc.tasks.tick(new Date());
+      };
+      const maintenant = (id: string) =>
+        t.svc.db.q('UPDATE courriel_jobs SET next_attempt_at = now() WHERE id=$1', [id]);
+
+      it('un échec passager remet la notification en file avec un délai doublé à chaque essai, jusqu’au nombre d’essais réglé', async () => {
+        await nouvelleDemande('relance');
+        const cfg = await reglages(3, 10);
+        const un = (await t.svc.courriel.reclamer(cfg)) as Record<string, string>;
+        await t.svc.courriel.terminer(un.id!, echec, cfg);
+        let l = (await ligne(un.id!))!;
+        expect(l).toMatchObject({ status: 'en_attente', attempts: 1, error: 'Connexion refusée.' });
+        expect(l.minutes).toBeGreaterThan(9);
+        expect(l.minutes).toBeLessThanOrEqual(10);
+        // Rien à réclamer avant l'échéance.
+        expect(await t.svc.courriel.reclamer(cfg)).toBeNull();
+        expect(
+          ((await admin.get('/api/admin/notifications/etat')).json() as { envois: { relances: number } }).envois
+            .relances,
+        ).toBe(1);
+
+        await maintenant(un.id!);
+        const deux = (await t.svc.courriel.reclamer(cfg)) as Record<string, string>;
+        expect(deux.id).toBe(un.id);
+        await t.svc.courriel.terminer(deux.id!, echec, cfg);
+        l = (await ligne(un.id!))!;
+        expect(l).toMatchObject({ status: 'en_attente', attempts: 2 });
+        expect(l.minutes).toBeGreaterThan(19);
+        expect(l.minutes).toBeLessThanOrEqual(20);
+
+        await maintenant(un.id!);
+        const trois = (await t.svc.courriel.reclamer(cfg)) as Record<string, string>;
+        await t.svc.courriel.terminer(trois.id!, echec, cfg);
+        // Plus d'essai : échec définitif, adresse effacée.
+        expect(await ligne(un.id!)).toMatchObject({ status: 'echec', attempts: 3, to_address: '' });
+      });
+
+      it('un succès à la relance clôt la demande ; avec un seul essai réglé, aucune relance', async () => {
+        await nouvelleDemande('succès');
+        const cfg = await reglages(3, 5);
+        const a = (await t.svc.courriel.reclamer(cfg)) as Record<string, string>;
+        await t.svc.courriel.terminer(a.id!, echec, cfg);
+        await maintenant(a.id!);
+        const b = (await t.svc.courriel.reclamer(cfg)) as Record<string, string>;
+        await t.svc.courriel.terminer(b.id!, { ok: true, steps: [], error: null }, cfg);
+        expect(await ligne(a.id!)).toMatchObject({ status: 'reussie', attempts: 2 });
+
+        await nouvelleDemande('sans relance');
+        const sans = await reglages(1, 5);
+        const c = (await t.svc.courriel.reclamer(sans)) as Record<string, string>;
+        await t.svc.courriel.terminer(c.id!, echec, sans);
+        expect(await ligne(c.id!)).toMatchObject({ status: 'echec', attempts: 1 });
+      });
+
+      it('un refus définitif du destinataire n’est pas relancé', async () => {
+        await nouvelleDemande('refus');
+        const cfg = await reglages(5, 5);
+        const a = (await t.svc.courriel.reclamer(cfg)) as Record<string, string>;
+        await t.svc.courriel.terminer(
+          a.id!,
+          { ...echec, error: 'Le serveur refuse le destinataire.', permanent: true },
+          cfg,
+        );
+        expect(await ligne(a.id!)).toMatchObject({ status: 'echec', attempts: 1 });
+      });
+
+      it('un exécutant interrompu en cours d’envoi : nouvel essai programmé tant qu’il en reste, sinon échec', async () => {
+        await nouvelleDemande('interrompu');
+        const cfg = await reglages(2, 10);
+        const a = (await t.svc.courriel.reclamer(cfg)) as Record<string, string>;
+        await t.svc.db.q("UPDATE courriel_jobs SET started_at = now() - interval '10 minutes' WHERE id=$1", [a.id]);
+        expect(await t.svc.courriel.reclamer(cfg)).toBeNull();
+        expect(await ligne(a.id!)).toMatchObject({
+          status: 'en_attente',
+          attempts: 1,
+          error: 'Exécutant interrompu : nouvel essai programmé.',
+        });
+        await maintenant(a.id!);
+        const b = (await t.svc.courriel.reclamer(cfg)) as Record<string, string>;
+        expect(b.id).toBe(a.id);
+        await t.svc.db.q("UPDATE courriel_jobs SET started_at = now() - interval '10 minutes' WHERE id=$1", [a.id]);
+        expect(await t.svc.courriel.reclamer(cfg)).toBeNull();
+        expect(await ligne(a.id!)).toMatchObject({ status: 'echec', attempts: 2 });
+      });
+
+      it('le message de test n’est jamais relancé', async () => {
+        await t.svc.db.q(
+          "UPDATE courriel_jobs SET status='echec', finished_at=now() WHERE status IN ('en_attente','en_cours')",
+        );
+        const cfg = await reglages(5, 5);
+        await admin.put(
+          '/api/settings/courriel',
+          { ...(await t.svc.settings.read('courriel')).values, contactTechnique: 'technique@exemple.test' },
+          { 'if-match': (await admin.get('/api/settings/courriel')).headers.etag as string },
+        );
+        await t.svc.backups.heartbeat(true);
+        t.svc.limits.courrielTest.reset();
+        expect((await admin.post('/api/settings/courriel/test')).statusCode).toBe(202);
+        const test = (await t.svc.courriel.reclamer(cfg)) as Record<string, string>;
+        expect(test.kind).toBe('test');
+        await t.svc.courriel.terminer(test.id!, echec, cfg);
+        expect(await ligne(test.id!)).toMatchObject({ status: 'echec', attempts: 1 });
+      });
+    });
     it('l’état des envois est lisible par l’administration, sans adresse', async () => {
       const r = await admin.get('/api/admin/notifications/etat');
       expect(r.statusCode).toBe(200);

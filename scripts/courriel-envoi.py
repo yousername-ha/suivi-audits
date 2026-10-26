@@ -4,7 +4,7 @@
 Lancé par l'exécutant d'exploitation du serveur (scripts/exploitation-worker.py) sous un compte sans privilège, jamais par
 l'API : le conteneur de l'API reste sans accès réseau sortant. Entrée : un objet JSON sur l'entrée standard (hôte, port,
 chiffrement, compte, mot de passe, expéditeur, destinataire, autorité de certification privée facultative). Sortie : un objet
-JSON {ok, steps, error} sur la sortie standard ; il ne contient jamais le mot de passe. Pour une notification (`kind` =
+JSON {ok, steps, error[, permanent]} sur la sortie standard ; il ne contient jamais le mot de passe. Pour une notification (`kind` =
 "notification"), l'objet et le corps en texte brut sont fournis par l'API (ils ne contiennent aucune donnée métier) et la trace
 n'écrit pas l'adresse du destinataire.
 
@@ -48,6 +48,13 @@ def explication(erreur):
     if isinstance(erreur, smtplib.SMTPException):
         return "Erreur SMTP : %s" % type(erreur).__name__
     return "Échec de l'envoi (%s)." % type(erreur).__name__
+
+
+def definitif(erreur):
+    """Échec qu'une relance ne peut pas corriger : le serveur refuse le destinataire de façon définitive (code 5xx pour tous)."""
+    return isinstance(erreur, smtplib.SMTPRecipientsRefused) and bool(erreur.recipients) and all(
+        isinstance(r, tuple) and 500 <= r[0] < 600 for r in erreur.recipients.values()
+    )
 
 
 def authentifier(serveur, utilisateur, mot_de_passe):
@@ -118,7 +125,7 @@ def envoyer(p):
     except Exception as erreur:  # noqa: BLE001 - tout échec est expliqué, jamais propagé avec ses détails
         message = str(erreur) if isinstance(erreur, smtplib.SMTPNotSupportedError) else explication(erreur)
         etape("Échec", False, message)
-        return {"ok": False, "steps": etapes, "error": message}
+        return {"ok": False, "steps": etapes, "error": message, "permanent": definitif(erreur)}
     finally:
         if serveur is not None:
             try:

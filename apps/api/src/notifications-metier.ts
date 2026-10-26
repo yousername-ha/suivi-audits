@@ -341,6 +341,10 @@ export class NotificationsMetier {
         WHERE kind='notification' AND created_at > now() - interval '7 days' GROUP BY status`,
     );
     const n = Object.fromEntries(r.rows.map((x) => [x.status, x.n])) as Record<string, number>;
+    const relances = await this.db.one<{ n: number }>(
+      `SELECT count(*)::int AS n FROM courriel_jobs
+        WHERE kind='notification' AND status='en_attente' AND attempts > 0`,
+    );
     const derniere = await this.db.one<{ error: string | null; at: Date }>(
       `SELECT result->>'error' AS error, finished_at AS at FROM courriel_jobs
         WHERE kind='notification' AND status='echec' ORDER BY finished_at DESC NULLS LAST LIMIT 1`,
@@ -348,6 +352,7 @@ export class NotificationsMetier {
     return {
       enAttente: (n.en_attente ?? 0) + (n.en_cours ?? 0),
       envoyees: n.reussie ?? 0,
+      relances: relances?.n ?? 0,
       echecs: n.echec ?? 0,
       derniereErreur: derniere?.error ?? null,
       derniereErreurLe: derniere?.at ? derniere.at.toISOString() : null,

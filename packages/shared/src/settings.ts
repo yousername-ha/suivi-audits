@@ -114,6 +114,10 @@ export const CourrielSettings = z.object({
   utilisateur: txt(255),
   expediteur: adresse,
   contactTechnique: adresse,
+  /** Relance automatique des notifications dont l'envoi échoue de façon passagère (ADR 0059) : nombre total d'essais, premier
+      envoi compris (1 = aucune relance), puis délai avant le deuxième essai, doublé à chaque échec (plafonné à 24 h). */
+  relanceEssais: z.number().int().min(1).max(10),
+  relanceDelaiMinutes: z.number().int().min(1).max(1440),
   /** Certificat PEM de l'autorité qui signe celui du serveur SMTP (relais interne) ; vide : autorités du système. */
   autoriteCertification: z
     .string()

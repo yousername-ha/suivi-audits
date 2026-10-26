@@ -51,6 +51,8 @@ function settingsDefaults(cfg: Config): { [K in Stored]: SettingsValues[K] } {
       utilisateur: '',
       expediteur: '',
       contactTechnique: '',
+      relanceEssais: 5,
+      relanceDelaiMinutes: 10,
       autoriteCertification: '',
     },
     securite: {

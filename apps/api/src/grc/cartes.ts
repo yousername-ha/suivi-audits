@@ -1,7 +1,13 @@
 /* Cartes de périmètres : compteurs de synthèse par périmètre accessible (voir `cartes-perimetres.ts` pour les règles de
    comptage). Chaque compteur exige la lecture de son module ; les éléments des registres restreints que la personne ne peut
    pas lire ne sont jamais comptés. */
-import type { CarteCompteurs, CartePerimetre, SyntheseCartes } from '@suivi/shared';
+import {
+  agregerCouvertures,
+  type CarteCompteurs,
+  type CartePerimetre,
+  type CouvertureReferentiel,
+  type SyntheseCartes,
+} from '@suivi/shared';
 import type { SessionUser } from '../auth.js';
 import type { Grc } from './core.js';
 
@@ -106,34 +112,68 @@ export async function cartesPerimetres(g: Grc, user: SessionUser): Promise<Synth
   const conformite = user.rights.can('conformite', 'lire');
   const maintenant = new Date().toISOString();
   const out: CartePerimetre[] = [];
+  const nomsAccessibles = new Map(perimetres.map((p) => [p.id, p.name]));
+  // Même calcul que l'écran « Couverture » : référentiels rattachés ou hérités du périmètre, états d'exigence communs. Chaque
+  // périmètre n'est lu qu'une fois ; null : périmètre non lisible pour la couverture (indisponible, jamais un zéro).
+  const memo = new Map<string, Promise<(CouvertureReferentiel & { origineId: string })[] | null>>();
+  const couvertureDe = (id: string) => {
+    let v = memo.get(id);
+    if (!v) {
+      v = g.rapprochements.coverage(id, user).then(
+        (r) =>
+          r.frameworks.map((f) => ({
+            referentielId: f.frameworkId,
+            identifiant: f.identifier,
+            nom: f.name,
+            version: f.version,
+            perimetres: 1,
+            exigences: f.requirements,
+            applicables: f.etats.applicables,
+            testees: f.etats.teste + f.etats.valide_metier,
+            aDeterminer: f.etats.aDeterminer,
+            obligatoiresNonConformes: f.etats.obligatoiresNonConformes,
+            origineId: f.origineId,
+          })),
+        () => null,
+      );
+      memo.set(id, v);
+    }
+    return v;
+  };
+  /** Provenance de chaque référentiel d'une carte : rattaché ici ou hérité ; le nom du parent n'est donné que s'il est lisible. */
+  const provenance = (fs: (CouvertureReferentiel & { origineId: string })[], id: string): CouvertureReferentiel[] =>
+    fs.map(({ origineId, ...f }) => ({
+      ...f,
+      provenance: origineId === id ? ('rattache' as const) : ('herite' as const),
+      origine: origineId === id ? null : (nomsAccessibles.get(origineId) ?? null),
+    }));
   for (const p of perimetres) {
     const compteurs: CarteCompteurs =
       ecarts || pilotage
         ? versCompteurs(await compter(g, [p.id], masques, maintenant), ecarts, pilotage)
         : versCompteurs(null, false, false);
     if (conformite) {
-      // Même calcul que l'écran « Couverture » : référentiels rattachés ou hérités du périmètre, états d'exigence communs.
-      const reels = await g.rapprochements.coverage(p.id, user).then(
-        (v) => v.frameworks,
-        () => [], // périmètre non lisible pour la couverture : indisponible, jamais un zéro
-      );
-      if (reels.length)
-        compteurs.couverture = {
-          referentiels: reels.length,
-          exigences: reels.reduce((t, f) => t + f.requirements, 0),
-          applicables: reels.reduce((t, f) => t + f.etats.applicables, 0),
-          testees: reels.reduce((t, f) => t + f.etats.teste + f.etats.valide_metier, 0),
-          aDeterminer: reels.reduce((t, f) => t + f.etats.aDeterminer, 0),
-          obligatoiresNonConformes: reels.reduce((t, f) => t + f.etats.obligatoiresNonConformes, 0),
-        };
+      const propre = await couvertureDe(p.id);
+      if (propre && propre.length) {
+        compteurs.couverture = agregerCouvertures([provenance(propre, p.id)]);
+      }
     }
     // Total de la carte : le périmètre et ses sous-périmètres, chaque élément une seule fois (jamais la somme des cartes
-    // enfants). Sans sous-périmètre, c'est le décompte de la carte ; la couverture ne s'additionne pas.
+    // enfants). Sans sous-périmètre, c'est le décompte de la carte.
     const ensemble = descendance(perimetres, p.id);
     const total: CarteCompteurs =
       ensemble.length === 1 || !(ecarts || pilotage)
         ? { ...compteurs, couverture: ensemble.length === 1 ? compteurs.couverture : null }
         : versCompteurs(await compter(g, ensemble, masques, maintenant), ecarts, pilotage);
+    // Couverture du total : somme explicite des couvertures de chaque périmètre de l'ensemble (une exigence compte une fois par
+    // périmètre où elle est évaluée), détail par référentiel ; les périmètres non lisibles sont signalés et exclus.
+    if (conformite && ensemble.length > 1) {
+      const lues = await Promise.all(ensemble.map((id) => couvertureDe(id)));
+      total.couverture = agregerCouvertures(
+        lues.filter((l) => l !== null),
+        lues.filter((l) => l === null).length,
+      );
+    }
     out.push({
       id: p.id,
       name: p.name,
@@ -146,7 +186,7 @@ export async function cartesPerimetres(g: Grc, user: SessionUser): Promise<Synth
     });
   }
   // Total général : chaque élément compté une seule fois sur l'ensemble des périmètres accessibles (jamais la somme des cartes, qui
-  // compterait deux fois un registre partagé). La couverture ne s'additionne pas : indisponible.
+  // compterait deux fois un registre partagé). La couverture n'est agrégée que par carte (avec ses sous-périmètres) : indisponible ici.
   const general =
     (ecarts || pilotage) && perimetres.length
       ? versCompteurs(
