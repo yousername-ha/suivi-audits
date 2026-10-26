@@ -2,7 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { hotp } from '../src/security/crypto.js';
 import { createTestApp, login, makeUser, type Agent, type TestApp, type TestUser } from './helpers.js';
 
@@ -319,5 +319,34 @@ describe('mise à jour intégrée : reçus', () => {
     const r = await login(t, reader);
     expect((await r.get('/api/admin/updates/receipts')).statusCode).toBe(403);
     expect((await r.get(`/api/admin/updates/receipts/${id}`)).statusCode).toBe(403);
+  });
+  it('sert le SBOM vérifié seulement si son empreinte correspond au reçu', async () => {
+    const id = randomUUID();
+    const contenu = JSON.stringify({ bomFormat: 'CycloneDX', specVersion: '1.6', components: [] });
+    const sha = createHash('sha256').update(contenu).digest('hex');
+    mkdirSync(path.join(dir, 'sbom', '3.1.0'), { recursive: true });
+    writeFileSync(path.join(dir, 'sbom', '3.1.0', 'api.cdx.json'), contenu);
+    recu(id, { sbom: { api: { fichier: 'api.cdx.json', sha256: sha } } });
+    const list = await a.get('/api/admin/updates/receipts');
+    expect(list.json().find((x: { id: string }) => x.id === id).sbom).toEqual(['api']);
+    const ok = await a.get(`/api/admin/updates/receipts/${id}/sbom/api`);
+    expect(ok.statusCode).toBe(200);
+    expect(ok.headers['content-type']).toContain('application/vnd.cyclonedx+json');
+    expect(ok.headers['content-disposition']).toContain('sbom-suivi-audits-api-3.1.0.cdx.json');
+    expect(ok.body).toBe(contenu);
+    expect(
+      (await t.svc.db.q("SELECT 1 FROM audit_log WHERE action='update.sbom.downloaded' AND target=$1", [id])).rowCount,
+    ).toBe(1);
+    expect((await a.get(`/api/admin/updates/receipts/${id}/sbom/web`)).statusCode).toBe(404);
+    expect((await a.get(`/api/admin/updates/receipts/${id}/sbom/autre`)).statusCode).toBe(422);
+    // Fichier altéré après l'installation : refusé.
+    writeFileSync(path.join(dir, 'sbom', '3.1.0', 'api.cdx.json'), contenu + ' ');
+    expect((await a.get(`/api/admin/updates/receipts/${id}/sbom/api`)).statusCode).toBe(409);
+    // Reçu qui désigne un autre fichier : refusé par le schéma (le reçu est ignoré).
+    const autre = randomUUID();
+    recu(autre, { sbom: { api: { fichier: '../../secrets/x', sha256: sha } } });
+    expect((await a.get(`/api/admin/updates/receipts/${autre}/sbom/api`)).statusCode).toBe(404);
+    const r = await login(t, reader);
+    expect((await r.get(`/api/admin/updates/receipts/${id}/sbom/api`)).statusCode).toBe(403);
   });
 });

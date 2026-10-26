@@ -1,4 +1,6 @@
 """Contrat de l'exécutant et reprise durable. Les commandes Docker sont simulées ici ; la CI teste la vraie pile."""
+import base64
+import hashlib
 import importlib.util
 import json
 import os
@@ -13,6 +15,28 @@ ROOT = Path(__file__).resolve().parents[2]
 spec = importlib.util.spec_from_file_location('updates', ROOT / 'scripts/update-worker.py')
 m = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(m)
+
+
+def attestation(digest_hex, predicate=None, predicate_type='https://cyclonedx.org/bom'):
+    statement={'_type':'https://in-toto.io/Statement/v1','predicateType':predicate_type,
+               'subject':[{'name':'ghcr.io/x','digest':{'sha256':digest_hex}}],
+               'predicate':predicate if predicate is not None else {'bomFormat':'CycloneDX','specVersion':'1.6','components':[{'name':'openssl','version':'3.5.4'}]}}
+    return json.dumps({'payloadType':'application/vnd.in-toto+json','payload':base64.b64encode(json.dumps(statement).encode()).decode(),'signatures':[{'sig':'x'}]})+'\n'
+
+
+def fake_run(revision='b'*40, attest=None, fetch_fail_origin=False, fetched=None):
+    """Simule git, docker et cosign pour signatures() ; « attest » remplace la sortie de verify-attestation."""
+    def run(args, **kwargs):
+        if args[:2]==['git','fetch']:
+            if fetched is not None: fetched.append(args[3])
+            if fetch_fail_origin and args[3]=='origin': raise m.Failure('ssh')
+            return ''
+        if args[0]=='git' and args[1]=='rev-parse': return revision
+        if args[0]=='docker' and args[1]=='inspect' and 'Labels' in args[3]: return 'b'*40
+        if args[0]=='docker' and args[1]=='inspect': return json.dumps([args[-1].split(':')[0]+'@sha256:'+'a'*64])
+        if args[:2]==['cosign','verify-attestation']: return attest if attest is not None else attestation('a'*64)
+        return ''
+    return run
 
 
 class Updates(unittest.TestCase):
@@ -133,21 +157,19 @@ class Updates(unittest.TestCase):
     def test_signature_pour_chaque_digest_et_identite_exacte(self):
         self.w.job={'id':self.id,'target':'3.1.0'}
         calls=[]
-        def run(args, **kwargs):
-            calls.append(args)
-            if args[0]=='git' and args[1]=='rev-parse': return 'b'*40
-            if args[0]=='docker' and args[1]=='inspect' and 'Labels' in args[3]: return 'b'*40
-            if args[0]=='docker' and args[1]=='inspect':
-                image=args[-1].split(':')[0]
-                return json.dumps([image+'@sha256:'+'a'*64])
-            return ''
-        with patch.object(self.w,'run',side_effect=run): self.w.signatures('3.1.0')
-        signed=[args for args in calls if args[0]=='cosign']
-        self.assertEqual(len(signed),3)
-        for args in signed:
+        run=fake_run()
+        def spy(args, **kwargs):
+            calls.append(args); return run(args, **kwargs)
+        with patch.object(self.w,'run',side_effect=spy): self.w.signatures('3.1.0')
+        identity='https://github.com/yousername-ha/suivi-audits/.github/workflows/release.yml@refs/tags/v3.1.0'
+        signed=[args for args in calls if args[:2]==['cosign','verify']]
+        attested=[args for args in calls if args[:2]==['cosign','verify-attestation']]
+        self.assertEqual((len(signed),len(attested)),(3,3))
+        for args in signed+attested:
             self.assertIn('@sha256:',args[2])
-            self.assertIn('https://github.com/yousername-ha/suivi-audits/.github/workflows/release.yml@refs/tags/v3.1.0',args)
+            self.assertIn(identity,args)
             self.assertNotIn('--insecure-ignore-tlog',args)
+        for args in attested: self.assertEqual(args[args.index('--type')+1],'cyclonedx')
         self.assertEqual(set(self.w.job['images']),{'api','web','updater'})
 
     def test_signature_invalide_avant_maintenance(self):
@@ -188,30 +210,49 @@ class Updates(unittest.TestCase):
         # ADR 0061 : /root/.ssh n'est plus monté ; l'origine SSH échoue, la lecture publique prend le relais.
         self.w.job={'id':self.id,'target':'3.1.0'}
         fetched=[]
-        def run(args, **kwargs):
-            if args[:2]==['git','fetch']:
-                fetched.append(args[3])
-                if args[3]=='origin': raise m.Failure('ssh')
-                return ''
-            if args[0]=='git' and args[1]=='rev-parse': return 'b'*40
-            if args[0]=='docker' and args[1]=='inspect' and 'Labels' in args[3]: return 'b'*40
-            if args[0]=='docker' and args[1]=='inspect': return json.dumps([args[-1].split(':')[0]+'@sha256:'+'a'*64])
-            return ''
-        with patch.object(self.w,'run',side_effect=run): self.w.signatures('3.1.0')
+        with patch.object(self.w,'run',side_effect=fake_run(fetch_fail_origin=True,fetched=fetched)): self.w.signatures('3.1.0')
         self.assertEqual(fetched,['origin','https://github.com/yousername-ha/suivi-audits.git'])
         self.assertEqual(self.w.job['revision'],'b'*40)
 
     def test_sources_publiques_differentes_des_images_signees_refusees(self):
         self.w.job={'id':self.id,'target':'3.1.0'}
-        def run(args, **kwargs):
-            if args[:2]==['git','fetch'] and args[3]=='origin': raise m.Failure('ssh')
-            if args[0]=='git' and args[1]=='rev-parse': return 'c'*40
-            if args[0]=='docker' and args[1]=='inspect' and 'Labels' in args[3]: return 'b'*40
-            if args[0]=='docker' and args[1]=='inspect': return json.dumps([args[-1].split(':')[0]+'@sha256:'+'a'*64])
-            return ''
-        with patch.object(self.w,'run',side_effect=run):
+        with patch.object(self.w,'run',side_effect=fake_run(revision='c'*40,fetch_fail_origin=True)):
             with self.assertRaises(m.Failure): self.w.signatures('3.1.0')
         self.assertNotIn('revision',self.w.job)
+
+    def test_sbom_verifie_conserve_et_empreinte_retenue(self):
+        self.w.job={'id':self.id,'target':'3.1.0'}
+        with patch.object(self.w,'run',side_effect=fake_run()): self.w.signatures('3.1.0')
+        for c in ('api','web','updater'):
+            ref=self.w.job['sbom'][c]
+            f=self.data/'etat/sbom/3.1.0'/ref['fichier']
+            self.assertEqual(ref['fichier'],f'{c}.cdx.json')
+            self.assertEqual(hashlib.sha256(f.read_bytes()).hexdigest(),ref['sha256'])
+            self.assertEqual(f.stat().st_mode & 0o777,0o644)
+            self.assertEqual(json.loads(f.read_text())['bomFormat'],'CycloneDX')
+
+    def test_attestation_absente_ou_invalide_refusee_avant_maintenance(self):
+        cas={
+            'absente':'',
+            'pas du json':'xx\n',
+            'autre type':attestation('a'*64,predicate_type='https://slsa.dev/provenance/v1'),
+            'autre image':attestation('f'*64),
+            'pas un SBOM':attestation('a'*64,predicate={'bomFormat':'SPDX'}),
+        }
+        for nom,sortie in cas.items():
+            with self.subTest(nom):
+                self.w.job={'id':self.id,'target':'3.1.0'}
+                with patch.object(self.w,'run',side_effect=fake_run(attest=sortie)):
+                    with self.assertRaises(m.Failure): self.w.signatures('3.1.0')
+                self.assertNotIn('revision',self.w.job)
+                self.assertFalse(self.w.state['maintenance'])
+        # Échec de cosign lui-même (signature d'attestation invalide) : refus aussi.
+        def fails(args, **kwargs):
+            if args[:2]==['cosign','verify-attestation']: raise m.Failure('attestation')
+            return fake_run()(args, **kwargs)
+        self.w.job={'id':self.id,'target':'3.1.0'}
+        with patch.object(self.w,'run',side_effect=fails):
+            with self.assertRaises(m.Failure): self.w.signatures('3.1.0')
 
     def test_frise_horodatee_des_etapes_de_l_installation(self):
         self.w.job={'id':self.id,'kind':'install','target':'3.1.0'}
@@ -238,7 +279,7 @@ class Updates(unittest.TestCase):
         m.atomic(self.w.private/'progress.json',{'jobId':self.id,'phase':'termine','backup':str(backup)})
         self.w.job={'id':self.id,'kind':'install','target':'3.1.0','installed':'3.0.0','previousEnv':'SECRET=confidentiel',
                     'images':{c:f'ghcr.io/yousername-ha/suivi-audits-{c}@sha256:'+'a'*64 for c in ('api','web','updater')},
-                    'revision':'b'*40,'before':{'ok':True,'documents':{'empreinte':'x'},'tables':{'users':3}},
+                    'revision':'b'*40,'sbom':{'api':{'fichier':'api.cdx.json','sha256':'e'*64},'autre':{}},'before':{'ok':True,'documents':{'empreinte':'x'},'tables':{'users':3}},
                     'after':{'ok':True,'documentsIdentiques':True}}
         self.w.publish(id=self.id,status='running',phase='preparing',etapes=[],startedAt='2026-10-26T10:00:00Z')
         with patch.object(self.w,'cli',return_value=''):
@@ -254,6 +295,7 @@ class Updates(unittest.TestCase):
         self.assertTrue(r['signature']['verifiee'])
         self.assertEqual(r['signature']['identite'],'https://github.com/yousername-ha/suivi-audits/.github/workflows/release.yml@refs/tags/v3.1.0')
         self.assertEqual(r['controles'],{'avant':True,'apres':True,'documentsIdentiques':True})
+        self.assertEqual(r['sbom'],{'api':{'fichier':'api.cdx.json','sha256':'e'*64}})
         self.assertEqual([e['phase'] for e in r['etapes']],['preparing','complete'])
         self.assertIsInstance(r['dureeSecondes'],int)
         self.assertEqual(self.w.state['finishedAt'],r['fin'])

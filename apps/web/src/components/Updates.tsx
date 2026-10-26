@@ -76,6 +76,7 @@ function UpdateReceipts() {
               <Table.Th>Résultat</Table.Th>
               <Table.Th>Durée</Table.Th>
               <Table.Th>Reçu</Table.Th>
+              <Table.Th>SBOM vérifiés</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
@@ -96,6 +97,25 @@ function UpdateReceipts() {
                   >
                     Télécharger
                   </Button>
+                </Table.Td>
+                <Table.Td>
+                  {r.sbom.length ? (
+                    <Group gap="xs" wrap="nowrap">
+                      {r.sbom.map((c) => (
+                        <Button
+                          key={c}
+                          size="compact-sm"
+                          variant="subtle"
+                          aria-label={`Télécharger le SBOM ${c} de la version ${r.vers}`}
+                          onClick={() => download(`/api/admin/updates/receipts/${r.id}/sbom/${c}`)}
+                        >
+                          {c}
+                        </Button>
+                      ))}
+                    </Group>
+                  ) : (
+                    '—'
+                  )}
                 </Table.Td>
               </Table.Tr>
             ))}

@@ -65,3 +65,4 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0059](0059-relance-automatique-des-courriels.md) | Relance automatique des courriels de notification : essais et délai réglables, délai doublé, refus définitif non relancé | Acceptée |
 | [0060](0060-couverture-agregee-des-cartes-de-perimetres.md) | Couverture agrégée des cartes de périmètres : somme par périmètre, détail par référentiel, provenance, jamais un taux | Acceptée |
 | [0061](0061-mise-a-jour-web-renforcee.md) | Mise à jour depuis l'interface renforcée : code TOTP à l'installation, fenêtre de maintenance, exécutant sans identifiants par défaut, avancement horodaté et reçu | Acceptée |
+| [0063](0063-chaine-de-publication-durcie.md) | Chaîne de publication durcie : actions par empreinte de commit, Trivy isolé sans secret, signature dans un job séparé, attestation SBOM exigée à l'installation | Acceptée |

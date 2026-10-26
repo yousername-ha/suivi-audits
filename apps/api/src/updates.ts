@@ -1,5 +1,5 @@
 /* L'API ne lance aucune commande : demandes auditées, exécutées uniquement par la CLI locale. */
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { z } from 'zod';
@@ -9,6 +9,7 @@ import {
   FENETRE_MAINTENANCE_DEFAUT,
   FenetreMaintenance,
   libelleFenetre,
+  SBOM_COMPOSANTS,
   UpdateReceipt,
   UpdateReceiptSummary,
   UpdateState,
@@ -222,12 +223,27 @@ export class Updates {
       .filter((r): r is UpdateReceipt => r !== null)
       .sort((a, b) => b.fin.localeCompare(a.fin))
       .slice(0, max)
-      .map((r) => UpdateReceiptSummary.parse(r));
+      .map((r) => UpdateReceiptSummary.parse({ ...r, sbom: SBOM_COMPOSANTS.filter((c) => r.sbom[c]) }));
   }
   receipt(id: string): UpdateReceipt {
     const r = this.readReceipt(id);
     if (!r) throw new HttpError(404, 'Reçu de mise à jour introuvable.');
     return r;
+  }
+  /** SBOM vérifié d'une installation : le fichier conservé doit avoir l'empreinte inscrite dans le reçu. */
+  sbom(id: string, composant: (typeof SBOM_COMPOSANTS)[number]): { vers: string; contenu: Buffer } {
+    const r = this.receipt(id);
+    const ref = r.sbom[composant];
+    if (!ref) throw new HttpError(404, 'Aucun SBOM vérifié pour ce composant.');
+    let contenu: Buffer;
+    try {
+      contenu = readFileSync(path.join(this.cfg.etatDir, 'sbom', r.vers, ref.fichier));
+    } catch {
+      throw new HttpError(404, 'SBOM introuvable sur le serveur.');
+    }
+    if (createHash('sha256').update(contenu).digest('hex') !== ref.sha256)
+      throw new HttpError(409, 'Le SBOM conservé ne correspond pas à l’empreinte du reçu.');
+    return { vers: r.vers, contenu };
   }
   private readReceipt(id: string): UpdateReceipt | null {
     if (!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(id)) return null;
