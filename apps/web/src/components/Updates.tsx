@@ -287,7 +287,7 @@ export function UpdatesPanel() {
                   disabled={busy || fenetreFermee}
                   inputMode="numeric"
                   autoComplete="one-time-code"
-                  maxLength={6}
+                  // Pas de maxLength : un code collé avec espace (« 123 456 ») serait tronqué avant le filtrage.
                   onChange={(e) => setCode(e.currentTarget.value.replace(/\D/g, '').slice(0, 6))}
                 />
                 <Group>
