@@ -15,27 +15,14 @@ import {
   type RapprochementDecision,
 } from '@suivi/shared';
 import type { SessionUser } from '../auth.js';
-import type { Client } from '../db/db.js';
+import { sql } from 'kysely';
+import { surConnexion, type Client } from '../db/db.js';
 import { HttpError } from '../http/errors.js';
 import type { NotificationEmise } from '../notifications-metier.js';
 import { loadGrants } from '../rights.js';
 import type { Grc } from './core.js';
 
 type Status = 'pending' | 'confirmed' | 'rejected' | 'withdrawn';
-interface Row {
-  id: string;
-  measure_ref: string;
-  source_ref: string;
-  target_ref: string;
-  mapping_id: string;
-  mapping_type: string;
-  coverage: number;
-  status: Status;
-  decided_by: string | null;
-  decided_at: string | null;
-  decision_note: string;
-  created_at: string;
-}
 interface Candidate {
   measure: string;
   source: string;
@@ -53,25 +40,29 @@ export function parseRequirementRef(ref: string) {
   return { frameworkId: fw, version: Number(version), requirementId: rest.join(':') };
 }
 const requirementRef = (fw: string, v: number, id: string) => `requirement:${fw}:${v}:${id}`;
+/** Compte actif : ni désactivé, ni expiré (fragment SQL fixe sur l'alias u). */
+const COMPTE_ACTIF = sql<boolean>`(NOT u.disabled AND (u.expires_at IS NULL OR u.expires_at > now()))`;
 
 export class GrcRapprochements {
   constructor(private readonly g: Grc) {}
 
   /** Comptes qui décident des rapprochements : écriture sur le périmètre et droit `pilotage:modifier`. */
   private async pilots(c: Client, smsi: string): Promise<string[]> {
-    const s = (await c.query<{ visibility: string }>('SELECT visibility FROM grc_smsis WHERE id=$1', [smsi])).rows[0];
+    const k = surConnexion(c);
+    const s = await k.selectFrom('grc_smsis').select('visibility').where('id', '=', smsi).executeTakeFirst();
     const candidates =
       s?.visibility === 'instance'
-        ? await c.query<{ id: string }>(
-            'SELECT id FROM users WHERE NOT disabled AND (expires_at IS NULL OR expires_at>now())',
-          )
-        : await c.query<{ id: string }>(
-            `SELECT u.id FROM grc_members m JOIN users u ON u.id=m.user_id
-              WHERE m.smsi_id=$1 AND m.can_write AND NOT u.disabled AND (u.expires_at IS NULL OR u.expires_at>now())`,
-            [smsi],
-          );
+        ? await k.selectFrom('users as u').select('u.id').where(COMPTE_ACTIF).execute()
+        : await k
+            .selectFrom('grc_members as m')
+            .innerJoin('users as u', 'u.id', 'm.user_id')
+            .select('u.id')
+            .where('m.smsi_id', '=', smsi)
+            .where('m.can_write', '=', true)
+            .where(COMPTE_ACTIF)
+            .execute();
     const out: string[] = [];
-    for (const { id } of candidates.rows) {
+    for (const { id } of candidates) {
       const perms = effectivePermissions(await loadGrants(c, id));
       if (perms.has('pilotage:modifier' as Permission) && perms.has('conformite:lire' as Permission)) out.push(id);
     }
@@ -85,35 +76,36 @@ export class GrcRapprochements {
     const attached = new Map(
       (await this.g.effectiveFrameworks(smsi, c)).filter((a) => a.enabled).map((a) => [a.frameworkId, a.version]),
     );
+    const k = surConnexion(c);
     const candidates = new Map<string, Candidate>();
     if (attached.size) {
-      const links = (
-        await c.query<{ source_ref: string; target_ref: string }>(
-          `SELECT source_ref,target_ref FROM grc_links WHERE smsi_id=$1 AND type='implements'
-             AND source_ref LIKE 'object:%' AND target_ref LIKE 'requirement:%'`,
-          [smsi],
-        )
-      ).rows;
+      const links = await k
+        .selectFrom('grc_links')
+        .select(['source_ref', 'target_ref'])
+        .where('smsi_id', '=', smsi)
+        .where('type', '=', 'implements')
+        .where('source_ref', 'like', 'object:%')
+        .where('target_ref', 'like', 'requirement:%')
+        .execute();
       const explicit = new Set(links.map((l) => l.source_ref + '|' + l.target_ref));
       const ids = [...attached.keys()];
-      const mappings = (
-        await c.query<{
-          id: string;
-          type: string;
-          coverage: number;
-          source_framework_id: string;
-          source_version: number;
-          source_requirement_id: string;
-          target_framework_id: string;
-          target_version: number;
-          target_requirement_id: string;
-        }>(
-          `SELECT id,type,coverage,source_framework_id,source_version,source_requirement_id,target_framework_id,target_version,
-                  target_requirement_id FROM lib_mappings
-            WHERE status='validated' AND type<>'none' AND (source_framework_id=ANY($1::uuid[]) OR target_framework_id=ANY($1::uuid[]))`,
-          [ids],
-        )
-      ).rows;
+      const mappings = await k
+        .selectFrom('lib_mappings')
+        .select([
+          'id',
+          'type',
+          'coverage',
+          'source_framework_id',
+          'source_version',
+          'source_requirement_id',
+          'target_framework_id',
+          'target_version',
+          'target_requirement_id',
+        ])
+        .where('status', '=', 'validated')
+        .where('type', '<>', 'none')
+        .where((eb) => eb.or([eb('source_framework_id', 'in', ids), eb('target_framework_id', 'in', ids)]))
+        .execute();
       for (const link of links) {
         const req = parseRequirementRef(link.target_ref);
         if (!req || attached.get(req.frameworkId) !== req.version) continue;
@@ -148,31 +140,47 @@ export class GrcRapprochements {
     }
     const created: Candidate[] = [];
     for (const cand of candidates.values()) {
-      const r = await c.query(
-        `INSERT INTO grc_rapprochements(smsi_id,measure_ref,source_ref,target_ref,mapping_id,mapping_type,coverage,status)
-         VALUES($1,$2,$3,$4,$5,$6,$7,'pending')
-         ON CONFLICT(smsi_id,measure_ref,target_ref,mapping_id) DO UPDATE SET status='pending',decided_by=NULL,decided_at=NULL
-           WHERE grc_rapprochements.status='withdrawn'
-         RETURNING id`,
-        [smsi, cand.measure, cand.source, cand.target, cand.mappingId, cand.type, cand.coverage],
-      );
-      if (r.rowCount) created.push(cand);
+      // Nouvelle proposition, ou proposition retirée qui redevient justifiée ; une décision prise n'est jamais rouverte.
+      const r = await k
+        .insertInto('grc_rapprochements')
+        .values({
+          smsi_id: smsi,
+          measure_ref: cand.measure,
+          source_ref: cand.source,
+          target_ref: cand.target,
+          mapping_id: cand.mappingId,
+          mapping_type: cand.type,
+          coverage: cand.coverage,
+          status: 'pending',
+        })
+        .onConflict((oc) =>
+          oc
+            .columns(['smsi_id', 'measure_ref', 'target_ref', 'mapping_id'])
+            .doUpdateSet({ status: 'pending', decided_by: null, decided_at: null })
+            .where('grc_rapprochements.status', '=', 'withdrawn'),
+        )
+        .returning('id')
+        .executeTakeFirst();
+      if (r) created.push(cand);
     }
     // Les propositions en attente qui ne se justifient plus (lien retiré, référentiel détaché, correspondance retirée,
     // exigence déjà liée) sont retirées ; les décisions prises (confirmées, rejetées) ne changent jamais.
-    const pending = (
-      await c.query<{ id: string; measure_ref: string; target_ref: string; mapping_id: string }>(
-        `SELECT id,measure_ref,target_ref,mapping_id FROM grc_rapprochements WHERE smsi_id=$1 AND status='pending'`,
-        [smsi],
-      )
-    ).rows;
+    const pending = await k
+      .selectFrom('grc_rapprochements')
+      .select(['id', 'measure_ref', 'target_ref', 'mapping_id'])
+      .where('smsi_id', '=', smsi)
+      .where('status', '=', 'pending')
+      .execute();
     const stale = pending
       .filter((p) => !candidates.has(`${p.measure_ref}|${p.target_ref}|${p.mapping_id}`))
       .map((p) => p.id);
     if (stale.length)
-      await c.query(`UPDATE grc_rapprochements SET status='withdrawn' WHERE id=ANY($1::uuid[]) AND status='pending'`, [
-        stale,
-      ]);
+      await k
+        .updateTable('grc_rapprochements')
+        .set({ status: 'withdrawn' })
+        .where('id', 'in', stale)
+        .where('status', '=', 'pending')
+        .execute();
     if (created.length) await this.notify(c, smsi, created);
     return created.length;
   }
@@ -181,44 +189,55 @@ export class GrcRapprochements {
   private async notify(c: Client, smsi: string, created: Candidate[]) {
     const pilots = await this.pilots(c, smsi);
     if (!pilots.length) return;
+    const k = surConnexion(c);
     const byMeasure = new Map<string, Candidate[]>();
     for (const cand of created) byMeasure.set(cand.measure, [...(byMeasure.get(cand.measure) ?? []), cand]);
     for (const [ref, list] of byMeasure) {
       const id = ref.slice('object:'.length);
-      const o = (await c.query<{ name: string }>('SELECT name FROM grc_objects WHERE id=$1 AND smsi_id=$2', [id, smsi]))
-        .rows[0];
+      const o = await k
+        .selectFrom('grc_objects')
+        .select('name')
+        .where('id', '=', id)
+        .where('smsi_id', '=', smsi)
+        .executeTakeFirst();
       if (!o) continue;
       const key = list
         .map((x) => x.target + x.mappingId)
         .sort()
         .join('|');
       for (const user of pilots) {
-        const r = await c.query<NotificationEmise>(
-          `INSERT INTO grc_notifications(smsi_id,object_id,user_id,kind,due_key,title,message)
-           VALUES($1,$2,$3,'rapprochement',md5($4),$5,$6) ON CONFLICT DO NOTHING RETURNING id,user_id AS "userId",kind`,
-          [
-            smsi,
-            id,
-            user,
-            key,
-            'Rapprochements à valider',
-            `${list.length} rapprochement(s) à valider pour la mesure « ${o.name} » : décidez de les confirmer ou de les rejeter.`,
-          ],
-        );
+        const r: NotificationEmise[] = await k
+          .insertInto('grc_notifications')
+          .values({
+            smsi_id: smsi,
+            object_id: id,
+            user_id: user,
+            kind: 'rapprochement',
+            due_key: sql<string>`md5(${key})`,
+            title: 'Rapprochements à valider',
+            message: `${list.length} rapprochement(s) à valider pour la mesure « ${o.name} » : décidez de les confirmer ou de les rejeter.`,
+          })
+          .onConflict((oc) => oc.doNothing())
+          .returning(['id', 'user_id as userId', 'kind'])
+          .execute();
         // Réglages de notification par groupe, rôle et utilisateur (ADR 0058) : visibilité dans Rappels et courriel éventuel.
-        await this.g.notificationsMetier?.diffuser(c, r.rows);
+        await this.g.notificationsMetier?.diffuser(c, r);
       }
     }
   }
 
   /** Après un changement de correspondance : recalcule chaque périmètre qui utilise l'un des référentiels. */
   async syncFrameworks(frameworkIds: string[]) {
-    const directs = (
-      await this.g.db.q<{ smsi_id: string }>(
-        'SELECT DISTINCT smsi_id FROM grc_scope_frameworks WHERE framework_id=ANY($1::uuid[])',
-        [frameworkIds],
-      )
-    ).rows.map((r) => r.smsi_id);
+    const directs = frameworkIds.length
+      ? (
+          await this.g.db.k
+            .selectFrom('grc_scope_frameworks')
+            .select('smsi_id')
+            .distinct()
+            .where('framework_id', 'in', frameworkIds)
+            .execute()
+        ).map((r) => r.smsi_id)
+      : [];
     // Les périmètres qui en héritent sont recalculés aussi.
     const smsis = new Set(directs);
     for (const d of directs) for (const h of await this.g.heritiers(d)) smsis.add(h);
@@ -236,12 +255,12 @@ export class GrcRapprochements {
   async summary(smsi: string, user: SessionUser) {
     await this.g.permission(user, 'conformite', 'lire');
     await this.g.access(smsi, user);
-    const r = (
-      await this.g.db.q<{ pending: number }>(
-        `SELECT count(*)::int AS pending FROM grc_rapprochements WHERE smsi_id=$1 AND status='pending'`,
-        [smsi],
-      )
-    ).rows[0]!;
+    const r = await this.g.db.k
+      .selectFrom('grc_rapprochements')
+      .select(sql<number>`count(*)::int`.as('pending'))
+      .where('smsi_id', '=', smsi)
+      .where('status', '=', 'pending')
+      .executeTakeFirstOrThrow();
     return { pending: r.pending };
   }
 
@@ -250,14 +269,15 @@ export class GrcRapprochements {
     for (const p of pairs) {
       const key = `${p.frameworkId}:${p.version}`;
       if (out.has(key)) continue;
-      const r = (
-        await this.g.db.q<{ identifier: string; name: string; definition: FrameworkDefinition }>(
-          `SELECT f.identifier,f.name,v.definition FROM lib_framework_versions v JOIN lib_frameworks f ON f.id=v.framework_id
-            WHERE v.framework_id=$1 AND v.version=$2`,
-          [p.frameworkId, p.version],
-        )
-      ).rows[0];
-      if (r) out.set(key, r);
+      const r = await this.g.db.k
+        .selectFrom('lib_framework_versions as v')
+        .innerJoin('lib_frameworks as f', 'f.id', 'v.framework_id')
+        .select(['f.identifier', 'f.name', 'v.definition'])
+        .where('v.framework_id', '=', p.frameworkId)
+        .where('v.version', '=', p.version)
+        .executeTakeFirst();
+      // Définitions écrites après validation (LibraryFrameworkDefinition) : relues telles quelles.
+      if (r) out.set(key, { ...r, definition: r.definition as FrameworkDefinition });
     }
     return out;
   }
@@ -279,27 +299,37 @@ export class GrcRapprochements {
   async list(smsi: string, user: SessionUser, filter: { status?: string; frameworkId?: string } = {}) {
     await this.g.permission(user, 'conformite', 'lire');
     await this.g.access(smsi, user);
-    const rows = (
-      await this.g.db.q<
-        Row & { v_type: string; justification: string; validated_by: string | null; validated_at: string | null }
-      >(
-        `SELECT r.*,m.justification,m.validated_by,m.validated_at FROM grc_rapprochements r JOIN lib_mappings m ON m.id=r.mapping_id
-          WHERE r.smsi_id=$1 AND ($2::text IS NULL OR r.status=$2) AND ($3::text IS NULL OR r.target_ref LIKE 'requirement:'||$3||':%')
-          ORDER BY (r.status='pending') DESC,r.created_at DESC,r.id LIMIT 500`,
-        [smsi, filter.status ?? null, filter.frameworkId ?? null],
+    // Dates renvoyées telles quelles (sérialisées en ISO par la réponse), comme avant la conversion.
+    const rows = await this.g.db.k
+      .selectFrom('grc_rapprochements as r')
+      .innerJoin('lib_mappings as m', 'm.id', 'r.mapping_id')
+      .selectAll('r')
+      .select(['m.justification', 'm.validated_by', 'm.validated_at'])
+      .where('r.smsi_id', '=', smsi)
+      .$if(!!filter.status, (q) => q.where('r.status', '=', filter.status as Status))
+      .$if(!!filter.frameworkId, (q) =>
+        q.where('r.target_ref', 'like', sql<string>`'requirement:' || ${filter.frameworkId} || ':%'`),
       )
-    ).rows;
+      .orderBy(sql`(r.status = 'pending')`, 'desc')
+      .orderBy('r.created_at', 'desc')
+      .orderBy('r.id')
+      .limit(500)
+      .execute();
     const pairs = rows
       .flatMap((r) => [parseRequirementRef(r.source_ref), parseRequirementRef(r.target_ref)])
       .filter((x) => !!x);
     const defs = await this.definitions(pairs as { frameworkId: string; version: number }[]);
+    const mesures = [...new Set(rows.map((r) => r.measure_ref.slice('object:'.length)))];
     const names = new Map(
-      (
-        await this.g.db.q<{ id: string; name: string }>(
-          'SELECT id,name FROM grc_objects WHERE smsi_id=$1 AND id=ANY($2::uuid[])',
-          [smsi, [...new Set(rows.map((r) => r.measure_ref.slice('object:'.length)))]],
-        )
-      ).rows.map((o) => [o.id, o.name]),
+      (mesures.length
+        ? await this.g.db.k
+            .selectFrom('grc_objects')
+            .select(['id', 'name'])
+            .where('smsi_id', '=', smsi)
+            .where('id', 'in', mesures)
+            .execute()
+        : []
+      ).map((o) => [o.id, o.name]),
     );
     return rows.map((r) => ({
       id: r.id,
@@ -327,16 +357,26 @@ export class GrcRapprochements {
     const results: { id: string; ok: boolean; error?: string }[] = [];
     for (const id of input.ids) {
       try {
-        await this.g.db.tx(async (c) => {
-          const r = (
-            await c.query<Row>('SELECT * FROM grc_rapprochements WHERE id=$1 AND smsi_id=$2 FOR UPDATE', [id, smsi])
-          ).rows[0];
+        await this.g.db.tx(async (c, k) => {
+          const r = await k
+            .selectFrom('grc_rapprochements')
+            .selectAll()
+            .where('id', '=', id)
+            .where('smsi_id', '=', smsi)
+            .forUpdate()
+            .executeTakeFirst();
           if (!r) throw new HttpError(404, 'Proposition introuvable.');
           if (r.status !== 'pending') throw new HttpError(409, 'Cette proposition a déjà été décidée ou retirée.');
-          await c.query(
-            `UPDATE grc_rapprochements SET status=$2,decided_by=$3,decided_at=now(),decision_note=$4 WHERE id=$1`,
-            [id, input.decision === 'confirm' ? 'confirmed' : 'rejected', user.username, input.note],
-          );
+          await k
+            .updateTable('grc_rapprochements')
+            .set({
+              status: input.decision === 'confirm' ? 'confirmed' : 'rejected',
+              decided_by: user.username,
+              decided_at: sql<Date>`now()`,
+              decision_note: input.note,
+            })
+            .where('id', '=', id)
+            .execute();
           if (input.decision === 'confirm')
             await this.g.linkIn(
               c,
@@ -374,40 +414,49 @@ export class GrcRapprochements {
     await this.g.permission(user, 'conformite', 'lire');
     await this.g.access(smsi, user);
     const effectifs = (await this.g.effectiveFrameworks(smsi)).filter((e) => e.enabled);
+    // Version effective de chaque référentiel actif : une seule par référentiel (effectiveFrameworks).
+    const versions = new Map(effectifs.map((e) => [e.frameworkId, e.version]));
     const attached = effectifs.length
       ? (
-          await this.g.db.q<{ framework_id: string; version: number; name: string; identifier: string }>(
-            `SELECT f.id AS framework_id,f.name,f.identifier,v.version
-               FROM lib_frameworks f JOIN unnest($1::uuid[],$2::int[]) AS v(id,version) ON v.id=f.id
-              ORDER BY f.name,f.id`,
-            [effectifs.map((e) => e.frameworkId), effectifs.map((e) => e.version)],
-          )
-        ).rows
+          await this.g.db.k
+            .selectFrom('lib_frameworks as f')
+            .select(['f.id as framework_id', 'f.name', 'f.identifier'])
+            .where('f.id', 'in', [...versions.keys()])
+            .orderBy('f.name')
+            .orderBy('f.id')
+            .execute()
+        ).map((f) => ({ ...f, version: versions.get(f.framework_id)! }))
       : [];
-    const links = (
-      await this.g.db.q<{ source_ref: string; target_ref: string }>(
-        `SELECT source_ref,target_ref FROM grc_links WHERE smsi_id=$1 AND type='implements' AND target_ref LIKE 'requirement:%'`,
-        [smsi],
-      )
-    ).rows;
+    const links = await this.g.db.k
+      .selectFrom('grc_links')
+      .select(['source_ref', 'target_ref'])
+      .where('smsi_id', '=', smsi)
+      .where('type', '=', 'implements')
+      .where('target_ref', 'like', 'requirement:%')
+      .execute();
     const explicit = new Map<string, string[]>();
     for (const l of links) explicit.set(l.target_ref, [...(explicit.get(l.target_ref) ?? []), l.source_ref]);
     const toValidate = new Set(
       (
-        await this.g.db.q<{ target_ref: string }>(
-          `SELECT DISTINCT target_ref FROM grc_rapprochements WHERE smsi_id=$1 AND status='pending'`,
-          [smsi],
-        )
-      ).rows.map((r) => r.target_ref),
+        await this.g.db.k
+          .selectFrom('grc_rapprochements')
+          .select('target_ref')
+          .distinct()
+          .where('smsi_id', '=', smsi)
+          .where('status', '=', 'pending')
+          .execute()
+      ).map((r) => r.target_ref),
     );
     const defs = await this.definitions(attached.map((a) => ({ frameworkId: a.framework_id, version: a.version })));
     const measureNames = new Map(
       (
-        await this.g.db.q<{ id: string; name: string }>(
-          'SELECT id,name FROM grc_objects WHERE smsi_id=$1 AND kind=$2',
-          [smsi, 'measure'],
-        )
-      ).rows.map((o) => ['object:' + o.id, o.name]),
+        await this.g.db.k
+          .selectFrom('grc_objects')
+          .select(['id', 'name'])
+          .where('smsi_id', '=', smsi)
+          .where('kind', '=', 'measure')
+          .execute()
+      ).map((o) => ['object:' + o.id, o.name]),
     );
     const evaluations = await this.g.evaluations.courantes(
       smsi,
