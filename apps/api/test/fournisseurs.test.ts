@@ -410,3 +410,75 @@ describe('suite donnée à une évaluation, dans un périmètre choisi', () => {
     ).toBe(422);
   });
 });
+
+describe('critères et évaluations : détails (équivalence de la conversion Kysely)', () => {
+  it('historique figé des critères, liste avec retirés, double retrait refusé, décompte et ordre des évaluations', async () => {
+    const k = (await a.post('/api/suppliers/criteria', critBody('Plan de continuité testé'))).json();
+    const m = await a.put(`/api/suppliers/criteria/${k.id}`, critBody('Plan de continuité testé chaque année'), {
+      'if-match': `"${k.version}"`,
+    });
+    expect(m.statusCode, m.body).toBe(200);
+    expect(m.json().updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+    const archive = (v: number) =>
+      a.post(
+        `/api/suppliers/criteria/${k.id}/archive`,
+        { reason: 'Critère remplacé', confirm: 'RETIRER' },
+        { 'if-match': `"${v}"` },
+      );
+    const r = await archive(2);
+    expect(r.statusCode, r.body).toBe(200);
+    expect(r.json()).toMatchObject({ archived: true, version: 3 });
+    expect((await archive(3)).statusCode).toBe(409);
+    const hist = await t.svc.db.q<{
+      version: number;
+      snapshot: { label: string; updatedAt: string; archived: boolean };
+    }>('SELECT version, snapshot FROM sup_criterion_history WHERE criterion_id=$1 ORDER BY version', [k.id]);
+    expect(hist.rows.map((h) => [h.version, h.snapshot.label, h.snapshot.archived])).toEqual([
+      [1, 'Plan de continuité testé', false],
+      [2, 'Plan de continuité testé chaque année', false],
+      [3, 'Plan de continuité testé chaque année', true],
+    ]);
+    expect(hist.rows[2]!.snapshot.updatedAt).toBe(r.json().updatedAt);
+    const actifs = (await reader.get('/api/suppliers/criteria')).json() as { id: string }[];
+    const tous = (await reader.get('/api/suppliers/criteria?archived=true')).json() as { id: string; label: string }[];
+    expect(actifs.some((x) => x.id === k.id)).toBe(false);
+    expect(tous.some((x) => x.id === k.id)).toBe(true);
+    const libelles = tous.map((x) => x.label.toLowerCase());
+    expect(libelles).toEqual([...libelles].sort());
+    // Décompte oui / non / non évalué et ordre : plus récente d'abord, la même date départagée par l'enregistrement.
+    const a1 = (await a.post('/api/suppliers/criteria', critBody('Sauvegardes externalisées'))).json();
+    const a2 = (await a.post('/api/suppliers/criteria', critBody('Journalisation conservée'))).json();
+    const a3 = (await a.post('/api/suppliers/criteria', critBody('Accès d’administration tracés'))).json();
+    const post = (items: { criterionId: string; meets: boolean | null }[], date = '2026-09-15') =>
+      contributor.post(
+        `/api/suppliers/${supplier}/evaluations`,
+        evalBody(items, { evaluatedAt: date, nextReviewAt: '2027-09-15' }),
+      );
+    const e1 = await post([
+      { criterionId: a1.id, meets: true },
+      { criterionId: a2.id, meets: false },
+      { criterionId: a3.id, meets: null },
+    ]);
+    expect(e1.statusCode, e1.body).toBe(200);
+    // La réponse détaille les éléments (« items » est la liste) ; le décompte figure dans le résumé du registre.
+    expect(e1.json()).toMatchObject({
+      meets: 1,
+      notMeets: 1,
+      notAssessed: 1,
+      evaluatedAt: '2026-09-15',
+      nextReviewAt: '2027-09-15',
+    });
+    expect((e1.json().items as { meets: boolean | null }[]).map((x) => x.meets).sort()).toEqual(
+      [false, null, true].sort(),
+    );
+    const e2 = (await post([{ criterionId: a1.id, meets: true }])).json();
+    const hist2 = (await reader.get(`/api/suppliers/${supplier}/evaluations`)).json() as {
+      id: string;
+      evaluatedAt: string;
+    }[];
+    const i1 = hist2.findIndex((x) => x.id === e1.json().id),
+      i2 = hist2.findIndex((x) => x.id === e2.id);
+    expect(i2).toBeLessThan(i1);
+    expect(hist2.every((x, i) => i === 0 || hist2[i - 1]!.evaluatedAt >= x.evaluatedAt)).toBe(true);
+  });
+});

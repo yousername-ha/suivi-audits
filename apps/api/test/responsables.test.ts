@@ -173,4 +173,48 @@ describe('responsables typés', () => {
     // Ni rôle, ni appartenance, ni droit de ressource : le responsable n'est pas une habilitation.
     expect(await droits()).toBe(avant);
   });
+
+  it('comptes désactivés ou expirés exclus ; renommage, membres, archivage et ordre de l’annuaire', async () => {
+    const actif = (await makeUser(t, 'resp_actif', 'rw')).id;
+    const inactif = (await makeUser(t, 'resp_inactif', 'rw')).id;
+    const expire = (await makeUser(t, 'resp_expire', 'rw')).id;
+    await t.svc.db.q("UPDATE users SET display_name='' WHERE id=$1", [actif]);
+    await t.svc.db.q('UPDATE users SET disabled=true WHERE id=$1', [inactif]);
+    await t.svc.db.q("UPDATE users SET expires_at=now() - interval '1 day' WHERE id=$1", [expire]);
+    const f = (await admin.post('/api/admin/fonctions', { name: 'Achats', members: [inactif, expire] })).json();
+    const g = (await t.svc.db.one<{ id: string }>("INSERT INTO groups(name) VALUES ('Équipe inactive') RETURNING id"))!
+      .id;
+    await t.svc.db.q('INSERT INTO user_groups(user_id,group_id) VALUES ($1,$2),($3,$2)', [inactif, g, expire]);
+    const r = (await admin.get(`/api/grc/${S}/responsables`)).json();
+    expect(r.fonctions.find((x: { id: string }) => x.id === f.id).membres).toBe(0);
+    expect(r.groupes.find((x: { id: string }) => x.id === g).membres).toBe(0);
+    expect((await creer({ responsable: { type: 'fonction', id: f.id } })).statusCode).toBe(422);
+    expect((await creer({ responsable: { type: 'groupe', id: g } })).statusCode).toBe(422);
+    // Modification : nom d'une autre fonction refusé (casse ignorée), membres remplacés, nom affiché par défaut.
+    expect((await admin.put(`/api/admin/fonctions/${f.id}`, { name: 'rssi', members: [] })).statusCode).toBe(409);
+    const m = await admin.put(`/api/admin/fonctions/${f.id}`, {
+      name: 'Achats publics',
+      description: 'Marchés',
+      members: [actif, actif],
+    });
+    expect(m.statusCode, m.body).toBe(200);
+    expect(m.json()).toMatchObject({ name: 'Achats publics', description: 'Marchés', archived: false });
+    expect(m.json().members).toEqual([{ id: actif, username: 'resp_actif', displayName: 'resp_actif' }]);
+    expect((await creer({ responsable: { type: 'fonction', id: f.id } })).statusCode).toBe(200);
+    // Archivage : une seule fois, plus modifiable, listée après les fonctions actives.
+    expect((await admin.req('DELETE', `/api/admin/fonctions/${f.id}`)).statusCode).toBe(204);
+    expect((await admin.req('DELETE', `/api/admin/fonctions/${f.id}`)).statusCode).toBe(404);
+    expect((await admin.put(`/api/admin/fonctions/${f.id}`, { name: 'Achats publics', members: [] })).statusCode).toBe(
+      409,
+    );
+    expect(
+      (await admin.put('/api/admin/fonctions/00000000-0000-4000-8000-0000000000ff', { name: 'X', members: [] }))
+        .statusCode,
+    ).toBe(404);
+    const liste = (await admin.get('/api/admin/fonctions')).json() as { id: string; archived: boolean; name: string }[];
+    const i = liste.findIndex((x) => x.archived);
+    expect(liste.slice(i).every((x) => x.archived)).toBe(true);
+    const actives = liste.filter((x) => !x.archived).map((x) => x.name.toLowerCase());
+    expect(actives).toEqual([...actives].sort());
+  });
 });

@@ -2,14 +2,18 @@
    de type groupe ou fonction doit exister et compter au moins une personne active ; pour une personne, l'identifiant
    historique `ownerId` reste la source des rappels. Un responsable n'est jamais une habilitation : désigner ou changer
    un responsable n'écrit dans aucune table de rôles, de groupes ou de droits de ressource. Les rappels d'un groupe ou d'une fonction vont aux
-   personnes qui le composent au moment de l'envoi. */
+   personnes qui le composent au moment de l'envoi. Accès aux données en Kysely (ADR 0062). */
 import { FonctionBody, type FonctionDto, type ResponsableRef, type ResponsablesProposables } from '@suivi/shared';
 import type { SessionUser } from '../auth.js';
-import type { Client } from '../db/db.js';
+import { sql } from 'kysely';
+import { surConnexion, type Client, type Kdb } from '../db/db.js';
 import { HttpError } from '../http/errors.js';
 import type { Grc } from './core.js';
 
-const ACTIF = '(NOT u.disabled AND (u.expires_at IS NULL OR u.expires_at>now()))';
+/** Compte actif : ni désactivé ni expiré (alias « u » de la table users ; fragment constant, sans valeur). */
+const actif = sql<boolean>`(NOT u.disabled AND (u.expires_at IS NULL OR u.expires_at > now()))`;
+const nomAffiche = sql<string>`coalesce(nullif(u.display_name, ''), u.username)`;
+const memeNom = (nom: string) => sql<boolean>`lower(name) = lower(${nom})`;
 
 export class GrcAnnuaires {
   constructor(private readonly g: Grc) {}
@@ -17,20 +21,24 @@ export class GrcAnnuaires {
   /** Responsables proposables dans un périmètre : personnes autorisées, groupes et fonctions qui comptent du monde. */
   async proposables(smsi: string, user: SessionUser): Promise<ResponsablesProposables> {
     const utilisateurs = await this.g.owners(smsi, user);
-    const groupes = (
-      await this.g.db.q<{ id: string; name: string; membres: number }>(
-        `SELECT g.id,g.name,count(u.id)::int AS membres FROM groups g
-           LEFT JOIN user_groups ug ON ug.group_id=g.id LEFT JOIN users u ON u.id=ug.user_id AND ${ACTIF}
-          GROUP BY g.id ORDER BY lower(g.name)`,
-      )
-    ).rows;
-    const fonctions = (
-      await this.g.db.q<{ id: string; name: string; membres: number }>(
-        `SELECT f.id,f.name,count(u.id)::int AS membres FROM fonctions f
-           LEFT JOIN fonction_membres fm ON fm.fonction_id=f.id LEFT JOIN users u ON u.id=fm.user_id AND ${ACTIF}
-          WHERE NOT f.archived GROUP BY f.id ORDER BY lower(f.name)`,
-      )
-    ).rows;
+    const k = this.g.db.k;
+    const groupes = await k
+      .selectFrom('groups as g')
+      .leftJoin('user_groups as ug', 'ug.group_id', 'g.id')
+      .leftJoin('users as u', (j) => j.onRef('u.id', '=', 'ug.user_id').on(actif))
+      .select(['g.id', 'g.name', sql<number>`count(u.id)::int`.as('membres')])
+      .groupBy('g.id')
+      .orderBy(sql`lower(g.name)`)
+      .execute();
+    const fonctions = await k
+      .selectFrom('fonctions as f')
+      .leftJoin('fonction_membres as fm', 'fm.fonction_id', 'f.id')
+      .leftJoin('users as u', (j) => j.onRef('u.id', '=', 'fm.user_id').on(actif))
+      .select(['f.id', 'f.name', sql<number>`count(u.id)::int`.as('membres')])
+      .where('f.archived', '=', false)
+      .groupBy('f.id')
+      .orderBy(sql`lower(f.name)`)
+      .execute();
     return { utilisateurs, groupes, fonctions };
   }
 
@@ -40,25 +48,34 @@ export class GrcAnnuaires {
       await this.g.checkOwner(smsi, ref.id, c);
       return [ref.id];
     }
+    const k = surConnexion(c);
     const rows =
       ref.type === 'groupe'
-        ? (
-            await c.query<{ id: string }>(
-              `SELECT u.id FROM user_groups ug JOIN users u ON u.id=ug.user_id WHERE ug.group_id=$1 AND ${ACTIF}`,
-              [ref.id],
-            )
-          ).rows
-        : (
-            await c.query<{ id: string }>(
-              `SELECT u.id FROM fonction_membres fm JOIN users u ON u.id=fm.user_id
-                 JOIN fonctions f ON f.id=fm.fonction_id WHERE fm.fonction_id=$1 AND NOT f.archived AND ${ACTIF}`,
-              [ref.id],
-            )
-          ).rows;
+        ? await k
+            .selectFrom('user_groups as ug')
+            .innerJoin('users as u', 'u.id', 'ug.user_id')
+            .select('u.id')
+            .where('ug.group_id', '=', ref.id)
+            .where(actif)
+            .execute()
+        : await k
+            .selectFrom('fonction_membres as fm')
+            .innerJoin('users as u', 'u.id', 'fm.user_id')
+            .innerJoin('fonctions as f', 'f.id', 'fm.fonction_id')
+            .select('u.id')
+            .where('fm.fonction_id', '=', ref.id)
+            .where('f.archived', '=', false)
+            .where(actif)
+            .execute();
     const existe =
       ref.type === 'groupe'
-        ? (await c.query('SELECT 1 FROM groups WHERE id=$1', [ref.id])).rowCount
-        : (await c.query('SELECT 1 FROM fonctions WHERE id=$1 AND NOT archived', [ref.id])).rowCount;
+        ? await k.selectFrom('groups').select('id').where('id', '=', ref.id).executeTakeFirst()
+        : await k
+            .selectFrom('fonctions')
+            .select('id')
+            .where('id', '=', ref.id)
+            .where('archived', '=', false)
+            .executeTakeFirst();
     if (!existe) throw new HttpError(422, ref.type === 'groupe' ? 'Groupe introuvable.' : 'Fonction introuvable.');
     if (!rows.length)
       throw new HttpError(
@@ -82,92 +99,104 @@ export class GrcAnnuaires {
 
   /** Libellé d'un responsable pour l'affichage (null si la cible a disparu). */
   async libelle(ref: ResponsableRef): Promise<string | null> {
-    const sql =
+    const k = this.g.db.k;
+    const r =
       ref.type === 'utilisateur'
-        ? "SELECT coalesce(nullif(display_name,''),username) AS l FROM users WHERE id=$1"
+        ? await k.selectFrom('users as u').select(nomAffiche.as('l')).where('u.id', '=', ref.id).executeTakeFirst()
         : ref.type === 'groupe'
-          ? 'SELECT name AS l FROM groups WHERE id=$1'
-          : 'SELECT name AS l FROM fonctions WHERE id=$1';
-    return (await this.g.db.one<{ l: string }>(sql, [ref.id]))?.l ?? null;
+          ? await k.selectFrom('groups').select('name as l').where('id', '=', ref.id).executeTakeFirst()
+          : await k.selectFrom('fonctions').select('name as l').where('id', '=', ref.id).executeTakeFirst();
+    return r?.l ?? null;
   }
 
   /* --------------------------------------------------------------------------------------- gestion des fonctions */
-  private async dto(id: string, c?: Client): Promise<FonctionDto> {
-    const q = c ?? this.g.db.pool;
-    const f = (
-      await q.query<Omit<FonctionDto, 'members'>>('SELECT id,name,description,archived FROM fonctions WHERE id=$1', [
-        id,
-      ])
-    ).rows[0];
+  private async dto(id: string, k: Kdb = this.g.db.k): Promise<FonctionDto> {
+    const f = await k
+      .selectFrom('fonctions')
+      .select(['id', 'name', 'description', 'archived'])
+      .where('id', '=', id)
+      .executeTakeFirst();
     if (!f) throw new HttpError(404, 'Fonction introuvable.');
-    const members = (
-      await q.query<FonctionDto['members'][number]>(
-        `SELECT u.id,u.username,coalesce(nullif(u.display_name,''),u.username) AS "displayName" FROM fonction_membres fm
-           JOIN users u ON u.id=fm.user_id WHERE fm.fonction_id=$1 ORDER BY lower(u.username)`,
-        [id],
-      )
-    ).rows;
+    const members = await k
+      .selectFrom('fonction_membres as fm')
+      .innerJoin('users as u', 'u.id', 'fm.user_id')
+      .select(['u.id', 'u.username', nomAffiche.as('displayName')])
+      .where('fm.fonction_id', '=', id)
+      .orderBy(sql`lower(u.username)`)
+      .execute();
     return { ...f, members };
   }
   async lister(): Promise<FonctionDto[]> {
-    const ids = (await this.g.db.q<{ id: string }>('SELECT id FROM fonctions ORDER BY archived,lower(name)')).rows;
+    const ids = await this.g.db.k
+      .selectFrom('fonctions')
+      .select('id')
+      .orderBy('archived')
+      .orderBy(sql`lower(name)`)
+      .execute();
     return Promise.all(ids.map((r) => this.dto(r.id)));
   }
-  private async membres(c: Client, id: string, users: string[]) {
+  private async membres(k: Kdb, id: string, users: string[]) {
     const uniques = [...new Set(users)];
     if (uniques.length) {
-      const ok = (await c.query('SELECT 1 FROM users WHERE id=ANY($1::uuid[])', [uniques])).rowCount;
-      if (ok !== uniques.length) throw new HttpError(422, 'Compte inconnu.');
+      const ok = await k.selectFrom('users').select('id').where('id', 'in', uniques).execute();
+      if (ok.length !== uniques.length) throw new HttpError(422, 'Compte inconnu.');
     }
-    await c.query('DELETE FROM fonction_membres WHERE fonction_id=$1', [id]);
-    for (const u of uniques) await c.query('INSERT INTO fonction_membres(fonction_id,user_id) VALUES($1,$2)', [id, u]);
+    await k.deleteFrom('fonction_membres').where('fonction_id', '=', id).execute();
+    for (const u of uniques) await k.insertInto('fonction_membres').values({ fonction_id: id, user_id: u }).execute();
   }
   async creer(input: FonctionBody, user: SessionUser, ip: string) {
     const b = FonctionBody.parse(input);
-    return this.g.db.tx(async (c) => {
-      if ((await c.query('SELECT 1 FROM fonctions WHERE lower(name)=lower($1) AND NOT archived', [b.name])).rowCount)
-        throw new HttpError(409, 'Une fonction porte déjà ce nom.');
-      const id = (
-        await c.query<{ id: string }>(
-          'INSERT INTO fonctions(name,description,created_by,updated_by) VALUES($1,$2,$3,$3) RETURNING id',
-          [b.name, b.description, user.username],
-        )
-      ).rows[0]!.id;
-      await this.membres(c, id, b.members);
+    return this.g.db.tx(async (c, k) => {
+      const doublon = await k
+        .selectFrom('fonctions')
+        .select('id')
+        .where(memeNom(b.name))
+        .where('archived', '=', false)
+        .executeTakeFirst();
+      if (doublon) throw new HttpError(409, 'Une fonction porte déjà ce nom.');
+      const { id } = await k
+        .insertInto('fonctions')
+        .values({ name: b.name, description: b.description, created_by: user.username, updated_by: user.username })
+        .returning('id')
+        .executeTakeFirstOrThrow();
+      await this.membres(k, id, b.members);
       await this.g.db.audit(user, ip, 'fonction.creee', id, { nom: b.name, membres: b.members.length }, c);
-      return this.dto(id, c);
+      return this.dto(id, k);
     }, user.username);
   }
   async modifier(id: string, input: FonctionBody, user: SessionUser, ip: string) {
     const b = FonctionBody.parse(input);
-    return this.g.db.tx(async (c) => {
-      const f = (await c.query<{ archived: boolean }>('SELECT archived FROM fonctions WHERE id=$1 FOR UPDATE', [id]))
-        .rows[0];
+    return this.g.db.tx(async (c, k) => {
+      const f = await k.selectFrom('fonctions').select('archived').where('id', '=', id).forUpdate().executeTakeFirst();
       if (!f) throw new HttpError(404, 'Fonction introuvable.');
       if (f.archived) throw new HttpError(409, 'Fonction archivée.');
-      if (
-        (await c.query('SELECT 1 FROM fonctions WHERE lower(name)=lower($1) AND NOT archived AND id<>$2', [b.name, id]))
-          .rowCount
-      )
-        throw new HttpError(409, 'Une fonction porte déjà ce nom.');
-      await c.query('UPDATE fonctions SET name=$2,description=$3,updated_by=$4,updated_at=now() WHERE id=$1', [
-        id,
-        b.name,
-        b.description,
-        user.username,
-      ]);
-      await this.membres(c, id, b.members);
+      const doublon = await k
+        .selectFrom('fonctions')
+        .select('id')
+        .where(memeNom(b.name))
+        .where('archived', '=', false)
+        .where('id', '<>', id)
+        .executeTakeFirst();
+      if (doublon) throw new HttpError(409, 'Une fonction porte déjà ce nom.');
+      await k
+        .updateTable('fonctions')
+        .set({ name: b.name, description: b.description, updated_by: user.username, updated_at: sql<Date>`now()` })
+        .where('id', '=', id)
+        .execute();
+      await this.membres(k, id, b.members);
       await this.g.db.audit(user, ip, 'fonction.modifiee', id, { nom: b.name, membres: b.members.length }, c);
-      return this.dto(id, c);
+      return this.dto(id, k);
     }, user.username);
   }
   async archiver(id: string, user: SessionUser, ip: string) {
-    await this.g.db.tx(async (c) => {
-      const r = await c.query(
-        'UPDATE fonctions SET archived=true,updated_by=$2,updated_at=now() WHERE id=$1 AND NOT archived',
-        [id, user.username],
-      );
-      if (!r.rowCount) throw new HttpError(404, 'Fonction introuvable.');
+    await this.g.db.tx(async (c, k) => {
+      const r = await k
+        .updateTable('fonctions')
+        .set({ archived: true, updated_by: user.username, updated_at: sql<Date>`now()` })
+        .where('id', '=', id)
+        .where('archived', '=', false)
+        .executeTakeFirst();
+      if (!Number(r.numUpdatedRows)) throw new HttpError(404, 'Fonction introuvable.');
       await this.g.db.audit(user, ip, 'fonction.archivee', id, {}, c);
     }, user.username);
   }

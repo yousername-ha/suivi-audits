@@ -4,16 +4,22 @@ Un module par pull request (ou un lot de petits modules). Chaque conversion gard
 après**, et ajoute les cas non couverts du module ; ces nouveaux tests doivent aussi réussir sur l'ancien code (preuve
 d'équivalence). Les verrous consultatifs, `pg_notify` et `LISTEN` restent des appels SQL directs.
 
+Ordre : les modules qui lisent `grc_objects` par `objectColumns` / `objectDto` (`grc/core.ts`) attendent la conversion
+de `grc/core.ts`, pour ne pas dupliquer la liste de colonnes ni réintroduire du SQL brut.
+
 Comptage : appels `.q(`, `.one(` et `.query(` restants par fichier (`apps/api/src`), relevé au 26/10/2026.
 
 | Module | Appels SQL restants | État |
 |---|---:|---|
+| `routes/documents.ts` | 8 | Liens convertis (socle) ; documents à convertir |
 | `modules.ts` | 4 | Converti (lot 2) ; verrous consultatifs en SQL |
 | `business-policy.ts` | 2 | Converti (lot 2) ; verrou consultatif et pg_notify en SQL |
 | `calendriers-plateforme.ts` | 0 | Converti (lot 2) |
+| `grc/annuaires.ts` | 0 | Converti (lot 3) |
+| `grc/suppliers.ts` | 0 | Converti (lot 3) |
 | `types-processus.ts` | 0 | Converti (lot 1) |
 | `grc/registres.ts` | 26 | À convertir |
-| `grc/core.ts` | 24 | À convertir |
+| `grc/core.ts` | 24 | À convertir avant les modules qui utilisent objectColumns |
 | `routes/access.ts` | 21 | À convertir |
 | `grc/library.ts` | 17 | À convertir |
 | `config-grc.ts` | 15 | À convertir |
@@ -22,11 +28,8 @@ Comptage : appels `.q(`, `.one(` et `.query(` restants par fichier (`apps/api/sr
 | `pilotage/service.ts` | 12 | À convertir |
 | `operations.ts` | 11 | À convertir |
 | `auth.ts` | 10 | À convertir |
-| `grc/tasks.ts` | 10 | À convertir |
-| `grc/annuaires.ts` | 9 | À convertir |
-| `grc/suppliers.ts` | 9 | À convertir |
+| `grc/tasks.ts` | 10 | Après grc/core.ts (objectColumns, objectDto) |
 | `routes/carto.ts` | 8 | À convertir |
-| `routes/documents.ts` | 8 | À convertir |
 | `routes/import.ts` | 8 | À convertir |
 | `cli.ts` | 7 | À convertir |
 | `historique/tables/collection.ts` | 7 | À convertir |
@@ -71,4 +74,4 @@ Comptage : appels `.q(`, `.one(` et `.query(` restants par fichier (`apps/api/sr
 | `tenacy.ts` | 1 | À convertir |
 | `walls.ts` | 1 | À convertir |
 
-Reste à convertir : 335 appels dans 58 fichiers.
+Reste à convertir : 317 appels dans 56 fichiers.

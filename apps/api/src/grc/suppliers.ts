@@ -1,6 +1,7 @@
 /* Fournisseurs de l'organisation (ADR 0032, lot M4). Le registre reste celui de l'état historique (sans copie) ; ce
    service y ajoute des critères définis par l'organisme, des évaluations immuables SANS périmètre et le rattachement
-   des fournisseurs à des périmètres. Aucune grille, aucun seuil, aucun critère n'est fourni. */
+   des fournisseurs à des périmètres. Aucune grille, aucun seuil, aucun critère n'est fourni.
+   Accès aux données en Kysely (ADR 0062) ; le registre reste dans l'état historique (LegacyStore). */
 import {
   SupplierBody,
   SupplierCriterionBody,
@@ -15,7 +16,9 @@ import {
 } from '@suivi/shared';
 import { isObject, type JsonObject } from '@suivi/shared/legacy';
 import type { SessionUser } from '../auth.js';
-import type { Client } from '../db/db.js';
+import { sql, type ExpressionBuilder } from 'kysely';
+import { surConnexion, type Client, type Kdb } from '../db/db.js';
+import type { DB } from '../db/types.generated.js';
 import { HttpError } from '../http/errors.js';
 import { DEFAULT_SMSI, type Grc } from './core.js';
 import { parseRequirementRef } from './rapprochements.js';
@@ -63,14 +66,63 @@ export interface SupplierRow {
   toReview: boolean;
   scopes: string[];
 }
-const CRITERION_COLUMNS = `id,label,description,purposes,requirement_refs AS "requirementRefs",version,archived,
-  created_by AS "createdBy",updated_by AS "updatedBy",updated_at AS "updatedAt"`;
-const EVALUATION_COLUMNS = `e.id,e.supplier_id AS "supplierId",e.evaluated_at::text AS "evaluatedAt",e.evaluator,
-  e.next_review_at::text AS "nextReviewAt",
-  (SELECT count(*)::int FROM sup_evaluation_items i WHERE i.evaluation_id=e.id) AS items,
-  (SELECT count(*)::int FROM sup_evaluation_items i WHERE i.evaluation_id=e.id AND i.meets IS TRUE) AS meets,
-  (SELECT count(*)::int FROM sup_evaluation_items i WHERE i.evaluation_id=e.id AND i.meets IS FALSE) AS "notMeets",
-  (SELECT count(*)::int FROM sup_evaluation_items i WHERE i.evaluation_id=e.id AND i.meets IS NULL) AS "notAssessed"`;
+/** Colonnes d'un critère ; la date de mise à jour est rendue en ISO, comme sa sérialisation JSON d'origine. */
+const criteres = (k: Kdb) =>
+  k
+    .selectFrom('sup_criteria')
+    .select([
+      'id',
+      'label',
+      'description',
+      'purposes',
+      'requirement_refs as requirementRefs',
+      'version',
+      'archived',
+      'created_by as createdBy',
+      'updated_by as updatedBy',
+      'updated_at',
+    ]);
+const critere = ({
+  updated_at,
+  ...r
+}: { updated_at: Date } & Omit<SupplierCriterion, 'updatedAt'>): SupplierCriterion => ({
+  ...r,
+  updatedAt: updated_at.toISOString(),
+});
+/** Nombre d'éléments d'une évaluation « e », éventuellement filtré sur « meets ». */
+const compte = (eb: ExpressionBuilder<DB & { e: DB['sup_evaluations'] }, 'e'>, meets?: boolean | null) => {
+  let q = eb
+    .selectFrom('sup_evaluation_items as i')
+    .select(sql<number>`count(*)::int`.as('n'))
+    .whereRef('i.evaluation_id', '=', 'e.id');
+  if (meets !== undefined) q = q.where('i.meets', 'is', meets);
+  return q;
+};
+/** Résumé d'évaluation ; les dates restent au format AAAA-MM-JJ calculé par PostgreSQL (::text). */
+const evaluations = (k: Kdb) =>
+  k
+    .selectFrom('sup_evaluations as e')
+    .select((eb) => [
+      'e.id',
+      'e.supplier_id as supplierId',
+      sql<string>`e.evaluated_at::text`.as('evaluatedAt'),
+      'e.evaluator',
+      sql<string | null>`e.next_review_at::text`.as('nextReviewAt'),
+      compte(eb).as('items'),
+      compte(eb, true).as('meets'),
+      compte(eb, false).as('notMeets'),
+      compte(eb, null).as('notAssessed'),
+    ]);
+const resume = (
+  r: Omit<EvaluationSummary, 'items' | 'meets' | 'notMeets' | 'notAssessed'> &
+    Record<'items' | 'meets' | 'notMeets' | 'notAssessed', number | null>,
+): EvaluationSummary => ({
+  ...r,
+  items: r.items ?? 0,
+  meets: r.meets ?? 0,
+  notMeets: r.notMeets ?? 0,
+  notAssessed: r.notAssessed ?? 0,
+});
 const str = (v: unknown) => (typeof v === 'string' ? v : '');
 /** Date du jour (AAAA-MM-JJ) dans le fuseau donné. */
 const today = (timezone: string) => new Intl.DateTimeFormat('en-CA', { timeZone: timezone }).format(new Date());
@@ -90,11 +142,15 @@ export class GrcSuppliers {
     if (!s) throw new HttpError(404, 'Fournisseur absent du registre.');
     return s;
   }
-  private current(c?: Client) {
-    return (c ?? this.g.db.pool).query<EvaluationSummary>(
-      `SELECT DISTINCT ON (e.supplier_id) ${EVALUATION_COLUMNS} FROM sup_evaluations e
-        ORDER BY e.supplier_id,e.evaluated_at DESC,e.created_at DESC`,
-    );
+  /** Évaluation la plus récente de chaque fournisseur. */
+  private async current(): Promise<EvaluationSummary[]> {
+    const rows = await evaluations(this.g.db.k)
+      .distinctOn('e.supplier_id')
+      .orderBy('e.supplier_id')
+      .orderBy('e.evaluated_at', 'desc')
+      .orderBy('e.created_at', 'desc')
+      .execute();
+    return rows.map(resume);
   }
   private row(s: JsonObject & { id: string }, current: EvaluationSummary | null, scopes: string[], day: string) {
     return {
@@ -123,10 +179,8 @@ export class GrcSuppliers {
   async list(user: SessionUser): Promise<SupplierRow[]> {
     await this.g.permission(user, 'fournisseurs', 'lire');
     const { suppliers } = await this.registry();
-    const current = new Map((await this.current()).rows.map((e) => [e.supplierId, e]));
-    const links = (
-      await this.g.db.q<{ supplier_id: string; smsi_id: string }>('SELECT supplier_id,smsi_id FROM sup_scope_links')
-    ).rows;
+    const current = new Map((await this.current()).map((e) => [e.supplierId, e]));
+    const links = await this.g.db.k.selectFrom('sup_scope_links').select(['supplier_id', 'smsi_id']).execute();
     const visible = new Set<string>();
     for (const smsi of new Set(links.map((l) => l.smsi_id)))
       try {
@@ -153,7 +207,7 @@ export class GrcSuppliers {
     await this.g.permission(user, 'fournisseurs', 'modifier');
     const body = SupplierBody.parse(input);
     return this.g.db.tx(async (c) => {
-      await c.query('SELECT id FROM app_state WHERE id=1 FOR UPDATE');
+      await surConnexion(c).selectFrom('app_state').select('id').where('id', '=', 1).forUpdate().execute();
       const { state, suppliers } = await this.registry(c);
       if (!state) throw new HttpError(409, 'Registre historique indisponible.');
       if (suppliers.some((s) => str(s.name).trim().toLowerCase() === body.name.toLowerCase()))
@@ -181,7 +235,7 @@ export class GrcSuppliers {
     await this.g.permission(user, 'fournisseurs', 'modifier');
     const body = SupplierUpdateBody.parse(input);
     return this.g.db.tx(async (c) => {
-      await c.query('SELECT id FROM app_state WHERE id=1 FOR UPDATE');
+      await surConnexion(c).selectFrom('app_state').select('id').where('id', '=', 1).forUpdate().execute();
       const { state, suppliers } = await this.registry(c);
       if (!state) throw new HttpError(409, 'Registre historique indisponible.');
       const before = suppliers.find((s) => s.id === id);
@@ -216,25 +270,24 @@ export class GrcSuppliers {
   /* ------------------------------------------------------------------ Critères définis par l'organisme */
   async criteria(user: SessionUser, includeArchived = false): Promise<SupplierCriterion[]> {
     await this.g.permission(user, 'fournisseurs', 'lire');
+    let q = criteres(this.g.db.k);
+    if (!includeArchived) q = q.where('archived', '=', false);
     return (
-      await this.g.db.q<SupplierCriterion>(
-        `SELECT ${CRITERION_COLUMNS} FROM sup_criteria WHERE ($1 OR NOT archived) ORDER BY lower(label),id`,
-        [includeArchived],
-      )
-    ).rows;
+      await q
+        .orderBy(sql`lower(label)`)
+        .orderBy('id')
+        .execute()
+    ).map(critere);
   }
-  private async criterion(id: string, c: Client, lock = false) {
-    const r = (
-      await c.query<SupplierCriterion>(
-        `SELECT ${CRITERION_COLUMNS} FROM sup_criteria WHERE id=$1${lock ? ' FOR UPDATE' : ''}`,
-        [id],
-      )
-    ).rows[0];
+  private async criterion(id: string, k: Kdb, lock = false) {
+    let q = criteres(k).where('id', '=', id);
+    if (lock) q = q.forUpdate();
+    const r = await q.executeTakeFirst();
     if (!r) throw new HttpError(404, 'Critère introuvable.');
-    return r;
+    return critere(r);
   }
   /** Chaque exigence visée doit exister dans la version publiée de la bibliothèque. */
-  private async checkRequirements(refs: string[], c: Client) {
+  private async checkRequirements(refs: string[], k: Kdb) {
     const definitions = new Map<string, FrameworkDefinition | null>();
     for (const ref of refs) {
       const p = parseRequirementRef(ref);
@@ -243,12 +296,15 @@ export class GrcSuppliers {
       if (!definitions.has(key))
         definitions.set(
           key,
-          (
-            await c.query<{ definition: FrameworkDefinition }>(
-              'SELECT definition FROM lib_framework_versions WHERE framework_id=$1 AND version=$2',
-              [p.frameworkId, p.version],
-            )
-          ).rows[0]?.definition ?? null,
+          // Définition publiée (validée à la publication), relue telle quelle.
+          ((
+            await k
+              .selectFrom('lib_framework_versions')
+              .select('definition')
+              .where('framework_id', '=', p.frameworkId)
+              .where('version', '=', p.version)
+              .executeTakeFirst()
+          )?.definition as FrameworkDefinition | undefined) ?? null,
         );
       const def = definitions.get(key);
       if (!def) throw new HttpError(404, 'Version de la bibliothèque introuvable.');
@@ -256,11 +312,17 @@ export class GrcSuppliers {
         throw new HttpError(422, `Exigence « ${p.requirementId} » absente de cette version publiée.`);
     }
   }
-  private async history(c: Client, k: SupplierCriterion, reason: string, user: SessionUser) {
-    await c.query(
-      'INSERT INTO sup_criterion_history(criterion_id,version,snapshot,reason,created_by) VALUES($1,$2,$3,$4,$5)',
-      [k.id, k.version, k, reason, user.username],
-    );
+  private async history(k: Kdb, crit: SupplierCriterion, reason: string, user: SessionUser) {
+    await k
+      .insertInto('sup_criterion_history')
+      .values({
+        criterion_id: crit.id,
+        version: crit.version,
+        snapshot: JSON.stringify(crit),
+        reason,
+        created_by: user.username,
+      })
+      .execute();
   }
   private duplicateLabel(e: unknown): never {
     if ((e as { code?: string }).code === '23505') throw new HttpError(409, 'Un critère actif porte déjà ce libellé.');
@@ -270,19 +332,24 @@ export class GrcSuppliers {
     await this.g.permission(user, 'fournisseurs', 'administrer');
     const body = SupplierCriterionBody.parse(input);
     return this.g.db
-      .tx(async (c) => {
-        await this.checkRequirements(body.requirementRefs, c);
-        const id = (
-          await c.query<{ id: string }>(
-            `INSERT INTO sup_criteria(label,description,purposes,requirement_refs,created_by,updated_by)
-             VALUES($1,$2,$3,$4,$5,$5) RETURNING id`,
-            [body.label, body.description, body.purposes, body.requirementRefs, user.username],
-          )
-        ).rows[0]!.id;
-        const k = await this.criterion(id, c);
-        await this.history(c, k, 'Critère créé : ' + body.reason, user);
-        await this.g.db.audit(user, ip, 'supplier.criterion.created', id, { label: k.label }, c);
-        return k;
+      .tx(async (c, k) => {
+        await this.checkRequirements(body.requirementRefs, k);
+        const { id } = await k
+          .insertInto('sup_criteria')
+          .values({
+            label: body.label,
+            description: body.description,
+            purposes: body.purposes,
+            requirement_refs: body.requirementRefs,
+            created_by: user.username,
+            updated_by: user.username,
+          })
+          .returning('id')
+          .executeTakeFirstOrThrow();
+        const crit = await this.criterion(id, k);
+        await this.history(k, crit, 'Critère créé : ' + body.reason, user);
+        await this.g.db.audit(user, ip, 'supplier.criterion.created', id, { label: crit.label }, c);
+        return crit;
       }, user.username)
       .catch((e: unknown) => this.duplicateLabel(e));
   }
@@ -290,39 +357,53 @@ export class GrcSuppliers {
     await this.g.permission(user, 'fournisseurs', 'administrer');
     const body = SupplierCriterionBody.parse(input);
     return this.g.db
-      .tx(async (c) => {
-        const current = await this.criterion(id, c, true);
+      .tx(async (c, k) => {
+        const current = await this.criterion(id, k, true);
         if (current.version !== expected)
           throw new HttpError(412, 'Le critère a changé. Rechargez avant d’enregistrer.');
         if (current.archived) throw new HttpError(409, 'Un critère retiré ne se modifie pas.');
-        await this.checkRequirements(body.requirementRefs, c);
-        await c.query(
-          `UPDATE sup_criteria SET label=$2,description=$3,purposes=$4,requirement_refs=$5,version=version+1,
-             updated_by=$6,updated_at=now() WHERE id=$1`,
-          [id, body.label, body.description, body.purposes, body.requirementRefs, user.username],
-        );
-        const k = await this.criterion(id, c);
-        await this.history(c, k, 'Critère modifié : ' + body.reason, user);
-        await this.g.db.audit(user, ip, 'supplier.criterion.updated', id, { version: k.version }, c);
-        return k;
+        await this.checkRequirements(body.requirementRefs, k);
+        await k
+          .updateTable('sup_criteria')
+          .set((eb) => ({
+            label: body.label,
+            description: body.description,
+            purposes: body.purposes,
+            requirement_refs: body.requirementRefs,
+            version: eb('version', '+', 1),
+            updated_by: user.username,
+            updated_at: sql<Date>`now()`,
+          }))
+          .where('id', '=', id)
+          .execute();
+        const crit = await this.criterion(id, k);
+        await this.history(k, crit, 'Critère modifié : ' + body.reason, user);
+        await this.g.db.audit(user, ip, 'supplier.criterion.updated', id, { version: crit.version }, c);
+        return crit;
       }, user.username)
       .catch((e: unknown) => this.duplicateLabel(e));
   }
   /** Retire un critère des nouvelles évaluations ; les évaluations passées gardent son libellé et sa version figés. */
   async archiveCriterion(id: string, expected: number, reason: string, user: SessionUser, ip: string) {
     await this.g.permission(user, 'fournisseurs', 'administrer');
-    return this.g.db.tx(async (c) => {
-      const current = await this.criterion(id, c, true);
+    return this.g.db.tx(async (c, k) => {
+      const current = await this.criterion(id, k, true);
       if (current.version !== expected) throw new HttpError(412, 'Le critère a changé.');
       if (current.archived) throw new HttpError(409, 'Critère déjà retiré.');
-      await c.query(
-        'UPDATE sup_criteria SET archived=true,version=version+1,updated_by=$2,updated_at=now() WHERE id=$1',
-        [id, user.username],
-      );
-      const k = await this.criterion(id, c);
-      await this.history(c, k, 'Critère retiré : ' + reason, user);
-      await this.g.db.audit(user, ip, 'supplier.criterion.archived', id, { version: k.version }, c);
-      return k;
+      await k
+        .updateTable('sup_criteria')
+        .set((eb) => ({
+          archived: true,
+          version: eb('version', '+', 1),
+          updated_by: user.username,
+          updated_at: sql<Date>`now()`,
+        }))
+        .where('id', '=', id)
+        .execute();
+      const crit = await this.criterion(id, k);
+      await this.history(k, crit, 'Critère retiré : ' + reason, user);
+      await this.g.db.audit(user, ip, 'supplier.criterion.archived', id, { version: crit.version }, c);
+      return crit;
     }, user.username);
   }
 
@@ -334,35 +415,52 @@ export class GrcSuppliers {
     if (body.evaluatedAt > limit) throw new HttpError(422, 'La date d’évaluation ne peut pas être dans le futur.');
     if (body.nextReviewAt && body.nextReviewAt < body.evaluatedAt)
       throw new HttpError(422, 'La réévaluation ne peut pas précéder l’évaluation.');
-    return this.g.db.tx(async (c) => {
+    return this.g.db.tx(async (c, k) => {
       const supplier = await this.supplier(supplierId, c);
+      // Au moins un élément (schéma .min(1)) : la liste « in » n'est jamais vide.
       const criteria = new Map(
         (
-          await c.query<SupplierCriterion>(
-            `SELECT ${CRITERION_COLUMNS} FROM sup_criteria WHERE id=ANY($1::uuid[]) FOR SHARE`,
-            [body.items.map((i) => i.criterionId)],
-          )
-        ).rows.map((k) => [k.id, k]),
+          await criteres(k)
+            .where(
+              'id',
+              'in',
+              body.items.map((i) => i.criterionId),
+            )
+            .forShare()
+            .execute()
+        ).map((r) => [r.id, critere(r)]),
       );
       for (const item of body.items) {
         const k = criteria.get(item.criterionId);
         if (!k) throw new HttpError(404, 'Critère introuvable.');
         if (k.archived) throw new HttpError(422, `Le critère « ${k.label} » est retiré.`);
       }
-      const id = (
-        await c.query<{ id: string }>(
-          `INSERT INTO sup_evaluations(supplier_id,supplier_name,evaluated_at,evaluator,conclusion,next_review_at)
-           VALUES($1,$2,$3,$4,$5,$6) RETURNING id`,
-          [supplierId, str(supplier.name), body.evaluatedAt, user.username, body.conclusion, body.nextReviewAt],
-        )
-      ).rows[0]!.id;
+      const { id } = await k
+        .insertInto('sup_evaluations')
+        .values({
+          supplier_id: supplierId,
+          supplier_name: str(supplier.name),
+          evaluated_at: body.evaluatedAt,
+          evaluator: user.username,
+          conclusion: body.conclusion,
+          next_review_at: body.nextReviewAt,
+        })
+        .returning('id')
+        .executeTakeFirstOrThrow();
       for (const item of body.items) {
-        const k = criteria.get(item.criterionId)!;
-        await c.query(
-          `INSERT INTO sup_evaluation_items(evaluation_id,criterion_id,criterion_version,criterion_label,requirement_refs,meets,result)
-           VALUES($1,$2,$3,$4,$5,$6,$7)`,
-          [id, k.id, k.version, k.label, k.requirementRefs, item.meets, item.result],
-        );
+        const crit = criteria.get(item.criterionId)!;
+        await k
+          .insertInto('sup_evaluation_items')
+          .values({
+            evaluation_id: id,
+            criterion_id: crit.id,
+            criterion_version: crit.version,
+            criterion_label: crit.label,
+            requirement_refs: crit.requirementRefs,
+            meets: item.meets,
+            result: item.result,
+          })
+          .execute();
       }
       await this.g.db.audit(
         user,
@@ -372,43 +470,46 @@ export class GrcSuppliers {
         { evaluation: id, items: body.items.length },
         c,
       );
-      return this.evaluationIn(id, c);
+      return this.evaluationIn(id, k);
     }, user.username);
   }
-  private async evaluationIn(id: string, c: Client) {
-    const e = (
-      await c.query<EvaluationSummary & { supplierName: string; conclusion: string }>(
-        `SELECT ${EVALUATION_COLUMNS},e.supplier_name AS "supplierName",e.conclusion FROM sup_evaluations e WHERE e.id=$1`,
-        [id],
-      )
-    ).rows[0]!;
-    const items = (
-      await c.query(
-        `SELECT criterion_id AS "criterionId",criterion_version AS "criterionVersion",criterion_label AS "criterionLabel",
-                requirement_refs AS "requirementRefs",meets,result FROM sup_evaluation_items
-          WHERE evaluation_id=$1 ORDER BY lower(criterion_label),id`,
-        [id],
-      )
-    ).rows;
-    return { ...e, items };
+  private async evaluationIn(id: string, k: Kdb) {
+    const e = await evaluations(k)
+      .select(['e.supplier_name as supplierName', 'e.conclusion'])
+      .where('e.id', '=', id)
+      .executeTakeFirstOrThrow();
+    const items = await k
+      .selectFrom('sup_evaluation_items')
+      .select([
+        'criterion_id as criterionId',
+        'criterion_version as criterionVersion',
+        'criterion_label as criterionLabel',
+        'requirement_refs as requirementRefs',
+        'meets',
+        'result',
+      ])
+      .where('evaluation_id', '=', id)
+      .orderBy(sql`lower(criterion_label)`)
+      .orderBy('id')
+      .execute();
+    const { supplierName, conclusion, ...r } = e;
+    return { ...resume(r), supplierName, conclusion, items };
   }
   /** Historique complet des évaluations d'un fournisseur, la plus récente d'abord (la première est la courante). */
   async evaluations(supplierId: string, user: SessionUser) {
     await this.g.permission(user, 'fournisseurs', 'lire');
-    const ids = (
-      await this.g.db.q<{ id: string }>(
-        'SELECT id FROM sup_evaluations WHERE supplier_id=$1 ORDER BY evaluated_at DESC,created_at DESC LIMIT 200',
-        [supplierId],
-      )
-    ).rows;
-    const client = await this.g.db.pool.connect();
-    try {
-      const out = [];
-      for (const { id } of ids) out.push(await this.evaluationIn(id, client));
-      return out;
-    } finally {
-      client.release();
-    }
+    const k = this.g.db.k;
+    const ids = await k
+      .selectFrom('sup_evaluations')
+      .select('id')
+      .where('supplier_id', '=', supplierId)
+      .orderBy('evaluated_at', 'desc')
+      .orderBy('created_at', 'desc')
+      .limit(200)
+      .execute();
+    const out = [];
+    for (const { id } of ids) out.push(await this.evaluationIn(id, k));
+    return out;
   }
 
   /* ------------------------------------------------------------------ Suite d'une évaluation (D11) */
@@ -418,12 +519,12 @@ export class GrcSuppliers {
     await this.g.permission(user, 'fournisseurs', 'modifier');
     const body = SupplierFollowUpBody.parse(input);
     const scope = await this.g.access(body.smsi, user, true);
-    const evaluation = (
-      await this.g.db.q<{ id: string; supplier_name: string; evaluated_at: string }>(
-        'SELECT id,supplier_name,evaluated_at::text FROM sup_evaluations WHERE id=$1 AND supplier_id=$2',
-        [evaluationId, supplierId],
-      )
-    ).rows[0];
+    const evaluation = await this.g.db.k
+      .selectFrom('sup_evaluations')
+      .select(['id', 'supplier_name', sql<string>`evaluated_at::text`.as('evaluated_at')])
+      .where('id', '=', evaluationId)
+      .where('supplier_id', '=', supplierId)
+      .executeTakeFirst();
     if (!evaluation) throw new HttpError(404, 'Évaluation introuvable pour ce fournisseur.');
     await this.supplier(supplierId);
     const ref = `legacy:suppliers:${supplierId}`;
@@ -492,14 +593,16 @@ export class GrcSuppliers {
   /* ------------------------------------------------------------------ Rattachement aux périmètres */
   async attach(smsi: string, supplierId: string, user: SessionUser, ip: string) {
     await this.g.permission(user, 'fournisseurs', 'modifier');
-    return this.g.db.tx(async (c) => {
+    return this.g.db.tx(async (c, k) => {
       await this.g.access(smsi, user, true, c);
       await this.supplier(supplierId, c);
-      const r = await c.query(
-        'INSERT INTO sup_scope_links(smsi_id,supplier_id,attached_by) VALUES($1,$2,$3) ON CONFLICT DO NOTHING',
-        [smsi, supplierId, user.username],
-      );
-      if (!r.rowCount) throw new HttpError(409, 'Fournisseur déjà rattaché à ce périmètre.');
+      const r = await k
+        .insertInto('sup_scope_links')
+        .values({ smsi_id: smsi, supplier_id: supplierId, attached_by: user.username })
+        .onConflict((oc) => oc.doNothing())
+        .executeTakeFirst();
+      if (!Number(r.numInsertedOrUpdatedRows ?? 0n))
+        throw new HttpError(409, 'Fournisseur déjà rattaché à ce périmètre.');
       await this.g.db.audit(user, ip, 'supplier.attached', supplierId, { smsi }, c);
       return { smsiId: smsi, supplierId };
     }, user.username);
@@ -507,10 +610,14 @@ export class GrcSuppliers {
   /** Retire seulement le rattachement : ni le fournisseur ni ses évaluations ne sont touchés. */
   async detach(smsi: string, supplierId: string, user: SessionUser, ip: string) {
     await this.g.permission(user, 'fournisseurs', 'modifier');
-    await this.g.db.tx(async (c) => {
+    await this.g.db.tx(async (c, k) => {
       await this.g.access(smsi, user, true, c);
-      const r = await c.query('DELETE FROM sup_scope_links WHERE smsi_id=$1 AND supplier_id=$2', [smsi, supplierId]);
-      if (!r.rowCount) throw new HttpError(404, 'Rattachement introuvable.');
+      const r = await k
+        .deleteFrom('sup_scope_links')
+        .where('smsi_id', '=', smsi)
+        .where('supplier_id', '=', supplierId)
+        .executeTakeFirst();
+      if (!Number(r.numDeletedRows)) throw new HttpError(404, 'Rattachement introuvable.');
       await this.g.db.audit(user, ip, 'supplier.detached', supplierId, { smsi }, c);
     }, user.username);
   }
@@ -519,12 +626,12 @@ export class GrcSuppliers {
     await this.g.permission(user, 'fournisseurs', 'lire');
     const scope = await this.g.access(smsi, user);
     const links = new Set(
-      (
-        await this.g.db.q<{ supplier_id: string }>('SELECT supplier_id FROM sup_scope_links WHERE smsi_id=$1', [smsi])
-      ).rows.map((l) => l.supplier_id),
+      (await this.g.db.k.selectFrom('sup_scope_links').select('supplier_id').where('smsi_id', '=', smsi).execute()).map(
+        (l) => l.supplier_id,
+      ),
     );
     const { suppliers } = await this.registry();
-    const current = new Map((await this.current()).rows.map((e) => [e.supplierId, e]));
+    const current = new Map((await this.current()).map((e) => [e.supplierId, e]));
     const day = today(scope.timezone);
     const rows = suppliers
       .filter((s) => links.has(s.id))
