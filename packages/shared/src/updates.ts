@@ -54,6 +54,8 @@ export type UpdateEtape = z.infer<typeof UpdateEtape>;
 
 /* ------------------------------------------------------------------ Reçu d'une mise à jour */
 const sha256 = z.string().regex(/^[a-f0-9]{64}$/);
+export const SBOM_COMPOSANTS = ['api', 'web', 'updater'] as const;
+const SbomRef = z.object({ fichier: z.enum(['api.cdx.json', 'web.cdx.json', 'updater.cdx.json']), sha256 });
 const imageEpinglee = (c: string) =>
   z.string().regex(new RegExp(`^ghcr\\.io/yousername-ha/suivi-audits-${c}(@sha256:[a-f0-9]{64}|:[\\w.-]{1,40})$`));
 /** Reçu structuré écrit par l'exécutant à la fin d'une installation : preuve de changement (ISO 27001 A.8.32), sans sortie
@@ -82,6 +84,15 @@ export const UpdateReceipt = z.object({
       .nullable(),
   }),
   sauvegarde: z.object({ fichier: z.string().max(200), sha256: sha256.nullable() }).nullable(),
+  /** SBOM CycloneDX extraits des attestations signées vérifiées (ADR 0063) ; absents des reçus antérieurs. */
+  sbom: z
+    .object({
+      api: SbomRef,
+      web: SbomRef,
+      updater: SbomRef,
+    })
+    .partial()
+    .default({}),
   controles: z.object({
     avant: z.boolean().nullable(),
     apres: z.boolean().nullable(),
@@ -96,7 +107,7 @@ export const UpdateReceiptSummary = UpdateReceipt.pick({
   statut: true,
   fin: true,
   dureeSecondes: true,
-});
+}).extend({ sbom: z.array(z.enum(SBOM_COMPOSANTS)) });
 export type UpdateReceiptSummary = z.infer<typeof UpdateReceiptSummary>;
 
 /* ------------------------------------------------------------------ Fenêtre de maintenance */

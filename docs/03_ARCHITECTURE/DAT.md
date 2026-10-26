@@ -60,7 +60,7 @@ Query invalide les données concernées. If-Match protège les mises à jour.
 | Vite / Vitest / Playwright    | 7.3.7 / 3.2.7 / 1.56.1                                                      |
 | PostgreSQL                    | 17, image 17-alpine                                                         |
 | Caddy                         | 2.11.7, recompilé avec Go 1.26.10                                            |
-| Trivy                         | 0.75.0 dans le workflow CI                                                  |
+| Trivy                         | 0.75.0, binaire officiel à empreinte vérifiée (ADR 0063)                    |
 
 Versions déclarées/épinglées dans package.json/lockfiles/Dockerfiles ; elles ne
 prouvent pas les binaires actuellement installés chez l’utilisateur.

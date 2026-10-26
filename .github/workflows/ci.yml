@@ -14,31 +14,28 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  TRIVY_IMAGE: aquasec/trivy:0.75.0
-
 jobs:
   secrets:
     name: Secrets (gitleaks, historique complet)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           fetch-depth: 0
+      - name: gitleaks (publication officielle, empreinte vérifiée, ADR 0063)
+        run: scripts/ci/installer-outils.sh gitleaks
       - name: Recherche de secrets dans tout l'historique (valeurs masquées dans le journal)
-        run: |
-          docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.28.0 \
-            git /repo --config /repo/.gitleaks.toml --redact --verbose --no-banner --exit-code 1
+        run: gitleaks git . --config .gitleaks.toml --redact --verbose --no-banner --exit-code 1
 
   qualite:
     name: Qualité (lint, format, typage, contrôles)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 26
           cache: pnpm
@@ -57,16 +54,19 @@ jobs:
         run: |
           for f in scripts/*.sh scripts/ci/*.sh; do bash -n "$f"; done
           shellcheck -S warning -x -e SC1091 scripts/*.sh scripts/ci/*.sh
+      - name: Actions GitHub épinglées par empreinte de commit (ADR 0063)
+        run: node scripts/ci/verifier-epinglage.mjs
       - name: CHANGELOG (paragraphe « Notes de mise à jour » dans chaque section, EXPL-07)
         run: node scripts/ci/verifier-changelog.mjs CHANGELOG.md
       - name: Contrats de publication et compatibilité de détection des mises à jour
         run: |
           node --test scripts/tests/publication.test.mjs
+          node --test scripts/tests/epinglage.test.mjs
           python3 -m unittest discover -s scripts/tests -p test_updates.py
           python3 -m unittest discover -s scripts/tests -p test_exploitation.py
       - name: OpenAPI
         run: pnpm --filter @suivi/api openapi "$GITHUB_WORKSPACE/openapi.json"
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: openapi
           path: openapi.json
@@ -117,9 +117,9 @@ jobs:
       TEST_PG_USER: postgres
       TEST_PG_PASSWORD: test
     steps:
-      - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 26
           cache: pnpm
@@ -130,7 +130,7 @@ jobs:
         env:
           PERF_OUT: ${{ runner.temp }}/performance/mesures.json
         run: pnpm --filter @suivi/api test
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         if: always()
         with:
           name: performance-mesures
@@ -151,9 +151,9 @@ jobs:
     env:
       APP_VERSION: ci
     steps:
-      - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 26
           cache: pnpm
@@ -171,32 +171,40 @@ jobs:
         run: docker compose -f docker-compose.yml -f docker-compose.build.yml build --pull
 
       - name: Cache de la base de vulnérabilités Trivy
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ~/.cache/trivy
           key: trivy-${{ github.run_id }}
           restore-keys: trivy-
 
+      # Trivy : binaire officiel à empreinte vérifiée (ADR 0063). Il lit des archives « docker save » : ni socket Docker,
+      # ni identifiants de registre ne lui sont exposés.
+      - name: Trivy (publication officielle, empreinte vérifiée)
+        run: scripts/ci/installer-outils.sh trivy
+      - name: Archives des images pour l'analyse
+        run: |
+          set -e
+          mkdir -p "$RUNNER_TEMP/images"
+          for img in api web updater; do docker save -o "$RUNNER_TEMP/images/$img.tar" "ghcr.io/yousername-ha/suivi-audits-$img:ci"; done
+
       - name: Trivy — images (échec sur HIGH et CRITICAL)
         run: |
           set -e
-          trivy() { docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$HOME/.cache/trivy:/root/.cache/trivy" -v "$PWD:/work" -w /work "$TRIVY_IMAGE" "$@"; }
           for img in api web updater; do
-            trivy image --scanners vuln --severity HIGH,CRITICAL --exit-code 1 --no-progress "ghcr.io/yousername-ha/suivi-audits-$img:ci"
+            trivy image --input "$RUNNER_TEMP/images/$img.tar" --scanners vuln --severity HIGH,CRITICAL --exit-code 1 --no-progress
           done
 
       - name: Trivy — dépendances du dépôt (échec sur HIGH et CRITICAL)
-        run: docker run --rm -v "$HOME/.cache/trivy:/root/.cache/trivy" -v "$PWD:/work" -w /work "$TRIVY_IMAGE" fs --scanners vuln --severity HIGH,CRITICAL --exit-code 1 --no-progress .
+        run: trivy fs --scanners vuln --severity HIGH,CRITICAL --exit-code 1 --no-progress .
 
       - name: SBOM CycloneDX (dépôt et images)
         run: |
           set -e
           mkdir -p sbom
-          trivy() { docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$HOME/.cache/trivy:/root/.cache/trivy" -v "$PWD:/work" -w /work "$TRIVY_IMAGE" "$@"; }
           trivy fs --format cyclonedx --output sbom/depot.cdx.json .
-          for img in api web updater; do trivy image --format cyclonedx --output "sbom/suivi-audits-$img.cdx.json" "ghcr.io/yousername-ha/suivi-audits-$img:ci"; done
-          sudo chown -R "$USER" sbom
-      - uses: actions/upload-artifact@v5
+          for img in api web updater; do trivy image --input "$RUNNER_TEMP/images/$img.tar" --format cyclonedx --output "sbom/suivi-audits-$img.cdx.json"; done
+          rm -rf "$RUNNER_TEMP/images"
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: sbom-cyclonedx
           path: sbom/
@@ -246,7 +254,7 @@ jobs:
       - name: Droits des résultats de test
         if: always()
         run: sudo chown -R "$USER" tests/e2e 2>/dev/null || true
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         if: failure()
         with:
           name: playwright-resultats
@@ -261,7 +269,7 @@ jobs:
           umask 077
           head -c 24 /dev/urandom | base64 > "$RUNNER_TEMP/passphrase-recette"
           sudo BACKUP_PASSPHRASE_FILE="$RUNNER_TEMP/passphrase-recette" ./scripts/recette-serveur.sh --version ci --avec-sauvegarde --sortie "$RUNNER_TEMP/recette-serveur"
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         if: always()
         with:
           name: recette-serveur
@@ -313,11 +321,11 @@ jobs:
       contents: read
       packages: read
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           fetch-depth: 0
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 26
       - name: Version de départ
@@ -388,7 +396,7 @@ jobs:
     needs: [qualite]
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
       - name: Runner vierge (désinstallation de Docker préinstallé)
         run: |
           sudo systemctl stop docker.socket docker containerd 2>/dev/null || true
@@ -400,7 +408,7 @@ jobs:
         run: |
           node scripts/ci/guide-extraire.mjs docs/INSTALLATION.md nom_dns=localhost version=ci > "$RUNNER_TEMP/guide.sh"
           cp "$RUNNER_TEMP/guide.sh" guide.sh
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: guide-script
           path: guide.sh

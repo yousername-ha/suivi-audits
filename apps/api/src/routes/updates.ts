@@ -1,9 +1,10 @@
-import { UpdateReceipt, UpdateReceiptSummary, UpdateRequest, UpdateState } from '@suivi/shared';
+import { SBOM_COMPOSANTS, UpdateReceipt, UpdateReceiptSummary, UpdateRequest, UpdateState } from '@suivi/shared';
 import { z } from 'zod';
 import { HttpError } from '../http/errors.js';
 import { route } from '../http/route.js';
 
 const ReceiptParams = z.object({ id: z.string().uuid() }).strict();
+const SbomParams = z.object({ id: z.string().uuid(), composant: z.enum(SBOM_COMPOSANTS) }).strict();
 
 export const updateRoutes = [
   route({
@@ -76,6 +77,26 @@ export const updateRoutes = [
       reply.header('Content-Disposition', `attachment; filename="recu-mise-a-jour-${receipt.vers}-${receipt.id}.json"`);
       reply.header('Cache-Control', 'no-store');
       return receipt;
+    },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/admin/updates/receipts/:id/sbom/:composant',
+    summary: 'Télécharger le SBOM CycloneDX vérifié d’un composant installé',
+    tags: ['Administration'],
+    access: 'administration:administrer',
+    params: SbomParams,
+    handler: async ({ svc, s, ip, params, reply }) => {
+      await svc.updates.assertAdmin(s!.user);
+      const { vers, contenu } = svc.updates.sbom(params.id, params.composant);
+      await svc.db.audit(s!.user, ip, 'update.sbom.downloaded', params.id, { composant: params.composant });
+      reply.header('Content-Type', 'application/vnd.cyclonedx+json');
+      reply.header(
+        'Content-Disposition',
+        `attachment; filename="sbom-suivi-audits-${params.composant}-${vers}.cdx.json"`,
+      );
+      reply.header('Cache-Control', 'no-store');
+      return reply.send(contenu);
     },
   }),
 ];

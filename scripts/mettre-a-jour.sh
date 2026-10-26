@@ -352,8 +352,13 @@ if [ "$LOCALES" = 0 ]; then
       cosign verify "$DEPOT_IMAGES-$i:$CIBLE" --certificate-identity "https://github.com/yousername-ha/suivi-audits/.github/workflows/release.yml@refs/tags/v$CIBLE" \
         --certificate-oidc-issuer https://token.actions.githubusercontent.com > /dev/null \
         || retour_arriere "signature de l'image $i:$CIBLE invalide ou absente"
+      # Attestation SBOM signée par la même identité (ADR 0063) : une image publiée hors procédure est refusée.
+      cosign verify-attestation "$DEPOT_IMAGES-$i:$CIBLE" --type cyclonedx \
+        --certificate-identity "https://github.com/yousername-ha/suivi-audits/.github/workflows/release.yml@refs/tags/v$CIBLE" \
+        --certificate-oidc-issuer https://token.actions.githubusercontent.com > /dev/null \
+        || retour_arriere "attestation SBOM de l'image $i:$CIBLE invalide ou absente"
     done
-    SIGNATURE='vérifiée (cosign)'
+    SIGNATURE='vérifiée (cosign, signature et attestation SBOM)'
     info "Signature des images vérifiée."
   fi
 fi

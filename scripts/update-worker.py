@@ -6,6 +6,8 @@ son successeur lit le reçu durable et ouvre l'application seulement après sant
 import contextlib
 import datetime as dt
 import fcntl
+import base64
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -22,6 +24,8 @@ import uuid
 REPOSITORY = "yousername-ha/suivi-audits"
 PUBLIC_GIT = f"https://github.com/{REPOSITORY}.git"
 SIGNER_ISSUER = "https://token.actions.githubusercontent.com"
+CYCLONEDX = "https://cyclonedx.org/bom"
+SBOM_MAX = 20_000_000
 VERSION = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$")
 TERMINAL = {"success", "rolled_back", "failed", "intervention"}
 PHASES = {"controles": "preparing", "notes": "preparing", "sauvegarde": "backup", "images": "installing", "demarrage": "installing", "sante": "verifying", "termine": "complete"}
@@ -268,6 +272,7 @@ class Worker:
             "signature": {"verifiee": bool(revision), "identite": self.signer(job["target"]), "emetteur": SIGNER_ISSUER,
                           "revision": revision if revision and re.fullmatch(r"[a-f0-9]{40}", revision) else None},
             "sauvegarde": backup,
+            "sbom": {k: v for k, v in (job.get("sbom") or {}).items() if k in ("api", "web", "updater")},
             "controles": {"avant": before.get("ok") is True if before else None,
                           "apres": after.get("ok") is True if after else None,
                           "documentsIdentiques": after.get("documentsIdentiques")},
@@ -357,11 +362,60 @@ class Worker:
             source = self.run(["docker", "inspect", "--format", '{{index .Config.Labels "org.opencontainers.image.revision"}}', digest]).strip()
             if source != revision:
                 raise Failure("Les sources ne correspondent pas aux images signées")
+            # Attestation SBOM signée par la même identité, pour la même empreinte (ADR 0063) : une image publiée hors de
+            # la procédure normale (sans analyse ni SBOM) est refusée.
+            sbom = self.sbom(digest, target)
+            self.job.setdefault("sbom", {})[component] = self.keep_sbom(target, component, sbom)
             # Une étiquette modifiée entre téléchargement et application est refusée par le script (empreinte attendue).
             self.job.setdefault("images", {})[component] = digest
         # Révision vérifiée (signature et sources concordantes) : reprise dans le reçu.
         self.job["revision"] = revision
         atomic(self.private / "active.json", self.job)
+
+    def sbom(self, digest, target):
+        """SBOM CycloneDX extrait de l'attestation vérifiée ; refus si absente, mal formée ou liée à une autre image."""
+        out = self.run(["cosign", "verify-attestation", digest, "--type", "cyclonedx", "--certificate-identity",
+                        self.signer(target), "--certificate-oidc-issuer", SIGNER_ISSUER], timeout=300)
+        expected = digest.rsplit("@sha256:", 1)[1]
+        for line in out.splitlines():
+            try:
+                envelope = json.loads(line)
+                statement = json.loads(base64.b64decode(envelope["payload"]))
+            except (ValueError, KeyError, TypeError):
+                continue
+            subjects = statement.get("subject") or []
+            if (statement.get("predicateType") == CYCLONEDX and isinstance(statement.get("predicate"), dict)
+                    and any((s.get("digest") or {}).get("sha256") == expected for s in subjects if isinstance(s, dict))):
+                predicate = statement["predicate"]
+                if predicate.get("bomFormat") != "CycloneDX":
+                    continue
+                data = json.dumps(predicate, sort_keys=True, separators=(",", ":")).encode()
+                if len(data) > SBOM_MAX:
+                    raise Failure("SBOM trop volumineux")
+                return data
+        raise Failure("Attestation SBOM absente ou invalide")
+
+    def keep_sbom(self, target, component, data):
+        """Conserve le SBOM vérifié de la version (lu par l'API, jamais servi par le frontal public)."""
+        folder = self.data / "etat/sbom" / target
+        name = f"{component}.cdx.json"
+        fd, tmp = tempfile.mkstemp(prefix=".sbom-", dir=self._mkdir(folder))
+        try:
+            os.fchmod(fd, 0o644)
+            with os.fdopen(fd, "wb") as stream:
+                stream.write(data)
+                stream.flush()
+                os.fsync(stream.fileno())
+            os.replace(tmp, folder / name)
+        finally:
+            with contextlib.suppress(FileNotFoundError):
+                os.unlink(tmp)
+        return {"fichier": name, "sha256": hashlib.sha256(data).hexdigest()}
+
+    @staticmethod
+    def _mkdir(folder):
+        folder.mkdir(mode=0o755, parents=True, exist_ok=True)
+        return folder
 
     @staticmethod
     def signer(target):
