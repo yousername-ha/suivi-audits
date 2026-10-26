@@ -99,7 +99,7 @@ function UpdateReceipts() {
                   </Button>
                 </Table.Td>
                 <Table.Td>
-                  {r.sbom.length ? (
+                  {r.sbom?.length ? (
                     <Group gap="xs" wrap="nowrap">
                       {r.sbom.map((c) => (
                         <Button

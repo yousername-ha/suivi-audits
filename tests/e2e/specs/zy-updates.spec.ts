@@ -275,6 +275,16 @@ test('mise à jour : code refusé, fenêtre fermée et reçus téléchargeables'
           statut: 'success',
           fin: '2026-10-26T10:06:00Z',
           dureeSecondes: 372,
+          sbom: ['api', 'web', 'updater'],
+        },
+        // Reçu antérieur à la vérification des attestations : pas de SBOM, affiché sans erreur.
+        {
+          id: '00000000-0000-4000-8000-0000000000ab',
+          depuis: '2.9.0',
+          vers: '3.0.0',
+          statut: 'rolled_back',
+          fin: '2026-10-20T10:00:00Z',
+          dureeSecondes: null,
         },
       ],
     }),
@@ -289,6 +299,8 @@ test('mise à jour : code refusé, fenêtre fermée et reçus téléchargeables'
     await expect(page.getByLabel('Code de double authentification')).toHaveValue('');
     await expect(page.getByRole('cell', { name: '6 min 12 s' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Télécharger le reçu 3.0.0 vers 3.1.0' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Télécharger le SBOM updater de la version 3.1.0' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'Annulée, version précédente restaurée' })).toBeVisible();
     current = fermee;
     await page.reload();
     await expect(page.getByText('L’installation n’est possible que samedi de 22:00 à 23:00')).toBeVisible();
