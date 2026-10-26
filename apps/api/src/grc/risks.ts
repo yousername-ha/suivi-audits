@@ -10,7 +10,8 @@ import {
   type RiskData,
 } from '@suivi/shared';
 import type { SessionUser } from '../auth.js';
-import type { Client } from '../db/db.js';
+import { sql } from 'kysely';
+import { surConnexion, type Client, type Kdb } from '../db/db.js';
 import { HttpError } from '../http/errors.js';
 import { hash, objectDto, type ObjectRow, type Grc } from './core.js';
 export interface MethodVersion {
@@ -22,40 +23,59 @@ export interface MethodVersion {
   createdAt: Date;
   reason: string;
 }
-const methodColumns = `id,method_id AS "methodId",version,definition,reason,created_by AS "createdBy",created_at AS "createdAt"`;
+/* Accès aux données en Kysely (ADR 0062), sauf la projection à une date passée (deux requêtes, SQL paramétré, voir
+   projection()). */
+const methodes = (k: Kdb) =>
+  k
+    .selectFrom('grc_method_versions')
+    .select([
+      'id',
+      'method_id as methodId',
+      'version',
+      'definition',
+      'reason',
+      'created_by as createdBy',
+      'created_at as createdAt',
+    ]);
+// La définition n'est écrite que par publishMethod(), après validation (RiskMethod) : relue telle quelle.
+const versMethode = (r: Omit<MethodVersion, 'definition'> & { definition: unknown }): MethodVersion => ({
+  ...r,
+  definition: r.definition as RiskMethod,
+});
 export class GrcRisks {
   constructor(private readonly g: Grc) {}
   async methods(smsi: string, user: SessionUser) {
     await this.g.access(smsi, user);
     await this.g.permission(user, 'pilotage', 'lire');
-    return (
-      await this.g.db.q<MethodVersion>(
-        `SELECT DISTINCT ON(method_id) ${methodColumns} FROM grc_method_versions WHERE smsi_id=$1 ORDER BY method_id,version DESC`,
-        [smsi],
-      )
-    ).rows;
+    const rows = await methodes(this.g.db.k)
+      .distinctOn('method_id')
+      .where('smsi_id', '=', smsi)
+      .orderBy('method_id')
+      .orderBy('version', 'desc')
+      .execute();
+    return rows.map(versMethode);
   }
   async method(smsi: string, id: string, version: number, user: SessionUser, c?: Client) {
     await this.g.access(smsi, user, false, c);
     await this.g.permission(user, 'pilotage', 'lire');
-    const r = (
-      await (c ?? this.g.db.pool).query<MethodVersion>(
-        `SELECT ${methodColumns} FROM grc_method_versions WHERE smsi_id=$1 AND method_id=$2 AND version=$3`,
-        [smsi, id, version],
-      )
-    ).rows[0];
+    const r = await methodes(c ? surConnexion(c) : this.g.db.k)
+      .where('smsi_id', '=', smsi)
+      .where('method_id', '=', id)
+      .where('version', '=', version)
+      .executeTakeFirst();
     if (!r) throw new HttpError(404, 'Version de méthode introuvable.');
-    return r;
+    return versMethode(r);
   }
   async methodHistory(smsi: string, id: string, user: SessionUser) {
     await this.g.access(smsi, user);
     await this.g.permission(user, 'pilotage', 'lire');
-    return (
-      await this.g.db.q<MethodVersion>(
-        `SELECT ${methodColumns} FROM grc_method_versions WHERE smsi_id=$1 AND method_id=$2 ORDER BY version DESC LIMIT 100`,
-        [smsi, id],
-      )
-    ).rows;
+    const rows = await methodes(this.g.db.k)
+      .where('smsi_id', '=', smsi)
+      .where('method_id', '=', id)
+      .orderBy('version', 'desc')
+      .limit(100)
+      .execute();
+    return rows.map(versMethode);
   }
   /** Définition à publier : épinglages résolus sur le catalogue de configuration, ou définition inchangée sans épinglage. */
   private async resolved(smsi: string, definition: RiskMethod, current: MethodVersion | null | undefined, c?: Client) {
@@ -87,36 +107,54 @@ export class GrcRisks {
     const p = await this.previewMethod(smsi, id, input, user);
     if (p.version !== expected) throw new HttpError(412, 'Version obsolète.');
     if (previewId !== p.previewId) throw new HttpError(422, 'Simulation différente du contenu publié.');
-    return this.g.db.tx(async (c) => {
-      await c.query('SELECT id FROM grc_smsis WHERE id=$1 FOR UPDATE', [smsi]);
+    return this.g.db.tx(async (c, k) => {
+      await k.selectFrom('grc_smsis').select('id').where('id', '=', smsi).forUpdate().execute();
       await this.g.access(smsi, user, true, c);
       const methodId = id ?? crypto.randomUUID();
       const current =
         (
-          await c.query<{ version: number }>(
-            'SELECT max(version)::int version FROM grc_method_versions WHERE smsi_id=$1 AND method_id=$2',
-            [smsi, methodId],
-          )
-        ).rows[0]?.version ?? 0;
+          await k
+            .selectFrom('grc_method_versions')
+            .select(sql<number | null>`max(version)::int`.as('version'))
+            .where('smsi_id', '=', smsi)
+            .where('method_id', '=', methodId)
+            .executeTakeFirst()
+        )?.version ?? 0;
       if (current !== expected) throw new HttpError(412, 'Publication concurrente.');
       // Les éléments épinglés sont relus dans la transaction : un archivage survenu depuis l'aperçu est pris en compte.
-      const previous = current
-        ? (
-            await c.query<MethodVersion>(
-              `SELECT ${methodColumns} FROM grc_method_versions WHERE smsi_id=$1 AND method_id=$2 AND version=$3`,
-              [smsi, methodId, current],
-            )
-          ).rows[0]
+      const lue = current
+        ? await methodes(k)
+            .where('smsi_id', '=', smsi)
+            .where('method_id', '=', methodId)
+            .where('version', '=', current)
+            .executeTakeFirst()
         : null;
+      const previous = lue ? versMethode(lue) : null;
       const fresh = await this.resolved(smsi, RiskMethod.parse(input), previous, c);
       if (hash({ smsi, id, version: current, definition: fresh.definition }) !== previewId)
         throw new HttpError(422, 'Simulation différente du contenu publié.');
-      const row = (
-        await c.query<MethodVersion>(
-          `INSERT INTO grc_method_versions(smsi_id,method_id,version,definition,reason,created_by) VALUES($1,$2,$3,$4,$5,$6) RETURNING ${methodColumns}`,
-          [smsi, methodId, current + 1, fresh.definition, reason, user.username],
-        )
-      ).rows[0]!;
+      const row = versMethode(
+        await k
+          .insertInto('grc_method_versions')
+          .values({
+            smsi_id: smsi,
+            method_id: methodId,
+            version: current + 1,
+            definition: JSON.stringify(fresh.definition),
+            reason,
+            created_by: user.username,
+          })
+          .returning([
+            'id',
+            'method_id as methodId',
+            'version',
+            'definition',
+            'reason',
+            'created_by as createdBy',
+            'created_at as createdAt',
+          ])
+          .executeTakeFirstOrThrow(),
+      );
       if (fresh.refs.length)
         await this.g.methodBindings!.recordUsage(
           c,
@@ -174,12 +212,16 @@ export class GrcRisks {
   async history(smsi: string, id: string, user: SessionUser, before = 2147483647) {
     const o = await this.g.object(smsi, id, user);
     if (o.kind !== 'risk') throw new HttpError(422, 'Risque attendu.');
-    return (
-      await this.g.db.q(
-        'SELECT e.*,m.definition AS method FROM grc_risk_evaluations e JOIN grc_method_versions m ON m.id=e.method_version_id WHERE risk_id=$1 AND revision<$2 ORDER BY revision DESC LIMIT 50',
-        [id, before],
-      )
-    ).rows;
+    return this.g.db.k
+      .selectFrom('grc_risk_evaluations as e')
+      .innerJoin('grc_method_versions as m', 'm.id', 'e.method_version_id')
+      .selectAll('e')
+      .select('m.definition as method')
+      .where('e.risk_id', '=', id)
+      .where('e.revision', '<', before)
+      .orderBy('e.revision', 'desc')
+      .limit(50)
+      .execute();
   }
   async preview(
     smsi: string,
@@ -232,22 +274,16 @@ export class GrcRisks {
     user: SessionUser,
     ip: string,
   ) {
-    return this.g.db.tx(async (c) => {
+    return this.g.db.tx(async (c, k) => {
+      // Verrou consultatif par identifiant de requête : appel SQL direct (ADR 0062).
       await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,727282))', [requestId]);
       await this.g.object(smsi, id, user, true, c);
       await this.g.raw(id, c, true);
-      const existing = (
-        await c.query<{
-          id: string;
-          user_id: string;
-          risk_id: string;
-          ratings: unknown;
-          rationale: string;
-          decision: string;
-          method_version_id: string;
-          risk_snapshot: { version: number };
-        }>('SELECT * FROM grc_risk_evaluations WHERE request_id=$1', [requestId])
-      ).rows[0];
+      const existing = await k
+        .selectFrom('grc_risk_evaluations')
+        .selectAll()
+        .where('request_id', '=', requestId)
+        .executeTakeFirst();
       if (existing) {
         if (
           existing.user_id !== user.id ||
@@ -255,7 +291,7 @@ export class GrcRisks {
           hash(existing.ratings) !== hash(RiskRatings.parse(ratings)) ||
           existing.rationale !== rationale ||
           existing.decision !== decision ||
-          existing.risk_snapshot.version !== expected ||
+          (existing.risk_snapshot as { version?: number } | null)?.version !== expected ||
           hash({
             risk: existing.risk_snapshot,
             methodId: existing.method_version_id,
@@ -272,31 +308,31 @@ export class GrcRisks {
       if (p.previewId !== previewId) throw new HttpError(422, 'Relancez la simulation.');
       const revision = Number(
         (
-          await c.query<{ n: number }>(
-            'SELECT coalesce(max(revision),0)+1 n FROM grc_risk_evaluations WHERE risk_id=$1',
-            [id],
-          )
-        ).rows[0]!.n,
+          await k
+            .selectFrom('grc_risk_evaluations')
+            .select(sql<number>`coalesce(max(revision), 0) + 1`.as('n'))
+            .where('risk_id', '=', id)
+            .executeTakeFirstOrThrow()
+        ).n,
       );
-      const row = (
-        await c.query(
-          `INSERT INTO grc_risk_evaluations(risk_id,smsi_id,method_version_id,revision,risk_snapshot,ratings,result,rationale,decision,request_id,user_id,created_by) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`,
-          [
-            id,
-            smsi,
-            p.method.id,
-            revision,
-            p.risk,
-            p.ratings,
-            p.result,
-            rationale,
-            decision,
-            requestId,
-            user.id,
-            user.username,
-          ],
-        )
-      ).rows[0]!;
+      const row = await k
+        .insertInto('grc_risk_evaluations')
+        .values({
+          risk_id: id,
+          smsi_id: smsi,
+          method_version_id: p.method.id,
+          revision,
+          risk_snapshot: JSON.stringify(p.risk),
+          ratings: JSON.stringify(p.ratings),
+          result: JSON.stringify(p.result),
+          rationale,
+          decision,
+          request_id: requestId,
+          user_id: user.id,
+          created_by: user.username,
+        })
+        .returningAll()
+        .executeTakeFirstOrThrow();
       await this.g.db.audit(
         user,
         ip,
@@ -350,10 +386,18 @@ export class GrcRisks {
         ip,
         accueil,
       );
-      await c.query(
-        `INSERT INTO grc_links(smsi_id,source_id,source_ref,target_ref,type,note,created_by) VALUES($1,$2,$3,$4,'implements','Action issue du traitement ; risque résiduel inchangé',$5)`,
-        [smsi, action.id, 'object:' + action.id, 'object:' + id, user.username],
-      );
+      await surConnexion(c)
+        .insertInto('grc_links')
+        .values({
+          smsi_id: smsi,
+          source_id: action.id,
+          source_ref: 'object:' + action.id,
+          target_ref: 'object:' + id,
+          type: 'implements',
+          note: 'Action issue du traitement ; risque résiduel inchangé',
+          created_by: user.username,
+        })
+        .execute();
       return action;
     }, user.username);
   }
@@ -399,11 +443,18 @@ export class GrcRisks {
         const objectIds = frontier.filter((r) => r.startsWith('object:')).map((r) => r.slice(7));
         const objects = objectIds.length
           ? (
-              await this.g.db.q<{ id: string; kind: keyof typeof GRC_MODULES; data: Record<string, unknown> }>(
-                `SELECT id,kind,data FROM grc_objects WHERE smsi_id=$1 AND id=ANY($2::uuid[]) AND NOT archived`,
-                [smsi, objectIds],
-              )
-            ).rows
+              await this.g.db.k
+                .selectFrom('grc_objects')
+                .select(['id', 'kind', 'data'])
+                .where('smsi_id', '=', smsi)
+                .where('id', 'in', objectIds)
+                .where('archived', '=', false)
+                .execute()
+            ).map((o) => ({
+              id: o.id,
+              kind: o.kind as keyof typeof GRC_MODULES,
+              data: o.data as Record<string, unknown>,
+            }))
           : [];
         const allowed = new Map(
           objects.filter((o) => user.rights.can(GRC_MODULES[o.kind], 'lire')).map((o) => ['object:' + o.id, o]),
@@ -428,19 +479,26 @@ export class GrcRisks {
           visible.push(ref);
         }
         if (!visible.length || depth === 6) break;
-        const links = (
-          await this.g.db.q<{ source_ref: string; target_ref: string }>(
-            `SELECT source_ref,target_ref FROM grc_links WHERE smsi_id=$1 AND (source_ref=ANY($2) OR target_ref=ANY($2)) LIMIT 2501`,
-            [smsi, visible],
-          )
-        ).rows;
+        const links = await this.g.db.k
+          .selectFrom('grc_links')
+          .select(['source_ref', 'target_ref'])
+          .where('smsi_id', '=', smsi)
+          .where((eb) => eb.or([eb('source_ref', 'in', visible), eb('target_ref', 'in', visible)]))
+          .limit(2501)
+          .execute();
         if (links.length > 2500) throw new HttpError(422, 'Affinez le filtre : trop de relations liées.');
-        const fieldSources = (
-          await this.g.db.q<{ id: string }>(
-            `SELECT id FROM grc_objects WHERE smsi_id=$1 AND NOT archived AND (jsonb_path_exists(data,'$.stages.*.values.*[*] ? (@ == $targets[*])',jsonb_build_object('targets',$2::jsonb)) OR jsonb_path_exists(data,'$.refs[*] ? (@ == $targets[*])',jsonb_build_object('targets',$2::jsonb))) LIMIT 1001`,
-            [smsi, JSON.stringify(visible)],
+        const cibles = JSON.stringify(visible);
+        const fieldSources = await this.g.db.k
+          .selectFrom('grc_objects')
+          .select('id')
+          .where('smsi_id', '=', smsi)
+          .where('archived', '=', false)
+          .where(
+            sql<boolean>`(jsonb_path_exists(data, '$.stages.*.values.*[*] ? (@ == $targets[*])', jsonb_build_object('targets', ${cibles}::jsonb))
+              OR jsonb_path_exists(data, '$.refs[*] ? (@ == $targets[*])', jsonb_build_object('targets', ${cibles}::jsonb)))`,
           )
-        ).rows;
+          .limit(1001)
+          .execute();
         frontier = [
           ...new Set([
             ...forward,
@@ -456,6 +514,9 @@ export class GrcRisks {
       args.push('%' + filters.search.replace(/[\\%_]/g, '\\$&') + '%');
       where += ` AND o.name ILIKE $${args.length}`;
     }
+    // Projection : les fiches courantes, ou reconstituées à la date « at » depuis l'historique des versions (LATERAL,
+    // snapshot->>…), avec l'appréciation retenue à cette date (to_jsonb). Cette requête à source dynamique reste en SQL
+    // paramétré (ADR 0062, §5) ; les clés de filtre viennent d'une liste fermée, toutes les valeurs sont liées.
     const total = Number(
       (await this.g.db.one<{ n: number }>(`SELECT count(*)::int n FROM ${baseRows} WHERE ${where}`, args))!.n,
     );
@@ -466,14 +527,24 @@ export class GrcRisks {
         args,
       )
     ).rows;
-    const previousRows = filters.compareAt
-      ? (
-          await this.g.db.q<{ risk_id: string; result: unknown; method_version_id: string; revision: number }>(
-            `SELECT DISTINCT ON(risk_id) risk_id,result,method_version_id,revision FROM grc_risk_evaluations WHERE smsi_id=$1 AND risk_id=ANY($2::uuid[]) AND created_at<=$3::timestamptz ORDER BY risk_id,(decision='approved') DESC,revision DESC`,
-            [smsi, rows.map((r) => r.id), filters.compareAt],
-          )
-        ).rows
-      : [];
+    const previousRows =
+      filters.compareAt && rows.length
+        ? await this.g.db.k
+            .selectFrom('grc_risk_evaluations')
+            .distinctOn('risk_id')
+            .select(['risk_id', 'result', 'method_version_id', 'revision'])
+            .where('smsi_id', '=', smsi)
+            .where(
+              'risk_id',
+              'in',
+              rows.map((r) => r.id),
+            )
+            .where('created_at', '<=', sql<Date>`${filters.compareAt}::timestamptz`)
+            .orderBy('risk_id')
+            .orderBy(sql`(decision = 'approved')`, 'desc')
+            .orderBy('revision', 'desc')
+            .execute()
+        : [];
     const previousById = new Map(previousRows.map((r) => [r.risk_id, r]));
     const items = [];
     for (const r of rows) {
@@ -503,12 +574,14 @@ export class GrcRisks {
     let frontier = refs;
     let graphTruncated = false;
     for (let depth = 0; depth < 6 && frontier.length; depth++) {
-      const links = (
-        await this.g.db.q<{ id: string; source_ref: string; target_ref: string; type: string }>(
-          `SELECT id,source_ref,target_ref,type FROM grc_links WHERE smsi_id=$1 AND (source_ref=ANY($2) OR target_ref=ANY($2)) ORDER BY id LIMIT 2501`,
-          [smsi, frontier],
-        )
-      ).rows;
+      const links: { id: string; source_ref: string; target_ref: string; type: string }[] = await this.g.db.k
+        .selectFrom('grc_links')
+        .select(['id', 'source_ref', 'target_ref', 'type'])
+        .where('smsi_id', '=', smsi)
+        .where((eb) => eb.or([eb('source_ref', 'in', frontier), eb('target_ref', 'in', frontier)]))
+        .orderBy('id')
+        .limit(2501)
+        .execute();
       for (const ref of frontier) {
         const node = nodes.get(ref);
         if (!node) continue;
@@ -528,11 +601,17 @@ export class GrcRisks {
       ];
       const candidates = candidateIds.length
         ? (
-            await this.g.db.q<ObjectRow>(
-              `SELECT id,smsi_id AS "smsiId",kind,name,data,version,created_at AS "createdAt",updated_at AS "updatedAt",created_by AS "createdBy",updated_by AS "updatedBy",archived,legacy_key AS "legacyKey",legacy_id AS "legacyId" FROM grc_objects WHERE smsi_id=$1 AND id=ANY($2::uuid[])`,
-              [smsi, candidateIds],
-            )
-          ).rows
+            await this.g.db.k
+              .selectFrom('grc_objects')
+              .select(['id', 'kind', 'name', 'data', 'version'])
+              .where('smsi_id', '=', smsi)
+              .where('id', 'in', candidateIds)
+              .execute()
+          ).map((o) => ({
+            ...o,
+            kind: o.kind as keyof typeof GRC_MODULES,
+            data: o.data as Record<string, unknown>,
+          }))
         : [];
       const objectsById = new Map(
         candidates.filter((o) => user.rights.can(GRC_MODULES[o.kind], 'lire')).map((o) => [o.id, o]),
