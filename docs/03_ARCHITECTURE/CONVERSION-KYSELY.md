@@ -22,6 +22,7 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `grc/core.ts` | 1 | Converti (lot 4) ; pg_notify en SQL |
 | `notifications-metier.ts` | 1 | Converti (lot 11) ; héritages de réglages (unions) en SQL paramétré |
 | `operations.ts` | 1 | Converti (lot 13) ; verrou consultatif en SQL |
+| `auth.ts` | 0 | Converti (lot 15) |
 | `calendriers-plateforme.ts` | 0 | Converti (lot 2) |
 | `config-grc.ts` | 0 | Converti (lot 10) |
 | `grc/annuaires.ts` | 0 | Converti (lot 3) |
@@ -30,9 +31,9 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `grc/registres.ts` | 0 | Converti (lot 7) ; objectColumns retiré de core.ts |
 | `grc/suppliers.ts` | 0 | Converti (lot 3) |
 | `routes/access.ts` | 0 | Converti (lot 9) |
+| `routes/auth.ts` | 0 | Converti (lot 15) |
 | `types-processus.ts` | 0 | Converti (lot 1) |
 | `courriel.ts` | 20 | Dernier (FOR UPDATE, power(), LEAST) |
-| `auth.ts` | 15 | À convertir |
 | `cli.ts` | 14 | À convertir |
 | `routes/carto.ts` | 14 | À convertir |
 | `routes/documents.ts` | 14 | Liens convertis (socle) ; documents à convertir |
@@ -40,7 +41,6 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `routes/admin.ts` | 13 | À convertir |
 | `controle-relations.ts` | 11 | À convertir |
 | `historique/tables/collection.ts` | 11 | À convertir |
-| `routes/auth.ts` | 11 | À convertir |
 | `routes/import.ts` | 11 | À convertir |
 | `grc/library-mappings.ts` | 9 | À convertir |
 | `legacy/store.ts` | 9 | À convertir |
@@ -88,4 +88,4 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `routes/modules.ts` | 1 | À convertir |
 | `startup.ts` | 1 | À convertir |
 
-Reste à convertir : 316 appels dans 56 fichiers.
+Reste à convertir : 290 appels dans 54 fichiers.
