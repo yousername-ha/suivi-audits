@@ -15,6 +15,7 @@ export const SECTIONS_GAP = [
   ['sup', 'Fournisseur'],
   ['rgpd', 'Données personnelles (RGPD)'],
   ['spec', 'Cas particuliers'],
+  ['ia', 'Maîtrise de l’IA'],
   ['hds', 'Exigences HDS (si DSCP)'],
 ] as const;
 export const ETATS_GAP = ['À évaluer', 'Conforme', 'Partiel', 'Non conforme', 'Non applicable'] as const;
@@ -182,6 +183,8 @@ export interface AppGap {
   owner: string;
   target: string;
   desc: string;
+  /** `ia` : GAP de l'usage de l'IA (aucun socle d'intégration d'application, seulement ses points propres). */
+  modele: 'application' | 'ia';
   lines: Record<string, LigneGap>;
   custom: { id: string; sec: string; refs: string[]; t: string }[];
   /** Plan d'action créé par le questionnaire guidé. */
@@ -217,6 +220,7 @@ export function lireAppGap(brut: unknown): AppGap | null {
     owner: str(o.owner),
     target: str(o.target),
     desc: str(o.desc),
+    modele: o.modele === 'ia' ? 'ia' : 'application',
     lines,
     custom: (Array.isArray(o.custom) ? o.custom : [])
       .map(obj)
@@ -237,7 +241,10 @@ export interface PointAffiche extends PointGap {
   custom: boolean;
 }
 /** Points de la liste de contrôle d'une application : socle filtré par les conditions, puis points ajoutés. */
-export function pointsGap(a: Pick<AppGap, 'dscp' | 'cloud' | 'custom'>): PointAffiche[] {
+export function pointsGap(
+  a: Pick<AppGap, 'dscp' | 'cloud' | 'custom'> & { modele?: AppGap['modele'] },
+): PointAffiche[] {
+  if (a.modele === 'ia') return a.custom.map((l) => ({ ...l, sec: l.sec || 'ia', custom: true }));
   const socle = POINTS_GAP.filter((l) => !l.cond || (l.cond === 'dscp' ? a.dscp !== 'Non' : a.cloud !== 'Non')).map(
     (l) => ({ ...l, custom: false }),
   );
@@ -262,7 +269,7 @@ export interface StatsGap {
   ouverts: number;
 }
 export function statsGap(
-  a: Pick<AppGap, 'lines' | 'dscp' | 'cloud' | 'custom'>,
+  a: Pick<AppGap, 'lines' | 'dscp' | 'cloud' | 'custom'> & { modele?: AppGap['modele'] },
   exclues: ReadonlySet<string>,
 ): StatsGap {
   const etats = pointsGap(a).map((l) => etatPointGap(a, l, exclues));
@@ -310,6 +317,8 @@ export function identifiantEcartGap(existants: readonly string[]): string {
 export interface QuestionGap {
   k: string;
   l: string;
+  /** Question posée seulement si la réponse multiple `k` contient `v` (GAP IA : une série de questions par cas d'usage). */
+  si?: { k: string; v: string };
   o: readonly string[];
   multi?: boolean;
 }
@@ -538,6 +547,399 @@ export function questionnaireGap(A: ReponsesGap): ResultatQuestionnaire {
   return { dscp, cloud: saas ? 'Oui' : 'Non', saas, fournisseur, dev, custom, st, cm };
 }
 
+/* ------------------------------------------------------------------------------------------------- GAP IA */
+/* GAP de l'usage de l'IA au regard de l'ISO/IEC 27001 et de l'HDS (ADR 0064). Trois cas d'usage réels : outils d'IA grand public
+   utilisés par les agents, IA intégrée à un logiciel métier ou à un SaaS, code généré par IA. Chaque question porte sur un fait
+   que l'on peut constater (compte utilisé, contrat, filtrage, relecture), pas sur une intention. Un point n'est pré-évalué que
+   si la réponse tranche ; sinon il reste « À évaluer ». Les références renvoient aux points de l'outil (annexe A, clauses,
+   HDS) ; les mentions « guide ANSSI Rn » renvoient au guide ANSSI-PA-102 (référentiel de la bibliothèque, non normatif). Les points
+   sont propres à l'organisation : ce ne sont pas des exigences d'un référentiel officiel. */
+export const CAS_IA = {
+  grandPublic: 'Outils d’IA grand public utilisés par les agents',
+  metier: 'IA intégrée à un logiciel métier ou à un SaaS',
+  code: 'Code généré par IA',
+} as const;
+const siGp = { k: 'iaCas', v: CAS_IA.grandPublic } as const;
+const siMetier = { k: 'iaCas', v: CAS_IA.metier } as const;
+const siCode = { k: 'iaCas', v: CAS_IA.code } as const;
+export const QUESTIONS_GAP_IA: readonly QuestionGap[] = [
+  {
+    k: 'iaCas',
+    l: 'Quelles situations d’IA concernent le GCS ?',
+    multi: true,
+    o: [CAS_IA.grandPublic, CAS_IA.metier, CAS_IA.code],
+  },
+  {
+    k: 'iaDscp',
+    l: 'Des données de santé (DSCP) peuvent-elles être saisies dans un outil d’IA ?',
+    o: ['Oui, constaté', 'Possible, non maîtrisé', 'Non, bloqué techniquement', 'Inconnu'],
+  },
+  {
+    k: 'iaInventaire',
+    l: 'Existe-t-il un inventaire à jour des usages et des outils d’IA ?',
+    o: ['Oui, à jour', 'Partiel', 'Non', 'Inconnu'],
+  },
+  {
+    k: 'iaRegle',
+    l: 'Une règle d’usage de l’IA (services autorisés, données interdites) est-elle en vigueur ?',
+    o: ['Oui, diffusée aux agents', 'Rédigée, non diffusée', 'Non', 'Inconnu'],
+  },
+  {
+    k: 'iaSensibilisation',
+    l: 'Les agents ont-ils été sensibilisés aux risques de l’IA ?',
+    o: ['Oui, dans les 12 derniers mois', 'Non', 'Inconnu'],
+  },
+  {
+    k: 'iaRisques',
+    l: 'Les risques propres à l’IA figurent-ils dans l’appréciation des risques ?',
+    o: ['Oui', 'Non', 'Inconnu'],
+  },
+  {
+    k: 'gpComptes',
+    l: 'Quels comptes les agents utilisent-ils pour les outils d’IA grand public ?',
+    si: siGp,
+    o: ['Comptes professionnels fournis et contractualisés', 'Comptes personnels', 'Les deux', 'Inconnu'],
+  },
+  {
+    k: 'gpFiltrage',
+    l: 'Ces outils sont-ils filtrés ou supervisés (proxy, prévention des fuites de données) ?',
+    si: siGp,
+    o: ['Bloqués ou filtrés', 'Supervisés sans blocage', 'Non', 'Inconnu'],
+  },
+  {
+    k: 'gpContrat',
+    l: 'Le fournisseur peut-il réutiliser les données saisies pour entraîner ses modèles ?',
+    si: siGp,
+    o: ['Non, exclu par contrat', 'Oui ou non garanti', 'Sans compte professionnel', 'Inconnu'],
+  },
+  {
+    k: 'gpIncident',
+    l: 'Des données sensibles ont-elles déjà été saisies dans l’un de ces outils (remontée, incident, constat) ?',
+    si: siGp,
+    o: ['Oui', 'Non connu', 'Inconnu'],
+  },
+  {
+    k: 'lmEntrainement',
+    l: 'Le fournisseur du logiciel réutilise-t-il les données saisies pour entraîner ses modèles ?',
+    si: siMetier,
+    o: ['Non, garanti par contrat', 'Oui', 'Inconnu'],
+  },
+  {
+    k: 'lmHds',
+    l: 'Le service d’IA est-il couvert par un certificat HDS pour l’activité concernée ?',
+    si: siMetier,
+    o: ['Oui, vérifié', 'Oui, déclaré non vérifié', 'Non', 'Inconnu'],
+  },
+  {
+    k: 'lmLieu',
+    l: 'Où les données saisies sont-elles traitées et stockées (inférence comprise) ?',
+    si: siMetier,
+    o: ['Union européenne', 'Hors Union européenne', 'Inconnu'],
+  },
+  {
+    k: 'lmParametrage',
+    l: 'Un administrateur peut-il activer ou désactiver les fonctions d’IA ?',
+    si: siMetier,
+    o: ['Oui', 'Non', 'Inconnu'],
+  },
+  {
+    k: 'lmRelecture',
+    l: 'Les réponses de l’IA sont-elles relues par une personne avant d’être utilisées ?',
+    si: siMetier,
+    o: ['Oui, systématiquement', 'Parfois', 'Non', 'Inconnu'],
+  },
+  {
+    k: 'codeOutils',
+    l: 'Quels assistants de programmation les développeurs et prestataires utilisent-ils ?',
+    si: siCode,
+    o: ['Fournis et contractualisés', 'Comptes personnels', 'Les deux', 'Inconnu'],
+  },
+  {
+    k: 'codeRevue',
+    l: 'Le code généré passe-t-il par la relecture et les tests de sécurité habituels ?',
+    si: siCode,
+    o: ['Oui, systématiquement', 'Partiellement', 'Non', 'Inconnu'],
+  },
+  {
+    k: 'codeCritique',
+    l: 'L’IA génère-t-elle du code de modules critiques (authentification, droits d’accès, chiffrement, données de santé) ?',
+    si: siCode,
+    o: ['Oui', 'Non', 'Inconnu'],
+  },
+];
+/** Questions du GAP IA à afficher compte tenu des cas d'usage déjà choisis. */
+export function questionsIaVisibles(A: ReponsesGap): QuestionGap[] {
+  const cas = Array.isArray(A.iaCas) ? (A.iaCas as string[]) : [];
+  return QUESTIONS_GAP_IA.filter((q) => !q.si || cas.includes(q.si.v));
+}
+/** Points ajoutés et pré-évaluations déduits des réponses du GAP IA. Même forme que `questionnaireGap`. */
+export function questionnaireGapIa(A: ReponsesGap): ResultatQuestionnaire {
+  const cas = Array.isArray(A.iaCas) ? (A.iaCas as string[]) : [];
+  const gp = cas.includes(CAS_IA.grandPublic),
+    metier = cas.includes(CAS_IA.metier),
+    code = cas.includes(CAS_IA.code);
+  const st: Record<string, string> = {},
+    cm: Record<string, string> = {},
+    custom: PointAjoute[] = [];
+  let n = 0;
+  const C = (sec: string, refs: string[], t: string, s?: string | null, c?: string) => {
+    const id = 'Q' + ++n;
+    custom.push({ id, sec, refs, t });
+    if (s) st[id] = s;
+    if (c) cm[id] = c;
+  };
+  /** État déduit d'une réponse : table réponse → [état, constat] ; une réponse absente ou « Inconnu » ne tranche pas. */
+  const D = (v: unknown, table: Record<string, [string | null, string]>): [string | null, string | undefined] => {
+    const r = table[str(v)];
+    return r ? r : [null, undefined];
+  };
+  const dscpPossible = A.iaDscp === 'Oui, constaté' || A.iaDscp === 'Possible, non maîtrisé';
+  const dscp = dscpPossible ? 'Oui' : A.iaDscp === 'Non, bloqué techniquement' ? 'Non' : 'À qualifier';
+
+  // Socle : gouvernance de l'IA, quel que soit le cas d'usage.
+  C(
+    'ia',
+    ['A-5.9', 'A-5.12'],
+    'Inventorier les usages et les outils d’IA et classifier les informations qui peuvent y être saisies',
+    ...D(A.iaInventaire, {
+      'Oui, à jour': ['Conforme', 'Inventaire des usages et outils d’IA à jour.'],
+      Partiel: ['Partiel', 'Inventaire partiel des usages et outils d’IA : à compléter.'],
+      Non: ['Non conforme', 'Aucun inventaire des usages et outils d’IA.'],
+    }),
+  );
+  C(
+    'ia',
+    ['A-5.10'],
+    'Diffuser une règle d’usage de l’IA : services autorisés, données interdites, relecture humaine des réponses (guide ANSSI R34)',
+    ...D(A.iaRegle, {
+      'Oui, diffusée aux agents': ['Conforme', 'Règle d’usage de l’IA diffusée aux agents.'],
+      'Rédigée, non diffusée': ['Partiel', 'Règle rédigée mais non diffusée : à diffuser et à faire accepter.'],
+      Non: ['Non conforme', 'Aucune règle d’usage de l’IA.'],
+    }),
+  );
+  C(
+    'ia',
+    ['A-6.3'],
+    'Sensibiliser les agents aux risques de l’IA : fuite des données saisies, réponses erronées, consignes malveillantes',
+    ...D(A.iaSensibilisation, {
+      'Oui, dans les 12 derniers mois': [
+        'Conforme',
+        'Sensibilisation réalisée dans les 12 derniers mois : conserver la preuve.',
+      ],
+      Non: ['Non conforme', 'Aucune sensibilisation aux risques de l’IA.'],
+    }),
+  );
+  C(
+    'per',
+    ['ISO-6.1.2'],
+    'Intégrer à l’appréciation des risques ceux propres à l’IA : fuite des données saisies, réponses erronées, injection de consignes, dépendance au fournisseur (guide ANSSI R2)',
+    ...D(A.iaRisques, {
+      Oui: ['Conforme', 'Risques propres à l’IA présents dans l’appréciation des risques.'],
+      Non: ['Non conforme', 'Risques propres à l’IA absents de l’appréciation des risques.'],
+    }),
+  );
+  C(
+    'ia',
+    ['A-5.31'],
+    'Vérifier les exigences légales applicables : RGPD et règlement européen sur l’IA (niveau de risque de chaque usage)',
+  );
+  if (A.iaDscp !== 'Non, bloqué techniquement')
+    C(
+      'rgpd',
+      ['A-5.34'],
+      'Inscrire les traitements assistés par IA au registre RGPD et réaliser l’analyse d’impact (AIPD) quand des données de santé sont concernées',
+    );
+  C(
+    'ia',
+    ['A-8.15', 'A-8.16'],
+    'Journaliser les usages de l’IA et superviser les usages non autorisés (guide ANSSI R29)',
+    ...(gp && A.gpFiltrage === 'Non'
+      ? (['Non conforme', 'Aucune supervision des outils d’IA grand public.'] as [string, string])
+      : [null, undefined]),
+  );
+
+  // Cas 1 : outils d'IA grand public utilisés par les agents.
+  if (gp) {
+    C(
+      'ia',
+      ['A-8.12'],
+      'Empêcher la saisie de données sensibles dans les outils d’IA grand public : filtrage, prévention des fuites, comptes professionnels (guide ANSSI R34)',
+      ...D(A.gpFiltrage, {
+        'Bloqués ou filtrés': [
+          'Conforme',
+          'Outils d’IA grand public bloqués ou filtrés : conserver la preuve (règles, journaux).',
+        ],
+        'Supervisés sans blocage': ['Partiel', 'Outils supervisés mais non bloqués : une saisie reste possible.'],
+        Non: ['Non conforme', 'Outils d’IA grand public ni filtrés ni supervisés.'],
+      }),
+    );
+    const personnels = A.gpComptes === 'Comptes personnels' || A.gpComptes === 'Les deux';
+    const proEtContrat =
+      A.gpComptes === 'Comptes professionnels fournis et contractualisés' && A.gpContrat === 'Non, exclu par contrat';
+    C(
+      'sup',
+      ['A-5.19', 'A-5.20', 'A-5.23'],
+      'Contractualiser les services d’IA autorisés : comptes professionnels, absence d’entraînement sur les données, durée de conservation, sous-traitants',
+      personnels ? 'Non conforme' : proEtContrat ? 'Conforme' : null,
+      personnels
+        ? 'Des comptes personnels sont utilisés : aucun contrat ne protège les données saisies.'
+        : proEtContrat
+          ? 'Comptes professionnels sous contrat excluant l’entraînement sur les données.'
+          : A.gpContrat === 'Oui ou non garanti'
+            ? 'Réutilisation des données saisies non exclue : à encadrer par contrat ou à refuser.'
+            : undefined,
+    );
+    C(
+      'ia',
+      ['A-5.26'],
+      'Définir la conduite à tenir quand des données sensibles sont saisies dans un outil d’IA non autorisé : incident de sécurité, évaluation, notification RGPD',
+      A.gpIncident === 'Oui' ? 'Non conforme' : null,
+      A.gpIncident === 'Oui'
+        ? 'Une saisie de données sensibles a déjà été constatée : traiter l’incident et formaliser la procédure.'
+        : undefined,
+    );
+    C(
+      'acc',
+      ['A-5.15', 'A-5.18'],
+      'Revoir les droits des outils d’IA connectés aux applications métier (messagerie, documents) à l’activation puis régulièrement (guide ANSSI R35)',
+    );
+  }
+
+  // Cas 2 : IA intégrée à un logiciel métier ou à un SaaS.
+  if (metier) {
+    C(
+      'sup',
+      ['A-5.19', 'A-5.20', 'A-5.23'],
+      'Encadrer par contrat l’usage des données saisies : pas d’entraînement des modèles, durée de conservation, sous-traitants, réversibilité',
+      ...D(A.lmEntrainement, {
+        'Non, garanti par contrat': [
+          'Conforme',
+          'Absence d’entraînement sur les données saisies garantie par contrat.',
+        ],
+        Oui: [
+          'Non conforme',
+          'Le fournisseur réutilise les données saisies pour entraîner ses modèles : à refuser ou à encadrer par contrat.',
+        ],
+      }),
+    );
+    if (dscpPossible || A.iaDscp === 'Inconnu' || A.iaDscp === undefined) {
+      C(
+        'hds',
+        ['HDS-12'],
+        'Obtenir et vérifier le certificat HDS qui couvre le service d’IA et les activités concernées',
+        ...D(A.lmHds, {
+          'Oui, vérifié': ['Conforme', 'Certificat HDS vérifié (activités couvertes et validité).'],
+          'Oui, déclaré non vérifié': [
+            null,
+            'Certificat HDS déclaré : vérifier les activités couvertes et la validité.',
+          ],
+          Non: dscpPossible
+            ? [
+                'Non conforme',
+                'Des données de santé peuvent être saisies alors que le service d’IA n’est pas couvert par un certificat HDS.',
+              ]
+            : [null, 'Pas de certificat HDS : à qualifier selon les données saisies.'],
+        }),
+      );
+      C(
+        'hds',
+        ['HDS-28', 'HDS-29', 'HDS-30', 'HDS-31'],
+        'Vérifier que les données saisies sont traitées et stockées dans l’Union européenne (inférence comprise) et documenter les accès depuis un pays tiers',
+        ...D(A.lmLieu, {
+          'Union européenne': [
+            null,
+            'Traitement dans l’Union européenne déclaré : à prouver (contrat, annexe sur les sous-traitants).',
+          ],
+          'Hors Union européenne': dscpPossible
+            ? [
+                'Non conforme',
+                'Traitement déclaré hors de l’Union européenne alors que des données de santé peuvent être saisies.',
+              ]
+            : [null, 'Traitement déclaré hors de l’Union européenne : à encadrer.'],
+        }),
+      );
+    } else if (A.lmLieu === 'Hors Union européenne')
+      C(
+        'rgpd',
+        ['A-5.34'],
+        'Encadrer ou exclure les transferts de données hors de l’Union européenne',
+        'Non conforme',
+        'Traitement déclaré hors de l’Union européenne.',
+      );
+    C(
+      'exp',
+      ['A-8.9'],
+      'Paramétrer les fonctions d’IA : activation décidée par l’administrateur, désactivation des fonctions non maîtrisées',
+      null,
+      A.lmParametrage === 'Non'
+        ? 'Les fonctions d’IA ne peuvent pas être désactivées : obtenir un engagement du fournisseur ou refuser le service.'
+        : A.lmParametrage === 'Oui'
+          ? 'Fonctions d’IA paramétrables par un administrateur : vérifier le paramétrage réel.'
+          : undefined,
+    );
+    C(
+      'ia',
+      ['A-5.10', 'ISO-8.1'],
+      'Exiger la relecture humaine des réponses de l’IA et proscrire les actions automatiques critiques (guide ANSSI R9, R27)',
+      ...D(A.lmRelecture, {
+        'Oui, systématiquement': ['Conforme', 'Réponses de l’IA relues avant usage.'],
+        Parfois: ['Partiel', 'Relecture partielle : la rendre systématique pour les usages qui engagent le GCS.'],
+        Non: ['Non conforme', 'Réponses de l’IA utilisées sans relecture.'],
+      }),
+    );
+    C(
+      'sup',
+      ['A-5.22'],
+      'Surveiller les changements du service d’IA (nouvelles fonctions activées par mise à jour, sous-traitants, conditions d’utilisation)',
+    );
+  }
+
+  // Cas 3 : code généré par IA.
+  if (code) {
+    C(
+      'ia',
+      ['A-8.28', 'A-8.29'],
+      'Soumettre le code généré par IA à la relecture et aux tests de sécurité habituels, vérifier les bibliothèques référencées, ne jamais le valider ni le publier automatiquement (guide ANSSI R30)',
+      ...D(A.codeRevue, {
+        'Oui, systématiquement': ['Conforme', 'Code généré par IA relu et testé comme le reste du code.'],
+        Partiellement: ['Partiel', 'Revue et tests partiels du code généré par IA : à rendre systématiques.'],
+        Non: ['Non conforme', 'Code généré par IA non relu ni testé.'],
+      }),
+    );
+    C(
+      'ia',
+      ['A-8.26', 'A-8.28'],
+      'Ne pas faire générer par IA les modules critiques : authentification, droits d’accès, chiffrement, traitement de données de santé (guide ANSSI R31)',
+      ...D(A.codeCritique, {
+        Non: ['Conforme', 'Aucun module critique généré par IA.'],
+        Oui: [
+          'Non conforme',
+          'Des modules critiques sont générés par IA : les faire écrire et relire par une personne qualifiée.',
+        ],
+      }),
+    );
+    const persoCode = A.codeOutils === 'Comptes personnels' || A.codeOutils === 'Les deux';
+    C(
+      'ia',
+      ['A-5.19', 'A-8.4'],
+      'N’autoriser que des assistants de programmation contractualisés et interdire l’envoi de secrets, de code propriétaire ou de données de santé à un assistant non contractualisé',
+      persoCode ? 'Non conforme' : A.codeOutils === 'Fournis et contractualisés' ? 'Conforme' : null,
+      persoCode
+        ? 'Des comptes personnels sont utilisés pour des assistants de programmation : le code et les secrets échappent à tout contrat.'
+        : A.codeOutils === 'Fournis et contractualisés'
+          ? 'Assistants de programmation fournis et contractualisés.'
+          : undefined,
+    );
+    C(
+      'ia',
+      ['A-8.30'],
+      'Imposer les mêmes règles aux prestataires de développement : contrat, revue du code, traçabilité de l’usage de l’IA',
+    );
+    C('ia', ['A-6.3'], 'Sensibiliser les développeurs aux risques du code généré par IA (guide ANSSI R32)');
+  }
+  return { dscp, cloud: 'À qualifier', saas: false, fournisseur: metier, dev: code, custom, st, cm };
+}
+
 /* ------------------------------------------------------------------------------------------- requêtes */
 const ligne = (max: number) => z.string().trim().max(max);
 const dateVide = z.union([z.literal(''), z.iso.date()]);
@@ -563,6 +965,8 @@ export const PointGapCreation = z
   .strict();
 export const GuideGapCreation = z
   .object({
+    /** `ia` : questionnaire du GAP IA (ADR 0064) ; par défaut, l'intégration d'une application. */
+    modele: z.enum(['application', 'ia']).default('application'),
     name: ligne(200).min(1),
     supplier: ligne(80).default(''),
     supplierNew: ligne(200).default(''),

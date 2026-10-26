@@ -174,6 +174,52 @@ describe('questionnaire guidé', () => {
     expect(j).not.toHaveProperty('ia');
     expect(s.appGaps.find((x: { id: string }) => x.id === 'APP02').profile.at).toBeTruthy();
   });
+  it('GAP IA : crée un GAP sans socle d’application, pré-évalué sur des faits, avec son plan d’action (ADR 0064)', async () => {
+    const corps = {
+      modele: 'ia',
+      name: 'Usage de l’IA fictif',
+      owner: 'Responsable fictif',
+      answers: {
+        iaCas: ['Outils d’IA grand public utilisés par les agents', 'Code généré par IA'],
+        iaDscp: 'Possible, non maîtrisé',
+        iaRegle: 'Non',
+        gpComptes: 'Comptes personnels',
+        gpFiltrage: 'Non',
+        codeCritique: 'Oui',
+        codeRevue: 'Partiellement',
+        // Réponses d'un cas d'usage non choisi (logiciel métier) : ignorées.
+        lmHds: 'Non',
+        lmRelecture: 'Oui, systématiquement',
+      },
+    };
+    expect((await reader.post('/api/gap/guide', corps)).statusCode).toBe(403);
+    const r = await writer.post('/api/gap/guide', corps);
+    expect(r.statusCode, r.body).toBe(201);
+    const j = r.json();
+    expect(j.fournisseur).toBeNull();
+    expect(j.app).toMatchObject({ modele: 'ia', status: 'En cours', dscp: 'Oui' });
+    // Aucun point du socle d'intégration d'application (G01 à G26) : uniquement les points propres au GAP IA.
+    expect(j.app.custom.length).toBeGreaterThan(15);
+    expect(Object.keys(j.app.lines).every((id) => id.startsWith('Q'))).toBe(true);
+    const nonConformes = Object.values(j.app.lines as Record<string, { st?: string }>).filter(
+      (l) => l.st === 'Non conforme',
+    );
+    expect(nonConformes.length).toBeGreaterThanOrEqual(5);
+    expect(j.plan).toMatch(/^GAP-\d+$/);
+    const s = await etat();
+    const stocke = s.appGaps.find((x: { id: string }) => x.id === j.app.id);
+    expect(stocke.modele).toBe('ia'); // conservé dans l'état historique normalisé
+    const plan = s.findings.find((x: { id: string }) => x.id === j.plan);
+    expect(plan.text).toContain('Maîtrise de l’IA');
+    expect(plan.desc.split('\n').filter((l: string) => l.startsWith('- ')).length).toBeGreaterThan(10);
+    const liste = (await writer.get('/api/gap')).json();
+    expect(liste.apps.find((a: { id: string }) => a.id === j.app.id).modele).toBe('ia');
+    expect(liste.apps.find((a: { id: string }) => a.id !== j.app.id).modele).toBe('application');
+    // La réponse d'un cas d'usage non choisi n'est pas enregistrée.
+    expect(stocke.profile.lmRelecture).toBeUndefined();
+    expect(stocke.profile.lmHds).toBeUndefined();
+    expect(stocke.profile.gpComptes).toBe('Comptes personnels');
+  });
   it('journalise les modifications', async () => {
     const rows = await t.svc.db.q<{ action: string }>("SELECT action FROM audit_log WHERE action LIKE 'gap.%'");
     const a = new Set(rows.rows.map((x) => x.action));
