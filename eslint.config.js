@@ -42,6 +42,28 @@ export default tseslint.config(
     rules: { 'react-hooks/rules-of-hooks': 'error', 'react-hooks/exhaustive-deps': 'warn' },
   },
   {
+    // Accès aux données (ADR 0062) : requêtes Kysely paramétrées ou SQL paramétré ($1, $2…). sql.raw insère du texte
+    // sans paramètre : interdit dans l'API. Drizzle est retiré.
+    files: ['apps/api/src/**/*.ts'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "MemberExpression[object.name='sql'][property.name=/^(raw|lit)$/]",
+          message:
+            'sql.raw / sql.lit insèrent du texte non paramétré (ADR 0062) : utiliser une valeur liée ou sql.ref.',
+        },
+      ],
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [{ name: 'drizzle-orm', message: 'Drizzle est retiré (ADR 0062) : utiliser Kysely (svc.db.k).' }],
+          patterns: ['drizzle-orm/*'],
+        },
+      ],
+    },
+  },
+  {
     // Intégration de l'outil historique : script navigateur classique (ES5, sans module).
     files: ['docker/maintenance/*.js'],
     languageOptions: { sourceType: 'script', globals: { ...globals.browser } },

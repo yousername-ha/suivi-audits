@@ -9,11 +9,11 @@ import {
   LinkPatchBody,
   Uuid,
 } from '@suivi/shared';
-import { and, desc, eq, isNull, sql, type SQL } from 'drizzle-orm';
+import { sql, type Selectable } from 'kysely';
 import { z } from 'zod';
 import type { Session } from '../auth.js';
 import type { Client } from '../db/db.js';
-import { links } from '../db/schema.js';
+import type { Links } from '../db/types.generated.js';
 import { scanFile, validateFile, type FileRejected } from '../files.js';
 import { conflict, requireIfMatch, setEtag } from '../http/concurrency.js';
 import { HttpError } from '../http/errors.js';
@@ -149,7 +149,8 @@ async function download(ctx: Ctx<unknown, { v?: string; inline?: string }, { id:
 }
 const DownloadQuery = z.object({ v: z.string().regex(/^\d+$/).optional(), inline: z.enum(['0', '1']).optional() });
 
-const linkOut = (r: typeof links.$inferSelect) => ({
+type LinkRow = Selectable<Links>;
+const linkOut = (r: LinkRow) => ({
   id: r.id,
   title: r.title,
   url: r.url,
@@ -158,10 +159,10 @@ const linkOut = (r: typeof links.$inferSelect) => ({
   refs: r.refs,
   tags: r.tags,
   version: r.version,
-  created_by: r.createdBy,
-  created_at: r.createdAt.toISOString(),
-  updated_by: r.updatedBy,
-  updated_at: r.updatedAt.toISOString(),
+  created_by: r.created_by,
+  created_at: r.created_at.toISOString(),
+  updated_by: r.updated_by,
+  updated_at: r.updated_at.toISOString(),
 });
 
 export const documentRoutes = [
@@ -464,21 +465,22 @@ export const documentRoutes = [
     query: DocumentQuery.omit({ trash: true }),
     response: z.array(LinkOut),
     handler: async ({ svc, query }) => {
-      const conds: SQL[] = [isNull(links.deletedAt)];
-      if (query.ref) conds.push(sql`${query.ref} = ANY(${links.refs})`);
-      if (query.category) conds.push(eq(links.category, query.category));
+      let req = svc.db.k.selectFrom('links').selectAll().where('deleted_at', 'is', null);
+      if (query.ref) req = req.where(sql<boolean>`${query.ref} = ANY(refs)`);
+      if (query.category) req = req.where('category', '=', query.category);
       if (query.q) {
         const q = like(query.q);
-        conds.push(
-          sql`(${links.title} ILIKE ${q} OR ${links.url} ILIKE ${q} OR ${links.description} ILIKE ${q} OR array_to_string(${links.refs},' ') ILIKE ${q} OR array_to_string(${links.tags},' ') ILIKE ${q})`,
+        req = req.where(({ eb, or }) =>
+          or([
+            eb('title', 'ilike', q),
+            eb('url', 'ilike', q),
+            eb('description', 'ilike', q),
+            eb(sql<string>`array_to_string(refs, ' ')`, 'ilike', q),
+            eb(sql<string>`array_to_string(tags, ' ')`, 'ilike', q),
+          ]),
         );
       }
-      const rows = await svc.db.orm
-        .select()
-        .from(links)
-        .where(and(...conds))
-        .orderBy(desc(links.updatedAt))
-        .limit(1000);
+      const rows = await req.orderBy('updated_at', 'desc').limit(1000).execute();
       return rows.map(linkOut);
     },
   }),
@@ -493,22 +495,24 @@ export const documentRoutes = [
     response: LinkOut,
     handler: async ({ svc, s, ip, body, reply }) => {
       const by = (s as Session).user.username;
-      const row = await svc.db.tx(async (_c, orm) => {
-        const [r] = await orm
-          .insert(links)
-          .values({
-            title: body.title || body.url,
-            url: body.url,
-            description: body.description ?? '',
-            category: body.category ?? '',
-            refs: body.refs ?? [],
-            tags: body.tags ?? [],
-            createdBy: by,
-            updatedBy: by,
-          })
-          .returning();
-        return r!;
-      }, by);
+      const row = await svc.db.tx(
+        (_c, k) =>
+          k
+            .insertInto('links')
+            .values({
+              title: body.title || body.url,
+              url: body.url,
+              description: body.description ?? '',
+              category: body.category ?? '',
+              refs: body.refs ?? [],
+              tags: body.tags ?? [],
+              created_by: by,
+              updated_by: by,
+            })
+            .returningAll()
+            .executeTakeFirstOrThrow(),
+        by,
+      );
       await svc.db.audit((s as Session).user, ip, 'link.create', row.id, { url: body.url });
       setEtag(reply, row.version);
       return linkOut(row);
@@ -527,20 +531,28 @@ export const documentRoutes = [
       const expected = requireIfMatch(req);
       const sess = s as Session;
       const fields = Object.keys(body);
-      const row = await svc.db.tx(async (_c, orm) => {
-        const [cur] = await orm
-          .select()
-          .from(links)
-          .where(and(eq(links.id, params.id), isNull(links.deletedAt)));
+      const row = await svc.db.tx(async (_c, k) => {
+        const cur = await k
+          .selectFrom('links')
+          .selectAll()
+          .where('id', '=', params.id)
+          .where('deleted_at', 'is', null)
+          .executeTakeFirst();
         if (!cur) throw new HttpError(404, 'Lien introuvable.');
         if (cur.version !== expected) throw conflict(linkOut(cur));
         if (!fields.length) return cur;
-        const [r] = await orm
-          .update(links)
-          .set({ ...body, version: sql`${links.version} + 1`, updatedBy: sess.user.username, updatedAt: sql`now()` })
-          .where(and(eq(links.id, params.id), eq(links.version, expected)))
-          .returning();
-        return r!;
+        return k
+          .updateTable('links')
+          .set((eb) => ({
+            ...body,
+            version: eb('version', '+', 1),
+            updated_by: sess.user.username,
+            updated_at: sql<Date>`now()`,
+          }))
+          .where('id', '=', params.id)
+          .where('version', '=', expected)
+          .returningAll()
+          .executeTakeFirstOrThrow();
       }, sess.user.username);
       if (fields.length) await svc.db.audit(sess.user, ip, 'link.update', params.id, { fields, version: row.version });
       setEtag(reply, row.version);

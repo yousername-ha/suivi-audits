@@ -130,6 +130,8 @@ jobs:
         env:
           PERF_OUT: ${{ runner.temp }}/performance/mesures.json
         run: pnpm --filter @suivi/api test
+      - name: Types Kysely à jour avec les migrations (ADR 0062)
+        run: pnpm --filter @suivi/api run db:types --check
       - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         if: always()
         with:

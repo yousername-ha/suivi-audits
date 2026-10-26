@@ -66,6 +66,11 @@ Rejouer le guide d'installation (comme la CI) : `node scripts/ci/guide-extraire.
 - Couleurs, espacements, rayons et largeurs viennent de `packages/ui` (ADR 0011). Le test `apps/web/test/charte.test.ts` refuse toute valeur codée en dur dans l'interface.
 - Les pages Paramètres et Administration sont comparées à des captures de référence (1440, 768 et 390 px, clair et sombre), ainsi que le tableau de bord, une liste avec sa fiche, l'administration et les Paramètres de 390 à 3840 px (ADR 0012), dans `tests/e2e/specs/__captures__/`. Les éléments variables (dates, présence) portent les classes `horodatage` ou `presence-liste`, masquées dans les captures. Après une évolution visuelle voulue : `./tests/e2e/run-in-container.sh --update-snapshots`, puis relire les images modifiées dans la PR.
 
+## Accès aux données (ADR 0062)
+- Le schéma est défini **uniquement** par les migrations SQL. Après une nouvelle migration : `pnpm --filter @suivi/api db:types` (PostgreSQL de test requis), puis versionner `apps/api/src/db/types.generated.ts`. La CI échoue si ce fichier diffère.
+- Le nouveau code d'accès aux données utilise Kysely : `svc.db.k` hors transaction, `db.tx(async (c, k) => …)` dans une transaction (même connexion). Le SQL paramétré existant (`$1`, `$2`) reste accepté et se convertit module par module, dans une PR dédiée.
+- Jamais de texte concaténé dans une requête : `sql.raw` et `sql.lit` sont interdits par ESLint ; pour un identifiant dynamique, `sql.ref` sur une liste fermée.
+
 ## Ajouter une route d'API
 1. La déclarer avec `route()` (`apps/api/src/http/route.ts`) : niveau d'accès (`any`, `rw`, `admin`…), schémas zod d'entrée et de sortie (dans `packages/shared` s'ils servent à l'interface).
 2. Journaliser les actions sensibles (`svc.db.audit(...)`).

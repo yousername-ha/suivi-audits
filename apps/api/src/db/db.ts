@@ -1,17 +1,18 @@
 /* Accès à PostgreSQL : pool, transactions (avec auteur pour les notifications temps réel), migrations, journal d'audit. */
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { Kysely, PostgresDialect } from 'kysely';
 import pg from 'pg';
 import type { Logger } from 'pino';
 import type { Config } from '../config.js';
 import { APP_ROOT } from '../config.js';
-import * as schema from './schema.js';
+import type { DB } from './types.generated.js';
 
 // Les colonnes « bigint » (identifiants de lots, tailles) sont renvoyées en nombre : valeurs très inférieures à 2^53.
 pg.types.setTypeParser(pg.types.builtins.INT8, (v) => parseInt(v, 10));
 
-export type Orm = NodePgDatabase<typeof schema>;
+/** Accès typé à la base (ADR 0062) : requêtes construites et paramétrées par Kysely, types générés des migrations. */
+export type Kdb = Kysely<DB>;
 export type Client = pg.PoolClient;
 export interface Actor {
   id?: string | null;
@@ -21,9 +22,16 @@ export interface Actor {
 export const MIGRATIONS_DIR = path.join(APP_ROOT, 'migrations');
 const MIGRATION_LOCK = 727274; // même verrou consultatif que la v2
 
+/** Kysely lié à une connexion déjà ouverte (transaction en cours) : la connexion n'est jamais rendue par Kysely. */
+function surConnexion(c: Client): Kdb {
+  const connexion = { query: c.query.bind(c), release: () => {} } as unknown as pg.PoolClient;
+  const pool = { connect: async () => connexion, end: async () => {} } as unknown as pg.Pool;
+  return new Kysely<DB>({ dialect: new PostgresDialect({ pool }) });
+}
+
 export class Db {
   readonly pool: pg.Pool;
-  readonly orm: Orm;
+  readonly k: Kdb;
   constructor(
     cfg: Config['db'],
     readonly log: Logger,
@@ -36,7 +44,7 @@ export class Db {
       statement_timeout: 30000,
     });
     this.pool.on('error', (e) => log.error({ err: e.message }, 'db pool error'));
-    this.orm = drizzle(this.pool, { schema });
+    this.k = new Kysely<DB>({ dialect: new PostgresDialect({ pool: this.pool }) });
   }
 
   q<R extends pg.QueryResultRow = Record<string, unknown>>(text: string, params?: unknown[]) {
@@ -50,13 +58,14 @@ export class Db {
     return r.rows[0] ?? null;
   }
 
-  /** Transaction. « actor » renseigne l'auteur des notifications temps réel (déclencheurs suivi_notify). */
-  async tx<T>(fn: (c: Client, orm: Orm) => Promise<T>, actor?: string): Promise<T> {
+  /** Transaction. « actor » renseigne l'auteur des notifications temps réel (déclencheurs suivi_notify).
+      « k » exécute ses requêtes sur la même connexion, donc dans la même transaction que « c ». */
+  async tx<T>(fn: (c: Client, k: Kdb) => Promise<T>, actor?: string): Promise<T> {
     const c = await this.pool.connect();
     try {
       await c.query('BEGIN');
       if (actor) await c.query("SELECT set_config('suivi.actor', $1, true)", [actor]);
-      const r = await fn(c, drizzle(c, { schema }));
+      const r = await fn(c, surConnexion(c));
       await c.query('COMMIT');
       return r;
     } catch (e) {
