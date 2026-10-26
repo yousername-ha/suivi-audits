@@ -27,15 +27,62 @@ import {
   type CfgScope,
   type CfgState,
 } from '@suivi/shared';
+import { sql } from 'kysely';
 import type { SessionUser } from './auth.js';
-import type { Client, Db } from './db/db.js';
+import { surConnexion, type Client, type Db, type Kdb } from './db/db.js';
 import { HttpError } from './http/errors.js';
 import type { Grc } from './grc/core.js';
 import { hash } from './grc/core.js';
 
-const ITEM_COLUMNS = `i.id,i.kind,i.key,i.scope,i.smsi_id AS "smsiId",i.state,i.draft,i.current_version AS "currentVersion",
-  i.derived_from_id AS "derivedFromId",i.derived_from_version AS "derivedFromVersion",i.origin,i.version,
-  i.created_by AS "createdBy",i.updated_by AS "updatedBy",i.created_at AS "createdAt",i.updated_at AS "updatedAt"`;
+const COLONNES_ELEMENT = [
+  'i.id',
+  'i.kind',
+  'i.key',
+  'i.scope',
+  'i.smsi_id as smsiId',
+  'i.state',
+  'i.draft',
+  'i.current_version as currentVersion',
+  'i.derived_from_id as derivedFromId',
+  'i.derived_from_version as derivedFromVersion',
+  'i.origin',
+  'i.version',
+  'i.created_by as createdBy',
+  'i.updated_by as updatedBy',
+  'i.created_at as createdAt',
+  'i.updated_at as updatedAt',
+] as const;
+/** Brouillon et origine ne sont écrits qu'après validation (parseCfgDefinition) ou par ce module : relus tels quels. */
+const versLigne = <T extends { draft: unknown; origin: unknown }>(r: T) =>
+  ({ ...r, draft: r.draft as Record<string, unknown> | null, origin: r.origin as Record<string, unknown> }) as Omit<
+    T,
+    'draft' | 'origin'
+  > & { draft: Record<string, unknown> | null; origin: Record<string, unknown> };
+/** Élément épinglé dans une version donnée, avec la définition de cette version. */
+const elementEpingle = async (k: Kdb, ref: CfgRef) => {
+  const r = await k
+    .selectFrom('cfg_items as i')
+    .innerJoin('cfg_versions as v', 'v.item_id', 'i.id')
+    .select(['i.kind', 'i.key', 'i.scope', 'i.smsi_id as smsiId', 'i.state', 'v.definition'])
+    .where('i.id', '=', ref.item)
+    .where('v.version', '=', ref.version)
+    .executeTakeFirst();
+  return r ? { ...r, definition: r.definition as Record<string, unknown> } : undefined;
+};
+/** Un identifiant est unique par type et par périmètre (l'organisation comptant comme un périmètre). */
+const identifiantPris = (k: Kdb, kind: CfgKind, key: string, smsiId: string | null) =>
+  k
+    .selectFrom('cfg_items')
+    .select('id')
+    .where('kind', '=', kind)
+    .where('key', '=', key)
+    .where((eb) => (smsiId === null ? eb('smsi_id', 'is', null) : eb('smsi_id', '=', smsiId)))
+    .executeTakeFirst();
+/** Nombre de consommateurs distincts (type, identifiant[, version]). */
+const consommateurs = (avecVersion: boolean) =>
+  avecVersion
+    ? sql<number>`count(DISTINCT (consumer_kind, consumer_id, consumer_version))::int`
+    : sql<number>`count(DISTINCT (consumer_kind, consumer_id))::int`;
 interface ItemRow {
   id: string;
   kind: CfgKind;
@@ -109,6 +156,10 @@ export class ConfigGrc {
     private readonly db: Db,
     private readonly grc: Grc,
   ) {}
+  /** Kysely sur la transaction de l'appelant, sinon sur le pool. */
+  private k(c?: Client): Kdb {
+    return c ? surConnexion(c) : this.db.k;
+  }
 
   /* ------------------------------------------------------------ Droits (aucune nouvelle permission) */
   /** Lecture : toute personne qui consulte le pilotage, les paramètres ou l'administration. */
@@ -140,45 +191,64 @@ export class ConfigGrc {
 
   /* ------------------------------------------------------------ Lecture */
   private async row(id: string, c?: Client, lock = false): Promise<ItemRow> {
-    const r = (
-      await (c ?? this.db.pool).query<ItemRow>(
-        `SELECT ${ITEM_COLUMNS} FROM cfg_items i WHERE i.id=$1${lock ? ' FOR UPDATE' : ''}`,
-        [id],
-      )
-    ).rows[0];
+    const r = await this.k(c)
+      .selectFrom('cfg_items as i')
+      .select(COLONNES_ELEMENT)
+      .where('i.id', '=', id)
+      .$if(lock, (q) => q.forUpdate())
+      .executeTakeFirst();
     if (!r) throw new HttpError(404, 'Élément de configuration introuvable.');
-    return r;
+    return versLigne(r);
   }
   private async versionDef(id: string, version: number, c?: Client) {
-    const r = (
-      await (c ?? this.db.pool).query<{
-        definition: Record<string, unknown>;
-        reason: string;
-        createdBy: string;
-        createdAt: Date;
-      }>(
-        'SELECT definition,reason,created_by AS "createdBy",created_at AS "createdAt" FROM cfg_versions WHERE item_id=$1 AND version=$2',
-        [id, version],
-      )
-    ).rows[0];
+    const r = await this.k(c)
+      .selectFrom('cfg_versions')
+      .select(['definition', 'reason', 'created_by as createdBy', 'created_at as createdAt'])
+      .where('item_id', '=', id)
+      .where('version', '=', version)
+      .executeTakeFirst();
     if (!r) throw new HttpError(404, 'Version introuvable.');
-    return r;
+    return { ...r, definition: r.definition as Record<string, unknown> };
   }
 
   async list(user: SessionUser, f: CfgFilters = {}) {
     await this.assertRead(user);
     const rows = (
-      await this.db.q<ItemRow & { definition: Record<string, unknown> | null; usages: number; children: number }>(
-        `SELECT ${ITEM_COLUMNS}, v.definition,
-           (SELECT count(DISTINCT (u.consumer_kind,u.consumer_id))::int FROM cfg_usages u WHERE u.item_id=i.id) AS usages,
-           (SELECT count(*)::int FROM cfg_items d WHERE d.derived_from_id=i.id) AS children
-         FROM cfg_items i LEFT JOIN cfg_versions v ON v.item_id=i.id AND v.version=i.current_version
-         WHERE ($1::text IS NULL OR i.kind=$1) AND ($2::text IS NULL OR i.state=$2) AND ($3::text IS NULL OR i.scope=$3)
-           AND ($4::uuid IS NULL OR i.smsi_id=$4 OR i.scope='instance')
-         ORDER BY i.kind, i.key, i.created_at`,
-        [f.kind ?? null, f.state ?? null, f.scope ?? null, f.smsi ?? null],
-      )
-    ).rows;
+      await this.db.k
+        .selectFrom('cfg_items as i')
+        .leftJoin('cfg_versions as v', (j) =>
+          j.onRef('v.item_id', '=', 'i.id').onRef('v.version', '=', 'i.current_version'),
+        )
+        .select(COLONNES_ELEMENT)
+        .select([
+          'v.definition',
+          (eb) =>
+            eb
+              .selectFrom('cfg_usages as u')
+              .select(consommateurs(false).as('n'))
+              .whereRef('u.item_id', '=', 'i.id')
+              .as('usages'),
+          (eb) =>
+            eb
+              .selectFrom('cfg_items as d')
+              .select(sql<number>`count(*)::int`.as('n'))
+              .whereRef('d.derived_from_id', '=', 'i.id')
+              .as('children'),
+        ])
+        .$if(!!f.kind, (q) => q.where('i.kind', '=', f.kind!))
+        .$if(!!f.state, (q) => q.where('i.state', '=', f.state!))
+        .$if(!!f.scope, (q) => q.where('i.scope', '=', f.scope!))
+        .$if(!!f.smsi, (q) => q.where((eb) => eb.or([eb('i.smsi_id', '=', f.smsi!), eb('i.scope', '=', 'instance')])))
+        .orderBy('i.kind')
+        .orderBy('i.key')
+        .orderBy('i.created_at')
+        .execute()
+    ).map((r) => ({
+      ...versLigne(r),
+      definition: r.definition as Record<string, unknown> | null,
+      usages: r.usages ?? 0,
+      children: r.children ?? 0,
+    }));
     const visible = new Map<string, boolean>();
     const out = [];
     for (const r of rows) {
@@ -199,16 +269,19 @@ export class ConfigGrc {
     const r = await this.row(id);
     await this.assertRead(user, r);
     const versions = (
-      await this.db.q<{ version: number; reason: string; createdBy: string; createdAt: Date }>(
-        'SELECT version,reason,created_by AS "createdBy",created_at AS "createdAt" FROM cfg_versions WHERE item_id=$1 ORDER BY version DESC',
-        [id],
-      )
-    ).rows.map((v) => ({ ...v, createdAt: v.createdAt.toISOString() }));
+      await this.db.k
+        .selectFrom('cfg_versions')
+        .select(['version', 'reason', 'created_by as createdBy', 'created_at as createdAt'])
+        .where('item_id', '=', id)
+        .orderBy('version', 'desc')
+        .execute()
+    ).map((v) => ({ ...v, createdAt: v.createdAt.toISOString() }));
     const current = r.currentVersion ? await this.versionDef(id, r.currentVersion) : null;
-    const usages = (await this.db.one<{ n: number }>(
-      'SELECT count(DISTINCT (consumer_kind,consumer_id))::int AS n FROM cfg_usages WHERE item_id=$1',
-      [id],
-    ))!.n;
+    const { n: usages } = await this.db.k
+      .selectFrom('cfg_usages')
+      .select(consommateurs(false).as('n'))
+      .where('item_id', '=', id)
+      .executeTakeFirstOrThrow();
     return {
       ...toItem(r),
       ...metaOf(r.kind, current?.definition ?? r.draft),
@@ -256,25 +329,29 @@ export class ConfigGrc {
     this.checkTarget(input.scope, input.smsiId);
     await this.assertWrite(user, { scope: input.scope, smsiId: input.smsiId ?? null }, 'edit');
     const definition = this.parse(input.kind, input.definition);
-    return this.db.tx(async (c) => {
-      const exists = await c.query(
-        `SELECT 1 FROM cfg_items WHERE kind=$1 AND key=$2 AND COALESCE(smsi_id,'00000000-0000-0000-0000-000000000000'::uuid)=COALESCE($3::uuid,'00000000-0000-0000-0000-000000000000'::uuid)`,
-        [input.kind, input.key, input.smsiId ?? null],
-      );
-      if (exists.rowCount) throw new HttpError(409, 'Cet identifiant existe déjà pour ce type d’élément.');
-      const id = (
-        await c.query<{ id: string }>(
-          'INSERT INTO cfg_items(kind,key,scope,smsi_id,draft,created_by,updated_by) VALUES($1,$2,$3,$4,$5,$6,$6) RETURNING id',
-          [input.kind, input.key, input.scope, input.smsiId ?? null, definition, user.username],
-        )
-      ).rows[0]!.id;
+    return this.db.tx(async (c, k) => {
+      if (await identifiantPris(k, input.kind, input.key, input.smsiId ?? null))
+        throw new HttpError(409, 'Cet identifiant existe déjà pour ce type d’élément.');
+      const { id } = await k
+        .insertInto('cfg_items')
+        .values({
+          kind: input.kind,
+          key: input.key,
+          scope: input.scope,
+          smsi_id: input.smsiId ?? null,
+          draft: JSON.stringify(definition),
+          created_by: user.username,
+          updated_by: user.username,
+        })
+        .returning('id')
+        .executeTakeFirstOrThrow();
       await this.db.audit(user, ip, 'config.create', id, { kind: input.kind, key: input.key, scope: input.scope }, c);
       return this.row(id, c).then(toItem);
     }, user.username);
   }
 
   async saveDraft(user: SessionUser, ip: string, id: string, expected: number, definition: unknown) {
-    return this.db.tx(async (c) => {
+    return this.db.tx(async (c, k) => {
       const r = await this.row(id, c, true);
       await this.assertWrite(user, r, 'edit');
       if (r.state === 'archived')
@@ -284,14 +361,45 @@ export class ConfigGrc {
           current: toItem(r),
         });
       const def = this.parse(r.kind, definition);
-      await c.query('UPDATE cfg_items SET draft=$2,version=version+1,updated_by=$3,updated_at=now() WHERE id=$1', [
-        id,
-        def,
-        user.username,
-      ]);
+      await this.ecrire(k, id, user.username, { draft: JSON.stringify(def) });
       await this.db.audit(user, ip, 'config.draft', id, { kind: r.kind, key: r.key }, c);
       return toItem(await this.row(id, c));
     }, user.username);
+  }
+
+  /** Nouvelle version d'un élément (champs donnés, version, auteur et date). */
+  private async ecrire(
+    k: Kdb,
+    id: string,
+    auteur: string,
+    champs: { draft?: string | null; state?: CfgState; current_version?: number },
+  ) {
+    await k
+      .updateTable('cfg_items')
+      .set((eb) => ({ ...champs, version: eb('version', '+', 1), updated_by: auteur, updated_at: sql<Date>`now()` }))
+      .where('id', '=', id)
+      .execute();
+  }
+  /** Usages d'éléments par un consommateur ; un usage déjà enregistré est conservé tel quel. */
+  private async usagesDe(
+    k: Kdb,
+    refs: CfgRef[],
+    consommateur: { kind: 'cfg_version' | 'method_version' | 'analysis'; id: string; version: number },
+    auteur: string,
+  ) {
+    for (const ref of refs)
+      await k
+        .insertInto('cfg_usages')
+        .values({
+          item_id: ref.item,
+          item_version: ref.version,
+          consumer_kind: consommateur.kind,
+          consumer_id: consommateur.id,
+          consumer_version: consommateur.version,
+          created_by: auteur,
+        })
+        .onConflict((oc) => oc.doNothing())
+        .execute();
   }
 
   /* ------------------------------------------------------------ Validation croisée (références épinglées) */
@@ -306,20 +414,7 @@ export class ConfigGrc {
     const errors: string[] = [];
     for (const ref of refs) {
       const k = ref.item + '@' + ref.version;
-      const row = (
-        await c.query<{
-          kind: CfgKind;
-          key: string;
-          scope: CfgScope;
-          smsiId: string | null;
-          state: CfgState;
-          definition: Record<string, unknown>;
-        }>(
-          `SELECT i.kind,i.key,i.scope,i.smsi_id AS "smsiId",i.state,v.definition FROM cfg_items i JOIN cfg_versions v ON v.item_id=i.id
-           WHERE i.id=$1 AND v.version=$2`,
-          [ref.item, ref.version],
-        )
-      ).rows[0];
+      const row = await elementEpingle(surConnexion(c), ref);
       if (!row) {
         errors.push(`Référence introuvable : ${ref.item} version ${ref.version}.`);
         continue;
@@ -389,10 +484,14 @@ export class ConfigGrc {
       if (before.success) diff = diffScales(before.data, definition as ScaleDefinition);
     }
     const pinned = r.currentVersion
-      ? (await this.db.one<{ n: number }>(
-          'SELECT count(DISTINCT (consumer_kind,consumer_id,consumer_version))::int AS n FROM cfg_usages WHERE item_id=$1 AND item_version=$2',
-          [id, r.currentVersion],
-        ))!.n
+      ? (
+          await this.db.k
+            .selectFrom('cfg_usages')
+            .select(consommateurs(true).as('n'))
+            .where('item_id', '=', id)
+            .where('item_version', '=', r.currentVersion)
+            .executeTakeFirstOrThrow()
+        ).n
       : 0;
     return {
       valid: errors.length === 0,
@@ -413,7 +512,7 @@ export class ConfigGrc {
   }
 
   async publish(user: SessionUser, ip: string, id: string, expected: number, previewId: string, reason: string) {
-    return this.db.tx(async (c) => {
+    return this.db.tx(async (c, k) => {
       const r = await this.row(id, c, true);
       await this.assertWrite(user, r, 'publish');
       if (r.state === 'archived') throw new HttpError(409, 'Cet élément est archivé : restaurez-le avant de publier.');
@@ -434,22 +533,12 @@ export class ConfigGrc {
           throw new HttpError(422, 'Aucun changement à publier.');
       }
       const version = (r.currentVersion ?? 0) + 1;
-      await c.query('INSERT INTO cfg_versions(item_id,version,definition,reason,created_by) VALUES($1,$2,$3,$4,$5)', [
-        id,
-        version,
-        definition,
-        reason,
-        user.username,
-      ]);
-      for (const ref of cfgRefs(r.kind, definition))
-        await c.query(
-          "INSERT INTO cfg_usages(item_id,item_version,consumer_kind,consumer_id,consumer_version,created_by) VALUES($1,$2,'cfg_version',$3,$4,$5) ON CONFLICT DO NOTHING",
-          [ref.item, ref.version, id, version, user.username],
-        );
-      await c.query(
-        "UPDATE cfg_items SET current_version=$2,state='active',draft=NULL,version=version+1,updated_by=$3,updated_at=now() WHERE id=$1",
-        [id, version, user.username],
-      );
+      await k
+        .insertInto('cfg_versions')
+        .values({ item_id: id, version, definition: JSON.stringify(definition), reason, created_by: user.username })
+        .execute();
+      await this.usagesDe(k, cfgRefs(r.kind, definition), { kind: 'cfg_version', id, version }, user.username);
+      await this.ecrire(k, id, user.username, { current_version: version, state: 'active', draft: null });
       await this.db.audit(
         user,
         ip,
@@ -478,59 +567,51 @@ export class ConfigGrc {
     await this.assertWrite(user, { scope: input.scope, smsiId: input.smsiId ?? null }, 'edit');
     const base = (await this.versionDef(id, src.currentVersion)).definition;
     const definition = this.parse(src.kind, { ...base, ...(input.name ? { name: input.name } : {}) });
-    return this.db.tx(async (c) => {
-      const exists = await c.query(
-        `SELECT 1 FROM cfg_items WHERE kind=$1 AND key=$2 AND COALESCE(smsi_id,'00000000-0000-0000-0000-000000000000'::uuid)=COALESCE($3::uuid,'00000000-0000-0000-0000-000000000000'::uuid)`,
-        [src.kind, input.key, input.smsiId ?? null],
-      );
-      if (exists.rowCount) throw new HttpError(409, 'Cet identifiant existe déjà pour ce type d’élément.');
-      const nid = (
-        await c.query<{ id: string }>(
-          `INSERT INTO cfg_items(kind,key,scope,smsi_id,draft,derived_from_id,derived_from_version,origin,created_by,updated_by)
-           VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$9) RETURNING id`,
-          [
-            src.kind,
-            input.key,
-            input.scope,
-            input.smsiId ?? null,
-            definition,
-            id,
-            src.currentVersion,
-            { type: 'derived' },
-            user.username,
-          ],
-        )
-      ).rows[0]!.id;
+    return this.db.tx(async (c, k) => {
+      if (await identifiantPris(k, src.kind, input.key, input.smsiId ?? null))
+        throw new HttpError(409, 'Cet identifiant existe déjà pour ce type d’élément.');
+      const { id: nid } = await k
+        .insertInto('cfg_items')
+        .values({
+          kind: src.kind,
+          key: input.key,
+          scope: input.scope,
+          smsi_id: input.smsiId ?? null,
+          draft: JSON.stringify(definition),
+          derived_from_id: id,
+          derived_from_version: src.currentVersion,
+          origin: JSON.stringify({ type: 'derived' }),
+          created_by: user.username,
+          updated_by: user.username,
+        })
+        .returning('id')
+        .executeTakeFirstOrThrow();
       await this.db.audit(user, ip, 'config.derive', nid, { from: id, version: src.currentVersion, key: input.key }, c);
       return toItem(await this.row(nid, c));
     }, user.username);
   }
 
   async setArchived(user: SessionUser, ip: string, id: string, archived: boolean) {
-    return this.db.tx(async (c) => {
+    return this.db.tx(async (c, k) => {
       const r = await this.row(id, c, true);
       await this.assertWrite(user, r, 'publish');
       if (archived && r.state === 'archived') throw new HttpError(409, 'Cet élément est déjà archivé.');
       if (!archived && r.state !== 'archived') throw new HttpError(409, 'Cet élément n’est pas archivé.');
       const next: CfgState = archived ? 'archived' : r.currentVersion ? 'active' : 'draft';
-      await c.query('UPDATE cfg_items SET state=$2,version=version+1,updated_by=$3,updated_at=now() WHERE id=$1', [
-        id,
-        next,
-        user.username,
-      ]);
+      await this.ecrire(k, id, user.username, { state: next });
       await this.db.audit(user, ip, archived ? 'config.archive' : 'config.restore', id, { key: r.key }, c);
       return toItem(await this.row(id, c));
     }, user.username);
   }
 
   async remove(user: SessionUser, ip: string, id: string) {
-    await this.db.tx(async (c) => {
+    await this.db.tx(async (c, k) => {
       const r = await this.row(id, c, true);
       await this.assertWrite(user, r, 'publish');
       if (r.currentVersion) throw new HttpError(409, 'Un élément publié est immuable : archivez-le.');
-      const child = await c.query('SELECT 1 FROM cfg_items WHERE derived_from_id=$1', [id]);
-      if (child.rowCount) throw new HttpError(409, 'Des variantes dérivent de cet élément.');
-      await c.query('DELETE FROM cfg_items WHERE id=$1', [id]);
+      const child = await k.selectFrom('cfg_items').select('id').where('derived_from_id', '=', id).executeTakeFirst();
+      if (child) throw new HttpError(409, 'Des variantes dérivent de cet élément.');
+      await k.deleteFrom('cfg_items').where('id', '=', id).execute();
       await this.db.audit(user, ip, 'config.delete', id, { key: r.key }, c);
     }, user.username);
   }
@@ -539,26 +620,25 @@ export class ConfigGrc {
   async usages(user: SessionUser, id: string) {
     const r = await this.row(id);
     await this.assertRead(user, r);
-    const rows = (
-      await this.db.q<{
-        itemVersion: number;
-        consumerKind: string;
-        consumerId: string;
-        consumerVersion: number;
-        createdBy: string;
-        createdAt: Date;
-        label: string | null;
-      }>(
-        `SELECT u.item_version AS "itemVersion",u.consumer_kind AS "consumerKind",u.consumer_id AS "consumerId",u.consumer_version AS "consumerVersion",
-           u.created_by AS "createdBy",u.created_at AS "createdAt",
-           CASE u.consumer_kind
-             WHEN 'cfg_version' THEN (SELECT ci.kind||' '||ci.key FROM cfg_items ci WHERE ci.id::text=u.consumer_id)
-             WHEN 'method_version' THEN (SELECT mv.definition->>'name' FROM grc_method_versions mv WHERE mv.id::text=u.consumer_id)
-             ELSE NULL END AS label
-         FROM cfg_usages u WHERE u.item_id=$1 ORDER BY u.item_version DESC,u.created_at DESC`,
-        [id],
-      )
-    ).rows;
+    // Libellé du consommateur selon son type (identifiant stocké en texte) : expression SQL fixe, sans valeur extérieure.
+    const rows = await this.db.k
+      .selectFrom('cfg_usages as u')
+      .select([
+        'u.item_version as itemVersion',
+        'u.consumer_kind as consumerKind',
+        'u.consumer_id as consumerId',
+        'u.consumer_version as consumerVersion',
+        'u.created_by as createdBy',
+        'u.created_at as createdAt',
+        sql<string | null>`CASE u.consumer_kind
+             WHEN 'cfg_version' THEN (SELECT ci.kind || ' ' || ci.key FROM cfg_items ci WHERE ci.id::text = u.consumer_id)
+             WHEN 'method_version' THEN (SELECT mv.definition->>'name' FROM grc_method_versions mv WHERE mv.id::text = u.consumer_id)
+             ELSE NULL END`.as('label'),
+      ])
+      .where('u.item_id', '=', id)
+      .orderBy('u.item_version', 'desc')
+      .orderBy('u.created_at', 'desc')
+      .execute();
     return rows.map((u) => ({ ...u, createdAt: u.createdAt.toISOString() }));
   }
 
@@ -569,12 +649,12 @@ export class ConfigGrc {
     if (r.kind !== 'scale') throw new HttpError(422, 'L’étude d’impact structurelle concerne les échelles.');
     const a = ScaleDefinition.parse((await this.versionDef(id, from)).definition);
     const b = ScaleDefinition.parse((await this.versionDef(id, to)).definition);
-    const consumers = (
-      await this.db.q<{ consumerKind: string; consumerId: string; consumerVersion: number }>(
-        'SELECT consumer_kind AS "consumerKind",consumer_id AS "consumerId",consumer_version AS "consumerVersion" FROM cfg_usages WHERE item_id=$1 AND item_version=$2',
-        [id, from],
-      )
-    ).rows;
+    const consumers = await this.db.k
+      .selectFrom('cfg_usages')
+      .select(['consumer_kind as consumerKind', 'consumer_id as consumerId', 'consumer_version as consumerVersion'])
+      .where('item_id', '=', id)
+      .where('item_version', '=', from)
+      .execute();
     return { from, to, diff: diffScales(a, b), consumers, consumersCount: consumers.length };
   }
 
@@ -585,7 +665,7 @@ export class ConfigGrc {
     const refs = methodBindingRefs(method.bindings);
     if (!refs.length) return { definition: method, refs };
     const b = method.bindings!;
-    const q = c ?? this.db.pool;
+    const kdb = this.k(c);
     const expected = new Map<string, Set<CfgKind>>();
     const expect = (r: CfgRef, kind: CfgKind) =>
       expected.set(r.item + '@' + r.version, (expected.get(r.item + '@' + r.version) ?? new Set()).add(kind));
@@ -602,20 +682,7 @@ export class ConfigGrc {
     const errors: string[] = [];
     for (const ref of refs) {
       const k = ref.item + '@' + ref.version;
-      const row = (
-        await q.query<{
-          kind: CfgKind;
-          key: string;
-          scope: CfgScope;
-          smsiId: string | null;
-          state: CfgState;
-          definition: Record<string, unknown>;
-        }>(
-          `SELECT i.kind,i.key,i.scope,i.smsi_id AS "smsiId",i.state,v.definition FROM cfg_items i JOIN cfg_versions v ON v.item_id=i.id
-           WHERE i.id=$1 AND v.version=$2`,
-          [ref.item, ref.version],
-        )
-      ).rows[0];
+      const row = await elementEpingle(kdb, ref);
       if (!row) {
         errors.push(`Référence introuvable : ${ref.item} version ${ref.version}.`);
         continue;
@@ -657,20 +724,7 @@ export class ConfigGrc {
     already: CfgRef | null,
     c: Client,
   ) {
-    const row = (
-      await c.query<{
-        kind: CfgKind;
-        key: string;
-        scope: CfgScope;
-        smsiId: string | null;
-        state: CfgState;
-        definition: Record<string, unknown>;
-      }>(
-        `SELECT i.kind,i.key,i.scope,i.smsi_id AS "smsiId",i.state,v.definition FROM cfg_items i JOIN cfg_versions v ON v.item_id=i.id
-         WHERE i.id=$1 AND v.version=$2`,
-        [ref.item, ref.version],
-      )
-    ).rows[0];
+    const row = await elementEpingle(surConnexion(c), ref);
     if (!row) throw new HttpError(422, `Référence de configuration introuvable : ${ref.item} version ${ref.version}.`);
     if (row.kind !== kind) throw new HttpError(422, `« ${row.key} » n’est pas du type attendu (${kind}).`);
     if (row.scope === 'smsi' && row.smsiId !== smsi)
@@ -698,11 +752,7 @@ export class ConfigGrc {
     consumer: { kind: 'method_version' | 'analysis'; id: string; version: number },
     refs: CfgRef[],
   ) {
-    for (const ref of refs)
-      await c.query(
-        'INSERT INTO cfg_usages(item_id,item_version,consumer_kind,consumer_id,consumer_version,created_by) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT DO NOTHING',
-        [ref.item, ref.version, consumer.kind, consumer.id, consumer.version, user.username],
-      );
+    await this.usagesDe(surConnexion(c), refs, consumer, user.username);
   }
 
   /* ------------------------------------------------------------ Modèles */
@@ -722,13 +772,9 @@ export class ConfigGrc {
     if (!tpl) throw new HttpError(404, 'Modèle introuvable.');
     await this.assertWrite(user, { scope: 'instance', smsiId: null }, 'publish');
     const ids = new Map(tpl.items.map((i) => [i.ref, crypto.randomUUID()]));
-    return this.db.tx(async (c) => {
+    return this.db.tx(async (c, k) => {
       for (const i of tpl.items) {
-        const clash = await c.query('SELECT 1 FROM cfg_items WHERE kind=$1 AND key=$2 AND smsi_id IS NULL', [
-          i.kind,
-          i.key,
-        ]);
-        if (clash.rowCount)
+        if (await identifiantPris(k, i.kind, i.key, null))
           throw new HttpError(409, `L’identifiant « ${i.key} » existe déjà : le modèle n’est pas adopté.`);
       }
       const created: CfgItem[] = [];
@@ -749,22 +795,33 @@ export class ConfigGrc {
           c,
         );
         if (errors.length) throw new HttpError(500, 'Modèle invalide : ' + errors.join(' ; '));
-        await c.query(
-          "INSERT INTO cfg_items(id,kind,key,scope,state,current_version,origin,created_by,updated_by) VALUES($1,$2,$3,'instance','draft',NULL,$4,$5,$5)",
-          [id, i.kind, i.key, { type: 'template', template: tpl.id, note: tpl.note }, user.username],
-        );
-        await c.query('INSERT INTO cfg_versions(item_id,version,definition,reason,created_by) VALUES($1,1,$2,$3,$4)', [
-          id,
-          definition,
-          `Adoption du modèle « ${tpl.label} » : à relire et à valider.`,
-          user.username,
-        ]);
-        await c.query("UPDATE cfg_items SET current_version=1,state='active' WHERE id=$1", [id]);
-        for (const ref of cfgRefs(i.kind, definition))
-          await c.query(
-            "INSERT INTO cfg_usages(item_id,item_version,consumer_kind,consumer_id,consumer_version,created_by) VALUES($1,$2,'cfg_version',$3,1,$4) ON CONFLICT DO NOTHING",
-            [ref.item, ref.version, id, user.username],
-          );
+        await k
+          .insertInto('cfg_items')
+          .values({
+            id,
+            kind: i.kind,
+            key: i.key,
+            scope: 'instance',
+            state: 'draft',
+            current_version: null,
+            origin: JSON.stringify({ type: 'template', template: tpl.id, note: tpl.note }),
+            created_by: user.username,
+            updated_by: user.username,
+          })
+          .execute();
+        await k
+          .insertInto('cfg_versions')
+          .values({
+            item_id: id,
+            version: 1,
+            definition: JSON.stringify(definition),
+            reason: `Adoption du modèle « ${tpl.label} » : à relire et à valider.`,
+            created_by: user.username,
+          })
+          .execute();
+        // Sans nouvelle version de l'élément : l'adoption le crée publié en version 1.
+        await k.updateTable('cfg_items').set({ current_version: 1, state: 'active' }).where('id', '=', id).execute();
+        await this.usagesDe(k, cfgRefs(i.kind, definition), { kind: 'cfg_version', id, version: 1 }, user.username);
         created.push(toItem(await this.row(id, c)));
       }
       await this.db.audit(user, ip, 'config.adopt', tpl.id, { items: created.map((x) => x.key) }, c);
