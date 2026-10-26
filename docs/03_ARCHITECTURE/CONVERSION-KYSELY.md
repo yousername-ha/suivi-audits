@@ -26,6 +26,7 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `operations.ts` | 1 | Converti (lot 13) ; verrou consultatif en SQL |
 | `auth.ts` | 0 | Converti (lot 15) |
 | `calendriers-plateforme.ts` | 0 | Converti (lot 2) |
+| `carto/maps.ts` | 0 | Converti (lot 18) |
 | `config-grc.ts` | 0 | Converti (lot 10) |
 | `grc/annuaires.ts` | 0 | Converti (lot 3) |
 | `grc/library.ts` | 0 | Converti (lot 8) |
@@ -34,17 +35,16 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `grc/suppliers.ts` | 0 | Converti (lot 3) |
 | `routes/access.ts` | 0 | Converti (lot 9) |
 | `routes/auth.ts` | 0 | Converti (lot 15) |
+| `routes/carto.ts` | 0 | Converti (lot 18) |
 | `routes/documents.ts` | 0 | Converti (socle et lot 17) |
 | `types-processus.ts` | 0 | Converti (lot 1) |
 | `courriel.ts` | 20 | Dernier (FOR UPDATE, power(), LEAST) |
-| `routes/carto.ts` | 14 | À convertir |
 | `routes/admin.ts` | 13 | À convertir |
 | `controle-relations.ts` | 11 | À convertir |
 | `historique/tables/collection.ts` | 11 | À convertir |
 | `routes/import.ts` | 11 | À convertir |
 | `grc/library-mappings.ts` | 9 | À convertir |
 | `legacy/store.ts` | 9 | À convertir |
-| `carto/maps.ts` | 8 | À convertir |
 | `grc/parcours.ts` | 8 | À convertir |
 | `grc/registre-risques.ts` | 7 | À convertir |
 | `historique/tables/invest.ts` | 7 | À convertir |
@@ -88,4 +88,4 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `routes/modules.ts` | 1 | À convertir |
 | `startup.ts` | 1 | À convertir |
 
-Reste à convertir : 248 appels dans 51 fichiers.
+Reste à convertir : 226 appels dans 49 fichiers.

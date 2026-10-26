@@ -42,7 +42,8 @@ import {
   type VersionRow,
 } from '../carto/maps.js';
 import { LegacyCartoSource, SOURCE_MODULES } from '../carto/sources.js';
-import type { Client } from '../db/db.js';
+import { sql } from 'kysely';
+import { surConnexion, type Client, type Kdb } from '../db/db.js';
 import { conflict, requireIfMatch, setEtag } from '../http/concurrency.js';
 import { HttpError } from '../http/errors.js';
 import { route } from '../http/route.js';
@@ -80,8 +81,41 @@ async function existing(c: Pick<Client, 'query'>, id: string, lock = false): Pro
   return m;
 }
 /** Champs legacy après un enregistrement depuis la nouvelle interface : date de mise à jour (lue par /legacy). */
-const EXTRA_SAVED = `(extra - 'absents' - 'sansVersions' - 'vide') ||
-  jsonb_build_object('champs', COALESCE(extra -> 'champs', '{}'::jsonb) || jsonb_build_object('updatedAt', $2::text))`;
+const extraEnregistre = (date: string) =>
+  sql<string>`(extra - 'absents' - 'sansVersions' - 'vide') ||
+    jsonb_build_object('champs', COALESCE(extra -> 'champs', '{}'::jsonb) || jsonb_build_object('updatedAt', ${date}::text))`;
+/** Nouvelle disposition d'une carte enregistrée depuis l'interface (version, date et auteur). */
+const enregistrerCarte = (
+  k: Kdb,
+  id: string,
+  champs: { layout: unknown; name?: string; date: string; auteur: string },
+) =>
+  k
+    .updateTable('maps')
+    .set((eb) => ({
+      layout: JSON.stringify(champs.layout),
+      ...(champs.name != null ? { name: champs.name } : {}),
+      extra: extraEnregistre(champs.date),
+      version: eb('version', '+', 1),
+      updated_at: sql<Date>`now()`,
+      updated_by: champs.auteur,
+    }))
+    .where('id', '=', id)
+    .execute();
+/** Carte de contexte « vide » (non proposée) créée si besoin : elle porte les réglages des enjeux. */
+const carteContexte = (k: Kdb, auteur: string) =>
+  k
+    .insertInto('maps')
+    .values({
+      view: 'context',
+      name: MAP_NAMES.context,
+      layout: '{"nodes": {}, "edges": [], "hide": {}, "ignored": {}}',
+      created_by: auteur,
+      updated_by: auteur,
+      extra: '{"vide": true}',
+    })
+    .onConflict((oc) => oc.column('view').doNothing())
+    .execute();
 
 /** Disposition valide pour l'enregistrement : relations orphelines retirées (versions de la bêta). */
 function cleanLayout(raw: unknown): MapLayout {
@@ -102,14 +136,10 @@ const creationError = (e: unknown) =>
 
 /** Carte de contexte verrouillée (créée « vide » si besoin) : porte la nature et les enjeux créés sur la carte. */
 async function lockedContextSettings(c: Client, actor: string) {
-  await c.query(
-    `INSERT INTO maps (view, name, layout, created_by, updated_by, extra)
-     VALUES ('context', $1, '{"nodes": {}, "edges": [], "hide": {}, "ignored": {}}', $2, $2, '{"vide": true}')
-     ON CONFLICT (view) DO NOTHING`,
-    [MAP_NAMES.context, actor],
-  );
-  const r = await c.query<{ settings: unknown }>("SELECT settings FROM maps WHERE view = 'context' FOR UPDATE");
-  return MapSettingsSchema.catch({}).parse(r.rows[0]?.settings ?? {});
+  const k = surConnexion(c);
+  await carteContexte(k, actor);
+  const r = await k.selectFrom('maps').select('settings').where('view', '=', 'context').forUpdate().executeTakeFirst();
+  return MapSettingsSchema.catch({}).parse(r?.settings ?? {});
 }
 
 /** Modifie l'état legacy sous verrou (une seule écriture à la fois, comme un enregistrement de /legacy). */
@@ -119,8 +149,8 @@ async function withLockedState<T>(
   note: string,
   fn: (data: Record<string, unknown>) => { data: Record<string, unknown>; out: T },
 ): Promise<T> {
-  return svc.db.tx(async (c) => {
-    await c.query('SELECT 1 FROM app_state WHERE id = 1 FOR UPDATE');
+  return svc.db.tx(async (c, k) => {
+    await k.selectFrom('app_state').select('id').where('id', '=', 1).forUpdate().execute();
     const etat = await svc.legacy.recompose(c);
     const { data, out } = fn((etat?.data ?? {}) as Record<string, unknown>);
     await svc.legacy.nativeWrite(c, data as JsonObject, sess.user, null, note);
@@ -168,7 +198,7 @@ export const cartoRoutes = [
       try {
         let out: { ref: string; name: string };
         if (body.type === 'issue') {
-          out = await svc.db.tx(async (c) => {
+          out = await svc.db.tx(async (c, k) => {
             const settings = await lockedContextSettings(c, sess.user.username);
             const st = await svc.legacy.recompose(c);
             const issues: MapIssue[] = settings.issues ?? [];
@@ -178,10 +208,13 @@ export const cartoRoutes = [
                 .map((o) => o.ref),
             );
             const r = createInLegacy(st?.data ?? {}, body, { now, uid, existingIssues: existants });
-            await c.query(
-              `UPDATE maps SET settings = jsonb_set(settings, '{issues}', $1::jsonb) WHERE view = 'context'`,
-              [JSON.stringify([...issues, r.issue])],
-            );
+            await k
+              .updateTable('maps')
+              .set({
+                settings: sql<string>`jsonb_set(settings, '{issues}', ${JSON.stringify([...issues, r.issue])}::jsonb)`,
+              })
+              .where('view', '=', 'context')
+              .execute();
             return { ref: r.ref, name: r.name };
           }, sess.user.username);
         } else
@@ -258,30 +291,37 @@ export const cartoRoutes = [
     handler: async ({ svc, s, ip, body, reply }) => {
       const sess = s as Session;
       const now = new Date().toISOString();
-      const id = await svc.db.tx(async (c) => {
-        const cur = (
-          await c.query<{ id: string; extra: MapRow['extra'] }>(
-            'SELECT id, extra FROM maps WHERE view = $1 FOR UPDATE',
-            [body.view],
-          )
-        ).rows[0];
-        if (cur && !cur.extra?.vide)
+      const id = await svc.db.tx(async (_c, k) => {
+        const cur = await k
+          .selectFrom('maps')
+          .select(['id', 'extra'])
+          .where('view', '=', body.view)
+          .forUpdate()
+          .executeTakeFirst();
+        if (cur && !(cur.extra as MapRow['extra'])?.vide)
           throw new HttpError(409, 'Une carte existe déjà pour cette vue : rechargez la page.', { id: cur.id });
         if (cur) {
-          await c.query(
-            `UPDATE maps SET layout = $3, name = $4, extra = ${EXTRA_SAVED}, version = version + 1, updated_at = now(),
-               updated_by = $5 WHERE id = $1`,
-            [cur.id, now, body.layout, body.name ?? MAP_NAMES[body.view], sess.user.username],
-          );
+          await enregistrerCarte(k, cur.id, {
+            layout: body.layout,
+            name: body.name ?? MAP_NAMES[body.view],
+            date: now,
+            auteur: sess.user.username,
+          });
           return cur.id;
         }
-        const r = await c.query<{ id: string }>(
-          `INSERT INTO maps (view, name, layout, created_by, updated_by, extra)
-           VALUES ($1, $2, $3, $4, $4, jsonb_build_object('champs', jsonb_build_object('updatedAt', $5::text)))
-           RETURNING id`,
-          [body.view, body.name ?? MAP_NAMES[body.view], body.layout, sess.user.username, now],
-        );
-        return r.rows[0]!.id;
+        const r = await k
+          .insertInto('maps')
+          .values({
+            view: body.view,
+            name: body.name ?? MAP_NAMES[body.view],
+            layout: JSON.stringify(body.layout),
+            created_by: sess.user.username,
+            updated_by: sess.user.username,
+            extra: sql<string>`jsonb_build_object('champs', jsonb_build_object('updatedAt', ${now}::text))`,
+          })
+          .returning('id')
+          .executeTakeFirstOrThrow();
+        return r.id;
       }, sess.user.username);
       const m = await existing(svc.db.pool, id);
       await svc.db.audit(sess.user, ip, 'carto.map_create', `map:${id}`, {
@@ -304,7 +344,7 @@ export const cartoRoutes = [
     handler: async ({ svc, s, ip, req, reply, params, body }) => {
       const sess = s as Session;
       const expected = requireIfMatch(req);
-      await svc.db.tx(async (c) => {
+      await svc.db.tx(async (c, k) => {
         const cur = await existing(c, params.id, true);
         if (cur.version !== expected)
           throw conflict({
@@ -312,11 +352,13 @@ export const cartoRoutes = [
             updated_by: cur.updated_by,
             updated_at: cur.updated_at.toISOString(),
           });
-        await c.query(
-          `UPDATE maps SET layout = $3, name = COALESCE($4, name), extra = ${EXTRA_SAVED}, version = version + 1,
-             updated_at = now(), updated_by = $5 WHERE id = $1`,
-          [params.id, new Date().toISOString(), body.layout, body.name ?? null, sess.user.username],
-        );
+        // Nom absent : conservé (COALESCE).
+        await enregistrerCarte(k, params.id, {
+          layout: body.layout,
+          name: body.name ?? undefined,
+          date: new Date().toISOString(),
+          auteur: sess.user.username,
+        });
       }, sess.user.username);
       const m = await existing(svc.db.pool, params.id);
       await svc.db.audit(sess.user, ip, body.overwrite ? 'carto.map_overwrite' : 'carto.map_save', `map:${m.id}`, {
@@ -338,9 +380,9 @@ export const cartoRoutes = [
     params: MapParams,
     handler: async ({ svc, s, ip, params }) => {
       const sess = s as Session;
-      const m = await svc.db.tx(async (c) => {
+      const m = await svc.db.tx(async (c, k) => {
         const cur = await existing(c, params.id, true);
-        await c.query('DELETE FROM maps WHERE id = $1', [params.id]);
+        await k.deleteFrom('maps').where('id', '=', params.id).execute();
         return cur;
       }, sess.user.username);
       await svc.db.audit(sess.user, ip, 'carto.map_delete', `map:${m.id}`, { view: m.view, versions: m.versions });
@@ -389,14 +431,14 @@ export const cartoRoutes = [
     handler: async ({ svc, s, ip, params, body }) => {
       const sess = s as Session;
       const label = body.label || `Version du ${new Date().toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' })}`;
-      const { v, removed } = await svc.db.tx(async (c) => {
+      const { v, removed } = await svc.db.tx(async (c, k) => {
         const m = await existing(c, params.id, true);
-        const r = await c.query<VersionRow>(
-          `INSERT INTO map_versions (map_id, label, layout, created_by) VALUES ($1, $2, $3, $4)
-           RETURNING id, map_id, label, layout, created_at, created_by, extra`,
-          [m.id, label, m.layout, sess.user.username],
-        );
-        return { v: r.rows[0]!, removed: await trimVersions(c, m.id) };
+        const r = await k
+          .insertInto('map_versions')
+          .values({ map_id: m.id, label, layout: JSON.stringify(m.layout), created_by: sess.user.username })
+          .returning(['id', 'map_id', 'label', 'layout', 'created_at', 'created_by', 'extra'])
+          .executeTakeFirstOrThrow();
+        return { v: r as unknown as VersionRow, removed: await trimVersions(c, m.id) };
       }, sess.user.username);
       await svc.db.audit(sess.user, ip, 'carto.version_create', `map:${params.id}`, {
         version: v.id,
@@ -417,7 +459,7 @@ export const cartoRoutes = [
     handler: async ({ svc, s, ip, req, reply, params }) => {
       const sess = s as Session;
       const expected = requireIfMatch(req);
-      const label = await svc.db.tx(async (c) => {
+      const label = await svc.db.tx(async (c, k) => {
         const cur = await existing(c, params.id, true);
         if (cur.version !== expected)
           throw conflict({
@@ -427,11 +469,11 @@ export const cartoRoutes = [
           });
         const v = (await listVersions(c, params.id)).find((x) => x.id === params.v);
         if (!v) throw new HttpError(404, 'Version introuvable.');
-        await c.query(
-          `UPDATE maps SET layout = $3, extra = ${EXTRA_SAVED}, version = version + 1, updated_at = now(),
-             updated_by = $4 WHERE id = $1`,
-          [params.id, new Date().toISOString(), cleanLayout(v.layout), sess.user.username],
-        );
+        await enregistrerCarte(k, params.id, {
+          layout: cleanLayout(v.layout),
+          date: new Date().toISOString(),
+          auteur: sess.user.username,
+        });
         return v.label;
       }, sess.user.username);
       const m = await existing(svc.db.pool, params.id);
@@ -454,17 +496,19 @@ export const cartoRoutes = [
     handler: async ({ svc, s, ip, params }) => {
       const sess = s as Session;
       const r = await svc.db.tx(
-        (c) =>
-          c.query<{ label: string }>('DELETE FROM map_versions WHERE id = $1 AND map_id = $2 RETURNING label', [
-            params.v,
-            params.id,
-          ]),
+        (_c, k) =>
+          k
+            .deleteFrom('map_versions')
+            .where('id', '=', params.v)
+            .where('map_id', '=', params.id)
+            .returning('label')
+            .executeTakeFirst(),
         sess.user.username,
       );
-      if (!r.rowCount) throw new HttpError(404, 'Version introuvable.');
+      if (!r) throw new HttpError(404, 'Version introuvable.');
       await svc.db.audit(sess.user, ip, 'carto.version_delete', `map:${params.id}`, {
         version: params.v,
-        label: r.rows[0]!.label,
+        label: r.label,
       });
       return undefined;
     },
@@ -481,23 +525,22 @@ export const cartoRoutes = [
     response: z.object({ issueKind: z.record(z.string(), z.enum(['ext', 'int'])) }),
     handler: async ({ svc, s, ip, body }) => {
       const sess = s as Session;
-      const issueKind = await svc.db.tx(async (c) => {
+      const issueKind = await svc.db.tx(async (_c, k) => {
         // Réglage porté par la carte de contexte ; sans carte, une carte « vide » (non proposée) le conserve.
-        await c.query(
-          `INSERT INTO maps (view, name, layout, created_by, updated_by, extra)
-           VALUES ('context', $1, '{"nodes": {}, "edges": [], "hide": {}, "ignored": {}}', $2, $2, '{"vide": true}')
-           ON CONFLICT (view) DO NOTHING`,
-          [MAP_NAMES.context, sess.user.username],
-        );
-        const r = await c.query<{ settings: { issueKind?: Record<string, 'ext' | 'int'> } }>(
-          `UPDATE maps SET settings = CASE WHEN $2::text IS NULL
-               THEN jsonb_set(settings, '{issueKind}', COALESCE(settings -> 'issueKind', '{}'::jsonb) - $1)
-               ELSE jsonb_set(settings, '{issueKind}', COALESCE(settings -> 'issueKind', '{}'::jsonb) || jsonb_build_object($1::text, $2::text))
-             END
-           WHERE view = 'context' RETURNING settings`,
-          [body.ref, body.kind],
-        );
-        return r.rows[0]!.settings.issueKind ?? {};
+        await carteContexte(k, sess.user.username);
+        // Nature retirée (null : nature déduite) ou posée pour cet enjeu, sans toucher aux autres.
+        const r = await k
+          .updateTable('maps')
+          .set({
+            settings:
+              body.kind == null
+                ? sql<string>`jsonb_set(settings, '{issueKind}', COALESCE(settings -> 'issueKind', '{}'::jsonb) - ${body.ref}::text)`
+                : sql<string>`jsonb_set(settings, '{issueKind}', COALESCE(settings -> 'issueKind', '{}'::jsonb) || jsonb_build_object(${body.ref}::text, ${body.kind}::text))`,
+          })
+          .where('view', '=', 'context')
+          .returning('settings')
+          .executeTakeFirstOrThrow();
+        return (r.settings as { issueKind?: Record<string, 'ext' | 'int'> }).issueKind ?? {};
       }, sess.user.username);
       await svc.db.audit(sess.user, ip, 'carto.issue_kind', body.ref, { kind: body.kind });
       return { issueKind };

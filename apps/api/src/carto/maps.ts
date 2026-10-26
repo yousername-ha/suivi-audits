@@ -2,7 +2,8 @@
    Le mapper reconstruit S.maps à l'identique pour /legacy et l'export, et écrit S.maps dans les tables à l'import. */
 import { MAP_VIEWS, type MapView } from '@suivi/shared/carto';
 import { isObject, type Json, type JsonObject } from '@suivi/shared/legacy';
-import type { Client } from '../db/db.js';
+import { sql } from 'kysely';
+import { surConnexion, type Client, type Kdb } from '../db/db.js';
 import type { ModuleMapper } from '../legacy/store.js';
 
 export const MAX_VERSIONS = 20;
@@ -41,38 +42,71 @@ export interface VersionRow {
   extra: { id?: Json; at?: Json };
 }
 
-export const MAP_COLUMNS = `m.id, m.view, m.name, m.layout, m.settings, m.version, m.created_at, m.created_by, m.updated_at,
-  m.updated_by, m.extra, (SELECT count(*)::int FROM map_versions v WHERE v.map_id = m.id) AS versions`;
+/** Carte avec le nombre de ses versions figées. Disposition, réglages et champs conservés : écrits par ce module. */
+const cartes = (k: Kdb) =>
+  k.selectFrom('maps as m').select([
+    'm.id',
+    'm.view',
+    'm.name',
+    'm.layout',
+    'm.settings',
+    'm.version',
+    'm.created_at',
+    'm.created_by',
+    'm.updated_at',
+    'm.updated_by',
+    'm.extra',
+    (eb) =>
+      eb
+        .selectFrom('map_versions as v')
+        .select(sql<number>`count(*)::int`.as('n'))
+        .whereRef('v.map_id', '=', 'm.id')
+        .as('versions'),
+  ]);
+const versCarte = (r: unknown) => r as MapRow;
 
 export async function listMaps(c: Pick<Client, 'query'>, withEmpty = false): Promise<MapRow[]> {
-  const r = await c.query<MapRow>(`SELECT ${MAP_COLUMNS} FROM maps m ORDER BY m.view, m.created_at`);
-  return withEmpty ? r.rows : r.rows.filter((m) => !m.extra?.vide);
+  const r = (await cartes(surConnexion(c)).orderBy('m.view').orderBy('m.created_at').execute()).map(versCarte);
+  return withEmpty ? r : r.filter((m) => !m.extra?.vide);
 }
 export async function getMap(c: Pick<Client, 'query'>, id: string, lock = false): Promise<MapRow | null> {
-  const r = await c.query<MapRow>(`SELECT ${MAP_COLUMNS} FROM maps m WHERE m.id = $1${lock ? ' FOR UPDATE' : ''}`, [
-    id,
-  ]);
-  return r.rows[0] ?? null;
+  const r = await cartes(surConnexion(c))
+    .where('m.id', '=', id)
+    .$if(lock, (q) => q.forUpdate())
+    .executeTakeFirst();
+  return r ? versCarte(r) : null;
 }
 export async function listVersions(c: Pick<Client, 'query'>, mapId: string): Promise<VersionRow[]> {
-  const r = await c.query<VersionRow>(
-    'SELECT id, map_id, label, layout, created_at, created_by, extra FROM map_versions WHERE map_id = $1 ORDER BY created_at, id',
-    [mapId],
-  );
-  return r.rows;
+  return (
+    await surConnexion(c)
+      .selectFrom('map_versions')
+      .select(['id', 'map_id', 'label', 'layout', 'created_at', 'created_by', 'extra'])
+      .where('map_id', '=', mapId)
+      .orderBy('created_at')
+      .orderBy('id')
+      .execute()
+  ).map((v) => v as unknown as VersionRow);
 }
 /** Supprime les versions au-delà des 20 plus récentes. */
 export async function trimVersions(c: Client, mapId: string): Promise<number> {
-  const r = await c.query(
-    `DELETE FROM map_versions WHERE id IN (
-       SELECT id FROM map_versions WHERE map_id = $1 ORDER BY created_at DESC, id DESC OFFSET $2)`,
-    [mapId, MAX_VERSIONS],
-  );
-  return r.rowCount ?? 0;
+  const r = await surConnexion(c)
+    .deleteFrom('map_versions')
+    .where('id', 'in', (eb) =>
+      eb
+        .selectFrom('map_versions')
+        .select('id')
+        .where('map_id', '=', mapId)
+        .orderBy('created_at', 'desc')
+        .orderBy('id', 'desc')
+        .offset(MAX_VERSIONS),
+    )
+    .executeTakeFirst();
+  return Number(r.numDeletedRows);
 }
 
 /* ---------------------------------------------------------------- Module legacy « maps » */
-const ACTOR = "COALESCE(NULLIF(current_setting('suivi.actor', true), ''), 'import')";
+/** Auteur de la transaction (réglé par Db.tx), sinon « import » : fragment SQL fixe. */
+const ACTOR = sql<string>`COALESCE(NULLIF(current_setting('suivi.actor', true), ''), 'import')`;
 
 /** S.maps reconstruit depuis les tables (undefined : aucune carte, la clé est absente de l'état). */
 export async function readLegacyMaps(c: Client): Promise<Json | undefined> {
@@ -114,7 +148,7 @@ export async function writeLegacyMaps(c: Client, value: Json | undefined, batchI
     const settings: JsonObject =
       view === 'context' ? { ...(issueKind ? { issueKind } : {}), ...(issues ? { issues } : {}) } : {};
     if (!valid && !(view === 'context' && (issueKind || issues))) {
-      await c.query('DELETE FROM maps WHERE view = $1', [view]);
+      await surConnexion(c).deleteFrom('maps').where('view', '=', view).execute();
       continue;
     }
     let layout: JsonObject = { nodes: {}, edges: [], hide: {}, ignored: {} };
@@ -138,32 +172,53 @@ export async function writeLegacyMaps(c: Client, value: Json | undefined, batchI
         ...(Array.isArray(m.versions) ? {} : { sansVersions: true }),
       };
     }
-    const r = await c.query<{ id: string }>(
-      `INSERT INTO maps (view, name, layout, settings, created_by, updated_by, legacy_id, import_batch_id, extra)
-       VALUES ($1, $2, $3, $4, ${ACTOR}, ${ACTOR}, $5, $6, $7)
-       ON CONFLICT (view) DO UPDATE SET layout = EXCLUDED.layout, settings = EXCLUDED.settings, extra = EXCLUDED.extra,
-         import_batch_id = EXCLUDED.import_batch_id, legacy_id = EXCLUDED.legacy_id, version = maps.version + 1,
-         updated_at = now(), updated_by = EXCLUDED.updated_by
-       RETURNING id`,
-      [view, MAP_NAMES[view], layout, settings, `maps.${view}`, batchId, extra],
-    );
-    const id = r.rows[0]!.id;
-    await c.query('DELETE FROM map_versions WHERE map_id = $1', [id]);
+    const k = surConnexion(c);
+    const { id } = await k
+      .insertInto('maps')
+      .values({
+        view,
+        name: MAP_NAMES[view],
+        layout: JSON.stringify(layout),
+        settings: JSON.stringify(settings),
+        created_by: ACTOR,
+        updated_by: ACTOR,
+        legacy_id: `maps.${view}`,
+        import_batch_id: batchId,
+        extra: JSON.stringify(extra),
+      })
+      .onConflict((oc) =>
+        oc.column('view').doUpdateSet((eb) => ({
+          layout: eb.ref('excluded.layout'),
+          settings: eb.ref('excluded.settings'),
+          extra: eb.ref('excluded.extra'),
+          import_batch_id: eb.ref('excluded.import_batch_id'),
+          legacy_id: eb.ref('excluded.legacy_id'),
+          version: sql<number>`maps.version + 1`,
+          updated_at: sql<Date>`now()`,
+          updated_by: eb.ref('excluded.updated_by'),
+        })),
+      )
+      .returning('id')
+      .executeTakeFirstOrThrow();
+    await k.deleteFrom('map_versions').where('map_id', '=', id).execute();
     const versions = valid && Array.isArray(m.versions) ? m.versions.filter(isObject) : [];
     for (const [i, v] of versions.entries()) {
-      await c.query(
-        `INSERT INTO map_versions (map_id, label, layout, created_at, created_by, legacy_id, import_batch_id, extra)
-         VALUES ($1, $2, $3, now() + ($4 || ' milliseconds')::interval, ${ACTOR}, $5, $6, $7)`,
-        [
-          id,
-          typeof v.label === 'string' ? v.label : '',
-          isObject(v.map ?? null) ? v.map : {},
-          String(i),
-          typeof v.id === 'string' ? v.id : null,
-          batchId,
-          Object.fromEntries(Object.entries({ id: v.id, at: v.at }).filter(([, x]) => x !== undefined)),
-        ],
-      );
+      // Une milliseconde d'écart par version : l'ordre d'origine est conservé.
+      await k
+        .insertInto('map_versions')
+        .values({
+          map_id: id,
+          label: typeof v.label === 'string' ? v.label : '',
+          layout: JSON.stringify(isObject(v.map ?? null) ? v.map : {}),
+          created_at: sql<Date>`now() + (${String(i)} || ' milliseconds')::interval`,
+          created_by: ACTOR,
+          legacy_id: typeof v.id === 'string' ? v.id : null,
+          import_batch_id: batchId,
+          extra: JSON.stringify(
+            Object.fromEntries(Object.entries({ id: v.id, at: v.at }).filter(([, x]) => x !== undefined)),
+          ),
+        })
+        .execute();
     }
   }
 }
