@@ -40,5 +40,7 @@
 - Les images de service de la CI (`postgres:18-alpine`) et de recette (`mcr.microsoft.com/playwright`) restent par étiquette :
   elles ne s'exécutent dans aucun job qui publie ou signe.
 - Le contenu du SBOM n'est pas confronté à une base de vulnérabilités sur le serveur (veille à mener depuis le fichier).
-- Réglages GitHub hors dépôt, à faire par le RSSI : règles d'étiquettes `v*`, environnement de publication avec
-  approbation, protection de `main`, clé matérielle sur le compte.
+- Réglages GitHub hors dépôt, faits par le RSSI le 26/10/2026 : règles d'étiquettes `v*` (création réservée au rôle
+  administrateur, ni déplacement ni suppression), protection de `main` (PR obligatoire, sept contrôles verts, fusion
+  classique) et environnement `publication` (approbation du RSSI, étiquettes `v*` seulement), exigé par le job
+  `sign`. Reste à faire : clé matérielle sur le compte.

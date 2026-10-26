@@ -52,6 +52,7 @@ Aucune action sur le serveur : la mise à jour applique les migrations additives
 - La fenêtre de fiche d'un élément a un bouton de fermeture nommé (« Fermer la fiche de l’élément »).
 
 ### Sécurité
+- **Publication soumise à approbation** ([ADR 0063](docs/adr/0063-chaine-de-publication-durcie.md)) : la signature des images attend l'approbation du RSSI dans l'environnement GitHub `publication`, accessible aux seules étiquettes `v*`. Sans cette approbation, aucune image n'est signée, donc aucune version n'est installable.
 - Dépendance `fast-uri` (via Fastify) passée en 3.1.9 et 4.2.3 : correctif de huit avis récents (confusion d'hôte, usurpation de schéma ; GHSA-w74x-v6f9-j3xg, GHSA-wjr9-j795-jxcr) que `pnpm audit` signalait. Aucun changement de code.
 
 ### Modifié
