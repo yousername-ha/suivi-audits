@@ -108,7 +108,9 @@ Les quinze décisions restantes ont été tranchées le 25/10/2026 : voir [DECIS
 
 Livré sur la branche de travail avec tests : couche visuelle EBIOS (ADR 0051), écart registre/matrice (0052), clôture avec liens ouverts (0053), bibliothèque de sources de risque (0054), kit d'intégration IA (0055), assistant « Analyser un service » et plan des écarts (0056), fériés en fond (0047, addendum), courriel (0049), certificats TLS (0050).
 
-Non fait ou limité, à décider ou à poursuivre : notifications métier par groupe ou profil (012-10) ; registres par défaut paresseux (010-04/010-10) ; remplacement des points IA du questionnaire par le kit ; suppression de la page « Conformité IA » (renvoi seulement, aucune donnée supprimée) ; envoi automatique de courriels ; émission ACME et envoi SMTP non constatés contre des serveurs réels ; référentiel officiel IA de l'ANSSI (accès réseau). **Aucun marqueur `IMPLEMENTATION-OK` n'est posé.**
+Mise à jour du 26/10/2026 : les points ci-dessus ont été tranchés puis réalisés. Livrés : retrait de la page « Conformité IA » et de ses données ([ADR 0057](../adr/0057-retrait-de-la-conformite-ia.md)), notifications métier par groupe, rôle et utilisateur ([0058](../adr/0058-notifications-metier.md)), relance automatique des courriels ([0059](../adr/0059-relance-automatique-des-courriels.md)), couverture agrégée des cartes de périmètres ([0060](../adr/0060-couverture-agregee-des-cartes-de-perimetres.md), L10), GAP IA ISO 27001 / HDS ([0064](../adr/0064-gap-ia-iso-27001-hds.md)), septième contrôle de la CI (gitleaks), référentiel ANSSI-PA-102 importable depuis le PDF officiel. La recette croisée (L11) est dans la [recette d'intégration](RECETTE-INTEGRATION-ASTRA.md#recette-croisée-l11-26102026).
+
+Reste non fait ou limité : envoi SMTP et émission ACME jamais constatés contre des serveurs réels ; vrai kit IA jamais chargé ; purge automatique et regroupement des courriels ; correspondances entre le GAP IA, le kit et le référentiel ANSSI. **Aucun nouveau marqueur `IMPLEMENTATION-OK` n'est posé.**
 
 ## Preuves exécutées
 
