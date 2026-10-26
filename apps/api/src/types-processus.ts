@@ -3,8 +3,6 @@
    Accès aux données en Kysely (ADR 0062). */
 import {
   codeDepuisLibelle,
-  TEINTES_TYPE_PROCESSUS,
-  type TeinteTypeProcessus,
   type TypeProcessusBody,
   type TypeProcessusDto,
   type TypeProcessusPatch,
@@ -29,12 +27,11 @@ const selectionner = (k: Kdb) =>
       .whereRef('p.family', '=', 't.code')
       .as('usage'),
   ]);
-// La contrainte CHECK de la migration 035 garantit la teinte ; on la vérifie plutôt que de la transtyper en silence.
-const estTeinte = (t: string): t is TeinteTypeProcessus => (TEINTES_TYPE_PROCESSUS as readonly string[]).includes(t);
-const versDto = (r: Omit<TypeProcessusDto, 'usage' | 'tint'> & { tint: string; usage: number | null }) => {
-  if (!estTeinte(r.tint)) throw new Error(`Teinte de type de processus inattendue : ${r.tint}`);
-  return { ...r, tint: r.tint, usage: r.usage ?? 0 } satisfies TypeProcessusDto;
-};
+// La teinte est typée par la contrainte CHECK de la migration 035 (types générés, ADR 0062).
+const versDto = (r: Omit<TypeProcessusDto, 'usage'> & { usage: number | null }): TypeProcessusDto => ({
+  ...r,
+  usage: r.usage ?? 0,
+});
 
 /** Un type actif porte-t-il déjà ce libellé (à la casse près), en excluant éventuellement un identifiant ? */
 async function libelleActifPris(k: Kdb, label: string, sauf?: string): Promise<boolean> {

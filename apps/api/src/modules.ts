@@ -1,4 +1,5 @@
-/* Configuration versionnée et verrouillage inter-instance des écritures métier. */
+/* Configuration versionnée et verrouillage inter-instance des écritures métier. Lecture et écriture de la configuration en
+   Kysely (ADR 0062) ; les verrous consultatifs restent des appels SQL directs sur leur pool dédié. */
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { createHash } from 'node:crypto';
 import {
@@ -10,9 +11,16 @@ import {
   type ModuleState,
   type Rights,
 } from '@suivi/shared';
+import { sql } from 'kysely';
 import pg from 'pg';
 import type { Config } from './config.js';
 import type { Actor, Db } from './db/db.js';
+
+// Les noms désactivés ne sont écrits que par apply() (sortie de planModules) et par les migrations : relus tels quels.
+const versEtat = (r: { version: number; disabled: string[] }): ModuleState => ({
+  version: r.version,
+  disabled: r.disabled as Module[],
+});
 import { HttpError } from './http/errors.js';
 
 const LOCK = 727276;
@@ -36,9 +44,13 @@ export class Modules {
   async state(fresh = false): Promise<ModuleState> {
     const cached = !fresh && this.context.getStore();
     if (cached) return cached;
-    const r = await this.db.one<ModuleState>('SELECT version, disabled FROM module_activation WHERE id=1');
+    const r = await this.db.k
+      .selectFrom('module_activation')
+      .select(['version', 'disabled'])
+      .where('id', '=', 1)
+      .executeTakeFirst();
     if (!r) throw new HttpError(503, 'Configuration des modules indisponible.');
-    return r;
+    return versEtat(r);
   }
   async rights(rights: Rights, fresh = false) {
     return activeRights(rights, (await this.state(fresh)).disabled);
@@ -89,10 +101,15 @@ export class Modules {
     try {
       await guard.query('SELECT pg_advisory_lock($1)', [LOCK]);
       locked = true;
-      return await this.db.tx(async (c) => {
-        const current = (
-          await c.query<ModuleState>('SELECT version, disabled FROM module_activation WHERE id=1 FOR UPDATE')
-        ).rows[0]!;
+      return await this.db.tx(async (c, k) => {
+        const current = versEtat(
+          await k
+            .selectFrom('module_activation')
+            .select(['version', 'disabled'])
+            .where('id', '=', 1)
+            .forUpdate()
+            .executeTakeFirstOrThrow(),
+        );
         if (current.version !== version)
           throw new HttpError(412, 'La configuration a changé : relancez la prévisualisation.');
         const preview = this.preview(current, intent);
@@ -100,12 +117,19 @@ export class Modules {
           throw new HttpError(409, 'La prévisualisation ne correspond pas à cette demande.');
         if (preview.blockers.length) throw new HttpError(409, preview.blockers.join(' '));
         if (!preview.changes.length) throw new HttpError(422, 'Aucun changement à appliquer.');
-        const next = (
-          await c.query<ModuleState>(
-            'UPDATE module_activation SET disabled=$1, version=version+1, updated_at=now(), updated_by=$2 WHERE id=1 RETURNING version, disabled',
-            [preview.disabled, actor.username],
-          )
-        ).rows[0]!;
+        const next = versEtat(
+          await k
+            .updateTable('module_activation')
+            .set((eb) => ({
+              disabled: preview.disabled,
+              version: eb('version', '+', 1),
+              updated_at: sql<Date>`now()`,
+              updated_by: actor.username,
+            }))
+            .where('id', '=', 1)
+            .returning(['version', 'disabled'])
+            .executeTakeFirstOrThrow(),
+        );
         await this.db.audit(
           actor,
           ip,

@@ -20,7 +20,8 @@
    applique les migrations, lit le catalogue (`information_schema`, `pg_enum`) et écrit `src/db/types.generated.ts`
    (générateur propre au projet, `src/db/introspection.ts`, testé ; pas de `kysely-codegen` et de ses 9 dépendances).
    Les types suivent les analyseurs de `pg` du projet : `int8` en nombre, `numeric` en texte, `jsonb` lu analysé et écrit
-   en texte JSON, horodatages en `Date`. La CI échoue si le fichier versionné diffère (`db:types --check` et test de
+   en texte JSON, horodatages en `Date`. Une colonne texte limitée par `CHECK (col IN ('a', 'b'))` est typée par l'union de ses valeurs
+   (`"a" | "b"`), lue dans `pg_constraint` : 42 colonnes au 26/10/2026 ; plus aucun transtypage nécessaire pour ces valeurs. La CI échoue si le fichier versionné diffère (`db:types --check` et test de
    `migrations.test.ts`) : une migration qui renomme une colonne casse la compilation du code qui l'utilise.
 4. **Sécurité** : Kysely lie toujours les valeurs en paramètres. `sql.raw` et `sql.lit`, qui insèrent du texte non
    paramétré, sont interdits dans l'API par ESLint ; l'import de Drizzle aussi.
