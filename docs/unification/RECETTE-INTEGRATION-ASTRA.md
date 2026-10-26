@@ -42,12 +42,38 @@ Légende : **Présent** (parcours vérifié, accès et refus compris) · **Parti
 | L6 | Tâches récurrentes | Livré : validation OK/KO/NA, fenêtres, jours exclus, calendriers iCalendar, enchaînement |
 | L7 | Cartes de périmètres | Livré : graphe et compteurs de synthèse |
 | L8 | Recette | Ce document |
+| L9 | Fonctionnalités complémentaires des dossiers 012, 003 et 018 | Livré (25 et 26/10/2026) : exploitation (courriel SMTP/SMTPS, certificats, conservation, calendriers), couche visuelle EBIOS, écart registre/matrice, clôture avec liens ouverts, bibliothèque de sources, kit IA, « Analyser un service », fériés en fond, notifications métier, relance automatique des courriels, GAP IA |
+| L10 | Compteurs et synthèses (010-04) | Livré : couverture agrégée des cartes de périmètres avec les sous-périmètres, provenance, détail par référentiel ([ADR 0060](../adr/0060-couverture-agregee-des-cartes-de-perimetres.md)) |
+| L11 | Recette croisée et bilan | Section « Recette croisée » ci-dessous |
+
+## Recette croisée (L11, 26/10/2026)
+
+Scénarios qui traversent plusieurs dossiers, avec la preuve exécutée. « CI » désigne la pull request correspondante, sept contrôles verts.
+
+| ID | Scénario croisé | Statut | Preuve et limite |
+| --- | --- | --- | --- |
+| C01 | Analyser un service : périmètre enfant qualifié → référentiels rattachés → couverture évaluée → plan d'action des écarts créé en une fois, rejouable sans doublon | **Présent** | `plan-ecarts.test.ts`, `couverture-exigences.test.ts`, parcours Playwright `plan-ecarts.spec.ts` ([ADR 0056](../adr/0056-analyser-un-service-et-plan-des-ecarts.md)). Limite : les actions d'un registre restreint sont comptées dans le plan (fuite d'existence mineure, documentée). |
+| C02 | Kit IA : import (aperçu puis publication, idempotent), correspondances proposées jamais appliquées d'office, couverture | **Présent** | `kit-ia.test.ts`, `kit-ia-chargement.test.ts`, parcours Playwright `kit-ia.spec.ts` ([ADR 0055](../adr/0055-kit-integration-ia.md)). Limite : testé avec un kit fictif ; le vrai kit n'a jamais été chargé. |
+| C03 | GAP IA : questionnaire par cas d'usage → points ISO 27001 / HDS pré-évalués sur des faits → plan d'action dans les écarts | **Présent** | `suivi-gap-ia.test.ts` (12 cas), `historique-gap.test.ts`, parcours Playwright `gap-ia.spec.ts` ([ADR 0064](../adr/0064-gap-ia-iso-27001-hds.md)). Limite : questions et points proposés, à valider par le RSSI. |
+| C04 | Référentiel officiel ANSSI-PA-102 (35 recommandations) importé par la bibliothèque, distinct du kit IA | **Présent (import vérifié)** | Simulation et publication réussies par l'API sur le fichier produit à partir du PDF officiel (même empreinte que l'exemplaire du site `messervices.cyber.gouv.fr`). Le contenu n'est pas dans le dépôt : il se charge par l'interface. Limite : aucune correspondance avec le GAP IA ni avec le kit n'est proposée à ce jour. |
+| C05 | Notification métier : réglage par groupe, rôle et personne (le réglage personnel l'emporte) → application et courriel en file → relance automatique | **Présent** | `notifications-metier.test.ts` (dont « relance automatique »), `courriel.test.ts`, `notifications.test.ts` (paquet partagé), parcours Playwright `notifications.spec.ts`, avec axe-core ([ADR 0058](../adr/0058-notifications-metier.md), [0059](../adr/0059-relance-automatique-des-courriels.md)). Limite : jamais éprouvé contre un vrai serveur SMTP ; évaluation à l'émission. |
+| C06 | Couverture agrégée : une carte parent affiche la somme de ses sous-périmètres, un enfant hérité nomme son parent seulement s'il est lisible, aucun taux inventé | **Présent** | `cartes-perimetres.test.ts` (API et paquet partagé), parcours Playwright `cartes-perimetres.spec.ts` (graphe, total avec un sous-périmètre ; le détail par référentiel n'a pas de parcours dédié) ([ADR 0060](../adr/0060-couverture-agregee-des-cartes-de-perimetres.md)). |
+| C07 | Retrait de « Conformité IA » : page, routes, exports et module de droits supprimés ; données supprimées par la migration 043 ; points IA du questionnaire retirés | **Présent** | `retrait-conformite-ia.test.ts`, `migrations.test.ts`, `reprise-tables-collections.test.ts` ([ADR 0057](../adr/0057-retrait-de-la-conformite-ia.md)). Limite : les tables `suivi_ia_*` restent, vides, pour le format historique. |
+| C08 | Jours fériés en fond des tâches (Calendrier, Timeline), sans modifier les actions | **Présent** | `jours-de-fond.test.ts` (web), parcours Playwright `jours-de-fond.spec.ts` ([ADR 0047](../adr/0047-calendriers-de-plateforme.md), addendum). |
+| C09 | Secrets : aucune fuite dans l'historique complet du dépôt public | **Présent** | Contrôle gitleaks (septième contrôle de la CI) ; exceptions rattachées à la règle `generic-api-key`, vérifiées sur l'historique complet. |
+
+## Bilan du 26/10/2026 (état honnête)
+
+- **Preuve la plus récente** : CI de la pull request 102 (GAP IA), sept contrôles verts : qualité, tests Vitest sur PostgreSQL 18, CodeQL, gitleaks, guide d'installation rejoué, montée de version avec retour arrière et restauration simulés, pile Docker complète avec **228 parcours Playwright réussis et 1 ignoré**. En local : paquet partagé 549 tests, API 752 tests (92 fichiers), web 114, scripts Python 65.
+- **Pas de marqueur de fin de chantier** : le marqueur `implementation/IMPLEMENTATION-OK.md` posé pour R01 à R18 atteste ce tableau, pas les chantiers C01 à C09, et aucun nouveau marqueur n'est posé ici.
+- **Non constaté** : envoi de courriel contre un vrai serveur SMTP ; émission de certificat contre une vraie autorité ACME ; chargement du vrai kit IA ; relecture humaine des questions du GAP IA ; recette ergonomique sur le serveur du client (TEST-042) ; charge cible.
+- **Non fait** : purge automatique des demandes de courriel terminées ; regroupement (digest) des notifications ; correspondances entre le GAP IA, le kit IA et le référentiel ANSSI ; cas d'usage « modèle hébergé en interne » pour le GAP IA.
 
 ## Limites connues (reportées, non cachées)
 
 - Les constats historiques de l'ancien outil ont été supprimés (migration 033) : les écarts sont tous des fiches de registre, donc déplaçables ; le module Audit relit les écarts du périmètre commun.
 - Calendriers iCalendar : fichier ou texte seulement ; règles de répétition rares (BYSETPOS, BYWEEKNO, BYYEARDAY, heures, etc.) signalées et non développées ; heure et fuseau des événements ignorés.
-- Les cartes de périmètres comptent les éléments visibles dans chaque périmètre ; un registre multi-périmètre figure donc dans chacune de ses cartes. Le total d'une carte parent et le total général comptent chaque élément une seule fois (conformité non agrégée).
+- Les cartes de périmètres comptent les éléments visibles dans chaque périmètre ; un registre multi-périmètre figure donc dans chacune de ses cartes. Le total d'une carte parent et le total général comptent chaque élément une seule fois ; la couverture d'une carte parent est la somme de celle de chaque périmètre lisible de l'ensemble (ADR 0060), celle du total général n'est pas agrégée.
 
 ## Commandes exécutées
 
