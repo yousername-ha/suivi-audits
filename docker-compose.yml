@@ -201,9 +201,10 @@ services:
       # Par défaut monter le dossier : init doit encore pouvoir y créer le fichier de clé au premier démarrage.
       - ${BACKUP_PASSPHRASE_FILE:-${DATA_DIR:-/srv/suivi-audits/donnees}/update-secrets}:${BACKUP_PASSPHRASE_FILE:-${DATA_DIR:-/srv/suivi-audits/donnees}/update-secrets}:ro
       - /var/run/docker.sock:/var/run/docker.sock
-      # Identifiants en lecture seule déjà provisionnés par le guide normal.
-      - /root/.ssh:/root/.ssh:ro
-      - /root/.docker:/root/.docker:ro
+      # Aucun identifiant par défaut (ADR 0061) : le dépôt public est lu en HTTPS, les images publiques sans connexion.
+      # Dépôt ou registre privé : UPDATER_SSH_DIR=/root/.ssh et/ou UPDATER_DOCKER_CONFIG=/root/.docker dans .env.
+      - ${UPDATER_SSH_DIR:-${DATA_DIR:-/srv/suivi-audits/donnees}/updater-sans-identifiants}:/root/.ssh:ro
+      - ${UPDATER_DOCKER_CONFIG:-${DATA_DIR:-/srv/suivi-audits/donnees}/updater-sans-identifiants}:/root/.docker:ro
     networks: [public]
     read_only: true
     tmpfs: ['/tmp:size=256m', '/root:size=32m']

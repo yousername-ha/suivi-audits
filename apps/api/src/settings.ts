@@ -1,7 +1,13 @@
 /* Paramètres de l'application (page Paramètres) : une version par section, valeurs par défaut issues de la
    configuration (.env), cache en mémoire pour les réglages lus à chaque requête (sécurité, général, apparence),
    rechargé à chaque modification (y compris par une autre instance, via le temps réel). */
-import { SETTINGS_SCHEMAS, SETTINGS_SECTIONS, type SettingsSection, type SettingsValues } from '@suivi/shared';
+import {
+  FENETRE_MAINTENANCE_DEFAUT,
+  SETTINGS_SCHEMAS,
+  SETTINGS_SECTIONS,
+  type SettingsSection,
+  type SettingsValues,
+} from '@suivi/shared';
 import type { JsonObject } from '@suivi/shared/legacy';
 import type { Config } from './config.js';
 import type { Client, Db } from './db/db.js';
@@ -62,6 +68,7 @@ function settingsDefaults(cfg: Config): { [K in Stored]: SettingsValues[K] } {
       lockoutThreshold: Math.min(10, Math.max(3, cfg.lockout.threshold)),
       lockoutMinutes: Math.min(1440, Math.max(5, cfg.lockout.minutes)),
       mfaRequired: true,
+      fenetreMaintenance: { ...FENETRE_MAINTENANCE_DEFAUT, jours: [...FENETRE_MAINTENANCE_DEFAUT.jours] },
     },
   };
 }

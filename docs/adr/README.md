@@ -64,5 +64,6 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0058](0058-notifications-metier.md) | Notifications métier : réglage par groupe, rôle et utilisateur (le réglage personnel l'emporte), application et courriel envoyé par l'exécutant | Acceptée |
 | [0059](0059-relance-automatique-des-courriels.md) | Relance automatique des courriels de notification : essais et délai réglables, délai doublé, refus définitif non relancé | Acceptée |
 | [0060](0060-couverture-agregee-des-cartes-de-perimetres.md) | Couverture agrégée des cartes de périmètres : somme par périmètre, détail par référentiel, provenance, jamais un taux | Acceptée |
+| [0061](0061-mise-a-jour-web-renforcee.md) | Mise à jour depuis l'interface renforcée : code TOTP à l'installation, fenêtre de maintenance, exécutant sans identifiants par défaut, avancement horodaté et reçu | Acceptée |
 | [0064](0064-gap-ia-iso-27001-hds.md) | GAP IA ISO 27001 / HDS : trois cas d'usage réels, questions sur des faits constatables, points pré-évalués seulement si la réponse tranche | Acceptée |
 

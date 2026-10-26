@@ -2,6 +2,7 @@
    sa permission d'écriture et son propre enregistrement (version par section, If-Match). */
 import { z } from 'zod';
 import type { Permission } from './permissions.js';
+import { FENETRE_MAINTENANCE_DEFAUT, FenetreMaintenance } from './updates.js';
 
 export const SETTINGS_SECTIONS = [
   'general',
@@ -134,6 +135,8 @@ export const SecuriteSettings = z.object({
   lockoutThreshold: z.number().int().min(3).max(10),
   lockoutMinutes: z.number().int().min(5).max(1440),
   mfaRequired: z.literal(true, 'La double authentification reste obligatoire.'),
+  /** Créneau hors duquel l'installation d'une mise à jour est refusée (ADR 0061). */
+  fenetreMaintenance: FenetreMaintenance.default(FENETRE_MAINTENANCE_DEFAUT),
 });
 
 export const SETTINGS_SCHEMAS = {

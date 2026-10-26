@@ -18,18 +18,24 @@
       </p>
       <div id="animation" class="spinner" aria-label="Opération en cours"></div>
       <ol id="steps">
-        <li data-phase="preparing">Préparation</li>
-        <li data-phase="backup">Sauvegarde de sécurité</li>
-        <li data-phase="installing">Installation</li>
-        <li data-phase="verifying">Vérification</li>
-        <li data-phase="complete">Retour à l’application</li>
+        <li data-phase="preparing">Préparation <time></time></li>
+        <li data-phase="backup">Sauvegarde de sécurité <time></time></li>
+        <li data-phase="installing">Installation <time></time></li>
+        <li data-phase="verifying">Vérification <time></time></li>
+        <li data-phase="rollback" hidden>Retour à la version précédente <time></time></li>
+        <li data-phase="complete">Retour à l’application <time></time></li>
       </ol>
+      <p id="elapsed" hidden></p>
       <p id="delay" hidden>
         L’opération prend plus de temps que prévu. Cette page continue à suivre son état ; vous pouvez la laisser
         ouverte.
       </p>
       <p id="connection" hidden>Connexion momentanément interrompue. Le suivi reprendra automatiquement.</p>
       <p id="versions"></p>
+      <p id="receipt" hidden>
+        Le reçu de cette opération (étapes, signatures vérifiées, sauvegarde, contrôles) est téléchargeable par un
+        administrateur dans Administration, Mises à jour.
+      </p>
       <a id="return" href="/admin/system" hidden>Consulter le résultat dans l’application</a>
       <p class="footnote">Votre espace revient automatiquement dès qu’il est disponible.</p>
     </main>

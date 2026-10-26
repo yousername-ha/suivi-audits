@@ -49,13 +49,17 @@ test('mise à jour : bandeau permanent et confirmation explicite dans le style e
     const install = page.getByRole('button', { name: 'Installer la version 3.1.0' });
     await expect(install).toBeDisabled();
     await page.getByLabel('Taper METTRE À JOUR pour confirmer').fill('METTRE À JOUR');
+    // Le code de double authentification est exigé à chaque installation.
+    await expect(install).toBeDisabled();
+    await page.getByLabel('Code de double authentification').fill('123 456');
+    await expect(page.getByLabel('Code de double authentification')).toHaveValue('123456');
     await install.click();
     // L'écran de mise à jour s'ouvre tout de suite, sans attendre la prise en charge de la demande par le service.
     await expect(page).toHaveURL(/\/update\/\?.*demande=00000000-0000-4000-8000-000000000001/);
     await expect(page.getByRole('heading', { name: 'Mise à jour en cours' })).toBeVisible();
     await expect(page.getByRole('status')).toContainText('Demande enregistrée.');
     expect(requests).toHaveLength(1);
-    expect(requests[0]).toMatchObject({ version: '3.1.0', confirm: 'METTRE À JOUR' });
+    expect(requests[0]).toMatchObject({ version: '3.1.0', confirm: 'METTRE À JOUR', code: '123456' });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
     expect(problems).toEqual([]);
   } finally {
@@ -101,6 +105,7 @@ test('mise à jour : après échec de préparation, une nouvelle confirmation cr
   try {
     await page.goto('/admin/system');
     await page.getByLabel('Taper METTRE À JOUR pour confirmer').fill('METTRE À JOUR');
+    await page.getByLabel('Code de double authentification').fill('123456');
     await page.getByRole('button', { name: 'Installer la version 3.1.0' }).click();
     // Attente de la prise en charge, puis le service signale l'échec de la préparation.
     await expect(page.getByRole('heading', { name: 'Mise à jour en cours' })).toBeVisible();
@@ -110,7 +115,9 @@ test('mise à jour : après échec de préparation, une nouvelle confirmation cr
     await expect(page).toHaveURL(/\/systeme\/mises-a-jour$/);
     const confirm = page.getByLabel('Taper METTRE À JOUR pour confirmer');
     await expect(confirm).toHaveValue('');
+    await expect(page.getByLabel('Code de double authentification')).toHaveValue('');
     await confirm.fill('METTRE À JOUR');
+    await page.getByLabel('Code de double authentification').fill('654321');
     await page.getByRole('button', { name: 'Installer la version 3.1.0' }).click();
     await expect.poll(() => requests.length).toBe(2);
     expect(requests[1]!.requestId).not.toBe(requests[0]!.requestId);
@@ -240,6 +247,105 @@ test('mise à jour : panne de suivi et retour arrière sont explicites, sans suc
     expect(await returned.evaluate((link) => new URL((link as HTMLAnchorElement).href).origin)).toBe(
       new URL(page.url()).origin,
     );
+    expect(problems).toEqual([]);
+  } finally {
+    await ctx.close();
+  }
+});
+test('mise à jour : code refusé, fenêtre fermée et reçus téléchargeables', async ({ browser }) => {
+  const { ctx, page, problems } = await open(browser);
+  const fermee = state({
+    fenetre: { active: true, ouverte: false, libelle: 'samedi de 22:00 à 23:00 (heure de Paris)' },
+  });
+  let current = state();
+  await page.route('**/api/updates', (route) => route.fulfill({ json: current }));
+  await page.route('**/api/admin/updates/install', (route) =>
+    route.fulfill({
+      status: 401,
+      json: { error: 'Code de double authentification incorrect ou déjà utilisé.', reason: 'mfa_failed' },
+    }),
+  );
+  await page.route('**/api/admin/updates/receipts', (route) =>
+    route.fulfill({
+      json: [
+        {
+          id: '00000000-0000-4000-8000-0000000000aa',
+          depuis: '3.0.0',
+          vers: '3.1.0',
+          statut: 'success',
+          fin: '2026-10-26T10:06:00Z',
+          dureeSecondes: 372,
+        },
+      ],
+    }),
+  );
+  try {
+    await page.goto('/systeme/mises-a-jour');
+    await page.getByLabel('Taper METTRE À JOUR pour confirmer').fill('METTRE À JOUR');
+    await page.getByLabel('Code de double authentification').fill('000000');
+    await page.getByRole('button', { name: 'Installer la version 3.1.0' }).click();
+    await expect(page.getByText('Code de double authentification incorrect ou déjà utilisé.')).toBeVisible();
+    // Un code est à usage unique : le champ est vidé après un refus.
+    await expect(page.getByLabel('Code de double authentification')).toHaveValue('');
+    await expect(page.getByRole('cell', { name: '6 min 12 s' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Télécharger le reçu 3.0.0 vers 3.1.0' })).toBeVisible();
+    current = fermee;
+    await page.reload();
+    await expect(page.getByText('L’installation n’est possible que samedi de 22:00 à 23:00')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Installer la version 3.1.0' })).toBeDisabled();
+    await expect(page.getByLabel('Code de double authentification')).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Vérifier les mises à jour' })).toBeEnabled();
+    expect(problems).toEqual([]);
+  } finally {
+    await ctx.close();
+  }
+});
+test('mise à jour : l’écran d’avancement horodate les étapes et donne la durée', async ({ browser }) => {
+  const { ctx, page, problems } = await open(browser, 390);
+  const jobId = '00000000-0000-4000-8000-000000000005';
+  const debut = new Date(Date.now() - 95_000).toISOString();
+  const etapes = [
+    { phase: 'preparing', at: debut },
+    { phase: 'backup', at: new Date(Date.now() - 60_000).toISOString() },
+    { phase: 'installing', at: new Date(Date.now() - 20_000).toISOString() },
+  ];
+  let current: Record<string, unknown> = state({
+    id: jobId,
+    target: '3.1.0',
+    maintenance: true,
+    status: 'running',
+    phase: 'installing',
+    message: 'Installation de la nouvelle version.',
+    startedAt: debut,
+    etapes,
+  });
+  await page.route('**/update/status.json', (route) => route.fulfill({ json: current }));
+  try {
+    await page.goto(`/update/?demande=${jobId}`);
+    await expect(page.locator('li.current')).toContainText('Installation');
+    await expect(page.locator('li[data-phase="backup"] time')).toHaveText(/^· \d{2}:\d{2}:\d{2}$/);
+    await expect(page.locator('li[data-phase="verifying"] time')).toHaveText('');
+    await expect(page.locator('#elapsed')).toContainText(/Durée écoulée : 1 min \d{2} s/);
+    await expect(page.locator('li[data-phase="rollback"]')).toBeHidden();
+    current = {
+      ...current,
+      maintenance: true,
+      status: 'running',
+      phase: 'rollback',
+      etapes: [...etapes, { phase: 'rollback', at: new Date().toISOString() }],
+    };
+    await expect(page.locator('li[data-phase="rollback"]')).toBeVisible();
+    await expect(page.locator('li[data-phase="rollback"]')).toHaveClass('current');
+    current = {
+      ...current,
+      maintenance: false,
+      status: 'rolled_back',
+      finishedAt: new Date().toISOString(),
+      message: 'La version précédente a été restaurée et vérifiée.',
+    };
+    await expect(page.locator('#elapsed')).toContainText('Durée totale');
+    await expect(page.locator('#receipt')).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
     expect(problems).toEqual([]);
   } finally {
     await ctx.close();

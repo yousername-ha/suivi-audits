@@ -36,7 +36,10 @@ flowchart LR
 - `init` : ponctuel, root sans réseau, génère uniquement les secrets manquants
   et prépare propriétaires/dossiers.
 - `updater` : conteneur root distinct, socket Docker et dépôt pour opérations
-  contrôlées ; intègre le worker d’exploitation par défaut depuis 3.0.2.
+  contrôlées ; intègre le worker d’exploitation par défaut depuis 3.0.2. Sans
+  identifiants SSH ni registre par défaut ; installation commandée depuis
+  l’interface avec code TOTP et fenêtre de maintenance, reçu structuré
+  ([ADR 0061](../adr/0061-mise-a-jour-web-renforcee.md)).
 - `clamav` : facultatif, profil antivirus.
 
 API et base appartiennent à des réseaux internes ; les flux externes de mise

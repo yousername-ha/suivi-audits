@@ -20,6 +20,8 @@ import urllib.request
 import uuid
 
 REPOSITORY = "yousername-ha/suivi-audits"
+PUBLIC_GIT = f"https://github.com/{REPOSITORY}.git"
+SIGNER_ISSUER = "https://token.actions.githubusercontent.com"
 VERSION = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$")
 TERMINAL = {"success", "rolled_back", "failed", "intervention"}
 PHASES = {"controles": "preparing", "notes": "preparing", "sauvegarde": "backup", "images": "installing", "demarrage": "installing", "sante": "verifying", "termine": "complete"}
@@ -94,7 +96,8 @@ class Worker:
         self.state = read(self.public / "status.json", {})
         defaults = dict(installed=installed, available=None, checkedAt=None, notes=None, checking=False,
                         checkError=False, ready=False, maintenance=False, id=None, target=None,
-                        status="idle", phase="idle", message="Aucune mise à jour en cours.", startedAt=None, updatedAt=now())
+                        status="idle", phase="idle", message="Aucune mise à jour en cours.", startedAt=None, updatedAt=now(),
+                        etapes=[], finishedAt=None)
         self.state = {**defaults, **self.state, "installed": installed}
 
     def env(self):
@@ -107,6 +110,14 @@ class Worker:
 
     def publish(self, **changes):
         with self.guard:
+            # Frise publique de l'installation : seules les transitions de phase, horodatées (aucune donnée sensible).
+            phase = changes.get("phase")
+            if (phase and phase not in ("idle", "checking") and self.job and self.job.get("kind") == "install"
+                    and (phase != self.state.get("phase") or "etapes" in changes)):
+                etapes = list(changes.get("etapes", self.state.get("etapes") or []))
+                if not etapes or etapes[-1].get("phase") != phase:
+                    etapes.append({"phase": phase, "at": now()})
+                changes["etapes"] = etapes[-30:]
             self.state.update(changes, updatedAt=now())
             atomic(self.public / "status.json", self.state, 0o644)
             flag = self.public / "maintenance"
@@ -186,6 +197,11 @@ class Worker:
             for table, count in before.get("tables", {}).items():
                 if control.get("tables", {}).get(table, -1) < count:
                     raise Failure("Des données ont disparu pendant la mise à jour")
+        if self.job:
+            identical = None
+            if before and before.get("documents", {}).get("empreinte"):
+                identical = control.get("documents", {}).get("empreinte") == before["documents"]["empreinte"]
+            self.job["after"] = {"ok": True, "documentsIdentiques": identical}
         result = self.run(["docker", "compose", "exec", "-T", "gateway", "wget", "-qO-", "http://web:8080/healthz"])
         if result.strip() != "ok":
             raise Failure("Le frontal applicatif n'est pas prêt")
@@ -223,14 +239,53 @@ class Worker:
         with contextlib.suppress(Failure):
             self.cli("update-sync")
 
+    def receipt(self, status, message, end):
+        """Reçu structuré d'une installation (preuve de changement), sans sortie brute de commande."""
+        job = self.job or {}
+        if job.get("kind") != "install" or not job.get("target"):
+            return
+        backup = None
+        progress = read(self.private / "progress.json", {})
+        if progress.get("jobId") == job["id"] and str(progress.get("backup", "")).endswith(".enc"):
+            path = Path(progress["backup"])
+            digest = None
+            with contextlib.suppress(OSError, IndexError):
+                first = (path.parent / (path.name + ".sha256")).read_text().split()[0]
+                digest = first if re.fullmatch(r"[a-f0-9]{64}", first) else None
+            backup = {"fichier": path.name[:200], "sha256": digest}
+        start = self.state.get("startedAt")
+        duration = None
+        with contextlib.suppress(TypeError, ValueError):
+            parse = lambda v: dt.datetime.fromisoformat(v.replace("Z", "+00:00"))
+            duration = max(0, int((parse(end) - parse(start)).total_seconds()))
+        before, after = job.get("before") or {}, job.get("after") or {}
+        revision = job.get("revision")
+        data = {
+            "format": 1, "id": job["id"], "depuis": str(job.get("installed", ""))[:80], "vers": job["target"],
+            "statut": status, "message": message[:500], "debut": start, "fin": end, "dureeSecondes": duration,
+            "etapes": list(self.state.get("etapes") or [])[-30:],
+            "images": {k: v for k, v in (job.get("images") or {}).items() if k in ("api", "web", "updater")},
+            "signature": {"verifiee": bool(revision), "identite": self.signer(job["target"]), "emetteur": SIGNER_ISSUER,
+                          "revision": revision if revision and re.fullmatch(r"[a-f0-9]{40}", revision) else None},
+            "sauvegarde": backup,
+            "controles": {"avant": before.get("ok") is True if before else None,
+                          "apres": after.get("ok") is True if after else None,
+                          "documentsIdentiques": after.get("documentsIdentiques")},
+        }
+        # Le reçu ne doit jamais empêcher la clôture d'une opération.
+        with contextlib.suppress(OSError, ValueError):
+            atomic(self.data / "etat/recus-mises-a-jour" / f'{job["id"]}.json', data, 0o644)
+
     def finish(self, status, message):
         if status not in TERMINAL:
             raise Failure("État terminal invalide")
         atomic(self.private / "receipts" / f'{self.job["id"]}.json', {"id": self.job["id"], "status": status, "at": now()})
         self.reconcile()
+        end = now()
         self.publish(id=self.job["id"], target=self.job.get("target"), status=status, phase="complete" if status == "success" else self.state["phase"],
-                     maintenance=status == "intervention", ready=status != "intervention", message=message,
+                     maintenance=status == "intervention", ready=status != "intervention", message=message, finishedAt=end,
                      installed=self.env().get("APP_VERSION", self.state["installed"]))
+        self.receipt(status, message, end)
         if status == "intervention":
             self.job["blocked"] = True
             atomic(self.private / "active.json", self.job)
@@ -278,7 +333,13 @@ class Worker:
 
     def signatures(self, target):
         # Le commit des sources doit correspondre à celui des images signées (label inclus dans l'empreinte).
-        self.run(["git", "fetch", "--no-tags", "origin", f"refs/tags/v{target}:refs/tags/v{target}"], timeout=120)
+        refspec = f"refs/tags/v{target}:refs/tags/v{target}"
+        try:
+            self.run(["git", "fetch", "--no-tags", "origin", refspec], timeout=120)
+        except Failure:
+            # Sans clé de déploiement (ADR 0061) : lecture publique en HTTPS. L'intégrité ne dépend pas de la source :
+            # la révision lue doit être celle portée par les images signées, sinon l'installation est refusée.
+            self.run(["git", "fetch", "--no-tags", PUBLIC_GIT, refspec], timeout=120)
         revision = self.run(["git", "rev-parse", f"refs/tags/v{target}^{{commit}}"]).strip()
         if not re.fullmatch(r"[a-f0-9]{40}", revision):
             raise Failure("Référence de publication invalide")
@@ -291,15 +352,20 @@ class Worker:
             digest = next((d for d in digests if d.startswith(prefix) and re.fullmatch(r"[a-f0-9]{64}", d[len(prefix):])), None)
             if not digest:
                 raise Failure("Empreinte d'image absente")
-            self.run(["cosign", "verify", digest, "--certificate-identity",
-                f"https://github.com/{REPOSITORY}/.github/workflows/release.yml@refs/tags/v{target}",
-                "--certificate-oidc-issuer", "https://token.actions.githubusercontent.com"], timeout=300)
+            self.run(["cosign", "verify", digest, "--certificate-identity", self.signer(target),
+                "--certificate-oidc-issuer", SIGNER_ISSUER], timeout=300)
             source = self.run(["docker", "inspect", "--format", '{{index .Config.Labels "org.opencontainers.image.revision"}}', digest]).strip()
             if source != revision:
                 raise Failure("Les sources ne correspondent pas aux images signées")
             # Une étiquette modifiée entre téléchargement et application est refusée par le script (empreinte attendue).
             self.job.setdefault("images", {})[component] = digest
+        # Révision vérifiée (signature et sources concordantes) : reprise dans le reçu.
+        self.job["revision"] = revision
         atomic(self.private / "active.json", self.job)
+
+    @staticmethod
+    def signer(target):
+        return f"https://github.com/{REPOSITORY}/.github/workflows/release.yml@refs/tags/v{target}"
 
     def install(self, job):
         target = job["target"]
@@ -312,7 +378,7 @@ class Worker:
                     "previousEnv": (self.repo / ".env").read_text(), "handoff": False}
         atomic(self.private / "active.json", self.job)
         self.publish(id=job["id"], target=target, status="running", phase="preparing", startedAt=now(),
-                     ready=False, message="Préparation et vérification de la nouvelle version.")
+                     finishedAt=None, etapes=[], ready=False, message="Préparation et vérification de la nouvelle version.")
         self.signatures(target)
         # Les utilisateurs ne sont interrompus qu'après téléchargement et vérification des images.
         self.publish(maintenance=True, phase="backup", message="Sauvegarde de sécurité de vos données.")
