@@ -83,7 +83,7 @@ const LECTURE_PILOTAGE: Permission[] = [
   'plan_audit:lire',
   'conformite:lire',
 ];
-/** Colonnes SQL d'un objet, pour les modules pas encore convertis à Kysely (registres, risques, tâches ; ADR 0062). */
+/** Colonnes SQL d'un objet, pour les modules pas encore convertis à Kysely (registres ; ADR 0062). */
 export const objectColumns = `id,smsi_id AS "smsiId",kind,name,data,version,archived,legacy_key AS "legacyKey",legacy_id AS "legacyId",registre_id AS "registreId",created_by AS "createdBy",updated_by AS "updatedBy",created_at AS "createdAt",updated_at AS "updatedAt"`;
 export type ObjectRow = Omit<GrcObject, 'createdAt' | 'updatedAt'> & { createdAt: Date; updatedAt: Date };
 export const objectDto = (r: ObjectRow): GrcObject => ({
@@ -92,7 +92,7 @@ export const objectDto = (r: ObjectRow): GrcObject => ({
   updatedAt: r.updatedAt.toISOString(),
 });
 /** Mêmes colonnes et alias que objectColumns, pour Kysely (sélection et RETURNING). */
-const COLONNES_OBJET = [
+export const COLONNES_OBJET = [
   'id',
   'smsi_id as smsiId',
   'kind',
@@ -108,10 +108,10 @@ const COLONNES_OBJET = [
   'created_at as createdAt',
   'updated_at as updatedAt',
 ] as const;
-const objets = (k: Kdb) => k.selectFrom('grc_objects').select(COLONNES_OBJET);
+export const objets = (k: Kdb) => k.selectFrom('grc_objects').select(COLONNES_OBJET);
 /** Ligne Kysely vers GrcObject. Le type et les données ne sont écrits que par insert() et write(), après validation
     (GrcObjectBody, normalize) : ils sont relus tels quels, comme le faisait le SQL d'origine. */
-const versObjet = (r: Omit<ObjectRow, 'kind' | 'data'> & { kind: string; data: unknown }): GrcObject =>
+export const versObjet = (r: Omit<ObjectRow, 'kind' | 'data'> & { kind: string; data: unknown }): GrcObject =>
   objectDto({ ...r, kind: r.kind as GrcKind, data: r.data as Record<string, unknown> });
 export const stable = (v: unknown): unknown =>
   Array.isArray(v)

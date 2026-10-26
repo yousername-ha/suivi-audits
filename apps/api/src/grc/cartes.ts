@@ -8,6 +8,7 @@ import {
   type CouvertureReferentiel,
   type SyntheseCartes,
 } from '@suivi/shared';
+import { sql } from 'kysely';
 import type { SessionUser } from '../auth.js';
 import type { Grc } from './core.js';
 
@@ -31,6 +32,10 @@ export interface Ligne {
 /** Fragment SQL : l'occurrence `o` a été validée (OK, KO ou NA) et ne s'est pas vue rouvrir depuis (journal immuable, migration
     030). Une occurrence validée n'est ni « en retard » ni rappelée, même si son statut d'action n'est pas terminal. */
 export const OCCURRENCE_VALIDEE = `EXISTS (SELECT 1 FROM occurrence_validations ov WHERE ov.objet_id=o.id AND ov.kind='validation'
+  AND ov.seq=(SELECT max(seq) FROM occurrence_validations ox WHERE ox.objet_id=o.id))`;
+/** Même condition, pour les requêtes Kysely (ADR 0062) ; texte identique, vérifié par test, jusqu'à la conversion de ce
+    module. */
+export const occurrenceValidee = sql<boolean>`EXISTS (SELECT 1 FROM occurrence_validations ov WHERE ov.objet_id=o.id AND ov.kind='validation'
   AND ov.seq=(SELECT max(seq) FROM occurrence_validations ox WHERE ox.objet_id=o.id))`;
 
 /** Fragment SQL : classification d'un écart (celle de la fiche, sinon celle de l'outil de suivi historique : champ `type`),

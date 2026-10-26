@@ -7,11 +7,50 @@ import {
   SeriesData,
   type ApercuCalendrier,
 } from '@suivi/shared';
+import { sql } from 'kysely';
 import type { SessionUser } from '../auth.js';
+import type { Kdb } from '../db/db.js';
 import { HttpError } from '../http/errors.js';
 import type { NotificationEmise } from '../notifications-metier.js';
-import { objectColumns, objectDto, type ObjectRow, type Grc } from './core.js';
-import { OCCURRENCE_VALIDEE } from './cartes.js';
+import { COLONNES_OBJET, objets, versObjet, type Grc } from './core.js';
+import { OCCURRENCE_VALIDEE, occurrenceValidee } from './cartes.js';
+
+/** Actions non archivées d'un périmètre et des registres partagés avec lui, hors registres restreints illisibles (R05). */
+const actionsVisibles = (k: Kdb, smsi: string, masques: string[], partages: string[]) => {
+  let q = k
+    .selectFrom('grc_objects as o')
+    .where((eb) =>
+      partages.length
+        ? eb.or([eb('o.smsi_id', '=', smsi), eb('o.registre_id', 'in', partages)])
+        : eb('o.smsi_id', '=', smsi),
+    )
+    .where('o.kind', '=', 'action')
+    .where('o.archived', '=', false);
+  if (masques.length)
+    q = q.where((eb) => eb.or([eb('o.registre_id', 'is', null), eb('o.registre_id', 'not in', masques)]));
+  return q;
+};
+/** Dernière décision de chaque occurrence (journal immuable, migration 030). */
+const dernieresDecisions = (k: Kdb, ids: string[]) =>
+  k
+    .selectFrom('occurrence_validations')
+    .distinctOn('objet_id')
+    .select(['objet_id as id', 'kind', 'result', 'created_at as at', 'created_by as by'])
+    .where('objet_id', 'in', ids)
+    .orderBy('objet_id')
+    .orderBy('seq', 'desc')
+    .execute();
+/** Occurrences d'une série avec l'action qui les porte. */
+const occurrencesSerie = (k: Kdb, serie: string) =>
+  k
+    .selectFrom('grc_occurrences as s')
+    .innerJoin('grc_objects as o', 'o.id', 's.action_id')
+    .select(['s.slot', 's.action_id as actionId', 'o.name', 'o.data', 'o.version'])
+    .where('s.series_id', '=', serie);
+const versLigne = (r: { slot: string; actionId: string; name: string; data: unknown; version: number }) => ({
+  ...r,
+  data: r.data as Record<string, unknown>,
+});
 
 export class GrcTasks {
   constructor(private readonly g: Grc) {}
@@ -44,30 +83,26 @@ export class GrcTasks {
     // Les actions d'un registre restreint que la personne ne peut pas lire n'apparaissent pas (R05).
     const masques = await this.g.registres.inaccessiblesPartout(user);
     const partages = await this.g.registres.partagesLisibles(user, smsi);
-    const items = (
-      await this.g.db.q<ObjectRow>(
-        `SELECT ${objectColumns} FROM grc_objects WHERE (smsi_id=$1 OR registre_id=ANY($5::uuid[])) AND kind='action' AND NOT archived AND (registre_id IS NULL OR NOT registre_id=ANY($4::uuid[])) AND (data->>'dueAt' IS NULL OR data->>'dueAt'>=$2 AND data->>'dueAt'<=$3) ORDER BY data->>'dueAt' NULLS LAST,id LIMIT 2001`,
-        [smsi, from, to, masques, partages],
-      )
-    ).rows;
+    const echeance = sql<string | null>`o.data->>'dueAt'`;
+    const items = await actionsVisibles(this.g.db.k, smsi, masques, partages)
+      .select(COLONNES_OBJET)
+      .where((eb) => eb.or([eb(echeance, 'is', null), eb.and([eb(echeance, '>=', from), eb(echeance, '<=', to)])]))
+      .orderBy(echeance, (ob) => ob.asc().nullsLast())
+      .orderBy('o.id')
+      .limit(2001)
+      .execute();
     const legacy = (await this.g.legacyTasks.list(smsi, user)).filter(
       (o) => !o.data.dueAt || (String(o.data.dueAt) >= from && String(o.data.dueAt) <= to),
     );
     if (items.length + legacy.length > 2000) throw new HttpError(422, 'Réduisez la période : plus de 2 000 actions.');
-    return { items: [...(await this.avecValidation(items.map(objectDto))), ...legacy], from, to };
+    return { items: [...(await this.avecValidation(items.map(versObjet))), ...legacy], from, to };
   }
   /** Joint à chaque occurrence de série sa dernière décision de validation (OK, KO, NA) ou sa réouverture : les vues de
       tâches montrent ainsi l'état réel de l'occurrence, que le statut d'action ne dit pas. */
   private async avecValidation<T extends { id: string; data: Record<string, unknown> }>(items: T[]) {
     const ids = items.filter((o) => o.data.seriesId).map((o) => o.id);
     if (!ids.length) return items;
-    const lignes = (
-      await this.g.db.q<{ id: string; kind: string; result: string | null; at: Date; by: string }>(
-        `SELECT DISTINCT ON (objet_id) objet_id AS id, kind, result, created_at AS at, created_by AS by
-           FROM occurrence_validations WHERE objet_id=ANY($1::uuid[]) ORDER BY objet_id, seq DESC`,
-        [ids],
-      )
-    ).rows;
+    const lignes = await dernieresDecisions(this.g.db.k, ids);
     const parId = new Map(lignes.map((l) => [l.id, l]));
     return items.map((o) => {
       const l = parId.get(o.id);
@@ -84,18 +119,24 @@ export class GrcTasks {
     const closed = policy.statuses.filter((s) => s.terminal).map((s) => s.id);
     const masques = await this.g.registres.inaccessiblesPartout(user);
     const partages = await this.g.registres.partagesLisibles(user, smsi);
-    const summary = await this.g.db.one(
-      `SELECT count(*)::int total,count(*) FILTER(WHERE o.data->>'status'=ANY($2))::int closed,count(*) FILTER(WHERE NOT(o.data->>'status'=ANY($2)) AND NOT ${OCCURRENCE_VALIDEE} AND o.data->>'dueAt'<$3)::int overdue,count(*) FILTER(WHERE o.data->>'ownerId' IS NULL AND COALESCE(o.data->'responsable','null'::jsonb)='null'::jsonb)::int unassigned FROM grc_objects o WHERE (o.smsi_id=$1 OR o.registre_id=ANY($5::uuid[])) AND o.kind='action' AND NOT o.archived AND (o.registre_id IS NULL OR NOT o.registre_id=ANY($4::uuid[]))`,
-      [smsi, closed, new Date().toISOString(), masques, partages],
-    );
-    const byStatus = (
-      await this.g.db.q(
-        `SELECT data->>'status' status,count(*)::int count FROM grc_objects WHERE (smsi_id=$1 OR registre_id=ANY($3::uuid[])) AND kind='action' AND NOT archived AND (registre_id IS NULL OR NOT registre_id=ANY($2::uuid[])) GROUP BY data->>'status'`,
-        [smsi, masques, partages],
-      )
-    ).rows;
+    const statut = sql<string | null>`o.data->>'status'`;
+    const totals = await actionsVisibles(this.g.db.k, smsi, masques, partages)
+      .select([
+        sql<number>`count(*)::int`.as('total'),
+        sql<number>`count(*) FILTER (WHERE ${statut} = ANY(${closed}))::int`.as('closed'),
+        sql<number>`count(*) FILTER (WHERE NOT (${statut} = ANY(${closed})) AND NOT ${occurrenceValidee} AND o.data->>'dueAt' < ${new Date().toISOString()})::int`.as(
+          'overdue',
+        ),
+        sql<number>`count(*) FILTER (WHERE o.data->>'ownerId' IS NULL AND COALESCE(o.data->'responsable', 'null'::jsonb) = 'null'::jsonb)::int`.as(
+          'unassigned',
+        ),
+      ])
+      .executeTakeFirstOrThrow();
+    const byStatus = await actionsVisibles(this.g.db.k, smsi, masques, partages)
+      .select([statut.as('status'), sql<number>`count(*)::int`.as('count')])
+      .groupBy(statut)
+      .execute();
     const legacy = await this.g.legacyTasks.list(smsi, user);
-    const totals = summary as { total: number; closed: number; overdue: number; unassigned: number };
     const counts = new Map(byStatus.map((r) => [String(r.status), Number(r.count)]));
     for (const item of legacy) {
       const terminal = closed.includes(String(item.data.status)) || item.data.status === 'done';
@@ -113,19 +154,12 @@ export class GrcTasks {
   async occurrences(smsi: string, id: string, user: SessionUser, before?: string) {
     const o = await this.g.object(smsi, id, user);
     if (o.kind !== 'task_series') throw new HttpError(422, 'Série attendue.');
-    const lignes = (
-      await this.g.db.q<{
-        slot: string;
-        actionId: string;
-        name: string;
-        data: Record<string, unknown>;
-        version: number;
-      }>(
-        `SELECT s.slot,s.action_id AS "actionId",o.name,o.data,o.version FROM grc_occurrences s JOIN grc_objects o ON o.id=s.action_id WHERE s.series_id=$1 AND ($2::text IS NULL OR s.slot<$2) ORDER BY s.slot DESC LIMIT 50`,
-        [id, before ?? null],
-      )
-    ).rows;
-    return this.enrichir(o.data, lignes);
+    const lignes = await occurrencesSerie(this.g.db.k, id)
+      .$if(before != null, (q) => q.where('s.slot', '<', before!))
+      .orderBy('s.slot', 'desc')
+      .limit(50)
+      .execute();
+    return this.enrichir(o.data, lignes.map(versLigne));
   }
   private async enrichir<T extends { actionId: string; data: Record<string, unknown> }>(
     serie: Record<string, unknown>,
@@ -134,13 +168,10 @@ export class GrcTasks {
   ) {
     const recurrence = SeriesData.parse(serie).recurrence;
     const derniers = lignes.length
-      ? (
-          await this.g.db.q<{ id: string; kind: string; result: string | null }>(
-            `SELECT DISTINCT ON (objet_id) objet_id AS id,kind,result FROM occurrence_validations
-              WHERE objet_id=ANY($1::uuid[]) ORDER BY objet_id,seq DESC`,
-            [lignes.map((l) => l.actionId)],
-          )
-        ).rows
+      ? await dernieresDecisions(
+          this.g.db.k,
+          lignes.map((l) => l.actionId),
+        )
       : [];
     const parId = new Map(derniers.map((d) => [d.id, d]));
     return lignes.map((l) => {
@@ -159,20 +190,12 @@ export class GrcTasks {
   async prochaine(smsi: string, id: string, user: SessionUser, apres?: string) {
     const o = await this.g.object(smsi, id, user);
     if (o.kind !== 'task_series') throw new HttpError(422, 'Série attendue.');
-    const lignes = (
-      await this.g.db.q<{
-        slot: string;
-        actionId: string;
-        name: string;
-        data: Record<string, unknown>;
-        version: number;
-      }>(
-        `SELECT s.slot,s.action_id AS "actionId",o.name,o.data,o.version FROM grc_occurrences s JOIN grc_objects o ON o.id=s.action_id
-          WHERE s.series_id=$1 AND NOT o.archived ORDER BY s.slot ASC LIMIT 1000`,
-        [id],
-      )
-    ).rows;
-    const occurrence = (await this.enrichir(o.data, lignes)).find(
+    const lignes = await occurrencesSerie(this.g.db.k, id)
+      .where('o.archived', '=', false)
+      .orderBy('s.slot', 'asc')
+      .limit(1000)
+      .execute();
+    const occurrence = (await this.enrichir(o.data, lignes.map(versLigne))).find(
       (l) => l.actionId !== apres && l.validation.etat !== 'validee' && l.fenetre?.etat === 'ouverte',
     );
     return { occurrence: occurrence ?? null };
@@ -206,15 +229,22 @@ export class GrcTasks {
   }
   /** Jours d'un calendrier de plateforme (d'une année, ou tous), copiés dans la série à la date de l'import. */
   private async joursPlateforme(calendrier: string, annee?: number): Promise<string[]> {
-    const existe = await this.g.db.q('SELECT 1 FROM calendriers_plateforme WHERE id=$1', [calendrier]);
-    if (!existe.rowCount) throw new HttpError(404, 'Calendrier de plateforme inconnu.');
+    const k = this.g.db.k;
+    const existe = await k
+      .selectFrom('calendriers_plateforme')
+      .select('id')
+      .where('id', '=', calendrier)
+      .executeTakeFirst();
+    if (!existe) throw new HttpError(404, 'Calendrier de plateforme inconnu.');
     return (
-      await this.g.db.q<{ d: string }>(
-        `SELECT to_char(day,'YYYY-MM-DD') d FROM calendriers_plateforme_jours
-          WHERE calendrier_id=$1 AND ($2::int IS NULL OR extract(year FROM day)=$2) ORDER BY day`,
-        [calendrier, annee ?? null],
-      )
-    ).rows.map((r) => r.d);
+      await k
+        .selectFrom('calendriers_plateforme_jours')
+        .select(sql<string>`to_char(day, 'YYYY-MM-DD')`.as('d'))
+        .where('calendrier_id', '=', calendrier)
+        .$if(annee != null, (q) => q.where(sql`extract(year FROM day)`, '=', annee!))
+        .orderBy('day')
+        .execute()
+    ).map((r) => r.d);
   }
   /** Import d'un calendrier iCalendar dans les jours exclus d'une série. L'aperçu décrit l'effet sans rien écrire ; l'import
       est tout ou rien (une erreur dans le fichier ne modifie rien) et rejouer le même fichier n'ajoute aucun doublon. */
@@ -269,54 +299,70 @@ export class GrcTasks {
   async tick(now = new Date()) {
     // Verrou par série + clé d’occurrence unique : plusieurs instances peuvent travailler sans doublons.
     await this.g.modules.assert('ecarts');
-    const series = (
-      await this.g.db.q<{ id: string }>(
-        `SELECT o.id FROM grc_objects o LEFT JOIN grc_series s ON s.object_id=o.id WHERE o.kind='task_series' AND NOT o.archived AND o.data->'recurrence'->>'active'='true' ORDER BY s.checked_at NULLS FIRST,o.id LIMIT 500`,
-      )
-    ).rows;
+    const series = await this.g.db.k
+      .selectFrom('grc_objects as o')
+      .leftJoin('grc_series as s', 's.object_id', 'o.id')
+      .select('o.id')
+      .where('o.kind', '=', 'task_series')
+      .where('o.archived', '=', false)
+      .where(sql<string | null>`o.data->'recurrence'->>'active'`, '=', 'true')
+      .orderBy('s.checked_at', (ob) => ob.asc().nullsFirst())
+      .orderBy('o.id')
+      .limit(500)
+      .execute();
     for (const { id } of series)
-      await this.g.db.tx(async (c) => {
+      await this.g.db.tx(async (c, k) => {
+        // Verrou consultatif transactionnel : fonction PostgreSQL appelée directement (ADR 0062 §5).
         const lock = (
           await c.query<{ locked: boolean }>('SELECT pg_try_advisory_xact_lock(hashtextextended($1,727281)) locked', [
             id,
           ])
         ).rows[0];
         if (!lock?.locked) return;
-        const row = (
-          await c.query<ObjectRow>(`SELECT ${objectColumns} FROM grc_objects WHERE id=$1 AND NOT archived FOR UPDATE`, [
-            id,
-          ])
-        ).rows[0];
+        const row = await objets(k).where('id', '=', id).where('archived', '=', false).forUpdate().executeTakeFirst();
         if (!row) return;
-        const o = objectDto(row),
+        const o = versObjet(row),
           d = SeriesData.parse(o.data);
         if (!d.recurrence.active) return;
-        await c.query('INSERT INTO grc_series(object_id) VALUES($1) ON CONFLICT DO NOTHING', [id]);
+        await k
+          .insertInto('grc_series')
+          .values({ object_id: id })
+          .onConflict((oc) => oc.doNothing())
+          .execute();
         let index = (
-          await c.query<{ next_index: number }>('SELECT next_index FROM grc_series WHERE object_id=$1 FOR UPDATE', [id])
-        ).rows[0]!.next_index;
-        const policyRow = (
-          await c.query<{ definition: { statuses: { id: string; terminal: boolean }[] } }>(
-            `SELECT p.definition FROM grc_smsis s JOIN business_policy_versions p ON p.version=s.business_version WHERE s.id=$1 FOR SHARE OF s`,
-            [o.smsiId],
-          )
-        ).rows[0];
+          await k
+            .selectFrom('grc_series')
+            .select('next_index')
+            .where('object_id', '=', id)
+            .forUpdate()
+            .executeTakeFirstOrThrow()
+        ).next_index;
+        const policyRow = await k
+          .selectFrom('grc_smsis as s')
+          .innerJoin('business_policy_versions as p', 'p.version', 's.business_version')
+          .select('p.definition')
+          .where('s.id', '=', o.smsiId)
+          .forShare('s')
+          .executeTakeFirst();
         if (!policyRow) return;
-        await c.query('UPDATE grc_series SET checked_at=$2 WHERE object_id=$1', [id, now]);
+        const definition = policyRow.definition as { statuses: { id: string; terminal: boolean }[] };
+        await k.updateTable('grc_series').set({ checked_at: now }).where('object_id', '=', id).execute();
         // Une série liée à un référentiel désactivé est suspendue, sans perdre son curseur.
         const frameworks = d.refs
           .filter((ref) => ref.startsWith('requirement:') || ref.startsWith('object:'))
-          .map((ref) => ref.split(':')[1]);
+          .map((ref) => ref.split(':')[1]!); // préfixe vérifié ci-dessus : le second segment existe
         if (frameworks.length) {
-          const publications = (
-            await c.query<{ enabled: string; archived: boolean }>(
-              "SELECT data->>'enabled' enabled,archived FROM grc_objects WHERE smsi_id=$1 AND id=ANY($2::uuid[]) AND kind='framework' FOR SHARE",
-              [o.smsiId, frameworks],
-            )
-          ).rows;
+          const publications = await k
+            .selectFrom('grc_objects')
+            .select([sql<string | null>`data->>'enabled'`.as('enabled'), 'archived'])
+            .where('smsi_id', '=', o.smsiId)
+            .where('id', 'in', frameworks)
+            .where('kind', '=', 'framework')
+            .forShare()
+            .execute();
           if (publications.some((p) => p.archived || p.enabled !== 'true')) return;
         }
-        const status = policyRow.definition.statuses.find((s) => !s.terminal)!.id;
+        const status = definition.statuses.find((s) => !s.terminal)!.id;
         // Rattrapage plafonné par transaction, poursuivi au prochain passage ; aucune occurrence perdue.
         for (let generated = 0; generated < 50; generated++) {
           const slot = recurrenceSlot(d.recurrence, index);
@@ -326,7 +372,12 @@ export class GrcTasks {
           )
             break;
           if (
-            !(await c.query('SELECT 1 FROM grc_occurrences WHERE series_id=$1 AND slot=$2', [id, slot.key])).rowCount
+            !(await k
+              .selectFrom('grc_occurrences')
+              .select('slot')
+              .where('series_id', '=', id)
+              .where('slot', '=', slot.key)
+              .executeTakeFirst())
           ) {
             const action = await this.g.insert(
               c,
@@ -353,26 +404,36 @@ export class GrcTasks {
               '',
               o.registreId ?? null,
             );
-            await c.query('INSERT INTO grc_occurrences(series_id,slot,action_id) VALUES($1,$2,$3)', [
-              id,
-              slot.key,
-              action.id,
-            ]);
+            await k
+              .insertInto('grc_occurrences')
+              .values({ series_id: id, slot: slot.key, action_id: action.id })
+              .execute();
             for (const target of ['object:' + id, ...d.refs])
-              await c.query(
-                `INSERT INTO grc_links(smsi_id,source_id,source_ref,target_ref,type,note,created_by) VALUES($1,$2,$3,$4,'related_to','Occurrence récurrente','Automate SMSI') ON CONFLICT DO NOTHING`,
-                [o.smsiId, action.id, 'object:' + action.id, target],
-              );
+              await k
+                .insertInto('grc_links')
+                .values({
+                  smsi_id: o.smsiId,
+                  source_id: action.id,
+                  source_ref: 'object:' + action.id,
+                  target_ref: target,
+                  type: 'related_to',
+                  note: 'Occurrence récurrente',
+                  created_by: 'Automate SMSI',
+                })
+                .onConflict((oc) => oc.doNothing())
+                .execute();
           }
           index++;
         }
-        await c.query('UPDATE grc_series SET next_index=$2 WHERE object_id=$1', [id, index]);
+        await k.updateTable('grc_series').set({ next_index: index }).where('object_id', '=', id).execute();
       }, 'Automate SMSI');
     await this.reminders(now);
   }
   private async reminders(now: Date) {
     await this.g.db.tx(async (c) => {
       // Notifications réellement créées à ce passage (les doublons sont ignorés) : seules elles sont diffusées (ADR 0058).
+      // Ces INSERT … SELECT (jointure latérale, jsonb_array_elements, make_interval) restent en SQL paramétré : Kysely les
+      // exprimerait par fragments sans gain de vérification (ADR 0062 §5).
       const emises: NotificationEmise[] = [];
       const noter = (r: { rows: NotificationEmise[] }) => void emises.push(...r.rows);
       noter(
@@ -425,12 +486,23 @@ export class GrcTasks {
     }, 'Automate SMSI');
   }
   async notifications(user: SessionUser) {
-    const rows = (
-      await this.g.db.q<{ smsiId: string; [key: string]: unknown }>(
-        `SELECT id,smsi_id AS "smsiId",object_id AS "objectId",kind,title,message,read_at AS "readAt",created_at AS "createdAt" FROM grc_notifications WHERE user_id=$1 AND canal_application ORDER BY created_at DESC LIMIT 100`,
-        [user.id],
-      )
-    ).rows;
+    const rows = await this.g.db.k
+      .selectFrom('grc_notifications')
+      .select([
+        'id',
+        'smsi_id as smsiId',
+        'object_id as objectId',
+        'kind',
+        'title',
+        'message',
+        'read_at as readAt',
+        'created_at as createdAt',
+      ])
+      .where('user_id', '=', user.id)
+      .where('canal_application', '=', true)
+      .orderBy('created_at', 'desc')
+      .limit(100)
+      .execute();
     const visible = [];
     for (const r of rows)
       if (
@@ -444,7 +516,12 @@ export class GrcTasks {
     return visible;
   }
   async read(id: string, user: SessionUser) {
-    await this.g.db.q('UPDATE grc_notifications SET read_at=now() WHERE id=$1 AND user_id=$2', [id, user.id]);
+    await this.g.db.k
+      .updateTable('grc_notifications')
+      .set({ read_at: sql<Date>`now()` })
+      .where('id', '=', id)
+      .where('user_id', '=', user.id)
+      .execute();
     return { ok: true };
   }
 }
