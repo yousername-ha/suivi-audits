@@ -67,3 +67,5 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0061](0061-mise-a-jour-web-renforcee.md) | Mise à jour depuis l'interface renforcée : code TOTP à l'installation, fenêtre de maintenance, exécutant sans identifiants par défaut, avancement horodaté et reçu | Acceptée |
 | [0062](0062-acces-aux-donnees-kysely.md) | Accès aux données : migrations SQL source unique, requêtes typées Kysely, types générés de la base migrée, Drizzle retiré | Acceptée |
 | [0063](0063-chaine-de-publication-durcie.md) | Chaîne de publication durcie : actions par empreinte de commit, Trivy isolé sans secret, signature dans un job séparé, attestation SBOM exigée à l'installation | Acceptée |
+| [0064](0064-gap-ia-iso-27001-hds.md) | GAP IA ISO 27001 / HDS : trois cas d'usage réels, questions sur des faits constatables, points pré-évalués seulement si la réponse tranche | Acceptée |
+
