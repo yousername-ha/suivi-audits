@@ -1,12 +1,45 @@
 import { EBIOS_ATELIERS, GRC_MODULES, JOURNEY_STEPS, PilotageRecord, SeriesData } from '@suivi/shared';
 import { isObject } from '@suivi/shared/legacy';
 import type { SessionUser } from '../auth.js';
-import type { Client } from '../db/db.js';
+import { sql } from 'kysely';
+import { surConnexion, type Client, type Kdb } from '../db/db.js';
 import { hash, type Grc } from '../grc/core.js';
 import { HttpError } from '../http/errors.js';
 import { PilotageLegacy } from './legacy.js';
 
-const columns = `id,source_ref AS "sourceRef",source_version AS "sourceVersion",operation,step,result,performed_on::text AS date,note,refs,generated_refs AS "generatedRefs",terms,snapshot,created_by AS "createdBy",created_at AS "createdAt"`;
+/** Colonnes d'une décision de pilotage, telles que les renvoie l'API. */
+const COLONNES_DECISION = [
+  'id',
+  'source_ref as sourceRef',
+  'source_version as sourceVersion',
+  'operation',
+  'step',
+  'result',
+  sql<string>`performed_on::text`.as('date'),
+  'note',
+  'refs',
+  'generated_refs as generatedRefs',
+  'terms',
+  'snapshot',
+  'created_by as createdBy',
+  'created_at as createdAt',
+] as const;
+const decisions = (k: Kdb) => k.selectFrom('pilotage_decisions').select(COLONNES_DECISION);
+/** Une décision de pilotage existe-t-elle pour cette fiche (et, le cas échéant, cette version et cette étape) ? */
+const decisionTracee = async (
+  k: Kdb,
+  f: { smsi: string; ref: string; operation: string; result?: string; version?: number; step?: string },
+) =>
+  !!(await k
+    .selectFrom('pilotage_decisions')
+    .select('id')
+    .where('smsi_id', '=', f.smsi)
+    .where('source_ref', '=', f.ref)
+    .where('operation', '=', f.operation)
+    .$if(f.result !== undefined, (q) => q.where('result', '=', f.result!))
+    .$if(f.version !== undefined, (q) => q.where('source_version', '=', f.version!))
+    .$if(f.step !== undefined, (q) => q.where('step', '=', f.step!))
+    .executeTakeFirst());
 export class Pilotage {
   readonly legacy: PilotageLegacy;
   constructor(readonly g: Grc) {
@@ -22,15 +55,14 @@ export class Pilotage {
     await this.source(smsi, ref, user);
     // Le journal des décisions est immuable : après le déplacement d'un élément vers un autre périmètre de référence, ses
     // décisions gardent le périmètre d'origine. L'accès à l'élément vient d'être contrôlé : on lit par sa référence.
-    const args: unknown[] = [ref, before ?? null];
-    let where = 'source_ref=$1 AND ($2::timestamptz IS NULL OR created_at<$2)';
-    if (!ref.startsWith('object:')) where += ` AND smsi_id=$${args.push(smsi)}`;
-    const rows = (
-      await this.g.db.q(
-        `SELECT ${columns} FROM pilotage_decisions WHERE ${where} ORDER BY created_at DESC,id DESC LIMIT 50`,
-        args,
-      )
-    ).rows;
+    const rows = await decisions(this.g.db.k)
+      .where('source_ref', '=', ref)
+      .$if(before != null, (q) => q.where('created_at', '<', sql<Date>`${before}::timestamptz`))
+      .$if(!ref.startsWith('object:'), (q) => q.where('smsi_id', '=', smsi))
+      .orderBy('created_at', 'desc')
+      .orderBy('id', 'desc')
+      .limit(50)
+      .execute();
     const refs: string[] = [...new Set(rows.flatMap((r) => (Array.isArray(r.refs) ? (r.refs as string[]) : [])))];
     const references: Record<string, { name: string; version: number }> = {};
     for (const ref of refs.slice(0, 200)) {
@@ -70,27 +102,35 @@ export class Pilotage {
       c,
     );
     const action = await this.g.insert(c, smsi, 'action', name, data, user, ip);
-    await c.query(
-      "INSERT INTO grc_links(smsi_id,source_id,source_ref,target_ref,type,note,created_by) VALUES($1,$2,$3,$4,'treats','Action issue du pilotage',$5)",
-      [smsi, action.id, 'object:' + action.id, ref, user.username],
-    );
+    await surConnexion(c)
+      .insertInto('grc_links')
+      .values({
+        smsi_id: smsi,
+        source_id: action.id,
+        source_ref: 'object:' + action.id,
+        target_ref: ref,
+        type: 'treats',
+        note: 'Action issue du pilotage',
+        created_by: user.username,
+      })
+      .execute();
     return 'object:' + action.id;
   }
   async record(smsi: string, ref: string, raw: PilotageRecord, expected: number, user: SessionUser, ip: string) {
     const input = PilotageRecord.parse(raw);
-    return this.g.db.tx(async (c) => {
+    return this.g.db.tx(async (c, k) => {
       const scope = await this.g.access(smsi, user, true, c);
       const isLegacy = ref.startsWith('legacy:');
-      if (isLegacy) await c.query('SELECT id FROM app_state WHERE id=1 FOR UPDATE');
-      else await c.query('SELECT id FROM grc_objects WHERE id=$1 FOR UPDATE', [ref.slice(7)]);
+      if (isLegacy) await k.selectFrom('app_state').select('id').where('id', '=', 1).forUpdate().execute();
+      else await k.selectFrom('grc_objects').select('id').where('id', '=', ref.slice(7)).forUpdate().execute();
       const source = await this.source(smsi, ref, user, c, true);
       const intentHash = hash({ smsi, ref, input, actor: user.username });
+      // Verrou consultatif par identifiant de demande (idempotence) : appel SQL direct (ADR 0062 §5).
       await c.query('SELECT pg_advisory_xact_lock(hashtext($1))', [input.requestId]);
-      const duplicate = (
-        await c.query(`SELECT ${columns},intent_hash AS "intentHash" FROM pilotage_decisions WHERE request_id=$1`, [
-          input.requestId,
-        ])
-      ).rows[0];
+      const duplicate = await decisions(k)
+        .select('intent_hash as intentHash')
+        .where('request_id', '=', input.requestId)
+        .executeTakeFirst();
       if (duplicate) {
         if (duplicate.intentHash !== intentHash)
           throw new HttpError(409, 'Cet identifiant de demande correspond à une autre décision.');
@@ -175,21 +215,26 @@ export class Pilotage {
       if (input.operation === 'close') {
         if (input.result !== 'completed' || data.effectiveness !== 'effective' || !String(data.cause ?? '').trim())
           throw new HttpError(409, 'Analyser les causes et vérifier une efficacité positive avant clôture.');
-        const effective = (
-          await c.query(
-            "SELECT 1 FROM pilotage_decisions WHERE smsi_id=$1 AND source_ref=$2 AND operation='effectiveness' AND result='effective' ORDER BY created_at DESC LIMIT 1",
-            [smsi, ref],
-          )
-        ).rowCount;
+        const effective = await decisionTracee(k, { smsi, ref, operation: 'effectiveness', result: 'effective' });
         if (!effective) throw new HttpError(409, 'Vérification d’efficacité tracée requise.');
         const policy = (await this.g.policy(smsi, user)).definition;
         const terminal = policy.statuses.filter((s) => s.terminal).map((s) => s.id);
-        const pending = (
-          await c.query<{ id: string; name: string; registre_id: string | null }>(
-            `SELECT a.id,a.name,a.registre_id FROM grc_objects a WHERE a.smsi_id=$1 AND a.kind='action' AND NOT(a.data->>'status'=ANY($3)) AND EXISTS(SELECT 1 FROM grc_links l WHERE l.smsi_id=$1 AND ((l.source_ref='object:'||a.id AND l.target_ref=$2) OR (l.target_ref='object:'||a.id AND l.source_ref=$2))) ORDER BY a.name,a.id LIMIT 50`,
-            [smsi, ref, terminal],
+        // Actions non terminées liées à la fiche, dans un sens ou dans l'autre.
+        const pending = await k
+          .selectFrom('grc_objects as a')
+          .select(['a.id', 'a.name', 'a.registre_id'])
+          .where('a.smsi_id', '=', smsi)
+          .where('a.kind', '=', 'action')
+          .where(sql<boolean>`NOT (a.data->>'status' = ANY(${terminal}))`)
+          .where(
+            sql<boolean>`EXISTS (SELECT 1 FROM grc_links l WHERE l.smsi_id = ${smsi}
+              AND ((l.source_ref = 'object:' || a.id AND l.target_ref = ${ref})
+                OR (l.target_ref = 'object:' || a.id AND l.source_ref = ${ref})))`,
           )
-        ).rows;
+          .orderBy('a.name')
+          .orderBy('a.id')
+          .limit(50)
+          .execute();
         const masques = new Set(await this.g.registres.inaccessibles(user, smsi, c));
         const tasks = Array.isArray(data.tasks) ? data.tasks : [];
         const tasksOpen = tasks.filter((t) => isObject(t) && t.done !== true).length;
@@ -281,12 +326,13 @@ export class Pilotage {
           throw new HttpError(422, 'Reliez au moins un élément de cet atelier, rattaché à l’étude.');
         for (const previous of EBIOS_ATELIERS.slice(0, EBIOS_ATELIERS.indexOf(atelier)))
           if (
-            !(
-              await c.query(
-                "SELECT 1 FROM pilotage_decisions WHERE smsi_id=$1 AND source_ref=$2 AND source_version=$3 AND operation='step_validation' AND step=$4",
-                [smsi, ref, source.version, previous.id],
-              )
-            ).rowCount
+            !(await decisionTracee(k, {
+              smsi,
+              ref,
+              operation: 'step_validation',
+              version: source.version,
+              step: previous.id,
+            }))
           )
             throw new HttpError(409, 'Validez d’abord : ' + previous.label);
       }
@@ -302,12 +348,13 @@ export class Pilotage {
         const index = JOURNEY_STEPS.indexOf(step);
         for (const previous of JOURNEY_STEPS.slice(0, index)) {
           if (
-            !(
-              await c.query(
-                "SELECT 1 FROM pilotage_decisions WHERE smsi_id=$1 AND source_ref=$2 AND source_version=$3 AND operation='step_validation' AND step=$4",
-                [smsi, ref, source.version, previous.id],
-              )
-            ).rowCount
+            !(await decisionTracee(k, {
+              smsi,
+              ref,
+              operation: 'step_validation',
+              version: source.version,
+              step: previous.id,
+            }))
           )
             throw new HttpError(409, 'Validez d’abord : ' + previous.label);
         }
@@ -363,28 +410,27 @@ export class Pilotage {
           );
         } else await this.g.write(c, source, source.name, data, user, ip, input.note);
       }
-      const row = (
-        await c.query(
-          `INSERT INTO pilotage_decisions(smsi_id,source_ref,source_version,operation,step,result,performed_on,note,refs,snapshot,generated_refs,request_id,intent_hash,created_by,terms) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING ${columns}`,
-          [
-            smsi,
-            ref,
-            source.version,
-            input.operation,
-            input.step,
-            input.result,
-            input.date,
-            input.note,
-            JSON.stringify(input.refs),
-            JSON.stringify(source),
-            JSON.stringify(generated),
-            input.requestId,
-            intentHash,
-            user.username,
-            JSON.stringify(terms),
-          ],
-        )
-      ).rows[0]!;
+      const row = await k
+        .insertInto('pilotage_decisions')
+        .values({
+          smsi_id: smsi,
+          source_ref: ref,
+          source_version: source.version,
+          operation: input.operation,
+          step: input.step,
+          result: input.result,
+          performed_on: input.date,
+          note: input.note,
+          refs: JSON.stringify(input.refs),
+          snapshot: JSON.stringify(source),
+          generated_refs: JSON.stringify(generated),
+          request_id: input.requestId,
+          intent_hash: intentHash,
+          created_by: user.username,
+          terms: JSON.stringify(terms),
+        })
+        .returning(COLONNES_DECISION)
+        .executeTakeFirstOrThrow();
       await this.g.db.audit(
         user,
         ip,
@@ -408,10 +454,10 @@ export class Pilotage {
     return this.g.insert(c, smsi, 'nonconformity', name, normalized, user, ip);
   }
   async schedule(smsi: string, ref: string, recurrence: unknown, expected: number, user: SessionUser, ip: string) {
-    return this.g.db.tx(async (c) => {
+    return this.g.db.tx(async (c, k) => {
       const o = await this.source(smsi, ref, user, c, true);
       if (o.kind !== 'control') throw new HttpError(422, 'Plan de contrôle attendu.');
-      await c.query('SELECT id FROM grc_objects WHERE id=$1 FOR UPDATE', [o.id]);
+      await k.selectFrom('grc_objects').select('id').where('id', '=', o.id).forUpdate().execute();
       const current = await this.g.raw(o.id, c);
       if (!current || current.version !== expected) throw new HttpError(412, 'Le contrôle a changé.');
       if (current.data.seriesRef)
@@ -447,12 +493,13 @@ export class Pilotage {
   async journey(smsi: string, id: string, user: SessionUser) {
     const o = await this.g.object(smsi, id, user);
     if (o.kind !== 'journey') throw new HttpError(422, 'Parcours attendu.');
-    const history = (
-      await this.g.db.q(
-        `SELECT ${columns} FROM pilotage_decisions WHERE smsi_id=$1 AND source_ref=$2 AND operation='step_validation' ORDER BY created_at DESC LIMIT 500`,
-        [smsi, 'object:' + id],
-      )
-    ).rows;
+    const history = await decisions(this.g.db.k)
+      .where('smsi_id', '=', smsi)
+      .where('source_ref', '=', 'object:' + id)
+      .where('operation', '=', 'step_validation')
+      .orderBy('created_at', 'desc')
+      .limit(500)
+      .execute();
     return {
       object: o,
       steps: JOURNEY_STEPS.map((step) => {
@@ -467,6 +514,8 @@ export class Pilotage {
     await this.g.permission(user, 'ecarts', 'lire');
     const scope = await this.g.access(smsi, user);
     const masques = await this.g.registres.inaccessibles(user, smsi);
+    // Indicateurs des écarts : expression commune (CTE) avec contrôle de date (pg_input_is_valid) et fuseau du périmètre,
+    // gardée en SQL paramétré (ADR 0062 §5).
     const native = (await this.g.db.one<{
       findings: number;
       closed: number;
@@ -479,12 +528,22 @@ export class Pilotage {
        SELECT count(*)::int findings,count(*) FILTER(WHERE data->>'status'='closed')::int closed,count(*) FILTER(WHERE data->>'effectiveness'='effective')::int effective,count(*) FILTER(WHERE data->>'effectiveness' IN ('effective','ineffective'))::int verified,COALESCE(sum(days) FILTER(WHERE data->>'status'='closed' AND days>=0),0)::float8 days,count(*) FILTER(WHERE data->>'status'='closed' AND days>=0)::int samples FROM findings`,
       [smsi, scope.timezone, masques],
     ))!;
-    const nativeCauses = (
-      await this.g.db.q<{ cause: string; count: number }>(
-        `SELECT trim(data->>'cause') cause,count(*)::int count FROM grc_objects WHERE smsi_id=$1 AND kind='nonconformity' AND NOT archived AND trim(COALESCE(data->>'cause',''))<>'' AND (registre_id IS NULL OR registre_id<>ALL($2::uuid[])) GROUP BY trim(data->>'cause') ORDER BY count DESC,cause LIMIT 1001`,
-        [smsi, masques],
+    const cause = sql<string>`trim(data->>'cause')`;
+    const nativeCauses = await this.g.db.k
+      .selectFrom('grc_objects')
+      .select([cause.as('cause'), sql<number>`count(*)::int`.as('count')])
+      .where('smsi_id', '=', smsi)
+      .where('kind', '=', 'nonconformity')
+      .where('archived', '=', false)
+      .where(sql<string>`trim(COALESCE(data->>'cause', ''))`, '<>', '')
+      .$if(masques.length > 0, (q) =>
+        q.where((eb) => eb.or([eb('registre_id', 'is', null), eb('registre_id', 'not in', masques)])),
       )
-    ).rows;
+      .groupBy(cause)
+      .orderBy('count', 'desc')
+      .orderBy('cause')
+      .limit(1001)
+      .execute();
     const causes = new Map(nativeCauses.slice(0, 1000).map((r) => [r.cause, r.count]));
     const samples = native.samples;
     return {
