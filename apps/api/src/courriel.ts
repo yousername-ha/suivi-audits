@@ -8,6 +8,7 @@ import type { SettingsValues, TestCourrielDto } from '@suivi/shared';
 import { z } from 'zod';
 import type { Actor, Db } from './db/db.js';
 import { HttpError } from './http/errors.js';
+import { adresseUtilisable, EXPIRATION_NOTIFICATION_JOURS } from './notifications-metier.js';
 import type { Vault } from './security/crypto.js';
 
 const CLE = 'secret:courriel';
@@ -17,6 +18,10 @@ const DELAI_ABANDON_MS = 3 * 60_000;
 
 interface Ligne {
   id: string;
+  kind: 'test' | 'notification';
+  user_id: string | null;
+  subject: string | null;
+  body: string | null;
   status: TestCourrielDto['status'];
   requested_by: string;
   to_address: string;
@@ -102,9 +107,11 @@ export class Courriel {
       await cl.query(
         `UPDATE courriel_jobs SET status='echec',finished_at=now(),
                 result=jsonb_build_object('steps','[]'::jsonb,'error','Demande abandonnée : l’exécutant n’a pas répondu.')
-          WHERE status IN ('en_attente','en_cours') AND created_at < now() - interval '3 minutes'`,
+          WHERE kind='test' AND status IN ('en_attente','en_cours') AND created_at < now() - interval '3 minutes'`,
       );
-      const active = await cl.query("SELECT 1 FROM courriel_jobs WHERE status IN ('en_attente','en_cours')");
+      const active = await cl.query(
+        "SELECT 1 FROM courriel_jobs WHERE kind='test' AND status IN ('en_attente','en_cours')",
+      );
       if (active.rowCount) throw new HttpError(409, 'Un message de test est déjà en cours.');
       const r = (
         await cl.query<Ligne>(
@@ -125,54 +132,86 @@ export class Courriel {
   }
 
   async lireDemande(id: string): Promise<TestCourrielDto> {
-    const r = await this.db.one<Ligne>('SELECT * FROM courriel_jobs WHERE id = $1', [id]);
+    const r = await this.db.one<Ligne>("SELECT * FROM courriel_jobs WHERE id = $1 AND kind='test'", [id]);
     if (!r) throw new HttpError(404, 'Demande introuvable.');
     return dto(r);
   }
 
   async derniere(): Promise<TestCourrielDto | null> {
-    const r = await this.db.one<Ligne>('SELECT * FROM courriel_jobs ORDER BY created_at DESC LIMIT 1');
+    const r = await this.db.one<Ligne>(
+      "SELECT * FROM courriel_jobs WHERE kind='test' ORDER BY created_at DESC LIMIT 1",
+    );
     return r ? dto(r) : null;
   }
 
-  /** CLI hôte (exécutant) : réclame la plus ancienne demande et renvoie ce qu'il faut pour l'envoyer, mot de passe compris. */
+  /** CLI hôte (exécutant) : réclame la demande la plus ancienne (le message de test passe avant les notifications) et renvoie
+      ce qu'il faut pour l'envoyer, mot de passe compris. Une demande de notification dont le destinataire est devenu
+      inutilisable (désactivé, expiré, sans adresse) est close sans envoi et la suivante est réclamée. */
   async reclamer(c: SettingsValues['courriel']): Promise<Record<string, unknown> | null> {
-    const r = await this.db.tx(async (cl) => {
-      await cl.query('SELECT pg_advisory_xact_lock(727277)');
-      await cl.query(
-        `UPDATE courriel_jobs SET status='echec',finished_at=now(),
-                result=jsonb_build_object('steps','[]'::jsonb,'error','Exécutant interrompu : aucune relance automatique.')
-          WHERE status = 'en_cours' AND started_at < now() - ($1::int * interval '1 millisecond')`,
-        [DELAI_ABANDON_MS],
-      );
-      return (
-        await cl.query<Ligne>(
-          `UPDATE courriel_jobs SET status='en_cours',started_at=now()
-            WHERE id = (SELECT id FROM courriel_jobs WHERE status='en_attente' ORDER BY created_at LIMIT 1) RETURNING *`,
-        )
-      ).rows[0];
-    });
-    if (!r) return null;
-    if (!c.actif || !c.hote || !c.expediteur) {
-      await this.terminer(r.id, {
-        ok: false,
-        steps: [],
-        error: 'La configuration a changé : l’envoi est désactivé ou incomplet.',
+    for (let essai = 0; essai < 50; essai++) {
+      const r = await this.db.tx(async (cl) => {
+        await cl.query('SELECT pg_advisory_xact_lock(727277)');
+        await cl.query(
+          `UPDATE courriel_jobs SET status='echec',finished_at=now(),
+                  result=jsonb_build_object('steps','[]'::jsonb,'error','Exécutant interrompu : aucune relance automatique.')
+            WHERE status = 'en_cours' AND started_at < now() - ($1::int * interval '1 millisecond')`,
+          [DELAI_ABANDON_MS],
+        );
+        await cl.query(
+          `UPDATE courriel_jobs SET status='echec',finished_at=now(),to_address='',
+                  result=jsonb_build_object('steps','[]'::jsonb,'error','Demande expirée : l’exécutant n’a pas pu l’envoyer à temps.')
+            WHERE kind='notification' AND status='en_attente' AND created_at < now() - ($1::int * interval '1 day')`,
+          [EXPIRATION_NOTIFICATION_JOURS],
+        );
+        return (
+          await cl.query<Ligne>(
+            `UPDATE courriel_jobs SET status='en_cours',started_at=now()
+              WHERE id = (SELECT id FROM courriel_jobs WHERE status='en_attente'
+                           ORDER BY (kind='test') DESC, created_at LIMIT 1) RETURNING *`,
+          )
+        ).rows[0];
       });
-      return null;
+      if (!r) return null;
+      if (!c.actif || !c.hote || !c.expediteur) {
+        await this.terminer(r.id, {
+          ok: false,
+          steps: [],
+          error: 'La configuration a changé : l’envoi est désactivé ou incomplet.',
+        });
+        return null;
+      }
+      let to = r.to_address;
+      if (r.kind === 'notification') {
+        const u = await this.db.one<{ email: string }>(
+          'SELECT email FROM users WHERE id=$1 AND NOT disabled AND (expires_at IS NULL OR expires_at > now())',
+          [r.user_id],
+        );
+        if (!u || !adresseUtilisable(u.email)) {
+          await this.terminer(r.id, {
+            ok: false,
+            steps: [],
+            error: 'Destinataire désactivé, expiré ou sans adresse : rien n’a été envoyé.',
+          });
+          continue;
+        }
+        to = u.email.trim();
+      }
+      return {
+        id: r.id,
+        kind: r.kind,
+        host: c.hote,
+        port: c.port,
+        security: c.securite,
+        username: c.utilisateur,
+        password: c.utilisateur ? await this.lireMotDePasse() : '',
+        from: c.expediteur,
+        to,
+        ca: c.autoriteCertification.trim(),
+        requested_by: r.requested_by,
+        ...(r.kind === 'notification' ? { subject: r.subject ?? '', body: r.body ?? '' } : {}),
+      };
     }
-    return {
-      id: r.id,
-      host: c.hote,
-      port: c.port,
-      security: c.securite,
-      username: c.utilisateur,
-      password: c.utilisateur ? await this.lireMotDePasse() : '',
-      from: c.expediteur,
-      to: r.to_address,
-      ca: c.autoriteCertification.trim(),
-      requested_by: r.requested_by,
-    };
+    return null;
   }
 
   /** CLI hôte : enregistre le rapport de l'envoi (jamais de secret). */
@@ -182,12 +221,14 @@ export class Courriel {
     const r = await this.db.tx(async (cl) => {
       const ligne = (
         await cl.query<Ligne>(
-          `UPDATE courriel_jobs SET status=$2,finished_at=now(),result=$3
+          `UPDATE courriel_jobs SET status=$2,finished_at=now(),result=$3,
+                  to_address = CASE WHEN kind='notification' THEN '' ELSE to_address END
             WHERE id=$1 AND status='en_cours' RETURNING *`,
           [id, p.ok ? 'reussie' : 'echec', { steps: p.steps, error: p.error }],
         )
       ).rows[0];
-      if (ligne)
+      // Le message de test est tracé au journal ; les notifications le sont dans leur demande (état, trace), sans adresse.
+      if (ligne && ligne.kind === 'test')
         await this.db.audit(
           { username: 'exécutant serveur' },
           null,
