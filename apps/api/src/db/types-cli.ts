@@ -32,8 +32,8 @@ async function main() {
       await db.migrate();
       const client = await db.pool.connect();
       try {
-        const { colonnes, enums } = await lireCatalogue(client);
-        rendu = rendreTypes(colonnes, enums);
+        const { colonnes, enums, checks } = await lireCatalogue(client);
+        rendu = rendreTypes(colonnes, enums, checks);
       } finally {
         client.release();
       }

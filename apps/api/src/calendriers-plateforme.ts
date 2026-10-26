@@ -1,7 +1,7 @@
 /* Calendriers de plateforme (décision 4, migration 039) : jours fériés français calculés par la loi et calendriers iCalendar
    importés par l'administrateur. Rien n'est récupéré à distance et rien ne se renouvelle seul : la mise à jour annuelle est une
    action de l'administrateur, consignée avec sa provenance. L'aperçu précède toujours l'écriture ; rejouer une mise à jour
-   n'ajoute aucun jour déjà présent. */
+   n'ajoute aucun jour déjà présent. Accès aux données en Kysely (ADR 0062). */
 import {
   anneesAttendues,
   ICAL_MAX_JOURS,
@@ -14,19 +14,13 @@ import {
   type ImporterCalendrierPlateformeBody,
   type JourCalendrierDto,
 } from '@suivi/shared';
-import type { Actor, Client, Db } from './db/db.js';
+import { sql } from 'kysely';
+import { surConnexion, type Actor, type Client, type Db } from './db/db.js';
 import { HttpError } from './http/errors.js';
 
 const PROVENANCE_LOI = 'Calcul légal (Code du travail, art. L3133-1), métropole';
-
-interface LigneCalendrier {
-  id: string;
-  name: string;
-  kind: CalendrierPlateformeDto['kind'];
-  years: { year: number; days: number }[];
-  updatedAt: Date | null;
-  updatedBy: string | null;
-}
+/** Jour au format AAAA-MM-JJ, calculé par PostgreSQL (pas de conversion de fuseau côté Node). */
+const jourIso = sql<string>`to_char(day, 'YYYY-MM-DD')`;
 
 export interface EntreeJournalCalendrier {
   seq: number;
@@ -44,18 +38,33 @@ export class CalendriersPlateforme {
   constructor(private readonly db: Db) {}
 
   async lister(maintenant = new Date()): Promise<CalendrierPlateformeDto[]> {
-    const lignes = (
-      await this.db.q<LigneCalendrier>(
-        `SELECT c.id,c.name,c.kind,
-           coalesce((SELECT json_agg(json_build_object('year',t.y,'days',t.n) ORDER BY t.y)
-                       FROM (SELECT extract(year FROM day)::int y,count(*)::int n FROM calendriers_plateforme_jours
-                              WHERE calendrier_id=c.id GROUP BY 1) t),'[]'::json) AS years,
-           j.created_at AS "updatedAt", j.created_by AS "updatedBy"
-         FROM calendriers_plateforme c
-         LEFT JOIN LATERAL (SELECT created_at,created_by FROM calendriers_plateforme_journal WHERE calendrier_id=c.id ORDER BY seq DESC LIMIT 1) j ON true
-        ORDER BY lower(c.name)`,
+    const lignes = await this.db.k
+      .selectFrom('calendriers_plateforme as c')
+      .leftJoinLateral(
+        (eb) =>
+          eb
+            .selectFrom('calendriers_plateforme_journal')
+            .select(['created_at', 'created_by'])
+            .whereRef('calendrier_id', '=', 'c.id')
+            .orderBy('seq', 'desc')
+            .limit(1)
+            .as('j'),
+        (join) => join.onTrue(),
       )
-    ).rows;
+      .select([
+        'c.id',
+        'c.name',
+        'c.kind',
+        sql<
+          { year: number; days: number }[]
+        >`coalesce((SELECT json_agg(json_build_object('year', t.y, 'days', t.n) ORDER BY t.y)
+          FROM (SELECT extract(year FROM day)::int y, count(*)::int n FROM calendriers_plateforme_jours
+                 WHERE calendrier_id = c.id GROUP BY 1) t), '[]'::json)`.as('years'),
+        'j.created_at as updatedAt',
+        'j.created_by as updatedBy',
+      ])
+      .orderBy(sql`lower(c.name)`)
+      .execute();
     const attendues = anneesAttendues(maintenant);
     return lignes.map((l) => ({
       id: l.id,
@@ -69,51 +78,63 @@ export class CalendriersPlateforme {
   }
 
   private async existe(c: Pick<Client, 'query'>, id: string) {
-    const r = await c.query<{ kind: CalendrierPlateformeDto['kind']; name: string }>(
-      'SELECT kind,name FROM calendriers_plateforme WHERE id=$1',
-      [id],
-    );
-    if (!r.rowCount) throw new HttpError(404, 'Calendrier inconnu.');
-    return r.rows[0]!;
+    const r = await surConnexion(c)
+      .selectFrom('calendriers_plateforme')
+      .select(['kind', 'name'])
+      .where('id', '=', id)
+      .executeTakeFirst();
+    if (!r) throw new HttpError(404, 'Calendrier inconnu.');
+    return r;
   }
 
   async jours(id: string, annee?: number): Promise<JourCalendrierDto[]> {
     await this.existe(this.db.pool, id);
-    return (
-      await this.db.q<JourCalendrierDto>(
-        `SELECT to_char(day,'YYYY-MM-DD') AS date,label,origin FROM calendriers_plateforme_jours
-          WHERE calendrier_id=$1 AND ($2::int IS NULL OR extract(year FROM day)=$2) ORDER BY day`,
-        [id, annee ?? null],
-      )
-    ).rows;
+    let q = this.db.k
+      .selectFrom('calendriers_plateforme_jours')
+      .select([jourIso.as('date'), 'label', 'origin'])
+      .where('calendrier_id', '=', id);
+    if (annee !== undefined) q = q.where(sql<number>`extract(year FROM day)`, '=', annee);
+    return q.orderBy('day').execute();
   }
 
   async journal(id: string): Promise<EntreeJournalCalendrier[]> {
     await this.existe(this.db.pool, id);
-    return (
-      await this.db.q<EntreeJournalCalendrier>(
-        `SELECT seq,operation,year,days_added AS "daysAdded",days_removed AS "daysRemoved",provenance,reason,
-                created_by AS "createdBy",to_char(created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "createdAt"
-           FROM calendriers_plateforme_journal WHERE calendrier_id=$1 ORDER BY seq DESC LIMIT 100`,
-        [id],
-      )
-    ).rows;
+    return this.db.k
+      .selectFrom('calendriers_plateforme_journal')
+      .select([
+        'seq',
+        'operation',
+        'year',
+        'days_added as daysAdded',
+        'days_removed as daysRemoved',
+        'provenance',
+        'reason',
+        'created_by as createdBy',
+        sql<string>`to_char(created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`.as('createdAt'),
+      ])
+      .where('calendrier_id', '=', id)
+      .orderBy('seq', 'desc')
+      .limit(100)
+      .execute();
   }
 
   async creer(body: CalendrierPlateformeBody, user: Actor, ip: string): Promise<CalendrierPlateformeDto> {
-    const id = await this.db.tx(async (c) => {
-      const doublon = await c.query('SELECT 1 FROM calendriers_plateforme WHERE lower(name)=lower($1)', [body.name]);
-      if (doublon.rowCount) throw new HttpError(409, 'Un calendrier porte déjà ce nom.');
-      const id = (
-        await c.query<{ id: string }>(
-          'INSERT INTO calendriers_plateforme (name,kind,created_by) VALUES ($1,$2,$3) RETURNING id',
-          [body.name, body.kind, user.username],
-        )
-      ).rows[0]!.id;
-      await c.query(
-        `INSERT INTO calendriers_plateforme_journal (calendrier_id,operation,created_by) VALUES ($1,'creer',$2)`,
-        [id, user.username],
-      );
+    const id = await this.db.tx(async (c, k) => {
+      const doublon = await k
+        .selectFrom('calendriers_plateforme')
+        .select('id')
+        .where(sql<string>`lower(name)`, '=', sql<string>`lower(${body.name})`)
+        .executeTakeFirst();
+      if (doublon) throw new HttpError(409, 'Un calendrier porte déjà ce nom.');
+      const { id } = await k
+        .insertInto('calendriers_plateforme')
+        .values({ name: body.name, kind: body.kind, created_by: user.username })
+        .returning('id')
+        .executeTakeFirstOrThrow();
+      await k
+        .insertInto('calendriers_plateforme_journal')
+        .values({ calendrier_id: id, operation: 'creer', created_by: user.username })
+        .execute();
       await this.db.audit(user, ip, 'admin.calendrier_cree', id, { name: body.name, kind: body.kind }, c);
       return id;
     }, user.username);
@@ -184,13 +205,15 @@ export class CalendriersPlateforme {
     ip: string,
     meta: { operation: 'generer' | 'importer'; year: number | null; provenance: string },
   ): Promise<ApercuMiseAJourCalendrier> {
+    const k = surConnexion(c);
     const presents = new Set(
       (
-        await c.query<{ d: string }>(
-          `SELECT to_char(day,'YYYY-MM-DD') d FROM calendriers_plateforme_jours WHERE calendrier_id=$1`,
-          [id],
-        )
-      ).rows.map((r) => r.d),
+        await k
+          .selectFrom('calendriers_plateforme_jours')
+          .select(jourIso.as('d'))
+          .where('calendrier_id', '=', id)
+          .execute()
+      ).map((r) => r.d),
     );
     const added = jours.filter((j) => !presents.has(j.date));
     const alreadyPresent = jours.filter((j) => presents.has(j.date));
@@ -203,16 +226,22 @@ export class CalendriersPlateforme {
       );
     if (!added.length) return resultat;
     for (const j of added)
-      await c.query(
-        `INSERT INTO calendriers_plateforme_jours (calendrier_id,day,label,origin,added_by) VALUES ($1,$2,$3,$4,$5)
-         ON CONFLICT DO NOTHING`,
-        [id, j.date, j.label, j.origin, user.username],
-      );
-    await c.query(
-      `INSERT INTO calendriers_plateforme_journal (calendrier_id,operation,year,days_added,provenance,created_by)
-       VALUES ($1,$2,$3,$4,$5,$6)`,
-      [id, meta.operation, meta.year, added.length, meta.provenance, user.username],
-    );
+      await k
+        .insertInto('calendriers_plateforme_jours')
+        .values({ calendrier_id: id, day: j.date, label: j.label, origin: j.origin, added_by: user.username })
+        .onConflict((oc) => oc.doNothing())
+        .execute();
+    await k
+      .insertInto('calendriers_plateforme_journal')
+      .values({
+        calendrier_id: id,
+        operation: meta.operation,
+        year: meta.year,
+        days_added: added.length,
+        provenance: meta.provenance,
+        created_by: user.username,
+      })
+      .execute();
     await this.db.audit(
       user,
       ip,
@@ -226,46 +255,56 @@ export class CalendriersPlateforme {
 
   /** Retire tous les jours d'une année, avec un motif consigné. */
   async retirerAnnee(id: string, annee: number, reason: string, user: Actor, ip: string): Promise<{ removed: number }> {
-    return this.db.tx(async (c) => {
+    return this.db.tx(async (c, k) => {
       await this.existe(c, id);
-      const r = await c.query(
-        'DELETE FROM calendriers_plateforme_jours WHERE calendrier_id=$1 AND extract(year FROM day)=$2',
-        [id, annee],
+      const supprimes = Number(
+        (
+          await k
+            .deleteFrom('calendriers_plateforme_jours')
+            .where('calendrier_id', '=', id)
+            .where(sql<number>`extract(year FROM day)`, '=', annee)
+            .executeTakeFirst()
+        ).numDeletedRows,
       );
-      if (!r.rowCount) throw new HttpError(404, 'Aucun jour pour cette année.');
-      await c.query(
-        `INSERT INTO calendriers_plateforme_journal (calendrier_id,operation,year,days_removed,reason,created_by)
-         VALUES ($1,'retirer_annee',$2,$3,$4,$5)`,
-        [id, annee, r.rowCount, reason, user.username],
-      );
+      if (!supprimes) throw new HttpError(404, 'Aucun jour pour cette année.');
+      await k
+        .insertInto('calendriers_plateforme_journal')
+        .values({
+          calendrier_id: id,
+          operation: 'retirer_annee',
+          year: annee,
+          days_removed: supprimes,
+          reason,
+          created_by: user.username,
+        })
+        .execute();
       await this.db.audit(
         user,
         ip,
         'admin.calendrier_annee_retiree',
         id,
-        { year: annee, removed: r.rowCount, reason },
+        { year: annee, removed: supprimes, reason },
         c,
       );
-      return { removed: r.rowCount ?? 0 };
+      return { removed: supprimes };
     }, user.username);
   }
 
   /** Suppression d'un calendrier vide (créé par erreur) ; un calendrier qui porte des jours se vide année par année. */
   async supprimer(id: string, user: Actor, ip: string): Promise<void> {
-    await this.db.tx(async (c) => {
+    await this.db.tx(async (c, k) => {
       const cal = await this.existe(c, id);
-      const n = (
-        await c.query<{ n: number }>(
-          'SELECT count(*)::int n FROM calendriers_plateforme_jours WHERE calendrier_id=$1',
-          [id],
-        )
-      ).rows[0]!.n;
+      const { n } = await k
+        .selectFrom('calendriers_plateforme_jours')
+        .select(sql<number>`count(*)::int`.as('n'))
+        .where('calendrier_id', '=', id)
+        .executeTakeFirstOrThrow();
       if (n) throw new HttpError(409, 'Ce calendrier porte encore des jours : retirez d’abord chaque année.');
-      await c.query('DELETE FROM calendriers_plateforme WHERE id=$1', [id]);
-      await c.query(
-        `INSERT INTO calendriers_plateforme_journal (calendrier_id,operation,provenance,created_by) VALUES ($1,'supprimer',$2,$3)`,
-        [id, cal.name, user.username],
-      );
+      await k.deleteFrom('calendriers_plateforme').where('id', '=', id).execute();
+      await k
+        .insertInto('calendriers_plateforme_journal')
+        .values({ calendrier_id: id, operation: 'supprimer', provenance: cal.name, created_by: user.username })
+        .execute();
       await this.db.audit(user, ip, 'admin.calendrier_supprime', id, { name: cal.name }, c);
     }, user.username);
   }

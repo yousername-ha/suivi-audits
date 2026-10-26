@@ -198,3 +198,46 @@ describe('reprise par une série de tâches', () => {
     expect((await importer({ annee: 2026, ics: ics('2026-12-24'), apercu: true })).statusCode).toBe(422);
   });
 });
+
+describe('calendriers de plateforme : lectures (équivalence de la conversion Kysely)', () => {
+  it('liste : dernière mise à jour et auteur ; jours de plusieurs années triés ; journal horodaté en UTC ; inconnu = 404', async () => {
+    const c = (await admin.post(base, { name: `Fermetures ${randomUUID().slice(0, 8)}`, kind: 'autre' })).json();
+    const ok = await admin.post(`${base}/${c.id}/ical`, {
+      ics: ics('2027-01-04', '2026-12-24', '2026-08-14'),
+      filename: 'multi.ics',
+      apercu: false,
+    });
+    expect(ok.statusCode, ok.body).toBe(200);
+    const l = (
+      (await lecteur.get(base)).json() as { id: string; updatedAt: string; updatedBy: string; years: unknown }[]
+    ).find((x) => x.id === c.id)!;
+    expect(l.updatedBy).toBe('cal_admin');
+    expect(l.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+    expect(l.years).toEqual([
+      { year: 2026, days: 2 },
+      { year: 2027, days: 1 },
+    ]);
+    const tous = (await lecteur.get(`${base}/${c.id}/jours`)).json() as { date: string; origin: string }[];
+    expect(tous.map((j) => j.date)).toEqual(['2026-08-14', '2026-12-24', '2027-01-04']);
+    expect(new Set(tous.map((j) => j.origin))).toEqual(new Set(['ical']));
+    expect(
+      ((await lecteur.get(`${base}/${c.id}/jours?annee=2027`)).json() as { date: string }[]).map((j) => j.date),
+    ).toEqual(['2027-01-04']);
+    const journal = (await admin.get(`${base}/${c.id}/journal`)).json() as {
+      seq: number;
+      operation: string;
+      daysAdded: number;
+      daysRemoved: number;
+      createdAt: string;
+      createdBy: string;
+    }[];
+    expect(journal.map((j) => j.operation)).toEqual(['importer', 'creer']);
+    expect(journal[0]!).toMatchObject({ daysAdded: 3, daysRemoved: 0, createdBy: 'cal_admin' });
+    expect(journal[0]!.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/);
+    expect(journal[0]!.seq).toBeGreaterThan(journal[1]!.seq);
+    const inconnu = randomUUID();
+    expect((await lecteur.get(`${base}/${inconnu}/jours`)).statusCode).toBe(404);
+    expect((await admin.get(`${base}/${inconnu}/journal`)).statusCode).toBe(404);
+    expect((await admin.req('DELETE', `${base}/${inconnu}`)).statusCode).toBe(404);
+  });
+});

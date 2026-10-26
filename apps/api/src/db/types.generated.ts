@@ -28,7 +28,7 @@ export interface AuditLog {
 export interface BackupJobs {
   id: Generated<string>;
   request_id: string;
-  status: Generated<string>;
+  status: Generated<"en_attente" | "en_cours" | "reussie" | "echec" | "annulee">;
   requested_by: string;
   created_at: ColumnType<Date, Date | string | undefined, Date | string>;
   started_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
@@ -71,7 +71,7 @@ export interface BusinessPolicyVersions {
 export interface CalendriersPlateforme {
   id: Generated<string>;
   name: string;
-  kind: string;
+  kind: "feries" | "autre";
   created_by: string;
   created_at: ColumnType<Date, Date | string | undefined, Date | string>;
 }
@@ -79,7 +79,7 @@ export interface CalendriersPlateforme {
 export interface CalendriersPlateformeJournal {
   seq: Generated<number>;
   calendrier_id: string;
-  operation: string;
+  operation: "creer" | "generer" | "importer" | "retirer_annee" | "supprimer";
   year: number | null;
   days_added: Generated<number>;
   days_removed: Generated<number>;
@@ -93,18 +93,18 @@ export interface CalendriersPlateformeJours {
   calendrier_id: string;
   day: ColumnType<Date, Date | string, Date | string>;
   label: Generated<string>;
-  origin: string;
+  origin: "calcul" | "ical";
   added_by: string;
   added_at: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
 export interface CfgItems {
   id: Generated<string>;
-  kind: string;
+  kind: "scale" | "matrix" | "mapping" | "criteria" | "taxonomy";
   key: string;
-  scope: Generated<string>;
+  scope: Generated<"instance" | "smsi">;
   smsi_id: string | null;
-  state: Generated<string>;
+  state: Generated<"draft" | "active" | "archived">;
   draft: ColumnType<JsonValue | null, string | null, string | null>;
   current_version: number | null;
   derived_from_id: string | null;
@@ -120,7 +120,7 @@ export interface CfgItems {
 export interface CfgUsages {
   item_id: string;
   item_version: number;
-  consumer_kind: string;
+  consumer_kind: "cfg_version" | "method_version" | "analysis";
   consumer_id: string;
   consumer_version: Generated<number>;
   created_by: string;
@@ -141,7 +141,7 @@ export interface ContributionsElements {
   objet_id: string;
   request_id: string;
   seq: number;
-  kind: string;
+  kind: "commentaire" | "preuve";
   comment: Generated<string>;
   proof_ref: Generated<string>;
   created_by: string;
@@ -150,8 +150,8 @@ export interface ContributionsElements {
 
 export interface CourrielJobs {
   id: Generated<string>;
-  kind: string;
-  status: Generated<string>;
+  kind: "test" | "notification";
+  status: Generated<"en_attente" | "en_cours" | "reussie" | "echec">;
   requested_by: string;
   to_address: string;
   result: ColumnType<JsonValue | null, string | null, string | null>;
@@ -190,7 +190,7 @@ export interface Documents {
   category: Generated<string>;
   refs: Generated<string[]>;
   tags: Generated<string[]>;
-  classification: Generated<string>;
+  classification: Generated<"public" | "interne" | "restreint" | "confidentiel">;
   current_version: Generated<number>;
   created_by: string;
   created_at: ColumnType<Date, Date | string | undefined, Date | string>;
@@ -206,11 +206,11 @@ export interface Documents {
 
 export interface DroitsRessources {
   id: Generated<string>;
-  resource_type: string;
+  resource_type: "registre" | "objet";
   resource_id: string;
-  subject_type: string;
+  subject_type: "utilisateur" | "groupe";
   subject_id: string;
-  role: string;
+  role: "lecteur" | "contributeur" | "gestionnaire";
   granted_by: string;
   granted_at: ColumnType<Date, Date | string | undefined, Date | string>;
 }
@@ -333,7 +333,7 @@ export interface GrcRapprochements {
   mapping_id: string;
   mapping_type: string;
   coverage: number;
-  status: string;
+  status: "pending" | "confirmed" | "rejected" | "withdrawn";
   decided_by: string | null;
   decided_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
   decision_note: Generated<string>;
@@ -347,12 +347,12 @@ export interface GrcRequirementAssessments {
   framework_version: number;
   requirement_id: string;
   version: number;
-  applicability: Generated<string>;
+  applicability: Generated<"a_determiner" | "applicable" | "exclue">;
   justification: Generated<string>;
-  implementation: Generated<string>;
+  implementation: Generated<"aucune" | "partielle" | "complete">;
   implementation_note: Generated<string>;
   tested_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
-  test_result: string | null;
+  test_result: "conforme" | "non_conforme" | null;
   test_note: Generated<string>;
   test_ref: Generated<string>;
   validated_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
@@ -399,7 +399,7 @@ export interface GrcSmsis {
   id: Generated<string>;
   name: string;
   scope: Generated<string>;
-  visibility: Generated<string>;
+  visibility: Generated<"instance" | "restricted">;
   risk_method_id: string | null;
   risk_method_version: number | null;
   timezone: Generated<string>;
@@ -410,7 +410,7 @@ export interface GrcSmsis {
   updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
   nature: Generated<string>;
   parent_id: string | null;
-  entity_kind: Generated<string>;
+  entity_kind: Generated<"organisation" | "entite" | "perimetre">;
   inherit_frameworks: Generated<boolean>;
 }
 
@@ -439,7 +439,7 @@ export interface ImportBatches {
   sha256: string;
   source_schema: number;
   envelope: Generated<boolean>;
-  mode: string;
+  mode: "init" | "merge" | "replace";
   module: string | null;
   modules: Generated<string[]>;
   report: ColumnType<JsonValue, string, string>;
@@ -451,7 +451,7 @@ export interface ImportBatches {
   after_state: ColumnType<JsonValue, string, string>;
   state_version_before: number | null;
   state_version_after: number | null;
-  status: Generated<string>;
+  status: Generated<"applied" | "undone">;
   undone_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
   undone_by: string | null;
   version: Generated<number>;
@@ -489,7 +489,7 @@ export interface InvestSettings {
 
 export interface JournalTechniqueConfig {
   id: number;
-  niveau: Generated<string>;
+  niveau: Generated<"info" | "warn">;
   debug_jusqua: ColumnType<Date | null, Date | string | null, Date | string | null>;
   modifie_par: Generated<string>;
   modifie_le: ColumnType<Date, Date | string | undefined, Date | string>;
@@ -556,11 +556,11 @@ export interface LibMappings {
   target_framework_id: string;
   target_version: number;
   target_requirement_id: string;
-  type: string;
+  type: "identical" | "equivalent" | "partial" | "complementary" | "related" | "none";
   justification: string;
   coverage: number;
-  origin: string;
-  status: string;
+  origin: "human" | "ai";
+  status: "proposed" | "validated" | "withdrawn";
   source_url: string;
   review_note: Generated<string>;
   version: Generated<number>;
@@ -606,7 +606,7 @@ export interface MapVersions {
 
 export interface Maps {
   id: Generated<string>;
-  view: string;
+  view: "context" | "process";
   name: string;
   layout: ColumnType<JsonValue, string, string>;
   settings: ColumnType<JsonValue, string | undefined, string>;
@@ -629,7 +629,7 @@ export interface ModuleActivation {
 }
 
 export interface NotificationPortees {
-  portee_kind: string;
+  portee_kind: "groupe" | "role" | "utilisateur";
   portee_id: string;
   version: Generated<number>;
   updated_by: string;
@@ -637,10 +637,10 @@ export interface NotificationPortees {
 }
 
 export interface NotificationReglages {
-  portee_kind: string;
+  portee_kind: "groupe" | "role" | "utilisateur";
   portee_id: string;
   type: string;
-  canal: string;
+  canal: "application" | "courriel";
   valeur: boolean;
   updated_by: string;
   updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
@@ -651,8 +651,8 @@ export interface OccurrenceValidations {
   objet_id: string;
   request_id: string;
   seq: number;
-  kind: string;
-  result: string | null;
+  kind: "validation" | "reouverture";
+  result: "ok" | "ko" | "na" | null;
   comment: Generated<string>;
   proof_ref: Generated<string>;
   created_by: string;
@@ -662,8 +662,8 @@ export interface OccurrenceValidations {
 export interface OperationJobs {
   id: Generated<string>;
   request_id: string;
-  kind: string;
-  status: Generated<string>;
+  kind: "verify" | "restore" | "tls_install" | "tls_reset" | "tls_internal" | "tls_acme";
+  status: Generated<"en_attente" | "en_cours" | "reussie" | "echec" | "annulee" | "intervention">;
   requested_by: string;
   created_at: ColumnType<Date, Date | string | undefined, Date | string>;
   started_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
@@ -688,7 +688,7 @@ export interface ParcoursAssociations {
   smsi_id: string;
   request_id: string;
   sous_action: string;
-  operation: string;
+  operation: "associer" | "retirer";
   target_ref: string;
   note: Generated<string>;
   created_by: string;
@@ -722,7 +722,7 @@ export interface RegistrePerimetres {
 
 export interface Registres {
   id: Generated<string>;
-  kind: string;
+  kind: "plan_actions" | "ecarts" | "recurrences";
   name: string;
   description: Generated<string>;
   reference_smsi_id: string;
@@ -736,7 +736,7 @@ export interface Registres {
   updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
   date_debut: ColumnType<Date | null, Date | string | null, Date | string | null>;
   date_fin: ColumnType<Date | null, Date | string | null, Date | string | null>;
-  statut: Generated<string>;
+  statut: Generated<"prevu" | "en_cours" | "termine" | "abandonne">;
   responsable: ColumnType<JsonValue | null, string | null, string | null>;
 }
 
@@ -1242,7 +1242,7 @@ export interface SuiviPlans {
 
 export interface SuiviPresence {
   cle: string;
-  kind: Generated<string>;
+  kind: Generated<"liste" | "objet">;
   champs: Generated<string[]>;
   reste: ColumnType<JsonValue, string | undefined, string>;
 }
@@ -1421,7 +1421,7 @@ export interface TypesProcessus {
   code: string;
   label: string;
   description: Generated<string>;
-  tint: Generated<string>;
+  tint: Generated<"vert" | "bleu" | "violet" | "orange" | "rouge" | "gris">;
   rank: Generated<number>;
   archived: Generated<boolean>;
   created_by: Generated<string>;
@@ -1433,9 +1433,9 @@ export interface TypesProcessus {
 export interface UpdateJobs {
   id: Generated<string>;
   request_id: string;
-  kind: string;
+  kind: "check" | "install";
   target: string | null;
-  status: Generated<string>;
+  status: Generated<"queued" | "running" | "success" | "rolled_back" | "failed" | "intervention">;
   requested_by: string;
   user_id: string | null;
   created_at: ColumnType<Date, Date | string | undefined, Date | string>;

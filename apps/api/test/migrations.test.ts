@@ -22,12 +22,12 @@ describe('schéma', () => {
     opened.push(t);
     const c = await t.svc.db.pool.connect();
     try {
-      const { colonnes, enums } = await lireCatalogue(c);
+      const { colonnes, enums, checks } = await lireCatalogue(c);
       const attendu = readFileSync(
         path.join(path.dirname(fileURLToPath(import.meta.url)), '../src/db/types.generated.ts'),
         'utf8',
       );
-      expect(rendreTypes(colonnes, enums), 'pnpm --filter @suivi/api db:types').toBe(attendu);
+      expect(rendreTypes(colonnes, enums, checks), 'pnpm --filter @suivi/api db:types').toBe(attendu);
       expect(colonnes.length).toBeGreaterThan(500);
     } finally {
       c.release();

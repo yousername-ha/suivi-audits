@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { rendreTypes, type ColonneCatalogue } from '../src/db/introspection.js';
+import { rendreTypes, valeursCheck, type ColonneCatalogue } from '../src/db/introspection.js';
 
 const col = (c: Partial<ColonneCatalogue> & Pick<ColonneCatalogue, 'column_name' | 'udt_name'>): ColonneCatalogue => ({
   table_name: 'exemple',
@@ -48,5 +48,49 @@ describe('génération des types Kysely', () => {
   it('est déterministe', () => {
     const c = [col({ column_name: 'a', udt_name: 'text' })];
     expect(rendreTypes(c, [])).toBe(rendreTypes([...c], []));
+  });
+  it('déduit une union des contraintes CHECK (col IN (...)), et ignore les autres formes', () => {
+    expect(valeursCheck("CHECK ((kind = ANY (ARRAY['feries'::text, 'autre'::text])))")).toEqual(['feries', 'autre']);
+    expect(valeursCheck("CHECK ((note = ANY (ARRAY['l''été'::text, 'a, b'::text])))")).toEqual(["l'été", 'a, b']);
+    expect(
+      valeursCheck("CHECK (((code)::text = ANY ((ARRAY['x'::character varying, 'y'::character varying])::text[])))"),
+    ).toEqual(['x', 'y']);
+    expect(valeursCheck('CHECK ((id = 1))')).toBeNull();
+    expect(
+      valeursCheck("CHECK (((NOT ('audit'::text = ANY (disabled))) OR ('plan_audit'::text = ANY (disabled))))"),
+    ).toBeNull();
+    expect(valeursCheck("CHECK ((kind = ANY (ARRAY['a'::text, upper('b'::text)])))")).toBeNull();
+    const out = rendreTypes(
+      [
+        col({ table_name: 't', column_name: 'kind', udt_name: 'text', ordinal_position: 1 }),
+        col({
+          table_name: 't',
+          column_name: 'etat',
+          udt_name: 'text',
+          is_nullable: 'YES',
+          column_default: "'a'::text",
+          ordinal_position: 2,
+        }),
+        col({ table_name: 't', column_name: 'n', udt_name: 'int4', ordinal_position: 3 }),
+      ],
+      [],
+      [
+        {
+          table_name: 't',
+          column_name: 'kind',
+          definition: "CHECK ((kind = ANY (ARRAY['feries'::text, 'autre'::text])))",
+        },
+        {
+          table_name: 't',
+          column_name: 'etat',
+          definition: "CHECK ((etat = ANY (ARRAY['a'::text, 'b'::text, 'c'::text])))",
+        },
+        { table_name: 't', column_name: 'etat', definition: "CHECK ((etat = ANY (ARRAY['b'::text, 'a'::text])))" },
+        { table_name: 't', column_name: 'n', definition: 'CHECK ((n > 0))' },
+      ],
+    );
+    expect(out).toContain('  kind: "feries" | "autre";');
+    expect(out).toContain('  etat: Generated<"a" | "b" | null>;');
+    expect(out).toContain('  n: number;');
   });
 });
