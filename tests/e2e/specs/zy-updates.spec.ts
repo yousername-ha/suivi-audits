@@ -51,7 +51,7 @@ test('mise à jour : bandeau permanent et confirmation explicite dans le style e
     await page.getByLabel('Taper METTRE À JOUR pour confirmer').fill('METTRE À JOUR');
     // Le code de double authentification est exigé à chaque installation.
     await expect(install).toBeDisabled();
-    await page.getByLabel('Code de double authentification').fill('12a3456');
+    await page.getByLabel('Code de double authentification').fill('123 456');
     await expect(page.getByLabel('Code de double authentification')).toHaveValue('123456');
     await install.click();
     // L'écran de mise à jour s'ouvre tout de suite, sans attendre la prise en charge de la demande par le service.
