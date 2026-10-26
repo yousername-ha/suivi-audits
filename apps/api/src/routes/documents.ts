@@ -12,7 +12,7 @@ import {
 import { sql, type Selectable } from 'kysely';
 import { z } from 'zod';
 import type { Session } from '../auth.js';
-import type { Client } from '../db/db.js';
+import { surConnexion, type Client, type Kdb } from '../db/db.js';
 import type { Links } from '../db/types.generated.js';
 import { scanFile, validateFile, type FileRejected } from '../files.js';
 import { conflict, requireIfMatch, setEtag } from '../http/concurrency.js';
@@ -26,14 +26,45 @@ import type { Services } from '../services.js';
 const IdParams = z.object({ id: Uuid });
 const like = (q: string) => '%' + q.replace(/[\\%_]/g, '\\$&') + '%';
 
-const DOC_SELECT = `SELECT d.id, d.title, d.description, d.category, d.refs, d.tags, d.classification, d.current_version, d.version,
-  d.created_by, d.created_at, d.updated_by, d.updated_at, d.deleted_at, d.deleted_by,
-  v.filename, v.mime, v.size, v.sha256, v.scan_status, v.uploaded_by, v.uploaded_at
-  FROM documents d LEFT JOIN document_versions v ON v.document_id = d.id AND v.version = d.current_version`;
+/** Document avec sa version courante (fichier, empreinte, analyse antivirale). */
+const documents = (k: Kdb) =>
+  k
+    .selectFrom('documents as d')
+    .leftJoin('document_versions as v', (j) =>
+      j.onRef('v.document_id', '=', 'd.id').onRef('v.version', '=', 'd.current_version'),
+    )
+    .select([
+      'd.id',
+      'd.title',
+      'd.description',
+      'd.category',
+      'd.refs',
+      'd.tags',
+      'd.classification',
+      'd.current_version',
+      'd.version',
+      'd.created_by',
+      'd.created_at',
+      'd.updated_by',
+      'd.updated_at',
+      'd.deleted_at',
+      'd.deleted_by',
+      'v.filename',
+      'v.mime',
+      'v.size',
+      'v.sha256',
+      'v.scan_status',
+      'v.uploaded_by',
+      'v.uploaded_at',
+    ]);
+type DocumentLigne = z.infer<typeof DocumentOut>;
 
-async function docById(svc: Services, id: string, c?: Client) {
-  const r = await (c ?? svc.db.pool).query<z.infer<typeof DocumentOut>>(`${DOC_SELECT} WHERE d.id = $1`, [id]);
-  return r.rows[0] ?? null;
+async function docById(svc: Services, id: string, c?: Client): Promise<DocumentLigne | null> {
+  // Dates relues telles quelles (sérialisées en ISO par la réponse), comme avant la conversion.
+  const r = await documents(c ? surConnexion(c) : svc.db.k)
+    .where('d.id', '=', id)
+    .executeTakeFirst();
+  return (r as unknown as DocumentLigne | undefined) ?? null;
 }
 
 /** Réception d'un fichier : en-tête X-File-Name, contrôles (type, signature, macros), analyse antivirale. */
@@ -85,11 +116,24 @@ async function insertVersion(
   comment: string,
 ) {
   const e = svc.vault.encrypt(f.buf, `doc:${docId}:${version}`);
-  await c.query(
-    `INSERT INTO document_versions(document_id, version, filename, mime, size, sha256, key_id, iv, auth_tag, content, scan_status, uploaded_by, comment)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
-    [docId, version, f.filename, f.mime, f.buf.length, f.sha, e.keyId, e.iv, e.tag, e.content, f.scan, user, comment],
-  );
+  await surConnexion(c)
+    .insertInto('document_versions')
+    .values({
+      document_id: docId,
+      version,
+      filename: f.filename,
+      mime: f.mime,
+      size: f.buf.length,
+      sha256: f.sha,
+      key_id: e.keyId,
+      iv: e.iv,
+      auth_tag: e.tag,
+      content: e.content,
+      scan_status: f.scan,
+      uploaded_by: user,
+      comment,
+    })
+    .execute();
 }
 
 function headerMeta(raw: unknown) {
@@ -105,21 +149,18 @@ async function download(ctx: Ctx<unknown, { v?: string; inline?: string }, { id:
   const { svc, reply, ip, params, query } = ctx;
   const s = ctx.s as Session;
   const v = query.v && /^\d+$/.test(query.v) ? parseInt(query.v, 10) : null;
-  const row = await svc.db.one<{
-    version: number;
-    filename: string;
-    mime: string;
-    sha256: string;
-    key_id: string;
-    iv: Buffer;
-    auth_tag: Buffer;
-    content: Buffer;
-    deleted_at: Date | null;
-  }>(
-    `SELECT v.*, d.deleted_at FROM documents d JOIN document_versions v ON v.document_id=d.id
-       AND v.version = COALESCE($2::int, d.current_version) WHERE d.id=$1`,
-    [params.id, v],
-  );
+  // Version demandée, sinon la version courante.
+  const row = await svc.db.k
+    .selectFrom('documents as d')
+    .innerJoin('document_versions as v', (j) =>
+      j
+        .onRef('v.document_id', '=', 'd.id')
+        .on('v.version', '=', v !== null ? sql<number>`${v}::int` : sql<number>`d.current_version`),
+    )
+    .selectAll('v')
+    .select('d.deleted_at')
+    .where('d.id', '=', params.id)
+    .executeTakeFirst();
   if (!row || (row.deleted_at && !s.user.rights.can('documents', 'supprimer')))
     throw new HttpError(404, 'Document introuvable.');
   let plain: Buffer;
@@ -177,25 +218,25 @@ export const documentRoutes = [
     handler: async ({ svc, s, query }) => {
       if (query.trash === '1' && !(s as Session).user.rights.can('documents', 'supprimer'))
         throw new HttpError(403, 'Droits insuffisants (lecture seule).');
-      const where = [query.trash === '1' ? 'd.deleted_at IS NOT NULL' : 'd.deleted_at IS NULL'];
-      const args: unknown[] = [];
-      if (query.ref) {
-        args.push(query.ref);
-        where.push(`$${args.length} = ANY(d.refs)`);
-      }
-      if (query.category) {
-        args.push(query.category);
-        where.push(`d.category = $${args.length}`);
-      }
-      if (query.q) {
-        args.push(like(query.q));
-        const n = `$${args.length}`;
-        where.push(
-          `(d.title ILIKE ${n} OR d.description ILIKE ${n} OR v.filename ILIKE ${n} OR array_to_string(d.refs,' ') ILIKE ${n} OR array_to_string(d.tags,' ') ILIKE ${n})`,
-        );
-      }
-      return (await svc.db.q(`${DOC_SELECT} WHERE ${where.join(' AND ')} ORDER BY d.updated_at DESC LIMIT 1000`, args))
-        .rows;
+      const motif = query.q ? like(query.q) : '';
+      return (await documents(svc.db.k)
+        .where('d.deleted_at', query.trash === '1' ? 'is not' : 'is', null)
+        .$if(!!query.ref, (q) => q.where(sql<boolean>`${query.ref} = ANY(d.refs)`))
+        .$if(!!query.category, (q) => q.where('d.category', '=', query.category!))
+        .$if(!!query.q, (q) =>
+          q.where((eb) =>
+            eb.or([
+              eb('d.title', 'ilike', motif),
+              eb('d.description', 'ilike', motif),
+              eb('v.filename', 'ilike', motif),
+              eb(sql<string>`array_to_string(d.refs, ' ')`, 'ilike', motif),
+              eb(sql<string>`array_to_string(d.tags, ' ')`, 'ilike', motif),
+            ]),
+          ),
+        )
+        .orderBy('d.updated_at', 'desc')
+        .limit(1000)
+        .execute()) as unknown as DocumentLigne[];
     },
   }),
   route({
@@ -207,11 +248,21 @@ export const documentRoutes = [
     response: z.array(z.string()),
     handler: async ({ svc }) =>
       (
-        await svc.db.q<{ category: string }>(
-          `SELECT DISTINCT category FROM (SELECT category FROM documents WHERE deleted_at IS NULL
-           UNION SELECT category FROM links WHERE deleted_at IS NULL) x WHERE category <> '' ORDER BY 1`,
-        )
-      ).rows.map((x) => x.category),
+        await svc.db.k
+          .selectFrom((eb) =>
+            eb
+              .selectFrom('documents')
+              .select('category')
+              .where('deleted_at', 'is', null)
+              .union(eb.selectFrom('links').select('category').where('deleted_at', 'is', null))
+              .as('x'),
+          )
+          .select('x.category')
+          .distinct()
+          .where('x.category', '<>', '')
+          .orderBy('x.category')
+          .execute()
+      ).map((x) => x.category),
   }),
   route({
     method: 'POST',
@@ -229,22 +280,22 @@ export const documentRoutes = [
       const meta = headerMeta(req.headers['x-meta']);
       const f = await receiveFile(ctx as unknown as Ctx<Buffer>);
       const by = s.user.username;
-      const doc = await svc.db.tx(async (c) => {
-        const d = (
-          await c.query<{ id: string }>(
-            `INSERT INTO documents(title, description, category, refs, tags, classification, current_version, created_by, updated_by)
-             VALUES ($1,$2,$3,$4,$5,$6,1,$7,$7) RETURNING id`,
-            [
-              meta.title || f.filename.replace(/\.[^.]+$/, ''),
-              meta.description || '',
-              meta.category || '',
-              meta.refs || [],
-              meta.tags || [],
-              meta.classification || 'interne',
-              by,
-            ],
-          )
-        ).rows[0]!;
+      const doc = await svc.db.tx(async (c, k) => {
+        const d = await k
+          .insertInto('documents')
+          .values({
+            title: meta.title || f.filename.replace(/\.[^.]+$/, ''),
+            description: meta.description || '',
+            category: meta.category || '',
+            refs: meta.refs || [],
+            tags: meta.tags || [],
+            classification: meta.classification || 'interne',
+            current_version: 1,
+            created_by: by,
+            updated_by: by,
+          })
+          .returning('id')
+          .executeTakeFirstOrThrow();
         await insertVersion(svc, c, d.id, 1, f, by, '');
         return d;
       }, by);
@@ -271,12 +322,24 @@ export const documentRoutes = [
       const d = await docById(svc, params.id);
       if (!d || (d.deleted_at && !(s as Session).user.rights.can('documents', 'supprimer')))
         throw new HttpError(404, 'Document introuvable.');
-      const v = await svc.db.q(
-        'SELECT version, filename, mime, size, sha256, scan_status, uploaded_by, uploaded_at, comment FROM document_versions WHERE document_id=$1 ORDER BY version DESC',
-        [d.id],
-      );
+      const v = await svc.db.k
+        .selectFrom('document_versions')
+        .select([
+          'version',
+          'filename',
+          'mime',
+          'size',
+          'sha256',
+          'scan_status',
+          'uploaded_by',
+          'uploaded_at',
+          'comment',
+        ])
+        .where('document_id', '=', d.id)
+        .orderBy('version', 'desc')
+        .execute();
       setEtag(reply, d.version);
-      return { ...d, versions: v.rows };
+      return { ...d, versions: v } as unknown as z.infer<typeof DocumentDetailOut>;
     },
   }),
   route({
@@ -292,17 +355,24 @@ export const documentRoutes = [
       const expected = requireIfMatch(req);
       const keys = Object.keys(body) as (keyof typeof body)[];
       const sess = s as Session;
-      const out = await svc.db.tx(async (c) => {
+      const out = await svc.db.tx(async (c, k) => {
         const cur = await docById(svc, params.id, c);
         if (!cur || cur.deleted_at) throw new HttpError(404, 'Document introuvable.');
         if (cur.version !== expected) throw conflict(cur);
         if (!keys.length) return cur;
-        const sets = keys.map((k, i) => `${k} = $${i + 3}`).join(', ');
-        const r = await c.query(
-          `UPDATE documents SET ${sets}, version = version + 1, updated_by = $2, updated_at = now() WHERE id = $1 AND version = ${expected}`,
-          [params.id, sess.user.username, ...keys.map((k) => body[k])],
-        );
-        if (!r.rowCount) throw conflict((await docById(svc, params.id, c))!);
+        // Champs modifiables : ceux du schéma DocumentMeta (liste fermée), typés par la base ; version attendue liée.
+        const r = await k
+          .updateTable('documents')
+          .set((eb) => ({
+            ...body,
+            version: eb('version', '+', 1),
+            updated_by: sess.user.username,
+            updated_at: sql<Date>`now()`,
+          }))
+          .where('id', '=', params.id)
+          .where('version', '=', expected)
+          .executeTakeFirst();
+        if (!Number(r.numUpdatedRows)) throw conflict((await docById(svc, params.id, c))!);
         return (await docById(svc, params.id, c))!;
       }, sess.user.username);
       if (keys.length)
@@ -334,21 +404,28 @@ export const documentRoutes = [
       } catch {
         /* commentaire ignoré s'il est mal encodé */
       }
-      const r = await svc.db.tx(async (c) => {
-        const d = (
-          await c.query<{ current_version: number; deleted_at: Date | null }>(
-            'SELECT current_version, deleted_at FROM documents WHERE id=$1 FOR UPDATE',
-            [params.id],
-          )
-        ).rows[0];
+      const r = await svc.db.tx(async (c, k) => {
+        const d = await k
+          .selectFrom('documents')
+          .select(['current_version', 'deleted_at'])
+          .where('id', '=', params.id)
+          .forUpdate()
+          .executeTakeFirst();
         if (!d || d.deleted_at) throw new HttpError(404, 'Document introuvable.');
         const nv = d.current_version + 1;
         await insertVersion(svc, c, params.id, nv, f, s.user.username, comment);
-        const u = await c.query<{ version: number }>(
-          'UPDATE documents SET current_version=$2, version = version + 1, updated_by=$3, updated_at=now() WHERE id=$1 RETURNING version',
-          [params.id, nv, s.user.username],
-        );
-        return { version: nv, documentVersion: u.rows[0]!.version };
+        const u = await k
+          .updateTable('documents')
+          .set((eb) => ({
+            current_version: nv,
+            version: eb('version', '+', 1),
+            updated_by: s.user.username,
+            updated_at: sql<Date>`now()`,
+          }))
+          .where('id', '=', params.id)
+          .returning('version')
+          .executeTakeFirstOrThrow();
+        return { version: nv, documentVersion: u.version };
       }, s.user.username);
       await svc.db.audit(s.user, ip, 'document.version', params.id, {
         version: r.version,
@@ -371,7 +448,7 @@ export const documentRoutes = [
       const sess = s as Session;
       const purge = query.purge === '1';
       if (purge) svc.auth.requirePermission(sess, 'documents:administrer');
-      const r = await svc.db.tx(async (c) => {
+      const r = await svc.db.tx(async (c, k) => {
         if (purge) {
           // Une version de document citée comme preuve (fiche, lien, décision, validation d'occurrence) ne se purge pas :
           // l'historique des preuves est conservé.
@@ -394,13 +471,31 @@ export const documentRoutes = [
             );
         }
         return purge
-          ? c.query('DELETE FROM documents WHERE id=$1 AND deleted_at IS NOT NULL', [params.id])
-          : c.query(
-              'UPDATE documents SET deleted_at=now(), deleted_by=$2, version = version + 1 WHERE id=$1 AND deleted_at IS NULL',
-              [params.id, sess.user.username],
+          ? Number(
+              (
+                await k
+                  .deleteFrom('documents')
+                  .where('id', '=', params.id)
+                  .where('deleted_at', 'is not', null)
+                  .executeTakeFirst()
+              ).numDeletedRows,
+            )
+          : Number(
+              (
+                await k
+                  .updateTable('documents')
+                  .set((eb) => ({
+                    deleted_at: sql<Date>`now()`,
+                    deleted_by: sess.user.username,
+                    version: eb('version', '+', 1),
+                  }))
+                  .where('id', '=', params.id)
+                  .where('deleted_at', 'is', null)
+                  .executeTakeFirst()
+              ).numUpdatedRows,
             );
       }, sess.user.username);
-      if (!r.rowCount)
+      if (!r)
         throw new HttpError(
           404,
           purge
@@ -421,14 +516,22 @@ export const documentRoutes = [
     handler: async ({ svc, s, ip, params }) => {
       const sess = s as Session;
       const r = await svc.db.tx(
-        (c) =>
-          c.query(
-            'UPDATE documents SET deleted_at=NULL, deleted_by=NULL, version = version + 1, updated_by=$2, updated_at=now() WHERE id=$1 AND deleted_at IS NOT NULL',
-            [params.id, sess.user.username],
-          ),
+        (_c, k) =>
+          k
+            .updateTable('documents')
+            .set((eb) => ({
+              deleted_at: null,
+              deleted_by: null,
+              version: eb('version', '+', 1),
+              updated_by: sess.user.username,
+              updated_at: sql<Date>`now()`,
+            }))
+            .where('id', '=', params.id)
+            .where('deleted_at', 'is not', null)
+            .executeTakeFirst(),
         sess.user.username,
       );
-      if (!r.rowCount) throw new HttpError(404, 'Document introuvable.');
+      if (!Number(r.numUpdatedRows)) throw new HttpError(404, 'Document introuvable.');
       await svc.db.audit(sess.user, ip, 'document.restore', params.id);
       return undefined;
     },
@@ -569,14 +672,20 @@ export const documentRoutes = [
     handler: async ({ svc, s, ip, params }) => {
       const sess = s as Session;
       const r = await svc.db.tx(
-        (c) =>
-          c.query(
-            'UPDATE links SET deleted_at=now(), deleted_by=$2, version = version + 1 WHERE id=$1 AND deleted_at IS NULL',
-            [params.id, sess.user.username],
-          ),
+        (_c, k) =>
+          k
+            .updateTable('links')
+            .set((eb) => ({
+              deleted_at: sql<Date>`now()`,
+              deleted_by: sess.user.username,
+              version: eb('version', '+', 1),
+            }))
+            .where('id', '=', params.id)
+            .where('deleted_at', 'is', null)
+            .executeTakeFirst(),
         sess.user.username,
       );
-      if (!r.rowCount) throw new HttpError(404, 'Lien introuvable.');
+      if (!Number(r.numUpdatedRows)) throw new HttpError(404, 'Lien introuvable.');
       await svc.db.audit(sess.user, ip, 'link.delete', params.id);
       return undefined;
     },
