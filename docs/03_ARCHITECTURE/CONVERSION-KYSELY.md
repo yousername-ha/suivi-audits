@@ -20,10 +20,10 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `grc/core.ts` | 1 | Converti (lot 4) ; pg_notify en SQL |
 | `calendriers-plateforme.ts` | 0 | Converti (lot 2) |
 | `grc/annuaires.ts` | 0 | Converti (lot 3) |
+| `grc/library.ts` | 0 | Converti (lot 8) |
 | `grc/registres.ts` | 0 | Converti (lot 7) ; objectColumns retiré de core.ts |
 | `grc/suppliers.ts` | 0 | Converti (lot 3) |
 | `types-processus.ts` | 0 | Converti (lot 1) |
-| `grc/library.ts` | 33 | À convertir |
 | `routes/access.ts` | 32 | À convertir |
 | `config-grc.ts` | 28 | À convertir |
 | `notifications-metier.ts` | 25 | À convertir |
@@ -88,4 +88,4 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `routes/modules.ts` | 1 | À convertir |
 | `startup.ts` | 1 | À convertir |
 
-Reste à convertir : 504 appels dans 64 fichiers.
+Reste à convertir : 471 appels dans 63 fichiers.
