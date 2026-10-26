@@ -36,7 +36,8 @@ import {
 } from '@suivi/shared';
 import { isObject, type JsonObject } from '@suivi/shared/legacy';
 import type { SessionUser } from '../auth.js';
-import type { Client, Db } from '../db/db.js';
+import { sql } from 'kysely';
+import { surConnexion, type Client, type Db, type Kdb } from '../db/db.js';
 import type { LegacyStore } from '../legacy/store.js';
 import type { BusinessPolicies } from '../business-policy.js';
 import type { Modules } from '../modules.js';
@@ -82,6 +83,7 @@ const LECTURE_PILOTAGE: Permission[] = [
   'plan_audit:lire',
   'conformite:lire',
 ];
+/** Colonnes SQL d'un objet, pour les modules pas encore convertis à Kysely (registres, risques, tâches ; ADR 0062). */
 export const objectColumns = `id,smsi_id AS "smsiId",kind,name,data,version,archived,legacy_key AS "legacyKey",legacy_id AS "legacyId",registre_id AS "registreId",created_by AS "createdBy",updated_by AS "updatedBy",created_at AS "createdAt",updated_at AS "updatedAt"`;
 export type ObjectRow = Omit<GrcObject, 'createdAt' | 'updatedAt'> & { createdAt: Date; updatedAt: Date };
 export const objectDto = (r: ObjectRow): GrcObject => ({
@@ -89,6 +91,28 @@ export const objectDto = (r: ObjectRow): GrcObject => ({
   createdAt: r.createdAt.toISOString(),
   updatedAt: r.updatedAt.toISOString(),
 });
+/** Mêmes colonnes et alias que objectColumns, pour Kysely (sélection et RETURNING). */
+const COLONNES_OBJET = [
+  'id',
+  'smsi_id as smsiId',
+  'kind',
+  'name',
+  'data',
+  'version',
+  'archived',
+  'legacy_key as legacyKey',
+  'legacy_id as legacyId',
+  'registre_id as registreId',
+  'created_by as createdBy',
+  'updated_by as updatedBy',
+  'created_at as createdAt',
+  'updated_at as updatedAt',
+] as const;
+const objets = (k: Kdb) => k.selectFrom('grc_objects').select(COLONNES_OBJET);
+/** Ligne Kysely vers GrcObject. Le type et les données ne sont écrits que par insert() et write(), après validation
+    (GrcObjectBody, normalize) : ils sont relus tels quels, comme le faisait le SQL d'origine. */
+const versObjet = (r: Omit<ObjectRow, 'kind' | 'data'> & { kind: string; data: unknown }): GrcObject =>
+  objectDto({ ...r, kind: r.kind as GrcKind, data: r.data as Record<string, unknown> });
 export const stable = (v: unknown): unknown =>
   Array.isArray(v)
     ? v.map(stable)
@@ -120,7 +144,27 @@ export interface GrcSmsi {
   version: number;
   createdBy: string;
 }
-const smsiColumns = `s.id,s.name,s.scope,s.nature,s.parent_id AS "parentId",s.entity_kind AS "entityKind",s.inherit_frameworks AS "inheritFrameworks",s.visibility,s.timezone,s.business_version AS "businessVersion",s.risk_method_id AS "riskMethodId",s.risk_method_version AS "riskMethodVersion",s.version,s.created_by AS "createdBy"`;
+const COLONNES_SMSI = [
+  's.id',
+  's.name',
+  's.scope',
+  's.nature',
+  's.parent_id as parentId',
+  's.entity_kind as entityKind',
+  's.inherit_frameworks as inheritFrameworks',
+  's.visibility',
+  's.timezone',
+  's.business_version as businessVersion',
+  's.risk_method_id as riskMethodId',
+  's.risk_method_version as riskMethodVersion',
+  's.version',
+  's.created_by as createdBy',
+] as const;
+/** Version de la politique métier publiée (configuration courante), en sous-requête. */
+const versionPolitique = (k: Kdb) =>
+  k.selectFrom('business_policy_configuration').select('version').where('id', '=', 1);
+/** Compte actif : ni désactivé ni expiré (alias « u » de la table users ; fragment constant, sans valeur). */
+const actif = sql<boolean>`(NOT u.disabled AND (u.expires_at IS NULL OR u.expires_at > now()))`;
 /** Résolution des épinglages d'une méthode de risque sur le catalogue de configuration (ADR 0038), branchée par services.ts. */
 export interface MethodBindingsResolver {
   resolveMethod(
@@ -208,10 +252,19 @@ export class Grc {
     );
   }
   async initialize() {
-    await this.db.q(
-      `INSERT INTO grc_smsis(id,name,scope,visibility,business_version,created_by) VALUES($1,'Pilotage de l’organisation','Données historiques et nouvelles relations communes','instance',(SELECT version FROM business_policy_configuration WHERE id=1),'système') ON CONFLICT DO NOTHING`,
-      [DEFAULT_SMSI],
-    );
+    const k = this.db.k;
+    await k
+      .insertInto('grc_smsis')
+      .values({
+        id: DEFAULT_SMSI,
+        name: 'Pilotage de l’organisation',
+        scope: 'Données historiques et nouvelles relations communes',
+        visibility: 'instance',
+        business_version: versionPolitique(k),
+        created_by: 'système',
+      })
+      .onConflict((oc) => oc.doNothing())
+      .execute();
     // Registres « Pilotage commun » (ADR 0043) : accueillent les éléments du périmètre commun, historiques compris.
     await this.db.tx(async (c) => {
       for (const kind of REGISTRE_KINDS) await this.registres.defautPour(c, DEFAULT_SMSI, kind);
@@ -222,12 +275,34 @@ export class Grc {
     if (!user.rights.can(module, action)) throw new HttpError(403, 'Droit requis : ' + module + ':' + action);
   }
   async access(id: string, user: SessionUser, write = false, c?: Client): Promise<GrcSmsi> {
-    const r = (
-      await (c ?? this.db.pool).query<GrcSmsi & { member: boolean; canWrite: boolean }>(
-        `SELECT ${smsiColumns},EXISTS(SELECT 1 FROM grc_members m WHERE m.smsi_id=s.id AND m.user_id=$2) AS member,EXISTS(SELECT 1 FROM grc_members m WHERE m.smsi_id=s.id AND m.user_id=$2 AND m.can_write) AS "canWrite" FROM grc_smsis s WHERE s.id=$1${c ? ' FOR SHARE OF s' : ''}`,
-        [id, user.id],
-      )
-    ).rows[0];
+    let q = (c ? surConnexion(c) : this.db.k)
+      .selectFrom('grc_smsis as s')
+      .select((eb) => [
+        ...COLONNES_SMSI,
+        eb
+          .exists(
+            eb
+              .selectFrom('grc_members as m')
+              .select('m.user_id')
+              .whereRef('m.smsi_id', '=', 's.id')
+              .where('m.user_id', '=', user.id),
+          )
+          .as('member'),
+        eb
+          .exists(
+            eb
+              .selectFrom('grc_members as m')
+              .select('m.user_id')
+              .whereRef('m.smsi_id', '=', 's.id')
+              .where('m.user_id', '=', user.id)
+              .where('m.can_write', '=', true),
+          )
+          .as('canWrite'),
+      ])
+      .where('s.id', '=', id);
+    // Dans une transaction, le périmètre est verrouillé en partage jusqu'à sa fin.
+    if (c) q = q.forShare('s');
+    const r = await q.executeTakeFirst();
     const admin = await this.isAdmin(user, c);
     if (!r || (r.visibility === 'restricted' && !r.member && !admin))
       throw new HttpError(404, 'Périmètre introuvable ou non accessible.');
@@ -260,12 +335,27 @@ export class Grc {
     }
   }
   async listSmsis(user: SessionUser) {
-    return (
-      await this.db.q<GrcSmsi>(
-        `SELECT ${smsiColumns} FROM grc_smsis s WHERE s.visibility='instance' OR $2 OR EXISTS(SELECT 1 FROM grc_members m WHERE m.smsi_id=s.id AND m.user_id=$1) ORDER BY s.visibility='instance' DESC,s.name,s.id`,
-        [user.id, await this.isAdmin(user)],
+    const admin = await this.isAdmin(user);
+    return this.db.k
+      .selectFrom('grc_smsis as s')
+      .select(COLONNES_SMSI)
+      .where((eb) =>
+        eb.or([
+          eb('s.visibility', '=', 'instance'),
+          sql<boolean>`${admin}`,
+          eb.exists(
+            eb
+              .selectFrom('grc_members as m')
+              .select('m.user_id')
+              .whereRef('m.smsi_id', '=', 's.id')
+              .where('m.user_id', '=', user.id),
+          ),
+        ]),
       )
-    ).rows;
+      .orderBy(sql`s.visibility = 'instance'`, 'desc')
+      .orderBy('s.name')
+      .orderBy('s.id')
+      .execute();
   }
   async createSmsi(
     input: {
@@ -281,25 +371,25 @@ export class Grc {
     ip: string,
   ) {
     await this.permission(user, 'pilotage', 'administrer');
-    return this.db.tx(async (c) => {
+    return this.db.tx(async (c, k) => {
       const parentId = input.parentId ?? null;
       if (parentId) await this.verifierParent('', parentId, user, c);
-      const row = (
-        await c.query<{ id: string }>(
-          `INSERT INTO grc_smsis(name,scope,nature,timezone,parent_id,entity_kind,inherit_frameworks,business_version,created_by) VALUES($1,$2,$3,$4,$5,$6,$7,(SELECT version FROM business_policy_configuration WHERE id=1),$8) RETURNING id`,
-          [
-            input.name,
-            input.scope,
-            input.nature,
-            input.timezone,
-            parentId,
-            input.entityKind ?? 'perimetre',
-            parentId ? (input.inheritFrameworks ?? false) : false,
-            user.username,
-          ],
-        )
-      ).rows[0]!;
-      await c.query('INSERT INTO grc_members(smsi_id,user_id,can_write) VALUES($1,$2,true)', [row.id, user.id]);
+      const row = await k
+        .insertInto('grc_smsis')
+        .values({
+          name: input.name,
+          scope: input.scope,
+          nature: input.nature,
+          timezone: input.timezone,
+          parent_id: parentId,
+          entity_kind: input.entityKind ?? 'perimetre',
+          inherit_frameworks: parentId ? (input.inheritFrameworks ?? false) : false,
+          business_version: versionPolitique(k),
+          created_by: user.username,
+        })
+        .returning('id')
+        .executeTakeFirstOrThrow();
+      await k.insertInto('grc_members').values({ smsi_id: row.id, user_id: user.id, can_write: true }).execute();
       await this.db.audit(user, ip, 'grc.smsi.created', row.id, { parentId }, c);
       if (parentId && input.inheritFrameworks) await this.rapprochements.sync(row.id, c);
       await this.notify(c, row.id, 1, row.id, 'pilotage', user.username);
@@ -313,42 +403,71 @@ export class Grc {
       if (e instanceof HttpError && e.status === 404) throw new HttpError(422, MESSAGES_REFUS.inconnu);
       throw e;
     });
-    const noeuds = (
-      await c.query<NoeudPerimetre>(
-        'SELECT id,parent_id AS "parentId",inherit_frameworks AS "inheritFrameworks" FROM grc_smsis',
-      )
-    ).rows;
+    const noeuds: NoeudPerimetre[] = await surConnexion(c)
+      .selectFrom('grc_smsis')
+      .select(['id', 'parent_id as parentId', 'inherit_frameworks as inheritFrameworks'])
+      .execute();
     const refus = refusRattachement(noeuds, id, parentId);
     if (refus) throw new HttpError(422, MESSAGES_REFUS[refus]);
   }
+  /** Verrou exclusif de la ligne du périmètre, jusqu'à la fin de la transaction. */
+  private async verrouillerPerimetre(c: Client, id: string) {
+    await surConnexion(c).selectFrom('grc_smsis').select('id').where('id', '=', id).forUpdate().execute();
+  }
   /** Référentiels effectifs d'un périmètre : les siens et ceux hérités (chaîne d'héritage explicite), le plus proche l'emporte. */
   async effectiveFrameworks(smsi: string, c?: Client): Promise<RattachementReferentiel[]> {
-    return (
-      await (c ?? this.db.pool).query<RattachementReferentiel>(
-        `WITH RECURSIVE chaine(id,parent_id,inherit,profondeur) AS (
-           SELECT id,parent_id,inherit_frameworks,0 FROM grc_smsis WHERE id=$1
-           UNION ALL
-           SELECT p.id,p.parent_id,p.inherit_frameworks,c.profondeur+1
-             FROM chaine c JOIN grc_smsis p ON p.id=c.parent_id WHERE c.inherit AND c.profondeur<64)
-         SELECT DISTINCT ON (s.framework_id) s.framework_id AS "frameworkId",s.version,s.enabled,ch.id AS "origineId"
-           FROM chaine ch JOIN grc_scope_frameworks s ON s.smsi_id=ch.id
-          ORDER BY s.framework_id,ch.profondeur`,
-        [smsi],
+    // Remontée de la chaîne d'héritage (64 niveaux au plus), le plus proche l'emporte (DISTINCT ON + profondeur).
+    return (c ? surConnexion(c) : this.db.k)
+      .withRecursive('chaine(id, parent_id, inherit, profondeur)', (db) =>
+        db
+          .selectFrom('grc_smsis')
+          .select(['id', 'parent_id', 'inherit_frameworks as inherit', sql<number>`0`.as('profondeur')])
+          .where('id', '=', smsi)
+          .unionAll(
+            db
+              .selectFrom('chaine as c')
+              .innerJoin('grc_smsis as p', 'p.id', 'c.parent_id')
+              .select([
+                'p.id',
+                'p.parent_id',
+                'p.inherit_frameworks as inherit',
+                sql<number>`c.profondeur + 1`.as('profondeur'),
+              ])
+              .where('c.inherit', '=', true)
+              .where('c.profondeur', '<', 64),
+          ),
       )
-    ).rows;
+      .selectFrom('chaine as ch')
+      .innerJoin('grc_scope_frameworks as s', 's.smsi_id', 'ch.id')
+      .distinctOn('s.framework_id')
+      .select(['s.framework_id as frameworkId', 's.version', 's.enabled', 'ch.id as origineId'])
+      .orderBy('s.framework_id')
+      .orderBy('ch.profondeur')
+      .execute();
   }
   /** Périmètres qui héritent (directement ou non) des référentiels de `smsi` : à recalculer quand ils changent. */
   async heritiers(smsi: string, c?: Client): Promise<string[]> {
-    return (
-      await (c ?? this.db.pool).query<{ id: string }>(
-        `WITH RECURSIVE d(id,profondeur) AS (
-           SELECT id,1 FROM grc_smsis WHERE parent_id=$1 AND inherit_frameworks
-           UNION
-           SELECT s.id,d.profondeur+1 FROM grc_smsis s JOIN d ON s.parent_id=d.id WHERE s.inherit_frameworks AND d.profondeur<64)
-         SELECT DISTINCT id FROM d`,
-        [smsi],
+    const rows = await (c ? surConnexion(c) : this.db.k)
+      .withRecursive('d(id, profondeur)', (db) =>
+        db
+          .selectFrom('grc_smsis')
+          .select(['id', sql<number>`1`.as('profondeur')])
+          .where('parent_id', '=', smsi)
+          .where('inherit_frameworks', '=', true)
+          .union(
+            db
+              .selectFrom('grc_smsis as s')
+              .innerJoin('d', 's.parent_id', 'd.id')
+              .select(['s.id', sql<number>`d.profondeur + 1`.as('profondeur')])
+              .where('s.inherit_frameworks', '=', true)
+              .where('d.profondeur', '<', 64),
+          ),
       )
-    ).rows.map((r) => r.id);
+      .selectFrom('d')
+      .select('id')
+      .distinct()
+      .execute();
+    return rows.map((r) => r.id);
   }
   /** Recalcule les rapprochements du périmètre et de ceux qui héritent de lui. */
   async resynchroniser(smsi: string, c: Client) {
@@ -360,7 +479,7 @@ export class Grc {
     await this.permission(user, 'pilotage', 'administrer');
     await this.access(id, user, true);
     return this.db.tx(async (c) => {
-      await c.query('SELECT id FROM grc_smsis WHERE id=$1 FOR UPDATE', [id]);
+      await this.verrouillerPerimetre(c, id);
       const current = await this.access(id, user, true, c);
       if (current.version !== expected)
         throw new HttpError(412, 'Le périmètre a changé : rechargez-le avant de le modifier.');
@@ -368,10 +487,21 @@ export class Grc {
       const entityKind = input.entityKind ?? current.entityKind;
       const inheritFrameworks = parentId ? (input.inheritFrameworks ?? current.inheritFrameworks) : false;
       if (parentId !== current.parentId && parentId) await this.verifierParent(id, parentId, user, c);
-      await c.query(
-        'UPDATE grc_smsis SET name=$2,scope=$3,nature=$4,timezone=$5,parent_id=$6,entity_kind=$7,inherit_frameworks=$8,version=version+1,updated_at=now() WHERE id=$1',
-        [id, input.name, input.scope, input.nature, input.timezone, parentId, entityKind, inheritFrameworks],
-      );
+      await surConnexion(c)
+        .updateTable('grc_smsis')
+        .set((eb) => ({
+          name: input.name,
+          scope: input.scope,
+          nature: input.nature,
+          timezone: input.timezone,
+          parent_id: parentId,
+          entity_kind: entityKind,
+          inherit_frameworks: inheritFrameworks,
+          version: eb('version', '+', 1),
+          updated_at: sql<Date>`now()`,
+        }))
+        .where('id', '=', id)
+        .execute();
       const changed: string[] = (['name', 'scope', 'nature', 'timezone'] as const).filter(
         (k) => current[k] !== input[k],
       );
@@ -395,33 +525,43 @@ export class Grc {
   async members(id: string, user: SessionUser) {
     await this.permission(user, 'pilotage', 'administrer');
     await this.access(id, user, true);
-    return (
-      await this.db.q(
-        `SELECT m.user_id AS "userId",u.username,u.display_name AS "displayName",m.can_write AS write FROM grc_members m JOIN users u ON u.id=m.user_id WHERE smsi_id=$1 ORDER BY u.username`,
-        [id],
-      )
-    ).rows;
+    return this.db.k
+      .selectFrom('grc_members as m')
+      .innerJoin('users as u', 'u.id', 'm.user_id')
+      .select(['m.user_id as userId', 'u.username', 'u.display_name as displayName', 'm.can_write as write'])
+      .where('m.smsi_id', '=', id)
+      .orderBy('u.username')
+      .execute();
   }
   async setMember(id: string, target: string, write: boolean | null, user: SessionUser, ip: string) {
     await this.permission(user, 'pilotage', 'administrer');
     await this.access(id, user, true);
     return this.db.tx(async (c) => {
-      await c.query('SELECT id FROM grc_smsis WHERE id=$1 FOR UPDATE', [id]);
+      await this.verrouillerPerimetre(c, id);
       await this.access(id, user, true, c);
       if (target === user.id && write !== true)
         throw new HttpError(
           409,
           'Conservez votre propre droit de gestion ; faites intervenir un autre administrateur pour le retirer.',
         );
-      if (!(await c.query('SELECT 1 FROM users WHERE id=$1 AND NOT disabled', [target])).rowCount)
-        throw new HttpError(404, 'Compte actif introuvable.');
-      if (write === null) await c.query('DELETE FROM grc_members WHERE smsi_id=$1 AND user_id=$2', [id, target]);
+      const k = surConnexion(c);
+      const compte = await k
+        .selectFrom('users')
+        .select('id')
+        .where('id', '=', target)
+        .where('disabled', '=', false)
+        .executeTakeFirst();
+      if (!compte) throw new HttpError(404, 'Compte actif introuvable.');
+      if (write === null)
+        await k.deleteFrom('grc_members').where('smsi_id', '=', id).where('user_id', '=', target).execute();
       else
-        await c.query(
-          'INSERT INTO grc_members(smsi_id,user_id,can_write) VALUES($1,$2,$3) ON CONFLICT(smsi_id,user_id) DO UPDATE SET can_write=$3',
-          [id, target, write],
-        );
-      if (target !== user.id) await c.query('DELETE FROM sessions WHERE user_id=$1', [target]);
+        await k
+          .insertInto('grc_members')
+          .values({ smsi_id: id, user_id: target, can_write: write })
+          .onConflict((oc) => oc.columns(['smsi_id', 'user_id']).doUpdateSet({ can_write: write }))
+          .execute();
+      // La désignation ferme les sessions de la personne (ses droits sont relus à la reconnexion).
+      if (target !== user.id) await k.deleteFrom('sessions').where('user_id', '=', target).execute();
       await this.db.audit(user, ip, 'grc.membership.changed', id, { userId: target, write }, c);
       await this.notify(c, id, 1, id, 'pilotage', user.username);
     }, user.username);
@@ -432,24 +572,31 @@ export class Grc {
   }
   /** Politique métier épinglée d'un périmètre, sans contrôle d'accès : l'appelant a déjà autorisé l'opération. */
   async politiqueDe(smsi: string, c?: Client) {
-    const r = await (c ?? this.db.pool).query<{ v: number }>(
-      'SELECT business_version AS v FROM grc_smsis WHERE id=$1',
-      [smsi],
-    );
-    if (!r.rows[0]) throw new HttpError(404, 'Périmètre introuvable.');
-    return this.business.version(r.rows[0].v);
+    const r = await (c ? surConnexion(c) : this.db.k)
+      .selectFrom('grc_smsis')
+      .select('business_version as v')
+      .where('id', '=', smsi)
+      .executeTakeFirst();
+    if (!r) throw new HttpError(404, 'Périmètre introuvable.');
+    return this.business.version(r.v);
   }
   async selectMethod(smsi: string, id: string, version: number, expected: number, user: SessionUser, ip: string) {
     await this.permission(user, 'pilotage', 'administrer');
     await this.risks.method(smsi, id, version, user);
     return this.db.tx(async (c) => {
-      await c.query('SELECT id FROM grc_smsis WHERE id=$1 FOR UPDATE', [smsi]);
+      await this.verrouillerPerimetre(c, smsi);
       const current = await this.access(smsi, user, true, c);
       if (current.version !== expected) throw new HttpError(412, 'Le périmètre a changé.');
-      await c.query(
-        'UPDATE grc_smsis SET risk_method_id=$2,risk_method_version=$3,version=version+1,updated_at=now() WHERE id=$1',
-        [smsi, id, version],
-      );
+      await surConnexion(c)
+        .updateTable('grc_smsis')
+        .set((eb) => ({
+          risk_method_id: id,
+          risk_method_version: version,
+          version: eb('version', '+', 1),
+          updated_at: sql<Date>`now()`,
+        }))
+        .where('id', '=', smsi)
+        .execute();
       await this.db.audit(
         user,
         ip,
@@ -466,15 +613,18 @@ export class Grc {
     await this.permission(user, 'pilotage', 'administrer');
     const policy = await this.business.version(version);
     return this.db.tx(async (c) => {
-      await c.query('SELECT id FROM grc_smsis WHERE id=$1 FOR UPDATE', [smsi]);
+      await this.verrouillerPerimetre(c, smsi);
       const current = await this.access(smsi, user, true, c);
       if (current.version !== expected) throw new HttpError(412, 'Le SMSI a changé.');
       const rows = (
-        await c.query<{ kind: string; data: Record<string, unknown> }>(
-          "SELECT kind,data FROM grc_objects WHERE smsi_id=$1 AND NOT archived AND kind IN ('action','task_series','measure','evidence','control')",
-          [smsi],
-        )
-      ).rows;
+        await surConnexion(c)
+          .selectFrom('grc_objects')
+          .select(['kind', 'data'])
+          .where('smsi_id', '=', smsi)
+          .where('archived', '=', false)
+          .where('kind', 'in', ['action', 'task_series', 'measure', 'evidence', 'control'])
+          .execute()
+      ).map((o) => ({ kind: o.kind, data: o.data as Record<string, unknown> }));
       for (const o of rows) {
         if (
           (o.kind === 'action' && !policy.definition.statuses.some((s) => s.id === o.data.status)) ||
@@ -498,10 +648,11 @@ export class Grc {
             'Des fiches utilisent des états, catégories ou fréquences supprimés : publication incompatible.',
           );
       }
-      await c.query('UPDATE grc_smsis SET business_version=$2,version=version+1,updated_at=now() WHERE id=$1', [
-        smsi,
-        version,
-      ]);
+      await surConnexion(c)
+        .updateTable('grc_smsis')
+        .set((eb) => ({ business_version: version, version: eb('version', '+', 1), updated_at: sql<Date>`now()` }))
+        .where('id', '=', smsi)
+        .execute();
       await this.db.audit(
         user,
         ip,
@@ -515,13 +666,10 @@ export class Grc {
     }, user.username);
   }
   async raw(id: string, c?: Client, lock = false) {
-    const row = (
-      await (c ?? this.db.pool).query<ObjectRow>(
-        `SELECT ${objectColumns} FROM grc_objects WHERE id=$1${lock ? ' FOR UPDATE' : ''}`,
-        [id],
-      )
-    ).rows[0];
-    return row ? objectDto(row) : null;
+    let q = objets(c ? surConnexion(c) : this.db.k).where('id', '=', id);
+    if (lock) q = q.forUpdate();
+    const row = await q.executeTakeFirst();
+    return row ? versObjet(row) : null;
   }
   async object(smsi: string, id: string, user: SessionUser, write = false, c?: Client) {
     const brut = await this.raw(id, c);
@@ -546,46 +694,62 @@ export class Grc {
   ) {
     await this.access(smsi, user);
     await this.permission(user, GRC_MODULES[kind], 'lire');
-    const args: unknown[] = [smsi, kind, '%' + search.replace(/[\\%_]/g, '\\$&') + '%'];
+    const motif = '%' + search.replace(/[\\%_]/g, '\\$&') + '%';
     // Éléments des registres partagés avec ce périmètre (référence ailleurs) : visibles aussi ici, une seule fois.
     const partages = ['action', 'nonconformity', 'task_series'].includes(kind)
       ? await this.registres.partagesLisibles(user, smsi)
       : [];
-    const dansLePerimetre = partages.length
-      ? `(smsi_id=$1 OR registre_id=ANY($${args.push(partages)}::uuid[]))`
-      : 'smsi_id=$1';
-    let where = `${dansLePerimetre} AND kind=$2 AND NOT archived AND name ILIKE $3`;
     const masques = await this.registres.inaccessibles(user, smsi);
-    if (masques.length) where += ` AND (registre_id IS NULL OR registre_id<>ALL($${args.push(masques)}::uuid[]))`;
-    for (const [k, v] of Object.entries(filters)) {
-      if (!['status', 'ownerId', 'domain', 'entity'].includes(k)) continue;
-      if (v) {
-        args.push(v);
-        where += ` AND data->>'${k}'=$${args.length}`;
-      }
-    }
-    const total = Number(
-      (await this.db.one<{ n: number }>(`SELECT count(*)::int n FROM grc_objects WHERE ${where}`, args))!.n,
-    );
-    args.push(offset);
-    const rows = (
-      await this.db.q<ObjectRow>(
-        `SELECT ${objectColumns} FROM grc_objects WHERE ${where} ORDER BY updated_at DESC,id LIMIT 50 OFFSET $${args.length}`,
-        args,
+    let filtre = this.db.k
+      .selectFrom('grc_objects')
+      .where((eb) =>
+        partages.length
+          ? eb.or([eb('smsi_id', '=', smsi), eb('registre_id', 'in', partages)])
+          : eb('smsi_id', '=', smsi),
       )
-    ).rows;
-    return { items: rows.map(objectDto), total, nextOffset: offset + 50 < total ? offset + 50 : null };
+      .where('kind', '=', kind)
+      .where('archived', '=', false)
+      .where('name', 'ilike', motif);
+    if (masques.length)
+      filtre = filtre.where((eb) => eb.or([eb('registre_id', 'is', null), eb('registre_id', 'not in', masques)]));
+    // Filtres sur des champs de la fiche : clés d'une liste fermée, passées en paramètre (data->>$n).
+    for (const [cle, v] of Object.entries(filters)) {
+      if (!['status', 'ownerId', 'domain', 'entity'].includes(cle) || !v) continue;
+      filtre = filtre.where(sql<string>`data->>${cle}`, '=', v);
+    }
+    const { n: total } = await filtre.select(sql<number>`count(*)::int`.as('n')).executeTakeFirstOrThrow();
+    const rows = await filtre
+      .select(COLONNES_OBJET)
+      .orderBy('updated_at', 'desc')
+      .orderBy('id')
+      .limit(50)
+      .offset(offset)
+      .execute();
+    return { items: rows.map(versObjet), total, nextOffset: offset + 50 < total ? offset + 50 : null };
   }
   /** Responsables proposés : comptes actifs du périmètre qui peuvent consulter le pilotage (lot U4). Un compte réduit
       à l'écran mural, aux évaluations IA ou aux documents n'est pas proposé. */
   async owners(smsi: string, user: SessionUser) {
     const s = await this.access(smsi, user);
-    const rows = (
-      await this.db.q<{ id: string; username: string; displayName: string }>(
-        `SELECT u.id,u.username,u.display_name AS "displayName" FROM users u WHERE NOT u.disabled AND (u.expires_at IS NULL OR u.expires_at>now()) AND ( $2 OR EXISTS(SELECT 1 FROM grc_members m WHERE m.smsi_id=$1 AND m.user_id=u.id)) ORDER BY u.username LIMIT 1000`,
-        [smsi, s.visibility === 'instance'],
+    const rows = await this.db.k
+      .selectFrom('users as u')
+      .select(['u.id', 'u.username', 'u.display_name as displayName'])
+      .where(actif)
+      .where((eb) =>
+        eb.or([
+          sql<boolean>`${s.visibility === 'instance'}`,
+          eb.exists(
+            eb
+              .selectFrom('grc_members as m')
+              .select('m.user_id')
+              .where('m.smsi_id', '=', smsi)
+              .whereRef('m.user_id', '=', 'u.id'),
+          ),
+        ]),
       )
-    ).rows;
+      .orderBy('u.username')
+      .limit(1000)
+      .execute();
     const out = [];
     for (const r of rows) {
       const eff = effectivePermissions(await loadGrants(this.db.pool, r.id));
@@ -597,12 +761,25 @@ export class Grc {
     if (owner == null) return;
     if (
       typeof owner !== 'string' ||
-      !(
-        await c.query(
-          `SELECT 1 FROM users u JOIN grc_smsis s ON s.id=$2 WHERE u.id=$1 AND NOT u.disabled AND (u.expires_at IS NULL OR u.expires_at>now()) AND (s.visibility='instance' OR EXISTS(SELECT 1 FROM grc_members m WHERE m.smsi_id=s.id AND m.user_id=u.id))`,
-          [owner, smsi],
+      !(await surConnexion(c)
+        .selectFrom('users as u')
+        .innerJoin('grc_smsis as s', (j) => j.on('s.id', '=', smsi))
+        .select('u.id')
+        .where('u.id', '=', owner)
+        .where(actif)
+        .where((eb) =>
+          eb.or([
+            eb('s.visibility', '=', 'instance'),
+            eb.exists(
+              eb
+                .selectFrom('grc_members as m')
+                .select('m.user_id')
+                .whereRef('m.smsi_id', '=', 's.id')
+                .whereRef('m.user_id', '=', 'u.id'),
+            ),
+          ]),
         )
-      ).rowCount
+        .executeTakeFirst())
     )
       throw new HttpError(422, 'Le responsable doit être un compte actif autorisé dans ce SMSI.');
   }
@@ -639,11 +816,14 @@ export class Grc {
       await this.checkOwner(smsi, d.ownerId, c);
       if (new Set(d.dependencies).size !== d.dependencies.length) throw new HttpError(422, 'Dépendances dupliquées.');
       if (previous && d.dependencies.length) {
-        const cycle = await c.query(
-          `WITH RECURSIVE chain(id) AS (SELECT unnest($1::uuid[]) UNION SELECT (jsonb_array_elements_text(o.data->'dependencies'))::uuid FROM grc_objects o JOIN chain ch ON ch.id=o.id WHERE o.smsi_id=$2 AND o.kind='action') SELECT 1 FROM chain WHERE id=$3 LIMIT 1`,
-          [d.dependencies, smsi, previous.id],
-        );
-        if (cycle.rowCount) throw new HttpError(409, 'Dépendance circulaire interdite.');
+        // Parcours des dépendances (jsonb) depuis les dépendances déclarées : retrouver l'action elle-même = cycle.
+        const cycle = await sql<{ x: number }>`WITH RECURSIVE chain(id) AS (
+            SELECT unnest(${d.dependencies}::uuid[])
+            UNION
+            SELECT (jsonb_array_elements_text(o.data->'dependencies'))::uuid
+              FROM grc_objects o JOIN chain ch ON ch.id = o.id WHERE o.smsi_id = ${smsi} AND o.kind = 'action')
+          SELECT 1 AS x FROM chain WHERE id = ${previous.id} LIMIT 1`.execute(surConnexion(c));
+        if (cycle.rows.length) throw new HttpError(409, 'Dépendance circulaire interdite.');
       }
       for (const id of d.dependencies) {
         if (previous?.id === id) throw new HttpError(422, 'Une action ne dépend pas d’elle-même.');
@@ -850,13 +1030,22 @@ export class Grc {
     // Tout élément d'une famille de registre en a un : à défaut de choix, le registre par défaut du périmètre.
     const famille = registreKindOf(kind, isObject(data) ? data : {});
     const registre = famille ? (registreId ?? (await this.registres.defautPour(c, smsi, famille))) : null;
-    const row = (
-      await c.query<ObjectRow>(
-        `INSERT INTO grc_objects(smsi_id,kind,module,name,data,created_by,updated_by,registre_id) VALUES($1,$2,$3,$4,$5,$6,$6,$7) RETURNING ${objectColumns}`,
-        [smsi, kind, GRC_MODULES[kind], name, data, user.username, registre],
-      )
-    ).rows[0]!;
-    const o = objectDto(row);
+    const o = versObjet(
+      await surConnexion(c)
+        .insertInto('grc_objects')
+        .values({
+          smsi_id: smsi,
+          kind,
+          module: GRC_MODULES[kind],
+          name,
+          data: JSON.stringify(data),
+          created_by: user.username,
+          updated_by: user.username,
+          registre_id: registre,
+        })
+        .returning(COLONNES_OBJET)
+        .executeTakeFirstOrThrow(),
+    );
     await this.snapshot(c, o, 'Création');
     await this.db.audit(user, ip, 'grc.object.created', o.id, { smsiId: smsi, kind }, c);
     await this.notify(c, o.id, o.version, smsi, GRC_MODULES[kind], user.username);
@@ -887,15 +1076,24 @@ export class Grc {
     ip: string,
     reason: string,
   ) {
-    const row = (
-      await c.query<ObjectRow>(
-        `UPDATE grc_objects SET name=$2,data=$3,version=version+1,updated_by=$4,updated_at=now() WHERE id=$1 RETURNING ${objectColumns}`,
-        [current.id, name, data, user.username],
-      )
-    ).rows[0]!;
-    const next = objectDto(row);
+    const k = surConnexion(c);
+    const next = versObjet(
+      await k
+        .updateTable('grc_objects')
+        .set((eb) => ({
+          name,
+          data: JSON.stringify(data),
+          version: eb('version', '+', 1),
+          updated_by: user.username,
+          updated_at: sql<Date>`now()`,
+        }))
+        .where('id', '=', current.id)
+        .returning(COLONNES_OBJET)
+        .executeTakeFirstOrThrow(),
+    );
+    // Récurrence changée : la série repart de sa première occurrence.
     if (next.kind === 'task_series' && hash(current.data.recurrence) !== hash(next.data.recurrence))
-      await c.query('UPDATE grc_series SET next_index=0 WHERE object_id=$1', [next.id]);
+      await k.updateTable('grc_series').set({ next_index: 0 }).where('object_id', '=', next.id).execute();
     await this.snapshot(c, next, reason);
     await this.db.audit(
       user,
@@ -940,10 +1138,12 @@ export class Grc {
       const dependances = Array.isArray(current.data.dependencies) ? (current.data.dependencies as string[]) : [];
       if (etat.terminal && dependances.length) {
         const ouvertes = (
-          await c.query<{ s: string }>("SELECT data->>'status' AS s FROM grc_objects WHERE id=ANY($1::uuid[])", [
-            dependances,
-          ])
-        ).rows.filter((r) => !policy.statuses.find((x) => x.id === r.s)?.terminal);
+          await surConnexion(c)
+            .selectFrom('grc_objects')
+            .select(sql<string | null>`data->>'status'`.as('s'))
+            .where('id', 'in', dependances)
+            .execute()
+        ).filter((r) => !policy.statuses.find((x) => x.id === r.s)?.terminal);
         if (ouvertes.length) throw new HttpError(409, 'Terminez les dépendances avant de clôturer.');
       }
       return this.write(
@@ -962,10 +1162,9 @@ export class Grc {
       const current = await this.object(smsi, id, user, true, c);
       if (current.registreId) await this.registres.exigerElement(user, current, 'gerer', c, 'supprimer');
       else await this.permission(user, GRC_MODULES[current.kind], 'supprimer');
-      await c.query('SELECT id FROM grc_objects WHERE id=$1 FOR UPDATE', [id]);
-      const fresh = (await this.raw(id, c))!;
+      const fresh = (await this.raw(id, c, true))!;
       if (fresh.version !== expected) throw new HttpError(412, 'Version obsolète.');
-      await c.query('UPDATE grc_objects SET archived=true WHERE id=$1', [id]);
+      await surConnexion(c).updateTable('grc_objects').set({ archived: true }).where('id', '=', id).execute();
       return this.write(
         c,
         { ...fresh, archived: true },
@@ -978,19 +1177,28 @@ export class Grc {
     }, user.username);
   }
   async snapshot(c: Client, o: GrcObject, reason: string) {
-    await c.query(
-      'INSERT INTO grc_object_versions(object_id,smsi_id,version,snapshot,reason,created_by) VALUES($1,$2,$3,$4,$5,$6)',
-      [o.id, o.smsiId, o.version, o, reason, o.updatedBy],
-    );
+    await surConnexion(c)
+      .insertInto('grc_object_versions')
+      .values({
+        object_id: o.id,
+        smsi_id: o.smsiId,
+        version: o.version,
+        snapshot: JSON.stringify(o),
+        reason,
+        created_by: o.updatedBy,
+      })
+      .execute();
   }
   async history(smsi: string, id: string, user: SessionUser, before = 2147483647) {
     await this.object(smsi, id, user);
-    return (
-      await this.db.q(
-        'SELECT version,snapshot,reason,created_by AS "createdBy",created_at AS "createdAt" FROM grc_object_versions WHERE object_id=$1 AND version<$2 ORDER BY version DESC LIMIT 50',
-        [id, before],
-      )
-    ).rows;
+    return this.db.k
+      .selectFrom('grc_object_versions')
+      .select(['version', 'snapshot', 'reason', 'created_by as createdBy', 'created_at as createdAt'])
+      .where('object_id', '=', id)
+      .where('version', '<', before)
+      .orderBy('version', 'desc')
+      .limit(50)
+      .execute();
   }
   async notify(c: Client, id: string, version: number, smsi: string, module: Module, actor: string) {
     await c.query(`SELECT pg_notify('suivi_events',$1)`, [
@@ -1055,12 +1263,14 @@ export class Grc {
     if (ref.startsWith('document:')) {
       await this.permission(user, 'documents', 'lire');
       const [, id, version] = ref.split(':');
-      const row = (
-        await (c ?? this.db.pool).query<{ name: string; title: string }>(
-          `SELECT d.title name,v.filename title FROM documents d JOIN document_versions v ON v.document_id=d.id WHERE d.id=$1 AND v.version=$2 AND d.deleted_at IS NULL`,
-          [id, version],
-        )
-      ).rows[0];
+      const row = await (c ? surConnexion(c) : this.db.k)
+        .selectFrom('documents as d')
+        .innerJoin('document_versions as v', 'v.document_id', 'd.id')
+        .select(['d.title as name', 'v.filename as title'])
+        .where('d.id', '=', id!)
+        .where('v.version', '=', Number(version))
+        .where('d.deleted_at', 'is', null)
+        .executeTakeFirst();
       if (!row) throw new HttpError(404, 'Version de preuve inaccessible.');
       return {
         ref,
@@ -1130,18 +1340,31 @@ export class Grc {
   async links(smsi: string, ref: string, user: SessionUser) {
     await this.access(smsi, user);
     const source = await this.resolve(smsi, ref, user);
-    const rows = (
-      await this.db.q<{ id: string; source_ref: string; target_ref: string; type: string; note: string }>(
-        'SELECT id,source_ref,target_ref,type,note FROM grc_links WHERE smsi_id=$1 AND (source_ref=$2 OR target_ref=$2) ORDER BY created_at,id LIMIT 500',
-        [smsi, ref],
+    const k = this.db.k;
+    const rows = await k
+      .selectFrom('grc_links')
+      .select(['id', 'source_ref', 'target_ref', 'type', 'note'])
+      .where('smsi_id', '=', smsi)
+      .where((eb) => eb.or([eb('source_ref', '=', ref), eb('target_ref', '=', ref)]))
+      .orderBy('created_at')
+      .orderBy('id')
+      .limit(500)
+      .execute();
+    // Fiches qui citent la référence dans leurs champs (étapes d'étude, références, documents, champs liés) ; jsonpath
+    // et opérateurs jsonb propres à PostgreSQL, valeurs liées.
+    const liste = JSON.stringify([ref]);
+    const parents = await objets(k)
+      .where('smsi_id', '=', smsi)
+      .where('archived', '=', false)
+      .where(
+        sql<boolean>`(jsonb_path_exists(data, '$.stages.*.values.*[*] ? (@ == $ref)', jsonb_build_object('ref', ${ref}::text))
+          OR data->'refs' @> ${liste}::jsonb OR data->'documentRefs' @> ${liste}::jsonb
+          OR data->>'auditRef' = ${ref} OR data->>'recidiveRef' = ${ref}
+          OR EXISTS (SELECT 1 FROM unnest(${CHAMPS_LIES}::text[]) f WHERE data->f @> ${liste}::jsonb OR data->>f = ${ref}))`,
       )
-    ).rows;
-    const parents = (
-      await this.db.q<ObjectRow>(
-        `SELECT ${objectColumns} FROM grc_objects WHERE smsi_id=$1 AND NOT archived AND (jsonb_path_exists(data,'$.stages.*.values.*[*] ? (@ == $ref)',jsonb_build_object('ref',$2::text)) OR data->'refs' @> $3::jsonb OR data->'documentRefs' @> $3::jsonb OR data->>'auditRef'=$2 OR data->>'recidiveRef'=$2 OR EXISTS (SELECT 1 FROM unnest($4::text[]) f WHERE data->f @> $3::jsonb OR data->>f=$2)) ORDER BY id LIMIT 500`,
-        [smsi, ref, JSON.stringify([ref]), CHAMPS_LIES],
-      )
-    ).rows;
+      .orderBy('id')
+      .limit(500)
+      .execute();
     const historicalParents: { source_ref: string; target_ref: string }[] = [];
     if (smsi === DEFAULT_SMSI) {
       const state = (await this.legacy.recompose())?.data ?? {};
@@ -1209,12 +1432,15 @@ export class Grc {
   private async applicabiliteExigence(smsi: string, ref: string, user: SessionUser) {
     if (!user.rights.can('conformite', 'lire')) return null;
     const [, frameworkId, , ...rest] = ref.split(':');
-    const e = (
-      await this.db.q<{ applicability: string }>(
-        'SELECT applicability FROM grc_requirement_assessments WHERE smsi_id=$1 AND framework_id=$2 AND requirement_id=$3 ORDER BY version DESC LIMIT 1',
-        [smsi, frameworkId, rest.join(':')],
-      )
-    ).rows[0];
+    const e = await this.db.k
+      .selectFrom('grc_requirement_assessments')
+      .select('applicability')
+      .where('smsi_id', '=', smsi)
+      .where('framework_id', '=', frameworkId!)
+      .where('requirement_id', '=', rest.join(':'))
+      .orderBy('version', 'desc')
+      .limit(1)
+      .executeTakeFirst();
     return e?.applicability ?? 'non_evaluee';
   }
   async link(smsi: string, source: string, target: string, type: string, note: string, user: SessionUser, ip: string) {
@@ -1250,19 +1476,33 @@ export class Grc {
           422,
           `Relation « ${(RELATIONS as Record<string, { libelle: string }>)[type]?.libelle ?? type} » non prévue de ${GRC_LABELS[from.kind as GrcKind] ?? from.kind} vers ${GRC_LABELS[to.kind as GrcKind] ?? to.kind} : choisissez une autre relation ou « Lié à ».`,
         );
+      const k = surConnexion(c);
       const before =
         (
-          await c.query(
-            'SELECT note FROM grc_links WHERE smsi_id=$1 AND source_ref=$2 AND target_ref=$3 AND type=$4 FOR UPDATE',
-            [smsi, source, target, type],
-          )
-        ).rows[0]?.note ?? null;
-      const r = (
-        await c.query<{ id: string }>(
-          'INSERT INTO grc_links(smsi_id,source_id,source_ref,target_ref,type,note,created_by) VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT(smsi_id,source_ref,target_ref,type) DO UPDATE SET note=$6 RETURNING id',
-          [smsi, source.startsWith('object:') ? source.slice(7) : null, source, target, type, note, user.username],
-        )
-      ).rows[0]!;
+          await k
+            .selectFrom('grc_links')
+            .select('note')
+            .where('smsi_id', '=', smsi)
+            .where('source_ref', '=', source)
+            .where('target_ref', '=', target)
+            .where('type', '=', type)
+            .forUpdate()
+            .executeTakeFirst()
+        )?.note ?? null;
+      const r = await k
+        .insertInto('grc_links')
+        .values({
+          smsi_id: smsi,
+          source_id: source.startsWith('object:') ? source.slice(7) : null,
+          source_ref: source,
+          target_ref: target,
+          type,
+          note,
+          created_by: user.username,
+        })
+        .onConflict((oc) => oc.columns(['smsi_id', 'source_ref', 'target_ref', 'type']).doUpdateSet({ note }))
+        .returning('id')
+        .executeTakeFirstOrThrow();
       await this.db.audit(
         user,
         ip,
@@ -1278,17 +1518,18 @@ export class Grc {
   }
   async unlink(smsi: string, id: string, user: SessionUser, ip: string) {
     await this.access(smsi, user, true);
-    return this.db.tx(async (c) => {
-      const row = (
-        await c.query<{ source_ref: string; target_ref: string; type: string; note: string }>(
-          'SELECT source_ref,target_ref,type,note FROM grc_links WHERE id=$1 AND smsi_id=$2 FOR UPDATE',
-          [id, smsi],
-        )
-      ).rows[0];
+    return this.db.tx(async (c, k) => {
+      const row = await k
+        .selectFrom('grc_links')
+        .select(['source_ref', 'target_ref', 'type', 'note'])
+        .where('id', '=', id)
+        .where('smsi_id', '=', smsi)
+        .forUpdate()
+        .executeTakeFirst();
       if (!row) throw new HttpError(404, 'Relation introuvable.');
       const source = await this.resolve(smsi, row.source_ref, user, c);
       await this.permission(user, source.module, 'modifier');
-      await c.query('DELETE FROM grc_links WHERE id=$1', [id]);
+      await k.deleteFrom('grc_links').where('id', '=', id).execute();
       await this.db.audit(user, ip, 'grc.link.deleted', id, { smsiId: smsi, ...row }, c);
       await this.notify(c, id, 1, smsi, source.module, user.username);
       await this.rapprochements.sync(smsi, c);
