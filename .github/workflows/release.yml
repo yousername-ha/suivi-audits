@@ -143,6 +143,9 @@ jobs:
   sign:
     needs: [images, scan]
     name: Signature ${{ matrix.image }} et attestation SBOM
+    # Environnement protégé (ADR 0063) : la signature attend l'approbation du RSSI, et seule une étiquette v* y accède.
+    # Sans signature, ni la page de la version ni l'installation ne sont possibles.
+    environment: publication
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
