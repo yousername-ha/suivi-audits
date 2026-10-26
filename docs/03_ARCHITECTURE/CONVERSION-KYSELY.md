@@ -29,7 +29,11 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `carto/maps.ts` | 0 | Converti (lot 18) |
 | `config-grc.ts` | 0 | Converti (lot 10) |
 | `grc/annuaires.ts` | 0 | Converti (lot 3) |
+| `grc/evaluations-exigences.ts` | 0 | Converti (lot 20) |
+| `grc/frameworks.ts` | 0 | Converti (lot 20) |
+| `grc/library-mappings.ts` | 0 | Converti (lot 20) |
 | `grc/library.ts` | 0 | Converti (lot 8) |
+| `grc/parcours.ts` | 0 | Converti (lot 20) |
 | `grc/rapprochements.ts` | 0 | Converti (lot 12) |
 | `grc/registres.ts` | 0 | Converti (lot 7) ; objectColumns retiré de core.ts |
 | `grc/suppliers.ts` | 0 | Converti (lot 3) |
@@ -45,14 +49,10 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `controle-relations.ts` | 11 | À convertir |
 | `historique/tables/collection.ts` | 11 | À convertir |
 | `routes/import.ts` | 11 | À convertir |
-| `grc/library-mappings.ts` | 9 | À convertir |
 | `legacy/store.ts` | 9 | À convertir |
-| `grc/parcours.ts` | 8 | À convertir |
 | `grc/registre-risques.ts` | 7 | À convertir |
 | `historique/tables/invest.ts` | 7 | À convertir |
 | `rights.ts` | 7 | À convertir |
-| `grc/evaluations-exigences.ts` | 6 | À convertir |
-| `grc/frameworks.ts` | 6 | À convertir |
 | `grc/contributions.ts` | 5 | À convertir |
 | `jeu-de-test.ts` | 5 | À convertir |
 | `walls.ts` | 5 | À convertir |
@@ -88,4 +88,4 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `routes/modules.ts` | 1 | À convertir |
 | `startup.ts` | 1 | À convertir |
 
-Reste à convertir : 202 appels dans 46 fichiers.
+Reste à convertir : 173 appels dans 42 fichiers.
