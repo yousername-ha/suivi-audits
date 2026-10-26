@@ -1,10 +1,17 @@
 /* Graphe des périmètres : un arbre (parent → enfants) de cartes de synthèse. Les compteurs viennent du serveur
    (`GET /api/grc/perimetres/synthese`) : un compteur absent s'affiche « indisponible », jamais comme un zéro. La création
    passe par le même formulaire que la liste (même route, même identifiant) ; le graphe n'a pas de modèle propre. */
-import { Anchor, Badge, Button, Group, Loader, Text } from '@mantine/core';
+import { Anchor, Badge, Button, Group, Loader, Stack, Text } from '@mantine/core';
 import { useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
-import { arbre, LIBELLES_NIVEAU, type CartePerimetre, type NiveauPerimetre } from '@suivi/shared';
+import {
+  arbre,
+  LIBELLES_NIVEAU,
+  type CartePerimetre,
+  type Couverture,
+  type CouvertureReferentiel,
+  type NiveauPerimetre,
+} from '@suivi/shared';
 
 const LARGEUR = 264;
 const HAUTEUR = 336;
@@ -64,6 +71,35 @@ const CLASSES = [
   ['mineure', 'Mineurs', 'orange'],
   ['point_sensible', 'Sensibles', 'violet'],
 ] as const;
+
+/** Une ligne par référentiel (et version) : testées ou validées sur applicables, avec sa provenance (carte seule : rattaché ici
+    ou hérité de tel parent) ou le nombre de périmètres comptés (total avec sous-périmètres). */
+function ligneReferentiel(f: CouvertureReferentiel, agrege: boolean): string {
+  const base = `${f.nom} v${f.version} : ${n(f.testees)} testées ou validées / ${n(f.applicables)} applicables`;
+  const aDeterminer = f.aDeterminer ? ` · ${n(f.aDeterminer)} à déterminer` : '';
+  if (agrege) return `${base}${aDeterminer} · ${n(f.perimetres)} périmètre(s)`;
+  if (f.provenance === 'herite')
+    return `${base}${aDeterminer} · hérité ${f.origine ? `de ${f.origine}` : 'd’un périmètre parent non accessible'}`;
+  return `${base}${aDeterminer} · rattaché ici`;
+}
+function detailCouverture(c: Couverture): ReactNode {
+  const agrege = c.perimetres > 1;
+  return (
+    <Stack gap="2xs" role="group" aria-label="Couverture par référentiel">
+      {agrege && (
+        <Text size="xs">
+          Somme sur {n(c.perimetres)} périmètre(s) : une exigence compte une fois par périmètre où elle est évaluée
+          {c.nonLus ? ` · ${n(c.nonLus)} périmètre(s) non lisible(s), exclu(s)` : ''}
+        </Text>
+      )}
+      {c.parReferentiel.map((f) => (
+        <Text key={`${f.referentielId}:${f.version}`} size="xs">
+          {ligneReferentiel(f, agrege)}
+        </Text>
+      ))}
+    </Stack>
+  );
+}
 
 /** Lignes de compteurs d'une carte ; `null` : indisponible (droit manquant ou donnée non mesurable). Un compteur est un lien
     vers la liste du module, dans le même périmètre : les chiffres d'une carte se retrouvent à l'identique dans la liste. */
@@ -148,6 +184,7 @@ function lignesCompteurs(c: CartePerimetre['compteurs'], id: string, liens = tru
           )
         : indisponible,
       alerte: !!c.couverture && (c.couverture.aDeterminer > 0 || c.couverture.obligatoiresNonConformes > 0),
+      detail: c.couverture && detailCouverture(c.couverture),
     },
   ];
 }
@@ -319,14 +356,13 @@ export function CartesPerimetres({
                       Total avec {n(carte.sousPerimetres)} sous-périmètre(s)
                     </Text>
                     <dl className="graphe-compteurs">
-                      {lignesCompteurs(carte.total, carte.id, false)
-                        .filter((l) => l.libelle !== 'Couverture')
-                        .map((l) => (
-                          <div key={l.libelle}>
-                            <dt>{l.libelle}</dt>
-                            <dd className={l.alerte ? 'graphe-alerte' : undefined}>{l.valeur}</dd>
-                          </div>
-                        ))}
+                      {lignesCompteurs(carte.total, carte.id, false).map((l) => (
+                        <div key={l.libelle}>
+                          <dt>{l.libelle}</dt>
+                          <dd className={l.alerte ? 'graphe-alerte' : undefined}>{l.valeur}</dd>
+                          {l.libelle === 'Couverture' && l.detail && <dd className="graphe-detail">{l.detail}</dd>}
+                        </div>
+                      ))}
                     </dl>
                   </div>
                 )}

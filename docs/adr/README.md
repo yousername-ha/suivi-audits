@@ -63,3 +63,4 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0057](0057-retrait-de-la-conformite-ia.md) | Retrait de la page « Conformité IA », de ses données et du module de droits « ia » | Acceptée |
 | [0058](0058-notifications-metier.md) | Notifications métier : réglage par groupe, rôle et utilisateur (le réglage personnel l'emporte), application et courriel envoyé par l'exécutant | Acceptée |
 | [0059](0059-relance-automatique-des-courriels.md) | Relance automatique des courriels de notification : essais et délai réglables, délai doublé, refus définitif non relancé | Acceptée |
+| [0060](0060-couverture-agregee-des-cartes-de-perimetres.md) | Couverture agrégée des cartes de périmètres : somme par périmètre, détail par référentiel, provenance, jamais un taux | Acceptée |

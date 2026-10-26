@@ -436,6 +436,8 @@ export class GrcRapprochements {
         identifier: a.identifier,
         name: a.name,
         version: a.version,
+        /** Périmètre qui porte le rattachement (le périmètre lui-même, ou l'ancêtre dont il hérite). */
+        origineId: effectifs.find((e) => e.frameworkId === a.framework_id)?.origineId ?? smsi,
         requirements: reqs.length,
         covered,
         toValidate: pending,
