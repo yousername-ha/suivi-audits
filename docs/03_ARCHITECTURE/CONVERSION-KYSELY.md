@@ -34,10 +34,10 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `grc/suppliers.ts` | 0 | Converti (lot 3) |
 | `routes/access.ts` | 0 | Converti (lot 9) |
 | `routes/auth.ts` | 0 | Converti (lot 15) |
+| `routes/documents.ts` | 0 | Converti (socle et lot 17) |
 | `types-processus.ts` | 0 | Converti (lot 1) |
 | `courriel.ts` | 20 | Dernier (FOR UPDATE, power(), LEAST) |
 | `routes/carto.ts` | 14 | À convertir |
-| `routes/documents.ts` | 14 | Liens convertis (socle) ; documents à convertir |
 | `routes/admin.ts` | 13 | À convertir |
 | `controle-relations.ts` | 11 | À convertir |
 | `historique/tables/collection.ts` | 11 | À convertir |
@@ -88,4 +88,4 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `routes/modules.ts` | 1 | À convertir |
 | `startup.ts` | 1 | À convertir |
 
-Reste à convertir : 262 appels dans 52 fichiers.
+Reste à convertir : 248 appels dans 51 fichiers.
