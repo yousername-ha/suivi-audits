@@ -10,8 +10,9 @@ import {
   type SettingsValues,
 } from '@suivi/shared';
 import type { FastifyReply, FastifyRequest } from 'fastify';
+import { sql } from 'kysely';
 import type { Config } from './config.js';
-import type { Client, Db } from './db/db.js';
+import { surConnexion, type Client, type Db } from './db/db.js';
 import { HttpError } from './http/errors.js';
 import { isHttps } from './http/security.js';
 import { loadGrants, permanentAdminCount, permissionDenied } from './rights.js';
@@ -134,10 +135,18 @@ export class Auth {
     const tok = token(32);
     const csrf = token(24);
     const exp = new Date(Date.now() + this.policy().sessionMaxHours * 3600e3);
-    await (c ?? this.db.pool).query(
-      'INSERT INTO sessions(id_hash, user_id, csrf, mfa_ok, ip, user_agent, expires_at) VALUES ($1,$2,$3,$4,$5,$6,$7)',
-      [sha256(tok), userId, csrf, mfaOk, req.ip || null, String(req.headers['user-agent'] || '').slice(0, 300), exp],
-    );
+    await (c ? surConnexion(c) : this.db.k)
+      .insertInto('sessions')
+      .values({
+        id_hash: sha256(tok),
+        user_id: userId,
+        csrf,
+        mfa_ok: mfaOk,
+        ip: req.ip || null,
+        user_agent: String(req.headers['user-agent'] || '').slice(0, 300),
+        expires_at: exp,
+      })
+      .execute();
     this.setCookie(req, reply, tok);
     return csrf;
   }
@@ -154,30 +163,37 @@ export class Auth {
     return tok ? this.loadByHash(sha256(tok)) : null;
   }
   async loadByHash(h: Buffer, touch = true): Promise<Session | null> {
-    const r = await this.db.one<{
-      id_hash: Buffer;
-      csrf: string;
-      mfa_ok: boolean;
-      last_seen_at: Date;
-      id: string;
-      username: string;
-      display_name: string;
-      disabled: boolean;
-      expires_at: Date | null;
-      preferences: unknown;
-      totp_enabled: boolean;
-      must_change_password: boolean;
-    }>(
-      `SELECT s.id_hash, s.csrf, s.mfa_ok, s.last_seen_at, u.id, u.username, u.display_name, u.disabled, u.expires_at,
-              u.preferences, u.totp_enabled, u.must_change_password
-         FROM sessions s JOIN users u ON u.id = s.user_id
-        WHERE s.id_hash = $1 AND s.expires_at > now() AND s.last_seen_at > now() - make_interval(mins => $2)`,
-      [h, this.policy().sessionIdleMinutes],
-    );
+    // Session valide : non expirée et active depuis moins que la durée d'inactivité réglée.
+    const r = await this.db.k
+      .selectFrom('sessions as s')
+      .innerJoin('users as u', 'u.id', 's.user_id')
+      .select([
+        's.id_hash',
+        's.csrf',
+        's.mfa_ok',
+        's.last_seen_at',
+        'u.id',
+        'u.username',
+        'u.display_name',
+        'u.disabled',
+        'u.expires_at',
+        'u.preferences',
+        'u.totp_enabled',
+        'u.must_change_password',
+      ])
+      .where('s.id_hash', '=', h)
+      .where('s.expires_at', '>', sql<Date>`now()`)
+      .where('s.last_seen_at', '>', sql<Date>`now() - make_interval(mins => ${this.policy().sessionIdleMinutes})`)
+      .executeTakeFirst();
     if (!r || r.disabled || (r.expires_at && new Date(r.expires_at) <= new Date())) return null;
     const grants = await loadGrants(this.db.pool, r.id);
     if (touch && Date.now() - new Date(r.last_seen_at).getTime() > 60e3) {
-      this.db.q('UPDATE sessions SET last_seen_at = now() WHERE id_hash = $1', [h]).catch(() => {});
+      this.db.k
+        .updateTable('sessions')
+        .set({ last_seen_at: sql<Date>`now()` })
+        .where('id_hash', '=', h)
+        .execute()
+        .catch(() => {});
     }
     return {
       sid: h,
@@ -197,34 +213,36 @@ export class Auth {
     };
   }
   async destroy(sid: Buffer) {
-    await this.db.q('DELETE FROM sessions WHERE id_hash = $1', [sid]);
+    await this.db.k.deleteFrom('sessions').where('id_hash', '=', sid).execute();
   }
+  /** Ferme les sessions d'un compte, sauf éventuellement la session courante. */
   async destroyUserSessions(userId: string, exceptSid?: Buffer | null, c?: Client) {
-    await (c ?? this.db.pool).query(
-      'DELETE FROM sessions WHERE user_id = $1 AND ($2::bytea IS NULL OR id_hash <> $2)',
-      [userId, exceptSid ?? null],
-    );
+    await (c ? surConnexion(c) : this.db.k)
+      .deleteFrom('sessions')
+      .where('user_id', '=', userId)
+      .$if(!!exceptSid, (q) => q.where('id_hash', '<>', exceptSid!))
+      .execute();
   }
   purgeExpired() {
-    return this.db.q(
-      'DELETE FROM sessions WHERE expires_at < now() OR last_seen_at < now() - make_interval(mins => $1)',
-      [this.policy().sessionIdleMinutes],
-    );
+    return this.db.k
+      .deleteFrom('sessions')
+      .where((eb) =>
+        eb.or([
+          eb('expires_at', '<', sql<Date>`now()`),
+          eb('last_seen_at', '<', sql<Date>`now() - make_interval(mins => ${this.policy().sessionIdleMinutes})`),
+        ]),
+      )
+      .execute();
   }
 
   /* ---------------------------------------------------------------- Mot de passe (verrouillage progressif) */
   async checkLogin(username: string, password: string) {
-    const u = await this.db.one<{
-      id: string;
-      username: string;
-      password_hash: string;
-      locked_until: Date | null;
-      failed_logins: number;
-      disabled: boolean;
-      expires_at: Date | null;
-      totp_enabled: boolean;
-      must_change_password: boolean;
-    }>('SELECT * FROM users WHERE lower(username) = lower($1)', [username.slice(0, 64)]);
+    // Identifiant comparé sans casse ; la fiche complète est relue, comme avant la conversion.
+    const u = await this.db.k
+      .selectFrom('users')
+      .selectAll()
+      .where(sql`lower(username)`, '=', sql`lower(${username.slice(0, 64)})`)
+      .executeTakeFirst();
     if (!u) {
       await dummyVerify(password);
       return { ok: false as const, reason: 'unknown' as const };
@@ -237,37 +255,44 @@ export class Auth {
       const n = u.failed_logins + 1;
       const { lockoutThreshold: t, lockoutMinutes } = this.policy();
       const lock = n >= t ? new Date(Date.now() + lockoutMinutes * 60e3 * Math.min(8, 2 ** (n - t))) : null;
-      await this.db.q('UPDATE users SET failed_logins = $2, locked_until = COALESCE($3, locked_until) WHERE id = $1', [
-        u.id,
-        n,
-        lock,
-      ]);
+      // Un verrou en cours n'est jamais raccourci : sans nouveau verrou, la date existante est conservée (COALESCE).
+      await this.db.k
+        .updateTable('users')
+        .set({ failed_logins: n, ...(lock ? { locked_until: lock } : {}) })
+        .where('id', '=', u.id)
+        .execute();
       return { ok: false as const, reason: lock ? ('locked_now' as const) : ('bad_password' as const), user: u };
     }
     if (u.disabled) return { ok: false as const, reason: 'disabled' as const, user: u };
     if (u.expires_at && new Date(u.expires_at) <= new Date())
       return { ok: false as const, reason: 'expired' as const, user: u };
-    await this.db.q('UPDATE users SET failed_logins = 0, locked_until = NULL, last_login_at = now() WHERE id = $1', [
-      u.id,
-    ]);
+    await this.db.k
+      .updateTable('users')
+      .set({ failed_logins: 0, locked_until: null, last_login_at: sql<Date>`now()` })
+      .where('id', '=', u.id)
+      .execute();
     return { ok: true as const, user: u };
   }
 
   /* ---------------------------------------------------------------- TOTP (anti-rejeu) */
   async checkTotp(userId: string, code: string): Promise<boolean> {
-    const u = await this.db.one<{ id: string; totp_secret: Buffer | null; totp_last_step: number }>(
-      'SELECT id, totp_secret, totp_last_step FROM users WHERE id = $1',
-      [userId],
-    );
+    const u = await this.db.k
+      .selectFrom('users')
+      .select(['id', 'totp_secret', 'totp_last_step'])
+      .where('id', '=', userId)
+      .executeTakeFirst();
     if (!u || !u.totp_secret) return false;
     const key = this.vault.openSmall(u.totp_secret, 'totp:' + u.id);
     const step = verifyTotp(key, code, Number(u.totp_last_step));
     if (!step) return false;
-    const r = await this.db.q('UPDATE users SET totp_last_step = $2 WHERE id = $1 AND totp_last_step < $2', [
-      u.id,
-      step,
-    ]);
-    return r.rowCount === 1;
+    // Anti-rejeu : le pas n'est accepté qu'une fois, et seulement s'il dépasse le dernier pas utilisé.
+    const r = await this.db.k
+      .updateTable('users')
+      .set({ totp_last_step: step })
+      .where('id', '=', u.id)
+      .where('totp_last_step', '<', step)
+      .executeTakeFirst();
+    return Number(r.numUpdatedRows) === 1;
   }
 
   /* ---------------------------------------------------------------- Jeton d'installation */
@@ -275,8 +300,12 @@ export class Auth {
     return (await permanentAdminCount(this.db.pool)) > 0;
   }
   async setupRecord(): Promise<SetupTokenRecord | null> {
-    const r = await this.db.one<{ value: SetupTokenRecord }>("SELECT value FROM settings WHERE key = 'setup_token'");
-    return r?.value ?? null;
+    const r = await this.db.k
+      .selectFrom('settings')
+      .select('value')
+      .where('key', '=', 'setup_token')
+      .executeTakeFirst();
+    return (r?.value as SetupTokenRecord | undefined) ?? null;
   }
   async setupPending(): Promise<boolean> {
     return setupTokenPending(await this.setupRecord());
@@ -286,11 +315,13 @@ export class Auth {
   async issueSetupToken(reason: string, out: (s: string) => void = (s) => process.stdout.write(s)) {
     const tok = generateSetupToken();
     const rec = await makeSetupTokenRecord(tok, reason);
-    await this.db.q(
-      `INSERT INTO settings(key, value) VALUES ('setup_token', $1)
-       ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`,
-      [rec],
-    );
+    await this.db.k
+      .insertInto('settings')
+      .values({ key: 'setup_token', value: JSON.stringify(rec) })
+      .onConflict((oc) =>
+        oc.column('key').doUpdateSet((eb) => ({ value: eb.ref('excluded.value'), updated_at: sql<Date>`now()` })),
+      )
+      .execute();
     await this.db.audit(null, null, 'setup.token_issued', '', { reason, expires: rec.expires });
     const expiry =
       new Date(rec.expires).toLocaleString('fr-FR', { timeZone: 'UTC', dateStyle: 'full', timeStyle: 'short' }) +
@@ -307,15 +338,22 @@ export class Auth {
 
   /** Vérifie et consomme le jeton dans la transaction « c » (le jeton est marqué utilisé, jamais supprimé). */
   async consumeSetupToken(tok: unknown, c: Client) {
-    const r = await c.query<{ value: SetupTokenRecord }>(
-      "SELECT value FROM settings WHERE key = 'setup_token' FOR UPDATE",
-    );
-    const rec = r.rows[0]?.value ?? null;
+    const k = surConnexion(c);
+    const r = await k
+      .selectFrom('settings')
+      .select('value')
+      .where('key', '=', 'setup_token')
+      .forUpdate()
+      .executeTakeFirst();
+    const rec = (r?.value as SetupTokenRecord | undefined) ?? null;
     const status = await checkSetupToken(tok, rec);
     if (status === 'ok') {
-      await c.query(
-        "UPDATE settings SET value = value || jsonb_build_object('usedAt', now()), updated_at = now() WHERE key = 'setup_token'",
-      );
+      // Jeton marqué utilisé (date ajoutée à l'enregistrement), jamais supprimé.
+      await k
+        .updateTable('settings')
+        .set({ value: sql<string>`value || jsonb_build_object('usedAt', now())`, updated_at: sql<Date>`now()` })
+        .where('key', '=', 'setup_token')
+        .execute();
     }
     return { status, reason: rec?.reason ?? null };
   }
