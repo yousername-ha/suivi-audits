@@ -10,7 +10,8 @@ import {
 } from '@suivi/shared';
 import { ZodError } from 'zod';
 import type { SessionUser } from '../auth.js';
-import type { Client } from '../db/db.js';
+import { sql } from 'kysely';
+import { surConnexion, type Client, type Kdb } from '../db/db.js';
 import { HttpError } from '../http/errors.js';
 import { hash, type Grc } from './core.js';
 import { trackerCandidates } from './library-tracker.js';
@@ -52,60 +53,116 @@ interface LibraryRow {
 
 const escapeLike = (s: string) => s.replace(/[\\%_]/g, (c) => '\\' + c);
 
+/** Version courante d'un référentiel de la bibliothèque, avec sa définition. */
+const avecVersionCourante = (k: Kdb) =>
+  k
+    .selectFrom('lib_frameworks as f')
+    .innerJoin('lib_framework_versions as v', (j) =>
+      j.onRef('v.framework_id', '=', 'f.id').onRef('v.version', '=', 'f.version'),
+    );
+/** Les définitions ne sont écrites qu'après validation (LibraryFrameworkDefinition) : relues telles quelles. */
+const definitionDe = <T extends { definition: unknown }>(r: T) =>
+  ({ ...r, definition: r.definition as FrameworkDefinition }) as Omit<T, 'definition'> & {
+    definition: FrameworkDefinition;
+  };
+
 export class GrcLibrary {
   constructor(private readonly g: Grc) {}
+  /** Kysely sur la transaction de l'appelant, sinon sur le pool. */
+  private k(c?: Client): Kdb {
+    return c ? surConnexion(c) : this.g.db.k;
+  }
+  private identifiantPris(k: Kdb, identifier: string) {
+    return k.selectFrom('lib_frameworks').select('id').where('identifier', '=', identifier).executeTakeFirst();
+  }
+  private rattache(k: Kdb, smsi: string, id: string) {
+    return k
+      .selectFrom('grc_scope_frameworks')
+      .select('version')
+      .where('smsi_id', '=', smsi)
+      .where('framework_id', '=', id);
+  }
+  private versionBibliotheque(k: Kdb, id: string, version: number) {
+    return k
+      .selectFrom('lib_framework_versions')
+      .select(['definition', 'version'])
+      .where('framework_id', '=', id)
+      .where('version', '=', version)
+      .executeTakeFirst()
+      .then((r) => (r ? definitionDe(r) : undefined));
+  }
+  /** Rattachements d'un périmètre (colonnes communes aux référentiels propres et hérités). */
+  private rattachements(k: Kdb, herite: boolean) {
+    return k
+      .selectFrom('grc_scope_frameworks as s')
+      .innerJoin('lib_frameworks as f', 'f.id', 's.framework_id')
+      .select([
+        's.framework_id as frameworkId',
+        'f.identifier',
+        'f.name',
+        's.version',
+        'f.version as latestVersion',
+        's.enabled',
+        's.attached_by as attachedBy',
+        's.attached_at as attachedAt',
+        sql<boolean>`${herite}::boolean`.as('inherited'),
+        's.smsi_id as originId',
+        sql<string | null>`NULL::text`.as('originName'),
+      ])
+      .orderBy('f.name')
+      .orderBy('f.id');
+  }
 
   async list(user: SessionUser): Promise<LibraryFramework[]> {
     await this.g.permission(user, 'conformite', 'lire');
-    return (
-      await this.g.db.q<LibraryFramework>(
-        `SELECT f.id,f.identifier,f.name,f.version,f.updated_at AS "updatedAt",v.definition->'source' AS source,
-                jsonb_array_length(v.definition->'requirements')::int AS requirements,
-                (SELECT count(*)::int FROM grc_scope_frameworks s WHERE s.framework_id=f.id) AS scopes,
-                NOT (v.definition ? 'derivedFrom') AS locked,v.definition->'derivedFrom' AS "derivedFrom"
-           FROM lib_frameworks f JOIN lib_framework_versions v ON v.framework_id=f.id AND v.version=f.version
-          ORDER BY f.name,f.id`,
-      )
-    ).rows;
+    // Dates renvoyées telles quelles (sérialisées en ISO par la réponse), comme avant la conversion.
+    return (await avecVersionCourante(this.g.db.k)
+      .select([
+        'f.id',
+        'f.identifier',
+        'f.name',
+        'f.version',
+        'f.updated_at as updatedAt',
+        sql<FrameworkDefinition['source']>`v.definition->'source'`.as('source'),
+        sql<number>`jsonb_array_length(v.definition->'requirements')::int`.as('requirements'),
+        (eb) =>
+          eb
+            .selectFrom('grc_scope_frameworks as s')
+            .select(sql<number>`count(*)::int`.as('n'))
+            .whereRef('s.framework_id', '=', 'f.id')
+            .as('scopes'),
+        sql<boolean>`NOT (v.definition ? 'derivedFrom')`.as('locked'),
+        sql<LibraryFramework['derivedFrom']>`v.definition->'derivedFrom'`.as('derivedFrom'),
+      ])
+      .orderBy('f.name')
+      .orderBy('f.id')
+      .execute()) as unknown as LibraryFramework[];
   }
 
   async version(id: string, version: number, user: SessionUser, c?: Client) {
     await this.g.permission(user, 'conformite', 'lire');
-    const row = (
-      await (c ?? this.g.db.pool).query<{ definition: FrameworkDefinition; version: number }>(
-        'SELECT definition,version FROM lib_framework_versions WHERE framework_id=$1 AND version=$2',
-        [id, version],
-      )
-    ).rows[0];
+    const row = await this.versionBibliotheque(this.k(c), id, version);
     if (!row) throw new HttpError(404, 'Version de la bibliothèque introuvable.');
     return row;
   }
 
   /** Définition d'une version d'un référentiel rattaché au périmètre, ou null si ce référentiel n'y est pas rattaché. */
   async versionForScope(smsi: string, id: string, version: number, user: SessionUser, c?: Client) {
-    const q = c ?? this.g.db.pool;
-    if (
-      !(await q.query('SELECT 1 FROM grc_scope_frameworks WHERE smsi_id=$1 AND framework_id=$2', [smsi, id])).rowCount
-    )
-      return null;
+    const k = this.k(c);
+    if (!(await this.rattache(k, smsi, id).executeTakeFirst())) return null;
     await this.g.access(smsi, user, false, c);
-    const row = (
-      await q.query<{ definition: FrameworkDefinition; version: number }>(
-        'SELECT definition,version FROM lib_framework_versions WHERE framework_id=$1 AND version=$2',
-        [id, version],
-      )
-    ).rows[0];
+    const row = await this.versionBibliotheque(k, id, version);
     if (!row) throw new HttpError(404, 'Version publiée introuvable.');
     return row;
   }
 
   private async current(id: string, c?: Client, lock = false) {
-    return (
-      await (c ?? this.g.db.pool).query<LibraryRow>(
-        `SELECT id,identifier,name,version FROM lib_frameworks WHERE id=$1${lock ? ' FOR UPDATE' : ''}`,
-        [id],
-      )
-    ).rows[0];
+    return (await this.k(c)
+      .selectFrom('lib_frameworks')
+      .select(['id', 'identifier', 'name', 'version'])
+      .where('id', '=', id)
+      .$if(lock, (q) => q.forUpdate())
+      .executeTakeFirst()) satisfies LibraryRow | undefined;
   }
 
   async preview(id: string | null, input: unknown, user: SessionUser) {
@@ -115,9 +172,7 @@ export class GrcLibrary {
     if (id && !existing) throw new HttpError(404, 'Référentiel de la bibliothèque introuvable.');
     if (existing && existing.identifier !== definition.identifier)
       throw new HttpError(422, 'L’identifiant d’un référentiel de la bibliothèque ne change pas entre deux versions.');
-    const duplicate =
-      !id &&
-      (await this.g.db.q('SELECT 1 FROM lib_frameworks WHERE identifier=$1', [definition.identifier])).rowCount! > 0;
+    const duplicate = !id && !!(await this.identifiantPris(this.g.db.k, definition.identifier));
     const version = existing?.version ?? 0;
     return {
       definition,
@@ -147,33 +202,33 @@ export class GrcLibrary {
     if (p.version !== expected) throw new HttpError(412, 'Version obsolète.');
     if (p.previewId !== previewId) throw new HttpError(422, 'Relancez la simulation.');
     if (!p.canPublish) throw new HttpError(409, 'Un référentiel de la bibliothèque porte déjà cet identifiant.');
-    return this.g.db.tx(async (c) => {
+    return this.g.db.tx(async (c, k) => {
       let frameworkId = id;
       let version = 1;
       if (id) {
         const locked = await this.current(id, c, true);
         if (!locked || locked.version !== expected) throw new HttpError(412, 'Le référentiel a changé.');
         version = locked.version + 1;
-        await c.query('UPDATE lib_frameworks SET name=$2,version=$3,updated_by=$4,updated_at=now() WHERE id=$1', [
-          id,
-          p.definition.name,
-          version,
-          user.username,
-        ]);
+        await k
+          .updateTable('lib_frameworks')
+          .set({ name: p.definition.name, version, updated_by: user.username, updated_at: sql<Date>`now()` })
+          .where('id', '=', id)
+          .execute();
       } else {
-        if ((await c.query('SELECT 1 FROM lib_frameworks WHERE identifier=$1', [p.definition.identifier])).rowCount)
+        if (await this.identifiantPris(k, p.definition.identifier))
           throw new HttpError(409, 'Un référentiel de la bibliothèque porte déjà cet identifiant.');
-        frameworkId = (
-          await c.query<{ id: string }>(
-            'INSERT INTO lib_frameworks(identifier,name,version,created_by,updated_by) VALUES($1,$2,1,$3,$3) RETURNING id',
-            [p.definition.identifier, p.definition.name, user.username],
-          )
-        ).rows[0]!.id;
+        frameworkId = await this.creer(k, p.definition, user.username);
       }
-      await c.query(
-        'INSERT INTO lib_framework_versions(framework_id,version,definition,reason,created_by) VALUES($1,$2,$3,$4,$5)',
-        [frameworkId, version, p.definition, reason, user.username],
-      );
+      await k
+        .insertInto('lib_framework_versions')
+        .values({
+          framework_id: frameworkId!,
+          version,
+          definition: JSON.stringify(p.definition),
+          reason,
+          created_by: user.username,
+        })
+        .execute();
       await this.g.db.audit(
         user,
         ip,
@@ -186,24 +241,34 @@ export class GrcLibrary {
     }, user.username);
   }
 
+  /** Nouveau référentiel de la bibliothèque, en version 1. */
+  private async creer(k: Kdb, definition: { identifier: string; name: string }, auteur: string) {
+    return (
+      await k
+        .insertInto('lib_frameworks')
+        .values({
+          identifier: definition.identifier,
+          name: definition.name,
+          version: 1,
+          created_by: auteur,
+          updated_by: auteur,
+        })
+        .returning('id')
+        .executeTakeFirstOrThrow()
+    ).id;
+  }
   /** Crée une copie personnalisable d'un référentiel de la bibliothèque (version courante). L'original reste verrouillé. */
   async copy(id: string, body: LibraryCopyBody, user: SessionUser, ip: string) {
     await this.g.permission(user, 'conformite', 'modifier');
-    const row = (
-      await this.g.db.q<{ definition: FrameworkDefinition; version: number; name: string }>(
-        `SELECT v.definition,f.version,f.name FROM lib_frameworks f
-           JOIN lib_framework_versions v ON v.framework_id=f.id AND v.version=f.version WHERE f.id=$1`,
-        [id],
-      )
-    ).rows[0];
-    if (!row) throw new HttpError(404, 'Référentiel de la bibliothèque introuvable.');
+    const r = await avecVersionCourante(this.g.db.k)
+      .select(['v.definition', 'f.version', 'f.name'])
+      .where('f.id', '=', id)
+      .executeTakeFirst();
+    if (!r) throw new HttpError(404, 'Référentiel de la bibliothèque introuvable.');
+    const row = definitionDe(r);
     const base = body.identifier ?? `${row.definition.identifier}-copie`;
     let identifier = base;
-    for (
-      let n = 2;
-      (await this.g.db.q('SELECT 1 FROM lib_frameworks WHERE identifier=$1', [identifier])).rowCount;
-      n++
-    ) {
+    for (let n = 2; await this.identifiantPris(this.g.db.k, identifier); n++) {
       if (body.identifier) throw new HttpError(409, 'Un référentiel de la bibliothèque porte déjà cet identifiant.');
       identifier = `${base}-${n}`;
     }
@@ -240,14 +305,12 @@ export class GrcLibrary {
       est verrouillée : il faut d'abord en créer une copie. */
   async upsertRequirement(id: string, body: LibraryRequirementBody, user: SessionUser, ip: string) {
     await this.g.permission(user, 'conformite', 'modifier');
-    const row = (
-      await this.g.db.q<{ definition: FrameworkDefinition; version: number }>(
-        `SELECT v.definition,f.version FROM lib_frameworks f
-           JOIN lib_framework_versions v ON v.framework_id=f.id AND v.version=f.version WHERE f.id=$1`,
-        [id],
-      )
-    ).rows[0];
-    if (!row) throw new HttpError(404, 'Référentiel de la bibliothèque introuvable.');
+    const r = await avecVersionCourante(this.g.db.k)
+      .select(['v.definition', 'f.version'])
+      .where('f.id', '=', id)
+      .executeTakeFirst();
+    if (!r) throw new HttpError(404, 'Référentiel de la bibliothèque introuvable.');
+    const row = definitionDe(r);
     if (!row.definition.derivedFrom)
       throw new HttpError(422, 'Version source verrouillée : créez une copie pour la personnaliser.');
     if (row.version !== body.expectedVersion) throw new HttpError(412, 'Version obsolète.');
@@ -335,12 +398,11 @@ export class GrcLibrary {
     if (!p) throw new HttpError(404, 'Standard introuvable dans l’outil de suivi.');
     if (p.error) throw new HttpError(422, `Standard non repris : ${p.error}`);
     if (p.duplicate) {
-      const existing = (
-        await this.g.db.q<{ id: string; name: string; version: number }>(
-          'SELECT id,name,version FROM lib_frameworks WHERE identifier=$1',
-          [identifier],
-        )
-      ).rows[0]!;
+      const existing = await this.g.db.k
+        .selectFrom('lib_frameworks')
+        .select(['id', 'name', 'version'])
+        .where('identifier', '=', identifier)
+        .executeTakeFirstOrThrow();
       return { id: existing.id, identifier, name: existing.name, version: existing.version, created: false };
     }
     return {
@@ -360,52 +422,47 @@ export class GrcLibrary {
   async attachments(smsi: string, user: SessionUser): Promise<ScopeAttachment[]> {
     await this.g.permission(user, 'conformite', 'lire');
     await this.g.access(smsi, user);
-    const propres = (
-      await this.g.db.q<ScopeAttachment>(
-        `SELECT s.framework_id AS "frameworkId",f.identifier,f.name,s.version,f.version AS "latestVersion",s.enabled,
-                s.attached_by AS "attachedBy",s.attached_at AS "attachedAt",false AS inherited,s.smsi_id AS "originId",NULL::text AS "originName"
-           FROM grc_scope_frameworks s JOIN lib_frameworks f ON f.id=s.framework_id
-          WHERE s.smsi_id=$1 ORDER BY f.name,f.id`,
-        [smsi],
-      )
-    ).rows;
+    // Dates renvoyées telles quelles (sérialisées en ISO par la réponse), comme avant la conversion.
+    const propres = (await this.rattachements(this.g.db.k, false)
+      .where('s.smsi_id', '=', smsi)
+      .execute()) as unknown as ScopeAttachment[];
     const heritees = (await this.g.effectiveFrameworks(smsi)).filter((e) => e.origineId !== smsi);
     if (!heritees.length) return propres;
     const origines = new Map<string, string | null>();
     for (const o of new Set(heritees.map((h) => h.origineId)))
       origines.set(o, (await this.g.visible(user, o)) ? (await this.g.access(o, user)).name : null);
-    const rows = (
-      await this.g.db.q<ScopeAttachment & { origine: string }>(
-        `SELECT s.framework_id AS "frameworkId",f.identifier,f.name,s.version,f.version AS "latestVersion",s.enabled,
-                s.attached_by AS "attachedBy",s.attached_at AS "attachedAt",true AS inherited,s.smsi_id AS "originId",NULL::text AS "originName"
-           FROM grc_scope_frameworks s JOIN lib_frameworks f ON f.id=s.framework_id
-           JOIN unnest($1::uuid[],$2::uuid[]) AS h(framework_id,origine) ON h.framework_id=s.framework_id AND h.origine=s.smsi_id
-          ORDER BY f.name,f.id`,
-        [heritees.map((h) => h.frameworkId), heritees.map((h) => h.origineId)],
+    // Couples (référentiel, périmètre porteur) : un seul par référentiel (effectiveFrameworks), donc aucun doublon.
+    const rows = (await this.rattachements(this.g.db.k, true)
+      .where((eb) =>
+        eb.or(
+          heritees.map((h) => eb.and([eb('s.framework_id', '=', h.frameworkId), eb('s.smsi_id', '=', h.origineId)])),
+        ),
       )
-    ).rows;
+      .execute()) as unknown as ScopeAttachment[];
     return [...propres, ...rows.map((r) => ({ ...r, originName: origines.get(r.originId) ?? null }))];
   }
 
+  private async verrouillerPerimetre(k: Kdb, smsi: string) {
+    await k.selectFrom('grc_smsis').select('id').where('id', '=', smsi).forUpdate().execute();
+  }
   /** Rattache (ou change la version rattachée de) un référentiel de la bibliothèque à un périmètre. */
   async attach(smsi: string, id: string, version: number, user: SessionUser, ip: string) {
     await this.g.permission(user, 'pilotage', 'administrer');
     await this.g.access(smsi, user, true);
     await this.version(id, version, user);
-    await this.g.db.tx(async (c) => {
-      await c.query('SELECT id FROM grc_smsis WHERE id=$1 FOR UPDATE', [smsi]);
+    await this.g.db.tx(async (c, k) => {
+      await this.verrouillerPerimetre(k, smsi);
       await this.g.access(smsi, user, true, c);
-      const previous = (
-        await c.query<{ version: number }>(
-          'SELECT version FROM grc_scope_frameworks WHERE smsi_id=$1 AND framework_id=$2',
-          [smsi, id],
+      const previous = await this.rattache(k, smsi, id).executeTakeFirst();
+      await k
+        .insertInto('grc_scope_frameworks')
+        .values({ smsi_id: smsi, framework_id: id, version, attached_by: user.username })
+        .onConflict((oc) =>
+          oc
+            .columns(['smsi_id', 'framework_id'])
+            .doUpdateSet({ version, attached_by: user.username, attached_at: sql<Date>`now()` }),
         )
-      ).rows[0];
-      await c.query(
-        `INSERT INTO grc_scope_frameworks(smsi_id,framework_id,version,attached_by) VALUES($1,$2,$3,$4)
-         ON CONFLICT(smsi_id,framework_id) DO UPDATE SET version=$3,attached_by=$4,attached_at=now()`,
-        [smsi, id, version, user.username],
-      );
+        .execute();
       await this.g.db.audit(
         user,
         ip,
@@ -424,13 +481,14 @@ export class GrcLibrary {
   async setEnabled(smsi: string, id: string, enabled: boolean, user: SessionUser, ip: string) {
     await this.g.permission(user, 'pilotage', 'administrer');
     await this.g.access(smsi, user, true);
-    await this.g.db.tx(async (c) => {
-      const r = await c.query('UPDATE grc_scope_frameworks SET enabled=$3 WHERE smsi_id=$1 AND framework_id=$2', [
-        smsi,
-        id,
-        enabled,
-      ]);
-      if (!r.rowCount) throw new HttpError(404, 'Référentiel non rattaché à ce périmètre.');
+    await this.g.db.tx(async (c, k) => {
+      const r = await k
+        .updateTable('grc_scope_frameworks')
+        .set({ enabled })
+        .where('smsi_id', '=', smsi)
+        .where('framework_id', '=', id)
+        .executeTakeFirst();
+      if (!Number(r.numUpdatedRows)) throw new HttpError(404, 'Référentiel non rattaché à ce périmètre.');
       await this.g.db.audit(user, ip, 'library.framework.enabled', smsi, { frameworkId: id, enabled }, c);
       await this.g.notify(c, smsi, 0, smsi, 'conformite', user.username);
       await this.g.resynchroniser(smsi, c);
@@ -442,31 +500,32 @@ export class GrcLibrary {
   async detach(smsi: string, id: string, user: SessionUser, ip: string) {
     await this.g.permission(user, 'pilotage', 'administrer');
     await this.g.access(smsi, user, true);
-    await this.g.db.tx(async (c) => {
-      await c.query('SELECT id FROM grc_smsis WHERE id=$1 FOR UPDATE', [smsi]);
-      if (
-        !(await c.query('SELECT 1 FROM grc_scope_frameworks WHERE smsi_id=$1 AND framework_id=$2', [smsi, id])).rowCount
-      )
+    await this.g.db.tx(async (c, k) => {
+      await this.verrouillerPerimetre(k, smsi);
+      if (!(await this.rattache(k, smsi, id).executeTakeFirst()))
         throw new HttpError(404, 'Référentiel non rattaché à ce périmètre.');
       const ref = `%requirement:${escapeLike(id)}:%`;
-      const links = (
-        await c.query<{ n: number }>(
-          'SELECT count(*)::int AS n FROM grc_links WHERE smsi_id=$1 AND (target_ref LIKE $2 OR source_ref LIKE $2)',
-          [smsi, ref],
-        )
-      ).rows[0]!.n;
-      const objects = (
-        await c.query<{ n: number }>(
-          `SELECT count(*)::int AS n FROM grc_objects WHERE smsi_id=$1 AND NOT archived AND (data::text LIKE $2 OR data::text LIKE $3)`,
-          [smsi, ref, `%"frameworkId":"${escapeLike(id)}"%`],
-        )
-      ).rows[0]!.n;
+      const n = sql<number>`count(*)::int`.as('n');
+      const { n: links } = await k
+        .selectFrom('grc_links')
+        .select(n)
+        .where('smsi_id', '=', smsi)
+        .where((eb) => eb.or([eb('target_ref', 'like', ref), eb('source_ref', 'like', ref)]))
+        .executeTakeFirstOrThrow();
+      const texte = sql<string>`data::text`;
+      const { n: objects } = await k
+        .selectFrom('grc_objects')
+        .select(n)
+        .where('smsi_id', '=', smsi)
+        .where('archived', '=', false)
+        .where((eb) => eb.or([eb(texte, 'like', ref), eb(texte, 'like', `%"frameworkId":"${escapeLike(id)}"%`)]))
+        .executeTakeFirstOrThrow();
       if (links + objects)
         throw new HttpError(
           409,
           `Ce référentiel est utilisé dans le périmètre (${links} lien(s), ${objects} objet(s)) : retirez d’abord ces références.`,
         );
-      await c.query('DELETE FROM grc_scope_frameworks WHERE smsi_id=$1 AND framework_id=$2', [smsi, id]);
+      await k.deleteFrom('grc_scope_frameworks').where('smsi_id', '=', smsi).where('framework_id', '=', id).execute();
       await this.g.db.audit(user, ip, 'library.framework.detached', smsi, { frameworkId: id }, c);
       await this.g.notify(c, smsi, 0, smsi, 'conformite', user.username);
       await this.g.resynchroniser(smsi, c);
@@ -479,32 +538,31 @@ export class GrcLibrary {
     await this.g.permission(user, 'conformite', 'modifier');
     const o = await this.g.object(smsi, id, user, false, c);
     if (o.kind !== 'framework') throw new HttpError(422, 'Référentiel attendu.');
-    const row = (
-      await (c ?? this.g.db.pool).query<{ definition: FrameworkDefinition }>(
-        'SELECT definition FROM grc_framework_versions WHERE framework_id=$1 AND version=$2 AND smsi_id=$3',
-        [id, o.version, smsi],
-      )
-    ).rows[0];
-    if (!row) throw new HttpError(404, 'Version publiée introuvable.');
+    const k = this.k(c);
+    const r = await k
+      .selectFrom('grc_framework_versions')
+      .select('definition')
+      .where('framework_id', '=', id)
+      .where('version', '=', o.version)
+      .where('smsi_id', '=', smsi)
+      .executeTakeFirst();
+    if (!r) throw new HttpError(404, 'Version publiée introuvable.');
+    const row = definitionDe(r);
     const droppedMeasureRefs = row.definition.requirements.reduce((n, r) => n + r.measureRefs.length, 0);
     const definition = LibraryFrameworkDefinition.parse({
       ...row.definition,
       requirements: row.definition.requirements.map((r) => ({ ...r, measureRefs: [] })),
     });
-    const q = c ?? this.g.db.pool;
-    const alreadyPromoted =
-      (
-        await q.query('SELECT 1 FROM lib_framework_promotions WHERE source_framework_id=$1 AND source_version=$2', [
-          id,
-          o.version,
-        ])
-      ).rowCount! > 0;
-    const inLibrary = (
-      await q.query<{ id: string; version: number; definition: FrameworkDefinition }>(
-        `SELECT f.id,f.version,v.definition FROM lib_frameworks f JOIN lib_framework_versions v ON v.framework_id=f.id AND v.version=f.version WHERE f.identifier=$1`,
-        [definition.identifier],
-      )
-    ).rows[0];
+    const alreadyPromoted = !!(await k
+      .selectFrom('lib_framework_promotions')
+      .select('source_version')
+      .where('source_framework_id', '=', id)
+      .where('source_version', '=', o.version)
+      .executeTakeFirst());
+    const inLibrary = await avecVersionCourante(k)
+      .select(['f.id', 'f.version', 'v.definition'])
+      .where('f.identifier', '=', definition.identifier)
+      .executeTakeFirst();
     return {
       sourceVersion: o.version,
       definition,
@@ -530,35 +588,45 @@ export class GrcLibrary {
           : 'Un référentiel de la bibliothèque porte déjà cet identifiant : rattachez-le au périmètre.',
       );
     await this.g.permission(user, 'pilotage', 'administrer');
-    return this.g.db.tx(async (c) => {
-      await c.query('SELECT id FROM grc_smsis WHERE id=$1 FOR UPDATE', [smsi]);
+    return this.g.db.tx(async (c, k) => {
+      await this.verrouillerPerimetre(k, smsi);
       const again = await this.promotionPreview(smsi, id, user, c);
       if (again.previewId !== previewId || !again.canPromote)
         throw new HttpError(409, 'Simulation obsolète : relancez-la.');
       const o = await this.g.object(smsi, id, user, true, c);
-      const libraryId = (
-        await c.query<{ id: string }>(
-          'INSERT INTO lib_frameworks(identifier,name,version,created_by,updated_by) VALUES($1,$2,1,$3,$3) RETURNING id',
-          [again.definition.identifier, again.definition.name, user.username],
-        )
-      ).rows[0]!.id;
-      await c.query(
-        'INSERT INTO lib_framework_versions(framework_id,version,definition,reason,created_by) VALUES($1,1,$2,$3,$4)',
-        [
-          libraryId,
-          again.definition,
-          `Promu depuis le périmètre « ${(await this.g.access(smsi, user, false, c)).name} » (version ${again.sourceVersion})`,
-          user.username,
-        ],
-      );
-      await c.query(
-        'INSERT INTO lib_framework_promotions(source_framework_id,source_version,smsi_id,library_framework_id,library_version,promoted_by) VALUES($1,$2,$3,$4,1,$5)',
-        [id, again.sourceVersion, smsi, libraryId, user.username],
-      );
-      await c.query(
-        'INSERT INTO grc_scope_frameworks(smsi_id,framework_id,version,enabled,attached_by) VALUES($1,$2,1,$3,$4)',
-        [smsi, libraryId, o.data.enabled !== false, user.username],
-      );
+      const libraryId = await this.creer(k, again.definition, user.username);
+      const perimetre = (await this.g.access(smsi, user, false, c)).name;
+      await k
+        .insertInto('lib_framework_versions')
+        .values({
+          framework_id: libraryId,
+          version: 1,
+          definition: JSON.stringify(again.definition),
+          reason: `Promu depuis le périmètre « ${perimetre} » (version ${again.sourceVersion})`,
+          created_by: user.username,
+        })
+        .execute();
+      await k
+        .insertInto('lib_framework_promotions')
+        .values({
+          source_framework_id: id,
+          source_version: again.sourceVersion,
+          smsi_id: smsi,
+          library_framework_id: libraryId,
+          library_version: 1,
+          promoted_by: user.username,
+        })
+        .execute();
+      await k
+        .insertInto('grc_scope_frameworks')
+        .values({
+          smsi_id: smsi,
+          framework_id: libraryId,
+          version: 1,
+          enabled: o.data.enabled !== false,
+          attached_by: user.username,
+        })
+        .execute();
       await this.g.db.audit(
         user,
         ip,
