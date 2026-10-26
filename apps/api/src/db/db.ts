@@ -22,8 +22,9 @@ export interface Actor {
 export const MIGRATIONS_DIR = path.join(APP_ROOT, 'migrations');
 const MIGRATION_LOCK = 727274; // même verrou consultatif que la v2
 
-/** Kysely lié à une connexion déjà ouverte (transaction en cours) : la connexion n'est jamais rendue par Kysely. */
-function surConnexion(c: Client): Kdb {
+/** Kysely lié à une connexion déjà ouverte (transaction en cours) ou au pool : la connexion n'est jamais rendue par
+    Kysely. Sert aux fonctions qui reçoivent un client de leur appelant (même transaction). */
+export function surConnexion(c: Pick<Client, 'query'>): Kdb {
   const connexion = { query: c.query.bind(c), release: () => {} } as unknown as pg.PoolClient;
   const pool = { connect: async () => connexion, end: async () => {} } as unknown as pg.Pool;
   return new Kysely<DB>({ dialect: new PostgresDialect({ pool }) });
