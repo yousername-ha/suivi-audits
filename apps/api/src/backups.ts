@@ -4,9 +4,11 @@ import path from 'node:path';
 import { BackupJobOut, BackupReportOut } from '@suivi/shared';
 import { z } from 'zod';
 import type { Config } from './config.js';
+import { sql, type Selectable } from 'kysely';
 import type { Actor, Client, Db } from './db/db.js';
+import type { BackupJobs } from './db/types.generated.js';
 import { HttpError } from './http/errors.js';
-import { readHost } from './operations.js';
+import { exploitationOccupee, readHost } from './operations.js';
 
 const LOCK = 727275;
 const UUID = z.string().uuid();
@@ -23,6 +25,8 @@ interface Row {
   report: BackupJobOut['report'];
   message: string;
 }
+/** Rapport écrit par finish() après validation (BackupReportOut) : relu tel quel. */
+const ligne = (r: Selectable<BackupJobs>): Row => ({ ...r, report: r.report as BackupJobOut['report'] });
 const out = (r: Row): BackupJobOut =>
   BackupJobOut.parse({
     id: r.id,
@@ -40,68 +44,82 @@ export class Backups {
     private readonly cfg: Config,
     private readonly db: Db,
   ) {}
+  // Verrou consultatif transactionnel partagé avec les opérations : appel SQL direct (ADR 0062 §5).
   private async lock(c: Client) {
     await c.query('SELECT pg_advisory_xact_lock($1)', [LOCK]);
   }
   async list() {
-    const w = await this.db.one<{ seen_at: Date; ready: boolean; message: string }>(
-      'SELECT * FROM backup_worker WHERE id=1',
-    );
+    const w = await this.db.k.selectFrom('backup_worker').selectAll().where('id', '=', 1).executeTakeFirst();
     return {
       worker: {
         available: !!w?.ready && Date.now() - w.seen_at.getTime() < IDLE_MS,
         seenAt: w?.seen_at.toISOString() ?? null,
         message: w ? w.message : 'Exécutant serveur non configuré.',
       },
-      jobs: (await this.db.q<Row>('SELECT * FROM backup_jobs ORDER BY created_at DESC, id LIMIT 50')).rows.map(out),
+      jobs: (
+        await this.db.k
+          .selectFrom('backup_jobs')
+          .selectAll()
+          .orderBy('created_at', 'desc')
+          .orderBy('id')
+          .limit(50)
+          .execute()
+      )
+        .map(ligne)
+        .map(out),
     };
   }
   async request(requestId: string, actor: Actor, ip: string) {
-    return this.db.tx(async (c) => {
+    return this.db.tx(async (c, k) => {
       await this.lock(c);
-      const existing = (await c.query<Row>('SELECT * FROM backup_jobs WHERE request_id=$1', [requestId])).rows[0];
+      const existing = await k
+        .selectFrom('backup_jobs')
+        .selectAll()
+        .where('request_id', '=', requestId)
+        .executeTakeFirst();
       if (existing) {
         if (existing.requested_by !== actor.username) throw new HttpError(409, 'Identifiant de requête déjà utilisé.');
-        return out(existing);
+        return out(ligne(existing));
       }
-      const w = (
-        await c.query("SELECT 1 FROM backup_worker WHERE id=1 AND ready AND seen_at > now() - interval '120 seconds'")
-      ).rowCount;
+      const w = await k
+        .selectFrom('backup_worker')
+        .select('id')
+        .where('id', '=', 1)
+        .where('ready', '=', true)
+        .where('seen_at', '>', sql<Date>`now() - interval '120 seconds'`)
+        .executeTakeFirst();
       if (!w) throw new HttpError(503, 'Exécutant serveur indisponible. Vérifiez sa configuration.');
       if (
         readHost(this.cfg)?.jobs.some((j) => ['en_cours', 'intervention'].includes(j.status)) ||
-        (
-          await c.query(
-            "SELECT 1 FROM backup_jobs WHERE status IN ('en_attente','en_cours') UNION ALL SELECT 1 FROM operation_jobs WHERE status IN ('en_attente','en_cours','intervention')",
-          )
-        ).rowCount
+        (await exploitationOccupee(k, ['en_attente', 'en_cours', 'intervention'], ['en_attente', 'en_cours']))
       )
         throw new HttpError(409, 'Une sauvegarde est déjà en attente ou en cours.');
-      const r = (
-        await c.query<Row>('INSERT INTO backup_jobs(request_id,requested_by) VALUES ($1,$2) RETURNING *', [
-          requestId,
-          actor.username,
-        ])
-      ).rows[0]!;
+      const r = ligne(
+        await k
+          .insertInto('backup_jobs')
+          .values({ request_id: requestId, requested_by: actor.username })
+          .returningAll()
+          .executeTakeFirstOrThrow(),
+      );
       await this.db.audit(actor, ip, 'backup.request', r.id, {}, c);
       return out(r);
     });
   }
   async cancel(id: string, version: number, actor: Actor, ip: string) {
-    return this.db.tx(async (c) => {
+    return this.db.tx(async (c, k) => {
       await this.lock(c);
-      const r = (await c.query<Row>('SELECT * FROM backup_jobs WHERE id=$1 FOR UPDATE', [id])).rows[0];
+      const r = await k.selectFrom('backup_jobs').selectAll().where('id', '=', id).forUpdate().executeTakeFirst();
       if (!r) throw new HttpError(404, 'Demande introuvable.');
       if (r.version !== version) throw new HttpError(412, 'La demande a changé. Rechargez son état.');
       if (r.status !== 'en_attente') throw new HttpError(409, 'Seule une demande en attente peut être annulée.');
-      const changed = (
-        await c.query<Row>(
-          "UPDATE backup_jobs SET status='annulee',finished_at=now(),version=version+1 WHERE id=$1 RETURNING *",
-          [id],
-        )
-      ).rows[0]!;
+      const changed = await k
+        .updateTable('backup_jobs')
+        .set((eb) => ({ status: 'annulee', finished_at: sql<Date>`now()`, version: eb('version', '+', 1) }))
+        .where('id', '=', id)
+        .returningAll()
+        .executeTakeFirstOrThrow();
       await this.db.audit(actor, ip, 'backup.cancel', id, {}, c);
-      return out(changed);
+      return out(ligne(changed));
     });
   }
   /** CLI hôte : un créneau refusé devient un échec consultable, jamais une tâche cachée à rejouer. */
@@ -111,56 +129,82 @@ export class Backups {
       return await this.request(requestId, actor, '127.0.0.1');
     } catch (e) {
       if (!(e instanceof HttpError) || ![409, 503].includes(e.status)) throw e;
-      return this.db.tx(async (c) => {
+      return this.db.tx(async (c, k) => {
         await this.lock(c);
-        const existing = (await c.query<Row>('SELECT * FROM backup_jobs WHERE request_id=$1', [requestId])).rows[0];
+        const existing = await k
+          .selectFrom('backup_jobs')
+          .selectAll()
+          .where('request_id', '=', requestId)
+          .executeTakeFirst();
         if (existing) {
           if (existing.requested_by !== actor.username) throw e;
-          return out(existing);
+          return out(ligne(existing));
         }
-        const r = (
-          await c.query<Row>(
-            "INSERT INTO backup_jobs(request_id,requested_by,status,finished_at,message) VALUES ($1,$2,'echec',now(),'Créneau manqué : opération active ou exécutant indisponible. Aucune relance automatique.') RETURNING *",
-            [requestId, actor.username],
-          )
-        ).rows[0]!;
+        const r = ligne(
+          await k
+            .insertInto('backup_jobs')
+            .values({
+              request_id: requestId,
+              requested_by: actor.username,
+              status: 'echec',
+              finished_at: sql<Date>`now()`,
+              message: 'Créneau manqué : opération active ou exécutant indisponible. Aucune relance automatique.',
+            })
+            .returningAll()
+            .executeTakeFirstOrThrow(),
+        );
         await this.db.audit(actor, null, 'backup.schedule_failed', r.id, {}, c);
         return out(r);
       });
     }
   }
   async heartbeat(ready: boolean) {
-    await this.db.q(
-      'INSERT INTO backup_worker(id,seen_at,ready,message) VALUES (1,now(),$1,$2) ON CONFLICT(id) DO UPDATE SET seen_at=excluded.seen_at,ready=excluded.ready,message=excluded.message',
-      [
+    await this.db.k
+      .insertInto('backup_worker')
+      .values({
+        id: 1,
+        seen_at: sql<Date>`now()`,
         ready,
-        ready
+        message: ready
           ? 'Exécutant serveur prêt ; chiffrement obligatoire.'
           : 'Configuration serveur incomplète : destination ou clé indisponible.',
-      ],
-    );
+      })
+      .onConflict((oc) =>
+        oc.column('id').doUpdateSet((eb) => ({
+          seen_at: eb.ref('excluded.seen_at'),
+          ready: eb.ref('excluded.ready'),
+          message: eb.ref('excluded.message'),
+        })),
+      )
+      .execute();
   }
   /** Appelé uniquement après prise du verrou local du worker. Aucun retry automatique d'une tâche interrompue. */
   async claim() {
-    return this.db.tx(async (c) => {
+    return this.db.tx(async (c, k) => {
       await this.lock(c);
-      if (
-        (await c.query("SELECT 1 FROM operation_jobs WHERE status IN ('en_attente','en_cours','intervention')"))
-          .rowCount
-      )
-        return null;
-      const broken = (
-        await c.query<Row>(
-          "UPDATE backup_jobs SET status='echec',finished_at=now(),version=version+1,message='Exécutant interrompu ; aucune relance automatique.' WHERE status='en_cours' RETURNING *",
-        )
-      ).rows;
+      if (await exploitationOccupee(k, ['en_attente', 'en_cours', 'intervention'], [])) return null;
+      const broken = await k
+        .updateTable('backup_jobs')
+        .set((eb) => ({
+          status: 'echec',
+          finished_at: sql<Date>`now()`,
+          version: eb('version', '+', 1),
+          message: 'Exécutant interrompu ; aucune relance automatique.',
+        }))
+        .where('status', '=', 'en_cours')
+        .returning('id')
+        .execute();
       for (const r of broken)
         await this.db.audit({ username: 'exécutant sauvegardes' }, null, 'backup.interrupted', r.id, {}, c);
-      const r = (
-        await c.query<Row>(
-          "UPDATE backup_jobs SET status='en_cours',started_at=now(),version=version+1 WHERE id=(SELECT id FROM backup_jobs WHERE status='en_attente' ORDER BY created_at LIMIT 1) RETURNING *",
+      // La plus ancienne demande en attente, prise sous le verrou consultatif : une seule à la fois.
+      const r = await k
+        .updateTable('backup_jobs')
+        .set((eb) => ({ status: 'en_cours', started_at: sql<Date>`now()`, version: eb('version', '+', 1) }))
+        .where('id', '=', (eb) =>
+          eb.selectFrom('backup_jobs').select('id').where('status', '=', 'en_attente').orderBy('created_at').limit(1),
         )
-      ).rows[0];
+        .returning('id')
+        .executeTakeFirst();
       if (r) await this.db.audit({ username: 'exécutant sauvegardes' }, null, 'backup.start', r.id, {}, c);
       return r?.id ?? null;
     });
@@ -190,24 +234,27 @@ export class Backups {
         report = null;
       }
     }
-    return this.db.tx(async (c) => {
+    return this.db.tx(async (c, k) => {
       await this.lock(c);
-      const r = (
-        await c.query<Row>(
-          "UPDATE backup_jobs SET status=$2,finished_at=now(),version=version+1,report=$3,message=$4 WHERE id=$1 AND status='en_cours' RETURNING *",
-          [
-            id,
-            report ? 'reussie' : 'echec',
-            report,
-            report
-              ? ''
-              : code
-                ? `Exécutant en échec (code ${code}).`
-                : 'Rapport absent, incohérent ou contrôle d’intégrité incomplet.',
-          ],
-        )
-      ).rows[0];
-      if (!r) throw new HttpError(409, 'Cette demande n’est pas en cours.');
+      const fini = await k
+        .updateTable('backup_jobs')
+        .set((eb) => ({
+          status: report ? 'reussie' : 'echec',
+          finished_at: sql<Date>`now()`,
+          version: eb('version', '+', 1),
+          report: report ? JSON.stringify(report) : null,
+          message: report
+            ? ''
+            : code
+              ? `Exécutant en échec (code ${code}).`
+              : 'Rapport absent, incohérent ou contrôle d’intégrité incomplet.',
+        }))
+        .where('id', '=', id)
+        .where('status', '=', 'en_cours')
+        .returningAll()
+        .executeTakeFirst();
+      if (!fini) throw new HttpError(409, 'Cette demande n’est pas en cours.');
+      const r = ligne(fini);
       await this.db.audit(
         { username: 'exécutant sauvegardes' },
         null,
