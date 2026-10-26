@@ -119,7 +119,11 @@ async function main() {
       break;
     }
     case 'mail-finish': {
-      await svc.courriel.terminer(arg ?? '', JSON.parse(await readStdin()));
+      await svc.courriel.terminer(
+        arg ?? '',
+        JSON.parse(await readStdin()),
+        (await svc.settings.read('courriel')).values as SettingsValues['courriel'],
+      );
       break;
     }
     case 'ops-policy': {

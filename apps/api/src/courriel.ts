@@ -28,6 +28,7 @@ interface Ligne {
   result: { steps?: TestCourrielDto['steps']; error?: string | null } | null;
   created_at: Date;
   finished_at: Date | null;
+  attempts: number;
 }
 const dto = (r: Ligne): TestCourrielDto => ({
   id: r.id,
@@ -46,8 +47,14 @@ export const RapportCourriel = z
       .array(z.object({ step: z.string().max(80), ok: z.boolean(), detail: z.string().max(400) }).strict())
       .max(20),
     error: z.string().max(600).nullable(),
+    /** Échec qu'aucune relance ne peut corriger (destinataire refusé par le serveur) : la demande n'est pas remise en file. */
+    permanent: z.boolean().optional(),
   })
   .strict();
+
+type Relance = Pick<SettingsValues['courriel'], 'relanceEssais' | 'relanceDelaiMinutes'>;
+/** Délai de la relance après le n-ième essai : délai de base, doublé à chaque échec, plafonné à 24 h (SQL, en minutes). */
+const DELAI_RELANCE_SQL = `LEAST(1440, $1::int * power(2, GREATEST(attempts - 1, 0)))`;
 
 export class Courriel {
   constructor(
@@ -151,9 +158,19 @@ export class Courriel {
     for (let essai = 0; essai < 50; essai++) {
       const r = await this.db.tx(async (cl) => {
         await cl.query('SELECT pg_advisory_xact_lock(727277)');
+        // Une notification interrompue (exécutant arrêté en cours d'envoi) est remise en file tant qu'il reste des essais ; le
+        // message de test, lancé à la main, est simplement clos.
+        await cl.query(
+          `UPDATE courriel_jobs SET status='en_attente',started_at=NULL,
+                  next_attempt_at = now() + (${DELAI_RELANCE_SQL} * interval '1 minute'),
+                  result=jsonb_build_object('steps','[]'::jsonb,'error','Exécutant interrompu : nouvel essai programmé.')
+            WHERE kind='notification' AND status = 'en_cours' AND attempts < $2::int
+              AND started_at < now() - ($3::int * interval '1 millisecond')`,
+          [c.relanceDelaiMinutes, c.relanceEssais, DELAI_ABANDON_MS],
+        );
         await cl.query(
           `UPDATE courriel_jobs SET status='echec',finished_at=now(),
-                  result=jsonb_build_object('steps','[]'::jsonb,'error','Exécutant interrompu : aucune relance automatique.')
+                  result=jsonb_build_object('steps','[]'::jsonb,'error','Exécutant interrompu : aucun essai restant.')
             WHERE status = 'en_cours' AND started_at < now() - ($1::int * interval '1 millisecond')`,
           [DELAI_ABANDON_MS],
         );
@@ -165,8 +182,8 @@ export class Courriel {
         );
         return (
           await cl.query<Ligne>(
-            `UPDATE courriel_jobs SET status='en_cours',started_at=now()
-              WHERE id = (SELECT id FROM courriel_jobs WHERE status='en_attente'
+            `UPDATE courriel_jobs SET status='en_cours',started_at=now(),attempts=attempts+1
+              WHERE id = (SELECT id FROM courriel_jobs WHERE status='en_attente' AND next_attempt_at <= now()
                            ORDER BY (kind='test') DESC, created_at LIMIT 1) RETURNING *`,
           )
         ).rows[0];
@@ -214,21 +231,42 @@ export class Courriel {
     return null;
   }
 
-  /** CLI hôte : enregistre le rapport de l'envoi (jamais de secret). */
-  async terminer(id: string, rapport: unknown): Promise<void> {
+  /** CLI hôte : enregistre le rapport de l'envoi (jamais de secret). Une notification qui échoue de façon passagère est remise en
+      file avec un délai croissant tant qu'il reste des essais (réglages du courriel) ; le message de test n'est jamais relancé. */
+  async terminer(id: string, rapport: unknown, relance?: Relance): Promise<void> {
     z.uuid().parse(id);
     const p = RapportCourriel.parse(rapport);
     const r = await this.db.tx(async (cl) => {
+      const courante = (
+        await cl.query<Ligne>("SELECT * FROM courriel_jobs WHERE id=$1 AND status='en_cours' FOR UPDATE", [id])
+      ).rows[0];
+      if (!courante) return undefined;
+      const resultat = { steps: p.steps, error: p.error };
+      if (
+        !p.ok &&
+        !p.permanent &&
+        relance &&
+        courante.kind === 'notification' &&
+        courante.attempts < relance.relanceEssais
+      ) {
+        await cl.query(
+          `UPDATE courriel_jobs SET status='en_attente',started_at=NULL,result=$2,
+                  next_attempt_at = now() + (${DELAI_RELANCE_SQL} * interval '1 minute')
+            WHERE id=$3`,
+          [relance.relanceDelaiMinutes, resultat, id],
+        );
+        return courante;
+      }
       const ligne = (
         await cl.query<Ligne>(
           `UPDATE courriel_jobs SET status=$2,finished_at=now(),result=$3,
                   to_address = CASE WHEN kind='notification' THEN '' ELSE to_address END
-            WHERE id=$1 AND status='en_cours' RETURNING *`,
-          [id, p.ok ? 'reussie' : 'echec', { steps: p.steps, error: p.error }],
+            WHERE id=$1 RETURNING *`,
+          [id, p.ok ? 'reussie' : 'echec', resultat],
         )
-      ).rows[0];
+      ).rows[0]!;
       // Le message de test est tracé au journal ; les notifications le sont dans leur demande (état, trace), sans adresse.
-      if (ligne && ligne.kind === 'test')
+      if (ligne.kind === 'test')
         await this.db.audit(
           { username: 'exécutant serveur' },
           null,
