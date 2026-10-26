@@ -45,7 +45,6 @@ const ETAT: JsonObject = {
   // supEvals absente : la clé ne doit pas apparaître.
 };
 
-
 /** Migre jusqu'à la 042 comprise : la 043 vide volontairement les données IA (ADR 0057), que ces tests comparent encore. */
 async function migrerAvant043(t: Awaited<ReturnType<typeof createTestApp>>) {
   const dir = mkdtempSync(path.join(os.tmpdir(), 'avant043-'));
