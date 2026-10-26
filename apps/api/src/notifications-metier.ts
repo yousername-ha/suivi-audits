@@ -25,12 +25,20 @@ import {
   type ReglagesPorteeDto,
   type ResolutionNotification,
 } from '@suivi/shared';
-import type { Actor, Client, Db } from './db/db.js';
+import { sql, type RawBuilder } from 'kysely';
+import { surConnexion, type Actor, type Client, type Db, type Kdb } from './db/db.js';
 import { HttpError } from './http/errors.js';
 import { conflict } from './http/concurrency.js';
 import type { Settings } from './settings.js';
 
 type Q = Pick<Client, 'query'>;
+/** Compte actif : ni désactivé, ni expiré (fragment SQL fixe sur l'alias u). */
+const COMPTE_ACTIF = sql<boolean>`(NOT u.disabled AND (u.expires_at IS NULL OR u.expires_at > now()))`;
+/** Comptes actifs portant un rôle, directement ou par un de leurs groupes (fragment sur l'alias u, rôle lié). */
+const porteLeRole = (role: RawBuilder<unknown>) =>
+  sql<boolean>`(EXISTS (SELECT 1 FROM user_roles ur WHERE ur.user_id = u.id AND ur.role_id = ${role})
+    OR EXISTS (SELECT 1 FROM user_groups ug JOIN group_roles gr ON gr.group_id = ug.group_id
+               WHERE ug.user_id = u.id AND gr.role_id = ${role}))`;
 
 /** Une notification vient d'être créée (INSERT … RETURNING) : à diffuser. */
 export interface NotificationEmise {
@@ -86,12 +94,15 @@ export class NotificationsMetier {
   private async contextes(q: Q, userIds: readonly string[]): Promise<Map<string, Contexte>> {
     const out = new Map<string, Contexte>(userIds.map((id) => [id, { perso: new Map(), heritages: new Map() }]));
     if (!userIds.length) return out;
-    const perso = await q.query<LignePerso>(
-      `SELECT portee_id AS user_id, type, canal, valeur FROM notification_reglages
-        WHERE portee_kind='utilisateur' AND portee_id = ANY($1::text[])`,
-      [userIds],
-    );
-    for (const r of perso.rows) out.get(r.user_id)?.perso.set(cle(r.type, r.canal), r.valeur);
+    const perso: LignePerso[] = await surConnexion(q)
+      .selectFrom('notification_reglages')
+      .select(['portee_id as user_id', 'type', 'canal', 'valeur'])
+      .where('portee_kind', '=', 'utilisateur')
+      .where('portee_id', 'in', [...userIds])
+      .execute();
+    for (const r of perso) out.get(r.user_id)?.perso.set(cle(r.type, r.canal), r.valeur);
+    // Héritages par groupe et par rôle (direct ou porté par un groupe) : union de deux sources et d'une sous-union,
+    // gardée en SQL paramétré (ADR 0062 §5).
     const heritees = await q.query<LigneHeritage>(
       `SELECT ug.user_id::text AS user_id, 'groupe' AS kind, g.id::text AS id, g.name AS nom, r.type, r.canal, r.valeur
          FROM user_groups ug JOIN groups g ON g.id = ug.group_id
@@ -133,30 +144,37 @@ export class NotificationsMetier {
 
   /* ---------------------------------------------------------------- Lecture et écriture des réglages */
   private async nomPortee(q: Q, kind: PorteeKind, id: string): Promise<string> {
+    // Identifiant comparé en texte : un identifiant qui n'est pas un UUID donne « introuvable », pas une erreur.
+    const k = surConnexion(q);
     const r =
       kind === 'groupe'
-        ? await q.query<{ n: string }>('SELECT name AS n FROM groups WHERE id::text=$1', [id])
+        ? await k
+            .selectFrom('groups')
+            .select('name as n')
+            .where(sql`id::text`, '=', id)
+            .executeTakeFirst()
         : kind === 'role'
-          ? await q.query<{ n: string }>('SELECT name AS n FROM roles WHERE id=$1', [id])
-          : await q.query<{ n: string }>(
-              "SELECT CASE WHEN display_name <> '' THEN display_name ELSE username END AS n FROM users WHERE id::text=$1",
-              [id],
-            );
-    if (!r.rowCount)
+          ? await k.selectFrom('roles').select('name as n').where('id', '=', id).executeTakeFirst()
+          : await k
+              .selectFrom('users')
+              .select(sql<string>`CASE WHEN display_name <> '' THEN display_name ELSE username END`.as('n'))
+              .where(sql`id::text`, '=', id)
+              .executeTakeFirst();
+    if (!r)
       throw new HttpError(
         404,
         kind === 'groupe' ? 'Groupe introuvable.' : kind === 'role' ? 'Rôle introuvable.' : 'Compte introuvable.',
       );
-    return r.rows[0]!.n;
+    return r.n;
   }
 
   private async reglagesDe(q: Q, kind: PorteeKind, id: string): Promise<ReglageDto[]> {
-    const rows = (
-      await q.query<{ type: string; canal: NotificationCanal; valeur: boolean }>(
-        'SELECT type, canal, valeur FROM notification_reglages WHERE portee_kind=$1 AND portee_id=$2',
-        [kind, id],
-      )
-    ).rows;
+    const rows = await surConnexion(q)
+      .selectFrom('notification_reglages')
+      .select(['type', 'canal', 'valeur'])
+      .where('portee_kind', '=', kind)
+      .where('portee_id', '=', id)
+      .execute();
     const map = new Map(rows.map((r) => [cle(r.type, r.canal), r.valeur]));
     return NOTIFICATION_TYPES.flatMap((t) =>
       NOTIFICATION_CANAUX.map((canal) => ({ type: t.id, canal, valeur: map.get(cle(t.id, canal)) ?? null })),
@@ -164,27 +182,37 @@ export class NotificationsMetier {
   }
 
   private async versionDe(q: Q, kind: PorteeKind, id: string): Promise<number> {
-    const r = await q.query<{ version: number }>(
-      'SELECT version FROM notification_portees WHERE portee_kind=$1 AND portee_id=$2',
-      [kind, id],
-    );
-    return r.rows[0]?.version ?? 0;
+    const r = await this.portee(surConnexion(q), kind, id).executeTakeFirst();
+    return r?.version ?? 0;
+  }
+  private portee(k: Kdb, kind: PorteeKind, id: string) {
+    return k
+      .selectFrom('notification_portees')
+      .select('version')
+      .where('portee_kind', '=', kind)
+      .where('portee_id', '=', id);
   }
 
   /** Nombre de comptes actifs concernés par un groupe ou un rôle. */
   private async membres(q: Q, kind: PorteeKind, id: string): Promise<number | undefined> {
     if (kind === 'utilisateur') return undefined;
-    const r = await q.query<{ n: number }>(
+    const k = surConnexion(q);
+    const r =
       kind === 'groupe'
-        ? `SELECT count(*)::int AS n FROM user_groups ug JOIN users u ON u.id=ug.user_id
-            WHERE ug.group_id::text=$1 AND NOT u.disabled AND (u.expires_at IS NULL OR u.expires_at>now())`
-        : `SELECT count(DISTINCT u.id)::int AS n FROM users u
-            WHERE NOT u.disabled AND (u.expires_at IS NULL OR u.expires_at>now()) AND (
-              EXISTS (SELECT 1 FROM user_roles ur WHERE ur.user_id=u.id AND ur.role_id=$1)
-              OR EXISTS (SELECT 1 FROM user_groups ug JOIN group_roles gr ON gr.group_id=ug.group_id WHERE ug.user_id=u.id AND gr.role_id=$1))`,
-      [id],
-    );
-    return r.rows[0]!.n;
+        ? await k
+            .selectFrom('user_groups as ug')
+            .innerJoin('users as u', 'u.id', 'ug.user_id')
+            .select(sql<number>`count(*)::int`.as('n'))
+            .where(sql`ug.group_id::text`, '=', id)
+            .where(COMPTE_ACTIF)
+            .executeTakeFirstOrThrow()
+        : await k
+            .selectFrom('users as u')
+            .select(sql<number>`count(DISTINCT u.id)::int`.as('n'))
+            .where(COMPTE_ACTIF)
+            .where(porteLeRole(sql`${id}`))
+            .executeTakeFirstOrThrow();
+    return r.n;
   }
 
   async lirePortee(kind: PorteeKind, id: string, q: Q = this.db.pool): Promise<ReglagesPorteeDto> {
@@ -199,32 +227,39 @@ export class NotificationsMetier {
     if (membres !== undefined) out.membres = membres;
     if (kind === 'utilisateur') {
       out.effectifs = await this.effectifs(q, id);
-      const u = await q.query<{ email: string }>('SELECT email FROM users WHERE id::text=$1', [id]);
-      out.sansAdresse = !adresseUtilisable(u.rows[0]?.email ?? '');
+      const u = await surConnexion(q)
+        .selectFrom('users')
+        .select('email')
+        .where(sql`id::text`, '=', id)
+        .executeTakeFirst();
+      out.sansAdresse = !adresseUtilisable(u?.email ?? '');
     }
     return out;
   }
 
   /** Groupes et rôles réglables, avec le nombre de comptes actifs concernés. */
   async portees(): Promise<{ groupes: PorteeListeDto[]; roles: PorteeListeDto[] }> {
-    const groupes = (
-      await this.db.q<{ id: string; nom: string; membres: number }>(
-        `SELECT g.id::text AS id, g.name AS nom,
-                (SELECT count(*)::int FROM user_groups ug JOIN users u ON u.id=ug.user_id
-                  WHERE ug.group_id=g.id AND NOT u.disabled AND (u.expires_at IS NULL OR u.expires_at>now())) AS membres
-           FROM groups g ORDER BY lower(g.name)`,
-      )
-    ).rows;
-    const roles = (
-      await this.db.q<{ id: string; nom: string; membres: number }>(
-        `SELECT r.id, r.name AS nom,
-                (SELECT count(*)::int FROM users u WHERE NOT u.disabled AND (u.expires_at IS NULL OR u.expires_at>now()) AND (
-                   EXISTS (SELECT 1 FROM user_roles ur WHERE ur.user_id=u.id AND ur.role_id=r.id)
-                   OR EXISTS (SELECT 1 FROM user_groups ug JOIN group_roles gr ON gr.group_id=ug.group_id
-                               WHERE ug.user_id=u.id AND gr.role_id=r.id))) AS membres
-           FROM roles r ORDER BY lower(r.name)`,
-      )
-    ).rows;
+    const groupes = await this.db.k
+      .selectFrom('groups as g')
+      .select([
+        sql<string>`g.id::text`.as('id'),
+        'g.name as nom',
+        sql<number>`(SELECT count(*)::int FROM user_groups ug JOIN users u ON u.id = ug.user_id
+                      WHERE ug.group_id = g.id AND ${COMPTE_ACTIF})`.as('membres'),
+      ])
+      .orderBy(sql`lower(g.name)`)
+      .execute();
+    const roles = await this.db.k
+      .selectFrom('roles as r')
+      .select([
+        'r.id',
+        'r.name as nom',
+        sql<number>`(SELECT count(*)::int FROM users u WHERE ${COMPTE_ACTIF} AND ${porteLeRole(sql`r.id`)})`.as(
+          'membres',
+        ),
+      ])
+      .orderBy(sql`lower(r.name)`)
+      .execute();
     return {
       groupes: groupes.map((g) => ({ kind: 'groupe', ...g })),
       roles: roles.map((r) => ({ kind: 'role', ...r })),
@@ -240,18 +275,14 @@ export class NotificationsMetier {
     user: Actor,
     ip: string,
   ): Promise<ReglagesPorteeDto> {
-    await this.db.tx(async (c) => {
+    await this.db.tx(async (c, k) => {
       const nom = await this.nomPortee(c, kind, id);
-      await c.query(
-        `INSERT INTO notification_portees (portee_kind, portee_id, version, updated_by) VALUES ($1,$2,0,$3) ON CONFLICT DO NOTHING`,
-        [kind, id, user.username],
-      );
-      const courante = (
-        await c.query<{ version: number }>(
-          'SELECT version FROM notification_portees WHERE portee_kind=$1 AND portee_id=$2 FOR UPDATE',
-          [kind, id],
-        )
-      ).rows[0]!.version;
+      await k
+        .insertInto('notification_portees')
+        .values({ portee_kind: kind, portee_id: id, version: 0, updated_by: user.username })
+        .onConflict((oc) => oc.doNothing())
+        .execute();
+      const courante = (await this.portee(k, kind, id).forUpdate().executeTakeFirstOrThrow()).version;
       if (courante !== attendue)
         throw conflict({ version: courante, reglages: await this.reglagesDe(c, kind, id) } as never);
       const avant = new Map((await this.reglagesDe(c, kind, id)).map((r) => [cle(r.type, r.canal), r.valeur]));
@@ -259,28 +290,50 @@ export class NotificationsMetier {
       if (!effectifs.length) return;
       for (const ch of effectifs) {
         if (ch.valeur === null)
-          await c.query(
-            'DELETE FROM notification_reglages WHERE portee_kind=$1 AND portee_id=$2 AND type=$3 AND canal=$4',
-            [kind, id, ch.type, ch.canal],
-          );
+          await k
+            .deleteFrom('notification_reglages')
+            .where('portee_kind', '=', kind)
+            .where('portee_id', '=', id)
+            .where('type', '=', ch.type)
+            .where('canal', '=', ch.canal)
+            .execute();
         else
-          await c.query(
-            `INSERT INTO notification_reglages (portee_kind, portee_id, type, canal, valeur, updated_by)
-             VALUES ($1,$2,$3,$4,$5,$6)
-             ON CONFLICT (portee_kind, portee_id, type, canal)
-             DO UPDATE SET valeur=EXCLUDED.valeur, updated_by=EXCLUDED.updated_by, updated_at=now()`,
-            [kind, id, ch.type, ch.canal, ch.valeur, user.username],
-          );
+          await k
+            .insertInto('notification_reglages')
+            .values({
+              portee_kind: kind,
+              portee_id: id,
+              type: ch.type,
+              canal: ch.canal,
+              valeur: ch.valeur,
+              updated_by: user.username,
+            })
+            .onConflict((oc) =>
+              oc.columns(['portee_kind', 'portee_id', 'type', 'canal']).doUpdateSet((eb) => ({
+                valeur: eb.ref('excluded.valeur'),
+                updated_by: eb.ref('excluded.updated_by'),
+                updated_at: sql<Date>`now()`,
+              })),
+            )
+            .execute();
       }
-      await c.query(
-        'UPDATE notification_portees SET version=version+1, updated_by=$3, updated_at=now() WHERE portee_kind=$1 AND portee_id=$2',
-        [kind, id, user.username],
-      );
+      await k
+        .updateTable('notification_portees')
+        .set((eb) => ({ version: eb('version', '+', 1), updated_by: user.username, updated_at: sql<Date>`now()` }))
+        .where('portee_kind', '=', kind)
+        .where('portee_id', '=', id)
+        .execute();
       // Journal : qui a changé quoi, pour qui. Jamais d'adresse courriel : la cible est un nom de groupe, un identifiant de
       // rôle ou un identifiant de compte.
       const cible =
         kind === 'utilisateur'
-          ? ((await c.query<{ u: string }>('SELECT username AS u FROM users WHERE id::text=$1', [id])).rows[0]?.u ?? id)
+          ? ((
+              await k
+                .selectFrom('users')
+                .select('username')
+                .where(sql`id::text`, '=', id)
+                .executeTakeFirst()
+            )?.username ?? id)
           : nom;
       await this.db.audit(
         user,
@@ -304,12 +357,13 @@ export class NotificationsMetier {
 
   /* ---------------------------------------------------------------- Aperçu « qui recevrait quoi » */
   async apercu(type: NotificationType, canal: NotificationCanal): Promise<ApercuDestinatairesDto> {
-    const comptes = (
-      await this.db.q<{ id: string; username: string; display_name: string; email: string }>(
-        `SELECT id::text AS id, username, display_name, email FROM users
-          WHERE NOT disabled AND (expires_at IS NULL OR expires_at > now()) ORDER BY lower(display_name), lower(username)`,
-      )
-    ).rows;
+    const comptes = await this.db.k
+      .selectFrom('users as u')
+      .select([sql<string>`u.id::text`.as('id'), 'u.username', 'u.display_name', 'u.email'])
+      .where(COMPTE_ACTIF)
+      .orderBy(sql`lower(u.display_name)`)
+      .orderBy(sql`lower(u.username)`)
+      .execute();
     const ctx = await this.contextes(
       this.db.pool,
       comptes.map((u) => u.id),
@@ -336,19 +390,25 @@ export class NotificationsMetier {
 
   /** Synthèse des envois de notification des sept derniers jours (administrateurs) : état de la file, jamais d'adresse. */
   async etatEnvois() {
-    const r = await this.db.q<{ status: string; n: number }>(
-      `SELECT status, count(*)::int AS n FROM courriel_jobs
-        WHERE kind='notification' AND created_at > now() - interval '7 days' GROUP BY status`,
-    );
-    const n = Object.fromEntries(r.rows.map((x) => [x.status, x.n])) as Record<string, number>;
-    const relances = await this.db.one<{ n: number }>(
-      `SELECT count(*)::int AS n FROM courriel_jobs
-        WHERE kind='notification' AND status='en_attente' AND attempts > 0`,
-    );
-    const derniere = await this.db.one<{ error: string | null; at: Date }>(
-      `SELECT result->>'error' AS error, finished_at AS at FROM courriel_jobs
-        WHERE kind='notification' AND status='echec' ORDER BY finished_at DESC NULLS LAST LIMIT 1`,
-    );
+    const k = this.db.k;
+    const notifications = k.selectFrom('courriel_jobs').where('kind', '=', 'notification');
+    const r = await notifications
+      .select(['status', sql<number>`count(*)::int`.as('n')])
+      .where('created_at', '>', sql<Date>`now() - interval '7 days'`)
+      .groupBy('status')
+      .execute();
+    const n = Object.fromEntries(r.map((x) => [x.status, x.n])) as Record<string, number>;
+    const relances = await notifications
+      .select(sql<number>`count(*)::int`.as('n'))
+      .where('status', '=', 'en_attente')
+      .where('attempts', '>', 0)
+      .executeTakeFirst();
+    const derniere = await notifications
+      .select([sql<string | null>`result->>'error'`.as('error'), 'finished_at as at'])
+      .where('status', '=', 'echec')
+      .orderBy('finished_at', (ob) => ob.desc().nullsLast())
+      .limit(1)
+      .executeTakeFirst();
     return {
       enAttente: (n.en_attente ?? 0) + (n.en_cours ?? 0),
       envoyees: n.reussie ?? 0,
@@ -368,38 +428,53 @@ export class NotificationsMetier {
     const masquees = connues
       .filter((n) => !this.resoudre(ctx.get(n.userId)!, n.kind, 'application').actif)
       .map((n) => n.id);
+    const k = surConnexion(c);
     if (masquees.length)
-      await c.query('UPDATE grc_notifications SET canal_application=false WHERE id = ANY($1::uuid[])', [masquees]);
+      await k.updateTable('grc_notifications').set({ canal_application: false }).where('id', 'in', masquees).execute();
     if (!this.courrielOperationnel()) return;
     const voulues = connues.filter((n) => this.resoudre(ctx.get(n.userId)!, n.kind, 'courriel').actif);
     if (!voulues.length) return;
     const comptes = new Map(
       (
-        await c.query<{ id: string; email: string }>(
-          `SELECT id::text AS id, email FROM users
-            WHERE id = ANY($1::uuid[]) AND NOT disabled AND (expires_at IS NULL OR expires_at > now())`,
-          [[...new Set(voulues.map((n) => n.userId))]],
-        )
-      ).rows.map((u) => [u.id, u.email.trim()]),
+        await k
+          .selectFrom('users as u')
+          .select([sql<string>`u.id::text`.as('id'), 'u.email'])
+          .where('u.id', 'in', [...new Set(voulues.map((n) => n.userId))])
+          .where(COMPTE_ACTIF)
+          .execute()
+      ).map((u) => [u.id, u.email.trim()]),
     );
     const titres = new Map(
       (
-        await c.query<{ id: string; title: string }>(
-          'SELECT id::text AS id, title FROM grc_notifications WHERE id = ANY($1::uuid[])',
-          [voulues.map((n) => n.id)],
-        )
-      ).rows.map((t) => [t.id, t.title]),
+        await k
+          .selectFrom('grc_notifications')
+          .select([sql<string>`id::text`.as('id'), 'title'])
+          .where(
+            'id',
+            'in',
+            voulues.map((n) => n.id),
+          )
+          .execute()
+      ).map((t) => [t.id, t.title]),
     );
     const appName = this.settings.get('general').appName;
     for (const n of voulues) {
       const adresse = comptes.get(n.userId);
       if (!adresse || !adresseUtilisable(adresse)) continue;
       const { objet, corps } = this.composer(n.kind as NotificationType, titres.get(n.id) ?? '', appName);
-      await c.query(
-        `INSERT INTO courriel_jobs (kind, requested_by, to_address, notification_id, user_id, subject, body)
-         VALUES ('notification', 'système', $1, $2, $3, $4, $5) ON CONFLICT DO NOTHING`,
-        [adresse, n.id, n.userId, objet, corps],
-      );
+      await k
+        .insertInto('courriel_jobs')
+        .values({
+          kind: 'notification',
+          requested_by: 'système',
+          to_address: adresse,
+          notification_id: n.id,
+          user_id: n.userId,
+          subject: objet,
+          body: corps,
+        })
+        .onConflict((oc) => oc.doNothing())
+        .execute();
     }
   }
 
