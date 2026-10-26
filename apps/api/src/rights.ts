@@ -11,7 +11,8 @@ import {
   type RoleGrant,
   type Rights,
 } from '@suivi/shared';
-import type { Client, Db } from './db/db.js';
+import { sql } from 'kysely';
+import { surConnexion, type Client, type Db } from './db/db.js';
 import { HttpError } from './http/errors.js';
 
 type Q = Pick<Client, 'query'>;
@@ -43,38 +44,43 @@ export function assertLegacyKeys(rights: Rights, keys: Iterable<string>, action:
   }
 }
 
-interface GrantRow {
-  role_id: string;
-  role_name: string;
-  role_permissions: string[];
-  modules: string[] | null;
-  group_id: string | null;
-  group_name: string | null;
-}
-
 /** Permissions d'un rôle : définies dans le code pour les rôles prédéfinis, en base pour les rôles personnalisés. */
 export function rolePermissions(id: string, stored: readonly string[]): Permission[] {
   if (isSystemRole(id)) return [...SYSTEM_ROLE_DEFS[id].permissions];
   return stored.filter(isPermission);
 }
 
-const GRANTS_SQL = `
-  SELECT r.id AS role_id, r.name AS role_name, r.permissions AS role_permissions, ur.modules,
-         NULL::uuid AS group_id, NULL::text AS group_name
-    FROM user_roles ur JOIN roles r ON r.id = ur.role_id
-   WHERE ur.user_id = $1
-  UNION ALL
-  SELECT r.id, r.name, r.permissions, NULL, g.id, g.name
-    FROM user_groups ug
-    JOIN groups g ON g.id = ug.group_id
-    JOIN group_roles gr ON gr.group_id = g.id
-    JOIN roles r ON r.id = gr.role_id
-   WHERE ug.user_id = $1`;
-
 /** Attributions d'un compte : rôles directs (avec leur portée) et rôles hérités des groupes. */
 export async function loadGrants(c: Q, userId: string): Promise<RoleGrant[]> {
-  const r = await c.query<GrantRow>(GRANTS_SQL, [userId]);
-  return r.rows.map((g) => ({
+  const k = surConnexion(c);
+  const directs = k
+    .selectFrom('user_roles as ur')
+    .innerJoin('roles as r', 'r.id', 'ur.role_id')
+    .select([
+      'r.id as role_id',
+      'r.name as role_name',
+      'r.permissions as role_permissions',
+      'ur.modules',
+      sql<string | null>`NULL::uuid`.as('group_id'),
+      sql<string | null>`NULL::text`.as('group_name'),
+    ])
+    .where('ur.user_id', '=', userId);
+  const parGroupe = k
+    .selectFrom('user_groups as ug')
+    .innerJoin('groups as g', 'g.id', 'ug.group_id')
+    .innerJoin('group_roles as gr', 'gr.group_id', 'g.id')
+    .innerJoin('roles as r', 'r.id', 'gr.role_id')
+    .select([
+      'r.id as role_id',
+      'r.name as role_name',
+      'r.permissions as role_permissions',
+      sql<string[] | null>`NULL`.as('modules'),
+      sql<string | null>`g.id`.as('group_id'),
+      sql<string | null>`g.name`.as('group_name'),
+    ])
+    .where('ug.user_id', '=', userId);
+  const r = await directs.unionAll(parGroupe).execute();
+  return r.map((g) => ({
     roleId: g.role_id,
     roleName: g.role_name,
     permissions: rolePermissions(g.role_id, g.role_permissions),
@@ -86,17 +92,41 @@ export async function loadGrants(c: Q, userId: string): Promise<RoleGrant[]> {
 /** Nombre d'administrateurs actifs et permanents : comptes non désactivés, sans date d'expiration,
     détenant « administration:administrer » (rôle direct ou par un groupe). */
 export async function permanentAdminCount(c: Q): Promise<number> {
-  const r = await c.query<{ n: number }>(
-    `WITH admin_roles AS (
-       SELECT id FROM roles WHERE id = 'administrateur' OR 'administration:administrer' = ANY(permissions))
-     SELECT count(*)::int AS n FROM users u
-      WHERE NOT u.disabled AND u.expires_at IS NULL AND (
-        EXISTS (SELECT 1 FROM user_roles ur WHERE ur.user_id = u.id AND ur.role_id IN (SELECT id FROM admin_roles)
-                  AND (ur.modules IS NULL OR 'administration' = ANY(ur.modules)))
-        OR EXISTS (SELECT 1 FROM user_groups ug JOIN group_roles gr ON gr.group_id = ug.group_id
-                    WHERE ug.user_id = u.id AND gr.role_id IN (SELECT id FROM admin_roles)))`,
-  );
-  return r.rows[0]!.n;
+  const r = await surConnexion(c)
+    .with('admin_roles', (db) =>
+      db
+        .selectFrom('roles')
+        .select('id')
+        .where((eb) =>
+          eb.or([eb('id', '=', 'administrateur'), sql<boolean>`'administration:administrer' = ANY(permissions)`]),
+        ),
+    )
+    .selectFrom('users as u')
+    .select(sql<number>`count(*)::int`.as('n'))
+    .where('u.disabled', '=', false)
+    .where('u.expires_at', 'is', null)
+    .where((eb) =>
+      eb.or([
+        eb.exists(
+          eb
+            .selectFrom('user_roles as ur')
+            .select('ur.user_id')
+            .whereRef('ur.user_id', '=', 'u.id')
+            .where('ur.role_id', 'in', eb.selectFrom('admin_roles').select('id'))
+            .where((e) => e.or([e('ur.modules', 'is', null), sql<boolean>`'administration' = ANY(ur.modules)`])),
+        ),
+        eb.exists(
+          eb
+            .selectFrom('user_groups as ug')
+            .innerJoin('group_roles as gr', 'gr.group_id', 'ug.group_id')
+            .select('ug.user_id')
+            .whereRef('ug.user_id', '=', 'u.id')
+            .where('gr.role_id', 'in', eb.selectFrom('admin_roles').select('id')),
+        ),
+      ]),
+    )
+    .executeTakeFirstOrThrow();
+  return r.n;
 }
 
 /** À appeler dans la transaction, après la modification : annule tout ce qui laisserait l'application
@@ -112,15 +142,20 @@ export async function assertAdminRemains(c: Q) {
 /** Le rôle « Auditeur externe » : attribution directe uniquement, avec des modules choisis et une date d'expiration. */
 export async function assertScopedRoles(c: Q, userIds: readonly string[]) {
   if (!userIds.length) return;
-  const bad = await c.query<{ username: string; why: string }>(
-    `SELECT u.username,
-            CASE WHEN u.expires_at IS NULL THEN 'expiration' ELSE 'modules' END AS why
-       FROM user_roles ur JOIN users u ON u.id = ur.user_id JOIN roles r ON r.id = ur.role_id
-      WHERE ur.user_id = ANY($1::uuid[]) AND r.id = 'auditeur_externe'
-        AND (u.expires_at IS NULL OR ur.modules IS NULL OR cardinality(ur.modules) = 0)`,
-    [userIds],
-  );
-  const b = bad.rows[0];
+  const b = await surConnexion(c)
+    .selectFrom('user_roles as ur')
+    .innerJoin('users as u', 'u.id', 'ur.user_id')
+    .innerJoin('roles as r', 'r.id', 'ur.role_id')
+    .select([
+      'u.username',
+      sql<'expiration' | 'modules'>`CASE WHEN u.expires_at IS NULL THEN 'expiration' ELSE 'modules' END`.as('why'),
+    ])
+    .where('ur.user_id', 'in', [...userIds])
+    .where('r.id', '=', 'auditeur_externe')
+    .where((eb) =>
+      eb.or([eb('u.expires_at', 'is', null), eb('ur.modules', 'is', null), sql<boolean>`cardinality(ur.modules) = 0`]),
+    )
+    .executeTakeFirst();
   if (b)
     throw new HttpError(
       422,
@@ -132,12 +167,20 @@ export async function assertScopedRoles(c: Q, userIds: readonly string[]) {
 
 /** Comptes concernés par un rôle (directement ou par un groupe), ou par un groupe. */
 export async function usersOfRole(c: Q, roleId: string): Promise<string[]> {
-  const r = await c.query<{ id: string }>(
-    `SELECT user_id AS id FROM user_roles WHERE role_id = $1
-     UNION SELECT ug.user_id FROM user_groups ug JOIN group_roles gr ON gr.group_id = ug.group_id WHERE gr.role_id = $1`,
-    [roleId],
-  );
-  return r.rows.map((x) => x.id);
+  const k = surConnexion(c);
+  const r = await k
+    .selectFrom('user_roles')
+    .select('user_id as id')
+    .where('role_id', '=', roleId)
+    .union(
+      k
+        .selectFrom('user_groups as ug')
+        .innerJoin('group_roles as gr', 'gr.group_id', 'ug.group_id')
+        .select('ug.user_id as id')
+        .where('gr.role_id', '=', roleId),
+    )
+    .execute();
+  return r.map((x) => x.id);
 }
 
 /** Un utilisateur ne peut pas modifier ses propres droits (ni directement, ni par un groupe ou un rôle qu'il détient). */
@@ -149,23 +192,36 @@ export function assertNotSelf(actorId: string, affected: readonly string[]) {
 /** Instantané des droits d'un ensemble de comptes, pour le journal d'audit (avant / après). */
 export async function rightsSnapshot(c: Q, userIds: readonly string[]) {
   if (!userIds.length) return {};
-  const r = await c.query<{
-    username: string;
-    roles: string[] | null;
-    groups: string[] | null;
-    expires_at: Date | null;
-    disabled: boolean;
-  }>(
-    `SELECT u.username, u.expires_at, u.disabled,
-            (SELECT array_agg(ur.role_id || COALESCE('[' || array_to_string(ur.modules, ',') || ']', '') ORDER BY ur.role_id)
-               FROM user_roles ur WHERE ur.user_id = u.id) AS roles,
-            (SELECT array_agg(g.name ORDER BY g.name) FROM user_groups ug JOIN groups g ON g.id = ug.group_id
-              WHERE ug.user_id = u.id) AS groups
-       FROM users u WHERE u.id = ANY($1::uuid[]) ORDER BY lower(u.username)`,
-    [userIds],
-  );
+  // Agrégats ordonnés : fragments SQL fixes.
+  const r = await surConnexion(c)
+    .selectFrom('users as u')
+    .select((eb) => [
+      'u.username',
+      'u.expires_at',
+      'u.disabled',
+      eb
+        .selectFrom('user_roles as ur')
+        .select(
+          sql<
+            string[] | null
+          >`array_agg(ur.role_id || COALESCE('[' || array_to_string(ur.modules, ',') || ']', '') ORDER BY ur.role_id)`.as(
+            'r',
+          ),
+        )
+        .whereRef('ur.user_id', '=', 'u.id')
+        .as('roles'),
+      eb
+        .selectFrom('user_groups as ug')
+        .innerJoin('groups as g', 'g.id', 'ug.group_id')
+        .select(sql<string[] | null>`array_agg(g.name ORDER BY g.name)`.as('g'))
+        .whereRef('ug.user_id', '=', 'u.id')
+        .as('groups'),
+    ])
+    .where('u.id', 'in', [...userIds])
+    .orderBy(sql`lower(u.username)`)
+    .execute();
   return Object.fromEntries(
-    r.rows.map((u) => [
+    r.map((u) => [
       u.username,
       { roles: u.roles ?? [], groups: u.groups ?? [], expires: u.expires_at, disabled: u.disabled },
     ]),
@@ -174,13 +230,25 @@ export async function rightsSnapshot(c: Q, userIds: readonly string[]) {
 
 /** Désactive les comptes arrivés à expiration et ferme leurs sessions. Renvoie les identifiants désactivés. */
 export async function expireAccounts(db: Db): Promise<string[]> {
-  const names = await db.tx(async (c) => {
-    const r = await c.query<{ id: string; username: string }>(
-      `UPDATE users SET disabled = true, version = version + 1, updated_at = now()
-        WHERE NOT disabled AND expires_at IS NOT NULL AND expires_at <= now() RETURNING id, username`,
-    );
-    if (r.rowCount) await c.query('DELETE FROM sessions WHERE user_id = ANY($1::uuid[])', [r.rows.map((x) => x.id)]);
-    return r.rows.map((x) => x.username);
+  const names = await db.tx(async (_c, k) => {
+    const r = await k
+      .updateTable('users')
+      .set((eb) => ({ disabled: true, version: eb('version', '+', 1), updated_at: sql<Date>`now()` }))
+      .where('disabled', '=', false)
+      .where('expires_at', 'is not', null)
+      .where('expires_at', '<=', sql<Date>`now()`)
+      .returning(['id', 'username'])
+      .execute();
+    if (r.length)
+      await k
+        .deleteFrom('sessions')
+        .where(
+          'user_id',
+          'in',
+          r.map((x) => x.id),
+        )
+        .execute();
+    return r.map((x) => x.username);
   }, 'système');
   for (const n of names) await db.audit({ username: 'système' }, null, 'account.expired', n);
   return names;
