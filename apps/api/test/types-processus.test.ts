@@ -129,4 +129,33 @@ describe('registre des types de processus', () => {
       ]),
     );
   });
+
+  it('libellés en double (casse ignorée), restauration bloquée, identifiant inconnu, archivés listés en dernier', async () => {
+    const a = (await admin.post('/api/types-processus', { label: 'Pilotage stratégique' })).json() as TypeProcessusDto;
+    const b = (await admin.post('/api/types-processus', { label: 'Achats' })).json() as TypeProcessusDto;
+    // Renommer vers le libellé d'un autre type actif, casse ignorée : refusé ; renommer vers son propre libellé : accepté.
+    expect((await admin.put(`/api/types-processus/${b.id}`, { label: 'PILOTAGE STRATÉGIQUE' })).statusCode).toBe(409);
+    expect((await admin.put(`/api/types-processus/${a.id}`, { label: 'pilotage stratégique' })).statusCode).toBe(200);
+    // Archiver b, créer un type actif qui reprend son libellé : b ne peut plus être restauré sans être renommé.
+    expect((await admin.put(`/api/types-processus/${b.id}`, { archived: true })).statusCode).toBe(200);
+    const c = (await admin.post('/api/types-processus', { label: 'achats' })).json() as TypeProcessusDto;
+    const restauration = await admin.put(`/api/types-processus/${b.id}`, { archived: false });
+    expect(restauration.statusCode).toBe(409);
+    expect(restauration.json().error).toMatch(/renommez avant de restaurer/);
+    const renomme = await admin.put(`/api/types-processus/${b.id}`, { archived: false, label: 'Achats publics' });
+    expect(renomme.statusCode, renomme.body).toBe(200);
+    expect(renomme.json()).toMatchObject({ archived: false, label: 'Achats publics', code: b.code, usage: 0 });
+    // Identifiant inconnu : 404 en modification comme en suppression.
+    const inconnu = '00000000-0000-4000-8000-00000000abcd';
+    expect((await admin.put(`/api/types-processus/${inconnu}`, { label: 'X' })).statusCode).toBe(404);
+    expect((await admin.del(`/api/types-processus/${inconnu}`)).statusCode).toBe(404);
+    // Ordre : actifs par rang puis archivés à la fin.
+    expect((await admin.put(`/api/types-processus/${c.id}`, { archived: true })).statusCode).toBe(200);
+    const l = await liste();
+    const premierArchive = l.findIndex((x) => x.archived);
+    expect(premierArchive).toBeGreaterThan(0);
+    expect(l.slice(premierArchive).every((x) => x.archived)).toBe(true);
+    const actifs = l.filter((x) => !x.archived).map((x) => x.rank);
+    expect(actifs).toEqual([...actifs].sort((x, y) => x - y));
+  });
 });
