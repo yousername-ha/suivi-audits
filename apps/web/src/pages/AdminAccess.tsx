@@ -37,6 +37,7 @@ import { useState } from 'react';
 import { api, ApiError, download, errorMessage, get } from '../api';
 import { ConfirmButton, ErrorAlert, fmtDate, SecretModal } from '../components/common';
 import { useColonnes, type Colonne } from '../components/Colonnes';
+import { EditeurReglages } from '../notifications/Reglages';
 import { useCan, useMe } from '../session';
 import { DataTable } from '@suivi/ui';
 
@@ -93,6 +94,7 @@ export function UsersPanel() {
   const [secret, setSecret] = useState<{ title: string; value: string } | null>(null);
   const [form, setForm] = useState<{ user: UserOut | null } | null>(null);
   const [rightsOf, setRightsOf] = useState<UserOut | null>(null);
+  const [notifsOf, setNotifsOf] = useState<UserOut | null>(null);
   const admin = can('administration', 'administrer');
 
   return (
@@ -183,6 +185,9 @@ export function UsersPanel() {
                     <Group gap="2xs" wrap="nowrap">
                       <Button size="compact-sm" variant="default" onClick={() => setRightsOf(u)}>
                         Droits effectifs
+                      </Button>
+                      <Button size="compact-sm" variant="default" onClick={() => setNotifsOf(u)}>
+                        Notifications
                       </Button>
                       {admin && (
                         <>
@@ -286,6 +291,23 @@ export function UsersPanel() {
         centered
       >
         {rightsOf && <EffectiveRights userId={rightsOf.id} />}
+      </Modal>
+      <Modal
+        opened={!!notifsOf}
+        onClose={() => setNotifsOf(null)}
+        title={`Notifications de ${notifsOf?.username ?? ''}`}
+        size="xl"
+        centered
+      >
+        {notifsOf && (
+          <EditeurReglages
+            url={`/api/admin/notifications/reglages/utilisateur/${notifsOf.id}`}
+            ecriture={admin}
+            sujet="son"
+            etiquette={`Réglages de notification de ${notifsOf.username}`}
+            introduction="Un réglage explicite ici l’emporte sur les groupes et les rôles du compte ; « Non défini » laisse l’héritage jouer. La personne peut aussi modifier ces réglages dans Mon compte."
+          />
+        )}
       </Modal>
       <SecretModal
         title={secret?.title ?? ''}

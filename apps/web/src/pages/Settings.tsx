@@ -45,7 +45,8 @@ const DESCRIPTIONS: Record<SettingsSection, string> = {
   cycle: 'Années du cycle de certification, prochain audit et audit interne.',
   referentiels: 'Référentiels chargés et référentiel complémentaire actif.',
   apparence: 'Thème et densité par défaut pour l’organisation.',
-  notifications: 'Alertes affichées dans l’application (aucun envoi d’e-mail : le serveur n’a pas d’accès sortant).',
+  notifications:
+    'Délais d’alerte avant une échéance. Qui reçoit quoi, dans l’application et par courriel, se règle dans « Destinataires des notifications » et dans Mon compte.',
   import_export: 'Reprise des données de l’ancien outil et exports.',
   sauvegardes:
     'Suivi des sauvegardes et des tests de restauration (les sauvegardes elles-mêmes sont faites sur le serveur).',

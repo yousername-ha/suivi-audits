@@ -21,6 +21,7 @@ import { useState } from 'react';
 import { errorMessage, get, post } from '../api';
 import { ErrorAlert, fmtDate } from '../components/common';
 import { usePresence } from '../realtime';
+import { EditeurReglages } from '../notifications/Reglages';
 import { useMe, usePreferences, useRefreshMe } from '../session';
 
 interface MySession {
@@ -42,10 +43,29 @@ export function AccountPage() {
         {me.user?.displayName} ({me.user?.username})
       </Text>
       <AffichageCard />
+      <NotificationsCard />
       <PasswordCard minLen={me.passwordMinLength} />
       <TotpCard />
       <SessionsCard />
     </Stack>
+  );
+}
+
+/** Notifications : chaque personne règle les siennes ; son choix l'emporte sur celui de ses groupes et de ses rôles. */
+function NotificationsCard() {
+  return (
+    <Card withBorder>
+      <Title order={2} size="h4" mb="xs">
+        Notifications
+      </Title>
+      <EditeurReglages
+        url="/api/account/notifications"
+        ecriture
+        sujet="votre"
+        etiquette="Mes réglages de notification"
+        introduction="Pour chaque type de notification, choisissez de la recevoir dans l’application ou par courriel. « Non défini » reprend le réglage de vos groupes et de vos rôles ; « Activé » ou « Désactivé » prend le dessus sur eux. Sans aucun réglage, la notification s’affiche dans l’application et aucun courriel n’est envoyé."
+      />
+    </Card>
   );
 }
 

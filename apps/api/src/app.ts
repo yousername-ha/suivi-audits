@@ -123,10 +123,10 @@ export function allRoutes(): RouteDef[] {
     ...registresRoutes,
     ...parcoursRoutes,
     ...calendriersPlateformeRoutes,
+    ...notificationsRoutes,
     ...pilotageRoutes,
     ...affichageRoutes,
     ...cartoRoutes,
-    ...notificationsRoutes,
   );
   return list;
 }

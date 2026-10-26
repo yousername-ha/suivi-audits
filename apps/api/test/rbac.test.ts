@@ -64,6 +64,9 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
     'GET /api/settings/logo',
     'GET /api/account/preferences',
     'PUT /api/account/preferences',
+    // Notifications : chaque compte lit et modifie les siens (jamais ceux d'un autre) ; testé dans notifications-metier.test.ts.
+    'GET /api/account/notifications',
+    'PUT /api/account/notifications',
     'POST /api/mur/activer',
     // Catalogue de configuration GRC : droits contrôlés par le service (pilotage, paramètres ou administration), testés dans
     // config-grc.test.ts (401, 403, portée du périmètre, droits de publication).
