@@ -1,12 +1,15 @@
 /* Notifications métier (décision 012-10, ADR 0058) : réglage par groupe, aperçu des destinataires, et le réglage personnel qui
-   l'emporte (Mon compte). Données fictives ; l'état initial est rétabli. Non rejouée en local pendant le chantier : la pile
-   Docker était occupée, cette spec est à lancer par ./tests/e2e/run-in-container.sh. */
+   l'emporte (Mon compte). Données fictives ; l'état initial est rétabli. Rejouée sur la pile Docker locale. */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { csrfOf, sessionAdmin, watchPage } from '../helpers';
 
 const TYPE = 'Échéance d’une action';
 const COURRIEL = `${TYPE} : Par courriel`;
+
+/** Carte (Mantine Card) qui contient la zone : le bouton Enregistrer est à côté du tableau, pas dedans. */
+const boiteDe = (zone: ReturnType<Page['locator']>) =>
+  zone.locator('xpath=ancestor::*[contains(@class,"mantine-Card-root")][1]');
 
 async function choisir(page: Page, zone: ReturnType<Page['locator']>, nom: string, option: string) {
   await zone.getByRole('combobox', { name: nom, exact: true }).click();
@@ -45,7 +48,7 @@ test('Notifications : groupe coché, retrait dans le profil, aperçu des destina
     await choisir(page, fenetre, 'Groupe ou rôle', groupe + ' (1 compte actif)');
     const matrice = fenetre.getByRole('region', { name: 'Réglages de notification de la portée choisie' });
     await choisir(page, matrice, COURRIEL, 'Activé');
-    await matrice.getByRole('button', { name: 'Enregistrer' }).click();
+    await fenetre.getByRole('button', { name: 'Enregistrer', exact: true }).click();
     await expect(page.getByText('Réglages de notification enregistrés.')).toBeVisible();
 
     // 2. L'aperçu liste le compte avec son origine : le groupe.
@@ -58,7 +61,7 @@ test('Notifications : groupe coché, retrait dans le profil, aperçu des destina
     await page.goto('/account');
     const carte = page.getByRole('region', { name: 'Mes réglages de notification' });
     await choisir(page, carte, COURRIEL, 'Désactivé');
-    await carte.getByRole('button', { name: 'Enregistrer' }).click();
+    await boiteDe(carte).getByRole('button', { name: 'Enregistrer', exact: true }).click();
     await expect(page.getByText('Réglages de notification enregistrés.').first()).toBeVisible();
     await expect(carte).toContainText('Résultat : désactivé');
     await expect(carte).toContainText('votre réglage personnel');
@@ -79,7 +82,7 @@ test('Notifications : groupe coché, retrait dans le profil, aperçu des destina
         (await carte.getByRole('combobox', { name: COURRIEL, exact: true }).inputValue()) === 'Désactivé'
       ) {
         await choisir(page, carte, COURRIEL, 'Non défini (hérite)');
-        await carte.getByRole('button', { name: 'Enregistrer' }).click();
+        await boiteDe(carte).getByRole('button', { name: 'Enregistrer', exact: true }).click();
         await expect(page.getByText('Réglages de notification enregistrés.').first()).toBeVisible();
       }
       if (groupeId)

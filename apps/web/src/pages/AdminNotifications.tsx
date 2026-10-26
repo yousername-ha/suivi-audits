@@ -60,7 +60,7 @@ export function NotificationsPanel() {
         défaut, la notification s’affiche dans l’application et aucun courriel n’est envoyé.
       </Text>
       <ErrorAlert error={portees.error ?? etat.error} />
-      {etat.data && <BandeauCourriel courriel={etat.data.courriel} />}
+      {etat.data && !portee && <BandeauCourriel courriel={etat.data.courriel} />}
       {e && (e.enAttente > 0 || e.envoyees > 0 || e.echecs > 0) && (
         <Group gap="xs" aria-label="Envois de courriel des sept derniers jours">
           <Text size="sm">Sept derniers jours :</Text>
