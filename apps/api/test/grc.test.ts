@@ -320,7 +320,7 @@ describe('SMSI, permissions et décisions', () => {
       for (let i = 0; i < 40; i++) {
         blocked = !!(
           await t.svc.db.one<{ blocked: boolean }>(
-            `SELECT EXISTS(SELECT 1 FROM pg_stat_activity WHERE datname=current_database() AND wait_event_type='Lock' AND query LIKE '%FOR SHARE OF s%') blocked`,
+            `SELECT EXISTS(SELECT 1 FROM pg_stat_activity WHERE datname=current_database() AND wait_event_type='Lock' AND query ~* 'for share of "?s"?') blocked`,
           )
         )?.blocked;
         if (blocked) break;
