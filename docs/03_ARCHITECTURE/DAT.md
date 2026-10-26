@@ -54,7 +54,7 @@ Query invalide les données concernées. If-Match protège les mises à jour.
 | Node                          | minimum 24 ; images node:24-alpine, version exacte de patch dépend du build |
 | pnpm / TypeScript             | 10.34.6 / 5.9.3                                                             |
 | Fastify / zod / pg            | 5.12.5 / 4.6.5 / 8.23.1                                                     |
-| Drizzle ORM                   | 0.45.2                                                                      |
+| Kysely                        | 0.29.7 (ADR 0062)                                                                      |
 | React / Mantine               | 19.3.0 / 8.3.18                                                             |
 | TanStack Query / React Router | 5.104.1 / 7.18.4                                                            |
 | Vite / Vitest / Playwright    | 7.3.7 / 3.2.7 / 1.56.1                                                      |
@@ -68,7 +68,7 @@ prouvent pas les binaires actuellement installés chez l’utilisateur.
 ## Modèle de données et intégrité
 
 15 migrations SQL additives et schema_migrations ; rôle applicatif limité,
-schéma Drizzle et base comparés en CI. App_state demeure source des familles
+types Kysely générés de la base migrée et comparés en CI (ADR 0062). App_state demeure source des familles
 historiques ; maps est recomposé par mapper. Pilotage adapte directement dix
 clés historiques sans dupliquer les fiches.
 

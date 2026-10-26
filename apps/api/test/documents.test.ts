@@ -157,6 +157,52 @@ describe('concurrence par enregistrement (If-Match)', () => {
     );
   });
 
+  it('liens : recherche par rattachement, catégorie et texte (jokers échappés), suppression logique', async () => {
+    const mk = (body: Record<string, unknown>) => a.post('/api/links', body).then((r) => r.json());
+    const l1 = await mk({
+      url: 'https://exemple.invalid/r1',
+      title: 'Rapport 100% sûr',
+      category: 'veille',
+      refs: ['proc:P1'],
+      tags: ['anssi'],
+    });
+    const l2 = await mk({
+      url: 'https://exemple.invalid/r2',
+      title: 'Autre',
+      category: 'norme',
+      refs: ['proc:P2'],
+      description: 'note_interne',
+    });
+    const l3 = await mk({
+      url: 'https://exemple.invalid/r3',
+      title: 'Troisième',
+      category: 'veille',
+      tags: ['iso27001'],
+    });
+    const ids = async (qs: string) =>
+      ((await a.get(`/api/links${qs}`)).json() as { id: string }[])
+        .map((l) => l.id)
+        .filter((id) => [l1.id, l2.id, l3.id].includes(id))
+        .sort();
+    expect(await ids('?ref=proc:P1')).toEqual([l1.id]);
+    expect(await ids('?category=veille')).toEqual([l1.id, l3.id].sort());
+    expect(await ids('?q=ISO27')).toEqual([l3.id]); // étiquettes, insensible à la casse
+    expect(await ids('?q=proc:P2')).toEqual([l2.id]); // rattachements
+    expect(await ids('?q=100%25')).toEqual([l1.id]); // « % » cherché littéralement
+    expect(await ids('?q=note_int')).toEqual([l2.id]);
+    expect(await ids('?q=note%25int')).toEqual([]); // un joker saisi ne s'étend pas
+    expect(await ids('?category=veille&q=troisi')).toEqual([l3.id]);
+    // Ordre : le plus récemment modifié d'abord.
+    await a.patch(`/api/links/${l1.id}`, { title: 'Rapport révisé' }, { 'if-match': '1' });
+    const tous = ((await a.get('/api/links?category=veille')).json() as { id: string }[]).map((l) => l.id);
+    expect(tous.indexOf(l1.id)).toBeLessThan(tous.indexOf(l3.id));
+    expect((await b.req('DELETE', `/api/links/${l2.id}`)).statusCode).toBe(204);
+    expect(await ids('?ref=proc:P2')).toEqual([]);
+    expect((await a.req('DELETE', `/api/links/${l1.id}`)).statusCode).toBe(403); // rédacteur : pas de suppression
+    expect((await b.req('DELETE', `/api/links/${l2.id}`)).statusCode).toBe(404);
+    expect((await a.patch(`/api/links/${l2.id}`, { title: 'x' }, { 'if-match': '2' })).statusCode).toBe(404);
+  });
+
   it('refuse une adresse de lien invalide', async () => {
     const r = await a.post('/api/links', { url: 'javascript:alert(1)' });
     expect(r.statusCode).toBe(422);
