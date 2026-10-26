@@ -2,7 +2,7 @@
    par application avant son intégration au périmètre certifié ISO 27001 / HDS. Liste de contrôle issue des exigences de
    l'ISO/IEC 27001:2022 et du référentiel HDS ; les exigences HDS ne s'affichent que si l'application traite des DSCP.
    Données lues et écrites dans l'état historique (clé `appGaps`), sous verrou. */
-import { Alert, Anchor, Button, Card, Group, Modal, Stack, Text } from '@mantine/core';
+import { Alert, Anchor, Badge, Button, Card, Group, Modal, Stack, Text } from '@mantine/core';
 import { useState } from 'react';
 import {
   NIVEAU_ETAT_GAP,
@@ -14,6 +14,8 @@ import {
   etatPointGap,
   pointsGap,
   questionnaireGap,
+  questionnaireGapIa,
+  questionsIaVisibles,
   statsGap,
   type AppGap,
   type EtatGap,
@@ -41,7 +43,7 @@ export function GapApplications() {
     modifiable = can('conformite', 'modifier'),
     { d, agir, erreur } = useModule<Donnees>('gap', '/api/gap'),
     [fiche, setFiche] = useState<string | null>(null),
-    [guide, setGuide] = useState(false);
+    [guide, setGuide] = useState<false | 'application' | 'ia'>(false);
   const exclues = new Set(d?.exclues ?? []);
   const ouverte = d?.apps.find((a) => a.id === fiche) ?? null;
   const actives = d?.apps.filter((a) => !['Intégrée', 'Écartée'].includes(a.status)) ?? [];
@@ -68,7 +70,10 @@ export function GapApplications() {
             >
               Ajouter sans questionnaire
             </Button>
-            <Button onClick={() => setGuide(true)}>Nouveau GAP guidé</Button>
+            <Button variant="default" onClick={() => setGuide('ia')}>
+              Nouveau GAP IA
+            </Button>
+            <Button onClick={() => setGuide('application')}>Nouveau GAP guidé</Button>
           </Group>
         )}
       </Group>
@@ -123,6 +128,11 @@ export function GapApplications() {
                         <Anchor component="button" type="button" fw={600} onClick={() => setFiche(a.id)}>
                           {a.name || a.id}
                         </Anchor>
+                        {a.modele === 'ia' && (
+                          <Badge size="xs" variant="light" ml="xs">
+                            GAP IA
+                          </Badge>
+                        )}
                         <Text size="xs" c="dimmed">
                           {[sp && sp.name !== a.name ? sp.name : '', a.desc].filter(Boolean).join(' — ').slice(0, 90)}
                         </Text>
@@ -165,8 +175,15 @@ export function GapApplications() {
         )}
       </Modal>
       {guide && d && (
-        <Modal opened onClose={() => setGuide(false)} size="xl" lockScroll={false} title="Nouveau GAP guidé">
+        <Modal
+          opened
+          onClose={() => setGuide(false)}
+          size="xl"
+          lockScroll={false}
+          title={guide === 'ia' ? 'Nouveau GAP IA' : 'Nouveau GAP guidé'}
+        >
           <GuideGap
+            modele={guide}
             d={d}
             agir={agir}
             onDone={(id) => {
@@ -435,16 +452,31 @@ function FicheApplication({
 }
 
 /* ------------------------------------------------------------------------------------------ questionnaire guidé */
-function GuideGap({ d, agir, onDone }: { d: Donnees; agir: Agir; onDone: (id: string) => void }) {
+function GuideGap({
+  d,
+  agir,
+  onDone,
+  modele,
+}: {
+  d: Donnees;
+  agir: Agir;
+  onDone: (id: string) => void;
+  modele: 'application' | 'ia';
+}) {
+  const ia = modele === 'ia';
   const [v, setV] = useState({ name: '', supplier: '', supplierNew: '', owner: '', target: '', desc: '' });
   const [reponses, setReponses] = useState<ReponsesGap>({});
   const [mkPlan, setMkPlan] = useState(true);
   const [info, setInfo] = useState('');
-  const repondues = QUESTIONS_GAP.filter((q) =>
+  const questions = ia ? questionsIaVisibles(reponses) : QUESTIONS_GAP;
+  const repondues = questions.filter((q) =>
     q.multi ? ((reponses[q.k] as string[] | undefined) ?? []).length : reponses[q.k],
   ).length;
-  const apercu = repondues ? questionnaireGap(reponses) : null;
-  const total = apercu ? pointsGap({ dscp: apercu.dscp, cloud: apercu.cloud, custom: apercu.custom }).length : 0;
+  const apercu = repondues ? (ia ? questionnaireGapIa(reponses) : questionnaireGap(reponses)) : null;
+  const total = apercu
+    ? pointsGap({ dscp: apercu.dscp, cloud: apercu.cloud, custom: apercu.custom, modele: ia ? 'ia' : 'application' })
+        .length
+    : 0;
   const preEcarts = apercu ? Object.values(apercu.st).filter((x) => x === 'Non conforme').length : 0;
   const choisir = (k: string, o: string, multi?: boolean) => {
     if (multi) {
@@ -459,7 +491,11 @@ function GuideGap({ d, agir, onDone }: { d: Donnees; agir: Agir; onDone: (id: st
   const generer = async () => {
     const corps = {
       ...v,
-      answers: Object.fromEntries(Object.entries(reponses).filter(([, x]) => x !== undefined)),
+      modele,
+      // Seules les réponses aux questions affichées sont envoyées (un cas d'usage décoché n'en laisse pas).
+      answers: Object.fromEntries(
+        Object.entries(reponses).filter(([k, x]) => x !== undefined && questions.some((q) => q.k === k)),
+      ),
       mkPlan,
     };
     const r = await agir<{ app: AppGap; plan: string | null; fournisseur: string | null }>(
@@ -479,28 +515,30 @@ function GuideGap({ d, agir, onDone }: { d: Donnees; agir: Agir; onDone: (id: st
   return (
     <Stack>
       <Text size="sm" c="dimmed">
-        Décrivez l’outil ou le service à intégrer au périmètre ISO 27001 / HDS : la liste des points à contrôler ou à
-        mettre en place est générée, les points que les réponses permettent de trancher sont pré-évalués, et le plan
-        d’action est créé. Les questions sans réponse laissent les points concernés « à évaluer ».
+        {ia
+          ? 'Répondez par des faits que l’on peut constater (compte utilisé, contrat, filtrage, relecture) pour chacune des situations d’IA qui concernent le GCS : les points ISO 27001 / HDS à contrôler sont générés, ceux que les réponses permettent de trancher sont pré-évalués et le plan d’action est créé. Une question sans réponse ou « Inconnu » laisse le point « à évaluer » : rien n’est supposé.'
+          : 'Décrivez l’outil ou le service à intégrer au périmètre ISO 27001 / HDS : la liste des points à contrôler ou à mettre en place est générée, les points que les réponses permettent de trancher sont pré-évalués, et le plan d’action est créé. Les questions sans réponse laissent les points concernés « à évaluer ».'}
       </Text>
       {info && <Alert color="green">{info}</Alert>}
       <div className="grille-formulaire">
         <div className="grille-formulaire__champs">
           <ChampTexte
-            label="Outil ou service"
-            placeholder="ex. Plateforme de téléexpertise"
+            label={ia ? 'Intitulé du GAP' : 'Outil ou service'}
+            placeholder={ia ? 'ex. Usage de l’IA au GCS' : 'ex. Plateforme de téléexpertise'}
             value={v.name}
             onCommit={(x) => setV({ ...v, name: x })}
           />
-          <ChampChoix
-            label="Fournisseur"
-            effacable
-            placeholder="Nouveau ou aucun"
-            value={v.supplier}
-            options={d.fournisseurs.map((f) => ({ value: f.id, label: f.name }))}
-            onCommit={(x) => setV({ ...v, supplier: x })}
-          />
-          {!v.supplier && (
+          {!ia && (
+            <ChampChoix
+              label="Fournisseur"
+              effacable
+              placeholder="Nouveau ou aucun"
+              value={v.supplier}
+              options={d.fournisseurs.map((f) => ({ value: f.id, label: f.name }))}
+              onCommit={(x) => setV({ ...v, supplier: x })}
+            />
+          )}
+          {!ia && !v.supplier && (
             <ChampTexte
               label="Nouveau fournisseur (facultatif)"
               value={v.supplierNew}
@@ -518,7 +556,7 @@ function GuideGap({ d, agir, onDone }: { d: Donnees; agir: Agir; onDone: (id: st
       </div>
       <ChampZone label="Description et activités concernées" value={v.desc} onCommit={(x) => setV({ ...v, desc: x })} />
       <ol className="audit-liste">
-        {QUESTIONS_GAP.map((q) => (
+        {questions.map((q) => (
           <li key={q.k}>
             <Text size="sm" fw={600}>
               {q.l}
@@ -548,7 +586,7 @@ function GuideGap({ d, agir, onDone }: { d: Donnees; agir: Agir; onDone: (id: st
       <Group>
         <Card withBorder padding="xs">
           <Text fw={700}>
-            {repondues}/{QUESTIONS_GAP.length}
+            {repondues}/{questions.length}
           </Text>
           <Text size="xs" c="dimmed">
             réponses
