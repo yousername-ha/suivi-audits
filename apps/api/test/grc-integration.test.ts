@@ -275,3 +275,75 @@ it('présente et réalise les actions historiques dans leur source, sans perdre 
   expect(source.last).toBe('2026-10-10');
   expect((await t.svc.db.q("SELECT id FROM grc_objects WHERE legacy_id='grc-historique'", [])).rowCount).toBe(0);
 });
+it('compare à une date antérieure, pagine l’historique des appréciations et rejoue une requête à l’identique', async () => {
+  const d = methodTemplate('custom'),
+    m = await publish(d);
+  const r = (await a.post(root() + '/objects', { ...risk(m.methodId), name: 'Risque comparé' })).json();
+  const rating = (level: string) => ({
+    dimensions: { severity: 'impact_2' },
+    likelihood: 'likelihood_2',
+    level,
+    inputs: {},
+  });
+  const evaluer = async (level: string, version: number, requestId = crypto.randomUUID()) => {
+    const body = {
+      ratings: { gross: rating(level), residual: rating(level) },
+      rationale: 'Appréciation datée',
+      decision: 'draft',
+    };
+    const p = await a.post(root() + `/risks/${r.id}/preview`, body);
+    expect(p.statusCode, p.body).toBe(200);
+    const out = { ...body, previewId: p.json().previewId, requestId, confirm: 'ENREGISTRER' };
+    return { reponse: await a.post(root() + `/risks/${r.id}/evaluate`, out, { 'if-match': `"${version}"` }), out };
+  };
+  const premiere = await evaluer('low', 1);
+  expect(premiere.reponse.statusCode, premiere.reponse.body).toBe(200);
+  // Rejeu de la même requête : même appréciation renvoyée, aucune nouvelle révision.
+  const rejeu = await a.post(root() + `/risks/${r.id}/evaluate`, premiere.out, { 'if-match': '"1"' });
+  expect(rejeu.statusCode, rejeu.body).toBe(200);
+  expect(rejeu.json().id).toBe(premiere.reponse.json().id);
+  // Même identifiant, autre contenu : refusé.
+  expect(
+    (
+      await a.post(
+        root() + `/risks/${r.id}/evaluate`,
+        { ...premiere.out, rationale: 'Autre justification différente' },
+        { 'if-match': '"1"' },
+      )
+    ).statusCode,
+  ).toBe(409);
+  const entre = new Date(Date.now() + 1).toISOString();
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  expect((await evaluer('high', 1)).reponse.statusCode).toBe(200);
+  const carte = await a.get(
+    root() +
+      `/risk-map?methodId=${m.methodId}&search=${encodeURIComponent('Risque comparé')}&compareAt=${encodeURIComponent(entre)}`,
+  );
+  expect(carte.statusCode, carte.body).toBe(200);
+  const item = carte.json().items[0];
+  expect(item.assessment.revision).toBe(2);
+  expect(item.comparison).toMatchObject({ revision: 1, compatible: true });
+  expect(item.comparison.result.residual.level).toBe('low');
+  // Sans appréciation à la date de comparaison : pas de comparaison.
+  const avant = await a.get(
+    root() +
+      `/risk-map?methodId=${m.methodId}&search=${encodeURIComponent('Risque comparé')}&compareAt=2000-01-01T00:00:00.000Z`,
+  );
+  expect(avant.json().items[0].comparison).toBeNull();
+  const hist = (await a.get(root() + `/risks/${r.id}/evaluations`)).json() as {
+    revision: number;
+    method: { name: string };
+  }[];
+  expect(hist.map((h) => h.revision)).toEqual([2, 1]);
+  expect(hist[0]!.method.name).toBe(d.name);
+  expect(
+    ((await a.get(root() + `/risks/${r.id}/evaluations?before=2`)).json() as { revision: number }[]).map(
+      (h) => h.revision,
+    ),
+  ).toEqual([1]);
+  // Historique des versions de la méthode, la plus récente d'abord.
+  d.name = 'Méthode révisée';
+  await publish(d, m.methodId, 1);
+  const versions = (await a.get(root() + `/methods/${m.methodId}/history`)).json() as { version: number }[];
+  expect(versions.map((v) => v.version)).toEqual([2, 1]);
+});
