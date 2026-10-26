@@ -22,6 +22,7 @@
    Raccourci : docker compose exec app setup-token                                                                */
 import crypto from 'node:crypto';
 import type { SettingsValues } from '@suivi/shared';
+import { sql } from 'kysely';
 import { z } from 'zod';
 import { certificateInfo } from './certificates.js';
 import { loadConfig } from './config.js';
@@ -61,10 +62,11 @@ async function main() {
   const svc = createServices(loadConfig(), createLogger('warn'));
   const SYS = { username: 'cli' };
   const user = async (name?: string) => {
-    const u = await svc.db.one<{ id: string; username: string }>(
-      'SELECT id, username FROM users WHERE lower(username)=lower($1)',
-      [name || ''],
-    );
+    const u = await svc.db.k
+      .selectFrom('users')
+      .select(['id', 'username'])
+      .where(sql`lower(username)`, '=', sql`lower(${name || ''})`)
+      .executeTakeFirst();
     if (!u) {
       console.error(`Compte inconnu : ${name ?? ''}`);
       process.exit(1);
@@ -78,6 +80,7 @@ async function main() {
       break;
     }
     case 'update-drain': {
+      // Attend la fin de l'exécutant en prenant puis rendant son verrou consultatif : appel SQL direct (ADR 0062 §5).
       const c = await svc.db.pool.connect();
       try {
         await c.query('SELECT pg_advisory_lock(727276)');
@@ -161,22 +164,24 @@ async function main() {
       break;
     }
     case 'users': {
-      const r = await svc.db.q<{
-        username: string;
-        roles: string | null;
-        expires_at: Date | null;
-        disabled: boolean;
-        totp_enabled: boolean;
-        locked_until: Date | null;
-        last_login_at: Date | null;
-      }>(
-        `SELECT u.username, u.disabled, u.totp_enabled, u.locked_until, u.last_login_at, u.expires_at,
-                (SELECT string_agg(r.name, ', ' ORDER BY r.name) FROM user_roles ur JOIN roles r ON r.id = ur.role_id
-                  WHERE ur.user_id = u.id) AS roles
-           FROM users u ORDER BY lower(u.username)`,
-      );
+      const r = await svc.db.k
+        .selectFrom('users as u')
+        .select([
+          'u.username',
+          'u.disabled',
+          'u.totp_enabled',
+          'u.locked_until',
+          'u.last_login_at',
+          'u.expires_at',
+          sql<
+            string | null
+          >`(SELECT string_agg(r.name, ', ' ORDER BY r.name) FROM user_roles ur JOIN roles r ON r.id = ur.role_id
+            WHERE ur.user_id = u.id)`.as('roles'),
+        ])
+        .orderBy(sql`lower(u.username)`)
+        .execute();
       console.table(
-        r.rows.map((u) => ({
+        r.map((u) => ({
           compte: u.username,
           roles: u.roles ?? '',
           expiration: u.expires_at ? new Date(u.expires_at).toISOString().slice(0, 10) : '',
@@ -200,11 +205,19 @@ async function main() {
     case 'reset-password': {
       const u = await user(arg);
       const pw = tempPassword();
-      await svc.db.tx(async (c) => {
-        await c.query(
-          'UPDATE users SET password_hash=$2, must_change_password=true, failed_logins=0, locked_until=NULL, version=version+1 WHERE id=$1',
-          [u.id, await hashPassword(pw)],
-        );
+      const empreinte = await hashPassword(pw);
+      await svc.db.tx(async (c, k) => {
+        await k
+          .updateTable('users')
+          .set((eb) => ({
+            password_hash: empreinte,
+            must_change_password: true,
+            failed_logins: 0,
+            locked_until: null,
+            version: eb('version', '+', 1),
+          }))
+          .where('id', '=', u.id)
+          .execute();
         await svc.auth.destroyUserSessions(u.id, null, c);
       }, 'cli');
       await svc.db.audit(SYS, null, 'cli.user_password_reset', u.username);
@@ -213,11 +226,12 @@ async function main() {
     }
     case 'reset-mfa': {
       const u = await user(arg);
-      await svc.db.tx(async (c) => {
-        await c.query(
-          'UPDATE users SET totp_secret=NULL, totp_pending=NULL, totp_enabled=false, version=version+1 WHERE id=$1',
-          [u.id],
-        );
+      await svc.db.tx(async (c, k) => {
+        await k
+          .updateTable('users')
+          .set((eb) => ({ totp_secret: null, totp_pending: null, totp_enabled: false, version: eb('version', '+', 1) }))
+          .where('id', '=', u.id)
+          .execute();
         await svc.auth.destroyUserSessions(u.id, null, c);
       }, 'cli');
       await svc.db.audit(SYS, null, 'cli.user_mfa_reset', u.username);
@@ -228,7 +242,11 @@ async function main() {
     }
     case 'unlock': {
       const u = await user(arg);
-      await svc.db.q('UPDATE users SET failed_logins=0, locked_until=NULL WHERE id=$1', [u.id]);
+      await svc.db.k
+        .updateTable('users')
+        .set({ failed_logins: 0, locked_until: null })
+        .where('id', '=', u.id)
+        .execute();
       await svc.db.audit(SYS, null, 'cli.user_unlock', u.username);
       console.log('Compte déverrouillé.');
       break;
@@ -236,8 +254,12 @@ async function main() {
     case 'disable':
     case 'enable': {
       const u = await user(arg);
-      await svc.db.tx(async (c) => {
-        await c.query('UPDATE users SET disabled=$2, version=version+1 WHERE id=$1', [u.id, cmd === 'disable']);
+      await svc.db.tx(async (c, k) => {
+        await k
+          .updateTable('users')
+          .set((eb) => ({ disabled: cmd === 'disable', version: eb('version', '+', 1) }))
+          .where('id', '=', u.id)
+          .execute();
         if (cmd === 'disable') await svc.auth.destroyUserSessions(u.id, null, c);
       }, 'cli');
       await svc.db.audit(SYS, null, `cli.user_${cmd}`, u.username);
@@ -245,9 +267,10 @@ async function main() {
       break;
     }
     case 'sessions-purge': {
-      const r = await svc.db.tx((c) => c.query('DELETE FROM sessions'), 'cli');
-      await svc.db.audit(SYS, null, 'cli.sessions_purge', '', { count: r.rowCount });
-      console.log(`${r.rowCount} session(s) fermée(s).`);
+      const r = await svc.db.tx((_c, k) => k.deleteFrom('sessions').executeTakeFirst(), 'cli');
+      const n = Number(r.numDeletedRows);
+      await svc.db.audit(SYS, null, 'cli.sessions_purge', '', { count: n });
+      console.log(`${n} session(s) fermée(s).`);
       break;
     }
     case 'migrate': {
@@ -259,10 +282,12 @@ async function main() {
       if (arg === '--a-appliquer') {
         for (const f of await pendingMigrations(svc.db)) console.log(f);
       } else {
-        const r = await svc.db.q<{ name: string; applied_at: Date }>(
-          'SELECT name, applied_at FROM schema_migrations ORDER BY name',
-        );
-        for (const m of r.rows) console.log(`${m.name}\t${new Date(m.applied_at).toISOString()}`);
+        const r = await svc.db.k
+          .selectFrom('schema_migrations')
+          .select(['name', 'applied_at'])
+          .orderBy('name')
+          .execute();
+        for (const m of r) console.log(`${m.name}\t${new Date(m.applied_at).toISOString()}`);
       }
       break;
     }
@@ -350,26 +375,28 @@ async function controleDonnees(svc: Services) {
     'import_batches',
   ];
   const tables: Record<string, number> = {};
+  const k = svc.db.k;
   for (const t of TABLES) {
-    const exists = await svc.db.one<{ r: string | null }>('SELECT to_regclass($1)::text AS r', [t]);
-    if (exists?.r) tables[t] = (await svc.db.one<{ n: number }>(`SELECT count(*)::int AS n FROM ${t}`))!.n;
+    const exists = (await sql<{ r: string | null }>`SELECT to_regclass(${t})::text AS r`.execute(k)).rows[0];
+    // Nom de table issu de la liste fermée ci-dessus, cité comme identifiant.
+    if (exists?.r)
+      tables[t] = (await sql<{ n: number }>`SELECT count(*)::int AS n FROM ${sql.table(t)}`.execute(k)).rows[0]!.n;
   }
-  const st = await svc.db.one<{ version: number; empreinte: string }>(
-    "SELECT version, encode(sha256(convert_to(data::text, 'UTF8')), 'hex') AS empreinte FROM app_state WHERE id = 1",
-  );
-  const versions = await svc.db.q<{
-    document_id: string;
-    version: number;
-    sha256: string;
-    key_id: string;
-    iv: Buffer;
-    auth_tag: Buffer;
-    content: Buffer;
-  }>('SELECT document_id, version, sha256, key_id, iv, auth_tag, content FROM document_versions ORDER BY 1, 2');
+  const st = await k
+    .selectFrom('app_state')
+    .select(['version', sql<string>`encode(sha256(convert_to(data::text, 'UTF8')), 'hex')`.as('empreinte')])
+    .where('id', '=', 1)
+    .executeTakeFirst();
+  const versions = await k
+    .selectFrom('document_versions')
+    .select(['document_id', 'version', 'sha256', 'key_id', 'iv', 'auth_tag', 'content'])
+    .orderBy('document_id')
+    .orderBy('version')
+    .execute();
   let relues = 0;
   const erreurs: string[] = [];
   const h = crypto.createHash('sha256');
-  for (const v of versions.rows) {
+  for (const v of versions) {
     try {
       const plain = svc.vault.decrypt(
         { iv: v.iv, tag: v.auth_tag, content: v.content, keyId: v.key_id },
@@ -387,7 +414,7 @@ async function controleDonnees(svc: Services) {
     ok: erreurs.length === 0,
     tables,
     etat: st ? { version: st.version, empreinte: st.empreinte } : null,
-    documents: { versions: versions.rows.length, relues, empreinte: h.digest('hex'), erreurs },
+    documents: { versions: versions.length, relues, empreinte: h.digest('hex'), erreurs },
     relations,
   };
 }
