@@ -356,6 +356,37 @@ describe('script d’envoi (scripts/courriel-envoi.py)', () => {
     expect(inconnu.error).toMatch(/introuvable|injoignable|Délai/);
   });
 
+  it('envoie une notification : objet et corps fournis, aucune adresse dans la trace, en-tête automatique', async () => {
+    const f = await fauxServeur('smtps');
+    try {
+      const r = await envoyer(
+        base(f.port, {
+          kind: 'notification',
+          to: 'personne@exemple.test',
+          subject: 'Suivi des audits : Échéance d’une action',
+          body: 'Bonjour,\n\nOuvrez /pilotage/rappels\n',
+        }),
+      );
+      expect(r.ok, JSON.stringify(r)).toBe(true);
+      expect(JSON.stringify(r)).not.toContain('personne@exemple.test');
+      expect(f.messages).toHaveLength(1);
+      expect(f.messages[0]).toContain('To: personne@exemple.test');
+      expect(f.messages[0]).toContain('Auto-Submitted: auto-generated');
+      expect(f.messages[0]).toContain('Ouvrez /pilotage/rappels');
+      expect(f.messages[0]).not.toContain('message de test');
+    } finally {
+      await f.close();
+    }
+  });
+
+  it('refuse une notification sans objet, avec un objet multiligne ou de type inconnu', async () => {
+    const notif = { kind: 'notification', subject: 'Objet', body: 'Corps' };
+    expect((await lancer(base(1, { ...notif, subject: '' }))).status).not.toBe(0);
+    expect((await lancer(base(1, { ...notif, subject: 'a\nBcc: x@y.test' }))).status).not.toBe(0);
+    expect((await lancer(base(1, { ...notif, body: '' }))).status).not.toBe(0);
+    expect((await lancer(base(1, { ...notif, kind: 'autre' }))).status).not.toBe(0);
+  });
+
   it('refuse une valeur contenant un saut de ligne (injection d’en-tête)', async () => {
     const r = await lancer(base(1, { to: 'a@b.test\r\nBcc: x@y.test' }));
     expect(r.status).not.toBe(0);

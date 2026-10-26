@@ -23,6 +23,7 @@ export const DROITS_CARTES: readonly { id: string; cote: Cote; peut: (can: Peut)
   { id: 'conservation', cote: 'plateforme', peut: parametres },
   { id: 'apparence', cote: 'plateforme', peut: parametres },
   { id: 'notifications', cote: 'plateforme', peut: parametres },
+  { id: 'notifications-destinataires', cote: 'plateforme', peut: administration },
   { id: 'murs', cote: 'plateforme', peut: administration },
   { id: 'import', cote: 'plateforme', peut: (can) => can('import_export', 'lire') },
   { id: 'sauvegardes', cote: 'systeme', peut: administration },

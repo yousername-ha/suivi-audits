@@ -17,6 +17,7 @@ import {
 import type { SessionUser } from '../auth.js';
 import type { Client } from '../db/db.js';
 import { HttpError } from '../http/errors.js';
+import type { NotificationEmise } from '../notifications-metier.js';
 import { loadGrants } from '../rights.js';
 import type { Grc } from './core.js';
 
@@ -191,10 +192,10 @@ export class GrcRapprochements {
         .map((x) => x.target + x.mappingId)
         .sort()
         .join('|');
-      for (const user of pilots)
-        await c.query(
+      for (const user of pilots) {
+        const r = await c.query<NotificationEmise>(
           `INSERT INTO grc_notifications(smsi_id,object_id,user_id,kind,due_key,title,message)
-           VALUES($1,$2,$3,'rapprochement',md5($4),$5,$6) ON CONFLICT DO NOTHING`,
+           VALUES($1,$2,$3,'rapprochement',md5($4),$5,$6) ON CONFLICT DO NOTHING RETURNING id,user_id AS "userId",kind`,
           [
             smsi,
             id,
@@ -204,6 +205,9 @@ export class GrcRapprochements {
             `${list.length} rapprochement(s) à valider pour la mesure « ${o.name} » : décidez de les confirmer ou de les rejeter.`,
           ],
         );
+        // Réglages de notification par groupe, rôle et utilisateur (ADR 0058) : visibilité dans Rappels et courriel éventuel.
+        await this.g.notificationsMetier?.diffuser(c, r.rows);
+      }
     }
   }
 
