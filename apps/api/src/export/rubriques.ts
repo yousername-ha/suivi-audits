@@ -13,8 +13,6 @@ import {
   recurrenceSuivante,
   revueEtat,
   valeurIndicateur,
-  evaluationIa,
-  etapeIa,
   lireAppGap,
   etatPointGap,
   pointsGap,
@@ -959,111 +957,6 @@ export const JEUX: Record<string, Jeu> = {
         texte(r.refs),
       ]),
   },
-  iaRegistre: {
-    titre: () => 'IA — registre des usages',
-    colonnes: [
-      ['ID', 10],
-      ['IA présente', 10],
-      ['Catégorie', 28],
-      ['Fournisseur, service', 46],
-      ["Cas d'usage", 40],
-      ['DSCP', 10],
-      ['Autorisation', 18],
-    ],
-    lignes: ({ etat }) =>
-      objs(obj(etat.ai).register).map((r) => [
-        texte(r.id),
-        texte(r.aiPresence),
-        texte(r.category),
-        texte(r.provider),
-        texte(r.usecase),
-        texte(r.dscp),
-        texte(r.authz),
-      ]),
-  },
-  iaEval: {
-    titre: () => 'IA — évaluation des risques',
-    colonnes: [
-      ['ID', 6],
-      ['Domaine', 26],
-      ['Scénario', 70],
-      ['Périmètre', 22],
-      ['Maturité', 9],
-      ['Indice', 8],
-      ['Niveau', 12],
-      ['Mesure attendue', 50],
-    ],
-    lignes: ({ etat }) =>
-      objs(obj(etat.ai).evals).map((e) => {
-        const r = evaluationIa({
-          app: texte(e.app),
-          c: nombre(e.c),
-          i: nombre(e.i),
-          a: nombre(e.a),
-          audit: nombre(e.audit),
-          patient: nombre(e.patient),
-          prob: nombre(e.prob),
-          dscp: texte(e.dscp),
-          maturity: nombre(e.maturity),
-          effort: nombre(e.effort),
-        } as never);
-        return [
-          texte(e.id),
-          texte(e.domain),
-          texte(e.scenario),
-          texte(e.scope),
-          texte(e.maturity),
-          r.indice ?? '',
-          r.niveau,
-          texte(e.measure),
-        ];
-      }),
-  },
-  iaPlan: {
-    titre: () => "IA — plan d'action",
-    colonnes: [
-      ['Étape', 7],
-      ['Phase', 22],
-      ['Action', 60],
-      ['Pilote', 18],
-      ['Échéance', 12],
-      ['Statut', 12],
-      ['Avancement', 11],
-      ['Alerte', 16],
-    ],
-    lignes: ({ etat, aujourdhui }) => {
-      const ia = obj(etat.ai);
-      return objs(ia.plan).map((p) => {
-        const e = etapeIa(
-          { jStart: nombre(p.jStart), jEnd: nombre(p.jEnd), status: texte(p.status) as never },
-          texte(ia.start),
-          !!ia.startValidated,
-          aujourdhui,
-        );
-        return [
-          texte(p.step),
-          texte(p.phase),
-          texte(p.action),
-          texte(p.owner),
-          dFr(e.echeance),
-          texte(p.status),
-          `${nombre(p.progress)} %`,
-          e.alerte[0],
-        ];
-      });
-    },
-  },
-  iaPolitiques: {
-    titre: () => 'IA — politiques à adapter',
-    colonnes: [
-      ['Politique', 40],
-      ['Modification attendue', 70],
-      ['Propriétaire', 20],
-      ['Statut', 14],
-    ],
-    lignes: ({ etat }) =>
-      objs(obj(etat.ai).policies).map((p) => [texte(p.policy), texte(p.change), texte(p.owner), texte(p.status)]),
-  },
   pronostic: {
     titre: ({ etat }) => `Pronostic de l'audit ${texte(etat.nextYear)}`.trim(),
     colonnes: [
@@ -1288,12 +1181,6 @@ export const GROUPES: readonly { id: string; titre: string; description: string;
     titre: 'Plans du SMSI',
     description: 'Formation, sensibilisation, audit interne, exercices et tâches récurrentes.',
     jeux: ['plans', 'recurrentes'],
-  },
-  {
-    id: 'ia',
-    titre: 'GAP — Intelligence artificielle',
-    description: 'Registre, évaluation, plan d’action et politiques.',
-    jeux: ['iaRegistre', 'iaEval', 'iaPlan', 'iaPolitiques'],
   },
   {
     id: 'apps',

@@ -23,6 +23,7 @@ import { ImportPanel } from './AdminImport';
 import { ImportTenacyPanel } from './AdminImportTenacy';
 import { ModulesPanel } from './AdminModules';
 import { MursPanel } from './AdminMurs';
+import { NotificationsPanel } from './AdminNotifications';
 import { OperationsPanel } from './AdminOperations';
 import { TypesProcessusPanel } from './AdminTypesProcessus';
 import { SectionLoader } from './Settings';
@@ -176,10 +177,19 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     id: 'notifications',
     cote: 'plateforme',
     titre: 'Notifications',
-    resume: 'Alertes affichées dans l’application (aucun envoi de courriel).',
+    resume: 'Délais d’alerte avant une échéance.',
     icone: 'cloche',
     teinte: 'vert',
     detail: (m) => <SectionLoader section="notifications" onDirty={m} />,
+  },
+  {
+    id: 'notifications-destinataires',
+    cote: 'plateforme',
+    titre: 'Destinataires des notifications',
+    resume: 'Qui reçoit quoi, dans l’application et par courriel : réglage par groupe, rôle et compte.',
+    icone: 'cloche',
+    teinte: 'orange',
+    detail: () => <NotificationsPanel />,
   },
   {
     id: 'murs',

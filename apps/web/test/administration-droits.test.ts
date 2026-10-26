@@ -31,6 +31,7 @@ describe('cartes de l’Administration : droits', () => {
       'roles',
       'types-processus',
       'calendriers',
+      'notifications-destinataires',
       'murs',
     ]);
     expect(cartesVisibles(peut, 'systeme')).toEqual([
@@ -91,6 +92,7 @@ describe('cartes de l’Administration : droits', () => {
       'import',
       'certificats',
       'modules',
+      'notifications-destinataires',
     ])
       expect(ids.has(onglet), onglet).toBe(true);
     expect(cartesVisibles(tout, 'plateforme').length + cartesVisibles(tout, 'systeme').length).toBe(

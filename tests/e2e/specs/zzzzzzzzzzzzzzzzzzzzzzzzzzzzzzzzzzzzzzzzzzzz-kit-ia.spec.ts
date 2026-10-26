@@ -87,9 +87,9 @@ test('Kit IA : aperçu, import confirmé, rejeu sans effet, veille à revérifie
     await expect(veille.getByText('à revérifier', { exact: true }).first()).toBeVisible();
     await veille.getByRole('button', { name: 'Fermer', exact: true }).click();
 
-    // La page « Conformité IA » renvoie vers le référentiel sans rien supprimer.
+    // La page « Conformité IA » est retirée (ADR 0057) : plus de menu ni d'adresse.
     await page.goto('/pilotage/conformite-ia');
-    await expect(page.getByTestId('ia-kit-renvoi')).toContainText('Contrôles IA internes');
+    await expect(page.getByText('Rubrique introuvable')).toBeVisible();
     expect(problems).toEqual([]);
   } finally {
     await ctx.close();

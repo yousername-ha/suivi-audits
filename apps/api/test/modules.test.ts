@@ -40,7 +40,7 @@ describe('B1 configuration des modules', () => {
   it('tous actifs par défaut, registre accessible aux sessions complètes', async () => {
     const state = (await a.get('/api/modules')).json();
     expect(state.disabled).toEqual([]);
-    expect(state.registry).toHaveLength(15);
+    expect(state.registry).toHaveLength(14);
     expect(state.registry.filter((m: { protected: boolean }) => m.protected)).toHaveLength(2);
     const r = await login(t, reader);
     expect((await r.get('/api/modules')).statusCode).toBe(200);
@@ -134,12 +134,12 @@ describe('B1 configuration des modules', () => {
       (
         await a.put(
           '/api/admin/modules',
-          { intent: intent('ia', false), previewId: p.previewId, confirm: 'VALIDER' },
+          { intent: intent('crrc', false), previewId: p.previewId, confirm: 'VALIDER' },
           { 'if-match': `"${p.version}"` },
         )
       ).statusCode,
     ).toBe(409);
-    expect((await apply(intent('ia', false))).statusCode).toBe(200);
+    expect((await apply(intent('crrc', false))).statusCode).toBe(200);
     expect(
       (
         await a.put(
@@ -149,7 +149,7 @@ describe('B1 configuration des modules', () => {
         )
       ).statusCode,
     ).toBe(412);
-    expect((await a.get('/api/modules')).json().disabled).toEqual(['ia']);
+    expect((await a.get('/api/modules')).json().disabled).toEqual(['crrc']);
   });
   it('refuse les simulations et imports portant sur un module désactivé', async () => {
     expect((await apply(intent('fournisseurs', false))).statusCode).toBe(200);

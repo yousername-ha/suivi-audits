@@ -9,6 +9,7 @@ import {
 } from '@suivi/shared';
 import type { SessionUser } from '../auth.js';
 import { HttpError } from '../http/errors.js';
+import type { NotificationEmise } from '../notifications-metier.js';
 import { objectColumns, objectDto, type ObjectRow, type Grc } from './core.js';
 import { OCCURRENCE_VALIDEE } from './cartes.js';
 
@@ -371,20 +372,26 @@ export class GrcTasks {
   }
   private async reminders(now: Date) {
     await this.g.db.tx(async (c) => {
-      await c.query(
-        `INSERT INTO grc_notifications(smsi_id,object_id,user_id,kind,due_key,title,message)
+      // Notifications réellement créées à ce passage (les doublons sont ignorés) : seules elles sont diffusées (ADR 0058).
+      const emises: NotificationEmise[] = [];
+      const noter = (r: { rows: NotificationEmise[] }) => void emises.push(...r.rows);
+      noter(
+        await c.query<NotificationEmise>(
+          `INSERT INTO grc_notifications(smsi_id,object_id,user_id,kind,due_key,title,message)
    SELECT o.smsi_id,o.id,u.id,'task_due',o.data->>'dueAt',p.definition->'notifications'->>'title',p.definition->'notifications'->>'message'
    FROM grc_objects o JOIN grc_smsis s ON s.id=o.smsi_id JOIN business_policy_versions p ON p.version=s.business_version JOIN users u ON u.id=(o.data->>'ownerId')::uuid
    WHERE o.kind='action' AND NOT o.archived AND NOT u.disabled AND (u.expires_at IS NULL OR u.expires_at>now()) AND p.definition->'notifications'->>'enabled'='true'
    AND NOT EXISTS(SELECT 1 FROM jsonb_array_elements(p.definition->'statuses') st WHERE st->>'id'=o.data->>'status' AND st->>'terminal'='true')
    AND NOT ${OCCURRENCE_VALIDEE}
    AND (o.data->>'dueAt')::timestamptz <= $1::timestamptz + make_interval(days => (o.data->>'reminderDays')::int)
-   AND (s.visibility='instance' OR EXISTS(SELECT 1 FROM grc_members m WHERE m.smsi_id=s.id AND m.user_id=u.id)) ON CONFLICT DO NOTHING`,
-        [now],
+   AND (s.visibility='instance' OR EXISTS(SELECT 1 FROM grc_members m WHERE m.smsi_id=s.id AND m.user_id=u.id)) ON CONFLICT DO NOTHING RETURNING id,user_id AS "userId",kind`,
+          [now],
+        ),
       );
       // Responsable de type groupe ou fonction : le rappel va aux personnes qui le composent aujourd'hui.
-      await c.query(
-        `INSERT INTO grc_notifications(smsi_id,object_id,user_id,kind,due_key,title,message)
+      noter(
+        await c.query<NotificationEmise>(
+          `INSERT INTO grc_notifications(smsi_id,object_id,user_id,kind,due_key,title,message)
    SELECT o.smsi_id,o.id,u.id,'task_due',o.data->>'dueAt',p.definition->'notifications'->>'title',p.definition->'notifications'->>'message'
    FROM grc_objects o JOIN grc_smsis s ON s.id=o.smsi_id JOIN business_policy_versions p ON p.version=s.business_version
    JOIN LATERAL (
@@ -398,25 +405,29 @@ export class GrcTasks {
    AND NOT EXISTS(SELECT 1 FROM jsonb_array_elements(p.definition->'statuses') st WHERE st->>'id'=o.data->>'status' AND st->>'terminal'='true')
    AND NOT ${OCCURRENCE_VALIDEE}
    AND (o.data->>'dueAt')::timestamptz <= $1::timestamptz + make_interval(days => (o.data->>'reminderDays')::int)
-   AND (s.visibility='instance' OR EXISTS(SELECT 1 FROM grc_members m WHERE m.smsi_id=s.id AND m.user_id=u.id)) ON CONFLICT DO NOTHING`,
-        [now],
+   AND (s.visibility='instance' OR EXISTS(SELECT 1 FROM grc_members m WHERE m.smsi_id=s.id AND m.user_id=u.id)) ON CONFLICT DO NOTHING RETURNING id,user_id AS "userId",kind`,
+          [now],
+        ),
       );
       if (!(await this.g.modules.state()).disabled.includes('pilotage'))
-        await c.query(
-          `INSERT INTO grc_notifications(smsi_id,object_id,user_id,kind,due_key,title,message)
+        noter(
+          await c.query<NotificationEmise>(
+            `INSERT INTO grc_notifications(smsi_id,object_id,user_id,kind,due_key,title,message)
         SELECT o.smsi_id,o.id,u.id,'risk_review',o.data->>'reviewAt','Réévaluation d’un risque','Une appréciation périodique du risque est à préparer.'
         FROM grc_objects o JOIN grc_smsis s ON s.id=o.smsi_id JOIN business_policy_versions p ON p.version=s.business_version JOIN users u ON u.id=(o.data->>'ownerId')::uuid
         WHERE o.kind='risk' AND NOT o.archived AND NOT u.disabled AND (u.expires_at IS NULL OR u.expires_at>now())
         AND p.definition->'notifications'->>'enabled'='true' AND (o.data->>'reviewAt')::date <= $1::timestamptz::date + (p.definition->'notifications'->>'leadDays')::int
-        AND (s.visibility='instance' OR EXISTS(SELECT 1 FROM grc_members m WHERE m.smsi_id=s.id AND m.user_id=u.id)) ON CONFLICT DO NOTHING`,
-          [now],
+        AND (s.visibility='instance' OR EXISTS(SELECT 1 FROM grc_members m WHERE m.smsi_id=s.id AND m.user_id=u.id)) ON CONFLICT DO NOTHING RETURNING id,user_id AS "userId",kind`,
+            [now],
+          ),
         );
+      await this.g.notificationsMetier?.diffuser(c, emises);
     }, 'Automate SMSI');
   }
   async notifications(user: SessionUser) {
     const rows = (
       await this.g.db.q<{ smsiId: string; [key: string]: unknown }>(
-        `SELECT id,smsi_id AS "smsiId",object_id AS "objectId",kind,title,message,read_at AS "readAt",created_at AS "createdAt" FROM grc_notifications WHERE user_id=$1 ORDER BY created_at DESC LIMIT 100`,
+        `SELECT id,smsi_id AS "smsiId",object_id AS "objectId",kind,title,message,read_at AS "readAt",created_at AS "createdAt" FROM grc_notifications WHERE user_id=$1 AND canal_application ORDER BY created_at DESC LIMIT 100`,
         [user.id],
       )
     ).rows;

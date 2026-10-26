@@ -147,7 +147,6 @@ describe('questionnaire guidé', () => {
         certs: ['ISO 27001'],
         mfa: 'Disponible, non activée',
         sso: 'Disponible et activée',
-        ia: 'Oui',
         crit: 'Critique : arrêt de moins de 4 h tolérable',
       },
     };
@@ -159,7 +158,7 @@ describe('questionnaire guidé', () => {
     expect(j.app).toMatchObject({ id: 'APP02', status: 'En cours', dscp: 'Oui', cloud: 'Oui', supplier: 'SUP02' });
     expect(j.app.lines.G10.st).toBe('Partiel');
     expect(j.app.lines.G25.st).toBe('Non conforme');
-    expect(j).toMatchObject({ plan: 'GAP-02', fournisseur: 'SUP02', ia: 'EXT-IA-01' });
+    expect(j).toMatchObject({ plan: 'GAP-02', fournisseur: 'SUP02' });
     const s = await etat();
     const plan = s.findings.find((x: { id: string }) => x.id === 'GAP-02');
     expect(plan.desc.split('\n').filter((l: string) => l.startsWith('- ')).length).toBeGreaterThan(10);
@@ -171,27 +170,9 @@ describe('questionnaire guidé', () => {
       hds: 'Oui',
       controls: [],
     });
-    expect(s.ai.register[0]).toMatchObject({
-      id: 'EXT-IA-01',
-      aiPresence: 'Oui',
-      usecase: 'Service fictif guidé',
-      authz: 'En qualification',
-    });
+    // Plus de registre IA : le guide ne crée aucun usage (ADR 0057).
+    expect(j).not.toHaveProperty('ia');
     expect(s.appGaps.find((x: { id: string }) => x.id === 'APP02').profile.at).toBeTruthy();
-  });
-  it('sans registre IA : il est initialisé vide puis l’usage y est inscrit', async () => {
-    // Le module IA est repris dans des tables : on le vide par sa correspondance (supprimer la clé de l'état n'y suffit pas).
-    await t.svc.db.tx((c) => t.svc.legacy.mapper('ai')!.write(c, undefined, null));
-    const r = await writer.post('/api/gap/guide', {
-      name: 'Service fictif sans registre',
-      answers: { ia: 'Oui' },
-      mkPlan: false,
-    });
-    expect(r.statusCode, r.body).toBe(201);
-    expect(r.json()).toMatchObject({ plan: null, ia: 'EXT-IA-01' });
-    const ai = (await etat()).ai;
-    expect(ai).toMatchObject({ evals: [], plan: [], policies: [] });
-    expect(ai.register).toHaveLength(1);
   });
   it('journalise les modifications', async () => {
     const rows = await t.svc.db.q<{ action: string }>("SELECT action FROM audit_log WHERE action LIKE 'gap.%'");

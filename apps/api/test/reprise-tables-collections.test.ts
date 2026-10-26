@@ -45,6 +45,14 @@ const ETAT: JsonObject = {
   // supEvals absente : la clé ne doit pas apparaître.
 };
 
+/** Migre jusqu'à la 042 comprise : la 043 vide volontairement les données IA (ADR 0057), que ces tests comparent encore. */
+async function migrerAvant043(t: Awaited<ReturnType<typeof createTestApp>>) {
+  const dir = mkdtempSync(path.join(os.tmpdir(), 'avant043-'));
+  for (const f of readdirSync(MIGRATIONS_DIR).filter((x) => x < '043'))
+    copyFileSync(path.join(MIGRATIONS_DIR, f), path.join(dir, f));
+  return t.svc.db.migrate(dir);
+}
+
 describe('migration 024 et correspondance générique', () => {
   it('copie les clés d’app_state et les restitue à l’identique', async () => {
     const dbName = await createDatabase();
@@ -57,7 +65,7 @@ describe('migration 024 et correspondance générique', () => {
       await t.svc.db.q("INSERT INTO app_state (id, version, data, sha256, updated_by) VALUES (1, 1, $1, 'x', 'v2')", [
         ETAT,
       ]);
-      expect(await t.svc.db.migrate()).toContain('024_collections_suivi_tables.sql');
+      expect(await migrerAvant043(t)).toContain('024_collections_suivi_tables.sql');
       const etat = (await t.svc.legacy.recompose())!.data;
       for (const k of ['incidents', 'plans', 'accessReviews', 'appGaps']) expect(etat[k], k).toEqual(ETAT[k]);
       expect('supEvals' in etat).toBe(false);
@@ -150,7 +158,7 @@ describe('migration 024 et correspondance générique', () => {
         await t.svc.db.q("INSERT INTO app_state (id, version, data, sha256, updated_by) VALUES (1, 1, $1, 'x', 'v2')", [
           fixture,
         ]);
-        await t.svc.db.migrate();
+        await migrerAvant043(t);
         const etat = (await t.svc.legacy.recompose())!.data;
         for (const [k, v] of Object.entries(attendu)) expect(etat[k], `SQL ${k}`).toEqual(v);
         // Après un enregistrement natif, plus aucune clé de module repris ne subsiste dans app_state.

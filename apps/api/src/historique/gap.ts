@@ -11,7 +11,6 @@ import {
   etatPointGap,
   identifiantApp,
   identifiantEcartGap,
-  identifiantUsageIa,
   identifiantExigence,
   lireAppGap,
   pointsGap,
@@ -22,7 +21,6 @@ import { itemCode } from '@suivi/shared/audit';
 import { isObject, type JsonObject } from '@suivi/shared/legacy';
 import type { SessionUser } from '../auth.js';
 import { HttpError } from '../http/errors.js';
-import { assurerIa, usageVierge } from './ia.js';
 import { entrees, type RegistreHistorique } from './registre.js';
 
 const str = (v: unknown) => (typeof v === 'string' ? v : v == null ? '' : String(v));
@@ -241,12 +239,12 @@ export class Gap {
   }
 
   /** Questionnaire guidé : crée l'application avec sa liste de contrôle pré-évaluée, et au choix le plan d'action, le
-      fournisseur et l'usage du registre IA. */
+      et le fournisseur. */
   async guider(
     input: unknown,
     user: SessionUser,
     ip: string,
-  ): Promise<{ app: AppGap; plan: string | null; fournisseur: string | null; ia: string | null }> {
+  ): Promise<{ app: AppGap; plan: string | null; fournisseur: string | null }> {
     const b = GuideGapCreation.parse(input);
     return this.r.modifier(
       user,
@@ -331,28 +329,8 @@ export class Gap {
           brut.planFd = plan;
           app = lireAppGap(brut)!;
         }
-        let ia: string | null = null;
-        if (b.mkIa && b.answers.ia === 'Oui') {
-          const ai = assurerIa(data);
-          ia = identifiantUsageIa((ai.register as JsonObject[]).filter(isObject).map((u) => str(u.id)));
-          const sp = entrees(data, 'suppliers').find((s) => s.id === fournisseur);
-          ai.register = [
-            ...(ai.register as JsonObject[]),
-            {
-              ...usageVierge(ia, maintenant),
-              aiPresence: 'Oui',
-              category: 'IA intégrée à un outil métier',
-              usecase: app.name,
-              owner: b.owner,
-              type: '',
-              provider: (sp ? str(sp.name) : '') + ' — ' + app.name,
-              purpose: 'À qualifier',
-              dscp: q.dscp === 'Oui' ? 'Oui' : 'À qualifier',
-            },
-          ];
-        }
         data.appGaps = [...(Array.isArray(data.appGaps) ? data.appGaps : []), brut];
-        return { app, plan, fournisseur: fournisseurCree, ia };
+        return { app, plan, fournisseur: fournisseurCree };
       },
     );
   }

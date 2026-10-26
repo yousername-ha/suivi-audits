@@ -1,0 +1,28 @@
+# Contrôle de secrets de la CI (gitleaks). Le dépôt est public : aucune donnée réelle, aucun secret.
+# Les règles par défaut s'appliquent partout. Exceptions, documentées et limitées à la règle « generic-api-key »
+# (la plus bruyante : elle prend des étiquettes, des empreintes et des alphabets pour des clés) ; elle reste active partout ailleurs :
+#  1. les fixtures de tests et d'exemples (valeurs FICTIVES : mots de passe d'essai, jetons d'essai, certificats de recette) ;
+#  2. faux positifs examinés un par un (aucun secret) : étiquettes « key » de maquettes, empreintes de fichiers dans des
+#     manifestes, libellés de modules et alphabet du jeton d'installation.
+[extend]
+useDefault = true
+
+[[rules]]
+id = "generic-api-key"
+
+[[rules.allowlists]]
+description = "Valeurs fictives de tests et d'exemples ; faux positifs examinés (maquettes, manifestes d'empreintes, libellés de modules, alphabet du jeton d'installation)"
+paths = [
+  '''^tests/''',
+  '''(^|/)test/''',
+  '''(^|/)__tests__/''',
+  '''^scripts/tests/''',
+  '''^docs/''',
+  '''\.example$''',
+  '''^pnpm-lock\.yaml$''',
+  '''^samples/''',
+  '''^fonctionnalites-en-developpement/''',
+  '''^archives/''',
+  '''^packages/shared/src/legacy/modules\.ts$''',
+  '''^packages/shared/src/setup-token\.ts$''',
+]

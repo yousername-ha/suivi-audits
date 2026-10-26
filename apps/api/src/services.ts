@@ -29,6 +29,7 @@ import { JournalTechnique } from './journal-technique.js';
 import { CalendriersPlateforme } from './calendriers-plateforme.js';
 import { Conservation } from './conservation.js';
 import { Courriel } from './courriel.js';
+import { NotificationsMetier } from './notifications-metier.js';
 import { TypesProcessus } from './types-processus.js';
 
 export function createServices(cfg: Config, log: Logger) {
@@ -51,6 +52,8 @@ export function createServices(cfg: Config, log: Logger) {
   const grc = new Grc(db, legacy, businessPolicies, modules);
   const configGrc = new ConfigGrc(db, grc);
   grc.methodBindings = configGrc;
+  const notificationsMetier = new NotificationsMetier(db, settings, cfg.publicUrl);
+  grc.notificationsMetier = notificationsMetier;
   const historique = new Historique(grc);
   return {
     cfg,
@@ -72,6 +75,7 @@ export function createServices(cfg: Config, log: Logger) {
     calendriers: new CalendriersPlateforme(db),
     conservation: new Conservation(db),
     courriel: new Courriel(db, vault),
+    notificationsMetier,
     auth: new Auth(cfg, db, vault, () => settings.get('securite')),
     bus,
     presence: new Presence(db, bus),

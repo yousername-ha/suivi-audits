@@ -660,6 +660,7 @@ export const grcNotifications = pgTable('grc_notifications', {
   message: text('message').notNull(),
   readAt: tstz('read_at'),
   createdAt: tstz('created_at').notNull(),
+  canalApplication: boolean('canal_application').notNull(),
 });
 
 export const pilotageDecisions = pgTable('pilotage_decisions', {

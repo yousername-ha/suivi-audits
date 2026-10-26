@@ -404,6 +404,8 @@ describe('migration 005 : reprise des cartes de la bêta déjà dessinées (CART
         '040_courriel_jobs.sql',
         '041_tls_modes.sql',
         '042_kit_ia.sql',
+        '043_retrait_conformite_ia.sql',
+        '044_notifications_metier.sql',
       ]);
       const st = await t2.svc.legacy.recompose();
       expect(deepEqual(st!.data.maps as Json, fixture.maps as Json)).toBe(true);

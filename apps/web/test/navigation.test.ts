@@ -57,7 +57,6 @@ const INVENTAIRE = [
   'conformite|applicabilite|dda-hds|/pilotage/dda-hds|audit|lire',
   'conformite|applicabilite|applicabilite|/pilotage/applicabilite|pilotage|lire',
   'conformite|applicabilite|mesures|/pilotage/mesures|audit|lire',
-  'conformite|ia|conformite-ia|/pilotage/conformite-ia|ia|lire',
   'conformite|audits|audit-pronostic|/pilotage/audit-pronostic|audit|lire',
   'conformite|audits|audit-couverture|/pilotage/audit-couverture|audit|lire',
   'conformite|audits|audit-deroule|/pilotage/audit-deroule|plan_audit|lire',

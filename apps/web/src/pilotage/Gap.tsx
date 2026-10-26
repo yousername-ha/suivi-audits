@@ -439,7 +439,6 @@ function GuideGap({ d, agir, onDone }: { d: Donnees; agir: Agir; onDone: (id: st
   const [v, setV] = useState({ name: '', supplier: '', supplierNew: '', owner: '', target: '', desc: '' });
   const [reponses, setReponses] = useState<ReponsesGap>({});
   const [mkPlan, setMkPlan] = useState(true);
-  const [mkIa, setMkIa] = useState(true);
   const [info, setInfo] = useState('');
   const repondues = QUESTIONS_GAP.filter((q) =>
     q.multi ? ((reponses[q.k] as string[] | undefined) ?? []).length : reponses[q.k],
@@ -462,21 +461,15 @@ function GuideGap({ d, agir, onDone }: { d: Donnees; agir: Agir; onDone: (id: st
       ...v,
       answers: Object.fromEntries(Object.entries(reponses).filter(([, x]) => x !== undefined)),
       mkPlan,
-      mkIa,
     };
-    const r = await agir<{ app: AppGap; plan: string | null; fournisseur: string | null; ia: string | null }>(
+    const r = await agir<{ app: AppGap; plan: string | null; fournisseur: string | null }>(
       'POST',
       '/api/gap/guide',
       corps,
     );
     if (r) {
       setInfo(
-        [
-          `GAP ${r.app.id} créé`,
-          r.plan && `plan d’action ${r.plan}`,
-          r.fournisseur && `fournisseur ${r.fournisseur}`,
-          r.ia && `usage inscrit au registre IA (${r.ia})`,
-        ]
+        [`GAP ${r.app.id} créé`, r.plan && `plan d’action ${r.plan}`, r.fournisseur && `fournisseur ${r.fournisseur}`]
           .filter(Boolean)
           .join(', ') + '.',
       );
@@ -577,10 +570,6 @@ function GuideGap({ d, agir, onDone }: { d: Donnees; agir: Agir; onDone: (id: st
       <label>
         <input type="checkbox" checked={mkPlan} onChange={(e) => setMkPlan(e.currentTarget.checked)} /> Créer le plan
         d’action dans « Écarts et actions »
-      </label>
-      <label>
-        <input type="checkbox" checked={mkIa} onChange={(e) => setMkIa(e.currentTarget.checked)} /> Inscrire au registre
-        IA si le service embarque de l’IA
       </label>
       <Group justify="flex-end">
         <Button

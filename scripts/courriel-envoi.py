@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-"""Envoi d'UN courriel de test par SMTP/SMTPS (décision 1 du 25/10/2026, ADR 0049).
+"""Envoi d'UN courriel par SMTP/SMTPS : message de test (décision 1 du 25/10/2026, ADR 0049) ou notification métier (ADR 0058).
 
 Lancé par l'exécutant d'exploitation du serveur (scripts/exploitation-worker.py) sous un compte sans privilège, jamais par
 l'API : le conteneur de l'API reste sans accès réseau sortant. Entrée : un objet JSON sur l'entrée standard (hôte, port,
 chiffrement, compte, mot de passe, expéditeur, destinataire, autorité de certification privée facultative). Sortie : un objet
-JSON {ok, steps, error} sur la sortie standard ; il ne contient jamais le mot de passe.
+JSON {ok, steps, error} sur la sortie standard ; il ne contient jamais le mot de passe. Pour une notification (`kind` =
+"notification"), l'objet et le corps en texte brut sont fournis par l'API (ils ne contiennent aucune donnée métier) et la trace
+n'écrit pas l'adresse du destinataire.
 
 Règles : STARTTLS (le serveur doit le proposer, sinon refus) ou TLS implicite ; certificat du serveur toujours vérifié ;
 authentification PLAIN ou LOGIN en UTF-8, pas XOAUTH2.
@@ -68,6 +70,7 @@ def authentifier(serveur, utilisateur, mot_de_passe):
 
 def envoyer(p):
     etapes = []
+    notification = p.get("kind") == "notification"
 
     def etape(nom, ok, detail):
         etapes.append({"step": nom, "ok": ok, "detail": detail})
@@ -99,13 +102,18 @@ def envoyer(p):
         message = EmailMessage()
         message["From"] = p["from"]
         message["To"] = p["to"]
-        message["Subject"] = "Suivi des audits : message de test"
-        message.set_content(
-            "Ce message confirme que le serveur peut envoyer des courriels.\n"
-            "Demandé par %s.\nSi vous le lisez, la configuration SMTP fonctionne.\n" % p.get("requested_by", "un administrateur")
-        )
+        if notification:
+            message["Subject"] = p["subject"]
+            message["Auto-Submitted"] = "auto-generated"
+            message.set_content(p["body"])
+        else:
+            message["Subject"] = "Suivi des audits : message de test"
+            message.set_content(
+                "Ce message confirme que le serveur peut envoyer des courriels.\n"
+                "Demandé par %s.\nSi vous le lisez, la configuration SMTP fonctionne.\n" % p.get("requested_by", "un administrateur")
+            )
         serveur.send_message(message, from_addr=p["from"], to_addrs=[p["to"]])
-        etape("Message accepté", True, "Destinataire %s" % p["to"])
+        etape("Message accepté", True, "Notification acceptée par le serveur" if notification else "Destinataire %s" % p["to"])
         return {"ok": True, "steps": etapes, "error": None}
     except Exception as erreur:  # noqa: BLE001 - tout échec est expliqué, jamais propagé avec ses détails
         message = str(erreur) if isinstance(erreur, smtplib.SMTPNotSupportedError) else explication(erreur)
@@ -126,9 +134,17 @@ def main():
             raise SystemExit("paramètre manquant")
     if p["security"] not in ("starttls", "smtps"):
         raise SystemExit("chiffrement invalide")
-    for texte in (p["host"], p["from"], p["to"], p.get("username", "")):
+    for texte in (p["host"], p["from"], p["to"], p.get("username", ""), p.get("subject", "")):
         if "\r" in str(texte) or "\n" in str(texte):
             raise SystemExit("valeur invalide")
+    if p.get("kind", "test") not in ("test", "notification"):
+        raise SystemExit("type de demande invalide")
+    if p.get("kind") == "notification":
+        sujet, corps = p.get("subject"), p.get("body")
+        if not isinstance(sujet, str) or not isinstance(corps, str) or not sujet.strip() or not corps.strip():
+            raise SystemExit("objet ou corps manquant")
+        if len(sujet) > 200 or len(corps) > 4000:
+            raise SystemExit("message trop long")
     sys.stdout.write(json.dumps(envoyer(p), ensure_ascii=True))
 
 

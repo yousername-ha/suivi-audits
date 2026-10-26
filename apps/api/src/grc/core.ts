@@ -50,6 +50,7 @@ import { GrcLibraryMappings } from './library-mappings.js';
 import { GrcEvaluationsExigences } from './evaluations-exigences.js';
 import { GrcPlanEcarts } from './plan-ecarts.js';
 import { GrcRapprochements } from './rapprochements.js';
+import type { NotificationsMetier } from '../notifications-metier.js';
 import { GrcSuppliers } from './suppliers.js';
 import { GrcRisks } from './risks.js';
 import { GrcStudyConfig } from './study-config.js';
@@ -158,6 +159,8 @@ const studyPins = (data: Record<string, unknown>): { ref: CfgRef; kind: 'matrix'
 };
 export class Grc {
   methodBindings?: MethodBindingsResolver;
+  /** Diffusion des notifications selon les réglages par groupe, rôle et utilisateur (ADR 0058). */
+  notificationsMetier?: NotificationsMetier;
   readonly legacyTasks: LegacyTasks;
   readonly frameworks: GrcFrameworks;
   readonly library: GrcLibrary;

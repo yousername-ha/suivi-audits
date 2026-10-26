@@ -21,3 +21,14 @@ Réponses données une par une aux quinze décisions en attente du [suivi ASTRA]
 | 15 | Rôle collaborateur | Garder « Contributeur ». | Rien |
 
 Rappel : l'étiquette `v4.5.0` sera posée par l'utilisateur quand tout sera implémenté.
+
+## Décisions complémentaires du 26/10/2026
+
+| N° | Sujet | Décision | Suite |
+| --- | --- | --- | --- |
+| 16 | Page « Conformité IA » | **Supprimer la page et ses données**, dans la prochaine livraison (4.5.0), après la sauvegarde automatique. | **Réalisé** ([ADR 0057](../adr/0057-retrait-de-la-conformite-ia.md)), migration 043 |
+| 17 | Points IA du questionnaire « Applications à intégrer » | Les retirer dès maintenant. | **Réalisé** ([ADR 0057](../adr/0057-retrait-de-la-conformite-ia.md)) |
+| 18 | Notifications métier (012-10) | Application et courriel (si configuré) ; réglage par groupe, par profil (rôle) et par utilisateur ; le réglage personnel l'emporte sur celui du groupe ; l'utilisateur règle aussi les siennes dans son profil. | **Réalisé** ([ADR 0058](../adr/0058-notifications-metier.md)) |
+| 19 | Registres par défaut (010-10) | Garder la création automatique. | Rien |
+| 20 | Contrôle de secrets dans la CI | Oui, comme septième contrôle (gitleaks). | **Réalisé** : travail `Secrets (gitleaks, historique complet)` |
+

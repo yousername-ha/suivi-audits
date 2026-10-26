@@ -13,14 +13,14 @@ import {
 import { LEGACY_MODULES } from '../src/legacy/index.js';
 
 describe('modèle de droits', () => {
-  it('permissions = modules × actions (15 × 5)', () => {
-    expect(ALL_PERMISSIONS).toHaveLength(75);
-    expect(new Set(ALL_PERMISSIONS).size).toBe(75);
+  it('permissions = modules × actions (14 × 5)', () => {
+    expect(ALL_PERMISSIONS).toHaveLength(70);
+    expect(new Set(ALL_PERMISSIONS).size).toBe(70);
   });
 
   it('rôles prédéfinis conformes à la spécification', () => {
     const p = (r: keyof typeof SYSTEM_ROLE_DEFS) => new Set(SYSTEM_ROLE_DEFS[r].permissions);
-    expect(p('administrateur').size).toBe(75);
+    expect(p('administrateur').size).toBe(70);
     expect([...p('rssi')].some((x) => x.startsWith('administration:'))).toBe(false);
     expect(p('rssi').has('parametres:administrer')).toBe(true);
     expect(p('contributeur').has('ecarts:modifier')).toBe(true);
