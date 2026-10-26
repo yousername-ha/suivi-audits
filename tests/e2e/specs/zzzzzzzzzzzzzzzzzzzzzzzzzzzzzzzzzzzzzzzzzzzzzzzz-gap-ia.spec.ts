@@ -46,7 +46,9 @@ test('GAP IA : questions par cas d’usage, points pré-évalués, plan d’acti
     ).toBeVisible();
     await expect(fiche.getByText('Inclure l’application dans le domaine d’application du SMSI')).toHaveCount(0);
     await expect(fiche.getByText('Non conforme').first()).toBeVisible();
-    await fiche.getByRole('button', { name: 'Fermer', exact: true }).first().click();
+    // Les fenêtres n'ont pas de bouton « Fermer » : Échap les ferme.
+    await page.keyboard.press('Escape');
+    await expect(fiche).toHaveCount(0);
 
     // Dans la liste, le GAP est repéré comme GAP IA.
     const ligne = page.getByRole('row').filter({ hasText: nom });
