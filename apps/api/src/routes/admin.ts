@@ -9,6 +9,7 @@ import {
   TypeProcessusBody,
   TypeProcessusPatch,
 } from '@suivi/shared';
+import { sql } from 'kysely';
 import { z } from 'zod';
 import type { Session } from '../auth.js';
 import { DUREE_DEBUG_MAX_MINUTES } from '../journal-technique.js';
@@ -70,11 +71,22 @@ export const adminRoutes = [
     tags: ['Administration'],
     access: 'administration:lire',
     handler: async ({ svc, s }) => {
-      const r = await svc.db.q<{ id: string }>(
-        `SELECT encode(s.id_hash,'hex') AS id, u.username, s.ip::text, s.user_agent, s.mfa_ok, s.created_at, s.last_seen_at
-           FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.expires_at > now() ORDER BY s.last_seen_at DESC`,
-      );
-      return r.rows.map((x) => ({ ...x, current: x.id === (s as Session).sid.toString('hex') }));
+      const r = await svc.db.k
+        .selectFrom('sessions as s')
+        .innerJoin('users as u', 'u.id', 's.user_id')
+        .select([
+          sql<string>`encode(s.id_hash, 'hex')`.as('id'),
+          'u.username',
+          sql<string | null>`s.ip::text`.as('ip'),
+          's.user_agent',
+          's.mfa_ok',
+          's.created_at',
+          's.last_seen_at',
+        ])
+        .where('s.expires_at', '>', sql<Date>`now()`)
+        .orderBy('s.last_seen_at', 'desc')
+        .execute();
+      return r.map((x) => ({ ...x, current: x.id === (s as Session).sid.toString('hex') }));
     },
   }),
   route({
@@ -87,7 +99,7 @@ export const adminRoutes = [
     handler: async ({ svc, s, ip, params }) => {
       const sess = s as Session;
       await svc.db.tx(
-        (c) => c.query("DELETE FROM sessions WHERE id_hash = decode($1,'hex')", [params.id]),
+        (_c, k) => k.deleteFrom('sessions').where('id_hash', '=', Buffer.from(params.id, 'hex')).execute(),
         sess.user.username,
       );
       await svc.db.audit(sess.user, ip, 'admin.session_revoke', params.id.slice(0, 12));
@@ -116,34 +128,30 @@ export const adminRoutes = [
       user: z.string().trim().max(100).optional(),
     }),
     handler: async ({ svc, s, ip, query, reply }) => {
-      const where: string[] = [];
-      const args: unknown[] = [];
-      if (query.from) {
-        args.push(query.from);
-        where.push(`ts >= $${args.length}::date`);
-      }
-      if (query.to) {
-        args.push(query.to);
-        where.push(`ts < ($${args.length}::date + 1)`);
-      }
-      if (query.user) {
-        args.push(query.user);
-        where.push(`username = $${args.length}`);
-      }
-      if (query.before) {
-        args.push(query.before);
-        where.push(`id < $${args.length}`);
-      }
-      if (query.q) {
-        args.push('%' + query.q.replace(/[\\%_]/g, '\\$&') + '%');
-        const n = `$${args.length}`;
-        where.push(`(username ILIKE ${n} OR action ILIKE ${n} OR target ILIKE ${n} OR ip::text ILIKE ${n})`);
-      }
       const limit = query.limit ?? (query.format === 'csv' ? 5000 : 200);
-      const r = await svc.db.q<Record<string, unknown>>(
-        `SELECT id, ts, username, ip::text, action, target, details FROM audit_log ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY id DESC LIMIT ${limit}`,
-        args,
-      );
+      const motif = query.q ? '%' + query.q.replace(/[\\%_]/g, '\\$&') + '%' : '';
+      // Période en jours calendaires (bornes incluses), compte, page précédente, recherche aux jokers échappés.
+      const lignes = await svc.db.k
+        .selectFrom('audit_log')
+        .select(['id', 'ts', 'username', sql<string | null>`ip::text`.as('ip'), 'action', 'target', 'details'])
+        .$if(!!query.from, (q) => q.where('ts', '>=', sql<Date>`${query.from}::date`))
+        .$if(!!query.to, (q) => q.where('ts', '<', sql<Date>`(${query.to}::date + 1)`))
+        .$if(!!query.user, (q) => q.where('username', '=', query.user!))
+        .$if(!!query.before, (q) => q.where('id', '<', query.before!))
+        .$if(!!query.q, (q) =>
+          q.where((eb) =>
+            eb.or([
+              eb('username', 'ilike', motif),
+              eb('action', 'ilike', motif),
+              eb('target', 'ilike', motif),
+              eb(sql<string>`ip::text`, 'ilike', motif),
+            ]),
+          ),
+        )
+        .orderBy('id', 'desc')
+        .limit(limit)
+        .execute();
+      const r = { rows: lignes as Record<string, unknown>[], rowCount: lignes.length };
       // Troncature signalée : la page est pleine, il reste des entrées plus anciennes (pagination par `before`, ou période à resserrer).
       const tronque = r.rowCount === limit;
       if (tronque) reply.header('X-Journal-Tronque', '1');
@@ -310,13 +318,21 @@ export const adminRoutes = [
     tags: ['Administration'],
     access: 'administration:lire',
     handler: async ({ svc }) =>
-      (
-        await svc.db.q(
-          `SELECT version, updated_at, updated_by, note, sha256, import_batch_id, pg_column_size(data) AS bytes,
-                  jsonb_array_length(COALESCE(data->'items','[]')) AS items
-             FROM state_history ORDER BY version DESC LIMIT 500`,
-        )
-      ).rows,
+      svc.db.k
+        .selectFrom('state_history')
+        .select([
+          'version',
+          'updated_at',
+          'updated_by',
+          'note',
+          'sha256',
+          'import_batch_id',
+          sql<number>`pg_column_size(data)`.as('bytes'),
+          sql<number>`jsonb_array_length(COALESCE(data->'items', '[]'))`.as('items'),
+        ])
+        .orderBy('version', 'desc')
+        .limit(500)
+        .execute(),
   }),
   route({
     method: 'GET',
@@ -326,10 +342,11 @@ export const adminRoutes = [
     access: 'administration:exporter',
     params: z.object({ v: z.coerce.number().int().positive() }),
     handler: async ({ svc, s, params, reply }) => {
-      const r = await svc.db.one<{ data: string; keys: string[] }>(
-        'SELECT data::text AS data, ARRAY(SELECT jsonb_object_keys(data)) AS keys FROM state_history WHERE version=$1',
-        [params.v],
-      );
+      const r = await svc.db.k
+        .selectFrom('state_history')
+        .select([sql<string>`data::text`.as('data'), sql<string[]>`ARRAY(SELECT jsonb_object_keys(data))`.as('keys')])
+        .where('version', '=', params.v)
+        .executeTakeFirst();
       if (!r) throw new HttpError(404, 'Version introuvable.');
       assertLegacyKeys((s as Session).user.rights, r.keys, 'exporter');
       reply
@@ -349,11 +366,17 @@ export const adminRoutes = [
     response: z.object({ version: z.number() }),
     handler: async ({ svc, s, ip, params }) => {
       const sess = s as Session;
-      const out = await svc.db.tx(async (c) => {
-        const r = (await c.query('SELECT data FROM state_history WHERE version=$1', [params.v])).rows[0];
+      const out = await svc.db.tx(async (c, k) => {
+        const r = await k.selectFrom('state_history').select('data').where('version', '=', params.v).executeTakeFirst();
         if (!r) throw new HttpError(404, 'Version introuvable.');
         assertLegacyKeys(sess.user.rights, Object.keys(r.data as object), 'modifier');
-        const res = await svc.legacy.nativeWrite(c, r.data, sess.user, null, `Restauration de la version ${params.v}`);
+        const res = await svc.legacy.nativeWrite(
+          c,
+          r.data as Parameters<typeof svc.legacy.nativeWrite>[1],
+          sess.user,
+          null,
+          `Restauration de la version ${params.v}`,
+        );
         return res.conflict ? res.version : res.version;
       }, sess.user.username);
       await svc.db.audit(sess.user, ip, 'admin.state_restore', `v${params.v}`, { newVersion: out });
@@ -405,10 +428,8 @@ export const adminRoutes = [
     handler: async ({ svc }) => ({
       ...systemStatus(svc.cfg),
       migrations: (
-        await svc.db.q<{ name: string; applied_at: Date }>(
-          'SELECT name, applied_at FROM schema_migrations ORDER BY name DESC',
-        )
-      ).rows.map((r) => ({ name: r.name, applied_at: new Date(r.applied_at).toISOString() })),
+        await svc.db.k.selectFrom('schema_migrations').select(['name', 'applied_at']).orderBy('name', 'desc').execute()
+      ).map((r) => ({ name: r.name, applied_at: new Date(r.applied_at).toISOString() })),
     }),
   }),
   route({
@@ -418,22 +439,33 @@ export const adminRoutes = [
     tags: ['Administration'],
     access: 'administration:lire',
     handler: async ({ svc }) => {
-      const pg = await svc.db.one<{ server_version: string }>('SHOW server_version');
-      const size = await svc.db.one<{ s: string }>('SELECT pg_size_pretty(pg_database_size(current_database())) AS s');
-      const st = await svc.db.one('SELECT version, updated_at, updated_by FROM app_state WHERE id=1');
+      const k = svc.db.k;
+      // Informations du serveur PostgreSQL et compteurs : requêtes fixes, sans valeur extérieure.
+      const pg = (await sql<{ server_version: string }>`SHOW server_version`.execute(k)).rows[0];
+      const size = (
+        await sql<{ s: string }>`SELECT pg_size_pretty(pg_database_size(current_database())) AS s`.execute(k)
+      ).rows[0];
+      const st = await k
+        .selectFrom('app_state')
+        .select(['version', 'updated_at', 'updated_by'])
+        .where('id', '=', 1)
+        .executeTakeFirst();
       // Volume des pièces (taille en clair des versions de documents, corbeille comprise) : la base est la seule source des fichiers.
-      const pieces = await svc.db.one<{ octets: string }>(
-        'SELECT COALESCE(sum(size),0)::text AS octets FROM document_versions',
+      const pieces = await k
+        .selectFrom('document_versions')
+        .select(sql<string>`COALESCE(sum(size), 0)::text`.as('octets'))
+        .executeTakeFirst();
+      const counts = (
+        await sql<Record<string, number>>`SELECT (SELECT count(*) FROM users)::int AS users,
+          (SELECT count(*) FROM documents WHERE deleted_at IS NULL)::int AS documents,
+          (SELECT count(*) FROM links WHERE deleted_at IS NULL)::int AS links,
+          (SELECT count(*) FROM state_history)::int AS versions,
+          (SELECT count(*) FROM audit_log)::int AS audit,
+          (SELECT count(*) FROM import_batches)::int AS imports`.execute(k)
+      ).rows[0];
+      const migrations = (await k.selectFrom('schema_migrations').select('name').orderBy('name').execute()).map(
+        (r) => r.name,
       );
-      const counts = await svc.db.one(`SELECT (SELECT count(*) FROM users)::int AS users,
-        (SELECT count(*) FROM documents WHERE deleted_at IS NULL)::int AS documents,
-        (SELECT count(*) FROM links WHERE deleted_at IS NULL)::int AS links,
-        (SELECT count(*) FROM state_history)::int AS versions,
-        (SELECT count(*) FROM audit_log)::int AS audit,
-        (SELECT count(*) FROM import_batches)::int AS imports`);
-      const migrations = (
-        await svc.db.q<{ name: string }>('SELECT name FROM schema_migrations ORDER BY name')
-      ).rows.map((r) => r.name);
       const c = svc.cfg;
       return {
         app: c.version,
