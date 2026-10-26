@@ -9,7 +9,7 @@ const COURRIEL = `${TYPE} : Par courriel`;
 
 /** Carte (Mantine Card) qui contient la zone : le bouton Enregistrer est à côté du tableau, pas dedans. */
 const boiteDe = (zone: ReturnType<Page['locator']>) =>
-  zone.locator('xpath=ancestor::*[contains(@class,"mantine-Card-root")][1]');
+  zone.locator('xpath=ancestor::*[contains(@class,"mantine-Card-root")][2]');
 
 async function choisir(page: Page, zone: ReturnType<Page['locator']>, nom: string, option: string) {
   await zone.getByRole('combobox', { name: nom, exact: true }).click();
