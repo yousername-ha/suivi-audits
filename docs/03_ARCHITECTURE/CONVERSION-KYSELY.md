@@ -23,8 +23,8 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `grc/library.ts` | 0 | Converti (lot 8) |
 | `grc/registres.ts` | 0 | Converti (lot 7) ; objectColumns retiré de core.ts |
 | `grc/suppliers.ts` | 0 | Converti (lot 3) |
+| `routes/access.ts` | 0 | Converti (lot 9) |
 | `types-processus.ts` | 0 | Converti (lot 1) |
-| `routes/access.ts` | 32 | À convertir |
 | `config-grc.ts` | 28 | À convertir |
 | `notifications-metier.ts` | 25 | À convertir |
 | `grc/rapprochements.ts` | 21 | À convertir |
@@ -88,4 +88,4 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `routes/modules.ts` | 1 | À convertir |
 | `startup.ts` | 1 | À convertir |
 
-Reste à convertir : 471 appels dans 63 fichiers.
+Reste à convertir : 439 appels dans 62 fichiers.

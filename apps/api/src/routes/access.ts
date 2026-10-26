@@ -23,10 +23,11 @@ import {
   Uuid,
   type RoleAssignment,
 } from '@suivi/shared';
+import { sql } from 'kysely';
 import crypto from 'node:crypto';
 import { z } from 'zod';
 import type { Session } from '../auth.js';
-import type { Client } from '../db/db.js';
+import { surConnexion, type Client, type Kdb } from '../db/db.js';
 import { csvCell, xlsx } from '../export/tabular.js';
 import { conflict, requireIfMatch, setEtag } from '../http/concurrency.js';
 import { HttpError } from '../http/errors.js';
@@ -48,26 +49,56 @@ const IdParams = z.object({ id: Uuid });
 const RoleParams = z.object({ id: z.string().regex(/^[a-z][a-z0-9_]{1,62}$/) });
 
 /* ---------------------------------------------------------------- Lectures */
-const USER_COLS = `u.id, u.username, u.display_name, u.email, u.disabled, u.expires_at, u.totp_enabled,
-  u.must_change_password, u.failed_logins, u.locked_until, u.last_login_at, u.created_at, u.version,
-  (SELECT count(*) FROM sessions s WHERE s.user_id = u.id AND s.expires_at > now())::int AS sessions,
-  COALESCE((SELECT json_agg(json_build_object('id', r.id, 'name', r.name, 'modules', ur.modules) ORDER BY r.name)
-     FROM user_roles ur JOIN roles r ON r.id = ur.role_id WHERE ur.user_id = u.id), '[]') AS roles,
-  COALESCE((SELECT json_agg(json_build_object('id', g.id, 'name', g.name) ORDER BY g.name)
-     FROM user_groups ug JOIN groups g ON g.id = ug.group_id WHERE ug.user_id = u.id), '[]') AS groups`;
+/** Kysely sur la connexion (ou la transaction) reçue. */
+const kq = (c: Q): Kdb => surConnexion(c);
+/** Colonnes d'un compte. Sessions actives, rôles et groupes agrégés en JSON (fragments SQL, aucune valeur extérieure). */
+const comptes = (k: Kdb) =>
+  k.selectFrom('users as u').select([
+    'u.id',
+    'u.username',
+    'u.display_name',
+    'u.email',
+    'u.disabled',
+    'u.expires_at',
+    'u.totp_enabled',
+    'u.must_change_password',
+    'u.failed_logins',
+    'u.locked_until',
+    'u.last_login_at',
+    'u.created_at',
+    'u.version',
+    sql<number>`(SELECT count(*) FROM sessions s WHERE s.user_id = u.id AND s.expires_at > now())::int`.as('sessions'),
+    sql<
+      UserOut['roles']
+    >`COALESCE((SELECT json_agg(json_build_object('id', r.id, 'name', r.name, 'modules', ur.modules) ORDER BY r.name)
+         FROM user_roles ur JOIN roles r ON r.id = ur.role_id WHERE ur.user_id = u.id), '[]')`.as('roles'),
+    sql<UserOut['groups']>`COALESCE((SELECT json_agg(json_build_object('id', g.id, 'name', g.name) ORDER BY g.name)
+         FROM user_groups ug JOIN groups g ON g.id = ug.group_id WHERE ug.user_id = u.id), '[]')`.as('groups'),
+  ]);
 
 async function userById(c: Q, id: string): Promise<UserOut | null> {
-  return (await c.query<UserOut>(`SELECT ${USER_COLS} FROM users u WHERE u.id = $1`, [id])).rows[0] ?? null;
+  return ((await comptes(kq(c)).where('u.id', '=', id).executeTakeFirst()) as UserOut | undefined) ?? null;
 }
 
-const GROUP_COLS = `g.id, g.name, g.description, g.version,
-  COALESCE((SELECT json_agg(json_build_object('id', r.id, 'name', r.name) ORDER BY r.name)
-     FROM group_roles gr JOIN roles r ON r.id = gr.role_id WHERE gr.group_id = g.id), '[]') AS roles,
-  COALESCE((SELECT json_agg(json_build_object('id', u.id, 'username', u.username, 'display_name', u.display_name)
-     ORDER BY lower(u.username)) FROM user_groups ug JOIN users u ON u.id = ug.user_id WHERE ug.group_id = g.id), '[]') AS members`;
+/** Colonnes d'un groupe, avec ses rôles et ses membres agrégés en JSON. */
+const groupes = (k: Kdb) =>
+  k.selectFrom('groups as g').select([
+    'g.id',
+    'g.name',
+    'g.description',
+    'g.version',
+    sql<GroupOut['roles']>`COALESCE((SELECT json_agg(json_build_object('id', r.id, 'name', r.name) ORDER BY r.name)
+         FROM group_roles gr JOIN roles r ON r.id = gr.role_id WHERE gr.group_id = g.id), '[]')`.as('roles'),
+    sql<
+      GroupOut['members']
+    >`COALESCE((SELECT json_agg(json_build_object('id', u.id, 'username', u.username, 'display_name', u.display_name)
+         ORDER BY lower(u.username)) FROM user_groups ug JOIN users u ON u.id = ug.user_id WHERE ug.group_id = g.id), '[]')`.as(
+      'members',
+    ),
+  ]);
 
 async function groupById(c: Q, id: string): Promise<GroupOut | null> {
-  return (await c.query<GroupOut>(`SELECT ${GROUP_COLS} FROM groups g WHERE g.id = $1`, [id])).rows[0] ?? null;
+  return ((await groupes(kq(c)).where('g.id', '=', id).executeTakeFirst()) as GroupOut | undefined) ?? null;
 }
 
 interface RoleRow {
@@ -86,42 +117,59 @@ const roleOut = (r: RoleRow): RoleOut => ({
   scoped: isSystemRole(r.id) ? !!SYSTEM_ROLE_DEFS[r.id].scoped : false,
   permissions: rolePermissions(r.id, r.permissions),
 });
+/** Colonnes d'un rôle, avec le nombre de comptes et de groupes qui le portent. */
+const roles = (k: Kdb) =>
+  k
+    .selectFrom('roles as r')
+    .select([
+      'r.id',
+      'r.name',
+      'r.description',
+      'r.system',
+      'r.based_on',
+      'r.permissions',
+      'r.version',
+      sql<number>`(SELECT count(*) FROM user_roles ur WHERE ur.role_id = r.id)::int`.as('users'),
+      sql<number>`(SELECT count(*) FROM group_roles gr WHERE gr.role_id = r.id)::int`.as('groups'),
+    ]);
 async function roleById(c: Q, id: string): Promise<RoleOut | null> {
-  const r = await c.query<RoleRow>(
-    `SELECT r.id, r.name, r.description, r.system, r.based_on, r.permissions, r.version,
-            (SELECT count(*) FROM user_roles ur WHERE ur.role_id = r.id)::int AS users,
-            (SELECT count(*) FROM group_roles gr WHERE gr.role_id = r.id)::int AS groups
-       FROM roles r WHERE r.id = $1`,
-    [id],
-  );
-  return r.rows[0] ? roleOut(r.rows[0]) : null;
+  const r: RoleRow | undefined = await roles(kq(c)).where('r.id', '=', id).executeTakeFirst();
+  return r ? roleOut(r) : null;
 }
 
 /* ---------------------------------------------------------------- Écritures */
 /** Remplace les rôles directs d'un compte (portée « modules » conservée seulement pour un rôle à portée). */
+/** Nombre d'identifiants connus parmi ceux donnés (aucun si la liste est vide). */
+async function connus(k: Kdb, table: 'roles' | 'groups' | 'users', ids: readonly string[]) {
+  return ids.length ? (await k.selectFrom(table).select('id').where('id', 'in', ids).execute()).length : 0;
+}
 async function setUserRoles(c: Q, userId: string, roles: readonly RoleAssignment[]) {
+  const k = kq(c);
   const ids = [...new Set(roles.map((r) => r.roleId))];
-  const known = await c.query<{ id: string }>('SELECT id FROM roles WHERE id = ANY($1::text[])', [ids]);
-  if (known.rowCount !== ids.length) throw new HttpError(422, 'Rôle inconnu.');
-  await c.query('DELETE FROM user_roles WHERE user_id = $1', [userId]);
+  if ((await connus(k, 'roles', ids)) !== ids.length) throw new HttpError(422, 'Rôle inconnu.');
+  await k.deleteFrom('user_roles').where('user_id', '=', userId).execute();
   for (const id of ids) {
     const a = roles.find((r) => r.roleId === id)!;
     const scoped = isSystemRole(id) && SYSTEM_ROLE_DEFS[id].scoped;
     const modules = scoped ? [...new Set(a.modules ?? [])].filter((m) => AUDITOR_MODULES.includes(m)) : null;
-    await c.query('INSERT INTO user_roles(user_id, role_id, modules) VALUES ($1, $2, $3)', [userId, id, modules]);
+    await k.insertInto('user_roles').values({ user_id: userId, role_id: id, modules }).execute();
   }
 }
 async function setUserGroups(c: Q, userId: string, groups: readonly string[]) {
+  const k = kq(c);
   const ids = [...new Set(groups)];
-  const known = await c.query('SELECT id FROM groups WHERE id = ANY($1::uuid[])', [ids]);
-  if (known.rowCount !== ids.length) throw new HttpError(422, 'Groupe inconnu.');
-  await c.query('DELETE FROM user_groups WHERE user_id = $1', [userId]);
-  for (const g of ids) await c.query('INSERT INTO user_groups(user_id, group_id) VALUES ($1, $2)', [userId, g]);
+  if ((await connus(k, 'groups', ids)) !== ids.length) throw new HttpError(422, 'Groupe inconnu.');
+  await k.deleteFrom('user_groups').where('user_id', '=', userId).execute();
+  for (const g of ids) await k.insertInto('user_groups').values({ user_id: userId, group_id: g }).execute();
 }
 
 /** Coupe les sessions des comptes dont les droits ont changé (sauf l'acteur, qui ne peut pas être concerné). */
 async function cutSessions(c: Q, userIds: readonly string[]) {
-  if (userIds.length) await c.query('DELETE FROM sessions WHERE user_id = ANY($1::uuid[])', [userIds]);
+  if (userIds.length)
+    await kq(c)
+      .deleteFrom('sessions')
+      .where('user_id', 'in', [...userIds])
+      .execute();
 }
 
 const expiresValue = (v: string | null | undefined) =>
@@ -139,11 +187,11 @@ interface ReviewRow {
   id: string;
 }
 async function accessReview(svc: Services) {
-  const users = (
-    await svc.db.q<ReviewRow>(
-      'SELECT id, username, display_name, email, disabled, expires_at, last_login_at, totp_enabled FROM users ORDER BY lower(username)',
-    )
-  ).rows;
+  const users: ReviewRow[] = await svc.db.k
+    .selectFrom('users')
+    .select(['id', 'username', 'display_name', 'email', 'disabled', 'expires_at', 'last_login_at', 'totp_enabled'])
+    .orderBy(sql`lower(username)`)
+    .execute();
   const out: string[][] = [];
   for (const u of users) {
     const grants = await loadGrants(svc.db.pool, u.id);
@@ -193,7 +241,10 @@ export const accessRoutes = [
     tags: ['Droits'],
     access: 'administration:lire',
     response: z.array(UserOut),
-    handler: async ({ svc }) => (await svc.db.q(`SELECT ${USER_COLS} FROM users u ORDER BY lower(u.username)`)).rows,
+    handler: async ({ svc }) =>
+      comptes(svc.db.k)
+        .orderBy(sql`lower(u.username)`)
+        .execute(),
   }),
   route({
     method: 'POST',
@@ -209,20 +260,19 @@ export const accessRoutes = [
       const pw = tempPassword();
       const hash = await hashPassword(pw);
       const { id, after } = await svc.db
-        .tx(async (c) => {
-          const u = (
-            await c.query<{ id: string }>(
-              `INSERT INTO users(username, display_name, email, password_hash, must_change_password, expires_at)
-               VALUES ($1, $2, $3, $4, true, $5) RETURNING id`,
-              [
-                body.username,
-                body.displayName || body.username,
-                body.email || '',
-                hash,
-                expiresValue(body.expiresAt) ?? null,
-              ],
-            )
-          ).rows[0]!;
+        .tx(async (c, k) => {
+          const u = await k
+            .insertInto('users')
+            .values({
+              username: body.username,
+              display_name: body.displayName || body.username,
+              email: body.email || '',
+              password_hash: hash,
+              must_change_password: true,
+              expires_at: expiresValue(body.expiresAt) ?? null,
+            })
+            .returning('id')
+            .executeTakeFirstOrThrow();
           await setUserRoles(c, u.id, body.roles);
           await setUserGroups(c, u.id, body.groups);
           await assertScopedRoles(c, [u.id]);
@@ -271,7 +321,15 @@ export const accessRoutes = [
         body.disabled !== undefined ||
         body.expiresAt !== undefined;
       if (rightsChange) assertNotSelf(sess.user.id, [params.id]);
-      const m: Record<string, unknown> = {};
+      // Champs modifiables : liste fermée, typée par le schéma de la base.
+      const m: {
+        display_name?: string;
+        email?: string;
+        disabled?: boolean;
+        expires_at?: string | null;
+        failed_logins?: number;
+        locked_until?: null;
+      } = {};
       if (body.displayName !== undefined) m.display_name = body.displayName;
       if (body.email !== undefined) m.email = body.email;
       if (body.disabled !== undefined) m.disabled = body.disabled;
@@ -280,17 +338,17 @@ export const accessRoutes = [
         m.failed_logins = 0;
         m.locked_until = null;
       }
-      const { out } = await svc.db.tx(async (c) => {
+      const { out } = await svc.db.tx(async (c, k) => {
         const cur = await userById(c, params.id);
         if (!cur) throw new HttpError(404, 'Compte introuvable.');
         if (cur.version !== expected) throw conflict(cur as unknown as { version: number });
         const before = rightsChange ? await rightsSnapshot(c, [params.id]) : null;
-        const keys = Object.keys(m);
-        if (keys.length || body.roles || body.groups)
-          await c.query(
-            `UPDATE users SET ${[...keys.map((k, i) => `${k}=$${i + 2}`), 'version = version + 1', 'updated_at = now()'].join(', ')} WHERE id=$1`,
-            [params.id, ...keys.map((k) => m[k])],
-          );
+        if (Object.keys(m).length || body.roles || body.groups)
+          await k
+            .updateTable('users')
+            .set((eb) => ({ ...m, version: eb('version', '+', 1), updated_at: sql<Date>`now()` }))
+            .where('id', '=', params.id)
+            .execute();
         if (body.roles) await setUserRoles(c, params.id, body.roles);
         if (body.groups) await setUserGroups(c, params.id, body.groups);
         if (rightsChange) {
@@ -326,12 +384,20 @@ export const accessRoutes = [
       const sess = s as Session;
       const pw = tempPassword();
       const hash = await hashPassword(pw);
-      await svc.db.tx(async (c) => {
-        const r = await c.query(
-          'UPDATE users SET password_hash=$2, must_change_password=true, failed_logins=0, locked_until=NULL, version = version + 1, updated_at=now() WHERE id=$1',
-          [params.id, hash],
-        );
-        if (!r.rowCount) throw new HttpError(404, 'Compte introuvable.');
+      await svc.db.tx(async (c, k) => {
+        const r = await k
+          .updateTable('users')
+          .set((eb) => ({
+            password_hash: hash,
+            must_change_password: true,
+            failed_logins: 0,
+            locked_until: null,
+            version: eb('version', '+', 1),
+            updated_at: sql<Date>`now()`,
+          }))
+          .where('id', '=', params.id)
+          .executeTakeFirst();
+        if (!Number(r.numUpdatedRows)) throw new HttpError(404, 'Compte introuvable.');
         await svc.auth.destroyUserSessions(params.id, null, c);
         await svc.db.audit(sess.user, ip, 'admin.user_password_reset', params.id, {}, c);
       }, sess.user.username);
@@ -347,12 +413,19 @@ export const accessRoutes = [
     params: IdParams,
     handler: async ({ svc, s, ip, params }) => {
       const sess = s as Session;
-      await svc.db.tx(async (c) => {
-        const r = await c.query(
-          'UPDATE users SET totp_secret=NULL, totp_pending=NULL, totp_enabled=false, version = version + 1, updated_at=now() WHERE id=$1',
-          [params.id],
-        );
-        if (!r.rowCount) throw new HttpError(404, 'Compte introuvable.');
+      await svc.db.tx(async (c, k) => {
+        const r = await k
+          .updateTable('users')
+          .set((eb) => ({
+            totp_secret: null,
+            totp_pending: null,
+            totp_enabled: false,
+            version: eb('version', '+', 1),
+            updated_at: sql<Date>`now()`,
+          }))
+          .where('id', '=', params.id)
+          .executeTakeFirst();
+        if (!Number(r.numUpdatedRows)) throw new HttpError(404, 'Compte introuvable.');
         await svc.auth.destroyUserSessions(params.id, null, c);
         await svc.db.audit(sess.user, ip, 'admin.user_mfa_reset', params.id, {}, c);
       }, sess.user.username);
@@ -369,12 +442,12 @@ export const accessRoutes = [
     handler: async ({ svc, s, ip, params }) => {
       const sess = s as Session;
       if (params.id === sess.user.id) throw new HttpError(409, 'Vous ne pouvez pas supprimer votre propre compte.');
-      await svc.db.tx(async (c) => {
+      await svc.db.tx(async (c, k) => {
         const before = await rightsSnapshot(c, [params.id]);
-        const r = await c.query<{ username: string }>('DELETE FROM users WHERE id=$1 RETURNING username', [params.id]);
-        if (!r.rowCount) throw new HttpError(404, 'Compte introuvable.');
+        const r = await k.deleteFrom('users').where('id', '=', params.id).returning('username').executeTakeFirst();
+        if (!r) throw new HttpError(404, 'Compte introuvable.');
         await assertAdminRemains(c);
-        await svc.db.audit(sess.user, ip, 'admin.user_delete', r.rows[0]!.username, { before, after: null }, c);
+        await svc.db.audit(sess.user, ip, 'admin.user_delete', r.username, { before, after: null }, c);
       }, sess.user.username);
       return undefined;
     },
@@ -388,10 +461,11 @@ export const accessRoutes = [
     params: IdParams,
     response: EffectiveRightsOut,
     handler: async ({ svc, params }) => {
-      const u = await svc.db.one<{ id: string; username: string; display_name: string }>(
-        'SELECT id, username, display_name FROM users WHERE id=$1',
-        [params.id],
-      );
+      const u = await svc.db.k
+        .selectFrom('users')
+        .select(['id', 'username', 'display_name'])
+        .where('id', '=', params.id)
+        .executeTakeFirst();
       if (!u) throw new HttpError(404, 'Compte introuvable.');
       const eff = effectivePermissions(await loadGrants(svc.db.pool, u.id));
       return {
@@ -434,7 +508,10 @@ export const accessRoutes = [
     tags: ['Droits'],
     access: 'administration:lire',
     response: z.array(GroupOut),
-    handler: async ({ svc }) => (await svc.db.q(`SELECT ${GROUP_COLS} FROM groups g ORDER BY lower(g.name)`)).rows,
+    handler: async ({ svc }) =>
+      groupes(svc.db.k)
+        .orderBy(sql`lower(g.name)`)
+        .execute(),
   }),
   route({
     method: 'POST',
@@ -449,13 +526,17 @@ export const accessRoutes = [
       const sess = s as Session;
       assertNotSelf(sess.user.id, body.roles.length ? body.members : []);
       const out = await svc.db
-        .tx(async (c) => {
-          const g = (
-            await c.query<{ id: string }>(
-              'INSERT INTO groups(name, description, created_by, updated_by) VALUES ($1, $2, $3, $3) RETURNING id',
-              [body.name, body.description ?? '', sess.user.username],
-            )
-          ).rows[0]!;
+        .tx(async (c, k) => {
+          const g = await k
+            .insertInto('groups')
+            .values({
+              name: body.name,
+              description: body.description ?? '',
+              created_by: sess.user.username,
+              updated_by: sess.user.username,
+            })
+            .returning('id')
+            .executeTakeFirstOrThrow();
           await setGroupRoles(c, g.id, body.roles);
           await setGroupMembers(c, g.id, body.members);
           await cutSessions(c, body.roles.length ? body.members : []);
@@ -480,7 +561,7 @@ export const accessRoutes = [
       const sess = s as Session;
       const expected = requireIfMatch(req);
       const { out } = await svc.db
-        .tx(async (c) => {
+        .tx(async (c, k) => {
           const cur = await groupById(c, params.id);
           if (!cur) throw new HttpError(404, 'Groupe introuvable.');
           if (cur.version !== expected) throw conflict(cur as unknown as { version: number });
@@ -502,11 +583,18 @@ export const accessRoutes = [
               ];
           const effective = (body.roles ?? cur.roles.map((r) => r.id)).length || rolesChanged ? affected : [];
           assertNotSelf(sess.user.id, effective);
-          await c.query(
-            `UPDATE groups SET name = COALESCE($2, name), description = COALESCE($3, description), updated_by = $4,
-                    version = version + 1, updated_at = now() WHERE id = $1`,
-            [params.id, body.name ?? null, body.description ?? null, sess.user.username],
-          );
+          // Champ absent (ou null) : valeur conservée, comme COALESCE.
+          await k
+            .updateTable('groups')
+            .set((eb) => ({
+              ...(body.name != null ? { name: body.name } : {}),
+              ...(body.description != null ? { description: body.description } : {}),
+              updated_by: sess.user.username,
+              version: eb('version', '+', 1),
+              updated_at: sql<Date>`now()`,
+            }))
+            .where('id', '=', params.id)
+            .execute();
           if (body.roles) await setGroupRoles(c, params.id, body.roles);
           if (body.members) await setGroupMembers(c, params.id, body.members);
           await assertAdminRemains(c);
@@ -536,12 +624,12 @@ export const accessRoutes = [
     params: IdParams,
     handler: async ({ svc, s, ip, params }) => {
       const sess = s as Session;
-      await svc.db.tx(async (c) => {
+      await svc.db.tx(async (c, k) => {
         const cur = await groupById(c, params.id);
         if (!cur) throw new HttpError(404, 'Groupe introuvable.');
         const affected = cur.roles.length ? cur.members.map((m) => m.id) : [];
         assertNotSelf(sess.user.id, affected);
-        await c.query('DELETE FROM groups WHERE id = $1', [params.id]);
+        await k.deleteFrom('groups').where('id', '=', params.id).execute();
         await assertAdminRemains(c);
         await cutSessions(c, affected);
         await svc.db.audit(sess.user, ip, 'admin.group_delete', cur.name, { before: groupSnap(cur), after: null }, c);
@@ -559,14 +647,14 @@ export const accessRoutes = [
     access: 'administration:lire',
     response: z.array(RoleOut),
     handler: async ({ svc }) => {
-      const r = await svc.db.q<RoleRow>(
-        `SELECT r.id, r.name, r.description, r.system, r.based_on, r.permissions, r.version,
-                (SELECT count(*) FROM user_roles ur WHERE ur.role_id = r.id)::int AS users,
-                (SELECT count(*) FROM group_roles gr WHERE gr.role_id = r.id)::int AS groups
-           FROM roles r ORDER BY NOT r.system, CASE r.id WHEN 'administrateur' THEN 0 WHEN 'rssi' THEN 1
-             WHEN 'contributeur' THEN 2 WHEN 'lecteur' THEN 3 ELSE 4 END, lower(r.name)`,
-      );
-      return r.rows.map(roleOut);
+      const r: RoleRow[] = await roles(svc.db.k)
+        .orderBy(sql`NOT r.system`)
+        .orderBy(
+          sql`CASE r.id WHEN 'administrateur' THEN 0 WHEN 'rssi' THEN 1 WHEN 'contributeur' THEN 2 WHEN 'lecteur' THEN 3 ELSE 4 END`,
+        )
+        .orderBy(sql`lower(r.name)`)
+        .execute();
+      return r.map(roleOut);
     },
   }),
   route({
@@ -589,7 +677,7 @@ export const accessRoutes = [
     handler: async ({ svc, s, ip, body }) => {
       const sess = s as Session;
       const out = await svc.db
-        .tx(async (c) => {
+        .tx(async (c, k) => {
           const src = await roleById(c, body.from);
           if (!src) throw new HttpError(404, 'Rôle d’origine introuvable.');
           if (src.scoped)
@@ -598,11 +686,19 @@ export const accessRoutes = [
               'Le rôle Auditeur externe ne peut pas être dupliqué : sa portée est choisie à l’attribution.',
             );
           const id = 'r_' + crypto.randomBytes(8).toString('hex');
-          await c.query(
-            `INSERT INTO roles(id, name, description, system, permissions, based_on, created_by, updated_by)
-             VALUES ($1, $2, $3, false, $4, $5, $6, $6)`,
-            [id, body.name, body.description ?? src.description, src.permissions, src.id, sess.user.username],
-          );
+          await k
+            .insertInto('roles')
+            .values({
+              id,
+              name: body.name,
+              description: body.description ?? src.description,
+              system: false,
+              permissions: src.permissions,
+              based_on: src.id,
+              created_by: sess.user.username,
+              updated_by: sess.user.username,
+            })
+            .execute();
           const created = (await roleById(c, id))!;
           await svc.db.audit(
             sess.user,
@@ -632,7 +728,7 @@ export const accessRoutes = [
       const expected = requireIfMatch(req);
       if (isSystemRole(params.id)) throw new HttpError(409, 'Un rôle prédéfini n’est pas modifiable : dupliquez-le.');
       const { out } = await svc.db
-        .tx(async (c) => {
+        .tx(async (c, k) => {
           const cur = await roleById(c, params.id);
           if (!cur) throw new HttpError(404, 'Rôle introuvable.');
           if (cur.version !== expected) throw conflict(cur as unknown as { version: number });
@@ -641,12 +737,19 @@ export const accessRoutes = [
             [...body.permissions].sort().join() !== [...cur.permissions].sort().join();
           const affected = permsChanged ? await usersOfRole(c, params.id) : [];
           assertNotSelf(sess.user.id, affected);
-          await c.query(
-            `UPDATE roles SET name = COALESCE($2, name), description = COALESCE($3, description),
-                    permissions = COALESCE($4, permissions), updated_by = $5, version = version + 1, updated_at = now()
-              WHERE id = $1`,
-            [params.id, body.name ?? null, body.description ?? null, body.permissions ?? null, sess.user.username],
-          );
+          // Champ absent (ou null) : valeur conservée, comme COALESCE.
+          await k
+            .updateTable('roles')
+            .set((eb) => ({
+              ...(body.name != null ? { name: body.name } : {}),
+              ...(body.description != null ? { description: body.description } : {}),
+              ...(body.permissions != null ? { permissions: [...body.permissions] } : {}),
+              updated_by: sess.user.username,
+              version: eb('version', '+', 1),
+              updated_at: sql<Date>`now()`,
+            }))
+            .where('id', '=', params.id)
+            .execute();
           await assertAdminRemains(c);
           await cutSessions(c, affected);
           const updated = (await roleById(c, params.id))!;
@@ -678,12 +781,12 @@ export const accessRoutes = [
     handler: async ({ svc, s, ip, params }) => {
       const sess = s as Session;
       if (isSystemRole(params.id)) throw new HttpError(409, 'Un rôle prédéfini ne peut pas être supprimé.');
-      await svc.db.tx(async (c) => {
+      await svc.db.tx(async (c, k) => {
         const cur = await roleById(c, params.id);
         if (!cur) throw new HttpError(404, 'Rôle introuvable.');
         const affected = await usersOfRole(c, params.id);
         assertNotSelf(sess.user.id, affected);
-        await c.query('DELETE FROM roles WHERE id = $1', [params.id]);
+        await k.deleteFrom('roles').where('id', '=', params.id).execute();
         await assertAdminRemains(c);
         await cutSessions(c, affected);
         await svc.db.audit(
@@ -702,20 +805,20 @@ export const accessRoutes = [
 
 /* ---------------------------------------------------------------- Aides (groupes) */
 async function setGroupRoles(c: Q, groupId: string, roles: readonly string[]) {
+  const k = kq(c);
   const ids = [...new Set(roles)];
-  const known = await c.query<{ id: string }>('SELECT id FROM roles WHERE id = ANY($1::text[])', [ids]);
-  if (known.rowCount !== ids.length) throw new HttpError(422, 'Rôle inconnu.');
+  if ((await connus(k, 'roles', ids)) !== ids.length) throw new HttpError(422, 'Rôle inconnu.');
   if (ids.some((id) => isSystemRole(id) && SYSTEM_ROLE_DEFS[id].scoped))
     throw new HttpError(422, 'Le rôle Auditeur externe s’attribue directement à un compte, pas à un groupe.');
-  await c.query('DELETE FROM group_roles WHERE group_id = $1', [groupId]);
-  for (const id of ids) await c.query('INSERT INTO group_roles(group_id, role_id) VALUES ($1, $2)', [groupId, id]);
+  await k.deleteFrom('group_roles').where('group_id', '=', groupId).execute();
+  for (const id of ids) await k.insertInto('group_roles').values({ group_id: groupId, role_id: id }).execute();
 }
 async function setGroupMembers(c: Q, groupId: string, members: readonly string[]) {
+  const k = kq(c);
   const ids = [...new Set(members)];
-  const known = await c.query('SELECT id FROM users WHERE id = ANY($1::uuid[])', [ids]);
-  if (known.rowCount !== ids.length) throw new HttpError(422, 'Compte inconnu.');
-  await c.query('DELETE FROM user_groups WHERE group_id = $1', [groupId]);
-  for (const u of ids) await c.query('INSERT INTO user_groups(user_id, group_id) VALUES ($1, $2)', [u, groupId]);
+  if ((await connus(k, 'users', ids)) !== ids.length) throw new HttpError(422, 'Compte inconnu.');
+  await k.deleteFrom('user_groups').where('group_id', '=', groupId).execute();
+  for (const u of ids) await k.insertInto('user_groups').values({ user_id: u, group_id: groupId }).execute();
 }
 const groupSnap = (g: GroupOut) => ({
   name: g.name,
