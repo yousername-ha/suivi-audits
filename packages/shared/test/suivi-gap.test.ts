@@ -78,7 +78,7 @@ describe('références et identifiants', () => {
 });
 
 describe('questionnaire guidé', () => {
-  it('18 questions (16 d’origine et 2 propres à l’IA)', () => expect(QUESTIONS_GAP).toHaveLength(18));
+  it('15 questions (les points propres à l’IA sont retirés : ADR 0057)', () => expect(QUESTIONS_GAP).toHaveLength(15));
   it('sans réponse : seuls les deux points communs sont ajoutés, aucune pré-évaluation', () => {
     const r = questionnaireGap({});
     expect(r.custom.map((c) => c.t)).toEqual([
@@ -121,39 +121,13 @@ describe('questionnaire guidé', () => {
     expect(r.fournisseur).toBe(false);
   });
   it('identifiants Q1, Q2… dans l’ordre d’ajout', () => {
-    const r = questionnaireGap({ dcp: 'Oui', ia: 'Oui' });
-    expect(r.custom.map((c) => c.id)).toEqual(['Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q6', 'Q7', 'Q8', 'Q9']);
+    const r = questionnaireGap({ dcp: 'Oui' });
+    expect(r.custom.map((c) => c.id)).toEqual(r.custom.map((_, i) => `Q${i + 1}`));
   });
-  it('service embarquant de l’IA : points de maîtrise rattachés à l’ISO 27001, sans estimation sans réponse', () => {
-    const sans = questionnaireGap({ ia: 'Oui' });
-    const ia = sans.custom.filter((c) => c.sec === 'spec');
-    expect(ia.map((c) => c.refs.join('+'))).toEqual([
-      'A-5.9+A-5.12',
-      'A-5.10+A-6.3',
-      'ISO-6.1.2',
-      'A-5.19+A-5.20+A-5.23',
-      'A-8.15+A-8.16',
-      'A-5.31',
-    ]);
-    expect(sans.st).toEqual({});
-    // Sans IA : aucun point propre à l'IA.
-    expect(questionnaireGap({ ia: 'Non' }).custom.some((c) => c.t.includes('IA'))).toBe(false);
-  });
-  it('IA : réutilisation des données par le fournisseur et données de santé sans certificat HDS', () => {
-    const r = questionnaireGap({
-      ia: 'Oui',
-      iaEntrainement: 'Oui',
-      iaDonnees: 'Données de santé (DSCP)',
-      certs: ['ISO 27001'],
-    });
-    const contrat = r.custom.find((c) => c.refs.includes('A-5.19'))!;
-    expect(r.st[contrat.id]).toBe('Non conforme');
-    const hds = r.custom.find((c) => c.refs.includes('HDS-28') && c.sec === 'hds')!;
-    expect(r.st[hds.id]).toBe('Non conforme');
-    // Certificat HDS déclaré : rien n'est estimé, le point reste à évaluer.
-    const ok = questionnaireGap({ ia: 'Oui', iaDonnees: 'Données de santé (DSCP)', certs: ['HDS'] });
-    expect(ok.st[ok.custom.find((c) => c.sec === 'hds')!.id]).toBeUndefined();
-    expect(questionnaireGap({ ia: 'Oui', iaEntrainement: 'Non, garanti par contrat' }).st.Q4).toBe('Conforme');
+  it('aucun point propre à l’IA : l’analyse de l’IA passe par le kit et l’assistant « Analyser un service » (ADR 0057)', () => {
+    expect(QUESTIONS_GAP.some((q) => q.k.startsWith('ia'))).toBe(false);
+    const r = questionnaireGap({ dcp: 'Oui', ia: 'Oui', iaEntrainement: 'Oui' });
+    expect(r.custom.some((c) => /\bIA\b/.test(c.t))).toBe(false);
   });
 });
 

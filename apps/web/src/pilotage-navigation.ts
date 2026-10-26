@@ -53,7 +53,6 @@ export const PILOTAGE_NAV = [
       { id: 'couverture', label: 'Couverture par référentiel', module: 'conformite' },
       { id: 'analyser-service', label: 'Analyser un service', module: 'conformite' },
       { id: 'gap-applications', label: 'Applications à intégrer', module: 'conformite' },
-      { id: 'conformite-ia', label: 'Conformité IA', module: 'ia' },
       { id: 'correspondances-bibliotheque', label: 'Correspondances de la bibliothèque', module: 'conformite' },
     ],
   },

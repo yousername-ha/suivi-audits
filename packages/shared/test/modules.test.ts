@@ -6,7 +6,7 @@ describe('activation des modules', () => {
   it('couvre exactement tous les modules du RBAC, sans changer les permissions', () => {
     expect(MODULE_REGISTRY.map((m) => m.id)).toEqual([...MODULES]);
     expect(new Set(MODULE_REGISTRY.map((m) => m.id)).size).toBe(MODULES.length);
-    expect(ALL_PERMISSIONS).toHaveLength(75);
+    expect(ALL_PERMISSIONS).toHaveLength(70);
   });
   it('protège administration et paramètres', () => {
     for (const id of ['administration', 'parametres'] as const) {
@@ -66,7 +66,7 @@ describe('activation des modules', () => {
     const rights = activeRights(grants, ['documents']);
     expect(rights.can('documents', 'lire')).toBe(false);
     expect(rights.can('audit', 'lire')).toBe(true);
-    expect(grants.list()).toHaveLength(75);
+    expect(grants.list()).toHaveLength(70);
     expect(activeRights(grants, []).list()).toEqual(grants.list());
   });
 });

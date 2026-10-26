@@ -6,7 +6,6 @@ import { Crise } from './crise.js';
 import { DeclarationApplicabilite } from './dda.js';
 import { EvaluationsClausier } from './evals-fournisseurs.js';
 import { Gap } from './gap.js';
-import { ConformiteIa } from './ia.js';
 import { Incidents } from './incidents.js';
 import { Investissements } from './invest.js';
 import { Plans } from './plans.js';
@@ -19,7 +18,6 @@ export class Historique {
   readonly audit: AuditSuivi;
   readonly revuesAcces: RevuesAcces;
   readonly gap: Gap;
-  readonly ia: ConformiteIa;
   readonly invest: Investissements;
   readonly crrc: GestionCrrc;
   readonly incidents: Incidents;
@@ -32,7 +30,6 @@ export class Historique {
     this.audit = new AuditSuivi(this.registre);
     this.revuesAcces = new RevuesAcces(this.registre);
     this.gap = new Gap(this.registre);
-    this.ia = new ConformiteIa(this.registre);
     this.invest = new Investissements(this.registre);
     this.crrc = new GestionCrrc(this.registre);
     this.incidents = new Incidents(this.registre);

@@ -60,3 +60,4 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0054](0054-bibliotheque-sources-de-risque.md) | Bibliothèque partagée des sources de risque réutilisées par les études | Acceptée |
 | [0055](0055-kit-integration-ia.md) | Kit d'intégration IA : contrôles internes importés depuis l'interface, correspondances proposées, veille « à revérifier » | Acceptée |
 | [0056](0056-analyser-un-service-et-plan-des-ecarts.md) | Assistant « Analyser un service » et plan d'action des écarts en lot | Acceptée |
+| [0057](0057-retrait-de-la-conformite-ia.md) | Retrait de la page « Conformité IA », de ses données et du module de droits « ia » | Acceptée |

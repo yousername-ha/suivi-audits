@@ -1,0 +1,17 @@
+# Contrôle de secrets de la CI (gitleaks). Le dépôt est public : aucune donnée réelle, aucun secret.
+# Les règles par défaut s'appliquent partout ; seules les fixtures de tests, qui contiennent des valeurs FICTIVES
+# (mots de passe d'essai, jetons d'essai, certificats de recette), et les captures de documentation sont exclues.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Valeurs fictives de tests et d'exemples"
+paths = [
+  '''^tests/''',
+  '''(^|/)test/''',
+  '''(^|/)__tests__/''',
+  '''^scripts/tests/''',
+  '''^docs/''',
+  '''\.example$''',
+  '''^pnpm-lock\.yaml$''',
+]

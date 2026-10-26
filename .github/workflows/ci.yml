@@ -18,6 +18,19 @@ env:
   TRIVY_IMAGE: aquasec/trivy:0.75.0
 
 jobs:
+  secrets:
+    name: Secrets (gitleaks, historique complet)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Recherche de secrets dans tout l'historique (valeurs masquées dans le journal)
+        run: |
+          docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.28.0 \
+            git /repo --config /repo/.gitleaks.toml --redact --no-banner --exit-code 1
+
   qualite:
     name: Qualité (lint, format, typage, contrôles)
     runs-on: ubuntu-latest

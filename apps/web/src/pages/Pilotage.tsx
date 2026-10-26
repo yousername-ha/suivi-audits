@@ -53,7 +53,6 @@ import { PreparationRevue } from '../pilotage/PreparationRevue';
 import { SeriesProposees } from '../pilotage/SeriesProposees';
 import { PlansSmsi } from '../pilotage/Plans';
 import { AnalyserService } from '../pilotage/AnalyserService';
-import { ConformiteIa } from '../pilotage/Ia';
 import { GapApplications } from '../pilotage/Gap';
 import { CelluleCriseVue, ContactsCrise, ScenariosCrise } from '../incidents/Crise';
 import { QualifierSignalement, RegistreIncidents } from '../incidents/Incidents';
@@ -460,7 +459,6 @@ export function PilotagePage() {
               <RiskMap smsi={smsi} onOpen={open} />
             )}
             {section === 'pestel' && can('pilotage', 'lire') && <Pestel smsi={smsi} />}
-            {section === 'conformite-ia' && can('ia', 'lire') && <ConformiteIa />}
             {section === 'analyser-service' && can('conformite', 'lire') && smsi && (
               <AnalyserService smsi={smsi} onChoisir={chooseScope} />
             )}

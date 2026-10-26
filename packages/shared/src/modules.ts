@@ -16,7 +16,6 @@ const optional: Partial<Record<Module, readonly Module[]>> = {
   pilotage: ['audit', 'ecarts', 'fournisseurs', 'documents'],
   fournisseurs: ['pilotage', 'documents'],
   conformite: ['audit', 'documents'],
-  ia: ['conformite', 'documents'],
   crrc: ['fournisseurs', 'documents'],
   investissements: ['fournisseurs', 'documents'],
   incidents: ['pilotage', 'documents'],

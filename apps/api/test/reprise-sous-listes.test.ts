@@ -114,6 +114,7 @@ describe('sous-listes en tables liées (migration 028)', () => {
         '040_courriel_jobs.sql',
         '041_tls_modes.sql',
         '042_kit_ia.sql',
+        '043_retrait_conformite_ia.sql',
       ]);
       for (const table of ['suivi_ecarts', 'suivi_ecarts_taches'])
         expect((await t.svc.db.one(`SELECT to_regclass('${table}') AS r`))!.r).toBeNull();
