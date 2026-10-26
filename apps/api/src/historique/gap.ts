@@ -15,6 +15,8 @@ import {
   lireAppGap,
   pointsGap,
   questionnaireGap,
+  questionnaireGapIa,
+  questionsIaVisibles,
   type AppGap,
 } from '@suivi/shared';
 import { itemCode } from '@suivi/shared/audit';
@@ -256,7 +258,13 @@ export class Gap {
         reference: (x) => `legacy:appGaps:${x.app.id}`,
       },
       async (data, c) => {
-        const q = questionnaireGap(b.answers);
+        const ia = b.modele === 'ia';
+        // GAP IA : seules les réponses aux questions des cas d'usage choisis sont retenues.
+        const visibles = new Set(questionsIaVisibles(b.answers).map((x) => x.k));
+        const reponses = ia
+          ? Object.fromEntries(Object.entries(b.answers).filter(([k]) => visibles.has(k)))
+          : b.answers;
+        const q = ia ? questionnaireGapIa(reponses) : questionnaireGap(reponses);
         const maintenant = new Date().toISOString();
         const id = identifiantApp(entrees(data, 'appGaps').map((a) => str(a.id)));
         const fournisseurs = entrees(data, 'suppliers');
@@ -264,7 +272,7 @@ export class Gap {
         let fournisseurCree: string | null = null;
         if (fournisseur && !fournisseurs.some((s) => s.id === fournisseur))
           throw new HttpError(422, 'Fournisseur absent du registre.');
-        if (!fournisseur && b.supplierNew) {
+        if (!ia && !fournisseur && b.supplierNew) {
           await this.r.g.permission(user, 'fournisseurs', 'modifier');
           let n = 1;
           while (fournisseurs.some((s) => s.id === 'SUP' + String(n).padStart(2, '0'))) n++;
@@ -305,9 +313,10 @@ export class Gap {
           owner: b.owner,
           target: b.target,
           desc: b.desc,
+          ...(ia ? { modele: 'ia' } : {}),
           lines,
           custom: q.custom.map((x) => ({ ...x, createdAt: maintenant })),
-          profile: { ...b.answers, at: maintenant },
+          profile: { ...reponses, at: maintenant },
         };
         let app = lireAppGap(brut)!;
         let plan: string | null = null;
@@ -319,7 +328,9 @@ export class Gap {
           plan = identifiantEcartGap(entrees(data, 'findings').map((f) => str(f.id)));
           await this.r.creerEcart(c, user, ip, {
             id: plan,
-            name: `Intégration de « ${app.name} » au périmètre ISO 27001 / HDS`,
+            name: ia
+              ? `Maîtrise de l’IA : « ${app.name} » (ISO 27001 / HDS)`
+              : `Intégration de « ${app.name} » au périmètre ISO 27001 / HDS`,
             description: [b.desc, 'Points à traiter :', ...aFaire.map((l) => `- ${l.t}`)].filter(Boolean).join('\n'),
             findingType: 'observation',
             items: [...new Set(aFaire.flatMap((l) => l.refs))].filter((r) => connues.has(r)),
