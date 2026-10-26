@@ -17,6 +17,7 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `modules.ts` | 4 | Converti (lot 2) ; verrous consultatifs en SQL |
 | `grc/risks.ts` | 3 | Converti (lot 5) ; verrou consultatif et projection temporelle (2 requêtes) en SQL paramétré |
 | `business-policy.ts` | 2 | Converti (lot 2) ; verrou consultatif et pg_notify en SQL |
+| `pilotage/service.ts` | 2 | Converti (lot 14) ; verrou consultatif et indicateurs (CTE) en SQL paramétré |
 | `backups.ts` | 1 | Converti (lot 13) ; verrou consultatif en SQL |
 | `grc/core.ts` | 1 | Converti (lot 4) ; pg_notify en SQL |
 | `notifications-metier.ts` | 1 | Converti (lot 11) ; héritages de réglages (unions) en SQL paramétré |
@@ -32,7 +33,6 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `types-processus.ts` | 0 | Converti (lot 1) |
 | `courriel.ts` | 20 | Dernier (FOR UPDATE, power(), LEAST) |
 | `auth.ts` | 15 | À convertir |
-| `pilotage/service.ts` | 15 | À convertir |
 | `cli.ts` | 14 | À convertir |
 | `routes/carto.ts` | 14 | À convertir |
 | `routes/documents.ts` | 14 | Liens convertis (socle) ; documents à convertir |
@@ -88,4 +88,4 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `routes/modules.ts` | 1 | À convertir |
 | `startup.ts` | 1 | À convertir |
 
-Reste à convertir : 331 appels dans 57 fichiers.
+Reste à convertir : 316 appels dans 56 fichiers.
