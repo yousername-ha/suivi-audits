@@ -184,5 +184,85 @@ class Updates(unittest.TestCase):
         with patch.object(self.w,'run',return_value=ready),patch.object(self.w,'cli',return_value=json.dumps({'ok':True,'documents':{'empreinte':'avant'},'tables':{'users':2}})):
             with self.assertRaises(m.Failure):self.w.health('3.1.0')
 
+    def test_sans_cle_de_deploiement_etiquette_lue_en_https_public(self):
+        # ADR 0061 : /root/.ssh n'est plus monté ; l'origine SSH échoue, la lecture publique prend le relais.
+        self.w.job={'id':self.id,'target':'3.1.0'}
+        fetched=[]
+        def run(args, **kwargs):
+            if args[:2]==['git','fetch']:
+                fetched.append(args[3])
+                if args[3]=='origin': raise m.Failure('ssh')
+                return ''
+            if args[0]=='git' and args[1]=='rev-parse': return 'b'*40
+            if args[0]=='docker' and args[1]=='inspect' and 'Labels' in args[3]: return 'b'*40
+            if args[0]=='docker' and args[1]=='inspect': return json.dumps([args[-1].split(':')[0]+'@sha256:'+'a'*64])
+            return ''
+        with patch.object(self.w,'run',side_effect=run): self.w.signatures('3.1.0')
+        self.assertEqual(fetched,['origin','https://github.com/yousername-ha/suivi-audits.git'])
+        self.assertEqual(self.w.job['revision'],'b'*40)
+
+    def test_sources_publiques_differentes_des_images_signees_refusees(self):
+        self.w.job={'id':self.id,'target':'3.1.0'}
+        def run(args, **kwargs):
+            if args[:2]==['git','fetch'] and args[3]=='origin': raise m.Failure('ssh')
+            if args[0]=='git' and args[1]=='rev-parse': return 'c'*40
+            if args[0]=='docker' and args[1]=='inspect' and 'Labels' in args[3]: return 'b'*40
+            if args[0]=='docker' and args[1]=='inspect': return json.dumps([args[-1].split(':')[0]+'@sha256:'+'a'*64])
+            return ''
+        with patch.object(self.w,'run',side_effect=run):
+            with self.assertRaises(m.Failure): self.w.signatures('3.1.0')
+        self.assertNotIn('revision',self.w.job)
+
+    def test_frise_horodatee_des_etapes_de_l_installation(self):
+        self.w.job={'id':self.id,'kind':'install','target':'3.1.0'}
+        self.w.publish(id=self.id,status='running',phase='preparing',etapes=[],startedAt=m.now())
+        self.w.publish(phase='preparing',message='toujours')
+        self.w.publish(phase='backup')
+        self.w.publish(phase='installing')
+        public=json.loads((self.w.public/'status.json').read_text())
+        self.assertEqual([e['phase'] for e in public['etapes']],['preparing','backup','installing'])
+        self.assertTrue(all(e['at'].endswith('Z') for e in public['etapes']))
+        # Nouvelle installation : la frise repart de zéro.
+        self.w.publish(phase='preparing',etapes=[])
+        self.assertEqual([e['phase'] for e in self.w.state['etapes']],['preparing'])
+        # Une simple vérification des publications n'alimente pas la frise.
+        self.w.job={'id':str(uuid.uuid4()),'kind':'check','target':None}
+        self.w.publish(phase='checking')
+        self.assertEqual([e['phase'] for e in self.w.state['etapes']],['preparing'])
+
+    def test_recu_structure_sans_donnee_sensible(self):
+        backup=self.data/'sauvegardes-updates/avant-maj-3.0.0-vers-3.1.0.tar.enc'
+        backup.parent.mkdir(parents=True)
+        backup.write_bytes(b'chiffre')
+        (backup.parent/(backup.name+'.sha256')).write_text('d'*64+'  '+backup.name+'\n')
+        m.atomic(self.w.private/'progress.json',{'jobId':self.id,'phase':'termine','backup':str(backup)})
+        self.w.job={'id':self.id,'kind':'install','target':'3.1.0','installed':'3.0.0','previousEnv':'SECRET=confidentiel',
+                    'images':{c:f'ghcr.io/yousername-ha/suivi-audits-{c}@sha256:'+'a'*64 for c in ('api','web','updater')},
+                    'revision':'b'*40,'before':{'ok':True,'documents':{'empreinte':'x'},'tables':{'users':3}},
+                    'after':{'ok':True,'documentsIdentiques':True}}
+        self.w.publish(id=self.id,status='running',phase='preparing',etapes=[],startedAt='2026-10-26T10:00:00Z')
+        with patch.object(self.w,'cli',return_value=''):
+            self.w.finish('success','Mise à jour installée et vérifiée.')
+        file=self.data/'etat/recus-mises-a-jour'/f'{self.id}.json'
+        self.assertEqual(file.stat().st_mode & 0o777,0o644)
+        text=file.read_text()
+        self.assertNotIn('confidentiel',text)
+        self.assertNotIn(str(self.data),text)
+        r=json.loads(text)
+        self.assertEqual((r['format'],r['depuis'],r['vers'],r['statut']),(1,'3.0.0','3.1.0','success'))
+        self.assertEqual(r['sauvegarde'],{'fichier':backup.name,'sha256':'d'*64})
+        self.assertTrue(r['signature']['verifiee'])
+        self.assertEqual(r['signature']['identite'],'https://github.com/yousername-ha/suivi-audits/.github/workflows/release.yml@refs/tags/v3.1.0')
+        self.assertEqual(r['controles'],{'avant':True,'apres':True,'documentsIdentiques':True})
+        self.assertEqual([e['phase'] for e in r['etapes']],['preparing','complete'])
+        self.assertIsInstance(r['dureeSecondes'],int)
+        self.assertEqual(self.w.state['finishedAt'],r['fin'])
+
+    def test_pas_de_recu_pour_une_verification(self):
+        self.w.job={'id':self.id,'kind':'check','target':None}
+        with patch.object(self.w,'cli',return_value=''):
+            self.w.finish('success','Vérification terminée.')
+        self.assertFalse((self.data/'etat/recus-mises-a-jour').exists())
+
 
 if __name__=='__main__': unittest.main()

@@ -1,21 +1,54 @@
 /* L'API ne lance aucune commande : demandes auditées, exécutées uniquement par la CLI locale. */
 import { randomUUID } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { z } from 'zod';
-import { effectivePermissions, UpdateState, type UpdateRequest } from '@suivi/shared';
+import {
+  dansFenetre,
+  effectivePermissions,
+  FENETRE_MAINTENANCE_DEFAUT,
+  FenetreMaintenance,
+  libelleFenetre,
+  UpdateReceipt,
+  UpdateReceiptSummary,
+  UpdateState,
+  type UpdateRequest,
+} from '@suivi/shared';
 import type { SessionUser } from './auth.js';
 import type { Config } from './config.js';
 import type { Client, Db } from './db/db.js';
 import { HttpError } from './http/errors.js';
 import { loadGrants } from './rights.js';
+import type { Settings } from './settings.js';
 import { compareVersions } from './systeme.js';
 
 export class Updates {
   constructor(
     private readonly cfg: Config,
     private readonly db: Db,
+    private readonly settings: Settings,
   ) {}
+  /** Fenêtre de maintenance lue en base (et non dans le cache) : la CLI de l'exécutant n'a pas de cache chargé. */
+  async fenetre(c?: Client): Promise<FenetreMaintenance> {
+    const values = (await this.settings.read('securite', c)).values as { fenetreMaintenance?: unknown };
+    const f = FenetreMaintenance.safeParse(values.fenetreMaintenance);
+    return f.success ? f.data : FENETRE_MAINTENANCE_DEFAUT;
+  }
+  /** Refuse une installation hors du créneau autorisé (contrôle de la demande, puis de la prise en charge). */
+  async assertWindow(c?: Client, now = new Date()) {
+    const f = await this.fenetre(c);
+    if (!dansFenetre(f, now))
+      throw new HttpError(
+        409,
+        `Installation refusée hors de la fenêtre de maintenance : ${libelleFenetre(f)}. Réessayez pendant ce créneau.`,
+        { reason: 'outside_window' },
+      );
+  }
+  private fenetreInfo() {
+    const parsed = FenetreMaintenance.safeParse(this.settings.get('securite').fenetreMaintenance);
+    const f = parsed.success ? parsed.data : FENETRE_MAINTENANCE_DEFAUT;
+    return { active: f.active, ouverte: dansFenetre(f), libelle: libelleFenetre(f) };
+  }
   state(): UpdateState {
     try {
       const state = UpdateState.parse(
@@ -23,7 +56,7 @@ export class Updates {
       );
       // Un rapport ancien ne peut autoriser une opération privilégiée.
       if (Date.now() - new Date(state.updatedAt).getTime() > 90_000) state.ready = false;
-      return { ...state, installed: this.cfg.version };
+      return { ...state, installed: this.cfg.version, fenetre: this.fenetreInfo() };
     } catch {
       return {
         installed: this.cfg.version,
@@ -41,6 +74,9 @@ export class Updates {
         message: 'Le service de mise à jour est indisponible.',
         startedAt: null,
         updatedAt: new Date().toISOString(),
+        etapes: [],
+        finishedAt: null,
+        fenetre: this.fenetreInfo(),
       };
     }
   }
@@ -79,6 +115,7 @@ export class Updates {
           409,
           'La version disponible a changé ou sa vérification est trop ancienne. Vérifiez à nouveau.',
         );
+      if (input) await this.assertWindow(c);
       if (
         input &&
         (
@@ -122,6 +159,19 @@ export class Updates {
         await c.query("UPDATE update_jobs SET status='failed', finished_at=now() WHERE id=$1", [job.id]);
         return null;
       }
+      // Créneau refermé entre la demande et sa prise en charge : refus tracé, rien n'est installé.
+      if (job.kind === 'install' && !dansFenetre(await this.fenetre(c))) {
+        await c.query("UPDATE update_jobs SET status='failed', finished_at=now() WHERE id=$1", [job.id]);
+        await this.db.audit(
+          { username: 'exploitation serveur' },
+          null,
+          'update.install.outside_window',
+          job.id,
+          { target: job.target },
+          c,
+        );
+        return null;
+      }
       await c.query("UPDATE update_jobs SET status='running',started_at=now() WHERE id=$1", [job.id]);
       return { id: job.id as string, kind: job.kind as 'check' | 'install', target: job.target as string | null };
     });
@@ -155,6 +205,38 @@ export class Updates {
           c,
         );
     });
+  }
+  private get receiptsDir() {
+    return path.join(this.cfg.etatDir, 'recus-mises-a-jour');
+  }
+  /** Reçus écrits par l'exécutant, du plus récent au plus ancien ; un fichier illisible ou non conforme est ignoré. */
+  receipts(max = 20): UpdateReceiptSummary[] {
+    let files: string[];
+    try {
+      files = readdirSync(this.receiptsDir).filter((f) => /^[a-f0-9-]{36}\.json$/.test(f));
+    } catch {
+      return [];
+    }
+    return files
+      .map((f) => this.readReceipt(f.slice(0, 36)))
+      .filter((r): r is UpdateReceipt => r !== null)
+      .sort((a, b) => b.fin.localeCompare(a.fin))
+      .slice(0, max)
+      .map((r) => UpdateReceiptSummary.parse(r));
+  }
+  receipt(id: string): UpdateReceipt {
+    const r = this.readReceipt(id);
+    if (!r) throw new HttpError(404, 'Reçu de mise à jour introuvable.');
+    return r;
+  }
+  private readReceipt(id: string): UpdateReceipt | null {
+    if (!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(id)) return null;
+    try {
+      const r = UpdateReceipt.safeParse(JSON.parse(readFileSync(path.join(this.receiptsDir, `${id}.json`), 'utf8')));
+      return r.success && r.data.id === id ? r.data : null;
+    } catch {
+      return null;
+    }
   }
   async finish(id: string, status: string) {
     if (!/^[a-f0-9-]{36}$/.test(id) || !['success', 'rolled_back', 'failed', 'intervention'].includes(status))

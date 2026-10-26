@@ -307,6 +307,17 @@ etape "Version $CIBLE du dépôt et images"
 cp -p "$REPO/.env" "$REPO/.env.avant-mise-a-jour"
 git checkout -q "v$CIBLE"
 . "$REPO/scripts/lib-commun.sh"
+# ADR 0061 : l'exécutant ne monte plus /root/.ssh ni /root/.docker par défaut. Une installation qui dépend encore d'une
+# connexion au registre ou d'une clé de déploiement (dépôt privé) les conserve explicitement ; rien n'est ajouté sinon.
+if [ -z "$(valeur_env UPDATER_DOCKER_CONFIG)" ] && grep -qs '"ghcr.io"' /root/.docker/config.json; then
+  ecrire_env UPDATER_DOCKER_CONFIG /root/.docker
+  info "Connexion au registre conservée pour l'exécutant (UPDATER_DOCKER_CONFIG=/root/.docker dans .env)."
+fi
+if [ -z "$(valeur_env UPDATER_SSH_DIR)" ] && git remote get-url origin 2> /dev/null | grep -qE '^(git@|ssh://)' \
+  && ! git ls-remote --exit-code https://github.com/yousername-ha/suivi-audits.git HEAD > /dev/null 2>&1; then
+  ecrire_env UPDATER_SSH_DIR /root/.ssh
+  info "Clé de déploiement conservée pour l'exécutant (UPDATER_SSH_DIR=/root/.ssh dans .env) : dépôt non lisible en HTTPS."
+fi
 if [ "${SUIVI_MAJ_WEB:-}" = 1 ]; then
   ecrire_env GATEWAY_VERSION "$(valeur_env GATEWAY_VERSION "$ACTUELLE")"
   # --images-locales est une option CLI de recette ; jamais exposée dans la demande web.

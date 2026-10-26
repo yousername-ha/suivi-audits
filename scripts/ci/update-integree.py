@@ -101,12 +101,19 @@ csrf=''
 def call(method,path,data=None):
     req=urllib.request.Request('https://localhost'+path,data=json.dumps(data).encode() if data is not None else None,method=method,headers={'Origin':'https://localhost','Content-Type':'application/json','X-CSRF-Token':csrf,'X-Forwarded-For':'203.0.113.10'})
     with http.open(req,timeout=10) as r: return json.loads(r.read())
+def totp(step):
+    raw=hmac.new(secret,step.to_bytes(8,'big'),hashlib.sha1).digest(); offset=raw[-1]&15
+    return str((int.from_bytes(raw[offset:offset+4],'big')&0x7fffffff)%1000000).zfill(6)
+used=[0]
+def next_code():
+    # Anti-rejeu : chaque code utilisé (connexion, installation) doit porter un pas strictement supérieur au précédent.
+    step=max(int(time.time()//30)-1,used[0]+1)
+    if step>int(time.time()//30)+1: time.sleep(31); step=max(int(time.time()//30)-1,used[0]+1)
+    used[0]=step
+    return totp(step)
 call('POST','/api/auth/login',{'username':'recette_update','password':'Recette-Update-2026!'})
 csrf=call('GET','/api/auth/me')['csrf']
-step=int(time.time()//30)-1
-raw=hmac.new(secret,step.to_bytes(8,'big'),hashlib.sha1).digest(); offset=raw[-1]&15
-code=str((int.from_bytes(raw[offset:offset+4],'big')&0x7fffffff)%1000000).zfill(6)
-call('POST','/api/auth/mfa',{'code':code})
+call('POST','/api/auth/mfa',{'code':next_code()})
 csrf=call('GET','/api/auth/me')['csrf']
 before=json.loads(compose('exec','-T','app','suivi','controle-donnees',cwd=repo))
 def donnees_snapshot():
@@ -153,7 +160,7 @@ def local_popen(args,*a,**kwargs):
     return original_popen(args,*a,**kwargs)
 try:
     worker=Fixture();worker.reconcile();worker.check();worker.publish(ready=True,status='idle',maintenance=False)
-    requested=call('POST','/api/admin/updates/install',{'requestId':str(uuid.uuid4()),'version':'99.0.0','confirm':'METTRE À JOUR'})
+    requested=call('POST','/api/admin/updates/install',{'requestId':str(uuid.uuid4()),'version':'99.0.0','confirm':'METTRE À JOUR','code':next_code()})
     audited_ip=compose('exec','-T','-u','postgres','db','psql','-d','suivi','-Atc',f"SELECT host(ip) FROM audit_log WHERE action='update.install.requested' AND target='{requested['id']}' ORDER BY id DESC LIMIT 1",cwd=repo).strip()
     gateway_networks=json.loads(run(['docker','inspect','-f','{{json .NetworkSettings.Networks}}',gateway]))
     assert audited_ip and audited_ip not in ['203.0.113.10',*[n['IPAddress'] for n in gateway_networks.values()]]
@@ -164,6 +171,13 @@ try:
         if state.get('status')=='success' and state.get('installed')=='99.0.0' and not state.get('maintenance'): break
         time.sleep(2)
     else: raise AssertionError('Reprise par le nouvel exécutant non terminée')
+    # ADR 0061 : frise horodatée publique et reçu structuré, servi par l'API à l'administrateur.
+    assert [e['phase'] for e in state['etapes']][:1]==['preparing'] and state['etapes'][-1]['phase']=='complete', state['etapes']
+    receipt=json.loads((data/'etat/recus-mises-a-jour'/f"{requested['id']}.json").read_text())
+    assert receipt['statut']=='success' and receipt['vers']=='99.0.0' and receipt['controles']['apres'] is True, receipt
+    assert receipt['sauvegarde'] and receipt['sauvegarde']['fichier'].endswith('.enc'), receipt
+    assert 'previousEnv' not in json.dumps(receipt) and str(data) not in json.dumps(receipt)
+    assert any(r['id']==requested['id'] for r in call('GET','/api/admin/updates/receipts'))
     assert compose('ps','-q','gateway').strip()==gateway
     updater=compose('ps','-q','updater',cwd=repo).strip()
     assert run(['docker','inspect','-f','{{.Config.Image}}',updater]).strip().endswith(':99.0.0')
@@ -182,14 +196,11 @@ try:
     jar.clear()
     call('POST','/api/auth/login',{'username':'recette_update','password':'Recette-Update-2026!'})
     csrf=call('GET','/api/auth/me')['csrf']
-    step=int(time.time()//30)
-    raw=hmac.new(secret,step.to_bytes(8,'big'),hashlib.sha1).digest(); offset=raw[-1]&15
-    code=str((int.from_bytes(raw[offset:offset+4],'big')&0x7fffffff)%1000000).zfill(6)
-    call('POST','/api/auth/mfa',{'code':code})
+    call('POST','/api/auth/mfa',{'code':next_code()})
     csrf=call('GET','/api/auth/me')['csrf']
     assert json.loads(compose('exec','-T','app','suivi','controle-donnees',cwd=repo))==before
     worker=Fixture();worker.reconcile();worker.check();worker.publish(ready=True,status='idle',maintenance=False)
-    requested=call('POST','/api/admin/updates/install',{'requestId':str(uuid.uuid4()),'version':'99.0.0','confirm':'METTRE À JOUR'})
+    requested=call('POST','/api/admin/updates/install',{'requestId':str(uuid.uuid4()),'version':'99.0.0','confirm':'METTRE À JOUR','code':next_code()})
     claimed=json.loads(worker.cli('update-claim'));assert claimed['id']==requested['id']
     forced=True
     with patch.object(m.subprocess,'Popen',side_effect=local_popen):worker.locked_operation(lambda:worker.install(claimed))

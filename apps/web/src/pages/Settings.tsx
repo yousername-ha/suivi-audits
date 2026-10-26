@@ -5,6 +5,7 @@ import {
   Alert,
   Anchor,
   Button,
+  Checkbox,
   FileButton,
   Group,
   Image,
@@ -24,6 +25,10 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import {
+  FENETRE_MAINTENANCE_DEFAUT,
+  FenetreMaintenance,
+  JOURS_SEMAINE,
+  libelleFenetre,
   SETTINGS_LABELS,
   SETTINGS_SECTIONS,
   type ApercuConservation,
@@ -673,9 +678,62 @@ const SECTIONS: Record<SettingsSection, (p: P) => ReactNode> = {
         Les nouvelles valeurs s’appliquent immédiatement : aux prochaines connexions pour les sessions, au prochain
         changement de mot de passe pour la longueur minimale.
       </Text>
+      <FenetreMaintenanceForm p={p} />
     </Stack>
   ),
 };
+
+/** Créneau d'installation des mises à jour (heure de Paris) : hors créneau, l'installation est refusée par le serveur. */
+function FenetreMaintenanceForm({ p }: { p: P }) {
+  const lu = FenetreMaintenance.safeParse(p.values.fenetreMaintenance);
+  const f = lu.success
+    ? lu.data
+    : { ...FENETRE_MAINTENANCE_DEFAUT, ...(p.values.fenetreMaintenance as Partial<FenetreMaintenance>) };
+  const set = (changes: Partial<FenetreMaintenance>) => p.set('fenetreMaintenance', { ...f, ...changes });
+  return (
+    <Stack gap="xs">
+      <Text fw={600}>Fenêtre de maintenance des mises à jour</Text>
+      <Switch
+        label="Limiter l’installation des mises à jour à un créneau"
+        description="Hors créneau, le serveur refuse l’installation ; la vérification des nouvelles versions reste possible."
+        checked={f.active}
+        disabled={p.ro}
+        onChange={(e) => set({ active: e.currentTarget.checked })}
+      />
+      <Checkbox.Group
+        label="Jours autorisés"
+        value={f.jours.map(String)}
+        onChange={(v) => set({ jours: v.map(Number).sort((a, b) => a - b) })}
+      >
+        <Group gap="sm">
+          {JOURS_SEMAINE.map((j, i) => (
+            <Checkbox key={j} value={String(i + 1)} label={j} disabled={p.ro || !f.active} />
+          ))}
+        </Group>
+      </Checkbox.Group>
+      <div className="grille-formulaire__champs">
+        <TextInput
+          type="time"
+          label="Début (heure de Paris)"
+          value={f.debut}
+          disabled={p.ro || !f.active}
+          onChange={(e) => set({ debut: e.currentTarget.value.slice(0, 5) })}
+        />
+        <TextInput
+          type="time"
+          label="Fin (heure de Paris)"
+          description="Une fin avant le début passe minuit."
+          value={f.fin}
+          disabled={p.ro || !f.active}
+          onChange={(e) => set({ fin: e.currentTarget.value.slice(0, 5) })}
+        />
+      </div>
+      <Text size="sm" c="dimmed" role="status">
+        {lu.success ? `Créneau : ${libelleFenetre(f)}` : 'Créneau incomplet : vérifiez les jours et les heures.'}
+      </Text>
+    </Stack>
+  );
+}
 
 function General({ p }: { p: P }) {
   const qc = useQueryClient();

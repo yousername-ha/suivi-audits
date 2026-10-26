@@ -13,6 +13,12 @@
       : 'light';
   const get = (id) => document.getElementById(id);
   const phases = ['preparing', 'backup', 'installing', 'verifying', 'complete'];
+  const heure = (iso) =>
+    new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const duree = (ms) => {
+    const s = Math.max(0, Math.round(ms / 1000));
+    return s < 60 ? `${s} s` : `${Math.floor(s / 60)} min ${String(s % 60).padStart(2, '0')} s`;
+  };
   const next = new URLSearchParams(location.search).get('next');
   let destination = '/';
   if (next && next.startsWith('/')) {
@@ -61,11 +67,43 @@
         : `Version ${state.installed || 'en service'}`;
       get('delay').hidden = !state.startedAt || Date.now() - Date.parse(state.startedAt) < 600000;
       get('animation').hidden = state.status === 'intervention' || (!state.maintenance && failed);
+      // Frise horodatée : uniquement pour l'opération suivie (pas celle d'une installation précédente).
+      const suivie = !waiting && !!state.target && !!state.startedAt && (!requested || state.id === requested);
+      const etapes = suivie && Array.isArray(state.etapes) ? state.etapes : [];
+      const franchies = new Map(etapes.map((e) => [e.phase, e.at]));
+      const termine = ['success', 'failed', 'rolled_back', 'intervention'].includes(state.status);
       document.querySelectorAll('[data-phase]').forEach((element) => {
-        const index = phases.indexOf(element.dataset.phase);
+        const phase = element.dataset.phase;
+        const index = phases.indexOf(phase);
         const current = phases.indexOf(waiting ? 'preparing' : state.phase);
-        element.className = index < current ? 'done' : index === current ? 'current' : '';
+        element.className =
+          phase === 'rollback'
+            ? state.phase === 'rollback' && !termine
+              ? 'current'
+              : franchies.has('rollback')
+                ? 'done'
+                : ''
+            : index < current || (franchies.has(phase) && phase !== state.phase)
+              ? 'done'
+              : index === current
+                ? 'current'
+                : '';
+        if (phase === 'rollback') element.hidden = !franchies.has('rollback');
+        const time = element.querySelector('time');
+        if (time) {
+          const at = franchies.get(phase);
+          time.textContent = at ? `· ${heure(at)}` : '';
+          if (at) time.dateTime = at;
+          else time.removeAttribute('datetime');
+        }
       });
+      get('elapsed').hidden = !suivie;
+      if (suivie) {
+        const fin = termine && state.finishedAt ? Date.parse(state.finishedAt) : Date.now();
+        get('elapsed').textContent =
+          `${termine ? 'Durée totale' : 'Durée écoulée'} : ${duree(fin - Date.parse(state.startedAt))}`;
+      }
+      get('receipt').hidden = !(suivie && termine);
       if (!state.maintenance && state.status !== 'intervention' && !waiting && !active) {
         const health = await fetch('/healthz', { cache: 'no-store', signal: AbortSignal.timeout(5000) });
         if (health.ok && (await health.text()).trim() === 'ok') {
