@@ -1,13 +1,17 @@
 # Contrôle de secrets de la CI (gitleaks). Le dépôt est public : aucune donnée réelle, aucun secret.
-# Les règles par défaut s'appliquent partout. Deux exceptions, documentées :
+# Les règles par défaut s'appliquent partout. Exceptions, documentées et limitées à la règle « generic-api-key »
+# (la plus bruyante : elle prend des étiquettes, des empreintes et des alphabets pour des clés) ; elle reste active partout ailleurs :
 #  1. les fixtures de tests et d'exemples (valeurs FICTIVES : mots de passe d'essai, jetons d'essai, certificats de recette) ;
-#  2. quinze faux positifs de la seule règle « generic-api-key », examinés un par un (aucun secret) : étiquettes « key » de
-#     maquettes, empreintes de fichiers dans des manifestes, libellés de modules et alphabet du jeton d'installation.
+#  2. faux positifs examinés un par un (aucun secret) : étiquettes « key » de maquettes, empreintes de fichiers dans des
+#     manifestes, libellés de modules et alphabet du jeton d'installation.
 [extend]
 useDefault = true
 
-[[allowlists]]
-description = "Valeurs fictives de tests et d'exemples"
+[[rules]]
+id = "generic-api-key"
+
+[[rules.allowlists]]
+description = "Valeurs fictives de tests et d'exemples ; faux positifs examinés (maquettes, manifestes d'empreintes, libellés de modules, alphabet du jeton d'installation)"
 paths = [
   '''^tests/''',
   '''(^|/)test/''',
@@ -16,12 +20,6 @@ paths = [
   '''^docs/''',
   '''\.example$''',
   '''^pnpm-lock\.yaml$''',
-]
-
-[[allowlists]]
-description = "Faux positifs generic-api-key : maquettes, manifestes d'empreintes, libellés de modules, alphabet du jeton d'installation"
-targetRules = ["generic-api-key"]
-paths = [
   '''^samples/''',
   '''^fonctionnalites-en-developpement/''',
   '''^archives/''',
