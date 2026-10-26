@@ -83,15 +83,14 @@ const LECTURE_PILOTAGE: Permission[] = [
   'plan_audit:lire',
   'conformite:lire',
 ];
-/** Colonnes SQL d'un objet, pour les modules pas encore convertis à Kysely (registres ; ADR 0062). */
-export const objectColumns = `id,smsi_id AS "smsiId",kind,name,data,version,archived,legacy_key AS "legacyKey",legacy_id AS "legacyId",registre_id AS "registreId",created_by AS "createdBy",updated_by AS "updatedBy",created_at AS "createdAt",updated_at AS "updatedAt"`;
+/** Ligne d'objet lue en SQL (projection à une date passée de risks.ts, ADR 0062 §5), avant conversion en GrcObject. */
 export type ObjectRow = Omit<GrcObject, 'createdAt' | 'updatedAt'> & { createdAt: Date; updatedAt: Date };
 export const objectDto = (r: ObjectRow): GrcObject => ({
   ...r,
   createdAt: r.createdAt.toISOString(),
   updatedAt: r.updatedAt.toISOString(),
 });
-/** Mêmes colonnes et alias que objectColumns, pour Kysely (sélection et RETURNING). */
+/** Colonnes d'un objet et leurs alias (sélection et RETURNING). */
 export const COLONNES_OBJET = [
   'id',
   'smsi_id as smsiId',
