@@ -248,6 +248,7 @@ jobs:
 
       - run: pnpm install --frozen-lockfile --filter @suivi/e2e
       - name: Tests de bout en bout et captures de référence (conteneur Playwright officiel)
+        id: e2e
         # Même navigateur et mêmes polices qu'en local : les captures de référence sont comparées à l'identique.
         timeout-minutes: 30
         env:
@@ -256,6 +257,9 @@ jobs:
       - name: Droits des résultats de test
         if: always()
         run: sudo chown -R "$USER" tests/e2e 2>/dev/null || true
+      - name: Tests en échec ou instables (annotations lisibles sans télécharger les journaux)
+        if: always() && steps.e2e.outcome != 'skipped'
+        run: node scripts/ci/rapport-e2e.mjs tests/e2e/test-results/resultats-e2e.json
       - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         if: failure()
         with:
