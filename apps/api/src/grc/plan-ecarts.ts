@@ -9,6 +9,7 @@ import {
   type FrameworkDefinition,
   type PlanEcartsCorps,
 } from '@suivi/shared';
+import { sql } from 'kysely';
 import type { SessionUser } from '../auth.js';
 import { HttpError } from '../http/errors.js';
 import type { Grc } from './core.js';
@@ -36,15 +37,17 @@ export class GrcPlanEcarts {
     const v = await this.g.library.version(frameworkId, eff.version, user);
     const definition: FrameworkDefinition = v.definition;
     const evaluations = await this.g.evaluations.courantes(smsi, [frameworkId]);
-    const liees = (
-      await this.g.db.q<{ target_ref: string; n: number }>(
-        `SELECT l.target_ref, count(DISTINCT o.id)::int AS n
-           FROM grc_links l JOIN grc_objects o ON o.id=l.source_id
-          WHERE l.smsi_id=$1 AND l.type='implements' AND l.target_ref LIKE 'requirement:%' AND o.kind='action' AND NOT o.archived
-          GROUP BY l.target_ref`,
-        [smsi],
-      )
-    ).rows;
+    const liees = await this.g.db.k
+      .selectFrom('grc_links as l')
+      .innerJoin('grc_objects as o', 'o.id', 'l.source_id')
+      .select(['l.target_ref', sql<number>`count(DISTINCT o.id)::int`.as('n')])
+      .where('l.smsi_id', '=', smsi)
+      .where('l.type', '=', 'implements')
+      .where('l.target_ref', 'like', 'requirement:%')
+      .where('o.kind', '=', 'action')
+      .where('o.archived', '=', false)
+      .groupBy('l.target_ref')
+      .execute();
     const parRef = new Map(liees.map((r) => [r.target_ref, r.n]));
     const ecarts: Ecart[] = [];
     let dejaCouvertes = 0;
@@ -97,22 +100,28 @@ export class GrcPlanEcarts {
     const aCreer = cibles.filter((e) => !e.actions);
     const horsEcart = [...voulues].filter((id) => !c.ecarts.some((e) => e.id === id)).length;
     if (!aCreer.length) return { creees: 0, dejaCouvertes, horsEcart, actions: [] as { id: string; name: string }[] };
-    const actions = await this.g.db.tx(async (cx) => {
+    const actions = await this.g.db.tx(async (cx, k) => {
       const accueil = await this.g.registreDeCreation(cx, smsi, 'action', 'plan_actions', corps.registreId, user);
       await this.g.checkOwner(smsi, corps.ownerId ?? null, cx);
       const policy = (await this.g.policy(smsi, user)).definition;
       const out: { id: string; name: string }[] = [];
       for (const e of aCreer) {
         // Verrou de l'exigence pour la durée de la transaction : deux demandes simultanées ne créent pas deux actions.
+        // Verrou consultatif : SQL direct (ADR 0062).
         await cx.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))', [
           `plan-ecarts:${smsi}:${corps.frameworkId}:${e.id}`,
         ]);
-        const deja = await cx.query(
-          `SELECT 1 FROM grc_links l JOIN grc_objects o ON o.id=l.source_id
-            WHERE l.smsi_id=$1 AND l.type='implements' AND l.target_ref=$2 AND o.kind='action' AND NOT o.archived`,
-          [smsi, requirementRef(corps.frameworkId, c.eff.version, e.id)],
-        );
-        if (deja.rowCount) continue;
+        const deja = await k
+          .selectFrom('grc_links as l')
+          .innerJoin('grc_objects as o', 'o.id', 'l.source_id')
+          .select('l.id')
+          .where('l.smsi_id', '=', smsi)
+          .where('l.type', '=', 'implements')
+          .where('l.target_ref', '=', requirementRef(corps.frameworkId, c.eff.version, e.id))
+          .where('o.kind', '=', 'action')
+          .where('o.archived', '=', false)
+          .executeTakeFirst();
+        if (deja) continue;
         const name = coupe(`Mettre en œuvre : ${e.title}`, 200);
         const donnees = await this.g.normalize(
           smsi,
@@ -136,17 +145,18 @@ export class GrcPlanEcarts {
           cx,
         );
         const action = await this.g.insert(cx, smsi, 'action', name, donnees, user, ip, accueil);
-        await cx.query(
-          `INSERT INTO grc_links(smsi_id,source_id,source_ref,target_ref,type,note,created_by) VALUES($1,$2,$3,$4,'implements',$5,$6)`,
-          [
-            smsi,
-            action.id,
-            'object:' + action.id,
-            requirementRef(corps.frameworkId, c.eff.version, e.id),
-            'Action créée par le plan d’action des écarts',
-            user.username,
-          ],
-        );
+        await k
+          .insertInto('grc_links')
+          .values({
+            smsi_id: smsi,
+            source_id: action.id,
+            source_ref: 'object:' + action.id,
+            target_ref: requirementRef(corps.frameworkId, c.eff.version, e.id),
+            type: 'implements',
+            note: 'Action créée par le plan d’action des écarts',
+            created_by: user.username,
+          })
+          .execute();
         out.push({ id: action.id, name });
       }
       if (out.length)

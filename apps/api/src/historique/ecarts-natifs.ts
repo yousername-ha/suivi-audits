@@ -3,7 +3,7 @@
    une écriture venant d'un import de l'ancien outil est ignorée. Les écarts d'un registre restreint ne sont pas projetés,
    cet état n'étant pas filtré par personne. */
 import type { Json } from '@suivi/shared/legacy';
-import type { Client } from '../db/db.js';
+import { surConnexion, type Client } from '../db/db.js';
 import { DEFAULT_SMSI } from '../grc/core.js';
 import type { ModuleMapper } from '../legacy/store.js';
 
@@ -48,16 +48,27 @@ export function ecartNatifVersFinding(o: Ligne): Json {
 export const ecartsNatifsMapper: ModuleMapper = {
   key: 'findings',
   async read(c: Client) {
-    const r = await c.query<Ligne>(
-      `SELECT o.id, o.legacy_id, o.name, o.data, o.created_at
-         FROM grc_objects o
-         LEFT JOIN registres g ON g.id = o.registre_id
-        WHERE o.kind = 'nonconformity' AND NOT o.archived AND (g.id IS NULL OR NOT g.restricted)
-          AND (o.smsi_id = $1 OR o.registre_id IN (SELECT registre_id FROM registre_perimetres WHERE smsi_id = $1))
-        ORDER BY o.created_at, o.id`,
-      [DEFAULT_SMSI],
-    );
-    return r.rows.map(ecartNatifVersFinding);
+    const r = (await surConnexion(c)
+      .selectFrom('grc_objects as o')
+      .leftJoin('registres as g', 'g.id', 'o.registre_id')
+      .select(['o.id', 'o.legacy_id', 'o.name', 'o.data', 'o.created_at'])
+      .where('o.kind', '=', 'nonconformity')
+      .where('o.archived', '=', false)
+      .where((eb) => eb.or([eb('g.id', 'is', null), eb('g.restricted', '=', false)]))
+      .where((eb) =>
+        eb.or([
+          eb('o.smsi_id', '=', DEFAULT_SMSI),
+          eb(
+            'o.registre_id',
+            'in',
+            eb.selectFrom('registre_perimetres').select('registre_id').where('smsi_id', '=', DEFAULT_SMSI),
+          ),
+        ]),
+      )
+      .orderBy('o.created_at')
+      .orderBy('o.id')
+      .execute()) as unknown as Ligne[];
+    return r.map(ecartNatifVersFinding);
   },
   async write() {
     /* Projection : rien à enregistrer. */

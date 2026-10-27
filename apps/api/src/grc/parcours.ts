@@ -12,7 +12,7 @@ import {
   type RetraitAssociationBody,
 } from '@suivi/shared';
 import type { SessionUser } from '../auth.js';
-import type { Client } from '../db/db.js';
+import { surConnexion, type Client, type Kdb } from '../db/db.js';
 import { HttpError } from '../http/errors.js';
 import type { Grc } from './core.js';
 
@@ -25,25 +25,36 @@ interface Ligne {
   createdAt: Date;
   requestId: string;
 }
-const colonnes = `sous_action AS "sousAction",target_ref AS "ref",operation,note,created_by AS "createdBy",created_at AS "createdAt",request_id AS "requestId"`;
+const lignes = (k: Kdb) =>
+  k
+    .selectFrom('parcours_associations')
+    .select([
+      'sous_action as sousAction',
+      'target_ref as ref',
+      'operation',
+      'note',
+      'created_by as createdBy',
+      'created_at as createdAt',
+      'request_id as requestId',
+    ]);
 
 export class GrcParcours {
   constructor(private readonly g: Grc) {}
-  private q(c?: Client) {
-    return c ?? this.g.db.pool;
+  private k(c?: Client): Kdb {
+    return c ? surConnexion(c) : this.g.db.k;
   }
   private exigerSousAction(id: string) {
     if (!sousActionParcours(id)) throw new HttpError(422, 'Sous-action inconnue du parcours.');
   }
   /** Dernière opération de chaque (sous-action, cible) du périmètre. */
-  private async etat(smsi: string, c?: Client) {
-    return (
-      await this.q(c).query<Ligne>(
-        `SELECT DISTINCT ON (sous_action,target_ref) ${colonnes} FROM parcours_associations WHERE smsi_id=$1
-          ORDER BY sous_action,target_ref,seq DESC`,
-        [smsi],
-      )
-    ).rows;
+  private async etat(smsi: string, c?: Client): Promise<Ligne[]> {
+    return lignes(this.k(c))
+      .distinctOn(['sous_action', 'target_ref'])
+      .where('smsi_id', '=', smsi)
+      .orderBy('sous_action')
+      .orderBy('target_ref')
+      .orderBy('seq', 'desc')
+      .execute();
   }
   async lister(smsi: string, user: SessionUser): Promise<{ items: AssociationParcoursDto[] }> {
     await this.g.permission(user, 'pilotage', 'lire');
@@ -71,14 +82,12 @@ export class GrcParcours {
     await this.g.permission(user, 'pilotage', 'modifier');
     await this.g.access(smsi, user, true);
     this.exigerSousAction(input.sousAction);
-    return this.g.db.tx(async (c) => {
-      await c.query('SELECT id FROM grc_smsis WHERE id=$1 FOR UPDATE', [smsi]);
-      const rejoue = (
-        await c.query<Ligne>(`SELECT ${colonnes} FROM parcours_associations WHERE smsi_id=$1 AND request_id=$2`, [
-          smsi,
-          input.requestId,
-        ])
-      ).rows[0];
+    return this.g.db.tx(async (c, k) => {
+      await k.selectFrom('grc_smsis').select('id').where('id', '=', smsi).forUpdate().execute();
+      const rejoue = await lignes(k)
+        .where('smsi_id', '=', smsi)
+        .where('request_id', '=', input.requestId)
+        .executeTakeFirst();
       if (rejoue) {
         if (rejoue.operation !== 'associer' || rejoue.ref !== input.ref || rejoue.sousAction !== input.sousAction)
           throw new HttpError(409, 'Cet identifiant de requête a déjà servi à une autre commande.');
@@ -90,11 +99,7 @@ export class GrcParcours {
       const courant = (await this.etat(smsi, c)).find((l) => l.sousAction === input.sousAction && l.ref === input.ref);
       if (courant?.operation === 'associer')
         throw new HttpError(409, 'Cet élément est déjà associé à cette sous-action.');
-      await c.query(
-        `INSERT INTO parcours_associations(smsi_id,request_id,sous_action,operation,target_ref,note,created_by)
-         VALUES($1,$2,$3,'associer',$4,$5,$6)`,
-        [smsi, input.requestId, input.sousAction, input.ref, input.note, user.username],
-      );
+      await this.journaliser(k, smsi, input, 'associer', input.note, user.username);
       await this.g.db.audit(
         user,
         ip,
@@ -111,14 +116,12 @@ export class GrcParcours {
     await this.g.permission(user, 'pilotage', 'modifier');
     await this.g.access(smsi, user, true);
     this.exigerSousAction(input.sousAction);
-    return this.g.db.tx(async (c) => {
-      await c.query('SELECT id FROM grc_smsis WHERE id=$1 FOR UPDATE', [smsi]);
-      const rejoue = (
-        await c.query<Ligne>(`SELECT ${colonnes} FROM parcours_associations WHERE smsi_id=$1 AND request_id=$2`, [
-          smsi,
-          input.requestId,
-        ])
-      ).rows[0];
+    return this.g.db.tx(async (c, k) => {
+      await k.selectFrom('grc_smsis').select('id').where('id', '=', smsi).forUpdate().execute();
+      const rejoue = await lignes(k)
+        .where('smsi_id', '=', smsi)
+        .where('request_id', '=', input.requestId)
+        .executeTakeFirst();
       if (rejoue) {
         if (rejoue.operation !== 'retirer' || rejoue.ref !== input.ref || rejoue.sousAction !== input.sousAction)
           throw new HttpError(409, 'Cet identifiant de requête a déjà servi à une autre commande.');
@@ -126,11 +129,7 @@ export class GrcParcours {
       }
       const courant = (await this.etat(smsi, c)).find((l) => l.sousAction === input.sousAction && l.ref === input.ref);
       if (courant?.operation !== 'associer') throw new HttpError(404, 'Association introuvable.');
-      await c.query(
-        `INSERT INTO parcours_associations(smsi_id,request_id,sous_action,operation,target_ref,note,created_by)
-         VALUES($1,$2,$3,'retirer',$4,$5,$6)`,
-        [smsi, input.requestId, input.sousAction, input.ref, input.reason, user.username],
-      );
+      await this.journaliser(k, smsi, input, 'retirer', input.reason, user.username);
       await this.g.db.audit(
         user,
         ip,
@@ -142,6 +141,28 @@ export class GrcParcours {
       await this.g.notify(c, smsi, 1, smsi, 'pilotage', user.username);
       return { rejoue: false };
     }, user.username);
+  }
+  /** Ajoute une opération au journal immuable des associations. */
+  private async journaliser(
+    k: Kdb,
+    smsi: string,
+    input: { requestId: string; sousAction: string; ref: string },
+    operation: Ligne['operation'],
+    note: string,
+    auteur: string,
+  ) {
+    await k
+      .insertInto('parcours_associations')
+      .values({
+        smsi_id: smsi,
+        request_id: input.requestId,
+        sous_action: input.sousAction,
+        operation,
+        target_ref: input.ref,
+        note,
+        created_by: auteur,
+      })
+      .execute();
   }
   /** Applicabilité des exigences du référentiel HDS rattaché (et actif) au périmètre : version courante de chaque évaluation. */
   async applicabiliteHds(smsi: string, user: SessionUser): Promise<ApplicabiliteHdsDto> {

@@ -5,9 +5,10 @@
 import { validDate, type Module } from '@suivi/shared';
 import { isObject, type JsonObject } from '@suivi/shared/legacy';
 import type { SessionUser } from '../auth.js';
-import type { Client } from '../db/db.js';
+import { surConnexion, type Client } from '../db/db.js';
 import { DEFAULT_SMSI, type Grc } from '../grc/core.js';
 import { HttpError } from '../http/errors.js';
+import { verrouillerEtat } from '../legacy/store.js';
 
 export interface EtatHistorique {
   version: number;
@@ -36,7 +37,11 @@ export class RegistreHistorique {
       c,
     );
     const o = await this.g.insert(c, DEFAULT_SMSI, 'nonconformity', e.name.slice(0, 200), data, user, ip);
-    await c.query("UPDATE grc_objects SET legacy_key='findings', legacy_id=$2 WHERE id=$1", [o.id, e.id]);
+    await surConnexion(c)
+      .updateTable('grc_objects')
+      .set({ legacy_key: 'findings', legacy_id: e.id })
+      .where('id', '=', o.id)
+      .execute();
     return e.id;
   }
 
@@ -59,7 +64,7 @@ export class RegistreHistorique {
     await this.g.permission(user, cible.module, 'modifier');
     for (const m of cible.droits ?? []) await this.g.permission(user, m, 'modifier');
     return this.g.db.tx(async (c) => {
-      await c.query('SELECT id FROM app_state WHERE id=1 FOR UPDATE');
+      await verrouillerEtat(c);
       const etat = await this.g.legacy.recompose(c);
       if (!etat) throw new HttpError(409, 'Registre historique indisponible.');
       const data: JsonObject = { ...etat.data };

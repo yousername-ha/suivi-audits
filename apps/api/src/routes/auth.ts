@@ -14,6 +14,7 @@ import {
   TotpConfirmBody,
   type MeOut as MeOutT,
 } from '@suivi/shared';
+import { sql } from 'kysely';
 import { z } from 'zod';
 import { accessStage, type Session } from '../auth.js';
 import { HttpError } from '../http/errors.js';
@@ -180,18 +181,24 @@ export const authRoutes = [
       checkPassword(svc, body.password, body.username);
       const hash = await hashPassword(body.password);
       const res = await svc.db
-        .tx(async (c) => {
+        .tx(async (c, kdb) => {
           const k = await svc.auth.consumeSetupToken(body.token, c);
           if (k.status !== 'ok') return { status: k.status };
           if (k.reason !== 'recovery' && (await permanentAdminCount(c)) > 0) {
             throw new HttpError(409, 'Un administrateur existe déjà.');
           }
-          const u = await c.query<{ id: string }>(
-            'INSERT INTO users(username, display_name, email, password_hash) VALUES ($1,$2,$3,$4) RETURNING id',
-            [body.username, body.displayName || body.username, body.email || '', hash],
-          );
-          await c.query("INSERT INTO user_roles(user_id, role_id) VALUES ($1, 'administrateur')", [u.rows[0]!.id]);
-          return { status: 'ok' as const, id: u.rows[0]!.id };
+          const u = await kdb
+            .insertInto('users')
+            .values({
+              username: body.username,
+              display_name: body.displayName || body.username,
+              email: body.email || '',
+              password_hash: hash,
+            })
+            .returning('id')
+            .executeTakeFirstOrThrow();
+          await kdb.insertInto('user_roles').values({ user_id: u.id, role_id: 'administrateur' }).execute();
+          return { status: 'ok' as const, id: u.id };
         }, body.username)
         .catch((e: { code?: string }) => {
           if (e.code === '23505') throw new HttpError(409, 'Cet identifiant existe déjà.');
@@ -219,10 +226,11 @@ export const authRoutes = [
     handler: async ({ svc, s, ip, body }) => {
       const sess = s as Session;
       if (!['ok', 'password'].includes(svc.auth.stage(sess))) throw new HttpError(403, 'Authentification incomplète.');
-      const u = (await svc.db.one<{ username: string; password_hash: string }>(
-        'SELECT username, password_hash FROM users WHERE id=$1',
-        [sess.user.id],
-      ))!;
+      const u = await svc.db.k
+        .selectFrom('users')
+        .select(['username', 'password_hash'])
+        .where('id', '=', sess.user.id)
+        .executeTakeFirstOrThrow();
       if (!(await verifyPassword(body.current, u.password_hash))) {
         await svc.db.audit(sess.user, ip, 'account.password_failed');
         throw new HttpError(401, 'Mot de passe actuel incorrect.');
@@ -230,11 +238,18 @@ export const authRoutes = [
       checkPassword(svc, body.next, u.username);
       if (await verifyPassword(body.next, u.password_hash))
         throw new HttpError(422, "Le nouveau mot de passe doit être différent de l'actuel.");
-      await svc.db.tx(async (c) => {
-        await c.query(
-          'UPDATE users SET password_hash=$2, must_change_password=false, password_changed_at=now(), updated_at=now() WHERE id=$1',
-          [sess.user.id, await hashPassword(body.next)],
-        );
+      const nouveau = await hashPassword(body.next);
+      await svc.db.tx(async (c, k) => {
+        await k
+          .updateTable('users')
+          .set({
+            password_hash: nouveau,
+            must_change_password: false,
+            password_changed_at: sql<Date>`now()`,
+            updated_at: sql<Date>`now()`,
+          })
+          .where('id', '=', sess.user.id)
+          .execute();
         await svc.auth.destroyUserSessions(sess.user.id, sess.sid, c);
       }, sess.user.username);
       await svc.db.audit(sess.user, ip, 'account.password_changed');
@@ -254,17 +269,16 @@ export const authRoutes = [
       const st = svc.auth.stage(sess);
       if (!['ok', 'enroll'].includes(st)) throw new HttpError(403, 'Authentification incomplète.');
       if (st === 'ok' && sess.user.totpEnabled) {
-        const u = (await svc.db.one<{ password_hash: string }>('SELECT password_hash FROM users WHERE id=$1', [
-          sess.user.id,
-        ]))!;
+        const u = await motDePasse(svc, sess.user.id);
         if (!(await verifyPassword(body.password || '', u.password_hash)))
           throw new HttpError(401, 'Mot de passe incorrect.');
       }
       const key = crypto.randomBytes(20);
-      await svc.db.q('UPDATE users SET totp_pending=$2 WHERE id=$1', [
-        sess.user.id,
-        svc.vault.sealSmall(key, 'totp:' + sess.user.id),
-      ]);
+      await svc.db.k
+        .updateTable('users')
+        .set({ totp_pending: svc.vault.sealSmall(key, 'totp:' + sess.user.id) })
+        .where('id', '=', sess.user.id)
+        .execute();
       const secret = base32(key);
       const label = encodeURIComponent(`${svc.settings.get('general').appName}:${sess.user.username}`);
       const uri = `otpauth://totp/${label}?secret=${secret}&issuer=${encodeURIComponent(svc.settings.get('general').orgName)}&algorithm=SHA1&digits=6&period=30`;
@@ -282,18 +296,27 @@ export const authRoutes = [
     handler: async ({ svc, req, reply, s, ip, body }) => {
       const sess = s as Session;
       if (!['ok', 'enroll'].includes(svc.auth.stage(sess))) throw new HttpError(403, 'Authentification incomplète.');
-      const u = await svc.db.one<{ totp_pending: Buffer | null }>('SELECT totp_pending FROM users WHERE id=$1', [
-        sess.user.id,
-      ]);
+      const u = await svc.db.k
+        .selectFrom('users')
+        .select('totp_pending')
+        .where('id', '=', sess.user.id)
+        .executeTakeFirst();
       if (!u || !u.totp_pending) throw new HttpError(409, 'Aucun enrôlement en cours.');
       const key = svc.vault.openSmall(u.totp_pending, 'totp:' + sess.user.id);
       const step = verifyTotp(key, body.code, 0);
       if (!step) throw new HttpError(401, "Code incorrect. Vérifiez l'heure du téléphone et réessayez.");
-      await svc.db.tx(async (c) => {
-        await c.query(
-          'UPDATE users SET totp_secret=totp_pending, totp_pending=NULL, totp_enabled=true, totp_last_step=$2, updated_at=now() WHERE id=$1',
-          [sess.user.id, step],
-        );
+      await svc.db.tx(async (c, k) => {
+        await k
+          .updateTable('users')
+          .set((eb) => ({
+            totp_secret: eb.ref('totp_pending'),
+            totp_pending: null,
+            totp_enabled: true,
+            totp_last_step: step,
+            updated_at: sql<Date>`now()`,
+          }))
+          .where('id', '=', sess.user.id)
+          .execute();
         await svc.auth.destroyUserSessions(sess.user.id, null, c);
       }, sess.user.username);
       await svc.auth.create(req, reply, sess.user.id, true);
@@ -311,14 +334,14 @@ export const authRoutes = [
     handler: async ({ svc, s, ip, body }) => {
       const sess = s as Session;
       if (svc.cfg.mfaRequired) throw new HttpError(403, 'La double authentification est obligatoire sur ce serveur.');
-      const u = (await svc.db.one<{ password_hash: string }>('SELECT password_hash FROM users WHERE id=$1', [
-        sess.user.id,
-      ]))!;
+      const u = await motDePasse(svc, sess.user.id);
       if (!(await verifyPassword(body.password || '', u.password_hash)))
         throw new HttpError(401, 'Mot de passe incorrect.');
-      await svc.db.q('UPDATE users SET totp_secret=NULL, totp_pending=NULL, totp_enabled=false WHERE id=$1', [
-        sess.user.id,
-      ]);
+      await svc.db.k
+        .updateTable('users')
+        .set({ totp_secret: null, totp_pending: null, totp_enabled: false })
+        .where('id', '=', sess.user.id)
+        .execute();
       await svc.db.audit(sess.user, ip, 'account.mfa_disabled');
       return undefined;
     },
@@ -341,11 +364,27 @@ export const authRoutes = [
     ),
     handler: async ({ svc, s }) => {
       const sess = s as Session;
-      const r = await svc.db.q<{ id: string }>(
-        "SELECT encode(id_hash,'hex') AS id, ip::text, user_agent, created_at, last_seen_at FROM sessions WHERE user_id=$1 ORDER BY last_seen_at DESC",
-        [sess.user.id],
-      );
-      return r.rows.map((x) => ({ ...x, current: x.id === sess.sid.toString('hex') }));
+      const r = await svc.db.k
+        .selectFrom('sessions')
+        .select([
+          sql<string>`encode(id_hash, 'hex')`.as('id'),
+          sql<string | null>`ip::text`.as('ip'),
+          'user_agent',
+          'created_at',
+          'last_seen_at',
+        ])
+        .where('user_id', '=', sess.user.id)
+        .orderBy('last_seen_at', 'desc')
+        .execute();
+      // Dates renvoyées telles quelles (sérialisées en ISO par la réponse), comme avant la conversion.
+      return r.map((x) => ({ ...x, current: x.id === sess.sid.toString('hex') })) as unknown as {
+        id: string;
+        ip: string | null;
+        user_agent: string;
+        created_at: string;
+        last_seen_at: string;
+        current: boolean;
+      }[];
     },
   }),
   route({
@@ -362,3 +401,8 @@ export const authRoutes = [
     },
   }),
 ];
+
+/** Empreinte du mot de passe d'un compte (le compte de la session existe toujours). */
+async function motDePasse(svc: Services, userId: string) {
+  return svc.db.k.selectFrom('users').select('password_hash').where('id', '=', userId).executeTakeFirstOrThrow();
+}

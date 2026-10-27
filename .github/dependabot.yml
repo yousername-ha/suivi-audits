@@ -1,0 +1,30 @@
+# Mises à jour proposées en pull request, jamais fusionnées automatiquement (ADR 0063).
+# Actions GitHub : épinglées par empreinte de commit ; Dependabot propose la nouvelle empreinte avec sa version en
+# commentaire. Chaque proposition passe par la CI complète et la relecture du RSSI.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Europe/Paris
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: ci
+      include: scope
+    groups:
+      actions-github:
+        patterns: ['*']
+  - package-ecosystem: docker
+    directory: /docker
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Europe/Paris
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: build
+      include: scope

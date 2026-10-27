@@ -12,7 +12,7 @@ Règle du projet : aucune nouvelle dépendance sans justification. La v2 n'avait
 | `pg` | API | Pilote PostgreSQL (déjà en v2), y compris pour LISTEN/NOTIFY. |
 | `fastify` | API | Socle HTTP (ADR 0002) ; apporte `pino` pour les journaux. |
 | `pino` | API | Journaux JSON pour le SIEM, avec masquage des secrets ; même version que celle de Fastify. |
-| `drizzle-orm` | API | Typage des requêtes (ADR 0003) ; sans dépendance d'exécution propre. |
+| `kysely` | API | Requêtes typées et paramétrées, types générés de la base migrée ([ADR 0062](0062-acces-aux-donnees-kysely.md)) ; aucune dépendance. Remplace `drizzle-orm` (retiré le 26/10/2026). |
 | `zod` | API, interface, partagé | Un seul langage de schémas pour la validation, les types et l'OpenAPI. |
 | `react`, `react-dom` | Interface | Interface (ADR 0006). |
 | `react-router` | Interface | Navigation. |

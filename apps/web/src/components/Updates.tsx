@@ -1,9 +1,9 @@
-import { Alert, Anchor, Button, Card, Group, Loader, Stack, Text, TextInput, Title } from '@mantine/core';
+import { Alert, Anchor, Button, Card, Group, Loader, Stack, Table, Text, TextInput, Title } from '@mantine/core';
 import { useQuery } from '@tanstack/react-query';
-import type { UpdateState } from '@suivi/shared';
+import type { UpdateReceiptSummary, UpdateState } from '@suivi/shared';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
-import { api, get } from '../api';
+import { api, download, get } from '../api';
 import { ErrorAlert } from './common';
 import { useCan, useMe } from '../session';
 
@@ -48,10 +48,88 @@ export function UpdateNotice() {
     </div>
   );
 }
+const STATUTS_RECU: Record<UpdateReceiptSummary['statut'], string> = {
+  success: 'Installée',
+  rolled_back: 'Annulée, version précédente restaurée',
+  failed: 'Non installée',
+  intervention: 'Intervention nécessaire',
+};
+const duree = (s: number | null) => (s == null ? '—' : s < 60 ? `${s} s` : `${Math.floor(s / 60)} min ${s % 60} s`);
+/** Preuves de changement : reçus structurés écrits par le service de mise à jour, téléchargeables en JSON. */
+function UpdateReceipts() {
+  const q = useQuery({
+    queryKey: ['updates', 'receipts'],
+    queryFn: () => get<UpdateReceiptSummary[]>('/api/admin/updates/receipts'),
+  });
+  if (!q.data?.length) return null;
+  return (
+    <Stack gap="xs">
+      <Title order={3} size="h5">
+        Reçus des dernières installations
+      </Title>
+      <div className="table-wrap" role="region" aria-label="Reçus des dernières installations" tabIndex={0}>
+        <Table striped>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Fin</Table.Th>
+              <Table.Th>Versions</Table.Th>
+              <Table.Th>Résultat</Table.Th>
+              <Table.Th>Durée</Table.Th>
+              <Table.Th>Reçu</Table.Th>
+              <Table.Th>SBOM vérifiés</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {q.data.map((r) => (
+              <Table.Tr key={r.id}>
+                <Table.Td className="horodatage">{new Date(r.fin).toLocaleString('fr-FR')}</Table.Td>
+                <Table.Td>
+                  {r.depuis} → {r.vers}
+                </Table.Td>
+                <Table.Td>{STATUTS_RECU[r.statut]}</Table.Td>
+                <Table.Td>{duree(r.dureeSecondes)}</Table.Td>
+                <Table.Td>
+                  <Button
+                    size="compact-sm"
+                    variant="default"
+                    aria-label={`Télécharger le reçu ${r.depuis} vers ${r.vers}`}
+                    onClick={() => download(`/api/admin/updates/receipts/${r.id}`)}
+                  >
+                    Télécharger
+                  </Button>
+                </Table.Td>
+                <Table.Td>
+                  {r.sbom?.length ? (
+                    <Group gap="xs" wrap="nowrap">
+                      {r.sbom.map((c) => (
+                        <Button
+                          key={c}
+                          size="compact-sm"
+                          variant="subtle"
+                          aria-label={`Télécharger le SBOM ${c} de la version ${r.vers}`}
+                          onClick={() => download(`/api/admin/updates/receipts/${r.id}/sbom/${c}`)}
+                        >
+                          {c}
+                        </Button>
+                      ))}
+                    </Group>
+                  ) : (
+                    '—'
+                  )}
+                </Table.Td>
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
+      </div>
+    </Stack>
+  );
+}
 export function UpdatesPanel() {
   const q = useUpdateState();
   const admin = useUpdateAdmin();
   const [confirm, setConfirm] = useState('');
+  const [code, setCode] = useState('');
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [queued, setQueued] = useState<string | null>(null);
@@ -66,6 +144,7 @@ export function UpdatesPanel() {
       setQueued(null);
       id.current = null;
       setConfirm('');
+      setCode('');
     }
   }, [queued, s?.id, s?.status]);
   /* La vérification est confiée au service de mise à jour : on suit son état seconde après seconde, au lieu d'attendre
@@ -120,7 +199,7 @@ export function UpdatesPanel() {
     setError(null);
     try {
       const response = await api<{ id: string }>('POST', '/api/admin/updates/install', {
-        body: { requestId: id.current, version: s.available, confirm },
+        body: { requestId: id.current, version: s.available, confirm, code },
       });
       setQueued(response.id);
       // L'écran de mise à jour s'ouvre tout de suite : il attend la prise en charge de la demande par le service.
@@ -128,11 +207,15 @@ export function UpdatesPanel() {
       window.location.assign(`/update/?next=${retour}&demande=${encodeURIComponent(response.id)}`);
       return;
     } catch (e) {
+      // Un code est à usage unique : toujours en saisir un nouveau après un refus.
+      setCode('');
       setError(e);
     } finally {
       setPending(false);
     }
   }
+  const fenetreFermee = !!s?.fenetre?.active && !s.fenetre.ouverte;
+  const codeValide = /^\d{6}$/.test(code);
   return (
     <Card withBorder id="updates">
       <Stack>
@@ -204,15 +287,32 @@ export function UpdatesPanel() {
                   publication et le redémarrage. Tous les utilisateurs verront la page de maintenance pendant
                   l’installation ; un retour sécurisé sera tenté en cas d’échec.
                 </Text>
+                {s?.fenetre?.active && (
+                  <Alert color={fenetreFermee ? 'orange' : 'blue'} role="status" title="Fenêtre de maintenance">
+                    {fenetreFermee
+                      ? `L’installation n’est possible que ${s.fenetre.libelle}. La vérification reste disponible.`
+                      : `Créneau ouvert : ${s.fenetre.libelle}.`}
+                  </Alert>
+                )}
                 <TextInput
                   label="Taper METTRE À JOUR pour confirmer"
                   value={confirm}
-                  disabled={busy}
+                  disabled={busy || fenetreFermee}
                   onChange={(e) => setConfirm(e.currentTarget.value)}
+                />
+                <TextInput
+                  label="Code de double authentification"
+                  description="Code à 6 chiffres de votre application d’authentification, demandé à chaque installation."
+                  value={code}
+                  disabled={busy || fenetreFermee}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  // Pas de maxLength : un code collé avec espace (« 123 456 ») serait tronqué avant le filtrage.
+                  onChange={(e) => setCode(e.currentTarget.value.replace(/\D/g, '').slice(0, 6))}
                 />
                 <Group>
                   <Button
-                    disabled={busy || !s?.ready || confirm !== 'METTRE À JOUR'}
+                    disabled={busy || !s?.ready || fenetreFermee || confirm !== 'METTRE À JOUR' || !codeValide}
                     loading={pending}
                     onClick={() => void install()}
                   >
@@ -221,6 +321,7 @@ export function UpdatesPanel() {
                 </Group>
               </>
             )}
+            <UpdateReceipts />
           </>
         )}
       </Stack>

@@ -14,7 +14,7 @@ import {
   type ValidationDto,
 } from '@suivi/shared';
 import type { SessionUser } from '../auth.js';
-import type { Client } from '../db/db.js';
+import { surConnexion, type Client, type Kdb } from '../db/db.js';
 import { HttpError } from '../http/errors.js';
 import type { Grc } from './core.js';
 
@@ -29,7 +29,18 @@ interface Ligne {
   createdAt: Date;
   requestId: string;
 }
-const colonnes = `id,seq,kind,result,comment,proof_ref AS "proofRef",created_by AS "createdBy",created_at AS "createdAt",request_id AS "requestId"`;
+const colonnes = [
+  'id',
+  'seq',
+  'kind',
+  'result',
+  'comment',
+  'proof_ref as proofRef',
+  'created_by as createdBy',
+  'created_at as createdAt',
+  'request_id as requestId',
+] as const;
+const journal = (k: Kdb) => k.selectFrom('occurrence_validations').select(colonnes);
 const dto = (l: Ligne): ValidationDto => ({
   id: l.id,
   seq: l.seq,
@@ -56,15 +67,11 @@ export async function exigerPreuve(g: Grc, smsi: string, proofRef: string, user:
 
 export class GrcValidations {
   constructor(private readonly g: Grc) {}
-  private q(c?: Client) {
-    return c ?? this.g.db.pool;
+  private k(c?: Client): Kdb {
+    return c ? surConnexion(c) : this.g.db.k;
   }
-  private async lignes(id: string, c?: Client) {
-    return (
-      await this.q(c).query<Ligne>(`SELECT ${colonnes} FROM occurrence_validations WHERE objet_id=$1 ORDER BY seq`, [
-        id,
-      ])
-    ).rows;
+  private async lignes(id: string, c?: Client): Promise<Ligne[]> {
+    return journal(this.k(c)).where('objet_id', '=', id).orderBy('seq').execute();
   }
   /** L'objet doit être une occurrence (action issue d'une série) d'un registre accessible pour ce besoin. */
   private async occurrence(
@@ -127,13 +134,20 @@ export class GrcValidations {
     ip: string,
   ) {
     const dernier = (await this.lignes(o.id, c)).length;
-    const l = (
-      await c.query<Ligne>(
-        `INSERT INTO occurrence_validations(objet_id,request_id,seq,kind,result,comment,proof_ref,created_by)
-         VALUES($1,$2,$3,$4,$5,$6,$7,$8) RETURNING ${colonnes}`,
-        [o.id, ligne.requestId, dernier + 1, ligne.kind, ligne.result, ligne.comment, ligne.proofRef, user.username],
-      )
-    ).rows[0]!;
+    const l: Ligne = await this.k(c)
+      .insertInto('occurrence_validations')
+      .values({
+        objet_id: o.id,
+        request_id: ligne.requestId,
+        seq: dernier + 1,
+        kind: ligne.kind,
+        result: ligne.result as Ligne['result'],
+        comment: ligne.comment,
+        proof_ref: ligne.proofRef,
+        created_by: user.username,
+      })
+      .returning(colonnes)
+      .executeTakeFirstOrThrow();
     await this.g.db.audit(
       user,
       ip,
@@ -146,12 +160,10 @@ export class GrcValidations {
   }
   /** Rejeu d'une commande déjà enregistrée : même enregistrement, sans écriture, si la nature correspond. */
   private async rejeu(c: Client, o: GrcObject, requestId: string, kind: 'validation' | 'reouverture') {
-    const l = (
-      await c.query<Ligne>(`SELECT ${colonnes} FROM occurrence_validations WHERE objet_id=$1 AND request_id=$2`, [
-        o.id,
-        requestId,
-      ])
-    ).rows[0];
+    const l = await journal(this.k(c))
+      .where('objet_id', '=', o.id)
+      .where('request_id', '=', requestId)
+      .executeTakeFirst();
     if (!l) return null;
     if (l.kind !== kind) throw new HttpError(409, 'Cet identifiant de requête a déjà servi à une autre commande.');
     return l;

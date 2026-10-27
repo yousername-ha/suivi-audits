@@ -4,7 +4,7 @@ import { validLegacyState } from './routes/suivi.js';
 import type { Services } from './services.js';
 
 export async function seedState(svc: Services): Promise<boolean> {
-  if (await svc.db.one('SELECT 1 FROM app_state WHERE id=1')) return false;
+  if (await svc.db.k.selectFrom('app_state').select('id').where('id', '=', 1).executeTakeFirst()) return false;
   try {
     const obj = JSON.parse(readFileSync(svc.cfg.seedFile, 'utf8'));
     if (!validLegacyState(obj)) throw new Error('structure inattendue');

@@ -5,7 +5,8 @@
 import { cleTexte, lireGaps, TENACY_LIMITES, type LigneTenacy, type TenacyBody } from '@suivi/shared';
 import { deepEqual, type Json } from '@suivi/shared/legacy';
 import type { SessionUser } from './auth.js';
-import type { Client } from './db/db.js';
+import { sql } from 'kysely';
+import { surConnexion, type Client } from './db/db.js';
 import { DEFAULT_SMSI, type Grc } from './grc/core.js';
 import { HttpError } from './http/errors.js';
 import { sha256hex } from './security/crypto.js';
@@ -76,6 +77,7 @@ export class ImportTenacy {
     if (empreinteTenacy(body) !== empreinte)
       throw new HttpError(409, 'Les lignes diffèrent de celles qui ont été simulées : relancez la simulation.');
     return this.g.db.tx(async (c) => {
+      // Verrou consultatif : SQL direct (ADR 0062).
       await c.query('SELECT pg_advisory_xact_lock(hashtext($1))', ['tenacy:' + body.perimetre]);
       const { rapport, travaux } = await this.calculer(c, user, body);
       if (rapport.erreurs.length) throw new HttpError(422, 'Corrigez les erreurs du fichier avant de l’appliquer.');
@@ -184,12 +186,17 @@ export class ImportTenacy {
   }
 
   private async trouver(c: Client, smsi: string, ids: string[]) {
-    const r = await c.query<{ id: string }>(
-      "SELECT id FROM grc_objects WHERE smsi_id=$1 AND kind='nonconformity' AND NOT archived AND data #>> '{tenacy,id}' = ANY($2::text[])",
-      [smsi, ids],
-    );
     const out = new Map<string, NonNullable<Awaited<ReturnType<Grc['raw']>>>>();
-    for (const row of r.rows) {
+    if (!ids.length) return out;
+    const r = await surConnexion(c)
+      .selectFrom('grc_objects')
+      .select('id')
+      .where('smsi_id', '=', smsi)
+      .where('kind', '=', 'nonconformity')
+      .where('archived', '=', false)
+      .where(sql<string>`data #>> '{tenacy,id}'`, 'in', ids)
+      .execute();
+    for (const row of r) {
       const o = await this.g.raw(row.id, c, true);
       if (o) out.set(String((o.data.tenacy as { id?: string } | undefined)?.id ?? ''), o);
     }
@@ -215,19 +222,27 @@ export class ImportTenacy {
       body.perimetre,
       lecture.lignes.map((l) => l.id),
     );
-    const liees = await c.query<{ ref: string; name: string }>(
-      `SELECT l.target_ref AS ref, o.name FROM grc_links l JOIN grc_objects o ON o.id=l.source_id
-       WHERE l.smsi_id=$1 AND l.type='treats' AND o.kind='action' AND NOT o.archived AND l.target_ref = ANY($2::text[])`,
-      [body.perimetre, [...existants.values()].map((o) => 'object:' + o.id)],
-    );
+    const cibles = [...existants.values()].map((o) => 'object:' + o.id);
+    const liees = cibles.length
+      ? await surConnexion(c)
+          .selectFrom('grc_links as l')
+          .innerJoin('grc_objects as o', 'o.id', 'l.source_id')
+          .select(['l.target_ref as ref', 'o.name'])
+          .where('l.smsi_id', '=', body.perimetre)
+          .where('l.type', '=', 'treats')
+          .where('o.kind', '=', 'action')
+          .where('o.archived', '=', false)
+          .where('l.target_ref', 'in', cibles)
+          .execute()
+      : [];
     const tachesDe = new Map<string, Set<string>>();
-    for (const r of liees.rows)
-      (tachesDe.get(r.ref) ?? tachesDe.set(r.ref, new Set()).get(r.ref)!).add(cleTexte(r.name));
-    const utilisateurs = (
-      await c.query<{ id: string; username: string; display_name: string; email: string }>(
-        'SELECT id, username, display_name, email FROM users WHERE NOT disabled AND (expires_at IS NULL OR expires_at>now())',
-      )
-    ).rows;
+    for (const r of liees) (tachesDe.get(r.ref) ?? tachesDe.set(r.ref, new Set()).get(r.ref)!).add(cleTexte(r.name));
+    const utilisateurs = await surConnexion(c)
+      .selectFrom('users')
+      .select(['id', 'username', 'display_name', 'email'])
+      .where('disabled', '=', false)
+      .where((eb) => eb.or([eb('expires_at', 'is', null), eb('expires_at', '>', sql<Date>`now()`)]))
+      .execute();
     const travaux: Travail[] = [];
     const lignes: LigneRapport[] = [];
     let actions = 0;

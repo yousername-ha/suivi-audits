@@ -316,3 +316,41 @@ describe('confirmation, sens inverse et retrait', () => {
     expect((await contributor.get(`/api/grc/${scope}/rapprochements`)).statusCode).toBe(200);
   });
 });
+
+describe('rapprochements : filtre par référentiel et réouverture d’une proposition retirée', () => {
+  it('filtre la liste par référentiel cible ; une proposition retirée se rouvre telle quelle si le lien revient', async () => {
+    const fc = await publier('RAP-C', ['C-1']);
+    const fd = await publier('RAP-D', ['D-1']);
+    const m = await a.post('/api/library/mappings', body(req(fc, 'C-1'), req(fd, 'D-1'), 'equivalent', 100));
+    expect(m.statusCode, m.body).toBeLessThan(300);
+    expect((await valider(m.json().id, 1)).statusCode).toBe(200);
+    const s3 = (
+      await a.post('/api/grc/smsis', {
+        name: 'Périmètre S3',
+        scope: 'Recette',
+        nature: 'SMI',
+        timezone: 'Europe/Paris',
+      })
+    ).json().id as string;
+    expect((await attacher(s3, fc)).statusCode).toBe(200);
+    expect((await attacher(s3, fd)).statusCode).toBe(200);
+    const mesure = (await a.post(`/api/grc/${s3}/objects`, { kind: 'measure', name: 'Mesure de S3', data: {} })).json()
+      .id as string;
+    const lien = await lier(s3, mesure, refReq(fc, 'C-1'));
+    expect(lien.statusCode, lien.body).toBe(200);
+    await a.post(`/api/grc/${s3}/rapprochements/sync`);
+    const liste = async (qs: string) =>
+      (await a.get(`/api/grc/${s3}/rapprochements?${qs}`)).json() as { id: string; status: string }[];
+    const [p] = await liste(`status=pending&frameworkId=${fd}`);
+    expect(p).toBeTruthy();
+    expect(await liste(`status=pending&frameworkId=${fc}`)).toEqual([]);
+    const liens = (await a.get(`/api/grc/${s3}/links?ref=${encodeURIComponent('object:' + mesure)}`)).json();
+    expect((await a.del(`/api/grc/${s3}/links/${liens[0].id}`)).statusCode).toBe(204);
+    await a.post(`/api/grc/${s3}/rapprochements/sync`);
+    expect((await liste('status=withdrawn')).map((x) => x.id)).toEqual([p!.id]);
+    expect((await lier(s3, mesure, refReq(fc, 'C-1'))).statusCode).toBe(200);
+    await a.post(`/api/grc/${s3}/rapprochements/sync`);
+    expect((await liste('status=pending')).map((x) => x.id)).toEqual([p!.id]);
+    expect((await a.get(`/api/grc/${s3}/rapprochements/summary`)).json()).toEqual({ pending: 1 });
+  });
+});

@@ -32,15 +32,44 @@ import {
   type StatutPlanRegistre,
   OrdreBody,
 } from '@suivi/shared';
+import { sql, type ExpressionBuilder } from 'kysely';
 import type { SessionUser } from '../auth.js';
-import type { Client } from '../db/db.js';
+import { surConnexion, type Client, type Kdb } from '../db/db.js';
+import type { DB } from '../db/types.generated.js';
 import { loadGrants } from '../rights.js';
 import { HttpError } from '../http/errors.js';
-import { DEFAULT_SMSI, objectColumns, objectDto, type ObjectRow, type Grc } from './core.js';
+import { COLONNES_OBJET, DEFAULT_SMSI, objets, versObjet, type Grc } from './core.js';
 
 const MODULE: Module = 'ecarts';
-const colonnes = `id,kind,name,description,reference_smsi_id AS "referenceId",restricted,archived,par_defaut AS "parDefaut",version,to_char(date_debut,'YYYY-MM-DD') AS "dateDebut",to_char(date_fin,'YYYY-MM-DD') AS "dateFin",statut,responsable`;
-const colonnesR = `r.id,r.kind,r.name,r.description,r.reference_smsi_id AS "referenceId",r.restricted,r.archived,r.par_defaut AS "parDefaut",r.version,to_char(r.date_debut,'YYYY-MM-DD') AS "dateDebut",to_char(r.date_fin,'YYYY-MM-DD') AS "dateFin",r.statut,r.responsable`;
+/** Fiches hors des registres masqués : sans masque, tout passe (comme registre_id <> ALL d'un tableau vide). */
+export function horsRegistresMasques(masques: readonly string[]) {
+  return (eb: ExpressionBuilder<DB, 'grc_objects'>) =>
+    masques.length
+      ? eb.or([eb('registre_id', 'is', null), eb('registre_id', 'not in', [...masques])])
+      : sql<boolean>`true`;
+}
+/** Colonnes d'un registre. Non qualifiées : aucune table jointe ici ne porte ces noms, et un INSERT ne prend pas d'alias. */
+const COLONNES_REGISTRE = [
+  'id',
+  'kind',
+  'name',
+  'description',
+  'reference_smsi_id as referenceId',
+  'restricted',
+  'archived',
+  'par_defaut as parDefaut',
+  'version',
+  sql<string | null>`to_char(date_debut, 'YYYY-MM-DD')`.as('dateDebut'),
+  sql<string | null>`to_char(date_fin, 'YYYY-MM-DD')`.as('dateFin'),
+  'statut',
+  'responsable',
+] as const;
+/** Le responsable n'est écrit que par create() et update(), après validation (RegistreBody, RegistreUpdate). */
+const versRegistre = (r: Omit<RegistreRow, 'responsable'> & { responsable: unknown }): RegistreRow => ({
+  ...r,
+  responsable: r.responsable as ResponsableRef | null,
+});
+const motifIlike = (texte: string) => '%' + texte.replace(/[\\%_]/g, '\\$&') + '%';
 export interface RegistreRow {
   id: string;
   kind: RegistreKind;
@@ -61,28 +90,31 @@ const unique = <T>(l: readonly T[]) => [...new Set(l)];
 
 export class GrcRegistres {
   constructor(private readonly g: Grc) {}
-  private q(c?: Client) {
-    return c ?? this.g.db.pool;
+  /** Kysely sur la transaction de l'appelant, sinon sur le pool. */
+  private k(c?: Client): Kdb {
+    return c ? surConnexion(c) : this.g.db.k;
+  }
+  private registres(c?: Client) {
+    return this.k(c).selectFrom('registres as r').select(COLONNES_REGISTRE);
   }
 
   /* ----------------------------------------------------------------------------------------------- lecture brute */
   async brut(id: string, c?: Client, lock = false): Promise<RegistreRow | null> {
-    return (
-      (
-        await this.q(c).query<RegistreRow>(
-          `SELECT ${colonnes} FROM registres WHERE id=$1${lock ? ' FOR UPDATE' : ''}`,
-          [id],
-        )
-      ).rows[0] ?? null
-    );
+    const r = await this.registres(c)
+      .where('r.id', '=', id)
+      .$if(lock, (q) => q.forUpdate())
+      .executeTakeFirst();
+    return r ? versRegistre(r) : null;
   }
   async perimetresIds(id: string, c?: Client): Promise<string[]> {
     return (
-      await this.q(c).query<{ id: string }>(
-        'SELECT smsi_id AS id FROM registre_perimetres WHERE registre_id=$1 ORDER BY smsi_id',
-        [id],
-      )
-    ).rows.map((r) => r.id);
+      await this.k(c)
+        .selectFrom('registre_perimetres')
+        .select('smsi_id as id')
+        .where('registre_id', '=', id)
+        .orderBy('smsi_id')
+        .execute()
+    ).map((r) => r.id);
   }
 
   /* -------------------------------------------------------------------------------------------- droits effectifs */
@@ -93,15 +125,27 @@ export class GrcRegistres {
     objetId: string | null,
     c?: Client,
   ): Promise<RoleRessource | null> {
-    const r = await this.q(c).query<{ role: RoleRessource }>(
-      `SELECT d.role FROM droits_ressources d
-        WHERE ((d.resource_type='registre' AND d.resource_id=$1) OR ($2::uuid IS NOT NULL AND d.resource_type='objet' AND d.resource_id=$2))
-          AND ((d.subject_type='utilisateur' AND d.subject_id=$3)
-            OR (d.subject_type='groupe' AND d.subject_id IN (SELECT group_id FROM user_groups WHERE user_id=$3)))`,
-      [registreId, objetId, user.id],
-    );
+    const r = await this.k(c)
+      .selectFrom('droits_ressources as d')
+      .select('d.role')
+      .where((eb) =>
+        eb.or([
+          eb.and([eb('d.resource_type', '=', 'registre'), eb('d.resource_id', '=', registreId)]),
+          ...(objetId ? [eb.and([eb('d.resource_type', '=', 'objet'), eb('d.resource_id', '=', objetId)])] : []),
+        ]),
+      )
+      .where((eb) =>
+        eb.or([
+          eb.and([eb('d.subject_type', '=', 'utilisateur'), eb('d.subject_id', '=', user.id)]),
+          eb.and([
+            eb('d.subject_type', '=', 'groupe'),
+            eb('d.subject_id', 'in', eb.selectFrom('user_groups').select('group_id').where('user_id', '=', user.id)),
+          ]),
+        ]),
+      )
+      .execute();
     let meilleur: RoleRessource | null = null;
-    for (const { role } of r.rows) if (!meilleur || RANG_ROLE[role] > RANG_ROLE[meilleur]) meilleur = role;
+    for (const { role } of r) if (!meilleur || RANG_ROLE[role] > RANG_ROLE[meilleur]) meilleur = role;
     return meilleur;
   }
   /** Accès par les droits de module et l'appartenance aux périmètres : lecture si un périmètre au moins est accessible,
@@ -176,10 +220,10 @@ export class GrcRegistres {
   /** Accès effectif de l'utilisateur à un élément (toutes origines confondues), pour adapter l'écran : 404 s'il ne peut pas
       lire. L'API refuse de toute façon ce qui dépasse ces droits. */
   async accesElement(id: string, user: SessionUser) {
-    const o = (await this.q().query<ObjectRow>(`SELECT ${objectColumns} FROM grc_objects WHERE id=$1`, [id])).rows[0];
+    const o = await objets(this.k()).where('id', '=', id).executeTakeFirst();
     const reg = o?.registreId ? await this.brut(o.registreId) : null;
     if (!o || !reg) throw new HttpError(404, 'Élément introuvable ou non accessible.');
-    const obj = objectDto(o);
+    const obj = versObjet(o);
     const module = GRC_MODULES[obj.kind];
     const peut = {
       lire: await this.peut(user, reg, id, 'lire', undefined, module),
@@ -192,25 +236,26 @@ export class GrcRegistres {
   /** Registres restreints d'un périmètre que l'utilisateur ne peut pas lire : leurs éléments sont masqués des listes. */
   async inaccessibles(user: SessionUser, smsi: string, c?: Client): Promise<string[]> {
     if (await this.g.isAdmin(user, c)) return [];
-    const r = await this.q(c).query<RegistreRow>(
-      `SELECT ${colonnes} FROM registres WHERE reference_smsi_id=$1 AND restricted`,
-      [smsi],
-    );
+    const r = await this.registres(c)
+      .where('r.reference_smsi_id', '=', smsi)
+      .where('r.restricted', '=', true)
+      .execute();
     const masques: string[] = [];
-    for (const reg of r.rows) if (!(await this.peut(user, reg, null, 'lire', c))) masques.push(reg.id);
+    for (const reg of r.map(versRegistre)) if (!(await this.peut(user, reg, null, 'lire', c))) masques.push(reg.id);
     return masques;
   }
 
   /** Registres lisibles qui portent ce périmètre sans en être la référence (registre multi-périmètre) : leurs éléments
       apparaissent aussi dans les vues de ce périmètre, sans doublon ni copie. Un registre archivé ou illisible n'y figure pas. */
   async partagesLisibles(user: SessionUser, smsi: string, c?: Client): Promise<string[]> {
-    const r = await this.q(c).query<RegistreRow>(
-      `SELECT ${colonnesR} FROM registres r JOIN registre_perimetres p ON p.registre_id=r.id
-        WHERE p.smsi_id=$1 AND r.reference_smsi_id<>$1 AND NOT r.archived`,
-      [smsi],
-    );
+    const r = await this.registres(c)
+      .innerJoin('registre_perimetres as p', 'p.registre_id', 'r.id')
+      .where('p.smsi_id', '=', smsi)
+      .where('r.reference_smsi_id', '<>', smsi)
+      .where('r.archived', '=', false)
+      .execute();
     const ids: string[] = [];
-    for (const reg of r.rows) if (await this.peut(user, reg, null, 'lire', c)) ids.push(reg.id);
+    for (const reg of r.map(versRegistre)) if (await this.peut(user, reg, null, 'lire', c)) ids.push(reg.id);
     return ids;
   }
 
@@ -218,9 +263,9 @@ export class GrcRegistres {
       éléments ne comptent dans aucun compteur qu'il consulte. */
   async inaccessiblesPartout(user: SessionUser, c?: Client): Promise<string[]> {
     if (await this.g.isAdmin(user, c)) return [];
-    const r = await this.q(c).query<RegistreRow>(`SELECT ${colonnes} FROM registres WHERE restricted`);
+    const r = await this.registres(c).where('r.restricted', '=', true).execute();
     const masques: string[] = [];
-    for (const reg of r.rows) if (!(await this.peut(user, reg, null, 'lire', c))) masques.push(reg.id);
+    for (const reg of r.map(versRegistre)) if (!(await this.peut(user, reg, null, 'lire', c))) masques.push(reg.id);
     return masques;
   }
 
@@ -232,13 +277,19 @@ export class GrcRegistres {
     if (!/^[0-9a-f-]{36}$/.test(id)) return true;
     let m = this.cacheEvenements.get(id);
     if (!m || Date.now() - m.a > 5000) {
-      const r = (
-        await this.g.db.q<{ registreId: string; restreint: boolean }>(
-          `SELECT g.registre_id AS "registreId", r.restricted AS restreint FROM grc_objects g JOIN registres r ON r.id=g.registre_id WHERE g.id=$1
-           UNION ALL SELECT r.id, r.restricted FROM registres r WHERE r.id=$1`,
-          [id],
+      const k = this.k();
+      const r = await k
+        .selectFrom('grc_objects as g')
+        .innerJoin('registres as r', 'r.id', 'g.registre_id')
+        .select(['r.id as registreId', 'r.restricted as restreint'])
+        .where('g.id', '=', id)
+        .unionAll(
+          k
+            .selectFrom('registres as r')
+            .select(['r.id as registreId', 'r.restricted as restreint'])
+            .where('r.id', '=', id),
         )
-      ).rows[0];
+        .executeTakeFirst();
       m = { registreId: r?.registreId ?? null, restreint: !!r?.restreint, a: Date.now() };
       if (this.cacheEvenements.size > 2000) this.cacheEvenements.clear();
       this.cacheEvenements.set(id, m);
@@ -252,11 +303,10 @@ export class GrcRegistres {
   async dto(user: SessionUser, reg: RegistreRow, c?: Client): Promise<RegistreDto> {
     const admin = await this.g.isAdmin(user, c);
     const ids = await this.perimetresIds(reg.id, c);
-    const noms = (
-      await this.q(c).query<{ id: string; name: string }>('SELECT id,name FROM grc_smsis WHERE id=ANY($1::uuid[])', [
-        ids,
-      ])
-    ).rows;
+    const k = this.k(c);
+    const noms = ids.length
+      ? await k.selectFrom('grc_smsis').select(['id', 'name']).where('id', 'in', ids).execute()
+      : [];
     const visibles: { id: string; name: string }[] = [];
     for (const p of noms.sort((a, b) => a.name.localeCompare(b.name, 'fr'))) {
       if (admin) {
@@ -275,21 +325,22 @@ export class GrcRegistres {
       contribuer: await this.peut(user, reg, null, 'contribuer', c),
       gerer: await this.peut(user, reg, null, 'gerer', c),
     };
-    const elements = Number(
-      (
-        await this.q(c).query<{ n: string }>(
-          'SELECT count(*)::text AS n FROM grc_objects WHERE registre_id=$1 AND NOT archived',
-          [reg.id],
-        )
-      ).rows[0]!.n,
-    );
-    const avancement = (
-      await this.q(c).query<{ total: number; terminees: number }>(
-        `SELECT count(*)::int AS total, count(*) FILTER (WHERE data->>'status'='done')::int AS terminees
-           FROM grc_objects WHERE registre_id=$1 AND NOT archived AND kind='action'`,
-        [reg.id],
-      )
-    ).rows[0]!;
+    const { elements } = await k
+      .selectFrom('grc_objects')
+      .select(sql<number>`count(*)::int`.as('elements'))
+      .where('registre_id', '=', reg.id)
+      .where('archived', '=', false)
+      .executeTakeFirstOrThrow();
+    const avancement = await k
+      .selectFrom('grc_objects')
+      .select([
+        sql<number>`count(*)::int`.as('total'),
+        sql<number>`count(*) FILTER (WHERE data->>'status' = 'done')::int`.as('terminees'),
+      ])
+      .where('registre_id', '=', reg.id)
+      .where('archived', '=', false)
+      .where('kind', '=', 'action')
+      .executeTakeFirstOrThrow();
     return {
       id: reg.id,
       kind: reg.kind,
@@ -313,20 +364,26 @@ export class GrcRegistres {
     };
   }
   async list(user: SessionUser, filtre: { perimetre?: string; kind?: RegistreKind; archives?: boolean } = {}) {
-    const args: unknown[] = [];
-    let where = 'TRUE';
-    if (filtre.kind) where += ` AND r.kind=$${args.push(filtre.kind)}`;
-    if (!filtre.archives) where += ' AND NOT r.archived';
-    if (filtre.perimetre)
-      where += ` AND EXISTS (SELECT 1 FROM registre_perimetres p WHERE p.registre_id=r.id AND p.smsi_id=$${args.push(filtre.perimetre)})`;
-    const rows = (
-      await this.g.db.q<RegistreRow>(
-        `SELECT ${colonnesR} FROM registres r WHERE ${where} ORDER BY r.kind, r.name, r.id`,
-        args,
+    const rows = await this.registres()
+      .$if(!!filtre.kind, (q) => q.where('r.kind', '=', filtre.kind!))
+      .$if(!filtre.archives, (q) => q.where('r.archived', '=', false))
+      .$if(!!filtre.perimetre, (q) =>
+        q.where(({ exists, selectFrom }) =>
+          exists(
+            selectFrom('registre_perimetres as p')
+              .select('p.registre_id')
+              .whereRef('p.registre_id', '=', 'r.id')
+              .where('p.smsi_id', '=', filtre.perimetre!),
+          ),
+        ),
       )
-    ).rows;
+      .orderBy('r.kind')
+      .orderBy('r.name')
+      .orderBy('r.id')
+      .execute();
     const out: RegistreDto[] = [];
-    for (const reg of rows) if (await this.peut(user, reg, null, 'lire')) out.push(await this.dto(user, reg));
+    for (const reg of rows.map(versRegistre))
+      if (await this.peut(user, reg, null, 'lire')) out.push(await this.dto(user, reg));
     return out;
   }
   async get(id: string, user: SessionUser, c?: Client) {
@@ -338,32 +395,40 @@ export class GrcRegistres {
 
   /** Registre par défaut d'une famille pour un périmètre : accueille les éléments créés sans registre choisi. */
   async defautPour(c: Client, smsi: string, kind: RegistreKind): Promise<string> {
-    const existant = (
-      await c.query<{ id: string }>('SELECT id FROM registres WHERE kind=$1 AND reference_smsi_id=$2 AND par_defaut', [
-        kind,
-        smsi,
-      ])
-    ).rows[0];
+    const k = surConnexion(c);
+    const parDefaut = () =>
+      k
+        .selectFrom('registres')
+        .select('id')
+        .where('kind', '=', kind)
+        .where('reference_smsi_id', '=', smsi)
+        .where('par_defaut', '=', true);
+    const existant = await parDefaut().executeTakeFirst();
     if (existant) return existant.id;
-    const s = (await c.query<{ id: string; name: string }>('SELECT id,name FROM grc_smsis WHERE id=$1', [smsi]))
-      .rows[0];
+    const s = await k.selectFrom('grc_smsis').select(['id', 'name']).where('id', '=', smsi).executeTakeFirst();
     if (!s) throw new HttpError(404, 'Périmètre introuvable.');
     const nom = `${REGISTRE_LABELS[kind]} — ${s.id === DEFAULT_SMSI ? 'Pilotage commun' : s.name}`;
-    const cree = (
-      await c.query<{ id: string }>(
-        `INSERT INTO registres(kind,name,reference_smsi_id,par_defaut,created_by,updated_by)
-         VALUES($1,$2,$3,true,'système','système') ON CONFLICT (kind,reference_smsi_id) WHERE par_defaut DO NOTHING RETURNING id`,
-        [kind, nom.slice(0, 200), smsi],
+    // Index unique partiel (un registre par défaut par famille et périmètre) : le prédicat de l'index est repris tel quel.
+    const cree = await k
+      .insertInto('registres')
+      .values({
+        kind,
+        name: nom.slice(0, 200),
+        reference_smsi_id: smsi,
+        par_defaut: true,
+        created_by: 'système',
+        updated_by: 'système',
+      })
+      .onConflict((oc) =>
+        oc
+          .columns(['kind', 'reference_smsi_id'])
+          .where(sql<boolean>`par_defaut`)
+          .doNothing(),
       )
-    ).rows[0];
-    if (!cree)
-      return (
-        await c.query<{ id: string }>(
-          'SELECT id FROM registres WHERE kind=$1 AND reference_smsi_id=$2 AND par_defaut',
-          [kind, smsi],
-        )
-      ).rows[0]!.id;
-    await c.query('INSERT INTO registre_perimetres(registre_id,smsi_id) VALUES($1,$2)', [cree.id, smsi]);
+      .returning('id')
+      .executeTakeFirst();
+    if (!cree) return (await parDefaut().executeTakeFirstOrThrow()).id;
+    await k.insertInto('registre_perimetres').values({ registre_id: cree.id, smsi_id: smsi }).execute();
     return cree.id;
   }
 
@@ -392,40 +457,47 @@ export class GrcRegistres {
     const b = RegistreBody.parse(input);
     await this.g.modules.assert(MODULE);
     const ids = unique([b.referenceId, ...b.perimetres]);
-    return this.g.db.tx(async (c) => {
-      const connus = (await c.query('SELECT 1 FROM grc_smsis WHERE id=ANY($1::uuid[])', [ids])).rowCount;
+    return this.g.db.tx(async (c, k) => {
+      const connus = (await k.selectFrom('grc_smsis').select('id').where('id', 'in', ids).execute()).length;
       if (connus !== ids.length) throw new HttpError(422, 'Périmètre inconnu.');
       if (!(await this.g.isAdmin(user, c))) {
         if (!user.rights.can(MODULE, 'modifier')) throw new HttpError(403, 'Droit requis : ecarts:modifier');
         for (const id of ids) await this.g.access(id, user, true, c);
       }
       const plan = await this.champsPlan(b.kind, b.referenceId, b, c);
-      const reg = (
-        await c.query<RegistreRow>(
-          `INSERT INTO registres(kind,name,description,reference_smsi_id,restricted,created_by,updated_by,date_debut,date_fin,statut,responsable)
-           VALUES($1,$2,$3,$4,$5,$6,$6,$7,$8,$9,$10) RETURNING ${colonnes}`,
-          [
-            b.kind,
-            b.name,
-            b.description,
-            b.referenceId,
-            b.restreint,
-            user.username,
-            plan.dateDebut,
-            plan.dateFin,
-            plan.statut,
-            plan.responsable ? JSON.stringify(plan.responsable) : null,
-          ],
-        )
-      ).rows[0]!;
-      for (const id of ids)
-        await c.query('INSERT INTO registre_perimetres(registre_id,smsi_id) VALUES($1,$2)', [reg.id, id]);
-      // Le créateur garde la gestion du registre même si ses droits de module changent ensuite.
-      await c.query(
-        `INSERT INTO droits_ressources(resource_type,resource_id,subject_type,subject_id,role,granted_by)
-         VALUES('registre',$1,'utilisateur',$2,'gestionnaire',$3)`,
-        [reg.id, user.id, user.username],
+      const reg = versRegistre(
+        await k
+          .insertInto('registres')
+          .values({
+            kind: b.kind,
+            name: b.name,
+            description: b.description,
+            reference_smsi_id: b.referenceId,
+            restricted: b.restreint,
+            created_by: user.username,
+            updated_by: user.username,
+            date_debut: plan.dateDebut,
+            date_fin: plan.dateFin,
+            statut: plan.statut,
+            responsable: plan.responsable ? JSON.stringify(plan.responsable) : null,
+          })
+          .returning(COLONNES_REGISTRE)
+          .executeTakeFirstOrThrow(),
       );
+      for (const id of ids)
+        await k.insertInto('registre_perimetres').values({ registre_id: reg.id, smsi_id: id }).execute();
+      // Le créateur garde la gestion du registre même si ses droits de module changent ensuite.
+      await k
+        .insertInto('droits_ressources')
+        .values({
+          resource_type: 'registre',
+          resource_id: reg.id,
+          subject_type: 'utilisateur',
+          subject_id: user.id,
+          role: 'gestionnaire',
+          granted_by: user.username,
+        })
+        .execute();
       await this.g.db.audit(user, ip, 'registre.created', reg.id, { kind: b.kind, perimetres: ids }, c);
       await this.g.notify(c, reg.id, reg.version, reg.referenceId, MODULE, user.username);
       return this.dto(user, reg, c);
@@ -433,7 +505,7 @@ export class GrcRegistres {
   }
   async update(id: string, input: RegistreUpdate, expected: number, user: SessionUser, ip: string) {
     const b = RegistreUpdate.parse(input);
-    return this.g.db.tx(async (c) => {
+    return this.g.db.tx(async (c, k) => {
       const reg = await this.brut(id, c, true);
       if (!reg) throw new HttpError(404, 'Registre introuvable ou non accessible.');
       await this.exiger(user, reg, null, 'gerer', c);
@@ -452,23 +524,15 @@ export class GrcRegistres {
       );
       if (plan.dateDebut && plan.dateFin && plan.dateDebut > plan.dateFin)
         throw new HttpError(422, 'La date de fin ne peut pas précéder la date de début.');
-      const nouveau = (
-        await c.query<RegistreRow>(
-          `UPDATE registres SET name=$2,description=$3,restricted=$4,date_debut=$6,date_fin=$7,statut=$8,responsable=$9,
-                  version=version+1,updated_by=$5,updated_at=now() WHERE id=$1 RETURNING ${colonnes}`,
-          [
-            id,
-            b.name,
-            b.description,
-            b.restreint,
-            user.username,
-            plan.dateDebut,
-            plan.dateFin,
-            plan.statut,
-            plan.responsable ? JSON.stringify(plan.responsable) : null,
-          ],
-        )
-      ).rows[0]!;
+      const nouveau = await this.ecrire(k, id, user.username, {
+        name: b.name,
+        description: b.description,
+        restricted: b.restreint,
+        date_debut: plan.dateDebut,
+        date_fin: plan.dateFin,
+        statut: plan.statut,
+        responsable: plan.responsable ? JSON.stringify(plan.responsable) : null,
+      });
       await this.g.db.audit(
         user,
         ip,
@@ -482,11 +546,36 @@ export class GrcRegistres {
     }, user.username);
   }
 
+  /** Nouvelle version d'un registre (champs donnés, version, auteur et date), relue avec ses colonnes. */
+  private async ecrire(
+    k: Kdb,
+    id: string,
+    auteur: string,
+    champs: {
+      name?: string;
+      description?: string;
+      restricted?: boolean;
+      archived?: boolean;
+      date_debut?: string | null;
+      date_fin?: string | null;
+      statut?: StatutPlanRegistre;
+      responsable?: string | null;
+    } = {},
+  ): Promise<RegistreRow> {
+    return versRegistre(
+      await k
+        .updateTable('registres')
+        .set((eb) => ({ ...champs, version: eb('version', '+', 1), updated_by: auteur, updated_at: sql<Date>`now()` }))
+        .where('id', '=', id)
+        .returning(COLONNES_REGISTRE)
+        .executeTakeFirstOrThrow(),
+    );
+  }
   /** Ordre des actions d'un plan : commande atomique (droit de gestion, `If-Match`) ; les actions citées prennent le rang de
       leur position, les autres passent après. */
   async ordonner(id: string, input: OrdreBody, expected: number, user: SessionUser, ip: string) {
     const b = OrdreBody.parse(input);
-    return this.g.db.tx(async (c) => {
+    return this.g.db.tx(async (c, k) => {
       const reg = await this.brut(id, c, true);
       if (!reg) throw new HttpError(404, 'Registre introuvable ou non accessible.');
       await this.exiger(user, reg, null, 'gerer', c);
@@ -495,24 +584,33 @@ export class GrcRegistres {
       if (reg.version !== expected) throw new HttpError(412, 'Le registre a changé. Rechargez avant de confirmer.');
       const ids = unique(b.ids);
       if (ids.length !== b.ids.length) throw new HttpError(422, 'Une action est citée deux fois.');
-      const connues = (
-        await c.query(
-          "SELECT 1 FROM grc_objects WHERE registre_id=$1 AND kind='action' AND NOT archived AND id=ANY($2::uuid[])",
-          [id, ids],
-        )
-      ).rowCount;
+      const connues = ids.length
+        ? (
+            await k
+              .selectFrom('grc_objects')
+              .select('id')
+              .where('registre_id', '=', id)
+              .where('kind', '=', 'action')
+              .where('archived', '=', false)
+              .where('id', 'in', ids)
+              .execute()
+          ).length
+        : 0;
       if (connues !== ids.length) throw new HttpError(422, 'Une action citée n’appartient pas à ce plan.');
-      await c.query('UPDATE grc_objects SET rang=NULL WHERE registre_id=$1 AND rang IS NOT NULL', [id]);
-      await c.query(
-        `UPDATE grc_objects o SET rang=t.rang FROM unnest($1::uuid[]) WITH ORDINALITY AS t(id,rang) WHERE o.id=t.id`,
-        [ids],
-      );
-      const nouveau = (
-        await c.query<RegistreRow>(
-          `UPDATE registres SET version=version+1,updated_by=$2,updated_at=now() WHERE id=$1 RETURNING ${colonnes}`,
-          [id, user.username],
-        )
-      ).rows[0]!;
+      await k
+        .updateTable('grc_objects')
+        .set({ rang: null })
+        .where('registre_id', '=', id)
+        .where('rang', 'is not', null)
+        .execute();
+      // Rang = position dans la liste (à partir de 1) ; les identifiants sont uniques, vérifiés ci-dessus.
+      if (ids.length)
+        await k
+          .updateTable('grc_objects')
+          .set({ rang: sql<number>`array_position(${ids}::uuid[], id)` })
+          .where('id', 'in', ids)
+          .execute();
+      const nouveau = await this.ecrire(k, id, user.username);
       await this.g.db.audit(user, ip, 'registre.ordre', id, { actions: ids.length, version: nouveau.version }, c);
       await this.g.notify(c, id, nouveau.version, nouveau.referenceId, MODULE, user.username);
       return this.dto(user, nouveau, c);
@@ -520,34 +618,44 @@ export class GrcRegistres {
   }
 
   /** Impact d'un changement de périmètres : éléments, liens et droits concernés, sans rien écrire. */
-  private async impact(reg: RegistreRow, avant: string[], apres: string[], c: Client) {
+  private async impact(reg: RegistreRow, avant: string[], apres: string[], k: Kdb) {
     const nom = async (ids: string[]) =>
-      (
-        await c.query<{ id: string; name: string }>(
-          'SELECT id,name FROM grc_smsis WHERE id=ANY($1::uuid[]) ORDER BY name',
-          [ids],
-        )
-      ).rows;
-    const compte = async (sql: string) => Number((await c.query<{ n: string }>(sql, [reg.id])).rows[0]!.n);
+      ids.length
+        ? await k.selectFrom('grc_smsis').select(['id', 'name']).where('id', 'in', ids).orderBy('name').execute()
+        : [];
+    const n = sql<number>`count(*)::int`.as('n');
+    const elements = k
+      .selectFrom('grc_objects')
+      .select(n)
+      .where('registre_id', '=', reg.id)
+      .where('archived', '=', false);
     return {
       ajoutes: await nom(apres.filter((x) => !avant.includes(x))),
       retires: await nom(avant.filter((x) => !apres.includes(x))),
-      elements: await compte('SELECT count(*)::text AS n FROM grc_objects WHERE registre_id=$1 AND NOT archived'),
-      series: await compte(
-        "SELECT count(*)::text AS n FROM grc_objects WHERE registre_id=$1 AND kind='task_series' AND NOT archived",
-      ),
-      liens: await compte(
-        'SELECT count(*)::text AS n FROM grc_links l JOIN grc_objects o ON o.id=l.source_id WHERE o.registre_id=$1',
-      ),
-      droits: await compte(
-        "SELECT count(*)::text AS n FROM droits_ressources WHERE resource_type='registre' AND resource_id=$1",
-      ),
+      elements: (await elements.executeTakeFirstOrThrow()).n,
+      series: (await elements.where('kind', '=', 'task_series').executeTakeFirstOrThrow()).n,
+      liens: (
+        await k
+          .selectFrom('grc_links as l')
+          .innerJoin('grc_objects as o', 'o.id', 'l.source_id')
+          .select(n)
+          .where('o.registre_id', '=', reg.id)
+          .executeTakeFirstOrThrow()
+      ).n,
+      droits: (
+        await k
+          .selectFrom('droits_ressources')
+          .select(n)
+          .where('resource_type', '=', 'registre')
+          .where('resource_id', '=', reg.id)
+          .executeTakeFirstOrThrow()
+      ).n,
     };
   }
   /** Commande atomique : le périmètre de référence reste ; les éléments héritent aussitôt, sans écriture individuelle. */
   async setPerimetres(id: string, input: RegistrePerimetresBody, expected: number, user: SessionUser, ip: string) {
     const b = RegistrePerimetresBody.parse(input);
-    return this.g.db.tx(async (c) => {
+    return this.g.db.tx(async (c, k) => {
       const reg = await this.brut(id, c, true);
       if (!reg) throw new HttpError(404, 'Registre introuvable ou non accessible.');
       await this.exiger(user, reg, null, 'gerer', c);
@@ -555,25 +663,25 @@ export class GrcRegistres {
       const apres = unique(b.perimetres);
       if (!apres.includes(reg.referenceId))
         throw new HttpError(422, 'Le périmètre de référence du registre doit rester rattaché.');
-      const connus = (await c.query('SELECT 1 FROM grc_smsis WHERE id=ANY($1::uuid[])', [apres])).rowCount;
+      // apres contient au moins le périmètre de référence : la liste n'est jamais vide.
+      const connus = (await k.selectFrom('grc_smsis').select('id').where('id', 'in', apres).execute()).length;
       if (connus !== apres.length) throw new HttpError(422, 'Périmètre inconnu.');
       const avant = await this.perimetresIds(id, c);
       const admin = await this.g.isAdmin(user, c);
       // Rattacher un registre à un périmètre exige de pouvoir au moins le consulter.
       if (!admin) for (const p of apres.filter((x) => !avant.includes(x))) await this.g.access(p, user, false, c);
-      const impact = await this.impact(reg, avant, apres, c);
+      const impact = await this.impact(reg, avant, apres, k);
       if (b.apercu) return { apercu: true as const, impact, version: reg.version };
       if (!b.reason) throw new HttpError(422, 'Un motif de 10 caractères au moins est exigé.');
       if (reg.version !== expected) throw new HttpError(412, 'Le registre a changé. Rechargez avant de confirmer.');
-      await c.query('DELETE FROM registre_perimetres WHERE registre_id=$1 AND smsi_id<>ALL($2::uuid[])', [id, apres]);
+      await k
+        .deleteFrom('registre_perimetres')
+        .where('registre_id', '=', id)
+        .where('smsi_id', 'not in', apres)
+        .execute();
       for (const p of apres.filter((x) => !avant.includes(x)))
-        await c.query('INSERT INTO registre_perimetres(registre_id,smsi_id) VALUES($1,$2)', [id, p]);
-      const nouveau = (
-        await c.query<RegistreRow>(
-          `UPDATE registres SET version=version+1,updated_by=$2,updated_at=now() WHERE id=$1 RETURNING ${colonnes}`,
-          [id, user.username],
-        )
-      ).rows[0]!;
+        await k.insertInto('registre_perimetres').values({ registre_id: id, smsi_id: p }).execute();
+      const nouveau = await this.ecrire(k, id, user.username);
       await this.g.db.audit(
         user,
         ip,
@@ -587,41 +695,45 @@ export class GrcRegistres {
     }, user.username);
   }
   async archive(id: string, expected: number, user: SessionUser, ip: string) {
-    return this.g.db.tx(async (c) => {
+    return this.g.db.tx(async (c, k) => {
       const reg = await this.brut(id, c, true);
       if (!reg) throw new HttpError(404, 'Registre introuvable ou non accessible.');
       await this.exiger(user, reg, null, 'gerer', c);
       if (reg.parDefaut) throw new HttpError(409, 'Le registre par défaut d’un périmètre ne s’archive pas.');
       if (reg.version !== expected) throw new HttpError(412, 'Le registre a changé. Rechargez avant de confirmer.');
-      const nouveau = (
-        await c.query<RegistreRow>(
-          `UPDATE registres SET archived=true,version=version+1,updated_by=$2,updated_at=now() WHERE id=$1 RETURNING ${colonnes}`,
-          [id, user.username],
-        )
-      ).rows[0]!;
+      const nouveau = await this.ecrire(k, id, user.username, { archived: true });
       // Les éléments, leurs historiques et leurs preuves sont conservés tels quels.
       await this.g.db.audit(user, ip, 'registre.archived', id, { version: nouveau.version }, c);
       await this.g.notify(c, id, nouveau.version, nouveau.referenceId, MODULE, user.username);
       return this.dto(user, nouveau, c);
     }, user.username);
   }
+  /** Page d'éléments non archivés de registres donnés (au moins un), dans l'ordre du plan puis du plus récent. */
+  private async pageElements(registres: string[], kind: string | undefined, search: string, offset: number) {
+    const filtre = this.g.db.k
+      .selectFrom('grc_objects')
+      .where('registre_id', 'in', registres)
+      .where('archived', '=', false)
+      .where('name', 'ilike', motifIlike(search))
+      .$if(!!kind, (q) => q.where('kind', '=', kind!));
+    const { total } = await filtre.select(sql<number>`count(*)::int`.as('total')).executeTakeFirstOrThrow();
+    const items = (
+      await filtre
+        .select(COLONNES_OBJET)
+        .orderBy('rang', (ob) => ob.asc().nullsLast())
+        .orderBy('updated_at', 'desc')
+        .orderBy('id')
+        .limit(50)
+        .offset(offset)
+        .execute()
+    ).map(versObjet);
+    return { total, items };
+  }
   async elements(id: string, user: SessionUser, kind: string | undefined, search: string, offset: number) {
     const reg = await this.brut(id);
     if (!reg) throw new HttpError(404, 'Registre introuvable ou non accessible.');
     await this.exiger(user, reg, null, 'lire');
-    const args: unknown[] = [id, '%' + search.replace(/[\\%_]/g, '\\$&') + '%'];
-    let where = 'registre_id=$1 AND NOT archived AND name ILIKE $2';
-    if (kind) where += ` AND kind=$${args.push(kind)}`;
-    const total = Number(
-      (await this.g.db.one<{ n: number }>(`SELECT count(*)::int n FROM grc_objects WHERE ${where}`, args))!.n,
-    );
-    args.push(offset);
-    const items = (
-      await this.g.db.q<ObjectRow>(
-        `SELECT ${objectColumns} FROM grc_objects WHERE ${where} ORDER BY rang NULLS LAST,updated_at DESC,id LIMIT 50 OFFSET $${args.length}`,
-        args,
-      )
-    ).rows.map(objectDto);
+    const { total, items } = await this.pageElements([id], kind, search, offset);
     return { registre: await this.dto(user, reg), items, total, nextOffset: offset + 50 < total ? offset + 50 : null };
   }
 
@@ -636,19 +748,7 @@ export class GrcRegistres {
     );
     const ids = visibles.map((r) => r.id);
     if (!ids.length) return { registres: visibles, items: [] as GrcObject[], total: 0, nextOffset: null };
-    const args: unknown[] = [ids, '%' + f.search.replace(/[\\%_]/g, '\\$&') + '%'];
-    let where = 'registre_id=ANY($1::uuid[]) AND NOT archived AND name ILIKE $2';
-    if (f.kind) where += ` AND kind=$${args.push(f.kind)}`;
-    const total = Number(
-      (await this.g.db.one<{ n: number }>(`SELECT count(*)::int n FROM grc_objects WHERE ${where}`, args))!.n,
-    );
-    args.push(f.offset);
-    const items = (
-      await this.g.db.q<ObjectRow>(
-        `SELECT ${objectColumns} FROM grc_objects WHERE ${where} ORDER BY rang NULLS LAST,updated_at DESC,id LIMIT 50 OFFSET $${args.length}`,
-        args,
-      )
-    ).rows.map(objectDto);
+    const { total, items } = await this.pageElements(ids, f.kind, f.search, f.offset);
     return { registres: visibles, items, total, nextOffset: f.offset + 50 < total ? f.offset + 50 : null };
   }
 
@@ -658,7 +758,7 @@ export class GrcRegistres {
       autorisé, liens vers d'autres périmètres. L'historique des versions reste celui d'origine. */
   async deplacer(smsi: string, id: string, input: DeplacementBody, expected: number, user: SessionUser, ip: string) {
     const b = DeplacementBody.parse(input);
-    return this.g.db.tx(async (c) => {
+    return this.g.db.tx(async (c, k) => {
       const o = await this.g.raw(id, c, true);
       if (!o || o.smsiId !== smsi || !o.registreId) throw new HttpError(404, 'Élément introuvable ou non accessible.');
       const source = await this.exigerElement(user, o, 'gerer', c);
@@ -675,40 +775,42 @@ export class GrcRegistres {
       if (cible.kind !== famille) throw new HttpError(422, 'Le registre cible n’est pas de la même famille.');
       const membres = [o];
       if (o.kind === 'task_series')
-        for (const r of (
-          await c.query<ObjectRow>(
-            `SELECT ${objectColumns} FROM grc_objects WHERE data->>'seriesId'=$1 AND kind='action' FOR UPDATE`,
-            [o.id],
-          )
-        ).rows)
-          membres.push(objectDto(r));
+        for (const r of await objets(k)
+          .where(sql<string | null>`data->>'seriesId'`, '=', o.id)
+          .where('kind', '=', 'action')
+          .forUpdate()
+          .execute())
+          membres.push(versObjet(r));
       const ids = membres.map((m) => m.id);
       const refs = ids.map((i) => 'object:' + i);
       const nouveau = cible.referenceId;
       const nomPerimetres = async (reg: RegistreRow) =>
-        (
-          await c.query<{ id: string; name: string }>(
-            'SELECT s.id,s.name FROM registre_perimetres p JOIN grc_smsis s ON s.id=p.smsi_id WHERE p.registre_id=$1 ORDER BY s.name',
-            [reg.id],
-          )
-        ).rows;
+        await k
+          .selectFrom('registre_perimetres as p')
+          .innerJoin('grc_smsis as s', 's.id', 'p.smsi_id')
+          .select(['s.id', 's.name'])
+          .where('p.registre_id', '=', reg.id)
+          .orderBy('s.name')
+          .execute();
+      // Liens qui touchent les éléments déplacés (ids et refs ne sont jamais vides : ils contiennent l'élément lui-même).
+      const touchesElements = (eb: ExpressionBuilder<DB, 'grc_links'>) =>
+        eb.or([eb('source_id', 'in', ids), eb('source_ref', 'in', refs), eb('target_ref', 'in', refs)]);
       // Liens : ceux dont l'autre extrémité est une fiche d'un autre périmètre de référence ne peuvent pas suivre.
-      const liens = (
-        await c.query<{ id: string; source_ref: string; target_ref: string; type: string }>(
-          'SELECT id,source_ref,target_ref,type FROM grc_links WHERE source_id=ANY($1::uuid[]) OR source_ref=ANY($2) OR target_ref=ANY($2)',
-          [ids, refs],
-        )
-      ).rows;
+      const liens = await k
+        .selectFrom('grc_links')
+        .select(['id', 'source_ref', 'target_ref', 'type'])
+        .where(touchesElements)
+        .execute();
       const incompatibles: ImpactDeplacement['liensIncompatibles'] = [];
       const incompatiblesIds: string[] = [];
       for (const l of liens) {
         const autre = refs.includes(l.source_ref) ? l.target_ref : l.source_ref;
         if (!autre.startsWith('object:') || ids.includes(autre.slice(7))) continue;
-        const x = (
-          await c.query<{ smsi_id: string; name: string }>('SELECT smsi_id,name FROM grc_objects WHERE id=$1', [
-            autre.slice(7),
-          ])
-        ).rows[0];
+        const x = await k
+          .selectFrom('grc_objects')
+          .select(['smsi_id', 'name'])
+          .where('id', '=', autre.slice(7))
+          .executeTakeFirst();
         if (x && x.smsi_id !== nouveau) {
           incompatibles.push({ ref: autre, type: l.type, nom: x.name });
           incompatiblesIds.push(l.id);
@@ -742,24 +844,29 @@ export class GrcRegistres {
       if (problemes.length) throw new HttpError(422, 'Déplacement impossible : ' + problemes.join(' '));
       if (incompatibles.length && !b.retirerLiensIncompatibles)
         throw new HttpError(409, 'Des liens ne peuvent pas suivre le déplacement : confirmez leur retrait.');
-      if (incompatiblesIds.length) await c.query('DELETE FROM grc_links WHERE id=ANY($1::uuid[])', [incompatiblesIds]);
+      if (incompatiblesIds.length) await k.deleteFrom('grc_links').where('id', 'in', incompatiblesIds).execute();
       let deplace = o;
       for (const m of membres) {
-        const row = (
-          await c.query<ObjectRow>(
-            `UPDATE grc_objects SET smsi_id=$2,registre_id=$3,rang=NULL,version=version+1,updated_by=$4,updated_at=now() WHERE id=$1 RETURNING ${objectColumns}`,
-            [m.id, nouveau, cible.id, user.username],
-          )
-        ).rows[0]!;
-        const next = objectDto(row);
+        const next = versObjet(
+          await k
+            .updateTable('grc_objects')
+            .set((eb) => ({
+              smsi_id: nouveau,
+              registre_id: cible.id,
+              rang: null,
+              version: eb('version', '+', 1),
+              updated_by: user.username,
+              updated_at: sql<Date>`now()`,
+            }))
+            .where('id', '=', m.id)
+            .returning(COLONNES_OBJET)
+            .executeTakeFirstOrThrow(),
+        );
         await this.g.snapshot(c, next, 'Déplacement : ' + b.reason);
         if (m.id === o.id) deplace = next;
       }
-      await c.query(
-        'UPDATE grc_links SET smsi_id=$2 WHERE source_id=ANY($1::uuid[]) OR source_ref=ANY($3) OR target_ref=ANY($3)',
-        [ids, nouveau, refs],
-      );
-      await c.query('UPDATE grc_notifications SET smsi_id=$2 WHERE object_id=ANY($1::uuid[])', [ids, nouveau]);
+      await k.updateTable('grc_links').set({ smsi_id: nouveau }).where(touchesElements).execute();
+      await k.updateTable('grc_notifications').set({ smsi_id: nouveau }).where('object_id', 'in', ids).execute();
       await this.g.db.audit(
         user,
         ip,
@@ -789,33 +896,36 @@ export class GrcRegistres {
       await this.exiger(user, reg, null, 'gerer', c);
       return { reg, objetId: null as string | null };
     }
-    const o = (await this.q(c).query<ObjectRow>(`SELECT ${objectColumns} FROM grc_objects WHERE id=$1`, [id])).rows[0];
+    const o = await objets(this.k(c)).where('id', '=', id).executeTakeFirst();
     if (!o?.registreId) throw new HttpError(404, 'Élément introuvable ou non accessible.');
-    const reg = await this.exigerElement(user, objectDto(o), 'gerer', c);
+    const reg = await this.exigerElement(user, versObjet(o), 'gerer', c);
     return { reg, objetId: id as string | null };
   }
   async droits(type: TypeRessource, id: string, user: SessionUser) {
     await this.ressource(type, id, user);
     return (
-      await this.g.db.q<{
-        id: string;
-        subjectType: string;
-        subjectId: string;
-        role: RoleRessource;
-        libelle: string;
-        grantedBy: string;
-        grantedAt: Date;
-      }>(
-        `SELECT d.id,d.subject_type AS "subjectType",d.subject_id AS "subjectId",d.role,
-                CASE WHEN d.subject_type='utilisateur' THEN coalesce(nullif(u.display_name,''),u.username,'Compte supprimé') ELSE coalesce(g.name,'Groupe supprimé') END AS libelle,
-                d.granted_by AS "grantedBy",d.granted_at AS "grantedAt"
-           FROM droits_ressources d
-           LEFT JOIN users u ON d.subject_type='utilisateur' AND u.id=d.subject_id
-           LEFT JOIN groups g ON d.subject_type='groupe' AND g.id=d.subject_id
-          WHERE d.resource_type=$1 AND d.resource_id=$2 ORDER BY d.subject_type,libelle,d.id`,
-        [type, id],
-      )
-    ).rows.map((r) => ({ ...r, grantedAt: r.grantedAt.toISOString() }));
+      await this.g.db.k
+        .selectFrom('droits_ressources as d')
+        .leftJoin('users as u', (j) => j.on('d.subject_type', '=', 'utilisateur').onRef('u.id', '=', 'd.subject_id'))
+        .leftJoin('groups as g', (j) => j.on('d.subject_type', '=', 'groupe').onRef('g.id', '=', 'd.subject_id'))
+        .select([
+          'd.id',
+          'd.subject_type as subjectType',
+          'd.subject_id as subjectId',
+          'd.role',
+          sql<string>`CASE WHEN d.subject_type = 'utilisateur' THEN coalesce(nullif(u.display_name, ''), u.username, 'Compte supprimé') ELSE coalesce(g.name, 'Groupe supprimé') END`.as(
+            'libelle',
+          ),
+          'd.granted_by as grantedBy',
+          'd.granted_at as grantedAt',
+        ])
+        .where('d.resource_type', '=', type)
+        .where('d.resource_id', '=', id)
+        .orderBy('d.subject_type')
+        .orderBy('libelle')
+        .orderBy('d.id')
+        .execute()
+    ).map((r) => ({ ...r, grantedAt: r.grantedAt.toISOString() }));
   }
   /** Vue des accès d'une personne ou d'un groupe : pour chaque registre, le rôle attribué (et son origine) et, pour une
       personne, les droits effectifs calculés par le serveur avec les contrôles réels. Réservée aux administrateurs des
@@ -825,55 +935,71 @@ export class GrcRegistres {
     id: string,
     f: { q: string; limite: number; decalage: number },
   ): Promise<AccesSujetPage> {
+    const k = this.g.db.k;
     const sujet =
       type === 'utilisateur'
-        ? await this.g.db.one<{ id: string; libelle: string; username: string }>(
-            "SELECT id, coalesce(nullif(display_name,''),username) AS libelle, username FROM users WHERE id=$1",
-            [id],
-          )
-        : await this.g.db.one<{ id: string; libelle: string; username: string }>(
-            'SELECT id, name AS libelle, name AS username FROM groups WHERE id=$1',
-            [id],
-          );
+        ? await k
+            .selectFrom('users')
+            .select(['id', sql<string>`coalesce(nullif(display_name, ''), username)`.as('libelle'), 'username'])
+            .where('id', '=', id)
+            .executeTakeFirst()
+        : await k
+            .selectFrom('groups')
+            .select(['id', 'name as libelle', 'name as username'])
+            .where('id', '=', id)
+            .executeTakeFirst();
     if (!sujet) throw new HttpError(404, type === 'utilisateur' ? 'Compte introuvable.' : 'Groupe introuvable.');
-    const motif = '%' + f.q.replace(/[\\%_]/g, '\\$&') + '%';
-    const filtre = 'NOT r.archived AND r.name ILIKE $1';
-    const total = Number(
-      (await this.g.db.one<{ n: string }>(`SELECT count(*)::text AS n FROM registres r WHERE ${filtre}`, [motif]))!.n,
-    );
+    const filtre = this.registres().where('r.archived', '=', false).where('r.name', 'ilike', motifIlike(f.q));
+    const { total } = await filtre
+      .clearSelect()
+      .select(sql<number>`count(*)::int`.as('total'))
+      .executeTakeFirstOrThrow();
     const regs = (
-      await this.g.db.q<RegistreRow>(
-        `SELECT ${colonnesR} FROM registres r WHERE ${filtre} ORDER BY r.kind, r.name, r.id LIMIT $2 OFFSET $3`,
-        [motif, f.limite, f.decalage],
-      )
-    ).rows;
+      await filtre.orderBy('r.kind').orderBy('r.name').orderBy('r.id').limit(f.limite).offset(f.decalage).execute()
+    ).map(versRegistre);
     const ids = regs.map((r) => r.id);
     // Rôles attribués, directement ou par un groupe (pour un groupe : les siens seulement).
-    const droits = ids.length
-      ? (
-          await this.g.db.q<{ registre: string; role: RoleRessource; direct: boolean; groupe: string | null }>(
-            type === 'utilisateur'
-              ? `SELECT d.resource_id AS registre, d.role, d.subject_type='utilisateur' AS direct, g.name AS groupe
-                   FROM droits_ressources d LEFT JOIN groups g ON d.subject_type='groupe' AND g.id=d.subject_id
-                  WHERE d.resource_type='registre' AND d.resource_id = ANY($1::uuid[])
-                    AND ((d.subject_type='utilisateur' AND d.subject_id=$2)
-                      OR (d.subject_type='groupe' AND d.subject_id IN (SELECT group_id FROM user_groups WHERE user_id=$2)))`
-              : `SELECT d.resource_id AS registre, d.role, false AS direct, g.name AS groupe
-                   FROM droits_ressources d JOIN groups g ON g.id=d.subject_id
-                  WHERE d.resource_type='registre' AND d.resource_id = ANY($1::uuid[])
-                    AND d.subject_type='groupe' AND d.subject_id=$2`,
-            [ids, id],
-          )
-        ).rows
-      : [];
+    const droits = !ids.length
+      ? []
+      : type === 'utilisateur'
+        ? await k
+            .selectFrom('droits_ressources as d')
+            .leftJoin('groups as g', (j) => j.on('d.subject_type', '=', 'groupe').onRef('g.id', '=', 'd.subject_id'))
+            .select([
+              'd.resource_id as registre',
+              'd.role',
+              sql<boolean>`d.subject_type = 'utilisateur'`.as('direct'),
+              'g.name as groupe',
+            ])
+            .where('d.resource_type', '=', 'registre')
+            .where('d.resource_id', 'in', ids)
+            .where((eb) =>
+              eb.or([
+                eb.and([eb('d.subject_type', '=', 'utilisateur'), eb('d.subject_id', '=', id)]),
+                eb.and([
+                  eb('d.subject_type', '=', 'groupe'),
+                  eb('d.subject_id', 'in', eb.selectFrom('user_groups').select('group_id').where('user_id', '=', id)),
+                ]),
+              ]),
+            )
+            .execute()
+        : await k
+            .selectFrom('droits_ressources as d')
+            .innerJoin('groups as g', 'g.id', 'd.subject_id')
+            .select(['d.resource_id as registre', 'd.role', sql<boolean>`false`.as('direct'), 'g.name as groupe'])
+            .where('d.resource_type', '=', 'registre')
+            .where('d.resource_id', 'in', ids)
+            .where('d.subject_type', '=', 'groupe')
+            .where('d.subject_id', '=', id)
+            .execute();
     const perimetres = ids.length
-      ? (
-          await this.g.db.q<{ registre: string; id: string; name: string }>(
-            `SELECT p.registre_id AS registre, s.id, s.name FROM registre_perimetres p JOIN grc_smsis s ON s.id=p.smsi_id
-              WHERE p.registre_id = ANY($1::uuid[]) ORDER BY s.name`,
-            [ids],
-          )
-        ).rows
+      ? await k
+          .selectFrom('registre_perimetres as p')
+          .innerJoin('grc_smsis as s', 's.id', 'p.smsi_id')
+          .select(['p.registre_id as registre', 's.id', 's.name'])
+          .where('p.registre_id', 'in', ids)
+          .orderBy('s.name')
+          .execute()
       : [];
     // La personne telle que les contrôles la voient : mêmes droits de module, mêmes périmètres, mêmes administrateurs.
     const personne: SessionUser | null =
@@ -936,46 +1062,59 @@ export class GrcRegistres {
       n'est servie aux autres). */
   async titulaires(type: TypeRessource, id: string, user: SessionUser, q: string) {
     await this.ressource(type, id, user);
-    const motif = '%' + q.replace(/[\\%_]/g, '\\$&') + '%';
-    const utilisateurs = (
-      await this.g.db.q<{ id: string; libelle: string }>(
-        `SELECT id,coalesce(nullif(display_name,''),username) AS libelle FROM users
-          WHERE NOT disabled AND (username ILIKE $1 OR display_name ILIKE $1) ORDER BY libelle LIMIT 20`,
-        [motif],
-      )
-    ).rows;
-    const groupes = (
-      await this.g.db.q<{ id: string; libelle: string }>(
-        'SELECT id,name AS libelle FROM groups WHERE name ILIKE $1 ORDER BY name LIMIT 20',
-        [motif],
-      )
-    ).rows;
+    const motif = motifIlike(q);
+    const k = this.g.db.k;
+    const utilisateurs = await k
+      .selectFrom('users')
+      .select(['id', sql<string>`coalesce(nullif(display_name, ''), username)`.as('libelle')])
+      .where('disabled', '=', false)
+      .where((eb) => eb.or([eb('username', 'ilike', motif), eb('display_name', 'ilike', motif)]))
+      .orderBy('libelle')
+      .limit(20)
+      .execute();
+    const groupes = await k
+      .selectFrom('groups')
+      .select(['id', 'name as libelle'])
+      .where('name', 'ilike', motif)
+      .orderBy('name')
+      .limit(20)
+      .execute();
     return { utilisateurs, groupes };
   }
   async accorder(type: TypeRessource, id: string, input: DroitBody, user: SessionUser, ip: string) {
     const b = DroitBody.parse(input);
-    return this.g.db.tx(async (c) => {
+    return this.g.db.tx(async (c, k) => {
       await this.ressource(type, id, user, c);
       const existe =
         b.subjectType === 'utilisateur'
-          ? await c.query('SELECT 1 FROM users WHERE id=$1 AND NOT disabled', [b.subjectId])
-          : await c.query('SELECT 1 FROM groups WHERE id=$1', [b.subjectId]);
-      if (!existe.rowCount) throw new HttpError(422, 'Titulaire du droit introuvable.');
-      const avant = (
-        await c.query<{ role: string }>(
-          'SELECT role FROM droits_ressources WHERE resource_type=$1 AND resource_id=$2 AND subject_type=$3 AND subject_id=$4 FOR UPDATE',
-          [type, id, b.subjectType, b.subjectId],
+          ? await k
+              .selectFrom('users')
+              .select('id')
+              .where('id', '=', b.subjectId)
+              .where('disabled', '=', false)
+              .executeTakeFirst()
+          : await k.selectFrom('groups').select('id').where('id', '=', b.subjectId).executeTakeFirst();
+      if (!existe) throw new HttpError(422, 'Titulaire du droit introuvable.');
+      const avant = await this.droitDe(k, type, id, b).forUpdate().executeTakeFirst();
+      const r = await k
+        .insertInto('droits_ressources')
+        .values({
+          resource_type: type,
+          resource_id: id,
+          subject_type: b.subjectType,
+          subject_id: b.subjectId,
+          role: b.role,
+          granted_by: user.username,
+        })
+        .onConflict((oc) =>
+          oc.columns(['resource_type', 'resource_id', 'subject_type', 'subject_id']).doUpdateSet((eb) => ({
+            role: eb.ref('excluded.role'),
+            granted_by: eb.ref('excluded.granted_by'),
+            granted_at: sql<Date>`now()`,
+          })),
         )
-      ).rows[0];
-      const r = (
-        await c.query<{ id: string }>(
-          `INSERT INTO droits_ressources(resource_type,resource_id,subject_type,subject_id,role,granted_by)
-           VALUES($1,$2,$3,$4,$5,$6)
-           ON CONFLICT (resource_type,resource_id,subject_type,subject_id)
-           DO UPDATE SET role=EXCLUDED.role,granted_by=EXCLUDED.granted_by,granted_at=now() RETURNING id`,
-          [type, id, b.subjectType, b.subjectId, b.role, user.username],
-        )
-      ).rows[0]!;
+        .returning('id')
+        .executeTakeFirstOrThrow();
       await this.g.db.audit(
         user,
         ip,
@@ -993,55 +1132,78 @@ export class GrcRegistres {
       return { id: r.id };
     }, user.username);
   }
+  /** Droit attribué à un titulaire sur une ressource. */
+  private droitDe(k: Kdb, type: TypeRessource, id: string, b: Pick<DroitBody, 'subjectType' | 'subjectId'>) {
+    return k
+      .selectFrom('droits_ressources')
+      .select('role')
+      .where('resource_type', '=', type)
+      .where('resource_id', '=', id)
+      .where('subject_type', '=', b.subjectType)
+      .where('subject_id', '=', b.subjectId);
+  }
   /** Aperçu d'une attribution : rôle avant et après, personnes concernées, rôles qui subsistent. N'écrit rien. */
   async apercuDroit(type: TypeRessource, id: string, input: DroitBody, user: SessionUser): Promise<ApercuDroit> {
     const b = DroitBody.parse(input);
     await this.ressource(type, id, user);
+    const k = this.g.db.k;
     const titulaire =
       b.subjectType === 'utilisateur'
-        ? await this.g.db.one<{ libelle: string }>(
-            "SELECT coalesce(nullif(display_name,''),username) AS libelle FROM users WHERE id=$1 AND NOT disabled",
-            [b.subjectId],
-          )
-        : await this.g.db.one<{ libelle: string }>('SELECT name AS libelle FROM groups WHERE id=$1', [b.subjectId]);
+        ? await k
+            .selectFrom('users')
+            .select(sql<string>`coalesce(nullif(display_name, ''), username)`.as('libelle'))
+            .where('id', '=', b.subjectId)
+            .where('disabled', '=', false)
+            .executeTakeFirst()
+        : await k.selectFrom('groups').select('name as libelle').where('id', '=', b.subjectId).executeTakeFirst();
     if (!titulaire) throw new HttpError(422, 'Titulaire du droit introuvable.');
-    const avant =
-      (
-        await this.g.db.one<{ role: RoleRessource }>(
-          'SELECT role FROM droits_ressources WHERE resource_type=$1 AND resource_id=$2 AND subject_type=$3 AND subject_id=$4',
-          [type, id, b.subjectType, b.subjectId],
-        )
-      )?.role ?? null;
+    const avant: RoleRessource | null = (await this.droitDe(k, type, id, b).executeTakeFirst())?.role ?? null;
     let personnes = 1;
     let subsistants: ApercuDroit['subsistants'] = [];
     let dejaPlusEleves = 0;
     if (b.subjectType === 'utilisateur') {
       subsistants = (
-        await this.g.db.q<{ role: RoleRessource; libelle: string }>(
-          `SELECT d.role, g.name AS libelle FROM droits_ressources d JOIN groups g ON g.id=d.subject_id
-            WHERE d.resource_type=$1 AND d.resource_id=$2 AND d.subject_type='groupe'
-              AND d.subject_id IN (SELECT group_id FROM user_groups WHERE user_id=$3) ORDER BY g.name`,
-          [type, id, b.subjectId],
-        )
-      ).rows.map((r) => ({ role: r.role, libelle: `Groupe ${r.libelle}` }));
+        await k
+          .selectFrom('droits_ressources as d')
+          .innerJoin('groups as g', 'g.id', 'd.subject_id')
+          .select(['d.role', 'g.name as libelle'])
+          .where('d.resource_type', '=', type)
+          .where('d.resource_id', '=', id)
+          .where('d.subject_type', '=', 'groupe')
+          .where('d.subject_id', 'in', (eb) =>
+            eb.selectFrom('user_groups').select('group_id').where('user_id', '=', b.subjectId),
+          )
+          .orderBy('g.name')
+          .execute()
+      ).map((r) => ({ role: r.role, libelle: `Groupe ${r.libelle}` }));
     } else {
-      personnes = Number(
-        (await this.g.db.one<{ n: string }>(
-          `SELECT count(*)::text AS n FROM user_groups ug JOIN users u ON u.id=ug.user_id
-              WHERE ug.group_id=$1 AND NOT u.disabled AND (u.expires_at IS NULL OR u.expires_at>now())`,
-          [b.subjectId],
-        ))!.n,
-      );
-      dejaPlusEleves = Number(
-        (await this.g.db.one<{ n: string }>(
-          `SELECT count(DISTINCT d.subject_id)::text AS n FROM droits_ressources d
-              WHERE d.resource_type=$1 AND d.resource_id=$2 AND d.subject_type='utilisateur'
-                AND d.subject_id IN (SELECT user_id FROM user_groups WHERE group_id=$3)
-                AND CASE d.role WHEN 'lecteur' THEN 1 WHEN 'contributeur' THEN 2 ELSE 3 END >
-                    CASE $4::text WHEN 'lecteur' THEN 1 WHEN 'contributeur' THEN 2 ELSE 3 END`,
-          [type, id, b.subjectId, b.role],
-        ))!.n,
-      );
+      personnes = (
+        await k
+          .selectFrom('user_groups as ug')
+          .innerJoin('users as u', 'u.id', 'ug.user_id')
+          .select(sql<number>`count(*)::int`.as('n'))
+          .where('ug.group_id', '=', b.subjectId)
+          .where('u.disabled', '=', false)
+          .where((eb) => eb.or([eb('u.expires_at', 'is', null), eb('u.expires_at', '>', sql<Date>`now()`)]))
+          .executeTakeFirstOrThrow()
+      ).n;
+      // Rangs des rôles comparés en SQL, comme RANG_ROLE côté serveur.
+      dejaPlusEleves = (
+        await k
+          .selectFrom('droits_ressources as d')
+          .select(sql<number>`count(DISTINCT d.subject_id)::int`.as('n'))
+          .where('d.resource_type', '=', type)
+          .where('d.resource_id', '=', id)
+          .where('d.subject_type', '=', 'utilisateur')
+          .where('d.subject_id', 'in', (eb) =>
+            eb.selectFrom('user_groups').select('user_id').where('group_id', '=', b.subjectId),
+          )
+          .where(
+            sql<boolean>`CASE d.role WHEN 'lecteur' THEN 1 WHEN 'contributeur' THEN 2 ELSE 3 END >
+              CASE ${b.role}::text WHEN 'lecteur' THEN 1 WHEN 'contributeur' THEN 2 ELSE 3 END`,
+          )
+          .executeTakeFirstOrThrow()
+      ).n;
     }
     return {
       apercu: true,
@@ -1055,14 +1217,15 @@ export class GrcRegistres {
     };
   }
   async retirer(type: TypeRessource, id: string, droitId: string, user: SessionUser, ip: string) {
-    return this.g.db.tx(async (c) => {
+    return this.g.db.tx(async (c, k) => {
       await this.ressource(type, id, user, c);
-      const r = (
-        await c.query<{ subject_type: string; subject_id: string; role: string }>(
-          'DELETE FROM droits_ressources WHERE id=$1 AND resource_type=$2 AND resource_id=$3 RETURNING subject_type,subject_id,role',
-          [droitId, type, id],
-        )
-      ).rows[0];
+      const r = await k
+        .deleteFrom('droits_ressources')
+        .where('id', '=', droitId)
+        .where('resource_type', '=', type)
+        .where('resource_id', '=', id)
+        .returning(['subject_type', 'subject_id', 'role'])
+        .executeTakeFirst();
       if (!r) throw new HttpError(404, 'Droit introuvable.');
       await this.g.db.audit(
         user,

@@ -1,3 +1,4 @@
+import { sql } from 'kysely';
 import { z } from 'zod';
 import {
   CalendrierBody,
@@ -88,11 +89,14 @@ export const grcRoutes = [
       const u = (s as Session).user;
       await svc.grc.permission(u, 'pilotage', 'administrer');
       await svc.grc.access(params.smsi, u, true);
-      return (
-        await svc.db.q(
-          'SELECT id,username,display_name AS "displayName" FROM users WHERE NOT disabled AND (expires_at IS NULL OR expires_at>now()) ORDER BY username LIMIT 1000',
-        )
-      ).rows;
+      return svc.db.k
+        .selectFrom('users')
+        .select(['id', 'username', 'display_name as displayName'])
+        .where('disabled', '=', false)
+        .where((eb) => eb.or([eb('expires_at', 'is', null), eb('expires_at', '>', sql<Date>`now()`)]))
+        .orderBy('username')
+        .limit(1000)
+        .execute();
     },
   }),
   route({
@@ -111,12 +115,13 @@ export const grcRoutes = [
     params: object,
     handler: async ({ svc, s, params }) => {
       await svc.grc.object(params.smsi, params.id, (s as Session).user);
-      return (
-        await svc.db.q(
-          'SELECT version,definition,reason,created_by AS "createdBy",created_at AS "createdAt" FROM grc_framework_versions WHERE framework_id=$1 ORDER BY version DESC LIMIT 100',
-          [params.id],
-        )
-      ).rows;
+      return svc.db.k
+        .selectFrom('grc_framework_versions')
+        .select(['version', 'definition', 'reason', 'created_by as createdBy', 'created_at as createdAt'])
+        .where('framework_id', '=', params.id)
+        .orderBy('version', 'desc')
+        .limit(100)
+        .execute();
     },
   }),
   route({

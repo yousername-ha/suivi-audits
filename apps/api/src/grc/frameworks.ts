@@ -1,8 +1,42 @@
 import { FrameworkDefinition, FrameworkImport, MappingData, type GrcObject } from '@suivi/shared';
 import type { SessionUser } from '../auth.js';
-import type { Client } from '../db/db.js';
+import { sql } from 'kysely';
+import { surConnexion, type Client, type Kdb } from '../db/db.js';
 import { HttpError } from '../http/errors.js';
 import { hash, type Grc } from './core.js';
+
+/** Référentiel actif du périmètre portant cet identifiant (chemin jsonb fixe). */
+const memeIdentifiant = (k: Kdb, smsi: string, identifiant: string) =>
+  k
+    .selectFrom('grc_objects')
+    .select('id')
+    .where('smsi_id', '=', smsi)
+    .where('kind', '=', 'framework')
+    .where('archived', '=', false)
+    .where(sql<string>`data->'definition'->>'identifier'`, '=', identifiant)
+    .executeTakeFirst();
+
+/** Version publiée (immuable) d'un référentiel du périmètre. */
+const publierVersion = (
+  k: Kdb,
+  frameworkId: string,
+  smsi: string,
+  version: number,
+  definition: FrameworkDefinition,
+  reason: string,
+  auteur: string,
+) =>
+  k
+    .insertInto('grc_framework_versions')
+    .values({
+      framework_id: frameworkId,
+      smsi_id: smsi,
+      version,
+      definition: JSON.stringify(definition),
+      reason,
+      created_by: auteur,
+    })
+    .execute();
 
 export class GrcFrameworks {
   constructor(private readonly g: Grc) {}
@@ -12,14 +46,15 @@ export class GrcFrameworks {
     if (attached) return attached;
     const object = await this.g.object(smsi, id, user, false, c);
     if (object.kind !== 'framework') throw new HttpError(422, 'Référentiel attendu.');
-    const row = (
-      await (c ?? this.g.db.pool).query<{ definition: FrameworkDefinition; version: number }>(
-        `SELECT definition,version FROM grc_framework_versions WHERE framework_id=$1 AND version=$2 AND smsi_id=$3`,
-        [id, version, smsi],
-      )
-    ).rows[0];
+    const row = await (c ? surConnexion(c) : this.g.db.k)
+      .selectFrom('grc_framework_versions')
+      .select(['definition', 'version'])
+      .where('framework_id', '=', id)
+      .where('version', '=', version)
+      .where('smsi_id', '=', smsi)
+      .executeTakeFirst();
     if (!row) throw new HttpError(404, 'Version publiée introuvable.');
-    return row;
+    return row as { definition: FrameworkDefinition; version: number };
   }
   async validateMapping(smsi: string, input: unknown, user: SessionUser, c?: Client) {
     const d = MappingData.parse(input);
@@ -64,7 +99,7 @@ export class GrcFrameworks {
     const p = await this.preview(smsi, id, input, user);
     if (p.version !== expected) throw new HttpError(412, 'Version obsolète.');
     if (p.previewId !== previewId) throw new HttpError(422, 'Relancez la simulation.');
-    return this.g.db.tx(async (c) => {
+    return this.g.db.tx(async (c, k) => {
       await this.g.access(smsi, user, true, c);
       let o: GrcObject;
       if (id) {
@@ -89,10 +124,7 @@ export class GrcFrameworks {
           user,
           ip,
         );
-      await c.query(
-        'INSERT INTO grc_framework_versions(framework_id,smsi_id,version,definition,reason,created_by) VALUES($1,$2,$3,$4,$5,$6)',
-        [o.id, smsi, o.version, p.definition, reason, user.username],
-      );
+      await publierVersion(k, o.id, smsi, o.version, p.definition, reason, user.username);
       // Les exigences sont des projections de la publication, jamais un second formulaire modifiable.
       return o;
     }, user.username);
@@ -144,13 +176,7 @@ export class GrcFrameworks {
         throw new HttpError(422, 'Une importation ne valide pas les correspondances.');
       await this.validateMapping(smsi, mapping, user);
     }
-    const duplicate =
-      (
-        await this.g.db.q(
-          `SELECT id FROM grc_objects WHERE smsi_id=$1 AND kind='framework' AND NOT archived AND data->'definition'->>'identifier'=$2`,
-          [smsi, d.definition.identifier],
-        )
-      ).rowCount! > 0;
+    const duplicate = !!(await memeIdentifiant(this.g.db.k, smsi, d.definition.identifier));
     return {
       ...p,
       previewId: hash({ smsi, import: d }),
@@ -165,17 +191,10 @@ export class GrcFrameworks {
     if (p.previewId !== previewId || !p.canImport)
       throw new HttpError(409, 'Simulation obsolète ou référentiel déjà présent.');
     await this.g.permission(user, 'conformite', 'modifier');
-    return this.g.db.tx(async (c) => {
-      await c.query('SELECT id FROM grc_smsis WHERE id=$1 FOR UPDATE', [smsi]);
+    return this.g.db.tx(async (c, k) => {
+      await k.selectFrom('grc_smsis').select('id').where('id', '=', smsi).forUpdate().execute();
       await this.g.access(smsi, user, true, c);
-      if (
-        (
-          await c.query(
-            `SELECT id FROM grc_objects WHERE smsi_id=$1 AND kind='framework' AND NOT archived AND data->'definition'->>'identifier'=$2`,
-            [smsi, d.definition.identifier],
-          )
-        ).rowCount
-      )
+      if (await memeIdentifiant(k, smsi, d.definition.identifier))
         throw new HttpError(409, 'Référentiel déjà importé.');
       const o = await this.g.insert(
         c,
@@ -186,10 +205,7 @@ export class GrcFrameworks {
         user,
         ip,
       );
-      await c.query(
-        'INSERT INTO grc_framework_versions(framework_id,smsi_id,version,definition,reason,created_by) VALUES($1,$2,1,$3,$4,$5)',
-        [o.id, smsi, d.definition, 'Importation simulée et confirmée', user.username],
-      );
+      await publierVersion(k, o.id, smsi, 1, d.definition, 'Importation simulée et confirmée', user.username);
       for (const mapping of d.mappings)
         await this.g.insert(c, smsi, 'mapping', 'Correspondance importée', mapping, user, ip);
       return o;

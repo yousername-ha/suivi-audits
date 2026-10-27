@@ -3,6 +3,7 @@
    liens du registre commun, références des fiches, objets de l'état historique, méthodes, critères et référentiels.
    Lecture seule. Une anomalie est signalée avec son contexte, jamais corrigée automatiquement. */
 import { isObject, type JsonObject } from '@suivi/shared/legacy';
+import { sql } from 'kysely';
 import type { Services } from './services.js';
 
 export interface ControleRelations {
@@ -24,6 +25,7 @@ export async function controleRelations(svc: Services): Promise<ControleRelation
     };
   };
   const state = (await svc.legacy.recompose())?.data ?? {};
+  const k = svc.db.k;
 
   // 1) Références internes de l'état de l'outil de suivi.
   const etat = nouveau('État de l’outil de suivi : références entre objets');
@@ -65,18 +67,20 @@ export async function controleRelations(svc: Services): Promise<ControleRelation
 
   // 2) Références du registre commun (liens et fiches) vers leurs cibles.
   const refs = nouveau('Registre commun : liens et références des fiches');
-  const objets = new Set((await svc.db.q<{ id: string }>('SELECT id FROM grc_objects')).rows.map((r) => r.id));
+  const objets = new Set((await k.selectFrom('grc_objects').select('id').execute()).map((r) => r.id));
   const exigences = new Map<string, Set<string>>();
-  for (const v of (
-    await svc.db.q<{ framework_id: string; version: number; definition: { requirements?: { id: string }[] } }>(
-      'SELECT framework_id,version,definition FROM lib_framework_versions',
-    )
-  ).rows)
-    exigences.set(`${v.framework_id}:${v.version}`, new Set((v.definition.requirements ?? []).map((r) => r.id)));
+  for (const v of await k
+    .selectFrom('lib_framework_versions')
+    .select(['framework_id', 'version', 'definition'])
+    .execute())
+    exigences.set(
+      `${v.framework_id}:${v.version}`,
+      new Set(((v.definition as { requirements?: { id: string }[] }).requirements ?? []).map((r) => r.id)),
+    );
   const documents = new Set(
-    (
-      await svc.db.q<{ document_id: string; version: number }>('SELECT document_id,version FROM document_versions')
-    ).rows.map((r) => `${r.document_id}:${r.version}`),
+    (await k.selectFrom('document_versions').select(['document_id', 'version']).execute()).map(
+      (r) => `${r.document_id}:${r.version}`,
+    ),
   );
   const resolue = (ref: string): boolean => {
     const [type, a, b, ...reste] = ref.split(':');
@@ -92,63 +96,51 @@ export async function controleRelations(svc: Services): Promise<ControleRelation
     if (type === 'document') return documents.has(`${a}:${b}`);
     return true; // forme inconnue : non contrôlée ici
   };
-  for (const l of (
-    await svc.db.q<{ source_ref: string; target_ref: string; type: string }>(
-      'SELECT source_ref,target_ref,type FROM grc_links',
-    )
-  ).rows)
+  for (const l of await k.selectFrom('grc_links').select(['source_ref', 'target_ref', 'type']).execute())
     for (const r of [l.source_ref, l.target_ref]) {
       refs.verifie();
       if (!resolue(r)) refs.anomalie(`lien ${l.type} : référence introuvable ${r}`);
     }
-  for (const o of (
-    await svc.db.q<{ id: string; kind: string; refs: unknown }>(
-      `SELECT id,kind,data->'refs' AS refs FROM grc_objects WHERE jsonb_typeof(data->'refs')='array'`,
-    )
-  ).rows)
-    for (const r of o.refs as unknown[]) {
+  // Chemins jsonb fixes : références portées par les fiches.
+  for (const o of await k
+    .selectFrom('grc_objects')
+    .select(['id', 'kind', sql<unknown[]>`data->'refs'`.as('refs')])
+    .where(sql<string>`jsonb_typeof(data->'refs')`, '=', 'array')
+    .execute())
+    for (const r of o.refs) {
       refs.verifie();
       if (typeof r === 'string' && !resolue(r)) refs.anomalie(`${o.kind} ${o.id} : référence introuvable ${r}`);
     }
 
   // 3) Risques, méthodes, référentiels et fournisseurs.
   const risques = nouveau('Risques, référentiels et fournisseurs');
-  for (const e of (
-    await svc.db.q<{ risk_id: string; method_version_id: string }>(
-      `SELECT e.risk_id,e.method_version_id FROM grc_risk_evaluations e`,
-    )
-  ).rows) {
+  for (const e of await k.selectFrom('grc_risk_evaluations').select(['risk_id', 'method_version_id']).execute()) {
     risques.verifie();
     if (!objets.has(e.risk_id)) risques.anomalie(`appréciation : risque introuvable ${e.risk_id}`);
-    const m = await svc.db.one('SELECT 1 FROM grc_method_versions WHERE id=$1', [e.method_version_id]);
+    const m = await k
+      .selectFrom('grc_method_versions')
+      .select('id')
+      .where('id', '=', e.method_version_id)
+      .executeTakeFirst();
     if (!m) risques.anomalie(`appréciation du risque ${e.risk_id} : version de méthode introuvable`);
   }
-  for (const a of (
-    await svc.db.q<{ smsi_id: string; framework_id: string; version: number }>(
-      'SELECT smsi_id,framework_id,version FROM grc_scope_frameworks',
-    )
-  ).rows) {
+  for (const a of await k.selectFrom('grc_scope_frameworks').select(['smsi_id', 'framework_id', 'version']).execute()) {
     risques.verifie();
     if (!exigences.has(`${a.framework_id}:${a.version}`))
       risques.anomalie(`périmètre ${a.smsi_id} : version rattachée introuvable (${a.framework_id} v${a.version})`);
   }
-  for (const k of (
-    await svc.db.q<{ id: string; requirement_refs: string[] }>('SELECT id,requirement_refs FROM sup_criteria')
-  ).rows)
-    for (const r of k.requirement_refs) {
+  for (const crit of await k.selectFrom('sup_criteria').select(['id', 'requirement_refs']).execute())
+    for (const r of crit.requirement_refs) {
       risques.verifie();
-      if (!resolue(r)) risques.anomalie(`critère fournisseur ${k.id} : exigence introuvable ${r}`);
+      if (!resolue(r)) risques.anomalie(`critère fournisseur ${crit.id} : exigence introuvable ${r}`);
     }
   const fournisseurs = ids(state.suppliers);
-  for (const l of (
-    await svc.db.q<{ smsi_id: string; supplier_id: string }>('SELECT smsi_id,supplier_id FROM sup_scope_links')
-  ).rows) {
+  for (const l of await k.selectFrom('sup_scope_links').select(['smsi_id', 'supplier_id']).execute()) {
     risques.verifie();
     if (!fournisseurs.has(l.supplier_id))
       risques.anomalie(`rattachement au périmètre ${l.smsi_id} : fournisseur absent du registre ${l.supplier_id}`);
   }
-  for (const e of (await svc.db.q<{ id: string; supplier_id: string }>('SELECT id,supplier_id FROM sup_evaluations'))
-    .rows) {
+  for (const e of await k.selectFrom('sup_evaluations').select(['id', 'supplier_id']).execute()) {
     risques.verifie();
     // Une évaluation survit au retrait d'un fournisseur (son nom est figé) : signalé, pas bloquant.
     if (!fournisseurs.has(e.supplier_id))

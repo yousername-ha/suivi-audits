@@ -12,11 +12,13 @@ export const moduleRoutes = [
     tags: ['Modules'],
     access: 'administration:lire',
     handler: async ({ svc }) =>
-      (
-        await svc.db.q(
-          "SELECT id, ts AS created_at, username, details FROM audit_log WHERE action='modules.update' ORDER BY id DESC LIMIT 200",
-        )
-      ).rows,
+      svc.db.k
+        .selectFrom('audit_log')
+        .select(['id', 'ts as created_at', 'username', 'details'])
+        .where('action', '=', 'modules.update')
+        .orderBy('id', 'desc')
+        .limit(200)
+        .execute(),
   }),
   route({
     method: 'GET',

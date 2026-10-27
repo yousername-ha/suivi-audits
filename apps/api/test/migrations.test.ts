@@ -1,12 +1,11 @@
 import crypto from 'node:crypto';
 import { copyFileSync, mkdtempSync, readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import os from 'node:os';
 import path from 'node:path';
-import { is } from 'drizzle-orm';
-import { getTableConfig, PgTable } from 'drizzle-orm/pg-core';
 import { afterAll, describe, expect, it } from 'vitest';
 import { Db, MIGRATIONS_DIR } from '../src/db/db.js';
-import * as schema from '../src/db/schema.js';
+import { lireCatalogue, rendreTypes } from '../src/db/introspection.js';
 import { createLogger } from '../src/log.js';
 import { hashPassword, hotp, sha256hex, Vault } from '../src/security/crypto.js';
 import { Agent, createTestApp, PASSWORD, REPO, type TestApp } from './helpers.js';
@@ -18,21 +17,20 @@ afterAll(async () => {
 });
 
 describe('schéma', () => {
-  it('le schéma Drizzle correspond exactement à la base migrée', async () => {
+  it('les types Kysely versionnés correspondent exactement à la base migrée (ADR 0062)', async () => {
     const t = await createTestApp();
     opened.push(t);
-    const tables = (Object.values(schema) as unknown[]).filter((v): v is PgTable => is(v, PgTable));
-    expect(tables.length).toBeGreaterThanOrEqual(11);
-    for (const tbl of tables) {
-      const cfg = getTableConfig(tbl);
-      const cols = await t.svc.db.q<{ column_name: string; is_nullable: string }>(
-        "SELECT column_name, is_nullable FROM information_schema.columns WHERE table_schema='public' AND table_name=$1",
-        [cfg.name],
+    const c = await t.svc.db.pool.connect();
+    try {
+      const { colonnes, enums, checks } = await lireCatalogue(c);
+      const attendu = readFileSync(
+        path.join(path.dirname(fileURLToPath(import.meta.url)), '../src/db/types.generated.ts'),
+        'utf8',
       );
-      const db = new Map(cols.rows.map((c) => [c.column_name, c.is_nullable === 'YES']));
-      const orm = new Map(cfg.columns.map((c) => [c.name, !c.notNull]));
-      expect([...orm.keys()].sort(), `colonnes de ${cfg.name}`).toEqual([...db.keys()].sort());
-      for (const [k, nullable] of orm) expect(nullable, `${cfg.name}.${k} : nullabilité`).toBe(db.get(k));
+      expect(rendreTypes(colonnes, enums, checks), 'pnpm --filter @suivi/api db:types').toBe(attendu);
+      expect(colonnes.length).toBeGreaterThan(500);
+    } finally {
+      c.release();
     }
   });
 

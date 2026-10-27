@@ -38,6 +38,8 @@ const CODE_TYPE = (classification: string, nature: string) =>
           ? 'PP'
           : 'Remarque';
 
+/* Agrégats du tableau de bord (regroupements, FILTER, statuts terminaux lus dans la politique en jsonb) : SQL paramétré,
+   fragment de portée fixe, valeurs liées (ADR 0062 § 5). */
 const DANS_LA_PORTEE = `NOT o.archived
   AND (o.smsi_id=ANY($1::uuid[]) OR o.registre_id IN (SELECT registre_id FROM registre_perimetres WHERE smsi_id=ANY($1::uuid[])))
   AND (o.registre_id IS NULL OR NOT (o.registre_id=ANY($2::uuid[])))`;
@@ -49,8 +51,8 @@ async function portee(g: Grc, user: SessionUser | null) {
       masques: await g.registres.inaccessiblesPartout(user),
     };
   }
-  const restreints = await g.db.q<{ id: string }>('SELECT id FROM registres WHERE restricted');
-  return { ids: [DEFAULT_SMSI], masques: restreints.rows.map((r) => r.id) };
+  const restreints = await g.db.k.selectFrom('registres').select('id').where('restricted', '=', true).execute();
+  return { ids: [DEFAULT_SMSI], masques: restreints.map((r) => r.id) };
 }
 
 export async function tableauDeBordNatif(

@@ -1,6 +1,6 @@
 # ADR 0003 — PostgreSQL, Drizzle ORM, migrations SQL versionnées
 
-**Statut** : acceptée (phase 0)
+**Statut** : acceptée (phase 0) ; la partie Drizzle est remplacée par l'[ADR 0062](0062-acces-aux-donnees-kysely.md) (Kysely, types générés de la base migrée).
 
 ## Contexte
 Une base v2 existante doit être migrée **sans perte**. La v2 enregistrait ses migrations dans `schema_migrations`, et `001_init.sql` est publié.

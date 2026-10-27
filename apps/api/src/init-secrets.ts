@@ -253,6 +253,12 @@ function main() {
     const updateKey = path.join(updateSecrets, 'backup-pass');
     genererCleMiseAJour(updateKey);
     dossier(path.join(donnees, 'etat', 'mises-a-jour'), 0, 0, 0o755);
+    // Reçus structurés des installations : lus par l'API (lecture seule), jamais servis par le frontal public.
+    dossier(path.join(donnees, 'etat', 'recus-mises-a-jour'), 0, 0, 0o755);
+    // SBOM vérifiés des versions installées (ADR 0063) : lus par l'API, jamais servis par le frontal public.
+    dossier(path.join(donnees, 'etat', 'sbom'), 0, 0, 0o755);
+    // Monté à la place de /root/.ssh et /root/.docker dans l'exécutant quand aucun identifiant n'est configuré (ADR 0061).
+    dossier(path.join(donnees, 'updater-sans-identifiants'), 0, 0, 0o555);
     dossier(path.join(donnees, 'etat', 'sauvegardes'), 0, 0, 0o755);
     const tlsDir = path.join(donnees, 'secrets', 'tls-web');
     dossier(tlsDir, WEB_UID, WEB_UID, 0o700);

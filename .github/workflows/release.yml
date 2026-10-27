@@ -27,10 +27,10 @@ jobs:
       prerelease: ${{ steps.plan.outputs.prerelease }}
       title: ${{ steps.plan.outputs.title }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 26
           # Aucun paquet n'est installé dans ce job ; ne pas chercher pnpm pour un cache automatique.
@@ -42,33 +42,34 @@ jobs:
         run: node scripts/ci/preparer-publication.mjs
       - name: Section de la version et « Notes de mise à jour »
         run: node scripts/ci/verifier-changelog.mjs CHANGELOG.md --section "${GITHUB_REF_NAME#v}" > notes.md
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: notes
           path: notes.md
 
+  # Trois jobs séparés (ADR 0063) : seul « sign » détient l'identité de signature ; Trivy, outil tiers, s'exécute
+  # dans un job sans droit d'écriture ni identité, sur une archive de l'image, sans identifiants exposés.
   images:
     needs: [notes]
-    name: Images ${{ matrix.image }}
+    name: Construction ${{ matrix.image }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
       contents: read
       packages: write
-      id-token: write
     strategy:
       matrix:
         image: [api, web, updater]
     steps:
-      - uses: actions/checkout@v5
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
         with:
           images: ghcr.io/yousername-ha/suivi-audits-${{ matrix.image }}
           flavor: latest=false
@@ -77,7 +78,7 @@ jobs:
           labels: |
             org.opencontainers.image.version=${{ needs.notes.outputs.version }}
       - id: build
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: .
           file: docker/${{ matrix.image }}.Dockerfile
@@ -87,59 +88,120 @@ jobs:
           tags: ghcr.io/yousername-ha/suivi-audits-${{ matrix.image }}:candidate-${{ github.sha }}
           labels: ${{ steps.meta.outputs.labels }}
           provenance: true
-      - name: Trivy (échec sur HIGH et CRITICAL) et SBOM
-        env:
-          REF: ghcr.io/yousername-ha/suivi-audits-${{ matrix.image }}@${{ steps.build.outputs.digest }}
-        run: |
-          set -e
-          trivy() { docker run --rm -v "$HOME/.docker:/root/.docker:ro" -v "$PWD:/work" -w /work aquasec/trivy:0.75.0 "$@"; }
-          trivy image --scanners vuln --severity HIGH,CRITICAL --exit-code 1 --no-progress "$REF"
-          trivy image --format cyclonedx --output sbom.cdx.json "$REF"
-      - uses: sigstore/cosign-installer@v3
-      - name: Signature et attestation SBOM (cosign, sans clé)
-        env:
-          REF: ghcr.io/yousername-ha/suivi-audits-${{ matrix.image }}@${{ steps.build.outputs.digest }}
-        run: |
-          cosign sign --yes "$REF"
-          cosign attest --yes --type cyclonedx --predicate sbom.cdx.json "$REF"
-      - uses: actions/upload-artifact@v5
-        with:
-          name: sbom-${{ matrix.image }}
-          path: sbom.cdx.json
-      - name: Empreinte vérifiée pour la publication finale
+      - name: Empreinte de l'image construite
         env:
           DIGEST: ${{ steps.build.outputs.digest }}
-        run: printf '%s\n' "$DIGEST" > digest.txt
-      - uses: actions/upload-artifact@v5
+        run: |
+          [[ "$DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]]
+          printf '%s\n' "$DIGEST" > digest.txt
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: digest-${{ matrix.image }}
           path: digest.txt
 
+  scan:
+    needs: [images]
+    name: Analyse ${{ matrix.image }} (Trivy, sans secret)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: read
+    strategy:
+      matrix:
+        image: [api, web, updater]
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        with:
+          name: digest-${{ matrix.image }}
+      - name: Archive de l'image par empreinte (jeton en lecture, effacé avant l'analyse)
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          digest=$(cat digest.txt)
+          [[ "$digest" =~ ^sha256:[a-f0-9]{64}$ ]]
+          ref="ghcr.io/yousername-ha/suivi-audits-${{ matrix.image }}@$digest"
+          printf '%s' "$TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin > /dev/null
+          docker pull --quiet "$ref" > /dev/null
+          docker logout ghcr.io > /dev/null
+          rm -f "$HOME/.docker/config.json"
+          docker save -o "$RUNNER_TEMP/image.tar" "$ref"
+      - name: Trivy (publication officielle, empreinte vérifiée)
+        run: scripts/ci/installer-outils.sh trivy
+      - name: Trivy (échec sur HIGH et CRITICAL) et SBOM
+        run: |
+          set -e
+          trivy image --input "$RUNNER_TEMP/image.tar" --scanners vuln --severity HIGH,CRITICAL --exit-code 1 --no-progress
+          trivy image --input "$RUNNER_TEMP/image.tar" --format cyclonedx --output sbom.cdx.json
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: sbom-${{ matrix.image }}
+          path: sbom.cdx.json
+
+  sign:
+    needs: [images, scan]
+    name: Signature ${{ matrix.image }} et attestation SBOM
+    # Environnement protégé (ADR 0063) : la signature attend l'approbation du RSSI, et seule une étiquette v* y accède.
+    # Sans signature, ni la page de la version ni l'installation ne sont possibles.
+    environment: publication
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    strategy:
+      matrix:
+        image: [api, web, updater]
+    steps:
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3.9.1
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        with:
+          name: digest-${{ matrix.image }}
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        with:
+          name: sbom-${{ matrix.image }}
+      - name: Signature et attestation SBOM (cosign, sans clé) de l'empreinte analysée
+        run: |
+          set -euo pipefail
+          digest=$(cat digest.txt)
+          [[ "$digest" =~ ^sha256:[a-f0-9]{64}$ ]]
+          ref="ghcr.io/yousername-ha/suivi-audits-${{ matrix.image }}@$digest"
+          cosign sign --yes "$ref"
+          cosign attest --yes --type cyclonedx --predicate sbom.cdx.json "$ref"
+
   page:
     name: Page de la version
-    needs: [notes, images]
+    needs: [notes, images, sign]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
       contents: write
       packages: write
     steps:
-      - uses: actions/checkout@v5
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: sigstore/cosign-installer@v3
-      - uses: actions/download-artifact@v5
+      - uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3.9.1
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
           name: notes
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
           pattern: sbom-*
           merge-multiple: false
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
           pattern: digest-*
           merge-multiple: false
@@ -156,6 +218,9 @@ jobs:
             image="ghcr.io/$GITHUB_REPOSITORY-$component"
             cosign verify "$image@$digest" --certificate-identity "$identity" \
               --certificate-oidc-issuer https://token.actions.githubusercontent.com
+            # L'exécutant refuse une image sans attestation SBOM signée : la vérifier avant toute exposition (ADR 0063).
+            cosign verify-attestation "$image@$digest" --type cyclonedx --certificate-identity "$identity" \
+              --certificate-oidc-issuer https://token.actions.githubusercontent.com > /dev/null
             if existing=$(docker buildx imagetools inspect "$image:$VERSION" --format '{{json .Manifest}}' 2>/dev/null); then
               [ "$(jq -r .digest <<< "$existing")" = "$digest" ] || { echo 'Version déjà publiée avec une autre empreinte'; exit 1; }
             fi

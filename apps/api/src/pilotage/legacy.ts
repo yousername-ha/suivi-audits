@@ -4,6 +4,7 @@ import type { SessionUser } from '../auth.js';
 import type { Client } from '../db/db.js';
 import { DEFAULT_SMSI, hash, type Grc } from '../grc/core.js';
 import { HttpError } from '../http/errors.js';
+import { verrouillerEtat } from '../legacy/store.js';
 
 const LEGACY_PILOTAGE = {
   scope: {
@@ -195,7 +196,7 @@ export class PilotageLegacy {
     ip: string,
   ) {
     return this.g.db.tx(async (c) => {
-      await c.query('SELECT id FROM app_state WHERE id=1 FOR UPDATE');
+      await verrouillerEtat(c);
       const { object, raw, state } = await this.get(smsi, key, id, user, c, true);
       if (state.version !== expected || hash(raw) !== input.sourceSha)
         throw new HttpError(412, 'La fiche historique a changé. Rechargez avant d’enregistrer.');
