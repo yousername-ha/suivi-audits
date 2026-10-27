@@ -6,6 +6,14 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
+Aucune action.
+
+## [5.0.0] — 2026-10-27
+
+**Version majeure** : deux migrations suppriment définitivement des données (catalogue « Environnement », page « Conformité IA ») et l'exécutant de mise à jour ne monte plus `/root/.ssh` ni `/root/.docker` par défaut. Lire les notes de mise à jour ci-dessous avant de lancer la mise à jour.
+
+### Notes de mise à jour
+
 L'exécutant de mise à jour ne monte plus `/root/.ssh` ni `/root/.docker` par défaut ([ADR 0061](docs/adr/0061-mise-a-jour-web-renforcee.md)). Une installation qui se connecte encore au registre `ghcr.io` ou lit le dépôt par clé de déploiement les conserve automatiquement (`UPDATER_DOCKER_CONFIG`, `UPDATER_SSH_DIR` ajoutés à `.env` par la mise à jour, qui l'annonce) ; les retirer ensuite si le dépôt et les images sont publics. La fenêtre de maintenance est désactivée par défaut. Aucune migration SQL pour ces changements.
 La migration `037_retrait_environnement.sql` **supprime définitivement** les tables du catalogue « Environnement » (`environment_versions`, `environment_configuration`) et des évaluations IA versionnées (`risk_assessments`), sur décision du 25/10/2026 ([ADR 0046](docs/adr/0046-retrait-du-catalogue-environnement.md)). La sauvegarde automatique de `scripts/mettre-a-jour.sh` la précède ; aucune autre donnée n'est touchée (registre IA et évaluations de l'outil de suivi, journal d'audit, Configuration GRC).
 La migration `043_retrait_conformite_ia.sql` **supprime définitivement** les données de la page « Conformité IA » (registre des usages, scénarios évalués, plan d'action, politiques) et retire le module de droits « ia » des rôles personnalisés, sur décision du 26/10/2026 ([ADR 0057](docs/adr/0057-retrait-de-la-conformite-ia.md)). La sauvegarde automatique de `scripts/mettre-a-jour.sh` la précède : exporter le registre IA avant la mise à jour pour en garder une trace.
@@ -50,6 +58,9 @@ Aucune action sur le serveur : la mise à jour applique les migrations additives
 - **Administration** : la carte « Environnement » devient « Environnement (usages de l'IA) » et la page dit que ce catalogue est distinct de la Configuration GRC (rien n'est partagé, chaque évaluation garde sa version).
 - **Tuile « Continuité »** (cartes de périmètres et synthèse) : seuls les plans de type PCRA sont comptés, sous le libellé « PCRA » ; un PCA ou un PRA seul n'en est pas un.
 - La fenêtre de fiche d'un élément a un bouton de fermeture nommé (« Fermer la fiche de l’élément »).
+
+### Corrigé
+- **Restauration : contrôle de santé de l'application** : `attendre_sante` (`scripts/lib-commun.sh`) interroge toujours l'application au moins une fois avant de renoncer. Avec un délai très court, un changement de seconde pouvait faire échouer la restauration alors que l'application était saine (échec intermittent du test `restore-scripts` en CI).
 
 ### Sécurité
 - **Publication soumise à approbation** ([ADR 0063](docs/adr/0063-chaine-de-publication-durcie.md)) : la signature des images attend l'approbation du RSSI dans l'environnement GitHub `publication`, accessible aux seules étiquettes `v*`. Sans cette approbation, aucune image n'est signée, donc aucune version n'est installable.
