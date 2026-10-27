@@ -21,6 +21,21 @@ Suivre également [CONTRIBUTING.md](CONTRIBUTING.md).
   Publier les changements par la PR ouverte, sans fusion ni déploiement.
 - Communiquer en français les étapes franchies et limites.
 
+## Sessions parallèles (directive commune du 27/10/2026, validée par le RSSI)
+
+Plusieurs sessions Claude peuvent travailler en même temps sur le dépôt. Règles communes :
+
+1. Branche de référence unique : `claude-suivi-smsi`. Chaque session travaille sur sa propre branche (`claude/…`) et y
+   fusionne `claude-suivi-smsi` avant tout travail.
+2. Toute PR vise `claude-suivi-smsi`, en fusion classique (merge commit), après les 7 contrôles verts. Rien ne vise
+   `main` directement : `main` n'évolue que par la PR `claude-suivi-smsi` → `main`, fusionnée par le RSSI ou sur son
+   accord explicite. Aucune étiquette `v*` sans le RSSI.
+3. Les PR Dependabot qui visent `main` sont redirigées vers `claude-suivi-smsi`.
+4. Avant de toucher `apps/api/src` ou un fichier tenu par une autre session, prévenir celle-ci par le RSSI. Fichier tenu
+   au 27/10/2026 : `apps/api/src/historique/gap.ts` (GAP IA, session Sonnet).
+5. Numéros d'ADR : annoncer le numéro pris au RSSI avant de l'utiliser (0065 retenu par la session Sonnet le 27/10/2026).
+6. Dossier de reprise commun : le plus récent de `docs/01_REPRISE_IA/REPRISE-*.md`.
+
 ## Invariants techniques
 
 - Réutiliser React/Mantine, `packages/ui`, Fastify, zod et PostgreSQL.
