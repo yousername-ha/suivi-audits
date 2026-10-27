@@ -5,6 +5,7 @@ import { BackupJobOut, BackupReportOut } from '@suivi/shared';
 import { z } from 'zod';
 import type { Config } from './config.js';
 import { sql, type Selectable } from 'kysely';
+import type { AlertesExploitation } from './alertes-exploitation.js';
 import type { Actor, Client, Db } from './db/db.js';
 import type { BackupJobs } from './db/types.generated.js';
 import { HttpError } from './http/errors.js';
@@ -43,6 +44,7 @@ export class Backups {
   constructor(
     private readonly cfg: Config,
     private readonly db: Db,
+    private readonly alertes: AlertesExploitation,
   ) {}
   // Verrou consultatif transactionnel partagé avec les opérations : appel SQL direct (ADR 0062 §5).
   private async lock(c: Client) {
@@ -263,6 +265,7 @@ export class Backups {
         { code },
         c,
       );
+      if (!report) await this.alertes.signaler(k, 'sauvegarde', id.slice(0, 8));
       return out(r);
     });
   }

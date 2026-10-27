@@ -2,7 +2,12 @@
    que LIRE : elle décrit, pour chaque durée réglée, ce qui serait candidat à une purge. Aucune suppression n'est lancée ici ni
    par un planificateur ; la suppression définitive d'un document reste l'action manuelle de Documents. Le journal d'audit est
    immuable et ne figure pas ici. */
-import type { ApercuConservation, CategorieApercuConservation, SettingsValues } from '@suivi/shared';
+import type {
+  ApercuConservation,
+  CategorieApercuConservation,
+  MotifExclusionConservation,
+  SettingsValues,
+} from '@suivi/shared';
 import { sql } from 'kysely';
 import type { Db } from './db/db.js';
 import { totalUsages, usagesPreuve } from './documents-usage.js';
@@ -33,6 +38,19 @@ export class Conservation {
       ancien = lignes[0]?.deleted_at ?? null;
       for (const l of lignes) if (totalUsages(await usagesPreuve(this.db.pool, l.id)) > 0) proteges++;
     }
+    const exclusionsDocs: MotifExclusionConservation[] = [];
+    if (docs !== null) {
+      const recents = await this.db.k
+        .selectFrom('documents')
+        .select(sql<number>`count(*)::int`.as('n'))
+        .where('deleted_at', 'is not', null)
+        .where('deleted_at', '>=', limite(docs))
+        .executeTakeFirstOrThrow();
+      exclusionsDocs.push(
+        { motif: 'Cités comme preuve : jamais candidats à la suppression définitive', count: proteges },
+        { motif: `Dans la corbeille depuis moins de ${docs} jours`, count: recents.n },
+      );
+    }
     categories.push({
       id: 'documents_corbeille',
       label: 'Documents dans la corbeille',
@@ -41,6 +59,7 @@ export class Conservation {
       protectedCount: proteges,
       oldest: ancien ? ancien.toISOString() : null,
       note: 'La suppression définitive se fait à la main dans Documents. Un document cité comme preuve ne peut pas être supprimé définitivement.',
+      exclusions: exclusionsDocs,
     });
 
     const rappels = r.rappelsLusJours;
@@ -52,6 +71,20 @@ export class Conservation {
         .where('read_at', 'is not', null)
         .where('read_at', '<', limite(rappels))
         .executeTakeFirstOrThrow();
+    const exclusionsRappels: MotifExclusionConservation[] = [];
+    if (rappels !== null) {
+      const autres = await this.db.k
+        .selectFrom('grc_notifications')
+        .select([
+          sql<number>`count(*) filter (where read_at is null)::int`.as('nonLus'),
+          sql<number>`count(*) filter (where read_at >= ${limite(rappels)})::int`.as('recents'),
+        ])
+        .executeTakeFirstOrThrow();
+      exclusionsRappels.push(
+        { motif: 'Pas encore lus : toujours conservés', count: autres.nonLus },
+        { motif: `Lus depuis moins de ${rappels} jours`, count: autres.recents },
+      );
+    }
     categories.push({
       id: 'rappels_lus',
       label: 'Rappels déjà lus',
@@ -60,6 +93,7 @@ export class Conservation {
       protectedCount: 0,
       oldest: lus.ancien ? lus.ancien.toISOString() : null,
       note: 'Aucune suppression des rappels n’existe aujourd’hui ; l’aperçu mesure seulement leur ancienneté.',
+      exclusions: exclusionsRappels,
     });
 
     const archives = r.elementsArchivesJours;
@@ -71,6 +105,16 @@ export class Conservation {
         .where('archived', '=', true)
         .where('updated_at', '<', limite(archives))
         .executeTakeFirstOrThrow();
+    const exclusionsArchives: MotifExclusionConservation[] = [];
+    if (archives !== null) {
+      const recents = await this.db.k
+        .selectFrom('grc_objects')
+        .select(sql<number>`count(*)::int`.as('n'))
+        .where('archived', '=', true)
+        .where('updated_at', '>=', limite(archives))
+        .executeTakeFirstOrThrow();
+      exclusionsArchives.push({ motif: `Archivés depuis moins de ${archives} jours`, count: recents.n });
+    }
     categories.push({
       id: 'elements_archives',
       label: 'Éléments archivés (fiches, registres)',
@@ -79,6 +123,7 @@ export class Conservation {
       protectedCount: 0,
       oldest: arch.ancien ? arch.ancien.toISOString() : null,
       note: 'Un élément archivé garde ses liens et son historique ; aucune purge n’existe aujourd’hui pour cette catégorie.',
+      exclusions: exclusionsArchives,
     });
 
     return { generatedAt: maintenant.toISOString(), automaticPurge: false, categories };

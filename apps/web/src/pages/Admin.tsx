@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { api, download, errorMessage, get } from '../api';
 import { ConfirmButton, ErrorAlert, fmtDate, fmtOctets, PresenceBar } from '../components/common';
+import { repartitionLignes } from '../components/repartition';
 import { usePresence } from '../realtime';
 import { useCan } from '../session';
 import { GroupsPanel, RolesPanel, UsersPanel } from './AdminAccess';
@@ -545,10 +546,12 @@ export function DetailsTechniques() {
         ['PostgreSQL', d.postgres],
         ['Taille de la base', d.dbSize],
         ['Volume des pièces (documents, versions comprises)', fmtOctets(Number(d.documentsBytes ?? 0))],
+        ...repartitionLignes(d.repartition),
         ['Relevé du', d.measuredAt ? fmtDate(String(d.measuredAt)) : 'Non disponible'],
         ['Migrations appliquées', (d.migrations as string[]).join(', ')],
         ['Temps réel', d.realtime],
         ['Antivirus (ClamAV)', d.clamav ?? 'Non disponible'],
+        ['Version de ClamAV', d.clamavVersion ?? 'Non disponible'],
         ['Double authentification', d.mfaRequired ? 'obligatoire' : 'facultative'],
         ['Identifiant de la clé maître', d.keyId],
         ['Modules repris de l’ancienne interface', (d.legacyTakenOver as string[]).join(', ') || 'aucun (phase 0)'],

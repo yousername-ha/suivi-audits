@@ -12,6 +12,7 @@ import {
 import { sql } from 'kysely';
 import { z } from 'zod';
 import type { Session } from '../auth.js';
+import { clamavVersion } from '../files.js';
 import { DUREE_DEBUG_MAX_MINUTES } from '../journal-technique.js';
 import { NIVEAUX_TECHNIQUES } from '../log.js';
 import { HttpError } from '../http/errors.js';
@@ -455,6 +456,21 @@ export const adminRoutes = [
         .selectFrom('document_versions')
         .select(sql<string>`COALESCE(sum(size), 0)::text`.as('octets'))
         .executeTakeFirst();
+      // Répartition de l'espace : pièces (versions de documents, contenu compris), journaux (audit, historique de l'état),
+      // reste de la base. Tailles totales des relations (index et stockage hors ligne compris), lues à la demande.
+      const taillePieces = (
+        await sql<{ o: string }>`SELECT pg_total_relation_size('document_versions')::text AS o`.execute(k)
+      ).rows[0];
+      const tailleJournaux = (
+        await sql<{
+          o: string;
+        }>`SELECT (pg_total_relation_size('audit_log') + pg_total_relation_size('state_history'))::text AS o`.execute(k)
+      ).rows[0];
+      const tailleBase = (await sql<{ o: string }>`SELECT pg_database_size(current_database())::text AS o`.execute(k))
+        .rows[0];
+      const totalOctets = Number(tailleBase?.o ?? 0);
+      const piecesOctets = Number(taillePieces?.o ?? 0);
+      const journauxOctets = Number(tailleJournaux?.o ?? 0);
       const counts = (
         await sql<Record<string, number>>`SELECT (SELECT count(*) FROM users)::int AS users,
           (SELECT count(*) FROM documents WHERE deleted_at IS NULL)::int AS documents,
@@ -482,6 +498,14 @@ export const adminRoutes = [
         clamav: c.clamav
           ? `${c.clamav.host}:${c.clamav.port}${c.clamav.required ? ' (obligatoire)' : ''}`
           : 'désactivé',
+        /** Version annoncée par le démon ; nulle s'il est désactivé ou injoignable. */
+        clamavVersion: await clamavVersion(c),
+        repartition: {
+          totalOctets,
+          piecesOctets,
+          journauxOctets,
+          autresOctets: Math.max(0, totalOctets - piecesOctets - journauxOctets),
+        },
         mfaRequired: c.mfaRequired,
         session: c.session,
         maxUploadMb: c.maxUploadMb,

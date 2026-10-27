@@ -321,6 +321,15 @@ describe('informations système', () => {
     expect(info.documentsBytes).toEqual(expect.any(Number));
     expect(Number.isNaN(Date.parse(info.measuredAt))).toBe(false);
     expect(info.counts).toMatchObject({ users: expect.any(Number), audit: expect.any(Number) });
+    // Répartition de l'espace : les trois parts sont cohérentes avec la taille totale de la base.
+    expect(info.repartition.totalOctets).toBeGreaterThan(0);
+    expect(info.repartition.piecesOctets).toBeGreaterThanOrEqual(0);
+    expect(info.repartition.journauxOctets).toBeGreaterThan(0);
+    expect(
+      info.repartition.piecesOctets + info.repartition.journauxOctets + info.repartition.autresOctets,
+    ).toBeGreaterThanOrEqual(info.repartition.totalOctets);
+    // Antivirus désactivé en test : pas de version inventée.
+    expect(info.clamavVersion).toBeNull();
   });
 });
 
