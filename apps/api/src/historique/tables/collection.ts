@@ -13,7 +13,8 @@
    vide, ou une valeur d'un autre type, reste dans la colonne du parent. À la lecture, les lignes liées l'emportent, sinon la
    colonne. Les entrées atypiques et les champs inconnus des sous-listes sont conservés comme pour les listes. */
 import { isObject, type Json, type JsonObject } from '@suivi/shared/legacy';
-import type { Client } from '../../db/db.js';
+import { sql } from 'kysely';
+import { surConnexion, type Client } from '../../db/db.js';
 import { HttpError } from '../../http/errors.js';
 import type { ModuleMapper } from '../../legacy/store.js';
 
@@ -51,10 +52,14 @@ const conforme = (t: ColType, v: unknown) =>
         : v !== undefined && v !== null; // json : un null explicite reste dans `extra` (NULL SQL = champ absent)
 
 type Rangee = Record<string, unknown> & { extra: JsonObject; cle?: string };
+/* Tables et colonnes viennent des descriptions de ce module (liste fermée, jamais d'une saisie) : identifiants cités par
+   sql.table / sql.id, valeurs liées (ADR 0062). */
+const presence = (c: Client) => surConnexion(c).selectFrom('suivi_presence');
 
 /** Entrées d'une table, dans l'ordre d'origine. */
 async function lireRangees(c: Client, spec: ListeSpec): Promise<Rangee[]> {
-  return (await c.query<Rangee>(`SELECT * FROM ${spec.table} ORDER BY position, seq`)).rows;
+  return (await sql<Rangee>`SELECT * FROM ${sql.table(spec.table)} ORDER BY position, seq`.execute(surConnexion(c)))
+    .rows;
 }
 /** Sous-listes déjà lues : colonne du parent → clé du parent → entrées, dans l'ordre. */
 type Sous = Map<string, Map<string, Json[]>>;
@@ -73,8 +78,11 @@ async function composer(c: Client, spec: ListeSpec, rangees: readonly Rangee[]):
   const sous: Sous = new Map();
   for (const col of spec.cols) {
     if (!col.enfants) continue;
-    const lignes = (await c.query<Rangee>(`SELECT * FROM ${col.enfants.table} ORDER BY parent_seq, position, seq`))
-      .rows;
+    const lignes = (
+      await sql<Rangee>`SELECT * FROM ${sql.table(col.enfants.table)} ORDER BY parent_seq, position, seq`.execute(
+        surConnexion(c),
+      )
+    ).rows;
     const valeurs = await composer(c, col.enfants, lignes);
     const parParent = new Map<string, Json[]>();
     for (const [i, l] of lignes.entries()) {
@@ -125,10 +133,8 @@ async function inserer(
     ...spec.cols.map((col) => col.c),
   ];
   const params = [position, extra, ...(parent === null ? [] : [parent]), ...(cle === null ? [] : [cle]), ...valeurs];
-  const r = await c.query<{ seq: string }>(
-    `INSERT INTO ${spec.table}(${noms.join(',')}) VALUES (${params.map((_, k) => `$${k + 1}`).join(',')}) RETURNING seq`,
-    params,
-  );
+  const r = await sql<{ seq: string }>`INSERT INTO ${sql.table(spec.table)} (${sql.join(noms.map((n) => sql.id(n)))})
+    VALUES (${sql.join(params)}) RETURNING seq`.execute(surConnexion(c));
   for (const [col, liste] of sousListes)
     for (const [i, x] of liste.entries()) await inserer(c, col.enfants!, i, null, x, r.rows[0]!.seq);
 }
@@ -136,7 +142,7 @@ async function inserer(
 /** Remplace le contenu d'une table (les sous-listes suivent par cascade) ; le premier élément de chaque couple est la clé
     d'une carte (null pour une liste). */
 async function ecrireRangees(c: Client, spec: ListeSpec, entrees: readonly [string | null, Json][]): Promise<void> {
-  await c.query(`DELETE FROM ${spec.table}`);
+  await sql`DELETE FROM ${sql.table(spec.table)}`.execute(surConnexion(c));
   for (const [position, [cle, e]] of entrees.entries()) await inserer(c, spec, position, cle, e, null);
 }
 
@@ -144,14 +150,14 @@ async function ecrireRangees(c: Client, spec: ListeSpec, entrees: readonly [stri
 const videOuAbsent = (v: Json | undefined) => v === undefined || v === null || (isObject(v) && !Object.keys(v).length);
 
 async function effacerPresence(c: Client, key: string) {
-  await c.query('DELETE FROM suivi_presence WHERE cle=$1', [key]);
+  await surConnexion(c).deleteFrom('suivi_presence').where('cle', '=', key).execute();
 }
 
 /* ---------------------------------------------------------------- liste */
 async function lireCollection(c: Client, spec: CollectionSpec): Promise<Json | undefined> {
   const lignes = await lireEntrees(c, spec);
   if (!lignes.length)
-    return (await c.query('SELECT 1 FROM suivi_presence WHERE cle=$1', [spec.key])).rowCount ? [] : undefined;
+    return (await presence(c).select('cle').where('cle', '=', spec.key).executeTakeFirst()) ? [] : undefined;
   return lignes.map((l) => l.valeur);
 }
 /** Remplace le contenu par la valeur de la clé (undefined, null ou objet vide : module vidé). */
@@ -159,7 +165,7 @@ export async function ecrireCollection(c: Client, spec: CollectionSpec, value: J
   await effacerPresence(c, spec.key);
   if (videOuAbsent(value)) return void (await ecrireRangees(c, spec, []));
   if (!Array.isArray(value)) throw new HttpError(422, `La clé « ${spec.key} » doit être une liste.`);
-  await c.query("INSERT INTO suivi_presence(cle,kind) VALUES ($1,'liste')", [spec.key]);
+  await surConnexion(c).insertInto('suivi_presence').values({ cle: spec.key, kind: 'liste' }).execute();
   await ecrireRangees(
     c,
     spec,
@@ -169,13 +175,9 @@ export async function ecrireCollection(c: Client, spec: CollectionSpec, value: J
 
 /* ---------------------------------------------------------------- groupe */
 async function lireGroupe(c: Client, spec: GroupeSpec): Promise<Json | undefined> {
-  const p = (
-    await c.query<{ champs: string[]; reste: JsonObject }>('SELECT champs, reste FROM suivi_presence WHERE cle=$1', [
-      spec.key,
-    ])
-  ).rows[0];
+  const p = await presence(c).select(['champs', 'reste']).where('cle', '=', spec.key).executeTakeFirst();
   if (!p) return undefined;
-  const o: JsonObject = { ...p.reste };
+  const o: JsonObject = { ...(p.reste as JsonObject) };
   for (const part of spec.parts)
     if (p.champs.includes(part.field)) o[part.field] = (await lireEntrees(c, part)).map((l) => l.valeur);
   return o;
@@ -198,25 +200,24 @@ export async function ecrireGroupe(c: Client, spec: GroupeSpec, value: Json | un
       v.map((e) => [null, e]),
     );
   }
-  await c.query("INSERT INTO suivi_presence(cle,kind,champs,reste) VALUES ($1,'objet',$2,$3)", [
-    spec.key,
-    champs,
-    reste,
-  ]);
+  await surConnexion(c)
+    .insertInto('suivi_presence')
+    .values({ cle: spec.key, kind: 'objet', champs, reste: JSON.stringify(reste) })
+    .execute();
 }
 
 /* ---------------------------------------------------------------- carte */
 async function lireCarte(c: Client, spec: CarteSpec): Promise<Json | undefined> {
   const lignes = await lireEntrees(c, spec);
   if (!lignes.length)
-    return (await c.query('SELECT 1 FROM suivi_presence WHERE cle=$1', [spec.key])).rowCount ? {} : undefined;
+    return (await presence(c).select('cle').where('cle', '=', spec.key).executeTakeFirst()) ? {} : undefined;
   return Object.fromEntries(lignes.map((l) => [l.rangee.cle as string, l.valeur]));
 }
 export async function ecrireCarte(c: Client, spec: CarteSpec, value: Json | undefined): Promise<void> {
   await effacerPresence(c, spec.key);
   if (value === undefined || value === null) return void (await ecrireRangees(c, spec, []));
   if (!isObject(value)) throw new HttpError(422, `La clé « ${spec.key} » doit être un objet.`);
-  await c.query("INSERT INTO suivi_presence(cle,kind) VALUES ($1,'objet')", [spec.key]);
+  await surConnexion(c).insertInto('suivi_presence').values({ cle: spec.key, kind: 'objet' }).execute();
   await ecrireRangees(c, spec, Object.entries(value));
 }
 

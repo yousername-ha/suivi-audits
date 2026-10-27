@@ -55,6 +55,11 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `grc/study-config.ts` | 0 | Converti (lot 23) |
 | `grc/suppliers.ts` | 0 | Converti (lot 3) |
 | `grc/validations.ts` | 0 | Converti (lot 23) |
+| `historique/ecarts-natifs.ts` | 0 | Converti (lot 27) |
+| `historique/registre.ts` | 0 | Converti (lot 27) |
+| `historique/tables/collection.ts` | 0 | Converti (lot 27) ; tables des descriptions citées par sql.table / sql.id |
+| `historique/tables/invest.ts` | 0 | Converti (lot 27) |
+| `historique/tables/reglages.ts` | 0 | Converti (lot 27) |
 | `jeu-de-test.ts` | 0 | Converti (lot 24) |
 | `journal-technique.ts` | 0 | Converti (lot 24) |
 | `legacy/store.ts` | 0 | Converti (lot 22) |
@@ -81,11 +86,6 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `systeme.ts` | 0 | Converti (lot 24) |
 | `types-processus.ts` | 0 | Converti (lot 1) |
 | `walls.ts` | 0 | Converti (lot 21) |
-| `historique/tables/collection.ts` | 11 | À convertir |
-| `historique/tables/invest.ts` | 7 | À convertir |
-| `historique/tables/reglages.ts` | 3 | À convertir |
 | `realtime.ts` | 3 | Reste en SQL (LISTEN/NOTIFY) |
-| `historique/registre.ts` | 2 | À convertir |
-| `historique/ecarts-natifs.ts` | 1 | À convertir |
 
-Reste à convertir : 27 appels dans 6 fichiers.
+Reste à convertir : 3 appels dans 1 fichiers.
