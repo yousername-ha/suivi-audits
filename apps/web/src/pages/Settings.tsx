@@ -307,6 +307,13 @@ function CourrielForm({ p }: { p: P }) {
           type="email"
           description="Reçoit les alertes d’exploitation et le message de test ; distinct des rappels métier."
         />
+        <Switch
+          label="Envoyer les alertes d’exploitation au contact technique"
+          description="Sauvegarde échouée, mise à jour non terminée, opération d’exploitation en échec. Texte sans donnée métier."
+          checked={p.values.alertesExploitation !== false}
+          onChange={(e) => p.set('alertesExploitation', e.currentTarget.checked)}
+          disabled={p.ro}
+        />
         <Num
           p={p}
           k="relanceEssais"

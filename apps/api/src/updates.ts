@@ -18,6 +18,7 @@ import {
 import type { SessionUser } from './auth.js';
 import type { Config } from './config.js';
 import { sql } from 'kysely';
+import type { AlertesExploitation } from './alertes-exploitation.js';
 import type { Client, Db } from './db/db.js';
 import { HttpError } from './http/errors.js';
 import { exploitationOccupee } from './operations.js';
@@ -30,6 +31,7 @@ export class Updates {
     private readonly cfg: Config,
     private readonly db: Db,
     private readonly settings: Settings,
+    private readonly alertes: AlertesExploitation,
   ) {}
   /** Fenêtre de maintenance lue en base (et non dans le cache) : la CLI de l'exécutant n'a pas de cache chargé. */
   async fenetre(c?: Client): Promise<FenetreMaintenance> {
@@ -304,6 +306,7 @@ export class Updates {
         .where('status', 'in', ['queued', 'running', 'intervention'])
         .returning(['requested_by', 'target'])
         .executeTakeFirst();
+      if (job && status !== 'success') await this.alertes.signaler(k, 'mise_a_jour', id.slice(0, 8));
       if (job)
         await this.db.audit(
           { username: job.requested_by },

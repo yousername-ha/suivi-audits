@@ -2,6 +2,7 @@
 import type { Logger } from 'pino';
 import { Auth } from './auth.js';
 import { Backups } from './backups.js';
+import { AlertesExploitation } from './alertes-exploitation.js';
 import { Updates } from './updates.js';
 import { Modules } from './modules.js';
 import { Operations } from './operations.js';
@@ -55,6 +56,7 @@ export function createServices(cfg: Config, log: Logger) {
   const notificationsMetier = new NotificationsMetier(db, settings, cfg.publicUrl);
   grc.notificationsMetier = notificationsMetier;
   const historique = new Historique(grc);
+  const alertes = new AlertesExploitation(settings, cfg.publicUrl);
   return {
     cfg,
     log,
@@ -66,9 +68,9 @@ export function createServices(cfg: Config, log: Logger) {
     configGrc,
     historique,
     modules,
-    updates: new Updates(cfg, db, settings),
-    backups: new Backups(cfg, db),
-    operations: new Operations(cfg, db, vault),
+    updates: new Updates(cfg, db, settings, alertes),
+    backups: new Backups(cfg, db, alertes),
+    operations: new Operations(cfg, db, vault, alertes),
     walls: new Walls(cfg, db),
     journalTechnique: new JournalTechnique(db, log),
     typesProcessus: new TypesProcessus(db),
