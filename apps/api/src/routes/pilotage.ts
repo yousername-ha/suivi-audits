@@ -7,6 +7,7 @@ import { PilotageBoites } from '../pilotage/boites.js';
 import { PilotageProcessusCartes } from '../pilotage/processus-cartes.js';
 import { PilotagePestel } from '../pilotage/pestel.js';
 import { PilotageRevue } from '../pilotage/revue.js';
+import { horsRegistresMasques } from '../grc/registres.js';
 import { HttpError } from '../http/errors.js';
 import { route } from '../http/route.js';
 import { requireIfMatch } from '../http/concurrency.js';
@@ -170,12 +171,16 @@ export const pilotageRoutes = [
       await g.permission(user, GRC_MODULES[query.kind], 'lire');
       // Les éléments d'un registre restreint que la personne ne peut pas lire ne sortent pas dans l'export.
       const masques = await g.registres.inaccessibles(user, params.smsi);
-      const objects = (
-        await svc.db.q(
-          'SELECT id,name,kind,data,version,created_by,updated_by,created_at,updated_at FROM grc_objects WHERE smsi_id=$1 AND kind=$2 AND NOT archived AND (registre_id IS NULL OR registre_id<>ALL($3::uuid[])) ORDER BY id LIMIT 1000',
-          [params.smsi, query.kind, masques],
-        )
-      ).rows;
+      const objects = await svc.db.k
+        .selectFrom('grc_objects')
+        .select(['id', 'name', 'kind', 'data', 'version', 'created_by', 'updated_by', 'created_at', 'updated_at'])
+        .where('smsi_id', '=', params.smsi)
+        .where('kind', '=', query.kind)
+        .where('archived', '=', false)
+        .where(horsRegistresMasques(masques))
+        .orderBy('id')
+        .limit(1000)
+        .execute();
       const refs = objects.map((o) => 'object:' + o.id);
       const key = query.kind === 'evidence' ? 'evidences' : query.kind === 'management_review' ? 'reviews' : null;
       const legacy = [];
@@ -192,12 +197,15 @@ export const pilotageRoutes = [
           refs.push(o.id);
         }
       }
-      const decisions = (
-        await svc.db.q(
-          'SELECT * FROM pilotage_decisions WHERE source_ref=ANY($1) ORDER BY created_at DESC LIMIT 1000',
-          [refs],
-        )
-      ).rows;
+      const decisions = refs.length
+        ? await svc.db.k
+            .selectFrom('pilotage_decisions')
+            .selectAll()
+            .where('source_ref', 'in', refs)
+            .orderBy('created_at', 'desc')
+            .limit(1000)
+            .execute()
+        : [];
       await svc.db.audit(user, ip, 'pilotage.register.exported', params.smsi, {
         kind: query.kind,
         objects: objects.length + legacy.length,

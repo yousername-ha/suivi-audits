@@ -10,6 +10,7 @@ import {
   type Rights,
 } from '@suivi/shared';
 import type { JsonObject } from '@suivi/shared/legacy';
+import { sql } from 'kysely';
 import { z } from 'zod';
 import type { Session, SessionUser } from '../auth.js';
 import { CSP_STRICT } from '../http/security.js';
@@ -68,7 +69,11 @@ export const affichageRoutes = [
     response: Preferences,
     handler: async ({ svc, s, body }) => {
       const sess = s as Session;
-      await svc.db.q('UPDATE users SET preferences = $2 WHERE id = $1', [sess.user.id, body]);
+      await svc.db.k
+        .updateTable('users')
+        .set({ preferences: JSON.stringify(body) })
+        .where('id', '=', sess.user.id)
+        .execute();
       return body;
     },
   }),
@@ -82,12 +87,24 @@ export const affichageRoutes = [
     access: 'administration:lire',
     response: z.array(WallOut),
     handler: async ({ svc }) =>
-      (
-        await svc.db.q(
-          `SELECT id, name, modules, activated_at, activation_expires, expires_at, revoked_at, last_seen_at,
-                  created_by, created_at, version FROM wall_screens ORDER BY revoked_at IS NOT NULL, created_at DESC`,
-        )
-      ).rows,
+      svc.db.k
+        .selectFrom('wall_screens')
+        .select([
+          'id',
+          'name',
+          'modules',
+          'activated_at',
+          'activation_expires',
+          'expires_at',
+          'revoked_at',
+          'last_seen_at',
+          'created_by',
+          'created_at',
+          'version',
+        ])
+        .orderBy(sql`revoked_at IS NOT NULL`)
+        .orderBy('created_at', 'desc')
+        .execute(),
   }),
   route({
     method: 'POST',

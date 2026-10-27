@@ -2,6 +2,7 @@ import { isObject, type JsonObject } from '@suivi/shared/legacy';
 import { validDate, type GrcObject } from '@suivi/shared';
 import type { SessionUser } from '../auth.js';
 import { HttpError } from '../http/errors.js';
+import { verrouillerEtat } from '../legacy/store.js';
 import { DEFAULT_SMSI, hash, type Grc } from './core.js';
 /** Adaptateur sans copie : les actions v2 restent modifiables dans leur source historique. */
 export class LegacyTasks {
@@ -77,7 +78,7 @@ export class LegacyTasks {
     await this.g.access(DEFAULT_SMSI, user, true);
     await this.g.permission(user, 'pilotage', 'modifier');
     return this.g.db.tx(async (c) => {
-      await c.query('SELECT id FROM app_state WHERE id=1 FOR UPDATE');
+      await verrouillerEtat(c);
       const state = await this.g.legacy.recompose(c);
       if (!state || state.version !== expected)
         throw new HttpError(412, 'La source historique a changé. Rechargez avant de confirmer.');

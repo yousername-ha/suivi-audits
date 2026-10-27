@@ -1,3 +1,4 @@
+import { sql } from 'kysely';
 import type { SessionUser } from '../auth.js';
 import type { Grc } from './core.js';
 export async function report(g: Grc, smsi: string, user: SessionUser, ip: string) {
@@ -14,18 +15,27 @@ export async function report(g: Grc, smsi: string, user: SessionUser, ip: string
     sections.tasks = await g.tasks.dashboard(smsi, user);
   if (user.rights.can('conformite', 'lire') && user.rights.can('conformite', 'exporter')) {
     const rows = (
-      await g.db.q<{ id: string; name: string; data: Record<string, unknown>; version: number }>(
-        `SELECT id,name,data,version FROM grc_objects WHERE smsi_id=$1 AND kind='framework' AND NOT archived ORDER BY name LIMIT 1000`,
-        [smsi],
-      )
-    ).rows;
+      await g.db.k
+        .selectFrom('grc_objects')
+        .select(['id', 'name', 'data', 'version'])
+        .where('smsi_id', '=', smsi)
+        .where('kind', '=', 'framework')
+        .where('archived', '=', false)
+        .orderBy('name')
+        .limit(1000)
+        .execute()
+    ).map((r) => ({ ...r, data: r.data as Record<string, unknown> }));
     sections.frameworks = rows;
-    sections.mappings = (
-      await g.db.q(
-        `SELECT id,name,data,version,updated_by AS "updatedBy",updated_at AS "updatedAt" FROM grc_objects WHERE smsi_id=$1 AND kind='mapping' AND NOT archived AND data->>'status'='validated' ORDER BY id LIMIT 1000`,
-        [smsi],
-      )
-    ).rows;
+    sections.mappings = await g.db.k
+      .selectFrom('grc_objects')
+      .select(['id', 'name', 'data', 'version', 'updated_by as updatedBy', 'updated_at as updatedAt'])
+      .where('smsi_id', '=', smsi)
+      .where('kind', '=', 'mapping')
+      .where('archived', '=', false)
+      .where(sql<string>`data->>'status'`, '=', 'validated')
+      .orderBy('id')
+      .limit(1000)
+      .execute();
   }
   await g.db.audit(user, ip, 'grc.report.exported', smsi, { sections: Object.keys(sections) });
   return {

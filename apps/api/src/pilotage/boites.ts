@@ -3,8 +3,10 @@
    mêmes sont lus et calculés avec l'état de l'outil de suivi. Aucun taux de conformité n'est calculé ici. */
 import { GRC_MODULES, Recurrence, prochaineOccurrence } from '@suivi/shared';
 import { isObject } from '@suivi/shared/legacy';
+import { sql } from 'kysely';
 import type { SessionUser } from '../auth.js';
 import { DEFAULT_SMSI, type Grc } from '../grc/core.js';
+import { horsRegistresMasques } from '../grc/registres.js';
 import { HttpError } from '../http/errors.js';
 
 export interface BoitePilotage {
@@ -33,26 +35,31 @@ export class PilotageBoites {
     const politique = (await this.g.policy(smsi, user)).definition;
     const clos = new Set(politique.statuses.filter((s) => s.terminal).map((s) => s.id));
     const masques = await this.g.registres.inaccessibles(user, smsi);
-    const objets = (
-      await this.g.db.q<{
-        id: string;
-        kind: string;
-        status: string | null;
-        due: string | null;
-        refs: unknown;
-        recurrence: unknown;
-      }>(
-        `SELECT id,kind,data->>'status' AS status,data->>'dueAt' AS due,data->'refs' AS refs,data->'recurrence' AS recurrence
-           FROM grc_objects WHERE smsi_id=$1 AND NOT archived AND kind IN ('action','risk','task_series') AND (registre_id IS NULL OR registre_id<>ALL($2::uuid[])) LIMIT 20000`,
-        [smsi, masques],
+    // Chemins jsonb fixes.
+    const objets = await this.g.db.k
+      .selectFrom('grc_objects')
+      .select([
+        'id',
+        'kind',
+        sql<string | null>`data->>'status'`.as('status'),
+        sql<string | null>`data->>'dueAt'`.as('due'),
+        sql<unknown>`data->'refs'`.as('refs'),
+        sql<unknown>`data->'recurrence'`.as('recurrence'),
+      ])
+      .where('smsi_id', '=', smsi)
+      .where('archived', '=', false)
+      .where('kind', 'in', ['action', 'risk', 'task_series'])
+      .where(horsRegistresMasques(masques))
+      .limit(20000)
+      .execute();
+    const liens = await this.g.db.k
+      .selectFrom('grc_links')
+      .select(['source_ref', 'target_ref'])
+      .where('smsi_id', '=', smsi)
+      .where((eb) =>
+        eb.or([eb('source_ref', 'like', 'legacy:processes:%'), eb('target_ref', 'like', 'legacy:processes:%')]),
       )
-    ).rows;
-    const liens = (
-      await this.g.db.q<{ source_ref: string; target_ref: string }>(
-        `SELECT source_ref,target_ref FROM grc_links WHERE smsi_id=$1 AND (source_ref LIKE 'legacy:processes:%' OR target_ref LIKE 'legacy:processes:%')`,
-        [smsi],
-      )
-    ).rows;
+      .execute();
     const rattaches = (ref: string) => {
       const ids = new Set<string>();
       for (const o of objets) if (Array.isArray(o.refs) && o.refs.includes(ref)) ids.add(o.id);

@@ -1,5 +1,6 @@
 /* Construction de l'application Fastify (sans écoute réseau : utilisée telle quelle par les tests). */
 import Fastify, { type FastifyBaseLogger, type FastifyInstance } from 'fastify';
+import { sql } from 'kysely';
 import { z } from 'zod';
 import { HttpError, errorHandler } from './http/errors.js';
 import { buildOpenApi, registerRoutes, route, type RouteDef } from './http/route.js';
@@ -45,7 +46,7 @@ const systemRoutes = (all: () => RouteDef[]) => [
     tags: ['Système'],
     access: 'public',
     handler: async ({ svc, reply }) => {
-      await svc.db.q('SELECT 1');
+      await sql`SELECT 1`.execute(svc.db.k);
       reply.header('Cache-Control', 'no-store').type('text/plain; charset=utf-8');
       return reply.send('ok');
     },
@@ -65,7 +66,7 @@ const systemRoutes = (all: () => RouteDef[]) => [
       let base: boolean;
       let attente: string[] = [];
       try {
-        await svc.db.q('SELECT 1');
+        await sql`SELECT 1`.execute(svc.db.k);
         base = true;
         attente = await pendingMigrations(svc.db);
       } catch {
