@@ -8,6 +8,7 @@ import type { SettingsValues, TestCourrielDto } from '@suivi/shared';
 import { sql } from 'kysely';
 import { z } from 'zod';
 import type { Actor, Db, Kdb } from './db/db.js';
+import { DEMANDEUR_ALERTE } from './alertes-exploitation.js';
 import { HttpError } from './http/errors.js';
 import { adresseUtilisable, EXPIRATION_NOTIFICATION_JOURS } from './notifications-metier.js';
 import type { Vault } from './security/crypto.js';
@@ -248,7 +249,14 @@ export class Courriel {
         return null;
       }
       let to = r.to_address;
-      if (r.kind === 'notification') {
+      if (r.kind === 'notification' && r.requested_by === DEMANDEUR_ALERTE) {
+        // Alerte d'exploitation : adressée au contact technique, jamais à un compte ; l'adresse est celle de la demande.
+        if (!adresseUtilisable(to)) {
+          await this.terminer(r.id, { ok: false, steps: [], error: 'Contact technique sans adresse utilisable.' });
+          continue;
+        }
+        to = to.trim();
+      } else if (r.kind === 'notification') {
         const u = r.user_id
           ? await this.db.k
               .selectFrom('users')
