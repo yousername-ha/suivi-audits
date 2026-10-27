@@ -8,6 +8,12 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 Aucune action.
 
+### Sécurité
+- **Chaîne d'approvisionnement** ([ADR 0063](docs/adr/0063-chaine-de-publication-durcie.md), complément du 27/10/2026) : Dependabot suit aussi les dépendances npm (correctifs et mineures regroupés, majeures isolées) ; toutes ses propositions attendent 7 jours après la publication d'une version. pnpm refuse de même une version publiée depuis moins de 7 jours, une version dont la preuve de provenance régresse et une dépendance transitive hors registre.
+- **CI** : les jobs ne conservent plus le jeton GitHub dans la copie de travail (`persist-credentials: false`) ; plus aucune expression GitHub n'est interpolée dans un script du job « montée de version ».
+- **Exécutant d'exploitation** : la liste publique des opérations n'est relue qu'à partir de fichiers réguliers nommés par identifiant, sans suivre de lien symbolique ni ouvrir de tube.
+- **Chiffrement** : le déchiffrement AES-256-GCM exige explicitement une étiquette d'authentification de 16 octets (déjà imposé par Node 26) ; tests du coffre ajoutés.
+
 ## [5.0.0] — 2026-10-27
 
 **Version majeure** : deux migrations suppriment définitivement des données (catalogue « Environnement », page « Conformité IA ») et l'exécutant de mise à jour ne monte plus `/root/.ssh` ni `/root/.docker` par défaut. Lire les notes de mise à jour ci-dessous avant de lancer la mise à jour.
