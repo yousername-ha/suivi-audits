@@ -2,6 +2,8 @@
 
 ## Jeu court à lire d'abord (18/10/2026)
 
+0. [Reprise du 27/10/2026](01_REPRISE_IA/REPRISE-2026-10-27.md) : état le plus récent, PR ouvertes, règles de fusion.
+
 1. [README](../README.md), [PRODUCT](PRODUCT.md), [REFERENTIALS](REFERENTIALS.md) : ce que fait la plateforme.
 2. [ARCHITECTURE](ARCHITECTURE.md) et [DAT](03_ARCHITECTURE/DAT.md) : comment elle est construite ; [ADR](adr/README.md) et
    [DECISIONS](DECISIONS.md) : pourquoi.
