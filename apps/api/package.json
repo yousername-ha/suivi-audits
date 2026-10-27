@@ -1,6 +1,6 @@
 {
   "name": "@suivi/api",
-  "version": "4.2.0",
+  "version": "5.0.0",
   "private": true,
   "type": "module",
   "description": "API du suivi des audits SMSI (Fastify, PostgreSQL)",

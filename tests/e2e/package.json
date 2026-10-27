@@ -1,6 +1,6 @@
 {
   "name": "@suivi/e2e",
-  "version": "4.2.0",
+  "version": "5.0.0",
   "private": true,
   "type": "module",
   "description": "Tests de bout en bout (Playwright) sur la pile Docker complète",

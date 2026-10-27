@@ -236,6 +236,16 @@ if 'pg_restore' in args and '--list' not in args: Path(os.environ['TEST_RESTORED
         self.assertNotIn('Restauration terminée.', result.stdout)
         self.assertFalse((self.root / 'data/etat/sauvegardes/derniere-restauration.json').exists())
 
+    def test_health_is_checked_even_if_the_second_changes_before_the_first_round(self):
+        # Horloge simulée : la seconde change juste après le calcul de la limite (délai de 1 s).
+        tick = self.root / 'tick'
+        script = ('source "$1/scripts/lib-commun.sh"; dc() { :; }; '
+                  'date() { n=$(cat "$TICK" 2>/dev/null || echo 0); echo $((n + 1)) > "$TICK"; echo $((100 + (n > 0))); }; '
+                  'attendre_sante 1')
+        result = subprocess.run(['bash', '-c', script, 'bash', str(self.root)],
+                                capture_output=True, text=True, env={**self.env, 'TICK': str(tick)}, timeout=20)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_unhealthy_application_has_no_success_report(self):
         result = self.run_restore(self.archive(), False, env={'TEST_NO_HEALTH': '1'})
         self.assertNotEqual(result.returncode, 0)

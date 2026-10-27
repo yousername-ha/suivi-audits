@@ -276,12 +276,13 @@ dc() {
 attendre_sante() {
   local delai="${1:-300}" fin st
   fin=$(($(date +%s) + delai))
-  while [ "$(date +%s)" -lt "$fin" ]; do
+  # Au moins un contrôle, même si le délai est court ou écoulé avant le premier tour (seconde qui change).
+  while :; do
     st=$(docker inspect -f '{{.State.Health.Status}}' "$(dc ps -q app 2> /dev/null)" 2> /dev/null || true)
     [ "$st" = healthy ] && return 0
+    [ "$(date +%s)" -lt "$fin" ] || return 1
     sleep 3
   done
-  return 1
 }
 
 # Liste des migrations appliquées à la base (une par ligne ; vide si la base est inaccessible).
