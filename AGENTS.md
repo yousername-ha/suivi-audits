@@ -30,7 +30,8 @@ Plusieurs sessions Claude peuvent travailler en même temps sur le dépôt. Règ
 2. Toute PR vise `claude-suivi-smsi`, en fusion classique (merge commit), après les 7 contrôles verts. Rien ne vise
    `main` directement : `main` n'évolue que par la PR `claude-suivi-smsi` → `main`, fusionnée par le RSSI ou sur son
    accord explicite. Aucune étiquette `v*` sans le RSSI.
-3. Les PR Dependabot qui visent `main` sont redirigées vers `claude-suivi-smsi`.
+3. Les PR Dependabot visent `claude-suivi-smsi` (`target-branch` de `.github/dependabot.yml`) ; une PR Dependabot
+   ouverte vers `main` avant ce réglage est fermée.
 4. Avant de toucher `apps/api/src` ou un fichier tenu par une autre session, prévenir celle-ci par le RSSI. Fichier tenu
    au 27/10/2026 : `apps/api/src/historique/gap.ts` (GAP IA, session Sonnet).
 5. Numéros d'ADR : annoncer le numéro pris au RSSI avant de l'utiliser (0065 retenu par la session Sonnet le 27/10/2026).
