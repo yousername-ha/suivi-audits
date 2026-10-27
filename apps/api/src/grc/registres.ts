@@ -41,6 +41,13 @@ import { HttpError } from '../http/errors.js';
 import { COLONNES_OBJET, DEFAULT_SMSI, objets, versObjet, type Grc } from './core.js';
 
 const MODULE: Module = 'ecarts';
+/** Fiches hors des registres masqués : sans masque, tout passe (comme registre_id <> ALL d'un tableau vide). */
+export function horsRegistresMasques(masques: readonly string[]) {
+  return (eb: ExpressionBuilder<DB, 'grc_objects'>) =>
+    masques.length
+      ? eb.or([eb('registre_id', 'is', null), eb('registre_id', 'not in', [...masques])])
+      : sql<boolean>`true`;
+}
 /** Colonnes d'un registre. Non qualifiées : aucune table jointe ici ne porte ces noms, et un INSERT ne prend pas d'alias. */
 const COLONNES_REGISTRE = [
   'id',

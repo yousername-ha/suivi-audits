@@ -16,6 +16,7 @@ import type { SessionUser } from '../auth.js';
 import type { Client } from '../db/db.js';
 import { DEFAULT_SMSI, type Grc } from '../grc/core.js';
 import { HttpError } from '../http/errors.js';
+import { verrouillerEtat } from '../legacy/store.js';
 
 type Cle = 'processes' | 'objectives' | 'indicators';
 const PREFIXE: Record<Cle, string> = { processes: 'PR', objectives: 'OBJ', indicators: 'IND' };
@@ -35,7 +36,7 @@ export class PilotageObjectifs {
     if (smsi !== DEFAULT_SMSI) throw new HttpError(404, 'Ces données appartiennent au pilotage commun.');
     await this.g.access(smsi, user, true, c);
     await this.g.permission(user, GRC_MODULES.indicator, 'modifier');
-    await c.query('SELECT id FROM app_state WHERE id=1 FOR UPDATE');
+    await verrouillerEtat(c);
     const state = await this.g.legacy.recompose(c);
     if (!state) throw new HttpError(409, 'Registre historique indisponible.');
     return state;

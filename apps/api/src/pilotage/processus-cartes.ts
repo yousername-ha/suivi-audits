@@ -10,8 +10,10 @@ import {
   type Rattache,
 } from '@suivi/shared';
 import { isObject } from '@suivi/shared/legacy';
+import { sql } from 'kysely';
 import type { SessionUser } from '../auth.js';
 import { DEFAULT_SMSI, type Grc } from '../grc/core.js';
+import { horsRegistresMasques } from '../grc/registres.js';
 import { HttpError } from '../http/errors.js';
 
 type Obj = Record<string, unknown>;
@@ -37,21 +39,24 @@ export class PilotageProcessusCartes {
     const fournisseurs = lignes(etat.suppliers).filter((f) => texte(f.id));
 
     const masques = await this.g.registres.inaccessibles(user, smsi);
-    const risques = (
-      await this.g.db.q<{ id: string; name: string; refs: unknown }>(
-        `SELECT id,name,data->'refs' AS refs FROM grc_objects
-          WHERE smsi_id=$1 AND kind='risk' AND NOT archived AND (registre_id IS NULL OR registre_id<>ALL($2::uuid[]))
-          ORDER BY lower(name) LIMIT 2000`,
-        [smsi, masques],
+    const risques = await this.g.db.k
+      .selectFrom('grc_objects')
+      .select(['id', 'name', sql<unknown>`data->'refs'`.as('refs')])
+      .where('smsi_id', '=', smsi)
+      .where('kind', '=', 'risk')
+      .where('archived', '=', false)
+      .where(horsRegistresMasques(masques))
+      .orderBy(sql`lower(name)`)
+      .limit(2000)
+      .execute();
+    const liens = await this.g.db.k
+      .selectFrom('grc_links')
+      .select(['id', 'source_ref', 'target_ref', 'type'])
+      .where('smsi_id', '=', smsi)
+      .where((eb) =>
+        eb.or([eb('target_ref', 'like', 'legacy:processes:%'), eb('source_ref', 'like', 'legacy:processes:%')]),
       )
-    ).rows;
-    const liens = (
-      await this.g.db.q<{ id: string; source_ref: string; target_ref: string; type: string }>(
-        `SELECT id,source_ref,target_ref,type FROM grc_links
-          WHERE smsi_id=$1 AND (target_ref LIKE 'legacy:processes:%' OR source_ref LIKE 'legacy:processes:%')`,
-        [smsi],
-      )
-    ).rows;
+      .execute();
 
     const objetsConnus = new Map<NatureRattachement, Map<string, Candidat>>([
       ['objectifs', new Map(objectifs.map((o) => [`legacy:objectives:${texte(o.id)}`, cand('objectives', o)]))],

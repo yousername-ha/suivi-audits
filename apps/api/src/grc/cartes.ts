@@ -49,6 +49,7 @@ const ECART_OUVERT = `o.kind='nonconformity' AND COALESCE(o.data->>'status','ope
     compté qu'une fois, même s'il apparaît dans plusieurs périmètres par un registre partagé. Un statut terminal vient de la
     politique métier du périmètre de l'élément. */
 export async function compter(g: Grc, ids: string[], masques: string[], maintenant: string) {
+  // Compteurs par catégorie (FILTER, statuts terminaux) : SQL paramétré (ADR 0062 § 5).
   return g.db.one<Ligne>(
     `SELECT
        count(*) FILTER (WHERE o.kind='action' AND o.data->>'seriesId' IS NULL)::int AS "actionsTotal",

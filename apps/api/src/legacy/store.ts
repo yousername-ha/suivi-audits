@@ -19,6 +19,9 @@ export interface ModuleMapper {
   write(c: Client, value: Json | undefined, batchId: number | null): Promise<void>;
 }
 
+/** Verrou sur l'état de l'outil de suivi : aucune autre écriture jusqu'à la fin de la transaction. */
+export const verrouillerEtat = (c: Pick<Client, 'query'>) =>
+  surConnexion(c).selectFrom('app_state').select('id').where('id', '=', 1).forUpdate().execute();
 /** Version courante d'app_state, verrouillée jusqu'à la fin de la transaction. */
 const versionVerrouillee = (k: Kdb) =>
   k

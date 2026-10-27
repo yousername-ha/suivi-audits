@@ -8,6 +8,7 @@ import type { SessionUser } from '../auth.js';
 import { LegacyCartoSource } from '../carto/sources.js';
 import { DEFAULT_SMSI, type Grc } from '../grc/core.js';
 import { HttpError } from '../http/errors.js';
+import { verrouillerEtat } from '../legacy/store.js';
 import type { Services } from '../services.js';
 
 const PestelBody = z
@@ -66,7 +67,7 @@ export class PilotagePestel {
     return this.g.db.tx(async (c) => {
       await this.g.access(smsi, user, true, c);
       await this.g.permission(user, GRC_MODULES.context, 'modifier');
-      await c.query('SELECT id FROM app_state WHERE id=1 FOR UPDATE');
+      await verrouillerEtat(c);
       const etat = await this.g.legacy.recompose(c);
       if (!etat) throw new HttpError(409, 'Registre historique indisponible.');
       const scope = isObject(etat.data.scope) ? { ...(etat.data.scope as JsonObject) } : {};
