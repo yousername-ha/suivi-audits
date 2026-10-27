@@ -3,7 +3,7 @@
 ## Règles du projet
 - **Aucune donnée réelle** dans le dépôt (écarts, fournisseurs, processus, noms de personnes…), **aucun secret**, pas de fichier `.env`. Les fichiers de test sont anonymisés (`tests/fixtures/`).
 - Interface et documentation **en français**.
-- Toute modification passe par une **branche** et une **pull request** vers `main`, avec une CI verte. Personne ne pousse directement sur `main`.
+- Toute modification passe par une **branche** `claude/…` (ou `feat/…`, `fix/…`) et une **pull request vers `claude-suivi-smsi`**, fusion classique (merge commit) après les 7 contrôles verts. `main` n'évolue que par la PR `claude-suivi-smsi` → `main`, fusionnée par le RSSI ou sur son accord explicite. Personne ne pousse directement sur `main`.
 - **Aucune nouvelle dépendance** sans justification dans une ADR (`docs/adr/0009-dependances-et-versions.md`, ou une nouvelle ADR).
 - Une PR qui touche l'installation, la configuration, la mise à jour ou l'exploitation **met à jour `docs/INSTALLATION.md` dans la même PR**. Le job CI « guide » rejoue ce guide et échoue s'il est inexact.
 - Une migration publiée (`apps/api/migrations/NNN_*.sql`) n'est **jamais modifiée** : on en ajoute une nouvelle.
@@ -59,6 +59,8 @@ docker compose -f docker-compose.yml -f docker-compose.build.yml build && docker
 ./tests/e2e/run-in-container.sh                     # conteneur Playwright officiel (rendu identique à la CI)
 docker compose down && sudo rm -rf /srv/suivi-audits/donnees   # remise à zéro (down -v ne touche pas aux données)
 ```
+
+En CI, un test de bout en bout en échec est rejoué une fois. S'il réussit au rejeu, la CI passe, mais le test est signalé « instable » par une annotation sur la PR (`scripts/ci/rapport-e2e.mjs`, lisible sans télécharger les journaux) et doit être corrigé : le rejeu ne sert pas à accepter un test instable. Deux échecs de suite font échouer la CI. En local, aucun rejeu.
 
 Rejouer le guide d'installation (comme la CI) : `node scripts/ci/guide-extraire.mjs docs/INSTALLATION.md nom_dns=localhost version=ci` produit le script exécuté par le job « guide ». Chaque bloc ```` ```bash ```` du guide doit porter un marqueur `<!-- ci: run -->`, `<!-- ci: skip — raison -->` ou `<!-- ci: instead: commande -->` (voir l'en-tête du script).
 

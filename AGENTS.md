@@ -21,6 +21,24 @@ Suivre également [CONTRIBUTING.md](CONTRIBUTING.md).
   Publier les changements par la PR ouverte, sans fusion ni déploiement.
 - Communiquer en français les étapes franchies et limites.
 
+## Sessions parallèles (directive commune du 27/10/2026, validée par le RSSI)
+
+Depuis le 27/10/2026 (fin de la session « Opus »), **une seule session est active** (« Sonnet »). Les règles ci-dessous
+restent valables si plusieurs sessions Claude travaillent de nouveau en même temps sur le dépôt :
+
+1. Branche de référence unique : `claude-suivi-smsi`. Chaque session travaille sur sa propre branche (`claude/…`) et y
+   fusionne `claude-suivi-smsi` avant tout travail.
+2. Toute PR vise `claude-suivi-smsi`, en fusion classique (merge commit), après les 7 contrôles verts. Rien ne vise
+   `main` directement : `main` n'évolue que par la PR `claude-suivi-smsi` → `main`, fusionnée par le RSSI ou sur son
+   accord explicite. Aucune étiquette `v*` sans le RSSI.
+3. Les PR Dependabot visent `claude-suivi-smsi` (`target-branch` de `.github/dependabot.yml`) ; une PR Dependabot
+   ouverte vers `main` avant ce réglage est fermée.
+4. Avant de toucher `apps/api/src` ou un fichier tenu par une autre session, prévenir celle-ci par le RSSI. Aucun fichier
+   n'est tenu par une autre session depuis le 27/10/2026 (`apps/api/src/historique/gap.ts`, GAP IA, était tenu par la session
+   Sonnet, aujourd'hui seule active).
+5. Numéros d'ADR : annoncer le numéro pris au RSSI avant de l'utiliser (0065 retenu par la session Sonnet le 27/10/2026).
+6. Dossier de reprise commun : le plus récent de `docs/01_REPRISE_IA/REPRISE-*.md`.
+
 ## Invariants techniques
 
 - Réutiliser React/Mantine, `packages/ui`, Fastify, zod et PostgreSQL.

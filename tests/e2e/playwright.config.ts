@@ -10,8 +10,12 @@ export default defineConfig({
   workers: 1,
   timeout: 60_000,
   expect: { timeout: 10_000 },
-  retries: 0,
-  reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
+  // En CI, un test en échec est rejoué une fois : un échec aléatoire ne bloque plus la fusion, mais le test reste signalé
+  // comme instable (annotation de scripts/ci/rapport-e2e.mjs) pour être corrigé. Deux échecs : la CI échoue.
+  retries: process.env.CI ? 1 : 0,
+  reporter: process.env.CI
+    ? [['list'], ['html', { open: 'never' }], ['json', { outputFile: 'test-results/resultats-e2e.json' }]]
+    : 'list',
   use: {
     baseURL: process.env.E2E_BASE_URL || 'https://localhost',
     ignoreHTTPSErrors: true,

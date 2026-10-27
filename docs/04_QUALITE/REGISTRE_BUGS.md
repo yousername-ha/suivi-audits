@@ -192,3 +192,20 @@ elles ne sont pas ajoutées artificiellement comme trois bugs applicatifs ouvert
 | Commit                      | e8af11a                                                                                                                                                                                                                                                                     |
 | Non-régression              | TEST-051 ; CI de 70ab3f0                                                                                                                                                                                                                                                    |
 | Reste à vérifier            | Passage du test d’accessibilité sur la pile complète (CI).                                                                                                                                                                              |
+
+## BUG-011 — Échecs intermittents des tests de bout en bout en CI
+
+| Champ                       | Constat                                                                                                                                                                                  |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fonction, gravité, priorité | Recette automatisée ; MINEURE ; P2                                                                                                                                                       |
+| Statut                      | EN COURS : diagnostic outillé                                                                                                                                                            |
+| Détection / correction      | 2026-10-26 et 2026-10-27 ; CI des PR #92, #112, #122, #123 et #124                                                                                                                      |
+| Déclencheur                 | Job « Images, sécurité et pile complète (Playwright) », étape des tests de bout en bout.                                                                                                 |
+| Attendu                     | Résultat identique d'une exécution à l'autre sur le même commit.                                                                                                                         |
+| Observé initialement        | Échec au premier passage, réussite au rejeu sans modification ; les PR concernées ne touchaient pas l'interface.                                                                         |
+| Cause / niveau              | NON CONFIRMÉ : journaux et artefacts de la CI non consultables depuis l'environnement de développement ; test(s) en cause inconnus.                                                      |
+| Correctif                   | Rejeu unique en CI ; chaque test en échec ou instable est signalé par une annotation GitHub (fichier, ligne, message), puis corrigé individuellement dès qu'il est identifié.          |
+| Fichiers                    | [tests/e2e/playwright.config.ts](../../tests/e2e/playwright.config.ts) ; [scripts/ci/rapport-e2e.mjs](../../scripts/ci/rapport-e2e.mjs) ; [.github/workflows/ci.yml](../../.github/workflows/ci.yml) |
+| Commit                      | À compléter à la fusion.                                                                                                                                                                 |
+| Non-régression              | Annotations « Test instable » relues sur les PR suivantes.                                                                                                                               |
+| Reste à vérifier            | Identifier et corriger le ou les tests signalés.                                                                                                                                         |
