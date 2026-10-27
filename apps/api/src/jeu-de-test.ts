@@ -10,6 +10,7 @@ import crypto from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 import { methodTemplate } from '@suivi/shared';
 import type { JsonObject } from '@suivi/shared/legacy';
+import { sql } from 'kysely';
 import type { Services } from './services.js';
 
 export const ORGANISATION_TEST = 'Association Fictive de Santé (jeu de test)';
@@ -494,17 +495,28 @@ export async function chargerJeuDeTest(
   compte: string,
   cfg: { publicUrl: string },
 ): Promise<BilanChargement> {
-  const u = await svc.db.one<{ id: string }>('SELECT id FROM users WHERE lower(username)=lower($1) AND NOT disabled', [
-    compte,
-  ]);
+  const u = await svc.db.k
+    .selectFrom('users')
+    .select('id')
+    .where(sql<string>`lower(username)`, '=', sql<string>`lower(${compte})`)
+    .where('disabled', '=', false)
+    .executeTakeFirst();
   if (!u) throw new Error(`Compte inconnu ou désactivé : ${compte}`);
   const jeton = crypto.randomBytes(32).toString('base64url');
   const csrf = crypto.randomBytes(24).toString('base64url');
   const hash = crypto.createHash('sha256').update(jeton).digest();
-  await svc.db.q(
-    `INSERT INTO sessions(id_hash,user_id,csrf,mfa_ok,ip,user_agent,expires_at) VALUES($1,$2,$3,true,'127.0.0.1','jeu-de-test',now()+interval '1 hour')`,
-    [hash, u.id, csrf],
-  );
+  await svc.db.k
+    .insertInto('sessions')
+    .values({
+      id_hash: hash,
+      user_id: u.id,
+      csrf,
+      mfa_ok: true,
+      ip: '127.0.0.1',
+      user_agent: 'jeu-de-test',
+      expires_at: sql<Date>`now() + interval '1 hour'`,
+    })
+    .execute();
   const origine = new URL(cfg.publicUrl).origin;
   const appel = async (
     method: 'GET' | 'POST' | 'PUT',
@@ -559,8 +571,8 @@ export async function chargerJeuDeTest(
     const { today: _jour, ...jeu } = etatJeuDeTest();
     void _jour;
     // Écriture directe par le service : les modules repris vont dans leurs tables (ADR 0040), /legacy les refuse.
-    await svc.db.tx(async (c) => {
-      await c.query('SELECT 1 FROM app_state WHERE id=1 FOR UPDATE');
+    await svc.db.tx(async (c, k) => {
+      await k.selectFrom('app_state').select('id').where('id', '=', 1).forUpdate().execute();
       const r = await svc.legacy.nativeWrite(c, { ...courant, ...jeu } as JsonObject, null, null, 'Jeu de test');
       if (r.conflict) throw new Error('Écriture de l’état : conflit de version.');
     }, compte);
@@ -729,10 +741,11 @@ export async function chargerJeuDeTest(
       );
       // Un écart ne se crée pas clos : l'état clos du jeu de démonstration est posé directement (aucune preuve fictive à produire).
       if (statut !== 'open')
-        await svc.db.q(`UPDATE grc_objects SET data=jsonb_set(data,'{status}',$2::jsonb) WHERE id=$1`, [
-          c.id,
-          JSON.stringify(statut),
-        ]);
+        await svc.db.k
+          .updateTable('grc_objects')
+          .set({ data: sql`jsonb_set(data, '{status}', ${JSON.stringify(statut)}::jsonb)` })
+          .where('id', '=', c.id)
+          .execute();
       bilan.ecarts++;
     }
     const serie = await exiger<{ id: string }>(
@@ -899,6 +912,6 @@ export async function chargerJeuDeTest(
     });
     return bilan;
   } finally {
-    await svc.db.q('DELETE FROM sessions WHERE id_hash=$1', [hash]);
+    await svc.db.k.deleteFrom('sessions').where('id_hash', '=', hash).execute();
   }
 }

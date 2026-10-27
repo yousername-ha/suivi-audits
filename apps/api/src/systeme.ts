@@ -4,6 +4,7 @@
 import { readdirSync, readFileSync, statfsSync } from 'node:fs';
 import path from 'node:path';
 import type { Config } from './config.js';
+import { sql } from 'kysely';
 import { MIGRATIONS_DIR, type Db } from './db/db.js';
 
 /** Fichiers de migration présents dans l'image, triés. */
@@ -15,15 +16,23 @@ export function migrationFiles(dir = MIGRATIONS_DIR): string[] {
 
 /** Migrations présentes dans l'image mais pas encore appliquées à la base. */
 export async function pendingMigrations(db: Db, dir = MIGRATIONS_DIR): Promise<string[]> {
-  const exists = await db.one<{ t: string | null }>("SELECT to_regclass('schema_migrations')::text AS t");
+  // Base neuve : la table des migrations peut ne pas exister encore.
+  const exists = await db.k
+    .selectNoFrom(sql<string | null>`to_regclass('schema_migrations')::text`.as('t'))
+    .executeTakeFirst();
   const applied = new Set(
-    exists?.t ? (await db.q<{ name: string }>('SELECT name FROM schema_migrations')).rows.map((r) => r.name) : [],
+    exists?.t ? (await db.k.selectFrom('schema_migrations').select('name').execute()).map((r) => r.name) : [],
   );
   return migrationFiles(dir).filter((f) => !applied.has(f));
 }
 
 export async function lastMigration(db: Db): Promise<string | null> {
-  const r = await db.one<{ name: string }>('SELECT name FROM schema_migrations ORDER BY name DESC LIMIT 1');
+  const r = await db.k
+    .selectFrom('schema_migrations')
+    .select('name')
+    .orderBy('name', 'desc')
+    .limit(1)
+    .executeTakeFirst();
   return r?.name ?? null;
 }
 

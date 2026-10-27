@@ -11,6 +11,7 @@ import {
   type EntreeRevue,
 } from '@suivi/shared';
 import { isObject, type JsonObject } from '@suivi/shared/legacy';
+import { sql } from 'kysely';
 import type { SessionUser } from '../auth.js';
 import { DEFAULT_SMSI, type Grc } from '../grc/core.js';
 import { HttpError } from '../http/errors.js';
@@ -58,16 +59,16 @@ export class PilotageRevue {
       .sort((x, y) => y.date.localeCompare(x.date));
     const precedente = revues[0] ?? null;
     if (precedente) {
-      const decisions = (
-        await this.g.db.q<{ generated_refs: string[] }>(
-          `SELECT generated_refs FROM pilotage_decisions WHERE smsi_id=$1 AND source_ref=$2`,
-          [smsi, `legacy:reviews:${precedente.id}`],
-        )
-      ).rows;
+      const decisions = await this.g.db.k
+        .selectFrom('pilotage_decisions')
+        .select('generated_refs')
+        .where('smsi_id', '=', smsi)
+        .where('source_ref', '=', `legacy:reviews:${precedente.id}`)
+        .execute();
       const ids = [
         ...new Set(
           decisions
-            .flatMap((d) => d.generated_refs)
+            .flatMap((d) => d.generated_refs as string[])
             .filter((r) => r.startsWith('object:'))
             .map((r) => r.slice(7)),
         ),
@@ -76,12 +77,17 @@ export class PilotageRevue {
         const politique = (await this.g.policy(smsi, user)).definition;
         const clos = new Set(politique.statuses.filter((s) => s.terminal).map((s) => s.id));
         const masques = await this.g.registres.inaccessibles(user, smsi);
-        const actions = (
-          await this.g.db.q<{ status: string; due: string | null }>(
-            `SELECT data->>'status' AS status,data->>'dueAt' AS due FROM grc_objects WHERE smsi_id=$1 AND id=ANY($2::uuid[]) AND kind='action' AND (registre_id IS NULL OR registre_id<>ALL($3::uuid[]))`,
-            [smsi, ids, masques],
+        // Chemins jsonb fixes ; registres masqués exclus (aucun masque : tout est lisible, comme <> ALL d'un tableau vide).
+        const actions = await this.g.db.k
+          .selectFrom('grc_objects')
+          .select([sql<string>`data->>'status'`.as('status'), sql<string | null>`data->>'dueAt'`.as('due')])
+          .where('smsi_id', '=', smsi)
+          .where('id', 'in', ids)
+          .where('kind', '=', 'action')
+          .$if(masques.length > 0, (q) =>
+            q.where((eb) => eb.or([eb('registre_id', 'is', null), eb('registre_id', 'not in', masques)])),
           )
-        ).rows;
+          .execute();
         const ouvertes = actions.filter((a) => !clos.has(a.status));
         const retard = ouvertes.filter((a) => a.due && a.due.slice(0, 10) < aujourdhui).length;
         faits.a.push(
@@ -166,16 +172,21 @@ export class PilotageRevue {
     } else faits.c7.push('Données fournisseurs non accessibles avec vos droits.');
 
     // e) risques et opportunités ; f) opportunités d'amélioration.
-    const risques = await this.g.db.one<{ n: number }>(
-      `SELECT count(*)::int n FROM grc_objects WHERE smsi_id=$1 AND kind='risk' AND NOT archived`,
-      [smsi],
-    );
-    const opportunites = (
-      await this.g.db.q<{ status: string; n: number }>(
-        `SELECT data->>'status' AS status,count(*)::int n FROM grc_objects WHERE smsi_id=$1 AND kind='opportunity' AND NOT archived GROUP BY 1`,
-        [smsi],
-      )
-    ).rows;
+    const risques = await this.g.db.k
+      .selectFrom('grc_objects')
+      .select(sql<number>`count(*)::int`.as('n'))
+      .where('smsi_id', '=', smsi)
+      .where('kind', '=', 'risk')
+      .where('archived', '=', false)
+      .executeTakeFirst();
+    const opportunites = await this.g.db.k
+      .selectFrom('grc_objects')
+      .select([sql<string>`data->>'status'`.as('status'), sql<number>`count(*)::int`.as('n')])
+      .where('smsi_id', '=', smsi)
+      .where('kind', '=', 'opportunity')
+      .where('archived', '=', false)
+      .groupBy(sql`1`)
+      .execute();
     faits.e.push(`${pluriel(risques?.n ?? 0, 'risque enregistré', 'risques enregistrés')} dans le registre commun.`);
     const parStatut = (s: string) => opportunites.find((o) => o.status === s)?.n ?? 0;
     faits.e.push(

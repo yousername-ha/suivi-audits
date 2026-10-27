@@ -3,6 +3,7 @@
    (toujours collectées) ni le journal d'audit (table SQL en ajout seul, indépendante). L'état « appliqué » est celui du
    journal en cours d'exécution, pas la valeur demandée. */
 import type { Logger } from 'pino';
+import { sql } from 'kysely';
 import type { Actor, Db } from './db/db.js';
 import { HttpError } from './http/errors.js';
 import { tamponDe, type EntreeJournal } from './log.js';
@@ -43,11 +44,11 @@ export class JournalTechnique {
 
   /** Reprend la configuration enregistrée (au démarrage) : un debug échu n'est pas rétabli. */
   async charger(): Promise<void> {
-    const r = (
-      await this.db.q<Ligne>(
-        'SELECT niveau, debug_jusqua, modifie_par, modifie_le FROM journal_technique_config WHERE id=1',
-      )
-    ).rows[0];
+    const r: Ligne | undefined = await this.db.k
+      .selectFrom('journal_technique_config')
+      .select(['niveau', 'debug_jusqua', 'modifie_par', 'modifie_le'])
+      .where('id', '=', 1)
+      .executeTakeFirst();
     if (!r) return;
     this.permanent = r.niveau;
     this.modifiePar = r.modifie_par;
@@ -61,7 +62,7 @@ export class JournalTechnique {
     if (!this.debugJusqua || this.debugJusqua.getTime() > Date.now()) return false;
     this.debugJusqua = null;
     this.log.level = this.permanent;
-    await this.db.q('UPDATE journal_technique_config SET debug_jusqua=NULL WHERE id=1');
+    await this.db.k.updateTable('journal_technique_config').set({ debug_jusqua: null }).where('id', '=', 1).execute();
     await this.db.audit(null, null, 'admin.journal_technique_debug_expire', '', { niveau: this.permanent });
     this.log.info({ niveau: this.permanent }, 'niveau debug échu : seuil permanent rétabli');
     return true;
@@ -92,11 +93,24 @@ export class JournalTechnique {
     const permanent: NiveauPermanent = niveau === 'debug' ? this.permanent : niveau;
     const jusqua = niveau === 'debug' ? new Date(Date.now() + dureeMinutes! * 60_000) : null;
     const avant = this.etat();
-    await this.db.q(
-      `INSERT INTO journal_technique_config(id, niveau, debug_jusqua, modifie_par, modifie_le) VALUES (1,$1,$2,$3,now())
-       ON CONFLICT (id) DO UPDATE SET niveau=$1, debug_jusqua=$2, modifie_par=$3, modifie_le=now()`,
-      [permanent, jusqua, user.username],
-    );
+    await this.db.k
+      .insertInto('journal_technique_config')
+      .values({
+        id: 1,
+        niveau: permanent,
+        debug_jusqua: jusqua,
+        modifie_par: user.username,
+        modifie_le: sql<Date>`now()`,
+      })
+      .onConflict((oc) =>
+        oc.column('id').doUpdateSet({
+          niveau: permanent,
+          debug_jusqua: jusqua,
+          modifie_par: user.username,
+          modifie_le: sql<Date>`now()`,
+        }),
+      )
+      .execute();
     this.permanent = permanent;
     this.debugJusqua = jusqua;
     this.modifiePar = user.username;
