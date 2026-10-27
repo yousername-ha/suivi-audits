@@ -178,6 +178,12 @@ export interface CategorieApercuConservation {
   oldest: string | null;
   /** Ce que le produit permet de faire de ces éléments aujourd'hui. */
   note: string;
+  /** Motifs pour lesquels des éléments de la catégorie ne sont pas candidats (vide quand aucune durée n'est réglée). */
+  exclusions: MotifExclusionConservation[];
+}
+export interface MotifExclusionConservation {
+  motif: string;
+  count: number;
 }
 export interface ApercuConservation {
   generatedAt: string;
