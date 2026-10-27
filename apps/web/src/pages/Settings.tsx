@@ -508,6 +508,18 @@ function ApercuConservationPanel() {
                   <Text size="xs" c="dimmed">
                     {c.note}
                   </Text>
+                  {c.exclusions.length > 0 && (
+                    <Text size="xs" c="dimmed" component="div">
+                      Non candidats :
+                      <ul>
+                        {c.exclusions.map((x) => (
+                          <li key={x.motif}>
+                            {x.motif} ({x.count})
+                          </li>
+                        ))}
+                      </ul>
+                    </Text>
+                  )}
                 </Table.Td>
                 <Table.Td>{c.days === null ? 'Sans limite' : `${c.days} jours`}</Table.Td>
                 <Table.Td>{c.candidates === null ? '—' : c.candidates}</Table.Td>

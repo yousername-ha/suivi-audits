@@ -3,6 +3,7 @@ import type { Logger } from 'pino';
 import { Auth } from './auth.js';
 import { Backups } from './backups.js';
 import { AlertesExploitation } from './alertes-exploitation.js';
+import { RemiseAVide } from './remise-a-vide.js';
 import { Updates } from './updates.js';
 import { Modules } from './modules.js';
 import { Operations } from './operations.js';
@@ -69,6 +70,7 @@ export function createServices(cfg: Config, log: Logger) {
     historique,
     modules,
     updates: new Updates(cfg, db, settings, alertes),
+    remiseAVide: new RemiseAVide(db),
     backups: new Backups(cfg, db, alertes),
     operations: new Operations(cfg, db, vault, alertes),
     walls: new Walls(cfg, db),
