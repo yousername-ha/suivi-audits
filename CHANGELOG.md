@@ -8,6 +8,9 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 Aucune action.
 
+### Sécurité
+- **Authentification** : les essais du second facteur sont limités par compte et comptés dans le verrouillage progressif existant ; les sessions à l'étape du second facteur sont plafonnées à trois par compte ; le compteur d'échecs est incrémenté de façon atomique ; les vérifications du mot de passe actuel (changement de mot de passe, enrôlement et désactivation du second facteur) sont limitées par compte, comptées dans le verrouillage et journalisées.
+
 ## [5.1.0] — 2026-10-27
 
 Version mineure : aucune migration SQL, aucune nouvelle dépendance.
