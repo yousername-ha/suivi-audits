@@ -20,10 +20,19 @@
    atteint. Par défaut, un pourcentage est rouge sous 60, orange de 60 à 80 et vert à partir de 80 ; les jours avant
    l'audit sont rouges sous 30, orange sous 60, verts au-delà ; un compteur de retards est vert à zéro et rouge sinon.
    Ces seuils sont un **choix d'affichage**, pas une règle métier : ils deviendront réglables à l'étape 2.
-4. **Aucun taux inventé.** Toutes les valeurs viennent de la synthèse existante (`/api/mur/synthese`), filtrée selon les
-   droits ; une dalle sans donnée lisible n'apparaît pas. La mise en œuvre de la déclaration d'applicabilité est donnée
-   **référentiel par référentiel**, avec la mention « Déclaration interne : ce n'est ni un taux de conformité certifié
-   ni le résultat d'un audit ». Aucun pourcentage tous référentiels confondus n'est calculé ([ADR 0060](0060-couverture-agregee-des-cartes-de-perimetres.md) : cela mélangerait des référentiels sans lien).
+4. **Taux de conformité global et taux par référentiel.** Toutes les valeurs viennent de la synthèse existante
+   (`/api/mur/synthese`), filtrée selon les droits ; une dalle sans donnée lisible n'apparaît pas.
+   - **Taux par référentiel** : exigences applicables mises en œuvre totalement sur exigences applicables, pour chaque
+     référentiel (déclaration d'applicabilité), dalle « Taux de conformité par référentiel ».
+   - **Taux global** (décision du RSSI du 28/10/2026) : **moyenne simple des taux par référentiel**, chaque référentiel
+     comptant autant quel que soit son nombre d'exigences. Dalle « Taux de conformité global », sous-titre « Moyenne des
+     référentiels », avec le nombre de référentiels moyennés ; il est aussi tracé en trait violet sur les barres des
+     taux par référentiel. Ce n'est **jamais** une somme d'exigences de référentiels différents, que
+     l'[ADR 0060](0060-couverture-agregee-des-cartes-de-perimetres.md) écarte parce qu'elle mélangerait des
+     référentiels sans lien et donnerait plus de poids au plus gros. L'ADR 0060 reste valable pour les cartes de
+     périmètres.
+   - Les deux portent la mention « déclaration interne, non certifiée » : ce n'est ni un taux certifié ni le résultat
+     d'un audit.
 5. **Couleurs.** Jetons `TABLEAU_DE_BORD` (clair et sombre) dans `tokens.ts`, variables `--tdb-*` générées dans
    `mantine-vars.css` : remplissage vif, texte foncé pour les chiffres, teinte douce pour les pastilles, contour. Le
    contour sombre (clair à l'écran sombre) porte le contraste des éléments graphiques (WCAG 1.4.11, 3:1) ; les textes et

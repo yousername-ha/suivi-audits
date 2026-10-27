@@ -1,7 +1,8 @@
 /* Tableau de bord par défaut de l'accueil, « Suivi de la conformité » (ADR 0066, lot 1) : dalles en verre et relief,
    métriques colorées selon des seuils d'affichage. Lecture seule ; toutes les valeurs viennent de la synthèse
-   (/api/mur/synthese), filtrée selon les droits : une dalle sans donnée lisible n'est pas affichée. Aucun taux tous
-   référentiels confondus (ADR 0060) : la mise en œuvre est donnée référentiel par référentiel.
+   (/api/mur/synthese), filtrée selon les droits : une dalle sans donnée lisible n'est pas affichée. Le taux global est
+   la moyenne simple des taux par référentiel (décision du RSSI du 28/10/2026, ADR 0066), affiché comme tel et distinct
+   des taux par référentiel ; jamais une somme d'exigences de référentiels différents (ADR 0060).
    L'écran mural et le Pilotage gardent les cartes de Synthese.tsx. */
 import type { Synthese } from '@suivi/shared';
 import {
@@ -10,6 +11,7 @@ import {
   BarresHorizontales,
   ChiffreCle,
   Dalle,
+  fmtTaux,
   Histogramme,
   JaugeArc,
   SEUILS_TAUX,
@@ -41,6 +43,13 @@ export function joursAvant(date: string, reference: string): number | null {
   return Number.isNaN(cible) || Number.isNaN(base) ? null : Math.round((cible - base) / JOUR_MS);
 }
 
+/** Taux de conformité global : moyenne simple des taux par référentiel (exigences mises en œuvre totalement sur
+    exigences applicables), chaque référentiel comptant autant. null sans référentiel applicable. */
+export function tauxGlobal(c: Synthese['conformite']) {
+  const taux = (c ?? []).filter((r) => r.applicables > 0).map((r) => (r.total * 100) / r.applicables);
+  return taux.length ? { pourcent: taux.reduce((s, t) => s + t, 0) / taux.length, referentiels: taux.length } : null;
+}
+
 const pluriel = (n: number, un: string, plusieurs: string) => `${n} ${n > 1 ? plusieurs : un}`;
 const AVERTISSEMENT = 'Déclaration interne : ce n’est ni un taux de conformité certifié ni le résultat d’un audit.';
 
@@ -64,7 +73,7 @@ function Repartition({ titre, valeurs }: { titre: string; valeurs: Record<string
 
 function Echeances({ s }: { s: Synthese }) {
   return (
-    <Dalle titre="Prochaines échéances" sousTitre="Écarts et actions à traiter" largeur={8}>
+    <Dalle titre="Prochaines échéances" sousTitre="Écarts et actions à traiter" largeur={6}>
       {s.echeances.length ? (
         <ul className="tdb-echeances">
           {s.echeances.map((e) => {
@@ -94,6 +103,7 @@ function Echeances({ s }: { s: Synthese }) {
 
 export function TableauDeBordConformite({ s }: { s: Synthese }) {
   const refs = (s.conformite ?? []).filter((r) => r.applicables > 0);
+  const global = tauxGlobal(s.conformite);
   const e = s.ecarts;
   const a = s.actions;
   const jours = s.prochainAudit ? joursAvant(s.prochainAudit.date, s.genereLe) : null;
@@ -112,13 +122,13 @@ export function TableauDeBordConformite({ s }: { s: Synthese }) {
   return (
     <div className="tdb">
       <div className="grille-cartes tdb-grille">
-        {s.recurrences && (
-          <Dalle titre="Tâches récurrentes en retard" sousTitre="Tâches récurrentes · revues, contrôles" largeur={3}>
+        {global && (
+          <Dalle titre="Taux de conformité global" sousTitre="Moyenne des référentiels" largeur={3}>
             <ChiffreCle
-              valeur={String(s.recurrences.occurrencesEnRetard)}
-              teinte={s.recurrences.occurrencesEnRetard ? 'rouge' : 'vert'}
-              detail={`sur ${pluriel(s.recurrences.occurrencesOuvertes, 'occurrence ouverte', 'occurrences ouvertes')}`}
-              legende={pluriel(s.recurrences.series, 'série active', 'séries actives')}
+              valeur={fmtTaux(global.pourcent)}
+              teinte={teinteSeuil(SEUILS_TAUX, global.pourcent)}
+              detail={`Moyenne simple des taux de ${pluriel(global.referentiels, 'référentiel', 'référentiels')}`}
+              legende="Chaque référentiel compte autant · déclaration interne, non certifiée"
             />
           </Dalle>
         )}
@@ -160,15 +170,19 @@ export function TableauDeBordConformite({ s }: { s: Synthese }) {
 
         {refs.length > 0 && (
           <Dalle
-            titre="Conformité par référentiel"
-            sousTitre="Exigences applicables mises en œuvre totalement"
+            titre="Taux de conformité par référentiel"
+            sousTitre="Exigences applicables mises en œuvre totalement, référentiel par référentiel"
             largeur={6}
           >
             <BarresHorizontales
-              titre="Conformité par référentiel"
+              titre="Taux de conformité par référentiel"
               lignes={refs.map((x) => ({ libelle: x.libelle, valeur: x.total, max: x.applicables }))}
               seuils={SEUILS_TAUX}
+              cible={global?.pourcent}
             />
+            {global && (
+              <Note>{`Trait violet : taux global, moyenne des référentiels (${fmtTaux(global.pourcent)}).`}</Note>
+            )}
             <Note>{AVERTISSEMENT}</Note>
           </Dalle>
         )}
@@ -227,7 +241,7 @@ export function TableauDeBordConformite({ s }: { s: Synthese }) {
 
         <Echeances s={s} />
         {(r || c) && (
-          <Dalle titre="Risques et continuité" sousTitre="Risques · continuité d’activité" largeur={4}>
+          <Dalle titre="Risques et continuité" sousTitre="Risques · continuité d’activité" largeur={3}>
             <div className="tdb-chiffres">
               {r && <ChiffreCle valeur={String(r.total)} detail="risques" />}
               {r && (
@@ -247,6 +261,16 @@ export function TableauDeBordConformite({ s }: { s: Synthese }) {
               {c && <ChiffreCle valeur={String(c.bia)} detail="analyses d’impact (BIA)" />}
               {c && <ChiffreCle valeur={String(c.pcra)} detail="plans de continuité et de reprise" />}
             </div>
+          </Dalle>
+        )}
+        {s.recurrences && (
+          <Dalle titre="Tâches récurrentes en retard" sousTitre="Tâches récurrentes · revues, contrôles" largeur={3}>
+            <ChiffreCle
+              valeur={String(s.recurrences.occurrencesEnRetard)}
+              teinte={s.recurrences.occurrencesEnRetard ? 'rouge' : 'vert'}
+              detail={`sur ${pluriel(s.recurrences.occurrencesOuvertes, 'occurrence ouverte', 'occurrences ouvertes')}`}
+              legende={pluriel(s.recurrences.series, 'série active', 'séries actives')}
+            />
           </Dalle>
         )}
 
