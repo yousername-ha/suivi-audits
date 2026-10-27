@@ -8,6 +8,9 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 Aucune action.
 
+### Modifié
+- **Tableau de bord de l'accueil « verre et relief »** ([ADR 0066](docs/adr/0066-tableau-de-bord-verre-et-relief.md), étape 1) : dalles en verre épais (reflets des bords, ombre portée, survol), chiffres clés colorés selon des seuils (tâches récurrentes en retard, écarts ouverts, actions en retard, jours avant l'audit), conformité par référentiel en barres fines, jauges en arc fin (indicateurs atteints, actions des écarts réalisées), niveau de mise en œuvre empilé, anneau des écarts par type, prochaines échéances avec état, risques et continuité, plans, mesures, plan d'audit et répartitions des écarts. Clair et sombre. Mêmes données et mêmes droits qu'avant ; aucun taux tous référentiels confondus. L'écran mural et la synthèse du Pilotage ne changent pas. Aucune migration, aucune dépendance nouvelle.
+
 ## [5.1.0] — 2026-10-27
 
 Version mineure : aucune migration SQL, aucune nouvelle dépendance.

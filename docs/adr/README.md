@@ -70,3 +70,4 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0064](0064-gap-ia-iso-27001-hds.md) | GAP IA ISO 27001 / HDS : trois cas d'usage réels, questions sur des faits constatables, points pré-évalués seulement si la réponse tranche | Acceptée |
 
 | [0065](0065-remise-a-vide-de-la-base.md) | Remise à vide de la base pour la recette : interrupteur désactivé par défaut, deux portées, code, phrase, sauvegarde récente, immuabilité suspendue le temps d'une transaction | Acceptée |
+| [0066](0066-tableau-de-bord-verre-et-relief.md) | Tableau de bord de l'accueil « verre et relief » : dalles en verre, métriques fines cernées, seuils d'affichage, aucun taux tous référentiels confondus (lot 1) | Acceptée |

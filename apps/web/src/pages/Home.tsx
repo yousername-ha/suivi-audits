@@ -1,12 +1,13 @@
-/* Accueil : tableau de bord (synthèse selon les droits), accès aux modules, activité en cours,
-   et activité en cours. Une seule grille de cartes : plus de colonnes sur les grands écrans. */
+/* Accueil : tableau de bord « Suivi de la conformité » en verre et relief (synthèse selon les droits, ADR 0066),
+   puis accès aux modules et activité en cours. Plus de colonnes sur les grands écrans. */
 import { Button, Card, Stack, Text, Title, VisuallyHidden } from '@mantine/core';
 import { ErrorAlert, IconeAdministration, IconeDocuments, IconeHistorique, Page, PageHeader } from '@suivi/ui';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router';
 import { cartesVisibles } from '../administration-droits';
 import { get } from '../api';
-import { SyntheseCartes, type SyntheseApi } from '../components/Synthese';
+import type { SyntheseApi } from '../components/Synthese';
+import { TableauDeBordConformite } from '../components/TableauDeBord';
 import { useLive, usePresence } from '../realtime';
 import { canAdminArea, canReadBusiness, useCan, useMe } from '../session';
 
@@ -159,24 +160,18 @@ export function HomePage() {
         actions={site && <LienSite url={site} nom={me.orgName} />}
       />
       {synthese.error && <ErrorAlert error={synthese.error} />}
-      {synthese.data ? (
-        <SyntheseCartes
-          s={synthese.data}
-          extra={
-            <>
-              <div className="section-label carte-large">
-                <Text className="page-eyebrow">Votre espace de travail</Text>
-                <Text size="sm" c="dimmed">
-                  Accès aux modules et activité de l’équipe
-                </Text>
-              </div>
-              {acces}
-            </>
-          }
-        />
-      ) : (
-        <div className="grille-cartes">{acces}</div>
-      )}
+      {synthese.data && <TableauDeBordConformite s={synthese.data} />}
+      <div className="grille-cartes">
+        {synthese.data && (
+          <div className="section-label carte-large">
+            <Text className="page-eyebrow">Votre espace de travail</Text>
+            <Text size="sm" c="dimmed">
+              Accès aux modules et activité de l’équipe
+            </Text>
+          </div>
+        )}
+        {acces}
+      </div>
     </Page>
   );
 }

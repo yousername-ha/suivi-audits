@@ -7,9 +7,13 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { convertCssVariables, DEFAULT_THEME, mergeMantineTheme } from '@mantine/core';
 import { cssVariablesResolver, theme as charte } from '@suivi/ui/theme';
-import { CARTE, variablesCarte } from '@suivi/ui/tokens';
+import { CARTE, TABLEAU_DE_BORD, variablesCarte, variablesTableauDeBord } from '@suivi/ui/tokens';
 
 const theme = mergeMantineTheme(DEFAULT_THEME, charte);
+const declarations = (v: Record<string, string>) =>
+  Object.entries(v)
+    .map(([k, c]) => `${k}:${c}`)
+    .join(';');
 const vars = cssVariablesResolver(theme);
 // Même calcul que MantineClasses (@mantine/core) : une règle par point de rupture.
 const em = (px: number) => `${px / 16}em`;
@@ -38,7 +42,10 @@ const css =
   // Exports de la cartographie : toujours en couleurs claires, quel que soit le thème affiché.
   `.carte-export{${Object.entries(variablesCarte(CARTE.clair))
     .map(([k, v]) => `${k}:${v}`)
-    .join(';')}}\n`;
+    .join(';')}}\n` +
+  // Tableau de bord « verre et relief » de l'accueil (ADR 0066), clair puis sombre.
+  `:root{${declarations(variablesTableauDeBord(TABLEAU_DE_BORD.clair))}}\n` +
+  `[data-mantine-color-scheme='dark']{${declarations(variablesTableauDeBord(TABLEAU_DE_BORD.sombre))}}\n`;
 const out = path.join(path.dirname(fileURLToPath(import.meta.url)), '../src/generated/mantine-vars.css');
 mkdirSync(path.dirname(out), { recursive: true });
 writeFileSync(out, css);
