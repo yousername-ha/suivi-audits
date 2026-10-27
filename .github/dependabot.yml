@@ -1,10 +1,13 @@
 # Mises à jour proposées en pull request, jamais fusionnées automatiquement (ADR 0063).
 # Actions GitHub : épinglées par empreinte de commit ; Dependabot propose la nouvelle empreinte avec sa version en
 # commentaire. Chaque proposition passe par la CI complète et la relecture du RSSI.
+# Les propositions visent claude-suivi-smsi, jamais main (directive commune du 27/10/2026, AGENTS « Sessions parallèles »).
+# Dependabot lit ce fichier sur la branche par défaut : le réglage s'applique une fois arrivé sur main.
 version: 2
 updates:
   - package-ecosystem: github-actions
     directory: /
+    target-branch: claude-suivi-smsi
     schedule:
       interval: weekly
       day: monday
@@ -19,6 +22,7 @@ updates:
         patterns: ['*']
   - package-ecosystem: docker
     directory: /docker
+    target-branch: claude-suivi-smsi
     schedule:
       interval: weekly
       day: monday
