@@ -19,6 +19,7 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `updates.ts` | 3 | Converti (lot 16) ; verrou consultatif en SQL |
 | `business-policy.ts` | 2 | Converti (lot 2) ; verrou consultatif et pg_notify en SQL |
 | `cli.ts` | 2 | Converti (lot 16) ; verrou consultatif en SQL |
+| `grc/registre-risques.ts` | 2 | Converti (lot 22) ; registre et bibliothèque des sources (sous-requêtes corrélées jsonb) en SQL paramétré |
 | `pilotage/service.ts` | 2 | Converti (lot 14) ; verrou consultatif et indicateurs (CTE) en SQL paramétré |
 | `backups.ts` | 1 | Converti (lot 13) ; verrou consultatif en SQL |
 | `grc/core.ts` | 1 | Converti (lot 4) ; pg_notify en SQL |
@@ -38,21 +39,20 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `grc/rapprochements.ts` | 0 | Converti (lot 12) |
 | `grc/registres.ts` | 0 | Converti (lot 7) ; objectColumns retiré de core.ts |
 | `grc/suppliers.ts` | 0 | Converti (lot 3) |
+| `legacy/store.ts` | 0 | Converti (lot 22) |
 | `rights.ts` | 0 | Converti (lot 21) ; agrégats ordonnés et ANY() en fragments fixes |
 | `routes/access.ts` | 0 | Converti (lot 9) |
 | `routes/admin.ts` | 0 | Converti (lot 19) ; version du serveur et comptages en SQL fixe |
 | `routes/auth.ts` | 0 | Converti (lot 15) |
 | `routes/carto.ts` | 0 | Converti (lot 18) |
 | `routes/documents.ts` | 0 | Converti (socle et lot 17) |
+| `routes/import.ts` | 0 | Converti (lot 22) |
 | `routes/settings.ts` | 0 | Converti (lot 19) |
 | `settings.ts` | 0 | Converti (lot 19) |
 | `types-processus.ts` | 0 | Converti (lot 1) |
 | `walls.ts` | 0 | Converti (lot 21) |
 | `courriel.ts` | 20 | Dernier (FOR UPDATE, power(), LEAST) |
 | `historique/tables/collection.ts` | 11 | À convertir |
-| `routes/import.ts` | 11 | À convertir |
-| `legacy/store.ts` | 9 | À convertir |
-| `grc/registre-risques.ts` | 7 | À convertir |
 | `historique/tables/invest.ts` | 7 | À convertir |
 | `grc/contributions.ts` | 5 | À convertir |
 | `jeu-de-test.ts` | 5 | À convertir |
@@ -88,4 +88,4 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `routes/modules.ts` | 1 | À convertir |
 | `startup.ts` | 1 | À convertir |
 
-Reste à convertir : 150 appels dans 39 fichiers.
+Reste à convertir : 123 appels dans 36 fichiers.

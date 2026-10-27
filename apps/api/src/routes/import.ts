@@ -18,7 +18,8 @@ import {
 import type { FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import type { Session } from '../auth.js';
-import type { Client } from '../db/db.js';
+import { sql } from 'kysely';
+import type { Client, Kdb } from '../db/db.js';
 import { HttpError } from '../http/errors.js';
 import { route } from '../http/route.js';
 import { sha256hex } from '../security/crypto.js';
@@ -112,8 +113,32 @@ async function writeModules(
   return svc.legacy.save(c, data, user, null, note, batchId);
 }
 
-const batchSummary = `id, created_at, created_by, filename, size, sha256, source_schema, envelope, mode, module, modules,
-  report->'totals' AS totals, state_version_before, state_version_after, status, undone_at, undone_by, version`;
+/** Résumé d'un lot d'import : colonnes publiques et total du rapport (chemin jsonb fixe). */
+const resumes = (k: Kdb) =>
+  k
+    .selectFrom('import_batches')
+    .select([
+      'id',
+      'created_at',
+      'created_by',
+      'filename',
+      'size',
+      'sha256',
+      'source_schema',
+      'envelope',
+      'mode',
+      'module',
+      'modules',
+      sql<unknown>`report->'totals'`.as('totals'),
+      'state_version_before',
+      'state_version_after',
+      'status',
+      'undone_at',
+      'undone_by',
+      'version',
+    ]);
+/** Verrou sur l'état : aucune autre écriture entre la lecture et l'application. */
+const verrouEtat = (k: Kdb) => k.selectFrom('app_state').select('id').where('id', '=', 1).forUpdate().execute();
 
 export const importRoutes = [
   route({
@@ -165,52 +190,53 @@ export const importRoutes = [
       const file = readUpload(buf);
       await svc.modules.assertKeys(query.module ? [query.module] : Object.keys(file.data));
       const filename = fileName(req);
-      const out = await svc.db.tx(async (c) => {
-        // Verrou sur l'état : aucune autre écriture entre la lecture et l'application.
-        await c.query('SELECT 1 FROM app_state WHERE id=1 FOR UPDATE');
+      const out = await svc.db.tx(async (c, k) => {
+        await verrouEtat(k);
         const before = await svc.legacy.recompose(c);
         const { next, report } = plan(before?.data ?? null, file, query.mode, query.module);
         if (!report.affected.length) throw new HttpError(422, 'Ce fichier ne modifie aucune donnée : rien à importer.');
         // L'import écrit dans les modules métier : il faut aussi les droits sur chacun d'eux.
         assertLegacyKeys(sess.user.rights, report.affected, 'modifier');
         if (query.mode === 'replace') assertLegacyKeys(sess.user.rights, report.affected, 'supprimer');
-        const id = (await c.query<{ id: number }>("SELECT nextval('import_batches_id_seq')::int AS id")).rows[0]!.id;
+        const { id } = await k
+          .selectNoFrom(sql<number>`nextval('import_batches_id_seq')::int`.as('id'))
+          .executeTakeFirstOrThrow();
         // Sauvegarde : la version courante est conservée dans l'historique (protégée de la fusion des versions).
         if (before) {
-          await c.query("UPDATE state_history SET note = $2 WHERE version = $1 AND note = ''", [
-            before.version,
-            `Sauvegarde avant l'import n°${id}`,
-          ]);
+          await k
+            .updateTable('state_history')
+            .set({ note: `Sauvegarde avant l'import n°${id}` })
+            .where('version', '=', before.version)
+            .where('note', '=', '')
+            .execute();
         }
         const keys = [...report.affected, 'schema'];
         const beforeSnap = snapshot(before?.data ?? null, keys);
         const afterSnap = snapshot(next, keys);
         const enc = svc.vault.encrypt(buf, `import:${id}`);
-        await c.query(
-          `INSERT INTO import_batches(id, created_by, filename, size, sha256, source_schema, envelope, mode, module, modules, report,
-             raw_key_id, raw_iv, raw_tag, raw_content, before_state, after_state, state_version_before)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)`,
-          [
+        await k
+          .insertInto('import_batches')
+          .values({
             id,
-            sess.user.username,
+            created_by: sess.user.username,
             filename,
-            buf.length,
-            sha,
-            file.schema,
-            !!file.envelope,
-            query.mode,
-            query.module ?? null,
-            report.affected,
-            report,
-            enc.keyId,
-            enc.iv,
-            enc.tag,
-            enc.content,
-            beforeSnap,
-            afterSnap,
-            before?.version ?? null,
-          ],
-        );
+            size: buf.length,
+            sha256: sha,
+            source_schema: file.schema,
+            envelope: !!file.envelope,
+            mode: query.mode,
+            module: query.module ?? null,
+            modules: report.affected,
+            report: JSON.stringify(report),
+            raw_key_id: enc.keyId,
+            raw_iv: enc.iv,
+            raw_tag: enc.tag,
+            raw_content: enc.content,
+            before_state: JSON.stringify(beforeSnap),
+            after_state: JSON.stringify(afterSnap),
+            state_version_before: before?.version ?? null,
+          })
+          .execute();
         const saved = await writeModules(
           svc,
           c,
@@ -220,7 +246,7 @@ export const importRoutes = [
           id,
         );
         const version = saved.conflict ? null : saved.version;
-        await c.query('UPDATE import_batches SET state_version_after=$2 WHERE id=$1', [id, version]);
+        await k.updateTable('import_batches').set({ state_version_after: version }).where('id', '=', id).execute();
         await svc.db.audit(
           sess.user,
           ip,
@@ -246,8 +272,7 @@ export const importRoutes = [
     summary: 'Historique des imports',
     tags: ['Import legacy'],
     access: 'import_export:lire',
-    handler: async ({ svc }) =>
-      (await svc.db.q(`SELECT ${batchSummary} FROM import_batches ORDER BY id DESC LIMIT 200`)).rows,
+    handler: async ({ svc }) => resumes(svc.db.k).orderBy('id', 'desc').limit(200).execute(),
   }),
   route({
     method: 'GET',
@@ -257,9 +282,9 @@ export const importRoutes = [
     access: 'import_export:lire',
     params: BatchParams,
     handler: async ({ svc, params }) => {
-      const r = await svc.db.one(`SELECT ${batchSummary}, report FROM import_batches WHERE id=$1`, [params.id]);
+      const r = await resumes(svc.db.k).select('report').where('id', '=', params.id).executeTakeFirst();
       if (!r) throw new HttpError(404, 'Import introuvable.');
-      await svc.modules.assertKeys(r.modules as string[]);
+      await svc.modules.assertKeys(r.modules);
       return r;
     },
   }),
@@ -271,16 +296,11 @@ export const importRoutes = [
     access: 'import_export:exporter',
     params: BatchParams,
     handler: async ({ svc, s, ip, params, reply }) => {
-      const r = await svc.db.one<{
-        filename: string;
-        sha256: string;
-        raw_key_id: string;
-        raw_iv: Buffer;
-        raw_tag: Buffer;
-        raw_content: Buffer;
-      }>('SELECT filename, sha256, raw_key_id, raw_iv, raw_tag, raw_content FROM import_batches WHERE id=$1', [
-        params.id,
-      ]);
+      const r = await svc.db.k
+        .selectFrom('import_batches')
+        .select(['filename', 'sha256', 'raw_key_id', 'raw_iv', 'raw_tag', 'raw_content'])
+        .where('id', '=', params.id)
+        .executeTakeFirst();
       if (!r) throw new HttpError(404, 'Import introuvable.');
       const plain = svc.vault.decrypt(
         { iv: r.raw_iv, tag: r.raw_tag, content: r.raw_content, keyId: r.raw_key_id },
@@ -313,14 +333,15 @@ export const importRoutes = [
     params: BatchParams,
     handler: async ({ svc, s, ip, params }) => {
       const sess = s as Session;
-      const r = await svc.db.tx(async (c) => {
-        await c.query('SELECT 1 FROM app_state WHERE id=1 FOR UPDATE');
-        const b = (
-          await c.query<{ status: string; modules: string[]; before_state: Snapshot; after_state: Snapshot }>(
-            'SELECT status, modules, before_state, after_state FROM import_batches WHERE id=$1 FOR UPDATE',
-            [params.id],
-          )
-        ).rows[0];
+      const r = await svc.db.tx(async (c, k) => {
+        await verrouEtat(k);
+        const b = (await k
+          .selectFrom('import_batches')
+          .select(['status', 'modules', 'before_state', 'after_state'])
+          .where('id', '=', params.id)
+          .forUpdate()
+          .executeTakeFirst()) as
+          { status: string; modules: string[]; before_state: Snapshot; after_state: Snapshot } | undefined;
         if (!b) throw new HttpError(404, 'Import introuvable.');
         if (b.status !== 'applied') throw new HttpError(409, 'Cet import a déjà été annulé.');
         const cur = (await svc.legacy.recompose(c))?.data ?? {};
@@ -350,10 +371,16 @@ export const importRoutes = [
           `Annulation de l'import n°${params.id}`,
           params.id,
         );
-        await c.query(
-          "UPDATE import_batches SET status='undone', undone_at=now(), undone_by=$2, version = version + 1 WHERE id=$1",
-          [params.id, sess.user.username],
-        );
+        await k
+          .updateTable('import_batches')
+          .set((eb) => ({
+            status: 'undone',
+            undone_at: sql<Date>`now()`,
+            undone_by: sess.user.username,
+            version: eb('version', '+', 1),
+          }))
+          .where('id', '=', params.id)
+          .execute();
         await svc.db.audit(sess.user, ip, 'import.undo', `import:${params.id}`, { modules: b.modules }, c);
         return { stateVersion: saved.conflict ? null : saved.version };
       }, sess.user.username);

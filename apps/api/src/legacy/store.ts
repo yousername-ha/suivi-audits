@@ -5,7 +5,8 @@
    - reste de l'état : app_state (clés techniques et version de l'état). */
 import { canonicalJson, type Json, type JsonObject } from '@suivi/shared/legacy';
 import type { Config } from '../config.js';
-import type { Actor, Client, Db } from '../db/db.js';
+import { sql } from 'kysely';
+import { surConnexion, type Actor, type Client, type Db, type Kdb } from '../db/db.js';
 import { sha256hex } from '../security/crypto.js';
 
 /** Correspondance d'un module legacy repris vers ses tables (phases 1 à 3). */
@@ -17,6 +18,15 @@ export interface ModuleMapper {
       undefined : le module est absent (annulation d'un import qui l'avait créé). */
   write(c: Client, value: Json | undefined, batchId: number | null): Promise<void>;
 }
+
+/** Version courante d'app_state, verrouillée jusqu'à la fin de la transaction. */
+const versionVerrouillee = (k: Kdb) =>
+  k
+    .selectFrom('app_state')
+    .select(['version', 'updated_by', 'updated_at'])
+    .where('id', '=', 1)
+    .forUpdate()
+    .executeTakeFirst();
 
 export interface StateRow {
   version: number;
@@ -74,10 +84,12 @@ export class LegacyStore {
 
   /* ---------------------------------------------------------------- Lecture */
   async row(c?: Client): Promise<StateRow | null> {
-    const r = await (c ?? this.db.pool).query<StateRow>(
-      'SELECT version, data, sha256, updated_by, updated_at FROM app_state WHERE id=1',
-    );
-    return r.rows[0] ?? null;
+    const r = await (c ? surConnexion(c) : this.db.k)
+      .selectFrom('app_state')
+      .select(['version', 'data', 'sha256', 'updated_by', 'updated_at'])
+      .where('id', '=', 1)
+      .executeTakeFirst();
+    return (r as StateRow | undefined) ?? null;
   }
   /** État servi à /legacy : app_state + modules repris, reconstruits depuis leurs tables. */
   async recompose(c?: Client): Promise<{ version: number; data: JsonObject } | null> {
@@ -117,31 +129,31 @@ export class LegacyStore {
     const obj: JsonObject = { ...incoming };
     for (const m of this.mappers.values()) delete obj[m.key];
     const sha = sha256hex(JSON.stringify(obj));
-    const cur = (
-      await c.query<{ version: number; updated_by: string; updated_at: Date }>(
-        'SELECT version, updated_by, updated_at FROM app_state WHERE id=1 FOR UPDATE',
-      )
-    ).rows[0];
+    const k = surConnexion(c);
+    const cur = await versionVerrouillee(k);
     if (cur && expected != null && expected !== cur.version)
       return { conflict: true, by: cur.updated_by, at: cur.updated_at, version: cur.version };
     const version = cur ? cur.version + 1 : 1;
     const by = user ? user.username : 'système';
+    const data = JSON.stringify(obj);
     if (cur) {
-      await c.query(
-        'UPDATE app_state SET version=$1, data=$2, sha256=$3, updated_at=now(), updated_by=$4, import_batch_id=$5 WHERE id=1',
-        [version, obj, sha, by, batchId],
-      );
+      await k
+        .updateTable('app_state')
+        .set({ version, data, sha256: sha, updated_at: sql<Date>`now()`, updated_by: by, import_batch_id: batchId })
+        .where('id', '=', 1)
+        .execute();
     } else {
-      await c.query(
-        'INSERT INTO app_state(id, version, data, sha256, updated_by, import_batch_id) VALUES (1,$1,$2,$3,$4,$5)',
-        [version, obj, sha, by, batchId],
-      );
+      await k
+        .insertInto('app_state')
+        .values({ id: 1, version, data, sha256: sha, updated_by: by, import_batch_id: batchId })
+        .execute();
     }
-    const last = (
-      await c.query<{ version: number; updated_by: string; updated_at: Date; note: string }>(
-        'SELECT version, updated_by, updated_at, note FROM state_history ORDER BY version DESC LIMIT 1',
-      )
-    ).rows[0];
+    const last = await k
+      .selectFrom('state_history')
+      .select(['version', 'updated_by', 'updated_at', 'note'])
+      .orderBy('version', 'desc')
+      .limit(1)
+      .executeTakeFirst();
     if (
       !note &&
       last &&
@@ -150,16 +162,26 @@ export class LegacyStore {
       Date.now() - new Date(last.updated_at).getTime() < 10 * 60e3 &&
       last.version === version - 1
     ) {
-      await c.query('DELETE FROM state_history WHERE version=$1', [last.version]);
+      await k.deleteFrom('state_history').where('version', '=', last.version).execute();
     }
-    await c.query(
-      'INSERT INTO state_history(version, data, sha256, updated_at, updated_by, note, import_batch_id) VALUES ($1,$2,$3,now(),$4,$5,$6)',
-      [version, obj, sha, by, note || '', batchId],
-    );
-    await c.query(
-      'DELETE FROM state_history WHERE version IN (SELECT version FROM state_history ORDER BY version DESC OFFSET $1)',
-      [this.cfg.stateHistoryKeep],
-    );
+    await k
+      .insertInto('state_history')
+      .values({
+        version,
+        data,
+        sha256: sha,
+        updated_at: sql<Date>`now()`,
+        updated_by: by,
+        note: note || '',
+        import_batch_id: batchId,
+      })
+      .execute();
+    await k
+      .deleteFrom('state_history')
+      .where('version', 'in', (eb) =>
+        eb.selectFrom('state_history').select('version').orderBy('version', 'desc').offset(this.cfg.stateHistoryKeep),
+      )
+      .execute();
     return { conflict: false, version, sha256: sha };
   }
 
@@ -176,11 +198,7 @@ export class LegacyStore {
   ) {
     const stored: JsonObject = { ...incoming };
     // Conflit détecté avant toute écriture dans les tables des modules repris.
-    const cur = (
-      await c.query<{ version: number; updated_by: string; updated_at: Date }>(
-        'SELECT version, updated_by, updated_at FROM app_state WHERE id=1 FOR UPDATE',
-      )
-    ).rows[0];
+    const cur = await versionVerrouillee(surConnexion(c));
     if (cur && expected != null && expected !== cur.version)
       return { conflict: true as const, by: cur.updated_by, at: cur.updated_at, version: cur.version };
     const actuel = await this.lireTous(c);

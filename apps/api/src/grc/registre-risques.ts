@@ -14,7 +14,9 @@ import {
   type GrcKind,
   type RiskMethod,
 } from '@suivi/shared';
+import { sql } from 'kysely';
 import type { SessionUser } from '../auth.js';
+import type { Kdb } from '../db/db.js';
 import { HttpError } from '../http/errors.js';
 import type { Grc } from './core.js';
 
@@ -45,12 +47,23 @@ interface Ligne {
 }
 
 const jour = () => new Date().toISOString().slice(0, 10);
+/** Définition d'une version de configuration (échelle, correspondance). */
+const definitionCfg = async (k: Kdb, ref: { item: string; version: number }) =>
+  (
+    await k
+      .selectFrom('cfg_versions')
+      .select('definition')
+      .where('item_id', '=', ref.item)
+      .where('version', '=', ref.version)
+      .executeTakeFirst()
+  )?.definition;
 
 /** Registre des risques du périmètre (500 au plus, filtres appliqués côté serveur). */
 export async function registreRisques(g: Grc, smsi: string, user: SessionUser, f: FiltresRegistre) {
   await g.access(smsi, user);
   await g.permission(user, 'pilotage', 'lire');
   const motif = '%' + (f.recherche ?? '').replace(/[\\%_]/g, '\\$&') + '%';
+  // Sous-requêtes corrélées et chemins jsonb : SQL paramétré (ADR 0062 § 5), filtres liés.
   const rows = (
     await g.db.q<Ligne>(
       `SELECT o.id,o.name,o.version,o.data,m.definition->>'family' AS family,
@@ -76,12 +89,16 @@ export async function registreRisques(g: Grc, smsi: string, user: SessionUser, f
   const courantes = new Map(
     methodes.length
       ? (
-          await g.db.q<{ methodId: string; version: number; definition: unknown }>(
-            `SELECT DISTINCT ON (method_id) method_id AS "methodId",version,definition FROM grc_method_versions
-             WHERE smsi_id=$1 AND method_id=ANY($2::uuid[]) ORDER BY method_id,version DESC`,
-            [smsi, methodes],
-          )
-        ).rows.map((m) => [m.methodId, { version: m.version, definition: m.definition as RiskMethod }] as const)
+          await g.db.k
+            .selectFrom('grc_method_versions')
+            .select(['method_id as methodId', 'version', 'definition'])
+            .distinctOn('method_id')
+            .where('smsi_id', '=', smsi)
+            .where('method_id', 'in', methodes)
+            .orderBy('method_id')
+            .orderBy('version', 'desc')
+            .execute()
+        ).map((m) => [m.methodId, { version: m.version, definition: m.definition as RiskMethod }] as const)
       : [],
   );
   const items = rows
@@ -135,20 +152,26 @@ export async function etudeEbios(g: Grc, smsi: string, id: string, user: Session
   if (etude.kind !== 'risk_study') throw new HttpError(422, 'Étude EBIOS RM attendue.');
   const ref = 'object:' + id;
   const kinds = [...new Set(EBIOS_ATELIERS.flatMap((a) => a.kinds as readonly GrcKind[]))];
-  const objets = (
-    await g.db.q<{
-      id: string;
-      kind: GrcKind;
-      name: string;
-      version: number;
-      data: Record<string, unknown>;
-      updatedAt: string;
-    }>(
-      `SELECT id,kind,name,version,data,updated_at AS "updatedAt" FROM grc_objects WHERE smsi_id=$1 AND NOT archived AND kind=ANY($2) AND data->>'studyRef'=$3
-       ORDER BY kind,name,id LIMIT 2000`,
-      [smsi, kinds, ref],
-    )
-  ).rows;
+  type Objet = {
+    id: string;
+    kind: GrcKind;
+    name: string;
+    version: number;
+    data: Record<string, unknown>;
+    updatedAt: string;
+  };
+  const objets = (await g.db.k
+    .selectFrom('grc_objects')
+    .select(['id', 'kind', 'name', 'version', 'data', 'updated_at as updatedAt'])
+    .where('smsi_id', '=', smsi)
+    .where('archived', '=', false)
+    .where('kind', 'in', kinds)
+    .where(sql<string>`data->>'studyRef'`, '=', ref)
+    .orderBy('kind')
+    .orderBy('name')
+    .orderBy('id')
+    .limit(2000)
+    .execute()) as unknown as Objet[];
   // Sources de la bibliothèque de risques (sans étude propriétaire) référencées par les couples de l'étude : lues, pas copiées.
   const propres = new Set(objets.map((o) => o.id));
   const idsBibliotheque = [
@@ -160,13 +183,14 @@ export async function etudeEbios(g: Grc, smsi: string, id: string, user: Session
     ),
   ];
   const bibliotheque = idsBibliotheque.length
-    ? (
-        await g.db.q<(typeof objets)[number] & { archived: boolean }>(
-          `SELECT id,kind,name,version,data,updated_at AS "updatedAt",archived FROM grc_objects
-           WHERE smsi_id=$1 AND kind='risk_source' AND id=ANY($2::uuid[]) AND COALESCE(data->>'studyRef','')=''`,
-          [smsi, idsBibliotheque],
-        )
-      ).rows
+    ? ((await g.db.k
+        .selectFrom('grc_objects')
+        .select(['id', 'kind', 'name', 'version', 'data', 'updated_at as updatedAt', 'archived'])
+        .where('smsi_id', '=', smsi)
+        .where('kind', '=', 'risk_source')
+        .where('id', 'in', idsBibliotheque)
+        .where(sql<string>`COALESCE(data->>'studyRef','')`, '=', '')
+        .execute()) as unknown as (Objet & { archived: boolean })[])
     : [];
   const versionsBibliotheque = new Map(bibliotheque.map((o) => ['object:' + o.id, o.version]));
   objets.push(...bibliotheque);
@@ -200,13 +224,28 @@ export async function etudeEbios(g: Grc, smsi: string, id: string, user: Session
     }
     return { ...o, calcul };
   });
-  const validations = (
-    await g.db.q<{ step: string; result: string; date: string; by: string; sourceVersion: number; at: string }>(
-      `SELECT step,result,performed_on::text AS date,created_by AS by,source_version AS "sourceVersion",created_at AS at FROM pilotage_decisions
-       WHERE smsi_id=$1 AND source_ref=$2 AND operation='step_validation' ORDER BY created_at`,
-      [smsi, ref],
-    )
-  ).rows;
+  const validations = (await g.db.k
+    .selectFrom('pilotage_decisions')
+    .select([
+      'step',
+      'result',
+      sql<string>`performed_on::text`.as('date'),
+      'created_by as by',
+      'source_version as sourceVersion',
+      'created_at as at',
+    ])
+    .where('smsi_id', '=', smsi)
+    .where('source_ref', '=', ref)
+    .where('operation', '=', 'step_validation')
+    .orderBy('created_at')
+    .execute()) as unknown as {
+    step: string;
+    result: string;
+    date: string;
+    by: string;
+    sourceVersion: number;
+    at: string;
+  }[];
   return {
     etude,
     ateliers: EBIOS_ATELIERS.map((a) => {
@@ -236,11 +275,7 @@ async function libellesEchellesScenario(g: Grc, configuration: unknown) {
   const lire = async (ref: { item: string; version: number } | null | undefined) => {
     const noms = new Map<string, string>();
     if (!ref) return noms;
-    const def = await g.db.one<{ definition: unknown }>(
-      'SELECT definition FROM cfg_versions WHERE item_id=$1 AND version=$2',
-      [ref.item, ref.version],
-    );
-    const echelle = ScaleDefinition.safeParse(def?.definition);
+    const echelle = ScaleDefinition.safeParse(await definitionCfg(g.db.k, ref));
     if (echelle.success) for (const l of echelle.data.levels) noms.set(l.id, l.label);
     return noms;
   };
@@ -255,13 +290,7 @@ async function libellesGravite(g: Grc, configuration: unknown) {
   const noms = new Map<string, string>();
   const conf = StudyConfiguration.safeParse(configuration);
   if (!conf.success || !conf.data.severityMapping) return noms;
-  const def = async (ref: { item: string; version: number }) =>
-    (
-      await g.db.one<{ definition: unknown }>('SELECT definition FROM cfg_versions WHERE item_id=$1 AND version=$2', [
-        ref.item,
-        ref.version,
-      ])
-    )?.definition;
+  const def = (ref: { item: string; version: number }) => definitionCfg(g.db.k, ref);
   const mapping = MappingDefinition.safeParse(await def(conf.data.severityMapping));
   if (!mapping.success) return noms;
   const echelle = ScaleDefinition.safeParse(await def(mapping.data.to));
@@ -274,6 +303,7 @@ async function libellesGravite(g: Grc, configuration: unknown) {
 export async function bibliothequeSources(g: Grc, smsi: string, user: SessionUser) {
   await g.access(smsi, user);
   await g.permission(user, 'pilotage', 'lire');
+  // Décomptes corrélés sur chemins jsonb : SQL paramétré (ADR 0062 § 5).
   const rows = (
     await g.db.q<{
       id: string;
