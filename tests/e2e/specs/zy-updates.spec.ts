@@ -363,3 +363,24 @@ test('mise à jour : l’écran d’avancement horodate les étapes et donne la 
     await ctx.close();
   }
 });
+test('mise à jour : aucun bandeau sur l’écran de connexion, même si une version est disponible', async ({
+  browser,
+}) => {
+  const ctx = await browser.newContext({ ignoreHTTPSErrors: true });
+  const page = await ctx.newPage();
+  const problems = watchPage(page);
+  await page.route('**/update/status.json', (route) => route.fulfill({ json: state() }));
+  try {
+    const statut = page.waitForResponse('**/update/status.json');
+    await page.goto('/login');
+    await statut;
+    await expect(page.getByRole('button', { name: /se connecter/i })).toBeVisible();
+    // Le suivi indépendant relit l'état toutes les 3 s : laisser passer un second cycle avant de conclure.
+    await page.waitForTimeout(3500);
+    await expect(page.locator('.suivi-update-notice')).toHaveCount(0);
+    await expect(page.locator('.update-notice')).toHaveCount(0);
+    expect(problems).toEqual([]);
+  } finally {
+    await ctx.close();
+  }
+});

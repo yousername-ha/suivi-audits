@@ -2,6 +2,23 @@
 (() => {
   let banner = null;
   let admin = false;
+  // Session complète (double authentification faite) ? Relue au plus toutes les 15 s : le bandeau ne s'affiche jamais
+  // à un visiteur non connecté (écran de connexion compris).
+  let session = { ok: false, admin: false, at: 0 };
+  async function connecte() {
+    if (Date.now() - session.at < 15000) return session;
+    const me = await fetch('/api/auth/me', { cache: 'no-store' })
+      .then((v) => v.json())
+      .catch(() => null);
+    const ok = me?.stage === 'ok';
+    session = {
+      ok,
+      admin:
+        ok && !!me?.user?.roles?.includes('Administrateur') && !!me.permissions?.includes('administration:administrer'),
+      at: Date.now(),
+    };
+    return session;
+  }
   const greater = (a, b) => {
     if (!/^\d+\.\d+\.\d+$/.test(a) || !/^\d+\.\d+\.\d+$/.test(b)) return false;
     const x = a.split('.').map(Number),
@@ -18,7 +35,10 @@
         location.replace(`/update/?next=${encodeURIComponent(location.pathname + location.search + location.hash)}`);
         return;
       }
-      if (!document.querySelector('[data-native-updates]') && greater(s.available, s.installed)) {
+      const veut = !document.querySelector('[data-native-updates]') && greater(s.available, s.installed);
+      const droit = veut ? await connecte() : null;
+      if (veut && droit.ok) {
+        admin = droit.admin;
         if (!banner) {
           const css = document.createElement('link');
           css.rel = 'stylesheet';
@@ -28,13 +48,6 @@
           banner.className = 'suivi-update-notice';
           banner.setAttribute('role', 'status');
           document.body.prepend(banner);
-          const me = await fetch('/api/auth/me', { cache: 'no-store' })
-            .then((v) => v.json())
-            .catch(() => null);
-          admin =
-            me?.stage === 'ok' &&
-            me?.user?.roles?.includes('Administrateur') &&
-            me.permissions?.includes('administration:administrer');
         }
         banner.replaceChildren();
         const text = document.createElement('span');

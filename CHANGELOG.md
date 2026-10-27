@@ -11,6 +11,9 @@ Aucune action.
 ### Ajouté
 - **Remise à vide de la base, pour la recette** ([ADR 0065](docs/adr/0065-remise-a-vide-de-la-base.md), demande du RSSI du 27/10/2026) : Administration, Sauvegardes et restauration, bouton rouge « Remettre la base à vide… ». **Désactivée par défaut** : un administrateur l'autorise d'abord par un interrupteur (code de double authentification). Deux portées au choix à chaque fois : les données de travail seulement (comptes, rôles et réglages conservés) ou tout, comptes compris (retour à l'écran d'installation avec un nouveau jeton). Exige la phrase à recopier propre à la portée, un code de double authentification, une sauvegarde réussie de moins de 30 minutes et aucune opération d'exploitation en cours. Efface aussi les données normalement immuables (décisions, versions publiées) : les triggers sont suspendus puis rétablis dans une seule transaction, annulée au moindre échec. Le journal d'audit n'est jamais effacé. Aucune migration.
 
+### Corrigé
+- **Bandeau « Mise à jour disponible » sur l'écran de connexion** (demande du RSSI du 27/10/2026) : le suivi indépendant injecté dans toutes les pages (`docker/maintenance/client.js`) l'affichait à un visiteur non connecté. Il n'apparaît plus qu'avec une session complète ; la redirection vers la page de maintenance pendant une mise à jour reste active sur tous les écrans.
+
 ## [5.0.0] — 2026-10-27
 
 **Version majeure** : deux migrations suppriment définitivement des données (catalogue « Environnement », page « Conformité IA ») et l'exécutant de mise à jour ne monte plus `/root/.ssh` ni `/root/.docker` par défaut. Lire les notes de mise à jour ci-dessous avant de lancer la mise à jour.
