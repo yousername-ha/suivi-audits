@@ -37,6 +37,7 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `config-grc.ts` | 0 | Converti (lot 10) |
 | `conservation.ts` | 0 | Converti (lot 24) |
 | `controle-relations.ts` | 0 | Converti (lot 21) |
+| `courriel.ts` | 0 | Converti (lot 26) ; verrou consultatif en SQL |
 | `documents-usage.ts` | 0 | Converti (lot 25) |
 | `grc/annuaires.ts` | 0 | Converti (lot 3) |
 | `grc/contributions.ts` | 0 | Converti (lot 23) |
@@ -80,7 +81,6 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `systeme.ts` | 0 | Converti (lot 24) |
 | `types-processus.ts` | 0 | Converti (lot 1) |
 | `walls.ts` | 0 | Converti (lot 21) |
-| `courriel.ts` | 20 | Dernier (FOR UPDATE, power(), LEAST) |
 | `historique/tables/collection.ts` | 11 | À convertir |
 | `historique/tables/invest.ts` | 7 | À convertir |
 | `historique/tables/reglages.ts` | 3 | À convertir |
@@ -88,4 +88,4 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `historique/registre.ts` | 2 | À convertir |
 | `historique/ecarts-natifs.ts` | 1 | À convertir |
 
-Reste à convertir : 47 appels dans 7 fichiers.
+Reste à convertir : 27 appels dans 6 fichiers.
