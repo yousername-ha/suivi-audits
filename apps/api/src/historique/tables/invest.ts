@@ -2,7 +2,7 @@
    (`{ baseYear, lines }`) et les tables invest_settings / invest_lines. Les champs non modélisés passent par `extra`
    pour que l'aller-retour ne perde rien ; /legacy et l'export reçoivent la forme historique recomposée. */
 import { isObject, type Json, type JsonObject } from '@suivi/shared/legacy';
-import type { Client } from '../../db/db.js';
+import { surConnexion, type Client } from '../../db/db.js';
 import type { ModuleMapper } from '../../legacy/store.js';
 
 const TEXTES = [
@@ -45,13 +45,21 @@ interface LigneRow {
 }
 
 async function lireInvest(c: Client): Promise<Json | undefined> {
-  const reglages = (
-    await c.query<{ base_year: number; extra: JsonObject }>('SELECT base_year, extra FROM invest_settings WHERE id=1')
-  ).rows[0];
+  const k = surConnexion(c);
+  const reglages = await k
+    .selectFrom('invest_settings')
+    .select(['base_year', 'extra'])
+    .where('id', '=', 1)
+    .executeTakeFirst();
   if (!reglages) return undefined;
-  const lignes = (await c.query<LigneRow>('SELECT * FROM invest_lines ORDER BY position, seq')).rows;
+  const lignes = (await k
+    .selectFrom('invest_lines')
+    .selectAll()
+    .orderBy('position')
+    .orderBy('seq')
+    .execute()) as unknown as LigneRow[];
   return {
-    ...reglages.extra,
+    ...(reglages.extra as JsonObject),
     baseYear: reglages.base_year,
     lines: lignes.map((r): Json => {
       if (r.extra.brut !== undefined) return r.extra.brut as Json;
@@ -74,49 +82,54 @@ async function lireInvest(c: Client): Promise<Json | undefined> {
 
 /** Remplace le contenu des tables par la valeur de la clé (undefined, null ou objet vide : module vidé). */
 export async function ecrireInvest(c: Client, value: Json | undefined): Promise<void> {
-  await c.query('DELETE FROM invest_lines');
-  await c.query('DELETE FROM invest_settings');
+  const k = surConnexion(c);
+  await k.deleteFrom('invest_lines').execute();
+  await k.deleteFrom('invest_settings').execute();
   if (!isObject(value) || !Object.keys(value).length) return;
   const annee = Number(value.baseYear);
   const { baseYear: _b, lines: _l, ...autres } = value;
-  await c.query('INSERT INTO invest_settings(base_year, extra) VALUES ($1,$2)', [
-    Number.isInteger(annee) && annee >= 2000 && annee <= 2200 ? annee : new Date().getFullYear(),
-    autres,
-  ]);
+  await k
+    .insertInto('invest_settings')
+    .values({
+      base_year: Number.isInteger(annee) && annee >= 2000 && annee <= 2200 ? annee : new Date().getFullYear(),
+      extra: JSON.stringify(autres),
+    })
+    .execute();
   const lignes = Array.isArray(value.lines) ? value.lines : [];
   for (const [position, l] of lignes.entries()) {
     if (!isObject(l)) {
-      await c.query('INSERT INTO invest_lines(position, extra) VALUES ($1,$2)', [position, { brut: l }]);
+      await k
+        .insertInto('invest_lines')
+        .values({ position, extra: JSON.stringify({ brut: l }) })
+        .execute();
       continue;
     }
     const extra = Object.fromEntries(Object.entries(l).filter(([k]) => !CHAMPS_MODELISES.has(k)));
     const notice = Number(l.notice);
-    await c.query(
-      `INSERT INTO invest_lines(position,id,company,priority,type,description,n0,n1,n2,comment,alt,account,perimeter,
-                                status,nature,renewal,notice,supplier,extra)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)`,
-      [
+    await k
+      .insertInto('invest_lines')
+      .values({
         position,
-        'id' in l ? str(l.id) : null,
-        str(l.company),
-        str(l.priority),
-        str(l.type),
-        str(l.desc),
-        nombre(l.n0),
-        nombre(l.n1),
-        nombre(l.n2),
-        str(l.comment),
-        str(l.alt),
-        str(l.account),
-        str(l.perimeter),
-        str(l.status) || 'À qualifier',
-        str(l.nature) || 'Abonnement',
-        str(l.renewal),
-        Number.isInteger(notice) && notice >= 0 ? notice : 60,
-        str(l.supplier),
-        extra,
-      ],
-    );
+        id: 'id' in l ? str(l.id) : null,
+        company: str(l.company),
+        priority: str(l.priority),
+        type: str(l.type),
+        description: str(l.desc),
+        n0: nombre(l.n0),
+        n1: nombre(l.n1),
+        n2: nombre(l.n2),
+        comment: str(l.comment),
+        alt: str(l.alt),
+        account: str(l.account),
+        perimeter: str(l.perimeter),
+        status: str(l.status) || 'À qualifier',
+        nature: str(l.nature) || 'Abonnement',
+        renewal: str(l.renewal),
+        notice: Number.isInteger(notice) && notice >= 0 ? notice : 60,
+        supplier: str(l.supplier),
+        extra: JSON.stringify(extra),
+      })
+      .execute();
   }
 }
 
