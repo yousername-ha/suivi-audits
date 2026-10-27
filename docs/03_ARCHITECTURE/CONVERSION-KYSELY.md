@@ -28,6 +28,7 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `calendriers-plateforme.ts` | 0 | Converti (lot 2) |
 | `carto/maps.ts` | 0 | Converti (lot 18) |
 | `config-grc.ts` | 0 | Converti (lot 10) |
+| `controle-relations.ts` | 0 | Converti (lot 21) |
 | `grc/annuaires.ts` | 0 | Converti (lot 3) |
 | `grc/evaluations-exigences.ts` | 0 | Converti (lot 20) |
 | `grc/frameworks.ts` | 0 | Converti (lot 20) |
@@ -37,6 +38,7 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `grc/rapprochements.ts` | 0 | Converti (lot 12) |
 | `grc/registres.ts` | 0 | Converti (lot 7) ; objectColumns retiré de core.ts |
 | `grc/suppliers.ts` | 0 | Converti (lot 3) |
+| `rights.ts` | 0 | Converti (lot 21) ; agrégats ordonnés et ANY() en fragments fixes |
 | `routes/access.ts` | 0 | Converti (lot 9) |
 | `routes/admin.ts` | 0 | Converti (lot 19) ; version du serveur et comptages en SQL fixe |
 | `routes/auth.ts` | 0 | Converti (lot 15) |
@@ -45,17 +47,15 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `routes/settings.ts` | 0 | Converti (lot 19) |
 | `settings.ts` | 0 | Converti (lot 19) |
 | `types-processus.ts` | 0 | Converti (lot 1) |
+| `walls.ts` | 0 | Converti (lot 21) |
 | `courriel.ts` | 20 | Dernier (FOR UPDATE, power(), LEAST) |
-| `controle-relations.ts` | 11 | À convertir |
 | `historique/tables/collection.ts` | 11 | À convertir |
 | `routes/import.ts` | 11 | À convertir |
 | `legacy/store.ts` | 9 | À convertir |
 | `grc/registre-risques.ts` | 7 | À convertir |
 | `historique/tables/invest.ts` | 7 | À convertir |
-| `rights.ts` | 7 | À convertir |
 | `grc/contributions.ts` | 5 | À convertir |
 | `jeu-de-test.ts` | 5 | À convertir |
-| `walls.ts` | 5 | À convertir |
 | `grc/kit-ia.ts` | 4 | À convertir |
 | `grc/plan-ecarts.ts` | 4 | À convertir |
 | `grc/sources.ts` | 4 | À convertir |
@@ -88,4 +88,4 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `routes/modules.ts` | 1 | À convertir |
 | `startup.ts` | 1 | À convertir |
 
-Reste à convertir : 173 appels dans 42 fichiers.
+Reste à convertir : 150 appels dans 39 fichiers.

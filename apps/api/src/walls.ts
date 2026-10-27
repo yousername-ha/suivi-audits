@@ -5,6 +5,7 @@
 import { Rights, type BusinessModule } from '@suivi/shared';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { Config } from './config.js';
+import { sql } from 'kysely';
 import type { Db } from './db/db.js';
 import { isHttps } from './http/security.js';
 import { parseCookies } from './auth.js';
@@ -30,33 +31,48 @@ export class Walls {
   /** Création : renvoie le code d'activation, affiché une seule fois. */
   async create(name: string, modules: BusinessModule[], days: number, by: string) {
     const code = token(24);
-    const r = await this.db.tx(
-      (c) =>
-        c.query<{ id: string }>(
-          `INSERT INTO wall_screens(name, modules, activation_hash, activation_expires, expires_at, created_by)
-           VALUES ($1, $2, $3, now() + make_interval(secs => $4), now() + make_interval(days => $5), $6) RETURNING id`,
-          [name, modules, sha256(code), ACTIVATION_MS / 1000, days, by],
-        ),
+    const { id } = await this.db.tx(
+      (_c, k) =>
+        k
+          .insertInto('wall_screens')
+          .values({
+            name,
+            modules,
+            activation_hash: sha256(code),
+            activation_expires: sql<Date>`now() + make_interval(secs => ${ACTIVATION_MS / 1000})`,
+            expires_at: sql<Date>`now() + make_interval(days => ${days})`,
+            created_by: by,
+          })
+          .returning('id')
+          .executeTakeFirstOrThrow(),
       by,
     );
-    return { id: r.rows[0]!.id, code };
+    return { id, code };
   }
 
   /** Activation par l'appareil : code valide, non utilisé, non expiré, écran non révoqué. Pose le cookie. */
   async activate(req: FastifyRequest, reply: FastifyReply, code: string): Promise<string | null> {
     const device = token(32);
-    const r = await this.db.tx(
-      (c) =>
-        c.query<{ id: string; name: string; expires_at: Date }>(
-          `UPDATE wall_screens SET activation_hash = NULL, activation_expires = NULL, device_hash = $2,
-                  activated_at = now(), last_ip = $3, version = version + 1
-            WHERE activation_hash = $1 AND activation_expires > now() AND revoked_at IS NULL AND expires_at > now()
-            RETURNING id, name, expires_at`,
-          [sha256(code), sha256(device), req.ip || null],
-        ),
+    const w = await this.db.tx(
+      (_c, k) =>
+        k
+          .updateTable('wall_screens')
+          .set((eb) => ({
+            activation_hash: null,
+            activation_expires: null,
+            device_hash: sha256(device),
+            activated_at: sql<Date>`now()`,
+            last_ip: req.ip || null,
+            version: eb('version', '+', 1),
+          }))
+          .where('activation_hash', '=', sha256(code))
+          .where('activation_expires', '>', sql<Date>`now()`)
+          .where('revoked_at', 'is', null)
+          .where('expires_at', '>', sql<Date>`now()`)
+          .returning(['id', 'name', 'expires_at'])
+          .executeTakeFirst(),
       'écran mural',
     );
-    const w = r.rows[0];
     if (!w) return null;
     const maxAge = Math.max(60, Math.floor((new Date(w.expires_at).getTime() - Date.now()) / 1000));
     this.setCookie(req, reply, device, maxAge);
@@ -68,30 +84,44 @@ export class Walls {
     const c = parseCookies(req.headers.cookie);
     const tok = c.get(WALL_COOKIE_SECURE) || c.get(WALL_COOKIE_PLAIN);
     if (!tok || tok.length > 100) return null;
-    const r = await this.db.one<{ id: string; name: string; modules: BusinessModule[]; last_seen_at: Date | null }>(
-      `SELECT id, name, modules, last_seen_at FROM wall_screens
-        WHERE device_hash = $1 AND revoked_at IS NULL AND expires_at > now()`,
-      [sha256(tok)],
-    );
+    const r = await this.db.k
+      .selectFrom('wall_screens')
+      .select(['id', 'name', 'modules', 'last_seen_at'])
+      .where('device_hash', '=', sha256(tok))
+      .where('revoked_at', 'is', null)
+      .where('expires_at', '>', sql<Date>`now()`)
+      .executeTakeFirst();
     if (!r) return null;
     if (!r.last_seen_at || Date.now() - new Date(r.last_seen_at).getTime() > 60e3)
-      this.db
-        .q('UPDATE wall_screens SET last_seen_at = now(), last_ip = $2 WHERE id = $1', [r.id, req.ip || null])
+      this.db.k
+        .updateTable('wall_screens')
+        .set({ last_seen_at: sql<Date>`now()`, last_ip: req.ip || null })
+        .where('id', '=', r.id)
+        .execute()
         .catch(() => {});
-    return { id: r.id, name: r.name, modules: r.modules, rights: new Rights(r.modules.map((m) => `${m}:lire`)) };
+    const modules = r.modules as BusinessModule[];
+    return { id: r.id, name: r.name, modules, rights: new Rights(modules.map((m) => `${m}:lire`)) };
   }
 
   async revoke(id: string, by: string): Promise<string | null> {
     const r = await this.db.tx(
-      (c) =>
-        c.query<{ name: string }>(
-          `UPDATE wall_screens SET revoked_at = now(), revoked_by = $2, device_hash = NULL, activation_hash = NULL,
-                  version = version + 1 WHERE id = $1 AND revoked_at IS NULL RETURNING name`,
-          [id, by],
-        ),
+      (_c, k) =>
+        k
+          .updateTable('wall_screens')
+          .set((eb) => ({
+            revoked_at: sql<Date>`now()`,
+            revoked_by: by,
+            device_hash: null,
+            activation_hash: null,
+            version: eb('version', '+', 1),
+          }))
+          .where('id', '=', id)
+          .where('revoked_at', 'is', null)
+          .returning('name')
+          .executeTakeFirst(),
       by,
     );
-    return r.rows[0]?.name ?? null;
+    return r?.name ?? null;
   }
 
   private setCookie(req: FastifyRequest, reply: FastifyReply, value: string, maxAge: number) {
