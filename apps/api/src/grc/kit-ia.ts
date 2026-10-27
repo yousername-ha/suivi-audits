@@ -149,18 +149,27 @@ export class GrcKitIa {
     const derniere = existant ? (await this.g.library.version(existant.id, existant.version, user)).definition : null;
     const identique = !!derniere && empreinte(derniere) === empreinte(definition);
     const sha = empreinte(b);
-    const dejaTrace = !!(await this.g.db.one('SELECT 1 FROM lib_kit_ia WHERE sha256=$1', [sha]));
+    const dejaTrace = !!(await this.g.db.k
+      .selectFrom('lib_kit_ia')
+      .select('id')
+      .where('sha256', '=', sha)
+      .executeTakeFirst());
     const { resolues, nonResolues, themes } = await this.resoudre(b, user);
     // Version du référentiel IA que l'import écrirait : la courante si le contenu est identique, la suivante sinon.
     const versionSource = identique ? existant!.version : (existant?.version ?? 0) + 1;
     const existantes = existant
-      ? (
-          await this.g.db.q<{ s: string; sv: number; tf: string; tv: number; tr: string }>(
-            `SELECT source_requirement_id AS s,source_version AS sv,target_framework_id AS tf,target_version AS tv,target_requirement_id AS tr
-               FROM lib_mappings WHERE source_framework_id=$1 AND status<>'withdrawn'`,
-            [existant.id],
-          )
-        ).rows
+      ? await this.g.db.k
+          .selectFrom('lib_mappings')
+          .select([
+            'source_requirement_id as s',
+            'source_version as sv',
+            'target_framework_id as tf',
+            'target_version as tv',
+            'target_requirement_id as tr',
+          ])
+          .where('source_framework_id', '=', existant.id)
+          .where('status', '<>', 'withdrawn')
+          .execute()
       : [];
     const dejaPresentes = new Set(existantes.map((m) => `${m.s}@${m.sv}>${m.tf}@${m.tv}:${m.tr}`));
     const nouvelles = resolues.filter(
@@ -284,16 +293,15 @@ export class GrcKitIa {
         else throw e;
       }
     }
-    await this.g.db.tx(async (c) => {
-      await c.query(
-        `INSERT INTO lib_kit_ia(sha256,kit_version,framework_id,framework_version,annexes,reason,imported_by)
-         VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT (sha256) DO NOTHING`,
-        [
-          apercu.sha256,
-          b.version,
-          frameworkId,
-          version,
-          JSON.stringify({
+    await this.g.db.tx(async (c, k) => {
+      await k
+        .insertInto('lib_kit_ia')
+        .values({
+          sha256: apercu.sha256,
+          kit_version: b.version,
+          framework_id: frameworkId,
+          framework_version: version,
+          annexes: JSON.stringify({
             actions: b.actions,
             scenarios: b.scenarios,
             deltas: b.deltas,
@@ -302,9 +310,10 @@ export class GrcKitIa {
             sources: b.sources,
           }),
           reason,
-          user.username,
-        ],
-      );
+          imported_by: user.username,
+        })
+        .onConflict((oc) => oc.column('sha256').doNothing())
+        .execute();
       await this.g.db.audit(
         user,
         ip,
@@ -327,16 +336,12 @@ export class GrcKitIa {
   /** Dernier kit importé : version, date et annexes de veille ; sources et deltas portent toujours « à revérifier ». */
   async dernier(user: SessionUser) {
     await this.g.permission(user, 'conformite', 'lire');
-    const r = await this.g.db.one<{
-      kit_version: string;
-      framework_id: string;
-      framework_version: number;
-      annexes: Record<string, unknown>;
-      imported_by: string;
-      imported_at: string;
-    }>(
-      'SELECT kit_version,framework_id,framework_version,annexes,imported_by,imported_at FROM lib_kit_ia ORDER BY imported_at DESC LIMIT 1',
-    );
+    const r = await this.g.db.k
+      .selectFrom('lib_kit_ia')
+      .select(['kit_version', 'framework_id', 'framework_version', 'annexes', 'imported_by', 'imported_at'])
+      .orderBy('imported_at', 'desc')
+      .limit(1)
+      .executeTakeFirst();
     if (!r) return { importe: false as const };
     return {
       importe: true as const,
@@ -345,7 +350,7 @@ export class GrcKitIa {
       frameworkVersion: r.framework_version,
       importePar: r.imported_by,
       importeLe: r.imported_at,
-      annexes: r.annexes,
+      annexes: r.annexes as Record<string, unknown>,
       statutJuridique: 'a_reverifier' as const,
     };
   }

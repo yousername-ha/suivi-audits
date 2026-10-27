@@ -23,6 +23,7 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `pilotage/service.ts` | 2 | Converti (lot 14) ; verrou consultatif et indicateurs (CTE) en SQL paramétré |
 | `backups.ts` | 1 | Converti (lot 13) ; verrou consultatif en SQL |
 | `grc/core.ts` | 1 | Converti (lot 4) ; pg_notify en SQL |
+| `grc/plan-ecarts.ts` | 1 | Converti (lot 23) ; verrou consultatif en SQL |
 | `notifications-metier.ts` | 1 | Converti (lot 11) ; héritages de réglages (unions) en SQL paramétré |
 | `operations.ts` | 1 | Converti (lot 13) ; verrou consultatif en SQL |
 | `auth.ts` | 0 | Converti (lot 15) |
@@ -31,14 +32,19 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `config-grc.ts` | 0 | Converti (lot 10) |
 | `controle-relations.ts` | 0 | Converti (lot 21) |
 | `grc/annuaires.ts` | 0 | Converti (lot 3) |
+| `grc/contributions.ts` | 0 | Converti (lot 23) |
 | `grc/evaluations-exigences.ts` | 0 | Converti (lot 20) |
 | `grc/frameworks.ts` | 0 | Converti (lot 20) |
+| `grc/kit-ia.ts` | 0 | Converti (lot 23) |
 | `grc/library-mappings.ts` | 0 | Converti (lot 20) |
 | `grc/library.ts` | 0 | Converti (lot 8) |
 | `grc/parcours.ts` | 0 | Converti (lot 20) |
 | `grc/rapprochements.ts` | 0 | Converti (lot 12) |
 | `grc/registres.ts` | 0 | Converti (lot 7) ; objectColumns retiré de core.ts |
+| `grc/sources.ts` | 0 | Converti (lot 23) |
+| `grc/study-config.ts` | 0 | Converti (lot 23) |
 | `grc/suppliers.ts` | 0 | Converti (lot 3) |
+| `grc/validations.ts` | 0 | Converti (lot 23) |
 | `legacy/store.ts` | 0 | Converti (lot 22) |
 | `rights.ts` | 0 | Converti (lot 21) ; agrégats ordonnés et ANY() en fragments fixes |
 | `routes/access.ts` | 0 | Converti (lot 9) |
@@ -54,13 +60,7 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `courriel.ts` | 20 | Dernier (FOR UPDATE, power(), LEAST) |
 | `historique/tables/collection.ts` | 11 | À convertir |
 | `historique/tables/invest.ts` | 7 | À convertir |
-| `grc/contributions.ts` | 5 | À convertir |
 | `jeu-de-test.ts` | 5 | À convertir |
-| `grc/kit-ia.ts` | 4 | À convertir |
-| `grc/plan-ecarts.ts` | 4 | À convertir |
-| `grc/sources.ts` | 4 | À convertir |
-| `grc/study-config.ts` | 4 | À convertir |
-| `grc/validations.ts` | 4 | À convertir |
 | `pilotage/revue.ts` | 4 | À convertir |
 | `tableau-de-bord.ts` | 4 | À convertir |
 | `tenacy.ts` | 4 | À convertir |
@@ -88,4 +88,4 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `routes/modules.ts` | 1 | À convertir |
 | `startup.ts` | 1 | À convertir |
 
-Reste à convertir : 123 appels dans 36 fichiers.
+Reste à convertir : 98 appels dans 30 fichiers.

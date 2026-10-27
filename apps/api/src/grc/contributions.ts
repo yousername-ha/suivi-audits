@@ -4,8 +4,9 @@
    - Journal immuable : l'auteur et l'heure viennent de la session et du serveur. Rejouer une commande avec le même identifiant de
      requête renvoie l'enregistrement d'origine. */
 import { CommentaireElementBody, PreuveElementBody, type ContributionElementDto, type GrcObject } from '@suivi/shared';
+import { sql } from 'kysely';
 import type { SessionUser } from '../auth.js';
-import type { Client } from '../db/db.js';
+import { surConnexion, type Client, type Kdb } from '../db/db.js';
 import { HttpError } from '../http/errors.js';
 import type { Grc } from './core.js';
 import { exigerPreuve } from './validations.js';
@@ -19,7 +20,16 @@ interface Ligne {
   createdBy: string;
   createdAt: Date;
 }
-const colonnes = `id,seq,kind,comment,proof_ref AS "proofRef",created_by AS "createdBy",created_at AS "createdAt"`;
+const colonnes = [
+  'id',
+  'seq',
+  'kind',
+  'comment',
+  'proof_ref as proofRef',
+  'created_by as createdBy',
+  'created_at as createdAt',
+] as const;
+const elements = (k: Kdb) => k.selectFrom('contributions_elements').select(colonnes);
 const dto = (l: Ligne): ContributionElementDto => ({
   id: l.id,
   seq: l.seq,
@@ -32,8 +42,8 @@ const dto = (l: Ligne): ContributionElementDto => ({
 
 export class GrcContributions {
   constructor(private readonly g: Grc) {}
-  private q(c?: Client) {
-    return c ?? this.g.db.pool;
+  private k(c?: Client): Kdb {
+    return c ? surConnexion(c) : this.g.db.k;
   }
   /** L'objet doit être une action d'un registre accessible pour ce besoin (404 sinon : aucune fuite d'existence). */
   private async action(
@@ -53,9 +63,7 @@ export class GrcContributions {
   }
   async lister(smsi: string, id: string, user: SessionUser) {
     await this.action(smsi, id, user, 'lire');
-    const lignes = (
-      await this.q().query<Ligne>(`SELECT ${colonnes} FROM contributions_elements WHERE objet_id=$1 ORDER BY seq`, [id])
-    ).rows;
+    const lignes: Ligne[] = await elements(this.k()).where('objet_id', '=', id).orderBy('seq').execute();
     // Intitulé des preuves, résolu avec les droits de la personne : une preuve illisible pour elle reste une référence.
     const noms = new Map<string, string | null>();
     for (const ref of new Set(lignes.map((l) => l.proofRef).filter(Boolean)))
@@ -80,30 +88,36 @@ export class GrcContributions {
     ip: string,
     verifier?: (c: Client) => Promise<void>,
   ) {
-    return this.g.db.tx(async (c) => {
+    return this.g.db.tx(async (c, k) => {
       const o = await this.action(smsi, id, user, 'contribuer', c, true);
-      const rejoue = (
-        await c.query<Ligne & { kind: string }>(
-          `SELECT ${colonnes} FROM contributions_elements WHERE objet_id=$1 AND request_id=$2`,
-          [o.id, requestId],
-        )
-      ).rows[0];
+      const rejoue = await elements(k)
+        .where('objet_id', '=', o.id)
+        .where('request_id', '=', requestId)
+        .executeTakeFirst();
       if (rejoue) {
         if (rejoue.kind !== kind)
           throw new HttpError(409, 'Cet identifiant de requête a déjà servi à une autre commande.');
         return { contribution: dto(rejoue), rejoue: true };
       }
       await verifier?.(c);
-      const dernier = (
-        await c.query<{ n: number }>('SELECT count(*)::int n FROM contributions_elements WHERE objet_id=$1', [o.id])
-      ).rows[0]!.n;
-      const l = (
-        await c.query<Ligne>(
-          `INSERT INTO contributions_elements(objet_id,request_id,seq,kind,comment,proof_ref,created_by)
-           VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING ${colonnes}`,
-          [o.id, requestId, dernier + 1, kind, valeurs.comment, valeurs.proofRef, user.username],
-        )
-      ).rows[0]!;
+      const { n: dernier } = await k
+        .selectFrom('contributions_elements')
+        .select(sql<number>`count(*)::int`.as('n'))
+        .where('objet_id', '=', o.id)
+        .executeTakeFirstOrThrow();
+      const l: Ligne = await k
+        .insertInto('contributions_elements')
+        .values({
+          objet_id: o.id,
+          request_id: requestId,
+          seq: dernier + 1,
+          kind,
+          comment: valeurs.comment,
+          proof_ref: valeurs.proofRef,
+          created_by: user.username,
+        })
+        .returning(colonnes)
+        .executeTakeFirstOrThrow();
       await this.g.db.audit(
         user,
         ip,

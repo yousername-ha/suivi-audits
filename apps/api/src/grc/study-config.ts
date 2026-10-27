@@ -11,7 +11,8 @@ import {
   type CfgRef,
 } from '@suivi/shared';
 import type { SessionUser } from '../auth.js';
-import type { Client } from '../db/db.js';
+import { sql } from 'kysely';
+import { surConnexion, type Client } from '../db/db.js';
 import { HttpError } from '../http/errors.js';
 import { hash, type Grc } from './core.js';
 
@@ -45,19 +46,21 @@ export class GrcStudyConfig {
   constructor(private readonly g: Grc) {}
 
   private async item(c: Client, id: string) {
-    const r = (
-      await c.query<CfgRow>('SELECT key,state,current_version AS "currentVersion" FROM cfg_items WHERE id=$1', [id])
-    ).rows[0];
+    const r: CfgRow | undefined = await surConnexion(c)
+      .selectFrom('cfg_items')
+      .select(['key', 'state', 'current_version as currentVersion'])
+      .where('id', '=', id)
+      .executeTakeFirst();
     if (!r || !r.currentVersion) throw new HttpError(422, 'Élément de configuration introuvable ou jamais publié.');
     return r as CfgRow & { currentVersion: number };
   }
   private async definition(c: Client, ref: CfgRef) {
-    const r = (
-      await c.query<{ definition: unknown }>('SELECT definition FROM cfg_versions WHERE item_id=$1 AND version=$2', [
-        ref.item,
-        ref.version,
-      ])
-    ).rows[0];
+    const r = await surConnexion(c)
+      .selectFrom('cfg_versions')
+      .select('definition')
+      .where('item_id', '=', ref.item)
+      .where('version', '=', ref.version)
+      .executeTakeFirst();
     if (!r) throw new HttpError(422, 'Version de configuration introuvable.');
     return r.definition;
   }
@@ -88,11 +91,15 @@ export class GrcStudyConfig {
   }
   private async used(c: Client, smsi: string, studyId: string, kind: string) {
     return (
-      await c.query<{ data: Record<string, unknown> }>(
-        `SELECT data FROM grc_objects WHERE smsi_id=$1 AND kind=$2 AND NOT archived AND data->>'studyRef'=$3`,
-        [smsi, kind, 'object:' + studyId],
-      )
-    ).rows.map((r) => r.data);
+      await surConnexion(c)
+        .selectFrom('grc_objects')
+        .select('data')
+        .where('smsi_id', '=', smsi)
+        .where('kind', '=', kind)
+        .where('archived', '=', false)
+        .where(sql<string>`data->>'studyRef'`, '=', 'object:' + studyId)
+        .execute()
+    ).map((r) => r.data as Record<string, unknown>);
   }
   private missing(used: unknown[], keep: Set<string>) {
     return [...new Set(used.filter((x): x is string => typeof x === 'string' && x !== ''))].filter((x) => !keep.has(x));
@@ -108,12 +115,13 @@ export class GrcStudyConfig {
     c: Client,
   ) {
     if (typeof data.studyRef !== 'string' || !data.studyRef.startsWith('object:')) return;
-    const study = (
-      await c.query<{ data: Record<string, unknown> }>(
-        "SELECT data FROM grc_objects WHERE id=$1 AND smsi_id=$2 AND kind='risk_study'",
-        [data.studyRef.slice(7), smsi],
-      )
-    ).rows[0];
+    const study = (await surConnexion(c)
+      .selectFrom('grc_objects')
+      .select('data')
+      .where('id', '=', data.studyRef.slice(7))
+      .where('smsi_id', '=', smsi)
+      .where('kind', '=', 'risk_study')
+      .executeTakeFirst()) as { data: Record<string, unknown> } | undefined;
     const conf = StudyConfiguration.safeParse(study?.data.configuration);
     if (!conf.success) return;
     const controler = (champ: string, valeur: unknown, permis: Set<string>) => {

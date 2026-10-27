@@ -1,3 +1,4 @@
+import { sql } from 'kysely';
 import type { SessionUser } from '../auth.js';
 import type { Module } from '@suivi/shared';
 import { isObject, type JsonObject } from '@suivi/shared/legacy';
@@ -14,21 +15,41 @@ export async function sources(g: Grc, smsi: string, user: SessionUser, search: s
   const pattern = '%' + search.replace(/[\\%_]/g, '\\$&') + '%';
   // Un registre restreint illisible ne propose aucun de ses éléments comme référence.
   const masques = await g.registres.inaccessibles(user, smsi);
-  const objects = (
-    await g.db.q<{ ref: string; name: string; kind: string }>(
-      `SELECT 'object:'||id ref,name,kind FROM grc_objects WHERE smsi_id=$1 AND NOT archived AND module=ANY($2) AND name ILIKE $3 AND ($4::text[] IS NULL OR kind=ANY($4)) AND (registre_id IS NULL OR registre_id<>ALL($5::uuid[])) ORDER BY name,id LIMIT 100`,
-      [smsi, modules, pattern, typesObjets ?? null, masques],
+  // Listes vides : aucune ligne (module, type demandé) ou aucun registre masqué, comme = ANY / <> ALL d'un tableau vide.
+  const objects: { ref: string; name: string; kind: string }[] = await g.db.k
+    .selectFrom('grc_objects')
+    .select([sql<string>`'object:' || id`.as('ref'), 'name', 'kind'])
+    .where('smsi_id', '=', smsi)
+    .where('archived', '=', false)
+    .where(modules.length ? (eb) => eb('module', 'in', modules) : sql<boolean>`false`)
+    .where('name', 'ilike', pattern)
+    .$if(typesObjets != null, (q) =>
+      q.where(typesObjets!.length ? (eb) => eb('kind', 'in', typesObjets!) : sql<boolean>`false`),
     )
-  ).rows;
+    .$if(masques.length > 0, (q) =>
+      q.where((eb) => eb.or([eb('registre_id', 'is', null), eb('registre_id', 'not in', masques)])),
+    )
+    .orderBy('name')
+    .orderBy('id')
+    .limit(100)
+    .execute();
   // Versions de documents (preuves) : proposées sans filtre, ou quand le champ typé les autorise.
   if ((!cibles || cibles.includes('document')) && user.rights.can('documents', 'lire'))
     objects.push(
-      ...(
-        await g.db.q<{ ref: string; name: string; kind: string }>(
-          `SELECT 'document:'||d.id||':'||v.version ref,d.title||' · preuve v'||v.version name,'evidence' kind FROM documents d JOIN document_versions v ON v.document_id=d.id WHERE d.deleted_at IS NULL AND d.title ILIKE $1 ORDER BY d.title,v.version DESC LIMIT 100`,
-          [pattern],
-        )
-      ).rows,
+      ...(await g.db.k
+        .selectFrom('documents as d')
+        .innerJoin('document_versions as v', 'v.document_id', 'd.id')
+        .select([
+          sql<string>`'document:' || d.id || ':' || v.version`.as('ref'),
+          sql<string>`d.title || ' · preuve v' || v.version`.as('name'),
+          sql<string>`'evidence'`.as('kind'),
+        ])
+        .where('d.deleted_at', 'is', null)
+        .where('d.title', 'ilike', pattern)
+        .orderBy('d.title')
+        .orderBy('v.version', 'desc')
+        .limit(100)
+        .execute()),
     );
   // Exigences publiées : proposées sans filtre, ou quand le champ typé les autorise (mesures d'un traitement).
   if (
@@ -36,16 +57,22 @@ export async function sources(g: Grc, smsi: string, user: SessionUser, search: s
     user.rights.can('audit', 'lire') &&
     user.rights.can('conformite', 'lire')
   ) {
-    const publications = (
-      await g.db.q<{
-        framework_id: string;
-        version: number;
-        definition: { requirements: { id: string; title: string }[] };
-      }>(
-        `SELECT DISTINCT ON(v.framework_id) v.framework_id,v.version,v.definition FROM grc_framework_versions v JOIN grc_objects o ON o.id=v.framework_id WHERE v.smsi_id=$1 AND NOT o.archived AND o.data->>'enabled'='true' ORDER BY v.framework_id,v.version DESC`,
-        [smsi],
-      )
-    ).rows;
+    type Publication = {
+      framework_id: string;
+      version: number;
+      definition: { requirements: { id: string; title: string }[] };
+    };
+    const publications = (await g.db.k
+      .selectFrom('grc_framework_versions as v')
+      .innerJoin('grc_objects as o', 'o.id', 'v.framework_id')
+      .select(['v.framework_id', 'v.version', 'v.definition'])
+      .distinctOn('v.framework_id')
+      .where('v.smsi_id', '=', smsi)
+      .where('o.archived', '=', false)
+      .where(sql<string>`o.data->>'enabled'`, '=', 'true')
+      .orderBy('v.framework_id')
+      .orderBy('v.version', 'desc')
+      .execute()) as Publication[];
     for (const p of publications)
       for (const r of p.definition.requirements)
         if ((r.title + ' ' + r.id).toLowerCase().includes(search.toLowerCase()) && objects.length < 300)
@@ -57,17 +84,15 @@ export async function sources(g: Grc, smsi: string, user: SessionUser, search: s
     // Référentiels de la bibliothèque rattachés et actifs dans ce périmètre (ADR 0031).
     const effectifs = (await g.effectiveFrameworks(smsi)).filter((e) => e.enabled);
     const attached = effectifs.length
-      ? (
-          await g.db.q<{
-            framework_id: string;
-            version: number;
-            definition: { requirements: { id: string; title: string }[] };
-          }>(
-            `SELECT v.framework_id,v.version,v.definition FROM lib_framework_versions v
-               JOIN unnest($1::uuid[],$2::int[]) AS e(id,version) ON e.id=v.framework_id AND e.version=v.version`,
-            [effectifs.map((e) => e.frameworkId), effectifs.map((e) => e.version)],
+      ? ((await g.db.k
+          .selectFrom('lib_framework_versions')
+          .select(['framework_id', 'version', 'definition'])
+          .where((eb) =>
+            eb.or(
+              effectifs.map((e) => eb.and([eb('framework_id', '=', e.frameworkId), eb('version', '=', e.version)])),
+            ),
           )
-        ).rows
+          .execute()) as Publication[])
       : [];
     for (const p of attached)
       for (const r of p.definition.requirements)
