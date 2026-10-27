@@ -138,3 +138,26 @@ export function scanFile(cfg: Config, buf: Buffer): Promise<'sain' | 'non_analys
     });
   });
 }
+
+/** Version annoncée par le démon ClamAV (commande clamd VERSION). Nul quand l'antivirus est désactivé ou injoignable :
+    l'écran dit alors « Non disponible » au lieu d'inventer une valeur. */
+export function clamavVersion(cfg: Config, delaiMs = 3000): Promise<string | null> {
+  const av = cfg.clamav;
+  if (!av) return Promise.resolve(null);
+  return new Promise((resolve) => {
+    const s = net.connect(av.port, av.host);
+    let out = '';
+    let fini = false;
+    const fin = (v: string | null) => {
+      if (fini) return;
+      fini = true;
+      s.destroy();
+      resolve(v);
+    };
+    s.setTimeout(delaiMs, () => fin(null));
+    s.on('error', () => fin(null));
+    s.on('data', (d) => (out += d.toString()));
+    s.on('end', () => fin(out.replace(/\0/g, '').trim().slice(0, 200) || null));
+    s.on('connect', () => s.write('zVERSION\0'));
+  });
+}
