@@ -3,7 +3,7 @@
 ## Règles du projet
 - **Aucune donnée réelle** dans le dépôt (écarts, fournisseurs, processus, noms de personnes…), **aucun secret**, pas de fichier `.env`. Les fichiers de test sont anonymisés (`tests/fixtures/`).
 - Interface et documentation **en français**.
-- Toute modification passe par une **branche** et une **pull request** vers `main`, avec une CI verte. Personne ne pousse directement sur `main`.
+- Toute modification passe par une **branche** `claude/…` (ou `feat/…`, `fix/…`) et une **pull request vers `claude-suivi-smsi`**, fusion classique (merge commit) après les 7 contrôles verts. `main` n'évolue que par la PR `claude-suivi-smsi` → `main`, fusionnée par le RSSI ou sur son accord explicite. Personne ne pousse directement sur `main`.
 - **Aucune nouvelle dépendance** sans justification dans une ADR (`docs/adr/0009-dependances-et-versions.md`, ou une nouvelle ADR).
 - Une PR qui touche l'installation, la configuration, la mise à jour ou l'exploitation **met à jour `docs/INSTALLATION.md` dans la même PR**. Le job CI « guide » rejoue ce guide et échoue s'il est inexact.
 - Une migration publiée (`apps/api/migrations/NNN_*.sql`) n'est **jamais modifiée** : on en ajoute une nouvelle.
