@@ -8,6 +8,24 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 Aucune action.
 
+## [5.1.0] — 2026-10-27
+
+Version mineure : aucune migration SQL, aucune nouvelle dépendance.
+
+### Notes de mise à jour
+
+Aucune action sur le serveur : la mise à jour ne touche pas au schéma de la base. Deux comportements nouveaux à connaître :
+les **alertes d'exploitation par courriel** sont **activées par défaut** (elles ne partent que si l'envoi de courriel est activé et le contact technique renseigné ; interrupteur dans Administration, Courriel) ; la **remise à vide de la base** est **désactivée par défaut** et ne peut être autorisée que par un administrateur avec un code de double authentification.
+
+### Ajouté
+- **Remise à vide de la base, pour la recette** ([ADR 0065](docs/adr/0065-remise-a-vide-de-la-base.md), demande du RSSI du 27/10/2026) : Administration, Sauvegardes et restauration, bouton rouge « Remettre la base à vide… ». **Désactivée par défaut** : un administrateur l'autorise d'abord par un interrupteur (code de double authentification). Deux portées au choix à chaque fois : les données de travail seulement (comptes, rôles et réglages conservés) ou tout, comptes compris (retour à l'écran d'installation avec un nouveau jeton). Exige la phrase à recopier propre à la portée, un code de double authentification, une sauvegarde réussie de moins de 30 minutes et aucune opération d'exploitation en cours. Efface aussi les données normalement immuables (décisions, versions publiées) : les triggers sont suspendus puis rétablis dans une seule transaction, annulée au moindre échec. Le journal d'audit n'est jamais effacé. Aucune migration.
+- **Alertes d'exploitation par courriel** (012-09, addendum à l'[ADR 0049](docs/adr/0049-courriel-et-sortie-reseau-optionnelle.md)) : le contact technique reçoit automatiquement un courriel en texte brut, sans donnée métier, quand une sauvegarde échoue, qu'une mise à jour échoue, est annulée ou demande une intervention, ou qu'une opération d'exploitation (vérification, restauration, certificat) échoue. Envoi par la file existante avec ses relances ; interrupteur « Envoyer les alertes d'exploitation au contact technique » dans Courriel, activé par défaut. Rien n'est mis en file si l'envoi est désactivé ou incomplet. Aucune migration.
+- **Aperçu de conservation : motifs d'exclusion** (012-07) : chaque catégorie indique ce qui n'est pas candidat à la purge et pourquoi (preuves citées, éléments trop récents, rappels non lus), avec les effectifs.
+- **Informations système** (012-03) : version de ClamAV lue sur le démon et répartition de l'espace de la base (pièces, journaux, autres données) ; « Non disponible » quand le serveur ne la fournit pas.
+
+### Corrigé
+- **Bandeau « Mise à jour disponible » sur l'écran de connexion** (demande du RSSI du 27/10/2026) : le suivi indépendant injecté dans toutes les pages (`docker/maintenance/client.js`) l'affichait à un visiteur non connecté. Il n'apparaît plus qu'avec une session complète ; la redirection vers la page de maintenance pendant une mise à jour reste active sur tous les écrans.
+
 ## [5.0.0] — 2026-10-27
 
 **Version majeure** : deux migrations suppriment définitivement des données (catalogue « Environnement », page « Conformité IA ») et l'exécutant de mise à jour ne monte plus `/root/.ssh` ni `/root/.docker` par défaut. Lire les notes de mise à jour ci-dessous avant de lancer la mise à jour.

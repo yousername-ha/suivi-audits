@@ -30,8 +30,13 @@ test('Revues des accès : une revue ajoutée, son mois saisi, son état calculé
     await expect(page.getByText('À planifier', { exact: true }).first()).toBeVisible();
 
     const app = page.getByLabel('Application de CONTROL-1');
+    // L'enregistrement part au blur, sans être attendu par la page : on attend sa réponse avant de recharger.
+    const enregistre = page.waitForResponse(
+      (r) => r.request().method() === 'PATCH' && r.url().includes('/api/revues-acces/') && r.ok(),
+    );
     await app.fill('Application fictive des revues');
     await app.blur();
+    await enregistre;
     await page.reload();
     await expect(page.getByLabel('Application de CONTROL-1')).toHaveValue('Application fictive des revues');
     expect(problems).toEqual([]);

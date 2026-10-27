@@ -391,7 +391,10 @@ export class NotificationsMetier {
   /** Synthèse des envois de notification des sept derniers jours (administrateurs) : état de la file, jamais d'adresse. */
   async etatEnvois() {
     const k = this.db.k;
-    const notifications = k.selectFrom('courriel_jobs').where('kind', '=', 'notification');
+    const notifications = k
+      .selectFrom('courriel_jobs')
+      .where('kind', '=', 'notification')
+      .where('requested_by', '<>', 'alerte-exploitation');
     const r = await notifications
       .select(['status', sql<number>`count(*)::int`.as('n')])
       .where('created_at', '>', sql<Date>`now() - interval '7 days'`)

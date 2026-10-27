@@ -6,6 +6,7 @@ import { BackupPolicyIn, BackupPolicyOut, HostState, OperationIn, OperationOut }
 import { z } from 'zod';
 import type { Config } from './config.js';
 import { sql, type Selectable } from 'kysely';
+import type { AlertesExploitation } from './alertes-exploitation.js';
 import type { Actor, Client, Db, Kdb } from './db/db.js';
 import type { OperationJobs } from './db/types.generated.js';
 import { HttpError } from './http/errors.js';
@@ -98,6 +99,7 @@ export class Operations {
     private readonly cfg: Config,
     private readonly db: Db,
     private readonly vault: Vault,
+    private readonly alertes: AlertesExploitation,
   ) {}
   // Verrou consultatif transactionnel partagé avec les sauvegardes : appel SQL direct (ADR 0062 §5).
   private lock(c: Client) {
@@ -337,6 +339,8 @@ export class Operations {
             })),
           )
           .execute();
+        if (j.status === 'echec' || j.status === 'intervention')
+          await this.alertes.signaler(k, 'operation', j.id.slice(0, 8));
         await this.db.audit(
           { username: j.requestedBy },
           null,

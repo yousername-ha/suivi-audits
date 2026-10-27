@@ -23,3 +23,13 @@
 
 - Migration additive `040_courriel_jobs.sql`. Aucune dépendance ajoutée : le script d'envoi n'utilise que la bibliothèque standard de Python.
 - Une version antérieure de ce chantier proposait un fichier `docker-compose.sortie-reseau.yml` pour donner un réseau sortant à l'API ; il est abandonné.
+
+## Addendum du 27/10/2026 — alertes d'exploitation (012-09)
+
+La première puce de « Ce qui n'est pas fait » ne vaut plus pour les alertes d'exploitation (les rappels métier restent régis par l'[ADR 0058](0058-notifications-metier.md)) :
+
+- Une **sauvegarde échouée**, une **mise à jour** qui échoue, est annulée (retour arrière) ou demande une intervention, et une **opération d'exploitation** en échec ou en intervention mettent un courriel en file pour le **contact technique**, dans la transaction qui constate l'échec. Rejouer le même constat n'en met pas deux.
+- Le texte est brut et sans donnée métier : l'événement, une référence courte et le lien vers l'écran concerné.
+- Elles passent par la file `courriel_jobs` (type `notification`, demandeur `alerte-exploitation`, adresse = contact technique) : l'exécutant d'exploitation les envoie, avec les mêmes relances que les notifications. Elles ne comptent pas dans la synthèse des envois de notification.
+- Un interrupteur « Envoyer les alertes d'exploitation au contact technique » (activé par défaut) figure dans Courriel. Rien n'est mis en file si l'envoi est désactivé ou incomplet (hôte, expéditeur, contact technique).
+- Sans migration. Toujours pas de XOAUTH2 (nouvelle dépendance, donc ADR séparée) ni de Teams (écarté).

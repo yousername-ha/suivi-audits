@@ -24,7 +24,7 @@ test('Courriel : configuration, mot de passe scellé, test réel dont l’échec
     await fenetre.getByLabel('Serveur SMTP (nom d’hôte)').fill('smtp.invalid');
     await fenetre.getByLabel('Compte (laisser vide pour un relais sans authentification)').fill('compte-test');
     await fenetre.getByLabel('Adresse d’expédition').fill('suivi@exemple.test');
-    await fenetre.getByLabel('Contact technique').fill('technique@exemple.test');
+    await fenetre.getByLabel('Contact technique', { exact: true }).fill('technique@exemple.test');
     await fenetre.getByRole('button', { name: 'Enregistrer', exact: true }).click();
     await expect(page.getByText('Courriel : enregistré.')).toBeVisible();
 
