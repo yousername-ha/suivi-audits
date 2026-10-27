@@ -3,6 +3,7 @@
    par un planificateur ; la suppression définitive d'un document reste l'action manuelle de Documents. Le journal d'audit est
    immuable et ne figure pas ici. */
 import type { ApercuConservation, CategorieApercuConservation, SettingsValues } from '@suivi/shared';
+import { sql } from 'kysely';
 import type { Db } from './db/db.js';
 import { totalUsages, usagesPreuve } from './documents-usage.js';
 
@@ -20,12 +21,14 @@ export class Conservation {
       proteges = 0,
       ancien: Date | null = null;
     if (docs !== null) {
-      const lignes = (
-        await this.db.q<{ id: string; deleted_at: Date }>(
-          'SELECT id,deleted_at FROM documents WHERE deleted_at IS NOT NULL AND deleted_at < $1 ORDER BY deleted_at LIMIT $2',
-          [limite(docs), PLAFOND_DOCUMENTS],
-        )
-      ).rows;
+      const lignes = await this.db.k
+        .selectFrom('documents')
+        .select(['id', 'deleted_at'])
+        .where('deleted_at', 'is not', null)
+        .where('deleted_at', '<', limite(docs))
+        .orderBy('deleted_at')
+        .limit(PLAFOND_DOCUMENTS)
+        .execute();
       candidats = lignes.length;
       ancien = lignes[0]?.deleted_at ?? null;
       for (const l of lignes) if (totalUsages(await usagesPreuve(this.db.pool, l.id)) > 0) proteges++;
@@ -43,12 +46,12 @@ export class Conservation {
     const rappels = r.rappelsLusJours;
     let lus = { n: 0, ancien: null as Date | null };
     if (rappels !== null)
-      lus = (
-        await this.db.q<{ n: number; ancien: Date | null }>(
-          'SELECT count(*)::int AS n,min(read_at) AS ancien FROM grc_notifications WHERE read_at IS NOT NULL AND read_at < $1',
-          [limite(rappels)],
-        )
-      ).rows[0]!;
+      lus = await this.db.k
+        .selectFrom('grc_notifications')
+        .select([sql<number>`count(*)::int`.as('n'), sql<Date | null>`min(read_at)`.as('ancien')])
+        .where('read_at', 'is not', null)
+        .where('read_at', '<', limite(rappels))
+        .executeTakeFirstOrThrow();
     categories.push({
       id: 'rappels_lus',
       label: 'Rappels déjà lus',
@@ -62,12 +65,12 @@ export class Conservation {
     const archives = r.elementsArchivesJours;
     let arch = { n: 0, ancien: null as Date | null };
     if (archives !== null)
-      arch = (
-        await this.db.q<{ n: number; ancien: Date | null }>(
-          'SELECT count(*)::int AS n,min(updated_at) AS ancien FROM grc_objects WHERE archived AND updated_at < $1',
-          [limite(archives)],
-        )
-      ).rows[0]!;
+      arch = await this.db.k
+        .selectFrom('grc_objects')
+        .select([sql<number>`count(*)::int`.as('n'), sql<Date | null>`min(updated_at)`.as('ancien')])
+        .where('archived', '=', true)
+        .where('updated_at', '<', limite(archives))
+        .executeTakeFirstOrThrow();
     categories.push({
       id: 'elements_archives',
       label: 'Éléments archivés (fiches, registres)',

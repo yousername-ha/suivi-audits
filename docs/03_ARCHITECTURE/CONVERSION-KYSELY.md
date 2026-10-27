@@ -15,7 +15,9 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 |---|---:|---|
 | `grc/tasks.ts` | 4 | Converti (lot 6) ; verrou consultatif et rappels (3 INSERT … SELECT) en SQL paramétré |
 | `modules.ts` | 4 | Converti (lot 2) ; verrous consultatifs en SQL |
+| `grc/dashboard.ts` | 3 | Reste en SQL paramétré (cartes de synthèse : FILTER, CTE) |
 | `grc/risks.ts` | 3 | Converti (lot 5) ; verrou consultatif et projection temporelle (2 requêtes) en SQL paramétré |
+| `tableau-de-bord.ts` | 3 | Converti (lot 24) ; agrégats du tableau de bord en SQL paramétré |
 | `updates.ts` | 3 | Converti (lot 16) ; verrou consultatif en SQL |
 | `business-policy.ts` | 2 | Converti (lot 2) ; verrou consultatif et pg_notify en SQL |
 | `cli.ts` | 2 | Converti (lot 16) ; verrou consultatif en SQL |
@@ -26,10 +28,12 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `grc/plan-ecarts.ts` | 1 | Converti (lot 23) ; verrou consultatif en SQL |
 | `notifications-metier.ts` | 1 | Converti (lot 11) ; héritages de réglages (unions) en SQL paramétré |
 | `operations.ts` | 1 | Converti (lot 13) ; verrou consultatif en SQL |
+| `tenacy.ts` | 1 | Converti (lot 24) ; verrou consultatif en SQL |
 | `auth.ts` | 0 | Converti (lot 15) |
 | `calendriers-plateforme.ts` | 0 | Converti (lot 2) |
 | `carto/maps.ts` | 0 | Converti (lot 18) |
 | `config-grc.ts` | 0 | Converti (lot 10) |
+| `conservation.ts` | 0 | Converti (lot 24) |
 | `controle-relations.ts` | 0 | Converti (lot 21) |
 | `grc/annuaires.ts` | 0 | Converti (lot 3) |
 | `grc/contributions.ts` | 0 | Converti (lot 23) |
@@ -45,7 +49,10 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `grc/study-config.ts` | 0 | Converti (lot 23) |
 | `grc/suppliers.ts` | 0 | Converti (lot 3) |
 | `grc/validations.ts` | 0 | Converti (lot 23) |
+| `jeu-de-test.ts` | 0 | Converti (lot 24) |
+| `journal-technique.ts` | 0 | Converti (lot 24) |
 | `legacy/store.ts` | 0 | Converti (lot 22) |
+| `pilotage/revue.ts` | 0 | Converti (lot 24) |
 | `rights.ts` | 0 | Converti (lot 21) ; agrégats ordonnés et ANY() en fragments fixes |
 | `routes/access.ts` | 0 | Converti (lot 9) |
 | `routes/admin.ts` | 0 | Converti (lot 19) ; version du serveur et comptages en SQL fixe |
@@ -55,21 +62,14 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `routes/import.ts` | 0 | Converti (lot 22) |
 | `routes/settings.ts` | 0 | Converti (lot 19) |
 | `settings.ts` | 0 | Converti (lot 19) |
+| `systeme.ts` | 0 | Converti (lot 24) |
 | `types-processus.ts` | 0 | Converti (lot 1) |
 | `walls.ts` | 0 | Converti (lot 21) |
 | `courriel.ts` | 20 | Dernier (FOR UPDATE, power(), LEAST) |
 | `historique/tables/collection.ts` | 11 | À convertir |
 | `historique/tables/invest.ts` | 7 | À convertir |
-| `jeu-de-test.ts` | 5 | À convertir |
-| `pilotage/revue.ts` | 4 | À convertir |
-| `tableau-de-bord.ts` | 4 | À convertir |
-| `tenacy.ts` | 4 | À convertir |
-| `conservation.ts` | 3 | À convertir |
-| `grc/dashboard.ts` | 3 | À convertir |
 | `historique/tables/reglages.ts` | 3 | À convertir |
-| `journal-technique.ts` | 3 | À convertir |
 | `realtime.ts` | 3 | Reste en SQL (LISTEN/NOTIFY) |
-| `systeme.ts` | 3 | À convertir |
 | `app.ts` | 2 | À convertir |
 | `grc/report.ts` | 2 | À convertir |
 | `historique/registre.ts` | 2 | À convertir |
@@ -88,4 +88,4 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `routes/modules.ts` | 1 | À convertir |
 | `startup.ts` | 1 | À convertir |
 
-Reste à convertir : 98 appels dans 30 fichiers.
+Reste à convertir : 69 appels dans 22 fichiers.
