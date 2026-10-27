@@ -40,6 +40,8 @@ describe('conservation', () => {
       'elements_archives',
     ]);
     expect(a.categories.every((c: { candidates: number | null }) => c.candidates === null)).toBe(true);
+    // Aucune durée réglée : rien n'est évalué, donc aucun motif d'exclusion à expliquer.
+    expect(a.categories.every((c: { exclusions: unknown[] }) => c.exclusions.length === 0)).toBe(true);
   });
 
   it('refuse une durée hors bornes ou non entière, et un lecteur sans droit sur les paramètres ne lit ni ne modifie', async () => {
@@ -74,6 +76,11 @@ describe('conservation', () => {
     const apercu = (await admin.get('/api/settings/conservation/apercu')).json();
     const docs = apercu.categories.find((c: { id: string }) => c.id === 'documents_corbeille');
     expect(docs).toMatchObject({ days: 90, candidates: 2, protectedCount: 1 });
+    // Motifs d'exclusion : le document cité comme preuve est protégé, celui supprimé aujourd'hui est trop récent.
+    expect(docs.exclusions).toEqual([
+      { motif: expect.stringContaining('Cités comme preuve'), count: 1 },
+      { motif: 'Dans la corbeille depuis moins de 90 jours', count: 1 },
+    ]);
     expect(new Date(docs.oldest).getTime()).toBeLessThan(Date.now() - 150 * 86400000);
     // Aucune suppression : les trois documents sont toujours en base.
     const restants = await t.svc.db.q<{ n: number }>('SELECT count(*)::int n FROM documents WHERE id = ANY($1)', [
@@ -115,6 +122,13 @@ describe('conservation', () => {
     const c = (await admin.get('/api/settings/conservation/apercu')).json().categories;
     expect(c.find((x: { id: string }) => x.id === 'elements_archives')).toMatchObject({ days: 365, candidates: 1 });
     expect(c.find((x: { id: string }) => x.id === 'rappels_lus')).toMatchObject({ days: 30, candidates: 0 });
+    expect(c.find((x: { id: string }) => x.id === 'elements_archives').exclusions).toEqual([
+      { motif: 'Archivés depuis moins de 365 jours', count: 0 },
+    ]);
+    expect(c.find((x: { id: string }) => x.id === 'rappels_lus').exclusions).toEqual([
+      { motif: expect.stringContaining('Pas encore lus'), count: expect.any(Number) },
+      { motif: 'Lus depuis moins de 30 jours', count: expect.any(Number) },
+    ]);
     const reste = await t.svc.db.q<{ n: number }>('SELECT count(*)::int n FROM grc_objects WHERE id=$1', [o.json().id]);
     expect(reste.rows[0]!.n).toBe(1);
   });
