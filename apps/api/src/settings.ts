@@ -10,7 +10,8 @@ import {
 } from '@suivi/shared';
 import type { JsonObject } from '@suivi/shared/legacy';
 import type { Config } from './config.js';
-import type { Client, Db } from './db/db.js';
+import { sql } from 'kysely';
+import { surConnexion, type Client, type Db } from './db/db.js';
 import { HttpError } from './http/errors.js';
 import type { LegacyStore } from './legacy/store.js';
 
@@ -88,11 +89,14 @@ export class Settings {
   /** Charge les sections enregistrées (au démarrage, puis à chaque événement « settings »). */
   async load() {
     const defaults = settingsDefaults(this.cfg);
-    const r = await this.db.q<{ key: string; value: { values: unknown } }>(
-      "SELECT key, value FROM settings WHERE key LIKE 'section:%'",
-    );
+    const r = await this.db.k
+      .selectFrom('settings')
+      .select(['key', 'value'])
+      .where('key', 'like', 'section:%')
+      .execute();
     const next = { ...defaults } as Record<Stored, unknown>;
-    for (const row of r.rows) {
+    for (const ligne of r) {
+      const row = ligne as { key: string; value: { values: unknown } };
       const s = row.key.slice('section:'.length) as Stored;
       if (!(STORED_SECTIONS as readonly string[]).includes(s)) continue;
       const parsed = SETTINGS_SCHEMAS[s].safeParse({ ...defaults[s], ...(row.value.values as object) });
@@ -111,13 +115,13 @@ export class Settings {
     s: SettingsSection,
     c?: Pick<Client, 'query'>,
   ): Promise<{ values: Record<string, unknown>; version: number }> {
-    const q = c ?? this.db.pool;
     if (isStored(s)) {
-      const r = await q.query<{ value: { values: unknown; version: number } }>(
-        'SELECT value FROM settings WHERE key = $1',
-        [key(s)],
-      );
-      const row = r.rows[0]?.value;
+      const r = await (c ? surConnexion(c) : this.db.k)
+        .selectFrom('settings')
+        .select('value')
+        .where('key', '=', key(s))
+        .executeTakeFirst();
+      const row = r?.value as { values: unknown; version: number } | undefined;
       const values = SETTINGS_SCHEMAS[s].safeParse({
         ...settingsDefaults(this.cfg)[s],
         ...((row?.values as object) ?? {}),
@@ -157,28 +161,31 @@ export class Settings {
     if (!parsed.success)
       throw new HttpError(422, parsed.error.issues.map((i) => `${i.path.join('.') || s} : ${i.message}`).join(' ; '));
     const after = parsed.data as Record<string, unknown>;
+    const k = surConnexion(c);
     if (isStored(s)) {
-      await c.query(
-        'INSERT INTO settings(key, value) VALUES ($1, \'{"values": {}, "version": 0}\') ON CONFLICT DO NOTHING',
-        [key(s)],
-      );
+      await k
+        .insertInto('settings')
+        .values({ key: key(s), value: '{"values": {}, "version": 0}' })
+        .onConflict((oc) => oc.doNothing())
+        .execute();
       const cur = (
-        await c.query<{ value: { values: Record<string, unknown>; version: number } }>(
-          'SELECT value FROM settings WHERE key = $1 FOR UPDATE',
-          [key(s)],
-        )
-      ).rows[0]!.value;
+        await k.selectFrom('settings').select('value').where('key', '=', key(s)).forUpdate().executeTakeFirstOrThrow()
+      ).value as { values: Record<string, unknown>; version: number };
       const before = (await this.read(s, c)).values;
       if ((cur.version ?? 0) !== expected) throw conflictError(cur.version ?? 0, before);
       const version = (cur.version ?? 0) + 1;
-      await c.query('UPDATE settings SET value = $2, updated_at = now() WHERE key = $1', [
-        key(s),
-        { values: after, version, updatedBy: user.username },
-      ]);
+      await k
+        .updateTable('settings')
+        .set({
+          value: JSON.stringify({ values: after, version, updatedBy: user.username }),
+          updated_at: sql<Date>`now()`,
+        })
+        .where('key', '=', key(s))
+        .execute();
       return { before, after, version };
     }
     // Cycle et référentiels : écriture des clés correspondantes de l'état legacy (contrôle de version de l'état).
-    await c.query('SELECT 1 FROM app_state WHERE id=1 FOR UPDATE');
+    await k.selectFrom('app_state').select('id').where('id', '=', 1).forUpdate().execute();
     const st = await this.legacy.recompose(c);
     if (!st) throw new HttpError(404, 'Aucune donnée.');
     const before = (await this.read(s, c)).values;

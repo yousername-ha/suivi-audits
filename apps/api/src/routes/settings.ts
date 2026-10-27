@@ -8,6 +8,7 @@ import {
   type SettingsValues,
 } from '@suivi/shared';
 import type { JsonObject } from '@suivi/shared/legacy';
+import { sql } from 'kysely';
 import { z } from 'zod';
 import type { Session } from '../auth.js';
 import { requireIfMatch, setEtag } from '../http/concurrency.js';
@@ -30,7 +31,9 @@ const canWrite = (rights: Rights, s: SettingsSection) => writePermissions(s).eve
 async function info(svc: Services, s: SettingsSection, values: Record<string, unknown>) {
   switch (s) {
     case 'general':
-      return { logo: !!(await svc.db.one("SELECT 1 FROM settings WHERE key = 'logo'")) };
+      return {
+        logo: !!(await svc.db.k.selectFrom('settings').select('key').where('key', '=', 'logo').executeTakeFirst()),
+      };
     case 'referentiels': {
       const auditEnabled = !(await svc.modules.state()).disabled.includes('audit');
       const d = ((await svc.legacy.recompose())?.data ?? {}) as JsonObject;
@@ -52,7 +55,10 @@ async function info(svc: Services, s: SettingsSection, values: Record<string, un
       };
     }
     case 'import_export': {
-      const n = await svc.db.one<{ n: number }>('SELECT count(*)::int AS n FROM import_batches');
+      const n = await svc.db.k
+        .selectFrom('import_batches')
+        .select(sql<number>`count(*)::int`.as('n'))
+        .executeTakeFirst();
       return { tailleMaxImportMo: svc.cfg.maxImportMb, imports: n?.n ?? 0 };
     }
     case 'sauvegardes': {
@@ -223,10 +229,9 @@ export const settingsRoutes = [
     tags: ['Paramètres'],
     access: 'public',
     handler: async ({ svc, reply }) => {
-      const r = await svc.db.one<{ value: { mime: string; data: string } }>(
-        "SELECT value FROM settings WHERE key = 'logo'",
-      );
-      if (!r) throw new HttpError(404, 'Aucun logo.');
+      const ligne = await svc.db.k.selectFrom('settings').select('value').where('key', '=', 'logo').executeTakeFirst();
+      if (!ligne) throw new HttpError(404, 'Aucun logo.');
+      const r = { value: ligne.value as { mime: string; data: string } };
       reply
         .header('Content-Type', r.value.mime)
         .header('Cache-Control', 'no-cache')
@@ -247,12 +252,14 @@ export const settingsRoutes = [
       const type = LOGO_TYPES.find(([, sig]) => buf.subarray(0, sig.length).equals(sig));
       if (!type) throw new HttpError(422, 'Logo refusé : seules les images PNG et JPEG sont acceptées.');
       await svc.db.tx(
-        (c) =>
-          c.query(
-            `INSERT INTO settings(key, value) VALUES ('logo', $1)
-             ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`,
-            [{ mime: type[0], data: buf.toString('base64') }],
-          ),
+        (_c, k) =>
+          k
+            .insertInto('settings')
+            .values({ key: 'logo', value: JSON.stringify({ mime: type[0], data: buf.toString('base64') }) })
+            .onConflict((oc) =>
+              oc.column('key').doUpdateSet((eb) => ({ value: eb.ref('excluded.value'), updated_at: sql<Date>`now()` })),
+            )
+            .execute(),
         (s as Session).user.username,
       );
       await svc.db.audit((s as Session).user, ip, 'settings.logo', type[0], { size: buf.length });
@@ -266,7 +273,10 @@ export const settingsRoutes = [
     tags: ['Paramètres'],
     access: 'parametres:modifier',
     handler: async ({ svc, s, ip }) => {
-      await svc.db.tx((c) => c.query("DELETE FROM settings WHERE key = 'logo'"), (s as Session).user.username);
+      await svc.db.tx(
+        (_c, k) => k.deleteFrom('settings').where('key', '=', 'logo').execute(),
+        (s as Session).user.username,
+      );
       await svc.db.audit((s as Session).user, ip, 'settings.logo_delete');
       return undefined;
     },
