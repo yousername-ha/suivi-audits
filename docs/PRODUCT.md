@@ -59,4 +59,4 @@ Tous les modules métier sont dans des tables PostgreSQL ([ADR 0040](adr/0040-so
 
 - La recette de l'ensemble sur le serveur réel du RSSI reste à exécuter (voir [PROJECT_STATUS](../PROJECT_STATUS.md)).
 - Les grilles officielles non disponibles ne sont pas intégrées ; aucun texte normatif sous licence n'est fourni.
-- Le test de déconnexion à deux onglets (Playwright) est instable en CI ; il est rejoué une fois avant de conclure.
+- Des tests de bout en bout (Playwright) échouent parfois en CI puis réussissent au rejeu (BUG-011). La CI rejoue désormais une fois chaque test en échec et signale les tests instables par une annotation, pour les corriger un à un.
