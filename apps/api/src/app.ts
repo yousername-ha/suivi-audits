@@ -9,6 +9,7 @@ import { expireAccounts } from './rights.js';
 import { accessRoutes } from './routes/access.js';
 import { moduleRoutes } from './routes/modules.js';
 import { adminRoutes } from './routes/admin.js';
+import { remiseAVideRoutes } from './routes/remise-a-vide.js';
 import { updateRoutes } from './routes/updates.js';
 import { operationRoutes } from './routes/operations.js';
 import { authRoutes } from './routes/auth.js';
@@ -111,6 +112,7 @@ export function allRoutes(): RouteDef[] {
     ...moduleRoutes,
     ...operationRoutes,
     ...updateRoutes,
+    ...remiseAVideRoutes,
     ...eventRoutes,
     ...suiviRoutes,
     ...exportSuiviRoutes,

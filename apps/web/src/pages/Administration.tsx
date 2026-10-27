@@ -11,6 +11,7 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router';
 import { cartesVisibles, type Cote, type Peut } from '../administration-droits';
 import { get } from '../api';
 import { fmtDate } from '../components/common';
+import { RemiseAVidePanel } from '../components/RemiseAVide';
 import { UpdatesPanel } from '../components/Updates';
 import { useCan } from '../session';
 import { DetailsTechniques, Audit, Sessions, Versions } from './Admin';
@@ -226,6 +227,7 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
       <Stack gap="xl">
         <BackupsPanel />
         {can('parametres', 'lire') && <SectionLoader section="sauvegardes" onDirty={m} />}
+        {can('administration', 'administrer') && <RemiseAVidePanel />}
       </Stack>
     ),
   },
