@@ -61,7 +61,7 @@ test('sauvegarde chiffrée réelle depuis le menu, sans cron supplémentaire', a
     const report = state.jobs.find((j: { id: string }) => j.id === job.id).report;
     expect(report.chiffree).toBe(true);
     expect(report.integriteVerifiee).toBe(true);
-    expect(report.fichier).toMatch(/\.tar\.enc$/);
+    expect(report.fichier).toMatch(/\.tar\.age$/);
     expect(report.sha256).toMatch(/^[a-f0-9]{64}$/);
     expect(report.tailleOctets).toBeGreaterThan(0);
     expect(await (await page.request.get('/api/suivi/etat')).json()).toEqual(before);
