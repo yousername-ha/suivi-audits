@@ -248,6 +248,7 @@ function DetailCellule({
   onListe: () => void;
   plusieurs: boolean;
 }) {
+  const peutSupprimer = useCan()('incidents', 'supprimer');
   const actif = c.status === 'Active',
     edition = actif && modifiable,
     maintenant = useMaintenant(actif),
@@ -396,7 +397,7 @@ function DetailCellule({
                       — {reste < 0 ? `dépassée de ${formaterDureeCrise(-reste)}` : `reste ${formaterDureeCrise(reste)}`}
                     </Text>
                   )}
-                  {edition && (
+                  {edition && peutSupprimer && (
                     <Button
                       size="compact-xs"
                       variant="subtle"
@@ -584,7 +585,7 @@ export function ContactsCrise() {
                       />
                     </Table.Td>
                   ))}
-                  {modifiable && (
+                  {modifiable && can('incidents', 'supprimer') && (
                     <Table.Td>
                       <ConfirmButton
                         message="Supprimer ce contact ?"
@@ -716,7 +717,7 @@ export function ScenariosCrise() {
                           onCommit={(v) => void agir('PATCH', `${base}/actions/${k}`, { owner: v })}
                         />
                       </Table.Td>
-                      {modifiable && (
+                      {modifiable && can('incidents', 'supprimer') && (
                         <Table.Td>
                           <Button
                             size="compact-sm"
@@ -742,16 +743,18 @@ export function ScenariosCrise() {
                 <Button variant="default" onClick={() => void agir('POST', `${base}/actions`)}>
                   Ajouter une action
                 </Button>
-                <ConfirmButton
-                  message="Supprimer ce scénario ?"
-                  variant="light"
-                  onConfirm={async () => {
-                    await agir('DELETE', base);
-                    setSel(null);
-                  }}
-                >
-                  Supprimer le scénario
-                </ConfirmButton>
+                {can('incidents', 'supprimer') && (
+                  <ConfirmButton
+                    message="Supprimer ce scénario ?"
+                    variant="light"
+                    onConfirm={async () => {
+                      await agir('DELETE', base);
+                      setSel(null);
+                    }}
+                  >
+                    Supprimer le scénario
+                  </ConfirmButton>
+                )}
               </Group>
             )}
           </Stack>

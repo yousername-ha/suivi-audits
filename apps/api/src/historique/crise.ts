@@ -74,8 +74,9 @@ export class Crise {
     action: string,
     reference: (x: T) => string,
     appliquer: (c: Racine, data: JsonObject) => T | Promise<T>,
+    droit: 'modifier' | 'supprimer' = 'modifier',
   ): Promise<T> {
-    return this.r.modifier(user, ip, { module: 'incidents', action, reference }, (data) =>
+    return this.r.modifier(user, ip, { module: 'incidents', action, reference, droit }, (data) =>
       appliquer(racine(data), data),
     );
   }
@@ -222,6 +223,7 @@ export class Crise {
         remplacer(c, 'cells', id, { ...cell, deadlines: l.filter((_, i) => i !== k) });
         return { id };
       },
+      'supprimer',
     );
   }
 
@@ -306,6 +308,7 @@ export class Crise {
         c.contacts = c.contacts.filter((_, i) => i !== k);
         return { id: String(k) };
       },
+      'supprimer',
     );
   }
   /** Ajoute comme contacts clés les fournisseurs critiques ou hébergeurs HDS du registre qui n'y figurent pas. */
@@ -386,6 +389,7 @@ export class Crise {
         remplacer(c, 'scenarios', id, null);
         return { id };
       },
+      'supprimer',
     );
   }
   ajouterAction(id: string, user: SessionUser, ip: string): Promise<{ id: string }> {
@@ -433,6 +437,7 @@ export class Crise {
         remplacer(c, 'scenarios', id, { ...s, items: items.filter((_, i) => i !== k) });
         return { id };
       },
+      'supprimer',
     );
   }
 }

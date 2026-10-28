@@ -299,16 +299,18 @@ function DetailEvaluation({
                 Créer les actions pour les écarts
               </Button>
             )}
-            <ConfirmButton
-              message="Supprimer cette évaluation ?"
-              variant="light"
-              onConfirm={async () => {
-                await agir('DELETE', base);
-                onRetour();
-              }}
-            >
-              Supprimer l’évaluation
-            </ConfirmButton>
+            {can('fournisseurs', 'supprimer') && (
+              <ConfirmButton
+                message="Supprimer cette évaluation ?"
+                variant="light"
+                onConfirm={async () => {
+                  await agir('DELETE', base);
+                  onRetour();
+                }}
+              >
+                Supprimer l’évaluation
+              </ConfirmButton>
+            )}
           </Group>
         )}
       </Group>

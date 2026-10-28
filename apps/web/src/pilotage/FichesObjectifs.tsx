@@ -22,6 +22,7 @@ import { optionsTypesProcessus, useTypesProcessus } from '../processus/types';
 import { ConfirmButton, DataTable } from '@suivi/ui';
 import { api } from '../api';
 import { ErrorAlert } from '../components/common';
+import { useCan } from '../session';
 
 export type Ligne = Record<string, unknown>;
 export const texte = (v: unknown) => (typeof v === 'string' ? v : v == null ? '' : String(v));
@@ -82,6 +83,7 @@ export function FicheProcessus({
   modifiable: boolean;
   onClose: () => void;
 }) {
+  const peutSupprimer = useCan()('pilotage', 'supprimer');
   const id = texte(processus.id),
     types = useTypesProcessus(),
     { ecrire, erreur } = useEcriture(smsi),
@@ -184,7 +186,7 @@ export function FicheProcessus({
           {siens.length ? siens.map((o) => `${texte(o.id)} ${texte(o.name)}`).join(' · ') : 'Aucun.'}
         </Text>
         <Group justify="space-between">
-          {modifiable ? (
+          {modifiable && peutSupprimer ? (
             <ConfirmButton
               size="xs"
               variant="default"
@@ -233,6 +235,7 @@ export function FicheObjectif({
   onClose: () => void;
   onOpenIndicateur: (id: string) => void;
 }) {
+  const peutSupprimer = useCan()('pilotage', 'supprimer');
   const id = texte(objectif.id),
     { ecrire, erreur } = useEcriture(smsi),
     [nom, setNom] = useState(texte(objectif.name)),
@@ -345,7 +348,7 @@ export function FicheObjectif({
           </Group>
         </div>
         <Group justify="space-between">
-          {modifiable ? (
+          {modifiable && peutSupprimer ? (
             <ConfirmButton
               size="xs"
               variant="default"
@@ -395,6 +398,7 @@ export function FicheIndicateur({
   /** Valeur et source du calcul automatique, si l'indicateur est calculé par l'outil. */
   automatique: string | null;
 }) {
+  const peutSupprimer = useCan()('pilotage', 'supprimer');
   const id = texte(indicateur.id),
     { ecrire, erreur } = useEcriture(smsi),
     [v, setV] = useState({
@@ -592,7 +596,7 @@ export function FicheIndicateur({
                     <Table.Td>{texte(m.note) || '–'}</Table.Td>
                     <Table.Td>{texte(m.hist) || '–'}</Table.Td>
                     <Table.Td>
-                      {modifiable && (
+                      {modifiable && peutSupprimer && (
                         <ConfirmButton
                           size="xs"
                           variant="default"
@@ -670,7 +674,7 @@ export function FicheIndicateur({
           />
         </Group>
         <Group justify="space-between">
-          {modifiable ? (
+          {modifiable && peutSupprimer ? (
             <ConfirmButton
               size="xs"
               variant="default"

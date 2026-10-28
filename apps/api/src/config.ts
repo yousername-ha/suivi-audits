@@ -1,5 +1,6 @@
 /* Configuration : variables d'environnement (fichier .env) et secrets (volume « secrets », générés par le service init). */
 import { readFileSync } from 'node:fs';
+import { isIP } from 'node:net';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -7,6 +8,29 @@ type Env = Record<string, string | undefined>;
 
 const bool = (v: string | undefined, d: boolean) => (v == null || v === '' ? d : /^(1|true|yes|oui)$/i.test(v));
 const int = (v: string | undefined, d: number) => (v == null || v === '' ? d : parseInt(v, 10));
+
+/** TRUST_PROXY : booléen (true = tous les relais, false = aucun), nombre de relais de confiance (1 à 10), ou liste d'adresses et
+    de CIDR séparés par des virgules. Une valeur mal formée arrête le démarrage au lieu d'être interprétée au hasard. */
+export function trustProxy(v: string | undefined): boolean | number | string[] {
+  const t = (v ?? '').trim();
+  if (/^(|false|no|non|0)$/i.test(t)) return false;
+  if (/^(true|yes|oui)$/i.test(t)) return true;
+  if (/^\d{1,2}$/.test(t) && Number(t) >= 1 && Number(t) <= 10) return Number(t);
+  const liste = t.split(',').map((x) => x.trim());
+  const valide = (x: string) => {
+    const [adresse = '', masque, ...reste] = x.split('/');
+    const version = isIP(adresse);
+    if (!version || reste.length) return false;
+    if (masque === undefined) return true;
+    return /^\d{1,3}$/.test(masque) && Number(masque) <= (version === 4 ? 32 : 128);
+  };
+  if (!liste.every(valide)) {
+    throw new Error(
+      "TRUST_PROXY invalide : attendu true, false, un nombre de relais (1 à 10) ou une liste d'adresses ou de CIDR.",
+    );
+  }
+  return liste;
+}
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 /** Racine de l'application (contient seed/ et migrations/). */
@@ -25,7 +49,7 @@ export function loadConfig(env: Env = process.env) {
   return {
     port: int(env.PORT, 8080),
     host: env.HOST || '0.0.0.0',
-    trustProxy: bool(env.TRUST_PROXY, false),
+    trustProxy: trustProxy(env.TRUST_PROXY),
     publicUrl: (env.PUBLIC_URL || '').replace(/\/+$/, ''),
     cookieSecure: (env.COOKIE_SECURE || 'auto').toLowerCase() as 'auto' | 'true' | 'false',
     logLevel: env.LOG_LEVEL || 'info',

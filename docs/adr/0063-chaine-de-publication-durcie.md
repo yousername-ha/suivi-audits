@@ -33,6 +33,20 @@
    le reçu ; l'administrateur le télécharge depuis les reçus (téléchargement journalisé, empreinte recontrôlée). Toutes les
    versions publiées depuis 3.0 portent cette attestation.
 
+## Complément du 27/10/2026 (audit DevSecOps)
+
+7. **Dépendances npm et quarantaine.** Dependabot suit aussi l'écosystème npm (`pnpm-lock.yaml`) : correctifs et mineures
+   regroupés en une pull request, chaque majeure seule (lecture des notes de version et validation du RSSI, ADR 0009).
+   Toutes les propositions Dependabot (actions, images, npm) attendent 7 jours après la publication (`cooldown`). Côté
+   pnpm (`pnpm-workspace.yaml`) : `minimumReleaseAge` (7 jours), `trustPolicy: no-downgrade` (refus d'une version dont la
+   preuve de provenance régresse) et `blockExoticSubdeps` (dépendances transitives du registre seulement). Un correctif de
+   sécurité urgent publié depuis moins de 7 jours s'installe en ajoutant le paquet à `minimumReleaseAgeExclude`, dans la PR
+   qui le monte, avec la référence de l'avis, puis en l'en retirant une fois le délai écoulé.
+8. **Jeton GitHub hors de la copie de travail.** Les checkouts de `ci.yml` et `codeql.yml` utilisent
+   `persist-credentials: false` (aucune opération Git authentifiée n'y a lieu) ; aucune expression `${{ }}` n'est interpolée
+   dans un script, les valeurs passent par `env`. `release.yml` est inchangé à ce stade : son job `notes` relit
+   `origin` (`git fetch`) et la chaîne n'a pas encore été exécutée avec les actions de #130.
+
 ## Ce qui n'est pas fait
 
 - Les versions de Trivy et gitleaks figées dans `installer-outils.sh` ne sont pas suivies par Dependabot : revue manuelle
@@ -44,3 +58,13 @@
   administrateur, ni déplacement ni suppression), protection de `main` (PR obligatoire, sept contrôles verts, fusion
   classique) et environnement `publication` (approbation du RSSI, étiquettes `v*` seulement), exigé par le job
   `sign`. Reste à faire : clé matérielle sur le compte.
+
+## Addendum du 28/10/2026 — images de base épinglées par empreinte
+
+Les images tierces des Dockerfiles (`node`, `caddy`, `golang`, `alpine`) et du compose de production (`postgres` 17 et 18,
+`clamav`) sont désignées par `étiquette@sha256:<empreinte>`, l'empreinte étant celle de l'index multi-architecture relevée avec
+`docker buildx imagetools inspect`. Dependabot (écosystèmes `docker` sur `/docker` et `docker-compose` sur `/`) propose
+chaque semaine la nouvelle empreinte avec la version ; la proposition passe par la CI complète et la relecture du RSSI. Si
+l'écosystème `docker-compose` ne couvrait pas un service, la revue reste manuelle à chaque mise à jour de version. Les images
+du projet (GHCR) restent désignées par version : la publication les signe et atteste leur nomenclature. Le contrôle
+`scripts/tests/conteneurs.test.mjs` refuse une image tierce sans empreinte.
