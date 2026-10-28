@@ -58,5 +58,6 @@
 
 - Les captures de référence du tableau de bord (`tests/e2e/specs/__captures__/ecrans-tableau-de-bord-*`, 12 images)
   changent et doivent être régénérées sur la pile Docker (`./tests/e2e/run-in-container.sh --update-snapshots`), puis
-  relues dans la PR (backlog TEST-043).
+  relues dans la PR (backlog TEST-043). Le compte à rebours du prochain audit change chaque jour : il porte la classe
+  `horodatage`, masquée dans ces captures comme les autres dates.
 - L'effet de verre (`backdrop-filter`) sollicite la carte graphique ; à surveiller sur un poste modeste.
