@@ -169,7 +169,7 @@ export function variablesCarte(p: PaletteCarte): Record<string, string> {
   return v;
 }
 
-/** Tableau de bord « verre et relief » de l'accueil (ADR 0066) : teintes des seuils et des métriques.
+/** Tableau de bord « verre et relief » de l'accueil (ADR 0069) : teintes des seuils et des métriques.
     remplissage : barre, arc ou part, toujours cerné du contour, qui porte le contraste de l'élément graphique
     (WCAG 1.4.11) ; texte : chiffre coloré ; doux : fond de pastille ; surface : verre posé sur le fond de page. */
 export const TEINTES_SEUIL = ['vert', 'orange', 'rouge', 'violet', 'bleu', 'gris'] as const;
@@ -415,7 +415,7 @@ export const COUPLES_CONTRASTE: { nom: string; texte: string; fond: string; seui
       }),
     ];
   }),
-  // Tableau de bord « verre et relief » (ADR 0066) : textes et pastilles sur le verre, contour des métriques.
+  // Tableau de bord « verre et relief » (ADR 0069) : textes et pastilles sur le verre, contour des métriques.
   ...(['clair', 'sombre'] as const).flatMap((m) => {
     const p = TABLEAU_DE_BORD[m];
     return [

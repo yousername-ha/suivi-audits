@@ -1,7 +1,7 @@
-/* Tableau de bord par défaut de l'accueil, « Suivi de la conformité » (ADR 0066, lot 1) : dalles en verre et relief,
+/* Tableau de bord par défaut de l'accueil, « Suivi de la conformité » (ADR 0069, lot 1) : dalles en verre et relief,
    métriques colorées selon des seuils d'affichage. Lecture seule ; toutes les valeurs viennent de la synthèse
    (/api/mur/synthese), filtrée selon les droits : une dalle sans donnée lisible n'est pas affichée. Le taux global est
-   la moyenne simple des taux par référentiel (décision du RSSI du 28/10/2026, ADR 0066), affiché comme tel et distinct
+   la moyenne simple des taux par référentiel (décision du RSSI du 28/10/2026, ADR 0069), affiché comme tel et distinct
    des taux par référentiel ; jamais une somme d'exigences de référentiels différents (ADR 0060).
    L'écran mural et le Pilotage gardent les cartes de Synthese.tsx. */
 import type { Synthese } from '@suivi/shared';

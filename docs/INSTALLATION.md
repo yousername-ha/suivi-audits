@@ -74,9 +74,12 @@ Cochez chaque ligne avant de passer à l'étape 1. Les demandes aux autres équi
 | `tuf-repo-cdn.sigstore.dev`, `rekor.sigstore.dev` | TCP 443 | Vérification de la signature des images à chaque mise à jour (étape 12.1) |
 | `registry-1.docker.io`, `auth.docker.io`, `production.cloudflare.docker.com` | TCP 443 | Image de la base de données (PostgreSQL) |
 | Serveur de temps (NTP) de votre organisation, ou `ntp.ubuntu.com` / `deb.pool.ntp.org` | UDP 123 | Mise à l'heure (indispensable à la double authentification) |
-| `database.clamav.net` | TCP 443 | Facultatif : signatures de l'antivirus |
+| `database.clamav.net` | TCP 443 | Facultatif : signatures de l'antivirus (service `freshclam` seul) |
 
 Une fois démarrée, l'application elle-même n'a **aucun accès à Internet** : seuls le système, Docker et les scripts du serveur en ont besoin, pour l'installation et les mises à jour.
+
+**Antivirus facultatif.** `docker compose --profile antivirus up -d` démarre deux services sans privilège (utilisateur `clamav`, système de fichiers en lecture seule, aucune capacité Linux) : `clamav` (analyse, joint par l'API seule sur le réseau interne `antivirus`, sans accès à la base ni à Internet) et `freshclam` (téléchargement des signatures, seul à sortir vers `database.clamav.net`). `clamav` démarre quand les signatures initiales sont présentes, ce qui prend quelques minutes au premier lancement ; l'analyse reprend les signatures mises à jour dans l'heure qui suit leur téléchargement. Renseigner `CLAMAV_HOST=clamav` dans `.env`. Le dossier `DATA_DIR/clamav` appartient à l'uid 100, préparé par le service `init`.
+
 
 ---
 
@@ -398,7 +401,7 @@ getent hosts <nom_dns>
 | `postgres/` | seulement sur un serveur mis à jour depuis une version en PostgreSQL 17 : l'**ancienne base**, conservée intacte après la migration (voir 12.1) | aucun usage |
 | `secrets/` | mots de passe internes et **clé de chiffrement des documents**, créés au premier démarrage | lecture par la base et l'application |
 | `caddy/` | certificats HTTPS et autorité de certification interne | frontal web seul |
-| `clamav/` | signatures de l'antivirus (facultatif) | antivirus seul |
+| `clamav/` | signatures de l'antivirus (facultatif) | `freshclam` (écriture) et `clamav` (lecture seule) |
 | `etat/` | rapports des sauvegardes et des mises à jour, affichés dans **Administration**, onglet **Système** | lecture seule pour l'application |
 
 Le service `init` crée ces sous-dossiers avec les bons propriétaires et droits à chaque démarrage. Il **refuse de démarrer** si le dossier n'a pas été préparé, s'il est dans le dossier de l'application (`/opt/suivi-audits`), dans un dossier système (`/var/lib/docker`, `/tmp`…) ou sur un disque temporaire.
@@ -731,6 +734,10 @@ La migration additive `006_sauvegardes.sql` est appliquée au démarrage. L’ap
 
 Après les étapes 11.1–11.4, vérifier la phrase secrète **non vide**, fichier régulier lisible par root et inaccessible au groupe et aux autres comptes (0600). Conserver sa copie dans le coffre-fort. La destination doit être persistante, privée et incluse dans la sauvegarde externalisée. `RETENTION_DAYS` accepte 1 à 36500 (90 par défaut ; 36500 conserve la compatibilité avec les sauvegardes avant mise à jour, dont les cinq dernières sont gardées) ; `BACKUP_PREFIXE` accepte 1 à 61 caractères ASCII alphanumériques, point, tiret ou soulignement, avec un premier caractère alphanumérique. Ces contrôles s’appliquent aussi aux appels directs de `backup.sh`.
 
+**Conservation minimale.** La rotation de `backup.sh` garde toujours les `BACKUP_GARDER_MIN` sauvegardes les plus récentes du dossier de destination (7 par défaut, de 1 à 365), même au-delà de `RETENTION_DAYS` ; seules les suivantes disparaissent, avec leur fichier `.sha256`, si elles ont plus de `RETENTION_DAYS` jours. L’exécutant des demandes web relève la durée enregistrée dans Configuration système à `RETENTION_MIN_DAYS` (30 par défaut, de 1 à 36500), lue dans `.env` sur le serveur ; une valeur hors bornes fait échouer la demande au lieu de supprimer des sauvegardes. Les deux réglages sont facultatifs et se placent dans `.env` (voir `.env.example`).
+
+**Identifiants réservés.** Les UID 70, 100, 1000 et 1001 servent aux conteneurs de la pile (base, antivirus, application, frontal) et aux dossiers de `DATA_DIR` : ne les attribuer à aucun compte humain ou de service de l’hôte. Une alternative est l’option `userns-remap` de Docker, qui décale les identifiants des conteneurs ; elle modifie les droits des dossiers montés et se valide d’abord hors production.
+
 Sur le serveur d’exploitation uniquement :
 
 <!-- ci: skip — configuration facultative de la tâche hôte A1a, testée avec un exécutant isolé -->
@@ -803,6 +810,8 @@ Caddy termine TLS. **Le mode de certificat se choisit dans l'application** (Admi
 - **Réglage de départ** : « Revenir au réglage de départ » rend la main à `CADDY_TLS` dans `.env`. Tant qu'aucun mode n'est choisi dans l'application, `.env` reste seul responsable.
 
 La gestion depuis l'application est active par défaut. `TLS_WEB_MANAGEMENT=0` dans `.env` l'interdit ; si TLS est terminé par un ingress/proxy extérieur, régler `TLS_TERMINATION=external` : observation du certificat public sur SITE_ADDRESS:443, aucune modification proposée. L'accès d'observation doit être permis depuis l'hôte ; aucune sortie Internet n'est donnée à l'API.
+
+**Adresse du client et `TRUST_PROXY`.** L'API lit l'adresse du client (audit, limites par adresse) dans `X-Forwarded-For`, mais seulement à travers les relais déclarés. `TRUST_PROXY` accepte : un **nombre de relais** (1 à 10 ; l'adresse retenue est celle que le dernier relais de confiance a vue), une **liste d'adresses ou de CIDR** séparés par des virgules (par exemple `10.0.0.0/8,192.168.1.5`), `false` (aucun relais, l'en-tête est ignoré) ou `true` (compatibilité : tous les relais, première adresse de la liste). Une valeur mal formée arrête le démarrage de l'API avec un message explicite. La pile fournie fixe `TRUST_PROXY: '1'` dans `docker-compose.yml` : seul `web` précède l'API, et `gateway` remplace l'en-tête du navigateur avant lui ; ne pas ajouter de relais devant `gateway` sans revoir cette valeur.
 
 Priorité : le marqueur `secrets/tls-web/mode` (sauvegardé avec le couple, il ne contient que `web`, `env`, `interne` ou `acme`) sélectionne le mode. Pour `web`, les chemins fixes `/certs-web/cert.pem` et `key.pem` ; pour `acme`, le fichier `secrets/tls-web/acme` (deux lignes, courriel puis adresse `https://…`, revalidées au démarrage du frontal) ; sinon Caddy utilise exactement `CADDY_TLS` dans `.env`. Aucun shell ni fichier de configuration fourni par un utilisateur n'est interprété. Le fichier `.env` n'est jamais modifié par une demande web. Caddy ne reçoit qu'un seul émetteur ACME (pas de serveur de secours). Aucun bouton ne prétend forcer un renouvellement : Caddy renouvelle seul.
 

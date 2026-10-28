@@ -43,7 +43,7 @@ const css =
   `.carte-export{${Object.entries(variablesCarte(CARTE.clair))
     .map(([k, v]) => `${k}:${v}`)
     .join(';')}}\n` +
-  // Tableau de bord « verre et relief » de l'accueil (ADR 0066), clair puis sombre.
+  // Tableau de bord « verre et relief » de l'accueil (ADR 0069), clair puis sombre.
   `:root{${declarations(variablesTableauDeBord(TABLEAU_DE_BORD.clair))}}\n` +
   `[data-mantine-color-scheme='dark']{${declarations(variablesTableauDeBord(TABLEAU_DE_BORD.sombre))}}\n`;
 const out = path.join(path.dirname(fileURLToPath(import.meta.url)), '../src/generated/mantine-vars.css');

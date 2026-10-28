@@ -32,10 +32,11 @@ const liste = (state: JsonObject, cle: Cle): JsonObject[] =>
 export class PilotageObjectifs {
   constructor(private readonly g: Grc) {}
 
-  private async ouvrir(smsi: string, user: SessionUser, c: Client) {
+  /** `droit` : « supprimer » pour une suppression (ADR 0010), « modifier » pour toute autre écriture. */
+  private async ouvrir(smsi: string, user: SessionUser, c: Client, droit: 'modifier' | 'supprimer' = 'modifier') {
     if (smsi !== DEFAULT_SMSI) throw new HttpError(404, 'Ces données appartiennent au pilotage commun.');
     await this.g.access(smsi, user, true, c);
-    await this.g.permission(user, GRC_MODULES.indicator, 'modifier');
+    await this.g.permission(user, GRC_MODULES.indicator, droit);
     await verrouillerEtat(c);
     const state = await this.g.legacy.recompose(c);
     if (!state) throw new HttpError(409, 'Registre historique indisponible.');
@@ -129,7 +130,7 @@ export class PilotageObjectifs {
   /** Suppression : un objectif emporte ses indicateurs ; un processus est retiré des objectifs et des indicateurs. */
   async supprimer(smsi: string, cle: Cle, id: string, user: SessionUser, ip: string) {
     return this.g.db.tx(async (c) => {
-      const state = await this.ouvrir(smsi, user, c);
+      const state = await this.ouvrir(smsi, user, c, 'supprimer');
       const lignes = liste(state.data, cle);
       const cible = lignes.find((r) => r.id === id);
       if (!cible) throw new HttpError(404, `${LIBELLE[cle]} introuvable.`);
@@ -184,7 +185,7 @@ export class PilotageObjectifs {
 
   async supprimerValeur(smsi: string, id: string, rang: number, user: SessionUser, ip: string) {
     return this.g.db.tx(async (c) => {
-      const state = await this.ouvrir(smsi, user, c);
+      const state = await this.ouvrir(smsi, user, c, 'supprimer');
       const lignes = liste(state.data, 'indicators');
       const ind = lignes.find((r) => r.id === id);
       if (!ind) throw new HttpError(404, 'Indicateur introuvable.');

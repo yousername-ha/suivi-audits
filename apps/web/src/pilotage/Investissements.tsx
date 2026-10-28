@@ -424,6 +424,7 @@ function FicheLigne({
   maj: (c: Record<string, unknown>) => void;
   supprimer: () => Promise<void>;
 }) {
+  const peutSupprimer = useCan()('investissements', 'supprimer');
   const montant = (cle: 'n0' | 'n1' | 'n2', libelle: string) => (
     <ChampTexte
       key={`${cle}-${l[cle]}`}
@@ -515,7 +516,7 @@ function FicheLigne({
       </div>
       <ChampZone label="Alternative" value={l.alt} disabled={!modifiable} onCommit={(v) => maj({ alt: v })} />
       <ChampZone label="Commentaires" value={l.comment} disabled={!modifiable} onCommit={(v) => maj({ comment: v })} />
-      {modifiable && (
+      {modifiable && peutSupprimer && (
         <Group justify="flex-end">
           <ConfirmButton message={`Supprimer la ligne ${l.company || l.id} ?`} onConfirm={supprimer} variant="light">
             Supprimer la ligne

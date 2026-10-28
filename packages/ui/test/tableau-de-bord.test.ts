@@ -40,7 +40,7 @@ const serialiser = (noeuds: (Noeud | string)[]): string =>
     .join('');
 const html = (e: ReactNode) => serialiser(aplatir(e));
 
-describe('tableau de bord « verre et relief » (ADR 0066)', () => {
+describe('tableau de bord « verre et relief » (ADR 0069)', () => {
   it('seuils : base sous le premier palier, puis teinte du plus haut palier atteint, quel que soit leur ordre', () => {
     expect(teinteSeuil(SEUILS_TAUX, 0)).toBe('rouge');
     expect(teinteSeuil(SEUILS_TAUX, 59.9)).toBe('rouge');

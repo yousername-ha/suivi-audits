@@ -1,4 +1,4 @@
-/* Tableau de bord « verre et relief » de l'accueil (ADR 0066) : dalles en verre, chiffres clés, jauges en arc,
+/* Tableau de bord « verre et relief » de l'accueil (ADR 0069) : dalles en verre, chiffres clés, jauges en arc,
    barres horizontales et empilées, colorées selon des seuils. SVG sans dépendance ; couleurs par classes reliées aux
    variables --tdb-* (clair et sombre, tokens.ts) ; aucun style en ligne (CSP). Chaque métrique a une alternative
    textuelle : libellé chiffré, liste ou tableau masqué. */

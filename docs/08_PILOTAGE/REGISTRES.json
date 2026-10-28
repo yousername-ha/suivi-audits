@@ -1506,7 +1506,7 @@
     },
     {
       "id": "DEV-004",
-      "title": "Tableau de bord personnalisable (étape 2 de l'ADR 0066)",
+      "title": "Tableau de bord personnalisable (étape 2 de l'ADR 0069)",
       "status": "À FAIRE",
       "priority": "P2",
       "origin": "demande utilisateur du 26/10/2026 (maquette retenue le 27/10/2026)",
@@ -1517,7 +1517,7 @@
     },
     {
       "id": "DEV-005",
-      "title": "Historique mensuel des métriques du tableau de bord (étape 3 de l'ADR 0066)",
+      "title": "Historique mensuel des métriques du tableau de bord (étape 3 de l'ADR 0069)",
       "status": "À FAIRE",
       "priority": "P2",
       "origin": "demande utilisateur du 26/10/2026",
@@ -1531,7 +1531,7 @@
       "title": "Régénérer et relire les captures de référence du tableau de bord",
       "status": "À FAIRE",
       "priority": "P1",
-      "origin": "ADR 0066, étape 1",
+      "origin": "ADR 0069, étape 1",
       "acceptance": "Les 12 captures ecrans-tableau-de-bord-* régénérées sur la pile Docker locale (run-in-container.sh --update-snapshots), relues image par image dans la PR, CI de bout en bout verte.",
       "dependencies": "Docker local (indisponible dans la session cloud du 27/10/2026)",
       "next": "Régénérer les captures sur un poste avec Docker et les pousser sur la branche claude/tableau-de-bord-verre.",

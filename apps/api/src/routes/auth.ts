@@ -123,12 +123,22 @@ export const authRoutes = [
     response: StageOut,
     handler: async ({ svc, req, reply, s, ip, body }) => {
       const sess = s as Session;
-      if (!svc.limits.mfaBySession(sess.sid.toString('hex')))
+      if (!svc.limits.mfaBySession(sess.sid.toString('hex')) || !svc.limits.mfaByUser(sess.user.id))
         throw new HttpError(429, 'Trop de tentatives. Reconnectez-vous.');
+      if (await svc.auth.estVerrouille(sess.user.id)) {
+        await svc.auth.destroy(sess.sid);
+        await svc.db.audit(sess.user, ip, 'auth.mfa_locked');
+        throw new HttpError(
+          423,
+          'Compte temporairement verrouillé après plusieurs échecs. Réessayez plus tard ou contactez un administrateur.',
+        );
+      }
       if (!(await svc.auth.checkTotp(sess.user.id, body.code))) {
+        await svc.auth.enregistrerEchec(sess.user.id);
         await svc.db.audit(sess.user, ip, 'auth.mfa_failed');
         throw new HttpError(401, 'Code incorrect ou déjà utilisé.');
       }
+      await svc.auth.effacerEchecs(sess.user.id);
       // Rotation de la session après élévation (prévention de la fixation de session).
       await svc.auth.destroy(sess.sid);
       await svc.auth.create(req, reply, sess.user.id, true);
@@ -231,7 +241,9 @@ export const authRoutes = [
         .select(['username', 'password_hash'])
         .where('id', '=', sess.user.id)
         .executeTakeFirstOrThrow();
+      limiterMotDePasse(svc, sess.user.id);
       if (!(await verifyPassword(body.current, u.password_hash))) {
+        await svc.auth.enregistrerEchec(sess.user.id);
         await svc.db.audit(sess.user, ip, 'account.password_failed');
         throw new HttpError(401, 'Mot de passe actuel incorrect.');
       }
@@ -264,15 +276,11 @@ export const authRoutes = [
     access: 'session',
     body: PasswordBody,
     response: TotpBeginOut,
-    handler: async ({ svc, s, body }) => {
+    handler: async ({ svc, s, ip, body }) => {
       const sess = s as Session;
       const st = svc.auth.stage(sess);
       if (!['ok', 'enroll'].includes(st)) throw new HttpError(403, 'Authentification incomplète.');
-      if (st === 'ok' && sess.user.totpEnabled) {
-        const u = await motDePasse(svc, sess.user.id);
-        if (!(await verifyPassword(body.password || '', u.password_hash)))
-          throw new HttpError(401, 'Mot de passe incorrect.');
-      }
+      if (st === 'ok' && sess.user.totpEnabled) await exigerMotDePasse(svc, sess.user, ip, body.password);
       const key = crypto.randomBytes(20);
       await svc.db.k
         .updateTable('users')
@@ -334,9 +342,7 @@ export const authRoutes = [
     handler: async ({ svc, s, ip, body }) => {
       const sess = s as Session;
       if (svc.cfg.mfaRequired) throw new HttpError(403, 'La double authentification est obligatoire sur ce serveur.');
-      const u = await motDePasse(svc, sess.user.id);
-      if (!(await verifyPassword(body.password || '', u.password_hash)))
-        throw new HttpError(401, 'Mot de passe incorrect.');
+      await exigerMotDePasse(svc, sess.user, ip, body.password);
       await svc.db.k
         .updateTable('users')
         .set({ totp_secret: null, totp_pending: null, totp_enabled: false })
@@ -405,4 +411,19 @@ export const authRoutes = [
 /** Empreinte du mot de passe d'un compte (le compte de la session existe toujours). */
 async function motDePasse(svc: Services, userId: string) {
   return svc.db.k.selectFrom('users').select('password_hash').where('id', '=', userId).executeTakeFirstOrThrow();
+}
+/** Vérifications du mot de passe actuel : cinq par quart d'heure et par compte. */
+function limiterMotDePasse(svc: Services, userId: string) {
+  if (!svc.limits.motDePasseByUser(userId))
+    throw new HttpError(429, 'Trop de tentatives. Réessayez dans quelques minutes.');
+}
+/** Exige le mot de passe actuel : limité par compte ; chaque échec est compté dans le verrouillage et journalisé. */
+async function exigerMotDePasse(svc: Services, user: Session['user'], ip: string | null, password: string | undefined) {
+  limiterMotDePasse(svc, user.id);
+  const u = await motDePasse(svc, user.id);
+  if (!(await verifyPassword(password || '', u.password_hash))) {
+    await svc.auth.enregistrerEchec(user.id);
+    await svc.db.audit(user, ip, 'account.password_failed');
+    throw new HttpError(401, 'Mot de passe incorrect.');
+  }
 }

@@ -212,6 +212,7 @@ function FicheApplication({
   agir: Agir;
   onSupprime: () => void;
 }) {
+  const peutSupprimer = useCan()('conformite', 'supprimer');
   const exclues = new Set(d.exclues);
   const s = statsGap(app, exclues);
   const points = pointsGap(app);
@@ -393,7 +394,7 @@ function FicheApplication({
                             </Button>
                           )
                         )}
-                        {modifiable && l.custom && (
+                        {modifiable && peutSupprimer && l.custom && (
                           <Button
                             size="compact-sm"
                             variant="subtle"
@@ -433,7 +434,7 @@ function FicheApplication({
           </Group>
         </section>
       )}
-      {modifiable && (
+      {modifiable && peutSupprimer && (
         <Group justify="flex-end">
           <ConfirmButton
             message={`Supprimer « ${app.name} » et son analyse d’écart ?`}

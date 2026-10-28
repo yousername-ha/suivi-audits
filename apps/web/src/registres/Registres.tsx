@@ -330,7 +330,7 @@ function FicheRegistre({ id }: { id: string }) {
             </Tabs.Panel>
             {r.peut.gerer && (
               <Tabs.Panel value="droits" pt="md">
-                <Droits type="registre" id={id} />
+                <Droits type="registre" id={id} peutAttribuer={r.peutAttribuer} />
               </Tabs.Panel>
             )}
             {r.peut.gerer && (
@@ -657,8 +657,13 @@ function Parametres({ r }: { r: RegistreDto }) {
       )}
       <Checkbox
         label="Registre restreint"
-        description="Seuls les droits attribués au registre (et les administrateurs) donnent accès."
+        description={
+          r.peutAttribuer
+            ? 'Seuls les droits attribués au registre (et les administrateurs) donnent accès.'
+            : 'Seuls les droits attribués au registre (et les administrateurs) donnent accès. Le modifier demande le droit d’administrer le module ou le rôle de gestionnaire.'
+        }
         checked={restreint}
+        disabled={!r.peutAttribuer && !r.archived}
         onChange={(e) => setRestreint(e.currentTarget.checked)}
       />
       <Group>

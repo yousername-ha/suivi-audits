@@ -1810,7 +1810,7 @@ html[data-style='clair'][data-mantine-color-scheme='light'] {
 }
 
 /* ========================================================================
-   TABLEAU DE BORD « VERRE ET RELIEF » (accueil, ADR 0066)
+   TABLEAU DE BORD « VERRE ET RELIEF » (accueil, ADR 0069)
    Dalles en verre épais (reflet des bords, lumière haute, ombre portée), métriques fines cernées d'un contour sombre,
    teintes des seuils --tdb-* (tokens.ts, clair et sombre). Limité à l'accueil : classe « tdb » sur le conteneur.
    ======================================================================== */

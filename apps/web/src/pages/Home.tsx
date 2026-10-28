@@ -1,4 +1,4 @@
-/* Accueil : tableau de bord « Suivi de la conformité » en verre et relief (synthèse selon les droits, ADR 0066),
+/* Accueil : tableau de bord « Suivi de la conformité » en verre et relief (synthèse selon les droits, ADR 0069),
    puis accès aux modules et activité en cours. Plus de colonnes sur les grands écrans. */
 import { Button, Card, Stack, Text, Title, VisuallyHidden } from '@mantine/core';
 import { ErrorAlert, IconeAdministration, IconeDocuments, IconeHistorique, Page, PageHeader } from '@suivi/ui';
