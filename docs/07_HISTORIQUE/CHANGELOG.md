@@ -7,7 +7,7 @@ Ce fichier oriente la lecture ; il n’en duplique pas toutes les entrées.
 
 | Repère                    | Modification                                                 | Preuve                                                     |
 | ------------------------- | ------------------------------------------------------------ | ---------------------------------------------------------- |
-| Base main v2              | Source conservée, sans changement de main                    | b148c1b ; archives/v2-manifest.json                        |
+| Base main v2              | Source conservée, sans changement de main                    | b148c1b ; historique Git                        |
 | Fondations v3/Sauge       | API/React, données et pont legacy                            | diagnostics d’intégration ; ADR 0001–0015                  |
 | A/B et mises à jour       | Exploitation, activation, configurations et worker intégré   | ADR 0016–0022 ; commits dans JOURNAL_DE_BORD               |
 | C                         | Référentiels/tâches/risques/carte                            | ADR 0023 ; migration 013/014                               |

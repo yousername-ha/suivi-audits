@@ -116,7 +116,11 @@ describe('questionnaire guidé', () => {
     expect(r.st[transfert.id]).toBe('Non conforme');
   });
   it('service hébergé et administré par l’organisme : G21 non applicable', () => {
-    const r = questionnaireGap({ type: 'Hébergé par le GCS, administré par le GCS', dscp: 'Oui', tma: 'Non' });
+    const r = questionnaireGap({
+      type: 'Hébergé par l’organisation, administré par l’organisation',
+      dscp: 'Oui',
+      tma: 'Non',
+    });
     expect(r.st.G21).toBe('Non applicable');
     expect(r.fournisseur).toBe(false);
   });

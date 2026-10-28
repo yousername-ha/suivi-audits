@@ -130,7 +130,8 @@ test('Investissements et CRRC : lignes, comparaison, contrat, sauvegardes, resta
     // Tableau de bord des sauvegardes.
     await page.goto('/pilotage/crrc-tableau');
     await expect(page.getByRole('img', { name: 'Évolution du volume protégé' })).toBeVisible();
-    await expect(page.getByRole('img', { name: /Carte schématique/ })).toBeVisible();
+    await expect(page.getByText('Activité par établissement')).toBeVisible();
+    await expect(page.getByText(/^Département \d{2}$/).first()).toBeVisible();
     await expect(page.getByText('Alerte fictive')).toBeVisible();
 
     // Ressource : ajout d'une sauvegarde.

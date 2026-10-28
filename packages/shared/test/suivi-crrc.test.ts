@@ -11,7 +11,8 @@ import {
   identifiantEtablissement,
   lireEtatCrrc,
   niveauCrrc,
-  pointsCarteCrrc,
+  activiteParDepartement,
+  departementFiness,
   rapportMensuelCrrc,
   sommetVolume,
   statistiquesCrrc,
@@ -135,10 +136,18 @@ describe('rapport et carte', () => {
     expect(a!.taux).toBe(75);
     expect(rapportMensuelCrrc(etat, '2026-08')[0]!.taux).toBeNull();
   });
-  it('points de la carte : département du FINESS, hors région au point par défaut', () => {
-    const pts = pointsCarteCrrc(etat);
-    expect(pts).toHaveLength(2);
-    expect(pts.find((p) => p.id === 'E2')).toMatchObject({ x: 140, y: 180 });
+  it('activité par département : département tiré du FINESS, « ? » si le FINESS est vide', () => {
+    expect(departementFiness('140000100')).toBe('14');
+    expect(departementFiness('2A0000100')).toBe('2A');
+    expect(departementFiness('')).toBe('?');
+    const groupes = activiteParDepartement(etat);
+    expect(groupes.flatMap((g) => g.etablissements)).toHaveLength(2);
+    expect(groupes.map((g) => g.departement)).toEqual(
+      groupes.map((g) => g.departement).sort((a, b) => a.localeCompare(b)),
+    );
+    for (const g of groupes)
+      for (const x of g.etablissements)
+        expect(departementFiness(etat.establishments.find((e) => e.id === x.id)!.finess)).toBe(g.departement);
   });
 });
 

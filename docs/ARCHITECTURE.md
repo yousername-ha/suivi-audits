@@ -49,7 +49,6 @@ packages/shared   schémas zod partagés (API ⇄ interface), droits, paramètre
                   cartographie : objets, dispositions, génération, scène (fonctions pures, parité avec la bêta)
 apps/api          API Fastify : src/ (routes, auth, sécurité, temps réel, legacy), migrations/ (SQL), test/ (Vitest + PostgreSQL)
 apps/web          interface React + Vite + Mantine (CSP stricte)
-app/public        outil historique (fichier unique), conservé comme référence de parité, non servi
 tests/e2e         Playwright : parcours complets sur la pile Docker
 docker/           Dockerfile des deux images et Caddyfile
 scripts/          sauvegarde, restauration, mise à jour du fichier historique de référence, scripts de CI

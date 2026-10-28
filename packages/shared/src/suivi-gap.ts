@@ -328,8 +328,8 @@ export const QUESTIONS_GAP: readonly QuestionGap[] = [
     l: 'Type de service',
     o: [
       'SaaS (hébergé par l’éditeur)',
-      'Hébergé par le GCS, administré par le GCS',
-      'Hébergé par le GCS, administré par le fournisseur',
+      'Hébergé par l’organisation, administré par l’organisation',
+      'Hébergé par l’organisation, administré par le fournisseur',
       'Développement interne ou spécifique',
     ],
   },
@@ -355,11 +355,11 @@ export const QUESTIONS_GAP: readonly QuestionGap[] = [
     k: 'users',
     l: 'Utilisateurs',
     multi: true,
-    o: ['Agents du GCS', 'Établissements adhérents', 'Patients ou usagers', 'Prestataires'],
+    o: ['Agents de l’organisation', 'Établissements adhérents', 'Patients ou usagers', 'Prestataires'],
   },
   {
     k: 'sso',
-    l: 'Authentification unique (SSO) avec l’annuaire du GCS',
+    l: 'Authentification unique (SSO) avec l’annuaire de l’organisation',
     o: ['Disponible et activée', 'Disponible, non activée', 'Non disponible', 'Inconnu'],
   },
   {
@@ -378,8 +378,12 @@ export const QUESTIONS_GAP: readonly QuestionGap[] = [
     l: 'Criticité pour l’activité',
     o: ['Critique : arrêt de moins de 4 h tolérable', 'Importante : une journée', 'Standard : plus d’une journée'],
   },
-  { k: 'backup', l: 'Qui assure les sauvegardes ?', o: ['Le fournisseur', 'Le GCS', 'Inconnu'] },
-  { k: 'logs', l: 'Les journaux peuvent-ils être envoyés vers le SIEM du GCS ?', o: ['Oui', 'Non', 'Inconnu'] },
+  { k: 'backup', l: 'Qui assure les sauvegardes ?', o: ['Le fournisseur', 'L’organisation', 'Inconnu'] },
+  {
+    k: 'logs',
+    l: 'Les journaux peuvent-ils être envoyés vers le SIEM de l’organisation ?',
+    o: ['Oui', 'Non', 'Inconnu'],
+  },
   {
     k: 'spec',
     l: 'Cas particuliers',
@@ -412,7 +416,7 @@ export function questionnaireGap(A: ReponsesGap): ResultatQuestionnaire {
   const a = (k: string) => A[k];
   const has = (k: string, v: string) => (Array.isArray(a(k)) ? (a(k) as string[]).includes(v) : a(k) === v);
   const saas = has('type', 'SaaS (hébergé par l’éditeur)'),
-    fournisseur = saas || has('type', 'Hébergé par le GCS, administré par le fournisseur') || has('tma', 'Oui'),
+    fournisseur = saas || has('type', 'Hébergé par l’organisation, administré par le fournisseur') || has('tma', 'Oui'),
     dev = has('type', 'Développement interne ou spécifique');
   const dscp = A.dscp === 'Oui' ? 'Oui' : A.dscp === 'Non' ? 'Non' : 'À qualifier',
     personnel = A.dscp === 'Oui' || A.dcp === 'Oui';
@@ -453,7 +457,7 @@ export function questionnaireGap(A: ReponsesGap): ResultatQuestionnaire {
   } else if (A.logs === 'Oui') cm.G14 = 'Export des journaux vers le SIEM possible : à raccorder.';
   if (A.backup === 'Inconnu') cm.G13 = 'Responsabilité des sauvegardes à clarifier.';
   else if (A.backup)
-    cm.G13 = `Sauvegardes assurées par ${A.backup === 'Le GCS' ? 'le GCS' : 'le fournisseur'} : obtenir la preuve des tests de restauration.`;
+    cm.G13 = `Sauvegardes assurées par ${A.backup === 'L’organisation' ? 'l’organisation' : 'le fournisseur'} : obtenir la preuve des tests de restauration.`;
   if (dscp === 'Oui') {
     if (A.loc === 'Hors Union européenne') {
       st.G25 = 'Non conforme';
@@ -467,7 +471,7 @@ export function questionnaireGap(A: ReponsesGap): ResultatQuestionnaire {
       }
     } else {
       st.G21 = 'Non applicable';
-      cm.G21 = 'Service hébergé et administré par le GCS : couvert par la certification HDS du GCS.';
+      cm.G21 = 'Service hébergé et administré par l’organisation : couvert par la certification HDS de l’organisation.';
     }
   }
   if (personnel) {
@@ -565,7 +569,7 @@ const siCode = { k: 'iaCas', v: CAS_IA.code } as const;
 export const QUESTIONS_GAP_IA: readonly QuestionGap[] = [
   {
     k: 'iaCas',
-    l: 'Quelles situations d’IA concernent le GCS ?',
+    l: 'Quelles situations d’IA concernent l’organisation ?',
     multi: true,
     o: [CAS_IA.grandPublic, CAS_IA.metier, CAS_IA.code],
   },
@@ -883,7 +887,10 @@ export function questionnaireGapIa(A: ReponsesGap): ResultatQuestionnaire {
       'Exiger la relecture humaine des réponses de l’IA et proscrire les actions automatiques critiques (guide ANSSI R9, R27)',
       ...D(A.lmRelecture, {
         'Oui, systématiquement': ['Conforme', 'Réponses de l’IA relues avant usage.'],
-        Parfois: ['Partiel', 'Relecture partielle : la rendre systématique pour les usages qui engagent le GCS.'],
+        Parfois: [
+          'Partiel',
+          'Relecture partielle : la rendre systématique pour les usages qui engagent l’organisation.',
+        ],
         Non: ['Non conforme', 'Réponses de l’IA utilisées sans relecture.'],
       }),
     );
