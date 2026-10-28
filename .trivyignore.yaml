@@ -1,0 +1,12 @@
+# Exceptions Trivy, une par entrée, chacune bornée et datée (ADR 0063, addendum du 28/10/2026).
+# Une exception ne vaut que pour la bibliothèque indiquée et expire à la date donnée : la CI échoue ensuite, ce qui impose
+# un réexamen. Le workflow « Veille Caddy » ouvre une demande dès qu'une version de Caddy ne l'exige plus.
+vulnerabilities:
+  - id: CVE-2026-116587
+    purls:
+      - 'pkg:golang/github.com/go-jose/go-jose/v3'
+    statement: >-
+      go-jose v3 est embarqué par Caddy et n'a aucun correctif publié (la v4 est corrigée en 4.1.6 et fixée dans
+      docker/web.Dockerfile). Déni de service à l'analyse de clés JWK RSA, sans effet sur la confidentialité ni l'intégrité.
+      Décision du RSSI du 28/10/2026 : accepter jusqu'au 27/11/2026 ou jusqu'à la sortie d'un Caddy sans go-jose v3.
+    expired_at: 2026-11-27
