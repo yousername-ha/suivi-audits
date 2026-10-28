@@ -293,11 +293,7 @@ export const CFG_DEFINITIONS = {
   taxonomy: TaxonomyDefinition,
 } as const;
 export type CfgDefinition =
-  | ScaleDefinition
-  | MatrixDefinition
-  | MappingDefinition
-  | CriteriaDefinition
-  | TaxonomyDefinition;
+  ScaleDefinition | MatrixDefinition | MappingDefinition | CriteriaDefinition | TaxonomyDefinition;
 
 /** Valide une définition selon son type ; renvoie la définition normalisée (valeurs par défaut posées). */
 export function parseCfgDefinition(
