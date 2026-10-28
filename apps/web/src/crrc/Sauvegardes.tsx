@@ -26,8 +26,8 @@ import {
   STATUTS_SAUVEGARDE_CRRC,
   TECHNOLOGIES_CRRC,
   TYPES_SAUVEGARDE_CRRC,
-  DEPARTEMENTS_CARTE,
-  centreDepartement,
+  activiteParDepartement,
+  libelleDepartement,
   derniereSauvegarde,
   evolutionVolume,
   formaterAxeVolume,
@@ -35,7 +35,6 @@ import {
   formaterHorodatage,
   formaterVolume,
   libelleTechnologie,
-  pointsCarteCrrc,
   rapportMensuelCrrc,
   referenceCrrc,
   sauvegardesDe,
@@ -147,7 +146,7 @@ export function TableauSauvegardes() {
             </Stack>
             <Stack gap="xs">
               <Text fw={600}>Activité par établissement</Text>
-              <CarteNormandie e={e} />
+              <ActiviteDepartements e={e} />
             </Stack>
           </Group>
           <Text fw={600}>Dernières alertes</Text>
@@ -158,40 +157,29 @@ export function TableauSauvegardes() {
   );
 }
 
-function CarteNormandie({ e }: { e: EtatCrrc }) {
+function ActiviteDepartements({ e }: { e: EtatCrrc }) {
+  const groupes = activiteParDepartement(e);
   return (
     <>
-      <svg
-        viewBox="0 0 290 190"
-        role="img"
-        aria-label="Carte schématique des établissements par département"
-        className="gr-svg"
-      >
-        {Object.entries(DEPARTEMENTS_CARTE).map(([nom, pts]) => {
-          const [x, y] = centreDepartement(nom);
-          return (
-            <g key={nom}>
-              <polygon points={pts.map((p) => p.join(',')).join(' ')} className="crrc-dept">
-                <title>{nom}</title>
-              </polygon>
-              <text x={x} y={y + 28} textAnchor="middle" className="crrc-dept-nom">
-                {nom}
-              </text>
-            </g>
-          );
-        })}
-        {pointsCarteCrrc(e).map((p) => (
-          <g key={p.id}>
-            <circle cx={p.x} cy={p.y} r="9" className={`crrc-halo crrc-n-${p.niveau}`} />
-            <circle cx={p.x} cy={p.y} r="4.5" className={`crrc-point crrc-n-${p.niveau}`} />
-            <title>
-              {p.nom}
-              {'\n'}
-              {p.detail}
-            </title>
-          </g>
+      <Stack gap="xs">
+        {groupes.map((g) => (
+          <div key={g.departement}>
+            <Text size="sm" fw={600}>
+              {libelleDepartement(g.departement)}
+            </Text>
+            <ul className="gr-legende">
+              {g.etablissements.map((x) => (
+                <li key={x.id} title={x.detail}>
+                  <span className={`gr-pastille crrc-n-${x.niveau}`} aria-hidden="true" />
+                  <Text size="sm" component="span">
+                    {x.nom}
+                  </Text>
+                </li>
+              ))}
+            </ul>
+          </div>
         ))}
-      </svg>
+      </Stack>
       <ul className="gr-legende gr-legende-ligne">
         {[
           ['ok', 'Opérationnel'],

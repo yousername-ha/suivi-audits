@@ -1,4 +1,4 @@
-/* Bac à sable des tests de parité du module Audit (AUD-05) : extrait de l'outil historique (app/public/index.html)
+/* Bac à sable des tests de parité du module Audit (AUD-05) : extrait de l'outil historique (extrait figé)
    le pronostic (`analyze`, `analysisAll`), le pire pronostic d'un créneau (`worst`), la couverture du plan
    (`coverage`) et les écarts d'un créneau (`slotFindings`), avec leurs dépendances minimales (`LV`, `typeLabel`), et
    les exécute dans un contexte node:vm isolé sur un état S fourni par le test. */
@@ -7,14 +7,14 @@ import path from 'node:path';
 import vm from 'node:vm';
 
 const RACINE = path.resolve(import.meta.dirname, '../../..');
-const INDEX = readFileSync(path.join(RACINE, 'app/public/index.html'), 'utf8');
+const INDEX = readFileSync(path.join(RACINE, 'packages/shared/test/reference/index-historique-extrait.txt'), 'utf8');
 
 /** Extrait un fragment de l'outil historique, de son en-tête jusqu'au marqueur de fin (exclu). */
 function extraire(debut: string, fin: string): string {
   const i = INDEX.indexOf(debut);
   const j = INDEX.indexOf(fin, i + debut.length);
-  if (i < 0 || j < 0) throw new Error(`fragment introuvable dans index.html : ${debut}`);
-  if (INDEX.indexOf(debut, i + 1) >= 0) throw new Error(`fragment ambigu dans index.html : ${debut}`);
+  if (i < 0 || j < 0) throw new Error(`fragment introuvable dans l'extrait historique : ${debut}`);
+  if (INDEX.indexOf(debut, i + 1) >= 0) throw new Error(`fragment ambigu dans l'extrait historique : ${debut}`);
   return INDEX.slice(i, j);
 }
 
@@ -56,7 +56,7 @@ export function historique(S: unknown, mutations: Mutation[] = []): Historique {
   const ctx: Record<string, any> = { S: JSON.parse(JSON.stringify(S)) };
   vm.createContext(ctx);
   vm.runInContext(`${code}\n;globalThis.__audit={analyze,analysisAll,worst,coverage,slotFindings,LV};`, ctx, {
-    filename: 'index.html',
+    filename: 'index-historique-extrait.txt',
   });
   return ctx.__audit as Historique;
 }

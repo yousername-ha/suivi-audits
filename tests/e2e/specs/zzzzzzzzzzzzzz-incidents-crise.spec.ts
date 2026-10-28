@@ -59,7 +59,7 @@ test('Incidents et cellule de crise : qualification, fiche, cellule, main couran
       .getByRole('button', { name: 'Oui', exact: true })
       .click();
     await expect(page.getByText('Atteinte avérée ou probable', { exact: false })).toBeVisible();
-    await expect(page.getByText('Catégorie du GCS : importante', { exact: false })).toBeVisible();
+    await expect(page.getByText('Catégorie de l’organisation : importante', { exact: false })).toBeVisible();
     await page.getByRole('button', { name: 'Créer la fiche dans le registre' }).click();
 
     // Fiche : obligation traitée, action du registre des écarts.

@@ -134,7 +134,7 @@ chiffres. Il ne valide ni contenu métier, ni site externe, ni acceptation humai
 - [Installation rejouée en CI](INSTALLATION.md), [Contribuer](../CONTRIBUTING.md),
   [CHANGELOG racine](../CHANGELOG.md).
 - [ADR](adr/README.md), [diagnostics datés](archive/diagnostics),
-  [source v2 archivée](../archives/README.md).
+  source v2 : historique Git (commit `b148c1ba303954b7023996fce3d0eff2923326b5`).
 - [Format legacy](legacy/LEGACY-FORMAT.md), [mapping](legacy/MAPPING-LEGACY.md),
   [import](legacy/IMPORT-LEGACY.md), [inventaire initial](archive/REPRISE-SOCLE-LEGACY.md).
 - [Archive de l'ancienne interface](archive/ancienne-interface/README.md) (captures, correspondance avec la nouvelle interface).

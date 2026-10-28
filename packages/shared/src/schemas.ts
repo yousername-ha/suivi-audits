@@ -51,6 +51,8 @@ export const SetupBody = z.object({
   username: Username,
   displayName: text(120).optional(),
   email: Email.optional(),
+  /** Nom de l'organisation (réglage « general »), demandé au premier lancement ; facultatif. */
+  orgName: text(120).optional(),
   password: z.string().max(256),
   /** Poivre des mots de passe : obligatoire à la première installation, refusé s'il est déjà défini (ADR 0072). */
   poivre: PoivreAEnregistrer.optional(),

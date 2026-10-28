@@ -1,5 +1,5 @@
 /* Bac à sable des tests de parité : exécute le module bêta de l'outil historique
-   (docs/cartographie/reference-beta-legacy/carto.js) et les fonctions d'indicateurs d'app/public/index.html
+   (docs/cartographie/reference-beta-legacy/carto.js) et les fonctions d'indicateurs de l'extrait historique figé
    dans un contexte isolé, avec un état S fourni par le test. */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -7,13 +7,13 @@ import vm from 'node:vm';
 
 const RACINE = path.resolve(import.meta.dirname, '../../..');
 const CARTO = readFileSync(path.join(RACINE, 'docs/cartographie/reference-beta-legacy/carto.js'), 'utf8');
-const INDEX = readFileSync(path.join(RACINE, 'app/public/index.html'), 'utf8');
+const INDEX = readFileSync(path.join(RACINE, 'packages/shared/test/reference/index-historique-extrait.txt'), 'utf8');
 
 /** Extrait une fonction de l'outil historique par son en-tête, jusqu'à la déclaration suivante. */
 function extraire(debut: string, fin: string): string {
   const i = INDEX.indexOf(debut);
   const j = INDEX.indexOf(fin, i + debut.length);
-  if (i < 0 || j < 0) throw new Error(`fonction introuvable dans index.html : ${debut}`);
+  if (i < 0 || j < 0) throw new Error(`fonction introuvable dans l'extrait historique : ${debut}`);
   return INDEX.slice(i, j);
 }
 const AIDES = [

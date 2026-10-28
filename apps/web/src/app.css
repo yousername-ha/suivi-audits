@@ -1456,23 +1456,7 @@ rect.audit-niv-faible {
   border-radius: var(--mantine-radius-xs);
 }
 
-/* Gestion CRRC : carte schématique des établissements par département. */
-.crrc-dept {
-  fill: var(--carte-bleu-doux);
-  stroke: var(--carte-boite);
-  stroke-width: 2;
-}
-.crrc-dept-nom {
-  fill: var(--carte-secondaire);
-  font-size: var(--mantine-font-size-xs);
-}
-.crrc-halo {
-  opacity: 0.18;
-}
-.crrc-point {
-  stroke: var(--carte-boite);
-  stroke-width: 1.5;
-}
+/* Gestion CRRC : activité des établissements par département (pastilles de niveau). */
 .crrc-n-ok {
   fill: var(--carte-bleu-accent);
   background: var(--carte-bleu-accent);
