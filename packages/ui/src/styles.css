@@ -1966,6 +1966,81 @@ html[data-style='clair'][data-mantine-color-scheme='light'] {
     radial-gradient(120% 70% at 16% -12%, rgb(255 255 255 / 50%), transparent 55%);
   mix-blend-mode: normal;
 }
+/* Carte phare (accueil) : style de l'ancienne carte « Prochain audit », fond vert profond de la navigation, arc
+   décoratif en bas à droite ; prochain audit en haut, taux de conformité global dessous. */
+.tdb-dalle.tdb-phare {
+  overflow: hidden;
+  gap: var(--mantine-spacing-md);
+  padding: var(--mantine-spacing-lg);
+  min-height: 13.5rem;
+  background: var(--suivi-nav-fond);
+  color: var(--suivi-nav-texte);
+  border-color: var(--suivi-nav-fond);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.tdb-dalle.tdb-phare::before {
+  opacity: 0.25;
+}
+.tdb-dalle.tdb-phare::after {
+  inset: auto -5rem -8rem auto;
+  width: 13rem;
+  height: 13rem;
+  border-radius: 50%;
+  border: 1px solid var(--suivi-nav-active);
+  background: none;
+  box-shadow: 0 0 0 2rem var(--suivi-nav-survol);
+  mix-blend-mode: normal;
+  z-index: 0;
+}
+.tdb-phare-symbole {
+  position: absolute;
+  top: var(--mantine-spacing-lg);
+  right: var(--mantine-spacing-lg);
+  color: var(--suivi-nav-repere);
+}
+.tdb-phare-bloc {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: var(--mantine-spacing-2xs);
+}
+.tdb-phare-taux {
+  padding-top: var(--mantine-spacing-md);
+  border-top: 1px solid var(--suivi-nav-active);
+}
+.tdb-phare-titre {
+  margin: 0 0 var(--mantine-spacing-2xs);
+  color: var(--suivi-nav-secondaire);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.tdb-phare-valeur {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+  color: var(--suivi-nav-texte);
+  font-size: clamp(1.75rem, 2.3vw, 2.8rem);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+}
+.tdb-phare-valeur .tdb-puce {
+  letter-spacing: normal;
+}
+.tdb-phare-detail,
+.tdb-phare-legende {
+  margin: 0;
+  color: var(--suivi-nav-secondaire);
+  font-size: var(--mantine-font-size-sm);
+}
+.tdb-phare-legende {
+  font-size: var(--mantine-font-size-xs);
+}
 .tdb-dalle-tete {
   display: grid;
   gap: var(--mantine-spacing-2xs);

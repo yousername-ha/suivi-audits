@@ -13,6 +13,7 @@ import {
   Dalle,
   fmtTaux,
   Histogramme,
+  IconeAdministration,
   JaugeArc,
   SEUILS_TAUX,
   teinteSeuil,
@@ -55,6 +56,64 @@ const AVERTISSEMENT = 'Déclaration interne : ce n’est ni un taux de conformit
 
 function Note({ children }: { children: ReactNode }) {
   return <p className="tdb-chiffre-legende">{children}</p>;
+}
+
+/** Compte à rebours affiché à côté de la date de l'audit. */
+export const libelleJours = (jours: number) =>
+  jours > 0 ? `dans ${jours}\u202fj` : jours === 0 ? 'aujourd’hui' : 'passé';
+
+/** Carte phare, au style de l'ancienne carte « Prochain audit » : le prochain audit en haut, avec son compte à
+    rebours, puis le taux de conformité global (moyenne des référentiels). Toujours affichée, comme l'ancienne carte. */
+function CartePhare({ s, global }: { s: Synthese; global: ReturnType<typeof tauxGlobal> }) {
+  const audit = s.prochainAudit;
+  const jours = audit ? joursAvant(audit.date, s.genereLe) : null;
+  return (
+    <section
+      className="tdb-dalle tdb-l6 tdb-phare"
+      aria-label={global ? 'Prochain audit et taux de conformité global' : 'Prochain audit'}
+    >
+      <span className="tdb-phare-symbole" aria-hidden="true">
+        <IconeAdministration />
+      </span>
+      <div className="tdb-phare-bloc">
+        <h2 className="tdb-phare-titre">Prochain audit</h2>
+        {audit ? (
+          <>
+            <p className="tdb-phare-valeur chiffres">
+              {fmtJour(audit.date)}
+              {jours != null && (
+                // Compte à rebours : change chaque jour, masqué comme les dates dans les captures de référence.
+                <span className={`tdb-puce horodatage tdb-p-${jours >= 0 ? teinteSeuil(SEUILS_JOURS, jours) : 'gris'}`}>
+                  {libelleJours(jours)}
+                </span>
+              )}
+            </p>
+            <p className="tdb-phare-detail">
+              {[audit.annee, audit.libelle].filter(Boolean).join(' — ') || 'Date à confirmer'}
+            </p>
+            {s.auditInterne && <p className="tdb-phare-detail">Audit interne : {fmtJour(s.auditInterne)}</p>}
+          </>
+        ) : (
+          <p className="tdb-phare-detail">Non planifié ou non visible avec vos droits.</p>
+        )}
+      </div>
+      {global && (
+        <div className="tdb-phare-bloc tdb-phare-taux">
+          <h2 className="tdb-phare-titre">Taux de conformité global</h2>
+          <p className="tdb-phare-valeur chiffres">
+            {fmtTaux(global.pourcent)}
+            <span className={`tdb-puce tdb-p-${teinteSeuil(SEUILS_TAUX, global.pourcent)}`}>
+              Moyenne des référentiels
+            </span>
+          </p>
+          <p className="tdb-phare-detail">
+            {`Moyenne simple des taux de ${pluriel(global.referentiels, 'référentiel', 'référentiels')} · chaque référentiel compte autant`}
+          </p>
+          <p className="tdb-phare-legende">Déclaration interne, non certifiée</p>
+        </div>
+      )}
+    </section>
+  );
 }
 
 function Repartition({ titre, valeurs }: { titre: string; valeurs: Record<string, number> }) {
@@ -106,7 +165,6 @@ export function TableauDeBordConformite({ s }: { s: Synthese }) {
   const global = tauxGlobal(s.conformite);
   const e = s.ecarts;
   const a = s.actions;
-  const jours = s.prochainAudit ? joursAvant(s.prochainAudit.date, s.genereLe) : null;
   const i = s.indicateurs;
   const eo = s.ecartsOuverts;
   const r = s.risques;
@@ -124,16 +182,7 @@ export function TableauDeBordConformite({ s }: { s: Synthese }) {
   return (
     <div className="tdb">
       <div className="grille-cartes tdb-grille">
-        {global && (
-          <Dalle titre="Taux de conformité global" sousTitre="Moyenne des référentiels" largeur={3}>
-            <ChiffreCle
-              valeur={fmtTaux(global.pourcent)}
-              teinte={teinteSeuil(SEUILS_TAUX, global.pourcent)}
-              detail={`Moyenne simple des taux de ${pluriel(global.referentiels, 'référentiel', 'référentiels')}`}
-              legende="Chaque référentiel compte autant · déclaration interne, non certifiée"
-            />
-          </Dalle>
-        )}
+        <CartePhare s={s} global={global} />
         {e && (
           <Dalle titre="Écarts ouverts" sousTitre="Écarts · tous périmètres lisibles" largeur={3}>
             <ChiffreCle
@@ -154,26 +203,6 @@ export function TableauDeBordConformite({ s }: { s: Synthese }) {
             />
           </Dalle>
         )}
-        <Dalle titre="Prochain audit" sousTitre="Audits" largeur={3}>
-          {s.prochainAudit ? (
-            <ChiffreCle
-              // Compte à rebours : change chaque jour, masqué comme les dates dans les captures de référence.
-              valeur={
-                <span className="horodatage">
-                  {jours == null ? fmtJour(s.prochainAudit.date) : jours >= 0 ? `${jours}\u202fj` : 'Passé'}
-                </span>
-              }
-              teinte={jours == null || jours < 0 ? undefined : teinteSeuil(SEUILS_JOURS, jours)}
-              detail={
-                [fmtJour(s.prochainAudit.date), s.prochainAudit.libelle].filter(Boolean).join(' · ') ||
-                'Date à confirmer'
-              }
-              legende={s.auditInterne ? `Audit interne : ${fmtJour(s.auditInterne)}` : undefined}
-            />
-          ) : (
-            <ChiffreCle valeur="—" detail="Non planifié ou non visible avec vos droits." />
-          )}
-        </Dalle>
 
         {refs.length > 0 && (
           <Dalle
