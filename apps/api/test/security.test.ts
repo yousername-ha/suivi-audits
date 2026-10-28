@@ -176,8 +176,14 @@ describe('verrouillage après échecs', () => {
     const a = new Agent(t);
     for (let i = 0; i < 4; i++)
       expect((await a.post('/api/auth/login', { username: u.username, password: 'mauvais' })).statusCode).toBe(401);
-    expect((await a.post('/api/auth/login', { username: u.username, password: 'mauvais' })).statusCode).toBe(423);
-    expect((await a.post('/api/auth/login', { username: u.username, password: PASSWORD })).statusCode).toBe(423);
+    // Réponse uniforme (ADR 0069) : le 5e essai et le bon mot de passe ensuite reçoivent 401, comme un compte inconnu ;
+    // le verrou est bien posé en base.
+    expect((await a.post('/api/auth/login', { username: u.username, password: 'mauvais' })).statusCode).toBe(401);
+    expect((await a.post('/api/auth/login', { username: u.username, password: PASSWORD })).statusCode).toBe(401);
+    const verrou = await t.svc.db.one<{ locked_until: Date | null }>('SELECT locked_until FROM users WHERE id=$1', [
+      u.id,
+    ]);
+    expect(verrou!.locked_until).not.toBeNull();
     t.svc.limits.loginByUser.reset();
     t.svc.limits.loginByIp.reset();
   });

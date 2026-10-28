@@ -73,3 +73,4 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0066](0066-limitation-des-essais-du-second-facteur-et-verrouillage-partage.md) | Limitation des essais du second facteur par compte, verrouillage partagé avec le mot de passe, sessions incomplètes plafonnées | Acceptée |
 | [0067](0067-attribution-des-droits-par-ressource-reservee.md) | Attribution des droits par ressource réservée au gestionnaire attribué ou à qui administre le module ; pas de modification de ses propres droits ; relations soumises à la gestion de l'élément | Acceptée |
 | [0068](0068-suppressions-reservees-au-droit-supprimer.md) | Suppressions des modules de suivi réservées au droit « supprimer » (cohérence avec l'ADR 0010) | Acceptée |
+| [0069](0069-reponse-de-connexion-uniforme-et-alerte-de-verrouillage.md) | Réponse de connexion uniforme et alerte de verrouillage de compte | Proposée |

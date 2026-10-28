@@ -9,7 +9,7 @@
 1. **Limite par compte.** Les essais du second facteur sont limités à 10 par quart d'heure et par compte (en plus de la limite existante par session). Au-delà : réponse 429.
 2. **Un seul compteur d'échecs.** Les colonnes `failed_logins` et `locked_until` servent aux deux facteurs. Une méthode unique, `enregistrerEchec`, incrémente le compteur **de façon atomique** (une seule instruction SQL) puis applique le verrouillage progressif existant (seuil et durées des réglages de sécurité, multiplicateur plafonné à 8). Un verrou en cours n'est jamais raccourci.
 3. **Remise à zéro.** Pour un compte dont le second facteur est actif, le compteur n'est plus effacé par un mot de passe correct mais par le **succès du second facteur**. Pour un compte sans second facteur actif (enrôlement en cours, ou second facteur non exigé), il reste effacé par le mot de passe correct.
-4. **Compte verrouillé.** Une session à l'étape du second facteur dont le compte est verrouillé est refusée (423, même message que la connexion) et **détruite**.
+4. **Compte verrouillé.** Une session à l'étape du second facteur dont le compte est verrouillé est refusée et **détruite** (réponse 401 uniforme depuis l'[ADR 0069](0069-reponse-de-connexion-uniforme-et-alerte-de-verrouillage.md) ; elle était 423 à l'origine).
 5. **Sessions incomplètes.** Un compte garde au plus **trois** sessions à l'étape du second facteur, les plus récentes. Les plus anciennes sont supprimées à la création d'une nouvelle.
 6. **Vérifications du mot de passe actuel.** Le changement de mot de passe, le début d'enrôlement et la désactivation du second facteur sont limités à 5 vérifications par quart d'heure et par compte (429). Chaque échec est compté dans le verrouillage et journalisé (`account.password_failed`).
 

@@ -59,6 +59,11 @@ const SETUP_HTTP = { invalid: 401, expired: 410, used: 409, none: 410 } as const
 const stageAfter = (svc: Services, user: { totpEnabled: boolean; mustChangePassword: boolean }, mfaOk: boolean) =>
   accessStage({ mfaOk, user }, svc.cfg.mfaRequired);
 
+/** Réponse unique à tout échec de connexion (inconnu, mot de passe faux, verrouillé, désactivé, expiré) : le motif exact reste
+    au journal d'audit (ADR 0069). */
+export const ECHEC_CONNEXION =
+  'Identifiant ou mot de passe incorrect, ou compte temporairement verrouillé après plusieurs échecs.';
+
 export const authRoutes = [
   route({
     method: 'GET',
@@ -84,7 +89,7 @@ export const authRoutes = [
         await svc.db.audit({ username }, ip, 'auth.rate_limited');
         throw new HttpError(429, 'Trop de tentatives. Réessayez dans quelques minutes.');
       }
-      const r = await svc.auth.checkLogin(username, body.password);
+      const r = await svc.auth.checkLogin(username, body.password, ip);
       if (!r.ok) {
         await svc.db.audit(
           r.user ? { id: r.user.id, username: r.user.username } : { username },
@@ -93,13 +98,7 @@ export const authRoutes = [
           '',
           { reason: r.reason },
         );
-        if (r.reason === 'locked' || r.reason === 'locked_now') {
-          throw new HttpError(
-            423,
-            'Compte temporairement verrouillé après plusieurs échecs. Réessayez plus tard ou contactez un administrateur.',
-          );
-        }
-        throw new HttpError(401, 'Identifiant ou mot de passe incorrect.');
+        throw new HttpError(401, ECHEC_CONNEXION);
       }
       if (s) await svc.auth.destroy(s.sid);
       await svc.auth.create(req, reply, r.user.id, false);
@@ -128,13 +127,10 @@ export const authRoutes = [
       if (await svc.auth.estVerrouille(sess.user.id)) {
         await svc.auth.destroy(sess.sid);
         await svc.db.audit(sess.user, ip, 'auth.mfa_locked');
-        throw new HttpError(
-          423,
-          'Compte temporairement verrouillé après plusieurs échecs. Réessayez plus tard ou contactez un administrateur.',
-        );
+        throw new HttpError(401, ECHEC_CONNEXION);
       }
       if (!(await svc.auth.checkTotp(sess.user.id, body.code))) {
-        await svc.auth.enregistrerEchec(sess.user.id);
+        await svc.auth.enregistrerEchec(sess.user.id, 'second_facteur', ip);
         await svc.db.audit(sess.user, ip, 'auth.mfa_failed');
         throw new HttpError(401, 'Code incorrect ou déjà utilisé.');
       }
@@ -243,7 +239,7 @@ export const authRoutes = [
         .executeTakeFirstOrThrow();
       limiterMotDePasse(svc, sess.user.id);
       if (!(await verifyPassword(body.current, u.password_hash))) {
-        await svc.auth.enregistrerEchec(sess.user.id);
+        await svc.auth.enregistrerEchec(sess.user.id, 'mot_de_passe', ip);
         await svc.db.audit(sess.user, ip, 'account.password_failed');
         throw new HttpError(401, 'Mot de passe actuel incorrect.');
       }
@@ -422,7 +418,7 @@ async function exigerMotDePasse(svc: Services, user: Session['user'], ip: string
   limiterMotDePasse(svc, user.id);
   const u = await motDePasse(svc, user.id);
   if (!(await verifyPassword(password || '', u.password_hash))) {
-    await svc.auth.enregistrerEchec(user.id);
+    await svc.auth.enregistrerEchec(user.id, 'mot_de_passe', ip);
     await svc.db.audit(user, ip, 'account.password_failed');
     throw new HttpError(401, 'Mot de passe incorrect.');
   }

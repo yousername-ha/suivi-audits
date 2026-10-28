@@ -33,9 +33,9 @@ import type { Settings } from './settings.js';
 
 type Q = Pick<Client, 'query'>;
 /** Compte actif : ni désactivé, ni expiré (fragment SQL fixe sur l'alias u). */
-const COMPTE_ACTIF = sql<boolean>`(NOT u.disabled AND (u.expires_at IS NULL OR u.expires_at > now()))`;
+export const COMPTE_ACTIF = sql<boolean>`(NOT u.disabled AND (u.expires_at IS NULL OR u.expires_at > now()))`;
 /** Comptes actifs portant un rôle, directement ou par un de leurs groupes (fragment sur l'alias u, rôle lié). */
-const porteLeRole = (role: RawBuilder<unknown>) =>
+export const porteLeRole = (role: RawBuilder<unknown>) =>
   sql<boolean>`(EXISTS (SELECT 1 FROM user_roles ur WHERE ur.user_id = u.id AND ur.role_id = ${role})
     OR EXISTS (SELECT 1 FROM user_groups ug JOIN group_roles gr ON gr.group_id = ug.group_id
                WHERE ug.user_id = u.id AND gr.role_id = ${role}))`;
