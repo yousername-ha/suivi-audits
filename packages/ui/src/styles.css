@@ -2201,6 +2201,35 @@ html[data-style='clair'][data-mantine-color-scheme='light'] {
   grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
   gap: var(--mantine-spacing-md);
 }
+/* Grille de chiffres de l'ancienne carte « Écarts » : deux colonnes, filet vertical à la teinte du seuil. */
+.tdb-grille-chiffres {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--mantine-spacing-lg) var(--mantine-spacing-md);
+}
+.tdb-grille-chiffre {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-end;
+  gap: var(--mantine-spacing-2xs);
+  padding-left: var(--mantine-spacing-sm);
+  border-left: 2px solid rgb(from var(--tdb-contour) r g b / 22%);
+}
+.tdb-grille-chiffre[class*='tdb-t-'] {
+  border-left-color: currentColor;
+}
+.tdb-grille-chiffre-valeur {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+.tdb-grille-chiffre-libelle {
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-dimmed);
+}
 .tdb-chiffres .tdb-chiffre-valeur {
   font-size: 1.75rem;
 }

@@ -12,6 +12,7 @@ import {
   ChiffreCle,
   Dalle,
   fmtTaux,
+  GrilleChiffres,
   Histogramme,
   IconeAdministration,
   JaugeArc,
@@ -184,12 +185,14 @@ export function TableauDeBordConformite({ s }: { s: Synthese }) {
       <div className="grille-cartes tdb-grille">
         <CartePhare s={s} global={global} />
         {e && (
-          <Dalle titre="Écarts ouverts" sousTitre="Écarts · tous périmètres lisibles" largeur={3}>
-            <ChiffreCle
-              valeur={String(e.ouverts)}
-              teinte={e.enRetard ? 'rouge' : e.aEcheance ? 'orange' : 'vert'}
-              detail={`${e.enRetard} en retard · ${e.aEcheance} à échéance proche`}
-              legende={`${e.total} au total`}
+          <Dalle titre="Écarts" sousTitre="Écarts · tous périmètres lisibles" largeur={3}>
+            <GrilleChiffres
+              chiffres={[
+                { valeur: e.ouverts, libelle: 'ouverts' },
+                { valeur: e.enRetard, libelle: 'en retard', teinte: e.enRetard ? 'rouge' : 'vert' },
+                { valeur: e.aEcheance, libelle: 'à échéance proche', teinte: e.aEcheance ? 'orange' : 'vert' },
+                { valeur: e.total, libelle: 'au total' },
+              ]}
             />
           </Dalle>
         )}
