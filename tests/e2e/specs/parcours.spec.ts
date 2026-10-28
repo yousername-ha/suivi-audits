@@ -9,7 +9,9 @@ import {
   freshTotp,
   markTotpUsed,
   PASSWORD,
+  loadAdmin,
   saveAdmin,
+  sessionAdmin,
   setupToken,
   totp,
   watchPage,
@@ -45,6 +47,19 @@ test('installation : jeton, création de l’administrateur, activation de la do
   const { page, problems } = await newPage(browser);
   await page.goto('/');
   await expect(page).toHaveURL(/\/setup$/);
+  // Étape 1 : poivre des mots de passe, à enregistrer au coffre-fort (ADR 0072). La continuation exige la case et la fin recopiée.
+  await expect(page.getByRole('heading', { name: 'Poivre des mots de passe' })).toBeVisible();
+  const poivre = (await page.getByTestId('poivre-genere').textContent())!.trim();
+  expect(poivre).toMatch(/^([A-Z2-7]{4}-){12}[A-Z2-7]{4}$/);
+  const continuer = page.getByRole('button', { name: 'Continuer' });
+  await expect(continuer).toBeDisabled();
+  await page.getByLabel('Les 8 derniers caractères du poivre').fill('ZZZZZZZZ');
+  await expect(page.getByText('Ne correspond pas à la fin du poivre.')).toBeVisible();
+  await page.getByLabel('Les 8 derniers caractères du poivre').fill(poivre.replace(/-/g, '').slice(-8).toLowerCase());
+  await expect(continuer).toBeDisabled();
+  await page.getByLabel('J’ai enregistré ce poivre dans le coffre-fort de l’organisation').check();
+  await expect(continuer).toBeEnabled();
+  await continuer.click();
   await expect(page.getByRole('heading', { name: 'Récupérer le jeton' })).toBeVisible();
   await expect(page.getByText('sudo docker compose exec app setup-token')).toBeVisible();
 
@@ -71,12 +86,44 @@ test('installation : jeton, création de l’administrateur, activation de la do
   await page.keyboard.type(totp(adminSecret));
   markTotpUsed(adminSecret);
   await expect(page.getByRole('heading', { name: /^Bonjour Responsable SSI/ })).toBeVisible();
-  saveAdmin(ADMIN, adminSecret);
+  saveAdmin(ADMIN, adminSecret, poivre);
 
   // Une fois l'administrateur créé, /setup renvoie vers la connexion.
   await page.goto('/setup');
   await expect(page).not.toHaveURL(/\/setup$/);
   expect(problems).toEqual([]);
+});
+
+test('poivre : défini à l’installation, changé depuis l’administration avec l’ancien poivre et un code', async ({
+  browser,
+}) => {
+  const { state } = await sessionAdmin(browser);
+  const ctx = await browser.newContext({ storageState: state, ignoreHTTPSErrors: true, locale: 'fr-FR' });
+  const page = await ctx.newPage();
+  const problems = watchPage(page);
+  await page.goto('/systeme/securite');
+  await expect(page.getByRole('heading', { name: 'Poivre des mots de passe' })).toBeVisible();
+  await expect(page.getByText('Défini', { exact: true })).toBeVisible();
+  // Le bandeau d'alerte n'apparaît que tant que le poivre n'est pas défini.
+  await expect(page.locator('[data-poivre-requis]')).toHaveCount(0);
+  const nouveau = (await page.getByTestId('poivre-genere').textContent())!.trim();
+  await page.getByLabel('J’ai enregistré ce poivre dans le coffre-fort de l’organisation').check();
+  await page.getByLabel('Les 8 derniers caractères du poivre').fill(nouveau.replace(/-/g, '').slice(-8));
+  const code = page.getByLabel('Code de double authentification');
+  const changer = page.getByRole('button', { name: 'Changer le poivre' });
+  // Un ancien poivre faux est refusé, sans rien changer.
+  await page.getByLabel('Ancien poivre').fill('Vq7!mZ3#kP9$wX2@nR5%tL8&yB4*cD6^hF1(');
+  await code.fill(await freshTotp(adminSecret));
+  await changer.click();
+  await expect(page.getByRole('alert')).toContainText('Ancien poivre incorrect');
+  // Avec le bon ancien poivre (celui de l'installation), le changement est enregistré.
+  await page.getByLabel('Ancien poivre').fill(loadAdmin().poivre.replace(/-/g, ''));
+  await code.fill(await freshTotp(adminSecret));
+  await changer.click();
+  await expect(page.getByText('Poivre enregistré.')).toBeVisible();
+  saveAdmin(ADMIN, adminSecret, nouveau);
+  expect(problems).toEqual([]);
+  await ctx.close();
 });
 
 test('connexion avec double authentification ; code erroné refusé', async ({ browser }) => {

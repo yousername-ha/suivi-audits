@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* CI, job « guide » : remplace les gestes faits dans le navigateur par le guide d'installation (docs/INSTALLATION.md),
    au moyen de l'API, sur la pile installée en suivant le guide. Sans dépendance (Node 20 ou plus).
-     administrateur <url>         étape 8 : jeton d'installation, création de l'administrateur, enrôlement TOTP
+     administrateur <url>         étape 8 : poivre, jeton d'installation, création de l'administrateur, enrôlement TOTP
      compte <url>                 étape 9 : création d'un compte « Contributeur » (mot de passe temporaire)
      import <url> <fichier.json>  étape 10 : simulation puis import (mode Initialiser) d'un fichier de l'ancien outil
      verifier <url>               étape 11.4 : après restauration, comptes et données présents
@@ -27,6 +27,28 @@ const ADMIN = 'rssi';
 const load = () => JSON.parse(readFileSync(STATE, 'utf8'));
 const save = (s) => writeFileSync(STATE, JSON.stringify(s), { mode: 0o600 });
 const mask = (v) => process.env.GITHUB_ACTIONS && console.log(`::add-mask::${v}`);
+/** Poivre des mots de passe de recette (ADR 0072), généré pendant la CI, jamais versionné : 52 caractères base32 sans série de
+    plus de 3 caractères identiques ni suite de plus de 4 caractères consécutifs, avec la preuve de recopie (8 derniers caractères). */
+const poivreDeRecette = () => {
+  for (;;) {
+    const bits = [...crypto.randomBytes(32)]
+      .map((b) => b.toString(2).padStart(8, '0'))
+      .join('')
+      .padEnd(260, '0');
+    let brut = '';
+    for (let i = 0; i + 5 <= bits.length && brut.length < 52; i += 5) brut += B32[parseInt(bits.slice(i, i + 5), 2)];
+    const codes = [...brut].map((c) => c.charCodeAt(0));
+    const serie = (d) =>
+      codes.some((_, i) => i >= 4 && codes.slice(i - 4, i + 1).every((c, j, a) => j === 0 || c - a[j - 1] === d));
+    if (/(.)\1{3}/.test(brut) || serie(1) || serie(-1) || new Set(brut).size < 16) continue;
+    mask(brut);
+    return {
+      mode: 'genere',
+      valeur: brut.replace(/(.{4})(?=.)/g, '$1-'),
+      engagement: { coffre: true, fin: brut.slice(-8) },
+    };
+  }
+};
 const fail = (msg) => {
   console.error(`::error::Guide d'installation : ${msg}`);
   process.exit(1);
@@ -141,6 +163,7 @@ switch (cmd) {
         username: ADMIN,
         displayName: 'Responsable SSI',
         password,
+        poivre: poivreDeRecette(),
       },
     });
     if ((await me()).stage !== 'enroll') fail('après /api/setup, l’enrôlement TOTP devrait être demandé');
@@ -153,7 +176,10 @@ switch (cmd) {
     if (m.stage !== 'ok' || !m.permissions?.includes('administration:administrer'))
       fail(`administrateur incomplet : ${JSON.stringify(m)}`);
     if ((await call('GET', '/api/setup')).needed) fail('/setup devrait être désactivé après la création');
-    console.log('Étape 8 : administrateur « rssi » créé, double authentification active.');
+    const poivre = await call('GET', '/api/admin/poivre');
+    if (!poivre.defini || poivre.empreintesPoivrees < 1)
+      fail(`poivre des mots de passe non défini : ${JSON.stringify(poivre)}`);
+    console.log('Étape 8 : administrateur « rssi » créé, poivre défini, double authentification active.');
     break;
   }
   case 'compte': {

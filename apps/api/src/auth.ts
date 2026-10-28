@@ -16,7 +16,8 @@ import { surConnexion, type Client, type Db } from './db/db.js';
 import { HttpError } from './http/errors.js';
 import { isHttps } from './http/security.js';
 import { loadGrants, permanentAdminCount, permissionDenied } from './rights.js';
-import { dummyVerify, sha256, token, verifyPassword, verifyTotp, type Vault } from './security/crypto.js';
+import type { MotsDePasse } from './mots-de-passe.js';
+import { dummyVerify, sha256, token, verifyTotp, type Vault } from './security/crypto.js';
 import {
   checkSetupToken,
   generateSetupToken,
@@ -98,6 +99,7 @@ export class Auth {
     private readonly vault: Vault,
     /** Politique de sécurité courante (page Paramètres, section Sécurité). */
     private readonly policy: () => SettingsValues['securite'],
+    private readonly motsDePasse: MotsDePasse,
   ) {}
 
   stage(s: Session | null): AccessStage {
@@ -282,7 +284,7 @@ export class Auth {
       await dummyVerify(password);
       return { ok: false as const, reason: 'locked' as const, user: u };
     }
-    if (!(await verifyPassword(password, u.password_hash))) {
+    if (!(await this.motsDePasse.verifier(u.id, password, u.password_hash))) {
       const e = await this.enregistrerEchec(u.id, 'mot_de_passe', ip);
       return {
         ok: false as const,

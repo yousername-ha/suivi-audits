@@ -20,7 +20,9 @@ import { accessStage, type Session } from '../auth.js';
 import { HttpError } from '../http/errors.js';
 import { route } from '../http/route.js';
 import { permanentAdminCount } from '../rights.js';
-import { base32, hashPassword, passwordProblems, verifyPassword, verifyTotp } from '../security/crypto.js';
+import { base32, chiffrerEmpreinte, hashPassword, passwordProblems, verifyTotp } from '../security/crypto.js';
+import type { PoivrePrepare } from '../mots-de-passe.js';
+import { exigerPoivreValide } from './poivre.js';
 import type { Services } from '../services.js';
 
 function checkPassword(svc: Services, pw: unknown, username: string) {
@@ -169,7 +171,7 @@ export const authRoutes = [
     handler: async ({ svc }) => {
       const adminExists = await svc.auth.adminExists();
       const pending = await svc.auth.setupPending();
-      return { needed: pending || !adminExists, pending, adminExists };
+      return { needed: pending || !adminExists, pending, adminExists, poivreDefini: await svc.motsDePasse.defini() };
     },
   }),
   route({
@@ -185,7 +187,21 @@ export const authRoutes = [
     handler: async ({ svc, req, reply, ip, body }) => {
       if (!svc.limits.setupByIp(ip)) throw new HttpError(429, 'Trop de tentatives. Réessayez dans 15 minutes.');
       checkPassword(svc, body.password, body.username);
-      const hash = await hashPassword(body.password);
+      // Poivre des mots de passe (ADR 0072) : défini ici, dans la transaction qui consomme le jeton, ou déjà défini (administrateur
+      // de secours). Les règles et l'engagement de sauvegarde sont contrôlés avant toute consommation du jeton.
+      let poivre: PoivrePrepare | null = null;
+      if (!(await svc.motsDePasse.defini())) {
+        if (!body.poivre)
+          throw new HttpError(422, 'Le poivre des mots de passe est obligatoire à l’installation.', {
+            reason: 'poivre_requis',
+          });
+        await exigerPoivreValide(svc, body.poivre, { identifiants: [body.username] });
+        poivre = await svc.motsDePasse.preparer(body.poivre.valeur);
+      }
+      const id = svc.motsDePasse.nouvelId();
+      const hash = poivre
+        ? chiffrerEmpreinte(poivre.cle, id, await hashPassword(body.password))
+        : await svc.motsDePasse.hacher(id, body.password);
       const res = await svc.db
         .tx(async (c, kdb) => {
           const k = await svc.auth.consumeSetupToken(body.token, c);
@@ -193,9 +209,13 @@ export const authRoutes = [
           if (k.reason !== 'recovery' && (await permanentAdminCount(c)) > 0) {
             throw new HttpError(409, 'Un administrateur existe déjà.');
           }
+          if (!poivre && body.poivre)
+            throw new HttpError(409, 'Le poivre est déjà défini.', { reason: 'poivre_defini' });
+          if (poivre) await svc.motsDePasse.inscrireALInstallation(c, kdb, poivre, body.username);
           const u = await kdb
             .insertInto('users')
             .values({
+              id,
               username: body.username,
               display_name: body.displayName || body.username,
               email: body.email || '',
@@ -215,6 +235,11 @@ export const authRoutes = [
         throw new HttpError(SETUP_HTTP[res.status], SETUP_TOKEN_MESSAGES[res.status], { reason: res.status });
       }
       await svc.db.audit({ id: res.id, username: body.username }, ip, 'setup.admin_created');
+      if (poivre)
+        await svc.db.audit({ id: res.id, username: body.username }, ip, 'securite.poivre_defini', '', {
+          idCle: poivre.idCle,
+          installation: true,
+        });
       await svc.auth.create(req, reply, res.id, false);
       return { stage: stageAfter(svc, { totpEnabled: false, mustChangePassword: false }, false) };
     },
@@ -238,15 +263,15 @@ export const authRoutes = [
         .where('id', '=', sess.user.id)
         .executeTakeFirstOrThrow();
       limiterMotDePasse(svc, sess.user.id);
-      if (!(await verifyPassword(body.current, u.password_hash))) {
+      if (!(await svc.motsDePasse.verifier(sess.user.id, body.current, u.password_hash))) {
         await svc.auth.enregistrerEchec(sess.user.id, 'mot_de_passe', ip);
         await svc.db.audit(sess.user, ip, 'account.password_failed');
         throw new HttpError(401, 'Mot de passe actuel incorrect.');
       }
       checkPassword(svc, body.next, u.username);
-      if (await verifyPassword(body.next, u.password_hash))
+      if (await svc.motsDePasse.verifier(sess.user.id, body.next, u.password_hash))
         throw new HttpError(422, "Le nouveau mot de passe doit être différent de l'actuel.");
-      const nouveau = await hashPassword(body.next);
+      const nouveau = await svc.motsDePasse.hacher(sess.user.id, body.next);
       await svc.db.tx(async (c, k) => {
         await k
           .updateTable('users')
@@ -417,7 +442,7 @@ function limiterMotDePasse(svc: Services, userId: string) {
 async function exigerMotDePasse(svc: Services, user: Session['user'], ip: string | null, password: string | undefined) {
   limiterMotDePasse(svc, user.id);
   const u = await motDePasse(svc, user.id);
-  if (!(await verifyPassword(password || '', u.password_hash))) {
+  if (!(await svc.motsDePasse.verifier(user.id, password || '', u.password_hash))) {
     await svc.auth.enregistrerEchec(user.id, 'mot_de_passe', ip);
     await svc.db.audit(user, ip, 'account.password_failed');
     throw new HttpError(401, 'Mot de passe incorrect.');

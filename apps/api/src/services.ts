@@ -32,6 +32,7 @@ import { JournalTechnique } from './journal-technique.js';
 import { CalendriersPlateforme } from './calendriers-plateforme.js';
 import { Conservation } from './conservation.js';
 import { Courriel } from './courriel.js';
+import { MotsDePasse } from './mots-de-passe.js';
 import { NotificationsMetier } from './notifications-metier.js';
 import { TypesProcessus } from './types-processus.js';
 
@@ -60,7 +61,8 @@ export function createServices(cfg: Config, log: Logger) {
   const historique = new Historique(grc);
   const alertes = new AlertesExploitation(settings, cfg.publicUrl);
   const alertesSecurite = new AlertesSecurite(db, settings, cfg.publicUrl);
-  const auth = new Auth(cfg, db, vault, () => settings.get('securite'));
+  const motsDePasse = new MotsDePasse(db, vault);
+  const auth = new Auth(cfg, db, vault, () => settings.get('securite'), motsDePasse);
   auth.surVerrouillage = (e) => alertesSecurite.verrouillage(e);
   return {
     cfg,
@@ -85,6 +87,7 @@ export function createServices(cfg: Config, log: Logger) {
     courriel: new Courriel(db, vault),
     notificationsMetier,
     auth,
+    motsDePasse,
     alertesSecurite,
     bus,
     presence: new Presence(db, bus),
@@ -98,6 +101,7 @@ export function createServices(cfg: Config, log: Logger) {
       mfaByUser: limiter(10, 15 * 60e3),
       motDePasseByUser: limiter(5, 15 * 60e3),
       updateMfaByUser: limiter(5, 15 * 60e3),
+      poivreByUser: limiter(5, 60 * 60e3),
       setupByIp: limiter(10, 15 * 60e3),
       presence: limiter(30, 60e3),
       wallActivation: limiter(10, 15 * 60e3),

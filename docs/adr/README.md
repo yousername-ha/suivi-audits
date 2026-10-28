@@ -75,3 +75,4 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0068](0068-suppressions-reservees-au-droit-supprimer.md) | Suppressions des modules de suivi réservées au droit « supprimer » (cohérence avec l'ADR 0010) | Acceptée |
 | [0069](0069-tableau-de-bord-verre-et-relief.md) | Tableau de bord de l'accueil « verre et relief » : dalles en verre, métriques fines cernées, seuils d'affichage, taux global = moyenne des taux par référentiel (lot 1) | Acceptée |
 | [0070](0070-reponse-de-connexion-uniforme-et-alerte-de-verrouillage.md) | Réponse de connexion uniforme et alerte de verrouillage de compte | Proposée |
+| [0072](0072-poivre-des-mots-de-passe.md) | Poivre des mots de passe : empreinte scrypt chiffrée en AES-256-GCM par une clé que l'organisation conserve au coffre-fort, définie à l'installation, changeable avec l'ancien poivre et un code TOTP, procédures de reprise et d'urgence | Proposée |
