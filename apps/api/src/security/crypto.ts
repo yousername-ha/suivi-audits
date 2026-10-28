@@ -145,7 +145,8 @@ export class Vault {
   decrypt({ iv, tag, content, keyId }: Sealed, aad = ''): Buffer {
     if (keyId && keyId !== this.keyId)
       throw new Error('Clé de chiffrement différente de celle utilisée pour ce contenu.');
-    const d = crypto.createDecipheriv('aes-256-gcm', this.#key, iv);
+    // Étiquette de 16 octets exigée explicitement : une étiquette tronquée affaiblirait l'authentification (CWE-354).
+    const d = crypto.createDecipheriv('aes-256-gcm', this.#key, iv, { authTagLength: 16 });
     if (aad) d.setAAD(Buffer.from(aad));
     d.setAuthTag(tag);
     return Buffer.concat([d.update(content), d.final()]);
