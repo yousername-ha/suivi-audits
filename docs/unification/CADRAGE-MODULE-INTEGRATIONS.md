@@ -75,7 +75,7 @@ PostgreSQL, Playwright pour les parcours) et la documentation (inventaire, recet
   entités, statuts, période (mois, semaine), date de référence (ouverture ou résolution). Il faut aussi une instance
   GLPI 10 ou 11 **de recette** joignable par l'exécutant, avec un compte en lecture seule.
 - **I5** : les champs du fournisseur GLPI à reprendre (nom, contact…) parmi ceux du registre.
-- **Logos (I1)** : pour chaque logo à embarquer, le fichier SVG et la preuve du droit d'usage (éditeur de GLPI ;
+- **Logos (I1)** : pour chaque logo à embarquer, le fichier et la preuve du droit d'usage (éditeur de GLPI ;
   ANSSI selon la charte de l'État, un seul logo pour les tuiles ORADAD et Silène). Sans cette preuve, la tuile montre un
   pictogramme neutre, toujours avec le nom de l'application en gras.
 
@@ -84,7 +84,7 @@ PostgreSQL, Playwright pour les parcours) et la documentation (inventaire, recet
 | Tuile | Fichier | Source | Licence et conditions | État |
 |---|---|---|---|---|
 | GLPI | `glpi.svg` (1 903 octets, SHA-256 `6d92bb891522dcd0ab74787991645d536c30cf374a5c627e442b6acbcb20c14d`) | Collection *dashboard-icons* de homarr-labs, fournie par le RSSI le 28/10/2026 : `https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/glpi.svg` | Collection sous Apache-2.0. Selon son avertissement, les marques restent à leurs propriétaires et les icônes servent **à identifier le produit seulement**, sans laisser croire à un partenariat. C'est l'usage prévu : désigner le connecteur GLPI | Retenu pour I1. Contrôlé le 28/10/2026 : SVG simple, sans script, sans lien, sans ressource externe. Embarqué en fichier local, jamais chargé depuis le CDN (CSP) |
-| ORADAD, Silène | Logo de l'ANSSI (un seul fichier) | À fournir | Charte graphique de l'État | En attente ; pictogramme neutre et nom en gras d'ici là |
+| ORADAD, Silène | `anssi.png` : emblème rond de l'ANSSI, PNG 256 × 256 (44 284 octets, SHA-256 `cfa618e20d61f08e2b68a0813bbe72618edb41a434884897ab3d7edaedd5490d`) | Désignée par le RSSI le 28/10/2026 : compte GitHub `ANSSI-FR` qui publie ORADAD (https://github.com/ANSSI-FR/ORADAD). Le dépôt ORADAD ne contient aucune image ; le fichier est l'avatar de ce compte : `https://avatars.githubusercontent.com/ANSSI-FR?size=256` | La licence GPL-3.0 d'ORADAD couvre le code, **pas l'emblème**. L'emblème appartient à l'ANSSI et relève de la charte graphique de l'État. Aucune autorisation écrite : le RSSI retient un usage **d'identification seulement** (désigner les outils de l'ANSSI), sans laisser croire à un partenariat ni à une homologation | Retenu pour I1, un seul fichier pour les deux tuiles, avec le nom de l'application en gras. Contrôlé le 28/10/2026 : PNG valide. Embarqué en fichier local, jamais chargé depuis GitHub (CSP). À retirer si l'ANSSI le demande |
 
 ## 6. Ce que ce cadrage n'établit pas
 

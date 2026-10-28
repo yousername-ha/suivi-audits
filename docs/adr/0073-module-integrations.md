@@ -142,8 +142,10 @@
       nom, ce qu'elle alimente (écarts, mesures, fournisseurs), son état (non configurée, active, en échec) et la date
       de la dernière exécution. Les tuiles reprennent les dalles et les jetons de couleur du tableau de bord
       ([ADR 0069](0069-tableau-de-bord-verre-et-relief.md)), sans valeur codée en dur.
-    - **Logos** : un logo est une marque. Il n'est embarqué dans le dépôt, en fichier SVG local relu, que si son droit
-      d'usage est vérifié et consigné (organisme, source, date, conditions) dans le registre des sources. Le logo de
+    - **Logos** : un logo est une marque. Il n'est embarqué dans le dépôt, en fichier SVG ou PNG local relu, que si son droit
+      d'usage est vérifié ou, sans autorisation écrite, si le RSSI retient un usage d'identification seulement ;
+      dans les deux cas, la décision est consignée (organisme, source, empreinte, date, conditions) dans le cadrage puis
+      le registre des sources. Le logo de
       l'ANSSI suit la charte graphique de l'État ; il sert aux deux tuiles ORADAD et Silène (R16), un seul fichier
       pour les deux, chaque tuile affichant en plus le nom de l'application en gras. Sans droit vérifié, la tuile montre un **pictogramme neutre** de
       `packages/ui` et le nom de l'application.
