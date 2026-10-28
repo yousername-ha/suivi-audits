@@ -46,7 +46,7 @@ services:
 
   db:
     <<: *hardening
-    image: postgres:18-alpine
+    image: postgres:18-alpine@sha256:10a5c69a83035ab5239f5620d708520e8b28f5aa1f2b20143e6024532edadfb5
     depends_on:
       init: { condition: service_completed_successfully }
     environment:
@@ -91,7 +91,7 @@ services:
   # au démarrage normal. Moteur 17 sur l'ancien dossier de données, sans réseau ; exporte la base vers etat/migration-postgresql.
   db-pg17:
     profiles: ['migration-postgresql']
-    image: postgres:17-alpine
+    image: postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b
     user: '70:70'
     entrypoint: ['sh', '/migration/exporter-pg17.sh']
     network_mode: none
@@ -124,7 +124,7 @@ services:
     volumes:
       - ${DATA_DIR:-/srv/suivi-audits/donnees}/secrets:/run/secrets:ro
       - ${DATA_DIR:-/srv/suivi-audits/donnees}/etat:/etat:ro
-    networks: [backend, edge]
+    networks: [backend, edge, antivirus]
     read_only: true
     tmpfs: ['/tmp:size=16m']
     cap_drop: [ALL]
@@ -215,22 +215,68 @@ services:
     stop_grace_period: 30s
 
   # Antivirus facultatif : docker compose --profile antivirus up -d  (et CLAMAV_HOST=clamav dans .env)
+  # Deux services : « clamav » (clamd seul) n'est relié qu'au réseau interne « antivirus », partagé avec l'API, sans accès à
+  # la base ni à Internet ; « freshclam » (mise à jour des signatures) sort vers Internet mais n'est relié à aucun autre service.
+  # Les deux s'exécutent sans privilège (utilisateur clamav, uid 100), système de fichiers en lecture seule.
   clamav:
     <<: *hardening
-    image: clamav/clamav:stable
+    image: clamav/clamav:1.5@sha256:bda39705e291105049c3936e2803ac90b955172af8030f94f05dce1252df6c6d
     profiles: ['antivirus']
-    networks: [backend, av_update]
+    user: '100:101'
+    entrypoint: ['/init-unprivileged']
+    environment:
+      CLAMAV_NO_FRESHCLAMD: 'true'
+      CLAMAV_NO_MILTERD: 'true'
+    networks: [antivirus]
+    depends_on:
+      init: { condition: service_completed_successfully }
+      freshclam: { condition: service_healthy }
+    volumes:
+      - ${DATA_DIR:-/srv/suivi-audits/donnees}/clamav:/var/lib/clamav:ro
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,uid=100,gid=101
+      - /var/log/clamav:size=16m,uid=100,gid=101
+    cap_drop: [ALL]
+    mem_limit: 3g
+    pids_limit: 200
+
+  freshclam:
+    <<: *hardening
+    image: clamav/clamav:1.5@sha256:bda39705e291105049c3936e2803ac90b955172af8030f94f05dce1252df6c6d
+    profiles: ['antivirus']
+    user: '100:101'
+    entrypoint: ['/init-unprivileged']
+    environment:
+      CLAMAV_NO_CLAMD: 'true'
+      CLAMAV_NO_MILTERD: 'true'
+    networks: [av_update]
     depends_on:
       init: { condition: service_completed_successfully }
     volumes:
       - ${DATA_DIR:-/srv/suivi-audits/donnees}/clamav:/var/lib/clamav
-    mem_limit: 3g
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,uid=100,gid=101
+      - /var/log/clamav:size=16m,uid=100,gid=101
+    cap_drop: [ALL]
+    mem_limit: 512m
+    pids_limit: 50
+    healthcheck:
+      # Prêt quand les signatures initiales sont téléchargées : clamd ne démarre pas sans elles.
+      test: ['CMD-SHELL', 'test -f /var/lib/clamav/main.cvd -o -f /var/lib/clamav/main.cld']
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 30s
 
 networks:
   public: {}
   edge: { internal: true }
   backend: { internal: true }
   av_update: {}
+  # clamd : joint par l'API seule (CLAMAV_HOST=clamav), sans accès à la base ni à Internet.
+  antivirus: { internal: true }
 
 # Aucun volume nommé : voir DATA_DIR ci-dessus. Les anciens volumes (pgdata, secrets, caddy_data, caddy_config,
 # clamav_db) sont repris par scripts/migrer-donnees-vers-dossier.sh.

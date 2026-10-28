@@ -67,3 +67,13 @@ jour, le scan des images échoue et force le réexamen. Le workflow `veille-cadd
 Caddy épinglée à la dernière publiée et ouvre une demande quand le correctif existe ou que l'exception approche de son terme.
 Il ne modifie aucun fichier. Première exception : go-jose v3 dans Caddy, jusqu'au 27/11/2026 ; go-jose v4 est fixé à 4.1.6
 dans `docker/web.Dockerfile`.
+
+## Addendum du 28/10/2026 — images de base épinglées par empreinte
+
+Les images tierces des Dockerfiles (`node`, `caddy`, `golang`, `alpine`) et du compose de production (`postgres` 17 et 18,
+`clamav`) sont désignées par `étiquette@sha256:<empreinte>`, l'empreinte étant celle de l'index multi-architecture relevée avec
+`docker buildx imagetools inspect`. Dependabot (écosystèmes `docker` sur `/docker` et `docker-compose` sur `/`) propose
+chaque semaine la nouvelle empreinte avec la version ; la proposition passe par la CI complète et la relecture du RSSI. Si
+l'écosystème `docker-compose` ne couvrait pas un service, la revue reste manuelle à chaque mise à jour de version. Les images
+du projet (GHCR) restent désignées par version : la publication les signe et atteste leur nomenclature. Le contrôle
+`scripts/tests/conteneurs.test.mjs` refuse une image tierce sans empreinte.

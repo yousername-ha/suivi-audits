@@ -10,6 +10,8 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 Aucune action obligatoire. Les sauvegardes les plus récentes sont désormais toujours conservées par la rotation (7 par défaut, `BACKUP_GARDER_MIN`) et les demandes de sauvegarde de l'interface appliquent une durée d'au moins 30 jours (`RETENTION_MIN_DAYS`) ; les deux réglages sont facultatifs, dans `.env`. Lire aussi la section 11 du guide d'installation (identifiants réservés).
 
+**Si l'antivirus facultatif est activé** (`--profile antivirus`) : après `docker compose pull`, relancer avec `docker compose --profile antivirus up -d` ; le nouveau service `freshclam` télécharge les signatures et `clamav` démarre quand elles sont présentes (quelques minutes). Vérifier que `CLAMAV_HOST=clamav` reste renseigné dans `.env`. Sans antivirus, rien à faire.
+
 Aucune action sur le serveur. Le frontal est reconstruit avec une bibliothèque corrigée (go-jose v4.1.6) ; une exception datée du scan des images couvre la seule alerte restante, sans correctif amont (voir ADR 0063).
 
 ### Modifié
@@ -24,6 +26,8 @@ Aucune action sur le serveur. Le frontal est reconstruit avec une bibliothèque 
 - **Exécutant d'exploitation** : la liste publique des opérations n'est relue qu'à partir de fichiers réguliers nommés par identifiant, sans suivre de lien symbolique ni ouvrir de tube.
 - **Chiffrement** : le déchiffrement AES-256-GCM exige explicitement une étiquette d'authentification de 16 octets (déjà imposé par Node 26) ; tests du coffre ajoutés.
 - **Conservation des sauvegardes** : la rotation de `scripts/backup.sh` garde toujours les `BACKUP_GARDER_MIN` archives les plus récentes (7 par défaut, de 1 à 365) et ne supprime les suivantes, avec leur fichier `.sha256`, qu'au-delà de `RETENTION_DAYS` ; l'exécutant des demandes web relève la durée de la politique à `RETENTION_MIN_DAYS` (30 par défaut, de 1 à 36500, lue dans `.env`). Tests Python ajoutés (rotation, bornes, plancher). Le guide d'installation précise aussi les identifiants (UID 70, 100, 1000, 1001) réservés aux conteneurs.
+- **Antivirus facultatif isolé** : `clamav` (analyse) n'est plus relié qu'au réseau interne `antivirus`, partagé avec l'API, sans accès à la base ni à Internet ; le téléchargement des signatures passe par un service `freshclam` distinct. Les deux s'exécutent sans privilège, en lecture seule, sans capacité Linux et avec une limite de processus.
+- **Images épinglées par empreinte** : les images tierces des Dockerfiles et du compose de production (`node`, `caddy`, `golang`, `alpine`, `postgres`, `clamav`) portent leur empreinte `@sha256` ; Dependabot suit aussi le compose. Contrôle `scripts/tests/conteneurs.test.mjs` ajouté à la CI.
 
 ## [5.1.0] — 2026-10-27
 

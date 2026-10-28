@@ -74,9 +74,12 @@ Cochez chaque ligne avant de passer à l'étape 1. Les demandes aux autres équi
 | `tuf-repo-cdn.sigstore.dev`, `rekor.sigstore.dev` | TCP 443 | Vérification de la signature des images à chaque mise à jour (étape 12.1) |
 | `registry-1.docker.io`, `auth.docker.io`, `production.cloudflare.docker.com` | TCP 443 | Image de la base de données (PostgreSQL) |
 | Serveur de temps (NTP) de votre organisation, ou `ntp.ubuntu.com` / `deb.pool.ntp.org` | UDP 123 | Mise à l'heure (indispensable à la double authentification) |
-| `database.clamav.net` | TCP 443 | Facultatif : signatures de l'antivirus |
+| `database.clamav.net` | TCP 443 | Facultatif : signatures de l'antivirus (service `freshclam` seul) |
 
 Une fois démarrée, l'application elle-même n'a **aucun accès à Internet** : seuls le système, Docker et les scripts du serveur en ont besoin, pour l'installation et les mises à jour.
+
+**Antivirus facultatif.** `docker compose --profile antivirus up -d` démarre deux services sans privilège (utilisateur `clamav`, système de fichiers en lecture seule, aucune capacité Linux) : `clamav` (analyse, joint par l'API seule sur le réseau interne `antivirus`, sans accès à la base ni à Internet) et `freshclam` (téléchargement des signatures, seul à sortir vers `database.clamav.net`). `clamav` démarre quand les signatures initiales sont présentes, ce qui prend quelques minutes au premier lancement ; l'analyse reprend les signatures mises à jour dans l'heure qui suit leur téléchargement. Renseigner `CLAMAV_HOST=clamav` dans `.env`. Le dossier `DATA_DIR/clamav` appartient à l'uid 100, préparé par le service `init`.
+
 
 ---
 
@@ -398,7 +401,7 @@ getent hosts <nom_dns>
 | `postgres/` | seulement sur un serveur mis à jour depuis une version en PostgreSQL 17 : l'**ancienne base**, conservée intacte après la migration (voir 12.1) | aucun usage |
 | `secrets/` | mots de passe internes et **clé de chiffrement des documents**, créés au premier démarrage | lecture par la base et l'application |
 | `caddy/` | certificats HTTPS et autorité de certification interne | frontal web seul |
-| `clamav/` | signatures de l'antivirus (facultatif) | antivirus seul |
+| `clamav/` | signatures de l'antivirus (facultatif) | `freshclam` (écriture) et `clamav` (lecture seule) |
 | `etat/` | rapports des sauvegardes et des mises à jour, affichés dans **Administration**, onglet **Système** | lecture seule pour l'application |
 
 Le service `init` crée ces sous-dossiers avec les bons propriétaires et droits à chaque démarrage. Il **refuse de démarrer** si le dossier n'a pas été préparé, s'il est dans le dossier de l'application (`/opt/suivi-audits`), dans un dossier système (`/var/lib/docker`, `/tmp`…) ou sur un disque temporaire.
