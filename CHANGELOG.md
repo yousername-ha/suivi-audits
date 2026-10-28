@@ -6,7 +6,13 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-Aucune action.
+**Changement de comportement** : les Contributeurs ne suppriment plus les plans d'actions, éléments du plan d'audit, GAP, lignes d'investissement, éléments du CRRC, incidents, éléments de la cellule de crise, évaluations du clausier, processus, objectifs, indicateurs et mesures (droit `supprimer` exigé, [ADR 0068](docs/adr/0068-suppressions-reservees-au-droit-supprimer.md)). Pour garder cette capacité à un profil, lui attribuer un rôle personnalisé qui porte `supprimer` sur les modules voulus. Aucune action sur le serveur.
+
+### Modifié
+- Les boutons de suppression de ces écrans n'apparaissent que pour qui a le droit `supprimer` du module.
+
+### Sécurité
+- **Suppressions** ([ADR 0068](docs/adr/0068-suppressions-reservees-au-droit-supprimer.md)) : toute suppression d'un enregistrement des modules de suivi exige le droit `supprimer`, comme le prévoit l'ADR 0010.
 
 ## [5.1.0] — 2026-10-27
 

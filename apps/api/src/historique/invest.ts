@@ -103,7 +103,12 @@ export class Investissements {
     return this.r.modifier(
       user,
       ip,
-      { module: 'investissements', action: 'invest.deleted', reference: (x) => `legacy:invest:${x.id}` },
+      {
+        droit: 'supprimer',
+        module: 'investissements',
+        action: 'invest.deleted',
+        reference: (x) => `legacy:invest:${x.id}`,
+      },
       (data) => {
         const v = etatInvest(data);
         if (!v.lines.some((l) => isObject(l) && l.id === id)) throw new HttpError(404, 'Ligne budgétaire absente.');

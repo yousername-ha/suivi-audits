@@ -121,7 +121,12 @@ export class Incidents {
     return this.r.modifier(
       user,
       ip,
-      { module: 'incidents', action: 'incident.deleted', reference: (x) => `legacy:incidents:${x.id}` },
+      {
+        droit: 'supprimer',
+        module: 'incidents',
+        action: 'incident.deleted',
+        reference: (x) => `legacy:incidents:${x.id}`,
+      },
       (data) => {
         this.trouver(data, id);
         remplacerEntree(data, 'incidents', id, null);

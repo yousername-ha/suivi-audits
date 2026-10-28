@@ -71,9 +71,13 @@ export class GestionCrrc {
     ip: string,
     action: string,
     appliquer: (c: Record<Cle, Json[]> & JsonObject, data: JsonObject) => T,
+    droit: 'modifier' | 'supprimer' = 'modifier',
   ): Promise<T> {
-    return this.r.modifier(user, ip, { module: 'crrc', action, reference: (x) => `legacy:crrc:${x.id}` }, (data) =>
-      appliquer(racine(data), data),
+    return this.r.modifier(
+      user,
+      ip,
+      { module: 'crrc', action, droit, reference: (x) => `legacy:crrc:${x.id}` },
+      (data) => appliquer(racine(data), data),
     );
   }
 
@@ -116,11 +120,17 @@ export class GestionCrrc {
     });
   }
   supprimerEtablissement(id: string, user: SessionUser, ip: string) {
-    return this.ecrire(user, ip, 'crrc.establishment.deleted', (c) => {
-      trouver(c, 'establishments', id, 'Établissement');
-      remplacer(c, 'establishments', id, null);
-      return { id };
-    });
+    return this.ecrire(
+      user,
+      ip,
+      'crrc.establishment.deleted',
+      (c) => {
+        trouver(c, 'establishments', id, 'Établissement');
+        remplacer(c, 'establishments', id, null);
+        return { id };
+      },
+      'supprimer',
+    );
   }
 
   /* ------------------------------------------------------------------------------------- ressources */
@@ -152,12 +162,18 @@ export class GestionCrrc {
     });
   }
   supprimerRessource(id: string, user: SessionUser, ip: string) {
-    return this.ecrire(user, ip, 'crrc.resource.deleted', (c) => {
-      trouver(c, 'resources', id, 'Ressource');
-      remplacer(c, 'resources', id, null);
-      c.runs = c.runs.filter((x) => !(isObject(x) && x.res === id));
-      return { id };
-    });
+    return this.ecrire(
+      user,
+      ip,
+      'crrc.resource.deleted',
+      (c) => {
+        trouver(c, 'resources', id, 'Ressource');
+        remplacer(c, 'resources', id, null);
+        c.runs = c.runs.filter((x) => !(isObject(x) && x.res === id));
+        return { id };
+      },
+      'supprimer',
+    );
   }
 
   /* ----------------------------------------------------------------------------------- sauvegardes */
@@ -171,11 +187,17 @@ export class GestionCrrc {
     });
   }
   supprimerSauvegarde(id: string, user: SessionUser, ip: string) {
-    return this.ecrire(user, ip, 'crrc.run.deleted', (c) => {
-      trouver(c, 'runs', id, 'Sauvegarde');
-      remplacer(c, 'runs', id, null);
-      return { id };
-    });
+    return this.ecrire(
+      user,
+      ip,
+      'crrc.run.deleted',
+      (c) => {
+        trouver(c, 'runs', id, 'Sauvegarde');
+        remplacer(c, 'runs', id, null);
+        return { id };
+      },
+      'supprimer',
+    );
   }
 
   /* --------------------------------------------------------------------------------- restaurations */
@@ -297,11 +319,17 @@ export class GestionCrrc {
     });
   }
   supprimerOffre(id: string, user: SessionUser, ip: string) {
-    return this.ecrire(user, ip, 'crrc.offer.deleted', (c) => {
-      if (id === 'backup') throw new HttpError(422, 'L’offre de sauvegarde ne se supprime pas.');
-      trouver(c, 'offers', id, 'Offre');
-      remplacer(c, 'offers', id, null);
-      return { id };
-    });
+    return this.ecrire(
+      user,
+      ip,
+      'crrc.offer.deleted',
+      (c) => {
+        if (id === 'backup') throw new HttpError(422, 'L’offre de sauvegarde ne se supprime pas.');
+        trouver(c, 'offers', id, 'Offre');
+        remplacer(c, 'offers', id, null);
+        return { id };
+      },
+      'supprimer',
+    );
   }
 }

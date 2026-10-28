@@ -58,10 +58,17 @@ export class RegistreHistorique {
   async modifier<T>(
     user: SessionUser,
     ip: string,
-    cible: { module: Module; action: string; reference: (resultat: T) => string; droits?: Module[] },
+    cible: {
+      module: Module;
+      action: string;
+      reference: (resultat: T) => string;
+      droits?: Module[];
+      /** Droit de module exigé : « supprimer » pour une suppression (ADR 0010), « modifier » sinon. */
+      droit?: 'modifier' | 'supprimer';
+    },
     appliquer: (data: JsonObject, c: Client) => T | Promise<T>,
   ): Promise<T> {
-    await this.g.permission(user, cible.module, 'modifier');
+    await this.g.permission(user, cible.module, cible.droit ?? 'modifier');
     for (const m of cible.droits ?? []) await this.g.permission(user, m, 'modifier');
     return this.g.db.tx(async (c) => {
       await verrouillerEtat(c);
