@@ -12,6 +12,7 @@ import {
   StageOut,
   TotpBeginOut,
   TotpConfirmBody,
+  problemesMotDePasse,
   type MeOut as MeOutT,
 } from '@suivi/shared';
 import { sql } from 'kysely';
@@ -20,13 +21,18 @@ import { accessStage, type Session } from '../auth.js';
 import { HttpError } from '../http/errors.js';
 import { route } from '../http/route.js';
 import { permanentAdminCount } from '../rights.js';
-import { base32, chiffrerEmpreinte, hashPassword, passwordProblems, verifyTotp } from '../security/crypto.js';
+import { base32, chiffrerEmpreinte, hashPassword, verifyTotp } from '../security/crypto.js';
 import type { PoivrePrepare } from '../mots-de-passe.js';
 import { exigerPoivreValide } from './poivre.js';
 import type { Services } from '../services.js';
 
 function checkPassword(svc: Services, pw: unknown, username: string) {
-  const p = passwordProblems(pw, svc.settings.get('securite').passwordMinLength, [username]);
+  const general = svc.settings.get('general');
+  const p = problemesMotDePasse(pw, {
+    minLen: svc.settings.get('securite').passwordMinLength,
+    identifiants: [username],
+    noms: [general.appName, general.orgName],
+  });
   if (p.length) throw new HttpError(422, 'Mot de passe trop faible : ' + p.join(', ') + '.');
 }
 
