@@ -6,6 +6,8 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
+**Pour recevoir les alertes de verrouillage de compte** : renseigner le contact technique et activer le courriel dans Administration, Configuration système, Courriel (un avertissement s'affiche tant que ce n'est pas fait). Les administrateurs actifs sont prévenus à l'adresse de leur compte. Le statut 423 n'est plus renvoyé par la connexion : tout échec répond 401. Aucune migration.
+
 **Changement de comportement** : les Contributeurs ne suppriment plus les plans d'actions, éléments du plan d'audit, GAP, lignes d'investissement, éléments du CRRC, incidents, éléments de la cellule de crise, évaluations du clausier, processus, objectifs, indicateurs et mesures (droit `supprimer` exigé, [ADR 0068](docs/adr/0068-suppressions-reservees-au-droit-supprimer.md)). Pour garder cette capacité à un profil, lui attribuer un rôle personnalisé qui porte `supprimer` sur les modules voulus. Aucune action sur le serveur.
 
 Aucune action obligatoire. Les sauvegardes les plus récentes sont désormais toujours conservées par la rotation (7 par défaut, `BACKUP_GARDER_MIN`) et les demandes de sauvegarde de l'interface appliquent une durée d'au moins 30 jours (`RETENTION_MIN_DAYS`) ; les deux réglages sont facultatifs, dans `.env`. Lire aussi la section 11 du guide d'installation (identifiants réservés).
@@ -20,6 +22,8 @@ Aucune action sur le serveur. Le frontal est reconstruit avec une bibliothèque 
 - Les boutons de suppression de ces écrans n'apparaissent que pour qui a le droit `supprimer` du module.
 
 ### Sécurité
+- **Connexion** ([ADR 0070](docs/adr/0070-reponse-de-connexion-uniforme-et-alerte-de-verrouillage.md)) : tout échec de connexion répond 401 avec un message unique (« Identifiant ou mot de passe incorrect, ou compte temporairement verrouillé après plusieurs échecs. ») ; un compte verrouillé ne se distingue plus d'un compte inconnu. Le motif exact reste au journal d'audit.
+- **Alerte de verrouillage** (ADR 0070) : au passage d'un compte à l'état verrouillé, un courriel sans donnée métier ni adresse IP part vers le contact technique et vers les administrateurs actifs (rôle `administrateur`, direct ou par un groupe). Une alerte par verrou, non désactivable par les réglages personnels, plafonnée à 10 par heure puis une synthèse horaire ; chaque verrou reste inscrit au journal (`auth.account_locked`).
 - **Suppressions** ([ADR 0068](docs/adr/0068-suppressions-reservees-au-droit-supprimer.md)) : toute suppression d'un enregistrement des modules de suivi exige le droit `supprimer`, comme le prévoit l'ADR 0010.
 - **Images du frontal et de l'exécutant de mise à jour** : go-jose v4 est fixé à 4.1.6 dans `docker/web.Dockerfile` et `docker/updater.Dockerfile`. Le scan des images accepte, jusqu'au 27/11/2026, l'alerte sur go-jose v3 sans correctif publié (`.trivyignore.yaml`, bornée et datée). Un workflow quotidien (`veille-caddy.yml`) ouvre une demande quand une version de Caddy n'exige plus go-jose v3 ou que l'exception approche de son terme.
 - **Authentification** : les essais du second facteur sont limités par compte et comptés dans le verrouillage progressif existant ; les sessions à l'étape du second facteur sont plafonnées à trois par compte ; le compteur d'échecs est incrémenté de façon atomique ; les vérifications du mot de passe actuel (changement de mot de passe, enrôlement et désactivation du second facteur) sont limitées par compte, comptées dans le verrouillage et journalisées.
