@@ -1,6 +1,6 @@
 # Cadrage — module Intégrations (GLPI, ORADAD, Silène et connecteurs à venir)
 
-**Statut** : cadrage du 28/10/2026, à la demande du RSSI, avec ses décisions (R1 à R15 de
+**Statut** : cadrage du 28/10/2026, à la demande du RSSI, avec ses décisions (R1 à R16 de
 l'[ADR 0073](../adr/0073-module-integrations.md), proposée). Aucun code, aucune migration. Les lots (§4) démarrent un par
 un après validation de ce plan.
 
@@ -14,7 +14,7 @@ permet de récupérer :
   demandes sur GLPI) ;
 - le **registre des fournisseurs** (liste des fournisseurs GLPI).
 
-Premières sources : GLPI (API), ORADAD de l'ANSSI (rapport JSON), Silène du Club SSI (JSON). D'autres suivront.
+Premières sources : GLPI (API), ORADAD (rapport JSON) et Silène (JSON), outils de l'ANSSI (Club SSI). D'autres suivront.
 Lecture seule. Règle du RSSI : **rien de réinventé ni de dupliqué**.
 
 ## 2. Ce qui est réutilisé et ce qui est nouveau
@@ -30,7 +30,7 @@ Lecture seule. Règle du RSSI : **rien de réinventé ni de dupliqué**.
 | Secrets | `Vault.sealSmall`, ligne `settings` `secret:…` en écriture seule (courriel, poivre), masquage `REDACT` | Ligne `secret:integration:<id>` ; nouveaux noms masqués |
 | Données reçues en attente | `vault.encrypt` (comme `import_batches`) | Purge après application ou expiration |
 | Module, droits, menu | `MODULES`, `MODULE_REGISTRY`, `route()` (garde, CSRF, activation), rubriques du Pilotage | Module `integrations` et migration de la contrainte des modules |
-| Interface | Écran de rapport Tenacy, dalles et jetons du tableau de bord (ADR 0069), `packages/ui`, CSP stricte, circuit de fichiers avec antivirus | Rubrique « Intégrations » en **tuiles avec logo** (connecteurs, exécutions, propositions) ; logo déposable par l'administrateur |
+| Interface | Écran de rapport Tenacy, dalles et jetons du tableau de bord (ADR 0069), `packages/ui`, CSP stricte, circuit de fichiers avec antivirus | Rubrique « Intégrations » en **tuiles avec logo** (connecteurs, exécutions, propositions) ; ORADAD et Silène : logo de l'ANSSI et nom en gras ; logo déposable par l'administrateur |
 
 ## 3. Parcours cibles
 
@@ -75,8 +75,9 @@ PostgreSQL, Playwright pour les parcours) et la documentation (inventaire, recet
   entités, statuts, période (mois, semaine), date de référence (ouverture ou résolution). Il faut aussi une instance
   GLPI 10 ou 11 **de recette** joignable par l'exécutant, avec un compte en lecture seule.
 - **I5** : les champs du fournisseur GLPI à reprendre (nom, contact…) parmi ceux du registre.
-- **Logos (I1)** : pour chaque logo à embarquer, le fichier SVG et la preuve du droit d'usage (éditeur de GLPI, ANSSI
-  selon la charte de l'État, Club SSI). Sans cette preuve, la tuile montre un pictogramme neutre.
+- **Logos (I1)** : pour chaque logo à embarquer, le fichier SVG et la preuve du droit d'usage (éditeur de GLPI ;
+  ANSSI selon la charte de l'État, un seul logo pour les tuiles ORADAD et Silène). Sans cette preuve, la tuile montre un
+  pictogramme neutre, toujours avec le nom de l'application en gras.
 
 ## 6. Ce que ce cadrage n'établit pas
 

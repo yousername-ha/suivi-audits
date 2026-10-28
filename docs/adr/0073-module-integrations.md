@@ -3,7 +3,7 @@
 - Statut : proposée (numéro confirmé par le RSSI le 28/10/2026)
 - Date : 2026-10-28
 - Contexte : le RSSI demande, le 28/10/2026, un module « Intégrations » qui crée des intégrations natives dans l'outil :
-  connecteur API GLPI, import ORADAD (ANSSI), import Silène (Club SSI), d'autres à venir. Selon ce que chaque source
+  connecteur API GLPI, import ORADAD et import Silène (ANSSI, Club SSI), d'autres à venir. Selon ce que chaque source
   permet de récupérer, les intégrations alimentent des écarts, des métriques (nombre d'incidents, d'incidents IT, de
   demandes…) et le registre des fournisseurs. Exigence explicite : **ne rien réinventer ni dupliquer** de l'existant.
   Cadrage détaillé et lots : [CADRAGE-MODULE-INTEGRATIONS](../unification/CADRAGE-MODULE-INTEGRATIONS.md).
@@ -27,6 +27,7 @@
 | R13 | Indicateurs et SMSI | Seul un connecteur du **périmètre commun** alimente des indicateurs (ils n'existent que là) |
 | R14 | Ordre | Socle, ORADAD, Silène, puis GLPI |
 | R15 | Présentation | Connecteurs en **tuiles avec le logo de l'application**, logo embarqué seulement si son droit d'usage est vérifié, sinon pictogramme neutre ; logo déposable par l'administrateur |
+| R16 | Tuiles ORADAD et Silène | Les deux outils relèvent de l'ANSSI (Club SSI) : **logo de l'ANSSI** et **nom de l'application en gras** (« **ORADAD** », « **Silène** ») ; pas de logo propre à chaque outil |
 
 ## Décision
 
@@ -67,7 +68,7 @@
    son empreinte et le rapport.
 
    Le schéma de chaque format est écrit **à partir d'un exemple anonymisé fourni par le RSSI**. Aucun champ n'est
-   supposé, et aucune grille de l'ANSSI ou du Club SSI n'est reconstruite ou reproduite : seuls les identifiants, intitulés
+   supposé, et aucune grille de l'ANSSI n'est reconstruite ou reproduite : seuls les identifiants, intitulés
    et niveaux présents dans le fichier de l'utilisateur sont repris.
 5. **Appels réseau (GLPI, connecteurs API futurs) : par l'exécutant d'exploitation, sur le modèle du courriel**
    ([ADR 0049](0049-courriel-et-sortie-reseau-optionnelle.md)). L'API garde **zéro accès sortant**
@@ -143,7 +144,8 @@
       ([ADR 0069](0069-tableau-de-bord-verre-et-relief.md)), sans valeur codée en dur.
     - **Logos** : un logo est une marque. Il n'est embarqué dans le dépôt, en fichier SVG local relu, que si son droit
       d'usage est vérifié et consigné (organisme, source, date, conditions) dans le registre des sources. Le logo de
-      l'ANSSI suit la charte graphique de l'État. Sans droit vérifié, la tuile montre un **pictogramme neutre** de
+      l'ANSSI suit la charte graphique de l'État ; il sert aux deux tuiles ORADAD et Silène (R16), un seul fichier
+      pour les deux, chaque tuile affichant en plus le nom de l'application en gras. Sans droit vérifié, la tuile montre un **pictogramme neutre** de
       `packages/ui` et le nom de l'application.
     - **Logo déposé par l'administrateur**, pour son instance (`integrations:administrer`) : PNG ou WebP seulement
       (pas de SVG, qui peut porter du script), taille bornée, contrôle antivirus et stockage par le circuit de fichiers
