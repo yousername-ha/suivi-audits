@@ -26,6 +26,7 @@
 | R12 | Réseau | Appels sortants **par l'exécutant d'exploitation**, jamais par l'API |
 | R13 | Indicateurs et SMSI | Seul un connecteur du **périmètre commun** alimente des indicateurs (ils n'existent que là) |
 | R14 | Ordre | Socle, ORADAD, Silène, puis GLPI |
+| R15 | Présentation | Connecteurs en **tuiles avec le logo de l'application**, logo embarqué seulement si son droit d'usage est vérifié, sinon pictogramme neutre ; logo déposable par l'administrateur |
 
 ## Décision
 
@@ -133,9 +134,20 @@
 11. **Journal et traçabilité.** La table des exécutions est le journal du module : origine (manuel ou planifié), auteur,
     état (`en_file`, `en_cours`, `recu`, `applique`, `echec`, `expire`), dates, totaux, erreur nettoyée. Chaque étape
     écrit un audit `integration.*` sans secret. Chaque objet modifié garde l'audit et la version de son propre service.
-12. **Interface.** Une rubrique « Intégrations » du Pilotage (module `integrations`, action `lire`) regroupe connecteurs,
-    exécutions et propositions. Le tableau de rapport reprend l'écran Tenacy. Le reste reprend la charte et les
-    composants de `packages/ui`, sous la CSP stricte ([ADR 0006](0006-front-react-mantine-csp-stricte.md)).
+12. **Interface en tuiles.** Une rubrique « Intégrations » du Pilotage (module `integrations`, action `lire`) regroupe
+    connecteurs, exécutions et propositions. Elle respecte la charte et les composants de `packages/ui`, sous la CSP
+    stricte ([ADR 0006](0006-front-react-mantine-csp-stricte.md)) ; le tableau de rapport reprend l'écran Tenacy.
+    - **Catalogue en tuiles** : une tuile par type de connecteur et par instance, avec le logo de l'application, son
+      nom, ce qu'elle alimente (écarts, mesures, fournisseurs), son état (non configurée, active, en échec) et la date
+      de la dernière exécution. Les tuiles reprennent les dalles et les jetons de couleur du tableau de bord
+      ([ADR 0069](0069-tableau-de-bord-verre-et-relief.md)), sans valeur codée en dur.
+    - **Logos** : un logo est une marque. Il n'est embarqué dans le dépôt, en fichier SVG local relu, que si son droit
+      d'usage est vérifié et consigné (organisme, source, date, conditions) dans le registre des sources. Le logo de
+      l'ANSSI suit la charte graphique de l'État. Sans droit vérifié, la tuile montre un **pictogramme neutre** de
+      `packages/ui` et le nom de l'application.
+    - **Logo déposé par l'administrateur**, pour son instance (`integrations:administrer`) : PNG ou WebP seulement
+      (pas de SVG, qui peut porter du script), taille bornée, contrôle antivirus et stockage par le circuit de fichiers
+      existant. Il est servi par l'application elle-même : aucun chargement externe, conformément à la CSP.
 13. **Aucune nouvelle dépendance**, ni côté API (TypeScript existant) ni côté exécutant (Python standard).
 
 ## Conséquences

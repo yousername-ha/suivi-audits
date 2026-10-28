@@ -1,6 +1,6 @@
 # Cadrage — module Intégrations (GLPI, ORADAD, Silène et connecteurs à venir)
 
-**Statut** : cadrage du 28/10/2026, à la demande du RSSI, avec ses décisions (R1 à R14 de
+**Statut** : cadrage du 28/10/2026, à la demande du RSSI, avec ses décisions (R1 à R15 de
 l'[ADR 0073](../adr/0073-module-integrations.md), proposée). Aucun code, aucune migration. Les lots (§4) démarrent un par
 un après validation de ce plan.
 
@@ -30,7 +30,7 @@ Lecture seule. Règle du RSSI : **rien de réinventé ni de dupliqué**.
 | Secrets | `Vault.sealSmall`, ligne `settings` `secret:…` en écriture seule (courriel, poivre), masquage `REDACT` | Ligne `secret:integration:<id>` ; nouveaux noms masqués |
 | Données reçues en attente | `vault.encrypt` (comme `import_batches`) | Purge après application ou expiration |
 | Module, droits, menu | `MODULES`, `MODULE_REGISTRY`, `route()` (garde, CSRF, activation), rubriques du Pilotage | Module `integrations` et migration de la contrainte des modules |
-| Interface | Écran de rapport Tenacy, `packages/ui`, CSP stricte | Rubrique « Intégrations » (connecteurs, exécutions, propositions) |
+| Interface | Écran de rapport Tenacy, dalles et jetons du tableau de bord (ADR 0069), `packages/ui`, CSP stricte, circuit de fichiers avec antivirus | Rubrique « Intégrations » en **tuiles avec logo** (connecteurs, exécutions, propositions) ; logo déposable par l'administrateur |
 
 ## 3. Parcours cibles
 
@@ -54,7 +54,7 @@ Lecture seule. Règle du RSSI : **rien de réinventé ni de dupliqué**.
 | Lot | Contenu | Acceptation |
 |---|---|---|
 | I0 | ADR 0073 et ce cadrage | Relus et validés par le RSSI |
-| I1 | **Socle.** Module `integrations` et migration additive : contrainte des modules, tables `integrations`, `integration_executions`, `integration_correspondances`, `integration_propositions`, `integration_liaisons`. Catalogue partagé des connecteurs. Routes de configuration et secrets. **Extraction du moteur d'écarts de Tenacy.** Rubrique « Intégrations » (liste et configuration) | Tests Tenacy inchangés et verts. Droits : refus sans le droit de la cible, sans écriture sur le périmètre, module désactivé. Secret jamais relu ni journalisé. Migration testée sur base vierge et sur base existante |
+| I1 | **Socle.** Module `integrations` et migration additive : contrainte des modules, tables `integrations`, `integration_executions`, `integration_correspondances`, `integration_propositions`, `integration_liaisons`. Catalogue partagé des connecteurs. Routes de configuration et secrets. **Extraction du moteur d'écarts de Tenacy.** Rubrique « Intégrations » en tuiles avec logo ou pictogramme neutre, configuration, dépôt du logo par l'administrateur | Tests Tenacy inchangés et verts. Tuiles vérifiées par captures (clair, sombre, 390 à 1440 px) ; logo déposé refusé s'il est SVG ou trop lourd. Droits : refus sans le droit de la cible, sans écriture sur le périmètre, module désactivé. Secret jamais relu ni journalisé. Migration testée sur base vierge et sur base existante |
 | I2 | **ORADAD.** Adaptateur JSON, simulation et application, disparus proposés à la clôture | Fixture anonymisée tirée de l'exemple fourni. Second import identique sans effet. Clôture seulement des écarts cochés. Effet sur les indicateurs calculés vérifié |
 | I3 | **Silène.** Adaptateur JSON (écarts, et métriques si le format en porte) | Mêmes critères qu'I2 |
 | I4 | **Exécutant et GLPI, métriques.** File, CLI, script isolé, socle HTTP de l'exécutant, API v1 et v2, liaisons métrique ↔ indicateur | Lectures seules prouvées par test (aucune méthode d'écriture métier émise). TLS vérifié, délais et plafonds. Idempotence par période. Indicateur lié non saisissable. Rapport sans secret |
@@ -75,6 +75,8 @@ PostgreSQL, Playwright pour les parcours) et la documentation (inventaire, recet
   entités, statuts, période (mois, semaine), date de référence (ouverture ou résolution). Il faut aussi une instance
   GLPI 10 ou 11 **de recette** joignable par l'exécutant, avec un compte en lecture seule.
 - **I5** : les champs du fournisseur GLPI à reprendre (nom, contact…) parmi ceux du registre.
+- **Logos (I1)** : pour chaque logo à embarquer, le fichier SVG et la preuve du droit d'usage (éditeur de GLPI, ANSSI
+  selon la charte de l'État, Club SSI). Sans cette preuve, la tuile montre un pictogramme neutre.
 
 ## 6. Ce que ce cadrage n'établit pas
 
