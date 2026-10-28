@@ -44,6 +44,12 @@ describe('jeu de données de test', () => {
     expect(bilan.normes!.elementsEbios).toBeGreaterThan(30);
     const etude = (await a.get(`/api/grc/${DEFAULT_SMSI}/risk-studies/${bilan.normes!.etudeEbios}`)).json();
     expect(JSON.stringify(etude)).toMatch(/Rançongiciel/);
+    // Les cinq ateliers sont validés et aucun élément n'a été modifié depuis.
+    expect(etude.ateliers.map((x: { id: string }) => x.id)).toEqual(['a1', 'a2', 'a3', 'a4', 'a5']);
+    for (const atelier of etude.ateliers) {
+      expect(atelier.valide, atelier.id).toBe(true);
+      expect(atelier.modifieDepuisValidation, atelier.id).toBe(false);
+    }
     const dda = (await a.get('/api/suivi/etat')).json().dda as Record<string, { app?: string; level?: string }>;
     expect(dda['A-8.30']).toMatchObject({ app: 'non' });
     expect(Object.values(dda).filter((d) => d.level === 'Total').length).toBeGreaterThan(30);
