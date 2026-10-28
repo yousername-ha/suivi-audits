@@ -1,14 +1,5 @@
-import { execFile } from 'node:child_process';
-import {
-  copyFileSync,
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  readdirSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs';
+import { execFile, execFileSync } from 'node:child_process';
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
@@ -28,8 +19,12 @@ function fixture() {
   for (const name of ['backup.sh', 'backup-worker.sh', 'lib-commun.sh'])
     copyFileSync(path.join(REPO, 'scripts', name), path.join(dir, 'scripts', name));
   writeFileSync(path.join(dir, '.env'), `DATA_DIR=${dir}/data\nAPP_VERSION=ci\n`);
-  const key = path.join(dir, 'phrase-fictive');
-  writeFileSync(key, 'Phrase-de-test-fictive', { mode: 0o600 });
+  const key = path.join(dir, 'cle-serveur');
+  const secours = path.join(dir, 'cle-secours');
+  execFileSync('age-keygen', ['-o', key], { stdio: 'ignore' });
+  execFileSync('age-keygen', ['-o', secours], { stdio: 'ignore' });
+  const destinataires = path.join(dir, 'destinataires');
+  writeFileSync(destinataires, execFileSync('age-keygen', ['-y', secours], { encoding: 'utf8' }), { mode: 0o600 });
   writeFileSync(path.join(dir, 'data/secrets/doc_key'), 'cle-document-fictive', { mode: 0o600 });
   const events = path.join(dir, 'events.jsonl');
   writeFileSync(
@@ -50,9 +45,10 @@ else if (cmd === 'backup-claim' && !process.env.TEST_EMPTY) console.log('${JOB}'
     PATH: `${dir}/bin:${process.env.PATH}`,
     TEST_EVENTS: events,
     BACKUP_DEST: path.join(dir, 'archives'),
-    BACKUP_PASSPHRASE_FILE: key,
+    BACKUP_KEY_FILE: key,
+    BACKUP_RECIPIENTS_FILE: destinataires,
   };
-  return { dir, key, events, env };
+  return { dir, key, secours, destinataires, events, env };
 }
 describe('exécutant serveur A1a', () => {
   it('exécute uniquement backup.sh, chiffre la sauvegarde, contrôle son empreinte et termine le job', async () => {
@@ -61,30 +57,29 @@ describe('exécutant serveur A1a', () => {
     const report = JSON.parse(readFileSync(path.join(f.dir, 'data/etat/sauvegardes/jobs', `${JOB}.json`), 'utf8'));
     expect(report).toMatchObject({ jobId: JOB, resultat: 'reussie', chiffree: true, integriteVerifiee: true });
     expect(report.sha256).toMatch(/^[a-f0-9]{64}$/);
-    expect(existsSync(report.fichier.replace(/\.enc$/, ''))).toBe(false);
-    await exec('sha256sum', ['-c', path.basename(report.fichier) + '.sha256'], { cwd: path.dirname(report.fichier) });
-    const plain = path.join(f.dir, 'controle.tar');
-    await exec('openssl', [
-      'enc',
-      '-d',
-      '-aes-256-cbc',
-      '-pbkdf2',
-      '-iter',
-      '600000',
-      '-in',
-      report.fichier,
-      '-out',
-      plain,
-      '-pass',
-      `file:${f.key}`,
+    expect(path.basename(report.fichier)).toMatch(new RegExp(`^suivi-audits-\\d{8}-\\d{6}-${JOB}\\.tar\\.age$`));
+    expect(readdirSync(path.join(f.dir, 'archives')).sort()).toEqual([
+      path.basename(report.fichier),
+      path.basename(report.fichier) + '.sha256',
     ]);
-    const dump = await exec('tar', ['-xOf', plain, 'suivi.dump']);
-    expect(dump.stdout).toBe('dump-fictif\n');
-    const secret = await exec('tar', ['-tf', plain]);
-    expect(secret.stdout).toContain('secrets.tgz');
+    await exec('sha256sum', ['-c', path.basename(report.fichier) + '.sha256'], { cwd: path.dirname(report.fichier) });
+    // Illisible sans clé ; la clé du serveur comme la clé de secours (seule) déchiffrent l'archive.
+    await expect(exec('tar', ['-tf', report.fichier])).rejects.toBeTruthy();
+    for (const identite of [f.key, f.secours]) {
+      const plain = path.join(f.dir, 'controle.tar');
+      await exec('age', ['-d', '-i', identite, '-o', plain, report.fichier]);
+      const dump = await exec('tar', ['-xOf', plain, 'suivi.dump']);
+      expect(dump.stdout).toBe('dump-fictif\n');
+      const secret = await exec('tar', ['-tf', plain]);
+      expect(secret.stdout).toContain('secrets.tgz');
+      // L'INFO lie le contenu au nom du fichier et à la demande.
+      const info = (await exec('tar', ['-xOf', plain, 'INFO'])).stdout;
+      expect(info).toContain(`fichier=${path.basename(report.fichier)}`);
+      expect(info).toContain(`job_id=${JOB}`);
+      rmSync(plain);
+    }
     const events = readFileSync(f.events, 'utf8');
     expect(events).toContain('backup-finish');
-    expect(events).not.toContain('Phrase-de-test-fictive');
   });
   it('ne crée pas de sauvegarde quand aucune demande n’est en attente', async () => {
     const f = fixture();
@@ -100,6 +95,21 @@ describe('exécutant serveur A1a', () => {
     const events = readFileSync(f.events, 'utf8');
     expect(events).toContain('unavailable');
     expect(events).not.toContain('backup-claim');
+    expect(readdirSync(path.join(f.dir, 'archives'))).toEqual([]);
+  });
+  it('refuse sans clé du serveur ou sans clé de secours, et ne produit aucune archive', async () => {
+    for (const manquante of ['BACKUP_KEY_FILE', 'BACKUP_RECIPIENTS_FILE']) {
+      const f = fixture();
+      await expect(
+        exec('bash', [path.join(f.dir, 'scripts/backup-worker.sh')], {
+          env: { ...f.env, [manquante]: path.join(f.dir, 'absente') },
+        }),
+      ).rejects.toMatchObject({ code: 1 });
+      const events = readFileSync(f.events, 'utf8');
+      expect(events).toContain('unavailable');
+      expect(events).not.toContain('pg_dump');
+      expect(readdirSync(path.join(f.dir, 'archives'))).toEqual([]);
+    }
   });
   it('consigne un échec du dump sans annoncer une sauvegarde réussie', async () => {
     const f = fixture();
@@ -113,7 +123,7 @@ describe('exécutant serveur A1a', () => {
   });
   it('ne publie aucune archive ni copie en clair si le chiffrement échoue', async () => {
     const f = fixture();
-    writeFileSync(path.join(f.dir, 'bin/openssl'), '#!/usr/bin/env bash\nexit 9\n', { mode: 0o700 });
+    writeFileSync(path.join(f.dir, 'bin/age'), '#!/usr/bin/env bash\nexit 9\n', { mode: 0o700 });
     await expect(exec('bash', [path.join(f.dir, 'scripts/backup-worker.sh')], { env: f.env })).rejects.toMatchObject({
       code: 9,
     });
@@ -144,7 +154,7 @@ describe('exécutant serveur A1a', () => {
     });
     const report = JSON.parse(readFileSync(path.join(f.dir, 'data/etat/sauvegardes/derniere-reussie.json'), 'utf8'));
     expect(report).toMatchObject({ resultat: 'reussie', chiffree: true, integriteVerifiee: true, jobId: '' });
-    expect(path.basename(report.fichier)).toMatch(/^avant-maj-ci-vers-99\.0\.0-.*\.tar\.enc$/);
+    expect(path.basename(report.fichier)).toMatch(/^avant-maj-ci-vers-99\.0\.0-.*\.tar\.age$/);
     await exec('sha256sum', ['-c', path.basename(report.fichier) + '.sha256'], { cwd: path.dirname(report.fichier) });
   });
 });
