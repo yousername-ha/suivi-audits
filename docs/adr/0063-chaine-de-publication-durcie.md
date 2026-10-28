@@ -59,6 +59,15 @@
   classique) et environnement `publication` (approbation du RSSI, étiquettes `v*` seulement), exigé par le job
   `sign`. Reste à faire : clé matérielle sur le compte.
 
+## Addendum du 28/10/2026 — exceptions du scan des images
+
+Une alerte sans correctif publié peut faire l'objet d'une exception dans `.trivyignore.yaml`, sur décision du RSSI. Chaque
+exception cible une bibliothèque précise (adresse de paquet), porte sa justification et expire à une date donnée : passé ce
+jour, le scan des images échoue et force le réexamen. Le workflow `veille-caddy.yml` compare chaque jour la version de
+Caddy épinglée à la dernière publiée et ouvre une demande quand le correctif existe ou que l'exception approche de son terme.
+Il ne modifie aucun fichier. Première exception : go-jose v3 dans Caddy, jusqu'au 27/11/2026 ; go-jose v4 est fixé à 4.1.6
+dans `docker/web.Dockerfile`.
+
 ## Addendum du 28/10/2026 — images de base épinglées par empreinte
 
 Les images tierces des Dockerfiles (`node`, `caddy`, `golang`, `alpine`) et du compose de production (`postgres` 17 et 18,
