@@ -1,0 +1,35 @@
+# Veille quotidienne du correctif Caddy : exception Trivy sur go-jose v3 (.trivyignore.yaml, ADR 0063, addendum du 28/10/2026).
+# Ouvre une demande quand une version de Caddy n'exige plus la bibliothèque, ou quand l'exception approche de son terme.
+# Ne modifie ni fichier ni branche. GitHub n'exécute les déclencheurs planifiés que depuis la branche par défaut : la veille
+# démarre avec la publication qui porte ce fichier sur main.
+name: Veille Caddy
+
+on:
+  schedule:
+    - cron: '17 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: veille-caddy
+  cancel-in-progress: false
+
+jobs:
+  veille:
+    name: Veille du correctif Caddy (go-jose v3)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Comparer avec la dernière version de Caddy
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: scripts/ci/veille-caddy.sh

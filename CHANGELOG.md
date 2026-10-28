@@ -10,11 +10,14 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 Aucune action obligatoire. Les sauvegardes les plus récentes sont désormais toujours conservées par la rotation (7 par défaut, `BACKUP_GARDER_MIN`) et les demandes de sauvegarde de l'interface appliquent une durée d'au moins 30 jours (`RETENTION_MIN_DAYS`) ; les deux réglages sont facultatifs, dans `.env`. Lire aussi la section 11 du guide d'installation (identifiants réservés).
 
+Aucune action sur le serveur. Le frontal est reconstruit avec une bibliothèque corrigée (go-jose v4.1.6) ; une exception datée du scan des images couvre la seule alerte restante, sans correctif amont (voir ADR 0063).
+
 ### Modifié
 - Les boutons de suppression de ces écrans n'apparaissent que pour qui a le droit `supprimer` du module.
 
 ### Sécurité
 - **Suppressions** ([ADR 0068](docs/adr/0068-suppressions-reservees-au-droit-supprimer.md)) : toute suppression d'un enregistrement des modules de suivi exige le droit `supprimer`, comme le prévoit l'ADR 0010.
+- **Images du frontal et de l'exécutant de mise à jour** : go-jose v4 est fixé à 4.1.6 dans `docker/web.Dockerfile` et `docker/updater.Dockerfile`. Le scan des images accepte, jusqu'au 27/11/2026, l'alerte sur go-jose v3 sans correctif publié (`.trivyignore.yaml`, bornée et datée). Un workflow quotidien (`veille-caddy.yml`) ouvre une demande quand une version de Caddy n'exige plus go-jose v3 ou que l'exception approche de son terme.
 - **Authentification** : les essais du second facteur sont limités par compte et comptés dans le verrouillage progressif existant ; les sessions à l'étape du second facteur sont plafonnées à trois par compte ; le compteur d'échecs est incrémenté de façon atomique ; les vérifications du mot de passe actuel (changement de mot de passe, enrôlement et désactivation du second facteur) sont limitées par compte, comptées dans le verrouillage et journalisées.
 - **Chaîne d'approvisionnement** ([ADR 0063](docs/adr/0063-chaine-de-publication-durcie.md), complément du 27/10/2026) : Dependabot suit aussi les dépendances npm (correctifs et mineures regroupés, majeures isolées) ; toutes ses propositions attendent 7 jours après la publication d'une version. pnpm refuse de même une version publiée depuis moins de 7 jours, une version dont la preuve de provenance régresse et une dépendance transitive hors registre.
 - **CI** : les jobs ne conservent plus le jeton GitHub dans la copie de travail (`persist-credentials: false`) ; plus aucune expression GitHub n'est interpolée dans un script du job « montée de version ».
