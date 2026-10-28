@@ -131,6 +131,17 @@ services:
     cap_drop: [ALL]
     mem_limit: 768m
     pids_limit: 200
+    healthcheck:
+      # Prête = base joignable ET migrations appliquées (appel local, réservé au conteneur) ; Node de l'image, rien à ajouter.
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:8080/api/health/ready').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
 
   web:
     <<: *hardening
@@ -153,6 +164,13 @@ services:
     tmpfs: ['/tmp:size=16m']
     cap_drop: [ALL]
     mem_limit: 256m
+    healthcheck:
+      # Le frontal sert l'interface compilée : indépendant de l'état de l'API.
+      test: ['CMD', 'wget', '-q', '--spider', 'http://127.0.0.1:8080/']
+      interval: 15s
+      timeout: 5s
+      retries: 4
+      start_period: 20s
 
   # Frontal stable : son image est indépendante des versions applicatives pendant une mise à jour web.
   gateway:
@@ -161,7 +179,7 @@ services:
     depends_on:
       init: { condition: service_completed_successfully }
       # Une ancienne installation libère d'abord les ports de web avant de lancer le nouveau frontal.
-      web: { condition: service_started }
+      web: { condition: service_healthy }
     command: ['/usr/local/bin/demarrer-gateway']
     environment:
       SITE_ADDRESS: ${SITE_ADDRESS}
@@ -182,6 +200,15 @@ services:
     tmpfs: ['/tmp:size=16m']
     cap_drop: [ALL]
     mem_limit: 256m
+    healthcheck:
+      # Le port HTTP répond (redirection vers HTTPS) tant que Caddy tourne, y compris pendant une maintenance.
+      test:
+        - CMD-SHELL
+        - "printf 'GET /healthz HTTP/1.0\\r\\nHost: localhost\\r\\n\\r\\n' | nc -w 2 127.0.0.1 8080 | grep -q '^HTTP/'"
+      interval: 15s
+      timeout: 5s
+      retries: 4
+      start_period: 20s
 
   # Composant de confiance privilégié, sans port ni API HTTP ; l'API applicative ne reçoit jamais Docker.
   updater:

@@ -461,8 +461,9 @@ sudo docker compose ps -a
 |---|---|---|
 | `init` | contrôle et prépare le dossier des données, génère les mots de passe internes au premier démarrage, puis s'arrête | `Exited (0)` : terminé normalement, c'est voulu |
 | `db` | base de données PostgreSQL | `Up … (healthy)` |
-| `app` | application (API) | `Up … (healthy)` |
-| `web` | interface interne (non exposée) | `Up …` |
+| `app` | application (API) : base joignable et migrations appliquées | `Up … (healthy)` |
+| `web` | interface interne (non exposée) | `Up … (healthy)` |
+| `gateway` | frontal HTTPS exposé (démarre après `web`) | `Up … (healthy)` |
 
 Si un service affiche `unhealthy`, `Restarting` ou `Exited (1)`, ou si une ligne manque, allez à la section [13. En cas de problème](#13-en-cas-de-problème).
 

@@ -75,7 +75,7 @@ if [ -n "$init_id" ] && [ "$(docker inspect -f '{{.State.ExitCode}}' "$init_id" 
 else
   noter ÉCHOUÉ R01 "Service d'initialisation terminé sans erreur" "conteneur init absent ou en erreur"
 fi
-for s in db app; do
+for s in db app web gateway; do
   id=$(dc ps -q "$s" 2> /dev/null | head -n 1)
   st=$([ -n "$id" ] && docker inspect -f '{{.State.Health.Status}}' "$id" 2> /dev/null || echo absent)
   if [ "$st" = healthy ]; then noter PASSÉ "R02-$s" "Conteneur $s en bonne santé"; else noter ÉCHOUÉ "R02-$s" "Conteneur $s en bonne santé" "état : $st"; fi
