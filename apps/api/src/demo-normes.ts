@@ -717,7 +717,7 @@ export async function etudeEbios(
     ['a4', -30, [so.rancon]],
     ['a5', -20, [risques['EB-01']!, t1]],
   ] as const;
-  for (const [step, jours, elements] of atelier) {
+  const valider = async (step: string, jours: number, elements: readonly string[]) => {
     await exiger(
       await appel(
         'POST',
@@ -739,7 +739,8 @@ export async function etudeEbios(
       ),
       `Validation de l’atelier ${step}`,
     );
-  }
+  };
+  for (const [step, jours, elements] of atelier.slice(0, 4)) await valider(step, jours, elements);
   // Acceptation formelle du risque accepté (décision de la direction fictive).
   const rEB4 = await appel('GET', `/api/grc/${commun}/objects/${risques['EB-04']}`);
   await exiger(
@@ -753,8 +754,8 @@ export async function etudeEbios(
           result: 'accepted',
           requestId: crypto.randomUUID(),
           note: 'Acceptation par la direction fictive, à revoir au prochain cycle.',
-          date: DATE_COURTE(ctx.decaler(-10)),
-          until: DATE_COURTE(ctx.decaler(355)),
+          date: DATE_COURTE(ctx.decaler(-22)),
+          until: DATE_COURTE(ctx.decaler(343)),
           refs: [],
           confirm: 'ENREGISTRER',
         },
@@ -763,5 +764,9 @@ export async function etudeEbios(
     ),
     'Acceptation du risque EB-04',
   );
+  // L'acceptation modifie la fiche du risque : l'atelier 5 est validé après elle, sinon sa validation serait caduque.
+  const dernier = atelier[4];
+  await valider(dernier[0], dernier[1], dernier[2]);
+
   return { etudeEbios: etude.id, elementsEbios, risquesEbios, traitements };
 }
