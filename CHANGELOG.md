@@ -8,6 +8,9 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 Aucune action.
 
+### Sécurité
+- **Droits par ressource** ([ADR 0067](docs/adr/0067-attribution-des-droits-par-ressource-reservee.md)) : l'attribution des droits par ressource et le passage d'un registre en restreint exigent le droit d'administrer le module, ou le rôle de gestionnaire de la ressource ; on ne modifie plus ses propres droits ; créer ou retirer une relation exige le droit de gérer l'élément source. Les droits déjà attribués sont conservés.
+
 ## [5.1.0] — 2026-10-27
 
 Version mineure : aucune migration SQL, aucune nouvelle dépendance.

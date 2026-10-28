@@ -231,7 +231,8 @@ export class GrcRegistres {
       gerer: await this.peut(user, reg, id, 'gerer', undefined, module),
     };
     if (!peut.lire) throw new HttpError(404, 'Élément introuvable ou non accessible.');
-    return { registreId: reg.id, role: await this.roleDe(user, reg.id, id), peut };
+    const peutAttribuer = await this.peut(user, reg, id, 'gerer', undefined, module, 'administrer');
+    return { registreId: reg.id, role: await this.roleDe(user, reg.id, id), peut, peutAttribuer };
   }
   /** Registres restreints d'un périmètre que l'utilisateur ne peut pas lire : leurs éléments sont masqués des listes. */
   async inaccessibles(user: SessionUser, smsi: string, c?: Client): Promise<string[]> {
@@ -325,6 +326,7 @@ export class GrcRegistres {
       contribuer: await this.peut(user, reg, null, 'contribuer', c),
       gerer: await this.peut(user, reg, null, 'gerer', c),
     };
+    const peutAttribuer = await this.peut(user, reg, null, 'gerer', c, MODULE, 'administrer');
     const { elements } = await k
       .selectFrom('grc_objects')
       .select(sql<number>`count(*)::int`.as('elements'))
@@ -360,6 +362,7 @@ export class GrcRegistres {
       autresPerimetres: ids.length - visibles.length,
       role: await this.roleDe(user, reg.id, null, c),
       peut,
+      peutAttribuer,
       elements,
     };
   }
@@ -509,6 +512,9 @@ export class GrcRegistres {
       const reg = await this.brut(id, c, true);
       if (!reg) throw new HttpError(404, 'Registre introuvable ou non accessible.');
       await this.exiger(user, reg, null, 'gerer', c);
+      // Passer un registre en « restreint » (ou l'ouvrir) est une décision d'administration du module.
+      if (b.restreint !== undefined && b.restreint !== reg.restricted)
+        await this.exiger(user, reg, null, 'gerer', c, MODULE, 'administrer');
       if (reg.archived) throw new HttpError(409, 'Registre archivé.');
       if (reg.version !== expected) throw new HttpError(412, 'Le registre a changé. Rechargez avant de confirmer.');
       const plan = await this.champsPlan(
@@ -889,17 +895,45 @@ export class GrcRegistres {
   }
 
   /* ------------------------------------------------------------------------------------------------------ droits */
-  private async ressource(type: TypeRessource, id: string, user: SessionUser, c?: Client) {
+  /** `pour: 'attribuer'` : attribuer ou retirer un droit exige, en plus de la gestion, soit le rôle de gestionnaire attribué
+      sur la ressource (délégation de l'ADR 0043), soit le droit d'administrer le module. */
+  private async ressource(
+    type: TypeRessource,
+    id: string,
+    user: SessionUser,
+    c?: Client,
+    pour: 'gerer' | 'attribuer' = 'gerer',
+  ) {
+    const action: Action | undefined = pour === 'attribuer' ? 'administrer' : undefined;
     if (type === 'registre') {
       const reg = await this.brut(id, c);
       if (!reg) throw new HttpError(404, 'Registre introuvable ou non accessible.');
-      await this.exiger(user, reg, null, 'gerer', c);
+      await this.exiger(user, reg, null, 'gerer', c, MODULE, action);
       return { reg, objetId: null as string | null };
     }
     const o = await objets(this.k(c)).where('id', '=', id).executeTakeFirst();
     if (!o?.registreId) throw new HttpError(404, 'Élément introuvable ou non accessible.');
-    const reg = await this.exigerElement(user, versObjet(o), 'gerer', c);
+    const reg = await this.exigerElement(user, versObjet(o), 'gerer', c, action);
     return { reg, objetId: id as string | null };
+  }
+  /** Interdit à qui n'est pas administrateur de modifier ses propres droits : droit qui le vise, ou qui vise un groupe
+      dont il est membre. */
+  private async exigerAutreQueSoi(
+    user: SessionUser,
+    titulaire: { subjectType: string; subjectId: string },
+    c?: Client,
+  ) {
+    if (await this.g.isAdmin(user, c)) return;
+    const soi =
+      titulaire.subjectType === 'utilisateur'
+        ? titulaire.subjectId === user.id
+        : !!(await this.k(c)
+            .selectFrom('user_groups')
+            .select('user_id')
+            .where('group_id', '=', titulaire.subjectId)
+            .where('user_id', '=', user.id)
+            .executeTakeFirst());
+    if (soi) throw new HttpError(403, 'Vous ne pouvez pas modifier vos propres droits.');
   }
   async droits(type: TypeRessource, id: string, user: SessionUser) {
     await this.ressource(type, id, user);
@@ -1084,7 +1118,8 @@ export class GrcRegistres {
   async accorder(type: TypeRessource, id: string, input: DroitBody, user: SessionUser, ip: string) {
     const b = DroitBody.parse(input);
     return this.g.db.tx(async (c, k) => {
-      await this.ressource(type, id, user, c);
+      await this.ressource(type, id, user, c, 'attribuer');
+      await this.exigerAutreQueSoi(user, b, c);
       const existe =
         b.subjectType === 'utilisateur'
           ? await k
@@ -1145,7 +1180,8 @@ export class GrcRegistres {
   /** Aperçu d'une attribution : rôle avant et après, personnes concernées, rôles qui subsistent. N'écrit rien. */
   async apercuDroit(type: TypeRessource, id: string, input: DroitBody, user: SessionUser): Promise<ApercuDroit> {
     const b = DroitBody.parse(input);
-    await this.ressource(type, id, user);
+    await this.ressource(type, id, user, undefined, 'attribuer');
+    await this.exigerAutreQueSoi(user, b);
     const k = this.g.db.k;
     const titulaire =
       b.subjectType === 'utilisateur'
@@ -1218,7 +1254,16 @@ export class GrcRegistres {
   }
   async retirer(type: TypeRessource, id: string, droitId: string, user: SessionUser, ip: string) {
     return this.g.db.tx(async (c, k) => {
-      await this.ressource(type, id, user, c);
+      await this.ressource(type, id, user, c, 'attribuer');
+      const cible = await k
+        .selectFrom('droits_ressources')
+        .select(['subject_type', 'subject_id'])
+        .where('id', '=', droitId)
+        .where('resource_type', '=', type)
+        .where('resource_id', '=', id)
+        .executeTakeFirst();
+      if (!cible) throw new HttpError(404, 'Droit introuvable.');
+      await this.exigerAutreQueSoi(user, { subjectType: cible.subject_type, subjectId: cible.subject_id }, c);
       const r = await k
         .deleteFrom('droits_ressources')
         .where('id', '=', droitId)
