@@ -1502,6 +1502,39 @@
       "dependencies": "DOC-001",
       "next": "Publier sur la branche et suivre la CI de la PR #12 ; ne pas fusionner.",
       "estimation": "NON ESTIMÉE : entretien ponctuel"
+    },
+    {
+      "id": "DEV-004",
+      "title": "Tableau de bord personnalisable (étape 2 de l'ADR 0069)",
+      "status": "À FAIRE",
+      "priority": "P2",
+      "origin": "demande utilisateur du 26/10/2026 (maquette retenue le 27/10/2026)",
+      "acceptance": "Créer, dupliquer, renommer un tableau ; déplacer et redimensionner les dalles ; réglages par dalle (métrique, axe, visualisation, cible, seuils) ; bibliothèque ; visibilité ; stockage serveur par migration additive, routes route() avec droits, MFA, CSRF, versions If-Match et audit ; tests API et de bout en bout.",
+      "dependencies": "ADR complémentaire (stockage et partage) ; TEST-043",
+      "next": "Rédiger l'ADR de stockage et de partage, puis la migration et les routes.",
+      "estimation": "NON ESTIMÉE"
+    },
+    {
+      "id": "DEV-005",
+      "title": "Historique mensuel des métriques du tableau de bord (étape 3 de l'ADR 0069)",
+      "status": "À FAIRE",
+      "priority": "P2",
+      "origin": "demande utilisateur du 26/10/2026",
+      "acceptance": "Séries mensuelles calculées par le serveur à partir des données réelles (aucune valeur reconstituée) ; courbe « Évolution » avec la lueur violette, tendances des chiffres clés et comparaison avec la période précédente.",
+      "dependencies": "DEV-004",
+      "next": "Définir quelles métriques sont historisées et à quelle date de référence.",
+      "estimation": "NON ESTIMÉE"
+    },
+    {
+      "id": "TEST-043",
+      "title": "Régénérer et relire les captures de référence du tableau de bord",
+      "status": "RÉALISÉE",
+      "priority": "P1",
+      "origin": "ADR 0069, étape 1",
+      "acceptance": "Les 12 captures ecrans-tableau-de-bord-* régénérées sur la pile Docker locale (run-in-container.sh --update-snapshots), relues image par image dans la PR, CI de bout en bout verte.",
+      "dependencies": "Docker local",
+      "next": "Aucune : captures régénérées dans le conteneur Playwright officiel le 28/10/2026, validées par le RSSI le 28/10/2026, CI de bout en bout verte (PR #152).",
+      "estimation": "NON ESTIMÉE"
     }
   ],
   "test_cases": [

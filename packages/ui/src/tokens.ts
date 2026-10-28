@@ -169,6 +169,87 @@ export function variablesCarte(p: PaletteCarte): Record<string, string> {
   return v;
 }
 
+/** Tableau de bord « verre et relief » de l'accueil (ADR 0069) : teintes des seuils et des métriques.
+    remplissage : barre, arc ou part, toujours cerné du contour, qui porte le contraste de l'élément graphique
+    (WCAG 1.4.11) ; texte : chiffre coloré ; doux : fond de pastille ; surface : verre posé sur le fond de page. */
+export const TEINTES_SEUIL = ['vert', 'orange', 'rouge', 'violet', 'bleu', 'gris'] as const;
+export type TeinteSeuil = (typeof TEINTES_SEUIL)[number];
+interface PaletteTableauDeBord {
+  remplissage: Record<TeinteSeuil, string>;
+  texte: Record<TeinteSeuil, string>;
+  doux: Record<TeinteSeuil, string>;
+  contour: string;
+  surface: string;
+}
+export const TABLEAU_DE_BORD: { clair: PaletteTableauDeBord; sombre: PaletteTableauDeBord } = {
+  clair: {
+    remplissage: {
+      vert: '#278A58',
+      orange: '#EA8A1A',
+      rouge: '#D63A30',
+      violet: '#6556C2',
+      bleu: '#3A66B5',
+      gris: '#7A887F',
+    },
+    texte: {
+      vert: '#17633F',
+      orange: '#8F4D00',
+      rouge: '#9E1F18',
+      violet: '#4F3FA1',
+      bleu: '#24478A',
+      gris: '#46584E',
+    },
+    doux: {
+      vert: '#CBE9D6',
+      orange: '#FDE2B9',
+      rouge: '#F8CFCB',
+      violet: '#DDD8F4',
+      bleu: '#D6E0F1',
+      gris: '#E0E4DE',
+    },
+    contour: '#10201A',
+    surface: '#F3F6F1',
+  },
+  sombre: {
+    remplissage: {
+      vert: '#3FAE74',
+      orange: '#E89A3C',
+      rouge: '#E5645A',
+      violet: '#9A8AE8',
+      bleu: '#6F97E0',
+      gris: '#8E9B92',
+    },
+    texte: {
+      vert: '#7FD9A6',
+      orange: '#F6BD77',
+      rouge: '#FF9C93',
+      violet: '#C3B8FF',
+      bleu: '#A9C4F5',
+      gris: '#C3CDC6',
+    },
+    doux: {
+      vert: '#173A29',
+      orange: '#3A2A14',
+      rouge: '#41201F',
+      violet: '#2C2550',
+      bleu: '#1B2E4F',
+      gris: '#253247',
+    },
+    contour: '#A9BDB2',
+    surface: '#22382D',
+  },
+};
+/** Variables CSS du tableau de bord (--tdb-*) pour un mode. */
+export function variablesTableauDeBord(p: PaletteTableauDeBord): Record<string, string> {
+  const v: Record<string, string> = { '--tdb-contour': p.contour };
+  for (const k of TEINTES_SEUIL) {
+    v[`--tdb-${k}-remplissage`] = p.remplissage[k];
+    v[`--tdb-${k}-texte`] = p.texte[k];
+    v[`--tdb-${k}-doux`] = p.doux[k];
+  }
+  return v;
+}
+
 /** Rayons : de 6 à 12 px, conformément à la charte. */
 export const RAYONS = { xs: '6px', sm: '8px', md: '10px', lg: '12px', xl: '12px' } as const;
 
@@ -332,6 +413,24 @@ export const COUPLES_CONTRASTE: { nom: string; texte: string; fond: string; seui
           { nom: `graphique ${k} sur surface (${m})`, texte: t.accent, fond: FONDS[m].surface, seuil: 3 },
         ];
       }),
+    ];
+  }),
+  // Tableau de bord « verre et relief » (ADR 0069) : textes et pastilles sur le verre, contour des métriques.
+  ...(['clair', 'sombre'] as const).flatMap((m) => {
+    const p = TABLEAU_DE_BORD[m];
+    return [
+      { nom: `tableau de bord : contour des métriques sur verre (${m})`, texte: p.contour, fond: p.surface, seuil: 3 },
+      { nom: `tableau de bord : texte sur verre (${m})`, texte: FONDS[m].texte, fond: p.surface, seuil: 4.5 },
+      {
+        nom: `tableau de bord : texte secondaire sur verre (${m})`,
+        texte: FONDS[m].secondaire,
+        fond: p.surface,
+        seuil: 4.5,
+      },
+      ...TEINTES_SEUIL.flatMap((k) => [
+        { nom: `tableau de bord ${k} : chiffre sur verre (${m})`, texte: p.texte[k], fond: p.surface, seuil: 4.5 },
+        { nom: `tableau de bord ${k} : texte de pastille (${m})`, texte: p.texte[k], fond: p.doux[k], seuil: 4.5 },
+      ]),
     ];
   }),
 ];
