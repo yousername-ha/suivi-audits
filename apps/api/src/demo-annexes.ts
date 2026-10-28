@@ -1,0 +1,297 @@
+/* Démonstration, modules annexes : incidents, investissements, revues des accès (puis cellule de crise, CRRC et GAP).
+   Même principe que `demo-normes.ts` : tout passe par l'API publique, au nom de l'administrateur créé à l'installation, avec les
+   mêmes validations que l'interface. Établissement, fournisseurs et circonstances sont entièrement fictifs et reprennent ceux
+   du jeu de démonstration (fournisseurs SUP-001 à SUP-005) ; dates et montants sont des exemples à remplacer par les vôtres. */
+import type { ContexteDemo } from './demo-normes.js';
+
+type Json = Record<string, unknown>;
+type Annexes = Pick<ContexteDemo, 'appel' | 'exiger' | 'decaler'>;
+
+export interface BilanAnnexes {
+  incidents: number;
+  investissements: number;
+  revuesAcces: number;
+}
+
+const heure = (jours: number, h: string) => `${new Date(Date.now() + jours * 86400e3).toISOString().slice(0, 10)}T${h}`;
+const mois = (delta: number) => {
+  const d = new Date();
+  const t = d.getUTCFullYear() * 12 + d.getUTCMonth() + delta;
+  return `${Math.floor(t / 12)}-${String((t % 12) + 1).padStart(2, '0')}`;
+};
+
+/** Incidents : cinq signalements de qualifications, de catégories et d'états différents, dont un incident de sécurité ouvert
+    avec obligations (données personnelles et de santé) et un retour d'expérience. */
+async function incidents({ appel, exiger }: Annexes): Promise<number> {
+  const fiches: { creation: Json; suite: Json; obligations?: number[] }[] = [
+    {
+      creation: {
+        title: 'Courriel d’hameçonnage reçu par plusieurs agents de l’accueil',
+        reporter: 'Responsable accueil',
+        answers: { demande: 'non', service: 'non', cia: 'non', politique: 'oui', dcp: 'non', sante: 'non' },
+      },
+      suite: {
+        detectedAt: heure(-41, '09:10'),
+        cat: 'Hameçonnage',
+        impact: 'Faible',
+        urgency: 'Moyen',
+        status: 'Clos',
+        owner: 'RSI',
+        desc: 'Un faux message de livraison, adressé à une dizaine d’agents, invitait à saisir des identifiants sur une page imitant la messagerie.',
+        actions:
+          'Message bloqué par la passerelle, domaine ajouté à la liste de blocage, rappel des consignes aux agents.',
+        cause: 'Campagne ciblant les établissements de santé ; aucun agent n’a saisi d’identifiants.',
+        resolvedAt: heure(-40, '16:30'),
+        retex:
+          'La passerelle de messagerie a filtré le message dès le deuxième envoi ; ajouter ce scénario à la sensibilisation annuelle.',
+      },
+    },
+    {
+      creation: {
+        title: 'Connexion inhabituelle d’un compte du prestataire de maintenance',
+        reporter: 'RSI',
+        answers: { demande: 'non', service: 'non', cia: 'oui', politique: 'oui', dcp: 'oui', sante: 'oui' },
+      },
+      suite: {
+        detectedAt: heure(-6, '03:42'),
+        cat: 'Compte compromis ou accès non autorisé',
+        impact: 'Élevé',
+        urgency: 'Élevé',
+        status: 'En cours',
+        owner: 'RSI',
+        desc: 'Le compte nominatif d’un technicien du prestataire de maintenance fictif s’est connecté de nuit depuis une adresse inhabituelle à une machine du réseau administratif.',
+        actions:
+          'Compte suspendu, mots de passe réinitialisés, journaux conservés, analyse de l’étendue des accès en cours avec le prestataire.',
+        cause: 'À déterminer : vol d’identifiants chez le prestataire envisagé.',
+      },
+      obligations: [0],
+    },
+    {
+      creation: {
+        title: 'Indisponibilité du logiciel de dossiers patients pendant trois heures',
+        reporter: 'Responsable qualité',
+        answers: { demande: 'non', service: 'oui', cia: 'non', politique: 'non', dcp: 'non', sante: 'non' },
+      },
+      suite: {
+        detectedAt: heure(-24, '08:05'),
+        cat: 'Indisponibilité de service',
+        impact: 'Moyen',
+        urgency: 'Élevé',
+        status: 'Résolu',
+        owner: 'RSI',
+        desc: 'Le logiciel de dossiers fictif est resté inaccessible de 8 h à 11 h ; l’accueil a travaillé en mode dégradé sur papier.',
+        actions:
+          'Redémarrage du service applicatif par l’éditeur, mise en place d’une surveillance de la disponibilité.',
+        cause: 'Saturation du disque du serveur d’application après une mise à jour.',
+        resolvedAt: heure(-24, '11:05'),
+        retex:
+          'Le mode dégradé a tenu mais la procédure n’était pas affichée aux postes : l’afficher et la tester une fois par an.',
+      },
+    },
+    {
+      creation: {
+        title: 'Perte d’un ordinateur portable chiffré en déplacement',
+        reporter: 'Direction',
+        answers: { demande: 'non', service: 'non', cia: 'oui', politique: 'oui', dcp: 'non', sante: 'non' },
+      },
+      suite: {
+        detectedAt: heure(-75, '18:20'),
+        cat: 'Perte ou vol de matériel',
+        impact: 'Faible',
+        urgency: 'Faible',
+        status: 'Clos',
+        owner: 'RSI',
+        desc: 'Un ordinateur portable professionnel a été égaré dans un train.',
+        actions: 'Appareil verrouillé et effacé à distance, certificats révoqués, déclaration de perte.',
+        cause: 'Matériel laissé sans surveillance.',
+        resolvedAt: heure(-74, '10:00'),
+        retex: 'Disque chiffré : aucune donnée exposée. Rappel de la règle sur le matériel en déplacement.',
+      },
+    },
+    {
+      creation: {
+        title: 'Demande d’accès au dossier partagé de la qualité pour un nouvel arrivant',
+        reporter: 'Responsable qualité',
+        answers: { demande: 'oui', service: 'non', cia: 'non', politique: 'non', dcp: 'non', sante: 'non' },
+      },
+      suite: { detectedAt: heure(-2, '14:00'), status: 'Nouveau', owner: 'RSI' },
+    },
+  ];
+  let n = 0;
+  for (const f of fiches) {
+    const cree = await exiger<{ id: string }>(
+      await appel('POST', '/api/incidents', f.creation),
+      'Création de l’incident',
+    );
+    await exiger(await appel('PATCH', `/api/incidents/${cree.id}`, f.suite), `Incident ${cree.id}`);
+    for (const k of f.obligations ?? [])
+      await exiger(
+        await appel('PUT', `/api/incidents/${cree.id}/obligations/${k}`, { traitee: true }),
+        `Obligation de l’incident ${cree.id}`,
+      );
+    n++;
+  }
+  return n;
+}
+
+/** Investissements : budget sur trois ans, dont deux options comparables pour la supervision de sécurité. */
+async function investissements({ appel, exiger, decaler }: Annexes): Promise<number> {
+  const annee = new Date().getFullYear();
+  await exiger(await appel('PUT', '/api/investissements/annee', { baseYear: annee }), 'Année de référence du budget');
+  const lignes: Json[] = [
+    {
+      company: 'Éditeur de protection des postes fictif',
+      type: 'Protection des postes',
+      desc: 'Détection et réponse sur les postes et serveurs (abonnement annuel).',
+      nature: 'Abonnement',
+      status: 'En place',
+      priority: '1',
+      n0: 18000,
+      n1: 18000,
+      n2: 18500,
+      perimeter: 'Établissement',
+      account: 'Fonctionnement',
+      renewal: decaler(200),
+      notice: 90,
+    },
+    {
+      company: 'Intégrateur de supervision fictif A',
+      type: 'Supervision de sécurité',
+      desc: 'Collecte et corrélation des journaux, supervision par un centre externe en heures ouvrées.',
+      nature: 'Prestation',
+      status: 'Prévisionnel',
+      priority: '2',
+      n0: 22000,
+      n1: 30000,
+      n2: 30000,
+      alt: 'Option B ci-dessous (supervision 24 h sur 24).',
+      perimeter: 'Établissement',
+      account: 'Investissement',
+    },
+    {
+      company: 'Intégrateur de supervision fictif B',
+      type: 'Supervision de sécurité',
+      desc: 'Même périmètre, supervision 24 h sur 24 et 7 jours sur 7.',
+      nature: 'Prestation',
+      status: 'À qualifier',
+      priority: '2',
+      n0: 35000,
+      n1: 42000,
+      n2: 42000,
+      comment: 'Devis à confirmer ; à comparer avec l’option A avant la revue de direction.',
+      perimeter: 'Établissement',
+      account: 'Investissement',
+    },
+    {
+      company: 'Fournisseur de sauvegarde fictif',
+      type: 'Sauvegarde',
+      desc: 'Copie immuable hors site des sauvegardes du dossier patient.',
+      nature: 'Abonnement',
+      status: 'Validé',
+      priority: '1',
+      n0: 9000,
+      n1: 9000,
+      n2: 9000,
+      perimeter: 'Dossier patient',
+      account: 'Fonctionnement',
+      supplier: 'SUP-001',
+    },
+    {
+      company: 'Cabinet d’audit fictif',
+      type: 'Audit de sécurité',
+      desc: 'Test d’intrusion annuel et revue de configuration.',
+      nature: 'Prestation',
+      status: 'Prévisionnel',
+      priority: '3',
+      n0: 12000,
+      n1: 12000,
+      n2: 12000,
+      perimeter: 'Établissement',
+      account: 'Fonctionnement',
+    },
+    {
+      company: 'Revendeur de matériel fictif',
+      type: 'Authentification forte',
+      desc: 'Clés d’authentification physiques pour les comptes d’administration et le personnel soignant.',
+      nature: 'Matériel',
+      status: 'En place',
+      priority: '2',
+      n0: 6500,
+      n1: 0,
+      n2: 0,
+      perimeter: 'Établissement',
+      account: 'Investissement',
+    },
+  ];
+  for (const l of lignes) {
+    const cree = await exiger<{ id: string }>(
+      await appel('POST', '/api/investissements/lignes'),
+      'Création d’une ligne budgétaire',
+    );
+    await exiger(await appel('PATCH', `/api/investissements/lignes/${cree.id}`, l), `Ligne ${cree.id}`);
+  }
+  return lignes.length;
+}
+
+/** Revues des accès : cinq applications, une par état (à jour, à planifier, en retard, jamais réalisée). */
+async function revuesAcces({ appel, exiger }: Annexes): Promise<number> {
+  const revues: Json[] = [
+    {
+      app: 'Logiciel de dossiers patients',
+      supplier: 'Logiciel de dossiers fictif',
+      month: mois(-3),
+      freq: 12,
+      source: 'Export des comptes du logiciel',
+      comment: 'Revue annuelle avec le responsable qualité.',
+    },
+    {
+      app: 'Messagerie collaborative',
+      supplier: 'Messagerie collaborative fictive',
+      month: mois(-10),
+      freq: 12,
+      source: 'Console d’administration',
+      comment: 'À planifier avant la fin de l’année.',
+    },
+    {
+      app: 'Console de l’hébergeur de données',
+      supplier: 'Hébergeur de données fictif',
+      month: mois(-16),
+      freq: 12,
+      source: 'Console d’administration',
+      comment: 'En retard : relancer l’hébergeur pour obtenir l’export.',
+    },
+    {
+      app: 'Outil de visioconférence',
+      supplier: 'Outil de visioconférence fictif',
+      month: '',
+      freq: 12,
+      source: '',
+      comment: 'Première revue à réaliser.',
+    },
+    {
+      app: 'Annuaire interne',
+      supplier: '',
+      month: mois(-8),
+      freq: 6,
+      source: 'Export de l’annuaire',
+      comment: 'Revue semestrielle des comptes à privilèges.',
+    },
+  ];
+  for (const r of revues) {
+    const cree = await exiger<{ id: string }>(
+      await appel('POST', '/api/revues-acces'),
+      'Création d’une revue des accès',
+    );
+    await exiger(await appel('PATCH', `/api/revues-acces/${cree.id}`, r), `Revue ${cree.id}`);
+  }
+  return revues.length;
+}
+
+/** Charge les modules annexes de la démonstration. */
+export async function modulesAnnexes(ctx: Annexes): Promise<BilanAnnexes> {
+  const bilan: BilanAnnexes = { incidents: 0, investissements: 0, revuesAcces: 0 };
+  bilan.incidents = await incidents(ctx);
+  bilan.investissements = await investissements(ctx);
+  bilan.revuesAcces = await revuesAcces(ctx);
+  return bilan;
+}

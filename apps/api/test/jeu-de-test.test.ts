@@ -1,6 +1,7 @@
 /* Jeu de données de test : chargé par l'API publique sur une instance vide, cohérent (aucune référence cassée), refusé sur une
    instance qui contient déjà des données ; le contrôle des relations détecte une référence cassée. Données fictives. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { comparerOptions, revuesSynthese, syntheseIncidents } from '@suivi/shared';
 import { controleRelations } from '../src/controle-relations.js';
 import { chargerJeuDeTest, etatJeuDeTest, ORGANISATION_TEST } from '../src/jeu-de-test.js';
 import { createTestApp, login, makeUser, type Agent, type TestApp } from './helpers.js';
@@ -57,6 +58,22 @@ describe('jeu de données de test', () => {
     expect(relations.controles.flatMap((c) => c.anomalies)).toEqual([]);
     expect(relations.ok).toBe(true);
     expect(relations.controles.reduce((n, c) => n + c.verifies, 0)).toBeGreaterThan(50);
+    // Modules annexes : incidents (dont un incident de sécurité ouvert avec obligation traitée), budget, revues des accès.
+    expect(bilan.annexes).toMatchObject({ incidents: 5, investissements: 6, revuesAcces: 5 });
+    const incidents = (await a.get('/api/incidents')).json();
+    expect(syntheseIncidents(incidents.incidents)).toMatchObject({ total: 5, securiteOuverts: 1, clos: 3 });
+    const budget = (await a.get('/api/investissements')).json();
+    expect(budget.lignes).toHaveLength(6);
+    expect(comparerOptions(budget.lignes).map((g) => g.type)).toEqual(['Supervision de sécurité']);
+    const revues = (await a.get('/api/revues-acces')).json();
+    const jour = new Date().toISOString().slice(0, 7);
+    expect(revuesSynthese(revues.revues, jour)).toMatchObject({
+      total: 5,
+      aJour: 1,
+      aPlanifier: 1,
+      enRetard: 2,
+      jamais: 1,
+    });
     // Ce que l'on retrouve par l'API, comme l'interface le fait.
     const etat = (await a.get('/api/suivi/etat')).json();
     expect(etat.processes).toHaveLength(6);
