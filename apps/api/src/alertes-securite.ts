@@ -13,6 +13,19 @@ import { COMPTE_ACTIF, adresseUtilisable, porteLeRole } from './notifications-me
 import type { Settings } from './settings.js';
 
 export const ALERTES_PAR_HEURE = 10;
+
+/** Évènement sur le poivre des mots de passe (ADR 0072). Jamais le poivre : seulement les identifiants de clé. */
+export interface PoivreEvt {
+  type: 'defini' | 'change' | 'reinitialise';
+  auteur: string;
+  ancienIdCle: string | null;
+  nouvelIdCle: string;
+}
+const TITRES_POIVRE = {
+  defini: 'Poivre des mots de passe défini',
+  change: 'Poivre des mots de passe changé',
+  reinitialise: 'Poivre des mots de passe réinitialisé (procédure d’urgence)',
+} as const;
 const VERROU_ALERTE = 'alerte-verrouillage';
 
 const MOTIFS = {
@@ -52,6 +65,52 @@ export class AlertesSecurite {
       await this.emettre(e);
     } catch (err) {
       this.db.log.error({ err: (err as Error).message }, 'alerte de verrouillage non émise');
+    }
+  }
+
+  /** Le poivre des mots de passe vient d'être défini, changé ou réinitialisé : même destinataires que l'alerte de verrouillage.
+      Ne lève jamais (l'opération est déjà faite) ; chaque évènement reste dans le journal d'audit. */
+  async poivre(e: PoivreEvt): Promise<void> {
+    try {
+      const dest = await this.destinataires();
+      if (dest.length === 0) return;
+      const general = (await this.settings.read('general')).values as SettingsValues['general'];
+      const nom = propre(general.appName, 80) || 'Suivi des audits';
+      const objet = `[${nom}] ${TITRES_POIVRE[e.type]}`;
+      const lignes = [
+        'Bonjour,',
+        '',
+        `${TITRES_POIVRE[e.type]} le ${paris(new Date())} (heure de Paris), par « ${propre(e.auteur, 64)} ».`,
+        '',
+        ...(e.ancienIdCle ? [`Ancien identifiant de clé : ${e.ancienIdCle}.`] : []),
+        `Nouvel identifiant de clé : ${e.nouvelIdCle}.`,
+        '',
+        e.type === 'reinitialise'
+          ? 'Tous les comptes ont reçu un mot de passe temporaire : les sessions sont fermées et un nouveau mot de passe est imposé.'
+          : 'Les sessions ouvertes ne sont pas fermées ; les mots de passe des comptes ne changent pas.',
+        'Le nouveau poivre doit être conservé au coffre-fort de l’organisation.',
+        '',
+        `Journal d'audit : ${this.lien('/admin/audit')} (action « securite.poivre_* »)`,
+        '',
+        'Si ce changement n’est pas attendu, traitez-le comme un incident de sécurité.',
+        '',
+        'Message automatique ; il ne contient ni poivre ni donnée métier.',
+      ];
+      await this.db.tx(async (_c, k) => {
+        for (const a of dest)
+          await k
+            .insertInto('courriel_jobs')
+            .values({
+              kind: 'notification',
+              requested_by: DEMANDEUR_ALERTE,
+              to_address: a,
+              subject: objet.slice(0, 180),
+              body: lignes.join('\n'),
+            })
+            .execute();
+      });
+    } catch (err) {
+      this.db.log.error({ err: (err as Error).message }, 'alerte du poivre non émise');
     }
   }
 

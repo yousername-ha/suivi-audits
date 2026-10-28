@@ -37,6 +37,42 @@ export async function dummyVerify(pw: string): Promise<false> {
   return false;
 }
 
+/* ---------------------------------------------------------------- Poivre (ADR 0072) */
+const SCRYPT_POIVRE = { N: 2 ** 17, r: 8, p: 1, maxmem: 256 * 1024 * 1024 };
+/** Clé de 32 octets dérivée du poivre (forme canonique) et d'un sel propre à chaque définition. */
+export async function deriverClePoivre(poivre: string, sel: Buffer): Promise<Buffer> {
+  return scrypt(poivre.normalize('NFKC'), sel, 32, SCRYPT_POIVRE);
+}
+export const idClePoivre = (cle: Buffer) => sha256hex(cle).slice(0, 16);
+/** Empreinte scrypt chiffrée : iv (12) | étiquette (16) | contenu, liée au compte par les données authentifiées. */
+export function chiffrerEmpreinte(cle: Buffer, userId: string, empreinteScrypt: string): string {
+  const iv = crypto.randomBytes(12);
+  const c = crypto.createCipheriv('aes-256-gcm', cle, iv);
+  c.setAAD(Buffer.from('mdp:' + userId));
+  const contenu = Buffer.concat([c.update(empreinteScrypt, 'utf8'), c.final()]);
+  return `poivre$${idClePoivre(cle)}$${Buffer.concat([iv, c.getAuthTag(), contenu]).toString('base64')}`;
+}
+/** Identifiant de clé porté par une empreinte poivrée, ou null si l'empreinte n'en est pas une. */
+export function idCleEmpreinte(stockee: string | null | undefined): string | null {
+  const parts = String(stockee || '').split('$');
+  return parts[0] === 'poivre' && parts.length === 3 ? (parts[1] as string) : null;
+}
+/** Empreinte scrypt en clair, ou null : mauvaise clé, autre compte, contenu altéré (l'authentification GCM échoue). */
+export function ouvrirEmpreinte(cle: Buffer, userId: string, stockee: string): string | null {
+  const parts = stockee.split('$');
+  if (parts[0] !== 'poivre' || parts.length !== 3 || parts[1] !== idClePoivre(cle)) return null;
+  try {
+    const b = Buffer.from(parts[2] as string, 'base64');
+    if (b.length < 28 + 1) return null;
+    const d = crypto.createDecipheriv('aes-256-gcm', cle, b.subarray(0, 12), { authTagLength: 16 });
+    d.setAAD(Buffer.from('mdp:' + userId));
+    d.setAuthTag(b.subarray(12, 28));
+    return Buffer.concat([d.update(b.subarray(28)), d.final()]).toString('utf8');
+  } catch {
+    return null;
+  }
+}
+
 export function passwordProblems(pw: unknown, minLen: number, ctx: string[] = []): string[] {
   const p: string[] = [];
   const s = typeof pw === 'string' ? pw : '';
