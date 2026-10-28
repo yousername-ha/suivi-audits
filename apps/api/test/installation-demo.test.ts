@@ -4,14 +4,20 @@
    ne bloque jamais l'installation. */
 import { describe, expect, it } from 'vitest';
 import { hotp } from '../src/security/crypto.js';
-import { Agent, createTestApp, PASSWORD, type TestApp } from './helpers.js';
+import { Agent, createTestApp, PASSWORD, poivreDeTest, type TestApp } from './helpers.js';
 
 const installer = async (corps: Record<string, unknown>, avant?: (t: TestApp) => void) => {
   const t = await createTestApp({ PUBLIC_URL: 'https://suivi.test' });
   avant?.(t);
   const { token } = await t.svc.auth.issueSetupToken('cli', () => {});
   const a = new Agent(t);
-  const r = await a.post('/api/setup', { token, username: 'chef', password: PASSWORD, ...corps });
+  const r = await a.post('/api/setup', {
+    token,
+    username: 'chef',
+    password: PASSWORD,
+    poivre: poivreDeTest(),
+    ...corps,
+  });
   return { t, a, r };
 };
 /** Enrôlement du second facteur du compte qui vient d'être créé (retourne la réponse de la confirmation). */
