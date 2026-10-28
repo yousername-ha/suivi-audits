@@ -60,6 +60,13 @@ describe('jeu de données de test', () => {
     expect(relations.controles.reduce((n, c) => n + c.verifies, 0)).toBeGreaterThan(50);
     // Modules annexes : incidents (dont un incident de sécurité ouvert avec obligation traitée), budget, revues des accès.
     expect(bilan.annexes).toMatchObject({ incidents: 5, investissements: 6, revuesAcces: 5 });
+    const crise = (await a.get('/api/crise')).json().etat;
+    expect(crise.scenarios).toHaveLength(2);
+    expect(crise.cells).toHaveLength(1);
+    expect(crise.cells[0]).toMatchObject({ status: 'Clôturée', mode: 'Exercice' });
+    expect(crise.cells[0].log.length).toBeGreaterThanOrEqual(5);
+    expect(Object.keys(crise.cells[0].checks)).toHaveLength(3);
+    expect(crise.contacts.length).toBeGreaterThanOrEqual(6);
     const incidents = (await a.get('/api/incidents')).json();
     expect(syntheseIncidents(incidents.incidents)).toMatchObject({ total: 5, securiteOuverts: 1, clos: 3 });
     const budget = (await a.get('/api/investissements')).json();

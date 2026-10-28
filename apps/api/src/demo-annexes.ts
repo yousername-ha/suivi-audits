@@ -11,6 +11,7 @@ export interface BilanAnnexes {
   incidents: number;
   investissements: number;
   revuesAcces: number;
+  crise: { contacts: number; scenarios: number; cellules: number };
 }
 
 const heure = (jours: number, h: string) => `${new Date(Date.now() + jours * 86400e3).toISOString().slice(0, 10)}T${h}`;
@@ -287,11 +288,184 @@ async function revuesAcces({ appel, exiger }: Annexes): Promise<number> {
   return revues.length;
 }
 
+/** Cellule de crise : contacts clés (numéros et adresses réservés à la fiction), deux scénarios avec leur check-list et un
+    exercice clôturé dont la main courante, les échéances réglementaires et la check-list sont renseignées. */
+async function crise({ appel, exiger }: Annexes): Promise<BilanAnnexes['crise']> {
+  const contacts: Json[] = [
+    {
+      name: 'Direction de l’établissement',
+      org: 'Établissement de santé fictif',
+      role: 'Directeur de crise',
+      phone: '01 99 00 00 01',
+      phone2: '06 39 98 00 01',
+      email: 'direction@exemple.invalid',
+      avail: '24 h sur 24',
+      notes: 'Décide de l’activation et de la clôture de la cellule.',
+      key: true,
+    },
+    {
+      name: 'RSI',
+      org: 'Établissement de santé fictif',
+      role: 'Responsable des systèmes d’information',
+      phone: '01 99 00 00 02',
+      phone2: '06 39 98 00 02',
+      email: 'rsi@exemple.invalid',
+      avail: 'Astreinte 24 h sur 24',
+      notes: 'Pilote l’investigation technique et le plan de reprise.',
+      key: true,
+    },
+    {
+      name: 'RSSI',
+      org: 'Établissement de santé fictif',
+      role: 'Responsable de la sécurité des systèmes d’information',
+      phone: '01 99 00 00 03',
+      phone2: '',
+      email: 'rssi@exemple.invalid',
+      avail: 'Heures ouvrées, astreinte en cas de crise',
+      notes: 'Qualifie l’incident et prépare les notifications.',
+      key: true,
+    },
+    {
+      name: 'Délégué à la protection des données',
+      org: 'Établissement de santé fictif',
+      role: 'DPO',
+      phone: '01 99 00 00 04',
+      phone2: '',
+      email: 'dpo@exemple.invalid',
+      avail: 'Heures ouvrées',
+      notes: 'Consulté pour toute violation de données personnelles.',
+      key: false,
+    },
+  ];
+  for (const c of contacts) {
+    const cree = await exiger<{ id: string }>(
+      await appel('POST', '/api/crise/contacts'),
+      'Création d’un contact de crise',
+    );
+    await exiger(await appel('PATCH', `/api/crise/contacts/${cree.id}`, c), `Contact de crise ${cree.id}`);
+  }
+  // Fournisseurs critiques ou hébergeurs HDS du registre, ajoutés comme contacts clés.
+  const importes = await exiger<{ ajoutes: number }>(
+    await appel('POST', '/api/crise/contacts/fournisseurs'),
+    'Contacts des fournisseurs critiques',
+  );
+
+  const scenarios: { fiche: Json; actions: { phase: string; t: string; owner: string }[] }[] = [
+    {
+      fiche: {
+        title: 'Rançongiciel sur le dossier patient',
+        ref: 'Scénario de l’étude EBIOS RM de démonstration',
+        desc: 'Chiffrement malveillant des serveurs du dossier patient : bascule en mode dégradé papier, isolement, investigation, restauration.',
+      },
+      actions: [
+        { phase: 'Alerte', t: 'Isoler les serveurs touchés du réseau sans les éteindre', owner: 'RSI' },
+        { phase: 'Alerte', t: 'Prévenir le directeur de crise et le RSSI', owner: 'RSI' },
+        { phase: 'Mobilisation', t: 'Activer le mode dégradé papier dans les services de soins', owner: 'Direction' },
+        {
+          phase: 'Gestion',
+          t: 'Conserver les preuves (journaux, copies mémoire) avant toute remise en service',
+          owner: 'RSSI',
+        },
+        {
+          phase: 'Gestion',
+          t: 'Évaluer l’atteinte aux données personnelles et de santé et les notifications à faire',
+          owner: 'DPO',
+        },
+        {
+          phase: 'Sortie de crise',
+          t: 'Restaurer depuis la copie hors site après validation de l’éradication',
+          owner: 'RSI',
+        },
+      ],
+    },
+    {
+      fiche: {
+        title: 'Indisponibilité prolongée de l’hébergeur de données',
+        ref: 'Plan de continuité de démonstration',
+        desc: 'Perte de l’accès à l’hébergeur de données de santé pendant plus de quatre heures.',
+      },
+      actions: [
+        { phase: 'Alerte', t: 'Contacter l’hébergeur et obtenir une estimation de la durée', owner: 'RSI' },
+        { phase: 'Mobilisation', t: 'Informer les services de soins et le directeur de crise', owner: 'RSI' },
+        { phase: 'Gestion', t: 'Basculer sur les consignes de continuité d’activité', owner: 'Direction' },
+        { phase: 'Sortie de crise', t: 'Contrôler l’intégrité des données au retour du service', owner: 'RSI' },
+      ],
+    },
+  ];
+  const ids: string[] = [];
+  for (const sc of scenarios) {
+    const cree = await exiger<{ id: string }>(
+      await appel('POST', '/api/crise/scenarios'),
+      'Création d’un scénario de crise',
+    );
+    await exiger(await appel('PATCH', `/api/crise/scenarios/${cree.id}`, sc.fiche), `Scénario ${cree.id}`);
+    for (const [k, a] of sc.actions.entries()) {
+      await exiger(
+        await appel('POST', `/api/crise/scenarios/${cree.id}/actions`),
+        `Action ${k} du scénario ${cree.id}`,
+      );
+      await exiger(
+        await appel('PATCH', `/api/crise/scenarios/${cree.id}/actions/${k}`, a),
+        `Action ${k} du scénario ${cree.id}`,
+      );
+    }
+    ids.push(cree.id);
+  }
+  // Un exercice sur le premier scénario, mené puis clôturé.
+  const cellule = await exiger<{ id: string }>(
+    await appel('POST', '/api/crise/cellules', {
+      mode: 'Exercice',
+      title: 'Exercice de crise : rançongiciel (démonstration)',
+      scenario: ids[0],
+    }),
+    'Ouverture de la cellule',
+  );
+  const note = (type: string, author: string, text: string) =>
+    appel('POST', `/api/crise/cellules/${cellule.id}/entrees`, { type, author, text });
+  await exiger(
+    await note('Information', 'RSI', 'Simulation : alerte de l’antivirus sur plusieurs serveurs du dossier patient.'),
+    'Main courante',
+  );
+  await exiger(
+    await note('Décision', 'Direction', 'Activation du mode dégradé papier dans les services de soins.'),
+    'Main courante',
+  );
+  await exiger(await note('Action', 'RSSI', 'Isolement des serveurs et conservation des journaux.'), 'Main courante');
+  await exiger(
+    await note('Communication', 'DPO', 'Évaluation de la violation de données et préparation de la notification.'),
+    'Main courante',
+  );
+  await exiger(
+    await appel('POST', `/api/crise/cellules/${cellule.id}/echeances`, {
+      label: 'Notification à l’autorité de protection des données (exercice)',
+      heures: 72,
+    }),
+    'Échéance',
+  );
+  for (const k of [0, 1, 2]) {
+    await exiger(
+      await appel('PUT', `/api/crise/cellules/${cellule.id}/checklist/${k}`, { fait: true, author: 'RSI' }),
+      `Check-list ${k}`,
+    );
+  }
+  await exiger(
+    await appel('POST', `/api/crise/cellules/${cellule.id}/cloture`, { author: 'Direction' }),
+    'Clôture de la cellule',
+  );
+  return { contacts: contacts.length + importes.ajoutes, scenarios: scenarios.length, cellules: 1 };
+}
+
 /** Charge les modules annexes de la démonstration. */
 export async function modulesAnnexes(ctx: Annexes): Promise<BilanAnnexes> {
-  const bilan: BilanAnnexes = { incidents: 0, investissements: 0, revuesAcces: 0 };
+  const bilan: BilanAnnexes = {
+    incidents: 0,
+    investissements: 0,
+    revuesAcces: 0,
+    crise: { contacts: 0, scenarios: 0, cellules: 0 },
+  };
   bilan.incidents = await incidents(ctx);
   bilan.investissements = await investissements(ctx);
   bilan.revuesAcces = await revuesAcces(ctx);
+  bilan.crise = await crise(ctx);
   return bilan;
 }
