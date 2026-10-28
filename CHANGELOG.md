@@ -22,6 +22,7 @@ Aucune action sur le serveur. Le frontal est reconstruit avec une bibliothèque 
 
 ### Modifié
 - Les boutons de suppression de ces écrans n'apparaissent que pour qui a le droit `supprimer` du module.
+- La construction des images `web` et `updater` réessaie jusqu'à quatre fois les téléchargements et compilations Go en cas d'échec réseau passager (proxy ou base de sommes de Go) ; la vérification des modules reste active. Aucune action sur le serveur.
 
 ### Sécurité
 - **Sauvegardes** ([ADR 0071](docs/adr/0071-sauvegardes-chiffrees-avec-age.md)) : chiffrement authentifié avec age (X25519 + ChaCha20-Poly1305) pour deux destinataires, la clé du serveur et une clé de secours conservée hors du serveur ; plus aucune sauvegarde en clair, ni sans clé valide ; une archive modifiée, tronquée, destinée à d'autres clés ou renommée est refusée avant toute restauration (l'INFO interne est liée au nom du fichier, à l'horodatage et à la demande). Nouveau script `scripts/generer-cles-sauvegarde.sh` ; l'image `updater` embarque `age` ; `init` ne génère plus `update-secrets/backup-pass`.
