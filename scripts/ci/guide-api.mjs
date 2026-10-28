@@ -157,13 +157,15 @@ switch (cmd) {
     const st = { password, secret: '', lastStep: 0 };
     const pre = await call('GET', '/api/setup');
     if (!pre.needed) fail('/api/setup indique que l’installation n’est pas attendue');
+    // La montée de version part d'une version publiée avant le poivre (ADR 0072) : elle ne le propose pas.
+    const avecPoivre = 'poivreDefini' in pre;
     await call('POST', '/api/setup', {
       json: {
         token: token.toLowerCase().replace(/-/g, ' '),
         username: ADMIN,
         displayName: 'Responsable SSI',
         password,
-        poivre: poivreDeRecette(),
+        ...(avecPoivre ? { poivre: poivreDeRecette() } : {}),
       },
     });
     if ((await me()).stage !== 'enroll') fail('après /api/setup, l’enrôlement TOTP devrait être demandé');
@@ -176,10 +178,14 @@ switch (cmd) {
     if (m.stage !== 'ok' || !m.permissions?.includes('administration:administrer'))
       fail(`administrateur incomplet : ${JSON.stringify(m)}`);
     if ((await call('GET', '/api/setup')).needed) fail('/setup devrait être désactivé après la création');
-    const poivre = await call('GET', '/api/admin/poivre');
-    if (!poivre.defini || poivre.empreintesPoivrees < 1)
-      fail(`poivre des mots de passe non défini : ${JSON.stringify(poivre)}`);
-    console.log('Étape 8 : administrateur « rssi » créé, poivre défini, double authentification active.');
+    if (avecPoivre) {
+      const poivre = await call('GET', '/api/admin/poivre');
+      if (!poivre.defini || poivre.empreintesPoivrees < 1)
+        fail(`poivre des mots de passe non défini : ${JSON.stringify(poivre)}`);
+    }
+    console.log(
+      `Étape 8 : administrateur « rssi » créé${avecPoivre ? ', poivre défini' : ''}, double authentification active.`,
+    );
     break;
   }
   case 'compte': {

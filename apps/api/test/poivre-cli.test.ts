@@ -2,7 +2,7 @@
    poivre-restaurer (clé maîtresse perdue, base intacte) et poivre-reinitialiser (poivre perdu, procédure d'urgence). */
 import { spawn } from 'node:child_process';
 import path from 'node:path';
-import { finPoivre, genererPoivre, type PoivreAEnregistrer } from '@suivi/shared';
+import type { PoivreAEnregistrer } from '@suivi/shared';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   Agent,
@@ -143,7 +143,5 @@ describe('CLI du poivre', () => {
     );
     expect(trace).toContain('idCle');
     expect(trace).not.toContain(poivre!.replace(/-/g, ''));
-    void finPoivre;
-    void genererPoivre;
   }, 60_000);
 });
