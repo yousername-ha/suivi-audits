@@ -194,6 +194,75 @@ if 'pg_restore' in args and '--list' not in args: Path(os.environ['TEST_RESTORED
         self.assertIn('SHA-256 vérifiée', result.stdout)
         self.assertFalse(self.events.exists())
 
+    def sauvegarde_avec_anciennes(self, nombre, env=None, prefixe='suivi-audits', age_min=100):
+        secrets = self.root / 'data/secrets'
+        (secrets / 'db_app_password').write_text('password-fictif')
+        (secrets / 'doc_master_key').write_bytes(base64.b64encode(b'a' * 32))
+        destination = self.root / 'archives'
+        destination.mkdir(exist_ok=True)
+        for i in range(nombre):
+            archive = destination / f'{prefixe}-202601{i + 1:02d}-000000.tar.enc'
+            archive.write_bytes(b'ancienne-archive-fictive')
+            (destination / f'{archive.name}.sha256').write_text('0' * 64 + f'  {archive.name}\n')
+            age = (age_min + nombre - i) * 86400
+            for fichier in (archive, destination / f'{archive.name}.sha256'):
+                os.utime(fichier, (fichier.stat().st_atime, fichier.stat().st_mtime - age))
+        resultat = subprocess.run(['bash', str(self.root / 'scripts/backup.sh'), str(destination)], input='', text=True,
+                                  capture_output=True, env={**self.env, **(env or {})}, timeout=20)
+        return destination, resultat
+
+    def test_rotation_keeps_the_newest_archives_even_when_all_are_expired(self):
+        destination, resultat = self.sauvegarde_avec_anciennes(10, {'RETENTION_DAYS': '1', 'BACKUP_GARDER_MIN': '7'})
+        self.assertEqual(resultat.returncode, 0, resultat.stderr)
+        restantes = sorted(f.name for f in destination.glob('*.tar.enc'))
+        self.assertEqual(len(restantes), 7)
+        # La nouvelle sauvegarde et les six plus récentes anciennes restent ; les trois plus anciennes sont supprimées.
+        for i in range(4, 10):
+            self.assertIn(f'suivi-audits-202601{i + 1:02d}-000000.tar.enc', restantes)
+        for i in range(0, 4):
+            self.assertNotIn(f'suivi-audits-202601{i + 1:02d}-000000.tar.enc', restantes)
+            self.assertFalse((destination / f'suivi-audits-202601{i + 1:02d}-000000.tar.enc.sha256').exists())
+        for nom in restantes:
+            self.assertTrue((destination / f'{nom}.sha256').exists())
+
+    def test_rotation_keeps_recent_archives_beyond_the_minimum(self):
+        destination, resultat = self.sauvegarde_avec_anciennes(10, {'RETENTION_DAYS': '90'}, age_min=1)
+        self.assertEqual(resultat.returncode, 0, resultat.stderr)
+        self.assertEqual(len(list(destination.glob('*.tar.enc'))), 11)
+
+    def test_rotation_removes_expired_archives_beyond_the_minimum(self):
+        # Âges de 2 à 11 jours, rétention de 5 jours : au-delà des 3 plus récentes, seules les archives de plus de 5 jours
+        # partent ; restent la nouvelle (0 jour) et celles de 2, 3, 4 et 5 jours.
+        destination, resultat = self.sauvegarde_avec_anciennes(10, {'RETENTION_DAYS': '5', 'BACKUP_GARDER_MIN': '3'}, age_min=1)
+        self.assertEqual(resultat.returncode, 0, resultat.stderr)
+        self.assertEqual(len(list(destination.glob('*.tar.enc'))), 5)
+
+    def test_rotation_keeps_everything_when_few_archives_exist(self):
+        destination, resultat = self.sauvegarde_avec_anciennes(3, {'RETENTION_DAYS': '1'})
+        self.assertEqual(resultat.returncode, 0, resultat.stderr)
+        self.assertEqual(len(list(destination.glob('*.tar.enc'))), 4)
+
+    def test_rotation_ignores_other_prefixes_and_subfolders(self):
+        destination = self.root / 'archives'
+        (destination / 'avant-maj').mkdir(parents=True)
+        voisins = [destination / 'autre-20200101-000000.tar.enc', destination / 'avant-maj/suivi-audits-20200101-000000.tar.enc']
+        for fichier in voisins:
+            fichier.write_bytes(b'x')
+            os.utime(fichier, (1, 1))
+        destination, resultat = self.sauvegarde_avec_anciennes(2, {'RETENTION_DAYS': '1', 'BACKUP_GARDER_MIN': '1'})
+        self.assertEqual(resultat.returncode, 0, resultat.stderr)
+        self.assertEqual(len(list(destination.glob('suivi-audits-*.tar.enc'))), 1)
+        for fichier in voisins:
+            self.assertTrue(fichier.exists(), fichier)
+
+    def test_minimum_count_is_validated(self):
+        for valeur in ('0', '366', 'x', '-1', '7; echo'):
+            with self.subTest(valeur=valeur):
+                destination, resultat = self.sauvegarde_avec_anciennes(0, {'BACKUP_GARDER_MIN': valeur})
+                self.assertNotEqual(resultat.returncode, 0)
+                self.assertIn('BACKUP_GARDER_MIN', resultat.stderr + resultat.stdout)
+                self.assertEqual(list(destination.glob('*.tar.enc')), [])
+
     def test_confirmation_is_required(self):
         result = self.run_restore(self.archive(), False, confirmation='NON\n')
         self.assertNotEqual(result.returncode, 0)

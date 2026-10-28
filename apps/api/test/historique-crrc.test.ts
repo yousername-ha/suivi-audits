@@ -131,7 +131,7 @@ describe('gestion CRRC', () => {
   it('supprime une sauvegarde, une ressource (avec ses sauvegardes) et un contrat (ressources conservées)', async () => {
     const c0 = (await etat()).crrc;
     const runId = c0.runs.find((x: { res: string }) => x.res === res).id;
-    expect((await writer.del(`/api/crrc/sauvegardes/${runId}`)).statusCode).toBe(200);
+    expect((await admin.del(`/api/crrc/sauvegardes/${runId}`)).statusCode).toBe(200);
     await writer.post(`/api/crrc/ressources/${res}/sauvegardes`, {
       date: '2026-10-13T02:00',
       type: 'Complète',
@@ -139,9 +139,9 @@ describe('gestion CRRC', () => {
       volumeGb: 1,
       durationMin: 1,
     });
-    expect((await writer.del(`/api/crrc/ressources/${res}`)).statusCode).toBe(200);
+    expect((await admin.del(`/api/crrc/ressources/${res}`)).statusCode).toBe(200);
     expect((await etat()).crrc.runs.map((x: { res: string }) => x.res)).toEqual(['RES-1']);
-    expect((await writer.del('/api/crrc/etablissements/CRRC-001-AAA')).statusCode).toBe(200);
+    expect((await admin.del('/api/crrc/etablissements/CRRC-001-AAA')).statusCode).toBe(200);
     expect((await etat()).crrc.resources.map((x: { id: string }) => x.id)).toEqual(['RES-1']);
   });
   it('gère les offres : la sauvegarde ne se supprime pas', async () => {
@@ -152,8 +152,8 @@ describe('gestion CRRC', () => {
         .statusCode,
     ).toBe(200);
     expect((await writer.patch('/api/crrc/offres/backup', { partner: 'Opérateur fictif' })).statusCode).toBe(200);
-    expect((await writer.del('/api/crrc/offres/backup')).statusCode).toBe(422);
-    expect((await writer.del(`/api/crrc/offres/${o.json().id}`)).statusCode).toBe(200);
+    expect((await admin.del('/api/crrc/offres/backup')).statusCode).toBe(422);
+    expect((await admin.del(`/api/crrc/offres/${o.json().id}`)).statusCode).toBe(200);
     const backup = (await etat()).crrc.offers.find((x: { id: string }) => x.id === 'backup');
     expect(backup.partner).toBe('Opérateur fictif');
     expect(backup.perimeters).toHaveLength(5);

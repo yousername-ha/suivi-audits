@@ -683,6 +683,7 @@ function FicheAction({
   onDone: () => void;
   onChange: () => Promise<void>;
 }) {
+  const peutSupprimer = useCan()('pilotage', 'supprimer');
   const def = PLANS[action.type];
   const initial = Object.fromEntries(MODIFIABLES.map((k) => [k, action[k]])) as Champs;
   const [v, setV] = useState<Champs>(initial);
@@ -902,7 +903,7 @@ function FicheAction({
         </Text>
       )}
       <Group justify="space-between">
-        {modifiable ? (
+        {modifiable && peutSupprimer ? (
           <ConfirmButton
             message={`Supprimer ${action.id} ? Cette action disparaîtra aussi de l’outil historique.`}
             onConfirm={() =>

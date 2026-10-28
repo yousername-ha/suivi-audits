@@ -521,6 +521,7 @@ function DetailRessource({
   modifiable: boolean;
   onRetour: () => void;
 }) {
+  const peutSupprimer = useCan()('crrc', 'supprimer');
   const [nouv, setNouv] = useState({
     date: new Date().toISOString().slice(0, 16),
     type: 'Incrémentale',
@@ -561,7 +562,7 @@ function DetailRessource({
               </Table.Td>
               <Table.Td>{formaterVolume(x.volumeGb)}</Table.Td>
               <Table.Td>{formaterDuree(x.durationMin)}</Table.Td>
-              {modifiable && (
+              {modifiable && peutSupprimer && (
                 <Table.Td>
                   <ConfirmButton
                     message="Supprimer cette sauvegarde ?"
@@ -739,7 +740,7 @@ function DetailRessource({
               </div>
             </div>
             <ChampZone label="Notes" value={r.notes} disabled={!modifiable} onCommit={(v) => maj({ notes: v })} />
-            {modifiable && (
+            {modifiable && peutSupprimer && (
               <Group justify="flex-end">
                 <ConfirmButton
                   message={`Supprimer la ressource « ${r.name} » et son historique ?`}

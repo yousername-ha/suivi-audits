@@ -245,16 +245,22 @@ export class AuditSuivi {
     });
   }
   async supprimerJour(id: string, user: SessionUser, ip: string) {
-    return this.modifierPlan(user, ip, 'audit.plan.day-deleted', (plan) => {
-      if (!plan.days.some((d) => d.id === id)) throw new HttpError(404, 'Jour absent du plan.');
-      if (plan.slots.some((s) => s.day === id))
-        throw new HttpError(409, 'Ce jour porte encore des créneaux : supprimez-les ou déplacez-les d’abord.');
-      plan.days = plan.days.filter((d) => d.id !== id);
-      plan.days.forEach((d, i) => {
-        if (/^Jour \d+$/.test(d.label)) d.label = `Jour ${i + 1}`;
-      });
-      return { id };
-    });
+    return this.modifierPlan(
+      user,
+      ip,
+      'audit.plan.day-deleted',
+      (plan) => {
+        if (!plan.days.some((d) => d.id === id)) throw new HttpError(404, 'Jour absent du plan.');
+        if (plan.slots.some((s) => s.day === id))
+          throw new HttpError(409, 'Ce jour porte encore des créneaux : supprimez-les ou déplacez-les d’abord.');
+        plan.days = plan.days.filter((d) => d.id !== id);
+        plan.days.forEach((d, i) => {
+          if (/^Jour \d+$/.test(d.label)) d.label = `Jour ${i + 1}`;
+        });
+        return { id };
+      },
+      'supprimer',
+    );
   }
   /** Ajout avec les valeurs de l'outil de suivi : à la suite du dernier créneau du jour (09h00 pour le premier, 1 h). */
   async ajouterCreneau(input: unknown, user: SessionUser, ip: string) {
@@ -305,11 +311,17 @@ export class AuditSuivi {
     });
   }
   async supprimerCreneau(id: string, user: SessionUser, ip: string) {
-    return this.modifierPlan(user, ip, 'audit.plan.slot-deleted', (plan) => {
-      if (!plan.slots.some((s) => s.id === id)) throw new HttpError(404, 'Créneau absent du plan.');
-      plan.slots = plan.slots.filter((s) => s.id !== id);
-      return { id };
-    });
+    return this.modifierPlan(
+      user,
+      ip,
+      'audit.plan.slot-deleted',
+      (plan) => {
+        if (!plan.slots.some((s) => s.id === id)) throw new HttpError(404, 'Créneau absent du plan.');
+        plan.slots = plan.slots.filter((s) => s.id !== id);
+        return { id };
+      },
+      'supprimer',
+    );
   }
   async ajouterPersonne(input: unknown, user: SessionUser, ip: string) {
     const b = z
@@ -332,12 +344,18 @@ export class AuditSuivi {
     });
   }
   async supprimerPersonne(id: string, user: SessionUser, ip: string) {
-    return this.modifierPlan(user, ip, 'audit.plan.person-deleted', (plan) => {
-      if (!plan.people.some((p) => p.id === id)) throw new HttpError(404, 'Personne absente du plan.');
-      plan.people = plan.people.filter((p) => p.id !== id);
-      plan.slots.forEach((s) => (s.people = s.people.filter((x) => x !== id)));
-      return { id };
-    });
+    return this.modifierPlan(
+      user,
+      ip,
+      'audit.plan.person-deleted',
+      (plan) => {
+        if (!plan.people.some((p) => p.id === id)) throw new HttpError(404, 'Personne absente du plan.');
+        plan.people = plan.people.filter((p) => p.id !== id);
+        plan.slots.forEach((s) => (s.people = s.people.filter((x) => x !== id)));
+        return { id };
+      },
+      'supprimer',
+    );
   }
 
   /* ------------------------------------------------------------------------------------------------ interne */
@@ -372,9 +390,10 @@ export class AuditSuivi {
     ip: string,
     action: string,
     appliquer: (plan: AuditPlan, data: JsonObject) => T,
+    droit: 'modifier' | 'supprimer' = 'modifier',
   ): Promise<T> {
     const reference = (r: T) => ((r as { id?: string }).id ? `legacy:plan:${(r as { id: string }).id}` : 'legacy:plan');
-    return this.r.modifier(user, ip, { module: 'plan_audit', action, reference }, (data) => {
+    return this.r.modifier(user, ip, { module: 'plan_audit', action, reference, droit }, (data) => {
       const plan = this.lirePlan(data);
       const resultat = appliquer(plan, data);
       data.plan = { ...(isObject(data.plan) ? data.plan : vide()), ...plan } as unknown as JsonObject;
