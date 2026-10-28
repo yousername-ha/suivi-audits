@@ -175,7 +175,7 @@ try:
     assert [e['phase'] for e in state['etapes']][:1]==['preparing'] and state['etapes'][-1]['phase']=='complete', state['etapes']
     receipt=json.loads((data/'etat/recus-mises-a-jour'/f"{requested['id']}.json").read_text())
     assert receipt['statut']=='success' and receipt['vers']=='99.0.0' and receipt['controles']['apres'] is True, receipt
-    assert receipt['sauvegarde'] and receipt['sauvegarde']['fichier'].endswith('.enc'), receipt
+    assert receipt['sauvegarde'] and receipt['sauvegarde']['fichier'].endswith('.tar.age'), receipt
     assert 'previousEnv' not in json.dumps(receipt) and str(data) not in json.dumps(receipt)
     assert any(r['id']==requested['id'] for r in call('GET','/api/admin/updates/receipts'))
     assert compose('ps','-q','gateway').strip()==gateway
@@ -188,10 +188,10 @@ try:
     print('Mise à jour API 98 -> 99 : sauvegarde chiffrée, migration réelle, données identiques, exécutant remplacé, frontal intact.')
     # Revenir à la base de la fixture avec la sauvegarde précédente, puis injecter un échec après migration.
     compose('stop','updater',cwd=repo)
-    private=m.read(data/'reprise-updates/progress.json');backup=private['backup'];assert backup.endswith('.enc')
+    private=m.read(data/'reprise-updates/progress.json');backup=private['backup'];assert backup.endswith('.tar.age')
     run(['git','checkout','--detach',base_ref],cwd=repo);change_version('98.0.0')
     compose('up','-d','db','app','web',cwd=repo);wait_health(repo)
-    run(['bash',str(repo/'scripts/restore.sh'),backup],cwd=repo,timeout=1800,env={'SUIVI_MAJ_WEB':'1','RESTAURER_SANS_CONFIRMATION':'1','BACKUP_PASSPHRASE_FILE':str(data/'update-secrets/backup-pass')})
+    run(['bash',str(repo/'scripts/restore.sh'),backup],cwd=repo,timeout=1800,env={'SUIVI_MAJ_WEB':'1','RESTAURER_SANS_CONFIRMATION':'1'})
     wait_health(repo)
     jar.clear()
     call('POST','/api/auth/login',{'username':'recette_update','password':'Recette-Update-2026!'})

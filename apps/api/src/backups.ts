@@ -231,7 +231,7 @@ export class Backups {
             chiffree: raw.chiffree,
             integriteVerifiee: raw.integriteVerifiee,
           });
-        if (report && !/^[a-zA-Z0-9_.-]+\.tar\.enc$/.test(report.fichier)) report = null;
+        if (report && !/^[a-zA-Z0-9_.-]+\.tar\.age$/.test(report.fichier)) report = null;
       } catch {
         report = null;
       }

@@ -653,7 +653,7 @@ const SECTIONS: Record<SettingsSection, (p: P) => ReactNode> = {
       </div>
       <Text size="sm">Sauvegarde manuelle, depuis le dossier de l’application sur le serveur :</Text>
       <CopyCommand
-        command={`sudo BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass ./scripts/backup.sh ${str(p.values.emplacement) || '/srv/sauvegardes/suivi-audits'}`}
+        command={`sudo ./scripts/backup.sh ${str(p.values.emplacement) || '/srv/sauvegardes/suivi-audits'}`}
       />
     </Stack>
   ),

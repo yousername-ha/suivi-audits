@@ -12,7 +12,9 @@
 #   --sans-signature    n'exige pas cosign (déconseillé : la provenance des images n'est alors pas vérifiée)
 #   --images-locales    images déjà présentes sur le serveur (essai d'une version non publiée, CI) : ni téléchargement,
 #                       ni vérification de signature
-# Variables : BACKUP_PASSPHRASE_FILE (défaut /root/.suivi-backup-pass) ;
+# Variables : BACKUP_KEY_FILE (défaut /root/.suivi-backup-key) et BACKUP_RECIPIENTS_FILE (défaut /root/.suivi-backup-recipients),
+#             préparés par scripts/generer-cles-sauvegarde.sh ; BACKUP_PASSPHRASE_FILE : ancienne phrase secrète, uniquement
+#             pour un retour arrière sur une sauvegarde de l'ancien format (.tar.enc) ;
 #             SUIVI_TEST_ECHEC_SANTE=1 : simule un échec du contrôle de santé (tests du retour arrière uniquement).
 # Étapes : contrôles → notes de mise à jour → sauvegarde chiffrée → version du dépôt → images (signature) →
 # migrations (au démarrage de app, sous verrou, une transaction chacune) → santé → rapport et journal d'audit.
@@ -71,6 +73,8 @@ while [ $# -gt 0 ]; do
 done
 
 DEPOT_IMAGES=ghcr.io/yousername-ha/suivi-audits
+CLE="${BACKUP_KEY_FILE:-/root/.suivi-backup-key}"
+SECOURS="${BACKUP_RECIPIENTS_FILE:-/root/.suivi-backup-recipients}"
 PASS="${BACKUP_PASSPHRASE_FILE:-/root/.suivi-backup-pass}"
 STAMP=$(date -u +%Y%m%d-%H%M%S)
 DEBUT=$(date +%s)
@@ -147,8 +151,9 @@ retour_arriere() { # raison
   elif [ -n "$apres" ] && [ "$apres" != "$MIGRATIONS_AVANT" ] && [ -n "$SAUVEGARDE" ]; then
     info "La base a été migrée : restauration de la sauvegarde $SAUVEGARDE."
     if [ "$AUTO" = 1 ] || confirmer "Restaurer la sauvegarde faite avant la mise à jour (les données ajoutées depuis seront perdues) ?"; then
-      RESTAURER_SANS_CONFIRMATION=1 BACKUP_PASSPHRASE_FILE="$PASS" "$REPO/scripts/restore.sh" "$SAUVEGARDE" < /dev/null \
-        || { echo RESTAURER | BACKUP_PASSPHRASE_FILE="$PASS" "$REPO/scripts/restore.sh" "$SAUVEGARDE"; }
+      # Une sauvegarde .tar.enc (faite par la version précédente) se restaure avec le restore.sh de cette version, qui l'accepte sans option.
+      RESTAURER_SANS_CONFIRMATION=1 BACKUP_KEY_FILE="$CLE" BACKUP_PASSPHRASE_FILE="$PASS" "$REPO/scripts/restore.sh" "$SAUVEGARDE" < /dev/null \
+        || { echo RESTAURER | BACKUP_KEY_FILE="$CLE" BACKUP_PASSPHRASE_FILE="$PASS" "$REPO/scripts/restore.sh" "$SAUVEGARDE"; }
     else
       avertir "restauration refusée : l'ancienne version peut ne pas démarrer sur une base migrée."
     fi
@@ -282,11 +287,11 @@ PHASE=sauvegarde
 if declare -F progression > /dev/null; then progression; fi
 etape "Sauvegarde chiffrée"
 mkdir -p "$SAUV/avant-mise-a-jour"
-sortie=$(RETENTION_DAYS=36500 BACKUP_PREFIXE="avant-maj-$ACTUELLE-vers-$CIBLE" BACKUP_PASSPHRASE_FILE="$PASS" \
+sortie=$(RETENTION_DAYS=36500 BACKUP_PREFIXE="avant-maj-$ACTUELLE-vers-$CIBLE" BACKUP_KEY_FILE="$CLE" BACKUP_RECIPIENTS_FILE="$SECOURS" BACKUP_PASSPHRASE_FILE="$PASS" \
   "$REPO/scripts/backup.sh" "$SAUV/avant-mise-a-jour" 2>&1) || { printf '%s\n' "$sortie" >&2; arret "échec de la sauvegarde : mise à jour annulée."; }
 printf '%s\n' "$sortie"
 SAUVEGARDE=$(printf '%s\n' "$sortie" | sed -n 's/^Sauvegarde : //p' | tail -n 1)
-case "$SAUVEGARDE" in *.enc) ;; *) arret "la sauvegarde n'est pas chiffrée : mise à jour annulée." ;; esac
+case "$SAUVEGARDE" in *.tar.age | *.tar.enc) ;; *) arret "la sauvegarde n'est pas chiffrée : mise à jour annulée." ;; esac
 if [ -f "$SAUVEGARDE.sha256" ]; then
   (cd "$(dirname "$SAUVEGARDE")" && sha256sum -c --quiet "$(basename "$SAUVEGARDE").sha256") || arret "empreinte de la sauvegarde incorrecte."
 else
