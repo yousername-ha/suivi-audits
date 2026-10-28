@@ -10,6 +10,10 @@ Aucune action.
 
 ### Sécurité
 - **Authentification** : les essais du second facteur sont limités par compte et comptés dans le verrouillage progressif existant ; les sessions à l'étape du second facteur sont plafonnées à trois par compte ; le compteur d'échecs est incrémenté de façon atomique ; les vérifications du mot de passe actuel (changement de mot de passe, enrôlement et désactivation du second facteur) sont limitées par compte, comptées dans le verrouillage et journalisées.
+- **Chaîne d'approvisionnement** ([ADR 0063](docs/adr/0063-chaine-de-publication-durcie.md), complément du 27/10/2026) : Dependabot suit aussi les dépendances npm (correctifs et mineures regroupés, majeures isolées) ; toutes ses propositions attendent 7 jours après la publication d'une version. pnpm refuse de même une version publiée depuis moins de 7 jours, une version dont la preuve de provenance régresse et une dépendance transitive hors registre.
+- **CI** : les jobs ne conservent plus le jeton GitHub dans la copie de travail (`persist-credentials: false`) ; plus aucune expression GitHub n'est interpolée dans un script du job « montée de version ».
+- **Exécutant d'exploitation** : la liste publique des opérations n'est relue qu'à partir de fichiers réguliers nommés par identifiant, sans suivre de lien symbolique ni ouvrir de tube.
+- **Chiffrement** : le déchiffrement AES-256-GCM exige explicitement une étiquette d'authentification de 16 octets (déjà imposé par Node 26) ; tests du coffre ajoutés.
 
 ## [5.1.0] — 2026-10-27
 
