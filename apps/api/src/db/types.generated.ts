@@ -273,8 +273,8 @@ export interface GrcMethodVersions {
 
 export interface GrcNotifications {
   id: Generated<string>;
-  smsi_id: string;
-  object_id: string;
+  smsi_id: string | null;
+  object_id: string | null;
   user_id: string;
   kind: string;
   due_key: string;
