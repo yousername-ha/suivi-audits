@@ -28,6 +28,16 @@ test('les images du compose et des Dockerfiles sont épinglées par empreinte', 
   assert.match(lire('docker/updater.Dockerfile'), /^FROM alpine:\S+@sha256:[0-9a-f]{64}/m);
 });
 
+test('les compilations Go des images réessaient les échecs réseau sans désactiver la vérification des modules', () => {
+  for (const fichier of ['web', 'updater']) {
+    const dockerfile = lire(`docker/${fichier}.Dockerfile`);
+    assert.match(dockerfile, /essayer\(\) \{/, fichier);
+    assert.match(dockerfile, /essayer go build /, fichier);
+    assert.doesNotMatch(dockerfile, /GONOSUMDB|GONOSUMCHECK|GOFLAGS=.*-insecure|GOSUMDB=off|GONOSUMDB/, fichier);
+  }
+  assert.match(lire('docker/web.Dockerfile'), /essayer go mod download /);
+});
+
 test("l'antivirus n'est relié qu'au réseau interne dédié, durci et sans privilège", () => {
   assert.match(compose, /^ {2}antivirus: \{ internal: true \}/m);
   const clamd = service('clamav');

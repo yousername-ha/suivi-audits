@@ -226,8 +226,19 @@ services:
       - ${DATA_DIR:-/srv/suivi-audits/donnees}:${DATA_DIR:-/srv/suivi-audits/donnees}
       # Sauvegardes intégrées ; les chemins explicites de l'exploitant restent prioritaires.
       - ${BACKUP_DEST:-${DATA_DIR:-/srv/suivi-audits/donnees}/sauvegardes}:${BACKUP_DEST:-${DATA_DIR:-/srv/suivi-audits/donnees}/sauvegardes}
-      # Par défaut monter le dossier : init doit encore pouvoir y créer le fichier de clé au premier démarrage.
-      - ${BACKUP_PASSPHRASE_FILE:-${DATA_DIR:-/srv/suivi-audits/donnees}/update-secrets}:${BACKUP_PASSPHRASE_FILE:-${DATA_DIR:-/srv/suivi-audits/donnees}/update-secrets}:ro
+      # Chiffrement age des sauvegardes (ADR 0071) : clé du serveur et clés publiques de secours, créées par
+      # sudo ./scripts/generer-cles-sauvegarde.sh avant le démarrage. Jamais créées par Docker : absentes, le démarrage échoue
+      # avec un message explicite plutôt que de produire des dossiers à leur place.
+      - type: bind
+        source: ${BACKUP_KEY_FILE:-/root/.suivi-backup-key}
+        target: ${BACKUP_KEY_FILE:-/root/.suivi-backup-key}
+        read_only: true
+        bind: { create_host_path: false }
+      - type: bind
+        source: ${BACKUP_RECIPIENTS_FILE:-/root/.suivi-backup-recipients}
+        target: ${BACKUP_RECIPIENTS_FILE:-/root/.suivi-backup-recipients}
+        read_only: true
+        bind: { create_host_path: false }
       - /var/run/docker.sock:/var/run/docker.sock
       # Aucun identifiant par défaut (ADR 0061) : le dépôt public est lu en HTTPS, les images publiques sans connexion.
       # Dépôt ou registre privé : UPDATER_SSH_DIR=/root/.ssh et/ou UPDATER_DOCKER_CONFIG=/root/.docker dans .env.

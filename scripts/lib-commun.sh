@@ -289,3 +289,21 @@ attendre_sante() {
 migrations_appliquees() {
   dc exec -T -u postgres db psql -d suivi -Atc 'SELECT name FROM schema_migrations ORDER BY name' 2> /dev/null || true
 }
+
+# Sauvegardes chiffrées avec age (ADR 0071) : contrôle de l'identité du serveur et des clés publiques de secours.
+# Aucune clé privée n'est jamais affichée. Arrête le script au moindre défaut, avant toute écriture.
+controler_cles_sauvegarde() { # identite secours
+  local id="$1" secours="$2" mode ligne n=0
+  command -v age > /dev/null && command -v age-keygen > /dev/null || arret "outil « age » absent : l'installer (sudo apt-get install -y age), voir docs/INSTALLATION.md."
+  [ -f "$id" ] && [ ! -L "$id" ] && [ -s "$id" ] || arret "clé de sauvegarde du serveur absente ou vide ($id) : lancer sudo ./scripts/generer-cles-sauvegarde.sh."
+  mode=$(stat -c %a "$id")
+  (( (8#$mode & 077) == 0 )) || arret "droits trop larges sur la clé de sauvegarde ($id) : 0600 requis (chmod 600)."
+  age-keygen -y "$id" > /dev/null 2>&1 || arret "la clé de sauvegarde du serveur ($id) n'est pas une identité age valide."
+  [ -f "$secours" ] && [ ! -L "$secours" ] && [ -s "$secours" ] || arret "clé publique de secours absente ou vide ($secours) : lancer sudo ./scripts/generer-cles-sauvegarde.sh."
+  while IFS= read -r ligne || [ -n "$ligne" ]; do
+    case "$ligne" in ''|'#'*) continue ;; esac
+    [[ "$ligne" =~ ^age1[023456789acdefghjklmnpqrstuvwxyz]{58}$ ]] || arret "le fichier de clés de secours ($secours) ne doit contenir que des clés publiques age (age1…), une par ligne."
+    n=$((n + 1))
+  done < "$secours"
+  [ "$n" -ge 1 ] || arret "aucune clé publique de secours dans $secours."
+}

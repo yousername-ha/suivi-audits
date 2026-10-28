@@ -43,6 +43,8 @@ jobs:
           node-version: 26
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: age (chiffrement des sauvegardes, nécessaire aux tests des scripts)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq age
       - name: Audit des dépendances (aucune faille connue, gravité modérée ou plus)
         run: pnpm audit --audit-level=moderate
       - name: ESLint
@@ -131,6 +133,8 @@ jobs:
           node-version: 26
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: age (chiffrement des sauvegardes, nécessaire aux tests des scripts)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq age
       - name: Paquet partagé (jeton, format legacy, couverture du contrat, parité avec l'outil historique)
         run: pnpm --filter @suivi/shared test
       - name: API (sécurité, concurrence, migrations v2 vers v3, import legacy, temps réel, performance sur 10 000 risques)
@@ -223,6 +227,13 @@ jobs:
       - name: Dossier des données du serveur (EXPL-01)
         run: sudo ./scripts/preparer-donnees.sh
 
+      - name: Clés de sauvegarde age (clé du serveur et clé publique de secours, ADR 0071)
+        run: |
+          set -e
+          sudo apt-get update -qq && sudo apt-get install -y -qq age
+          age-keygen -o "$RUNNER_TEMP/cle-secours.key" 2> /dev/null
+          sudo ./scripts/generer-cles-sauvegarde.sh --secours "$(age-keygen -y "$RUNNER_TEMP/cle-secours.key")" --confirmer
+
       - name: Démarrage de la pile
         run: |
           docker compose up -d
@@ -281,9 +292,7 @@ jobs:
         timeout-minutes: 10
         run: |
           set -e
-          umask 077
-          head -c 24 /dev/urandom | base64 > "$RUNNER_TEMP/passphrase-recette"
-          sudo BACKUP_PASSPHRASE_FILE="$RUNNER_TEMP/passphrase-recette" ./scripts/recette-serveur.sh --version ci --avec-sauvegarde --sortie "$RUNNER_TEMP/recette-serveur"
+          sudo ./scripts/recette-serveur.sh --version ci --avec-sauvegarde --sortie "$RUNNER_TEMP/recette-serveur"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
