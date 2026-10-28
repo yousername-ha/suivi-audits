@@ -117,6 +117,7 @@ services:
     environment:
       DB_HOST: db
       SECRETS_DIR: /run/secrets
+      # Un seul relais de confiance devant l'API : web (gateway remplace l'en-tête du navigateur avant lui).
       TRUST_PROXY: '1'
       PUBLIC_URL: https://${SITE_ADDRESS:?Renseigner SITE_ADDRESS dans .env}
       ETAT_DIR: /etat

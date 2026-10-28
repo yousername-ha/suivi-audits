@@ -1,7 +1,7 @@
 /* Déclarer une fois (ADR 0031, lot M3) : correspondances organisationnelles validées par une décision humaine,
    propositions de rapprochement jamais affirmées (le pilote confirme ou rejette), notification des pilotes, couverture
    commune et isolation des périmètres. Données fictives : aucun texte normatif. */
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { FrameworkDefinition } from '@suivi/shared';
 import { createTestApp, login, makeUser, type Agent, type TestApp, type TestUser } from './helpers.js';
 
@@ -352,5 +352,23 @@ describe('rapprochements : filtre par référentiel et réouverture d’une prop
     await a.post(`/api/grc/${s3}/rapprochements/sync`);
     expect((await liste('status=pending')).map((x) => x.id)).toEqual([p!.id]);
     expect((await a.get(`/api/grc/${s3}/rapprochements/summary`)).json()).toEqual({ pending: 1 });
+  });
+});
+
+describe('erreurs internes lors de la décision', () => {
+  it("renvoie un message neutre pour une erreur inattendue et garde le texte d'une erreur fonctionnelle", async () => {
+    const detail = 'duplicate key value violates unique constraint "grc_rapprochements_pkey"';
+    const journal = vi.spyOn(t.svc.db.log, 'error');
+    vi.spyOn(t.svc.db, 'tx').mockRejectedValueOnce(new Error(detail));
+    const id = '00000000-0000-4000-8000-0000000000aa';
+    const corps = { ids: [id], decision: 'reject', note: 'Motif de rejet de test', confirm: 'DECIDER' };
+    const r = await a.post(`/api/grc/${scope}/rapprochements/decision`, corps);
+    expect(r.statusCode, r.body).toBe(200);
+    expect(r.json().results).toEqual([{ id, ok: false, error: 'Erreur interne lors de la décision.' }]);
+    expect(r.body).not.toContain('duplicate key');
+    expect(journal).toHaveBeenCalled();
+    vi.restoreAllMocks();
+    const suite = await a.post(`/api/grc/${scope}/rapprochements/decision`, corps);
+    expect(suite.json().results).toEqual([{ id, ok: false, error: 'Proposition introuvable.' }]);
   });
 });

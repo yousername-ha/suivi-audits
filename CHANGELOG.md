@@ -12,6 +12,8 @@ Aucune action obligatoire. Les sauvegardes les plus récentes sont désormais to
 
 **Si l'antivirus facultatif est activé** (`--profile antivirus`) : après `docker compose pull`, relancer avec `docker compose --profile antivirus up -d` ; le nouveau service `freshclam` télécharge les signatures et `clamav` démarre quand elles sont présentes (quelques minutes). Vérifier que `CLAMAV_HOST=clamav` reste renseigné dans `.env`. Sans antivirus, rien à faire.
 
+Aucune action sur la pile Docker fournie : `TRUST_PROXY` y reste à `1`, qui désigne désormais un relais de confiance (le frontal `web`) au lieu de « tous ». Une installation hors Docker qui renseigne `TRUST_PROXY` doit relire la section « Adresse du client » du guide d'installation ; une valeur mal formée arrête l'API au démarrage avec un message explicite.
+
 Aucune action sur le serveur. Le frontal est reconstruit avec une bibliothèque corrigée (go-jose v4.1.6) ; une exception datée du scan des images couvre la seule alerte restante, sans correctif amont (voir ADR 0063).
 
 ### Modifié
@@ -28,6 +30,8 @@ Aucune action sur le serveur. Le frontal est reconstruit avec une bibliothèque 
 - **Conservation des sauvegardes** : la rotation de `scripts/backup.sh` garde toujours les `BACKUP_GARDER_MIN` archives les plus récentes (7 par défaut, de 1 à 365) et ne supprime les suivantes, avec leur fichier `.sha256`, qu'au-delà de `RETENTION_DAYS` ; l'exécutant des demandes web relève la durée de la politique à `RETENTION_MIN_DAYS` (30 par défaut, de 1 à 36500, lue dans `.env`). Tests Python ajoutés (rotation, bornes, plancher). Le guide d'installation précise aussi les identifiants (UID 70, 100, 1000, 1001) réservés aux conteneurs.
 - **Antivirus facultatif isolé** : `clamav` (analyse) n'est plus relié qu'au réseau interne `antivirus`, partagé avec l'API, sans accès à la base ni à Internet ; le téléchargement des signatures passe par un service `freshclam` distinct. Les deux s'exécutent sans privilège, en lecture seule, sans capacité Linux et avec une limite de processus.
 - **Images épinglées par empreinte** : les images tierces des Dockerfiles et du compose de production (`node`, `caddy`, `golang`, `alpine`, `postgres`, `clamav`) portent leur empreinte `@sha256` ; Dependabot suit aussi le compose. Contrôle `scripts/tests/conteneurs.test.mjs` ajouté à la CI.
+- **Adresse du client** : `TRUST_PROXY` accepte un nombre de relais de confiance (1 à 10), une liste d'adresses ou de CIDR, ou `true`/`false` (compatibilité). L'adresse retenue est celle vue par le dernier relais de confiance, et non la première de l'en-tête `X-Forwarded-For`. Valeur mal formée : l'API refuse de démarrer.
+- **Décision des rapprochements** : une erreur inattendue renvoie « Erreur interne lors de la décision. » au lieu du texte de l'erreur technique, qui est journalisée.
 
 ## [5.1.0] — 2026-10-27
 

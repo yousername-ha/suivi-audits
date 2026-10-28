@@ -137,7 +137,15 @@ export function allRoutes(): RouteDef[] {
 export async function buildApp(svc: Services): Promise<FastifyInstance> {
   const app = Fastify({
     loggerInstance: svc.log as unknown as FastifyBaseLogger,
-    trustProxy: svc.cfg.trustProxy,
+    // Fastify ne fait confiance à aucun relais quand TRUST_PROXY est un nombre : on le traduit en règle explicite
+    // (les `n` premiers sauts, à partir de la connexion directe, sont des relais ; l'adresse cliente est celle qui suit).
+    trustProxy:
+      typeof svc.cfg.trustProxy === 'number'
+        ? (
+            (n) => (_adresse: string, saut: number) =>
+              saut < n
+          )(svc.cfg.trustProxy)
+        : svc.cfg.trustProxy,
     bodyLimit: 1024 * 1024,
     requestIdHeader: false,
     return503OnClosing: true,
