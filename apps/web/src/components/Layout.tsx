@@ -40,6 +40,7 @@ import { famillesVisibles, localiser, type FamilleId } from '../navigation';
 import { logout as endSession } from '../logout';
 import { alerteDeFamille, LibelleAlerte, useAlertesMenu } from '../pilotage/alertes-menu';
 import { OngletsRubriques } from './OngletsRubriques';
+import { AlerteSecuriteNotice } from './AlerteSecuriteNotice';
 import { PoivreNotice } from './PoivreNotice';
 import { UpdateNotice } from './Updates';
 import { ErrorAlert } from './common';
@@ -230,6 +231,7 @@ export function Layout({ children }: { children: ReactNode }) {
       <div className="shell-top">
         <UpdateNotice />
         <PoivreNotice />
+        <AlerteSecuriteNotice />
         <header className="shell-header">
           <Group h="100%" px="md" justify="space-between" wrap="nowrap">
             <Group gap="sm" wrap="nowrap">

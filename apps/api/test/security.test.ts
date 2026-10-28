@@ -242,6 +242,27 @@ describe('jeton d’installation', () => {
     }
   });
 
+  it('le nom de l’organisation saisi à l’assistant devient le réglage général ; neutre par défaut', async () => {
+    const t2 = await createTestApp();
+    try {
+      expect(t2.svc.settings.get('general').orgName).toBe('Mon organisation');
+      const { token } = await t2.svc.auth.issueSetupToken('cli', () => {});
+      const a = new Agent(t2);
+      const r = await a.post('/api/setup', {
+        token,
+        username: 'chef',
+        password: PASSWORD,
+        poivre: poivreDeTest(),
+        orgName: '  Hôpital Exemple  ',
+      });
+      expect(r.statusCode, r.body).toBe(201);
+      expect(t2.svc.settings.get('general').orgName).toBe('Hôpital Exemple');
+      expect((await a.get('/api/auth/me')).json().orgName).toBe('Hôpital Exemple');
+    } finally {
+      await t2.close();
+    }
+  });
+
   it('jeton expiré : 410 avec un message clair', async () => {
     const t2 = await createTestApp();
     try {

@@ -18,9 +18,8 @@ Ces fichiers donnent l’état actuel, les preuves de test et les priorités. Co
   [recette](docs/05_RECETTE/RAPPORT_RECETTE.md), [backlog](docs/08_PILOTAGE/BACKLOG.md).
 
 L’écran `/legacy` est retiré ([ADR 0042](docs/adr/0042-retrait-de-lecran-legacy.md)) ; l’outil autonome est
-conservé sur `archive/outil-legacy-autonome`. `app/public/index.html` reste dans le dépôt comme référence de
-parité (plus servi) : ne pas le réécrire, toute évolution de ce fichier fait l’objet d’un commit dédié.
-`scripts/update-ui.sh` s’utilise sur un poste de développement.
+conservé sur `archive/outil-legacy-autonome` (le fichier `app/public/index.html`, ses bibliothèques, `scripts/update-ui.sh`
+et `archives/` ont été retirés du dépôt).
 Les données de départ restent vides et les fixtures anonymisées. Les cartes et
 les familles historiques encore attendues sont conservées.
 

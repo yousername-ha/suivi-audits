@@ -4,7 +4,7 @@ Référence applicative analysée : `c704fa6e6d6d516db75f963db8dd5d2049ab42c8`. 
 
 | Travaux                                                  | Trace Git / source                                       | Validation accessible                                                                   |
 | -------------------------------------------------------- | -------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Conservation v2 et intégration Sauge                     | archives/v2-manifest.json ; diagnostic integration-sauge | 44 fichiers comparés aux blobs ; 326 fonctions conservées ; 5 bibliothèques identiques. |
+| Conservation v2 et intégration Sauge                     | historique Git ; diagnostic integration-sauge | 44 fichiers comparés aux blobs ; 326 fonctions conservées ; 5 bibliothèques identiques. |
 | A3/A4/A5/A6 : connexion, déconnexion, aide, cartographie | 0e45380 ; diagnostic fiabilisation                       | Tests unitaires et parcours de CI ; les échecs intermédiaires restent documentés.       |
 | A1/A2 : sauvegarde, restauration, TLS                    | f909a61, 4901e86, 9c2dd8a ; ADR 0016–0018                | Recettes lot A du guide, restauration et rollback CI.                                   |
 | Dépendances HIGH                                         | 69e6782 ; diagnostic dependances-high                    | Drizzle 0.45.2, Caddy compilé Go 1.26.9 ; scans CI au commit courant verts.             |

@@ -230,6 +230,14 @@ export const authRoutes = [
             .returning('id')
             .executeTakeFirstOrThrow();
           await kdb.insertInto('user_roles').values({ user_id: u.id, role_id: 'administrateur' }).execute();
+          const org = body.orgName?.trim();
+          if (org) {
+            const cur = await svc.settings.read('general', c);
+            await svc.settings.write(c, 'general', { ...cur.values, orgName: org }, cur.version, {
+              id: u.id,
+              username: body.username,
+            });
+          }
           return { status: 'ok' as const, id: u.id };
         }, body.username)
         .catch((e: { code?: string }) => {
@@ -240,6 +248,7 @@ export const authRoutes = [
         await svc.db.audit({ username: body.username }, ip, 'setup.failed', '', { reason: res.status });
         throw new HttpError(SETUP_HTTP[res.status], SETUP_TOKEN_MESSAGES[res.status], { reason: res.status });
       }
+      await svc.settings.load();
       await svc.db.audit({ id: res.id, username: body.username }, ip, 'setup.admin_created');
       if (poivre)
         await svc.db.audit({ id: res.id, username: body.username }, ip, 'securite.poivre_defini', '', {

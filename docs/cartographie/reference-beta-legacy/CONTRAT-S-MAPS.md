@@ -1,6 +1,6 @@
 # Cartographie (bêta) — module de test dans l'outil historique
 
-Module « Cartographie » (Vue contexte, Vue processus) ajouté à `app/public/index.html` pour tester la
+Module « Cartographie » (Vue contexte, Vue processus) ajouté à l'ancien outil (retiré du dépôt) pour tester la
 maquette _Map Builder SMSI_ sur l'outil historique avant son portage dans l'application refondue.
 
 ## Fichiers

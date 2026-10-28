@@ -50,6 +50,17 @@ describe('alerte de verrouillage : anti-inondation', () => {
     expect(synthese[0]!.body).toContain('https://suivi.test/admin/audit');
     expect(envois).toHaveLength(11);
     expect(envois.map((e) => e.body).join('\n')).not.toContain('203.0.113.9');
+    // Même plafond dans l'application : dix alertes détaillées et une synthèse pour l'administrateur, sans adresse IP.
+    const admin = await t.svc.db.one<{ id: string }>("SELECT id FROM users WHERE username = 'plafond-admin'");
+    const appli = (
+      await t.svc.db.q<{ title: string; message: string }>(
+        "SELECT title, message FROM grc_notifications WHERE user_id = $1 AND kind = 'alerte_securite'",
+        [admin!.id],
+      )
+    ).rows;
+    expect(appli.filter((a) => /^Compte verrouillé :/.test(a.title))).toHaveLength(10);
+    expect(appli.filter((a) => /comptes verrouillés depuis/.test(a.title))).toHaveLength(1);
+    expect(appli.map((a) => a.message).join('\n')).not.toContain('203.0.113.9');
     // Le journal garde les douze événements, même au-delà du plafond de courriels.
     const journal = await t.svc.db.one<{ n: number }>(
       "SELECT count(*)::int AS n FROM audit_log WHERE action='auth.account_locked'",

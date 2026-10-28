@@ -3,7 +3,9 @@
    un groupe). C'est une alerte de sécurité : les réglages personnels de notification (ADR 0058) ne s'y appliquent pas.
    Même file que les alertes d'exploitation (`courriel_jobs`, ADR 0049 et 0059) : l'adresse est celle de la demande.
    Le corps ne contient jamais d'adresse IP (elle reste au journal d'audit) ni de code saisi. Plafond : ALERTES_PAR_HEURE alertes
-   détaillées par heure, puis une seule synthèse horaire ; les événements restent tous au journal. */
+   détaillées par heure, puis une seule synthèse horaire ; les événements restent tous au journal.
+   Notification dans l'application (ADR 0074) : les mêmes évènements, aux mêmes administrateurs actifs, dans `grc_notifications`
+   (type `alerte_securite`, sans SMSI ni objet) ; elle existe même quand le courriel n'est pas configuré. */
 import { sql } from 'kysely';
 import type { SettingsValues } from '@suivi/shared';
 import type { VerrouillageEvt } from './auth.js';
@@ -27,6 +29,14 @@ const TITRES_POIVRE = {
   reinitialise: 'Poivre des mots de passe réinitialisé (procédure d’urgence)',
 } as const;
 const VERROU_ALERTE = 'alerte-verrouillage';
+export const KIND_ALERTE_SECURITE = 'alerte_securite';
+
+export interface AlerteApplication {
+  id: string;
+  title: string;
+  message: string;
+  createdAt: string;
+}
 
 const MOTIFS = {
   mot_de_passe: 'échecs de mot de passe',
@@ -54,6 +64,49 @@ export class AlertesSecurite {
     private readonly settings: Settings,
     private readonly publicUrl: string,
   ) {}
+
+  /** Alertes de sécurité non lues de ce compte (le droit d'administrer est vérifié par la route). */
+  async nonLues(userId: string): Promise<AlerteApplication[]> {
+    const lignes = await this.db.k
+      .selectFrom('grc_notifications')
+      .select(['id', 'title', 'message', 'created_at'])
+      .where('user_id', '=', userId)
+      .where('kind', '=', KIND_ALERTE_SECURITE)
+      .where('read_at', 'is', null)
+      .where('canal_application', '=', true)
+      .orderBy('created_at', 'desc')
+      .limit(50)
+      .execute();
+    return lignes.map((l) => ({
+      id: l.id,
+      title: l.title,
+      message: l.message,
+      createdAt: new Date(l.created_at).toISOString(),
+    }));
+  }
+
+  /** Marque une alerte comme lue ; seul son destinataire peut le faire. */
+  async lire(id: string, userId: string): Promise<boolean> {
+    const r = await this.db.k
+      .updateTable('grc_notifications')
+      .set({ read_at: sql<Date>`now()` })
+      .where('id', '=', id)
+      .where('user_id', '=', userId)
+      .where('kind', '=', KIND_ALERTE_SECURITE)
+      .executeTakeFirst();
+    return Number(r.numUpdatedRows) > 0;
+  }
+
+  /** Administrateurs actifs (rôle « administrateur », direct ou par un groupe) : destinataires dans l'application. */
+  private async administrateurs(): Promise<string[]> {
+    const lignes = await this.db.k
+      .selectFrom('users as u')
+      .select('u.id')
+      .where(COMPTE_ACTIF)
+      .where(porteLeRole(sql`${'administrateur'}`))
+      .execute();
+    return lignes.map((l) => l.id);
+  }
 
   private lien(ecran: string) {
     return this.publicUrl ? this.publicUrl.replace(/\/$/, '') + ecran : ecran;
@@ -187,6 +240,7 @@ export class AlertesSecurite {
     const general = (await this.settings.read('general')).values as SettingsValues['general'];
     const nom = propre(general.appName, 80) || 'Suivi des audits';
     const dest = await this.destinataires();
+    const admins = await this.administrateurs();
     const identifiant = propre(compte.username, 64);
 
     await this.db.tx(async (c, k) => {
@@ -200,16 +254,24 @@ export class AlertesSecurite {
         { motif: e.motif, echecs: e.echecs, jusqua: e.jusqua.toISOString() },
         c,
       );
-      if (dest.length === 0) return;
+      if (dest.length === 0 && admins.length === 0) return;
       const fenetre = await k
         .selectFrom('audit_log')
         .select([sql<number>`count(*)::int`.as('n'), sql<Date>`min(ts)`.as('depuis')])
         .where('action', '=', 'auth.account_locked')
         .where('ts', '>', sql<Date>`now() - interval '1 hour'`)
         .executeTakeFirstOrThrow();
-      let objet: string, corps: string;
+      let objet: string, corps: string, titre: string, message: string, cle: string;
       if (fenetre.n <= ALERTES_PAR_HEURE) {
         objet = `[${nom}] Compte verrouillé : ${identifiant}`;
+        titre = `Compte verrouillé : ${identifiant}`;
+        cle = `verrou:${e.userId}:${e.jusqua.toISOString()}`;
+        message = [
+          `Le compte « ${identifiant} » (${propre(compte.display_name, 120)}) a été verrouillé le ${paris(new Date())}`,
+          `(heure de Paris) : ${MOTIFS[e.motif]} (${e.echecs} échecs). Fin prévue du verrou : ${paris(e.jusqua)}.`,
+          'Détail dans le journal d’audit (action « auth.account_locked »). Si ce verrouillage ne vient pas de l’utilisateur lui-même,',
+          'traitez-le comme un incident de sécurité.',
+        ].join(' ');
         corps = [
           'Bonjour,',
           '',
@@ -235,6 +297,9 @@ export class AlertesSecurite {
         if (deja.n > 0) return;
         await this.db.audit(null, null, 'auth.account_locked_synthese', '', { comptes: fenetre.n }, c);
         objet = `[${nom}] ${fenetre.n} comptes verrouillés depuis ${heureParis(new Date(fenetre.depuis))}`;
+        titre = `${fenetre.n} comptes verrouillés depuis ${heureParis(new Date(fenetre.depuis))}`;
+        cle = `synthese:${new Date().toISOString().slice(0, 13)}`;
+        message = `${fenetre.n} comptes verrouillés en moins d’une heure : cette série peut indiquer une attaque par essais de mots de passe. Détail dans le journal d’audit (action « auth.account_locked »).`;
         corps = [
           'Bonjour,',
           '',
@@ -259,6 +324,20 @@ export class AlertesSecurite {
             subject: objet.slice(0, 180),
             body: corps,
           })
+          .execute();
+      for (const id of admins)
+        await k
+          .insertInto('grc_notifications')
+          .values({
+            smsi_id: null,
+            object_id: null,
+            user_id: id,
+            kind: KIND_ALERTE_SECURITE,
+            due_key: cle,
+            title: titre.slice(0, 180),
+            message,
+          })
+          .onConflict((oc) => oc.doNothing())
           .execute();
     });
   }

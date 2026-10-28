@@ -61,7 +61,7 @@ export function SetupPage() {
   const [poivre, setPoivre] = useState<PoivreAEnregistrer | null>(null);
   const interdits = useMemo(() => [me.appName], [me.appName]);
   const token = useTokenInput();
-  const [f, setF] = useState({ username: '', displayName: '', email: '', password: '', confirm: '' });
+  const [f, setF] = useState({ orgName: '', username: '', displayName: '', email: '', password: '', confirm: '' });
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -80,6 +80,7 @@ export function SetupPage() {
     try {
       await post('/api/setup', {
         token: token.value,
+        orgName: f.orgName.trim() || undefined,
         username: f.username.trim(),
         displayName: f.displayName,
         email: f.email,
@@ -163,6 +164,14 @@ export function SetupPage() {
                     value={token.value}
                     onChange={token.onChange}
                     onKeyDown={token.onKeyDown}
+                  />
+                  <TextInput
+                    label="Nom de l’organisation"
+                    description="Affiché dans l’application et les exports ; modifiable ensuite dans Paramètres."
+                    maxLength={120}
+                    autoComplete="organization"
+                    value={f.orgName}
+                    onChange={set('orgName')}
                   />
                   <div className="grid-2">
                     <TextInput

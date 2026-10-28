@@ -1,6 +1,6 @@
 # Suivi des audits et pilotage multi-référentiels
 
-Application web auto-hébergée de pilotage du GCS Normand'e-Santé : qualité, sécurité et référentiels, préparation et suivi des audits, écarts et actions, documents et preuves. Le menu Pilotage accompagne les démarches SMQ (ISO 9001), SMSI (ISO 27001), HDS et intégrées, sans imposer la création d’un SMSI. Elle remplace, module par module, l'outil historique en fichier unique, qui reste disponible sous `/legacy` pendant la transition.
+Application web auto-hébergée de pilotage d'un système de management de la sécurité de l'information et de la qualité : qualité, sécurité et référentiels, préparation et suivi des audits, écarts et actions, documents et preuves. Le menu Pilotage accompagne les démarches SMQ (ISO 9001), SMSI (ISO 27001), HDS et intégrées, sans imposer la création d’un SMSI. Elle remplace, module par module, l'outil historique en fichier unique, qui reste disponible sous `/legacy` pendant la transition.
 
 - **Reprise du projet : [HANDOVER.md](HANDOVER.md)** — [état](PROJECT_STATUS.md), [index documentaire](docs/00_INDEX.md), [consignes IA](AGENTS.md)
 - **Comprendre le produit** : [PRODUCT](docs/PRODUCT.md), [référentiels](docs/REFERENTIALS.md), [décisions](docs/DECISIONS.md), [feuille de route](docs/ROADMAP.md) ; les documents de travail terminés sont dans [docs/archive](docs/archive/README.md)

@@ -1,5 +1,5 @@
 /* Parité du tableau de bord unifié avec l'outil historique (UI-02) : `ddaStats`, `indState`, `planLate`/`plansOf` et
-   les écarts ouverts de `viewDash` sont extraits de app/public/index.html et exécutés dans un contexte node:vm isolé sur
+   les écarts ouverts de `viewDash` sont extraits de l'extrait historique figé et exécutés dans un contexte node:vm isolé sur
    des états fictifs générés, puis comparés aux fonctions partagées. */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -18,7 +18,7 @@ import {
   TYPES_PLAN,
 } from '../src/tableau-de-bord.js';
 
-const INDEX = readFileSync(path.resolve(import.meta.dirname, '../../../app/public/index.html'), 'utf8');
+const INDEX = readFileSync(path.resolve(import.meta.dirname, './reference/index-historique-extrait.txt'), 'utf8');
 function extraire(debut: string, fin: string): string {
   const i = INDEX.indexOf(debut);
   const j = INDEX.indexOf(fin, i + debut.length);
@@ -44,7 +44,7 @@ function historique(S: unknown) {
   const ctx: Record<string, any> = { S: JSON.parse(JSON.stringify(S)) };
   vm.createContext(ctx);
   vm.runInContext(`${CODE}\n;globalThis.__h={ddaStats,indState,planLate,plansOf,fmtVal};`, ctx, {
-    filename: 'index.html',
+    filename: 'index-historique-extrait.txt',
   });
   return ctx.__h as {
     ddaStats(ref: string): any;
