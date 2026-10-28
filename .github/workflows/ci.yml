@@ -86,10 +86,6 @@ jobs:
               if (s.schema !== 14) throw new Error(label + " : schema attendu 14, trouvé " + s.schema);
             };
             check("apps/api/seed/state.json", JSON.parse(fs.readFileSync("apps/api/seed/state.json", "utf8")));
-            const h = fs.readFileSync("app/public/index.html", "utf8");
-            const m = h.match(/<script type="application\/json" id="seed">([\s\S]*?)<\/script>/);
-            if (!m) throw new Error("bloc <script id=\"seed\"> introuvable dans app/public/index.html");
-            check("app/public/index.html", JSON.parse(m[1]));
             console.log("État initial vide : OK");
           '
       - name: Aucun secret ni .env versionné
@@ -100,7 +96,7 @@ jobs:
           if git ls-files | grep -E '\.(pem|key|p12|pfx)$'; then
             echo "::error::Certificat ou clé privée versionné"; exit 1
           fi
-          if git grep -nIE 'BEGIN [A-Z ]*PRIVATE KEY' -- . ':!app/public/lib'; then
+          if git grep -nIE 'BEGIN [A-Z ]*PRIVATE KEY' -- .; then
             echo "::error::Clé privée dans le dépôt"; exit 1
           fi
 

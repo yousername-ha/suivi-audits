@@ -1,4 +1,4 @@
-/* Parité entre l'outil historique (app/public/index.html) et la nouvelle version : mêmes identifiants du schéma 15. */
+/* Parité entre l'outil historique (extrait figé) et la nouvelle version : mêmes identifiants du schéma 15. */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -8,7 +8,7 @@ import { migrateToSchema15 } from '../src/legacy/index.js';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 
 describe('outil historique : schéma 15', () => {
-  const html = readFileSync(path.join(root, 'app/public/index.html'), 'utf8');
+  const html = readFileSync(path.join(root, 'packages/shared/test/reference/index-historique-extrait.txt'), 'utf8');
 
   it('déclare le schéma 15 et l’export pour la nouvelle version', () => {
     expect(html).toContain('const SCHEMA=15;');

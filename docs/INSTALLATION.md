@@ -7,8 +7,7 @@ Ce guide part d'un serveur vide et ne suppose aucune connaissance de Linux ni de
 > **Branches et version (11 octobre 2026).** `main` porte la version Docker unique, **3.1.0** (section 12.0),
 > issue de la branche de travail `claude-suivi-smsi` ; la branche `legacy` porte l'outil historique autonome.
 > Les anciennes branches sont conservées sous les étiquettes `archive/*`.
-> La version 2 du dépôt est conservée intégralement dans
-> `archives/v2-source.zip` et vérifiable avec `archives/v2-manifest.json`.
+> La version 2 du dépôt reste accessible dans l'historique Git (commit `b148c1ba303954b7023996fce3d0eff2923326b5`).
 > Le guide ci-dessous décrit le déploiement v3 ; il ne faut pas l’appliquer à une
 > installation v2 en service sans sauvegarde et recette de la montée de version.
 > La validation cloud de l’intégration utilise une base PostgreSQL dédiée et Caddy avec
