@@ -77,6 +77,5 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0070](0070-reponse-de-connexion-uniforme-et-alerte-de-verrouillage.md) | Réponse de connexion uniforme et alerte de verrouillage de compte | Proposée |
 | [0071](0071-sauvegardes-chiffrees-avec-age.md) | Sauvegardes chiffrées avec age (`.tar.age`), deux destinataires dont une clé de secours hors serveur, INFO liée au nom du fichier, chiffrement obligatoire, ancien format `.tar.enc` restaurable une version | Proposée |
 | [0072](0072-poivre-des-mots-de-passe.md) | Poivre des mots de passe : empreinte scrypt chiffrée en AES-256-GCM par une clé que l'organisation conserve au coffre-fort, définie à l'installation, changeable avec l'ancien poivre et un code TOTP, procédures de reprise et d'urgence | Proposée |
-
 | [0073](0073-donnees-de-demonstration-a-l-installation.md) | Données de démonstration proposées à l'installation (ISO 27001, HDS, EBIOS RM) | Proposée |
 
