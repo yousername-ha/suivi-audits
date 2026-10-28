@@ -14,6 +14,7 @@ import {
   TotpConfirmBody,
   type MeOut as MeOutT,
 } from '@suivi/shared';
+import { chargerDemoDemandee, demanderDemo } from '../demo-installation.js';
 import { sql } from 'kysely';
 import { z } from 'zod';
 import { accessStage, type Session } from '../auth.js';
@@ -229,7 +230,11 @@ export const authRoutes = [
       await svc.settings.load();
       await svc.db.audit({ id: res.id, username: body.username }, ip, 'setup.admin_created');
       await svc.auth.create(req, reply, res.id, false);
-      return { stage: stageAfter(svc, { totpEnabled: false, mustChangePassword: false }, false) };
+      if (body.demo) await demanderDemo(svc, { id: res.id, username: body.username });
+      return {
+        stage: stageAfter(svc, { totpEnabled: false, mustChangePassword: false }, false),
+        ...(body.demo ? { demo: 'en_attente' as const } : {}),
+      };
     },
   }),
 
@@ -338,7 +343,8 @@ export const authRoutes = [
       }, sess.user.username);
       await svc.auth.create(req, reply, sess.user.id, true);
       await svc.db.audit(sess.user, ip, 'account.mfa_enrolled');
-      return { stage: stageAfter(svc, { ...sess.user, totpEnabled: true }, true) };
+      const demo = await chargerDemoDemandee(svc, req.server, sess.user, ip);
+      return { stage: stageAfter(svc, { ...sess.user, totpEnabled: true }, true), ...(demo ? { demo } : {}) };
     },
   }),
   route({

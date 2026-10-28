@@ -2,7 +2,7 @@
    instance qui contient déjà des données ; le contrôle des relations détecte une référence cassée. Données fictives. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { controleRelations } from '../src/controle-relations.js';
-import { chargerJeuDeTest, etatJeuDeTest, ORGANISATION_TEST, referentielDemonstration } from '../src/jeu-de-test.js';
+import { chargerJeuDeTest, etatJeuDeTest, ORGANISATION_TEST } from '../src/jeu-de-test.js';
 import { createTestApp, login, makeUser, type Agent, type TestApp } from './helpers.js';
 import { DEFAULT_SMSI } from '../src/grc/core.js';
 
@@ -14,14 +14,13 @@ beforeAll(async () => {
 afterAll(() => t.close());
 
 describe('jeu de données de test', () => {
-  it('est entièrement fictif et ne reproduit aucun référentiel officiel', () => {
-    const texte = JSON.stringify({ etat: etatJeuDeTest(), ref: referentielDemonstration() });
+  it('est entièrement fictif et ne reproduit aucun texte normatif', () => {
+    const texte = JSON.stringify(etatJeuDeTest());
     expect(texte).toMatch(/fictif/i);
-    expect(referentielDemonstration().source.normative).toBe(false);
-    expect(ORGANISATION_TEST).toMatch(/jeu de test/);
+    expect(ORGANISATION_TEST).toMatch(/fictif.*démonstration/);
     expect(texte).not.toMatch(/ISO\/IEC 27001:2022|ReCyF|Annexe A/);
   });
-  it('se charge sur une instance vide et produit des données cohérentes', async () => {
+  it('se charge sur une instance vide et produit des données cohérentes', { timeout: 180_000 }, async () => {
     const bilan = await chargerJeuDeTest(t.svc, t.app, 'jdt_admin', { publicUrl: 'https://suivi.test' });
     expect(bilan).toMatchObject({
       etat: 'oui',
@@ -34,6 +33,20 @@ describe('jeu de données de test', () => {
       evaluations: 2,
     });
     expect(bilan.liens).toBeGreaterThanOrEqual(8);
+    // ISO 27001 / HDS : référentiels de la bibliothèque, couverture par exigence, déclaration d'applicabilité, étude EBIOS RM.
+    expect(bilan.normes).toMatchObject({
+      referentiels: ['iso-27001-2022', 'hds'],
+      exigencesEvaluees: 157,
+      ddaRenseignees: 126,
+      risquesEbios: 4,
+      traitements: 5,
+    });
+    expect(bilan.normes!.elementsEbios).toBeGreaterThan(30);
+    const etude = (await a.get(`/api/grc/${DEFAULT_SMSI}/risk-studies/${bilan.normes!.etudeEbios}`)).json();
+    expect(JSON.stringify(etude)).toMatch(/Rançongiciel/);
+    const dda = (await a.get('/api/suivi/etat')).json().dda as Record<string, { app?: string; level?: string }>;
+    expect(dda['A-8.30']).toMatchObject({ app: 'non' });
+    expect(Object.values(dda).filter((d) => d.level === 'Total').length).toBeGreaterThan(30);
     const relations = await controleRelations(t.svc);
     expect(relations.controles.flatMap((c) => c.anomalies)).toEqual([]);
     expect(relations.ok).toBe(true);

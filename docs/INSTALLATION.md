@@ -515,9 +515,10 @@ Le fichier `racine-suivi-audits.crt` est alors dans votre dossier **Télécharge
 > ⚠️ Ce certificat racine permet au serveur de signer des certificats reconnus par les postes. Ne le déployez que pour ce serveur, et préférez à terme un certificat de votre PKI (étape 6.4).
 
 **8.4 Remplir la page « Installation initiale »** :
-1. **Jeton d'installation** : collez le jeton. Minuscules, espaces et tirets sont acceptés : le champ se met en forme tout seul.
+1. **Jeton d'installation** : collez le jeton. Minuscules, espaces et tirets sont acceptés : le champ se met en forme tout seul. **Nom de l'organisation** (facultatif) : affiché dans l'application et les exports, modifiable ensuite dans Paramètres.
 2. **Identifiant** : par exemple `rssi`. **Nom affiché** : par exemple `Responsable SSI`. L'adresse e-mail est facultative.
 3. **Mot de passe** et **Confirmation** : au moins 12 caractères, avec au moins 3 types de caractères parmi minuscules, majuscules, chiffres et symboles, et sans l'identifiant. Enregistrez-le dans votre coffre-fort.
+4. **Charger des données de démonstration** (case facultative, décochée par défaut) : à cocher pour une évaluation, jamais en production. Voir l'étape 10.4.
 4. Cliquez sur **Créer le compte**.
 
 **Résultat attendu** : la page « Activer la double authentification » s'affiche, avec un QR code. En cas de message d'erreur :
@@ -621,7 +622,9 @@ Sautez cette étape si vous démarrez sans historique.
 
 > Les autres modes : **Fusionner** ajoute et met à jour sans jamais rien supprimer ; **Remplacer un module** remplace un seul module et **supprime** les éléments absents du fichier (il faut ressaisir le nom du module pour confirmer).
 
-**10.4 Charger un jeu de données de test (instance de test uniquement).** Pour évaluer la plateforme sans saisir de données réelles, l'API sait charger un jeu **fictif et cohérent** (processus, objectifs et indicateurs, parties intéressées, fournisseurs évalués, écarts, plans d'audit, revue de direction, référentiel de démonstration, méthode de risque et risques appréciés, actions, série récurrente, opportunités) :
+**10.4 Charger un jeu de données de démonstration (instance de test uniquement).** Pour évaluer la plateforme sans saisir de données réelles, l'API sait charger un jeu **fictif et cohérent**, celui d'un établissement de santé imaginaire : processus, objectifs et indicateurs, parties intéressées, fournisseurs évalués, écarts, plans d'audit, revue de direction, référentiels **ISO/IEC 27001:2022 et HDS** rattachés avec leur couverture par exigence et la déclaration d'applicabilité, méthode de risque, **étude EBIOS RM complète** (valeurs métier, événements redoutés, sources de risque, scénarios stratégiques et opérationnels, risques, traitements et actions, ateliers 1 à 5 validés), actions, série récurrente, opportunités.
+
+À l'installation, la même démonstration se charge en **cochant « Charger des données de démonstration »** sur la page d'installation initiale (étape 8.4) : elle est alors chargée à la fin de la configuration de la double authentification du compte créé, en une minute environ. Pour repartir d'une base vide : Administration, Remettre la base à vide. En ligne de commande :
 
 <!-- ci: skip — instance de test uniquement, jamais rejoué par le guide -->
 ```bash

@@ -1,5 +1,5 @@
 /* Installation initiale : création du compte administrateur avec le jeton d'installation. */
-import { Alert, Button, Card, Group, PasswordInput, Stack, Text, TextInput, Title } from '@mantine/core';
+import { Alert, Button, Card, Checkbox, Group, PasswordInput, Stack, Text, TextInput, Title } from '@mantine/core';
 import {
   formatSetupToken,
   SETUP_TOKEN_COMMANDS,
@@ -54,6 +54,7 @@ export function SetupPage() {
   });
   const token = useTokenInput();
   const [f, setF] = useState({ orgName: '', username: '', displayName: '', email: '', password: '', confirm: '' });
+  const [demo, setDemo] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -70,6 +71,7 @@ export function SetupPage() {
     try {
       await post('/api/setup', {
         token: token.value,
+        demo,
         orgName: f.orgName.trim() || undefined,
         username: f.username.trim(),
         displayName: f.displayName,
@@ -180,6 +182,12 @@ export function SetupPage() {
                 autoComplete="new-password"
                 value={f.confirm}
                 onChange={set('confirm')}
+              />
+              <Checkbox
+                label="Charger des données de démonstration"
+                description="Établissement de santé fictif avec ISO 27001, HDS et une étude EBIOS RM complète, pour découvrir l’outil. Chargées à la fin de la configuration de la double authentification (environ une minute). À retirer avant la production : Administration, Remettre la base à vide."
+                checked={demo}
+                onChange={(e) => setDemo(e.currentTarget.checked)}
               />
               {error && (
                 <Alert color="red" role="alert">

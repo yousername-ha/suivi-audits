@@ -52,6 +52,8 @@ export const SetupBody = z.object({
   email: Email.optional(),
   /** Nom de l'organisation (réglage « general »), demandé au premier lancement ; facultatif. */
   orgName: text(120).optional(),
+  /** Charger les données de démonstration (établissement fictif, ISO 27001 / HDS / EBIOS RM) à l'installation. */
+  demo: z.boolean().optional(),
   password: z.string().max(256),
 });
 export const PasswordChangeBody = z.object({ current: z.string().max(256), next: z.string().max(256) });
@@ -92,7 +94,10 @@ export const MeOut = z.object({
   version: z.string(),
 });
 export type MeOut = z.infer<typeof MeOut>;
-export const StageOut = z.object({ stage: AccessStageSchema });
+/** `demo` : données de démonstration demandées à l'installation, « en_attente » jusqu'à la fin de l'enrôlement du second
+    facteur, puis « ok » ou « echec » (chargement interrompu). */
+export const ResultatDemoSchema = z.enum(['en_attente', 'ok', 'echec']);
+export const StageOut = z.object({ stage: AccessStageSchema, demo: ResultatDemoSchema.optional() });
 export const SetupStatusOut = z.object({ needed: z.boolean(), pending: z.boolean(), adminExists: z.boolean() });
 export const TotpBeginOut = z.object({ secret: z.string(), uri: z.string() });
 export const ErrorOut = z.object({ error: z.string() }).catchall(z.unknown());

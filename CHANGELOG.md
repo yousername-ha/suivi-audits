@@ -6,6 +6,8 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
+Aucune action : la case de démonstration est décochée par défaut et ne concerne que l'installation initiale. `suivi jeu-de-test` charge désormais la même démonstration (ISO 27001, HDS, EBIOS RM) à la place du référentiel fictif d'avant.
+
 Aucune action obligatoire. Une installation existante conserve le nom d'organisation déjà enregistré (Paramètres, Organisation). La valeur par défaut de `ORG_NAME` ne s'applique qu'à une nouvelle installation, où l'assistant du premier lancement demande le nom. La carte de l'activité des établissements du CRRC devient une liste par département : un établissement est rangé selon les deux premiers chiffres de son FINESS.
 
 **Changement de comportement** : les Contributeurs ne suppriment plus les plans d'actions, éléments du plan d'audit, GAP, lignes d'investissement, éléments du CRRC, incidents, éléments de la cellule de crise, évaluations du clausier, processus, objectifs, indicateurs et mesures (droit `supprimer` exigé, [ADR 0068](docs/adr/0068-suppressions-reservees-au-droit-supprimer.md)). Pour garder cette capacité à un profil, lui attribuer un rôle personnalisé qui porte `supprimer` sur les modules voulus. Aucune action sur le serveur.
@@ -17,6 +19,9 @@ Aucune action obligatoire. Les sauvegardes les plus récentes sont désormais to
 Aucune action sur la pile Docker fournie : `TRUST_PROXY` y reste à `1`, qui désigne désormais un relais de confiance (le frontal `web`) au lieu de « tous ». Une installation hors Docker qui renseigne `TRUST_PROXY` doit relire la section « Adresse du client » du guide d'installation ; une valeur mal formée arrête l'API au démarrage avec un message explicite.
 
 Aucune action sur le serveur. Le frontal est reconstruit avec une bibliothèque corrigée (go-jose v4.1.6) ; une exception datée du scan des images couvre la seule alerte restante, sans correctif amont (voir ADR 0063).
+
+### Ajouté
+- **Données de démonstration à l'installation** ([ADR 0072](docs/adr/0072-donnees-de-demonstration-a-l-installation.md)) : une case facultative, décochée par défaut, charge un établissement de santé entièrement fictif avec les référentiels ISO/IEC 27001:2022 et HDS (couverture par exigence, déclaration d'applicabilité) et une étude EBIOS RM complète (ateliers 1 à 5, risques, traitements, actions). Le chargement a lieu à la fin de la configuration de la double authentification ; un échec ne bloque pas l'installation. Aucun compte supplémentaire n'est créé.
 
 ### Modifié
 - **Références à une organisation réelle** : le nom d'organisation par défaut est neutre (« Mon organisation », `ORG_NAME`) et l'assistant du premier lancement le demande ; les questionnaires (GAP, guide d'audit, incidents NIS 2) parlent de « l'organisation » et ne citent plus de prestataire nommé. L'activité du CRRC se regroupe par département (deux premiers chiffres du FINESS) au lieu d'une carte des départements normands.
