@@ -1529,12 +1529,12 @@
     {
       "id": "TEST-043",
       "title": "Régénérer et relire les captures de référence du tableau de bord",
-      "status": "À FAIRE",
+      "status": "RÉALISÉE",
       "priority": "P1",
       "origin": "ADR 0069, étape 1",
       "acceptance": "Les 12 captures ecrans-tableau-de-bord-* régénérées sur la pile Docker locale (run-in-container.sh --update-snapshots), relues image par image dans la PR, CI de bout en bout verte.",
-      "dependencies": "Docker local (indisponible dans la session cloud du 27/10/2026)",
-      "next": "Régénérer les captures sur un poste avec Docker et les pousser sur la branche claude/tableau-de-bord-verre.",
+      "dependencies": "Docker local",
+      "next": "Aucune : captures régénérées dans le conteneur Playwright officiel le 28/10/2026, validées par le RSSI le 28/10/2026, CI de bout en bout verte (PR #152).",
       "estimation": "NON ESTIMÉE"
     }
   ],
