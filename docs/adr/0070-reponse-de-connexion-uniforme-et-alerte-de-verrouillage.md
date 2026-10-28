@@ -18,6 +18,6 @@
 ## Conséquences
 
 - **Aucune migration** : la file existante suffit (les alertes d'exploitation y sont déjà adressées à une adresse de la demande). La variante du dossier (nouveau genre `alerte`) n'est donc pas nécessaire.
-- **Pas de notification dans l'application** pour cette alerte : `grc_notifications` est rattachée à un SMSI et à un objet (colonnes obligatoires), ce qui ne convient pas à un événement de compte. L'ajouter demanderait une migration qui assouplit ces colonnes ; elle n'est pas faite sans décision du RSSI. L'événement reste visible dans le journal d'audit (`auth.account_locked`).
+- **Notification dans l'application** : ajoutée ensuite sur décision du RSSI, par l'[ADR 0074](0074-alerte-de-securite-dans-l-application.md) (migration qui rend facultatifs le SMSI et l'objet pour ce seul type). L'événement reste aussi visible dans le journal d'audit (`auth.account_locked`).
 - **Compromis accepté** : un utilisateur légitime ne sait plus, à l'écran, si son compte est verrouillé ; le message le suggère. Le déverrouillage par un administrateur reste disponible.
 - Un attaquant qui verrouille de nombreux comptes déclenche au plus 10 alertes détaillées, puis une synthèse par heure.
