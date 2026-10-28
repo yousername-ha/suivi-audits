@@ -13,6 +13,7 @@ import { useMemo, useRef, useState, type FormEvent } from 'react';
 import { Navigate, useNavigate } from 'react-router';
 import { ApiError, get, post } from '../api';
 import { CopyCommand } from '../components/common';
+import { CriteresMotDePasse } from '../components/CriteresMotDePasse';
 import { SaisiePoivre } from '../components/Poivre';
 import { useMe, useRefreshMe } from '../session';
 
@@ -201,11 +202,17 @@ export function SetupPage() {
                   />
                   <PasswordInput
                     label="Mot de passe"
-                    description={`Au moins ${minLen} caractères et 3 types parmi minuscules, majuscules, chiffres, symboles.`}
+                    description={`Au moins ${minLen} caractères et 3 types parmi minuscules, majuscules, chiffres, symboles, sans répétition ni suite.`}
                     required
                     autoComplete="new-password"
                     value={f.password}
                     onChange={set('password')}
+                  />
+                  <CriteresMotDePasse
+                    valeur={f.password}
+                    minLen={minLen}
+                    identifiants={[f.username.trim()]}
+                    noms={[me.appName, me.orgName]}
                   />
                   <PasswordInput
                     label="Confirmation"

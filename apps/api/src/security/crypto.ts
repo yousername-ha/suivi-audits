@@ -73,18 +73,6 @@ export function ouvrirEmpreinte(cle: Buffer, userId: string, stockee: string): s
   }
 }
 
-export function passwordProblems(pw: unknown, minLen: number, ctx: string[] = []): string[] {
-  const p: string[] = [];
-  const s = typeof pw === 'string' ? pw : '';
-  if (s.length < minLen) p.push(`au moins ${minLen} caractères`);
-  if (s.length > 256) p.push('256 caractères au maximum');
-  const classes = [/[a-z]/, /[A-Z]/, /[0-9]/, /[^A-Za-z0-9]/].filter((r) => r.test(s)).length;
-  if (classes < 3) p.push('au moins 3 types de caractères parmi minuscules, majuscules, chiffres, symboles');
-  for (const c of ctx)
-    if (c && c.length >= 3 && s.toLowerCase().includes(c.toLowerCase())) p.push("ne pas contenir l'identifiant");
-  return p;
-}
-
 export const token = (n = 32) => crypto.randomBytes(n).toString('base64url');
 /** Octets hachables : chaîne ou vue sur un tampon (Buffer, Uint8Array…). */
 type Octets = string | NodeJS.ArrayBufferView;

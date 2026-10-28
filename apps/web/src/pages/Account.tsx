@@ -19,6 +19,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import qrcode from 'qrcode-generator';
 import { useState } from 'react';
 import { errorMessage, get, post } from '../api';
+import { CriteresMotDePasse } from '../components/CriteresMotDePasse';
 import { ErrorAlert, fmtDate } from '../components/common';
 import { usePresence } from '../realtime';
 import { EditeurReglages } from '../notifications/Reglages';
@@ -140,6 +141,7 @@ function AffichageCard() {
 
 function PasswordCard({ minLen }: { minLen: number }) {
   const refresh = useRefreshMe();
+  const me = useMe();
   const [f, setF] = useState({ current: '', next: '', confirm: '' });
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -179,11 +181,18 @@ function PasswordCard({ minLen }: { minLen: number }) {
           />
           <PasswordInput
             label="Nouveau mot de passe"
-            description={`Au moins ${minLen} caractères et 3 types de caractères.`}
+            description={`Au moins ${minLen} caractères, 3 types de caractères, sans répétition ni suite.`}
             autoComplete="new-password"
             required
             value={f.next}
             onChange={(e) => setF({ ...f, next: e.currentTarget.value })}
+          />
+          <CriteresMotDePasse
+            valeur={f.next}
+            minLen={minLen}
+            identifiants={[me.user?.username ?? '']}
+            noms={[me.appName, me.orgName]}
+            ancien={f.current}
           />
           <PasswordInput
             label="Confirmation"
