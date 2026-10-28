@@ -6,7 +6,10 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-Aucune action.
+Aucune action obligatoire. Les sauvegardes les plus récentes sont désormais toujours conservées par la rotation (7 par défaut, `BACKUP_GARDER_MIN`) et les demandes de sauvegarde de l'interface appliquent une durée d'au moins 30 jours (`RETENTION_MIN_DAYS`) ; les deux réglages sont facultatifs, dans `.env`. Lire aussi la section 11 du guide d'installation (identifiants réservés).
+
+### Sécurité
+- **Conservation des sauvegardes** : la rotation de `scripts/backup.sh` garde toujours les `BACKUP_GARDER_MIN` archives les plus récentes (7 par défaut, de 1 à 365) et ne supprime les suivantes, avec leur fichier `.sha256`, qu'au-delà de `RETENTION_DAYS` ; l'exécutant des demandes web relève la durée de la politique à `RETENTION_MIN_DAYS` (30 par défaut, de 1 à 36500, lue dans `.env`). Tests Python ajoutés (rotation, bornes, plancher). Le guide d'installation précise aussi les identifiants (UID 70, 100, 1000, 1001) réservés aux conteneurs.
 
 ## [5.1.0] — 2026-10-27
 
