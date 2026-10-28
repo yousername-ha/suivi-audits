@@ -114,6 +114,54 @@ export class AlertesSecurite {
     }
   }
 
+  /** L'analyse antivirale a échoué (délai de 15 s dépassé, démon injoignable, réponse inattendue) : au plus UNE alerte par heure,
+      au contact technique seul. Ne lève jamais ; le dépôt n'attend pas l'envoi. */
+  async antivirus(requis: boolean): Promise<void> {
+    try {
+      const c = (await this.settings.read('courriel')).values as SettingsValues['courriel'];
+      if (!c.actif || !c.hote || !c.expediteur || !adresseUtilisable(c.contactTechnique)) return;
+      const general = (await this.settings.read('general')).values as SettingsValues['general'];
+      const nom = propre(general.appName, 80) || 'Suivi des audits';
+      await this.db.tx(async (cl, k) => {
+        await cl.query('SELECT pg_advisory_xact_lock(hashtext($1))', ['alerte-antivirus']);
+        const recente = await k
+          .selectFrom('audit_log')
+          .select(sql<number>`count(*)::int`.as('n'))
+          .where('action', '=', 'document.scan_alerte')
+          .where('ts', '>', sql<Date>`now() - interval '1 hour'`)
+          .executeTakeFirstOrThrow();
+        if (recente.n > 0) return;
+        await this.db.audit(null, null, 'document.scan_alerte', '', { requis }, cl);
+        await k
+          .insertInto('courriel_jobs')
+          .values({
+            kind: 'notification',
+            requested_by: DEMANDEUR_ALERTE,
+            to_address: c.contactTechnique.trim(),
+            subject: `[${nom}] Analyse antivirale indisponible`.slice(0, 180),
+            body: [
+              'Bonjour,',
+              '',
+              `L’analyse antivirale d’un document déposé a échoué le ${paris(new Date())} (heure de Paris) : le service ClamAV ne répond pas`,
+              'dans le délai de 15 secondes ou est injoignable.',
+              '',
+              requis
+                ? 'L’analyse est obligatoire : les dépôts de documents sont refusés tant qu’elle est indisponible.'
+                : 'L’analyse n’est pas obligatoire : les documents sont acceptés sans analyse (« non analysé ») tant qu’elle est indisponible.',
+              '',
+              `Détails techniques : ${this.lien('/systeme/details')}`,
+              `Journal d'audit : ${this.lien('/systeme/journal')} (action « document.scan_unavailable »)`,
+              '',
+              'Au plus un message de ce type par heure. Message automatique ; il ne contient aucune donnée métier.',
+            ].join('\n'),
+          })
+          .execute();
+      });
+    } catch (err) {
+      this.db.log.error({ err: (err as Error).message }, 'alerte antivirus non émise');
+    }
+  }
+
   private async destinataires(): Promise<string[]> {
     const c = (await this.settings.read('courriel')).values as SettingsValues['courriel'];
     if (!c.actif || !c.hote || !c.expediteur) return [];
