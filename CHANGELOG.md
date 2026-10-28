@@ -9,7 +9,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 Aucune action sur le serveur. Le frontal est reconstruit avec une bibliothèque corrigée (go-jose v4.1.6) ; une exception datée du scan des images couvre la seule alerte restante, sans correctif amont (voir ADR 0063).
 
 ### Sécurité
-- **Frontal Caddy** : go-jose v4 est fixé à 4.1.6 dans `docker/web.Dockerfile`. Le scan des images accepte, jusqu'au 27/11/2026, l'alerte sur go-jose v3 sans correctif publié (`.trivyignore.yaml`, bornée et datée). Un workflow quotidien (`veille-caddy.yml`) ouvre une demande quand une version de Caddy n'exige plus go-jose v3 ou que l'exception approche de son terme.
+- **Images du frontal et de l'exécutant de mise à jour** : go-jose v4 est fixé à 4.1.6 dans `docker/web.Dockerfile` et `docker/updater.Dockerfile`. Le scan des images accepte, jusqu'au 27/11/2026, l'alerte sur go-jose v3 sans correctif publié (`.trivyignore.yaml`, bornée et datée). Un workflow quotidien (`veille-caddy.yml`) ouvre une demande quand une version de Caddy n'exige plus go-jose v3 ou que l'exception approche de son terme.
 
 ### Sécurité
 - **Chaîne d'approvisionnement** ([ADR 0063](docs/adr/0063-chaine-de-publication-durcie.md), complément du 27/10/2026) : Dependabot suit aussi les dépendances npm (correctifs et mineures regroupés, majeures isolées) ; toutes ses propositions attendent 7 jours après la publication d'une version. pnpm refuse de même une version publiée depuis moins de 7 jours, une version dont la preuve de provenance régresse et une dépendance transitive hors registre.
