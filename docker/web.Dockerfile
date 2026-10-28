@@ -15,7 +15,7 @@ RUN --mount=type=secret,id=build_ca --mount=type=cache,target=/go/pkg/mod --moun
     && mkdir /src-caddy \
     && cp /go/pkg/mod/github.com/caddyserver/caddy/v2@v2.11.7/cmd/caddy/main.go /src-caddy/main.go \
     && cd /src-caddy && go mod init suivi-caddy \
-    && go mod edit -require=github.com/caddyserver/caddy/v2@v2.11.7 -require=golang.org/x/net@v0.60.0 \
+    && go mod edit -require=github.com/caddyserver/caddy/v2@v2.11.7 -require=golang.org/x/net@v0.60.0 -require=github.com/go-jose/go-jose/v4@v4.1.6 \
     && go build -mod=mod -o /go/bin/caddy .
 
 FROM ${NODE_IMAGE} AS build

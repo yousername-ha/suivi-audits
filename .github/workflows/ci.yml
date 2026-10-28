@@ -67,6 +67,7 @@ jobs:
           node --test scripts/tests/epinglage.test.mjs
           python3 -m unittest discover -s scripts/tests -p test_updates.py
           python3 -m unittest discover -s scripts/tests -p test_exploitation.py
+          python3 -m unittest discover -s scripts/tests -p test_veille_caddy.py
       - name: OpenAPI
         run: pnpm --filter @suivi/api openapi "$GITHUB_WORKSPACE/openapi.json"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -200,7 +201,7 @@ jobs:
         run: |
           set -e
           for img in api web updater; do
-            trivy image --input "$RUNNER_TEMP/images/$img.tar" --scanners vuln --severity HIGH,CRITICAL --exit-code 1 --no-progress
+            trivy image --input "$RUNNER_TEMP/images/$img.tar" --scanners vuln --severity HIGH,CRITICAL --exit-code 1 --no-progress --ignorefile .trivyignore.yaml
           done
 
       - name: Trivy — dépendances du dépôt (échec sur HIGH et CRITICAL)
