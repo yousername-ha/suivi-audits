@@ -60,6 +60,9 @@ describe('jeu de données de test', () => {
     expect(relations.controles.reduce((n, c) => n + c.verifies, 0)).toBeGreaterThan(50);
     // Modules annexes : incidents (dont un incident de sécurité ouvert avec obligation traitée), budget, revues des accès.
     expect(bilan.annexes).toMatchObject({ incidents: 5, investissements: 6, revuesAcces: 5 });
+    const gaps = (await a.get('/api/gap')).json();
+    expect(gaps.apps.map((x: { modele: string }) => x.modele).sort()).toEqual(['application', 'application', 'ia']);
+    expect(gaps.apps.find((x: { name: string }) => /téléconsultation/.test(x.name)).lines.G01.st).toBe('Conforme');
     const crrc = (await a.get('/api/crrc')).json();
     expect(bilan.annexes!.crrc).toMatchObject({ etablissements: 3, ressources: 5, sauvegardes: 50 });
     expect(crrc.etat.establishments).toHaveLength(3);
@@ -91,8 +94,9 @@ describe('jeu de données de test', () => {
     // Ce que l'on retrouve par l'API, comme l'interface le fait.
     const etat = (await a.get('/api/suivi/etat')).json();
     expect(etat.processes).toHaveLength(6);
-    // Les six écarts du jeu sont des écarts de registre, relus comme constats par le module Audit.
-    expect(etat.findings).toHaveLength(6);
+    // Les six écarts du jeu sont des écarts de registre, relus comme constats par le module Audit ; le plan d'actions du GAP
+    // guidé de l'application en ajoute un septième.
+    expect(etat.findings).toHaveLength(7);
     expect(etat.findings.filter((f: { status: string }) => f.status === 'Clos')).toHaveLength(1);
     expect(etat.indicators.filter((i: { calc?: string }) => i.calc)).toHaveLength(3);
     const synthese = (await a.get('/api/mur/synthese')).json();

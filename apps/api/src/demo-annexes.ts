@@ -13,6 +13,7 @@ export interface BilanAnnexes {
   revuesAcces: number;
   crise: { contacts: number; scenarios: number; cellules: number };
   crrc: { etablissements: number; ressources: number; sauvegardes: number; restaurations: number; alertes: number };
+  gap: { applications: number; usagesIa: number };
 }
 
 const heure = (jours: number, h: string) => `${new Date(Date.now() + jours * 86400e3).toISOString().slice(0, 10)}T${h}`;
@@ -659,6 +660,97 @@ async function crrc({ appel, exiger, decaler }: Annexes): Promise<BilanAnnexes['
   };
 }
 
+/** GAP : un questionnaire guidé d'intégration d'application (avec plan d'actions), un questionnaire guidé des usages de l'IA
+    et une application saisie à la main, dont quelques points sont déjà évalués. */
+async function gap({ appel, exiger, decaler }: Annexes): Promise<BilanAnnexes['gap']> {
+  const portail = await exiger<{ app: { id: string }; plan: string | null }>(
+    await appel('POST', '/api/gap/guide', {
+      modele: 'application',
+      name: 'Portail de prise de rendez-vous des patients (démonstration)',
+      owner: 'RSI',
+      target: decaler(120),
+      desc: 'Application en ligne fictive permettant aux patients de prendre rendez-vous.',
+      mkPlan: true,
+      answers: {
+        type: 'SaaS (hébergé par l’éditeur)',
+        dscp: 'Oui',
+        dcp: 'Oui',
+        loc: 'France',
+        certs: ['ISO 27001', 'HDS'],
+        expo: 'Accessible depuis internet',
+        users: ['Patients ou usagers', 'Agents de l’organisation'],
+        sso: 'Disponible, non activée',
+        mfa: 'Disponible et activée',
+        tma: 'Non',
+        flux: 'Oui',
+        crit: 'Importante : une journée',
+        backup: 'Le fournisseur',
+        logs: 'Oui',
+        spec: ['Aucun'],
+      },
+    }),
+    'GAP guidé de l’application',
+  );
+  const ia = await exiger<{ app: { id: string } }>(
+    await appel('POST', '/api/gap/guide', {
+      modele: 'ia',
+      name: 'Usages de l’IA de l’établissement (démonstration)',
+      owner: 'RSSI',
+      target: decaler(180),
+      desc: 'État des lieux fictif des usages d’outils d’IA par les agents.',
+      mkPlan: false,
+      answers: {
+        iaCas: ['Outils d’IA grand public utilisés par les agents', 'Code généré par IA'],
+        iaDscp: 'Possible, non maîtrisé',
+        iaInventaire: 'Partiel',
+        iaRegle: 'Rédigée, non diffusée',
+        iaSensibilisation: 'Non',
+        iaRisques: 'Non',
+        gpComptes: 'Comptes personnels',
+        gpFiltrage: 'Supervisés sans blocage',
+        gpContrat: 'Sans compte professionnel',
+        gpIncident: 'Non connu',
+        codeOutils: 'Comptes personnels',
+        codeRevue: 'Partiellement',
+        codeCritique: 'Non',
+      },
+    }),
+    'GAP guidé des usages de l’IA',
+  );
+  // Application saisie à la main, avec deux points évalués.
+  const manuel = await exiger<{ id: string }>(await appel('POST', '/api/gap'), 'Création d’une application à intégrer');
+  await exiger(
+    await appel('PATCH', `/api/gap/${manuel.id}`, {
+      name: 'Plateforme de téléconsultation (démonstration)',
+      dscp: 'Oui',
+      cloud: 'Oui',
+      status: 'En cours',
+      owner: 'RSI',
+      target: decaler(90),
+      desc: 'Application fictive de téléconsultation, en cours d’étude.',
+    }),
+    `Application ${manuel.id}`,
+  );
+  await exiger(
+    await appel('PATCH', `/api/gap/${manuel.id}/points/G01`, {
+      st: 'Conforme',
+      comment: 'Périmètre mis à jour dans la démonstration.',
+      owner: 'RSSI',
+    }),
+    'Point G01',
+  );
+  await exiger(
+    await appel('PATCH', `/api/gap/${manuel.id}/points/G03`, {
+      st: 'Partiel',
+      comment: 'Appréciation des risques commencée, à terminer avant l’intégration.',
+      owner: 'RSSI',
+      due: decaler(45),
+    }),
+    'Point G03',
+  );
+  return { applications: [portail.app, manuel].length, usagesIa: [ia.app].length };
+}
+
 /** Charge les modules annexes de la démonstration. */
 export async function modulesAnnexes(ctx: Annexes): Promise<BilanAnnexes> {
   const bilan: BilanAnnexes = {
@@ -667,11 +759,13 @@ export async function modulesAnnexes(ctx: Annexes): Promise<BilanAnnexes> {
     revuesAcces: 0,
     crise: { contacts: 0, scenarios: 0, cellules: 0 },
     crrc: { etablissements: 0, ressources: 0, sauvegardes: 0, restaurations: 0, alertes: 0 },
+    gap: { applications: 0, usagesIa: 0 },
   };
   bilan.incidents = await incidents(ctx);
   bilan.investissements = await investissements(ctx);
   bilan.revuesAcces = await revuesAcces(ctx);
   bilan.crise = await crise(ctx);
   bilan.crrc = await crrc(ctx);
+  bilan.gap = await gap(ctx);
   return bilan;
 }
