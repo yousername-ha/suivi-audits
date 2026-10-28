@@ -245,7 +245,7 @@ elif [ "$SANS_SIGNATURE" = 1 ]; then
 else
   arret "cosign est nécessaire pour vérifier la signature des images (docs/INSTALLATION.md, étape 12.1) ; à défaut : --sans-signature."
 fi
-[ "$VERIFIER" = 1 ] || [ -s "$PASS" ] || arret "phrase secrète des sauvegardes introuvable ($PASS) : la sauvegarde chiffrée est obligatoire (étape 11.1)."
+[ "$VERIFIER" = 1 ] || controler_cles_sauvegarde "$CLE" "$SECOURS"
 
 # ---------------------------------------------------------------- 2. Notes de mise à jour
 PHASE=notes
