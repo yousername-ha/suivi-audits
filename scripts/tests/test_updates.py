@@ -92,25 +92,28 @@ class Updates(unittest.TestCase):
         self.assertIsNone(self.w.state['available'])
         self.assertTrue(self.w.state['checkError'])
 
-    def test_exploitation_automatique_reutilise_cle_generee_et_stockage_prive(self):
+    def test_exploitation_automatique_utilise_les_cles_age_de_l_hote_et_stockage_prive(self):
         with patch.object(self.w,'run') as run:
             self.w.exploitation()
         args, options = run.call_args
         self.assertEqual(args[0],['python3',str(self.root/'scripts/exploitation-worker.py')])
         self.assertEqual(options['timeout'],4000)
         env = options['extra_env']
-        self.assertEqual(env['BACKUP_PASSPHRASE_FILE'],str(self.data/'update-secrets/backup-pass'))
+        self.assertEqual(env['BACKUP_KEY_FILE'],'/root/.suivi-backup-key')
+        self.assertEqual(env['BACKUP_RECIPIENTS_FILE'],'/root/.suivi-backup-recipients')
+        self.assertNotIn('BACKUP_PASSPHRASE_FILE',env)
         self.assertEqual(env['BACKUP_DEST'],str(self.data/'sauvegardes'))
         self.assertEqual(env['EXPLOITATION_TLS_HOST'],'gateway')
         for path in (Path(env['TMPDIR']),Path(env['BACKUP_DEST'])):
             self.assertEqual(path.stat().st_mode & 0o777,0o700)
 
     def test_configuration_sauvegarde_existante_prioritaire_sans_changement_de_cle(self):
-        (self.root/'.env').write_text('APP_VERSION=3.0.0\nBACKUP_DEST=/catalogue-existant\nBACKUP_PASSPHRASE_FILE=/cle-existante\n')
+        (self.root/'.env').write_text('APP_VERSION=3.0.0\nBACKUP_DEST=/catalogue-existant\nBACKUP_KEY_FILE=/cle-existante\nBACKUP_RECIPIENTS_FILE=/secours-existant\n')
         with patch.object(self.w,'run') as run:
             self.w.exploitation()
         self.assertEqual(run.call_args.kwargs['extra_env']['BACKUP_DEST'],'/catalogue-existant')
-        self.assertEqual(run.call_args.kwargs['extra_env']['BACKUP_PASSPHRASE_FILE'],'/cle-existante')
+        self.assertEqual(run.call_args.kwargs['extra_env']['BACKUP_KEY_FILE'],'/cle-existante')
+        self.assertEqual(run.call_args.kwargs['extra_env']['BACKUP_RECIPIENTS_FILE'],'/secours-existant')
 
     def test_maintenance_et_mode_hote_nexecutent_pas_de_sauvegarde_automatique(self):
         with patch.object(self.w,'run') as run:
@@ -272,7 +275,7 @@ class Updates(unittest.TestCase):
         self.assertEqual([e['phase'] for e in self.w.state['etapes']],['preparing'])
 
     def test_recu_structure_sans_donnee_sensible(self):
-        backup=self.data/'sauvegardes-updates/avant-maj-3.0.0-vers-3.1.0.tar.enc'
+        backup=self.data/'sauvegardes-updates/avant-maj-3.0.0-vers-3.1.0.tar.age'
         backup.parent.mkdir(parents=True)
         backup.write_bytes(b'chiffre')
         (backup.parent/(backup.name+'.sha256')).write_text('d'*64+'  '+backup.name+'\n')

@@ -194,36 +194,6 @@ function genererSecrets(dir: string): number {
   return created;
 }
 
-/** Création exclusive ; les droits sont appliqués au descripteur, jamais à un chemin recontrôlé. */
-export function genererCleMiseAJour(file: string, owner = 0) {
-  let fd: number;
-  let created = false;
-  try {
-    fd = fs.openSync(
-      file,
-      fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL | fs.constants.O_NOFOLLOW,
-      0o600,
-    );
-    created = true;
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
-    fd = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
-  }
-  try {
-    const stat = fs.fstatSync(fd);
-    if (!stat.isFile() || stat.nlink !== 1 || (!created && stat.size === 0))
-      throw new Error('Clé de sauvegarde des mises à jour invalide.');
-    if (created) {
-      fs.writeFileSync(fd, crypto.randomBytes(48).toString('base64') + '\n');
-      fs.fsyncSync(fd);
-    }
-    fs.fchownSync(fd, owner, owner);
-    fs.fchmodSync(fd, 0o600);
-  } finally {
-    fs.closeSync(fd);
-  }
-}
-
 function main() {
   const donnees = process.env.DONNEES;
   let secretsDir = process.env.SECRETS_DIR || '/secrets';
@@ -248,10 +218,6 @@ function main() {
     dossier(path.join(donnees, 'clamav'), CLAMAV_UID, CLAMAV_GID, 0o755);
     dossier(path.join(donnees, 'etat'), 0, 0, 0o755);
     dossier(path.join(donnees, 'etat', 'updates'), 0, 0, 0o755);
-    const updateSecrets = path.join(donnees, 'update-secrets');
-    dossier(updateSecrets, 0, 0, 0o700);
-    const updateKey = path.join(updateSecrets, 'backup-pass');
-    genererCleMiseAJour(updateKey);
     dossier(path.join(donnees, 'etat', 'mises-a-jour'), 0, 0, 0o755);
     // Reçus structurés des installations : lus par l'API (lecture seule), jamais servis par le frontal public.
     dossier(path.join(donnees, 'etat', 'recus-mises-a-jour'), 0, 0, 0o755);
