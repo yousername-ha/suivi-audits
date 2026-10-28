@@ -110,6 +110,8 @@ export function TableauDeBordConformite({ s }: { s: Synthese }) {
   const i = s.indicateurs;
   const eo = s.ecartsOuverts;
   const r = s.risques;
+  // Les deux jauges partagent la moitié de la rangée ; seule, une jauge la prend entière (pas de trou dans la grille).
+  const largeurJauge = i && i.total > 0 && eo && eo.actionsTotal > 0 ? 3 : 6;
   const c = s.continuite;
   const mesures =
     s.mesures &&
@@ -155,7 +157,12 @@ export function TableauDeBordConformite({ s }: { s: Synthese }) {
         <Dalle titre="Prochain audit" sousTitre="Audits" largeur={3}>
           {s.prochainAudit ? (
             <ChiffreCle
-              valeur={jours == null ? fmtJour(s.prochainAudit.date) : jours >= 0 ? `${jours}\u202fj` : 'Passé'}
+              // Compte à rebours : change chaque jour, masqué comme les dates dans les captures de référence.
+              valeur={
+                <span className="horodatage">
+                  {jours == null ? fmtJour(s.prochainAudit.date) : jours >= 0 ? `${jours}\u202fj` : 'Passé'}
+                </span>
+              }
               teinte={jours == null || jours < 0 ? undefined : teinteSeuil(SEUILS_JOURS, jours)}
               detail={
                 [fmtJour(s.prochainAudit.date), s.prochainAudit.libelle].filter(Boolean).join(' · ') ||
@@ -187,7 +194,7 @@ export function TableauDeBordConformite({ s }: { s: Synthese }) {
           </Dalle>
         )}
         {i && i.total > 0 && (
-          <Dalle titre="Indicateurs atteints" sousTitre="Objectifs et indicateurs" largeur={3}>
+          <Dalle titre="Indicateurs atteints" sousTitre="Objectifs et indicateurs" largeur={largeurJauge}>
             <JaugeArc
               libelle="Indicateurs atteints"
               valeur={i.atteints}
@@ -197,7 +204,7 @@ export function TableauDeBordConformite({ s }: { s: Synthese }) {
           </Dalle>
         )}
         {eo && eo.actionsTotal > 0 && (
-          <Dalle titre="Actions des écarts réalisées" sousTitre="Écarts · plans d’action" largeur={3}>
+          <Dalle titre="Actions des écarts réalisées" sousTitre="Écarts · plans d’action" largeur={largeurJauge}>
             <JaugeArc
               libelle="Actions des écarts réalisées"
               valeur={eo.actionsRealisees}

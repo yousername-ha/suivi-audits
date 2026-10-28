@@ -99,7 +99,7 @@ export function ChiffreCle({
   detail,
   legende,
 }: {
-  valeur: string;
+  valeur: ReactNode;
   teinte?: TeinteSeuil;
   detail?: ReactNode;
   legende?: ReactNode;
