@@ -402,7 +402,13 @@ export class GrcRapprochements {
         }, user.username);
         results.push({ id, ok: true });
       } catch (e) {
-        results.push({ id, ok: false, error: e instanceof Error ? e.message : String(e) });
+        if (!(e instanceof HttpError))
+          this.g.db.log.error({ err: e instanceof Error ? e.message : String(e), id }, 'rapprochement decision failed');
+        results.push({
+          id,
+          ok: false,
+          error: e instanceof HttpError ? e.message : 'Erreur interne lors de la décision.',
+        });
       }
     }
     return { results, ...(await this.summary(smsi, user)) };

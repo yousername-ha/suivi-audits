@@ -6,7 +6,11 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-Aucune action.
+Aucune action sur la pile Docker fournie : `TRUST_PROXY` y reste à `1`, qui désigne désormais un relais de confiance (le frontal `web`) au lieu de « tous ». Une installation hors Docker qui renseigne `TRUST_PROXY` doit relire la section « Adresse du client » du guide d'installation ; une valeur mal formée arrête l'API au démarrage avec un message explicite.
+
+### Sécurité
+- **Adresse du client** : `TRUST_PROXY` accepte un nombre de relais de confiance (1 à 10), une liste d'adresses ou de CIDR, ou `true`/`false` (compatibilité). L'adresse retenue est celle vue par le dernier relais de confiance, et non la première de l'en-tête `X-Forwarded-For`. Valeur mal formée : l'API refuse de démarrer.
+- **Décision des rapprochements** : une erreur inattendue renvoie « Erreur interne lors de la décision. » au lieu du texte de l'erreur technique, qui est journalisée.
 
 ## [5.1.0] — 2026-10-27
 
