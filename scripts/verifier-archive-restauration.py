@@ -4,6 +4,7 @@ import base64
 import hashlib
 import gzip
 import pathlib
+import re
 import shutil
 import sys
 import tarfile
@@ -117,7 +118,29 @@ def unpack(source, target, limit, allowed=None):
     return seen
 
 
-def verify(source, destination):
+NOM_ARCHIVE = re.compile(r'^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,100}?-(\d{8}-\d{6})(?:-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}))?\.tar\.age$')
+
+
+def lier_au_nom(texte, nom):
+    """L'INFO doit correspondre au nom de l'archive : fichier, horodatage local et identifiant de la demande. Une archive
+    valide renommée, ou une ancienne archive substituée à une autre, est refusée."""
+    info = {}
+    for ligne in texte.splitlines():
+        if '=' in ligne:
+            cle, _, valeur = ligne.partition('=')
+            info.setdefault(cle, valeur)
+    m = NOM_ARCHIVE.match(nom)
+    if not m:
+        fail('Nom d’archive inattendu.')
+    if info.get('fichier') != nom:
+        fail('Le nom de l’archive ne correspond pas à son contenu.')
+    if info.get('date') != m.group(1):
+        fail('L’horodatage de l’archive ne correspond pas à son nom.')
+    if info.get('job_id', '') != (m.group(2) or ''):
+        fail('L’identifiant de demande ne correspond pas au nom de l’archive.')
+
+
+def verify(source, destination, nom=None):
     allowed = {'suivi.dump': MAX_OUTER, 'secrets.tgz': MAX_NESTED, 'INFO': 1024**2, 'caddy.tgz': MAX_NESTED}
     names = unpack(source, destination, MAX_OUTER, allowed)
     if not {'suivi.dump', 'secrets.tgz', 'INFO'} <= names:
@@ -131,6 +154,8 @@ def verify(source, destination):
     text = info.read_text(encoding='utf-8')
     if any(ord(c) < 32 and c not in '\n\t' for c in text) or '\x7f' in text:
         fail('Métadonnées invalides.')
+    if nom is not None:
+        lier_au_nom(text, nom)
     secrets = destination / 'secrets'
     unpack(destination / 'secrets.tgz', secrets, MAX_NESTED)
     password = secrets / 'db_app_password'
@@ -172,8 +197,10 @@ if __name__ == '__main__':
             checksum(pathlib.Path(sys.argv[2]), pathlib.Path(sys.argv[3]))
         elif len(sys.argv) == 3:
             verify(pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2]))
+        elif len(sys.argv) == 5 and sys.argv[1] == '--nom':
+            verify(pathlib.Path(sys.argv[3]), pathlib.Path(sys.argv[4]), sys.argv[2])
         else:
-            fail('Usage : verifier-archive-restauration.py archive.tar destination-neuve')
+            fail('Usage : verifier-archive-restauration.py [--nom fichier.tar.age] archive.tar destination-neuve')
     except (ValueError, OSError, tarfile.TarError, EOFError, RecursionError):
         print('Archive refusée : structure, empreinte, secrets ou espace temporaire invalides.', file=sys.stderr)
         sys.exit(1)

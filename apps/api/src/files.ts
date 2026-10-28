@@ -91,8 +91,21 @@ export function validateFile(filename: string, buf: Buffer) {
   return { filename: name, ext, mime: t.mime };
 }
 
+/** Délai maximal d'une analyse : au-delà, l'antivirus est considéré indisponible (une organisation de quinzaine d'utilisateurs
+    n'a pas à attendre une minute devant un dépôt). Pas de disjoncteur à cette échelle : chaque dépôt retente l'analyse. */
+export const DELAI_ANALYSE_MS = 15_000;
+const ANALYSE_INDISPONIBLE =
+  'Analyse antivirale indisponible : dépôt refusé. Réessayez dans quelques minutes ; si le problème persiste, prévenez l’administrateur.';
+
+export interface OptionsAnalyse {
+  /** Délai d'inactivité de la connexion au démon (tests). */
+  delaiMs?: number;
+  /** Appelé une fois quand l'analyse échoue (délai, démon injoignable, réponse inattendue), refus ou non. */
+  surEchec?: () => void;
+}
+
 /** Analyse ClamAV (protocole clamd INSTREAM). Renvoie 'sain' | 'non_analysé' ; lève FileRejected si infecté ou si l'analyse est obligatoire et impossible. */
-export function scanFile(cfg: Config, buf: Buffer): Promise<'sain' | 'non_analysé'> {
+export function scanFile(cfg: Config, buf: Buffer, o: OptionsAnalyse = {}): Promise<'sain' | 'non_analysé'> {
   const av = cfg.clamav;
   if (!av) return Promise.resolve('non_analysé');
   return new Promise((resolve, reject) => {
@@ -107,13 +120,15 @@ export function scanFile(cfg: Config, buf: Buffer): Promise<'sain' | 'non_analys
     };
     const fail = () => {
       s.destroy();
-      done(() =>
-        av.required
-          ? reject(new FileRejected('Analyse antivirale indisponible : dépôt refusé.'))
-          : resolve('non_analysé'),
-      );
+      if (settled) return;
+      try {
+        o.surEchec?.();
+      } catch {
+        /* l'alerte ne doit jamais changer le résultat du dépôt */
+      }
+      done(() => (av.required ? reject(new FileRejected(ANALYSE_INDISPONIBLE)) : resolve('non_analysé')));
     };
-    s.setTimeout(60000, fail);
+    s.setTimeout(o.delaiMs ?? DELAI_ANALYSE_MS, fail);
     s.on('error', fail);
     s.on('data', (d) => (out += d.toString()));
     s.on('end', () => {

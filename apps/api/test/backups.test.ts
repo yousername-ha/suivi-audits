@@ -37,7 +37,7 @@ const report = (id: string, changes: Record<string, unknown> = {}) =>
     JSON.stringify({
       jobId: id,
       resultat: 'reussie',
-      fichier: '/srv/backups/suivi-audits-fictif.tar.enc',
+      fichier: '/srv/backups/suivi-audits-fictif.tar.age',
       tailleOctets: 1024,
       dureeSecondes: 12,
       chiffree: true,
@@ -111,7 +111,7 @@ describe('A1a sauvegardes', () => {
     report(job.id, { password: 'secret-fictif', secretPath: '/root/key' });
     expect((await t.svc.backups.finish(job.id, 0)).status).toBe('reussie');
     const body = (await a.get('/api/admin/sauvegardes')).body;
-    expect(body).toContain('suivi-audits-fictif.tar.enc');
+    expect(body).toContain('suivi-audits-fictif.tar.age');
     expect(body).not.toContain('/srv/backups');
     expect(body).not.toContain('secret-fictif');
     expect(body).not.toContain('/root/key');

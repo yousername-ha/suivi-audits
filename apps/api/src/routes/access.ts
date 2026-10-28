@@ -41,7 +41,7 @@ import {
   rolePermissions,
   usersOfRole,
 } from '../rights.js';
-import { hashPassword, tempPassword } from '../security/crypto.js';
+import { tempPassword } from '../security/crypto.js';
 import type { Services } from '../services.js';
 
 type Q = Pick<Client, 'query'>;
@@ -258,12 +258,15 @@ export const accessRoutes = [
     handler: async ({ svc, s, ip, body }) => {
       const sess = s as Session;
       const pw = tempPassword();
-      const hash = await hashPassword(pw);
+      // Identifiant choisi par le serveur : l'empreinte poivrée y est liée.
+      const nouvelId = svc.motsDePasse.nouvelId();
+      const hash = await svc.motsDePasse.hacher(nouvelId, pw);
       const { id, after } = await svc.db
         .tx(async (c, k) => {
           const u = await k
             .insertInto('users')
             .values({
+              id: nouvelId,
               username: body.username,
               display_name: body.displayName || body.username,
               email: body.email || '',
@@ -383,7 +386,7 @@ export const accessRoutes = [
     handler: async ({ svc, s, ip, params }) => {
       const sess = s as Session;
       const pw = tempPassword();
-      const hash = await hashPassword(pw);
+      const hash = await svc.motsDePasse.hacher(params.id, pw);
       await svc.db.tx(async (c, k) => {
         const r = await k
           .updateTable('users')

@@ -112,6 +112,12 @@ class Worker:
                 result[k.strip()] = v.strip().strip("\"'")
         return result
 
+    def crypto_env(self, config=None):
+        """Clés age de l'hôte (montées en lecture seule dans l'exécutant) : identité du serveur et clés publiques de secours."""
+        config = self.env() if config is None else config
+        return {"BACKUP_KEY_FILE": config.get("BACKUP_KEY_FILE") or "/root/.suivi-backup-key",
+                "BACKUP_RECIPIENTS_FILE": config.get("BACKUP_RECIPIENTS_FILE") or "/root/.suivi-backup-recipients"}
+
     def publish(self, **changes):
         with self.guard:
             # Frise publique de l'installation : seules les transitions de phase, horodatées (aucune donnée sensible).
@@ -225,7 +231,7 @@ class Worker:
             os.chmod(destination, 0o700)
         settings = {
             "BACKUP_DEST": config.get("BACKUP_DEST") or str(self.data / "sauvegardes"),
-            "BACKUP_PASSPHRASE_FILE": config.get("BACKUP_PASSPHRASE_FILE") or str(self.data / "update-secrets/backup-pass"),
+            **self.crypto_env(config),
             "TMPDIR": str(temporary),
             "EXPLOITATION_TLS_HOST": "gateway",
             "EXPLOITATION_TLS_PORT": "8443",
@@ -250,7 +256,7 @@ class Worker:
             return
         backup = None
         progress = read(self.private / "progress.json", {})
-        if progress.get("jobId") == job["id"] and str(progress.get("backup", "")).endswith(".enc"):
+        if progress.get("jobId") == job["id"] and str(progress.get("backup", "")).endswith(".age"):
             path = Path(progress["backup"])
             digest = None
             with contextlib.suppress(OSError, IndexError):
@@ -324,12 +330,12 @@ class Worker:
                 raise Failure("Référence invalide")
             backup = Path(progress.get("backup", ""))
             backup.resolve().relative_to(self.data / "sauvegardes-updates")
-            if not backup.is_file() or backup.suffix != ".enc":
+            if not backup.is_file() or backup.suffix != ".age":
                 raise Failure("Sauvegarde absente")
             self.run(["git", "checkout", "--detach", ref])
             (self.repo / ".env").write_text(self.job["previousEnv"])
             self.run(["bash", str(self.repo / "scripts/restore.sh"), str(backup)], timeout=1800,
-                     extra_env={"RESTAURER_SANS_CONFIRMATION": "1", "BACKUP_PASSPHRASE_FILE": str(self.data / "update-secrets/backup-pass"),
+                     extra_env={"RESTAURER_SANS_CONFIRMATION": "1", **self.crypto_env(),
                                 "RESTORE_WORKER_LOCK_HELD": "1", "RESTORE_SAUVEGARDE_LOCK_HELD": "1"})
             self.health(self.job["installed"])
             self.finish("rolled_back", "La mise à jour a été interrompue. La version précédente a été restaurée et vérifiée.")
@@ -441,9 +447,8 @@ class Worker:
         if self.job["before"].get("ok") is not True:
             raise Failure("Contrôle préalable des données en échec")
         atomic(self.private / "active.json", self.job)
-        key = self.data / "update-secrets/backup-pass"
         log = self.private / f'{job["id"]}.log'
-        env = {"BACKUP_PASSPHRASE_FILE": str(key), "SUIVI_UPDATE_PROGRESS": str(self.private / "progress.json"),
+        env = {**self.crypto_env(), "SUIVI_UPDATE_PROGRESS": str(self.private / "progress.json"),
                "SUIVI_UPDATE_JOB": job["id"], "SUIVI_UPDATE_IMAGES": json.dumps(self.job["images"]),
                "UPDATE_SAUVEGARDE_LOCK_HELD": "1", "RESTORE_WORKER_LOCK_HELD": "1", "RESTORE_SAUVEGARDE_LOCK_HELD": "1"}
         # Le script établi garde sauvegarde, migrations et rollback. Aucun argument contrôlé librement.

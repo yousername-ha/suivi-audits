@@ -7,11 +7,13 @@ import {
   setupTokenChars,
   setupTokenInputProblem,
 } from '@suivi/shared';
+import type { PoivreAEnregistrer } from '@suivi/shared';
 import { useQuery } from '@tanstack/react-query';
-import { useRef, useState, type FormEvent } from 'react';
+import { useMemo, useRef, useState, type FormEvent } from 'react';
 import { Navigate, useNavigate } from 'react-router';
 import { ApiError, get, post } from '../api';
 import { CopyCommand } from '../components/common';
+import { SaisiePoivre } from '../components/Poivre';
 import { useMe, useRefreshMe } from '../session';
 
 /** Mise en forme XXXXX-XXXXX-XXXXX-XXXXX pendant la saisie, en conservant la position du curseur. */
@@ -50,16 +52,23 @@ export function SetupPage() {
   const nav = useNavigate();
   const status = useQuery({
     queryKey: ['setup'],
-    queryFn: () => get<{ needed: boolean; adminExists: boolean; pending: boolean }>('/api/setup'),
+    queryFn: () =>
+      get<{ needed: boolean; adminExists: boolean; pending: boolean; poivreDefini: boolean }>('/api/setup'),
   });
+  // Étape 1 (poivre des mots de passe, ADR 0072) quand il n'est pas encore défini ; étape 2 : le compte administrateur.
+  const [etape, setEtape] = useState<'poivre' | 'compte'>('poivre');
+  const [poivre, setPoivre] = useState<PoivreAEnregistrer | null>(null);
+  const interdits = useMemo(() => [me.appName], [me.appName]);
   const token = useTokenInput();
-  const [f, setF] = useState({ orgName: '', username: '', displayName: '', email: '', password: '', confirm: '' });
   const [demo, setDemo] = useState(false);
+  const [f, setF] = useState({ orgName: '', username: '', displayName: '', email: '', password: '', confirm: '' });
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   if (status.data && !status.data.needed) return <Navigate to="/login" replace />;
   const minLen = me.passwordMinLength;
+  const avecPoivre = !!status.data && !status.data.poivreDefini;
+  const surPoivre = avecPoivre && etape === 'poivre';
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -71,18 +80,22 @@ export function SetupPage() {
     try {
       await post('/api/setup', {
         token: token.value,
-        demo,
         orgName: f.orgName.trim() || undefined,
         username: f.username.trim(),
         displayName: f.displayName,
         email: f.email,
         password: f.password,
+        demo,
+        ...(avecPoivre && poivre ? { poivre } : {}),
       });
       await refresh();
       nav('/login', { replace: true });
     } catch (x) {
       setError(x instanceof ApiError ? x.message : String(x));
-      token.ref.current?.focus();
+      // Un refus du poivre se corrige à l'étape 1.
+      const raison = x instanceof ApiError ? x.data?.reason : undefined;
+      if (raison === 'poivre_faible' || raison === 'engagement' || raison === 'poivre_requis') setEtape('poivre');
+      else token.ref.current?.focus();
     } finally {
       setBusy(false);
     }
@@ -101,107 +114,132 @@ export function SetupPage() {
             <Text fw={700}>Installation initiale</Text>
           </Group>
           <Title order={1} size="h2">
-            Créer le compte administrateur
+            {surPoivre ? 'Poivre des mots de passe' : 'Créer le compte administrateur'}
           </Title>
-          <Card withBorder bg="var(--mantine-color-default-hover)" component="section" aria-labelledby="tokbox">
-            <Stack gap="xs">
-              <Title order={2} size="h5" id="tokbox">
-                Récupérer le jeton
-              </Title>
-              <Text size="sm" c="dimmed">
-                Sur le serveur, dans le dossier de l’application, exécuter l’une des commandes suivantes. Le jeton est
-                valable 24 h ; en générer un nouveau annule le précédent.
-              </Text>
-              <CopyCommand command={`sudo ${SETUP_TOKEN_COMMANDS.generate}`} />
-              <Text size="sm" c="dimmed">
-                ou, pour retrouver le jeton émis au démarrage :
-              </Text>
-              <CopyCommand command={`sudo ${SETUP_TOKEN_COMMANDS.logs}`} />
-            </Stack>
-          </Card>
-          <form onSubmit={submit} noValidate>
+          {surPoivre ? (
             <Stack>
-              <TextInput
-                label="Jeton d’installation"
-                description="20 caractères, majuscules et chiffres de 2 à 9. Minuscules, espaces et tirets acceptés."
-                placeholder={SETUP_TOKEN_PLACEHOLDER}
-                className="token-input"
-                autoComplete="off"
-                autoCapitalize="characters"
-                spellCheck={false}
-                required
-                ref={token.ref}
-                value={token.value}
-                onChange={token.onChange}
-                onKeyDown={token.onKeyDown}
-              />
-              <TextInput
-                label="Nom de l’organisation"
-                description="Affiché dans l’application et les exports ; modifiable ensuite dans Paramètres."
-                maxLength={120}
-                autoComplete="organization"
-                value={f.orgName}
-                onChange={set('orgName')}
-              />
-              <div className="grid-2">
-                <TextInput
-                  label="Identifiant"
-                  required
-                  maxLength={64}
-                  autoComplete="username"
-                  value={f.username}
-                  onChange={set('username')}
-                />
-                <TextInput
-                  label="Nom affiché"
-                  maxLength={120}
-                  autoComplete="name"
-                  value={f.displayName}
-                  onChange={set('displayName')}
-                />
-              </div>
-              <TextInput
-                label="Adresse e-mail (facultatif)"
-                type="email"
-                maxLength={200}
-                autoComplete="email"
-                value={f.email}
-                onChange={set('email')}
-              />
-              <PasswordInput
-                label="Mot de passe"
-                description={`Au moins ${minLen} caractères et 3 types parmi minuscules, majuscules, chiffres, symboles.`}
-                required
-                autoComplete="new-password"
-                value={f.password}
-                onChange={set('password')}
-              />
-              <PasswordInput
-                label="Confirmation"
-                required
-                autoComplete="new-password"
-                value={f.confirm}
-                onChange={set('confirm')}
-              />
-              <Checkbox
-                label="Charger des données de démonstration"
-                description="Établissement de santé fictif avec ISO 27001, HDS et une étude EBIOS RM complète, pour découvrir l’outil. Chargées à la fin de la configuration de la double authentification (environ une minute). À retirer avant la production : Administration, Remettre la base à vide."
-                checked={demo}
-                onChange={(e) => setDemo(e.currentTarget.checked)}
-              />
+              <Text size="sm">
+                Étape 1 sur 2. Avant de créer le compte, définissez le poivre qui protégera tous les mots de passe de
+                l’application. Il est conservé au coffre-fort de l’organisation, pas sur le serveur.
+              </Text>
+              <SaisiePoivre interdits={interdits} onChange={setPoivre} />
               {error && (
                 <Alert color="red" role="alert">
                   {error}
                 </Alert>
               )}
-              <Button type="submit" loading={busy} fullWidth>
-                Créer le compte
+              <Button disabled={!poivre} onClick={() => setEtape('compte')} fullWidth>
+                Continuer
               </Button>
             </Stack>
-          </form>
-          <Text size="xs" c="dimmed" ta="center">
-            La double authentification sera configurée à l’étape suivante.
-          </Text>
+          ) : (
+            <>
+              <Card withBorder bg="var(--mantine-color-default-hover)" component="section" aria-labelledby="tokbox">
+                <Stack gap="xs">
+                  <Title order={2} size="h5" id="tokbox">
+                    Récupérer le jeton
+                  </Title>
+                  <Text size="sm" c="dimmed">
+                    Sur le serveur, dans le dossier de l’application, exécuter l’une des commandes suivantes. Le jeton
+                    est valable 24 h ; en générer un nouveau annule le précédent.
+                  </Text>
+                  <CopyCommand command={`sudo ${SETUP_TOKEN_COMMANDS.generate}`} />
+                  <Text size="sm" c="dimmed">
+                    ou, pour retrouver le jeton émis au démarrage :
+                  </Text>
+                  <CopyCommand command={`sudo ${SETUP_TOKEN_COMMANDS.logs}`} />
+                </Stack>
+              </Card>
+              <form onSubmit={submit} noValidate>
+                <Stack>
+                  <TextInput
+                    label="Jeton d’installation"
+                    description="20 caractères, majuscules et chiffres de 2 à 9. Minuscules, espaces et tirets acceptés."
+                    placeholder={SETUP_TOKEN_PLACEHOLDER}
+                    className="token-input"
+                    autoComplete="off"
+                    autoCapitalize="characters"
+                    spellCheck={false}
+                    required
+                    ref={token.ref}
+                    value={token.value}
+                    onChange={token.onChange}
+                    onKeyDown={token.onKeyDown}
+                  />
+                  <TextInput
+                    label="Nom de l’organisation"
+                    description="Affiché dans l’application et les exports ; modifiable ensuite dans Paramètres."
+                    maxLength={120}
+                    autoComplete="organization"
+                    value={f.orgName}
+                    onChange={set('orgName')}
+                  />
+                  <div className="grid-2">
+                    <TextInput
+                      label="Identifiant"
+                      required
+                      maxLength={64}
+                      autoComplete="username"
+                      value={f.username}
+                      onChange={set('username')}
+                    />
+                    <TextInput
+                      label="Nom affiché"
+                      maxLength={120}
+                      autoComplete="name"
+                      value={f.displayName}
+                      onChange={set('displayName')}
+                    />
+                  </div>
+                  <TextInput
+                    label="Adresse e-mail (facultatif)"
+                    type="email"
+                    maxLength={200}
+                    autoComplete="email"
+                    value={f.email}
+                    onChange={set('email')}
+                  />
+                  <PasswordInput
+                    label="Mot de passe"
+                    description={`Au moins ${minLen} caractères et 3 types parmi minuscules, majuscules, chiffres, symboles.`}
+                    required
+                    autoComplete="new-password"
+                    value={f.password}
+                    onChange={set('password')}
+                  />
+                  <PasswordInput
+                    label="Confirmation"
+                    required
+                    autoComplete="new-password"
+                    value={f.confirm}
+                    onChange={set('confirm')}
+                  />
+                  <Checkbox
+                    label="Charger des données de démonstration"
+                    description="Établissement de santé fictif avec ISO 27001, HDS et une étude EBIOS RM complète, pour découvrir l’outil. Chargées à la fin de la configuration de la double authentification (environ une minute). À retirer avant la production : Administration, Remettre la base à vide."
+                    checked={demo}
+                    onChange={(e) => setDemo(e.currentTarget.checked)}
+                  />
+                  {error && (
+                    <Alert color="red" role="alert">
+                      {error}
+                    </Alert>
+                  )}
+                  <Button type="submit" loading={busy} fullWidth>
+                    Créer le compte
+                  </Button>
+                </Stack>
+              </form>
+              <Text size="xs" c="dimmed" ta="center">
+                La double authentification sera configurée à l’étape suivante.
+              </Text>
+              {avecPoivre && (
+                <Button variant="subtle" size="xs" onClick={() => setEtape('poivre')}>
+                  Revenir au poivre
+                </Button>
+              )}
+            </>
+          )}
         </Stack>
       </Card>
     </main>

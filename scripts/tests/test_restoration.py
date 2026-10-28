@@ -11,6 +11,14 @@ import tempfile
 import unittest
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
+NOM = 'suivi-audits-20261009-120000.tar.age'
+
+
+def cle_age(chemin):
+    """Identité age fictive (0600) ; renvoie la clé publique correspondante."""
+    subprocess.run(['age-keygen', '-o', str(chemin)], check=True, capture_output=True)
+    chemin.chmod(0o600)
+    return subprocess.run(['age-keygen', '-y', str(chemin)], check=True, capture_output=True, text=True).stdout.strip()
 
 
 def tar_bytes(entries, compressed=False):
@@ -36,14 +44,22 @@ class Restoration(unittest.TestCase):
         self.root = pathlib.Path(self.tmp.name)
         for name in ('scripts', 'bin', 'data/etat', 'data/secrets'):
             (self.root / name).mkdir(parents=True, exist_ok=True)
-        for name in ('backup.sh', 'restore.sh', 'lib-commun.sh', 'verifier-archive-restauration.py'):
+        for name in ('backup.sh', 'restore.sh', 'lib-commun.sh', 'verifier-archive-restauration.py', 'generer-cles-sauvegarde.sh'):
             shutil.copyfile(REPO / 'scripts' / name, self.root / 'scripts' / name)
         (self.root / '.env').write_text('DATA_DIR=' + str(self.root / 'data') + '\n')
         (self.root / 'data/.suivi-audits-donnees').touch()
         (self.root / 'data/secrets/old').write_text('ancien-secret-fictif')
-        self.key = self.root / 'phrase'
-        self.key.write_text('phrase-de-test-fictive')
-        self.key.chmod(0o600)
+        # Chiffrement age : identité du serveur + clé de secours du RSSI (clé privée gardée hors de BACKUP_RECIPIENTS_FILE).
+        self.key = self.root / 'cle-serveur'
+        self.secours_cle = self.root / 'cle-secours'
+        self.publique = cle_age(self.key)
+        self.publique_secours = cle_age(self.secours_cle)
+        self.recipients = self.root / 'destinataires'
+        self.recipients.write_text('# secours\n' + self.publique_secours + '\n')
+        self.recipients.chmod(0o600)
+        self.phrase = self.root / 'phrase'
+        self.phrase.write_text('phrase-de-test-fictive')
+        self.phrase.chmod(0o600)
         self.events = self.root / 'events'
         fake = self.root / 'bin/docker'
         fake.write_text('''#!/usr/bin/env python3
@@ -65,30 +81,41 @@ if 'pg_restore' in args and '--list' not in args: Path(os.environ['TEST_RESTORED
         fake_id.chmod(0o700)
         self.env = {**os.environ, 'PATH': str(self.root / 'bin') + ':' + os.environ['PATH'],
                     'TEST_EVENTS': str(self.events), 'TEST_RESTORED': str(self.root / 'restored.dump'),
-                    'BACKUP_PASSPHRASE_FILE': str(self.key), 'RESTORE_WAIT_SECONDS': '1'}
+                    'BACKUP_KEY_FILE': str(self.key), 'BACKUP_RECIPIENTS_FILE': str(self.recipients),
+                    'RESTORE_WAIT_SECONDS': '1'}
 
-    def archive(self, secrets=None, outer=None, caddy=None):
+    def chiffrer(self, clair, nom=NOM, destinataires=None):
+        cible = self.root / nom
+        args = ['age', '-o', str(cible)]
+        for d in destinataires or (self.publique, self.publique_secours):
+            args += ['-r', d]
+        subprocess.run(args + [str(clair)], check=True, capture_output=True)
+        return cible
+
+    def archive(self, secrets=None, outer=None, caddy=None, nom=NOM, info=None, destinataires=None):
         if secrets is None:
             secrets = [('db_app_password', b'password-fictif', tarfile.REGTYPE),
                        ('doc_master_key', base64.b64encode(b'a' * 32), tarfile.REGTYPE)]
         contents = [('suivi.dump', b'PGDMP-dump-fictif', tarfile.REGTYPE),
-                    ('INFO', b'date=20261009\n', tarfile.REGTYPE),
+                    ('INFO', info if info is not None else b'date=20261009-120000\nfichier=' + nom.encode() + b'\n', tarfile.REGTYPE),
                     ('secrets.tgz', tar_bytes(secrets, True), tarfile.REGTYPE)]
         if caddy is not None:
             contents.append(('caddy.tgz', tar_bytes(caddy, True), tarfile.REGTYPE))
-        target = self.root / 'backup.tar'
-        target.write_bytes(tar_bytes(contents if outer is None else outer))
-        return target
+        clair = self.root / 'clair.tar'
+        clair.write_bytes(tar_bytes(contents if outer is None else outer))
+        return self.chiffrer(clair, nom, destinataires)
 
-    def run_restore(self, archive, verify=True, env=None, confirmation='RESTAURER\n'):
+    def run_restore(self, archive, verify=True, env=None, confirmation='RESTAURER\n', ancien=False):
         args = ['bash', str(self.root / 'scripts/restore.sh')]
         if verify:
             args.append('--verifier')
+        if ancien:
+            args.append('--ancien-format')
         return subprocess.run(args + [str(archive)], input=confirmation, text=True, capture_output=True,
                               env={**self.env, **(env or {})}, timeout=20)
 
-    def assert_refused(self, archive):
-        result = self.run_restore(archive, False)
+    def assert_refused(self, archive, env=None):
+        result = self.run_restore(archive, False, env=env)
         self.assertNotEqual(result.returncode, 0)
         self.assertFalse(self.events.exists(), 'Docker ne doit pas être appelé pour une archive refusée')
         self.assertEqual((self.root / 'data/secrets/old').read_text(), 'ancien-secret-fictif')
@@ -102,18 +129,91 @@ if 'pg_restore' in args and '--list' not in args: Path(os.environ['TEST_RESTORED
         self.assertTrue((self.root / 'data/secrets/old').exists())
 
     def test_encrypted_roundtrip_and_checksum(self):
-        plain = self.archive()
-        encrypted = self.root / 'backup.tar.enc'
-        subprocess.run(['openssl', 'enc', '-aes-256-cbc', '-pbkdf2', '-iter', '600000', '-salt',
-                        '-in', str(plain), '-out', str(encrypted), '-pass', 'file:' + str(self.key)], check=True)
+        encrypted = self.archive()
         digest = hashlib.sha256(encrypted.read_bytes()).hexdigest()
         pathlib.Path(str(encrypted) + '.sha256').write_text(digest + '  ' + encrypted.name + '\n')
         result = self.run_restore(encrypted)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn('SHA-256 vérifiée', result.stdout)
         self.assertFalse(self.events.exists())
-        self.key.write_text('mauvaise-phrase-fictive')
-        self.assert_refused(encrypted)
+        # Une clé qui n'est pas destinataire de l'archive est refusée, sans aucun appel à Docker.
+        cle_etrangere = self.root / 'cle-etrangere'
+        cle_age(cle_etrangere)
+        pathlib.Path(str(encrypted) + '.sha256').unlink()
+        self.assert_refused(encrypted, env={'BACKUP_KEY_FILE': str(cle_etrangere)})
+
+    def test_recovery_key_alone_decrypts_and_restores(self):
+        archive = self.archive()
+        env = {'BACKUP_KEY_FILE': str(self.secours_cle)}
+        self.assertEqual(self.run_restore(archive, env=env).returncode, 0)
+        result = self.run_restore(archive, False, env=env)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('Restauration terminée.', result.stdout)
+
+    def test_tampered_truncated_and_foreign_archives_are_refused_without_partial_restore(self):
+        valide = self.archive()
+        octets = bytearray(valide.read_bytes())
+        for nom, contenu in (('un octet modifié', bytes(octets[:200]) + bytes([octets[200] ^ 1]) + bytes(octets[201:])),
+                             ('dernier octet modifié', bytes(octets[:-1]) + bytes([octets[-1] ^ 1])),
+                             ('tronquée', bytes(octets[:len(octets) // 2])),
+                             ('tronquée de 16 octets', bytes(octets[:-16])),
+                             ('vide', b''), ('contenu quelconque', b'pas une archive age')):
+            with self.subTest(nom):
+                altere = self.root / NOM
+                altere.write_bytes(contenu)
+                self.assert_refused(altere)
+                self.events.unlink(missing_ok=True)
+        with self.subTest('chiffrée pour d autres clés'):
+            etrangere = self.root / 'etrangere'
+            publique = cle_age(etrangere)
+            self.assert_refused(self.archive(destinataires=(publique,)))
+
+    def test_renamed_or_replayed_archive_is_refused(self):
+        valide = self.archive()
+        for nom in ('suivi-audits-20261010-130000.tar.age', 'suivi-audits-20261009-120000-0b0e3b6c-5b2a-4f0e-9c1d-2a7a5f6d8e11.tar.age',
+                    'autre-20261009-120000.tar.age', 'renommee.tar.age'):
+            with self.subTest(nom):
+                copie = self.root / 'copies' / nom
+                copie.parent.mkdir(exist_ok=True)
+                shutil.copyfile(valide, copie)
+                self.assert_refused(copie)
+                self.events.unlink(missing_ok=True)
+
+    def test_info_binds_job_id_and_timestamp(self):
+        job = '0b0e3b6c-5b2a-4f0e-9c1d-2a7a5f6d8e11'
+        nom = f'suivi-audits-20261009-120000-{job}.tar.age'
+        ok = self.archive(nom=nom, info=f'date=20261009-120000\nfichier={nom}\njob_id={job}\n'.encode())
+        self.assertEqual(self.run_restore(ok).returncode, 0)
+        autre = '9a8b7c6d-1111-4222-8333-444455556666'
+        faux = self.archive(nom=nom, info=f'date=20261009-120000\nfichier={nom}\njob_id={autre}\n'.encode())
+        self.assert_refused(faux)
+        sans = self.archive(nom=nom, info=f'date=20261009-120000\nfichier={nom}\n'.encode())
+        self.assert_refused(sans)
+        ancien = self.archive(info=b'date=20261009\n')
+        self.assert_refused(ancien)
+
+    def test_plain_archive_and_old_format_need_explicit_handling(self):
+        clair = self.root / 'suivi-audits-20261009-120000.tar'
+        clair.write_bytes(tar_bytes([('suivi.dump', b'PGDMP-dump-fictif', tarfile.REGTYPE)]))
+        self.assert_refused(clair)
+        valide = self.archive()
+        self.assertNotEqual(self.run_restore(valide, ancien=True).returncode, 0)
+        # Ancien format : accepté seulement avec --ancien-format et la phrase secrète (INFO sans liaison au nom).
+        ancien = self.root / 'suivi-audits-20261009-120000.tar.enc'
+        subprocess.run(['openssl', 'enc', '-aes-256-cbc', '-pbkdf2', '-iter', '600000', '-salt', '-in', str(self.root / 'clair.tar'),
+                        '-out', str(ancien), '-pass', 'file:' + str(self.phrase)], check=True)
+        env = {'BACKUP_PASSPHRASE_FILE': str(self.phrase)}
+        refus = self.run_restore(ancien, env=env)
+        self.assertNotEqual(refus.returncode, 0)
+        self.assertIn('--ancien-format', refus.stderr + refus.stdout)
+        result = self.run_restore(ancien, env=env, ancien=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(self.events.exists())
+
+    def test_decryption_key_with_wide_permissions_is_refused(self):
+        archive = self.archive()
+        self.key.chmod(0o644)
+        self.assert_refused(archive)
 
     def test_checksum_cannot_select_another_file(self):
         archive = self.archive()
@@ -163,9 +263,9 @@ if 'pg_restore' in args and '--list' not in args: Path(os.environ['TEST_RESTORED
             member = tarfile.TarInfo('suivi.dump')
             member.type = kind
             member.size = size
-            archive = self.root / 'too-large.tar'
-            archive.write_bytes(member.tobuf(format=tarfile.GNU_FORMAT) + b'\0' * 1024)
-            self.assert_refused(archive)
+            clair = self.root / 'too-large.tar'
+            clair.write_bytes(member.tobuf(format=tarfile.GNU_FORMAT) + b'\0' * 1024)
+            self.assert_refused(self.chiffrer(clair))
 
     def test_gnu_long_names_and_root_directory_remain_compatible(self):
         archive = self.archive(caddy=[('./', b'', tarfile.DIRTYPE),
@@ -179,20 +279,59 @@ if 'pg_restore' in args and '--list' not in args: Path(os.environ['TEST_RESTORED
             with self.subTest(entries=entries):
                 self.assert_refused(self.archive(secrets=entries))
 
-    def test_archive_produced_by_backup_script_is_compatible(self):
+    def sauvegarder(self, destination, env=None):
         secrets = self.root / 'data/secrets'
         (secrets / 'db_app_password').write_text('password-fictif')
         (secrets / 'doc_master_key').write_bytes(base64.b64encode(b'a' * 32))
+        return subprocess.run(['bash', str(self.root / 'scripts/backup.sh'), str(destination)],
+                              input='', text=True, capture_output=True, env={**self.env, **(env or {})}, timeout=20)
+
+    def test_archive_produced_by_backup_script_is_compatible(self):
         destination = self.root / 'archives'
-        backup = subprocess.run(['bash', str(self.root / 'scripts/backup.sh'), str(destination)],
-                                input='', text=True, capture_output=True, env=self.env, timeout=20)
+        backup = self.sauvegarder(destination)
         self.assertEqual(backup.returncode, 0, backup.stderr)
-        archive = next(destination.glob('*.tar.enc'))
+        archive = next(destination.glob('*.tar.age'))
+        self.assertEqual(sorted(f.suffix for f in destination.iterdir()), ['.age', '.sha256'])
+        # Illisible sans clé : ce n'est pas une archive tar, et rien n'est resté en clair.
+        self.assertNotEqual(subprocess.run(['tar', 'tf', str(archive)], capture_output=True).returncode, 0)
+        self.assertFalse(list(destination.glob('*.tar')))
         self.events.unlink()
         result = self.run_restore(archive)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn('SHA-256 vérifiée', result.stdout)
         self.assertFalse(self.events.exists())
+        # La clé de secours seule suffit, comme la clé du serveur.
+        self.assertEqual(self.run_restore(archive, env={'BACKUP_KEY_FILE': str(self.secours_cle)}).returncode, 0)
+        # L'INFO lie le contenu au nom du fichier.
+        clair = subprocess.run(['age', '-d', '-i', str(self.key), str(archive)], capture_output=True, check=True).stdout
+        with tarfile.open(fileobj=io.BytesIO(clair)) as t:
+            info = t.extractfile('INFO').read().decode()
+        self.assertIn('fichier=' + archive.name, info)
+        self.assertIn('date=' + archive.name.split('-', 2)[2].removesuffix('.tar.age'), info)
+
+    def test_backup_refuses_without_valid_keys_and_leaves_no_plaintext(self):
+        absent = self.root / 'absente'
+        large = self.root / 'cle-large'
+        shutil.copyfile(self.key, large)
+        large.chmod(0o644)
+        invalide = self.root / 'cle-invalide'
+        invalide.write_text('pas une identité age\n')
+        invalide.chmod(0o600)
+        vide = self.root / 'destinataires-vides'
+        vide.write_text('# rien\n')
+        privee = self.root / 'destinataires-prives'
+        privee.write_text(self.secours_cle.read_text())
+        cas = {'clé absente': {'BACKUP_KEY_FILE': str(absent)}, 'clé 0644': {'BACKUP_KEY_FILE': str(large)},
+               'clé invalide': {'BACKUP_KEY_FILE': str(invalide)}, 'destinataires absents': {'BACKUP_RECIPIENTS_FILE': str(absent)},
+               'aucun destinataire': {'BACKUP_RECIPIENTS_FILE': str(vide)},
+               'clé privée en destinataire': {'BACKUP_RECIPIENTS_FILE': str(privee)}}
+        for nom, env in cas.items():
+            with self.subTest(nom):
+                destination = self.root / 'archives'
+                resultat = self.sauvegarder(destination, env)
+                self.assertNotEqual(resultat.returncode, 0)
+                self.assertEqual(sorted(destination.glob('*')) if destination.exists() else [], [])
+                self.assertFalse(self.events.exists(), 'aucune sauvegarde ne doit démarrer')
 
     def sauvegarde_avec_anciennes(self, nombre, env=None, prefixe='suivi-audits', age_min=100):
         secrets = self.root / 'data/secrets'
@@ -201,7 +340,7 @@ if 'pg_restore' in args and '--list' not in args: Path(os.environ['TEST_RESTORED
         destination = self.root / 'archives'
         destination.mkdir(exist_ok=True)
         for i in range(nombre):
-            archive = destination / f'{prefixe}-202601{i + 1:02d}-000000.tar.enc'
+            archive = destination / f'{prefixe}-202601{i + 1:02d}-000000.tar.age'
             archive.write_bytes(b'ancienne-archive-fictive')
             (destination / f'{archive.name}.sha256').write_text('0' * 64 + f'  {archive.name}\n')
             age = (age_min + nombre - i) * 86400
@@ -214,44 +353,44 @@ if 'pg_restore' in args and '--list' not in args: Path(os.environ['TEST_RESTORED
     def test_rotation_keeps_the_newest_archives_even_when_all_are_expired(self):
         destination, resultat = self.sauvegarde_avec_anciennes(10, {'RETENTION_DAYS': '1', 'BACKUP_GARDER_MIN': '7'})
         self.assertEqual(resultat.returncode, 0, resultat.stderr)
-        restantes = sorted(f.name for f in destination.glob('*.tar.enc'))
+        restantes = sorted(f.name for f in destination.glob('*.tar.age'))
         self.assertEqual(len(restantes), 7)
         # La nouvelle sauvegarde et les six plus récentes anciennes restent ; les trois plus anciennes sont supprimées.
         for i in range(4, 10):
-            self.assertIn(f'suivi-audits-202601{i + 1:02d}-000000.tar.enc', restantes)
+            self.assertIn(f'suivi-audits-202601{i + 1:02d}-000000.tar.age', restantes)
         for i in range(0, 4):
-            self.assertNotIn(f'suivi-audits-202601{i + 1:02d}-000000.tar.enc', restantes)
-            self.assertFalse((destination / f'suivi-audits-202601{i + 1:02d}-000000.tar.enc.sha256').exists())
+            self.assertNotIn(f'suivi-audits-202601{i + 1:02d}-000000.tar.age', restantes)
+            self.assertFalse((destination / f'suivi-audits-202601{i + 1:02d}-000000.tar.age.sha256').exists())
         for nom in restantes:
             self.assertTrue((destination / f'{nom}.sha256').exists())
 
     def test_rotation_keeps_recent_archives_beyond_the_minimum(self):
         destination, resultat = self.sauvegarde_avec_anciennes(10, {'RETENTION_DAYS': '90'}, age_min=1)
         self.assertEqual(resultat.returncode, 0, resultat.stderr)
-        self.assertEqual(len(list(destination.glob('*.tar.enc'))), 11)
+        self.assertEqual(len(list(destination.glob('*.tar.age'))), 11)
 
     def test_rotation_removes_expired_archives_beyond_the_minimum(self):
         # Âges de 2 à 11 jours, rétention de 5 jours : au-delà des 3 plus récentes, seules les archives de plus de 5 jours
         # partent ; restent la nouvelle (0 jour) et celles de 2, 3, 4 et 5 jours.
         destination, resultat = self.sauvegarde_avec_anciennes(10, {'RETENTION_DAYS': '5', 'BACKUP_GARDER_MIN': '3'}, age_min=1)
         self.assertEqual(resultat.returncode, 0, resultat.stderr)
-        self.assertEqual(len(list(destination.glob('*.tar.enc'))), 5)
+        self.assertEqual(len(list(destination.glob('*.tar.age'))), 5)
 
     def test_rotation_keeps_everything_when_few_archives_exist(self):
         destination, resultat = self.sauvegarde_avec_anciennes(3, {'RETENTION_DAYS': '1'})
         self.assertEqual(resultat.returncode, 0, resultat.stderr)
-        self.assertEqual(len(list(destination.glob('*.tar.enc'))), 4)
+        self.assertEqual(len(list(destination.glob('*.tar.age'))), 4)
 
     def test_rotation_ignores_other_prefixes_and_subfolders(self):
         destination = self.root / 'archives'
         (destination / 'avant-maj').mkdir(parents=True)
-        voisins = [destination / 'autre-20200101-000000.tar.enc', destination / 'avant-maj/suivi-audits-20200101-000000.tar.enc']
+        voisins = [destination / 'autre-20200101-000000.tar.age', destination / 'avant-maj/suivi-audits-20200101-000000.tar.age']
         for fichier in voisins:
             fichier.write_bytes(b'x')
             os.utime(fichier, (1, 1))
         destination, resultat = self.sauvegarde_avec_anciennes(2, {'RETENTION_DAYS': '1', 'BACKUP_GARDER_MIN': '1'})
         self.assertEqual(resultat.returncode, 0, resultat.stderr)
-        self.assertEqual(len(list(destination.glob('suivi-audits-*.tar.enc'))), 1)
+        self.assertEqual(len(list(destination.glob('suivi-audits-*.tar.age'))), 1)
         for fichier in voisins:
             self.assertTrue(fichier.exists(), fichier)
 
@@ -261,7 +400,50 @@ if 'pg_restore' in args and '--list' not in args: Path(os.environ['TEST_RESTORED
                 destination, resultat = self.sauvegarde_avec_anciennes(0, {'BACKUP_GARDER_MIN': valeur})
                 self.assertNotEqual(resultat.returncode, 0)
                 self.assertIn('BACKUP_GARDER_MIN', resultat.stderr + resultat.stdout)
-                self.assertEqual(list(destination.glob('*.tar.enc')), [])
+                self.assertEqual(list(destination.glob('*.tar.age')), [])
+
+    def generer(self, *args, env=None):
+        return subprocess.run(['bash', str(self.root / 'scripts/generer-cles-sauvegarde.sh'), *args], input='', text=True,
+                              capture_output=True, env={**self.env, **(env or {})}, timeout=20)
+
+    def test_key_generation_creates_private_server_key_and_a_working_setup(self):
+        cle, secours = self.root / 'nouvelle-cle', self.root / 'nouveaux-destinataires'
+        env = {'BACKUP_KEY_FILE': str(cle), 'BACKUP_RECIPIENTS_FILE': str(secours)}
+        resultat = self.generer('--secours', self.publique_secours, '--confirmer', env=env)
+        self.assertEqual(resultat.returncode, 0, resultat.stderr)
+        self.assertEqual(cle.stat().st_mode & 0o777, 0o600)
+        self.assertEqual(secours.stat().st_mode & 0o777, 0o600)
+        self.assertNotIn('AGE-SECRET-KEY', resultat.stdout + resultat.stderr)
+        self.assertNotIn(cle.read_text().splitlines()[-1], resultat.stdout + resultat.stderr)
+        self.assertIn(self.publique_secours, secours.read_text())
+        # La configuration produite permet une sauvegarde, relisible par la clé du serveur comme par la clé de secours.
+        destination = self.root / 'archives'
+        self.assertEqual(self.sauvegarder(destination, env).returncode, 0)
+        archive = next(destination.glob('*.tar.age'))
+        self.assertEqual(self.run_restore(archive, env=env).returncode, 0)
+        self.assertEqual(self.run_restore(archive, env={'BACKUP_KEY_FILE': str(self.secours_cle)}).returncode, 0)
+        # Relancer ne remplace jamais la clé existante.
+        avant = cle.read_text()
+        self.assertEqual(self.generer('--secours', self.publique_secours, '--confirmer', env=env).returncode, 0)
+        self.assertEqual(cle.read_text(), avant)
+
+    def test_key_generation_refuses_private_keys_unconfirmed_and_invalid_existing_key(self):
+        cle, secours = self.root / 'nouvelle-cle', self.root / 'nouveaux-destinataires'
+        env = {'BACKUP_KEY_FILE': str(cle), 'BACKUP_RECIPIENTS_FILE': str(secours)}
+        privee = self.secours_cle.read_text().splitlines()[-1]
+        for argument in (privee, 'age1court', 'n importe quoi'):
+            with self.subTest(argument[:12]):
+                resultat = self.generer('--secours', argument, '--confirmer', env=env)
+                self.assertNotEqual(resultat.returncode, 0)
+                self.assertNotIn(privee, resultat.stdout + resultat.stderr)
+                self.assertFalse(secours.exists())
+        # Sans confirmation explicite ni terminal, rien n'est enregistré.
+        self.assertNotEqual(self.generer('--secours', self.publique_secours, env=env).returncode, 0)
+        self.assertFalse(secours.exists())
+        # Un fichier existant qui n'est pas une identité age n'est ni écrasé ni remplacé.
+        cle.write_text('configuration existante')
+        self.assertNotEqual(self.generer('--secours', self.publique_secours, '--confirmer', env=env).returncode, 0)
+        self.assertEqual(cle.read_text(), 'configuration existante')
 
     def test_confirmation_is_required(self):
         result = self.run_restore(self.archive(), False, confirmation='NON\n')

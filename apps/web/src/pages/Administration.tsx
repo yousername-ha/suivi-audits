@@ -11,6 +11,7 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router';
 import { cartesVisibles, type Cote, type Peut } from '../administration-droits';
 import { get } from '../api';
 import { fmtDate } from '../components/common';
+import { PoivrePanel } from '../components/Poivre';
 import { RemiseAVidePanel } from '../components/RemiseAVide';
 import { UpdatesPanel } from '../components/Updates';
 import { useCan } from '../session';
@@ -270,7 +271,12 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     resume: 'Mots de passe, durée des sessions et double authentification.',
     icone: 'bouclier',
     teinte: 'vert',
-    detail: (m) => <SectionLoader section="securite" onDirty={m} />,
+    detail: (m, can) => (
+      <Stack gap="xl">
+        <SectionLoader section="securite" onDirty={m} />
+        {can('administration', 'administrer') && <PoivrePanel />}
+      </Stack>
+    ),
   },
   {
     id: 'sessions',

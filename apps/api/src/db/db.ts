@@ -30,6 +30,14 @@ export function surConnexion(c: Pick<Client, 'query'>): Kdb {
   return new Kysely<DB>({ dialect: new PostgresDialect({ pool }) });
 }
 
+/** Délai d'inactivité toléré dans une transaction ouverte. */
+export const DELAI_TRANSACTION_INACTIVE_MS = 60_000;
+/** Deadlock détecté (40P01) ou échec de sérialisation (40001) : PostgreSQL annule la transaction, qui peut être rejouée entière. */
+const CODES_RELANCE = new Set(['40P01', '40001']);
+export const RELANCES_MAX = 2;
+/** Courte attente aléatoire (50 à 200 ms) avant de rejouer : deux transactions qui se sont bloquées ne repartent pas ensemble. */
+const attenteAleatoire = () => 50 + Math.floor(Math.random() * 151);
+
 export class Db {
   readonly pool: pg.Pool;
   readonly k: Kdb;
@@ -43,6 +51,9 @@ export class Db {
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 10000,
       statement_timeout: 30000,
+      // Une transaction restée ouverte sans activité (appelant planté, attente d'un service) est coupée au bout d'une minute :
+      // sinon elle garde ses verrous et une connexion du pool (max 10, suffisant pour une quinzaine d'utilisateurs).
+      idle_in_transaction_session_timeout: DELAI_TRANSACTION_INACTIVE_MS,
     });
     this.pool.on('error', (e) => log.error({ err: e.message }, 'db pool error'));
     this.k = new Kysely<DB>({ dialect: new PostgresDialect({ pool: this.pool }) });
@@ -60,20 +71,28 @@ export class Db {
   }
 
   /** Transaction. « actor » renseigne l'auteur des notifications temps réel (déclencheurs suivi_notify).
-      « k » exécute ses requêtes sur la même connexion, donc dans la même transaction que « c ». */
+      « k » exécute ses requêtes sur la même connexion, donc dans la même transaction que « c ».
+      Sur deadlock ou échec de sérialisation (40P01, 40001), la transaction ENTIÈRE est rejouée au plus RELANCES_MAX fois, après
+      une courte attente aléatoire, et chaque relance est journalisée : « fn » doit donc n'avoir aucun effet hors de la base
+      (pg_notify, déclencheurs et courriels en file sont transactionnels ; un appel réseau ou fichier ne doit pas s'y trouver). */
   async tx<T>(fn: (c: Client, k: Kdb) => Promise<T>, actor?: string): Promise<T> {
-    const c = await this.pool.connect();
-    try {
-      await c.query('BEGIN');
-      if (actor) await c.query("SELECT set_config('suivi.actor', $1, true)", [actor]);
-      const r = await fn(c, surConnexion(c));
-      await c.query('COMMIT');
-      return r;
-    } catch (e) {
-      await c.query('ROLLBACK').catch(() => {});
-      throw e;
-    } finally {
-      c.release();
+    for (let essai = 0; ; essai++) {
+      const c = await this.pool.connect();
+      try {
+        await c.query('BEGIN');
+        if (actor) await c.query("SELECT set_config('suivi.actor', $1, true)", [actor]);
+        const r = await fn(c, surConnexion(c));
+        await c.query('COMMIT');
+        return r;
+      } catch (e) {
+        await c.query('ROLLBACK').catch(() => {});
+        const code = (e as { code?: string }).code;
+        if (!code || !CODES_RELANCE.has(code) || essai >= RELANCES_MAX) throw e;
+        this.log.warn({ code, essai: essai + 1, max: RELANCES_MAX }, 'transaction rejouée après conflit');
+      } finally {
+        c.release();
+      }
+      await new Promise((r) => setTimeout(r, attenteAleatoire()));
     }
   }
 

@@ -1,6 +1,16 @@
 import { hotp } from '../src/security/crypto.js';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { Agent, createTestApp, login, makeUser, nextCode, PASSWORD, type TestApp, type TestUser } from './helpers.js';
+import {
+  Agent,
+  createTestApp,
+  login,
+  makeUser,
+  nextCode,
+  PASSWORD,
+  poivreDeTest,
+  type TestApp,
+  type TestUser,
+} from './helpers.js';
 
 let t: TestApp;
 let admin: TestUser, rw: TestUser, ro: TestUser;
@@ -176,8 +186,14 @@ describe('verrouillage après échecs', () => {
     const a = new Agent(t);
     for (let i = 0; i < 4; i++)
       expect((await a.post('/api/auth/login', { username: u.username, password: 'mauvais' })).statusCode).toBe(401);
-    expect((await a.post('/api/auth/login', { username: u.username, password: 'mauvais' })).statusCode).toBe(423);
-    expect((await a.post('/api/auth/login', { username: u.username, password: PASSWORD })).statusCode).toBe(423);
+    // Réponse uniforme (ADR 0070) : le 5e essai et le bon mot de passe ensuite reçoivent 401, comme un compte inconnu ;
+    // le verrou est bien posé en base.
+    expect((await a.post('/api/auth/login', { username: u.username, password: 'mauvais' })).statusCode).toBe(401);
+    expect((await a.post('/api/auth/login', { username: u.username, password: PASSWORD })).statusCode).toBe(401);
+    const verrou = await t.svc.db.one<{ locked_until: Date | null }>('SELECT locked_until FROM users WHERE id=$1', [
+      u.id,
+    ]);
+    expect(verrou!.locked_until).not.toBeNull();
     t.svc.limits.loginByUser.reset();
     t.svc.limits.loginByIp.reset();
   });
@@ -204,7 +220,12 @@ describe('jeton d’installation', () => {
       const { token } = await t2.svc.auth.issueSetupToken('cli', () => {});
       const a = new Agent(t2);
       expect((await a.get('/setup-inexistant')).statusCode).toBe(404);
-      const body = (tok: string, username = 'chef') => ({ token: tok, username, password: PASSWORD });
+      const body = (tok: string, username = 'chef') => ({
+        token: tok,
+        username,
+        password: PASSWORD,
+        poivre: poivreDeTest(),
+      });
       const old = await a.post('/api/setup', body(first.token));
       expect(old.statusCode).toBe(401);
       expect(old.json().reason).toBe('invalid');
@@ -231,6 +252,7 @@ describe('jeton d’installation', () => {
         token,
         username: 'chef',
         password: PASSWORD,
+        poivre: poivreDeTest(),
         orgName: '  Hôpital Exemple  ',
       });
       expect(r.statusCode, r.body).toBe(201);
@@ -248,7 +270,12 @@ describe('jeton d’installation', () => {
       await t2.svc.db.q(
         "UPDATE settings SET value = jsonb_set(value, '{expires}', '\"2020-01-01T00:00:00Z\"') WHERE key='setup_token'",
       );
-      const r = await new Agent(t2).post('/api/setup', { token, username: 'chef', password: PASSWORD });
+      const r = await new Agent(t2).post('/api/setup', {
+        token,
+        username: 'chef',
+        password: PASSWORD,
+        poivre: poivreDeTest(),
+      });
       expect(r.statusCode).toBe(410);
       expect(r.json().error).toMatch(/expiré.*setup-token/);
       expect((await new Agent(t2).get('/api/setup')).json()).toMatchObject({

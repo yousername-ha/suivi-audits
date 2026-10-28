@@ -6,7 +6,7 @@
 # données, la dernière sauvegarde et, avec --avec-sauvegarde, une sauvegarde chiffrée réelle suivie de la
 # vérification de son archive (restore.sh --verifier, sans restauration).
 # Elle ne remplace pas la recette humaine (ergonomie, parcours métier) ni une restauration sur une autre machine.
-#   Usage :  sudo [BACKUP_PASSPHRASE_FILE=<fichier>, défaut /root/.suivi-backup-pass] ./scripts/recette-serveur.sh [--version X.Y.Z]
+#   Usage :  sudo [BACKUP_KEY_FILE=<fichier>, défaut /root/.suivi-backup-key] [BACKUP_RECIPIENTS_FILE=<fichier>, défaut /root/.suivi-backup-recipients] ./scripts/recette-serveur.sh [--version X.Y.Z]
 #                 [--avec-sauvegarde] [--sortie DOSSIER]
 # Rapports (sans secret) : DOSSIER, par défaut DATA_DIR/etat/recette/recette-AAAAMMJJ-HHMMSS.{md,json}.
 # Code de sortie : 0 si aucun contrôle n'a échoué (les avertissements ne font pas échouer), 1 sinon.
@@ -75,7 +75,7 @@ if [ -n "$init_id" ] && [ "$(docker inspect -f '{{.State.ExitCode}}' "$init_id" 
 else
   noter ÉCHOUÉ R01 "Service d'initialisation terminé sans erreur" "conteneur init absent ou en erreur"
 fi
-for s in db app; do
+for s in db app web gateway; do
   id=$(dc ps -q "$s" 2> /dev/null | head -n 1)
   st=$([ -n "$id" ] && docker inspect -f '{{.State.Health.Status}}' "$id" 2> /dev/null || echo absent)
   if [ "$st" = healthy ]; then noter PASSÉ "R02-$s" "Conteneur $s en bonne santé"; else noter ÉCHOUÉ "R02-$s" "Conteneur $s en bonne santé" "état : $st"; fi
@@ -177,16 +177,17 @@ else
   noter AVERTISSEMENT R19 "Dernière sauvegarde" "aucun rapport de sauvegarde (planification à configurer)"
 fi
 if [ "$AVEC_SAUVEGARDE" = 1 ]; then
-  # Même fichier par défaut que mettre-a-jour.sh : la recette n'oblige pas à répéter la variable.
-  BACKUP_PASSPHRASE_FILE="${BACKUP_PASSPHRASE_FILE:-/root/.suivi-backup-pass}"
-  export BACKUP_PASSPHRASE_FILE
-  if [ ! -s "$BACKUP_PASSPHRASE_FILE" ]; then
-    noter ÉCHOUÉ R20 "Sauvegarde chiffrée puis vérification de l'archive" "phrase secrète des sauvegardes absente ou vide ($BACKUP_PASSPHRASE_FILE) : indiquer BACKUP_PASSPHRASE_FILE=<fichier>"
+  # Mêmes fichiers par défaut que mettre-a-jour.sh : la recette n'oblige pas à répéter les variables.
+  BACKUP_KEY_FILE="${BACKUP_KEY_FILE:-/root/.suivi-backup-key}"
+  BACKUP_RECIPIENTS_FILE="${BACKUP_RECIPIENTS_FILE:-/root/.suivi-backup-recipients}"
+  export BACKUP_KEY_FILE BACKUP_RECIPIENTS_FILE
+  if ! erreur_cles=$( (controler_cles_sauvegarde "$BACKUP_KEY_FILE" "$BACKUP_RECIPIENTS_FILE") 2>&1 ); then
+    noter ÉCHOUÉ R20 "Sauvegarde chiffrée puis vérification de l'archive" "$(printf '%s' "$erreur_cles" | tr '\n' ' ' | cut -c1-200)"
   else
     tmp=$(mktemp -d)
     # Le dossier temporaire ne contient que l'archive chiffrée, supprimée en fin de contrôle.
     if "$REPO/scripts/backup.sh" "$tmp" > "$tmp/backup.log" 2>&1; then
-      archive=$(find "$tmp" -maxdepth 1 \( -name '*.tar.enc' -o -name '*.tar' \) | head -n 1)
+      archive=$(find "$tmp" -maxdepth 1 -name '*.tar.age' | head -n 1)
       if [ -n "$archive" ] && "$REPO/scripts/restore.sh" --verifier "$archive" > "$tmp/verif.log" 2>&1; then
         noter PASSÉ R20 "Sauvegarde chiffrée réelle et archive vérifiée (restauration non exécutée)"
       else
