@@ -20,7 +20,15 @@ interface Droit {
 }
 const ROLE_OPTIONS = ROLES_RESSOURCE.map((r) => ({ value: r, label: ROLE_LABELS[r] }));
 
-export function Droits({ type, id }: { type: 'registre' | 'objet'; id: string }) {
+export function Droits({
+  type,
+  id,
+  peutAttribuer,
+}: {
+  type: 'registre' | 'objet';
+  id: string;
+  peutAttribuer: boolean;
+}) {
   const cible = type === 'registre' ? 'le registre' : 'l’élément';
   const qc = useQueryClient();
   const droits = useQuery({
@@ -127,15 +135,17 @@ export function Droits({ type, id }: { type: 'registre' | 'objet'; id: string })
                   {d.grantedBy}, {fmtDate(d.grantedAt)}
                 </Table.Td>
                 <Table.Td>
-                  <ConfirmButton
-                    size="xs"
-                    variant="default"
-                    aria-label={`Retirer le droit de ${d.libelle}`}
-                    message={`${d.libelle} perd son rôle ${ROLE_LABELS[d.role].toLowerCase()} sur ${cible}.`}
-                    onConfirm={() => retirer(d)}
-                  >
-                    Retirer
-                  </ConfirmButton>
+                  {peutAttribuer && (
+                    <ConfirmButton
+                      size="xs"
+                      variant="default"
+                      aria-label={`Retirer le droit de ${d.libelle}`}
+                      message={`${d.libelle} perd son rôle ${ROLE_LABELS[d.role].toLowerCase()} sur ${cible}.`}
+                      onConfirm={() => retirer(d)}
+                    >
+                      Retirer
+                    </ConfirmButton>
+                  )}
                 </Table.Td>
               </Table.Tr>
             ))}
@@ -149,22 +159,28 @@ export function Droits({ type, id }: { type: 'registre' | 'objet'; id: string })
           </Table.Tbody>
         </Table>
       </DataTable>
-      <Group align="end">
-        <Select
-          label="Utilisateur ou groupe"
-          searchable
-          placeholder="Rechercher…"
-          data={options}
-          value={titulaire}
-          onChange={setTitulaire}
-          onSearchChange={setRecherche}
-          filter={({ options: o }) => o}
-        />
-        <Select label="Rôle" allowDeselect={false} data={ROLE_OPTIONS} value={role} onChange={setRole} />
-        <Button disabled={!titulaire || !role} onClick={() => void preparer()}>
-          Attribuer
-        </Button>
-      </Group>
+      {peutAttribuer ? (
+        <Group align="end">
+          <Select
+            label="Utilisateur ou groupe"
+            searchable
+            placeholder="Rechercher…"
+            data={options}
+            value={titulaire}
+            onChange={setTitulaire}
+            onSearchChange={setRecherche}
+            filter={({ options: o }) => o}
+          />
+          <Select label="Rôle" allowDeselect={false} data={ROLE_OPTIONS} value={role} onChange={setRole} />
+          <Button disabled={!titulaire || !role} onClick={() => void preparer()}>
+            Attribuer
+          </Button>
+        </Group>
+      ) : (
+        <Text size="sm" c="dimmed">
+          Attribuer ou retirer un droit demande le droit d’administrer le module ou le rôle de gestionnaire.
+        </Text>
+      )}
       <Modal
         centered
         opened={!!apercu}

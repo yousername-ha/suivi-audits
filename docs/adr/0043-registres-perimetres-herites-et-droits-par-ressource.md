@@ -2,7 +2,8 @@
 
 **Statut** : acceptée le 20/10/2026 (proposée le 19/10/2026, lot L3 de l'intégration des interfaces ASTRA, [audit L0](../unification/AUDIT-L0-INTEGRATION-UI-ASTRA.md)) ; suites livrées dans la 3.6.0, voir l'addendum en fin de document.
 Complète l'[ADR 0010](0010-droits-rbac.md) (droits de module), l'[ADR 0039](0039-hierarchie-des-perimetres.md) (hiérarchie) et
-l'[ADR 0040](0040-sortie-du-json-plat-modules-en-tables.md).
+l'[ADR 0040](0040-sortie-du-json-plat-modules-en-tables.md). Amendée par l'[ADR 0067](0067-attribution-des-droits-par-ressource-reservee.md)
+(qui peut attribuer un droit).
 
 ## Contexte
 

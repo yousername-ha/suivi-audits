@@ -32,6 +32,7 @@ Aucune action sur le serveur. Le frontal est reconstruit avec une bibliothèque 
 - **Images épinglées par empreinte** : les images tierces des Dockerfiles et du compose de production (`node`, `caddy`, `golang`, `alpine`, `postgres`, `clamav`) portent leur empreinte `@sha256` ; Dependabot suit aussi le compose. Contrôle `scripts/tests/conteneurs.test.mjs` ajouté à la CI.
 - **Adresse du client** : `TRUST_PROXY` accepte un nombre de relais de confiance (1 à 10), une liste d'adresses ou de CIDR, ou `true`/`false` (compatibilité). L'adresse retenue est celle vue par le dernier relais de confiance, et non la première de l'en-tête `X-Forwarded-For`. Valeur mal formée : l'API refuse de démarrer.
 - **Décision des rapprochements** : une erreur inattendue renvoie « Erreur interne lors de la décision. » au lieu du texte de l'erreur technique, qui est journalisée.
+- **Droits par ressource** ([ADR 0067](docs/adr/0067-attribution-des-droits-par-ressource-reservee.md)) : l'attribution des droits par ressource et le passage d'un registre en restreint exigent le droit d'administrer le module, ou le rôle de gestionnaire de la ressource ; on ne modifie plus ses propres droits ; créer ou retirer une relation exige le droit de gérer l'élément source. Les droits déjà attribués sont conservés.
 
 ## [5.1.0] — 2026-10-27
 
