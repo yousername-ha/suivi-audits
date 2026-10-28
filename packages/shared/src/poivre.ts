@@ -56,7 +56,7 @@ const CLAVIERS = ['azertyuiop', 'qsdfghjklm', 'wxcvbn', 'qwertyuiop', 'asdfghjkl
 const RANGEES = [...CLAVIERS, ...CLAVIERS.map((r) => [...r].reverse().join(''))];
 
 /** Plus longue série de caractères identiques consécutifs. */
-function plusLongueRepetition(s: string): number {
+export function plusLongueRepetition(s: string): number {
   let max = 0,
     cur = 0,
     prev = '';
