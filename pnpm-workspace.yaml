@@ -4,3 +4,9 @@ packages:
   - tests/e2e
 onlyBuiltDependencies:
   - esbuild
+# Chaîne d'approvisionnement (pnpm 10) : une version publiée depuis moins de 7 jours n'est pas résolue (délai de
+# détection d'un paquet compromis) ; une version publiée avec une preuve de confiance plus faible que les précédentes
+# (provenance perdue) est refusée ; une dépendance transitive ne peut venir que du registre (ni git ni archive distante).
+minimumReleaseAge: 10080
+trustPolicy: no-downgrade
+blockExoticSubdeps: true

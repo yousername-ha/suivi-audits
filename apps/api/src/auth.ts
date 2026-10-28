@@ -147,6 +147,23 @@ export class Auth {
         expires_at: exp,
       })
       .execute();
+    // Sessions à l'étape du second facteur : trois au plus par compte, les plus récentes.
+    if (!mfaOk)
+      await (c ? surConnexion(c) : this.db.k)
+        .deleteFrom('sessions')
+        .where('user_id', '=', userId)
+        .where('mfa_ok', '=', false)
+        .where('id_hash', 'not in', (eb) =>
+          eb
+            .selectFrom('sessions')
+            .select('id_hash')
+            .where('user_id', '=', userId)
+            .where('mfa_ok', '=', false)
+            .orderBy('created_at', 'desc')
+            .orderBy('id_hash')
+            .limit(3),
+        )
+        .execute();
     this.setCookie(req, reply, tok);
     return csrf;
   }
@@ -252,26 +269,67 @@ export class Auth {
       return { ok: false as const, reason: 'locked' as const, user: u };
     }
     if (!(await verifyPassword(password, u.password_hash))) {
-      const n = u.failed_logins + 1;
-      const { lockoutThreshold: t, lockoutMinutes } = this.policy();
-      const lock = n >= t ? new Date(Date.now() + lockoutMinutes * 60e3 * Math.min(8, 2 ** (n - t))) : null;
-      // Un verrou en cours n'est jamais raccourci : sans nouveau verrou, la date existante est conservée (COALESCE).
-      await this.db.k
-        .updateTable('users')
-        .set({ failed_logins: n, ...(lock ? { locked_until: lock } : {}) })
-        .where('id', '=', u.id)
-        .execute();
-      return { ok: false as const, reason: lock ? ('locked_now' as const) : ('bad_password' as const), user: u };
+      const e = await this.enregistrerEchec(u.id);
+      return {
+        ok: false as const,
+        reason: e.verrouille ? ('locked_now' as const) : ('bad_password' as const),
+        user: u,
+      };
     }
     if (u.disabled) return { ok: false as const, reason: 'disabled' as const, user: u };
     if (u.expires_at && new Date(u.expires_at) <= new Date())
       return { ok: false as const, reason: 'expired' as const, user: u };
+    // Avec un second facteur actif, la remise à zéro attend son succès : un mot de passe correct ne l'efface pas.
     await this.db.k
       .updateTable('users')
-      .set({ failed_logins: 0, locked_until: null, last_login_at: sql<Date>`now()` })
+      .set(
+        u.totp_enabled
+          ? { last_login_at: sql<Date>`now()` }
+          : { failed_logins: 0, locked_until: null, last_login_at: sql<Date>`now()` },
+      )
       .where('id', '=', u.id)
       .execute();
     return { ok: true as const, user: u };
+  }
+
+  /** Enregistre un échec d'authentification (mot de passe ou second facteur) : incrément atomique du compteur, puis
+      verrouillage progressif au seuil. Un verrou en cours n'est jamais raccourci. */
+  async enregistrerEchec(userId: string): Promise<{ echecs: number; verrouille: boolean }> {
+    const { lockoutThreshold: t, lockoutMinutes } = this.policy();
+    const r = await this.db.k
+      .updateTable('users')
+      .set((eb) => ({ failed_logins: eb('failed_logins', '+', 1) }))
+      .where('id', '=', userId)
+      .returning(['failed_logins'])
+      .executeTakeFirst();
+    if (!r) return { echecs: 0, verrouille: false };
+    const n = r.failed_logins;
+    if (n < t) return { echecs: n, verrouille: false };
+    const fin = new Date(Date.now() + lockoutMinutes * 60e3 * Math.min(8, 2 ** (n - t)));
+    await this.db.k
+      .updateTable('users')
+      .set({ locked_until: sql<Date>`greatest(coalesce(locked_until, ${fin}::timestamptz), ${fin}::timestamptz)` })
+      .where('id', '=', userId)
+      .execute();
+    return { echecs: n, verrouille: true };
+  }
+
+  /** Second facteur réussi : les échecs et le verrou sont remis à zéro. */
+  async effacerEchecs(userId: string): Promise<void> {
+    await this.db.k
+      .updateTable('users')
+      .set({ failed_logins: 0, locked_until: null })
+      .where('id', '=', userId)
+      .execute();
+  }
+
+  async estVerrouille(userId: string): Promise<boolean> {
+    const r = await this.db.k
+      .selectFrom('users')
+      .select(sql<boolean>`coalesce(locked_until > now(), false)`.as('verrouille'))
+      .where('id', '=', userId)
+      .executeTakeFirst();
+    return !!r?.verrouille;
   }
 
   /* ---------------------------------------------------------------- TOTP (anti-rejeu) */

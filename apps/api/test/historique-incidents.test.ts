@@ -124,8 +124,8 @@ describe('registre des incidents', () => {
     expect((await writer.post('/api/crrc/alertes/ALR-1/incident')).statusCode).toBe(409);
   });
   it('supprime un incident', async () => {
-    expect((await writer.del(`/api/incidents/${incident}`)).statusCode).toBe(200);
-    expect((await writer.del(`/api/incidents/${incident}`)).statusCode).toBe(404);
+    expect((await admin.del(`/api/incidents/${incident}`)).statusCode).toBe(200);
+    expect((await admin.del(`/api/incidents/${incident}`)).statusCode).toBe(404);
   });
 });
 
@@ -181,7 +181,7 @@ describe('cellule de crise', () => {
     expect(c.log[2].text).toBe('Check-list : Alerter — fait.');
     expect(Date.parse(c.deadlines[0].due) - Date.parse(c.start)).toBe(72 * 3600e3);
     expect((await writer.put(`/api/crise/cellules/${cellule}/checklist/0`, { fait: false })).statusCode).toBe(200);
-    expect((await writer.del(`/api/crise/cellules/${cellule}/echeances/0`)).statusCode).toBe(200);
+    expect((await admin.del(`/api/crise/cellules/${cellule}/echeances/0`)).statusCode).toBe(200);
     c = (await etat()).crisis.cells[0];
     expect(c.checks).toEqual({});
     expect(c.deadlines).toEqual([]);
@@ -220,7 +220,7 @@ describe('cellule de crise', () => {
       '',
       'Fournisseur critique fictif',
     ]);
-    expect((await writer.del('/api/crise/contacts/0')).statusCode).toBe(200);
+    expect((await admin.del('/api/crise/contacts/0')).statusCode).toBe(200);
     const sc = await writer.post('/api/crise/scenarios');
     const id = sc.json().id;
     expect(
@@ -237,9 +237,9 @@ describe('cellule de crise', () => {
       title: 'Panne fictive',
       items: [{ phase: 'Mobilisation', t: 'Réunir la cellule', owner: '' }],
     });
-    expect((await writer.del(`/api/crise/scenarios/${id}/actions/0`)).statusCode).toBe(200);
-    expect((await writer.del(`/api/crise/scenarios/${id}`)).statusCode).toBe(200);
-    expect((await writer.del(`/api/crise/scenarios/${id}`)).statusCode).toBe(404);
+    expect((await admin.del(`/api/crise/scenarios/${id}/actions/0`)).statusCode).toBe(200);
+    expect((await admin.del(`/api/crise/scenarios/${id}`)).statusCode).toBe(200);
+    expect((await admin.del(`/api/crise/scenarios/${id}`)).statusCode).toBe(404);
   });
   it('journalise les modifications', async () => {
     const rows = await t.svc.db.q<{ action: string }>(

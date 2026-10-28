@@ -90,6 +90,8 @@ export function createServices(cfg: Config, log: Logger) {
       loginByIp: limiter(20, 15 * 60e3),
       loginByUser: limiter(10, 15 * 60e3),
       mfaBySession: limiter(8, 10 * 60e3),
+      mfaByUser: limiter(10, 15 * 60e3),
+      motDePasseByUser: limiter(5, 15 * 60e3),
       updateMfaByUser: limiter(5, 15 * 60e3),
       setupByIp: limiter(10, 15 * 60e3),
       presence: limiter(30, 60e3),

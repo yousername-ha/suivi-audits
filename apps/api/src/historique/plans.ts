@@ -125,7 +125,7 @@ export class Plans {
     return this.r.modifier(
       user,
       ip,
-      { module: 'pilotage', action: 'plan.deleted', reference: (p) => `legacy:plans:${p.id}` },
+      { droit: 'supprimer', module: 'pilotage', action: 'plan.deleted', reference: (p) => `legacy:plans:${p.id}` },
       (data) => {
         this.trouver(data, id);
         remplacerEntree(data, 'plans', id, null);

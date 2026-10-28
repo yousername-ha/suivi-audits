@@ -116,7 +116,7 @@ export class Gap {
     return this.r.modifier(
       user,
       ip,
-      { module: 'conformite', action: 'gap.deleted', reference: (a) => `legacy:appGaps:${a.id}` },
+      { droit: 'supprimer', module: 'conformite', action: 'gap.deleted', reference: (a) => `legacy:appGaps:${a.id}` },
       (data) => {
         this.trouver(data, id);
         data.appGaps = (data.appGaps as JsonObject[]).filter((a) => !(isObject(a) && a.id === id));
@@ -178,7 +178,12 @@ export class Gap {
     return this.r.modifier(
       user,
       ip,
-      { module: 'conformite', action: 'gap.point-deleted', reference: (a) => `legacy:appGaps:${a.id}` },
+      {
+        droit: 'supprimer',
+        module: 'conformite',
+        action: 'gap.point-deleted',
+        reference: (a) => `legacy:appGaps:${a.id}`,
+      },
       (data) => {
         const app = lireAppGap(this.trouver(data, id))!;
         if (!app.custom.some((l) => l.id === ligne)) throw new HttpError(404, 'Seuls les points ajoutés se retirent.');
