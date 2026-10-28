@@ -151,7 +151,7 @@ retour_arriere() { # raison
   elif [ -n "$apres" ] && [ "$apres" != "$MIGRATIONS_AVANT" ] && [ -n "$SAUVEGARDE" ]; then
     info "La base a été migrée : restauration de la sauvegarde $SAUVEGARDE."
     if [ "$AUTO" = 1 ] || confirmer "Restaurer la sauvegarde faite avant la mise à jour (les données ajoutées depuis seront perdues) ?"; then
-      # Une sauvegarde .tar.enc (faite par la version précédente) se restaure avec le restore.sh de cette version, qui l'accepte sans option.
+      # Le dépôt est revenu à la version précédente : son restore.sh correspond au format de la sauvegarde (.tar.enc ou .tar.age).
       RESTAURER_SANS_CONFIRMATION=1 BACKUP_KEY_FILE="$CLE" BACKUP_PASSPHRASE_FILE="$PASS" "$REPO/scripts/restore.sh" "$SAUVEGARDE" < /dev/null \
         || { echo RESTAURER | BACKUP_KEY_FILE="$CLE" BACKUP_PASSPHRASE_FILE="$PASS" "$REPO/scripts/restore.sh" "$SAUVEGARDE"; }
     else
@@ -245,7 +245,18 @@ elif [ "$SANS_SIGNATURE" = 1 ]; then
 else
   arret "cosign est nécessaire pour vérifier la signature des images (docs/INSTALLATION.md, étape 12.1) ; à défaut : --sans-signature."
 fi
-[ "$VERIFIER" = 1 ] || controler_cles_sauvegarde "$CLE" "$SECOURS"
+if [ "$VERIFIER" != 1 ]; then
+  if declare -F controler_cles_sauvegarde > /dev/null; then
+    controler_cles_sauvegarde "$CLE" "$SECOURS"
+  else
+    # Version installée antérieure au chiffrement age : sa sauvegarde utilise encore la phrase secrète (étape 11.1 de son guide),
+    # mais la version cible exige les clés age (montées par son docker-compose.yml) : les contrôler avant toute modification.
+    [ -s "$PASS" ] || arret "phrase secrète des sauvegardes introuvable ($PASS) : la sauvegarde chiffrée est obligatoire (étape 11.1)."
+    git cat-file -e "v$CIBLE:scripts/generer-cles-sauvegarde.sh" 2> /dev/null \
+      && { ( eval "$(git show "v$CIBLE:scripts/lib-commun.sh")"; controler_cles_sauvegarde "$CLE" "$SECOURS" ) \
+        || arret "clés de sauvegarde age à préparer avant cette mise à jour (docs/INSTALLATION.md, étape 6.8)."; }
+  fi
+fi
 
 # ---------------------------------------------------------------- 2. Notes de mise à jour
 PHASE=notes
