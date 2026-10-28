@@ -1808,3 +1808,584 @@ html[data-style='clair'][data-mantine-color-scheme='light'] {
   background: #c92a2a;
   color: #fff;
 }
+
+/* ========================================================================
+   TABLEAU DE BORD « VERRE ET RELIEF » (accueil, ADR 0069)
+   Dalles en verre épais (reflet des bords, lumière haute, ombre portée), métriques fines cernées d'un contour sombre,
+   teintes des seuils --tdb-* (tokens.ts, clair et sombre). Limité à l'accueil : classe « tdb » sur le conteneur.
+   ======================================================================== */
+.app-main:has(.tdb) {
+  background-color: var(--suivi-fond-page);
+  background-image:
+    radial-gradient(56rem 40rem at 4% -6%, rgb(220 236 226 / 90%), transparent 62%),
+    radial-gradient(48rem 38rem at 104% 2%, rgb(235 232 249 / 90%), transparent 58%),
+    radial-gradient(56rem 50rem at 58% 108%, rgb(224 240 227 / 90%), transparent 62%),
+    radial-gradient(39rem 32rem at 30% 55%, rgb(248 243 230 / 85%), transparent 62%),
+    radial-gradient(32rem 26rem at 84% 60%, rgb(228 240 245 / 85%), transparent 60%);
+}
+[data-mantine-color-scheme='dark'] .app-main:has(.tdb) {
+  background-image:
+    radial-gradient(56rem 40rem at 4% -6%, rgb(39 74 58 / 55%), transparent 62%),
+    radial-gradient(48rem 38rem at 104% 2%, rgb(60 52 110 / 45%), transparent 58%),
+    radial-gradient(56rem 50rem at 58% 108%, rgb(30 66 50 / 50%), transparent 62%),
+    radial-gradient(32rem 26rem at 84% 60%, rgb(36 60 78 / 40%), transparent 60%);
+}
+.tdb {
+  --tdb-verre-haut: rgb(255 255 255 / 52%);
+  --tdb-verre-milieu: rgb(255 255 255 / 28%);
+  --tdb-verre-bas: rgb(255 255 255 / 38%);
+  --tdb-verre-bord: rgb(255 255 255 / 50%);
+  --tdb-reflet-bord: rgb(255 255 255 / 100%);
+  --tdb-lumiere: rgb(255 255 255 / 95%);
+  --tdb-ombre: rgb(36 59 52);
+  --tdb-filet: rgb(16 30 24 / 14%);
+  --tdb-rail: rgb(36 59 52 / 12%);
+  --tdb-lueur: rgb(140 124 230);
+}
+[data-mantine-color-scheme='dark'] .tdb {
+  --tdb-verre-haut: rgb(48 78 63 / 62%);
+  --tdb-verre-milieu: rgb(26 47 37 / 50%);
+  --tdb-verre-bas: rgb(34 56 45 / 58%);
+  --tdb-verre-bord: rgb(255 255 255 / 14%);
+  --tdb-reflet-bord: rgb(255 255 255 / 45%);
+  --tdb-lumiere: rgb(255 255 255 / 22%);
+  --tdb-ombre: rgb(0 0 0);
+  --tdb-filet: rgb(0 0 0 / 35%);
+  --tdb-rail: rgb(255 255 255 / 12%);
+}
+.tdb-grille {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--mantine-spacing-lg);
+  align-items: stretch;
+}
+.tdb-grille > * {
+  grid-column: span 12;
+  min-width: 0;
+}
+@media (min-width: 48em) {
+  .tdb-grille > .tdb-l3,
+  .tdb-grille > .tdb-l4,
+  .tdb-grille > .tdb-l6 {
+    grid-column: span 6;
+  }
+}
+@media (min-width: 64em) {
+  .tdb-grille > .tdb-l3 {
+    grid-column: span 3;
+  }
+  .tdb-grille > .tdb-l4 {
+    grid-column: span 4;
+  }
+  .tdb-grille > .tdb-l8 {
+    grid-column: span 8;
+  }
+}
+
+/* Dalle en verre : fond translucide flouté, liseré lumineux des bords (::before), reflet haut (::after). */
+.tdb-dalle {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-sm);
+  padding: var(--mantine-spacing-md) var(--mantine-spacing-lg) var(--mantine-spacing-lg);
+  border-radius: var(--mantine-radius-lg);
+  border: var(--suivi-trait-l) solid var(--tdb-verre-bord);
+  background: linear-gradient(160deg, var(--tdb-verre-haut) 0%, var(--tdb-verre-milieu) 55%, var(--tdb-verre-bas) 100%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%) brightness(1.04);
+  backdrop-filter: blur(18px) saturate(180%) brightness(1.04);
+  box-shadow:
+    0 0 0 1px var(--tdb-filet),
+    inset 0 1px 0 var(--tdb-lumiere),
+    inset 0 1rem 1.5rem -1.125rem var(--tdb-lumiere),
+    inset 0 -1.125rem 1.75rem -1.25rem rgb(from var(--tdb-ombre) r g b / 16%),
+    0 1px 1px rgb(from var(--tdb-ombre) r g b / 5%),
+    0 0.5rem 1.125rem -0.375rem rgb(from var(--tdb-ombre) r g b / 12%),
+    0 1.875rem 3.75rem -1.5rem rgb(from var(--tdb-ombre) r g b / 26%);
+  transition:
+    transform var(--suivi-motion) var(--suivi-ease),
+    box-shadow var(--suivi-motion) var(--suivi-ease);
+}
+.tdb-dalle::before,
+.tdb-dalle::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.tdb-dalle::before {
+  z-index: 2;
+  padding: 1.5px;
+  background: linear-gradient(
+    135deg,
+    var(--tdb-reflet-bord) 0%,
+    rgb(255 255 255 / 40%) 20%,
+    transparent 42%,
+    rgb(255 255 255 / 12%) 68%,
+    rgb(255 255 255 / 90%) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+[data-mantine-color-scheme='dark'] .tdb-dalle::before {
+  opacity: 0.4;
+}
+.tdb-dalle::after {
+  z-index: 1;
+  background: radial-gradient(120% 70% at 16% -12%, rgb(255 255 255 / 50%), transparent 55%);
+  mix-blend-mode: soft-light;
+}
+.tdb-dalle:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 0 0 1px rgb(from var(--tdb-filet) r g b / 18%),
+    inset 0 1px 0 var(--tdb-lumiere),
+    inset 0 1rem 1.5rem -1.125rem var(--tdb-lumiere),
+    inset 0 -1.125rem 1.75rem -1.25rem rgb(from var(--tdb-ombre) r g b / 16%),
+    0 2px 2px rgb(from var(--tdb-ombre) r g b / 5%),
+    0 0.875rem 1.625rem -0.5rem rgb(from var(--tdb-ombre) r g b / 16%),
+    0 2.5rem 4.375rem -1.625rem rgb(from var(--tdb-ombre) r g b / 32%);
+}
+/* Lueur violette dans la dalle : voile centré et diffus, sans halo extérieur. */
+.tdb-dalle--lueur::after {
+  background:
+    radial-gradient(
+      75% 85% at 50% 55%,
+      rgb(from var(--tdb-lueur) r g b / 20%) 0%,
+      rgb(from var(--tdb-lueur) r g b / 12%) 35%,
+      rgb(from var(--tdb-lueur) r g b / 4%) 60%,
+      transparent 80%
+    ),
+    radial-gradient(120% 70% at 16% -12%, rgb(255 255 255 / 50%), transparent 55%);
+  mix-blend-mode: normal;
+}
+.tdb-dalle-tete {
+  display: grid;
+  gap: var(--mantine-spacing-2xs);
+}
+.tdb-dalle-titre {
+  margin: 0;
+  font-size: var(--mantine-font-size-md);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+.tdb-dalle-sous-titre {
+  margin: 0;
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-dimmed);
+}
+.tdb-dalle-corps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-sm);
+  flex: 1;
+  min-height: 0;
+}
+
+/* Teintes des seuils : texte (t), remplissage (f), trait (s), fond de pastille (b), puce douce (p). */
+.tdb-t-vert {
+  color: var(--tdb-vert-texte);
+  fill: var(--tdb-vert-texte);
+}
+.tdb-t-orange {
+  color: var(--tdb-orange-texte);
+  fill: var(--tdb-orange-texte);
+}
+.tdb-t-rouge {
+  color: var(--tdb-rouge-texte);
+  fill: var(--tdb-rouge-texte);
+}
+.tdb-t-violet {
+  color: var(--tdb-violet-texte);
+  fill: var(--tdb-violet-texte);
+}
+.tdb-t-bleu {
+  color: var(--tdb-bleu-texte);
+  fill: var(--tdb-bleu-texte);
+}
+.tdb-t-gris {
+  color: var(--tdb-gris-texte);
+  fill: var(--tdb-gris-texte);
+}
+.tdb-f-vert {
+  fill: var(--tdb-vert-remplissage);
+}
+.tdb-f-orange {
+  fill: var(--tdb-orange-remplissage);
+}
+.tdb-f-rouge {
+  fill: var(--tdb-rouge-remplissage);
+}
+.tdb-f-violet {
+  fill: var(--tdb-violet-remplissage);
+}
+.tdb-f-bleu {
+  fill: var(--tdb-bleu-remplissage);
+}
+.tdb-f-gris {
+  fill: var(--tdb-gris-remplissage);
+}
+.tdb-s-vert {
+  stroke: var(--tdb-vert-remplissage);
+}
+.tdb-s-orange {
+  stroke: var(--tdb-orange-remplissage);
+}
+.tdb-s-rouge {
+  stroke: var(--tdb-rouge-remplissage);
+}
+.tdb-s-violet {
+  stroke: var(--tdb-violet-remplissage);
+}
+.tdb-s-bleu {
+  stroke: var(--tdb-bleu-remplissage);
+}
+.tdb-s-gris {
+  stroke: var(--tdb-gris-remplissage);
+}
+.tdb-b-vert {
+  background: var(--tdb-vert-remplissage);
+}
+.tdb-b-orange {
+  background: var(--tdb-orange-remplissage);
+}
+.tdb-b-rouge {
+  background: var(--tdb-rouge-remplissage);
+}
+.tdb-b-violet {
+  background: var(--tdb-violet-remplissage);
+}
+.tdb-b-bleu {
+  background: var(--tdb-bleu-remplissage);
+}
+.tdb-b-gris {
+  background: var(--tdb-gris-remplissage);
+}
+.tdb-p-vert {
+  background: var(--tdb-vert-doux);
+  color: var(--tdb-vert-texte);
+}
+.tdb-p-orange {
+  background: var(--tdb-orange-doux);
+  color: var(--tdb-orange-texte);
+}
+.tdb-p-rouge {
+  background: var(--tdb-rouge-doux);
+  color: var(--tdb-rouge-texte);
+}
+.tdb-p-violet {
+  background: var(--tdb-violet-doux);
+  color: var(--tdb-violet-texte);
+}
+.tdb-p-bleu {
+  background: var(--tdb-bleu-doux);
+  color: var(--tdb-bleu-texte);
+}
+.tdb-p-gris {
+  background: var(--tdb-gris-doux);
+  color: var(--tdb-gris-texte);
+}
+
+/* Chiffre clé : grand, serré, légèrement gravé. */
+.tdb-chiffre {
+  display: grid;
+  gap: var(--mantine-spacing-2xs);
+}
+.tdb-chiffre-valeur {
+  margin: 0;
+  font-size: clamp(2.25rem, 2.6vw, 2.875rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  text-shadow:
+    0 1px 0 rgb(255 255 255 / 90%),
+    0 0.5rem 1.125rem rgb(from var(--tdb-ombre) r g b / 12%);
+}
+[data-mantine-color-scheme='dark'] .tdb-chiffre-valeur {
+  text-shadow: 0 0.5rem 1.125rem rgb(0 0 0 / 35%);
+}
+.tdb-chiffre-detail,
+.tdb-chiffre-legende {
+  margin: 0;
+  font-size: var(--mantine-font-size-sm);
+  color: var(--mantine-color-dimmed);
+}
+.tdb-chiffre-legende {
+  font-size: var(--mantine-font-size-xs);
+}
+.tdb-chiffres {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: var(--mantine-spacing-md);
+}
+.tdb-chiffres .tdb-chiffre-valeur {
+  font-size: 1.75rem;
+}
+
+/* Jauge en arc fin : rail et arc cernés, zones de seuils en filet, curseur blanc cerclé. */
+.tdb-jauge {
+  margin: 0;
+  display: grid;
+  justify-items: center;
+  gap: var(--mantine-spacing-2xs);
+}
+.tdb-jauge svg {
+  display: block;
+  width: 100%;
+  max-width: 17rem;
+  height: auto;
+  overflow: visible;
+}
+.tdb-jauge-rail-contour,
+.tdb-jauge-rail,
+.tdb-jauge-bande,
+.tdb-jauge-arc-contour,
+.tdb-jauge-arc {
+  fill: none;
+  stroke-linecap: round;
+}
+.tdb-jauge-rail-contour {
+  stroke: rgb(from var(--tdb-contour) r g b / 22%);
+  stroke-width: 9;
+}
+.tdb-jauge-rail {
+  stroke: var(--suivi-surface-douce);
+  stroke-width: 7;
+}
+.tdb-jauge-bande {
+  stroke-width: 2.5;
+  opacity: 0.95;
+}
+.tdb-jauge-arc-contour {
+  stroke: rgb(from var(--tdb-contour) r g b / 55%);
+  stroke-width: 9.5;
+  filter: drop-shadow(0 2px 2px rgb(from var(--tdb-ombre) r g b / 25%));
+}
+.tdb-jauge-arc {
+  stroke-width: 7;
+}
+.tdb-jauge-curseur {
+  fill: var(--mantine-color-body);
+  stroke: rgb(from var(--tdb-contour) r g b / 75%);
+  stroke-width: 1.5;
+  filter: drop-shadow(0 1px 2px rgb(from var(--tdb-ombre) r g b / 35%));
+}
+.tdb-jauge-valeur {
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.tdb-jauge-borne {
+  font-size: 11px;
+  fill: var(--mantine-color-dimmed);
+}
+.tdb-jauge-detail {
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-dimmed);
+  text-align: center;
+}
+.tdb-cible {
+  stroke: var(--tdb-violet-remplissage);
+  stroke-width: 2;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Barres fines en relief : rail en creux, remplissage cerné, reflet sur la moitié haute. */
+.tdb-barres,
+.tdb-empile-lignes,
+.tdb-legende {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.tdb-barres {
+  display: grid;
+  gap: var(--mantine-spacing-sm);
+}
+.tdb-barre-ligne {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: var(--mantine-spacing-2xs) var(--mantine-spacing-sm);
+  font-size: var(--mantine-font-size-sm);
+}
+.tdb-barre-ligne .tdb-barre {
+  grid-column: 1 / -1;
+}
+.tdb-barre-libelle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tdb-barre-valeur {
+  font-weight: 600;
+  text-align: right;
+}
+.tdb-barre {
+  display: block;
+  width: 100%;
+  height: 0.375rem;
+  overflow: visible;
+}
+.tdb-rail {
+  fill: var(--tdb-rail);
+  stroke: rgb(from var(--tdb-contour) r g b / 12%);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.tdb-barre-remplie {
+  stroke: rgb(from var(--tdb-contour) r g b / 32%);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 1px 1.5px rgb(from var(--tdb-ombre) r g b / 35%));
+}
+.tdb-reflet {
+  fill: rgb(255 255 255 / 26%);
+  pointer-events: none;
+}
+.tdb-empile {
+  display: grid;
+  gap: var(--mantine-spacing-sm);
+}
+.tdb-empile-lignes {
+  display: grid;
+  gap: var(--mantine-spacing-sm);
+}
+.tdb-empile-ligne {
+  display: grid;
+  grid-template-columns: minmax(6rem, 28%) minmax(0, 1fr) 3rem;
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+  font-size: var(--mantine-font-size-sm);
+}
+.tdb-legende {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mantine-spacing-2xs) var(--mantine-spacing-md);
+  font-size: var(--mantine-font-size-xs);
+}
+.tdb-legende li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mantine-spacing-2xs);
+}
+.tdb-legende-note {
+  color: var(--mantine-color-dimmed);
+}
+.tdb-pastille {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgb(from var(--tdb-contour) r g b / 30%);
+}
+
+/* Graphiques communs (anneau, histogramme) dans le tableau de bord : teintes des seuils, traits plus fins. */
+.tdb .graph-vert {
+  fill: var(--tdb-vert-remplissage);
+  stroke: var(--tdb-vert-remplissage);
+  background: var(--tdb-vert-remplissage);
+}
+.tdb .graph-orange {
+  fill: var(--tdb-orange-remplissage);
+  stroke: var(--tdb-orange-remplissage);
+  background: var(--tdb-orange-remplissage);
+}
+.tdb .graph-rouge {
+  fill: var(--tdb-rouge-remplissage);
+  stroke: var(--tdb-rouge-remplissage);
+  background: var(--tdb-rouge-remplissage);
+}
+.tdb .graph-violet {
+  fill: var(--tdb-violet-remplissage);
+  stroke: var(--tdb-violet-remplissage);
+  background: var(--tdb-violet-remplissage);
+}
+.tdb .graph-bleu {
+  fill: var(--tdb-bleu-remplissage);
+  stroke: var(--tdb-bleu-remplissage);
+  background: var(--tdb-bleu-remplissage);
+}
+.tdb .graph-gris {
+  fill: var(--tdb-gris-remplissage);
+  stroke: var(--tdb-gris-remplissage);
+  background: var(--tdb-gris-remplissage);
+}
+.tdb .graph-piste {
+  stroke: var(--tdb-rail);
+  stroke-width: 8;
+}
+.tdb .graph-arc {
+  fill: none;
+  stroke-width: 8;
+  filter: drop-shadow(0 0 0.5px rgb(from var(--tdb-contour) r g b / 70%));
+}
+.tdb .graph-barre {
+  stroke: rgb(from var(--tdb-contour) r g b / 32%);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.tdb .graph-pastille {
+  box-shadow: 0 0 0 1px rgb(from var(--tdb-contour) r g b / 30%);
+}
+
+/* Liste des échéances : pastille d'état, référence et objet, pilote, date, puce d'état. */
+.tdb-echeances {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+.tdb-echeance {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--mantine-spacing-2xs) var(--mantine-spacing-sm);
+  padding-block: var(--mantine-spacing-xs);
+  border-bottom: var(--suivi-trait-l) solid var(--tdb-rail);
+  font-size: var(--mantine-font-size-sm);
+}
+.tdb-echeance:last-child {
+  border-bottom: 0;
+}
+.tdb-echeance-objet {
+  min-width: 0;
+}
+.tdb-echeance-objet > span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tdb-echeance-meta {
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-dimmed);
+}
+.tdb-puce {
+  padding: 0.125rem var(--mantine-spacing-xs);
+  border-radius: var(--mantine-radius-xl);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+@media (prefers-reduced-transparency: reduce) {
+  .tdb-dalle {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: var(--mantine-color-body);
+  }
+}
+@media (forced-colors: active) {
+  .tdb-dalle {
+    border: 1px solid CanvasText;
+  }
+}

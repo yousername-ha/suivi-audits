@@ -34,6 +34,9 @@ Aucune action sur le serveur. Le frontal est reconstruit avec une bibliothèque 
 - **Décision des rapprochements** : une erreur inattendue renvoie « Erreur interne lors de la décision. » au lieu du texte de l'erreur technique, qui est journalisée.
 - **Droits par ressource** ([ADR 0067](docs/adr/0067-attribution-des-droits-par-ressource-reservee.md)) : l'attribution des droits par ressource et le passage d'un registre en restreint exigent le droit d'administrer le module, ou le rôle de gestionnaire de la ressource ; on ne modifie plus ses propres droits ; créer ou retirer une relation exige le droit de gérer l'élément source. Les droits déjà attribués sont conservés.
 
+### Modifié
+- **Tableau de bord de l'accueil « verre et relief »** ([ADR 0069](docs/adr/0069-tableau-de-bord-verre-et-relief.md), étape 1) : dalles en verre épais (reflets des bords, ombre portée, survol), chiffres clés colorés selon des seuils (taux de conformité global, écarts ouverts, actions en retard, jours avant l'audit, tâches récurrentes en retard), conformité par référentiel en barres fines, jauges en arc fin (indicateurs atteints, actions des écarts réalisées), niveau de mise en œuvre empilé, anneau des écarts par type, prochaines échéances avec état, risques et continuité, plans, mesures, plan d'audit et répartitions des écarts. Clair et sombre. Mêmes données et mêmes droits qu'avant. Le **taux de conformité global** est la moyenne simple des taux par référentiel (décision du RSSI du 28/10/2026), nommé « Moyenne des référentiels » et tracé en trait violet sur les taux par référentiel ; ce n'est pas un taux certifié. L'écran mural et la synthèse du Pilotage ne changent pas. Aucune migration, aucune dépendance nouvelle.
+
 ## [5.1.0] — 2026-10-27
 
 Version mineure : aucune migration SQL, aucune nouvelle dépendance.
