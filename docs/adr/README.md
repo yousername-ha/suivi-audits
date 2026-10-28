@@ -71,3 +71,4 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 
 | [0065](0065-remise-a-vide-de-la-base.md) | Remise à vide de la base pour la recette : interrupteur désactivé par défaut, deux portées, code, phrase, sauvegarde récente, immuabilité suspendue le temps d'une transaction | Acceptée |
 | [0066](0066-limitation-des-essais-du-second-facteur-et-verrouillage-partage.md) | Limitation des essais du second facteur par compte, verrouillage partagé avec le mot de passe, sessions incomplètes plafonnées | Acceptée |
+| [0068](0068-suppressions-reservees-au-droit-supprimer.md) | Suppressions des modules de suivi réservées au droit « supprimer » (cohérence avec l'ADR 0010) | Acceptée |

@@ -105,9 +105,9 @@ describe('analyse d’écart', () => {
     });
     expect(r.statusCode, r.body).toBe(201);
     expect(r.json().custom).toMatchObject([{ id: 'C1', t: 'Point ajouté fictif', refs: ['A-8.24', 'HDS-04'] }]);
-    expect((await writer.del('/api/gap/APP01/points/G03')).statusCode).toBe(404); // le socle ne se retire pas
+    expect((await admin.del('/api/gap/APP01/points/G03')).statusCode).toBe(404); // le socle ne se retire pas
     expect((await writer.patch('/api/gap/APP01/points/C1', { st: 'Non conforme' })).statusCode).toBe(200);
-    expect((await writer.del('/api/gap/APP01/points/C1')).statusCode).toBe(200);
+    expect((await admin.del('/api/gap/APP01/points/C1')).statusCode).toBe(200);
     expect((await writer.get('/api/gap')).json().apps[0].custom).toEqual([]);
   });
   it('crée l’action du registre des écarts pour un point partiel, une seule fois', async () => {
@@ -125,8 +125,8 @@ describe('analyse d’écart', () => {
     const r = await writer.post('/api/gap');
     const id = r.json().id;
     expect(id).toBe('APP02');
-    expect((await writer.del(`/api/gap/${id}`)).statusCode).toBe(200);
-    expect((await writer.del(`/api/gap/${id}`)).statusCode).toBe(404);
+    expect((await admin.del(`/api/gap/${id}`)).statusCode).toBe(200);
+    expect((await admin.del(`/api/gap/${id}`)).statusCode).toBe(404);
     expect((await etat()).items).toHaveLength(6);
   });
 });

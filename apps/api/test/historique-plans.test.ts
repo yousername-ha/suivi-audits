@@ -126,8 +126,8 @@ describe('écriture', () => {
   });
   it('supprime une action sans toucher aux autres', async () => {
     expect((await reader.del('/api/plans/PL-FOR-002')).statusCode).toBe(403);
-    expect((await writer.del('/api/plans/PL-FOR-002')).statusCode).toBe(200);
-    expect((await writer.del('/api/plans/PL-FOR-002')).statusCode).toBe(404);
+    expect((await admin.del('/api/plans/PL-FOR-002')).statusCode).toBe(200);
+    expect((await admin.del('/api/plans/PL-FOR-002')).statusCode).toBe(404);
     const ids = (await reader.get('/api/plans')).json().plans.map((p: { id: string }) => p.id);
     expect(ids).toContain('PL-FOR-001');
     expect(ids).not.toContain('PL-FOR-002');

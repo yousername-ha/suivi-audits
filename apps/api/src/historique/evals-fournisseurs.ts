@@ -152,7 +152,12 @@ export class EvaluationsClausier {
     return this.r.modifier(
       user,
       ip,
-      { module: 'fournisseurs', action: 'sup-eval.deleted', reference: (x) => `legacy:supEvals:${x.id}` },
+      {
+        droit: 'supprimer',
+        module: 'fournisseurs',
+        action: 'sup-eval.deleted',
+        reference: (x) => `legacy:supEvals:${x.id}`,
+      },
       (data) => {
         this.trouver(data, id);
         remplacerEntree(data, 'supEvals', id, null);
