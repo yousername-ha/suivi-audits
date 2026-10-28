@@ -252,6 +252,7 @@ describe('jeton d’installation', () => {
         token,
         username: 'chef',
         password: PASSWORD,
+        poivre: poivreDeTest(),
         orgName: '  Hôpital Exemple  ',
       });
       expect(r.statusCode, r.body).toBe(201);
