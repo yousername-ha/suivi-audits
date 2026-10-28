@@ -50,6 +50,8 @@ export const SetupBody = z.object({
   username: Username,
   displayName: text(120).optional(),
   email: Email.optional(),
+  /** Nom de l'organisation (réglage « general »), demandé au premier lancement ; facultatif. */
+  orgName: text(120).optional(),
   password: z.string().max(256),
 });
 export const PasswordChangeBody = z.object({ current: z.string().max(256), next: z.string().max(256) });

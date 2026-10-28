@@ -77,7 +77,7 @@ export function loadConfig(env: Env = process.env) {
       ? { host: env.CLAMAV_HOST, port: int(env.CLAMAV_PORT, 3310), required: bool(env.CLAMAV_REQUIRED, true) }
       : null,
     appName: env.APP_NAME || 'Suivi des audits SMSI',
-    orgName: env.ORG_NAME || "GCS Normand'e-Santé",
+    orgName: env.ORG_NAME || 'Mon organisation',
     seedFile: env.SEED_FILE || path.join(APP_ROOT, 'seed', 'state.json'),
     /** Rapports d'exploitation (DATA_DIR/etat sur le serveur, monté en lecture seule) : mises à jour, sauvegardes. */
     etatDir: env.ETAT_DIR || '/etat',

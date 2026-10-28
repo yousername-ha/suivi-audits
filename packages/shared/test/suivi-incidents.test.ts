@@ -46,10 +46,10 @@ describe('obligations', () => {
     expect(obligationsIncident({}, 'Incident', '')).toEqual([]);
     const base = obligationsIncident({}, 'Incident de sécurité', '');
     expect(base.map((o) => o[0])).toEqual(['Qualification et réponse', 'NIS 2']);
-    expect(base[1]![1]).toContain('Catégorie du GCS : à confirmer.');
+    expect(base[1]![1]).toContain('Catégorie de l’organisation : à confirmer.');
     const tout = obligationsIncident({ dcp: 'oui', sante: 'oui' }, 'Incident de sécurité', 'importante');
     expect(tout.map((o) => o[0])).toEqual(['Qualification et réponse', 'RGPD', 'Santé et HDS', 'NIS 2']);
-    expect(tout[3]![1]).toContain('Catégorie du GCS : importante.');
+    expect(tout[3]![1]).toContain('Catégorie de l’organisation : importante.');
   });
 });
 
