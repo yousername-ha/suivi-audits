@@ -295,6 +295,7 @@ function FicheContrat({
   modifiable: boolean;
   onFermer: () => void;
 }) {
+  const peutSupprimer = useCan()('crrc', 'supprimer');
   const x = e?.establishments.find((y) => y.id === id) ?? null;
   const maj = (champ: Record<string, unknown>) =>
     void agir('PATCH', `/api/crrc/etablissements/${encodeURIComponent(id!)}`, champ);
@@ -392,7 +393,7 @@ function FicheContrat({
             </div>
           )}
           <ChampZone label="Notes" value={x.notes} disabled={!modifiable} onCommit={(v) => maj({ notes: v })} />
-          {modifiable && (
+          {modifiable && peutSupprimer && (
             <Group justify="flex-end">
               <ConfirmButton
                 message={`Supprimer le contrat « ${x.name} » ? Ses ressources restent dans l’historique.`}
@@ -472,7 +473,7 @@ export function OffresCrrc() {
                 <Text size="sm" c="dimmed">
                   {souscripteurs.length} établissement(s) souscripteur(s).
                 </Text>
-                {modifiable && o.id !== 'backup' && (
+                {modifiable && can('crrc', 'supprimer') && o.id !== 'backup' && (
                   <ConfirmButton
                     message="Supprimer cette offre ?"
                     onConfirm={() => agir('DELETE', `/api/crrc/offres/${encodeURIComponent(o.id)}`)}

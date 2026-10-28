@@ -203,6 +203,7 @@ function Deroule({
   onAjouter: (day?: string) => Promise<void>;
   lancer: Lancer;
 }) {
+  const peutSupprimer = useCan()('plan_audit', 'supprimer');
   const terme = recherche.trim().toLowerCase();
   const correspond = (s: AuditPlanSlot) =>
     !terme ||
@@ -249,7 +250,7 @@ function Deroule({
                   {jourLong(j.date)}
                 </Text>
               </Group>
-              {modifiable && !duJour(plan, j.id).length && (
+              {modifiable && peutSupprimer && !duJour(plan, j.id).length && (
                 <Button variant="subtle" onClick={() => void lancer('DELETE', `/plan/jours/${j.id}`)}>
                   Supprimer ce jour
                 </Button>
@@ -470,6 +471,7 @@ function Participants({
   onOuvrir: (id: string) => void;
   lancer: Lancer;
 }) {
+  const peutSupprimer = useCan()('plan_audit', 'supprimer');
   if (!plan.people.length) return <Text size="sm">Aucune personne : ajoutez les interlocuteurs de l’audit.</Text>;
   return (
     <Stack>
@@ -536,7 +538,7 @@ function Participants({
                   </Table.Td>
                   <Table.Td>{duree(total)}</Table.Td>
                   <Table.Td>
-                    {modifiable && (
+                    {modifiable && peutSupprimer && (
                       <ConfirmButton
                         message={`Retirer « ${p.name} » de l’organisation et de tous ses créneaux ?`}
                         onConfirm={() => lancer('DELETE', `/plan/personnes/${p.id}`)}
@@ -576,6 +578,7 @@ function FicheCreneau({
   onDone: () => void;
   lancer: Lancer;
 }) {
+  const peutSupprimer = useCan()('plan_audit', 'supprimer');
   const [v, setV] = useState({
     title: s.title,
     day: s.day,
@@ -888,7 +891,7 @@ function FicheCreneau({
         </>
       )}
       <Group justify="space-between">
-        {modifiable ? (
+        {modifiable && peutSupprimer ? (
           <ConfirmButton
             message={`Supprimer le créneau « ${s.title} » ?`}
             onConfirm={async () => {

@@ -172,16 +172,16 @@ describe('organisation de l’audit', () => {
     expect((await writer.patch(`/api/audit-suivi/plan/creneaux/${creneau}`, { day: jour2 })).json().day).toBe(jour2);
   });
   it('refuse de supprimer un jour qui porte des créneaux, renumérote les jours restants', async () => {
-    expect((await writer.del(`/api/audit-suivi/plan/jours/${jour2}`)).statusCode).toBe(409);
+    expect((await admin.del(`/api/audit-suivi/plan/jours/${jour2}`)).statusCode).toBe(409);
     await writer.patch(`/api/audit-suivi/plan/creneaux/${creneau}`, { day: jour1 });
-    expect((await writer.del(`/api/audit-suivi/plan/jours/${jour2}`)).statusCode).toBe(200);
+    expect((await admin.del(`/api/audit-suivi/plan/jours/${jour2}`)).statusCode).toBe(200);
     expect((await vue()).plan.days.map((d: { label: string }) => d.label)).toEqual(['Jour 1']);
   });
   it('retirer une personne la retire de tous ses créneaux', async () => {
-    expect((await writer.del(`/api/audit-suivi/plan/personnes/${personne}`)).statusCode).toBe(200);
+    expect((await admin.del(`/api/audit-suivi/plan/personnes/${personne}`)).statusCode).toBe(200);
     const s = (await vue()).plan.slots.find((x: { id: string }) => x.id === creneau);
     expect(s.people).toEqual([]);
-    expect((await writer.del(`/api/audit-suivi/plan/personnes/${personne}`)).statusCode).toBe(404);
+    expect((await admin.del(`/api/audit-suivi/plan/personnes/${personne}`)).statusCode).toBe(404);
   });
   it('état et note du plan, suppression d’un créneau', async () => {
     expect(
@@ -190,8 +190,8 @@ describe('organisation de l’audit', () => {
     expect((await vue()).plan).toMatchObject({ status: 'Plan validé', note: 'Note fictive' });
     expect((await writer.patch('/api/audit-suivi/plan', { status: 'Autre' })).statusCode).toBe(422);
     expect((await writer.patch('/api/audit-suivi/plan', {})).statusCode).toBe(422);
-    expect((await writer.del(`/api/audit-suivi/plan/creneaux/${creneau}`)).statusCode).toBe(200);
-    expect((await writer.del(`/api/audit-suivi/plan/creneaux/${creneau}`)).statusCode).toBe(404);
+    expect((await admin.del(`/api/audit-suivi/plan/creneaux/${creneau}`)).statusCode).toBe(200);
+    expect((await admin.del(`/api/audit-suivi/plan/creneaux/${creneau}`)).statusCode).toBe(404);
   });
 });
 

@@ -338,7 +338,7 @@ function FicheIncident({
           </div>
         )
       )}
-      {modifiable && (
+      {modifiable && can('incidents', 'supprimer') && (
         <Group justify="flex-end">
           <ConfirmButton
             message={`Supprimer ${i.id} ?`}

@@ -98,8 +98,8 @@ describe('évaluations par le clausier', () => {
       (await writer.patch('/api/evaluations-clausier/EVAL-ancienne', { evaluator: 'Évaluateur fictif' })).statusCode,
     ).toBe(200);
     expect((await etat()).supEvals[0]).toMatchObject({ evaluator: 'Évaluateur fictif', inconnu: { x: 1 } });
-    expect((await writer.del(`/api/evaluations-clausier/${ev}`)).statusCode).toBe(200);
-    expect((await writer.del(`/api/evaluations-clausier/${ev}`)).statusCode).toBe(404);
+    expect((await admin.del(`/api/evaluations-clausier/${ev}`)).statusCode).toBe(200);
+    expect((await admin.del(`/api/evaluations-clausier/${ev}`)).statusCode).toBe(404);
   });
   it('journalise les modifications', async () => {
     const rows = await t.svc.db.q<{ action: string }>(
