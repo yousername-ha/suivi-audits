@@ -75,3 +75,4 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0068](0068-suppressions-reservees-au-droit-supprimer.md) | Suppressions des modules de suivi réservées au droit « supprimer » (cohérence avec l'ADR 0010) | Acceptée |
 | [0069](0069-tableau-de-bord-verre-et-relief.md) | Tableau de bord de l'accueil « verre et relief » : dalles en verre, métriques fines cernées, seuils d'affichage, taux global = moyenne des taux par référentiel (lot 1) | Acceptée |
 | [0070](0070-reponse-de-connexion-uniforme-et-alerte-de-verrouillage.md) | Réponse de connexion uniforme et alerte de verrouillage de compte | Proposée |
+| [0071](0071-sauvegardes-chiffrees-avec-age.md) | Sauvegardes chiffrées avec age (`.tar.age`), deux destinataires dont une clé de secours hors serveur, INFO liée au nom du fichier, chiffrement obligatoire, ancien format `.tar.enc` restaurable une version | Proposée |

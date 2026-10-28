@@ -101,7 +101,7 @@ test('A1a : résultats chiffrés et échecs consultables au téléphone, sans d�
     ...job(),
     status: 'reussie',
     report: {
-      fichier: 'suivi-fictif.tar.enc',
+      fichier: 'suivi-fictif.tar.age',
       tailleOctets: 1024,
       dureeSecondes: 12,
       sha256: 'a'.repeat(64),
@@ -112,7 +112,7 @@ test('A1a : résultats chiffrés et échecs consultables au téléphone, sans d�
   const failed: BackupJobOut = { ...job(), status: 'echec', message: 'Exécutant en échec (code 7).' };
   await page.route('**/api/admin/sauvegardes', (route) => route.fulfill({ json: { worker, jobs: [done, failed] } }));
   await page.goto('/admin/system');
-  await expect(page.getByText('suivi-fictif.tar.enc')).toBeVisible();
+  await expect(page.getByText('suivi-fictif.tar.age')).toBeVisible();
   await expect(page.getByText(/1.0 Ko.*SHA-256 vérifié/)).toBeVisible();
   await expect(page.getByText('Exécutant en échec (code 7).')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

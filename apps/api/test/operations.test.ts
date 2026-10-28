@@ -11,7 +11,7 @@ const hash = 'a'.repeat(64),
   archiveId = 'b'.repeat(64);
 const archive = {
   id: archiveId,
-  name: 'suivi-audits-fictif.tar.enc',
+  name: 'suivi-audits-fictif.tar.age',
   sha256: hash,
   size: 1024,
   modifiedAt: new Date().toISOString(),

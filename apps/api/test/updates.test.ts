@@ -292,7 +292,7 @@ describe('mise à jour intégrée : reçus', () => {
           emetteur: 'https://token.actions.githubusercontent.com',
           revision: 'b'.repeat(40),
         },
-        sauvegarde: { fichier: 'avant-maj-3.0.0-vers-3.1.0.tar.enc', sha256: 'c'.repeat(64) },
+        sauvegarde: { fichier: 'avant-maj-3.0.0-vers-3.1.0.tar.age', sha256: 'c'.repeat(64) },
         controles: { avant: true, apres: true, documentsIdentiques: true },
         ...changes,
       }),

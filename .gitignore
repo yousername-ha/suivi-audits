@@ -11,6 +11,7 @@ certs/*
 backups/
 *.tar
 *.tar.enc
+*.tar.age
 *.sha256
 *.dump
 
