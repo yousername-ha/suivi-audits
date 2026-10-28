@@ -341,7 +341,8 @@ export const importRoutes = [
           .where('id', '=', params.id)
           .forUpdate()
           .executeTakeFirst()) as
-          { status: string; modules: string[]; before_state: Snapshot; after_state: Snapshot } | undefined;
+          | { status: string; modules: string[]; before_state: Snapshot; after_state: Snapshot }
+          | undefined;
         if (!b) throw new HttpError(404, 'Import introuvable.');
         if (b.status !== 'applied') throw new HttpError(409, 'Cet import a déjà été annulé.');
         const cur = (await svc.legacy.recompose(c))?.data ?? {};

@@ -60,7 +60,7 @@ const stageAfter = (svc: Services, user: { totpEnabled: boolean; mustChangePassw
   accessStage({ mfaOk, user }, svc.cfg.mfaRequired);
 
 /** Réponse unique à tout échec de connexion (inconnu, mot de passe faux, verrouillé, désactivé, expiré) : le motif exact reste
-    au journal d'audit (ADR 0069). */
+    au journal d'audit (ADR 0070). */
 export const ECHEC_CONNEXION =
   'Identifiant ou mot de passe incorrect, ou compte temporairement verrouillé après plusieurs échecs.';
 

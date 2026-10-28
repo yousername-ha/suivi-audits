@@ -88,7 +88,7 @@ export interface VerrouillageEvt {
 }
 
 export class Auth {
-  /** Appelé à la transition vers l'état verrouillé (alerte de sécurité, ADR 0069). Branché par les services ; ne fait jamais
+  /** Appelé à la transition vers l'état verrouillé (alerte de sécurité, ADR 0070). Branché par les services ; ne fait jamais
       échouer l'authentification. */
   surVerrouillage: ((e: VerrouillageEvt) => Promise<void>) | null = null;
 

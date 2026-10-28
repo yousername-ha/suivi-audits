@@ -1,4 +1,4 @@
-/* Verrouillage de compte (L7, ADR 0069) : réponse de connexion uniforme (aucune différence observable entre un compte inconnu,
+/* Verrouillage de compte (L7, ADR 0070) : réponse de connexion uniforme (aucune différence observable entre un compte inconnu,
    un mauvais mot de passe et un compte verrouillé) et alerte par courriel à la TRANSITION vers l'état verrouillé, adressée au
    contact technique et aux administrateurs actifs, non désactivable par les réglages personnels, avec plafond horaire. */
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';

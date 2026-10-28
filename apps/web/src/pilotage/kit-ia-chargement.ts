@@ -3,7 +3,14 @@
    actions, scénarios, deltas HDS, mémos, questionnaire, sources). Aucune donnée n'est conservée dans le navigateur. */
 
 export type RubriqueKit =
-  'controls' | 'correspondances' | 'actions' | 'scenarios' | 'deltas' | 'memosHds' | 'questionnaire' | 'sources';
+  | 'controls'
+  | 'correspondances'
+  | 'actions'
+  | 'scenarios'
+  | 'deltas'
+  | 'memosHds'
+  | 'questionnaire'
+  | 'sources';
 
 const LIBELLES: Record<RubriqueKit, string> = {
   controls: 'contrôles',

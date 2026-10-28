@@ -84,10 +84,7 @@ describe('chemins (003-08)', () => {
     expect(m.aretes.some((a) => a.chemins.includes('object:st3'))).toBe(false);
   });
   it('liste les alternatives vers le même événement ou depuis la même source', () => {
-    const a = alternatives(
-      m.chemins,
-      m.chemins.find((x) => x.ref === 'object:st1')!,
-    );
+    const a = alternatives(m.chemins, m.chemins.find((x) => x.ref === 'object:st1')!);
     expect(a.memeEvenement.map((c) => c.ref)).toEqual(['object:st2']);
     expect(a.memeSource.map((c) => c.ref)).toEqual(['object:st2']);
   });

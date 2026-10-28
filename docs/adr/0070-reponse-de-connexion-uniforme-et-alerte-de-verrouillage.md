@@ -1,4 +1,4 @@
-# ADR 0069 — Réponse de connexion uniforme et alerte de verrouillage de compte
+# ADR 0070 — Réponse de connexion uniforme et alerte de verrouillage de compte
 
 - Statut : proposée (numéro à confirmer par le RSSI)
 - Date : 2026-10-28

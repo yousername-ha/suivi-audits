@@ -1,4 +1,4 @@
-/* Alerte de verrouillage de compte (ADR 0069, S-09) : à la TRANSITION vers l'état verrouillé (une alerte par verrou), un courriel
+/* Alerte de verrouillage de compte (ADR 0070, S-09) : à la TRANSITION vers l'état verrouillé (une alerte par verrou), un courriel
    sans donnée métier part vers le contact technique et vers chaque administrateur actif (rôle « administrateur », direct ou par
    un groupe). C'est une alerte de sécurité : les réglages personnels de notification (ADR 0058) ne s'y appliquent pas.
    Même file que les alertes d'exploitation (`courriel_jobs`, ADR 0049 et 0059) : l'adresse est celle de la demande.

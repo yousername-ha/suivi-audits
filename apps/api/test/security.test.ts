@@ -176,7 +176,7 @@ describe('verrouillage après échecs', () => {
     const a = new Agent(t);
     for (let i = 0; i < 4; i++)
       expect((await a.post('/api/auth/login', { username: u.username, password: 'mauvais' })).statusCode).toBe(401);
-    // Réponse uniforme (ADR 0069) : le 5e essai et le bon mot de passe ensuite reçoivent 401, comme un compte inconnu ;
+    // Réponse uniforme (ADR 0070) : le 5e essai et le bon mot de passe ensuite reçoivent 401, comme un compte inconnu ;
     // le verrou est bien posé en base.
     expect((await a.post('/api/auth/login', { username: u.username, password: 'mauvais' })).statusCode).toBe(401);
     expect((await a.post('/api/auth/login', { username: u.username, password: PASSWORD })).statusCode).toBe(401);

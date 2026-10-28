@@ -1,4 +1,4 @@
-/* Alerte de verrouillage (L7, ADR 0069) : plafond horaire. Base dédiée : le décompte porte sur le journal d'audit, qui est en ajout
+/* Alerte de verrouillage (L7, ADR 0070) : plafond horaire. Base dédiée : le décompte porte sur le journal d'audit, qui est en ajout
    seul et ne peut donc pas être purgé entre deux tests. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { DEMANDEUR_ALERTE } from '../src/alertes-exploitation.js';
