@@ -79,6 +79,13 @@ PostgreSQL, Playwright pour les parcours) et la documentation (inventaire, recet
   ANSSI selon la charte de l'État, un seul logo pour les tuiles ORADAD et Silène). Sans cette preuve, la tuile montre un
   pictogramme neutre, toujours avec le nom de l'application en gras.
 
+## 5 bis. Sources des logos
+
+| Tuile | Fichier | Source | Licence et conditions | État |
+|---|---|---|---|---|
+| GLPI | `glpi.svg` (1 903 octets, SHA-256 `6d92bb891522dcd0ab74787991645d536c30cf374a5c627e442b6acbcb20c14d`) | Collection *dashboard-icons* de homarr-labs, fournie par le RSSI le 28/10/2026 : `https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/glpi.svg` | Collection sous Apache-2.0. Selon son avertissement, les marques restent à leurs propriétaires et les icônes servent **à identifier le produit seulement**, sans laisser croire à un partenariat. C'est l'usage prévu : désigner le connecteur GLPI | Retenu pour I1. Contrôlé le 28/10/2026 : SVG simple, sans script, sans lien, sans ressource externe. Embarqué en fichier local, jamais chargé depuis le CDN (CSP) |
+| ORADAD, Silène | Logo de l'ANSSI (un seul fichier) | À fournir | Charte graphique de l'État | En attente ; pictogramme neutre et nom en gras d'ici là |
+
 ## 6. Ce que ce cadrage n'établit pas
 
 - Les formats ORADAD et Silène : aucun champ n'est supposé avant réception des exemples.
