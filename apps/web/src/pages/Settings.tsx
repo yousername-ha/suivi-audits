@@ -277,6 +277,16 @@ function CourrielForm({ p }: { p: P }) {
         Le serveur d’application n’a pas d’accès à Internet : c’est l’exécutant d’exploitation du serveur (le même que
         pour les sauvegardes) qui se connecte au serveur SMTP. Tout se règle ici, sans fichier à modifier.
       </Alert>
+      {!(
+        p.values.actif === true &&
+        str(p.values.hote) &&
+        str(p.values.expediteur) &&
+        str(p.values.contactTechnique)
+      ) && (
+        <Alert color="orange" role="status" title="Alertes de sécurité non envoyées">
+          Les alertes de sécurité ne sont pas envoyées par courriel : configurez le courriel et le contact technique.
+        </Alert>
+      )}
       <Switch
         label="Activer l’envoi de courriels"
         checked={p.values.actif === true}
@@ -305,7 +315,7 @@ function CourrielForm({ p }: { p: P }) {
           k="contactTechnique"
           label="Contact technique"
           type="email"
-          description="Reçoit les alertes d’exploitation et le message de test ; distinct des rappels métier."
+          description="Reçoit les alertes d’exploitation, les alertes de verrouillage de compte et le message de test ; distinct des rappels métier."
         />
         <Switch
           label="Envoyer les alertes d’exploitation au contact technique"

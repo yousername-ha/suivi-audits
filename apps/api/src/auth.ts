@@ -77,7 +77,21 @@ export function accessStage(
   return 'ok';
 }
 
+export type MotifVerrou = 'mot_de_passe' | 'second_facteur';
+/** Un compte vient de passer à l'état verrouillé (une seule fois par verrou). */
+export interface VerrouillageEvt {
+  userId: string;
+  motif: MotifVerrou;
+  echecs: number;
+  jusqua: Date;
+  ip: string | null;
+}
+
 export class Auth {
+  /** Appelé à la transition vers l'état verrouillé (alerte de sécurité, ADR 0070). Branché par les services ; ne fait jamais
+      échouer l'authentification. */
+  surVerrouillage: ((e: VerrouillageEvt) => Promise<void>) | null = null;
+
   constructor(
     private readonly cfg: Config,
     private readonly db: Db,
@@ -253,7 +267,7 @@ export class Auth {
   }
 
   /* ---------------------------------------------------------------- Mot de passe (verrouillage progressif) */
-  async checkLogin(username: string, password: string) {
+  async checkLogin(username: string, password: string, ip: string | null = null) {
     // Identifiant comparé sans casse ; la fiche complète est relue, comme avant la conversion.
     const u = await this.db.k
       .selectFrom('users')
@@ -269,7 +283,7 @@ export class Auth {
       return { ok: false as const, reason: 'locked' as const, user: u };
     }
     if (!(await verifyPassword(password, u.password_hash))) {
-      const e = await this.enregistrerEchec(u.id);
+      const e = await this.enregistrerEchec(u.id, 'mot_de_passe', ip);
       return {
         ok: false as const,
         reason: e.verrouille ? ('locked_now' as const) : ('bad_password' as const),
@@ -293,8 +307,13 @@ export class Auth {
   }
 
   /** Enregistre un échec d'authentification (mot de passe ou second facteur) : incrément atomique du compteur, puis
-      verrouillage progressif au seuil. Un verrou en cours n'est jamais raccourci. */
-  async enregistrerEchec(userId: string): Promise<{ echecs: number; verrouille: boolean }> {
+      verrouillage progressif au seuil. Un verrou en cours n'est jamais raccourci. Le passage de l'état « libre » à l'état
+      « verrouillé » (et lui seul) déclenche l'alerte : un échec sur un compte déjà verrouillé n'en produit pas. */
+  async enregistrerEchec(
+    userId: string,
+    motif: MotifVerrou,
+    ip: string | null = null,
+  ): Promise<{ echecs: number; verrouille: boolean }> {
     const { lockoutThreshold: t, lockoutMinutes } = this.policy();
     const r = await this.db.k
       .updateTable('users')
@@ -306,11 +325,21 @@ export class Auth {
     const n = r.failed_logins;
     if (n < t) return { echecs: n, verrouille: false };
     const fin = new Date(Date.now() + lockoutMinutes * 60e3 * Math.min(8, 2 ** (n - t)));
-    await this.db.k
-      .updateTable('users')
-      .set({ locked_until: sql<Date>`greatest(coalesce(locked_until, ${fin}::timestamptz), ${fin}::timestamptz)` })
-      .where('id', '=', userId)
-      .execute();
+    // La ligne est verrouillée le temps de lire l'ancien état : deux échecs simultanés ne produisent qu'une transition.
+    const m = await sql<{ transition: boolean; locked_until: Date }>`
+      UPDATE users u
+         SET locked_until = greatest(coalesce(o.locked_until, ${fin}::timestamptz), ${fin}::timestamptz)
+        FROM (SELECT id, locked_until FROM users WHERE id = ${userId} FOR UPDATE) o
+       WHERE u.id = o.id
+   RETURNING (o.locked_until IS NULL OR o.locked_until <= now()) AS transition, u.locked_until`.execute(this.db.k);
+    const ligne = m.rows[0];
+    if (ligne?.transition && this.surVerrouillage) {
+      try {
+        await this.surVerrouillage({ userId, motif, echecs: n, jusqua: new Date(ligne.locked_until), ip });
+      } catch (e) {
+        this.db.log.error({ err: (e as Error).message }, 'alerte de verrouillage non émise');
+      }
+    }
     return { echecs: n, verrouille: true };
   }
 
