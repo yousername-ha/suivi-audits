@@ -7,6 +7,7 @@
 #   Usage :  sudo BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass ./scripts/backup.sh [/chemin/destination]
 #   Cron  :  15 2 * * *  root cd /opt/suivi-audits && BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass ./scripts/backup.sh /srv/sauvegardes/suivi-audits
 # Variables : RETENTION_DAYS (90 par défaut, sauvegardes du dossier de destination uniquement, sous-dossiers exclus),
+#             BACKUP_GARDER_MIN (nombre de sauvegardes les plus récentes toujours conservées, 7 par défaut, de 1 à 365),
 #             BACKUP_PREFIXE (début du nom de fichier, « suivi-audits » par défaut).
 set -euo pipefail
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
@@ -15,6 +16,7 @@ cd "$REPO"
 
 DEST="${1:-./backups}"
 RETENTION_DAYS="${RETENTION_DAYS:-90}"
+GARDER_MIN="${BACKUP_GARDER_MIN:-7}"
 PREFIXE="${BACKUP_PREFIXE:-suivi-audits}"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 DEBUT=$(date +%s)
@@ -58,6 +60,7 @@ fin() {
 trap fin EXIT
 umask 077
 [[ "$RETENTION_DAYS" =~ ^[0-9]{1,5}$ ]] && [ "$RETENTION_DAYS" -ge 1 ] && [ "$RETENTION_DAYS" -le 36500 ] || arret "RETENTION_DAYS doit être compris entre 1 et 36500."
+[[ "$GARDER_MIN" =~ ^[0-9]{1,3}$ ]] && [ "$GARDER_MIN" -ge 1 ] && [ "$GARDER_MIN" -le 365 ] || arret "BACKUP_GARDER_MIN doit être compris entre 1 et 365."
 [[ "$PREFIXE" =~ ^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,60}$ ]] || arret "Préfixe de sauvegarde invalide."
 if [ -n "$JOB_ID" ]; then
   [ -n "${BACKUP_PASSPHRASE_FILE:-}" ] || arret "Chiffrement obligatoire pour une demande web."
@@ -107,4 +110,13 @@ SHA=${SHA%% *}
 VERIFIEE=true
 echo "Sauvegarde : $OUT"
 # Rotation dans le dossier de destination seulement : les sauvegardes « avant mise à jour » (sous-dossier) sont gardées.
-find "$DEST" -maxdepth 1 -name "$PREFIXE-*.tar*" -mtime +"$RETENTION_DAYS" -delete
+# Les BACKUP_GARDER_MIN archives les plus récentes sont toujours conservées, quelle que soit leur ancienneté ; au-delà,
+# une archive disparaît (avec son fichier .sha256) seulement si elle a plus de RETENTION_DAYS jours.
+rang=0
+while IFS= read -r -d '' ligne; do
+  rang=$((rang + 1))
+  [ "$rang" -gt "$GARDER_MIN" ] || continue
+  archive=${ligne#*$'\t'}
+  [ -n "$(find "$archive" -maxdepth 0 -mtime +"$RETENTION_DAYS")" ] || continue
+  rm -f -- "$archive" "$archive.sha256"
+done < <(find "$DEST" -maxdepth 1 -type f \( -name "$PREFIXE-*.tar" -o -name "$PREFIXE-*.tar.enc" \) -printf '%T@\t%p\0' | LC_ALL=C sort -z -t $'\t' -k1,1nr -k2,2r)

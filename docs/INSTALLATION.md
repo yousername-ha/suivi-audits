@@ -731,6 +731,10 @@ La migration additive `006_sauvegardes.sql` est appliquée au démarrage. L’ap
 
 Après les étapes 11.1–11.4, vérifier la phrase secrète **non vide**, fichier régulier lisible par root et inaccessible au groupe et aux autres comptes (0600). Conserver sa copie dans le coffre-fort. La destination doit être persistante, privée et incluse dans la sauvegarde externalisée. `RETENTION_DAYS` accepte 1 à 36500 (90 par défaut ; 36500 conserve la compatibilité avec les sauvegardes avant mise à jour, dont les cinq dernières sont gardées) ; `BACKUP_PREFIXE` accepte 1 à 61 caractères ASCII alphanumériques, point, tiret ou soulignement, avec un premier caractère alphanumérique. Ces contrôles s’appliquent aussi aux appels directs de `backup.sh`.
 
+**Conservation minimale.** La rotation de `backup.sh` garde toujours les `BACKUP_GARDER_MIN` sauvegardes les plus récentes du dossier de destination (7 par défaut, de 1 à 365), même au-delà de `RETENTION_DAYS` ; seules les suivantes disparaissent, avec leur fichier `.sha256`, si elles ont plus de `RETENTION_DAYS` jours. L’exécutant des demandes web relève la durée enregistrée dans Configuration système à `RETENTION_MIN_DAYS` (30 par défaut, de 1 à 36500), lue dans `.env` sur le serveur ; une valeur hors bornes fait échouer la demande au lieu de supprimer des sauvegardes. Les deux réglages sont facultatifs et se placent dans `.env` (voir `.env.example`).
+
+**Identifiants réservés.** Les UID 70, 100, 1000 et 1001 servent aux conteneurs de la pile (base, antivirus, application, frontal) et aux dossiers de `DATA_DIR` : ne les attribuer à aucun compte humain ou de service de l’hôte. Une alternative est l’option `userns-remap` de Docker, qui décale les identifiants des conteneurs ; elle modifie les droits des dossiers montés et se valide d’abord hors production.
+
 Sur le serveur d’exploitation uniquement :
 
 <!-- ci: skip — configuration facultative de la tâche hôte A1a, testée avec un exécutant isolé -->

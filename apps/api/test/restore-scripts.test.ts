@@ -9,6 +9,6 @@ it('protège la restauration contre les archives piégées et préserve le parco
   const result = await promisify(execFile)('python3', [path.join(REPO, 'scripts/tests/test_restoration.py')], {
     timeout: 30_000,
   });
-  expect(result.stderr).toContain('Ran 20 tests');
+  expect(result.stderr).toContain('Ran 26 tests');
   expect(result.stderr).toMatch(/\nOK\n/);
 }, 35_000);

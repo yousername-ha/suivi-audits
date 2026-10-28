@@ -8,6 +8,8 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 **Changement de comportement** : les Contributeurs ne suppriment plus les plans d'actions, éléments du plan d'audit, GAP, lignes d'investissement, éléments du CRRC, incidents, éléments de la cellule de crise, évaluations du clausier, processus, objectifs, indicateurs et mesures (droit `supprimer` exigé, [ADR 0068](docs/adr/0068-suppressions-reservees-au-droit-supprimer.md)). Pour garder cette capacité à un profil, lui attribuer un rôle personnalisé qui porte `supprimer` sur les modules voulus. Aucune action sur le serveur.
 
+Aucune action obligatoire. Les sauvegardes les plus récentes sont désormais toujours conservées par la rotation (7 par défaut, `BACKUP_GARDER_MIN`) et les demandes de sauvegarde de l'interface appliquent une durée d'au moins 30 jours (`RETENTION_MIN_DAYS`) ; les deux réglages sont facultatifs, dans `.env`. Lire aussi la section 11 du guide d'installation (identifiants réservés).
+
 Aucune action sur le serveur. Le frontal est reconstruit avec une bibliothèque corrigée (go-jose v4.1.6) ; une exception datée du scan des images couvre la seule alerte restante, sans correctif amont (voir ADR 0063).
 
 ### Modifié
@@ -21,6 +23,7 @@ Aucune action sur le serveur. Le frontal est reconstruit avec une bibliothèque 
 - **CI** : les jobs ne conservent plus le jeton GitHub dans la copie de travail (`persist-credentials: false`) ; plus aucune expression GitHub n'est interpolée dans un script du job « montée de version ».
 - **Exécutant d'exploitation** : la liste publique des opérations n'est relue qu'à partir de fichiers réguliers nommés par identifiant, sans suivre de lien symbolique ni ouvrir de tube.
 - **Chiffrement** : le déchiffrement AES-256-GCM exige explicitement une étiquette d'authentification de 16 octets (déjà imposé par Node 26) ; tests du coffre ajoutés.
+- **Conservation des sauvegardes** : la rotation de `scripts/backup.sh` garde toujours les `BACKUP_GARDER_MIN` archives les plus récentes (7 par défaut, de 1 à 365) et ne supprime les suivantes, avec leur fichier `.sha256`, qu'au-delà de `RETENTION_DAYS` ; l'exécutant des demandes web relève la durée de la politique à `RETENTION_MIN_DAYS` (30 par défaut, de 1 à 36500, lue dans `.env`). Tests Python ajoutés (rotation, bornes, plancher). Le guide d'installation précise aussi les identifiants (UID 70, 100, 1000, 1001) réservés aux conteneurs.
 
 ## [5.1.0] — 2026-10-27
 
