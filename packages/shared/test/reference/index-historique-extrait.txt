@@ -1,0 +1,113 @@
+/* Extraits figés de l'ancien outil de suivi (retiré du dépôt) : fonctions et constantes recopiées à l'identique, utilisées
+   comme référence des tests de parité du module Audit, de la cartographie et du tableau de bord. Aucune donnée. */
+const LV={certain:{l:'Certain',o:0},tres:{l:'Très probable',o:1},probable:{l:'Probable',o:2},socle:{l:'Systématique',o:3},faible:{l:'Peu probable',o:4}};
+const PREP={'':'À préparer',encours:'En cours',pret:'Prête'};
+const STATUTS=['Ouvert','En cours','Clos'];
+const TYPES=['NC maj','NC min','PS','PP','Remarque'];
+
+const today=()=>{const d=new Date();d.setHours(0,0,0,0);return d};
+const parseD=s=>{if(!s)return null;const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+
+const typeLabel=t=>t==='NC maj'?'NC majeure':t==='NC min'?'NC mineure':t==='PS'?'Point sensible':t==='PP'?'Piste de progrès':'Remarque';
+
+function analyze(it){
+  const N=S.nextYear, P=N-1, r=[]; let sc=0;
+  const fs=S.findings.filter(f=>f.items.includes(it.id));
+  const open=fs.filter(f=>f.status!=='Clos'), closed=fs.filter(f=>f.status==='Clos');
+  const socle=it.ref!=='A';
+  if(socle) r.push('Socle audité à chaque visite');
+  for(const f of open){
+    if(f.type.startsWith('NC')){sc+=100;r.push(`${typeLabel(f.type)} ouverte (${f.source} ${f.year}) : sa levée sera vérifiée`)}
+    else if(f.type==='PS'&&f.source==='AFNOR'){sc+=70;r.push(`Point sensible relevé par l'AFNOR en ${f.year}`)}
+    else if(f.type==='PS'){sc+=35;r.push(`Point sensible de l'audit interne ${f.year}`)}
+    else {sc+=10;r.push(`Remarque ${f.source} ${f.year} encore ouverte`)}
+  }
+  if(closed.length){sc+=15;r.push(closed.length>1?`${closed.length} écarts clos : preuves de clôture à présenter`:'Écart clos : preuves de clôture à présenter')}
+  let blind=false, notSeen=false;
+  const hasP=S.years.includes(P);
+  if(!socle&&hasP){
+    if(!it.afnor[P]){sc+=60;notSeen=true;r.push(`Non vue par l'AFNOR en ${P} : rotation du cycle de surveillance`)}
+    if(!it.afnor[P]&&!it.interne[P]){sc+=25;blind=true;r.push(`Angle mort ${P} : ni audit interne ni AFNOR`)}
+  }
+  if(!socle&&it.afnor[N]){sc+=40;r.push(`Inscrite au plan d'audit AFNOR ${N}`)}
+  let level;
+  if(socle) level=open.length?'certain':'socle';
+  else level=sc>=100?'certain':sc>=60?'tres':sc>=30?'probable':'faible';
+  const internalGap=(level==='certain'||level==='tres')&&!it.interne[N]&&S.years.includes(N);
+  return {sc,level,reasons:r,open,closed,blind,notSeen,internalGap,fs};
+}
+function analysisAll(){const m={};for(const it of S.items)m[it.id]=analyze(it);return m}
+
+        <label class="fld">Relevé par<select data-fd="${f.id}" data-f="source" data-rr="1">${opts(['AFNOR','Interne','Tenacy','Veille','GAP','Exercice','Incident','Fournisseur'],f.source)}</select></label>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"><button class="btn" data-act="json">Exporter la sauvegarde JSON</button><button class="btn" data-act="jsonv3">Exporter pour la nouvelle version</button><button class="btn" data-act="import">Importer une sauvegarde</button><button class="btn danger" data-act="reset">Revenir au fichier d'origine</button></div>
+
+const SKIND={ouverture:"Réunion d'ouverture",audit:'Entretien',visite:'Visite terrain',synthese:'Synthèse',cloture:'Réunion de clôture',pause:'Pause'};
+const PLANST=['Projet',"Plan reçu de l'AFNOR",'Plan validé'];
+
+const slotFindings=s=>S.findings.filter(f=>f.status!=='Clos'&&f.items.some(i=>s.items.includes(i)));
+
+function worst(s,AN){let best=null;for(const id of s.items){const a=AN[id];if(!a)continue;if(!best||LV[a.level].o<LV[best].o)best=a.level}return best}
+function coverage(AN){const placed=new Set(S.plan.slots.flatMap(s=>s.items));const targets=S.items.filter(i=>['certain','tres','socle'].includes(AN[i.id].level));return {placed,targets,miss:targets.filter(i=>!placed.has(i.id))}}
+
+const SCHEMA=15;
+
+const DDA_LV={Total:{l:'Total',c:'ok'},Partiel:{l:'Partiel',c:'mid'},Insuffisant:{l:'Insuffisant',c:'bad'}};
+const pct=(n,d)=>d?Math.round(n*100/d):0;
+
+const LID_LISTS=[['findings[].tasks','TK-'],['indicators[].values','IV-'],['ai.plan','AP-'],['ai.policies','AL-'],['plan.slots[].proofs','PR-'],['reviews[].cs.inc.focus','RF-'],['reviews[].cs.sujet','RS-'],['crisis.cells[].log','CL-'],['roles','RO-']];
+function lidLists(s,path){let cur=[s];const t=path.split('.');t.forEach((tok,i)=>{const many=tok.endsWith('[]'),k=many?tok.slice(0,-2):tok,nx=[];for(const n of cur){if(!n||typeof n!=='object'||Array.isArray(n))continue;const v=n[k];if(v===undefined)continue;if(many&&i<t.length-1){if(Array.isArray(v))nx.push(...v)}else nx.push(v)}cur=nx});return cur.filter(Array.isArray)}
+function legacyIds(s){if(!s||typeof s!=='object')return s;for(const[path,pre]of LID_LISTS){const lists=lidLists(s,path),used=new Set();let n=0;
+  for(const l of lists)for(const e of l)if(e&&typeof e==='object'&&typeof e.id==='string'&&e.id){used.add(e.id);if(e.id.startsWith(pre)){const k=Number(e.id.slice(pre.length));if(Number.isInteger(k)&&k>n)n=k}}
+  for(const l of lists)for(let i=0;i<l.length;i++){const e=l[i];if(!e||typeof e!=='object'||Array.isArray(e)||(typeof e.id==='string'&&e.id))continue;let id;do id=pre+String(++n).padStart(3,'0');while(used.has(id));used.add(id);l[i]=Object.assign({id},e)}}
+  return s}
+function migrate15(s)
+  const env={format:'suivi-audits-legacy',formatVersion:1,schema:data.schema,exportedAt:new Date().toISOString(),appVersion:'outil-historique-schema-'+data.schema,sha256:sha,data};
+
+function ddaStats(ref){
+  const its=S.items.filter(i=>i.ref===ref), app=its.filter(i=>(S.dda[i.id]||{}).app!=='non');
+  const c={Total:0,Partiel:0,Insuffisant:0,'':0};app.forEach(i=>{const l=(S.dda[i.id]||{}).level||'';c[DDA_LV[l]?l:'']++});
+  return {total:its.length,app:app.length,na:its.length-app.length,c,pct:pct(c.Total,app.length)};
+}
+
+function indCalc(ind){
+  const saas=S.suppliers.filter(x=>x.saas);
+  const lastY=src=>Math.max(0,...S.findings.filter(f=>f.source===src).map(f=>+f.year||0));
+  switch(ind.calc){
+    case 'saasMfa':return {v:saas.length?saas.filter(x=>x.mfa==='Oui').length/saas.length:null,src:`${saas.filter(x=>x.mfa==='Oui').length}/${saas.length} services SaaS`};
+    case 'saasSso':return {v:saas.length?saas.filter(x=>x.sso==='Oui').length/saas.length:null,src:`${saas.filter(x=>x.sso==='Oui').length}/${saas.length} services SaaS`};
+    case 'afnorNcMaj':{const y=lastY('AFNOR');return {v:S.findings.filter(f=>f.source==='AFNOR'&&f.type==='NC maj'&&+f.year===y).length,src:`écarts AFNOR ${y||''}`}}
+    case 'interneNcMaj':{const y=lastY('Interne');return {v:S.findings.filter(f=>f.source==='Interne'&&f.type==='NC maj'&&+f.year===y).length,src:`audit interne ${y||''}`}}
+    case 'interneNcMajOpen':return {v:S.findings.filter(f=>f.source==='Interne'&&f.type==='NC maj'&&f.status!=='Clos').length,src:'écarts internes ouverts'};
+  }
+  return null;
+}
+function isRate(ind){return typeof ind.target==='number'&&ind.target>0&&ind.target<=1}
+
+function fmtVal(ind,v){if(v==null||v==='')return '–';if(typeof v==='number'&&isRate(ind))return String(Math.round(v*1000)/10).replace('.',',')+' %';if(typeof v==='number')return String(v).replace('.',',');return String(v)}
+function indState(ind){
+  const auto=ind.calc&&ind.auto!==false?indCalc(ind):null;
+  const all=(ind.values||[]).slice().sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+  const vals=all.filter(x=>!x.hist), hist=all.filter(x=>x.hist);
+  const last=vals[vals.length-1], prev=vals[vals.length-2]||hist[hist.length-1];
+  const v=auto?auto.v:(last?last.v:null);
+  let st='na';
+  if(!ind.dir||ind.target===''||ind.target==null)st='undef';
+  else if(v!=null&&v!==''){
+    if(ind.dir==='=')st=String(v).toLowerCase()===String(ind.target).toLowerCase()?'ok':'ko';
+    else if(ind.dir==='≤')st=+v<=+ind.target?'ok':'ko';
+    else if(ind.dir==='≥')st=+v>=+ind.target?'ok':'ko';
+  }
+  let trend='';
+  if(!auto&&last&&prev&&typeof last.v==='number'&&typeof prev.v==='number')trend=last.v>prev.v?'↗':last.v<prev.v?'↘':'→';
+  const h=hist[hist.length-1];
+  return {v,st,trend,auto,date:auto?'calculé':last?last.date:'',hist:h?{per:h.hist,v:h.v}:null};
+}
+const IST=
+const dFr=d=>{const x=parseD(d);return x?x.toLocaleDateString('fr-FR'):''};
+
+function planLate(p){return !['Réalisé','Annulé'].includes(p.status)&&p.start&&parseD(p.end||p.start)<today()}
+
+function plansOf(t,y){return (S.plans||[]).filter(p=>(!t||p.type===t)&&(!y||String(p.start||p.done||'').startsWith(String(y))))}
+
+function swotLatest(proc){return (S.swots||[]).filter(s=>s.process===proc).sort((a,b)=>String(b.date).localeCompare(String(a.date)))[0]}

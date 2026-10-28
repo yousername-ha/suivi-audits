@@ -14,7 +14,7 @@ export interface OptionsClasseur {
   mode: 'std' | 'pro';
   /** Titre du classeur (feuille « Sommaire » et en-tête des feuilles du mode pro). */
   titre: string;
-  /** Mention d'extraction, par exemple « Normand'e-Santé — extraction du 18/10/2026 ». */
+  /** Mention d'extraction, par exemple « Mon organisation — extraction du 18/10/2026 ». */
   contexte: string;
 }
 
