@@ -10,8 +10,7 @@ Aucune action sur le serveur. Le frontal est reconstruit avec une bibliothèque 
 
 ### Sécurité
 - **Images du frontal et de l'exécutant de mise à jour** : go-jose v4 est fixé à 4.1.6 dans `docker/web.Dockerfile` et `docker/updater.Dockerfile`. Le scan des images accepte, jusqu'au 27/11/2026, l'alerte sur go-jose v3 sans correctif publié (`.trivyignore.yaml`, bornée et datée). Un workflow quotidien (`veille-caddy.yml`) ouvre une demande quand une version de Caddy n'exige plus go-jose v3 ou que l'exception approche de son terme.
-
-### Sécurité
+- **Authentification** : les essais du second facteur sont limités par compte et comptés dans le verrouillage progressif existant ; les sessions à l'étape du second facteur sont plafonnées à trois par compte ; le compteur d'échecs est incrémenté de façon atomique ; les vérifications du mot de passe actuel (changement de mot de passe, enrôlement et désactivation du second facteur) sont limitées par compte, comptées dans le verrouillage et journalisées.
 - **Chaîne d'approvisionnement** ([ADR 0063](docs/adr/0063-chaine-de-publication-durcie.md), complément du 27/10/2026) : Dependabot suit aussi les dépendances npm (correctifs et mineures regroupés, majeures isolées) ; toutes ses propositions attendent 7 jours après la publication d'une version. pnpm refuse de même une version publiée depuis moins de 7 jours, une version dont la preuve de provenance régresse et une dépendance transitive hors registre.
 - **CI** : les jobs ne conservent plus le jeton GitHub dans la copie de travail (`persist-credentials: false`) ; plus aucune expression GitHub n'est interpolée dans un script du job « montée de version ».
 - **Exécutant d'exploitation** : la liste publique des opérations n'est relue qu'à partir de fichiers réguliers nommés par identifiant, sans suivre de lien symbolique ni ouvrir de tube.

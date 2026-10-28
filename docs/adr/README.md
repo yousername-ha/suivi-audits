@@ -70,3 +70,4 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0064](0064-gap-ia-iso-27001-hds.md) | GAP IA ISO 27001 / HDS : trois cas d'usage réels, questions sur des faits constatables, points pré-évalués seulement si la réponse tranche | Acceptée |
 
 | [0065](0065-remise-a-vide-de-la-base.md) | Remise à vide de la base pour la recette : interrupteur désactivé par défaut, deux portées, code, phrase, sauvegarde récente, immuabilité suspendue le temps d'une transaction | Acceptée |
+| [0066](0066-limitation-des-essais-du-second-facteur-et-verrouillage-partage.md) | Limitation des essais du second facteur par compte, verrouillage partagé avec le mot de passe, sessions incomplètes plafonnées | Acceptée |

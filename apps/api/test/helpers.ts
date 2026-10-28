@@ -188,6 +188,7 @@ export async function login(t: TestApp, u: TestUser): Promise<Agent> {
   await a.me();
   t.svc.limits.loginByIp.reset();
   t.svc.limits.loginByUser.reset();
+  t.svc.limits.mfaByUser.reset();
   return a;
 }
 
