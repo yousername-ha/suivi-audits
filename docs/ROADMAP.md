@@ -16,7 +16,7 @@ consolidation documentaire (H5, ci-dessous).
    tâches des écarts et valeurs d'indicateurs faites (migration 028) ; restent le plan d'audit (jours, personnes, créneaux) puis
    les autres colonnes JSON du cœur (preuves de créneaux, contrôles des fournisseurs, sections des revues…).
 4. Décision à prendre : retirer l'import et l'export au format historique, ou les garder comme outil de sauvegarde ;
-   retirer ou non `app/public/index.html` (référence de la CI et des tests de parité).
+   `app/public/index.html` : retiré du dépôt (décision du 28/10/2026).
 5. Entretien : mise à jour de la pile (actions GitHub, versions majeures, Node 26), module Qualité ISO 9001
    ([cadrage](unification/CADRAGE-MODULE-QUALITE-9001.md)).
 6. Stabiliser le test Playwright de déconnexion à deux onglets (échecs intermittents en CI, non reproduits en isolation).

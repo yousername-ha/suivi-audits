@@ -2,7 +2,7 @@
 
 > Exigences `AUD-01` à `AUD-16`, à citer dans les commits et les PR. **Statut : validée par le RSSI le 08/10/2026**,
 > avec les défauts du § 6. Décisions d'architecture : [ADR 0025](../adr/0025-audit.md).
-> Recette : [RECETTE.md](RECETTE.md). Référence de comportement : l'outil historique (`app/public/index.html`,
+> Recette : [RECETTE.md](RECETTE.md). Référence de comportement : l'outil historique (ancien outil retiré du dépôt,
 > schéma 15), inventorié le 08/10/2026 ; les numéros de ligne cités sont indicatifs.
 
 ## 1. Objectif

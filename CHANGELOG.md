@@ -42,6 +42,9 @@ Aucune action sur le serveur. Le frontal est reconstruit avec une bibliothèque 
 - **Décision des rapprochements** : une erreur inattendue renvoie « Erreur interne lors de la décision. » au lieu du texte de l'erreur technique, qui est journalisée.
 - **Droits par ressource** ([ADR 0067](docs/adr/0067-attribution-des-droits-par-ressource-reservee.md)) : l'attribution des droits par ressource et le passage d'un registre en restreint exigent le droit d'administrer le module, ou le rôle de gestionnaire de la ressource ; on ne modifie plus ses propres droits ; créer ou retirer une relation exige le droit de gérer l'élément source. Les droits déjà attribués sont conservés.
 
+### Retiré
+- **Ancien outil de suivi** : `app/public/index.html` (non servi depuis le retrait de `/legacy`), ses bibliothèques, `scripts/update-ui.sh` et `archives/` (copie de la version 2) sont retirés du dépôt public ; l'outil autonome reste sur la branche `archive/outil-legacy-autonome` et la version 2 dans l'historique Git. Les tests de parité (audit, cartographie, tableau de bord, schéma 15) s'appuient désormais sur un extrait figé des fonctions de référence (`packages/shared/test/reference`). L'étape « état initial vide » de la CI ne contrôle plus que le jeu de départ de l'API.
+
 ## [5.1.0] — 2026-10-27
 
 Version mineure : aucune migration SQL, aucune nouvelle dépendance.

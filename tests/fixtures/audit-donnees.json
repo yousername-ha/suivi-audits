@@ -1,5 +1,5 @@
 {
-  "_commentaire": "Jeu FICTIF des tests du module Audit (AUD-05, AUD-09, AUD-10) : référentiels du seed vide d'app/public/index.html ; écarts, couverture et plan d'audit inventés. Aucune donnée réelle.",
+  "_commentaire": "Jeu FICTIF des tests du module Audit (AUD-05, AUD-09, AUD-10) : référentiels du seed vide de l'ancien outil ; écarts, couverture et plan d'audit inventés. Aucune donnée réelle.",
   "years": [
     2025,
     2026,

@@ -1,5 +1,5 @@
 /* Audit (phase 1, AUD-03 à AUD-11, ADR 0025) : modèle partagé entre l'API et l'interface.
-   Listes et libellés repris à l'identique de l'outil historique (app/public/index.html, schéma 15) : les numéros de
+   Listes et libellés repris à l'identique de l'outil historique (ancien outil, schéma 15) : les numéros de
    ligne cités sont indicatifs. Les couleurs ne sont pas ici : l'interface les prend dans les jetons de packages/ui. */
 
 /* ---------------------------------------------------------------- Référentiels (AUD-03) */

@@ -1,5 +1,5 @@
 /* Parité du pronostic avec l'outil historique (AUD-05, ADR 0025 § 3) : `analyze`, `worst`, `coverage` et
-   `slotFindings` d'app/public/index.html sont exécutés dans un bac à sable sur les mêmes états que les fonctions
+   `slotFindings` de l'extrait historique figé sont exécutés dans un bac à sable sur les mêmes états que les fonctions
    partagées ; scores, niveaux, motifs, drapeaux et listes doivent être identiques. Un test de mutation vérifie que
    ces comparaisons détectent la modification de chaque pondération, de chaque seuil et des règles du socle. */
 import { readFileSync } from 'node:fs';

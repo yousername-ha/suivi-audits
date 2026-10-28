@@ -36,7 +36,6 @@ jobs:
           queries: security-extended
           config: |
             paths-ignore:
-              - app/public/lib
               - '**/dist'
             # js/missing-rate-limiting ne reconnaît que les intergiciels connus (express-rate-limit…). Toutes les
             # routes passent par un point d'entrée unique (apps/api/src/http/route.ts) qui applique une limite

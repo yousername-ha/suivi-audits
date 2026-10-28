@@ -29,7 +29,7 @@ import {
 } from '../src/audit/index.js';
 
 const RACINE = path.resolve(import.meta.dirname, '../../..');
-const INDEX = readFileSync(path.join(RACINE, 'app/public/index.html'), 'utf8');
+const INDEX = readFileSync(path.join(RACINE, 'packages/shared/test/reference/index-historique-extrait.txt'), 'utf8');
 const DONNEES = JSON.parse(readFileSync(path.join(RACINE, 'tests/fixtures/audit-donnees.json'), 'utf8')) as AuditState;
 
 /** Évalue une expression de l'outil historique (constante ou fonction d'une ligne). */

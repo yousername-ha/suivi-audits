@@ -31,7 +31,7 @@ Un commit ou une PR qui traite une exigence de [docs/archive/BACKLOG-FONCTIONNEL
 - Les images installables sont publiées uniquement depuis une **étiquette immuable**. Exception de développement demandée : `.github/publication.json` associe le numéro au canal `development`, et l'étiquette doit appartenir à `feature/gpt6-evolution-smsi-grc`, sans fusion dans `main`. La page GitHub est une préversion ; seul le numéro exact est publié, aucun alias stable. Le canal `stable` (ou l'absence du manifeste) impose `main`. Un manifeste obsolète ou incohérent bloque la publication : le mettre à jour avec chaque version. CI et CodeQL doivent avoir réussi sur le commit exact avant de créer l'étiquette ; le workflow contrôle cette condition, scanne et signe les trois images avant de les exposer. La procédure de détection du dépôt privé et ses limites sont documentées dans INSTALLATION 12.0.
 
 ## Organisation du dépôt
-Voir [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) § 2. En résumé : `packages/shared` (schémas zod, format legacy), `apps/api` (Fastify), `apps/web` (React), `tests/e2e` (Playwright), `app/public/index.html` (outil historique).
+Voir [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) § 2. En résumé : `packages/shared` (schémas zod, format legacy), `apps/api` (Fastify), `apps/web` (React), `tests/e2e` (Playwright). L'outil historique est retiré du dépôt ; ses fonctions de référence figées servent aux tests de parité (`packages/shared/test/reference`).
 
 ## Environnement de développement
 Prérequis : Node 24, pnpm 10 (`corepack enable`), Docker.

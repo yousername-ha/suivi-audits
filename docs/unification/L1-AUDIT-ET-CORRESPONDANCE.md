@@ -58,7 +58,7 @@ Total : 587 tests Vitest réussis, conforme au chiffre de `HANDOVER.md`. Aucune 
 
 ## 5. Correspondance ancienne interface → nouvelle interface
 
-Menu historique : `navDef()` de `app/public/index.html`. Nouvelle interface : `apps/web/src/main.tsx`,
+Menu historique : `navDef()` de l'ancien outil (retiré). Nouvelle interface : `apps/web/src/main.tsx`,
 `components/Layout.tsx`, `pilotage-navigation.ts`, `pages/Pilotage.tsx`.
 
 | Rubrique historique (clés) | Nouvelle interface | État réel | Doublon / incohérence |

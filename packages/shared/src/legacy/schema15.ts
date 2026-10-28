@@ -1,5 +1,5 @@
 /* Migration du format legacy vers le schéma 15 : identifiant stable pour les éléments des 9 listes qui n'en avaient pas.
-   Algorithme déterministe (même résultat à chaque exécution), identique à celui de l'outil legacy (app/public/index.html) :
+   Algorithme déterministe (même résultat à chaque exécution), identique à celui de l'outil legacy (ancien outil) :
    pour chaque préfixe, numérotation à la suite du plus grand numéro déjà attribué, sur 3 chiffres minimum. */
 import { ID_LISTS, isObject, listsAt, type Json, type JsonObject } from './paths.js';
 
