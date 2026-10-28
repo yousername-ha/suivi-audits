@@ -7,16 +7,18 @@ ARG GO_IMAGE=golang:1.26.10-alpine@sha256:a2012b4a1d1f9f7e9f44e0d39b805a901e856b
 
 # Même Caddy et modules standards, compilés avec la bibliothèque Go corrigée.
 # Les modules sont vérifiés par Go (sum.golang.org) ; aucune toolchain secondaire téléchargée.
+# Les échecs réseau passagers sont réessayés (4 essais), sans désactiver cette vérification.
 FROM ${GO_IMAGE} AS caddy-build
 RUN --mount=type=secret,id=build_ca --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build \
     if [ -f /run/secrets/build_ca ]; then export SSL_CERT_FILE=/run/secrets/build_ca; fi; \
     export CGO_ENABLED=0 GOTOOLCHAIN=local; \
-    go mod download github.com/caddyserver/caddy/v2@v2.11.7 \
+    essayer() { n=1; until "$@"; do [ "$n" -ge 4 ] && return 1; echo "essai $n échoué : $*" >&2; sleep $((n * 15)); n=$((n + 1)); done; }; \
+    essayer go mod download github.com/caddyserver/caddy/v2@v2.11.7 \
     && mkdir /src-caddy \
     && cp /go/pkg/mod/github.com/caddyserver/caddy/v2@v2.11.7/cmd/caddy/main.go /src-caddy/main.go \
     && cd /src-caddy && go mod init suivi-caddy \
     && go mod edit -require=github.com/caddyserver/caddy/v2@v2.11.7 -require=golang.org/x/net@v0.60.0 -require=github.com/go-jose/go-jose/v4@v4.1.6 \
-    && go build -mod=mod -o /go/bin/caddy .
+    && essayer go build -mod=mod -o /go/bin/caddy .
 
 FROM ${NODE_IMAGE} AS build
 RUN --mount=type=secret,id=build_ca \

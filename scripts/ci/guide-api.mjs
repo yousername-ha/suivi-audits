@@ -301,7 +301,8 @@ switch (cmd) {
       root([
         'env',
         'BACKUP_DEST=/srv/sauvegardes/suivi-audits',
-        'BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass',
+        'BACKUP_KEY_FILE=/root/.suivi-backup-key',
+        'BACKUP_RECIPIENTS_FILE=/root/.suivi-backup-recipients',
         'python3',
         './scripts/exploitation-worker.py',
       ]);
@@ -383,16 +384,17 @@ switch (cmd) {
       work=$(mktemp -d)
       trap 'rm -rf "$work"' EXIT
       printf 'PGDMP-invalide-fictif' > "$work/suivi.dump"
-      printf 'recette=lot-a\n' > "$work/INFO"
+      nom=suivi-audits-20260101-000000.tar.age
+      printf 'date=20260101-000000\nfichier=%s\n' "$nom" > "$work/INFO"
       tar czf "$work/secrets.tgz" -C /srv/suivi-audits/donnees/secrets .
       tar cf "$work/archive.tar" -C "$work" suivi.dump secrets.tgz INFO
-      openssl enc -aes-256-cbc -pbkdf2 -iter 600000 -salt -in "$work/archive.tar" -out /srv/sauvegardes/suivi-audits/suivi-audits-recette-invalide.tar.enc -pass file:/root/.suivi-backup-pass
+      age -r "$(age-keygen -y /root/.suivi-backup-key)" -R /root/.suivi-backup-recipients -o "/srv/sauvegardes/suivi-audits/$nom" "$work/archive.tar"
       cd /srv/sauvegardes/suivi-audits
-      sha256sum suivi-audits-recette-invalide.tar.enc > suivi-audits-recette-invalide.tar.enc.sha256`,
+      sha256sum "$nom" > "$nom.sha256"`,
     ]);
     worker();
     e = await call('GET', '/api/admin/exploitation');
-    const bad = e.host.archives.find((a) => a.name === 'suivi-audits-recette-invalide.tar.enc');
+    const bad = e.host.archives.find((a) => a.name === 'suivi-audits-20260101-000000.tar.age');
     job = await operation({ kind: 'verify', archiveId: bad.id, sha256: bad.sha256 });
     if ((await result(job.id)).status !== 'reussie') fail('recette préalable de l’archive fictive inattendue');
     job = await operation({ kind: 'restore', confirmation: 'RESTAURER', archiveId: bad.id, sha256: bad.sha256 });
