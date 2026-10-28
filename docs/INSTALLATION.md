@@ -416,6 +416,24 @@ sudo ./scripts/preparer-donnees.sh
 ```
 **Résultat attendu** : `Dossier des données prêt : /srv/suivi-audits/donnees`. Le message `des données existent déjà dans des volumes Docker` signifie que l'application a déjà été installée sur ce serveur : suivez plutôt l'étape 12.5.
 
+**6.8 Préparer les clés de sauvegarde** (avant le premier démarrage, étape 7). Sur **votre poste** (pas sur le serveur), générez la clé de secours :
+
+<!-- ci: instead: age-keygen -o "$RUNNER_TEMP/cle-secours.key" -->
+```bash
+age-keygen -o cle-secours-suivi.key
+```
+**Résultat attendu** : une ligne `Public key: age1…` (62 caractères). **Rangez `cle-secours-suivi.key` hors ligne** (coffre-fort, support chiffré) : c'est elle qui permet de restaurer si le serveur et sa clé sont perdus. Elle ne doit **jamais** être copiée sur le serveur. Seule la ligne `age1…` (la clé *publique*) est donnée au serveur.
+
+Sur le serveur, créez la clé du serveur et enregistrez la clé publique de secours :
+
+<!-- ci: instead: sudo ./scripts/generer-cles-sauvegarde.sh --secours "$(age-keygen -y "$RUNNER_TEMP/cle-secours.key")" --confirmer -->
+```bash
+sudo ./scripts/generer-cles-sauvegarde.sh
+```
+Le script génère `/root/.suivi-backup-key` (droits 0600, jamais affichée), puis vous demande de coller la clé publique `age1…` et de taper `ENREGISTRER` pour confirmer ; elle est écrite dans `/root/.suivi-backup-recipients`. Il ne demande ni n'affiche jamais de clé privée, et refuse d'écraser une clé existante. **Résultat attendu** : `Clé de secours enregistrée`.
+
+> Perte du serveur : installez `age` ailleurs, puis `BACKUP_KEY_FILE=<cle-secours-suivi.key> ./scripts/restore.sh <archive>.tar.age` (étape 11.4). **Testez-le avec la clé de secours avant de vous y fier.**
+
 ---
 
 ## 7. Démarrer l'application
@@ -647,23 +665,13 @@ Une sauvegarde contient la base (suivi, comptes, documents chiffrés, journal), 
 
 > ⚠️ Sans la clé du serveur **ni** la clé de secours, les sauvegardes sont **illisibles**, définitivement. Sans les sauvegardes, une panne du serveur fait **tout perdre**.
 
-**11.1 Préparer les clés de sauvegarde.** Sur **votre poste** (pas sur le serveur), générez la clé de secours :
+**11.1 Contrôler les clés de sauvegarde.** Elles ont été créées à l'étape 6.8, avant le premier démarrage (Compose les monte dans l'exécutant et refuse de démarrer sans elles). Vérifiez leur présence et leurs droits :
 
-<!-- ci: instead: age-keygen -o "$RUNNER_TEMP/cle-secours.key" -->
+<!-- ci: run -->
 ```bash
-age-keygen -o cle-secours-suivi.key
+sudo ls -l /root/.suivi-backup-key /root/.suivi-backup-recipients
 ```
-**Résultat attendu** : une ligne `Public key: age1…` (62 caractères). **Rangez `cle-secours-suivi.key` hors ligne** (coffre-fort, support chiffré) : c'est elle qui permet de restaurer si le serveur et sa clé sont perdus. Elle ne doit **jamais** être copiée sur le serveur. Seule la ligne `age1…` (la clé *publique*) est donnée au serveur.
-
-Sur le serveur, créez la clé du serveur et enregistrez la clé publique de secours :
-
-<!-- ci: instead: sudo ./scripts/generer-cles-sauvegarde.sh --secours "$(age-keygen -y "$RUNNER_TEMP/cle-secours.key")" --confirmer -->
-```bash
-sudo ./scripts/generer-cles-sauvegarde.sh
-```
-Le script génère `/root/.suivi-backup-key` (droits 0600, jamais affichée), puis vous demande de coller la clé publique `age1…` et de taper `ENREGISTRER` pour confirmer ; elle est écrite dans `/root/.suivi-backup-recipients`. Il ne demande ni n'affiche jamais de clé privée, et refuse d'écraser une clé existante. **Résultat attendu** : `Clé de secours enregistrée`.
-
-> Perte du serveur : installez `age` ailleurs, puis `BACKUP_KEY_FILE=<cle-secours-suivi.key> ./scripts/restore.sh <archive>.tar.age` (étape 11.4). **Testez-le avec la clé de secours avant de vous y fier.**
+**Résultat attendu** : deux fichiers appartenant à `root`, la clé du serveur en `-rw-------`. **Gardez la clé de secours privée (`cle-secours-suivi.key`) hors ligne** et testez-la à l'étape 11.4.
 
 **11.2 Lancer une première sauvegarde :**
 
@@ -677,7 +685,7 @@ sudo mkdir -p /srv/sauvegardes/suivi-audits
 ```bash
 sudo ./scripts/backup.sh /srv/sauvegardes/suivi-audits
 ```
-**Résultat attendu** : la dernière ligne est `Sauvegarde : /srv/sauvegardes/suivi-audits/suivi-audits-<date>-<heure>.tar.age`. Sans les clés de l'étape 11.1, le script refuse de sauvegarder et n'écrit aucun fichier en clair.
+**Résultat attendu** : la dernière ligne est `Sauvegarde : /srv/sauvegardes/suivi-audits/suivi-audits-<date>-<heure>.tar.age`. Sans les clés de l'étape 6.8, le script refuse de sauvegarder et n'écrit aucun fichier en clair.
 
 <!-- ci: run -->
 ```bash
@@ -739,7 +747,7 @@ Le script vérifie l'empreinte et la structure, puis demande de taper `RESTAURER
 
 La migration additive `006_sauvegardes.sql` est appliquée au démarrage. L’application enregistre une demande ; elle n’exécute aucun shell et ne reçoit ni clé ni chemin. Un exécutant sur le serveur interroge la file. Il réutilise `backup.sh`, avec chiffrement obligatoire. La restauration reste la procédure 11.4 ; l’empreinte SHA-256 vérifie la cohérence du fichier, pas son authenticité ni sa restaurabilité.
 
-Après les étapes 11.1–11.4, vérifier que la clé du serveur est un fichier régulier, **non vide**, lisible par root seul (0600), et que le fichier de clés publiques de secours contient au moins une clé `age1…`. La clé de secours privée reste hors du serveur, dans le coffre-fort. La destination doit être persistante, privée et incluse dans la sauvegarde externalisée. `RETENTION_DAYS` accepte 1 à 36500 (90 par défaut ; 36500 conserve la compatibilité avec les sauvegardes avant mise à jour, dont les cinq dernières sont gardées) ; `BACKUP_PREFIXE` accepte 1 à 61 caractères ASCII alphanumériques, point, tiret ou soulignement, avec un premier caractère alphanumérique. Ces contrôles s’appliquent aussi aux appels directs de `backup.sh`.
+Après les étapes 6.8 et 11.1–11.4, vérifier que la clé du serveur est un fichier régulier, **non vide**, lisible par root seul (0600), et que le fichier de clés publiques de secours contient au moins une clé `age1…`. La clé de secours privée reste hors du serveur, dans le coffre-fort. La destination doit être persistante, privée et incluse dans la sauvegarde externalisée. `RETENTION_DAYS` accepte 1 à 36500 (90 par défaut ; 36500 conserve la compatibilité avec les sauvegardes avant mise à jour, dont les cinq dernières sont gardées) ; `BACKUP_PREFIXE` accepte 1 à 61 caractères ASCII alphanumériques, point, tiret ou soulignement, avec un premier caractère alphanumérique. Ces contrôles s’appliquent aussi aux appels directs de `backup.sh`.
 
 **Conservation minimale.** La rotation de `backup.sh` garde toujours les `BACKUP_GARDER_MIN` sauvegardes les plus récentes du dossier de destination (7 par défaut, de 1 à 365), même au-delà de `RETENTION_DAYS` ; seules les suivantes disparaissent, avec leur fichier `.sha256`, si elles ont plus de `RETENTION_DAYS` jours. L’exécutant des demandes web relève la durée enregistrée dans Configuration système à `RETENTION_MIN_DAYS` (30 par défaut, de 1 à 36500), lue dans `.env` sur le serveur ; une valeur hors bornes fait échouer la demande au lieu de supprimer des sauvegardes. Les deux réglages sont facultatifs et se placent dans `.env` (voir `.env.example`).
 
@@ -772,7 +780,7 @@ Recette après configuration : confirmer une demande, attendre son résultat « 
 
 ### 11.6 Pilotage complet du lot A (poller commun)
 
-La migration additive `007_exploitation.sql` est appliquée au démarrage. À partir de **3.0.2**, le service `updater` de l'installation Compose exécute le poller commun automatiquement : sauvegardes manuelles/planifiées, catalogue, vérifications, restaurations et TLS autorisé. Aucun nouveau service, paquet ni cron. Il utilise par défaut **`DATA_DIR/sauvegardes`** (privé, persistant) et les clés age de l'étape 11.1 (**`/root/.suivi-backup-key`** et **`/root/.suivi-backup-recipients`**, root, montées en lecture seule dans l'exécutant, hors API). Elles doivent exister **avant** `docker compose up` : Compose refuse de démarrer l'exécutant sans elles plutôt que de créer des dossiers à leur place. Externaliser les archives. Les verrous hôte et SQL empêchent les opérations concurrentes ; une mise à jour attend le passage actif. Les fichiers temporaires volumineux sont dans `DATA_DIR/reprise-exploitation/tmp`, hors du petit `/tmp` du conteneur.
+La migration additive `007_exploitation.sql` est appliquée au démarrage. À partir de **3.0.2**, le service `updater` de l'installation Compose exécute le poller commun automatiquement : sauvegardes manuelles/planifiées, catalogue, vérifications, restaurations et TLS autorisé. Aucun nouveau service, paquet ni cron. Il utilise par défaut **`DATA_DIR/sauvegardes`** (privé, persistant) et les clés age de l'étape 6.8 (**`/root/.suivi-backup-key`** et **`/root/.suivi-backup-recipients`**, root, montées en lecture seule dans l'exécutant, hors API). Elles sont créées à l'étape 6.8 et doivent exister **avant** `docker compose up` : Compose refuse de démarrer l'exécutant sans elles plutôt que de créer des dossiers à leur place. Externaliser les archives. Les verrous hôte et SQL empêchent les opérations concurrentes ; une mise à jour attend le passage actif. Les fichiers temporaires volumineux sont dans `DATA_DIR/reprise-exploitation/tmp`, hors du petit `/tmp` du conteneur.
 
 **Catalogue existant** : renseigner le chemin serveur `BACKUP_DEST` (et, si les clés ne sont pas aux emplacements par défaut, `BACKUP_KEY_FILE` et `BACKUP_RECIPIENTS_FILE`) dans `.env`, puis redémarrer `updater` ; Compose les monte pour l'exécutant, sans les exposer à l'API. Le dossier doit être persistant, possédé par root et non modifiable par le groupe/les autres comptes ; la clé du serveur est régulière, non vide, root 0600. Les anciennes archives `.tar.enc` ne sont plus listées (voir l'étape 11.4 pour les restaurer). Aucun cron existant n'est supprimé ou changé : éviter de planifier deux sauvegardes nocturnes pour le même besoin, même si les verrous empêchent une exécution simultanée.
 
@@ -851,7 +859,7 @@ Dans **Configuration système → Mises à jour et versions**, un compte ayant l
 
 L’exécutant télécharge et vérifie les signatures cosign des images API, web et updater, avec l’identité exacte du workflow/tag, ainsi que leur **attestation SBOM** signée par la même identité ([ADR 0063](adr/0063-chaine-de-publication-durcie.md)) : une image sans attestation est refusée. Le SBOM vérifié de chaque composant est conservé dans `DATA_DIR/etat/sbom/<version>` et se télécharge depuis les reçus de mise à jour. Le commit des sources doit correspondre au label de révision des images signées ; les images appliquées sont épinglées par empreinte. Pendant cette préparation, le service reste disponible. Ensuite la maintenance bloque les écritures, attend la fin des mutations déjà engagées, crée une sauvegarde chiffrée et effectue migrations/redémarrage/contrôles de santé et de données. Le frontal sert indépendamment `/update/` et un état public minimal : les utilisateurs et nouvelles connexions conservent la page pendant l’arrêt de l’API, de l’interface et de l’exécutant. Les étapes affichées sont réelles et horodatées, avec la durée écoulée ; aucun pourcentage n’est inventé. À la fin, un **reçu** structuré (versions, étapes, empreintes et signature des images vérifiées, sauvegarde et son empreinte, contrôles des données avant et après) est déposé dans `DATA_DIR/etat/recus-mises-a-jour` et se télécharge depuis Configuration système → Mises à jour et versions ; il ne contient aucune sortie brute de commande et n’est pas servi par le frontal public. Le retour à l’application est automatique après santé confirmée. Un échec avec retour arrière est clairement affiché, avec accès au résultat ; une intervention requise maintient la protection.
 
-`init` crée exclusivement les secrets manquants. Les sauvegardes de mise à jour utilisent les clés age de l'étape 11.1 (root, 0600, montées en lecture seule dans l'exécutant, hors montage API) ; l'ancien fichier `DATA_DIR/update-secrets/backup-pass` n'est plus créé ni utilisé (le conserver s'il sert à restaurer d'anciennes archives `.tar.enc`). Les archives chiffrées sont dans `DATA_DIR/sauvegardes-updates/avant-mise-a-jour`, les cinq dernières sont conservées ; les journaux/reçus privés dans `DATA_DIR/reprise-updates` (root, 0700), l’état public dans `DATA_DIR/etat/updates`. Inclure ces dossiers dans la sauvegarde externalisée du serveur et conserver la clé de secours (privée) dans le coffre-fort pour restaurer après perte du serveur. Ne jamais exposer le socket Docker, le projet en écriture ou ces clés à l’API.
+`init` crée exclusivement les secrets manquants. Les sauvegardes de mise à jour utilisent les clés age de l'étape 6.8 (root, 0600, montées en lecture seule dans l'exécutant, hors montage API) ; l'ancien fichier `DATA_DIR/update-secrets/backup-pass` n'est plus créé ni utilisé (le conserver s'il sert à restaurer d'anciennes archives `.tar.enc`). Les archives chiffrées sont dans `DATA_DIR/sauvegardes-updates/avant-mise-a-jour`, les cinq dernières sont conservées ; les journaux/reçus privés dans `DATA_DIR/reprise-updates` (root, 0700), l’état public dans `DATA_DIR/etat/updates`. Inclure ces dossiers dans la sauvegarde externalisée du serveur et conserver la clé de secours (privée) dans le coffre-fort pour restaurer après perte du serveur. Ne jamais exposer le socket Docker, le projet en écriture ou ces clés à l’API.
 
 L’exécutant se remplace lui-même à la fin d’une mise à jour ; son successeur termine les contrôles depuis le reçu durable. Après une interruption pendant remplacement, il tente le retour sécurisé depuis la sauvegarde précédente. Une reprise échouée reste bloquée et conserve les références privées pour l’exploitant : examiner le journal, le rapport et la sauvegarde avant toute restauration manuelle. Ne pas supprimer le marqueur de maintenance tant que la santé et les données ne sont pas validées.
 
@@ -892,7 +900,7 @@ Si des images épinglées par `API_IMAGE`/`WEB_IMAGE`/`UPDATER_IMAGE` sont prés
 7. attend que l'application soit en bon état, relit chaque document chiffré, puis écrit un rapport (onglet **Système** de l'administration, et journal d'audit) ;
 8. **en cas d'échec**, revient tout seul à la version précédente ; si la base avait déjà évolué, il restaure la sauvegarde du point 4 (après votre accord).
 
-> ⚠️ **Première mise à jour vers la version qui chiffre les sauvegardes avec age** (voir le CHANGELOG) : avant de lancer le script, installez `age` (`sudo apt install -y age`) et créez les clés de l'étape 11.1. La sauvegarde de cette mise à jour est encore faite par la version installée (avec l'ancienne phrase secrète) ; sans les clés, la nouvelle version ne démarre pas et le retour arrière automatique rétablit l'ancienne. Une mise à jour lancée depuis l'interface web nécessite de la même façon des clés déjà créées.
+> ⚠️ **Première mise à jour vers la version qui chiffre les sauvegardes avec age** (voir le CHANGELOG) : avant de lancer le script, installez `age` (`sudo apt install -y age`) et créez les clés de l'étape 6.8. La sauvegarde de cette mise à jour est encore faite par la version installée (avec l'ancienne phrase secrète) ; sans les clés, la nouvelle version ne démarre pas et le retour arrière automatique rétablit l'ancienne. Une mise à jour lancée depuis l'interface web nécessite de la même façon des clés déjà créées.
 
 **1. Récupérer la liste des versions publiées :**
 
