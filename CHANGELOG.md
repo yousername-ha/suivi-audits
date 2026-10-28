@@ -6,7 +6,11 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-Aucune action.
+Aucune action obligatoire. **Si l'antivirus facultatif est activé** (`--profile antivirus`) : après `docker compose pull`, relancer avec `docker compose --profile antivirus up -d` ; le nouveau service `freshclam` télécharge les signatures et `clamav` démarre quand elles sont présentes (quelques minutes). Vérifier que `CLAMAV_HOST=clamav` reste renseigné dans `.env`. Sans antivirus, rien à faire.
+
+### Sécurité
+- **Antivirus facultatif isolé** : `clamav` (analyse) n'est plus relié qu'au réseau interne `antivirus`, partagé avec l'API, sans accès à la base ni à Internet ; le téléchargement des signatures passe par un service `freshclam` distinct. Les deux s'exécutent sans privilège, en lecture seule, sans capacité Linux et avec une limite de processus.
+- **Images épinglées par empreinte** : les images tierces des Dockerfiles et du compose de production (`node`, `caddy`, `golang`, `alpine`, `postgres`, `clamav`) portent leur empreinte `@sha256` ; Dependabot suit aussi le compose. Contrôle `scripts/tests/conteneurs.test.mjs` ajouté à la CI.
 
 ## [5.1.0] — 2026-10-27
 
