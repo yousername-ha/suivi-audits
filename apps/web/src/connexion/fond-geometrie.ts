@@ -1,12 +1,12 @@
 /* Fond animé de l'écran de connexion : géométrie en fonctions pures (testées), sans accès au DOM ni au canevas.
-   Grille large qui défile, barres fines espacées, halos, deux courbes en pointillés et une courbe principale montante
+   Grille large qui défile, barres larges espacées, halos, deux courbes en pointillés et une courbe principale montante
    dont certains nœuds, cerclés, émettent une onde. Les teintes sont des noms de variables de la charte (palettes). */
 
 /** Vitesse de défilement (px/s), pas de la grille (px), écart des barres (px), cadence (images/s). */
 export const VITESSE = 16;
 export const PAS_GRILLE = 112;
 export const ECART_BARRES = 125;
-export const LARGEUR_BARRE = 26;
+export const LARGEUR_BARRE = 48;
 export const IMAGES_PAR_SECONDE = 30;
 /** Instant dessiné en image fixe (moins de mouvement demandé). */
 export const INSTANT_FIXE = 12;
@@ -53,7 +53,8 @@ export interface Barre {
   l: number;
   h: number;
 }
-/** Barres fines espacées, plus hautes vers la droite ; environ une sur cinq manque. Défilement à mi-vitesse. */
+/** Barres larges (48 px pour un pas de 125 px), plus hautes vers la droite ; environ une sur cinq manque.
+    Défilement à mi-vitesse ; chaque barre reste centrée au même endroit du pas. */
 export function barres(t: number, l: number, h: number): Barre[] {
   const ob = t * VITESSE * 0.5;
   const premier = Math.floor(ob / ECART_BARRES);
@@ -63,7 +64,7 @@ export function barres(t: number, l: number, h: number): Barre[] {
     if (hasard(idx + 300) < 0.22) continue;
     const x = i * ECART_BARRES - (ob % ECART_BARRES);
     const hb = h * (0.12 + 0.4 * Math.max(0, x / Math.max(l, 1)) + 0.1 * bruit(idx * 0.7 + t * 0.15));
-    liste.push({ x: x + 50, y: h - hb, l: LARGEUR_BARRE, h: hb });
+    liste.push({ x: x + 63 - LARGEUR_BARRE / 2, y: h - hb, l: LARGEUR_BARRE, h: hb });
   }
   return liste;
 }

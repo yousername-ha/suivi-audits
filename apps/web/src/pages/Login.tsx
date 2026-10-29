@@ -7,6 +7,7 @@ import { useEffect, useId, useState, type FormEvent, type KeyboardEvent, type Re
 import { Navigate, useNavigate, useSearchParams } from 'react-router';
 import { ApiError, api, get, post, setCsrf } from '../api';
 import { CriteresMotDePasse } from '../components/CriteresMotDePasse';
+import { OndeMenu } from '../components/OndeMenu';
 import { FondConnexion } from '../connexion/FondConnexion';
 import { IconeCadenas, IconeFleche, IconeOeil, IconeOeilBarre, IconePersonne } from '../connexion/icones';
 import { Sceau } from '../connexion/Sceau';
@@ -21,6 +22,7 @@ function AuthCard({ title, etape = true, children }: { title: string; etape?: bo
     <main className="auth-wrap auth-connexion">
       <FondConnexion />
       <section className="auth-panneau">
+        <OndeMenu />
         <Sceau />
         <VisuallyHidden component="h1">{title}</VisuallyHidden>
         <span className="auth-kicker">Gouvernance · Risques · Conformité</span>

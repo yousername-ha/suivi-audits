@@ -1292,9 +1292,22 @@ h3,
   box-shadow: var(--suivi-ombre-haute);
   text-align: start;
 }
-.auth-panneau > :not(.auth-sceau) {
+.auth-panneau > :not(.auth-sceau, .onde-menu) {
   position: relative;
   z-index: 1;
+}
+/* Onde en fond de panneau (OndeMenu) : sous le sceau et le texte, masquée sans mouvement et à l'impression. */
+.onde-menu {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.onde-menu__toile {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 .auth-kicker {
   color: var(--suivi-nav-repere);
@@ -1597,6 +1610,9 @@ h3,
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .onde-menu {
+    display: none;
+  }
   .auth-sceau__tourne {
     animation: none;
   }
@@ -1605,7 +1621,8 @@ h3,
   }
 }
 @media print {
-  .auth-fond {
+  .auth-fond,
+  .onde-menu {
     display: none;
   }
 }

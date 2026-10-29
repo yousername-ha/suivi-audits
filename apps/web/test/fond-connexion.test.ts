@@ -63,10 +63,11 @@ describe('fond de connexion : grille large qui défile', () => {
   });
 });
 
-describe('fond de connexion : barres fines espacées', () => {
-  it.each(INSTANTS)('à t = %s s, barres posées sur le bas, fines, espacées, certaines absentes', (t) => {
+describe('fond de connexion : barres larges espacées', () => {
+  it.each(INSTANTS)('à t = %s s, barres posées sur le bas, larges, espacées, certaines absentes', (t) => {
     const b = barres(t, L, H);
     const attendues = Math.ceil(L / ECART_BARRES) + 3;
+    expect([LARGEUR_BARRE, ECART_BARRES]).toEqual([48, 125]);
     expect(b.length).toBeGreaterThan(attendues / 2);
     expect(b.length).toBeLessThan(attendues);
     for (const x of b) {
