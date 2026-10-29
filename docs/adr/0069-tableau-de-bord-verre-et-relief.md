@@ -43,6 +43,15 @@
 7. **Accessibilité.** Chaque métrique garde une alternative textuelle (libellé chiffré, liste, tableau masqué).
    `prefers-reduced-transparency` remplace le verre par une surface opaque ; `forced-colors` ajoute une bordure.
 
+8. **Haut du tableau de bord** (demande du RSSI du 28/10/2026, après la première mise en service) :
+   - une **carte phare** sur la demi-rangée, au style de l'ancienne carte « Prochain audit » (fond vert profond de la
+     navigation, titre en petites capitales, arc décoratif) : la date du prochain audit en haut, avec son compte à
+     rebours en pastille colorée selon les seuils de jours, puis le taux de conformité global (point 4). Elle remplace
+     les dalles « Taux de conformité global » et « Prochain audit » ;
+   - à sa droite, la carte **« Écarts »** reprend la grille 2 × 2 de l'ancienne carte (ouverts, en retard, à échéance
+     proche, au total) au style verre et relief, chaque chiffre précédé d'un filet à la teinte de son seuil
+     (`GrilleChiffres`).
+
 ## Étapes suivantes (non réalisées dans ce lot)
 
 - **Étape 2 — personnalisation** (backlog DEV-004) : créer et dupliquer un tableau, déplacer et redimensionner les
