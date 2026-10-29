@@ -53,6 +53,7 @@ export const TABLES_CONFIGURATION = [
   'notification_reglages',
   'notification_portees',
   'wall_screens',
+  'tableaux_de_bord',
   'calendriers_plateforme',
   'calendriers_plateforme_journal',
   'calendriers_plateforme_jours',
