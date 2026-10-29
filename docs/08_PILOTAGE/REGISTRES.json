@@ -31,8 +31,18 @@
       "module": "compte",
       "historical_key": "users / sessions",
       "historical_source": "ancien outil (branche archive/outil-legacy-autonome)",
-      "implementation": ["apps/api/src/routes/auth.ts", "apps/api/src/auth.ts", "apps/api/src/security/setup-token.ts"],
-      "tests": ["apps/api/test/security.test.ts", "tests/e2e/specs/parcours.spec.ts"],
+      "implementation": [
+        "apps/api/src/routes/auth.ts",
+        "apps/api/src/auth.ts",
+        "apps/api/src/security/setup-token.ts",
+        "apps/web/src/pages/Login.tsx"
+      ],
+      "tests": [
+        "apps/api/test/security.test.ts",
+        "tests/e2e/specs/parcours.spec.ts",
+        "apps/web/test/fond-connexion.test.ts",
+        "apps/web/test/onde-menu.test.ts"
+      ],
       "route": "/setup ; /login",
       "verified_scope": "Installation avec jeton à usage unique, session complète après MFA, anti-rejeu et refus CSRF/origine.",
       "validation": "VALIDÉ AUTOMATIQUEMENT",
@@ -1534,6 +1544,17 @@
       "acceptance": "Les 12 captures ecrans-tableau-de-bord-* régénérées sur la pile Docker locale (run-in-container.sh --update-snapshots), relues image par image dans la PR, CI de bout en bout verte.",
       "dependencies": "Docker local",
       "next": "Aucune : captures régénérées dans le conteneur Playwright officiel le 28/10/2026, validées par le RSSI le 28/10/2026, CI de bout en bout verte (PR #152).",
+      "estimation": "NON ESTIMÉE"
+    },
+    {
+      "id": "DEV-007",
+      "title": "Refonte de l'écran de connexion (maquette validée)",
+      "status": "RÉALISÉE",
+      "priority": "P2",
+      "origin": "demande du RSSI du 29/10/2026 (maquette validée)",
+      "acceptance": "Panneau unique centré à toutes les tailles ; formulaire dans les trois cartes empilées ; étapes code TOTP, enrôlement et changement de mot de passe dans le même panneau ; sceau, onde (OndeMenu, option connexion) et fond animés décoratifs, absents sous automate de test et à l'impression ; CSP stricte, couleurs par jetons, aucune dépendance nouvelle ; tests purs de la géométrie ; captures clair, sombre et téléphone.",
+      "dependencies": "Aucune",
+      "next": "Aucune côté développement : PR #181, CI 7/7 exigée avant fusion. Relecture visuelle du RSSI sur son serveur à faire (TEST-041).",
       "estimation": "NON ESTIMÉE"
     }
   ],

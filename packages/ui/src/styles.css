@@ -1590,6 +1590,14 @@ h3,
   background: var(--suivi-nav-repere);
   color: var(--suivi-nav-fond);
 }
+/* Œil des champs de mot de passe : le gris de Mantine en mode clair disparaît sur le champ sombre. */
+.auth-panneau .mantine-PasswordInput-visibilityToggle {
+  color: var(--suivi-nav-secondaire);
+}
+.auth-panneau .mantine-PasswordInput-visibilityToggle:hover {
+  background: var(--suivi-nav-active);
+  color: var(--suivi-nav-texte);
+}
 .auth-panneau .mantine-Button-root[data-variant='subtle'] {
   color: var(--suivi-nav-repere);
 }
