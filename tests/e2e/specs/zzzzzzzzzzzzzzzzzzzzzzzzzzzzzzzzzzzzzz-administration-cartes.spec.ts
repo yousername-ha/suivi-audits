@@ -10,6 +10,8 @@ test('Administration : deux pages à cartes, détail en fenêtre centrée, ancie
   const ctx = await browser.newContext({
     ignoreHTTPSErrors: true,
     locale: 'fr-FR',
+    // Sans transitions : axe-core calcule les contrastes sur l'état final de la page, pas en plein fondu.
+    reducedMotion: 'reduce',
     viewport: { width: 1366, height: 900 },
     storageState: (await sessionAdmin(browser)).state,
   });
