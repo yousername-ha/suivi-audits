@@ -6,6 +6,7 @@ import type { FastifyInstance, InjectOptions, LightMyRequestResponse } from 'fas
 import { buildApp } from '../src/app.js';
 import { loadConfig } from '../src/config.js';
 import { createLogger } from '../src/log.js';
+import { finPoivre, formaterPoivreGenere, genererPoivre, type PoivreAEnregistrer } from '@suivi/shared';
 import { hashPassword, hotp } from '../src/security/crypto.js';
 import { createServices, type Services } from '../src/services.js';
 import { prepareDatabase } from '../src/startup.js';
@@ -15,6 +16,12 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 export const REPO = path.resolve(here, '../../..');
 export const ORIGIN = 'https://suivi.test';
 export const PASSWORD = 'Mot-de-passe-2026!';
+
+/** Poivre généré, tel que l'interface l'envoie à l'installation (avec la preuve de recopie). */
+export function poivreDeTest(): PoivreAEnregistrer {
+  const brut = genererPoivre();
+  return { mode: 'genere', valeur: formaterPoivreGenere(brut), engagement: { coffre: true, fin: finPoivre(brut) } };
+}
 
 export interface TestApp {
   app: FastifyInstance;
@@ -188,6 +195,7 @@ export async function login(t: TestApp, u: TestUser): Promise<Agent> {
   await a.me();
   t.svc.limits.loginByIp.reset();
   t.svc.limits.loginByUser.reset();
+  t.svc.limits.mfaByUser.reset();
   return a;
 }
 

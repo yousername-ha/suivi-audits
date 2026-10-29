@@ -9,6 +9,8 @@ import { expireAccounts } from './rights.js';
 import { accessRoutes } from './routes/access.js';
 import { moduleRoutes } from './routes/modules.js';
 import { adminRoutes } from './routes/admin.js';
+import { alertesSecuriteRoutes } from './routes/alertes-securite.js';
+import { poivreRoutes } from './routes/poivre.js';
 import { remiseAVideRoutes } from './routes/remise-a-vide.js';
 import { updateRoutes } from './routes/updates.js';
 import { operationRoutes } from './routes/operations.js';
@@ -113,6 +115,8 @@ export function allRoutes(): RouteDef[] {
     ...operationRoutes,
     ...updateRoutes,
     ...remiseAVideRoutes,
+    ...poivreRoutes,
+    ...alertesSecuriteRoutes,
     ...eventRoutes,
     ...suiviRoutes,
     ...exportSuiviRoutes,
@@ -137,7 +141,15 @@ export function allRoutes(): RouteDef[] {
 export async function buildApp(svc: Services): Promise<FastifyInstance> {
   const app = Fastify({
     loggerInstance: svc.log as unknown as FastifyBaseLogger,
-    trustProxy: svc.cfg.trustProxy,
+    // Fastify ne fait confiance à aucun relais quand TRUST_PROXY est un nombre : on le traduit en règle explicite
+    // (les `n` premiers sauts, à partir de la connexion directe, sont des relais ; l'adresse cliente est celle qui suit).
+    trustProxy:
+      typeof svc.cfg.trustProxy === 'number'
+        ? (
+            (n) => (_adresse: string, saut: number) =>
+              saut < n
+          )(svc.cfg.trustProxy)
+        : svc.cfg.trustProxy,
     bodyLimit: 1024 * 1024,
     requestIdHeader: false,
     return503OnClosing: true,

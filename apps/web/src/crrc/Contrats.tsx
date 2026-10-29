@@ -2,7 +2,8 @@
 import { Anchor, Button, Card, Checkbox, Group, Modal, Select, Stack, Table, Text, TextInput } from '@mantine/core';
 import { useState } from 'react';
 import {
-  DEPARTEMENTS_CRRC,
+  departementFiness,
+  libelleDepartement,
   STATUTS_CONTRAT_CRRC,
   STATUTS_OFFRE_CRRC,
   TECHNOLOGIES_CRRC,
@@ -215,7 +216,7 @@ export function EtablissementsCrrc() {
       (x) =>
         (!f.st || x.status === f.st) &&
         (!f.of || x.scopes[f.of]) &&
-        (!f.dp || DEPARTEMENTS_CRRC[x.finess.slice(0, 2)] === f.dp) &&
+        (!f.dp || departementFiness(x.finess) === f.dp) &&
         (!f.q || norm(`${x.name} ${x.finess} ${x.adminContact} ${x.techContact}`).includes(norm(f.q))),
     ) ?? [];
   const p = usePage(liste, 10);
@@ -267,7 +268,9 @@ export function EtablissementsCrrc() {
           aria-label="Département"
           placeholder="Tous les départements"
           clearable
-          data={Object.values(DEPARTEMENTS_CRRC)}
+          data={[...new Set((e?.establishments ?? []).map((x) => departementFiness(x.finess)))]
+            .sort((a, b) => a.localeCompare(b))
+            .map((value) => ({ value, label: libelleDepartement(value) }))}
           value={f.dp || null}
           onChange={(v) => {
             setF({ ...f, dp: v ?? '' });
@@ -295,6 +298,7 @@ function FicheContrat({
   modifiable: boolean;
   onFermer: () => void;
 }) {
+  const peutSupprimer = useCan()('crrc', 'supprimer');
   const x = e?.establishments.find((y) => y.id === id) ?? null;
   const maj = (champ: Record<string, unknown>) =>
     void agir('PATCH', `/api/crrc/etablissements/${encodeURIComponent(id!)}`, champ);
@@ -392,7 +396,7 @@ function FicheContrat({
             </div>
           )}
           <ChampZone label="Notes" value={x.notes} disabled={!modifiable} onCommit={(v) => maj({ notes: v })} />
-          {modifiable && (
+          {modifiable && peutSupprimer && (
             <Group justify="flex-end">
               <ConfirmButton
                 message={`Supprimer le contrat « ${x.name} » ? Ses ressources restent dans l’historique.`}
@@ -472,7 +476,7 @@ export function OffresCrrc() {
                 <Text size="sm" c="dimmed">
                   {souscripteurs.length} établissement(s) souscripteur(s).
                 </Text>
-                {modifiable && o.id !== 'backup' && (
+                {modifiable && can('crrc', 'supprimer') && o.id !== 'backup' && (
                   <ConfirmButton
                     message="Supprimer cette offre ?"
                     onConfirm={() => agir('DELETE', `/api/crrc/offres/${encodeURIComponent(o.id)}`)}

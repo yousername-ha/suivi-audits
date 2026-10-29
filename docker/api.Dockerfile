@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Suivi des audits SMSI — image de l'API (Node 26). Multi-étapes : seule l'étape finale (sans npm ni pnpm) est livrée.
-ARG NODE_IMAGE=node:26-alpine
+ARG NODE_IMAGE=node:26-alpine@sha256:40cd011b55415bc894e45b02fdd5a5dfde056921b7d23a64c74f80497af48797
 
 FROM ${NODE_IMAGE} AS build
 RUN --mount=type=secret,id=build_ca \

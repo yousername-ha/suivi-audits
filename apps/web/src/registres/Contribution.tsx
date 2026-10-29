@@ -16,6 +16,8 @@ export interface AccesElement {
   registreId: string;
   role: RoleRessource | null;
   peut: { lire: boolean; contribuer: boolean; gerer: boolean };
+  /** Calculé par le serveur : gestionnaire attribué ou droit d'administrer le module. */
+  peutAttribuer: boolean;
 }
 
 /** Accès de la personne à l'élément ; indéfini tant qu'il n'est pas connu ou pour un élément hors registre. */
@@ -117,7 +119,7 @@ export function PanneauElement({
       {acces.peut.gerer && (
         <Stack gap="xs">
           <Text fw={600}>Droits sur cet élément</Text>
-          <Droits type="objet" id={object.id} />
+          <Droits type="objet" id={object.id} peutAttribuer={acces.peutAttribuer} />
         </Stack>
       )}
     </Stack>

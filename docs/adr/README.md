@@ -70,3 +70,14 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0064](0064-gap-ia-iso-27001-hds.md) | GAP IA ISO 27001 / HDS : trois cas d'usage réels, questions sur des faits constatables, points pré-évalués seulement si la réponse tranche | Acceptée |
 
 | [0065](0065-remise-a-vide-de-la-base.md) | Remise à vide de la base pour la recette : interrupteur désactivé par défaut, deux portées, code, phrase, sauvegarde récente, immuabilité suspendue le temps d'une transaction | Acceptée |
+| [0066](0066-limitation-des-essais-du-second-facteur-et-verrouillage-partage.md) | Limitation des essais du second facteur par compte, verrouillage partagé avec le mot de passe, sessions incomplètes plafonnées | Acceptée |
+| [0067](0067-attribution-des-droits-par-ressource-reservee.md) | Attribution des droits par ressource réservée au gestionnaire attribué ou à qui administre le module ; pas de modification de ses propres droits ; relations soumises à la gestion de l'élément | Acceptée |
+| [0068](0068-suppressions-reservees-au-droit-supprimer.md) | Suppressions des modules de suivi réservées au droit « supprimer » (cohérence avec l'ADR 0010) | Acceptée |
+| [0069](0069-tableau-de-bord-verre-et-relief.md) | Tableau de bord de l'accueil « verre et relief » : dalles en verre, métriques fines cernées, seuils d'affichage, taux global = moyenne des taux par référentiel (lot 1) | Acceptée |
+| [0070](0070-reponse-de-connexion-uniforme-et-alerte-de-verrouillage.md) | Réponse de connexion uniforme et alerte de verrouillage de compte | Proposée |
+| [0071](0071-sauvegardes-chiffrees-avec-age.md) | Sauvegardes chiffrées avec age (`.tar.age`), deux destinataires dont une clé de secours hors serveur, INFO liée au nom du fichier, chiffrement obligatoire, ancien format `.tar.enc` restaurable une version | Proposée |
+| [0072](0072-poivre-des-mots-de-passe.md) | Poivre des mots de passe : empreinte scrypt chiffrée en AES-256-GCM par une clé que l'organisation conserve au coffre-fort, définie à l'installation, changeable avec l'ancien poivre et un code TOTP, procédures de reprise et d'urgence | Proposée |
+| [0073](0073-donnees-de-demonstration-a-l-installation.md) | Données de démonstration proposées à l'installation (ISO 27001, HDS, EBIOS RM) | Proposée |
+| [0074](0074-alerte-de-securite-dans-l-application.md) | Alerte de verrouillage de compte dans l'application (notification aux administrateurs, indépendante du courriel) | Proposée |
+| [0075](0075-composition-des-mots-de-passe.md) | Composition des mots de passe de compte alignée sur le poivre ; mots de passe compromis documentés, non retenus | Proposée |
+

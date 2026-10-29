@@ -1467,6 +1467,8 @@ export class Grc {
         );
       const from = await this.resolve(smsi, source, user, c);
       await this.permission(user, from.module, 'modifier');
+      // Un élément d'un registre se relie avec le droit de le gérer (rôle attribué ou droit de module).
+      if (source.startsWith('object:')) await this.object(smsi, source.slice(7), user, true, c);
       const to = await this.resolve(smsi, target, user, c);
       if (from.archived || to.archived)
         throw new HttpError(422, 'Un objet archivé ne reçoit plus de nouvelle relation.');
@@ -1528,6 +1530,7 @@ export class Grc {
       if (!row) throw new HttpError(404, 'Relation introuvable.');
       const source = await this.resolve(smsi, row.source_ref, user, c);
       await this.permission(user, source.module, 'modifier');
+      if (row.source_ref.startsWith('object:')) await this.object(smsi, row.source_ref.slice(7), user, true, c);
       await k.deleteFrom('grc_links').where('id', '=', id).execute();
       await this.db.audit(user, ip, 'grc.link.deleted', id, { smsiId: smsi, ...row }, c);
       await this.notify(c, id, 1, smsi, source.module, user.username);

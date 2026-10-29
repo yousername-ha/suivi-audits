@@ -22,6 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           fetch-depth: 0
       - name: gitleaks (publication officielle, empreinte vérifiée, ADR 0063)
         run: scripts/ci/installer-outils.sh gitleaks
@@ -34,12 +35,16 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 26
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: age (chiffrement des sauvegardes, nécessaire aux tests des scripts)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq age
       - name: Audit des dépendances (aucune faille connue, gravité modérée ou plus)
         run: pnpm audit --audit-level=moderate
       - name: ESLint
@@ -62,8 +67,10 @@ jobs:
         run: |
           node --test scripts/tests/publication.test.mjs
           node --test scripts/tests/epinglage.test.mjs
+          node --test scripts/tests/conteneurs.test.mjs
           python3 -m unittest discover -s scripts/tests -p test_updates.py
           python3 -m unittest discover -s scripts/tests -p test_exploitation.py
+          python3 -m unittest discover -s scripts/tests -p test_veille_caddy.py
       - name: OpenAPI
         run: pnpm --filter @suivi/api openapi "$GITHUB_WORKSPACE/openapi.json"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -81,10 +88,6 @@ jobs:
               if (s.schema !== 14) throw new Error(label + " : schema attendu 14, trouvé " + s.schema);
             };
             check("apps/api/seed/state.json", JSON.parse(fs.readFileSync("apps/api/seed/state.json", "utf8")));
-            const h = fs.readFileSync("app/public/index.html", "utf8");
-            const m = h.match(/<script type="application\/json" id="seed">([\s\S]*?)<\/script>/);
-            if (!m) throw new Error("bloc <script id=\"seed\"> introuvable dans app/public/index.html");
-            check("app/public/index.html", JSON.parse(m[1]));
             console.log("État initial vide : OK");
           '
       - name: Aucun secret ni .env versionné
@@ -95,7 +98,7 @@ jobs:
           if git ls-files | grep -E '\.(pem|key|p12|pfx)$'; then
             echo "::error::Certificat ou clé privée versionné"; exit 1
           fi
-          if git grep -nIE 'BEGIN [A-Z ]*PRIVATE KEY' -- . ':!app/public/lib'; then
+          if git grep -nIE 'BEGIN [A-Z ]*PRIVATE KEY' -- .; then
             echo "::error::Clé privée dans le dépôt"; exit 1
           fi
 
@@ -118,12 +121,16 @@ jobs:
       TEST_PG_PASSWORD: test
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 26
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: age (chiffrement des sauvegardes, nécessaire aux tests des scripts)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq age
       - name: Paquet partagé (jeton, format legacy, couverture du contrat, parité avec l'outil historique)
         run: pnpm --filter @suivi/shared test
       - name: API (sécurité, concurrence, migrations v2 vers v3, import legacy, temps réel, performance sur 10 000 risques)
@@ -154,6 +161,8 @@ jobs:
       APP_VERSION: ci
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -193,7 +202,7 @@ jobs:
         run: |
           set -e
           for img in api web updater; do
-            trivy image --input "$RUNNER_TEMP/images/$img.tar" --scanners vuln --severity HIGH,CRITICAL --exit-code 1 --no-progress
+            trivy image --input "$RUNNER_TEMP/images/$img.tar" --scanners vuln --severity HIGH,CRITICAL --exit-code 1 --no-progress --ignorefile .trivyignore.yaml
           done
 
       - name: Trivy — dépendances du dépôt (échec sur HIGH et CRITICAL)
@@ -213,6 +222,13 @@ jobs:
 
       - name: Dossier des données du serveur (EXPL-01)
         run: sudo ./scripts/preparer-donnees.sh
+
+      - name: Clés de sauvegarde age (clé du serveur et clé publique de secours, ADR 0071)
+        run: |
+          set -e
+          sudo apt-get update -qq && sudo apt-get install -y -qq age
+          age-keygen -o "$RUNNER_TEMP/cle-secours.key" 2> /dev/null
+          sudo ./scripts/generer-cles-sauvegarde.sh --secours "$(age-keygen -y "$RUNNER_TEMP/cle-secours.key")" --confirmer
 
       - name: Démarrage de la pile
         run: |
@@ -272,9 +288,7 @@ jobs:
         timeout-minutes: 10
         run: |
           set -e
-          umask 077
-          head -c 24 /dev/urandom | base64 > "$RUNNER_TEMP/passphrase-recette"
-          sudo BACKUP_PASSPHRASE_FILE="$RUNNER_TEMP/passphrase-recette" ./scripts/recette-serveur.sh --version ci --avec-sauvegarde --sortie "$RUNNER_TEMP/recette-serveur"
+          sudo ./scripts/recette-serveur.sh --version ci --avec-sauvegarde --sortie "$RUNNER_TEMP/recette-serveur"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
@@ -329,6 +343,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           fetch-depth: 0
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -357,13 +372,14 @@ jobs:
           VERSION: ${{ steps.depart.outputs.version }}
           PUBLIEE: ${{ steps.depart.outputs.publiee }}
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACTEUR: ${{ github.actor }}
         run: |
           set -e
           git worktree add -q "$RUNNER_TEMP/depart" "$REF"
           cd "$RUNNER_TEMP/depart"
           cp .env.example .env
           sed -i "s/^SITE_ADDRESS=.*/SITE_ADDRESS=localhost/; s/^APP_VERSION=.*/APP_VERSION=$VERSION/" .env
-          if [ "$PUBLIEE" = 1 ] && echo "$TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin && docker compose pull --quiet; then
+          if [ "$PUBLIEE" = 1 ] && echo "$TOKEN" | docker login ghcr.io -u "$ACTEUR" --password-stdin && docker compose pull --quiet; then
             echo "Images publiées $VERSION téléchargées."
           else
             docker compose -f docker-compose.yml -f docker-compose.build.yml build --quiet
@@ -403,6 +419,8 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Runner vierge (désinstallation de Docker préinstallé)
         run: |
           sudo systemctl stop docker.socket docker containerd 2>/dev/null || true

@@ -83,8 +83,8 @@ describe('investissements', () => {
   it('change l’année de référence et supprime une ligne', async () => {
     expect((await writer.put('/api/investissements/annee', { baseYear: 2027 })).statusCode).toBe(200);
     expect((await writer.put('/api/investissements/annee', { baseYear: 1 })).statusCode).toBe(422);
-    expect((await writer.del('/api/investissements/lignes/INV-002')).statusCode).toBe(200);
-    expect((await writer.del('/api/investissements/lignes/INV-002')).statusCode).toBe(404);
+    expect((await admin.del('/api/investissements/lignes/INV-002')).statusCode).toBe(200);
+    expect((await admin.del('/api/investissements/lignes/INV-002')).statusCode).toBe(404);
     const s = await etat();
     expect(s.invest.baseYear).toBe(2027);
     expect(s.invest.lines.map((l: { id: string }) => l.id)).toEqual(['INV-001']);

@@ -43,13 +43,9 @@ export const MOTIFS_RESTAURATION_CRRC = [
 ] as const;
 export const DESTINATIONS_RESTAURATION_CRRC = ['Emplacement d’origine', 'Emplacement alternatif'] as const;
 export const CONFLITS_RESTAURATION_CRRC = ['Ne pas écraser', 'Renommer', 'Écraser'] as const;
-export const DEPARTEMENTS_CRRC: Record<string, string> = {
-  '14': 'Calvados',
-  '27': 'Eure',
-  '50': 'Manche',
-  '61': 'Orne',
-  '76': 'Seine-Maritime',
-};
+/** Code du département : deux premiers caractères du FINESS (« ? » si le FINESS est vide). */
+export const departementFiness = (finess: string) => finess.trim().slice(0, 2).toUpperCase() || '?';
+export const libelleDepartement = (code: string) => (code === '?' ? 'Département inconnu' : `Département ${code}`);
 export const libelleTechnologie = (k: string) => TECHNOLOGIES_CRRC.find((t) => t.cle === k)?.libelle ?? k;
 
 export interface Etablissement {
@@ -468,95 +464,45 @@ export function rapportMensuelCrrc(e: EtatCrrc, mois: string): LigneRapportCrrc[
   });
 }
 
-/* ------------------------------------------------------------------------------------------------- carte */
-export const DEPARTEMENTS_CARTE: Record<string, [number, number][]> = {
-  Manche: [
-    [18, 20],
-    [70, 22],
-    [78, 60],
-    [70, 120],
-    [60, 150],
-    [22, 150],
-    [30, 90],
-  ],
-  Calvados: [
-    [78, 60],
-    [150, 52],
-    [176, 70],
-    [170, 100],
-    [110, 102],
-    [72, 98],
-  ],
-  Orne: [
-    [70, 120],
-    [110, 102],
-    [170, 100],
-    [180, 140],
-    [120, 160],
-    [62, 150],
-  ],
-  Eure: [
-    [176, 70],
-    [230, 60],
-    [250, 96],
-    [240, 140],
-    [180, 140],
-    [170, 100],
-  ],
-  'Seine-Maritime': [
-    [150, 52],
-    [176, 22],
-    [250, 8],
-    [280, 40],
-    [250, 62],
-    [230, 60],
-    [176, 70],
-  ],
-};
-export const centreDepartement = (d: string): [number, number] => {
-  const P = DEPARTEMENTS_CARTE[d]!;
-  return [P.reduce((a, p) => a + p[0], 0) / P.length, P.reduce((a, p) => a + p[1], 0) / P.length];
-};
-export interface PointCarteCrrc {
+/* ------------------------------------------------------------------------------------------ activité par département */
+export interface EtablissementDepartementCrrc {
   id: string;
   nom: string;
-  x: number;
-  y: number;
   niveau: NiveauCrrc;
   detail: string;
 }
-/** Position schématique des établissements : département déduit des deux premiers chiffres du FINESS. */
-export function pointsCarteCrrc(e: EtatCrrc): PointCarteCrrc[] {
+export interface ActiviteDepartementCrrc {
+  departement: string;
+  etablissements: EtablissementDepartementCrrc[];
+}
+/** Établissements regroupés par département (deux premiers chiffres du FINESS), départements triés par code. */
+export function activiteParDepartement(e: EtatCrrc): ActiviteDepartementCrrc[] {
   const parDept = new Map<string, Etablissement[]>();
   for (const est of e.establishments) {
-    const d = DEPARTEMENTS_CRRC[est.finess.slice(0, 2)] ?? '?';
+    const d = departementFiness(est.finess);
     parDept.set(d, [...(parDept.get(d) ?? []), est]);
   }
-  const points: PointCarteCrrc[] = [];
-  for (const [d, liste] of parDept) {
-    const [cx, cy] = DEPARTEMENTS_CARTE[d] ? centreDepartement(d) : [140, 180];
-    liste.forEach((est, i) => {
-      const a = i * 2.4,
-        rr = i ? 7 + i * 3 : 0;
-      const [libelle, niveau] = statutEtablissement(e, est);
-      const res = e.resources.filter((r) => r.est === est.id);
-      const volume = res.reduce((s, r) => s + volumeProtegeRessource(e, r.id), 0);
-      const derniere = res
-        .map((r) => derniereSauvegarde(e, r.id)?.date)
-        .filter((x): x is string => !!x)
-        .sort()
-        .pop();
-      points.push({
-        id: est.id,
-        nom: est.name,
-        x: cx + rr * Math.cos(a),
-        y: cy + rr * Math.sin(a) * 0.8,
-        niveau,
-        detail: `${formaterVolume(volume)} sauvegardés · dernière sauvegarde : ${formaterHorodatage(derniere ?? '')} · ${libelle}`,
-      });
-    });
-  }
-  return points;
+  return [...parDept.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([departement, liste]) => ({
+      departement,
+      etablissements: liste.map((est) => {
+        const [libelle, niveau] = statutEtablissement(e, est);
+        const res = e.resources.filter((r) => r.est === est.id);
+        const volume = res.reduce((s, r) => s + volumeProtegeRessource(e, r.id), 0);
+        const derniere = res
+          .map((r) => derniereSauvegarde(e, r.id)?.date)
+          .filter((x): x is string => !!x)
+          .sort()
+          .pop();
+        return {
+          id: est.id,
+          nom: est.name,
+          niveau,
+          detail: `${formaterVolume(volume)} sauvegardés · dernière sauvegarde : ${formaterHorodatage(derniere ?? '')} · ${libelle}`,
+        };
+      }),
+    }));
 }
 
 /* ------------------------------------------------------------------------------------------------ écriture */

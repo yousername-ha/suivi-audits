@@ -35,7 +35,8 @@ Ce document décrit l'architecture cible et l'état livré en **phase 0** (fonda
 | `db` | `postgres:18-alpine` | Base unique. Aucun port publié. |
 | `app` | `ghcr.io/yousername-ha/suivi-audits-api` | API, commandes d'exploitation (`setup-token`, `suivi`). Désactive aussi les comptes arrivés à expiration. |
 | `web` | `ghcr.io/yousername-ha/suivi-audits-web` | Caddy : TLS, en-têtes de sécurité, interface compilée, reverse proxy vers `app`. Seul service exposé. |
-| `clamav` | `clamav/clamav` | Facultatif (`--profile antivirus`). |
+| `clamav` | `clamav/clamav` (épinglée par empreinte) | Facultatif (`--profile antivirus`) : clamd seul, sur le réseau interne `antivirus` partagé avec `app`, sans privilège. |
+| `freshclam` | `clamav/clamav` (épinglée par empreinte) | Facultatif (`--profile antivirus`) : mise à jour des signatures, seul service antivirus avec accès sortant, aucun lien avec les autres services. |
 
 Données : toutes dans le dossier du serveur `DATA_DIR` (montages bind, aucun volume nommé, [ADR 0014](adr/0014-donnees-sur-le-serveur-et-mises-a-jour.md)) : `postgres/` (base), `secrets/` (mots de passe de la base, clé maître des documents), `caddy/` (certificats, autorité interne), `clamav/`, `etat/` (rapports des scripts du serveur, lus par l'application). Mises à jour : `scripts/mettre-a-jour.sh` (sauvegarde, signature des images, santé, retour arrière automatique).
 
@@ -48,7 +49,6 @@ packages/shared   schémas zod partagés (API ⇄ interface), droits, paramètre
                   cartographie : objets, dispositions, génération, scène (fonctions pures, parité avec la bêta)
 apps/api          API Fastify : src/ (routes, auth, sécurité, temps réel, legacy), migrations/ (SQL), test/ (Vitest + PostgreSQL)
 apps/web          interface React + Vite + Mantine (CSP stricte)
-app/public        outil historique (fichier unique), conservé comme référence de parité, non servi
 tests/e2e         Playwright : parcours complets sur la pile Docker
 docker/           Dockerfile des deux images et Caddyfile
 scripts/          sauvegarde, restauration, mise à jour du fichier historique de référence, scripts de CI

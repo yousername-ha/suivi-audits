@@ -1,6 +1,6 @@
 # Produit : ce que fait la plateforme
 
-Application web auto-hébergée de pilotage du GCS Normand'e-Santé : qualité (ISO 9001), sécurité de l'information
+Application web auto-hébergée de pilotage d'un système de management de la sécurité de l'information et de la qualité : qualité (ISO 9001), sécurité de l'information
 (ISO/IEC 27001, HDS), continuité, risques, audits, écarts et actions, fournisseurs, preuves. Une base PostgreSQL
 normalisée, un enregistrement par élément, des droits par module et action, un journal d'audit et une mise à jour en temps
 réel entre utilisateurs. Aucune donnée réelle n'est livrée : les données de départ sont vides et les jeux d'essai

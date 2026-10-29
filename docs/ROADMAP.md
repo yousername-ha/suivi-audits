@@ -16,7 +16,7 @@ consolidation documentaire (H5, ci-dessous).
    tâches des écarts et valeurs d'indicateurs faites (migration 028) ; restent le plan d'audit (jours, personnes, créneaux) puis
    les autres colonnes JSON du cœur (preuves de créneaux, contrôles des fournisseurs, sections des revues…).
 4. Décision à prendre : retirer l'import et l'export au format historique, ou les garder comme outil de sauvegarde ;
-   retirer ou non `app/public/index.html` (référence de la CI et des tests de parité).
+   `app/public/index.html` : retiré du dépôt (décision du 28/10/2026).
 5. Entretien : mise à jour de la pile (actions GitHub, versions majeures, Node 26), module Qualité ISO 9001
    ([cadrage](unification/CADRAGE-MODULE-QUALITE-9001.md)).
 6. Stabiliser le test Playwright de déconnexion à deux onglets (échecs intermittents en CI, non reproduits en isolation).
@@ -105,7 +105,7 @@ Modules repris : `frameworks` (ReCyF et autres), `appGaps`, `ai`, `crrc`, `inves
   - `CRRC-01` menu organisé en catalogue d'offres (modèle générique, la sauvegarde étant la première offre) ;
   - `CRRC-02` onglet « Convention et offre » (convention versionnée et échéance, résumé technique, volumes, tarifs, export PDF et Word) ;
   - `CRRC-03` statut unique par établissement et par offre (Non délivré, Non configuré, En run), avec historique, en remplacement du suivi par ressource ;
-  - `CRRC-04` carte réelle et zoomable des départements normands, embarquée (données IGN simplifiées, sans service externe), avec export PNG et SVG.
+  - `CRRC-04` activité des établissements regroupée par département (deux premiers chiffres du FINESS) ; réalisé sous forme de liste, la carte géographique n'est pas reprise.
 - **Investissements** :
   - `INV-01` filtres cumulables en haut de la liste, sous forme de puces, mémorisés dans l'adresse, et vues enregistrées ;
   - `INV-02` page « Prospection » (tableau, Kanban par étape, conversion en investissement).

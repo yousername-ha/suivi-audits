@@ -26,8 +26,8 @@ export const GUIDE_AUDIT: Record<string, GuideAudit> = {
     ],
     questions: [
       'Le tableau de bord SMSI est-il présenté en revue de direction ?',
-      'Les indicateurs couvrent-ils tous les processus du SMSI ? (cf. DHA-61)',
-      "Pourquoi la revue de direction du 01/04/2025 n'a-t-elle pas traité la performance ? (cf. DHA-63)",
+      'Les indicateurs couvrent-ils tous les processus du SMSI ?',
+      "Pourquoi la revue de direction n'a-t-elle pas traité la performance ?",
     ],
   },
   '10': {
@@ -61,7 +61,7 @@ export const GUIDE_AUDIT: Record<string, GuideAudit> = {
       'Traçabilité entre exigences et politiques SMSI',
     ],
     questions: [
-      'Quelles sont les parties intéressées pertinentes pour le SMSI du GCS ?',
+      'Quelles sont les parties intéressées pertinentes pour le SMSI de l’organisation ?',
       'Comment les exigences des hébergés (clients HDS) sont-elles intégrées ?',
       'Les exigences ont-elles évolué depuis le dernier audit ?',
     ],
@@ -80,13 +80,13 @@ export const GUIDE_AUDIT: Record<string, GuideAudit> = {
   },
   '4.4': {
     preuves: [
-      'Cartographie des processus du SMSI (cohérente avec la cartographie GCS)',
+      'Cartographie des processus du SMSI (cohérente avec la cartographie de l’organisation)',
       'Preuves de pilotage du SMSI (réunions, comptes-rendus, indicateurs)',
       'Liste des processus nécessaires au SMSI avec leurs interactions',
     ],
     questions: [
       'Comment les processus nécessaires au SMSI sont-ils identifiés ?',
-      'Comment la cohérence entre la cartographie GCS et celle du SMSI est-elle assurée ? (cf. DHA-6)',
+      'Comment la cohérence entre la cartographie de l’organisation et celle du SMSI est-elle assurée ?',
       'Qui est responsable de tenir la cartographie à jour ?',
     ],
   },
@@ -94,7 +94,7 @@ export const GUIDE_AUDIT: Record<string, GuideAudit> = {
     preuves: [
       "Rapport d'appréciation des risques SSI (méthode, critères, résultats)",
       "Plan de traitement des risques avec suivi d'avancement",
-      'DDA avec justification des exclusions A.8.29 et A.8.33 (cf. DHA-10)',
+      'DDA avec justification des exclusions A.8.29 et A.8.33',
       'Analyse des risques et opportunités généraux',
     ],
     questions: [
@@ -105,7 +105,7 @@ export const GUIDE_AUDIT: Record<string, GuideAudit> = {
   },
   '6.2': {
     preuves: [
-      'Document des objectifs de sécurité 2025–2026 (SMART, formalisés)',
+      'Document des objectifs de sécurité (SMART, formalisés)',
       'Tableau de bord de suivi des objectifs',
       'Compte-rendu présentant les objectifs à la direction',
     ],
@@ -195,7 +195,7 @@ export const GUIDE_AUDIT: Record<string, GuideAudit> = {
     ],
     questions: [
       "À quel stade d'un projet la sécurité est-elle formellement intégrée ?",
-      'Comment les projets internes (GOUTI) prennent-ils en compte la sécurité ? (cf. DHA-28)',
+      'Comment les projets internes prennent-ils en compte la sécurité ?',
       'Qui donne le go sécurité avant la mise en production ?',
     ],
   },
@@ -298,13 +298,13 @@ export const GUIDE_AUDIT: Record<string, GuideAudit> = {
   'A.5.18': {
     preuves: [
       "Procédure formelle de revue des droits d'accès",
-      'Preuves de revues réalisées pour SALESFORCE et ENRS (cf. DHA-19)',
+      'Preuves de revues réalisées pour les fournisseurs concernés',
       'Tickets ou rapports de révocation suite aux revues',
       'Preuves de revue des droits privilégiés',
     ],
     questions: [
       "Comment les revues sont-elles planifiées et tracées — au-delà d'un seul ticket TENACY ?",
-      'Les revues SALESFORCE et ENRS sont-elles tracées depuis DHA-19 ?',
+      'Les revues des fournisseurs sont-elles tracées ?',
       'Que se passe-t-il quand un excès de droits est détecté ?',
     ],
   },
@@ -312,18 +312,18 @@ export const GUIDE_AUDIT: Record<string, GuideAudit> = {
     preuves: [
       'Procédure de gestion des risques fournisseurs',
       'Registre des fournisseurs avec évaluation sécurité',
-      'Preuves de revue annuelle des fournisseurs critiques (AZN, Maincare)',
+      'Preuves de revue annuelle des fournisseurs critiques',
     ],
     questions: [
-      "Comment les risques d'AZN et Maincare sont-ils évalués et suivis ?",
+      'Comment les risques des fournisseurs critiques sont-ils évalués et suivis ?',
       'Existe-t-il un processus de qualification sécurité avant choix ?',
       'Comment les incidents chez les fournisseurs sont-ils remontés ?',
     ],
   },
   'A.5.20': {
     preuves: [
-      "Contrat avec AZN — clauses sécurité, SLA, droit d'audit",
-      'Contrat avec Maincare — gestion des vulnérabilités, notification incidents',
+      "Contrat avec l’hébergeur — clauses sécurité, SLA, droit d'audit",
+      'Contrat avec le prestataire applicatif — gestion des vulnérabilités, notification incidents',
       'Preuves de révision lors de changements majeurs',
     ],
     questions: [
@@ -395,11 +395,11 @@ export const GUIDE_AUDIT: Record<string, GuideAudit> = {
   'A.5.29': {
     preuves: [
       "PCA incluant la sécurité de l'information",
-      'BIA avec scénario sinistre datacenter AZN (cf. DHA-31)',
+      'BIA avec scénario sinistre du datacenter de l’hébergeur',
       'Procédures de fonctionnement en mode dégradé sécurisé',
     ],
     questions: [
-      'Le PCA inclut-il un scénario de sinistre AZN ? Pourquoi manquait-il ? (cf. DHA-31)',
+      'Le PCA inclut-il un scénario de sinistre du datacenter de l’hébergeur ?',
       'Comment la sécurité des données est-elle maintenue pendant le PCA ?',
       'Les procédures ont-elles été testées avec les équipes sécurité ?',
     ],
@@ -408,11 +408,11 @@ export const GUIDE_AUDIT: Record<string, GuideAudit> = {
     preuves: [
       'PRA incluant les TIC — RTO/RPO documentés',
       'Politique de test PCA/PRA révisée et réaliste',
-      'Comptes-rendus des tests PRA AZN',
+      'Comptes-rendus des tests PRA',
     ],
     questions: [
-      'La politique de test a-t-elle été révisée depuis DHA-32 ?',
-      'Quand le PRA AZN sera-t-il testé ?',
+      'La politique de test a-t-elle été révisée ?',
+      'Quand le PRA sera-t-il testé ?',
       'Les RTO/RPO sont-ils cohérents avec les exigences clients ?',
     ],
   },
@@ -443,11 +443,11 @@ export const GUIDE_AUDIT: Record<string, GuideAudit> = {
   'A.5.33': {
     preuves: [
       'Politique de conservation et archivage des enregistrements',
-      'Registre de traitement RGPD à jour (cf. DHA-57 : GLPI, SIEM)',
+      'Registre de traitement RGPD à jour (GLPI, SIEM)',
       'Preuves de destruction sécurisée',
     ],
     questions: [
-      'Le registre a-t-il été mis à jour pour GLPI et le SIEM depuis DHA-57 ?',
+      'Le registre a-t-il été mis à jour pour GLPI et le SIEM ?',
       'Comment les enregistrements sont-ils protégés contre la modification ?',
       'Comment la fin de vie est-elle gérée de façon sécurisée ?',
     ],
@@ -473,7 +473,7 @@ export const GUIDE_AUDIT: Record<string, GuideAudit> = {
       'Preuves de suivi des actions',
     ],
     questions: [
-      "Quel est le programme d'audit pour 2025–2026 — tous les processus sont-ils couverts ?",
+      "Quel est le programme d'audit — tous les processus sont-ils couverts ?",
       "Comment l'indépendance des auditeurs est-elle garantie ?",
       'Les résultats sont-ils présentés en revue de direction ?',
     ],
@@ -482,7 +482,7 @@ export const GUIDE_AUDIT: Record<string, GuideAudit> = {
     preuves: ['Résultats des contrôles de conformité', 'Surveillance des indicateurs', "Plan d'actions correctives"],
     questions: [
       'Comment la conformité aux politiques est-elle vérifiée au quotidien ?',
-      'Les contrôles couvrent-ils les prestataires (Maincare, AZN) ?',
+      'Les contrôles couvrent-ils les prestataires ?',
       'Comment les non-conformités sont-elles escaladées ?',
     ],
   },
@@ -490,12 +490,12 @@ export const GUIDE_AUDIT: Record<string, GuideAudit> = {
     preuves: [
       "Liste des procédures d'exploitation documentées",
       'Procédure de gestion des changements',
-      "DAT de l'ENRS — état d'avancement (cf. DHA-35)",
+      "DAT — état d'avancement",
     ],
     questions: [
       "Toutes les opérations critiques disposent-elles d'une procédure ?",
-      'Où en est la finalisation du DAT ENRS ?',
-      "Comment s'assure-t-on que les procédures sont appliquées par Maincare ?",
+      'Où en est la finalisation du DAT ?',
+      "Comment s'assure-t-on que les procédures sont appliquées par les prestataires ?",
     ],
   },
   'A.6.8': {
@@ -541,7 +541,7 @@ export const GUIDE_AUDIT: Record<string, GuideAudit> = {
       "Logs d'accès aux ressources sensibles",
     ],
     questions: [
-      "Comment le moindre privilège est-il appliqué sur l'ENRS ?",
+      'Comment le moindre privilège est-il appliqué sur le système d’information ?',
       'Les données des clients sont-elles bien cloisonnées entre elles ?',
       'Comment les accès aux données de santé sont-ils restreints ?',
     ],
@@ -553,7 +553,7 @@ export const GUIDE_AUDIT: Record<string, GuideAudit> = {
       'Preuves de revue des accès',
     ],
     questions: [
-      'Qui a accès au code source — le GCS développe-t-il en interne ?',
+      'Qui a accès au code source — l’organisation développe-t-elle en interne ?',
       'Comment les accès des prestataires de développement sont-ils contrôlés ?',
       'Les dépôts sont-ils protégés contre les modifications non autorisées ?',
     ],
@@ -577,7 +577,7 @@ export const GUIDE_AUDIT: Record<string, GuideAudit> = {
       'Plan de capacité à 12 mois',
     ],
     questions: [
-      'Comment la capacité ENRS est-elle surveillée et anticipée ?',
+      'Comment la capacité de l’infrastructure est-elle surveillée et anticipée ?',
       'Des dépassements ont-ils causé des incidents récents ?',
       'Le plan est-il revu en fonction des nouveaux clients hébergés ?',
     ],
@@ -597,13 +597,13 @@ export const GUIDE_AUDIT: Record<string, GuideAudit> = {
   'A.8.8': {
     preuves: [
       'Outil de scan de vulnérabilités et calendrier',
-      'Plan de remédiation des 18 vulnérabilités MAINCARE (cf. DHA-30)',
-      'Rapport pentest EXCUBE 07/05/2025',
+      'Plan de remédiation des vulnérabilités critiques',
+      'Dernier rapport de test d’intrusion',
       'Procédure de gestion des vulnérabilités (délais par criticité)',
     ],
     questions: [
-      'Où en est la remédiation des 18 vulnérabilités critiques EXCUBE ?',
-      'Ces vulnérabilités ont-elles été communiquées à MAINCARE ?',
+      'Où en est la remédiation des vulnérabilités critiques ?',
+      'Ces vulnérabilités ont-elles été communiquées au prestataire concerné ?',
       'Quel est le délai cible de correction par criticité ?',
     ],
   },
@@ -674,7 +674,7 @@ export const GUIDE_AUDIT: Record<string, GuideAudit> = {
       'Preuves de tests de basculement',
     ],
     questions: [
-      "L'infrastructure ENRS est-elle redondée ?",
+      "L'infrastructure est-elle redondée ?",
       'Les tests de failover sont-ils réguliers ?',
       'Comment la disponibilité contractualisée est-elle mesurée ?',
     ],
@@ -806,11 +806,11 @@ export const GUIDE_AUDIT: Record<string, GuideAudit> = {
   'A.8.27': {
     preuves: [
       "Documentation des principes d'architecture sécurisée",
-      'DAT ENRS (cf. DHA-35)',
+      'DAT',
       "Preuves d'application dans les projets infra",
     ],
     questions: [
-      "Quels principes sont appliqués sur l'ENRS ?",
+      'Quels principes sont appliqués sur le système d’information ?',
       'Le DAT intègre-t-il les principes de sécurité ?',
       'Comment ces principes sont-ils vérifiés en recette ?',
     ],
@@ -824,29 +824,29 @@ export const GUIDE_AUDIT: Record<string, GuideAudit> = {
     questions: [
       'Des outils SAST sont-ils utilisés en CI ?',
       'Comment les vulnérabilités détectées sont-elles traitées ?',
-      'Le GCS développe-t-il en interne — dans quels projets ?',
+      'L’organisation développe-t-elle en interne — dans quels projets ?',
     ],
   },
   'A.8.29': {
     preuves: [
       'Rapport de test de sécurité (DAST, pentest)',
-      'Preuves de recette sécurité (cf. DHA-27)',
+      'Preuves de recette sécurité',
       'Plan de remédiation des vulnérabilités',
     ],
     questions: [
       'Des tests sont-ils systématiques avant mise en production ?',
-      'Pouvez-vous montrer les preuves de recette consolidées ? (cf. DHA-27)',
+      'Pouvez-vous montrer les preuves de recette consolidées ?',
       'Comment les résultats des pentests sont-ils intégrés ?',
     ],
   },
   'A.8.30': {
     preuves: [
-      'Contrats de développement externalisé avec clauses sécurité (Maincare)',
+      'Contrats de développement externalisé avec clauses sécurité',
       'Procédure de supervision',
       'Preuves de revue sécurité des livrables tiers',
     ],
     questions: [
-      'Comment le GCS supervise-t-il la qualité sécurité Maincare ?',
+      'Comment l’organisation supervise-t-elle la qualité sécurité des prestataires ?',
       'Existe-t-il une recette sécurité sur les livrables externalisés ?',
       'Les sous-traitants sont-ils soumis aux mêmes exigences ?',
     ],
@@ -883,7 +883,7 @@ export const GUIDE_AUDIT: Record<string, GuideAudit> = {
     ],
     questions: [
       'Comment les données de test sont-elles générées — anonymisées ou synthétiques ?',
-      "Pouvez-vous prouver l'absence de données réelles en test ? (cf. DHA-10)",
+      "Pouvez-vous prouver l'absence de données réelles en test ?",
       'Comment les données de test sont-elles détruites ?',
     ],
   },

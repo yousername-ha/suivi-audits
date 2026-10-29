@@ -102,7 +102,7 @@ export function obligationsIncident(a: Reponses, kind: string, categorieEntite: 
     ]);
   l.push([
     'NIS 2',
-    `Si le GCS est entité essentielle ou importante et que l’incident est important : alerte précoce sous 24 heures, notification sous 72 heures, rapport final sous un mois (article 23 de la directive). Catégorie du GCS : ${categorieEntite || 'à confirmer'}.`,
+    `Si l’organisation est entité essentielle ou importante et que l’incident est important : alerte précoce sous 24 heures, notification sous 72 heures, rapport final sous un mois (article 23 de la directive). Catégorie de l’organisation : ${categorieEntite || 'à confirmer'}.`,
   ]);
   return l;
 }

@@ -31,7 +31,7 @@
   - **volumes et quantités** : volumétrie incluse, unités de facturation (To, Go, licence, établissement…), seuils ;
   - **tarifs en euros** : frais de mise en service, abonnement mensuel ou annuel, prix unitaire au-delà du forfait, mention HT/TTC, date de validité de la grille ;
   - engagements de service : niveaux de service, support, horaires.
-- Export de ce résumé en **PDF et Word**, aux couleurs du GCS, pour l'envoyer aux établissements.
+- Export de ce résumé en **PDF et Word**, aux couleurs de l'organisation, pour l'envoyer aux établissements.
 
 ### CRRC-03 — Statut d'un établissement pour une offre (simplification)
 - **Suppression du suivi par ressource**, jugé trop détaillé.
@@ -51,35 +51,9 @@
 - L'historique des changements de statut est conservé (qui, quand, ancien statut → nouveau statut).
 - Filtres et compteurs par statut, et liste exportable.
 
-### CRRC-04 — Carte des départements, réaliste et zoomable
-- **Contours géographiques réels** des 5 départements normands (Calvados 14, Eure 27, Manche 50, Orne 61, Seine-Maritime 76). Sur demande, on peut ajouter les limites de communes ou d'EPCI.
-  - Source : données ouvertes IGN (ADMIN EXPRESS) ou équivalent sous licence ouverte, simplifiées (mapshaper) et **embarquées dans l'application**. Pas d'appel à un service de cartes externe : la CSP reste stricte et l'outil fonctionne hors ligne.
-  - Fond de carte en option, désactivé par défaut : les tuiles d'un service externe exposeraient les adresses IP et les zones consultées.
-- Le rendu doit être soigné :
-  - départements en aplat léger, avec la frontière littorale ;
-  - chef-lieu et principales villes en repère discret ;
-  - établissements placés à leurs **coordonnées réelles** (latitude et longitude, saisies ou obtenues à partir de l'adresse) ;
-  - couleur selon le statut CRRC-03 ;
-  - regroupement automatique des points proches selon le niveau de zoom.
-- Interaction :
-  - **zoom** à la molette, par pincement sur mobile et avec des boutons + et − ;
-  - **déplacement** à la souris ou au doigt ;
-  - double-clic sur un département pour zoomer dessus ;
-  - bouton « Vue d'ensemble ».
-  - Au survol d'un établissement : nom, type et statut. Au clic : fiche de l'établissement dans le panneau latéral.
-- Légende des statuts, filtres par statut, par département et par type d'établissement, et compteurs par département.
-- Adaptation à l'écran : la carte occupe toute la place disponible, jusqu'au 4K, avec la liste à côté sur grand écran.
-- Export de la carte en PNG ou en SVG pour le COPIL et les présentations.
-
----
-
-## 2. Pilotage  *(phase 2)*
-
-*Aucun retour pour l'instant : à compléter.*
-
----
-
-## 3. Investissements  *(phase 3)*
+### CRRC-04 — Activité par département
+- Regroupement des établissements par département (deux premiers chiffres du FINESS), sans carte géographique.
+- Légende des statuts, filtres par statut et par département.
 
 ### INV-01 — Filtres cumulables, en haut de la liste
 - Une **barre de filtres placée en haut** de la liste, toujours visible au défilement. Les filtres **se cumulent** : entre filtres différents, la condition est « ET » ; à l'intérieur d'un même filtre à choix multiple, elle est « OU ».

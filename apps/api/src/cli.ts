@@ -19,15 +19,17 @@
   ops-request | ops-certificate  JSON privé sur entrée standard
   ops-schedule <UUID>         demande planifiée (verrou hôte)
   consigner-mise-a-jour       consigne au journal d'audit le rapport de mise à jour lu sur l'entrée standard
+  poivre-restaurer            reprend le poivre des mots de passe (texte sur l'entrée standard) après perte de la clé maîtresse
+  poivre-reinitialiser --confirmer  URGENCE, poivre perdu : nouveau poivre, mots de passe temporaires pour tous les comptes
    Raccourci : docker compose exec app setup-token                                                                */
 import crypto from 'node:crypto';
-import type { SettingsValues } from '@suivi/shared';
+import { formaterPoivreGenere, type SettingsValues } from '@suivi/shared';
 import { sql } from 'kysely';
 import { z } from 'zod';
 import { certificateInfo } from './certificates.js';
 import { loadConfig } from './config.js';
 import { createLogger } from './log.js';
-import { hashPassword, tempPassword } from './security/crypto.js';
+import { tempPassword } from './security/crypto.js';
 import { createServices, type Services } from './services.js';
 import { controleRelations } from './controle-relations.js';
 import { pendingMigrations } from './systeme.js';
@@ -51,7 +53,9 @@ const HELP = `Commandes : docker compose exec app suivi <commande> [arguments]
   ops-policy | ops-sync [date] | ops-claim  protocole hôte (jamais HTTP)
   ops-request | ops-certificate  JSON privé sur entrée standard
   ops-schedule <UUID>         demande planifiée (verrou hôte)
-  consigner-mise-a-jour       consigne au journal d'audit un rapport de mise à jour (JSON sur l'entrée standard)`;
+  consigner-mise-a-jour       consigne au journal d'audit un rapport de mise à jour (JSON sur l'entrée standard)
+  poivre-restaurer            reprend le poivre des mots de passe (texte sur l'entrée standard) après perte de la clé maîtresse
+  poivre-reinitialiser --confirmer  URGENCE, poivre perdu : nouveau poivre, mots de passe temporaires pour tous les comptes`;
 
 async function main() {
   const [cmd, arg, extra] = process.argv.slice(2);
@@ -205,7 +209,7 @@ async function main() {
     case 'reset-password': {
       const u = await user(arg);
       const pw = tempPassword();
-      const empreinte = await hashPassword(pw);
+      const empreinte = await svc.motsDePasse.hacher(u.id, pw);
       await svc.db.tx(async (c, k) => {
         await k
           .updateTable('users')
@@ -344,6 +348,46 @@ async function main() {
         rep,
       );
       console.log('Mise à jour consignée au journal d’audit.');
+      break;
+    }
+    case 'poivre-restaurer': {
+      // Le poivre se lit sur l'entrée standard : il n'apparaît ni dans la liste des processus ni dans l'historique du shell.
+      const poivre = (await readStdin()).replace(/\r?\n$/, '');
+      if (!poivre) {
+        console.error(
+          'Poivre attendu sur l\'entrée standard : printf %s "$POIVRE" | docker compose exec -T app suivi poivre-restaurer',
+        );
+        process.exit(1);
+      }
+      try {
+        await svc.motsDePasse.restaurer(poivre, SYS);
+      } catch (e) {
+        console.error((e as Error).message);
+        process.exit(1);
+      }
+      console.log('Poivre repris : la clé est de nouveau scellée par la clé maîtresse actuelle.');
+      break;
+    }
+    case 'poivre-reinitialiser': {
+      if (arg !== '--confirmer') {
+        console.error(
+          "PROCÉDURE D'URGENCE, à n'utiliser que si le poivre est perdu. Elle génère un nouveau poivre, impose un mot de passe\n" +
+            "temporaire à TOUS les comptes et ferme toutes les sessions. Relancer avec --confirmer pour l'exécuter.",
+        );
+        process.exit(1);
+      }
+      const r = await svc.motsDePasse.reinitialiser(SYS);
+      await svc.alertesSecurite.poivre({
+        type: 'reinitialise',
+        auteur: 'cli',
+        ancienIdCle: null,
+        nouvelIdCle: r.idCle,
+      });
+      console.log(
+        `NOUVEAU POIVRE (à enregistrer au coffre-fort MAINTENANT ; affiché une seule fois) :\n  ${formaterPoivreGenere(r.poivre)}\n`,
+      );
+      console.log(`Mots de passe temporaires (changement imposé à la connexion), ${r.comptes.length} compte(s) :`);
+      console.table(r.comptes.map((c) => ({ compte: c.username, 'mot de passe temporaire': c.motDePasse })));
       break;
     }
     default:

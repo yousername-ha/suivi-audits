@@ -212,6 +212,7 @@ function FicheApplication({
   agir: Agir;
   onSupprime: () => void;
 }) {
+  const peutSupprimer = useCan()('conformite', 'supprimer');
   const exclues = new Set(d.exclues);
   const s = statsGap(app, exclues);
   const points = pointsGap(app);
@@ -393,7 +394,7 @@ function FicheApplication({
                             </Button>
                           )
                         )}
-                        {modifiable && l.custom && (
+                        {modifiable && peutSupprimer && l.custom && (
                           <Button
                             size="compact-sm"
                             variant="subtle"
@@ -433,7 +434,7 @@ function FicheApplication({
           </Group>
         </section>
       )}
-      {modifiable && (
+      {modifiable && peutSupprimer && (
         <Group justify="flex-end">
           <ConfirmButton
             message={`Supprimer « ${app.name} » et son analyse d’écart ?`}
@@ -516,7 +517,7 @@ function GuideGap({
     <Stack>
       <Text size="sm" c="dimmed">
         {ia
-          ? 'Répondez par des faits que l’on peut constater (compte utilisé, contrat, filtrage, relecture) pour chacune des situations d’IA qui concernent le GCS : les points ISO 27001 / HDS à contrôler sont générés, ceux que les réponses permettent de trancher sont pré-évalués et le plan d’action est créé. Une question sans réponse ou « Inconnu » laisse le point « à évaluer » : rien n’est supposé.'
+          ? 'Répondez par des faits que l’on peut constater (compte utilisé, contrat, filtrage, relecture) pour chacune des situations d’IA qui concernent l’organisation : les points ISO 27001 / HDS à contrôler sont générés, ceux que les réponses permettent de trancher sont pré-évalués et le plan d’action est créé. Une question sans réponse ou « Inconnu » laisse le point « à évaluer » : rien n’est supposé.'
           : 'Décrivez l’outil ou le service à intégrer au périmètre ISO 27001 / HDS : la liste des points à contrôler ou à mettre en place est générée, les points que les réponses permettent de trancher sont pré-évalués, et le plan d’action est créé. Les questions sans réponse laissent les points concernés « à évaluer ».'}
       </Text>
       {info && <Alert color="green">{info}</Alert>}
@@ -524,7 +525,7 @@ function GuideGap({
         <div className="grille-formulaire__champs">
           <ChampTexte
             label={ia ? 'Intitulé du GAP' : 'Outil ou service'}
-            placeholder={ia ? 'ex. Usage de l’IA au GCS' : 'ex. Plateforme de téléexpertise'}
+            placeholder={ia ? 'ex. Usage de l’IA dans l’organisation' : 'ex. Plateforme de téléexpertise'}
             value={v.name}
             onCommit={(x) => setV({ ...v, name: x })}
           />

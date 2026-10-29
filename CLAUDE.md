@@ -4,7 +4,7 @@ Les consignes communes sont dans [AGENTS.md](AGENTS.md). Les lire avant toute
 intervention, puis consulter [HANDOVER.md](HANDOVER.md),
 [PROJECT_STATUS.md](PROJECT_STATUS.md) et [docs/00_INDEX.md](docs/00_INDEX.md).
 Ces fichiers donnent l’état actuel, les preuves de test et les priorités. Commencer par la
-[reprise du 27/10/2026](docs/01_REPRISE_IA/REPRISE-2026-10-27.md), la plus récente.
+[reprise du 29/10/2026](docs/01_REPRISE_IA/REPRISE-2026-10-29.md), la plus récente (elle complète celle du 27/10).
 
 - Trois branches (décision du RSSI, 11/10/2026) : `main` (version Docker unique, publiée par étiquette
   `vX.Y.Z`), `claude-suivi-smsi` (branche de travail, [plan d'unification](docs/unification/PLAN-EVOLUTION.md)),
@@ -18,9 +18,8 @@ Ces fichiers donnent l’état actuel, les preuves de test et les priorités. Co
   [recette](docs/05_RECETTE/RAPPORT_RECETTE.md), [backlog](docs/08_PILOTAGE/BACKLOG.md).
 
 L’écran `/legacy` est retiré ([ADR 0042](docs/adr/0042-retrait-de-lecran-legacy.md)) ; l’outil autonome est
-conservé sur `archive/outil-legacy-autonome`. `app/public/index.html` reste dans le dépôt comme référence de
-parité (plus servi) : ne pas le réécrire, toute évolution de ce fichier fait l’objet d’un commit dédié.
-`scripts/update-ui.sh` s’utilise sur un poste de développement.
+conservé sur `archive/outil-legacy-autonome` (le fichier `app/public/index.html`, ses bibliothèques, `scripts/update-ui.sh`
+et `archives/` ont été retirés du dépôt).
 Les données de départ restent vides et les fixtures anonymisées. Les cartes et
 les familles historiques encore attendues sont conservées.
 

@@ -172,6 +172,8 @@ export interface RegistreDto {
   role: RoleRessource | null;
   /** Besoins couverts pour l'utilisateur courant, toutes origines confondues. */
   peut: Record<Besoin, boolean>;
+  /** Peut attribuer ou retirer des droits et changer « restreint » : rôle de gestionnaire attribué ou droit d'administrer le module. */
+  peutAttribuer: boolean;
   elements: number;
 }
 

@@ -98,6 +98,20 @@ Mise à jour : versions numériques, signatures, sauvegarde avant maintenance,
 migrations, santé et données ; rollback selon reçu durable et archive.
 Le frontal stable est entretenu séparément de la mise à jour web.
 
+**Dimensionnement retenu (28/10/2026) : une organisation, une quinzaine d’utilisateurs
+simultanés au plus, une seule instance d’API** (limiteurs en mémoire, verrous
+consultatifs, un seul exécutant d’exploitation). Le pool PostgreSQL garde ses 10
+connexions. Une transaction annulée par deadlock ou échec de sérialisation (codes
+40P01 et 40001) est rejouée entière, au plus deux fois, après 50 à 200 ms, chaque
+relance journalisée ; une transaction restée inactive est coupée après une minute.
+L’analyse antivirale est limitée à 15 s ; si elle échoue, le dépôt est refusé quand
+elle est obligatoire et le contact technique reçoit au plus une alerte par heure.
+Sondes Docker : `app` prête quand la base répond et que les migrations sont
+appliquées, `web` et `gateway` quand Caddy répond ; `gateway` attend `web`. Écartés à
+cette échelle : disjoncteur, plusieurs instances, clé d’idempotence, analyse des
+requêtes en CI (le test de performance sur 10 000 risques fait foi ; une requête
+n’est corrigée que si un parcours dépasse 500 ms sur un jeu réaliste).
+
 Installation/exploitation : [déploiement](DEPLOIEMENT.md),
 [maintenance](EXPLOITATION_MAINTENANCE.md), [guide rejoué en CI](../INSTALLATION.md).
 L’audit n’a ni déployé ni restauré ; charge, HA, RPO/RTO réels et reprise après

@@ -3,6 +3,7 @@ import type { Logger } from 'pino';
 import { Auth } from './auth.js';
 import { Backups } from './backups.js';
 import { AlertesExploitation } from './alertes-exploitation.js';
+import { AlertesSecurite } from './alertes-securite.js';
 import { RemiseAVide } from './remise-a-vide.js';
 import { Updates } from './updates.js';
 import { Modules } from './modules.js';
@@ -31,6 +32,7 @@ import { JournalTechnique } from './journal-technique.js';
 import { CalendriersPlateforme } from './calendriers-plateforme.js';
 import { Conservation } from './conservation.js';
 import { Courriel } from './courriel.js';
+import { MotsDePasse } from './mots-de-passe.js';
 import { NotificationsMetier } from './notifications-metier.js';
 import { TypesProcessus } from './types-processus.js';
 
@@ -58,6 +60,10 @@ export function createServices(cfg: Config, log: Logger) {
   grc.notificationsMetier = notificationsMetier;
   const historique = new Historique(grc);
   const alertes = new AlertesExploitation(settings, cfg.publicUrl);
+  const alertesSecurite = new AlertesSecurite(db, settings, cfg.publicUrl);
+  const motsDePasse = new MotsDePasse(db, vault);
+  const auth = new Auth(cfg, db, vault, () => settings.get('securite'), motsDePasse);
+  auth.surVerrouillage = (e) => alertesSecurite.verrouillage(e);
   return {
     cfg,
     log,
@@ -80,7 +86,9 @@ export function createServices(cfg: Config, log: Logger) {
     conservation: new Conservation(db),
     courriel: new Courriel(db, vault),
     notificationsMetier,
-    auth: new Auth(cfg, db, vault, () => settings.get('securite')),
+    auth,
+    motsDePasse,
+    alertesSecurite,
     bus,
     presence: new Presence(db, bus),
     legacy,
@@ -90,7 +98,10 @@ export function createServices(cfg: Config, log: Logger) {
       loginByIp: limiter(20, 15 * 60e3),
       loginByUser: limiter(10, 15 * 60e3),
       mfaBySession: limiter(8, 10 * 60e3),
+      mfaByUser: limiter(10, 15 * 60e3),
+      motDePasseByUser: limiter(5, 15 * 60e3),
       updateMfaByUser: limiter(5, 15 * 60e3),
+      poivreByUser: limiter(5, 60 * 60e3),
       setupByIp: limiter(10, 15 * 60e3),
       presence: limiter(30, 60e3),
       wallActivation: limiter(10, 15 * 60e3),

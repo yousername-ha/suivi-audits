@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 # Restauration complète depuis une archive produite par backup.sh (EXPL-08).
-#   Usage :  sudo [BACKUP_PASSPHRASE_FILE=...] ./scripts/restore.sh /chemin/suivi-audits-AAAAMMJJ-HHMMSS.tar[.enc]
+#   Usage :  sudo [BACKUP_KEY_FILE=...] ./scripts/restore.sh [--verifier] /chemin/suivi-audits-AAAAMMJJ-HHMMSS.tar.age
+#            sudo BACKUP_PASSPHRASE_FILE=... ./scripts/restore.sh --ancien-format /chemin/...tar.enc   (ancien format, une version)
+# L'archive est déchiffrée avec age (identité du serveur, ou clé de secours du RSSI en indiquant son fichier dans BACKUP_KEY_FILE) ;
+# toute modification, troncature ou clé inadaptée est refusée avant le moindre changement. L'INFO de l'archive doit correspondre
+# à son nom (anti-rejeu). Les archives non chiffrées ne sont plus acceptées.
 # Remplace la base, les secrets et l'autorité de certification interne (si l'archive la contient) du serveur courant,
 # dans le dossier des données DATA_DIR, avec les bons propriétaires et droits (service init). À utiliser sur une
 # installation arrêtée ou neuve. Sur un serveur neuf, DATA_DIR est préparé automatiquement.
@@ -11,9 +15,18 @@ REPO="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$REPO"
 
 VERIFY=0
-if [ "${1:-}" = --verifier ]; then VERIFY=1; shift; fi
-ARCH="${1:?Usage : $0 [--verifier] archive.tar[.enc]}"
+ANCIEN=0
+while [ "${1:-}" = --verifier ] || [ "${1:-}" = --ancien-format ]; do
+  case "$1" in --verifier) VERIFY=1 ;; --ancien-format) ANCIEN=1 ;; esac
+  shift
+done
+ARCH="${1:?Usage : $0 [--verifier] [--ancien-format] archive.tar.age}"
 [ "$#" = 1 ] || arret "Argument inattendu."
+case "$ARCH" in
+  *.tar.age) [ "$ANCIEN" = 0 ] || arret "--ancien-format ne concerne que les archives .tar.enc." ;;
+  *.tar.enc) [ "$ANCIEN" = 1 ] || arret "archive de l'ancien format (.tar.enc) : la restaurer avec --ancien-format et BACKUP_PASSPHRASE_FILE (format retiré à la version suivante)." ;;
+  *) arret "format d'archive refusé : seules les archives chiffrées .tar.age sont acceptées (les sauvegardes en clair n'existent plus)." ;;
+esac
 command -v python3 > /dev/null || arret "Python 3 requis (guide d’installation)."
 [ -f "$ARCH" ] || arret "Archive régulière introuvable."
 [ "$(stat -Lc %s "$ARCH")" -le 68719476736 ] || arret "Archive trop volumineuse."
@@ -24,11 +37,20 @@ trap 'rm -rf "$WORK"' EXIT
 # Copie privée : l'archive sélectionnée ne peut changer entre empreinte, déchiffrement et extraction.
 cp -- "$ARCH" "$WORK/source"
 python3 "$REPO/scripts/verifier-archive-restauration.py" --checksum "$ARCH" "$WORK/source"
+NOM_ATTENDU=()
 case "$ARCH" in
-  *.enc) openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -in "$WORK/source" -out "$WORK/a.tar" -pass "file:${BACKUP_PASSPHRASE_FILE:?BACKUP_PASSPHRASE_FILE requis}" ;;
-  *) mv "$WORK/source" "$WORK/a.tar" ;;
+  *.tar.age)
+    CLE="${BACKUP_KEY_FILE:-/root/.suivi-backup-key}"
+    command -v age > /dev/null || arret "outil « age » absent : l'installer (sudo apt-get install -y age)."
+    [ -f "$CLE" ] && [ ! -L "$CLE" ] && [ -s "$CLE" ] || arret "clé de déchiffrement absente ou vide ($CLE) : indiquer BACKUP_KEY_FILE (clé du serveur ou clé de secours)."
+    (( (8#$(stat -c %a "$CLE") & 077) == 0 )) || arret "droits trop larges sur la clé de déchiffrement ($CLE) : 0600 requis."
+    age -d -i "$CLE" -o "$WORK/a.tar" "$WORK/source" 2> /dev/null || { rm -f "$WORK/a.tar"; arret "déchiffrement impossible : archive modifiée ou tronquée, ou clé qui n'est pas un destinataire de cette archive."; }
+    NOM_ATTENDU=(--nom "$(basename "$ARCH")") ;;
+  *)
+    command -v openssl > /dev/null || arret "openssl requis pour l'ancien format."
+    openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -in "$WORK/source" -out "$WORK/a.tar" -pass "file:${BACKUP_PASSPHRASE_FILE:?BACKUP_PASSPHRASE_FILE requis (ancien format)}" ;;
 esac
-python3 "$REPO/scripts/verifier-archive-restauration.py" "$WORK/a.tar" "$WORK/extrait"
+python3 "$REPO/scripts/verifier-archive-restauration.py" "${NOM_ATTENDU[@]}" "$WORK/a.tar" "$WORK/extrait"
 if [ "$VERIFY" = 1 ]; then
   echo "Vérification réussie. Restauration non exécutée."
   exit 0

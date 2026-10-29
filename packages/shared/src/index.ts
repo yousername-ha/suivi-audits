@@ -9,6 +9,8 @@ export * from './exploitation.js';
 export * from './modules.js';
 export * from './updates.js';
 export * from './remise-a-vide.js';
+export * from './mot-de-passe.js';
+export * from './poivre.js';
 
 export * from './business-policy.js';
 export * from './grc.js';

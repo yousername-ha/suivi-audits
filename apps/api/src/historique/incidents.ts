@@ -24,7 +24,7 @@ const maintenant16 = () => new Date().toISOString().slice(0, 16);
 export interface VueIncidents {
   version: number;
   incidents: Incident[];
-  /** Catégorie d'entité NIS 2 du GCS, citée dans les obligations (vide si non renseignée). */
+  /** Catégorie d'entité NIS 2 de l'organisation, citée dans les obligations (vide si non renseignée). */
   categorieEntite: string;
   /** Statut des actions du registre des écarts rattachées aux incidents. */
   ecarts: Record<string, string>;
@@ -121,7 +121,12 @@ export class Incidents {
     return this.r.modifier(
       user,
       ip,
-      { module: 'incidents', action: 'incident.deleted', reference: (x) => `legacy:incidents:${x.id}` },
+      {
+        droit: 'supprimer',
+        module: 'incidents',
+        action: 'incident.deleted',
+        reference: (x) => `legacy:incidents:${x.id}`,
+      },
       (data) => {
         this.trouver(data, id);
         remplacerEntree(data, 'incidents', id, null);

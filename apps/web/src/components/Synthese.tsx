@@ -15,7 +15,7 @@ export const VUE_LABELS: Record<Vue, string> = {
   plan: 'Plan d’audit',
 };
 
-const fmtJour = (d: string) =>
+export const fmtJour = (d: string) =>
   /^\d{4}-\d{2}-\d{2}/.test(d) ? new Date(`${d.slice(0, 10)}T12:00:00`).toLocaleDateString('fr-FR') : d || '—';
 
 function Carte({
@@ -162,7 +162,7 @@ function Plan({ s, large }: { s: Synthese; large?: boolean }) {
   );
 }
 
-const TEINTE_ECART: Record<string, TeinteGraphique> = {
+export const TEINTE_ECART: Record<string, TeinteGraphique> = {
   'NC maj': 'rouge',
   'NC min': 'orange',
   PS: 'violet',

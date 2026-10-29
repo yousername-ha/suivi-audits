@@ -1,6 +1,6 @@
 # Suivi des audits et pilotage multi-référentiels
 
-Application web auto-hébergée de pilotage du GCS Normand'e-Santé : qualité, sécurité et référentiels, préparation et suivi des audits, écarts et actions, documents et preuves. Le menu Pilotage accompagne les démarches SMQ (ISO 9001), SMSI (ISO 27001), HDS et intégrées, sans imposer la création d’un SMSI. Elle remplace, module par module, l'outil historique en fichier unique, qui reste disponible sous `/legacy` pendant la transition.
+Application web auto-hébergée de pilotage d'un système de management de la sécurité de l'information et de la qualité : qualité, sécurité et référentiels, préparation et suivi des audits, écarts et actions, documents et preuves. Le menu Pilotage accompagne les démarches SMQ (ISO 9001), SMSI (ISO 27001), HDS et intégrées, sans imposer la création d’un SMSI. Elle remplace, module par module, l'outil historique en fichier unique, qui reste disponible sous `/legacy` pendant la transition.
 
 - **Reprise du projet : [HANDOVER.md](HANDOVER.md)** — [état](PROJECT_STATUS.md), [index documentaire](docs/00_INDEX.md), [consignes IA](AGENTS.md)
 - **Comprendre le produit** : [PRODUCT](docs/PRODUCT.md), [référentiels](docs/REFERENTIALS.md), [décisions](docs/DECISIONS.md), [feuille de route](docs/ROADMAP.md) ; les documents de travail terminés sont dans [docs/archive](docs/archive/README.md)
@@ -57,8 +57,8 @@ sudo docker compose exec app setup-token           # jeton d'installation, puis 
 | Journaux | `sudo docker compose logs -f app` |
 | Commandes d'exploitation | `sudo docker compose exec app suivi help` (`users`, `reset-password`, `reset-mfa`, `unlock`, `disable`, `enable`, `sessions-purge`) |
 | Administrateur de secours | `sudo docker compose exec app setup-token --recovery` |
-| Sauvegarde chiffrée | `sudo BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass ./scripts/backup.sh /srv/sauvegardes/suivi-audits` |
-| Restauration | `sudo BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass ./scripts/restore.sh <archive>.tar.enc` |
+| Sauvegarde chiffrée | `sudo ./scripts/backup.sh /srv/sauvegardes/suivi-audits` |
+| Restauration | `sudo ./scripts/restore.sh <archive>.tar.age` |
 | Mise à jour | Configuration système → Mises à jour et versions ; pour le premier passage ou l’entretien serveur, suivre [INSTALLATION, section 12](docs/INSTALLATION.md) (sauvegarde et signatures). |
 | Antivirus | `CLAMAV_HOST=clamav` dans `.env`, puis `sudo docker compose --profile antivirus up -d` |
 

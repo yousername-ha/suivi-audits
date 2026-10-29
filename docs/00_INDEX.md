@@ -2,7 +2,8 @@
 
 ## Jeu court à lire d'abord (18/10/2026)
 
-0. [Reprise du 27/10/2026](01_REPRISE_IA/REPRISE-2026-10-27.md) : état le plus récent, PR ouvertes, règles de fusion.
+0. [Reprise du 29/10/2026](01_REPRISE_IA/REPRISE-2026-10-29.md) : état le plus récent (version 5.2.0 préparée, reste à faire) ;
+   [reprise du 27/10/2026](01_REPRISE_IA/REPRISE-2026-10-27.md) : règles de fusion et de travail.
 
 1. [README](../README.md), [PRODUCT](PRODUCT.md), [REFERENTIALS](REFERENTIALS.md) : ce que fait la plateforme.
 2. [ARCHITECTURE](ARCHITECTURE.md) et [DAT](03_ARCHITECTURE/DAT.md) : comment elle est construite ; [ADR](adr/README.md) et
@@ -134,7 +135,7 @@ chiffres. Il ne valide ni contenu métier, ni site externe, ni acceptation humai
 - [Installation rejouée en CI](INSTALLATION.md), [Contribuer](../CONTRIBUTING.md),
   [CHANGELOG racine](../CHANGELOG.md).
 - [ADR](adr/README.md), [diagnostics datés](archive/diagnostics),
-  [source v2 archivée](../archives/README.md).
+  source v2 : historique Git (commit `b148c1ba303954b7023996fce3d0eff2923326b5`).
 - [Format legacy](legacy/LEGACY-FORMAT.md), [mapping](legacy/MAPPING-LEGACY.md),
   [import](legacy/IMPORT-LEGACY.md), [inventaire initial](archive/REPRISE-SOCLE-LEGACY.md).
 - [Archive de l'ancienne interface](archive/ancienne-interface/README.md) (captures, correspondance avec la nouvelle interface).

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { ACTIONS, ALL_PERMISSIONS, MODULES, type Permission } from './permissions.js';
 import { PRESENCE_HEARTBEAT_MS } from './events.js';
 import { Preferences as PreferencesSchema } from './affichage.js';
+import { PoivreAEnregistrer } from './poivre.js';
 
 export const USERNAME_RE = /^[a-zA-Z0-9._@-]{2,64}$/;
 export const CLASSIFICATIONS = ['public', 'interne', 'restreint', 'confidentiel'] as const;
@@ -50,7 +51,13 @@ export const SetupBody = z.object({
   username: Username,
   displayName: text(120).optional(),
   email: Email.optional(),
+  /** Nom de l'organisation (réglage « general »), demandé au premier lancement ; facultatif. */
+  orgName: text(120).optional(),
+  /** Charger les données de démonstration (établissement fictif, ISO 27001 / HDS / EBIOS RM) à l'installation. */
+  demo: z.boolean().optional(),
   password: z.string().max(256),
+  /** Poivre des mots de passe : obligatoire à la première installation, refusé s'il est déjà défini (ADR 0072). */
+  poivre: PoivreAEnregistrer.optional(),
 });
 export const PasswordChangeBody = z.object({ current: z.string().max(256), next: z.string().max(256) });
 export const PasswordBody = z.object({ password: z.string().max(256).optional() });
@@ -90,8 +97,17 @@ export const MeOut = z.object({
   version: z.string(),
 });
 export type MeOut = z.infer<typeof MeOut>;
-export const StageOut = z.object({ stage: AccessStageSchema });
-export const SetupStatusOut = z.object({ needed: z.boolean(), pending: z.boolean(), adminExists: z.boolean() });
+/** `demo` : données de démonstration demandées à l'installation, « en_attente » jusqu'à la fin de l'enrôlement du second
+    facteur, puis « ok » ou « echec » (chargement interrompu). */
+export const ResultatDemoSchema = z.enum(['en_attente', 'ok', 'echec']);
+export const StageOut = z.object({ stage: AccessStageSchema, demo: ResultatDemoSchema.optional() });
+export const SetupStatusOut = z.object({
+  needed: z.boolean(),
+  pending: z.boolean(),
+  adminExists: z.boolean(),
+  /** Faux : l'installation demande aussi le poivre des mots de passe. */
+  poivreDefini: z.boolean(),
+});
 export const TotpBeginOut = z.object({ secret: z.string(), uri: z.string() });
 export const ErrorOut = z.object({ error: z.string() }).catchall(z.unknown());
 

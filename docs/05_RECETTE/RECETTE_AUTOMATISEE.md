@@ -23,7 +23,7 @@ Avec la sauvegarde chiffrée réelle et la vérification de son archive (écrit 
 supprimée ensuite ; laisse un rapport de sauvegarde dans l'état de l'application) :
 
 ```sh
-sudo BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass ./scripts/recette-serveur.sh --version 3.1.0 --avec-sauvegarde
+sudo ./scripts/recette-serveur.sh --version 3.1.0 --avec-sauvegarde
 ```
 
 Les rapports `recette-AAAAMMJJ-HHMMSS.md` et `.json` (sans secret) sont écrits dans `DATA_DIR/etat/recette/`, ou dans le

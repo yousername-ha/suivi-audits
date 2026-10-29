@@ -55,7 +55,7 @@ Un test lit `LEGACY-FORMAT.md` et échoue si un chemin du contrat n'est pas trai
 
 ## 3. Côté outil legacy (mise à jour nécessaire)
 
-Il faut appliquer la même modification à `app/public/index.html` (servi sous `/legacy`) **et** à l'artefact claude.ai :
+Il faut appliquer la même modification à l'ancien outil (servi sous `/legacy`, retiré depuis) **et** à l'artefact claude.ai :
 
 1. **Migration vers le schéma 15** : ajout d'un identifiant stable (`id`) aux éléments des listes qui n'en ont pas.
 
