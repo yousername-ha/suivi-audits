@@ -81,5 +81,4 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0074](0074-alerte-de-securite-dans-l-application.md) | Alerte de verrouillage de compte dans l'application (notification aux administrateurs, indépendante du courriel) | Proposée |
 | [0075](0075-composition-des-mots-de-passe.md) | Composition des mots de passe de compte alignée sur le poivre ; mots de passe compromis documentés, non retenus | Proposée |
 | [0076](0076-module-integrations.md) | Module Intégrations : connecteurs natifs en lecture seule par SMSI (GLPI, ORADAD, Silène), moteur d'écarts de Tenacy partagé, métriques vers les indicateurs Pilotage, fournisseurs par propositions, appels réseau par l'exécutant d'exploitation | Acceptée |
-
 | [0077](0077-installation-sans-ligne-de-commande.md) | Installation sans ligne de commande : une commande d'installation, puis l'assistant web ; clé du serveur créée par l'exécutant, clé de secours des sauvegardes générée par le navigateur | Acceptée, réalisée (étapes 1 à 3) |

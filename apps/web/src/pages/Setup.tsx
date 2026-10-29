@@ -274,7 +274,7 @@ export function SetupPage() {
                     valeur={f.password}
                     minLen={minLen}
                     identifiants={[f.username.trim()]}
-                    noms={[me.appName, me.orgName]}
+                    noms={[me.appName, me.orgName, f.orgName.trim()].filter(Boolean)}
                   />
                   <PasswordInput
                     label="Confirmation"

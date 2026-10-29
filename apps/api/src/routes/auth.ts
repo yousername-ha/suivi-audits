@@ -28,12 +28,12 @@ import type { PoivrePrepare } from '../mots-de-passe.js';
 import { exigerPoivreValide } from './poivre.js';
 import type { Services } from '../services.js';
 
-function checkPassword(svc: Services, pw: unknown, username: string) {
+function checkPassword(svc: Services, pw: unknown, username: string, autresNoms: string[] = []) {
   const general = svc.settings.get('general');
   const p = problemesMotDePasse(pw, {
     minLen: svc.settings.get('securite').passwordMinLength,
     identifiants: [username],
-    noms: [general.appName, general.orgName],
+    noms: [general.appName, general.orgName, ...autresNoms],
   });
   if (p.length) throw new HttpError(422, 'Mot de passe trop faible : ' + p.join(', ') + '.');
 }
@@ -201,7 +201,8 @@ export const authRoutes = [
     response: StageOut,
     handler: async ({ svc, req, reply, ip, body }) => {
       if (!svc.limits.setupByIp(ip)) throw new HttpError(429, 'Trop de tentatives. Réessayez dans 15 minutes.');
-      checkPassword(svc, body.password, body.username);
+      // Le nom d'organisation saisi dans le même formulaire compte aussi (ADR 0075) : il remplace le nom enregistré.
+      checkPassword(svc, body.password, body.username, body.orgName?.trim() ? [body.orgName.trim()] : []);
       // Poivre des mots de passe (ADR 0072) : défini ici, dans la transaction qui consomme le jeton, ou déjà défini (administrateur
       // de secours). Les règles et l'engagement de sauvegarde sont contrôlés avant toute consommation du jeton.
       let poivre: PoivrePrepare | null = null;

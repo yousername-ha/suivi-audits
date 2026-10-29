@@ -105,12 +105,11 @@ if 'pg_restore' in args and '--list' not in args: Path(os.environ['TEST_RESTORED
         clair.write_bytes(tar_bytes(contents if outer is None else outer))
         return self.chiffrer(clair, nom, destinataires)
 
-    def run_restore(self, archive, verify=True, env=None, confirmation='RESTAURER\n', ancien=False):
+    def run_restore(self, archive, verify=True, env=None, confirmation='RESTAURER\n', options=()):
         args = ['bash', str(self.root / 'scripts/restore.sh')]
         if verify:
             args.append('--verifier')
-        if ancien:
-            args.append('--ancien-format')
+        args.extend(options)
         return subprocess.run(args + [str(archive)], input=confirmation, text=True, capture_output=True,
                               env={**self.env, **(env or {})}, timeout=20)
 
@@ -192,22 +191,21 @@ if 'pg_restore' in args and '--list' not in args: Path(os.environ['TEST_RESTORED
         ancien = self.archive(info=b'date=20261009\n')
         self.assert_refused(ancien)
 
-    def test_plain_archive_and_old_format_need_explicit_handling(self):
+    def test_plain_archive_and_old_format_are_refused(self):
         clair = self.root / 'suivi-audits-20261009-120000.tar'
         clair.write_bytes(tar_bytes([('suivi.dump', b'PGDMP-dump-fictif', tarfile.REGTYPE)]))
         self.assert_refused(clair)
         valide = self.archive()
-        self.assertNotEqual(self.run_restore(valide, ancien=True).returncode, 0)
-        # Ancien format : accepté seulement avec --ancien-format et la phrase secrète (INFO sans liaison au nom).
+        # L'option de l'ancien format n'existe plus (6.0.0, installation neuve uniquement).
+        self.assertNotEqual(self.run_restore(valide, options=['--ancien-format']).returncode, 0)
+        # Archive .tar.enc de la 5.x : refusée avec un message explicite, même avec la phrase secrète, sans appeler Docker.
         ancien = self.root / 'suivi-audits-20261009-120000.tar.enc'
         subprocess.run(['openssl', 'enc', '-aes-256-cbc', '-pbkdf2', '-iter', '600000', '-salt', '-in', str(self.root / 'clair.tar'),
                         '-out', str(ancien), '-pass', 'file:' + str(self.phrase)], check=True)
-        env = {'BACKUP_PASSPHRASE_FILE': str(self.phrase)}
-        refus = self.run_restore(ancien, env=env)
-        self.assertNotEqual(refus.returncode, 0)
-        self.assertIn('--ancien-format', refus.stderr + refus.stdout)
-        result = self.run_restore(ancien, env=env, ancien=True)
-        self.assertEqual(result.returncode, 0, result.stderr)
+        for verifier in (True, False):
+            refus = self.run_restore(ancien, verify=verifier, env={'BACKUP_PASSPHRASE_FILE': str(self.phrase)})
+            self.assertNotEqual(refus.returncode, 0)
+            self.assertIn('non prise en charge depuis la 6.0.0', refus.stderr + refus.stdout)
         self.assertFalse(self.events.exists())
 
     def test_decryption_key_with_wide_permissions_is_refused(self):
