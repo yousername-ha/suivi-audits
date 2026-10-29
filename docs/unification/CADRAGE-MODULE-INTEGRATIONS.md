@@ -1,8 +1,8 @@
 # Cadrage — module Intégrations (GLPI, ORADAD, Silène et connecteurs à venir)
 
 **Statut** : cadrage du 28/10/2026, à la demande du RSSI, avec ses décisions (R1 à R16 de
-l'[ADR 0076](../adr/0076-module-integrations.md), proposée). Aucun code, aucune migration. Les lots (§4) démarrent un par
-un après validation de ce plan.
+l'[ADR 0076](../adr/0076-module-integrations.md), acceptée le 29/10/2026). Aucun code, aucune migration. Plan validé par le
+RSSI le 29/10/2026 ; les lots (§4) démarrent un par un.
 
 ## 1. Besoin
 
