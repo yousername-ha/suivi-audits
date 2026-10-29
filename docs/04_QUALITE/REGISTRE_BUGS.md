@@ -203,12 +203,12 @@ elles ne sont pas ajoutées artificiellement comme trois bugs applicatifs ouvert
 | Déclencheur                 | Job « Images, sécurité et pile complète (Playwright) », étape des tests de bout en bout.                                                                                                 |
 | Attendu                     | Résultat identique d'une exécution à l'autre sur le même commit.                                                                                                                         |
 | Observé initialement        | Échec au premier passage, réussite au rejeu sans modification ; les PR concernées ne touchaient pas l'interface.                                                                         |
-| Cause / niveau | PARTIELLE : un test identifié (revues des accès, annotation « Test instable » de la CI de la PR #140) : l’enregistrement part au blur, sans être attendu, et la page est rechargée aussitôt ; la requête peut être interrompue. Autres tests : cause inconnue. |
-| Correctif | Rejeu unique en CI ; annotation GitHub par test en échec ou instable ; revues des accès : le test attend la réponse de l’enregistrement avant de recharger. |
+| Cause / niveau | PARTIELLE : un test identifié (revues des accès, annotation « Test instable » de la CI de la PR #140) : l’enregistrement part au blur, sans être attendu, et la page est rechargée aussitôt ; la requête peut être interrompue. Autres tests : cause inconnue. ; second test identifié le 29/10/2026 (CI de la PR #168) : administration en cartes, contrôle axe-core exécuté avec les transitions de l'interface actives (cause probable, non prouvée : le message de la CI est tronqué). |
+| Correctif | Rejeu unique en CI ; annotation GitHub par test en échec ou instable ; revues des accès : le test attend la réponse de l’enregistrement avant de recharger. ; administration en cartes : contexte sans transitions (`reducedMotion`), comme les autres tests axe-core ; l'annotation de la CI donne la ligne de l'assertion en échec. |
 | Fichiers                    | [tests/e2e/playwright.config.ts](../../tests/e2e/playwright.config.ts) ; [scripts/ci/rapport-e2e.mjs](../../scripts/ci/rapport-e2e.mjs) ; [.github/workflows/ci.yml](../../.github/workflows/ci.yml) |
-| Commit                      | À compléter à la fusion.                                                                                                                                                                 |
+| Commit | À compléter à la fusion de la PR de correction. |
 | Non-régression              | Annotations « Test instable » relues sur les PR suivantes.                                                                                                                               |
-| Reste à vérifier | Relire les annotations « Test instable » sur les PR suivantes ; corriger chaque autre test signalé. |
+| Reste à vérifier | Une seule instabilité relevée sur les 12 PR du 28 et 29/10/2026 ; relire les annotations sur les PR suivantes. Si le test d'administration en cartes reste instable, la ligne indiquée par l'annotation désigne l'assertion en cause. |
 
 ## BUG-012 — Échec passager de la construction de l'image « updater » en CI
 
