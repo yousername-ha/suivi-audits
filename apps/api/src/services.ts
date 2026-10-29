@@ -34,6 +34,7 @@ import { Conservation } from './conservation.js';
 import { Courriel } from './courriel.js';
 import { MotsDePasse } from './mots-de-passe.js';
 import { CleSecours } from './cle-secours.js';
+import { AdresseSiteService } from './adresse-site.js';
 import { NotificationsMetier } from './notifications-metier.js';
 import { TypesProcessus } from './types-processus.js';
 
@@ -90,6 +91,7 @@ export function createServices(cfg: Config, log: Logger) {
     auth,
     motsDePasse,
     cleSecours: new CleSecours(db, cfg),
+    adresseSite: new AdresseSiteService(db, cfg),
     alertesSecurite,
     bus,
     presence: new Presence(db, bus),
@@ -105,6 +107,7 @@ export function createServices(cfg: Config, log: Logger) {
       updateMfaByUser: limiter(5, 15 * 60e3),
       poivreByUser: limiter(5, 60 * 60e3),
       cleSecoursByUser: limiter(5, 60 * 60e3),
+      adresseSiteByUser: limiter(5, 60 * 60e3),
       setupByIp: limiter(10, 15 * 60e3),
       presence: limiter(30, 60e3),
       wallActivation: limiter(10, 15 * 60e3),

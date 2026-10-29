@@ -183,6 +183,8 @@ services:
     command: ['/usr/local/bin/demarrer-gateway']
     environment:
       SITE_ADDRESS: ${SITE_ADDRESS}
+      # Noms et adresses IPv4 du serveur, servis avec le certificat interne en plus du nom du site (installer.sh, ADR 0077).
+      SITE_ADDRESS_EXTRA: ${SITE_ADDRESS_EXTRA:-}
       CADDY_TLS: ${CADDY_TLS:-internal}
       TLS_WEB_MANAGEMENT: ${TLS_WEB_MANAGEMENT:-1}
       TLS_TERMINATION: ${TLS_TERMINATION:-caddy}

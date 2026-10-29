@@ -12,6 +12,7 @@ import { adminRoutes } from './routes/admin.js';
 import { alertesSecuriteRoutes } from './routes/alertes-securite.js';
 import { poivreRoutes } from './routes/poivre.js';
 import { cleSecoursRoutes } from './routes/cle-secours.js';
+import { adresseSiteRoutes } from './routes/adresse-site.js';
 import { remiseAVideRoutes } from './routes/remise-a-vide.js';
 import { updateRoutes } from './routes/updates.js';
 import { operationRoutes } from './routes/operations.js';
@@ -118,6 +119,7 @@ export function allRoutes(): RouteDef[] {
     ...remiseAVideRoutes,
     ...poivreRoutes,
     ...cleSecoursRoutes,
+    ...adresseSiteRoutes,
     ...alertesSecuriteRoutes,
     ...eventRoutes,
     ...suiviRoutes,

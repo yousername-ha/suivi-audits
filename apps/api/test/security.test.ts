@@ -281,7 +281,7 @@ describe('jeton d’installation', () => {
         cleSecours: cleSecoursDeTest(),
       });
       expect(r.statusCode).toBe(410);
-      expect(r.json().error).toMatch(/expiré.*setup-token/);
+      expect(r.json().error).toMatch(/expiré.*installer\.sh/);
       expect((await new Agent(t2).get('/api/setup')).json()).toMatchObject({
         needed: true,
         pending: false,
