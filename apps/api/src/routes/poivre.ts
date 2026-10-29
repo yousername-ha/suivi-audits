@@ -2,14 +2,7 @@
    Droit « administrer » + code de double authentification saisi à ce moment (même anti-rejeu que l'installation d'une mise à jour),
    ancien poivre exigé pour un changement, au plus 5 tentatives par heure et par compte. Le poivre ne traverse l'API que dans la
    requête qui l'enregistre ; il n'est jamais renvoyé, journalisé ni stocké en texte. */
-import {
-  PoivreChangerBody,
-  PoivreDefinirBody,
-  PoivreEtat,
-  finCorrespond,
-  problemesPoivre,
-  type PoivreAEnregistrer,
-} from '@suivi/shared';
+import { PoivreChangerBody, PoivreEtat, finCorrespond, problemesPoivre, type PoivreAEnregistrer } from '@suivi/shared';
 import { HttpError } from '../http/errors.js';
 import { route } from '../http/route.js';
 import type { Services } from '../services.js';
@@ -47,32 +40,6 @@ export const poivreRoutes = [
     access: 'administration:administrer',
     response: PoivreEtat,
     handler: async ({ svc }) => svc.motsDePasse.etat(),
-  }),
-  route({
-    method: 'POST',
-    url: '/api/admin/poivre/definir',
-    summary: 'Définir le poivre sur une installation qui n’en a pas (toutes les empreintes sont aussitôt protégées)',
-    tags: ['Administration'],
-    access: 'administration:administrer',
-    body: PoivreDefinirBody,
-    response: PoivreEtat,
-    handler: async ({ svc, s, ip, body }) => {
-      const user = s!.user;
-      if (!svc.limits.poivreByUser(user.id)) throw new HttpError(429, 'Trop de tentatives. Réessayez dans une heure.');
-      if (await svc.motsDePasse.defini())
-        throw new HttpError(409, 'Le poivre est déjà défini : utilisez le changement de poivre.');
-      await exigerPoivreValide(svc, body.poivre);
-      await exigerCode(svc, user, ip, body.code, 'securite.poivre_definition');
-      const prep = await svc.motsDePasse.preparer(body.poivre.valeur);
-      await svc.motsDePasse.definir(prep, user, ip);
-      await svc.alertesSecurite.poivre({
-        type: 'defini',
-        auteur: user.username,
-        ancienIdCle: null,
-        nouvelIdCle: prep.idCle,
-      });
-      return svc.motsDePasse.etat();
-    },
   }),
   route({
     method: 'POST',

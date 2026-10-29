@@ -161,7 +161,7 @@ export function PoivrePanel() {
 
   if (!etat) return <ErrorAlert error={q.error} />;
   const defini = etat.defini;
-  const pret = !!poivre && /^\d{6}$/.test(code) && (!defini || ancien !== '');
+  const pret = !!poivre && /^\d{6}$/.test(code) && ancien !== '';
 
   async function envoyer() {
     if (!poivre) return;
@@ -169,9 +169,10 @@ export function PoivrePanel() {
     setError(null);
     setFait(false);
     try {
-      const url = defini ? '/api/admin/poivre/changer' : '/api/admin/poivre/definir';
-      const body = defini ? { poivre, ancienPoivre: ancien, code } : { poivre, code };
-      qc.setQueryData(CLE_POIVRE, await api<PoivreEtat>('POST', url, { body }));
+      qc.setQueryData(
+        CLE_POIVRE,
+        await api<PoivreEtat>('POST', '/api/admin/poivre/changer', { body: { poivre, ancienPoivre: ancien, code } }),
+      );
       setFait(true);
       setPoivre(null);
       setAncien('');
@@ -201,37 +202,39 @@ export function PoivrePanel() {
           une copie de la base ne suffit pas à tenter de les retrouver.{' '}
           {defini
             ? `Clé ${etat.idCle}, définie le ${etat.definiLe ? new Date(etat.definiLe).toLocaleString('fr-FR', { timeZone: 'Europe/Paris' }) : '—'} ; ${etat.empreintesPoivrees} empreinte(s) sur ${etat.comptes} protégée(s).`
-            : 'Il n’est pas encore défini : les mots de passe restent protégés par le seul hachage. Définissez-le maintenant.'}
+            : 'Il n’est pas défini : il se définit dans l’assistant d’installation (ADR 0077).'}
         </Text>
         <ErrorAlert error={error} />
         {fait && (
           <Alert color="green" role="status">
-            {defini ? 'Poivre enregistré.' : 'Poivre défini.'} Toutes les empreintes sont protégées ; les mots de passe
-            des comptes n’ont pas changé et les sessions ouvertes restent actives.
+            Poivre enregistré. Toutes les empreintes sont protégées ; les mots de passe des comptes n’ont pas changé et
+            les sessions ouvertes restent actives.
           </Alert>
         )}
         {defini && (
-          <PasswordInput
-            label="Ancien poivre"
-            description="Le poivre actuel, tel que conservé au coffre-fort."
-            autoComplete="off"
-            value={ancien}
-            onChange={(e) => setAncien(e.currentTarget.value)}
-          />
+          <>
+            <PasswordInput
+              label="Ancien poivre"
+              description="Le poivre actuel, tel que conservé au coffre-fort."
+              autoComplete="off"
+              value={ancien}
+              onChange={(e) => setAncien(e.currentTarget.value)}
+            />
+            <SaisiePoivre key={cle} interdits={interdits} ancien={ancien} onChange={setPoivre} />
+            <TextInput
+              label="Code de double authentification"
+              value={code}
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              onChange={(e) => setCode(e.currentTarget.value.replace(/\D/g, '').slice(0, 6))}
+            />
+            <Group>
+              <Button disabled={!pret || pending} loading={pending} onClick={() => void envoyer()}>
+                Changer le poivre
+              </Button>
+            </Group>
+          </>
         )}
-        <SaisiePoivre key={cle} interdits={interdits} ancien={defini ? ancien : undefined} onChange={setPoivre} />
-        <TextInput
-          label="Code de double authentification"
-          value={code}
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          onChange={(e) => setCode(e.currentTarget.value.replace(/\D/g, '').slice(0, 6))}
-        />
-        <Group>
-          <Button disabled={!pret || pending} loading={pending} onClick={() => void envoyer()}>
-            {defini ? 'Changer le poivre' : 'Définir le poivre'}
-          </Button>
-        </Group>
       </Stack>
     </Card>
   );

@@ -59,6 +59,16 @@
    `installer.sh --construire` construit les images d'une branche non publiée : le job CI du guide l'utilise et rejoue
    le même parcours (l'assistant étant joué par l'API). Les notes de la 6.0.0 décrivent une installation neuve.
 
+6. **Retraits liés à l'installation neuve** (décision du RSSI du 29/10/2026, après l'audit des ADR 0070 à 0075) :
+   `restore.sh --ancien-format` (archives `.tar.enc` de la 5.x, annoncé par l'ADR 0071) et la définition du poivre sur une
+   installation existante (`POST /api/admin/poivre/definir`, mode « Définir » et bandeau, ADR 0072), inatteignables en 6.0.0.
+   Le changement de poivre et les sauvegardes `.tar.age` sont inchangés. `mettre-a-jour.sh` garde la phrase secrète de
+   l'ancien format pour une seule raison : le job CI de montée de version part encore de la 5.0.0, en attendant l'étiquette
+   `v6.0.0`.
+7. **Copie externe des sauvegardes** : seules les archives chiffrées (`DATA_DIR/sauvegardes`) s'externalisent, jamais avec
+   `DATA_DIR/cles-sauvegarde` (la clé du serveur déchiffre toutes les archives). La clé du serveur n'a pas à être
+   sauvegardée : la restauration après perte du serveur se fait avec la clé de secours.
+
 ## Conséquences
 
 - Plus d'`age`, de `cosign`, d'éditeur de texte ni de commande de jeton pour installer (hors voies d'expert) ; `age` reste utile sur l'hôte pour
