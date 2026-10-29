@@ -1,6 +1,6 @@
 # ADR 0073 — Données de démonstration proposées à l'installation
 
-- Statut : proposée (numéro à confirmer par le RSSI)
+- Statut : acceptée par le RSSI le 29/10/2026 (numéro confirmé)
 - Date : 2026-10-28
 - Contexte : le jeu de données fictif existait déjà (`suivi jeu-de-test`) mais ne couvrait ni les référentiels réels (ISO 27001, HDS) ni EBIOS RM, et se chargeait seulement en ligne de commande. Le RSSI demande de le proposer au premier lancement, construit comme une vraie démarche ISO 27001 / HDS et alimentant l'étude EBIOS RM, sans rien inventer de normatif.
 
