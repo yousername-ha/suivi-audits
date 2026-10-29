@@ -209,3 +209,20 @@ elles ne sont pas ajoutées artificiellement comme trois bugs applicatifs ouvert
 | Commit                      | À compléter à la fusion.                                                                                                                                                                 |
 | Non-régression              | Annotations « Test instable » relues sur les PR suivantes.                                                                                                                               |
 | Reste à vérifier | Relire les annotations « Test instable » sur les PR suivantes ; corriger chaque autre test signalé. |
+
+## BUG-012 — Échec passager de la construction de l'image « updater » en CI
+
+| Champ | Constat |
+| --- | --- |
+| Fonction, gravité, priorité | Chaîne de construction des images ; MINEURE ; P2 |
+| Statut | CORRIGÉ |
+| Détection / correction | 2026-10-28 ; CI des PR #158, #159 et #163 |
+| Déclencheur | Job « Montée de version », étape de construction de `docker/updater.Dockerfile` (compilation de cosign avec Go). |
+| Attendu | Résultat identique d'une exécution à l'autre sur le même commit. |
+| Observé initialement | Échec de `go build` sans rapport avec le code de la PR, réussite au rejeu. |
+| Cause / niveau | PROBABLE : indisponibilité passagère du proxy ou de la base de sommes de Go pendant le téléchargement des modules. Le message exact de Go n'est pas conservé par la construction en mode silencieux. |
+| Correctif | Les compilations Go des images `updater` et `web` sont réessayées jusqu'à 4 fois (15, 30 puis 45 secondes d'attente) ; la vérification des modules reste active. |
+| Fichiers | [docker/updater.Dockerfile](../../docker/updater.Dockerfile) ; [docker/web.Dockerfile](../../docker/web.Dockerfile) ; [scripts/tests/conteneurs.test.mjs](../../scripts/tests/conteneurs.test.mjs) |
+| Commit | 6ef7136 (PR #164) |
+| Non-régression | Test `scripts/tests/conteneurs.test.mjs` ; CI des PR suivantes. |
+| Reste à vérifier | Aucun nouvel échec de cette étape sur les PR suivantes ; sinon, journaliser la sortie de Go. |

@@ -4,6 +4,10 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ## [Non publié]
 
+## [5.2.0] — 2026-10-29
+
+Version mineure : une migration SQL (`046`, alertes de sécurité), aucune nouvelle dépendance. Elle regroupe les correctifs de sécurité des revues du 27 et du 28/10/2026 et le contenu de la 5.1.0, qui n'a pas été étiquetée. **Deux actions avant la mise à jour** (sauvegardes chiffrées avec age, poivre des mots de passe) : lire d'abord les notes ci-dessous.
+
 ### Notes de mise à jour
 
 **Changement majeur — sauvegardes chiffrées avec age** ([ADR 0071](docs/adr/0071-sauvegardes-chiffrees-avec-age.md)) : **avant la mise à jour**, installer `age` (`sudo apt install -y age`), lancer `sudo ./scripts/generer-cles-sauvegarde.sh`, générer la **clé de secours hors du serveur** (`age-keygen -o cle-secours.key` sur le poste du RSSI, la ranger hors ligne, ne donner au script que la ligne publique `age1…`) puis **tester une restauration avec cette clé** (`BACKUP_KEY_FILE=cle-secours.key ./scripts/restore.sh --verifier <archive>.tar.age`). Sans ces clés, la nouvelle version ne démarre pas et le retour arrière automatique rétablit l'ancienne. Les sauvegardes sont désormais des fichiers `.tar.age` ; les anciennes `.tar.enc` ne se restaurent plus qu'avec `restore.sh --ancien-format` et `BACKUP_PASSPHRASE_FILE`, pendant une version : **conserver l'ancienne phrase secrète** (`/root/.suivi-backup-pass`) tant qu'on garde de telles archives et refaire une sauvegarde juste après la mise à jour. Les variables `BACKUP_KEY_FILE` et `BACKUP_RECIPIENTS_FILE` remplacent `BACKUP_PASSPHRASE_FILE` (cron, `.env`).
