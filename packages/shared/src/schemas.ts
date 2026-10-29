@@ -4,6 +4,7 @@ import { ACTIONS, ALL_PERMISSIONS, MODULES, type Permission } from './permission
 import { PRESENCE_HEARTBEAT_MS } from './events.js';
 import { Preferences as PreferencesSchema } from './affichage.js';
 import { PoivreAEnregistrer } from './poivre.js';
+import { CleSecoursAEnregistrer } from './cle-secours.js';
 
 export const USERNAME_RE = /^[a-zA-Z0-9._@-]{2,64}$/;
 export const CLASSIFICATIONS = ['public', 'interne', 'restreint', 'confidentiel'] as const;
@@ -58,6 +59,8 @@ export const SetupBody = z.object({
   password: z.string().max(256),
   /** Poivre des mots de passe : obligatoire à la première installation, refusé s'il est déjà défini (ADR 0072). */
   poivre: PoivreAEnregistrer.optional(),
+  /** Clé PUBLIQUE de secours des sauvegardes, générée par le navigateur : obligatoire tant qu'aucune n'est enregistrée (ADR 0077). */
+  cleSecours: CleSecoursAEnregistrer.optional(),
 });
 export const PasswordChangeBody = z.object({ current: z.string().max(256), next: z.string().max(256) });
 export const PasswordBody = z.object({ password: z.string().max(256).optional() });
@@ -107,6 +110,8 @@ export const SetupStatusOut = z.object({
   adminExists: z.boolean(),
   /** Faux : l'installation demande aussi le poivre des mots de passe. */
   poivreDefini: z.boolean(),
+  /** Faux : l'installation demande aussi la clé de secours des sauvegardes. */
+  cleSecoursDefinie: z.boolean(),
 });
 export const TotpBeginOut = z.object({ secret: z.string(), uri: z.string() });
 export const ErrorOut = z.object({ error: z.string() }).catchall(z.unknown());

@@ -4,7 +4,7 @@
    ne bloque jamais l'installation. */
 import { describe, expect, it } from 'vitest';
 import { hotp } from '../src/security/crypto.js';
-import { Agent, createTestApp, PASSWORD, poivreDeTest, type TestApp } from './helpers.js';
+import { Agent, cleSecoursDeTest, createTestApp, PASSWORD, poivreDeTest, type TestApp } from './helpers.js';
 
 const installer = async (corps: Record<string, unknown>, avant?: (t: TestApp) => void) => {
   const t = await createTestApp({ PUBLIC_URL: 'https://suivi.test' });
@@ -16,6 +16,7 @@ const installer = async (corps: Record<string, unknown>, avant?: (t: TestApp) =>
     username: 'chef',
     password: PASSWORD,
     poivre: poivreDeTest(),
+    cleSecours: cleSecoursDeTest(),
     ...corps,
   });
   return { t, a, r };

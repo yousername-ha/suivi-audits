@@ -6,7 +6,7 @@
 # données, la dernière sauvegarde et, avec --avec-sauvegarde, une sauvegarde chiffrée réelle suivie de la
 # vérification de son archive (restore.sh --verifier, sans restauration).
 # Elle ne remplace pas la recette humaine (ergonomie, parcours métier) ni une restauration sur une autre machine.
-#   Usage :  sudo [BACKUP_KEY_FILE=<fichier>, défaut /root/.suivi-backup-key] [BACKUP_RECIPIENTS_FILE=<fichier>, défaut /root/.suivi-backup-recipients] ./scripts/recette-serveur.sh [--version X.Y.Z]
+#   Usage :  sudo [BACKUP_KEY_FILE=<fichier>, défaut DATA_DIR/cles-sauvegarde/serveur.key] [BACKUP_RECIPIENTS_FILE=<fichier>, défaut DATA_DIR/cles-sauvegarde/secours.pub] ./scripts/recette-serveur.sh [--version X.Y.Z]
 #                 [--avec-sauvegarde] [--sortie DOSSIER]
 # Rapports (sans secret) : DOSSIER, par défaut DATA_DIR/etat/recette/recette-AAAAMMJJ-HHMMSS.{md,json}.
 # Code de sortie : 0 si aucun contrôle n'a échoué (les avertissements ne font pas échouer), 1 sinon.
@@ -178,8 +178,8 @@ else
 fi
 if [ "$AVEC_SAUVEGARDE" = 1 ]; then
   # Mêmes fichiers par défaut que mettre-a-jour.sh : la recette n'oblige pas à répéter les variables.
-  BACKUP_KEY_FILE="${BACKUP_KEY_FILE:-/root/.suivi-backup-key}"
-  BACKUP_RECIPIENTS_FILE="${BACKUP_RECIPIENTS_FILE:-/root/.suivi-backup-recipients}"
+  BACKUP_KEY_FILE="$(cle_sauvegarde_serveur)"
+  BACKUP_RECIPIENTS_FILE="$(cles_sauvegarde_secours)"
   export BACKUP_KEY_FILE BACKUP_RECIPIENTS_FILE
   if ! erreur_cles=$( (controler_cles_sauvegarde "$BACKUP_KEY_FILE" "$BACKUP_RECIPIENTS_FILE") 2>&1 ); then
     noter ÉCHOUÉ R20 "Sauvegarde chiffrée puis vérification de l'archive" "$(printf '%s' "$erreur_cles" | tr '\n' ' ' | cut -c1-200)"

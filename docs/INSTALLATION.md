@@ -415,23 +415,14 @@ sudo ./scripts/preparer-donnees.sh
 ```
 **Résultat attendu** : `Dossier des données prêt : /srv/suivi-audits/donnees`. Le message `des données existent déjà dans des volumes Docker` signifie que l'application a déjà été installée sur ce serveur : suivez plutôt l'étape 12.5.
 
-**6.8 Préparer les clés de sauvegarde** (avant le premier démarrage, étape 7). Sur **votre poste** (pas sur le serveur), générez la clé de secours :
+**6.8 Clés de sauvegarde : rien à faire ici.** Chaque sauvegarde est chiffrée avec [age](https://github.com/FiloSottile/age) pour deux clés ([ADR 0071](adr/0071-sauvegardes-chiffrees-avec-age.md), [ADR 0077](adr/0077-installation-sans-ligne-de-commande.md)) :
 
-<!-- ci: instead: age-keygen -o "$RUNNER_TEMP/cle-secours.key" -->
-```bash
-age-keygen -o cle-secours-suivi.key
-```
-**Résultat attendu** : une ligne `Public key: age1…` (62 caractères). **Rangez `cle-secours-suivi.key` hors ligne** (coffre-fort, support chiffré) : c'est elle qui permet de restaurer si le serveur et sa clé sont perdus. Elle ne doit **jamais** être copiée sur le serveur. Seule la ligne `age1…` (la clé *publique*) est donnée au serveur.
+- la **clé du serveur**, créée automatiquement au premier démarrage dans `/srv/suivi-audits/donnees/cles-sauvegarde/serveur.key` (lisible par root seul, jamais affichée) ;
+- la **clé de secours**, générée par **votre navigateur** à l'étape 8 (assistant d'installation). Vous la téléchargez et la rangez au coffre-fort de l'organisation ; seule sa partie publique (`age1…`) est envoyée au serveur. C'est elle qui permet de restaurer si le serveur et sa clé sont perdus.
 
-Sur le serveur, créez la clé du serveur et enregistrez la clé publique de secours :
+Tant que la clé de secours n'est pas définie, les sauvegardes sont bloquées et un bandeau rouge le signale aux administrateurs.
 
-<!-- ci: instead: sudo ./scripts/generer-cles-sauvegarde.sh --secours "$(age-keygen -y "$RUNNER_TEMP/cle-secours.key")" --confirmer -->
-```bash
-sudo ./scripts/generer-cles-sauvegarde.sh
-```
-Le script génère `/root/.suivi-backup-key` (droits 0600, jamais affichée), puis vous demande de coller la clé publique `age1…` et de taper `ENREGISTRER` pour confirmer ; elle est écrite dans `/root/.suivi-backup-recipients`. Il ne demande ni n'affiche jamais de clé privée, et refuse d'écraser une clé existante. **Résultat attendu** : `Clé de secours enregistrée`.
-
-> Perte du serveur : installez `age` ailleurs, puis `BACKUP_KEY_FILE=<cle-secours-suivi.key> ./scripts/restore.sh <archive>.tar.age` (étape 11.4). **Testez-le avec la clé de secours avant de vous y fier.**
+> Perte du serveur : installez `age` ailleurs, puis `BACKUP_KEY_FILE=<fichier de la clé de secours> ./scripts/restore.sh <archive>.tar.age` (étape 11.4). **Testez-le avec la clé de secours avant de vous y fier.**
 
 ---
 
@@ -532,16 +523,21 @@ Le fichier `racine-suivi-audits.crt` est alors dans votre dossier **Télécharge
 
 > ⚠️ Ce certificat racine permet au serveur de signer des certificats reconnus par les postes. Ne le déployez que pour ce serveur, et préférez à terme un certificat de votre PKI (étape 6.4).
 
-**8.4 Remplir la page « Installation initiale »**, en deux étapes.
+**8.4 Remplir la page « Installation initiale »**, en trois étapes.
 
-*Étape 1 sur 2, le poivre des mots de passe* ([ADR 0072](adr/0072-poivre-des-mots-de-passe.md)). Le poivre est un secret qui chiffre toutes les empreintes de mots de passe : une copie de la base ne suffit plus à tenter de les retrouver. Il n'est stocké nulle part en clair et ne sera plus affiché.
-- **Générer un poivre** (recommandé) : l'application en propose un de 52 caractères, par groupes de 4. Copiez-le avec le bouton **Copier** et **enregistrez-le dans le coffre-fort de l'organisation**, avec le nom du serveur, au même titre que la clé de secours des sauvegardes (étape 6.8).
+*Étape 1 sur 3, le poivre des mots de passe* ([ADR 0072](adr/0072-poivre-des-mots-de-passe.md)). Le poivre est un secret qui chiffre toutes les empreintes de mots de passe : une copie de la base ne suffit plus à tenter de les retrouver. Il n'est stocké nulle part en clair et ne sera plus affiché.
+- **Générer un poivre** (recommandé) : l'application en propose un de 52 caractères, par groupes de 4. Copiez-le avec le bouton **Copier** et **enregistrez-le dans le coffre-fort de l'organisation**, avec le nom du serveur, au même titre que la clé de secours des sauvegardes (étape suivante).
 - ou **Saisir le mien** : 32 à 256 caractères avec au moins 3 types de caractères (ou une phrase d'au moins 6 mots), sans suite évidente (`abcde`, `12345`, `azerty`), sans le nom de l'application ou de l'organisation, avec une entropie estimée d'au moins 128 bits. Les critères non respectés s'affichent en direct.
 - Cochez **J'ai enregistré ce poivre dans le coffre-fort de l'organisation**, puis **recopiez ses 8 derniers caractères** depuis le coffre-fort : sans les deux, **Continuer** reste grisé.
 
 > Le poivre sert à le **changer** plus tard (Administration, Configuration système, Sécurité : ancien poivre et code de double authentification exigés) et à **reprendre l'activité** si la clé maîtresse du serveur est perdue. Perdu, il ne se récupère pas : la procédure d'urgence (`suivi poivre-reinitialiser --confirmer`) impose un nouveau mot de passe à tous les comptes.
 
-*Étape 2 sur 2, le compte administrateur* :
+*Étape 2 sur 3, la clé de secours des sauvegardes* ([ADR 0077](adr/0077-installation-sans-ligne-de-commande.md), étape 6.8).
+- Cliquez sur **Générer la clé de secours** : votre navigateur crée la clé, sans rien envoyer.
+- **Télécharger le fichier de la clé** (ou **Copier la clé privée**) et rangez-la dans le coffre-fort de l'organisation, avec le poivre. Elle ne sera plus affichée et ne doit jamais être copiée sur le serveur.
+- Cochez **J'ai rangé la clé privée de secours dans le coffre-fort**, puis recopiez ses **8 derniers caractères** : sans les deux, **Continuer** reste grisé. Seule la clé publique (`age1…`) est envoyée, avec le compte, à la fin de l'étape 3.
+
+*Étape 3 sur 3, le compte administrateur* :
 1. **Jeton d'installation** : collez le jeton. Minuscules, espaces et tirets sont acceptés : le champ se met en forme tout seul. **Nom de l'organisation** (facultatif) : affiché dans l'application et les exports, modifiable ensuite dans Paramètres.
 2. **Identifiant** : par exemple `rssi`. **Nom affiché** : par exemple `Responsable SSI`. L'adresse e-mail est facultative.
 3. **Mot de passe** et **Confirmation** : au moins 12 caractères, avec au moins 3 types de caractères parmi minuscules, majuscules, chiffres et symboles, et sans l'identifiant. Enregistrez-le dans votre coffre-fort.
@@ -677,13 +673,15 @@ Une sauvegarde contient la base (suivi, comptes, documents chiffrés, journal), 
 
 > ⚠️ Sans la clé du serveur **ni** la clé de secours, les sauvegardes sont **illisibles**, définitivement. Sans les sauvegardes, une panne du serveur fait **tout perdre**.
 
-**11.1 Contrôler les clés de sauvegarde.** Elles ont été créées à l'étape 6.8, avant le premier démarrage (Compose les monte dans l'exécutant et refuse de démarrer sans elles). Vérifiez leur présence et leurs droits :
+**11.1 Contrôler les clés de sauvegarde.** La clé du serveur est créée au premier démarrage et la clé publique de secours, définie à l'étape 8, est recopiée par l'exécutant des sauvegardes sous une minute (étape 6.8). Vérifiez leur présence et leurs droits :
 
+<!-- ci: exec: cd /opt/suivi-audits && sudo env BACKUP_DEST=/srv/sauvegardes/suivi-audits python3 ./scripts/exploitation-worker.py # recette en mode hôte (EXPLOITATION_AUTO=0, étape 6) : un passage de l'exécutant tient lieu de l'exécutant intégré -->
+<!-- ci: exec: for i in $(seq 1 60); do sudo test -s /srv/suivi-audits/donnees/cles-sauvegarde/secours.pub && break; sleep 3; done -->
 <!-- ci: run -->
 ```bash
-sudo ls -l /root/.suivi-backup-key /root/.suivi-backup-recipients
+sudo ls -l /srv/suivi-audits/donnees/cles-sauvegarde
 ```
-**Résultat attendu** : deux fichiers appartenant à `root`, la clé du serveur en `-rw-------`. **Gardez la clé de secours privée (`cle-secours-suivi.key`) hors ligne** et testez-la à l'étape 11.4.
+**Résultat attendu** : deux fichiers appartenant à `root`, `serveur.key` en `-rw-------` et `secours.pub`. **Gardez la clé de secours privée hors ligne** et testez-la à l'étape 11.4.
 
 **11.2 Lancer une première sauvegarde :**
 
@@ -697,7 +695,7 @@ sudo mkdir -p /srv/sauvegardes/suivi-audits
 ```bash
 sudo ./scripts/backup.sh /srv/sauvegardes/suivi-audits
 ```
-**Résultat attendu** : la dernière ligne est `Sauvegarde : /srv/sauvegardes/suivi-audits/suivi-audits-<date>-<heure>.tar.age`. Sans les clés de l'étape 6.8, le script refuse de sauvegarder et n'écrit aucun fichier en clair.
+**Résultat attendu** : la dernière ligne est `Sauvegarde : /srv/sauvegardes/suivi-audits/suivi-audits-<date>-<heure>.tar.age`. Sans clé de secours (étape 8), le script refuse de sauvegarder et n'écrit aucun fichier en clair.
 
 <!-- ci: run -->
 ```bash
@@ -740,7 +738,7 @@ La restauration destructive exige root et la confirmation RESTAURER. Elle refuse
 ```bash
 sudo ./scripts/restore.sh /srv/sauvegardes/suivi-audits/<fichier>.tar.age
 ```
-Sur un autre serveur (perte de la clé du serveur), indiquer la clé de secours : `sudo BACKUP_KEY_FILE=/chemin/cle-secours-suivi.key ./scripts/restore.sh <fichier>.tar.age`.
+Sur un autre serveur (perte de la clé du serveur), indiquer le fichier de la clé de secours téléchargé à l'étape 8 : `sudo BACKUP_KEY_FILE=/chemin/cle-secours-sauvegardes-<date>.txt ./scripts/restore.sh <fichier>.tar.age`.
 
 **Anciennes archives `.tar.enc`** (phrase secrète, version 5.x) : elles ne figurent plus dans l'écran de sauvegardes et ne se restaurent que par `sudo BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass ./scripts/restore.sh --ancien-format <fichier>.tar.enc`, pour une version seulement : **conservez l'ancienne phrase secrète** tant que vous gardez de telles archives, et faites une nouvelle sauvegarde `.tar.age`.
 Le script vérifie l'empreinte et la structure, puis demande de taper `RESTAURER` (en majuscules) suivi d'**Entrée**.
@@ -770,7 +768,6 @@ Sur le serveur d’exploitation uniquement :
 <!-- ci: skip — configuration facultative de la tâche hôte A1a, testée avec un exécutant isolé -->
 ```bash
 cd /opt/suivi-audits
-sudo chmod 0600 /root/.suivi-backup-key
 sudo BACKUP_DEST=/srv/sauvegardes/suivi-audits RETENTION_DAYS=90 ./scripts/backup-worker.sh
 ```
 
@@ -881,7 +878,7 @@ Dans **Configuration système → Mises à jour et versions**, un compte ayant l
 
 L’exécutant télécharge et vérifie les signatures cosign des images API, web et updater, avec l’identité exacte du workflow/tag, ainsi que leur **attestation SBOM** signée par la même identité ([ADR 0063](adr/0063-chaine-de-publication-durcie.md)) : une image sans attestation est refusée. Le SBOM vérifié de chaque composant est conservé dans `DATA_DIR/etat/sbom/<version>` et se télécharge depuis les reçus de mise à jour. Le commit des sources doit correspondre au label de révision des images signées ; les images appliquées sont épinglées par empreinte. Pendant cette préparation, le service reste disponible. Ensuite la maintenance bloque les écritures, attend la fin des mutations déjà engagées, crée une sauvegarde chiffrée et effectue migrations/redémarrage/contrôles de santé et de données. Le frontal sert indépendamment `/update/` et un état public minimal : les utilisateurs et nouvelles connexions conservent la page pendant l’arrêt de l’API, de l’interface et de l’exécutant. Les étapes affichées sont réelles et horodatées, avec la durée écoulée ; aucun pourcentage n’est inventé. À la fin, un **reçu** structuré (versions, étapes, empreintes et signature des images vérifiées, sauvegarde et son empreinte, contrôles des données avant et après) est déposé dans `DATA_DIR/etat/recus-mises-a-jour` et se télécharge depuis Configuration système → Mises à jour et versions ; il ne contient aucune sortie brute de commande et n’est pas servi par le frontal public. Le retour à l’application est automatique après santé confirmée. Un échec avec retour arrière est clairement affiché, avec accès au résultat ; une intervention requise maintient la protection.
 
-`init` crée exclusivement les secrets manquants. Les sauvegardes de mise à jour utilisent les clés age de l'étape 6.8 (root, 0600, montées en lecture seule dans l'exécutant, hors montage API) ; l'ancien fichier `DATA_DIR/update-secrets/backup-pass` n'est plus créé ni utilisé (le conserver s'il sert à restaurer d'anciennes archives `.tar.enc`). Les archives chiffrées sont dans `DATA_DIR/sauvegardes-updates/avant-mise-a-jour`, les cinq dernières sont conservées ; les journaux/reçus privés dans `DATA_DIR/reprise-updates` (root, 0700), l’état public dans `DATA_DIR/etat/updates`. Inclure ces dossiers dans la sauvegarde externalisée du serveur et conserver la clé de secours (privée) dans le coffre-fort pour restaurer après perte du serveur. Ne jamais exposer le socket Docker, le projet en écriture ou ces clés à l’API.
+`init` crée exclusivement les secrets manquants. Les sauvegardes de mise à jour utilisent les clés age de l'étape 6.8 (`DATA_DIR/cles-sauvegarde`, root, 0600, hors montage API) ; l'ancien fichier `DATA_DIR/update-secrets/backup-pass` n'est plus créé ni utilisé (le conserver s'il sert à restaurer d'anciennes archives `.tar.enc`). Les archives chiffrées sont dans `DATA_DIR/sauvegardes-updates/avant-mise-a-jour`, les cinq dernières sont conservées ; les journaux/reçus privés dans `DATA_DIR/reprise-updates` (root, 0700), l’état public dans `DATA_DIR/etat/updates`. Inclure ces dossiers dans la sauvegarde externalisée du serveur et conserver la clé de secours (privée) dans le coffre-fort pour restaurer après perte du serveur. Ne jamais exposer le socket Docker, le projet en écriture ou ces clés à l’API.
 
 L’exécutant se remplace lui-même à la fin d’une mise à jour ; son successeur termine les contrôles depuis le reçu durable. Après une interruption pendant remplacement, il tente le retour sécurisé depuis la sauvegarde précédente. Une reprise échouée reste bloquée et conserve les références privées pour l’exploitant : examiner le journal, le rapport et la sauvegarde avant toute restauration manuelle. Ne pas supprimer le marqueur de maintenance tant que la santé et les données ne sont pas validées.
 

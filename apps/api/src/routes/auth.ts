@@ -12,6 +12,7 @@ import {
   StageOut,
   TotpBeginOut,
   TotpConfirmBody,
+  empreinteCleSecours,
   problemesMotDePasse,
   type MeOut as MeOutT,
 } from '@suivi/shared';
@@ -178,7 +179,13 @@ export const authRoutes = [
     handler: async ({ svc }) => {
       const adminExists = await svc.auth.adminExists();
       const pending = await svc.auth.setupPending();
-      return { needed: pending || !adminExists, pending, adminExists, poivreDefini: await svc.motsDePasse.defini() };
+      return {
+        needed: pending || !adminExists,
+        pending,
+        adminExists,
+        poivreDefini: await svc.motsDePasse.defini(),
+        cleSecoursDefinie: await svc.cleSecours.definie(),
+      };
     },
   }),
   route({
@@ -205,6 +212,14 @@ export const authRoutes = [
         await exigerPoivreValide(svc, body.poivre, { identifiants: [body.username] });
         poivre = await svc.motsDePasse.preparer(body.poivre.valeur);
       }
+      // Clé de secours des sauvegardes (ADR 0077) : sa clé publique seule, enregistrée avec le compte ; l'engagement de l'avoir
+      // rangée au coffre-fort est vérifié dans le navigateur, seul détenteur de la clé privée.
+      const cleSecoursDefinie = await svc.cleSecours.definie();
+      const cleSecours = cleSecoursDefinie ? null : (body.cleSecours ?? null);
+      if (!cleSecoursDefinie && !cleSecours)
+        throw new HttpError(422, 'La clé de secours des sauvegardes est obligatoire à l’installation.', {
+          reason: 'cle_secours_requise',
+        });
       const id = svc.motsDePasse.nouvelId();
       const hash = poivre
         ? chiffrerEmpreinte(poivre.cle, id, await hashPassword(body.password))
@@ -219,6 +234,7 @@ export const authRoutes = [
           if (!poivre && body.poivre)
             throw new HttpError(409, 'Le poivre est déjà défini.', { reason: 'poivre_defini' });
           if (poivre) await svc.motsDePasse.inscrireALInstallation(c, kdb, poivre, body.username);
+          if (cleSecours) await svc.cleSecours.inscrire(kdb, cleSecours.publique, body.username);
           const u = await kdb
             .insertInto('users')
             .values({
@@ -254,6 +270,11 @@ export const authRoutes = [
       if (poivre)
         await svc.db.audit({ id: res.id, username: body.username }, ip, 'securite.poivre_defini', '', {
           idCle: poivre.idCle,
+          installation: true,
+        });
+      if (cleSecours)
+        await svc.db.audit({ id: res.id, username: body.username }, ip, 'sauvegarde.cle_secours_definie', '', {
+          empreinte: empreinteCleSecours(cleSecours.publique),
           installation: true,
         });
       await svc.auth.create(req, reply, res.id, false);

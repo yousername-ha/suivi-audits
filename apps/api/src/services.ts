@@ -33,6 +33,7 @@ import { CalendriersPlateforme } from './calendriers-plateforme.js';
 import { Conservation } from './conservation.js';
 import { Courriel } from './courriel.js';
 import { MotsDePasse } from './mots-de-passe.js';
+import { CleSecours } from './cle-secours.js';
 import { NotificationsMetier } from './notifications-metier.js';
 import { TypesProcessus } from './types-processus.js';
 
@@ -88,6 +89,7 @@ export function createServices(cfg: Config, log: Logger) {
     notificationsMetier,
     auth,
     motsDePasse,
+    cleSecours: new CleSecours(db, cfg),
     alertesSecurite,
     bus,
     presence: new Presence(db, bus),
@@ -102,6 +104,7 @@ export function createServices(cfg: Config, log: Logger) {
       motDePasseByUser: limiter(5, 15 * 60e3),
       updateMfaByUser: limiter(5, 15 * 60e3),
       poivreByUser: limiter(5, 60 * 60e3),
+      cleSecoursByUser: limiter(5, 60 * 60e3),
       setupByIp: limiter(10, 15 * 60e3),
       presence: limiter(30, 60e3),
       wallActivation: limiter(10, 15 * 60e3),

@@ -92,15 +92,15 @@ class Updates(unittest.TestCase):
         self.assertIsNone(self.w.state['available'])
         self.assertTrue(self.w.state['checkError'])
 
-    def test_exploitation_automatique_utilise_les_cles_age_de_l_hote_et_stockage_prive(self):
+    def test_exploitation_automatique_utilise_les_cles_age_du_dossier_des_donnees_et_stockage_prive(self):
         with patch.object(self.w,'run') as run:
             self.w.exploitation()
         args, options = run.call_args
         self.assertEqual(args[0],['python3',str(self.root/'scripts/exploitation-worker.py')])
         self.assertEqual(options['timeout'],4000)
         env = options['extra_env']
-        self.assertEqual(env['BACKUP_KEY_FILE'],'/root/.suivi-backup-key')
-        self.assertEqual(env['BACKUP_RECIPIENTS_FILE'],'/root/.suivi-backup-recipients')
+        self.assertEqual(env['BACKUP_KEY_FILE'],str(self.data/'cles-sauvegarde/serveur.key'))
+        self.assertEqual(env['BACKUP_RECIPIENTS_FILE'],str(self.data/'cles-sauvegarde/secours.pub'))
         self.assertNotIn('BACKUP_PASSPHRASE_FILE',env)
         self.assertEqual(env['BACKUP_DEST'],str(self.data/'sauvegardes'))
         self.assertEqual(env['EXPLOITATION_TLS_HOST'],'gateway')

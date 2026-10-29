@@ -3,7 +3,17 @@
 import { finPoivre, formaterPoivreGenere, genererPoivre, type PoivreAEnregistrer } from '@suivi/shared';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { DEMANDEUR_ALERTE } from '../src/alertes-exploitation.js';
-import { Agent, createTestApp, login, makeUser, nextCode, PASSWORD, type TestApp, type TestUser } from './helpers.js';
+import {
+  Agent,
+  cleSecoursDeTest,
+  createTestApp,
+  login,
+  makeUser,
+  nextCode,
+  PASSWORD,
+  type TestApp,
+  type TestUser,
+} from './helpers.js';
 
 const SAISI = 'Vq7!mZ3#kP9$wX2@nR5%tL8&yB4*cD6^hF1(';
 const AUTRE = 'Jh6&nB2!rT8#qL4@zW9$cK5%xP3*mD7^vF1)';
@@ -33,6 +43,7 @@ describe('installation', () => {
     token,
     username: 'chef',
     password: PASSWORD,
+    cleSecours: cleSecoursDeTest(),
     ...extra,
   });
   const hash = async (nom: string) =>

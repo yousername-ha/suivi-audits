@@ -1,7 +1,16 @@
 /* Composition des mots de passe de compte (ADR 0075) côté serveur : changement de mot de passe et installation refusent la
    répétition, la suite et les noms interdits, avec un message par critère ; un mot de passe conforme est accepté. */
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { Agent, createTestApp, login, makeUser, PASSWORD, poivreDeTest, type TestApp } from './helpers.js';
+import {
+  Agent,
+  cleSecoursDeTest,
+  createTestApp,
+  login,
+  makeUser,
+  PASSWORD,
+  poivreDeTest,
+  type TestApp,
+} from './helpers.js';
 
 let t: TestApp, a: Agent;
 beforeAll(async () => {
@@ -46,7 +55,7 @@ describe('installation initiale', () => {
       const { token } = await t2.svc.auth.issueSetupToken('cli', () => {});
       const poivre = poivreDeTest();
       const tenter = (password: string) =>
-        new Agent(t2).post('/api/setup', { token, username: 'chef', password, poivre });
+        new Agent(t2).post('/api/setup', { token, username: 'chef', password, poivre, cleSecours: cleSecoursDeTest() });
       const r1 = await tenter('Zq8-chef-Lm5-Hjk-9!');
       expect(r1.statusCode, r1.body).toBe(422);
       expect(r1.json().error).toMatch(/identifiant/);

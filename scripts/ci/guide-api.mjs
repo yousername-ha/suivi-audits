@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* CI, job « guide » : remplace les gestes faits dans le navigateur par le guide d'installation (docs/INSTALLATION.md),
    au moyen de l'API, sur la pile installée en suivant le guide. Sans dépendance (Node 20 ou plus).
-     administrateur <url>         étape 8 : poivre, jeton d'installation, création de l'administrateur, enrôlement TOTP
+     administrateur <url>         étape 8 : poivre, clé de secours, jeton d'installation, administrateur, enrôlement TOTP
      compte <url>                 étape 9 : création d'un compte « Contributeur » (mot de passe temporaire)
      import <url> <fichier.json>  étape 10 : simulation puis import (mode Initialiser) d'un fichier de l'ancien outil
      verifier <url>               étape 11.4 : après restauration, comptes et données présents
@@ -48,6 +48,38 @@ const poivreDeRecette = () => {
       engagement: { coffre: true, fin: brut.slice(-8) },
     };
   }
+};
+/** Clé PUBLIQUE de secours des sauvegardes (ADR 0077), comme l'assistant la génère dans le navigateur : X25519, encodée en
+    bech32 au format age (age1…). La clé privée reste dans $RUNNER_TEMP, hors du serveur. */
+const cleSecoursDeRecette = () => {
+  const { publicKey, privateKey } = crypto.generateKeyPairSync('x25519');
+  writeFileSync(
+    path.join(process.env.RUNNER_TEMP || '/tmp', 'guide-cle-secours.der'),
+    privateKey.export({ format: 'der', type: 'pkcs8' }),
+    { mode: 0o600 },
+  );
+  const octets = Buffer.from(publicKey.export({ format: 'jwk' }).x, 'base64url');
+  const ALPHA = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
+  const GEN = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3];
+  const polymod = (v) =>
+    v.reduce((chk, x) => {
+      const haut = chk >>> 25;
+      let c = ((chk & 0x1ffffff) << 5) ^ x;
+      for (let i = 0; i < 5; i++) if ((haut >>> i) & 1) c ^= GEN[i];
+      return c;
+    }, 1);
+  const cinq = [];
+  let acc = 0,
+    bits = 0;
+  for (const o of octets) {
+    acc = (acc << 8) | o;
+    bits += 8;
+    while (bits >= 5) cinq.push((acc >>> (bits -= 5)) & 31);
+  }
+  if (bits) cinq.push((acc << (5 - bits)) & 31);
+  const mod = polymod([3, 3, 3, 0, 1, 7, 5, ...cinq, 0, 0, 0, 0, 0, 0]) ^ 1;
+  const controle = [0, 1, 2, 3, 4, 5].map((i) => (mod >>> (5 * (5 - i))) & 31);
+  return { publique: `age1${[...cinq, ...controle].map((v) => ALPHA[v]).join('')}`, coffre: true };
 };
 const fail = (msg) => {
   console.error(`::error::Guide d'installation : ${msg}`);
@@ -162,6 +194,7 @@ switch (cmd) {
     if (!pre.needed) fail('/api/setup indique que l’installation n’est pas attendue');
     // La montée de version part d'une version publiée avant le poivre (ADR 0072) : elle ne le propose pas.
     const avecPoivre = 'poivreDefini' in pre;
+    const avecCle = 'cleSecoursDefinie' in pre && !pre.cleSecoursDefinie;
     await call('POST', '/api/setup', {
       json: {
         token: token.toLowerCase().replace(/-/g, ' '),
@@ -169,6 +202,7 @@ switch (cmd) {
         displayName: 'Responsable SSI',
         password,
         ...(avecPoivre ? { poivre: poivreDeRecette() } : {}),
+        ...(avecCle ? { cleSecours: cleSecoursDeRecette() } : {}),
       },
     });
     if ((await me()).stage !== 'enroll') fail('après /api/setup, l’enrôlement TOTP devrait être demandé');
@@ -301,14 +335,7 @@ switch (cmd) {
     const st = load();
     const root = (args, options = {}) => execFileSync('sudo', args, { encoding: 'utf8', timeout: 240000, ...options });
     const worker = () =>
-      root([
-        'env',
-        'BACKUP_DEST=/srv/sauvegardes/suivi-audits',
-        'BACKUP_KEY_FILE=/root/.suivi-backup-key',
-        'BACKUP_RECIPIENTS_FILE=/root/.suivi-backup-recipients',
-        'python3',
-        './scripts/exploitation-worker.py',
-      ]);
+      root(['env', 'BACKUP_DEST=/srv/sauvegardes/suivi-audits', 'python3', './scripts/exploitation-worker.py']);
     const result = async (id) => {
       const e = await call('GET', '/api/admin/exploitation');
       const job = e.jobs.find((j) => j.id === id);
@@ -391,7 +418,7 @@ switch (cmd) {
       printf 'date=20260101-000000\nfichier=%s\n' "$nom" > "$work/INFO"
       tar czf "$work/secrets.tgz" -C /srv/suivi-audits/donnees/secrets .
       tar cf "$work/archive.tar" -C "$work" suivi.dump secrets.tgz INFO
-      age -r "$(age-keygen -y /root/.suivi-backup-key)" -R /root/.suivi-backup-recipients -o "/srv/sauvegardes/suivi-audits/$nom" "$work/archive.tar"
+      age -r "$(age-keygen -y /srv/suivi-audits/donnees/cles-sauvegarde/serveur.key)" -R /srv/suivi-audits/donnees/cles-sauvegarde/secours.pub -o "/srv/sauvegardes/suivi-audits/$nom" "$work/archive.tar"
       cd /srv/sauvegardes/suivi-audits
       sha256sum "$nom" > "$nom.sha256"`,
     ]);
