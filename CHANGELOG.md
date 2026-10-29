@@ -4,6 +4,10 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ## [Non publié]
 
+### Notes de mise à jour
+
+Aucune action.
+
 ## [5.2.0] — 2026-10-29
 
 Version mineure : une migration SQL (`046`, alertes de sécurité), aucune nouvelle dépendance. Elle regroupe les correctifs de sécurité des revues du 27 et du 28/10/2026 et le contenu de la 5.1.0, qui n'a pas été étiquetée. **Deux actions avant la mise à jour** (sauvegardes chiffrées avec age, poivre des mots de passe) : lire d'abord les notes ci-dessous.
