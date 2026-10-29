@@ -73,8 +73,10 @@ while [ $# -gt 0 ]; do
 done
 
 DEPOT_IMAGES=ghcr.io/yousername-ha/suivi-audits
-CLE="$(cle_sauvegarde_serveur)"
-SECOURS="$(cles_sauvegarde_secours)"
+# Mêmes chemins que cle_sauvegarde_serveur et cles_sauvegarde_secours (lib-commun.sh), écrits ici : depuis l'écran de mise à jour,
+# ce script s'exécute avec les fonctions communes de la version installée, qui peut ne pas encore les avoir.
+CLE="${BACKUP_KEY_FILE:-$(dossier_donnees)/cles-sauvegarde/serveur.key}"
+SECOURS="${BACKUP_RECIPIENTS_FILE:-$(dossier_donnees)/cles-sauvegarde/secours.pub}"
 PASS="${BACKUP_PASSPHRASE_FILE:-/root/.suivi-backup-pass}"
 STAMP=$(date -u +%Y%m%d-%H%M%S)
 DEBUT=$(date +%s)
