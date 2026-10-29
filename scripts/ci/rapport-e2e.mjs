@@ -31,12 +31,15 @@ function parcourir(suite, chemin) {
       if (t.status !== 'flaky' && t.status !== 'unexpected') continue;
       const echec = (t.results ?? []).find((r) => r.status !== 'passed' && r.status !== 'skipped');
       const brut = echec?.error?.message ?? echec?.errors?.[0]?.message ?? '';
+      const position = echec?.error?.location ?? echec?.errors?.[0]?.location;
       constats[t.status].push({
         fichier: spec.file,
         ligne: spec.line,
         titre: [...chemin.slice(1), spec.title].join(' › '),
         essais: (t.results ?? []).length,
         message: sansCouleur(brut).split('\n').filter(Boolean).slice(0, 3).join(' ').slice(0, 300),
+        // Ligne de l'assertion en échec : le message, tronqué, ne dit pas laquelle des vérifications du test a échoué.
+        position: position?.line ? ` — ligne ${position.line} du test` : '',
       });
     }
 }
@@ -51,7 +54,7 @@ for (const [statut, niveau] of [
     console.log(
       `::${niveau} file=${echapperPropriete(`tests/e2e/specs/${c.fichier}`)},line=${c.ligne},title=${echapperPropriete(
         libelles[statut],
-      )}::${echapper(`${c.fichier} › ${c.titre} (${c.essais} essai(s)) — ${c.message}`)}`,
+      )}::${echapper(`${c.fichier} › ${c.titre} (${c.essais} essai(s))${c.position} — ${c.message}`)}`,
     );
 
 const st = rapport.stats ?? {};
@@ -61,7 +64,7 @@ const resume = [
   `Réussis : ${st.expected ?? 0} · en échec : ${st.unexpected ?? 0} · instables (réussis au rejeu) : ${st.flaky ?? 0} · ignorés : ${st.skipped ?? 0}`,
   '',
   ...[...constats.unexpected.map((c) => ['échec', c]), ...constats.flaky.map((c) => ['instable', c])].map(
-    ([etat, c]) => `- ${etat} : \`${c.fichier}:${c.ligne}\` ${c.titre} — ${c.message}`,
+    ([etat, c]) => `- ${etat} : \`${c.fichier}:${c.ligne}\` ${c.titre}${c.position} — ${c.message}`,
   ),
   '',
 ].join('\n');
