@@ -410,8 +410,9 @@ jobs:
 
   guide:
     name: Guide d'installation (rejoué sur un runner Ubuntu vierge)
-    # Rejoue docs/INSTALLATION.md : préparation, installation de Docker, configuration, démarrage, administrateur
-    # créé par l'API, compte utilisateur, import de la fixture legacy, sauvegarde, restauration et mise à jour.
+    # Rejoue docs/INSTALLATION.md : préparation, installation de Docker, installer.sh (images construites par --construire),
+    # assistant joué par l'API (administrateur, clé de secours), compte utilisateur, import de la fixture legacy,
+    # sauvegarde, restauration et mise à jour.
     # Échoue si une commande du guide échoue, si un bloc n'est pas marqué, ou si un résultat attendu n'est pas obtenu.
     runs-on: ubuntu-24.04
     needs: [qualite]

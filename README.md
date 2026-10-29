@@ -44,12 +44,15 @@ Pour un besoin particulier, on crée des rôles personnalisés par duplication, 
 
 Le guide complet, avec les prérequis et les résultats attendus, est [docs/INSTALLATION.md](docs/INSTALLATION.md).
 
+Sur un serveur où Docker et git sont installés ([ADR 0077](docs/adr/0077-installation-sans-ligne-de-commande.md)) :
+
 ```bash
-cd /opt/suivi-audits
-sudo cp .env.example .env && sudo nano .env        # SITE_ADDRESS, APP_VERSION, CADDY_TLS
-sudo docker compose pull && sudo docker compose up -d
-sudo docker compose exec app setup-token           # jeton d'installation, puis https://<nom_dns>/setup
+sudo git clone https://github.com/yousername-ha/suivi-audits.git /opt/suivi-audits
+cd /opt/suivi-audits && sudo git checkout v<version>
+sudo ./installer.sh            # vérifie, configure, démarre, puis affiche l'adresse https://…/setup et le jeton
 ```
+
+Tout le reste se fait dans le navigateur : adresse du site, poivre des mots de passe, clé de secours des sauvegardes (générée par le navigateur), compte administrateur et double authentification.
 
 | Tâche | Commande |
 |---|---|
@@ -57,7 +60,7 @@ sudo docker compose exec app setup-token           # jeton d'installation, puis 
 | Journaux | `sudo docker compose logs -f app` |
 | Commandes d'exploitation | `sudo docker compose exec app suivi help` (`users`, `reset-password`, `reset-mfa`, `unlock`, `disable`, `enable`, `sessions-purge`) |
 | Administrateur de secours | `sudo docker compose exec app setup-token --recovery` |
-| Sauvegarde chiffrée | `sudo ./scripts/backup.sh /srv/sauvegardes/suivi-audits` |
+| Sauvegarde chiffrée | Administration → Sauvegardes et restauration (planification : Certificats et opérations) ; en ligne de commande : `sudo ./scripts/backup.sh /srv/sauvegardes/suivi-audits` |
 | Restauration | `sudo ./scripts/restore.sh <archive>.tar.age` |
 | Mise à jour | Configuration système → Mises à jour et versions ; pour le premier passage ou l’entretien serveur, suivre [INSTALLATION, section 12](docs/INSTALLATION.md) (sauvegarde et signatures). |
 | Antivirus | `CLAMAV_HOST=clamav` dans `.env`, puis `sudo docker compose --profile antivirus up -d` |
