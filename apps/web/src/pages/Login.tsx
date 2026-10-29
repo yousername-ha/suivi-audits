@@ -1,5 +1,6 @@
 /* Connexion : mot de passe, puis double authentification (code TOTP), enrôlement TOTP, changement de mot de passe imposé. */
 import { Alert, Button, Card, Group, PasswordInput, PinInput, Stack, Text, TextInput, Title } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
 import { useQuery } from '@tanstack/react-query';
 import qrcode from 'qrcode-generator';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
@@ -253,7 +254,28 @@ function EnrollForm({
         </Text>
       )}
       <Text size="sm">2. Saisissez le code affiché par l’application.</Text>
-      <CodeInput busy={busy} onComplete={(code) => run(() => post('/api/account/totp/confirm', { code }))} />
+      <CodeInput
+        busy={busy}
+        onComplete={(code) =>
+          run(async () => {
+            const r = await post<{ demo?: 'ok' | 'echec' }>('/api/account/totp/confirm', { code });
+            if (r.demo === 'ok')
+              notifications.show({
+                color: 'teal',
+                autoClose: false,
+                message:
+                  'Données de démonstration chargées (établissement fictif). Pour repartir d’une base vide : Administration, Remettre la base à vide.',
+              });
+            if (r.demo === 'echec')
+              notifications.show({
+                color: 'red',
+                autoClose: false,
+                message:
+                  'Le chargement des données de démonstration a été interrompu : la démonstration peut être incomplète. Consultez le journal d’audit, puis Administration, Remettre la base à vide.',
+              });
+          })
+        }
+      />
       {err}
       {restart}
     </AuthCard>

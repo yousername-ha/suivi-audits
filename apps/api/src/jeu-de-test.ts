@@ -12,8 +12,9 @@ import { methodTemplate } from '@suivi/shared';
 import type { JsonObject } from '@suivi/shared/legacy';
 import { sql } from 'kysely';
 import type { Services } from './services.js';
+import { couvertureEtDda, etudeEbios, rattacherStandards, type BilanNormes } from './demo-normes.js';
 
-export const ORGANISATION_TEST = 'Association Fictive de Santé (jeu de test)';
+export const ORGANISATION_TEST = 'Établissement de santé fictif (démonstration)';
 type Json = Record<string, unknown>;
 
 const decaler = (jours: number) => new Date(Date.now() + jours * 86400e3).toISOString().slice(0, 10);
@@ -25,30 +26,31 @@ export function etatJeuDeTest(): Json {
   return {
     scope: {
       organisation: ORGANISATION_TEST,
-      text: 'Activités d’accueil, de prise en charge et de gestion des dossiers de l’association fictive.',
-      interfaces: 'Prestataires informatiques, autorité de tutelle fictive, établissements partenaires fictifs.',
+      text: 'Accueil, prise en charge des patients, dossier patient informatisé et hébergement des données de santé de l’établissement fictif et de ses établissements partenaires.',
+      interfaces:
+        'Hébergeur de données de santé fictif, éditeur du logiciel de dossiers fictif, prestataire de maintenance fictif, autorité de tutelle fictive, établissements partenaires fictifs.',
       issues:
         'Évolution de la législation sur les données de santé\nMenace cyber sur les dossiers\nCompétences internes en sécurité\nDépendance à un hébergeur unique',
-      exclusions: 'Aucune exclusion déclarée dans ce jeu de test.',
+      exclusions: 'Mesures sans objet : voir la déclaration d’applicabilité (démonstration).',
     },
     processes: [
       {
         id: 'PR1',
-        name: 'Pilotage de l’association',
+        name: 'Direction et pilotage de l’établissement',
         family: 'Management',
         owner: 'Direction',
         purpose: 'Définir les orientations et les moyens.',
       },
       {
         id: 'PR2',
-        name: 'Accueil et prise en charge',
+        name: 'Accueil et prise en charge des patients',
         family: 'Réalisation',
         owner: 'Responsable accueil',
-        purpose: 'Accueillir et accompagner les personnes.',
+        purpose: 'Accueillir les patients et assurer leur prise en charge.',
         inputs: 'Demandes d’admission',
-        outputs: 'Dossiers ouverts et suivis',
+        outputs: 'Dossiers patients ouverts et suivis',
         sequence: 'Après le pilotage, avant la facturation',
-        controlCriteria: 'Délai de première réponse ; satisfaction des usagers',
+        controlCriteria: 'Délai de première réponse ; satisfaction des patients',
         resources: 'Équipe d’accueil, logiciel de dossiers',
         evaluation: 'Revue trimestrielle du processus',
       },
@@ -78,11 +80,11 @@ export function etatJeuDeTest(): Json {
     objectives: [
       {
         id: 'OBJ1',
-        name: 'Garantir la satisfaction des usagers',
+        name: 'Garantir la satisfaction des patients',
         due: `${annee}-12-31`,
         owner: 'Responsable accueil',
         processes: ['PR2'],
-        enjeux: ['Attentes des usagers : qualité d’accueil'],
+        enjeux: ['Attentes des patients : qualité d’accueil'],
       },
       {
         id: 'OBJ2',
@@ -113,9 +115,9 @@ export function etatJeuDeTest(): Json {
       {
         id: 'IND1',
         obj: 'OBJ1',
-        name: 'Taux de satisfaction des usagers',
+        name: 'Taux de satisfaction des patients',
         category: 'satisfaction',
-        source: 'Enquête annuelle fictive',
+        source: 'Enquête annuelle de satisfaction (fictive)',
         dir: '≥',
         target: 0.85,
         owner: 'Responsable accueil',
@@ -163,7 +165,7 @@ export function etatJeuDeTest(): Json {
     interested: [
       {
         id: 'PI1',
-        name: 'Usagers',
+        name: 'Patients',
         type: 'Externe',
         cat: 'Patient ou usager',
         needs: 'Accueil de qualité, confidentialité',
@@ -436,44 +438,6 @@ export function etatJeuDeTest(): Json {
   };
 }
 
-/** Définition du référentiel de démonstration de la bibliothèque (aucun texte normatif). */
-export function referentielDemonstration() {
-  return {
-    name: 'Référentiel fictif de démonstration',
-    identifier: 'demo-fictif',
-    source: {
-      organisation: 'Organisation fictive',
-      document: 'Exigences fictives du jeu de test',
-      url: 'https://example.invalid/demo',
-      version: '1',
-      date: decaler(0),
-      license: 'Contenu fictif libre ; ne reproduit aucun référentiel officiel.',
-      verifiedAt: '',
-      normative: false,
-      status: 'organisation' as const,
-    },
-    domains: [
-      { id: 'gouvernance', label: 'Gouvernance' },
-      { id: 'exploitation', label: 'Exploitation' },
-    ],
-    requirements: [
-      ['DEMO-01', 'gouvernance', 'Définir les responsabilités'],
-      ['DEMO-02', 'gouvernance', 'Revoir la politique chaque année'],
-      ['DEMO-03', 'exploitation', 'Contrôler les accès'],
-      ['DEMO-04', 'exploitation', 'Sauvegarder et tester la restauration'],
-      ['DEMO-05', 'exploitation', 'Suivre les prestataires'],
-      ['DEMO-06', 'gouvernance', 'Mesurer et analyser les résultats'],
-    ].map(([id, domain, title]) => ({
-      id: id!,
-      domain: domain!,
-      title: title!,
-      description: 'Exigence fictive.',
-      applicability: 'Tout le périmètre fictif',
-      measureRefs: [],
-    })),
-  };
-}
-
 export interface BilanChargement {
   etat: string;
   referentiel: string | null;
@@ -486,6 +450,7 @@ export interface BilanChargement {
   liens: number;
   criteres: number;
   evaluations: number;
+  normes: BilanNormes | null;
 }
 
 /** Charge le jeu de test par l'API publique, au nom d'un compte administrateur existant (session temporaire). */
@@ -518,15 +483,19 @@ export async function chargerJeuDeTest(
     })
     .execute();
   const origine = new URL(cfg.publicUrl).origin;
+  let appels = 0;
   const appel = async (
-    method: 'GET' | 'POST' | 'PUT',
+    method: 'GET' | 'POST' | 'PUT' | 'PATCH',
     url: string,
     json?: unknown,
     headers: Record<string, string> = {},
   ) => {
+    // Le chargement envoie plusieurs centaines de requêtes : l'adresse source change tous les 300 appels pour ne pas
+    // épuiser la limite par adresse (RATE_LIMIT_PER_MINUTE) d'une instance réglée bas.
     const res = await app.inject({
       method,
       url,
+      remoteAddress: `127.0.${Math.floor(appels++ / 300) % 250}.1`,
       headers: {
         'x-forwarded-proto': 'https',
         host: new URL(cfg.publicUrl).host,
@@ -556,6 +525,7 @@ export async function chargerJeuDeTest(
       liens: 0,
       criteres: 0,
       evaluations: 0,
+      normes: null,
     };
     const commun = '00000000-0000-4000-8000-000000000001';
     // 1) État de l'outil de suivi : refusé s'il contient déjà des données de pilotage.
@@ -577,32 +547,9 @@ export async function chargerJeuDeTest(
       if (r.conflict) throw new Error('Écriture de l’état : conflit de version.');
     }, compte);
     bilan.etat = 'oui';
-    // 2) Référentiel de démonstration dans la bibliothèque, rattaché au pilotage commun.
-    const definition = referentielDemonstration();
-    const apercu = await exiger<{ previewId: string }>(
-      await appel('POST', '/api/library/frameworks/preview', { id: null, definition }),
-      'Simulation du référentiel',
-    );
-    const publie = await exiger<{ id: string }>(
-      await appel(
-        'POST',
-        '/api/library/frameworks/publish',
-        {
-          id: null,
-          definition,
-          previewId: apercu.previewId,
-          reason: 'Jeu de test fictif (référentiel de démonstration).',
-          confirm: 'PUBLIER',
-        },
-        { 'if-match': '"0"' },
-      ),
-      'Publication du référentiel',
-    );
-    await exiger(
-      await appel('PUT', `/api/grc/${commun}/framework-attachments/${publie.id}`, { version: 1, confirm: 'RATTACHER' }),
-      'Rattachement du référentiel',
-    );
-    bilan.referentiel = definition.identifier;
+    // 2) Référentiels ISO/IEC 27001:2022 et HDS de la bibliothèque, rattachés au pilotage commun.
+    const normes = await rattacherStandards({ appel, exiger, commun, decaler, methodeId: '' });
+    bilan.referentiel = normes.iso.identifier;
     // 3) Méthode de risque publiée, trois risques appréciés.
     const methode = methodTemplate('ebios_rm');
     const apercuM = await exiger<{ previewId: string }>(
@@ -625,6 +572,7 @@ export async function chargerJeuDeTest(
       'Publication de la méthode',
     );
     bilan.methode = methode.name;
+    const methodeId = m.methodId;
     const risque = (nom: string, code: string, domaine: string) => ({
       kind: 'risk',
       name: nom,
@@ -818,7 +766,7 @@ export async function chargerJeuDeTest(
     await lier(`object:${refs.R01}`, 'legacy:processes:PR4', 'Risque rattaché au processus');
     await lier(`object:${refs.R02}`, 'legacy:processes:PR3', 'Risque rattaché au processus');
     // 5) Fournisseurs : critères propres à l'organisme et deux évaluations immuables.
-    const exigence = (id: string) => `requirement:${publie.id}:1:${id}`;
+    const exigence = (id: string) => `requirement:${normes.iso.id}:${normes.iso.version}:${id}`;
     const critere = async (label: string, purposes: string[], requirementRefs: string[]) =>
       (
         await exiger<{ id: string }>(
@@ -832,9 +780,9 @@ export async function chargerJeuDeTest(
           `Critère ${label}`,
         )
       ).id;
-    const c1 = await critere('Authentification multifacteur', ['evaluation', 'surveillance'], [exigence('DEMO-03')]);
-    const c2 = await critere('Certificat valide', ['selection', 'reevaluation'], [exigence('DEMO-05')]);
-    const c3 = await critere('Plan de continuité documenté', ['evaluation'], [exigence('DEMO-04')]);
+    const c1 = await critere('Authentification multifacteur', ['evaluation', 'surveillance'], [exigence('A-8.5')]);
+    const c2 = await critere('Certificat valide', ['selection', 'reevaluation'], [exigence('A-5.22')]);
+    const c3 = await critere('Plan de continuité documenté', ['evaluation'], [exigence('A-5.30')]);
     bilan.criteres = 3;
     const evaluation = (
       items: { criterionId: string; meets: boolean | null; result?: string }[],
@@ -906,6 +854,15 @@ export async function chargerJeuDeTest(
       'Décision de la revue',
     );
     bilan.actions++;
+    // 7) Couverture ISO 27001 / HDS, déclaration d'applicabilité et étude EBIOS RM complète.
+    const ctx = { appel, exiger, commun, decaler, methodeId };
+    const couv = await couvertureEtDda(ctx, normes);
+    const ebios = await etudeEbios(ctx);
+    bilan.normes = {
+      referentiels: [normes.iso.identifier, normes.hds.identifier],
+      ...couv,
+      ...ebios,
+    };
     await svc.db.audit({ username: 'jeu-de-test' } as never, '127.0.0.1', 'jeu-de-test.loaded', commun, {
       compte,
       ...bilan,
