@@ -22,7 +22,7 @@ const poivre = () => {
 describe('adresse du site à l’installation', () => {
   let t: TestApp;
   beforeAll(async () => {
-    t = await createTestApp();
+    t = await createTestApp({}, { poivre: false });
   });
   afterAll(async () => {
     await t.close();
@@ -47,7 +47,7 @@ describe('adresse du site à l’installation', () => {
   });
 
   it('n’enregistre rien quand l’adresse est déjà celle en service', async () => {
-    const t2 = await createTestApp();
+    const t2 = await createTestApp({}, { poivre: false });
     try {
       const { token } = await t2.svc.auth.issueSetupToken('install', () => {});
       const ok = await new Agent(t2).post('/api/setup', {

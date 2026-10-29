@@ -212,7 +212,7 @@ describe('verrouillage après échecs', () => {
 
 describe('jeton d’installation', () => {
   it('format XXXXX-XXXXX-XXXXX-XXXXX, usage unique, erreurs explicites', async () => {
-    const t2 = await createTestApp();
+    const t2 = await createTestApp({}, { poivre: false });
     try {
       const out: string[] = [];
       const first = await t2.svc.auth.issueSetupToken('first_start', (s) => out.push(s));
@@ -245,7 +245,7 @@ describe('jeton d’installation', () => {
   });
 
   it('le nom de l’organisation saisi à l’assistant devient le réglage général ; neutre par défaut', async () => {
-    const t2 = await createTestApp();
+    const t2 = await createTestApp({}, { poivre: false });
     try {
       expect(t2.svc.settings.get('general').orgName).toBe('Mon organisation');
       const { token } = await t2.svc.auth.issueSetupToken('cli', () => {});
@@ -267,7 +267,7 @@ describe('jeton d’installation', () => {
   });
 
   it('jeton expiré : 410 avec un message clair', async () => {
-    const t2 = await createTestApp();
+    const t2 = await createTestApp({}, { poivre: false });
     try {
       const { token } = await t2.svc.auth.issueSetupToken('cli', () => {});
       await t2.svc.db.q(

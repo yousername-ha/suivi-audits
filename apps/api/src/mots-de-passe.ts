@@ -1,12 +1,13 @@
 /* Mots de passe poivrés (ADR 0072, ASVS 2.4.5). L'empreinte scrypt de chaque compte est chiffrée en AES-256-GCM par une clé
    dérivée d'un poivre que l'organisation conserve au coffre-fort ; la vérification déchiffre, puis compare l'empreinte scrypt en
-   temps constant. Le poivre peut ainsi être défini après coup et changé sans connaître aucun mot de passe : changer, c'est rechiffrer.
+   temps constant. Le poivre peut ainsi être changé sans connaître aucun mot de passe : changer, c'est rechiffrer.
 
      password_hash = poivre$<idClé>$<base64(iv | étiquette | AES-256-GCM(clé, "scrypt$N$r$p$sel$empreinte", AAD = "mdp:" + userId))>
 
    La clé dérivée (jamais le poivre en texte) est scellée par le coffre dans la ligne `settings` `secret:poivre`, avec le sel de
    dérivation et l'identifiant de clé. Toute création ou modification d'un mot de passe passe par ce service ; `crypto.ts` garde les
-   primitives. Tant que le poivre n'est pas défini, les empreintes restent au format `scrypt$` (installations existantes). */
+   primitives. Le poivre est défini par l'assistant d'installation, avec le premier compte (ADR 0077) : une empreinte qui n'est pas
+   poivrée par la clé courante (`scrypt$` comprise) est refusée, et aucun compte ne reçoit d'empreinte tant qu'il n'y a pas de poivre. */
 import { randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
 import type { PoivreEtat } from '@suivi/shared';
 import { canoniquePoivre, genererPoivre } from '@suivi/shared';
@@ -29,7 +30,7 @@ import {
 
 const CLE = 'secret:poivre';
 const AAD = 'poivre';
-/** Verrou consultatif : une seule opération sur le poivre à la fois (définition, changement, reprise). */
+/** Verrou consultatif : une seule opération sur le poivre à la fois (installation, changement, reprise). */
 const VERROU_POIVRE = 727279;
 
 interface LigneCle {
@@ -46,7 +47,6 @@ export interface PoivrePrepare {
   idCle: string;
 }
 
-const estScrypt = (h: string) => h.startsWith('scrypt$');
 const egales = (a: Buffer, b: Buffer) => a.length === b.length && timingSafeEqual(a, b);
 
 export class MotsDePasse {
@@ -133,8 +133,8 @@ export class MotsDePasse {
     return c.query('SELECT pg_advisory_xact_lock($1)', [VERROU_POIVRE]);
   }
 
-  /** Réécrit les empreintes de tous les comptes avec la clé donnée. `ancienne` : clé courante (null : aucune, empreintes scrypt).
-      Une empreinte poivrée illisible avec la clé courante annule toute l'opération. */
+  /** Réécrit les empreintes de tous les comptes avec la clé donnée. `ancienne` : clé courante (null : aucune, tous les comptes
+      reçoivent un mot de passe de `mots`). Une empreinte poivrée illisible avec la clé courante annule toute l'opération. */
   private async rechiffrer(
     k: Kdb,
     ancienne: Buffer | null,
@@ -146,12 +146,11 @@ export class MotsDePasse {
     for (const u of comptes) {
       let scrypt: string | null;
       if (mots?.has(u.id)) scrypt = await hashPassword(mots.get(u.id) as string);
-      else if (estScrypt(u.password_hash)) scrypt = u.password_hash;
       else if (idCleEmpreinte(u.password_hash) !== null) {
         scrypt = ancienne ? ouvrirEmpreinte(ancienne, u.id, u.password_hash) : null;
         if (scrypt === null)
           throw new Error(`Empreinte illisible avec le poivre courant (compte ${u.id}) : opération annulée.`);
-      } else continue; // forme inconnue (compte sans mot de passe) : laissée telle quelle
+      } else continue; // empreinte non poivrée ou forme inconnue : laissée telle quelle, refusée à la connexion
       await k
         .updateTable('users')
         .set({ password_hash: chiffrerEmpreinte(nouvelle, u.id, scrypt) })
@@ -163,48 +162,37 @@ export class MotsDePasse {
   }
 
   /* ---------------------------------------------------------------- Hachage et vérification */
-  /** Empreinte à stocker pour un compte : poivrée si le poivre est défini. L'identifiant doit être connu avant l'insertion. */
+  /** Empreinte poivrée à stocker pour un compte. L'identifiant doit être connu avant l'insertion. Sans poivre, aucune empreinte :
+      l'installation poivre le premier compte elle-même (`inscrireALInstallation`). */
   async hacher(userId: string, mdp: string): Promise<string> {
-    const h = await hashPassword(mdp);
     const k = await this.cleCourante();
-    return k ? chiffrerEmpreinte(k.cle, userId, h) : h;
+    if (!k) throw new Error('Poivre des mots de passe non défini : aucune empreinte ne peut être enregistrée.');
+    return chiffrerEmpreinte(k.cle, userId, await hashPassword(mdp));
   }
 
   async verifier(userId: string, mdp: string, stockee: string | null | undefined): Promise<boolean> {
     const stock = String(stockee || '');
     const idEmpreinte = idCleEmpreinte(stock);
-    if (idEmpreinte !== null) {
-      const k = await this.cleCourante();
-      const clair = k ? ouvrirEmpreinte(k.cle, userId, stock) : null;
-      if (clair === null) {
-        // Aucun poivre, autre clé, autre compte ou contenu altéré : refus, au même coût qu'une vérification ordinaire.
-        await dummyVerify(mdp);
-        this.db.log.error(
-          { idCleEmpreinte: idEmpreinte, idCleCourante: k?.idCle ?? null },
-          'empreinte de mot de passe illisible',
-        );
-        await this.db.audit(null, null, 'securite.poivre_integrite', userId, {
-          idCleEmpreinte: idEmpreinte,
-          idCleCourante: k?.idCle ?? null,
-        });
-        return false;
-      }
-      return verifyPassword(mdp, clair);
-    }
-    if (!(await verifyPassword(mdp, stock))) return false;
-    // Empreinte non poivrée alors qu'un poivre est défini (compte restauré, inséré hors service) : protégée à cette occasion.
     const k = await this.cleCourante();
-    if (k && estScrypt(stock))
-      await this.db.k
-        .updateTable('users')
-        .set({ password_hash: chiffrerEmpreinte(k.cle, userId, stock) })
-        .where('id', '=', userId)
-        .where('password_hash', '=', stock)
-        .execute();
-    return true;
+    const clair = k && idEmpreinte !== null ? ouvrirEmpreinte(k.cle, userId, stock) : null;
+    if (clair === null) {
+      // Empreinte non poivrée (insérée hors service : l'accepter laisserait quiconque écrit dans la base choisir le mot de passe
+      // d'un compte), aucun poivre, autre clé, autre compte ou contenu altéré : refus, au même coût qu'une vérification ordinaire.
+      await dummyVerify(mdp);
+      this.db.log.error(
+        { idCleEmpreinte: idEmpreinte, idCleCourante: k?.idCle ?? null },
+        'empreinte de mot de passe illisible',
+      );
+      await this.db.audit(null, null, 'securite.poivre_integrite', userId, {
+        idCleEmpreinte: idEmpreinte,
+        idCleCourante: k?.idCle ?? null,
+      });
+      return false;
+    }
+    return verifyPassword(mdp, clair);
   }
 
-  /* ---------------------------------------------------------------- Définition, changement */
+  /* ---------------------------------------------------------------- Installation, changement */
   /** Identifiant d'un futur compte : généré par le serveur, car l'empreinte y est liée (AAD). */
   nouvelId() {
     return randomUUID();
@@ -214,20 +202,6 @@ export class MotsDePasse {
   async inscrireALInstallation(c: Client, k: Kdb, p: PoivrePrepare, par: string): Promise<void> {
     await this.verrou(c);
     await this.inscrire(k, p, par, false);
-  }
-
-  /** Base sans poivre (comptes créés directement en base par les tests ; aucune route depuis la 6.0.0, ADR 0077) : inscrit
-   * le poivre et protège aussitôt toutes les empreintes. Une installation neuve le définit dans l'assistant. */
-  async definir(p: PoivrePrepare, par: Actor, ip: string | null): Promise<number> {
-    return this.db.tx(async (c, k) => {
-      await this.verrou(c);
-      if (await this.ligne(k))
-        throw new HttpError(409, 'Le poivre est déjà défini : utilisez le changement de poivre.');
-      await this.inscrire(k, p, par.username, false);
-      const n = await this.rechiffrer(k, null, p.cle);
-      await this.db.audit(par, ip, 'securite.poivre_defini', '', { idCle: p.idCle, empreintes: n }, c);
-      return n;
-    }, par.username);
   }
 
   /** Changement : l'ancien poivre est contrôlé avant (route) ; ici tout est rechiffré dans une seule transaction. */

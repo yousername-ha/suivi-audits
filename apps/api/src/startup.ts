@@ -25,9 +25,9 @@ export async function prepareDatabase(svc: Services, opts: { issueToken?: boolea
   await seedState(svc);
   await svc.settings.load();
   if (opts.issueToken !== false && !(await svc.auth.adminExists())) await svc.auth.issueSetupToken('first_start');
-  // Installation existante : le poivre des mots de passe se définit dans l'administration (ADR 0072).
+  // Le poivre est défini avec le premier administrateur (ADR 0072, 0077) : sans lui, toute empreinte est refusée.
   if ((await svc.auth.adminExists()) && !(await svc.motsDePasse.defini()))
-    svc.log.warn(
-      'poivre non défini : un administrateur doit le définir (Administration, Configuration système, Sécurité)',
+    svc.log.error(
+      'poivre non défini alors que des comptes existent : aucune connexion possible ; reprise par « suivi poivre-reinitialiser --confirmer »',
     );
 }
