@@ -45,7 +45,7 @@ Source de référence des chiffres/IDs/états :
 - [Suivi d'avancement du prompt maître ASTRA du 21/10/2026 (état honnête, décisions en attente)](unification/SUIVI-ASTRA-2026-10-21.md)
 - [Recette de l'intégration ASTRA (R01 à R18) et bilan par lot](unification/RECETTE-INTEGRATION-ASTRA.md)
 - [Cadrage du module Qualité ISO 9001](unification/CADRAGE-MODULE-QUALITE-9001.md) (réflexion, aucun code)
-- [Cadrage du module Intégrations (GLPI, ORADAD, Silène)](unification/CADRAGE-MODULE-INTEGRATIONS.md) et [ADR 0073](adr/0073-module-integrations.md) (proposés, aucun code)
+- [Cadrage du module Intégrations (GLPI, ORADAD, Silène)](unification/CADRAGE-MODULE-INTEGRATIONS.md) et [ADR 0076](adr/0076-module-integrations.md) (proposés, aucun code)
 - [Refonte GRC : configuration transversale et multiméthode](archive/refonte-grc/README.md) ([ADR 0038](adr/0038-socle-de-configuration-grc-transversal.md))
 
 ## 01_REPRISE_IA

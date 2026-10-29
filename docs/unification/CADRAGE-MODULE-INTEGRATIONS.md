@@ -1,7 +1,7 @@
 # Cadrage — module Intégrations (GLPI, ORADAD, Silène et connecteurs à venir)
 
 **Statut** : cadrage du 28/10/2026, à la demande du RSSI, avec ses décisions (R1 à R16 de
-l'[ADR 0073](../adr/0073-module-integrations.md), proposée). Aucun code, aucune migration. Les lots (§4) démarrent un par
+l'[ADR 0076](../adr/0076-module-integrations.md), proposée). Aucun code, aucune migration. Les lots (§4) démarrent un par
 un après validation de ce plan.
 
 ## 1. Besoin
@@ -53,7 +53,7 @@ Lecture seule. Règle du RSSI : **rien de réinventé ni de dupliqué**.
 
 | Lot | Contenu | Acceptation |
 |---|---|---|
-| I0 | ADR 0073 et ce cadrage | Relus et validés par le RSSI |
+| I0 | ADR 0076 et ce cadrage | Relus et validés par le RSSI |
 | I1 | **Socle.** Module `integrations` et migration additive : contrainte des modules, tables `integrations`, `integration_executions`, `integration_correspondances`, `integration_propositions`, `integration_liaisons`. Catalogue partagé des connecteurs. Routes de configuration et secrets. **Extraction du moteur d'écarts de Tenacy.** Rubrique « Intégrations » en tuiles avec logo ou pictogramme neutre, configuration, dépôt du logo par l'administrateur | Tests Tenacy inchangés et verts. Tuiles vérifiées par captures (clair, sombre, 390 à 1440 px) ; logo déposé refusé s'il est SVG ou trop lourd. Droits : refus sans le droit de la cible, sans écriture sur le périmètre, module désactivé. Secret jamais relu ni journalisé. Migration testée sur base vierge et sur base existante |
 | I2 | **ORADAD.** Adaptateur JSON, simulation et application, disparus proposés à la clôture | Fixture anonymisée tirée de l'exemple fourni. Second import identique sans effet. Clôture seulement des écarts cochés. Effet sur les indicateurs calculés vérifié |
 | I3 | **Silène.** Adaptateur JSON (écarts, et métriques si le format en porte) | Mêmes critères qu'I2 |

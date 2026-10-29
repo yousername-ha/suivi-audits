@@ -1,6 +1,6 @@
-# ADR 0073 — Module Intégrations : connecteurs natifs en lecture seule, par SMSI, appels réseau par l'exécutant d'exploitation
+# ADR 0076 — Module Intégrations : connecteurs natifs en lecture seule, par SMSI, appels réseau par l'exécutant d'exploitation
 
-- Statut : proposée (numéro confirmé par le RSSI le 28/10/2026)
+- Statut : proposée (numéro 0076 confirmé par le RSSI le 29/10/2026 ; le 0073 d’abord retenu a été pris entre-temps par l’ADR des données de démonstration)
 - Date : 2026-10-28
 - Contexte : le RSSI demande, le 28/10/2026, un module « Intégrations » qui crée des intégrations natives dans l'outil :
   connecteur API GLPI, import ORADAD et import Silène (ANSSI, Club SSI), d'autres à venir. Selon ce que chaque source
