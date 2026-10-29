@@ -8,6 +8,9 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 Aucune action. Une installation 6.0.0 a toujours un poivre, défini par l'assistant : aucune empreinte n'est concernée.
 
+### Modifié
+- **Écran de connexion refondu** (maquette validée) : un panneau unique centré, au fond de la navigation vert profond (36rem au plus, téléphone compris), remplace la colonne éditoriale et la carte séparée. Bandeau « Gouvernance · Risques · Conformité », accroche « Une vision claire. / Un pilotage serein. », titre « Connexion » masqué visuellement ; le nom de l'application, la phrase d'accroche et la légende sont retirés. Le formulaire prend la place des trois cartes empilées : identifiant, mot de passe (bouton afficher/masquer, avertissement « Majuscules verrouillées ») et bouton « Se connecter ». Les étapes code TOTP, enrôlement et changement de mot de passe s'affichent dans le même panneau. Sceau décoratif (texte circulaire qui tourne en 40 s, écu tricolore assombri) et fond animé décoratif derrière le panneau (grille, barres, halos, courbe montante et libellés de référentiels), à 30 images/s, image fixe si moins de mouvement est demandé, absent à l'impression et sous automate de test. Nouveaux jetons `SCEAU` (`--suivi-sceau-bleu`, `--suivi-sceau-blanc`, `--suivi-sceau-rouge`) et fonction `transparence` dans `packages/ui`. Aucune nouvelle dépendance.
+
 ### Sécurité
 - **Empreintes non poivrées refusées** ([ADR 0072](docs/adr/0072-poivre-des-mots-de-passe.md), point 2) : une empreinte `scrypt$` sans poivre n'ouvre plus de session, même avec le bon mot de passe ; elle n'est plus convertie à la connexion. Une telle empreinte ne pouvant venir que d'une écriture directe dans la base, l'accepter permettait de choisir le mot de passe d'un compte sans le poivre. Le refus est journalisé (`securite.poivre_integrite`). Une base sans poivre se reprend par `suivi poivre-reinitialiser --confirmer`.
 
