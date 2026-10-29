@@ -3,17 +3,7 @@
 import { spawn } from 'node:child_process';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import {
-  Agent,
-  createTestApp,
-  definirPoivreDeTest,
-  login,
-  makeUser,
-  PASSWORD,
-  REPO,
-  type TestApp,
-  type TestUser,
-} from './helpers.js';
+import { Agent, createTestApp, login, makeUser, PASSWORD, REPO, type TestApp, type TestUser } from './helpers.js';
 import { APP_ROLE, APP_ROLE_PASSWORD, PG } from './pg.js';
 
 const SAISI = 'Vq7!mZ3#kP9$wX2@nR5%tL8&yB4*cD6^hF1(';
@@ -62,10 +52,9 @@ const connexion = async (u: { username: string }, mdp: string) => {
 
 describe('CLI du poivre', () => {
   beforeAll(async () => {
-    t = await createTestApp();
+    t = await createTestApp({}, { poivre: SAISI });
     admin = await makeUser(t, 'rssi', 'admin');
     alice = await makeUser(t, 'alice', 'rw');
-    await definirPoivreDeTest(t, admin, SAISI);
   }, 60_000);
   afterAll(async () => {
     await t.close();

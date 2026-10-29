@@ -1,5 +1,5 @@
-/* Poivre des mots de passe (L9, ADR 0072) : installation, définition sur une installation existante, changement (ancien poivre,
-   code de double authentification, rechiffrement atomique), liaison de l'empreinte au compte, aucune fuite du poivre. */
+/* Poivre des mots de passe (L9, ADR 0072) : installation, refus de toute empreinte non poivrée, changement (ancien poivre, code de
+   double authentification, rechiffrement atomique), liaison de l'empreinte au compte, aucune fuite du poivre. */
 import { finPoivre, formaterPoivreGenere, genererPoivre, type PoivreAEnregistrer } from '@suivi/shared';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { DEMANDEUR_ALERTE } from '../src/alertes-exploitation.js';
@@ -7,7 +7,6 @@ import {
   Agent,
   cleSecoursDeTest,
   createTestApp,
-  definirPoivreDeTest,
   login,
   makeUser,
   nextCode,
@@ -35,7 +34,7 @@ const saisi = (valeur: string): PoivreAEnregistrer => ({
 describe('installation', () => {
   let t: TestApp;
   beforeEach(async () => {
-    t = await createTestApp();
+    t = await createTestApp({}, { poivre: false });
   });
   afterAll(async () => {
     await t?.close();
@@ -86,6 +85,8 @@ describe('installation', () => {
     // Rien n'a été créé, le jeton reste utilisable, aucun poivre n'est enregistré.
     expect((await a.get('/api/setup')).json()).toMatchObject({ needed: true, poivreDefini: false });
     expect(await t.svc.motsDePasse.defini()).toBe(false);
+    // Sans poivre, aucune empreinte : le premier compte est poivré par l'assistant lui-même.
+    await expect(t.svc.motsDePasse.hacher(t.svc.motsDePasse.nouvelId(), PASSWORD)).rejects.toThrow(/non défini/);
     const ok = await a.post('/api/setup', corps(token, { poivre: p }));
     expect(ok.statusCode, ok.body).toBe(201);
   });
@@ -122,12 +123,12 @@ describe('installation', () => {
   });
 });
 
-describe('installation existante et changement', () => {
+describe('poivre en service et changement', () => {
   let t: TestApp, admin: TestUser, agent: Agent, autres: TestUser[];
   /** Poivre courant au fil des tests de la série. */
   let courant = SAISI;
   beforeAll(async () => {
-    t = await createTestApp();
+    t = await createTestApp({}, { poivre: SAISI });
     admin = await makeUser(t, 'rssi', 'admin');
     autres = [await makeUser(t, 'alice', 'rw'), await makeUser(t, 'bob', 'ro', { totp: false })];
     agent = await login(t, admin);
@@ -154,24 +155,25 @@ describe('installation existante et changement', () => {
   const changer = async (poivre: PoivreAEnregistrer, ancien: string, code?: string) =>
     agent.post('/api/admin/poivre/changer', { poivre, ancienPoivre: ancien, code: code ?? (await nextCode(t, admin)) });
 
-  it('signale un poivre non défini et laisse les connexions continuer ; aucune définition hors de l’assistant', async () => {
+  it('signale le poivre défini à l’installation ; aucune définition hors de l’assistant', async () => {
     remise();
     const e = (await agent.get('/api/admin/poivre')).json();
-    expect(e).toMatchObject({ defini: false, idCle: null, empreintesPoivrees: 0, comptes: 3 });
-    expect((await hashes()).every((x) => x.h.startsWith('scrypt$'))).toBe(true);
+    expect(e).toMatchObject({ defini: true, empreintesPoivrees: 3, comptes: 3 });
+    expect(e.idCle).toMatch(/^[0-9a-f]{16}$/);
+    expect((await hashes()).every((x) => x.h.startsWith(`poivre$${e.idCle}$`))).toBe(true);
     expect(await connexion(autres[0]!)).toBe(200);
-    // Droit insuffisant, code faux, poivre faible, engagement non tenu : rien ne change.
+    // Droit insuffisant : l'état du poivre n'est pas lisible.
     const lecteur = await login(t, autres[0]!);
     expect((await lecteur.get('/api/admin/poivre')).statusCode).toBe(403);
     // Installation neuve uniquement (ADR 0077) : le poivre se définit dans l'assistant, la route de définition n'existe plus.
+    const avant = await hashes();
     const r = await agent.post('/api/admin/poivre/definir', { poivre: saisi(SAISI), code: await nextCode(t, admin) });
     expect(r.statusCode).toBe(404);
-    expect((await hashes()).every((x) => x.h.startsWith('scrypt$'))).toBe(true);
+    expect(await hashes()).toEqual(avant);
   });
 
-  it('définit le poivre : toutes les empreintes sont protégées, chaque compte se connecte avec son mot de passe inchangé', async () => {
+  it('empreintes poivrées : chaque compte se connecte, les nouveaux sont poivrés, une empreinte non poivrée est refusée', async () => {
     remise();
-    expect(await definirPoivreDeTest(t, admin, SAISI)).toBe(3);
     expect((await agent.get('/api/admin/poivre')).json()).toMatchObject({
       defini: true,
       empreintesPoivrees: 3,
@@ -180,9 +182,13 @@ describe('installation existante et changement', () => {
     expect((await hashes()).every((x) => /^poivre\$[0-9a-f]{16}\$/.test(x.h))).toBe(true);
     remise();
     for (const u of [admin, ...autres]) expect(await connexion(u), u.username).toBe(200);
-    // Déjà défini : la définition est refusée.
+    // Déjà défini : un second poivre n'est pas inscrit (seul le changement, ancien poivre exigé, le remplace).
     remise();
-    await expect(definirPoivreDeTest(t, admin, AUTRE)).rejects.toMatchObject({ status: 409 });
+    const autre = await t.svc.motsDePasse.preparer(AUTRE);
+    await expect(
+      t.svc.db.tx((c, k) => t.svc.motsDePasse.inscrireALInstallation(c, k, autre, 'rssi'), 'rssi'),
+    ).rejects.toMatchObject({ status: 409 });
+    expect(await t.svc.motsDePasse.estLePoivre(SAISI)).toBe(true);
     // Les nouveaux comptes et les changements de mot de passe sont poivrés aussi.
     const cree = await agent.post('/api/admin/users', { username: 'carole', roles: [], groups: [] });
     expect(cree.statusCode, cree.body).toBe(201);
@@ -195,13 +201,27 @@ describe('installation existante et changement', () => {
       (await new Agent(t).post('/api/auth/login', { username: 'carole', password: reset.json().temporaryPassword }))
         .statusCode,
     ).toBe(200);
-    // Protection d'une empreinte non poivrée restée en base (compte restauré, inséré hors service) à la première connexion.
+    // Empreinte non poivrée écrite en base hors service (mot de passe choisi par qui écrit dans la base) : refusée, journalisée,
+    // laissée telle quelle ; le mot de passe du compte reste celui de son empreinte poivrée.
     const bob = autres[1]!;
+    const poivree = (await hashes()).find((x) => x.username === 'bob')!.h;
     const { hashPassword } = await import('../src/security/crypto.js');
-    await t.svc.db.q('UPDATE users SET password_hash=$2 WHERE id=$1', [bob.id, await hashPassword(PASSWORD)]);
+    const nonPoivree = await hashPassword(PASSWORD);
+    await t.svc.db.q('UPDATE users SET password_hash=$2 WHERE id=$1', [bob.id, nonPoivree]);
+    remise();
+    expect(await connexion(bob)).toBe(401);
+    expect((await hashes()).find((x) => x.username === 'bob')!.h).toBe(nonPoivree);
+    const trace = await t.svc.db.one<{ details: Record<string, unknown> }>(
+      "SELECT details FROM audit_log WHERE action='securite.poivre_integrite' AND target=$1",
+      [bob.id],
+    );
+    expect(trace!.details).toMatchObject({
+      idCleEmpreinte: null,
+      idCleCourante: expect.stringMatching(/^[0-9a-f]{16}$/),
+    });
+    await t.svc.db.q('UPDATE users SET password_hash=$2, failed_logins=0 WHERE id=$1', [bob.id, poivree]);
     remise();
     expect(await connexion(bob)).toBe(200);
-    expect((await hashes()).find((x) => x.username === 'bob')!.h).toMatch(/^poivre\$/);
   });
 
   it('refuse un changement sans droit, sans bon code, avec un ancien poivre faux, trop faible ou identique', async () => {
@@ -331,12 +351,10 @@ describe('installation existante et changement', () => {
 describe('liaison de l’empreinte au compte et fuites', () => {
   let t: TestApp, a: TestUser, b: TestUser, agent: Agent;
   beforeAll(async () => {
-    t = await createTestApp();
+    t = await createTestApp({}, { poivre: SAISI });
     a = await makeUser(t, 'alice', 'rw');
     b = await makeUser(t, 'bob', 'rw');
-    const admin = await makeUser(t, 'rssi', 'admin');
-    agent = await login(t, admin);
-    await definirPoivreDeTest(t, admin, SAISI);
+    agent = await login(t, await makeUser(t, 'rssi', 'admin'));
   });
   afterAll(async () => {
     await t.close();

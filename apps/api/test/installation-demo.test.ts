@@ -7,7 +7,7 @@ import { hotp } from '../src/security/crypto.js';
 import { Agent, cleSecoursDeTest, createTestApp, PASSWORD, poivreDeTest, type TestApp } from './helpers.js';
 
 const installer = async (corps: Record<string, unknown>, avant?: (t: TestApp) => void) => {
-  const t = await createTestApp({ PUBLIC_URL: 'https://suivi.test' });
+  const t = await createTestApp({ PUBLIC_URL: 'https://suivi.test' }, { poivre: false });
   avant?.(t);
   const { token } = await t.svc.auth.issueSetupToken('cli', () => {});
   const a = new Agent(t);

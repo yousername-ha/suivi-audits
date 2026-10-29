@@ -6,7 +6,13 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-Aucune action.
+Aucune action. Une installation 6.0.0 a toujours un poivre, défini par l'assistant : aucune empreinte n'est concernée.
+
+### Sécurité
+- **Empreintes non poivrées refusées** ([ADR 0072](docs/adr/0072-poivre-des-mots-de-passe.md), point 2) : une empreinte `scrypt$` sans poivre n'ouvre plus de session, même avec le bon mot de passe ; elle n'est plus convertie à la connexion. Une telle empreinte ne pouvant venir que d'une écriture directe dans la base, l'accepter permettait de choisir le mot de passe d'un compte sans le poivre. Le refus est journalisé (`securite.poivre_integrite`). Une base sans poivre se reprend par `suivi poivre-reinitialiser --confirmer`.
+
+### Retiré
+- `MotsDePasse.definir()` (pose d'un poivre sur une base sans poivre, sans route depuis la 6.0.0) et le chemin de vérification non poivré. Les tests de l'API créent désormais des comptes poivrés, comme une installation réelle.
 
 ## [6.0.0] — 2026-10-29
 
