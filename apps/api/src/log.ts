@@ -15,6 +15,8 @@ const REDACT = [
   '*.privateKey',
   'req.body.privateKey',
   '*.secret',
+  '*.poivre',
+  '*.ancienPoivre',
 ];
 
 /** Niveaux de la journalisation technique, du plus détaillé au plus sobre. Les erreurs (error, fatal) sont toujours collectées. */

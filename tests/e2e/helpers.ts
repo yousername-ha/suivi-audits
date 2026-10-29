@@ -88,9 +88,10 @@ export async function csrfOf(req: APIRequestContext): Promise<string> {
 
 /** Compte administrateur créé par le parcours d'installation, réutilisé par les autres fichiers de tests. */
 const ADMIN_FILE = path.join(os.tmpdir(), 'suivi-e2e-admin.json');
-export const saveAdmin = (username: string, secret: string) =>
-  writeFileSync(ADMIN_FILE, JSON.stringify({ username, secret }), { mode: 0o600 });
-export const loadAdmin = (): { username: string; secret: string } => JSON.parse(readFileSync(ADMIN_FILE, 'utf8'));
+export const saveAdmin = (username: string, secret: string, poivre = '') =>
+  writeFileSync(ADMIN_FILE, JSON.stringify({ username, secret, poivre }), { mode: 0o600 });
+export const loadAdmin = (): { username: string; secret: string; poivre: string } =>
+  JSON.parse(readFileSync(ADMIN_FILE, 'utf8'));
 
 /** Session administrateur partagée par les fichiers de tests : chaque connexion compte dans la limite par adresse
     (20 par quart d'heure), la suite complète la dépasserait. Rouverte seulement si elle n'est plus valide. */

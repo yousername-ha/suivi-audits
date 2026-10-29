@@ -59,7 +59,7 @@ Cochez chaque ligne avant de passer à l'étape 1. Les demandes aux autres équi
 | ☐ | **Flux sortants ouverts** du serveur vers Internet | Voir le tableau ci-dessous. |
 | ☐ | **Un compte GitHub** ayant accès au dépôt `yousername-ha/suivi-audits` | Pour autoriser le serveur à le lire (étape 4). |
 | ☐ | **Un téléphone avec une application d'authentification** | Microsoft Authenticator, FreeOTP, Aegis ou Google Authenticator. |
-| ☐ | **Un coffre-fort de mots de passe** | KeePass ou équivalent, pour conserver la phrase secrète des sauvegardes (étape 11). |
+| ☐ | **Un coffre-fort de mots de passe** | KeePass ou équivalent, pour conserver la clé de secours des sauvegardes (étape 11). |
 
 **Flux sortants à demander** (du serveur vers Internet, à faire ouvrir au pare-feu ou au proxy) :
 
@@ -115,9 +115,9 @@ sudo apt update && sudo apt full-upgrade -y
 
 <!-- ci: run -->
 ```bash
-sudo apt install -y git curl ca-certificates ufw nano openssl python3
+sudo apt install -y git curl ca-certificates ufw nano openssl python3 age
 ```
-**Résultat attendu** : la dernière ligne ne contient pas `E:`.
+**Résultat attendu** : la dernière ligne ne contient pas `E:`. `age` chiffre les sauvegardes (étape 11).
 
 **2.3 Vérifier l'heure du serveur.** C'est **indispensable** : les codes de double authentification dépendent de l'heure.
 
@@ -415,6 +415,24 @@ sudo ./scripts/preparer-donnees.sh
 ```
 **Résultat attendu** : `Dossier des données prêt : /srv/suivi-audits/donnees`. Le message `des données existent déjà dans des volumes Docker` signifie que l'application a déjà été installée sur ce serveur : suivez plutôt l'étape 12.5.
 
+**6.8 Préparer les clés de sauvegarde** (avant le premier démarrage, étape 7). Sur **votre poste** (pas sur le serveur), générez la clé de secours :
+
+<!-- ci: instead: age-keygen -o "$RUNNER_TEMP/cle-secours.key" -->
+```bash
+age-keygen -o cle-secours-suivi.key
+```
+**Résultat attendu** : une ligne `Public key: age1…` (62 caractères). **Rangez `cle-secours-suivi.key` hors ligne** (coffre-fort, support chiffré) : c'est elle qui permet de restaurer si le serveur et sa clé sont perdus. Elle ne doit **jamais** être copiée sur le serveur. Seule la ligne `age1…` (la clé *publique*) est donnée au serveur.
+
+Sur le serveur, créez la clé du serveur et enregistrez la clé publique de secours :
+
+<!-- ci: instead: sudo ./scripts/generer-cles-sauvegarde.sh --secours "$(age-keygen -y "$RUNNER_TEMP/cle-secours.key")" --confirmer -->
+```bash
+sudo ./scripts/generer-cles-sauvegarde.sh
+```
+Le script génère `/root/.suivi-backup-key` (droits 0600, jamais affichée), puis vous demande de coller la clé publique `age1…` et de taper `ENREGISTRER` pour confirmer ; elle est écrite dans `/root/.suivi-backup-recipients`. Il ne demande ni n'affiche jamais de clé privée, et refuse d'écraser une clé existante. **Résultat attendu** : `Clé de secours enregistrée`.
+
+> Perte du serveur : installez `age` ailleurs, puis `BACKUP_KEY_FILE=<cle-secours-suivi.key> ./scripts/restore.sh <archive>.tar.age` (étape 11.4). **Testez-le avec la clé de secours avant de vous y fier.**
+
 ---
 
 ## 7. Démarrer l'application
@@ -460,8 +478,9 @@ sudo docker compose ps -a
 |---|---|---|
 | `init` | contrôle et prépare le dossier des données, génère les mots de passe internes au premier démarrage, puis s'arrête | `Exited (0)` : terminé normalement, c'est voulu |
 | `db` | base de données PostgreSQL | `Up … (healthy)` |
-| `app` | application (API) | `Up … (healthy)` |
-| `web` | interface interne (non exposée) | `Up …` |
+| `app` | application (API) : base joignable et migrations appliquées | `Up … (healthy)` |
+| `web` | interface interne (non exposée) | `Up … (healthy)` |
+| `gateway` | frontal HTTPS exposé (démarre après `web`) | `Up … (healthy)` |
 
 Si un service affiche `unhealthy`, `Restarting` ou `Exited (1)`, ou si une ligne manque, allez à la section [13. En cas de problème](#13-en-cas-de-problème).
 
@@ -513,12 +532,21 @@ Le fichier `racine-suivi-audits.crt` est alors dans votre dossier **Télécharge
 
 > ⚠️ Ce certificat racine permet au serveur de signer des certificats reconnus par les postes. Ne le déployez que pour ce serveur, et préférez à terme un certificat de votre PKI (étape 6.4).
 
-**8.4 Remplir la page « Installation initiale »** :
+**8.4 Remplir la page « Installation initiale »**, en deux étapes.
+
+*Étape 1 sur 2, le poivre des mots de passe* ([ADR 0072](adr/0072-poivre-des-mots-de-passe.md)). Le poivre est un secret qui chiffre toutes les empreintes de mots de passe : une copie de la base ne suffit plus à tenter de les retrouver. Il n'est stocké nulle part en clair et ne sera plus affiché.
+- **Générer un poivre** (recommandé) : l'application en propose un de 52 caractères, par groupes de 4. Copiez-le avec le bouton **Copier** et **enregistrez-le dans le coffre-fort de l'organisation**, avec le nom du serveur, au même titre que la clé de secours des sauvegardes (étape 6.8).
+- ou **Saisir le mien** : 32 à 256 caractères avec au moins 3 types de caractères (ou une phrase d'au moins 6 mots), sans suite évidente (`abcde`, `12345`, `azerty`), sans le nom de l'application ou de l'organisation, avec une entropie estimée d'au moins 128 bits. Les critères non respectés s'affichent en direct.
+- Cochez **J'ai enregistré ce poivre dans le coffre-fort de l'organisation**, puis **recopiez ses 8 derniers caractères** depuis le coffre-fort : sans les deux, **Continuer** reste grisé.
+
+> Le poivre sert à le **changer** plus tard (Administration, Configuration système, Sécurité : ancien poivre et code de double authentification exigés) et à **reprendre l'activité** si la clé maîtresse du serveur est perdue. Perdu, il ne se récupère pas : la procédure d'urgence (`suivi poivre-reinitialiser --confirmer`) impose un nouveau mot de passe à tous les comptes.
+
+*Étape 2 sur 2, le compte administrateur* :
 1. **Jeton d'installation** : collez le jeton. Minuscules, espaces et tirets sont acceptés : le champ se met en forme tout seul. **Nom de l'organisation** (facultatif) : affiché dans l'application et les exports, modifiable ensuite dans Paramètres.
 2. **Identifiant** : par exemple `rssi`. **Nom affiché** : par exemple `Responsable SSI`. L'adresse e-mail est facultative.
 3. **Mot de passe** et **Confirmation** : au moins 12 caractères, avec au moins 3 types de caractères parmi minuscules, majuscules, chiffres et symboles, et sans l'identifiant. Enregistrez-le dans votre coffre-fort.
 4. **Charger des données de démonstration** (case facultative, décochée par défaut) : à cocher pour une évaluation, jamais en production. Voir l'étape 10.4.
-4. Cliquez sur **Créer le compte**.
+5. Cliquez sur **Créer le compte**.
 
 **Résultat attendu** : la page « Activer la double authentification » s'affiche, avec un QR code. En cas de message d'erreur :
 - « jeton invalide » : vérifiez la saisie, ou le jeton a été remplacé par un plus récent ;
@@ -567,7 +595,7 @@ Pour un besoin particulier, onglet **Rôles** : **Dupliquer** un rôle proche, p
 - personne ne peut modifier ses propres droits : demandez à un autre administrateur ;
 - toute modification de droits est tracée dans le **Journal** (avant et après) et ferme les sessions des personnes concernées.
 
-**9.5 Paramètres** : menu **Paramètres**. Renseignez au moins la section **Général** (nom de l'organisation, logo, coordonnées). La section **Sécurité** règle la longueur minimale des mots de passe, la durée des sessions et le verrouillage, dans des bornes que l'application impose ; la double authentification reste toujours obligatoire. Les valeurs du fichier `.env` (`SESSION_…`, `PASSWORD_MIN_LENGTH`, `LOCKOUT_…`) ne servent que tant que cette section n'a pas été enregistrée.
+**9.5 Paramètres** : menu **Paramètres**. Renseignez au moins la section **Général** (nom de l'organisation, logo, coordonnées). La section **Sécurité** règle la longueur minimale des mots de passe, la durée des sessions et le verrouillage, dans des bornes que l'application impose (un mot de passe contient en plus au moins 3 types de caractères, sans plus de 3 caractères identiques à la suite, sans suite de plus de 4 caractères consécutifs ni le nom de l'application ou de l'organisation, [ADR 0075](adr/0075-composition-des-mots-de-passe.md)) ; la double authentification reste toujours obligatoire. Les valeurs du fichier `.env` (`SESSION_…`, `PASSWORD_MIN_LENGTH`, `LOCKOUT_…`) ne servent que tant que cette section n'a pas été enregistrée.
 
 **9.6 Revue des accès** (ISO 27001, mesure A.5.18) : onglet **Utilisateurs**, boutons **Excel** ou **CSV** de la revue des accès. Le fichier liste chaque compte, ses groupes, ses rôles, ses droits effectifs, sa dernière connexion et son expiration. Le bouton **Droits effectifs** d'un compte montre l'origine de chaque droit (rôle direct ou groupe). Faites cette revue au moins une fois par an, et archivez le fichier.
 
@@ -645,23 +673,17 @@ La commande vérifie les références logiques entre objets (processus, objectif
 
 ## 11. Mettre en place les sauvegardes
 
-Une sauvegarde contient la base (suivi, comptes, documents chiffrés, journal), les secrets (clé de chiffrement des documents) **et** l'autorité de certification interne, lus dans le dossier des données. Elle est elle-même chiffrée par une phrase secrète. Chaque sauvegarde laisse un rapport dans `/srv/suivi-audits/donnees/etat/` : **Administration**, onglet **Système**, affiche la date de la dernière sauvegarde réussie et une **alerte au-delà de 48 h**.
+Une sauvegarde contient la base (suivi, comptes, documents chiffrés, journal), les secrets (clé de chiffrement des documents) **et** l'autorité de certification interne, lus dans le dossier des données. Elle est elle-même chiffrée avec [age](https://github.com/FiloSottile/age) pour **deux clés** : celle du serveur et une **clé de secours** que le RSSI garde hors du serveur ([ADR 0071](adr/0071-sauvegardes-chiffrees-avec-age.md)). Aucune sauvegarde n'est jamais produite en clair. Chaque sauvegarde laisse un rapport dans `/srv/suivi-audits/donnees/etat/` : **Administration**, onglet **Système**, affiche la date de la dernière sauvegarde réussie et une **alerte au-delà de 48 h**.
 
-> ⚠️ Sans la phrase secrète, les sauvegardes sont **illisibles**, définitivement. Sans les sauvegardes, une panne du serveur fait **tout perdre**.
+> ⚠️ Sans la clé du serveur **ni** la clé de secours, les sauvegardes sont **illisibles**, définitivement. Sans les sauvegardes, une panne du serveur fait **tout perdre**.
 
-**11.1 Créer la phrase secrète :**
+**11.1 Contrôler les clés de sauvegarde.** Elles ont été créées à l'étape 6.8, avant le premier démarrage (Compose les monte dans l'exécutant et refuse de démarrer sans elles). Vérifiez leur présence et leurs droits :
 
 <!-- ci: run -->
 ```bash
-sudo sh -c 'umask 077 && openssl rand -base64 48 > /root/.suivi-backup-pass'
+sudo ls -l /root/.suivi-backup-key /root/.suivi-backup-recipients
 ```
-**Résultat attendu** : aucun message.
-
-<!-- ci: skip — n'affiche pas la phrase secrète dans les journaux de la CI -->
-```bash
-sudo cat /root/.suivi-backup-pass
-```
-**Résultat attendu** : une ligne de 64 caractères. **Copiez-la dans votre coffre-fort de mots de passe**, avec le nom du serveur.
+**Résultat attendu** : deux fichiers appartenant à `root`, la clé du serveur en `-rw-------`. **Gardez la clé de secours privée (`cle-secours-suivi.key`) hors ligne** et testez-la à l'étape 11.4.
 
 **11.2 Lancer une première sauvegarde :**
 
@@ -673,21 +695,21 @@ sudo mkdir -p /srv/sauvegardes/suivi-audits
 
 <!-- ci: run -->
 ```bash
-sudo BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass ./scripts/backup.sh /srv/sauvegardes/suivi-audits
+sudo ./scripts/backup.sh /srv/sauvegardes/suivi-audits
 ```
-**Résultat attendu** : la dernière ligne est `Sauvegarde : /srv/sauvegardes/suivi-audits/suivi-audits-<date>-<heure>.tar.enc`.
+**Résultat attendu** : la dernière ligne est `Sauvegarde : /srv/sauvegardes/suivi-audits/suivi-audits-<date>-<heure>.tar.age`. Sans les clés de l'étape 6.8, le script refuse de sauvegarder et n'écrit aucun fichier en clair.
 
 <!-- ci: run -->
 ```bash
 sudo ls -lh /srv/sauvegardes/suivi-audits
 ```
-**Résultat attendu** : deux fichiers, `suivi-audits-….tar.enc` (la sauvegarde) et `suivi-audits-….tar.enc.sha256` (son empreinte, qui permet de détecter une altération).
+**Résultat attendu** : deux fichiers, `suivi-audits-….tar.age` (la sauvegarde) et `suivi-audits-….tar.age.sha256` (son empreinte, qui permet de détecter une altération).
 
 **11.3 Planifier une sauvegarde chaque nuit à 2 h 15** (conservation : 90 jours), et la recherche d'une nouvelle version chaque matin à 6 h 40 :
 
 <!-- ci: run -->
 ```bash
-printf '%s\n' '15 2 * * * root cd /opt/suivi-audits && BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass ./scripts/backup.sh /srv/sauvegardes/suivi-audits >> /var/log/suivi-backup.log 2>&1' '40 6 * * * root cd /opt/suivi-audits && ./scripts/verifier-version.sh >> /var/log/suivi-version.log 2>&1' | sudo tee /etc/cron.d/suivi-audits
+printf '%s\n' '15 2 * * * root cd /opt/suivi-audits && ./scripts/backup.sh /srv/sauvegardes/suivi-audits >> /var/log/suivi-backup.log 2>&1' '40 6 * * * root cd /opt/suivi-audits && ./scripts/verifier-version.sh >> /var/log/suivi-version.log 2>&1' | sudo tee /etc/cron.d/suivi-audits
 ```
 **Résultat attendu** : les deux lignes s'affichent à nouveau. Le lendemain, `sudo tail /var/log/suivi-backup.log` doit montrer `Sauvegarde : …`, et `sudo tail /var/log/suivi-version.log` la dernière version publiée.
 
@@ -699,25 +721,28 @@ Demandez à l'équipe infrastructure d'**inclure les dossiers `/srv/suivi-audits
 
 > ⚠️ La restauration **remplace** toutes les données actuelles par celles de la sauvegarde. Juste après l'installation, rien n'est perdu. Plus tard, faites ce test sur un **serveur de test**, jamais sur le serveur en service.
 
-Repérez le nom exact du fichier `.tar.enc` affiché à l'étape 11.2, puis :
+Repérez le nom exact du fichier `.tar.age` affiché à l'étape 11.2, puis :
 
 Avant confirmation, vérifier l’archive sans arrêter l’application ni modifier ses données :
 
-<!-- ci: instead: sudo BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass ./scripts/restore.sh --verifier "$(sudo sh -c 'ls -1 /srv/sauvegardes/suivi-audits/*.tar.enc' | tail -1)" -->
+<!-- ci: instead: sudo ./scripts/restore.sh --verifier "$(sudo sh -c 'ls -1 /srv/sauvegardes/suivi-audits/*.tar.age' | tail -1)" -->
 ```bash
-sudo BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass ./scripts/restore.sh --verifier /srv/sauvegardes/suivi-audits/<fichier>.tar.enc
+sudo ./scripts/restore.sh --verifier /srv/sauvegardes/suivi-audits/<fichier>.tar.age
 ```
 
-Résultat : « Vérification réussie. Restauration non exécutée. » Python 3 utilise uniquement sa bibliothèque standard, sans paquet à télécharger. L’archive est copiée dans un dossier temporaire privé, puis son empreinte, son déchiffrement et ses contenus imbriqués sont contrôlés. Une erreur empêche tout remplacement. Cette vérification ne prouve pas l’authenticité du fichier ni la réussite d’une restauration PostgreSQL : conserver la recette isolée ci-dessous.
+Résultat : « Vérification réussie. Restauration non exécutée. » Python 3 utilise uniquement sa bibliothèque standard, sans paquet à télécharger. L’archive est copiée dans un dossier temporaire privé, puis son empreinte, son déchiffrement et ses contenus imbriqués sont contrôlés. Une erreur empêche tout remplacement : archive modifiée ou tronquée, clé qui n'est pas destinataire de l'archive, ou archive renommée (l'INFO de l'archive doit correspondre à son nom de fichier, à son horodatage et à son identifiant de demande). Cette vérification ne prouve pas l’authenticité du fichier ni la réussite d’une restauration PostgreSQL : conserver la recette isolée ci-dessous.
 
 Formats acceptés : archives GNU/USTAR produites par backup.sh, contenant suivi.dump, secrets.tgz, INFO et éventuellement caddy.tgz. Chemins absolus/traversées, liens, fichiers spéciaux/sparse, doublons et extensions PAX sont refusés. Limites : archive/dump 64 Gio, chaque archive imbriquée décompressée 512 Mio, INFO 1 Mio, 20000 en-têtes et 64 niveaux. Prévoir dans le disque temporaire l’espace pour la copie, le déchiffrement et les contenus extraits. Une archive sans fichier .sha256 reste lisible pour compatibilité, avec avertissement ; un fichier d’empreinte présent doit désigner exactement l’archive sélectionnée. Ne pas renommer un fichier sans actualiser son empreinte.
 
 La restauration destructive exige root et la confirmation RESTAURER. Elle refuse un verrou de sauvegarde/exécutant déjà actif, contrôle le catalogue PostgreSQL avant arrêt, applique uniquement les fichiers validés, puis invalide les sessions restaurées. Il faut se reconnecter. L’attente PostgreSQL et la santé de l’application sont bornées par RESTORE_WAIT_SECONDS (300 secondes par défaut, 1 à 1800). Aucun rapport de succès n’est écrit si ces contrôles échouent. Après un échec pendant remplacement, conserver la sauvegarde de sécurité et faire intervenir l’exploitant : ce sous-lot ne fournit pas de rollback automatique ni de déclenchement HTTP.
 
-<!-- ci: instead: echo RESTAURER | sudo BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass ./scripts/restore.sh "$(sudo sh -c 'ls -1 /srv/sauvegardes/suivi-audits/*.tar.enc' | tail -1)" -->
+<!-- ci: instead: echo RESTAURER | sudo ./scripts/restore.sh "$(sudo sh -c 'ls -1 /srv/sauvegardes/suivi-audits/*.tar.age' | tail -1)" -->
 ```bash
-sudo BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass ./scripts/restore.sh /srv/sauvegardes/suivi-audits/<fichier>.tar.enc
+sudo ./scripts/restore.sh /srv/sauvegardes/suivi-audits/<fichier>.tar.age
 ```
+Sur un autre serveur (perte de la clé du serveur), indiquer la clé de secours : `sudo BACKUP_KEY_FILE=/chemin/cle-secours-suivi.key ./scripts/restore.sh <fichier>.tar.age`.
+
+**Anciennes archives `.tar.enc`** (phrase secrète, version 5.x) : elles ne figurent plus dans l'écran de sauvegardes et ne se restaurent que par `sudo BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass ./scripts/restore.sh --ancien-format <fichier>.tar.enc`, pour une version seulement : **conservez l'ancienne phrase secrète** tant que vous gardez de telles archives, et faites une nouvelle sauvegarde `.tar.age`.
 Le script vérifie l'empreinte et la structure, puis demande de taper `RESTAURER` (en majuscules) suivi d'**Entrée**.
 **Résultat attendu** : la dernière ligne est `Restauration terminée.` Attendez une minute et vérifiez les états (étape 7.3), puis connectez-vous : vos comptes et vos données sont présents. Notez la date de ce test dans **Paramètres**, section **Sauvegardes** : l'application signale quand le prochain test est dû.
 
@@ -734,7 +759,7 @@ Le script vérifie l'empreinte et la structure, puis demande de taper `RESTAURER
 
 La migration additive `006_sauvegardes.sql` est appliquée au démarrage. L’application enregistre une demande ; elle n’exécute aucun shell et ne reçoit ni clé ni chemin. Un exécutant sur le serveur interroge la file. Il réutilise `backup.sh`, avec chiffrement obligatoire. La restauration reste la procédure 11.4 ; l’empreinte SHA-256 vérifie la cohérence du fichier, pas son authenticité ni sa restaurabilité.
 
-Après les étapes 11.1–11.4, vérifier la phrase secrète **non vide**, fichier régulier lisible par root et inaccessible au groupe et aux autres comptes (0600). Conserver sa copie dans le coffre-fort. La destination doit être persistante, privée et incluse dans la sauvegarde externalisée. `RETENTION_DAYS` accepte 1 à 36500 (90 par défaut ; 36500 conserve la compatibilité avec les sauvegardes avant mise à jour, dont les cinq dernières sont gardées) ; `BACKUP_PREFIXE` accepte 1 à 61 caractères ASCII alphanumériques, point, tiret ou soulignement, avec un premier caractère alphanumérique. Ces contrôles s’appliquent aussi aux appels directs de `backup.sh`.
+Après les étapes 6.8 et 11.1–11.4, vérifier que la clé du serveur est un fichier régulier, **non vide**, lisible par root seul (0600), et que le fichier de clés publiques de secours contient au moins une clé `age1…`. La clé de secours privée reste hors du serveur, dans le coffre-fort. La destination doit être persistante, privée et incluse dans la sauvegarde externalisée. `RETENTION_DAYS` accepte 1 à 36500 (90 par défaut ; 36500 conserve la compatibilité avec les sauvegardes avant mise à jour, dont les cinq dernières sont gardées) ; `BACKUP_PREFIXE` accepte 1 à 61 caractères ASCII alphanumériques, point, tiret ou soulignement, avec un premier caractère alphanumérique. Ces contrôles s’appliquent aussi aux appels directs de `backup.sh`.
 
 **Conservation minimale.** La rotation de `backup.sh` garde toujours les `BACKUP_GARDER_MIN` sauvegardes les plus récentes du dossier de destination (7 par défaut, de 1 à 365), même au-delà de `RETENTION_DAYS` ; seules les suivantes disparaissent, avec leur fichier `.sha256`, si elles ont plus de `RETENTION_DAYS` jours. L’exécutant des demandes web relève la durée enregistrée dans Configuration système à `RETENTION_MIN_DAYS` (30 par défaut, de 1 à 36500), lue dans `.env` sur le serveur ; une valeur hors bornes fait échouer la demande au lieu de supprimer des sauvegardes. Les deux réglages sont facultatifs et se placent dans `.env` (voir `.env.example`).
 
@@ -745,15 +770,15 @@ Sur le serveur d’exploitation uniquement :
 <!-- ci: skip — configuration facultative de la tâche hôte A1a, testée avec un exécutant isolé -->
 ```bash
 cd /opt/suivi-audits
-sudo chmod 0600 /root/.suivi-backup-pass
-sudo BACKUP_DEST=/srv/sauvegardes/suivi-audits BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass RETENTION_DAYS=90 ./scripts/backup-worker.sh
+sudo chmod 0600 /root/.suivi-backup-key
+sudo BACKUP_DEST=/srv/sauvegardes/suivi-audits RETENTION_DAYS=90 ./scripts/backup-worker.sh
 ```
 
 Sans demande, ce passage annonce seulement que l’exécutant est prêt. Il ne crée pas de sauvegarde. Ajouter un fichier cron distinct, sans écraser la sauvegarde nocturne existante :
 
 <!-- ci: skip — installation facultative d’une tâche privilégiée sur le serveur d’exploitation -->
 ```bash
-printf '%s\n' '* * * * * root cd /opt/suivi-audits && BACKUP_DEST=/srv/sauvegardes/suivi-audits BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass RETENTION_DAYS=90 ./scripts/backup-worker.sh >> /var/log/suivi-backup-worker.log 2>&1' | sudo tee /etc/cron.d/suivi-backup-worker
+printf '%s\n' '* * * * * root cd /opt/suivi-audits && BACKUP_DEST=/srv/sauvegardes/suivi-audits RETENTION_DAYS=90 ./scripts/backup-worker.sh >> /var/log/suivi-backup-worker.log 2>&1' | sudo tee /etc/cron.d/suivi-backup-worker
 sudo chmod 0644 /etc/cron.d/suivi-backup-worker
 ```
 
@@ -761,22 +786,22 @@ Le passage chaque minute **interroge la file**, sans planifier une sauvegarde ch
 
 Une seule demande est active ; un réessai réseau conserve son identifiant. L’annulation concerne seulement une demande en attente et vérifie sa version. Deux exécutants simultanés sont exclus par un verrou hôte ; `backup.sh` conserve aussi un verrou partagé avec les tâches nocturnes et de mise à jour. Une collision produit un échec explicite, sans relance automatique. Une demande interrompue passe en échec au prochain passage valide ; examiner le journal hôte avant une nouvelle demande.
 
-Les commandes `suivi backup-worker ready|unavailable`, `suivi backup-claim` et `suivi backup-finish <uuid> <code>` sont réservées au script hôte dans le conteneur app. Elles ne constituent pas des routes HTTP. Les rapports par demande restent dans `DATA_DIR/etat/sauvegardes/jobs/`. L’écran expose seulement le nom de fichier, la taille, la durée et l’empreinte, sans chemin hôte ni phrase secrète. Les 50 dernières demandes sont affichées ; l’historique SQL et l’audit ne sont pas purgés par la rotation des archives.
+Les commandes `suivi backup-worker ready|unavailable`, `suivi backup-claim` et `suivi backup-finish <uuid> <code>` sont réservées au script hôte dans le conteneur app. Elles ne constituent pas des routes HTTP. Les rapports par demande restent dans `DATA_DIR/etat/sauvegardes/jobs/`. L’écran expose seulement le nom de fichier, la taille, la durée et l’empreinte, sans chemin hôte ni clé. Les 50 dernières demandes sont affichées ; l’historique SQL et l’audit ne sont pas purgés par la rotation des archives.
 
-Recette après configuration : confirmer une demande, attendre son résultat « Réussie », contrôler la présence de l’archive `.tar.enc` et de son `.sha256`, puis réaliser une restauration **sur un serveur isolé**, selon 11.4. L’application ne déclare pas cette restauration validée automatiquement. En cas d’échec, consulter `/var/log/suivi-backup-worker.log` et corriger la configuration ; aucun secret ne doit être copié dans un ticket. Supprimer uniquement `/etc/cron.d/suivi-backup-worker` désactive ce poller, sans supprimer les données ni la sauvegarde nocturne.
+Recette après configuration : confirmer une demande, attendre son résultat « Réussie », contrôler la présence de l’archive `.tar.age` et de son `.sha256`, puis réaliser une restauration **sur un serveur isolé**, selon 11.4. L’application ne déclare pas cette restauration validée automatiquement. En cas d’échec, consulter `/var/log/suivi-backup-worker.log` et corriger la configuration ; aucun secret ne doit être copié dans un ticket. Supprimer uniquement `/etc/cron.d/suivi-backup-worker` désactive ce poller, sans supprimer les données ni la sauvegarde nocturne.
 
 ### 11.6 Pilotage complet du lot A (poller commun)
 
-La migration additive `007_exploitation.sql` est appliquée au démarrage. À partir de **3.0.2**, le service `updater` de l'installation Compose exécute le poller commun automatiquement : sauvegardes manuelles/planifiées, catalogue, vérifications, restaurations et TLS autorisé. Aucun nouveau service, paquet ni cron. Il utilise par défaut **`DATA_DIR/sauvegardes`** (privé, persistant) et la clé déjà générée **`DATA_DIR/update-secrets/backup-pass`** (root 0600, hors API). Conserver cette clé dans le coffre-fort et externaliser les archives. Aucun secret existant n'est remplacé. Les verrous hôte et SQL empêchent les opérations concurrentes ; une mise à jour attend le passage actif. Les fichiers temporaires volumineux sont dans `DATA_DIR/reprise-exploitation/tmp`, hors du petit `/tmp` du conteneur.
+La migration additive `007_exploitation.sql` est appliquée au démarrage. À partir de **3.0.2**, le service `updater` de l'installation Compose exécute le poller commun automatiquement : sauvegardes manuelles/planifiées, catalogue, vérifications, restaurations et TLS autorisé. Aucun nouveau service, paquet ni cron. Il utilise par défaut **`DATA_DIR/sauvegardes`** (privé, persistant) et les clés age de l'étape 6.8 (**`/root/.suivi-backup-key`** et **`/root/.suivi-backup-recipients`**, root, montées en lecture seule dans l'exécutant, hors API). Elles sont créées à l'étape 6.8 et doivent exister **avant** `docker compose up` : Compose refuse de démarrer l'exécutant sans elles plutôt que de créer des dossiers à leur place. Externaliser les archives. Les verrous hôte et SQL empêchent les opérations concurrentes ; une mise à jour attend le passage actif. Les fichiers temporaires volumineux sont dans `DATA_DIR/reprise-exploitation/tmp`, hors du petit `/tmp` du conteneur.
 
-**Catalogue existant** : renseigner les chemins serveur `BACKUP_DEST` et `BACKUP_PASSPHRASE_FILE` dans `.env`, puis redémarrer `updater` ; Compose les monte pour l'exécutant, sans les exposer à l'API. Garder la clé d'origine pour déchiffrer les anciennes archives. Le dossier doit être persistant, possédé par root et non modifiable par le groupe/les autres comptes ; la clé est régulière, non vide, root 0600. La nouvelle clé par défaut ne déchiffre pas les anciennes archives créées avec une autre clé. Aucun cron existant n'est supprimé ou changé : éviter de planifier deux sauvegardes nocturnes pour le même besoin, même si les verrous empêchent une exécution simultanée.
+**Catalogue existant** : renseigner le chemin serveur `BACKUP_DEST` (et, si les clés ne sont pas aux emplacements par défaut, `BACKUP_KEY_FILE` et `BACKUP_RECIPIENTS_FILE`) dans `.env`, puis redémarrer `updater` ; Compose les monte pour l'exécutant, sans les exposer à l'API. Le dossier doit être persistant, possédé par root et non modifiable par le groupe/les autres comptes ; la clé du serveur est régulière, non vide, root 0600. Les anciennes archives `.tar.enc` ne sont plus listées (voir l'étape 11.4 pour les restaurer). Aucun cron existant n'est supprimé ou changé : éviter de planifier deux sauvegardes nocturnes pour le même besoin, même si les verrous empêchent une exécution simultanée.
 
-**Mode hôte facultatif** : pour conserver le poller externe plutôt que l'intégration Compose, mettre `EXPLOITATION_AUTO=0` dans `.env`. Les commandes ci-dessous restent utilisables, avec Python 3, Docker Compose et OpenSSL sur le serveur. Le poller commun remplace alors le poller A1a ; ils partagent un verrou. La recette du guide utilise ce mode pour contrôler explicitement chaque opération ; la CI normale teste aussi la sauvegarde automatique depuis le bouton, sans cron.
+**Mode hôte facultatif** : pour conserver le poller externe plutôt que l'intégration Compose, mettre `EXPLOITATION_AUTO=0` dans `.env`. Les commandes ci-dessous restent utilisables, avec Python 3, Docker Compose, OpenSSL et age sur le serveur. Le poller commun remplace alors le poller A1a ; ils partagent un verrou. La recette du guide utilise ce mode pour contrôler explicitement chaque opération ; la CI normale teste aussi la sauvegarde automatique depuis le bouton, sans cron.
 
 <!-- ci: skip — configuration de production facultative ; protocole complet rejoué dans le job guide, recette lot A -->
 ```bash
 cd /opt/suivi-audits
-sudo BACKUP_DEST=/srv/sauvegardes/suivi-audits BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass python3 ./scripts/exploitation-worker.py
+sudo BACKUP_DEST=/srv/sauvegardes/suivi-audits python3 ./scripts/exploitation-worker.py
 ```
 
 Installer un cron dédié (une fois par minute, un seul passage actif) :
@@ -784,7 +809,7 @@ Installer un cron dédié (une fois par minute, un seul passage actif) :
 <!-- ci: skip — activation privilégiée spécifique au serveur de production -->
 ```bash
 sudo tee /etc/cron.d/suivi-exploitation > /dev/null <<'CRON'
-* * * * * root cd /opt/suivi-audits && BACKUP_DEST=/srv/sauvegardes/suivi-audits BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass python3 ./scripts/exploitation-worker.py >> /var/log/suivi-exploitation.log 2>&1
+* * * * * root cd /opt/suivi-audits && BACKUP_DEST=/srv/sauvegardes/suivi-audits python3 ./scripts/exploitation-worker.py >> /var/log/suivi-exploitation.log 2>&1
 CRON
 sudo chmod 0644 /etc/cron.d/suivi-exploitation
 ```
@@ -797,7 +822,7 @@ Les journaux publics sont dans `DATA_DIR/etat/exploitation` ; les fichiers de re
 
 <!-- ci: skip — action réservée à l'exploitant après reprise manuelle contrôlée, UUID d'un incident réel -->
 ```bash
-sudo BACKUP_DEST=/srv/sauvegardes/suivi-audits BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass python3 ./scripts/exploitation-worker.py --acquitter <UUID>
+sudo BACKUP_DEST=/srv/sauvegardes/suivi-audits python3 ./scripts/exploitation-worker.py --acquitter <UUID>
 ```
 
 Les demandes anciennes réintroduites depuis une archive sont neutralisées ; aucune restauration/certification/sauvegarde en attente du passé n'est exécutée. Une demande peut être annulée tant qu'elle reste en attente, avec contrôle de version. Les résultats sont notifiés lorsque l'écran est ouvert ; le journal reste la référence après reconnexion. La rétention normale concerne les archives de préfixe standard à la prochaine sauvegarde, sans supprimer les sauvegardes avant mise à jour ni les sauvegardes de sécurité.
@@ -828,6 +853,16 @@ Aucune étape d'installation supplémentaire : l'envoi de courriels (message de 
 
 **Notifications par courriel** ([ADR 0058](adr/0058-notifications-metier.md)). Les notifications métier (échéance d'une action, réévaluation d'un risque, rapprochements à valider) peuvent aussi partir par courriel, **aucune étape d'installation de plus** : qui les reçoit, par groupe, par rôle ou par compte, se règle dans l'application (Administration, Plateforme, Destinataires des notifications ; chaque personne règle les siennes dans Mon compte). Tant que le courriel n'est pas activé et configuré, l'interface le dit (« Courriel non configuré, rien n'est envoyé ») et aucune demande n'est mise en file. Quand il l'est, le même exécutant d'exploitation envoie ces courriels, au plus 20 par passage (une minute environ) : une rafale s'écoule en quelques passages, et une demande restée en attente plus de trois jours est abandonnée. Un courriel ne contient que le type de la notification, un titre court et l'adresse de la rubrique « Rappels » (jamais de donnée métier) ; le lien reprend l'adresse du site (`SITE_ADDRESS`, déjà renseignée à l'installation). Un échec d'envoi n'empêche jamais la notification d'apparaître dans l'application et se lit dans la carte « Destinataires des notifications ».
 
+**Alertes de verrouillage de compte** ([ADR 0070](adr/0070-reponse-de-connexion-uniforme-et-alerte-de-verrouillage.md)), **aucune étape d'installation de plus** : quand un compte est verrouillé après plusieurs échecs, un courriel part vers le **contact technique** (Administration, Configuration système, Courriel) et vers chaque **administrateur actif** (rôle Administrateur, directement ou par un groupe), à l'adresse de son compte. Cette alerte de sécurité ne se désactive ni par les réglages personnels ni par l'interrupteur des alertes d'exploitation ; elle ne contient ni adresse IP ni code, seulement le compte, l'heure, le motif et la fin du verrou. Au plus 10 alertes détaillées par heure, puis une synthèse horaire ; chaque verrou reste dans le journal d'audit (action `auth.account_locked`). Les administrateurs voient aussi l'alerte dans l'application ([ADR 0074](adr/0074-alerte-de-securite-dans-l-application.md)) : un bandeau en haut de l'écran, jusqu'à ce qu'ils la marquent comme lue, même quand le courriel n'est pas configuré. Sans courriel configuré, aucun courriel n'est envoyé et l'écran Courriel l'indique. La connexion répond la même chose (401) pour un compte inconnu, un mauvais mot de passe ou un compte verrouillé : le motif exact se lit dans le journal d'audit.
+
+### 11.9 Poivre des mots de passe
+
+Le poivre ([ADR 0072](adr/0072-poivre-des-mots-de-passe.md)) est défini à l'étape 8.4 (installation neuve) ou, sur un serveur installé avant cette version, dans **Administration, Configuration système, Sécurité, Poivre des mots de passe** : un bandeau le rappelle aux administrateurs tant qu'il manque. **Conservez-le au coffre-fort**, avec la clé de secours des sauvegardes (étape 6.8) : ce sont les deux secrets de reprise du serveur.
+
+- **Le changer** (par exemple au départ d'un administrateur qui le connaissait) : même carte, **Ancien poivre**, nouveau poivre généré ou saisi, engagement de sauvegarde, code de double authentification. Toutes les empreintes sont rechiffrées en une opération ; les mots de passe et les sessions ne changent pas. Cinq tentatives par heure et par compte ; un courriel prévient le contact technique et les administrateurs, et le journal d'audit garde l'auteur et les identifiants de clé (jamais le poivre).
+- **Clé maîtresse perdue, base intacte** : restaurer la clé maîtresse si possible. Sinon, rescellez le poivre depuis le coffre-fort, le poivre étant lu sur l'entrée standard pour ne pas apparaître dans l'historique du shell : `printf %s "<poivre>" | sudo docker compose exec -T app suivi poivre-restaurer`.
+- **Poivre perdu** (aucune copie au coffre-fort) : il ne peut plus être changé. Procédure d'urgence, sur le serveur : `sudo docker compose exec app suivi poivre-reinitialiser --confirmer`. Elle génère un nouveau poivre (affiché une seule fois : l'enregistrer **tout de suite** au coffre-fort), impose un mot de passe temporaire à **tous** les comptes (changement obligatoire à la connexion), ferme toutes les sessions et prévient par courriel. À réserver à ce cas : les utilisateurs doivent recevoir leur mot de passe temporaire.
+
 ## 12. Mettre à jour
 
 ### Configuration de l’environnement (retirée)
@@ -846,7 +881,7 @@ Dans **Configuration système → Mises à jour et versions**, un compte ayant l
 
 L’exécutant télécharge et vérifie les signatures cosign des images API, web et updater, avec l’identité exacte du workflow/tag, ainsi que leur **attestation SBOM** signée par la même identité ([ADR 0063](adr/0063-chaine-de-publication-durcie.md)) : une image sans attestation est refusée. Le SBOM vérifié de chaque composant est conservé dans `DATA_DIR/etat/sbom/<version>` et se télécharge depuis les reçus de mise à jour. Le commit des sources doit correspondre au label de révision des images signées ; les images appliquées sont épinglées par empreinte. Pendant cette préparation, le service reste disponible. Ensuite la maintenance bloque les écritures, attend la fin des mutations déjà engagées, crée une sauvegarde chiffrée et effectue migrations/redémarrage/contrôles de santé et de données. Le frontal sert indépendamment `/update/` et un état public minimal : les utilisateurs et nouvelles connexions conservent la page pendant l’arrêt de l’API, de l’interface et de l’exécutant. Les étapes affichées sont réelles et horodatées, avec la durée écoulée ; aucun pourcentage n’est inventé. À la fin, un **reçu** structuré (versions, étapes, empreintes et signature des images vérifiées, sauvegarde et son empreinte, contrôles des données avant et après) est déposé dans `DATA_DIR/etat/recus-mises-a-jour` et se télécharge depuis Configuration système → Mises à jour et versions ; il ne contient aucune sortie brute de commande et n’est pas servi par le frontal public. Le retour à l’application est automatique après santé confirmée. Un échec avec retour arrière est clairement affiché, avec accès au résultat ; une intervention requise maintient la protection.
 
-`init` crée exclusivement les secrets manquants. La clé spécifique aux sauvegardes de mise à jour est dans **`DATA_DIR/update-secrets/backup-pass`** (root, 0600), hors montage API. Les archives chiffrées sont dans `DATA_DIR/sauvegardes-updates/avant-mise-a-jour`, les cinq dernières sont conservées ; les journaux/reçus privés dans `DATA_DIR/reprise-updates` (root, 0700), l’état public dans `DATA_DIR/etat/updates`. Inclure ces dossiers dans la sauvegarde externalisée du serveur et conserver la clé dans le coffre-fort pour restaurer après perte du serveur. Ne jamais exposer le socket Docker, le projet en écriture ou cette clé à l’API.
+`init` crée exclusivement les secrets manquants. Les sauvegardes de mise à jour utilisent les clés age de l'étape 6.8 (root, 0600, montées en lecture seule dans l'exécutant, hors montage API) ; l'ancien fichier `DATA_DIR/update-secrets/backup-pass` n'est plus créé ni utilisé (le conserver s'il sert à restaurer d'anciennes archives `.tar.enc`). Les archives chiffrées sont dans `DATA_DIR/sauvegardes-updates/avant-mise-a-jour`, les cinq dernières sont conservées ; les journaux/reçus privés dans `DATA_DIR/reprise-updates` (root, 0700), l’état public dans `DATA_DIR/etat/updates`. Inclure ces dossiers dans la sauvegarde externalisée du serveur et conserver la clé de secours (privée) dans le coffre-fort pour restaurer après perte du serveur. Ne jamais exposer le socket Docker, le projet en écriture ou ces clés à l’API.
 
 L’exécutant se remplace lui-même à la fin d’une mise à jour ; son successeur termine les contrôles depuis le reçu durable. Après une interruption pendant remplacement, il tente le retour sécurisé depuis la sauvegarde précédente. Une reprise échouée reste bloquée et conserve les références privées pour l’exploitant : examiner le journal, le rapport et la sauvegarde avant toute restauration manuelle. Ne pas supprimer le marqueur de maintenance tant que la santé et les données ne sont pas validées.
 
@@ -886,6 +921,8 @@ Si des images épinglées par `API_IMAGE`/`WEB_IMAGE`/`UPDATER_IMAGE` sont prés
 6. redémarre l'application ; les évolutions de la base s'appliquent au démarrage, une par une ;
 7. attend que l'application soit en bon état, relit chaque document chiffré, puis écrit un rapport (onglet **Système** de l'administration, et journal d'audit) ;
 8. **en cas d'échec**, revient tout seul à la version précédente ; si la base avait déjà évolué, il restaure la sauvegarde du point 4 (après votre accord).
+
+> ⚠️ **Première mise à jour vers la version qui chiffre les sauvegardes avec age** (voir le CHANGELOG) : avant de lancer le script, installez `age` (`sudo apt install -y age`) et créez les clés de l'étape 6.8. La sauvegarde de cette mise à jour est encore faite par la version installée (avec l'ancienne phrase secrète) ; sans les clés, la nouvelle version ne démarre pas et le retour arrière automatique rétablit l'ancienne. Une mise à jour lancée depuis l'interface web nécessite de la même façon des clés déjà créées.
 
 **1. Récupérer la liste des versions publiées :**
 
@@ -1062,7 +1099,7 @@ Toutes ces commandes se lancent depuis `/opt/suivi-audits`.
 | ⚠️ **Tout effacer** | `sudo docker compose down && sudo rm -rf /srv/suivi-audits/donnees` | `.env`, sauvegardes de `/srv/sauvegardes` | **base de données, documents, comptes, secrets, certificats : définitivement** |
 | Supprimer aussi l'application | `cd / && sudo rm -rf /opt/suivi-audits /etc/cron.d/suivi-audits` | sauvegardes de `/srv/sauvegardes` | le dépôt, `.env` et les tâches planifiées |
 
-> ⚠️ Avant d'effacer le dossier des données, faites une sauvegarde (étape 11.2) **et** vérifiez que la phrase secrète est dans votre coffre-fort. Sans les deux, rien n'est récupérable. Supprimer les conteneurs ou les images, ou lancer `docker compose down -v`, ne touche plus aux données.
+> ⚠️ Avant d'effacer le dossier des données, faites une sauvegarde (étape 11.2) **et** vérifiez que la clé de secours (privée) est dans votre coffre-fort. Sans les deux, rien n'est récupérable. Supprimer les conteneurs ou les images, ou lancer `docker compose down -v`, ne touche plus aux données.
 
 ---
 

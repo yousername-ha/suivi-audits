@@ -57,8 +57,8 @@ sudo docker compose exec app setup-token           # jeton d'installation, puis 
 | Journaux | `sudo docker compose logs -f app` |
 | Commandes d'exploitation | `sudo docker compose exec app suivi help` (`users`, `reset-password`, `reset-mfa`, `unlock`, `disable`, `enable`, `sessions-purge`) |
 | Administrateur de secours | `sudo docker compose exec app setup-token --recovery` |
-| Sauvegarde chiffrée | `sudo BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass ./scripts/backup.sh /srv/sauvegardes/suivi-audits` |
-| Restauration | `sudo BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass ./scripts/restore.sh <archive>.tar.enc` |
+| Sauvegarde chiffrée | `sudo ./scripts/backup.sh /srv/sauvegardes/suivi-audits` |
+| Restauration | `sudo ./scripts/restore.sh <archive>.tar.age` |
 | Mise à jour | Configuration système → Mises à jour et versions ; pour le premier passage ou l’entretien serveur, suivre [INSTALLATION, section 12](docs/INSTALLATION.md) (sauvegarde et signatures). |
 | Antivirus | `CLAMAV_HOST=clamav` dans `.env`, puis `sudo docker compose --profile antivirus up -d` |
 

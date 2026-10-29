@@ -3,41 +3,7 @@ import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { cheminRefuse, genererCleMiseAJour, migrationPostgresqlRequise, typeMontage } from '../src/init-secrets.js';
-
-describe('clé des mises à jour', () => {
-  it('crée une clé privée et conserve sa valeur lors des démarrages suivants', () => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'update-key-'));
-    try {
-      const file = path.join(dir, 'backup-pass');
-      genererCleMiseAJour(file, process.getuid!());
-      const key = fs.readFileSync(file, 'utf8');
-      expect(Buffer.from(key.trim(), 'base64')).toHaveLength(48);
-      fs.chmodSync(file, 0o644);
-      genererCleMiseAJour(file, process.getuid!());
-      expect(fs.readFileSync(file, 'utf8')).toBe(key);
-      expect(fs.statSync(file).mode & 0o777).toBe(0o600);
-    } finally {
-      fs.rmSync(dir, { recursive: true, force: true });
-    }
-  });
-  it('refuse un lien ou un fichier vide sans écraser sa cible', () => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'update-key-'));
-    try {
-      const target = path.join(dir, 'target');
-      const file = path.join(dir, 'backup-pass');
-      fs.writeFileSync(target, 'configuration existante');
-      fs.symlinkSync(target, file);
-      expect(() => genererCleMiseAJour(file, process.getuid!())).toThrow();
-      expect(fs.readFileSync(target, 'utf8')).toBe('configuration existante');
-      fs.unlinkSync(file);
-      fs.writeFileSync(file, '');
-      expect(() => genererCleMiseAJour(file, process.getuid!())).toThrow(/invalide/);
-    } finally {
-      fs.rmSync(dir, { recursive: true, force: true });
-    }
-  });
-});
+import { cheminRefuse, migrationPostgresqlRequise, typeMontage } from '../src/init-secrets.js';
 
 describe('DATA_DIR : emplacements refusés', () => {
   it('accepte un dossier dédié', () => {

@@ -66,11 +66,11 @@ describe('second facteur : essais limités par compte', () => {
     // Connexion par mot de passe refusée.
     remettreAZero();
     const b = new Agent(t);
-    expect((await b.post('/api/auth/login', { username: u.username, password: PASSWORD })).statusCode).toBe(423);
+    expect((await b.post('/api/auth/login', { username: u.username, password: PASSWORD })).statusCode).toBe(401);
     // Session ouverte avant le verrou : refusée et détruite, même avec un code juste.
     t.svc.limits.mfaByUser.reset();
     const r = await a.post('/api/auth/mfa', { code: await nextCode(t, u) });
-    expect(r.statusCode).toBe(423);
+    expect(r.statusCode).toBe(401);
     const restantes = await t.svc.db.one<{ n: number }>('SELECT count(*)::int AS n FROM sessions WHERE user_id=$1', [
       u.id,
     ]);

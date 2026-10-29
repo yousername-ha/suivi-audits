@@ -104,13 +104,14 @@ dc --profile antivirus stop
 STAMP=$(date +%Y%m%d-%H%M%S)
 if [ "$SANS_SAUVEGARDE" = 0 ]; then
   etape "Sauvegarde chiffrée des volumes"
-  PASS="${BACKUP_PASSPHRASE_FILE:-/root/.suivi-backup-pass}"
-  [ -s "$PASS" ] || arret "phrase secrète des sauvegardes introuvable ($PASS) : voir docs/INSTALLATION.md, étape 11.1."
+  CLE="${BACKUP_KEY_FILE:-/root/.suivi-backup-key}"
+  SECOURS="${BACKUP_RECIPIENTS_FILE:-/root/.suivi-backup-recipients}"
+  controler_cles_sauvegarde "$CLE" "$SECOURS"
   mkdir -p "$SAUV"
-  OUT="$SAUV/avant-migration-dossier-$STAMP.tar.gz.enc"
+  OUT="$SAUV/avant-migration-dossier-$STAMP.tar.gz.age"
   # Les volumes sont sous la même racine (/var/lib/docker/volumes/<volume>/_data) : une seule archive, un dossier par volume.
   racine=$(dirname "$(dirname "$(docker volume inspect -f '{{.Mountpoint}}' "$(printf '%s\n' $vols | head -n 1)")")")
-  (umask 077 && tar czf - -C "$racine" $vols | openssl enc -aes-256-cbc -pbkdf2 -iter 600000 -salt -out "$OUT" -pass "file:$PASS")
+  (umask 077 && tar czf - -C "$racine" $vols | age -r "$(age-keygen -y "$CLE")" -R "$SECOURS" -o "$OUT")
   sha256sum "$OUT" > "$OUT.sha256"
   info "Sauvegarde : $OUT"
 fi

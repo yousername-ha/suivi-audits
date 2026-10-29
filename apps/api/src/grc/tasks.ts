@@ -500,17 +500,21 @@ export class GrcTasks {
       ])
       .where('user_id', '=', user.id)
       .where('canal_application', '=', true)
+      // Les alertes de sécurité (sans SMSI) ont leur propre route : /api/account/alertes-securite (ADR 0074).
+      .where('smsi_id', 'is not', null)
       .orderBy('created_at', 'desc')
       .limit(100)
       .execute();
     const visible = [];
     for (const r of rows)
       if (
-        await this.g.visible(
+        r.smsiId &&
+        r.objectId &&
+        (await this.g.visible(
           user,
           r.smsiId,
           r.kind === 'risk_review' ? 'pilotage' : r.kind === 'rapprochement' ? 'conformite' : 'ecarts',
-        )
+        ))
       )
         visible.push(r);
     return visible;

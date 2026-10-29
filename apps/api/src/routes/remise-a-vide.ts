@@ -12,7 +12,7 @@ import type { Services } from '../services.js';
 import { prepareDatabase } from '../startup.js';
 
 /** Contrôles communs : même limiteur et même anti-rejeu que l'installation d'une mise à jour. */
-async function exigerCode(svc: Services, user: SessionUser, ip: string, code: string, action: string) {
+export async function exigerCode(svc: Services, user: SessionUser, ip: string, code: string, action: string) {
   if (!svc.limits.updateMfaByUser(user.id))
     throw new HttpError(429, 'Trop de codes refusés. Réessayez dans quinze minutes.');
   if (!(await svc.auth.checkTotp(user.id, code))) {

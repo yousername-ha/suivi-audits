@@ -32,6 +32,7 @@ maj() {
     -v /srv/suivi-audits/donnees:/srv/suivi-audits/donnees \
     -v /srv/sauvegardes/suivi-audits:/srv/sauvegardes/suivi-audits \
     -v /root/.suivi-backup-pass:/root/.suivi-backup-pass:ro \
+    -v /root/.suivi-backup-key:/root/.suivi-backup-key:ro -v /root/.suivi-backup-recipients:/root/.suivi-backup-recipients:ro \
     -w "$SERVEUR" -e "PWD=$SERVEUR" \
     -e GIT_CONFIG_COUNT=2 -e GIT_CONFIG_KEY_0=safe.directory -e "GIT_CONFIG_VALUE_0=$SERVEUR" \
     -e GIT_CONFIG_KEY_1=safe.directory -e "GIT_CONFIG_VALUE_1=$SOURCE" \
@@ -46,6 +47,7 @@ maj_installee() {
     -v /srv/suivi-audits/donnees:/srv/suivi-audits/donnees \
     -v /srv/sauvegardes/suivi-audits:/srv/sauvegardes/suivi-audits \
     -v /root/.suivi-backup-pass:/root/.suivi-backup-pass:ro \
+    -v /root/.suivi-backup-key:/root/.suivi-backup-key:ro -v /root/.suivi-backup-recipients:/root/.suivi-backup-recipients:ro \
     -w "$SERVEUR" -e "PWD=$SERVEUR" \
     -e GIT_CONFIG_COUNT=2 -e GIT_CONFIG_KEY_0=safe.directory -e "GIT_CONFIG_VALUE_0=$SERVEUR" \
     -e GIT_CONFIG_KEY_1=safe.directory -e "GIT_CONFIG_VALUE_1=$SOURCE" \
@@ -80,6 +82,11 @@ api import "$URL" "$SOURCE/tests/fixtures/legacy-fixture.json"
 api document "$URL"
 api instantane "$URL" "$RUNNER_TEMP/reference.json"
 sudo sh -c 'umask 077 && openssl rand -base64 48 > /root/.suivi-backup-pass'
+# Clés age (ADR 0071) : la version de départ ne les utilise pas (phrase secrète), la cible les monte (docker-compose.yml) et les
+# exige ; les créer avant la montée comme le demande le guide d'installation (sudo ./scripts/generer-cles-sauvegarde.sh).
+command -v age-keygen > /dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq age > /dev/null; }
+age-keygen -o "$RUNNER_TEMP/cle-secours.key" 2> /dev/null
+sudo "$SOURCE/scripts/generer-cles-sauvegarde.sh" --secours "$(age-keygen -y "$RUNNER_TEMP/cle-secours.key")" --confirmer > /dev/null
 VOLUMES_DEPART=$(sudo docker volume ls -q | grep -c '^suivi-audits_' || true)
 fin_groupe
 
@@ -92,7 +99,7 @@ if maj SUIVI_TEST_ECHEC_SANTE=1; then echec "la mise à jour aurait dû échouer
 attendre
 api instantane "$URL" "$RUNNER_TEMP/apres-echec.json" "$RUNNER_TEMP/reference.json"
 dernier_rapport | grep -q '"resultat":"retour-arriere"' || echec "rapport « retour-arriere » absent"
-[ -z "$(sudo ls /srv/sauvegardes/suivi-audits/avant-mise-a-jour/ | grep '\.enc$')" ] && echec "sauvegarde avant mise à jour absente"
+[ -z "$(sudo ls /srv/sauvegardes/suivi-audits/avant-mise-a-jour/ | grep -E '\.tar\.(enc|age)$')" ] && echec "sauvegarde avant mise à jour absente"
 fin_groupe
 
 groupe "2. Simulation (--verifier) : rien ne change"

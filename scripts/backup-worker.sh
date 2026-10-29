@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # A1a : exécutant serveur. Aucun chemin ni commande n'est fourni par l'interface web.
-# BACKUP_DEST et BACKUP_PASSPHRASE_FILE sont définis par l'exploitant, hors de l'application.
+# BACKUP_DEST, BACKUP_KEY_FILE et BACKUP_RECIPIENTS_FILE (chiffrement age, voir generer-cles-sauvegarde.sh) sont définis par
+# l'exploitant, hors de l'application.
 set -euo pipefail
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 . "$REPO/scripts/lib-commun.sh"
@@ -12,16 +13,12 @@ umask 077
 exec 8> "$DATA_DIR/etat/backup-worker.lock"
 flock -n 8 || exit 0
 DEST="${BACKUP_DEST:-}"
-KEY_FILE="${BACKUP_PASSPHRASE_FILE:-}"
-if [ -z "$DEST" ] || [ -z "$KEY_FILE" ] || [ ! -f "$KEY_FILE" ] || [ ! -s "$KEY_FILE" ] || [ ! -r "$KEY_FILE" ]; then
+KEY_FILE="${BACKUP_KEY_FILE:-/root/.suivi-backup-key}"
+RECIPIENTS_FILE="${BACKUP_RECIPIENTS_FILE:-/root/.suivi-backup-recipients}"
+# Clé du serveur (0600, identité age valide) et clé publique de secours : sans elles, aucune sauvegarde (jamais en clair).
+if [ -z "$DEST" ] || ! (controler_cles_sauvegarde "$KEY_FILE" "$RECIPIENTS_FILE") > /dev/null 2>&1; then
   cli backup-worker unavailable
-  exit 1
-fi
-# Pas de clé lisible par le groupe ou les autres comptes.
-MODE=$(stat -c %a "$KEY_FILE")
-if (( (8#$MODE & 077) != 0 )); then
-  cli backup-worker unavailable
-  arret "Permissions de la clé de sauvegarde trop larges (0600 requis)."
+  arret "Sauvegarde indisponible : destination ou clés absentes ou invalides (sudo ./scripts/generer-cles-sauvegarde.sh)."
 fi
 mkdir -p "$DEST"
 [ -d "$DEST" ] && [ -w "$DEST" ] || { cli backup-worker unavailable; exit 1; }
@@ -29,7 +26,7 @@ cli backup-worker ready
 JOB=$(cli backup-claim)
 [ -n "$JOB" ] || exit 0
 [[ "$JOB" =~ ^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$ ]] || arret "Réponse de prise en charge invalide."
-BACKUP_JOB_ID="$JOB" BACKUP_PASSPHRASE_FILE="$KEY_FILE" "$REPO/scripts/backup.sh" "$DEST" &
+BACKUP_JOB_ID="$JOB" BACKUP_KEY_FILE="$KEY_FILE" BACKUP_RECIPIENTS_FILE="$RECIPIENTS_FILE" "$REPO/scripts/backup.sh" "$DEST" &
 BACKUP_PID=$!
 # Le battement continue pendant une sauvegarde longue. Les enfants héritent du verrou hôte.
 (
