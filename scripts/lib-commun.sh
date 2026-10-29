@@ -126,7 +126,7 @@ dossier_base_postgresql() {
   m=$(postgresql_majeure_compose)
   if [[ "$m" =~ ^[0-9]+$ ]] && [ "$m" -ge 18 ]; then printf '%s/postgres%s' "$(dossier_donnees)" "$m"; else printf '%s/postgres' "$(dossier_donnees)"; fi
 }
-postgresql_majeure_ancienne() { tr -d '[:space:]' < "$(dossier_donnees)/postgres/PG_VERSION" 2> /dev/null || true; }
+postgresql_majeure_ancienne() { tr -d '[:space:]' 2> /dev/null < "$(dossier_donnees)/postgres/PG_VERSION" || true; }
 
 # Comptes de lignes par table de la base « suivi » (une ligne « table nombre », triée), pour comparer avant et après.
 postgresql_comptes() {

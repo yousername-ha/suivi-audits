@@ -58,7 +58,7 @@ jobs:
       - name: Scripts d'exploitation (syntaxe bash, ShellCheck)
         run: |
           for f in scripts/*.sh scripts/ci/*.sh; do bash -n "$f"; done
-          shellcheck -S warning -x -e SC1091 scripts/*.sh scripts/ci/*.sh
+          shellcheck -S warning -x -e SC1091 installer.sh docker/*.sh scripts/*.sh scripts/ci/*.sh
       - name: Actions GitHub épinglées par empreinte de commit (ADR 0063)
         run: node scripts/ci/verifier-epinglage.mjs
       - name: CHANGELOG (paragraphe « Notes de mise à jour » dans chaque section, EXPL-07)

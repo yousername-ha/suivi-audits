@@ -19,6 +19,7 @@ import { DetailsTechniques, Audit, Sessions, Versions } from './Admin';
 import { GroupsPanel, RolesPanel, UsersPanel } from './AdminAccess';
 import { BackupsPanel } from './AdminBackups';
 import { CleSecoursPanel } from '../components/CleSecours';
+import { AdresseSitePanel } from '../components/AdresseSite';
 import { CalendriersPanel } from './AdminCalendriers';
 import { FonctionsPanel } from './AdminFonctions';
 import { JournauxTechniquesPanel } from './AdminJournauxTechniques';
@@ -261,10 +262,15 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     id: 'certificats',
     cote: 'systeme',
     titre: 'Certificats et opérations',
-    resume: 'Certificat du serveur (aperçu, échéance), opérations d’exploitation.',
+    resume: 'Adresse du site, certificat du serveur (aperçu, échéance), opérations d’exploitation.',
     icone: 'cadenas',
     teinte: 'rouge',
-    detail: () => <OperationsPanel />,
+    detail: (_m, can) => (
+      <Stack gap="xl">
+        {can('administration', 'lire') && <AdresseSitePanel />}
+        <OperationsPanel />
+      </Stack>
+    ),
   },
   {
     id: 'securite',

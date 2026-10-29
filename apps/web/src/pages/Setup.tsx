@@ -61,6 +61,7 @@ export function SetupPage() {
         pending: boolean;
         poivreDefini: boolean;
         cleSecoursDefinie: boolean;
+        adresseSite: string | null;
       }>('/api/setup'),
   });
   // Étapes : poivre des mots de passe (ADR 0072) et clé de secours des sauvegardes (ADR 0077) quand ils ne sont pas encore
@@ -72,6 +73,8 @@ export function SetupPage() {
   const token = useTokenInput();
   const [demo, setDemo] = useState(false);
   const [f, setF] = useState({ orgName: '', username: '', displayName: '', email: '', password: '', confirm: '' });
+  // Adresse du site (ADR 0077) : par défaut celle par laquelle ce navigateur a ouvert l'assistant.
+  const [adresse, setAdresse] = useState(() => window.location.hostname);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -109,6 +112,7 @@ export function SetupPage() {
         demo,
         ...(avecPoivre && poivre ? { poivre } : {}),
         ...(avecCle && cleSecours ? { cleSecours } : {}),
+        ...(adresse.trim() ? { adresseSite: adresse.trim() } : {}),
       });
       await refresh();
       nav('/login', { replace: true });
@@ -189,14 +193,11 @@ export function SetupPage() {
                     Récupérer le jeton
                   </Title>
                   <Text size="sm" c="dimmed">
-                    Sur le serveur, dans le dossier de l’application, exécuter l’une des commandes suivantes. Le jeton
-                    est valable 24 h ; en générer un nouveau annule le précédent.
+                    Le jeton est affiché à la fin de la commande d’installation, sur le serveur. Il est valable 24 h ;
+                    relancer la commande, dans le dossier de l’application, en affiche un nouveau et annule le précédent
+                    :
                   </Text>
-                  <CopyCommand command={`sudo ${SETUP_TOKEN_COMMANDS.generate}`} />
-                  <Text size="sm" c="dimmed">
-                    ou, pour retrouver le jeton émis au démarrage :
-                  </Text>
-                  <CopyCommand command={`sudo ${SETUP_TOKEN_COMMANDS.logs}`} />
+                  <CopyCommand command={SETUP_TOKEN_COMMANDS.installer} />
                 </Stack>
               </Card>
               <form onSubmit={submit} noValidate>
@@ -214,6 +215,19 @@ export function SetupPage() {
                     value={token.value}
                     onChange={token.onChange}
                     onKeyDown={token.onKeyDown}
+                  />
+                  <TextInput
+                    label="Adresse du site"
+                    description={
+                      status.data?.adresseSite && adresse.trim().toLowerCase() !== status.data.adresseSite
+                        ? `Nom DNS ou adresse IP par lesquels les utilisateurs ouvriront l’application. Elle remplacera « ${status.data.adresseSite} » une minute après la création du compte ; le site restera aussi joignable par les adresses du serveur.`
+                        : 'Nom DNS ou adresse IP par lesquels les utilisateurs ouvriront l’application (modifiable ensuite dans Administration).'
+                    }
+                    autoComplete="off"
+                    spellCheck={false}
+                    maxLength={253}
+                    value={adresse}
+                    onChange={(e) => setAdresse(e.currentTarget.value)}
                   />
                   <TextInput
                     label="Nom de l’organisation"

@@ -420,7 +420,7 @@ export class Auth {
       `\n${line}\n  JETON D'INSTALLATION (usage unique, valable 24 h)\n\n    ${tok}\n\n` +
         `  Expire le : ${expiry}\n` +
         `  Ouvrir ${this.cfg.publicUrl || 'https://<serveur>'}/setup et le saisir pour créer le compte administrateur.\n` +
-        `  Nouveau jeton (annule le précédent) : docker compose exec app setup-token\n${line}\n\n`,
+        `  Nouveau jeton (annule le précédent) : sudo ./installer.sh, ou docker compose exec app setup-token\n${line}\n\n`,
     );
     return { token: tok, expires: rec.expires };
   }

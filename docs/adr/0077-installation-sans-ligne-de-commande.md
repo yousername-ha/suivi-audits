@@ -1,6 +1,6 @@
 # ADR 0077 — Installation sans ligne de commande
 
-- Statut : acceptée (étape 1 : clés de sauvegarde ; étapes 2 et 3 à venir)
+- Statut : acceptée (étapes 1 et 2 réalisées : clés de sauvegarde, commande d'installation et adresse du site ; étape 3 à venir)
 - Date : 2026-10-29
 - Contexte : décision du RSSI du 29/10/2026. Le guide d'installation compte des dizaines de commandes (paquets, clés `age`,
   `.env` à éditer, préparation du dossier des données, jeton lu dans les journaux, cosign…). Règle retenue : **aucune ligne
@@ -38,16 +38,27 @@
      les administrateurs à la définir.
    - Les scripts du serveur (`backup.sh`, `restore.sh`, `generer-cles-sauvegarde.sh`…) gardent les mêmes clés par défaut ;
      ce dernier reste une voie d'expert (clé publique générée hors navigateur).
-4. **Adresse du site (étape 2).** Sans `SITE_ADDRESS`, le site démarre en HTTPS avec le certificat interne pour le nom et
-   les adresses du serveur fournis par la commande d'installation. L'assistant propose l'adresse utilisée par le
-   navigateur ; après confirmation (jeton exigé), elle est appliquée par la file d'exploitation existante (ADR 0050), qui
-   écrit `.env` et recrée le frontal.
+4. **Commande d'installation et adresse du site (étape 2, réalisée).**
+   - `installer.sh` (racine du dépôt, root) refuse de continuer si Docker ou Compose manque, si un autre service occupe
+     les ports, et signale une heure non synchronisée. Sans `.env`, il le crée depuis `.env.example` (0600) : nom du site =
+     nom complet du serveur, sinon sa première adresse IPv4 ; `SITE_ADDRESS_EXTRA` = ses autres noms et adresses IPv4 (sans
+     les passerelles des réseaux Docker), plus `localhost`. Un `.env` existant n'est jamais modifié.
+   - Le frontal sert `SITE_ADDRESS` et, **avec le certificat interne seulement**, `SITE_ADDRESS_EXTRA` : l'assistant
+     s'ouvre par l'adresse IP avant que le nom DNS existe. Un navigateur n'annonce aucun nom (SNI) pour une adresse IP :
+     `default_sni` désigne alors la première adresse IPv4 servie. ACME et un certificat fourni ne couvrent que le nom du
+     site.
+   - L'assistant propose l'adresse du navigateur (modifiable). Si elle diffère de l'adresse en service, l'application
+     l'enregistre (`settings`, `site:adresse`) ; l'exécutant d'exploitation (ADR 0050) la relit (`suivi site-adresse`),
+     la revalide, écrit `SITE_ADDRESS` dans `.env` (l'ancienne passe dans `SITE_ADDRESS_EXTRA`) et recrée `app` et
+     `gateway`. Ensuite, Administration, Certificats (droit « administrer », code de double authentification).
+   - Le jeton est affiché par la commande (`docker compose exec app setup-token`) ; les messages de l'application
+     renvoient vers `sudo ./installer.sh`.
 5. **Documentation et recette (étape 3).** Guide d'installation réécrit autour de ce parcours ; le job CI qui rejoue le
    guide suit les mêmes étapes ; notes de la 6.0.0 réécrites (installation neuve).
 
 ## Conséquences
 
-- Plus d'`age`, de `cosign`, d'éditeur de texte ni de commande de jeton pour installer ; `age` reste utile sur l'hôte pour
+- Plus d'`age`, de `cosign`, d'éditeur de texte ni de commande de jeton pour installer (hors voies d'expert) ; `age` reste utile sur l'hôte pour
   les scripts d'expert et la restauration manuelle.
 - La clé de secours est générée par une page servie par le serveur : il faut faire confiance à ce serveur au moment de la
   génération. À l'installation, il est neuf ; ensuite, `generer-cles-sauvegarde.sh --secours` permet de fournir une clé

@@ -1,5 +1,6 @@
 # Frontal HTTPS (Caddy 2) : interface web compilée + reverse proxy vers l'API.
-# Variables : SITE_ADDRESS, CADDY_TLS (voir .env). Ports internes non privilégiés : 8080 (HTTP) et 8443 (HTTPS),
+# Variables : SITE_HTTP et SITE_HTTPS (adresses du site, calculées par demarrer-gateway.sh depuis SITE_ADDRESS et
+# SITE_ADDRESS_EXTRA), SITE_DEFAULT_SNI, CADDY_TLS (voir .env). Ports internes non privilégiés : 8080 (HTTP) et 8443 (HTTPS),
 # publiés sur 80 et 443 par docker-compose.yml.
 {
 	admin off
@@ -10,6 +11,8 @@
 	cert_issuer acme {
 		dir {$ACME_CA:https://acme-v02.api.letsencrypt.org/directory}
 	}
+	# Nom présenté quand le navigateur n'en annonce aucun (accès par adresse IP) : voir demarrer-gateway.sh.
+	default_sni {$SITE_DEFAULT_SNI}
 	http_port 8080
 	https_port 8443
 	# Redirection HTTP -> HTTPS gérée ci-dessous (sans le port interne 8443 dans l'adresse).
@@ -19,11 +22,11 @@
 	}
 }
 
-http://{$SITE_ADDRESS}:8080 {
+{$SITE_HTTP} {
 	redir https://{host}{uri} 308
 }
 
-{$SITE_ADDRESS}:8443 {
+{$SITE_HTTPS} {
 	tls {$CADDY_TLS}
 
 	# Compression, sauf pour le flux temps réel (text/event-stream), qui doit partir sans délai.

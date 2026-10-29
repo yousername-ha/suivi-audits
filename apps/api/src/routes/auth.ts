@@ -185,6 +185,7 @@ export const authRoutes = [
         adminExists,
         poivreDefini: await svc.motsDePasse.defini(),
         cleSecoursDefinie: await svc.cleSecours.definie(),
+        adresseSite: svc.adresseSite.actuelle(),
       };
     },
   }),
@@ -235,6 +236,8 @@ export const authRoutes = [
             throw new HttpError(409, 'Le poivre est déjà défini.', { reason: 'poivre_defini' });
           if (poivre) await svc.motsDePasse.inscrireALInstallation(c, kdb, poivre, body.username);
           if (cleSecours) await svc.cleSecours.inscrire(kdb, cleSecours.publique, body.username);
+          if (body.adresseSite && body.adresseSite !== svc.adresseSite.actuelle())
+            await svc.adresseSite.demander(kdb, body.adresseSite, body.username);
           const u = await kdb
             .insertInto('users')
             .values({

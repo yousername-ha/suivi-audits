@@ -47,13 +47,15 @@ export type SetupTokenStatus = 'ok' | 'invalid' | 'expired' | 'used' | 'none';
 export const SETUP_TOKEN_MESSAGES: Record<Exclude<SetupTokenStatus, 'ok'>, string> = {
   invalid:
     "Jeton d'installation invalide. Vérifiez la saisie ou utilisez le dernier jeton généré (les précédents sont annulés).",
-  expired: "Jeton d'installation expiré (validité 24 h). Générez-en un nouveau : docker compose exec app setup-token",
+  expired:
+    "Jeton d'installation expiré (validité 24 h). Relancez la commande d'installation (sudo ./installer.sh) : elle en affiche un nouveau.",
   used: "Ce jeton d'installation a déjà été utilisé. Connectez-vous, ou générez-en un nouveau si aucun administrateur n'a été créé.",
-  none: "Aucun jeton d'installation en cours. Générez-en un : docker compose exec app setup-token",
+  none: "Aucun jeton d'installation en cours. Relancez la commande d'installation (sudo ./installer.sh) : elle en affiche un.",
 };
 
-/** Commandes rappelées sur la page d'installation et dans les journaux. */
+/** Commandes rappelées sur la page d'installation et dans les journaux (ADR 0077 : la commande d'installation affiche le
+    jeton ; la commande directe reste possible). */
 export const SETUP_TOKEN_COMMANDS = {
+  installer: 'sudo ./installer.sh',
   generate: 'docker compose exec app setup-token',
-  logs: 'docker compose logs app | grep -A3 JETON',
 } as const;

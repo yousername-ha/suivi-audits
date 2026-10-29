@@ -79,7 +79,7 @@ test('installation : jeton, création de l’administrateur, activation de la do
   await expect(suite).toBeEnabled();
   await suite.click();
   await expect(page.getByRole('heading', { name: 'Récupérer le jeton' })).toBeVisible();
-  await expect(page.getByText('sudo docker compose exec app setup-token')).toBeVisible();
+  await expect(page.getByText('sudo ./installer.sh')).toBeVisible();
 
   // Le jeton est saisi en minuscules, avec des espaces : il est mis en forme automatiquement.
   const token = setupToken();
