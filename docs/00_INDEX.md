@@ -2,7 +2,7 @@
 
 ## Jeu court à lire d'abord (18/10/2026)
 
-0. [Reprise du 29/10/2026](01_REPRISE_IA/REPRISE-2026-10-29.md) : état le plus récent (version 5.2.0 préparée, reste à faire) ;
+0. [Reprise du 29/10/2026](01_REPRISE_IA/REPRISE-2026-10-29.md) : état le plus récent (version 6.0.0 préparée, reste à faire) ;
    [reprise du 27/10/2026](01_REPRISE_IA/REPRISE-2026-10-27.md) : règles de fusion et de travail.
 
 1. [README](../README.md), [PRODUCT](PRODUCT.md), [REFERENTIALS](REFERENTIALS.md) : ce que fait la plateforme.
