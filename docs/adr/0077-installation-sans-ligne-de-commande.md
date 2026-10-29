@@ -1,6 +1,6 @@
 # ADR 0077 — Installation sans ligne de commande
 
-- Statut : acceptée (étapes 1 et 2 réalisées : clés de sauvegarde, commande d'installation et adresse du site ; étape 3 à venir)
+- Statut : acceptée et réalisée (étape 1 : clés de sauvegarde ; étape 2 : commande d'installation et adresse du site ; étape 3 : guide et notes de la 6.0.0)
 - Date : 2026-10-29
 - Contexte : décision du RSSI du 29/10/2026. Le guide d'installation compte des dizaines de commandes (paquets, clés `age`,
   `.env` à éditer, préparation du dossier des données, jeton lu dans les journaux, cosign…). Règle retenue : **aucune ligne
@@ -53,8 +53,11 @@
      `gateway`. Ensuite, Administration, Certificats (droit « administrer », code de double authentification).
    - Le jeton est affiché par la commande (`docker compose exec app setup-token`) ; les messages de l'application
      renvoient vers `sudo ./installer.sh`.
-5. **Documentation et recette (étape 3).** Guide d'installation réécrit autour de ce parcours ; le job CI qui rejoue le
-   guide suit les mêmes étapes ; notes de la 6.0.0 réécrites (installation neuve).
+5. **Documentation et recette (étape 3, réalisée).** Le guide d'installation suit ce parcours : Docker et git, `git clone`,
+   `sudo ./installer.sh`, puis l'assistant. Les sauvegardes se demandent, se planifient et se restaurent dans
+   l'application ; les commandes du serveur ne servent plus qu'à restaurer sur un autre serveur avec la clé de secours.
+   `installer.sh --construire` construit les images d'une branche non publiée : le job CI du guide l'utilise et rejoue
+   le même parcours (l'assistant étant joué par l'API). Les notes de la 6.0.0 décrivent une installation neuve.
 
 ## Conséquences
 

@@ -9,6 +9,7 @@
 #   --site NOM        nom DNS du site (défaut : nom complet du serveur, ou son adresse IPv4 s'il n'en a pas)
 #   --version X.Y.Z   version à installer (défaut : celle du dépôt téléchargé)
 #   --images-locales  images déjà présentes sur le serveur (recette, CI) : aucun téléchargement
+#   --construire      construit les images depuis le dépôt (branche non publiée, CI) ; version « test » par défaut
 set -euo pipefail
 REPO="$(cd "$(dirname "$0")" && pwd)"
 . "$REPO/scripts/lib-commun.sh"
@@ -17,12 +18,14 @@ cd "$REPO"
 SITE=''
 VERSION=''
 LOCALES=0
+CONSTRUIRE=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --site) [ $# -ge 2 ] || arret "--site attend un nom DNS."; SITE="$2"; shift 2 ;;
     --version) [ $# -ge 2 ] || arret "--version attend un numéro X.Y.Z."; VERSION="${2#v}"; shift 2 ;;
     --images-locales) LOCALES=1; shift ;;
-    -h | --help) sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    --construire) CONSTRUIRE=1; LOCALES=1; shift ;;
+    -h | --help) sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) arret "option inconnue : $1 (voir sudo ./installer.sh --help)." ;;
   esac
 done
@@ -30,7 +33,7 @@ exiger_root "$@"
 NOM_VALIDE='^[A-Za-z0-9]([A-Za-z0-9.-]{0,251}[A-Za-z0-9])?$'
 
 etape "1. Vérification du serveur"
-command -v docker > /dev/null || arret "Docker est absent : l'installer d'abord (docs/INSTALLATION.md, étape 1)."
+command -v docker > /dev/null || arret "Docker est absent : l'installer d'abord (docs/INSTALLATION.md, étape 3)."
 docker compose version > /dev/null 2>&1 || arret "le module « docker compose » est absent : installer docker-compose-plugin."
 docker info > /dev/null 2>&1 || arret "Docker ne répond pas : sudo systemctl enable --now docker, puis relancer."
 info "Docker : $(docker version --format '{{.Server.Version}}' 2> /dev/null || echo '?') ; Compose : $(docker compose version --short 2> /dev/null || echo '?')"
@@ -54,6 +57,7 @@ etape "2. Configuration"
 if [ -f .env ]; then
   info "Fichier .env existant : conservé."
 else
+  [ -n "$VERSION" ] || [ "$CONSTRUIRE" = 0 ] || VERSION='test'
   [ -n "$VERSION" ] || VERSION=$(sed -n 's/^ *"version": *"\([0-9][0-9.]*\)".*/\1/p' package.json | head -n 1)
   [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || [ "$LOCALES" = 1 ] || arret "version introuvable : préciser --version X.Y.Z."
   # Noms et adresses du serveur : le premier devient le nom du site (modifiable ensuite dans l'assistant), tous sont servis
@@ -86,12 +90,15 @@ fi
 info "Dossier des données : $(dossier_donnees)"
 
 etape "3. Démarrage de l'application"
-if [ "$LOCALES" = 0 ]; then
+if [ "$CONSTRUIRE" = 1 ]; then
+  info "Construction des images depuis le dépôt (10 à 20 minutes)…"
+  docker compose -f docker-compose.yml -f docker-compose.build.yml build --quiet || arret "construction des images impossible : vérifier l'accès à registry.npmjs.org et dl-cdn.alpinelinux.org (docs/INSTALLATION.md, étape 5)."
+elif [ "$LOCALES" = 0 ]; then
   dc pull --quiet || arret "téléchargement des images impossible : vérifier l'accès à ghcr.io et à Docker Hub (docs/INSTALLATION.md, étape 0)."
 fi
 dc up -d
 info "Attente de l'application (jusqu'à 5 minutes)…"
-attendre_sante 300 || { dc ps -a; arret "l'application n'a pas démarré : docker compose logs app (et docs/INSTALLATION.md, Dépannage)."; }
+attendre_sante 300 || { dc ps -a; arret "l'application n'a pas démarré : docker compose logs app (et docs/INSTALLATION.md, section 13)."; }
 for _ in $(seq 1 30); do
   [ "$(dc exec -T gateway wget -qO- http://web:8080/healthz 2> /dev/null || true)" = ok ] && break
   sleep 2
