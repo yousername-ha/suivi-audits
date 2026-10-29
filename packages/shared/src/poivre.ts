@@ -174,7 +174,6 @@ export const PoivreAEnregistrer = z.object({
 });
 export type PoivreAEnregistrer = z.infer<typeof PoivreAEnregistrer>;
 const Code = z.string().regex(/^\d{6}$/, 'Code à 6 chiffres.');
-export const PoivreDefinirBody = z.object({ poivre: PoivreAEnregistrer, code: Code });
 export const PoivreChangerBody = z.object({
   poivre: PoivreAEnregistrer,
   ancienPoivre: z.string().min(1).max(400),

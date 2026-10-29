@@ -122,8 +122,6 @@ test('poivre : défini à l’installation, changé depuis l’administration av
   await page.goto('/systeme/securite');
   await expect(page.getByRole('heading', { name: 'Poivre des mots de passe' })).toBeVisible();
   await expect(page.getByText('Défini', { exact: true })).toBeVisible();
-  // Le bandeau d'alerte n'apparaît que tant que le poivre n'est pas défini.
-  await expect(page.locator('[data-poivre-requis]')).toHaveCount(0);
   const nouveau = (await page.getByTestId('poivre-genere').textContent())!.trim();
   await page.getByLabel('J’ai enregistré ce poivre dans le coffre-fort de l’organisation').check();
   await page.getByLabel('Les 8 derniers caractères du poivre').fill(nouveau.replace(/-/g, '').slice(-8));

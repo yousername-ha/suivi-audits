@@ -172,6 +172,12 @@ export async function makeUser(
 }
 
 /** Code TOTP valide et non encore utilisé (anti-rejeu : pas strictement supérieur au dernier accepté). */
+/** Poivre posé par le service, sur une base dont les comptes ont été créés directement (makeUser) : l'API ne permet de le
+    définir que dans l'assistant d'installation (ADR 0077). */
+export async function definirPoivreDeTest(t: TestApp, par: TestUser, valeur: string): Promise<number> {
+  return t.svc.motsDePasse.definir(await t.svc.motsDePasse.preparer(valeur), par, null);
+}
+
 export async function nextCode(t: TestApp, u: TestUser): Promise<string> {
   const last = Number(
     (await t.svc.db.one<{ s: string }>('SELECT totp_last_step::text AS s FROM users WHERE id=$1', [u.id]))!.s,

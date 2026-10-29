@@ -2,14 +2,13 @@
    poivre-restaurer (clé maîtresse perdue, base intacte) et poivre-reinitialiser (poivre perdu, procédure d'urgence). */
 import { spawn } from 'node:child_process';
 import path from 'node:path';
-import type { PoivreAEnregistrer } from '@suivi/shared';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   Agent,
   createTestApp,
+  definirPoivreDeTest,
   login,
   makeUser,
-  nextCode,
   PASSWORD,
   REPO,
   type TestApp,
@@ -66,10 +65,7 @@ describe('CLI du poivre', () => {
     t = await createTestApp();
     admin = await makeUser(t, 'rssi', 'admin');
     alice = await makeUser(t, 'alice', 'rw');
-    const a = await login(t, admin);
-    const p: PoivreAEnregistrer = { mode: 'saisi', valeur: SAISI, engagement: { coffre: true, fin: SAISI.slice(-8) } };
-    const r = await a.post('/api/admin/poivre/definir', { poivre: p, code: await nextCode(t, admin) });
-    expect(r.statusCode, r.body).toBe(200);
+    await definirPoivreDeTest(t, admin, SAISI);
   }, 60_000);
   afterAll(async () => {
     await t.close();
