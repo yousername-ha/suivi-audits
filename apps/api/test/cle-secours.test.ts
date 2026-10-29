@@ -78,7 +78,7 @@ describe('clé de secours dans l’administration', () => {
   });
 
   it('signale l’absence de clé : sauvegardes impossibles', async () => {
-    const r = await agent.get('/api/admin/sauvegardes/cle-secours');
+    const r = await agent.get('/api/admin/cle-secours-sauvegardes');
     expect(r.statusCode).toBe(200);
     expect(r.json()).toMatchObject({ publique: null, serveur: [], sauvegardesPossibles: false });
   });
@@ -90,15 +90,15 @@ describe('clé de secours dans l’administration', () => {
       code: code ?? (await nextCode(t, admin)),
     });
     expect(
-      (await lecteur.post('/api/admin/sauvegardes/cle-secours', await corps(CLE_SECOURS_TEST, '000000'))).statusCode,
+      (await lecteur.post('/api/admin/cle-secours-sauvegardes', await corps(CLE_SECOURS_TEST, '000000'))).statusCode,
     ).toBe(403);
-    const faux = await agent.post('/api/admin/sauvegardes/cle-secours', await corps(CLE_SECOURS_TEST, '000000'));
+    const faux = await agent.post('/api/admin/cle-secours-sauvegardes', await corps(CLE_SECOURS_TEST, '000000'));
     expect(faux.statusCode).toBe(401);
     expect(await t.svc.cleSecours.publiques()).toEqual([]);
-    const ok = await agent.post('/api/admin/sauvegardes/cle-secours', await corps(CLE_SECOURS_TEST));
+    const ok = await agent.post('/api/admin/cle-secours-sauvegardes', await corps(CLE_SECOURS_TEST));
     expect(ok.statusCode, ok.body).toBe(200);
     expect(ok.json()).toMatchObject({ publique: CLE_SECOURS_TEST, definiPar: 'rssi' });
-    const remplace = await agent.post('/api/admin/sauvegardes/cle-secours', await corps(AUTRE_CLE));
+    const remplace = await agent.post('/api/admin/cle-secours-sauvegardes', await corps(AUTRE_CLE));
     expect(remplace.statusCode, remplace.body).toBe(200);
     expect(await t.svc.cleSecours.publiques()).toEqual([AUTRE_CLE]);
     const audit = await t.svc.db.q<{ details: { remplace: string | null } }>(
@@ -111,12 +111,12 @@ describe('clé de secours dans l’administration', () => {
     t.svc.limits.cleSecoursByUser.reset();
     t.svc.limits.updateMfaByUser.reset();
     for (let i = 0; i < 5; i++)
-      await agent.post('/api/admin/sauvegardes/cle-secours', {
+      await agent.post('/api/admin/cle-secours-sauvegardes', {
         cleSecours: { publique: AUTRE_CLE, coffre: true },
         code: '000000',
       });
     t.svc.limits.updateMfaByUser.reset();
-    const r = await agent.post('/api/admin/sauvegardes/cle-secours', {
+    const r = await agent.post('/api/admin/cle-secours-sauvegardes', {
       cleSecours: { publique: AUTRE_CLE, coffre: true },
       code: await nextCode(t, admin),
     });

@@ -8,7 +8,7 @@ import { exigerCode } from './remise-a-vide.js';
 export const cleSecoursRoutes = [
   route({
     method: 'GET',
-    url: '/api/admin/sauvegardes/cle-secours',
+    url: '/api/admin/cle-secours-sauvegardes',
     summary: 'Clé de secours des sauvegardes : clé publique enregistrée et clés lues par l’exécutant',
     tags: ['Administration'],
     access: 'administration:lire',
@@ -17,7 +17,7 @@ export const cleSecoursRoutes = [
   }),
   route({
     method: 'POST',
-    url: '/api/admin/sauvegardes/cle-secours',
+    url: '/api/admin/cle-secours-sauvegardes',
     summary:
       'Définir ou remplacer la clé de secours (clé publique générée par le navigateur, code de double authentification)',
     tags: ['Administration'],

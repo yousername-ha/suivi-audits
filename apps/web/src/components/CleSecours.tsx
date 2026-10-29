@@ -34,12 +34,13 @@ import { ErrorAlert, fmtDate } from './common';
 
 export const CLE_CLE_SECOURS = ['admin', 'sauvegardes', 'cle-secours'] as const;
 
-export function useEtatCleSecours(actif: boolean) {
+/** État de la clé de secours ; `suivre` rafraîchit toutes les 15 s (panneau ouvert, en attente de l'exécutant). */
+export function useEtatCleSecours(actif: boolean, suivre = false) {
   return useQuery({
     queryKey: CLE_CLE_SECOURS,
-    queryFn: () => get<CleSecoursEtat>('/api/admin/sauvegardes/cle-secours'),
+    queryFn: () => get<CleSecoursEtat>('/api/admin/cle-secours-sauvegardes'),
     enabled: actif,
-    refetchInterval: 15_000,
+    refetchInterval: suivre ? 15_000 : false,
   });
 }
 
@@ -140,7 +141,7 @@ export function GenerationCleSecours({ onChange }: { onChange: (c: CleSecoursAEn
 export function CleSecoursPanel() {
   const qc = useQueryClient();
   const peutAdministrer = useCan()('administration', 'administrer');
-  const q = useEtatCleSecours(true);
+  const q = useEtatCleSecours(true, true);
   const [nouvelle, setNouvelle] = useState<CleSecoursAEnregistrer | null>(null);
   const [code, setCode] = useState('');
   const [pending, setPending] = useState(false);
@@ -148,7 +149,7 @@ export function CleSecoursPanel() {
   const [fait, setFait] = useState(false);
   const [cle, setCle] = useState(0);
   const etat = q.data;
-  if (!etat) return <ErrorAlert error={q.error} />;
+  if (!etat || !Array.isArray(etat.serveur)) return <ErrorAlert error={q.error} />;
   const enregistree = etat.publique;
   const pret = !!nouvelle && /^\d{6}$/.test(code);
 
@@ -160,7 +161,7 @@ export function CleSecoursPanel() {
     try {
       qc.setQueryData(
         CLE_CLE_SECOURS,
-        await api<CleSecoursEtat>('POST', '/api/admin/sauvegardes/cle-secours', {
+        await api<CleSecoursEtat>('POST', '/api/admin/cle-secours-sauvegardes', {
           body: { cleSecours: nouvelle, code },
         }),
       );
@@ -232,7 +233,8 @@ export function CleSecoursPanel() {
 export function CleSecoursNotice() {
   const peutAdministrer = useCan()('administration', 'administrer');
   const q = useEtatCleSecours(peutAdministrer);
-  if (!peutAdministrer || !q.data || q.data.publique || q.data.serveur.length) return null;
+  if (!peutAdministrer || !q.data || q.data.publique || !Array.isArray(q.data.serveur) || q.data.serveur.length)
+    return null;
   return (
     <div className="update-notice" role="alert" data-cle-secours-requise>
       <span>
