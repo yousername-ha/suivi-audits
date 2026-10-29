@@ -60,6 +60,24 @@ test('installation : jeton, création de l’administrateur, activation de la do
   await page.getByLabel('J’ai enregistré ce poivre dans le coffre-fort de l’organisation').check();
   await expect(continuer).toBeEnabled();
   await continuer.click();
+  // Étape 2 : clé de secours des sauvegardes, générée par le navigateur (ADR 0077) ; seule la clé publique part au serveur.
+  await expect(page.getByRole('heading', { name: 'Clé de secours des sauvegardes' })).toBeVisible();
+  await expect(page.getByText('Étape 2 sur 3')).toBeVisible();
+  const suite = page.getByRole('button', { name: 'Continuer' });
+  await expect(suite).toBeDisabled();
+  await page.getByRole('button', { name: 'Générer la clé de secours' }).click();
+  const privee = (await page.getByTestId('cle-secours-privee').textContent())!.trim();
+  expect(privee).toMatch(/^AGE-SECRET-KEY-1[0-9A-Z]{58}$/);
+  const telechargement = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Télécharger le fichier de la clé' }).click();
+  expect((await telechargement).suggestedFilename()).toMatch(/^cle-secours-sauvegardes-\d{4}-\d{2}-\d{2}\.txt$/);
+  await page.getByLabel('J’ai rangé la clé privée de secours dans le coffre-fort de l’organisation').check();
+  await page.getByLabel('Les 8 derniers caractères de la clé privée').fill('ZZZZZZZZ');
+  await expect(page.getByText('Ne correspond pas à la fin de la clé privée.')).toBeVisible();
+  await expect(suite).toBeDisabled();
+  await page.getByLabel('Les 8 derniers caractères de la clé privée').fill(privee.slice(-8).toLowerCase());
+  await expect(suite).toBeEnabled();
+  await suite.click();
   await expect(page.getByRole('heading', { name: 'Récupérer le jeton' })).toBeVisible();
   await expect(page.getByText('sudo docker compose exec app setup-token')).toBeVisible();
 
@@ -122,6 +140,35 @@ test('poivre : défini à l’installation, changé depuis l’administration av
   await changer.click();
   await expect(page.getByText('Poivre enregistré.')).toBeVisible();
   saveAdmin(ADMIN, adminSecret, nouveau);
+  expect(problems).toEqual([]);
+  await ctx.close();
+});
+
+test('clé de secours : définie à l’installation, recopiée par l’exécutant, remplacée avec un code', async ({
+  browser,
+}) => {
+  const { state } = await sessionAdmin(browser);
+  const ctx = await browser.newContext({ storageState: state, ignoreHTTPSErrors: true, locale: 'fr-FR' });
+  const page = await ctx.newPage();
+  const problems = watchPage(page);
+  await page.goto('/systeme/sauvegardes');
+  const panneau = page.getByRole('region', { name: 'Clé de secours des sauvegardes' });
+  await expect(panneau.getByRole('heading', { name: 'Clé de secours des sauvegardes' })).toBeVisible();
+  // La clé de l'installation est en place : l'exécutant l'a recopiée et la clé du serveur existe (sauvegardes possibles).
+  await expect(panneau.getByText('En place', { exact: true })).toBeVisible({ timeout: 90_000 });
+  await expect(page.locator('[data-cle-secours-requise]')).toHaveCount(0);
+  await panneau.getByRole('button', { name: 'Générer la clé de secours' }).click();
+  const privee = (await panneau.getByTestId('cle-secours-privee').textContent())!.trim();
+  await panneau.getByLabel('J’ai rangé la clé privée de secours dans le coffre-fort de l’organisation').check();
+  await panneau.getByLabel('Les 8 derniers caractères de la clé privée').fill(privee.slice(-8));
+  const enregistrer = panneau.getByRole('button', { name: 'Enregistrer la clé de secours' });
+  await panneau.getByLabel('Code de double authentification').fill('000000');
+  await enregistrer.click();
+  await expect(panneau.getByRole('alert')).toContainText('Code de double authentification incorrect');
+  await panneau.getByLabel('Code de double authentification').fill(await freshTotp(adminSecret));
+  await enregistrer.click();
+  await expect(panneau.getByText(/Clé de secours enregistrée/)).toBeVisible();
+  await expect(panneau.getByText('En place', { exact: true })).toBeVisible({ timeout: 90_000 });
   expect(problems).toEqual([]);
   await ctx.close();
 });

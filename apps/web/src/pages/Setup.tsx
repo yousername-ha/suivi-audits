@@ -7,12 +7,13 @@ import {
   setupTokenChars,
   setupTokenInputProblem,
 } from '@suivi/shared';
-import type { PoivreAEnregistrer } from '@suivi/shared';
+import type { CleSecoursAEnregistrer, PoivreAEnregistrer } from '@suivi/shared';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useRef, useState, type FormEvent } from 'react';
 import { Navigate, useNavigate } from 'react-router';
 import { ApiError, get, post } from '../api';
 import { CopyCommand } from '../components/common';
+import { GenerationCleSecours } from '../components/CleSecours';
 import { CriteresMotDePasse } from '../components/CriteresMotDePasse';
 import { SaisiePoivre } from '../components/Poivre';
 import { useMe, useRefreshMe } from '../session';
@@ -54,11 +55,19 @@ export function SetupPage() {
   const status = useQuery({
     queryKey: ['setup'],
     queryFn: () =>
-      get<{ needed: boolean; adminExists: boolean; pending: boolean; poivreDefini: boolean }>('/api/setup'),
+      get<{
+        needed: boolean;
+        adminExists: boolean;
+        pending: boolean;
+        poivreDefini: boolean;
+        cleSecoursDefinie: boolean;
+      }>('/api/setup'),
   });
-  // Étape 1 (poivre des mots de passe, ADR 0072) quand il n'est pas encore défini ; étape 2 : le compte administrateur.
-  const [etape, setEtape] = useState<'poivre' | 'compte'>('poivre');
+  // Étapes : poivre des mots de passe (ADR 0072) et clé de secours des sauvegardes (ADR 0077) quand ils ne sont pas encore
+  // définis, puis le compte administrateur. Tout est envoyé ensemble, dans la requête qui consomme le jeton.
+  const [etape, setEtape] = useState<'poivre' | 'cle' | 'compte'>('poivre');
   const [poivre, setPoivre] = useState<PoivreAEnregistrer | null>(null);
+  const [cleSecours, setCleSecours] = useState<CleSecoursAEnregistrer | null>(null);
   const interdits = useMemo(() => [me.appName], [me.appName]);
   const token = useTokenInput();
   const [demo, setDemo] = useState(false);
@@ -69,7 +78,18 @@ export function SetupPage() {
   if (status.data && !status.data.needed) return <Navigate to="/login" replace />;
   const minLen = me.passwordMinLength;
   const avecPoivre = !!status.data && !status.data.poivreDefini;
-  const surPoivre = avecPoivre && etape === 'poivre';
+  const avecCle = !!status.data && !status.data.cleSecoursDefinie;
+  const etapes = [
+    ...(avecPoivre ? (['poivre'] as const) : []),
+    ...(avecCle ? (['cle'] as const) : []),
+    'compte' as const,
+  ];
+  const courante = etapes.includes(etape) ? etape : etapes[0]!;
+  const numero = etapes.indexOf(courante) + 1;
+  const suivante = () => setEtape(etapes[numero] ?? 'compte');
+  const precedente = numero > 1 ? etapes[numero - 2] : null;
+  const surPoivre = courante === 'poivre';
+  const surCle = courante === 'cle';
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -88,6 +108,7 @@ export function SetupPage() {
         password: f.password,
         demo,
         ...(avecPoivre && poivre ? { poivre } : {}),
+        ...(avecCle && cleSecours ? { cleSecours } : {}),
       });
       await refresh();
       nav('/login', { replace: true });
@@ -96,6 +117,7 @@ export function SetupPage() {
       // Un refus du poivre se corrige à l'étape 1.
       const raison = x instanceof ApiError ? x.data?.reason : undefined;
       if (raison === 'poivre_faible' || raison === 'engagement' || raison === 'poivre_requis') setEtape('poivre');
+      else if (raison === 'cle_secours_requise') setEtape('cle');
       else token.ref.current?.focus();
     } finally {
       setBusy(false);
@@ -115,13 +137,22 @@ export function SetupPage() {
             <Text fw={700}>Installation initiale</Text>
           </Group>
           <Title order={1} size="h2">
-            {surPoivre ? 'Poivre des mots de passe' : 'Créer le compte administrateur'}
+            {surPoivre
+              ? 'Poivre des mots de passe'
+              : surCle
+                ? 'Clé de secours des sauvegardes'
+                : 'Créer le compte administrateur'}
           </Title>
+          {etapes.length > 1 && (
+            <Text size="xs" c="dimmed">
+              Étape {numero} sur {etapes.length}
+            </Text>
+          )}
           {surPoivre ? (
             <Stack>
               <Text size="sm">
-                Étape 1 sur 2. Avant de créer le compte, définissez le poivre qui protégera tous les mots de passe de
-                l’application. Il est conservé au coffre-fort de l’organisation, pas sur le serveur.
+                Avant de créer le compte, définissez le poivre qui protégera tous les mots de passe de l’application. Il
+                est conservé au coffre-fort de l’organisation, pas sur le serveur.
               </Text>
               <SaisiePoivre interdits={interdits} onChange={setPoivre} />
               {error && (
@@ -129,9 +160,26 @@ export function SetupPage() {
                   {error}
                 </Alert>
               )}
-              <Button disabled={!poivre} onClick={() => setEtape('compte')} fullWidth>
+              <Button disabled={!poivre} onClick={suivante} fullWidth>
                 Continuer
               </Button>
+            </Stack>
+          ) : surCle ? (
+            <Stack>
+              <GenerationCleSecours onChange={setCleSecours} />
+              {error && (
+                <Alert color="red" role="alert">
+                  {error}
+                </Alert>
+              )}
+              <Button disabled={!cleSecours} onClick={suivante} fullWidth>
+                Continuer
+              </Button>
+              {precedente && (
+                <Button variant="subtle" size="xs" onClick={() => setEtape(precedente)}>
+                  Revenir à l’étape précédente
+                </Button>
+              )}
             </Stack>
           ) : (
             <>
@@ -240,9 +288,9 @@ export function SetupPage() {
               <Text size="xs" c="dimmed" ta="center">
                 La double authentification sera configurée à l’étape suivante.
               </Text>
-              {avecPoivre && (
-                <Button variant="subtle" size="xs" onClick={() => setEtape('poivre')}>
-                  Revenir au poivre
+              {precedente && (
+                <Button variant="subtle" size="xs" onClick={() => setEtape(precedente)}>
+                  Revenir à l’étape précédente
                 </Button>
               )}
             </>

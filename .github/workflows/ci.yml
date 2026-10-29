@@ -224,12 +224,10 @@ jobs:
       - name: Dossier des données du serveur (EXPL-01)
         run: sudo ./scripts/preparer-donnees.sh
 
-      - name: Clés de sauvegarde age (clé du serveur et clé publique de secours, ADR 0071)
-        run: |
-          set -e
-          sudo apt-get update -qq && sudo apt-get install -y -qq age
-          age-keygen -o "$RUNNER_TEMP/cle-secours.key" 2> /dev/null
-          sudo ./scripts/generer-cles-sauvegarde.sh --secours "$(age-keygen -y "$RUNNER_TEMP/cle-secours.key")" --confirmer
+      # Aucune clé créée à la main (ADR 0077) : l'exécutant crée la clé du serveur au démarrage, la clé de secours est générée
+      # par le navigateur au test d'installation. age sur l'hôte sert seulement aux scripts de recette (backup.sh, restore.sh).
+      - name: Outil age sur l'hôte (scripts de recette)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq age
 
       - name: Démarrage de la pile
         run: |

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Prépare le chiffrement des sauvegardes (age) : clé du serveur + clé publique de secours du RSSI.
 #   Usage :  sudo ./scripts/generer-cles-sauvegarde.sh [--secours age1… [--confirmer]]
-# - Génère l'identité du serveur (BACKUP_KEY_FILE, défaut /root/.suivi-backup-key, droits 0600) si elle n'existe pas ;
+# - Génère l'identité du serveur (BACKUP_KEY_FILE, défaut DATA_DIR/cles-sauvegarde/serveur.key, droits 0600) si elle n'existe pas ;
 #   elle n'est jamais affichée ni écrasée.
-# - Enregistre la clé PUBLIQUE de secours (BACKUP_RECIPIENTS_FILE, défaut /root/.suivi-backup-recipients) après
+# - Enregistre la clé PUBLIQUE de secours (BACKUP_RECIPIENTS_FILE, défaut DATA_DIR/cles-sauvegarde/secours.pub) après
 #   confirmation explicite. La clé privée de secours se génère HORS du serveur, par exemple sur le poste du RSSI :
 #       age-keygen -o secours.key          # affiche « Public key: age1… » ; ranger secours.key hors ligne
 #   Seule la ligne « age1… » est donnée à ce script. Chaque archive est chiffrée pour le serveur ET pour cette clé :
@@ -15,8 +15,8 @@ REPO="$(cd "$(dirname "$0")/.." && pwd)"
 exiger_root "$@"
 command -v age > /dev/null && command -v age-keygen > /dev/null || arret "outil « age » absent : sudo apt-get install -y age (voir docs/INSTALLATION.md)."
 
-CLE="${BACKUP_KEY_FILE:-/root/.suivi-backup-key}"
-SECOURS="${BACKUP_RECIPIENTS_FILE:-/root/.suivi-backup-recipients}"
+CLE="$(cle_sauvegarde_serveur)"
+SECOURS="$(cles_sauvegarde_secours)"
 MOTIF='^age1[023456789acdefghjklmnpqrstuvwxyz]{58}$'
 PUBLIQUE_SECOURS=""
 CONFIRME=0
@@ -38,6 +38,7 @@ if [ -e "$CLE" ] || [ -L "$CLE" ]; then
   info "Clé déjà présente : conservée ($CLE)."
 else
   mkdir -p "$(dirname "$CLE")"
+  [ "$(dirname "$CLE")" != "$(dossier_donnees)/cles-sauvegarde" ] || chmod 700 "$(dirname "$CLE")"
   ( umask 077 && age-keygen -o "$CLE" > /dev/null 2>&1 ) || { rm -f "$CLE"; arret "génération de la clé impossible."; }
   chmod 600 "$CLE"
   info "Clé générée ($CLE, droits 0600). Elle ne quitte pas le serveur ; la sauvegarder séparément n'est pas nécessaire grâce à la clé de secours."
@@ -64,6 +65,7 @@ if [ "$CONFIRME" = 0 ]; then
   [ "$REP" = ENREGISTRER ] || arret "abandon, rien n'a été enregistré."
 fi
 mkdir -p "$(dirname "$SECOURS")"
+[ "$(dirname "$SECOURS")" != "$(dossier_donnees)/cles-sauvegarde" ] || chmod 700 "$(dirname "$SECOURS")"
 TMP="$(umask 077 && mktemp "$SECOURS.XXXXXX")"
 printf '# Clés publiques de secours (age). Enregistré le %s.\n%s\n' "$(horodatage)" "$PUBLIQUE_SECOURS" > "$TMP"
 chmod 600 "$TMP"

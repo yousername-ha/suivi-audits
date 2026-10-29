@@ -113,10 +113,10 @@ class Worker:
         return result
 
     def crypto_env(self, config=None):
-        """Clés age de l'hôte (montées en lecture seule dans l'exécutant) : identité du serveur et clés publiques de secours."""
+        """Clés age (ADR 0077) : identité du serveur et clés publiques de secours, dans le dossier des données par défaut."""
         config = self.env() if config is None else config
-        return {"BACKUP_KEY_FILE": config.get("BACKUP_KEY_FILE") or "/root/.suivi-backup-key",
-                "BACKUP_RECIPIENTS_FILE": config.get("BACKUP_RECIPIENTS_FILE") or "/root/.suivi-backup-recipients"}
+        return {"BACKUP_KEY_FILE": config.get("BACKUP_KEY_FILE") or str(self.data / "cles-sauvegarde/serveur.key"),
+                "BACKUP_RECIPIENTS_FILE": config.get("BACKUP_RECIPIENTS_FILE") or str(self.data / "cles-sauvegarde/secours.pub")}
 
     def publish(self, **changes):
         with self.guard:

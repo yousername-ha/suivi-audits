@@ -2,6 +2,7 @@ import { hotp } from '../src/security/crypto.js';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   Agent,
+  cleSecoursDeTest,
   createTestApp,
   login,
   makeUser,
@@ -225,6 +226,7 @@ describe('jeton d’installation', () => {
         username,
         password: PASSWORD,
         poivre: poivreDeTest(),
+        cleSecours: cleSecoursDeTest(),
       });
       const old = await a.post('/api/setup', body(first.token));
       expect(old.statusCode).toBe(401);
@@ -253,6 +255,7 @@ describe('jeton d’installation', () => {
         username: 'chef',
         password: PASSWORD,
         poivre: poivreDeTest(),
+        cleSecours: cleSecoursDeTest(),
         orgName: '  Hôpital Exemple  ',
       });
       expect(r.statusCode, r.body).toBe(201);
@@ -275,6 +278,7 @@ describe('jeton d’installation', () => {
         username: 'chef',
         password: PASSWORD,
         poivre: poivreDeTest(),
+        cleSecours: cleSecoursDeTest(),
       });
       expect(r.statusCode).toBe(410);
       expect(r.json().error).toMatch(/expiré.*setup-token/);

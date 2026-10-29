@@ -11,6 +11,7 @@ export * from './updates.js';
 export * from './remise-a-vide.js';
 export * from './mot-de-passe.js';
 export * from './poivre.js';
+export * from './cle-secours.js';
 
 export * from './business-policy.js';
 export * from './grc.js';

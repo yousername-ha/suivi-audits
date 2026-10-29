@@ -17,6 +17,10 @@ export const REPO = path.resolve(here, '../../..');
 export const ORIGIN = 'https://suivi.test';
 export const PASSWORD = 'Mot-de-passe-2026!';
 
+/** Clé publique de secours des sauvegardes (ADR 0077), telle que l'interface l'envoie : vecteur de test d'age-keygen. */
+export const CLE_SECOURS_TEST = 'age17pgvufarqx5netqz2wypxnpmu68u5zfdswk4qhk8mdg9jckjuu6spgaupp';
+export const cleSecoursDeTest = () => ({ publique: CLE_SECOURS_TEST, coffre: true as const });
+
 /** Poivre généré, tel que l'interface l'envoie à l'installation (avec la preuve de recopie). */
 export function poivreDeTest(): PoivreAEnregistrer {
   const brut = genererPoivre();

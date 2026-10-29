@@ -12,7 +12,7 @@
 #   --sans-signature    n'exige pas cosign (déconseillé : la provenance des images n'est alors pas vérifiée)
 #   --images-locales    images déjà présentes sur le serveur (essai d'une version non publiée, CI) : ni téléchargement,
 #                       ni vérification de signature
-# Variables : BACKUP_KEY_FILE (défaut /root/.suivi-backup-key) et BACKUP_RECIPIENTS_FILE (défaut /root/.suivi-backup-recipients),
+# Variables : BACKUP_KEY_FILE (défaut DATA_DIR/cles-sauvegarde/serveur.key) et BACKUP_RECIPIENTS_FILE (défaut DATA_DIR/cles-sauvegarde/secours.pub),
 #             préparés par scripts/generer-cles-sauvegarde.sh ; BACKUP_PASSPHRASE_FILE : ancienne phrase secrète, uniquement
 #             pour un retour arrière sur une sauvegarde de l'ancien format (.tar.enc) ;
 #             SUIVI_TEST_ECHEC_SANTE=1 : simule un échec du contrôle de santé (tests du retour arrière uniquement).
@@ -73,8 +73,8 @@ while [ $# -gt 0 ]; do
 done
 
 DEPOT_IMAGES=ghcr.io/yousername-ha/suivi-audits
-CLE="${BACKUP_KEY_FILE:-/root/.suivi-backup-key}"
-SECOURS="${BACKUP_RECIPIENTS_FILE:-/root/.suivi-backup-recipients}"
+CLE="$(cle_sauvegarde_serveur)"
+SECOURS="$(cles_sauvegarde_secours)"
 PASS="${BACKUP_PASSPHRASE_FILE:-/root/.suivi-backup-pass}"
 STAMP=$(date -u +%Y%m%d-%H%M%S)
 DEBUT=$(date +%s)

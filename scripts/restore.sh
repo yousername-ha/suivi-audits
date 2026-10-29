@@ -40,7 +40,7 @@ python3 "$REPO/scripts/verifier-archive-restauration.py" --checksum "$ARCH" "$WO
 NOM_ATTENDU=()
 case "$ARCH" in
   *.tar.age)
-    CLE="${BACKUP_KEY_FILE:-/root/.suivi-backup-key}"
+    CLE="$(cle_sauvegarde_serveur)"
     command -v age > /dev/null || arret "outil « age » absent : l'installer (sudo apt-get install -y age)."
     [ -f "$CLE" ] && [ ! -L "$CLE" ] && [ -s "$CLE" ] || arret "clé de déchiffrement absente ou vide ($CLE) : indiquer BACKUP_KEY_FILE (clé du serveur ou clé de secours)."
     (( (8#$(stat -c %a "$CLE") & 077) == 0 )) || arret "droits trop larges sur la clé de déchiffrement ($CLE) : 0600 requis."

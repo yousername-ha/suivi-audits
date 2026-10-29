@@ -13,8 +13,8 @@ umask 077
 exec 8> "$DATA_DIR/etat/backup-worker.lock"
 flock -n 8 || exit 0
 DEST="${BACKUP_DEST:-}"
-KEY_FILE="${BACKUP_KEY_FILE:-/root/.suivi-backup-key}"
-RECIPIENTS_FILE="${BACKUP_RECIPIENTS_FILE:-/root/.suivi-backup-recipients}"
+KEY_FILE="$(cle_sauvegarde_serveur)"
+RECIPIENTS_FILE="$(cles_sauvegarde_secours)"
 # Clé du serveur (0600, identité age valide) et clé publique de secours : sans elles, aucune sauvegarde (jamais en clair).
 if [ -z "$DEST" ] || ! (controler_cles_sauvegarde "$KEY_FILE" "$RECIPIENTS_FILE") > /dev/null 2>&1; then
   cli backup-worker unavailable

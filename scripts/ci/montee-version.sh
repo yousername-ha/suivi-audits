@@ -32,7 +32,6 @@ maj() {
     -v /srv/suivi-audits/donnees:/srv/suivi-audits/donnees \
     -v /srv/sauvegardes/suivi-audits:/srv/sauvegardes/suivi-audits \
     -v /root/.suivi-backup-pass:/root/.suivi-backup-pass:ro \
-    -v /root/.suivi-backup-key:/root/.suivi-backup-key:ro -v /root/.suivi-backup-recipients:/root/.suivi-backup-recipients:ro \
     -w "$SERVEUR" -e "PWD=$SERVEUR" \
     -e GIT_CONFIG_COUNT=2 -e GIT_CONFIG_KEY_0=safe.directory -e "GIT_CONFIG_VALUE_0=$SERVEUR" \
     -e GIT_CONFIG_KEY_1=safe.directory -e "GIT_CONFIG_VALUE_1=$SOURCE" \
@@ -47,7 +46,6 @@ maj_installee() {
     -v /srv/suivi-audits/donnees:/srv/suivi-audits/donnees \
     -v /srv/sauvegardes/suivi-audits:/srv/sauvegardes/suivi-audits \
     -v /root/.suivi-backup-pass:/root/.suivi-backup-pass:ro \
-    -v /root/.suivi-backup-key:/root/.suivi-backup-key:ro -v /root/.suivi-backup-recipients:/root/.suivi-backup-recipients:ro \
     -w "$SERVEUR" -e "PWD=$SERVEUR" \
     -e GIT_CONFIG_COUNT=2 -e GIT_CONFIG_KEY_0=safe.directory -e "GIT_CONFIG_VALUE_0=$SERVEUR" \
     -e GIT_CONFIG_KEY_1=safe.directory -e "GIT_CONFIG_VALUE_1=$SOURCE" \
@@ -82,8 +80,8 @@ api import "$URL" "$SOURCE/tests/fixtures/legacy-fixture.json"
 api document "$URL"
 api instantane "$URL" "$RUNNER_TEMP/reference.json"
 sudo sh -c 'umask 077 && openssl rand -base64 48 > /root/.suivi-backup-pass'
-# Clés age (ADR 0071) : la version de départ ne les utilise pas (phrase secrète), la cible les monte (docker-compose.yml) et les
-# exige ; les créer avant la montée comme le demande le guide d'installation (sudo ./scripts/generer-cles-sauvegarde.sh).
+# Clés age (ADR 0071, ADR 0077) : la version de départ ne les utilise pas (phrase secrète) ; la cible les lit dans le dossier des
+# données. Les y déposer avant la montée (le script de la cible ; un serveur réel les obtient de l'exécutant et de l'assistant).
 command -v age-keygen > /dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq age > /dev/null; }
 age-keygen -o "$RUNNER_TEMP/cle-secours.key" 2> /dev/null
 sudo "$SOURCE/scripts/generer-cles-sauvegarde.sh" --secours "$(age-keygen -y "$RUNNER_TEMP/cle-secours.key")" --confirmer > /dev/null
