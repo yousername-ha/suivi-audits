@@ -1,6 +1,6 @@
 # ADR 0074 — Alerte de verrouillage dans l'application
 
-- Statut : proposée (numéro à confirmer par le RSSI)
+- Statut : acceptée par le RSSI le 29/10/2026 (numéro confirmé)
 - Date : 2026-10-28
 - Contexte : l'[ADR 0070](0070-reponse-de-connexion-uniforme-et-alerte-de-verrouillage.md) envoie un courriel au contact technique et aux administrateurs quand un compte est verrouillé, mais ne prévoyait pas de notification dans l'application : `grc_notifications` était rattachée à un SMSI et à un objet (colonnes obligatoires). Le RSSI demande une alerte dans l'application pour les administrateurs, en plus du courriel du contact administrateur et du contact technique.
 
