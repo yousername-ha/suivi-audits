@@ -46,4 +46,6 @@ for n in $noms; do
   if printf '%s' "$n" | grep -Eq '^[0-9]+(\.[0-9]+){3}$'; then SITE_DEFAULT_SNI=$n; break; fi
 done
 export SITE_HTTP SITE_HTTPS SITE_DEFAULT_SNI
+# --valider : contrôle de la configuration avec ces mêmes adresses (exécutant d'exploitation, avant de recréer le frontal).
+[ "${1:-}" != --valider ] || exec /usr/local/bin/caddy validate --config /etc/caddy/Caddyfile.gateway --adapter caddyfile
 exec /usr/local/bin/caddy run --config /etc/caddy/Caddyfile.gateway --adapter caddyfile
