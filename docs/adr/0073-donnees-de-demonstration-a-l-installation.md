@@ -18,5 +18,6 @@
 
 - Le chargement n'est pas transactionnel : en cas d'interruption, la base peut contenir une démonstration partielle ; la remise à vide permet de repartir.
 - Le chargement dure environ 30 secondes en base locale et se fait pendant la confirmation du second facteur.
-- Les modules annexes (incidents, cellule de crise, CRRC, investissements, revues d'accès, GAP, usages de l'IA) ne sont pas alimentés dans cette version ; le registre des usages de l'IA n'a pas de route d'écriture unitaire.
+- Les modules annexes sont alimentés de la même façon (`apps/api/src/demo-annexes.ts`) : cinq incidents (dont un incident de sécurité ouvert avec ses obligations), un budget d'investissement sur trois ans avec deux options comparables, cinq revues des accès (une par état), la cellule de crise (contacts, deux scénarios, un exercice clôturé), le CRRC (trois établissements partenaires fictifs dont l'identifiant FINESS est volontairement irréel, « 99-FICTIF-nn », cinquante sauvegardes, deux restaurations, deux alertes) et le GAP (une application et les usages de l'IA par questionnaire guidé, une application saisie à la main). Le plan d'actions du GAP guidé ajoute un écart au registre. Dates et montants sont relatifs au jour du chargement ou d'exemple.
+- Le registre des usages de l'IA n'est pas alimenté : il n'a pas de route d'écriture unitaire.
 - Hypothèse de construction à valider : la démonstration décrit un établissement qui héberge le dossier patient pour ses établissements partenaires, ce qui rend les exigences HDS applicables.
