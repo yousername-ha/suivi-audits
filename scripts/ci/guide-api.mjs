@@ -152,7 +152,10 @@ switch (cmd) {
     const token = /[A-Z2-9]{5}(-[A-Z2-9]{5}){3}/.exec(out)?.[0];
     if (!token) fail('jeton introuvable dans la sortie de « docker compose exec app setup-token »');
     mask(token);
-    const password = `Guide-${crypto.randomBytes(12).toString('base64url')}-9a`;
+    // Règles de composition (ADR 0075) : pas plus de 3 caractères identiques à la suite, pas l'identifiant ; on retire le tirage sinon.
+    let password;
+    do password = `Guide-${crypto.randomBytes(12).toString('base64url')}-9a`;
+    while (/(.)\1{3}/.test(password) || password.toLowerCase().includes(ADMIN.toLowerCase()));
     mask(password);
     const st = { password, secret: '', lastStep: 0 };
     const pre = await call('GET', '/api/setup');

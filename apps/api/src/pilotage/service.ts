@@ -321,7 +321,9 @@ export class Pilotage {
         if (!atelier) throw new HttpError(422, 'Atelier inconnu.');
         if (!String(data.objective ?? '').trim() || !String(data.scope ?? '').trim())
           throw new HttpError(422, 'Renseignez l’objet et le périmètre de l’étude.');
-        const resolved = await Promise.all(input.refs.map((r) => this.g.resolve(smsi, r, user, c)));
+        // Séquentiel : une transaction n'a qu'une connexion, les requêtes concurrentes y sont dépréciées par pg.
+        const resolved = [];
+        for (const r of input.refs) resolved.push(await this.g.resolve(smsi, r, user, c));
         if (!resolved.some((r) => (atelier.kinds as readonly string[]).includes(r.kind) && r.data.studyRef === ref))
           throw new HttpError(422, 'Reliez au moins un élément de cet atelier, rattaché à l’étude.');
         for (const previous of EBIOS_ATELIERS.slice(0, EBIOS_ATELIERS.indexOf(atelier)))
@@ -342,7 +344,9 @@ export class Pilotage {
         const step = JOURNEY_STEPS.find((s) => s.id === input.step);
         if (!step) throw new HttpError(422, 'Étape inconnue.');
         if (!input.refs.length) throw new HttpError(422, 'Reliez les travaux réellement réalisés à cette étape.');
-        const resolved = await Promise.all(input.refs.map((r) => this.g.resolve(smsi, r, user, c)));
+        // Séquentiel : une transaction n'a qu'une connexion, les requêtes concurrentes y sont dépréciées par pg.
+        const resolved = [];
+        for (const r of input.refs) resolved.push(await this.g.resolve(smsi, r, user, c));
         if (!resolved.some((r) => (step.kinds as readonly string[]).includes(r.kind) || r.ref.startsWith('document:')))
           throw new HttpError(422, 'Une référence correspondant aux travaux de cette étape est requise.');
         const index = JOURNEY_STEPS.indexOf(step);

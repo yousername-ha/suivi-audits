@@ -5,6 +5,7 @@ import {
   BarresHorizontales,
   bandesSeuils,
   cheminArc,
+  GrilleChiffres,
   JaugeArc,
   pointArc,
   SEUILS_TAUX,
@@ -121,6 +122,21 @@ describe('tableau de bord « verre et relief » (ADR 0069)', () => {
     );
     expect(rendu).toContain('75\u202f%');
     expect(rendu).toContain('<caption>Niveau</caption>');
+    expect(rendu).not.toContain('style=');
+  });
+
+  it('grille de chiffres : libellé et valeur par chiffre, filet à la teinte du seuil ou neutre', () => {
+    const rendu = html(
+      createElement(GrilleChiffres, {
+        chiffres: [
+          { valeur: 2, libelle: 'ouverts' },
+          { valeur: 1, libelle: 'en retard', teinte: 'rouge' },
+        ],
+      }),
+    );
+    expect(rendu).toContain('<div class="tdb-grille-chiffre"><dt class="tdb-grille-chiffre-libelle">ouverts</dt>');
+    expect(rendu).toContain('class="tdb-grille-chiffre tdb-t-rouge"><dt class="tdb-grille-chiffre-libelle">en retard');
+    expect(rendu).toContain('<dd class="tdb-grille-chiffre-valeur chiffres">1</dd>');
     expect(rendu).not.toContain('style=');
   });
 });

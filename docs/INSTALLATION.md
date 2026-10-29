@@ -542,10 +542,11 @@ Le fichier `racine-suivi-audits.crt` est alors dans votre dossier **Télécharge
 > Le poivre sert à le **changer** plus tard (Administration, Configuration système, Sécurité : ancien poivre et code de double authentification exigés) et à **reprendre l'activité** si la clé maîtresse du serveur est perdue. Perdu, il ne se récupère pas : la procédure d'urgence (`suivi poivre-reinitialiser --confirmer`) impose un nouveau mot de passe à tous les comptes.
 
 *Étape 2 sur 2, le compte administrateur* :
-1. **Jeton d'installation** : collez le jeton. Minuscules, espaces et tirets sont acceptés : le champ se met en forme tout seul.
+1. **Jeton d'installation** : collez le jeton. Minuscules, espaces et tirets sont acceptés : le champ se met en forme tout seul. **Nom de l'organisation** (facultatif) : affiché dans l'application et les exports, modifiable ensuite dans Paramètres.
 2. **Identifiant** : par exemple `rssi`. **Nom affiché** : par exemple `Responsable SSI`. L'adresse e-mail est facultative.
 3. **Mot de passe** et **Confirmation** : au moins 12 caractères, avec au moins 3 types de caractères parmi minuscules, majuscules, chiffres et symboles, et sans l'identifiant. Enregistrez-le dans votre coffre-fort.
-4. Cliquez sur **Créer le compte**.
+4. **Charger des données de démonstration** (case facultative, décochée par défaut) : à cocher pour une évaluation, jamais en production. Voir l'étape 10.4.
+5. Cliquez sur **Créer le compte**.
 
 **Résultat attendu** : la page « Activer la double authentification » s'affiche, avec un QR code. En cas de message d'erreur :
 - « jeton invalide » : vérifiez la saisie, ou le jeton a été remplacé par un plus récent ;
@@ -594,7 +595,7 @@ Pour un besoin particulier, onglet **Rôles** : **Dupliquer** un rôle proche, p
 - personne ne peut modifier ses propres droits : demandez à un autre administrateur ;
 - toute modification de droits est tracée dans le **Journal** (avant et après) et ferme les sessions des personnes concernées.
 
-**9.5 Paramètres** : menu **Paramètres**. Renseignez au moins la section **Général** (nom de l'organisation, logo, coordonnées). La section **Sécurité** règle la longueur minimale des mots de passe, la durée des sessions et le verrouillage, dans des bornes que l'application impose ; la double authentification reste toujours obligatoire. Les valeurs du fichier `.env` (`SESSION_…`, `PASSWORD_MIN_LENGTH`, `LOCKOUT_…`) ne servent que tant que cette section n'a pas été enregistrée.
+**9.5 Paramètres** : menu **Paramètres**. Renseignez au moins la section **Général** (nom de l'organisation, logo, coordonnées). La section **Sécurité** règle la longueur minimale des mots de passe, la durée des sessions et le verrouillage, dans des bornes que l'application impose (un mot de passe contient en plus au moins 3 types de caractères, sans plus de 3 caractères identiques à la suite, sans suite de plus de 4 caractères consécutifs ni le nom de l'application ou de l'organisation, [ADR 0075](adr/0075-composition-des-mots-de-passe.md)) ; la double authentification reste toujours obligatoire. Les valeurs du fichier `.env` (`SESSION_…`, `PASSWORD_MIN_LENGTH`, `LOCKOUT_…`) ne servent que tant que cette section n'a pas été enregistrée.
 
 **9.6 Revue des accès** (ISO 27001, mesure A.5.18) : onglet **Utilisateurs**, boutons **Excel** ou **CSV** de la revue des accès. Le fichier liste chaque compte, ses groupes, ses rôles, ses droits effectifs, sa dernière connexion et son expiration. Le bouton **Droits effectifs** d'un compte montre l'origine de chaque droit (rôle direct ou groupe). Faites cette revue au moins une fois par an, et archivez le fichier.
 
@@ -648,7 +649,9 @@ Sautez cette étape si vous démarrez sans historique.
 
 > Les autres modes : **Fusionner** ajoute et met à jour sans jamais rien supprimer ; **Remplacer un module** remplace un seul module et **supprime** les éléments absents du fichier (il faut ressaisir le nom du module pour confirmer).
 
-**10.4 Charger un jeu de données de test (instance de test uniquement).** Pour évaluer la plateforme sans saisir de données réelles, l'API sait charger un jeu **fictif et cohérent** (processus, objectifs et indicateurs, parties intéressées, fournisseurs évalués, écarts, plans d'audit, revue de direction, référentiel de démonstration, méthode de risque et risques appréciés, actions, série récurrente, opportunités) :
+**10.4 Charger un jeu de données de démonstration (instance de test uniquement).** Pour évaluer la plateforme sans saisir de données réelles, l'API sait charger un jeu **fictif et cohérent**, celui d'un établissement de santé imaginaire : processus, objectifs et indicateurs, parties intéressées, fournisseurs évalués, écarts, plans d'audit, revue de direction, référentiels **ISO/IEC 27001:2022 et HDS** rattachés avec leur couverture par exigence et la déclaration d'applicabilité, méthode de risque, **étude EBIOS RM complète** (valeurs métier, événements redoutés, sources de risque, scénarios stratégiques et opérationnels, risques, traitements et actions, ateliers 1 à 5 validés), actions, série récurrente, opportunités.
+
+À l'installation, la même démonstration se charge en **cochant « Charger des données de démonstration »** sur la page d'installation initiale (étape 8.4) : elle est alors chargée à la fin de la configuration de la double authentification du compte créé, en une minute environ. Pour repartir d'une base vide : Administration, Remettre la base à vide. En ligne de commande :
 
 <!-- ci: skip — instance de test uniquement, jamais rejoué par le guide -->
 ```bash

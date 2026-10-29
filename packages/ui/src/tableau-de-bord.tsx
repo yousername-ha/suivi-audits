@@ -113,6 +113,25 @@ export function ChiffreCle({
   );
 }
 
+/** Grille de chiffres (deux colonnes), chacun précédé d'un filet vertical à la teinte de son seuil (neutre sans
+    teinte) : disposition de l'ancienne carte « Écarts ». */
+export function GrilleChiffres({
+  chiffres,
+}: {
+  chiffres: { valeur: number | string; libelle: string; teinte?: TeinteSeuil }[];
+}) {
+  return (
+    <dl className="tdb-grille-chiffres">
+      {chiffres.map((c) => (
+        <div key={c.libelle} className={`tdb-grille-chiffre${c.teinte ? ` tdb-t-${c.teinte}` : ''}`}>
+          <dt className="tdb-grille-chiffre-libelle">{c.libelle}</dt>
+          <dd className="tdb-grille-chiffre-valeur chiffres">{c.valeur}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
 const DEMI_CERCLE = 'M 20 100 A 80 80 0 0 1 180 100';
 
 /** Jauge en arc fin d'un pourcentage : zones de seuils en filet, curseur au bout de l'arc, cible facultative. */
