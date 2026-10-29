@@ -17,7 +17,11 @@
    web : adresse du site (étape 2), poivre, clé de secours des sauvegardes, compte administrateur, double authentification.
 2. **Jeton d'installation conservé.** Il prouve la maîtrise du serveur : sans lui, le premier navigateur venu créerait
    l'administrateur. Il est affiché par la commande d'installation au lieu d'être lu dans les journaux.
-3. **Clés de sauvegarde (étape 1, réalisée).**
+3. **Clés de sauvegarde (étape 1, réalisée).** L'ADR 0071 reste la référence (format age `.tar.age`, deux destinataires
+   par archive, chiffrement obligatoire, scripts `backup.sh` et `restore.sh`) ; seules changent la façon d'obtenir les clés,
+   désormais sans commande, et leur emplacement par défaut. Des clés déjà créées dans `/root` ne sont plus lues par défaut
+   (installation neuve en 6.0.0) ; `BACKUP_KEY_FILE` et `BACKUP_RECIPIENTS_FILE` permettent encore de les indiquer aux
+   scripts lancés sur l'hôte.
    - Emplacement par défaut : `DATA_DIR/cles-sauvegarde/` (root, 0700), déjà monté dans l'exécutant ; les montages de
      `/root/.suivi-backup-key` et `/root/.suivi-backup-recipients` sont retirés de `docker-compose.yml`.
    - **Clé du serveur** (`serveur.key`, 0600) : créée par l'exécutant des sauvegardes (conteneur `updater`, qui contient
