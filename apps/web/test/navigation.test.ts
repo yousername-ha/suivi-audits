@@ -74,6 +74,7 @@ const INVENTAIRE = [
   'resilience|continuite|exercices|/pilotage/exercices|pilotage|lire',
   'resilience|incidents|incidents-registre|/pilotage/incidents-registre|incidents|lire',
   'resilience|incidents|incidents-qualifier|/pilotage/incidents-qualifier|incidents|lire',
+  'resilience|incidents|incidents-retex|/pilotage/incidents-retex|incidents|lire',
   'resilience|incidents|crise-cellule|/pilotage/crise-cellule|incidents|lire',
   'resilience|incidents|crise-contacts|/pilotage/crise-contacts|incidents|lire',
   'resilience|incidents|crise-scenarios|/pilotage/crise-scenarios|incidents|lire',

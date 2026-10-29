@@ -163,6 +163,7 @@ export const FAMILLES: Famille[] = [
       dest('incidents', 'Incidents et crise', [
         p('incidents-registre'),
         p('incidents-qualifier'),
+        p('incidents-retex'),
         p('crise-cellule'),
         p('crise-contacts'),
         p('crise-scenarios'),

@@ -10,6 +10,8 @@ import {
   ScenarioModification,
   ObligationTraitee,
   IncidentModification,
+  EvenementRetexModification,
+  EvenementRetexSaisie,
   IncidentCreation,
   EntreeCreation,
   EcheanceCreation,
@@ -51,6 +53,7 @@ const creneau = z.object({ day: z.string().trim().min(1).max(64).optional() }).s
 const souple = z.record(z.string(), z.unknown());
 const indice = z.coerce.number().int().min(0).max(100000);
 const idIndice = z.object({ id: z.string().trim().min(1).max(64), k: indice });
+const idEvenement = z.object({ id: z.string().trim().min(1).max(64), eid: z.string().trim().min(1).max(32) });
 const indiceSeul = z.object({ k: indice });
 
 export const historiqueRoutes = [
@@ -631,6 +634,39 @@ export const historiqueRoutes = [
     status: 201,
     params: idElement,
     handler: async ({ svc, s, params, ip }) => svc.historique.incidents.action(params.id, user(s), ip),
+  }),
+  route({
+    method: 'POST',
+    url: '/api/incidents/:id/retex',
+    summary: 'Ajouter un événement à la chronologie du RETEX de l’incident',
+    tags,
+    access: 'incidents:modifier' as const,
+    status: 201,
+    params: idElement,
+    body: EvenementRetexSaisie,
+    handler: async ({ svc, s, params, body, ip }) =>
+      svc.historique.incidents.ajouterEvenement(params.id, body, user(s), ip),
+  }),
+  route({
+    method: 'PATCH',
+    url: '/api/incidents/:id/retex/:eid',
+    summary: 'Modifier un événement de la chronologie du RETEX',
+    tags,
+    access: 'incidents:modifier' as const,
+    params: idEvenement,
+    body: EvenementRetexModification,
+    handler: async ({ svc, s, params, body, ip }) =>
+      svc.historique.incidents.modifierEvenement(params.id, params.eid, body, user(s), ip),
+  }),
+  route({
+    method: 'DELETE',
+    url: '/api/incidents/:id/retex/:eid',
+    summary: 'Retirer un événement de la chronologie du RETEX',
+    tags,
+    access: 'incidents:modifier' as const,
+    params: idEvenement,
+    handler: async ({ svc, s, params, ip }) =>
+      svc.historique.incidents.supprimerEvenement(params.id, params.eid, user(s), ip),
   }),
   route({
     method: 'GET',

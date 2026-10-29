@@ -3,7 +3,11 @@
    questionnaire ; une action du registre des écarts (INC-AC-nn) peut être créée depuis un incident (droit des écarts
    requis en plus), comme dans l'outil historique. */
 import {
+  EvenementRetexModification,
+  EvenementRetexSaisie,
   IncidentCreation,
+  MAX_EVENEMENTS_RETEX,
+  identifiantEvenementRetex,
   IncidentModification,
   ObligationTraitee,
   identifiantActionIncident,
@@ -13,7 +17,7 @@ import {
   type Incident,
   type Reponses,
 } from '@suivi/shared';
-import { isObject, type JsonObject } from '@suivi/shared/legacy';
+import { isObject, type Json, type JsonObject } from '@suivi/shared/legacy';
 import type { SessionUser } from '../auth.js';
 import { HttpError } from '../http/errors.js';
 import { entrees, remplacerEntree, type RegistreHistorique } from './registre.js';
@@ -58,6 +62,9 @@ export function incidentBrut(data: JsonObject, o: JsonObject = {}): JsonObject {
     ...o,
   };
 }
+/** Chronologie brute du RETEX, telle que stockée (valeurs non objet conservées à leur place). */
+const chronologieBrute = (i: JsonObject): Json[] => (Array.isArray(i.timeline) ? [...i.timeline] : []);
+
 export const ajouterIncident = (data: JsonObject, brut: JsonObject) => {
   data.incidents = [...(Array.isArray(data.incidents) ? data.incidents : []), brut];
 };
@@ -180,6 +187,78 @@ export class Incidents {
         });
         remplacerEntree(data, 'incidents', id, { ...i, findingId: fid });
         return { id, findingId: fid };
+      },
+    );
+  }
+
+  /* ------------------------------------------------------------------------------- RETEX : chronologie */
+  /** Ajoute un événement à la chronologie du RETEX (champs inconnus des autres événements conservés). */
+  ajouterEvenement(id: string, input: unknown, user: SessionUser, ip: string): Promise<Incident> {
+    const body = EvenementRetexSaisie.parse(input);
+    return this.r.modifier(
+      user,
+      ip,
+      { module: 'incidents', action: 'incident.retex-added', reference: (x) => `legacy:incidents:${x.id}` },
+      (data) => {
+        const i = this.trouver(data, id);
+        const liste = chronologieBrute(i);
+        if (liste.length >= MAX_EVENEMENTS_RETEX)
+          throw new HttpError(409, `La chronologie est limitée à ${MAX_EVENEMENTS_RETEX} événements.`);
+        const eid = identifiantEvenementRetex(
+          liste.filter(isObject).map((e) => str(e.id)),
+          typeof i.timelineSeq === 'number' ? i.timelineSeq : 0,
+        );
+        const evenement: JsonObject = {
+          id: eid,
+          createdAt: new Date().toISOString(),
+          description: '',
+          acteur: '',
+          gravite: '',
+          ...body,
+        };
+        const suivant = { ...i, timeline: [...liste, evenement], timelineSeq: Number(eid.slice(3)) };
+        remplacerEntree(data, 'incidents', id, suivant);
+        return lireIncident(suivant)!;
+      },
+    );
+  }
+
+  modifierEvenement(id: string, eid: string, input: unknown, user: SessionUser, ip: string): Promise<Incident> {
+    const body = EvenementRetexModification.parse(input);
+    return this.r.modifier(
+      user,
+      ip,
+      { module: 'incidents', action: 'incident.retex-updated', reference: (x) => `legacy:incidents:${x.id}` },
+      (data) => {
+        const i = this.trouver(data, id);
+        const liste = chronologieBrute(i);
+        if (liste.filter((e) => isObject(e) && e.id === eid).length !== 1)
+          throw new HttpError(404, 'Événement absent de la chronologie.');
+        const suivant = {
+          ...i,
+          timeline: liste.map((e) =>
+            isObject(e) && e.id === eid ? { ...e, ...body, updatedAt: new Date().toISOString() } : e,
+          ),
+        };
+        remplacerEntree(data, 'incidents', id, suivant);
+        return lireIncident(suivant)!;
+      },
+    );
+  }
+
+  supprimerEvenement(id: string, eid: string, user: SessionUser, ip: string): Promise<Incident> {
+    return this.r.modifier(
+      user,
+      ip,
+      { module: 'incidents', action: 'incident.retex-deleted', reference: (x) => `legacy:incidents:${x.id}` },
+      (data) => {
+        const i = this.trouver(data, id);
+        const liste = chronologieBrute(i);
+        if (!liste.some((e) => isObject(e) && e.id === eid))
+          throw new HttpError(404, 'Événement absent de la chronologie.');
+        const suivant = { ...i, timeline: liste.filter((e) => !(isObject(e) && e.id === eid)) };
+        remplacerEntree(data, 'incidents', id, suivant);
+        return lireIncident(suivant)!;
       },
     );
   }

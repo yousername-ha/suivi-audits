@@ -200,6 +200,7 @@ function FicheIncident({
 }) {
   const obligations = obligationsIncident(i.answers, i.kind, d.categorieEntite);
   const can = useCan();
+  const navigate = useNavigate();
   return (
     <Stack key={i.id}>
       <Group>
@@ -298,6 +299,14 @@ function FicheIncident({
         disabled={!modifiable}
         onCommit={(v) => maj({ retex: v })}
       />
+      <Group>
+        <Button
+          variant="light"
+          onClick={() => void navigate(`/pilotage/incidents-retex?incident=${encodeURIComponent(i.id)}`)}
+        >
+          RETEX et chronologie ({i.timeline.length} événement{i.timeline.length > 1 ? 's' : ''})
+        </Button>
+      </Group>
       {obligations.length > 0 && (
         <Stack gap="xs">
           <Text fw={600}>Obligations à vérifier</Text>

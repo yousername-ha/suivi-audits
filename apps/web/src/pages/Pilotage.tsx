@@ -56,6 +56,7 @@ import { AnalyserService } from '../pilotage/AnalyserService';
 import { GapApplications } from '../pilotage/Gap';
 import { CelluleCriseVue, ContactsCrise, ScenariosCrise } from '../incidents/Crise';
 import { QualifierSignalement, RegistreIncidents } from '../incidents/Incidents';
+import { RetexIncidents } from '../incidents/Retex';
 import { DeclarationApplicabilite } from '../dda/Dda';
 import { EtablissementsCrrc, OffresCrrc, VueEnsembleCrrc } from '../crrc/Contrats';
 import { AlertesCrrc, RapportsCrrc, RessourcesCrrc, RestaurationsCrrc, TableauSauvegardes } from '../crrc/Sauvegardes';
@@ -479,6 +480,7 @@ export function PilotagePage() {
             {section === 'crise-scenarios' && can('incidents', 'lire') && <ScenariosCrise />}
             {section === 'incidents-registre' && can('incidents', 'lire') && <RegistreIncidents />}
             {section === 'incidents-qualifier' && can('incidents', 'lire') && <QualifierSignalement />}
+            {section === 'incidents-retex' && can('incidents', 'lire') && <RetexIncidents />}
             {section === 'evaluations-clausier' && can('fournisseurs', 'lire') && <EvaluationsClausier />}
             {section === 'investissements' && can('investissements', 'lire') && <Investissements />}
             {section === 'revues-acces' && can('pilotage', 'lire') && <RevuesAcces />}

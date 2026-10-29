@@ -8,6 +8,10 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 Aucune action.
 
+### Ajouté
+
+- **RETEX et chronologie d’incident** (Résilience > Incidents et crise) : saisie de la chronologie événement par événement (date et heure, type d’étape, intitulé, description, acteur, gravité ressentie), triée automatiquement, avec la cause et les enseignements de l’incident ; génération d’une chronologie animée et cliquable (scène en profondeur, courbe de gravité lissée tracée point par point, bulle d’information reliée au point qui s’ouvre par étapes, frise des étapes, navigation au clic, au clavier ou en lecture automatique, plein écran). Indicateurs : durée totale, délais de confinement et de rétablissement depuis la détection. Données dans l’incident (champ `timeline` de l’état historique, identifiants `EV-nnn` jamais réattribués) ; routes `POST /api/incidents/:id/retex`, `PATCH` et `DELETE /api/incidents/:id/retex/:eid` (droit de modification des incidents, journalisées). Aucune migration, aucune dépendance nouvelle.
+
 ## [6.0.0] — 2026-10-29
 
 Version majeure : **installation neuve uniquement**, sans aucune ligne de commande au-delà de l'installation de Docker et de git ([ADR 0077](docs/adr/0077-installation-sans-ligne-de-commande.md)). Aucune mise à jour depuis une version 5.x n'est prévue (décision du RSSI du 29/10/2026). Elle regroupe les correctifs de sécurité des revues du 27 et du 28/10/2026 et le contenu de la 5.1.0, qui n'a pas été étiquetée. Une migration SQL (`046`, alertes de sécurité), appliquée au premier démarrage ; aucune nouvelle dépendance.
