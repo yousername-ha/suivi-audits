@@ -675,6 +675,7 @@ Une sauvegarde contient la base (suivi, comptes, documents chiffrés, journal), 
 
 **11.1 Contrôler les clés de sauvegarde.** La clé du serveur est créée au premier démarrage et la clé publique de secours, définie à l'étape 8, est recopiée par l'exécutant des sauvegardes sous une minute (étape 6.8). Vérifiez leur présence et leurs droits :
 
+<!-- ci: exec: cd /opt/suivi-audits && sudo env BACKUP_DEST=/srv/sauvegardes/suivi-audits python3 ./scripts/exploitation-worker.py # recette en mode hôte (EXPLOITATION_AUTO=0, étape 6) : un passage de l'exécutant tient lieu de l'exécutant intégré -->
 <!-- ci: exec: for i in $(seq 1 60); do sudo test -s /srv/suivi-audits/donnees/cles-sauvegarde/secours.pub && break; sleep 3; done -->
 <!-- ci: run -->
 ```bash
