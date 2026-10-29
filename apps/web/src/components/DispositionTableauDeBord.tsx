@@ -246,8 +246,8 @@ export function EditionTableauDeBord({
                 >
                   <IconePoignee />
                 </button>
-                <span className="tdb-case-titre">{dalle.titre}</span>
                 <NativeSelect
+                  className="tdb-case-largeur"
                   size="xs"
                   aria-label={`Largeur de « ${dalle.titre} »`}
                   value={String(x.largeur)}

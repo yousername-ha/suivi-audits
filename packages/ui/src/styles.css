@@ -1917,12 +1917,11 @@ html[data-style='clair'][data-mantine-color-scheme='light'] {
   align-items: center;
   gap: var(--mantine-spacing-xs);
 }
-.tdb-case-titre {
+/* Le titre de la dalle reste visible dans la dalle elle-même : la barre ne porte que les outils. */
+.tdb-case-largeur {
   flex: 1;
   min-width: 0;
-  font-size: var(--mantine-font-size-sm);
-  font-weight: 600;
-  overflow-wrap: anywhere;
+  max-inline-size: 14em;
 }
 .tdb-poignee {
   display: inline-flex;
