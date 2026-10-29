@@ -58,7 +58,7 @@ jobs:
       - name: Scripts d'exploitation (syntaxe bash, ShellCheck)
         run: |
           for f in scripts/*.sh scripts/ci/*.sh; do bash -n "$f"; done
-          shellcheck -S warning -x -e SC1091 scripts/*.sh scripts/ci/*.sh
+          shellcheck -S warning -x -e SC1091 installer.sh docker/*.sh scripts/*.sh scripts/ci/*.sh
       - name: Actions GitHub épinglées par empreinte de commit (ADR 0063)
         run: node scripts/ci/verifier-epinglage.mjs
       - name: CHANGELOG (paragraphe « Notes de mise à jour » dans chaque section, EXPL-07)
@@ -224,12 +224,10 @@ jobs:
       - name: Dossier des données du serveur (EXPL-01)
         run: sudo ./scripts/preparer-donnees.sh
 
-      - name: Clés de sauvegarde age (clé du serveur et clé publique de secours, ADR 0071)
-        run: |
-          set -e
-          sudo apt-get update -qq && sudo apt-get install -y -qq age
-          age-keygen -o "$RUNNER_TEMP/cle-secours.key" 2> /dev/null
-          sudo ./scripts/generer-cles-sauvegarde.sh --secours "$(age-keygen -y "$RUNNER_TEMP/cle-secours.key")" --confirmer
+      # Aucune clé créée à la main (ADR 0077) : l'exécutant crée la clé du serveur au démarrage, la clé de secours est générée
+      # par le navigateur au test d'installation. age sur l'hôte sert seulement aux scripts de recette (backup.sh, restore.sh).
+      - name: Outil age sur l'hôte (scripts de recette)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq age
 
       - name: Démarrage de la pile
         run: |
@@ -412,8 +410,9 @@ jobs:
 
   guide:
     name: Guide d'installation (rejoué sur un runner Ubuntu vierge)
-    # Rejoue docs/INSTALLATION.md : préparation, installation de Docker, configuration, démarrage, administrateur
-    # créé par l'API, compte utilisateur, import de la fixture legacy, sauvegarde, restauration et mise à jour.
+    # Rejoue docs/INSTALLATION.md : préparation, installation de Docker, installer.sh (images construites par --construire),
+    # assistant joué par l'API (administrateur, clé de secours), compte utilisateur, import de la fixture legacy,
+    # sauvegarde, restauration et mise à jour.
     # Échoue si une commande du guide échoue, si un bloc n'est pas marqué, ou si un résultat attendu n'est pas obtenu.
     runs-on: ubuntu-24.04
     needs: [qualite]

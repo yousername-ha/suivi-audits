@@ -44,6 +44,10 @@ ecrire_env() {
 }
 
 dossier_donnees() { valeur_env DATA_DIR "$DATA_DIR_DEFAUT"; }
+# Clés age des sauvegardes (ADR 0077) : dans le dossier des données, créées et tenues à jour par l'exécutant des sauvegardes
+# (clé du serveur générée, clé publique de secours recopiée de l'application), sauf chemins explicites dans l'environnement.
+cle_sauvegarde_serveur() { printf '%s\n' "${BACKUP_KEY_FILE:-$(dossier_donnees)/cles-sauvegarde/serveur.key}"; }
+cles_sauvegarde_secours() { printf '%s\n' "${BACKUP_RECIPIENTS_FILE:-$(dossier_donnees)/cles-sauvegarde/secours.pub}"; }
 
 # Contrôle de l'emplacement de DATA_DIR (mêmes règles que le service init, plus le système de fichiers réel).
 verifier_chemin_donnees() {
@@ -122,7 +126,7 @@ dossier_base_postgresql() {
   m=$(postgresql_majeure_compose)
   if [[ "$m" =~ ^[0-9]+$ ]] && [ "$m" -ge 18 ]; then printf '%s/postgres%s' "$(dossier_donnees)" "$m"; else printf '%s/postgres' "$(dossier_donnees)"; fi
 }
-postgresql_majeure_ancienne() { tr -d '[:space:]' < "$(dossier_donnees)/postgres/PG_VERSION" 2> /dev/null || true; }
+postgresql_majeure_ancienne() { tr -d '[:space:]' 2> /dev/null < "$(dossier_donnees)/postgres/PG_VERSION" || true; }
 
 # Comptes de lignes par table de la base « suivi » (une ligne « table nombre », triée), pour comparer avant et après.
 postgresql_comptes() {
@@ -295,11 +299,11 @@ migrations_appliquees() {
 controler_cles_sauvegarde() { # identite secours
   local id="$1" secours="$2" mode ligne n=0
   command -v age > /dev/null && command -v age-keygen > /dev/null || arret "outil « age » absent : l'installer (sudo apt-get install -y age), voir docs/INSTALLATION.md."
-  [ -f "$id" ] && [ ! -L "$id" ] && [ -s "$id" ] || arret "clé de sauvegarde du serveur absente ou vide ($id) : lancer sudo ./scripts/generer-cles-sauvegarde.sh."
+  [ -f "$id" ] && [ ! -L "$id" ] && [ -s "$id" ] || arret "clé de sauvegarde du serveur absente ou vide ($id) : elle est créée par l'exécutant des sauvegardes au démarrage de la pile (ou sudo ./scripts/generer-cles-sauvegarde.sh)."
   mode=$(stat -c %a "$id")
   (( (8#$mode & 077) == 0 )) || arret "droits trop larges sur la clé de sauvegarde ($id) : 0600 requis (chmod 600)."
   age-keygen -y "$id" > /dev/null 2>&1 || arret "la clé de sauvegarde du serveur ($id) n'est pas une identité age valide."
-  [ -f "$secours" ] && [ ! -L "$secours" ] && [ -s "$secours" ] || arret "clé publique de secours absente ou vide ($secours) : lancer sudo ./scripts/generer-cles-sauvegarde.sh."
+  [ -f "$secours" ] && [ ! -L "$secours" ] && [ -s "$secours" ] || arret "clé publique de secours absente ou vide ($secours) : la définir dans l'application (Administration, Sauvegardes), ou sudo ./scripts/generer-cles-sauvegarde.sh --secours age1…."
   while IFS= read -r ligne || [ -n "$ligne" ]; do
     case "$ligne" in ''|'#'*) continue ;; esac
     [[ "$ligne" =~ ^age1[023456789acdefghjklmnpqrstuvwxyz]{58}$ ]] || arret "le fichier de clés de secours ($secours) ne doit contenir que des clés publiques age (age1…), une par ligne."

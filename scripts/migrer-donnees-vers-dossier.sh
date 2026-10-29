@@ -104,8 +104,8 @@ dc --profile antivirus stop
 STAMP=$(date +%Y%m%d-%H%M%S)
 if [ "$SANS_SAUVEGARDE" = 0 ]; then
   etape "Sauvegarde chiffrée des volumes"
-  CLE="${BACKUP_KEY_FILE:-/root/.suivi-backup-key}"
-  SECOURS="${BACKUP_RECIPIENTS_FILE:-/root/.suivi-backup-recipients}"
+  CLE="$(cle_sauvegarde_serveur)"
+  SECOURS="$(cles_sauvegarde_secours)"
   controler_cles_sauvegarde "$CLE" "$SECOURS"
   mkdir -p "$SAUV"
   OUT="$SAUV/avant-migration-dossier-$STAMP.tar.gz.age"

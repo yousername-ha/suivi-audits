@@ -134,5 +134,5 @@ L'écran `/legacy` est retiré ([ADR 0042](adr/0042-retrait-de-lecran-legacy.md)
 
 - **CI** (`.github/workflows/ci.yml`) : ESLint, Prettier, typage strict, construction, OpenAPI. Puis Vitest sur PostgreSQL 18, construction des images, Trivy, SBOM, pile complète et Playwright. Le job **guide** rejoue `docs/INSTALLATION.md` sur un runner vierge. CodeQL tourne dans `codeql.yml`.
 - **Publication** (`release.yml`) : uniquement sur une étiquette `vX.Y.Z`. Elle publie sur GHCR les images signées (cosign) et leur SBOM attesté.
-- **Production** : `docker compose pull && docker compose up -d` avec `APP_VERSION` dans `.env` ([ADR 0008](adr/0008-images-ghcr-cosign-caddy-non-root.md)).
+- **Production** : `sudo ./installer.sh` crée `.env` (dont `APP_VERSION`), télécharge les images publiées et démarre la pile ([ADR 0008](adr/0008-images-ghcr-cosign-caddy-non-root.md), [ADR 0077](adr/0077-installation-sans-ligne-de-commande.md)).
 - **Développement** : `docker-compose.dev.yml` (rechargement à chaud), voir [CONTRIBUTING.md](../CONTRIBUTING.md).

@@ -3,7 +3,18 @@
 import { finPoivre, formaterPoivreGenere, genererPoivre, type PoivreAEnregistrer } from '@suivi/shared';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { DEMANDEUR_ALERTE } from '../src/alertes-exploitation.js';
-import { Agent, createTestApp, login, makeUser, nextCode, PASSWORD, type TestApp, type TestUser } from './helpers.js';
+import {
+  Agent,
+  cleSecoursDeTest,
+  createTestApp,
+  definirPoivreDeTest,
+  login,
+  makeUser,
+  nextCode,
+  PASSWORD,
+  type TestApp,
+  type TestUser,
+} from './helpers.js';
 
 const SAISI = 'Vq7!mZ3#kP9$wX2@nR5%tL8&yB4*cD6^hF1(';
 const AUTRE = 'Jh6&nB2!rT8#qL4@zW9$cK5%xP3*mD7^vF1)';
@@ -33,6 +44,7 @@ describe('installation', () => {
     token,
     username: 'chef',
     password: PASSWORD,
+    cleSecours: cleSecoursDeTest(),
     ...extra,
   });
   const hash = async (nom: string) =>
@@ -139,12 +151,10 @@ describe('installation existante et changement', () => {
     ).rows;
   const connexion = async (u: TestUser) =>
     (await new Agent(t).post('/api/auth/login', { username: u.username, password: PASSWORD })).statusCode;
-  const definir = async (poivre: PoivreAEnregistrer, code?: string) =>
-    agent.post('/api/admin/poivre/definir', { poivre, code: code ?? (await nextCode(t, admin)) });
   const changer = async (poivre: PoivreAEnregistrer, ancien: string, code?: string) =>
     agent.post('/api/admin/poivre/changer', { poivre, ancienPoivre: ancien, code: code ?? (await nextCode(t, admin)) });
 
-  it('signale un poivre non défini, laisse les connexions continuer, puis refuse les définitions invalides', async () => {
+  it('signale un poivre non défini et laisse les connexions continuer ; aucune définition hors de l’assistant', async () => {
     remise();
     const e = (await agent.get('/api/admin/poivre')).json();
     expect(e).toMatchObject({ defini: false, idCle: null, empreintesPoivrees: 0, comptes: 3 });
@@ -153,26 +163,26 @@ describe('installation existante et changement', () => {
     // Droit insuffisant, code faux, poivre faible, engagement non tenu : rien ne change.
     const lecteur = await login(t, autres[0]!);
     expect((await lecteur.get('/api/admin/poivre')).statusCode).toBe(403);
-    expect((await lecteur.post('/api/admin/poivre/definir', { poivre: saisi(SAISI), code: '000000' })).statusCode).toBe(
-      403,
-    );
-    expect((await definir(saisi(SAISI), '000000')).statusCode).toBe(401);
-    expect((await definir(saisi('MotDePasse2026'))).statusCode).toBe(422);
-    expect((await definir({ ...saisi(SAISI), engagement: { coffre: true, fin: 'ZZZZZZZZ' } })).statusCode).toBe(422);
+    // Installation neuve uniquement (ADR 0077) : le poivre se définit dans l'assistant, la route de définition n'existe plus.
+    const r = await agent.post('/api/admin/poivre/definir', { poivre: saisi(SAISI), code: await nextCode(t, admin) });
+    expect(r.statusCode).toBe(404);
     expect((await hashes()).every((x) => x.h.startsWith('scrypt$'))).toBe(true);
   });
 
   it('définit le poivre : toutes les empreintes sont protégées, chaque compte se connecte avec son mot de passe inchangé', async () => {
     remise();
-    const r = await definir(saisi(SAISI));
-    expect(r.statusCode, r.body).toBe(200);
-    expect(r.json()).toMatchObject({ defini: true, empreintesPoivrees: 3, comptes: 3 });
+    expect(await definirPoivreDeTest(t, admin, SAISI)).toBe(3);
+    expect((await agent.get('/api/admin/poivre')).json()).toMatchObject({
+      defini: true,
+      empreintesPoivrees: 3,
+      comptes: 3,
+    });
     expect((await hashes()).every((x) => /^poivre\$[0-9a-f]{16}\$/.test(x.h))).toBe(true);
     remise();
     for (const u of [admin, ...autres]) expect(await connexion(u), u.username).toBe(200);
     // Déjà défini : la définition est refusée.
     remise();
-    expect((await definir(saisi(AUTRE))).statusCode).toBe(409);
+    await expect(definirPoivreDeTest(t, admin, AUTRE)).rejects.toMatchObject({ status: 409 });
     // Les nouveaux comptes et les changements de mot de passe sont poivrés aussi.
     const cree = await agent.post('/api/admin/users', { username: 'carole', roles: [], groups: [] });
     expect(cree.statusCode, cree.body).toBe(201);
@@ -326,8 +336,7 @@ describe('liaison de l’empreinte au compte et fuites', () => {
     b = await makeUser(t, 'bob', 'rw');
     const admin = await makeUser(t, 'rssi', 'admin');
     agent = await login(t, admin);
-    const r = await agent.post('/api/admin/poivre/definir', { poivre: saisi(SAISI), code: await nextCode(t, admin) });
-    expect(r.statusCode, r.body).toBe(200);
+    await definirPoivreDeTest(t, admin, SAISI);
   });
   afterAll(async () => {
     await t.close();

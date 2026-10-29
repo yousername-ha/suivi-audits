@@ -41,7 +41,7 @@ import { logout as endSession } from '../logout';
 import { alerteDeFamille, LibelleAlerte, useAlertesMenu } from '../pilotage/alertes-menu';
 import { OngletsRubriques } from './OngletsRubriques';
 import { AlerteSecuriteNotice } from './AlerteSecuriteNotice';
-import { PoivreNotice } from './PoivreNotice';
+import { CleSecoursNotice } from './CleSecours';
 import { UpdateNotice } from './Updates';
 import { ErrorAlert } from './common';
 import { useLive } from '../realtime';
@@ -230,7 +230,7 @@ export function Layout({ children }: { children: ReactNode }) {
     <div className="shell">
       <div className="shell-top">
         <UpdateNotice />
-        <PoivreNotice />
+        <CleSecoursNotice />
         <AlerteSecuriteNotice />
         <header className="shell-header">
           <Group h="100%" px="md" justify="space-between" wrap="nowrap">

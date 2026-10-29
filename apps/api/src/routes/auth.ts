@@ -12,6 +12,7 @@ import {
   StageOut,
   TotpBeginOut,
   TotpConfirmBody,
+  empreinteCleSecours,
   problemesMotDePasse,
   type MeOut as MeOutT,
 } from '@suivi/shared';
@@ -27,12 +28,12 @@ import type { PoivrePrepare } from '../mots-de-passe.js';
 import { exigerPoivreValide } from './poivre.js';
 import type { Services } from '../services.js';
 
-function checkPassword(svc: Services, pw: unknown, username: string) {
+function checkPassword(svc: Services, pw: unknown, username: string, autresNoms: string[] = []) {
   const general = svc.settings.get('general');
   const p = problemesMotDePasse(pw, {
     minLen: svc.settings.get('securite').passwordMinLength,
     identifiants: [username],
-    noms: [general.appName, general.orgName],
+    noms: [general.appName, general.orgName, ...autresNoms],
   });
   if (p.length) throw new HttpError(422, 'Mot de passe trop faible : ' + p.join(', ') + '.');
 }
@@ -178,7 +179,14 @@ export const authRoutes = [
     handler: async ({ svc }) => {
       const adminExists = await svc.auth.adminExists();
       const pending = await svc.auth.setupPending();
-      return { needed: pending || !adminExists, pending, adminExists, poivreDefini: await svc.motsDePasse.defini() };
+      return {
+        needed: pending || !adminExists,
+        pending,
+        adminExists,
+        poivreDefini: await svc.motsDePasse.defini(),
+        cleSecoursDefinie: await svc.cleSecours.definie(),
+        adresseSite: svc.adresseSite.actuelle(),
+      };
     },
   }),
   route({
@@ -193,7 +201,8 @@ export const authRoutes = [
     response: StageOut,
     handler: async ({ svc, req, reply, ip, body }) => {
       if (!svc.limits.setupByIp(ip)) throw new HttpError(429, 'Trop de tentatives. Réessayez dans 15 minutes.');
-      checkPassword(svc, body.password, body.username);
+      // Le nom d'organisation saisi dans le même formulaire compte aussi (ADR 0075) : il remplace le nom enregistré.
+      checkPassword(svc, body.password, body.username, body.orgName?.trim() ? [body.orgName.trim()] : []);
       // Poivre des mots de passe (ADR 0072) : défini ici, dans la transaction qui consomme le jeton, ou déjà défini (administrateur
       // de secours). Les règles et l'engagement de sauvegarde sont contrôlés avant toute consommation du jeton.
       let poivre: PoivrePrepare | null = null;
@@ -205,6 +214,14 @@ export const authRoutes = [
         await exigerPoivreValide(svc, body.poivre, { identifiants: [body.username] });
         poivre = await svc.motsDePasse.preparer(body.poivre.valeur);
       }
+      // Clé de secours des sauvegardes (ADR 0077) : sa clé publique seule, enregistrée avec le compte ; l'engagement de l'avoir
+      // rangée au coffre-fort est vérifié dans le navigateur, seul détenteur de la clé privée.
+      const cleSecoursDefinie = await svc.cleSecours.definie();
+      const cleSecours = cleSecoursDefinie ? null : (body.cleSecours ?? null);
+      if (!cleSecoursDefinie && !cleSecours)
+        throw new HttpError(422, 'La clé de secours des sauvegardes est obligatoire à l’installation.', {
+          reason: 'cle_secours_requise',
+        });
       const id = svc.motsDePasse.nouvelId();
       const hash = poivre
         ? chiffrerEmpreinte(poivre.cle, id, await hashPassword(body.password))
@@ -219,6 +236,9 @@ export const authRoutes = [
           if (!poivre && body.poivre)
             throw new HttpError(409, 'Le poivre est déjà défini.', { reason: 'poivre_defini' });
           if (poivre) await svc.motsDePasse.inscrireALInstallation(c, kdb, poivre, body.username);
+          if (cleSecours) await svc.cleSecours.inscrire(kdb, cleSecours.publique, body.username);
+          if (body.adresseSite && body.adresseSite !== svc.adresseSite.actuelle())
+            await svc.adresseSite.demander(kdb, body.adresseSite, body.username);
           const u = await kdb
             .insertInto('users')
             .values({
@@ -254,6 +274,11 @@ export const authRoutes = [
       if (poivre)
         await svc.db.audit({ id: res.id, username: body.username }, ip, 'securite.poivre_defini', '', {
           idCle: poivre.idCle,
+          installation: true,
+        });
+      if (cleSecours)
+        await svc.db.audit({ id: res.id, username: body.username }, ip, 'sauvegarde.cle_secours_definie', '', {
+          empreinte: empreinteCleSecours(cleSecours.publique),
           installation: true,
         });
       await svc.auth.create(req, reply, res.id, false);

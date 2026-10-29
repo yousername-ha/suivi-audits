@@ -1,6 +1,6 @@
 # ADR 0070 — Réponse de connexion uniforme et alerte de verrouillage de compte
 
-- Statut : proposée (numéro à confirmer par le RSSI)
+- Statut : acceptée par le RSSI le 29/10/2026 (numéro confirmé)
 - Date : 2026-10-28
 - Contexte : revue de sécurité de l'authentification (OWASP ASVS 4.0 niveau 2 ; CWE-204 ; ISO 27001:2022 A.5.17, A.8.5 et A.8.16). La connexion répondait 423 à un compte verrouillé et 401 aux autres échecs : la différence révélait l'existence d'un compte. Le RSSI a demandé, le 28/10/2026, d'être averti dès qu'un compte est verrouillé.
 

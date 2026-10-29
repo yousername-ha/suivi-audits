@@ -8,8 +8,8 @@
 # Un rapport est écrit dans DATA_DIR/etat/sauvegardes/ (affiché dans Administration > Système, alerte au-delà de 48 h).
 #   Usage :  sudo ./scripts/backup.sh [/chemin/destination]
 #   Cron  :  15 2 * * *  root cd /opt/suivi-audits && ./scripts/backup.sh /srv/sauvegardes/suivi-audits
-# Variables : BACKUP_KEY_FILE (identité age du serveur, défaut /root/.suivi-backup-key, 0600),
-#             BACKUP_RECIPIENTS_FILE (clés publiques de secours, défaut /root/.suivi-backup-recipients),
+# Variables : BACKUP_KEY_FILE (identité age du serveur, défaut DATA_DIR/cles-sauvegarde/serveur.key, 0600),
+#             BACKUP_RECIPIENTS_FILE (clés publiques de secours, défaut DATA_DIR/cles-sauvegarde/secours.pub),
 #             RETENTION_DAYS (90 par défaut, sauvegardes du dossier de destination uniquement, sous-dossiers exclus),
 #             BACKUP_GARDER_MIN (nombre de sauvegardes les plus récentes toujours conservées, 7 par défaut, de 1 à 365),
 #             BACKUP_PREFIXE (début du nom de fichier, « suivi-audits » par défaut).
@@ -22,8 +22,8 @@ DEST="${1:-./backups}"
 RETENTION_DAYS="${RETENTION_DAYS:-90}"
 GARDER_MIN="${BACKUP_GARDER_MIN:-7}"
 PREFIXE="${BACKUP_PREFIXE:-suivi-audits}"
-CLE="${BACKUP_KEY_FILE:-/root/.suivi-backup-key}"
-SECOURS="${BACKUP_RECIPIENTS_FILE:-/root/.suivi-backup-recipients}"
+CLE="$(cle_sauvegarde_serveur)"
+SECOURS="$(cles_sauvegarde_secours)"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 DEBUT=$(date +%s)
 DATA_DIR=$(dossier_donnees)

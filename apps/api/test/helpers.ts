@@ -17,6 +17,10 @@ export const REPO = path.resolve(here, '../../..');
 export const ORIGIN = 'https://suivi.test';
 export const PASSWORD = 'Mot-de-passe-2026!';
 
+/** Clé publique de secours des sauvegardes (ADR 0077), telle que l'interface l'envoie : vecteur de test d'age-keygen. */
+export const CLE_SECOURS_TEST = 'age17pgvufarqx5netqz2wypxnpmu68u5zfdswk4qhk8mdg9jckjuu6spgaupp';
+export const cleSecoursDeTest = () => ({ publique: CLE_SECOURS_TEST, coffre: true as const });
+
 /** Poivre généré, tel que l'interface l'envoie à l'installation (avec la preuve de recopie). */
 export function poivreDeTest(): PoivreAEnregistrer {
   const brut = genererPoivre();
@@ -168,6 +172,12 @@ export async function makeUser(
 }
 
 /** Code TOTP valide et non encore utilisé (anti-rejeu : pas strictement supérieur au dernier accepté). */
+/** Poivre posé par le service, sur une base dont les comptes ont été créés directement (makeUser) : l'API ne permet de le
+    définir que dans l'assistant d'installation (ADR 0077). */
+export async function definirPoivreDeTest(t: TestApp, par: TestUser, valeur: string): Promise<number> {
+  return t.svc.motsDePasse.definir(await t.svc.motsDePasse.preparer(valeur), par, null);
+}
+
 export async function nextCode(t: TestApp, u: TestUser): Promise<string> {
   const last = Number(
     (await t.svc.db.one<{ s: string }>('SELECT totp_last_step::text AS s FROM users WHERE id=$1', [u.id]))!.s,

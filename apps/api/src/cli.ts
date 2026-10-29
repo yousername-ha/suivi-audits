@@ -14,6 +14,8 @@
      backup-worker [ready|unavailable] annonce l'état de l'exécutant serveur
      backup-claim               réclame une demande (verrou hôte obligatoire)
      backup-finish <id> <code>   termine une demande avec le rapport serveur
+     backup-secours             clés publiques de secours des sauvegardes (une par ligne)
+     site-adresse               adresse du site demandée dans l'application
      mail-claim | mail-finish <id>  courriels : réclame une demande, rapporte l'envoi (JSON sur l'entrée standard)
      ops-policy | ops-sync [date] | ops-claim  protocole hôte (jamais HTTP)
   ops-request | ops-certificate  JSON privé sur entrée standard
@@ -49,6 +51,8 @@ const HELP = `Commandes : docker compose exec app suivi <commande> [arguments]
   backup-worker [ready|unavailable] état du worker serveur
   backup-claim               réclame une demande (verrou hôte obligatoire)
   backup-finish <id> <code>   termine une demande avec son rapport
+  backup-secours             clés publiques de secours des sauvegardes
+  site-adresse               adresse du site demandée
   mail-claim | mail-finish <id>  courriels : réclame une demande, rapporte l'envoi (JSON sur l'entrée standard)
   ops-policy | ops-sync [date] | ops-claim  protocole hôte (jamais HTTP)
   ops-request | ops-certificate  JSON privé sur entrée standard
@@ -111,6 +115,17 @@ async function main() {
     case 'backup-claim': {
       const id = await svc.backups.claim();
       if (id) console.log(id);
+      break;
+    }
+    case 'backup-secours': {
+      // Clés publiques de secours (ADR 0077), une par ligne, pour le fichier de l'exécutant des sauvegardes.
+      for (const cle of await svc.cleSecours.publiques()) console.log(cle);
+      break;
+    }
+    case 'site-adresse': {
+      // Adresse du site demandée dans l'application (ADR 0077), à appliquer par l'exécutant ; rien si aucune demande.
+      const a = await svc.adresseSite.demandee();
+      if (a) console.log(a);
       break;
     }
     case 'backup-finish': {

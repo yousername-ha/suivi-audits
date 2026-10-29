@@ -216,7 +216,8 @@ export class MotsDePasse {
     await this.inscrire(k, p, par, false);
   }
 
-  /** Installation existante, sans poivre : inscrit le poivre et protège aussitôt toutes les empreintes. */
+  /** Base sans poivre (comptes créés directement en base par les tests ; aucune route depuis la 6.0.0, ADR 0077) : inscrit
+   * le poivre et protège aussitôt toutes les empreintes. Une installation neuve le définit dans l'assistant. */
   async definir(p: PoivrePrepare, par: Actor, ip: string | null): Promise<number> {
     return this.db.tx(async (c, k) => {
       await this.verrou(c);

@@ -1,18 +1,11 @@
 # Installer « Suivi des audits SMSI » — guide pas à pas
 
-> Reprise documentaire du 11 octobre 2026 : ce guide reste la référence des commandes rejouées en CI. Le [dossier de reprise](00_INDEX.md), le [guide administrateur](06_GUIDES/GUIDE_ADMINISTRATEUR.md) et le [dépannage](06_GUIDES/GUIDE_DEPANNAGE.md) décrivent les parcours et réserves actuels ; aucune commande de ce guide n’est modifiée par l’audit.
+> Ce guide reste la référence des commandes rejouées en CI. Le [dossier de reprise](00_INDEX.md), le [guide administrateur](06_GUIDES/GUIDE_ADMINISTRATEUR.md) et le [dépannage](06_GUIDES/GUIDE_DEPANNAGE.md) décrivent les parcours et réserves actuels.
 
-Ce guide part d'un serveur vide et ne suppose aucune connaissance de Linux ni de Docker. Il s'adresse au RSSI ou à un technicien. Suivez les étapes **dans l'ordre**, sans en sauter. Comptez environ 1 h 30 la première fois.
+Ce guide part d'un serveur vide et ne suppose aucune connaissance de Linux ni de Docker. Il s'adresse au RSSI ou à un technicien. Suivez les étapes **dans l'ordre**, sans en sauter. Comptez environ 30 minutes, plus le temps des demandes aux autres équipes (étape 0).
 
-> **Branches et version (11 octobre 2026).** `main` porte la version Docker unique, **3.1.0** (section 12.0),
-> issue de la branche de travail `claude-suivi-smsi` ; la branche `legacy` porte l'outil historique autonome.
-> Les anciennes branches sont conservées sous les étiquettes `archive/*`.
-> La version 2 du dépôt reste accessible dans l'historique Git (commit `b148c1ba303954b7023996fce3d0eff2923326b5`).
-> Le guide ci-dessous décrit le déploiement v3 ; il ne faut pas l’appliquer à une
-> installation v2 en service sans sauvegarde et recette de la montée de version.
-> La validation cloud de l’intégration utilise une base PostgreSQL dédiée et Caddy avec
-> les fichiers compilés. Elle ne remplace pas les tests des images de production,
-> de restauration et de signatures. Voir le [rapport d’intégration](archive/diagnostics/2026-10-09-integration-sauge.md) et la [recette de fiabilisation](archive/diagnostics/2026-10-09-fiabilisation.md) (105 scénarios officiels réussis).
+> **Version 6.0.0 : installation sans ligne de commande** ([ADR 0077](adr/0077-installation-sans-ligne-de-commande.md)). Sur le serveur, vous installez Docker et git, vous téléchargez l'application, puis **une seule commande**, `sudo ./installer.sh`, prépare et démarre tout. Le reste se fait dans le navigateur : adresse du site, poivre des mots de passe, clé de secours des sauvegardes, compte administrateur. La 6.0.0 s'installe sur un **serveur neuf** : il n'y a pas de mise à jour depuis une version 5.x.
+> `main` porte la version Docker unique, issue de la branche de travail `claude-suivi-smsi` ; la branche `legacy` porte l'outil historique autonome. Les anciennes branches sont conservées sous les étiquettes `archive/*`.
 
 **Comment lire ce guide**
 - Chaque cadre gris contient **une commande**. Copiez-la, collez-la dans le terminal du serveur (clic droit dans PowerShell), puis appuyez sur **Entrée**.
@@ -20,7 +13,7 @@ Ce guide part d'un serveur vide et ne suppose aucune connaissance de Linux ni de
 - Le texte `<comme_ceci>` est à remplacer par votre valeur, **chevrons compris**. Par exemple, `ssh <utilisateur>@<adresse_ip_du_serveur>` devient `ssh admin@10.0.12.40`.
 - ⚠️ signale une action risquée : lisez l'avertissement **avant** de lancer la commande.
 
-Ce guide est **vérifié automatiquement** : à chaque modification de l'application, l'intégration continue rejoue ses commandes sur un serveur Ubuntu vierge, jusqu'à la création de l'administrateur et à l'import d'un fichier de l'ancien outil. Un guide inexact bloque la publication. Les commentaires `<!-- ci: … -->`, invisibles sur GitHub, servent à ce contrôle.
+Ce guide est **vérifié automatiquement** : à chaque modification de l'application, l'intégration continue rejoue ses commandes sur un serveur Ubuntu vierge, jusqu'à la création de l'administrateur, l'import d'un fichier de l'ancien outil, une sauvegarde et sa restauration. Un guide inexact bloque la publication. Les commentaires `<!-- ci: … -->`, invisibles sur GitHub, servent à ce contrôle.
 
 ---
 
@@ -29,11 +22,11 @@ Ce guide est **vérifié automatiquement** : à chaque modification de l'applica
 1. [Se connecter au serveur depuis Windows](#1-se-connecter-au-serveur-depuis-windows)
 2. [Préparer le serveur](#2-préparer-le-serveur)
 3. [Installer Docker](#3-installer-docker)
-4. [Autoriser le serveur à lire le dépôt et les images](#4-autoriser-le-serveur-à-lire-le-dépôt-et-les-images)
-5. [Télécharger l'application](#5-télécharger-lapplication)
-6. [Configurer l'application](#6-configurer-lapplication)
-7. [Démarrer l'application](#7-démarrer-lapplication)
-8. [Créer le compte administrateur](#8-créer-le-compte-administrateur)
+4. [Télécharger l'application](#4-télécharger-lapplication)
+5. [Lancer l'installation](#5-lancer-linstallation)
+6. [Ce que la commande a configuré](#6-ce-que-la-commande-a-configuré)
+7. [Vérifier que l'application tourne](#7-vérifier-que-lapplication-tourne)
+8. [Terminer l'installation dans le navigateur](#8-terminer-linstallation-dans-le-navigateur)
 9. [Créer les comptes des utilisateurs](#9-créer-les-comptes-des-utilisateurs)
 10. [Reprendre les données de l'ancien outil](#10-reprendre-les-données-de-lancien-outil)
 11. [Mettre en place les sauvegardes](#11-mettre-en-place-les-sauvegardes)
@@ -52,14 +45,13 @@ Cochez chaque ligne avant de passer à l'étape 1. Les demandes aux autres équi
 |---|---|---|
 | ☐ | **Un serveur Linux** (machine virtuelle) | **Debian 12** ou **Ubuntu 24.04 LTS**, installation minimale, en 64 bits (x86_64). Demandez à l'équipe infrastructure « une VM Linux pour une application Docker ». |
 | ☐ | **Dimensionnement** | 2 processeurs, 4 Go de mémoire, 30 Go de disque, plus la place des sauvegardes (prévoir 10 Go). Avec l'antivirus facultatif (ClamAV) : 8 Go de mémoire. Une mise à jour demande, en espace libre, deux fois la taille de la base plus 2 Go. |
-| ☐ | **Un emplacement pour les données** | Un dossier du serveur, par défaut `/srv/suivi-audits/donnees`, sur un disque **inclus dans la sauvegarde externalisée** du serveur, comme `/srv/sauvegardes`. Demandez à l'équipe infrastructure de sauvegarder ces deux dossiers. |
+| ☐ | **Un emplacement pour les données** | Un dossier du serveur, par défaut `/srv/suivi-audits/donnees`. Les sauvegardes chiffrées de l'application sont rangées dans son sous-dossier `sauvegardes/` : demandez à l'équipe infrastructure de les **copier hors du serveur** (sauvegarde externalisée), **sans** le sous-dossier `cles-sauvegarde/` (étape 6.6). |
 | ☐ | **Un compte sur ce serveur** avec droits d'administration (`sudo`) | L'équipe infrastructure vous fournit l'adresse IP, l'identifiant et le mot de passe. |
-| ☐ | **Un nom DNS** pointant vers le serveur | Par exemple `suivi-audits.mondomaine.local`. Demandez à l'équipe réseau « un enregistrement DNS de type A vers l'IP du serveur ». |
+| ☐ | **Un nom DNS** pointant vers le serveur | Par exemple `suivi-audits.mondomaine.local`. Demandez à l'équipe réseau « un enregistrement DNS de type A vers l'IP du serveur ». Il n'est pas nécessaire pour commencer : l'assistant s'ouvre aussi par l'adresse IP du serveur. |
 | ☐ | **Ports entrants ouverts** des postes utilisateurs vers le serveur | TCP **443** (HTTPS) et TCP **80** (redirection vers HTTPS). Pour l'administration : TCP **22** (SSH), depuis votre poste uniquement. |
 | ☐ | **Flux sortants ouverts** du serveur vers Internet | Voir le tableau ci-dessous. |
-| ☐ | **Un compte GitHub** ayant accès au dépôt `yousername-ha/suivi-audits` | Pour autoriser le serveur à le lire (étape 4). |
 | ☐ | **Un téléphone avec une application d'authentification** | Microsoft Authenticator, FreeOTP, Aegis ou Google Authenticator. |
-| ☐ | **Un coffre-fort de mots de passe** | KeePass ou équivalent, pour conserver la clé de secours des sauvegardes (étape 11). |
+| ☐ | **Un coffre-fort de mots de passe** | KeePass ou équivalent, pour conserver le poivre des mots de passe et la clé de secours des sauvegardes (étape 8). |
 
 **Flux sortants à demander** (du serveur vers Internet, à faire ouvrir au pare-feu ou au proxy) :
 
@@ -67,15 +59,14 @@ Cochez chaque ligne avant de passer à l'étape 1. Les demandes aux autres équi
 |---|---|---|
 | `deb.debian.org`, `security.debian.org` (Debian) ou `archive.ubuntu.com`, `security.ubuntu.com` (Ubuntu) | TCP 80 et 443 | Mises à jour du système |
 | `download.docker.com` | TCP 443 | Installation de Docker |
-| `github.com` | TCP 22 | Téléchargement de l'application (clé de déploiement SSH) |
+| `github.com` | TCP 443 | Téléchargement de l'application et de ses nouvelles versions |
 | `ghcr.io`, `pkg-containers.githubusercontent.com` | TCP 443 | Images de l'application |
-| `github.com`, `objects.githubusercontent.com` | TCP 443 | Installation de cosign (étape 3.6) |
-| `tuf-repo-cdn.sigstore.dev`, `rekor.sigstore.dev` | TCP 443 | Vérification de la signature des images à chaque mise à jour (étape 12.1) |
+| `tuf-repo-cdn.sigstore.dev`, `rekor.sigstore.dev` | TCP 443 | Vérification de la signature des images à chaque mise à jour (étape 12) |
 | `registry-1.docker.io`, `auth.docker.io`, `production.cloudflare.docker.com` | TCP 443 | Image de la base de données (PostgreSQL) |
 | Serveur de temps (NTP) de votre organisation, ou `ntp.ubuntu.com` / `deb.pool.ntp.org` | UDP 123 | Mise à l'heure (indispensable à la double authentification) |
 | `database.clamav.net` | TCP 443 | Facultatif : signatures de l'antivirus (service `freshclam` seul) |
 
-Une fois démarrée, l'application elle-même n'a **aucun accès à Internet** : seuls le système, Docker et les scripts du serveur en ont besoin, pour l'installation et les mises à jour.
+Une fois démarrée, l'application elle-même n'a **aucun accès à Internet** : seuls le système, Docker et l'exécutant d'exploitation en ont besoin, pour l'installation et les mises à jour.
 
 **Antivirus facultatif.** `docker compose --profile antivirus up -d` démarre deux services sans privilège (utilisateur `clamav`, système de fichiers en lecture seule, aucune capacité Linux) : `clamav` (analyse, joint par l'API seule sur le réseau interne `antivirus`, sans accès à la base ni à Internet) et `freshclam` (téléchargement des signatures, seul à sortir vers `database.clamav.net`). `clamav` démarre quand les signatures initiales sont présentes, ce qui prend quelques minutes au premier lancement ; l'analyse reprend les signatures mises à jour dans l'heure qui suit leur téléchargement. Renseigner `CLAMAV_HOST=clamav` dans `.env`. Le dossier `DATA_DIR/clamav` appartient à l'uid 100, préparé par le service `init`.
 
@@ -111,29 +102,23 @@ sudo apt update && sudo apt full-upgrade -y
 
 > Sur Ubuntu, un écran violet « **Daemons using outdated libraries** » peut s'afficher : appuyez sur **Tab** jusqu'à `<Ok>`, puis **Entrée**.
 
-**2.2 Installer les outils de base :**
+**2.2 Installer git** (téléchargement de l'application) et les outils de base :
 
 <!-- ci: run -->
 ```bash
-sudo apt install -y git curl ca-certificates ufw nano openssl python3 age
+sudo apt install -y git curl ca-certificates ufw
 ```
-**Résultat attendu** : la dernière ligne ne contient pas `E:`. `age` chiffre les sauvegardes (étape 11).
+**Résultat attendu** : la dernière ligne ne contient pas `E:`.
 
-**2.3 Vérifier l'heure du serveur.** C'est **indispensable** : les codes de double authentification dépendent de l'heure.
+**2.3 L'heure du serveur** est **indispensable** : les codes de double authentification en dépendent. La commande d'installation (étape 5) la vérifie et active la synchronisation si besoin. Pour la contrôler vous-même :
 
 <!-- ci: run -->
 ```bash
 timedatectl
 ```
-**Résultat attendu** : une ligne `System clock synchronized: yes`. Si elle indique `no`, activez la synchronisation :
+**Résultat attendu** : une ligne `System clock synchronized: yes`. Si elle reste à `no` plusieurs minutes après l'installation, le flux NTP (UDP 123) est bloqué : voir l'étape 0.
 
-<!-- ci: run -->
-```bash
-sudo timedatectl set-ntp true
-```
-**Résultat attendu** : aucun message. Relancez `timedatectl` une minute plus tard : la ligne doit indiquer `yes`. Si elle reste à `no`, le flux NTP (UDP 123) est bloqué : voir l'étape 0.
-
-**2.4 Activer le pare-feu du serveur**, en n'autorisant que l'administration (SSH) et le web.
+**2.4 Activer le pare-feu du serveur**, en n'autorisant que l'administration (SSH) et le web. Passez cette étape si l'équipe infrastructure filtre déjà les flux du serveur.
 
 > ⚠️ Autorisez **toujours le port 22 en premier**. Si vous activez le pare-feu sans lui, vous perdez immédiatement la connexion au serveur, et il faudra l'intervention de l'équipe infrastructure.
 
@@ -154,12 +139,6 @@ sudo ufw allow 80/tcp && sudo ufw allow 443/tcp
 sudo ufw --force enable
 ```
 **Résultat attendu** : `Firewall is active and enabled on system startup`.
-
-<!-- ci: run -->
-```bash
-sudo ufw status
-```
-**Résultat attendu** : `Status: active`, puis les lignes `22/tcp`, `80/tcp` et `443/tcp` avec `ALLOW`.
 
 ---
 
@@ -209,107 +188,23 @@ sudo systemctl enable --now docker
 
 <!-- ci: run -->
 ```bash
-sudo docker compose version
-```
-**Résultat attendu** : `Docker Compose version v2.` suivi d'un numéro (2.24 ou plus récent).
-
-<!-- ci: run -->
-```bash
 sudo docker run --rm hello-world
 ```
 **Résultat attendu** : le texte contient `Hello from Docker!`. Docker fonctionne et sait télécharger des images.
 
-**3.6 Installer cosign**, l'outil qui vérifie, à chaque mise à jour, que les images viennent bien de la chaîne de publication du dépôt (signature) et n'ont pas été modifiées. La commande télécharge cosign et contrôle son empreinte avant de l'installer :
-
-<!-- ci: run -->
-```bash
-cd /tmp && curl -fsSLO https://github.com/sigstore/cosign/releases/download/v3.1.3/cosign-linux-amd64 && curl -fsSL https://github.com/sigstore/cosign/releases/download/v3.1.3/cosign_checksums.txt | grep ' cosign-linux-amd64$' | sha256sum -c && sudo install -m 0755 cosign-linux-amd64 /usr/local/bin/cosign && rm cosign-linux-amd64 && cd -
-```
-**Résultat attendu** : `cosign-linux-amd64: OK`, puis le nom du dossier précédent.
-
-<!-- ci: run -->
-```bash
-cosign version | grep GitVersion
-```
-**Résultat attendu** : `GitVersion:    v3.1.3`.
-
 ---
 
-## 4. Autoriser le serveur à lire le dépôt et les images
+## 4. Télécharger l'application
 
-Le dépôt GitHub est **privé**. On donne au serveur une **clé de déploiement** : elle lui permet de **lire** le dépôt, et rien d'autre.
-
-**4.1 Créer la clé sur le serveur :**
-
-<!-- ci: skip — le runner de CI utilise directement le code testé -->
-```bash
-sudo ssh-keygen -t ed25519 -N "" -C "serveur-suivi-audits" -f /root/.ssh/suivi_deploy
-```
-**Résultat attendu** : `Your identification has been saved in /root/.ssh/suivi_deploy`, puis un dessin fait de caractères.
-
-<!-- ci: skip — le runner de CI utilise directement le code testé -->
-```bash
-sudo cat /root/.ssh/suivi_deploy.pub
-```
-**Résultat attendu** : une ligne qui commence par `ssh-ed25519` et se termine par `serveur-suivi-audits`. **Sélectionnez-la entièrement et copiez-la** (sélection à la souris, puis clic droit).
-
-**4.2 Déclarer la clé sur GitHub**, depuis le navigateur de votre poste :
-1. Ouvrez `https://github.com/yousername-ha/suivi-audits`.
-2. Cliquez sur **Settings**, puis sur **Deploy keys** dans le menu de gauche, puis sur **Add deploy key**.
-3. Dans **Title**, saisissez `Serveur suivi-audits`. Dans **Key**, collez la ligne copiée.
-4. ⚠️ **Ne cochez pas** « Allow write access » : le serveur n'a besoin que de lire.
-5. Cliquez sur **Add key**.
-
-> Si le menu **Settings** n'apparaît pas, votre compte n'est pas administrateur du dépôt : demandez à un administrateur du dépôt de déclarer la clé.
-
-**4.3 Indiquer au serveur quelle clé utiliser pour GitHub :**
-
-<!-- ci: skip — le runner de CI utilise directement le code testé -->
-```bash
-printf 'Host github-suivi\n  HostName github.com\n  User git\n  IdentityFile /root/.ssh/suivi_deploy\n  IdentitiesOnly yes\n' | sudo tee -a /root/.ssh/config
-```
-**Résultat attendu** : les 5 lignes s'affichent, de `Host github-suivi` à `IdentitiesOnly yes`.
-
-**4.4 Tester l'accès :**
-
-<!-- ci: skip — le runner de CI utilise directement le code testé -->
-```bash
-sudo ssh -T github-suivi
-```
-À la question `Are you sure you want to continue connecting`, tapez `yes` puis **Entrée**.
-**Résultat attendu** : `Hi yousername-ha/suivi-audits! You've successfully authenticated, but GitHub does not provide shell access.` Ce message est **normal** : il confirme que l'accès fonctionne.
-
-**4.5 Accès aux images de l'application** (uniquement si les images sont privées).
-
-Les images sont publiées sur le registre de GitHub (`ghcr.io`). Ouvrez `https://github.com/yousername-ha/suivi-audits/pkgs/container/suivi-audits-api` sans être connecté à GitHub (fenêtre de navigation privée) :
-- la page s'affiche : les images sont publiques, **passez à l'étape 5** ;
-- vous obtenez une erreur 404 : les images sont privées, poursuivez ci-dessous.
-
-La clé de déploiement ne donne pas accès aux images. Il faut un **jeton d'accès en lecture seule** :
-1. Sur GitHub, cliquez sur votre photo (en haut à droite), puis **Settings**, **Developer settings**, **Personal access tokens**, **Tokens (classic)**, et enfin **Generate new token (classic)**.
-2. **Note** : `serveur suivi-audits (lecture des images)`. **Expiration** : 1 an, et notez la date de renouvellement dans votre agenda.
-3. Cochez **uniquement** `read:packages`, puis cliquez sur **Generate token**. Copiez le jeton, qui commence par `ghp_`. Il ne sera plus jamais affiché.
-
-<!-- ci: skip — les images sont construites par la CI, aucun registre privé -->
-```bash
-sudo docker login ghcr.io -u <compte_github>
-```
-À la question `Password:`, collez le jeton (rien ne s'affiche), puis **Entrée**.
-**Résultat attendu** : `Login Succeeded`. Un avertissement sur le stockage non chiffré du jeton peut s'afficher : il est conservé dans `/root/.docker/config.json`, lisible par root seulement. Ce jeton ne permet que de **lire** des images.
-
----
-
-## 5. Télécharger l'application
-
-**5.1 Télécharger le dépôt** dans le dossier `/opt/suivi-audits` :
+**4.1 Télécharger le dépôt** dans le dossier `/opt/suivi-audits` :
 
 <!-- ci: instead: sudo cp -a "$GITHUB_WORKSPACE" /opt/suivi-audits -->
 ```bash
-sudo git clone git@github-suivi:yousername-ha/suivi-audits.git /opt/suivi-audits
+sudo git clone https://github.com/yousername-ha/suivi-audits.git /opt/suivi-audits
 ```
-**Résultat attendu** : `Cloning into '/opt/suivi-audits'...`, puis une ligne se terminant par `done.`
+**Résultat attendu** : `Cloning into '/opt/suivi-audits'...`, puis la ligne revient à l'invite sans message `fatal:`.
 
-**5.2 Aller dans ce dossier :**
+**4.2 Aller dans ce dossier :**
 
 <!-- ci: run -->
 ```bash
@@ -319,7 +214,7 @@ cd /opt/suivi-audits
 
 > **À partir d'ici, toutes les commandes se lancent depuis le dossier `/opt/suivi-audits`.** Si vous vous reconnectez plus tard, retapez d'abord `cd /opt/suivi-audits`.
 
-**5.3 Choisir la version à installer.** Les versions publiées sont listées sur `https://github.com/yousername-ha/suivi-audits/releases` : prenez la plus récente, par exemple `3.0.0`. Dans les commandes, `<version>` est ce numéro **sans** le « v ».
+**4.3 Choisir la version à installer.** Les versions publiées sont listées sur `https://github.com/yousername-ha/suivi-audits/releases` : prenez la plus récente, par exemple `6.0.0`. Dans les commandes, `<version>` est ce numéro **sans** le « v ».
 
 <!-- ci: skip — la CI installe le commit testé -->
 ```bash
@@ -327,47 +222,42 @@ sudo git checkout v<version>
 ```
 **Résultat attendu** : `HEAD is now at …`. Un paragraphe sur l'état « detached HEAD » s'affiche aussi : c'est normal.
 
-<!-- ci: run -->
+---
+
+## 5. Lancer l'installation
+
+**5.1 Lancer la commande d'installation.** Elle vérifie le serveur (Docker, heure, ports 80 et 443 libres), crée la configuration et le dossier des données, télécharge les images, démarre l'application, puis affiche **l'adresse à ouvrir** et le **jeton d'installation**. Comptez quelques minutes la première fois.
+
+<!-- ci: instead: sudo ./installer.sh --site <nom_dns> --version <version> --construire | sed -E 's/[A-Z2-9]{5}(-[A-Z2-9]{5}){3}/XXXXX-XXXXX-XXXXX-XXXXX/g' -->
+<!-- ci: then: sudo grep -qx 'SITE_ADDRESS=<nom_dns>' .env && sudo test "$(sudo stat -c %a .env)" = 600 -->
 ```bash
-ls
+sudo ./installer.sh
 ```
-**Résultat attendu** : la liste contient notamment `docker-compose.yml`, `README.md`, `docs` et `scripts`.
+**Résultat attendu**, en quatre parties :
+1. `1. Vérification du serveur` : les versions de Docker et de Compose, puis `Heure du serveur synchronisée.` ;
+2. `2. Configuration` : `Fichier .env créé (droits 0600) : site <nom ou adresse du serveur>, version <version>.`, puis `Dossier des données prêt : /srv/suivi-audits/donnees` ;
+3. `3. Démarrage de l'application` : une ligne par composant, puis `Attente de l'application (jusqu'à 5 minutes)…` ;
+4. `4. Ouvrir l'assistant d'installation` : une ou plusieurs adresses `https://…/setup`, puis un encadré `JETON D'INSTALLATION (usage unique, valable 24 h)` avec le jeton au format `XXXXX-XXXXX-XXXXX-XXXXX`, par exemple `K7QM2-XH9PD-4TNRW-B8FZC`. Le jeton ne contient jamais 0, 1, I, L ni O.
+
+**Gardez cette fenêtre ouverte** : le jeton sert à l'étape 8. La commande s'arrête avec `ERREUR :` et une explication si le serveur n'est pas prêt (Docker absent, port déjà utilisé, images inaccessibles…) : corrigez, puis relancez-la. Relancée, elle ne modifie pas une installation existante.
+
+> **Tester une version non publiée** (une branche, à la demande de l'équipe projet) : `sudo git checkout <branche>` au lieu de l'étape 4.3, puis `sudo ./installer.sh --construire` au lieu de la commande ci-dessus. Les images sont alors construites sur le serveur (10 à 20 minutes), ce qui demande des flux sortants supplémentaires : `registry.npmjs.org` et `dl-cdn.alpinelinux.org` (TCP 443).
+
+<!-- ci: exec: sudo sed -i 's/^EXPLOITATION_AUTO=.*/EXPLOITATION_AUTO=0/' .env # recette du guide en mode hôte : chaque opération de l'exécutant est lancée explicitement (étape 11.6) -->
+
+> Le nom du site proposé est le nom complet du serveur (`hostname -f`) ou, à défaut, son adresse IP. Vous le choisirez dans l'assistant (étape 8). Pour l'imposer dès maintenant : `sudo ./installer.sh --site suivi-audits.mondomaine.local`.
 
 ---
 
-## 6. Configurer l'application
+## 6. Ce que la commande a configuré
 
-**6.1 Créer le fichier de configuration** à partir du modèle :
+Rien à faire dans cette section : elle explique ce que `installer.sh` a préparé, pour s'y retrouver plus tard.
 
-<!-- ci: run -->
-```bash
-sudo cp .env.example .env
-```
-**Résultat attendu** : aucun message.
+**6.1 Le fichier de configuration `.env`**, dans `/opt/suivi-audits`, créé à partir du modèle `.env.example` et lisible par root seul (droits 0600). Une installation normale n'a jamais à le modifier. Pour un réglage avancé (voir les commentaires du fichier) : `sudo nano .env`, puis `sudo docker compose up -d` pour l'appliquer.
 
-**6.2 Ouvrir le fichier dans l'éditeur nano :**
+**6.2 L'adresse du site** (`SITE_ADDRESS`) : celle choisie dans l'assistant (étape 8), ou dans Administration, Certificats et opérations. L'exécutant d'exploitation l'écrit lui-même dans `.env`. Tant que le certificat interne est utilisé, le site répond aussi aux autres noms et adresses IPv4 du serveur (`SITE_ADDRESS_EXTRA`).
 
-<!-- ci: instead: sudo sed -i 's/^SITE_ADDRESS=.*/SITE_ADDRESS=localhost/; s/^APP_VERSION=.*/APP_VERSION=ci/; s/^EXPLOITATION_AUTO=.*/EXPLOITATION_AUTO=0/' .env -->
-```bash
-sudo nano .env
-```
-**Résultat attendu** : le fichier s'affiche, avec en bas de l'écran une aide qui commence par `^G Help`.
-
-nano se pilote **uniquement au clavier** (la souris ne déplace pas le curseur) :
-1. Avec les **flèches**, placez le curseur à la fin de la ligne `SITE_ADDRESS=suivi-audits.example.local`.
-2. Effacez `suivi-audits.example.local` avec la touche **Retour arrière** (⌫), puis tapez votre nom DNS. La ligne devient par exemple `SITE_ADDRESS=suivi-audits.mondomaine.local`.
-3. Descendez à la ligne `APP_VERSION=` et remplacez le numéro par la version choisie à l'étape 5.3, sans le « v ».
-4. Laissez `CADDY_TLS=internal` pour l'instant (voir 6.4), ainsi que toutes les autres lignes. Laissez aussi `DATA_DIR=/srv/suivi-audits/donnees`, sauf si l'équipe infrastructure a prévu un autre disque pour les données (étape 6.6).
-5. Enregistrez : **Ctrl + O**, puis **Entrée**. En bas s'affiche `[ Wrote 53 lines ]` (le nombre peut varier).
-6. Quittez : **Ctrl + X**.
-
-**6.3 Protéger le fichier**, puis vérifier les deux valeurs :
-
-<!-- ci: run -->
-```bash
-sudo chmod 600 .env
-```
-**Résultat attendu** : aucun message.
+**6.3 La version** (`APP_VERSION`) : celle du dépôt téléchargé à l'étape 4. Pour vérifier les trois valeurs principales :
 
 <!-- ci: run -->
 ```bash
@@ -377,95 +267,57 @@ sudo grep -E '^(SITE_ADDRESS|APP_VERSION|CADDY_TLS)=' .env
 ```text
 SITE_ADDRESS=suivi-audits.mondomaine.local
 CADDY_TLS=internal
-APP_VERSION=3.0.0
+APP_VERSION=6.0.0
 ```
 
-**6.4 Certificat HTTPS.** Ne faites rien maintenant : le serveur démarre avec un **certificat interne** (`CADDY_TLS=internal`, réglage par défaut) qu'il crée lui-même. Le certificat définitif se choisit **dans l'application**, une fois connecté (Administration, Système, Certificats TLS), sans fichier à modifier : autorité interne du serveur, **ACME** (certificat publiquement fiable, renouvelé seul, qui demande un nom public et les ports 80 et 443 joignables depuis Internet) ou **certificat de votre PKI** (déposé depuis l'application). Voir l'étape 11.7.
+**6.4 Certificat HTTPS.** Le serveur démarre avec un **certificat interne** (`CADDY_TLS=internal`, réglage par défaut) qu'il crée lui-même. Le certificat définitif se choisit **dans l'application**, une fois connecté (Administration, Système, Certificats TLS), sans fichier à modifier : autorité interne du serveur, **ACME** (certificat publiquement fiable, renouvelé seul, qui demande un nom public et les ports 80 et 443 joignables depuis Internet) ou **certificat de votre PKI** (déposé depuis l'application). Voir l'étape 11.7.
 
 Si l'équipe infrastructure impose un réglage de départ par fichier (certificat de la PKI avant tout accès à l'application), il reste possible : déposez `fullchain.pem` et `privkey.pem` (clé **non protégée par mot de passe**) dans `/opt/suivi-audits/certs/`, remplacez `CADDY_TLS=internal` par `CADDY_TLS=/certs/fullchain.pem /certs/privkey.pem` dans `.env`, puis `sudo chown 1001:1001 certs/*.pem && sudo chmod 400 certs/privkey.pem`. Ce réglage est celui auquel l'application revient quand on choisit « Revenir au réglage de départ ».
 
-**6.5 Vérifier le DNS.** Le nom doit renvoyer l'adresse IP du serveur :
+**6.5 Le nom DNS.** Quand il existe, il doit renvoyer l'adresse IP du serveur :
 
 <!-- ci: run -->
 ```bash
 getent hosts <nom_dns>
 ```
-**Résultat attendu** : une ligne avec l'adresse IP du serveur, puis le nom. Si rien ne s'affiche, l'enregistrement DNS n'existe pas encore : relancez l'équipe réseau avant de continuer.
+**Résultat attendu** : une ligne avec l'adresse IP du serveur, puis le nom. Si rien ne s'affiche, l'enregistrement DNS n'existe pas encore : ouvrez l'assistant par l'adresse IP en attendant.
 
 **6.6 Le dossier des données.** Toutes les données de l'application sont rangées dans **un seul dossier du serveur**, indiqué par la ligne `DATA_DIR` de `.env` (par défaut `/srv/suivi-audits/donnees`). Rien n'est gardé dans les conteneurs : on peut les supprimer, les recréer ou changer de version sans rien perdre. Ce dossier contient :
 
 | Sous-dossier | Contenu | Accès |
 |---|---|---|
 | `postgres18/` | la base de données PostgreSQL 18 : suivi, comptes, documents chiffrés, journal d'audit | base de données seule |
-| `postgres/` | seulement sur un serveur mis à jour depuis une version en PostgreSQL 17 : l'**ancienne base**, conservée intacte après la migration (voir 12.1) | aucun usage |
 | `secrets/` | mots de passe internes et **clé de chiffrement des documents**, créés au premier démarrage | lecture par la base et l'application |
+| `cles-sauvegarde/` | clé du serveur et clé publique de secours des sauvegardes (étape 6.8) | exécutant d'exploitation seul (root) |
+| `sauvegardes/` | sauvegardes chiffrées de l'application (étape 11) | exécutant d'exploitation seul (root) |
 | `caddy/` | certificats HTTPS et autorité de certification interne | frontal web seul |
 | `clamav/` | signatures de l'antivirus (facultatif) | `freshclam` (écriture) et `clamav` (lecture seule) |
 | `etat/` | rapports des sauvegardes et des mises à jour, affichés dans **Administration**, onglet **Système** | lecture seule pour l'application |
 
 Le service `init` crée ces sous-dossiers avec les bons propriétaires et droits à chaque démarrage. Il **refuse de démarrer** si le dossier n'a pas été préparé, s'il est dans le dossier de l'application (`/opt/suivi-audits`), dans un dossier système (`/var/lib/docker`, `/tmp`…) ou sur un disque temporaire.
 
-> ⚠️ Ce dossier contient la clé de chiffrement des documents : ne le copiez pas hors du serveur sans la protection des sauvegardes (étape 11), et faites-le inclure dans la sauvegarde externalisée du serveur.
+> ⚠️ Ce dossier contient la base et la clé de chiffrement des documents **en clair** : ne le copiez pas hors du serveur ; ce sont les archives chiffrées de `sauvegardes/` qui s'externalisent (étape 11.2).
+>
+> ⚠️ **Ne copiez jamais `cles-sauvegarde/` avec les archives** : la clé du serveur qu'il contient déchiffre toutes les sauvegardes, et les deux réunis annulent leur chiffrement ([ADR 0071](adr/0071-sauvegardes-chiffrees-avec-age.md)). Si l'équipe infrastructure copie tout le serveur (instantané de la machine virtuelle), cette copie contient déjà la base en clair : elle se protège comme le serveur lui-même, et doit exclure `cles-sauvegarde/` si elle est conservée avec les archives. La clé du serveur n'a pas besoin d'être sauvegardée : après une perte, un nouveau serveur en crée une autre et les archives se restaurent avec la clé de secours du coffre-fort.
 
-**6.7 Préparer le dossier des données** (une seule fois) :
+**6.7 La préparation du dossier des données** est faite par `installer.sh`. Pour un autre disque, choisi par l'équipe infrastructure : avant la première installation, créez `.env` (`sudo cp .env.example .env && sudo chmod 600 .env`), indiquez le dossier sur la ligne `DATA_DIR`, puis lancez `sudo ./installer.sh`. Le script `sudo ./scripts/preparer-donnees.sh` refait cette préparation seule ; il signale `des données existent déjà dans des volumes Docker` sur un serveur déjà installé avec des volumes : suivez alors l'étape 12.5.
 
-<!-- ci: run -->
-```bash
-sudo ./scripts/preparer-donnees.sh
-```
-**Résultat attendu** : `Dossier des données prêt : /srv/suivi-audits/donnees`. Le message `des données existent déjà dans des volumes Docker` signifie que l'application a déjà été installée sur ce serveur : suivez plutôt l'étape 12.5.
+**6.8 Les clés de sauvegarde : rien à faire.** Chaque sauvegarde est chiffrée avec [age](https://github.com/FiloSottile/age) pour deux clés ([ADR 0071](adr/0071-sauvegardes-chiffrees-avec-age.md), [ADR 0077](adr/0077-installation-sans-ligne-de-commande.md)) :
 
-**6.8 Préparer les clés de sauvegarde** (avant le premier démarrage, étape 7). Sur **votre poste** (pas sur le serveur), générez la clé de secours :
+- la **clé du serveur**, créée automatiquement au premier démarrage dans `/srv/suivi-audits/donnees/cles-sauvegarde/serveur.key` (lisible par root seul, jamais affichée) ;
+- la **clé de secours**, générée par **votre navigateur** à l'étape 8 (assistant d'installation). Vous la téléchargez et la rangez au coffre-fort de l'organisation ; seule sa partie publique (`age1…`) est envoyée au serveur. C'est elle qui permet de restaurer si le serveur et sa clé sont perdus.
 
-<!-- ci: instead: age-keygen -o "$RUNNER_TEMP/cle-secours.key" -->
-```bash
-age-keygen -o cle-secours-suivi.key
-```
-**Résultat attendu** : une ligne `Public key: age1…` (62 caractères). **Rangez `cle-secours-suivi.key` hors ligne** (coffre-fort, support chiffré) : c'est elle qui permet de restaurer si le serveur et sa clé sont perdus. Elle ne doit **jamais** être copiée sur le serveur. Seule la ligne `age1…` (la clé *publique*) est donnée au serveur.
+Tant que la clé de secours n'est pas définie, les sauvegardes sont bloquées et un bandeau rouge le signale aux administrateurs.
 
-Sur le serveur, créez la clé du serveur et enregistrez la clé publique de secours :
-
-<!-- ci: instead: sudo ./scripts/generer-cles-sauvegarde.sh --secours "$(age-keygen -y "$RUNNER_TEMP/cle-secours.key")" --confirmer -->
-```bash
-sudo ./scripts/generer-cles-sauvegarde.sh
-```
-Le script génère `/root/.suivi-backup-key` (droits 0600, jamais affichée), puis vous demande de coller la clé publique `age1…` et de taper `ENREGISTRER` pour confirmer ; elle est écrite dans `/root/.suivi-backup-recipients`. Il ne demande ni n'affiche jamais de clé privée, et refuse d'écraser une clé existante. **Résultat attendu** : `Clé de secours enregistrée`.
-
-> Perte du serveur : installez `age` ailleurs, puis `BACKUP_KEY_FILE=<cle-secours-suivi.key> ./scripts/restore.sh <archive>.tar.age` (étape 11.4). **Testez-le avec la clé de secours avant de vous y fier.**
+> Perte du serveur : la restauration avec la clé de secours se fait sur un autre serveur (étape 11.4). **Testez-la avant de vous y fier.**
 
 ---
 
-## 7. Démarrer l'application
+## 7. Vérifier que l'application tourne
 
-**7.1 Télécharger les images** de l'application et de la base de données. Comptez quelques minutes la première fois.
+`installer.sh` attend que l'application soit prête avant d'afficher le jeton. Ces contrôles servent si quelque chose semble anormal, ou plus tard.
 
-<!-- ci: skip — les images de la version testée ne sont pas encore publiées : la CI les construit (encadré ci-dessous) -->
-```bash
-sudo docker compose pull
-```
-**Résultat attendu** : une ligne par composant (`init`, `db`, `app`, `web`, `gateway`, `updater`) se terminant par `Pulled`. Si vous lisez `unauthorized` ou `denied`, les images sont privées : faites l'étape 4.5.
-
-> **Tester une version non publiée** (une branche, à la demande de l'équipe projet), à la place de la commande ci-dessus.
-> Il faut alors des flux sortants supplémentaires : `registry.npmjs.org` et `dl-cdn.alpinelinux.org` (TCP 443).
-> 1. `sudo git checkout <branche>` au lieu de l'étape 5.3 ;
-> 2. dans `.env`, `APP_VERSION=test` ;
-> 3. construire les images sur le serveur (10 à 20 minutes), avec la commande ci-dessous. Ne lancez jamais `docker compose pull` avec cette configuration : il échouerait, faute d'images publiées sous ce nom.
-
-<!-- ci: run -->
-```bash
-sudo docker compose -f docker-compose.yml -f docker-compose.build.yml build
-```
-**Résultat attendu** (uniquement pour tester une branche) : des centaines de lignes, puis une ligne par image se terminant par `Built`.
-
-**7.2 Démarrer :**
-
-<!-- ci: run -->
-```bash
-sudo docker compose up -d
-```
-**Résultat attendu** : une ligne par composant, avec `Started` ou `Healthy`. La commande rend la main au bout d'une minute environ.
-
-**7.3 Vérifier l'état** :
+**7.1 Vérifier l'état** :
 
 <!-- ci: run -->
 <!-- ci: then: "$GITHUB_WORKSPACE/scripts/ci/guide-attendre.sh" -->
@@ -481,72 +333,62 @@ sudo docker compose ps -a
 | `app` | application (API) : base joignable et migrations appliquées | `Up … (healthy)` |
 | `web` | interface interne (non exposée) | `Up … (healthy)` |
 | `gateway` | frontal HTTPS exposé (démarre après `web`) | `Up … (healthy)` |
+| `updater` | exécutant d'exploitation : sauvegardes, certificats, mises à jour, adresse du site | `Up …` |
 
 Si un service affiche `unhealthy`, `Restarting` ou `Exited (1)`, ou si une ligne manque, allez à la section [13. En cas de problème](#13-en-cas-de-problème).
 
-**7.4 Vérifier que le site répond** depuis le serveur :
+**7.2 Vérifier que le site répond** depuis le serveur :
 
 <!-- ci: run -->
 ```bash
 curl -sk https://<nom_dns>/healthz
 ```
-**Résultat attendu** : `ok`.
+**Résultat attendu** : `ok`. Remplacez `<nom_dns>` par l'adresse affichée par `installer.sh`.
 
 ---
 
-## 8. Créer le compte administrateur
+## 8. Terminer l'installation dans le navigateur
 
-**8.1 Récupérer le jeton d'installation.** C'est un code à **usage unique**, valable **24 heures**, qui prouve que c'est bien vous qui installez. Il est émis au premier démarrage :
+**8.1 Le jeton d'installation.** C'est un code à **usage unique**, valable **24 heures**, qui prouve que c'est bien vous qui installez : il est affiché à la fin de `sudo ./installer.sh` (étape 5). Fenêtre fermée, plus de 24 h écoulées, ou jeton perdu ? Relancez la commande d'installation, qui en affiche un nouveau et annule le précédent :
 
-<!-- ci: instead: "$GITHUB_WORKSPACE/scripts/ci/guide-masquer-jeton.sh" -->
+<!-- ci: instead: sudo ./installer.sh --images-locales > /dev/null -->
 ```bash
-sudo docker compose logs app | grep -A3 JETON
+sudo ./installer.sh
 ```
-**Résultat attendu** : un encadré `JETON D'INSTALLATION (usage unique, valable 24 h)`, suivi du jeton au format `XXXXX-XXXXX-XXXXX-XXXXX`, par exemple `K7QM2-XH9PD-4TNRW-B8FZC`. Le jeton ne contient jamais 0, 1, I, L ni O.
+**Résultat attendu** : `Fichier .env existant : conservé.`, puis les adresses et le nouveau jeton. La commande `sudo docker compose exec app setup-token` fait de même.
 
-Rien ne s'affiche, plus de 24 h se sont écoulées, ou le jeton est perdu ? Générez-en un nouveau, qui annule le précédent :
+**8.2 Ouvrir l'assistant** dans le navigateur de votre poste, à l'une des adresses affichées par la commande, par exemple `https://<nom_dns>/setup` ou `https://<adresse_ip_du_serveur>/setup`.
 
-<!-- ci: instead: sudo docker compose exec -T app setup-token > /dev/null -->
-```bash
-sudo docker compose exec app setup-token
-```
-**Résultat attendu** : le même encadré, avec un nouveau jeton et sa date d'expiration.
-
-**8.2 Ouvrir l'application** dans le navigateur de votre poste, à l'adresse `https://<nom_dns>/setup`.
-
-**8.3 Avertissement « Votre connexion n'est pas privée »** (avec `CADDY_TLS=internal` uniquement). C'est **attendu** : le certificat a été créé par le serveur lui-même, et votre poste ne le connaît pas encore.
+**8.3 Avertissement « Votre connexion n'est pas privée »** (certificat interne). C'est **attendu** : le certificat a été créé par le serveur lui-même, et votre poste ne le connaît pas encore.
 - Pour avancer maintenant : cliquez sur **Paramètres avancés**, puis sur **Continuer vers le site**.
-- Pour une installation durable, installez le certificat racine du serveur sur les postes. Une fois connecté, l'application le propose au téléchargement (Administration, Système, Certificats TLS, « Télécharger le certificat racine »). Sur le serveur, vous pouvez aussi le récupérer ainsi :
+- Pour une installation durable, installez le certificat racine du serveur sur les postes. Une fois connecté, l'application le propose au téléchargement (Administration, Système, Certificats TLS, « Télécharger le certificat racine »). Remettez le fichier à l'équipe Active Directory, pour un déploiement par GPO dans « Autorités de certification racines de confiance ». Pour un test sur votre seul poste : double-cliquez dessus, **Installer le certificat**, **Utilisateur actuel**, **Placer tous les certificats dans le magasin suivant**, **Autorités de certification racines de confiance**, puis redémarrez le navigateur.
 
-<!-- ci: run -->
-```bash
-sudo docker compose cp gateway:/data/caddy/pki/authorities/local/root.crt /opt/suivi-audits/racine-suivi-audits.crt && sudo chmod 644 /opt/suivi-audits/racine-suivi-audits.crt
-```
-**Résultat attendu** : `Successfully copied` (ou aucun message).
-
-Puis, **sur votre poste**, dans une **nouvelle** fenêtre PowerShell (pas celle connectée au serveur) :
-```powershell
-scp <utilisateur>@<adresse_ip_du_serveur>:/opt/suivi-audits/racine-suivi-audits.crt $HOME\Downloads\
-```
-Le fichier `racine-suivi-audits.crt` est alors dans votre dossier **Téléchargements**. Remettez-le à l'équipe Active Directory, pour un déploiement par GPO dans « Autorités de certification racines de confiance ». Pour un test sur votre seul poste : double-cliquez dessus, **Installer le certificat**, **Utilisateur actuel**, **Placer tous les certificats dans le magasin suivant**, **Autorités de certification racines de confiance**, puis redémarrez le navigateur.
+<!-- ci: exec: sudo docker compose cp gateway:/data/caddy/pki/authorities/local/root.crt /opt/suivi-audits/racine-suivi-audits.crt && sudo chmod 644 /opt/suivi-audits/racine-suivi-audits.crt -->
 
 > ⚠️ Ce certificat racine permet au serveur de signer des certificats reconnus par les postes. Ne le déployez que pour ce serveur, et préférez à terme un certificat de votre PKI (étape 6.4).
 
-**8.4 Remplir la page « Installation initiale »**, en deux étapes.
+**8.4 Remplir la page « Installation initiale »**, en trois étapes.
 
-*Étape 1 sur 2, le poivre des mots de passe* ([ADR 0072](adr/0072-poivre-des-mots-de-passe.md)). Le poivre est un secret qui chiffre toutes les empreintes de mots de passe : une copie de la base ne suffit plus à tenter de les retrouver. Il n'est stocké nulle part en clair et ne sera plus affiché.
-- **Générer un poivre** (recommandé) : l'application en propose un de 52 caractères, par groupes de 4. Copiez-le avec le bouton **Copier** et **enregistrez-le dans le coffre-fort de l'organisation**, avec le nom du serveur, au même titre que la clé de secours des sauvegardes (étape 6.8).
+*Étape 1 sur 3, le poivre des mots de passe* ([ADR 0072](adr/0072-poivre-des-mots-de-passe.md)). Le poivre est un secret qui chiffre toutes les empreintes de mots de passe : une copie de la base ne suffit plus à tenter de les retrouver. Il n'est stocké nulle part en clair et ne sera plus affiché.
+- **Générer un poivre** (recommandé) : l'application en propose un de 52 caractères, par groupes de 4. Copiez-le avec le bouton **Copier** et **enregistrez-le dans le coffre-fort de l'organisation**, avec le nom du serveur, au même titre que la clé de secours des sauvegardes (étape suivante).
 - ou **Saisir le mien** : 32 à 256 caractères avec au moins 3 types de caractères (ou une phrase d'au moins 6 mots), sans suite évidente (`abcde`, `12345`, `azerty`), sans le nom de l'application ou de l'organisation, avec une entropie estimée d'au moins 128 bits. Les critères non respectés s'affichent en direct.
 - Cochez **J'ai enregistré ce poivre dans le coffre-fort de l'organisation**, puis **recopiez ses 8 derniers caractères** depuis le coffre-fort : sans les deux, **Continuer** reste grisé.
 
 > Le poivre sert à le **changer** plus tard (Administration, Configuration système, Sécurité : ancien poivre et code de double authentification exigés) et à **reprendre l'activité** si la clé maîtresse du serveur est perdue. Perdu, il ne se récupère pas : la procédure d'urgence (`suivi poivre-reinitialiser --confirmer`) impose un nouveau mot de passe à tous les comptes.
 
-*Étape 2 sur 2, le compte administrateur* :
-1. **Jeton d'installation** : collez le jeton. Minuscules, espaces et tirets sont acceptés : le champ se met en forme tout seul. **Nom de l'organisation** (facultatif) : affiché dans l'application et les exports, modifiable ensuite dans Paramètres.
-2. **Identifiant** : par exemple `rssi`. **Nom affiché** : par exemple `Responsable SSI`. L'adresse e-mail est facultative.
-3. **Mot de passe** et **Confirmation** : au moins 12 caractères, avec au moins 3 types de caractères parmi minuscules, majuscules, chiffres et symboles, et sans l'identifiant. Enregistrez-le dans votre coffre-fort.
-4. **Charger des données de démonstration** (case facultative, décochée par défaut) : à cocher pour une évaluation, jamais en production. Voir l'étape 10.4.
-5. Cliquez sur **Créer le compte**.
+*Étape 2 sur 3, la clé de secours des sauvegardes* ([ADR 0077](adr/0077-installation-sans-ligne-de-commande.md), étape 6.8).
+- Cliquez sur **Générer la clé de secours** : votre navigateur crée la clé, sans rien envoyer.
+- **Télécharger le fichier de la clé** (ou **Copier la clé privée**) et rangez-la dans le coffre-fort de l'organisation, avec le poivre. Elle ne sera plus affichée et ne doit jamais être copiée sur le serveur.
+- Cochez **J'ai rangé la clé privée de secours dans le coffre-fort**, puis recopiez ses **8 derniers caractères** : sans les deux, **Continuer** reste grisé. Seule la clé publique (`age1…`) est envoyée, avec le compte, à la fin de l'étape 3.
+
+*Étape 3 sur 3, le compte administrateur* :
+1. **Jeton d'installation** : collez le jeton affiché par la commande d'installation. Minuscules, espaces et tirets sont acceptés : le champ se met en forme tout seul.
+2. **Adresse du site** : le nom DNS (ou l'adresse IP) par lequel les utilisateurs ouvriront l'application. L'assistant propose celle de votre navigateur. Si elle diffère de l'adresse en service, le serveur l'applique une minute environ après la création du compte, sans commande ; le site reste joignable par les adresses du serveur. Elle se change ensuite dans Administration, Certificats et opérations.
+3. **Nom de l'organisation** (facultatif) : affiché dans l'application et les exports, modifiable ensuite dans Paramètres.
+4. **Identifiant** : par exemple `rssi`. **Nom affiché** : par exemple `Responsable SSI`. L'adresse e-mail est facultative.
+5. **Mot de passe** et **Confirmation** : au moins 12 caractères, avec au moins 3 types de caractères parmi minuscules, majuscules, chiffres et symboles, et sans l'identifiant. Enregistrez-le dans votre coffre-fort.
+6. **Charger des données de démonstration** (case facultative, décochée par défaut) : à cocher pour une évaluation, jamais en production. Voir l'étape 10.4.
+7. Cliquez sur **Créer le compte**.
 
 **Résultat attendu** : la page « Activer la double authentification » s'affiche, avec un QR code. En cas de message d'erreur :
 - « jeton invalide » : vérifiez la saisie, ou le jeton a été remplacé par un plus récent ;
@@ -677,27 +519,55 @@ Une sauvegarde contient la base (suivi, comptes, documents chiffrés, journal), 
 
 > ⚠️ Sans la clé du serveur **ni** la clé de secours, les sauvegardes sont **illisibles**, définitivement. Sans les sauvegardes, une panne du serveur fait **tout perdre**.
 
-**11.1 Contrôler les clés de sauvegarde.** Elles ont été créées à l'étape 6.8, avant le premier démarrage (Compose les monte dans l'exécutant et refuse de démarrer sans elles). Vérifiez leur présence et leurs droits :
+**11.1 Contrôler les clés de sauvegarde.** Dans l'application, **Administration**, **Sauvegardes et restauration** : la carte « Clé de secours des sauvegardes » doit indiquer **En place**. La clé du serveur est créée au premier démarrage et la clé publique de secours, définie à l'étape 8, est recopiée par l'exécutant d'exploitation sous une minute (étape 6.8). Tant qu'elle indique **En attente de l'exécutant**, patientez une minute et rechargez la page.
+
+<!-- ci: exec: command -v age-keygen > /dev/null || sudo apt-get install -y -qq age python3 > /dev/null -->
+<!-- ci: exec: cd /opt/suivi-audits && sudo env BACKUP_DEST=/srv/sauvegardes/suivi-audits python3 ./scripts/exploitation-worker.py # recette en mode hôte (étape 5) : un passage de l'exécutant tient lieu de l'exécutant intégré -->
+<!-- ci: exec: for i in $(seq 1 60); do sudo test -s /srv/suivi-audits/donnees/cles-sauvegarde/secours.pub && break; sleep 3; done -->
+
+Pour le vérifier aussi sur le serveur (facultatif) :
 
 <!-- ci: run -->
 ```bash
-sudo ls -l /root/.suivi-backup-key /root/.suivi-backup-recipients
+sudo ls -l /srv/suivi-audits/donnees/cles-sauvegarde
 ```
-**Résultat attendu** : deux fichiers appartenant à `root`, la clé du serveur en `-rw-------`. **Gardez la clé de secours privée (`cle-secours-suivi.key`) hors ligne** et testez-la à l'étape 11.4.
+**Résultat attendu** : deux fichiers appartenant à `root`, `serveur.key` en `-rw-------` et `secours.pub`. **Gardez la clé de secours privée hors ligne** et testez-la à l'étape 11.4.
 
-**11.2 Lancer une première sauvegarde :**
+**11.2 Lancer une première sauvegarde.** Même écran, carte « Demandes de sauvegarde » : **Demander une sauvegarde**, puis confirmez. L'exécutant d'exploitation la prend en charge dans la minute ; l'historique affiche ensuite son résultat (« Réussie »), sa taille et son empreinte. Les archives (`….tar.age`, avec leur empreinte `.sha256`) sont rangées dans `/srv/suivi-audits/donnees/sauvegardes`. Sans clé de secours (étape 8), l'exécutant se déclare indisponible, le bouton reste grisé et rien n'est écrit en clair.
+
+Demandez à l'équipe infrastructure de **copier le dossier `/srv/suivi-audits/donnees/sauvegardes` hors du serveur** (sauvegarde externalisée), **sans** `cles-sauvegarde/` (étape 6.6) : une sauvegarde restée sur le serveur disparaît avec lui. Pour ranger les archives ailleurs (disque dédié), indiquez le dossier sur la ligne `BACKUP_DEST` de `.env`, puis `sudo docker compose up -d updater`.
 
 <!-- ci: run -->
 ```bash
 sudo mkdir -p /srv/sauvegardes/suivi-audits
 ```
-**Résultat attendu** : aucun message.
+**Résultat attendu** (uniquement pour un dossier dédié comme celui-ci) : aucun message.
+
+**11.3 Planifier les sauvegardes.** **Administration**, **Certificats et opérations**, carte « Planification et rétention » : cochez **Activer la sauvegarde planifiée**, choisissez les **jours**, l'**heure** et la **minute** (en heure UTC : 1 h 15 UTC correspond à 2 h 15 en hiver à Paris) et la **rétention** (90 jours conseillés), puis enregistrez. La planification est désactivée par défaut ; le prochain créneau s'affiche dans le fuseau de votre navigateur. Aucune tâche planifiée (cron) n'est nécessaire sur le serveur. **Administration**, onglet **Système**, affiche la date de la dernière sauvegarde réussie et une **alerte au-delà de 48 h**.
+
+La recherche de nouvelle version est, elle aussi, automatique (au démarrage, puis toutes les six heures) : un bandeau l'annonce aux administrateurs, sans rien installer (étape 12).
+
+**11.4 Tester la restauration — obligatoire.** Une sauvegarde qui n'a jamais été restaurée n'est pas une sauvegarde. Faites ce test **maintenant**, avant d'ouvrir l'application aux utilisateurs, puis une fois par an sur un serveur de test.
+
+> ⚠️ La restauration **remplace** toutes les données actuelles par celles de la sauvegarde. Juste après l'installation, rien n'est perdu. Plus tard, faites ce test sur un **serveur de test**, jamais sur le serveur en service.
+
+**Depuis l'application** : **Administration**, **Certificats et opérations**, carte « Archives disponibles ». Sur la ligne de l'archive, **Vérifier** contrôle son empreinte, son déchiffrement et sa structure sans rien modifier. Une fois la vérification réussie, **Restaurer**, puis tapez `RESTAURER` pour confirmer. L'exécutant fait d'abord une sauvegarde de sécurité, puis restaure ; la session est fermée : reconnectez-vous. Notez la date de ce test dans **Paramètres**, section **Sauvegardes** : l'application signale quand le prochain test est dû.
+
+**Sur un autre serveur, avec la clé de secours** (perte du serveur et de sa clé). C'est le seul cas qui demande des commandes : installez l'application sur un serveur neuf (étapes 2 à 8), copiez-y l'archive et son fichier `.sha256`, ainsi que le fichier de la clé de secours sorti du coffre-fort, puis installez les outils de restauration :
+
+<!-- ci: run -->
+```bash
+sudo apt install -y age python3
+```
+**Résultat attendu** : la dernière ligne ne contient pas `E:`.
+
+Les commandes ci-dessous sont rejouées par la CI sur la sauvegarde faite par le serveur lui-même ; sur un autre serveur, ajoutez `BACKUP_KEY_FILE=<fichier de la clé de secours>` après `sudo`. Faites d'abord une sauvegarde en ligne de commande, dans le dossier de l'étape 11.2 :
 
 <!-- ci: run -->
 ```bash
 sudo ./scripts/backup.sh /srv/sauvegardes/suivi-audits
 ```
-**Résultat attendu** : la dernière ligne est `Sauvegarde : /srv/sauvegardes/suivi-audits/suivi-audits-<date>-<heure>.tar.age`. Sans les clés de l'étape 6.8, le script refuse de sauvegarder et n'écrit aucun fichier en clair.
+**Résultat attendu** : la dernière ligne est `Sauvegarde : /srv/sauvegardes/suivi-audits/suivi-audits-<date>-<heure>.tar.age`. Sans clé de secours (étape 8), le script refuse de sauvegarder et n'écrit aucun fichier en clair.
 
 <!-- ci: run -->
 ```bash
@@ -705,25 +575,7 @@ sudo ls -lh /srv/sauvegardes/suivi-audits
 ```
 **Résultat attendu** : deux fichiers, `suivi-audits-….tar.age` (la sauvegarde) et `suivi-audits-….tar.age.sha256` (son empreinte, qui permet de détecter une altération).
 
-**11.3 Planifier une sauvegarde chaque nuit à 2 h 15** (conservation : 90 jours), et la recherche d'une nouvelle version chaque matin à 6 h 40 :
-
-<!-- ci: run -->
-```bash
-printf '%s\n' '15 2 * * * root cd /opt/suivi-audits && ./scripts/backup.sh /srv/sauvegardes/suivi-audits >> /var/log/suivi-backup.log 2>&1' '40 6 * * * root cd /opt/suivi-audits && ./scripts/verifier-version.sh >> /var/log/suivi-version.log 2>&1' | sudo tee /etc/cron.d/suivi-audits
-```
-**Résultat attendu** : les deux lignes s'affichent à nouveau. Le lendemain, `sudo tail /var/log/suivi-backup.log` doit montrer `Sauvegarde : …`, et `sudo tail /var/log/suivi-version.log` la dernière version publiée.
-
-La recherche de version ne fait qu'**informer** : quand une nouvelle version est publiée, un bandeau l'annonce aux administrateurs dans l'application. Rien n'est installé automatiquement (étape 12.1).
-
-Demandez à l'équipe infrastructure d'**inclure les dossiers `/srv/suivi-audits/donnees` et `/srv/sauvegardes/suivi-audits` dans la sauvegarde externalisée** du serveur : une sauvegarde restée sur le serveur disparaît avec lui.
-
-**11.4 Tester la restauration — obligatoire.** Une sauvegarde qui n'a jamais été restaurée n'est pas une sauvegarde. Faites ce test **maintenant**, avant d'ouvrir l'application aux utilisateurs, puis une fois par an sur un serveur de test.
-
-> ⚠️ La restauration **remplace** toutes les données actuelles par celles de la sauvegarde. Juste après l'installation, rien n'est perdu. Plus tard, faites ce test sur un **serveur de test**, jamais sur le serveur en service.
-
-Repérez le nom exact du fichier `.tar.age` affiché à l'étape 11.2, puis :
-
-Avant confirmation, vérifier l’archive sans arrêter l’application ni modifier ses données :
+Vérifier l'archive sans arrêter l'application ni modifier ses données :
 
 <!-- ci: instead: sudo ./scripts/restore.sh --verifier "$(sudo sh -c 'ls -1 /srv/sauvegardes/suivi-audits/*.tar.age' | tail -1)" -->
 ```bash
@@ -734,17 +586,16 @@ Résultat : « Vérification réussie. Restauration non exécutée. » Python 3 
 
 Formats acceptés : archives GNU/USTAR produites par backup.sh, contenant suivi.dump, secrets.tgz, INFO et éventuellement caddy.tgz. Chemins absolus/traversées, liens, fichiers spéciaux/sparse, doublons et extensions PAX sont refusés. Limites : archive/dump 64 Gio, chaque archive imbriquée décompressée 512 Mio, INFO 1 Mio, 20000 en-têtes et 64 niveaux. Prévoir dans le disque temporaire l’espace pour la copie, le déchiffrement et les contenus extraits. Une archive sans fichier .sha256 reste lisible pour compatibilité, avec avertissement ; un fichier d’empreinte présent doit désigner exactement l’archive sélectionnée. Ne pas renommer un fichier sans actualiser son empreinte.
 
-La restauration destructive exige root et la confirmation RESTAURER. Elle refuse un verrou de sauvegarde/exécutant déjà actif, contrôle le catalogue PostgreSQL avant arrêt, applique uniquement les fichiers validés, puis invalide les sessions restaurées. Il faut se reconnecter. L’attente PostgreSQL et la santé de l’application sont bornées par RESTORE_WAIT_SECONDS (300 secondes par défaut, 1 à 1800). Aucun rapport de succès n’est écrit si ces contrôles échouent. Après un échec pendant remplacement, conserver la sauvegarde de sécurité et faire intervenir l’exploitant : ce sous-lot ne fournit pas de rollback automatique ni de déclenchement HTTP.
+La restauration destructive exige root et la confirmation RESTAURER. Elle refuse un verrou de sauvegarde/exécutant déjà actif, contrôle le catalogue PostgreSQL avant arrêt, applique uniquement les fichiers validés, puis invalide les sessions restaurées. Il faut se reconnecter. L’attente PostgreSQL et la santé de l’application sont bornées par RESTORE_WAIT_SECONDS (300 secondes par défaut, 1 à 1800). Aucun rapport de succès n’est écrit si ces contrôles échouent. Après un échec pendant remplacement, conserver la sauvegarde de sécurité et faire intervenir l’exploitant.
 
 <!-- ci: instead: echo RESTAURER | sudo ./scripts/restore.sh "$(sudo sh -c 'ls -1 /srv/sauvegardes/suivi-audits/*.tar.age' | tail -1)" -->
 ```bash
 sudo ./scripts/restore.sh /srv/sauvegardes/suivi-audits/<fichier>.tar.age
 ```
-Sur un autre serveur (perte de la clé du serveur), indiquer la clé de secours : `sudo BACKUP_KEY_FILE=/chemin/cle-secours-suivi.key ./scripts/restore.sh <fichier>.tar.age`.
+Sur un autre serveur (perte de la clé du serveur), indiquer le fichier de la clé de secours téléchargé à l'étape 8 : `sudo BACKUP_KEY_FILE=/chemin/cle-secours-sauvegardes-<date>.txt ./scripts/restore.sh <fichier>.tar.age`.
 
-**Anciennes archives `.tar.enc`** (phrase secrète, version 5.x) : elles ne figurent plus dans l'écran de sauvegardes et ne se restaurent que par `sudo BACKUP_PASSPHRASE_FILE=/root/.suivi-backup-pass ./scripts/restore.sh --ancien-format <fichier>.tar.enc`, pour une version seulement : **conservez l'ancienne phrase secrète** tant que vous gardez de telles archives, et faites une nouvelle sauvegarde `.tar.age`.
 Le script vérifie l'empreinte et la structure, puis demande de taper `RESTAURER` (en majuscules) suivi d'**Entrée**.
-**Résultat attendu** : la dernière ligne est `Restauration terminée.` Attendez une minute et vérifiez les états (étape 7.3), puis connectez-vous : vos comptes et vos données sont présents. Notez la date de ce test dans **Paramètres**, section **Sauvegardes** : l'application signale quand le prochain test est dû.
+**Résultat attendu** : la dernière ligne est `Restauration terminée.` Attendez une minute et vérifiez les états (étape 7.1), puis connectez-vous : vos comptes et vos données sont présents.
 
 <!-- ci: exec: "$GITHUB_WORKSPACE/scripts/ci/guide-attendre.sh" -->
 <!-- ci: exec: NODE_EXTRA_CA_CERTS=/opt/suivi-audits/racine-suivi-audits.crt node "$GITHUB_WORKSPACE/scripts/ci/guide-api.mjs" verifier https://<nom_dns> -->
@@ -770,7 +621,6 @@ Sur le serveur d’exploitation uniquement :
 <!-- ci: skip — configuration facultative de la tâche hôte A1a, testée avec un exécutant isolé -->
 ```bash
 cd /opt/suivi-audits
-sudo chmod 0600 /root/.suivi-backup-key
 sudo BACKUP_DEST=/srv/sauvegardes/suivi-audits RETENTION_DAYS=90 ./scripts/backup-worker.sh
 ```
 
@@ -792,9 +642,9 @@ Recette après configuration : confirmer une demande, attendre son résultat « 
 
 ### 11.6 Pilotage complet du lot A (poller commun)
 
-La migration additive `007_exploitation.sql` est appliquée au démarrage. À partir de **3.0.2**, le service `updater` de l'installation Compose exécute le poller commun automatiquement : sauvegardes manuelles/planifiées, catalogue, vérifications, restaurations et TLS autorisé. Aucun nouveau service, paquet ni cron. Il utilise par défaut **`DATA_DIR/sauvegardes`** (privé, persistant) et les clés age de l'étape 6.8 (**`/root/.suivi-backup-key`** et **`/root/.suivi-backup-recipients`**, root, montées en lecture seule dans l'exécutant, hors API). Elles sont créées à l'étape 6.8 et doivent exister **avant** `docker compose up` : Compose refuse de démarrer l'exécutant sans elles plutôt que de créer des dossiers à leur place. Externaliser les archives. Les verrous hôte et SQL empêchent les opérations concurrentes ; une mise à jour attend le passage actif. Les fichiers temporaires volumineux sont dans `DATA_DIR/reprise-exploitation/tmp`, hors du petit `/tmp` du conteneur.
+La migration additive `007_exploitation.sql` est appliquée au démarrage. À partir de **3.0.2**, le service `updater` de l'installation Compose exécute le poller commun automatiquement : sauvegardes manuelles/planifiées, catalogue, vérifications, restaurations et TLS autorisé. Aucun nouveau service, paquet ni cron. Il utilise par défaut **`DATA_DIR/sauvegardes`** (privé, persistant) et les clés age de l'étape 6.8 (**`DATA_DIR/cles-sauvegarde/serveur.key`** et **`secours.pub`**, root, hors API), qu'il crée ou recopie lui-même. Externaliser les archives. Les verrous hôte et SQL empêchent les opérations concurrentes ; une mise à jour attend le passage actif. Les fichiers temporaires volumineux sont dans `DATA_DIR/reprise-exploitation/tmp`, hors du petit `/tmp` du conteneur.
 
-**Catalogue existant** : renseigner le chemin serveur `BACKUP_DEST` (et, si les clés ne sont pas aux emplacements par défaut, `BACKUP_KEY_FILE` et `BACKUP_RECIPIENTS_FILE`) dans `.env`, puis redémarrer `updater` ; Compose les monte pour l'exécutant, sans les exposer à l'API. Le dossier doit être persistant, possédé par root et non modifiable par le groupe/les autres comptes ; la clé du serveur est régulière, non vide, root 0600. Les anciennes archives `.tar.enc` ne sont plus listées (voir l'étape 11.4 pour les restaurer). Aucun cron existant n'est supprimé ou changé : éviter de planifier deux sauvegardes nocturnes pour le même besoin, même si les verrous empêchent une exécution simultanée.
+**Catalogue existant** : renseigner le chemin serveur `BACKUP_DEST` (et, si les clés ne sont pas aux emplacements par défaut, `BACKUP_KEY_FILE` et `BACKUP_RECIPIENTS_FILE`) dans `.env`, puis redémarrer `updater` ; Compose les monte pour l'exécutant, sans les exposer à l'API. Le dossier doit être persistant, possédé par root et non modifiable par le groupe/les autres comptes ; la clé du serveur est régulière, non vide, root 0600. Les archives `.tar.enc` de la version 5.x ne sont ni listées ni restaurables en 6.0.0 (installation neuve uniquement). Aucun cron existant n'est supprimé ou changé : éviter de planifier deux sauvegardes nocturnes pour le même besoin, même si les verrous empêchent une exécution simultanée.
 
 **Mode hôte facultatif** : pour conserver le poller externe plutôt que l'intégration Compose, mettre `EXPLOITATION_AUTO=0` dans `.env`. Les commandes ci-dessous restent utilisables, avec Python 3, Docker Compose, OpenSSL et age sur le serveur. Le poller commun remplace alors le poller A1a ; ils partagent un verrou. La recette du guide utilise ce mode pour contrôler explicitement chaque opération ; la CI normale teste aussi la sauvegarde automatique depuis le bouton, sans cron.
 
@@ -857,7 +707,7 @@ Aucune étape d'installation supplémentaire : l'envoi de courriels (message de 
 
 ### 11.9 Poivre des mots de passe
 
-Le poivre ([ADR 0072](adr/0072-poivre-des-mots-de-passe.md)) est défini à l'étape 8.4 (installation neuve) ou, sur un serveur installé avant cette version, dans **Administration, Configuration système, Sécurité, Poivre des mots de passe** : un bandeau le rappelle aux administrateurs tant qu'il manque. **Conservez-le au coffre-fort**, avec la clé de secours des sauvegardes (étape 6.8) : ce sont les deux secrets de reprise du serveur.
+Le poivre ([ADR 0072](adr/0072-poivre-des-mots-de-passe.md)) est défini à l'étape 8.4, dans l'assistant d'installation ; il se gère ensuite dans **Administration, Configuration système, Sécurité, Poivre des mots de passe**. **Conservez-le au coffre-fort**, avec la clé de secours des sauvegardes (étape 6.8) : ce sont les deux secrets de reprise du serveur.
 
 - **Le changer** (par exemple au départ d'un administrateur qui le connaissait) : même carte, **Ancien poivre**, nouveau poivre généré ou saisi, engagement de sauvegarde, code de double authentification. Toutes les empreintes sont rechiffrées en une opération ; les mots de passe et les sessions ne changent pas. Cinq tentatives par heure et par compte ; un courriel prévient le contact technique et les administrateurs, et le journal d'audit garde l'auteur et les identifiants de clé (jamais le poivre).
 - **Clé maîtresse perdue, base intacte** : restaurer la clé maîtresse si possible. Sinon, rescellez le poivre depuis le coffre-fort, le poivre étant lu sur l'entrée standard pour ne pas apparaître dans l'historique du shell : `printf %s "<poivre>" | sudo docker compose exec -T app suivi poivre-restaurer`.
@@ -873,7 +723,7 @@ Retirées par la migration `037_retrait_environnement.sql` (décision du 25/10/2
 
 L’installation Compose normale démarre désormais `gateway` (frontal HTTPS stable), `web` (interface interne), `app`, `db`, `init` et `updater` (exécutant privilégié). Aucun cron ni fichier de configuration supplémentaire n’est nécessaire pour la mise à jour intégrée. Une installation existante reçoit ces services lors de sa première mise à niveau vers une version qui les contient ; la procédure serveur ci-dessous reste disponible pour ce premier passage et pour le dépannage.
 
-Chaque utilisateur connecté voit un bandeau fin dès qu’une nouvelle version numérotée est disponible : version installée, version disponible, lien vers les nouveautés. Le contrôle est automatique au démarrage puis toutes les six heures. **Aucun identifiant n’est monté par défaut dans l’exécutant** ([ADR 0061](adr/0061-mise-a-jour-web-renforcee.md)) : le dépôt public est lu en HTTPS et les images publiques sans connexion. Pour un dépôt ou un registre privé, ajouter dans `.env` `UPDATER_SSH_DIR=/root/.ssh` (clé de déploiement, étapes 4.1–4.3) et/ou `UPDATER_DOCKER_CONFIG=/root/.docker` (jeton de lecture, étape 4.5) : ils sont alors montés **en lecture seule**. Lors de la mise à jour vers cette version, une installation qui dépend encore d’une connexion au registre `ghcr.io` ou d’une clé de déploiement (dépôt non lisible en HTTPS) les conserve automatiquement ; le script l’annonce. Les retirer de `.env` dès qu’ils ne servent plus. L’API GitHub publique est essayée en premier et accepte les publications stables uniquement ; si le dépôt est privé, les étiquettes numériques et la présence des trois artefacts sont contrôlées par la clé de déploiement et le registre. Ce dernier chemin peut proposer une préversion **numérotée** comme celle de la section 12.0 ; les suffixes `-beta`/`-dev` restent refusés. Une panne réseau conserve la dernière information connue et est signalée, sans prétendre que le serveur est à jour.
+Chaque utilisateur connecté voit un bandeau fin dès qu’une nouvelle version numérotée est disponible : version installée, version disponible, lien vers les nouveautés. Le contrôle est automatique au démarrage puis toutes les six heures. **Aucun identifiant n’est monté par défaut dans l’exécutant** ([ADR 0061](adr/0061-mise-a-jour-web-renforcee.md)) : le dépôt public est lu en HTTPS et les images publiques sans connexion. Pour un dépôt ou un registre privé, ajouter dans `.env` `UPDATER_SSH_DIR=/root/.ssh` (clé de déploiement en lecture seule déclarée sur le dépôt) et/ou `UPDATER_DOCKER_CONFIG=/root/.docker` (jeton de lecture `read:packages`, après `sudo docker login ghcr.io`) : ils sont alors montés **en lecture seule**. Lors de la mise à jour vers cette version, une installation qui dépend encore d’une connexion au registre `ghcr.io` ou d’une clé de déploiement (dépôt non lisible en HTTPS) les conserve automatiquement ; le script l’annonce. Les retirer de `.env` dès qu’ils ne servent plus. L’API GitHub publique est essayée en premier et accepte les publications stables uniquement ; si le dépôt est privé, les étiquettes numériques et la présence des trois artefacts sont contrôlées par la clé de déploiement et le registre. Ce dernier chemin peut proposer une préversion **numérotée** comme celle de la section 12.0 ; les suffixes `-beta`/`-dev` restent refusés. Une panne réseau conserve la dernière information connue et est signalée, sans prétendre que le serveur est à jour.
 
 Dans **Configuration système → Mises à jour et versions**, un compte ayant le **rôle système Administrateur** peut vérifier manuellement puis confirmer en tapant **METTRE À JOUR** et en saisissant un **code de double authentification** (6 chiffres, à usage unique, demandé à chaque installation ; cinq essais par quart d’heure, chaque refus est journalisé). Une permission personnalisée `administration:administrer` seule ne suffit pas.
 
@@ -881,7 +731,7 @@ Dans **Configuration système → Mises à jour et versions**, un compte ayant l
 
 L’exécutant télécharge et vérifie les signatures cosign des images API, web et updater, avec l’identité exacte du workflow/tag, ainsi que leur **attestation SBOM** signée par la même identité ([ADR 0063](adr/0063-chaine-de-publication-durcie.md)) : une image sans attestation est refusée. Le SBOM vérifié de chaque composant est conservé dans `DATA_DIR/etat/sbom/<version>` et se télécharge depuis les reçus de mise à jour. Le commit des sources doit correspondre au label de révision des images signées ; les images appliquées sont épinglées par empreinte. Pendant cette préparation, le service reste disponible. Ensuite la maintenance bloque les écritures, attend la fin des mutations déjà engagées, crée une sauvegarde chiffrée et effectue migrations/redémarrage/contrôles de santé et de données. Le frontal sert indépendamment `/update/` et un état public minimal : les utilisateurs et nouvelles connexions conservent la page pendant l’arrêt de l’API, de l’interface et de l’exécutant. Les étapes affichées sont réelles et horodatées, avec la durée écoulée ; aucun pourcentage n’est inventé. À la fin, un **reçu** structuré (versions, étapes, empreintes et signature des images vérifiées, sauvegarde et son empreinte, contrôles des données avant et après) est déposé dans `DATA_DIR/etat/recus-mises-a-jour` et se télécharge depuis Configuration système → Mises à jour et versions ; il ne contient aucune sortie brute de commande et n’est pas servi par le frontal public. Le retour à l’application est automatique après santé confirmée. Un échec avec retour arrière est clairement affiché, avec accès au résultat ; une intervention requise maintient la protection.
 
-`init` crée exclusivement les secrets manquants. Les sauvegardes de mise à jour utilisent les clés age de l'étape 6.8 (root, 0600, montées en lecture seule dans l'exécutant, hors montage API) ; l'ancien fichier `DATA_DIR/update-secrets/backup-pass` n'est plus créé ni utilisé (le conserver s'il sert à restaurer d'anciennes archives `.tar.enc`). Les archives chiffrées sont dans `DATA_DIR/sauvegardes-updates/avant-mise-a-jour`, les cinq dernières sont conservées ; les journaux/reçus privés dans `DATA_DIR/reprise-updates` (root, 0700), l’état public dans `DATA_DIR/etat/updates`. Inclure ces dossiers dans la sauvegarde externalisée du serveur et conserver la clé de secours (privée) dans le coffre-fort pour restaurer après perte du serveur. Ne jamais exposer le socket Docker, le projet en écriture ou ces clés à l’API.
+`init` crée exclusivement les secrets manquants. Les sauvegardes de mise à jour utilisent les clés age de l'étape 6.8 (`DATA_DIR/cles-sauvegarde`, root, 0600, hors montage API) ; l'ancien fichier `DATA_DIR/update-secrets/backup-pass` (version 5.x) n'est plus créé ni utilisé. Les archives chiffrées sont dans `DATA_DIR/sauvegardes-updates/avant-mise-a-jour`, les cinq dernières sont conservées ; les journaux/reçus privés dans `DATA_DIR/reprise-updates` (root, 0700), l’état public dans `DATA_DIR/etat/updates`. Inclure ces dossiers dans la sauvegarde externalisée du serveur, sans `cles-sauvegarde/` (étape 6.6), et conserver la clé de secours (privée) dans le coffre-fort pour restaurer après perte du serveur. Ne jamais exposer le socket Docker, le projet en écriture ou ces clés à l’API.
 
 L’exécutant se remplace lui-même à la fin d’une mise à jour ; son successeur termine les contrôles depuis le reçu durable. Après une interruption pendant remplacement, il tente le retour sécurisé depuis la sauvegarde précédente. Une reprise échouée reste bloquée et conserve les références privées pour l’exploitant : examiner le journal, le rapport et la sauvegarde avant toute restauration manuelle. Ne pas supprimer le marqueur de maintenance tant que la santé et les données ne sont pas validées.
 
@@ -908,7 +758,7 @@ sudo docker compose -f docker-compose.yml -f docker-compose.build.yml build
 sudo docker compose up -d --no-deps --pull never app web updater
 ```
 
-Si des images épinglées par `API_IMAGE`/`WEB_IMAGE`/`UPDATER_IMAGE` sont présentes dans `.env`, les conserver pour une version publiée ; pour une construction locale, suivre plutôt la construction de branche de la section 7 et retirer ces trois références. `GATEWAY_VERSION` conserve le frontal existant. Si `Vérifier` échoue, contrôler les accès de la section 4 et l'état des services ; ne pas désactiver les signatures.
+Si des images épinglées par `API_IMAGE`/`WEB_IMAGE`/`UPDATER_IMAGE` sont présentes dans `.env`, les conserver pour une version publiée ; pour une construction locale, suivre plutôt la construction de branche de l'étape 5 et retirer ces trois références. `GATEWAY_VERSION` conserve le frontal existant. Si `Vérifier` échoue, contrôler les flux sortants de l'étape 0 et l'état des services ; ne pas désactiver les signatures.
 
 ### 12.1 Procédure serveur de mise à jour et d’entretien du frontal
 
@@ -917,12 +767,24 @@ Si des images épinglées par `API_IMAGE`/`WEB_IMAGE`/`UPDATER_IMAGE` sont prés
 2. affiche la version en service, la version cible et ses **notes de mise à jour** (actions particulières, évolutions de la base, durée estimée), puis demande confirmation ;
 3. refuse de revenir à une version plus ancienne ;
 4. fait une **sauvegarde chiffrée** (obligatoire) dans `/srv/sauvegardes/suivi-audits/avant-mise-a-jour/` et contrôle son empreinte ; les 5 dernières sont gardées ;
-5. passe le dépôt à la nouvelle version, télécharge les images et **vérifie leur signature** (cosign, étape 3.6) ;
+5. passe le dépôt à la nouvelle version, télécharge les images et **vérifie leur signature** (cosign, installé ci-dessous) ;
 6. redémarre l'application ; les évolutions de la base s'appliquent au démarrage, une par une ;
 7. attend que l'application soit en bon état, relit chaque document chiffré, puis écrit un rapport (onglet **Système** de l'administration, et journal d'audit) ;
 8. **en cas d'échec**, revient tout seul à la version précédente ; si la base avait déjà évolué, il restaure la sauvegarde du point 4 (après votre accord).
 
-> ⚠️ **Première mise à jour vers la version qui chiffre les sauvegardes avec age** (voir le CHANGELOG) : avant de lancer le script, installez `age` (`sudo apt install -y age`) et créez les clés de l'étape 6.8. La sauvegarde de cette mise à jour est encore faite par la version installée (avec l'ancienne phrase secrète) ; sans les clés, la nouvelle version ne démarre pas et le retour arrière automatique rétablit l'ancienne. Une mise à jour lancée depuis l'interface web nécessite de la même façon des clés déjà créées.
+**0. Installer cosign** (une fois), l'outil qui vérifie que les images viennent bien de la chaîne de publication du dépôt (signature) et n'ont pas été modifiées. La mise à jour depuis l'application n'en a pas besoin : l'exécutant d'exploitation contient déjà cosign. La commande télécharge cosign et contrôle son empreinte avant de l'installer :
+
+<!-- ci: run -->
+```bash
+cd /tmp && curl -fsSLO https://github.com/sigstore/cosign/releases/download/v3.1.3/cosign-linux-amd64 && curl -fsSL https://github.com/sigstore/cosign/releases/download/v3.1.3/cosign_checksums.txt | grep ' cosign-linux-amd64$' | sha256sum -c && sudo install -m 0755 cosign-linux-amd64 /usr/local/bin/cosign && rm cosign-linux-amd64 && cd -
+```
+**Résultat attendu** : `cosign-linux-amd64: OK`, puis le nom du dossier précédent.
+
+<!-- ci: run -->
+```bash
+cosign version | grep GitVersion
+```
+**Résultat attendu** : `GitVersion:    v3.1.3`.
 
 **1. Récupérer la liste des versions publiées :**
 
@@ -967,7 +829,7 @@ sudo ./scripts/nettoyer-ancienne-base-postgresql.sh
 ```bash
 sudo docker compose ps -a
 ```
-**Résultat attendu** : les mêmes états qu'à l'étape 7.3. Dans l'application, **Administration**, onglet **Système** : la nouvelle version, et la mise à jour dans l'historique avec le résultat « Réussie ».
+**Résultat attendu** : les mêmes états qu'à l'étape 7.1. Dans l'application, **Administration**, onglet **Système** : la nouvelle version, et la mise à jour dans l'historique avec le résultat « Réussie ».
 
 > **Première mise à jour avec le script.** Si la version en service ne contient pas encore `scripts/mettre-a-jour.sh` (message `No such file or directory`), lancez-le directement depuis la nouvelle version, en remplaçant `<version>` par son numéro (sans le « v ») :
 > ```text
@@ -996,12 +858,12 @@ sudo apt update && sudo apt full-upgrade -y
 ```bash
 [ -f /var/run/reboot-required ] && echo "Redémarrage nécessaire" || echo "Pas de redémarrage nécessaire"
 ```
-**Résultat attendu** : l'un des deux messages. Si un redémarrage est nécessaire, prévenez les utilisateurs, puis lancez `sudo reboot`. L'application redémarre toute seule avec le serveur. Reconnectez-vous au bout de 2 minutes et vérifiez les états (étape 7.3).
+**Résultat attendu** : l'un des deux messages. Si un redémarrage est nécessaire, prévenez les utilisateurs, puis lancez `sudo reboot`. L'application redémarre toute seule avec le serveur. Reconnectez-vous au bout de 2 minutes et vérifiez les états (étape 7.1).
 
 ### 12.4 Passer d'un serveur v2 à cette version
 
 La v2 construisait l'application sur le serveur, avec un service `proxy`, et gardait ses données dans des volumes Docker. La base, les secrets et les certificats sont **conservés** : rien n'est à réimporter.
-1. Faites une sauvegarde (étape 11.2), et installez cosign (étape 3.6).
+1. Faites une sauvegarde (étape 11.2), et installez cosign (étape 12.1, point 0).
 2. Récupérez la nouvelle version : `sudo git fetch --tags`, puis `sudo git checkout v<version>`.
 3. Dans `.env` (`sudo nano .env`), **ajoutez** à la fin les lignes `APP_VERSION=<version>` et `DATA_DIR=/srv/suivi-audits/donnees`.
 4. Téléchargez les images : `sudo docker compose pull`.
@@ -1037,7 +899,7 @@ sudo ./scripts/migrer-donnees-vers-dossier.sh --supprimer-anciens-volumes
 ```bash
 sudo docker compose ps -a
 ```
-**Résultat attendu** : les états de l'étape 7.3.
+**Résultat attendu** : les états de l'étape 7.1.
 
 <!-- ci: run -->
 ```bash
@@ -1054,25 +916,25 @@ Si vous demandez de l'aide, joignez ces deux sorties. Elles ne contiennent aucun
 | `permission denied while trying to connect to the Docker daemon socket` | `sudo` oublié | Relancer la commande en ajoutant `sudo` devant |
 | `no configuration file provided: not found` | Commande lancée hors du dossier de l'application | `cd /opt/suivi-audits`, puis relancer |
 | `Bind for 0.0.0.0:443 failed: port is already allocated` ou `address already in use` (80 ou 443) | Un autre service web (Apache, nginx, ou l'ancien service `proxy`) occupe le port | `sudo ss -ltnp \| grep -E ':(80\|443) '` pour l'identifier. Ancien `proxy` : `sudo docker compose up -d --remove-orphans`. Sinon, arrêter ce service, ou changer `HTTPS_PORT` et `HTTP_PORT` dans `.env` |
-| `required variable SITE_ADDRESS is missing a value: Renseigner SITE_ADDRESS dans .env` | `SITE_ADDRESS` vide, ou fichier `.env` absent | Étape 6 |
+| `required variable SITE_ADDRESS is missing a value: Renseigner SITE_ADDRESS dans .env` | `SITE_ADDRESS` vide, ou fichier `.env` absent | `sudo ./installer.sh` (étape 5) crée `.env` |
 | `Renseigner APP_VERSION dans .env` | Ligne `APP_VERSION=` absente (serveur v2) | Étape 12.4 |
-| `init` affiche `ERREUR (dossier des données) : … n'a pas été préparé` | Dossier des données jamais préparé, ou données encore dans des volumes Docker | Nouvelle installation : étape 6.7. Serveur déjà installé : étape 12.5 |
+| `init` affiche `ERREUR (dossier des données) : … n'a pas été préparé` | Dossier des données jamais préparé, ou données encore dans des volumes Docker | Nouvelle installation : `sudo ./installer.sh` (étape 5). Serveur déjà installé : étape 12.5 |
 | `ERREUR (dossier des données) : DATA_DIR … est dans le dossier de l'application` (ou dans un dossier système, ou « non persistant ») | `DATA_DIR` mal choisi dans `.env` | Choisir un dossier dédié, par exemple `/srv/suivi-audits/donnees`, puis étape 6.7 |
-| `mettre-a-jour.sh` : `cosign est nécessaire` | cosign non installé | Étape 3.6 |
+| `mettre-a-jour.sh` : `cosign est nécessaire` | cosign non installé | Étape 12.1, point 0 |
 | `mettre-a-jour.sh` : `signature de l'image … invalide ou absente` | Image modifiée, ou flux vers `rekor.sigstore.dev` bloqué | Ne pas forcer : vérifier les flux de l'étape 0, puis prévenir l'équipe projet. La version précédente reste en service |
 | `mettre-a-jour.sh` : `espace disque insuffisant` | Moins de deux fois la taille de la base, plus 2 Go, de libre | `sudo docker image prune -f`, supprimer d'anciennes sauvegardes locales (après copie externe), ou agrandir le disque |
 | `mettre-a-jour.sh` : `Retour arrière terminé` | La nouvelle version n'a pas démarré correctement : retour automatique | Rien n'est perdu. Transmettre le rapport indiqué (`/srv/suivi-audits/donnees/etat/mises-a-jour/…`) et `sudo docker compose logs app` à l'équipe projet |
 | `mettre-a-jour.sh` : `des fichiers suivis par git ont été modifiés` | Un fichier de l'application a été modifié à la main sur le serveur | `sudo git diff` pour voir lesquels ; `sudo git checkout -- <fichier>` pour les remettre en état |
-| Alerte « Sauvegarde en retard » dans l'onglet **Système** | Aucune sauvegarde réussie depuis plus de 48 h | `sudo tail -50 /var/log/suivi-backup.log`, puis étape 11.3 |
-| `unauthorized`, `denied` ou `manifest unknown` pendant `docker compose pull` | Images privées sans connexion, ou numéro de version erroné | Étape 4.5 ; vérifier `APP_VERSION` (sans « v ») sur la page Releases |
+| Alerte « Sauvegarde en retard » dans l'onglet **Système** | Aucune sauvegarde réussie depuis plus de 48 h | Vérifier la planification et l'historique des sauvegardes (étapes 11.2 et 11.3) ; une tâche cron éventuelle écrit dans `/var/log/suivi-backup.log` |
+| `unauthorized`, `denied` ou `manifest unknown` pendant le téléchargement des images | Numéro de version erroné, ou images privées | Vérifier `APP_VERSION` (sans « v ») sur la page Releases. Images privées : `sudo docker login ghcr.io` avec un jeton GitHub limité à `read:packages` |
 | `timeout`, `TLS handshake timeout`, `Could not resolve host` pendant une installation ou un téléchargement | Flux sortants bloqués, ou proxy d'entreprise | Vérifier le tableau des flux de l'étape 0 avec l'équipe réseau |
 | `db` reste `unhealthy` ou redémarre | Premier démarrage encore en cours, ou disque plein | Attendre 2 minutes. `df -h /` : en dessous de 10 % d'espace libre, libérer de la place (`sudo docker image prune -f`, anciennes sauvegardes) |
 | `init` affiche `Exited (1)` | Volume des secrets abîmé ou droits modifiés | `sudo docker compose logs init`, puis demander de l'aide avec ce message |
 | Le navigateur n'affiche rien, ou « délai dépassé » | DNS, pare-feu ou ports | Sur le serveur : `getent hosts <nom_dns>` et `curl -sk https://<nom_dns>/healthz` (réponse `ok`). Si le serveur répond mais pas le poste : ports 80 et 443 à ouvrir entre le poste et le serveur |
 | « Votre connexion n'est pas privée » | Certificat interne non installé sur le poste | Normal tant que le certificat racine n'est pas déployé : étape 8.3 |
 | « Jeton d'installation invalide » | Faute de frappe, ou jeton remplacé par un plus récent | Recopier le **dernier** jeton émis (étape 8.1) |
-| « Jeton expiré » ou « déjà utilisé » | Jeton de plus de 24 h, ou administrateur déjà créé | `sudo docker compose exec app setup-token` (étape 8.1) |
-| Code de double authentification toujours refusé | Heure du téléphone ou du serveur décalée | Serveur : étape 2.3. Téléphone : régler la date et l'heure en mode automatique |
+| « Jeton expiré » ou « déjà utilisé » | Jeton de plus de 24 h, ou administrateur déjà créé | `sudo ./installer.sh` (étape 8.1) |
+| Code de double authentification toujours refusé | Heure du téléphone ou du serveur décalée | Serveur : étape 2.3 (`sudo timedatectl set-ntp true`). Téléphone : régler la date et l'heure en mode automatique |
 | Téléphone perdu ou changé | — | `sudo docker compose exec app suivi reset-mfa <identifiant>`. La personne reconfigure sa double authentification à la connexion suivante |
 | Compte verrouillé après plusieurs erreurs | Protection contre les attaques par essais successifs | Attendre 15 minutes, ou `sudo docker compose exec app suivi unlock <identifiant>` |
 | Mot de passe oublié | — | **Administration**, **Utilisateurs**, bouton **Mot de passe** sur la ligne du compte (affiche un mot de passe temporaire). Ou : `sudo docker compose exec app suivi reset-password <identifiant>` (affiche un mot de passe temporaire) |
@@ -1096,8 +958,8 @@ Toutes ces commandes se lancent depuis `/opt/suivi-audits`.
 | Arrêter temporairement | `sudo docker compose stop` | tout | rien |
 | Redémarrer après un arrêt | `sudo docker compose start` | tout | rien |
 | Arrêter et retirer les conteneurs | `sudo docker compose down` (ou `down -v`) | toutes les données (dossier des données), configuration | les conteneurs, recréés au prochain `up -d` |
-| ⚠️ **Tout effacer** | `sudo docker compose down && sudo rm -rf /srv/suivi-audits/donnees` | `.env`, sauvegardes de `/srv/sauvegardes` | **base de données, documents, comptes, secrets, certificats : définitivement** |
-| Supprimer aussi l'application | `cd / && sudo rm -rf /opt/suivi-audits /etc/cron.d/suivi-audits` | sauvegardes de `/srv/sauvegardes` | le dépôt, `.env` et les tâches planifiées |
+| ⚠️ **Tout effacer** | `sudo docker compose down && sudo rm -rf /srv/suivi-audits/donnees` | `.env`, sauvegardes rangées hors du dossier des données | **base de données, documents, comptes, secrets, certificats, clés et sauvegardes du dossier des données : définitivement** |
+| Supprimer aussi l'application | `cd / && sudo rm -rf /opt/suivi-audits /etc/cron.d/suivi-audits` | sauvegardes rangées hors du dossier des données (par exemple `/srv/sauvegardes`) | le dépôt, `.env` et les tâches planifiées éventuelles |
 
 > ⚠️ Avant d'effacer le dossier des données, faites une sauvegarde (étape 11.2) **et** vérifiez que la clé de secours (privée) est dans votre coffre-fort. Sans les deux, rien n'est récupérable. Supprimer les conteneurs ou les images, ou lancer `docker compose down -v`, ne touche plus aux données.
 
