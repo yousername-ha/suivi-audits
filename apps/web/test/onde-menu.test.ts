@@ -2,8 +2,18 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
+  AMPLITUDE_CONNEXION,
+  amplitudeConnexion,
   AMPLITUDE_SOL,
   AVANCE,
+  compresser,
+  DECALAGE_TRAITS,
+  dispositionConnexion,
+  ondeSignee,
+  PALETTE_CONNEXION,
+  PART_TRAITS,
+  PAS_TRAITS,
+  signalOnde,
   CRETE_MAX,
   ECHANTILLONS,
   grillePerspective,
@@ -148,5 +158,117 @@ describe('onde : teintes et mouvement', () => {
     expect(ondeVisible({ ...base, mouvementReduit: true })).toBe(false);
     expect(ondeVisible({ ...base, webdriver: true })).toBe(false);
     expect(ondeVisible({ ...base, impression: true })).toBe(false);
+  });
+});
+
+describe('onde de connexion : horizon mesuré', () => {
+  it('à mi-chemin entre le bas du titre et le haut de la première carte, en part de la hauteur', () => {
+    // Panneau de 600 px à 100 px du haut de la page ; titre jusqu'à 300 ; carte à 348 (3rem à 16 px).
+    const d = dispositionConnexion({ top: 100, height: 600 }, 300, 348);
+    expect(d.horizon).toBeCloseTo((324 - 100) / 600, 12);
+    expect(d.ecart).toBeCloseTo(48 / 600, 12);
+  });
+  it('bornée dans [0 ; 1], sans division par zéro', () => {
+    expect(dispositionConnexion({ top: 0, height: 100 }, 300, 400)).toEqual({ horizon: 1, ecart: 1 });
+    expect(dispositionConnexion({ top: 500, height: 100 }, 300, 200)).toEqual({ horizon: 0, ecart: 0 });
+    const d = dispositionConnexion({ top: 0, height: 0 }, 0.2, 0.4);
+    expect(Number.isFinite(d.horizon)).toBe(true);
+  });
+  it('la grille en perspective part du même horizon', () => {
+    const d = dispositionConnexion({ top: 0, height: H }, 250, 298);
+    const { fuyantes } = grillePerspective(2, L, H, d.horizon);
+    for (const f of fuyantes) expect(f.points.at(-1)!.y).toBeGreaterThan(H * d.horizon);
+    expect(Math.min(...fuyantes.flatMap((f) => f.points.map((p) => p.y)))).toBeLessThan(
+      H * d.horizon + (H * (1 - d.horizon)) / PROFONDEUR,
+    );
+  });
+});
+
+describe('onde de connexion : signal signé et compression', () => {
+  const us = Array.from({ length: 401 }, (_, i) => i / 400);
+  it.each(INSTANTS)('à t = %s s, signal dans [−1 ; 1], nul aux bords, positif et négatif', (t) => {
+    const z = us.map((u) => signalOnde(u, t));
+    for (const v of z) {
+      expect(v).toBeGreaterThanOrEqual(-1);
+      expect(v).toBeLessThanOrEqual(1);
+    }
+    expect(signalOnde(0, t)).toBeCloseTo(0, 12);
+    expect(signalOnde(1, t)).toBeCloseTo(0, 12);
+    expect(Math.max(...z)).toBeGreaterThan(0.05);
+    expect(Math.min(...z)).toBeLessThan(-0.05);
+  });
+  it('formule demandée', () => {
+    const u = 0.37;
+    const t = 4.2;
+    const attendu =
+      Math.sin(Math.PI * u) ** 1.4 *
+      (0.65 + 0.35 * Math.sin(0.9 * t + 4 * u)) *
+      (0.5 * Math.sin(23 * u + 2.1 * t) + 0.3 * Math.sin(51 * u - 3.3 * t) + 0.2 * Math.sin(9 * u + 0.7 * t));
+    expect(signalOnde(u, t)).toBeCloseTo(attendu, 12);
+  });
+  it('compression : signe conservé, bornée, réduit les grandes valeurs plus que les petites', () => {
+    expect(compresser(0)).toBe(0);
+    expect(compresser(-0.5)).toBeCloseTo(-compresser(0.5), 12);
+    expect(compresser(1)).toBeCloseTo(1 / 1.4, 12);
+    for (const z of [0.1, 0.3, 0.6, 1]) {
+      expect(compresser(z)).toBeLessThan(z);
+      expect(compresser(z)).toBeGreaterThan(0);
+    }
+    const reduction = (z: number) => compresser(z) / z;
+    expect(reduction(1)).toBeLessThan(reduction(0.5));
+    expect(reduction(0.5)).toBeLessThan(reduction(0.1));
+    for (let z = 0; z < 1; z += 0.05) expect(compresser(z + 0.05)).toBeGreaterThan(compresser(z));
+  });
+});
+
+describe('onde de connexion : amplitude et tracé', () => {
+  it('7,5 % de la hauteur, au plus la moitié de l’espace entre le titre et la carte', () => {
+    expect(AMPLITUDE_CONNEXION).toBe(0.075);
+    expect(amplitudeConnexion(600, 0.5)).toBeCloseTo(45, 9);
+    expect(amplitudeConnexion(600, 48 / 600)).toBeCloseTo(24, 9);
+  });
+  it.each([
+    ['bureau', 576, 640, 304, 352],
+    ['téléphone', 362, 860, 210, 252],
+  ])('%s : les crêtes restent entre le titre et la carte', (_, l, h, basTitre, hautCarte) => {
+    const d = dispositionConnexion({ top: 0, height: h }, basTitre, hautCarte);
+    for (const t of INSTANTS) {
+      const { y0, signal, traits } = ondeSignee(t, l, h, d);
+      expect(y0).toBeCloseTo((basTitre + hautCarte) / 2, 9);
+      for (const p of [...signal, ...traits.map((s) => ({ x: s.x, y: s.y2 }))]) {
+        expect(p.y).toBeGreaterThan(basTitre);
+        expect(p.y).toBeLessThan(hautCarte);
+      }
+    }
+  });
+  it('un point et un trait signé tous les 4 px, traits à 75 % de l’amplitude avec une phase décalée', () => {
+    const d = { horizon: 0.4, ecart: 0.5 };
+    const { y0, signal, traits } = ondeSignee(3, L, H, d);
+    expect(signal[0]!.x).toBe(0);
+    expect(signal.at(-1)!.x).toBe(L);
+    for (let i = 1; i < signal.length - 1; i++) expect(signal[i]!.x - signal[i - 1]!.x).toBe(PAS_TRAITS);
+    const a = amplitudeConnexion(H, d.ecart);
+    traits.forEach((s, i) => {
+      expect(s.y1).toBe(y0);
+      expect(s.y2).toBeCloseTo(y0 - a * PART_TRAITS * compresser(signalOnde(s.x / L, 3 - DECALAGE_TRAITS)), 9);
+      expect(s.x).toBe(signal[i]!.x);
+    });
+    expect(traits.some((s) => s.y2 > y0)).toBe(true);
+    expect(traits.some((s) => s.y2 < y0)).toBe(true);
+  });
+  it('rendu : opacités et teintes demandées, définies par la charte', () => {
+    const css = readFileSync(new URL('../../../packages/ui/src/styles.css', import.meta.url), 'utf8');
+    expect(PALETTE_CONNEXION).toMatchObject({
+      surface: 0.22,
+      traits: 0.3,
+      ligne: 0.4,
+      onde: 0.95,
+      epaisseur: 2.4,
+      flou: 18,
+    });
+    expect(PALETTE_CONNEXION.bord).toBe('--suivi-famille-conformite');
+    expect(PALETTE_CONNEXION.centre).toBe('--suivi-famille-risques');
+    expect(css).toContain(`${PALETTE_CONNEXION.bord}:`);
+    expect(css).toContain(`${PALETTE_CONNEXION.centre}:`);
   });
 });

@@ -3,11 +3,21 @@ import { Alert, Button, Loader, PasswordInput, PinInput, Stack, Text, VisuallyHi
 import { notifications } from '@mantine/notifications';
 import { useQuery } from '@tanstack/react-query';
 import qrcode from 'qrcode-generator';
-import { useEffect, useId, useState, type FormEvent, type KeyboardEvent, type ReactNode } from 'react';
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type FormEvent,
+  type KeyboardEvent,
+  type ReactNode,
+  type RefObject,
+} from 'react';
 import { Navigate, useNavigate, useSearchParams } from 'react-router';
 import { ApiError, api, get, post, setCsrf } from '../api';
 import { CriteresMotDePasse } from '../components/CriteresMotDePasse';
 import { OndeMenu } from '../components/OndeMenu';
+import { dispositionConnexion, type DispositionConnexion } from '../components/onde-menu';
 import { FondConnexion } from '../connexion/FondConnexion';
 import { IconeCadenas, IconeFleche, IconeOeil, IconeOeilBarre, IconePersonne } from '../connexion/icones';
 import { Sceau } from '../connexion/Sceau';
@@ -16,17 +26,52 @@ import { useMe, useRefreshMe } from '../session';
 const safeNext = (n: string | null) => (n && /^\/(?!\/)/.test(n) ? n : '/');
 
 /* Panneau unique centré : bandeau, accroche, puis le formulaire de l'étape (connexion, code, enrôlement, mot de passe). */
+/** Horizon de l'onde : à mi-chemin entre le bas du titre et le haut de la première carte, mesuré sur la mise en page
+    (taille du panneau, chargement des polices). */
+function useDispositionOnde(panneau: RefObject<HTMLElement | null>, titre: RefObject<HTMLElement | null>) {
+  const [disposition, setDisposition] = useState<DispositionConnexion | null>(null);
+  useEffect(() => {
+    const p = panneau.current;
+    const h2 = titre.current;
+    if (!p || !h2) return;
+    const mesurer = () => {
+      const carte = p.querySelector('.auth-carte--identifiant, .auth-etape');
+      if (!carte) return;
+      const d = dispositionConnexion(
+        p.getBoundingClientRect(),
+        h2.getBoundingClientRect().bottom,
+        carte.getBoundingClientRect().top,
+      );
+      setDisposition((avant) => (avant && avant.horizon === d.horizon && avant.ecart === d.ecart ? avant : d));
+    };
+    mesurer();
+    const taille = typeof ResizeObserver === 'function' ? new ResizeObserver(mesurer) : null;
+    taille?.observe(p);
+    const polices = 'fonts' in document ? document.fonts : null;
+    void polices?.ready.then(mesurer);
+    polices?.addEventListener('loadingdone', mesurer);
+    return () => {
+      taille?.disconnect();
+      polices?.removeEventListener('loadingdone', mesurer);
+    };
+  }, [panneau, titre]);
+  return disposition;
+}
+
 function AuthCard({ title, etape = true, children }: { title: string; etape?: boolean; children: ReactNode }) {
+  const panneau = useRef<HTMLElement>(null);
+  const titre = useRef<HTMLHeadingElement>(null);
+  const disposition = useDispositionOnde(panneau, titre);
   // Panneau sans nom accessible : le h1 suffit, et un nom ferait doublon avec les libellés des champs.
   return (
     <main className="auth-wrap auth-connexion">
       <FondConnexion />
-      <section className="auth-panneau">
-        <OndeMenu />
+      <section className="auth-panneau" ref={panneau}>
+        {disposition && <OndeMenu connexion={disposition} />}
         <Sceau />
         <VisuallyHidden component="h1">{title}</VisuallyHidden>
         <span className="auth-kicker">Gouvernance · Risques · Conformité</span>
-        <h2 className="auth-accroche">
+        <h2 className="auth-accroche" ref={titre}>
           Une vision claire.
           <br />
           Un pilotage serein.

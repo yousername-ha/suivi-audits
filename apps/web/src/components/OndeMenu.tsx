@@ -1,16 +1,32 @@
 /* Onde en fond de panneau (décorative, aria-hidden) : grille en perspective, onde sonore sur l'horizon, particules.
    Géométrie : onde-menu.ts. Le canevas suit la taille de son parent positionné ; 30 images/s au plus ; rien si moins de
-   mouvement est demandé, sous un automate de test ou à l'impression. */
+   mouvement est demandé, sous un automate de test ou à l'impression. Option `connexion` (écran de connexion seulement) :
+   horizon mesuré entre le titre et la première carte, onde signée en dégradé ; sans elle, rendu par défaut inchangé. */
 import { transparence } from '@suivi/ui';
 import { useEffect, useRef } from 'react';
 import { imageDue, type Teinte } from '../connexion/fond-geometrie';
-import { grillePerspective, ondeHorizon, ondeVisible, PALETTE_ONDE, particules, type Point } from './onde-menu';
+import {
+  grillePerspective,
+  ondeHorizon,
+  ondeSignee,
+  ondeVisible,
+  PALETTE_CONNEXION,
+  PALETTE_ONDE,
+  particules,
+  type DispositionConnexion,
+  type Point,
+} from './onde-menu';
 
 const automate = () => typeof navigator !== 'undefined' && navigator.webdriver === true;
 
-export function OndeMenu() {
+export function OndeMenu({ connexion }: { connexion?: DispositionConnexion }) {
   const cadre = useRef<HTMLDivElement>(null);
   const toile = useRef<HTMLCanvasElement>(null);
+  // Lue à chaque image : un changement de disposition ne relance pas l'animation.
+  const disposition = useRef(connexion);
+  useEffect(() => {
+    disposition.current = connexion;
+  }, [connexion]);
 
   useEffect(() => {
     const div = cadre.current;
@@ -45,7 +61,8 @@ export function OndeMenu() {
     const dessiner = (t: number) => {
       ctx.clearRect(0, 0, l, h);
 
-      const { rangees, fuyantes } = grillePerspective(t, l, h);
+      const d = disposition.current;
+      const { rangees, fuyantes } = grillePerspective(t, l, h, d?.horizon);
       ctx.lineWidth = 1;
       for (const r of [...fuyantes, ...rangees]) {
         ctx.strokeStyle = coul(PALETTE_ONDE.grille, r.opacite);
@@ -53,6 +70,19 @@ export function OndeMenu() {
         ctx.stroke();
       }
 
+      if (d) dessinerSignee(t, d);
+      else dessinerCretes(t);
+
+      for (const p of particules(t, l, h)) {
+        ctx.fillStyle = coul(PALETTE_ONDE.particule, p.opacite);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    };
+
+    /** Rendu par défaut : crêtes au-dessus de l'horizon, traits fins en dessous. */
+    const dessinerCretes = (t: number) => {
       const { cretes, traits } = ondeHorizon(t, l, h);
       ctx.strokeStyle = coul(PALETTE_ONDE.trait);
       ctx.beginPath();
@@ -75,13 +105,52 @@ export function OndeMenu() {
       ctx.strokeStyle = coul(PALETTE_ONDE.crete);
       tracer(cretes);
       ctx.stroke();
+    };
 
-      for (const p of particules(t, l, h)) {
-        ctx.fillStyle = coul(PALETTE_ONDE.particule, p.opacite);
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fill();
+    /** Écran de connexion : surface et traits signés, ligne centrale, onde lumineuse en dégradé. */
+    const dessinerSignee = (t: number, d: DispositionConnexion) => {
+      const P = PALETTE_CONNEXION;
+      const { y0, signal, traits } = ondeSignee(t, l, h, d);
+      const degrade = (opacite: number) => {
+        const g = ctx.createLinearGradient(0, 0, l, 0);
+        g.addColorStop(0, transparence(lire(P.bord), opacite));
+        g.addColorStop(0.5, transparence(lire(P.centre), opacite));
+        g.addColorStop(1, transparence(lire(P.bord), opacite));
+        return g;
+      };
+
+      ctx.fillStyle = degrade(P.surface);
+      tracer(signal);
+      ctx.lineTo(l, y0);
+      ctx.lineTo(0, y0);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = degrade(P.traits);
+      ctx.beginPath();
+      for (const s of traits) {
+        ctx.moveTo(s.x, s.y1);
+        ctx.lineTo(s.x, s.y2);
       }
+      ctx.stroke();
+
+      ctx.strokeStyle = degrade(P.ligne);
+      ctx.beginPath();
+      ctx.moveTo(0, y0);
+      ctx.lineTo(l, y0);
+      ctx.stroke();
+
+      ctx.save();
+      ctx.shadowColor = transparence(lire(P.centre), P.onde);
+      ctx.shadowBlur = P.flou;
+      ctx.lineWidth = P.epaisseur;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = degrade(P.onde);
+      tracer(signal);
+      ctx.stroke();
+      ctx.restore();
     };
 
     let image = 0;

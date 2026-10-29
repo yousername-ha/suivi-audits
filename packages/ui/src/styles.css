@@ -34,6 +34,7 @@
   --suivi-nav-l: 15.5rem;
   --suivi-largeur-formulaire: 45rem; /* formulaires simples : 720 px */
   --suivi-largeur-connexion: 36rem; /* panneau de connexion : 576 px */
+  --suivi-ecart-onde: 3rem; /* connexion : espace entre le titre et la première carte */
   --suivi-largeur-lecture: 75ch; /* textes : environ 75 caractères par ligne */
   --suivi-champ-xs: 8rem;
   --suivi-champ-s: 12.5rem;
@@ -1317,7 +1318,7 @@ h3,
   text-transform: uppercase;
 }
 .auth-accroche {
-  margin: 1rem 0 0.75rem;
+  margin: 1rem 0 0;
   font-size: clamp(2rem, 6vw, 3rem);
   font-weight: 500;
   line-height: 1.12;
@@ -1407,7 +1408,8 @@ h3,
 .auth-pile {
   display: flex;
   flex-direction: column;
-  margin-block: 1.4rem 1rem;
+  /* 3rem entre le titre et la première carte : place de l'onde du panneau. */
+  margin-block: var(--suivi-ecart-onde) 1rem;
 }
 .auth-carte {
   position: relative;
@@ -1571,7 +1573,7 @@ h3,
 
 /* Autres étapes (code, enrôlement, mot de passe imposé) : une carte du panneau, champs et boutons Mantine adaptés. */
 .auth-etape {
-  margin-top: 1.4rem;
+  margin-top: var(--suivi-ecart-onde);
   padding: 1rem;
   border: var(--suivi-trait-l) solid var(--suivi-nav-active);
   border-radius: 0.75rem;

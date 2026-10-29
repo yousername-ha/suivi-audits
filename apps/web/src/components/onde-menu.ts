@@ -36,14 +36,20 @@ export interface Trace {
 export const ondulation = (X: number, Z: number, t: number) =>
   AMPLITUDE_SOL * Math.sin(X * 0.012 + t * 0.9) * Math.cos(Z * 0.8 - t * 0.6);
 
-/** Projection d'un point du sol (X latéral au premier plan, z profondeur relative > 0) sur le panneau. */
-export function projeter(X: number, z: number, Z: number, t: number, l: number, h: number): Point {
-  const y0 = h * HORIZON;
+/** Projection d'un point du sol (X latéral au premier plan, z profondeur relative > 0) sur le panneau, sous l'horizon
+    donné en part de la hauteur. */
+export function projeter(X: number, z: number, Z: number, t: number, l: number, h: number, horizon = HORIZON): Point {
+  const y0 = h * horizon;
   return { x: l / 2 + X / z, y: y0 + (h - y0) / z + ondulation(X, Z, t) / z };
 }
 
 /** Grille en perspective : rangées (parallèles à l'horizon) qui avancent, puis fuyantes vers le centre de l'horizon. */
-export function grillePerspective(t: number, l: number, h: number): { rangees: Trace[]; fuyantes: Trace[] } {
+export function grillePerspective(
+  t: number,
+  l: number,
+  h: number,
+  horizon = HORIZON,
+): { rangees: Trace[]; fuyantes: Trace[] } {
   const phase = lisse(t * AVANCE);
   const rangees: Trace[] = [];
   for (let k = 0; k <= PROFONDEUR; k++) {
@@ -51,7 +57,7 @@ export function grillePerspective(t: number, l: number, h: number): { rangees: T
     if (z < PROCHE) continue;
     const Z = k + Math.floor(t * AVANCE);
     // Abscisses régulières à l'écran : X choisi pour que la projection tombe sur s/24 de la largeur.
-    const points = Array.from({ length: 25 }, (_, s) => projeter(((s / 24) * l - l / 2) * z, z, Z, t, l, h));
+    const points = Array.from({ length: 25 }, (_, s) => projeter(((s / 24) * l - l / 2) * z, z, Z, t, l, h, horizon));
     rangees.push({ points, opacite: Math.max(0, 1 - z / (PROFONDEUR + 1)) });
   }
   const demi = Math.ceil((l / 2 / PAS_FUYANTES) * 1.6);
@@ -60,7 +66,7 @@ export function grillePerspective(t: number, l: number, h: number): { rangees: T
     const X = j * PAS_FUYANTES;
     const points = Array.from({ length: 17 }, (_, s) => {
       const z = PROCHE * ((PROFONDEUR + 1) / PROCHE) ** (s / 16);
-      return projeter(X, z, z + t * AVANCE, t, l, h);
+      return projeter(X, z, z + t * AVANCE, t, l, h, horizon);
     });
     fuyantes.push({ points, opacite: Math.max(0.25, 1 - Math.abs(j) / (demi + 1)) });
   }
@@ -93,6 +99,81 @@ export function ondeHorizon(
   }
   return { cretes, traits };
 }
+
+/* ---------------------------------------------------------------- Variante de l'écran de connexion
+   Onde signée (au-dessus et en dessous de la ligne centrale), placée à mi-chemin entre le titre et la première carte. */
+
+/** Disposition mesurée sur le panneau : horizon et espace libre entre le titre et la première carte, en part de la hauteur. */
+export interface DispositionConnexion {
+  horizon: number;
+  ecart: number;
+}
+const borne = (x: number) => Math.min(1, Math.max(0, x));
+/** Horizon à mi-chemin entre le bas du titre et le haut de la première carte (positions en px dans la page). */
+export function dispositionConnexion(
+  panneau: { top: number; height: number },
+  basTitre: number,
+  hautCarte: number,
+): DispositionConnexion {
+  const h = Math.max(panneau.height, 1);
+  return {
+    horizon: borne(((basTitre + hautCarte) / 2 - panneau.top) / h),
+    ecart: borne((hautCarte - basTitre) / h),
+  };
+}
+
+/** Signal signé dans [−1 ; 1], nul aux bords (u de 0 à 1, t en secondes). */
+export function signalOnde(u: number, t: number): number {
+  const v = borne(u);
+  const enveloppe = Math.sin(Math.PI * v) ** 1.4;
+  const souffle = 0.65 + 0.35 * Math.sin(0.9 * t + 4 * v);
+  const porteuse =
+    0.5 * Math.sin(23 * v + 2.1 * t) + 0.3 * Math.sin(51 * v - 3.3 * t) + 0.2 * Math.sin(9 * v + 0.7 * t);
+  return enveloppe * souffle * porteuse;
+}
+/** Compression douce des grandes crêtes. */
+export const compresser = (z: number) => z / (1 + 0.4 * Math.abs(z));
+
+/** Amplitude (px) : 7,5 % de la hauteur, au plus la moitié de l'espace entre le titre et la première carte. */
+export const AMPLITUDE_CONNEXION = 0.075;
+export const amplitudeConnexion = (h: number, ecart: number) => Math.min(h * AMPLITUDE_CONNEXION, (h * ecart) / 2);
+
+/** Pas des traits verticaux (px), leur part de l'amplitude et leur décalage de phase (s). */
+export const PAS_TRAITS = 4;
+export const PART_TRAITS = 0.75;
+export const DECALAGE_TRAITS = 0.35;
+/** Onde signée : signal (un point tous les PAS_TRAITS px), traits verticaux signés et ligne centrale (y0). */
+export function ondeSignee(
+  t: number,
+  l: number,
+  h: number,
+  d: DispositionConnexion,
+): { y0: number; signal: Point[]; traits: { x: number; y1: number; y2: number }[] } {
+  const y0 = h * d.horizon;
+  const a = amplitudeConnexion(h, d.ecart);
+  const n = Math.max(2, Math.ceil(l / PAS_TRAITS) + 1);
+  const signal: Point[] = [];
+  const traits: { x: number; y1: number; y2: number }[] = [];
+  for (let i = 0; i < n; i++) {
+    const x = Math.min(l, i * PAS_TRAITS);
+    const u = x / Math.max(l, 1);
+    signal.push({ x, y: y0 - a * compresser(signalOnde(u, t)) });
+    traits.push({ x, y1: y0, y2: y0 - a * PART_TRAITS * compresser(signalOnde(u, t - DECALAGE_TRAITS)) });
+  }
+  return { y0, signal, traits };
+}
+
+/** Teintes de l'onde de connexion : dégradé conformité (bords) / risques (centre). */
+export const PALETTE_CONNEXION = {
+  bord: '--suivi-famille-conformite',
+  centre: '--suivi-famille-risques',
+  surface: 0.22,
+  traits: 0.3,
+  ligne: 0.4,
+  onde: 0.95,
+  epaisseur: 2.4,
+  flou: 18,
+} as const;
 
 export interface Particule {
   x: number;
