@@ -118,6 +118,9 @@ test('installation : jeton, création de l’administrateur, activation de la do
 test('poivre : défini à l’installation, changé depuis l’administration avec l’ancien poivre et un code', async ({
   browser,
 }) => {
+  // Connexion puis deux codes TOTP neufs : chacun peut attendre la fenêtre de 30 s suivante (freshTotp, anti-rejeu).
+  // Le test dure déjà 52 s quand aucune attente ne s'ajoute ; 60 s ne suffisent pas selon l'instant de départ.
+  test.setTimeout(120_000);
   const { state } = await sessionAdmin(browser);
   const ctx = await browser.newContext({ storageState: state, ignoreHTTPSErrors: true, locale: 'fr-FR' });
   const page = await ctx.newPage();

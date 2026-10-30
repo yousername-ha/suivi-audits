@@ -23,8 +23,10 @@ Suivre également [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Sessions parallèles (directive commune du 27/10/2026, validée par le RSSI)
 
-Depuis le 27/10/2026 (fin de la session « Opus »), **une seule session est active** (« Sonnet »). Les règles ci-dessous
-restent valables si plusieurs sessions Claude travaillent de nouveau en même temps sur le dépôt :
+Du 27/10/2026 (fin de la session « Opus ») au 29/10/2026, une seule session était active (« Sonnet »). Le 30/10/2026, deux
+sessions travaillent en même temps : « Projet audit_suivi Coeur » (`session_01ES6jrfuR1tD6Az1XDgAnS3`) et « Refonte écran de
+connexion » (`session_01EnWdzhN76qXxN4h4g2c977`). Les règles ci-dessous s'appliquent dès que plusieurs sessions Claude
+travaillent sur le dépôt :
 
 1. Branche de référence unique : `claude-suivi-smsi`. Chaque session travaille sur sa propre branche (`claude/…`) et y
    fusionne `claude-suivi-smsi` avant tout travail.
@@ -38,6 +40,13 @@ restent valables si plusieurs sessions Claude travaillent de nouveau en même te
    Sonnet, aujourd'hui seule active).
 5. Numéros d'ADR : annoncer le numéro pris au RSSI avant de l'utiliser (0065 retenu par la session Sonnet le 27/10/2026).
 6. Dossier de reprise commun : le plus récent de `docs/01_REPRISE_IA/REPRISE-*.md`.
+7. Signature des sessions (consigne du RSSI du 30/10/2026) : chaque session indique son nom et son identifiant
+   (« Nom de la session » (`session_…`), lus avec l'outil `get_session`) dans ce qu'elle rédige : pied des messages de
+   commit (`Session : …`), en-tête des descriptions de PR (`**Session** : …`, ou les sessions successives quand plusieurs
+   ont contribué) et fin de chaque entrée du CHANGELOG qu'elle écrit (`(session « … »)`). Pas de reprise rétroactive des
+   entrées existantes.
+8. Avant de ranger une entrée du CHANGELOG ou de modifier un fichier partagé, vérifier qu'aucune PR ouverte d'une autre
+   session ne fait déjà la même chose (`#183` et `#184` ont déplacé la même entrée le 30/10/2026 ; doublon retiré par `#185`).
 
 ## Invariants techniques
 
