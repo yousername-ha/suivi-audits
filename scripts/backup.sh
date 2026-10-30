@@ -116,7 +116,8 @@ VERIFIEE=true
 echo "Sauvegarde : $OUT"
 # Rotation dans le dossier de destination seulement : les sauvegardes « avant mise à jour » (sous-dossier) sont gardées.
 # Les BACKUP_GARDER_MIN archives les plus récentes sont toujours conservées, quelle que soit leur ancienneté ; au-delà,
-# une archive disparaît (avec son fichier .sha256) seulement si elle a plus de RETENTION_DAYS jours.
+# une archive disparaît (avec son fichier .sha256) seulement si elle a plus de RETENTION_DAYS jours. Les archives .tar.enc de la
+# 5.x, que cette version ne sait ni lire ni vérifier (ADR 0077), sont hors rotation : leur suppression revient à l'exploitant.
 rang=0
 while IFS= read -r -d '' ligne; do
   rang=$((rang + 1))
@@ -124,4 +125,4 @@ while IFS= read -r -d '' ligne; do
   archive=${ligne#*$'\t'}
   [ -n "$(find "$archive" -maxdepth 0 -mtime +"$RETENTION_DAYS")" ] || continue
   rm -f -- "$archive" "$archive.sha256"
-done < <(find "$DEST" -maxdepth 1 -type f \( -name "$PREFIXE-*.tar.age" -o -name "$PREFIXE-*.tar.enc" -o -name "$PREFIXE-*.tar" \) -printf '%T@\t%p\0' | LC_ALL=C sort -z -t $'\t' -k1,1nr -k2,2r)
+done < <(find "$DEST" -maxdepth 1 -type f \( -name "$PREFIXE-*.tar.age" -o -name "$PREFIXE-*.tar" \) -printf '%T@\t%p\0' | LC_ALL=C sort -z -t $'\t' -k1,1nr -k2,2r)
