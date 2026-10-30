@@ -105,6 +105,15 @@ for (const p of PAGES)
         const problems = watchPage(page);
         await page.goto(p.url());
         await pret(page, p.titre, p.contenu);
+        // Diagnostic des captures qui dépendent de la présence (barre de présence, liste des personnes en ligne) : la
+        // liste des présences vues par le serveur est jointe au résultat, pour savoir qui était là en cas d'écart.
+        const presences = await page.request.get('/api/presence').then(
+          (r) => r.json() as Promise<unknown>,
+          () => null,
+        );
+        await test
+          .info()
+          .attach('presences', { body: JSON.stringify(presences, null, 1), contentType: 'application/json' });
         await expect(page).toHaveScreenshot(`ecrans-${p.nom}-${w}-${mode}.png`, {
           animations: 'disabled',
           caret: 'hide',
