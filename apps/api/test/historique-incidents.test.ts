@@ -124,6 +124,38 @@ describe('registre des incidents', () => {
     expect(s.crrc.alerts[0]).toMatchObject({ incident: r.json().incident, status: 'En cours' });
     expect((await writer.post('/api/crrc/alertes/ALR-1/incident')).statusCode).toBe(409);
   });
+  it('tient la chronologie du RETEX : ajout, tri, modification, retrait, droits et champs inconnus conservés', async () => {
+    const url = '/api/incidents/INC-2026-001/retex';
+    const ev = { ts: '2026-10-12T09:00', type: 'Analyse', titre: 'Analyse fictive', gravite: 'Élevée' };
+    expect((await reader.post(url, ev)).statusCode).toBe(403);
+    expect((await writer.post(url, { ...ev, titre: '' })).statusCode).toBe(422);
+    expect((await writer.post(url, { ...ev, ts: '2026-02-30T09:00' })).statusCode).toBe(422);
+    expect((await writer.post('/api/incidents/INC-9/retex', ev)).statusCode).toBe(404);
+    const a = await writer.post(url, ev);
+    expect(a.statusCode, a.body).toBe(201);
+    const b = await writer.post(url, { ts: '2026-10-12T08:45', type: 'Détection', titre: 'Alerte fictive' });
+    expect(b.json().timeline.map((e: { id: string }) => e.id)).toEqual(['EV-002', 'EV-001']);
+    expect(b.json().timeline[0]).toMatchObject({ titre: 'Alerte fictive', description: '', gravite: '' });
+    const s = await etat();
+    const brut = s.incidents.find((x: { id: string }) => x.id === 'INC-2026-001');
+    brut.timeline[0].inconnu = 'garder';
+    await seedState(t, s);
+    const m = await writer.patch(`${url}/EV-001`, { titre: 'Analyse corrigée', gravite: '' });
+    expect(m.statusCode, m.body).toBe(200);
+    expect(m.json().timeline[1]).toMatchObject({ id: 'EV-001', titre: 'Analyse corrigée', gravite: '' });
+    const apres = (await etat()).incidents.find((x: { id: string }) => x.id === 'INC-2026-001');
+    expect(apres.timeline[0]).toMatchObject({ inconnu: 'garder', type: 'Analyse' });
+    expect(apres).toMatchObject({ inconnu: { x: 1 } });
+    expect((await writer.patch(`${url}/EV-404`, { titre: 'x' })).statusCode).toBe(404);
+    expect((await writer.patch(`${url}/EV-001`, { type: 'Inconnu' })).statusCode).toBe(422);
+    expect((await reader.del(`${url}/EV-002`)).statusCode).toBe(403);
+    const d = await writer.del(`${url}/EV-002`);
+    expect(d.statusCode, d.body).toBe(200);
+    expect(d.json().timeline.map((e: { id: string }) => e.id)).toEqual(['EV-001']);
+    expect((await writer.del(`${url}/EV-002`)).statusCode).toBe(404);
+    const c = await writer.post(url, { ts: '2026-10-12T10:00', type: 'Confinement', titre: 'Isolement fictif' });
+    expect(c.json().timeline.map((e: { id: string }) => e.id)).toEqual(['EV-001', 'EV-003']);
+  });
   it('supprime un incident', async () => {
     expect((await admin.del(`/api/incidents/${incident}`)).statusCode).toBe(200);
     expect((await admin.del(`/api/incidents/${incident}`)).statusCode).toBe(404);
@@ -291,6 +323,9 @@ describe('cellule de crise', () => {
     for (const n of [
       'incident.created',
       'incident.action-created',
+      'incident.retex-added',
+      'incident.retex-updated',
+      'incident.retex-deleted',
       'crisis.cell-opened',
       'crisis.cell-closed',
       'crisis.checklist',

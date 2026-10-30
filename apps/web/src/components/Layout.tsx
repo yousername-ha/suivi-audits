@@ -41,6 +41,7 @@ import { logout as endSession } from '../logout';
 import { alerteDeFamille, LibelleAlerte, useAlertesMenu } from '../pilotage/alertes-menu';
 import { OngletsRubriques } from './OngletsRubriques';
 import { AlerteSecuriteNotice } from './AlerteSecuriteNotice';
+import { RetexInvitationNotice, useInvitationsRetex } from '../incidents/MesContributionsRetex';
 import { CleSecoursNotice } from './CleSecours';
 import { UpdateNotice } from './Updates';
 import { ErrorAlert } from './common';
@@ -96,9 +97,12 @@ export function Layout({ children }: { children: ReactNode }) {
   if (cartesVisibles(can, 'plateforme').length > 0) administration.push(['/plateforme', 'Plateforme', IconeParametres]);
   if (cartesVisibles(can, 'systeme').length > 0)
     administration.push(['/systeme', 'Configuration système', IconeAdministration]);
+  const invitationsRetex = useInvitationsRetex();
   const outils: Item[] = [['/account', 'Mon compte', IconeCompte]];
   outils.push(['/aide', 'Guide d’utilisation', IconeDocuments]);
   if (canReadBusiness(can)) outils.push(['/mur', 'Écran mural', IconeMur]);
+  // Demandes de contribution à un RETEX : visibles pour toute personne invitée, même sans droit sur les incidents.
+  if (invitationsRetex.data?.length) outils.push(['/retex', 'Mes contributions RETEX', IconeDocuments]);
   const active = (to: string) =>
     to === '/'
       ? loc.pathname === '/'
@@ -232,6 +236,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <UpdateNotice />
         <CleSecoursNotice />
         <AlerteSecuriteNotice />
+        <RetexInvitationNotice />
         <header className="shell-header">
           <Group h="100%" px="md" justify="space-between" wrap="nowrap">
             <Group gap="sm" wrap="nowrap">
