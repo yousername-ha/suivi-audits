@@ -75,6 +75,7 @@ export type Disposition = z.infer<typeof Disposition>;
 export const DispositionBody = z.object({ disposition: Disposition }).strict();
 
 export const DispositionEnregistree = z.object({
+  id: z.uuid(),
   disposition: Disposition,
   version: z.number().int().min(1),
   modifieePar: z.string(),
@@ -82,12 +83,47 @@ export const DispositionEnregistree = z.object({
 });
 export type DispositionEnregistree = z.infer<typeof DispositionEnregistree>;
 
-/** Disposition personnelle et disposition par défaut de l'organisation (chacune absente si non enregistrée). */
+/** Tableau de bord partagé avec la personne (lot 2b) : la disposition seule et le nom de son auteur. */
+export const TableauPartage = DispositionEnregistree.extend({ auteur: z.string() });
+export type TableauPartage = z.infer<typeof TableauPartage>;
+
+/** Disposition personnelle, disposition par défaut de l'organisation (chacune absente si non enregistrée), tableaux
+    partagés avec la personne et tableau qu'elle a choisi d'afficher (null : le sien, sinon celui de l'organisation). */
 export const DispositionsOut = z.object({
   personnelle: DispositionEnregistree.nullable(),
   organisation: DispositionEnregistree.nullable(),
+  partages: z.array(TableauPartage),
+  choix: z.uuid().nullable(),
 });
 export type DispositionsOut = z.infer<typeof DispositionsOut>;
+
+/** Tableau affiché à l'accueil : un tableau visible par la personne, ou null pour le choix automatique. */
+export const ChoixTableauBody = z.object({ tableau: z.uuid().nullable() }).strict();
+
+/** Destinataire d'un partage : un compte ou un groupe. */
+export const DestinatairePartage = z.object({ type: z.enum(['utilisateur', 'groupe']), id: z.uuid() }).strict();
+export type DestinatairePartage = z.infer<typeof DestinatairePartage>;
+export const MAX_DESTINATAIRES = 200;
+export const PartageBody = z
+  .object({ destinataires: z.array(DestinatairePartage).max(MAX_DESTINATAIRES) })
+  .strict()
+  .refine(
+    (b) => new Set(b.destinataires.map((d) => `${d.type}:${d.id}`)).size === b.destinataires.length,
+    'Un destinataire figure deux fois.',
+  );
+export const PartageOut = z.object({
+  destinataires: z.array(DestinatairePartage.extend({ nom: z.string() })),
+  /** Version du tableau personnel (0 : pas encore enregistré, donc pas encore partageable). */
+  version: z.number().int().min(0),
+});
+export type PartageOut = z.infer<typeof PartageOut>;
+
+/** Annuaire des destinataires possibles (droit tableau_de_bord:modifier) : comptes actifs et groupes, sans courriel. */
+export const AnnuaireTableauDeBord = z.object({
+  utilisateurs: z.array(z.object({ id: z.uuid(), nom: z.string(), identifiant: z.string() })),
+  groupes: z.array(z.object({ id: z.uuid(), nom: z.string(), membres: z.number().int() })),
+});
+export type AnnuaireTableauDeBord = z.infer<typeof AnnuaireTableauDeBord>;
 
 const connue = (id: unknown): id is IdDalle => (DALLES_TABLEAU_DE_BORD as readonly unknown[]).includes(id);
 

@@ -15,7 +15,14 @@ export const BUSINESS_MODULES = [
   'incidents',
   'cartographie',
 ] as const;
-export const MODULES = [...BUSINESS_MODULES, 'documents', 'import_export', 'administration', 'parametres'] as const;
+export const MODULES = [
+  ...BUSINESS_MODULES,
+  'documents',
+  'import_export',
+  'administration',
+  'parametres',
+  'tableau_de_bord',
+] as const;
 export type Module = (typeof MODULES)[number];
 export type BusinessModule = (typeof BUSINESS_MODULES)[number];
 
@@ -34,6 +41,7 @@ export const MODULE_LABELS: Record<Module, string> = {
   import_export: 'Import et export',
   administration: 'Administration (comptes, groupes, rôles, sessions, journal)',
   parametres: 'Paramètres',
+  tableau_de_bord: 'Tableau de bord de l’accueil (disposition et partage)',
 };
 
 export const ACTIONS = ['lire', 'modifier', 'supprimer', 'exporter', 'administrer'] as const;
@@ -84,8 +92,13 @@ export const SYSTEM_ROLE_DEFS: Record<SystemRole, SystemRoleDef> = {
   },
   contributeur: {
     name: 'Contributeur',
-    description: 'Lire et modifier les modules métier, les documents et les liens ; exporter les cartes.',
-    permissions: [...every([...BUSINESS_MODULES, 'documents'], ['lire', 'modifier']), 'cartographie:exporter'],
+    description:
+      'Lire et modifier les modules métier, les documents et les liens ; exporter les cartes ; disposer et partager son tableau de bord.',
+    permissions: [
+      ...every([...BUSINESS_MODULES, 'documents'], ['lire', 'modifier']),
+      'cartographie:exporter',
+      'tableau_de_bord:modifier',
+    ],
   },
   lecteur: {
     name: 'Lecteur',

@@ -2173,6 +2173,10 @@ html[data-style='clair'][data-mantine-color-scheme='light'] {
   gap: var(--mantine-spacing-sm);
   margin-block-end: var(--mantine-spacing-lg);
 }
+.tdb-choix {
+  max-inline-size: 24rem;
+  margin-block-end: var(--mantine-spacing-md);
+}
 .tdb-masquees {
   display: flex;
   flex-wrap: wrap;
