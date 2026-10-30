@@ -25,7 +25,7 @@ Aucune action sur le serveur : la migration additive `049_retex_contributions.sq
 
 ### Modifié
 
-- **Menu Pilotage** : « Parcours guidé » devient une destination de la famille Pilotage, avec deux onglets, « Parcours guidé » (démarche qualité, sécurité, HDS ou intégrée) et « Parcours ISO 27001 / HDS ». Les deux rubriques quittent « Synthèse et périmètres », qui garde « Synthèse » et « Périmètres ». Adresses (`/pilotage/parcours`, `/pilotage/parcours-iso`) et droits inchangés. _(Session « Pilotages ».)_
+- **Menu Pilotage** : « Parcours guidé » devient une destination de la famille Pilotage, qui regroupe les parcours disponibles en onglets : « Parcours ISO 27001 / HDS », ouvert par défaut, et « Parcours par démarche » (nouveau nom de l'ancienne rubrique « Parcours guidé » : démarche qualité, sécurité, HDS ou intégrée ; article d'aide renommé de même). Le bouton de la Synthèse devient « Ouvrir les parcours guidés ». Les deux rubriques quittent « Synthèse et périmètres », qui garde « Synthèse » et « Périmètres ». Adresses (`/pilotage/parcours`, `/pilotage/parcours-iso`) et droits inchangés. _(Session « Pilotages ».)_
 
 ### Corrigé
 - **Installateur** (session « Projet audit_suivi Coeur ») : `sudo ./installer.sh` signale un fichier `.env` conservé dont `APP_VERSION` n'est pas celle du dépôt téléchargé (cas relevé à l'installation d'essai de la 6.0.1 : un `.env` d'une tentative précédente demandait les images 6.0.0, jamais publiées, d'où « manifest unknown »). L'avertissement donne la commande de correction ; le fichier n'est jamais modifié. L'échec du téléchargement des images rappelle la version demandée. Ligne de dépannage ajoutée au guide d'installation.

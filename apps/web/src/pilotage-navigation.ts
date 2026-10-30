@@ -10,8 +10,8 @@ export const PILOTAGE_NAV = [
   {
     label: 'Parcours guidé',
     items: [
-      { id: 'parcours', label: 'Parcours guidé', module: 'pilotage' },
       { id: 'parcours-iso', label: 'Parcours ISO 27001 / HDS', module: 'pilotage' },
+      { id: 'parcours', label: 'Parcours par démarche', module: 'pilotage' },
     ],
   },
   {

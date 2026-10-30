@@ -12,8 +12,8 @@ const rubriques = FAMILLES.flatMap((f) => f.destinations.flatMap((d) => d.rubriq
 const INVENTAIRE = [
   'pilotage|synthese|synthese|/pilotage/synthese|pilotage|lire',
   'pilotage|synthese|perimetres|/pilotage/perimetres|pilotage|lire',
-  'pilotage|parcours|parcours|/pilotage/parcours|pilotage|lire',
   'pilotage|parcours|parcours-iso|/pilotage/parcours-iso|pilotage|lire',
+  'pilotage|parcours|parcours|/pilotage/parcours|pilotage|lire',
   'pilotage|objectifs|processus|/pilotage/processus|pilotage|lire',
   'pilotage|objectifs|objectifs|/pilotage/objectifs|pilotage|lire',
   'pilotage|objectifs|indicateurs|/pilotage/indicateurs|pilotage|lire',
@@ -150,6 +150,7 @@ describe('navigation', () => {
     expect(localiser('/pilotage')?.rubrique.id).toBe('synthese');
     expect(localiser('/pilotage/risques')?.famille.id).toBe('risques');
     expect(localiser('/pilotage/parcours-iso')?.destination.label).toBe('Parcours guidé');
+    expect(famillesVisibles(tout)[0]?.destinations.find((d) => d.id === 'parcours')?.to).toBe('/pilotage/parcours-iso');
     expect(localiser('/documents/abc')?.destination.id).toBe('documents');
     expect(localiser('/cartographie/risques')?.famille.id).toBe('organisation');
     expect(localiser('/account')).toBeUndefined();
