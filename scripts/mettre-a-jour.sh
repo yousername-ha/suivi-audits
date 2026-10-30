@@ -303,7 +303,7 @@ else
   sha256sum "$SAUVEGARDE" > "$SAUVEGARDE.sha256"
 fi
 # Les 5 dernières sauvegardes « avant mise à jour » sont gardées, hors rotation.
-find "$SAUV/avant-mise-a-jour" -maxdepth 1 -name '*.tar*' ! -name '*.sha256' -printf '%T@ %p\n' | sort -rn | tail -n +6 \
+find "$SAUV/avant-mise-a-jour" -maxdepth 1 -name '*.tar.age' -printf '%T@ %p\n' | sort -rn | tail -n +6 \
   | cut -d' ' -f2- | while read -r f; do rm -f "$f" "$f.sha256"; done
 MIGRATIONS_AVANT=$(migrations_appliquees)
 CONTROLE_AVANT=$(dc exec -T app suivi controle-donnees 2> /dev/null || true)
