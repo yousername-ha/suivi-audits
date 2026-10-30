@@ -31,7 +31,8 @@ test.beforeAll(async ({ browser }) => {
   pilote = { ctx, page, problems: watchPage(page), csrf: admin.csrf };
   const rq = ctx.request;
 
-  // Incident et cellule de crise fictifs, remis à neuf à chaque exécution (aucune collecte, main courante de deux entrées).
+  // Incident et cellule de crise fictifs, remis à neuf à chaque exécution (aucune collecte, main courante de deux entrées ;
+  // identifiants « CL- » exigés par le schéma 15, uniques dans toutes les cellules).
   const s = (await (await rq.get('/api/suivi/etat')).json()) as Record<string, unknown>;
   const incidents = (Array.isArray(s.incidents) ? s.incidents : []) as { id?: string }[];
   const crise = (s.crisis && typeof s.crisis === 'object' ? s.crisis : {}) as Record<string, unknown>;
@@ -76,8 +77,15 @@ test.beforeAll(async ({ browser }) => {
           end: '2026-10-12T11:00:00.000Z',
           status: 'Clôturée',
           log: [
-            { ts: '2026-10-12T08:20:00.000Z', type: 'Décision', author: 'Cellule', text: 'Isolement fictif du relais' },
             {
+              id: 'CL-RETEX-1',
+              ts: '2026-10-12T08:20:00.000Z',
+              type: 'Décision',
+              author: 'Cellule',
+              text: 'Isolement fictif du relais',
+            },
+            {
+              id: 'CL-RETEX-2',
               ts: '2026-10-12T09:10:00.000Z',
               type: 'Communication',
               author: 'Cellule',
