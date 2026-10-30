@@ -7,7 +7,8 @@
 CREATE TABLE webauthn_credentials (
   id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id       uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  credential_id text NOT NULL UNIQUE CHECK (credential_id ~ '^[A-Za-z0-9_-]{16,1366}$'),
+  credential_id text NOT NULL UNIQUE
+    CHECK (credential_id ~ '^[A-Za-z0-9_-]+$' AND char_length(credential_id) BETWEEN 16 AND 1366),
   public_key    bytea NOT NULL,
   sign_count    bigint NOT NULL DEFAULT 0 CHECK (sign_count >= 0),
   transports    jsonb NOT NULL DEFAULT '[]'::jsonb,
