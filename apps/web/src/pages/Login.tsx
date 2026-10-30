@@ -1,4 +1,5 @@
-/* Connexion : mot de passe, puis double authentification (code TOTP), enrôlement TOTP, changement de mot de passe imposé. */
+/* Connexion : mot de passe, puis double authentification (code TOTP, clé de sécurité ou code de récupération), enrôlement TOTP
+   (avec ajout facultatif d'une clé), enrôlement d'une clé imposé, changement de mot de passe imposé. */
 import { Alert, Button, Card, Group, PasswordInput, PinInput, Stack, Text, TextInput, Title } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { useQuery } from '@tanstack/react-query';
@@ -7,7 +8,9 @@ import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { Navigate, useNavigate, useSearchParams } from 'react-router';
 import { ApiError, api, get, post, setCsrf } from '../api';
 import { CriteresMotDePasse } from '../components/CriteresMotDePasse';
-import { useMe, useRefreshMe } from '../session';
+import { AjoutCle, EnrolementImpose } from '../components/ClesSecurite';
+import { fetchMe, useMe, useRefreshMe } from '../session';
+import { connexionParCle, MESSAGE_NAVIGATEUR, navigateurCompatible } from '../webauthn';
 
 const safeNext = (n: string | null) => (n && /^\/(?!\/)/.test(n) ? n : '/');
 
@@ -66,14 +69,14 @@ export function LoginPage() {
   }, [me.stage, next, nav]);
   if (me.stage === 'anon' && setup.data?.needed && !setup.data.adminExists) return <Navigate to="/setup" replace />;
 
-  const run = async (fn: () => Promise<unknown>) => {
+  const run = async (fn: () => Promise<unknown>, o: { rafraichir?: boolean } = {}) => {
     setError(null);
     setBusy(true);
     try {
       await fn();
-      await refresh();
+      if (o.rafraichir !== false) await refresh();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : String(e));
+      setError(e instanceof ApiError || e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(false);
     }
@@ -100,9 +103,27 @@ export function LoginPage() {
 
   if (me.stage === 'mfa')
     return (
-      <MfaForm busy={busy} err={err} restart={restart} onCode={(code) => run(() => post('/api/auth/mfa', { code }))} />
+      <MfaForm
+        busy={busy}
+        err={err}
+        restart={restart}
+        cle={me.webauthn && (me.user?.cles ?? 0) > 0}
+        totp={!!me.user?.totpEnabled}
+        onCode={(code) => run(() => post('/api/auth/mfa', { code }))}
+        onCle={() => run(connexionParCle)}
+        onRecuperation={(code) => run(() => post('/api/auth/recovery', { code }))}
+      />
     );
-  if (me.stage === 'enroll') return <EnrollForm busy={busy} err={err} restart={restart} run={run} />;
+  if (me.stage === 'enroll')
+    return <EnrollForm busy={busy} err={err} restart={restart} run={run} cleProposee={me.webauthn} />;
+  if (me.stage === 'enroll_key')
+    return (
+      <AuthCard title="Enregistrer une clé de sécurité">
+        <EnrolementImpose />
+        {err}
+        {restart}
+      </AuthCard>
+    );
   if (me.stage === 'password') return <PasswordForm busy={busy} err={err} run={run} minLen={me.passwordMinLength} />;
   return (
     <PasswordLogin
@@ -161,7 +182,15 @@ function PasswordLogin({
   );
 }
 
-function CodeInput({ onComplete, busy }: { onComplete: (c: string) => void; busy: boolean }) {
+function CodeInput({
+  onComplete,
+  busy,
+  autoFocus = true,
+}: {
+  onComplete: (c: string) => void;
+  busy: boolean;
+  autoFocus?: boolean;
+}) {
   const [code, setCode] = useState('');
   return (
     <Stack align="center">
@@ -169,7 +198,7 @@ function CodeInput({ onComplete, busy }: { onComplete: (c: string) => void; busy
         length={6}
         type="number"
         oneTimeCode
-        autoFocus
+        autoFocus={autoFocus}
         size="lg"
         value={code}
         onChange={setCode}
@@ -189,20 +218,73 @@ function MfaForm({
   busy,
   err,
   restart,
+  cle,
+  totp,
   onCode,
+  onCle,
+  onRecuperation,
 }: {
   busy: boolean;
   err: ReactNode;
   restart: ReactNode;
+  /** Le compte a une clé utilisable et le serveur propose les clés. */
+  cle: boolean;
+  totp: boolean;
   onCode: (c: string) => void;
+  onCle: () => void;
+  onRecuperation: (c: string) => void;
 }) {
+  const [recuperation, setRecuperation] = useState(false);
+  const [code, setCode] = useState('');
+  const compatible = navigateurCompatible();
   return (
     <AuthCard title="Double authentification">
-      <Text size="sm" c="dimmed">
-        Saisissez le code à 6 chiffres affiché par votre application d’authentification.
-      </Text>
-      <CodeInput onComplete={onCode} busy={busy} />
+      {cle && (
+        <Stack gap="xs">
+          <Button onClick={onCle} loading={busy} disabled={!compatible} fullWidth autoFocus={compatible}>
+            Utiliser ma clé de sécurité
+          </Button>
+          {!compatible && (
+            <Text size="xs" c="orange.8" role="status">
+              {MESSAGE_NAVIGATEUR}
+            </Text>
+          )}
+        </Stack>
+      )}
+      {totp && !recuperation && (
+        <>
+          <Text size="sm" c="dimmed">
+            {cle ? 'Ou saisissez' : 'Saisissez'} le code à 6 chiffres affiché par votre application d’authentification.
+          </Text>
+          <CodeInput onComplete={onCode} busy={busy} autoFocus={!cle || !compatible} />
+        </>
+      )}
+      {recuperation && (
+        <form
+          onSubmit={(e: FormEvent) => {
+            e.preventDefault();
+            onRecuperation(code);
+          }}
+        >
+          <Stack gap="xs">
+            <TextInput
+              label="Code de récupération"
+              description="Un des dix codes remis lors de leur création (XXXX-XXXX-XXXX-XXXX), utilisable une seule fois."
+              autoComplete="one-time-code"
+              autoFocus
+              value={code}
+              onChange={(e) => setCode(e.currentTarget.value)}
+            />
+            <Button type="submit" loading={busy} disabled={code.replace(/[\s-]/g, '').length !== 16} fullWidth>
+              Valider le code de récupération
+            </Button>
+          </Stack>
+        </form>
+      )}
       {err}
+      <Button variant="subtle" size="xs" onClick={() => setRecuperation(!recuperation)}>
+        {recuperation ? 'Revenir au code de double authentification' : 'Utiliser un code de récupération'}
+      </Button>
       <Text size="xs" c="dimmed">
         Code refusé : vérifiez que l’heure du téléphone est automatique. Téléphone perdu : un administrateur peut
         réinitialiser votre double authentification.
@@ -217,12 +299,18 @@ function EnrollForm({
   err,
   restart,
   run,
+  cleProposee,
 }: {
   busy: boolean;
   err: ReactNode;
   restart: ReactNode;
-  run: (fn: () => Promise<unknown>) => void;
+  run: (fn: () => Promise<unknown>, o?: { rafraichir?: boolean }) => void;
+  /** Le serveur propose les clés : après le TOTP, ajout facultatif d'une clé (dès l'installation). */
+  cleProposee: boolean;
 }) {
+  const refresh = useRefreshMe();
+  const proposerCle = cleProposee && navigateurCompatible();
+  const [etapeCle, setEtapeCle] = useState(false);
   const [data, setData] = useState<{ secret: string; uri: string } | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   useEffect(() => {
@@ -237,6 +325,20 @@ function EnrollForm({
     q.make();
     return q.createDataURL(6, 2);
   })();
+  if (etapeCle)
+    return (
+      <AuthCard title="Ajouter une clé de sécurité (facultatif)">
+        <Text size="sm">
+          La double authentification est active. Vous pouvez aussi enregistrer dès maintenant une clé de sécurité
+          (YubiKey, clé FIDO2) : elle remplacera le code à 6 chiffres à la connexion, le code restant utilisable en
+          secours.
+        </Text>
+        <AjoutCle libelleBouton="Enregistrer ma clé" onAjout={() => void refresh()} />
+        <Button variant="default" onClick={() => void refresh()}>
+          Plus tard
+        </Button>
+      </AuthCard>
+    );
   return (
     <AuthCard title="Activer la double authentification">
       <Text size="sm">
@@ -257,23 +359,31 @@ function EnrollForm({
       <CodeInput
         busy={busy}
         onComplete={(code) =>
-          run(async () => {
-            const r = await post<{ demo?: 'ok' | 'echec' }>('/api/account/totp/confirm', { code });
-            if (r.demo === 'ok')
-              notifications.show({
-                color: 'teal',
-                autoClose: false,
-                message:
-                  'Données de démonstration chargées (établissement fictif). Pour repartir d’une base vide : Administration, Remettre la base à vide.',
-              });
-            if (r.demo === 'echec')
-              notifications.show({
-                color: 'red',
-                autoClose: false,
-                message:
-                  'Le chargement des données de démonstration a été interrompu : la démonstration peut être incomplète. Consultez le journal d’audit, puis Administration, Remettre la base à vide.',
-              });
-          })
+          run(
+            async () => {
+              const r = await post<{ demo?: 'ok' | 'echec' }>('/api/account/totp/confirm', { code });
+              // Session régénérée par la confirmation : nouveau jeton CSRF, sans quitter encore cet écran.
+              if (proposerCle) {
+                await fetchMe();
+                setEtapeCle(true);
+              }
+              if (r.demo === 'ok')
+                notifications.show({
+                  color: 'teal',
+                  autoClose: false,
+                  message:
+                    'Données de démonstration chargées (établissement fictif). Pour repartir d’une base vide : Administration, Remettre la base à vide.',
+                });
+              if (r.demo === 'echec')
+                notifications.show({
+                  color: 'red',
+                  autoClose: false,
+                  message:
+                    'Le chargement des données de démonstration a été interrompu : la démonstration peut être incomplète. Consultez le journal d’audit, puis Administration, Remettre la base à vide.',
+                });
+            },
+            { rafraichir: !proposerCle },
+          )
         }
       />
       {err}

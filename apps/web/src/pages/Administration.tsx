@@ -12,6 +12,7 @@ import { cartesVisibles, type Cote, type Peut } from '../administration-droits';
 import { get } from '../api';
 import { fmtDate } from '../components/common';
 import { PoivrePanel } from '../components/Poivre';
+import { PolitiqueClesPanel } from '../components/PolitiqueCles';
 import { RemiseAVidePanel } from '../components/RemiseAVide';
 import { UpdatesPanel } from '../components/Updates';
 import { useCan } from '../session';
@@ -276,13 +277,14 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     id: 'securite',
     cote: 'systeme',
     titre: 'Sécurité',
-    resume: 'Mots de passe, durée des sessions et double authentification.',
+    resume: 'Mots de passe, durée des sessions, double authentification et clés de sécurité.',
     icone: 'bouclier',
     teinte: 'vert',
     detail: (m, can) => (
       <Stack gap="xl">
         <SectionLoader section="securite" onDirty={m} />
         {can('administration', 'administrer') && <PoivrePanel />}
+        {can('administration', 'lire') && <PolitiqueClesPanel ecriture={can('administration', 'administrer')} />}
       </Stack>
     ),
   },
