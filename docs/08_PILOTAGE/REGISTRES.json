@@ -1554,7 +1554,7 @@
       "origin": "demande du RSSI du 29/10/2026 (maquette validée)",
       "acceptance": "Panneau unique centré à toutes les tailles ; formulaire dans les trois cartes empilées ; étapes code TOTP, enrôlement et changement de mot de passe dans le même panneau ; sceau, onde (OndeMenu, option connexion) et fond animés décoratifs, absents sous automate de test et à l'impression ; CSP stricte, couleurs par jetons, aucune dépendance nouvelle ; tests purs de la géométrie ; captures clair, sombre et téléphone.",
       "dependencies": "Aucune",
-      "next": "Aucune côté développement : PR #181, CI 7/7 exigée avant fusion. Relecture visuelle du RSSI sur son serveur à faire (TEST-041).",
+      "next": "Aucune côté développement : PR #181 fusionnée dans claude-suivi-smsi le 30/10/2026 après CI 7/7, publiée dans la 6.0.0 (décision du RSSI du 30/10/2026). Relecture visuelle du RSSI sur son serveur à faire (TEST-041).",
       "estimation": "NON ESTIMÉE"
     }
   ],
