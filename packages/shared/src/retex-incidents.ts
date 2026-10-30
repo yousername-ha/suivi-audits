@@ -35,6 +35,11 @@ export interface EvenementRetex {
   description: string;
   acteur: string;
   gravite: string;
+  /** Origine : vide (saisie du pilote), `incident:…` (fiche), `crise:<cellule>:<rang>` (main courante),
+      `proposition:<id>` (contribution validée). Sert aussi à ne pas importer deux fois le même élément. */
+  source: string;
+  /** Contributeur à l'origine de l'événement (nom affiché), vide pour une saisie du pilote ou un import. */
+  apport: string;
 }
 
 const HORODATAGE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
@@ -66,6 +71,8 @@ export function lireEvenementsRetex(brut: unknown): EvenementRetex[] {
       description: str(o.description),
       acteur: str(o.acteur),
       gravite: (GRAVITES_RETEX as readonly string[]).includes(str(o.gravite)) ? str(o.gravite) : '',
+      source: str(o.source),
+      apport: str(o.apport),
     }))
     .filter((e) => e.id && horodatageRetexValide(e.ts))
     .sort((a, b) => a.ts.localeCompare(b.ts) || a.id.localeCompare(b.id, 'fr', { numeric: true }));
@@ -179,6 +186,22 @@ export const EvenementRetexSaisie = z
   .partial({ description: true, acteur: true, gravite: true })
   .strict();
 export type EvenementRetexSaisie = z.infer<typeof EvenementRetexSaisie>;
+/** Import en lot par le pilote (fiche de l'incident, main courante de crise) : chaque élément porte sa source, un élément
+    dont la source figure déjà dans la chronologie est ignoré. */
+export const LotEvenementsRetex = z
+  .object({
+    evenements: z
+      .array(
+        z
+          .object({ ...champs, source: t(120).min(1) })
+          .partial({ description: true, acteur: true, gravite: true })
+          .strict(),
+      )
+      .min(1)
+      .max(200),
+  })
+  .strict();
+export type LotEvenementsRetex = z.infer<typeof LotEvenementsRetex>;
 /** Modification d'un événement : champs fournis seulement. */
 export const EvenementRetexModification = z.object(champs).partial().strict();
 export type EvenementRetexModification = z.infer<typeof EvenementRetexModification>;

@@ -10,6 +10,7 @@ import { lazy, Suspense, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, Navigate, Outlet, RouterProvider, useLocation } from 'react-router';
 import { ApiError } from './api';
+import { MesContributionsRetexPage } from './incidents/MesContributionsRetex';
 import { Layout } from './components/Layout';
 import { AccountPage } from './pages/Account';
 import { AdminPage } from './pages/Admin';
@@ -92,6 +93,7 @@ const router = createBrowserRouter([
       { path: '/exports', element: <ExportsPage /> },
       { path: '/registres/:id?', element: <RegistresPage /> },
       { path: '/aide', element: <HelpPage /> },
+      { path: '/retex/:incident?', element: <MesContributionsRetexPage /> },
       { path: '/plateforme/:carte?', element: <PageCartes cote="plateforme" /> },
       { path: '/systeme/:carte?', element: <PageCartes cote="systeme" /> },
       { path: '/parametres/configuration-grc/:kind?', element: <ConfigurationGrcPage /> },

@@ -97,6 +97,13 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
     'POST /api/grc/:smsi/objects/:id/contributions/commentaire',
     'POST /api/grc/:smsi/objects/:id/contributions/preuve',
     'GET /api/grc/:smsi/objects/:id', // droit de lecture attribué sur un registre ou droits de module : évalué par le service
+    // Contributions à un RETEX : habilitation sur un seul RETEX (contributeur invité), vérifiée par le service sous verrou.
+    'GET /api/retex/invitations',
+    'GET /api/retex/:id',
+    'POST /api/retex/:id/propositions',
+    'PATCH /api/retex/:id/propositions/:pid',
+    'DELETE /api/retex/:id/propositions/:pid',
+    'PUT /api/retex/:id/terminee',
     'GET /api/config-grc/templates',
     'POST /api/config-grc/templates/:id/adopt',
     'GET /api/config-grc/items',

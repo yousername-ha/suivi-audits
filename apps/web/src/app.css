@@ -3309,3 +3309,79 @@ rect.audit-niv-faible {
     display: none;
   }
 }
+
+/* ---------------------------------------------------------------- RETEX : collecte (pilote et contributeurs)
+   File à valider, récupération d'éléments et page « Mes contributions RETEX ». Jetons du thème uniquement. */
+.retex-proposition {
+  border-left: var(--suivi-trait-focus) solid var(--carte-orange-accent);
+}
+.retex-proposition__actions {
+  flex: none;
+  min-width: var(--suivi-champ-xs);
+}
+.retex-texte-libre,
+.retex-consigne {
+  white-space: pre-wrap;
+}
+.retex-consigne {
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  border-left: var(--suivi-trait-focus) solid var(--carte-bleu-accent);
+  background: var(--carte-bleu-fond);
+  border-radius: var(--mantine-radius-sm);
+}
+.retex-invitation {
+  flex: 1 1 var(--suivi-champ-l);
+}
+tr[data-importe='oui'] {
+  opacity: 0.55;
+}
+.retex-contribution {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--mantine-spacing-lg);
+  align-items: start;
+}
+@media (min-width: 62em) {
+  .retex-contribution {
+    grid-template-columns: var(--suivi-champ-l) minmax(0, 1fr);
+  }
+}
+.retex-contribution__liste {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-xs);
+}
+.retex-demande {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15em;
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  color: inherit;
+  background: var(--mantine-color-body);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.retex-demande:hover {
+  border-color: var(--carte-bleu-accent);
+}
+.retex-demande[data-active='oui'] {
+  border-color: var(--carte-bleu-accent);
+  box-shadow: inset var(--suivi-trait-focus) 0 0 var(--carte-bleu-accent);
+  background: var(--carte-bleu-fond);
+}
+.retex-demande__id {
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--carte-bleu-accent);
+}
+.retex-demande__titre {
+  font-weight: 600;
+}
+.retex-demande__etat {
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-dimmed);
+}

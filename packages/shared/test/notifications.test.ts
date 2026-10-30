@@ -16,7 +16,12 @@ const role = (nom: string, valeur: Reglage): HeritageReglage => ({ kind: 'role',
 
 describe('types et canaux', () => {
   it('liste fermée : seuls les types réellement émis par le serveur', () => {
-    expect(NOTIFICATION_TYPES.map((t) => t.id)).toEqual(['task_due', 'risk_review', 'rapprochement']);
+    expect(NOTIFICATION_TYPES.map((t) => t.id)).toEqual([
+      'task_due',
+      'risk_review',
+      'rapprochement',
+      'retex_contribution',
+    ]);
     expect(NOTIFICATION_CANAUX).toEqual(['application', 'courriel']);
     for (const t of NOTIFICATION_TYPES) {
       expect(t.label.length).toBeGreaterThan(5);

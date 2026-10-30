@@ -38,6 +38,12 @@ export const NOTIFICATION_TYPES = [
     description:
       'Rappel adressé aux pilotes d’une mesure quand de nouveaux rapprochements entre référentiels attendent leur décision.',
   },
+  {
+    id: 'retex_contribution',
+    label: 'Contribution à un RETEX',
+    description:
+      'Invitation ou relance adressée à une personne d’un autre pôle pour qu’elle ajoute ses éléments au retour d’expérience d’un incident.',
+  },
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number]['id'];
 export const NOTIFICATION_TYPE_IDS = NOTIFICATION_TYPES.map((t) => t.id) as [NotificationType, ...NotificationType[]];
@@ -47,6 +53,10 @@ export const notificationLabel = (id: string) => NOTIFICATION_TYPES.find((t) => 
 
 /** Rubrique de l'application où la personne retrouve la notification (lien relatif, repris dans le courriel). */
 export const NOTIFICATION_LIEN = '/pilotage/rappels';
+/** Rubriques propres à certains types (lien relatif et libellé de la rubrique, repris dans le courriel). */
+export const NOTIFICATION_RUBRIQUES: Partial<Record<NotificationType, { lien: string; rubrique: string }>> = {
+  retex_contribution: { lien: '/retex', rubrique: 'Mes contributions RETEX' },
+};
 
 export const PORTEE_KINDS = ['groupe', 'role', 'utilisateur'] as const;
 export type PorteeKind = (typeof PORTEE_KINDS)[number];

@@ -7,6 +7,7 @@ import { DeclarationApplicabilite } from './dda.js';
 import { EvaluationsClausier } from './evals-fournisseurs.js';
 import { Gap } from './gap.js';
 import { Incidents } from './incidents.js';
+import { Retex } from './retex.js';
 import { Investissements } from './invest.js';
 import { Plans } from './plans.js';
 import { RevuesAcces } from './revues-acces.js';
@@ -21,6 +22,7 @@ export class Historique {
   readonly invest: Investissements;
   readonly crrc: GestionCrrc;
   readonly incidents: Incidents;
+  readonly retex: Retex;
   readonly crise: Crise;
   readonly evaluations: EvaluationsClausier;
   readonly dda: DeclarationApplicabilite;
@@ -33,6 +35,7 @@ export class Historique {
     this.invest = new Investissements(this.registre);
     this.crrc = new GestionCrrc(this.registre);
     this.incidents = new Incidents(this.registre);
+    this.retex = new Retex(this.registre);
     this.crise = new Crise(this.registre);
     this.evaluations = new EvaluationsClausier(this.registre);
     this.dda = new DeclarationApplicabilite(this.registre);

@@ -2,6 +2,7 @@
    (incident de sécurité, incident, événement, demande), obligations à vérifier, priorité ITIL impact × urgence et
    états, repris à l'identique de l'outil historique (`incQualify`, `incObligations`, `incPrio`, `incOpen`, `incNew`). */
 import { z } from 'zod';
+import { lireCollecteRetex, type CollecteRetex } from './retex-collecte.js';
 import { lireEvenementsRetex, type EvenementRetex } from './retex-incidents.js';
 
 type Obj = Record<string, unknown>;
@@ -136,6 +137,8 @@ export interface Incident {
   findingId: string;
   /** Chronologie du RETEX, triée (voir `retex-incidents.ts`). */
   timeline: EvenementRetex[];
+  /** Collecte du RETEX, champ `retexCollecte` (null tant que le RETEX n'est pas ouvert, voir `retex-collecte.ts`). */
+  collecte: CollecteRetex | null;
 }
 export function lireIncident(brut: unknown): Incident | null {
   if (!brut || typeof brut !== 'object' || Array.isArray(brut)) return null;
@@ -173,6 +176,7 @@ export function lireIncident(brut: unknown): Incident | null {
     notified: traite,
     findingId: str(o.findingId),
     timeline: lireEvenementsRetex(o.timeline),
+    collecte: lireCollecteRetex(o.retexCollecte),
   };
 }
 /** Identifiant d'un incident : INC-AAAA-nnn, premier numéro libre de l'année. */

@@ -7,6 +7,7 @@
 import {
   NOTIFICATION_CANAUX,
   NOTIFICATION_LIEN,
+  NOTIFICATION_RUBRIQUES,
   NOTIFICATION_TYPES,
   isNotificationType,
   notificationLabel,
@@ -483,7 +484,9 @@ export class NotificationsMetier {
 
   /** Objet et corps en texte brut : aucune donnée métier (ni nom de mesure, de risque ou d'action), un titre court et un lien. */
   composer(type: NotificationType, titre: string, appName: string): { objet: string; corps: string } {
-    const lien = this.publicUrl ? this.publicUrl + NOTIFICATION_LIEN : NOTIFICATION_LIEN;
+    const propre = NOTIFICATION_RUBRIQUES[type];
+    const chemin = propre?.lien ?? NOTIFICATION_LIEN;
+    const lien = this.publicUrl ? this.publicUrl + chemin : chemin;
     const court = titre.replace(/\s+/g, ' ').trim().slice(0, 80);
     const nom = appName.replace(/\s+/g, ' ').trim().slice(0, 80) || 'Suivi des audits';
     return {
@@ -493,7 +496,7 @@ export class NotificationsMetier {
         '',
         `Une notification est disponible dans ${nom}${court ? ` : ${court}` : ''}.`,
         '',
-        `Pour la consulter, ouvrez l’application (rubrique Pilotage, Rappels) : ${lien}`,
+        `Pour la consulter, ouvrez l’application (rubrique ${propre?.rubrique ?? 'Pilotage, Rappels'}) : ${lien}`,
         '',
         'Ce message ne contient aucun détail afin de ne pas exposer d’information sensible par courriel.',
         'Vous le recevez parce que les notifications par courriel sont activées pour vous (réglage de votre groupe, de votre rôle ou personnel).',
