@@ -4014,125 +4014,192 @@ tr[data-importe='oui'] {
   backdrop-filter: blur(0.15em);
 }
 
-/* Préparation de la revue de direction : synthèse en tête, puis trois temps de lecture en cartes (faits visibles d'emblée,
-   chiffres mis en évidence). Filet à gauche : teinte de la charte pour les faits, orange pour ce que la direction apprécie. */
-.revue-preparation {
-  display: flex;
-  flex-direction: column;
+/* ---------------------------------------------------------------- Revue de direction : préparation des entrées
+   Écran sombre de la chronologie RETEX (classe retex-chronologie : fond, néon, teintes retex-c-*, bandeau téléscripteur,
+   bouton en pilule) sur lequel sont posées les dalles en verre du tableau de bord (classe tdb-dalle), réglées ici pour
+   un verre fumé. Grille pointillée et halos en fond, pour que le verre ait de la matière à flouter. Longueurs en em ou
+   jetons ; aucun style en ligne (CSP) ; mouvements neutralisés par la règle de réduction de la chronologie. */
+.revue-ecran {
+  /* Verre fumé des dalles (variables lues par tdb-dalle). */
+  --tdb-verre-haut: color-mix(in srgb, var(--mantine-color-white) 13%, transparent);
+  --tdb-verre-milieu: color-mix(in srgb, var(--mantine-color-white) 5%, transparent);
+  --tdb-verre-bas: color-mix(in srgb, var(--mantine-color-white) 8%, transparent);
+  --tdb-verre-bord: color-mix(in srgb, var(--mantine-color-white) 16%, transparent);
+  --tdb-reflet-bord: color-mix(in srgb, var(--mantine-color-white) 70%, transparent);
+  --tdb-lumiere: color-mix(in srgb, var(--mantine-color-white) 18%, transparent);
+  --tdb-ombre: var(--mantine-color-black);
+  --tdb-filet: color-mix(in srgb, var(--mantine-color-black) 30%, transparent);
+  --revue-grille: color-mix(in srgb, var(--retex-neon) 7%, transparent);
   gap: var(--mantine-spacing-xl);
+  padding: var(--mantine-spacing-lg);
+  background:
+    radial-gradient(ellipse at 12% 0%, color-mix(in srgb, var(--retex-neon) 22%, transparent), transparent 42%),
+    radial-gradient(
+      ellipse at 90% 38%,
+      color-mix(in srgb, var(--carte-violet-accent) 22%, transparent),
+      transparent 45%
+    ),
+    radial-gradient(ellipse at 20% 85%, color-mix(in srgb, var(--carte-vert-accent) 16%, transparent), transparent 45%),
+    repeating-linear-gradient(0deg, var(--revue-grille) 0 var(--suivi-trait-l), transparent var(--suivi-trait-l) 3em),
+    repeating-linear-gradient(90deg, var(--revue-grille) 0 var(--suivi-trait-l), transparent var(--suivi-trait-l) 3em),
+    linear-gradient(180deg, var(--retex-fond), color-mix(in srgb, var(--retex-fond) 65%, var(--mantine-color-black)));
 }
-.revue-synthese {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--mantine-spacing-md);
-  align-items: center;
-  background: color-mix(in srgb, var(--mantine-color-suivi-light) 60%, var(--mantine-color-body));
-}
-.revue-synthese__texte {
-  display: flex;
-  flex-direction: column;
-  gap: var(--mantine-spacing-2xs);
+.revue-bandeau__texte {
+  margin: 0;
   max-width: var(--suivi-largeur-lecture);
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1.5;
+  color: var(--retex-secondaire);
 }
-.revue-synthese__titre {
-  font-size: var(--mantine-h3-font-size);
-}
-.revue-synthese__action {
-  justify-self: start;
-}
-.revue-reperes {
+.revue-ecran .retex-bandeau__nom {
   margin: 0;
+}
+.revue-ecran .retex-bandeau__chiffres {
+  align-self: center;
+}
+.revue-commande {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--mantine-spacing-md) var(--mantine-spacing-xl);
-}
-.revue-reperes > div {
-  display: flex;
-  flex-direction: column-reverse;
-  gap: 0.125em;
-  padding-left: var(--mantine-spacing-sm);
-  border-left: var(--suivi-trait-focus) solid var(--mantine-color-suivi-filled);
-}
-.revue-reperes > div[data-attention='oui'] {
-  border-left-color: var(--mantine-color-orange-6);
-}
-.revue-reperes dt {
-  font-size: var(--mantine-font-size-xs);
-  color: var(--mantine-color-dimmed);
-}
-.revue-reperes dd {
-  margin: 0;
-  font-size: var(--mantine-h3-font-size);
-  font-weight: 700;
-  line-height: 1.1;
-}
-@media (min-width: 64em) {
-  .revue-synthese {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-  .revue-synthese__action {
-    grid-column: 2;
-    grid-row: 1;
-    justify-self: end;
-  }
+  justify-content: flex-end;
+  margin-top: calc(-1 * var(--mantine-spacing-md));
 }
 
+/* Temps de lecture : anneau numéroté lumineux, surtitre, titre affirmé. */
 .revue-temps {
   display: flex;
   flex-direction: column;
   gap: var(--mantine-spacing-md);
+  animation: retex-monte 0.45s ease both;
+}
+.revue-temps:nth-of-type(2) {
+  animation-delay: 0.1s;
+}
+.revue-temps:nth-of-type(3) {
+  animation-delay: 0.2s;
 }
 .revue-temps__tete {
   display: flex;
-  align-items: flex-start;
-  gap: var(--mantine-spacing-sm);
+  align-items: center;
+  gap: var(--mantine-spacing-md);
 }
-.revue-temps__numero {
+.revue-temps__anneau {
   flex: none;
   display: inline-grid;
   place-items: center;
-  width: 2em;
-  height: 2em;
+  width: 2.6em;
+  height: 2.6em;
   border-radius: 50%;
+  border: var(--retex-trait) solid var(--c);
+  background: color-mix(in srgb, var(--c) 18%, transparent);
+  color: var(--retex-texte);
   font-weight: 700;
-  color: var(--mantine-color-white);
-  background: var(--mantine-color-suivi-filled);
+  font-variant-numeric: tabular-nums;
+  box-shadow:
+    0 0 1.2em color-mix(in srgb, var(--c) 55%, transparent),
+    inset 0 0 0.6em color-mix(in srgb, var(--c) 35%, transparent);
+}
+.revue-temps__sur {
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--c);
 }
 .revue-temps__titre {
+  margin: 0;
   font-size: var(--mantine-h4-font-size);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--retex-texte);
+  text-shadow: 0 0 1em color-mix(in srgb, var(--c) 40%, transparent);
 }
-/* Colonnes selon la largeur disponible (menu latéral compris) : une au téléphone, trois sur un grand écran. */
-.revue-entrees {
+.revue-temps__resume {
+  margin: 0;
+  font-size: var(--mantine-font-size-sm);
+  color: var(--retex-secondaire);
+}
+
+/* Dalles en verre fumé : colonnes selon la largeur disponible (menu latéral compris). */
+.revue-dalles {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 20em), 1fr));
   gap: var(--mantine-spacing-md);
 }
-.revue-entree {
-  display: flex;
-  flex-direction: column;
+.revue-dalle {
   gap: var(--mantine-spacing-xs);
-  border-inline-start: var(--suivi-trait-focus) solid var(--mantine-color-suivi-filled);
-  transition: box-shadow 150ms ease;
+  color: var(--retex-texte);
 }
-.revue-entree:hover {
-  box-shadow: var(--suivi-ombre);
+.revue-ecran .tdb-dalle::before {
+  opacity: 0.45;
 }
-.revue-entree[data-etat='a-saisir'] {
-  border-inline-start-color: var(--mantine-color-orange-6);
-  background: color-mix(in srgb, var(--mantine-color-orange-light) 50%, var(--mantine-color-body));
+.revue-dalle:hover {
+  box-shadow:
+    0 0 0 var(--suivi-trait-l) color-mix(in srgb, var(--c) 45%, transparent),
+    0 0 1.6em -0.2em color-mix(in srgb, var(--c) 45%, transparent),
+    inset 0 var(--suivi-trait-l) 0 var(--tdb-lumiere),
+    0 1.875em 3.75em -1.5em color-mix(in srgb, var(--mantine-color-black) 60%, transparent);
 }
-.revue-entree__tete {
+.revue-dalle[data-etat='a-saisir'] {
+  --tdb-verre-haut: color-mix(in srgb, var(--c) 22%, transparent);
+  --tdb-verre-milieu: color-mix(in srgb, var(--c) 8%, transparent);
+  --tdb-verre-bas: color-mix(in srgb, var(--c) 12%, transparent);
+  border-color: color-mix(in srgb, var(--c) 45%, transparent);
+}
+.revue-dalle__tete,
+.revue-dalle__titre,
+.revue-dalle__souligne,
+.revue-faits {
+  position: relative;
+  z-index: 3;
+}
+.revue-dalle__tete {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--mantine-spacing-xs);
 }
-.revue-entree__article {
-  text-transform: none;
+.revue-dalle__article,
+.revue-pastille {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.25em 0.8em;
+  border-radius: 999em;
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
-.revue-entree__titre {
+.revue-dalle__article {
+  border: var(--suivi-trait-l) solid color-mix(in srgb, var(--c) 70%, transparent);
+  background: color-mix(in srgb, var(--c) 24%, transparent);
+  color: var(--retex-texte);
+  text-shadow: 0 0 0.6em color-mix(in srgb, var(--c) 70%, transparent);
+}
+.revue-pastille {
+  --retex-neon: var(--c);
+  border: var(--suivi-trait-l) solid color-mix(in srgb, var(--c) 60%, transparent);
+  background: color-mix(in srgb, var(--c) 18%, transparent);
+  color: var(--retex-texte);
+  text-transform: uppercase;
+  box-shadow: 0 0 1em color-mix(in srgb, var(--c) 35%, transparent);
+}
+.revue-dalle__titre {
+  margin: 0;
+  font-size: var(--mantine-font-size-md);
+  font-weight: 700;
   line-height: 1.3;
+}
+.revue-dalle__souligne {
+  display: block;
+  width: 3em;
+  height: var(--retex-trait);
+  border-radius: 999em;
+  background: linear-gradient(90deg, var(--c), transparent);
+  box-shadow: 0 0 0.8em color-mix(in srgb, var(--c) 70%, transparent);
+  transform-origin: left;
+  animation: retex-etire 0.6s ease 0.3s both;
 }
 .revue-faits {
   margin: 0;
@@ -4141,17 +4208,28 @@ tr[data-importe='oui'] {
   flex-direction: column;
   gap: var(--mantine-spacing-2xs);
   font-size: var(--mantine-font-size-sm);
-  line-height: 1.5;
+  line-height: 1.55;
+  color: var(--retex-secondaire);
 }
 .revue-faits li::marker {
-  color: var(--mantine-color-suivi-filled);
+  color: var(--c);
 }
 .revue-chiffre {
   font-weight: 700;
-  color: var(--mantine-color-text);
+  font-variant-numeric: tabular-nums;
+  color: var(--c);
+  text-shadow: 0 0 0.8em color-mix(in srgb, var(--c) 60%, transparent);
 }
-@media (prefers-reduced-motion: reduce) {
-  .revue-entree {
-    transition: none;
+@media (max-width: 48em) {
+  .revue-ecran {
+    padding: var(--mantine-spacing-sm);
+  }
+  .revue-commande {
+    justify-content: stretch;
+    margin-top: 0;
+  }
+  .revue-commande .retex-bouton {
+    width: 100%;
+    white-space: normal;
   }
 }
