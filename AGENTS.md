@@ -46,7 +46,7 @@ travaillent sur le dépôt :
    ont contribué) et fin de chaque entrée du CHANGELOG qu'elle écrit (`(session « … »)`). Pas de reprise rétroactive des
    entrées existantes.
 8. Avant de ranger une entrée du CHANGELOG ou de modifier un fichier partagé, vérifier qu'aucune PR ouverte d'une autre
-   session ne fait déjà la même chose (`#183` et `#184` ont déplacé la même entrée le 30/10/2026 : doublon corrigé).
+   session ne fait déjà la même chose (`#183` et `#184` ont déplacé la même entrée le 30/10/2026 ; doublon retiré par `#185`).
 
 ## Invariants techniques
 
