@@ -2,6 +2,7 @@
 
 - Statut : acceptée (lot 2a)
 - Date : 2026-10-29
+- Rédaction : session « Dashboard maquette personnalisable »
 - Contexte : étape 2 de l'[ADR 0069](0069-tableau-de-bord-verre-et-relief.md) (backlog DEV-004). Décisions du RSSI du
   29/10/2026 : on commence par la **disposition** (déplacer, redimensionner, masquer les dalles), au glisser-déposer et au
   clavier ; chaque personne a **son** tableau de bord, enregistré côté serveur ; une disposition **par défaut** est
