@@ -1,48 +1,92 @@
 /* Connexion : mot de passe, puis double authentification (code TOTP), enrôlement TOTP, changement de mot de passe imposé. */
-import { Alert, Button, Card, Group, PasswordInput, PinInput, Stack, Text, TextInput, Title } from '@mantine/core';
+import { Alert, Button, Loader, PasswordInput, PinInput, Stack, Text, VisuallyHidden } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { useQuery } from '@tanstack/react-query';
 import qrcode from 'qrcode-generator';
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type FormEvent,
+  type KeyboardEvent,
+  type ReactNode,
+  type RefObject,
+} from 'react';
 import { Navigate, useNavigate, useSearchParams } from 'react-router';
 import { ApiError, api, get, post, setCsrf } from '../api';
 import { CriteresMotDePasse } from '../components/CriteresMotDePasse';
+import { OndeMenu } from '../components/OndeMenu';
+import { dispositionConnexion, type DispositionConnexion } from '../components/onde-menu';
+import { FondConnexion } from '../connexion/FondConnexion';
+import { IconeCadenas, IconeFleche, IconeOeil, IconeOeilBarre, IconePersonne } from '../connexion/icones';
+import { Sceau } from '../connexion/Sceau';
 import { useMe, useRefreshMe } from '../session';
 
 const safeNext = (n: string | null) => (n && /^\/(?!\/)/.test(n) ? n : '/');
 
-function AuthCard({ title, children }: { title: string; children: ReactNode }) {
+/* Panneau unique centré : bandeau, accroche, puis le formulaire de l'étape (connexion, code, enrôlement, mot de passe). */
+/** Horizon de l'onde : à mi-chemin entre le bas du titre et le haut de la première carte, mesuré sur la mise en page
+    (taille du panneau, chargement des polices). */
+function useDispositionOnde(panneau: RefObject<HTMLElement | null>, titre: RefObject<HTMLElement | null>) {
+  const [disposition, setDisposition] = useState<DispositionConnexion | null>(null);
+  useEffect(() => {
+    const p = panneau.current;
+    const h2 = titre.current;
+    if (!p || !h2) return;
+    const mesurer = () => {
+      const carte = p.querySelector('.auth-carte--identifiant, .auth-etape');
+      if (!carte) return;
+      const d = dispositionConnexion(
+        p.getBoundingClientRect(),
+        h2.getBoundingClientRect().bottom,
+        carte.getBoundingClientRect().top,
+      );
+      setDisposition((avant) => (avant && avant.horizon === d.horizon && avant.ecart === d.ecart ? avant : d));
+    };
+    mesurer();
+    const taille = typeof ResizeObserver === 'function' ? new ResizeObserver(mesurer) : null;
+    taille?.observe(p);
+    const polices = 'fonts' in document ? document.fonts : null;
+    void polices?.ready.then(mesurer);
+    polices?.addEventListener('loadingdone', mesurer);
+    return () => {
+      taille?.disconnect();
+      polices?.removeEventListener('loadingdone', mesurer);
+    };
+  }, [panneau, titre]);
+  return disposition;
+}
+
+function AuthCard({ title, etape = true, children }: { title: string; etape?: boolean; children: ReactNode }) {
+  const panneau = useRef<HTMLElement>(null);
+  const titre = useRef<HTMLHeadingElement>(null);
+  const disposition = useDispositionOnde(panneau, titre);
+  // Panneau sans nom accessible : le h1 suffit, et un nom ferait doublon avec les libellés des champs.
   return (
-    <main className="auth-wrap">
-      <section className="auth-editorial" aria-label="Suivi du SMSI">
-        <span className="auth-kicker">ISO 27001 / HDS</span>
-        <h2>
+    <main className="auth-wrap auth-connexion">
+      <FondConnexion />
+      <section className="auth-panneau" ref={panneau}>
+        {disposition && <OndeMenu connexion={disposition} />}
+        <Sceau />
+        <VisuallyHidden component="h1">{title}</VisuallyHidden>
+        <span className="auth-kicker">Gouvernance · Risques · Conformité</span>
+        <h2 className="auth-accroche" ref={titre}>
           Une vision claire.
           <br />
           Un pilotage serein.
         </h2>
-        <p>Vos audits, vos preuves et vos actions, dans un même espace de travail.</p>
-        <div className="auth-illustration" aria-hidden="true">
-          <span />
-          <span />
-          <span />
-        </div>
-        <span className="auth-caption">Système de management de la sécurité de l’information</span>
-      </section>
-      <Card className="auth-card" withBorder padding="xl" radius="lg">
-        <Stack>
-          <Group gap="xs">
-            <span className="brand-mark" aria-hidden="true">
-              S
+        {etape ? (
+          <Stack className="auth-etape">
+            <span className="auth-label" aria-hidden="true">
+              {title}
             </span>
-            <Text fw={700}>{useMe().appName}</Text>
-          </Group>
-          <Title order={1} size="h2">
-            {title}
-          </Title>
-          {children}
-        </Stack>
-      </Card>
+            {children}
+          </Stack>
+        ) : (
+          children
+        )}
+      </section>
     </main>
   );
 }
@@ -124,39 +168,88 @@ function PasswordLogin({
 }) {
   const [u, setU] = useState('');
   const [p, setP] = useState('');
+  const [voir, setVoir] = useState(false);
+  const [majuscules, setMajuscules] = useState(false);
+  const id = useId();
+  const verifierMajuscules = (e: KeyboardEvent<HTMLInputElement>) => setMajuscules(e.getModifierState('CapsLock'));
   return (
-    <AuthCard title="Connexion">
+    <AuthCard title="Connexion" etape={false}>
       <form
+        className="auth-pile"
         onSubmit={(e: FormEvent) => {
           e.preventDefault();
           onLogin(u.trim(), p);
         }}
       >
-        <Stack>
-          <TextInput
-            label="Identifiant"
-            autoComplete="username"
-            required
-            autoFocus
-            value={u}
-            onChange={(e) => setU(e.currentTarget.value)}
-          />
-          <PasswordInput
-            label="Mot de passe"
-            autoComplete="current-password"
-            required
-            value={p}
-            onChange={(e) => setP(e.currentTarget.value)}
-          />
-          {err}
-          <Button type="submit" loading={busy} fullWidth>
-            Se connecter
-          </Button>
-        </Stack>
+        <div className="auth-carte auth-carte--identifiant">
+          <label className="auth-label" htmlFor={`${id}-u`}>
+            Identifiant
+          </label>
+          <div className="auth-boite">
+            <IconePersonne />
+            <input
+              id={`${id}-u`}
+              className="auth-champ"
+              name="username"
+              autoComplete="username"
+              autoCapitalize="none"
+              spellCheck={false}
+              placeholder="prenom.nom"
+              required
+              autoFocus
+              value={u}
+              onChange={(e) => setU(e.currentTarget.value)}
+            />
+          </div>
+        </div>
+        <div className="auth-carte auth-carte--mot-de-passe">
+          <div className="auth-tete">
+            <label className="auth-label" htmlFor={`${id}-p`}>
+              Mot de passe
+            </label>
+            {majuscules && (
+              <span className="auth-majuscules" id={`${id}-maj`} role="status">
+                Majuscules verrouillées
+              </span>
+            )}
+          </div>
+          <div className="auth-boite">
+            <IconeCadenas />
+            <input
+              id={`${id}-p`}
+              className="auth-champ auth-champ--secret"
+              name="password"
+              type={voir ? 'text' : 'password'}
+              autoComplete="current-password"
+              placeholder="Votre mot de passe"
+              required
+              aria-describedby={majuscules ? `${id}-maj` : undefined}
+              value={p}
+              onChange={(e) => setP(e.currentTarget.value)}
+              onKeyDown={verifierMajuscules}
+              onKeyUp={verifierMajuscules}
+              onBlur={() => setMajuscules(false)}
+            />
+            {/* Libellé sans « mot de passe » : le champ reste seul à porter ce nom. */}
+            <button
+              type="button"
+              className="auth-oeil"
+              aria-label="Afficher la saisie"
+              aria-pressed={voir}
+              aria-controls={`${id}-p`}
+              onClick={() => setVoir((v) => !v)}
+            >
+              {voir ? <IconeOeilBarre /> : <IconeOeil />}
+            </button>
+          </div>
+        </div>
+        <button type="submit" className="auth-carte auth-carte--valider" disabled={busy} aria-busy={busy}>
+          <span>Se connecter</span>
+          {busy ? <Loader size="xs" className="auth-attente" /> : <IconeFleche />}
+        </button>
       </form>
-      <Text size="xs" c="dimmed" ta="center">
-        Mot de passe oublié ou compte verrouillé : contactez un administrateur.
-      </Text>
+      {err}
+      <p className="auth-aide">Mot de passe oublié ou compte verrouillé ? Un administrateur peut le réinitialiser.</p>
     </AuthCard>
   );
 }
@@ -312,6 +405,7 @@ function PasswordForm({
         <Stack>
           <PasswordInput
             label="Mot de passe temporaire"
+            withAsterisk={false}
             autoComplete="current-password"
             required
             value={f.current}
@@ -319,6 +413,7 @@ function PasswordForm({
           />
           <PasswordInput
             label="Nouveau mot de passe"
+            withAsterisk={false}
             description={`Au moins ${minLen} caractères et 3 types parmi minuscules, majuscules, chiffres, symboles, sans répétition ni suite.`}
             autoComplete="new-password"
             required
@@ -334,6 +429,7 @@ function PasswordForm({
           />
           <PasswordInput
             label="Confirmation"
+            withAsterisk={false}
             autoComplete="new-password"
             required
             value={f.confirm}

@@ -133,7 +133,7 @@ describe('migration d’une base v2 existante, sans perte', () => {
     await v2.end();
 
     // 3. Démarrage de la v3 sur cette base : migrations 002+ appliquées automatiquement.
-    const t = await createTestApp({ DOC_MASTER_KEY: masterKey }, { dbName });
+    const t = await createTestApp({ DOC_MASTER_KEY: masterKey }, { dbName, poivre: false });
     opened.push(t);
     const applied = (await t.svc.db.q<{ name: string }>('SELECT name FROM schema_migrations ORDER BY name')).rows.map(
       (r) => r.name,
@@ -205,13 +205,31 @@ describe('migration d’une base v2 existante, sans perte', () => {
     expect(after).toEqual(before);
     expect((await t.svc.db.one<{ version: number }>('SELECT version FROM documents'))!.version).toBe(1);
 
-    // 4. Tout reste utilisable : connexion (mot de passe et TOTP v2), document déchiffré, état servi à /legacy.
+    // 4. Empreinte v2 non poivrée : refusée et journalisée (ADR 0072, aucune mise à jour sans installation neuve). Reprise d'une
+    //    base sans poivre : la procédure d'urgence `suivi poivre-reinitialiser` donne un mot de passe temporaire à chaque compte.
+    const refus = await new Agent(t).post('/api/auth/login', { username: 'rssi', password: PASSWORD });
+    expect(refus.statusCode).toBe(401);
+    expect(
+      (await t.svc.db.q("SELECT 1 FROM audit_log WHERE action='securite.poivre_integrite' AND target=$1", [uid]))
+        .rowCount,
+    ).toBe(1);
+    const reprise = await t.svc.motsDePasse.reinitialiser({ username: 'cli' });
+    expect(reprise.comptes.map((c) => c.username).sort()).toEqual(['adjoint', 'alternant', 'rssi']);
+    const temporaire = reprise.comptes.find((c) => c.username === 'rssi')!.motDePasse;
+    t.svc.limits.loginByIp.reset();
+    t.svc.limits.loginByUser.reset();
+
+    // 5. Tout reste utilisable : connexion (mot de passe et TOTP v2), document déchiffré, état servi à /legacy.
     const a = new Agent(t);
-    expect((await a.post('/api/auth/login', { username: 'rssi', password: PASSWORD })).json()).toEqual({
+    expect((await a.post('/api/auth/login', { username: 'rssi', password: temporaire })).json()).toEqual({
       stage: 'mfa',
     });
     await a.me();
     expect((await a.post('/api/auth/mfa', { code: hotp(totpKey, Math.floor(Date.now() / 30000)) })).json()).toEqual({
+      stage: 'password',
+    });
+    await a.me();
+    expect((await a.post('/api/account/password', { current: temporaire, next: PASSWORD })).json()).toEqual({
       stage: 'ok',
     });
     await a.me();

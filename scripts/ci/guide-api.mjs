@@ -10,6 +10,8 @@
                                   instantané des données (comptes, données de suivi, document relu, version) ; avec une
                                   référence, échoue si les données diffèrent (mises à jour, retour arrière, EXPL-01 à 04)
      systeme <url>                Administration > Système : dernière sauvegarde connue (rapport de backup.sh)
+     reprise-poivre <url>         montée depuis une version antérieure au poivre (ADR 0072) : suivi poivre-reinitialiser, puis
+                                  connexion avec le mot de passe temporaire et changement imposé
    Le certificat est vérifié : lancer avec NODE_EXTRA_CA_CERTS=<certificat racine copié à l'étape 8.3>.
    L'état (mot de passe et secret TOTP de l'administrateur de test) est conservé dans $RUNNER_TEMP. */
 import { execFileSync } from 'node:child_process';
@@ -80,6 +82,15 @@ const cleSecoursDeRecette = () => {
   const mod = polymod([3, 3, 3, 0, 1, 7, 5, ...cinq, 0, 0, 0, 0, 0, 0]) ^ 1;
   const controle = [0, 1, 2, 3, 4, 5].map((i) => (mod >>> (5 * (5 - i))) & 31);
   return { publique: `age1${[...cinq, ...controle].map((v) => ALPHA[v]).join('')}`, coffre: true };
+};
+/** Mot de passe de l'administrateur de test. Règles de composition (ADR 0075) : pas plus de 3 caractères identiques à la suite,
+    pas l'identifiant ; on retire le tirage sinon. */
+const motDePasseDeRecette = () => {
+  let password;
+  do password = `Guide-${crypto.randomBytes(12).toString('base64url')}-9a`;
+  while (/(.)\1{3}/.test(password) || password.toLowerCase().includes(ADMIN.toLowerCase()));
+  mask(password);
+  return password;
 };
 const fail = (msg) => {
   console.error(`::error::Guide d'installation : ${msg}`);
@@ -184,16 +195,12 @@ switch (cmd) {
     const token = /[A-Z2-9]{5}(-[A-Z2-9]{5}){3}/.exec(out)?.[0];
     if (!token) fail('jeton introuvable dans la sortie de « docker compose exec app setup-token »');
     mask(token);
-    // Règles de composition (ADR 0075) : pas plus de 3 caractères identiques à la suite, pas l'identifiant ; on retire le tirage sinon.
-    let password;
-    do password = `Guide-${crypto.randomBytes(12).toString('base64url')}-9a`;
-    while (/(.)\1{3}/.test(password) || password.toLowerCase().includes(ADMIN.toLowerCase()));
-    mask(password);
-    const st = { password, secret: '', lastStep: 0 };
+    const password = motDePasseDeRecette();
     const pre = await call('GET', '/api/setup');
     if (!pre.needed) fail('/api/setup indique que l’installation n’est pas attendue');
     // La montée de version part d'une version publiée avant le poivre (ADR 0072) : elle ne le propose pas.
     const avecPoivre = 'poivreDefini' in pre;
+    const st = { password, secret: '', lastStep: 0, poivre: avecPoivre };
     const avecCle = 'cleSecoursDefinie' in pre && !pre.cleSecoursDefinie;
     await call('POST', '/api/setup', {
       json: {
@@ -290,6 +297,46 @@ switch (cmd) {
     st.document = { id: d.id, sha256: crypto.createHash('sha256').update(contenu).digest('hex') };
     save(st);
     console.log(`Document fictif déposé (${d.id}).`);
+    break;
+  }
+  case 'reprise-poivre': {
+    // Une version antérieure au poivre (ADR 0072) a laissé des empreintes non poivrées, refusées par la cible : reprise d'une base
+    // sans poivre par la procédure d'urgence, comme l'exploitant (nouveau poivre, mot de passe temporaire pour chaque compte).
+    const st = load();
+    if (st.poivre) {
+      console.log('Poivre défini à l’installation : aucune reprise nécessaire.');
+      break;
+    }
+    const out = execFileSync(
+      'sudo',
+      ['docker', 'compose', 'exec', '-T', 'app', 'suivi', 'poivre-reinitialiser', '--confirmer'],
+      {
+        encoding: 'utf8',
+      },
+    );
+    const nouveau = /NOUVEAU POIVRE[^\n]*\n\s+([A-Z2-7-]{64,})/.exec(out)?.[1];
+    const temporaire = new RegExp(`'${ADMIN}'\\s*│\\s*'([^']+)'`).exec(out)?.[1];
+    if (!nouveau || !temporaire) fail('sortie de « suivi poivre-reinitialiser » inattendue');
+    mask(nouveau);
+    mask(temporaire);
+    jar.clear();
+    delete st.cookies;
+    await call('POST', '/api/auth/login', { json: { username: ADMIN, password: temporaire } });
+    await me();
+    await call('POST', '/api/auth/mfa', { json: { code: await freshCode(st) } });
+    if ((await me()).stage !== 'password')
+      fail('après la reprise du poivre, le changement de mot de passe devrait être imposé');
+    st.password = motDePasseDeRecette();
+    await call('POST', '/api/account/password', { json: { current: temporaire, next: st.password } });
+    const m = await me();
+    if (m.stage !== 'ok') fail(`connexion incomplète après la reprise du poivre (étape ${m.stage})`);
+    st.cookies = Object.fromEntries(jar);
+    st.poivre = true;
+    save(st);
+    const poivre = await call('GET', '/api/admin/poivre');
+    if (!poivre.defini || poivre.empreintesPoivrees !== poivre.comptes)
+      fail(`poivre non défini après la reprise : ${JSON.stringify(poivre)}`);
+    console.log(`Reprise du poivre : ${poivre.comptes} compte(s) poivré(s), mot de passe de l'administrateur changé.`);
     break;
   }
   case 'instantane': {
