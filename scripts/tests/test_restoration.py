@@ -375,16 +375,19 @@ if 'pg_restore' in args and '--list' not in args: Path(os.environ['TEST_RESTORED
         self.assertEqual(len(list(destination.glob('*.tar.age'))), 5)
 
     def test_rotation_leaves_old_format_archives_to_the_operator(self):
-        # Archive .tar.enc de la 5.x dans un catalogue réutilisé : illisible par cette version (ADR 0077), jamais supprimée.
+        # Archives d'anciennes versions dans un catalogue réutilisé (.tar.enc de la 5.x, .tar en clair) : illisibles par cette
+        # version (ADR 0077), jamais supprimées.
         destination = self.root / 'archives'
         destination.mkdir()
-        ancienne = destination / 'suivi-audits-20250101-000000.tar.enc'
-        ancienne.write_bytes(b'ancienne-archive-fictive')
-        os.utime(ancienne, (ancienne.stat().st_atime, ancienne.stat().st_mtime - 400 * 86400))
+        anciennes = [destination / 'suivi-audits-20250101-000000.tar.enc', destination / 'suivi-audits-20250102-000000.tar']
+        for ancienne in anciennes:
+            ancienne.write_bytes(b'ancienne-archive-fictive')
+            os.utime(ancienne, (ancienne.stat().st_atime, ancienne.stat().st_mtime - 400 * 86400))
         destination, resultat = self.sauvegarde_avec_anciennes(10, {'RETENTION_DAYS': '1', 'BACKUP_GARDER_MIN': '3'})
         self.assertEqual(resultat.returncode, 0, resultat.stderr)
         self.assertEqual(len(list(destination.glob('*.tar.age'))), 3)
-        self.assertTrue(ancienne.exists())
+        for ancienne in anciennes:
+            self.assertTrue(ancienne.exists())
 
     def test_rotation_keeps_everything_when_few_archives_exist(self):
         destination, resultat = self.sauvegarde_avec_anciennes(3, {'RETENTION_DAYS': '1'})
