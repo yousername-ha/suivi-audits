@@ -1,4 +1,4 @@
-/* RETEX d'un incident (ADR 0078) : le pilote ouvre un RETEX et invite un compte sans droit sur les incidents ; ce
+/* RETEX d'un incident (ADR 0080) : le pilote ouvre un RETEX et invite un compte sans droit sur les incidents ; ce
    contributeur voit le bandeau, propose un élément et déclare sa contribution terminée ; un compte non invité reçoit 404 ;
    le pilote valide la proposition, récupère la main courante de crise, clôt la collecte, génère la chronologie et la
    diffuse au contributeur. Comptes, incident et cellule de crise FICTIFS, posés par l'API. */

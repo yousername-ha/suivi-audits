@@ -1,6 +1,6 @@
-# ADR 0078 — Habilitation déléguée sur un objet : contribution à un RETEX
+# ADR 0080 — Habilitation déléguée sur un objet : contribution à un RETEX
 
-- Statut : proposée (numéro confirmé par le RSSI le 30/10/2026 ; décision à accepter après relecture de la PR)
+- Statut : proposée (numéro 0080 retenu par le RSSI le 30/10/2026, 0078 étant pris par la PR #188 ; décision à accepter après relecture de la PR)
 - Date : 2026-10-30
 - Rédaction : session « Intégration module RETEX incidents »
 - Contexte : le retour d'expérience (RETEX) d'un incident doit rassembler ce qu'ont vécu des personnes d'autres pôles
@@ -41,7 +41,7 @@
    ([ADR 0058](0058-notifications-metier.md)) de type `retex_contribution`, réglables par groupe, rôle ou personne et
    envoyées par courriel selon ces réglages, sans aucune donnée métier dans le courriel (lien vers « Mes contributions
    RETEX »). Rattachées à un incident de l'état historique, elles n'ont ni SMSI ni objet du socle : la migration additive
-   `047_retex_contributions.sql` étend la contrainte `grc_notifications_portee` posée par la migration `046`
+   `049_retex_contributions.sql` étend la contrainte `grc_notifications_portee` posée par la migration `046`
    ([ADR 0074](0074-alerte-de-securite-dans-l-application.md)) à ce seul type, et un index unique partiel
    (`user_id`, `due_key` = `incident:numéro d'envoi`) garantit une seule notification par personne et par envoi. Aucune
    notification existante n'est modifiée. L'ouverture de la contribution marque ces notifications comme lues.
@@ -60,5 +60,5 @@
   le filtrage du menu ne vaut pas permission, le serveur reste seul juge.
 - Retirer un contributeur retire ses propositions en attente ; les éléments déjà intégrés à la chronologie restent, avec
   le nom de leur auteur (« Proposé par … »).
-- Aucune dépendance nouvelle. Retour arrière : la migration `047` est additive ; une version antérieure ignore le champ
+- Aucune dépendance nouvelle. Retour arrière : la migration `049` est additive ; une version antérieure ignore le champ
   `retexCollecte` et les notifications de ce type.
