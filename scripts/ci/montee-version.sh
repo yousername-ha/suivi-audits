@@ -111,6 +111,8 @@ sudo git -C "$SERVEUR" rev-parse --verify -q "$DEPART_REF^{commit}" > /dev/null
 maj_installee
 [ "$(version_env)" = "$CIBLE_VERSION" ] || echec "APP_VERSION différent de $CIBLE_VERSION"
 attendre
+# Version de départ antérieure au poivre (ADR 0072) : ses empreintes sont refusées par la cible ; reprise d'une base sans poivre.
+api reprise-poivre "$URL"
 api instantane "$URL" "$RUNNER_TEMP/apres-maj.json" "$RUNNER_TEMP/reference.json"
 grep -q "\"version\": \"$CIBLE_VERSION\"" "$RUNNER_TEMP/apres-maj.json" || echec "/api/version n'indique pas $CIBLE_VERSION"
 dernier_rapport | grep -q '"resultat":"reussie"' || echec "rapport « reussie » absent"

@@ -77,9 +77,11 @@ compose('stop','updater')
 compose('up','-d','db','app','web',cwd=repo)
 wait_health(repo)
 # Compte fictif supplémentaire, créé uniquement dans cette pile CI. Aucun compte existant n'est modifié.
-js="""import crypto from 'node:crypto'; import {createServices} from './dist/services.js'; import {loadConfig} from './dist/config.js'; import {createLogger} from './dist/log.js'; import {hashPassword} from './dist/security/crypto.js'; import {methodTemplate,evaluateMethod} from '@suivi/shared';
+js="""import crypto from 'node:crypto'; import {createServices} from './dist/services.js'; import {loadConfig} from './dist/config.js'; import {createLogger} from './dist/log.js'; import {methodTemplate,evaluateMethod} from '@suivi/shared';
 const svc=createServices(loadConfig(),createLogger('silent')); const key=crypto.randomBytes(20);
-const u=await svc.db.one('INSERT INTO users(username,display_name,password_hash,must_change_password) VALUES ($1,$2,$3,false) RETURNING id',['recette_update','Recette mise à jour',await hashPassword('Recette-Update-2026!')]);
+// Empreinte poivrée par le service (ADR 0072) : une empreinte non poivrée écrite en base est refusée à la connexion.
+const id=svc.motsDePasse.nouvelId();
+const u=await svc.db.one('INSERT INTO users(id,username,display_name,password_hash,must_change_password) VALUES ($1,$2,$3,$4,false) RETURNING id',[id,'recette_update','Recette mise à jour',await svc.motsDePasse.hacher(id,'Recette-Update-2026!')]);
 await svc.db.q('INSERT INTO user_roles(user_id,role_id) VALUES ($1,$2)',[u.id,'administrateur']);
 await svc.db.q('UPDATE users SET totp_secret=$2,totp_enabled=true WHERE id=$1',[u.id,svc.vault.sealSmall(key,'totp:'+u.id)]);
 const smsi='00000000-0000-4000-8000-000000000001', methodId=crypto.randomUUID(), definition=methodTemplate('custom');

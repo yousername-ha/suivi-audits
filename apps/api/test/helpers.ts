@@ -7,7 +7,8 @@ import { buildApp } from '../src/app.js';
 import { loadConfig } from '../src/config.js';
 import { createLogger } from '../src/log.js';
 import { finPoivre, formaterPoivreGenere, genererPoivre, type PoivreAEnregistrer } from '@suivi/shared';
-import { hashPassword, hotp } from '../src/security/crypto.js';
+import type { PoivrePrepare } from '../src/mots-de-passe.js';
+import { hotp } from '../src/security/crypto.js';
 import { createServices, type Services } from '../src/services.js';
 import { prepareDatabase } from '../src/startup.js';
 import { APP_ROLE, APP_ROLE_PASSWORD, createDatabase, dropDatabase, PG } from './pg.js';
@@ -27,6 +28,11 @@ export function poivreDeTest(): PoivreAEnregistrer {
   return { mode: 'genere', valeur: formaterPoivreGenere(brut), engagement: { coffre: true, fin: finPoivre(brut) } };
 }
 
+/** Poivre des bases de test (ADR 0072) : chaque base migrée en reçoit un, comme une installation réelle, sauf `poivre: false`. */
+export const POIVRE_TEST = 'Tq4!vN8#kR2$mX6@pL9%wZ3&yC7*bH5^dJ1(';
+/** Dérivation (0,3 à 0,5 s) faite une fois par poivre et par fichier de test : seul le scellement change d'une base à l'autre. */
+const derives = new Map<string, Promise<PoivrePrepare>>();
+
 export interface TestApp {
   app: FastifyInstance;
   svc: Services;
@@ -36,7 +42,7 @@ export interface TestApp {
 
 export async function createTestApp(
   env: Record<string, string> = {},
-  opts: { migrate?: boolean; dbName?: string } = {},
+  opts: { migrate?: boolean; dbName?: string; poivre?: string | false } = {},
 ): Promise<TestApp> {
   const dbName = opts.dbName ?? (await createDatabase());
   const cfg = loadConfig({
@@ -54,7 +60,15 @@ export async function createTestApp(
     ...env,
   });
   const svc = createServices(cfg, createLogger(process.env.TEST_LOG_LEVEL || 'silent'));
-  if (opts.migrate !== false) await prepareDatabase(svc, { issueToken: false });
+  if (opts.migrate !== false) {
+    await prepareDatabase(svc, { issueToken: false });
+    const poivre = opts.poivre ?? POIVRE_TEST;
+    if (poivre !== false) {
+      if (!derives.has(poivre)) derives.set(poivre, svc.motsDePasse.preparer(poivre));
+      const p = await derives.get(poivre)!;
+      await svc.db.tx((c, k) => svc.motsDePasse.inscrireALInstallation(c, k, p, 'test'), 'test');
+    }
+  }
   const app = await buildApp(svc);
   await app.ready();
   return {
@@ -142,8 +156,8 @@ export interface TestUser {
 /** Raccourcis des rôles v2 (même correspondance que la migration 003). */
 const V2: Record<string, string> = { admin: 'administrateur', rw: 'contributeur', ro: 'lecteur' };
 
-/** Crée un compte avec TOTP déjà activé (mot de passe PASSWORD). « role » : rôle v2 (admin, rw, ro), identifiant
-    de rôle (prédéfini ou personnalisé) ou null (aucun rôle direct). */
+/** Crée un compte avec TOTP déjà activé (mot de passe PASSWORD, empreinte poivrée : la base doit avoir un poivre). « role » :
+    rôle v2 (admin, rw, ro), identifiant de rôle (prédéfini ou personnalisé) ou null (aucun rôle direct). */
 export async function makeUser(
   t: TestApp,
   username: string,
@@ -151,11 +165,18 @@ export async function makeUser(
   o: { totp?: boolean; mustChange?: boolean; modules?: string[]; expiresAt?: Date | null } = {},
 ): Promise<TestUser> {
   const key = crypto.randomBytes(20);
-  const r = await t.svc.db.one<{ id: string }>(
-    'INSERT INTO users(username, display_name, password_hash, must_change_password, expires_at) VALUES ($1,$2,$3,$4,$5) RETURNING id',
-    [username, `Nom ${username}`, await hashPassword(PASSWORD), !!o.mustChange, o.expiresAt ?? null],
+  const id = t.svc.motsDePasse.nouvelId();
+  await t.svc.db.q(
+    'INSERT INTO users(id, username, display_name, password_hash, must_change_password, expires_at) VALUES ($1,$2,$3,$4,$5,$6)',
+    [
+      id,
+      username,
+      `Nom ${username}`,
+      await t.svc.motsDePasse.hacher(id, PASSWORD),
+      !!o.mustChange,
+      o.expiresAt ?? null,
+    ],
   );
-  const id = r!.id;
   if (role)
     await t.svc.db.q('INSERT INTO user_roles(user_id, role_id, modules) VALUES ($1, $2, $3)', [
       id,
@@ -172,12 +193,6 @@ export async function makeUser(
 }
 
 /** Code TOTP valide et non encore utilisé (anti-rejeu : pas strictement supérieur au dernier accepté). */
-/** Poivre posé par le service, sur une base dont les comptes ont été créés directement (makeUser) : l'API ne permet de le
-    définir que dans l'assistant d'installation (ADR 0077). */
-export async function definirPoivreDeTest(t: TestApp, par: TestUser, valeur: string): Promise<number> {
-  return t.svc.motsDePasse.definir(await t.svc.motsDePasse.preparer(valeur), par, null);
-}
-
 export async function nextCode(t: TestApp, u: TestUser): Promise<string> {
   const last = Number(
     (await t.svc.db.one<{ s: string }>('SELECT totp_last_step::text AS s FROM users WHERE id=$1', [u.id]))!.s,
