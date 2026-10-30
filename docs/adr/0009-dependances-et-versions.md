@@ -19,6 +19,8 @@ Règle du projet : aucune nouvelle dépendance sans justification. La v2 n'avait
 | `@tanstack/react-query` | Interface | Cache des données, invalidé par le temps réel. |
 | `@mantine/core`, `@mantine/hooks`, `@mantine/notifications` | Interface | Composants accessibles en français, sous CSP stricte (ADR 0006). |
 | `qrcode-generator` | Interface | QR code d'enrôlement TOTP. Même bibliothèque que la v2 (déjà intégrée sous forme de copie), sans dépendance. |
+| `@simplewebauthn/server` | API | Vérification des réponses FIDO2 / WebAuthn (enrôlement, connexion, attestation) : aucune cryptographie écrite dans le projet ([ADR 0079](0079-authentification-fido2-webauthn.md)). Publiée avec une provenance npm ; une vingtaine de dépendances transitives (`@peculiar/*`, `asn1js`, `tiny-cbor`). |
+| `@simplewebauthn/browser` | Interface | Appels `navigator.credentials` et conversions base64url côté navigateur ([ADR 0079](0079-authentification-fido2-webauthn.md)) ; aucune dépendance. |
 
 Outils de développement : TypeScript, ESLint et typescript-eslint, Prettier, Vitest, Playwright, tsx, Vite et `@vitejs/plugin-react`, types Node, pg et React.
 

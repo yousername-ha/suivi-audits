@@ -24,6 +24,12 @@ export async function prepareDatabase(svc: Services, opts: { issueToken?: boolea
   await svc.grc.initialize();
   await seedState(svc);
   await svc.settings.load();
+  await svc.webauthn.charger();
+  if (!svc.cfg.webauthn.disponible)
+    svc.log.warn(
+      { raison: svc.cfg.webauthn.raison },
+      'clés de sécurité (WebAuthn) non proposées : configuration RP inutilisable',
+    );
   if (opts.issueToken !== false && !(await svc.auth.adminExists())) await svc.auth.issueSetupToken('first_start');
   // Le poivre est défini avec le premier administrateur (ADR 0072, 0077) : sans lui, toute empreinte est refusée.
   if ((await svc.auth.adminExists()) && !(await svc.motsDePasse.defini()))

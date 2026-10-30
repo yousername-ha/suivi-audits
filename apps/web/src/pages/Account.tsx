@@ -1,4 +1,5 @@
-/* Mon compte : affichage (taille, densité, thème), mot de passe, double authentification, sessions ouvertes. */
+/* Mon compte : affichage (taille, densité, thème), mot de passe, double authentification, clés de sécurité (sécurité du compte),
+   sessions ouvertes. */
 import {
   Alert,
   Badge,
@@ -19,6 +20,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import qrcode from 'qrcode-generator';
 import { useState } from 'react';
 import { errorMessage, get, post } from '../api';
+import { ClesSecuriteCard } from '../components/ClesSecurite';
 import { CriteresMotDePasse } from '../components/CriteresMotDePasse';
 import { ErrorAlert, fmtDate } from '../components/common';
 import { usePresence } from '../realtime';
@@ -47,6 +49,7 @@ export function AccountPage() {
       <NotificationsCard />
       <PasswordCard minLen={me.passwordMinLength} />
       <TotpCard />
+      <ClesSecuriteCard />
       <SessionsCard />
     </Stack>
   );

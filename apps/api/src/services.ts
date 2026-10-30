@@ -37,6 +37,7 @@ import { CleSecours } from './cle-secours.js';
 import { AdresseSiteService } from './adresse-site.js';
 import { NotificationsMetier } from './notifications-metier.js';
 import { TypesProcessus } from './types-processus.js';
+import { Webauthn } from './webauthn.js';
 
 export function createServices(cfg: Config, log: Logger) {
   const db = new Db(cfg.db, log);
@@ -66,6 +67,9 @@ export function createServices(cfg: Config, log: Logger) {
   const motsDePasse = new MotsDePasse(db, vault);
   const auth = new Auth(cfg, db, vault, () => settings.get('securite'), motsDePasse);
   auth.surVerrouillage = (e) => alertesSecurite.verrouillage(e);
+  const webauthn = new Webauthn(cfg, db, vault);
+  auth.exigenceCle = (u) => webauthn.exigence(u);
+  webauthn.surAlerte = (e) => alertesSecurite.cleSecurite(e);
   return {
     cfg,
     log,
@@ -90,6 +94,7 @@ export function createServices(cfg: Config, log: Logger) {
     notificationsMetier,
     auth,
     motsDePasse,
+    webauthn,
     cleSecours: new CleSecours(db, cfg),
     adresseSite: new AdresseSiteService(db, cfg),
     alertesSecurite,
@@ -111,6 +116,11 @@ export function createServices(cfg: Config, log: Logger) {
       setupByIp: limiter(10, 15 * 60e3),
       presence: limiter(30, 60e3),
       wallActivation: limiter(10, 15 * 60e3),
+      /* Clés de sécurité (ADR 0079) : options et vérifications, par session et par compte. */
+      webauthnBySession: limiter(10, 10 * 60e3),
+      webauthnByUser: limiter(20, 15 * 60e3),
+      webauthnGestionByUser: limiter(30, 15 * 60e3),
+      codeRecuperationByUser: limiter(5, 15 * 60e3),
     },
   };
 }
