@@ -23,6 +23,7 @@ Aucune action sur le serveur : la migration additive `049_retex_contributions.sq
 - Guide d'utilisation : articles « RETEX d'un incident et chronologie » et « Contribuer au RETEX d'un incident » ; tests de bout en bout des parcours du pilote et du contributeur (données fictives). (session « Intégration module RETEX incidents »)
 
 ### Corrigé
+- **Tests de bout en bout** (session « Projet audit_suivi Coeur », chantier Playwright) : le test 27 de la recette cartographie (le cadre emporte son contenu) attend la stabilisation du rendu avant de mesurer l'écart entre le cadre et ses objets (mêmes seuils : 15 px de déplacement, 1,5 px d'écart) ; les captures d'écran joignent la liste des présences vues par le serveur, pour identifier ce qui rend certaines captures instables. Aucune capture de référence modifiée.
 
 - **Main courante de crise** : chaque entrée reçoit son identifiant `CL-nnn` du schéma 15, comme dans l'outil historique ; les entrées écrites sans identifiant sont numérotées à la prochaine écriture de la crise, avec la numérotation de l'export. L'import « Remplacer un module » d'un état contenant une main courante n'est plus refusé (BUG-013). (session « Intégration module RETEX incidents »)
 
