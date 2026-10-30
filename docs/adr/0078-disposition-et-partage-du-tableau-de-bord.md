@@ -1,6 +1,6 @@
 # ADR 0078 — Disposition et partage du tableau de bord de l'accueil
 
-- Statut : acceptée (lots 2a et 2b)
+- Statut : acceptée (lots 2a, 2b et 2c)
 - Date : 2026-10-29
 - Rédaction : session « Dashboard maquette personnalisable »
 - Contexte : étape 2 de l'[ADR 0069](0069-tableau-de-bord-verre-et-relief.md) (backlog DEV-004). Décisions du RSSI du
@@ -10,7 +10,8 @@
   Décisions du RSSI du 30/10/2026 (lot 2b) : un **droit dédié** pour créer, modifier et partager un tableau de bord, qui
   donne aussi accès à la liste des personnes et des groupes ; la disposition personnelle lui est aussi réservée ; la
   personne qui reçoit choisit le tableau affiché et peut le copier ; un seul tableau par personne ; partage journalisé,
-  sans notification.
+  sans notification. Décisions du RSSI du 30/10/2026 (lot 2c) : seuils, cible et visualisation par dalle, enregistrés
+  dans chaque tableau, pour l'accueil seulement ; la bibliothèque de dalles (dalles filtrées) est reportée.
 
 ## Décision
 
@@ -74,8 +75,21 @@
    ni repartager le tableau reçu ; il peut le copier comme le sien (avec le droit). Un seul tableau par personne : la
    contrainte d'unicité du lot 2a reste en place ; plusieurs tableaux nommés pourront venir sans changer les partages.
    Pas de notification au destinataire : le tableau reçu apparaît dans « Tableau affiché ».
-8. **Réglages des dalles** (lot 2c, non réalisé) : métrique, visualisation, cible et seuils par dalle, bibliothèque de
-   dalles. Les seuils restent d'ici là les seuils d'affichage de l'ADR 0069.
+8. **Réglages des dalles** (lot 2c). Chaque dalle de la disposition peut porter des `reglages` facultatifs, enregistrés,
+   copiés et partagés avec elle : seuils de couleur d'un taux (`seuils` : orange puis vert à partir de…, en %, rouge
+   en dessous), seuils du compte à rebours de l'audit (`seuilsJours`, carte phare, 0 à 365 jours), `cible` (0 à
+   100 %, trait sur la jauge ou les barres) et `visualisation`. Ce que chaque dalle accepte est fixé par
+   `REGLAGES_DALLE` (`packages/shared/src/disposition-tableau-de-bord.ts`) : taux global et jours de la carte phare ;
+   seuils, cible et barres ou tableau pour les taux par référentiel ; seuils, cible et jauge ou chiffre clé pour les
+   indicateurs et les actions des écarts ; barres empilées ou tableau pour la mise en œuvre ; anneau, barres ou
+   histogramme pour les répartitions et les mesures. Tout autre réglage, un seuil orange au-dessus du vert ou une
+   valeur hors bornes est refusé (422) ; un réglage devenu invalide après une mise à jour est ignoré à la lecture, la
+   dalle restant affichée. Sans réglage, les seuils et visualisations standard de l'ADR 0069 s'appliquent : l'accueil
+   ne change pas. Ce sont des **choix d'affichage** : aucune donnée, aucune règle métier ; l'écran mural et la
+   synthèse du Pilotage gardent leurs seuils. Interface : bouton « Réglages » sur chaque dalle réglable en mode
+   modification, aperçu immédiat, « Réglages standard ». Aucune migration (les réglages vivent dans le JSON de la
+   disposition, 16 Kio au plus). Reportée : la **bibliothèque de dalles** (une même dalle plusieurs fois, filtrée
+   par référentiel, périmètre ou source), qui exige des calculs filtrés côté serveur et leurs contrôles de droits.
 
 ## Conséquences
 

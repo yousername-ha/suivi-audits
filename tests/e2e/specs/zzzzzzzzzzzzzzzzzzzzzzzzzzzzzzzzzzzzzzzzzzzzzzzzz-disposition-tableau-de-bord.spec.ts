@@ -1,5 +1,5 @@
-/* Disposition du tableau de bord de l'accueil (ADR 0078, lots 2a et 2b) : déplacer une dalle au clavier et au glisser,
-   changer sa largeur, la masquer puis la réafficher, enregistrer (la disposition survit au rechargement), puis revenir à
+/* Disposition du tableau de bord de l'accueil (ADR 0078, lots 2a à 2c) : déplacer une dalle au clavier et au glisser,
+   changer sa largeur, la masquer puis la réafficher, changer sa visualisation, enregistrer (la disposition survit au rechargement), puis revenir à
    la disposition par défaut. Puis partager sa disposition avec un compte Lecteur, qui l'affiche sans pouvoir la
    modifier. Le compte d'administration reprend ensuite la disposition standard. */
 import { expect, test, type Page } from '@playwright/test';
@@ -70,6 +70,16 @@ test('disposition du tableau de bord : clavier, glisser, largeur, masquer, enreg
     await expect(page.locator('[data-dalle="ecarts"]')).toHaveCount(1);
     await page.getByRole('button', { name: 'Masquer « Écarts »', exact: true }).click();
 
+    // Réglages (lot 2c) : « Écarts par statut » passe en anneau, aperçu immédiat.
+    const statut = page.locator('[data-dalle="ecarts-statut"]');
+    await expect(statut.locator('.graph-anneau')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Réglages de « Écarts par statut »' }).click();
+    await page
+      .getByRole('group', { name: 'Réglages de « Écarts par statut »' })
+      .getByLabel('Visualisation')
+      .selectOption({ label: 'Anneau' });
+    await expect(statut.locator('.graph-anneau')).toHaveCount(1);
+
     const voulu = await ordreEdition(page);
     await page.getByRole('button', { name: 'Enregistrer' }).click();
     await expect(page.getByRole('button', { name: 'Modifier la disposition' })).toBeVisible();
@@ -79,6 +89,7 @@ test('disposition du tableau de bord : clavier, glisser, largeur, masquer, enreg
       expect((await ordreLecture(page)).length).toBe(voulu.length);
       await expect(page.locator('.tdb-grille > section[aria-label="Écarts"]')).toHaveCount(0);
       await expect(page.locator('.tdb-grille > section[aria-label="Prochaines échéances"]')).toHaveClass(/tdb-l12/);
+      await expect(page.locator('.tdb-grille > section[aria-label="Écarts par statut"] .graph-anneau')).toHaveCount(1);
     };
     await verifier();
     await page.reload();

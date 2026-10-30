@@ -1,9 +1,9 @@
 /* Mode « Modifier la disposition » du tableau de bord de l'accueil (ADR 0078, lot 2a) : déplacer les dalles au glisser
    (évènements de pointeur, souris ou doigt) ou au clavier (flèches, Origine, Fin sur la poignée), changer leur largeur,
-   les masquer et les réafficher. Enregistre la disposition personnelle (droit tableau_de_bord:modifier, lot 2b) ; un
-   administrateur peut aussi la proposer à tous. Aucune donnée n'est enregistrée : seulement l'ordre, les largeurs et les dalles masquées. Le glissé réordonne
+   les masquer et les réafficher, régler leurs seuils, leur cible et leur visualisation (lot 2c). Enregistre la
+   disposition personnelle (droit tableau_de_bord:modifier, lot 2b) ; un administrateur peut aussi la proposer à tous. Aucune donnée n'est enregistrée : seulement l'ordre, les largeurs et les dalles masquées. Le glissé réordonne
    la grille en direct, sans élément positionné par script (CSP, ADR 0006). */
-import { Alert, Button, Group, NativeSelect, Text, VisuallyHidden } from '@mantine/core';
+import { Alert, Button, Group, NativeSelect, NumberInput, Text, VisuallyHidden } from '@mantine/core';
 import {
   completerDisposition,
   dallesAffichees,
@@ -11,12 +11,19 @@ import {
   deplacerDalleAuClavier,
   LARGEURS_DALLE,
   LIBELLES_LARGEUR,
+  LIBELLES_VISUALISATION,
   memesDispositions,
   modifierDalle,
+  REGLAGES_DALLE,
+  SEUILS_JOURS_STANDARD,
+  SEUILS_STANDARD,
+  visualisationDalle,
   type Disposition,
   type DispositionsOut,
   type IdDalle,
+  type ReglagesDalle,
   type Synthese,
+  type Visualisation,
 } from '@suivi/shared';
 import { ConfirmButton, ErrorAlert, type LargeurDalle } from '@suivi/ui';
 import { useQueryClient } from '@tanstack/react-query';
@@ -47,6 +54,126 @@ function IconePoignee() {
       <circle cx="5.5" cy="12.5" r="1.5" />
       <circle cx="10.5" cy="12.5" r="1.5" />
     </svg>
+  );
+}
+
+/** Deux seuils liés (orange puis vert à partir de…) : l'un ne dépasse jamais l'autre. */
+function Paliers({
+  legende,
+  unite,
+  max,
+  valeur,
+  onChange,
+}: {
+  legende: string;
+  unite: string;
+  max: number;
+  valeur: { orange: number; vert: number };
+  onChange: (v: { orange: number; vert: number }) => void;
+}) {
+  const nombre = (v: number | string) => Math.max(0, Math.min(max, Math.round(Number(v) || 0)));
+  return (
+    <fieldset className="tdb-reglages-paliers">
+      <legend>{legende}</legend>
+      <NumberInput
+        size="xs"
+        label={`Orange à partir de (${unite})`}
+        min={0}
+        max={max}
+        allowDecimal={false}
+        value={valeur.orange}
+        onChange={(v) => {
+          const orange = nombre(v);
+          onChange({ orange, vert: Math.max(orange, valeur.vert) });
+        }}
+      />
+      <NumberInput
+        size="xs"
+        label={`Vert à partir de (${unite})`}
+        min={0}
+        max={max}
+        allowDecimal={false}
+        value={valeur.vert}
+        onChange={(v) => {
+          const vert = nombre(v);
+          onChange({ orange: Math.min(valeur.orange, vert), vert });
+        }}
+      />
+      <Text size="xs" c="dimmed">
+        Rouge en dessous du seuil orange.
+      </Text>
+    </fieldset>
+  );
+}
+
+/** Réglages d'une dalle (lot 2c) : visualisation, seuils de couleur, cible. Choix d'affichage, sans effet sur les
+    données ; sans réglage, la dalle garde ses seuils et sa visualisation standard. */
+function PanneauReglages({
+  id,
+  idPanneau,
+  titre,
+  reglages,
+  onChange,
+}: {
+  id: IdDalle;
+  idPanneau: string;
+  titre: string;
+  reglages: ReglagesDalle | undefined;
+  onChange: (r: ReglagesDalle | undefined) => void;
+}) {
+  const permis = REGLAGES_DALLE[id]!;
+  const r = reglages ?? {};
+  const maj = (champs: Partial<ReglagesDalle>) => onChange({ ...r, ...champs });
+  return (
+    <div className="tdb-reglages" id={idPanneau} role="group" aria-label={`Réglages de « ${titre} »`}>
+      {permis.visualisations && (
+        <NativeSelect
+          size="xs"
+          label="Visualisation"
+          value={visualisationDalle(id, reglages) ?? ''}
+          data={permis.visualisations.map((v) => ({ value: v, label: LIBELLES_VISUALISATION[v] }))}
+          onChange={(e) => {
+            const v = e.currentTarget.value as Visualisation;
+            maj({ visualisation: v === permis.visualisations![0] ? undefined : v });
+          }}
+        />
+      )}
+      {permis.seuils && (
+        <Paliers
+          legende={id === 'phare' ? 'Couleurs du taux global' : 'Couleurs du taux'}
+          unite="%"
+          max={100}
+          valeur={r.seuils ?? SEUILS_STANDARD}
+          onChange={(seuils) => maj({ seuils })}
+        />
+      )}
+      {permis.seuilsJours && (
+        <Paliers
+          legende="Couleurs du compte à rebours de l’audit"
+          unite="jours"
+          max={365}
+          valeur={r.seuilsJours ?? SEUILS_JOURS_STANDARD}
+          onChange={(seuilsJours) => maj({ seuilsJours })}
+        />
+      )}
+      {permis.cible && (
+        <NumberInput
+          size="xs"
+          label="Cible (%)"
+          description="Trait sur la jauge ou les barres ; vide : aucune cible."
+          min={0}
+          max={100}
+          allowDecimal={false}
+          value={r.cible ?? ''}
+          onChange={(v) =>
+            maj({ cible: v === '' ? undefined : Math.max(0, Math.min(100, Math.round(Number(v) || 0))) })
+          }
+        />
+      )}
+      <Button size="compact-sm" variant="subtle" disabled={!reglages} onClick={() => onChange(undefined)}>
+        Réglages standard
+      </Button>
+    </div>
   );
 }
 
@@ -82,6 +209,7 @@ export function EditionTableauDeBord({
   const autreQueLaSienne = base !== (dispositions.personnelle?.disposition ?? null);
   const [d, setD] = useState<Disposition>(depart);
   const [glissee, setGlissee] = useState<IdDalle | null>(null);
+  const [reglee, setReglee] = useState<IdDalle | null>(null);
   const [annonce, setAnnonce] = useState('');
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<unknown>(null);
@@ -262,6 +390,18 @@ export function EditionTableauDeBord({
                     setD((cur) => modifierDalle(cur, x.id, { largeur }));
                   }}
                 />
+                {REGLAGES_DALLE[x.id] && (
+                  <Button
+                    size="compact-sm"
+                    variant={reglee === x.id ? 'light' : 'subtle'}
+                    aria-label={`Réglages de « ${dalle.titre} »`}
+                    aria-expanded={reglee === x.id}
+                    aria-controls={`${aide}-reglages-${x.id}`}
+                    onClick={() => setReglee((cur) => (cur === x.id ? null : x.id))}
+                  >
+                    Réglages
+                  </Button>
+                )}
                 <Button
                   size="compact-sm"
                   variant="subtle"
@@ -274,7 +414,16 @@ export function EditionTableauDeBord({
                   Masquer
                 </Button>
               </div>
-              {dalle.rendu(x.largeur)}
+              {reglee === x.id && (
+                <PanneauReglages
+                  id={x.id}
+                  idPanneau={`${aide}-reglages-${x.id}`}
+                  titre={dalle.titre}
+                  reglages={x.reglages}
+                  onChange={(reglages) => setD((cur) => modifierDalle(cur, x.id, { reglages }))}
+                />
+              )}
+              {dalle.rendu(x.largeur, x.reglages)}
             </div>
           );
         })}

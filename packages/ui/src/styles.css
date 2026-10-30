@@ -2173,6 +2173,38 @@ html[data-style='clair'][data-mantine-color-scheme='light'] {
   gap: var(--mantine-spacing-sm);
   margin-block-end: var(--mantine-spacing-lg);
 }
+.tdb-reglages {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--mantine-spacing-sm);
+  padding: var(--mantine-spacing-sm);
+  border: 1px solid var(--suivi-trait);
+  border-radius: var(--mantine-radius-md);
+  background: var(--suivi-surface);
+}
+.tdb-reglages-paliers {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--mantine-spacing-xs);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.tdb-reglages-paliers legend {
+  padding: 0;
+  margin-block-end: var(--mantine-spacing-2xs);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+}
+.tdb-tableau {
+  font-size: var(--mantine-font-size-sm);
+}
+.tdb-tableau .tdb-tableau-nombre {
+  text-align: end;
+  white-space: nowrap;
+}
 .tdb-choix {
   max-inline-size: 24rem;
   margin-block-end: var(--mantine-spacing-md);
