@@ -118,6 +118,7 @@ describe('sous-listes en tables liées (migration 028)', () => {
         '044_notifications_metier.sql',
         '045_courriel_relances.sql',
         '046_alertes_securite_notifications.sql',
+        '047_tableaux_de_bord.sql',
         '048_webauthn.sql',
       ]);
       for (const table of ['suivi_ecarts', 'suivi_ecarts_taches'])

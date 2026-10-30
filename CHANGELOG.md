@@ -6,7 +6,10 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-Aucune action.
+**Migration automatique `047`** (disposition du tableau de bord) : additive, appliquée au démarrage de `app`, durée négligeable ; aucune action sur le serveur. Sans disposition enregistrée, l'accueil garde la disposition actuelle.
+
+### Ajouté
+- **Disposition du tableau de bord de l'accueil** ([ADR 0078](docs/adr/0078-disposition-et-partage-du-tableau-de-bord.md), lot 2a) : bouton « Modifier la disposition » ; chaque personne déplace ses dalles au glisser (souris ou doigt) ou au clavier, choisit leur largeur, les masque et les réaffiche, puis enregistre. Sa disposition la suit sur tous ses appareils ; « Revenir à la disposition par défaut » la supprime. Un administrateur peut proposer une disposition à tous, sans remplacer celles déjà enregistrées (journalisé). Seuls l'ordre, les largeurs et les dalles masquées sont enregistrés : les valeurs restent filtrées selon les droits de chacun. _(Session « Dashboard maquette personnalisable ».)_
 
 ## [6.0.0] — 2026-10-29
 

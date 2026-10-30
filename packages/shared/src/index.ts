@@ -13,6 +13,7 @@ export * from './mot-de-passe.js';
 export * from './poivre.js';
 export * from './cle-secours.js';
 export * from './adresse-site.js';
+export * from './disposition-tableau-de-bord.js';
 export * from './webauthn.js';
 
 export * from './business-policy.js';
