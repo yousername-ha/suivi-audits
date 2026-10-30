@@ -2165,6 +2165,74 @@ html[data-style='clair'][data-mantine-color-scheme='light'] {
   }
 }
 
+/* Mode « Modifier la disposition » (ADR 0078) : barre d'outils, cases en pointillé autour des dalles, poignée de
+   glissé (pointeur et clavier). Le glissé réordonne la grille : aucun élément n'est positionné par script. */
+.tdb-edition-barre {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-sm);
+  margin-block-end: var(--mantine-spacing-lg);
+}
+.tdb-masquees {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+}
+.tdb-case {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-xs);
+  padding: var(--mantine-spacing-xs);
+  border-radius: var(--mantine-radius-lg);
+  border: var(--suivi-trait-l) dashed var(--mantine-color-default-border);
+}
+.tdb-case > .tdb-dalle {
+  flex: 1;
+}
+.tdb-case--glissee {
+  border-style: solid;
+  border-color: var(--mantine-primary-color-filled);
+  opacity: 0.7;
+}
+.tdb-case-outils {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+}
+/* Le titre de la dalle reste visible dans la dalle elle-même : la barre ne porte que les outils. */
+.tdb-case-largeur {
+  flex: 1;
+  min-width: 0;
+  max-inline-size: 14em;
+}
+.tdb-poignee {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--mantine-spacing-xl);
+  block-size: var(--mantine-spacing-xl);
+  padding: 0;
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-sm);
+  background: var(--mantine-color-default);
+  color: inherit;
+  cursor: grab;
+  /* Au doigt, le glissé déplace la dalle au lieu de faire défiler la page. */
+  touch-action: none;
+}
+.tdb-case--glissee .tdb-poignee {
+  cursor: grabbing;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tdb-case {
+    transition:
+      border-color 120ms ease,
+      opacity 120ms ease;
+  }
+}
+
 /* Dalle en verre : fond translucide flouté, liseré lumineux des bords (::before), reflet haut (::after). */
 .tdb-dalle {
   position: relative;

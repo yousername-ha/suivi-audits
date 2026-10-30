@@ -1,12 +1,16 @@
-/* Accueil : tableau de bord « Suivi de la conformité » en verre et relief (synthèse selon les droits, ADR 0069),
-   puis accès aux modules et activité en cours. Plus de colonnes sur les grands écrans. */
+/* Accueil : tableau de bord « Suivi de la conformité » en verre et relief (synthèse selon les droits, ADR 0069), dans la
+   disposition de la personne (ADR 0078), puis accès aux modules et activité en cours. Plus de colonnes sur les grands
+   écrans. */
 import { Button, Card, Stack, Text, Title, VisuallyHidden } from '@mantine/core';
 import { ErrorAlert, IconeAdministration, IconeDocuments, IconeHistorique, Page, PageHeader } from '@suivi/ui';
+import type { DispositionsOut } from '@suivi/shared';
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { Link } from 'react-router';
 import { cartesVisibles } from '../administration-droits';
 import { get } from '../api';
 import type { SyntheseApi } from '../components/Synthese';
+import { CLE_DISPOSITION, EditionTableauDeBord } from '../components/DispositionTableauDeBord';
 import { TableauDeBordConformite } from '../components/TableauDeBord';
 import { useLive, usePresence } from '../realtime';
 import { canAdminArea, canReadBusiness, useCan, useMe } from '../session';
@@ -67,6 +71,14 @@ export function HomePage() {
     queryFn: () => get<SyntheseApi>('/api/mur/synthese'),
     enabled: canReadBusiness(can),
   });
+  const dispositions = useQuery({
+    queryKey: CLE_DISPOSITION,
+    queryFn: () => get<DispositionsOut>('/api/tableau-de-bord/disposition'),
+    enabled: canReadBusiness(can),
+  });
+  const [edition, setEdition] = useState(false);
+  // Sa disposition, sinon celle de l'organisation, sinon la standard (aussi si la disposition ne se charge pas).
+  const disposition = (dispositions.data?.personnelle ?? dispositions.data?.organisation)?.disposition ?? null;
   const online = [...new Map(presence.map((p) => [p.username, p])).values()];
 
   const acces = (
@@ -157,10 +169,32 @@ export function HomePage() {
       <PageHeader
         title={`Bonjour ${me.user?.displayName || me.user?.username}`}
         description={synthese.data ? `Tableau de bord — ${synthese.data.organisation}` : undefined}
-        actions={site && <LienSite url={site} nom={me.orgName} />}
+        actions={
+          (site || (synthese.data && dispositions.data && !edition)) && (
+            <>
+              {synthese.data && dispositions.data && !edition && (
+                <Button variant="default" onClick={() => setEdition(true)}>
+                  Modifier la disposition
+                </Button>
+              )}
+              {site && <LienSite url={site} nom={me.orgName} />}
+            </>
+          )
+        }
       />
       {synthese.error && <ErrorAlert error={synthese.error} />}
-      {synthese.data && <TableauDeBordConformite s={synthese.data} />}
+      {synthese.data &&
+        !dispositions.isPending &&
+        (edition && dispositions.data ? (
+          <EditionTableauDeBord
+            s={synthese.data}
+            dispositions={dispositions.data}
+            peutDefinirDefaut={can('administration', 'administrer')}
+            onFin={() => setEdition(false)}
+          />
+        ) : (
+          <TableauDeBordConformite s={synthese.data} disposition={disposition} />
+        ))}
       <div className="grille-cartes">
         {synthese.data && (
           <div className="section-label carte-large">

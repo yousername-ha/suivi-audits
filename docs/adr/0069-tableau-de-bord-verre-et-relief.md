@@ -54,7 +54,7 @@
 
 ## Étapes suivantes (non réalisées dans ce lot)
 
-- **Étape 2 — personnalisation** (backlog DEV-004) : créer et dupliquer un tableau, déplacer et redimensionner les
+- **Étape 2 — personnalisation** (backlog DEV-004 ; décrite par l'[ADR 0078](0078-disposition-et-partage-du-tableau-de-bord.md), lot 2a réalisé) : créer et dupliquer un tableau, déplacer et redimensionner les
   dalles, réglages par dalle (métrique, axe, visualisation, cible, seuils), bibliothèque de dalles, visibilité (privé,
   équipe, périmètre, écran mural), enregistrement côté serveur (migration, routes `route()`, droits, versions, audit).
   Une ADR complémentaire précisera le stockage et le partage.
