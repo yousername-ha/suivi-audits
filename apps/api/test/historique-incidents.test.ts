@@ -1,5 +1,6 @@
 /* Reprise du registre des incidents, de la cellule de crise et de l'alerte CRRC → incident de l'outil de suivi : écritures
    natives sous verrou, droits croisés (écarts, pilotage, incidents), champs inconnus conservés. Données fictives. */
+import { schema15Problems } from '@suivi/shared/legacy';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createTestApp, login, makeUser, seedState, type Agent, type TestApp } from './helpers.js';
 
@@ -123,6 +124,38 @@ describe('registre des incidents', () => {
     expect(s.crrc.alerts[0]).toMatchObject({ incident: r.json().incident, status: 'En cours' });
     expect((await writer.post('/api/crrc/alertes/ALR-1/incident')).statusCode).toBe(409);
   });
+  it('tient la chronologie du RETEX : ajout, tri, modification, retrait, droits et champs inconnus conservés', async () => {
+    const url = '/api/incidents/INC-2026-001/retex';
+    const ev = { ts: '2026-10-12T09:00', type: 'Analyse', titre: 'Analyse fictive', gravite: 'Élevée' };
+    expect((await reader.post(url, ev)).statusCode).toBe(403);
+    expect((await writer.post(url, { ...ev, titre: '' })).statusCode).toBe(422);
+    expect((await writer.post(url, { ...ev, ts: '2026-02-30T09:00' })).statusCode).toBe(422);
+    expect((await writer.post('/api/incidents/INC-9/retex', ev)).statusCode).toBe(404);
+    const a = await writer.post(url, ev);
+    expect(a.statusCode, a.body).toBe(201);
+    const b = await writer.post(url, { ts: '2026-10-12T08:45', type: 'Détection', titre: 'Alerte fictive' });
+    expect(b.json().timeline.map((e: { id: string }) => e.id)).toEqual(['EV-002', 'EV-001']);
+    expect(b.json().timeline[0]).toMatchObject({ titre: 'Alerte fictive', description: '', gravite: '' });
+    const s = await etat();
+    const brut = s.incidents.find((x: { id: string }) => x.id === 'INC-2026-001');
+    brut.timeline[0].inconnu = 'garder';
+    await seedState(t, s);
+    const m = await writer.patch(`${url}/EV-001`, { titre: 'Analyse corrigée', gravite: '' });
+    expect(m.statusCode, m.body).toBe(200);
+    expect(m.json().timeline[1]).toMatchObject({ id: 'EV-001', titre: 'Analyse corrigée', gravite: '' });
+    const apres = (await etat()).incidents.find((x: { id: string }) => x.id === 'INC-2026-001');
+    expect(apres.timeline[0]).toMatchObject({ inconnu: 'garder', type: 'Analyse' });
+    expect(apres).toMatchObject({ inconnu: { x: 1 } });
+    expect((await writer.patch(`${url}/EV-404`, { titre: 'x' })).statusCode).toBe(404);
+    expect((await writer.patch(`${url}/EV-001`, { type: 'Inconnu' })).statusCode).toBe(422);
+    expect((await reader.del(`${url}/EV-002`)).statusCode).toBe(403);
+    const d = await writer.del(`${url}/EV-002`);
+    expect(d.statusCode, d.body).toBe(200);
+    expect(d.json().timeline.map((e: { id: string }) => e.id)).toEqual(['EV-001']);
+    expect((await writer.del(`${url}/EV-002`)).statusCode).toBe(404);
+    const c = await writer.post(url, { ts: '2026-10-12T10:00', type: 'Confinement', titre: 'Isolement fictif' });
+    expect(c.json().timeline.map((e: { id: string }) => e.id)).toEqual(['EV-001', 'EV-003']);
+  });
   it('supprime un incident', async () => {
     expect((await admin.del(`/api/incidents/${incident}`)).statusCode).toBe(200);
     expect((await admin.del(`/api/incidents/${incident}`)).statusCode).toBe(404);
@@ -179,6 +212,9 @@ describe('cellule de crise', () => {
     expect(c.checks['0']).toMatchObject({ done: true });
     expect(c.log.map((l: { type: string }) => l.type)).toEqual(['Information', 'Décision', 'Action']);
     expect(c.log[2].text).toBe('Check-list : Alerter — fait.');
+    // Identifiants « CL- » du schéma 15 : l'import « Remplacer un module » de cet état les exige.
+    expect(c.log.map((l: { id: string }) => l.id)).toEqual(['CL-001', 'CL-002', 'CL-003']);
+    expect(schema15Problems(await etat())).toEqual([]);
     expect(Date.parse(c.deadlines[0].due) - Date.parse(c.start)).toBe(72 * 3600e3);
     expect((await writer.put(`/api/crise/cellules/${cellule}/checklist/0`, { fait: false })).statusCode).toBe(200);
     expect((await admin.del(`/api/crise/cellules/${cellule}/echeances/0`)).statusCode).toBe(200);
@@ -241,6 +277,44 @@ describe('cellule de crise', () => {
     expect((await admin.del(`/api/crise/scenarios/${id}`)).statusCode).toBe(200);
     expect((await admin.del(`/api/crise/scenarios/${id}`)).statusCode).toBe(404);
   });
+  it('numérote à la prochaine écriture les entrées de main courante écrites sans identifiant', async () => {
+    const s = await etat();
+    const sans = (text: string) => ({ ts: '2026-10-12T08:00:00.000Z', type: 'Information', author: '', text });
+    s.crisis.cells = [
+      ...s.crisis.cells,
+      {
+        id: 'CEL-ANCIENNE',
+        title: 'Cellule fictive antérieure au correctif',
+        mode: 'Exercice',
+        start: '2026-10-12T08:00:00.000Z',
+        status: 'Active',
+        log: [sans('Première'), { id: 'CL-007', ...sans('Déjà numérotée') }, sans('Troisième')],
+      },
+    ];
+    await seedState(t, s);
+    expect(schema15Problems(await etat())).not.toEqual([]);
+    const r = await writer.post('/api/crise/cellules/CEL-ANCIENNE/entrees', {
+      type: 'Décision',
+      author: 'Pilote',
+      text: 'Nouvelle',
+    });
+    expect(r.statusCode, r.body).toBe(201);
+    const apres = await etat();
+    const c = apres.crisis.cells.find((x: { id: string }) => x.id === 'CEL-ANCIENNE');
+    expect(c.log.map((l: { id: string; text: string }) => [l.id, l.text])).toEqual([
+      ['CL-008', 'Première'],
+      ['CL-007', 'Déjà numérotée'],
+      ['CL-009', 'Troisième'],
+      ['CL-010', 'Nouvelle'],
+    ]);
+    // Les identifiants déjà attribués ne changent pas.
+    expect(apres.crisis.cells[0].log.map((l: { id: string }) => l.id).slice(0, 3)).toEqual([
+      'CL-001',
+      'CL-002',
+      'CL-003',
+    ]);
+    expect(schema15Problems(apres)).toEqual([]);
+  });
   it('journalise les modifications', async () => {
     const rows = await t.svc.db.q<{ action: string }>(
       "SELECT DISTINCT action FROM audit_log WHERE action LIKE 'crisis.%' OR action LIKE 'incident.%'",
@@ -249,6 +323,9 @@ describe('cellule de crise', () => {
     for (const n of [
       'incident.created',
       'incident.action-created',
+      'incident.retex-added',
+      'incident.retex-updated',
+      'incident.retex-deleted',
       'crisis.cell-opened',
       'crisis.cell-closed',
       'crisis.checklist',

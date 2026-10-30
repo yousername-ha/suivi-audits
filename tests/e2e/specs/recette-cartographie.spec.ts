@@ -980,13 +980,21 @@ test('27. note et cadre : grouper deux objets dans un cadre qui les emporte ; co
   await p.mouse.down();
   await p.mouse.move(fb.x + 60, fb.y + 52, { steps: 5 });
   await p.mouse.up();
-  const apres = await position();
-  const delta = apres.map((a, i) => ({ x: a.x - avant[i]!.x, y: a.y - avant[i]!.y }));
-  expect(Math.hypot(delta[0]!.x, delta[0]!.y)).toBeGreaterThan(15);
-  for (const d of delta.slice(1)) {
-    expect(Math.abs(d.x - delta[0]!.x)).toBeLessThan(1.5);
-    expect(Math.abs(d.y - delta[0]!.y)).toBeLessThan(1.5);
-  }
+  // Mesure relative attendue stable, pas instantanée : le rendu des objets du cadre suit celui du cadre quelques
+  // images plus tard (sous charge, 6 px de retard relevés juste après le relâchement). Mêmes seuils qu'avant (15 px de
+  // déplacement, 1,5 px d'écart entre le cadre et chaque objet), évalués jusqu'à stabilisation (10 s au plus).
+  const mesures = async () => {
+    const apres = await position();
+    const delta = apres.map((a, i) => ({ x: a.x - avant[i]!.x, y: a.y - avant[i]!.y }));
+    const ecart = Math.max(
+      ...delta.slice(1).flatMap((d) => [Math.abs(d.x - delta[0]!.x), Math.abs(d.y - delta[0]!.y)]),
+    );
+    return { deplacement: Math.hypot(delta[0]!.x, delta[0]!.y), ecart };
+  };
+  await expect.poll(async () => (await mesures()).deplacement, { message: 'le cadre a bougé' }).toBeGreaterThan(15);
+  await expect
+    .poll(async () => (await mesures()).ecart, { message: 'les objets du cadre suivent le cadre' })
+    .toBeLessThan(1.5);
   await enregistrer(p);
   const l = (await carte(admin, 'context')).layout as unknown as { free: Record<string, { text: string }> };
   expect(

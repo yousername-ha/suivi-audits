@@ -1,7 +1,8 @@
 # Reprendre Suivi des audits
 
 > **Reprise la plus récente : [30/10/2026](docs/01_REPRISE_IA/REPRISE-2026-10-30.md)** (clés de sécurité FIDO2 / WebAuthn,
-> ADR 0079, PR ouverte vers `claude-suivi-smsi`), qui complète celle du [29/10/2026](docs/01_REPRISE_IA/REPRISE-2026-10-29.md)
+> ADR 0079, PR ouverte vers `claude-suivi-smsi` ; § 6 : module RETEX d'incident sur `claude/retex-incidents`,
+> [ADR 0080](docs/adr/0080-habilitation-deleguee-contribution-retex.md) acceptée), qui complète celle du [29/10/2026](docs/01_REPRISE_IA/REPRISE-2026-10-29.md)
 > (version 6.0.0 préparée, PR de sécurité fusionnées, écran de connexion refondu par la PR #181, reste à faire) et celle du
 > [27/10/2026](docs/01_REPRISE_IA/REPRISE-2026-10-27.md) (règles de fusion, conversion Kysely, tests de bout en bout instables).
 > Les sections ci-dessous sont datées.

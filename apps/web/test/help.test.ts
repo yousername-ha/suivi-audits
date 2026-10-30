@@ -16,4 +16,11 @@ describe('guide embarqué', () => {
     const permitted = HELP_ARTICLES.filter((a) => !a.permission || permissions.includes(a.permission));
     expect(permitted.map((a) => a.id)).not.toContain('exports-excel');
   });
+  it('décrit la contribution à un RETEX à toute personne, et le pilotage du RETEX avec son droit', () => {
+    const permitted = HELP_ARTICLES.filter((a) => !a.permission);
+    expect(permitted.find((a) => a.id === 'retex-contribution')?.link).toBe('/retex');
+    const pilote = HELP_ARTICLES.find((a) => a.id === 'retex-incidents');
+    expect(pilote?.permission).toBe('incidents:modifier');
+    expect(pilote?.link).toBe('/pilotage/incidents-retex');
+  });
 });

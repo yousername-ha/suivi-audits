@@ -13,6 +13,7 @@ export * from './mot-de-passe.js';
 export * from './poivre.js';
 export * from './cle-secours.js';
 export * from './adresse-site.js';
+export * from './disposition-tableau-de-bord.js';
 export * from './webauthn.js';
 
 export * from './business-policy.js';
@@ -45,6 +46,8 @@ export * from './fournisseurs.js';
 export * from './suivi-invest.js';
 export * from './suivi-crrc.js';
 export * from './suivi-incidents.js';
+export * from './retex-incidents.js';
+export * from './retex-collecte.js';
 export * from './suivi-crise.js';
 export * from './suivi-evals-fournisseurs.js';
 export * from './suivi-dda.js';
