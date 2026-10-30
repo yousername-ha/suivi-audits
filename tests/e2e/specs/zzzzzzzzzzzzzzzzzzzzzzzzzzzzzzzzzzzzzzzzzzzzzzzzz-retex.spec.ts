@@ -32,11 +32,10 @@ test.beforeAll(async ({ browser }) => {
   const rq = ctx.request;
 
   // Incident et cellule de crise fictifs, remis à neuf à chaque exécution (aucune collecte, main courante de deux entrées ;
-  // identifiants « CL- » exigés par le schéma 15, uniques dans toutes les cellules).
+  // identifiants « CL- » exigés par le schéma 15).
   const s = (await (await rq.get('/api/suivi/etat')).json()) as Record<string, unknown>;
   const incidents = (Array.isArray(s.incidents) ? s.incidents : []) as { id?: string }[];
   const crise = (s.crisis && typeof s.crisis === 'object' ? s.crisis : {}) as Record<string, unknown>;
-  const cellules = (Array.isArray(crise.cells) ? crise.cells : []) as { id?: string }[];
   Object.assign(s, {
     incidents: [
       ...incidents.filter((i) => i.id !== INCIDENT),
@@ -65,8 +64,9 @@ test.beforeAll(async ({ browser }) => {
       scenarios: [],
       contacts: [],
       ...crise,
+      // Seule la cellule fictive du RETEX est conservée, comme dans le spec des incidents : les entrées de main courante
+      // écrites par l'écran de crise n'ont pas d'identifiant du schéma 15, que l'import « Remplacer un module » exige.
       cells: [
-        ...cellules.filter((c) => c.id !== CELLULE),
         {
           id: CELLULE,
           title: 'Cellule fictive RETEX',
