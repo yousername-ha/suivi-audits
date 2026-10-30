@@ -277,7 +277,7 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     id: 'securite',
     cote: 'systeme',
     titre: 'Sécurité',
-    resume: 'Mots de passe, durée des sessions, double authentification et clés de sécurité.',
+    resume: 'Mots de passe, durée des sessions et double authentification.',
     icone: 'bouclier',
     teinte: 'vert',
     detail: (m, can) => (
