@@ -3,7 +3,7 @@
    la disposition par défaut. Puis partager sa disposition avec un compte Lecteur, qui l'affiche sans pouvoir la
    modifier. Le compte d'administration reprend ensuite la disposition standard. */
 import { expect, test, type Page } from '@playwright/test';
-import { apiLogin, creerEcartCommun, csrfOf, markTotpUsed, PASSWORD, sessionAdmin, totp, watchPage } from '../helpers';
+import { creerEcartCommun, csrfOf, markTotpUsed, PASSWORD, sessionAdmin, totp, watchPage } from '../helpers';
 
 /** Identifiants des dalles affichées, dans l'ordre de la grille (mode modification). */
 const ordreEdition = (page: Page) =>
@@ -137,7 +137,6 @@ test('partage du tableau de bord : un compte Lecteur reçoit la disposition et l
     headers: { 'x-csrf-token': csrf },
   });
   expect(mdp.ok(), await mdp.text()).toBe(true);
-  await lc.close();
 
   const page = await ctx.newPage();
   const problems = watchPage(page);
@@ -164,10 +163,11 @@ test('partage du tableau de bord : un compte Lecteur reçoit la disposition et l
     const partage = await (await rq.get('/api/tableau-de-bord/partage')).json();
     expect(partage.destinataires).toEqual([expect.objectContaining({ type: 'utilisateur', id: lecteurId })]);
 
-    // Le Lecteur : pas de bouton de modification ; il choisit le tableau reçu, qui suit l'ordre de l'administrateur.
-    const lecteur = await browser.newContext({ ignoreHTTPSErrors: true, viewport: { width: 1440, height: 1000 } });
+    // Le Lecteur (session déjà ouverte par l'enrôlement : une connexion de moins dans la limite par adresse) : pas de
+    // bouton de modification ; il choisit le tableau reçu, qui suit l'ordre de l'administrateur.
+    const lecteur = lc;
     try {
-      await apiLogin(lecteur.request, username, PASSWORD, begin.secret);
+      expect((await (await lecteur.request.get('/api/auth/me')).json()).stage).toBe('ok');
       const lp = await lecteur.newPage();
       const problemesLecteur = watchPage(lp);
       await lp.goto('/');
@@ -181,7 +181,8 @@ test('partage du tableau de bord : un compte Lecteur reçoit la disposition et l
       await expect.poll(async () => (await ordreLecture(lp))[0]).toBe('Prochaines échéances');
       await lp.reload();
       await expect(lp.getByRole('heading', { level: 1, name: /^Bonjour/ })).toBeVisible();
-      expect((await ordreLecture(lp))[0]).toBe('Prochaines échéances');
+      await expect(lp.getByLabel('Tableau affiché')).toHaveValue(/.+/);
+      await expect.poll(async () => (await ordreLecture(lp))[0]).toBe('Prochaines échéances');
       // Sans le droit, il ne peut pas en faire sa disposition (le serveur refuse aussi).
       await expect(lp.getByRole('button', { name: 'Copier comme mon tableau' })).toHaveCount(0);
       const refus = await lecteur.request.put('/api/tableau-de-bord/disposition', {
@@ -198,6 +199,7 @@ test('partage du tableau de bord : un compte Lecteur reçoit la disposition et l
     // Nettoyage : la disposition et ses partages disparaissent, le compte Lecteur est supprimé.
     await rq.delete('/api/tableau-de-bord/disposition', { headers: entete });
     await rq.delete(`/api/admin/users/${lecteurId}`, { headers: entete });
+    await lc.close();
     await ctx.close();
   }
 });
