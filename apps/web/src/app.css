@@ -4027,15 +4027,55 @@ tr[data-importe='oui'] {
   --retex-secondaire: var(--mantine-color-dimmed);
   --retex-filet: color-mix(in srgb, var(--retex-neon) 18%, transparent);
   --retex-trait: 0.125em;
-  /* Capsules de verre : liseré, reflet, lueur intérieure et ombre (clair). */
-  --verre-fond-haut: color-mix(in srgb, var(--mantine-color-white) 70%, transparent);
-  --verre-fond-bas: color-mix(in srgb, var(--mantine-color-white) 35%, transparent);
-  --verre-lisere: color-mix(in srgb, var(--mantine-color-white) 90%, transparent);
-  --verre-contour: color-mix(in srgb, var(--mantine-color-black) 9%, transparent);
-  --verre-reflet: color-mix(in srgb, var(--mantine-color-white) 85%, transparent);
-  --verre-lueur: color-mix(in srgb, var(--mantine-color-white) 55%, transparent);
-  --verre-ombre: color-mix(in srgb, var(--carte-marine-fond) 18%, transparent);
-  --verre-principal: color-mix(in srgb, var(--retex-neon) 75%, var(--carte-violet-accent));
+  /* Capsules de verre (clair) : voile, liseré, lueur laiteuse des bords, contour et ombre neutres. */
+  --verre-voile: color-mix(in srgb, var(--mantine-color-white) 45%, transparent);
+  --verre-lisere: color-mix(in srgb, var(--mantine-color-white) 95%, transparent);
+  --verre-laiteux: color-mix(in srgb, var(--mantine-color-white) 95%, transparent);
+  --verre-contour: color-mix(in srgb, var(--carte-marine-fond) 14%, transparent);
+  --verre-ombre: color-mix(in srgb, var(--carte-marine-fond) 22%, transparent);
+  /* Bleu de la charte approfondi par la marine : texte blanc lisible (contraste d'environ 4,8:1) malgré la transparence. */
+  --verre-principal: color-mix(in srgb, var(--carte-bleu-accent) 70%, var(--carte-marine-fond));
+  --verre-principal-dose: 80%;
+  --verre-principal-laiteux: color-mix(in srgb, var(--mantine-color-white) 62%, transparent);
+}
+[data-mantine-color-scheme='dark'] .app-main:has(.revue-ecran) {
+  --retex-neon: color-mix(in srgb, var(--carte-bleu-accent) 55%, var(--mantine-color-white));
+  --verre-voile: color-mix(in srgb, var(--mantine-color-white) 8%, transparent);
+  --verre-lisere: color-mix(in srgb, var(--mantine-color-white) 70%, transparent);
+  --verre-laiteux: color-mix(in srgb, var(--mantine-color-white) 32%, transparent);
+  --verre-contour: color-mix(in srgb, var(--mantine-color-black) 30%, transparent);
+  --verre-ombre: color-mix(in srgb, var(--mantine-color-black) 45%, transparent);
+  --verre-principal: color-mix(in srgb, var(--carte-bleu-accent) 85%, var(--carte-violet-accent));
+  --verre-principal-dose: 42%;
+  --verre-principal-laiteux: color-mix(in srgb, var(--mantine-color-white) 45%, transparent);
+  /* Sombre allégé sur cette page : voile ardoise sur le fond vert, halos bleu et violet discrets. */
+  background-image:
+    radial-gradient(
+      56em 40em at 4% -6%,
+      color-mix(in srgb, var(--carte-bleu-accent) 18%, transparent),
+      transparent 62%
+    ),
+    radial-gradient(
+      48em 38em at 104% 2%,
+      color-mix(in srgb, var(--carte-violet-accent) 16%, transparent),
+      transparent 58%
+    ),
+    radial-gradient(
+      56em 50em at 58% 108%,
+      color-mix(in srgb, var(--carte-bleu-accent) 12%, transparent),
+      transparent 62%
+    ),
+    linear-gradient(
+      color-mix(in srgb, var(--carte-canevas) 60%, transparent),
+      color-mix(in srgb, var(--carte-canevas) 60%, transparent)
+    );
+}
+/* Verre des dalles en sombre : fumé neutre plutôt que vert. */
+[data-mantine-color-scheme='dark'] .revue-ecran.tdb {
+  --tdb-verre-haut: color-mix(in srgb, var(--mantine-color-white) 11%, transparent);
+  --tdb-verre-milieu: color-mix(in srgb, var(--mantine-color-white) 5%, transparent);
+  --tdb-verre-bas: color-mix(in srgb, var(--mantine-color-white) 8%, transparent);
+  --tdb-verre-bord: color-mix(in srgb, var(--mantine-color-white) 18%, transparent);
 }
 .revue-ecran {
   display: flex;
@@ -4043,18 +4083,7 @@ tr[data-importe='oui'] {
   gap: var(--mantine-spacing-xl);
   color: var(--retex-texte);
 }
-[data-mantine-color-scheme='dark'] .app-main:has(.revue-ecran) {
-  --retex-neon: color-mix(in srgb, var(--carte-bleu-accent) 55%, var(--mantine-color-white));
-  --verre-fond-haut: color-mix(in srgb, var(--mantine-color-white) 16%, transparent);
-  --verre-fond-bas: color-mix(in srgb, var(--mantine-color-white) 5%, transparent);
-  --verre-lisere: color-mix(in srgb, var(--mantine-color-white) 55%, transparent);
-  --verre-contour: color-mix(in srgb, var(--mantine-color-black) 35%, transparent);
-  --verre-reflet: color-mix(in srgb, var(--mantine-color-white) 30%, transparent);
-  --verre-lueur: color-mix(in srgb, var(--mantine-color-white) 22%, transparent);
-  --verre-ombre: color-mix(in srgb, var(--mantine-color-black) 45%, transparent);
-  --verre-principal: color-mix(in srgb, var(--carte-bleu-accent) 70%, var(--carte-violet-accent));
-}
-/* Teintes : franches et assombries en clair (lisibles sur le verre blanc), éclaircies et lumineuses en sombre. */
+/* Teintes : franches et assombries en clair (lisibles sur le verre blanc), éclaircies en sombre. */
 .revue-ecran [class*='retex-c-'] {
   --c: color-mix(in srgb, var(--a) 82%, var(--mantine-color-black));
 }
@@ -4062,7 +4091,8 @@ tr[data-importe='oui'] {
   --c: color-mix(in srgb, var(--a) 62%, var(--mantine-color-white));
 }
 
-/* Capsule de verre (pastilles, anneaux, boutons). */
+/* Capsule de verre (d'après les maquettes) : verre presque transparent et flouté, liseré blanc net doublé d'un filet
+   intérieur, lueur laiteuse le long des bords intérieurs, ombre neutre courte. Ni dégradé brillant ni halo coloré. */
 .verre-pilule,
 .verre-bouton,
 .app-main:has(.revue-ecran) .mantine-Button-root {
@@ -4070,19 +4100,14 @@ tr[data-importe='oui'] {
   position: relative;
   border: var(--suivi-trait-l) solid var(--verre-lisere);
   border-radius: 999em;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--t) 14%, var(--verre-fond-haut)),
-    color-mix(in srgb, var(--t) 8%, var(--verre-fond-bas))
-  );
-  -webkit-backdrop-filter: blur(0.9em) saturate(170%);
-  backdrop-filter: blur(0.9em) saturate(170%);
+  background: color-mix(in srgb, var(--t) 7%, var(--verre-voile));
+  -webkit-backdrop-filter: blur(1em) saturate(160%);
+  backdrop-filter: blur(1em) saturate(160%);
   box-shadow:
+    inset 0 0 0 var(--suivi-trait-l) color-mix(in srgb, var(--mantine-color-white) 30%, transparent),
+    inset 0 0 0.7em 0.05em var(--verre-laiteux),
     0 0 0 var(--suivi-trait-l) var(--verre-contour),
-    inset 0 0.55em 0.9em -0.55em var(--verre-reflet),
-    inset 0 -0.45em 0.9em -0.6em var(--verre-lueur),
-    inset 0 0 0.9em -0.2em color-mix(in srgb, var(--t) 18%, transparent),
-    0 0.45em 1em -0.5em var(--verre-ombre);
+    0 0.3em 0.8em -0.45em var(--verre-ombre);
   color: var(--retex-texte);
 }
 .verre-pilule {
@@ -4101,48 +4126,51 @@ tr[data-importe='oui'] {
   align-items: center;
   justify-content: center;
   gap: 0.5em;
-  height: 2.9em;
-  padding: 0 1.6em;
+  height: 3em;
+  padding: 0 1.75em;
   font: inherit;
-  font-size: var(--mantine-font-size-sm);
-  font-weight: 600;
+  font-size: var(--mantine-font-size-md);
+  font-weight: 500;
   letter-spacing: 0.01em;
   cursor: pointer;
   transition:
     transform 0.12s ease,
     box-shadow 0.2s ease,
-    filter 0.2s ease;
+    background 0.2s ease;
 }
-/* Capsule principale : verre teinté du néon RETEX, lueur blanche sur les bords, texte clair. */
-/* Variante pleine de Mantine : attribut data-variant absent (variante par défaut) ou « filled ». */
+/* Capsule principale : verre teinté (bleu de la charte), translucide, bords laiteux, texte blanc. Variante pleine de
+   Mantine : attribut data-variant absent (variante par défaut) ou « filled ». */
 .verre-bouton[data-principal='oui'],
 .app-main:has(.revue-ecran) .mantine-Button-root:not([data-variant]),
 .app-main:has(.revue-ecran) .mantine-Button-root[data-variant='filled'] {
   --t: var(--verre-principal);
-  border-color: color-mix(in srgb, var(--mantine-color-white) 70%, transparent);
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--t) 72%, var(--mantine-color-white)),
-    color-mix(in srgb, var(--t) 92%, transparent) 55%,
-    color-mix(in srgb, var(--t) 85%, var(--mantine-color-black))
-  );
+  border-color: color-mix(in srgb, var(--mantine-color-white) 85%, transparent);
+  background: color-mix(in srgb, var(--t) var(--verre-principal-dose), transparent);
   color: var(--mantine-color-white);
-  text-shadow: 0 var(--suivi-trait-l) 0.4em color-mix(in srgb, var(--mantine-color-black) 35%, transparent);
+  text-shadow: 0 0 0.5em color-mix(in srgb, var(--t) 60%, var(--mantine-color-black));
   box-shadow:
-    0 0 0 var(--suivi-trait-l) color-mix(in srgb, var(--t) 40%, transparent),
-    inset 0 0 0 var(--suivi-trait-l) color-mix(in srgb, var(--mantine-color-white) 25%, transparent),
-    inset 0 0.6em 0.9em -0.55em color-mix(in srgb, var(--mantine-color-white) 70%, transparent),
-    inset 0 0 1.1em -0.1em color-mix(in srgb, var(--mantine-color-white) 40%, transparent),
-    0 0.6em 1.4em -0.5em color-mix(in srgb, var(--t) 60%, transparent);
+    inset 0 0 0 var(--suivi-trait-l) color-mix(in srgb, var(--mantine-color-white) 40%, transparent),
+    inset 0 0 0.9em 0.12em var(--verre-principal-laiteux),
+    0 0 0 var(--suivi-trait-l) var(--verre-contour),
+    0 0.35em 0.9em -0.45em var(--verre-ombre);
 }
 .verre-bouton:hover,
 .app-main:has(.revue-ecran) .mantine-Button-root:hover {
-  filter: brightness(1.06) saturate(1.1);
   box-shadow:
+    inset 0 0 0 var(--suivi-trait-l) color-mix(in srgb, var(--mantine-color-white) 45%, transparent),
+    inset 0 0 1em 0.15em var(--verre-laiteux),
     0 0 0 var(--suivi-trait-l) var(--verre-contour),
-    inset 0 0.55em 0.9em -0.55em var(--verre-reflet),
-    inset 0 0 1.2em -0.1em var(--verre-lueur),
-    0 0 1.4em -0.3em color-mix(in srgb, var(--t) 55%, transparent);
+    0 0.45em 1em -0.45em var(--verre-ombre);
+}
+.verre-bouton[data-principal='oui']:hover,
+.app-main:has(.revue-ecran) .mantine-Button-root:not([data-variant]):hover,
+.app-main:has(.revue-ecran) .mantine-Button-root[data-variant='filled']:hover {
+  background: color-mix(in srgb, var(--t) calc(var(--verre-principal-dose) - 8%), transparent);
+  box-shadow:
+    inset 0 0 0 var(--suivi-trait-l) color-mix(in srgb, var(--mantine-color-white) 50%, transparent),
+    inset 0 0 1em 0.2em color-mix(in srgb, var(--mantine-color-white) 60%, transparent),
+    0 0 0 var(--suivi-trait-l) var(--verre-contour),
+    0 0.45em 1em -0.45em var(--verre-ombre);
 }
 .verre-bouton:active,
 .app-main:has(.revue-ecran) .mantine-Button-root:active {
