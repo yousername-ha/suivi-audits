@@ -2,6 +2,7 @@
 
 - Statut : proposée (numéro confirmé par le RSSI le 30/10/2026 ; décision à accepter après relecture de la PR)
 - Date : 2026-10-30
+- Rédaction : session « Intégration module RETEX incidents »
 - Contexte : le retour d'expérience (RETEX) d'un incident doit rassembler ce qu'ont vécu des personnes d'autres pôles
   (exploitation, communication, métiers) qui n'ont, le plus souvent, **aucun droit sur le module Incidents**. Les droits
   de l'application sont attribués par module ([ADR 0010](0010-droits-rbac.md)) ou par ressource réservée
