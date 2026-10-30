@@ -194,6 +194,13 @@ describe('clés de sécurité : enrôlement et connexion', () => {
     const r = await a.post('/api/account/webauthn', { response: k.enrolement(o), label: 'Doublon' });
     expect(r.statusCode).toBe(409);
     expect(r.json().reason).toBe('doublon');
+    // Révoquée, la clé physique peut être enregistrée de nouveau (nouvel identifiant de clé).
+    const id = (await a.get('/api/account/factors'))
+      .json()
+      .cles.find((c: { label: string }) => c.label === 'Première').id;
+    expect((await a.del(`/api/account/webauthn/${id}`)).statusCode).toBe(204);
+    const o2 = (await a.post('/api/account/webauthn/options')).json() as Json;
+    expect(o2.excludeCredentials.map((c) => c.id)).not.toContain(k.id);
   });
 
   it('enrôlement refusé : origine, RP ID, UV absent, challenge expiré', async () => {
@@ -301,12 +308,21 @@ describe('clés de sécurité : enrôlement et connexion', () => {
     await t.svc.db.q("UPDATE webauthn_challenges SET expires_at = now() - interval '1 second'");
     const tard = await a.post('/api/auth/webauthn', { response: k.authentification(o2) });
     expect(tard.json().reason).toBe('challenge');
-    // Challenge d'une autre session : inconnu de celle-ci.
+    // Challenge d'une autre session : sans challenge en cours, refus immédiat ; avec un challenge en cours, refus à la
+    // vérification. Dans les deux cas, aucun challenge n'est recopié au journal.
     remettreLimites(t);
     const autre = await motDePasse(t, v);
     const o3 = (await autre.post('/api/auth/webauthn/options')).json() as Json;
     const croise = await a.post('/api/auth/webauthn', { response: k.authentification(o3) });
     expect(croise.json().reason).toBe('challenge');
+    const o4 = (await a.post('/api/auth/webauthn/options')).json() as Json;
+    const croise2 = await a.post('/api/auth/webauthn', {
+      response: k.authentification(o4, { challenge: o3.challenge }),
+    });
+    expect(croise2.json().reason).toBe('verification');
+    const journal = JSON.stringify((await t.svc.db.q('SELECT details FROM audit_log')).rows);
+    for (const c of [o.challenge, o2.challenge, o3.challenge, o4.challenge]) expect(journal).not.toContain(c);
+    expect(journal).toContain('challenge non conforme');
     expect((await audit(t, 'auth.webauthn_failed', v.username)).rows.length).toBeGreaterThanOrEqual(5);
   });
 

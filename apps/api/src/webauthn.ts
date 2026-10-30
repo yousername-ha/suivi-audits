@@ -51,6 +51,11 @@ export interface ContexteEvt {
   ua: string;
 }
 
+/** Message d'erreur de la bibliothèque, pour le journal : un message qui cite le challenge reçu est remplacé (aucun challenge
+    au journal) ; les autres (origine, RP ID, UV, compteur) sont gardés, bornés. */
+export const nettoyerDetail = (message: string) =>
+  /challenge/i.test(message) ? 'challenge non conforme' : message.replace(/[\p{Cc}]+/gu, ' ').slice(0, 200);
+
 /** Identifiant de clé tronqué pour les journaux : assez pour la retrouver, pas pour la rejouer ailleurs. */
 export const tronquer = (credentialId: string) => credentialId.slice(0, 8) + '…';
 
@@ -279,12 +284,15 @@ export class Webauthn {
     sid: Buffer,
     user: { id: string; username: string; displayName: string },
   ): Promise<PublicKeyCredentialCreationOptionsJSON | null> {
+    // Clés non révoquées seulement : une clé physique révoquée (retrouvée, ou après réinitialisation) peut être enregistrée
+    // de nouveau, sous un nouvel identifiant ; un même identifiant reste refusé (contrainte d'unicité).
     const existantes = await this.db.k
       .selectFrom('webauthn_credentials')
-      .select(['credential_id', 'transports', 'revoked_at'])
+      .select(['credential_id', 'transports'])
       .where('user_id', '=', user.id)
+      .where('revoked_at', 'is', null)
       .execute();
-    if (existantes.filter((c) => !c.revoked_at).length >= CLES_MAX) return null;
+    if (existantes.length >= CLES_MAX) return null;
     const { politique } = this.stockee;
     return generateRegistrationOptions({
       rpName: this.cfg.webauthn.rpName,
@@ -295,7 +303,6 @@ export class Webauthn {
       challenge: await this.nouveauChallenge(sid, 'enrolement'),
       timeout: DELAI_NAVIGATEUR_MS,
       attestationType: politique.materielUniquement ? 'direct' : 'none',
-      // Toutes les clés déjà connues, révoquées comprises : un même authentificateur n'est jamais enrôlé deux fois.
       excludeCredentials: existantes.map((c) => ({
         id: c.credential_id,
         transports: (Array.isArray(c.transports) ? c.transports : []) as AuthenticatorTransport[],
@@ -331,7 +338,7 @@ export class Webauthn {
       if (!v.verified) return { ok: false, motif: 'verification' };
       info = v.registrationInfo;
     } catch (e) {
-      return { ok: false, motif: 'verification', detail: (e as Error).message.slice(0, 200) };
+      return { ok: false, motif: 'verification', detail: nettoyerDetail((e as Error).message) };
     }
     if (politique.materielUniquement) {
       // Attestation complète exigée : format « packed » avec chaîne de certificats (vérifiée jusqu'à une racine ci-dessus),
@@ -456,7 +463,7 @@ export class Webauthn {
       if (!v.verified) return { ok: false, motif: 'verification', ...base };
       info = v.authenticationInfo;
     } catch (e) {
-      return { ok: false, motif: 'verification', ...base, detail: (e as Error).message.slice(0, 200) };
+      return { ok: false, motif: 'verification', ...base, detail: nettoyerDetail((e as Error).message) };
     }
     // Compteur de signature : une clé qui en tient un (non nul) doit le faire progresser. Les passkeys synchronisées
     // renvoient toujours 0 : 0 après 0 est accepté. Un compteur qui stagne ou recule signale une clé possiblement clonée.
