@@ -31,8 +31,18 @@
       "module": "compte",
       "historical_key": "users / sessions",
       "historical_source": "ancien outil (branche archive/outil-legacy-autonome)",
-      "implementation": ["apps/api/src/routes/auth.ts", "apps/api/src/auth.ts", "apps/api/src/security/setup-token.ts"],
-      "tests": ["apps/api/test/security.test.ts", "tests/e2e/specs/parcours.spec.ts"],
+      "implementation": [
+        "apps/api/src/routes/auth.ts",
+        "apps/api/src/auth.ts",
+        "apps/api/src/security/setup-token.ts",
+        "apps/web/src/pages/Login.tsx"
+      ],
+      "tests": [
+        "apps/api/test/security.test.ts",
+        "tests/e2e/specs/parcours.spec.ts",
+        "apps/web/test/fond-connexion.test.ts",
+        "apps/web/test/onde-menu.test.ts"
+      ],
       "route": "/setup ; /login",
       "verified_scope": "Installation avec jeton à usage unique, session complète après MFA, anti-rejeu et refus CSRF/origine.",
       "validation": "VALIDÉ AUTOMATIQUEMENT",
@@ -1537,7 +1547,18 @@
       "estimation": "NON ESTIMÉE"
     },
     {
-      "id": "TEST-044",
+      "id": "DEV-007",
+      "title": "Refonte de l'écran de connexion (maquette validée)",
+      "status": "RÉALISÉE",
+      "priority": "P2",
+      "origin": "demande du RSSI du 29/10/2026 (maquette validée)",
+      "acceptance": "Panneau unique centré à toutes les tailles ; formulaire dans les trois cartes empilées ; étapes code TOTP, enrôlement et changement de mot de passe dans le même panneau ; sceau, onde (OndeMenu, option connexion) et fond animés décoratifs, absents sous automate de test et à l'impression ; CSP stricte, couleurs par jetons, aucune dépendance nouvelle ; tests purs de la géométrie ; captures clair, sombre et téléphone.",
+      "dependencies": "Aucune",
+      "next": "Aucune côté développement : PR #181 fusionnée dans claude-suivi-smsi le 30/10/2026 après CI 7/7, publiée dans la 6.0.0 (décision du RSSI du 30/10/2026). Relecture visuelle du RSSI sur son serveur à faire (TEST-041).",
+      "estimation": "NON ESTIMÉE"
+    },
+    {
+      "id": "TEST-052",
       "title": "Recetter les clés de sécurité FIDO2 sur matériel réel",
       "status": "À FAIRE",
       "priority": "P1",
@@ -1548,24 +1569,24 @@
       "estimation": "NON ESTIMÉE"
     },
     {
-      "id": "DEV-007",
+      "id": "DEV-008",
       "title": "Connexion sans mot de passe par passkey (phase 2 de l'ADR 0079)",
       "status": "À CADRER",
       "priority": "P3",
       "origin": "ADR 0079, alternative reportée",
       "acceptance": "ADR complémentaire : clés découvrables, procédure de perte de clé sans mot de passe, verrouillage et journalisation ; politique passwordless activable ; tests API et de bout en bout.",
-      "dependencies": "TEST-044",
+      "dependencies": "TEST-052",
       "next": "Décision du RSSI sur l'opportunité, puis ADR.",
       "estimation": "NON ESTIMÉE"
     },
     {
-      "id": "DEV-008",
+      "id": "DEV-009",
       "title": "Accepter la clé de sécurité pour l'installation des mises à jour et la remise à vide",
       "status": "À FAIRE",
       "priority": "P3",
       "origin": "ADR 0079 (décision du RSSI du 30/10/2026 : hors de ce chantier)",
       "acceptance": "Code TOTP ou clé de sécurité (challenge dédié, usage unique) sur ces deux écrans ; tests API et de bout en bout ; aucune régression du TOTP.",
-      "dependencies": "TEST-044",
+      "dependencies": "TEST-052",
       "next": "À planifier sur décision du RSSI.",
       "estimation": "NON ESTIMÉE"
     }
