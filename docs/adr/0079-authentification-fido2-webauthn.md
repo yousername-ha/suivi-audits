@@ -1,6 +1,6 @@
 # ADR 0079 — Authentification FIDO2 / WebAuthn (clés de sécurité)
 
-- Statut : proposée (numéro annoncé au RSSI le 30/10/2026, à confirmer ; 0078 est pris par la branche du tableau de bord)
+- Statut : acceptée par le RSSI le 30/10/2026
 - Date : 2026-10-30
 - Rédaction : session Claude « FIDO2/WebAuthn support for suivi-audits », branche `claude/intelligent-gauss-6dgh4w`
 - Contexte : la connexion exige le mot de passe puis un code TOTP ([ADR 0066](0066-limitation-des-essais-du-second-facteur-et-verrouillage-partage.md),
