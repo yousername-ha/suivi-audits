@@ -1633,7 +1633,7 @@
       "origin": "demande du RSSI du 30/10/2026 (module fourni en trois patchs, intégré sans réécriture)",
       "acceptance": "Chronologie triée et générée (écran sombre conservé) ; collecte avec invitations et relances notifiées (retex_contribution, migration 049) ; contributeur sans droit de module habilité sur un seul RETEX, écritures vérifiées sous verrou, 404 identiques (ADR 0080) ; file à valider, récupération fiche et main courante, clôture, diffusion ; CSP stricte, couleurs par jetons, aucune dépendance nouvelle ; texte « retex » historique inchangé.",
       "dependencies": "Aucune",
-      "next": "CI 7/7 de la PR vers claude-suivi-smsi, relecture du RSSI, acceptation de l’ADR 0080, puis recette sur son serveur (TEST-041).",
+      "next": "ADR 0080 acceptée par le RSSI le 30/10/2026 ; PR #189 fusionnée sur son accord après CI 7/7 ; recette sur son serveur (TEST-041).",
       "estimation": "NON ESTIMÉE"
     }
   ],

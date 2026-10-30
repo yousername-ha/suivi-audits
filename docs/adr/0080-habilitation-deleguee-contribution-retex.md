@@ -1,6 +1,6 @@
 # ADR 0080 — Habilitation déléguée sur un objet : contribution à un RETEX
 
-- Statut : proposée (numéro 0080 retenu par le RSSI le 30/10/2026, 0078 étant pris par la PR #188 ; décision à accepter après relecture de la PR)
+- Statut : acceptée par le RSSI le 30/10/2026 (numéro 0080 retenu le même jour, 0078 étant pris par la PR #188)
 - Date : 2026-10-30
 - Rédaction : session « Intégration module RETEX incidents »
 - Contexte : le retour d'expérience (RETEX) d'un incident doit rassembler ce qu'ont vécu des personnes d'autres pôles
