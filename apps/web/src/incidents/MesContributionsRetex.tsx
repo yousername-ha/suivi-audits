@@ -1,7 +1,7 @@
 /* Mes contributions RETEX : page d'une personne invitée à contribuer au retour d'expérience d'un incident. Aucun droit de
    module n'est requis : le serveur ne renvoie que le contexte minimal (incident, pilote, consigne, échéance), les
    propositions de la personne et, si le pilote l'a diffusée après clôture, la chronologie en lecture seule. */
-import { Anchor, Button, Card, Group, Modal, Stack, Table, Text } from '@mantine/core';
+import { Anchor, Button, Group, Modal, Stack, Table, Text } from '@mantine/core';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   chronologieRetex,
@@ -11,7 +11,7 @@ import {
   type InvitationVue,
   type PropositionRetex,
 } from '@suivi/shared';
-import { ConfirmButton, DataTable, StatusChip } from '@suivi/ui';
+import { ConfirmButton, DataTable } from '@suivi/ui';
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { api, get } from '../api';
@@ -25,6 +25,7 @@ import {
   type SaisieRetex,
 } from './FormulaireEvenementRetex';
 import { StatutPropositionChip, TypeRetex } from './Retex';
+import { EnteteRetex, EspaceRetex, EtatRetex, SectionRetex } from './RetexHabillage';
 
 export const CLE_INVITATIONS_RETEX = ['retex-invitations'] as const;
 interface Contribution {
@@ -54,25 +55,20 @@ export function MesContributionsRetexPage() {
   const liste = invitations.data ?? [];
   const actives = liste.filter((x) => x.statut === 'ouverte');
   return (
-    <Stack className="retex-contribution-page">
-      <div>
-        <Text fw={700} size="xl">
-          Mes contributions RETEX
-        </Text>
-        <Text size="sm" c="dimmed">
-          Le pilote d’un retour d’expérience vous demande d’ajouter ce que votre pôle a vécu pendant un incident. Vous
-          ne voyez que vos propres éléments ; le pilote les valide avant de les intégrer à la chronologie.
-        </Text>
-      </div>
+    <EspaceRetex>
+      <EnteteRetex
+        surtitre="Retour d’expérience · Contribution"
+        titre="Mes contributions RETEX"
+        sousTitre="Le pilote d’un retour d’expérience vous demande d’ajouter ce que votre pôle a vécu pendant un incident. Vous ne voyez que vos propres éléments ; le pilote les valide avant de les intégrer à la chronologie."
+      />
       <ErrorAlert error={invitations.error} />
       {!liste.length && !invitations.isLoading && (
-        <Card withBorder>
-          <Text c="dimmed">Aucune demande de contribution pour le moment.</Text>
-        </Card>
+        <SectionRetex titre="Aucune demande" aide="Aucune demande de contribution pour le moment." />
       )}
       <div className="retex-contribution">
         {liste.length > 0 && (
           <nav className="retex-contribution__liste" aria-label="Demandes de contribution">
+            <span className="retex-contribution__legende">Demandes ({liste.length})</span>
             {[...actives, ...liste.filter((x) => x.statut !== 'ouverte')].map((x) => (
               <Anchor
                 key={x.incidentId}
@@ -102,14 +98,12 @@ export function MesContributionsRetexPage() {
             <Contribution id={incident} />
           ) : (
             liste.length > 0 && (
-              <Card withBorder>
-                <Text c="dimmed">Choisissez une demande dans la liste.</Text>
-              </Card>
+              <SectionRetex titre="Choisissez une demande" aide="Sélectionnez un RETEX dans la liste." />
             )
           )}
         </div>
       </div>
-    </Stack>
+    </EspaceRetex>
   );
 }
 
@@ -134,12 +128,12 @@ function Contribution({ id }: { id: string }) {
   };
   if (q.error)
     return (
-      <Card withBorder>
+      <SectionRetex titre="Demande indisponible">
         <ErrorAlert error={q.error} />
         <Button mt="sm" variant="default" onClick={() => void navigate('/retex')}>
           Retour à mes demandes
         </Button>
-      </Card>
+      </SectionRetex>
     );
   const c = q.data;
   if (!c) return null;
@@ -151,50 +145,35 @@ function Contribution({ id }: { id: string }) {
   return (
     <Stack>
       <ErrorAlert error={erreur} />
-      <Card withBorder className="retex-contexte">
-        <Group justify="space-between" align="flex-start">
-          <div>
-            <Text size="xs" tt="uppercase" c="dimmed" fw={700}>
-              Retour d’expérience · {inv.incidentId}
-            </Text>
-            <Text fw={700} size="lg">
-              {inv.titre || '(sans titre)'}
-            </Text>
-            <Text size="sm" c="dimmed">
-              Pilote : {inv.piloteNom}
-            </Text>
-          </div>
-          <Stack gap="xs" align="flex-end">
+      <SectionRetex
+        numero="01"
+        titre={inv.titre || '(sans titre)'}
+        aide={`Retour d’expérience de l’incident ${inv.incidentId} · pilote : ${inv.piloteNom}`}
+        actions={
+          <div className="retex-contexte__etat">
             {ouverte ? (
-              <StatusChip etat="attention">Collecte ouverte</StatusChip>
+              <EtatRetex ton="attention">Collecte ouverte</EtatRetex>
             ) : (
-              <StatusChip etat="succes">Collecte close</StatusChip>
+              <EtatRetex ton="succes">Collecte close</EtatRetex>
             )}
             {inv.echeance && (
-              <Text size="sm" c={jours !== null && jours < 0 ? 'red' : undefined}>
-                Échéance : {dateJour(inv.echeance)}
-                {ouverte && jours !== null
-                  ? jours < 0
-                    ? ' (dépassée)'
-                    : ` (${jours} jour${jours > 1 ? 's' : ''})`
-                  : ''}
-              </Text>
+              <span className="retex-contexte__echeance" data-depassee={jours !== null && jours < 0 ? 'oui' : 'non'}>
+                Échéance {dateJour(inv.echeance)}
+                {ouverte && jours !== null ? (jours < 0 ? ' · dépassée' : ` · J-${jours}`) : ''}
+              </span>
             )}
-          </Stack>
-        </Group>
-        {inv.consigne && (
-          <Text size="sm" mt="sm" className="retex-consigne">
-            {inv.consigne}
-          </Text>
-        )}
-      </Card>
+          </div>
+        }
+      >
+        {inv.consigne && <p className="retex-consigne">{inv.consigne}</p>}
+      </SectionRetex>
 
       {ouverte && !inv.termineLe && (
-        <Card withBorder>
-          <Text fw={600}>Ajouter un élément</Text>
-          <Text size="sm" c="dimmed" mb="sm">
-            Un élément par fait marquant : ce que vous avez constaté, décidé, fait ou communiqué.
-          </Text>
+        <SectionRetex
+          numero="02"
+          titre="Ajouter un élément"
+          aide="Un élément par fait marquant : ce que vous avez constaté, décidé, fait ou communiqué."
+        >
           <FormulaireEvenementRetex
             key={c.propositions.length}
             initial={saisieVide(dernier?.ts || maintenantLocal(), 'Analyse')}
@@ -202,91 +181,19 @@ function Contribution({ id }: { id: string }) {
             aideActeur="Personne ou équipe qui a agi."
             valider={async (s) => !!(await agir('POST', `${base}/propositions`, nettoyerSaisie(s)))}
           />
-        </Card>
+        </SectionRetex>
       )}
 
-      <DataTable label="Mes éléments proposés">
-        <Table>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Date et heure</Table.Th>
-              <Table.Th>Type</Table.Th>
-              <Table.Th>Élément</Table.Th>
-              <Table.Th>Suite donnée</Table.Th>
-              <Table.Th>Actions</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {c.propositions.map((p) => {
-              const modifiable = ouverte && p.statut === 'en_attente';
-              return (
-                <Table.Tr key={p.id}>
-                  <Table.Td>{dateHeureRetex(p.ts)}</Table.Td>
-                  <Table.Td>
-                    <TypeRetex type={p.type} />
-                  </Table.Td>
-                  <Table.Td>
-                    <Text size="sm" fw={500}>
-                      {p.titre}
-                    </Text>
-                    {p.description && (
-                      <Text size="xs" c="dimmed" lineClamp={2}>
-                        {p.description}
-                      </Text>
-                    )}
-                  </Table.Td>
-                  <Table.Td>
-                    <StatutPropositionChip p={p} />
-                    {p.motif && (
-                      <Text size="xs" c="dimmed">
-                        {p.motif}
-                      </Text>
-                    )}
-                  </Table.Td>
-                  <Table.Td>
-                    {modifiable ? (
-                      <Group gap="xs" wrap="nowrap">
-                        <Anchor component="button" type="button" size="sm" onClick={() => setEdite(p)}>
-                          Modifier
-                        </Anchor>
-                        <ConfirmButton
-                          message={`Retirer « ${p.titre} » ?`}
-                          onConfirm={async () => {
-                            await agir('DELETE', `${base}/propositions/${encodeURIComponent(p.id)}`);
-                          }}
-                          variant="subtle"
-                          size="compact-sm"
-                        >
-                          Retirer
-                        </ConfirmButton>
-                      </Group>
-                    ) : (
-                      '–'
-                    )}
-                  </Table.Td>
-                </Table.Tr>
-              );
-            })}
-            {!c.propositions.length && (
-              <Table.Tr>
-                <Table.Td colSpan={5}>Vous n’avez encore rien proposé.</Table.Td>
-              </Table.Tr>
-            )}
-          </Table.Tbody>
-        </Table>
-      </DataTable>
-
-      {ouverte && (
-        <Group justify="flex-end">
-          {inv.termineLe ? (
-            <>
-              <Text size="sm" c="dimmed">
-                Contribution déclarée terminée le {new Date(inv.termineLe).toLocaleDateString('fr-FR')}.
-              </Text>
-              <Button variant="default" onClick={() => void agir('PUT', `${base}/terminee`, { terminee: false })}>
-                Reprendre ma contribution
-              </Button>
-            </>
+      <SectionRetex
+        numero={ouverte && !inv.termineLe ? '03' : '02'}
+        titre={`Mes éléments proposés (${c.propositions.length})`}
+        aide="Suite donnée par le pilote : à valider, intégrée, déjà connue ou non retenue."
+        actions={
+          ouverte &&
+          (inv.termineLe ? (
+            <Button variant="default" onClick={() => void agir('PUT', `${base}/terminee`, { terminee: false })}>
+              Reprendre ma contribution
+            </Button>
           ) : (
             <Button
               disabled={!c.propositions.length}
@@ -294,13 +201,88 @@ function Contribution({ id }: { id: string }) {
             >
               J’ai terminé ma contribution
             </Button>
-          )}
-        </Group>
-      )}
+          ))
+        }
+      >
+        {inv.termineLe && (
+          <Text size="sm" c="dimmed" mb="sm">
+            Contribution déclarée terminée le {new Date(inv.termineLe).toLocaleDateString('fr-FR')}.
+          </Text>
+        )}
+        <DataTable label="Mes éléments proposés">
+          <Table>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Date et heure</Table.Th>
+                <Table.Th>Type</Table.Th>
+                <Table.Th>Élément</Table.Th>
+                <Table.Th>Suite donnée</Table.Th>
+                <Table.Th>Actions</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {c.propositions.map((p) => {
+                const modifiable = ouverte && p.statut === 'en_attente';
+                return (
+                  <Table.Tr key={p.id}>
+                    <Table.Td className="retex-chiffre">{dateHeureRetex(p.ts)}</Table.Td>
+                    <Table.Td>
+                      <TypeRetex type={p.type} />
+                    </Table.Td>
+                    <Table.Td>
+                      <Text size="sm" fw={500}>
+                        {p.titre}
+                      </Text>
+                      {p.description && (
+                        <Text size="xs" c="dimmed" lineClamp={2}>
+                          {p.description}
+                        </Text>
+                      )}
+                    </Table.Td>
+                    <Table.Td>
+                      <StatutPropositionChip p={p} />
+                      {p.motif && (
+                        <Text size="xs" c="dimmed">
+                          {p.motif}
+                        </Text>
+                      )}
+                    </Table.Td>
+                    <Table.Td>
+                      {modifiable ? (
+                        <Group gap="xs" wrap="nowrap">
+                          <Anchor component="button" type="button" size="sm" onClick={() => setEdite(p)}>
+                            Modifier
+                          </Anchor>
+                          <ConfirmButton
+                            message={`Retirer « ${p.titre} » ?`}
+                            onConfirm={async () => {
+                              await agir('DELETE', `${base}/propositions/${encodeURIComponent(p.id)}`);
+                            }}
+                            variant="subtle"
+                            size="compact-sm"
+                          >
+                            Retirer
+                          </ConfirmButton>
+                        </Group>
+                      ) : (
+                        '–'
+                      )}
+                    </Table.Td>
+                  </Table.Tr>
+                );
+              })}
+              {!c.propositions.length && (
+                <Table.Tr>
+                  <Table.Td colSpan={5}>Vous n’avez encore rien proposé.</Table.Td>
+                </Table.Tr>
+              )}
+            </Table.Tbody>
+          </Table>
+        </DataTable>
+      </SectionRetex>
 
       {c.chronologie && c.chronologie.length > 0 && (
         <Stack gap="xs">
-          <Text fw={600}>Chronologie diffusée par le pilote</Text>
           <ChronologieRetex
             titre={`${inv.incidentId} — ${inv.titre || '(sans titre)'}`}
             points={chronologieRetex(c.chronologie)}
@@ -309,7 +291,15 @@ function Contribution({ id }: { id: string }) {
         </Stack>
       )}
 
-      <Modal opened={!!edite} onClose={() => setEdite(null)} lockScroll={false} size="lg" title="Modifier mon élément">
+      <Modal
+        withinPortal={false}
+        classNames={{ content: 'retex-modal' }}
+        opened={!!edite}
+        onClose={() => setEdite(null)}
+        lockScroll={false}
+        size="lg"
+        title="Modifier mon élément"
+      >
         {edite && (
           <FormulaireEvenementRetex
             initial={edite as SaisieRetex}

@@ -5,14 +5,11 @@
    de l'état historique), sous verrou, par les routes /api/incidents/:id/retex…. */
 import {
   Anchor,
-  Badge,
   Button,
-  Card,
   Checkbox,
   Group,
   Modal,
   MultiSelect,
-  SegmentedControl,
   Select,
   Stack,
   Switch,
@@ -41,13 +38,12 @@ import {
   type PropositionRetex,
   type StatutProposition,
 } from '@suivi/shared';
-import { ConfirmButton, DataTable, StatusChip, type Etat } from '@suivi/ui';
+import { ConfirmButton, DataTable } from '@suivi/ui';
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { ChampTexte, ChampZone, useModule } from '../historique/champs';
-import { Chiffres } from '../historique/graphiques';
 import { useCan } from '../session';
 import { ChronologieRetex, TEINTE_TYPE_RETEX } from './ChronologieRetex';
 import {
@@ -58,6 +54,15 @@ import {
   saisieVide,
   type SaisieRetex,
 } from './FormulaireEvenementRetex';
+import {
+  EnteteRetex,
+  EspaceRetex,
+  EtatRetex,
+  IndicateursRetex,
+  OngletsRetex,
+  SectionRetex,
+  type TonRetex,
+} from './RetexHabillage';
 
 interface Donnees {
   version: number;
@@ -68,7 +73,7 @@ interface Donnees {
 type Agir = <R = unknown>(m: string, c: string, b?: unknown) => Promise<R | undefined>;
 type Vue = 'saisie' | 'contributeurs' | 'valider' | 'recuperer' | 'chronologie';
 const VUES: Vue[] = ['saisie', 'contributeurs', 'valider', 'recuperer', 'chronologie'];
-const ETAT_PROPOSITION: Record<StatutProposition, Etat> = {
+const ETAT_PROPOSITION: Record<StatutProposition, TonRetex> = {
   en_attente: 'attention',
   acceptee: 'succes',
   doublon: 'info',
@@ -85,16 +90,18 @@ export const TypeRetex = ({ type }: { type: string }) => (
   </span>
 );
 export const StatutPropositionChip = ({ p }: { p: Pick<PropositionRetex, 'statut'> }) => (
-  <StatusChip etat={ETAT_PROPOSITION[p.statut]}>{LIBELLES_PROPOSITION[p.statut]}</StatusChip>
+  <EtatRetex ton={ETAT_PROPOSITION[p.statut]}>{LIBELLES_PROPOSITION[p.statut]}</EtatRetex>
 );
 const ChipCollecte = ({ c }: { c: CollecteRetex | null }) =>
   !c ? (
-    <StatusChip etat="neutre">Saisie seule</StatusChip>
+    <EtatRetex ton="neutre">Saisie seule</EtatRetex>
   ) : c.statut === 'cloturee' ? (
-    <StatusChip etat="succes">{c.diffusee ? 'Close, diffusée' : 'Collecte close'}</StatusChip>
+    <EtatRetex ton="succes">{c.diffusee ? 'Close · diffusée' : 'Collecte close'}</EtatRetex>
   ) : (
-    <StatusChip etat="attention">Collecte ouverte</StatusChip>
+    <EtatRetex ton="attention">Collecte ouverte</EtatRetex>
   );
+/** Listes déroulantes rendues dans l'espace (sans portail) pour en reprendre l'habillage. */
+const SANS_PORTAIL = { withinPortal: false } as const;
 
 /* ================================================================================================ page */
 export function RetexIncidents() {
@@ -110,7 +117,7 @@ export function RetexIncidents() {
     setParams(id ? { incident: id, ...(v !== 'saisie' ? { vue: v } : {}) } : {}, { replace: true });
 
   return (
-    <Stack>
+    <EspaceRetex>
       <ErrorAlert error={erreur} />
       {!incident ? (
         <ListeRetex d={d} modifiable={modifiable} ouvrir={(id) => aller(id)} nouveau={() => setOuverture('')} />
@@ -139,6 +146,8 @@ export function RetexIncidents() {
       )}
       {incident && (
         <Modal
+          withinPortal={false}
+          classNames={{ content: 'retex-modal' }}
           opened={plein && vue === 'chronologie'}
           onClose={() => setPlein(false)}
           fullScreen
@@ -152,7 +161,7 @@ export function RetexIncidents() {
           />
         </Modal>
       )}
-    </Stack>
+    </EspaceRetex>
   );
 }
 
@@ -171,70 +180,76 @@ function ListeRetex({
   const liste = (d ? filtrerIncidents(d.incidents, 'all') : []).filter((i) => i.collecte || i.timeline.length);
   const ouverts = liste.filter((i) => i.collecte?.statut === 'ouverte');
   const attente = liste.reduce((n, i) => n + syntheseCollecte(i.collecte).enAttente, 0);
+  const contributeurs = liste.reduce((n, i) => n + syntheseCollecte(i.collecte).contributeurs, 0);
   return (
     <>
-      <Group justify="space-between" align="flex-end">
-        <div>
-          <Text fw={600}>Retours d’expérience</Text>
-          <Text size="sm" c="dimmed">
-            Ouvrez un RETEX sur un incident, remplissez-le seul ou invitez des personnes d’autres pôles : chacune ajoute
-            ses éléments sans voir le reste. Vous validez, puis vous générez la chronologie animée.
-          </Text>
-        </div>
-        {modifiable && <Button onClick={nouveau}>Ouvrir un RETEX</Button>}
-      </Group>
-      <Chiffres
+      <EnteteRetex
+        surtitre="Incidents et crise · Retour d’expérience"
+        titre="Retours d’expérience"
+        sousTitre="Ouvrez un RETEX sur un incident, remplissez-le seul ou invitez des personnes d’autres pôles. Chacune ajoute ses éléments sans voir le reste ; vous validez, puis vous générez la chronologie."
+        actions={modifiable && <Button onClick={nouveau}>Ouvrir un RETEX</Button>}
+      />
+      <IndicateursRetex
         items={[
-          { valeur: liste.length, libelle: 'RETEX' },
-          { valeur: ouverts.length, libelle: 'collectes ouvertes' },
-          { valeur: attente, libelle: 'propositions à valider' },
+          ['RETEX', liste.length],
+          ['Collectes ouvertes', ouverts.length],
+          ['Contributeurs', contributeurs],
+          ['À valider', attente, attente ? 'orange' : undefined],
         ]}
       />
-      <DataTable label="Retours d’expérience">
-        <Table highlightOnHover>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Incident</Table.Th>
-              <Table.Th>Pilote</Table.Th>
-              <Table.Th>Collecte</Table.Th>
-              <Table.Th>Contributeurs</Table.Th>
-              <Table.Th>À valider</Table.Th>
-              <Table.Th>Échéance</Table.Th>
-              <Table.Th>Chronologie</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {liste.map((i) => {
-              const s = syntheseCollecte(i.collecte);
-              return (
-                <Table.Tr key={i.id}>
-                  <Table.Td>
-                    <Anchor component="button" type="button" fw={600} onClick={() => ouvrir(i.id)}>
-                      {i.id}
-                    </Anchor>
-                    <Text size="xs" c="dimmed">
-                      {i.title || '(sans titre)'}
-                    </Text>
-                  </Table.Td>
-                  <Table.Td>{i.collecte?.piloteNom || '–'}</Table.Td>
-                  <Table.Td>
-                    <ChipCollecte c={i.collecte} />
-                  </Table.Td>
-                  <Table.Td>{s.contributeurs ? `${s.termines} / ${s.contributeurs} terminé(s)` : '–'}</Table.Td>
-                  <Table.Td>{s.enAttente ? <Badge color="orange">{s.enAttente}</Badge> : '–'}</Table.Td>
-                  <Table.Td>{dateJour(i.collecte?.echeance ?? '') || '–'}</Table.Td>
-                  <Table.Td>{i.timeline.length} événement(s)</Table.Td>
-                </Table.Tr>
-              );
-            })}
-            {!liste.length && (
+      <SectionRetex
+        numero="01"
+        titre="Registre des RETEX"
+        aide="Un RETEX par incident ; ouvrez-le pour suivre la collecte."
+      >
+        <DataTable label="Retours d’expérience">
+          <Table highlightOnHover>
+            <Table.Thead>
               <Table.Tr>
-                <Table.Td colSpan={7}>Aucun RETEX. Ouvrez-en un depuis un incident du registre.</Table.Td>
+                <Table.Th>Incident</Table.Th>
+                <Table.Th>Pilote</Table.Th>
+                <Table.Th>Collecte</Table.Th>
+                <Table.Th>Contributeurs</Table.Th>
+                <Table.Th>À valider</Table.Th>
+                <Table.Th>Échéance</Table.Th>
+                <Table.Th>Chronologie</Table.Th>
               </Table.Tr>
-            )}
-          </Table.Tbody>
-        </Table>
-      </DataTable>
+            </Table.Thead>
+            <Table.Tbody>
+              {liste.map((i) => {
+                const s = syntheseCollecte(i.collecte);
+                return (
+                  <Table.Tr key={i.id}>
+                    <Table.Td>
+                      <button type="button" className="retex-lien-ligne" onClick={() => ouvrir(i.id)}>
+                        <span className="retex-lien-ligne__id">{i.id}</span>
+                        <span className="retex-lien-ligne__titre">{i.title || '(sans titre)'}</span>
+                      </button>
+                    </Table.Td>
+                    <Table.Td>{i.collecte?.piloteNom || '–'}</Table.Td>
+                    <Table.Td>
+                      <ChipCollecte c={i.collecte} />
+                    </Table.Td>
+                    <Table.Td className="retex-chiffre">
+                      {s.contributeurs ? `${s.termines} / ${s.contributeurs}` : '–'}
+                    </Table.Td>
+                    <Table.Td>
+                      {s.enAttente ? <EtatRetex ton="attention">{s.enAttente} en attente</EtatRetex> : '–'}
+                    </Table.Td>
+                    <Table.Td className="retex-chiffre">{dateJour(i.collecte?.echeance ?? '') || '–'}</Table.Td>
+                    <Table.Td className="retex-chiffre">{i.timeline.length} événement(s)</Table.Td>
+                  </Table.Tr>
+                );
+              })}
+              {!liste.length && (
+                <Table.Tr>
+                  <Table.Td colSpan={7}>Aucun RETEX. Ouvrez-en un depuis un incident du registre.</Table.Td>
+                </Table.Tr>
+              )}
+            </Table.Tbody>
+          </Table>
+        </DataTable>
+      </SectionRetex>
     </>
   );
 }
@@ -262,25 +277,33 @@ function OuvertureRetex({
   const candidats = useCandidats(mode === 'collectif');
   const choix = filtrerIncidents(d.incidents, 'all').filter((i) => !i.collecte);
   return (
-    <Modal opened onClose={() => fermer()} lockScroll={false} size="lg" title="Ouvrir un RETEX">
+    <Modal
+      withinPortal={false}
+      classNames={{ content: 'retex-modal' }}
+      opened
+      onClose={() => fermer()}
+      lockScroll={false}
+      size="lg"
+      title="Ouvrir un RETEX"
+    >
       <Stack>
         <Select
           label="Incident"
           placeholder="Choisir un incident du registre"
           searchable
           required
-          comboboxProps={{ withinPortal: true }}
+          comboboxProps={SANS_PORTAIL}
           value={id}
           onChange={setId}
           data={choix.map((i) => ({ value: i.id, label: `${i.id} — ${i.title || '(sans titre)'}` }))}
         />
-        <SegmentedControl
-          aria-label="Mode de collecte"
-          value={mode}
-          onChange={(v) => setMode(v as 'seul' | 'collectif')}
-          data={[
-            { value: 'collectif', label: 'J’invite des contributeurs' },
-            { value: 'seul', label: 'Je remplis seul' },
+        <OngletsRetex
+          libelle="Mode de collecte"
+          valeur={mode}
+          onChange={setMode}
+          onglets={[
+            { valeur: 'collectif', libelle: 'J’invite des contributeurs' },
+            { valeur: 'seul', libelle: 'Je remplis seul' },
           ]}
         />
         {mode === 'collectif' && (
@@ -290,7 +313,7 @@ function OuvertureRetex({
               description="Comptes existants. Chacun n’aura accès qu’à ce RETEX, pour y ajouter ses propres éléments."
               placeholder="Rechercher une personne ou un pôle"
               searchable
-              comboboxProps={{ withinPortal: true }}
+              comboboxProps={SANS_PORTAIL}
               data={optionsCandidats(candidats.data ?? [], [])}
               value={invites}
               onChange={setInvites}
@@ -384,72 +407,66 @@ function FicheRetex({
   const points = chronologieRetex(i.timeline);
   const base = urlRetex(i.id);
   return (
-    <Stack>
-      <Group justify="space-between" align="flex-start">
-        <div>
-          <Anchor component="button" type="button" size="sm" onClick={retour}>
-            ‹ Tous les RETEX
-          </Anchor>
-          <Group gap="sm" mt="xs">
-            <Text fw={700} size="lg">
-              RETEX {i.id} — {i.title || '(sans titre)'}
-            </Text>
-            <ChipCollecte c={c} />
-          </Group>
-          {c && (
-            <Text size="sm" c="dimmed">
-              Pilote : {c.piloteNom} · ouvert le {dateCourte(c.ouverteLe)}
-              {c.echeance ? ` · échéance de la collecte : ${dateJour(c.echeance)}` : ''}
-            </Text>
-          )}
-        </div>
-        {modifiable && (
-          <Group gap="xs">
-            {!c && <Button onClick={ouvrirCollecte}>Inviter des contributeurs</Button>}
-            {c?.statut === 'ouverte' && (
-              <Button
-                variant="default"
-                disabled={s.enAttente > 0}
-                title={s.enAttente ? 'Traitez d’abord la file à valider' : undefined}
-                onClick={() => void agir('POST', `${base}/cloture`)}
-              >
-                Clore la collecte
-              </Button>
-            )}
-            {c?.statut === 'cloturee' && (
-              <>
-                <Switch
-                  label="Diffuser aux contributeurs"
-                  checked={c.diffusee}
-                  onChange={(e) => void agir('PUT', `${base}/diffusion`, { diffusee: e.currentTarget.checked })}
-                />
-                <Button variant="default" onClick={() => void agir('POST', `${base}/reouverture`)}>
-                  Rouvrir la collecte
+    <Stack gap="lg">
+      <EnteteRetex
+        retour={{ libelle: 'Tous les RETEX', action: retour }}
+        surtitre={`Retour d’expérience · ${i.id}`}
+        titre={i.title || '(sans titre)'}
+        etat={<ChipCollecte c={c} />}
+        sousTitre={
+          c
+            ? `Pilote : ${c.piloteNom} · ouvert le ${dateCourte(c.ouverteLe)}${c.echeance ? ` · échéance de la collecte : ${dateJour(c.echeance)}` : ''}`
+            : 'Saisie par le pilote seul, sans collecte auprès d’autres pôles.'
+        }
+        actions={
+          modifiable && (
+            <>
+              {!c && <Button onClick={ouvrirCollecte}>Inviter des contributeurs</Button>}
+              {c?.statut === 'ouverte' && (
+                <Button
+                  variant="default"
+                  disabled={s.enAttente > 0}
+                  title={s.enAttente ? 'Traitez d’abord la file à valider' : undefined}
+                  onClick={() => void agir('POST', `${base}/cloture`)}
+                >
+                  Clore la collecte
                 </Button>
-              </>
-            )}
-            {vue === 'chronologie' ? (
-              <Button variant="default" onClick={pleinEcran}>
-                Plein écran
-              </Button>
-            ) : (
-              <Button disabled={!points.length} onClick={() => aller('chronologie')}>
-                Générer la chronologie
-              </Button>
-            )}
-          </Group>
-        )}
-      </Group>
-      <SegmentedControl
-        aria-label="Rubrique du RETEX"
-        value={vue}
-        onChange={(v) => aller(v as Vue)}
-        data={[
-          { value: 'saisie', label: `Chronologie (${points.length})` },
-          { value: 'contributeurs', label: `Contributeurs (${s.contributeurs})`, disabled: !c },
-          { value: 'valider', label: `À valider (${s.enAttente})`, disabled: !c },
-          { value: 'recuperer', label: 'Récupérer des éléments', disabled: !modifiable },
-          { value: 'chronologie', label: 'Chronologie générée', disabled: !points.length },
+              )}
+              {c?.statut === 'cloturee' && (
+                <>
+                  <Switch
+                    label="Diffuser aux contributeurs"
+                    checked={c.diffusee}
+                    onChange={(e) => void agir('PUT', `${base}/diffusion`, { diffusee: e.currentTarget.checked })}
+                  />
+                  <Button variant="default" onClick={() => void agir('POST', `${base}/reouverture`)}>
+                    Rouvrir la collecte
+                  </Button>
+                </>
+              )}
+              {vue === 'chronologie' ? (
+                <Button variant="default" onClick={pleinEcran}>
+                  Plein écran
+                </Button>
+              ) : (
+                <Button disabled={!points.length} onClick={() => aller('chronologie')}>
+                  Générer la chronologie
+                </Button>
+              )}
+            </>
+          )
+        }
+      />
+      <OngletsRetex
+        libelle="Rubriques du RETEX"
+        valeur={vue}
+        onChange={aller}
+        onglets={[
+          { valeur: 'saisie', libelle: 'Chronologie', compte: points.length },
+          { valeur: 'contributeurs', libelle: 'Contributeurs', compte: s.contributeurs, desactive: !c },
+          { valeur: 'valider', libelle: 'À valider', compte: s.enAttente, alerte: true, desactive: !c },
+          { valeur: 'recuperer', libelle: 'Récupérer des éléments', desactive: !modifiable },
+          { valeur: 'chronologie', libelle: 'Chronologie générée', desactive: !points.length },
         ]}
       />
       {vue === 'saisie' && <SaisieRetex incident={i} modifiable={modifiable} agir={agir} />}
@@ -485,126 +502,143 @@ function SaisieRetex({ incident, modifiable, agir }: { incident: Incident; modif
   const maj = (champ: Record<string, unknown>) => void agir('PATCH', base, champ);
   return (
     <Stack>
-      <Chiffres
+      <IndicateursRetex
         items={[
-          { valeur: ind.evenements, libelle: 'événements' },
-          { valeur: ind.dureeTotale == null ? '–' : dureeRetex(ind.dureeTotale), libelle: 'durée totale' },
-          {
-            valeur: ind.avantConfinement == null ? '–' : dureeRetex(ind.avantConfinement),
-            libelle: 'avant confinement',
-          },
-          {
-            valeur: ind.avantRetablissement == null ? '–' : dureeRetex(ind.avantRetablissement),
-            libelle: 'avant rétablissement',
-          },
-          { valeur: ind.graviteMax || '–', libelle: 'gravité maximale' },
+          ['Événements', ind.evenements],
+          ['Durée totale', ind.dureeTotale == null ? '–' : dureeRetex(ind.dureeTotale)],
+          ['Confinement après', ind.avantConfinement == null ? '–' : dureeRetex(ind.avantConfinement)],
+          ['Rétablissement après', ind.avantRetablissement == null ? '–' : dureeRetex(ind.avantRetablissement)],
+          ['Gravité maximale', ind.graviteMax || '–'],
         ]}
       />
       {modifiable && (
-        <Card withBorder>
-          <Text fw={600} mb="xs">
-            Ajouter un événement
-          </Text>
+        <SectionRetex
+          numero="01"
+          titre="Ajouter un événement"
+          aide="La chronologie se trie toute seule : saisissez les faits dans l’ordre où ils vous reviennent."
+        >
           <FormulaireEvenementRetex
             key={`${incident.id}-${incident.timeline.length}`}
             initial={saisieVide(dernier?.ts || incident.detectedAt || maintenantLocal())}
             libelle="Ajouter à la chronologie"
             valider={async (s) => !!(await agir('POST', `${base}/retex`, nettoyerSaisie(s)))}
           />
-        </Card>
+        </SectionRetex>
       )}
-      <DataTable label="Chronologie de l’incident">
-        <Table>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Date et heure</Table.Th>
-              <Table.Th>Écart</Table.Th>
-              <Table.Th>Type</Table.Th>
-              <Table.Th>Événement</Table.Th>
-              <Table.Th>Gravité</Table.Th>
-              <Table.Th>Origine</Table.Th>
-              {modifiable && <Table.Th>Actions</Table.Th>}
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {points.map((p) => (
-              <Table.Tr key={p.id}>
-                <Table.Td>{dateHeureRetex(p.ts)}</Table.Td>
-                <Table.Td>{p.depuisPrecedent == null ? 'T0' : `+${dureeRetex(p.depuisPrecedent)}`}</Table.Td>
-                <Table.Td>
-                  <TypeRetex type={p.type} />
-                </Table.Td>
-                <Table.Td>
-                  <Text size="sm" fw={500}>
-                    {p.titre}
-                  </Text>
-                  {p.description && (
-                    <Text size="xs" c="dimmed" lineClamp={2}>
-                      {p.description}
-                    </Text>
-                  )}
-                  {p.acteur && (
-                    <Text size="xs" c="dimmed">
-                      Acteur : {p.acteur}
-                    </Text>
-                  )}
-                </Table.Td>
-                <Table.Td>
-                  {p.gravite || (
-                    <Text span size="sm" c="dimmed">
-                      {GRAVITES_RETEX[p.niveau]} (reportée)
-                    </Text>
-                  )}
-                </Table.Td>
-                <Table.Td>
-                  <Text size="xs">{origine(p)}</Text>
-                </Table.Td>
-                {modifiable && (
-                  <Table.Td>
-                    <Group gap="xs" wrap="nowrap">
-                      <Anchor component="button" type="button" size="sm" onClick={() => setEdite(p)}>
-                        Modifier
-                      </Anchor>
-                      <ConfirmButton
-                        message={`Retirer « ${p.titre} » de la chronologie ?`}
-                        onConfirm={async () => {
-                          await agir('DELETE', `${base}/retex/${encodeURIComponent(p.id)}`);
-                        }}
-                        variant="subtle"
-                        size="compact-sm"
-                      >
-                        Retirer
-                      </ConfirmButton>
-                    </Group>
-                  </Table.Td>
-                )}
-              </Table.Tr>
-            ))}
-            {!points.length && (
+      <SectionRetex
+        numero={modifiable ? '02' : '01'}
+        titre="Chronologie de l’incident"
+        aide="Origine de chaque événement : saisie du pilote, fiche de l’incident, main courante ou contribution validée."
+      >
+        <DataTable label="Chronologie de l’incident">
+          <Table>
+            <Table.Thead>
               <Table.Tr>
-                <Table.Td colSpan={modifiable ? 7 : 6}>
-                  Aucun événement. Saisissez-les ici, récupérez-les depuis la fiche de l’incident ou la main courante de
-                  crise, ou invitez des contributeurs.
-                </Table.Td>
+                <Table.Th>Date et heure</Table.Th>
+                <Table.Th>Écart</Table.Th>
+                <Table.Th>Type</Table.Th>
+                <Table.Th>Événement</Table.Th>
+                <Table.Th>Gravité</Table.Th>
+                <Table.Th>Origine</Table.Th>
+                {modifiable && <Table.Th>Actions</Table.Th>}
               </Table.Tr>
-            )}
-          </Table.Tbody>
-        </Table>
-      </DataTable>
-      <ChampZone
-        label="Cause identifiée"
-        value={incident.cause}
-        disabled={!modifiable}
-        onCommit={(v) => maj({ cause: v })}
-      />
-      <ChampZone
-        label="Enseignements (retour d’expérience)"
-        lignes={4}
-        value={incident.retex}
-        disabled={!modifiable}
-        onCommit={(v) => maj({ retex: v })}
-      />
-      <Modal opened={!!edite} onClose={() => setEdite(null)} lockScroll={false} size="lg" title="Modifier l’événement">
+            </Table.Thead>
+            <Table.Tbody>
+              {points.map((p) => (
+                <Table.Tr key={p.id}>
+                  <Table.Td className="retex-chiffre">{dateHeureRetex(p.ts)}</Table.Td>
+                  <Table.Td>{p.depuisPrecedent == null ? 'T0' : `+${dureeRetex(p.depuisPrecedent)}`}</Table.Td>
+                  <Table.Td>
+                    <TypeRetex type={p.type} />
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size="sm" fw={500}>
+                      {p.titre}
+                    </Text>
+                    {p.description && (
+                      <Text size="xs" c="dimmed" lineClamp={2}>
+                        {p.description}
+                      </Text>
+                    )}
+                    {p.acteur && (
+                      <Text size="xs" c="dimmed">
+                        Acteur : {p.acteur}
+                      </Text>
+                    )}
+                  </Table.Td>
+                  <Table.Td>
+                    {p.gravite || (
+                      <Text span size="sm" c="dimmed">
+                        {GRAVITES_RETEX[p.niveau]} (reportée)
+                      </Text>
+                    )}
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size="xs">{origine(p)}</Text>
+                  </Table.Td>
+                  {modifiable && (
+                    <Table.Td>
+                      <Group gap="xs" wrap="nowrap">
+                        <Anchor component="button" type="button" size="sm" onClick={() => setEdite(p)}>
+                          Modifier
+                        </Anchor>
+                        <ConfirmButton
+                          message={`Retirer « ${p.titre} » de la chronologie ?`}
+                          onConfirm={async () => {
+                            await agir('DELETE', `${base}/retex/${encodeURIComponent(p.id)}`);
+                          }}
+                          variant="subtle"
+                          size="compact-sm"
+                        >
+                          Retirer
+                        </ConfirmButton>
+                      </Group>
+                    </Table.Td>
+                  )}
+                </Table.Tr>
+              ))}
+              {!points.length && (
+                <Table.Tr>
+                  <Table.Td colSpan={modifiable ? 7 : 6}>
+                    Aucun événement. Saisissez-les ici, récupérez-les depuis la fiche de l’incident ou la main courante
+                    de crise, ou invitez des contributeurs.
+                  </Table.Td>
+                </Table.Tr>
+              )}
+            </Table.Tbody>
+          </Table>
+        </DataTable>
+      </SectionRetex>
+      <SectionRetex
+        numero={modifiable ? '03' : '02'}
+        titre="Analyse"
+        aide="Cause identifiée et enseignements retenus, repris dans la fiche de l’incident."
+      >
+        <Stack>
+          <ChampZone
+            label="Cause identifiée"
+            value={incident.cause}
+            disabled={!modifiable}
+            onCommit={(v) => maj({ cause: v })}
+          />
+          <ChampZone
+            label="Enseignements"
+            lignes={4}
+            value={incident.retex}
+            disabled={!modifiable}
+            onCommit={(v) => maj({ retex: v })}
+          />
+        </Stack>
+      </SectionRetex>
+      <Modal
+        withinPortal={false}
+        classNames={{ content: 'retex-modal' }}
+        opened={!!edite}
+        onClose={() => setEdite(null)}
+        lockScroll={false}
+        size="lg"
+        title="Modifier l’événement"
+      >
         {edite && (
           <FormulaireEvenementRetex
             initial={edite}
@@ -629,31 +663,40 @@ function Contributeurs({ i, c, modifiable, agir }: { i: Incident; c: CollecteRet
   const parAuteur = (uid: string) => c.propositions.filter((p) => p.auteurId === uid);
   const restants = c.contributeurs.filter((x) => !x.termineLe);
   return (
-    <Stack>
-      <Group align="flex-start" grow>
-        <ChampZone
-          label="Consigne aux contributeurs"
-          value={c.consigne}
-          disabled={!modifiable}
-          onCommit={(v) => void agir('PATCH', `${base}/collecte`, { consigne: v })}
-        />
-        <ChampTexte
-          label="Échéance de la collecte"
-          type="date"
-          value={c.echeance}
-          disabled={!modifiable}
-          onCommit={(v) => void agir('PATCH', `${base}/collecte`, { echeance: v })}
-        />
-      </Group>
+    <Stack gap="lg">
+      <SectionRetex
+        numero="01"
+        titre="Consigne et échéance"
+        aide="Ce que voient les contributeurs en ouvrant leur demande."
+      >
+        <Group align="flex-start" grow>
+          <ChampZone
+            label="Consigne aux contributeurs"
+            value={c.consigne}
+            disabled={!modifiable}
+            onCommit={(v) => void agir('PATCH', `${base}/collecte`, { consigne: v })}
+          />
+          <ChampTexte
+            label="Échéance de la collecte"
+            type="date"
+            value={c.echeance}
+            disabled={!modifiable}
+            onCommit={(v) => void agir('PATCH', `${base}/collecte`, { echeance: v })}
+          />
+        </Group>
+      </SectionRetex>
       {modifiable && c.statut === 'ouverte' && (
-        <Card withBorder>
+        <SectionRetex
+          numero="02"
+          titre="Inviter et relancer"
+          aide="Chaque personne invitée reçoit une notification, dans l’application et par courriel selon ses réglages."
+        >
           <Group align="flex-end">
             <MultiSelect
               label="Inviter d’autres personnes"
-              description="Chacune recevra une notification (dans l’application et par courriel selon ses réglages)."
               placeholder="Rechercher une personne ou un pôle"
               searchable
-              comboboxProps={{ withinPortal: true }}
+              comboboxProps={SANS_PORTAIL}
               data={optionsCandidats(
                 candidats.data ?? [],
                 c.contributeurs.map((x) => x.id),
@@ -678,84 +721,90 @@ function Contributeurs({ i, c, modifiable, agir }: { i: Incident; c: CollecteRet
               Relancer ceux qui n’ont pas terminé ({restants.length})
             </Button>
           </Group>
-        </Card>
+        </SectionRetex>
       )}
-      <DataTable label="Contributeurs du RETEX">
-        <Table>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Personne</Table.Th>
-              <Table.Th>Pôle</Table.Th>
-              <Table.Th>Invitée le</Table.Th>
-              <Table.Th>Contribution</Table.Th>
-              <Table.Th>Propositions</Table.Th>
-              {modifiable && <Table.Th>Actions</Table.Th>}
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {c.contributeurs.map((x) => {
-              const p = parAuteur(x.id);
-              return (
-                <Table.Tr key={x.id}>
-                  <Table.Td fw={500}>{x.nom}</Table.Td>
-                  <Table.Td>{x.pole || '–'}</Table.Td>
-                  <Table.Td>
-                    {dateCourte(x.inviteLe)}
-                    {x.relanceLe && (
-                      <Text size="xs" c="dimmed">
-                        relancée le {dateCourte(x.relanceLe)}
-                      </Text>
-                    )}
-                  </Table.Td>
-                  <Table.Td>
-                    {x.termineLe ? (
-                      <StatusChip etat="succes">Terminée le {dateCourte(x.termineLe)}</StatusChip>
-                    ) : (
-                      <StatusChip etat="attention">En cours</StatusChip>
-                    )}
-                  </Table.Td>
-                  <Table.Td>
-                    {p.length
-                      ? `${p.length} (${p.filter((y) => y.statut === 'en_attente').length} à valider)`
-                      : 'Aucune'}
-                  </Table.Td>
-                  {modifiable && (
-                    <Table.Td>
-                      <Group gap="xs" wrap="nowrap">
-                        {!x.termineLe && c.statut === 'ouverte' && (
-                          <Anchor
-                            component="button"
-                            type="button"
-                            size="sm"
-                            onClick={() => void agir('POST', `${base}/relances`, { utilisateur: x.id })}
-                          >
-                            Relancer
-                          </Anchor>
-                        )}
-                        <ConfirmButton
-                          message={`Retirer ${x.nom} du RETEX ? Ses propositions en attente seront retirées ; les éléments déjà intégrés restent.`}
-                          onConfirm={async () => {
-                            await agir('DELETE', `${base}/contributeurs/${x.id}`);
-                          }}
-                          variant="subtle"
-                          size="compact-sm"
-                        >
-                          Retirer
-                        </ConfirmButton>
-                      </Group>
-                    </Table.Td>
-                  )}
-                </Table.Tr>
-              );
-            })}
-            {!c.contributeurs.length && (
+      <SectionRetex
+        numero={modifiable && c.statut === 'ouverte' ? '03' : '02'}
+        titre="Contributeurs"
+        aide={`${c.contributeurs.filter((x) => x.termineLe).length} sur ${c.contributeurs.length} ont déclaré leur contribution terminée.`}
+      >
+        <DataTable label="Contributeurs du RETEX">
+          <Table>
+            <Table.Thead>
               <Table.Tr>
-                <Table.Td colSpan={modifiable ? 6 : 5}>Aucun contributeur : vous remplissez ce RETEX seul.</Table.Td>
+                <Table.Th>Personne</Table.Th>
+                <Table.Th>Pôle</Table.Th>
+                <Table.Th>Invitée le</Table.Th>
+                <Table.Th>Contribution</Table.Th>
+                <Table.Th>Propositions</Table.Th>
+                {modifiable && <Table.Th>Actions</Table.Th>}
               </Table.Tr>
-            )}
-          </Table.Tbody>
-        </Table>
-      </DataTable>
+            </Table.Thead>
+            <Table.Tbody>
+              {c.contributeurs.map((x) => {
+                const p = parAuteur(x.id);
+                return (
+                  <Table.Tr key={x.id}>
+                    <Table.Td fw={500}>{x.nom}</Table.Td>
+                    <Table.Td>{x.pole || '–'}</Table.Td>
+                    <Table.Td>
+                      {dateCourte(x.inviteLe)}
+                      {x.relanceLe && (
+                        <Text size="xs" c="dimmed">
+                          relancée le {dateCourte(x.relanceLe)}
+                        </Text>
+                      )}
+                    </Table.Td>
+                    <Table.Td>
+                      {x.termineLe ? (
+                        <EtatRetex ton="succes">Terminée le {dateCourte(x.termineLe)}</EtatRetex>
+                      ) : (
+                        <EtatRetex ton="attention">En cours</EtatRetex>
+                      )}
+                    </Table.Td>
+                    <Table.Td>
+                      {p.length
+                        ? `${p.length} (${p.filter((y) => y.statut === 'en_attente').length} à valider)`
+                        : 'Aucune'}
+                    </Table.Td>
+                    {modifiable && (
+                      <Table.Td>
+                        <Group gap="xs" wrap="nowrap">
+                          {!x.termineLe && c.statut === 'ouverte' && (
+                            <Anchor
+                              component="button"
+                              type="button"
+                              size="sm"
+                              onClick={() => void agir('POST', `${base}/relances`, { utilisateur: x.id })}
+                            >
+                              Relancer
+                            </Anchor>
+                          )}
+                          <ConfirmButton
+                            message={`Retirer ${x.nom} du RETEX ? Ses propositions en attente seront retirées ; les éléments déjà intégrés restent.`}
+                            onConfirm={async () => {
+                              await agir('DELETE', `${base}/contributeurs/${x.id}`);
+                            }}
+                            variant="subtle"
+                            size="compact-sm"
+                          >
+                            Retirer
+                          </ConfirmButton>
+                        </Group>
+                      </Table.Td>
+                    )}
+                  </Table.Tr>
+                );
+              })}
+              {!c.contributeurs.length && (
+                <Table.Tr>
+                  <Table.Td colSpan={modifiable ? 6 : 5}>Aucun contributeur : vous remplissez ce RETEX seul.</Table.Td>
+                </Table.Tr>
+              )}
+            </Table.Tbody>
+          </Table>
+        </DataTable>
+      </SectionRetex>
     </Stack>
   );
 }
@@ -773,91 +822,86 @@ function FileAValider({ i, c, modifiable, agir }: { i: Incident; c: CollecteRete
   const pole = (uid: string) => c.contributeurs.find((x) => x.id === uid)?.pole ?? '';
   const evenements = chronologieRetex(i.timeline);
   return (
-    <Stack>
-      <Text size="sm" c="dimmed">
-        Chaque élément proposé par un contributeur attend votre décision avant d’entrer dans la chronologie. Le
-        contributeur voit l’issue de ses propositions (intégrée, déjà connue, non retenue avec le motif).
-      </Text>
-      {!attente.length && (
-        <Card withBorder>
-          <Text c="dimmed">Rien à valider pour le moment.</Text>
-        </Card>
-      )}
-      {attente.map((p) => (
-        <Card key={p.id} withBorder className="retex-proposition">
-          <Group justify="space-between" align="flex-start" wrap="nowrap">
-            <Stack gap={0}>
-              <Group gap="sm">
-                <Text fw={700}>{dateHeureRetex(p.ts)}</Text>
-                <TypeRetex type={p.type} />
-                {p.gravite && <Badge variant="light">Gravité {p.gravite.toLowerCase()}</Badge>}
-              </Group>
-              <Text fw={600} mt="xs">
-                {p.titre}
-              </Text>
-              {p.description && (
-                <Text size="sm" className="retex-texte-libre">
-                  {p.description}
-                </Text>
+    <Stack gap="lg">
+      <SectionRetex
+        numero="01"
+        titre={`Propositions en attente (${attente.length})`}
+        aide="Rien n’entre dans la chronologie sans votre décision. Le contributeur voit l’issue de chaque proposition et, le cas échéant, le motif."
+      >
+        <Stack>
+          {!attente.length && <Text c="dimmed">Rien à valider pour le moment.</Text>}
+          {attente.map((p) => (
+            <article key={p.id} className="retex-proposition">
+              <div className="retex-proposition__corps">
+                <div className="retex-proposition__quand">
+                  <span className="retex-proposition__date">{dateHeureRetex(p.ts)}</span>
+                  <TypeRetex type={p.type} />
+                  {p.gravite && <EtatRetex ton="info">Gravité {p.gravite.toLowerCase()}</EtatRetex>}
+                </div>
+                <h4 className="retex-proposition__titre">{p.titre}</h4>
+                {p.description && <p className="retex-texte-libre retex-proposition__texte">{p.description}</p>}
+                <p className="retex-proposition__auteur">
+                  Proposé par <b>{p.auteurNom}</b>
+                  {pole(p.auteurId) ? ` · ${pole(p.auteurId)}` : ''} · le {dateCourte(p.soumisLe)}
+                  {p.acteur ? ` · acteur : ${p.acteur}` : ''}
+                </p>
+              </div>
+              {modifiable && (
+                <div className="retex-proposition__actions">
+                  <Button size="xs" onClick={() => void decider(p, { decision: 'accepter' })}>
+                    Accepter
+                  </Button>
+                  <Button size="xs" variant="default" onClick={() => setCorrige(p)}>
+                    Corriger puis accepter
+                  </Button>
+                  <Button size="xs" variant="default" disabled={!evenements.length} onClick={() => setDoublon(p)}>
+                    Déjà connu
+                  </Button>
+                  <Button size="xs" variant="subtle" onClick={() => setRejet(p)}>
+                    Rejeter
+                  </Button>
+                </div>
               )}
-              <Text size="xs" c="dimmed" mt="xs">
-                Proposé par {p.auteurNom}
-                {pole(p.auteurId) ? ` (${pole(p.auteurId)})` : ''} le {dateCourte(p.soumisLe)}
-                {p.acteur ? ` · acteur : ${p.acteur}` : ''}
-              </Text>
-            </Stack>
-            {modifiable && (
-              <Stack gap="xs" className="retex-proposition__actions">
-                <Button size="xs" onClick={() => void decider(p, { decision: 'accepter' })}>
-                  Accepter
-                </Button>
-                <Button size="xs" variant="default" onClick={() => setCorrige(p)}>
-                  Corriger puis accepter
-                </Button>
-                <Button size="xs" variant="default" disabled={!evenements.length} onClick={() => setDoublon(p)}>
-                  Déjà connu
-                </Button>
-                <Button size="xs" variant="subtle" color="red" onClick={() => setRejet(p)}>
-                  Rejeter
-                </Button>
-              </Stack>
-            )}
-          </Group>
-        </Card>
-      ))}
-      {traitees.length > 0 && <Text fw={600}>Déjà traitées ({traitees.length})</Text>}
+            </article>
+          ))}
+        </Stack>
+      </SectionRetex>
       {traitees.length > 0 && (
-        <DataTable label="Propositions déjà traitées">
-          <Table>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Date et heure</Table.Th>
-                <Table.Th>Proposition</Table.Th>
-                <Table.Th>Auteur</Table.Th>
-                <Table.Th>Décision</Table.Th>
-                <Table.Th>Précision</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {traitees.map((p) => (
-                <Table.Tr key={p.id}>
-                  <Table.Td>{dateHeureRetex(p.ts)}</Table.Td>
-                  <Table.Td>
-                    <TypeRetex type={p.type} />
-                    <Text size="sm">{p.titre}</Text>
-                  </Table.Td>
-                  <Table.Td>{p.auteurNom}</Table.Td>
-                  <Table.Td>
-                    <StatutPropositionChip p={p} />
-                  </Table.Td>
-                  <Table.Td>{p.motif || (p.evenementId ? `Événement ${p.evenementId}` : '–')}</Table.Td>
+        <SectionRetex numero="02" titre={`Déjà traitées (${traitees.length})`}>
+          <DataTable label="Propositions déjà traitées">
+            <Table>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Date et heure</Table.Th>
+                  <Table.Th>Proposition</Table.Th>
+                  <Table.Th>Auteur</Table.Th>
+                  <Table.Th>Décision</Table.Th>
+                  <Table.Th>Précision</Table.Th>
                 </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
-        </DataTable>
+              </Table.Thead>
+              <Table.Tbody>
+                {traitees.map((p) => (
+                  <Table.Tr key={p.id}>
+                    <Table.Td className="retex-chiffre">{dateHeureRetex(p.ts)}</Table.Td>
+                    <Table.Td>
+                      <TypeRetex type={p.type} />
+                      <Text size="sm">{p.titre}</Text>
+                    </Table.Td>
+                    <Table.Td>{p.auteurNom}</Table.Td>
+                    <Table.Td>
+                      <StatutPropositionChip p={p} />
+                    </Table.Td>
+                    <Table.Td>{p.motif || (p.evenementId ? `Événement ${p.evenementId}` : '–')}</Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
+          </DataTable>
+        </SectionRetex>
       )}
       <Modal
+        withinPortal={false}
+        classNames={{ content: 'retex-modal' }}
         opened={!!corrige}
         onClose={() => setCorrige(null)}
         lockScroll={false}
@@ -904,7 +948,14 @@ function ModalDoublon({
   const [cible, setCible] = useState<string | null>(null);
   const [motif, setMotif] = useState('');
   return (
-    <Modal opened={!!p} onClose={fermer} lockScroll={false} title="Élément déjà connu">
+    <Modal
+      withinPortal={false}
+      classNames={{ content: 'retex-modal' }}
+      opened={!!p}
+      onClose={fermer}
+      lockScroll={false}
+      title="Élément déjà connu"
+    >
       <Stack>
         <Text size="sm">
           « {p?.titre} » correspond à un événement déjà présent dans la chronologie. Il n’est pas ajouté ; le
@@ -914,7 +965,7 @@ function ModalDoublon({
           label="Événement correspondant"
           required
           searchable
-          comboboxProps={{ withinPortal: true }}
+          comboboxProps={SANS_PORTAIL}
           value={cible}
           onChange={setCible}
           data={evenements.map((e) => ({ value: e.id, label: `${dateHeureRetex(e.ts)} — ${e.titre}` }))}
@@ -949,7 +1000,14 @@ function ModalRejet({
 }) {
   const [motif, setMotif] = useState('');
   return (
-    <Modal opened={!!p} onClose={fermer} lockScroll={false} title="Ne pas retenir la proposition">
+    <Modal
+      withinPortal={false}
+      classNames={{ content: 'retex-modal' }}
+      opened={!!p}
+      onClose={fermer}
+      lockScroll={false}
+      title="Ne pas retenir la proposition"
+    >
       <Stack>
         <Text size="sm">Le motif est communiqué au contributeur.</Text>
         <Textarea
@@ -1048,32 +1106,28 @@ function Recuperation({ i, agir }: { i: Incident; agir: Agir }) {
     };
   });
   return (
-    <Stack>
-      <Text size="sm" c="dimmed">
-        Récupérez des éléments déjà datés ailleurs dans l’application. Cochez ce qui doit entrer dans la chronologie et
-        ajustez le type si besoin ; un élément déjà importé n’est pas proposé deux fois.
-      </Text>
-      <Card withBorder>
-        <Text fw={600}>Fiche de l’incident</Text>
-        <Text size="sm" c="dimmed" mb="sm">
-          Détection, obligations cochées et résolution renseignées dans le registre des incidents.
-        </Text>
+    <Stack gap="lg">
+      <SectionRetex
+        numero="01"
+        titre="Fiche de l’incident"
+        aide="Détection, obligations cochées et résolution renseignées dans le registre des incidents. Cochez ce qui doit entrer dans la chronologie et ajustez le type si besoin."
+      >
         <TableauImport
           candidats={fiche}
           deja={deja}
           vide="Aucun élément daté dans la fiche."
           importer={(lot) => agir('POST', `${urlRetex(i.id)}/import`, { evenements: lot })}
         />
-      </Card>
-      <Card withBorder>
-        <Text fw={600}>Main courante de crise</Text>
-        <Text size="sm" c="dimmed" mb="sm">
-          Entrées horodatées d’une cellule de crise (réelle ou exercice).
-        </Text>
+      </SectionRetex>
+      <SectionRetex
+        numero="02"
+        titre="Main courante de crise"
+        aide="Entrées horodatées d’une cellule de crise, réelle ou d’exercice. Un élément déjà importé n’est pas proposé deux fois."
+      >
         <Select
           label="Cellule de crise"
           placeholder={crise.data?.etat.cells.length ? 'Choisir une cellule' : 'Aucune cellule de crise'}
-          comboboxProps={{ withinPortal: true }}
+          comboboxProps={SANS_PORTAIL}
           disabled={!crise.data?.etat.cells.length}
           value={cellule}
           onChange={setCellule}
@@ -1081,7 +1135,7 @@ function Recuperation({ i, agir }: { i: Incident; agir: Agir }) {
             value: x.id,
             label: `${x.title || x.id} (${x.mode}, ${x.log.length} entrées)`,
           }))}
-          mb="sm"
+          mb="md"
         />
         {cel && (
           <TableauImport
@@ -1092,7 +1146,7 @@ function Recuperation({ i, agir }: { i: Incident; agir: Agir }) {
             importer={(lot) => agir('POST', `${urlRetex(i.id)}/import`, { evenements: lot })}
           />
         )}
-      </Card>
+      </SectionRetex>
     </Stack>
   );
 }
@@ -1146,7 +1200,7 @@ function TableauImport({
                       }}
                     />
                   </Table.Td>
-                  <Table.Td>{dateHeureRetex(x.ts)}</Table.Td>
+                  <Table.Td className="retex-chiffre">{dateHeureRetex(x.ts)}</Table.Td>
                   <Table.Td>
                     {importe ? (
                       <TypeRetex type={x.type} />
@@ -1155,7 +1209,7 @@ function TableauImport({
                         aria-label="Type d’événement"
                         size="xs"
                         allowDeselect={false}
-                        comboboxProps={{ withinPortal: true }}
+                        comboboxProps={SANS_PORTAIL}
                         data={[...TYPES_EVENEMENT_RETEX]}
                         value={types[x.source] ?? x.type}
                         onChange={(v) => setTypes({ ...types, [x.source]: v ?? x.type })}

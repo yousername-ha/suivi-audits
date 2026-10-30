@@ -79,7 +79,7 @@ export function FormulaireEvenementRetex({
               label="Type d’événement"
               required
               allowDeselect={false}
-              comboboxProps={{ withinPortal: true }}
+              comboboxProps={{ withinPortal: false }}
               data={[...TYPES_EVENEMENT_RETEX]}
               value={s.type}
               onChange={(v) => champ('type', v ?? 'Autre')}
@@ -88,7 +88,7 @@ export function FormulaireEvenementRetex({
               label="Gravité à ce moment"
               placeholder="Reprendre la précédente"
               clearable
-              comboboxProps={{ withinPortal: true }}
+              comboboxProps={{ withinPortal: false }}
               data={[...GRAVITES_RETEX]}
               value={s.gravite || null}
               onChange={(v) => champ('gravite', v ?? '')}

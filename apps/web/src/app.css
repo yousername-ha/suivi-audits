@@ -2511,12 +2511,23 @@ rect.audit-niv-faible {
    d'information reliée au point actif (anneau, trait montant, titre souligné, repères, description) qui s'ouvre par
    étapes. Couleurs issues des jetons (--carte-*), longueurs en em ou jetons ; aucun style en ligne (CSP).
    Mouvements neutralisés si l'utilisateur préfère les réduire. */
+/* Variables de l'écran sombre de la chronologie générée. */
 .retex-chronologie {
   --retex-fond: color-mix(in srgb, var(--carte-marine-fond) 55%, var(--mantine-color-black));
   --retex-texte: var(--carte-sur-marine);
   --retex-secondaire: var(--carte-sur-marine-secondaire);
   --retex-neon: color-mix(in srgb, var(--carte-bleu-accent) 55%, var(--mantine-color-white));
   --retex-filet: color-mix(in srgb, var(--retex-neon) 18%, transparent);
+  --retex-trait: 0.125em;
+  --retex-rouge: color-mix(in srgb, var(--carte-rouge-accent) 55%, var(--mantine-color-white));
+  --retex-orange: color-mix(in srgb, var(--carte-orange-accent) 55%, var(--mantine-color-white));
+  --retex-vert: color-mix(in srgb, var(--carte-vert-accent) 55%, var(--mantine-color-white));
+  --retex-violet: color-mix(in srgb, var(--carte-violet-accent) 55%, var(--mantine-color-white));
+}
+[data-mantine-color-scheme='dark'] .retex-chronologie {
+  --retex-fond: color-mix(in srgb, var(--carte-canevas) 75%, var(--mantine-color-black));
+}
+.retex-chronologie {
   display: flex;
   flex-direction: column;
   gap: var(--mantine-spacing-md);
@@ -2534,9 +2545,6 @@ rect.audit-niv-faible {
   box-shadow:
     inset 0 0 0 var(--suivi-trait-l) var(--retex-filet),
     0 1.5em 3em -1.25em color-mix(in srgb, var(--carte-marine-fond) 60%, transparent);
-}
-[data-mantine-color-scheme='dark'] .retex-chronologie {
-  --retex-fond: color-mix(in srgb, var(--carte-canevas) 75%, var(--mantine-color-black));
 }
 .retex-c-rouge {
   --a: var(--carte-rouge-accent);
@@ -3311,29 +3319,25 @@ rect.audit-niv-faible {
 }
 
 /* ---------------------------------------------------------------- RETEX : collecte (pilote et contributeurs)
-   File à valider, récupération d'éléments et page « Mes contributions RETEX ». Jetons du thème uniquement. */
-.retex-proposition {
-  border-left: var(--suivi-trait-focus) solid var(--carte-orange-accent);
-}
-.retex-proposition__actions {
-  flex: none;
-  min-width: var(--suivi-champ-xs);
-}
+   Récupération d'éléments et page « Mes contributions RETEX », dans l'espace sombre (habillage plus bas). */
 .retex-texte-libre,
 .retex-consigne {
   white-space: pre-wrap;
 }
 .retex-consigne {
-  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
-  border-left: var(--suivi-trait-focus) solid var(--carte-bleu-accent);
-  background: var(--carte-bleu-fond);
+  margin: 0;
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
+  border-left: 0.3em solid var(--retex-neon);
   border-radius: var(--mantine-radius-sm);
+  background: color-mix(in srgb, var(--retex-neon) 10%, transparent);
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1.6;
 }
 .retex-invitation {
   flex: 1 1 var(--suivi-champ-l);
 }
 tr[data-importe='oui'] {
-  opacity: 0.55;
+  opacity: 0.5;
 }
 .retex-contribution {
   display: grid;
@@ -3349,39 +3353,663 @@ tr[data-importe='oui'] {
 .retex-contribution__liste {
   display: flex;
   flex-direction: column;
-  gap: var(--mantine-spacing-xs);
+  gap: var(--mantine-spacing-sm);
+}
+.retex-contribution__detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-lg);
+  min-width: 0;
 }
 .retex-demande {
   display: flex;
   flex-direction: column;
-  gap: 0.15em;
+  gap: 0.2em;
   padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
-  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border: var(--retex-trait) solid color-mix(in srgb, var(--retex-neon) 22%, transparent);
   border-radius: var(--mantine-radius-md);
-  color: inherit;
-  background: var(--mantine-color-body);
+  color: var(--retex-texte);
+  background: color-mix(in srgb, var(--retex-champ) 70%, transparent);
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease;
 }
 .retex-demande:hover {
-  border-color: var(--carte-bleu-accent);
+  border-color: var(--retex-neon);
 }
 .retex-demande[data-active='oui'] {
-  border-color: var(--carte-bleu-accent);
-  box-shadow: inset var(--suivi-trait-focus) 0 0 var(--carte-bleu-accent);
-  background: var(--carte-bleu-fond);
+  border-color: var(--retex-neon);
+  border-left: 0.3em solid var(--retex-neon);
+  background: color-mix(in srgb, var(--retex-neon) 12%, var(--retex-champ));
+  box-shadow: 0 0 1.2em color-mix(in srgb, var(--retex-neon) 25%, transparent);
 }
 .retex-demande__id {
   font-size: var(--mantine-font-size-xs);
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: var(--carte-bleu-accent);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--retex-neon);
 }
 .retex-demande__titre {
-  font-weight: 600;
+  color: var(--retex-texte);
+  font-weight: 700;
+  line-height: 1.3;
 }
 .retex-demande__etat {
   font-size: var(--mantine-font-size-xs);
-  color: var(--mantine-color-dimmed);
+  color: var(--retex-secondaire);
+}
+
+/* ---------------------------------------------------------------- RETEX : habillage des écrans de collecte
+   Codes de la chronologie générée (contours francs, surtitres, titres affirmés, sections numérotées, onglets et boutons
+   en pilule, pastilles d'état) dans les couleurs de la charte de la plateforme, en thème clair comme sombre. Seule la
+   chronologie générée garde son écran sombre. Les composants Mantine rendus dans l'espace (champs, listes déroulantes et
+   fenêtres sans portail, tableaux, cases) sont repris par des règles de portée. */
+.retex-espace {
+  /* Couleurs de la charte de la plateforme (thème clair ou sombre) ; seule la chronologie générée garde son écran. */
+  --retex-neon: var(--carte-bleu-accent);
+  --retex-texte: var(--mantine-color-text);
+  --retex-secondaire: var(--mantine-color-dimmed);
+  --retex-fond: var(--mantine-color-body);
+  --retex-panneau: var(--suivi-surface);
+  --retex-champ: var(--mantine-color-body);
+  --retex-filet: color-mix(in srgb, var(--retex-neon) 18%, transparent);
+  --retex-ombre: color-mix(in srgb, var(--carte-marine-fond) 16%, transparent);
+  --retex-trait: 0.125em;
+  --retex-rouge: var(--carte-rouge-accent);
+  --retex-orange: var(--carte-orange-accent);
+  --retex-vert: var(--carte-vert-accent);
+  --retex-violet: var(--carte-violet-accent);
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-lg);
+  color: var(--retex-texte);
+  font-feature-settings:
+    'tnum' 1,
+    'cv11' 1;
+}
+.retex-espace .retex-indicateurs [class*='retex-c-'] {
+  --c: var(--a);
+}
+.retex-espace .retex-indicateurs dd {
+  text-shadow: none;
+}
+.retex-espace .retex-chronologie {
+  box-shadow: inset 0 0 0 var(--retex-trait) var(--retex-filet);
+}
+
+/* En-tête de page. */
+.retex-entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-lg);
+  padding-bottom: var(--mantine-spacing-lg);
+  border-bottom: var(--retex-trait) solid var(--retex-filet);
+}
+.retex-entete__texte {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  min-width: 0;
+  max-width: var(--suivi-largeur-lecture);
+}
+.retex-retour {
+  align-self: flex-start;
+  margin-bottom: 0.4em;
+  padding: 0.3em 0.9em;
+  border: var(--retex-trait) solid color-mix(in srgb, var(--retex-neon) 30%, transparent);
+  border-radius: 999em;
+  background: transparent;
+  color: var(--retex-secondaire);
+  font: inherit;
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+.retex-retour:hover {
+  color: var(--retex-texte);
+  border-color: var(--retex-neon);
+}
+.retex-retour:focus-visible {
+  outline: var(--suivi-trait-focus) solid var(--retex-neon);
+}
+.retex-surtitre {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--retex-neon);
+}
+.retex-entete__titre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-md);
+  margin: 0;
+  font-size: calc(var(--mantine-font-size-xl) * 1.45);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  color: var(--retex-texte);
+}
+.retex-entete__etat {
+  font-size: var(--mantine-font-size-sm);
+  letter-spacing: 0;
+  text-shadow: none;
+}
+.retex-entete__souligne {
+  width: 4.5em;
+  height: 0.25em;
+  margin-top: 0.15em;
+  border-radius: 0.2em;
+  background: linear-gradient(90deg, var(--retex-neon), transparent);
+  box-shadow: 0 0 0.8em color-mix(in srgb, var(--retex-neon) 60%, transparent);
+}
+.retex-entete__sous-titre {
+  margin: 0.4em 0 0;
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1.55;
+  color: var(--retex-secondaire);
+}
+.retex-entete__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+}
+
+/* Indicateurs hors bandeau de la chronologie. */
+.retex-indicateurs {
+  padding: var(--mantine-spacing-xs) 0;
+}
+.retex-indicateurs > div:first-child {
+  padding-left: 0;
+  border-left: none;
+}
+
+/* Panneaux de section. */
+.retex-panneau {
+  position: relative;
+  border-radius: var(--mantine-radius-md);
+  background: linear-gradient(
+    180deg,
+    var(--retex-panneau),
+    color-mix(in srgb, var(--retex-panneau) 85%, var(--retex-fond))
+  );
+  box-shadow:
+    inset 0 0 0 var(--retex-trait) color-mix(in srgb, var(--retex-neon) 22%, transparent),
+    0 0.75em 1.75em -1em var(--retex-ombre);
+}
+.retex-section__tete {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--mantine-spacing-md);
+  padding: var(--mantine-spacing-md) var(--mantine-spacing-lg);
+  border-bottom: var(--retex-trait) solid var(--retex-filet);
+}
+.retex-panneau:not(:has(.retex-section__corps)) .retex-section__tete {
+  border-bottom: none;
+}
+.retex-section__numero {
+  flex: none;
+  min-width: 2.2em;
+  padding: 0.15em 0.45em;
+  border: var(--retex-trait) solid color-mix(in srgb, var(--retex-neon) 55%, transparent);
+  border-radius: var(--mantine-radius-sm);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-align: center;
+  color: var(--retex-neon);
+}
+.retex-section__titres {
+  flex: 1;
+  min-width: 0;
+}
+.retex-section__titre {
+  margin: 0;
+  font-size: var(--mantine-font-size-lg);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.005em;
+  color: var(--retex-texte);
+}
+.retex-section__aide {
+  margin: 0.25em 0 0;
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1.5;
+  color: var(--retex-secondaire);
+}
+.retex-section__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+}
+.retex-section__corps {
+  padding: var(--mantine-spacing-lg);
+}
+
+/* Pastilles d'état. */
+.retex-etat {
+  --t: var(--retex-secondaire);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  padding: 0.2em 0.75em;
+  border: var(--retex-trait) solid color-mix(in srgb, var(--t) 55%, transparent);
+  border-radius: 999em;
+  background: color-mix(in srgb, var(--t) 12%, transparent);
+  color: var(--t);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+.retex-etat[data-ton='attention'] {
+  --t: var(--retex-orange);
+}
+.retex-etat[data-ton='succes'] {
+  --t: var(--retex-vert);
+}
+.retex-etat[data-ton='info'] {
+  --t: var(--retex-violet);
+}
+.retex-etat[data-ton='erreur'] {
+  --t: var(--retex-rouge);
+}
+.retex-etat__point {
+  width: 0.5em;
+  height: 0.5em;
+  border-radius: 50%;
+  background: var(--t);
+  box-shadow: 0 0 0.5em var(--t);
+}
+
+/* Onglets en barre de commande. */
+.retex-onglets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mantine-spacing-xs);
+  padding: 0.35em;
+  border-radius: 999em;
+  background: color-mix(in srgb, var(--retex-neon) 6%, var(--retex-panneau));
+  box-shadow:
+    inset 0 0 0 var(--retex-trait) var(--retex-filet),
+    inset 0 0.15em 0.6em var(--retex-ombre);
+}
+.retex-onglet {
+  display: inline-flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55em;
+  height: 2.6em;
+  padding: 0 1.2em;
+  border: var(--retex-trait) solid transparent;
+  border-radius: 999em;
+  background: transparent;
+  color: var(--retex-secondaire);
+  font: inherit;
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.retex-onglet:hover:not(:disabled) {
+  color: var(--retex-texte);
+  background: color-mix(in srgb, var(--retex-neon) 10%, transparent);
+}
+.retex-onglet[aria-current='page'] {
+  background: linear-gradient(
+    135deg,
+    var(--retex-neon),
+    color-mix(in srgb, var(--retex-neon) 60%, var(--carte-violet-accent))
+  );
+  color: var(--retex-fond);
+  box-shadow: 0 0 1.2em color-mix(in srgb, var(--retex-neon) 50%, transparent);
+}
+.retex-onglet:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.retex-onglet:focus-visible {
+  outline: var(--suivi-trait-focus) solid var(--retex-neon);
+  outline-offset: var(--suivi-trait-focus);
+}
+.retex-onglet__compte {
+  min-width: 1.7em;
+  padding: 0.05em 0.45em;
+  border-radius: 999em;
+  background: color-mix(in srgb, var(--retex-texte) 12%, transparent);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 700;
+  text-align: center;
+}
+.retex-onglet[aria-current='page'] .retex-onglet__compte {
+  background: color-mix(in srgb, var(--retex-fond) 22%, transparent);
+}
+.retex-onglet__compte[data-alerte='oui'] {
+  background: var(--retex-orange);
+  color: var(--retex-fond);
+  box-shadow: 0 0 0.6em color-mix(in srgb, var(--retex-orange) 60%, transparent);
+}
+
+/* Champs, listes et cases dans l'espace. */
+.retex-espace .mantine-InputWrapper-label {
+  margin-bottom: 0.3em;
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--retex-secondaire);
+}
+.retex-espace .mantine-InputWrapper-required {
+  color: var(--retex-orange);
+}
+.retex-espace .mantine-InputWrapper-description {
+  color: color-mix(in srgb, var(--retex-secondaire) 80%, transparent);
+}
+.retex-espace .mantine-Input-input {
+  --input-bg: var(--retex-champ);
+  --input-bd: color-mix(in srgb, var(--retex-neon) 28%, transparent);
+  --input-bd-focus: var(--retex-neon);
+  --input-color: var(--retex-texte);
+  border-width: var(--retex-trait);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.retex-espace .mantine-Input-input:focus,
+.retex-espace .mantine-Input-input:focus-within {
+  box-shadow: 0 0 0 0.25em color-mix(in srgb, var(--retex-neon) 18%, transparent);
+}
+.retex-espace .mantine-Input-input:disabled,
+.retex-espace .mantine-Input-input[data-disabled] {
+  opacity: 0.65;
+  background: color-mix(in srgb, var(--retex-champ) 60%, transparent);
+}
+.retex-espace .mantine-Combobox-dropdown {
+  border: var(--retex-trait) solid color-mix(in srgb, var(--retex-neon) 35%, transparent);
+  background: var(--retex-panneau);
+  box-shadow: 0 1em 2em -0.5em var(--retex-ombre);
+}
+.retex-espace .mantine-Combobox-option:hover,
+.retex-espace .mantine-Combobox-option[data-combobox-selected] {
+  background: color-mix(in srgb, var(--retex-neon) 18%, transparent);
+  color: var(--retex-texte);
+}
+.retex-espace .mantine-Combobox-groupLabel {
+  color: var(--retex-neon);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.retex-espace .mantine-Pill-root {
+  background: color-mix(in srgb, var(--retex-neon) 20%, transparent);
+  color: var(--retex-texte);
+}
+.retex-espace .mantine-Checkbox-input {
+  border: var(--retex-trait) solid color-mix(in srgb, var(--retex-neon) 45%, transparent);
+  background: var(--retex-champ);
+}
+.retex-espace .mantine-Checkbox-input:checked {
+  border-color: var(--retex-neon);
+  background: var(--retex-neon);
+}
+.retex-espace .mantine-Checkbox-icon {
+  color: var(--retex-fond);
+}
+.retex-espace .mantine-Switch-track {
+  border: var(--retex-trait) solid color-mix(in srgb, var(--retex-neon) 40%, transparent);
+  background: var(--retex-champ);
+}
+.retex-espace .mantine-Switch-input:checked + .mantine-Switch-track {
+  border-color: var(--retex-neon);
+  background: var(--retex-neon);
+}
+.retex-espace .mantine-Switch-label {
+  font-weight: 600;
+}
+
+/* Boutons dans l'espace : mêmes codes que la barre de lecture de la chronologie. */
+.retex-espace .mantine-Button-root {
+  height: 2.6em;
+  padding-inline: 1.25em;
+  border-radius: 999em;
+  border-width: var(--retex-trait);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.1s ease;
+}
+.retex-espace .mantine-Button-root[data-size='xs'] {
+  height: 2.2em;
+  padding-inline: 1em;
+  font-size: var(--mantine-font-size-xs);
+}
+.retex-espace .mantine-Button-root:is([data-variant='filled'], :not([data-variant])) {
+  border-color: transparent;
+  background: linear-gradient(
+    135deg,
+    var(--retex-neon),
+    color-mix(in srgb, var(--retex-neon) 60%, var(--carte-violet-accent))
+  );
+  color: var(--retex-fond);
+  box-shadow: 0 0 1.1em color-mix(in srgb, var(--retex-neon) 45%, transparent);
+}
+.retex-espace
+  .mantine-Button-root:is([data-variant='filled'], :not([data-variant])):hover:not(:disabled, [data-disabled]) {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--retex-neon) 80%, var(--mantine-color-white)),
+    var(--retex-neon)
+  );
+  box-shadow: 0 0 1.7em color-mix(in srgb, var(--retex-neon) 65%, transparent);
+}
+.retex-espace .mantine-Button-root[data-variant='default'] {
+  border-color: color-mix(in srgb, var(--retex-neon) 35%, transparent);
+  background: color-mix(in srgb, var(--retex-neon) 7%, transparent);
+  color: var(--retex-texte);
+}
+.retex-espace .mantine-Button-root[data-variant='default']:hover:not(:disabled, [data-disabled]) {
+  border-color: var(--retex-neon);
+  background: color-mix(in srgb, var(--retex-neon) 16%, transparent);
+  box-shadow: 0 0 1em color-mix(in srgb, var(--retex-neon) 40%, transparent);
+}
+.retex-espace .mantine-Button-root[data-variant='subtle'],
+.retex-espace .mantine-Button-root[data-variant='light'] {
+  border-color: color-mix(in srgb, var(--retex-rouge) 35%, transparent);
+  background: transparent;
+  color: var(--retex-rouge);
+}
+.retex-espace .mantine-Button-root[data-variant='subtle']:hover:not(:disabled, [data-disabled]),
+.retex-espace .mantine-Button-root[data-variant='light']:hover:not(:disabled, [data-disabled]) {
+  background: color-mix(in srgb, var(--retex-rouge) 14%, transparent);
+}
+.retex-espace .mantine-Button-root:disabled,
+.retex-espace .mantine-Button-root[data-disabled] {
+  opacity: 0.4;
+  box-shadow: none;
+  background: color-mix(in srgb, var(--retex-neon) 6%, transparent);
+  color: var(--retex-secondaire);
+  border-color: color-mix(in srgb, var(--retex-neon) 20%, transparent);
+}
+.retex-espace .mantine-Button-root:active:not(:disabled, [data-disabled]) {
+  transform: scale(0.97);
+}
+.retex-espace .mantine-Anchor-root {
+  color: var(--retex-neon);
+  font-weight: 600;
+}
+
+/* Tableaux dans l'espace. */
+.retex-espace .data-table {
+  --retex-table: color-mix(in srgb, var(--retex-champ) 70%, var(--retex-panneau));
+  border: var(--retex-trait) solid color-mix(in srgb, var(--retex-neon) 18%, transparent);
+  border-radius: var(--mantine-radius-md);
+  background: var(--retex-table);
+  box-shadow: none;
+}
+.retex-espace .mantine-Table-table {
+  --table-border-color: color-mix(in srgb, var(--retex-neon) 12%, transparent);
+  --table-hover-color: color-mix(in srgb, var(--retex-neon) 8%, transparent);
+  color: var(--retex-texte);
+}
+.retex-espace .data-table thead th {
+  background: color-mix(in srgb, var(--retex-neon) 7%, var(--retex-panneau));
+  color: var(--retex-secondaire);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  border-bottom: var(--retex-trait) solid color-mix(in srgb, var(--retex-neon) 30%, transparent);
+}
+.retex-espace .data-table tbody td:first-child {
+  background: var(--retex-table);
+}
+.retex-espace .data-table thead th:first-child {
+  background: color-mix(in srgb, var(--retex-neon) 7%, var(--retex-panneau));
+}
+.retex-chiffre {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.retex-lien-ligne {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1em;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.retex-lien-ligne__id {
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--retex-neon);
+}
+.retex-lien-ligne__titre {
+  font-weight: 600;
+}
+.retex-lien-ligne:hover .retex-lien-ligne__titre {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.retex-lien-ligne:focus-visible {
+  outline: var(--suivi-trait-focus) solid var(--retex-neon);
+  outline-offset: var(--suivi-trait-focus);
+}
+
+/* Fenêtres rendues dans l'espace. */
+.retex-modal {
+  border: var(--retex-trait) solid color-mix(in srgb, var(--retex-neon) 35%, transparent);
+  box-shadow:
+    0 0 2.5em color-mix(in srgb, var(--retex-neon) 14%, transparent),
+    0 2em 4em -1em var(--retex-ombre);
+}
+.retex-modal .mantine-Modal-header {
+  border-bottom: var(--retex-trait) solid var(--retex-filet);
+}
+.retex-modal .mantine-Modal-title {
+  font-size: var(--mantine-font-size-lg);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.retex-modal .mantine-Modal-body {
+  padding-top: var(--mantine-spacing-md);
+}
+
+/* Propositions de la file à valider. */
+.retex-proposition {
+  display: flex;
+  gap: var(--mantine-spacing-lg);
+  justify-content: space-between;
+  padding: var(--mantine-spacing-md) var(--mantine-spacing-lg);
+  border-radius: var(--mantine-radius-md);
+  border: var(--retex-trait) solid color-mix(in srgb, var(--retex-orange) 30%, transparent);
+  border-left: 0.3em solid var(--retex-orange);
+  background: color-mix(in srgb, var(--retex-champ) 75%, transparent);
+  box-shadow: -0.4em 0 1.2em -0.6em color-mix(in srgb, var(--retex-orange) 70%, transparent);
+}
+.retex-proposition__corps {
+  min-width: 0;
+}
+.retex-proposition__quand {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+}
+.retex-proposition__date {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--retex-texte);
+}
+.retex-proposition__titre {
+  margin: 0.5em 0 0;
+  font-size: var(--mantine-font-size-lg);
+  font-weight: 700;
+  line-height: 1.3;
+}
+.retex-proposition__texte {
+  margin: 0.35em 0 0;
+  font-size: var(--mantine-font-size-sm);
+  color: color-mix(in srgb, var(--retex-texte) 88%, transparent);
+}
+.retex-proposition__auteur {
+  margin: 0.6em 0 0;
+  font-size: var(--mantine-font-size-xs);
+  color: var(--retex-secondaire);
+}
+.retex-proposition__actions {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: var(--mantine-spacing-xs);
+  min-width: var(--suivi-champ-s);
+}
+
+/* Contexte de la demande (contributeur). */
+.retex-contexte__etat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--mantine-spacing-xs);
+}
+.retex-contexte__echeance {
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 700;
+  color: var(--retex-texte);
+}
+.retex-contexte__echeance[data-depassee='oui'] {
+  color: var(--retex-rouge);
+}
+.retex-contribution__legende {
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--retex-secondaire);
+}
+.retex-espace .mantine-Modal-overlay {
+  background: color-mix(in srgb, var(--carte-marine-fond) 45%, transparent);
+  backdrop-filter: blur(0.15em);
 }
