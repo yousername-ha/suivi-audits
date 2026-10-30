@@ -43,7 +43,10 @@ test('disposition du tableau de bord : clavier, glisser, largeur, masquer, enreg
     await poignee2.focus();
     await page.keyboard.press('ArrowLeft');
     expect((await ordreEdition(page))[0]).toBe(deuxieme);
-    await expect(page.locator('[aria-live="polite"]')).toHaveText(/position 1 sur \d+/);
+    // Annonce de la zone d'édition (le menu a sa propre zone d'annonce).
+    await expect(
+      page.getByRole('region', { name: 'Modifier la disposition du tableau de bord' }).locator('[aria-live="polite"]'),
+    ).toHaveText(/position 1 sur \d+/);
     await expect(poignee2).toBeFocused();
     await page.keyboard.press('End');
     expect((await ordreEdition(page)).at(-1)).toBe(deuxieme);
