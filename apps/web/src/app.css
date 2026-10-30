@@ -4015,34 +4015,189 @@ tr[data-importe='oui'] {
 }
 
 /* ---------------------------------------------------------------- Revue de direction : préparation des entrées
-   Écran sombre de la chronologie RETEX (classe retex-chronologie : fond, néon, teintes retex-c-*, bandeau téléscripteur,
-   bouton en pilule) sur lequel sont posées les dalles en verre du tableau de bord (classe tdb-dalle), réglées ici pour
-   un verre fumé. Grille pointillée et halos en fond, pour que le verre ait de la matière à flouter. Longueurs en em ou
-   jetons ; aucun style en ligne (CSP) ; mouvements neutralisés par la règle de réduction de la chronologie. */
+   Dalles en verre du tableau de bord (classe tdb sur le conteneur : variables de verre et fond de page du tableau de bord,
+   en clair comme en sombre), codes graphiques de la chronologie RETEX (bandeau téléscripteur, voyant, surtitres, teintes
+   retex-c-*) et capsules de verre : fond flouté, liseré clair, reflet haut et lueur blanche intérieure ; la capsule
+   principale prend la teinte néon du RETEX. Les boutons Mantine de la page (registre, exports) reçoivent la même capsule.
+   Couleurs issues des jetons, longueurs en em ou jetons, aucun style en ligne (CSP). */
+/* Variables portées par la zone principale : les boutons du registre, hors de l'encart, les lisent aussi. */
+.app-main:has(.revue-ecran) {
+  --retex-neon: var(--carte-bleu-accent);
+  --retex-texte: var(--mantine-color-text);
+  --retex-secondaire: var(--mantine-color-dimmed);
+  --retex-filet: color-mix(in srgb, var(--retex-neon) 18%, transparent);
+  --retex-trait: 0.125em;
+  /* Capsules de verre : liseré, reflet, lueur intérieure et ombre (clair). */
+  --verre-fond-haut: color-mix(in srgb, var(--mantine-color-white) 70%, transparent);
+  --verre-fond-bas: color-mix(in srgb, var(--mantine-color-white) 35%, transparent);
+  --verre-lisere: color-mix(in srgb, var(--mantine-color-white) 90%, transparent);
+  --verre-contour: color-mix(in srgb, var(--mantine-color-black) 9%, transparent);
+  --verre-reflet: color-mix(in srgb, var(--mantine-color-white) 85%, transparent);
+  --verre-lueur: color-mix(in srgb, var(--mantine-color-white) 55%, transparent);
+  --verre-ombre: color-mix(in srgb, var(--carte-marine-fond) 18%, transparent);
+  --verre-principal: color-mix(in srgb, var(--retex-neon) 75%, var(--carte-violet-accent));
+}
 .revue-ecran {
-  /* Verre fumé des dalles (variables lues par tdb-dalle). */
-  --tdb-verre-haut: color-mix(in srgb, var(--mantine-color-white) 13%, transparent);
-  --tdb-verre-milieu: color-mix(in srgb, var(--mantine-color-white) 5%, transparent);
-  --tdb-verre-bas: color-mix(in srgb, var(--mantine-color-white) 8%, transparent);
-  --tdb-verre-bord: color-mix(in srgb, var(--mantine-color-white) 16%, transparent);
-  --tdb-reflet-bord: color-mix(in srgb, var(--mantine-color-white) 70%, transparent);
-  --tdb-lumiere: color-mix(in srgb, var(--mantine-color-white) 18%, transparent);
-  --tdb-ombre: var(--mantine-color-black);
-  --tdb-filet: color-mix(in srgb, var(--mantine-color-black) 30%, transparent);
-  --revue-grille: color-mix(in srgb, var(--retex-neon) 7%, transparent);
+  display: flex;
+  flex-direction: column;
   gap: var(--mantine-spacing-xl);
-  padding: var(--mantine-spacing-lg);
-  background:
-    radial-gradient(ellipse at 12% 0%, color-mix(in srgb, var(--retex-neon) 22%, transparent), transparent 42%),
-    radial-gradient(
-      ellipse at 90% 38%,
-      color-mix(in srgb, var(--carte-violet-accent) 22%, transparent),
-      transparent 45%
-    ),
-    radial-gradient(ellipse at 20% 85%, color-mix(in srgb, var(--carte-vert-accent) 16%, transparent), transparent 45%),
-    repeating-linear-gradient(0deg, var(--revue-grille) 0 var(--suivi-trait-l), transparent var(--suivi-trait-l) 3em),
-    repeating-linear-gradient(90deg, var(--revue-grille) 0 var(--suivi-trait-l), transparent var(--suivi-trait-l) 3em),
-    linear-gradient(180deg, var(--retex-fond), color-mix(in srgb, var(--retex-fond) 65%, var(--mantine-color-black)));
+  color: var(--retex-texte);
+}
+[data-mantine-color-scheme='dark'] .app-main:has(.revue-ecran) {
+  --retex-neon: color-mix(in srgb, var(--carte-bleu-accent) 55%, var(--mantine-color-white));
+  --verre-fond-haut: color-mix(in srgb, var(--mantine-color-white) 16%, transparent);
+  --verre-fond-bas: color-mix(in srgb, var(--mantine-color-white) 5%, transparent);
+  --verre-lisere: color-mix(in srgb, var(--mantine-color-white) 55%, transparent);
+  --verre-contour: color-mix(in srgb, var(--mantine-color-black) 35%, transparent);
+  --verre-reflet: color-mix(in srgb, var(--mantine-color-white) 30%, transparent);
+  --verre-lueur: color-mix(in srgb, var(--mantine-color-white) 22%, transparent);
+  --verre-ombre: color-mix(in srgb, var(--mantine-color-black) 45%, transparent);
+  --verre-principal: color-mix(in srgb, var(--carte-bleu-accent) 70%, var(--carte-violet-accent));
+}
+/* Teintes : franches et assombries en clair (lisibles sur le verre blanc), éclaircies et lumineuses en sombre. */
+.revue-ecran [class*='retex-c-'] {
+  --c: color-mix(in srgb, var(--a) 82%, var(--mantine-color-black));
+}
+[data-mantine-color-scheme='dark'] .revue-ecran [class*='retex-c-'] {
+  --c: color-mix(in srgb, var(--a) 62%, var(--mantine-color-white));
+}
+
+/* Capsule de verre (pastilles, anneaux, boutons). */
+.verre-pilule,
+.verre-bouton,
+.app-main:has(.revue-ecran) .mantine-Button-root {
+  --t: var(--c, var(--retex-neon));
+  position: relative;
+  border: var(--suivi-trait-l) solid var(--verre-lisere);
+  border-radius: 999em;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--t) 14%, var(--verre-fond-haut)),
+    color-mix(in srgb, var(--t) 8%, var(--verre-fond-bas))
+  );
+  -webkit-backdrop-filter: blur(0.9em) saturate(170%);
+  backdrop-filter: blur(0.9em) saturate(170%);
+  box-shadow:
+    0 0 0 var(--suivi-trait-l) var(--verre-contour),
+    inset 0 0.55em 0.9em -0.55em var(--verre-reflet),
+    inset 0 -0.45em 0.9em -0.6em var(--verre-lueur),
+    inset 0 0 0.9em -0.2em color-mix(in srgb, var(--t) 18%, transparent),
+    0 0.45em 1em -0.5em var(--verre-ombre);
+  color: var(--retex-texte);
+}
+.verre-pilule {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.3em 0.9em;
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.verre-bouton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  height: 2.9em;
+  padding: 0 1.6em;
+  font: inherit;
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
+}
+/* Capsule principale : verre teinté du néon RETEX, lueur blanche sur les bords, texte clair. */
+/* Variante pleine de Mantine : attribut data-variant absent (variante par défaut) ou « filled ». */
+.verre-bouton[data-principal='oui'],
+.app-main:has(.revue-ecran) .mantine-Button-root:not([data-variant]),
+.app-main:has(.revue-ecran) .mantine-Button-root[data-variant='filled'] {
+  --t: var(--verre-principal);
+  border-color: color-mix(in srgb, var(--mantine-color-white) 70%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--t) 72%, var(--mantine-color-white)),
+    color-mix(in srgb, var(--t) 92%, transparent) 55%,
+    color-mix(in srgb, var(--t) 85%, var(--mantine-color-black))
+  );
+  color: var(--mantine-color-white);
+  text-shadow: 0 var(--suivi-trait-l) 0.4em color-mix(in srgb, var(--mantine-color-black) 35%, transparent);
+  box-shadow:
+    0 0 0 var(--suivi-trait-l) color-mix(in srgb, var(--t) 40%, transparent),
+    inset 0 0 0 var(--suivi-trait-l) color-mix(in srgb, var(--mantine-color-white) 25%, transparent),
+    inset 0 0.6em 0.9em -0.55em color-mix(in srgb, var(--mantine-color-white) 70%, transparent),
+    inset 0 0 1.1em -0.1em color-mix(in srgb, var(--mantine-color-white) 40%, transparent),
+    0 0.6em 1.4em -0.5em color-mix(in srgb, var(--t) 60%, transparent);
+}
+.verre-bouton:hover,
+.app-main:has(.revue-ecran) .mantine-Button-root:hover {
+  filter: brightness(1.06) saturate(1.1);
+  box-shadow:
+    0 0 0 var(--suivi-trait-l) var(--verre-contour),
+    inset 0 0.55em 0.9em -0.55em var(--verre-reflet),
+    inset 0 0 1.2em -0.1em var(--verre-lueur),
+    0 0 1.4em -0.3em color-mix(in srgb, var(--t) 55%, transparent);
+}
+.verre-bouton:active,
+.app-main:has(.revue-ecran) .mantine-Button-root:active {
+  transform: scale(0.97);
+}
+.verre-bouton:focus-visible {
+  outline: var(--suivi-trait-focus) solid var(--retex-neon);
+  outline-offset: var(--suivi-trait-focus);
+}
+/* Boutons Mantine de la page : capsule claire (default, light), discrète jusqu'au survol (subtle). */
+.app-main:has(.revue-ecran) .mantine-Button-root[data-variant='light'] {
+  --t: var(--mantine-color-suivi-filled);
+}
+.app-main:has(.revue-ecran) .mantine-Button-root[data-variant='subtle']:not(:hover) {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* Bandeau : grande dalle de verre, surtitre en capsule, chiffres façon téléscripteur, bouton principal. */
+.revue-bandeau.tdb-dalle {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-lg);
+  padding: var(--mantine-spacing-lg) var(--mantine-spacing-xl);
+  border-bottom: var(--suivi-trait-l) solid var(--tdb-verre-bord);
+}
+.revue-bandeau.tdb-dalle:hover {
+  transform: none;
+}
+.revue-bandeau > * {
+  position: relative;
+  z-index: 3;
+}
+.revue-bandeau .retex-bandeau__titre {
+  flex: 1 1 28em;
+  align-items: flex-start;
+  gap: var(--mantine-spacing-xs);
+}
+.revue-bandeau__sur {
+  --t: var(--carte-vert-accent);
+  --retex-neon: var(--carte-vert-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+.revue-ecran .retex-bandeau__nom {
+  margin: 0;
+  text-shadow: none;
+}
+[data-mantine-color-scheme='dark'] .revue-ecran .retex-bandeau__nom {
+  text-shadow: 0 0 1.2em color-mix(in srgb, var(--retex-neon) 45%, transparent);
 }
 .revue-bandeau__texte {
   margin: 0;
@@ -4051,19 +4206,23 @@ tr[data-importe='oui'] {
   line-height: 1.5;
   color: var(--retex-secondaire);
 }
-.revue-ecran .retex-bandeau__nom {
-  margin: 0;
-}
-.revue-ecran .retex-bandeau__chiffres {
-  align-self: center;
-}
-.revue-commande {
+.revue-bandeau__droite {
   display: flex;
-  justify-content: flex-end;
-  margin-top: calc(-1 * var(--mantine-spacing-md));
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--mantine-spacing-md);
+}
+.revue-ecran .retex-bandeau__chiffres > div:first-child {
+  border-left: none;
+}
+.revue-ecran .retex-bandeau__chiffres dd {
+  text-shadow: none;
+}
+[data-mantine-color-scheme='dark'] .revue-ecran .retex-bandeau__chiffres dd {
+  text-shadow: 0 0 0.8em color-mix(in srgb, var(--c) 60%, transparent);
 }
 
-/* Temps de lecture : anneau numéroté lumineux, surtitre, titre affirmé. */
+/* Temps de lecture : anneau numéroté en capsule de verre teintée, surtitre, titre affirmé. */
 .revue-temps {
   display: flex;
   flex-direction: column;
@@ -4081,21 +4240,14 @@ tr[data-importe='oui'] {
   align-items: center;
   gap: var(--mantine-spacing-md);
 }
-.revue-temps__anneau {
+.revue-temps__anneau.verre-pilule {
   flex: none;
-  display: inline-grid;
-  place-items: center;
+  justify-content: center;
   width: 2.6em;
   height: 2.6em;
-  border-radius: 50%;
-  border: var(--retex-trait) solid var(--c);
-  background: color-mix(in srgb, var(--c) 18%, transparent);
-  color: var(--retex-texte);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  box-shadow:
-    0 0 1.2em color-mix(in srgb, var(--c) 55%, transparent),
-    inset 0 0 0.6em color-mix(in srgb, var(--c) 35%, transparent);
+  padding: 0;
+  font-size: var(--mantine-font-size-md);
+  color: var(--c);
 }
 .revue-temps__sur {
   font-size: var(--mantine-font-size-xs);
@@ -4109,8 +4261,6 @@ tr[data-importe='oui'] {
   font-size: var(--mantine-h4-font-size);
   font-weight: 700;
   line-height: 1.25;
-  color: var(--retex-texte);
-  text-shadow: 0 0 1em color-mix(in srgb, var(--c) 40%, transparent);
 }
 .revue-temps__resume {
   margin: 0;
@@ -4118,7 +4268,7 @@ tr[data-importe='oui'] {
   color: var(--retex-secondaire);
 }
 
-/* Dalles en verre fumé : colonnes selon la largeur disponible (menu latéral compris). */
+/* Dalles : colonnes selon la largeur disponible (menu latéral compris). */
 .revue-dalles {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 20em), 1fr));
@@ -4126,23 +4276,12 @@ tr[data-importe='oui'] {
 }
 .revue-dalle {
   gap: var(--mantine-spacing-xs);
-  color: var(--retex-texte);
-}
-.revue-ecran .tdb-dalle::before {
-  opacity: 0.45;
-}
-.revue-dalle:hover {
-  box-shadow:
-    0 0 0 var(--suivi-trait-l) color-mix(in srgb, var(--c) 45%, transparent),
-    0 0 1.6em -0.2em color-mix(in srgb, var(--c) 45%, transparent),
-    inset 0 var(--suivi-trait-l) 0 var(--tdb-lumiere),
-    0 1.875em 3.75em -1.5em color-mix(in srgb, var(--mantine-color-black) 60%, transparent);
 }
 .revue-dalle[data-etat='a-saisir'] {
-  --tdb-verre-haut: color-mix(in srgb, var(--c) 22%, transparent);
-  --tdb-verre-milieu: color-mix(in srgb, var(--c) 8%, transparent);
-  --tdb-verre-bas: color-mix(in srgb, var(--c) 12%, transparent);
-  border-color: color-mix(in srgb, var(--c) 45%, transparent);
+  --tdb-verre-haut: color-mix(in srgb, var(--a) 22%, transparent);
+  --tdb-verre-milieu: color-mix(in srgb, var(--a) 8%, transparent);
+  --tdb-verre-bas: color-mix(in srgb, var(--a) 14%, transparent);
+  border-color: color-mix(in srgb, var(--a) 45%, transparent);
 }
 .revue-dalle__tete,
 .revue-dalle__titre,
@@ -4158,32 +4297,12 @@ tr[data-importe='oui'] {
   justify-content: space-between;
   gap: var(--mantine-spacing-xs);
 }
-.revue-dalle__article,
-.revue-pastille {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5em;
-  padding: 0.25em 0.8em;
-  border-radius: 999em;
-  font-size: var(--mantine-font-size-xs);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
 .revue-dalle__article {
-  border: var(--suivi-trait-l) solid color-mix(in srgb, var(--c) 70%, transparent);
-  background: color-mix(in srgb, var(--c) 24%, transparent);
-  color: var(--retex-texte);
-  text-shadow: 0 0 0.6em color-mix(in srgb, var(--c) 70%, transparent);
+  color: var(--c);
 }
 .revue-pastille {
   --retex-neon: var(--c);
-  border: var(--suivi-trait-l) solid color-mix(in srgb, var(--c) 60%, transparent);
-  background: color-mix(in srgb, var(--c) 18%, transparent);
-  color: var(--retex-texte);
   text-transform: uppercase;
-  box-shadow: 0 0 1em color-mix(in srgb, var(--c) 35%, transparent);
 }
 .revue-dalle__titre {
   margin: 0;
@@ -4197,9 +4316,11 @@ tr[data-importe='oui'] {
   height: var(--retex-trait);
   border-radius: 999em;
   background: linear-gradient(90deg, var(--c), transparent);
-  box-shadow: 0 0 0.8em color-mix(in srgb, var(--c) 70%, transparent);
   transform-origin: left;
   animation: retex-etire 0.6s ease 0.3s both;
+}
+[data-mantine-color-scheme='dark'] .revue-dalle__souligne {
+  box-shadow: 0 0 0.8em color-mix(in srgb, var(--c) 70%, transparent);
 }
 .revue-faits {
   margin: 0;
@@ -4209,7 +4330,6 @@ tr[data-importe='oui'] {
   gap: var(--mantine-spacing-2xs);
   font-size: var(--mantine-font-size-sm);
   line-height: 1.55;
-  color: var(--retex-secondaire);
 }
 .revue-faits li::marker {
   color: var(--c);
@@ -4218,18 +4338,34 @@ tr[data-importe='oui'] {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--c);
+}
+[data-mantine-color-scheme='dark'] .revue-chiffre {
   text-shadow: 0 0 0.8em color-mix(in srgb, var(--c) 60%, transparent);
 }
 @media (max-width: 48em) {
-  .revue-ecran {
-    padding: var(--mantine-spacing-sm);
+  .revue-bandeau.tdb-dalle {
+    padding: var(--mantine-spacing-md);
   }
-  .revue-commande {
-    justify-content: stretch;
-    margin-top: 0;
-  }
-  .revue-commande .retex-bouton {
+  .revue-bandeau__droite {
+    align-items: stretch;
     width: 100%;
+  }
+  .revue-bandeau__droite .verre-bouton {
     white-space: normal;
+  }
+  .revue-ecran .retex-bandeau__chiffres {
+    gap: var(--mantine-spacing-sm) 0;
+  }
+  .revue-ecran .retex-bandeau__chiffres > div {
+    padding-left: 0;
+    border-left: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .revue-ecran,
+  .revue-ecran *,
+  .app-main:has(.revue-ecran) .mantine-Button-root {
+    animation: none !important;
+    transition: none !important;
   }
 }

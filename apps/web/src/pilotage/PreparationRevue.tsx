@@ -1,7 +1,8 @@
 /* Préparation d'une revue de direction (ISO 9001:2015, 9.3.2) : faits chiffrés tirés des données de la plateforme, repris
    dans une nouvelle fiche de revue. Rien n'est interprété : la direction apprécie, conclut et décide (9.3.3).
-   Habillage : écran sombre de la chronologie RETEX (bandeau téléscripteur, grille, halos) et dalles en verre du tableau de
-   bord ; les entrées sont regroupées en trois temps de lecture et affichées d'emblée, chiffres mis en évidence. */
+   Habillage : dalles en verre du tableau de bord (classe tdb : même fond de page, clair ou sombre), codes graphiques de la
+   chronologie RETEX (bandeau téléscripteur, voyant, teintes retex-c-*) et boutons en capsule de verre ; les entrées sont
+   regroupées en trois temps de lecture et affichées d'emblée, chiffres mis en évidence. */
 import { useQuery } from '@tanstack/react-query';
 import { cleEntree, type EntreeRevue } from '@suivi/shared';
 import { get } from '../api';
@@ -58,9 +59,9 @@ function DalleEntree({ entree, teinte }: { entree: EntreeRevue; teinte: string }
       aria-label={entree.titre}
     >
       <div className="revue-dalle__tete">
-        <span className="revue-dalle__article">{entree.article}</span>
+        <span className="verre-pilule revue-dalle__article">{entree.article}</span>
         {entree.aSaisir && (
-          <span className="revue-pastille">
+          <span className="verre-pilule revue-pastille">
             <span className="retex-bandeau__voyant" aria-hidden="true" />À apprécier par la direction
           </span>
         )}
@@ -104,10 +105,10 @@ export function PreparationRevue({
       Object.fromEntries(entrees.filter((e) => e.faits.length).map((e) => [cleEntree(e.id), e.faits.join('\n')])),
     );
   return (
-    <section className="retex-chronologie revue-ecran" aria-label="Entrées de la revue de direction">
-      <header className="retex-bandeau revue-bandeau">
+    <section className="tdb revue-ecran" aria-label="Entrées de la revue de direction">
+      <header className="tdb-dalle retex-bandeau revue-bandeau">
         <div className="retex-bandeau__titre">
-          <span className="retex-bandeau__sur">
+          <span className="verre-pilule revue-bandeau__sur">
             <span className="retex-bandeau__voyant" aria-hidden="true" />
             Revue de direction · ISO 9001:2015, 9.3.2
           </span>
@@ -117,30 +118,30 @@ export function PreparationRevue({
             direction apprécie, conclut et décide ; les sorties (9.3.3) se saisissent dans la fiche de revue.
           </p>
         </div>
-        {q.data && (
-          <dl className="retex-bandeau__chiffres">
-            <div data-teinte="non">
-              <dt>Dernière revue</dt>
-              <dd>{precedente ? precedente.date.split('-').reverse().join('/') : 'Aucune'}</dd>
-            </div>
-            <div className="retex-c-vert">
-              <dt>Entrées préparées</dt>
-              <dd>{entrees.length}</dd>
-            </div>
-            <div className={aApprecier ? 'retex-c-orange' : 'retex-c-gris'}>
-              <dt>À apprécier</dt>
-              <dd>{aApprecier}</dd>
-            </div>
-          </dl>
-        )}
-      </header>
-      {can('pilotage', 'modifier') && entrees.length > 0 && (
-        <div className="revue-commande">
-          <button type="button" className="retex-bouton retex-bouton--principal" onClick={creer}>
-            Préparer une revue avec ces entrées
-          </button>
+        <div className="revue-bandeau__droite">
+          {q.data && (
+            <dl className="retex-bandeau__chiffres">
+              <div className="retex-c-bleu">
+                <dt>Dernière revue</dt>
+                <dd>{precedente ? precedente.date.split('-').reverse().join('/') : 'Aucune'}</dd>
+              </div>
+              <div className="retex-c-vert">
+                <dt>Entrées préparées</dt>
+                <dd>{entrees.length}</dd>
+              </div>
+              <div className={aApprecier ? 'retex-c-orange' : 'retex-c-gris'}>
+                <dt>À apprécier</dt>
+                <dd>{aApprecier}</dd>
+              </div>
+            </dl>
+          )}
+          {can('pilotage', 'modifier') && entrees.length > 0 && (
+            <button type="button" className="verre-bouton" data-principal="oui" onClick={creer}>
+              Préparer une revue avec ces entrées
+            </button>
+          )}
         </div>
-      )}
+      </header>
       <ErrorAlert error={q.error} />
       {entrees.length > 0 &&
         TEMPS.map((t, n) => {
@@ -149,7 +150,7 @@ export function PreparationRevue({
           return (
             <section key={t.titre} className={`revue-temps retex-c-${t.teinte}`} aria-labelledby={`revue-temps-${n}`}>
               <div className="revue-temps__tete">
-                <span className="revue-temps__anneau" aria-hidden="true">
+                <span className="verre-pilule revue-temps__anneau" aria-hidden="true">
                   {n + 1}
                 </span>
                 <div>
