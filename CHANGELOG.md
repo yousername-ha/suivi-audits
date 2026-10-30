@@ -19,6 +19,10 @@ Aucune action sur le serveur : la migration additive `049_retex_contributions.sq
 - **Habilitation déléguée sur un objet** ([ADR 0080](docs/adr/0080-habilitation-deleguee-contribution-retex.md)) : un contributeur de RETEX n'a aucun droit de module ; ses routes `/api/retex/...` exigent une session complète, ses écritures sont vérifiées sous verrou (`RegistreHistorique.modifierDelegue`), ses lectures filtrées (`lireDelegue`), et un compte non invité reçoit la même réponse 404 qu'un incident absent. (session « Intégration module RETEX incidents »)
 - Guide d'utilisation : articles « RETEX d'un incident et chronologie » et « Contribuer au RETEX d'un incident » ; tests de bout en bout des parcours du pilote et du contributeur (données fictives). (session « Intégration module RETEX incidents »)
 
+### Corrigé
+
+- **Main courante de crise** : chaque entrée reçoit son identifiant `CL-nnn` du schéma 15, comme dans l'outil historique ; les entrées écrites sans identifiant sont numérotées à la prochaine écriture de la crise, avec la numérotation de l'export. L'import « Remplacer un module » d'un état contenant une main courante n'est plus refusé (BUG-013). (session « Intégration module RETEX incidents »)
+
 ## [6.0.0] — 2026-10-29
 
 Version majeure : **installation neuve uniquement**, sans aucune ligne de commande au-delà de l'installation de Docker et de git ([ADR 0077](docs/adr/0077-installation-sans-ligne-de-commande.md)). Aucune mise à jour depuis une version 5.x n'est prévue (décision du RSSI du 29/10/2026). Elle regroupe les correctifs de sécurité des revues du 27 et du 28/10/2026 et le contenu de la 5.1.0, qui n'a pas été étiquetée. Deux migrations SQL (`046`, alertes de sécurité ; `048`, clés de sécurité FIDO2), appliquées au premier démarrage ; deux dépendances nouvelles, `@simplewebauthn/server` et `@simplewebauthn/browser` ([ADR 0079](docs/adr/0079-authentification-fido2-webauthn.md)).

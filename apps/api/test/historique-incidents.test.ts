@@ -1,5 +1,6 @@
 /* Reprise du registre des incidents, de la cellule de crise et de l'alerte CRRC → incident de l'outil de suivi : écritures
    natives sous verrou, droits croisés (écarts, pilotage, incidents), champs inconnus conservés. Données fictives. */
+import { schema15Problems } from '@suivi/shared/legacy';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createTestApp, login, makeUser, seedState, type Agent, type TestApp } from './helpers.js';
 
@@ -211,6 +212,9 @@ describe('cellule de crise', () => {
     expect(c.checks['0']).toMatchObject({ done: true });
     expect(c.log.map((l: { type: string }) => l.type)).toEqual(['Information', 'Décision', 'Action']);
     expect(c.log[2].text).toBe('Check-list : Alerter — fait.');
+    // Identifiants « CL- » du schéma 15 : l'import « Remplacer un module » de cet état les exige.
+    expect(c.log.map((l: { id: string }) => l.id)).toEqual(['CL-001', 'CL-002', 'CL-003']);
+    expect(schema15Problems(await etat())).toEqual([]);
     expect(Date.parse(c.deadlines[0].due) - Date.parse(c.start)).toBe(72 * 3600e3);
     expect((await writer.put(`/api/crise/cellules/${cellule}/checklist/0`, { fait: false })).statusCode).toBe(200);
     expect((await admin.del(`/api/crise/cellules/${cellule}/echeances/0`)).statusCode).toBe(200);
@@ -272,6 +276,44 @@ describe('cellule de crise', () => {
     expect((await admin.del(`/api/crise/scenarios/${id}/actions/0`)).statusCode).toBe(200);
     expect((await admin.del(`/api/crise/scenarios/${id}`)).statusCode).toBe(200);
     expect((await admin.del(`/api/crise/scenarios/${id}`)).statusCode).toBe(404);
+  });
+  it('numérote à la prochaine écriture les entrées de main courante écrites sans identifiant', async () => {
+    const s = await etat();
+    const sans = (text: string) => ({ ts: '2026-10-12T08:00:00.000Z', type: 'Information', author: '', text });
+    s.crisis.cells = [
+      ...s.crisis.cells,
+      {
+        id: 'CEL-ANCIENNE',
+        title: 'Cellule fictive antérieure au correctif',
+        mode: 'Exercice',
+        start: '2026-10-12T08:00:00.000Z',
+        status: 'Active',
+        log: [sans('Première'), { id: 'CL-007', ...sans('Déjà numérotée') }, sans('Troisième')],
+      },
+    ];
+    await seedState(t, s);
+    expect(schema15Problems(await etat())).not.toEqual([]);
+    const r = await writer.post('/api/crise/cellules/CEL-ANCIENNE/entrees', {
+      type: 'Décision',
+      author: 'Pilote',
+      text: 'Nouvelle',
+    });
+    expect(r.statusCode, r.body).toBe(201);
+    const apres = await etat();
+    const c = apres.crisis.cells.find((x: { id: string }) => x.id === 'CEL-ANCIENNE');
+    expect(c.log.map((l: { id: string; text: string }) => [l.id, l.text])).toEqual([
+      ['CL-008', 'Première'],
+      ['CL-007', 'Déjà numérotée'],
+      ['CL-009', 'Troisième'],
+      ['CL-010', 'Nouvelle'],
+    ]);
+    // Les identifiants déjà attribués ne changent pas.
+    expect(apres.crisis.cells[0].log.map((l: { id: string }) => l.id).slice(0, 3)).toEqual([
+      'CL-001',
+      'CL-002',
+      'CL-003',
+    ]);
+    expect(schema15Problems(apres)).toEqual([]);
   });
   it('journalise les modifications', async () => {
     const rows = await t.svc.db.q<{ action: string }>(

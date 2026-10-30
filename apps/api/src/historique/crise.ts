@@ -15,7 +15,7 @@ import {
   syntheseRetex,
   type EtatCrise,
 } from '@suivi/shared';
-import { isObject, type Json, type JsonObject } from '@suivi/shared/legacy';
+import { isObject, nextLegacyId, type Json, type JsonObject } from '@suivi/shared/legacy';
 import type { SessionUser } from '../auth.js';
 import { HttpError } from '../http/errors.js';
 import { entrees, remplacerEntree, type RegistreHistorique } from './registre.js';
@@ -41,6 +41,25 @@ const remplacer = (c: Racine, cle: 'scenarios' | 'cells', id: string, s: JsonObj
 };
 const liste = (v: unknown): Json[] => (Array.isArray(v) ? (v as Json[]) : []);
 const entreeLog = (type: string, author: string, text: string): JsonObject => ({ ts: now(), type, author, text });
+const aUnId = (l: Json) => isObject(l) && typeof l.id === 'string' && l.id !== '';
+/** Identifiants « CL- » du schéma 15 sur la main courante, uniques dans toutes les cellules, comme l'outil historique.
+    Une entrée qui n'en a pas (écrite avant ce correctif) en reçoit un, avec la même numérotation qu'à l'export. */
+function numeroterMainCourante(c: Racine) {
+  const pris = c.cells.flatMap((x) => (isObject(x) ? liste(x.log).filter(aUnId) : [])).map((l) => (l as JsonObject).id);
+  c.cells = c.cells.map((x) =>
+    isObject(x) && liste(x.log).some((l) => isObject(l) && !aUnId(l))
+      ? {
+          ...x,
+          log: liste(x.log).map((l) => {
+            if (!isObject(l) || aUnId(l)) return l;
+            const id = nextLegacyId('CL-', pris);
+            pris.push(id);
+            return { id, ...l };
+          }),
+        }
+      : x,
+  );
+}
 
 export interface VueCrise {
   version: number;
@@ -76,9 +95,12 @@ export class Crise {
     appliquer: (c: Racine, data: JsonObject) => T | Promise<T>,
     droit: 'modifier' | 'supprimer' = 'modifier',
   ): Promise<T> {
-    return this.r.modifier(user, ip, { module: 'incidents', action, reference, droit }, (data) =>
-      appliquer(racine(data), data),
-    );
+    return this.r.modifier(user, ip, { module: 'incidents', action, reference, droit }, async (data) => {
+      const c = racine(data);
+      const resultat = await appliquer(c, data);
+      numeroterMainCourante(c);
+      return resultat;
+    });
   }
   private cellule(c: Racine, id: string, active = false): JsonObject {
     const x = parId(c.cells, id, 'Cellule');
@@ -150,6 +172,7 @@ export class Crise {
         const fin = now();
         const log = [...liste(cell.log), entreeLog('Décision', b.author ?? '', 'Clôture de la cellule.')];
         remplacer(c, 'cells', id, { ...cell, end: fin, status: 'Clôturée', log });
+        numeroterMainCourante(c);
         const planId = str(cell.plan);
         const plan = planId ? entrees(data, 'plans').find((p) => p.id === planId) : undefined;
         if (plan) {
