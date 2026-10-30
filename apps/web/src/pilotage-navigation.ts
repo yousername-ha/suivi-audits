@@ -4,9 +4,14 @@ export const PILOTAGE_NAV = [
     label: 'Vue d’ensemble',
     items: [
       { id: 'synthese', label: 'Synthèse', module: 'pilotage' },
+      { id: 'perimetres', label: 'Périmètres', module: 'pilotage' },
+    ],
+  },
+  {
+    label: 'Parcours guidé',
+    items: [
       { id: 'parcours', label: 'Parcours guidé', module: 'pilotage' },
       { id: 'parcours-iso', label: 'Parcours ISO 27001 / HDS', module: 'pilotage' },
-      { id: 'perimetres', label: 'Périmètres', module: 'pilotage' },
     ],
   },
   {
