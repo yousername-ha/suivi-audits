@@ -1,4 +1,4 @@
-/* Sessions, authentification (mot de passe + TOTP), jeton d'installation initiale. */
+/* Sessions, authentification (mot de passe, puis TOTP, clé de sécurité ou code de récupération), jeton d'installation. */
 import {
   DEFAULT_PREFERENCES,
   effectivePermissions,
@@ -40,14 +40,26 @@ export interface SessionUser {
   expiresAt: string | null;
   preferences: Preferences;
   totpEnabled: boolean;
+  /** Clés de sécurité utilisables (ni révoquées ni suspectes), ADR 0079. */
+  cles: number;
+  /** Une clé est exigée (politique des administrateurs échue, ou ré-enrôlement imposé). */
+  cleRequise: boolean;
   mustChangePassword: boolean;
 }
 export interface Session {
   sid: Buffer;
   csrf: string;
   mfaOk: boolean;
+  /** Dernière ré-authentification (mot de passe et second facteur), ouverture de la session complète comprise. */
+  reauthAt: Date | null;
   user: SessionUser;
 }
+
+/** Exigence d'une clé de sécurité pour un compte (branchée par les services sur la politique WebAuthn). */
+export type ExigenceCle = (u: { admin: boolean; creeLe: Date; reenrolement: boolean }) => {
+  requise: boolean;
+  echeance: Date | null;
+};
 
 /** Cookies de la requête. Map : un nom choisi par le client (« __proto__ »…) ne touche jamais un objet. */
 export function parseCookies(header: string | undefined): Map<string, string> {
@@ -66,14 +78,22 @@ export function parseCookies(header: string | undefined): Map<string, string> {
   return out;
 }
 
-/** Étape d'accès : 'ok' | 'mfa' (code TOTP à saisir) | 'enroll' (TOTP à configurer) | 'password' (changement imposé). */
+/** Étape d'accès : 'ok' | 'mfa' (second facteur à présenter : TOTP, clé ou code de récupération) | 'enroll' (TOTP à configurer,
+    toujours obligatoire) | 'enroll_key' (clé de sécurité exigée, ADR 0079) | 'password' (changement imposé). */
 export function accessStage(
-  s: (Pick<Session, 'mfaOk'> & { user: Pick<SessionUser, 'totpEnabled' | 'mustChangePassword'> }) | null,
+  s:
+    | (Pick<Session, 'mfaOk'> & {
+        user: Pick<SessionUser, 'totpEnabled' | 'mustChangePassword'> &
+          Partial<Pick<SessionUser, 'cles' | 'cleRequise'>>;
+      })
+    | null,
   mfaRequired: boolean,
 ): AccessStage {
   if (!s) return 'anon';
-  if (s.user.totpEnabled && !s.mfaOk) return 'mfa';
+  const cles = s.user.cles ?? 0;
+  if ((s.user.totpEnabled || cles > 0) && !s.mfaOk) return 'mfa';
   if (!s.user.totpEnabled && mfaRequired) return 'enroll';
+  if (s.user.cleRequise && cles === 0) return 'enroll_key';
   if (s.user.mustChangePassword) return 'password';
   return 'ok';
 }
@@ -92,6 +112,8 @@ export class Auth {
   /** Appelé à la transition vers l'état verrouillé (alerte de sécurité, ADR 0070). Branché par les services ; ne fait jamais
       échouer l'authentification. */
   surVerrouillage: ((e: VerrouillageEvt) => Promise<void>) | null = null;
+  /** Exigence d'une clé de sécurité (politique WebAuthn) ; par défaut, jamais. */
+  exigenceCle: ExigenceCle = () => ({ requise: false, echeance: null });
 
   constructor(
     private readonly cfg: Config,
@@ -158,6 +180,8 @@ export class Auth {
         user_id: userId,
         csrf,
         mfa_ok: mfaOk,
+        // Une session complète vient de présenter le mot de passe et le second facteur : ré-authentification récente.
+        reauth_at: mfaOk ? sql<Date>`now()` : null,
         ip: req.ip || null,
         user_agent: String(req.headers['user-agent'] || '').slice(0, 300),
         expires_at: exp,
@@ -205,6 +229,7 @@ export class Auth {
         's.csrf',
         's.mfa_ok',
         's.last_seen_at',
+        's.reauth_at',
         'u.id',
         'u.username',
         'u.display_name',
@@ -213,6 +238,16 @@ export class Auth {
         'u.preferences',
         'u.totp_enabled',
         'u.must_change_password',
+        'u.created_at',
+        'u.webauthn_reenrolement',
+        (eb) =>
+          eb
+            .selectFrom('webauthn_credentials as w')
+            .select(sql<number>`count(*)::int`.as('n'))
+            .whereRef('w.user_id', '=', 'u.id')
+            .where('w.revoked_at', 'is', null)
+            .where('w.suspect_at', 'is', null)
+            .as('cles'),
       ])
       .where('s.id_hash', '=', h)
       .where('s.expires_at', '>', sql<Date>`now()`)
@@ -220,6 +255,7 @@ export class Auth {
       .executeTakeFirst();
     if (!r || r.disabled || (r.expires_at && new Date(r.expires_at) <= new Date())) return null;
     const grants = await loadGrants(this.db.pool, r.id);
+    const rights = new Rights(effectivePermissions(grants).keys());
     if (touch && Date.now() - new Date(r.last_seen_at).getTime() > 60e3) {
       this.db.k
         .updateTable('sessions')
@@ -232,18 +268,64 @@ export class Auth {
       sid: h,
       csrf: r.csrf,
       mfaOk: r.mfa_ok,
+      reauthAt: r.reauth_at ? new Date(r.reauth_at) : null,
       user: {
         id: r.id,
         username: r.username,
         displayName: r.display_name,
         roles: [...new Set(grants.map((g) => g.roleName))],
-        rights: new Rights(effectivePermissions(grants).keys()),
+        rights,
         expiresAt: r.expires_at ? new Date(r.expires_at).toISOString() : null,
         preferences: PreferencesSchema.safeParse(r.preferences).data ?? DEFAULT_PREFERENCES,
         totpEnabled: r.totp_enabled,
+        cles: Number(r.cles ?? 0),
+        cleRequise: this.exigenceCle({
+          admin: rights.has('administration:administrer'),
+          creeLe: new Date(r.created_at),
+          reenrolement: r.webauthn_reenrolement,
+        }).requise,
         mustChangePassword: r.must_change_password,
       },
     };
+  }
+
+  /** Étape d'accès d'un compte pour une session à l'état « mfaOk » (réponse des routes de connexion et d'enrôlement). */
+  async etape(userId: string, mfaOk: boolean): Promise<AccessStage> {
+    const u = await this.db.k
+      .selectFrom('users as u')
+      .select([
+        'u.totp_enabled',
+        'u.must_change_password',
+        'u.created_at',
+        'u.webauthn_reenrolement',
+        (eb) =>
+          eb
+            .selectFrom('webauthn_credentials as w')
+            .select(sql<number>`count(*)::int`.as('n'))
+            .whereRef('w.user_id', '=', 'u.id')
+            .where('w.revoked_at', 'is', null)
+            .where('w.suspect_at', 'is', null)
+            .as('cles'),
+      ])
+      .where('u.id', '=', userId)
+      .executeTakeFirstOrThrow();
+    const rights = new Rights(effectivePermissions(await loadGrants(this.db.pool, userId)).keys());
+    return accessStage(
+      {
+        mfaOk,
+        user: {
+          totpEnabled: u.totp_enabled,
+          mustChangePassword: u.must_change_password,
+          cles: Number(u.cles ?? 0),
+          cleRequise: this.exigenceCle({
+            admin: rights.has('administration:administrer'),
+            creeLe: new Date(u.created_at),
+            reenrolement: u.webauthn_reenrolement,
+          }).requise,
+        },
+      },
+      this.cfg.mfaRequired,
+    );
   }
   async destroy(sid: Buffer) {
     await this.db.k.deleteFrom('sessions').where('id_hash', '=', sid).execute();
@@ -295,11 +377,19 @@ export class Auth {
     if (u.disabled) return { ok: false as const, reason: 'disabled' as const, user: u };
     if (u.expires_at && new Date(u.expires_at) <= new Date())
       return { ok: false as const, reason: 'expired' as const, user: u };
-    // Avec un second facteur actif, la remise à zéro attend son succès : un mot de passe correct ne l'efface pas.
+    // Avec un second facteur actif (TOTP ou clé), la remise à zéro attend son succès : un mot de passe correct ne l'efface pas.
+    const secondFacteur =
+      u.totp_enabled ||
+      !!(await this.db.k
+        .selectFrom('webauthn_credentials')
+        .select('id')
+        .where('user_id', '=', u.id)
+        .where('revoked_at', 'is', null)
+        .executeTakeFirst());
     await this.db.k
       .updateTable('users')
       .set(
-        u.totp_enabled
+        secondFacteur
           ? { last_login_at: sql<Date>`now()` }
           : { failed_logins: 0, locked_until: null, last_login_at: sql<Date>`now()` },
       )

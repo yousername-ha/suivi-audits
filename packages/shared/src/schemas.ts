@@ -69,7 +69,7 @@ export const PasswordChangeBody = z.object({ current: z.string().max(256), next:
 export const PasswordBody = z.object({ password: z.string().max(256).optional() });
 export const TotpConfirmBody = MfaBody;
 
-export const AccessStageSchema = z.enum(['anon', 'mfa', 'enroll', 'password', 'ok']);
+export const AccessStageSchema = z.enum(['anon', 'mfa', 'enroll', 'enroll_key', 'password', 'ok']);
 export const MeOut = z.object({
   stage: AccessStageSchema,
   csrf: z.string().nullable(),
@@ -79,6 +79,8 @@ export const MeOut = z.object({
       username: z.string(),
       displayName: z.string(),
       totpEnabled: z.boolean(),
+      /** Clés de sécurité utilisables (ni révoquées ni suspectes), ADR 0079. */
+      cles: z.number(),
       mustChangePassword: z.boolean(),
       roles: z.array(z.string()),
       expiresAt: z.string().nullable(),
@@ -87,6 +89,8 @@ export const MeOut = z.object({
   /** Droits effectifs (module:action) ; l'interface s'en sert pour masquer ce qui n'est pas permis. */
   permissions: z.array(PermissionSchema),
   mfaRequired: z.boolean(),
+  /** Clés de sécurité proposées par ce serveur (configuration RP utilisable, ADR 0079). */
+  webauthn: z.boolean(),
   passwordMinLength: z.number(),
   appName: z.string(),
   orgName: z.string(),
