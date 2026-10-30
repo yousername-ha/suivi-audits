@@ -54,17 +54,19 @@ for (const [nom, largeur, hauteur] of AFFICHAGES) {
         expect(apres[1]).toBeLessThanOrEqual(avant[1]!);
       }
       if (largeur >= 576) {
-        // Le menu est borné à la hauteur de la fenêtre et défile seul s'il est plus long.
+        // Le menu est borné à la hauteur de la fenêtre et défile seul s'il est plus long, sans barre de défilement visible.
         const borne = await page.evaluate(() => {
           const el = document.querySelector('.shell-nav-inner') as HTMLElement;
           return {
             hauteur: el.getBoundingClientRect().height,
             fenetre: window.innerHeight,
             overflowY: getComputedStyle(el).overflowY,
+            largeurBarre: el.offsetWidth - el.clientWidth,
           };
         });
         expect(borne.overflowY).toBe('auto');
         expect(borne.hauteur).toBeLessThanOrEqual(borne.fenetre);
+        expect(borne.largeurBarre).toBe(0);
       }
       expect(problems).toEqual([]);
     } finally {

@@ -8,6 +8,10 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 Aucune action.
 
+### Corrigé
+
+- **Menu latéral** : plus de barre de défilement affichée dans le menu. Il reste borné à la hauteur de la fenêtre et défilable à la molette, au clavier et au toucher.
+
 ## [6.0.1] — 2026-10-30
 
 Version de publication : **aucun changement de code ni de fonction par rapport à la 6.0.0**. La publication de l'étiquette `v6.0.0` a échoué au scan Trivy (voir « Corrigé ») et une étiquette ne peut ni être déplacée ni supprimée ; la 6.0.1 est la première version 6 publiée. Le contenu fonctionnel est celui de la section [6.0.0] ci-dessous. Section rédigée par la session « Projet audit_suivi Coeur ».
