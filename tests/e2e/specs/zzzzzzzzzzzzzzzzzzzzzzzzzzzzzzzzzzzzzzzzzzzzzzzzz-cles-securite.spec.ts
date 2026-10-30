@@ -108,10 +108,7 @@ test('clés de sécurité : enrôlement, double enrôlement refusé, connexion p
       .getByRole('row', { name: /Clé virtuelle/ })
       .getByRole('button', { name: 'Révoquer' })
       .click();
-    await page
-      .getByRole('dialog')
-      .getByRole('button', { name: 'Confirmer' })
-      .click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Confirmer' }).click();
     await expect(page.getByText('Clé révoquée.')).toBeVisible();
     await expect(carte.getByRole('cell', { name: 'Clé virtuelle' })).toHaveCount(0);
     expect(problems).toEqual([]);
