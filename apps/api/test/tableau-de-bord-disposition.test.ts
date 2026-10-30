@@ -77,6 +77,35 @@ describe('disposition personnelle', () => {
     expect((await alice.get(URL_PERSO)).json().personnelle).toEqual(avant);
   });
 
+  it('réglages des dalles (lot 2c) : enregistrés avec la disposition, refusés hors de ce que la dalle accepte', async () => {
+    const avant = (await alice.get(URL_PERSO)).json().personnelle;
+    const avecReglages = {
+      dalles: [
+        { id: 'phare', largeur: 6, masquee: false, reglages: { seuils: { orange: 50, vert: 90 } } },
+        { id: 'ecarts-statut', largeur: 4, masquee: false, reglages: { visualisation: 'anneau' } },
+        { id: 'indicateurs', largeur: 3, masquee: false, reglages: { cible: 75, visualisation: 'chiffre' } },
+      ],
+    };
+    const r = await alice.put(URL_PERSO, { disposition: avecReglages }, v(avant.version));
+    expect(r.statusCode, r.body).toBe(200);
+    expect((await alice.get(URL_PERSO)).json().personnelle.disposition).toEqual(avecReglages);
+    const version = r.json().version;
+    for (const reglages of [
+      { cible: 80 },
+      { visualisation: 'histogramme' },
+      { seuils: { orange: 90, vert: 50 } },
+      { seuilsJours: { orange: 10, vert: 20 }, couleur: 'rouge' },
+    ]) {
+      const refus = await alice.put(
+        URL_PERSO,
+        { disposition: { dalles: [{ id: 'phare', largeur: 6, masquee: false, reglages }] } },
+        v(version),
+      );
+      expect(refus.statusCode, JSON.stringify(reglages)).toBe(422);
+    }
+    expect((await alice.get(URL_PERSO)).json().personnelle.version).toBe(version);
+  });
+
   it('revenir à la disposition par défaut supprime la sienne, sans toucher celle des autres', async () => {
     expect((await alice.del(URL_PERSO)).statusCode).toBe(204);
     expect((await alice.get(URL_PERSO)).json().personnelle).toBeNull();

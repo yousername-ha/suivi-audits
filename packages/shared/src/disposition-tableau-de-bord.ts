@@ -1,6 +1,6 @@
-/* Disposition du tableau de bord de l'accueil (ADR 0078, lot 2a) : ordre, largeur et état masqué des dalles. Une
-   disposition ne contient aucune donnée : les valeurs viennent toujours de la synthèse filtrée selon les droits de la
-   personne qui regarde. Fonctions pures, testées (packages/shared/test/disposition-tableau-de-bord.test.ts). */
+/* Disposition du tableau de bord de l'accueil (ADR 0078) : ordre, largeur et état masqué des dalles (lot 2a), seuils,
+   cible et visualisation de chacune (lot 2c). Une disposition ne contient aucune donnée : les valeurs viennent toujours
+   de la synthèse filtrée selon les droits de la personne qui regarde. Fonctions pures, testées (packages/shared/test/disposition-tableau-de-bord.test.ts). */
 import { z } from 'zod';
 
 /** Catalogue des dalles, dans l'ordre de la disposition standard (ADR 0069, lot 1). */
@@ -57,14 +57,83 @@ export const LARGEUR_STANDARD: Record<IdDalle, LargeurDisposee> = {
   'ecarts-source': 4,
 };
 
+/** Visualisations proposées (lot 2c) ; chaque dalle n'en accepte que certaines (`REGLAGES_DALLE`). */
+export const VISUALISATIONS = ['barres', 'anneau', 'histogramme', 'tableau', 'empilees', 'jauge', 'chiffre'] as const;
+export type Visualisation = (typeof VISUALISATIONS)[number];
+export const LIBELLES_VISUALISATION: Record<Visualisation, string> = {
+  barres: 'Barres horizontales',
+  anneau: 'Anneau',
+  histogramme: 'Histogramme',
+  tableau: 'Tableau',
+  empilees: 'Barres empilées',
+  jauge: 'Jauge',
+  chiffre: 'Chiffre clé',
+};
+
+/** Réglages possibles de chaque dalle (lot 2c) : seuils de couleur d'un taux (orange et vert à partir de…), seuils de
+    jours (carte phare : jours avant l'audit), cible facultative (trait) et visualisations compatibles, la première étant
+    la visualisation standard. Une dalle absente n'a aucun réglage. */
+export const REGLAGES_DALLE: Partial<
+  Record<IdDalle, { seuils?: true; seuilsJours?: true; cible?: true; visualisations?: readonly Visualisation[] }>
+> = {
+  phare: { seuils: true, seuilsJours: true },
+  'conformite-referentiels': { seuils: true, cible: true, visualisations: ['barres', 'tableau'] },
+  indicateurs: { seuils: true, cible: true, visualisations: ['jauge', 'chiffre'] },
+  'actions-ecarts': { seuils: true, cible: true, visualisations: ['jauge', 'chiffre'] },
+  'mise-en-oeuvre': { visualisations: ['empilees', 'tableau'] },
+  'ecarts-type': { visualisations: ['anneau', 'barres', 'histogramme'] },
+  mesures: { visualisations: ['barres', 'anneau', 'histogramme'] },
+  'ecarts-statut': { visualisations: ['barres', 'anneau', 'histogramme'] },
+  'ecarts-classification': { visualisations: ['barres', 'anneau', 'histogramme'] },
+  'ecarts-source': { visualisations: ['barres', 'anneau', 'histogramme'] },
+};
+
+/** Seuils standard (ADR 0069) : taux rouge sous 60 %, orange de 60 à 80 %, vert à partir de 80 % ; jours avant
+    l'audit rouge sous 30, orange de 30 à 60, vert à partir de 60. */
+export const SEUILS_STANDARD = { orange: 60, vert: 80 } as const;
+export const SEUILS_JOURS_STANDARD = { orange: 30, vert: 60 } as const;
+
+const paliers = (max: number) =>
+  z
+    .object({ orange: z.number().int().min(0).max(max), vert: z.number().int().min(0).max(max) })
+    .strict()
+    .refine((x) => x.orange <= x.vert, 'Le seuil orange ne peut pas dépasser le seuil vert.');
+export const ReglagesDalle = z
+  .object({
+    seuils: paliers(100).optional(),
+    seuilsJours: paliers(365).optional(),
+    cible: z.number().int().min(0).max(100).optional(),
+    visualisation: z.enum(VISUALISATIONS).optional(),
+  })
+  .strict();
+export type ReglagesDalle = z.infer<typeof ReglagesDalle>;
+
 export const DalleDisposee = z
   .object({
     id: z.enum(DALLES_TABLEAU_DE_BORD),
     largeur: z.union([z.literal(3), z.literal(4), z.literal(6), z.literal(8), z.literal(12)]),
     masquee: z.boolean(),
+    reglages: ReglagesDalle.optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((d, ctx) => {
+    for (const m of reglagesRefuses(d)) ctx.addIssue({ code: 'custom', path: ['reglages'], message: m });
+  });
 export type DalleDisposee = z.infer<typeof DalleDisposee>;
+
+/** Réglages qu'une dalle n'accepte pas (seuils, cible ou visualisation hors de `REGLAGES_DALLE`). */
+function reglagesRefuses(d: { id: IdDalle; reglages?: ReglagesDalle }): string[] {
+  const r = d.reglages;
+  if (!r) return [];
+  const permis = REGLAGES_DALLE[d.id] ?? {};
+  const refus: string[] = [];
+  if (r.seuils && !permis.seuils) refus.push(`La dalle « ${d.id} » n’a pas de seuils de taux.`);
+  if (r.seuilsJours && !permis.seuilsJours) refus.push(`La dalle « ${d.id} » n’a pas de seuils de jours.`);
+  if (r.cible !== undefined && !permis.cible) refus.push(`La dalle « ${d.id} » n’a pas de cible.`);
+  if (r.visualisation && !permis.visualisations?.includes(r.visualisation))
+    refus.push(`Visualisation « ${r.visualisation} » impossible pour la dalle « ${d.id} ».`);
+  return refus;
+}
 
 export const Disposition = z
   .object({ dalles: z.array(DalleDisposee).max(DALLES_TABLEAU_DE_BORD.length) })
@@ -137,7 +206,12 @@ export function lireDisposition(v: unknown): Disposition {
   const vues = new Set<IdDalle>();
   const dalles: DalleDisposee[] = [];
   for (const x of brut) {
-    const r = DalleDisposee.safeParse(x);
+    // Des réglages devenus invalides (visualisation retirée, par exemple) sont abandonnés, la dalle reste.
+    let r = DalleDisposee.safeParse(x);
+    if (!r.success && x && typeof x === 'object' && 'reglages' in x) {
+      const { reglages: _ignores, ...sans } = x as Record<string, unknown>;
+      r = DalleDisposee.safeParse(sans);
+    }
     if (r.success && connue(r.data.id) && !vues.has(r.data.id)) {
       vues.add(r.data.id);
       dalles.push(r.data);
@@ -197,15 +271,39 @@ export function deplacerDalleAuClavier(
   return { disposition: suivante, rang: apres.indexOf(id) + 1, total: apres.length };
 }
 
-/** Change la largeur ou l'état masqué d'une dalle. */
+/** Change la largeur, l'état masqué ou les réglages d'une dalle (des réglages vides sont retirés). */
 export function modifierDalle(d: Disposition, id: IdDalle, champs: Partial<Omit<DalleDisposee, 'id'>>): Disposition {
-  return { dalles: d.dalles.map((x) => (x.id === id ? { ...x, ...champs } : x)) };
+  return {
+    dalles: d.dalles.map((x) => {
+      if (x.id !== id) return x;
+      const y = { ...x, ...champs };
+      const r = y.reglages && Object.fromEntries(Object.entries(y.reglages).filter(([, v]) => v !== undefined));
+      if (r && Object.keys(r).length) return { ...y, reglages: r };
+      const { reglages: _vides, ...sans } = y;
+      return sans;
+    }),
+  };
 }
 
-/** Deux dispositions identiques (ordre, largeurs, états) : rien à enregistrer. */
+const memesReglages = (a?: ReglagesDalle, b?: ReglagesDalle) =>
+  a?.seuils?.orange === b?.seuils?.orange &&
+  a?.seuils?.vert === b?.seuils?.vert &&
+  a?.seuilsJours?.orange === b?.seuilsJours?.orange &&
+  a?.seuilsJours?.vert === b?.seuilsJours?.vert &&
+  a?.cible === b?.cible &&
+  a?.visualisation === b?.visualisation;
+
+/** Deux dispositions identiques (ordre, largeurs, états, réglages) : rien à enregistrer. */
 export const memesDispositions = (a: Disposition, b: Disposition) =>
   a.dalles.length === b.dalles.length &&
   a.dalles.every((x, i) => {
     const y = b.dalles[i]!;
-    return x.id === y.id && x.largeur === y.largeur && x.masquee === y.masquee;
+    return x.id === y.id && x.largeur === y.largeur && x.masquee === y.masquee && memesReglages(x.reglages, y.reglages);
   });
+
+/** Visualisation retenue pour une dalle : la sienne si elle est permise, sinon la standard (null : sans choix). */
+export function visualisationDalle(id: IdDalle, r?: ReglagesDalle): Visualisation | null {
+  const permises = REGLAGES_DALLE[id]?.visualisations;
+  if (!permises) return null;
+  return r?.visualisation && permises.includes(r.visualisation) ? r.visualisation : permises[0]!;
+}

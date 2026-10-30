@@ -8,7 +8,13 @@ const URL_PERSO = '/api/tableau-de-bord/disposition';
 const URL_PARTAGE = '/api/tableau-de-bord/partage';
 const URL_CHOIX = '/api/tableau-de-bord/choix';
 const URL_ANNUAIRE = '/api/tableau-de-bord/annuaire';
-const D_ALICE = { dalles: [{ id: 'echeances', largeur: 12, masquee: false }] };
+const D_ALICE = {
+  dalles: [
+    { id: 'echeances', largeur: 12, masquee: false },
+    // Réglages (lot 2c) : transmis avec la disposition partagée.
+    { id: 'ecarts-type', largeur: 6, masquee: false, reglages: { visualisation: 'histogramme' } },
+  ],
+};
 const D_BOB = { dalles: [{ id: 'ecarts', largeur: 4, masquee: false }] };
 const v = (n: number) => ({ 'if-match': `"${n}"` });
 

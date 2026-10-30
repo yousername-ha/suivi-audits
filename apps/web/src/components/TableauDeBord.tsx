@@ -1,10 +1,20 @@
 /* Tableau de bord de l'accueil, « Suivi de la conformité » (ADR 0069) : dalles en verre et relief, métriques colorées
-   selon des seuils d'affichage, dans la disposition choisie par la personne (ADR 0078). Lecture seule ; toutes les valeurs viennent de la synthèse
+   selon des seuils d'affichage, dans la disposition choisie par la personne (ADR 0078), avec ses seuils, sa cible et sa
+   visualisation pour chaque dalle (ADR 0078, lot 2c ; seuils standard sans réglage). Lecture seule ; toutes les valeurs viennent de la synthèse
    (/api/mur/synthese), filtrée selon les droits : une dalle sans donnée lisible n'est pas affichée. Le taux global est
    la moyenne simple des taux par référentiel (décision du RSSI du 28/10/2026, ADR 0069), affiché comme tel et distinct
    des taux par référentiel ; jamais une somme d'exigences de référentiels différents (ADR 0060).
    L'écran mural et le Pilotage gardent les cartes de Synthese.tsx. */
-import { completerDisposition, dallesAffichees, type Disposition, type IdDalle, type Synthese } from '@suivi/shared';
+import { Table } from '@mantine/core';
+import {
+  completerDisposition,
+  dallesAffichees,
+  visualisationDalle,
+  type Disposition,
+  type IdDalle,
+  type ReglagesDalle,
+  type Synthese,
+} from '@suivi/shared';
 import {
   Anneau,
   BarresEmpilees,
@@ -20,6 +30,7 @@ import {
   teinteSeuil,
   type LargeurDalle,
   type Seuils,
+  type TeinteGraphique,
   type TeinteSeuil,
 } from '@suivi/ui';
 import { Fragment, type ReactNode } from 'react';
@@ -34,6 +45,22 @@ const SEUILS_JOURS: Seuils = {
   ],
 };
 const JOUR_MS = 86_400_000;
+
+/** Seuils d'une dalle (lot 2c) : rouge en dessous du seuil orange, orange puis vert à partir de leurs seuils ; sans
+    réglage, les seuils standard. */
+export const seuilsRegles = (r: { orange: number; vert: number } | undefined, standard: Seuils): Seuils =>
+  r
+    ? {
+        base: 'rouge',
+        paliers: [
+          { des: r.orange, teinte: 'orange' },
+          { des: r.vert, teinte: 'vert' },
+        ],
+      }
+    : standard;
+
+/** Teintes successives d'une répartition sans teinte métier (anneau, histogramme). */
+const TEINTES_REPARTITION: readonly TeinteGraphique[] = ['bleu', 'violet', 'vert', 'orange', 'gris', 'rouge'];
 
 /** Jours entiers entre la date de génération de la synthèse et une date AAAA-MM-JJ (négatif si elle est passée). */
 export function joursAvant(date: string, reference: string): number | null {
@@ -70,11 +97,15 @@ function CartePhare({
   s,
   global,
   largeur,
+  reglages,
 }: {
   s: Synthese;
   global: ReturnType<typeof tauxGlobal>;
   largeur: LargeurDalle;
+  reglages?: ReglagesDalle;
 }) {
+  const seuilsJours = seuilsRegles(reglages?.seuilsJours, SEUILS_JOURS);
+  const seuilsTaux = seuilsRegles(reglages?.seuils, SEUILS_TAUX);
   const audit = s.prochainAudit;
   const jours = audit ? joursAvant(audit.date, s.genereLe) : null;
   return (
@@ -93,7 +124,7 @@ function CartePhare({
               {fmtJour(audit.date)}
               {jours != null && (
                 // Compte à rebours : change chaque jour, masqué comme les dates dans les captures de référence.
-                <span className={`tdb-puce horodatage tdb-p-${jours >= 0 ? teinteSeuil(SEUILS_JOURS, jours) : 'gris'}`}>
+                <span className={`tdb-puce horodatage tdb-p-${jours >= 0 ? teinteSeuil(seuilsJours, jours) : 'gris'}`}>
                   {libelleJours(jours)}
                 </span>
               )}
@@ -112,7 +143,7 @@ function CartePhare({
           <h2 className="tdb-phare-titre">Taux de conformité global</h2>
           <p className="tdb-phare-valeur chiffres">
             {fmtTaux(global.pourcent)}
-            <span className={`tdb-puce tdb-p-${teinteSeuil(SEUILS_TAUX, global.pourcent)}`}>
+            <span className={`tdb-puce tdb-p-${teinteSeuil(seuilsTaux, global.pourcent)}`}>
               Moyenne des référentiels
             </span>
           </p>
@@ -126,25 +157,149 @@ function CartePhare({
   );
 }
 
+/** Répartition d'éléments par catégorie, dans la visualisation choisie (barres horizontales par défaut). */
+function VueRepartition({
+  titre,
+  lignes,
+  visualisation,
+  teinte = 'bleu',
+  centre,
+  sousCentre,
+}: {
+  titre: string;
+  lignes: readonly { libelle: string; valeur: number; teinte?: TeinteGraphique }[];
+  visualisation: string | null;
+  teinte?: TeinteSeuil;
+  centre?: string;
+  sousCentre?: string;
+}) {
+  const total = lignes.reduce((x, l) => x + l.valeur, 0);
+  const teinteDe = (l: (typeof lignes)[number], i: number) =>
+    l.teinte ?? TEINTES_REPARTITION[i % TEINTES_REPARTITION.length]!;
+  if (visualisation === 'anneau')
+    return (
+      <Anneau
+        titre={titre}
+        parts={lignes.map((l, i) => ({ libelle: l.libelle, valeur: l.valeur, teinte: teinteDe(l, i) }))}
+        centre={centre ?? String(total)}
+        sousCentre={sousCentre ?? 'au total'}
+      />
+    );
+  if (visualisation === 'histogramme')
+    return (
+      <Histogramme
+        titre={titre}
+        categories={lignes.map((l) => ({ libelle: l.libelle, valeurs: { n: l.valeur } }))}
+        series={[{ cle: 'n', libelle: 'Nombre', teinte: teinte === 'bleu' || teinte === 'vert' ? teinte : 'bleu' }]}
+      />
+    );
+  return (
+    <BarresHorizontales
+      titre={titre}
+      lignes={lignes.map((l) => ({ libelle: l.libelle, valeur: l.valeur, max: total, texte: String(l.valeur) }))}
+      teinte={teinte}
+    />
+  );
+}
+
 function Repartition({
   titre,
   valeurs,
   largeur,
+  visualisation,
 }: {
   titre: string;
   valeurs: Record<string, number>;
   largeur: LargeurDalle;
+  visualisation: string | null;
 }) {
   const lignes = Object.entries(valeurs).sort((a, b) => b[1] - a[1]);
   const total = lignes.reduce((s, [, n]) => s + n, 0);
   return (
     <Dalle titre={titre} sousTitre={pluriel(total, 'élément', 'éléments')} largeur={largeur}>
-      <BarresHorizontales
+      <VueRepartition
         titre={titre}
-        lignes={lignes.map(([libelle, n]) => ({ libelle, valeur: n, max: total, texte: String(n) }))}
-        teinte="bleu"
+        lignes={lignes.map(([libelle, valeur]) => ({ libelle, valeur }))}
+        visualisation={visualisation}
       />
     </Dalle>
+  );
+}
+
+/** Tableau de valeurs d'une dalle (visualisation « Tableau », lot 2c) : en-têtes de colonnes, une ligne par catégorie. */
+function TableauDalle({
+  titre,
+  colonnes,
+  lignes,
+}: {
+  titre: string;
+  colonnes: readonly string[];
+  lignes: readonly { cle: string; cellules: readonly ReactNode[] }[];
+}) {
+  return (
+    <div className="table-wrap">
+      <Table className="tdb-tableau" aria-label={titre}>
+        <Table.Thead>
+          <Table.Tr>
+            {colonnes.map((c, i) => (
+              <Table.Th key={c} scope="col" className={i ? 'tdb-tableau-nombre' : undefined}>
+                {c}
+              </Table.Th>
+            ))}
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>
+          {lignes.map((l) => (
+            <Table.Tr key={l.cle}>
+              {l.cellules.map((c, i) =>
+                i ? (
+                  <Table.Td key={i} className="tdb-tableau-nombre chiffres">
+                    {c}
+                  </Table.Td>
+                ) : (
+                  <Table.Th key={i} scope="row">
+                    {c}
+                  </Table.Th>
+                ),
+              )}
+            </Table.Tr>
+          ))}
+        </Table.Tbody>
+      </Table>
+    </div>
+  );
+}
+
+/** Taux d'une jauge ou d'un chiffre clé (indicateurs, actions des écarts) selon la visualisation et les seuils. */
+function TauxDalle({
+  libelle,
+  valeur,
+  max,
+  detail,
+  reglages,
+  id,
+}: {
+  libelle: string;
+  valeur: number;
+  max: number;
+  detail: string;
+  reglages?: ReglagesDalle;
+  id: IdDalle;
+}) {
+  const seuils = seuilsRegles(reglages?.seuils, SEUILS_TAUX);
+  if (visualisationDalle(id, reglages) === 'chiffre') {
+    const p = Math.min(100, (valeur * 100) / max);
+    return (
+      <ChiffreCle
+        valeur={fmtTaux(p)}
+        teinte={teinteSeuil(seuils, p)}
+        detail={detail}
+        legende={reglages?.cible !== undefined ? `Cible : ${fmtTaux(reglages.cible)}` : undefined}
+      />
+    );
+  }
+  return (
+    <JaugeArc libelle={libelle} valeur={valeur} max={max} seuils={seuils} cible={reglages?.cible} detail={detail} />
   );
 }
 
@@ -184,7 +339,8 @@ export interface DalleTableauDeBord {
   id: IdDalle;
   titre: string;
   largeur: LargeurDalle;
-  rendu: (largeur: LargeurDalle) => ReactNode;
+  /** Rendu à une largeur, avec les réglages de la dalle (lot 2c ; absents : seuils et visualisation standard). */
+  rendu: (largeur: LargeurDalle, reglages?: ReglagesDalle) => ReactNode;
 }
 
 /** Dalles disponibles pour cette synthèse, dans l'ordre et aux largeurs standard (ADR 0069, lot 1). */
@@ -212,7 +368,7 @@ export function dallesTableauDeBord(s: Synthese): DalleTableauDeBord[] {
       id: 'phare',
       titre: global ? 'Prochain audit et taux de conformité global' : 'Prochain audit',
       largeur: 6,
-      rendu: (l) => <CartePhare s={s} global={global} largeur={l} />,
+      rendu: (l, rg) => <CartePhare s={s} global={global} largeur={l} reglages={rg} />,
     },
     e && {
       id: 'ecarts',
@@ -250,37 +406,69 @@ export function dallesTableauDeBord(s: Synthese): DalleTableauDeBord[] {
       id: 'conformite-referentiels',
       titre: 'Taux de conformité par référentiel',
       largeur: 6,
-      rendu: (l) => (
-        <Dalle
-          titre="Taux de conformité par référentiel"
-          sousTitre="Exigences applicables mises en œuvre totalement, référentiel par référentiel"
-          largeur={l}
-        >
-          <BarresHorizontales
+      rendu: (l, rg) => {
+        const seuils = seuilsRegles(rg?.seuils, SEUILS_TAUX);
+        // Une cible réglée remplace le trait du taux global (moyenne des référentiels).
+        const cible = rg?.cible ?? global?.pourcent;
+        return (
+          <Dalle
             titre="Taux de conformité par référentiel"
-            lignes={refs.map((x) => ({ libelle: x.libelle, valeur: x.total, max: x.applicables }))}
-            seuils={SEUILS_TAUX}
-            cible={global?.pourcent}
-          />
-          {global && (
-            <Note>{`Trait violet : taux global, moyenne des référentiels (${fmtTaux(global.pourcent)}).`}</Note>
-          )}
-          <Note>{AVERTISSEMENT}</Note>
-        </Dalle>
-      ),
+            sousTitre="Exigences applicables mises en œuvre totalement, référentiel par référentiel"
+            largeur={l}
+          >
+            {visualisationDalle('conformite-referentiels', rg) === 'tableau' ? (
+              <TableauDalle
+                titre="Taux de conformité par référentiel"
+                colonnes={['Référentiel', 'Mises en œuvre', 'Applicables', 'Taux']}
+                lignes={refs.map((x) => {
+                  const p = (x.total * 100) / x.applicables;
+                  return {
+                    cle: x.libelle,
+                    cellules: [
+                      x.libelle,
+                      x.total,
+                      x.applicables,
+                      <span key="t" className={`tdb-puce tdb-p-${teinteSeuil(seuils, p)}`}>
+                        {fmtTaux(p)}
+                      </span>,
+                    ],
+                  };
+                })}
+              />
+            ) : (
+              <BarresHorizontales
+                titre="Taux de conformité par référentiel"
+                lignes={refs.map((x) => ({ libelle: x.libelle, valeur: x.total, max: x.applicables }))}
+                seuils={seuils}
+                cible={cible}
+              />
+            )}
+            {rg?.cible !== undefined ? (
+              <Note>{`Cible : ${fmtTaux(rg.cible)}${global ? ` · taux global, moyenne des référentiels : ${fmtTaux(global.pourcent)}` : ''}.`}</Note>
+            ) : (
+              global && (
+                <Note>{`Trait violet : taux global, moyenne des référentiels (${fmtTaux(global.pourcent)}).`}</Note>
+              )
+            )}
+            <Note>{AVERTISSEMENT}</Note>
+          </Dalle>
+        );
+      },
     },
     i &&
       i.total > 0 && {
         id: 'indicateurs',
         titre: 'Indicateurs atteints',
         largeur: largeurJauge,
-        rendu: (l) => (
+        rendu: (l, rg) => (
           <Dalle titre="Indicateurs atteints" sousTitre="Objectifs et indicateurs" largeur={l}>
-            <JaugeArc
+            <TauxDalle
+              id="indicateurs"
               libelle="Indicateurs atteints"
               valeur={i.atteints}
               max={i.total}
               detail={`${i.atteints}/${i.total} atteints · ${i.nonAtteints} non atteints · ${i.nonMesures} non mesurés`}
+              reglages={rg}
             />
           </Dalle>
         ),
@@ -290,13 +478,15 @@ export function dallesTableauDeBord(s: Synthese): DalleTableauDeBord[] {
         id: 'actions-ecarts',
         titre: 'Actions des écarts réalisées',
         largeur: largeurJauge,
-        rendu: (l) => (
+        rendu: (l, rg) => (
           <Dalle titre="Actions des écarts réalisées" sousTitre="Écarts · plans d’action" largeur={l}>
-            <JaugeArc
+            <TauxDalle
+              id="actions-ecarts"
               libelle="Actions des écarts réalisées"
               valeur={eo.actionsRealisees}
               max={eo.actionsTotal}
               detail={`${eo.actionsRealisees}/${eo.actionsTotal} actions réalisées`}
+              reglages={rg}
             />
           </Dalle>
         ),
@@ -305,23 +495,34 @@ export function dallesTableauDeBord(s: Synthese): DalleTableauDeBord[] {
       id: 'mise-en-oeuvre',
       titre: 'Niveau de mise en œuvre des exigences',
       largeur: 6,
-      rendu: (l) => (
+      rendu: (l, rg) => (
         <Dalle titre="Niveau de mise en œuvre des exigences" sousTitre="Applicabilité · par référentiel" largeur={l}>
-          <BarresEmpilees
-            titre="Niveau de mise en œuvre des exigences applicables, par référentiel"
-            series={[
-              { cle: 't', libelle: 'Total', teinte: 'vert' },
-              { cle: 'p', libelle: 'Partiel', teinte: 'orange' },
-              { cle: 'i', libelle: 'Insuffisant', teinte: 'rouge' },
-              { cle: 'n', libelle: 'Non renseigné', teinte: 'gris' },
-            ]}
-            lignes={refs.map((x) => ({
-              libelle: x.libelle,
-              valeurs: { t: x.total, p: x.partiel, i: x.insuffisant, n: x.nonRenseigne },
-            }))}
-            part="t"
-            libellePart="part mise en œuvre totalement"
-          />
+          {visualisationDalle('mise-en-oeuvre', rg) === 'tableau' ? (
+            <TableauDalle
+              titre="Niveau de mise en œuvre des exigences applicables, par référentiel"
+              colonnes={['Référentiel', 'Total', 'Partiel', 'Insuffisant', 'Non renseigné']}
+              lignes={refs.map((x) => ({
+                cle: x.libelle,
+                cellules: [x.libelle, x.total, x.partiel, x.insuffisant, x.nonRenseigne],
+              }))}
+            />
+          ) : (
+            <BarresEmpilees
+              titre="Niveau de mise en œuvre des exigences applicables, par référentiel"
+              series={[
+                { cle: 't', libelle: 'Total', teinte: 'vert' },
+                { cle: 'p', libelle: 'Partiel', teinte: 'orange' },
+                { cle: 'i', libelle: 'Insuffisant', teinte: 'rouge' },
+                { cle: 'n', libelle: 'Non renseigné', teinte: 'gris' },
+              ]}
+              lignes={refs.map((x) => ({
+                libelle: x.libelle,
+                valeurs: { t: x.total, p: x.partiel, i: x.insuffisant, n: x.nonRenseigne },
+              }))}
+              part="t"
+              libellePart="part mise en œuvre totalement"
+            />
+          )}
         </Dalle>
       ),
     },
@@ -329,13 +530,14 @@ export function dallesTableauDeBord(s: Synthese): DalleTableauDeBord[] {
       id: 'ecarts-type',
       titre: 'Écarts ouverts par type',
       largeur: 6,
-      rendu: (l) => (
+      rendu: (l, rg) => (
         <Dalle titre="Écarts ouverts par type" sousTitre="Écarts · classification" largeur={l}>
-          <Anneau
+          <VueRepartition
             titre="Écarts ouverts par type"
-            parts={eo.parType
+            lignes={eo.parType
               .filter((t) => t.n || t.type)
               .map((t) => ({ libelle: t.libelle, valeur: t.n, teinte: TEINTE_ECART[t.type] ?? 'gris' }))}
+            visualisation={visualisationDalle('ecarts-type', rg)}
             centre={String(eo.ouverts)}
             sousCentre="ouverts"
           />
@@ -412,13 +614,14 @@ export function dallesTableauDeBord(s: Synthese): DalleTableauDeBord[] {
       id: 'mesures',
       titre: 'Mesures suivies',
       largeur: 4,
-      rendu: (l) => (
+      rendu: (l, rg) => (
         <Dalle titre={`Mesures suivies (${s.mesures!.total})`} sousTitre="Applicabilité · par référentiel" largeur={l}>
-          <BarresHorizontales
+          <VueRepartition
             titre="Mesures suivies par référentiel"
             lignes={Object.entries(mesures)
               .sort((x, y) => y[1] - x[1])
-              .map(([libelle, n]) => ({ libelle, valeur: n, max: s.mesures!.total, texte: String(n) }))}
+              .map(([libelle, valeur]) => ({ libelle, valeur }))}
+            visualisation={visualisationDalle('mesures', rg)}
             teinte="vert"
           />
         </Dalle>
@@ -453,19 +656,40 @@ export function dallesTableauDeBord(s: Synthese): DalleTableauDeBord[] {
       id: 'ecarts-statut',
       titre: 'Écarts par statut',
       largeur: 4,
-      rendu: (l) => <Repartition titre="Écarts par statut" valeurs={e.parStatut} largeur={l} />,
+      rendu: (l, rg) => (
+        <Repartition
+          titre="Écarts par statut"
+          valeurs={e.parStatut}
+          largeur={l}
+          visualisation={visualisationDalle('ecarts-statut', rg)}
+        />
+      ),
     },
     e && {
       id: 'ecarts-classification',
       titre: 'Écarts par classification',
       largeur: 4,
-      rendu: (l) => <Repartition titre="Écarts par classification" valeurs={e.parType} largeur={l} />,
+      rendu: (l, rg) => (
+        <Repartition
+          titre="Écarts par classification"
+          valeurs={e.parType}
+          largeur={l}
+          visualisation={visualisationDalle('ecarts-classification', rg)}
+        />
+      ),
     },
     e && {
       id: 'ecarts-source',
       titre: 'Écarts par audit à l’origine',
       largeur: 4,
-      rendu: (l) => <Repartition titre="Écarts par audit à l’origine" valeurs={e.parSource} largeur={l} />,
+      rendu: (l, rg) => (
+        <Repartition
+          titre="Écarts par audit à l’origine"
+          valeurs={e.parSource}
+          largeur={l}
+          visualisation={visualisationDalle('ecarts-source', rg)}
+        />
+      ),
     },
   ];
   return dalles.filter((x): x is DalleTableauDeBord => !!x);
@@ -473,21 +697,25 @@ export function dallesTableauDeBord(s: Synthese): DalleTableauDeBord[] {
 
 /** Dalles affichées : selon la disposition enregistrée (ADR 0078), sinon dans l'ordre et aux largeurs standard. */
 export function dallesDisposees(dalles: DalleTableauDeBord[], disposition: Disposition | null) {
-  if (!disposition) return dalles.map((x) => ({ dalle: x, largeur: x.largeur }));
+  if (!disposition) return dalles.map((x) => ({ dalle: x, largeur: x.largeur, reglages: undefined }));
   const parId = new Map(dalles.map((x) => [x.id, x]));
   const complete = completerDisposition(
     disposition,
     Object.fromEntries(dalles.map((x) => [x.id, x.largeur])) as Partial<Record<IdDalle, LargeurDalle>>,
   );
-  return dallesAffichees(complete, new Set(parId.keys())).map((x) => ({ dalle: parId.get(x.id)!, largeur: x.largeur }));
+  return dallesAffichees(complete, new Set(parId.keys())).map((x) => ({
+    dalle: parId.get(x.id)!,
+    largeur: x.largeur,
+    reglages: x.reglages,
+  }));
 }
 
 export function TableauDeBordConformite({ s, disposition = null }: { s: Synthese; disposition?: Disposition | null }) {
   return (
     <div className="tdb">
       <div className="grille-cartes tdb-grille">
-        {dallesDisposees(dallesTableauDeBord(s), disposition).map(({ dalle, largeur }) => (
-          <Fragment key={dalle.id}>{dalle.rendu(largeur)}</Fragment>
+        {dallesDisposees(dallesTableauDeBord(s), disposition).map(({ dalle, largeur, reglages }) => (
+          <Fragment key={dalle.id}>{dalle.rendu(largeur, reglages)}</Fragment>
         ))}
       </div>
     </div>

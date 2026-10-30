@@ -1,4 +1,5 @@
-/* Disposition du tableau de bord (ADR 0078, lot 2a) : schéma, lecture tolérante, complétion, déplacements. */
+/* Disposition du tableau de bord (ADR 0078, lots 2a et 2c) : schéma, lecture tolérante, complétion, déplacements,
+   réglages par dalle (seuils, cible, visualisation). */
 import { describe, expect, it } from 'vitest';
 import {
   completerDisposition,
@@ -11,6 +12,8 @@ import {
   lireDisposition,
   memesDispositions,
   modifierDalle,
+  REGLAGES_DALLE,
+  visualisationDalle,
   type IdDalle,
 } from '../src/disposition-tableau-de-bord.js';
 
@@ -133,5 +136,64 @@ describe('affichage et déplacements', () => {
     expect(memesDispositions(base, modifierDalle(base, 'phare', { largeur: 12 }))).toBe(false);
     expect(memesDispositions(base, deplacerDalle(base, 'ecarts', 'phare'))).toBe(false);
     expect(dallesAffichees(base, tout)).toHaveLength(DALLES_TABLEAU_DE_BORD.length);
+  });
+});
+
+describe('réglages des dalles (lot 2c)', () => {
+  const dalle = (id: string, reglages: unknown) => ({ dalles: [{ id, largeur: 6, masquee: false, reglages }] });
+
+  it('accepte les réglages permis par la dalle', () => {
+    for (const [id, r] of [
+      ['phare', { seuils: { orange: 50, vert: 90 }, seuilsJours: { orange: 15, vert: 45 } }],
+      ['conformite-referentiels', { seuils: { orange: 70, vert: 70 }, cible: 85, visualisation: 'tableau' }],
+      ['indicateurs', { visualisation: 'chiffre', cible: 100 }],
+      ['ecarts-statut', { visualisation: 'anneau' }],
+      ['mise-en-oeuvre', {}],
+    ] as const)
+      expect(Disposition.safeParse(dalle(id, r)).success, id).toBe(true);
+  });
+
+  it.each([
+    ['des seuils sur une dalle sans taux', dalle('ecarts', { seuils: { orange: 60, vert: 80 } })],
+    ['une cible sur la carte phare', dalle('phare', { cible: 80 })],
+    ['une visualisation non proposée', dalle('ecarts-statut', { visualisation: 'jauge' })],
+    ['une visualisation inconnue', dalle('ecarts-statut', { visualisation: 'camembert3d' })],
+    ['un seuil orange au-dessus du vert', dalle('indicateurs', { seuils: { orange: 90, vert: 80 } })],
+    ['un taux au-delà de 100', dalle('indicateurs', { seuils: { orange: 60, vert: 120 } })],
+    ['une cible décimale', dalle('indicateurs', { cible: 80.5 })],
+    ['des jours au-delà d’un an', dalle('phare', { seuilsJours: { orange: 30, vert: 400 } })],
+    ['un réglage inconnu', dalle('indicateurs', { couleur: 'rouge' })],
+  ])('refuse %s', (_, v) => {
+    expect(Disposition.safeParse(v).success).toBe(false);
+  });
+
+  it('chaque visualisation standard est la première proposée', () => {
+    expect(visualisationDalle('ecarts-type')).toBe('anneau');
+    expect(visualisationDalle('ecarts-type', { visualisation: 'histogramme' })).toBe('histogramme');
+    expect(visualisationDalle('phare', { visualisation: 'tableau' })).toBeNull();
+    for (const r of Object.values(REGLAGES_DALLE))
+      if (r.visualisations) expect(r.visualisations.length).toBeGreaterThan(1);
+  });
+
+  it('lecture tolérante : des réglages devenus invalides sont abandonnés, la dalle reste', () => {
+    expect(lireDisposition(dalle('ecarts-statut', { visualisation: 'retiree' }))).toEqual({
+      dalles: [{ id: 'ecarts-statut', largeur: 6, masquee: false }],
+    });
+  });
+
+  it('modifier, comparer, retirer les réglages', () => {
+    const base = completerDisposition(null);
+    const avec = modifierDalle(base, 'indicateurs', { reglages: { cible: 90 } });
+    expect(avec.dalles.find((x) => x.id === 'indicateurs')!.reglages).toEqual({ cible: 90 });
+    expect(memesDispositions(base, avec)).toBe(false);
+    expect(memesDispositions(avec, modifierDalle(avec, 'indicateurs', { reglages: { cible: 90 } }))).toBe(true);
+    const sans = modifierDalle(avec, 'indicateurs', { reglages: { cible: undefined } });
+    expect('reglages' in sans.dalles.find((x) => x.id === 'indicateurs')!).toBe(false);
+    expect(memesDispositions(base, sans)).toBe(true);
+    // Déplacer ou compléter garde les réglages.
+    expect(completerDisposition(deplacerDalle(avec, 'indicateurs', 'phare')).dalles[0]).toMatchObject({
+      id: 'indicateurs',
+      reglages: { cible: 90 },
+    });
   });
 });
