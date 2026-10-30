@@ -32,6 +32,71 @@ export function trustProxy(v: string | undefined): boolean | number | string[] {
   return liste;
 }
 
+/** Partie dépendante de la relying party WebAuthn (ADR 0079). `disponible` faux : les clés de sécurité ne sont pas proposées. */
+export interface ConfigWebauthn {
+  disponible: boolean;
+  raison: string | null;
+  rpId: string | null;
+  rpName: string;
+  origines: string[];
+  /** env : RP_ID ou RP_ORIGINS renseignés ; adresse_site : déduite de PUBLIC_URL (SITE_ADDRESS) ; aucune. */
+  source: 'env' | 'adresse_site' | 'aucune';
+}
+
+const NOM_DOMAINE = /^(?=.{1,253}$)[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$/;
+
+/** RP_ID, RP_NAME, RP_ORIGINS. Sans RP_ID ni RP_ORIGINS, la configuration est déduite de PUBLIC_URL ; si elle n'est pas
+    utilisable (adresse IP, HTTP), les clés sont simplement désactivées. Une configuration explicite incohérente arrête le
+    démarrage (fail closed) : nom de domaine invalide, origine non HTTPS (HTTP seulement pour localhost hors production),
+    origine hors du domaine de la relying party, chemin dans une origine. */
+export function configWebauthn(env: Env, publicUrl: string, appName: string): ConfigWebauthn {
+  const production = env.NODE_ENV === 'production';
+  const explicite = !!(env.RP_ID?.trim() || env.RP_ORIGINS?.trim());
+  const rpName = (env.RP_NAME || '').trim().slice(0, 64) || appName;
+  let rpId = (env.RP_ID || '').trim();
+  if (!rpId && publicUrl) {
+    try {
+      rpId = new URL(publicUrl).hostname;
+    } catch {
+      rpId = '';
+    }
+  }
+  const origines = (env.RP_ORIGINS?.trim() ? env.RP_ORIGINS.split(',') : publicUrl ? [publicUrl] : [])
+    .map((o) => o.trim().replace(/\/+$/, ''))
+    .filter(Boolean);
+  const source: ConfigWebauthn['source'] = explicite ? 'env' : publicUrl ? 'adresse_site' : 'aucune';
+  const probleme = ((): string | null => {
+    if (!rpId) return 'aucune adresse de site ni RP_ID';
+    if (rpId !== rpId.toLowerCase() || !NOM_DOMAINE.test(rpId) || isIP(rpId))
+      return `RP_ID « ${rpId} » n'est pas un nom de domaine (une adresse IP ne convient pas)`;
+    if (origines.length === 0) return 'aucune origine (RP_ORIGINS)';
+    for (const o of origines) {
+      let u: URL;
+      try {
+        u = new URL(o);
+      } catch {
+        return `origine « ${o} » illisible`;
+      }
+      if (u.origin !== o) return `origine « ${o} » : schéma, hôte et port seulement, sans chemin`;
+      const local = u.hostname === 'localhost';
+      if (u.protocol !== 'https:' && !(u.protocol === 'http:' && local && !production))
+        return `origine « ${o} » : HTTPS obligatoire${local ? ' en production' : ''}`;
+      if (u.hostname !== rpId && !u.hostname.endsWith('.' + rpId))
+        return `origine « ${o} » hors du domaine de la relying party « ${rpId} »`;
+    }
+    return null;
+  })();
+  if (probleme && explicite) throw new Error(`Configuration WebAuthn invalide : ${probleme}.`);
+  return {
+    disponible: !probleme,
+    raison: probleme,
+    rpId: probleme ? null : rpId,
+    rpName,
+    origines: probleme ? [] : origines,
+    source,
+  };
+}
+
 const here = path.dirname(fileURLToPath(import.meta.url));
 /** Racine de l'application (contient seed/ et migrations/). */
 export const APP_ROOT = path.resolve(here, '..');
@@ -46,11 +111,13 @@ export function loadConfig(env: Env = process.env) {
       return '';
     }
   };
+  const publicUrl = (env.PUBLIC_URL || '').replace(/\/+$/, '');
+  const appName = env.APP_NAME || 'Suivi des audits SMSI';
   return {
     port: int(env.PORT, 8080),
     host: env.HOST || '0.0.0.0',
     trustProxy: trustProxy(env.TRUST_PROXY),
-    publicUrl: (env.PUBLIC_URL || '').replace(/\/+$/, ''),
+    publicUrl,
     cookieSecure: (env.COOKIE_SECURE || 'auto').toLowerCase() as 'auto' | 'true' | 'false',
     logLevel: env.LOG_LEVEL || 'info',
     db: {
@@ -76,7 +143,9 @@ export function loadConfig(env: Env = process.env) {
     clamav: env.CLAMAV_HOST
       ? { host: env.CLAMAV_HOST, port: int(env.CLAMAV_PORT, 3310), required: bool(env.CLAMAV_REQUIRED, true) }
       : null,
-    appName: env.APP_NAME || 'Suivi des audits SMSI',
+    appName,
+    /** Clés de sécurité FIDO2 / WebAuthn (ADR 0079). */
+    webauthn: configWebauthn(env, publicUrl, appName),
     orgName: env.ORG_NAME || 'Mon organisation',
     seedFile: env.SEED_FILE || path.join(APP_ROOT, 'seed', 'state.json'),
     /** Rapports d'exploitation (DATA_DIR/etat sur le serveur, monté en lecture seule) : mises à jour, sauvegardes. */

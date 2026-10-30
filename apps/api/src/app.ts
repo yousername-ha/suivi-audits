@@ -17,6 +17,7 @@ import { remiseAVideRoutes } from './routes/remise-a-vide.js';
 import { updateRoutes } from './routes/updates.js';
 import { operationRoutes } from './routes/operations.js';
 import { authRoutes } from './routes/auth.js';
+import { webauthnRoutes } from './routes/webauthn.js';
 import { documentRoutes } from './routes/documents.js';
 import { eventRoutes } from './routes/events.js';
 import { importRoutes } from './routes/import.js';
@@ -110,6 +111,7 @@ export function allRoutes(): RouteDef[] {
   list.push(
     ...systemRoutes(() => list),
     ...authRoutes,
+    ...webauthnRoutes,
     ...documentRoutes,
     ...accessRoutes,
     ...adminRoutes,
@@ -175,7 +177,10 @@ export async function buildApp(svc: Services): Promise<FastifyInstance> {
   };
   svc.bus.on('change', onSettings);
   // Purge des sessions expirées.
-  const purge = setInterval(() => svc.auth.purgeExpired().catch(() => {}), 10 * 60e3);
+  const purge = setInterval(() => {
+    svc.auth.purgeExpired().catch(() => {});
+    svc.webauthn.purgerChallenges().catch(() => {});
+  }, 10 * 60e3);
   purge.unref();
   // Comptes arrivés à expiration : désactivés automatiquement (et sessions fermées), au démarrage puis toutes les 5 min.
   const expire = () =>

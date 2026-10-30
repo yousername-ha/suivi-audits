@@ -1556,6 +1556,39 @@
       "dependencies": "Aucune",
       "next": "Aucune côté développement : PR #181 fusionnée dans claude-suivi-smsi le 30/10/2026 après CI 7/7, publiée dans la 6.0.0 (décision du RSSI du 30/10/2026). Relecture visuelle du RSSI sur son serveur à faire (TEST-041).",
       "estimation": "NON ESTIMÉE"
+    },
+    {
+      "id": "TEST-052",
+      "title": "Recetter les clés de sécurité FIDO2 sur matériel réel",
+      "status": "À FAIRE",
+      "priority": "P1",
+      "origin": "ADR 0079 (demande du RSSI du 30/10/2026)",
+      "acceptance": "Liste de contrôle docs/05_RECETTE/CHECKLIST-FIDO2.md déroulée : YubiKey 5 USB-A, USB-C et NFC, Windows Hello, Chrome, Edge, Firefox et Safari ; résultats datés, sans donnée réelle.",
+      "dependencies": "Publication de la v6.0.0 (étiquette posée par le RSSI) ; serveur installé en HTTPS sur un nom de domaine ; clés YubiKey 5",
+      "next": "Après l'étiquette v6.0.0 et l'installation sur le serveur du RSSI : dérouler la liste de contrôle (décision du RSSI du 30/10/2026 : clés livrées dans la 6.0.0).",
+      "estimation": "NON ESTIMÉE"
+    },
+    {
+      "id": "DEV-008",
+      "title": "Connexion sans mot de passe par passkey (phase 2 de l'ADR 0079)",
+      "status": "À CADRER",
+      "priority": "P3",
+      "origin": "ADR 0079, alternative reportée",
+      "acceptance": "ADR complémentaire : clés découvrables, procédure de perte de clé sans mot de passe, verrouillage et journalisation ; politique passwordless activable ; tests API et de bout en bout.",
+      "dependencies": "TEST-052",
+      "next": "Décision du RSSI sur l'opportunité, puis ADR.",
+      "estimation": "NON ESTIMÉE"
+    },
+    {
+      "id": "DEV-009",
+      "title": "Accepter la clé de sécurité pour l'installation des mises à jour et la remise à vide",
+      "status": "À FAIRE",
+      "priority": "P3",
+      "origin": "ADR 0079 (décision du RSSI du 30/10/2026 : hors de ce chantier)",
+      "acceptance": "Code TOTP ou clé de sécurité (challenge dédié, usage unique) sur ces deux écrans ; tests API et de bout en bout ; aucune régression du TOTP.",
+      "dependencies": "TEST-052",
+      "next": "À planifier sur décision du RSSI.",
+      "estimation": "NON ESTIMÉE"
     }
   ],
   "test_cases": [
