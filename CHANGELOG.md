@@ -6,7 +6,29 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-Aucune action.
+Aucune action obligatoire. Une migration SQL additive (`048`, clés de sécurité) est appliquée au démarrage. Les clés de
+sécurité sont proposées quand l'adresse du site est un nom de domaine en HTTPS (`RP_ID` et `RP_ORIGINS` déduits de
+`SITE_ADDRESS`) ; avec une adresse IP, elles ne sont pas proposées et rien ne change. Si `RP_ID` ou `RP_ORIGINS` sont
+renseignés dans `.env`, une valeur incohérente arrête le démarrage de l'API (message dans `docker compose logs app`). Deux
+dépendances nouvelles : `@simplewebauthn/server` et `@simplewebauthn/browser`.
+
+### Ajouté
+- **Clés de sécurité FIDO2 / WebAuthn** ([ADR 0079](docs/adr/0079-authentification-fido2-webauthn.md)) : après le mot de passe,
+  « Utiliser ma clé de sécurité » (YubiKey, clé FIDO2, passkey), à côté du code TOTP, qui reste obligatoire. Mon compte : ajouter
+  (code PIN exigé), renommer et révoquer ses clés, deux clés recommandées ; ajout proposé, facultatif, dès l'installation.
+  Codes de récupération (dix, usage unique, affichés une fois). Confirmation d'identité de moins de 5 minutes (mot de passe puis
+  code ou clé) pour ajouter ou révoquer une clé ; le dernier facteur fort ne peut pas être retiré.
+- **Politique des clés** (Administration, Configuration système, Sécurité) : clé obligatoire pour les comptes qui administrent,
+  avec période de grâce (14 jours par défaut) et alerte à chaque connexion de secours par TOTP ou code ; option « clés
+  matérielles uniquement » (attestation vérifiée jusqu'aux racines FIDO de Yubico ou à des racines ajoutées, liste d'AAGUID).
+- **Facteurs d'un compte** (Droits, Utilisateurs, « Facteurs ») : révoquer une clé, réactiver une clé suspendue, réinitialiser
+  les clés (ré-enrôlement imposé), chaque fois avec un motif consigné au journal.
+
+### Sécurité
+- Clé dont le compteur de signature ne progresse pas (clonage possible) : connexion refusée, clé suspendue, alerte aux
+  administrateurs. Challenges côté serveur, liés à la session, à usage unique, valables 5 minutes ; origine, domaine et
+  vérification de l'utilisateur contrôlés. Évènements au journal d'audit et en JSON pour le SIEM, sans challenge ni secret.
+  `Permissions-Policy` limite les clés de sécurité à l'origine de l'application.
 
 ## [6.0.0] — 2026-10-29
 
