@@ -1564,8 +1564,8 @@
       "priority": "P1",
       "origin": "ADR 0079 (demande du RSSI du 30/10/2026)",
       "acceptance": "Liste de contrôle docs/05_RECETTE/CHECKLIST-FIDO2.md déroulée : YubiKey 5 USB-A, USB-C et NFC, Windows Hello, Chrome, Edge, Firefox et Safari ; résultats datés, sans donnée réelle.",
-      "dependencies": "Serveur de recette en HTTPS sur un nom de domaine ; clés YubiKey 5",
-      "next": "Dérouler la liste de contrôle sur le serveur de recette du RSSI.",
+      "dependencies": "Publication de la v6.0.0 (étiquette posée par le RSSI) ; serveur installé en HTTPS sur un nom de domaine ; clés YubiKey 5",
+      "next": "Après l'étiquette v6.0.0 et l'installation sur le serveur du RSSI : dérouler la liste de contrôle (décision du RSSI du 30/10/2026 : clés livrées dans la 6.0.0).",
       "estimation": "NON ESTIMÉE"
     },
     {

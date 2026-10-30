@@ -1,6 +1,6 @@
 # Recette manuelle des clés de sécurité FIDO2 / WebAuthn
 
-Rédigé le 2026-10-30 (Europe/Paris) par la session Claude « FIDO2/WebAuthn support for suivi-audits », pour l'[ADR 0079](../adr/0079-authentification-fido2-webauthn.md). État : **NON EXÉCUTÉE**.
+Rédigé le 2026-10-30 (Europe/Paris) par la session Claude « FIDO2/WebAuthn support for suivi-audits », pour l'[ADR 0079](../adr/0079-authentification-fido2-webauthn.md). État : **NON EXÉCUTÉE**, à dérouler après la publication de la v6.0.0 (les clés de sécurité y sont livrées).
 Les tests automatisés (API avec authentificateur logiciel, Playwright avec l'authentificateur virtuel de Chromium) ne
 remplacent pas ce passage sur matériel réel. Consigner pour chaque ligne : date, navigateur et version, système, modèle de
 clé (sans numéro de série), résultat (PASSÉ, ÉCHEC, NON APPLICABLE) et remarque. Aucun code PIN, code de récupération ni
