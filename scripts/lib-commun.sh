@@ -33,6 +33,20 @@ valeur_env() {
   printf '%s' "${v:-${2:-}}"
 }
 
+# Version du dépôt téléchargé (package.json), vide si introuvable.
+version_du_depot() { [ -f "$REPO/package.json" ] && sed -n 's/^ *"version": *"\([0-9][0-9.]*\)".*/\1/p' "$REPO/package.json" | head -n 1 || true; }
+
+# Signale (sans rien modifier) un .env dont APP_VERSION n'est pas la version du dépôt téléchargé : un .env conservé d'un
+# essai précédent fait demander des images d'une autre version, parfois jamais publiée (« manifest unknown »).
+# Sans objet pour les versions non numériques (« test », « local » : images construites ou présentes sur le serveur).
+verifier_version_env() {
+  local demandee depot
+  demandee=$(valeur_env APP_VERSION)
+  depot=$(version_du_depot)
+  [[ "$demandee" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ && -n "$depot" && "$demandee" != "$depot" ]] || return 0
+  avertir "APP_VERSION=$demandee dans .env, mais le dépôt téléchargé est en $depot : les images demandées peuvent ne pas exister (« manifest unknown ») ou ne pas correspondre aux scripts du dépôt. Pour installer $depot : sudo sed -i 's/^APP_VERSION=.*/APP_VERSION=$depot/' .env, puis relancer sudo ./installer.sh. Pour une installation neuve, supprimer l'ancien dossier de l'application avant de le télécharger à nouveau (docs/INSTALLATION.md, étape 14)."
+}
+
 # Remplace (ou ajoute) une ligne NOM=valeur dans .env, sans toucher aux autres lignes ni aux droits du fichier.
 ecrire_env() {
   local f="$REPO/.env"

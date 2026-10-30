@@ -56,9 +56,10 @@ fi
 etape "2. Configuration"
 if [ -f .env ]; then
   info "Fichier .env existant : conservé."
+  [ "$CONSTRUIRE" = 1 ] || [ "$LOCALES" = 1 ] || verifier_version_env
 else
   [ -n "$VERSION" ] || [ "$CONSTRUIRE" = 0 ] || VERSION='test'
-  [ -n "$VERSION" ] || VERSION=$(sed -n 's/^ *"version": *"\([0-9][0-9.]*\)".*/\1/p' package.json | head -n 1)
+  [ -n "$VERSION" ] || VERSION=$(version_du_depot)
   [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || [ "$LOCALES" = 1 ] || arret "version introuvable : préciser --version X.Y.Z."
   # Noms et adresses du serveur : le premier devient le nom du site (modifiable ensuite dans l'assistant), tous sont servis
   # avec le certificat interne pour pouvoir ouvrir l'assistant par l'adresse IP tant que le nom DNS n'est pas en place.
@@ -94,7 +95,7 @@ if [ "$CONSTRUIRE" = 1 ]; then
   info "Construction des images depuis le dépôt (10 à 20 minutes)…"
   docker compose -f docker-compose.yml -f docker-compose.build.yml build --quiet || arret "construction des images impossible : vérifier l'accès à registry.npmjs.org et dl-cdn.alpinelinux.org (docs/INSTALLATION.md, étape 5)."
 elif [ "$LOCALES" = 0 ]; then
-  dc pull --quiet || arret "téléchargement des images impossible : vérifier l'accès à ghcr.io et à Docker Hub (docs/INSTALLATION.md, étape 0)."
+  dc pull --quiet || arret "téléchargement des images impossible (version demandée : $(valeur_env APP_VERSION)) : vérifier cette version dans .env, puis l'accès à ghcr.io et à Docker Hub (docs/INSTALLATION.md, étape 0)."
 fi
 dc up -d
 info "Attente de l'application (jusqu'à 5 minutes)…"

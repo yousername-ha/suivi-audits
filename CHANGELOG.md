@@ -23,6 +23,7 @@ Aucune action sur le serveur : la migration additive `049_retex_contributions.sq
 - Guide d'utilisation : articles « RETEX d'un incident et chronologie » et « Contribuer au RETEX d'un incident » ; tests de bout en bout des parcours du pilote et du contributeur (données fictives). (session « Intégration module RETEX incidents »)
 
 ### Corrigé
+- **Installateur** (session « Projet audit_suivi Coeur ») : `sudo ./installer.sh` signale un fichier `.env` conservé dont `APP_VERSION` n'est pas celle du dépôt téléchargé (cas relevé à l'installation d'essai de la 6.0.1 : un `.env` d'une tentative précédente demandait les images 6.0.0, jamais publiées, d'où « manifest unknown »). L'avertissement donne la commande de correction ; le fichier n'est jamais modifié. L'échec du téléchargement des images rappelle la version demandée. Ligne de dépannage ajoutée au guide d'installation.
 
 - **Main courante de crise** : chaque entrée reçoit son identifiant `CL-nnn` du schéma 15, comme dans l'outil historique ; les entrées écrites sans identifiant sont numérotées à la prochaine écriture de la crise, avec la numérotation de l'export. L'import « Remplacer un module » d'un état contenant une main courante n'est plus refusé (BUG-013). (session « Intégration module RETEX incidents »)
 
