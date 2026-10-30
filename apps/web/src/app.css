@@ -4013,3 +4013,145 @@ tr[data-importe='oui'] {
   background: color-mix(in srgb, var(--carte-marine-fond) 45%, transparent);
   backdrop-filter: blur(0.15em);
 }
+
+/* Préparation de la revue de direction : synthèse en tête, puis trois temps de lecture en cartes (faits visibles d'emblée,
+   chiffres mis en évidence). Filet à gauche : teinte de la charte pour les faits, orange pour ce que la direction apprécie. */
+.revue-preparation {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-xl);
+}
+.revue-synthese {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--mantine-spacing-md);
+  align-items: center;
+  background: color-mix(in srgb, var(--mantine-color-suivi-light) 60%, var(--mantine-color-body));
+}
+.revue-synthese__texte {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-2xs);
+  max-width: var(--suivi-largeur-lecture);
+}
+.revue-synthese__titre {
+  font-size: var(--mantine-h3-font-size);
+}
+.revue-synthese__action {
+  justify-self: start;
+}
+.revue-reperes {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mantine-spacing-md) var(--mantine-spacing-xl);
+}
+.revue-reperes > div {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 0.125em;
+  padding-left: var(--mantine-spacing-sm);
+  border-left: var(--suivi-trait-focus) solid var(--mantine-color-suivi-filled);
+}
+.revue-reperes > div[data-attention='oui'] {
+  border-left-color: var(--mantine-color-orange-6);
+}
+.revue-reperes dt {
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-dimmed);
+}
+.revue-reperes dd {
+  margin: 0;
+  font-size: var(--mantine-h3-font-size);
+  font-weight: 700;
+  line-height: 1.1;
+}
+@media (min-width: 64em) {
+  .revue-synthese {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .revue-synthese__action {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+  }
+}
+
+.revue-temps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-md);
+}
+.revue-temps__tete {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--mantine-spacing-sm);
+}
+.revue-temps__numero {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 2em;
+  height: 2em;
+  border-radius: 50%;
+  font-weight: 700;
+  color: var(--mantine-color-white);
+  background: var(--mantine-color-suivi-filled);
+}
+.revue-temps__titre {
+  font-size: var(--mantine-h4-font-size);
+}
+/* Colonnes selon la largeur disponible (menu latéral compris) : une au téléphone, trois sur un grand écran. */
+.revue-entrees {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 20em), 1fr));
+  gap: var(--mantine-spacing-md);
+}
+.revue-entree {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-xs);
+  border-inline-start: var(--suivi-trait-focus) solid var(--mantine-color-suivi-filled);
+  transition: box-shadow 150ms ease;
+}
+.revue-entree:hover {
+  box-shadow: var(--suivi-ombre);
+}
+.revue-entree[data-etat='a-saisir'] {
+  border-inline-start-color: var(--mantine-color-orange-6);
+  background: color-mix(in srgb, var(--mantine-color-orange-light) 50%, var(--mantine-color-body));
+}
+.revue-entree__tete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-xs);
+}
+.revue-entree__article {
+  text-transform: none;
+}
+.revue-entree__titre {
+  line-height: 1.3;
+}
+.revue-faits {
+  margin: 0;
+  padding-left: 1.1em;
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-2xs);
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1.5;
+}
+.revue-faits li::marker {
+  color: var(--mantine-color-suivi-filled);
+}
+.revue-chiffre {
+  font-weight: 700;
+  color: var(--mantine-color-text);
+}
+@media (prefers-reduced-motion: reduce) {
+  .revue-entree {
+    transition: none;
+  }
+}
