@@ -226,3 +226,19 @@ elles ne sont pas ajoutées artificiellement comme trois bugs applicatifs ouvert
 | Commit | 6ef7136 (PR #164) |
 | Non-régression | Test `scripts/tests/conteneurs.test.mjs` ; CI des PR suivantes. |
 | Reste à vérifier | Aucun nouvel échec de cette étape sur les PR suivantes ; sinon, journaliser la sortie de Go. |
+
+## BUG-013 — Main courante de crise écrite sans identifiant du schéma 15
+
+| Champ | Constat |
+| --- | --- |
+| Fonction, gravité, priorité | FCT-055 (cellule de crise) ; MINEURE ; P2 |
+| Statut | CORRIGÉ (CI de la PR à venir) |
+| Détection / correction | 2026-10-30, en écrivant le test de bout en bout du RETEX (PR #189) ; correctif dans une PR dédiée (session « Intégration module RETEX incidents ») |
+| Déclencheur | Ouverture d'une cellule, entrée de main courante, case de check-list, bascule de mode ou clôture depuis l'écran de crise. |
+| Attendu | Chaque entrée de `crisis.cells[].log` porte un identifiant `CL-nnn` unique, comme dans l'outil historique (schéma 15). |
+| Observé initialement | Entrées écrites sans identifiant ; l'import « Remplacer un module » d'un état qui en contient est refusé (« Identifiants du schéma 15 manquants ou en double »). L'export officiel n'était pas touché : il attribue les identifiants manquants au moment de l'export. |
+| Cause / niveau | CONFIRMÉ : `entreeLog` (`apps/api/src/historique/crise.ts`) créait l'entrée sans `id`. |
+| Correctif | Après chaque écriture de la crise, les entrées sans identifiant reçoivent le suivant libre (`nextLegacyId('CL-', …)`), dans toutes les cellules, avec la numérotation de l'export ; les identifiants existants ne changent pas. Les entrées écrites avant le correctif sont numérotées à la prochaine écriture. |
+| Fichiers | [apps/api/src/historique/crise.ts](../../apps/api/src/historique/crise.ts) ; [apps/api/test/historique-incidents.test.ts](../../apps/api/test/historique-incidents.test.ts) |
+| Non-régression | `historique-incidents.test.ts` : identifiants `CL-001` à `CL-003` et `schema15Problems` vide ; reprise d'une cellule antérieure (`CL-008`, `CL-007` conservé, `CL-009`, `CL-010`). Les deux tests échouent sans le correctif. |
+| Reste à vérifier | Instance existante : une cellule restée sans nouvelle écriture garde ses entrées sans identifiant jusqu'à la suivante (l'export les numérote toujours). |
