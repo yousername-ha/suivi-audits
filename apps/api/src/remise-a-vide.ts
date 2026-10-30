@@ -43,6 +43,9 @@ export const TABLES_SYSTEME = [
 export const TABLES_CONFIGURATION = [
   'users',
   'sessions',
+  'webauthn_credentials',
+  'webauthn_challenges',
+  'recovery_codes',
   'user_roles',
   'user_groups',
   'groups',

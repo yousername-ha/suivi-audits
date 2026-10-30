@@ -12,6 +12,7 @@ import { cartesVisibles, type Cote, type Peut } from '../administration-droits';
 import { get } from '../api';
 import { fmtDate } from '../components/common';
 import { PoivrePanel } from '../components/Poivre';
+import { PolitiqueClesPanel } from '../components/PolitiqueCles';
 import { RemiseAVidePanel } from '../components/RemiseAVide';
 import { UpdatesPanel } from '../components/Updates';
 import { useCan } from '../session';
@@ -283,6 +284,7 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
       <Stack gap="xl">
         <SectionLoader section="securite" onDirty={m} />
         {can('administration', 'administrer') && <PoivrePanel />}
+        {can('administration', 'lire') && <PolitiqueClesPanel ecriture={can('administration', 'administrer')} />}
       </Stack>
     ),
   },

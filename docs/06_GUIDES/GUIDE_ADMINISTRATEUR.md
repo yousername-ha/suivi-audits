@@ -31,6 +31,63 @@ Périmètres restreints : administration de membres autorisée dans le périmèt
 permissions métier et rôle de validation restent cumulatives. Le périmètre
 commun est automatique ; la création d’un SMSI n’est pas un prérequis normal.
 
+## Clés de sécurité FIDO2 / WebAuthn ([ADR 0079](../adr/0079-authentification-fido2-webauthn.md))
+
+Les clés de sécurité (YubiKey 5, clés FIDO2, passkeys) servent de second facteur après le mot de passe, à côté du code TOTP qui
+reste obligatoire. Mise à jour : 2026-10-30 (Europe/Paris). Recette sur matériel réel : **NON EXÉCUTÉE**
+([liste de contrôle](../05_RECETTE/CHECKLIST-FIDO2.md)).
+
+**Configuration du serveur (relying party).** Par défaut, rien à faire : le domaine des clés (`RP_ID`) et l'origine acceptée
+(`RP_ORIGINS`) sont déduits de l'adresse du site (`SITE_ADDRESS`). Pour les fixer, renseigner dans `.env` :
+
+- `RP_ID` : nom de domaine en minuscules, sans schéma ni port (par exemple `suivi.exemple.fr`, ou le domaine parent
+  `exemple.fr` pour accepter plusieurs sous-domaines) ; jamais une adresse IP ;
+- `RP_ORIGINS` : liste stricte des origines, séparées par des virgules (`https://suivi.exemple.fr`), en HTTPS, dans le domaine
+  de `RP_ID`, sans chemin ;
+- `RP_NAME` : nom affiché par le navigateur (par défaut, le nom de l'application).
+
+Une valeur explicite incohérente **arrête le démarrage** de l'API (message dans `docker compose logs app`). Une adresse de site
+en IP ou en HTTP ne bloque rien : les clés ne sont simplement pas proposées. Administration, Configuration système, Sécurité
+affiche la configuration retenue. **Changer l'adresse du site rend toutes les clés inutilisables** (le TOTP reste valable) :
+prévenir les utilisateurs et leur faire enregistrer de nouvelles clés.
+
+**Politique** (Administration, Configuration système, Sécurité, carte « Clés de sécurité ») :
+
+1. *Clé obligatoire pour les administrateurs* : comptes qui détiennent « Administration : administrer ». Choisir la période de
+   grâce (14 jours par défaut, 0 à 90), comptée depuis l'activation (ou la création d'un compte plus récent). À l'échéance, un
+   administrateur sans clé ne peut plus qu'enregistrer une clé après sa connexion. **Avant de mettre 0 jour, enregistrer sa
+   propre clé.** Le code TOTP reste accepté en secours ; chaque connexion par TOTP ou code de récupération d'un administrateur
+   obligé déclenche une alerte (application et courriel), à traiter comme un incident si elle n'est pas expliquée.
+2. *Clés matérielles uniquement* : seules les clés dont l'attestation remonte à une autorité connue et dont le modèle (AAGUID)
+   figure dans la liste sont acceptées. Le bouton « Ajouter les YubiKey 5 courantes » remplit la liste ; les racines FIDO de
+   Yubico sont incluses, d'autres racines (PEM) peuvent être ajoutées. Les passkeys synchronisées et Windows Hello sont alors
+   refusés, sauf AAGUID ajouté. Les clés déjà enregistrées ne sont pas réexaminées.
+
+Chaque changement de politique est journalisé (`securite.webauthn_politique`, avant et après).
+
+**Facteurs d'un compte** (Droits, Utilisateurs, bouton « Facteurs ») : TOTP, clés (révoquées comprises), codes de récupération
+restants. Actions, toutes avec un **motif obligatoire** consigné au journal :
+
+- *Révoquer* une clé (clé perdue ou volée) : les sessions du compte sont fermées ;
+- *Réactiver* une clé **suspendue** : une clé est suspendue quand son compteur de signature ne progresse pas (clonage
+  possible) ; vérifier d'abord avec son porteur qu'il l'a en main et ne l'a ni prêtée ni perdue, sinon la révoquer ;
+- *Réinitialiser les clés (forcer le ré-enrôlement)* : toutes les clés révoquées, codes effacés, sessions fermées ; à sa
+  prochaine connexion (mot de passe puis TOTP), la personne doit enregistrer une nouvelle clé.
+
+**Procédure de réinitialisation tracée** (clé perdue sans clé de secours) : vérifier l'identité de la personne par un canal
+distinct (présentiel ou rappel sur un numéro connu), réinitialiser ses clés avec un motif qui cite le ticket, lui demander
+d'enregistrer deux clés, puis relire l'évènement `admin.user_webauthn_reset` du journal d'audit. Téléphone perdu aussi :
+réinitialiser également le TOTP (bouton « TOTP »).
+
+**Journal d'audit et SIEM.** Évènements : `account.webauthn_enrolled`, `account.webauthn_enrolement_refuse`,
+`auth.webauthn_succes`, `auth.webauthn_failed`, `auth.webauthn_compteur`, `auth.code_recuperation_utilise`,
+`auth.code_recuperation_refuse`, `auth.facteur_secours`, `account.reauth`, `account.reauth_failed`, `account.webauthn_revoked`,
+`account.webauthn_renamed`, `account.codes_recuperation_generes`, `admin.user_webauthn_revoked`,
+`admin.user_webauthn_reactivated`, `admin.user_webauthn_reset`, `securite.webauthn_politique`. Chacun figure au journal d'audit
+et sur la sortie standard de l'API (ligne JSON `"evt":"securite.webauthn"`, collectée par le pilote de logs Docker) avec
+l'heure, le compte, l'adresse IP, le navigateur, l'identifiant de clé tronqué (8 caractères), l'AAGUID et le résultat. Les
+alertes à remonter en priorité : `auth.webauthn_compteur` et `auth.facteur_secours`. Aucun challenge, clé ni code n'y figure.
+
 ## Supervision et maintenance
 
 Système : version, état des workers, catalogue/planification sauvegardes,

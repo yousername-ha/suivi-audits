@@ -37,6 +37,7 @@ import { useState } from 'react';
 import { api, ApiError, download, errorMessage, get } from '../api';
 import { ConfirmButton, ErrorAlert, fmtDate, SecretModal } from '../components/common';
 import { useColonnes, type Colonne } from '../components/Colonnes';
+import { FacteursCompte } from '../components/FacteursCompte';
 import { EditeurReglages } from '../notifications/Reglages';
 import { useCan, useMe } from '../session';
 import { DataTable } from '@suivi/ui';
@@ -95,6 +96,7 @@ export function UsersPanel() {
   const [form, setForm] = useState<{ user: UserOut | null } | null>(null);
   const [rightsOf, setRightsOf] = useState<UserOut | null>(null);
   const [notifsOf, setNotifsOf] = useState<UserOut | null>(null);
+  const [facteursOf, setFacteursOf] = useState<UserOut | null>(null);
   const admin = can('administration', 'administrer');
 
   return (
@@ -188,6 +190,9 @@ export function UsersPanel() {
                       </Button>
                       <Button size="compact-sm" variant="default" onClick={() => setNotifsOf(u)}>
                         Notifications
+                      </Button>
+                      <Button size="compact-sm" variant="default" onClick={() => setFacteursOf(u)}>
+                        Facteurs
                       </Button>
                       {admin && (
                         <>
@@ -308,6 +313,16 @@ export function UsersPanel() {
             introduction="Un réglage explicite ici l’emporte sur les groupes et les rôles du compte ; « Non défini » laisse l’héritage jouer. La personne peut aussi modifier ces réglages dans Mon compte."
           />
         )}
+      </Modal>
+      <Modal
+        opened={!!facteursOf}
+        onClose={() => setFacteursOf(null)}
+        title={`Facteurs d’authentification de ${facteursOf?.username ?? ''}`}
+        size="xl"
+        centered
+        lockScroll={false}
+      >
+        {facteursOf && <FacteursCompte userId={facteursOf.id} username={facteursOf.username} ecriture={admin} />}
       </Modal>
       <SecretModal
         title={secret?.title ?? ''}

@@ -183,4 +183,10 @@ export class Vault {
   openSmall(b: Buffer, aad: string): Buffer {
     return this.decrypt({ iv: b.subarray(0, 12), tag: b.subarray(12, 28), content: b.subarray(28), keyId: '' }, aad);
   }
+  /** Empreinte HMAC-SHA-256 sous une clé dérivée (HKDF) de la clé maître et propre à l'usage : une base copiée sans la clé
+      maître ne permet pas de tester des valeurs hors ligne (codes de récupération). */
+  hmac(usage: string, data: string): Buffer {
+    const k = Buffer.from(crypto.hkdfSync('sha256', this.#key, Buffer.alloc(0), 'suivi-audits:' + usage, 32));
+    return crypto.createHmac('sha256', k).update(data).digest();
+  }
 }

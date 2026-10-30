@@ -15,6 +15,7 @@
     "@mantine/core": "9.7.3",
     "@mantine/hooks": "9.7.3",
     "@mantine/notifications": "9.7.3",
+    "@simplewebauthn/browser": "14.0.0",
     "@suivi/shared": "workspace:*",
     "@suivi/ui": "workspace:*",
     "@tanstack/react-query": "5.104.4",

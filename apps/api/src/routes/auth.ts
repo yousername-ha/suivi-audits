@@ -27,6 +27,7 @@ import { base32, chiffrerEmpreinte, hashPassword, verifyTotp } from '../security
 import type { PoivrePrepare } from '../mots-de-passe.js';
 import { exigerPoivreValide } from './poivre.js';
 import type { Services } from '../services.js';
+import { alerteSecours } from './webauthn.js';
 
 function checkPassword(svc: Services, pw: unknown, username: string, autresNoms: string[] = []) {
   const general = svc.settings.get('general');
@@ -48,6 +49,7 @@ function meOut(svc: Services, s: Session | null): MeOutT {
           username: s.user.username,
           displayName: s.user.displayName,
           totpEnabled: s.user.totpEnabled,
+          cles: s.user.cles,
           mustChangePassword: s.user.mustChangePassword,
           roles: s.user.roles,
           expiresAt: s.user.expiresAt,
@@ -56,6 +58,7 @@ function meOut(svc: Services, s: Session | null): MeOutT {
     preferences: s && svc.auth.stage(s) === 'ok' ? s.user.preferences : null,
     permissions: s && svc.auth.stage(s) === 'ok' ? s.user.rights.list() : [],
     mfaRequired: svc.cfg.mfaRequired,
+    webauthn: svc.webauthn.disponible,
     passwordMinLength: svc.settings.get('securite').passwordMinLength,
     appName: svc.settings.get('general').appName,
     orgName: svc.settings.get('general').orgName,
@@ -66,8 +69,11 @@ function meOut(svc: Services, s: Session | null): MeOutT {
 }
 
 const SETUP_HTTP = { invalid: 401, expired: 410, used: 409, none: 410 } as const;
-const stageAfter = (svc: Services, user: { totpEnabled: boolean; mustChangePassword: boolean }, mfaOk: boolean) =>
-  accessStage({ mfaOk, user }, svc.cfg.mfaRequired);
+const stageAfter = (
+  svc: Services,
+  user: { totpEnabled: boolean; mustChangePassword: boolean; cles?: number; cleRequise?: boolean },
+  mfaOk: boolean,
+) => accessStage({ mfaOk, user }, svc.cfg.mfaRequired);
 
 /** Réponse unique à tout échec de connexion (inconnu, mot de passe faux, verrouillé, désactivé, expiré) : le motif exact reste
     au journal d'audit (ADR 0070). */
@@ -113,13 +119,7 @@ export const authRoutes = [
       if (s) await svc.auth.destroy(s.sid);
       await svc.auth.create(req, reply, r.user.id, false);
       await svc.db.audit({ id: r.user.id, username: r.user.username }, ip, 'auth.password_ok');
-      return {
-        stage: stageAfter(
-          svc,
-          { totpEnabled: r.user.totp_enabled, mustChangePassword: r.user.must_change_password },
-          false,
-        ),
-      };
+      return { stage: await svc.auth.etape(r.user.id, false) };
     },
   }),
   route({
@@ -148,8 +148,9 @@ export const authRoutes = [
       // Rotation de la session après élévation (prévention de la fixation de session).
       await svc.auth.destroy(sess.sid);
       await svc.auth.create(req, reply, sess.user.id, true);
-      await svc.db.audit(sess.user, ip, 'auth.login');
-      return { stage: stageAfter(svc, sess.user, true) };
+      await svc.db.audit(sess.user, ip, 'auth.login', '', { facteur: 'totp' });
+      await alerteSecours(svc, sess, { ip, ua: String(req.headers['user-agent'] || '') }, 'totp');
+      return { stage: await svc.auth.etape(sess.user.id, true) };
     },
   }),
   route({
@@ -410,6 +411,11 @@ export const authRoutes = [
       const sess = s as Session;
       if (svc.cfg.mfaRequired) throw new HttpError(403, 'La double authentification est obligatoire sur ce serveur.');
       await exigerMotDePasse(svc, sess.user, ip, body.password);
+      // Jamais le dernier facteur fort : sans clé utilisable, le TOTP reste (ADR 0079).
+      if (sess.user.cles === 0)
+        throw new HttpError(409, 'Impossible de désactiver votre dernier facteur d’authentification forte.', {
+          reason: 'dernier_facteur',
+        });
       await svc.db.k
         .updateTable('users')
         .set({ totp_secret: null, totp_pending: null, totp_enabled: false })
@@ -485,7 +491,12 @@ function limiterMotDePasse(svc: Services, userId: string) {
     throw new HttpError(429, 'Trop de tentatives. Réessayez dans quelques minutes.');
 }
 /** Exige le mot de passe actuel : limité par compte ; chaque échec est compté dans le verrouillage et journalisé. */
-async function exigerMotDePasse(svc: Services, user: Session['user'], ip: string | null, password: string | undefined) {
+export async function exigerMotDePasse(
+  svc: Services,
+  user: Session['user'],
+  ip: string | null,
+  password: string | undefined,
+) {
   limiterMotDePasse(svc, user.id);
   const u = await motDePasse(svc, user.id);
   if (!(await svc.motsDePasse.verifier(user.id, password || '', u.password_hash))) {
