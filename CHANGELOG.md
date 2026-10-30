@@ -63,6 +63,7 @@ Version majeure : **installation neuve uniquement**, sans aucune ligne de comman
 - **Ancien outil de suivi** : `app/public/index.html` (non servi depuis le retrait de `/legacy`), ses bibliothèques, `scripts/update-ui.sh` et `archives/` (copie de la version 2) sont retirés du dépôt public ; l'outil autonome reste sur la branche `archive/outil-legacy-autonome` et la version 2 dans l'historique Git. Les tests de parité (audit, cartographie, tableau de bord, schéma 15) s'appuient désormais sur un extrait figé des fonctions de référence (`packages/shared/test/reference`). L'étape « état initial vide » de la CI ne contrôle plus que le jeu de départ de l'API.
 
 ### Corrigé
+- **Filtres conservés dans l'adresse** (vue, mois, bascules des jours de fond des actions, filtres des registres) : deux filtres changés coup sur coup, avant que l'écran ait fini de se redessiner, ne s'écrasent plus. Le second partait des paramètres du dernier rendu et effaçait le premier (le calendrier revenait au mois en cours). Cause aussi d'un test de bout en bout instable (« Jours fériés en fond »). (session « Refonte écran de connexion »)
 - **Tests de bout en bout** (BUG-011) : la page d'administration en cartes est vérifiée sans transitions, comme les autres contrôles d'accessibilité (un contrôle axe-core pouvait échouer en plein fondu puis réussir au rejeu). L'annotation « Test instable » de la CI indique désormais la ligne de l'assertion qui a échoué.
 
 ### Sécurité
