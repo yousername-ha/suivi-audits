@@ -34,10 +34,16 @@ test.beforeAll(async ({ browser }) => {
   // Incident et cellule de crise fictifs, remis à neuf à chaque exécution (aucune collecte, main courante de deux entrées ;
   // identifiants « CL- » exigés par le schéma 15).
   const s = (await (await rq.get('/api/suivi/etat')).json()) as Record<string, unknown>;
-  const incidents = (Array.isArray(s.incidents) ? s.incidents : []) as { id?: string }[];
+  const incidents = (Array.isArray(s.incidents) ? s.incidents : []) as Record<string, unknown>[];
+  // Pile déjà passée par ce spec : l'incident fictif déjà neuf (sans RETEX) ou la cellule fictive en place ne sont pas
+  // reposés, l'import « Remplacer un module » refusant un fichier sans changement.
+  const existant = incidents.find((i) => i.id === INCIDENT);
+  const incidentNeuf = !!existant && !('retexCollecte' in existant) && !('timeline' in existant);
   const crise = (s.crisis && typeof s.crisis === 'object' ? s.crisis : {}) as Record<string, unknown>;
-  Object.assign(s, {
-    incidents: [
+  const cellules = (Array.isArray(crise.cells) ? crise.cells : []) as { id?: string }[];
+  const cellulePosee = cellules.length === 1 && cellules[0]!.id === CELLULE;
+  if (!incidentNeuf)
+    s.incidents = [
       ...incidents.filter((i) => i.id !== INCIDENT),
       {
         id: INCIDENT,
@@ -59,8 +65,9 @@ test.beforeAll(async ({ browser }) => {
         answers: {},
         notified: {},
       },
-    ],
-    crisis: {
+    ];
+  if (!cellulePosee)
+    s.crisis = {
       scenarios: [],
       contacts: [],
       ...crise,
@@ -96,8 +103,7 @@ test.beforeAll(async ({ browser }) => {
           deadlines: [],
         },
       ],
-    },
-  });
+    };
   await ecrireEtat(rq, admin.csrf, s);
 
   // Rôle sans aucun droit sur les incidents : le contributeur n'est habilité que par son invitation.
@@ -265,7 +271,10 @@ test('Pilote : valider la proposition, récupérer la main courante, clore, gén
   await page.getByRole('button', { name: 'Générer la chronologie' }).click();
   await expect(page.getByRole('group', { name: /^Chronologie de 3 événements/ })).toBeVisible();
   await expect(page.getByRole('list', { name: 'Étapes de la chronologie' })).toBeVisible();
-  await page.getByRole('switch', { name: 'Diffuser aux contributeurs' }).check();
+  // Interrupteur contrôlé par la réponse du serveur : il ne change d'état qu'une fois la diffusion enregistrée.
+  const diffusion = page.getByRole('switch', { name: 'Diffuser aux contributeurs' });
+  await diffusion.click();
+  await expect(diffusion).toBeChecked();
   await expect(page.getByText('Close · diffusée')).toBeVisible();
   expect(problems).toEqual([]);
 
