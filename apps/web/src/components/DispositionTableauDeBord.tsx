@@ -1,7 +1,7 @@
 /* Mode « Modifier la disposition » du tableau de bord de l'accueil (ADR 0078, lot 2a) : déplacer les dalles au glisser
    (évènements de pointeur, souris ou doigt) ou au clavier (flèches, Origine, Fin sur la poignée), changer leur largeur,
-   les masquer et les réafficher. Enregistre la disposition personnelle ; un administrateur peut aussi la proposer à
-   tous. Aucune donnée n'est enregistrée : seulement l'ordre, les largeurs et les dalles masquées. Le glissé réordonne
+   les masquer et les réafficher. Enregistre la disposition personnelle (droit tableau_de_bord:modifier, lot 2b) ; un
+   administrateur peut aussi la proposer à tous. Aucune donnée n'est enregistrée : seulement l'ordre, les largeurs et les dalles masquées. Le glissé réordonne
    la grille en direct, sans élément positionné par script (CSP, ADR 0006). */
 import { Alert, Button, Group, NativeSelect, Text, VisuallyHidden } from '@mantine/core';
 import {
@@ -53,11 +53,14 @@ function IconePoignee() {
 export function EditionTableauDeBord({
   s,
   dispositions,
+  base,
   peutDefinirDefaut,
   onFin,
 }: {
   s: Synthese;
   dispositions: DispositionsOut;
+  /** Disposition affichée au moment d'entrer en modification (la sienne, celle de l'organisation ou un tableau reçu). */
+  base: Disposition | null;
   peutDefinirDefaut: boolean;
   onFin: () => void;
 }) {
@@ -66,15 +69,17 @@ export function EditionTableauDeBord({
   const dalles = useMemo(() => dallesTableauDeBord(s), [s]);
   const parId = useMemo(() => new Map(dalles.map((x) => [x.id, x])), [dalles]);
   const disponibles = useMemo(() => new Set<IdDalle>(parId.keys()), [parId]);
-  // Départ : la disposition affichée (la sienne, sinon celle de l'organisation, sinon la standard), complète.
+  // Départ : la disposition affichée (la sienne, celle de l'organisation, un tableau reçu ou la standard), complète.
   const depart = useMemo(
     () =>
       completerDisposition(
-        (dispositions.personnelle ?? dispositions.organisation)?.disposition ?? null,
+        base,
         Object.fromEntries(dalles.map((x) => [x.id, x.largeur])) as Partial<Record<IdDalle, LargeurDalle>>,
       ),
-    [dispositions, dalles],
+    [base, dalles],
   );
+  // Partir d'un autre tableau que le sien : l'enregistrer en fait sa disposition, même sans changement.
+  const autreQueLaSienne = base !== (dispositions.personnelle?.disposition ?? null);
   const [d, setD] = useState<Disposition>(depart);
   const [glissee, setGlissee] = useState<IdDalle | null>(null);
   const [annonce, setAnnonce] = useState('');
@@ -144,7 +149,7 @@ export function EditionTableauDeBord({
         </Text>
         <Group gap="xs">
           <Button
-            disabled={!modifiee || pending}
+            disabled={(!modifiee && !autreQueLaSienne) || pending}
             loading={pending}
             onClick={() =>
               void agir(() =>

@@ -1,16 +1,25 @@
 /* Accueil : tableau de bord « Suivi de la conformité » en verre et relief (synthèse selon les droits, ADR 0069), dans la
-   disposition de la personne (ADR 0078), puis accès aux modules et activité en cours. Plus de colonnes sur les grands
-   écrans. */
-import { Button, Card, Stack, Text, Title, VisuallyHidden } from '@mantine/core';
-import { ErrorAlert, IconeAdministration, IconeDocuments, IconeHistorique, Page, PageHeader } from '@suivi/ui';
-import type { DispositionsOut } from '@suivi/shared';
-import { useQuery } from '@tanstack/react-query';
+   disposition de la personne ou dans un tableau partagé avec elle (ADR 0078), puis accès aux modules et activité en
+   cours. Plus de colonnes sur les grands écrans. */
+import { Button, Card, NativeSelect, Stack, Text, Title, VisuallyHidden } from '@mantine/core';
+import {
+  ConfirmButton,
+  ErrorAlert,
+  IconeAdministration,
+  IconeDocuments,
+  IconeHistorique,
+  Page,
+  PageHeader,
+} from '@suivi/ui';
+import type { DispositionEnregistree, DispositionsOut, TableauPartage } from '@suivi/shared';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { cartesVisibles } from '../administration-droits';
-import { get } from '../api';
+import { api, get } from '../api';
 import type { SyntheseApi } from '../components/Synthese';
 import { CLE_DISPOSITION, EditionTableauDeBord } from '../components/DispositionTableauDeBord';
+import { PartageTableauDeBord } from '../components/PartageTableauDeBord';
 import { TableauDeBordConformite } from '../components/TableauDeBord';
 import { useLive, usePresence } from '../realtime';
 import { canAdminArea, canReadBusiness, useCan, useMe } from '../session';
@@ -23,6 +32,29 @@ const RESOURCE_LABELS: [RegExp, string][] = [
   [/^home$/, 'l’accueil'],
 ];
 const resourceLabel = (r: string) => RESOURCE_LABELS.find(([re]) => re.test(r))?.[1] ?? r;
+
+/** Tableau affiché : celui choisi s'il est encore visible, sinon le sien, sinon celui de l'organisation (null : la
+    disposition standard). */
+function tableauAffiche(d: DispositionsOut): DispositionEnregistree | TableauPartage | null {
+  const choisi = d.choix && [d.personnelle, d.organisation, ...d.partages].find((x) => x?.id === d.choix);
+  return choisi || d.personnelle || d.organisation;
+}
+
+/** Tableaux que la personne peut afficher ; la valeur vide est le choix automatique. */
+function choixTableaux(d: DispositionsOut) {
+  const auto = d.personnelle
+    ? 'Mon tableau de bord'
+    : d.organisation
+      ? 'Tableau de bord de l’organisation'
+      : 'Tableau de bord standard';
+  return [
+    { value: '', label: auto },
+    ...(d.personnelle && d.organisation
+      ? [{ value: d.organisation.id, label: 'Tableau de bord de l’organisation' }]
+      : []),
+    ...d.partages.map((p) => ({ value: p.id, label: `Tableau de bord de ${p.auteur}` })),
+  ];
+}
 
 /** Adresse du site de l'organisation, acceptée seulement en https : lien ouvert par clic explicite, jamais chargé. */
 const siteHttps = (u: string) => {
@@ -76,9 +108,43 @@ export function HomePage() {
     queryFn: () => get<DispositionsOut>('/api/tableau-de-bord/disposition'),
     enabled: canReadBusiness(can),
   });
-  const [edition, setEdition] = useState(false);
-  // Sa disposition, sinon celle de l'organisation, sinon la standard (aussi si la disposition ne se charge pas).
-  const disposition = (dispositions.data?.personnelle ?? dispositions.data?.organisation)?.disposition ?? null;
+  const qc = useQueryClient();
+  const [mode, setMode] = useState<'lecture' | 'edition' | 'partage'>('lecture');
+  const [erreurChoix, setErreurChoix] = useState<unknown>(null);
+  const d = dispositions.data;
+  // Disposer et partager son tableau : droit tableau_de_bord:modifier (ADR 0078, lot 2b).
+  const peutModifier = can('tableau_de_bord', 'modifier');
+  // Tableau choisi, sinon le sien, sinon celui de l'organisation, sinon la standard (aussi s'il ne se charge pas).
+  const affiche = d ? tableauAffiche(d) : null;
+  const disposition = affiche?.disposition ?? null;
+  const recu = d?.partages.find((p) => p.id === affiche?.id) ?? null;
+  const choix = d ? choixTableaux(d) : [];
+
+  async function choisir(tableau: string) {
+    setErreurChoix(null);
+    try {
+      qc.setQueryData(
+        CLE_DISPOSITION,
+        await api<DispositionsOut>('PUT', '/api/tableau-de-bord/choix', {
+          body: { tableau: tableau || null },
+        }),
+      );
+    } catch (e) {
+      setErreurChoix(e);
+    }
+  }
+  async function copier(t: TableauPartage) {
+    setErreurChoix(null);
+    try {
+      await api('PUT', '/api/tableau-de-bord/disposition', {
+        body: { disposition: t.disposition },
+        ifMatch: d?.personnelle?.version ?? 0,
+      });
+      await qc.invalidateQueries({ queryKey: CLE_DISPOSITION });
+    } catch (e) {
+      setErreurChoix(e);
+    }
+  }
   const online = [...new Map(presence.map((p) => [p.username, p])).values()];
 
   const acces = (
@@ -170,12 +236,33 @@ export function HomePage() {
         title={`Bonjour ${me.user?.displayName || me.user?.username}`}
         description={synthese.data ? `Tableau de bord — ${synthese.data.organisation}` : undefined}
         actions={
-          (site || (synthese.data && dispositions.data && !edition)) && (
+          (site || (synthese.data && d && mode === 'lecture' && peutModifier)) && (
             <>
-              {synthese.data && dispositions.data && !edition && (
-                <Button variant="default" onClick={() => setEdition(true)}>
-                  Modifier la disposition
-                </Button>
+              {synthese.data && d && mode === 'lecture' && peutModifier && (
+                <>
+                  <Button variant="default" onClick={() => setMode('edition')}>
+                    Modifier la disposition
+                  </Button>
+                  {d.personnelle && (
+                    <Button variant="default" onClick={() => setMode('partage')}>
+                      Partager
+                    </Button>
+                  )}
+                  {recu && (
+                    <ConfirmButton
+                      variant="light"
+                      color="blue"
+                      message={
+                        d.personnelle
+                          ? `Copier le tableau de bord de ${recu.auteur} ? Il remplacera votre disposition.`
+                          : `Copier le tableau de bord de ${recu.auteur} comme le vôtre ?`
+                      }
+                      onConfirm={() => void copier(recu)}
+                    >
+                      Copier comme mon tableau
+                    </ConfirmButton>
+                  )}
+                </>
               )}
               {site && <LienSite url={site} nom={me.orgName} />}
             </>
@@ -183,14 +270,26 @@ export function HomePage() {
         }
       />
       {synthese.error && <ErrorAlert error={synthese.error} />}
+      <ErrorAlert error={erreurChoix} />
+      {synthese.data && d && mode === 'lecture' && choix.length > 1 && (
+        <NativeSelect
+          className="tdb-choix"
+          label="Tableau affiché"
+          value={d.choix ?? ''}
+          data={choix}
+          onChange={(e) => void choisir(e.currentTarget.value)}
+        />
+      )}
+      {synthese.data && mode === 'partage' && <PartageTableauDeBord onFin={() => setMode('lecture')} />}
       {synthese.data &&
         !dispositions.isPending &&
-        (edition && dispositions.data ? (
+        (mode === 'edition' && d ? (
           <EditionTableauDeBord
             s={synthese.data}
-            dispositions={dispositions.data}
+            dispositions={d}
+            base={disposition}
             peutDefinirDefaut={can('administration', 'administrer')}
-            onFin={() => setEdition(false)}
+            onFin={() => setMode('lecture')}
           />
         ) : (
           <TableauDeBordConformite s={synthese.data} disposition={disposition} />

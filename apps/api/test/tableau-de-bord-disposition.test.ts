@@ -1,5 +1,7 @@
-/* Disposition du tableau de bord (ADR 0078, lot 2a) : disposition personnelle par compte, disposition par défaut réservée
-   au droit « administrer » et journalisée, concurrence optimiste (If-Match, 412), validation (422), isolement entre comptes. */
+/* Disposition du tableau de bord (ADR 0078, lots 2a et 2b) : disposition personnelle par compte (droit
+   tableau_de_bord:modifier), disposition par défaut réservée au droit « administrer » et journalisée, concurrence
+   optimiste (If-Match, 412), validation (422), isolement entre comptes. Le partage est testé à part
+   (tableau-de-bord-partage.test.ts). */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { Agent, createTestApp, login, makeUser, type TestApp } from './helpers.js';
 
@@ -28,7 +30,7 @@ describe('disposition personnelle', () => {
   it('rien d’enregistré au départ', async () => {
     const r = await alice.get(URL_PERSO);
     expect(r.statusCode, r.body).toBe(200);
-    expect(r.json()).toEqual({ personnelle: null, organisation: null });
+    expect(r.json()).toEqual({ personnelle: null, organisation: null, partages: [], choix: null });
   });
 
   it('crée avec If-Match « 0 », puis exige la version courante (428, 412)', async () => {
@@ -83,8 +85,33 @@ describe('disposition personnelle', () => {
     expect((await alice.put(URL_PERSO, { disposition: D1 }, v(0))).statusCode).toBe(200);
   });
 
-  it('lecture seule (rôle Lecteur) : la disposition reste personnelle et modifiable', async () => {
-    expect((await lecteur.put(URL_PERSO, { disposition: D2 }, v(0))).statusCode).toBe(200);
+  it('sans le droit tableau_de_bord:modifier (rôle Lecteur) : lecture et retour au défaut seulement', async () => {
+    expect((await lecteur.get(URL_PERSO)).statusCode).toBe(200);
+    expect((await lecteur.put(URL_PERSO, { disposition: D2 }, v(0))).statusCode).toBe(403);
+    // Une disposition enregistrée avant le lot 2b reste affichée et peut toujours être abandonnée.
+    await t.svc.db.q(
+      `INSERT INTO tableaux_de_bord (proprietaire, disposition, updated_by)
+       SELECT id, '{"dalles":[]}', 'test' FROM users WHERE username = 'lecteur'`,
+    );
+    expect((await lecteur.get(URL_PERSO)).json().personnelle).toMatchObject({ disposition: { dalles: [] } });
+    expect((await lecteur.del(URL_PERSO)).statusCode).toBe(204);
+    expect((await lecteur.get(URL_PERSO)).json().personnelle).toBeNull();
+  });
+
+  it('module « Tableau de bord » désactivé : plus de modification (409), lecture inchangée', async () => {
+    const etat = await t.svc.modules.state(true);
+    await t.svc.db.q('UPDATE module_activation SET disabled = $1, version = version + 1 WHERE id = 1', [
+      [...etat.disabled, 'tableau_de_bord'],
+    ]);
+    try {
+      const avant = (await alice.get(URL_PERSO)).json().personnelle;
+      expect((await alice.put(URL_PERSO, { disposition: D2 }, v(avant.version))).statusCode).toBe(409);
+      expect((await alice.get(URL_PERSO)).statusCode).toBe(200);
+    } finally {
+      await t.svc.db.q('UPDATE module_activation SET disabled = $1, version = version + 1 WHERE id = 1', [
+        etat.disabled,
+      ]);
+    }
   });
 
   it('refusée sans session', async () => {
