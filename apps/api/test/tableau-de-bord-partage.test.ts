@@ -23,7 +23,10 @@ beforeAll(async () => {
   uBob = await makeUser(t, 'bob', 'rw');
   uCarole = await makeUser(t, 'carole', 'rw');
   uLecteur = await makeUser(t, 'lecteur', 'ro');
-  [alice, bob, carole, lecteur] = await Promise.all([uAlice, uBob, uCarole, uLecteur].map((u) => login(t, u)));
+  alice = await login(t, uAlice);
+  bob = await login(t, uBob);
+  carole = await login(t, uCarole);
+  lecteur = await login(t, uLecteur);
   groupe = (await t.svc.db.one<{ id: string }>("INSERT INTO groups(name) VALUES ('Direction') RETURNING id"))!.id;
   await t.svc.db.q('INSERT INTO user_groups(user_id, group_id) VALUES ($1, $2)', [uLecteur.id, groupe]);
 });
