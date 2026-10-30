@@ -765,6 +765,17 @@
     display: none;
   }
 }
+
+/* Ordre du menu : la famille ou la destination saisie à la souris est signalée pendant le glisser. */
+.shell-nav-inner[data-tri-actif] {
+  cursor: grabbing;
+  user-select: none;
+}
+.shell-nav-inner [data-glisse] {
+  outline: var(--suivi-trait-l) dashed currentColor;
+  outline-offset: -2px;
+  opacity: 0.85;
+}
 @media (min-width: 64em) {
   .nav-destination.mantine-NavLink-root {
     padding-block: var(--mantine-spacing-xs);

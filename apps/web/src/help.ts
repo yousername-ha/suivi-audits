@@ -172,6 +172,17 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
   },
   {
+    id: 'ordre-menu',
+    title: 'Ordre du menu',
+    link: '/account',
+    steps: [
+      'Placez les familles du menu et leurs rubriques dans l’ordre qui vous convient : glissez-les à la souris à leur nouvelle place. Échap pendant le glisser annule le déplacement.',
+      'Au clavier, placez-vous sur une famille ou une rubrique du menu, puis utilisez Alt + flèche haut ou Alt + flèche bas.',
+      'L’ordre est enregistré avec vos préférences et vous suit sur tous vos appareils. Il ne change que l’affichage : vos droits et les adresses des pages restent les mêmes.',
+      'Dans Mon compte, rubrique Affichage, « Rétablir l’ordre par défaut » remet le menu dans son ordre d’origine.',
+    ],
+  },
+  {
     id: 'documents',
     title: 'Documents, liens et versions',
     permission: 'documents:lire',
