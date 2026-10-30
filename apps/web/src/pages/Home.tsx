@@ -16,7 +16,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { cartesVisibles } from '../administration-droits';
-import { api, get } from '../api';
+import { api, del, get } from '../api';
 import type { SyntheseApi } from '../components/Synthese';
 import { CLE_DISPOSITION, EditionTableauDeBord } from '../components/DispositionTableauDeBord';
 import { PartageTableauDeBord } from '../components/PartageTableauDeBord';
@@ -133,6 +133,15 @@ export function HomePage() {
       setErreurChoix(e);
     }
   }
+  async function abandonner() {
+    setErreurChoix(null);
+    try {
+      await del('/api/tableau-de-bord/disposition');
+      await qc.invalidateQueries({ queryKey: CLE_DISPOSITION });
+    } catch (e) {
+      setErreurChoix(e);
+    }
+  }
   async function copier(t: TableauPartage) {
     setErreurChoix(null);
     try {
@@ -236,7 +245,7 @@ export function HomePage() {
         title={`Bonjour ${me.user?.displayName || me.user?.username}`}
         description={synthese.data ? `Tableau de bord — ${synthese.data.organisation}` : undefined}
         actions={
-          (site || (synthese.data && d && mode === 'lecture' && peutModifier)) && (
+          (site || (synthese.data && d && mode === 'lecture' && (peutModifier || d.personnelle))) && (
             <>
               {synthese.data && d && mode === 'lecture' && peutModifier && (
                 <>
@@ -263,6 +272,17 @@ export function HomePage() {
                     </ConfirmButton>
                   )}
                 </>
+              )}
+              {synthese.data && d?.personnelle && mode === 'lecture' && !peutModifier && (
+                // Disposition enregistrée avant le droit dédié : on peut toujours l'abandonner (ADR 0078, lot 2b).
+                <ConfirmButton
+                  variant="default"
+                  color="gray"
+                  message="Revenir à la disposition par défaut ? Votre disposition personnelle sera supprimée."
+                  onConfirm={() => void abandonner()}
+                >
+                  Revenir à la disposition par défaut
+                </ConfirmButton>
               )}
               {site && <LienSite url={site} nom={me.orgName} />}
             </>
