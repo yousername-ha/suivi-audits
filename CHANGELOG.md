@@ -11,6 +11,10 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 ### Ajouté
 - **Disposition du tableau de bord de l'accueil** ([ADR 0078](docs/adr/0078-disposition-et-partage-du-tableau-de-bord.md), lot 2a) : bouton « Modifier la disposition » ; chaque personne déplace ses dalles au glisser (souris ou doigt) ou au clavier, choisit leur largeur, les masque et les réaffiche, puis enregistre. Sa disposition la suit sur tous ses appareils ; « Revenir à la disposition par défaut » la supprime. Un administrateur peut proposer une disposition à tous, sans remplacer celles déjà enregistrées (journalisé). Seuls l'ordre, les largeurs et les dalles masquées sont enregistrés : les valeurs restent filtrées selon les droits de chacun. _(Session « Dashboard maquette personnalisable ».)_
 
+### Corrigé
+
+- **Main courante de crise** : chaque entrée reçoit son identifiant `CL-nnn` du schéma 15, comme dans l'outil historique ; les entrées écrites sans identifiant sont numérotées à la prochaine écriture de la crise, avec la numérotation de l'export. L'import « Remplacer un module » d'un état contenant une main courante n'est plus refusé (BUG-013). (session « Intégration module RETEX incidents »)
+
 ## [6.0.0] — 2026-10-29
 
 Version majeure : **installation neuve uniquement**, sans aucune ligne de commande au-delà de l'installation de Docker et de git ([ADR 0077](docs/adr/0077-installation-sans-ligne-de-commande.md)). Aucune mise à jour depuis une version 5.x n'est prévue (décision du RSSI du 29/10/2026). Elle regroupe les correctifs de sécurité des revues du 27 et du 28/10/2026 et le contenu de la 5.1.0, qui n'a pas été étiquetée. Deux migrations SQL (`046`, alertes de sécurité ; `048`, clés de sécurité FIDO2), appliquées au premier démarrage ; deux dépendances nouvelles, `@simplewebauthn/server` et `@simplewebauthn/browser` ([ADR 0079](docs/adr/0079-authentification-fido2-webauthn.md)).
