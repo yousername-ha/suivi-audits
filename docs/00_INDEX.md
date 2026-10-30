@@ -97,6 +97,7 @@ Source de référence des chiffres/IDs/états :
 - [Rapport recette](05_RECETTE/RAPPORT_RECETTE.md)
 - [Couverture fonctionnelle](05_RECETTE/COUVERTURE_FONCTIONNELLE.md)
 - [Pv recette](05_RECETTE/PV_RECETTE.md)
+- [Recette manuelle des clés de sécurité FIDO2](05_RECETTE/CHECKLIST-FIDO2.md) ([ADR 0079](adr/0079-authentification-fido2-webauthn.md), non exécutée)
 
 ## 06_GUIDES
 

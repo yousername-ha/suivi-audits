@@ -715,6 +715,13 @@ export interface PilotageDecisions {
   terms: ColumnType<JsonValue, string | undefined, string>;
 }
 
+export interface RecoveryCodes {
+  user_id: string;
+  code_hash: Buffer;
+  created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+  used_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
+}
+
 export interface RegistrePerimetres {
   registre_id: string;
   smsi_id: string;
@@ -769,6 +776,7 @@ export interface Sessions {
   created_at: ColumnType<Date, Date | string | undefined, Date | string>;
   last_seen_at: ColumnType<Date, Date | string | undefined, Date | string>;
   expires_at: ColumnType<Date, Date | string, Date | string>;
+  reauth_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
 }
 
 export interface Settings {
@@ -1475,6 +1483,8 @@ export interface Users {
   version: Generated<number>;
   expires_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
   preferences: ColumnType<JsonValue, string | undefined, string>;
+  webauthn_user_handle: Buffer | null;
+  webauthn_reenrolement: Generated<boolean>;
 }
 
 export interface VDocuments {
@@ -1509,6 +1519,32 @@ export interface WallScreens {
   version: Generated<number>;
   created_by: string;
   created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface WebauthnChallenges {
+  session_hash: Buffer;
+  usage: "enrolement" | "connexion" | "reauth";
+  challenge_hash: Buffer;
+  expires_at: ColumnType<Date, Date | string, Date | string>;
+}
+
+export interface WebauthnCredentials {
+  id: Generated<string>;
+  user_id: string;
+  credential_id: string;
+  public_key: Buffer;
+  sign_count: Generated<number>;
+  transports: ColumnType<JsonValue, string | undefined, string>;
+  aaguid: string;
+  device_type: "singleDevice" | "multiDevice";
+  backed_up: Generated<boolean>;
+  label: string;
+  attestation_fmt: Generated<string>;
+  created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+  last_used_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  revoked_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  revoked_by: Generated<string>;
+  suspect_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
 }
 
 export interface DB {
@@ -1569,6 +1605,7 @@ export interface DB {
   operation_receipts: OperationReceipts;
   parcours_associations: ParcoursAssociations;
   pilotage_decisions: PilotageDecisions;
+  recovery_codes: RecoveryCodes;
   registre_perimetres: RegistrePerimetres;
   registres: Registres;
   roles: Roles;
@@ -1623,4 +1660,6 @@ export interface DB {
   users: Users;
   v_documents: VDocuments;
   wall_screens: WallScreens;
+  webauthn_challenges: WebauthnChallenges;
+  webauthn_credentials: WebauthnCredentials;
 }

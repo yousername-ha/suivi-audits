@@ -9,6 +9,7 @@
 import { sql } from 'kysely';
 import type { SettingsValues } from '@suivi/shared';
 import type { VerrouillageEvt } from './auth.js';
+import type { AlerteCleEvt } from './webauthn.js';
 import { DEMANDEUR_ALERTE } from './alertes-exploitation.js';
 import type { Db } from './db/db.js';
 import { COMPTE_ACTIF, adresseUtilisable, porteLeRole } from './notifications-metier.js';
@@ -212,6 +213,82 @@ export class AlertesSecurite {
       });
     } catch (err) {
       this.db.log.error({ err: (err as Error).message }, 'alerte antivirus non émise');
+    }
+  }
+
+  /** Clé de sécurité suspecte (compteur de signature qui ne progresse pas : clonage possible), ou connexion d'un administrateur
+      soumis à l'obligation de clé par un facteur de secours (TOTP, code de récupération), ADR 0079. Mêmes destinataires et
+      même plafond horaire que l'alerte de verrouillage ; ne lève jamais. */
+  async cleSecurite(e: AlerteCleEvt): Promise<void> {
+    try {
+      const compte = await this.db.k
+        .selectFrom('users')
+        .select(['username', 'display_name'])
+        .where('id', '=', e.userId)
+        .executeTakeFirst();
+      if (!compte) return;
+      const general = (await this.settings.read('general')).values as SettingsValues['general'];
+      const nom = propre(general.appName, 80) || 'Suivi des audits';
+      const dest = await this.destinataires();
+      const admins = await this.administrateurs();
+      const identifiant = propre(compte.username, 64);
+      const quand = paris(new Date());
+      const titre =
+        e.type === 'cle_suspecte'
+          ? `Clé de sécurité suspendue : ${identifiant}`
+          : `Connexion par facteur de secours : ${identifiant}`;
+      const message =
+        e.type === 'cle_suspecte'
+          ? `Une clé de sécurité du compte « ${identifiant} » a présenté un compteur de signature qui ne progresse pas le ${quand} (heure de Paris) : elle peut avoir été clonée. La connexion a été refusée et la clé est suspendue ; vérifiez-la avec son porteur, puis réactivez-la ou révoquez-la (Droits, fiche du compte). Détail dans le journal d’audit (action « auth.webauthn_compteur »).`
+          : `Le compte administrateur « ${identifiant} », tenu d’utiliser une clé de sécurité, s’est connecté le ${quand} (heure de Paris) avec ${e.facteur === 'code_recuperation' ? 'un code de récupération' : 'le code TOTP'}. Si cet usage n’est pas expliqué (clé perdue ou oubliée), traitez-le comme un incident de sécurité. Détail dans le journal d’audit (action « auth.facteur_secours »).`;
+      await this.db.tx(async (c, k) => {
+        await c.query('SELECT pg_advisory_xact_lock(hashtext($1))', [VERROU_ALERTE]);
+        const fenetre = await k
+          .selectFrom('audit_log')
+          .select(sql<number>`count(*)::int`.as('n'))
+          .where('action', '=', 'securite.alerte_cle')
+          .where('ts', '>', sql<Date>`now() - interval '1 hour'`)
+          .executeTakeFirstOrThrow();
+        if (fenetre.n >= ALERTES_PAR_HEURE) return;
+        await this.db.audit(null, null, 'securite.alerte_cle', compte.username, { type: e.type }, c);
+        const corps = [
+          'Bonjour,',
+          '',
+          message,
+          '',
+          `Comptes : ${this.lien('/admin/users')}`,
+          `Journal d'audit : ${this.lien('/admin/audit')}`,
+          '',
+          'Message automatique ; il ne contient ni code, ni clé, ni donnée métier.',
+        ].join('\n');
+        for (const a of dest)
+          await k
+            .insertInto('courriel_jobs')
+            .values({
+              kind: 'notification',
+              requested_by: DEMANDEUR_ALERTE,
+              to_address: a,
+              subject: `[${nom}] ${titre}`.slice(0, 180),
+              body: corps,
+            })
+            .execute();
+        for (const id of admins)
+          await k
+            .insertInto('grc_notifications')
+            .values({
+              smsi_id: null,
+              object_id: null,
+              user_id: id,
+              kind: KIND_ALERTE_SECURITE,
+              due_key: `cle:${e.type}:${e.userId}:${Date.now()}`,
+              title: titre.slice(0, 180),
+              message,
+            })
+            .onConflict((oc) => oc.doNothing())
+            .execute();
+      });
+    } catch (err) {
+      this.db.log.error({ err: (err as Error).message }, 'alerte de clé de sécurité non émise');
     }
   }
 

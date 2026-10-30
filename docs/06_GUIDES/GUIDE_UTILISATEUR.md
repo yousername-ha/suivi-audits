@@ -35,6 +35,37 @@ Restriction : Recette du serveur utilisateur non reçue.
 Fonctions liées : voir la [matrice](../02_FONCTIONNALITES/MATRICE_TRACABILITE.md)
 et le cas TEST-001.
 
+## Clés de sécurité et codes de récupération ([ADR 0079](../adr/0079-authentification-fido2-webauthn.md))
+
+Une clé de sécurité (YubiKey, clé FIDO2) remplace le code à 6 chiffres à la connexion : elle ne fonctionne que sur l'adresse
+officielle de l'application, ce qui protège contre les faux sites. Le code de votre application d'authentification reste
+utilisable en secours. Mise à jour : 2026-10-30 (Europe/Paris). État : **VALIDÉ AUTOMATIQUEMENT** (authentificateur virtuel),
+recette sur matériel réel non exécutée.
+
+**Enregistrer une clé** : Mon compte, carte « Clés de sécurité (FIDO2) ».
+
+1. Si l'application le demande, confirmez votre identité : mot de passe, puis code à 6 chiffres ou clé déjà enregistrée
+   (valable 5 minutes ; juste après la connexion, ce n'est pas nécessaire).
+2. Donnez un nom à la clé (« YubiKey bureau », « YubiKey de secours »), puis « Ajouter une clé ».
+3. Branchez ou approchez la clé, saisissez son code PIN si le navigateur le demande, puis touchez-la quand elle clignote.
+
+Enregistrez **deux clés** : une au quotidien, une de secours rangée en lieu sûr. Une clé déjà enregistrée est refusée
+(« Cette clé est déjà enregistrée sur votre compte »).
+
+**Se connecter** : identifiant et mot de passe, puis « Utiliser ma clé de sécurité ». « Opération annulée ou délai dépassé » :
+recommencez et touchez la clé quand elle clignote. Sans la clé : saisissez le code à 6 chiffres, ou « Utiliser un code de
+récupération ».
+
+**Renommer, révoquer** : boutons de la ligne de la clé. La révocation demande une confirmation d'identité récente ; votre
+dernier facteur (dernière clé sans code TOTP, ou clé obligatoire pour votre compte) ne peut pas être révoqué. Clé perdue ou
+volée : révoquez-la tout de suite depuis un autre appareil, ou demandez-le à un administrateur.
+
+**Codes de récupération** : dix codes à usage unique, affichés **une seule fois** (copier, télécharger), à ranger hors ligne.
+En générer de nouveaux annule les anciens.
+
+**Clé obligatoire** : si la politique de votre organisation l'exige (comptes d'administration), un bandeau annonce la date
+limite ; passé cette date, l'application vous demande d'enregistrer une clé juste après la connexion.
+
 ## FCT-002 — Comptes, groupes, rôles et revue des droits
 
 Objectif : Droits effectifs, périmètres auditeur, expiration, dernier administrateur et exports de revue.

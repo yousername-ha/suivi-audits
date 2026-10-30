@@ -103,6 +103,9 @@ test('installation : jeton, création de l’administrateur, activation de la do
   await page.getByLabel('Chiffre 1 sur 6').click();
   await page.keyboard.type(totp(adminSecret));
   markTotpUsed(adminSecret);
+  // Clé de sécurité proposée dès l'installation (ADR 0079), facultative : le TOTP reste le facteur obligatoire.
+  await expect(page.getByRole('heading', { name: 'Ajouter une clé de sécurité (facultatif)' })).toBeVisible();
+  await page.getByRole('button', { name: 'Plus tard' }).click();
   await expect(page.getByRole('heading', { name: /^Bonjour Responsable SSI/ })).toBeVisible();
   saveAdmin(ADMIN, adminSecret, poivre);
 
