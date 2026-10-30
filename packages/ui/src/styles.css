@@ -33,6 +33,8 @@
   --suivi-entete-h: 3.75rem;
   --suivi-nav-l: 15.5rem;
   --suivi-largeur-formulaire: 45rem; /* formulaires simples : 720 px */
+  --suivi-largeur-connexion: 36rem; /* panneau de connexion : 576 px */
+  --suivi-ecart-onde: 3rem; /* connexion : espace entre le titre et la première carte */
   --suivi-largeur-lecture: 75ch; /* textes : environ 75 caractères par ligne */
   --suivi-champ-xs: 8rem;
   --suivi-champ-s: 12.5rem;
@@ -1253,85 +1255,386 @@ h3,
   gap: var(--mantine-spacing-md);
 }
 
-/* Connexion : composition éditoriale, sans ressource distante. */
-.auth-wrap:has(.auth-editorial) {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  align-content: center;
-  gap: var(--mantine-spacing-xl);
-  padding: clamp(1rem, 5vw, 5rem);
+/* Connexion : panneau unique centré (fond de la navigation) sur un fond animé décoratif, sans ressource distante.
+   Le formulaire prend la place des trois cartes empilées ; les autres étapes s'affichent dans le même panneau. */
+.auth-wrap.auth-connexion {
+  position: relative;
+  isolation: isolate;
+  padding-block: clamp(1rem, 3vw, 2.5rem);
+  padding-inline: max(var(--mantine-spacing-md), env(safe-area-inset-left, 0px))
+    max(var(--mantine-spacing-md), env(safe-area-inset-right, 0px));
 }
-.auth-editorial {
+.auth-fond {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.auth-panneau {
+  /* Panneau toujours sombre : textes et champs Mantine de l'étape lisibles sur le vert profond, dans les deux modes. */
+  --mantine-color-text: var(--suivi-nav-texte);
+  --mantine-color-dimmed: var(--suivi-nav-secondaire);
+  --mantine-color-green-text: var(--mantine-color-green-3);
+  --mantine-color-red-text: var(--mantine-color-red-3);
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  width: min(var(--suivi-largeur-connexion), 100%);
+  padding: clamp(1.5rem, 5vw, 3rem);
+  border-radius: var(--mantine-radius-xl);
   background: var(--suivi-nav-fond);
   color: var(--suivi-nav-texte);
-  padding: clamp(1.5rem, 4vw, 4rem);
-  border-radius: var(--mantine-radius-xl);
-  overflow: hidden;
+  box-shadow: var(--suivi-ombre-haute);
+  text-align: start;
+}
+.auth-panneau > :not(.auth-sceau, .onde-menu) {
   position: relative;
+  z-index: 1;
+}
+/* Onde en fond de panneau (OndeMenu) : sous le sceau et le texte, masquée sans mouvement et à l'impression. */
+.onde-menu {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.onde-menu__toile {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 .auth-kicker {
   color: var(--suivi-nav-repere);
   font-size: 0.65rem;
   font-weight: 600;
   letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
-.auth-editorial h2 {
-  margin: 2rem 0 1rem;
-  font-size: clamp(2rem, 3.6vw, 3.75rem);
+.auth-accroche {
+  margin: 1rem 0 0;
+  font-size: clamp(2rem, 6vw, 3rem);
   font-weight: 500;
   line-height: 1.12;
   letter-spacing: -0.05em;
 }
-.auth-editorial p {
-  max-width: 32ch;
-  font-size: 0.9rem;
-  line-height: 1.75;
-  color: var(--suivi-nav-secondaire);
-}
-.auth-caption {
-  display: block;
-  max-width: 42ch;
-  font-size: 0.67rem;
-  color: var(--suivi-nav-secondaire);
-}
-.auth-illustration {
-  position: relative;
-  height: 11rem;
-  margin-block: 2rem;
-}
-.auth-illustration span {
+
+/* Sceau : en haut à droite, derrière le texte. */
+.auth-panneau > .auth-sceau {
   position: absolute;
-  border: 1px solid var(--suivi-nav-active);
-  background: var(--suivi-nav-survol);
-  width: 70%;
-  height: 4rem;
-  border-radius: 0.75rem;
-  left: 5%;
-  top: 0;
+  z-index: 0;
+  top: -0.35rem;
+  right: -0.6rem;
+  width: clamp(7.5rem, 26vw, 10.75rem);
+  height: auto;
+  pointer-events: none;
 }
-.auth-illustration span:nth-child(2) {
-  left: 15%;
-  top: 3rem;
+.auth-sceau__deco {
+  opacity: 0.45;
+}
+.auth-sceau__drapeau {
+  opacity: 0.82;
+}
+.auth-sceau__bleu {
+  fill: var(--suivi-sceau-bleu);
+}
+.auth-sceau__blanc {
+  fill: var(--suivi-sceau-blanc);
+}
+.auth-sceau__rouge {
+  fill: var(--suivi-sceau-rouge);
+}
+.auth-sceau__ombre {
+  fill: var(--suivi-nav-fond);
+  opacity: 0.28;
+}
+.auth-sceau__anneau,
+.auth-sceau__bord {
+  fill: none;
+  stroke: var(--suivi-nav-repere);
+  stroke-width: 1.5;
+}
+.auth-sceau__bord {
+  opacity: 0.7;
+}
+.auth-sceau__fin {
+  fill: none;
+  stroke: var(--suivi-nav-active);
+  stroke-width: 1;
+}
+.auth-sceau__coeur {
+  fill: var(--suivi-nav-survol);
+  stroke: var(--suivi-nav-active);
+  stroke-width: 1;
+}
+.auth-sceau__coche-fond,
+.auth-sceau__coche {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.auth-sceau__coche-fond {
+  stroke: var(--suivi-nav-fond);
+  stroke-width: 6.5;
+}
+.auth-sceau__coche {
+  stroke: var(--mantine-color-white);
+  stroke-width: 3.2;
+}
+.auth-sceau__texte {
+  font-family: var(--mantine-font-family);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  fill: var(--suivi-nav-repere);
+}
+.auth-sceau__tourne {
+  transform-origin: 120px 120px;
+  animation: auth-sceau-tourne 40s linear infinite;
+}
+@keyframes auth-sceau-tourne {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Les trois cartes empilées : identifiant, mot de passe (décalée), bouton (décalée encore). */
+.auth-pile {
+  display: flex;
+  flex-direction: column;
+  /* 3rem entre le titre et la première carte : place de l'onde du panneau. */
+  margin-block: var(--suivi-ecart-onde) 1rem;
+}
+.auth-carte {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: min(24rem, calc(100% - 3rem));
+  padding: 0.85rem 1rem 1.15rem;
+  border: var(--suivi-trait-l) solid var(--suivi-nav-active);
+  border-radius: 0.75rem;
+}
+.auth-carte--identifiant {
+  z-index: 1;
+  background: var(--suivi-nav-survol);
+}
+.auth-carte--mot-de-passe {
+  z-index: 2;
+  margin: -0.6rem 0 0 1.5rem;
+  padding-top: 1.2rem;
   background: var(--suivi-nav-active);
 }
-.auth-illustration span:nth-child(3) {
-  left: 25%;
-  top: 6rem;
+.auth-carte--valider {
+  z-index: 3;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin: -0.6rem 0 0 3rem;
+  padding: 1.35rem 1.1rem 1rem;
+  border-color: var(--suivi-nav-repere);
   background: var(--suivi-nav-repere);
+  color: var(--suivi-nav-fond);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: start;
+  cursor: pointer;
+  transition:
+    transform var(--suivi-motion) var(--suivi-ease),
+    box-shadow var(--suivi-motion) var(--suivi-ease);
 }
-.auth-illustration span::after {
-  content: '';
+.auth-carte--valider:disabled {
+  cursor: progress;
+}
+@media (hover: hover) {
+  .auth-carte--valider:not(:disabled):hover {
+    transform: translateY(-2px);
+    box-shadow: var(--suivi-ombre-haute);
+  }
+}
+.auth-carte--valider:focus-visible {
+  outline: var(--suivi-trait-focus) solid var(--suivi-nav-texte);
+  outline-offset: 3px;
+}
+.auth-carte--valider svg {
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+.auth-carte--valider .auth-attente {
+  --loader-color: var(--suivi-nav-fond);
+}
+.auth-label,
+.auth-etape .mantine-InputWrapper-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--suivi-nav-repere);
+}
+.auth-tete {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+.auth-majuscules {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--suivi-famille-conformite);
+}
+.auth-boite {
+  position: relative;
+}
+.auth-icone {
   position: absolute;
-  width: 55%;
-  height: 0.3rem;
-  background: var(--suivi-nav-secondaire);
-  opacity: 0.35;
-  top: 45%;
-  left: 1.25rem;
-  border-radius: 1rem;
+  left: 0.75rem;
+  top: 50%;
+  translate: 0 -50%;
+  width: 1.0625rem;
+  height: 1.0625rem;
+  color: var(--suivi-nav-secondaire);
+  pointer-events: none;
 }
-.auth-illustration span:nth-child(3)::after {
+.auth-champ {
+  width: 100%;
+  height: 2.75rem;
+  padding: 0 0.85rem 0 2.5rem;
+  border: var(--suivi-trait-l) solid var(--suivi-nav-active);
+  border-radius: 0.55rem;
   background: var(--suivi-nav-fond);
+  color: var(--suivi-nav-texte);
+  font: inherit;
+  /* 16 px au moins : pas d'agrandissement automatique au toucher sur téléphone. */
+  font-size: max(1rem, 16px);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  transition: border-color var(--suivi-motion) var(--suivi-ease);
+}
+.auth-champ::placeholder {
+  color: var(--suivi-nav-secondaire);
+  opacity: 0.6;
+  font-weight: 400;
+}
+.auth-champ--secret {
+  padding-inline-end: 2.6rem;
+  border-color: var(--suivi-nav-survol);
+}
+.auth-champ:hover {
+  border-color: var(--suivi-nav-secondaire);
+}
+.auth-champ:focus-visible {
+  outline: var(--suivi-trait-focus) solid var(--suivi-nav-repere);
+  outline-offset: 1px;
+}
+.auth-oeil {
+  position: absolute;
+  right: 0.3rem;
+  top: 50%;
+  translate: 0 -50%;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0.4rem;
+  background: none;
+  color: var(--suivi-nav-secondaire);
+  cursor: pointer;
+}
+.auth-oeil svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+.auth-oeil:hover {
+  color: var(--suivi-nav-texte);
+}
+.auth-oeil:focus-visible {
+  outline: var(--suivi-trait-focus) solid var(--suivi-nav-repere);
+  outline-offset: 0;
+}
+.auth-aide {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--suivi-nav-secondaire);
+}
+.auth-panneau > .mantine-Alert-root {
+  margin-bottom: var(--mantine-spacing-sm);
+}
+
+/* Autres étapes (code, enrôlement, mot de passe imposé) : une carte du panneau, champs et boutons Mantine adaptés. */
+.auth-etape {
+  margin-top: var(--suivi-ecart-onde);
+  padding: 1rem;
+  border: var(--suivi-trait-l) solid var(--suivi-nav-active);
+  border-radius: 0.75rem;
+  background: var(--suivi-nav-survol);
+}
+.auth-panneau .auth-etape .mantine-Input-wrapper[data-variant] {
+  --input-bg: var(--suivi-nav-fond);
+  --input-bd: var(--suivi-nav-active);
+  --input-bd-focus: var(--suivi-nav-repere);
+  --input-color: var(--suivi-nav-texte);
+}
+/* Variante pleine : Mantine ne pose data-variant que hors variante par défaut. */
+.auth-panneau .mantine-Button-root:is([data-variant='filled'], :not([data-variant])):not(:disabled, [data-disabled]) {
+  background: var(--suivi-nav-repere);
+  color: var(--suivi-nav-fond);
+}
+/* Œil des champs de mot de passe : le gris de Mantine en mode clair disparaît sur le champ sombre. */
+.auth-panneau .mantine-PasswordInput-visibilityToggle {
+  color: var(--suivi-nav-secondaire);
+}
+.auth-panneau .mantine-PasswordInput-visibilityToggle:hover {
+  background: var(--suivi-nav-active);
+  color: var(--suivi-nav-texte);
+}
+.auth-panneau .mantine-Button-root[data-variant='subtle'] {
+  color: var(--suivi-nav-repere);
+}
+.auth-panneau .mantine-Button-root[data-variant='subtle']:hover {
+  background: var(--suivi-nav-active);
+}
+@media (max-width: 30em) {
+  .auth-carte {
+    width: calc(100% - 1.5rem);
+  }
+  .auth-carte--mot-de-passe {
+    margin-inline-start: 0.75rem;
+  }
+  .auth-carte--valider {
+    margin-inline-start: 1.5rem;
+  }
+  .auth-panneau > .auth-sceau {
+    top: -0.4rem;
+    right: -0.5rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .onde-menu {
+    display: none;
+  }
+  .auth-sceau__tourne {
+    animation: none;
+  }
+  .auth-carte--valider {
+    transition: none;
+  }
+}
+@media print {
+  .auth-fond,
+  .onde-menu {
+    display: none;
+  }
 }
 .auth-wrap .auth-card {
   padding: clamp(1.25rem, 3vw, 3rem);
@@ -1346,25 +1649,6 @@ h3,
 .auth-card .mantine-Stepper-root {
   margin-block: var(--mantine-spacing-sm);
 }
-@media (min-width: 64em) {
-  .auth-wrap:has(.auth-editorial) {
-    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-    max-width: 90rem;
-    margin-inline: auto;
-  }
-  .auth-editorial {
-    min-height: 38rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-}
-@media (max-width: 63.99em) {
-  .auth-editorial {
-    display: none;
-  }
-}
-
 /* Mouvement uniquement à l'apparition ; aucun défilement imposé ni boucle décorative. */
 @keyframes suivi-arrivee {
   from {
@@ -1380,7 +1664,7 @@ h3,
   .page-header,
   .page > .mantine-Group-root:first-child,
   .auth-card,
-  .auth-editorial {
+  .auth-panneau {
     animation: suivi-arrivee var(--suivi-motion-entree) var(--suivi-ease) both;
   }
   .synthese-grille > .mantine-Card-root {

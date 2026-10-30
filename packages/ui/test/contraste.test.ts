@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { contrast, COUPLES_CONTRASTE, RAYONS, STYLE_CLAIR } from '../src/tokens.ts';
+import { contrast, COUPLES_CONTRASTE, RAYONS, SCEAU, STYLE_CLAIR, transparence } from '../src/tokens.ts';
 
 describe('charte : contrastes WCAG AA', () => {
   it.each(COUPLES_CONTRASTE)('$nom ≥ $seuil', ({ texte, fond, seuil }) => {
@@ -25,5 +25,17 @@ describe('charte : contrastes WCAG AA', () => {
       expect(px).toBeGreaterThanOrEqual(6);
       expect(px).toBeLessThanOrEqual(12);
     }
+  });
+});
+
+describe('charte : transparence et sceau de connexion', () => {
+  it('applique une opacité bornée à une couleur hexadécimale', () => {
+    expect(transparence('#2cc4cb', 0.5)).toBe('rgb(44 196 203 / 0.5)');
+    expect(transparence(' #fff ', 2)).toBe('rgb(255 255 255 / 1)');
+    expect(transparence('#000', -1)).toBe('rgb(0 0 0 / 0)');
+    expect(transparence('var(--x)', 0.3)).toBe('var(--x)');
+  });
+  it('les trois teintes du sceau sont exposées en variables du thème', () => {
+    expect(Object.values(SCEAU)).toEqual(['#00005E', '#B9C4BD', '#9C0A14']);
   });
 });
