@@ -10,16 +10,6 @@ const rubriques = FAMILLES.flatMap((f) => f.destinations.flatMap((d) => d.rubriq
 /** Inventaire de référence (020-01) : famille | destination | rubrique | adresse | module | action. Toute rubrique ajoutée,
     retirée ou déplacée, ou dont le droit change, doit modifier cette table : aucune fonction ne se perd en silence. */
 const INVENTAIRE = [
-  'pilotage|synthese|synthese|/pilotage/synthese|pilotage|lire',
-  'pilotage|synthese|parcours|/pilotage/parcours|pilotage|lire',
-  'pilotage|synthese|parcours-iso|/pilotage/parcours-iso|pilotage|lire',
-  'pilotage|synthese|perimetres|/pilotage/perimetres|pilotage|lire',
-  'pilotage|objectifs|processus|/pilotage/processus|pilotage|lire',
-  'pilotage|objectifs|objectifs|/pilotage/objectifs|pilotage|lire',
-  'pilotage|objectifs|indicateurs|/pilotage/indicateurs|pilotage|lire',
-  'pilotage|revues|revues|/pilotage/revues|pilotage|lire',
-  'pilotage|rappels|rappels|/pilotage/rappels|pilotage|lire',
-  'pilotage|rappels|configuration|/pilotage/configuration|pilotage|lire',
   'organisation|contexte|contexte|/pilotage/contexte|pilotage|lire',
   'organisation|contexte|parties|/pilotage/parties|pilotage|lire',
   'organisation|contexte|swot|/pilotage/swot|pilotage|lire',
@@ -37,6 +27,16 @@ const INVENTAIRE = [
   'organisation|plans|plans-formation|/pilotage/plans-formation|pilotage|lire',
   'organisation|plans|plans-sensibilisation|/pilotage/plans-sensibilisation|pilotage|lire',
   'organisation|budget|investissements|/pilotage/investissements|investissements|lire',
+  'pilotage|synthese|synthese|/pilotage/synthese|pilotage|lire',
+  'pilotage|synthese|parcours|/pilotage/parcours|pilotage|lire',
+  'pilotage|synthese|parcours-iso|/pilotage/parcours-iso|pilotage|lire',
+  'pilotage|synthese|perimetres|/pilotage/perimetres|pilotage|lire',
+  'pilotage|objectifs|processus|/pilotage/processus|pilotage|lire',
+  'pilotage|objectifs|objectifs|/pilotage/objectifs|pilotage|lire',
+  'pilotage|objectifs|indicateurs|/pilotage/indicateurs|pilotage|lire',
+  'pilotage|revues|revues|/pilotage/revues|pilotage|lire',
+  'pilotage|rappels|rappels|/pilotage/rappels|pilotage|lire',
+  'pilotage|rappels|configuration|/pilotage/configuration|pilotage|lire',
   'risques|risques|risques|/pilotage/risques|pilotage|lire',
   'risques|risques|opportunites|/pilotage/opportunites|pilotage|lire',
   'risques|risques|etudes|/pilotage/etudes|pilotage|lire',
@@ -101,8 +101,8 @@ describe('navigation', () => {
   });
   it('range les sept familles dans l’ordre validé', () => {
     expect(FAMILLES.map((f) => f.label)).toEqual([
-      'Pilotage',
       'Organisation',
+      'Pilotage',
       'Risques',
       'Conformité et audits',
       'Actions',

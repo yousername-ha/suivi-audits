@@ -8,6 +8,10 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 Aucune action.
 
+### Modifié
+
+- **Menu latéral** : la famille Organisation est placée en tête, au-dessus du Pilotage. Les adresses et les droits des rubriques sont inchangés.
+
 ### Corrigé
 
 - **Menu latéral** : plus de barre de défilement affichée dans le menu. Il reste borné à la hauteur de la fenêtre et défilable à la molette, au clavier et au toucher.

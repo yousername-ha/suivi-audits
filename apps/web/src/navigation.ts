@@ -1,4 +1,4 @@
-/* Navigation de l'application : sept familles (ordre validé le 19/10/2026) -> destinations -> rubriques.
+/* Navigation de l'application : sept familles (ordre validé le 19/10/2026, Organisation avant Pilotage depuis le 30/10/2026) -> destinations -> rubriques.
    Chaque rubrique garde son adresse et son droit de lecture d'origine : réorganiser le menu ne crée aucune adresse
    et n'ouvre aucun accès. Les rubriques du Pilotage sont décrites dans pilotage-navigation.ts (libellé et module) ;
    ce fichier ne fait que les regrouper. Le test navigation.test.ts vérifie qu'aucune rubrique n'est perdue ni doublée. */
@@ -61,16 +61,6 @@ const dest = (id: string, label: string, rubriques: Rubrique[]): Destination => 
 
 export const FAMILLES: Famille[] = [
   {
-    id: 'pilotage',
-    label: 'Pilotage',
-    destinations: [
-      dest('synthese', 'Synthèse et périmètres', [p('synthese'), p('parcours'), p('parcours-iso'), p('perimetres')]),
-      dest('objectifs', 'Objectifs et indicateurs', [p('processus'), p('objectifs'), p('indicateurs')]),
-      dest('revues', 'Revues de direction', [p('revues')]),
-      dest('rappels', 'Rappels et configuration', [p('rappels'), p('configuration')]),
-    ],
-  },
-  {
     id: 'organisation',
     label: 'Organisation',
     destinations: [
@@ -94,6 +84,16 @@ export const FAMILLES: Famille[] = [
         p('plans-sensibilisation'),
       ]),
       dest('budget', 'Budget', [p('investissements')]),
+    ],
+  },
+  {
+    id: 'pilotage',
+    label: 'Pilotage',
+    destinations: [
+      dest('synthese', 'Synthèse et périmètres', [p('synthese'), p('parcours'), p('parcours-iso'), p('perimetres')]),
+      dest('objectifs', 'Objectifs et indicateurs', [p('processus'), p('objectifs'), p('indicateurs')]),
+      dest('revues', 'Revues de direction', [p('revues')]),
+      dest('rappels', 'Rappels et configuration', [p('rappels'), p('configuration')]),
     ],
   },
   {
