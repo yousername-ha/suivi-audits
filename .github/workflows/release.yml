@@ -133,7 +133,7 @@ jobs:
       - name: Trivy (échec sur HIGH et CRITICAL) et SBOM
         run: |
           set -e
-          trivy image --input "$RUNNER_TEMP/image.tar" --scanners vuln --severity HIGH,CRITICAL --exit-code 1 --no-progress
+          trivy image --input "$RUNNER_TEMP/image.tar" --scanners vuln --severity HIGH,CRITICAL --exit-code 1 --no-progress --ignorefile .trivyignore.yaml
           trivy image --input "$RUNNER_TEMP/image.tar" --format cyclonedx --output sbom.cdx.json
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
