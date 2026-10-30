@@ -17,19 +17,18 @@ dépendances nouvelles : `@simplewebauthn/server` et `@simplewebauthn/browser`.
   « Utiliser ma clé de sécurité » (YubiKey, clé FIDO2, passkey), à côté du code TOTP, qui reste obligatoire. Mon compte : ajouter
   (code PIN exigé), renommer et révoquer ses clés, deux clés recommandées ; ajout proposé, facultatif, dès l'installation.
   Codes de récupération (dix, usage unique, affichés une fois). Confirmation d'identité de moins de 5 minutes (mot de passe puis
-  code ou clé) pour ajouter ou révoquer une clé ; le dernier facteur fort ne peut pas être retiré.
+  code ou clé) pour ajouter ou révoquer une clé ; le dernier facteur fort ne peut pas être retiré. (session Claude « FIDO2/WebAuthn support for suivi-audits »)
 - **Politique des clés** (Administration, Configuration système, Sécurité) : clé obligatoire pour les comptes qui administrent,
   avec période de grâce (14 jours par défaut) et alerte à chaque connexion de secours par TOTP ou code ; option « clés
-  matérielles uniquement » (attestation vérifiée jusqu'aux racines FIDO de Yubico ou à des racines ajoutées, liste d'AAGUID).
+  matérielles uniquement » (attestation vérifiée jusqu'aux racines FIDO de Yubico ou à des racines ajoutées, liste d'AAGUID). (session Claude « FIDO2/WebAuthn support for suivi-audits »)
 - **Facteurs d'un compte** (Droits, Utilisateurs, « Facteurs ») : révoquer une clé, réactiver une clé suspendue, réinitialiser
-  les clés (ré-enrôlement imposé), chaque fois avec un motif consigné au journal.
+  les clés (ré-enrôlement imposé), chaque fois avec un motif consigné au journal. (session Claude « FIDO2/WebAuthn support for suivi-audits »)
 
 ### Sécurité
 - Clé dont le compteur de signature ne progresse pas (clonage possible) : connexion refusée, clé suspendue, alerte aux
   administrateurs. Challenges côté serveur, liés à la session, à usage unique, valables 5 minutes ; origine, domaine et
   vérification de l'utilisateur contrôlés. Évènements au journal d'audit et en JSON pour le SIEM, sans challenge ni secret.
-  `Permissions-Policy` limite les clés de sécurité à l'origine de l'application.
-
+  `Permissions-Policy` limite les clés de sécurité à l'origine de l'application. (session Claude « FIDO2/WebAuthn support for suivi-audits »)
 ## [6.0.0] — 2026-10-29
 
 Version majeure : **installation neuve uniquement**, sans aucune ligne de commande au-delà de l'installation de Docker et de git ([ADR 0077](docs/adr/0077-installation-sans-ligne-de-commande.md)). Aucune mise à jour depuis une version 5.x n'est prévue (décision du RSSI du 29/10/2026). Elle regroupe les correctifs de sécurité des revues du 27 et du 28/10/2026 et le contenu de la 5.1.0, qui n'a pas été étiquetée. Une migration SQL (`046`, alertes de sécurité), appliquée au premier démarrage ; aucune nouvelle dépendance.

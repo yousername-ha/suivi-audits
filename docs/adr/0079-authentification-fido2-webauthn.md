@@ -2,6 +2,7 @@
 
 - Statut : proposée (numéro annoncé au RSSI le 30/10/2026, à confirmer ; 0078 est pris par la branche du tableau de bord)
 - Date : 2026-10-30
+- Rédaction : session Claude « FIDO2/WebAuthn support for suivi-audits », branche `claude/intelligent-gauss-6dgh4w`
 - Contexte : la connexion exige le mot de passe puis un code TOTP ([ADR 0066](0066-limitation-des-essais-du-second-facteur-et-verrouillage-partage.md),
   [ADR 0070](0070-reponse-de-connexion-uniforme-et-alerte-de-verrouillage.md)). Le TOTP résiste mal à l'hameçonnage en temps
   réel (un code saisi sur un faux site est rejoué aussitôt). Le RSSI demande la prise en charge des clés FIDO2 (YubiKey 5,
