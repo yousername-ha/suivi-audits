@@ -1,7 +1,8 @@
 # Reprendre Suivi des audits
 
 > **Reprise la plus récente : [29/10/2026](docs/01_REPRISE_IA/REPRISE-2026-10-29.md)** (version 6.0.0 préparée, PR de
-> sécurité fusionnées, écran de connexion refondu par la PR #181, reste à faire), qui complète celle du [27/10/2026](docs/01_REPRISE_IA/REPRISE-2026-10-27.md) (règles de
+> sécurité fusionnées, écran de connexion refondu par la PR #181, reste à faire ; § 5 : module RETEX d'incident
+> intégré le 30/10 sur `claude/retex-incidents`, [ADR 0078](docs/adr/0078-habilitation-deleguee-contribution-retex.md) proposée), qui complète celle du [27/10/2026](docs/01_REPRISE_IA/REPRISE-2026-10-27.md) (règles de
 > fusion, conversion Kysely, tests de bout en bout instables). Les sections ci-dessous sont datées.
 
 Dernière mise à jour : **2026-10-11T04:04:46+02:00 (Europe/Paris)**.

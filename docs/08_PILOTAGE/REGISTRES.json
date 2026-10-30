@@ -5,9 +5,9 @@
   "updated_at": "2026-10-12T17:00:00+02:00",
   "status_rules": ["CONFIRMÉ", "OBSERVÉ", "DÉCLARÉ", "SUPPOSÉ", "NON VÉRIFIÉ", "INCONNU"],
   "statistics": {
-    "features": 45,
+    "features": 46,
     "automated_validated": 31,
-    "partial": 8,
+    "partial": 9,
     "historical_not_migrated": 5,
     "bugs_open": 1,
     "bugs_fixed_validated": 8,
@@ -16,11 +16,11 @@
     "security_risks": 7,
     "optimisations_done": 5,
     "optimisations_remaining": 3,
-    "planned_cases": 51,
+    "planned_cases": 52,
     "case_passed": 39,
     "case_failed": 0,
     "case_blocked": 0,
-    "case_not_executed": 12,
+    "case_not_executed": 13,
     "local_test_passages": 0,
     "ci_test_passages": 898
   },
@@ -1015,6 +1015,41 @@
       "provenance": "CONFIRMÉ",
       "case": "TEST-050",
       "kind": null
+    },
+    {
+      "id": "FCT-058",
+      "name": "Incidents : RETEX, chronologie animée et collecte auprès d’autres pôles",
+      "module": "incidents",
+      "historical_key": "incidents.retex",
+      "historical_source": "Champ texte « retex » de l’incident (ancien outil) conservé tel quel ; chronologie (timeline) et collecte (retexCollecte) ajoutées sans équivalent historique.",
+      "implementation": [
+        "packages/shared/src/retex-incidents.ts",
+        "packages/shared/src/retex-collecte.ts",
+        "apps/api/src/historique/retex.ts",
+        "apps/api/src/historique/incidents.ts",
+        "apps/api/src/historique/registre.ts",
+        "apps/api/migrations/047_retex_contributions.sql",
+        "apps/web/src/incidents/Retex.tsx",
+        "apps/web/src/incidents/MesContributionsRetex.tsx",
+        "apps/web/src/incidents/ChronologieRetex.tsx"
+      ],
+      "tests": [
+        "packages/shared/test/retex-incidents.test.ts",
+        "packages/shared/test/retex-collecte.test.ts",
+        "apps/api/test/historique-incidents.test.ts",
+        "apps/api/test/retex-collecte.test.ts",
+        "apps/api/test/rbac.test.ts",
+        "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-retex.spec.ts"
+      ],
+      "route": "/pilotage/incidents-retex ; /retex",
+      "verified_scope": "Chronologie saisie par le pilote (droit de modification des incidents), invitations notifiées, contributions d’un compte sans droit de module vérifiées sous verrou (ADR 0078), 404 identiques pour un compte non invité, file à valider, récupération depuis la fiche et la main courante, clôture, diffusion en lecture seule ; texte historique « retex » inchangé.",
+      "validation": "PARTIEL",
+      "migration": "MODIFIÉE VOLONTAIREMENT",
+      "gap": "Tests unitaires, API et de bout en bout exécutés localement le 30/10/2026 sur la branche claude/retex-incidents ; aucune preuve CI sur le commit analysé du registre ; recette du RSSI non faite.",
+      "criticality": "MOYENNE",
+      "provenance": "CONFIRMÉ",
+      "case": "TEST-052",
+      "kind": null
     }
   ],
   "bugs": [
@@ -1555,6 +1590,17 @@
       "acceptance": "Panneau unique centré à toutes les tailles ; formulaire dans les trois cartes empilées ; étapes code TOTP, enrôlement et changement de mot de passe dans le même panneau ; sceau, onde (OndeMenu, option connexion) et fond animés décoratifs, absents sous automate de test et à l'impression ; CSP stricte, couleurs par jetons, aucune dépendance nouvelle ; tests purs de la géométrie ; captures clair, sombre et téléphone.",
       "dependencies": "Aucune",
       "next": "Aucune côté développement : PR #181 fusionnée dans claude-suivi-smsi le 30/10/2026 après CI 7/7, publiée dans la 6.0.0 (décision du RSSI du 30/10/2026). Relecture visuelle du RSSI sur son serveur à faire (TEST-041).",
+      "estimation": "NON ESTIMÉE"
+    },
+    {
+      "id": "DEV-008",
+      "title": "RETEX d’incident : chronologie animée et collecte auprès d’autres pôles",
+      "status": "PUBLIÉ SUR LA BRANCHE",
+      "priority": "P2",
+      "origin": "demande du RSSI du 30/10/2026 (module fourni en trois patchs, intégré sans réécriture)",
+      "acceptance": "Chronologie triée et générée (écran sombre conservé) ; collecte avec invitations et relances notifiées (retex_contribution, migration 047) ; contributeur sans droit de module habilité sur un seul RETEX, écritures vérifiées sous verrou, 404 identiques (ADR 0078) ; file à valider, récupération fiche et main courante, clôture, diffusion ; CSP stricte, couleurs par jetons, aucune dépendance nouvelle ; texte « retex » historique inchangé.",
+      "dependencies": "Aucune",
+      "next": "CI 7/7 de la PR vers claude-suivi-smsi, relecture du RSSI, acceptation de l’ADR 0078, puis recette sur son serveur (TEST-041).",
       "estimation": "NON ESTIMÉE"
     }
   ],
@@ -2421,6 +2467,25 @@
       "result": "PASSÉ",
       "proof": "EXE-015",
       "limits": "Sept écarts visuels connus (contraste sur six écrans, lien du tableau de bord) reportés à la demande du RSSI ; contrôle automatique partiel, sans clavier ni lecteur d’écran ; ne remplace pas TEST-042."
+    },
+    {
+      "id": "TEST-052",
+      "feature": "FCT-058",
+      "title": "RETEX d’un incident : pilote et contributeur d’un autre pôle",
+      "priority": "P2",
+      "prerequisites": "Pile complète démarrée ; compte administrateur de recette ; comptes contributeur et non invité créés par le test, sans droit sur les incidents.",
+      "data": "Incident, cellule de crise et comptes fictifs posés par l’API ; aucune donnée de production.",
+      "procedure": "Ouvrir un RETEX et inviter un contributeur ; côté contributeur, bandeau, proposition, contribution terminée ; compte non invité : 404 ; côté pilote, accepter la proposition, récupérer la main courante, clore, générer et diffuser la chronologie.",
+      "expected": "Le contributeur ne voit que son contexte et ses éléments ; un compte non invité reçoit la même 404 qu’un incident absent ; la chronologie générée contient la proposition intégrée et la main courante ; aucune violation de CSP.",
+      "type": "AUTOMATISÉ",
+      "automation": "EXISTANTE",
+      "code": [
+        "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-retex.spec.ts",
+        "apps/api/test/retex-collecte.test.ts"
+      ],
+      "result": "NON EXÉCUTÉ",
+      "proof": null,
+      "limits": "Exécuté localement le 30/10/2026 (voir le journal de reprise) ; le registre ne déclare PASSÉ qu’un cas prouvé par la CI du commit analysé. À rejouer par la CI de la PR."
     }
   ],
   "executions": [

@@ -81,6 +81,16 @@ chiffrés ; liens vers document:ID:version lors d’un examen.
 Voir [base](BASE_DE_DONNEES.md), [API](API_INTERFACES.md) et
 [sécurité](SECURITE.md) pour schémas, accès et limites.
 
+**Habilitation déléguée sur un objet (30/10/2026, [ADR 0078](../adr/0078-habilitation-deleguee-contribution-retex.md)).**
+Le RETEX d’un incident (chronologie `timeline` et collecte `retexCollecte`, dans l’incident de l’état historique) admet
+des contributeurs **sans droit de module** : leurs six routes `/api/retex/...` sont en accès `auth` (session complète,
+CSRF, origine, zod), listées explicitement dans `rbac.test.ts`. Les écritures passent par
+`RegistreHistorique.modifierDelegue`, qui reprend `modifier` (verrou, version, audit, SSE) mais vérifie l’habilitation
+propre à l’objet sous verrou, sur l’état courant ; les lectures par `lireDelegue`, dont l’appelant filtre la réponse
+(contexte minimal et propositions de la personne). Un compte non invité reçoit la même 404 qu’un incident absent. Les
+invitations et relances sont des notifications métier `retex_contribution` sans SMSI ni objet (migration additive `047`,
+qui étend la contrainte posée par la `046`). Le pilote garde le droit `incidents:modifier`.
+
 ## Traitements asynchrones
 
 API : purge/expiration de sessions et comptes, notifications/occurrences métier.
