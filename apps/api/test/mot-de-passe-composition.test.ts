@@ -50,7 +50,7 @@ describe('changement de mot de passe', () => {
 
 describe('installation initiale', () => {
   it('refuse un mot de passe qui contient l’identifiant, une suite ou le nom d’organisation saisi, sans consommer le jeton', async () => {
-    const t2 = await createTestApp();
+    const t2 = await createTestApp({}, { poivre: false });
     try {
       const { token } = await t2.svc.auth.issueSetupToken('cli', () => {});
       const poivre = poivreDeTest();

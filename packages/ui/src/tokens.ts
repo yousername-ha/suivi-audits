@@ -313,6 +313,19 @@ export type EtatCouleur = keyof typeof ETATS;
 /** Fonds du style global « Clair » (Paramètres > Apparence), posés par `html[data-style='clair']` en mode clair. */
 export const STYLE_CLAIR = { page: '#f7f9fb', surfaceDouce: '#f0f4f7' } as const;
 
+/** Sceau décoratif de l'écran de connexion : écu tricolore assombri, posé sur le fond de la navigation vert profond. */
+export const SCEAU = { bleu: '#00005E', blanc: '#B9C4BD', rouge: '#9C0A14' } as const;
+
+/** Couleur `#rgb` ou `#rrggbb` à l'opacité `alpha` (bornée entre 0 et 1), pour un dessin sur canevas dont la teinte
+    vient d'une variable de la charte. Une valeur non hexadécimale est rendue telle quelle. */
+export function transparence(couleur: string, alpha: number): string {
+  const h = couleur.trim().replace('#', '');
+  if (!/^([0-9a-f]{3}|[0-9a-f]{6})$/i.test(h)) return couleur;
+  const n = parseInt(h.length === 3 ? [...h].map((c) => c + c).join('') : h, 16);
+  const a = Math.round(Math.max(0, Math.min(1, alpha)) * 1000) / 1000;
+  return `rgb(${(n >> 16) & 255} ${(n >> 8) & 255} ${n & 255} / ${a})`;
+}
+
 /** Couleur obtenue en posant `couleur` à l'opacité `alpha` sur `fond` (variantes légères de Mantine). */
 export function melange(couleur: string, alpha: number, fond: string): string {
   const v = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));

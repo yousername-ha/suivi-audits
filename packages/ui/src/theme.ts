@@ -28,6 +28,7 @@ import {
   VIOLET,
   CARTE,
   ETATS,
+  SCEAU,
   variablesCarte,
   type EtatCouleur,
 } from './tokens.ts';
@@ -87,6 +88,9 @@ export const cssVariablesResolver: CSSVariablesResolver = (t) => {
       '--suivi-encre': BRAND.encre,
       '--suivi-vert': BRAND.vert,
       '--suivi-violet': BRAND.violet,
+      '--suivi-sceau-bleu': SCEAU.bleu,
+      '--suivi-sceau-blanc': SCEAU.blanc,
+      '--suivi-sceau-rouge': SCEAU.rouge,
     },
     light: {
       ...base.light,

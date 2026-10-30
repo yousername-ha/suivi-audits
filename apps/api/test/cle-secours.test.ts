@@ -23,7 +23,7 @@ const poivre = () => {
 describe('clé de secours à l’installation', () => {
   let t: TestApp;
   beforeAll(async () => {
-    t = await createTestApp();
+    t = await createTestApp({}, { poivre: false });
   });
   afterAll(async () => {
     await t.close();
