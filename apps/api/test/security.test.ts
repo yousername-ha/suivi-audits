@@ -1,5 +1,5 @@
 import { hotp } from '../src/security/crypto.js';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import {
   Agent,
   cleSecoursDeTest,
@@ -83,6 +83,25 @@ describe('double authentification', () => {
     expect(after).toBeTruthy();
     expect(after).not.toBe(before);
     expect((await a.me()).stage).toBe('ok');
+  });
+
+  it('code de test (nextCode) encore accepté quand le pas change avant la vérification, fenêtre épuisée', async () => {
+    const u = await makeUser(t, 'frontiere', 'ro');
+    const cur = Math.floor(Date.now() / 30000);
+    // Deux connexions dans le même pas ont déjà consommé cur et cur + 1 : la fenêtre du compte est épuisée.
+    await t.svc.db.q('UPDATE users SET totp_last_step=$2 WHERE id=$1', [u.id, cur + 1]);
+    const a = new Agent(t);
+    await a.post('/api/auth/login', { username: u.username, password: PASSWORD });
+    await a.me();
+    const horloge = vi.spyOn(Date, 'now');
+    try {
+      horloge.mockReturnValue(cur * 30000 + 29_995); // code généré à la fin du pas cur…
+      const code = await nextCode(t, u);
+      horloge.mockReturnValue((cur + 1) * 30000 + 5); // … vérifié au début du pas suivant
+      expect((await a.post('/api/auth/mfa', { code })).statusCode).toBe(200);
+    } finally {
+      horloge.mockRestore();
+    }
   });
 
   it('impose l’enrôlement TOTP quand il n’est pas encore configuré', async () => {
