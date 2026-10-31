@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # CI, job « montée de version » (EXPL-02, EXPL-03, EXPL-04) : serveur simulé dans $SERVEUR, installé avec la version de
-# départ (dernière version publiée, ou à défaut la base de la PR), données fictives, puis mises à jour par
+# départ (dernière version publiée, 6.0.0 ou ultérieure : ADR 0077), données fictives, puis mises à jour par
 # scripts/mettre-a-jour.sh vers le commit testé :
 #   1. échec simulé de la santé → retour arrière (ancienne version en service, données identiques) ;
 #   2. simulation (--verifier) → rien ne change ;
@@ -31,7 +31,6 @@ maj() {
     -v /var/run/docker.sock:/var/run/docker.sock -v "$SERVEUR:$SERVEUR" -v "$SOURCE:$SOURCE:ro" \
     -v /srv/suivi-audits/donnees:/srv/suivi-audits/donnees \
     -v /srv/sauvegardes/suivi-audits:/srv/sauvegardes/suivi-audits \
-    -v /root/.suivi-backup-pass:/root/.suivi-backup-pass:ro \
     -w "$SERVEUR" -e "PWD=$SERVEUR" \
     -e GIT_CONFIG_COUNT=2 -e GIT_CONFIG_KEY_0=safe.directory -e "GIT_CONFIG_VALUE_0=$SERVEUR" \
     -e GIT_CONFIG_KEY_1=safe.directory -e "GIT_CONFIG_VALUE_1=$SOURCE" \
@@ -45,7 +44,6 @@ maj_installee() {
     -v /var/run/docker.sock:/var/run/docker.sock -v "$SERVEUR:$SERVEUR" -v "$SOURCE:$SOURCE:ro" \
     -v /srv/suivi-audits/donnees:/srv/suivi-audits/donnees \
     -v /srv/sauvegardes/suivi-audits:/srv/sauvegardes/suivi-audits \
-    -v /root/.suivi-backup-pass:/root/.suivi-backup-pass:ro \
     -w "$SERVEUR" -e "PWD=$SERVEUR" \
     -e GIT_CONFIG_COUNT=2 -e GIT_CONFIG_KEY_0=safe.directory -e "GIT_CONFIG_VALUE_0=$SERVEUR" \
     -e GIT_CONFIG_KEY_1=safe.directory -e "GIT_CONFIG_VALUE_1=$SOURCE" \
@@ -79,9 +77,8 @@ api administrateur "$URL"
 api import "$URL" "$SOURCE/tests/fixtures/legacy-fixture.json"
 api document "$URL"
 api instantane "$URL" "$RUNNER_TEMP/reference.json"
-sudo sh -c 'umask 077 && openssl rand -base64 48 > /root/.suivi-backup-pass'
-# Clés age (ADR 0071, ADR 0077) : la version de départ ne les utilise pas (phrase secrète) ; la cible les lit dans le dossier des
-# données. Les y déposer avant la montée (le script de la cible ; un serveur réel les obtient de l'exécutant et de l'assistant).
+# Clés age (ADR 0071, ADR 0077) : les versions de départ (6.0.0 et suivantes) et cible les lisent dans le dossier des données.
+# Les y déposer avant la montée (le script de la cible ; un serveur réel les obtient de l'exécutant et de l'assistant).
 command -v age-keygen > /dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq age > /dev/null; }
 age-keygen -o "$RUNNER_TEMP/cle-secours.key" 2> /dev/null
 sudo "$SOURCE/scripts/generer-cles-sauvegarde.sh" --secours "$(age-keygen -y "$RUNNER_TEMP/cle-secours.key")" --confirmer > /dev/null
@@ -97,7 +94,7 @@ if maj SUIVI_TEST_ECHEC_SANTE=1; then echec "la mise à jour aurait dû échouer
 attendre
 api instantane "$URL" "$RUNNER_TEMP/apres-echec.json" "$RUNNER_TEMP/reference.json"
 dernier_rapport | grep -q '"resultat":"retour-arriere"' || echec "rapport « retour-arriere » absent"
-[ -z "$(sudo ls /srv/sauvegardes/suivi-audits/avant-mise-a-jour/ | grep -E '\.tar\.(enc|age)$')" ] && echec "sauvegarde avant mise à jour absente"
+[ -z "$(sudo ls /srv/sauvegardes/suivi-audits/avant-mise-a-jour/ | grep -E '\.tar\.age$')" ] && echec "sauvegarde avant mise à jour absente"
 fin_groupe
 
 groupe "2. Simulation (--verifier) : rien ne change"
@@ -111,8 +108,6 @@ sudo git -C "$SERVEUR" rev-parse --verify -q "$DEPART_REF^{commit}" > /dev/null
 maj_installee
 [ "$(version_env)" = "$CIBLE_VERSION" ] || echec "APP_VERSION différent de $CIBLE_VERSION"
 attendre
-# Version de départ antérieure au poivre (ADR 0072) : ses empreintes sont refusées par la cible ; reprise d'une base sans poivre.
-api reprise-poivre "$URL"
 api instantane "$URL" "$RUNNER_TEMP/apres-maj.json" "$RUNNER_TEMP/reference.json"
 grep -q "\"version\": \"$CIBLE_VERSION\"" "$RUNNER_TEMP/apres-maj.json" || echec "/api/version n'indique pas $CIBLE_VERSION"
 dernier_rapport | grep -q '"resultat":"reussie"' || echec "rapport « reussie » absent"

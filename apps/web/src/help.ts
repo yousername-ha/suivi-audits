@@ -99,7 +99,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
   },
   {
     id: 'parcours-pilotage',
-    title: 'Parcours guidé',
+    title: 'Parcours par démarche',
     permission: 'pilotage:lire',
     link: '/pilotage/parcours',
     steps: [
@@ -169,6 +169,17 @@ export const HELP_ARTICLES: HelpArticle[] = [
       'Lors de la première connexion, activez la double authentification et changez le mot de passe temporaire si cela vous est demandé.',
       'Dans Mon compte, gérez votre mot de passe, votre double authentification et vos sessions.',
       'Utilisez Déconnexion pour fermer la session. En cas d’erreur réseau ou de refus du serveur, un message vous permet de réessayer : la fermeture n’est pas annoncée comme réussie.',
+    ],
+  },
+  {
+    id: 'ordre-menu',
+    title: 'Ordre du menu',
+    link: '/account',
+    steps: [
+      'Placez les familles du menu et leurs rubriques dans l’ordre qui vous convient : glissez-les à la souris à leur nouvelle place. Échap pendant le glisser annule le déplacement.',
+      'Au clavier, placez-vous sur une famille ou une rubrique du menu, puis utilisez Alt + flèche haut ou Alt + flèche bas.',
+      'L’ordre est enregistré avec vos préférences et vous suit sur tous vos appareils. Il ne change que l’affichage : vos droits et les adresses des pages restent les mêmes.',
+      'Dans Mon compte, rubrique Affichage, « Rétablir l’ordre par défaut » remet le menu dans son ordre d’origine.',
     ],
   },
   {

@@ -101,7 +101,6 @@ class Updates(unittest.TestCase):
         env = options['extra_env']
         self.assertEqual(env['BACKUP_KEY_FILE'],str(self.data/'cles-sauvegarde/serveur.key'))
         self.assertEqual(env['BACKUP_RECIPIENTS_FILE'],str(self.data/'cles-sauvegarde/secours.pub'))
-        self.assertNotIn('BACKUP_PASSPHRASE_FILE',env)
         self.assertEqual(env['BACKUP_DEST'],str(self.data/'sauvegardes'))
         self.assertEqual(env['EXPLOITATION_TLS_HOST'],'gateway')
         for path in (Path(env['TMPDIR']),Path(env['BACKUP_DEST'])):
