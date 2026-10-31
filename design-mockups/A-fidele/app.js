@@ -93,12 +93,13 @@
     'Terminée': { cls: 'succes', ico: 'coche-cercle', c: '--succes' },
   };
   var REF_CLS = { vert: 'vert', bleu: 'info', violet: 'marque-violet', orange: 'alerte', gris: 'gris' };
+  /* c : couleur de composant (pastille, bordure, barre, >= 3:1) ; t : variante texte (>= 4,5:1 sur blanc et fond de page) */
   var GRAVITE = [
-    { ico: 'coche-cercle', c: '--donnee-gris' },
-    { ico: 'info', c: '--info' },
-    { ico: 'info', c: '--jaune' },
-    { ico: 'alerte', c: '--alerte' },
-    { ico: 'alerte', c: '--erreur' },
+    { ico: 'coche-cercle', c: '--donnee-gris', t: '--texte-2' },
+    { ico: 'info', c: '--info', t: '--info-texte' },
+    { ico: 'info', c: '--jaune', t: '--jaune-texte' },
+    { ico: 'alerte', c: '--alerte', t: '--alerte-texte' },
+    { ico: 'alerte', c: '--erreur', t: '--erreur-texte' },
   ];
   var TYPE_EVENEMENT_ICO = {
     'Détection': 'recherche', 'Qualification': 'filtre', 'Alerte et escalade': 'alerte', 'Analyse': 'cible', 'Confinement': 'bouclier',
@@ -117,7 +118,7 @@
   function badgeType(t) { return '<span class="badge badge--contour">' + esc(t) + '</span>'; }
   function gravite(n) {
     var g = GRAVITE[n];
-    return '<span class="gravite" data-c="var(' + g.c + ')">' + ico(g.ico) + 'Gravité ' + esc(F.vocabulaire.gravitesRetex[n].toLowerCase()) + '</span>';
+    return '<span class="gravite" data-c="var(' + g.t + ')">' + ico(g.ico) + 'Gravité ' + esc(F.vocabulaire.gravitesRetex[n].toLowerCase()) + '</span>';
   }
   function avatar(id, classe) { var u = F.utilisateur(id); return '<span class="avatar' + (classe ? ' ' + classe : '') + '" aria-hidden="true">' + esc(u.initiales) + '</span>'; }
   function personne(id, avecRole) {
@@ -818,7 +819,7 @@
           '<p class="evenement__titre">' + (i + 1) + '. ' + esc(e.titre) + '</p><p class="evenement__detail">' + esc(e.detail) + '</p>' +
           '<p class="evenement__pied">' + avatar(e.acteur) + esc(u.nom) + ' · ' + esc(u.role) + '</p></div></li>';
       }).join('') + '</ol>' +
-      '<article class="carte retex__fin" id="retex-fin" aria-hidden="true"><h2 class="carte__titre">Enseignements du RETEX</h2><ul class="enseignements">' + inc.enseignements.map(function (e) { return '<li>' + ico('coche-cercle') + '<span>' + esc(e) + '</span></li>'; }).join('') + '</ul>' +
+      '<article class="carte retex__fin" id="retex-fin" aria-hidden="true" hidden><h2 class="carte__titre">Enseignements du RETEX</h2><ul class="enseignements">' + inc.enseignements.map(function (e) { return '<li>' + ico('coche-cercle') + '<span>' + esc(e) + '</span></li>'; }).join('') + '</ul>' +
       '<div class="carte__pied"><span>' + ico('calendrier') + ' Réunion de retour d’expérience du 24/09/2026</span><a class="carte__lien" href="#/audit/AUD-07">Audit lié ' + ico('fleche-droite') + '</a></div></article>' +
       '</div>' +
       '<div class="pile"><article class="carte"><h2 class="carte__titre">Incident</h2>' +
@@ -842,7 +843,9 @@
       compteur.textContent = visibles + ' / ' + n + ' points affichés';
       bSuivant.disabled = visibles >= n; bTout.disabled = visibles >= n; bReset.disabled = visibles === 0;
       var complet = visibles >= n;
-      fin.classList.toggle('est-visible', complet);
+      /* La carte des enseignements est retirée du flux (hidden) tant que le déroulé n'est pas complet : rien ne reste à opacité 0. */
+      if (complet && fin.hidden) { fin.hidden = false; void fin.offsetWidth; fin.classList.add('est-visible'); }
+      else if (!complet) { fin.classList.remove('est-visible'); fin.hidden = true; }
       fin.setAttribute('aria-hidden', String(!complet));
       items.forEach(function (it, i) { it.classList.toggle('est-courant', i === visibles - 1); });
       barres.forEach(function (b, i) { b.setAttribute('fill', jeton(i < visibles ? GRAVITE[evts[i].gravite].c : '--trait')); });

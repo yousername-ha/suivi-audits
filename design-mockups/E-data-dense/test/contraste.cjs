@@ -34,6 +34,7 @@ const COUPLES = [
   ['texte-inverse', 'accent', 4.5, 'bouton primaire'],
   ['texte-inverse', 'accent-survol', 4.5, 'bouton primaire survolé'],
   ['texte-inverse', 'erreur', 4.5, 'bouton danger, compteur de notifications'],
+  ['texte-inverse', 'erreur-survol', 4.5, 'bouton danger survolé'],
   ['texte-inverse', 'texte', 4.5, 'info-bulle'],
   ['texte-inverse-2', 'texte', 4.5, 'info-bulle, lignes secondaires'],
   ['succes', 'succes-fond', 4.5, 'pastille Clos / Terminée'],

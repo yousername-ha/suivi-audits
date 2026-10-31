@@ -31,17 +31,22 @@ qu'il reste rare et lisible.
 | Filet / filet léger | `#D8D1C4` / `#E7E1D5` |
 | Bordure de champ | `#857D70` |
 | Encre (texte) | `#23221E` |
-| Texte secondaire / tertiaire | `#5B564D` / `#7A7366` |
+| Texte secondaire / tertiaire | `#5B564D` / `#6F685B` |
 | Terre cuite (actions) / sombre | `#A84E24` / `#8F421E` |
 | Succès (texte / fond) | `#2F6B46` / `#E4EEE4` |
 | Alerte (texte / fond) | `#7F5208` / `#F7ECD2` |
 | Erreur (texte / fond) | `#9A3528` / `#F7E2DC` |
 | Information (texte / fond) | `#2B5A88` / `#E1EAF3` |
 | Reporté (texte / fond) | `#5B4A86` / `#EAE5F2` |
-| Graphiques : ocre, sauge, gris chaud | `#B8862B`, `#5C8A6C`, `#8F897E` |
+| Graphiques : ocre, sauge, gris chaud | `#A97B26`, `#5C8A6C`, `#8B857A` |
+| Halo de focus des champs | `#6B86AA` (bleu clair) |
 
 Tous les couples texte/fond utilisés ont été vérifiés par calcul de luminance (`test/contraste.cjs`) :
-≥ 4,5 : 1 pour le texte, ≥ 3 : 1 pour les bordures de champ et les remplissages de graphiques.
+≥ 4,5 : 1 pour le texte (minimum obtenu : 4,76 : 1, texte tertiaire sur surface douce), ≥ 3 : 1 pour les bordures de
+champ, les anneaux de focus et les remplissages de graphiques, y compris sur la piste douce des barres (minimum 3,16 : 1).
+Revue du 31/10 : le texte tertiaire est passé de `#7A7366` (4,06 : 1 sur surface douce) à `#6F685B`, l'ocre de `#B8862B`
+(2,80 : 1 sur la piste) à `#A97B26`, le gris chaud de `#8F897E` à `#8B857A`, et le halo de focus des champs du bleu pâle
+(1,2 : 1) au bleu clair (3,7 : 1).
 
 ## Typographie
 
@@ -75,6 +80,9 @@ supprimées, seuls des fondus de 150 ms subsistent ; la pulsation du squelette e
 - Statuts, criticités, priorités et échéances : couleur + icône ou libellé, jamais la couleur seule
   (badges, échéances « Dépassée de N jours », « J-7 »).
 - Focus visible partout (anneau terre cuite à double liseré) ; lien d'évitement ; `aria-current="page"` sur la navigation.
+  Les champs de formulaire montrent leur anneau sur `:focus` et `:focus-within` (Chromium ne fait pas correspondre
+  `:focus-visible` au champ `date` quand son bouton de calendrier interne est focalisé) ; les éléments SVG survolables
+  (barres, segments, points) reçoivent un `outline` terre cuite, un `box-shadow` étant sans effet sur une forme SVG.
 - Tableau : `aria-sort` sur la colonne triée, boutons de tri nommés, lignes cliquables doublées d'un lien.
 - Onglets : `role="tablist"`/`tab`/`tabpanel`, flèches, Début/Fin, panneaux `hidden`.
 - Modale : `role="dialog"`, `aria-modal`, piège de focus, Échap, retour du focus au bouton d'origine.
@@ -98,10 +106,14 @@ supprimées, seuls des fondus de 150 ms subsistent ; la pulsation du squelette e
 - Les champs `type="date"` affichent le format du navigateur (ex. `mm/dd/yyyy` sous Chromium en anglais).
 - Pas de mode sombre ni d'écran mural ; les sélecteurs sont stylés par dégradés CSS (pas de composant personnalisé).
 - La recherche est plein texte simple (sans accents normalisés), l'export et la modification sont simulés par toast.
-- Tablette 1024 px : grille repliée sur deux colonnes, navigation sans icônes ; en dessous de 760 px la mise en
-  page est fonctionnelle mais non optimisée (hors périmètre du brief).
+- Tablette 1024 px : grille repliée sur deux colonnes, navigation sans icônes ; le tableau des audits est compacté
+  (en-têtes sur deux lignes, avatars masqués, jauges plus courtes) pour tenir sans défilement horizontal ; en dessous
+  de 760 px la mise en page est fonctionnelle mais non optimisée (hors périmètre du brief).
 
 ## Écarts d'accessibilité éventuels
+
+- RETEX : les points non encore déroulés restent à opacité 0 et `aria-hidden="true"` (ils occupent leur place dans la
+  chronologie) ; c'est le comportement voulu du déroulé point par point, en mouvement réduit comme en mouvement normal.
 
 - Les filets décoratifs (`#D8D1C4` sur ivoire, 1,4 : 1) sont sous 3 : 1 : ils sont purement décoratifs, mais
   l'en-tête de tableau s'appuie sur une ligne en encre pour la structure.
@@ -118,3 +130,6 @@ supprimées, seuls des fondus de 150 ms subsistent ; la pulsation du squelette e
 recherche, formulaire (erreurs puis succès), RETEX (bouton, clavier, tout dérouler), modale (piège de
 focus, Échap), toasts, chargement, `postMessage`, 1024 px, puis le même parcours avec `reducedMotion: 'reduce'`.
 Aucune erreur ni avertissement console. Captures dans `test/captures/`. `node test/contraste.cjs` : contrastes.
+Revue complémentaire du 31/10 (Playwright) : six ancres à 1440 et 1024 px sans débordement horizontal ni requête
+externe ; en mouvement réduit, aucun élément visible à opacité 0 après 1,5 s et tracés à `stroke-dashoffset: 0` ;
+parcours Tab complet sur chaque écran avec indicateur de focus mesurable (outline ou box-shadow) sur chaque élément.

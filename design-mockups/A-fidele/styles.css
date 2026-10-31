@@ -90,6 +90,7 @@ table { border-collapse: collapse; width: 100%; }
 .nav__lien[aria-current='page'] { background: var(--nav-actif); }
 .nav__lien[aria-current='page']::before { transform: scaleY(1); }
 .nav__lien[aria-current='page'] .icone { color: var(--nav-repere); }
+.nav__lien[aria-current='page'] .nav__compteur, .nav__lien:hover .nav__compteur { color: var(--nav-texte); } /* 5,5:1 sur l'entrée active (3,6:1 avec le texte secondaire) */
 .nav__libelle { flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; }
 .nav__compteur { font-size: var(--taille-2xs); font-weight: var(--graisse-grasse); padding: 0.1rem 0.45rem; border-radius: var(--rayon-rond); background: rgb(255 255 255 / 10%); color: var(--nav-texte-2); font-variant-numeric: tabular-nums; }
 .nav__pied { padding: var(--esp-sm) var(--esp-md); border-top: 1px solid rgb(255 255 255 / 8%); }
@@ -249,9 +250,10 @@ a.kpi:hover { box-shadow: var(--ombre-survol); transform: translateY(-2px); text
 .graphique .barre { transform-box: fill-box; transform-origin: left center; transform: scaleX(0); transition: transform var(--duree-graphique) var(--courbe); rx: 4; cursor: default; }
 .graphique .barre--verticale { transform-origin: center bottom; transform: scaleY(0); }
 .graphique.est-anime .barre { transform: scale(1); }
-.graphique .barre:hover, .graphique .barre:focus-visible { filter: brightness(0.9); outline: none; stroke: var(--encre); stroke-width: 1.5; }
+.graphique .barre:hover, .graphique .barre:focus-visible { filter: brightness(0.9); stroke: var(--encre); stroke-width: 1.5; }
+.graphique .barre:focus-visible, .graphique .arc:focus-visible, .graphique .point:focus-visible, .graphique .colonne-survol:focus-visible { outline: var(--trait-focus) solid var(--vert); outline-offset: 3px; }
 .graphique .arc { fill: none; stroke-linecap: butt; transition: stroke-dashoffset var(--duree-graphique) var(--courbe), opacity var(--duree) var(--courbe); cursor: default; }
-.graphique .arc:hover, .graphique .arc:focus-visible { opacity: 0.8; outline: none; }
+.graphique .arc:hover, .graphique .arc:focus-visible { opacity: 0.8; }
 .graphique .piste { fill: none; stroke: var(--sombre-clair); }
 .graphique .centre { fill: var(--texte); font-size: 26px; font-weight: 650; letter-spacing: -0.03em; }
 .graphique .centre--sous { fill: var(--texte-2); font-size: 11px; font-weight: 500; }
@@ -260,9 +262,9 @@ a.kpi:hover { box-shadow: var(--ombre-survol); transform: translateY(-2px); text
 .graphique.est-anime .aire { opacity: 0.12; }
 .graphique .point { fill: var(--surface); stroke-width: 2; opacity: 0; transition: opacity var(--duree-lente) var(--courbe); cursor: default; }
 .graphique.est-anime .point { opacity: 1; }
-.graphique .point:hover, .graphique .point:focus-visible { r: 6; outline: none; }
+.graphique .point:hover, .graphique .point:focus-visible { r: 6; }
 .graphique .colonne-survol { fill: transparent; }
-.graphique .colonne-survol:hover, .graphique .colonne-survol:focus-visible { fill: rgb(36 59 52 / 5%); outline: none; }
+.graphique .colonne-survol:hover, .graphique .colonne-survol:focus-visible { fill: rgb(36 59 52 / 5%); }
 .graphique .repere-cible { stroke: var(--encre); stroke-width: 2; stroke-linecap: round; }
 .graphique .jauge-valeur { fill: var(--texte); font-size: 30px; font-weight: 650; letter-spacing: -0.03em; }
 .graphique .jauge-libelle { font-size: 11px; }
@@ -305,11 +307,11 @@ a.kpi:hover { box-shadow: var(--ombre-survol); transform: translateY(-2px); text
 .champ__erreur .icone { width: 0.95rem; height: 0.95rem; }
 .champ--invalide .champ__erreur { display: inline-flex; }
 .controle { height: var(--hauteur-controle); padding: 0 var(--esp-sm); border: 1px solid var(--bordure-champ); border-radius: var(--rayon-md); background: var(--surface); color: var(--texte); font-size: var(--taille-md); width: 100%; transition: border-color var(--duree) var(--courbe), box-shadow var(--duree) var(--courbe); appearance: none; }
-.controle::placeholder { color: var(--texte-2); opacity: 0.85; }
+.controle::placeholder { color: var(--texte-2); opacity: 1; } /* opaque : 5,8:1 (à 85 % le couple tombait à 4,2:1) */
 .controle:hover { border-color: var(--texte-2); }
-.controle:focus, .controle:focus-visible { outline: none; border-color: var(--vert); box-shadow: var(--anneau-focus); }
+.controle:focus, .controle:focus-visible, .controle:focus-within { outline: none; border-color: var(--vert); box-shadow: var(--anneau-focus); } /* :focus-within : l'hôte d'un champ date garde l'anneau quand le bouton de calendrier interne (shadow DOM) est focalisé */
 .controle[aria-invalid='true'] { border-color: var(--erreur); }
-.controle[aria-invalid='true']:focus { box-shadow: 0 0 0 3px color-mix(in srgb, var(--erreur) 25%, transparent); }
+.controle[aria-invalid='true']:focus, .controle[aria-invalid='true']:focus-within { box-shadow: 0 0 0 3px color-mix(in srgb, var(--erreur) 25%, transparent); }
 textarea.controle { height: auto; min-height: 6rem; padding: var(--esp-xs) var(--esp-sm); resize: vertical; line-height: var(--interligne); }
 .controle--select { padding-right: 2.2rem; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2358695F' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>"); background-repeat: no-repeat; background-position: right 0.6rem center; background-size: 1.1rem; }
 .champ-recherche { position: relative; display: flex; align-items: center; min-width: 16rem; flex: 1 1 16rem; max-width: 24rem; }
@@ -449,6 +451,7 @@ th[aria-sort='ascending'] .tableau__tri .icone, th[aria-sort='descending'] .tabl
 .gravite .icone { width: 0.95rem; height: 0.95rem; }
 .retex__fin { opacity: 0; transform: translateY(8px); transition: opacity var(--duree-entree) var(--courbe), transform var(--duree-entree) var(--courbe); }
 .retex__fin.est-visible { opacity: 1; transform: none; }
+.retex__fin[hidden] { display: none; }
 .enseignements li { display: flex; gap: var(--esp-sm); padding: var(--esp-xs) 0; border-top: 1px solid var(--trait); }
 .enseignements li:first-child { border-top: 0; }
 .enseignements .icone { color: var(--vert); margin-top: 0.2rem; }

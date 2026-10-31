@@ -251,8 +251,8 @@ button, input, select, textarea { font-family: inherit; }
 .graphique .grille-h { stroke: var(--grille-graphique); stroke-dasharray: 2 4; }
 .graphique .barre { transform-box: fill-box; transform-origin: left center; transform: scaleX(0); transition: transform var(--duree-graphique) var(--courbe); cursor: default; }
 .graphique .barre.est-visible { transform: scaleX(1); }
-.graphique .barre:hover, .graphique .barre:focus-visible { filter: brightness(1.25) drop-shadow(0 0 4px currentColor); box-shadow: none; outline: none; }
-.graphique .barre:focus-visible { stroke: var(--texte); stroke-width: 1; }
+.graphique .barre:hover, .graphique .barre:focus-visible { filter: brightness(1.25) drop-shadow(0 0 4px currentColor); box-shadow: none; }
+.graphique .barre:focus-visible { stroke: var(--texte); stroke-width: 1; outline: 2px solid var(--cyan); outline-offset: 2px; }
 .graphique .colonne { transform-box: fill-box; transform-origin: center bottom; transform: scaleY(0); transition: transform var(--duree-graphique) var(--courbe); }
 .graphique .colonne.est-visible { transform: scaleY(1); }
 .graphique .trace { fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: var(--longueur, 1000); stroke-dashoffset: var(--longueur, 1000); transition: stroke-dashoffset var(--duree-graphique) var(--courbe); }
@@ -262,10 +262,12 @@ button, input, select, textarea { font-family: inherit; }
 .graphique .aire.est-visible { opacity: 1; }
 .graphique .point { fill: var(--fond-page); stroke-width: 1.6; cursor: default; opacity: 0; transition: opacity var(--duree-normale) var(--courbe) 600ms, r var(--duree-rapide); }
 .graphique .point.est-visible { opacity: 1; }
-.graphique .point:hover, .graphique .point:focus-visible { r: 5; fill: currentColor; filter: drop-shadow(0 0 4px currentColor); outline: none; box-shadow: none; }
+.graphique .point:hover, .graphique .point:focus-visible { r: 5; fill: currentColor; filter: drop-shadow(0 0 4px currentColor); box-shadow: none; }
+.graphique .point:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
 .graphique .segment { fill: none; stroke-width: 12; stroke-dasharray: var(--longueur, 1000); stroke-dashoffset: var(--longueur, 1000); transition: stroke-dashoffset var(--duree-graphique) var(--courbe), stroke-width var(--duree-rapide); cursor: default; }
 .graphique .segment.est-visible { stroke-dashoffset: 0; }
-.graphique .segment:hover, .graphique .segment:focus-visible { stroke-width: 16; filter: drop-shadow(0 0 4px currentColor); outline: none; box-shadow: none; }
+.graphique .segment:hover, .graphique .segment:focus-visible { stroke-width: 16; filter: drop-shadow(0 0 4px currentColor); box-shadow: none; }
+.graphique .segment:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
 .graphique .jauge-fond { fill: none; stroke: var(--surface-saisie); stroke-width: 10; }
 .graphique .jauge-valeur { fill: none; stroke-width: 10; stroke-linecap: round; stroke-dasharray: var(--longueur, 1000); stroke-dashoffset: var(--longueur, 1000); transition: stroke-dashoffset var(--duree-graphique) var(--courbe); filter: drop-shadow(0 0 5px currentColor); }
 .graphique .jauge-valeur.est-visible { stroke-dashoffset: var(--decalage, 0); }
@@ -343,7 +345,7 @@ button, input, select, textarea { font-family: inherit; }
 }
 .saisie::placeholder { color: var(--texte-attenue); }
 .saisie:hover { border-color: var(--texte-attenue); }
-.saisie:focus { outline: none; border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan), var(--lueur-cyan); }
+.saisie:focus, .saisie:focus-within { outline: none; border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan), var(--lueur-cyan); }
 .saisie--mono { font-family: var(--police-mono); }
 textarea.saisie { height: auto; min-height: 5.5rem; padding: var(--e-2) var(--e-3); resize: vertical; line-height: var(--interligne); }
 select.saisie { appearance: none; -webkit-appearance: none; padding-right: 2rem; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23A9B6CC' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.6rem center; background-size: 0.8rem; cursor: pointer; }

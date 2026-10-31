@@ -259,10 +259,10 @@
       s.appendChild(svg('circle', { class: 'marqueur', cx: X(fin), cy: Y(sr.valeurs[fin]), r: 4, fill: sr.couleur }));
     });
     /* Colonnes de survol : une par catégorie */
-    var surbrillance = svg('line', { class: 'axe', x1: 0, x2: 0, y1: m.t, y2: h - m.b, opacity: 0 });
+    var surbrillance = svg('line', { class: 'axe', x1: 0, x2: 0, y1: m.t, y2: h - m.b, visibility: 'hidden' });
     s.appendChild(surbrillance);
     var marqueurs = series.map(function (sr) {
-      var c = svg('circle', { class: 'marqueur', r: 4, fill: sr.couleur, opacity: 0 });
+      var c = svg('circle', { class: 'marqueur', r: 4, fill: sr.couleur, visibility: 'hidden' });
       s.appendChild(c);
       return c;
     });
@@ -272,14 +272,14 @@
       function entrer(e) {
         surbrillance.setAttribute('x1', X(i));
         surbrillance.setAttribute('x2', X(i));
-        surbrillance.setAttribute('opacity', 1);
-        marqueurs.forEach(function (mk, k) { mk.setAttribute('cx', X(i)); mk.setAttribute('cy', Y(series[k].valeurs[i])); mk.setAttribute('opacity', 1); });
+        surbrillance.setAttribute('visibility', 'visible');
+        marqueurs.forEach(function (mk, k) { mk.setAttribute('cx', X(i)); mk.setAttribute('cy', Y(series[k].valeurs[i])); mk.setAttribute('visibility', 'visible'); });
         var r = zone.getBoundingClientRect();
         montrerInfobulle(r.left + r.width / 2, r.top + 10, c, series.map(function (sr) { return sr.libelle + ' : ' + sr.valeurs[i]; }));
       }
       function sortir() {
-        surbrillance.setAttribute('opacity', 0);
-        marqueurs.forEach(function (mk) { mk.setAttribute('opacity', 0); });
+        surbrillance.setAttribute('visibility', 'hidden');
+        marqueurs.forEach(function (mk) { mk.setAttribute('visibility', 'hidden'); });
         cacherInfobulle();
       }
       zone.addEventListener('mouseenter', entrer);

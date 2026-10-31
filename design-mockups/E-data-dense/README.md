@@ -32,7 +32,7 @@ sur des aplats de couleur : la couleur est réservée aux statuts et aux donnée
 | Accent indigo (boutons, liens, onglet actif, focus) | `#3949AB` (survol `#2F3D94`, fond `#E9ECF8`, bordure `#B7C0E9`) |
 | Succès (Clos, Terminée) | `#1B7A3E` sur `#E6F4EA` |
 | Alerte (Rapport attendu, Majeure, À vérifier) | `#A84E0A` sur `#FBEEE2` |
-| Erreur (Critique, Bloquée, Ouvert, retard) | `#BE2E2E` sur `#FCE9E9` |
+| Erreur (Critique, Bloquée, Ouvert, retard) | `#BE2E2E` sur `#FCE9E9` (bouton danger survolé `#A82626`) |
 | Info (En cours) | `#1F62B8` sur `#E7EFFA` |
 | Violet (En préparation) | `#6A47C2` sur `#EFEAFB` |
 | Ambre (Reporté, Mineure) | `#8A6400` sur `#FBF3DC` |
@@ -42,7 +42,8 @@ sur des aplats de couleur : la couleur est réservée aux statuts et aux donnée
 | Piste des barres / grille des graphiques | `#E1E4EA` / `#EEF0F4` |
 | Info-bulle (fond / texte secondaire) | `#15181E` / `#AEB4C0` |
 
-Tous les couples texte/fond ont été vérifiés en Node (`test/contraste.cjs`, 44 couples) : ≥ 4,5 : 1 pour le texte,
+Tous les couples texte/fond ont été vérifiés en Node (`test/contraste.cjs`, 45 couples ; `test/audit-complementaire.cjs` mesure
+en plus 44 couples texte / fond effectif depuis les styles calculés dans Chromium, minimum 4,74 : 1) : ≥ 4,5 : 1 pour le texte,
 y compris les libellés 11 px et les pastilles sur fond teinté ; ≥ 3 : 1 pour les bordures de champ, l'anneau de focus
 et les remplissages de graphiques. La paire de séries indigo/orange de la courbe d'évolution a été passée au
 validateur daltonisme (ΔE ≥ 26 protan/deutan/tritan). Les couleurs de statut ne sont jamais seules : icône + libellé
@@ -110,7 +111,9 @@ Toutes en `transform` / `opacity` (et `stroke-dasharray`/`stroke-dashoffset` pou
 
 `prefers-reduced-motion: reduce` : toutes les animations et transitions passent à 1 ms, les tracés SVG s'affichent
 complets, le squelette n'a plus de brillance, la roue est immobile, les toasts disparaissent sans glissement, le
-défilement vers le point RETEX est instantané.
+défilement vers le point RETEX est instantané. Les éléments masqués jusqu'au survol (marqueurs et colonne de survol de
+la courbe, touches de raccourci de la navigation) utilisent `visibility: hidden`, pas une opacité nulle : aucun
+élément visible ne reste à opacité 0 une fois l'écran affiché.
 
 ## Points forts
 
@@ -119,8 +122,9 @@ défilement vers le point RETEX est instantané.
 - Un seul accent : les couleurs n'apparaissent que là où elles portent une information (statut, criticité, série).
 - Cibles ≥ 32 px malgré la densité (boutons, liens de navigation, onglets, pagination, cases des menus) ; seuls les
   boutons de fermeture des toasts et jetons sont à 28 / 16 px (voir écarts).
-- Clavier complet : raccourcis d'écran, onglets avec flèches, RETEX au clavier, menus fermables à Échap, piège de
-  focus de la modale, anneau de focus double (blanc + indigo) visible sur toutes les surfaces.
+- Clavier complet : raccourcis d'écran (les touches `1` à `6` s'affichent au survol et au focus clavier des entrées de
+  navigation), onglets avec flèches, RETEX au clavier, menus fermables à Échap, piège de focus de la modale, anneau de
+  focus double (blanc + indigo) visible sur toutes les surfaces.
 
 ## Limites connues
 
@@ -152,4 +156,10 @@ recherche, pagination, densité, clic de ligne, modale (piège de focus, Échap,
 succès, bouton désactivé), RETEX (clic et clavier), toasts, squelette, `postMessage`, raccourci clavier, cibles
 cliquables, vue 1024 px sans débordement horizontal, contexte `reducedMotion: 'reduce'` ; aucune erreur ni
 avertissement de console. Captures dans `test/`.
-`node design-mockups/E-data-dense/test/contraste.cjs` : 44 couples de couleurs.
+`node design-mockups/E-data-dense/test/contraste.cjs` : 45 couples de couleurs issus de `tokens.css`.
+`node design-mockups/E-data-dense/test/audit-complementaire.cjs` : audit croisé à 1440 × 900 et 1024 × 768 (six ancres,
+console, débordement, pastilles icône + libellé), interactions (onglets, recherche, filtre, tri `aria-sort`, pagination,
+ligne → fiche, formulaire vide puis rempli, modale et retour de focus, toast, RETEX point par point puis « Tout
+dérouler », `postMessage`), Tab depuis le haut de page avec indicateur de focus mesuré (`outline` ou `box-shadow`),
+contexte `reducedMotion: 'reduce'` (aucun élément visible à opacité 0 après 1,5 s, tracés et barres complets, KPI à
+leur valeur) et contrastes calculés sur les couleurs réellement rendues.

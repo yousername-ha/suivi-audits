@@ -73,6 +73,26 @@ var couples = [
   /* Toasts (fond blanc, liseré coloré) et bandeaux pleins */
   ['Blanc / fond toast sombre (encre)', '#F2F6EF', '#243B34', 4.5],
   ['Nav texte 2 / fond encre', '#B5CEC0', '#243B34', 4.5],
+  /* Compteur de navigation : fond blanc à 10 % sur l'entrée (repos, actif, survol) */
+  ['Nav compteur (repos) texte 2 / blanc 10 % sur nav fond', '#B5CEC0', sur('#FFFFFF', 0.10, NAV), 4.5],
+  ['Nav compteur (actif) texte / blanc 10 % sur nav actif', '#F2F6EF', sur('#FFFFFF', 0.10, NAV_ACTIF), 4.5],
+  ['Nav compteur (survol) texte / blanc 10 % sur nav survol', '#F2F6EF', sur('#FFFFFF', 0.10, NAV_SURVOL), 4.5],
+  /* Gravité RETEX : variantes texte des états, sur blanc et sur surface douce */
+  ['Gravité texte secondaire / surface douce', '#58695F', DOUCE, 4.5],
+  ['Gravité info texte / surface douce', '#145B9C', DOUCE, 4.5],
+  ['Gravité jaune texte / surface douce', '#925500', DOUCE, 4.5],
+  ['Gravité alerte texte / surface douce', '#A03E08', DOUCE, 4.5],
+  ['Gravité erreur texte / surface douce', '#A82424', DOUCE, 4.5],
+  /* Placeholder des champs (texte secondaire opaque) */
+  ['Placeholder / blanc', '#58695F', BLANC, 4.5],
+  /* Badge jaune sur fond de page (en-tête de fiche, statut Reporté) */
+  ['Badge jaune texte / teinte sur fond', '#925500', sur('#AC5900', 0.12, FOND), 4.5],
+  ['Badge alerte texte / teinte sur fond', '#A03E08', sur('#CE440E', 0.12, FOND), 4.5],
+  ['Badge succès texte / teinte sur fond', '#206D2F', sur('#29833B', 0.12, FOND), 4.5],
+  ['Badge violet texte / teinte sur fond', '#5A2FB0', sur('#6741D9', 0.12, FOND), 4.5],
+  ['Badge gris texte / teinte sur fond', '#58695F', sur('#7A887F', 0.14, FOND), 4.5],
+  /* Compteur d'onglet et priorité par défaut sur piste */
+  ['Texte secondaire / piste (compteur d’onglet)', '#58695F', '#E7EEE9', 4.5],
 ];
 var echec = 0;
 couples.forEach(function (c) {

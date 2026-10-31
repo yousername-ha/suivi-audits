@@ -179,6 +179,29 @@ async function parcours(browser, options) {
   await page.waitForSelector('.squelette', { state: 'detached', timeout: 4000 }).catch(() => {});
   ok((await page.locator('.squelette').count()) === 0, 'chargement : contenu revenu');
 
+  /* Info-bulles de graphiques (survol et clavier) et View Transitions */
+  await page.evaluate(() => { location.hash = '#/dashboard'; });
+  await page.waitForSelector('.graphique .g-zone');
+  await page.waitForTimeout(reduit ? 150 : 800); /* fin de la transition d'écran avant le survol */
+  await page.hover('.graphique .g-zone >> nth=2');
+  await page.waitForFunction(() => { const b = document.getElementById('infobulle'); return !b.hidden && b.classList.contains('visible'); }, null, { timeout: 2000 }).catch(() => {});
+  const bulleVisible = await page.evaluate(() => { const b = document.getElementById('infobulle'); return !b.hidden && b.classList.contains('visible') && b.textContent.trim().length > 0; });
+  ok(bulleVisible, 'info-bulle de graphique affichée au survol (' + (await page.textContent('#infobulle')).trim().replace(/\s+/g, ' ') + ')');
+  await page.mouse.move(5, 5);
+  await page.waitForTimeout(200);
+  ok(await page.evaluate(() => document.getElementById('infobulle').hidden), 'info-bulle masquée quand le pointeur sort');
+  await page.focus('.graphique .g-zone >> nth=0');
+  await page.waitForTimeout(200);
+  ok(await page.evaluate(() => !document.getElementById('infobulle').hidden), 'info-bulle affichée au focus clavier');
+  await page.evaluate(() => document.activeElement.blur());
+  const vt = await page.evaluate(() => ({ api: typeof document.startViewTransition === 'function', nom: getComputedStyle(document.getElementById('vue')).viewTransitionName }));
+  ok(vt.api && vt.nom === 'vue', `View Transitions : API ${vt.api ? 'disponible' : 'absente'}, view-transition-name="${vt.nom}"`);
+  const retexBulle = await page.evaluate(() => { location.hash = '#/retex'; return true; });
+  await page.waitForSelector('.retex-bulle.ouverte .retex-bulle__detail', { timeout: 4000 });
+  const titreBulle = await page.textContent('.retex-bulle.ouverte .retex-bulle__titre');
+  const detailBulle = await page.textContent('.retex-bulle.ouverte .retex-bulle__detail');
+  ok(retexBulle && /^\d+\. .+/.test(titreBulle.trim()) && detailBulle.trim().length > 20, `RETEX : bulle avec titre « ${titreBulle.trim()} » et détail`);
+
   /* Interrupteur d'animations */
   await page.click('#segment-animations .segment__option[data-valeur="off"]');
   ok((await page.getAttribute('html', 'data-animations')) === 'off', 'interrupteur : data-animations="off"');

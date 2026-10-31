@@ -64,6 +64,7 @@ svg { display: inline-block; vertical-align: middle; }
 .page { max-width: var(--largeur-page); margin: 0 auto; padding: var(--e-8) var(--gouttiere) var(--e-16); min-height: 60vh; }
 .page:focus { box-shadow: none; }
 .ecran { display: grid; gap: var(--e-10); }
+.ecran > *, .section, .section > * { min-width: 0; }
 .ecran.est-entrant > * { animation: entree var(--d-lent) var(--courbe) both; }
 .ecran.est-entrant > *:nth-child(2) { animation-delay: 60ms; }
 .ecran.est-entrant > *:nth-child(3) { animation-delay: 120ms; }
@@ -200,7 +201,11 @@ th[aria-sort] .tri { color: var(--c-encre); }
 .champ input, .champ select, .champ textarea { font: inherit; font-size: var(--t-base); color: var(--c-encre); background: var(--c-surface); border: 1px solid var(--c-bordure-champ); border-radius: var(--r-sm); padding: 0.5rem 0.75rem; width: 100%; min-height: 2.5rem; }
 .champ textarea { min-height: 6rem; resize: vertical; }
 .champ select { appearance: none; -webkit-appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--c-texte-2) 50%), linear-gradient(135deg, var(--c-texte-2) 50%, transparent 50%); background-position: calc(100% - 1.1rem) 50%, calc(100% - 0.75rem) 50%; background-size: 0.35rem 0.35rem; background-repeat: no-repeat; padding-right: 2.2rem; }
-.champ input:focus-visible, .champ select:focus-visible, .champ textarea:focus-visible { border-color: var(--c-bleu); box-shadow: 0 0 0 3px var(--c-bleu-pale); }
+.champ input:focus-visible, .champ select:focus-visible, .champ textarea:focus-visible,
+.champ input:focus, .champ select:focus, .champ textarea:focus, .champ input:focus-within { outline: none; border-color: var(--c-bleu); box-shadow: 0 0 0 3px var(--c-bleu-clair); }
+/* Chromium : le bouton de calendrier des champs date est une étape de tabulation interne, on lui donne le même anneau */
+.champ input[type="date"]::-webkit-calendar-picker-indicator { border-radius: var(--r-xs); padding: 2px; }
+.champ input[type="date"]::-webkit-calendar-picker-indicator:focus-visible { outline: 2px solid var(--c-terre); outline-offset: 1px; }
 .champ [aria-invalid="true"] { border-color: var(--c-erreur); box-shadow: inset 0 0 0 1px var(--c-erreur); }
 .champ__aide { font-size: var(--t-xs); color: var(--c-texte-2); }
 .champ__erreur { font-size: var(--t-xs); color: var(--c-erreur); display: flex; align-items: center; gap: 0.35em; font-weight: 500; }
@@ -290,7 +295,8 @@ th[aria-sort] .tri { color: var(--c-encre); }
 .graphique__legende i { width: 0.7rem; height: 0.7rem; border-radius: 1px; background: var(--c, var(--g-1)); display: inline-block; }
 .graphique__legende .val { color: var(--c-encre); font-weight: 600; font-variant-numeric: tabular-nums; }
 .graphique .survol { cursor: default; }
-.graphique .survol:hover, .graphique .survol:focus-visible { opacity: 0.8; outline: none; }
+.graphique .survol:hover { opacity: 0.8; }
+.graphique .survol:focus-visible { opacity: 0.8; outline: 2px solid var(--c-terre); outline-offset: 2px; box-shadow: none; }
 /* Barres : poussent depuis la base */
 .barre-v { transform: scaleY(0); transform-box: fill-box; transform-origin: bottom; transition: transform var(--d-graphique) var(--courbe); transition-delay: var(--delai, 0ms); }
 .barre-h { transform: scaleX(0); transform-box: fill-box; transform-origin: left; transition: transform var(--d-graphique) var(--courbe); transition-delay: var(--delai, 0ms); }
@@ -439,6 +445,11 @@ th[aria-sort] .tri { color: var(--c-encre); }
   .fiche-entete { grid-template-columns: 1fr; }
   .fiche-progression { text-align: left; }
   .fiche-progression .kpi__valeur { justify-content: flex-start; }
+  .tableau-cadre.carte { padding: var(--e-3) var(--e-3); }
+  .tableau th, .tableau td { padding-left: var(--e-2); padding-right: var(--e-2); }
+  .tableau th { white-space: normal; letter-spacing: 0.04em; }
+  .tableau .jauge { min-width: 4rem; }
+  .tableau .cell-icone .avatar--petit { display: none; }
 }
 @media (max-width: 760px) {
   .col-3, .col-4, .col-5, .col-6, .col-7, .col-8, .col-9 { grid-column: span 12; }

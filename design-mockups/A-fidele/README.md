@@ -49,7 +49,15 @@ assombri `#CE440E` les remplace.
 
 Correspondances : statuts d'audit Planifié gris, En préparation violet, En cours bleu, Rapport attendu orange, Clos
 vert, Reporté jaune ; criticités Critique rouge, Majeure orange, Mineure jaune, Observation gris ; actions Terminée vert,
-En cours bleu, À faire gris, Bloquée rouge.
+En cours bleu, À faire gris, Bloquée rouge. Gravités RETEX (0 → 4) : gris, info, jaune, alerte, erreur — la pastille,
+la bordure et la barre prennent la couleur d'état pleine (≥ 3 : 1), le libellé prend la variante « texte sur teinte »
+(`#58695F` `#145B9C` `#925500` `#A03E08` `#A82424`, ≥ 4,5 : 1 sur blanc, fond de page et surface douce).
+
+Règles de contraste appliquées : texte principal `#243B34` 12 : 1 sur blanc ; texte secondaire `#58695F` 5,8 : 1 sur blanc,
+5,4 : 1 sur le fond de page, 4,9 : 1 sur la piste `#E7EEE9` (compteur d'onglet, minimum mesuré dans la page) ; libellés
+de navigation `#F2F6EF` 10,8 : 1 sur `#163E33` et 7,2 : 1 sur l'entrée active ; le compteur « 36 » de la navigation passe
+en texte principal sur l'entrée active et au survol (5,5 : 1 ; le texte secondaire tombait à 3,6 : 1) ; placeholders
+opaques (5,8 : 1) ; texte des boutons pleins blanc sur `#245F4C` 7,5 : 1 et sur `#C92A2A` 5,5 : 1.
 
 ## Typographie
 
@@ -84,7 +92,13 @@ identifiants et références.
 - Liste complète : recherche, trois filtres, tri avec `aria-sort`, pagination, clic de ligne.
 - Formulaire validé au blur et à la soumission, résumé d'erreurs relié aux champs, état d'envoi, succès.
 - Modale avec piège de focus, Échap, retour du focus ; toasts dans une zone `aria-live`.
-- Contrastes vérifiés par `test/contraste.js` ; parcours Playwright `test/verifier.cjs` (normal et mouvement réduit).
+- Focus clavier visible partout : `outline` 2 px vert (repère clair dans la navigation), anneau `box-shadow` sur les
+  champs (aussi en `:focus-within`, pour que le champ date garde son anneau pendant que Chromium focalise son bouton de
+  calendrier interne), `outline` aussi sur les éléments SVG focalisables (barres, arcs, points, colonnes).
+- Contrastes vérifiés par `test/contraste.js` (couples issus de `tokens.css`) ; parcours Playwright `test/verifier.cjs`
+  (interactions, normal et mouvement réduit) et `test/verifier-complement.cjs` (six ancres à 1 440 et 1 024 px, aucune
+  opacité 0 résiduelle en mouvement réduit, parcours Tab avec indicateur de focus, `postMessage`, badges icône + libellé,
+  contraste des couples texte/fond calculés dans la page).
 
 ## Limites connues
 
@@ -102,7 +116,10 @@ identifiants et références.
 - Les cibles tactiles des boutons `--sm` (2 rem) et des badges (1,6 rem) sont sous 44 px : acceptable sur poste de
   travail, à revoir pour une version tactile.
 - Les segments d'anneau, barres et colonnes de courbe sont focalisables avec `aria-label`, mais un tableau de données
-  équivalent n'est pas fourni sous chaque graphique.
+  équivalent n'est pas fourni sous chaque graphique. Sur un segment d'anneau, l'`outline` de focus entoure la boîte du
+  cercle entier (limite des SVG) ; le segment focalisé est signalé en plus par l'info-bulle et l'opacité.
+- La carte « Enseignements du RETEX » est retirée du flux (`hidden`) tant que le déroulé n'est pas complet ; elle
+  apparaît en fondu à la dernière étape.
 - La chronologie RETEX annonce le compteur en `aria-live`, pas le contenu de chaque point révélé.
 - Les sparklines des indicateurs sont décoratives (`aria-hidden`), la valeur et la cible étant données en texte.
 - Les couleurs des pastilles de famille dans la navigation sont décoratives (le libellé porte l'information).

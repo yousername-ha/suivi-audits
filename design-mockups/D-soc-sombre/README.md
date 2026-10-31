@@ -23,7 +23,8 @@ sont réservées à la maquette F.
 | `styles.css` | Styles de la maquette, responsive 1440 / 1024 px, `prefers-reduced-motion`. |
 | `app.js` | Routeur par ancre + `postMessage`, six écrans, graphiques SVG natifs, interactions. |
 | `test/verifier.cjs` | Scénario Playwright (1440, 1024, mouvement réduit) : six ancres, onglets, filtres, tri, pagination, formulaire, RETEX, modale, toasts, console vide. |
-| `test/contraste.cjs` | Calcul de luminance WCAG sur tous les couples texte/fond utilisés. |
+| `test/contraste.cjs` | Calcul de luminance WCAG sur tous les couples texte/fond déclarés dans `tokens.css`. |
+| `test/verifier-a11y.cjs` | Contrôle complémentaire : contraste mesuré dans le navigateur sur chaque élément textuel visible (fond composé), parcours clavier complet avec indicateur de focus sur chaque arrêt, mouvement réduit (aucune opacité 0 après 1,5 s, tracés complets), `aria-sort`, `postMessage`, absence de débordement horizontal à 1440 et 1024 px. |
 
 Les scripts de test sont en `.cjs` parce que le dépôt déclare `"type": "module"`.
 
@@ -61,6 +62,10 @@ Contrastes mesurés (`node test/contraste.cjs`) : texte principal 10,9 à 15,9 :
 6,3 à 9,1 : 1 ; texte atténué 4,7 à 6,8 : 1 ; accents 5,1 à 12 : 1 sur toutes les surfaces ; texte des
 badges ≥ 4,6 : 1 sur leur fond teinté ; texte inverse sur cyan plein 9,5 : 1 ; bordure de champ ≥ 3,2 : 1
 sur son fond.
+
+Contraste mesuré dans le navigateur (`node test/verifier-a11y.cjs`, 632 éléments textuels sur les six écrans,
+couleur calculée contre le fond composé) : minimum **5,19 : 1** (texte rouge `#FF7B7B` d'un badge « Critique »
+sur son voile rouge à 14 % posé sur la surface) ; aucun élément textuel sous 4,5 : 1.
 
 ## Typographie
 
@@ -130,3 +135,7 @@ complets, le squelette devient statique et le défilement automatique du RETEX e
   fiche (une seule cible par ligne, volontairement).
 - Les lueurs (`text-shadow`, `drop-shadow`) sont purement décoratives et n'affectent pas le contraste
   mesuré du texte.
+- Les éléments SVG focalisables (barres, points, segments) portent, en plus du trait renforcé, un `outline`
+  cyan de 2 px au `:focus-visible` (le `box-shadow` ne s'applique pas aux formes SVG). Les champs de date
+  natifs reçoivent leur anneau par `:focus-within`, car Chromium donne le focus à un sous-champ interne et
+  l'hôte peut ne pas satisfaire `:focus-visible`. Les anneaux apparaissent par une transition de 150 ms.

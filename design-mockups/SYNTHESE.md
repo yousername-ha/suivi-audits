@@ -64,8 +64,64 @@ n'incluent ni la recette utilisateur ni la documentation (ADR, inventaire foncti
 
 ## 3. Résultats des vérifications
 
-Voir § 3 complété ci-dessous après les vérifications Playwright.
+Chaque maquette a été construite par un agent, puis vérifiée et corrigée par un second agent indépendant
+(Playwright Chromium, 1440 × 900 et 1024 × 768), avant un contrôle final global (`scripts/capture.cjs` :
+36 écrans, zéro erreur ni avertissement console ; contrôle en `prefers-reduced-motion: reduce` : aucun élément
+visible laissé à opacité 0, hormis les points du RETEX non encore déroulés dans F, qui le sont volontairement).
+
+| Vérification | A | B | C | D | E | F |
+| --- | --- | --- | --- | --- | --- | --- |
+| Six écrans sans erreur console | oui | oui | oui | oui | oui | oui |
+| Onglets, filtres, tri (`aria-sort`), recherche, pagination, ligne → fiche | oui | oui | oui | oui | oui | oui |
+| Formulaire : erreurs reliées, `aria-invalid`, succès | oui | oui | oui | oui | oui | oui |
+| Modale (`role=dialog`, piège de focus, Échap, retour du focus) ; toasts `aria-live` | oui | oui | oui | oui | oui | oui |
+| RETEX déroulable point par point et « Tout dérouler » | oui | oui | oui | oui | oui | oui |
+| `postMessage` de la page comparative | oui | oui | oui | oui | oui | oui |
+| Mouvement réduit : écrans complets | oui | oui | oui | oui | oui | oui (+ interrupteur) |
+| Focus clavier visible, y compris formes SVG et champs date | oui | oui | oui | oui | oui | oui |
+| Contraste texte minimum mesuré | 4,94 : 1 | 4,75 : 1 | 4,76 : 1 | 5,19 : 1 | 4,74 : 1 | 4,52 : 1 |
+| Contraste composant minimum | 3,08 : 1 | 3,24 : 1 | 3,16 : 1 | 3,17 : 1 | 3,13 : 1 | 3,73 : 1 |
+| Aucun `style=` statique, aucune ressource externe | oui | oui | oui | oui | oui | oui |
+
+Corrections apportées par la vérification (détail dans chaque README) : contrastes relevés sur quelques couples
+limites (texte tertiaire de C, violet clair de F, compteur de navigation de A, ocre et gris chaud de C), anneau de
+focus sur les formes SVG et sur les champs date (Chromium focalise le bouton interne), éléments masqués passés de
+`opacity: 0` à `visibility: hidden` (E, F), débordement horizontal du tableau à 1024 px corrigé (C), carte
+« Enseignements » du RETEX retirée du flux tant qu'elle n'est pas révélée (A).
+
+Écarts assumés et documentés : cibles tactiles de 28 à 32 px sur poste de travail (A, E), pas de tableau de données
+sous les graphiques (valeurs données en texte et en info-bulles), champs `type=date` natifs affichés selon la
+locale du navigateur (D), filets et numéros décoratifs sous 3 : 1 (C), `backdrop-filter` coûteux sans accélération
+graphique avec repli opaque prêt mais non automatique (F), pas de mode clair pour D et F.
 
 ## 4. Recommandation
 
-Voir § 4 complété ci-dessous.
+**Retenir la maquette F (Inspiration) comme direction cible**, puisqu'elle répond à la demande du commanditaire et
+qu'elle est la seule à porter le mouvement et l'ambiance des références, et **la déployer en deux temps** :
+
+1. **Socle immédiat (4 à 6 jours) : la mise en page de A.** La grille d'accueil resserrée, les cartes sans bordure,
+   les graphiques redimensionnés et les en-têtes de tableau relevés de A sont compatibles avec la charte actuelle et
+   résorbent les défauts relevés dans `AUDIT-VISUEL.md` sans dépayser personne. Ce travail reste utile quelle que
+   soit la suite (il porte sur `Home.tsx`, `TableauDeBord.tsx`, `graphiques.tsx` et la section cartes de `styles.css`).
+2. **Refonte F (15 à 22 jours) par couches**, pour maîtriser le risque technique : d'abord les jetons et le fond
+   marine avec les deux familles de cartes (verre pour les KPI et graphiques, blanc pour les tableaux et formulaires),
+   puis les graphiques (jauges pointillées, anneaux, courbes à halo), enfin les animations derrière une préférence
+   utilisateur « Animations » persistée, `prefers-reduced-motion` restant prioritaire. Points de vigilance : les
+   contrastes sur verre (F est conforme mais sans marge sur deux couples, à 4,52 et 4,59 : 1), le coût du flou sur
+   une quinzaine de cartes (prévoir le repli opaque automatique) et le devenir du mode clair.
+
+Si la direction préfère une évolution sans rupture, **B (Fidèle épurée)** est la meilleure option de repli : même
+vocabulaire que l'application, interface nettement allégée, effort modéré (6 à 9 jours). **D (SOC sombre)** mérite
+d'être conservé comme piste pour l'écran mural `/mur`, où un mode sombre dense et une barre d'état sont pertinents.
+**C** et **E** sont des directions cohérentes mais éloignées, respectivement, des références et des usages actuels ;
+E fournit toutefois de bonnes idées pour la liste des audits (densité réglable, colonnes figées, barre d'outils).
+
+## 5. Remarques sur la livraison
+
+- Le dossier `design-mockups/reference/` n'existait pas dans le dépôt : il a été créé à partir des cinq images jointes
+  à la demande (aucune vidéo ni GIF n'était fourni ; la section « Mouvement » de l'analyse est extrapolée).
+- La branche de travail est `claude/beautiful-gates-tzd0cd` (branche imposée par l'environnement) ; le même contenu
+  est aussi poussé sur `design/refonte-maquettes`, nommée dans la demande. Aucun commit sur `main`.
+- `git diff main --stat` ne montre que des fichiers sous `design-mockups/` (vérifié avant la livraison).
+- Les captures de travail des scripts de test de chaque maquette (`X-*/test/**/*.png`) sont ignorées par Git ; seules
+  les captures de `screenshots/` sont versionnées (environ 30 Mo avec les deux GIF et vidéos de F).

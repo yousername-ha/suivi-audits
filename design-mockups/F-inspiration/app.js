@@ -125,12 +125,14 @@
   function initialiserSegment(conteneur, onChange) {
     var options = Array.prototype.slice.call(conteneur.querySelectorAll('.segment__option'));
     function choisir(valeur, silencieux) {
+      /* Le rappel est appelé d'abord : pour l'interrupteur d'animations, data-animations="off" doit être posé
+         avant le changement d'état des options, sinon leur transition de couleur (220 ms) démarre encore animée. */
+      if (!silencieux && onChange) onChange(valeur);
       options.forEach(function (o) {
         o.setAttribute('aria-pressed', String(o.dataset.valeur === valeur));
       });
       var actif = options.filter(function (o) { return o.dataset.valeur === valeur; })[0];
       placerCapsule(conteneur, actif, '.segment__capsule');
-      if (!silencieux && onChange) onChange(valeur);
     }
     options.forEach(function (o) {
       o.addEventListener('click', function () { choisir(o.dataset.valeur); });
@@ -141,6 +143,14 @@
   }
   function appliquerAnimations(valeur) {
     racine.setAttribute('data-animations', valeur);
+    if (valeur === 'off' && typeof document.getAnimations === 'function') {
+      /* Les animations et transitions déjà en cours gardent leur durée d'origine : on les amène à leur état final
+         (après recalcul des styles, les boucles infinies sont déjà coupées par la feuille de style). */
+      void racine.offsetWidth;
+      document.getAnimations().forEach(function (a) {
+        try { if (a.playState === 'running') a.finish(); } catch (e) { /* animation infinie résiduelle : ignorée */ }
+      });
+    }
   }
   var reduire = window.matchMedia('(prefers-reduced-motion: reduce)');
   var segAnim = initialiserSegment(segmentAnimations, appliquerAnimations);
@@ -1340,7 +1350,7 @@
       progression.classList.add('anime');
       appliquer(Math.min(etat.retex.actif, n - 1));
       if (etat.retex.actif < 0) {
-        setTimeout(function () { if (location.hash.indexOf('#/retex') === 0 && etat.retex.actif < 0) appliquer(0); }, anim() ? 700 : 0);
+        setTimeout(function () { if (location.hash.indexOf('#/retex') === 0 && etat.retex.actif < 0) appliquer(0); }, anim() ? 350 : 0);
       }
     });
     return racineEcran;

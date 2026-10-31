@@ -1379,13 +1379,16 @@ html[data-animations='off'] .fond__halo {
   font-weight: var(--graisse-moyenne);
   color: var(--corail-encre);
   opacity: 0;
+  visibility: hidden; /* retiré de l'arbre d'accessibilité tant que le message est vide */
   transform: translateY(-4px);
-  transition: opacity var(--duree-courte) var(--courbe), transform var(--duree-courte) var(--courbe);
+  transition: opacity var(--duree-courte) var(--courbe), transform var(--duree-courte) var(--courbe), visibility 0s linear var(--duree-courte);
 }
 
 .champ__erreur.visible {
   opacity: 1;
+  visibility: visible;
   transform: none;
+  transition-delay: 0s;
 }
 
 .formulaire__actions {
@@ -2711,28 +2714,30 @@ html[data-animations='off'] .fond__halo {
   opacity: 0;
 }
 
+/* Ouverture par étapes : la chaîne complète dure 600 ms (dernier étage à 340 ms + 260 ms), de sorte que l'écran RETEX
+   soit entièrement révélé moins de 1,5 s après la navigation (transition de vue + entrée de la carte + bulle). */
 .retex-bulle.ouverte .retex-bulle__anneau {
-  animation: anneau-ouvrir 320ms var(--courbe-rebond) both;
+  animation: anneau-ouvrir 300ms var(--courbe-rebond) both;
 }
 
 .retex-bulle.ouverte .retex-bulle__trait {
-  animation: trait-ouvrir 260ms var(--courbe) 120ms both;
+  animation: trait-ouvrir 240ms var(--courbe) 80ms both;
 }
 
 .retex-bulle.ouverte .retex-bulle__entete {
-  animation: entree-courte 280ms var(--courbe) 280ms both;
+  animation: entree-courte 260ms var(--courbe) 160ms both;
 }
 
 .retex-bulle.ouverte .retex-bulle__titre {
-  animation: entree-courte 280ms var(--courbe) 360ms both;
+  animation: entree-courte 260ms var(--courbe) 220ms both;
 }
 
 .retex-bulle.ouverte .retex-bulle__detail {
-  animation: entree-courte 280ms var(--courbe) 460ms both;
+  animation: entree-courte 260ms var(--courbe) 280ms both;
 }
 
 .retex-bulle.ouverte .retex-bulle__acteur {
-  animation: entree-courte 280ms var(--courbe) 540ms both;
+  animation: entree-courte 260ms var(--courbe) 340ms both;
 }
 
 .retex-commandes {
@@ -3075,7 +3080,12 @@ html[data-animations='off']::view-transition-new(vue) {
 
 @media (max-width: 1180px) {
   .nav__liste a span {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
   }
 
   .nav__liste a {
@@ -3092,10 +3102,19 @@ html[data-animations='off']::view-transition-new(vue) {
 
   .col-3,
   .col-4,
-  .col-5,
-  .col-7,
-  .col-8 {
+  .col-5 {
     grid-column: span 6;
+  }
+
+  .col-7,
+  .col-8,
+  .grille > .col-5:last-child {
+    grid-column: span 12;
+  }
+
+  .indicateur__sparkline {
+    max-width: 14rem;
+    justify-self: center;
   }
 
   .fiche-entete__meta {
@@ -3111,7 +3130,7 @@ html[data-animations='off']::view-transition-new(vue) {
   }
 
   .indicateur {
-    grid-template-columns: 4rem 1fr 6rem;
+    grid-template-columns: 4.5rem 1fr 14rem;
   }
 
   .retex-bulle__carte {

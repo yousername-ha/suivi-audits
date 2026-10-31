@@ -16,7 +16,7 @@
   --bordure-saisie: #5B6E98;
   --bordure-lueur: rgba(94, 225, 240, 0.28);
 
-  /* Textes (tous ≥ 4,5 : 1 sur les fonds ci-dessus, voir test/contraste.js) */
+  /* Textes (tous ≥ 4,5 : 1 sur les fonds ci-dessus, voir test/contraste.cjs et test/verifier-a11y.cjs) */
   --texte: #E6EDF7;
   --texte-secondaire: #A9B6CC;
   --texte-attenue: #8E9DB8;

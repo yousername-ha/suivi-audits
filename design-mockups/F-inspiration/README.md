@@ -38,7 +38,7 @@ légende minuscule en capitales espacées, titre moyen.
 | Sarcelle (données, points, chips) | `#2EC4B6` | clair `#7EE0D6` pour le texte sur verre |
 | Sarcelle assombri (boutons pleins, texte blanc) | `#157F76` | ajustement AA, voir § 7 |
 | Sarcelle encre (texte sur carte claire) | `#0F6B63` | |
-| Violet (dégradé signature) | `#6D5BD0` | lumineux `#8F7BFF` (courbe), clair `#B388FF` (texte sur verre), sombre `#5A48B5` (bouton) |
+| Violet (dégradé signature) | `#6D5BD0` | lumineux `#8F7BFF` (courbe), clair `#C09CFF` (texte sur verre, badges), sombre `#5A48B5` (bouton) |
 | Corail (alerte, criticité, retard) | `#F0564A` | clair `#FF9A8E`, bouton `#C23A2F`, encre `#B8362B` |
 | Or (rapport attendu, échéance proche) | `#F2A33A` | clair `#F7C97A`, encre `#8A5200` |
 | Vert (clos, « en direct ») | `#2FD37A` | clair `#7CE7AC`, encre `#1F7F4C` |
@@ -91,13 +91,15 @@ interactions, ≤ 1,2 s pour les graphiques et compteurs ; courbe `cubic-bezier(
 | Navigation | `document.startViewTransition` (nommé `vue`, l'en-tête reste fixe) ; repli fondu + glissement 12 px |
 | Onglets / segment | indicateur et capsule qui glissent (`translateX` + `scaleX`, aucune propriété de boîte animée) |
 | Micro-interactions | cartes et boutons : `translateY(-4 px / -2 px)` + ombre longue portée par un pseudo-élément dont seule l'opacité varie, lueur colorée ; modale `scale(.96 → 1)` + fondu ; toasts glissés depuis la droite ; squelette balayé par translation d'un reflet ; badge dont le texte bascule (sortie vers le haut, entrée par le bas) |
-| RETEX | segments tracés un à un (`stroke-dashoffset`), point actif qui pulse une fois, bulle ouverte par étapes (anneau 0 → 1 avec rebond, trait `scaleX`, en-tête, titre, détail, acteur), aire qui suit la lecture ; « Point suivant / précédent », « Tout dérouler » (260 ms par point), « Recommencer », clavier (flèches, Origine, Fin) sur le graphique, clic sur un point ou une carte |
+| RETEX | segments tracés un à un (`stroke-dashoffset`), point actif qui pulse une fois (700 ms), bulle ouverte par étapes en 600 ms au total (anneau 0 → 1 avec rebond, trait `scaleX`, en-tête, titre, détail, acteur décalés de 80 ms), premier point dévoilé 350 ms après le montage : l'écran est complet ≈ 1,2 s après la navigation ; aire qui suit la lecture ; « Point suivant / précédent », « Tout dérouler » (260 ms par point), « Recommencer », clavier (flèches, Origine, Fin) sur le graphique, clic sur un point ou une carte |
 | Fond | dérive très lente des deux halos (38 s, aller-retour), coupée en mouvement réduit et par l'interrupteur |
 
 Mouvement réduit : `prefers-reduced-motion: reduce` pose automatiquement `data-animations="off"` (et suit les
 changements du média) ; l'interrupteur permet de forcer l'un ou l'autre. En mode « off », toutes les animations et
 transitions passent à 0,01 ms, les boucles à une itération, les compteurs et le RETEX affichent directement leurs
-états finaux, `startViewTransition` n'est pas appelé.
+états finaux, `startViewTransition` n'est pas appelé ; les animations et transitions déjà en cours au moment du
+basculement sont amenées à leur état final (`document.getAnimations().finish()`), et l'attribut est posé avant le
+changement d'état des options du segment pour que leur propre transition ne soit pas animée.
 
 ## 6. Points forts et limites
 
@@ -118,17 +120,23 @@ Limites connues :
 - `color-mix()` est utilisé pour le fond des icônes de toast (navigateurs 2023+) ; sans prise en charge, l'icône reste
   lisible sur le verre.
 - Pas de mode clair global : le style de référence est intrinsèquement sombre.
+- À 1024 px, la grille du tableau de bord passe à deux colonnes (évolution, échéances et indicateurs en pleine
+  largeur, KPI sur trois colonnes) ; la navigation se replie en icônes avec info-bulle native (`title` absent
+  volontairement : le libellé reste dans le lien, masqué visuellement).
 
 ## 7. Écarts d'accessibilité et ajustements par rapport aux références
 
-Vérification par `node test/contraste.cjs` (luminance relative WCAG 2.1) : tous les couples texte/fond atteignent
-4,5 : 1 et les composants 3 : 1.
+Vérification par `node test/contraste.cjs` (luminance relative WCAG 2.1, surfaces translucides composées sur leur fond) :
+tous les couples texte/fond atteignent 4,5 : 1 et les composants 3 : 1. Minimum texte : **4,52 : 1** (badge « Clos » vert
+encre `#1F7F4C` sur sa teinte verte à 14 % sur carte claire) ; minimum composant : 3,73 : 1 (bord des champs sur carte claire).
 
 | Trait des références | Problème | Ajustement retenu |
 | --- | --- | --- |
 | Texte blanc sur sarcelle `#2EC4B6` (boutons, chips actives) | ~2,1 : 1 | Boutons pleins en sarcelle assombri `#157F76` (4,85 : 1) ou dégradé `#157F76 → #5A48B5` ; chips actives sur verre en sarcelle avec texte marine `#0F1A33` (7,97 : 1) |
 | Légendes tertiaires `#6E7A99` | ~3,2 : 1 | Remontées à `#8E9AB8` (5 : 1 sur le verre) ; secondaire `#A9B4D0` (6,8 : 1) |
 | Légendes `#8A93AD` sur carte blanche | ~3,2 : 1 | Remplacées par `#5F6A8A` (5,36 : 1) |
+| Violet clair `#B388FF` dans un badge violet sur verre | 4,06 : 1 | Remonté à `#C09CFF` (4,87 : 1 sur le fond du badge, 6,34 : 1 sur le verre) ; même jeton pour les valeurs KPI violettes |
+| Messages d'erreur de formulaire réservés en place (opacité 0) | lus par les lecteurs d'écran via `aria-describedby` alors qu'ils sont vides | `visibility: hidden` tant que le message n'est pas affiché, fondu conservé |
 | Chiffres en graisse 300 | fins | Jamais sous 28 px ; 44 px pour les KPI, 400 dans les tableaux |
 | Bordures 1 px blanc 8–12 % | décoratives | Conservées, mais les champs de saisie utilisent `#7A84A0` (clair) ou blanc 48 % (sombre) ≥ 3 : 1 |
 | Couleur seule pour les séries et statuts | repérage | Point ou icône + libellé partout ; échéances dépassées : icône alerte + « Dépassée de n jours » |
@@ -141,10 +149,18 @@ sans le graphique).
 
 ## 8. Tests
 
-- `node test/contraste.cjs` : couples de couleurs.
+- `node test/contraste.cjs` : couples de couleurs (texte principal, secondaire, tertiaire, valeurs colorées, badges sur verre et
+  sur carte claire, chips, navigation, boutons pleins, bandeaux, priorités, bords de champs) ; affiche le minimum texte.
 - `node test/verifier.cjs` : Playwright (Chromium) — six ancres, `postMessage`, recherche, filtre, tri, pagination,
   ligne cliquable, onglets (souris et clavier), formulaire (erreurs, blur, envoi, succès), RETEX (bouton, clavier,
-  tout dérouler), modale (piège de focus, Échap, retour du focus), toasts, badge animé, squelette, interrupteur
-  d'animations, absence de `style=` hors variables, libellés des boutons, absence de débordement horizontal, zéro
-  erreur ou avertissement console ; exécuté avec animations à 1440 px, en `reducedMotion: 'reduce'` à 1440 px, et
+  tout dérouler, bulle avec titre et détail du point actif), modale (piège de focus, Échap, retour du focus), toasts,
+  badge animé, squelette, info-bulles de graphiques (survol, sortie, focus clavier), View Transitions
+  (`view-transition-name` sur la vue), interrupteur d'animations, absence de `style=` hors variables, libellés des
+  boutons, absence de débordement horizontal, zéro erreur ou avertissement console ; exécuté avec animations à 1440 px, en `reducedMotion: 'reduce'` à 1440 px, et
   à 1024 px. Captures dans `test/captures/`.
+- `node test/complement.cjs` : Playwright, 1440 et 1024 px — en `reducedMotion: 'reduce'` puis avec l'interrupteur « Désactivées »,
+  aucun élément visible ne reste à opacité 0 après 1,5 s sur les six écrans (compteurs à leur valeur finale, graphiques
+  dessinés, points du RETEX non déroulés exclus car intentionnels) ; en mode animé, tout est révélé après le repli de
+  l'observateur (4 s) ; aucune animation de plus de 50 ms ne reste en cours après coupure par l'interrupteur ;
+  `postMessage` ; parcours au Tab depuis le haut de page avec indicateur de focus (outline ou ombre) sur chaque élément ;
+  console vide.

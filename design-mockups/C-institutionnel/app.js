@@ -778,7 +778,7 @@
       '<p class="galerie__legende">Cartouches et référentiels</p><div class="galerie__rang"><span class="cartouche">AUD-07</span><span class="cartouche">C-12</span><span class="cartouche">ACT-45</span>' + F.referentiels.map(function (r) { return badgeReferentiel(r.id); }).join('') + '</div></article></section>';
     var nuancier = [
       ['Bleu institutionnel', '#1F3A5F'], ['Bleu clair', '#6B86AA'], ['Terre cuite', '#A84E24'], ['Papier', '#FAF8F3'], ['Surface douce', '#F2EEE5'], ['Filet', '#D8D1C4'],
-      ['Encre', '#23221E'], ['Texte secondaire', '#5B564D'], ['Succès', '#2F6B46'], ['Alerte', '#7F5208'], ['Erreur', '#9A3528'], ['Information', '#2B5A88'], ['Reporté', '#5B4A86'], ['Ocre (graphique)', '#B8862B'], ['Sauge (graphique)', '#5C8A6C'], ['Gris chaud (graphique)', '#8F897E'],
+      ['Encre', '#23221E'], ['Texte secondaire', '#5B564D'], ['Succès', '#2F6B46'], ['Alerte', '#7F5208'], ['Erreur', '#9A3528'], ['Information', '#2B5A88'], ['Reporté', '#5B4A86'], ['Ocre (graphique)', '#A97B26'], ['Sauge (graphique)', '#5C8A6C'], ['Gris chaud (graphique)', '#8B857A'],
     ];
     html += '<section class="section" aria-labelledby="s-nuancier">' + sectionEntete('6.5', 'Nuancier').replace('<h3>', '<h3 id="s-nuancier">') + '<article class="carte"><ul class="nuancier">' + nuancier.map(function (c) { return '<li data-couleur="' + c[1] + '"><i aria-hidden="true"></i><strong>' + esc(c[0]) + '</strong><span class="mono">' + c[1] + '</span></li>'; }).join('') + '</ul></article></section>';
     return html;

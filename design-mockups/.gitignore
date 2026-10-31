@@ -1,0 +1,3 @@
+# Captures produites par les scripts de test de chaque maquette (redondantes avec screenshots/).
+*/test/**/*.png
+*/test/*.png

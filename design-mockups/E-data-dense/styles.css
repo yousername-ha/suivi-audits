@@ -240,10 +240,13 @@ svg:not(.graphique) {
 }
 .nav-lien kbd {
   opacity: 0;
-  transition: opacity var(--duree-1) var(--courbe);
+  visibility: hidden;
+  transition: opacity var(--duree-1) var(--courbe), visibility var(--duree-1);
 }
-.nav-lien:hover kbd {
+.nav-lien:hover kbd,
+.nav-lien:focus-visible kbd {
   opacity: 1;
+  visibility: visible;
 }
 .nav-lien[aria-current='page'] {
   background: var(--accent-fond);
@@ -502,8 +505,8 @@ svg:not(.graphique) {
   color: var(--texte-inverse);
 }
 .btn-danger:hover {
-  background: #a82626;
-  border-color: #a82626;
+  background: var(--erreur-survol);
+  border-color: var(--erreur-survol);
 }
 .btn-discret {
   border-color: transparent;
@@ -1723,16 +1726,16 @@ ul.legende {
   background: var(--surface-3);
 }
 .matrice .cell.n1 {
-  background: #e6f4ea;
+  background: var(--succes-fond);
 }
 .matrice .cell.n2 {
-  background: #fbf3dc;
+  background: var(--ambre-fond);
 }
 .matrice .cell.n3 {
-  background: #fbeee2;
+  background: var(--alerte-fond);
 }
 .matrice .cell.n4 {
-  background: #fce9e9;
+  background: var(--erreur-fond);
 }
 .matrice .cell.vide {
   color: var(--texte-3);

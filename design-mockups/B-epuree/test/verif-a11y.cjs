@@ -56,17 +56,22 @@ async function etatGraphiques(page) {
   });
 }
 
+// Tab depuis le haut de page : on part du lien d'évitement (premier élément du document) puis on tabule.
+// L'anneau de focus des champs est une box-shadow en transition (150 ms) : on laisse la transition se terminer avant de lire.
 async function focusVisible(page, n) {
   const sans = [];
   let vus = 0;
+  await page.focus('.lien-evitement');
   for (let i = 0; i < n; i++) {
-    await page.keyboard.press('Tab');
+    if (i > 0) await page.keyboard.press('Tab');
+    await page.waitForTimeout(220);
     const info = await page.evaluate(() => {
       const el = document.activeElement;
       if (!el || el === document.body) return null;
       const cs = getComputedStyle(el);
       const outline = cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) > 0;
-      const ombre = cs.boxShadow && cs.boxShadow !== 'none';
+      // Une ombre transparente (rgba(…, 0)) ou de rayon nul n'est pas un indicateur.
+      const ombre = !!cs.boxShadow && cs.boxShadow !== 'none' && !/rgba\(\d+, \d+, \d+, 0\) 0px 0px 0px 0px$/.test(cs.boxShadow);
       const d = el.tagName.toLowerCase() + (el.id ? '#' + el.id : '') + (el.getAttribute('class') ? '.' + el.getAttribute('class').split(' ')[0] : '');
       return { d, ok: outline || ombre, outline: cs.outlineStyle + ' ' + cs.outlineWidth + ' ' + cs.outlineColor, ombre: cs.boxShadow };
     });
@@ -150,7 +155,7 @@ async function scenario(browser, options, etiquette) {
   await page.waitForTimeout(100);
   ok(await page.locator('.page-btn[aria-current="page"]').innerText() === '3', 'liste : page 3');
   const idLigne = await page.locator('#corps-audits tr.ligne >> nth=2').getAttribute('data-id');
-  await page.click('#corps-audits tr.ligne >> nth=2 >> td >> nth=4');
+  await page.click('#corps-audits tr.ligne >> nth=2 >> td[data-col="nom"]');
   await page.waitForTimeout(400);
   ok((await page.evaluate(() => location.hash)) === '#/audit/' + idLigne, 'liste : clic sur une ligne → #/audit/' + idLigne);
   ok((await page.locator('h1#titre-page').count()) === 1, 'fiche ouverte depuis la liste');
@@ -191,12 +196,14 @@ async function scenario(browser, options, etiquette) {
   ok(await page.locator('#voile').isHidden(), 'modale : Échap ferme');
   ok(await page.evaluate(() => document.activeElement.getAttribute('data-action') === 'ouvrir-modale'), 'modale : focus revenu au déclencheur');
   // Toast
+  // (le toast de succès du formulaire, 6 s, peut encore être présent : la navigation par ancre garde le document)
+  const toastsAvant = await page.locator('#toasts .toast').count();
   await page.click('[data-action="toast"][data-genre="alerte"]');
   await page.waitForTimeout(300);
-  ok((await page.locator('#toasts .toast.visible[role="status"]').count()) >= 1, 'toast déclenché (role=status, visible)');
-  await page.click('#toasts .toast >> nth=0 >> button[aria-label]');
+  ok((await page.locator('#toasts .toast.visible[role="status"]').count()) >= 1 && (await page.locator('#toasts .toast').count()) === toastsAvant + 1, 'toast déclenché (role=status, visible)');
+  await page.click('#toasts .toast >> nth=-1 >> button[aria-label]');
   await page.waitForTimeout(400);
-  ok((await page.locator('#toasts .toast').count()) === 0, 'toast fermé par son bouton');
+  ok((await page.locator('#toasts .toast').count()) === toastsAvant, 'toast fermé par son bouton (retiré du DOM)');
 
   // RETEX point par point jusqu'au bout, puis Tout dérouler
   await page.goto(URL + '#/retex');
