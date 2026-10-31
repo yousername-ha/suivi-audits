@@ -1,14 +1,13 @@
 # Maquettes de refonte graphique
 
-Test visuel uniquement : cinq maquettes statiques et cliquables de « Suivi des audits SMSI », sur données fictives,
+Test visuel uniquement : quatre maquettes statiques et cliquables de « Suivi des audits SMSI », sur données fictives,
 sans aucun lien avec le code de l'application. Rien ici n'est à déployer.
 
 ## Ouvrir
 
 - Double-cliquer sur `index.html` (page comparative : cartes des maquettes, bascule de maquette et d'écran dans un
   cadre), ou servir le dossier : `npx serve design-mockups` puis ouvrir l'URL indiquée.
-- Chaque maquette s'ouvre aussi directement : `A-fidele/index.html`, `B-epuree/index.html`,
-  `D-soc-sombre/index.html`, `E-data-dense/index.html`, `F-inspiration/index.html`.
+- Chaque maquette s'ouvre aussi directement : `A-fidele/index.html`, `D-soc-sombre/index.html`, `E-data-dense/index.html`, `F-inspiration/index.html`.
   Écrans par ancre : `#/dashboard`, `#/audits`, `#/audit/AUD-07`, `#/formulaire`, `#/retex`, `#/composants`.
 
 ## Contenu

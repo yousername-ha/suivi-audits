@@ -53,24 +53,6 @@ window.CATALOGUE = {
       ],
     },
     {
-      dossier: 'B-epuree',
-      titre: 'B · Fidèle épurée',
-      vedette: false,
-      disponible: true,
-      intention:
-        'Mêmes couleurs de base, nuancées : navigation claire, sections à fond sauge très léger, quasi aucune bordure ni ombre, tableaux sans grille, couleur vive réservée aux statuts et à l’action principale. Nettement moins chargée.',
-      palette: [
-        { role: 'Fond', hex: '#FBFCFB' },
-        { role: 'Section sauge', hex: '#F3F7F4' },
-        { role: 'Encre', hex: '#243B34' },
-        { role: 'Encre 80 %', hex: '#4F6159' },
-        { role: 'Vert', hex: '#245F4C' },
-        { role: 'Violet', hex: '#5A48B5' },
-        { role: 'Alerte', hex: '#D97A1F' },
-        { role: 'Erreur', hex: '#C2312A' },
-      ],
-    },
-    {
       dossier: 'D-soc-sombre',
       titre: 'D · SOC sombre',
       vedette: false,
