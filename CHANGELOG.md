@@ -8,6 +8,10 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 Aucune action.
 
+### Corrigé
+
+- **Documents de pilotage** : le backlog, le registre (`REGISTRES.json`) et l'ADR 0077 citaient la v6.0.0, jamais publiée ; ils désignent maintenant la 6.0.1, première version 6 publiée (addendum à l'ADR 0077). Aucun changement de code. _(Session « Projet audit_suivi Coeur ».)_
+
 ## [6.1.0] — 2026-10-31
 
 Version mineure : trois migrations SQL additives (`047`, `049`, `050`), aucune nouvelle dépendance. Elle apporte le tableau de bord de l'accueil personnalisable, la collecte du RETEX d'incident, l'ordre du menu personnalisable et le regroupement des parcours guidés, et retire les restes des anciens formats de sauvegarde. Section rédigée par la session « Projet audit_suivi Coeur ».
