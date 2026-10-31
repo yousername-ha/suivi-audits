@@ -38,3 +38,11 @@ Captures de l'instance de recette et de ses données fictives ; présentation pr
 | ![Dalle claire](captures-perimetres/dalle-claire.png) | ![Dalle sombre](captures-perimetres/dalle-sombre.png) |
 
 [Vue du graphe](captures-perimetres/graphe-clair.png) · [Détail sur mobile](captures-perimetres/detail-mobile.png).
+
+## Ajustement typographique après retour visuel
+
+Les compteurs n'utilisent plus le soulignement et la couleur violette des liens documentaires. Ils gardent leur navigation avec une flèche permanente, un survol de surface et un focus clavier visible. Cette exception est locale aux dalles et à leur panneau de détail ; le thème global des liens reste inchangé.
+
+Hiérarchie Inter retravaillée : titre et libellés plus lisibles, chiffres agrandis et graisses moins fortes. Les dalles ne répètent plus le nombre ouvert dans la ligne du retard : le chiffre principal porte les ouverts, la ligne affiche les retards et, pour les récurrences, le nombre de séries. Le nom accessible du lien garde la formule complète, et le panneau de détail garde les valeurs complètes.
+
+Le test e2e du compteur vérifie désormais le lien par son nom accessible complet, plutôt que par une répétition visible de la phrase. La valeur contrôlée et la cible restent les mêmes. Quatre tests e2e du graphe, dont navigation vers la liste filtrée et contrôle axe, réussis après cette modification ; six tests ciblés charte/disposition, typage, lint et build réussis. Captures renouvelées dans les deux thèmes.

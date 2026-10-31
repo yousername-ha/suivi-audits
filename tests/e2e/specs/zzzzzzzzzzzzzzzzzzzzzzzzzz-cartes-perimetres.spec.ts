@@ -52,7 +52,7 @@ test('Graphe des périmètres : compteurs de la carte et création d’un enfant
     await page.getByText('Graphe', { exact: true }).click();
     const carte = page.getByRole('group', { name: `Périmètre ${parent}` });
     await expect(carte).toBeVisible();
-    await expect(carte.getByText('1 ouverte(s) · 1 en retard').first()).toBeVisible();
+    await expect(carte.getByRole('link', { name: '1 ouverte(s) · 1 en retard', exact: true }).first()).toBeVisible();
     // Aucun référentiel activé : la conformité n'est pas mesurable, elle n'est pas affichée comme 0 %.
     await expect(carte.getByText('indisponible')).toBeVisible();
 

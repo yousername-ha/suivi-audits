@@ -76,7 +76,7 @@
 }
 .perimetre-couverture p {
   font-size: 0.68rem;
-  margin: 0.4rem 0;
+  margin: 0.25rem 0;
   color: var(--mantine-color-dimmed);
 }
 .perimetre-couverture small {
@@ -109,9 +109,9 @@
   flex-direction: column;
   justify-content: flex-start;
   align-items: stretch;
-  gap: 0.35rem;
+  gap: 0.25rem;
   min-width: 0;
-  padding: var(--mantine-spacing-sm);
+  padding: 0.625rem;
   border: var(--suivi-trait-l) solid var(--suivi-trait);
   border-radius: var(--mantine-radius-md);
 }
@@ -261,4 +261,119 @@
    Le tracé de couverture reste visible dans le graphe, avec le même arc et un accent contrasté. */
 .perimetre-dalle .perimetre-couverture .neon-ring-valeur {
   stroke: var(--neon-accent);
+}
+
+/* Typographie des dalles : chiffres nets, textes neutres et navigation signalée par une flèche. */
+.perimetre-dalle {
+  font-family: var(--mantine-font-family);
+  letter-spacing: normal;
+}
+.perimetre-entete .perimetre-titre {
+  font-size: 1.08rem;
+  line-height: 1.3;
+  font-weight: 650;
+  letter-spacing: -0.025em;
+}
+.perimetre-sur-titre {
+  color: var(--mantine-color-dimmed);
+  font-size: 0.72rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0.025em;
+}
+.perimetre-couverture strong {
+  font-size: 0.82rem;
+  line-height: 1.4;
+  font-weight: 600;
+}
+.perimetre-couverture p {
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+.perimetre-couverture small {
+  font-size: 0.68rem;
+}
+.perimetre-couverture .neon-ring-centre {
+  font-size: 34px;
+  font-weight: 650;
+  letter-spacing: -1px;
+}
+.perimetre-couverture .neon-axe {
+  display: none;
+}
+.perimetre-lien {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  max-width: 100%;
+  padding: 0.18em 0.3em;
+  margin-left: -0.3em;
+  border-radius: var(--mantine-radius-xs);
+  color: inherit;
+  font-family: inherit;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  font-weight: 450;
+  text-decoration: none;
+  transition: background var(--suivi-motion);
+}
+.perimetre-lien > span {
+  min-width: 0;
+}
+.perimetre-lien > svg {
+  flex: none;
+  opacity: 0.65;
+}
+.perimetre-lien:hover {
+  background: var(--neon-doux);
+  color: var(--neon-titre);
+  text-decoration: none;
+}
+.perimetre-lien:focus-visible {
+  outline: var(--suivi-trait-focus) solid var(--neon-accent);
+  outline-offset: var(--suivi-trait-focus);
+}
+.perimetre-indicateurs .perimetre-indicateur dt {
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+.perimetre-chiffre b {
+  font-size: 2rem;
+  font-weight: 650;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+.perimetre-chiffre small {
+  font-size: 0.68rem;
+}
+.perimetre-indicateurs .perimetre-indicateur dd {
+  font-size: 0.75rem;
+}
+.perimetre-indicateurs .perimetre-indicateur .perimetre-lien {
+  font-size: 0.72rem;
+}
+.perimetre-indicateurs .mantine-Badge-root {
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.perimetre-couverture .graphe-alerte {
+  color: var(--carte-rouge-accent);
+  font-weight: 500;
+}
+.perimetre-indicateurs .graphe-alerte {
+  color: var(--carte-rouge-accent);
+  font-weight: 450;
+}
+.perimetre-retard-valeur {
+  fill: var(--carte-rouge-accent);
+}
+.perimetre-indicateurs .perimetre-indicateur[data-alerte] {
+  border-bottom-color: var(--carte-rouge-accent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .perimetre-lien {
+    transition: none;
+  }
 }

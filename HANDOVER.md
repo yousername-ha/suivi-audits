@@ -1,3 +1,5 @@
+> Retour visuel du 01/11/2026 : typographie des dalles Périmètres ajustée, compteurs neutres non soulignés et flèches de navigation, captures actualisées pour validation.
+
 > 01/11/2026 : [dalles Périmètres en mode Graphe](docs/refonte-neon/DALLES-PERIMETRES.md) retravaillées, compteurs et actions conservés ; quatre tests e2e du graphe réussis.
 
 > Complément graphique : [graphiques et menus du prototype intégrés](docs/refonte-neon/PROTOTYPE-INTEGRE.md), sur la branche Codex ; RETEX inchangé.

@@ -108,15 +108,27 @@ function detailCouverture(c: Couverture): ReactNode {
   );
 }
 
+/** Navigation de dalle : aspect neutre, flèche et focus visibles plutôt qu'un lien violet souligné. */
+function LienCompteur({ to, children, libelle }: { to: string; children: ReactNode; libelle?: string }) {
+  return (
+    <Anchor component={Link} to={to} c="inherit" underline="never" className="perimetre-lien" aria-label={libelle}>
+      <span>{children}</span>
+      <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+        <path d="M4 12 12 4M4 4h8v8" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      </svg>
+    </Anchor>
+  );
+}
+
 /** Lignes de compteurs d'une carte ; `null` : indisponible (droit manquant ou donnée non mesurable). Un compteur est un lien
     vers la liste du module, dans le même périmètre : les chiffres d'une carte se retrouvent à l'identique dans la liste. */
-function lignesCompteurs(c: CartePerimetre['compteurs'], id: string, liens = true): LigneCompteur[] {
+function lignesCompteurs(c: CartePerimetre['compteurs'], id: string, liens = true, compact = false): LigneCompteur[] {
   const indisponible = 'indisponible';
-  const lien = (section: string, texte: ReactNode) =>
+  const lien = (section: string, texte: ReactNode, court?: string) =>
     liens ? (
-      <Anchor component={Link} to={vers(section, id)} size="xs">
-        {texte}
-      </Anchor>
+      <LienCompteur to={vers(section, id)} libelle={compact && typeof texte === 'string' ? texte : undefined}>
+        {compact && court ? court : texte}
+      </LienCompteur>
     ) : (
       texte
     );
@@ -126,7 +138,7 @@ function lignesCompteurs(c: CartePerimetre['compteurs'], id: string, liens = tru
       chiffre: c.actions?.ouverts,
       sousTitre: 'ouvertes',
       jauge: c.actions ?? undefined,
-      valeur: c.actions ? lien('actions', retard(c.actions)) : indisponible,
+      valeur: c.actions ? lien('actions', retard(c.actions), `${n(c.actions.enRetard)} en retard`) : indisponible,
       alerte: !!c.actions && c.actions.enRetard > 0,
     },
     {
@@ -135,7 +147,11 @@ function lignesCompteurs(c: CartePerimetre['compteurs'], id: string, liens = tru
       sousTitre: 'occurrences ouvertes',
       jauge: c.recurrentes?.occurrences,
       valeur: c.recurrentes
-        ? lien('recurrences', `${n(c.recurrentes.series)} série(s) · ${retard(c.recurrentes.occurrences)}`)
+        ? lien(
+            'recurrences',
+            `${n(c.recurrentes.series)} série(s) · ${retard(c.recurrentes.occurrences)}`,
+            `${n(c.recurrentes.series)} série(s) · ${n(c.recurrentes.occurrences.enRetard)} en retard`,
+          )
         : indisponible,
       alerte: !!c.recurrentes && c.recurrentes.occurrences.enRetard > 0,
     },
@@ -144,7 +160,7 @@ function lignesCompteurs(c: CartePerimetre['compteurs'], id: string, liens = tru
       chiffre: c.ecarts?.ouverts,
       sousTitre: 'non clos',
       jauge: c.ecarts ?? undefined,
-      valeur: c.ecarts ? lien('amelioration', retard(c.ecarts)) : indisponible,
+      valeur: c.ecarts ? lien('amelioration', retard(c.ecarts), `${n(c.ecarts.enRetard)} en retard`) : indisponible,
       alerte: !!c.ecarts && c.ecarts.enRetard > 0,
       detail: c.ecarts && (
         <Group gap="2xs" wrap="wrap" role="group" aria-label="Écarts ouverts par classification">
@@ -246,9 +262,9 @@ function CouvertureCarte({ couverture, id }: { couverture: Couverture | null; id
       />
       <div>
         <strong>Couverture des exigences</strong>
-        <Anchor component={Link} to={vers('couverture', id)} size="xs">
+        <LienCompteur to={vers('couverture', id)}>
           {n(couverture.testees)} testées ou validées / {n(couverture.applicables)} applicables
-        </Anchor>
+        </LienCompteur>
         <p>
           {n(couverture.referentiels)} référentiel(s) · {n(couverture.exigences)} exigences
         </p>
@@ -421,7 +437,7 @@ export function CartesPerimetres({
                       {LIBELLES_NIVEAU[carte.entityKind as NiveauPerimetre] ?? carte.entityKind}
                       {carte.nature ? ` · ${carte.nature}` : ''}
                     </Text>
-                    <Text fw={700} lineClamp={2} title={carte.name}>
+                    <Text fw={650} lineClamp={2} title={carte.name} className="perimetre-titre">
                       {carte.name}
                     </Text>
                   </div>
@@ -439,7 +455,7 @@ export function CartesPerimetres({
                 >
                   <CouvertureCarte couverture={carte.compteurs.couverture} id={carte.id} />
                   <dl className="graphe-compteurs perimetre-indicateurs">
-                    {lignesCompteurs(carte.compteurs, carte.id)
+                    {lignesCompteurs(carte.compteurs, carte.id, true, true)
                       .filter((l) => l.libelle !== 'Couverture')
                       .map((l) => (
                         <div key={l.libelle} className="perimetre-indicateur" data-alerte={l.alerte || undefined}>
