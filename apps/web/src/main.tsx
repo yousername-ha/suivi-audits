@@ -3,6 +3,7 @@ import '@mantine/notifications/styles.css';
 import './generated/mantine-vars.css';
 import '@suivi/ui/styles.css';
 import './app.css';
+import '@suivi/ui/neon.css';
 import { Center, Loader, MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';

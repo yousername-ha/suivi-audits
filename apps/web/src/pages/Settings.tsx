@@ -564,14 +564,14 @@ function StyleGlobal({ p }: { p: P }) {
       <Stack gap="xs" mt="xs">
         <Radio
           value="sage"
-          label="Référence 08 — Sauge"
-          description="Fonds sauge chauds (par défaut)."
+          label="Neon Analytics"
+          description="Blanc cassé et indigo, accents violets (par défaut)."
           disabled={p.ro}
         />
         <Radio
           value="clair"
-          label="Clair bleuté"
-          description="Fonds et bordures bleutés ; navigation vert profond conservée."
+          label="Neon — surfaces claires"
+          description="Fond clair lumineux et surfaces lavande ; même identité Neon."
           disabled={p.ro}
         />
       </Stack>

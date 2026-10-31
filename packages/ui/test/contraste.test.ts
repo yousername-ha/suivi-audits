@@ -19,11 +19,11 @@ describe('charte : contrastes WCAG AA', () => {
     expect(bloc).toContain(`--suivi-surface-douce: ${STYLE_CLAIR.surfaceDouce};`);
   });
 
-  it('rayons de 6 à 12 px', () => {
+  it('rayons Neon de 6 à 18 px', () => {
     for (const r of Object.values(RAYONS)) {
       const px = parseInt(r, 10);
       expect(px).toBeGreaterThanOrEqual(6);
-      expect(px).toBeLessThanOrEqual(12);
+      expect(px).toBeLessThanOrEqual(18);
     }
   });
 });

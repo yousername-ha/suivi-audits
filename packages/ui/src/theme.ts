@@ -15,6 +15,7 @@ import {
 } from '@mantine/core';
 import {
   BRAND,
+  NEON,
   ENCRE,
   ESPACEMENTS,
   FONDS,
@@ -79,6 +80,21 @@ const variablesEtats = (mode: 'clair' | 'sombre'): Record<string, string> =>
     }),
   );
 
+/** Palette sémantique commune à la navigation, aux surfaces et aux dessins. */
+const variablesNeon = (mode: 'clair' | 'sombre'): Record<string, string> => ({
+  '--neon-secondaire': FONDS[mode].secondaire,
+  '--neon-rose': NEON.rose,
+  '--neon-violet': NEON.violet,
+  '--neon-bleu': NEON.bleu,
+  '--neon-cyan': NEON.cyan,
+  '--neon-orange': NEON.orange,
+  '--neon-menthe': NEON.menthe,
+  '--neon-navigation': NEON[mode].navigation,
+  '--neon-titre': NEON[mode].titre,
+  '--neon-accent': NEON[mode].accent,
+  '--neon-doux': NEON[mode].doux,
+});
+
 /** Variables CSS : celles de Mantine, ajustées (fonds, bordures, texte secondaire) et complétées par la charte. */
 export const cssVariablesResolver: CSSVariablesResolver = (t) => {
   const base = defaultCssVariablesResolver(t);
@@ -104,6 +120,7 @@ export const cssVariablesResolver: CSSVariablesResolver = (t) => {
       '--suivi-marque-fond': VERT[8],
       '--suivi-qr-fond': '#FFFFFF',
       '--suivi-trait': GRIS[3],
+      ...variablesNeon('clair'),
       ...variablesEtats('clair'),
       ...variablesCarte(CARTE.clair),
     },
@@ -119,6 +136,7 @@ export const cssVariablesResolver: CSSVariablesResolver = (t) => {
       '--suivi-marque-fond': VERT[7],
       '--suivi-qr-fond': '#FFFFFF',
       '--suivi-trait': SOMBRE[5],
+      ...variablesNeon('sombre'),
       ...variablesEtats('sombre'),
       ...variablesCarte(CARTE.sombre),
     },

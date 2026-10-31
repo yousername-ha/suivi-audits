@@ -1,0 +1,490 @@
+{
+  "apiReady": 200,
+  "mfa": true,
+  "demo": {
+    "ecarts": 7,
+    "risques": 7
+  },
+  "document": {
+    "upload": true,
+    "edition": true,
+    "telechargement": true
+  },
+  "routes": [
+    {
+      "route": "/pilotage/contexte",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/parties",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/swot",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/pestel",
+      "errors": [],
+      "apiError": 1,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/perimetres",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/processus-cartes",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/responsabilites",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/cartographie",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/fournisseurs",
+      "errors": [],
+      "apiError": 1,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/criteres-fournisseurs",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/fournisseurs-perimetre",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/evaluations-clausier",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/revues-acces",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/plans-calendrier",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/plans-planning",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/plans-formation",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/plans-sensibilisation",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/investissements",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/synthese",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/parcours-iso",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/parcours",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/processus",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/objectifs",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/indicateurs",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/revues",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/rappels",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/configuration",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/risques",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/opportunites",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/etudes",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/carte",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/traitements",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/scenarios",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/configuration-analyses",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/referentiels",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/bibliotheque",
+      "errors": [],
+      "apiError": 1,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/correspondances",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/rapprochements",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/couverture",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/analyser-service",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/gap-applications",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/correspondances-bibliotheque",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/dda-iso",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/dda-annexe-a",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/dda-hds",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/applicabilite",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/mesures",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/audit-pronostic",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/audit-couverture",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/audit-deroule",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/audit-planning",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/audit-participants",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/audits",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/preuves",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/controles",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/amelioration",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/actions",
+      "errors": [],
+      "apiError": 1,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/recurrences",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/registres",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/bia",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/continuite",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/exercices",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/incidents-registre",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/incidents-qualifier",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/incidents-retex",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/crise-cellule",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/crise-contacts",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/crise-scenarios",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/crrc-ensemble",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/crrc-etablissements",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/crrc-offres",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/crrc-tableau",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/crrc-ressources",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/crrc-restaurations",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/crrc-alertes",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/crrc-rapports",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/documents",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    },
+    {
+      "route": "/pilotage/imports",
+      "errors": [],
+      "apiError": 1,
+      "overflow": false
+    },
+    {
+      "route": "/exports",
+      "errors": [],
+      "apiError": 0,
+      "overflow": false
+    }
+  ],
+  "errors": []
+}

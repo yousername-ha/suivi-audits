@@ -1,3 +1,5 @@
+> Refonte graphique Codex depuis main 6.1.0 (31/10/2026, Europe/Paris) : voir [inventaire, changements et contrôles Neon](docs/refonte-neon/README.md). Copie isolée, sans changement métier ni déploiement. Recette exhaustive des 79 rubriques en attente.
+
 # Reprendre Suivi des audits
 
 > **Reprise la plus récente : [30/10/2026](docs/01_REPRISE_IA/REPRISE-2026-10-30.md)** (clés de sécurité FIDO2 / WebAuthn,
