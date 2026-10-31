@@ -4029,3 +4029,387 @@ tr[data-importe='oui'] {
   background: color-mix(in srgb, var(--carte-marine-fond) 45%, transparent);
   backdrop-filter: blur(0.15em);
 }
+
+/* ---------------------------------------------------------------- Revue de direction : préparation des entrées
+   Dalles en verre du tableau de bord (classe tdb sur le conteneur : variables de verre et fond de page du tableau de bord,
+   en clair comme en sombre), codes graphiques de la chronologie RETEX (bandeau téléscripteur, voyant, surtitres, teintes
+   retex-c-*) et capsules de verre : fond flouté, liseré clair, reflet haut et lueur blanche intérieure ; la capsule
+   principale prend la teinte néon du RETEX. Les boutons Mantine de la page (registre, exports) reçoivent la même capsule.
+   Couleurs issues des jetons, longueurs en em ou jetons, aucun style en ligne (CSP). */
+/* Variables portées par la zone principale : les boutons du registre, hors de l'encart, les lisent aussi. */
+.app-main:has(.revue-ecran) {
+  --retex-neon: var(--carte-bleu-accent);
+  --retex-texte: var(--mantine-color-text);
+  --retex-secondaire: var(--mantine-color-dimmed);
+  --retex-filet: color-mix(in srgb, var(--retex-neon) 18%, transparent);
+  --retex-trait: 0.125em;
+  /* Capsules de verre (clair) : voile, liseré, lueur laiteuse des bords, contour et ombre neutres. */
+  --verre-voile: color-mix(in srgb, var(--mantine-color-white) 45%, transparent);
+  --verre-lisere: color-mix(in srgb, var(--mantine-color-white) 95%, transparent);
+  --verre-laiteux: color-mix(in srgb, var(--mantine-color-white) 95%, transparent);
+  --verre-contour: color-mix(in srgb, var(--carte-marine-fond) 14%, transparent);
+  --verre-ombre: color-mix(in srgb, var(--carte-marine-fond) 22%, transparent);
+  /* Bleu de la charte approfondi par la marine : texte blanc lisible (contraste d'environ 4,8:1) malgré la transparence. */
+  --verre-principal: color-mix(in srgb, var(--carte-bleu-accent) 70%, var(--carte-marine-fond));
+  --verre-principal-dose: 80%;
+  --verre-principal-laiteux: color-mix(in srgb, var(--mantine-color-white) 62%, transparent);
+}
+[data-mantine-color-scheme='dark'] .app-main:has(.revue-ecran) {
+  --retex-neon: color-mix(in srgb, var(--carte-bleu-accent) 55%, var(--mantine-color-white));
+  --verre-voile: color-mix(in srgb, var(--mantine-color-white) 8%, transparent);
+  --verre-lisere: color-mix(in srgb, var(--mantine-color-white) 70%, transparent);
+  --verre-laiteux: color-mix(in srgb, var(--mantine-color-white) 32%, transparent);
+  --verre-contour: color-mix(in srgb, var(--mantine-color-black) 30%, transparent);
+  --verre-ombre: color-mix(in srgb, var(--mantine-color-black) 45%, transparent);
+  --verre-principal: color-mix(in srgb, var(--carte-bleu-accent) 85%, var(--carte-violet-accent));
+  --verre-principal-dose: 42%;
+  --verre-principal-laiteux: color-mix(in srgb, var(--mantine-color-white) 45%, transparent);
+  /* Sombre allégé sur cette page : voile ardoise sur le fond vert, halos bleu et violet discrets. */
+  background-image:
+    radial-gradient(
+      56em 40em at 4% -6%,
+      color-mix(in srgb, var(--carte-bleu-accent) 18%, transparent),
+      transparent 62%
+    ),
+    radial-gradient(
+      48em 38em at 104% 2%,
+      color-mix(in srgb, var(--carte-violet-accent) 16%, transparent),
+      transparent 58%
+    ),
+    radial-gradient(
+      56em 50em at 58% 108%,
+      color-mix(in srgb, var(--carte-bleu-accent) 12%, transparent),
+      transparent 62%
+    ),
+    linear-gradient(
+      color-mix(in srgb, var(--carte-canevas) 60%, transparent),
+      color-mix(in srgb, var(--carte-canevas) 60%, transparent)
+    );
+}
+/* Verre des dalles en sombre : fumé neutre plutôt que vert. */
+[data-mantine-color-scheme='dark'] .revue-ecran.tdb {
+  --tdb-verre-haut: color-mix(in srgb, var(--mantine-color-white) 11%, transparent);
+  --tdb-verre-milieu: color-mix(in srgb, var(--mantine-color-white) 5%, transparent);
+  --tdb-verre-bas: color-mix(in srgb, var(--mantine-color-white) 8%, transparent);
+  --tdb-verre-bord: color-mix(in srgb, var(--mantine-color-white) 18%, transparent);
+}
+.revue-ecran {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-xl);
+  color: var(--retex-texte);
+}
+/* Teintes : franches et assombries en clair (lisibles sur le verre blanc), éclaircies en sombre. */
+.revue-ecran [class*='retex-c-'] {
+  --c: color-mix(in srgb, var(--a) 82%, var(--mantine-color-black));
+}
+[data-mantine-color-scheme='dark'] .revue-ecran [class*='retex-c-'] {
+  --c: color-mix(in srgb, var(--a) 62%, var(--mantine-color-white));
+}
+
+/* Capsule de verre (d'après les maquettes) : verre presque transparent et flouté, liseré blanc net doublé d'un filet
+   intérieur, lueur laiteuse le long des bords intérieurs, ombre neutre courte. Ni dégradé brillant ni halo coloré. */
+.verre-pilule,
+.verre-bouton,
+.app-main:has(.revue-ecran) .mantine-Button-root {
+  --t: var(--c, var(--retex-neon));
+  position: relative;
+  border: var(--suivi-trait-l) solid var(--verre-lisere);
+  border-radius: 999em;
+  background: color-mix(in srgb, var(--t) 7%, var(--verre-voile));
+  -webkit-backdrop-filter: blur(1em) saturate(160%);
+  backdrop-filter: blur(1em) saturate(160%);
+  box-shadow:
+    inset 0 0 0 var(--suivi-trait-l) color-mix(in srgb, var(--mantine-color-white) 30%, transparent),
+    inset 0 0 0.7em 0.05em var(--verre-laiteux),
+    0 0 0 var(--suivi-trait-l) var(--verre-contour),
+    0 0.3em 0.8em -0.45em var(--verre-ombre);
+  color: var(--retex-texte);
+}
+.verre-pilule {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.3em 0.9em;
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.verre-bouton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  height: 3em;
+  padding: 0 1.75em;
+  font: inherit;
+  font-size: var(--mantine-font-size-md);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+/* Capsule principale : verre teinté (bleu de la charte), translucide, bords laiteux, texte blanc. Variante pleine de
+   Mantine : attribut data-variant absent (variante par défaut) ou « filled ». */
+.verre-bouton[data-principal='oui'],
+.app-main:has(.revue-ecran) .mantine-Button-root:not([data-variant]),
+.app-main:has(.revue-ecran) .mantine-Button-root[data-variant='filled'] {
+  --t: var(--verre-principal);
+  border-color: color-mix(in srgb, var(--mantine-color-white) 85%, transparent);
+  background: color-mix(in srgb, var(--t) var(--verre-principal-dose), transparent);
+  color: var(--mantine-color-white);
+  text-shadow: 0 0 0.5em color-mix(in srgb, var(--t) 60%, var(--mantine-color-black));
+  box-shadow:
+    inset 0 0 0 var(--suivi-trait-l) color-mix(in srgb, var(--mantine-color-white) 40%, transparent),
+    inset 0 0 0.9em 0.12em var(--verre-principal-laiteux),
+    0 0 0 var(--suivi-trait-l) var(--verre-contour),
+    0 0.35em 0.9em -0.45em var(--verre-ombre);
+}
+.verre-bouton:hover,
+.app-main:has(.revue-ecran) .mantine-Button-root:hover {
+  box-shadow:
+    inset 0 0 0 var(--suivi-trait-l) color-mix(in srgb, var(--mantine-color-white) 45%, transparent),
+    inset 0 0 1em 0.15em var(--verre-laiteux),
+    0 0 0 var(--suivi-trait-l) var(--verre-contour),
+    0 0.45em 1em -0.45em var(--verre-ombre);
+}
+.verre-bouton[data-principal='oui']:hover,
+.app-main:has(.revue-ecran) .mantine-Button-root:not([data-variant]):hover,
+.app-main:has(.revue-ecran) .mantine-Button-root[data-variant='filled']:hover {
+  background: color-mix(in srgb, var(--t) calc(var(--verre-principal-dose) - 8%), transparent);
+  box-shadow:
+    inset 0 0 0 var(--suivi-trait-l) color-mix(in srgb, var(--mantine-color-white) 50%, transparent),
+    inset 0 0 1em 0.2em color-mix(in srgb, var(--mantine-color-white) 60%, transparent),
+    0 0 0 var(--suivi-trait-l) var(--verre-contour),
+    0 0.45em 1em -0.45em var(--verre-ombre);
+}
+.verre-bouton:active,
+.app-main:has(.revue-ecran) .mantine-Button-root:active {
+  transform: scale(0.97);
+}
+.verre-bouton:focus-visible {
+  outline: var(--suivi-trait-focus) solid var(--retex-neon);
+  outline-offset: var(--suivi-trait-focus);
+}
+/* Boutons Mantine de la page : capsule claire (default, light), discrète jusqu'au survol (subtle). */
+.app-main:has(.revue-ecran) .mantine-Button-root[data-variant='light'] {
+  --t: var(--mantine-color-suivi-filled);
+}
+.app-main:has(.revue-ecran) .mantine-Button-root[data-variant='subtle']:not(:hover) {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* Bandeau : grande dalle de verre, surtitre en capsule, chiffres façon téléscripteur, bouton principal. */
+.revue-bandeau.tdb-dalle {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-lg);
+  padding: var(--mantine-spacing-lg) var(--mantine-spacing-xl);
+  border-bottom: var(--suivi-trait-l) solid var(--tdb-verre-bord);
+}
+.revue-bandeau.tdb-dalle:hover {
+  transform: none;
+}
+.revue-bandeau > * {
+  position: relative;
+  z-index: 3;
+}
+.revue-bandeau .retex-bandeau__titre {
+  flex: 1 1 28em;
+  align-items: flex-start;
+  gap: var(--mantine-spacing-xs);
+}
+.revue-bandeau__sur {
+  --t: var(--carte-vert-accent);
+  --retex-neon: var(--carte-vert-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+.revue-ecran .retex-bandeau__nom {
+  margin: 0;
+  text-shadow: none;
+}
+[data-mantine-color-scheme='dark'] .revue-ecran .retex-bandeau__nom {
+  text-shadow: 0 0 1.2em color-mix(in srgb, var(--retex-neon) 45%, transparent);
+}
+.revue-bandeau__texte {
+  margin: 0;
+  max-width: var(--suivi-largeur-lecture);
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1.5;
+  color: var(--retex-secondaire);
+}
+.revue-bandeau__droite {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--mantine-spacing-md);
+}
+.revue-ecran .retex-bandeau__chiffres > div:first-child {
+  border-left: none;
+}
+.revue-ecran .retex-bandeau__chiffres dd {
+  text-shadow: none;
+}
+[data-mantine-color-scheme='dark'] .revue-ecran .retex-bandeau__chiffres dd {
+  text-shadow: 0 0 0.8em color-mix(in srgb, var(--c) 60%, transparent);
+}
+
+/* Temps de lecture : anneau numéroté en capsule de verre teintée, surtitre, titre affirmé. */
+.revue-temps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-md);
+  animation: retex-monte 0.45s ease both;
+}
+.revue-temps:nth-of-type(2) {
+  animation-delay: 0.1s;
+}
+.revue-temps:nth-of-type(3) {
+  animation-delay: 0.2s;
+}
+.revue-temps__tete {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-md);
+}
+.revue-temps__anneau.verre-pilule {
+  flex: none;
+  justify-content: center;
+  width: 2.6em;
+  height: 2.6em;
+  padding: 0;
+  font-size: var(--mantine-font-size-md);
+  color: var(--c);
+}
+.revue-temps__sur {
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--c);
+}
+.revue-temps__titre {
+  margin: 0;
+  font-size: var(--mantine-h4-font-size);
+  font-weight: 700;
+  line-height: 1.25;
+}
+.revue-temps__resume {
+  margin: 0;
+  font-size: var(--mantine-font-size-sm);
+  color: var(--retex-secondaire);
+}
+
+/* Dalles : colonnes selon la largeur disponible (menu latéral compris). */
+.revue-dalles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 20em), 1fr));
+  gap: var(--mantine-spacing-md);
+}
+.revue-dalle {
+  gap: var(--mantine-spacing-xs);
+}
+.revue-dalle[data-etat='a-saisir'] {
+  --tdb-verre-haut: color-mix(in srgb, var(--a) 22%, transparent);
+  --tdb-verre-milieu: color-mix(in srgb, var(--a) 8%, transparent);
+  --tdb-verre-bas: color-mix(in srgb, var(--a) 14%, transparent);
+  border-color: color-mix(in srgb, var(--a) 45%, transparent);
+}
+.revue-dalle__tete,
+.revue-dalle__titre,
+.revue-dalle__souligne,
+.revue-faits {
+  position: relative;
+  z-index: 3;
+}
+.revue-dalle__tete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-xs);
+}
+.revue-dalle__article {
+  color: var(--c);
+}
+.revue-pastille {
+  --retex-neon: var(--c);
+  text-transform: uppercase;
+}
+.revue-dalle__titre {
+  margin: 0;
+  font-size: var(--mantine-font-size-md);
+  font-weight: 700;
+  line-height: 1.3;
+}
+.revue-dalle__souligne {
+  display: block;
+  width: 3em;
+  height: var(--retex-trait);
+  border-radius: 999em;
+  background: linear-gradient(90deg, var(--c), transparent);
+  transform-origin: left;
+  animation: retex-etire 0.6s ease 0.3s both;
+}
+[data-mantine-color-scheme='dark'] .revue-dalle__souligne {
+  box-shadow: 0 0 0.8em color-mix(in srgb, var(--c) 70%, transparent);
+}
+.revue-faits {
+  margin: 0;
+  padding-left: 1.1em;
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-2xs);
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1.55;
+}
+.revue-faits li::marker {
+  color: var(--c);
+}
+.revue-chiffre {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--c);
+}
+[data-mantine-color-scheme='dark'] .revue-chiffre {
+  text-shadow: 0 0 0.8em color-mix(in srgb, var(--c) 60%, transparent);
+}
+@media (max-width: 48em) {
+  .revue-bandeau.tdb-dalle {
+    padding: var(--mantine-spacing-md);
+  }
+  .revue-bandeau__droite {
+    align-items: stretch;
+    width: 100%;
+  }
+  .revue-bandeau__droite .verre-bouton {
+    white-space: normal;
+  }
+  .revue-ecran .retex-bandeau__chiffres {
+    gap: var(--mantine-spacing-sm) 0;
+  }
+  .revue-ecran .retex-bandeau__chiffres > div {
+    padding-left: 0;
+    border-left: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .revue-ecran,
+  .revue-ecran *,
+  .app-main:has(.revue-ecran) .mantine-Button-root {
+    animation: none !important;
+    transition: none !important;
+  }
+}

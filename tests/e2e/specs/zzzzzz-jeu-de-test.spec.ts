@@ -110,8 +110,10 @@ test('jeu de test : menu, objectifs, fournisseurs, PESTEL, boîtes, carte des ri
     await expect(page.getByLabel('Séries proposées')).toContainText('Aucune n’est créée d’office');
     await capture(page, '12-series-proposees');
     await page.goto('/pilotage/revues');
-    await page.getByRole('button', { name: /Statut des actions décidées lors des revues précédentes/ }).click();
-    await expect(page.getByText(/Revue du .* : (1 action décidée|aucune action)/)).toBeVisible();
+    // Les faits sont affichés d'emblée, regroupés en cartes (plus d'accordéon à ouvrir).
+    await expect(
+      page.getByRole('article', { name: 'Statut des actions décidées lors des revues précédentes' }),
+    ).toContainText(/Revue du .* : (1 action décidée|aucune action)/);
     await capture(page, '13-revue-entrees');
 
     // Cartographie des risques : la carte reste dans son cadre (plus d'écran gris).

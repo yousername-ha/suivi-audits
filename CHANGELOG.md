@@ -6,6 +6,16 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
+Aucune action.
+
+## [6.1.0] — 2026-10-31
+
+Version mineure : trois migrations SQL additives (`047`, `049`, `050`), aucune nouvelle dépendance. Elle apporte le tableau de bord de l'accueil personnalisable, la collecte du RETEX d'incident, l'ordre du menu personnalisable et le regroupement des parcours guidés, et retire les restes des anciens formats de sauvegarde. Section rédigée par la session « Projet audit_suivi Coeur ».
+
+### Notes de mise à jour
+
+**Mise à jour depuis la 6.0.1 : aucune action sur le serveur** (depuis l'interface web ou `scripts/mettre-a-jour.sh`). Les trois migrations ci-dessous sont automatiques et additives. Un seul point à surveiller : un compte à **rôle personnalisé** perd la modification de sa disposition d'accueil tant que le droit `tableau_de_bord:modifier` n'est pas ajouté à son rôle (détail plus bas).
+
 **Migration automatique `047`** (disposition du tableau de bord) : additive, appliquée au démarrage de `app`, durée négligeable ; aucune action sur le serveur. Sans disposition enregistrée, l'accueil garde la disposition actuelle.
 
 **Migration automatique `050`** (partage du tableau de bord et droit dédié) : additive, appliquée au démarrage de `app`, durée négligeable ; aucune action sur le serveur. **Droit nouveau** `tableau_de_bord:modifier` : les rôles prédéfinis Administrateur, RSSI et Contributeur l'ont ; un compte qui n'a qu'un **rôle personnalisé** ne peut plus modifier sa disposition tant qu'un administrateur n'ajoute pas « Tableau de bord de l'accueil : Créer et modifier » à ce rôle (Administration, Rôles). _(Session « Dashboard maquette personnalisable ».)_
@@ -28,6 +38,7 @@ Aucune action sur le serveur : la migration additive `049_retex_contributions.sq
 
 - **Menu latéral** : la famille Organisation est placée en tête, au-dessus du Pilotage. Les Périmètres quittent la destination « Synthèse et périmètres » du Pilotage (renommée « Synthèse et parcours ») et deviennent une destination « Périmètres » de l'Organisation, après le contexte. Adresses (`/pilotage/perimetres`) et droits inchangés. (session « Menu »)
 - **Menu Pilotage** : « Parcours guidé » devient une destination de la famille Pilotage, qui regroupe les parcours disponibles en onglets : « Parcours ISO 27001 / HDS », ouvert par défaut, et « Parcours par démarche » (nouveau nom de l'ancienne rubrique « Parcours guidé » : démarche qualité, sécurité, HDS ou intégrée ; article d'aide renommé de même). Le bouton de la Synthèse devient « Ouvrir les parcours guidés ». Les deux rubriques quittent « Synthèse et parcours », qui redevient la destination « Synthèse ». Adresses (`/pilotage/parcours`, `/pilotage/parcours-iso`) et droits inchangés. _(Session « Pilotages ».)_
+- **Revue de direction plus lisible** (Pilotage > Plans et revues > Revues de direction) : les douze entrées de 9.3.2, auparavant repliées dans des accordéons, s'affichent d'emblée en dalles regroupées en trois temps numérotés (« Suites et contexte », « Performance et efficacité », « Ressources, risques et amélioration »). Dalles en verre du tableau de bord sur le même fond de page, en thème clair comme sombre ; codes graphiques de la chronologie RETEX (bandeau téléscripteur avec la date de la dernière revue, le nombre d'entrées et ce qui reste à apprécier, surtitres, voyant, teinte par temps). Boutons et pastilles de la page en capsules de verre d'après les maquettes (verre translucide et flouté, liseré blanc net, lueur laiteuse sur les bords intérieurs, sans dégradé brillant ni halo coloré), bouton principal en verre bleu ; en thème sombre, dalles en verre fumé neutre et fond ardoise plutôt que vert ; les boutons du registre et des exports de cette page prennent la même capsule. Dates et nombres des faits mis en évidence, entrée à apprécier (ressources) signalée en orange. Contenu, calculs et API inchangés ; aucune dépendance nouvelle, aucun style en ligne. _(Session « Revue de direction ».)_
 
 ### Retiré
 
