@@ -1,0 +1,118 @@
+/* Maquette E — DATA-DENSE COMPACT. Jetons uniquement (aucune règle). */
+:root {
+  /* Fonds et surfaces */
+  --fond: #f4f5f7;
+  --surface: #ffffff;
+  --surface-2: #f8f9fb;
+  --surface-3: #eef0f4;
+  --surface-survol: #f3f4f8;
+  --surface-selection: #e9ecf8;
+
+  /* Texte */
+  --texte: #15181e;
+  --texte-2: #4f5664;
+  --texte-3: #5f6675;
+  --texte-inverse: #ffffff;
+  --texte-inverse-2: #aeb4c0;
+
+  /* Traits */
+  --bordure: #e1e4ea;
+  --bordure-forte: #c5cad3;
+  --bordure-champ: #8a92a1;
+
+  /* Accent unique : indigo */
+  --accent: #3949ab;
+  --accent-survol: #2f3d94;
+  --accent-actif: #273280;
+  --accent-fond: #e9ecf8;
+  --accent-bordure: #b7c0e9;
+  --accent-texte: #3949ab;
+
+  /* États (texte lisible AA sur leur fond teinté et sur blanc) */
+  --succes: #1b7a3e;
+  --succes-fond: #e6f4ea;
+  --alerte: #a84e0a;
+  --alerte-fond: #fbeee2;
+  --erreur: #be2e2e;
+  --erreur-fond: #fce9e9;
+  --info: #1f62b8;
+  --info-fond: #e7effa;
+  --violet: #6a47c2;
+  --violet-fond: #efeafb;
+  --ambre: #8a6400;
+  --ambre-fond: #fbf3dc;
+  --neutre: #5b6270;
+  --neutre-fond: #eef0f4;
+
+  /* Données (graphiques) */
+  --donnee-1: #3949ab;
+  --donnee-2: #c85a14;
+  --donnee-3: #1b7a3e;
+  --donnee-4: #7c5ae0;
+  --donnee-piste: #e1e4ea;
+  --donnee-grille: #eef0f4;
+  --donnee-critique: #be2e2e;
+  --donnee-majeure: #c85a14;
+  --donnee-mineure: #b98000;
+  --donnee-observation: #8a92a1;
+
+  /* Typographie */
+  --police: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --police-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+  --taille-base: 13px;
+  --taille-xs: 11px;
+  --taille-sm: 12px;
+  --taille-md: 13px;
+  --taille-lg: 15px;
+  --taille-xl: 18px;
+  --taille-2xl: 22px;
+  --taille-kpi: 22px;
+  --interligne: 1.35;
+  --interligne-serre: 1.2;
+  --graisse-normale: 450;
+  --graisse-moyenne: 530;
+  --graisse-forte: 620;
+  --crenage-titre: -0.02em;
+  --crenage-corps: -0.006em;
+  --crenage-capitale: 0.05em;
+
+  /* Espacements (grille 4 px) */
+  --esp-1: 4px;
+  --esp-2: 8px;
+  --esp-3: 12px;
+  --esp-4: 16px;
+  --esp-5: 20px;
+  --esp-6: 24px;
+  --esp-8: 32px;
+
+  /* Dimensions */
+  --ligne-tableau: 32px;
+  --ligne-compacte: 28px;
+  --ligne-confort: 40px;
+  --cible-min: 32px;
+  --hauteur-barre: 40px;
+  --largeur-nav: 208px;
+  --largeur-nav-repliee: 52px;
+  --hauteur-champ: 30px;
+
+  /* Rayons */
+  --rayon-xs: 3px;
+  --rayon-sm: 4px;
+  --rayon-md: 6px;
+  --rayon-lg: 8px;
+  --rayon-rond: 999px;
+
+  /* Ombres */
+  --ombre-1: 0 1px 2px rgb(21 24 30 / 6%), 0 0 0 1px rgb(21 24 30 / 4%);
+  --ombre-2: 0 4px 12px rgb(21 24 30 / 10%), 0 0 0 1px rgb(21 24 30 / 5%);
+  --ombre-3: 0 16px 40px rgb(21 24 30 / 18%), 0 0 0 1px rgb(21 24 30 / 6%);
+  --anneau-focus: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent);
+
+  /* Mouvement */
+  --duree-1: 120ms;
+  --duree-2: 180ms;
+  --duree-3: 260ms;
+  --duree-graphique: 900ms;
+  --courbe: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --courbe-sortie: cubic-bezier(0.4, 0, 1, 1);
+}

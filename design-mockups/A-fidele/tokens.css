@@ -1,0 +1,140 @@
+/* Maquette A — FIDÈLE. Jetons de conception (variables uniquement).
+   Palette strictement reprise de design-mockups/AUDIT-VISUEL.md (direction « Sauge »). */
+:root {
+  /* ------------------------------------------------------------ Marque et fonds */
+  --encre: #243B34;
+  --vert: #245F4C;
+  --vert-sombre: #194B3B;
+  --vert-clair: #EDF4EF;
+  --violet: #5A48B5;
+  --violet-sombre: #43358B;
+  --violet-clair: #F2F0FB;
+  --fond: #F5F6F2;
+  --surface: #FFFFFF;
+  --surface-douce: #F8F9F6;
+  --surface-verre: #F3F6F1;
+  --texte: #243B34;
+  --texte-2: #58695F;
+  --bordure-champ: #819087;
+  --trait: #D5DCD3;
+  --encre-clair: #EEF1F6;
+  --sombre-clair: #E7EEE9;
+  --gris-sombre: #25382D;
+
+  /* ------------------------------------------------------------ Navigation latérale (toujours sombre) */
+  --nav-fond: #163E33;
+  --nav-texte: #F2F6EF;
+  --nav-texte-2: #B5CEC0;
+  --nav-actif: #305A49;
+  --nav-repere: #C5DBAB;
+  --nav-survol: #244C3E;
+  --famille-pilotage: #C5DBAB;
+  --famille-organisation: #9CC7E4;
+  --famille-risques: #F2A99B;
+  --famille-conformite: #E8D28C;
+  --famille-actions: #BCAAEC;
+  --famille-resilience: #84D6C6;
+  --famille-documents: #E6B8D2;
+
+  /* ------------------------------------------------------------ États (assombris, WCAG AA) */
+  --erreur: #C92A2A;
+  --erreur-survol: #B12525;
+  --erreur-texte: #A82424;
+  --alerte: #CE440E;
+  --alerte-survol: #B53C0C;
+  --alerte-texte: #A03E08;
+  --jaune: #AC5900;
+  --jaune-survol: #974E00;
+  --jaune-texte: #925500;
+  --succes: #29833B;
+  --succes-survol: #247334;
+  --succes-texte: #206D2F;
+  --sarcelle: #087F5B;
+  --sarcelle-survol: #077050;
+  --sarcelle-texte: #066A4C;
+  --info: #1971C2;
+  --info-survol: #1663AB;
+  --info-texte: #145B9C;
+  --violet-etat: #6741D9;
+  --violet-etat-survol: #5B37C4;
+  --violet-etat-texte: #5A2FB0;
+  /* Teintes légères : couleur d'état à 12 % sur la surface (badges, bandeaux) */
+  --teinte-alpha: 12%;
+
+  /* ------------------------------------------------------------ Données (graphiques, ADR 0069, hors orange clair) */
+  --donnee-vert: #278A58;
+  --donnee-bleu: #3A66B5;
+  --donnee-violet: #6556C2;
+  --donnee-rouge: #D63A30;
+  --donnee-gris: #7A887F;
+  --donnee-contour: #10201A;
+  --sante-ok: #2F8F5B;
+  --sante-ko: #C2312A;
+
+  /* ------------------------------------------------------------ Typographie */
+  --police: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --police-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+  --taille-base: clamp(0.9rem, 0.84rem + 0.25vw, 1rem);
+  --taille-2xs: 0.68rem;
+  --taille-xs: 0.74rem;
+  --taille-sm: 0.82rem;
+  --taille-md: 0.9rem;
+  --taille-lg: 1.1rem;
+  --taille-xl: 1.35rem;
+  --taille-2xl: 1.75rem;
+  --taille-3xl: clamp(1.65rem, 2.2vw, 2.45rem);
+  --graisse-corps: 450;
+  --graisse-moyenne: 550;
+  --graisse-grasse: 600;
+  --graisse-titre: 650;
+  --interlettre-titre: -0.035em;
+  --interlettre-corps: -0.011em;
+  --interlettre-legende: 0.08em;
+  --interlettre-nav: 0.14em;
+  --interligne: 1.5;
+  --interligne-serre: 1.2;
+
+  /* ------------------------------------------------------------ Espacements */
+  --esp-2xs: 0.25rem;
+  --esp-xs: 0.5rem;
+  --esp-sm: 0.75rem;
+  --esp-md: 1rem;
+  --esp-lg: 1.5rem;
+  --esp-xl: 2rem;
+  --esp-2xl: 3rem;
+  --esp-3xl: 4rem;
+
+  /* ------------------------------------------------------------ Rayons */
+  --rayon-xs: 6px;
+  --rayon-sm: 8px;
+  --rayon-md: 10px;
+  --rayon-lg: 12px;
+  --rayon-xl: 16px;
+  --rayon-rond: 999px;
+
+  /* ------------------------------------------------------------ Ombres et anneaux */
+  --ombre: 0 2px 4px rgb(27 54 37 / 4%), 0 8px 28px rgb(27 54 37 / 6%);
+  --ombre-survol: 0 4px 10px rgb(27 54 37 / 6%), 0 14px 36px rgb(27 54 37 / 9%);
+  --ombre-haute: 0 18px 54px rgb(27 54 37 / 12%);
+  --ombre-bouton: 0 4px 12px rgb(18 63 41 / 14%);
+  --anneau-focus: 0 0 0 3px rgb(36 95 76 / 25%);
+  --trait-focus: 2px;
+
+  /* ------------------------------------------------------------ Mouvement */
+  --duree-rapide: 150ms;
+  --duree: 180ms;
+  --duree-lente: 250ms;
+  --duree-entree: 360ms;
+  --duree-graphique: 900ms;
+  --courbe: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --courbe-sortie: cubic-bezier(0.4, 0, 1, 1);
+
+  /* ------------------------------------------------------------ Dimensions de la coquille */
+  --nav-largeur: 15.5rem;
+  --nav-repliee: 4.25rem;
+  --entete-hauteur: 3.75rem;
+  --marge-page: clamp(1rem, 0.5rem + 1.5vw, 2.5rem);
+  --largeur-contenu: 1360px;
+  --hauteur-controle: 2.5rem;
+  --hauteur-controle-sm: 2rem;
+}

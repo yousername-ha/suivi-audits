@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Suivi des audits SMSI — Maquette B, fidèle épurée</title>
+  <meta name="description" content="Maquette statique et cliquable : refonte graphique fidèle épurée de l’application Suivi des audits SMSI. Données fictives.">
+  <link rel="stylesheet" href="../shared/fonts.css">
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="lien-evitement" href="#contenu">Aller au contenu</a>
+
+  <div class="coquille">
+    <header class="entete">
+      <div class="marque">
+        <div class="marque-sceau" aria-hidden="true">VO</div>
+        <div>
+          <span class="marque-nom" id="marque-nom">Suivi des audits SMSI</span>
+          <span class="marque-sous" id="marque-sous">GHT Val-d’Ombre</span>
+        </div>
+      </div>
+      <div class="entete-centre">
+        <span class="entete-org" id="entete-org"></span>
+        <span class="entete-cycle" id="entete-cycle"></span>
+      </div>
+      <div class="entete-droite">
+        <span class="direct"><span class="direct-point" aria-hidden="true"></span>En direct</span>
+        <div class="utilisateur">
+          <span class="avatar" id="utilisateur-avatar" aria-hidden="true"></span>
+          <div>
+            <span class="utilisateur-nom" id="utilisateur-nom"></span>
+            <span class="utilisateur-role" id="utilisateur-role"></span>
+          </div>
+        </div>
+        <button type="button" class="btn btn-discret btn-sm" data-action="toast" data-genre="info" data-titre="Déconnexion simulée" data-texte="La maquette ne gère pas de session.">Déconnexion</button>
+      </div>
+    </header>
+
+    <nav class="nav" aria-label="Navigation principale">
+      <div>
+        <div class="nav-legende">Pilotage</div>
+        <ul id="nav-liste"></ul>
+      </div>
+      <div class="nav-pied">Maquette B — fidèle épurée<br>Données fictives, sans persistance.</div>
+    </nav>
+
+    <main class="contenu" id="contenu" tabindex="-1">
+      <div class="ecran" id="ecran"></div>
+    </main>
+  </div>
+
+  <div class="infobulle" id="infobulle" role="tooltip" aria-hidden="true"></div>
+
+  <div class="toasts" id="toasts" aria-live="polite" aria-relevant="additions" aria-label="Notifications"></div>
+
+  <div class="voile" id="voile" hidden>
+    <div class="modale" role="dialog" aria-modal="true" aria-labelledby="modale-titre" aria-describedby="modale-texte" id="modale">
+      <div class="modale-icone" id="modale-icone" aria-hidden="true"></div>
+      <h2 id="modale-titre">Supprimer l’audit ?</h2>
+      <p id="modale-texte">Cette action retire l’audit « Audit blanc avant surveillance » et ses 0 constat du suivi. Elle est irréversible dans l’application réelle ; ici, rien n’est modifié.</p>
+      <div class="modale-actions">
+        <button type="button" class="btn" data-action="fermer-modale">Annuler</button>
+        <button type="button" class="btn btn-danger" data-action="confirmer-modale">Supprimer</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared/fake-data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

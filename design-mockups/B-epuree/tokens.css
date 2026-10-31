@@ -1,0 +1,113 @@
+/* Maquette B — Fidèle épurée. Design tokens uniquement (aucune règle). */
+:root {
+  /* Fonds : beaucoup de blanc, sauge très clair pour les sections */
+  --fond-page: #FBFCFB;
+  --fond-surface: #FFFFFF;
+  --fond-sauge: #F3F7F4;
+  --fond-sauge-2: #E6EFE9;
+  --fond-nav: #F5F8F5;
+  --fond-survol: rgba(36, 59, 52, 0.04);
+  --fond-ligne-survol: rgba(36, 59, 52, 0.035);
+  --fond-voile: rgba(36, 59, 52, 0.28);
+
+  /* Encre : base de la marque, puis nuancée */
+  --encre: #243B34;
+  --encre-80: #4F6159;
+  --encre-60: #5A6C64;
+  --encre-trait: rgba(36, 59, 52, 0.10);
+  --encre-trait-fort: #7A8A81;
+
+  /* Marque */
+  --vert: #245F4C;
+  --vert-sombre: #1F5A46;
+  --vert-pale: #E3EEE7;
+  --violet: #5A48B5;
+  --violet-pale: #EDEAF8;
+  --blanc: #FFFFFF;
+
+  /* États : couleur réservée aux statuts et aux actions */
+  --succes-texte: #206D2F;
+  --succes-fond: #E6F2E8;
+  --succes-plein: #2F8F5B;
+  --alerte-texte: #A03E08;
+  --alerte-fond: #FAEBE0;
+  --alerte-plein: #C86A12;
+  --erreur-texte: #B02424;
+  --erreur-fond: #FCE8E8;
+  --erreur-plein: #C2312A;
+  --info-texte: #145B9C;
+  --info-fond: #E4EEF9;
+  --info-plein: #2F6FC2;
+  --jaune-texte: #8A5200;
+  --jaune-fond: #FBF0DC;
+  --neutre-texte: #4F6159;
+  --neutre-fond: #EEF1EE;
+
+  /* Données (graphiques), palette validée */
+  --donnee-1: #1F8A5C;
+  --donnee-2: #5A48B5;
+  --donnee-3: #2F6FC2;
+  --donnee-4: #C86A12;
+  --donnee-5: #7A68C9;
+  --donnee-6: #B02424;
+  --donnee-grille: rgba(36, 59, 52, 0.08);
+  --donnee-piste: #E6EFE9;
+
+  /* Typographie */
+  --fonte: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --fonte-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --taille-xs: 0.75rem;
+  --taille-sm: 0.8125rem;
+  --taille-md: 0.9375rem;
+  --taille-lg: 1.125rem;
+  --taille-xl: 1.5rem;
+  --taille-2xl: 2rem;
+  --taille-hero: 2.75rem;
+  --graisse-normale: 400;
+  --graisse-moyenne: 500;
+  --graisse-forte: 600;
+  --interligne: 1.5;
+  --interligne-serre: 1.15;
+  --espacement-titre: -0.02em;
+  --espacement-legende: 0.06em;
+
+  /* Espacements */
+  --esp-1: 0.25rem;
+  --esp-2: 0.5rem;
+  --esp-3: 0.75rem;
+  --esp-4: 1rem;
+  --esp-5: 1.5rem;
+  --esp-6: 2rem;
+  --esp-7: 3rem;
+  --esp-8: 4rem;
+
+  /* Rayons */
+  --rayon-sm: 6px;
+  --rayon-md: 10px;
+  --rayon-lg: 14px;
+  --rayon-pilule: 999px;
+
+  /* Ombres : presque nulles, réservées aux surfaces flottantes */
+  --ombre-nulle: none;
+  --ombre-flottante: 0 8px 24px rgba(36, 59, 52, 0.10);
+  --ombre-modale: 0 16px 48px rgba(36, 59, 52, 0.14);
+
+  /* Focus */
+  --focus-anneau: 0 0 0 3px var(--vert);
+  --focus-contour: 2px solid var(--vert);
+
+  /* Mouvement */
+  --duree-rapide: 150ms;
+  --duree-base: 220ms;
+  --duree-lente: 360ms;
+  --duree-graphique: 900ms;
+  --courbe: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --courbe-sortie: cubic-bezier(0.4, 0, 1, 1);
+
+  /* Gabarit */
+  --hauteur-entete: 3.5rem;
+  --largeur-nav: 14.5rem;
+  --largeur-nav-repliee: 4rem;
+  --largeur-contenu: 84rem;
+  --marge-page: 2.5rem;
+}

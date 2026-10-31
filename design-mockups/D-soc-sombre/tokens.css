@@ -1,0 +1,111 @@
+/* Maquette D — « SOC sombre ». Jetons de conception : variables CSS uniquement, aucune règle. */
+:root {
+  /* Fonds (du plus profond au plus élevé) */
+  --fond-page: #0B1220;
+  --fond-nav: #0E1627;
+  --fond-barre: #0A101C;
+  --surface: #16203A;
+  --surface-elevee: #1C2846;
+  --surface-selection: #223058;
+  --surface-saisie: #0F1830;
+  --voile: rgba(5, 9, 18, 0.72);
+
+  /* Bordures (1 px, faiblement lumineuses) */
+  --bordure: #2B3A5F;
+  --bordure-forte: #3B4E7C;
+  --bordure-saisie: #5B6E98;
+  --bordure-lueur: rgba(94, 225, 240, 0.28);
+
+  /* Textes (tous ≥ 4,5 : 1 sur les fonds ci-dessus, voir test/contraste.js) */
+  --texte: #E6EDF7;
+  --texte-secondaire: #A9B6CC;
+  --texte-attenue: #8E9DB8;
+  --texte-inverse: #071019;
+
+  /* Accents */
+  --cyan: #5EE1F0;
+  --cyan-plein: #22C8DD;
+  --cyan-voile: rgba(94, 225, 240, 0.12);
+  --vert: #4ADE80;
+  --vert-plein: #2FC46F;
+  --vert-voile: rgba(74, 222, 128, 0.12);
+  --ambre: #F6B860;
+  --ambre-plein: #F0A030;
+  --ambre-voile: rgba(246, 184, 96, 0.14);
+  --rouge: #FF7B7B;
+  --rouge-plein: #F25757;
+  --rouge-voile: rgba(255, 123, 123, 0.14);
+  --bleu: #8DC2FF;
+  --bleu-voile: rgba(141, 194, 255, 0.12);
+  --violet: #C1ABFF;
+  --violet-voile: rgba(193, 171, 255, 0.12);
+  --gris: #B4BED1;
+  --gris-voile: rgba(180, 190, 209, 0.12);
+
+  /* Séries des graphiques */
+  --serie-1: #5EE1F0;
+  --serie-2: #C1ABFF;
+  --serie-3: #F6B860;
+  --serie-4: #4ADE80;
+  --serie-5: #8DC2FF;
+  --serie-6: #8E9DB8;
+  --grille-graphique: rgba(169, 182, 204, 0.14);
+
+  /* Typographie */
+  --police: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --police-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, 'Liberation Mono', monospace;
+  --taille-xs: 0.6875rem;
+  --taille-sm: 0.75rem;
+  --taille-base: 0.8125rem;
+  --taille-md: 0.875rem;
+  --taille-lg: 1rem;
+  --taille-xl: 1.25rem;
+  --taille-2xl: 1.625rem;
+  --taille-3xl: 2.125rem;
+  --graisse-normal: 400;
+  --graisse-moyen: 500;
+  --graisse-demi: 600;
+  --graisse-gras: 700;
+  --interligne: 1.45;
+  --interligne-serre: 1.2;
+  --espacement-capitales: 0.08em;
+
+  /* Espacements */
+  --e-1: 0.25rem;
+  --e-2: 0.5rem;
+  --e-3: 0.75rem;
+  --e-4: 1rem;
+  --e-5: 1.25rem;
+  --e-6: 1.5rem;
+  --e-8: 2rem;
+  --e-10: 2.5rem;
+
+  /* Dimensions de la coquille */
+  --hauteur-barre: 2.75rem;
+  --largeur-nav: 13.5rem;
+  --largeur-nav-repliee: 3.75rem;
+  --largeur-contenu-max: 100rem;
+
+  /* Rayons */
+  --rayon-xs: 3px;
+  --rayon-sm: 4px;
+  --rayon-md: 6px;
+  --rayon-lg: 8px;
+  --rayon-capsule: 999px;
+
+  /* Ombres et lueurs */
+  --ombre-carte: 0 1px 0 rgba(255, 255, 255, 0.02) inset, 0 0 0 1px rgba(94, 225, 240, 0.04);
+  --ombre-elevee: 0 12px 40px rgba(0, 0, 0, 0.55), 0 0 0 1px var(--bordure);
+  --lueur-cyan: 0 0 12px rgba(94, 225, 240, 0.35);
+  --lueur-rouge: 0 0 10px rgba(255, 123, 123, 0.35);
+  --lueur-ambre: 0 0 10px rgba(246, 184, 96, 0.35);
+  --lueur-focus: 0 0 0 2px var(--fond-page), 0 0 0 4px var(--cyan);
+
+  /* Mouvement */
+  --duree-rapide: 150ms;
+  --duree-normale: 220ms;
+  --duree-lente: 360ms;
+  --duree-graphique: 900ms;
+  --courbe: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --courbe-sortie: cubic-bezier(0.4, 0, 1, 1);
+}

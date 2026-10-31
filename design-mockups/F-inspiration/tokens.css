@@ -1,0 +1,132 @@
+/* Maquette F « Inspiration » — design tokens (variables uniquement, aucune règle).
+   Palette transposée des images de référence (marine dégradé, sarcelle → violet, corail, or),
+   ajustée pour WCAG AA : voir README.md § Écarts d'accessibilité et test/contraste.cjs. */
+:root {
+  /* ---------------------------------------------------------------- Fonds */
+  --marine-900: #0F1A33;
+  --marine-800: #1C2B4A;
+  --marine-700: #232A48;
+  --fond-haut: var(--marine-800);
+  --fond-bas: var(--marine-900);
+  --verre: rgb(35 42 72 / 60%);
+  --verre-fort: rgb(35 42 72 / 82%);
+  --verre-bord: rgb(255 255 255 / 10%);
+  --verre-bord-fort: rgb(255 255 255 / 22%);
+  --verre-reflet: linear-gradient(180deg, rgb(255 255 255 / 10%), rgb(255 255 255 / 0%) 40%);
+  --capsule-fond: rgb(255 255 255 / 12%);
+  --capsule-fond-actif: rgb(255 255 255 / 26%);
+  --capsule-bord: rgb(255 255 255 / 30%);
+  --carte-claire: #FFFFFF;
+  --carte-claire-douce: #F4F6FB;
+  --piste-sombre: rgb(255 255 255 / 9%);
+  --piste-claire: #E6E9F2;
+  --grille-points: rgb(255 255 255 / 7%);
+
+  /* ---------------------------------------------------------------- Accents */
+  --sarcelle: #2EC4B6;
+  --sarcelle-clair: #7EE0D6;
+  --sarcelle-sombre: #157F76;
+  --sarcelle-encre: #0F6B63;
+  --violet: #6D5BD0;
+  --violet-lumineux: #8F7BFF;
+  --violet-clair: #B388FF;
+  --violet-sombre: #5A48B5;
+  --corail: #F0564A;
+  --corail-clair: #FF9A8E;
+  --corail-sombre: #C23A2F;
+  --corail-encre: #B8362B;
+  --or: #F2A33A;
+  --or-clair: #F7C97A;
+  --or-encre: #8A5200;
+  --vert: #2FD37A;
+  --vert-clair: #7CE7AC;
+  --vert-encre: #1F7F4C;
+  --bleu: #4C8DFF;
+  --bleu-clair: #8FC1FF;
+  --bleu-encre: #2457B0;
+  --rose: #FF4F8B;
+  --degrade-signature: linear-gradient(90deg, var(--sarcelle), var(--violet));
+  --degrade-signature-vertical: linear-gradient(180deg, var(--sarcelle), var(--violet));
+  --degrade-bouton: linear-gradient(90deg, var(--sarcelle-sombre), var(--violet-sombre));
+  --degrade-chaud: linear-gradient(90deg, var(--rose), var(--or));
+
+  /* ---------------------------------------------------------------- Texte */
+  --texte: #FFFFFF;
+  --texte-2: #A9B4D0;
+  --texte-3: #8E9AB8;
+  --encre: #2B3350;
+  --encre-2: #334066;
+  --encre-3: #5F6A8A;
+  --encre-4: #6B7596;
+  --champ-bord-clair: #7A84A0;
+  --champ-bord-sombre: rgb(255 255 255 / 48%);
+
+  /* ---------------------------------------------------------------- Typographie */
+  --police: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --police-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --taille-xs: 0.6875rem;   /* 11 px — légendes capitales */
+  --taille-sm: 0.8125rem;   /* 13 px */
+  --taille-md: 0.875rem;    /* 14 px — corps */
+  --taille-lg: 1rem;        /* 16 px — titres de carte */
+  --taille-xl: 1.375rem;    /* 22 px — titres d'écran */
+  --taille-2xl: 1.75rem;    /* 28 px */
+  --taille-kpi: 2.75rem;    /* 44 px — chiffres clés */
+  --taille-kpi-grand: 3.5rem; /* 56 px */
+  --graisse-fine: 300;
+  --graisse-normale: 400;
+  --graisse-moyenne: 500;
+  --graisse-demi: 600;
+  --interlettre-legende: 0.14em;
+  --interlettre-bouton: 0.06em;
+  --interlettre-titre: -0.02em;
+
+  /* ---------------------------------------------------------------- Espacements */
+  --esp-1: 0.25rem;
+  --esp-2: 0.5rem;
+  --esp-3: 0.75rem;
+  --esp-4: 1rem;
+  --esp-5: 1.25rem;
+  --esp-6: 1.5rem;
+  --esp-7: 2rem;
+  --esp-8: 2.5rem;
+  --esp-9: 3.5rem;
+  --gouttiere: 1.375rem;
+  --marge-page: clamp(1.25rem, 3vw, 3.5rem);
+  --hauteur-entete: 4.5rem;
+  --largeur-max: 1480px;
+
+  /* ---------------------------------------------------------------- Rayons */
+  --rayon-sm: 10px;
+  --rayon-md: 16px;
+  --rayon-lg: 24px;
+  --rayon-xl: 28px;
+  --rayon-capsule: 999px;
+
+  /* ---------------------------------------------------------------- Ombres et lueurs */
+  --ombre-carte: 0 20px 60px rgb(10 20 50 / 25%);
+  --ombre-carte-haute: 0 32px 80px rgb(10 20 50 / 38%);
+  --ombre-verre: 0 12px 40px rgb(5 10 30 / 30%);
+  --ombre-modale: 0 40px 120px rgb(5 10 30 / 55%);
+  --lueur-sarcelle: 0 0 24px rgb(46 196 182 / 45%);
+  --lueur-violet: 0 0 24px rgb(143 123 255 / 45%);
+  --lueur-corail: 0 0 24px rgb(240 86 74 / 40%);
+  --lueur-or: 0 0 24px rgb(242 163 58 / 40%);
+  --anneau-focus: 0 0 0 3px rgb(126 224 214 / 85%);
+  --anneau-focus-clair: 0 0 0 3px rgb(21 127 118 / 70%);
+
+  /* ---------------------------------------------------------------- Mouvement */
+  --duree-rapide: 150ms;
+  --duree-courte: 220ms;
+  --duree-moyenne: 320ms;
+  --duree-longue: 420ms;
+  --duree-entree: 520ms;
+  --duree-compteur: 1100ms;
+  --duree-graphique: 1000ms;
+  --duree-trace: 1200ms;
+  --duree-derive: 38s;
+  --pas-cascade: 60ms;
+  --courbe: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --courbe-sortie: cubic-bezier(0.4, 0, 1, 1);
+  --courbe-rebond: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --courbe-lineaire: linear;
+}
