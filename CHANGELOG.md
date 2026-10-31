@@ -6,6 +6,16 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
+Aucune action.
+
+## [6.1.0] — 2026-10-31
+
+Version mineure : trois migrations SQL additives (`047`, `049`, `050`), aucune nouvelle dépendance. Elle apporte le tableau de bord de l'accueil personnalisable, la collecte du RETEX d'incident, l'ordre du menu personnalisable et le regroupement des parcours guidés, et retire les restes des anciens formats de sauvegarde. Section rédigée par la session « Projet audit_suivi Coeur ».
+
+### Notes de mise à jour
+
+**Mise à jour depuis la 6.0.1 : aucune action sur le serveur** (depuis l'interface web ou `scripts/mettre-a-jour.sh`). Les trois migrations ci-dessous sont automatiques et additives. Un seul point à surveiller : un compte à **rôle personnalisé** perd la modification de sa disposition d'accueil tant que le droit `tableau_de_bord:modifier` n'est pas ajouté à son rôle (détail plus bas).
+
 **Migration automatique `047`** (disposition du tableau de bord) : additive, appliquée au démarrage de `app`, durée négligeable ; aucune action sur le serveur. Sans disposition enregistrée, l'accueil garde la disposition actuelle.
 
 **Migration automatique `050`** (partage du tableau de bord et droit dédié) : additive, appliquée au démarrage de `app`, durée négligeable ; aucune action sur le serveur. **Droit nouveau** `tableau_de_bord:modifier` : les rôles prédéfinis Administrateur, RSSI et Contributeur l'ont ; un compte qui n'a qu'un **rôle personnalisé** ne peut plus modifier sa disposition tant qu'un administrateur n'ajoute pas « Tableau de bord de l'accueil : Créer et modifier » à ce rôle (Administration, Rôles). _(Session « Dashboard maquette personnalisable ».)_
