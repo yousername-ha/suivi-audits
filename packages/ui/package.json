@@ -19,7 +19,8 @@
     },
     "./styles.css": "./src/styles.css",
     "./neon.css": "./src/neon.css",
-    "./neon-analytics.css": "./src/neon-analytics.css"
+    "./neon-analytics.css": "./src/neon-analytics.css",
+    "./neon-perimetres.css": "./src/neon-perimetres.css"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",

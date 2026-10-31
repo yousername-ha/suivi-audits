@@ -1,3 +1,5 @@
+> 01/11/2026 : [dalles Périmètres en mode Graphe](docs/refonte-neon/DALLES-PERIMETRES.md) retravaillées, compteurs et actions conservés ; quatre tests e2e du graphe réussis.
+
 > Complément graphique : [graphiques et menus du prototype intégrés](docs/refonte-neon/PROTOTYPE-INTEGRE.md), sur la branche Codex ; RETEX inchangé.
 
 > Refonte graphique Codex depuis main 6.1.0 (31/10/2026, Europe/Paris) : voir [inventaire, changements et contrôles Neon](docs/refonte-neon/README.md). Copie isolée, sans changement métier ni déploiement. Recette exhaustive des 79 rubriques en attente.

@@ -1,0 +1,264 @@
+/* Périmètres, présentation Graphe : dalles Neon, mêmes données et actions que la liste. */
+.graphe-perimetres {
+  overflow: visible;
+}
+.graphe-lien {
+  stroke: var(--neon-accent);
+  stroke-width: 2;
+  opacity: 0.7;
+}
+.graphe-lien-fournisseur {
+  stroke: var(--carte-bleu-accent);
+  stroke-width: 1.5;
+  opacity: 0.65;
+}
+.graphe-fleche {
+  fill: var(--neon-accent);
+}
+.graphe-carte.perimetre-dalle {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-sm);
+  padding: var(--mantine-spacing-md);
+  border-color: var(--suivi-trait);
+  border-radius: var(--mantine-radius-lg);
+  background: var(--suivi-surface);
+  box-shadow: var(--suivi-ombre);
+}
+.graphe-carte.perimetre-dalle[data-actif] {
+  border-color: var(--neon-accent);
+  box-shadow: inset 3px 0 var(--neon-accent);
+}
+.perimetre-entete {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--mantine-spacing-xs);
+  padding-bottom: var(--mantine-spacing-sm);
+  border-bottom: var(--suivi-trait-l) solid var(--suivi-trait);
+  flex: none;
+}
+.perimetre-entete > div {
+  min-width: 0;
+}
+.perimetre-sur-titre {
+  color: var(--neon-accent);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.35rem;
+}
+.perimetre-corps {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  scrollbar-width: thin;
+  padding-right: var(--mantine-spacing-2xs);
+}
+.perimetre-couverture {
+  display: grid;
+  grid-template-columns: 6rem minmax(0, 1fr);
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+  margin-bottom: var(--mantine-spacing-sm);
+  padding: var(--mantine-spacing-xs);
+  border-radius: var(--mantine-radius-md);
+  background: var(--neon-doux);
+}
+.perimetre-couverture .neon-anneau svg {
+  height: 6rem;
+  width: 6rem;
+}
+.perimetre-couverture strong {
+  display: block;
+  font-size: var(--mantine-font-size-xs);
+  margin-bottom: 0.3rem;
+}
+.perimetre-couverture p {
+  font-size: 0.68rem;
+  margin: 0.4rem 0;
+  color: var(--mantine-color-dimmed);
+}
+.perimetre-couverture small {
+  display: block;
+  font-size: 0.62rem;
+  color: var(--mantine-color-dimmed);
+  line-height: 1.5;
+}
+.perimetre-couverture .graphe-alerte {
+  color: var(--mantine-color-red-light-color);
+}
+.perimetre-anneau-vide {
+  display: grid;
+  place-content: center;
+  width: 5rem;
+  height: 5rem;
+  border: 0.45rem solid var(--suivi-trait);
+  border-radius: 50%;
+  color: var(--mantine-color-dimmed);
+  font-size: 1.4rem;
+}
+.graphe-compteurs.perimetre-indicateurs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--mantine-spacing-xs);
+  margin: 0;
+}
+.graphe-compteurs.perimetre-indicateurs > .perimetre-indicateur {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: var(--mantine-spacing-sm);
+  border: var(--suivi-trait-l) solid var(--suivi-trait);
+  border-radius: var(--mantine-radius-md);
+}
+.perimetre-indicateurs .perimetre-indicateur[data-alerte] {
+  border-bottom: 2px solid var(--mantine-color-red-light-color);
+}
+.perimetre-indicateurs .perimetre-indicateur dt {
+  color: var(--mantine-color-dimmed);
+  font-size: 0.68rem;
+}
+.perimetre-indicateurs .perimetre-indicateur dd {
+  text-align: start;
+  font-size: 0.68rem;
+  line-height: 1.5;
+}
+.perimetre-indicateurs .perimetre-chiffre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3rem;
+}
+.perimetre-chiffre b {
+  font-size: 1.7rem;
+  line-height: 1.1;
+  font-weight: 750;
+  color: var(--neon-titre);
+}
+.perimetre-chiffre small {
+  font-size: 0.62rem;
+  color: var(--mantine-color-dimmed);
+}
+.perimetre-retard {
+  display: block;
+  width: 100%;
+  height: 0.3rem;
+}
+.perimetre-retard-piste {
+  fill: color-mix(in srgb, var(--neon-violet) 25%, var(--suivi-surface));
+}
+.perimetre-retard-valeur {
+  fill: var(--mantine-color-red-light-color);
+}
+.perimetre-indicateurs .perimetre-jauge {
+  margin-top: auto;
+}
+.perimetre-indicateurs .graphe-detail .mantine-Group-root {
+  display: flex;
+  gap: 0.25rem;
+}
+.perimetre-indicateurs .mantine-Badge-root {
+  font-size: 0.55rem;
+}
+.perimetre-actions {
+  padding-top: var(--mantine-spacing-xs);
+  border-top: var(--suivi-trait-l) solid var(--suivi-trait);
+  flex: none;
+}
+.perimetre-sous-total {
+  padding: var(--mantine-spacing-xs);
+  border-radius: var(--mantine-radius-sm);
+  background: var(--suivi-surface-douce);
+  margin-top: var(--mantine-spacing-sm);
+}
+.perimetre-sous-total summary {
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 650;
+}
+.perimetre-sous-total summary span {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--mantine-color-dimmed);
+  font-size: 0.62rem;
+  font-weight: 400;
+}
+.perimetre-sous-total .graphe-compteurs {
+  display: grid;
+  gap: var(--mantine-spacing-xs);
+  margin-top: var(--mantine-spacing-sm);
+}
+.graphe-total {
+  background: var(--suivi-surface);
+  padding: var(--mantine-spacing-md);
+  border-color: var(--suivi-trait);
+  border-radius: var(--mantine-radius-lg);
+  box-shadow: var(--suivi-ombre);
+}
+.graphe-total > dl {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--mantine-spacing-md);
+}
+.graphe-total > dl > div {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: var(--mantine-spacing-xs);
+  padding-left: var(--mantine-spacing-sm);
+  border-left: 2px solid var(--neon-violet);
+}
+.graphe-total > dl > div > dt {
+  font-size: 0.7rem;
+  color: var(--mantine-color-dimmed);
+}
+.graphe-total > .mantine-Text-root {
+  margin-top: var(--mantine-spacing-md);
+  color: var(--mantine-color-dimmed);
+}
+.perimetre-detail-compteurs {
+  display: grid;
+  gap: var(--mantine-spacing-md);
+}
+.perimetre-detail-compteurs > div {
+  padding-bottom: var(--mantine-spacing-sm);
+  border-bottom: var(--suivi-trait-l) solid var(--suivi-trait);
+}
+.perimetre-detail-compteurs dt {
+  font-weight: 650;
+}
+@media (max-width: 70em) {
+  .graphe-total > dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 36em) {
+  .graphe-total > dl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .perimetre-dalle .neon-ring-valeur {
+    animation: none;
+  }
+}
+/* Les rangées historiques sont flex-wrap ; les tuiles restent sur une seule colonne. */
+.graphe-compteurs.perimetre-indicateurs > .perimetre-indicateur {
+  flex-wrap: nowrap;
+}
+.perimetre-indicateurs .graphe-detail {
+  flex-basis: auto;
+}
+.perimetre-indicateurs .graphe-detail .mantine-Group-root {
+  max-width: 100%;
+  justify-content: flex-start;
+}
+/* Chromium ne peint pas toujours un dégradé référencé depuis le SVG imbriqué d'un foreignObject.
+   Le tracé de couverture reste visible dans le graphe, avec le même arc et un accent contrasté. */
+.perimetre-dalle .perimetre-couverture .neon-ring-valeur {
+  stroke: var(--neon-accent);
+}

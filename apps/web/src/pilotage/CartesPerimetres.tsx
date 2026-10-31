@@ -1,9 +1,10 @@
 /* Graphe des périmètres : un arbre (parent → enfants) de cartes de synthèse. Les compteurs viennent du serveur
    (`GET /api/grc/perimetres/synthese`) : un compteur absent s'affiche « indisponible », jamais comme un zéro. La création
    passe par le même formulaire que la liste (même route, même identifiant) ; le graphe n'a pas de modèle propre. */
-import { Anchor, Badge, Button, Group, Loader, Stack, Text } from '@mantine/core';
+import { Anchor, Badge, Button, Drawer, Group, Loader, Stack, Text } from '@mantine/core';
 import { useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
+import { NeonAnneau } from '@suivi/ui';
 import {
   arbre,
   LIBELLES_NIVEAU,
@@ -13,12 +14,14 @@ import {
   type NiveauPerimetre,
 } from '@suivi/shared';
 
-const LARGEUR = 264;
-const HAUTEUR = 336;
-const ECART_X = 24;
-const ECART_Y = 56;
+export const LARGEUR_CARTE_PERIMETRE = 380;
+export const HAUTEUR_CARTE_PERIMETRE = 680;
+const LARGEUR = LARGEUR_CARTE_PERIMETRE;
+const HAUTEUR = HAUTEUR_CARTE_PERIMETRE;
+const ECART_X = 40;
+const ECART_Y = 72;
 const LARGEUR_FOURNISSEUR = 216;
-const HAUTEUR_FOURNISSEUR = 56;
+const HAUTEUR_FOURNISSEUR = 80;
 const ECART_FOURNISSEUR = 12;
 const DECALAGE_FOURNISSEUR = 96;
 
@@ -65,6 +68,10 @@ interface LigneCompteur {
   /** Section de Pilotage qui liste ces éléments (même périmètre) ; absent : ligne de texte. */
   section?: string;
   detail?: ReactNode;
+  /** Valeur mise en avant, sans remplacer le libellé ni le lien du compteur. */
+  chiffre?: number;
+  sousTitre?: string;
+  jauge?: { ouverts: number; enRetard: number };
 }
 const CLASSES = [
   ['majeure', 'Majeurs', 'red'],
@@ -116,11 +123,17 @@ function lignesCompteurs(c: CartePerimetre['compteurs'], id: string, liens = tru
   return [
     {
       libelle: 'Actions',
+      chiffre: c.actions?.ouverts,
+      sousTitre: 'ouvertes',
+      jauge: c.actions ?? undefined,
       valeur: c.actions ? lien('actions', retard(c.actions)) : indisponible,
       alerte: !!c.actions && c.actions.enRetard > 0,
     },
     {
       libelle: 'Tâches récurrentes',
+      chiffre: c.recurrentes?.occurrences.ouverts,
+      sousTitre: 'occurrences ouvertes',
+      jauge: c.recurrentes?.occurrences,
       valeur: c.recurrentes
         ? lien('recurrences', `${n(c.recurrentes.series)} série(s) · ${retard(c.recurrentes.occurrences)}`)
         : indisponible,
@@ -128,6 +141,9 @@ function lignesCompteurs(c: CartePerimetre['compteurs'], id: string, liens = tru
     },
     {
       libelle: 'Écarts ouverts',
+      chiffre: c.ecarts?.ouverts,
+      sousTitre: 'non clos',
+      jauge: c.ecarts ?? undefined,
       valeur: c.ecarts ? lien('amelioration', retard(c.ecarts)) : indisponible,
       alerte: !!c.ecarts && c.ecarts.enRetard > 0,
       detail: c.ecarts && (
@@ -189,6 +205,65 @@ function lignesCompteurs(c: CartePerimetre['compteurs'], id: string, liens = tru
   ];
 }
 
+/** Part des éléments ouverts en retard. Un dénominateur nul garde une piste vide, jamais un taux inventé. */
+function JaugeRetard({ ouverts, enRetard }: { ouverts: number; enRetard: number }) {
+  const largeur = ouverts > 0 ? Math.min(100, (Math.max(0, enRetard) / ouverts) * 100) : 0;
+  return (
+    <svg
+      className="perimetre-retard"
+      viewBox="0 0 100 4"
+      preserveAspectRatio="none"
+      role="img"
+      aria-label={`${n(enRetard)} en retard parmi ${n(ouverts)} ouverts`}
+    >
+      <rect width="100" height="4" rx="2" className="perimetre-retard-piste" />
+      <rect width={largeur} height="4" rx="2" className="perimetre-retard-valeur" />
+    </svg>
+  );
+}
+
+function CouvertureCarte({ couverture, id }: { couverture: Couverture | null; id: string }) {
+  if (!couverture)
+    return (
+      <section className="perimetre-couverture perimetre-couverture--vide" aria-label="Couverture indisponible">
+        <span className="perimetre-anneau-vide" aria-hidden="true">
+          —
+        </span>
+        <div>
+          <strong>Couverture</strong>
+          <p>indisponible</p>
+          <small>Aucun référentiel effectif ou droit de lecture absent.</small>
+        </div>
+      </section>
+    );
+  return (
+    <section className="perimetre-couverture" aria-label="Couverture des exigences du périmètre">
+      <NeonAnneau
+        titre="Exigences testées ou validées"
+        valeur={couverture.testees}
+        total={couverture.applicables}
+        detail="couverture"
+      />
+      <div>
+        <strong>Couverture des exigences</strong>
+        <Anchor component={Link} to={vers('couverture', id)} size="xs">
+          {n(couverture.testees)} testées ou validées / {n(couverture.applicables)} applicables
+        </Anchor>
+        <p>
+          {n(couverture.referentiels)} référentiel(s) · {n(couverture.exigences)} exigences
+        </p>
+        <small>Évaluation renseignée, pas un taux de conformité.</small>
+        {(couverture.aDeterminer > 0 || couverture.obligatoiresNonConformes > 0) && (
+          <p className="graphe-alerte">
+            {n(couverture.aDeterminer)} à déterminer · {n(couverture.obligatoiresNonConformes)} clause(s) obligatoire(s)
+            à traiter
+          </p>
+        )}
+      </div>
+    </section>
+  );
+}
+
 export function CartesPerimetres({
   cartes,
   total,
@@ -212,6 +287,8 @@ export function CartesPerimetres({
   fournisseurs?: readonly FournisseurRattache[];
   chargement?: boolean;
 }) {
+  const [detail, setDetail] = useState<string | null>(null);
+  const detailCarte = cartes.find((c) => c.id === detail);
   const [arret, setArret] = useState(
     () => typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches,
   );
@@ -224,7 +301,10 @@ export function CartesPerimetres({
   const hauteur = Math.max(hauteurArbre, affichables.length * (HAUTEUR_FOURNISSEUR + ECART_FOURNISSEUR));
   return (
     <>
-      <Group justify="flex-end" mb="xs">
+      <Group justify="space-between" mb="xs">
+        <Text size="sm" c="dimmed">
+          {n(cartes.length)} périmètre(s) · liens hiérarchiques orientés · fournisseurs extérieurs en pointillés
+        </Text>
         <Button size="compact-xs" variant="default" aria-pressed={arret} onClick={() => setArret((a) => !a)}>
           {arret ? 'Reprendre le flux' : 'Mettre le flux en pause'}
         </Button>
@@ -329,44 +409,90 @@ export function CartesPerimetres({
           ))}
           {places.map(({ carte, x, y }) => (
             <foreignObject key={carte.id} x={x} y={y} width={LARGEUR} height={HAUTEUR}>
-              <div className="graphe-carte" role="group" aria-label={`Périmètre ${carte.name}`}>
-                <Text fw={600} lineClamp={1} title={carte.name}>
-                  {carte.name}
-                </Text>
-                <Text size="xs" lineClamp={1}>
-                  {LIBELLES_NIVEAU[carte.entityKind as NiveauPerimetre] ?? carte.entityKind}
-                  {carte.nature ? ` · ${carte.nature}` : ''}
-                </Text>
-                <dl className="graphe-compteurs">
-                  {lignesCompteurs(carte.compteurs, carte.id).map((l) => (
-                    <div key={l.libelle}>
-                      <dt>{l.libelle}</dt>
-                      <dd className={l.alerte ? 'graphe-alerte' : undefined}>{l.valeur}</dd>
-                      {l.detail && <dd className="graphe-detail">{l.detail}</dd>}
-                    </div>
-                  ))}
-                </dl>
-                {carte.sousPerimetres > 0 && (
-                  <div
-                    className="graphe-ensemble"
-                    role="group"
-                    aria-label={`Total de ${carte.name} avec ses sous-périmètres, chaque élément une seule fois`}
-                  >
-                    <Text size="xs" fw={600}>
-                      Total avec {n(carte.sousPerimetres)} sous-périmètre(s)
+              <div
+                className="graphe-carte perimetre-dalle"
+                data-actif={carte.id === affiche || undefined}
+                role="group"
+                aria-label={`Périmètre ${carte.name}`}
+              >
+                <header className="perimetre-entete">
+                  <div>
+                    <Text size="xs" className="perimetre-sur-titre">
+                      {LIBELLES_NIVEAU[carte.entityKind as NiveauPerimetre] ?? carte.entityKind}
+                      {carte.nature ? ` · ${carte.nature}` : ''}
                     </Text>
-                    <dl className="graphe-compteurs">
-                      {lignesCompteurs(carte.total, carte.id, false).map((l) => (
-                        <div key={l.libelle}>
+                    <Text fw={700} lineClamp={2} title={carte.name}>
+                      {carte.name}
+                    </Text>
+                  </div>
+                  {carte.id === affiche && (
+                    <Badge size="xs" variant="light">
+                      Affiché
+                    </Badge>
+                  )}
+                </header>
+                <div
+                  className="perimetre-corps"
+                  role="region"
+                  aria-label={`Indicateurs de ${carte.name}, défilement possible`}
+                  tabIndex={0}
+                >
+                  <CouvertureCarte couverture={carte.compteurs.couverture} id={carte.id} />
+                  <dl className="graphe-compteurs perimetre-indicateurs">
+                    {lignesCompteurs(carte.compteurs, carte.id)
+                      .filter((l) => l.libelle !== 'Couverture')
+                      .map((l) => (
+                        <div key={l.libelle} className="perimetre-indicateur" data-alerte={l.alerte || undefined}>
                           <dt>{l.libelle}</dt>
+                          {l.chiffre !== undefined && (
+                            <dd className="perimetre-chiffre">
+                              <b>{n(l.chiffre)}</b>
+                              <small>{l.sousTitre}</small>
+                            </dd>
+                          )}
                           <dd className={l.alerte ? 'graphe-alerte' : undefined}>{l.valeur}</dd>
-                          {l.libelle === 'Couverture' && l.detail && <dd className="graphe-detail">{l.detail}</dd>}
+                          {l.jauge && (
+                            <dd className="perimetre-jauge">
+                              <JaugeRetard {...l.jauge} />
+                            </dd>
+                          )}
+                          {l.detail && <dd className="graphe-detail">{l.detail}</dd>}
                         </div>
                       ))}
-                    </dl>
-                  </div>
-                )}
-                <Group gap="2xs" wrap="nowrap">
+                  </dl>
+                  {carte.sousPerimetres > 0 && (
+                    <div
+                      className="graphe-ensemble"
+                      role="group"
+                      aria-label={`Total de ${carte.name} avec ses sous-périmètres, chaque élément une seule fois`}
+                    >
+                      <details className="perimetre-sous-total">
+                        <summary>
+                          Total avec {n(carte.sousPerimetres)} sous-périmètre(s)
+                          <span>Sans doublon · voir les compteurs</span>
+                        </summary>
+                        <dl className="graphe-compteurs">
+                          {lignesCompteurs(carte.total, carte.id, false).map((l) => (
+                            <div key={l.libelle}>
+                              <dt>{l.libelle}</dt>
+                              <dd className={l.alerte ? 'graphe-alerte' : undefined}>{l.valeur}</dd>
+                              {l.libelle === 'Couverture' && l.detail && <dd className="graphe-detail">{l.detail}</dd>}
+                            </div>
+                          ))}
+                        </dl>
+                      </details>
+                    </div>
+                  )}
+                </div>
+                <Group gap="2xs" wrap="wrap" className="perimetre-actions">
+                  <Button
+                    size="compact-xs"
+                    variant="light"
+                    aria-label={`Détail des compteurs de ${carte.name}`}
+                    onClick={() => setDetail(carte.id)}
+                  >
+                    Détail
+                  </Button>
                   {carte.id !== affiche && (
                     <Button
                       size="compact-xs"
@@ -403,6 +529,45 @@ export function CartesPerimetres({
           ))}
         </svg>
       </div>
+      <Drawer
+        opened={!!detailCarte}
+        onClose={() => setDetail(null)}
+        title={detailCarte?.name}
+        position="right"
+        size="lg"
+      >
+        {detailCarte && (
+          <Stack>
+            <Text size="sm" c="dimmed">
+              Données propres au périmètre · accès aux registres filtrés sur ce périmètre
+            </Text>
+            <CouvertureCarte couverture={detailCarte.compteurs.couverture} id={detailCarte.id} />
+            <dl className="graphe-compteurs perimetre-detail-compteurs">
+              {lignesCompteurs(detailCarte.compteurs, detailCarte.id).map((l) => (
+                <div key={l.libelle}>
+                  <dt>{l.libelle}</dt>
+                  <dd>{l.valeur}</dd>
+                  {l.detail && <dd className="graphe-detail">{l.detail}</dd>}
+                </div>
+              ))}
+            </dl>
+            {detailCarte.sousPerimetres > 0 && (
+              <section aria-label={`Total de ${detailCarte.name} avec ses sous-périmètres`}>
+                <Text fw={600}>Total avec {n(detailCarte.sousPerimetres)} sous-périmètre(s)</Text>
+                <dl className="graphe-compteurs perimetre-detail-compteurs">
+                  {lignesCompteurs(detailCarte.total, detailCarte.id, false).map((l) => (
+                    <div key={l.libelle}>
+                      <dt>{l.libelle}</dt>
+                      <dd>{l.valeur}</dd>
+                      {l.detail && <dd className="graphe-detail">{l.detail}</dd>}
+                    </div>
+                  ))}
+                </dl>
+              </section>
+            )}
+          </Stack>
+        )}
+      </Drawer>
     </>
   );
 }

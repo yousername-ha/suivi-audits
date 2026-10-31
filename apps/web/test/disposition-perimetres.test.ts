@@ -2,7 +2,7 @@
    chevauche sa voisine, y compris pour un grand arbre ou des noms longs. */
 import { describe, expect, it } from 'vitest';
 import type { CartePerimetre } from '@suivi/shared';
-import { disposer } from '../src/pilotage/CartesPerimetres';
+import { disposer, LARGEUR_CARTE_PERIMETRE, HAUTEUR_CARTE_PERIMETRE } from '../src/pilotage/CartesPerimetres';
 
 const vide = { actions: null, recurrentes: null, ecarts: null, continuite: null, couverture: null };
 const carte = (id: string, parentId: string | null, name = id): CartePerimetre => ({
@@ -39,9 +39,12 @@ describe('disposer', () => {
         .filter((p) => p.y === y)
         .map((p) => p.x)
         .sort((a, b) => a - b);
-      for (let i = 1; i < xs.length; i++) expect(xs[i]! - xs[i - 1]!).toBeGreaterThanOrEqual(264);
+      for (let i = 1; i < xs.length; i++) expect(xs[i]! - xs[i - 1]!).toBeGreaterThanOrEqual(LARGEUR_CARTE_PERIMETRE);
     }
-    expect(Math.max(...places.map((p) => p.x)) + 264).toBeLessThanOrEqual(largeur);
+    for (const parent of places)
+      for (const enfant of places.filter((p) => p.parent === parent.carte.id))
+        expect(enfant.y).toBeGreaterThanOrEqual(parent.y + HAUTEUR_CARTE_PERIMETRE);
+    expect(Math.max(...places.map((p) => p.x)) + LARGEUR_CARTE_PERIMETRE).toBeLessThanOrEqual(largeur);
   });
 
   it('un périmètre sans parent accessible devient une racine', () => {
