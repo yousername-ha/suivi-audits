@@ -34,6 +34,7 @@ import { parcoursRoutes } from './routes/parcours.js';
 import { registresRoutes } from './routes/registres.js';
 import { pilotageRoutes } from './routes/pilotage.js';
 import { affichageRoutes } from './routes/affichage.js';
+import { tableauDeBordRoutes } from './routes/tableau-de-bord.js';
 import { cartoRoutes } from './routes/carto.js';
 import { notificationsRoutes } from './routes/notifications.js';
 import { lastMigration, pendingMigrations } from './systeme.js';
@@ -139,6 +140,7 @@ export function allRoutes(): RouteDef[] {
     ...notificationsRoutes,
     ...pilotageRoutes,
     ...affichageRoutes,
+    ...tableauDeBordRoutes,
     ...cartoRoutes,
   );
   return list;

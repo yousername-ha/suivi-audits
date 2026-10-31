@@ -215,7 +215,8 @@ function PasswordLogin({
               autoComplete="username"
               autoCapitalize="none"
               spellCheck={false}
-              placeholder="prenom.nom"
+              // Aucun exemple de format : il aiderait à deviner les identifiants.
+              placeholder="Identifiant"
               required
               autoFocus
               value={u}

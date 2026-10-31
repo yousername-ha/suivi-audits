@@ -1424,6 +1424,31 @@ export interface SupScopeLinks {
   attached_at: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
+export interface TableauxDeBord {
+  id: Generated<string>;
+  proprietaire: string | null;
+  nom: Generated<string>;
+  disposition: ColumnType<JsonValue, string, string>;
+  version: Generated<number>;
+  updated_by: string;
+  updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
+  created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface TableauxDeBordChoix {
+  utilisateur: string;
+  tableau: string;
+  updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface TableauxDeBordPartages {
+  tableau: string;
+  utilisateur: string | null;
+  groupe: string | null;
+  created_by: string;
+  created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
 export interface TypesProcessus {
   id: Generated<string>;
   code: string;
@@ -1653,6 +1678,9 @@ export interface DB {
   sup_evaluation_items: SupEvaluationItems;
   sup_evaluations: SupEvaluations;
   sup_scope_links: SupScopeLinks;
+  tableaux_de_bord: TableauxDeBord;
+  tableaux_de_bord_choix: TableauxDeBordChoix;
+  tableaux_de_bord_partages: TableauxDeBordPartages;
   types_processus: TypesProcessus;
   update_jobs: UpdateJobs;
   user_groups: UserGroups;

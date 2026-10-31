@@ -69,4 +69,14 @@ describe('préférences', () => {
     });
     expect(Preferences.safeParse({ colonnes: { 'Pas valide!': [] } }).success).toBe(false);
   });
+  it('ordre du menu : facultatif, identifiants bornés', () => {
+    const menu = { familles: ['risques', 'organisation'], destinations: { organisation: ['perimetres', 'contexte'] } };
+    expect(Preferences.parse({ menu }).menu).toEqual(menu);
+    expect(Preferences.parse({}).menu).toBeUndefined();
+    expect(Preferences.safeParse({ menu: { familles: ['<script>'] } }).success).toBe(false);
+    expect(Preferences.safeParse({ menu: { familles: Array.from({ length: 21 }, (_, i) => `f${i}`) } }).success).toBe(
+      false,
+    );
+    expect(Preferences.safeParse({ menu: { destinations: { 'Pas valide!': [] } } }).success).toBe(false);
+  });
 });

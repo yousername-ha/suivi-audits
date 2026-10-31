@@ -198,12 +198,12 @@ if 'pg_restore' in args and '--list' not in args: Path(os.environ['TEST_RESTORED
         valide = self.archive()
         # L'option de l'ancien format n'existe plus (6.0.0, installation neuve uniquement).
         self.assertNotEqual(self.run_restore(valide, options=['--ancien-format']).returncode, 0)
-        # Archive .tar.enc de la 5.x : refusée avec un message explicite, même avec la phrase secrète, sans appeler Docker.
+        # Archive .tar.enc de la 5.x : refusée avec un message explicite, sans appeler Docker.
         ancien = self.root / 'suivi-audits-20261009-120000.tar.enc'
         subprocess.run(['openssl', 'enc', '-aes-256-cbc', '-pbkdf2', '-iter', '600000', '-salt', '-in', str(self.root / 'clair.tar'),
                         '-out', str(ancien), '-pass', 'file:' + str(self.phrase)], check=True)
         for verifier in (True, False):
-            refus = self.run_restore(ancien, verify=verifier, env={'BACKUP_PASSPHRASE_FILE': str(self.phrase)})
+            refus = self.run_restore(ancien, verify=verifier)
             self.assertNotEqual(refus.returncode, 0)
             self.assertIn('non prise en charge depuis la 6.0.0', refus.stderr + refus.stdout)
         self.assertFalse(self.events.exists())
@@ -373,6 +373,21 @@ if 'pg_restore' in args and '--list' not in args: Path(os.environ['TEST_RESTORED
         destination, resultat = self.sauvegarde_avec_anciennes(10, {'RETENTION_DAYS': '5', 'BACKUP_GARDER_MIN': '3'}, age_min=1)
         self.assertEqual(resultat.returncode, 0, resultat.stderr)
         self.assertEqual(len(list(destination.glob('*.tar.age'))), 5)
+
+    def test_rotation_leaves_old_format_archives_to_the_operator(self):
+        # Archives d'anciennes versions dans un catalogue réutilisé (.tar.enc de la 5.x, .tar en clair) : illisibles par cette
+        # version (ADR 0077), jamais supprimées.
+        destination = self.root / 'archives'
+        destination.mkdir()
+        anciennes = [destination / 'suivi-audits-20250101-000000.tar.enc', destination / 'suivi-audits-20250102-000000.tar']
+        for ancienne in anciennes:
+            ancienne.write_bytes(b'ancienne-archive-fictive')
+            os.utime(ancienne, (ancienne.stat().st_atime, ancienne.stat().st_mtime - 400 * 86400))
+        destination, resultat = self.sauvegarde_avec_anciennes(10, {'RETENTION_DAYS': '1', 'BACKUP_GARDER_MIN': '3'})
+        self.assertEqual(resultat.returncode, 0, resultat.stderr)
+        self.assertEqual(len(list(destination.glob('*.tar.age'))), 3)
+        for ancienne in anciennes:
+            self.assertTrue(ancienne.exists())
 
     def test_rotation_keeps_everything_when_few_archives_exist(self):
         destination, resultat = self.sauvegarde_avec_anciennes(3, {'RETENTION_DAYS': '1'})

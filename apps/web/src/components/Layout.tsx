@@ -14,6 +14,7 @@ import {
   Text,
   Tooltip,
   useMantineColorScheme,
+  VisuallyHidden,
 } from '@mantine/core';
 import { useDisclosure, useMediaQuery } from '@mantine/hooks';
 import {
@@ -40,7 +41,9 @@ import { famillesVisibles, localiser, type FamilleId } from '../navigation';
 import { logout as endSession } from '../logout';
 import { alerteDeFamille, LibelleAlerte, useAlertesMenu } from '../pilotage/alertes-menu';
 import { OngletsRubriques } from './OngletsRubriques';
+import { useTriMenu } from './tri-menu';
 import { AlerteSecuriteNotice } from './AlerteSecuriteNotice';
+import { RetexInvitationNotice, useInvitationsRetex } from '../incidents/MesContributionsRetex';
 import { CleSecoursNotice } from './CleSecours';
 import { UpdateNotice } from './Updates';
 import { ErrorAlert } from './common';
@@ -96,9 +99,12 @@ export function Layout({ children }: { children: ReactNode }) {
   if (cartesVisibles(can, 'plateforme').length > 0) administration.push(['/plateforme', 'Plateforme', IconeParametres]);
   if (cartesVisibles(can, 'systeme').length > 0)
     administration.push(['/systeme', 'Configuration système', IconeAdministration]);
+  const invitationsRetex = useInvitationsRetex();
   const outils: Item[] = [['/account', 'Mon compte', IconeCompte]];
   outils.push(['/aide', 'Guide d’utilisation', IconeDocuments]);
   if (canReadBusiness(can)) outils.push(['/mur', 'Écran mural', IconeMur]);
+  // Demandes de contribution à un RETEX : visibles pour toute personne invitée, même sans droit sur les incidents.
+  if (invitationsRetex.data?.length) outils.push(['/retex', 'Mes contributions RETEX', IconeDocuments]);
   const active = (to: string) =>
     to === '/'
       ? loc.pathname === '/'
@@ -106,7 +112,9 @@ export function Layout({ children }: { children: ReactNode }) {
         ? ALIAS_ADMINISTRATION[to].test(loc.pathname)
         : loc.pathname.startsWith(to);
   const alertes = useAlertesMenu();
-  const familles = famillesVisibles(can);
+  const tri = useTriMenu();
+  const familles = famillesVisibles(can, tri.ordre);
+  const idsFamilles = familles.map((f) => f.famille.id);
   // Une seule famille dépliée à la fois : ouvrir une famille referme la précédente. La page affichée déplie la sienne.
   const familleDeLaPage = localiser(loc.pathname)?.famille.id;
   const [ouvert, setOuvert] = useState<string | null>(familleDeLaPage ?? null);
@@ -151,7 +159,12 @@ export function Layout({ children }: { children: ReactNode }) {
       ),
     );
   const navigation = (
-    <nav aria-label="Navigation principale" className="shell-nav-inner">
+    <nav
+      aria-label="Navigation principale"
+      className="shell-nav-inner"
+      data-tri-actif={tri.glisse || undefined}
+      onClickCapture={tri.surClicCapture}
+    >
       <Text className="nav-caption nav-annexe">Espace de travail</Text>
       <Stack gap="2xs">
         {navigationItems(accueil)}
@@ -173,6 +186,7 @@ export function Layout({ children }: { children: ReactNode }) {
               onChange={(o) => basculer(famille.id, o)}
               // Tablette : le menu est replié en icônes, un clic mène à la première destination de la famille.
               onClick={tablette ? () => close() : undefined}
+              {...tri.deplacable({ id: famille.id }, idsFamilles, famille.label)}
             >
               {!tablette &&
                 destinations.map((d) => (
@@ -184,12 +198,18 @@ export function Layout({ children }: { children: ReactNode }) {
                     label={<LibelleAlerte libelle={d.label} alerte={alertes[d.id]} />}
                     active={localiser(loc.pathname)?.destination.id === d.id}
                     onClick={close}
+                    {...tri.deplacable(
+                      { famille: famille.id, id: d.id },
+                      destinations.map((x) => x.id),
+                      d.label,
+                    )}
                   />
                 ))}
             </NavLink>
           );
         })}
       </Stack>
+      <VisuallyHidden aria-live="polite">{tri.annonce}</VisuallyHidden>
       <Stack gap="2xs" className="nav-administration">
         <Text className="nav-caption nav-annexe">Compte et administration</Text>
         {navigationItems(administration)}
@@ -232,6 +252,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <UpdateNotice />
         <CleSecoursNotice />
         <AlerteSecuriteNotice />
+        <RetexInvitationNotice />
         <header className="shell-header">
           <Group h="100%" px="md" justify="space-between" wrap="nowrap">
             <Group gap="sm" wrap="nowrap">

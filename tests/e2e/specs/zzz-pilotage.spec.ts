@@ -19,12 +19,12 @@ for (const width of [1440, 390]) {
         .filter({ visible: true })
         .click();
       await page
-        .getByRole('link', { name: /^Synthèse et périmètres(\s|$)/ })
+        .getByRole('link', { name: /^Synthèse et parcours(\s|$)/ })
         .filter({ visible: true })
         .click();
       await expect(page).toHaveURL(/\/pilotage\/synthese$/);
       await expect(page.getByRole('heading', { name: 'Synthèse', exact: true })).toBeVisible();
-      await expect(page.getByRole('navigation', { name: 'Rubriques : Synthèse et périmètres' })).toBeVisible();
+      await expect(page.getByRole('navigation', { name: 'Rubriques : Synthèse et parcours' })).toBeVisible();
       if (width < 576) {
         await expect(page.getByRole('dialog')).toHaveCount(0);
         await page.getByRole('button', { name: 'Ouvrir le menu' }).click();

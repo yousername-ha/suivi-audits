@@ -1,6 +1,6 @@
 /* Guide embarqué versionné avec le code : seulement les fonctionnalités réellement disponibles. */
 import type { Permission } from '@suivi/shared';
-export const HELP_VERSION = '2026-10-10';
+export const HELP_VERSION = '2026-10-30';
 export interface HelpArticle {
   id: string;
   title: string;
@@ -135,6 +135,32 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
   },
   {
+    id: 'retex-incidents',
+    title: 'RETEX d’un incident et chronologie',
+    permission: 'incidents:modifier',
+    link: '/pilotage/incidents-retex',
+    steps: [
+      'Ouvrez Résilience, Incidents et crise, RETEX et chronologie (ou le bouton « RETEX et chronologie » de la fiche d’un incident), puis « Ouvrir un RETEX ». Vous en devenez le pilote.',
+      'Remplissez-le seul, ou invitez des comptes existants d’autres pôles avec une consigne et une échéance. Chaque personne invitée reçoit une notification « Contribution à un RETEX » (dans l’application, et par courriel selon ses réglages) ; relancez celles qui n’ont pas terminé.',
+      'Saisissez les événements (date et heure, type d’étape, intitulé, acteur, gravité ressentie) : la chronologie se trie toute seule. Récupérez aussi les éléments datés de la fiche de l’incident et de la main courante d’une cellule de crise ; un élément déjà importé n’est pas proposé deux fois.',
+      'Dans « À valider », acceptez chaque proposition, corrigez-la puis acceptez-la, marquez-la comme déjà connue ou rejetez-la avec un motif. Rien n’entre dans la chronologie sans votre décision.',
+      'Clôturez la collecte quand la file à valider est vide, puis générez la chronologie animée (navigation au clic, au clavier ou en lecture automatique, plein écran). Vous pouvez la diffuser en lecture seule aux contributeurs, ou rouvrir la collecte.',
+      'Le texte des enseignements de la fiche de l’incident est conservé tel quel ; la collecte est rangée à part dans l’incident.',
+    ],
+  },
+  {
+    id: 'retex-contribution',
+    title: 'Contribuer au RETEX d’un incident',
+    link: '/retex',
+    steps: [
+      'Quand le pilote d’un RETEX vous invite, un bandeau « Contribution RETEX demandée » s’affiche et le menu propose « Mes contributions RETEX ». Aucun droit sur les incidents n’est nécessaire.',
+      'Ouvrez la demande : vous voyez l’intitulé de l’incident, le pilote, sa consigne et l’échéance. Vous ne voyez ni le reste de l’incident, ni les éléments des autres contributeurs.',
+      'Ajoutez un élément par fait marquant (ce que vous avez constaté, décidé, fait ou communiqué, avec la date et l’heure les plus précises possible). Tant que le pilote ne l’a pas traité, vous pouvez le modifier ou le retirer.',
+      'Déclarez votre contribution terminée ; vous pouvez la reprendre tant que la collecte est ouverte. Vous voyez ensuite la suite donnée à chaque élément : intégré, déjà connu ou non retenu, avec le motif.',
+      'Si le pilote diffuse la chronologie après clôture, vous la consultez en lecture seule depuis la même page.',
+    ],
+  },
+  {
     id: 'compte',
     title: 'Connexion, double authentification et déconnexion',
     link: '/account',
@@ -143,6 +169,17 @@ export const HELP_ARTICLES: HelpArticle[] = [
       'Lors de la première connexion, activez la double authentification et changez le mot de passe temporaire si cela vous est demandé.',
       'Dans Mon compte, gérez votre mot de passe, votre double authentification et vos sessions.',
       'Utilisez Déconnexion pour fermer la session. En cas d’erreur réseau ou de refus du serveur, un message vous permet de réessayer : la fermeture n’est pas annoncée comme réussie.',
+    ],
+  },
+  {
+    id: 'ordre-menu',
+    title: 'Ordre du menu',
+    link: '/account',
+    steps: [
+      'Placez les familles du menu et leurs rubriques dans l’ordre qui vous convient : glissez-les à la souris à leur nouvelle place. Échap pendant le glisser annule le déplacement.',
+      'Au clavier, placez-vous sur une famille ou une rubrique du menu, puis utilisez Alt + flèche haut ou Alt + flèche bas.',
+      'L’ordre est enregistré avec vos préférences et vous suit sur tous vos appareils. Il ne change que l’affichage : vos droits et les adresses des pages restent les mêmes.',
+      'Dans Mon compte, rubrique Affichage, « Rétablir l’ordre par défaut » remet le menu dans son ordre d’origine.',
     ],
   },
   {

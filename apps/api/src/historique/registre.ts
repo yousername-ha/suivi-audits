@@ -52,6 +52,41 @@ export class RegistreHistorique {
     return etat ?? { version: 0, data: {} };
   }
 
+  /** Lecture déléguée (contribution à un RETEX) : aucun droit de module n'est exigé ici, seulement l'activation du module.
+      L'appelant DOIT filtrer ce qu'il renvoie et vérifier l'habilitation propre à l'objet (contributeur désigné). */
+  async lireDelegue(module: Module): Promise<EtatHistorique> {
+    await this.g.modules.assert(module);
+    const etat = await this.g.legacy.recompose();
+    return etat ?? { version: 0, data: {} };
+  }
+
+  /** Modification déléguée : même verrou, même journal d'audit et même notification que `modifier`, mais l'habilitation
+      n'est pas un droit de module. `autoriser` est appelé sous verrou, sur l'état courant, avant `appliquer`, et lève une
+      erreur si l'utilisateur n'est pas habilité sur l'objet visé (contributeur invité d'un RETEX ouvert, par exemple). */
+  async modifierDelegue<T>(
+    user: SessionUser,
+    ip: string,
+    cible: { module: Module; action: string; reference: (resultat: T) => string },
+    autoriser: (data: JsonObject) => void,
+    appliquer: (data: JsonObject, c: Client) => T | Promise<T>,
+  ): Promise<T> {
+    await this.g.modules.assert(cible.module);
+    return this.g.db.tx(async (c) => {
+      await verrouillerEtat(c);
+      const etat = await this.g.legacy.recompose(c);
+      if (!etat) throw new HttpError(409, 'Registre historique indisponible.');
+      const data: JsonObject = { ...etat.data };
+      autoriser(data);
+      const resultat = await appliquer(data, c);
+      const r = await this.g.legacy.nativeWrite(c, data, user, etat.version);
+      if (r.conflict) throw new HttpError(412, 'Les données historiques ont changé. Rechargez avant de modifier.');
+      const ref = cible.reference(resultat);
+      await this.g.db.audit(user, ip, cible.action, ref, { version: r.version }, c);
+      await this.g.notify(c, ref, r.version, DEFAULT_SMSI, cible.module, user.username);
+      return resultat;
+    }, user.username);
+  }
+
   /** Modifie l'état historique sous verrou : `appliquer` reçoit une copie de l'état et retourne le résultat à renvoyer.
       L'écriture refuse toute modification d'un module repris dans des tables (cartographie) et échoue si l'état a changé
       entre-temps. Journal d'audit et notification temps réel inclus. */

@@ -72,6 +72,7 @@ jobs:
           python3 -m unittest discover -s scripts/tests -p test_updates.py
           python3 -m unittest discover -s scripts/tests -p test_exploitation.py
           python3 -m unittest discover -s scripts/tests -p test_veille_caddy.py
+          python3 -m unittest discover -s scripts/tests -p test_installateur.py
       - name: OpenAPI
         run: pnpm --filter @suivi/api openapi "$GITHUB_WORKSPACE/openapi.json"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -331,7 +332,7 @@ jobs:
 
   montee:
     name: Montée de version (retour arrière et restauration simulés)
-    # EXPL-02 à EXPL-04 : serveur installé avec la dernière version publiée (à défaut, la base de la PR), données
+    # EXPL-02 à EXPL-04 : serveur installé avec la dernière version publiée (6.0.0 ou ultérieure), données
     # fictives, puis scripts/mettre-a-jour.sh vers le commit testé (voir scripts/ci/montee-version.sh).
     runs-on: ubuntu-latest
     needs: [qualite, tests]
@@ -350,16 +351,15 @@ jobs:
           node-version: 26
       - name: Version de départ
         id: depart
-        env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           set -e
+          # Installation neuve uniquement depuis la 6.0.0 (ADR 0077) : le départ est la dernière version publiée, 6.0.0 ou
+          # ultérieure ; scripts/ci/montee-version.sh ne prend plus en charge une version 5.x (phrase secrète, archives .tar.enc).
           tag=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' | sort -V | tail -n 1)
-          if [ -n "$tag" ]; then ref="$tag"; version="${tag#v}"; publiee=1
-          elif [ -n "$BASE_SHA" ]; then ref="$BASE_SHA"; version=3.0.0; publiee=0
-          else echo "Ni version publiée ni PR : rien à comparer."; echo "actif=0" >> "$GITHUB_OUTPUT"; exit 0; fi
-          if ! git cat-file -e "$ref:docker/api.Dockerfile" 2> /dev/null; then
-            echo "La version de départ ($ref) n'est pas une v3 : test sans objet."; echo "actif=0" >> "$GITHUB_OUTPUT"; exit 0
+          [ -n "$tag" ] || { echo "::error::Aucune version publiée (étiquette vX.Y.Z) : version de départ introuvable."; exit 1; }
+          ref="$tag"; version="${tag#v}"; publiee=1
+          if [ "$(printf '%s\n' 6.0.0 "$version" | sort -V | head -n 1)" != 6.0.0 ]; then
+            echo "::error::Version de départ $version antérieure à la 6.0.0 : non prise en charge (ADR 0077)."; exit 1
           fi
           cible=$(echo "$version" | awk -F. '{ print $1 "." $2 + 1 ".0" }')
           { echo "actif=1"; echo "ref=$ref"; echo "version=$version"; echo "publiee=$publiee"; echo "cible=$cible"; } >> "$GITHUB_OUTPUT"
