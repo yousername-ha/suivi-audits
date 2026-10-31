@@ -13,8 +13,7 @@
 #   --images-locales    images déjà présentes sur le serveur (essai d'une version non publiée, CI) : ni téléchargement,
 #                       ni vérification de signature
 # Variables : BACKUP_KEY_FILE (défaut DATA_DIR/cles-sauvegarde/serveur.key) et BACKUP_RECIPIENTS_FILE (défaut DATA_DIR/cles-sauvegarde/secours.pub),
-#             préparés par scripts/generer-cles-sauvegarde.sh ; BACKUP_PASSPHRASE_FILE : ancienne phrase secrète, uniquement
-#             pour un retour arrière sur une sauvegarde de l'ancien format (.tar.enc) ;
+#             préparés par scripts/generer-cles-sauvegarde.sh ;
 #             SUIVI_TEST_ECHEC_SANTE=1 : simule un échec du contrôle de santé (tests du retour arrière uniquement).
 # Étapes : contrôles → notes de mise à jour → sauvegarde chiffrée → version du dépôt → images (signature) →
 # migrations (au démarrage de app, sous verrou, une transaction chacune) → santé → rapport et journal d'audit.
@@ -77,7 +76,6 @@ DEPOT_IMAGES=ghcr.io/yousername-ha/suivi-audits
 # ce script s'exécute avec les fonctions communes de la version installée, qui peut ne pas encore les avoir.
 CLE="${BACKUP_KEY_FILE:-$(dossier_donnees)/cles-sauvegarde/serveur.key}"
 SECOURS="${BACKUP_RECIPIENTS_FILE:-$(dossier_donnees)/cles-sauvegarde/secours.pub}"
-PASS="${BACKUP_PASSPHRASE_FILE:-/root/.suivi-backup-pass}"
 STAMP=$(date -u +%Y%m%d-%H%M%S)
 DEBUT=$(date +%s)
 NOTES=''
@@ -153,9 +151,9 @@ retour_arriere() { # raison
   elif [ -n "$apres" ] && [ "$apres" != "$MIGRATIONS_AVANT" ] && [ -n "$SAUVEGARDE" ]; then
     info "La base a été migrée : restauration de la sauvegarde $SAUVEGARDE."
     if [ "$AUTO" = 1 ] || confirmer "Restaurer la sauvegarde faite avant la mise à jour (les données ajoutées depuis seront perdues) ?"; then
-      # Le dépôt est revenu à la version précédente : son restore.sh correspond au format de la sauvegarde (.tar.enc ou .tar.age).
-      RESTAURER_SANS_CONFIRMATION=1 BACKUP_KEY_FILE="$CLE" BACKUP_PASSPHRASE_FILE="$PASS" "$REPO/scripts/restore.sh" "$SAUVEGARDE" < /dev/null \
-        || { echo RESTAURER | BACKUP_KEY_FILE="$CLE" BACKUP_PASSPHRASE_FILE="$PASS" "$REPO/scripts/restore.sh" "$SAUVEGARDE"; }
+      # Le dépôt est revenu à la version précédente : son restore.sh lit la sauvegarde .tar.age avec la clé du serveur.
+      RESTAURER_SANS_CONFIRMATION=1 BACKUP_KEY_FILE="$CLE" "$REPO/scripts/restore.sh" "$SAUVEGARDE" < /dev/null \
+        || { echo RESTAURER | BACKUP_KEY_FILE="$CLE" "$REPO/scripts/restore.sh" "$SAUVEGARDE"; }
     else
       avertir "restauration refusée : l'ancienne version peut ne pas démarrer sur une base migrée."
     fi
@@ -248,16 +246,10 @@ else
   arret "cosign est nécessaire pour vérifier la signature des images (docs/INSTALLATION.md, étape 12.1) ; à défaut : --sans-signature."
 fi
 if [ "$VERIFIER" != 1 ]; then
-  if declare -F controler_cles_sauvegarde > /dev/null; then
-    controler_cles_sauvegarde "$CLE" "$SECOURS"
-  else
-    # Version installée antérieure au chiffrement age : sa sauvegarde utilise encore la phrase secrète (étape 11.1 de son guide),
-    # mais la version cible exige les clés age (montées par son docker-compose.yml) : les contrôler avant toute modification.
-    [ -s "$PASS" ] || arret "phrase secrète des sauvegardes introuvable ($PASS) : la sauvegarde chiffrée est obligatoire (étape 11.1)."
-    git cat-file -e "v$CIBLE:scripts/generer-cles-sauvegarde.sh" 2> /dev/null \
-      && { ( eval "$(git show "v$CIBLE:scripts/lib-commun.sh")"; controler_cles_sauvegarde "$CLE" "$SECOURS" ) \
-        || arret "clés de sauvegarde age à préparer avant cette mise à jour (docs/INSTALLATION.md, étape 6.8)."; }
-  fi
+  # Une version installée sans chiffrement age (5.x) ne se met pas à jour : installation neuve uniquement (ADR 0077).
+  declare -F controler_cles_sauvegarde > /dev/null \
+    || arret "version installée ($ACTUELLE) antérieure à la 6.0.0 : mise à jour non prise en charge, installer un serveur neuf (ADR 0077)."
+  controler_cles_sauvegarde "$CLE" "$SECOURS"
 fi
 
 # ---------------------------------------------------------------- 2. Notes de mise à jour
@@ -300,18 +292,18 @@ PHASE=sauvegarde
 if declare -F progression > /dev/null; then progression; fi
 etape "Sauvegarde chiffrée"
 mkdir -p "$SAUV/avant-mise-a-jour"
-sortie=$(RETENTION_DAYS=36500 BACKUP_PREFIXE="avant-maj-$ACTUELLE-vers-$CIBLE" BACKUP_KEY_FILE="$CLE" BACKUP_RECIPIENTS_FILE="$SECOURS" BACKUP_PASSPHRASE_FILE="$PASS" \
+sortie=$(RETENTION_DAYS=36500 BACKUP_PREFIXE="avant-maj-$ACTUELLE-vers-$CIBLE" BACKUP_KEY_FILE="$CLE" BACKUP_RECIPIENTS_FILE="$SECOURS" \
   "$REPO/scripts/backup.sh" "$SAUV/avant-mise-a-jour" 2>&1) || { printf '%s\n' "$sortie" >&2; arret "échec de la sauvegarde : mise à jour annulée."; }
 printf '%s\n' "$sortie"
 SAUVEGARDE=$(printf '%s\n' "$sortie" | sed -n 's/^Sauvegarde : //p' | tail -n 1)
-case "$SAUVEGARDE" in *.tar.age | *.tar.enc) ;; *) arret "la sauvegarde n'est pas chiffrée : mise à jour annulée." ;; esac
+case "$SAUVEGARDE" in *.tar.age) ;; *) arret "la sauvegarde n'est pas chiffrée : mise à jour annulée." ;; esac
 if [ -f "$SAUVEGARDE.sha256" ]; then
   (cd "$(dirname "$SAUVEGARDE")" && sha256sum -c --quiet "$(basename "$SAUVEGARDE").sha256") || arret "empreinte de la sauvegarde incorrecte."
 else
   sha256sum "$SAUVEGARDE" > "$SAUVEGARDE.sha256"
 fi
 # Les 5 dernières sauvegardes « avant mise à jour » sont gardées, hors rotation.
-find "$SAUV/avant-mise-a-jour" -maxdepth 1 -name '*.tar*' ! -name '*.sha256' -printf '%T@ %p\n' | sort -rn | tail -n +6 \
+find "$SAUV/avant-mise-a-jour" -maxdepth 1 -name '*.tar.age' -printf '%T@ %p\n' | sort -rn | tail -n +6 \
   | cut -d' ' -f2- | while read -r f; do rm -f "$f" "$f.sha256"; done
 MIGRATIONS_AVANT=$(migrations_appliquees)
 CONTROLE_AVANT=$(dc exec -T app suivi controle-donnees 2> /dev/null || true)

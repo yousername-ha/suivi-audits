@@ -153,7 +153,7 @@ esac
 if donnees_preparees; then noter PASSÉ R16 "Dossier des données préparé ($DATA_DIR)"; else noter ÉCHOUÉ R16 "Dossier des données préparé" "$DATA_DIR sans marqueur"; fi
 if [ -d "$DATA_DIR/secrets" ]; then
   # Le dossier peut se traverser (conteneurs sous d'autres identifiants) ; aucun fichier ne doit être accessible à « autres ».
-  ouverts=$(find "$DATA_DIR/secrets" "$DATA_DIR/update-secrets" "$DATA_DIR/postgres" "$DATA_DIR/postgres18" -maxdepth 2 -type f -perm /007 2> /dev/null | wc -l)
+  ouverts=$(find "$DATA_DIR/secrets" "$DATA_DIR/cles-sauvegarde" "$DATA_DIR/postgres" "$DATA_DIR/postgres18" -maxdepth 2 -type f -perm /007 2> /dev/null | wc -l)
   if [ "$ouverts" = 0 ]; then noter PASSÉ R17 "Aucun fichier de secret ou de base accessible à tous"; else noter ÉCHOUÉ R17 "Aucun fichier de secret ou de base accessible à tous" "$ouverts fichier(s) ouvert(s) à « autres »"; fi
 else
   noter ÉCHOUÉ R17 "Aucun fichier de secret accessible à tous" "dossier secrets absent"

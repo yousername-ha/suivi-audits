@@ -1,7 +1,7 @@
 /* Menu à sept familles : aucune rubrique du Pilotage perdue ni doublée, droits et adresses d'origine conservés. */
 import type { Action, Module } from '@suivi/shared';
 import { describe, expect, it } from 'vitest';
-import { FAMILLES, famillesVisibles, localiser } from '../src/navigation';
+import { deplacerDansMenu, FAMILLES, famillesVisibles, localiser, ordonnerMenu, placer } from '../src/navigation';
 import { PILOTAGE_NAV } from '../src/pilotage-navigation';
 
 const tout = () => true;
@@ -10,20 +10,11 @@ const rubriques = FAMILLES.flatMap((f) => f.destinations.flatMap((d) => d.rubriq
 /** Inventaire de référence (020-01) : famille | destination | rubrique | adresse | module | action. Toute rubrique ajoutée,
     retirée ou déplacée, ou dont le droit change, doit modifier cette table : aucune fonction ne se perd en silence. */
 const INVENTAIRE = [
-  'pilotage|synthese|synthese|/pilotage/synthese|pilotage|lire',
-  'pilotage|synthese|perimetres|/pilotage/perimetres|pilotage|lire',
-  'pilotage|parcours|parcours-iso|/pilotage/parcours-iso|pilotage|lire',
-  'pilotage|parcours|parcours|/pilotage/parcours|pilotage|lire',
-  'pilotage|objectifs|processus|/pilotage/processus|pilotage|lire',
-  'pilotage|objectifs|objectifs|/pilotage/objectifs|pilotage|lire',
-  'pilotage|objectifs|indicateurs|/pilotage/indicateurs|pilotage|lire',
-  'pilotage|revues|revues|/pilotage/revues|pilotage|lire',
-  'pilotage|rappels|rappels|/pilotage/rappels|pilotage|lire',
-  'pilotage|rappels|configuration|/pilotage/configuration|pilotage|lire',
   'organisation|contexte|contexte|/pilotage/contexte|pilotage|lire',
   'organisation|contexte|parties|/pilotage/parties|pilotage|lire',
   'organisation|contexte|swot|/pilotage/swot|pilotage|lire',
   'organisation|contexte|pestel|/pilotage/pestel|pilotage|lire',
+  'organisation|perimetres|perimetres|/pilotage/perimetres|pilotage|lire',
   'organisation|processus|processus-cartes|/pilotage/processus-cartes|pilotage|lire',
   'organisation|responsabilites|responsabilites|/pilotage/responsabilites|pilotage|lire',
   'organisation|cartographie|cartographie|/cartographie|cartographie|lire',
@@ -37,6 +28,15 @@ const INVENTAIRE = [
   'organisation|plans|plans-formation|/pilotage/plans-formation|pilotage|lire',
   'organisation|plans|plans-sensibilisation|/pilotage/plans-sensibilisation|pilotage|lire',
   'organisation|budget|investissements|/pilotage/investissements|investissements|lire',
+  'pilotage|synthese|synthese|/pilotage/synthese|pilotage|lire',
+  'pilotage|parcours|parcours-iso|/pilotage/parcours-iso|pilotage|lire',
+  'pilotage|parcours|parcours|/pilotage/parcours|pilotage|lire',
+  'pilotage|objectifs|processus|/pilotage/processus|pilotage|lire',
+  'pilotage|objectifs|objectifs|/pilotage/objectifs|pilotage|lire',
+  'pilotage|objectifs|indicateurs|/pilotage/indicateurs|pilotage|lire',
+  'pilotage|revues|revues|/pilotage/revues|pilotage|lire',
+  'pilotage|rappels|rappels|/pilotage/rappels|pilotage|lire',
+  'pilotage|rappels|configuration|/pilotage/configuration|pilotage|lire',
   'risques|risques|risques|/pilotage/risques|pilotage|lire',
   'risques|risques|opportunites|/pilotage/opportunites|pilotage|lire',
   'risques|risques|etudes|/pilotage/etudes|pilotage|lire',
@@ -102,8 +102,8 @@ describe('navigation', () => {
   });
   it('range les sept familles dans l’ordre validé', () => {
     expect(FAMILLES.map((f) => f.label)).toEqual([
-      'Pilotage',
       'Organisation',
+      'Pilotage',
       'Risques',
       'Conformité et audits',
       'Actions',
@@ -150,9 +150,73 @@ describe('navigation', () => {
     expect(localiser('/pilotage')?.rubrique.id).toBe('synthese');
     expect(localiser('/pilotage/risques')?.famille.id).toBe('risques');
     expect(localiser('/pilotage/parcours-iso')?.destination.label).toBe('Parcours guidé');
-    expect(famillesVisibles(tout)[0]?.destinations.find((d) => d.id === 'parcours')?.to).toBe('/pilotage/parcours-iso');
+    expect(
+      famillesVisibles(tout)
+        .find((f) => f.famille.id === 'pilotage')
+        ?.destinations.find((d) => d.id === 'parcours')?.to,
+    ).toBe('/pilotage/parcours-iso');
     expect(localiser('/documents/abc')?.destination.id).toBe('documents');
     expect(localiser('/cartographie/risques')?.famille.id).toBe('organisation');
     expect(localiser('/account')).toBeUndefined();
+  });
+  it('les Périmètres sont une destination de l’Organisation, séparée de la Synthèse', () => {
+    expect(localiser('/pilotage/perimetres')).toMatchObject({
+      famille: { id: 'organisation' },
+      destination: { id: 'perimetres', label: 'Périmètres' },
+    });
+    const synthese = FAMILLES.find((f) => f.id === 'pilotage')?.destinations.find((d) => d.id === 'synthese');
+    expect(synthese?.rubriques.map((r) => r.id)).toEqual(['synthese']);
+  });
+});
+
+describe('ordre du menu choisi par la personne', () => {
+  const ids = (ordre?: Parameters<typeof ordonnerMenu>[0]) => ordonnerMenu(ordre).map((f) => f.id);
+  it('identifiants compatibles avec la préférence enregistrée', () => {
+    for (const f of FAMILLES) {
+      expect(f.id).toMatch(/^[a-z0-9_-]{1,40}$/);
+      for (const d of f.destinations) expect(d.id).toMatch(/^[a-z0-9_-]{1,40}$/);
+    }
+  });
+  it('sans préférence : ordre par défaut', () => {
+    expect(ids()).toEqual(FAMILLES.map((f) => f.id));
+    expect(ordonnerMenu({})).toEqual(FAMILLES);
+  });
+  it('classe selon la préférence ; un identifiant oublié suit dans l’ordre d’origine, un inconnu est ignoré', () => {
+    expect(ids({ familles: ['documents', 'inconnue', 'risques'] })).toEqual([
+      'documents',
+      'risques',
+      'organisation',
+      'pilotage',
+      'conformite',
+      'actions',
+      'resilience',
+    ]);
+    const org = ordonnerMenu({ destinations: { organisation: ['budget', 'contexte'] } }).find(
+      (f) => f.id === 'organisation',
+    );
+    expect(org?.destinations.map((d) => d.id).slice(0, 3)).toEqual(['budget', 'contexte', 'perimetres']);
+  });
+  it('place un identifiant avant ou après une cible', () => {
+    expect(placer(['a', 'b', 'c', 'd'], 'a', 'c')).toEqual(['b', 'a', 'c', 'd']);
+    expect(placer(['a', 'b', 'c', 'd'], 'a', 'c', true)).toEqual(['b', 'c', 'a', 'd']);
+    expect(placer(['a', 'b', 'c', 'd'], 'd', 'a')).toEqual(['d', 'a', 'b', 'c']);
+    expect(placer(['a', 'b'], 'a', 'x')).toEqual(['a', 'b']);
+  });
+  it('déplace une famille ou une destination dans sa famille, sans toucher au reste', () => {
+    const o1 = deplacerDansMenu(undefined, { id: 'documents' }, 'organisation');
+    expect(ids(o1)[0]).toBe('documents');
+    const o2 = deplacerDansMenu(o1, { famille: 'organisation', id: 'perimetres' }, 'contexte');
+    expect(o2.familles).toEqual(o1.familles);
+    expect(o2.destinations?.organisation?.slice(0, 2)).toEqual(['perimetres', 'contexte']);
+    // Une destination ne passe pas dans une autre famille : la cible inconnue laisse l'ordre inchangé.
+    const o3 = deplacerDansMenu(o2, { famille: 'organisation', id: 'perimetres' }, 'synthese');
+    expect(o3.destinations?.organisation).toEqual(o2.destinations?.organisation);
+  });
+  it('le menu visible suit l’ordre choisi et reste filtré selon les droits', () => {
+    const ordre = { familles: ['actions', 'organisation'], destinations: { actions: ['plan-actions'] } };
+    expect(famillesVisibles(tout, ordre)[0]?.famille.id).toBe('actions');
+    expect(famillesVisibles(() => false, ordre).map((f) => f.famille.id)).toEqual(['actions']);
+    // L'ordre ne change ni les adresses ni la famille désignée par une adresse.
+    expect(localiser('/pilotage/perimetres')?.famille.id).toBe('organisation');
   });
 });
