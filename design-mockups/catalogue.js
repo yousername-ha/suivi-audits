@@ -1,0 +1,128 @@
+/* Catalogue des maquettes pour la page comparative (index.html). Palettes résumées : voir les README de chaque dossier. */
+window.CATALOGUE = {
+  ecrans: [
+    { hash: '#/dashboard', libelle: 'Dashboard' },
+    { hash: '#/audits', libelle: 'Liste des audits' },
+    { hash: '#/audit/AUD-07', libelle: 'Fiche audit' },
+    { hash: '#/formulaire', libelle: 'Formulaire' },
+    { hash: '#/retex', libelle: 'RETEX' },
+    { hash: '#/composants', libelle: 'Composants' },
+  ],
+  references: [
+    { fichier: '03-dashboard-clair-cartes.jpg', legende: 'Référence 03 : cartes claires sur fond marine' },
+    { fichier: '04-dashboard-sombre-jauges.webp', legende: 'Référence 04 : verre sombre, jauges pointillées' },
+    { fichier: '05-planches-infographie-sombre.webp', legende: 'Référence 05 : planches d’infographie' },
+    { fichier: '01-pastille-confirmation.jpg', legende: 'Référence 01 : pastille de confirmation', large: false },
+    { fichier: '02-pastille-interrupteur.jpg', legende: 'Référence 02 : interrupteur en capsule', large: true },
+  ],
+  maquettes: [
+    {
+      dossier: 'F-inspiration',
+      titre: 'F · Inspiration',
+      vedette: true,
+      disponible: true,
+      intention:
+        'Transposition fidèle des images de référence : fond marine dégradé, cartes de verre sombres pour les chiffres et les graphiques, cartes blanches pour les contenus denses, dégradé signature sarcelle → violet, jauges pointillées, chiffres énormes et fins, animations complètes (cascade, compteurs, tracés, RETEX façon cotation) avec interrupteur « Animations ».',
+      palette: [
+        { role: 'Fond marine', hex: '#1C2B4A' },
+        { role: 'Fond bas', hex: '#0F1A33' },
+        { role: 'Sarcelle', hex: '#2EC4B6' },
+        { role: 'Violet', hex: '#6D5BD0' },
+        { role: 'Corail', hex: '#F0564A' },
+        { role: 'Or', hex: '#F2A33A' },
+        { role: 'Carte claire', hex: '#FFFFFF' },
+        { role: 'Texte secondaire', hex: '#A9B4D0' },
+      ],
+    },
+    {
+      dossier: 'A-fidele',
+      titre: 'A · Fidèle',
+      vedette: false,
+      disponible: true,
+      intention:
+        'Palette « Sauge » actuelle reprise strictement (encre, vert, violet, navigation vert sombre). Seuls changent la mise en page, la hiérarchie, les espacements et les graphiques : l’utilisateur actuel s’y retrouve immédiatement.',
+      palette: [
+        { role: 'Encre', hex: '#243B34' },
+        { role: 'Vert', hex: '#245F4C' },
+        { role: 'Violet', hex: '#5A48B5' },
+        { role: 'Fond', hex: '#F5F6F2' },
+        { role: 'Navigation', hex: '#163E33' },
+        { role: 'Repère', hex: '#C5DBAB' },
+        { role: 'Erreur', hex: '#C92A2A' },
+        { role: 'Succès', hex: '#29833B' },
+      ],
+    },
+    {
+      dossier: 'B-epuree',
+      titre: 'B · Fidèle épurée',
+      vedette: false,
+      disponible: true,
+      intention:
+        'Mêmes couleurs de base, nuancées : navigation claire, sections à fond sauge très léger, quasi aucune bordure ni ombre, tableaux sans grille, couleur vive réservée aux statuts et à l’action principale. Nettement moins chargée.',
+      palette: [
+        { role: 'Fond', hex: '#FBFCFB' },
+        { role: 'Section sauge', hex: '#F3F7F4' },
+        { role: 'Encre', hex: '#243B34' },
+        { role: 'Encre 80 %', hex: '#4F6159' },
+        { role: 'Vert', hex: '#245F4C' },
+        { role: 'Violet', hex: '#5A48B5' },
+        { role: 'Alerte', hex: '#D97A1F' },
+        { role: 'Erreur', hex: '#C2312A' },
+      ],
+    },
+    {
+      dossier: 'C-institutionnel',
+      titre: 'C · Institutionnel santé',
+      vedette: false,
+      disponible: true,
+      intention:
+        'Ton « rapport officiel » : papier ivoire, bleu institutionnel, titres en serif, sections numérotées, filets fins, cartouches d’identifiants, accent terre cuite rare réservé aux actions. Direction éditoriale rassurante pour un établissement public.',
+      palette: [
+        { role: 'Bleu', hex: '#1F3A5F' },
+        { role: 'Bleu clair', hex: '#6B86AA' },
+        { role: 'Papier', hex: '#FAF8F3' },
+        { role: 'Surface douce', hex: '#F2EEE5' },
+        { role: 'Encre', hex: '#23221E' },
+        { role: 'Filet', hex: '#D8D1C4' },
+        { role: 'Terre cuite', hex: '#A84E24' },
+        { role: 'Secondaire', hex: '#5B564D' },
+      ],
+    },
+    {
+      dossier: 'D-soc-sombre',
+      titre: 'D · SOC sombre',
+      vedette: false,
+      disponible: true,
+      intention:
+        'Salle de contrôle : mode sombre natif, barre d’état avec horloge et état du SMSI, identifiants en monospace, cartes fines à bord faiblement lumineux, cyan pour l’actif, vert conforme, ambre vigilance, rouge critique.',
+      palette: [
+        { role: 'Fond', hex: '#0B1220' },
+        { role: 'Surface', hex: '#16203A' },
+        { role: 'Bordure', hex: '#2B3A5F' },
+        { role: 'Cyan', hex: '#5EE1F0' },
+        { role: 'Vert', hex: '#4ADE80' },
+        { role: 'Ambre', hex: '#F6B860' },
+        { role: 'Rouge', hex: '#FF7B7B' },
+        { role: 'Texte', hex: '#E6EDF7' },
+      ],
+    },
+    {
+      dossier: 'E-data-dense',
+      titre: 'E · Data-dense compact',
+      vedette: false,
+      disponible: true,
+      intention:
+        'Poste de travail expert : base 13 px, six KPI sur une rangée avec tendances, panneaux repliables, liste à dix colonnes sans défilement horizontal, en-têtes figés, un seul accent indigo, statuts en pastilles compactes.',
+      palette: [
+        { role: 'Fond', hex: '#F4F5F7' },
+        { role: 'Surface', hex: '#FFFFFF' },
+        { role: 'Texte', hex: '#15181E' },
+        { role: 'Secondaire', hex: '#4F5664' },
+        { role: 'Indigo', hex: '#3949AB' },
+        { role: 'Succès', hex: '#1B7A3E' },
+        { role: 'Alerte', hex: '#A84E0A' },
+        { role: 'Erreur', hex: '#BE2E2E' },
+      ],
+    },
+  ],
+};
