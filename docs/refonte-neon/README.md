@@ -1,3 +1,5 @@
+> Complément : [intégration des graphiques et menus du prototype](PROTOTYPE-INTEGRE.md).
+
 # Refonte graphique Neon — copie de main
 
 Session : Codex. Référence : main 6.1.0, commit `6a59d3f919523fdb2da0987659c190e2ad5bea37`, vérifié par le connecteur GitHub le 31 octobre 2026 (Europe/Paris).

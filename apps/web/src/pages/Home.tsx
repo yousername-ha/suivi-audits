@@ -1,7 +1,7 @@
 /* Accueil : tableau de bord « Suivi de la conformité » en verre et relief (synthèse selon les droits, ADR 0069), dans la
    disposition de la personne ou dans un tableau partagé avec elle (ADR 0078), puis accès aux modules et activité en
    cours. Plus de colonnes sur les grands écrans. */
-import { Button, Card, NativeSelect, Stack, Text, Title, VisuallyHidden } from '@mantine/core';
+import { Button, Card, NativeSelect, SegmentedControl, Stack, Text, Title, VisuallyHidden } from '@mantine/core';
 import {
   ConfirmButton,
   ErrorAlert,
@@ -21,6 +21,7 @@ import type { SyntheseApi } from '../components/Synthese';
 import { CLE_DISPOSITION, EditionTableauDeBord } from '../components/DispositionTableauDeBord';
 import { PartageTableauDeBord } from '../components/PartageTableauDeBord';
 import { TableauDeBordConformite } from '../components/TableauDeBord';
+import { NeonAnalytics } from '../components/NeonAnalytics';
 import { useLive, usePresence } from '../realtime';
 import { canAdminArea, canReadBusiness, useCan, useMe } from '../session';
 
@@ -117,10 +118,13 @@ export function HomePage() {
   // Tableau choisi, sinon le sien, sinon celui de l'organisation, sinon la standard (aussi s'il ne se charge pas).
   const affiche = d ? tableauAffiche(d) : null;
   const disposition = affiche?.disposition ?? null;
+  const [vue, setVue] = useState<'analytique' | 'personnalisee' | null>(null);
+  const analytique = (vue ?? (disposition ? 'personnalisee' : 'analytique')) === 'analytique';
   const recu = d?.partages.find((p) => p.id === affiche?.id) ?? null;
   const choix = d ? choixTableaux(d) : [];
 
   async function choisir(tableau: string) {
+    setVue('personnalisee');
     setErreurChoix(null);
     try {
       qc.setQueryData(
@@ -300,6 +304,17 @@ export function HomePage() {
           onChange={(e) => void choisir(e.currentTarget.value)}
         />
       )}
+      {synthese.data && mode === 'lecture' && (
+        <SegmentedControl
+          aria-label="Présentation du tableau de bord"
+          value={analytique ? 'analytique' : 'personnalisee'}
+          onChange={(v) => setVue(v as 'analytique' | 'personnalisee')}
+          data={[
+            { value: 'analytique', label: 'Vue analytique Neon' },
+            { value: 'personnalisee', label: 'Tableau personnalisable' },
+          ]}
+        />
+      )}
       {synthese.data && mode === 'partage' && <PartageTableauDeBord onFin={() => setMode('lecture')} />}
       {synthese.data &&
         !dispositions.isPending &&
@@ -311,6 +326,8 @@ export function HomePage() {
             peutDefinirDefaut={can('administration', 'administrer')}
             onFin={() => setMode('lecture')}
           />
+        ) : mode === 'lecture' && analytique ? (
+          <NeonAnalytics s={synthese.data} />
         ) : (
           <TableauDeBordConformite s={synthese.data} disposition={disposition} />
         ))}

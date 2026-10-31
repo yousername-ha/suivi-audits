@@ -2,6 +2,7 @@
    Couleurs : classes « graph-<teinte> » reliées aux teintes de la charte (--carte-<teinte>-accent, clair et sombre) ;
    aucun style en ligne (CSP). Chaque graphique a une alternative textuelle : légende chiffrée ou tableau masqué. */
 import { VisuallyHidden } from '@mantine/core';
+import { useId } from 'react';
 import type { TeinteCarte } from './tokens.ts';
 
 export type TeinteGraphique = Exclude<TeinteCarte, 'marine'>;
@@ -10,6 +11,16 @@ export interface PartGraphique {
   libelle: string;
   valeur: number;
   teinte: TeinteGraphique;
+}
+
+/** Dégradé de la teinte sémantique existante : la légende et les valeurs restent inchangées. */
+function GraphDegrade({ id, teinte }: { id: string; teinte: TeinteGraphique }) {
+  return (
+    <linearGradient id={id} x1="0" y1="1" x2="1" y2="0">
+      <stop className={`graph-neon-stop graph-neon-${teinte}`} />
+      <stop offset="1" className={`graph-neon-stop graph-neon-fin graph-neon-${teinte}`} />
+    </linearGradient>
+  );
 }
 
 const pourcent = (n: number, total: number) => (total ? Math.round((n * 100) / total) : 0);
@@ -42,19 +53,26 @@ export function Anneau({
   centre: string;
   sousCentre?: string;
 }) {
+  const id = useId();
   const total = parts.reduce((s, p) => s + Math.max(0, p.valeur), 0);
   const resume = parts.map((p) => `${p.libelle} : ${p.valeur}`).join(', ');
   return (
     <div className="graph-anneau">
       <svg viewBox="0 0 100 100" role="img" aria-label={`${titre} : ${total ? resume : 'aucune donnée'}`}>
+        <defs>
+          {arcsAnneau(parts).map((a, i) => (
+            <GraphDegrade key={a.libelle} id={`${id}-${i}`} teinte={a.teinte} />
+          ))}
+        </defs>
         <circle cx="50" cy="50" r={RAYON} className="graph-piste" />
-        {arcsAnneau(parts).map((a) => (
+        {arcsAnneau(parts).map((a, i) => (
           <circle
             key={a.libelle}
             cx="50"
             cy="50"
             r={RAYON}
-            className={`graph-arc graph-${a.teinte}`}
+            className="graph-arc"
+            stroke={`url(#${id}-${i})`}
             strokeDasharray={`${a.longueur} ${CIRCONFERENCE - a.longueur}`}
             strokeDashoffset={-a.decalage}
             transform="rotate(-90 50 50)"
@@ -116,6 +134,7 @@ export function Histogramme({
   format?: (v: number) => string;
   vide?: string;
 }) {
+  const id = useId();
   const W = 420,
     H = 210,
     gauche = 44,
@@ -130,6 +149,11 @@ export function Histogramme({
   return (
     <div className="graph-histogramme">
       <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={titre}>
+        <defs>
+          {series.map((s, i) => (
+            <GraphDegrade key={s.cle} id={`${id}-${i}`} teinte={s.teinte} />
+          ))}
+        </defs>
         {[0, 1, 2, 3].map((i) => {
           const y = H - bas - ((H - bas - hautZone) * i) / 3;
           return (
@@ -146,12 +170,20 @@ export function Histogramme({
           let y = H - bas;
           return (
             <g key={c.libelle}>
-              {series.map((s) => {
+              {series.map((s, iSerie) => {
                 const h = echelle(Math.max(0, c.valeurs[s.cle] ?? 0));
                 if (h <= 0) return null;
                 y -= h;
                 return (
-                  <rect key={s.cle} x={x} y={y} width={largeur} height={h} className={`graph-barre graph-${s.teinte}`}>
+                  <rect
+                    key={s.cle}
+                    x={x}
+                    y={y}
+                    width={largeur}
+                    height={h}
+                    className="graph-barre"
+                    fill={`url(#${id}-${iSerie})`}
+                  >
                     <title>{`${c.libelle} — ${s.libelle} : ${format(c.valeurs[s.cle] ?? 0)}`}</title>
                   </rect>
                 );

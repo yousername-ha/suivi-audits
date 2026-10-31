@@ -14,6 +14,7 @@ import {
   Text,
   Tooltip,
   useMantineColorScheme,
+  useComputedColorScheme,
   VisuallyHidden,
 } from '@mantine/core';
 import { useDisclosure, useMediaQuery } from '@mantine/hooks';
@@ -91,6 +92,7 @@ export function Layout({ children }: { children: ReactNode }) {
   const can = useCan();
   const { save } = usePreferences();
   const theme = useAffichage();
+  const schema = useComputedColorScheme('light');
   const tablette = useMediaQuery('(min-width: 36em) and (max-width: 63.99em)');
 
   type Item = [string, string, () => ReactNode];
@@ -165,6 +167,15 @@ export function Layout({ children }: { children: ReactNode }) {
       data-tri-actif={tri.glisse || undefined}
       onClickCapture={tri.surClicCapture}
     >
+      <Link to="/" className="na-marque" onClick={close} aria-label={`${me.appName} — accueil`}>
+        <span className="brand-mark" aria-hidden="true">
+          ✧
+        </span>
+        <span>
+          <strong>{me.appName}</strong>
+          <small>ISO 27001 / HDS</small>
+        </span>
+      </Link>
       <Text className="nav-caption nav-annexe">Espace de travail</Text>
       <Stack gap="2xs">
         {navigationItems(accueil)}
@@ -178,7 +189,12 @@ export function Layout({ children }: { children: ReactNode }) {
               to={destinations[0]!.to}
               className="nav-famille"
               data-famille={famille.id}
-              label={<LibelleAlerte libelle={famille.label} alerte={alerteDeFamille(alertes, destinations)} />}
+              label={
+                <span className="na-nav-libelle">
+                  <LibelleAlerte libelle={famille.label} alerte={alerteDeFamille(alertes, destinations)} />
+                  <small aria-label={`${destinations.length} destinations`}>{destinations.length}</small>
+                </span>
+              }
               leftSection={<Icone />}
               active={dansLaFamille}
               aria-expanded={!tablette && ouvert === famille.id}
@@ -255,7 +271,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <RetexInvitationNotice />
         <header className="shell-header">
           <Group h="100%" px="md" justify="space-between" wrap="nowrap">
-            <Group gap="sm" wrap="nowrap">
+            <Group gap="sm" wrap="nowrap" className="na-header-marque">
               <Burger opened={opened} onClick={toggle} hiddenFrom="xs" size="sm" aria-label="Ouvrir le menu" />
               <Anchor component={Link} to="/" underline="never" c="inherit" aria-label={`${me.appName} — accueil`}>
                 <Group gap="xs" wrap="nowrap">
@@ -280,6 +296,14 @@ export function Layout({ children }: { children: ReactNode }) {
               )}
             </Group>
             <Group gap="xs" wrap="nowrap">
+              <Button
+                size="xs"
+                variant="default"
+                leftSection={<IconeTheme />}
+                onClick={() => void save({ theme: schema === 'dark' ? 'clair' : 'sombre' })}
+              >
+                {schema === 'dark' ? 'Mode clair' : 'Mode sombre'}
+              </Button>
               <Tooltip
                 label={
                   live.connected ? 'Mises à jour en temps réel actives' : 'Temps réel déconnecté : reconnexion en cours'

@@ -1,0 +1,58 @@
+{
+  "captures": [
+    {
+      "colorScheme": "dark",
+      "width": 1920,
+      "overflow": false
+    },
+    {
+      "colorScheme": "dark",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "colorScheme": "dark",
+      "width": 1024,
+      "overflow": false
+    },
+    {
+      "colorScheme": "dark",
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "colorScheme": "light",
+      "width": 1920,
+      "overflow": false
+    },
+    {
+      "colorScheme": "light",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "colorScheme": "light",
+      "width": 1024,
+      "overflow": false
+    },
+    {
+      "colorScheme": "light",
+      "width": 390,
+      "overflow": false
+    }
+  ],
+  "errors": [],
+  "failed": [],
+  "csp": [],
+  "recherche": true,
+  "detail": true,
+  "filtreReferentiels": true,
+  "personnalisationAccessible": true,
+  "themePersiste": true,
+  "requeteProtegeeSansDroit": false,
+  "navigation": {
+    "routes": 79,
+    "erreursJavaScript": 0,
+    "debordements": 0
+  }
+}
