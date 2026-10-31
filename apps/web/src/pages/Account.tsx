@@ -136,6 +136,18 @@ function AffichageCard() {
             onChange={(v) => set({ theme: v as Preferences['theme'] })}
           />
         </div>
+        <div>
+          <Text size="sm" fw={500} mb="2xs">
+            Ordre du menu
+          </Text>
+          <Text size="xs" c="dimmed" mb="xs" className="lecture">
+            Glissez une famille ou une rubrique du menu à la souris pour la placer où vous voulez, ou placez-vous dessus
+            et utilisez Alt + flèche haut ou bas.
+          </Text>
+          <Button variant="default" size="xs" disabled={!prefs.menu} onClick={() => set({ menu: undefined })}>
+            Rétablir l’ordre par défaut
+          </Button>
+        </div>
         {err && <Alert color="red">{err}</Alert>}
       </Stack>
     </Card>

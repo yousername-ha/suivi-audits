@@ -49,8 +49,23 @@ export const Preferences = z.object({
       mouvement: z.enum(['animees', 'automatique', 'arretees']).optional(),
     })
     .default({}),
+  /** Ordre du menu choisi par la personne (glisser-déposer ou clavier) : familles, puis destinations de chaque famille.
+      Affichage seulement : l'ordre n'ouvre ni ne retire aucun accès ; un identifiant inconnu est ignoré. */
+  menu: z
+    .object({
+      familles: z
+        .array(z.string().regex(/^[a-z0-9_-]{1,40}$/))
+        .max(20)
+        .optional(),
+      destinations: z
+        .record(z.string().regex(/^[a-z0-9_-]{1,40}$/), z.array(z.string().regex(/^[a-z0-9_-]{1,40}$/)).max(30))
+        .refine((r) => Object.keys(r).length <= 20, 'Trop de familles.')
+        .optional(),
+    })
+    .optional(),
 });
 export type Preferences = z.infer<typeof Preferences>;
+export type OrdreMenu = NonNullable<Preferences['menu']>;
 export const DEFAULT_PREFERENCES: Preferences = Preferences.parse({});
 
 /* ---------------------------------------------------------------- Écrans muraux */

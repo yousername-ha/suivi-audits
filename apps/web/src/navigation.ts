@@ -1,8 +1,8 @@
-/* Navigation de l'application : sept familles (ordre validé le 19/10/2026) -> destinations -> rubriques.
+/* Navigation de l'application : sept familles (ordre validé le 19/10/2026, Organisation avant Pilotage depuis le 30/10/2026) -> destinations -> rubriques.
    Chaque rubrique garde son adresse et son droit de lecture d'origine : réorganiser le menu ne crée aucune adresse
    et n'ouvre aucun accès. Les rubriques du Pilotage sont décrites dans pilotage-navigation.ts (libellé et module) ;
    ce fichier ne fait que les regrouper. Le test navigation.test.ts vérifie qu'aucune rubrique n'est perdue ni doublée. */
-import type { Action, Module } from '@suivi/shared';
+import type { Action, Module, OrdreMenu } from '@suivi/shared';
 import { PILOTAGE_NAV } from './pilotage-navigation';
 
 export type FamilleId = 'pilotage' | 'organisation' | 'risques' | 'conformite' | 'actions' | 'resilience' | 'documents';
@@ -61,20 +61,11 @@ const dest = (id: string, label: string, rubriques: Rubrique[]): Destination => 
 
 export const FAMILLES: Famille[] = [
   {
-    id: 'pilotage',
-    label: 'Pilotage',
-    destinations: [
-      dest('synthese', 'Synthèse et périmètres', [p('synthese'), p('parcours'), p('parcours-iso'), p('perimetres')]),
-      dest('objectifs', 'Objectifs et indicateurs', [p('processus'), p('objectifs'), p('indicateurs')]),
-      dest('revues', 'Revues de direction', [p('revues')]),
-      dest('rappels', 'Rappels et configuration', [p('rappels'), p('configuration')]),
-    ],
-  },
-  {
     id: 'organisation',
     label: 'Organisation',
     destinations: [
       dest('contexte', 'Contexte de l’organisation', [p('contexte'), p('parties'), p('swot'), p('pestel')]),
+      dest('perimetres', 'Périmètres', [p('perimetres')]),
       dest('processus', 'Processus', [p('processus-cartes')]),
       dest('responsabilites', 'Rôles et responsabilités', [p('responsabilites')]),
       dest('cartographie', 'Cartographie du SMSI', [
@@ -94,6 +85,16 @@ export const FAMILLES: Famille[] = [
         p('plans-sensibilisation'),
       ]),
       dest('budget', 'Budget', [p('investissements')]),
+    ],
+  },
+  {
+    id: 'pilotage',
+    label: 'Pilotage',
+    destinations: [
+      dest('synthese', 'Synthèse et parcours', [p('synthese'), p('parcours'), p('parcours-iso')]),
+      dest('objectifs', 'Objectifs et indicateurs', [p('processus'), p('objectifs'), p('indicateurs')]),
+      dest('revues', 'Revues de direction', [p('revues')]),
+      dest('rappels', 'Rappels et configuration', [p('rappels'), p('configuration')]),
     ],
   },
   {
@@ -203,9 +204,68 @@ const rubriqueVisible = (r: Rubrique, can: Can) =>
 /** Rubriques affichables d'une destination, dans l'ordre du menu. */
 export const rubriquesVisibles = (d: Destination, can: Can) => d.rubriques.filter((r) => rubriqueVisible(r, can));
 
-/** Menu réduit à ce que la personne peut lire : une destination ou une famille sans rubrique lisible disparaît. */
-export function famillesVisibles(can: Can): { famille: Famille; destinations: (Destination & { to: string })[] }[] {
-  return FAMILLES.flatMap((famille) => {
+/** Classe des éléments selon l'ordre choisi ; ceux qu'il ne cite pas (ajoutés depuis) suivent, dans l'ordre d'origine. */
+function classer<T extends { id: string }>(elements: T[], ordre: readonly string[] | undefined): T[] {
+  if (!ordre?.length) return elements;
+  const rang = (x: T, i: number) => {
+    const r = ordre.indexOf(x.id);
+    return r >= 0 ? r : ordre.length + i;
+  };
+  return elements
+    .map((x, i) => [x, rang(x, i)] as const)
+    .sort((a, b) => a[1] - b[1])
+    .map(([x]) => x);
+}
+
+/** Familles et destinations dans l'ordre choisi par la personne (préférence `menu`), sinon dans l'ordre par défaut. */
+export function ordonnerMenu(ordre: OrdreMenu | undefined): Famille[] {
+  return classer(FAMILLES, ordre?.familles).map((f) => ({
+    ...f,
+    destinations: classer(f.destinations, ordre?.destinations?.[f.id]),
+  }));
+}
+
+/** Place `id` avant `cible` (ou après), dans une liste d'identifiants. */
+export function placer(ids: readonly string[], id: string, cible: string, apres = false): string[] {
+  if (id === cible || !ids.includes(id) || !ids.includes(cible)) return [...ids];
+  const reste = ids.filter((x) => x !== id);
+  const i = reste.indexOf(cible) + (apres ? 1 : 0);
+  return [...reste.slice(0, i), id, ...reste.slice(i)];
+}
+
+/** Ordre du menu après le déplacement d'une famille (sans `famille`) ou d'une destination de `famille`, avant ou après
+    une cible. */
+export function deplacerDansMenu(
+  ordre: OrdreMenu | undefined,
+  element: { famille?: FamilleId; id: string },
+  cible: string,
+  apres = false,
+): OrdreMenu {
+  const menu = ordonnerMenu(ordre);
+  if (!element.famille)
+    return {
+      ...ordre,
+      familles: placer(
+        menu.map((f) => f.id),
+        element.id,
+        cible,
+        apres,
+      ),
+    };
+  const ids = menu.find((f) => f.id === element.famille)?.destinations.map((d) => d.id) ?? [];
+  return {
+    ...ordre,
+    destinations: { ...ordre?.destinations, [element.famille]: placer(ids, element.id, cible, apres) },
+  };
+}
+
+/** Menu réduit à ce que la personne peut lire : une destination ou une famille sans rubrique lisible disparaît. L'ordre
+    est celui de la personne (`ordre`), sinon l'ordre par défaut. */
+export function famillesVisibles(
+  can: Can,
+  ordre?: OrdreMenu,
+): { famille: Famille; destinations: (Destination & { to: string })[] }[] {
+  return ordonnerMenu(ordre).flatMap((famille) => {
     const destinations = famille.destinations.flatMap((d) => {
       const visibles = rubriquesVisibles(d, can);
       return visibles.length ? [{ ...d, rubriques: visibles, to: visibles[0]!.to }] : [];
