@@ -77,3 +77,21 @@ chaque semaine la nouvelle empreinte avec la version ; la proposition passe par 
 l'écosystème `docker-compose` ne couvrait pas un service, la revue reste manuelle à chaque mise à jour de version. Les images
 du projet (GHCR) restent désignées par version : la publication les signe et atteste leur nomenclature. Le contrôle
 `scripts/tests/conteneurs.test.mjs` refuse une image tierce sans empreinte.
+
+## Addendum du 31/10/2026 — exceptions de l'audit des dépendances
+
+Sur le modèle des exceptions du scan des images, un avis sans correctif adoptable peut être ignoré par `pnpm audit` (CI,
+job « Qualité »), sur décision du RSSI. L'exception est déclarée dans `pnpm-workspace.yaml` (`auditConfig.ignoreGhsas`), un
+identifiant GHSA par entrée, avec sa justification en commentaire et ici, et une date de réexamen. pnpm ne sait pas faire
+expirer une exception : le réexamen est manuel, et l'exception est retirée dans la PR qui adopte le correctif.
+
+Première exception (décision du RSSI du 31/10/2026) : **GHSA-g3hv-75wg-m249**, déni de service dans `minimatch` < 11.0.1
+(gravité modérée), par amplification des motifs `{…}`.
+- `minimatch` n'est tiré que par ESLint (`eslint`, `@eslint/config-array`, `@typescript-eslint/typescript-estree`), outil
+  de développement absent des images publiées. Les motifs qu'il évalue viennent de la configuration ESLint du dépôt, relue en
+  PR, jamais d'une saisie extérieure.
+- Seule la série 11 est corrigée (11.0.1, publiée le 27/10/2026), sans correctif 10.x ; ESLint 10.14.0 et ses paquets
+  exigent `minimatch` ^10. Forcer la 11 imposerait une substitution de version majeure sous ESLint, et `minimumReleaseAge`
+  la refuse jusqu'au 03/11/2026.
+- Réexamen au plus tard le **30/11/2026**, ou dès qu'ESLint accepte `minimatch` 11 (propositions Dependabot) : monter alors
+  les versions et retirer l'exception.
