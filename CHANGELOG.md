@@ -27,6 +27,7 @@ Aucune action sur le serveur : la migration additive `049_retex_contributions.sq
 ### Modifié
 
 - **Menu latéral** : la famille Organisation est placée en tête, au-dessus du Pilotage. Les Périmètres quittent la destination « Synthèse et périmètres » du Pilotage (renommée « Synthèse et parcours ») et deviennent une destination « Périmètres » de l'Organisation, après le contexte. Adresses (`/pilotage/perimetres`) et droits inchangés. (session « Menu »)
+- **Menu Pilotage** : « Parcours guidé » devient une destination de la famille Pilotage, qui regroupe les parcours disponibles en onglets : « Parcours ISO 27001 / HDS », ouvert par défaut, et « Parcours par démarche » (nouveau nom de l'ancienne rubrique « Parcours guidé » : démarche qualité, sécurité, HDS ou intégrée ; article d'aide renommé de même). Le bouton de la Synthèse devient « Ouvrir les parcours guidés ». Les deux rubriques quittent « Synthèse et parcours », qui redevient la destination « Synthèse ». Adresses (`/pilotage/parcours`, `/pilotage/parcours-iso`) et droits inchangés. _(Session « Pilotages ».)_
 
 ### Retiré
 

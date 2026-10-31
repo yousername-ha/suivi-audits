@@ -342,11 +342,12 @@ export function PilotagePage() {
                     <Text fw={600}>Vos travaux de pilotage</Text>
                     <Text>
                       Commencez par vos référentiels et votre contexte, ou reprenez les actions et contrôles en cours.
-                      Le parcours guidé accompagne une démarche qualité, sécurité ou intégrée.
+                      Les parcours guidés (ISO 27001 / HDS, ou par démarche qualité, sécurité ou intégrée) vous
+                      accompagnent étape par étape.
                     </Text>
                     <Group>
-                      <Button component={Link} to="/pilotage/parcours">
-                        Ouvrir le parcours guidé
+                      <Button component={Link} to="/pilotage/parcours-iso">
+                        Ouvrir les parcours guidés
                       </Button>
                       <Button component={Link} to="/pilotage/actions" variant="light">
                         Voir les actions

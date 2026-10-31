@@ -91,7 +91,8 @@ export const FAMILLES: Famille[] = [
     id: 'pilotage',
     label: 'Pilotage',
     destinations: [
-      dest('synthese', 'Synthèse et parcours', [p('synthese'), p('parcours'), p('parcours-iso')]),
+      dest('synthese', 'Synthèse', [p('synthese')]),
+      dest('parcours', 'Parcours guidé', [p('parcours-iso'), p('parcours')]),
       dest('objectifs', 'Objectifs et indicateurs', [p('processus'), p('objectifs'), p('indicateurs')]),
       dest('revues', 'Revues de direction', [p('revues')]),
       dest('rappels', 'Rappels et configuration', [p('rappels'), p('configuration')]),

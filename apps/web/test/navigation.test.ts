@@ -29,8 +29,8 @@ const INVENTAIRE = [
   'organisation|plans|plans-sensibilisation|/pilotage/plans-sensibilisation|pilotage|lire',
   'organisation|budget|investissements|/pilotage/investissements|investissements|lire',
   'pilotage|synthese|synthese|/pilotage/synthese|pilotage|lire',
-  'pilotage|synthese|parcours|/pilotage/parcours|pilotage|lire',
-  'pilotage|synthese|parcours-iso|/pilotage/parcours-iso|pilotage|lire',
+  'pilotage|parcours|parcours-iso|/pilotage/parcours-iso|pilotage|lire',
+  'pilotage|parcours|parcours|/pilotage/parcours|pilotage|lire',
   'pilotage|objectifs|processus|/pilotage/processus|pilotage|lire',
   'pilotage|objectifs|objectifs|/pilotage/objectifs|pilotage|lire',
   'pilotage|objectifs|indicateurs|/pilotage/indicateurs|pilotage|lire',
@@ -149,6 +149,12 @@ describe('navigation', () => {
   it('localise une adresse, y compris la racine /pilotage et les sous-adresses', () => {
     expect(localiser('/pilotage')?.rubrique.id).toBe('synthese');
     expect(localiser('/pilotage/risques')?.famille.id).toBe('risques');
+    expect(localiser('/pilotage/parcours-iso')?.destination.label).toBe('Parcours guidé');
+    expect(
+      famillesVisibles(tout)
+        .find((f) => f.famille.id === 'pilotage')
+        ?.destinations.find((d) => d.id === 'parcours')?.to,
+    ).toBe('/pilotage/parcours-iso');
     expect(localiser('/documents/abc')?.destination.id).toBe('documents');
     expect(localiser('/cartographie/risques')?.famille.id).toBe('organisation');
     expect(localiser('/account')).toBeUndefined();
@@ -159,7 +165,7 @@ describe('navigation', () => {
       destination: { id: 'perimetres', label: 'Périmètres' },
     });
     const synthese = FAMILLES.find((f) => f.id === 'pilotage')?.destinations.find((d) => d.id === 'synthese');
-    expect(synthese?.rubriques.map((r) => r.id)).toEqual(['synthese', 'parcours', 'parcours-iso']);
+    expect(synthese?.rubriques.map((r) => r.id)).toEqual(['synthese']);
   });
 });
 

@@ -19,12 +19,27 @@ for (const width of [1440, 390]) {
         .filter({ visible: true })
         .click();
       await page
-        .getByRole('link', { name: /^Synthèse et parcours(\s|$)/ })
+        .getByRole('link', { name: /^Synthèse(\s|$)/ })
         .filter({ visible: true })
         .click();
       await expect(page).toHaveURL(/\/pilotage\/synthese$/);
       await expect(page.getByRole('heading', { name: 'Synthèse', exact: true })).toBeVisible();
-      await expect(page.getByRole('navigation', { name: 'Rubriques : Synthèse et parcours' })).toBeVisible();
+      if (width < 576) {
+        await expect(page.getByRole('dialog')).toHaveCount(0);
+        await page.getByRole('button', { name: 'Ouvrir le menu' }).click();
+      }
+      // « Parcours guidé » regroupe les parcours : il s'ouvre sur le parcours ISO 27001 / HDS, l'autre est un onglet.
+      await page
+        .getByRole('link', { name: /^Parcours guidé(\s|$)/ })
+        .filter({ visible: true })
+        .click();
+      await expect(page).toHaveURL(/\/pilotage\/parcours-iso$/);
+      await expect(page.getByRole('heading', { name: 'Parcours ISO 27001 / HDS', level: 1 })).toBeVisible();
+      await expect(
+        page
+          .getByRole('navigation', { name: 'Rubriques : Parcours guidé' })
+          .getByRole('link', { name: 'Parcours par démarche' }),
+      ).toBeVisible();
       if (width < 576) {
         await expect(page.getByRole('dialog')).toHaveCount(0);
         await page.getByRole('button', { name: 'Ouvrir le menu' }).click();

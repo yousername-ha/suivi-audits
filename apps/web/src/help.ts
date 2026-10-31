@@ -99,7 +99,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
   },
   {
     id: 'parcours-pilotage',
-    title: 'Parcours guidé',
+    title: 'Parcours par démarche',
     permission: 'pilotage:lire',
     link: '/pilotage/parcours',
     steps: [
