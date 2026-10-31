@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Maquettes de refonte graphique — Suivi des audits SMSI</title>
+  <link rel="stylesheet" href="shared/fonts.css">
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <header class="entete">
+    <div>
+      <h1>Maquettes de refonte graphique</h1>
+      <p>Six directions pour « Suivi des audits SMSI », sur les mêmes six écrans et les mêmes données fictives. Test visuel uniquement : rien n’est branché à l’application.</p>
+    </div>
+    <nav aria-label="Documents">
+      <a href="AUDIT-VISUEL.md">Audit visuel</a>
+      <a href="reference/ANALYSE-INSPIRATION.md">Analyse des références</a>
+      <a href="SYNTHESE.md">Synthèse</a>
+      <a href="screenshots/planche-comparative.png">Planche comparative</a>
+    </nav>
+  </header>
+  <main>
+    <section id="comparateur" aria-labelledby="titre-comparateur">
+      <div class="section-titre">
+        <h2 id="titre-comparateur">Comparer sur le même écran</h2>
+        <p>Choisissez une maquette puis un écran : le cadre bascule sans recharger la maquette.</p>
+      </div>
+      <div class="comparateur">
+        <div class="barre">
+          <div class="groupe" role="group" aria-label="Maquette"><span class="legende">Maquette</span><span id="sel-maquettes" class="groupe"></span></div>
+          <div class="groupe" role="group" aria-label="Écran"><span class="legende">Écran</span><span id="sel-ecrans" class="groupe"></span></div>
+        </div>
+        <div class="cadre-wrap">
+          <iframe id="cadre" class="cadre" title="Maquette affichée" src="about:blank"></iframe>
+        </div>
+        <div class="cadre-info"><code id="cadre-info"></code><span>Ouvrez la maquette dans un onglet pour la voir en pleine largeur.</span></div>
+      </div>
+    </section>
+    <section aria-labelledby="titre-cartes">
+      <div class="section-titre">
+        <h2 id="titre-cartes">Les maquettes</h2>
+        <p>La maquette F, fondée sur les images de référence, est mise en avant.</p>
+      </div>
+      <div id="grille" class="grille"></div>
+    </section>
+  </main>
+  <script src="catalogue.js"></script>
+  <script src="index.js"></script>
+</body>
+</html>

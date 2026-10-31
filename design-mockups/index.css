@@ -1,0 +1,128 @@
+/* Page comparative des maquettes : neutre, pour ne pas concurrencer les maquettes elles-mêmes. */
+:root {
+  --fond: #f3f4f6;
+  --surface: #ffffff;
+  --texte: #1b2130;
+  --secondaire: #5b6474;
+  --trait: #dde1e8;
+  --accent: #2f4f9b;
+  --accent-texte: #ffffff;
+  --ombre: 0 1px 2px rgb(20 30 60 / 6%), 0 10px 30px rgb(20 30 60 / 8%);
+  --rayon: 14px;
+  --duree: 200ms;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+* { box-sizing: border-box; }
+html { font-size: 16px; }
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: var(--fond);
+  color: var(--texte);
+  line-height: 1.5;
+}
+a { color: var(--accent); }
+.entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 2rem clamp(1rem, 4vw, 3rem) 1rem;
+}
+.entete h1 { margin: 0; font-size: 1.6rem; letter-spacing: -0.02em; }
+.entete p { margin: 0.25rem 0 0; color: var(--secondaire); max-width: 70ch; }
+.entete nav { display: flex; gap: 1rem; font-size: 0.9rem; }
+main { padding: 0 clamp(1rem, 4vw, 3rem) 3rem; display: grid; gap: 2rem; }
+.section-titre { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin: 0; }
+.section-titre h2 { margin: 0; font-size: 1.15rem; }
+.section-titre p { margin: 0; color: var(--secondaire); font-size: 0.9rem; }
+
+/* Comparateur : sélecteur de maquette, sélecteur d'écran, cadre. */
+.comparateur { background: var(--surface); border-radius: var(--rayon); box-shadow: var(--ombre); overflow: hidden; }
+.barre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--trait);
+}
+.barre .groupe { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; }
+.barre .legende { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--secondaire); margin-right: 0.25rem; }
+.puce {
+  appearance: none;
+  border: 1px solid var(--trait);
+  background: var(--surface);
+  color: var(--texte);
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background var(--duree) var(--ease), border-color var(--duree) var(--ease), transform var(--duree) var(--ease);
+}
+.puce:hover { border-color: var(--accent); transform: translateY(-1px); }
+.puce[aria-pressed='true'] { background: var(--accent); color: var(--accent-texte); border-color: var(--accent); }
+.puce:focus-visible, .carte a:focus-visible, .lien-ouvrir:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.cadre-wrap { position: relative; background: #e9ebf0; }
+.cadre { display: block; width: 100%; height: min(78vh, 900px); border: 0; background: #fff; }
+.cadre-info { display: flex; justify-content: space-between; gap: 1rem; padding: 0.6rem 1rem; font-size: 0.85rem; color: var(--secondaire); border-top: 1px solid var(--trait); }
+.cadre-info code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; }
+
+/* Grille des cartes. */
+.grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.25rem; }
+.carte {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  background: var(--surface);
+  border-radius: var(--rayon);
+  box-shadow: var(--ombre);
+  transition: transform var(--duree) var(--ease), box-shadow var(--duree) var(--ease);
+}
+.carte:hover { transform: translateY(-3px); box-shadow: 0 2px 4px rgb(20 30 60 / 6%), 0 18px 40px rgb(20 30 60 / 12%); }
+.carte--vedette { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 1.5rem; align-items: start; border: 2px solid var(--accent); }
+.carte--vedette .corps { display: flex; flex-direction: column; gap: 0.75rem; }
+.carte--absente { opacity: 0.6; }
+.carte h3 { margin: 0; font-size: 1.05rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.etiquette { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.15rem 0.5rem; border-radius: 999px; background: var(--accent); color: var(--accent-texte); }
+.carte p { margin: 0; color: var(--secondaire); font-size: 0.92rem; }
+.pastilles { display: flex; flex-wrap: wrap; gap: 0.4rem; list-style: none; margin: 0; padding: 0; }
+.pastilles li { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.72rem; color: var(--secondaire); }
+.pastilles i { display: inline-block; width: 1.1rem; height: 1.1rem; border-radius: 50%; border: 1px solid rgb(0 0 0 / 12%); background: var(--c); }
+.vignette { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; border-radius: 10px; border: 1px solid var(--trait); background: #e9ebf0; }
+.actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: auto; }
+.lien-ouvrir, .btn-comparer {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 550;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  background: var(--surface);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background var(--duree) var(--ease), color var(--duree) var(--ease);
+}
+.lien-ouvrir:hover, .btn-comparer:hover { background: var(--accent); color: var(--accent-texte); }
+.lien-ouvrir--secondaire { border-color: var(--trait); color: var(--texte); }
+.lien-ouvrir--secondaire:hover { background: var(--fond); color: var(--texte); }
+.references { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+.references figure { margin: 0; }
+.references img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 8px; border: 1px solid var(--trait); }
+.references figcaption { font-size: 0.72rem; color: var(--secondaire); margin-top: 0.25rem; }
+.references .large { grid-column: 1 / -1; }
+.references .large img { aspect-ratio: 6 / 1; }
+.note { font-size: 0.85rem; color: var(--secondaire); }
+@media (max-width: 900px) {
+  .carte--vedette { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
