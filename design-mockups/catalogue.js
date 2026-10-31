@@ -71,24 +71,6 @@ window.CATALOGUE = {
       ],
     },
     {
-      dossier: 'C-institutionnel',
-      titre: 'C · Institutionnel santé',
-      vedette: false,
-      disponible: true,
-      intention:
-        'Ton « rapport officiel » : papier ivoire, bleu institutionnel, titres en serif, sections numérotées, filets fins, cartouches d’identifiants, accent terre cuite rare réservé aux actions. Direction éditoriale rassurante pour un établissement public.',
-      palette: [
-        { role: 'Bleu', hex: '#1F3A5F' },
-        { role: 'Bleu clair', hex: '#6B86AA' },
-        { role: 'Papier', hex: '#FAF8F3' },
-        { role: 'Surface douce', hex: '#F2EEE5' },
-        { role: 'Encre', hex: '#23221E' },
-        { role: 'Filet', hex: '#D8D1C4' },
-        { role: 'Terre cuite', hex: '#A84E24' },
-        { role: 'Secondaire', hex: '#5B564D' },
-      ],
-    },
-    {
       dossier: 'D-soc-sombre',
       titre: 'D · SOC sombre',
       vedette: false,

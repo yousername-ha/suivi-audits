@@ -9,7 +9,7 @@ const { chromium } = require('playwright');
 
 const ROOT = path.resolve(__dirname, '..');
 const OUT = path.join(ROOT, 'screenshots');
-const MAQUETTES = ['A-fidele', 'B-epuree', 'C-institutionnel', 'D-soc-sombre', 'E-data-dense', 'F-inspiration'].filter((m) =>
+const MAQUETTES = ['A-fidele', 'B-epuree', 'D-soc-sombre', 'E-data-dense', 'F-inspiration'].filter((m) =>
   fs.existsSync(path.join(ROOT, m, 'index.html')),
 );
 const ECRANS = [
