@@ -10,3 +10,10 @@ onlyBuiltDependencies:
 minimumReleaseAge: 10080
 trustPolicy: no-downgrade
 blockExoticSubdeps: true
+# Exceptions de l'audit des dépendances (ADR 0063, addendum du 31/10/2026), sur décision du RSSI : une par avis, justifiée
+# dans l'ADR et à retirer dès qu'un correctif est adoptable.
+auditConfig:
+  ignoreGhsas:
+    # minimatch < 11.0.1 (déni de service, modéré), tiré par ESLint seul, outil de développement absent des images. Seule la
+    # 11.0.1 est corrigée (27/10/2026), une majeure qu'ESLint n'accepte pas encore (^10). Réexamen au plus tard le 30/11/2026.
+    - GHSA-g3hv-75wg-m249

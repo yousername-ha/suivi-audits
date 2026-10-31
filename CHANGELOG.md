@@ -40,6 +40,10 @@ Aucune action sur le serveur : la migration additive `049_retex_contributions.sq
 
 - **Main courante de crise** : chaque entrée reçoit son identifiant `CL-nnn` du schéma 15, comme dans l'outil historique ; les entrées écrites sans identifiant sont numérotées à la prochaine écriture de la crise, avec la numérotation de l'export. L'import « Remplacer un module » d'un état contenant une main courante n'est plus refusé (BUG-013). (session « Intégration module RETEX incidents »)
 
+### Sécurité
+
+- **Exception d'audit des dépendances** ([ADR 0063](docs/adr/0063-chaine-de-publication-durcie.md), addendum du 31/10/2026, décision du RSSI) : l'avis GHSA-g3hv-75wg-m249 (déni de service dans `minimatch` < 11.0.1, modéré) est ignoré par `pnpm audit` (`pnpm-workspace.yaml`, `auditConfig.ignoreGhsas`). `minimatch` n'est tiré que par ESLint, outil de développement absent des images ; seule la 11.0.1 est corrigée, une majeure qu'ESLint n'accepte pas encore. Réexamen au plus tard le 30/11/2026. Aucune action sur le serveur.
+
 ## [6.0.1] — 2026-10-30
 
 Version de publication : **aucun changement de code ni de fonction par rapport à la 6.0.0**. La publication de l'étiquette `v6.0.0` a échoué au scan Trivy (voir « Corrigé ») et une étiquette ne peut ni être déplacée ni supprimée ; la 6.0.1 est la première version 6 publiée. Le contenu fonctionnel est celui de la section [6.0.0] ci-dessous. Section rédigée par la session « Projet audit_suivi Coeur ».
