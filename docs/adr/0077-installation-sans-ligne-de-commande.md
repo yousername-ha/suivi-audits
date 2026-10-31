@@ -1,11 +1,11 @@
 # ADR 0077 — Installation sans ligne de commande
 
-- Statut : acceptée et réalisée (étape 1 : clés de sauvegarde ; étape 2 : commande d'installation et adresse du site ; étape 3 : guide et notes de la 6.0.0)
+- Statut : acceptée et réalisée (étape 1 : clés de sauvegarde ; étape 2 : commande d'installation et adresse du site ; étape 3 : guide et notes de la 6.0.1)
 - Date : 2026-10-29
 - Contexte : décision du RSSI du 29/10/2026. Le guide d'installation compte des dizaines de commandes (paquets, clés `age`,
   `.env` à éditer, préparation du dossier des données, jeton lu dans les journaux, cosign…). Règle retenue : **aucune ligne
   de commande** au-delà de l'installation de Docker et de la récupération du dépôt git ; tout le reste se fait dans le
-  navigateur. La version 6.0.0 s'installe sur un serveur neuf : **aucune migration depuis la 5.x** n'est assurée (décision
+  navigateur. La version 6.0.1 s'installe sur un serveur neuf : **aucune migration depuis la 5.x** n'est assurée (décision
   du RSSI du 29/10/2026).
 
 ## Décision
@@ -20,7 +20,7 @@
 3. **Clés de sauvegarde (étape 1, réalisée).** L'ADR 0071 reste la référence (format age `.tar.age`, deux destinataires
    par archive, chiffrement obligatoire, scripts `backup.sh` et `restore.sh`) ; seules changent la façon d'obtenir les clés,
    désormais sans commande, et leur emplacement par défaut. Des clés déjà créées dans `/root` ne sont plus lues par défaut
-   (installation neuve en 6.0.0) ; `BACKUP_KEY_FILE` et `BACKUP_RECIPIENTS_FILE` permettent encore de les indiquer aux
+   (installation neuve en 6.0.1) ; `BACKUP_KEY_FILE` et `BACKUP_RECIPIENTS_FILE` permettent encore de les indiquer aux
    scripts lancés sur l'hôte.
    - Emplacement par défaut : `DATA_DIR/cles-sauvegarde/` (root, 0700), déjà monté dans l'exécutant ; les montages de
      `/root/.suivi-backup-key` et `/root/.suivi-backup-recipients` sont retirés de `docker-compose.yml`.
@@ -57,14 +57,14 @@
    `sudo ./installer.sh`, puis l'assistant. Les sauvegardes se demandent, se planifient et se restaurent dans
    l'application ; les commandes du serveur ne servent plus qu'à restaurer sur un autre serveur avec la clé de secours.
    `installer.sh --construire` construit les images d'une branche non publiée : le job CI du guide l'utilise et rejoue
-   le même parcours (l'assistant étant joué par l'API). Les notes de la 6.0.0 décrivent une installation neuve.
+   le même parcours (l'assistant étant joué par l'API). Les notes de la 6.0.1 décrivent une installation neuve.
 
 6. **Retraits liés à l'installation neuve** (décision du RSSI du 29/10/2026, après l'audit des ADR 0070 à 0075) :
    `restore.sh --ancien-format` (archives `.tar.enc` de la 5.x, annoncé par l'ADR 0071) et la définition du poivre sur une
-   installation existante (`POST /api/admin/poivre/definir`, mode « Définir » et bandeau, ADR 0072), inatteignables en 6.0.0.
+   installation existante (`POST /api/admin/poivre/definir`, mode « Définir » et bandeau, ADR 0072), inatteignables en 6.0.1.
    Le changement de poivre et les sauvegardes `.tar.age` sont inchangés. `mettre-a-jour.sh` garde la phrase secrète de
    l'ancien format pour une seule raison : le job CI de montée de version part encore de la 5.0.0, en attendant l'étiquette
-   `v6.0.0`.
+   `v6.0.1` (première version 6 publiée).
 7. **Copie externe des sauvegardes** : seules les archives chiffrées (`DATA_DIR/sauvegardes`) s'externalisent, jamais avec
    `DATA_DIR/cles-sauvegarde` (la clé du serveur déchiffre toutes les archives). La clé du serveur n'a pas à être
    sauvegardée : la restauration après perte du serveur se fait avec la clé de secours.
@@ -86,3 +86,7 @@
 - *Clé de secours collée depuis `age-keygen`* : exige l'outil sur le poste ; conservé seulement comme voie d'expert.
 - *Sauvegardes chiffrées pour la seule clé du serveur tant que la clé de secours manque* : archives illisibles si le
   serveur est perdu ; contraire à l'ADR 0071.
+
+## Addendum du 31/10/2026
+
+L'étiquette `v6.0.0` n'a jamais été publiée : le scan Trivy de la publication a échoué et une étiquette ne peut être ni déplacée ni supprimée. La première version 6 publiée est la **6.0.1**, au contenu fonctionnel identique à celui prévu pour la 6.0.0 ; les mentions de version ci-dessus ont été alignées sur la 6.0.1. Le job CI de montée de version part désormais de la dernière version publiée (6.0.1 ou ultérieure). Addendum rédigé par la session « Projet audit_suivi Coeur ».

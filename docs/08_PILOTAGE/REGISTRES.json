@@ -1589,7 +1589,7 @@
       "origin": "demande du RSSI du 29/10/2026 (maquette validée)",
       "acceptance": "Panneau unique centré à toutes les tailles ; formulaire dans les trois cartes empilées ; étapes code TOTP, enrôlement et changement de mot de passe dans le même panneau ; sceau, onde (OndeMenu, option connexion) et fond animés décoratifs, absents sous automate de test et à l'impression ; CSP stricte, couleurs par jetons, aucune dépendance nouvelle ; tests purs de la géométrie ; captures clair, sombre et téléphone.",
       "dependencies": "Aucune",
-      "next": "Aucune côté développement : PR #181 fusionnée dans claude-suivi-smsi le 30/10/2026 après CI 7/7, publiée dans la 6.0.0 (décision du RSSI du 30/10/2026). Relecture visuelle du RSSI sur son serveur à faire (TEST-041).",
+      "next": "Aucune côté développement : PR #181 fusionnée dans claude-suivi-smsi le 30/10/2026 après CI 7/7, publiée dans la 6.0.1 (la 6.0.0 n'a jamais été publiée ; décision du RSSI du 30/10/2026). Relecture visuelle du RSSI sur son serveur à faire (TEST-041).",
       "estimation": "NON ESTIMÉE"
     },
     {
@@ -1599,8 +1599,8 @@
       "priority": "P1",
       "origin": "ADR 0079 (demande du RSSI du 30/10/2026)",
       "acceptance": "Liste de contrôle docs/05_RECETTE/CHECKLIST-FIDO2.md déroulée : YubiKey 5 USB-A, USB-C et NFC, Windows Hello, Chrome, Edge, Firefox et Safari ; résultats datés, sans donnée réelle.",
-      "dependencies": "Publication de la v6.0.0 (étiquette posée par le RSSI) ; serveur installé en HTTPS sur un nom de domaine ; clés YubiKey 5",
-      "next": "Après l'étiquette v6.0.0 et l'installation sur le serveur du RSSI : dérouler la liste de contrôle (décision du RSSI du 30/10/2026 : clés livrées dans la 6.0.0).",
+      "dependencies": "Publication de la v6.0.1 (étiquette posée par le RSSI le 30/10/2026) ; serveur installé en HTTPS sur un nom de domaine ; clés YubiKey 5",
+      "next": "Après l'installation de la 6.0.1 sur le serveur du RSSI : dérouler la liste de contrôle (décision du RSSI du 30/10/2026 : clés livrées dans la première version 6 publiée, la 6.0.1).",
       "estimation": "NON ESTIMÉE"
     },
     {
