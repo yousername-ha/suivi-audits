@@ -1,3 +1,5 @@
+> 01/11/2026 : [proposition : contours intérieurs harmonisés](propositions/contours-harmonises/README.md), barres d’en-tête, onglets, boutons, encadrés et séparations plus lisibles. **Validation explicite en attente avant intégration et tests**.
+
 > 01/11/2026 : [proposition : contours Biseau plus foncés et plus visibles](propositions/contours-renforces/README.md), dans les deux vues et les deux thèmes. Intérieur et animations conservés ; **validation explicite en attente avant intégration et tests**.
 
 > 01/11/2026 : [proposition : cible violette, colonnes et alerte rouge animée](propositions/cible-violette-alerte/README.md), à partir de la palette atténuée. Noms des colonnes restaurés, halo renforcé et triangle warning ; **validation explicite en attente avant intégration et tests**.

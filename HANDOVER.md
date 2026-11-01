@@ -1,3 +1,5 @@
+> 01/11/2026 : [contours des barres, onglets, boutons et blocs harmonisés](docs/refonte-neon/propositions/contours-harmonises/README.md). Traits intérieurs foncés, barres de colonnes encadrées, séparations de lignes plus nettes ; cadre Biseau et animations conservés. **Validation explicite en attente**, aucun changement applicatif ni build/test ; sources inchangées depuis `3492112`.
+
 > 01/11/2026 : [cadre Biseau renforcé et foncé](docs/refonte-neon/propositions/contours-renforces/README.md), liseré plein de 3 px, ardoise/mauve désaturé vers bleu pétrole, angles mieux marqués. Présentation intérieure et animations conservées. **Validation explicite en attente**, aucun changement applicatif ni build/test ; sources inchangées depuis `3492112`.
 
 > 01/11/2026 : [maquette mise à jour : cible violette, noms des colonnes restaurés et alerte renforcée](docs/refonte-neon/propositions/cible-violette-alerte/README.md). Halo rouge plus marqué et triangle warning sur Non atteint dans les deux vues. Palette atténuée conservée ailleurs. **Validation explicite en attente**, aucune intégration ni aucun build/test applicatif ; sources inchangées depuis `3492112`.
