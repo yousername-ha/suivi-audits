@@ -1,3 +1,5 @@
+> Suite graphique : [cadres néon et animations des pictogrammes](CADRES-NEON.md). Les captures ci-dessous conservent le rendu du lot précédent.
+
 # Présenter le périmètre et le contexte en audit
 
 01/11/2026, Europe/Paris. Session : Codex. Branche `codex/refonte-neon-main`, suite du lot fenêtres `466dc663f7e798d0e1600da905b452f32109fe0c`.

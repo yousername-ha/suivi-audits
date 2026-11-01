@@ -19,32 +19,34 @@ type Relation = {
 const PICTOGRAMMES: Record<string, ReactNode> = {
   organisation: (
     <>
-      <path d="M4 21V7l8-4 8 4v14M8 21v-5h8v5M8 9h1m6 0h1M8 12h1m6 0h1" />
+      <path d="M4 21V7l8-4 8 4v14M8 21v-5h8v5" />
+      <path className="contexte-icone-fenetres" d="M8 9h1m6 0h1M8 12h1m6 0h1" />
     </>
   ),
   scope: (
     <>
       <path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5" />
-      <rect x="7" y="7" width="10" height="10" rx="2" />
+      <rect className="contexte-icone-cible" x="7" y="7" width="10" height="10" rx="2" />
     </>
   ),
   interfaces: (
     <>
-      <circle cx="5" cy="12" r="2.5" />
-      <circle cx="18" cy="5" r="2.5" />
-      <circle cx="18" cy="19" r="2.5" />
+      <circle className="contexte-icone-noeud contexte-icone-noeud--a" cx="5" cy="12" r="2.5" />
+      <circle className="contexte-icone-noeud contexte-icone-noeud--b" cx="18" cy="5" r="2.5" />
+      <circle className="contexte-icone-noeud contexte-icone-noeud--c" cx="18" cy="19" r="2.5" />
       <path d="M7.5 12H11V5h4.5M11 12v7h4.5" />
     </>
   ),
   issues: (
     <>
       <circle cx="12" cy="12" r="9" />
-      <path d="m16 8-3 5-5 3 3-5z" />
+      <path className="contexte-icone-boussole" d="m16 8-3 5-5 3 3-5z" />
     </>
   ),
   exclusions: (
     <>
-      <path d="M11 4H4v16h16v-7M14 4h6v6M20 4l-9 9" />
+      <path d="M11 4H4v16h16v-7" />
+      <path className="contexte-icone-sortie" d="M14 4h6v6M20 4l-9 9" />
       <path d="M8 8v8h8" />
     </>
   ),
@@ -91,10 +93,21 @@ export function ContextPresentation({
       title="Périmètre et contexte"
       size="xl"
       fullScreen={fullScreen}
+      data-cadre="biseau"
       classNames={{ root: 'contexte-fenetre', content: 'contexte-presentation', body: 'contexte-presentation-corps' }}
       closeButtonProps={{ 'aria-label': 'Fermer la présentation' }}
     >
       <Stack>
+        <div className="contexte-cadre" aria-hidden="true">
+          {['haut-gauche', 'haut-droite', 'bas-droite', 'bas-gauche'].map((coin) => (
+            <span key={coin} className={`contexte-cadre-coin contexte-cadre-coin--${coin}`}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" focusable="false">
+                <path className="contexte-cadre-diagonale" d="M0 24 24 0" />
+                <path className="contexte-cadre-equerre" d="M1 24V1H24" />
+              </svg>
+            </span>
+          ))}
+        </div>
         <ErrorAlert error={error ?? links.error} />
         <Tabs defaultValue="presentation" keepMounted={false}>
           <Tabs.List>

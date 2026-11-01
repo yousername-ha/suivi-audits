@@ -1,3 +1,5 @@
+> 01/11/2026 : [trois propositions de cadres néon et pictogrammes animés](docs/refonte-neon/CADRES-NEON.md) pour la grande dalle Contexte. Biseau provisoire dans la copie ; comparatifs, GIFs réels et contrôles disponibles. Choix esthétique du demandeur en attente.
+
 > 01/11/2026 : [fonds du contexte légèrement foncés et puces partagées](docs/refonte-neon/CONTEXTE-PRESENTATION.md) entre enjeux et interfaces/dépendances ; texte enregistré conservé, cas de découpage et droits vérifiés.
 
 > 01/11/2026 : [découpage des cinq rubriques du contexte rééquilibré](docs/refonte-neon/CONTEXTE-PRESENTATION.md) : organisation en tête, activités et dépendances côte à côte, enjeux détaillés et exclusions distinctes. Captures et parcours de droits vérifiés.

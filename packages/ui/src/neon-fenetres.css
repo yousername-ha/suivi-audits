@@ -599,3 +599,236 @@
     flex: 2;
   }
 }
+
+/* Trois propositions de cadre, sélection purement graphique sur la fenêtre. */
+.contexte-presentation {
+  position: relative;
+  isolation: isolate;
+  --contexte-cadre-coupe: 18px;
+}
+.contexte-cadre {
+  position: absolute;
+  inset: 0;
+  z-index: 1001;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.contexte-cadre::before,
+.contexte-cadre::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+}
+.contexte-cadre-coin {
+  position: absolute;
+  width: var(--contexte-cadre-coupe);
+  height: var(--contexte-cadre-coupe);
+  color: var(--neon-violet);
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--neon-violet) 40%, transparent));
+}
+.contexte-cadre-coin svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.contexte-cadre-coin--haut-gauche {
+  top: 0;
+  left: 0;
+}
+.contexte-cadre-coin--haut-droite {
+  top: 0;
+  right: 0;
+  color: var(--neon-cyan);
+  transform: rotate(90deg);
+}
+.contexte-cadre-coin--bas-droite {
+  bottom: 0;
+  right: 0;
+  color: var(--neon-cyan);
+  transform: rotate(180deg);
+}
+.contexte-cadre-coin--bas-gauche {
+  bottom: 0;
+  left: 0;
+  transform: rotate(270deg);
+}
+.contexte-cadre-equerre {
+  display: none;
+}
+/* A · Biseau : coupe géométrique et traits cyan/violet sur le contour. */
+.contexte-fenetre[data-cadre='biseau'] .contexte-presentation {
+  border-color: transparent;
+  border-radius: 0;
+  clip-path: polygon(
+    var(--contexte-cadre-coupe) 0,
+    calc(100% - var(--contexte-cadre-coupe)) 0,
+    100% var(--contexte-cadre-coupe),
+    100% calc(100% - var(--contexte-cadre-coupe)),
+    calc(100% - var(--contexte-cadre-coupe)) 100%,
+    var(--contexte-cadre-coupe) 100%,
+    0 calc(100% - var(--contexte-cadre-coupe)),
+    0 var(--contexte-cadre-coupe)
+  );
+}
+.contexte-fenetre[data-cadre='biseau'] .contexte-cadre::before {
+  inset: 0 var(--contexte-cadre-coupe);
+  border-block: 1.5px solid transparent;
+  border-image: linear-gradient(90deg, var(--neon-violet), var(--neon-cyan)) 1;
+}
+.contexte-fenetre[data-cadre='biseau'] .contexte-cadre::after {
+  inset: var(--contexte-cadre-coupe) 0;
+  border-inline: 1.5px solid transparent;
+  border-image: linear-gradient(160deg, var(--neon-violet), var(--neon-cyan)) 1;
+}
+/* B · Équerres : cadre discret et angles de repérage lumineux. */
+.contexte-fenetre[data-cadre='equerres'] .contexte-presentation {
+  border-radius: 0.45rem;
+  border-color: color-mix(in srgb, var(--neon-violet) 24%, var(--suivi-trait));
+}
+.contexte-fenetre[data-cadre='equerres'] .contexte-cadre::before {
+  inset: 0;
+  border: 1px solid color-mix(in srgb, var(--neon-cyan) 18%, transparent);
+  border-radius: inherit;
+}
+.contexte-fenetre[data-cadre='equerres'] .contexte-cadre-coin {
+  width: 2.4rem;
+  height: 2.4rem;
+}
+.contexte-fenetre[data-cadre='equerres'] .contexte-cadre-diagonale {
+  display: none;
+}
+.contexte-fenetre[data-cadre='equerres'] .contexte-cadre-equerre {
+  display: block;
+}
+/* C · Halo : double liseré et lueur extérieure contenue. */
+.contexte-fenetre[data-cadre='halo'] .contexte-presentation {
+  border-color: transparent;
+  border-radius: 1.1rem;
+  box-shadow:
+    var(--suivi-ombre-haute),
+    0 0 0 1px color-mix(in srgb, var(--neon-violet) 42%, transparent),
+    0 0 24px color-mix(in srgb, var(--neon-violet) 15%, transparent),
+    0 0 40px color-mix(in srgb, var(--neon-cyan) 10%, transparent);
+}
+.contexte-fenetre[data-cadre='halo'] .contexte-cadre::before {
+  inset: 0;
+  border: 1px solid color-mix(in srgb, var(--neon-violet) 70%, transparent);
+  border-radius: inherit;
+}
+.contexte-fenetre[data-cadre='halo'] .contexte-cadre::after {
+  inset: 5px;
+  border: 1px solid color-mix(in srgb, var(--neon-cyan) 30%, transparent);
+  border-radius: 0.8rem;
+}
+.contexte-fenetre[data-cadre='halo'] .contexte-cadre-coin {
+  display: none;
+}
+/* Les pictogrammes s'activent brièvement à l'ouverture, puis au survol.
+   Les textes, les données et le cadre restent immobiles. */
+.contexte-pictogramme svg [class^='contexte-icone-'] {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation-duration: 3.2s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: 1;
+}
+.contexte-icone-fenetres {
+  animation-name: contexte-veille;
+}
+.contexte-icone-cible {
+  animation-name: contexte-focalisation;
+}
+.contexte-icone-noeud {
+  animation-name: contexte-connexion;
+}
+.contexte-icone-noeud--b {
+  animation-delay: 0.18s;
+}
+.contexte-icone-noeud--c {
+  animation-delay: 0.36s;
+}
+.contexte-icone-boussole {
+  animation-name: contexte-orientation;
+}
+.contexte-icone-sortie {
+  animation-name: contexte-ouverture;
+}
+.contexte-pictogramme:hover svg [class^='contexte-icone-'] {
+  animation-iteration-count: infinite;
+}
+@keyframes contexte-veille {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  25%,
+  70% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes contexte-focalisation {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(0.82);
+  }
+  65% {
+    transform: scale(1.06);
+  }
+}
+@keyframes contexte-connexion {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  30% {
+    opacity: 0.5;
+    transform: scale(0.88);
+  }
+  65% {
+    opacity: 1;
+    transform: scale(1.13);
+  }
+}
+@keyframes contexte-orientation {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  35% {
+    transform: rotate(-14deg);
+  }
+  65% {
+    transform: rotate(9deg);
+  }
+}
+@keyframes contexte-ouverture {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(1px, -1px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .contexte-pictogramme svg [class^='contexte-icone-'] {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+@media (forced-colors: active) {
+  .contexte-fenetre[data-cadre] .contexte-presentation {
+    border-color: CanvasText;
+    clip-path: none;
+  }
+  .contexte-cadre {
+    display: none;
+  }
+}
