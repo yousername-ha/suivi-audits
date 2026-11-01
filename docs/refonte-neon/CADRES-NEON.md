@@ -4,6 +4,8 @@
 
 ## Cadre retenu : Biseau
 
+Les cinq animations de l’aperçu ont également été validées par le demandeur, qui a demandé leur intégration le 01/11/2026. Elles sont retenues dans la fiche Contexte de la version de refonte, avec le cadre Biseau.
+
 Le demandeur a choisi **Biseau** (« Biseau très bien »). Le cadre biseauté cyan/violet et les pictogrammes animés sont donc conservés pour cette dalle. Les deux autres variantes ont été retirées du code actif ; leurs captures restent archivées pour garder la comparaison.
 
 ## Propositions comparées (historique)
@@ -37,7 +39,7 @@ Les SVG et les règles d’animation sont repris de l’application au commit `7
 
 Vérifications : cinq icônes, sept animations, 36 images distinctes du navigateur assemblées en vidéo H.264 de 1280 × 386, 180 images sur 18 secondes ; lecture et décodage effectifs vérifiés dans Chromium. La page autonome finale a été testée avec les trois commandes et à 390 px sans débordement horizontal, sans erreur JavaScript ni requête externe. Aucun objet ou lien modifié pendant la collecte depuis l’application. L’ouverture `file://` est bloquée par la politique de Chromium dans l’environnement cloud ; les octets du fichier HTML ont donc été chargés en mémoire pour la recette, sans serveur. L’archive ZIP est relue et son intégrité vérifiée.
 
-Les preuves privées restent dans `/workspace/work/neon-instance/apercu-icones` : `validation.json`, `validation-video.json` et `validation-html-final.json`. Aucun test applicatif complet n’est déclaré rejoué pour cet ajout d’aperçus. La validation esthétique des mouvements reste à faire par le demandeur.
+Les preuves privées restent dans `/workspace/work/neon-instance/apercu-icones` : `validation.json`, `validation-video.json` et `validation-html-final.json`. Aucun test applicatif complet n’est déclaré rejoué pour cet ajout d’aperçus. Le demandeur a validé le rendu des mouvements et demandé leur intégration dans la refonte.
 
 ## Animations des pictogrammes
 
@@ -68,3 +70,9 @@ Aucune modification métier, de droits, d’API ou de données de production. Au
 ## Finalisation du choix
 
 Après confirmation du demandeur, retrait des styles Équerres/Halo et du tracé SVG inutilisé. Biseau et les animations conservent leur rendu. Typage, lint, formatage et build réussis ; contrôle navigateur ciblé réussi : cadre biseauté, quatre coins, animations actives puis arrêtées avec mouvement réduit, commandes accessibles et fermeture, sans erreur JavaScript ni écriture. Preuve privée : `validation-biseau-retenu.json`. Les tests du lot de propositions ci-dessus restent historiques et ne sont pas déclarés rejoués pour ce nettoyage.
+
+## Confirmation de l’intégration des animations
+
+01/11/2026, Europe/Paris. Les animations étaient déjà raccordées aux cinq pictogrammes de la fiche ; aucune nouvelle copie du code ni modification des commandes n’était nécessaire. Les règles CSS de l’aperçu approuvé ont été comparées à celles de l’application : elles sont identiques. La vérification dans la vraie fiche confirme le cadre Biseau, les animations actives, leur arrêt avec mouvement réduit et la fermeture de la fenêtre, sans erreur JavaScript ni écriture d’objet ou de relation. Preuve privée actualisée : `validation-biseau-retenu.json`.
+
+Cette validation fige le rendu retenu sur `codex/refonte-neon-main`. Les pictogrammes gardent leur taille normale dans l’application ; le grossissement et les commandes Lire/Pause/Rejouer restent propres à l’aperçu de validation. Les règles métier et les droits sont inchangés. Les suites complètes, la fusion et le déploiement ne sont pas déclarés exécutés pour cette confirmation.

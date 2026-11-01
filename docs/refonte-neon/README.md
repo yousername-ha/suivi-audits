@@ -1,4 +1,4 @@
-> Choix du demandeur : **cadre Biseau**, avec [pictogrammes animés](CADRES-NEON.md).
+> Rendu validé par le demandeur et intégré à la refonte : **cadre Biseau et cinq pictogrammes animés**. [État et contrôles](CADRES-NEON.md).
 
 > Complément du 01/11/2026 : [vue de présentation du contexte pour consultation en audit](CONTEXTE-PRESENTATION.md).
 

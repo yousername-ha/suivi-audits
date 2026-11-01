@@ -1,3 +1,5 @@
+> 01/11/2026 : **animations validées par le demandeur et retenues dans la refonte**, avec Biseau. Correspondance entre aperçu et CSS de l’application confirmée ; contrôle réel des animations, du mouvement réduit et de la fermeture réussi, sans écriture. Voir [cadres et animations](docs/refonte-neon/CADRES-NEON.md).
+
 > 01/11/2026 : [vidéo MP4 et aperçu interactif des cinq animations](docs/refonte-neon/CADRES-NEON.md) fournis pour validation ; icônes agrandies et commandes Lire/Pause/Rejouer dans le fichier autonome. Aucun changement du code applicatif.
 
 > 01/11/2026 : **Biseau retenu par le demandeur** pour la grande dalle Contexte, avec pictogrammes animés. Les variantes de comparaison sont retirées du code actif ; leurs captures restent dans [le dossier des cadres](docs/refonte-neon/CADRES-NEON.md).
