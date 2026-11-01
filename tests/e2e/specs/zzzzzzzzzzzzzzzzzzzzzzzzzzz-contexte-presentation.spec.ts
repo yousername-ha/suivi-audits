@@ -51,6 +51,10 @@ test('Contexte : afficher, agrandir, annuler et enregistrer une modification exp
     await expect(view.getByRole('textbox')).toHaveCount(0);
     await expect(view.getByRole('combobox')).toHaveCount(0);
     await expect(view.getByRole('region', { name: /Exclusions et justification/ })).toContainText('Non renseigné');
+    await expect(view.getByRole('region', { name: /Enjeux internes et externes/ }).getByRole('listitem')).toHaveText([
+      'Évolution de la réglementation',
+      'Disponibilité des services',
+    ]);
     await view.getByRole('button', { name: 'Agrandir', exact: true }).click();
     await expect(view).toHaveAttribute('data-full-screen', 'true');
     await view.getByRole('button', { name: 'Réduire', exact: true }).click();

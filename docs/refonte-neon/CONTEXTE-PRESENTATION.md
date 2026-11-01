@@ -59,6 +59,21 @@ Contrôles de cette reprise, tous réussis :
 
 Les captures suivantes sont celles de cette reprise. La validation esthétique par le demandeur reste en attente ; les références visuelles de CI restent intactes.
 
+## Rééquilibrage des cinq rubriques
+
+01/11/2026, après retour sur `d4cd20dc771242edeac33ae47137e9fcbea9c1c3`. La présentation donne désormais un bloc identifiable à chaque rubrique, avec un pictogramme décoratif, un numéro et un titre de même niveau. Organisation et responsable occupent le bandeau supérieur ; activités et dépendances sont côte à côte, suivies des enjeux et des exclusions. Les accents légers ne représentent ni criticité ni statut. La colonne latérale de sommaire et le bandeau sombre dominant sont retirés.
+
+Les lignes non vides saisies dans le champ Enjeux sont présentées comme des points séparés, sans réécriture, classement ou regroupement automatique. Les autres champs gardent leur texte complet, y compris les paragraphes libres des interfaces : aucune entité n’est déduite des virgules ou des phrases. La mention « Non renseigné » reste explicite pour les champs vides.
+
+Contrôles de cette reprise :
+
+- Deux parcours e2e réussis, avec toutes les assertions précédentes et une assertion supplémentaire vérifiant que les deux lignes fictives d’enjeux sont restituées exactement. Consultation, annulation, sauvegarde, versions, création et refus serveur pour le lecteur restent vérifiés.
+- Huit captures renouvelées et quatre analyses axe sans violation détectée, sans erreur JavaScript, violation CSP, échec API ou écriture pendant le parcours de consultation. Aucun débordement horizontal de page dans l’échantillon.
+- Contrôle supplémentaire de visibilité intégrale des cinq sections à 1440 × 1080 sur le jeu de démonstration, dans les deux thèmes : réussi après ajustement des espacements. Le premier contrôle constatait le bas des derniers blocs partiellement défilant ; le même contrôle a été conservé après correction. Les contenus longs peuvent toujours défiler, et les commandes restent visibles.
+- Trois tests ciblés de charte, typages web et e2e, lint des fichiers TypeScript modifiés, formatage et build : codes 0. Avertissements de build identiques aux lots précédents. Les suites unitaires complètes ne sont pas déclarées rejouées pour cet ajustement.
+
+Les captures ci-dessous correspondent à ce découpage. La validation esthétique du demandeur reste en attente. Les données enregistrées, droits, commandes, API et références visuelles de CI ne sont pas modifiés.
+
 ## Captures pour validation
 
 [Clair](captures-contexte/presentation-light-1440.png) · [Sombre](captures-contexte/presentation-dark-1440.png) · [Mobile](captures-contexte/presentation-light-390.png) · [Plein écran](captures-contexte/presentation-plein-ecran.png) · [Formulaire distinct de modification](captures-contexte/modification-light-1440.png)

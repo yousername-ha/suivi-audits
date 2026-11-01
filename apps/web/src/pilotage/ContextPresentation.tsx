@@ -1,7 +1,7 @@
 import { Button, Group, Modal, Stack, Tabs, Text } from '@mantine/core';
 import { GRC_LABELS, libelleRelation, PILOTAGE_FIELDS, type GrcKind, type GrcObject } from '@suivi/shared';
 import { useQuery } from '@tanstack/react-query';
-import { useId, useState } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 import { get } from '../api';
 import { ErrorAlert, fmtDate } from '../components/common';
 import type { Source } from './Fields';
@@ -13,6 +13,40 @@ type Relation = {
   note: string;
   sens?: 'sortant' | 'entrant';
   other: { ref: string; name: string; kind: string; archived?: boolean };
+};
+
+const PICTOGRAMMES: Record<string, ReactNode> = {
+  organisation: (
+    <>
+      <path d="M4 21V7l8-4 8 4v14M8 21v-5h8v5M8 9h1m6 0h1M8 12h1m6 0h1" />
+    </>
+  ),
+  scope: (
+    <>
+      <path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5" />
+      <rect x="7" y="7" width="10" height="10" rx="2" />
+    </>
+  ),
+  interfaces: (
+    <>
+      <circle cx="5" cy="12" r="2.5" />
+      <circle cx="18" cy="5" r="2.5" />
+      <circle cx="18" cy="19" r="2.5" />
+      <path d="M7.5 12H11V5h4.5M11 12v7h4.5" />
+    </>
+  ),
+  issues: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="m16 8-3 5-5 3 3-5z" />
+    </>
+  ),
+  exclusions: (
+    <>
+      <path d="M11 4H4v16h16v-7M14 4h6v6M20 4l-9 9" />
+      <path d="M8 8v8h8" />
+    </>
+  ),
 };
 
 /** Présentation du contexte enregistré : aucune commande de mutation dans les onglets de consultation. */
@@ -88,8 +122,9 @@ export function ContextPresentation({
               </header>
               <div className="contexte-sections">
                 {(PILOTAGE_FIELDS.context ?? []).map((field, index) => {
-                  const value = object.data[field.key];
-                  const filled = typeof value === 'string' && value.trim();
+                  const rawValue = object.data[field.key];
+                  const value = typeof rawValue === 'string' ? rawValue : '';
+                  const filled = !!value.trim();
                   return (
                     <section
                       key={field.key}
@@ -98,27 +133,44 @@ export function ContextPresentation({
                       aria-labelledby={`${id}-${field.key}`}
                     >
                       <h4 id={`${id}-${field.key}`}>
-                        <span aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
-                        <span>{field.label}</span>
+                        <span className="contexte-pictogramme" aria-hidden="true">
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.6"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            focusable="false"
+                          >
+                            {PICTOGRAMMES[field.key]}
+                          </svg>
+                        </span>
+                        <span className="contexte-section-titre">{field.label}</span>
+                        <span className="contexte-section-numero" aria-hidden="true">
+                          {String(index + 1).padStart(2, '0')}
+                        </span>
                       </h4>
-                      <p className={filled ? 'contexte-texte' : 'contexte-vide'}>{filled ? value : 'Non renseigné'}</p>
+                      {field.key === 'issues' && filled ? (
+                        <ul className="contexte-enjeux">
+                          {value
+                            .split(/\r?\n/)
+                            .filter((line) => line.trim())
+                            .map((line, lineIndex) => (
+                              <li key={lineIndex}>{line}</li>
+                            ))}
+                        </ul>
+                      ) : (
+                        <p className={filled ? 'contexte-texte' : 'contexte-vide'}>
+                          {filled ? value : 'Non renseigné'}
+                        </p>
+                      )}
                       {field.key === 'organisation' && (
                         <>
                           <dl className="contexte-responsable">
                             <dt>Responsable</dt>
                             <dd>{ownerLabel}</dd>
                           </dl>
-                          <div className="contexte-sommaire" aria-hidden="true">
-                            <span>Dans ce dossier</span>
-                            <ol>
-                              {(PILOTAGE_FIELDS.context ?? []).slice(1).map((entry, position) => (
-                                <li key={entry.key}>
-                                  <span>{String(position + 2).padStart(2, '0')}</span>
-                                  {entry.label}
-                                </li>
-                              ))}
-                            </ol>
-                          </div>
                         </>
                       )}
                     </section>

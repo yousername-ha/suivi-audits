@@ -1,3 +1,5 @@
+> 01/11/2026 : [découpage des cinq rubriques du contexte rééquilibré](docs/refonte-neon/CONTEXTE-PRESENTATION.md) : organisation en tête, activités et dépendances côte à côte, enjeux détaillés et exclusions distinctes. Captures et parcours de droits vérifiés.
+
 > 01/11/2026 : [contexte retravaillé en dossier de présentation](docs/refonte-neon/CONTEXTE-PRESENTATION.md), après retour visuel : colonne de référence, périmètre mis en évidence, lecture éditoriale. Captures renouvelées ; consultation, modification et lecteur réel vérifiés.
 
 > 01/11/2026 : [présentation du contexte distincte de sa modification](docs/refonte-neon/CONTEXTE-PRESENTATION.md). Afficher ouvre une fiche sans formulaire ; Modifier reste soumis aux droits existants.
