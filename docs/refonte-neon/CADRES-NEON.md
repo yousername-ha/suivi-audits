@@ -26,6 +26,19 @@ Vues complètes : [Biseau](captures-cadres/biseau-dark-1440.png), [Équerres](ca
 
 Comparatifs clairs : [Biseau](captures-cadres/biseau-light-1440.png), [Équerres](captures-cadres/equerres-light-1440.png), [Halo](captures-cadres/halo-light-1440.png). Les gros plans et captures mobiles sont dans le même dossier.
 
+## Voir les cinq animations pour validation
+
+Pour rendre les mouvements visibles indépendamment de l’affichage des images dans la conversation :
+
+- [Vidéo MP4 des cinq icônes agrandies](captures-cadres/validation-animations/animations-5-icones.mp4) : 18 secondes, séquence répétée cinq fois, à vitesse réelle.
+- [Aperçu interactif autonome à télécharger](captures-cadres/validation-animations/apercu-icones.zip) : extraire l’archive, ouvrir `apercu-icones.html`, puis utiliser Lire, Pause et Rejouer. La démonstration démarre en pause et ne charge aucune ressource distante. L’archive contient aussi le MP4, les instructions et la licence de la police Inter.
+
+Les SVG et les règles d’animation sont repris de l’application au commit `7f5fb78c9eb04be48abb9670dfb4391948ea8dcd`. Seul le grossissement de l’aperçu est différent. Le code, la taille des icônes et le comportement de l’application restent inchangés. Les boutons de lecture appartiennent uniquement au fichier de validation.
+
+Vérifications : cinq icônes, sept animations, 36 images distinctes du navigateur assemblées en vidéo H.264 de 1280 × 386, 180 images sur 18 secondes ; lecture et décodage effectifs vérifiés dans Chromium. La page autonome finale a été testée avec les trois commandes et à 390 px sans débordement horizontal, sans erreur JavaScript ni requête externe. Aucun objet ou lien modifié pendant la collecte depuis l’application. L’ouverture `file://` est bloquée par la politique de Chromium dans l’environnement cloud ; les octets du fichier HTML ont donc été chargés en mémoire pour la recette, sans serveur. L’archive ZIP est relue et son intégrité vérifiée.
+
+Les preuves privées restent dans `/workspace/work/neon-instance/apercu-icones` : `validation.json`, `validation-video.json` et `validation-html-final.json`. Aucun test applicatif complet n’est déclaré rejoué pour cet ajout d’aperçus. La validation esthétique des mouvements reste à faire par le demandeur.
+
 ## Animations des pictogrammes
 
 Les cinq pictogrammes conservent leurs formes ; seuls certains éléments internes bougent : fenêtres du bâtiment, cadre intérieur du périmètre, nœuds des interfaces, aiguille de la boussole et flèche de sortie. Sept éléments SVG sont animés, sans déplacement des textes ou des blocs.
