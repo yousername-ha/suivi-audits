@@ -2,6 +2,8 @@
 
 01/11/2026, Europe/Paris. Session : Codex. Branche `codex/refonte-neon-main`, depuis `fede36115ae543c6a0485571160eef9657bd3252`.
 
+**Présentation validée par le demandeur le 01/11/2026 et conservée pour la suite de la refonte.** Les quatre catégories distinctes sont retenues, avec le cadre Biseau et les animations déjà validés. Cette consignation ne modifie pas le code ; les résultats ci-dessous restent ceux de la recette du commit `e5dabd2bc94bf240e8a9aa34ac874d5911501c50`.
+
 La consultation « Périmètre et contexte » présente quatre zones identifiées : **Interfaces**, **Dépendances**, **Enjeux internes** et **Enjeux externes**. Chaque catégorie possède un titre, une courte explication, un repère et un accent décoratif propres. Les titres et la séparation des panneaux permettent de les distinguer sans dépendre de la couleur. Organisation, activités et exclusions restent visibles ; le cadre Biseau, les animations validées et le défilement extérieur sont conservés.
 
 Les deux champs existants sont des textes libres. La présentation lit les catégories explicitement indiquées dans ces textes. Les éléments sans catégorie apparaissent dans **À préciser**, avec leur contenu conservé. Une catégorie vide porte « Catégorie non renseignée ». Aucun classement n’est déduit du sens des mots, aucune donnée existante n’est réécrite à l’ouverture, aucun autre registre n’est fusionné avec la fiche.

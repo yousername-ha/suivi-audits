@@ -1,3 +1,5 @@
+> 01/11/2026 : **présentation des quatre catégories Contexte validée par le demandeur et conservée**. Voir [la présentation retenue](docs/refonte-neon/CONTEXTE-CATEGORIES.md). Aucun changement applicatif dans cette consignation.
+
 > 01/11/2026 : [catégories du contexte distinguées](docs/refonte-neon/CONTEXTE-CATEGORIES.md) : enjeux internes/externes et interfaces/dépendances dans quatre zones. Catégories lues explicitement, anciens textes conservés dans À préciser ; 230 tests web et trois parcours e2e réussis.
 
 > 01/11/2026 : [Biseau généralisé aux fenêtres et hauteur naturelle](docs/refonte-neon/FENETRES-GLOBALES.md). Dalles Périmètres sans ascenseur interne, niveaux du graphe recalculés, défilement des fiches longues porté par le voile extérieur ; captures et contrôles sur la copie Codex.
