@@ -1,3 +1,5 @@
+> 01/11/2026 : [maquette uniforme Cible / Mesuré / État](docs/refonte-neon/propositions/cible-mesure-etat/README.md) : état dans un troisième encadré, mêmes dimensions et alignement, aussi sur mobile. **Validation explicite en attente** ; code applicatif inchangé, aucun test lancé.
+
 > 01/11/2026 : [maquette Cible et Mesuré mise à jour](docs/refonte-neon/propositions/cible-et-mesure/README.md) : encadrés de même format, mesure sur fond vert/rouge. **Toujours en attente de validation explicite** ; code applicatif inchangé, aucun test lancé.
 
 > 01/11/2026 : **nouvelle règle du demandeur : maquette → validation explicite → intégration et tests → nouveau visuel réel**. Voir [AGENTS.md](AGENTS.md#refonte-neon-codex--validation-visuelle-préalable). [Proposition autonome de cible renforcée](docs/refonte-neon/propositions/cible-visible/README.md) prête, en attente de validation ; code applicatif inchangé et aucun test lancé pour ce lot.
