@@ -1,3 +1,5 @@
+> 01/11/2026 : retour utilisateur « trop de violet » ; [nouvelle palette néon plus discrète et diversifiée](docs/refonte-neon/propositions/palette-equilibree/README.md). Titres neutres, cible bleue, repères cyan, états vert/rouge adoucis ; vue compacte et animations conservées. **Validation explicite en attente**, aucune intégration ni aucun build/test applicatif ; sources inchangées depuis `3492112`.
+
 > 01/11/2026 : [nouvelle maquette : titres alignés et colorés, animations et vue compacte](docs/refonte-neon/propositions/alignement-compact/README.md). Le demandeur précise **animer**, donc « Non atteint » et les flèches sont conservés. Vidéo et GIF du prototype fournis ; **validation explicite en attente**. Aucune intégration, aucun build ni test applicatif ; sources inchangées depuis `3492112`.
 
 > 01/11/2026 : [maquette uniforme Cible / Mesuré / État](docs/refonte-neon/propositions/cible-mesure-etat/README.md) : état dans un troisième encadré, mêmes dimensions et alignement, aussi sur mobile. **Validation explicite en attente** ; code applicatif inchangé, aucun test lancé.
