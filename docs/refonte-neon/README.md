@@ -1,3 +1,5 @@
+> 01/11/2026 : [proposition : titres alignés, animations et vue compacte](propositions/alignement-compact/README.md), **en attente de validation explicite avant intégration**. « Non atteint » et les flèches sont conservés et animés, conformément à la précision du demandeur. Visuels et vidéo du prototype, aucun changement applicatif ni test lancé.
+
 > 01/11/2026 : [proposition uniforme Cible / Mesuré / État](propositions/cible-mesure-etat/README.md), **à valider avant toute intégration**. Nouvelle règle du demandeur : visuel → validation → modifications et tests → nouveau visuel réel. Code applicatif inchangé à ce stade.
 
 > 01/11/2026 : [Objectifs et indicateurs : synthèse, cartes et fiches Neon](OBJECTIFS-INDICATEURS.md), captures réelles et contrôles.
