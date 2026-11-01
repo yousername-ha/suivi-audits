@@ -4,6 +4,20 @@ Lire [HANDOVER.md](HANDOVER.md), [PROJECT_STATUS.md](PROJECT_STATUS.md),
 [l’index](docs/00_INDEX.md) et le [DAT](docs/03_ARCHITECTURE/DAT.md) avant intervention.
 Suivre également [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## Refonte Neon Codex : validation visuelle préalable
+
+Consigne explicite du demandeur du 01/11/2026, pour la copie de main sur `codex/refonte-neon-main` :
+
+1. Présenter d'abord une proposition visuelle isolée et attendre sa validation explicite.
+2. Avant cet accord, ne pas modifier le code applicatif, intégrer la proposition, lancer un build ou des tests applicatifs.
+   La lecture des sources, la documentation et la création/rendu de maquettes indépendantes restent possibles.
+3. Après validation, effectuer les modifications de l'application, exécuter les contrôles pertinents, puis fournir de
+   nouveaux visuels de l'application intégrée.
+4. Un accord sur une proposition ne valide pas automatiquement les propositions suivantes. Ne pas redemander l'accord
+   pour les travaux d'intégration et de test déjà couverts par la validation reçue.
+
+Conserver le périmètre graphique, les fonctionnalités, données et droits existants. Ne jamais travailler directement sur main.
+
 ## Périmètre actuel
 
 - Branches : `main` (version Docker unique), `claude-suivi-smsi` (branche de travail),

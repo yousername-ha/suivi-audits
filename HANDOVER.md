@@ -1,3 +1,5 @@
+> 01/11/2026 : **nouvelle règle du demandeur : maquette → validation explicite → intégration et tests → nouveau visuel réel**. Voir [AGENTS.md](AGENTS.md#refonte-neon-codex--validation-visuelle-préalable). [Proposition autonome de cible renforcée](docs/refonte-neon/propositions/cible-visible/README.md) prête, en attente de validation ; code applicatif inchangé et aucun test lancé pour ce lot.
+
 > 01/11/2026 : [couleurs des chiffres et tendances des objectifs](docs/refonte-neon/OBJECTIFS-INDICATEURS.md) ajoutées : hausse verte/baisse rouge, chiffre selon la cible, nuances visibles en sombre. Contrôles de contraste et captures réelles ; calculs conservés.
 
 > 01/11/2026 : [Objectifs et indicateurs retravaillés en Neon](docs/refonte-neon/OBJECTIFS-INDICATEURS.md) : synthèse graphique, cartes Biseau, tableaux mobiles et fiches par rubriques. Calculs et actions conservés ; 230 tests web, deux scénarios e2e et lecteur réel vérifiés. Validation visuelle du demandeur en attente.
