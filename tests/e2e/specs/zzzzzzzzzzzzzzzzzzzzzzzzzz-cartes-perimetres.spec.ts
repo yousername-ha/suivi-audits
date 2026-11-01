@@ -70,7 +70,9 @@ test('Graphe des périmètres : compteurs de la carte et création d’un enfant
 
     // Même périmètre dans la liste, rattaché au parent, et dans les sélecteurs de l'API.
     await page.getByText('Liste', { exact: true }).click();
-    await expect(page.getByRole('row').filter({ hasText: enfant })).toContainText(`de ${parent}`);
+    await expect(page.getByRole('row').filter({ hasText: enfant })).toContainText(
+      `Organisation · rattachée à ${parent}`,
+    );
     const smsis = (await (await page.request.get('/api/grc/smsis')).json()) as {
       id: string;
       name: string;
