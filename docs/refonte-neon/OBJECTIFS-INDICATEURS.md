@@ -2,6 +2,26 @@
 
 01/11/2026, Europe/Paris. Session : Codex. Branche `codex/refonte-neon-main`, depuis `31d580a`.
 
+## Couleurs d’atteinte et de tendance — complément du 01/11/2026
+
+Suite au retour du demandeur, les chiffres et les flèches sont colorés dans les quatre vues :
+
+- Flèche de hausse verte, flèche de baisse rouge ; une tendance stable reste neutre, et aucune flèche n’est ajoutée sans tendance connue.
+- Valeur verte si la cible est atteinte, rouge si elle ne l’est pas, orange si la cible reste à définir, grise si la valeur n’est pas mesurée. Les badges suivent les mêmes couleurs, localement à ce module.
+- Chiffres de synthèse et centre des anneaux colorés. Le centre d’un anneau d’objectif reprend l’état le plus défavorable de ses indicateurs, comme les boîtes existantes ; les fractions restent inchangées.
+
+La flèche décrit l’évolution numérique ; le sens de la cible (`≥`, `≤`, `=`) continue à déterminer l’état de la valeur. Une courte légende distingue ces deux lectures. Les libellés d’état et les noms accessibles des flèches sont conservés. Les nuances du mode sombre sont renforcées pour que le vert et le rouge restent visibles. Aucun calcul métier, donnée ou mécanisme d’écriture modifié.
+
+Captures réelles d’une fiche fictive créée pour présenter une hausse et une baisse. Ces objets de recette ont ensuite été nettoyés ; les données de démonstration existantes n’ont pas été modifiées pour obtenir les couleurs.
+
+[![Couleurs claires](captures-objectifs/couleurs/dalle-light-1440.png)](captures-objectifs/couleurs/dalle-light-1440.png)
+
+[Mode sombre](captures-objectifs/couleurs/dalle-dark-1440.png) · [Mobile](captures-objectifs/couleurs/dalle-light-390.png) · [Synthèse sombre](captures-objectifs/couleurs/synthese-dark-1440.png).
+
+Contrôles de ce complément : trois tests de charte réussis ; TypeScript web, ESLint, formatage, `git diff --check` et build réussis ; les deux scénarios e2e Objectifs/Pilotage réussis. Quatre vues à 1440 et 390 px, clair/sombre : couleurs calculées contrôlées, aucune erreur JavaScript, violation CSP, écriture lors de la consultation ou violation axe WCAG 2 A/AA et 2.1 AA. Les vues Par processus, Vue compacte et Boîtes de pilotage ont également été ouvertes. Preuve privée : `/workspace/work/neon-instance/validation-objectifs-couleurs.json`. Les 230 tests web cités plus bas restent ceux du lot précédent ; ils ne sont pas déclarés rejoués pour cette finition. Les règles de calcul et la suite API complète ne sont pas modifiées ni réévaluées par ce contrôle de couleurs.
+
+Les captures et vérifications du lot de présentation initial sont conservées ci-dessous.
+
 ## Présentation proposée
 
 Les pages **Objectifs par processus**, **Objectifs** et **Indicateurs** du pilotage commun reprennent le cadre Biseau et la typographie neutre validés pour la refonte. Une synthèse graphique présente les indicateurs atteints, non atteints, et non mesurés ou sans cible. Les chiffres viennent de `indicateursSynthese`, sans nouvelle règle métier. Les anneaux par objectif montrent le nombre d’indicateurs atteints sur le nombre rattaché à cet objectif ; le cas sans indicateur affiche un tiret.

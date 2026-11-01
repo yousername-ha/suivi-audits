@@ -13,7 +13,7 @@ import {
   type IndicateurObjectif,
   type ObjectifPilotage,
 } from '@suivi/shared';
-import { DataTable, NeonAnneau, StatusChip, type Etat } from '@suivi/ui';
+import { DataTable, NeonAnneau } from '@suivi/ui';
 import { get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { Filtres } from '../components/Filtres';
@@ -22,12 +22,20 @@ import { useState } from 'react';
 import { FicheIndicateur, FicheObjectif, FicheProcessus, texte, useEcriture, type Ligne } from './FichesObjectifs';
 
 const SOCLE = '00000000-0000-4000-8000-000000000001';
-const ETATS: Record<EtatIndicateur, [string, Etat]> = {
-  ok: ['Atteint', 'succes'],
-  ko: ['Non atteint', 'erreur'],
-  na: ['Non mesuré', 'neutre'],
-  undef: ['Cible à définir', 'attention'],
+const ETATS: Record<EtatIndicateur, [string, string]> = {
+  ok: ['Atteint', 'green'],
+  ko: ['Non atteint', 'red'],
+  na: ['Non mesuré', 'gray'],
+  undef: ['Cible à définir', 'orange'],
 };
+
+function EtatObjectifs({ etat }: { etat: EtatIndicateur }) {
+  return (
+    <Badge color={ETATS[etat][1]} variant="light" data-etat={etat}>
+      {ETATS[etat][0]}
+    </Badge>
+  );
+}
 const jour = (d: string) => (/^\d{4}-\d{2}-\d{2}$/.test(d) ? d.split('-').reverse().join('/') : '–');
 const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
 const rows = (v: unknown): Ligne[] =>
@@ -49,6 +57,7 @@ function Tendance({ valeur }: { valeur: IndicateurObjectif['tendance'] }) {
   return (
     <svg
       className="objectifs-tendance"
+      data-tendance={valeur}
       viewBox="0 0 16 16"
       role="img"
       aria-label={`Tendance : ${valeur === '↗' ? 'en hausse' : valeur === '↘' ? 'en baisse' : 'stable'}`}
@@ -143,7 +152,7 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
                   </Table.Td>
                   <Table.Td data-label="Cible">{i.cible}</Table.Td>
                   <Table.Td data-label="Valeur">
-                    <Text span fw={650} className="objectifs-valeur">
+                    <Text span fw={650} className="objectifs-valeur" data-etat={i.etat}>
                       {i.valeur}
                     </Text>{' '}
                     <Tendance valeur={i.tendance} />
@@ -157,7 +166,7 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
                     )}
                   </Table.Td>
                   <Table.Td data-label="État" className="objectifs-cellule-etat">
-                    <StatusChip etat={ETATS[i.etat][1]}>{ETATS[i.etat][0]}</StatusChip>
+                    <EtatObjectifs etat={i.etat} />
                   </Table.Td>
                 </Table.Tr>
               ))}
@@ -192,7 +201,10 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
             </div>
           </dl>
         </div>
-        <div className="objectifs-avancement">
+        <div
+          className="objectifs-avancement"
+          data-etat={PIRE.find((etat) => o.indicateurs.some((i) => i.etat === etat)) ?? 'na'}
+        >
           <NeonAnneau
             titre={`Indicateurs atteints de l’objectif ${o.id}`}
             valeur={o.atteints}
@@ -296,12 +308,13 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
             </Filtres>
             <Group gap="xs" aria-label="Légende des états">
               {(Object.keys(ETATS) as EtatIndicateur[]).map((k) => (
-                <StatusChip key={k} etat={ETATS[k][1]}>
-                  {ETATS[k][0]}
-                </StatusChip>
+                <EtatObjectifs key={k} etat={k} />
               ))}
             </Group>
           </Group>
+          <Text size="xs" c="dimmed">
+            Flèches : évolution de la valeur · Couleur du chiffre : comparaison à la cible.
+          </Text>
           <Tabs
             className="objectifs-vues"
             value={vue}
@@ -357,7 +370,7 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
                             >
                               {id} · {texte(p.name)}
                             </Button>
-                            {pire && <StatusChip etat={ETATS[pire][1]}>{ETATS[pire][0]}</StatusChip>}
+                            {pire && <EtatObjectifs etat={pire} />}
                           </Group>
                           <Text size="sm" c="dimmed">
                             Pilote : {texte(p.owner) || 'à définir'}
@@ -374,9 +387,12 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
                                   {i.nom}
                                 </Button>
                                 <Text size="sm">
-                                  <b>{i.valeur}</b> <Tendance valeur={i.tendance} /> · {i.cible}
+                                  <b className="objectifs-valeur" data-etat={i.etat}>
+                                    {i.valeur}
+                                  </b>{' '}
+                                  <Tendance valeur={i.tendance} /> · {i.cible}
                                 </Text>
-                                <StatusChip etat={ETATS[i.etat][1]}>{ETATS[i.etat][0]}</StatusChip>
+                                <EtatObjectifs etat={i.etat} />
                               </Group>
                             ))
                           ) : (
@@ -518,7 +534,7 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
                             <Stack gap="2xs">
                               {o.indicateurs.filter(garde).map((i) => (
                                 <Group key={i.id} gap="xs" wrap="nowrap" className="objectifs-indicateur-resume">
-                                  <StatusChip etat={ETATS[i.etat][1]}>{ETATS[i.etat][0]}</StatusChip>
+                                  <EtatObjectifs etat={i.etat} />
                                   <Button
                                     variant="subtle"
                                     size="compact-sm"
@@ -529,7 +545,10 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
                                     {i.calcule ? ' (auto)' : ''}
                                   </Button>
                                   <Text size="sm">
-                                    <b>{i.valeur}</b> <Tendance valeur={i.tendance} /> · {i.cible}
+                                    <b className="objectifs-valeur" data-etat={i.etat}>
+                                      {i.valeur}
+                                    </b>{' '}
+                                    <Tendance valeur={i.tendance} /> · {i.cible}
                                   </Text>
                                   {i.valeur === '–' && i.historique && (
                                     <Text size="xs" c="dimmed">

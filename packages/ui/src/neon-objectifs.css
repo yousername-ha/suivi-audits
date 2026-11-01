@@ -1,6 +1,23 @@
 /* Objectifs et indicateurs : seules les données et les états existants alimentent la présentation. */
 .objectifs-module {
+  --objectifs-succes: var(--mantine-color-green-light-color);
+  --objectifs-erreur: var(--mantine-color-red-light-color);
+  --objectifs-attention: var(--mantine-color-orange-light-color);
   gap: 1.25rem;
+}
+[data-mantine-color-scheme='dark'] .objectifs-module {
+  --objectifs-succes: var(--mantine-color-green-4);
+  --objectifs-erreur: var(--mantine-color-red-4);
+  --objectifs-attention: var(--mantine-color-orange-4);
+}
+.objectifs-module .mantine-Badge-root[data-etat='ok'] {
+  color: var(--objectifs-succes);
+}
+.objectifs-module .mantine-Badge-root[data-etat='ko'] {
+  color: var(--objectifs-erreur);
+}
+.objectifs-module .mantine-Badge-root[data-etat='undef'] {
+  color: var(--objectifs-attention);
 }
 .objectifs-commandes {
   align-items: flex-start;
@@ -170,13 +187,24 @@
   font-size: 0.8rem;
 }
 .objectifs-avancement {
+  --objectifs-couleur-avancement: var(--mantine-color-dimmed);
   flex: none;
+}
+.objectifs-avancement[data-etat='ok'] {
+  --objectifs-couleur-avancement: var(--objectifs-succes);
+}
+.objectifs-avancement[data-etat='ko'] {
+  --objectifs-couleur-avancement: var(--objectifs-erreur);
+}
+.objectifs-avancement[data-etat='undef'] {
+  --objectifs-couleur-avancement: var(--objectifs-attention);
 }
 .objectifs-avancement .neon-anneau svg {
   width: 5.5rem;
   height: 5.5rem;
 }
 .objectifs-avancement .neon-ring-centre {
+  fill: var(--objectifs-couleur-avancement);
   font-size: 27px;
 }
 .objectifs-table-indicateurs .data-table {
@@ -198,12 +226,39 @@
   font-size: 1.1rem;
   font-variant-numeric: tabular-nums;
 }
+.objectifs-valeur[data-etat='ok'] {
+  color: var(--objectifs-succes);
+}
+.objectifs-valeur[data-etat='ko'] {
+  color: var(--objectifs-erreur);
+}
+.objectifs-valeur[data-etat='undef'] {
+  color: var(--objectifs-attention);
+}
+.objectifs-valeur[data-etat='na'] {
+  color: var(--mantine-color-dimmed);
+}
+.objectifs-kpi:first-child .neon-ring-centre {
+  fill: var(--objectifs-succes);
+}
+.objectifs-kpi[data-etat='ko'] .objectifs-kpi-valeur {
+  color: var(--objectifs-erreur);
+}
+.objectifs-kpi[data-etat='na'] .objectifs-kpi-valeur {
+  color: var(--objectifs-attention);
+}
 .objectifs-tendance {
   display: inline-block;
   width: 0.95rem;
   height: 0.95rem;
   vertical-align: middle;
   color: var(--mantine-color-dimmed);
+}
+.objectifs-tendance[data-tendance='↗'] {
+  color: var(--objectifs-succes);
+}
+.objectifs-tendance[data-tendance='↘'] {
+  color: var(--objectifs-erreur);
 }
 .objectifs-famille {
   padding-left: 0.75rem;

@@ -1,3 +1,5 @@
+> 01/11/2026 : [couleurs des chiffres et tendances des objectifs](docs/refonte-neon/OBJECTIFS-INDICATEURS.md) ajoutées : hausse verte/baisse rouge, chiffre selon la cible, nuances visibles en sombre. Contrôles de contraste et captures réelles ; calculs conservés.
+
 > 01/11/2026 : [Objectifs et indicateurs retravaillés en Neon](docs/refonte-neon/OBJECTIFS-INDICATEURS.md) : synthèse graphique, cartes Biseau, tableaux mobiles et fiches par rubriques. Calculs et actions conservés ; 230 tests web, deux scénarios e2e et lecteur réel vérifiés. Validation visuelle du demandeur en attente.
 
 > 01/11/2026 : **présentation des quatre catégories Contexte validée par le demandeur et conservée**. Voir [la présentation retenue](docs/refonte-neon/CONTEXTE-CATEGORIES.md). Aucun changement applicatif dans cette consignation.
