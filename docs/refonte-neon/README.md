@@ -1,3 +1,5 @@
+> 01/11/2026 : [proposition : cible violette, colonnes et alerte rouge animée](propositions/cible-violette-alerte/README.md), à partir de la palette atténuée. Noms des colonnes restaurés, halo renforcé et triangle warning ; **validation explicite en attente avant intégration et tests**.
+
 > 01/11/2026 : [nouvelle proposition : palette néon atténuée et diversifiée](propositions/palette-equilibree/README.md), après retour sur le violet trop présent. Visuels détaillés/compacts, deux thèmes et animations ; **validation explicite en attente avant intégration et tests**.
 
 > 01/11/2026 : [proposition : titres alignés, animations et vue compacte](propositions/alignement-compact/README.md), **en attente de validation explicite avant intégration**. « Non atteint » et les flèches sont conservés et animés, conformément à la précision du demandeur. Visuels et vidéo du prototype, aucun changement applicatif ni test lancé.
