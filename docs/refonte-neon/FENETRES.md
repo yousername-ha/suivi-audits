@@ -1,3 +1,5 @@
+> Évolution du 01/11/2026 : [Biseau commun et hauteur naturelle des fenêtres](FENETRES-GLOBALES.md). Le défilement interne décrit ci-dessous appartient au lot précédent et est remplacé.
+
 > Évolution suivante : [présentation du contexte séparée du formulaire de modification](CONTEXTE-PRESENTATION.md). Les captures ci-dessous conservent la preuve du lot précédent.
 
 # Fenêtres et panneaux — finition Neon

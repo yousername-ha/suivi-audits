@@ -1,3 +1,5 @@
+> Correction du 01/11/2026 : [dalles Biseau à hauteur naturelle, sans défilement interne](FENETRES-GLOBALES.md). Les captures et résultats ci-dessous conservent la preuve du lot précédent.
+
 # Dalles des périmètres — vue Graphe
 
 1er novembre 2026, Europe/Paris. Session Codex. Branche `codex/refonte-neon-main`.

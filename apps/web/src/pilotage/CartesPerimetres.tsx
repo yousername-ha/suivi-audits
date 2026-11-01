@@ -2,7 +2,7 @@
    (`GET /api/grc/perimetres/synthese`) : un compteur absent s'affiche « indisponible », jamais comme un zéro. La création
    passe par le même formulaire que la liste (même route, même identifiant) ; le graphe n'a pas de modèle propre. */
 import { Anchor, Badge, Button, Drawer, Group, Loader, Stack, Text } from '@mantine/core';
-import { useState, type ReactNode } from 'react';
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import { NeonAnneau } from '@suivi/ui';
 import {
@@ -15,6 +15,7 @@ import {
 } from '@suivi/shared';
 
 export const LARGEUR_CARTE_PERIMETRE = 380;
+/** Estimation au premier rendu ; chaque dalle est ensuite mesurée, y compris après dépliage et changement de police. */
 export const HAUTEUR_CARTE_PERIMETRE = 680;
 const LARGEUR = LARGEUR_CARTE_PERIMETRE;
 const HAUTEUR = HAUTEUR_CARTE_PERIMETRE;
@@ -37,21 +38,40 @@ interface Place {
   x: number;
   y: number;
   parent: string | null;
+  hauteur: number;
 }
 
 /** Disposition en arbre : les feuilles se suivent de gauche à droite, chaque parent est centré sur ses enfants. */
-export function disposer(cartes: readonly CartePerimetre[]) {
+export function disposer(cartes: readonly CartePerimetre[], hauteurs: Readonly<Record<string, number>> = {}) {
   const racines = arbre(cartes.map((c) => ({ ...c, id: c.id, parentId: c.parentId, name: c.name })));
   const places: Place[] = [];
+  const hauteurDe = (id: string) => Math.max(1, hauteurs[id] ?? HAUTEUR);
+  const niveaux: number[] = [];
+  const relever = (noeuds: typeof racines) => {
+    for (const n of noeuds) {
+      niveaux[n.profondeur] = Math.max(niveaux[n.profondeur] ?? 0, hauteurDe(n.item.id));
+      relever(n.enfants);
+    }
+  };
+  relever(racines);
+  const ordonnees: number[] = [];
+  for (let niveau = 0; niveau < niveaux.length; niveau++)
+    ordonnees[niveau] = niveau ? ordonnees[niveau - 1]! + niveaux[niveau - 1]! + ECART_Y : 0;
   let colonne = 0;
   const poser = (n: (typeof racines)[number], parent: string | null): number => {
     const enfants = n.enfants.map((e) => poser(e, n.item.id));
     const x = enfants.length ? (enfants[0]! + enfants[enfants.length - 1]!) / 2 : colonne++ * (LARGEUR + ECART_X);
-    places.push({ carte: cartes.find((c) => c.id === n.item.id)!, x, y: n.profondeur * (HAUTEUR + ECART_Y), parent });
+    places.push({
+      carte: cartes.find((c) => c.id === n.item.id)!,
+      x,
+      y: ordonnees[n.profondeur]!,
+      parent,
+      hauteur: hauteurDe(n.item.id),
+    });
     return x;
   };
   racines.forEach((r) => poser(r, null));
-  const profondeur = places.length ? Math.max(...places.map((p) => p.y)) + HAUTEUR : HAUTEUR;
+  const profondeur = places.length ? Math.max(...places.map((p) => p.y + p.hauteur)) : HAUTEUR;
   const largeur = places.length ? Math.max(...places.map((p) => p.x)) + LARGEUR : LARGEUR;
   return { places, largeur, hauteur: profondeur };
 }
@@ -304,11 +324,46 @@ export function CartesPerimetres({
   chargement?: boolean;
 }) {
   const [detail, setDetail] = useState<string | null>(null);
+  // La hauteur naturelle du HTML pilote les niveaux du SVG, sans zone de défilement propre aux cartes.
+  const [hauteurs, setHauteurs] = useState<Record<string, number>>({});
+  const noeuds = useRef(new Map<string, HTMLDivElement>());
+  const observateur = useRef<ResizeObserver | null>(null);
+  useLayoutEffect(() => {
+    const observer = new ResizeObserver((entries) => {
+      setHauteurs((precedentes) => {
+        let suivantes = precedentes;
+        for (const entry of entries) {
+          const id = (entry.target as HTMLElement).dataset.perimetreId;
+          if (!id) continue;
+          const h = Math.ceil(entry.borderBoxSize[0]?.blockSize ?? entry.target.getBoundingClientRect().height);
+          if (h > 0 && h !== precedentes[id]) {
+            if (suivantes === precedentes) suivantes = { ...precedentes };
+            suivantes[id] = h;
+          }
+        }
+        return suivantes;
+      });
+    });
+    observateur.current = observer;
+    noeuds.current.forEach((element) => observer.observe(element));
+    return () => {
+      observer.disconnect();
+      observateur.current = null;
+    };
+  }, []);
+  const enregistrer = (id: string, element: HTMLDivElement | null) => {
+    const ancien = noeuds.current.get(id);
+    if (ancien) observateur.current?.unobserve(ancien);
+    if (element) {
+      noeuds.current.set(id, element);
+      observateur.current?.observe(element);
+    } else noeuds.current.delete(id);
+  };
   const detailCarte = cartes.find((c) => c.id === detail);
   const [arret, setArret] = useState(
     () => typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches,
   );
-  const { places, largeur: largeurArbre, hauteur: hauteurArbre } = disposer(cartes);
+  const { places, largeur: largeurArbre, hauteur: hauteurArbre } = disposer(cartes, hauteurs);
   if (chargement) return <Loader size="sm" aria-label="Chargement du graphe des périmètres" />;
   if (!places.length) return <Text>Aucun périmètre accessible.</Text>;
   const affichables = (fournisseurs ?? []).filter((f) => f.scopes.some((id) => places.some((p) => p.carte.id === id)));
@@ -370,7 +425,7 @@ export function CartesPerimetres({
             .map((p) => {
               const parent = places.find((q) => q.carte.id === p.parent)!;
               const x1 = parent.x + LARGEUR / 2,
-                y1 = parent.y + HAUTEUR,
+                y1 = parent.y + parent.hauteur,
                 x2 = p.x + LARGEUR / 2,
                 y2 = p.y,
                 milieu = (y1 + y2) / 2;
@@ -392,7 +447,7 @@ export function CartesPerimetres({
               .map((p) => {
                 const y1 = i * (HAUTEUR_FOURNISSEUR + ECART_FOURNISSEUR) + HAUTEUR_FOURNISSEUR / 2,
                   x2 = p.x + LARGEUR,
-                  y2 = p.y + HAUTEUR / 2,
+                  y2 = p.y + p.hauteur / 2,
                   xm = (colonneX + x2) / 2;
                 return (
                   <path
@@ -423,9 +478,11 @@ export function CartesPerimetres({
               </div>
             </foreignObject>
           ))}
-          {places.map(({ carte, x, y }) => (
-            <foreignObject key={carte.id} x={x} y={y} width={LARGEUR} height={HAUTEUR}>
+          {places.map(({ carte, x, y, hauteur: hauteurCarte }) => (
+            <foreignObject key={carte.id} x={x} y={y} width={LARGEUR} height={hauteurCarte} overflow="visible">
               <div
+                ref={(element) => enregistrer(carte.id, element)}
+                data-perimetre-id={carte.id}
                 className="graphe-carte perimetre-dalle"
                 data-actif={carte.id === affiche || undefined}
                 role="group"
@@ -437,7 +494,7 @@ export function CartesPerimetres({
                       {LIBELLES_NIVEAU[carte.entityKind as NiveauPerimetre] ?? carte.entityKind}
                       {carte.nature ? ` · ${carte.nature}` : ''}
                     </Text>
-                    <Text fw={650} lineClamp={2} title={carte.name} className="perimetre-titre">
+                    <Text fw={650} title={carte.name} className="perimetre-titre">
                       {carte.name}
                     </Text>
                   </div>
@@ -447,12 +504,7 @@ export function CartesPerimetres({
                     </Badge>
                   )}
                 </header>
-                <div
-                  className="perimetre-corps"
-                  role="region"
-                  aria-label={`Indicateurs de ${carte.name}, défilement possible`}
-                  tabIndex={0}
-                >
+                <div className="perimetre-corps" role="region" aria-label={`Indicateurs de ${carte.name}`}>
                   <CouvertureCarte couverture={carte.compteurs.couverture} id={carte.id} />
                   <dl className="graphe-compteurs perimetre-indicateurs">
                     {lignesCompteurs(carte.compteurs, carte.id, true, true)

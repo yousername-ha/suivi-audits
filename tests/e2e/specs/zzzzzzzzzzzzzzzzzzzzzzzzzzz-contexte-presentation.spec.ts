@@ -75,6 +75,16 @@ test('Contexte : afficher, agrandir, annuler et enregistrer une modification exp
     await view.getByRole('button', { name: 'Modifier', exact: true }).click();
     let edit = page.getByRole('dialog', { name: 'Modifier — Périmètre et contexte', exact: true });
     await expect(edit.getByLabel('Intitulé', { exact: true })).toHaveValue(name);
+    // Une fiche longue défile depuis le voile extérieur, jamais dans son corps ou ses onglets.
+    await page.setViewportSize({ width: 390, height: 844 });
+    const voile = page.locator('.mantine-Modal-inner');
+    await edit.getByLabel('Intitulé', { exact: true }).hover();
+    await page.mouse.wheel(0, 1200);
+    await expect.poll(() => voile.evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
+    for (const zone of [edit, edit.locator('.mantine-Modal-body'), edit.locator('.mantine-Tabs-root')])
+      expect(await zone.evaluate((el) => el.scrollHeight - el.clientHeight)).toBeLessThanOrEqual(2);
+    await edit.getByRole('button', { name: 'Annuler', exact: true }).scrollIntoViewIfNeeded();
+    await expect(edit.getByRole('button', { name: 'Annuler', exact: true })).toBeInViewport();
     await edit.getByLabel('Organisation', { exact: true }).fill('Brouillon à annuler');
     await edit.getByRole('button', { name: 'Annuler', exact: true }).click();
     view = page.getByRole('dialog', { name: 'Périmètre et contexte', exact: true });
@@ -91,6 +101,7 @@ test('Contexte : afficher, agrandir, annuler et enregistrer une modification exp
     expect(after.data.interfaces).toBe('Hébergeur fictif, éditeur (dossiers, imagerie), partenaire fictif');
     expect(after.version).toBeGreaterThan(before.version);
     expect(writes).toEqual(['PUT']);
+    await page.setViewportSize({ width: 1440, height: 1000 });
     await page
       .getByRole('row')
       .filter({ hasText: name })

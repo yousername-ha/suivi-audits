@@ -51,4 +51,14 @@ describe('disposer', () => {
     const { places } = disposer([carte('a', 'inconnu'), carte('b', null)]);
     expect(places.map((p) => p.y)).toEqual([0, 0]);
   });
+  it('écarte chaque niveau selon sa plus haute dalle, même après ouverture des détails', () => {
+    const cartes = [carte('p', null), carte('a', 'p'), carte('b', 'p'), carte('c', 'a')];
+    const { places, hauteur } = disposer(cartes, { p: 1320, a: 1700, b: 950, c: 810 });
+    const p = (id: string) => places.find((place) => place.carte.id === id)!;
+    expect(p('a').y).toBeGreaterThan(p('p').y + 1320);
+    expect(p('a').y).toBe(p('b').y);
+    expect(p('c').y).toBeGreaterThan(p('a').y + 1700);
+    expect(hauteur).toBe(p('c').y + 810);
+    expect(p('b').hauteur).toBe(950);
+  });
 });

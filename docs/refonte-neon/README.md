@@ -1,3 +1,5 @@
+> 01/11/2026 : [fenêtres Biseau et correction des dimensions](FENETRES-GLOBALES.md). Les dalles et corps de fenêtre ne défilent plus ; les longues fiches utilisent le voile extérieur.
+
 > Rendu validé par le demandeur et intégré à la refonte : **cadre Biseau et cinq pictogrammes animés**. [État et contrôles](CADRES-NEON.md).
 
 > Complément du 01/11/2026 : [vue de présentation du contexte pour consultation en audit](CONTEXTE-PRESENTATION.md).

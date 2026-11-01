@@ -24,6 +24,8 @@
   border-radius: var(--mantine-radius-lg);
   background: var(--suivi-surface);
   box-shadow: var(--suivi-ombre);
+  block-size: auto;
+  overflow: visible;
 }
 .graphe-carte.perimetre-dalle[data-actif] {
   border-color: var(--neon-accent);
@@ -49,11 +51,10 @@
   margin-bottom: 0.35rem;
 }
 .perimetre-corps {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-  scrollbar-width: thin;
-  padding-right: var(--mantine-spacing-2xs);
+  flex: none;
+  min-height: auto;
+  overflow: visible;
+  padding-right: 0;
 }
 .perimetre-couverture {
   display: grid;

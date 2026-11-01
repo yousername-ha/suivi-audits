@@ -68,6 +68,35 @@ test('Graphe des périmètres : compteurs de la carte et création d’un enfant
     await expect(total).toContainText('Total avec 1 sous-périmètre(s)');
     await expect(total).toContainText('1 ouverte(s) · 1 en retard');
 
+    // Déplier tous les compteurs agrandit la dalle et descend l'enfant, sans cacher une partie du contenu.
+    const carteEnfant = page.getByRole('group', { name: `Périmètre ${enfant}`, exact: true });
+    const geometre = () =>
+      carte.evaluate((el) => ({
+        hauteur: el.getBoundingClientRect().height,
+        hauteurSvg: Number(el.closest('foreignObject')!.getAttribute('height')),
+      }));
+    const hauteurAvant = (await geometre()).hauteur;
+    await carte.locator('summary').click();
+    await expect.poll(async () => (await geometre()).hauteur).toBeGreaterThan(hauteurAvant);
+    await expect
+      .poll(async () => Math.abs((await geometre()).hauteur - (await geometre()).hauteurSvg))
+      .toBeLessThan(1.1);
+    await expect
+      .poll(async () => {
+        const basParent = await carte.evaluate((el) => {
+          const svg = el.closest('foreignObject')!;
+          return Number(svg.getAttribute('y')) + Number(svg.getAttribute('height'));
+        });
+        return (await carteEnfant.evaluate((el) => Number(el.closest('foreignObject')!.getAttribute('y')))) - basParent;
+      })
+      .toBeGreaterThanOrEqual(72);
+    expect(await carte.evaluate((el) => el.scrollHeight - el.clientHeight)).toBeLessThanOrEqual(2);
+    expect(
+      await carte.locator('.perimetre-corps').evaluate((el) => el.scrollHeight - el.clientHeight),
+    ).toBeLessThanOrEqual(2);
+    await carte.locator('summary').click();
+    await expect.poll(async () => (await geometre()).hauteur).toBe(hauteurAvant);
+
     // Même périmètre dans la liste, rattaché au parent, et dans les sélecteurs de l'API.
     await page.getByText('Liste', { exact: true }).click();
     await expect(page.getByRole('row').filter({ hasText: enfant })).toContainText(`de ${parent}`);
