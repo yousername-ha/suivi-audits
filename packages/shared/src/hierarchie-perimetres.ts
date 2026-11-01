@@ -1,14 +1,17 @@
-/* Hiérarchie des périmètres de management (organisation → entité → périmètre) : arbre parent/enfant sans cycle et
-   héritage explicite des référentiels. Fonctions pures, partagées par l'API (contrôle avant écriture) et l'interface
+/* Hiérarchie des périmètres de management : arbre parent/enfant sans cycle et héritage explicite des référentiels. Un
+   périmètre est une organisation ou un fournisseur, rien d'autre (amendement de l'ADR 0039, 01/11/2026) ; le rattachement
+   est le même pour les deux : une organisation A peut avoir pour enfants les organisations B et C et le fournisseur F. Fonctions pures, partagées par l'API (contrôle avant écriture) et l'interface
    (arbre, sélecteur de parent). La base impose les mêmes règles par un déclencheur (migration 022). */
 
-export const NIVEAUX_PERIMETRE = ['organisation', 'entite', 'perimetre'] as const;
-export type NiveauPerimetre = (typeof NIVEAUX_PERIMETRE)[number];
-export const LIBELLES_NIVEAU: Record<NiveauPerimetre, string> = {
+export const TYPES_PERIMETRE = ['organisation', 'fournisseur'] as const;
+export type TypePerimetre = (typeof TYPES_PERIMETRE)[number];
+export const LIBELLES_TYPE_PERIMETRE: Record<TypePerimetre, string> = {
   organisation: 'Organisation',
-  entite: 'Entité',
-  perimetre: 'Périmètre',
+  fournisseur: 'Fournisseur',
 };
+/** Libellé du type d'un périmètre ; une valeur inconnue (donnée antérieure non migrée) s'affiche telle quelle. */
+export const libelleTypePerimetre = (type: string): string =>
+  (LIBELLES_TYPE_PERIMETRE as Record<string, string>)[type] ?? type;
 
 export interface NoeudPerimetre {
   id: string;

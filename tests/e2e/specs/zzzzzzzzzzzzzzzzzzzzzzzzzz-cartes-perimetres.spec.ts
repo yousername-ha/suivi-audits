@@ -28,7 +28,7 @@ test('Graphe des périmètres : compteurs de la carte et création d’un enfant
       scope: 'Fixture de recette',
       timezone: 'Europe/Paris',
       parentId: null,
-      entityKind: 'perimetre',
+      entityKind: 'organisation',
       inheritFrameworks: false,
     });
     await post(page, `/api/grc/${p.id}/objects`, {
@@ -101,7 +101,7 @@ test('Graphe des périmètres : modification depuis le graphe, flèches et flux,
       scope: 'Fixture de recette',
       timezone: 'Europe/Paris',
       parentId: null,
-      entityKind: 'perimetre',
+      entityKind: 'organisation',
       inheritFrameworks: false,
     });
     const f = await post(page, '/api/suppliers', { name: fournisseur });
@@ -133,7 +133,7 @@ test('Graphe des périmètres : modification depuis le graphe, flèches et flux,
       scope: '',
       timezone: 'Europe/Paris',
       parentId: p.id,
-      entityKind: 'perimetre',
+      entityKind: 'organisation',
       inheritFrameworks: false,
     });
     await page.reload();
@@ -195,7 +195,7 @@ test('Graphe des périmètres : écarts par classification, compteurs cliquables
       scope: 'Fixture de recette',
       timezone: 'Europe/Paris',
       parentId: null,
-      entityKind: 'perimetre',
+      entityKind: 'organisation',
       inheritFrameworks: false,
     });
     const ecart = (name: string, data: Record<string, unknown>) =>

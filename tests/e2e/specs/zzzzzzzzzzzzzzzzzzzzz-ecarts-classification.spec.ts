@@ -27,7 +27,7 @@ test('Écarts : classification et récidive visibles dans la liste', async ({ br
       scope: 'Fixture de recette',
       timezone: 'Europe/Paris',
       parentId: null,
-      entityKind: 'perimetre',
+      entityKind: 'organisation',
       inheritFrameworks: false,
     });
     const initial = await post(page, `/api/grc/${p.id}/objects`, {

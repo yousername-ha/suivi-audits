@@ -6,7 +6,11 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-Aucune action.
+**Migration automatique `051`** (type des périmètres) : appliquée au démarrage de `app`, durée négligeable ; aucune action sur le serveur. Les périmètres marqués « Entité » ou « Périmètre » deviennent « Organisation » ; aucune donnée supprimée, parents et héritages inchangés. _(Session « Révision gestion des périmètres ».)_
+
+### Modifié
+
+- **Périmètres : une organisation ou un fournisseur** ([ADR 0039 amendée](docs/adr/0039-hierarchie-des-perimetres.md)) : le champ « Niveau » (organisation, entité, périmètre) devient « Type », à deux choix, Organisation ou Fournisseur. Le rattachement ne change pas : une organisation A peut avoir pour enfants les organisations B et C et un fournisseur. La liste indique « Fournisseur · rattaché à A », le graphe dessine la carte d'un fournisseur en tirets. L'API refuse les anciennes valeurs `entite` et `perimetre`. _(Session « Révision gestion des périmètres ».)_
 
 ### Corrigé
 

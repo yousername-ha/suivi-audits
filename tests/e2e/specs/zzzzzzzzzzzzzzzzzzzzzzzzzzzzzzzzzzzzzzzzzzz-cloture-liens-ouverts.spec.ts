@@ -28,7 +28,7 @@ test('Clôture avec liens ouverts : refus puis motif écrit', async ({ browser }
       scope: 'Fixture de recette',
       timezone: 'Europe/Paris',
       parentId: null,
-      entityKind: 'perimetre',
+      entityKind: 'organisation',
       inheritFrameworks: false,
     });
     const doc = await envoyer(page, '/api/documents', Buffer.from('Justificatif de recette'), {

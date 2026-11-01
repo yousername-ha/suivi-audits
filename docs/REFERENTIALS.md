@@ -15,7 +15,7 @@ repris, les exigences se chargent par import avec leurs droits.
 
 ## Périmètres hiérarchiques
 
-- Un périmètre peut avoir un parent : organisation → entité → périmètre, sans boucle, profondeur limitée à 8
+- Un périmètre est une organisation ou un fournisseur ; il peut avoir un parent (par exemple, l'organisation A a pour enfants les organisations B et C et le fournisseur F), sans boucle, profondeur limitée à 8
   ([ADR 0039](adr/0039-hierarchie-des-perimetres.md)).
 - **Héritage explicite** : si le périmètre l'a décidé, il reçoit les référentiels rattachés à son parent ; ses propres
   rattachements priment. L'héritage ne concerne que les référentiels, jamais les évaluations.

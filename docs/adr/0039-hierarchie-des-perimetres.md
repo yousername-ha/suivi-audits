@@ -35,3 +35,22 @@ rattaché périmètre par périmètre.
 - Le calcul des référentiels effectifs existe en SQL (récursif) et en logique pure (tests croisés, même résultat).
 - Hors périmètre de ce lot : organigramme graphique, transfert de preuves entre entités, héritage des mesures ou des risques.
   Ils feront l'objet de décisions séparées.
+
+## Amendement du 01/11/2026 — un périmètre est une organisation ou un fournisseur
+
+Demande du RSSI du 01/11/2026 : les trois étiquettes de structure du point 1 (`organisation`, `entite`, `perimetre`) ne
+correspondaient pas à la réalité. **Un périmètre est une organisation ou un fournisseur, rien d'autre.**
+
+1. `entity_kind` ne prend plus que `organisation` (valeur par défaut) ou `fournisseur`. Migration `051` : les périmètres
+   existants marqués `entite` ou `perimetre` deviennent `organisation` ; aucune ligne supprimée, la contrainte est remplacée.
+   L'API refuse les anciennes valeurs (422).
+2. **Rattachement inchangé** : mêmes règles qu'au point 2 (pas de boucle, profondeur 8), mêmes droits, même héritage explicite
+   des référentiels. Exemple : l'organisation A a pour enfants les organisations B et C et le fournisseur F. Aucune règle
+   supplémentaire n'est posée selon le type.
+3. Le type reste une étiquette : il ne change ni les droits, ni les compteurs, ni les objets du périmètre. La nature
+   (SMSI, SMQ, SMI…, ADR 0030) est conservée, indépendante du type.
+4. Le registre des fournisseurs et leur rattachement à un ou plusieurs périmètres (ADR 0032, `sup_scope_links`) ne changent
+   pas : un fournisseur du registre reste affiché « Fournisseur extérieur » à côté du graphe. Un périmètre de type fournisseur
+   est un périmètre à part entière (actions, écarts, référentiels…), sans lien automatique avec une fiche du registre.
+5. Retour arrière : une version antérieure lit `organisation` mais pas `fournisseur` ; il passe par la restauration de la
+   sauvegarde prise avant la mise à jour.

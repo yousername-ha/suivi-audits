@@ -10,7 +10,7 @@ const carte = (id: string, parentId: string | null, name = id): CartePerimetre =
   name,
   parentId,
   nature: '',
-  entityKind: 'perimetre',
+  entityKind: 'organisation',
   compteurs: vide,
   total: vide,
   sousPerimetres: 0,

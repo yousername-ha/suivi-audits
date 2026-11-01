@@ -29,7 +29,7 @@ test('Récidive : constat clos, nouveau constat lié, retour au constat précéd
       scope: 'Fixture de recette',
       timezone: 'Europe/Paris',
       parentId: null,
-      entityKind: 'perimetre',
+      entityKind: 'organisation',
       inheritFrameworks: false,
     });
     // Preuve : un document, référencé par le constat (version 1).

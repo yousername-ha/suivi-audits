@@ -22,7 +22,7 @@ import {
   effectivePermissions,
   MESSAGES_REFUS,
   refusRattachement,
-  type NiveauPerimetre,
+  type TypePerimetre,
   type NoeudPerimetre,
   type RattachementReferentiel,
   type Permission,
@@ -133,7 +133,7 @@ export interface GrcSmsi {
   scope: string;
   nature: string;
   parentId: string | null;
-  entityKind: NiveauPerimetre;
+  entityKind: TypePerimetre;
   inheritFrameworks: boolean;
   visibility: 'instance' | 'restricted';
   timezone: string;
@@ -363,7 +363,7 @@ export class Grc {
       nature: string;
       timezone: string;
       parentId?: string | null;
-      entityKind?: NiveauPerimetre;
+      entityKind?: TypePerimetre;
       inheritFrameworks?: boolean;
     },
     user: SessionUser,
@@ -381,7 +381,7 @@ export class Grc {
           nature: input.nature,
           timezone: input.timezone,
           parent_id: parentId,
-          entity_kind: input.entityKind ?? 'perimetre',
+          entity_kind: input.entityKind ?? 'organisation',
           inherit_frameworks: parentId ? (input.inheritFrameworks ?? false) : false,
           business_version: versionPolitique(k),
           created_by: user.username,

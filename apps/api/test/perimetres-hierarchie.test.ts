@@ -75,17 +75,46 @@ beforeAll(async () => {
 afterAll(() => t.close());
 
 describe('rattachement parent/enfant', () => {
-  it('crée une hiérarchie avec niveau et indicateur d’héritage, restitués par la liste', async () => {
+  it('crée une hiérarchie typée (organisation par défaut) et l’indicateur d’héritage, restitués par la liste', async () => {
     groupe = await creer('Groupe', { entityKind: 'organisation' });
-    hopital = await creer('Hôpital', { parentId: groupe, entityKind: 'entite', inheritFrameworks: true });
+    hopital = await creer('Hôpital', { parentId: groupe, entityKind: 'organisation', inheritFrameworks: true });
     labo = await creer('Laboratoire', { parentId: hopital, inheritFrameworks: true });
-    clinique = await creer('Clinique', { parentId: groupe, entityKind: 'entite' });
+    clinique = await creer('Clinique', { parentId: groupe });
     const liste = (await admin.get('/api/grc/smsis')).json() as Record<string, unknown>[];
     const de = (id: string) => liste.find((x) => x.id === id);
     expect(de(groupe)).toMatchObject({ parentId: null, entityKind: 'organisation', inheritFrameworks: false });
-    expect(de(hopital)).toMatchObject({ parentId: groupe, entityKind: 'entite', inheritFrameworks: true });
-    expect(de(labo)).toMatchObject({ parentId: hopital, entityKind: 'perimetre', inheritFrameworks: true });
+    expect(de(hopital)).toMatchObject({ parentId: groupe, entityKind: 'organisation', inheritFrameworks: true });
+    expect(de(labo)).toMatchObject({ parentId: hopital, entityKind: 'organisation', inheritFrameworks: true });
     expect(de(clinique)).toMatchObject({ inheritFrameworks: false });
+  });
+  it('rattache à une organisation des organisations enfants et un fournisseur', async () => {
+    const a = await creer('Organisation A', {});
+    const b = await creer('Organisation B', { parentId: a });
+    const c = await creer('Organisation C', { parentId: a, entityKind: 'organisation' });
+    const f = await creer('Fournisseur F', { parentId: a, entityKind: 'fournisseur' });
+    const liste = (await admin.get('/api/grc/smsis')).json() as Record<string, unknown>[];
+    const de = (id: string) => liste.find((x) => x.id === id);
+    expect(de(a)).toMatchObject({ parentId: null, entityKind: 'organisation' });
+    expect(de(b)).toMatchObject({ parentId: a, entityKind: 'organisation' });
+    expect(de(c)).toMatchObject({ parentId: a, entityKind: 'organisation' });
+    expect(de(f)).toMatchObject({ parentId: a, entityKind: 'fournisseur' });
+    // Le type se modifie comme le reste, et le changement est journalisé.
+    const r = await modifier(b, { entityKind: 'fournisseur' });
+    expect(r.statusCode, r.body).toBe(200);
+    expect(r.json().entityKind).toBe('fournisseur');
+    const audit = await t.svc.db.one<{ details: { changed: string[] } }>(
+      "SELECT details FROM audit_log WHERE action='grc.smsi.updated' AND target=$1 ORDER BY id DESC LIMIT 1",
+      [b],
+    );
+    expect(audit!.details.changed).toContain('entityKind');
+  });
+  it('refuse les anciennes étiquettes « entité » et « périmètre », à l’API comme en base', async () => {
+    for (const entityKind of ['entite', 'perimetre']) {
+      const r = await admin.post('/api/grc/smsis', { name: 'Ancien', scope: '', timezone: 'Europe/Paris', entityKind });
+      expect(r.statusCode, r.body).toBe(422);
+      expect((await modifier(groupe, { entityKind })).statusCode).toBe(422);
+    }
+    await expect(t.svc.db.q("UPDATE grc_smsis SET entity_kind='entite' WHERE id=$1", [groupe])).rejects.toThrow();
   });
   it('ignore l’héritage d’un périmètre sans parent', async () => {
     const seul = await creer('Sans parent', { inheritFrameworks: true });

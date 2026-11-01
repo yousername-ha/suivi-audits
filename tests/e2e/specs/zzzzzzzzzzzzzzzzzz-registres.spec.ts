@@ -23,7 +23,7 @@ test('Registres : registre créé, périmètre ajouté après aperçu de l’imp
         scope: '',
         timezone: 'Europe/Paris',
         parentId: null,
-        entityKind: 'perimetre',
+        entityKind: 'organisation',
         inheritFrameworks: false,
       },
     });

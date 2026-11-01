@@ -1,6 +1,7 @@
 /* Page « Périmètres » (ADR 0030, lot M1) : créer et modifier les périmètres de management, leur donner une nature
    libre (SMSI, SMQ, SMI…) et gérer les accès des périmètres restreints. Création et modification : droit
-   `pilotage:administrer`, comme l'exige l'API. La nature est une simple étiquette, sans règle de comportement. */
+   `pilotage:administrer`, comme l'exige l'API. La nature est une simple étiquette, sans règle de comportement. Un
+   périmètre est une organisation ou un fournisseur (amendement de l'ADR 0039) ; les deux se rattachent de la même façon. */
 import {
   Alert,
   Autocomplete,
@@ -8,6 +9,7 @@ import {
   Checkbox,
   Group,
   Modal,
+  Radio,
   SegmentedControl,
   Select,
   Stack,
@@ -19,14 +21,14 @@ import {
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import {
-  LIBELLES_NIVEAU,
+  LIBELLES_TYPE_PERIMETRE,
   NATURES_PERIMETRE,
-  NIVEAUX_PERIMETRE,
+  TYPES_PERIMETRE,
   aplatir,
   arbre,
   descendants,
   type SyntheseCartes,
-  type NiveauPerimetre,
+  type TypePerimetre,
 } from '@suivi/shared';
 import { DataTable, StatusChip } from '@suivi/ui';
 import { api, ApiError, get } from '../api';
@@ -42,7 +44,7 @@ interface Perimetre {
   scope: string;
   nature: string;
   parentId: string | null;
-  entityKind: NiveauPerimetre;
+  entityKind: TypePerimetre;
   inheritFrameworks: boolean;
   visibility: 'instance' | 'restricted';
   timezone: string;
@@ -54,7 +56,7 @@ interface Formulaire {
   scope: string;
   timezone: string;
   parentId: string | null;
-  entityKind: NiveauPerimetre;
+  entityKind: TypePerimetre;
   inheritFrameworks: boolean;
 }
 const VIDE: Formulaire = {
@@ -63,7 +65,7 @@ const VIDE: Formulaire = {
   scope: '',
   timezone: 'Europe/Paris',
   parentId: null,
-  entityKind: 'perimetre',
+  entityKind: 'organisation',
   inheritFrameworks: false,
 };
 
@@ -229,8 +231,10 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
                   <Table.Td className={`hier-n${Math.min(profondeur, 8)}`}>
                     <Text fw={600}>{p.name}</Text>
                     <Text size="xs">
-                      {LIBELLES_NIVEAU[p.entityKind]}
-                      {p.parentId && nomParent(p.parentId) ? ` de ${nomParent(p.parentId)}` : ''}
+                      {LIBELLES_TYPE_PERIMETRE[p.entityKind] ?? p.entityKind}
+                      {p.parentId && nomParent(p.parentId)
+                        ? ` · ${p.entityKind === 'fournisseur' ? 'rattaché' : 'rattachée'} à ${nomParent(p.parentId)}`
+                        : ''}
                       {p.inheritFrameworks ? ' · hérite des référentiels du parent' : ''}
                     </Text>
                     {p.id === affiche && <StatusChip etat="info">Affiché dans le Pilotage</StatusChip>}
@@ -320,14 +324,18 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
               value={formulaire.valeurs.nature}
               onChange={champ('nature')}
             />
-            <Select
-              label="Niveau"
-              description="Organisation, entité ou périmètre : une étiquette de structure."
-              allowDeselect={false}
-              data={NIVEAUX_PERIMETRE.map((n) => ({ value: n, label: LIBELLES_NIVEAU[n] }))}
+            <Radio.Group
+              label="Type"
+              description="Une organisation ou un fournisseur. Les deux se rattachent de la même façon à une organisation parente."
               value={formulaire.valeurs.entityKind}
-              onChange={(v) => v && champ('entityKind')(v as NiveauPerimetre)}
-            />
+              onChange={(v) => champ('entityKind')(v as TypePerimetre)}
+            >
+              <Group gap="lg" mt="xs">
+                {TYPES_PERIMETRE.map((t) => (
+                  <Radio key={t} value={t} label={LIBELLES_TYPE_PERIMETRE[t]} />
+                ))}
+              </Group>
+            </Radio.Group>
             <Select
               label="Rattaché à"
               description="Parent dans la hiérarchie ; laisser vide pour une racine."

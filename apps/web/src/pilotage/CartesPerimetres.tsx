@@ -6,11 +6,10 @@ import { useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import {
   arbre,
-  LIBELLES_NIVEAU,
+  libelleTypePerimetre,
   type CartePerimetre,
   type Couverture,
   type CouvertureReferentiel,
-  type NiveauPerimetre,
 } from '@suivi/shared';
 
 const LARGEUR = 264;
@@ -329,12 +328,18 @@ export function CartesPerimetres({
           ))}
           {places.map(({ carte, x, y }) => (
             <foreignObject key={carte.id} x={x} y={y} width={LARGEUR} height={HAUTEUR}>
-              <div className="graphe-carte" role="group" aria-label={`Périmètre ${carte.name}`}>
+              <div
+                className={
+                  carte.entityKind === 'fournisseur' ? 'graphe-carte graphe-carte--fournisseur' : 'graphe-carte'
+                }
+                role="group"
+                aria-label={`Périmètre ${carte.name}`}
+              >
                 <Text fw={600} lineClamp={1} title={carte.name}>
                   {carte.name}
                 </Text>
                 <Text size="xs" lineClamp={1}>
-                  {LIBELLES_NIVEAU[carte.entityKind as NiveauPerimetre] ?? carte.entityKind}
+                  {libelleTypePerimetre(carte.entityKind)}
                   {carte.nature ? ` · ${carte.nature}` : ''}
                 </Text>
                 <dl className="graphe-compteurs">

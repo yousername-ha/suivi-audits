@@ -17,7 +17,7 @@ const perimetre = (nom: string) => ({
   scope: 'Fixture de recette',
   timezone: 'Europe/Paris',
   parentId: null,
-  entityKind: 'perimetre',
+  entityKind: 'organisation',
   inheritFrameworks: false,
 });
 
