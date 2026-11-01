@@ -1,3 +1,5 @@
+> 01/11/2026 : [proposition : contours Biseau plus foncés et plus visibles](propositions/contours-renforces/README.md), dans les deux vues et les deux thèmes. Intérieur et animations conservés ; **validation explicite en attente avant intégration et tests**.
+
 > 01/11/2026 : [proposition : cible violette, colonnes et alerte rouge animée](propositions/cible-violette-alerte/README.md), à partir de la palette atténuée. Noms des colonnes restaurés, halo renforcé et triangle warning ; **validation explicite en attente avant intégration et tests**.
 
 > 01/11/2026 : [nouvelle proposition : palette néon atténuée et diversifiée](propositions/palette-equilibree/README.md), après retour sur le violet trop présent. Visuels détaillés/compacts, deux thèmes et animations ; **validation explicite en attente avant intégration et tests**.
