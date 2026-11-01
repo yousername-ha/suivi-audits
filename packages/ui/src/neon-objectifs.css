@@ -1,0 +1,399 @@
+/* Objectifs et indicateurs : seules les données et les états existants alimentent la présentation. */
+.objectifs-module {
+  gap: 1.25rem;
+}
+.objectifs-commandes {
+  align-items: flex-start;
+  gap: 0.85rem;
+}
+.objectifs-commandes > p {
+  max-width: 76ch;
+  color: var(--mantine-color-dimmed);
+}
+.objectifs-synthese {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr 1fr;
+  gap: 1rem;
+}
+.objectifs-kpi {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(135deg, var(--neon-doux), var(--suivi-surface) 75%);
+}
+.objectifs-kpi:first-child {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 7rem;
+  align-items: center;
+  gap: 0.5rem;
+}
+.objectifs-repere {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: var(--mantine-color-dimmed);
+  font-size: 0.62rem;
+  font-weight: 550;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.objectifs-kpi h3 {
+  margin: 0;
+  color: var(--neon-titre);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: -0.025em;
+}
+.objectifs-kpi-valeur {
+  display: block;
+  margin-block: 0.15rem;
+  color: var(--neon-titre);
+  font-size: 2.25rem;
+  font-weight: 600;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+.objectifs-kpi .mantine-Progress-root {
+  margin-top: 0.75rem;
+  height: 0.3rem;
+}
+.objectifs-kpi .neon-anneau svg {
+  width: 7rem;
+  height: 7rem;
+}
+.objectifs-kpi .neon-ring-centre {
+  font-size: 26px;
+}
+.objectifs-outils {
+  justify-content: space-between;
+  padding-block: 0.5rem;
+}
+.objectifs-vues > .mantine-Tabs-list {
+  gap: 0.3rem;
+  padding: 0.3rem;
+  border: 1px solid var(--suivi-trait);
+  border-radius: 0.8rem;
+  background: var(--suivi-surface-douce);
+}
+.objectifs-vues > .mantine-Tabs-list::before {
+  display: none;
+}
+.objectifs-vues > .mantine-Tabs-list > .mantine-Tabs-tab {
+  padding: 0.7rem 1.1rem;
+  border: 0;
+  border-radius: 0.55rem;
+  color: var(--mantine-color-dimmed);
+  font-size: 0.8125rem;
+}
+.objectifs-vues > .mantine-Tabs-list > .mantine-Tabs-tab[data-active] {
+  color: var(--neon-titre);
+  background: var(--suivi-surface);
+  box-shadow: var(--suivi-ombre);
+}
+.objectifs-vues > .mantine-Tabs-panel {
+  padding-top: 1.25rem;
+}
+.objectifs-carte,
+.objectifs-processus,
+.objectifs-boite {
+  min-width: 0;
+  padding: 1.4rem 1.5rem;
+  background: var(--suivi-surface);
+}
+.objectifs-entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.objectifs-identite {
+  min-width: 0;
+}
+.objectifs-ouvrir,
+.objectifs-module .mantine-Button-root[data-variant='subtle'] {
+  height: auto;
+  min-height: 2rem;
+  max-width: 100%;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid var(--suivi-trait);
+  border-radius: 0.45rem;
+  color: var(--neon-titre);
+  background: var(--suivi-surface-douce);
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-align: left;
+  text-decoration: none;
+}
+.objectifs-ouvrir .mantine-Button-label,
+.objectifs-module .mantine-Button-root[data-variant='subtle'] .mantine-Button-label {
+  display: flex;
+  gap: 0.6rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.objectifs-ouvrir:hover,
+.objectifs-module .mantine-Button-root[data-variant='subtle']:hover {
+  background: var(--neon-doux);
+}
+.objectifs-titre {
+  padding: 0.5rem 0.6rem;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+.objectifs-code {
+  flex: none;
+  align-self: flex-start;
+  padding: 0.12rem 0.35rem;
+  border-radius: 0.3rem;
+  background: var(--neon-doux);
+  color: var(--neon-titre);
+  font-size: 0.67rem;
+  font-weight: 550;
+  letter-spacing: 0.025em;
+}
+.objectifs-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 2rem;
+  margin: 0.75rem 0 0;
+}
+.objectifs-meta dt {
+  color: var(--mantine-color-dimmed);
+  font-size: 0.65rem;
+}
+.objectifs-meta dd {
+  margin: 0.15rem 0 0;
+  color: var(--neon-titre);
+  font-size: 0.8rem;
+}
+.objectifs-avancement {
+  flex: none;
+}
+.objectifs-avancement .neon-anneau svg {
+  width: 5.5rem;
+  height: 5.5rem;
+}
+.objectifs-avancement .neon-ring-centre {
+  font-size: 27px;
+}
+.objectifs-table-indicateurs .data-table {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.objectifs-table-indicateurs th {
+  color: var(--mantine-color-dimmed);
+  font-size: 0.65rem;
+  font-weight: 500;
+}
+.objectifs-table-indicateurs td {
+  padding-block: 0.9rem;
+  font-size: 0.8rem;
+}
+.objectifs-valeur {
+  color: var(--neon-titre);
+  font-size: 1.1rem;
+  font-variant-numeric: tabular-nums;
+}
+.objectifs-tendance {
+  display: inline-block;
+  width: 0.95rem;
+  height: 0.95rem;
+  vertical-align: middle;
+  color: var(--mantine-color-dimmed);
+}
+.objectifs-famille {
+  padding-left: 0.75rem;
+  border-left: 3px solid var(--neon-accent);
+  color: var(--neon-titre);
+  font-size: 0.875rem;
+}
+.objectifs-processus .objectifs-bloc {
+  padding-top: 1rem;
+  border-top: 1px solid var(--suivi-trait);
+}
+.objectifs-boite-ligne {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  padding-block: 0.75rem;
+  border-bottom: 1px solid var(--suivi-trait);
+}
+.objectifs-boite-ligne > .mantine-Button-root {
+  grid-column: 1 / -1;
+}
+.objectifs-table-compacte :is(.col-p2, .col-p3) {
+  display: table-cell;
+}
+.objectifs-table-compacte table {
+  table-layout: fixed;
+}
+.objectifs-table-compacte th:nth-child(1) {
+  width: 22%;
+}
+.objectifs-table-compacte th:nth-child(3) {
+  width: 38%;
+}
+.objectifs-table-compacte td {
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+.objectifs-indicateur-resume {
+  flex-wrap: wrap;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--suivi-trait);
+}
+.objectifs-indicateur-resume > .mantine-Button-root {
+  order: -1;
+  flex-basis: 100%;
+}
+/* Fiches : groupes de champs lisibles, hauteur naturelle et actions existantes. */
+.objectifs-fiche .objectif-champs {
+  min-width: 0;
+  margin: 0;
+  padding: 1.2rem;
+  border: 1px solid var(--suivi-trait);
+  border-radius: 0.8rem;
+  background: color-mix(in srgb, var(--mantine-color-encre-9) 4%, var(--suivi-surface));
+}
+.objectifs-fiche .objectif-champs > legend {
+  padding-inline: 0.5rem;
+  color: var(--neon-titre);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.objectifs-fiche .objectif-champs > .mantine-Stack-root {
+  gap: 1.1rem;
+}
+.objectifs-fiche .objectif-grille {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 1.1rem;
+}
+.objectifs-fiche .objectif-grille--trois {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.objectifs-fiche .objectif-grille > * {
+  min-width: 0;
+  width: 100%;
+  max-width: none;
+}
+@media (max-width: 64em) {
+  .objectifs-synthese {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .objectifs-kpi {
+    padding: 1.1rem;
+  }
+  .objectifs-kpi:first-child {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .objectifs-kpi:first-child .neon-anneau {
+    display: none;
+  }
+  .objectifs-kpi:first-child > div > p {
+    font-size: 0.875rem;
+  }
+}
+@media (max-width: 48em) {
+  .objectifs-synthese {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .objectifs-kpi:first-child {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(0, 1fr) 6rem;
+  }
+  .objectifs-kpi:first-child .neon-anneau {
+    display: block;
+  }
+  .objectifs-kpi .neon-anneau svg {
+    width: 6rem;
+    height: 6rem;
+  }
+  .objectifs-commandes > .mantine-Group-root {
+    width: 100%;
+  }
+  .objectifs-commandes > .mantine-Group-root > button {
+    flex: 1 1 auto;
+  }
+  .objectifs-kpi {
+    padding: 1.25rem;
+  }
+  .objectifs-outils {
+    align-items: flex-start;
+  }
+  .objectifs-vues > .mantine-Tabs-list > .mantine-Tabs-tab {
+    flex: 1;
+    padding: 0.65rem 0.5rem;
+  }
+  .objectifs-carte,
+  .objectifs-processus,
+  .objectifs-boite {
+    padding: 1rem;
+  }
+  .objectifs-entete {
+    align-items: flex-start;
+    gap: 0.4rem;
+  }
+  .objectifs-titre {
+    font-size: 0.875rem;
+  }
+  .objectifs-titre .mantine-Button-label {
+    flex-direction: column;
+  }
+  .objectifs-avancement .neon-anneau svg {
+    width: 4.2rem;
+    height: 4.2rem;
+  }
+  :is(.objectifs-table-indicateurs, .objectifs-table-compacte) :is(table, tbody) {
+    display: block;
+    width: 100%;
+  }
+  :is(.objectifs-table-indicateurs, .objectifs-table-compacte) thead {
+    display: none;
+  }
+  :is(.objectifs-table-indicateurs, .objectifs-table-compacte) tbody > tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--suivi-trait);
+  }
+  :is(.objectifs-table-indicateurs, .objectifs-table-compacte) td {
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+  :is(.objectifs-table-indicateurs, .objectifs-table-compacte) td[data-label]::before {
+    display: block;
+    margin-bottom: 0.35rem;
+    color: var(--mantine-color-dimmed);
+    font-size: 0.65rem;
+    content: attr(data-label);
+  }
+  .objectifs-table-indicateurs .objectifs-cellule-nom {
+    grid-column: 1 / -1;
+  }
+  .objectifs-table-indicateurs .objectifs-cellule-nom::before {
+    display: none;
+  }
+  .objectifs-table-indicateurs .objectifs-cellule-etat {
+    grid-column: 1 / -1;
+  }
+  .objectifs-table-compacte td[data-label='Objectif'],
+  .objectifs-table-compacte td[data-label='Indicateurs'] {
+    grid-column: 1 / -1;
+  }
+  .objectifs-fiche .objectif-champs {
+    padding: 1rem;
+  }
+  .objectifs-fiche :is(.objectif-grille, .objectif-grille--trois) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

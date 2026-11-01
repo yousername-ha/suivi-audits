@@ -13,7 +13,7 @@ import {
   type IndicateurObjectif,
   type ObjectifPilotage,
 } from '@suivi/shared';
-import { DataTable, StatusChip, type Etat } from '@suivi/ui';
+import { DataTable, NeonAnneau, StatusChip, type Etat } from '@suivi/ui';
 import { get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { Filtres } from '../components/Filtres';
@@ -43,6 +43,25 @@ interface Boite {
 }
 const PIRE: EtatIndicateur[] = ['ko', 'undef', 'na', 'ok'];
 type Ouvert = { type: 'processus' | 'objectif' | 'indicateur'; id: string } | null;
+
+function Tendance({ valeur }: { valeur: IndicateurObjectif['tendance'] }) {
+  if (!valeur) return null;
+  return (
+    <svg
+      className="objectifs-tendance"
+      viewBox="0 0 16 16"
+      role="img"
+      aria-label={`Tendance : ${valeur === '↗' ? 'en hausse' : valeur === '↘' ? 'en baisse' : 'stable'}`}
+    >
+      <path
+        d={valeur === '↗' ? 'M3 13 13 3M5 3h8v8' : valeur === '↘' ? 'M3 3 13 13M5 13h8V5' : 'M2 8h12m-4-4 4 4-4 4'}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+    </svg>
+  );
+}
 
 export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { smsi: string; vue?: Vue }) {
   const can = useCan(),
@@ -86,91 +105,110 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
     if (!lignes.length)
       return <Text size="sm">{o.indicateurs.length ? 'Aucun indicateur pour ce filtre.' : 'Aucun indicateur.'}</Text>;
     return (
-      <DataTable label={`Indicateurs de l’objectif ${o.id}`}>
-        <Table>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th className="col-p3">Code</Table.Th>
-              <Table.Th>Indicateur</Table.Th>
-              <Table.Th className="col-p2">Cible</Table.Th>
-              <Table.Th>Valeur</Table.Th>
-              <Table.Th>État</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {lignes.map((i) => (
-              <Table.Tr key={i.id}>
-                <Table.Td className="col-p3">
-                  <Button
-                    variant="subtle"
-                    size="compact-sm"
-                    aria-label={`Ouvrir l’indicateur ${i.id}`}
-                    onClick={() => ouvrirIndicateur(i.id)}
-                  >
-                    {i.id}
-                  </Button>
-                </Table.Td>
-                <Table.Td>
-                  {i.nom}
-                  {i.calcule && (
-                    <Badge ml="xs" size="sm" variant="light">
-                      calculé
-                    </Badge>
-                  )}
-                  {i.categorie === 'satisfaction' && (
-                    <Badge ml="xs" size="sm" variant="light" color="encre">
-                      satisfaction client
-                    </Badge>
-                  )}
-                </Table.Td>
-                <Table.Td className="col-p2">{i.cible}</Table.Td>
-                <Table.Td>
-                  <Text span fw={700}>
-                    {i.valeur}
-                  </Text>{' '}
-                  {i.tendance}
-                  <Text size="xs" c="dimmed">
-                    {i.source ? (i.calcule ? i.source : jour(i.source)) : ''}
-                  </Text>
-                  {i.historique && (
-                    <Text size="xs" c="dimmed">
-                      {i.historique.periode} : {i.historique.valeur}
-                    </Text>
-                  )}
-                </Table.Td>
-                <Table.Td>
-                  <StatusChip etat={ETATS[i.etat][1]}>{ETATS[i.etat][0]}</StatusChip>
-                </Table.Td>
+      <div className="objectifs-table-indicateurs">
+        <DataTable label={`Indicateurs de l’objectif ${o.id}`}>
+          <Table>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Indicateur</Table.Th>
+                <Table.Th>Cible</Table.Th>
+                <Table.Th>Valeur</Table.Th>
+                <Table.Th>État</Table.Th>
               </Table.Tr>
-            ))}
-          </Table.Tbody>
-        </Table>
-      </DataTable>
+            </Table.Thead>
+            <Table.Tbody>
+              {lignes.map((i) => (
+                <Table.Tr key={i.id}>
+                  <Table.Td data-label="Indicateur" className="objectifs-cellule-nom">
+                    <Button
+                      variant="default"
+                      size="compact-sm"
+                      className="objectifs-ouvrir"
+                      aria-label={`Ouvrir l’indicateur ${i.id}`}
+                      onClick={() => ouvrirIndicateur(i.id)}
+                    >
+                      <span className="objectifs-code">{i.id}</span>
+                      <span>{i.nom}</span>
+                    </Button>
+                    {i.calcule && (
+                      <Badge ml="xs" size="sm" variant="light">
+                        calculé
+                      </Badge>
+                    )}
+                    {i.categorie === 'satisfaction' && (
+                      <Badge ml="xs" size="sm" variant="light" color="encre">
+                        satisfaction client
+                      </Badge>
+                    )}
+                  </Table.Td>
+                  <Table.Td data-label="Cible">{i.cible}</Table.Td>
+                  <Table.Td data-label="Valeur">
+                    <Text span fw={650} className="objectifs-valeur">
+                      {i.valeur}
+                    </Text>{' '}
+                    <Tendance valeur={i.tendance} />
+                    <Text size="xs" c="dimmed">
+                      {i.source ? (i.calcule ? i.source : jour(i.source)) : ''}
+                    </Text>
+                    {i.historique && (
+                      <Text size="xs" c="dimmed">
+                        {i.historique.periode} : {i.historique.valeur}
+                      </Text>
+                    )}
+                  </Table.Td>
+                  <Table.Td data-label="État" className="objectifs-cellule-etat">
+                    <StatusChip etat={ETATS[i.etat][1]}>{ETATS[i.etat][0]}</StatusChip>
+                  </Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+        </DataTable>
+      </div>
     );
   };
   const blocObjectif = (o: ObjectifPilotage) => (
-    <Stack key={o.id} gap="xs">
-      <Group gap="xs">
-        <Button
-          variant="subtle"
-          size="compact-sm"
-          aria-label={`Ouvrir l’objectif ${o.id}`}
-          onClick={() => setOuvert({ type: 'objectif', id: o.id })}
-        >
-          {o.id}
-        </Button>
-        <Text fw={600}>{o.nom}</Text>
-        <Text size="sm" c="dimmed">
-          Échéance {jour(o.echeance)} · {o.responsable || 'responsable à définir'}
-        </Text>
-      </Group>
+    <Stack key={o.id} gap="sm" className="objectifs-bloc" role="group" aria-label={`Objectif ${o.id}`}>
+      <div className="objectifs-entete">
+        <div className="objectifs-identite">
+          <Button
+            variant="default"
+            size="compact-sm"
+            className="objectifs-ouvrir objectifs-titre"
+            aria-label={`Ouvrir l’objectif ${o.id}`}
+            onClick={() => setOuvert({ type: 'objectif', id: o.id })}
+          >
+            <span className="objectifs-code">{o.id}</span>
+            <span>{o.nom}</span>
+          </Button>
+          <dl className="objectifs-meta">
+            <div>
+              <dt>Responsable</dt>
+              <dd>{o.responsable || 'À définir'}</dd>
+            </div>
+            <div>
+              <dt>Échéance</dt>
+              <dd>{jour(o.echeance)}</dd>
+            </div>
+          </dl>
+        </div>
+        <div className="objectifs-avancement">
+          <NeonAnneau
+            titre={`Indicateurs atteints de l’objectif ${o.id}`}
+            valeur={o.atteints}
+            total={o.indicateurs.length}
+            centre={o.indicateurs.length ? `${o.atteints}/${o.indicateurs.length}` : '—'}
+            detail="atteints"
+          />
+        </div>
+      </div>
       {tableauIndicateurs(o)}
     </Stack>
   );
 
   return (
-    <Stack>
-      <Group justify="space-between">
+    <Stack className="objectifs-module">
+      <Group justify="space-between" className="objectifs-commandes">
         <Text size="sm">
           Processus, objectifs de sécurité et indicateurs associés. Les indicateurs marqués « calculé » sont alimentés
           par les autres modules ; aucune valeur n’est estimée.
@@ -191,31 +229,54 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
       </Group>
       <ErrorAlert error={erreur ?? q.error} />
       {synthese && (
-        <Group gap="lg" aria-label="Synthèse des indicateurs">
-          <div>
-            <Text fw={700} size="xl">
-              {synthese.atteints}/{synthese.total}
+        <section className="objectifs-synthese" aria-label="Synthèse des indicateurs">
+          <Card withBorder className="objectifs-kpi neon-cadre-biseau">
+            <div>
+              <span className="objectifs-repere">Résultats mesurés</span>
+              <h3>Indicateurs atteints</h3>
+              <Text size="sm" c="dimmed">
+                {synthese.atteints} sur {synthese.total} indicateurs
+              </Text>
+            </div>
+            <NeonAnneau
+              titre="Indicateurs atteints"
+              valeur={synthese.atteints}
+              total={synthese.total}
+              centre={synthese.total ? `${synthese.atteints}/${synthese.total}` : '—'}
+            />
+          </Card>
+          <Card withBorder className="objectifs-kpi neon-cadre-biseau" data-etat="ko">
+            <span className="objectifs-repere">Résultats à suivre</span>
+            <h3>Non atteints</h3>
+            <strong className="objectifs-kpi-valeur">{synthese.nonAtteints}</strong>
+            <Text size="sm" c="dimmed">
+              sur {synthese.total} indicateurs
             </Text>
-            <Text size="sm">indicateurs atteints</Text>
-          </div>
-          <div>
-            <Text fw={700} size="xl">
-              {synthese.nonAtteints}
+            <Progress
+              value={synthese.total ? (synthese.nonAtteints * 100) / synthese.total : 0}
+              color="red"
+              aria-label={`${synthese.nonAtteints} indicateurs non atteints sur ${synthese.total}`}
+            />
+          </Card>
+          <Card withBorder className="objectifs-kpi neon-cadre-biseau" data-etat="na">
+            <span className="objectifs-repere">Mesure et définition</span>
+            <h3>À mesurer ou définir</h3>
+            <strong className="objectifs-kpi-valeur">{synthese.nonMesures}</strong>
+            <Text size="sm" c="dimmed">
+              non mesurés ou cible à définir
             </Text>
-            <Text size="sm">non atteints</Text>
-          </div>
-          <div>
-            <Text fw={700} size="xl">
-              {synthese.nonMesures}
-            </Text>
-            <Text size="sm">non mesurés ou cible à définir</Text>
-          </div>
-        </Group>
+            <Progress
+              value={synthese.total ? (synthese.nonMesures * 100) / synthese.total : 0}
+              color="gray"
+              aria-label={`${synthese.nonMesures} indicateurs non mesurés ou cible à définir sur ${synthese.total}`}
+            />
+          </Card>
+        </section>
       )}
       {donnees && !objectifs.length && !rProcessus.length && <Text>Aucun processus ni objectif enregistré.</Text>}
       {donnees && (
         <>
-          <Group>
+          <Group className="objectifs-outils">
             <Filtres actifs={etat === 'all' ? 0 : 1} onReinitialiser={() => setEtat('all')}>
               <Tabs value={etat} onChange={(v) => setEtat(v ?? 'all')} variant="pills">
                 <Tabs.List>
@@ -241,7 +302,12 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
               ))}
             </Group>
           </Group>
-          <Tabs value={vue} onChange={(v) => setVue((v as Vue) ?? 'processus')} keepMounted={false}>
+          <Tabs
+            className="objectifs-vues"
+            value={vue}
+            onChange={(v) => setVue((v as Vue) ?? 'processus')}
+            keepMounted={false}
+          >
             <Tabs.List>
               <Tabs.Tab value="processus">Par processus</Tabs.Tab>
               <Tabs.Tab value="objectif">Par objectif</Tabs.Tab>
@@ -275,7 +341,12 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
                     const pire = PIRE.find((e) => tous.some((i) => i.etat === e));
                     const b = boites.data?.find((x) => x.ref === `legacy:processes:${id}`);
                     return (
-                      <Card key={id} withBorder aria-label={`Boîte du processus ${id}`}>
+                      <Card
+                        key={id}
+                        withBorder
+                        className="objectifs-boite neon-cadre-biseau"
+                        aria-label={`Boîte du processus ${id}`}
+                      >
                         <Stack gap="xs">
                           <Group justify="space-between" wrap="nowrap">
                             <Button
@@ -293,7 +364,7 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
                           </Text>
                           {tous.length ? (
                             tous.map((i) => (
-                              <Group key={i.id} justify="space-between" wrap="nowrap">
+                              <Group key={i.id} justify="space-between" wrap="nowrap" className="objectifs-boite-ligne">
                                 <Button
                                   variant="subtle"
                                   size="compact-sm"
@@ -303,7 +374,7 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
                                   {i.nom}
                                 </Button>
                                 <Text size="sm">
-                                  <b>{i.valeur}</b> {i.tendance} · {i.cible}
+                                  <b>{i.valeur}</b> <Tendance valeur={i.tendance} /> · {i.cible}
                                 </Text>
                                 <StatusChip etat={ETATS[i.etat][1]}>{ETATS[i.etat][0]}</StatusChip>
                               </Group>
@@ -336,11 +407,11 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
               <Stack>
                 {parProcessus?.familles.map((f) => (
                   <Stack key={f.famille} gap="xs">
-                    <Text fw={600}>
+                    <Text fw={600} className="objectifs-famille">
                       {f.famille === 'Autres' ? 'Processus non classés' : `Processus de ${f.famille.toLowerCase()}`}
                     </Text>
                     {f.avecObjectif.map((p) => (
-                      <Card key={p.id} withBorder>
+                      <Card key={p.id} withBorder className="objectifs-processus neon-cadre-biseau">
                         <Stack gap="xs">
                           <Group gap="xs">
                             <Button
@@ -379,7 +450,7 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
                   </Stack>
                 ))}
                 {!!parProcessus?.sansProcessus.length && (
-                  <Card withBorder>
+                  <Card withBorder className="objectifs-processus neon-cadre-biseau">
                     <Stack gap="xs">
                       <Text fw={600}>Objectifs sans processus</Text>
                       {parProcessus.sansProcessus.map(blocObjectif)}
@@ -394,7 +465,7 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
                   const brut = ligne(rObjectifs, o.id);
                   const enjeux = Array.isArray(brut?.enjeux) ? (brut.enjeux as unknown[]).map(texte) : [];
                   return (
-                    <Card key={o.id} withBorder>
+                    <Card key={o.id} withBorder className="objectifs-carte neon-cadre-biseau">
                       <Stack gap="xs">
                         {blocObjectif(o)}
                         {!!enjeux.length && (
@@ -415,73 +486,81 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
               </Stack>
             </Tabs.Panel>
             <Tabs.Panel value="compacte">
-              <DataTable label="Objectifs, vue compacte">
-                <Table>
-                  <Table.Thead>
-                    <Table.Tr>
-                      <Table.Th>Objectif</Table.Th>
-                      <Table.Th className="col-p2">Processus</Table.Th>
-                      <Table.Th>Indicateurs (valeur · cible)</Table.Th>
-                      <Table.Th>Atteints</Table.Th>
-                      <Table.Th className="col-p2">Échéance</Table.Th>
-                      <Table.Th className="col-p3">Responsable</Table.Th>
-                    </Table.Tr>
-                  </Table.Thead>
-                  <Table.Tbody>
-                    {objectifs.map((o) => (
-                      <Table.Tr key={o.id}>
-                        <Table.Td>
-                          <Button
-                            variant="subtle"
-                            size="compact-sm"
-                            onClick={() => setOuvert({ type: 'objectif', id: o.id })}
-                          >
-                            {o.id} · {o.nom}
-                          </Button>
-                        </Table.Td>
-                        <Table.Td className="col-p2">{o.processus.join(', ') || '–'}</Table.Td>
-                        <Table.Td>
-                          <Stack gap="2xs">
-                            {o.indicateurs.filter(garde).map((i) => (
-                              <Group key={i.id} gap="xs" wrap="nowrap">
-                                <StatusChip etat={ETATS[i.etat][1]}>{ETATS[i.etat][0]}</StatusChip>
-                                <Button
-                                  variant="subtle"
-                                  size="compact-sm"
-                                  aria-label={`Ouvrir l’indicateur ${i.id}`}
-                                  onClick={() => ouvrirIndicateur(i.id)}
-                                >
-                                  {i.id.replace('INDOBJ', '')} {i.nom}
-                                  {i.calcule ? ' (auto)' : ''}
-                                </Button>
-                                <Text size="sm">
-                                  <b>{i.valeur}</b> {i.tendance} · {i.cible}
-                                </Text>
-                                {i.valeur === '–' && i.historique && (
-                                  <Text size="xs" c="dimmed">
-                                    {i.historique.periode} : {i.historique.valeur}
-                                  </Text>
-                                )}
-                              </Group>
-                            ))}
-                          </Stack>
-                        </Table.Td>
-                        <Table.Td>
-                          <Progress
-                            value={o.indicateurs.length ? (o.atteints * 100) / o.indicateurs.length : 0}
-                            aria-label={`${o.atteints} indicateur(s) atteint(s) sur ${o.indicateurs.length}`}
-                          />
-                          <Text size="xs">
-                            {o.atteints}/{o.indicateurs.length}
-                          </Text>
-                        </Table.Td>
-                        <Table.Td className="col-p2">{jour(o.echeance)}</Table.Td>
-                        <Table.Td className="col-p3">{o.responsable || '–'}</Table.Td>
+              <div className="objectifs-table-compacte">
+                <DataTable label="Objectifs, vue compacte">
+                  <Table>
+                    <Table.Thead>
+                      <Table.Tr>
+                        <Table.Th>Objectif</Table.Th>
+                        <Table.Th className="col-p2">Processus</Table.Th>
+                        <Table.Th>Indicateurs (valeur · cible)</Table.Th>
+                        <Table.Th>Atteints</Table.Th>
+                        <Table.Th className="col-p2">Échéance</Table.Th>
+                        <Table.Th className="col-p3">Responsable</Table.Th>
                       </Table.Tr>
-                    ))}
-                  </Table.Tbody>
-                </Table>
-              </DataTable>
+                    </Table.Thead>
+                    <Table.Tbody>
+                      {objectifs.map((o) => (
+                        <Table.Tr key={o.id}>
+                          <Table.Td data-label="Objectif">
+                            <Button
+                              variant="subtle"
+                              size="compact-sm"
+                              onClick={() => setOuvert({ type: 'objectif', id: o.id })}
+                            >
+                              {o.id} · {o.nom}
+                            </Button>
+                          </Table.Td>
+                          <Table.Td className="col-p2" data-label="Processus">
+                            {o.processus.join(', ') || '–'}
+                          </Table.Td>
+                          <Table.Td data-label="Indicateurs">
+                            <Stack gap="2xs">
+                              {o.indicateurs.filter(garde).map((i) => (
+                                <Group key={i.id} gap="xs" wrap="nowrap" className="objectifs-indicateur-resume">
+                                  <StatusChip etat={ETATS[i.etat][1]}>{ETATS[i.etat][0]}</StatusChip>
+                                  <Button
+                                    variant="subtle"
+                                    size="compact-sm"
+                                    aria-label={`Ouvrir l’indicateur ${i.id}`}
+                                    onClick={() => ouvrirIndicateur(i.id)}
+                                  >
+                                    {i.id.replace('INDOBJ', '')} {i.nom}
+                                    {i.calcule ? ' (auto)' : ''}
+                                  </Button>
+                                  <Text size="sm">
+                                    <b>{i.valeur}</b> <Tendance valeur={i.tendance} /> · {i.cible}
+                                  </Text>
+                                  {i.valeur === '–' && i.historique && (
+                                    <Text size="xs" c="dimmed">
+                                      {i.historique.periode} : {i.historique.valeur}
+                                    </Text>
+                                  )}
+                                </Group>
+                              ))}
+                            </Stack>
+                          </Table.Td>
+                          <Table.Td data-label="Atteints">
+                            <Progress
+                              value={o.indicateurs.length ? (o.atteints * 100) / o.indicateurs.length : 0}
+                              aria-label={`${o.atteints} indicateur(s) atteint(s) sur ${o.indicateurs.length}`}
+                            />
+                            <Text size="xs">
+                              {o.atteints}/{o.indicateurs.length}
+                            </Text>
+                          </Table.Td>
+                          <Table.Td className="col-p2" data-label="Échéance">
+                            {jour(o.echeance)}
+                          </Table.Td>
+                          <Table.Td className="col-p3" data-label="Responsable">
+                            {o.responsable || '–'}
+                          </Table.Td>
+                        </Table.Tr>
+                      ))}
+                    </Table.Tbody>
+                  </Table>
+                </DataTable>
+              </div>
             </Tabs.Panel>
           </Tabs>
         </>

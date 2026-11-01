@@ -1,3 +1,5 @@
+> 01/11/2026 : [Objectifs et indicateurs : synthèse, cartes et fiches Neon](OBJECTIFS-INDICATEURS.md), captures réelles et contrôles.
+
 > 01/11/2026 : [enjeux internes/externes et interfaces/dépendances distingués](CONTEXTE-CATEGORIES.md), captures et règles de lecture des textes existants.
 
 > 01/11/2026 : [fenêtres Biseau et correction des dimensions](FENETRES-GLOBALES.md). Les dalles et corps de fenêtre ne défilent plus ; les longues fiches utilisent le voile extérieur.

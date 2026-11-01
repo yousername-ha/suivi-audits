@@ -16,7 +16,7 @@ import {
   TextInput,
 } from '@mantine/core';
 import { useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { formatValeurIndicateur } from '@suivi/shared';
 import { optionsTypesProcessus, useTypesProcessus } from '../processus/types';
 import { ConfirmButton, DataTable } from '@suivi/ui';
@@ -66,6 +66,15 @@ const saisieCible = (ind: Ligne) =>
   typeof ind.target === 'number' && ind.target > 0 && ind.target <= 1
     ? formatValeurIndicateur(ind, ind.target)
     : texte(ind.target);
+
+function RubriqueObjectifs({ titre, children }: { titre: string; children: ReactNode }) {
+  return (
+    <fieldset className="objectif-champs">
+      <legend>{titre}</legend>
+      <Stack>{children}</Stack>
+    </fieldset>
+  );
+}
 
 /* ------------------------------------------------------------------------------------------ Processus */
 export function FicheProcessus({
@@ -134,58 +143,63 @@ export function FicheProcessus({
     if ((await ecrire('PATCH', `processes/${encodeURIComponent(id)}`, v)) !== null) onClose();
   };
   return (
-    <Modal opened onClose={onClose} size="xl" title={`Processus ${id}`}>
+    <Modal opened onClose={onClose} size="xl" classNames={{ content: 'objectifs-fiche' }} title={`Processus ${id}`}>
       <Stack>
         <ErrorAlert error={erreur} />
-        <Group grow align="flex-start">
-          {champ('name', 'Nom du processus', undefined, false)}
-          {champ('owner', 'Pilote', undefined, false)}
-        </Group>
-        <Group grow align="flex-start">
-          <Select
-            label="Type de processus"
-            clearable
-            disabled={!modifiable}
-            data={optionsTypesProcessus(types.data, v.family)}
-            value={v.family || null}
-            onChange={(f) => setV({ ...v, family: f ?? '' })}
-          />
-          {champ('parent', 'Processus parent', undefined, false)}
-          {champ('entity', 'Entité', undefined, false)}
-        </Group>
-        {champ('purpose', 'Finalité du processus')}
-        {champ('scope', 'Périmètre')}
-        <Text fw={600}>Fiche processus (ISO 9001:2015, 4.4.1)</Text>
-        <Text size="sm">
-          Champs facultatifs, vides par défaut : la norme demande de les déterminer, sans imposer de contenu.
-        </Text>
-        {champ('inputs', 'Entrées requises (a)', 'Les entrées requises pour le processus.')}
-        {champ('outputs', 'Sorties attendues (a)', 'Les sorties attendues du processus.')}
-        {champ('sequence', 'Séquence et interaction avec les autres processus (b)')}
-        {champ(
-          'controlCriteria',
-          'Critères et méthodes de maîtrise (c)',
-          'Surveillance, mesures et indicateurs de performance.',
-        )}
-        {champ('resources', 'Ressources nécessaires et leur disponibilité (d)')}
-        {champ('responsibilities', 'Responsabilités et autorités (e)')}
-        {champ('risksOpportunities', 'Risques et opportunités (f)', 'Selon l’article 6.1.')}
-        {champ('evaluation', 'Évaluation du processus et changements nécessaires (g)')}
-        {champ('improvement', 'Amélioration du processus et du système de management (h)')}
-        <Text fw={600}>Indicateurs associés (c)</Text>
-        {indicateursLies.length ? (
+        <RubriqueObjectifs titre="Identité et périmètre">
+          <Group grow align="flex-start" className="objectif-grille">
+            {champ('name', 'Nom du processus', undefined, false)}
+            {champ('owner', 'Pilote', undefined, false)}
+          </Group>
+          <Group grow align="flex-start" className="objectif-grille">
+            <Select
+              label="Type de processus"
+              clearable
+              disabled={!modifiable}
+              data={optionsTypesProcessus(types.data, v.family)}
+              value={v.family || null}
+              onChange={(f) => setV({ ...v, family: f ?? '' })}
+            />
+            {champ('parent', 'Processus parent', undefined, false)}
+            {champ('entity', 'Entité', undefined, false)}
+          </Group>
+          {champ('purpose', 'Finalité du processus')}
+          {champ('scope', 'Périmètre')}
+        </RubriqueObjectifs>
+        <RubriqueObjectifs titre="Fiche processus (ISO 9001:2015, 4.4.1)">
           <Text size="sm">
-            {indicateursLies.map((i) => `${texte(i.id)} ${texte(i.name)}`).join(' · ')} — rattachés par leurs objectifs
-            ou directement.
+            Champs facultatifs, vides par défaut : la norme demande de les déterminer, sans imposer de contenu.
           </Text>
-        ) : (
-          <Text size="sm">Aucun indicateur rattaché à ce processus.</Text>
-        )}
-        <Text fw={600}>Objectifs rattachés</Text>
-        <Text size="sm">
-          {siens.length ? siens.map((o) => `${texte(o.id)} ${texte(o.name)}`).join(' · ') : 'Aucun.'}
-        </Text>
-        <Group justify="space-between">
+          {champ('inputs', 'Entrées requises (a)', 'Les entrées requises pour le processus.')}
+          {champ('outputs', 'Sorties attendues (a)', 'Les sorties attendues du processus.')}
+          {champ('sequence', 'Séquence et interaction avec les autres processus (b)')}
+          {champ(
+            'controlCriteria',
+            'Critères et méthodes de maîtrise (c)',
+            'Surveillance, mesures et indicateurs de performance.',
+          )}
+          {champ('resources', 'Ressources nécessaires et leur disponibilité (d)')}
+          {champ('responsibilities', 'Responsabilités et autorités (e)')}
+          {champ('risksOpportunities', 'Risques et opportunités (f)', 'Selon l’article 6.1.')}
+          {champ('evaluation', 'Évaluation du processus et changements nécessaires (g)')}
+          {champ('improvement', 'Amélioration du processus et du système de management (h)')}
+        </RubriqueObjectifs>
+        <RubriqueObjectifs titre="Rattachements">
+          <Text fw={600}>Indicateurs associés (c)</Text>
+          {indicateursLies.length ? (
+            <Text size="sm">
+              {indicateursLies.map((i) => `${texte(i.id)} ${texte(i.name)}`).join(' · ')} — rattachés par leurs
+              objectifs ou directement.
+            </Text>
+          ) : (
+            <Text size="sm">Aucun indicateur rattaché à ce processus.</Text>
+          )}
+          <Text fw={600}>Objectifs rattachés</Text>
+          <Text size="sm">
+            {siens.length ? siens.map((o) => `${texte(o.id)} ${texte(o.name)}`).join(' · ') : 'Aucun.'}
+          </Text>
+        </RubriqueObjectifs>
+        <Group justify="space-between" className="fenetre-actions objectifs-fiche-actions">
           {modifiable && peutSupprimer ? (
             <ConfirmButton
               size="xs"
@@ -264,90 +278,97 @@ export function FicheObjectif({
     if (ok !== null) onClose();
   };
   return (
-    <Modal opened onClose={onClose} size="xl" title={`Objectif ${id}`}>
+    <Modal opened onClose={onClose} size="xl" classNames={{ content: 'objectifs-fiche' }} title={`Objectif ${id}`}>
       <Stack>
         <ErrorAlert error={erreur} />
-        <Textarea
-          label="Objectif"
-          autosize
-          minRows={2}
-          disabled={!modifiable}
-          value={nom}
-          onChange={(e) => setNom(e.currentTarget.value)}
-        />
-        <Group grow align="flex-start">
-          <TextInput
-            label="Échéance"
-            type="date"
+        <RubriqueObjectifs titre="Objectif et responsabilité">
+          <Textarea
+            label="Objectif"
+            autosize
+            minRows={2}
             disabled={!modifiable}
-            value={echeance}
-            onChange={(e) => setEcheance(e.currentTarget.value)}
+            value={nom}
+            onChange={(e) => setNom(e.currentTarget.value)}
           />
-          <TextInput
-            label="Responsable"
-            disabled={!modifiable}
-            value={responsable}
-            onChange={(e) => setResponsable(e.currentTarget.value)}
-          />
-        </Group>
-        <div>
-          <Text fw={600}>Processus associés</Text>
-          <Chip.Group multiple value={liens} onChange={setLiens}>
-            <Group gap="xs">
-              {processus.map((p) => (
-                <Chip key={texte(p.id)} value={texte(p.id)} disabled={!modifiable}>
-                  {texte(p.id)}
-                </Chip>
-              ))}
-              {!processus.length && <Text size="sm">Aucun processus.</Text>}
-            </Group>
-          </Chip.Group>
-        </div>
-        <Textarea
-          label="Enjeux associés (un par ligne)"
-          autosize
-          minRows={3}
-          disabled={!modifiable}
-          value={enjeux}
-          onChange={(e) => setEnjeux(e.currentTarget.value)}
-        />
-        <Text fw={600}>Planification de l’atteinte (ISO 9001:2015, 6.2.2)</Text>
-        <Textarea
-          label="Ce qui sera fait"
-          autosize
-          minRows={2}
-          disabled={!modifiable}
-          value={plan}
-          onChange={(e) => setPlan(e.currentTarget.value)}
-        />
-        <Textarea
-          label="Ressources nécessaires"
-          autosize
-          minRows={2}
-          disabled={!modifiable}
-          value={ressources}
-          onChange={(e) => setRessources(e.currentTarget.value)}
-        />
-        <Textarea
-          label="Comment les résultats seront évalués"
-          autosize
-          minRows={2}
-          disabled={!modifiable}
-          value={evaluation}
-          onChange={(e) => setEvaluation(e.currentTarget.value)}
-        />
-        <div>
-          <Text fw={600}>Indicateurs</Text>
-          <Group gap="xs">
-            {siens.map((i) => (
-              <Button key={texte(i.id)} size="xs" variant="default" onClick={() => onOpenIndicateur(texte(i.id))}>
-                {texte(i.id)}
-              </Button>
-            ))}
-            {!siens.length && <Text size="sm">Aucun.</Text>}
+          <Group grow align="flex-start" className="objectif-grille">
+            <TextInput
+              label="Échéance"
+              type="date"
+              disabled={!modifiable}
+              value={echeance}
+              onChange={(e) => setEcheance(e.currentTarget.value)}
+            />
+            <TextInput
+              label="Responsable"
+              disabled={!modifiable}
+              value={responsable}
+              onChange={(e) => setResponsable(e.currentTarget.value)}
+            />
           </Group>
-        </div>
-        <Group justify="space-between">
+        </RubriqueObjectifs>
+        <RubriqueObjectifs titre="Processus et enjeux">
+          <div>
+            <Text fw={600}>Processus associés</Text>
+            <Chip.Group multiple value={liens} onChange={setLiens}>
+              <Group gap="xs">
+                {processus.map((p) => (
+                  <Chip key={texte(p.id)} value={texte(p.id)} disabled={!modifiable}>
+                    {texte(p.id)}
+                  </Chip>
+                ))}
+                {!processus.length && <Text size="sm">Aucun processus.</Text>}
+              </Group>
+            </Chip.Group>
+          </div>
+          <Textarea
+            label="Enjeux associés (un par ligne)"
+            autosize
+            minRows={3}
+            disabled={!modifiable}
+            value={enjeux}
+            onChange={(e) => setEnjeux(e.currentTarget.value)}
+          />
+        </RubriqueObjectifs>
+        <RubriqueObjectifs titre="Planification de l’atteinte (ISO 9001:2015, 6.2.2)">
+          <Textarea
+            label="Ce qui sera fait"
+            autosize
+            minRows={2}
+            disabled={!modifiable}
+            value={plan}
+            onChange={(e) => setPlan(e.currentTarget.value)}
+          />
+          <Textarea
+            label="Ressources nécessaires"
+            autosize
+            minRows={2}
+            disabled={!modifiable}
+            value={ressources}
+            onChange={(e) => setRessources(e.currentTarget.value)}
+          />
+          <Textarea
+            label="Comment les résultats seront évalués"
+            autosize
+            minRows={2}
+            disabled={!modifiable}
+            value={evaluation}
+            onChange={(e) => setEvaluation(e.currentTarget.value)}
+          />
+        </RubriqueObjectifs>
+        <RubriqueObjectifs titre="Indicateurs de l’objectif">
+          <div>
+            <Text fw={600}>Indicateurs</Text>
+            <Group gap="xs">
+              {siens.map((i) => (
+                <Button key={texte(i.id)} size="xs" variant="default" onClick={() => onOpenIndicateur(texte(i.id))}>
+                  {texte(i.id)}
+                </Button>
+              ))}
+              {!siens.length && <Text size="sm">Aucun.</Text>}
+            </Group>
+          </div>
+        </RubriqueObjectifs>
+        <Group justify="space-between" className="fenetre-actions objectifs-fiche-actions">
           {modifiable && peutSupprimer ? (
             <ConfirmButton
               size="xs"
@@ -449,231 +470,236 @@ export function FicheIndicateur({
     }
   };
   return (
-    <Modal opened onClose={onClose} size="xl" title={`Indicateur ${id}`}>
+    <Modal opened onClose={onClose} size="xl" classNames={{ content: 'objectifs-fiche' }} title={`Indicateur ${id}`}>
       <Stack>
         <ErrorAlert error={erreur} />
-        <Textarea
-          label="Indicateur"
-          autosize
-          minRows={2}
-          disabled={!modifiable}
-          value={v.name}
-          onChange={(e) => maj('name', e.currentTarget.value)}
-        />
-        <Group grow align="flex-start">
-          <Select
-            label="Objectif"
-            allowDeselect={false}
+        <RubriqueObjectifs titre="Définition et cible">
+          <Textarea
+            label="Indicateur"
+            autosize
+            minRows={2}
             disabled={!modifiable}
-            data={objectifs.map((o) => ({ value: texte(o.id), label: `${texte(o.id)} ${texte(o.name)}` }))}
-            value={v.obj}
-            onChange={(o) => maj('obj', o ?? v.obj)}
+            value={v.name}
+            onChange={(e) => maj('name', e.currentTarget.value)}
           />
-          <Select
-            label="Sens"
-            allowDeselect={false}
-            disabled={!modifiable}
-            data={[
-              { value: '', label: 'À définir' },
-              { value: '≤', label: '≤ (au plus)' },
-              { value: '≥', label: '≥ (au moins)' },
-              { value: '=', label: '= (égal)' },
-            ]}
-            value={v.dir}
-            onChange={(d) => maj('dir', d ?? '')}
-          />
-          <TextInput
-            label="Cible"
-            disabled={!modifiable}
-            value={v.cible}
-            onChange={(e) => maj('cible', e.currentTarget.value)}
-          />
-        </Group>
-        <Group grow align="flex-start">
-          <TextInput
-            label="Responsable"
-            disabled={!modifiable}
-            value={v.owner}
-            onChange={(e) => maj('owner', e.currentTarget.value)}
-          />
-          <TextInput
-            label="Fréquence de mesure"
-            placeholder="à définir"
-            disabled={!modifiable}
-            value={v.freq}
-            onChange={(e) => maj('freq', e.currentTarget.value)}
-          />
-        </Group>
-        {!!indicateur.calc && (
-          <Checkbox
-            label={`Calcul automatique${automatique ? ` : ${automatique}` : ''}`}
-            disabled={!modifiable}
-            checked={v.auto}
-            onChange={(e) => maj('auto', e.currentTarget.checked)}
-          />
-        )}
-        <Text fw={600}>Surveillance et mesure (ISO 9001:2015, 9.1.1)</Text>
-        <Textarea
-          label="Ce qui est surveillé et mesuré"
-          autosize
-          minRows={2}
-          disabled={!modifiable}
-          value={v.monitored}
-          onChange={(e) => maj('monitored', e.currentTarget.value)}
-        />
-        <Textarea
-          label="Méthodes de surveillance et de mesure"
-          autosize
-          minRows={2}
-          disabled={!modifiable}
-          value={v.method}
-          onChange={(e) => maj('method', e.currentTarget.value)}
-        />
-        <Group grow align="flex-start">
-          <TextInput
-            label="Quand surveiller"
-            disabled={!modifiable}
-            value={v.monitorWhen}
-            onChange={(e) => maj('monitorWhen', e.currentTarget.value)}
-          />
-          <TextInput
-            label="Quand analyser et évaluer"
-            disabled={!modifiable}
-            value={v.analyzeWhen}
-            onChange={(e) => maj('analyzeWhen', e.currentTarget.value)}
-          />
-        </Group>
-        <Group grow align="flex-start">
-          <Select
-            label="Catégorie"
-            allowDeselect={false}
-            disabled={!modifiable}
-            data={[
-              { value: '', label: 'Indicateur de performance' },
-              { value: 'satisfaction', label: 'Satisfaction du client (9.1.2)' },
-            ]}
-            value={v.category}
-            onChange={(c) => maj('category', c ?? '')}
-          />
-          <TextInput
-            label="Source de l’information"
-            description="Enquête, réclamations, retours… choisis par l’organisme."
-            disabled={!modifiable}
-            value={v.source}
-            onChange={(e) => maj('source', e.currentTarget.value)}
-          />
-        </Group>
-        <div>
-          <Text fw={600}>Processus concernés (en plus de ceux de l’objectif)</Text>
-          <Chip.Group multiple value={v.processes} onChange={(p) => maj('processes', p)}>
-            <Group gap="xs">
-              {processus.map((p) => (
-                <Chip key={texte(p.id)} value={texte(p.id)} disabled={!modifiable}>
-                  {texte(p.id)}
-                </Chip>
-              ))}
-            </Group>
-          </Chip.Group>
-        </div>
-        <Text fw={600}>Valeurs mesurées</Text>
-        {mesures.length ? (
-          <DataTable label={`Mesures de l’indicateur ${id}`}>
-            <Table>
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th>Date</Table.Th>
-                  <Table.Th>Valeur</Table.Th>
-                  <Table.Th>Commentaire</Table.Th>
-                  <Table.Th>Période historique</Table.Th>
-                  <Table.Th>Actions</Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
-                {mesures.map(({ m, rang }) => (
-                  <Table.Tr key={rang}>
-                    <Table.Td>{texte(m.date)}</Table.Td>
-                    <Table.Td>{formatValeurIndicateur(indicateur, m.v)}</Table.Td>
-                    <Table.Td>{texte(m.note) || '–'}</Table.Td>
-                    <Table.Td>{texte(m.hist) || '–'}</Table.Td>
-                    <Table.Td>
-                      {modifiable && peutSupprimer && (
-                        <ConfirmButton
-                          size="xs"
-                          variant="default"
-                          message="Supprimer cette mesure ?"
-                          onConfirm={() => ecrire('DELETE', `indicators/${encodeURIComponent(id)}/values/${rang}`)}
-                        >
-                          {`Supprimer la mesure du ${texte(m.date)}`}
-                        </ConfirmButton>
-                      )}
-                    </Table.Td>
-                  </Table.Tr>
-                ))}
-              </Table.Tbody>
-            </Table>
-          </DataTable>
-        ) : (
-          <Text size="sm">Aucune valeur saisie.</Text>
-        )}
-        {modifiable && !calcule && (
-          <Group align="flex-end" wrap="wrap">
-            <TextInput
-              label="Date de la mesure"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.currentTarget.value)}
+          <Group grow align="flex-start" className="objectif-grille objectif-grille--trois">
+            <Select
+              label="Objectif"
+              allowDeselect={false}
+              disabled={!modifiable}
+              data={objectifs.map((o) => ({ value: texte(o.id), label: `${texte(o.id)} ${texte(o.name)}` }))}
+              value={v.obj}
+              onChange={(o) => maj('obj', o ?? v.obj)}
+            />
+            <Select
+              label="Sens"
+              allowDeselect={false}
+              disabled={!modifiable}
+              data={[
+                { value: '', label: 'À définir' },
+                { value: '≤', label: '≤ (au plus)' },
+                { value: '≥', label: '≥ (au moins)' },
+                { value: '=', label: '= (égal)' },
+              ]}
+              value={v.dir}
+              onChange={(d) => maj('dir', d ?? '')}
             />
             <TextInput
-              label="Valeur"
-              placeholder={v.dir === '=' ? 'Oui ou Non' : 'ex. 88 %'}
-              value={valeur}
-              onChange={(e) => setValeur(e.currentTarget.value)}
+              label="Cible"
+              disabled={!modifiable}
+              value={v.cible}
+              onChange={(e) => maj('cible', e.currentTarget.value)}
             />
-            <TextInput label="Commentaire" value={note} onChange={(e) => setNote(e.currentTarget.value)} />
-            <TextInput
-              label="Période historique"
-              placeholder="ex. 2025-2026 (facultatif)"
-              value={hist}
-              onChange={(e) => setHist(e.currentTarget.value)}
-            />
-            <Button variant="default" disabled={!valeur.trim() || !date} onClick={ajouter}>
-              Ajouter la mesure
-            </Button>
           </Group>
-        )}
-        {calcule && <Alert>Indicateur calculé automatiquement : sa valeur ne se saisit pas manuellement.</Alert>}
-        <Text fw={600}>Plan d’action si non atteint</Text>
-        <Group grow align="flex-start">
-          <TextInput
-            label="Action"
+          <Group grow align="flex-start" className="objectif-grille">
+            <TextInput
+              label="Responsable"
+              disabled={!modifiable}
+              value={v.owner}
+              onChange={(e) => maj('owner', e.currentTarget.value)}
+            />
+            <TextInput
+              label="Fréquence de mesure"
+              placeholder="à définir"
+              disabled={!modifiable}
+              value={v.freq}
+              onChange={(e) => maj('freq', e.currentTarget.value)}
+            />
+          </Group>
+          {!!indicateur.calc && (
+            <Checkbox
+              label={`Calcul automatique${automatique ? ` : ${automatique}` : ''}`}
+              disabled={!modifiable}
+              checked={v.auto}
+              onChange={(e) => maj('auto', e.currentTarget.checked)}
+            />
+          )}
+        </RubriqueObjectifs>
+        <RubriqueObjectifs titre="Surveillance et mesure (ISO 9001:2015, 9.1.1)">
+          <Textarea
+            label="Ce qui est surveillé et mesuré"
+            autosize
+            minRows={2}
             disabled={!modifiable}
-            value={v.action}
-            onChange={(e) => maj('action', e.currentTarget.value)}
+            value={v.monitored}
+            onChange={(e) => maj('monitored', e.currentTarget.value)}
           />
-          <TextInput
-            label="Responsable de l’action"
+          <Textarea
+            label="Méthodes de surveillance et de mesure"
+            autosize
+            minRows={2}
             disabled={!modifiable}
-            value={v.actionOwner}
-            onChange={(e) => maj('actionOwner', e.currentTarget.value)}
+            value={v.method}
+            onChange={(e) => maj('method', e.currentTarget.value)}
           />
-        </Group>
-        <Group grow align="flex-start">
-          <TextInput
-            label="Échéance de l’action"
-            type="date"
-            disabled={!modifiable}
-            value={v.actionDue}
-            onChange={(e) => maj('actionDue', e.currentTarget.value)}
-          />
-          <TextInput
-            label="Dernière revue"
-            type="date"
-            disabled={!modifiable}
-            value={v.lastReview}
-            onChange={(e) => maj('lastReview', e.currentTarget.value)}
-          />
-        </Group>
-        <Group justify="space-between">
+          <Group grow align="flex-start" className="objectif-grille">
+            <TextInput
+              label="Quand surveiller"
+              disabled={!modifiable}
+              value={v.monitorWhen}
+              onChange={(e) => maj('monitorWhen', e.currentTarget.value)}
+            />
+            <TextInput
+              label="Quand analyser et évaluer"
+              disabled={!modifiable}
+              value={v.analyzeWhen}
+              onChange={(e) => maj('analyzeWhen', e.currentTarget.value)}
+            />
+          </Group>
+          <Group grow align="flex-start" className="objectif-grille">
+            <Select
+              label="Catégorie"
+              allowDeselect={false}
+              disabled={!modifiable}
+              data={[
+                { value: '', label: 'Indicateur de performance' },
+                { value: 'satisfaction', label: 'Satisfaction du client (9.1.2)' },
+              ]}
+              value={v.category}
+              onChange={(c) => maj('category', c ?? '')}
+            />
+            <TextInput
+              label="Source de l’information"
+              description="Enquête, réclamations, retours… choisis par l’organisme."
+              disabled={!modifiable}
+              value={v.source}
+              onChange={(e) => maj('source', e.currentTarget.value)}
+            />
+          </Group>
+          <div>
+            <Text fw={600}>Processus concernés (en plus de ceux de l’objectif)</Text>
+            <Chip.Group multiple value={v.processes} onChange={(p) => maj('processes', p)}>
+              <Group gap="xs">
+                {processus.map((p) => (
+                  <Chip key={texte(p.id)} value={texte(p.id)} disabled={!modifiable}>
+                    {texte(p.id)}
+                  </Chip>
+                ))}
+              </Group>
+            </Chip.Group>
+          </div>
+        </RubriqueObjectifs>
+        <RubriqueObjectifs titre="Valeurs mesurées">
+          {mesures.length ? (
+            <DataTable label={`Mesures de l’indicateur ${id}`}>
+              <Table>
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>Date</Table.Th>
+                    <Table.Th>Valeur</Table.Th>
+                    <Table.Th>Commentaire</Table.Th>
+                    <Table.Th>Période historique</Table.Th>
+                    <Table.Th>Actions</Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
+                  {mesures.map(({ m, rang }) => (
+                    <Table.Tr key={rang}>
+                      <Table.Td>{texte(m.date)}</Table.Td>
+                      <Table.Td>{formatValeurIndicateur(indicateur, m.v)}</Table.Td>
+                      <Table.Td>{texte(m.note) || '–'}</Table.Td>
+                      <Table.Td>{texte(m.hist) || '–'}</Table.Td>
+                      <Table.Td>
+                        {modifiable && peutSupprimer && (
+                          <ConfirmButton
+                            size="xs"
+                            variant="default"
+                            message="Supprimer cette mesure ?"
+                            onConfirm={() => ecrire('DELETE', `indicators/${encodeURIComponent(id)}/values/${rang}`)}
+                          >
+                            {`Supprimer la mesure du ${texte(m.date)}`}
+                          </ConfirmButton>
+                        )}
+                      </Table.Td>
+                    </Table.Tr>
+                  ))}
+                </Table.Tbody>
+              </Table>
+            </DataTable>
+          ) : (
+            <Text size="sm">Aucune valeur saisie.</Text>
+          )}
+          {modifiable && !calcule && (
+            <Group align="flex-end" wrap="wrap" className="objectif-grille">
+              <TextInput
+                label="Date de la mesure"
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.currentTarget.value)}
+              />
+              <TextInput
+                label="Valeur"
+                placeholder={v.dir === '=' ? 'Oui ou Non' : 'ex. 88 %'}
+                value={valeur}
+                onChange={(e) => setValeur(e.currentTarget.value)}
+              />
+              <TextInput label="Commentaire" value={note} onChange={(e) => setNote(e.currentTarget.value)} />
+              <TextInput
+                label="Période historique"
+                placeholder="ex. 2025-2026 (facultatif)"
+                value={hist}
+                onChange={(e) => setHist(e.currentTarget.value)}
+              />
+              <Button variant="default" disabled={!valeur.trim() || !date} onClick={ajouter}>
+                Ajouter la mesure
+              </Button>
+            </Group>
+          )}
+          {calcule && <Alert>Indicateur calculé automatiquement : sa valeur ne se saisit pas manuellement.</Alert>}
+        </RubriqueObjectifs>
+        <RubriqueObjectifs titre="Plan d’action si non atteint">
+          <Group grow align="flex-start" className="objectif-grille">
+            <TextInput
+              label="Action"
+              disabled={!modifiable}
+              value={v.action}
+              onChange={(e) => maj('action', e.currentTarget.value)}
+            />
+            <TextInput
+              label="Responsable de l’action"
+              disabled={!modifiable}
+              value={v.actionOwner}
+              onChange={(e) => maj('actionOwner', e.currentTarget.value)}
+            />
+          </Group>
+          <Group grow align="flex-start" className="objectif-grille">
+            <TextInput
+              label="Échéance de l’action"
+              type="date"
+              disabled={!modifiable}
+              value={v.actionDue}
+              onChange={(e) => maj('actionDue', e.currentTarget.value)}
+            />
+            <TextInput
+              label="Dernière revue"
+              type="date"
+              disabled={!modifiable}
+              value={v.lastReview}
+              onChange={(e) => maj('lastReview', e.currentTarget.value)}
+            />
+          </Group>
+        </RubriqueObjectifs>
+        <Group justify="space-between" className="fenetre-actions objectifs-fiche-actions">
           {modifiable && peutSupprimer ? (
             <ConfirmButton
               size="xs"

@@ -1,3 +1,5 @@
+> 01/11/2026 : [Objectifs et indicateurs retravaillés en Neon](docs/refonte-neon/OBJECTIFS-INDICATEURS.md) : synthèse graphique, cartes Biseau, tableaux mobiles et fiches par rubriques. Calculs et actions conservés ; 230 tests web, deux scénarios e2e et lecteur réel vérifiés. Validation visuelle du demandeur en attente.
+
 > 01/11/2026 : **présentation des quatre catégories Contexte validée par le demandeur et conservée**. Voir [la présentation retenue](docs/refonte-neon/CONTEXTE-CATEGORIES.md). Aucun changement applicatif dans cette consignation.
 
 > 01/11/2026 : [catégories du contexte distinguées](docs/refonte-neon/CONTEXTE-CATEGORIES.md) : enjeux internes/externes et interfaces/dépendances dans quatre zones. Catégories lues explicitement, anciens textes conservés dans À préciser ; 230 tests web et trois parcours e2e réussis.
