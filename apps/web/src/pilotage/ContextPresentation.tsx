@@ -5,6 +5,7 @@ import { useId, useState, type ReactNode } from 'react';
 import { get } from '../api';
 import { ErrorAlert, fmtDate } from '../components/common';
 import type { Source } from './Fields';
+import { lignesInterfaces } from './liste-interfaces';
 
 type Revision = { version: number; reason: string; createdAt: string; createdBy: string };
 type Relation = {
@@ -151,14 +152,14 @@ export function ContextPresentation({
                           {String(index + 1).padStart(2, '0')}
                         </span>
                       </h4>
-                      {field.key === 'issues' && filled ? (
-                        <ul className="contexte-enjeux">
-                          {value
-                            .split(/\r?\n/)
-                            .filter((line) => line.trim())
-                            .map((line, lineIndex) => (
-                              <li key={lineIndex}>{line}</li>
-                            ))}
+                      {['issues', 'interfaces'].includes(field.key) && filled ? (
+                        <ul className="contexte-puces">
+                          {(field.key === 'interfaces'
+                            ? lignesInterfaces(value)
+                            : value.split(/\r?\n/).filter((line) => line.trim())
+                          ).map((line, lineIndex) => (
+                            <li key={lineIndex}>{line}</li>
+                          ))}
                         </ul>
                       ) : (
                         <p className={filled ? 'contexte-texte' : 'contexte-vide'}>

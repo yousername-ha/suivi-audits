@@ -16,7 +16,7 @@ async function contexte(req: APIRequestContext, name: string) {
         description: 'Contexte fictif de recette.',
         organisation: 'Organisation de démonstration',
         scope: 'Accueil et services numériques',
-        interfaces: 'Hébergeur fictif et partenaires',
+        interfaces: 'Hébergeur fictif, éditeur (dossiers, imagerie), partenaire fictif',
         issues: 'Évolution de la réglementation\nDisponibilité des services',
         exclusions: '',
         refs: [],
@@ -55,6 +55,11 @@ test('Contexte : afficher, agrandir, annuler et enregistrer une modification exp
       'Évolution de la réglementation',
       'Disponibilité des services',
     ]);
+    await expect(view.getByRole('region', { name: /Interfaces et dépendances/ }).getByRole('listitem')).toHaveText([
+      'Hébergeur fictif',
+      'éditeur (dossiers, imagerie)',
+      'partenaire fictif',
+    ]);
     await view.getByRole('button', { name: 'Agrandir', exact: true }).click();
     await expect(view).toHaveAttribute('data-full-screen', 'true');
     await view.getByRole('button', { name: 'Réduire', exact: true }).click();
@@ -83,6 +88,7 @@ test('Contexte : afficher, agrandir, annuler et enregistrer une modification exp
     await expect(page.getByRole('dialog')).toHaveCount(0);
     const after = await (await ctx.request.get(`${base}/${object.id}`)).json();
     expect(after.data.organisation).toBe('Organisation mise à jour');
+    expect(after.data.interfaces).toBe('Hébergeur fictif, éditeur (dossiers, imagerie), partenaire fictif');
     expect(after.version).toBeGreaterThan(before.version);
     expect(writes).toEqual(['PUT']);
     await page

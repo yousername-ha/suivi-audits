@@ -74,6 +74,18 @@ Contrôles de cette reprise :
 
 Les captures ci-dessous correspondent à ce découpage. La validation esthétique du demandeur reste en attente. Les données enregistrées, droits, commandes, API et références visuelles de CI ne sont pas modifiés.
 
+## Fonds plus soutenus et puces communes
+
+01/11/2026, après retour sur `deb68f1851ddf2c8454b3551b24c915f7bea4c7f`. Les fonds des blocs sont légèrement assombris et leurs bordures renforcées, dans les deux thèmes. Interfaces/dépendances et enjeux utilisent la même liste visuelle : puce violette et séparateurs discrets.
+
+Pour les interfaces, plusieurs lignes non vides définissent les entrées en priorité. Si le champ est un seul paragraphe, les virgules et points-virgules hors parenthèses, crochets et guillemets séparent les entrées ; les virgules des nombres décimaux sont conservées. Les précisions entre parenthèses et les dénominations entre guillemets restent dans leur entrée. Ce découpage ne modifie pas le texte enregistré : le formulaire et la sauvegarde conservent la chaîne d’origine, vérifiée par le parcours e2e.
+
+Les listes sont un peu plus compactes et la fenêtre utilise davantage de hauteur disponible, pour accueillir les dépendances détaillées. Les cinq blocs restent intégralement visibles sur le jeu de démonstration à 1440 × 1080, dans les deux thèmes ; le défilement reste possible pour des textes plus longs.
+
+Vérifications de cet ajustement : huit tests ciblés réussis (trois de charte et cinq de découpage), deux parcours e2e réussis avec assertions sur les entrées affichées et le texte sauvegardé, typages web/e2e, lint, formatage et build réussis. Huit captures renouvelées, quatre analyses axe sans violation détectée ; aucune erreur JavaScript, violation CSP, réponse API en échec ou écriture pendant la consultation. Le contrôle de visibilité des cinq blocs a été conservé après ajustement des espacements. Les avertissements de build restent ceux des lots précédents.
+
+Les captures suivantes correspondent à cet ajustement. Les données, droits, commandes et références visuelles de CI sont conservés. La validation esthétique de ce dernier rendu reste à confirmer par le demandeur.
+
 ## Captures pour validation
 
 [Clair](captures-contexte/presentation-light-1440.png) · [Sombre](captures-contexte/presentation-dark-1440.png) · [Mobile](captures-contexte/presentation-light-390.png) · [Plein écran](captures-contexte/presentation-plein-ecran.png) · [Formulaire distinct de modification](captures-contexte/modification-light-1440.png)

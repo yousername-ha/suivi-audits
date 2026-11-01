@@ -231,6 +231,16 @@
 .contexte-fenetre {
   --modal-size-xl: 76rem;
 }
+.contexte-presentation {
+  --contexte-surface: color-mix(in srgb, var(--mantine-color-encre-9) 6%, var(--suivi-surface));
+  --contexte-filet: color-mix(in srgb, var(--mantine-color-encre-9) 18%, var(--suivi-trait));
+}
+.contexte-fenetre .mantine-Modal-inner {
+  --modal-inner-y-offset: 1rem;
+}
+.contexte-fenetre .mantine-Modal-content:not([data-full-screen]) {
+  --modal-content-max-height: calc(100dvh - 2rem);
+}
 .contexte-presentation > .mantine-Modal-header {
   min-height: 4rem;
   padding-block: 1rem;
@@ -369,9 +379,9 @@
   --contexte-repere-fond: var(--neon-doux);
   min-width: 0;
   padding: 1.25rem 1.4rem;
-  border: 1px solid var(--suivi-trait);
+  border: 1px solid var(--contexte-filet);
   border-radius: 0.8rem;
-  background: var(--suivi-surface);
+  background: var(--contexte-surface);
 }
 .contexte-section h4 {
   display: flex;
@@ -380,7 +390,7 @@
   min-height: 2rem;
   margin: 0 0 1rem;
   padding-bottom: 0.9rem;
-  border-bottom: 1px solid var(--suivi-trait);
+  border-bottom: 1px solid var(--contexte-filet);
   color: var(--neon-titre);
   font-size: 0.9rem;
   font-weight: 600;
@@ -420,7 +430,11 @@
   grid-template-columns: minmax(0, 1fr) minmax(10rem, 0.38fr);
   grid-column: 1 / -1;
   gap: 0.5rem 2rem;
-  background: linear-gradient(100deg, var(--neon-doux), var(--suivi-surface) 65%);
+  background: linear-gradient(
+    100deg,
+    color-mix(in srgb, var(--mantine-color-encre-9) 5%, var(--neon-doux)),
+    var(--contexte-surface) 65%
+  );
 }
 .contexte-section[data-champ='organisation'] h4 {
   grid-column: 1;
@@ -443,7 +457,7 @@
   align-self: center;
   margin: 0;
   padding: 0.5rem 0 0.5rem 1.5rem;
-  border-left: 1px solid var(--suivi-trait);
+  border-left: 1px solid var(--contexte-filet);
 }
 .contexte-responsable dd {
   font-size: 0.875rem;
@@ -452,16 +466,16 @@
   --contexte-repere-fond: color-mix(in srgb, var(--neon-bleu) 13%, var(--suivi-surface));
   background: linear-gradient(
     145deg,
-    color-mix(in srgb, var(--neon-bleu) 5%, var(--suivi-surface)),
-    var(--suivi-surface) 70%
+    color-mix(in srgb, var(--neon-bleu) 8%, var(--contexte-surface)),
+    var(--contexte-surface) 70%
   );
 }
 .contexte-section[data-champ='interfaces'] {
   --contexte-repere-fond: color-mix(in srgb, var(--neon-cyan) 14%, var(--suivi-surface));
   background: linear-gradient(
     145deg,
-    color-mix(in srgb, var(--neon-cyan) 5%, var(--suivi-surface)),
-    var(--suivi-surface) 70%
+    color-mix(in srgb, var(--neon-cyan) 8%, var(--contexte-surface)),
+    var(--contexte-surface) 70%
   );
 }
 .contexte-section[data-champ='issues'] {
@@ -469,36 +483,36 @@
 }
 .contexte-section[data-champ='exclusions'] {
   --contexte-repere-fond: color-mix(in srgb, var(--neon-rose) 12%, var(--suivi-surface));
-  background: var(--suivi-surface-douce);
+  background: color-mix(in srgb, var(--mantine-color-encre-9) 6%, var(--suivi-surface-douce));
 }
-.contexte-enjeux {
+.contexte-puces {
   display: grid;
   gap: 0.25rem;
   margin: 0;
   padding: 0;
   list-style: none;
 }
-.contexte-enjeux li {
+.contexte-puces li {
   position: relative;
-  padding: 0.45rem 0.5rem 0.45rem 1.2rem;
-  border-bottom: 1px solid var(--suivi-trait);
+  padding: 0.25rem 0.5rem 0.25rem 1.2rem;
+  border-bottom: 1px solid var(--contexte-filet);
   color: var(--mantine-color-text);
   font-size: 0.875rem;
   line-height: 1.6;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
-.contexte-enjeux li::before {
+.contexte-puces li::before {
   content: '';
   position: absolute;
-  top: 1.02rem;
+  top: 0.82rem;
   left: 0;
   width: 0.3rem;
   height: 0.3rem;
   border-radius: 50%;
   background: var(--neon-accent);
 }
-.contexte-enjeux li:last-child {
+.contexte-puces li:last-child {
   border-bottom: 0;
 }
 .contexte-vide {
@@ -536,7 +550,7 @@
   margin-inline: auto;
 }
 .contexte-presentation[data-full-screen] .contexte-texte,
-.contexte-presentation[data-full-screen] .contexte-enjeux li {
+.contexte-presentation[data-full-screen] .contexte-puces li {
   font-size: 1rem;
 }
 @media (max-width: 48em) {
