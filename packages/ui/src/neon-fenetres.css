@@ -600,7 +600,7 @@
   }
 }
 
-/* Trois propositions de cadre, sélection purement graphique sur la fenêtre. */
+/* Cadre biseauté retenu par le demandeur pour la fenêtre de contexte. */
 .contexte-presentation {
   position: relative;
   isolation: isolate;
@@ -652,10 +652,7 @@
   left: 0;
   transform: rotate(270deg);
 }
-.contexte-cadre-equerre {
-  display: none;
-}
-/* A · Biseau : coupe géométrique et traits cyan/violet sur le contour. */
+/* Biseau : coupe géométrique et traits cyan/violet sur le contour. */
 .contexte-fenetre[data-cadre='biseau'] .contexte-presentation {
   border-color: transparent;
   border-radius: 0;
@@ -679,49 +676,6 @@
   inset: var(--contexte-cadre-coupe) 0;
   border-inline: 1.5px solid transparent;
   border-image: linear-gradient(160deg, var(--neon-violet), var(--neon-cyan)) 1;
-}
-/* B · Équerres : cadre discret et angles de repérage lumineux. */
-.contexte-fenetre[data-cadre='equerres'] .contexte-presentation {
-  border-radius: 0.45rem;
-  border-color: color-mix(in srgb, var(--neon-violet) 24%, var(--suivi-trait));
-}
-.contexte-fenetre[data-cadre='equerres'] .contexte-cadre::before {
-  inset: 0;
-  border: 1px solid color-mix(in srgb, var(--neon-cyan) 18%, transparent);
-  border-radius: inherit;
-}
-.contexte-fenetre[data-cadre='equerres'] .contexte-cadre-coin {
-  width: 2.4rem;
-  height: 2.4rem;
-}
-.contexte-fenetre[data-cadre='equerres'] .contexte-cadre-diagonale {
-  display: none;
-}
-.contexte-fenetre[data-cadre='equerres'] .contexte-cadre-equerre {
-  display: block;
-}
-/* C · Halo : double liseré et lueur extérieure contenue. */
-.contexte-fenetre[data-cadre='halo'] .contexte-presentation {
-  border-color: transparent;
-  border-radius: 1.1rem;
-  box-shadow:
-    var(--suivi-ombre-haute),
-    0 0 0 1px color-mix(in srgb, var(--neon-violet) 42%, transparent),
-    0 0 24px color-mix(in srgb, var(--neon-violet) 15%, transparent),
-    0 0 40px color-mix(in srgb, var(--neon-cyan) 10%, transparent);
-}
-.contexte-fenetre[data-cadre='halo'] .contexte-cadre::before {
-  inset: 0;
-  border: 1px solid color-mix(in srgb, var(--neon-violet) 70%, transparent);
-  border-radius: inherit;
-}
-.contexte-fenetre[data-cadre='halo'] .contexte-cadre::after {
-  inset: 5px;
-  border: 1px solid color-mix(in srgb, var(--neon-cyan) 30%, transparent);
-  border-radius: 0.8rem;
-}
-.contexte-fenetre[data-cadre='halo'] .contexte-cadre-coin {
-  display: none;
 }
 /* Les pictogrammes s'activent brièvement à l'ouverture, puis au survol.
    Les textes, les données et le cadre restent immobiles. */

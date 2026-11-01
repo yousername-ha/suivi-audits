@@ -2,7 +2,11 @@
 
 01/11/2026, Europe/Paris. Session : Codex. Branche `codex/refonte-neon-main`, depuis `bf7530595e517c4fcfd8a3213f8e9e116de8639c`.
 
-## Trois propositions pour la grande dalle
+## Cadre retenu : Biseau
+
+Le demandeur a choisi **Biseau** (« Biseau très bien »). Le cadre biseauté cyan/violet et les pictogrammes animés sont donc conservés pour cette dalle. Les deux autres variantes ont été retirées du code actif ; leurs captures restent archivées pour garder la comparaison.
+
+## Propositions comparées (historique)
 
 Le contenu du contexte, les cinq rubriques, les listes et les commandes sont conservés. Seul l’encadrement de la fenêtre varie :
 
@@ -12,7 +16,7 @@ Le contenu du contexte, les cinq rubriques, les listes et les commandes sont con
 | **2 · Équerres** | Angles presque carrés et repères d’angle lumineux plus présents.        |
 | **3 · Halo**     | Coins arrondis, double liseré et lueur extérieure discrète.             |
 
-Biseau est appliqué provisoirement dans la copie de refonte. Les trois styles sont déclarés dans la feuille UI et sélectionnés par l’attribut décoratif `data-cadre`. Pour les comparatifs, la recette change uniquement cet attribut dans le navigateur. Aucun menu ou réglage enregistré n’est ajouté au produit ; les trois propositions restent à départager par le demandeur.
+Lors du lot de propositions, la recette changeait uniquement l’attribut décoratif `data-cadre` dans le navigateur. Les comparatifs ci-dessous conservent les rendus de ce lot. Aucun menu ou réglage enregistré n’a été ajouté au produit.
 
 | Biseau                                                                                   | Équerres                                                                                       | Halo                                                                               |
 | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
@@ -32,7 +36,7 @@ Une activation de 3,2 secondes se joue à l’ouverture, avec un léger décalag
 
 Ces GIFs proviennent de 36 captures du navigateur à différentes positions des animations CSS, assemblées avec FFmpeg. Ils montrent les pictogrammes réels agrandis par le facteur de pixels du navigateur, sans modification des données ni dessin de remplacement. Les captures statiques utilisent le mouvement réduit pour faciliter la comparaison.
 
-## Contrôles exécutés
+## Contrôles du lot de propositions (e73f7ef)
 
 Instance fictive isolée, vraie API et PostgreSQL 18, Node 26.13.0, Chromium système :
 
@@ -46,4 +50,8 @@ Instance fictive isolée, vraie API et PostgreSQL 18, Node 26.13.0, Chromium sys
 
 Preuve détaillée hors Git : `/workspace/work/neon-instance/validation-cadres-contexte.json`. Les 36 poses de connexions sont distinctes ; 32 poses de boussole le sont également. Les GIFs bouclent pour la démonstration ; le produit conserve l’activation brève puis le survol.
 
-Aucune modification métier, de droits, d’API ou de données de production. Aucune nouvelle dépendance ni référence visuelle de CI remplacée automatiquement. Main, le dépôt d’origine et le graphique RETEX restent intacts. Aucun déploiement. Prochaine étape : choix visuel du cadre par le demandeur.
+Aucune modification métier, de droits, d’API ou de données de production. Aucune nouvelle dépendance ni référence visuelle de CI remplacée automatiquement. Main, le dépôt d’origine et le graphique RETEX restent intacts. Aucun déploiement. Le choix du cadre est confirmé. La modification reste sur la branche de refonte, sans fusion ni mise en production.
+
+## Finalisation du choix
+
+Après confirmation du demandeur, retrait des styles Équerres/Halo et du tracé SVG inutilisé. Biseau et les animations conservent leur rendu. Typage, lint, formatage et build réussis ; contrôle navigateur ciblé réussi : cadre biseauté, quatre coins, animations actives puis arrêtées avec mouvement réduit, commandes accessibles et fermeture, sans erreur JavaScript ni écriture. Preuve privée : `validation-biseau-retenu.json`. Les tests du lot de propositions ci-dessus restent historiques et ne sont pas déclarés rejoués pour ce nettoyage.

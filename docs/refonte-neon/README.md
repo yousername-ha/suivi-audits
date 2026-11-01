@@ -1,4 +1,4 @@
-> Propositions du 01/11/2026 : [cadres néon et pictogrammes animés](CADRES-NEON.md).
+> Choix du demandeur : **cadre Biseau**, avec [pictogrammes animés](CADRES-NEON.md).
 
 > Complément du 01/11/2026 : [vue de présentation du contexte pour consultation en audit](CONTEXTE-PRESENTATION.md).
 

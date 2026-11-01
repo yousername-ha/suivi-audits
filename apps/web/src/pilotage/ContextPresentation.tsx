@@ -103,7 +103,6 @@ export function ContextPresentation({
             <span key={coin} className={`contexte-cadre-coin contexte-cadre-coin--${coin}`}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" focusable="false">
                 <path className="contexte-cadre-diagonale" d="M0 24 24 0" />
-                <path className="contexte-cadre-equerre" d="M1 24V1H24" />
               </svg>
             </span>
           ))}

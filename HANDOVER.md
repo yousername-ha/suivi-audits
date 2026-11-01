@@ -1,3 +1,5 @@
+> 01/11/2026 : **Biseau retenu par le demandeur** pour la grande dalle Contexte, avec pictogrammes animés. Les variantes de comparaison sont retirées du code actif ; leurs captures restent dans [le dossier des cadres](docs/refonte-neon/CADRES-NEON.md).
+
 > 01/11/2026 : [trois propositions de cadres néon et pictogrammes animés](docs/refonte-neon/CADRES-NEON.md) pour la grande dalle Contexte. Biseau provisoire dans la copie ; comparatifs, GIFs réels et contrôles disponibles. Choix esthétique du demandeur en attente.
 
 > 01/11/2026 : [fonds du contexte légèrement foncés et puces partagées](docs/refonte-neon/CONTEXTE-PRESENTATION.md) entre enjeux et interfaces/dépendances ; texte enregistré conservé, cas de découpage et droits vérifiés.
