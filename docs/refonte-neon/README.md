@@ -1,4 +1,4 @@
-> 01/11/2026 : [proposition de cible plus visible](propositions/cible-visible/README.md), **à valider avant toute intégration**. Nouvelle règle du demandeur : visuel → validation → modifications et tests → nouveau visuel réel. Code applicatif inchangé à ce stade.
+> 01/11/2026 : [proposition Cible et Mesuré encadrés](propositions/cible-et-mesure/README.md), **à valider avant toute intégration**. Nouvelle règle du demandeur : visuel → validation → modifications et tests → nouveau visuel réel. Code applicatif inchangé à ce stade.
 
 > 01/11/2026 : [Objectifs et indicateurs : synthèse, cartes et fiches Neon](OBJECTIFS-INDICATEURS.md), captures réelles et contrôles.
 
