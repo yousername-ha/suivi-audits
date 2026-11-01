@@ -49,8 +49,12 @@ export const theme = createTheme({
   breakpoints: POINTS_DE_RUPTURE,
   components: {
     // Le verrouillage du défilement (react-remove-scroll) injecte une balise <style> : interdit par la CSP stricte.
-    Modal: Modal.extend({ defaultProps: { lockScroll: false, radius: 'lg' } }),
-    Drawer: Drawer.extend({ defaultProps: { lockScroll: false } }),
+    Modal: Modal.extend({
+      defaultProps: { lockScroll: false, radius: 'lg', closeButtonProps: { 'aria-label': 'Fermer la fenêtre' } },
+    }),
+    Drawer: Drawer.extend({
+      defaultProps: { lockScroll: false, closeButtonProps: { 'aria-label': 'Fermer le panneau' } },
+    }),
     Card: Card.extend({ defaultProps: { radius: 'lg', withBorder: true } }),
     Button: Button.extend({ defaultProps: { radius: 'md' } }),
     Badge: Badge.extend({ defaultProps: { radius: 'sm' } }),

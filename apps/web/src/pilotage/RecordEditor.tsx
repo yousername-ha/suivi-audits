@@ -156,6 +156,7 @@ export function RecordEditor({
       onClose={onClose}
       title={`${object ? 'Fiche' : 'Ajouter'} — ${GRC_LABELS[kind]}`}
       size="lg"
+      classNames={{ content: 'fenetre-fiche', body: 'fenetre-fiche-corps' }}
       closeButtonProps={{ 'aria-label': 'Fermer la fiche' }}
     >
       <Stack>
@@ -278,7 +279,7 @@ export function RecordEditor({
             </Stack>
           </Tabs.Panel>
         </Tabs>
-        <Group justify="flex-end">
+        <Group justify="flex-end" className="fenetre-actions">
           <Button variant="default" onClick={onClose}>
             Fermer
           </Button>

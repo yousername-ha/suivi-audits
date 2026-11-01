@@ -6,6 +6,7 @@ import './app.css';
 import '@suivi/ui/neon.css';
 import '@suivi/ui/neon-analytics.css';
 import '@suivi/ui/neon-perimetres.css';
+import '@suivi/ui/neon-fenetres.css';
 import { Center, Loader, MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';

@@ -1,0 +1,227 @@
+/* Habillage commun des fenêtres, sans modification des formulaires ni des droits.
+   Les petits dialogues conservent leur largeur ; les fiches lg/xl gagnent de l'espace. */
+.mantine-Modal-root {
+  --modal-size-lg: 50rem;
+  --modal-size-xl: 64rem;
+}
+.mantine-Modal-content,
+.mantine-Drawer-content {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--suivi-trait);
+  box-shadow: var(--suivi-ombre-haute);
+  color: var(--mantine-color-text);
+  font-family: var(--mantine-font-family);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.mantine-Modal-content {
+  border-radius: 1.25rem;
+  overflow: hidden;
+}
+.mantine-Modal-overlay,
+.mantine-Drawer-overlay {
+  background-color: color-mix(in srgb, var(--suivi-encre) 38%, transparent);
+  backdrop-filter: blur(4px);
+}
+.mantine-Modal-header,
+.mantine-Drawer-header {
+  flex: none;
+  gap: 1rem;
+  min-height: 5rem;
+  margin-bottom: 0;
+  padding: 1.35rem 1.75rem;
+  border-bottom: 1px solid var(--suivi-trait);
+  background: var(--suivi-surface);
+}
+.mantine-Modal-header .mantine-Modal-title,
+.mantine-Drawer-header .mantine-Drawer-title {
+  color: var(--neon-titre);
+  font-size: 1.125rem;
+  font-weight: 650;
+  line-height: 1.45;
+  letter-spacing: -0.025em;
+  overflow-wrap: anywhere;
+}
+.mantine-Modal-close,
+.mantine-Drawer-close {
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid var(--suivi-trait);
+  border-radius: 0.75rem;
+  background: var(--suivi-surface-douce);
+  color: var(--mantine-color-dimmed);
+}
+.mantine-Modal-close:hover,
+.mantine-Drawer-close:hover {
+  background: var(--neon-doux);
+  color: var(--neon-titre);
+}
+.mantine-Modal-body,
+.mantine-Drawer-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 1.5rem 1.75rem;
+  overflow: auto;
+  overflow-wrap: anywhere;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--suivi-trait) transparent;
+}
+/* Hiérarchie commune : texte neutre, libellés nets, aides plus discrètes.
+   Les couleurs d'erreur, les champs désactivés et les variantes gardent leur sémantique. */
+:is(.mantine-Modal-body, .mantine-Drawer-body) .mantine-InputWrapper-label {
+  margin-bottom: 0.45rem;
+  color: var(--neon-titre);
+  font-size: 0.8125rem;
+  font-weight: 550;
+  line-height: 1.5;
+  letter-spacing: normal;
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body) .mantine-Input-input {
+  border-color: var(--suivi-trait);
+  border-radius: 0.7rem;
+  font-family: inherit;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body) .mantine-Input-input:not([data-error]):focus-within {
+  border-color: var(--neon-accent);
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body) .mantine-Input-input[data-error] {
+  border-color: var(--mantine-color-error);
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body) textarea.mantine-Input-input {
+  padding-block: 0.65rem;
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body) :is(.mantine-InputWrapper-description, .mantine-InputWrapper-error) {
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body) .mantine-Button-root {
+  font-size: 0.8125rem;
+  font-weight: 550;
+  letter-spacing: normal;
+}
+/* Un lien reste reconnaissable sans la couleur : contour et flèche permanents.
+   Les liens des dalles, déjà validés, gardent leur propre présentation. */
+:is(.mantine-Modal-body, .mantine-Drawer-body) .mantine-Anchor-root:not(.mantine-Button-root):not(.perimetre-lien) {
+  padding: 0.1em 0.35em;
+  border: 1px solid var(--suivi-trait);
+  border-radius: 0.35rem;
+  background: var(--suivi-surface-douce);
+  color: var(--neon-titre);
+  font-weight: 500;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  box-decoration-break: clone;
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body)
+  .mantine-Anchor-root:not(.mantine-Button-root):not(.perimetre-lien)::after {
+  content: '';
+  display: inline-block;
+  width: 0.45em;
+  height: 0.45em;
+  margin-inline-start: 0.45em;
+  vertical-align: 0.1em;
+  border-top: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+  background: linear-gradient(135deg, transparent 42%, currentColor 42%, currentColor 58%, transparent 58%);
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body)
+  .mantine-Anchor-root:not(.mantine-Button-root):not(.perimetre-lien):hover {
+  background: var(--neon-doux);
+  text-decoration: none;
+}
+/* Les onglets restent identifiables par leur forme et leur état actif, même sans couleur. */
+:is(.mantine-Modal-body, .mantine-Drawer-body) .mantine-Tabs-list:not([data-orientation='vertical']) {
+  gap: 0.25rem;
+  padding: 0.3rem;
+  border: 1px solid var(--suivi-trait);
+  border-radius: 0.85rem;
+  background: var(--suivi-surface-douce);
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body) .mantine-Tabs-list:not([data-orientation='vertical'])::before {
+  display: none;
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body) .mantine-Tabs-tab {
+  padding: 0.7rem 0.95rem;
+  border-radius: 0.6rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body) .mantine-Tabs-tab[data-active] {
+  background: var(--suivi-surface);
+  border-color: transparent;
+  color: var(--neon-titre);
+  box-shadow: var(--suivi-ombre);
+  font-weight: 650;
+}
+/* Fiches des registres : seul le contenu des onglets défile, les actions restent visibles. */
+.fenetre-fiche-corps {
+  display: flex;
+  overflow: hidden;
+  padding-bottom: 0;
+}
+.fenetre-fiche-corps > .mantine-Stack-root {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+.fenetre-fiche-corps > .mantine-Stack-root > .mantine-Tabs-root {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--suivi-trait) transparent;
+  padding: 0.2rem;
+}
+.fenetre-fiche-corps .mantine-Tabs-panel > .mantine-Stack-root {
+  gap: 1.25rem;
+}
+.fenetre-actions {
+  flex: none;
+  padding-block: 1rem;
+  border-top: 1px solid var(--suivi-trait);
+  background: var(--suivi-surface);
+}
+@media (max-width: 36em) {
+  .mantine-Modal-root {
+    --modal-x-offset: 0.5rem;
+    --modal-y-offset: 0.75rem;
+  }
+  .mantine-Modal-content {
+    border-radius: 1rem;
+  }
+  .mantine-Modal-header,
+  .mantine-Drawer-header {
+    min-height: 4.25rem;
+    padding: 1rem;
+  }
+  .mantine-Modal-header .mantine-Modal-title,
+  .mantine-Drawer-header .mantine-Drawer-title {
+    font-size: 1rem;
+  }
+  .mantine-Modal-body,
+  .mantine-Drawer-body {
+    padding: 1rem;
+  }
+  .fenetre-fiche-corps {
+    padding-bottom: 0;
+  }
+  :is(.mantine-Modal-body, .mantine-Drawer-body) .mantine-Tabs-tab {
+    padding: 0.6rem;
+    font-size: 0.75rem;
+  }
+  .fenetre-actions .mantine-Button-root {
+    flex: 1;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .mantine-Modal-overlay,
+  .mantine-Drawer-overlay {
+    backdrop-filter: none;
+  }
+}

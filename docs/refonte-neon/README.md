@@ -1,3 +1,5 @@
+> Complément du 01/11/2026 : [fenêtres, fiches et panneaux latéraux](FENETRES.md), captures et contrôles.
+
 > Complément du 01/11/2026 : [dalles Périmètres en mode Graphe](DALLES-PERIMETRES.md).
 
 > Complément : [intégration des graphiques et menus du prototype](PROTOTYPE-INTEGRE.md).
