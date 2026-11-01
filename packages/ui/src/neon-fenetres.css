@@ -462,6 +462,83 @@
 .contexte-section[data-champ='issues'] {
   --contexte-repere-fond: color-mix(in srgb, var(--neon-violet) 13%, var(--suivi-surface));
 }
+.contexte-section:is([data-champ='interfaces'], [data-champ='issues']) {
+  grid-column: 1 / -1;
+}
+.contexte-categories {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+.contexte-categorie {
+  --categorie-accent: var(--neon-violet);
+  min-width: 0;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--contexte-filet);
+  border-left: 3px solid var(--categorie-accent);
+  border-radius: 0.6rem;
+  background: color-mix(in srgb, var(--categorie-accent) 4%, var(--suivi-surface));
+}
+.contexte-categorie[data-nature='externe'] {
+  --categorie-accent: var(--neon-rose);
+}
+.contexte-categorie[data-nature='interface'] {
+  --categorie-accent: var(--neon-cyan);
+}
+.contexte-categorie[data-nature='dependance'] {
+  --categorie-accent: var(--neon-bleu);
+}
+.contexte-categorie > header {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 0.9rem;
+}
+.contexte-categorie > header > div {
+  min-width: 0;
+}
+.contexte-categorie h5 {
+  margin: 0;
+  color: var(--neon-titre);
+  font-size: 0.9rem;
+  font-weight: 650;
+  line-height: 1.5;
+}
+.contexte-categorie > header p {
+  margin: 0.1rem 0 0;
+  color: var(--mantine-color-dimmed);
+  font-size: 0.72rem;
+  line-height: 1.6;
+}
+.contexte-categorie-repere {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.2rem;
+  height: 2.2rem;
+  border: 1px solid color-mix(in srgb, var(--categorie-accent) 30%, var(--contexte-filet));
+  border-radius: 0.45rem;
+  background: color-mix(in srgb, var(--categorie-accent) 10%, var(--suivi-surface));
+  color: var(--neon-titre);
+  font-size: 0.6rem;
+  font-weight: 650;
+  letter-spacing: 0.025em;
+}
+.contexte-categorie-nombre {
+  margin-left: auto;
+  color: var(--mantine-color-dimmed);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+.contexte-categorie .contexte-puces li::before {
+  background: var(--categorie-accent);
+}
+.contexte-categorie--a-preciser {
+  --categorie-accent: var(--suivi-trait);
+  grid-column: 1 / -1;
+  border-left-style: dashed;
+  background: var(--suivi-surface-douce);
+}
 .contexte-section[data-champ='exclusions'] {
   --contexte-repere-fond: color-mix(in srgb, var(--neon-rose) 12%, var(--suivi-surface));
   background: color-mix(in srgb, var(--mantine-color-encre-9) 6%, var(--suivi-surface-douce));
@@ -551,6 +628,9 @@
     border-left: 0;
   }
   .contexte-sections {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .contexte-categories {
     grid-template-columns: minmax(0, 1fr);
   }
   .contexte-section {

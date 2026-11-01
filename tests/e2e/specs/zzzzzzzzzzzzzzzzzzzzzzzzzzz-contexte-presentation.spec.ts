@@ -6,7 +6,7 @@ import { csrfOf, PASSWORD, sessionAdmin, totp, watchPage } from '../helpers';
 
 const SOCLE = '00000000-0000-4000-8000-000000000001';
 const base = `/api/grc/${SOCLE}/objects`;
-async function contexte(req: APIRequestContext, name: string) {
+async function contexte(req: APIRequestContext, name: string, donnees: Record<string, unknown> = {}) {
   const response = await req.post(base, {
     headers: { 'x-csrf-token': await csrfOf(req) },
     data: {
@@ -20,12 +20,64 @@ async function contexte(req: APIRequestContext, name: string) {
         issues: 'Évolution de la réglementation\nDisponibilité des services',
         exclusions: '',
         refs: [],
+        ...donnees,
       },
     },
   });
   expect(response.status(), await response.text()).toBe(200);
   return response.json() as Promise<{ id: string; version: number }>;
 }
+
+test('Contexte : distinguer les quatre catégories sans inventer le classement ni écrire pendant la lecture', async ({
+  browser,
+}) => {
+  const ctx = await browser.newContext({
+    storageState: (await sessionAdmin(browser)).state,
+    ignoreHTTPSErrors: true,
+    viewport: { width: 1440, height: 1000 },
+    reducedMotion: 'reduce',
+  });
+  try {
+    const objet = await contexte(ctx.request, `Catégories contexte ${Date.now().toString(36)}`, {
+      issues:
+        'Enjeux internes :\nCompétences des équipes\nEnjeux externes :\nÉvolution de la réglementation\n[À préciser]\nContexte à qualifier',
+      interfaces:
+        '[Interface] Échanges avec le laboratoire\n[Dépendance] Connectivité du site\nPrestataire à qualifier',
+    });
+    const avant = await (await ctx.request.get(`${base}/${objet.id}`)).json();
+    const page = await ctx.newPage(),
+      problems = watchPage(page),
+      ecritures: string[] = [];
+    page.on('request', (r) => {
+      if (r.method() !== 'GET' && /\/api\/grc\/.*\/(objects|links)(\/|\?|$)/.test(r.url())) ecritures.push(r.method());
+    });
+    for (const largeur of [1440, 390]) {
+      await page.setViewportSize({ width: largeur, height: 1000 });
+      await page.goto(`/pilotage/contexte?ouvrir=${objet.id}`);
+      const vue = page.getByRole('dialog', { name: 'Périmètre et contexte', exact: true });
+      for (const [titre, texte] of [
+        ['Enjeux internes', 'Compétences des équipes'],
+        ['Enjeux externes', 'Évolution de la réglementation'],
+        ['Interfaces', 'Échanges avec le laboratoire'],
+        ['Dépendances', 'Connectivité du site'],
+      ])
+        await expect(vue.getByRole('region', { name: titre, exact: true }).getByRole('listitem')).toHaveText([texte!]);
+      await expect(vue.getByRole('region', { name: 'À préciser', exact: true }).getByRole('listitem')).toHaveText([
+        'Prestataire à qualifier',
+        'Contexte à qualifier',
+      ]);
+      for (const zone of [vue, vue.locator('.mantine-Modal-body'), vue.locator('.mantine-Tabs-root')])
+        expect(await zone.evaluate((el) => el.scrollHeight - el.clientHeight)).toBeLessThanOrEqual(2);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+      await vue.getByRole('button', { name: 'Fermer', exact: true }).click();
+    }
+    expect(await (await ctx.request.get(`${base}/${objet.id}`)).json()).toEqual(avant);
+    expect(ecritures).toEqual([]);
+    expect(problems).toEqual([]);
+  } finally {
+    await ctx.close();
+  }
+});
 
 test('Contexte : afficher, agrandir, annuler et enregistrer une modification explicite', async ({ browser }) => {
   const ctx = await browser.newContext({

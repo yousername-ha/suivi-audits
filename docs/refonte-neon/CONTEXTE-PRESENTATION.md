@@ -1,3 +1,5 @@
+> Évolution du 01/11/2026 : [quatre catégories distinctes dans la présentation](CONTEXTE-CATEGORIES.md). Les captures ci-dessous conservent la preuve du découpage précédent.
+
 > Suite graphique : [cadres néon et animations des pictogrammes](CADRES-NEON.md). Les captures ci-dessous conservent le rendu du lot précédent.
 
 # Présenter le périmètre et le contexte en audit

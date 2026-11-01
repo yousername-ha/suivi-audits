@@ -6,6 +6,7 @@ import { get } from '../api';
 import { ErrorAlert, fmtDate } from '../components/common';
 import type { Source } from './Fields';
 import { lignesInterfaces } from './liste-interfaces';
+import { CATEGORIES_CONTEXTE, repartirContexte, type FamilleContexte } from './categories-contexte';
 
 type Revision = { version: number; reason: string; createdAt: string; createdBy: string };
 type Relation = {
@@ -52,6 +53,75 @@ const PICTOGRAMMES: Record<string, ReactNode> = {
   ),
 };
 
+function CategoriesContexte({ value, famille }: { value: string; famille: FamilleContexte }) {
+  const id = useId();
+  const textes = repartirContexte(value, famille);
+  const lignes = (texte: string) =>
+    famille === 'interfaces' ? lignesInterfaces(texte) : texte.split(/\r?\n/).filter((ligne) => ligne.trim());
+  const nonClasses = lignes(textes.aPreciser);
+  return (
+    <div className="contexte-categories">
+      {CATEGORIES_CONTEXTE[famille].map((categorie, index) => {
+        const elements = lignes(index === 0 ? textes.premier : textes.second);
+        return (
+          <section
+            key={categorie.id}
+            className="contexte-categorie"
+            data-nature={categorie.id}
+            aria-labelledby={`${id}-${categorie.id}`}
+          >
+            <header>
+              <span className="contexte-categorie-repere" aria-hidden="true">
+                {categorie.repere}
+              </span>
+              <div>
+                <h5 id={`${id}-${categorie.id}`}>{categorie.titre}</h5>
+                <p>{categorie.aide}</p>
+              </div>
+              {!!elements.length && (
+                <span className="contexte-categorie-nombre">
+                  {elements.length} élément{elements.length > 1 ? 's' : ''}
+                </span>
+              )}
+            </header>
+            {elements.length ? (
+              <ul className="contexte-puces">
+                {elements.map((ligne, indexLigne) => (
+                  <li key={indexLigne}>{ligne}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="contexte-vide">Catégorie non renseignée.</p>
+            )}
+          </section>
+        );
+      })}
+      {!!nonClasses.length && (
+        <section className="contexte-categorie contexte-categorie--a-preciser" aria-labelledby={`${id}-a-preciser`}>
+          <header>
+            <span className="contexte-categorie-repere" aria-hidden="true">
+              ?
+            </span>
+            <div>
+              <h5 id={`${id}-a-preciser`}>À préciser</h5>
+              <p>
+                {famille === 'issues'
+                  ? 'La nature interne ou externe de ces enjeux n’est pas indiquée.'
+                  : 'Ces éléments ne sont pas identifiés comme interface ou dépendance.'}
+              </p>
+            </div>
+          </header>
+          <ul className="contexte-puces">
+            {nonClasses.map((ligne, index) => (
+              <li key={index}>{ligne}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </div>
+  );
+}
+
 /** Présentation du contexte enregistré : aucune commande de mutation dans les onglets de consultation. */
 export function ContextPresentation({
   object,
@@ -86,6 +156,8 @@ export function ContextPresentation({
     ? object.data.refs.filter((r): r is string => typeof r === 'string')
     : [];
   const description = typeof object.data.description === 'string' ? object.data.description : '';
+  const ordre = ['organisation', 'scope', 'exclusions', 'interfaces', 'issues'];
+  const champs = [...(PILOTAGE_FIELDS.context ?? [])].sort((a, b) => ordre.indexOf(a.key) - ordre.indexOf(b.key));
   return (
     <Modal
       opened={opened}
@@ -134,7 +206,7 @@ export function ContextPresentation({
                 </dl>
               </header>
               <div className="contexte-sections">
-                {(PILOTAGE_FIELDS.context ?? []).map((field, index) => {
+                {champs.map((field, index) => {
                   const rawValue = object.data[field.key];
                   const value = typeof rawValue === 'string' ? rawValue : '';
                   const filled = !!value.trim();
@@ -164,15 +236,8 @@ export function ContextPresentation({
                           {String(index + 1).padStart(2, '0')}
                         </span>
                       </h4>
-                      {['issues', 'interfaces'].includes(field.key) && filled ? (
-                        <ul className="contexte-puces">
-                          {(field.key === 'interfaces'
-                            ? lignesInterfaces(value)
-                            : value.split(/\r?\n/).filter((line) => line.trim())
-                          ).map((line, lineIndex) => (
-                            <li key={lineIndex}>{line}</li>
-                          ))}
-                        </ul>
+                      {field.key === 'issues' || field.key === 'interfaces' ? (
+                        <CategoriesContexte value={value} famille={field.key} />
                       ) : (
                         <p className={filled ? 'contexte-texte' : 'contexte-vide'}>
                           {filled ? value : 'Non renseigné'}

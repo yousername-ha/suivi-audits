@@ -257,7 +257,13 @@ export function Fields({
       <Textarea
         key={f.key}
         label={f.label}
-        description={f.hint}
+        description={
+          kind === 'context' && f.key === 'issues'
+            ? 'Séparez les catégories par les titres « Enjeux internes : » et « Enjeux externes : », chacun sur sa ligne.'
+            : kind === 'context' && f.key === 'interfaces'
+              ? 'Séparez les catégories par les titres « Interfaces : » et « Dépendances : », chacun sur sa ligne.'
+              : f.hint
+        }
         rows={3}
         value={String(value ?? '')}
         onChange={(e) => onChange(f.key, e.currentTarget.value)}
