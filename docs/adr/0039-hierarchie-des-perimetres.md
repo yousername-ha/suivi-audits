@@ -38,19 +38,29 @@ rattaché périmètre par périmètre.
 
 ## Amendement du 01/11/2026 — un périmètre est une organisation ou un fournisseur
 
-Demande du RSSI du 01/11/2026 : les trois étiquettes de structure du point 1 (`organisation`, `entite`, `perimetre`) ne
-correspondaient pas à la réalité. **Un périmètre est une organisation ou un fournisseur, rien d'autre.**
+Demandes et choix du RSSI du 01/11/2026 : les trois étiquettes de structure du point 1 (`organisation`, `entite`, `perimetre`)
+ne correspondaient pas à la réalité. **Un périmètre est une organisation ou un fournisseur, rien d'autre.**
 
 1. `entity_kind` ne prend plus que `organisation` (valeur par défaut) ou `fournisseur`. Migration `051` : les périmètres
    existants marqués `entite` ou `perimetre` deviennent `organisation` ; aucune ligne supprimée, la contrainte est remplacée.
    L'API refuse les anciennes valeurs (422).
-2. **Rattachement inchangé** : mêmes règles qu'au point 2 (pas de boucle, profondeur 8), mêmes droits, même héritage explicite
-   des référentiels. Exemple : l'organisation A a pour enfants les organisations B et C et le fournisseur F. Aucune règle
-   supplémentaire n'est posée selon le type.
-3. Le type reste une étiquette : il ne change ni les droits, ni les compteurs, ni les objets du périmètre. La nature
-   (SMSI, SMQ, SMI…, ADR 0030) est conservée, indépendante du type.
-4. Le registre des fournisseurs et leur rattachement à un ou plusieurs périmètres (ADR 0032, `sup_scope_links`) ne changent
-   pas : un fournisseur du registre reste affiché « Fournisseur extérieur » à côté du graphe. Un périmètre de type fournisseur
-   est un périmètre à part entière (actions, écarts, référentiels…), sans lien automatique avec une fiche du registre.
-5. Retour arrière : une version antérieure lit `organisation` mais pas `fournisseur` ; il passe par la restauration de la
+2. **Rattachement** : mêmes règles qu'au point 2 (pas de boucle, profondeur 8), mêmes droits, même héritage explicite des
+   référentiels. Exemple : l'organisation A a pour enfants les organisations B et C et le fournisseur F. **Seule règle
+   ajoutée : un fournisseur n'a pour enfants que des fournisseurs** (ses sous-traitants), jamais une organisation. Contrôle
+   applicatif lisible (422, logique pure partagée avec l'interface) et déclencheur en base `grc_smsis_types_rattachement`.
+   Un périmètre qui a des organisations enfants ne peut donc pas devenir un fournisseur.
+3. **Fiche du registre** : un périmètre fournisseur peut être relié à sa fiche du registre des fournisseurs (ADR 0032) par la
+   colonne `supplier_id` (identifiant historique, comme `sup_scope_links`). Facultatif, réservé au type fournisseur
+   (contrainte `grc_smsis_fiche_fournisseur`), une fiche reliée à un seul périmètre (index unique ; 409 sinon, sans révéler
+   le nom de l'autre périmètre). Relier une fiche exige `fournisseurs:lire` et une fiche présente au registre. Un périmètre
+   qui redevient une organisation est délié. Dans le graphe, une fiche reliée n'apparaît plus comme « Fournisseur
+   extérieur » : elle est représentée par son périmètre.
+4. **Criticité** : elle reste une donnée de la fiche du registre (champ `critical`, seule source), désormais cochable dans
+   la fiche (« Fournisseur critique »). Le périmètre relié l'affiche (« Fournisseur critique » dans la liste, « Critique »
+   sur la carte du graphe) sans la recopier.
+5. **Nature retirée de l'écran** : la nature (SMSI, SMQ, SMI…, ADR 0030) n'a pas de sens pour un périmètre, un SMSI ou un
+   SMQ étant l'ensemble des éléments qui le constituent. Elle n'est plus proposée ni affichée ; la colonne reste en base,
+   la valeur enregistrée est conservée (une modification qui ne la précise pas la laisse inchangée).
+6. Le type ne change ni les droits, ni les compteurs, ni les objets du périmètre.
+7. Retour arrière : une version antérieure lit `organisation` mais pas `fournisseur` ; il passe par la restauration de la
    sauvegarde prise avant la mise à jour.

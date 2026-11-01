@@ -186,6 +186,7 @@ export async function cartesPerimetres(g: Grc, user: SessionUser): Promise<Synth
       parentId: p.parentId ?? null,
       nature: p.nature,
       entityKind: p.entityKind,
+      supplierId: p.supplierId ?? null,
       compteurs,
       total,
       sousPerimetres: ensemble.length - 1,

@@ -412,6 +412,7 @@ export interface GrcSmsis {
   parent_id: string | null;
   entity_kind: Generated<"organisation" | "fournisseur">;
   inherit_frameworks: Generated<boolean>;
+  supplier_id: string | null;
 }
 
 export interface GroupRoles {

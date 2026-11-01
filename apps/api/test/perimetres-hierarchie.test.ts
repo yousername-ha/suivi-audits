@@ -108,6 +108,83 @@ describe('rattachement parent/enfant', () => {
     );
     expect(audit!.details.changed).toContain('entityKind');
   });
+  it('sous un fournisseur, seulement des fournisseurs (API et base)', async () => {
+    const a = await creer('Organisation A2', {});
+    const f = await creer('Fournisseur F2', { parentId: a, entityKind: 'fournisseur' });
+    const sousTraitant = await creer('Sous-traitant S2', { parentId: f, entityKind: 'fournisseur' });
+    expect(sousTraitant).toBeTruthy();
+    const refus = await admin.post('/api/grc/smsis', {
+      name: 'Organisation sous fournisseur',
+      scope: '',
+      timezone: 'Europe/Paris',
+      parentId: f,
+    });
+    expect(refus.statusCode, refus.body).toBe(422);
+    expect(refus.json().error ?? refus.body).toMatch(/fournisseur/);
+    const o = await creer('Organisation O2', { parentId: a });
+    expect((await modifier(o, { parentId: f })).statusCode).toBe(422);
+    // Le sous-traitant ne peut pas redevenir une organisation tant qu'il est sous un fournisseur.
+    expect((await modifier(sousTraitant, { entityKind: 'organisation' })).statusCode).toBe(422);
+    // A a des organisations enfants : il ne peut pas devenir un fournisseur.
+    expect((await modifier(a, { entityKind: 'fournisseur' })).statusCode).toBe(422);
+    await expect(t.svc.db.q('UPDATE grc_smsis SET parent_id=$1 WHERE id=$2', [f, o])).rejects.toThrow(/fournisseur/);
+    await expect(t.svc.db.q("UPDATE grc_smsis SET entity_kind='fournisseur' WHERE id=$1", [a])).rejects.toThrow(
+      /fournisseur/,
+    );
+  });
+  it('relie un périmètre fournisseur à sa fiche du registre, une seule fois, et la délie s’il devient une organisation', async () => {
+    const sup = await admin.post('/api/suppliers', { name: 'Fiche fournisseur fictive' });
+    expect(sup.statusCode, sup.body).toBe(200);
+    const fiche = sup.json().id as string;
+    const f = await creer('Fournisseur relié', { entityKind: 'fournisseur', supplierId: fiche });
+    const de = async (id: string) =>
+      ((await admin.get('/api/grc/smsis')).json() as Record<string, unknown>[]).find((x) => x.id === id);
+    expect(await de(f)).toMatchObject({ entityKind: 'fournisseur', supplierId: fiche });
+    // Une fiche n'est reliée qu'à un seul périmètre ; une fiche absente du registre est refusée.
+    const doublon = await admin.post('/api/grc/smsis', {
+      name: 'Doublon',
+      scope: '',
+      timezone: 'Europe/Paris',
+      entityKind: 'fournisseur',
+      supplierId: fiche,
+    });
+    expect(doublon.statusCode, doublon.body).toBe(409);
+    const absente = await admin.post('/api/grc/smsis', {
+      name: 'Absente',
+      scope: '',
+      timezone: 'Europe/Paris',
+      entityKind: 'fournisseur',
+      supplierId: 'SUP-999',
+    });
+    expect(absente.statusCode, absente.body).toBe(422);
+    // Une organisation ne se relie pas à une fiche.
+    const org = await admin.post('/api/grc/smsis', {
+      name: 'Organisation avec fiche',
+      scope: '',
+      timezone: 'Europe/Paris',
+      supplierId: fiche,
+    });
+    expect(org.statusCode, org.body).toBe(422);
+    // Modifier sans préciser la fiche la conserve ; devenir une organisation la délie.
+    expect((await modifier(f, { name: 'Fournisseur relié renommé' })).json().supplierId).toBe(fiche);
+    const r = await modifier(f, { entityKind: 'organisation' });
+    expect(r.statusCode, r.body).toBe(200);
+    expect(r.json()).toMatchObject({ entityKind: 'organisation', supplierId: null });
+    await expect(t.svc.db.q("UPDATE grc_smsis SET supplier_id='SUP-001' WHERE id=$1", [f])).rejects.toThrow(
+      /grc_smsis_fiche_fournisseur/,
+    );
+  });
+  it('garde la nature enregistrée quand la modification ne la précise pas', async () => {
+    const id = await creer('Avec nature', { nature: 'SMQ' });
+    const courant = (await admin.get('/api/grc/smsis')).json().find((x: { id: string }) => x.id === id);
+    const r = await admin.patch(
+      `/api/grc/smsis/${id}`,
+      { name: 'Avec nature renommé', scope: courant.scope, timezone: courant.timezone, confirm: 'ENREGISTRER' },
+      { 'if-match': `"${courant.version}"` },
+    );
+    expect(r.statusCode, r.body).toBe(200);
+    expect(r.json().nature).toBe('SMQ');
+  });
   it('refuse les anciennes étiquettes « entité » et « périmètre », à l’API comme en base', async () => {
     for (const entityKind of ['entite', 'perimetre']) {
       const r = await admin.post('/api/grc/smsis', { name: 'Ancien', scope: '', timezone: 'Europe/Paris', entityKind });

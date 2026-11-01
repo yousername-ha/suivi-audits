@@ -11,6 +11,7 @@ const carte = (id: string, parentId: string | null, name = id): CartePerimetre =
   parentId,
   nature: '',
   entityKind: 'organisation',
+  supplierId: null,
   compteurs: vide,
   total: vide,
   sousPerimetres: 0,
