@@ -30,6 +30,7 @@ import { Relations } from '../grc/Relations';
 import { MigrationEtude } from '../config-grc/MigrationEtude';
 import { SelecteurResponsable, useResponsables } from '../components/selecteurs';
 import { SelecteurRegistre } from '../registres/SelecteurRegistre';
+import { ContextPresentation } from './ContextPresentation';
 export function RecordEditor({
   smsi,
   kind,
@@ -55,7 +56,8 @@ export function RecordEditor({
     [search, setSearch] = useState(''),
     [registreId, setRegistreId] = useState<string | null>(null),
     [error, setError] = useState<unknown>(null),
-    [saving, setSaving] = useState(false);
+    [saving, setSaving] = useState(false),
+    [editingContext, setEditingContext] = useState(false);
   const sources = useQuery({
     queryKey: ['grc', smsi, 'sources', search],
     queryFn: () => get<{ items: Source[] }>(`/api/grc/${smsi}/sources?search=${encodeURIComponent(search)}`),
@@ -73,6 +75,7 @@ export function RecordEditor({
   const readonly = !can(GRC_MODULES[kind], 'modifier') || object?.data.status === 'closed';
   useEffect(() => {
     if (opened) {
+      setEditingContext(false);
       setName(object?.name ?? (typeof initial?.name === 'string' ? initial.name : ''));
       const d: Record<string, unknown> = object
         ? { ...object.data }
@@ -150,11 +153,38 @@ export function RecordEditor({
   const options = [...(sources.data?.items ?? [])];
   for (const ref of refs)
     if (!options.some((s) => s.ref === ref)) options.push({ ref, name: 'Référence déjà liée', kind: '' });
+  if (kind === 'context' && object && (!editingContext || readonly))
+    return (
+      <ContextPresentation
+        object={object}
+        opened={opened}
+        onClose={onClose}
+        onModify={
+          readonly
+            ? undefined
+            : () => {
+                setName(object.name);
+                setData({ ...object.data });
+                setError(null);
+                setEditingContext(true);
+              }
+        }
+        ownerLabel={
+          owners.data?.find((o) => o.id === object.data.ownerId)?.displayName ||
+          owners.data?.find((o) => o.id === object.data.ownerId)?.username ||
+          String(object.data.ownerLabel || (object.data.ownerId ? 'Responsable non disponible' : 'Non attribué'))
+        }
+        sources={options}
+        history={history.data}
+        historyLoading={history.isPending}
+        error={sources.error ?? owners.error ?? history.error}
+      />
+    );
   return (
     <Modal
       opened={opened}
       onClose={onClose}
-      title={`${object ? 'Fiche' : 'Ajouter'} — ${GRC_LABELS[kind]}`}
+      title={`${object ? (kind === 'context' ? 'Modifier' : 'Fiche') : 'Ajouter'} — ${GRC_LABELS[kind]}`}
       size="lg"
       classNames={{ content: 'fenetre-fiche', body: 'fenetre-fiche-corps' }}
       closeButtonProps={{ 'aria-label': 'Fermer la fiche' }}
@@ -280,8 +310,8 @@ export function RecordEditor({
           </Tabs.Panel>
         </Tabs>
         <Group justify="flex-end" className="fenetre-actions">
-          <Button variant="default" onClick={onClose}>
-            Fermer
+          <Button variant="default" onClick={kind === 'context' && object ? () => setEditingContext(false) : onClose}>
+            {kind === 'context' && object ? 'Annuler' : 'Fermer'}
           </Button>
           {!readonly && (
             <Button loading={saving} disabled={!name.trim()} onClick={() => void save()}>

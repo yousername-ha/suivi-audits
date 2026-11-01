@@ -188,7 +188,7 @@ export function BusinessRegistry({
     return (
       <Group gap="xs">
         <Button variant="light" size="xs" onClick={() => onOpen(o)}>
-          Ouvrir
+          {kind === 'context' ? 'Afficher' : 'Ouvrir'}
         </Button>
         {editable && primary && (
           <Button variant="default" size="xs" onClick={() => onDecision(o, primary)}>

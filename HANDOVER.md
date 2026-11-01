@@ -1,3 +1,5 @@
+> 01/11/2026 : [présentation du contexte distincte de sa modification](docs/refonte-neon/CONTEXTE-PRESENTATION.md). Afficher ouvre une fiche sans formulaire ; Modifier reste soumis aux droits existants.
+
 > 01/11/2026 : [fenêtres et panneaux Neon harmonisés](docs/refonte-neon/FENETRES.md), fiches de registre avec actions visibles ; contrôles et captures réelles sur la copie Codex.
 
 > Retour visuel du 01/11/2026 : typographie des dalles Périmètres ajustée, compteurs neutres non soulignés et flèches de navigation, captures actualisées pour validation.

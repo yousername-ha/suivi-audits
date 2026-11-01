@@ -1,3 +1,5 @@
+> Évolution suivante : [présentation du contexte séparée du formulaire de modification](CONTEXTE-PRESENTATION.md). Les captures ci-dessous conservent la preuve du lot précédent.
+
 # Fenêtres et panneaux — finition Neon
 
 01/11/2026, Europe/Paris. Session : Codex. Branche `codex/refonte-neon-main`, suite de `af34ebe6b1806ae2a72c06bc3aa5af138988f70f`.
