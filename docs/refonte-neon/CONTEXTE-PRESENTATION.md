@@ -26,7 +26,7 @@ La création d’une nouvelle fiche ouvre directement le formulaire habituel. Le
 
 Aucun endpoint, schéma, stockage ou calcul métier ajouté ou modifié. Les requêtes de consultation utilisent les lectures existantes ; la sauvegarde, `If-Match`, les versions et les contrôles serveur sont conservés. Le graphique RETEX et le dépôt d’origine ne sont pas modifiés. Aucune nouvelle dépendance, fusion dans main ou mise en production.
 
-## Vérifications réelles
+## Vérifications du lot de séparation (37bd031)
 
 Sur l’instance fictive isolée PostgreSQL 18/API réelle, avec Node 26.13.0 et Chromium :
 
@@ -42,6 +42,22 @@ Sur l’instance fictive isolée PostgreSQL 18/API réelle, avec Node 26.13.0 et
 Les scripts, sessions et résultats détaillés restent hors Git dans `/workspace/work/neon-instance` ; preuve visuelle complémentaire `validation-contexte-presentation.json`. Les tests réutilisables sont dans `tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzz-contexte-presentation.spec.ts`. Aucun secret ni compte réel dans les captures publiées.
 
 La recette humaine de présentation à l’auditeur, les cas de permissions exhaustifs et l’examen par lecteur d’écran restent à faire. Le point de retour de focus décrit dans [le lot fenêtres](FENETRES.md) n’est pas déclaré résolu par ce changement. Aucune référence visuelle de CI remplacée automatiquement.
+
+## Reprise visuelle — dossier de présentation
+
+01/11/2026, après retour visuel sur la présentation de `37bd0311f71a3e87f8aeefba33f2ff4093e82799`. La composition est retravaillée pour présenter le contexte comme un dossier : titre plus affirmé, version et date en marge, organisation et responsable dans une colonne de référence avec un sommaire visuel. Les activités concernées occupent un bandeau sombre, suivi des interfaces, des enjeux et des exclusions, avec des filets et des espacements plutôt qu’une grille de cinq encadrés équivalents.
+
+Les cinq champs et leurs libellés restent ceux du schéma existant. Le sommaire répète les titres pour faciliter le repérage visuel ; les traits géométriques du bandeau sont décoratifs. Aucun indicateur, relation, score, graphique de données ou texte métier n’est généré à partir du contenu. Les données vides gardent leur mention explicite. La modification, les droits et les requêtes restent identiques au lot de séparation.
+
+La mise en page utilise trois colonnes sur grand écran, deux à largeur intermédiaire et une sur mobile. Le sommaire visuel disparaît sur téléphone ; l’organisation, le responsable et les cinq champs restent présents. Les boutons restent accessibles et le plein écran est conservé.
+
+Contrôles de cette reprise, tous réussis :
+
+- Deux parcours e2e existants de la présentation, sans modifier leurs assertions : consultation sans écriture, agrandissement, annulation, sauvegarde, création et lecteur réel avec refus serveur HTTP 403.
+- Huit captures renouvelées, aux trois largeurs dans les deux thèmes, puis en plein écran et en modification. Quatre analyses axe sans violation détectée ; aucune erreur JavaScript, violation CSP, réponse API en échec ou écriture d’objet/relation pendant la recette visuelle ; aucun débordement horizontal de page.
+- Trois tests ciblés de charte, typage web, lint du composant modifié et formatage : codes 0. Build web : code 0, mêmes avertissements de script externe et taille de chunks. Les suites unitaires complètes du lot précédent ne sont pas déclarées rejouées pour cette seule reprise graphique.
+
+Les captures suivantes sont celles de cette reprise. La validation esthétique par le demandeur reste en attente ; les références visuelles de CI restent intactes.
 
 ## Captures pour validation
 

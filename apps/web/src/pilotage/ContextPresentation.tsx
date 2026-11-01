@@ -56,7 +56,7 @@ export function ContextPresentation({
       title="Périmètre et contexte"
       size="xl"
       fullScreen={fullScreen}
-      classNames={{ content: 'contexte-presentation', body: 'contexte-presentation-corps' }}
+      classNames={{ root: 'contexte-fenetre', content: 'contexte-presentation', body: 'contexte-presentation-corps' }}
       closeButtonProps={{ 'aria-label': 'Fermer la présentation' }}
     >
       <Stack>
@@ -70,14 +70,12 @@ export function ContextPresentation({
           <Tabs.Panel value="presentation" pt="lg">
             <article className="contexte-document" aria-labelledby={`${id}-titre`}>
               <header className="contexte-entete">
-                <span className="contexte-repere">Organisation · Périmètre et contexte</span>
-                <h3 id={`${id}-titre`}>{object.name}</h3>
-                {description.trim() && <p className="contexte-description">{description}</p>}
+                <div className="contexte-couverture">
+                  <span className="contexte-repere">Dossier de contexte</span>
+                  <h3 id={`${id}-titre`}>{object.name}</h3>
+                  {description.trim() && <p className="contexte-description">{description}</p>}
+                </div>
                 <dl className="contexte-meta">
-                  <div>
-                    <dt>Responsable</dt>
-                    <dd>{ownerLabel}</dd>
-                  </div>
                   <div>
                     <dt>Dernière mise à jour</dt>
                     <dd>{fmtDate(object.updatedAt)}</dd>
@@ -101,9 +99,28 @@ export function ContextPresentation({
                     >
                       <h4 id={`${id}-${field.key}`}>
                         <span aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
-                        {field.label}
+                        <span>{field.label}</span>
                       </h4>
                       <p className={filled ? 'contexte-texte' : 'contexte-vide'}>{filled ? value : 'Non renseigné'}</p>
+                      {field.key === 'organisation' && (
+                        <>
+                          <dl className="contexte-responsable">
+                            <dt>Responsable</dt>
+                            <dd>{ownerLabel}</dd>
+                          </dl>
+                          <div className="contexte-sommaire" aria-hidden="true">
+                            <span>Dans ce dossier</span>
+                            <ol>
+                              {(PILOTAGE_FIELDS.context ?? []).slice(1).map((entry, position) => (
+                                <li key={entry.key}>
+                                  <span>{String(position + 2).padStart(2, '0')}</span>
+                                  {entry.label}
+                                </li>
+                              ))}
+                            </ol>
+                          </div>
+                        </>
+                      )}
                     </section>
                   );
                 })}

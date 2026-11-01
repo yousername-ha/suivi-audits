@@ -226,7 +226,19 @@
   }
 }
 
-/* Consultation du contexte : un document de présentation, distinct du formulaire. */
+/* Dossier de contexte : couverture, colonne de référence et périmètre central.
+   Les cinq champs restent distincts ; aucune donnée n'est déduite des textes saisis. */
+.contexte-fenetre {
+  --modal-size-xl: 76rem;
+}
+.contexte-presentation > .mantine-Modal-header {
+  min-height: 4rem;
+  padding-block: 1rem;
+}
+.contexte-presentation .mantine-Modal-title {
+  font-size: 0.9375rem;
+  font-weight: 550;
+}
 .contexte-presentation-corps {
   display: flex;
   overflow: hidden;
@@ -245,101 +257,246 @@
   scrollbar-width: thin;
   scrollbar-color: var(--suivi-trait) transparent;
 }
+.contexte-presentation .mantine-Tabs-list:not([data-orientation='vertical']) {
+  gap: 1.5rem;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--suivi-trait);
+  border-radius: 0;
+  background: transparent;
+}
+.contexte-presentation .mantine-Tabs-tab {
+  padding: 0.8rem 0.1rem 1rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--mantine-color-dimmed);
+  font-weight: 500;
+}
+.contexte-presentation .mantine-Tabs-tab[data-active] {
+  background: transparent;
+  color: var(--neon-titre);
+  box-shadow: inset 0 -2px var(--neon-accent);
+  font-weight: 600;
+}
 .contexte-document {
   display: grid;
-  gap: 1.25rem;
-  padding-bottom: 1rem;
+  gap: 1.75rem;
+  padding: 0.25rem 0 1.25rem;
 }
 .contexte-entete {
-  padding: 1.5rem;
-  border: 1px solid var(--suivi-trait);
-  border-top: 3px solid var(--neon-accent);
-  border-radius: 1rem;
-  background: var(--suivi-surface-douce);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 2rem;
+  padding: 0.5rem 0 1.75rem;
+  border-bottom: 1px solid var(--suivi-trait);
 }
 .contexte-repere {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
   color: var(--mantine-color-dimmed);
-  font-size: 0.7rem;
-  font-weight: 550;
-  letter-spacing: 0.08em;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
   text-transform: uppercase;
 }
+.contexte-repere::before {
+  content: '';
+  width: 0.4rem;
+  height: 0.4rem;
+  background: var(--neon-accent);
+}
 .contexte-entete h3 {
-  margin: 0.65rem 0 1.25rem;
+  max-width: 32ch;
+  margin: 0.75rem 0 0;
   color: var(--neon-titre);
-  font-size: clamp(1.25rem, 2vw, 1.8rem);
-  font-weight: 650;
-  line-height: 1.3;
-  letter-spacing: -0.035em;
+  font-size: clamp(1.5rem, 2.6vw, 2.15rem);
+  font-weight: 600;
+  line-height: 1.18;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
 }
 .contexte-description,
 .contexte-texte {
   margin: 0;
   color: var(--mantine-color-text);
   font-size: 0.875rem;
-  line-height: 1.75;
+  line-height: 1.8;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 .contexte-description {
-  margin-bottom: 1.25rem;
+  max-width: 68ch;
+  margin-top: 1rem;
+  color: var(--mantine-color-dimmed);
 }
 .contexte-meta {
   display: flex;
-  flex-wrap: wrap;
-  gap: 1rem 2.5rem;
+  flex-direction: column-reverse;
+  gap: 0.9rem;
   margin: 0;
-  padding-top: 1rem;
-  border-top: 1px solid var(--suivi-trait);
+  padding-left: 1.5rem;
+  border-left: 1px solid var(--suivi-trait);
 }
-.contexte-meta dt {
+.contexte-meta dt,
+.contexte-responsable dt {
   color: var(--mantine-color-dimmed);
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 450;
 }
-.contexte-meta dd {
-  margin: 0.25rem 0 0;
+.contexte-meta dd,
+.contexte-responsable dd {
+  margin: 0.2rem 0 0;
   color: var(--neon-titre);
-  font-size: 0.8125rem;
+  font-size: 0.8rem;
   font-weight: 550;
   font-variant-numeric: tabular-nums;
 }
+.contexte-meta > div:last-child dd {
+  font-size: 1rem;
+  letter-spacing: -0.025em;
+}
 .contexte-sections {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+  grid-template-columns: 13rem minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 1.5rem 2rem;
+  align-items: start;
 }
 .contexte-section {
   min-width: 0;
-  padding: 1.25rem;
-  border: 1px solid var(--suivi-trait);
-  border-radius: 0.85rem;
-}
-.contexte-section[data-champ='interfaces'] {
-  grid-column: 1 / -1;
 }
 .contexte-section h4 {
   display: flex;
   align-items: baseline;
   gap: 0.65rem;
-  margin: 0 0 0.8rem;
+  margin: 0 0 0.85rem;
   color: var(--neon-titre);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   line-height: 1.5;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.01em;
 }
-.contexte-section h4 > span {
+.contexte-section h4 > span:first-child {
   flex: none;
   color: var(--mantine-color-dimmed);
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 450;
   font-variant-numeric: tabular-nums;
+}
+.contexte-section[data-champ='organisation'] {
+  grid-column: 1;
+  grid-row: 1 / 4;
+  align-self: stretch;
+  padding-right: 1.5rem;
+  border-right: 1px solid var(--suivi-trait);
+}
+.contexte-section[data-champ='organisation'] > .contexte-texte {
+  color: var(--neon-titre);
+  font-size: 0.9375rem;
+  font-weight: 550;
+  line-height: 1.6;
+}
+.contexte-responsable {
+  margin: 1.5rem 0;
+  padding: 1.1rem 0;
+  border-block: 1px solid var(--suivi-trait);
+}
+.contexte-sommaire > span {
+  color: var(--mantine-color-dimmed);
+  font-size: 0.6rem;
+  font-weight: 550;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.contexte-sommaire ol {
+  display: grid;
+  gap: 1.15rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.contexte-sommaire li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  color: var(--mantine-color-dimmed);
+  font-size: 0.6875rem;
+  line-height: 1.6;
+}
+.contexte-sommaire li > span {
+  flex: none;
+  font-size: 0.6rem;
+  font-variant-numeric: tabular-nums;
+}
+.contexte-section[data-champ='scope'] {
+  position: relative;
+  isolation: isolate;
+  grid-column: 2 / 4;
+  padding: 1.75rem 2rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--neon-violet) 35%, var(--suivi-encre));
+  border-radius: 0.65rem;
+  background: var(--suivi-encre);
+}
+.contexte-section[data-champ='scope']::before,
+.contexte-section[data-champ='scope']::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  width: 8rem;
+  height: 8rem;
+  right: -2rem;
+  bottom: -4rem;
+  border: 1px solid color-mix(in srgb, var(--neon-violet) 40%, transparent);
+  transform: rotate(35deg);
+  pointer-events: none;
+}
+.contexte-section[data-champ='scope']::after {
+  right: -0.7rem;
+  bottom: -5.3rem;
+  border-color: color-mix(in srgb, var(--neon-cyan) 30%, transparent);
+}
+.contexte-section[data-champ='scope'] h4,
+.contexte-section[data-champ='scope'] h4 > span:first-child {
+  color: var(--mantine-color-white);
+}
+.contexte-section[data-champ='scope'] h4 {
+  margin-bottom: 1rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+.contexte-section[data-champ='scope'] .contexte-texte {
+  color: var(--mantine-color-white);
+  font-size: 1.125rem;
+  font-weight: 450;
+  line-height: 1.65;
+  letter-spacing: -0.015em;
+}
+.contexte-section[data-champ='scope'] .contexte-vide {
+  color: var(--mantine-color-white);
+}
+.contexte-section[data-champ='interfaces'] {
+  grid-column: 2 / 4;
+  padding: 0.2rem 0 1.5rem 1.25rem;
+  border-left: 2px solid var(--neon-doux);
+  border-bottom: 1px solid var(--suivi-trait);
+}
+.contexte-section[data-champ='issues'] {
+  grid-column: 2;
+}
+.contexte-section[data-champ='exclusions'] {
+  grid-column: 3;
+  padding: 1.1rem 1.25rem;
+  border-radius: 0.4rem;
+  background: var(--suivi-surface-douce);
 }
 .contexte-vide {
   margin: 0;
   color: var(--mantine-color-dimmed);
   font-size: 0.8125rem;
+  line-height: 1.7;
 }
 .contexte-references,
 .contexte-historique {
@@ -350,10 +507,10 @@
 }
 .contexte-references li,
 .contexte-historique li {
-  padding: 0.75rem;
+  padding: 1rem 0.5rem;
   border-bottom: 1px solid var(--suivi-trait);
   font-size: 0.875rem;
-  line-height: 1.6;
+  line-height: 1.7;
 }
 .contexte-historique li > span {
   display: block;
@@ -372,16 +529,83 @@
 .contexte-presentation[data-full-screen] .contexte-texte {
   font-size: 1rem;
 }
-@media (max-width: 36em) {
-  .contexte-entete,
-  .contexte-section {
-    padding: 1rem;
+.contexte-presentation[data-full-screen] [data-champ='scope'] .contexte-texte {
+  font-size: 1.3rem;
+}
+@media (max-width: 62em) {
+  .contexte-sections {
+    grid-template-columns: 11rem minmax(0, 1fr);
+    gap: 1.5rem;
+  }
+  .contexte-section[data-champ='organisation'] {
+    grid-row: 1 / 5;
+    padding-right: 1rem;
+  }
+  .contexte-section[data-champ='scope'],
+  .contexte-section[data-champ='interfaces'],
+  .contexte-section[data-champ='issues'],
+  .contexte-section[data-champ='exclusions'] {
+    grid-column: 2;
+  }
+}
+@media (max-width: 48em) {
+  .contexte-document {
+    gap: 1.25rem;
+  }
+  .contexte-entete {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
+    padding-bottom: 1.25rem;
+  }
+  .contexte-meta {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 1rem 2rem;
+    padding-left: 0;
+    border-left: 0;
   }
   .contexte-sections {
     grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
   }
-  .contexte-meta {
-    gap: 0.85rem 1.25rem;
+  .contexte-section[data-champ] {
+    grid-column: 1;
+    grid-row: auto;
+  }
+  .contexte-section[data-champ='organisation'] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.5rem 1.25rem;
+    padding-right: 0;
+    border-right: 0;
+  }
+  .contexte-section[data-champ='organisation'] h4 {
+    grid-column: 1 / -1;
+    margin-bottom: 0;
+  }
+  .contexte-responsable {
+    margin: 0;
+    padding: 0 0 0 1rem;
+    border: 0;
+    border-left: 1px solid var(--suivi-trait);
+  }
+  .contexte-sommaire {
+    display: none;
+  }
+  .contexte-section[data-champ='scope'] {
+    padding: 1.25rem;
+  }
+  .contexte-section[data-champ='scope'] .contexte-texte {
+    font-size: 1rem;
+  }
+  .contexte-section[data-champ='interfaces'] {
+    padding-bottom: 1.25rem;
+  }
+  .contexte-presentation .mantine-Tabs-list:not([data-orientation='vertical']) {
+    gap: 1rem;
+  }
+  .contexte-presentation .mantine-Tabs-tab {
+    padding-inline: 0;
   }
   .contexte-actions > .mantine-Group-root {
     flex: 2;
