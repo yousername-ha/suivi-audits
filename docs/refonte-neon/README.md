@@ -1,3 +1,5 @@
+> 02/11/2026 : [proposition : en-têtes plus proches du Dashboard initial](propositions/entetes-dashboard/README.md), surfaces arrondies bleu ardoise et accents discrets. Barre à valider ; **reprise graphique de la DdA demandée ensuite**, selon la même règle de validation visuelle et avec peu de violet.
+
 > 02/11/2026 : [proposition : barre des en-têtes Biseau](propositions/entetes-biseau/README.md), angles coupés, relief discret, pictogrammes et séparateurs. **Nouvelle barre à valider avant intégration** ; la version B reste intégrée et validée.
 
 > 02/11/2026 : **[version B choisie et intégrée](OBJECTIFS-VERSION-B.md)**, blocs plus petits, titres inchangés, couleurs renforcées. Captures réelles, deux e2e existants et contrôles d’affichage/accessibilité réussis ; aucune validation préalable en attente pour ce lot.
