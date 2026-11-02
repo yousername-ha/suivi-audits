@@ -27,6 +27,16 @@ const strList = (maxItems: number, max: number) =>
       .slice(0, maxItems),
   );
 
+/** Liste d'étiquettes : comme strList, mais « RGPD » et « rgpd » sont la même étiquette (la première graphie est gardée). */
+const tagList = (maxItems: number, max: number) =>
+  z.union([z.array(z.string()), z.string()]).transform((v) =>
+    (Array.isArray(v) ? v : v.split(','))
+      .map((x) => x.trim().replace(/\s+/g, ' ').slice(0, max))
+      .filter(Boolean)
+      .filter((x, i, a) => a.findIndex((y) => y.toLowerCase() === x.toLowerCase()) === i)
+      .slice(0, maxItems),
+  );
+
 export const Username = z
   .string()
   .trim()
@@ -235,7 +245,7 @@ export const DocumentMeta = z.object({
   description: text(4000).optional(),
   category: text(80).optional(),
   refs: strList(100, 60).optional(),
-  tags: strList(30, 40).optional(),
+  tags: tagList(30, 40).optional(),
   classification: Classification.optional(),
 });
 export type DocumentMeta = z.infer<typeof DocumentMeta>;
@@ -320,7 +330,7 @@ export const LinkCreateBody = z.object({
   description: text(4000).optional(),
   category: text(80).optional(),
   refs: strList(100, 60).optional(),
-  tags: strList(30, 40).optional(),
+  tags: tagList(30, 40).optional(),
 });
 export const LinkPatchBody = LinkCreateBody.partial();
 export const LinkOut = z.object({

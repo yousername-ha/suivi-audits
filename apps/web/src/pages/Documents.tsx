@@ -68,6 +68,26 @@ function useEtiquettes(portee: 'documents' | 'liens' | 'tous') {
 }
 const optionsEtiquettes = (t?: TagCount[]) => (t ?? []).map((e) => ({ value: e.tag, label: `${e.tag} (${e.count})` }));
 
+/** Saisie d'étiquettes : une étiquette qui ne diffère d'une étiquette existante que par la casse est refusée
+ *  (« rgpd » si « RGPD » existe) ; un doublon dans la même liste est ignoré. */
+function saisirEtiquettes(existantes: string[], actuelles: string[], proposees: string[]): string[] {
+  const gardees = proposees.filter((t) => actuelles.includes(t));
+  const acceptees: string[] = [];
+  for (const t of proposees.filter((x) => !actuelles.includes(x))) {
+    const existante = existantes.find((e) => e !== t && e.toLowerCase() === t.toLowerCase());
+    if (existante) {
+      notifications.show({
+        color: 'orange',
+        title: 'Étiquette déjà existante',
+        message: `« ${existante} » existe déjà : choisissez-la dans la liste.`,
+      });
+    } else if (![...gardees, ...acceptees].some((g) => g.toLowerCase() === t.toLowerCase())) {
+      acceptees.push(t);
+    }
+  }
+  return [...gardees, ...acceptees];
+}
+
 type CleTri = 'modifie' | 'titre' | 'categorie' | 'classification' | 'taille';
 interface OrdreTri {
   tri: CleTri;
@@ -581,11 +601,20 @@ function DocumentDetail({
           />
           <TagsInput
             label="Étiquettes"
-            description="Pour classer et filtrer. Choisissez une étiquette existante ou tapez-en une nouvelle."
+            description="Pour classer et filtrer. Choisissez une étiquette existante ou tapez-en une nouvelle (la casse ne crée pas une autre étiquette)."
             data={(suggestions.data ?? []).map((e) => e.tag)}
             limit={30}
             value={form.tags}
-            onChange={(v) => setForm({ ...form, tags: v })}
+            onChange={(v) =>
+              setForm({
+                ...form,
+                tags: saisirEtiquettes(
+                  (suggestions.data ?? []).map((e) => e.tag),
+                  form.tags,
+                  v,
+                ),
+              })
+            }
           />
           <Select
             label="Classification"
@@ -922,11 +951,20 @@ function LinkList({ canWrite }: { canWrite: boolean }) {
             />
             <TagsInput
               label="Étiquettes"
-              description="Pour classer et filtrer. Choisissez une étiquette existante ou tapez-en une nouvelle."
+              description="Pour classer et filtrer. Choisissez une étiquette existante ou tapez-en une nouvelle (la casse ne crée pas une autre étiquette)."
               data={(suggestions.data ?? []).map((e) => e.tag)}
               limit={30}
               value={edit.tags}
-              onChange={(v) => setEdit({ ...edit, tags: v })}
+              onChange={(v) =>
+                setEdit({
+                  ...edit,
+                  tags: saisirEtiquettes(
+                    (suggestions.data ?? []).map((e) => e.tag),
+                    edit.tags,
+                    v,
+                  ),
+                })
+              }
             />
             <Group justify="flex-end">
               <Button variant="default" onClick={() => setEdit(null)}>

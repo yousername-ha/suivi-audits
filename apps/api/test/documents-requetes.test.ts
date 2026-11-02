@@ -78,6 +78,8 @@ describe('documents : requêtes', () => {
     expect(await parmi('?tags=etq-rh,etq-rgpd')).toEqual([d1.id]);
     expect(await parmi('?tags=etq-rgpd,etq-sec')).toEqual([]);
     expect(await parmi('?tags=etq-inconnue')).toEqual([]);
+    // La casse est ignorée : « ETQ-RGPD » et « etq-rgpd » sont la même étiquette.
+    expect(await parmi('?tags=ETQ-RGPD,Etq-RH')).toEqual([d1.id]);
     expect(await parmi('?tags=%20etq-rh%20,')).toHaveLength(2); // espaces et virgules vides ignorés
     // Tri : titre sans tenir compte de la casse, catégorie, classification (public avant restreint), taille.
     expect(await parmi('?tri=titre')).toEqual([d2.id, d3.id, d1.id]);
@@ -105,6 +107,34 @@ describe('documents : requêtes', () => {
     expect(await compte('documents')).toEqual({ 'etq-rgpd': 2, 'etq-rh': 2, 'etq-sec': 1 });
     expect(await compte('liens')).toEqual({ 'etq-rgpd': 1, 'etq-lien': 1 });
     expect(await compte('tous')).toEqual({ 'etq-rgpd': 3, 'etq-rh': 2, 'etq-sec': 1, 'etq-lien': 1 });
+    // Une étiquette qui ne diffère d'une étiquette existante que par la casse est interdite (dépôt, modification, lien) ;
+    // un doublon de casse dans une même liste est fusionné ; une étiquette déjà portée reste modifiable.
+    const refus = await deposer('zz-etq-d.txt', 'd', { tags: ['ETQ-rgpd'] });
+    expect(refus.statusCode).toBe(422);
+    expect(refus.body).toContain('etq-rgpd');
+    const modif = await a.patch(`/api/documents/${d2.id}`, { tags: ['etq-rgpd', 'ETQ-SEC'] }, { 'if-match': '"1"' });
+    expect(modif.statusCode, modif.body).toBe(422);
+    expect((await a.post('/api/links', { url: 'https://exemple.invalid/x', tags: ['Etq-RH'] })).statusCode).toBe(422);
+    const memeListe = await deposer('zz-etq-e.txt', 'e', { tags: ['etq-nouvelle', 'ETQ-NOUVELLE'] });
+    expect(memeListe.json().tags).toEqual(['etq-nouvelle']);
+    const gardee = await a.patch(`/api/documents/${d2.id}`, { tags: ['etq-rgpd', 'etq-neuve'] }, { 'if-match': '"1"' });
+    expect(gardee.statusCode, gardee.body).toBe(200);
+    // Données anciennes : deux graphies déjà présentes (insérées sans passer par l'API) sont comptées comme une seule
+    // étiquette, sous la graphie la plus employée, et le filtre les trouve toutes les deux.
+    for (const [nom, tag] of [
+      ['zz-etq-v1.txt', 'Etq-Variante'],
+      ['zz-etq-v2.txt', 'etq-variante'],
+      ['zz-etq-v3.txt', 'etq-variante'],
+    ] as const) {
+      const v = (await deposer(nom, nom)).json();
+      await t.svc.db.q('UPDATE documents SET tags = ARRAY[$1]::text[] WHERE id = $2', [tag, v.id]);
+    }
+    const variantes = (
+      (await a.get('/api/documents/tags?portee=documents')).json() as { tag: string; count: number }[]
+    ).filter((x) => x.tag.toLowerCase() === 'etq-variante');
+    expect(variantes).toEqual([{ tag: 'etq-variante', count: 3 }]);
+    expect(await parmi('?tags=ETQ-VARIANTE')).toHaveLength(0); // hors des trois documents suivis plus haut
+    expect(((await a.get('/api/documents?tags=ETQ-Variante')).json() as unknown[]).length).toBe(3);
     // Un document supprimé ne compte plus.
     expect((await a.del(`/api/documents/${d3.id}`)).statusCode).toBe(204);
     expect((await compte('documents'))['etq-sec']).toBeUndefined();
