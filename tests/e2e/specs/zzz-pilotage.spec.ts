@@ -209,6 +209,7 @@ test('Pilotage : page Périmètres, une organisation et son fournisseur rattach�
   try {
     await page.goto('/pilotage/perimetres');
     await expect(page.getByRole('heading', { name: 'Périmètres', exact: true })).toBeVisible();
+    await page.getByText('Liste', { exact: true }).click(); // le graphe est la vue par défaut
     const dialog = page.getByRole('dialog');
     // Une organisation (type par défaut) ; la nature n'est plus proposée.
     await page.getByRole('button', { name: 'Créer un périmètre', exact: true }).click();
@@ -239,6 +240,7 @@ test('Pilotage : page Périmètres, une organisation et son fournisseur rattach�
     await page.keyboard.press('Escape');
     await dialog.getByRole('button', { name: 'Annuler', exact: true }).click();
     await page.reload();
+    await page.getByText('Liste', { exact: true }).click(); // le graphe est la vue par défaut
     await expect(page.getByRole('row').filter({ hasText: fournisseur })).toContainText(
       `Fournisseur · rattaché à ${organisation}`,
     );
@@ -292,6 +294,7 @@ test('Pilotage : bibliothèque de référentiels, import puis rattachement à un
     await expect(dialog).toHaveCount(0);
     await expect(page.getByRole('row').filter({ hasText: nom })).toContainText('QA-BIBLIO');
     await page.goto('/pilotage/perimetres');
+    await page.getByText('Liste', { exact: true }).click(); // le graphe est la vue par défaut
     await page.getByRole('button', { name: /^Référentiels rattachés au périmètre Pilotage de l/ }).click();
     await expect(dialog.getByText('Aucun référentiel de la bibliothèque n’est rattaché à ce périmètre.')).toBeVisible();
     await choose(page, 'Rattacher un référentiel de la bibliothèque', nom);
@@ -299,6 +302,7 @@ test('Pilotage : bibliothèque de référentiels, import puis rattachement à un
     await expect(dialog.getByText(nom, { exact: true })).toBeVisible();
     await expect(dialog.getByText(/Version 1/)).toBeVisible();
     await page.reload();
+    await page.getByText('Liste', { exact: true }).click(); // le graphe est la vue par défaut
     await page.getByRole('button', { name: /^Référentiels rattachés au périmètre Pilotage de l/ }).click();
     await expect(page.getByRole('dialog').getByText(nom, { exact: true })).toBeVisible();
     expect(problems).toEqual([]);
