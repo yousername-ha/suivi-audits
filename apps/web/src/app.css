@@ -733,10 +733,18 @@
 }
 
 /* Boîtes de pilotage par processus (Objectifs et indicateurs) : colonnes assez larges pour lire le nom complet d'un
-   indicateur, sa valeur et sa cible sur une ligne ; chiffres du registre en grille de deux colonnes. */
+   indicateur, sa valeur et sa cible sur une ligne ; chiffres du registre en grille de deux colonnes. Toutes les boîtes
+   ont la même taille (largeur de colonne commune, hauteur de la plus haute) et leurs chiffres alignés en bas. */
 .boites-pilotage {
   grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--grc-boite-min)), 1fr));
-  align-items: start;
+  grid-auto-rows: 1fr;
+  align-items: stretch;
+}
+.boite-pilotage > .mantine-Stack-root {
+  flex: 1;
+}
+.boite-pilotage .boite-chiffres {
+  margin-top: auto;
 }
 .boite-pilotage .mantine-Anchor-root {
   text-align: start;

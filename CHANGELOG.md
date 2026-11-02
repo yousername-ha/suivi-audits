@@ -10,7 +10,7 @@ Aucune action.
 
 ### Modifié
 
-- **Boîtes de pilotage** (Pilotage, Objectifs et indicateurs, onglet « Boîtes de pilotage ») : cartes plus lisibles. Le nom complet de chaque indicateur s'affiche sur sa propre ligne (il était tronqué), avec en dessous la valeur, la tendance, la cible et l'état (la valeur et la cible étaient coupées caractère par caractère) ; le titre du processus et le pilote passent en tête, l'état le plus défavorable à droite ; les chiffres du registre (actions ouvertes et en retard, risques liés, séries récurrentes, prochaine échéance) sont regroupés dans un encadré à deux colonnes ; colonnes plus larges (trois cartes par ligne sur un écran de bureau, une sur téléphone). Affichage seulement : calculs, données et droits inchangés. Aucune migration.
+- **Boîtes de pilotage** (Pilotage, Objectifs et indicateurs, onglet « Boîtes de pilotage ») : cartes plus lisibles. Le nom complet de chaque indicateur s'affiche sur sa propre ligne (il était tronqué), avec en dessous la valeur, la tendance, la cible et l'état (la valeur et la cible étaient coupées caractère par caractère) ; le titre du processus et le pilote passent en tête, l'état le plus défavorable à droite ; les chiffres du registre (actions ouvertes et en retard, risques liés, séries récurrentes, prochaine échéance) sont regroupés dans un encadré à deux colonnes ; colonnes plus larges (trois cartes par ligne sur un écran de bureau, une sur téléphone) ; toutes les boîtes ont la même taille (hauteur de la plus haute) et leur encadré de chiffres aligné en bas. Affichage seulement : calculs, données et droits inchangés. Aucune migration.
 
 ## [6.1.0] — 2026-10-31
 
