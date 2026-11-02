@@ -24,6 +24,10 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 - **Documents de pilotage** : le backlog, le registre (`REGISTRES.json`) et l'ADR 0077 citaient la v6.0.0, jamais publiée ; ils désignent maintenant la 6.0.1, première version 6 publiée (addendum à l'ADR 0077). Aucun changement de code. _(Session « Projet audit_suivi Coeur ».)_
 
+### Modifié
+
+- **Boîtes de pilotage** (Pilotage, Objectifs et indicateurs, onglet « Boîtes de pilotage ») : cartes plus lisibles. Le nom complet de chaque indicateur s'affiche sur sa propre ligne (il était tronqué), avec en dessous la valeur, la tendance, la cible et l'état (la valeur et la cible étaient coupées caractère par caractère) ; le titre du processus et le pilote passent en tête, l'état le plus défavorable à droite ; les chiffres du registre (actions ouvertes et en retard, risques liés, séries récurrentes, prochaine échéance) sont regroupés dans un encadré à deux colonnes ; colonnes plus larges (trois cartes par ligne sur un écran de bureau, une sur téléphone) ; toutes les boîtes ont la même taille (hauteur de la plus haute) et leur encadré de chiffres aligné en bas. Affichage seulement : calculs, données et droits inchangés. Aucune migration.
+
 ## [6.1.0] — 2026-10-31
 
 Version mineure : trois migrations SQL additives (`047`, `049`, `050`), aucune nouvelle dépendance. Elle apporte le tableau de bord de l'accueil personnalisable, la collecte du RETEX d'incident, l'ordre du menu personnalisable et le regroupement des parcours guidés, et retire les restes des anciens formats de sauvegarde. Section rédigée par la session « Projet audit_suivi Coeur ».
