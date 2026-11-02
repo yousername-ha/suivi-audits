@@ -119,7 +119,7 @@ function EnteteTri({
       : 'asc';
   return (
     <Table.Th className={className} aria-sort={actif ? (courant.ordre === 'asc' ? 'ascending' : 'descending') : 'none'}>
-      <UnstyledButton type="button" fw={600} onClick={() => onChange({ tri: cle, ordre: suivant })}>
+      <UnstyledButton type="button" className="entete-tri" onClick={() => onChange({ tri: cle, ordre: suivant })}>
         {libelle}
         {actif ? (courant.ordre === 'asc' ? ' ▲' : ' ▼') : ''}
       </UnstyledButton>

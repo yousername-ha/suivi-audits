@@ -4424,3 +4424,18 @@ tr[data-importe='oui'] {
     display: block;
   }
 }
+
+/* Bouton de tri dans un en-tête de colonne : reprend exactement la typographie de l'en-tête (taille, graisse, couleur,
+   casse), pour que l'en-tête ne change ni d'aspect ni de hauteur lorsqu'il devient cliquable. */
+.data-table thead th .entete-tri {
+  display: inline;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
