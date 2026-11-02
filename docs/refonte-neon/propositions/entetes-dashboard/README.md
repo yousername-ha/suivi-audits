@@ -28,7 +28,7 @@ Douze captures de cette maquette autonome, avec mouvement réduit : deux thèmes
 
 La barre est intégrée aux vues détaillée et compacte. Voir les [contrôles et captures réelles](../../ENTETES-DASHBOARD.md). Ne pas redemander son autorisation d'intégration.
 
-Le demandeur précise pour la DdA : **« tu utilise le thème original que j'ai fournis en images au début de la conversation »**. Préparer sa proposition depuis ces références originales, avec peu de violet, et attendre l'accord visuel propre à la DdA avant de modifier son application. Conserver données, calculs, applicabilité, niveaux, justifications, incohérences, liens, droits et actions existants.
+Le demandeur précise pour la DdA : **« tu utilise le thème original que j'ai fournis en images au début de la conversation »**. La [proposition DdA issue de ces références originales](../dda-dashboard/README.md) est prête, avec peu de violet ; attendre son propre accord visuel avant de modifier son application. Conserver données, calculs, applicabilité, niveaux, justifications, incohérences, liens, droits et actions existants.
 
 [Version B intégrée](../../OBJECTIFS-VERSION-B.md) · [Proposition Biseau précédente](../entetes-biseau/README.md).
 
