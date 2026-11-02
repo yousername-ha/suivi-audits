@@ -22,6 +22,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Corrigé
 
+- **Tests de bout en bout** (session « Projet audit_suivi Coeur », chantier Playwright) : la capture « liste-fiche » à 390 px échouait à la première tentative puis passait au rejeu. Cause trouvée grâce à la liste des présences jointe aux captures : les fichiers de test précédents laissent des pages ouvertes (par exemple celle de la Rédactrice), qui continuent d'envoyer leur présence toutes les 20 s ; un échec redémarre le worker, les ferme, et le rejeu voit alors une pile propre. `tous-ecrans.spec.ts` ferme maintenant ces pages avant ses captures et attend l'expiration de leur présence (45 s au plus). Aucune capture de référence modifiée.
 - **Documents de pilotage** : le backlog, le registre (`REGISTRES.json`) et l'ADR 0077 citaient la v6.0.0, jamais publiée ; ils désignent maintenant la 6.0.1, première version 6 publiée (addendum à l'ADR 0077). Aucun changement de code. _(Session « Projet audit_suivi Coeur ».)_
 
 ### Modifié
