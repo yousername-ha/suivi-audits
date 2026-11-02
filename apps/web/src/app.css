@@ -732,6 +732,56 @@
   gap: var(--mantine-spacing-md);
 }
 
+/* Boîtes de pilotage par processus (Objectifs et indicateurs) : colonnes assez larges pour lire le nom complet d'un
+   indicateur, sa valeur et sa cible sur une ligne ; chiffres du registre en grille de deux colonnes. */
+.boites-pilotage {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--grc-boite-min)), 1fr));
+  align-items: start;
+}
+.boite-pilotage .mantine-Anchor-root {
+  text-align: start;
+  overflow-wrap: anywhere;
+}
+.boite-indicateurs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.boite-indicateurs > li {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-2xs);
+  padding-block: var(--mantine-spacing-xs);
+  border-top: var(--suivi-trait-l) solid var(--suivi-trait);
+}
+.boite-indicateurs > li > .mantine-Group-root > .mantine-Text-root {
+  flex: 1;
+  min-width: 0;
+}
+.boite-chiffres {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+  margin: 0;
+  padding: var(--mantine-spacing-sm);
+  border-radius: var(--mantine-radius-sm);
+  background: var(--suivi-surface-douce);
+}
+.boite-chiffres dt {
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-dimmed);
+}
+.boite-chiffres dd {
+  margin: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.boite-chiffres-detail {
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 400;
+  color: var(--mantine-color-red-light-color);
+}
+
 .grc-fieldset {
   border: 0;
   margin: 0;
