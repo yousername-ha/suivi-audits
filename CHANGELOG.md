@@ -8,6 +8,10 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 Aucune action.
 
+### Ajouté
+
+- **Étiquettes des documents et des liens** (session « Projet audit_suivi Coeur ») : les « mots-clés » deviennent des **étiquettes** que l'on peut filtrer, trier et réutiliser. Dans Documents et liens, un filtre « Étiquettes » (avec le nombre d'emplois de chacune) ne garde que ce qui porte **toutes** les étiquettes choisies ; un clic sur une étiquette de la liste l'ajoute au filtre ; une colonne « Étiquettes » s'affiche (tablette et grands écrans, au choix dans « Colonnes »). Les en-têtes Titre, Classification, Catégorie, Taille et Modifié trient la liste (second clic : ordre inverse), les liens se trient par titre, catégorie ou date. La saisie propose les étiquettes déjà utilisées, ce qui évite les doublons, et un dépôt fait pendant un filtrage reprend les étiquettes filtrées. La fiche d'un lien permet enfin de saisir ses étiquettes (l'API les acceptait déjà). Nouvelle route `GET /api/documents/tags` ; paramètres `tags`, `tri` et `ordre` sur `GET /api/documents` et `GET /api/links`. Aucune migration, aucune action sur le serveur ; les mots-clés existants deviennent des étiquettes telles quelles.
+
 ### Corrigé
 
 - **Documents de pilotage** : le backlog, le registre (`REGISTRES.json`) et l'ADR 0077 citaient la v6.0.0, jamais publiée ; ils désignent maintenant la 6.0.1, première version 6 publiée (addendum à l'ADR 0077). Aucun changement de code. _(Session « Projet audit_suivi Coeur ».)_

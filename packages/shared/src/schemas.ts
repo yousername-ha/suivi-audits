@@ -239,12 +239,21 @@ export const DocumentMeta = z.object({
   classification: Classification.optional(),
 });
 export type DocumentMeta = z.infer<typeof DocumentMeta>;
+/** Tris de la liste des documents et des liens (les liens n'ont ni taille ni classification : tri par défaut). */
+export const DOCUMENT_TRIS = ['modifie', 'titre', 'categorie', 'classification', 'taille'] as const;
 export const DocumentQuery = z.object({
   q: z.string().max(200).optional(),
   ref: z.string().max(60).optional(),
   category: z.string().max(80).optional(),
+  /** Étiquettes exigées (toutes), séparées par des virgules. */
+  tags: z.string().max(1200).optional(),
+  tri: z.enum(DOCUMENT_TRIS).optional(),
+  ordre: z.enum(['asc', 'desc']).optional(),
   trash: z.enum(['0', '1']).optional(),
 });
+export const TagCountQuery = z.object({ portee: z.enum(['documents', 'liens', 'tous']).optional() });
+export const TagCount = z.object({ tag: z.string(), count: z.number() });
+export type TagCount = z.infer<typeof TagCount>;
 export const DocumentOut = z.object({
   id: z.string(),
   title: z.string(),

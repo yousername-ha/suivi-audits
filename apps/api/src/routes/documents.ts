@@ -7,6 +7,8 @@ import {
   LinkCreateBody,
   LinkOut,
   LinkPatchBody,
+  TagCount,
+  TagCountQuery,
   Uuid,
 } from '@suivi/shared';
 import { sql, type Selectable } from 'kysely';
@@ -25,6 +27,35 @@ import type { Services } from '../services.js';
 
 const IdParams = z.object({ id: Uuid });
 const like = (q: string) => '%' + q.replace(/[\\%_]/g, '\\$&') + '%';
+
+/** Étiquettes exigées par un filtre : « a, b » donne ['a', 'b'] (au plus 10, toutes doivent être présentes). */
+const etiquettesDemandees = (brut?: string) =>
+  [
+    ...new Set(
+      (brut ?? '')
+        .split(',')
+        .map((t) => t.trim().slice(0, 40))
+        .filter(Boolean),
+    ),
+  ].slice(0, 10);
+
+type Tri = 'modifie' | 'titre' | 'categorie' | 'classification' | 'taille';
+type Sens = 'asc' | 'desc';
+/** Sens du tri : celui demandé, sinon le plus utile pour la colonne (récent et gros d'abord, texte de A à Z). */
+const sensDuTri = (tri: Tri = 'modifie', ordre?: Sens): Sens =>
+  ordre ?? (tri === 'modifie' || tri === 'taille' ? 'desc' : 'asc');
+/** Clé de tri des documents (expressions fixes : aucune entrée libre n'est insérée dans la requête). */
+const cleTriDocuments = (tri: Tri = 'modifie') =>
+  ({
+    modifie: sql`d.updated_at`,
+    titre: sql`lower(d.title)`,
+    categorie: sql`lower(d.category)`,
+    classification: sql`CASE d.classification WHEN 'public' THEN 0 WHEN 'interne' THEN 1 WHEN 'restreint' THEN 2 ELSE 3 END`,
+    taille: sql`coalesce(v.size, 0)`,
+  })[tri];
+/** Les liens n'ont ni taille ni classification : ces tris retombent sur la date de modification. */
+const cleTriLiens = (tri: Tri = 'modifie') =>
+  tri === 'titre' ? sql`lower(title)` : tri === 'categorie' ? sql`lower(category)` : sql`updated_at`;
 
 /** Document avec sa version courante (fichier, empreinte, analyse antivirale). */
 const documents = (k: Kdb) =>
@@ -225,6 +256,9 @@ export const documentRoutes = [
         .where('d.deleted_at', query.trash === '1' ? 'is not' : 'is', null)
         .$if(!!query.ref, (q) => q.where(sql<boolean>`${query.ref} = ANY(d.refs)`))
         .$if(!!query.category, (q) => q.where('d.category', '=', query.category!))
+        .$if(etiquettesDemandees(query.tags).length > 0, (q) =>
+          q.where(sql<boolean>`d.tags @> ${etiquettesDemandees(query.tags)}::text[]`),
+        )
         .$if(!!query.q, (q) =>
           q.where((eb) =>
             eb.or([
@@ -236,7 +270,11 @@ export const documentRoutes = [
             ]),
           ),
         )
+        .orderBy(cleTriDocuments(query.tri), (ob) =>
+          sensDuTri(query.tri, query.ordre) === 'asc' ? ob.asc() : ob.desc(),
+        )
         .orderBy('d.updated_at', 'desc')
+        .orderBy('d.id')
         .limit(1000)
         .execute()) as unknown as DocumentLigne[];
     },
@@ -265,6 +303,24 @@ export const documentRoutes = [
           .orderBy('x.category')
           .execute()
       ).map((x) => x.category),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/documents/tags',
+    summary: 'Étiquettes utilisées avec leur nombre d’emplois (documents, liens ou les deux)',
+    tags: ['Documents'],
+    access: 'documents:lire',
+    query: TagCountQuery,
+    response: z.array(TagCount),
+    handler: async ({ svc, query }) => {
+      const docs = sql`SELECT unnest(tags) AS tag FROM documents WHERE deleted_at IS NULL`;
+      const liens = sql`SELECT unnest(tags) AS tag FROM links WHERE deleted_at IS NULL`;
+      const source =
+        query.portee === 'documents' ? docs : query.portee === 'liens' ? liens : sql`${docs} UNION ALL ${liens}`;
+      const res = await sql<{ tag: string; count: number }>`
+        SELECT tag, count(*)::int AS count FROM (${source}) x GROUP BY tag ORDER BY count DESC, tag`.execute(svc.db.k);
+      return res.rows;
+    },
   }),
   route({
     method: 'POST',
@@ -571,6 +627,8 @@ export const documentRoutes = [
     response: z.array(LinkOut),
     handler: async ({ svc, query }) => {
       let req = svc.db.k.selectFrom('links').selectAll().where('deleted_at', 'is', null);
+      const demandees = etiquettesDemandees(query.tags);
+      if (demandees.length) req = req.where(sql<boolean>`tags @> ${demandees}::text[]`);
       if (query.ref) req = req.where(sql<boolean>`${query.ref} = ANY(refs)`);
       if (query.category) req = req.where('category', '=', query.category);
       if (query.q) {
@@ -585,7 +643,16 @@ export const documentRoutes = [
           ]),
         );
       }
-      const rows = await req.orderBy('updated_at', 'desc').limit(1000).execute();
+      const sens =
+        query.tri === 'titre' || query.tri === 'categorie'
+          ? sensDuTri(query.tri, query.ordre)
+          : sensDuTri('modifie', query.ordre);
+      const rows = await req
+        .orderBy(cleTriLiens(query.tri), (ob) => (sens === 'asc' ? ob.asc() : ob.desc()))
+        .orderBy('updated_at', 'desc')
+        .orderBy('id')
+        .limit(1000)
+        .execute();
       return rows.map(linkOut);
     },
   }),

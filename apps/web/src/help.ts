@@ -191,6 +191,8 @@ export const HELP_ARTICLES: HelpArticle[] = [
       'Ouvrez Documents et liens pour rechercher une pièce ou consulter sa fiche et ses rattachements.',
       'Si vos droits le permettent, déposez un document, renseignez son titre et ses références, ou ajoutez un lien.',
       'Une nouvelle version conserve les versions précédentes. Vérifiez la version de la pièce utilisée comme preuve.',
+      'Les étiquettes servent à classer : ajoutez-les depuis la fiche d’un document ou d’un lien (celles déjà utilisées sont proposées). Dans la liste, filtrez par une ou plusieurs étiquettes (toutes les étiquettes choisies sont exigées) ou cliquez sur une étiquette pour l’ajouter au filtre.',
+      'Cliquez sur l’en-tête d’une colonne (titre, classification, catégorie, taille, date) pour trier ; un second clic inverse l’ordre.',
       'Les téléchargements et les modifications restent soumis à vos droits ; un lien interne ne rend pas le document public.',
     ],
   },
