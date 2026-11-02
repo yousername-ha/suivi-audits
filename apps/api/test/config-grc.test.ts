@@ -501,7 +501,52 @@ describe('modèle adopté à la demande', () => {
     expect((await rssi.post(`${base}/templates/ebios-pertinence-sr-ov/adopt`)).statusCode).toBe(409);
     expect((await t.svc.db.one<{ n: number }>('SELECT count(*)::int n FROM cfg_items'))!.n).toBe(count);
     expect((await rssi.post(`${base}/templates/inconnu/adopt`)).statusCode).toBe(404);
-    expect(cfgTemplates().length).toBe(1);
+    expect(cfgTemplates().map((x) => x.id)).toEqual([
+      'ebios-pertinence-sr-ov',
+      'ebios-rm-gravite-vraisemblance',
+      'mehari-2010-impact-potentialite',
+    ]);
+  });
+  it('adopte les modèles EBIOS RM et MÉHARI 2010 : éléments publiés, grilles complètes, compatibles ISO/IEC 27005', async () => {
+    const liste = (await rssi.get(`${base}/templates`)).json() as {
+      id: string;
+      source: { organisation: string } | null;
+    }[];
+    expect(liste.find((x) => x.id === 'ebios-pertinence-sr-ov')?.source).toBeNull();
+    expect(liste.find((x) => x.id === 'ebios-rm-gravite-vraisemblance')?.source?.organisation).toBe('ANSSI');
+    expect(liste.find((x) => x.id === 'mehari-2010-impact-potentialite')?.source?.organisation).toBe('CLUSIF');
+    const attendu = {
+      'ebios-rm-gravite-vraisemblance': [
+        'gravite_ebios_rm',
+        'vraisemblance_ebios_rm',
+        'niveau_risque_ebios_rm',
+        'matrice_risque_ebios_rm',
+      ],
+      'mehari-2010-impact-potentialite': [
+        'impact_mehari',
+        'potentialite_mehari',
+        'gravite_risque_mehari',
+        'grille_acceptabilite_mehari',
+        'classification_dic_mehari',
+      ],
+    };
+    for (const [id, cles] of Object.entries(attendu)) {
+      const r = await rssi.post(`${base}/templates/${id}/adopt`);
+      expect(r.statusCode, r.body).toBe(201);
+      const items = r.json() as { id: string; key: string; kind: string; state: string; currentVersion: number }[];
+      expect(items.map((x) => x.key)).toEqual(cles);
+      expect(items.every((x) => x.state === 'active' && x.currentVersion === 1)).toBe(true);
+      const matrice = items.find((x) => x.kind === 'matrix')!;
+      expect((await rssi.get(`${base}/items/${matrice.id}/versions/1`)).json().definition.cells).toHaveLength(16);
+    }
+    const cles = async (family: string) =>
+      ((await rssi.get(`${base}/items?family=${family}&kind=matrix`)).json() as { key: string }[]).map((x) => x.key);
+    expect(await cles('iso27005')).toEqual(
+      expect.arrayContaining(['grille_acceptabilite_mehari', 'matrice_risque_ebios_rm']),
+    );
+    expect(await cles('mehari')).toContain('grille_acceptabilite_mehari');
+    expect(await cles('mehari')).not.toContain('matrice_risque_ebios_rm');
+    expect(await cles('ebios_rm')).not.toContain('grille_acceptabilite_mehari');
   });
 });
 

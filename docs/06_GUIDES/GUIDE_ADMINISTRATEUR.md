@@ -27,6 +27,16 @@ immuable. La politique métier a sa propre version, adoptée explicitement par
 périmètre ; elle ne recalcule pas l’historique. Un conflit impose relecture,
 pas remplacement forcé du brouillon.
 
+Modèles d’échelles et de matrices (Paramètres → Configuration GRC → Modèles, droit `parametres:administrer`) : le
+catalogue est vide à l’installation. Trois lots s’adoptent à la demande, chacun en une fois (un identifiant déjà pris
+bloque l’adoption) : pertinence des couples SR/OV (proposition de l’organisation) ; **EBIOS Risk Manager** (gravité
+G1 à G4, vraisemblance V1 à V4, niveaux faible, moyen et élevé, matrice 4 × 4 du guide de l’ANSSI 1.5) ; **MÉHARI 2010**
+(impact et potentialité à quatre niveaux, gravité toléré, inadmissible ou insupportable, grille d’acceptabilité du
+CLUSIF, critères D, I, C). Les deux derniers servent aussi à une méthode ISO/IEC 27005, qui laisse l’organisation
+définir ses critères. Les éléments adoptés sont publiés en version 1 avec leur provenance ; les relire et les faire
+valider, puis les épingler dans la méthode (dimension, vraisemblance, niveaux de risque, matrice). Pour les adapter,
+publier une nouvelle version : les méthodes déjà épinglées gardent la version 1.
+
 Périmètres restreints : administration de membres autorisée dans le périmètre ;
 permissions métier et rôle de validation restent cumulatives. Le périmètre
 commun est automatique ; la création d’un SMSI n’est pas un prérequis normal.

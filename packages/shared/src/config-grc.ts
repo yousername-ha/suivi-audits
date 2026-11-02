@@ -467,7 +467,20 @@ export interface CfgTemplate {
   description: string;
   /** Provenance et réserve affichées à l'adoption : les modèles sont des propositions à valider. */
   note: string;
+  /** Document public dont les libellés et la grille sont repris (absent pour une proposition de l'organisation). */
+  source?: CfgTemplateSource;
   items: CfgTemplateItem[];
+}
+export interface CfgTemplateSource {
+  organisation: string;
+  document: string;
+  version: string;
+  url: string;
+  /** Pages ou sections d'où proviennent les niveaux et la grille. */
+  reference: string;
+  license: string;
+  /** Date de vérification du document (AAAA-MM-JJ). */
+  verifiedAt: string;
 }
 
 /** Instancie la définition d'un élément de modèle : chaque référence locale `{ item: '<ref>', version }` devient la
@@ -503,8 +516,10 @@ const niveaux3 = (descriptions: [string, string, string]) =>
     description: descriptions[i]!,
   }));
 
-/** Matrice de niveau de pertinence ressources × motivation (3 × 3), telle que décrite dans la demande de refonte et
-    confirmée par l'export fourni. Proposition à valider : elle n'est pas présentée comme une règle officielle. */
+/** Modèles proposés : matrice de pertinence SR/OV (proposition de l'organisation), puis deux lots repris de documents
+    publics vérifiés : EBIOS Risk Manager (ANSSI) et MÉHARI 2010 (CLUSIF). Les libellés, descriptions et grilles sont ceux
+    des documents cités (`source`) ; rien n'est complété ni extrapolé. ISO/IEC 27005 ne prescrit pas d'échelle : ses
+    exemples d'annexe, payants, ne sont pas reconstruits ; les deux lots publics sont déclarés utilisables avec cette famille. */
 export function cfgTemplates(): CfgTemplate[] {
   const grid: Record<string, [string, string, string]> = {
     n1: ['low', 'low', 'medium'],
@@ -603,5 +618,347 @@ export function cfgTemplates(): CfgTemplate[] {
         },
       ],
     },
+    ebiosRmRisque(),
+    mehariRisque(),
   ];
+}
+
+/** Niveaux numérotés à partir de 1 (cotation des guides : G1…G4, V1…V4, niveaux 1 à 4). */
+const niveauxCotes = (
+  prefix: string,
+  levels: { label: string; description: string; color?: string; acceptability?: string }[],
+) => levels.map((l, i) => ({ id: `${prefix}${i + 1}`, value: i + 1, ...l }));
+
+/** Cellules d'une grille donnée ligne par ligne (lignes et colonnes numérotées à partir de 1). */
+const grille = (rowPrefix: string, colPrefix: string, resultPrefix: string, rows: Record<number, number[]>) =>
+  Object.entries(rows).flatMap(([row, results]) =>
+    results.map((r, j) => ({
+      row: `${rowPrefix}${row}`,
+      column: `${colPrefix}${j + 1}`,
+      result: `${resultPrefix}${r}`,
+    })),
+  );
+
+/** EBIOS Risk Manager, guide de l'ANSSI version 1.5 (septembre 2024), sous Licence Ouverte Etalab : échelle de gravité
+    (atelier 1, p. 27), échelle de vraisemblance globale (atelier 4, p. 67), classes d'acceptation (atelier 5, p. 74) et
+    cartographie du risque de l'exemple (atelier 5, p. 75). Dans la figure de la p. 75, l'axe de gravité est numéroté de
+    1 en haut à 4 en bas, alors que les scénarios placés sur la ligne du haut (R4, R5) sont cotés G4 dans le texte (p. 51,
+    vraisemblances V2 et V1 p. 67) et ceux de la deuxième ligne (R1 à R3) G3 (p. 50) : la grille est relue d'après ces
+    cotations, ligne du haut = G4. */
+function ebiosRmRisque(): CfgTemplate {
+  const familles: CfgFamily[] = ['ebios_rm', 'iso27005'];
+  return {
+    id: 'ebios-rm-gravite-vraisemblance',
+    label: 'Gravité, vraisemblance et niveau de risque (EBIOS Risk Manager, ANSSI)',
+    description:
+      'Échelles de gravité (G1 à G4) et de vraisemblance (V1 à V4) du guide EBIOS Risk Manager, classes d’acceptation du risque (faible, moyen, élevé) et matrice gravité × vraisemblance de la cartographie du risque du guide.',
+    note: 'Libellés et descriptions repris du guide de l’ANSSI (Licence Ouverte Etalab) ; « la société » de l’exemple du guide est remplacée par « l’organisation ». Les échelles et la grille sont présentées par le guide comme l’exemple d’une société de biotechnologie : à relire, adapter à votre contexte et valider avant usage. Aucune conformité n’est revendiquée.',
+    source: {
+      organisation: 'ANSSI',
+      document: 'EBIOS Risk Manager — Le guide (ANSSI-PA-048)',
+      version: '1.5 — septembre 2024',
+      url: 'https://messervices.cyber.gouv.fr/documents-guides/250129_np_anssi_guide_ebios_fr_final_collection_WEB.pdf',
+      reference:
+        'Atelier 1 p. 27 (gravité), atelier 4 p. 67 (vraisemblance), atelier 5 p. 74 (acceptabilité) et p. 75 (cartographie).',
+      license: 'Licence Ouverte / Open Licence (Etalab — V1), mention de la source obligatoire.',
+      verifiedAt: '2026-11-02',
+    },
+    items: [
+      {
+        ref: 'gravite',
+        kind: 'scale',
+        key: 'gravite_ebios_rm',
+        definition: {
+          name: 'Gravité des événements redoutés (EBIOS RM)',
+          description: 'Échelle de cotation de la gravité des impacts (guide EBIOS Risk Manager, atelier 1).',
+          category: 'severity',
+          nature: 'qualitative',
+          appliesTo: familles,
+          usage:
+            'La gravité de chaque événement redouté s’estime d’après ses impacts sur la valeur métier vis-à-vis des missions de l’organisation, de la réglementation, et de la nature et de l’intensité des impacts directs, voire indirects.',
+          levels: niveauxCotes('g', [
+            {
+              label: 'G1 — Mineure',
+              description:
+                'Aucun impact opérationnel ni sur les performances de l’activité ni sur la sécurité des personnes et des biens. L’organisation surmontera la situation sans trop de difficultés (consommation des marges).',
+            },
+            {
+              label: 'G2 — Significative',
+              description:
+                'Dégradation des performances de l’activité sans impact sur la sécurité des personnes et des biens. L’organisation surmontera la situation malgré quelques difficultés (fonctionnement en mode dégradé).',
+            },
+            {
+              label: 'G3 — Grave',
+              description:
+                'Forte dégradation des performances de l’activité, avec d’éventuels impacts significatifs sur la sécurité des personnes et des biens. L’organisation surmontera la situation avec de sérieuses difficultés (fonctionnement en mode très dégradé).',
+            },
+            {
+              label: 'G4 — Critique',
+              description:
+                'Incapacité pour l’organisation d’assurer tout ou partie de son activité, avec d’éventuels impacts graves sur la sécurité des personnes et des biens. L’organisation ne surmontera vraisemblablement pas la situation (sa survie est menacée).',
+            },
+          ]),
+        },
+      },
+      {
+        ref: 'vraisemblance',
+        kind: 'scale',
+        key: 'vraisemblance_ebios_rm',
+        definition: {
+          name: 'Vraisemblance globale d’un scénario opérationnel (EBIOS RM)',
+          description:
+            'Échelle de vraisemblance globale d’un scénario opérationnel (guide EBIOS Risk Manager, atelier 4).',
+          category: 'likelihood',
+          nature: 'qualitative',
+          appliesTo: familles,
+          levels: niveauxCotes('v', [
+            {
+              label: 'V1 — Peu vraisemblable',
+              description:
+                'La source de risque a peu de chance d’atteindre son objectif visé selon l’un des modes opératoires envisagés. La vraisemblance du scénario est faible.',
+            },
+            {
+              label: 'V2 — Vraisemblable',
+              description:
+                'La source de risque est susceptible d’atteindre son objectif visé selon l’un des modes opératoires envisagés. La vraisemblance du scénario est significative.',
+            },
+            {
+              label: 'V3 — Très vraisemblable',
+              description:
+                'La source de risque va probablement atteindre son objectif visé selon l’un des modes opératoires envisagés. La vraisemblance du scénario est élevée.',
+            },
+            {
+              label: 'V4 — Quasi certain',
+              description:
+                'La source de risque va certainement atteindre son objectif visé selon l’un des modes opératoires envisagés. La vraisemblance du scénario est très élevée.',
+            },
+          ]),
+        },
+      },
+      {
+        ref: 'niveau',
+        kind: 'scale',
+        key: 'niveau_risque_ebios_rm',
+        definition: {
+          name: 'Niveau de risque et acceptabilité (EBIOS RM)',
+          description:
+            'Classes d’acceptation du risque recommandées par le guide EBIOS Risk Manager (atelier 5, stratégie de traitement du risque).',
+          category: 'risk_level',
+          nature: 'qualitative',
+          appliesTo: familles,
+          levels: [
+            {
+              id: 'faible',
+              label: 'Faible',
+              description: 'Acceptable en l’état : aucune action n’est à entreprendre.',
+              color: PALETTE.low,
+              acceptability: 'acceptable',
+            },
+            {
+              id: 'moyen',
+              label: 'Moyen',
+              description:
+                'Tolérable sous contrôle : un suivi en termes de gestion du risque est à mener et des actions sont à mettre en place dans le cadre d’une amélioration continue sur le moyen et long terme.',
+              color: PALETTE.medium,
+              acceptability: 'conditional',
+            },
+            {
+              id: 'eleve',
+              label: 'Élevé',
+              description:
+                'Inacceptable : des mesures de réduction du risque doivent impérativement être prises à court terme. Dans le cas contraire, tout ou partie de l’activité sera refusé.',
+              color: PALETTE.high,
+              acceptability: 'unacceptable',
+            },
+          ],
+        },
+      },
+      {
+        ref: 'matrice',
+        kind: 'matrix',
+        key: 'matrice_risque_ebios_rm',
+        definition: {
+          name: 'Cartographie du risque (gravité × vraisemblance, EBIOS RM)',
+          description:
+            'Zones de la cartographie du risque de l’exemple du guide EBIOS Risk Manager (atelier 5, p. 75) : vert = faible, orange = moyen, rouge = élevé (légende p. 74).',
+          category: 'risk',
+          appliesTo: familles,
+          rows: { scale: { item: 'gravite', version: 1 }, label: 'Gravité' },
+          columns: { scale: { item: 'vraisemblance', version: 1 }, label: 'Vraisemblance' },
+          result: { scale: { item: 'niveau', version: 1 } },
+          cells: Object.entries({
+            1: ['faible', 'faible', 'moyen', 'moyen'],
+            2: ['faible', 'faible', 'moyen', 'eleve'],
+            3: ['faible', 'moyen', 'eleve', 'eleve'],
+            4: ['moyen', 'moyen', 'eleve', 'eleve'],
+          }).flatMap(([g, results]) => results.map((result, j) => ({ row: `g${g}`, column: `v${j + 1}`, result }))),
+        },
+      },
+    ],
+  };
+}
+
+/** MÉHARI 2010, « Principes fondamentaux et spécifications fonctionnelles » (CLUSIF) : échelles standards d'impact et de
+    potentialité (annexe D, p. 42), grille d'acceptabilité des risques et trois types de risques (§ 4, p. 28). Les
+    descriptions sont de courtes citations (première phrase de chaque niveau) ; le document entier n'est pas reproduit. */
+function mehariRisque(): CfgTemplate {
+  const familles: CfgFamily[] = ['mehari', 'iso27005'];
+  return {
+    id: 'mehari-2010-impact-potentialite',
+    label: 'Impact, potentialité et grille d’acceptabilité (MÉHARI 2010, CLUSIF)',
+    description:
+      'Échelles standards d’impact et de potentialité de MÉHARI 2010 (quatre niveaux), échelle de gravité du risque (toléré, inadmissible, insupportable), grille d’acceptabilité impact × potentialité et critères de classification D, I, C.',
+    note: 'Libellés et grille repris du document « MÉHARI 2010 — Principes fondamentaux et spécifications fonctionnelles » du CLUSIF ; descriptions limitées à de courtes citations. MÉHARI est une marque déposée du CLUSIF. Le CLUSIF présente la grille comme un exemple : à relire, adapter et valider avant usage. Aucune base de connaissances MÉHARI n’est fournie ni aucune conformité revendiquée.',
+    source: {
+      organisation: 'CLUSIF',
+      document: 'MÉHARI 2010 — Principes fondamentaux et spécifications fonctionnelles',
+      version: '2010',
+      url: 'https://clusif.fr/wp-content/uploads/2015/10/mehari-2010-principes-specifications.pdf',
+      reference:
+        '§ 4 p. 28 (grille d’acceptabilité des risques), annexe D p. 42 (échelles d’impact et de potentialité).',
+      license: '© CLUSIF 2010 : courtes citations avec mention de la source ; aucun texte intégral reproduit.',
+      verifiedAt: '2026-11-02',
+    },
+    items: [
+      {
+        ref: 'impact',
+        kind: 'scale',
+        key: 'impact_mehari',
+        definition: {
+          name: 'Impact (MÉHARI 2010)',
+          description: 'Échelle standard des niveaux d’impact de MÉHARI 2010 (annexe D).',
+          category: 'impact',
+          nature: 'qualitative',
+          appliesTo: familles,
+          levels: niveauxCotes('i', [
+            {
+              label: '1 — Non significatif',
+              description:
+                'À ce niveau les dommages encourus n’ont pratiquement pas d’impact sur les résultats de l’entité ni sur son image, même si certaines personnes sont fortement impliquées dans le rétablissement de la situation d’origine.',
+            },
+            {
+              label: '2 — Important',
+              description:
+                'Il s’agit là de sinistres ayant un impact notable au niveau des opérations de l’entité, de ses résultats ou de son image, mais restant globalement supportables.',
+            },
+            {
+              label: '3 — Très grave',
+              description:
+                'Il s’agit là d’impact très grave au niveau de l’entité, sans que son avenir soit compromis.',
+            },
+            {
+              label: '4 — Vital',
+              description:
+                'À ce niveau l’impact est extrêmement grave et met en danger l’existence même ou la survie de l’entité ou de l’une de ses activités majeures.',
+            },
+          ]),
+        },
+      },
+      {
+        ref: 'potentialite',
+        kind: 'scale',
+        key: 'potentialite_mehari',
+        definition: {
+          name: 'Potentialité (MÉHARI 2010)',
+          description: 'Échelle standard des niveaux de potentialité de MÉHARI 2010 (annexe D).',
+          category: 'likelihood',
+          nature: 'qualitative',
+          appliesTo: familles,
+          levels: niveauxCotes('p', [
+            {
+              label: '1 — Très improbable',
+              description: 'À ce niveau l’occurrence du risque est tout à fait improbable.',
+            },
+            {
+              label: '2 — Improbable',
+              description:
+                'Il s’agit là de scénarios dont il est raisonnable de penser qu’ils ne surviendront pas. Ils demeurent néanmoins « possibles » et ne sont pas complètement invraisemblables.',
+            },
+            {
+              label: '3 — Probable',
+              description:
+                'Il s’agit là des scénarios dont il est raisonnable de penser qu’ils pourraient bien se produire, à plus ou moins court terme.',
+            },
+            {
+              label: '4 — Très probable',
+              description:
+                'À ce niveau, il est raisonnable de penser que le scénario se produira très certainement et vraisemblablement à court terme.',
+            },
+          ]),
+        },
+      },
+      {
+        ref: 'gravite',
+        kind: 'scale',
+        key: 'gravite_risque_mehari',
+        definition: {
+          name: 'Gravité du risque (MÉHARI 2010)',
+          description:
+            'Gravité globale évaluée par la grille d’acceptabilité : 4 = risque insupportable, 3 = risque inadmissible, gravités inférieures = risques tolérés. Les risques insupportables et inadmissibles sont les risques inacceptables.',
+          category: 'risk_level',
+          nature: 'qualitative',
+          appliesTo: familles,
+          levels: niveauxCotes('g', [
+            {
+              label: 'Gravité 1 — Risque toléré',
+              description: 'Risque toléré.',
+              color: PALETTE.low,
+              acceptability: 'acceptable',
+            },
+            {
+              label: 'Gravité 2 — Risque toléré',
+              description: 'Risque toléré.',
+              color: PALETTE.medium,
+              acceptability: 'acceptable',
+            },
+            {
+              label: 'Gravité 3 — Risque inadmissible',
+              description:
+                'Risque qui devrait être réduit ou éliminé à une échéance à déterminer, donc à prendre en compte dans une planification (plan de sécurité).',
+              color: PALETTE.high,
+              acceptability: 'unacceptable',
+            },
+            {
+              label: 'Gravité 4 — Risque insupportable',
+              description: 'Risque qui devrait faire l’objet de mesures d’urgence, en dehors de tout cycle budgétaire.',
+              color: '#7E4A45',
+              acceptability: 'unacceptable',
+            },
+          ]),
+        },
+      },
+      {
+        ref: 'grille',
+        kind: 'matrix',
+        key: 'grille_acceptabilite_mehari',
+        definition: {
+          name: 'Grille d’acceptabilité des risques (impact × potentialité, MÉHARI 2010)',
+          description:
+            'Grille de gravité standard de MÉHARI 2010 (§ 4) : gravité G en fonction de l’impact I et de la potentialité P.',
+          category: 'risk',
+          appliesTo: familles,
+          rows: { scale: { item: 'impact', version: 1 }, label: 'Impact' },
+          columns: { scale: { item: 'potentialite', version: 1 }, label: 'Potentialité' },
+          result: { scale: { item: 'gravite', version: 1 } },
+          cells: grille('i', 'p', 'g', { 1: [1, 1, 1, 2], 2: [1, 2, 2, 3], 3: [2, 3, 3, 4], 4: [2, 3, 4, 4] }),
+        },
+      },
+      {
+        ref: 'classification',
+        kind: 'criteria',
+        key: 'classification_dic_mehari',
+        definition: {
+          name: 'Classification des informations et des actifs (D, I, C — MÉHARI 2010)',
+          description:
+            'Critères de classification cités par MÉHARI 2010 : disponibilité, intégrité et confidentialité, chacun évalué sur l’échelle à quatre niveaux. D’autres critères (traçabilité, valeur probatoire…) peuvent être ajoutés.',
+          appliesTo: familles,
+          criteria: [
+            { id: 'disponibilite', label: 'Disponibilité', scale: { item: 'impact', version: 1 } },
+            { id: 'integrite', label: 'Intégrité', scale: { item: 'impact', version: 1 } },
+            { id: 'confidentialite', label: 'Confidentialité', scale: { item: 'impact', version: 1 } },
+          ],
+        },
+      },
+    ],
+  };
 }
