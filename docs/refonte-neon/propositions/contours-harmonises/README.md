@@ -2,7 +2,7 @@
 
 01/11/2026, Europe/Paris. Session : Codex. Référence applicative inchangée : `34921129f6117b8093e3d63216f827c76abbec4c`.
 
-**Statut : maquette indépendante en attente de validation explicite. Aucune intégration, aucun build et aucun test applicatif exécuté pour ce lot.**
+**Statut actualisé le 02/11/2026 : présentation explicitement validée, avec demande de centrage des trois en-têtes. [Intégration et contrôles réalisés](../../OBJECTIFS-PRESENTATION-VALIDEE.md). Les images ci-dessous restent les maquettes historiques.**
 
 À la demande « et le contour de barre etc », le renforcement porte aussi sur les éléments intérieurs de la proposition Objectifs et indicateurs :
 
@@ -21,6 +21,6 @@ Les huit PNG sont des rendus de la maquette uniquement, avec mouvement réduit, 
 
 Seuls la documentation et les supports de proposition évoluent ; aucun fichier de `apps/`, `packages/` ou des tests applicatifs n'est modifié.
 
-**Prochaine action : attendre la validation explicite de cette présentation avant intégration dans la copie Codex, puis effectuer les contrôles pertinents et fournir les nouveaux visuels réels.**
+**Intégration réalisée. La demande ultérieure de fonds plus soutenus dispose de sa [nouvelle maquette](../couleurs-soutenues/README.md), encore à valider séparément.**
 
 [Proposition précédente : cadre extérieur renforcé](../contours-renforces/README.md), conservée pour référence. Règle du demandeur : **visuel → validation explicite → intégration et tests → nouveau visuel réel**.

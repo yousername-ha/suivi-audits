@@ -31,7 +31,12 @@ const ETATS: Record<EtatIndicateur, [string, string]> = {
 
 function EtatObjectifs({ etat }: { etat: EtatIndicateur }) {
   return (
-    <Badge color={ETATS[etat][1]} variant="light" data-etat={etat}>
+    <Badge
+      color={ETATS[etat][1]}
+      variant="light"
+      data-etat={etat}
+      leftSection={etat === 'ko' ? <Avertissement /> : undefined}
+    >
       {ETATS[etat][0]}
     </Badge>
   );
@@ -72,12 +77,88 @@ function Tendance({ valeur }: { valeur: IndicateurObjectif['tendance'] }) {
   );
 }
 
+function Avertissement() {
+  return (
+    <svg
+      className="objectifs-avertissement"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M10.3 4.6a2 2 0 0 1 3.4 0l8 13.9a2 2 0 0 1-1.7 3H4a2 2 0 0 1-1.7-3Z" />
+      <path d="M12 9v5m0 3h.01" />
+    </svg>
+  );
+}
+
+function SourceIndicateur({ indicateur: i }: { indicateur: IndicateurObjectif }) {
+  return (
+    <span className="objectifs-source">
+      {i.source && <span>{i.calcule ? i.source : jour(i.source)}</span>}
+      {i.historique && (
+        <span>
+          {i.historique.periode} : {i.historique.valeur}
+        </span>
+      )}
+    </span>
+  );
+}
+
+function CibleIndicateur({ indicateur: i, compacte = false }: { indicateur: IndicateurObjectif; compacte?: boolean }) {
+  return (
+    <div className="objectifs-donnee objectifs-donnee--cible" data-compacte={compacte || undefined}>
+      <span className="objectifs-donnee-label">Cible</span>
+      <strong>{i.cible}</strong>
+      {!compacte && <span className="objectifs-source">Valeur attendue</span>}
+    </div>
+  );
+}
+
+function MesureIndicateur({ indicateur: i, compacte = false }: { indicateur: IndicateurObjectif; compacte?: boolean }) {
+  return (
+    <div className="objectifs-donnee objectifs-donnee--mesure" data-etat={i.etat} data-compacte={compacte || undefined}>
+      <span className="objectifs-donnee-label">Mesuré</span>
+      <span className="objectifs-mesure-chiffre">
+        <strong className="objectifs-valeur" data-etat={i.etat}>
+          {i.valeur}
+        </strong>
+        <Tendance valeur={i.tendance} />
+      </span>
+      {!compacte && <SourceIndicateur indicateur={i} />}
+    </div>
+  );
+}
+
+function EtatIndicateurBloc({ etat, compacte = false }: { etat: EtatIndicateur; compacte?: boolean }) {
+  const description = {
+    ok: 'Seuil respecté',
+    ko: 'Écart constaté',
+    na: 'Aucune mesure courante',
+    undef: 'Renseigner une cible',
+  };
+  return (
+    <div className="objectifs-donnee objectifs-donnee--etat" data-etat={etat} data-compacte={compacte || undefined}>
+      <span className="objectifs-donnee-label">{etat === 'ko' && <Avertissement />}État</span>
+      <strong className="objectifs-etat-libelle">
+        {etat === 'ko' && <Avertissement />}
+        <span>{ETATS[etat][0]}</span>
+      </strong>
+      {!compacte && <span className="objectifs-source">{description[etat]}</span>}
+    </div>
+  );
+}
+
 export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { smsi: string; vue?: Vue }) {
   const can = useCan(),
     modifiable = can('pilotage', 'modifier'),
     [vue, setVue] = useState<Vue>(vueInitiale),
     [ouvert, setOuvert] = useState<Ouvert>(null),
     [etat, setEtat] = useState('all'),
+    [animationsActives, setAnimationsActives] = useState(true),
     { ecrire, erreur } = useEcriture(smsi);
   const q = useQuery({
     queryKey: ['grc', smsi, 'legacy-objectifs'],
@@ -120,9 +201,9 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>Indicateur</Table.Th>
-                <Table.Th>Cible</Table.Th>
-                <Table.Th>Valeur</Table.Th>
-                <Table.Th>État</Table.Th>
+                <Table.Th className="objectifs-colonne-donnee objectifs-colonne-cible">Cible à atteindre</Table.Th>
+                <Table.Th className="objectifs-colonne-donnee">Valeur mesurée</Table.Th>
+                <Table.Th className="objectifs-colonne-donnee">État</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
@@ -150,23 +231,14 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
                       </Badge>
                     )}
                   </Table.Td>
-                  <Table.Td data-label="Cible">{i.cible}</Table.Td>
-                  <Table.Td data-label="Valeur">
-                    <Text span fw={650} className="objectifs-valeur" data-etat={i.etat}>
-                      {i.valeur}
-                    </Text>{' '}
-                    <Tendance valeur={i.tendance} />
-                    <Text size="xs" c="dimmed">
-                      {i.source ? (i.calcule ? i.source : jour(i.source)) : ''}
-                    </Text>
-                    {i.historique && (
-                      <Text size="xs" c="dimmed">
-                        {i.historique.periode} : {i.historique.valeur}
-                      </Text>
-                    )}
+                  <Table.Td data-label="Cible" className="objectifs-cellule-donnee">
+                    <CibleIndicateur indicateur={i} />
                   </Table.Td>
-                  <Table.Td data-label="État" className="objectifs-cellule-etat">
-                    <EtatObjectifs etat={i.etat} />
+                  <Table.Td data-label="Valeur mesurée" className="objectifs-cellule-donnee">
+                    <MesureIndicateur indicateur={i} />
+                  </Table.Td>
+                  <Table.Td data-label="État" className="objectifs-cellule-donnee objectifs-cellule-etat">
+                    <EtatIndicateurBloc etat={i.etat} />
                   </Table.Td>
                 </Table.Tr>
               ))}
@@ -219,7 +291,7 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
   );
 
   return (
-    <Stack className="objectifs-module">
+    <Stack className="objectifs-module" data-animations={animationsActives ? 'actives' : 'pause'}>
       <Group justify="space-between" className="objectifs-commandes">
         <Text size="sm">
           Processus, objectifs de sécurité et indicateurs associés. Les indicateurs marqués « calculé » sont alimentés
@@ -289,6 +361,14 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
       {donnees && (
         <>
           <Group className="objectifs-outils">
+            <Button
+              variant="default"
+              size="compact-sm"
+              aria-pressed={!animationsActives}
+              onClick={() => setAnimationsActives((active) => !active)}
+            >
+              {animationsActives ? 'Pause animations' : 'Activer les animations'}
+            </Button>
             <Filtres actifs={etat === 'all' ? 0 : 1} onReinitialiser={() => setEtat('all')}>
               <Tabs value={etat} onChange={(v) => setEtat(v ?? 'all')} variant="pills">
                 <Tabs.List>
@@ -502,84 +582,90 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
               </Stack>
             </Tabs.Panel>
             <Tabs.Panel value="compacte">
-              <div className="objectifs-table-compacte">
-                <DataTable label="Objectifs, vue compacte">
-                  <Table>
-                    <Table.Thead>
-                      <Table.Tr>
-                        <Table.Th>Objectif</Table.Th>
-                        <Table.Th className="col-p2">Processus</Table.Th>
-                        <Table.Th>Indicateurs (valeur · cible)</Table.Th>
-                        <Table.Th>Atteints</Table.Th>
-                        <Table.Th className="col-p2">Échéance</Table.Th>
-                        <Table.Th className="col-p3">Responsable</Table.Th>
-                      </Table.Tr>
-                    </Table.Thead>
-                    <Table.Tbody>
+              <Card withBorder className="objectifs-compact-cadre neon-cadre-biseau">
+                <div className="objectifs-table-compacte">
+                  <DataTable label="Objectifs, vue compacte">
+                    <Table>
+                      <Table.Thead>
+                        <Table.Tr>
+                          <Table.Th>Indicateur</Table.Th>
+                          <Table.Th className="objectifs-colonne-donnee objectifs-colonne-cible">
+                            Cible à atteindre
+                          </Table.Th>
+                          <Table.Th className="objectifs-colonne-donnee">Valeur mesurée</Table.Th>
+                          <Table.Th className="objectifs-colonne-donnee">État</Table.Th>
+                          <Table.Th className="objectifs-colonne-source">Relevé / source</Table.Th>
+                        </Table.Tr>
+                      </Table.Thead>
                       {objectifs.map((o) => (
-                        <Table.Tr key={o.id}>
-                          <Table.Td data-label="Objectif">
-                            <Button
-                              variant="subtle"
-                              size="compact-sm"
-                              onClick={() => setOuvert({ type: 'objectif', id: o.id })}
-                            >
-                              {o.id} · {o.nom}
-                            </Button>
-                          </Table.Td>
-                          <Table.Td className="col-p2" data-label="Processus">
-                            {o.processus.join(', ') || '–'}
-                          </Table.Td>
-                          <Table.Td data-label="Indicateurs">
-                            <Stack gap="2xs">
-                              {o.indicateurs.filter(garde).map((i) => (
-                                <Group key={i.id} gap="xs" wrap="nowrap" className="objectifs-indicateur-resume">
-                                  <EtatObjectifs etat={i.etat} />
+                        <Table.Tbody key={o.id}>
+                          <Table.Tr className="objectifs-compact-groupe">
+                            <Table.Th colSpan={5} scope="rowgroup">
+                              <div className="objectifs-compact-entete">
+                                <div>
                                   <Button
                                     variant="subtle"
                                     size="compact-sm"
-                                    aria-label={`Ouvrir l’indicateur ${i.id}`}
-                                    onClick={() => ouvrirIndicateur(i.id)}
+                                    aria-label={`Ouvrir l’objectif ${o.id}`}
+                                    onClick={() => setOuvert({ type: 'objectif', id: o.id })}
                                   >
-                                    {i.id.replace('INDOBJ', '')} {i.nom}
-                                    {i.calcule ? ' (auto)' : ''}
+                                    <span className="objectifs-code">{o.id}</span>
+                                    <span>{o.nom}</span>
                                   </Button>
-                                  <Text size="sm">
-                                    <b className="objectifs-valeur" data-etat={i.etat}>
-                                      {i.valeur}
-                                    </b>{' '}
-                                    <Tendance valeur={i.tendance} /> · {i.cible}
-                                  </Text>
-                                  {i.valeur === '–' && i.historique && (
-                                    <Text size="xs" c="dimmed">
-                                      {i.historique.periode} : {i.historique.valeur}
-                                    </Text>
-                                  )}
-                                </Group>
-                              ))}
-                            </Stack>
-                          </Table.Td>
-                          <Table.Td data-label="Atteints">
-                            <Progress
-                              value={o.indicateurs.length ? (o.atteints * 100) / o.indicateurs.length : 0}
-                              aria-label={`${o.atteints} indicateur(s) atteint(s) sur ${o.indicateurs.length}`}
-                            />
-                            <Text size="xs">
-                              {o.atteints}/{o.indicateurs.length}
-                            </Text>
-                          </Table.Td>
-                          <Table.Td className="col-p2" data-label="Échéance">
-                            {jour(o.echeance)}
-                          </Table.Td>
-                          <Table.Td className="col-p3" data-label="Responsable">
-                            {o.responsable || '–'}
-                          </Table.Td>
-                        </Table.Tr>
+                                  <div className="objectifs-compact-meta">
+                                    <span>Processus : {o.processus.join(', ') || '–'}</span>
+                                    <span>Responsable : {o.responsable || '–'}</span>
+                                    <span>Échéance : {jour(o.echeance)}</span>
+                                  </div>
+                                </div>
+                                <div className="objectifs-compact-avancement">
+                                  <Progress
+                                    value={o.indicateurs.length ? (o.atteints * 100) / o.indicateurs.length : 0}
+                                    aria-label={`${o.atteints} indicateur(s) atteint(s) sur ${o.indicateurs.length}`}
+                                  />
+                                  <span>
+                                    {o.atteints}/{o.indicateurs.length} atteints
+                                  </span>
+                                </div>
+                              </div>
+                            </Table.Th>
+                          </Table.Tr>
+                          {o.indicateurs.filter(garde).map((i) => (
+                            <Table.Tr key={i.id}>
+                              <Table.Td data-label="Indicateur" className="objectifs-cellule-nom">
+                                <Button
+                                  variant="subtle"
+                                  size="compact-sm"
+                                  aria-label={`Ouvrir l’indicateur ${i.id}`}
+                                  onClick={() => ouvrirIndicateur(i.id)}
+                                >
+                                  <span className="objectifs-code">{i.id}</span>
+                                  <span>
+                                    {i.nom}
+                                    {i.calcule ? ' (auto)' : ''}
+                                  </span>
+                                </Button>
+                              </Table.Td>
+                              <Table.Td data-label="Cible" className="objectifs-cellule-donnee">
+                                <CibleIndicateur indicateur={i} compacte />
+                              </Table.Td>
+                              <Table.Td data-label="Valeur mesurée" className="objectifs-cellule-donnee">
+                                <MesureIndicateur indicateur={i} compacte />
+                              </Table.Td>
+                              <Table.Td data-label="État" className="objectifs-cellule-donnee objectifs-cellule-etat">
+                                <EtatIndicateurBloc etat={i.etat} compacte />
+                              </Table.Td>
+                              <Table.Td data-label="Relevé / source" className="objectifs-cellule-source">
+                                <SourceIndicateur indicateur={i} />
+                              </Table.Td>
+                            </Table.Tr>
+                          ))}
+                        </Table.Tbody>
                       ))}
-                    </Table.Tbody>
-                  </Table>
-                </DataTable>
-              </div>
+                    </Table>
+                  </DataTable>
+                </div>
+              </Card>
             </Tabs.Panel>
           </Tabs>
         </>

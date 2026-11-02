@@ -1,3 +1,5 @@
+> 02/11/2026 : [présentation des objectifs validée et intégrée](OBJECTIFS-PRESENTATION-VALIDEE.md), en-têtes centrés, captures réelles et contrôles réussis. Nouvelle nuance des carrés : [proposition plus soutenue](propositions/couleurs-soutenues/README.md) encore à valider.
+
 > 02/11/2026 : [proposition : carrés violet/vert/rouge plus soutenus](propositions/couleurs-soutenues/README.md), nouvelles nuances en attente de validation. La présentation précédente et le centrage des en-têtes sont validés ; leur intégration et leurs contrôles sont autorisés.
 
 > 01/11/2026 : [proposition : contours intérieurs harmonisés](propositions/contours-harmonises/README.md), barres d’en-tête, onglets, boutons, encadrés et séparations plus lisibles. **Validation explicite en attente avant intégration et tests**.

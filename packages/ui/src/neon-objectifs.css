@@ -1,14 +1,14 @@
 /* Objectifs et indicateurs : seules les données et les états existants alimentent la présentation. */
 .objectifs-module {
-  --objectifs-succes: var(--mantine-color-green-light-color);
-  --objectifs-erreur: var(--mantine-color-red-light-color);
-  --objectifs-attention: var(--mantine-color-orange-light-color);
+  --objectifs-succes: #267552;
+  --objectifs-erreur: #b44e59;
+  --objectifs-attention: #986019;
   gap: 1.25rem;
 }
 [data-mantine-color-scheme='dark'] .objectifs-module {
-  --objectifs-succes: var(--mantine-color-green-4);
-  --objectifs-erreur: var(--mantine-color-red-4);
-  --objectifs-attention: var(--mantine-color-orange-4);
+  --objectifs-succes: #80caa6;
+  --objectifs-erreur: #e997a2;
+  --objectifs-attention: #eac180;
 }
 .objectifs-module .mantine-Badge-root[data-etat='ok'] {
   color: var(--objectifs-succes);
@@ -207,20 +207,6 @@
   fill: var(--objectifs-couleur-avancement);
   font-size: 27px;
 }
-.objectifs-table-indicateurs .data-table {
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-}
-.objectifs-table-indicateurs th {
-  color: var(--mantine-color-dimmed);
-  font-size: 0.65rem;
-  font-weight: 500;
-}
-.objectifs-table-indicateurs td {
-  padding-block: 0.9rem;
-  font-size: 0.8rem;
-}
 .objectifs-valeur {
   color: var(--neon-titre);
   font-size: 1.1rem;
@@ -279,31 +265,6 @@
 }
 .objectifs-boite-ligne > .mantine-Button-root {
   grid-column: 1 / -1;
-}
-.objectifs-table-compacte :is(.col-p2, .col-p3) {
-  display: table-cell;
-}
-.objectifs-table-compacte table {
-  table-layout: fixed;
-}
-.objectifs-table-compacte th:nth-child(1) {
-  width: 22%;
-}
-.objectifs-table-compacte th:nth-child(3) {
-  width: 38%;
-}
-.objectifs-table-compacte td {
-  vertical-align: top;
-  overflow-wrap: anywhere;
-}
-.objectifs-indicateur-resume {
-  flex-wrap: wrap;
-  padding-bottom: 0.6rem;
-  border-bottom: 1px solid var(--suivi-trait);
-}
-.objectifs-indicateur-resume > .mantine-Button-root {
-  order: -1;
-  flex-basis: 100%;
 }
 /* Fiches : groupes de champs lisibles, hauteur naturelle et actions existantes. */
 .objectifs-fiche .objectif-champs {
@@ -404,51 +365,545 @@
     width: 4.2rem;
     height: 4.2rem;
   }
-  :is(.objectifs-table-indicateurs, .objectifs-table-compacte) :is(table, tbody) {
-    display: block;
-    width: 100%;
-  }
-  :is(.objectifs-table-indicateurs, .objectifs-table-compacte) thead {
-    display: none;
-  }
-  :is(.objectifs-table-indicateurs, .objectifs-table-compacte) tbody > tr {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.85rem;
-    padding: 1rem 0;
-    border-bottom: 1px solid var(--suivi-trait);
-  }
-  :is(.objectifs-table-indicateurs, .objectifs-table-compacte) td {
-    display: block;
-    min-width: 0;
-    padding: 0;
-    border: 0;
-    background: transparent;
-  }
-  :is(.objectifs-table-indicateurs, .objectifs-table-compacte) td[data-label]::before {
-    display: block;
-    margin-bottom: 0.35rem;
-    color: var(--mantine-color-dimmed);
-    font-size: 0.65rem;
-    content: attr(data-label);
-  }
-  .objectifs-table-indicateurs .objectifs-cellule-nom {
-    grid-column: 1 / -1;
-  }
-  .objectifs-table-indicateurs .objectifs-cellule-nom::before {
-    display: none;
-  }
-  .objectifs-table-indicateurs .objectifs-cellule-etat {
-    grid-column: 1 / -1;
-  }
-  .objectifs-table-compacte td[data-label='Objectif'],
-  .objectifs-table-compacte td[data-label='Indicateurs'] {
-    grid-column: 1 / -1;
-  }
   .objectifs-fiche .objectif-champs {
     padding: 1rem;
   }
   .objectifs-fiche :is(.objectif-grille, .objectif-grille--trois) {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* Présentation validée : cible violette, accents mesurés et contours hiérarchisés. */
+.objectifs-module {
+  --objectifs-cible: #7950b3;
+  --objectifs-cible-fond: #f3eff9;
+  --objectifs-cible-trait: #8d68bd;
+  --objectifs-vert-fond: #eef7f2;
+  --objectifs-vert-trait: #5e9777;
+  --objectifs-rouge-fond: #fcf0f1;
+  --objectifs-rouge-trait: #c67483;
+  --objectifs-orange-fond: #faf3e6;
+  --objectifs-orange-trait: #c7a16c;
+  --objectifs-neutre: #617084;
+  --objectifs-neutre-fond: #f1f4f7;
+  --objectifs-neutre-trait: #9eafc1;
+  --objectifs-cyan: #286e7d;
+  --objectifs-cyan-fond: #edf7f9;
+  --objectifs-structure: #73879c;
+  --objectifs-ligne: #9eafc1;
+  --objectifs-barre: #e9eef4;
+  --objectifs-cadre-debut: #635178;
+  --objectifs-cadre-milieu: #466278;
+  --objectifs-cadre-fin: #267184;
+  --objectifs-alerte: #d33347;
+  --objectifs-halo-faible: rgb(211 51 71 / 9%);
+  --objectifs-halo-fort: rgb(231 53 77 / 26%);
+  --objectifs-halo-anneau: rgb(211 51 71 / 36%);
+}
+[data-mantine-color-scheme='dark'] .objectifs-module {
+  --objectifs-cible: #c5a2f0;
+  --objectifs-cible-fond: #29263f;
+  --objectifs-cible-trait: #a48bc4;
+  --objectifs-vert-fond: #1b3433;
+  --objectifs-vert-trait: #6da889;
+  --objectifs-rouge-fond: #392833;
+  --objectifs-rouge-trait: #ae7280;
+  --objectifs-orange-fond: #3b3225;
+  --objectifs-orange-trait: #ac8c57;
+  --objectifs-neutre: #a0afc3;
+  --objectifs-neutre-fond: #223047;
+  --objectifs-neutre-trait: #6682a0;
+  --objectifs-cyan: #80c4d3;
+  --objectifs-cyan-fond: #1c3442;
+  --objectifs-structure: #6682a0;
+  --objectifs-ligne: #4c6884;
+  --objectifs-barre: #223249;
+  --objectifs-cadre-debut: #76638d;
+  --objectifs-cadre-milieu: #4d6d8b;
+  --objectifs-cadre-fin: #397f91;
+  --objectifs-alerte: #ff6b7b;
+  --objectifs-halo-faible: rgb(255 75 98 / 12%);
+  --objectifs-halo-fort: rgb(255 75 98 / 33%);
+  --objectifs-halo-anneau: rgb(255 107 123 / 55%);
+}
+.objectifs-module .neon-cadre-biseau::before {
+  opacity: 1;
+  background: linear-gradient(
+    110deg,
+    var(--objectifs-cadre-debut),
+    var(--objectifs-cadre-milieu) 52%,
+    var(--objectifs-cadre-fin)
+  );
+  clip-path: polygon(
+    evenodd,
+    18px 0,
+    calc(100% - 18px) 0,
+    100% 18px,
+    100% calc(100% - 18px),
+    calc(100% - 18px) 100%,
+    18px 100%,
+    0 calc(100% - 18px),
+    0 18px,
+    18px 0,
+    19.25px 3px,
+    3px 19.25px,
+    3px calc(100% - 19.25px),
+    19.25px calc(100% - 3px),
+    calc(100% - 19.25px) calc(100% - 3px),
+    calc(100% - 3px) calc(100% - 19.25px),
+    calc(100% - 3px) 19.25px,
+    calc(100% - 19.25px) 3px,
+    19.25px 3px
+  );
+}
+.objectifs-compact-cadre {
+  min-width: 0;
+  padding: 1.4rem 1.5rem;
+  background: var(--suivi-surface);
+}
+.objectifs-module .mantine-Button-root[data-variant='default'],
+.objectifs-module .mantine-Button-root[data-variant='subtle'],
+.objectifs-vues > .mantine-Tabs-list {
+  border: 1.5px solid var(--objectifs-structure);
+}
+.objectifs-vues > .mantine-Tabs-list > .mantine-Tabs-tab {
+  border: 1px solid transparent;
+}
+.objectifs-vues > .mantine-Tabs-list > .mantine-Tabs-tab[data-active] {
+  border-color: var(--objectifs-cyan);
+  color: var(--objectifs-cyan);
+  background: var(--objectifs-cyan-fond);
+  box-shadow: none;
+}
+.objectifs-code {
+  color: var(--objectifs-cible);
+  background: var(--objectifs-cible-fond);
+}
+.objectifs-cellule-nom .objectifs-code {
+  color: var(--objectifs-cyan);
+  background: var(--objectifs-cyan-fond);
+}
+.objectifs-module .objectifs-cellule-nom .mantine-Button-root {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--neon-titre);
+}
+.objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) .data-table {
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) .table-wrap {
+  max-height: none;
+  overflow: visible;
+}
+.objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) table {
+  width: 100%;
+  table-layout: fixed;
+}
+.objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) :is(th, td) {
+  position: static;
+  overflow-wrap: anywhere;
+}
+.objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) thead {
+  outline: none;
+}
+.objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) thead th {
+  padding: 0.75rem 0.8rem;
+  background: var(--objectifs-barre);
+  color: var(--mantine-color-dimmed);
+  font-size: 0.65rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) thead th:first-child {
+  color: var(--objectifs-cyan);
+}
+.objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) th.objectifs-colonne-donnee {
+  text-align: center;
+}
+.objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) th.objectifs-colonne-cible {
+  color: var(--objectifs-cible);
+}
+.objectifs-table-indicateurs .objectifs-colonne-donnee {
+  width: clamp(9rem, 16vw, 13.25rem);
+}
+.objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) tbody td {
+  padding: 1.5rem 0.8rem;
+  border-bottom: 1px solid var(--objectifs-ligne);
+  background: transparent;
+  vertical-align: top;
+  font-size: 0.8rem;
+}
+.objectifs-donnee {
+  --objectifs-donnee-texte: var(--objectifs-neutre);
+  --objectifs-donnee-fond: var(--objectifs-neutre-fond);
+  --objectifs-donnee-trait: var(--objectifs-neutre-trait);
+  display: grid;
+  grid-template-rows: minmax(2.375rem, auto) minmax(2rem, auto);
+  align-content: center;
+  gap: 0.5rem;
+  min-width: 0;
+  min-height: 8.125rem;
+  padding: 0.75rem 0.9rem;
+  border: 1.5px solid var(--objectifs-donnee-trait);
+  border-left: 4px solid var(--objectifs-donnee-texte);
+  border-radius: 0.55rem;
+  background: var(--objectifs-donnee-fond);
+  color: var(--objectifs-donnee-texte);
+}
+.objectifs-donnee--cible {
+  --objectifs-donnee-texte: var(--objectifs-cible);
+  --objectifs-donnee-fond: var(--objectifs-cible-fond);
+  --objectifs-donnee-trait: var(--objectifs-cible-trait);
+}
+.objectifs-donnee[data-etat='ok'] {
+  --objectifs-donnee-texte: var(--objectifs-succes);
+  --objectifs-donnee-fond: var(--objectifs-vert-fond);
+  --objectifs-donnee-trait: var(--objectifs-vert-trait);
+}
+.objectifs-donnee[data-etat='ko'] {
+  --objectifs-donnee-texte: var(--objectifs-erreur);
+  --objectifs-donnee-fond: var(--objectifs-rouge-fond);
+  --objectifs-donnee-trait: var(--objectifs-rouge-trait);
+}
+.objectifs-donnee[data-etat='undef'] {
+  --objectifs-donnee-texte: var(--objectifs-attention);
+  --objectifs-donnee-fond: var(--objectifs-orange-fond);
+  --objectifs-donnee-trait: var(--objectifs-orange-trait);
+}
+.objectifs-donnee > strong,
+.objectifs-mesure-chiffre {
+  align-self: center;
+}
+.objectifs-donnee > strong,
+.objectifs-donnee .objectifs-valeur {
+  color: var(--objectifs-donnee-texte);
+  font-size: 1.875rem;
+  line-height: 1.25;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.objectifs-donnee-label {
+  display: none;
+}
+.objectifs-mesure-chiffre,
+.objectifs-etat-libelle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+.objectifs-donnee > .objectifs-etat-libelle {
+  font-size: 1.25rem;
+}
+.objectifs-source {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  color: var(--mantine-color-dimmed);
+  font-size: 0.65rem;
+  font-weight: 400;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.objectifs-avertissement {
+  flex: none;
+  width: 1.2rem;
+  height: 1.2rem;
+  color: var(--objectifs-alerte);
+}
+.objectifs-module .mantine-Badge-root .objectifs-avertissement {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+.objectifs-donnee--etat[data-etat='ko'] {
+  border-color: var(--objectifs-alerte);
+  animation: objectifs-alerte 2.6s ease-in-out infinite;
+}
+.objectifs-donnee--etat[data-etat='ko'] .objectifs-avertissement {
+  animation: objectifs-warning 2.6s ease-in-out infinite;
+}
+.objectifs-tendance[data-tendance='↗'] {
+  animation: objectifs-hausse 1.8s ease-in-out infinite;
+}
+.objectifs-tendance[data-tendance='↘'] {
+  animation: objectifs-baisse 1.8s ease-in-out infinite;
+}
+.objectifs-table-compacte .objectifs-colonne-donnee {
+  width: 8.25rem;
+}
+.objectifs-table-compacte .objectifs-colonne-source {
+  width: 8rem;
+  text-align: center;
+}
+.objectifs-module .objectifs-table-compacte tbody td {
+  padding: 0.7rem 0.6rem;
+  vertical-align: middle;
+}
+.objectifs-compact-groupe th {
+  padding: 0.75rem 0.6rem;
+  border-bottom: 1.5px solid var(--objectifs-structure);
+  background: var(--suivi-surface-douce);
+  text-align: left;
+}
+.objectifs-compact-entete {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+.objectifs-compact-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1rem;
+  margin-top: 0.4rem;
+  color: var(--mantine-color-dimmed);
+  font-size: 0.65rem;
+  font-weight: 400;
+}
+.objectifs-compact-avancement {
+  flex: none;
+  width: 6rem;
+  color: var(--mantine-color-dimmed);
+  font-size: 0.65rem;
+  text-align: center;
+}
+.objectifs-donnee[data-compacte] {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0;
+  min-height: 2.625rem;
+  padding: 0.4rem 0.35rem;
+  border-left-width: 1.5px;
+  text-align: center;
+}
+.objectifs-donnee[data-compacte] > strong,
+.objectifs-donnee[data-compacte] .objectifs-valeur {
+  font-size: 1rem;
+}
+.objectifs-donnee[data-compacte] > .objectifs-etat-libelle {
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  line-height: 1.5;
+}
+.objectifs-donnee[data-compacte] .objectifs-avertissement {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+.objectifs-module[data-animations='pause'] :is(.objectifs-donnee, .objectifs-avertissement, .objectifs-tendance) {
+  animation-play-state: paused;
+}
+@keyframes objectifs-alerte {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 0 var(--objectifs-halo-anneau),
+      0 0 5px 0 var(--objectifs-halo-faible);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px var(--objectifs-halo-anneau),
+      0 0 18px 3px var(--objectifs-halo-fort);
+  }
+}
+@keyframes objectifs-warning {
+  0%,
+  100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+@keyframes objectifs-hausse {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(2px, -4px);
+  }
+}
+@keyframes objectifs-baisse {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(2px, 4px);
+  }
+}
+@media (max-width: 64em) {
+  .objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) :is(table, tbody) {
+    display: block;
+    width: 100%;
+  }
+  .objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) thead {
+    display: none;
+  }
+  .objectifs-module
+    :is(.objectifs-table-indicateurs, .objectifs-table-compacte)
+    tbody
+    > tr:not(.objectifs-compact-groupe) {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem 0.6rem;
+    padding: 1.25rem 0;
+    border-bottom: 1px solid var(--objectifs-ligne);
+  }
+  .objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) tbody td {
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+  .objectifs-cellule-nom,
+  .objectifs-cellule-source {
+    grid-column: 1 / -1;
+  }
+  .objectifs-donnee {
+    grid-template-rows: 0.95rem minmax(2.375rem, auto) minmax(2rem, auto);
+    align-content: start;
+    gap: 0.25rem;
+    height: 100%;
+    padding: 0.65rem 0.5rem;
+  }
+  .objectifs-donnee-label {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    color: var(--objectifs-donnee-texte);
+    font-size: 0.5rem;
+    line-height: 0.95rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .objectifs-donnee > strong,
+  .objectifs-donnee .objectifs-valeur {
+    font-size: 1.4rem;
+  }
+  .objectifs-donnee > .objectifs-etat-libelle {
+    font-size: 0.85rem;
+  }
+  .objectifs-donnee--etat:not([data-compacte]) .objectifs-etat-libelle > .objectifs-avertissement {
+    display: none;
+  }
+  .objectifs-donnee-label .objectifs-avertissement {
+    width: 0.75rem;
+    height: 0.75rem;
+  }
+  .objectifs-source {
+    font-size: 0.58rem;
+  }
+  .objectifs-compact-cadre {
+    padding: 1rem;
+  }
+  .objectifs-compact-groupe,
+  .objectifs-compact-groupe th {
+    display: block;
+    width: 100%;
+  }
+  .objectifs-compact-groupe th {
+    padding: 0.75rem 0;
+  }
+  .objectifs-compact-entete {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+  .objectifs-donnee[data-compacte] {
+    display: grid;
+    grid-template-rows: 0.75rem minmax(1.3rem, auto);
+    gap: 0.25rem;
+    min-height: 3.75rem;
+    padding: 0.45rem 0.25rem;
+  }
+  .objectifs-donnee[data-compacte] .objectifs-donnee-label {
+    justify-content: center;
+    line-height: 0.75rem;
+  }
+  .objectifs-donnee[data-compacte] .objectifs-donnee-label .objectifs-avertissement {
+    display: none;
+  }
+  .objectifs-donnee[data-compacte] > strong,
+  .objectifs-donnee[data-compacte] .objectifs-valeur {
+    font-size: 0.875rem;
+  }
+  .objectifs-donnee[data-compacte] > .objectifs-etat-libelle {
+    font-size: 0.62rem;
+  }
+}
+@media (prefers-reduced-motion: reduce), print {
+  .objectifs-module :is(.objectifs-donnee, .objectifs-avertissement, .objectifs-tendance) {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+    box-shadow: none;
+  }
+}
+
+/* Les jauges reprennent les accents bleu/cyan de la présentation validée. */
+.objectifs-module .neon-stop-violet {
+  stop-color: #698eab;
+}
+.objectifs-module .neon-stop-rose {
+  stop-color: #62aeb9;
+}
+.objectifs-module .neon-stop-orange {
+  stop-color: #9a8ab6;
+}
+[data-mantine-color-scheme='dark'] .objectifs-module .neon-stop-violet {
+  stop-color: #7196ba;
+}
+[data-mantine-color-scheme='dark'] .objectifs-module .neon-stop-rose {
+  stop-color: #70b9c3;
+}
+[data-mantine-color-scheme='dark'] .objectifs-module .neon-stop-orange {
+  stop-color: #a494bd;
+}
+.objectifs-kpi {
+  background: linear-gradient(135deg, var(--suivi-surface-douce), var(--suivi-surface) 75%);
+}
+.objectifs-famille {
+  border-left-color: var(--objectifs-cyan);
+}
+
+.objectifs-module .mantine-Badge-root[data-etat='ok'] {
+  background: var(--objectifs-vert-fond);
+}
+.objectifs-module .mantine-Badge-root[data-etat='ko'] {
+  background: var(--objectifs-rouge-fond);
+}
+.objectifs-module .mantine-Badge-root[data-etat='undef'] {
+  background: var(--objectifs-orange-fond);
+}
+.objectifs-module .mantine-Badge-root[data-etat='na'] {
+  background: var(--objectifs-neutre-fond);
+  color: var(--objectifs-neutre);
+}
+.objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) thead th {
+  border-block: 1.5px solid var(--objectifs-structure);
+  z-index: auto;
+}
+.objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) thead th:first-child {
+  border-inline-start: 1.5px solid var(--objectifs-structure);
+}
+.objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) thead th:last-child {
+  border-inline-end: 1.5px solid var(--objectifs-structure);
+}
+.objectifs-compact-groupe th {
+  background: var(--objectifs-neutre-fond);
+}
+.objectifs-compact-avancement .mantine-Progress-section {
+  background: var(--objectifs-cyan);
 }
