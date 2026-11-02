@@ -4413,3 +4413,14 @@ tr[data-importe='oui'] {
     transition: none !important;
   }
 }
+
+/* Filtre par étiquettes de la liste des documents : masqué sur petit écran pour ne pas allonger l'en-tête de la liste
+   (la recherche trouve aussi les étiquettes) ; affiché à partir de la largeur tablette. */
+.filtre-etiquettes {
+  display: none;
+}
+@media (min-width: 48rem) {
+  .filtre-etiquettes {
+    display: block;
+  }
+}

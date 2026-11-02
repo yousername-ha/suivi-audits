@@ -307,18 +307,20 @@ function DocumentList({
           clearable
           className="champ-s"
         />
-        <MultiSelect
-          label="Étiquettes"
-          description="Toutes les étiquettes choisies"
-          placeholder={tags.length ? undefined : 'Toutes'}
-          data={optionsEtiquettes(etiquettes.data)}
-          value={tags}
-          onChange={setTags}
-          searchable
-          clearable
-          nothingFoundMessage="Aucune étiquette"
-          className="champ-m"
-        />
+        <div className="filtre-etiquettes">
+          <MultiSelect
+            label="Étiquettes"
+            description="Toutes les étiquettes choisies"
+            placeholder={tags.length ? undefined : 'Toutes'}
+            data={optionsEtiquettes(etiquettes.data)}
+            value={tags}
+            onChange={setTags}
+            searchable
+            clearable
+            nothingFoundMessage="Aucune étiquette"
+            className="champ-m"
+          />
+        </div>
         {canDelete && (
           <SegmentedControl
             value={trash}
