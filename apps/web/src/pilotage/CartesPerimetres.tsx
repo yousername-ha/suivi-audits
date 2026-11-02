@@ -6,11 +6,10 @@ import { useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import {
   arbre,
-  LIBELLES_NIVEAU,
+  libelleTypePerimetre,
   type CartePerimetre,
   type Couverture,
   type CouvertureReferentiel,
-  type NiveauPerimetre,
 } from '@suivi/shared';
 
 const LARGEUR = 264;
@@ -22,11 +21,14 @@ const HAUTEUR_FOURNISSEUR = 56;
 const ECART_FOURNISSEUR = 12;
 const DECALAGE_FOURNISSEUR = 96;
 
-/** Fournisseur extérieur : jamais un parent, seulement rattaché à un ou plusieurs périmètres. */
+/** Fiche du registre des fournisseurs : affichée « Fournisseur extérieur » à côté de l'arbre, sauf si un périmètre de type
+    fournisseur la relie (elle est alors représentée par ce périmètre). */
 export interface FournisseurRattache {
   id: string;
   name: string;
   scopes: string[];
+  /** « Oui » : fournisseur critique (case de la fiche du registre). */
+  critical?: string;
 }
 
 interface Place {
@@ -218,7 +220,11 @@ export function CartesPerimetres({
   const { places, largeur: largeurArbre, hauteur: hauteurArbre } = disposer(cartes);
   if (chargement) return <Loader size="sm" aria-label="Chargement du graphe des périmètres" />;
   if (!places.length) return <Text>Aucun périmètre accessible.</Text>;
-  const affichables = (fournisseurs ?? []).filter((f) => f.scopes.some((id) => places.some((p) => p.carte.id === id)));
+  const relies = new Set(places.map((p) => p.carte.supplierId).filter((id): id is string => !!id));
+  const fiche = (id: string | null) => (id ? (fournisseurs ?? []).find((f) => f.id === id) : undefined);
+  const affichables = (fournisseurs ?? []).filter(
+    (f) => !relies.has(f.id) && f.scopes.some((id) => places.some((p) => p.carte.id === id)),
+  );
   const colonneX = largeurArbre + DECALAGE_FOURNISSEUR;
   const largeur = affichables.length ? colonneX + LARGEUR_FOURNISSEUR : largeurArbre;
   const hauteur = Math.max(hauteurArbre, affichables.length * (HAUTEUR_FOURNISSEUR + ECART_FOURNISSEUR));
@@ -329,14 +335,27 @@ export function CartesPerimetres({
           ))}
           {places.map(({ carte, x, y }) => (
             <foreignObject key={carte.id} x={x} y={y} width={LARGEUR} height={HAUTEUR}>
-              <div className="graphe-carte" role="group" aria-label={`Périmètre ${carte.name}`}>
+              <div
+                className={
+                  carte.entityKind === 'fournisseur' ? 'graphe-carte graphe-carte--fournisseur' : 'graphe-carte'
+                }
+                role="group"
+                aria-label={`Périmètre ${carte.name}`}
+              >
                 <Text fw={600} lineClamp={1} title={carte.name}>
                   {carte.name}
                 </Text>
-                <Text size="xs" lineClamp={1}>
-                  {LIBELLES_NIVEAU[carte.entityKind as NiveauPerimetre] ?? carte.entityKind}
-                  {carte.nature ? ` · ${carte.nature}` : ''}
-                </Text>
+                <Group gap="2xs" wrap="nowrap">
+                  <Text size="xs" lineClamp={1}>
+                    {libelleTypePerimetre(carte.entityKind)}
+                    {fiche(carte.supplierId) ? ` · fiche ${fiche(carte.supplierId)!.name}` : ''}
+                  </Text>
+                  {fiche(carte.supplierId)?.critical === 'Oui' && (
+                    <Badge size="xs" color="red" variant="light">
+                      Critique
+                    </Badge>
+                  )}
+                </Group>
                 <dl className="graphe-compteurs">
                   {lignesCompteurs(carte.compteurs, carte.id).map((l) => (
                     <div key={l.libelle}>

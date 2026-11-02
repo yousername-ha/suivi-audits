@@ -42,7 +42,7 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0036](0036-objectifs-boites-contexte-et-revue-de-direction.md) | Objectifs, boîtes de pilotage, contexte et revue de direction (lots M5 à M8) | Acceptée |
 | [0037](0037-standards-verrouilles-jeu-de-test-et-relations.md) | Standards verrouillés, copies personnalisables, jeu de test et contrôle des relations | Acceptée |
 | [0038](0038-socle-de-configuration-grc-transversal.md) | Socle de configuration GRC transversal (échelles, matrices, critères) et méthodes épinglées | Proposée |
-| [0039](0039-hierarchie-des-perimetres.md) | Hiérarchie des périmètres (organisation → entité → périmètre) et héritage explicite des référentiels | Proposée |
+| [0039](0039-hierarchie-des-perimetres.md) | Hiérarchie des périmètres (organisations et fournisseurs, amendée le 01/11/2026) et héritage explicite des référentiels | Proposée |
 | [0040](0040-sortie-du-json-plat-modules-en-tables.md) | Sortie du JSON plat : modules de l'outil de suivi repris en tables, un par un | Proposée |
 | [0041](0041-evaluation-des-exigences-et-couverture.md) | Évaluation des exigences : applicabilité, mise en œuvre, test d'efficacité, validation métier et état de couverture | Proposée |
 | [0042](0042-retrait-de-lecran-legacy.md) | Retrait de l'écran /legacy : lecture par /api/suivi, exports Excel natifs, import conservé | Proposée |

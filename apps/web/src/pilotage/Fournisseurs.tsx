@@ -448,6 +448,7 @@ function FicheFournisseur({
   const qc = useQueryClient(),
     [nom, setNom] = useState(fournisseur.name),
     [saas, setSaas] = useState(fournisseur.saas),
+    [critique, setCritique] = useState(fournisseur.critical === 'Oui'),
     [rattachement, setRattachement] = useState(fournisseur.rattachement),
     [contact, setContact] = useState(fournisseur.contact),
     [notes, setNotes] = useState(fournisseur.notes),
@@ -467,6 +468,8 @@ function FicheFournisseur({
         body: {
           name: nom,
           saas,
+          // Case cochée : « Oui ». Décochée : « Non », sauf si la valeur n'a pas changé (« N/A » ou vide conservés).
+          critical: critique ? 'Oui' : fournisseur.critical === 'Oui' ? 'Non' : fournisseur.critical,
           rattachement,
           contact,
           notes,
@@ -502,12 +505,21 @@ function FicheFournisseur({
       <ErrorAlert error={erreur} />
       <Group grow align="flex-start">
         <TextInput label="Nom" disabled={!modifiable} value={nom} onChange={(e) => setNom(e.currentTarget.value)} />
-        <Checkbox
-          label="Service SaaS"
-          disabled={!modifiable}
-          checked={saas}
-          onChange={(e) => setSaas(e.currentTarget.checked)}
-        />
+        <Stack gap="xs">
+          <Checkbox
+            label="Service SaaS"
+            disabled={!modifiable}
+            checked={saas}
+            onChange={(e) => setSaas(e.currentTarget.checked)}
+          />
+          <Checkbox
+            label="Fournisseur critique"
+            description="Affiché aussi sur le périmètre fournisseur relié à cette fiche."
+            disabled={!modifiable}
+            checked={critique}
+            onChange={(e) => setCritique(e.currentTarget.checked)}
+          />
+        </Stack>
       </Group>
       <Group grow align="flex-start">
         <TextInput

@@ -412,6 +412,7 @@ describe('migration 005 : reprise des cartes de la bêta déjà dessinées (CART
         '048_webauthn.sql',
         '049_retex_contributions.sql',
         '050_tableaux_de_bord_partages.sql',
+        '051_perimetres_organisation_fournisseur.sql',
       ]);
       const st = await t2.svc.legacy.recompose();
       expect(deepEqual(st!.data.maps as Json, fixture.maps as Json)).toBe(true);

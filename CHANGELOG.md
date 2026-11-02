@@ -6,7 +6,16 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-Aucune action.
+**Migration automatique `051`** (type des périmètres) : appliquée au démarrage de `app`, durée négligeable ; aucune action sur le serveur. Les périmètres marqués « Entité » ou « Périmètre » deviennent « Organisation » ; aucune donnée supprimée, parents et héritages inchangés. Elle ajoute la colonne facultative de la fiche fournisseur reliée et la règle « sous un fournisseur, seulement des fournisseurs », que les données existantes respectent toutes (elles ne contiennent encore aucun fournisseur). _(Session « Révision gestion des périmètres ».)_
+
+### Modifié
+
+- **Périmètres : une organisation ou un fournisseur** ([ADR 0039 amendée](docs/adr/0039-hierarchie-des-perimetres.md)) : le champ « Niveau » (organisation, entité, périmètre) devient « Type », à deux choix, Organisation ou Fournisseur. Le rattachement ne change pas : une organisation A peut avoir pour enfants les organisations B et C et un fournisseur. La liste indique « Fournisseur · rattaché à A », le graphe dessine la carte d'un fournisseur en tirets. L'API refuse les anciennes valeurs `entite` et `perimetre`. Un fournisseur n'a pour enfants que des fournisseurs (ses sous-traitants) ; il peut être relié à sa fiche du registre des fournisseurs, qui n'apparaît alors plus comme « Fournisseur extérieur » dans le graphe. _(Session « Révision gestion des périmètres ».)_
+- **Fournisseur critique** : case à cocher dans la fiche du fournisseur (même donnée que la colonne « Critique » du registre). Le périmètre fournisseur relié l'affiche. _(Session « Révision gestion des périmètres ».)_
+
+### Retiré
+
+- **Nature d'un périmètre** (SMSI, SMQ, SMI…) : n'est plus proposée ni affichée sur la page Périmètres et le graphe ; un système de management est l'ensemble de ses éléments, pas une étiquette. La valeur déjà enregistrée reste en base, inchangée. _(Session « Révision gestion des périmètres ».)_
 
 ### Corrigé
 

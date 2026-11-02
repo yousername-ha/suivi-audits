@@ -1583,6 +1583,10 @@ rect.audit-niv-faible {
   border-radius: var(--mantine-radius-md);
   overflow: hidden;
 }
+/* Périmètre de type fournisseur : même carte, bordure en tirets comme ses liens. */
+.graphe-carte--fournisseur {
+  border-style: dashed;
+}
 .graphe-compteurs {
   margin: var(--mantine-spacing-2xs) 0;
   font-size: var(--mantine-font-size-xs);
