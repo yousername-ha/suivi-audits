@@ -1,3 +1,5 @@
+> 02/11/2026 : [proposition : barre des en-têtes Biseau](propositions/entetes-biseau/README.md), angles coupés, relief discret, pictogrammes et séparateurs. **Nouvelle barre à valider avant intégration** ; la version B reste intégrée et validée.
+
 > 02/11/2026 : **[version B choisie et intégrée](OBJECTIFS-VERSION-B.md)**, blocs plus petits, titres inchangés, couleurs renforcées. Captures réelles, deux e2e existants et contrôles d’affichage/accessibilité réussis ; aucune validation préalable en attente pour ce lot.
 
 > 02/11/2026 : [deux variantes à comparer](propositions/comparatif-titres-blocs/README.md) : **A**, titres d’objectifs agrandis ; **B**, blocs encore réduits avec titres inchangés. Fonds soutenus communs, choix et validation explicite en attente avant intégration et tests.
