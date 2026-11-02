@@ -1,3 +1,5 @@
+> 02/11/2026 : [deux variantes à comparer](propositions/comparatif-titres-blocs/README.md) : **A**, titres d’objectifs agrandis ; **B**, blocs encore réduits avec titres inchangés. Fonds soutenus communs, choix et validation explicite en attente avant intégration et tests.
+
 > 02/11/2026 : [proposition : blocs mieux proportionnés](propositions/blocs-proportionnes/README.md), carrés et chiffres réduits, plus de place pour les intitulés, fonds renforcés et vue compacte resserrée. **Validation explicite en attente avant application des dimensions et nuances.**
 
 > 02/11/2026 : [présentation des objectifs validée et intégrée](OBJECTIFS-PRESENTATION-VALIDEE.md), en-têtes centrés, captures réelles et contrôles réussis. Nouvelle nuance des carrés : [proposition plus soutenue](propositions/couleurs-soutenues/README.md) encore à valider.
