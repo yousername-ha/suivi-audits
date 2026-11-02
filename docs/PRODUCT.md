@@ -16,7 +16,7 @@ une démarche qualité. Les droits et les modules activés déterminent les rubr
 
 | Groupe | Contenu |
 | --- | --- |
-| Vue d'ensemble | Synthèse, parcours guidé, périmètres (organisation → entité → périmètre) |
+| Vue d'ensemble | Synthèse, parcours guidé, périmètres (organisations et fournisseurs, rattachés en arbre) |
 | Contexte et responsabilités | Périmètre et contexte, parties intéressées, SWOT par processus, PESTEL, rôles et responsabilités |
 | Objectifs et indicateurs | Processus, objectifs, indicateurs (états calculés, valeurs historiques) |
 | Gestion de l'audit | Carte du prochain audit, couverture du cycle, déroulé, planning, participants |

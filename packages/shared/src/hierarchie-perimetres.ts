@@ -1,13 +1,47 @@
-/* Hiérarchie des périmètres de management (organisation → entité → périmètre) : arbre parent/enfant sans cycle et
-   héritage explicite des référentiels. Fonctions pures, partagées par l'API (contrôle avant écriture) et l'interface
+/* Hiérarchie des périmètres de management : arbre parent/enfant sans cycle et héritage explicite des référentiels. Un
+   périmètre est une organisation ou un fournisseur, rien d'autre (amendement de l'ADR 0039, 01/11/2026) : une organisation
+   A peut avoir pour enfants les organisations B et C et le fournisseur F ; un fournisseur n'a pour enfants que des
+   fournisseurs (ses sous-traitants). Fonctions pures, partagées par l'API (contrôle avant écriture) et l'interface
    (arbre, sélecteur de parent). La base impose les mêmes règles par un déclencheur (migration 022). */
 
-export const NIVEAUX_PERIMETRE = ['organisation', 'entite', 'perimetre'] as const;
-export type NiveauPerimetre = (typeof NIVEAUX_PERIMETRE)[number];
-export const LIBELLES_NIVEAU: Record<NiveauPerimetre, string> = {
+export const TYPES_PERIMETRE = ['organisation', 'fournisseur'] as const;
+export type TypePerimetre = (typeof TYPES_PERIMETRE)[number];
+export const LIBELLES_TYPE_PERIMETRE: Record<TypePerimetre, string> = {
   organisation: 'Organisation',
-  entite: 'Entité',
-  perimetre: 'Périmètre',
+  fournisseur: 'Fournisseur',
+};
+/** Libellé du type d'un périmètre ; une valeur inconnue (donnée antérieure non migrée) s'affiche telle quelle. */
+export const libelleTypePerimetre = (type: string): string =>
+  (LIBELLES_TYPE_PERIMETRE as Record<string, string>)[type] ?? type;
+
+/** Un parent de type `typeParent` peut-il recevoir un enfant de type `typeEnfant` ? Sous un fournisseur, seulement des
+    fournisseurs ; sous une organisation, tout. */
+export const parentPermis = (typeEnfant: TypePerimetre, typeParent: TypePerimetre): boolean =>
+  typeParent === 'organisation' || typeEnfant === 'fournisseur';
+
+export type RefusType = 'organisation-sous-fournisseur' | 'fournisseur-avec-organisations';
+/** Vérifie le type d'un périmètre `id` (vide à la création) rattaché à `parentId` : `null` si la combinaison est permise. */
+export function refusType(
+  noeuds: readonly { id: string; parentId: string | null; type: TypePerimetre }[],
+  id: string,
+  type: TypePerimetre,
+  parentId: string | null,
+): RefusType | null {
+  const parent = parentId ? noeuds.find((n) => n.id === parentId) : undefined;
+  if (parent && !parentPermis(type, parent.type)) return 'organisation-sous-fournisseur';
+  if (
+    type === 'fournisseur' &&
+    id &&
+    noeuds.some((n) => n.parentId === id && n.id !== id && !parentPermis(n.type, 'fournisseur'))
+  )
+    return 'fournisseur-avec-organisations';
+  return null;
+}
+export const MESSAGES_REFUS_TYPE: Record<RefusType, string> = {
+  'organisation-sous-fournisseur':
+    'Une organisation ne peut pas être rattachée à un fournisseur : seul un fournisseur peut l’être.',
+  'fournisseur-avec-organisations':
+    'Ce périmètre a des organisations enfants : il ne peut pas devenir un fournisseur. Rattachez-les d’abord ailleurs.',
 };
 
 export interface NoeudPerimetre {

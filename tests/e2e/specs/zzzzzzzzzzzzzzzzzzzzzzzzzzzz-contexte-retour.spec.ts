@@ -28,7 +28,7 @@ test('Écart → audit d’origine → retour à la liste ; Timeline avec pério
       scope: 'Fixture de recette',
       timezone: 'Europe/Paris',
       parentId: null,
-      entityKind: 'perimetre',
+      entityKind: 'organisation',
       inheritFrameworks: false,
     });
     const audit = await post(page, `/api/grc/${p.id}/objects`, {

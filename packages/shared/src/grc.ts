@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { NIVEAUX_PERIMETRE } from './hierarchie-perimetres.js';
+import { TYPES_PERIMETRE } from './hierarchie-perimetres.js';
 import type { Module } from './permissions.js';
 import { ResponsableRef } from './responsables.js';
 export const GRC_KINDS = [
@@ -164,6 +164,8 @@ export interface GrcObject {
 /** Natures proposées à la création d'un périmètre : de simples suggestions, la nature reste un libellé libre. */
 export const NATURES_PERIMETRE = ['SMSI', 'SMQ', 'SMI'] as const;
 const natureLibelle = z.string().trim().max(60);
+/** Identifiant d'une fiche du registre des fournisseurs (identifiant historique, par exemple SUP-001). */
+const ficheFournisseur = z.string().trim().min(1).max(200);
 const fuseau = z
   .string()
   .max(100)
@@ -181,22 +183,29 @@ export const SmsiCreate = z
     scope: z.string().max(5000),
     nature: natureLibelle.default(''),
     parentId: z.uuid().nullable().default(null),
-    entityKind: z.enum(NIVEAUX_PERIMETRE).default('perimetre'),
+    /** Organisation ou fournisseur (amendement de l'ADR 0039). */
+    entityKind: z.enum(TYPES_PERIMETRE).default('organisation'),
+    /** Fiche du registre des fournisseurs reliée (type fournisseur seulement). */
+    supplierId: ficheFournisseur.nullable().default(null),
     inheritFrameworks: z.boolean().default(false),
     visibility: z.literal('restricted').default('restricted'),
     timezone: fuseau,
   })
   .strict();
-/** Modification d'un périmètre : nom, texte du périmètre, nature et fuseau (version attendue en If-Match). */
+/** Modification d'un périmètre : nom, texte du périmètre, fuseau, place dans l'arbre, type et fiche fournisseur reliée
+    (version attendue en If-Match). */
 export const SmsiUpdate = z
   .object({
     name: label,
     scope: z.string().max(5000),
-    nature: natureLibelle,
+    /** Absente : inchangée. L'écran ne la propose plus (01/11/2026) ; la valeur enregistrée est conservée. */
+    nature: natureLibelle.optional(),
     timezone: fuseau,
     /** Absents : inchangés. `parentId: null` détache le périmètre de son parent. */
     parentId: z.uuid().nullable().optional(),
-    entityKind: z.enum(NIVEAUX_PERIMETRE).optional(),
+    entityKind: z.enum(TYPES_PERIMETRE).optional(),
+    /** Absente : inchangée (retirée si le périmètre devient une organisation). `null` délie la fiche. */
+    supplierId: ficheFournisseur.nullable().optional(),
     inheritFrameworks: z.boolean().optional(),
     confirm: z.literal('ENREGISTRER'),
   })

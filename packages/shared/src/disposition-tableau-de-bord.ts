@@ -271,6 +271,43 @@ export function deplacerDalleAuClavier(
   return { disposition: suivante, rang: apres.indexOf(id) + 1, total: apres.length };
 }
 
+/** Colonnes de la grille aux grands écrans : les largeurs s'y entendent. */
+export const COLONNES_TABLEAU_DE_BORD = 12;
+
+/** Placement magnétique : rangée par rangée, sur 12 colonnes, une place restée libre au bout d'une rangée est comblée par
+    la première dalle suivante qui y tient, avancée à cette place ; les autres gardent leur ordre. La dalle `figee` (celle
+    qu'on vient de poser) n'est jamais avancée : elle reste où on l'a mise. Les dalles masquées ou sans données gardent
+    leur rang dans la disposition. */
+export function compacterDisposition(d: Disposition, disponibles: ReadonlySet<IdDalle>, figee?: IdDalle): Disposition {
+  const vues = dallesAffichees(d, disponibles);
+  const file = [...vues];
+  const ordre: DalleDisposee[] = [];
+  let reste = COLONNES_TABLEAU_DE_BORD;
+  while (file.length) {
+    let i = file[0]!.largeur <= reste ? 0 : file.findIndex((x) => x.id !== figee && x.largeur <= reste);
+    if (i < 0) {
+      // Rien ne tient dans la fin de rangée : la suivante commence.
+      reste = COLONNES_TABLEAU_DE_BORD;
+      i = 0;
+    }
+    const [x] = file.splice(i, 1);
+    ordre.push(x!);
+    reste -= x!.largeur;
+    if (reste <= 0) reste = COLONNES_TABLEAU_DE_BORD;
+  }
+  // Les dalles affichées reprennent, dans le nouvel ordre, les rangs qu'elles occupaient ; les autres ne bougent pas.
+  const affichees = new Set(vues.map((x) => x.id));
+  let k = 0;
+  return { dalles: d.dalles.map((x) => (affichees.has(x.id) ? ordre[k++]! : x)) };
+}
+
+/** Largeur proposée la plus proche d'un nombre de colonnes (redimensionnement au glisser, aimanté sur ¼, ⅓, ½, ⅔, 1). */
+export function largeurAimantee(colonnes: number): LargeurDisposee {
+  let meilleure: LargeurDisposee = LARGEURS_DALLE[0];
+  for (const l of LARGEURS_DALLE) if (Math.abs(l - colonnes) < Math.abs(meilleure - colonnes)) meilleure = l;
+  return meilleure;
+}
+
 /** Change la largeur, l'état masqué ou les réglages d'une dalle (des réglages vides sont retirés). */
 export function modifierDalle(d: Disposition, id: IdDalle, champs: Partial<Omit<DalleDisposee, 'id'>>): Disposition {
   return {

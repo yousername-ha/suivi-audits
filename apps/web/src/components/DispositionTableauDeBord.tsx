@@ -1,14 +1,21 @@
 /* Mode « Modifier la disposition » du tableau de bord de l'accueil (ADR 0078, lot 2a) : déplacer les dalles au glisser
-   (évènements de pointeur, souris ou doigt) ou au clavier (flèches, Origine, Fin sur la poignée), changer leur largeur,
-   les masquer et les réafficher, régler leurs seuils, leur cible et leur visualisation (lot 2c). Enregistre la
-   disposition personnelle (droit tableau_de_bord:modifier, lot 2b) ; un administrateur peut aussi la proposer à tous. Aucune donnée n'est enregistrée : seulement l'ordre, les largeurs et les dalles masquées. Le glissé réordonne
-   la grille en direct, sans élément positionné par script (CSP, ADR 0006). */
-import { Alert, Button, Group, NativeSelect, NumberInput, Text, VisuallyHidden } from '@mantine/core';
+   (poignée ou surface de la dalle à la souris, poignée au doigt) ou au clavier (flèches, Origine, Fin sur la poignée),
+   changer leur largeur (bord à tirer, aimanté sur les largeurs proposées, ou liste), les masquer et les réafficher, régler
+   leurs seuils, leur cible et leur visualisation (lot 2c). Pendant le glissé, la dalle suit le pointeur et une ombre bleue
+   translucide marque sa place d'arrivée ; les autres se poussent en direct. Placement magnétique (activé par défaut) : au
+   lâcher, les fins de rangée libres sont comblées par les dalles suivantes qui y tiennent. Enregistre la disposition
+   personnelle (droit tableau_de_bord:modifier, lot 2b) ; un administrateur peut aussi la proposer à tous. Aucune donnée
+   n'est enregistrée : seulement l'ordre, les largeurs et les dalles masquées. Le déplacement visuel passe par des
+   variables CSS posées par le CSSOM (permis par l'ADR 0006), jamais par un attribut style. */
+import { Alert, Button, Group, NativeSelect, NumberInput, Switch, Text, VisuallyHidden } from '@mantine/core';
 import {
+  compacterDisposition,
+  COLONNES_TABLEAU_DE_BORD,
   completerDisposition,
   dallesAffichees,
   deplacerDalle,
   deplacerDalleAuClavier,
+  largeurAimantee,
   LARGEURS_DALLE,
   LIBELLES_LARGEUR,
   LIBELLES_VISUALISATION,
@@ -27,7 +34,16 @@ import {
 } from '@suivi/shared';
 import { ConfirmButton, ErrorAlert, type LargeurDalle } from '@suivi/ui';
 import { useQueryClient } from '@tanstack/react-query';
-import { useId, useMemo, useState, type KeyboardEvent, type PointerEvent } from 'react';
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type PointerEvent,
+} from 'react';
 import { api, del } from '../api';
 import { dallesTableauDeBord } from './TableauDeBord';
 
@@ -43,6 +59,32 @@ const SENS_TOUCHES: Record<string, -1 | 1 | 'debut' | 'fin'> = {
   Home: 'debut',
   End: 'fin',
 };
+
+/** Distance, en pixels, au-delà de laquelle un appui sur la surface d'une dalle devient un glissé (en deçà : un clic). */
+const SEUIL_GLISSE = 6;
+/** Bande, en pixels, près des bords haut et bas de la fenêtre où le glissé fait défiler la page. */
+const BANDE_DEFILEMENT = 56;
+/** Éléments d'une case qui gardent leur propre comportement : ils ne démarrent pas de glissé. */
+const HORS_GLISSE = 'button:not(.tdb-poignee), select, input, textarea, a, label, .tdb-reglages, .tdb-redim';
+
+/** Glissé en cours : dalle, point de saisie dans la dalle, dernière position du pointeur, seuil franchi ou non. */
+interface Glisse {
+  id: IdDalle;
+  decalX: number;
+  decalY: number;
+  departX: number;
+  departY: number;
+  x: number;
+  y: number;
+  demarre: boolean;
+}
+/** Redimensionnement en cours : bord gauche de la dalle et largeur d'une colonne (écart compris), en pixels. */
+interface Redim {
+  id: IdDalle;
+  gauche: number;
+  colonne: number;
+  ecart: number;
+}
 
 function IconePoignee() {
   return (
@@ -208,7 +250,13 @@ export function EditionTableauDeBord({
   // Partir d'un autre tableau que le sien : l'enregistrer en fait sa disposition, même sans changement.
   const autreQueLaSienne = base !== (dispositions.personnelle?.disposition ?? null);
   const [d, setD] = useState<Disposition>(depart);
-  const [glissee, setGlissee] = useState<IdDalle | null>(null);
+  const [glisse, setGlisse] = useState<Glisse | null>(null);
+  const [redim, setRedim] = useState<Redim | null>(null);
+  const [magnetique, setMagnetique] = useState(true);
+  const grille = useRef<HTMLDivElement>(null);
+  const glissee = glisse?.demarre ? glisse.id : null;
+  // Dalle posée au dernier lâcher : son rang et sa largeur sont annoncés une fois la disposition rendue.
+  const [posee, setPosee] = useState<IdDalle | null>(null);
   const [reglee, setReglee] = useState<IdDalle | null>(null);
   const [annonce, setAnnonce] = useState('');
   const [pending, setPending] = useState(false);
@@ -218,11 +266,6 @@ export function EditionTableauDeBord({
   const masquees = d.dalles.filter((x) => x.masquee && disponibles.has(x.id));
   const titre = (id: IdDalle) => parId.get(id)?.titre ?? id;
   const modifiee = !memesDispositions(d, depart);
-
-  const annoncerRang = (disposition: Disposition, id: IdDalle) => {
-    const ids = dallesAffichees(disposition, disponibles).map((x) => x.id);
-    setAnnonce(`« ${titre(id)} » : position ${ids.indexOf(id) + 1} sur ${ids.length}.`);
-  };
 
   async function agir(fn: () => Promise<unknown>) {
     setPending(true);
@@ -247,34 +290,164 @@ export function EditionTableauDeBord({
     setAnnonce(`« ${titre(id)} » : position ${r.rang} sur ${r.total}.`);
   };
 
-  const surPointeurBas = (id: IdDalle) => (e: PointerEvent<HTMLButtonElement>) => {
-    if (e.button !== 0) return;
+  const caseDe = (id: IdDalle) => grille.current?.querySelector<HTMLElement>(`[data-dalle="${id}"]`) ?? null;
+
+  /** Saisie d'une dalle : par la poignée (souris ou doigt, glissé immédiat) ou par sa surface (souris ou stylet, glissé
+      au-delà de quelques pixels, pour laisser les clics). */
+  const surPointeurBas = (id: IdDalle) => (e: PointerEvent<HTMLElement>) => {
+    if (e.button !== 0 || redim) return;
+    const cible = e.target as HTMLElement;
+    const parPoignee = !!cible.closest('.tdb-poignee');
+    if (!parPoignee && (cible.closest(HORS_GLISSE) || e.pointerType === 'touch')) return;
+    const r = caseDe(id)?.getBoundingClientRect();
+    if (!r) return;
     e.preventDefault();
-    e.currentTarget.setPointerCapture(e.pointerId);
-    setGlissee(id);
+    setGlisse({
+      id,
+      decalX: e.clientX - r.left,
+      decalY: e.clientY - r.top,
+      departX: e.clientX,
+      departY: e.clientY,
+      x: e.clientX,
+      y: e.clientY,
+      demarre: parPoignee,
+    });
   };
-  const surPointeurDeplace = (id: IdDalle) => (e: PointerEvent<HTMLButtonElement>) => {
-    if (glissee !== id) return;
-    const sous = document.elementFromPoint(e.clientX, e.clientY)?.closest<HTMLElement>('[data-dalle]');
-    const cible = sous?.dataset.dalle as IdDalle | undefined;
-    if (!cible || cible === id || !disponibles.has(cible)) return;
-    // Vers une dalle plus loin : se placer après elle ; plus haut : avant elle (pas d'oscillation au survol).
-    const ids = vues.map((x) => x.id);
-    setD((cur) => deplacerDalle(cur, id, cible, ids.indexOf(cible) > ids.indexOf(id)));
+
+  /** Place d'arrivée : la dalle sous le pointeur (avant elle en remontant, après elle en descendant), ou la fin de la
+      grille sous la dernière rangée. */
+  const placer = (id: IdDalle, x: number, y: number) => {
+    const cases = [...(grille.current?.querySelectorAll<HTMLElement>('[data-dalle]') ?? [])].filter(
+      (c) => c.dataset.dalle !== id,
+    );
+    const sous = cases.find((c) => {
+      const r = c.getBoundingClientRect();
+      return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+    });
+    const bas = Math.max(...cases.map((c) => c.getBoundingClientRect().bottom));
+    setD((cur) => {
+      const ids = dallesAffichees(cur, disponibles).map((v) => v.id);
+      if (sous) {
+        const cible = sous.dataset.dalle as IdDalle;
+        return disponibles.has(cible) ? deplacerDalle(cur, id, cible, ids.indexOf(cible) > ids.indexOf(id)) : cur;
+      }
+      const derniere = ids[ids.length - 1];
+      return cases.length && y > bas && derniere && derniere !== id ? deplacerDalle(cur, id, derniere, true) : cur;
+    });
   };
-  const surPointeurHaut = (id: IdDalle) => () => {
-    if (glissee !== id) return;
-    setGlissee(null);
-    annoncerRang(d, id);
+
+  useEffect(() => {
+    if (!posee) return;
+    const vuesApres = dallesAffichees(d, disponibles);
+    const r = vuesApres.find((v) => v.id === posee);
+    setAnnonce(
+      `« ${titre(posee)} » : position ${vuesApres.findIndex((v) => v.id === posee) + 1} sur ${vuesApres.length}` +
+        (r ? `, ${LIBELLES_LARGEUR[r.largeur].toLowerCase()}.` : '.'),
+    );
+    setPosee(null);
+    // titre ne dépend que de parId, stable pendant l'édition.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [posee, d, disponibles]);
+
+  // Suivi du pointeur pendant un glissé ou un redimensionnement, sur toute la fenêtre (posé dès le rendu, avant le
+  // prochain mouvement).
+  useLayoutEffect(() => {
+    if (!glisse && !redim) return;
+    const bouge = (e: globalThis.PointerEvent) => {
+      if (redim) {
+        const colonnes = (e.clientX - redim.gauche + redim.ecart) / redim.colonne;
+        const largeur = largeurAimantee(Math.min(COLONNES_TABLEAU_DE_BORD, Math.max(1, colonnes)));
+        setD((cur) =>
+          cur.dalles.find((v) => v.id === redim.id)?.largeur === largeur
+            ? cur
+            : modifierDalle(cur, redim.id, { largeur }),
+        );
+        return;
+      }
+      if (!glisse) return;
+      const demarre =
+        glisse.demarre || Math.hypot(e.clientX - glisse.departX, e.clientY - glisse.departY) > SEUIL_GLISSE;
+      if (!demarre) return;
+      e.preventDefault();
+      setGlisse((g) => (g ? { ...g, x: e.clientX, y: e.clientY, demarre: true } : g));
+      if (e.clientY < BANDE_DEFILEMENT) window.scrollBy(0, -BANDE_DEFILEMENT / 4);
+      else if (e.clientY > window.innerHeight - BANDE_DEFILEMENT) window.scrollBy(0, BANDE_DEFILEMENT / 4);
+      placer(glisse.id, e.clientX, e.clientY);
+    };
+    const fin = () => {
+      const id = redim?.id ?? (glisse?.demarre ? glisse.id : null);
+      setGlisse(null);
+      setRedim(null);
+      if (!id) return;
+      if (magnetique) setD((cur) => compacterDisposition(cur, disponibles, id));
+      setPosee(id);
+    };
+    window.addEventListener('pointermove', bouge);
+    window.addEventListener('pointerup', fin);
+    window.addEventListener('pointercancel', fin);
+    return () => {
+      window.removeEventListener('pointermove', bouge);
+      window.removeEventListener('pointerup', fin);
+      window.removeEventListener('pointercancel', fin);
+    };
+    // placer et titre ne dépendent que de l'état déjà listé.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [glisse, redim, magnetique, disponibles]);
+
+  // La dalle glissée suit le pointeur : décalage entre sa place (l'ombre bleue) et la position du pointeur, recalculé après
+  // chaque déplacement de la place dans la grille.
+  useLayoutEffect(() => {
+    if (!glisse?.demarre) return;
+    const c = caseDe(glisse.id);
+    if (!c) return;
+    const r = c.getBoundingClientRect();
+    c.style.setProperty('--tdb-dx', `${glisse.x - glisse.decalX - r.left}px`);
+    c.style.setProperty('--tdb-dy', `${glisse.y - glisse.decalY - r.top}px`);
+  });
+
+  /** Bord droit d'une dalle : largeur au glisser (aimantée), ou flèches gauche et droite au clavier. */
+  const surRedimBas = (id: IdDalle) => (e: PointerEvent<HTMLButtonElement>) => {
+    if (e.button !== 0 || !grille.current) return;
+    const c = caseDe(id);
+    if (!c) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const g = grille.current.getBoundingClientRect();
+    const ecart = parseFloat(getComputedStyle(grille.current).columnGap) || 0;
+    setRedim({
+      id,
+      gauche: c.getBoundingClientRect().left,
+      colonne: (g.width + ecart) / COLONNES_TABLEAU_DE_BORD,
+      ecart,
+    });
+  };
+  const surRedimTouche = (id: IdDalle, largeur: LargeurDalle) => (e: KeyboardEvent<HTMLButtonElement>) => {
+    const pas = e.key === 'ArrowLeft' ? -1 : e.key === 'ArrowRight' ? 1 : 0;
+    if (!pas) return;
+    e.preventDefault();
+    const suivante = LARGEURS_DALLE[LARGEURS_DALLE.indexOf(largeur) + pas];
+    if (!suivante) return;
+    setD((cur) => modifierDalle(cur, id, { largeur: suivante }));
+    setAnnonce(`« ${titre(id)} » : ${LIBELLES_LARGEUR[suivante].toLowerCase()}.`);
   };
 
   return (
     <div className="tdb tdb--edition">
       <div className="tdb-edition-barre" role="region" aria-label="Modifier la disposition du tableau de bord">
         <Text size="sm" id={aide}>
-          Glissez une dalle par sa poignée, ou placez-vous sur la poignée et utilisez les flèches du clavier (Origine et
-          Fin : premier et dernier rang). Les dalles sans données lisibles avec vos droits n’apparaissent pas.
+          Glissez une dalle par sa surface ou par sa poignée : une ombre bleue montre sa place d’arrivée. Tirez son bord
+          droit pour changer sa largeur. Au clavier, flèches sur la poignée (Origine et Fin : premier et dernier rang)
+          et sur le bord droit (largeur). Les dalles sans données lisibles avec vos droits n’apparaissent pas.
         </Text>
+        <Switch
+          label="Placement magnétique : combler les fins de rangée au lâcher d’une dalle"
+          checked={magnetique}
+          onChange={(e) => {
+            const actif = e.currentTarget.checked;
+            setMagnetique(actif);
+            if (actif) setD((cur) => compacterDisposition(cur, disponibles));
+          }}
+        />
         <Group gap="xs">
           <Button
             disabled={(!modifiee && !autreQueLaSienne) || pending}
@@ -356,74 +529,80 @@ export function EditionTableauDeBord({
         )}
         <VisuallyHidden aria-live="polite">{annonce}</VisuallyHidden>
       </div>
-      <div className="grille-cartes tdb-grille">
+      <div ref={grille} className="grille-cartes tdb-grille" data-glisse={glissee || redim ? 'oui' : undefined}>
         {vues.map((x) => {
           const dalle = parId.get(x.id)!;
           return (
             <div
               key={x.id}
               data-dalle={x.id}
-              className={`tdb-l${x.largeur} tdb-case${glissee === x.id ? ' tdb-case--glissee' : ''}`}
+              className={`tdb-l${x.largeur} tdb-case${glissee === x.id ? ' tdb-case--glissee' : ''}${redim?.id === x.id ? ' tdb-case--redim' : ''}`}
+              onPointerDown={surPointeurBas(x.id)}
             >
-              <div className="tdb-case-outils">
-                <button
-                  type="button"
-                  className="tdb-poignee"
-                  aria-label={`Déplacer « ${dalle.titre} »`}
-                  aria-describedby={aide}
-                  onKeyDown={surTouche(x.id)}
-                  onPointerDown={surPointeurBas(x.id)}
-                  onPointerMove={surPointeurDeplace(x.id)}
-                  onPointerUp={surPointeurHaut(x.id)}
-                  onPointerCancel={surPointeurHaut(x.id)}
-                >
-                  <IconePoignee />
-                </button>
-                <NativeSelect
-                  className="tdb-case-largeur"
-                  size="xs"
-                  aria-label={`Largeur de « ${dalle.titre} »`}
-                  value={String(x.largeur)}
-                  data={LARGEURS_DALLE.map((l) => ({ value: String(l), label: LIBELLES_LARGEUR[l] }))}
-                  onChange={(e) => {
-                    const largeur = Number(e.currentTarget.value) as LargeurDalle;
-                    setD((cur) => modifierDalle(cur, x.id, { largeur }));
-                  }}
-                />
-                {REGLAGES_DALLE[x.id] && (
+              <div className="tdb-case-corps">
+                <div className="tdb-case-outils">
+                  <button
+                    type="button"
+                    className="tdb-poignee"
+                    aria-label={`Déplacer « ${dalle.titre} »`}
+                    aria-describedby={aide}
+                    onKeyDown={surTouche(x.id)}
+                  >
+                    <IconePoignee />
+                  </button>
+                  <NativeSelect
+                    className="tdb-case-largeur"
+                    size="xs"
+                    aria-label={`Largeur de « ${dalle.titre} »`}
+                    value={String(x.largeur)}
+                    data={LARGEURS_DALLE.map((l) => ({ value: String(l), label: LIBELLES_LARGEUR[l] }))}
+                    onChange={(e) => {
+                      const largeur = Number(e.currentTarget.value) as LargeurDalle;
+                      setD((cur) => modifierDalle(cur, x.id, { largeur }));
+                    }}
+                  />
+                  {REGLAGES_DALLE[x.id] && (
+                    <Button
+                      size="compact-sm"
+                      variant={reglee === x.id ? 'light' : 'subtle'}
+                      aria-label={`Réglages de « ${dalle.titre} »`}
+                      aria-expanded={reglee === x.id}
+                      aria-controls={`${aide}-reglages-${x.id}`}
+                      onClick={() => setReglee((cur) => (cur === x.id ? null : x.id))}
+                    >
+                      Réglages
+                    </Button>
+                  )}
                   <Button
                     size="compact-sm"
-                    variant={reglee === x.id ? 'light' : 'subtle'}
-                    aria-label={`Réglages de « ${dalle.titre} »`}
-                    aria-expanded={reglee === x.id}
-                    aria-controls={`${aide}-reglages-${x.id}`}
-                    onClick={() => setReglee((cur) => (cur === x.id ? null : x.id))}
+                    variant="subtle"
+                    aria-label={`Masquer « ${dalle.titre} »`}
+                    onClick={() => {
+                      setD((cur) => modifierDalle(cur, x.id, { masquee: true }));
+                      setAnnonce(`« ${dalle.titre} » est masquée.`);
+                    }}
                   >
-                    Réglages
+                    Masquer
                   </Button>
+                </div>
+                {reglee === x.id && (
+                  <PanneauReglages
+                    id={x.id}
+                    idPanneau={`${aide}-reglages-${x.id}`}
+                    titre={dalle.titre}
+                    reglages={x.reglages}
+                    onChange={(reglages) => setD((cur) => modifierDalle(cur, x.id, { reglages }))}
+                  />
                 )}
-                <Button
-                  size="compact-sm"
-                  variant="subtle"
-                  aria-label={`Masquer « ${dalle.titre} »`}
-                  onClick={() => {
-                    setD((cur) => modifierDalle(cur, x.id, { masquee: true }));
-                    setAnnonce(`« ${dalle.titre} » est masquée.`);
-                  }}
-                >
-                  Masquer
-                </Button>
+                {dalle.rendu(x.largeur, x.reglages)}
               </div>
-              {reglee === x.id && (
-                <PanneauReglages
-                  id={x.id}
-                  idPanneau={`${aide}-reglages-${x.id}`}
-                  titre={dalle.titre}
-                  reglages={x.reglages}
-                  onChange={(reglages) => setD((cur) => modifierDalle(cur, x.id, { reglages }))}
-                />
-              )}
-              {dalle.rendu(x.largeur, x.reglages)}
+              <button
+                type="button"
+                className="tdb-redim"
+                aria-label={`Redimensionner « ${dalle.titre} » (${LIBELLES_LARGEUR[x.largeur].toLowerCase()}) : glisser, ou flèches gauche et droite`}
+                onPointerDown={surRedimBas(x.id)}
+                onKeyDown={surRedimTouche(x.id, x.largeur)}
+              />
             </div>
           );
         })}

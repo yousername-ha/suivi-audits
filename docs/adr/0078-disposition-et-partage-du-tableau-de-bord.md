@@ -1,6 +1,6 @@
 # ADR 0078 — Disposition et partage du tableau de bord de l'accueil
 
-- Statut : acceptée (lots 2a, 2b et 2c)
+- Statut : acceptée (lots 2a, 2b et 2c) ; édition magnétique (lot 2d) proposée le 02/11/2026
 - Date : 2026-10-29
 - Rédaction : session « Dashboard maquette personnalisable »
 - Contexte : étape 2 de l'[ADR 0069](0069-tableau-de-bord-verre-et-relief.md) (backlog DEV-004). Décisions du RSSI du
@@ -11,7 +11,10 @@
   donne aussi accès à la liste des personnes et des groupes ; la disposition personnelle lui est aussi réservée ; la
   personne qui reçoit choisit le tableau affiché et peut le copier ; un seul tableau par personne ; partage journalisé,
   sans notification. Décisions du RSSI du 30/10/2026 (lot 2c) : seuils, cible et visualisation par dalle, enregistrés
-  dans chaque tableau, pour l'accueil seulement ; la bibliothèque de dalles (dalles filtrées) est reportée.
+  dans chaque tableau, pour l'accueil seulement ; la bibliothèque de dalles (dalles filtrées) est reportée. Demande du
+  RSSI du 02/11/2026 (lot 2d), après la mise en production de la 6.1.0 : une édition plus fluide, au glisser-déposer,
+  en mode magnétique (dalles placées automatiquement), avec une ombre bleue presque transparente qui montre où la dalle
+  va se placer, et la largeur réglable au glisser.
 
 ## Décision
 
@@ -67,7 +70,17 @@
    direct, sans élément flottant positionné par script. Lot 2b : « Tableau affiché » (le sien, celui de l'organisation,
    « Tableau de bord de <auteur> » pour chaque tableau reçu) dès qu'il y a un choix ; « Partager » (personnes et groupes,
    liste avec recherche) ; « Copier comme mon tableau » sur un tableau reçu. Les boutons qui modifient n'apparaissent
-   qu'avec le droit ; la modification part du tableau affiché.
+   qu'avec le droit ; la modification part du tableau affiché. Lot 2d (édition magnétique) : la dalle se saisit aussi
+   par sa surface (souris ou stylet, au-delà de quelques pixels pour laisser les clics ; au doigt, par la poignée seule,
+   pour garder le défilement de la page) et **suit le pointeur**, pendant que sa place dans la grille devient une
+   **ombre bleue translucide** et que les autres dalles se poussent ; la page défile près des bords de la fenêtre. Un
+   **bord droit** à tirer règle la largeur, **aimantée** sur les largeurs proposées (¼, ⅓, ½, ⅔, toute la largeur ; flèches
+   gauche et droite au clavier ; grands écrans, où ces largeurs s'appliquent). **Placement magnétique**, activé par
+   défaut et désactivable : au lâcher (déplacement ou largeur), une fin de rangée restée libre est comblée par la première
+   dalle suivante qui y tient (`compacterDisposition`, fonction pure testée), sans jamais avancer la dalle qu'on vient de
+   poser ; l'ordre enregistré reste celui de l'affichage, donc de la lecture au clavier. Le déplacement visuel passe par
+   deux variables CSS posées par le CSSOM, permis par l'ADR 0006 ; aucun attribut `style`, aucune dépendance nouvelle,
+   aucun changement du format enregistré.
 7. **Partage** (lot 2b). Une personne partage sa disposition, en lecture, avec des comptes ou des groupes (table
    `tableaux_de_bord_partages`, migration `050`, supprimée avec le tableau, le compte ou le groupe) ; un membre d'un
    groupe reçoit le partage tant qu'il en fait partie. Le partage ne transmet **que la disposition** : chacun voit les
@@ -110,4 +123,7 @@
   disposition par défaut, ni partage, ni version propre.
 - *Bibliothèque de glisser-déposer* : dépendance nouvelle et souvent des styles en ligne, contraires à la CSP ; les
   évènements de pointeur et le clavier suffisent pour réordonner une grille.
+- *Remplissage des trous par la grille CSS (`grid-auto-flow: dense`)* (lot 2d) : l'ordre affiché différerait de l'ordre
+  du document, donc de la lecture au clavier et par un lecteur d'écran ; le placement magnétique réordonne la
+  disposition elle-même.
 - *Copier les chiffres dans un tableau partagé* : contournerait les droits de la personne qui reçoit le partage.

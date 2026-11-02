@@ -45,7 +45,7 @@ test('Tâches : filtre par registre, conservé après rechargement', async ({ br
       scope: 'Fixture de recette',
       timezone: 'Europe/Paris',
       parentId: null,
-      entityKind: 'perimetre',
+      entityKind: 'organisation',
       inheritFrameworks: false,
     });
     const a = await post(page, '/api/registres', { kind: 'plan_actions', name: planA, referenceId: p.id });

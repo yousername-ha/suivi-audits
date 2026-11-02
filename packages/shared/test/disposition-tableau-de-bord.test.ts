@@ -2,6 +2,7 @@
    réglages par dalle (seuils, cible, visualisation). */
 import { describe, expect, it } from 'vitest';
 import {
+  compacterDisposition,
   completerDisposition,
   DALLES_TABLEAU_DE_BORD,
   dallesAffichees,
@@ -9,6 +10,7 @@ import {
   deplacerDalleAuClavier,
   Disposition,
   LARGEUR_STANDARD,
+  largeurAimantee,
   lireDisposition,
   memesDispositions,
   modifierDalle,
@@ -195,5 +197,34 @@ describe('réglages des dalles (lot 2c)', () => {
       id: 'indicateurs',
       reglages: { cible: 90 },
     });
+  });
+});
+
+describe('placement magnétique', () => {
+  const disp = (...x: [IdDalle, 3 | 4 | 6 | 8 | 12, boolean?][]) => ({
+    dalles: x.map(([id, largeur, masquee]) => ({ id, largeur, masquee: !!masquee })),
+  });
+  it('comble la fin d’une rangée avec la première dalle suivante qui y tient', () => {
+    // 6 + 4 laissent 2 colonnes : rien n'y tient, rangée suivante ; 8 laisse 4 : « plans » (4) remonte avant « mesures » (6).
+    const d = disp(['phare', 6], ['ecarts', 4], ['echeances', 8], ['mise-en-oeuvre', 6], ['plans', 4]);
+    expect(ids(compacterDisposition(d, tout))).toEqual(['phare', 'ecarts', 'echeances', 'plans', 'mise-en-oeuvre']);
+  });
+  it('ne change rien quand les rangées sont déjà pleines', () => {
+    const d = disp(['phare', 6], ['ecarts', 3], ['actions-retard', 3], ['echeances', 12]);
+    expect(compacterDisposition(d, tout)).toEqual(d);
+  });
+  it('n’avance jamais la dalle qu’on vient de poser', () => {
+    const d = disp(['phare', 8], ['echeances', 6], ['plans', 4]);
+    expect(ids(compacterDisposition(d, tout))).toEqual(['phare', 'plans', 'echeances']);
+    expect(ids(compacterDisposition(d, tout, 'plans'))).toEqual(['phare', 'echeances', 'plans']);
+  });
+  it('laisse les dalles masquées ou sans données à leur rang', () => {
+    const d = disp(['phare', 8], ['ecarts', 3, true], ['echeances', 6], ['plans', 4]);
+    const sansEcheances = new Set<IdDalle>(DALLES_TABLEAU_DE_BORD.filter((x) => x !== 'echeances'));
+    expect(ids(compacterDisposition(d, tout))).toEqual(['phare', 'ecarts', 'plans', 'echeances']);
+    expect(compacterDisposition(d, sansEcheances)).toEqual(d);
+  });
+  it('aimante une largeur sur la plus proche des largeurs proposées', () => {
+    expect([0, 3.4, 3.6, 5, 7.2, 9.9, 10.1, 15].map(largeurAimantee)).toEqual([3, 3, 4, 4, 8, 8, 12, 12]);
   });
 });

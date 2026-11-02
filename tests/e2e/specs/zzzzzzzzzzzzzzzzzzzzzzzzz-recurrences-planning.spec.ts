@@ -54,7 +54,7 @@ test('Récurrences : fenêtre de réalisation, enchaînement et calendrier iCale
       scope: 'Fixture de recette',
       timezone: 'Europe/Paris',
       parentId: null,
-      entityKind: 'perimetre',
+      entityKind: 'organisation',
       inheritFrameworks: false,
     });
     // Deux occurrences : celle d'il y a trois jours (fenêtre ouverte jusqu'à dix jours après) et celle de dans quatre jours

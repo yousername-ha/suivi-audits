@@ -29,7 +29,7 @@ test('Série récurrente : périodicité prédéfinie, aperçu des échéances, 
       scope: 'Fixture de recette',
       timezone: 'Europe/Paris',
       parentId: null,
-      entityKind: 'perimetre',
+      entityKind: 'organisation',
       inheritFrameworks: false,
     });
     await page.reload();
