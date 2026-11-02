@@ -2,7 +2,7 @@
 
 02/11/2026, Europe/Paris. Session : Codex. Référence applicative inchangée : `03b6640af352ce0e7a31754b97c5301d58fd551c`.
 
-**Statut : proposition indépendante à valider. Ni les nouvelles dimensions ni les fonds plus soutenus ne sont encore appliqués à l'application. Aucun build ni test applicatif exécuté pour cette proposition.**
+**Statut actualisé : proposition historique, suivie du choix explicite de la version B. [Version B intégrée et contrôlée](../../OBJECTIFS-VERSION-B.md), dimensions et fonds renforcés inclus.**
 
 Le demandeur trouve les carrés trop imposants par rapport aux intitulés d'objectifs. Cette version réduit leur surface et la taille des chiffres, sans réduire les titres des objectifs ni les noms des indicateurs.
 
@@ -26,6 +26,6 @@ Les fonds violet/vert/rouge plus soutenus de la proposition précédente sont re
 
 Les images rendent uniquement la maquette indépendante, dans les deux thèmes et aux largeurs 1280/390 px, avec mouvement réduit pour des captures fixes. Les captures de dalles montrent directement le rapport entre intitulés et blocs. Inter et sa licence SIL OFL restent embarqués. Aucune application ni API n'a été chargée, aucun test applicatif ni build exécuté pour ce lot. Seuls la documentation et les supports de proposition évoluent ; sources applicatives inchangées depuis `03b6640`.
 
-**Prochaine action : validation explicite de cette proposition combinant blocs réduits et fonds renforcés, puis application des dimensions et nuances dans l'application, contrôles pertinents et nouveaux visuels réels.** Ne pas demander un nouvel accord pour l'intégration de la présentation précédente, déjà autorisée et réalisée.
+**Version B intégrée et vérifiée ; ces maquettes sont conservées comme historique.**
 
 [Proposition précédente : fonds plus soutenus](../couleurs-soutenues/README.md). Règle du demandeur : **visuel → validation explicite → intégration et tests → nouveau visuel réel**.

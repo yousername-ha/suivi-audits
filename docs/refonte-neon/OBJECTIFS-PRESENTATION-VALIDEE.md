@@ -2,7 +2,7 @@
 
 02/11/2026, Europe/Paris. Session : Codex. Copie de main sur `codex/refonte-neon-main`, sans fusion ni déploiement.
 
-**Accord explicite reçu sur la présentation et les contours, avec demande supplémentaire de centrage des trois en-têtes. Intégration et contrôles de ce lot terminés.** Le retour ultérieur sur les carrés trop pâles fait l'objet d'une [nouvelle proposition de couleurs plus soutenues](propositions/couleurs-soutenues/README.md), encore à valider avant application de ces nuances.
+**Lot initial intégré au commit `03b6640`. La version B a ensuite été explicitement choisie et appliquée : [état actuel, captures réelles et contrôles](OBJECTIFS-VERSION-B.md).** Les captures et résultats ci-dessous restent ceux de cette première intégration.
 
 ## Présentation intégrée
 
@@ -51,4 +51,4 @@ Les suites API complètes, un nouveau test dédié du rôle lecteur, les opérat
 
 ## Suite
 
-La présentation autorisée est intégrée. Les fonds plus soutenus demandés ensuite restent dans leur maquette jusqu'à validation explicite ; ils feront l'objet de contrôles ciblés et de nouvelles captures après application. Aucune autre autorisation n'est nécessaire pour les travaux déjà validés.
+La [version B](OBJECTIFS-VERSION-B.md) est désormais choisie, intégrée et contrôlée, avec blocs réduits et fonds plus soutenus. Aucune nouvelle autorisation attendue pour ce lot.

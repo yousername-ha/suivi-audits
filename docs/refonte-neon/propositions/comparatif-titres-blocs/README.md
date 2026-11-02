@@ -2,7 +2,7 @@
 
 02/11/2026, Europe/Paris. Session : Codex. Référence applicative inchangée : `03b6640af352ce0e7a31754b97c5301d58fd551c`.
 
-**Statut : deux propositions indépendantes à comparer et valider. Aucune nouvelle dimension, nuance ou taille de titre appliquée à l'application ; aucun build ni test applicatif exécuté pour ce lot.**
+**Statut actualisé : version B explicitement choisie et intégrée, variante A non retenue. [Captures réelles et contrôles](../../OBJECTIFS-VERSION-B.md). Les visuels ci-dessous restent les maquettes historiques.**
 
 Le demandeur souhaite deux versions distinctes : agrandir les titres des objectifs, ou réduire encore les blocs sans changer la taille des titres. La base commune est la dernière maquette avec fonds violet/vert/rouge plus soutenus et blocs déjà réduits.
 
@@ -34,6 +34,6 @@ Les noms des indicateurs et les en-têtes des colonnes gardent leur taille dans 
 
 Les seize captures proviennent de cette seule maquette indépendante, avec mouvement réduit, dans les deux vues, deux thèmes et aux largeurs 1280/390 px. Elles sont cadrées sur la dalle pour comparer directement l'importance des titres et des blocs. Inter et sa licence SIL OFL restent embarqués. Aucune application ni API chargée, aucun build ni test applicatif exécuté. Seuls la documentation et les supports de proposition évoluent.
 
-**Prochaine action : choix et validation explicite d'une variante, puis application des dimensions, fonds renforcés et tailles de titres correspondants dans l'application, contrôles pertinents et nouvelles captures réelles.** Les dimensions et fonds des dernières maquettes ne sont pas encore dans l'application au commit `03b6640` : ne pas se limiter à modifier la taille des titres après le choix.
+**Version B intégrée avec ses dimensions et ses fonds renforcés. Aucun nouvel accord nécessaire pour ce lot ; voir les captures réelles de l’application.**
 
 [Maquette précédente](../blocs-proportionnes/README.md). Règle du demandeur : **visuel → validation explicite → intégration et tests → nouveau visuel réel**.
