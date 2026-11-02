@@ -199,32 +199,49 @@ test('Pilotage G/H : contrôle, preuve versionnée, constat et action corrective
     await ctx.close();
   }
 });
-test('Pilotage : page Périmètres, création puis modification de la nature d’un périmètre', async ({ browser }) => {
+test('Pilotage : page Périmètres, une organisation et son fournisseur rattaché', async ({ browser }) => {
   const ctx = await browser.newContext({ storageState: (await sessionAdmin(browser)).state, ignoreHTTPSErrors: true });
   const page = await ctx.newPage(),
     problems = watchPage(page);
-  const nom = `QA-Perimetre-${Date.now()}`;
+  const stamp = Date.now(),
+    organisation = `QA-Organisation-${stamp}`,
+    fournisseur = `QA-Fournisseur-${stamp}`;
   try {
     await page.goto('/pilotage/perimetres');
     await expect(page.getByRole('heading', { name: 'Périmètres', exact: true })).toBeVisible();
-    await page.getByRole('button', { name: 'Créer un périmètre', exact: true }).click();
     const dialog = page.getByRole('dialog');
-    await dialog.getByLabel(/^Nom/).fill(nom);
-    await dialog.getByLabel('Nature', { exact: true }).fill('SMQ');
-    await dialog.getByLabel('Nature', { exact: true }).press('Tab');
-    await dialog.getByLabel('Périmètre', { exact: true }).fill('Activités du système de management de la qualité');
+    // Une organisation (type par défaut) ; la nature n'est plus proposée.
+    await page.getByRole('button', { name: 'Créer un périmètre', exact: true }).click();
+    await dialog.getByLabel(/^Nom/).fill(organisation);
+    await expect(dialog.getByRole('radio', { name: 'Organisation', exact: true })).toBeChecked();
+    await expect(dialog.getByLabel('Nature', { exact: true })).toHaveCount(0);
+    await dialog.getByLabel('Périmètre', { exact: true }).fill('Activités fictives de recette');
     await dialog.getByRole('button', { name: 'Créer', exact: true }).click();
     await expect(dialog).toHaveCount(0);
-    const ligne = page.getByRole('row').filter({ hasText: nom });
-    await expect(ligne).toContainText('SMQ');
-    await ligne.getByRole('button', { name: `Modifier le périmètre ${nom}` }).click();
-    await dialog.getByLabel('Nature', { exact: true }).fill('SMI');
-    await dialog.getByLabel('Nature', { exact: true }).press('Tab');
-    await dialog.getByRole('button', { name: 'Enregistrer', exact: true }).click();
+    await expect(page.getByRole('row').filter({ hasText: organisation })).toContainText('Organisation');
+    // Un fournisseur rattaché à cette organisation.
+    await page.getByRole('button', { name: 'Créer un périmètre', exact: true }).click();
+    await dialog.getByLabel(/^Nom/).fill(fournisseur);
+    await dialog.getByRole('radio', { name: 'Fournisseur', exact: true }).check();
+    await dialog.getByRole('combobox', { name: 'Rattaché à' }).click();
+    await page.getByRole('option', { name: `${organisation} (Organisation)` }).click();
+    await dialog.getByRole('button', { name: 'Créer', exact: true }).click();
     await expect(dialog).toHaveCount(0);
-    await expect(ligne).toContainText('SMI');
+    const ligne = page.getByRole('row').filter({ hasText: fournisseur });
+    await expect(ligne).toContainText(`Fournisseur · rattaché à ${organisation}`);
+    // Sous un fournisseur, une organisation n'est pas proposée comme parent : seul un fournisseur l'est.
+    await page.getByRole('button', { name: 'Créer un périmètre', exact: true }).click();
+    await dialog.getByRole('combobox', { name: 'Rattaché à' }).click();
+    await expect(page.getByRole('option', { name: `${fournisseur} (Fournisseur)` })).toHaveCount(0);
+    await dialog.getByRole('radio', { name: 'Fournisseur', exact: true }).check();
+    await dialog.getByRole('combobox', { name: 'Rattaché à' }).click();
+    await expect(page.getByRole('option', { name: `${fournisseur} (Fournisseur)` })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await dialog.getByRole('button', { name: 'Annuler', exact: true }).click();
     await page.reload();
-    await expect(page.getByRole('row').filter({ hasText: nom })).toContainText('SMI');
+    await expect(page.getByRole('row').filter({ hasText: fournisseur })).toContainText(
+      `Fournisseur · rattaché à ${organisation}`,
+    );
     expect(problems).toEqual([]);
   } finally {
     await ctx.close();

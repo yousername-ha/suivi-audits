@@ -26,7 +26,7 @@ test('Actions : Timeline avec barre datée, puis droit de contributeur attribué
       scope: 'Fixture de recette',
       timezone: 'Europe/Paris',
       parentId: null,
-      entityKind: 'perimetre',
+      entityKind: 'organisation',
       inheritFrameworks: false,
     });
     const debut = new Date(Date.now() + 5 * 86_400_000).toISOString();

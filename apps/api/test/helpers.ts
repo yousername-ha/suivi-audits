@@ -200,11 +200,12 @@ export async function nextCode(t: TestApp, u: TestUser): Promise<string> {
   const cur = Math.floor(Date.now() / 30000);
   // Pas courant d'abord (milieu de la fenêtre acceptée par le serveur) : choisir le pas précédent exposait le test à un
   // rejet quand l'horloge franchit la limite entre la génération du code et sa vérification, sur un exécuteur chargé.
-  const step = [cur, cur + 1, cur - 1].find((s) => s > last);
+  const step = [cur, cur + 1].find((s) => s > last);
   if (step === undefined) {
-    // Fenêtre épuisée (trois connexions dans la même minute) : on remet le compteur à zéro, réservé aux tests.
+    // Fenêtre épuisée (trois connexions dans le même pas) : on remet le compteur à zéro, réservé aux tests, et on
+    // reprend le pas courant pour la même raison.
     await t.svc.db.q('UPDATE users SET totp_last_step=0 WHERE id=$1', [u.id]);
-    return hotp(u.key, cur - 1);
+    return hotp(u.key, cur);
   }
   return hotp(u.key, step);
 }

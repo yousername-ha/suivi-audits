@@ -29,7 +29,7 @@ test('Traitement : action générée dans le plan choisi ; étude : socle de sé
       scope: 'Fixture de recette',
       timezone: 'Europe/Paris',
       parentId: null,
-      entityKind: 'perimetre',
+      entityKind: 'organisation',
       inheritFrameworks: false,
     });
     const registre = await post(page, '/api/registres', { kind: 'plan_actions', name: plan, referenceId: p.id });

@@ -410,8 +410,9 @@ export interface GrcSmsis {
   updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
   nature: Generated<string>;
   parent_id: string | null;
-  entity_kind: Generated<"organisation" | "entite" | "perimetre">;
+  entity_kind: Generated<"organisation" | "fournisseur">;
   inherit_frameworks: Generated<boolean>;
+  supplier_id: string | null;
 }
 
 export interface GroupRoles {

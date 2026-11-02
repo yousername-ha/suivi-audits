@@ -21,8 +21,10 @@ import {
   StudyConfiguration,
   effectivePermissions,
   MESSAGES_REFUS,
+  MESSAGES_REFUS_TYPE,
   refusRattachement,
-  type NiveauPerimetre,
+  refusType,
+  type TypePerimetre,
   type NoeudPerimetre,
   type RattachementReferentiel,
   type Permission,
@@ -133,7 +135,9 @@ export interface GrcSmsi {
   scope: string;
   nature: string;
   parentId: string | null;
-  entityKind: NiveauPerimetre;
+  entityKind: TypePerimetre;
+  /** Fiche du registre des fournisseurs reliée (périmètre de type fournisseur seulement). */
+  supplierId: string | null;
   inheritFrameworks: boolean;
   visibility: 'instance' | 'restricted';
   timezone: string;
@@ -150,6 +154,7 @@ const COLONNES_SMSI = [
   's.nature',
   's.parent_id as parentId',
   's.entity_kind as entityKind',
+  's.supplier_id as supplierId',
   's.inherit_frameworks as inheritFrameworks',
   's.visibility',
   's.timezone',
@@ -314,6 +319,7 @@ export class Grc {
       nature: r.nature,
       parentId: r.parentId,
       entityKind: r.entityKind,
+      supplierId: r.supplierId,
       inheritFrameworks: r.inheritFrameworks,
       visibility: r.visibility,
       timezone: r.timezone,
@@ -363,7 +369,8 @@ export class Grc {
       nature: string;
       timezone: string;
       parentId?: string | null;
-      entityKind?: NiveauPerimetre;
+      entityKind?: TypePerimetre;
+      supplierId?: string | null;
       inheritFrameworks?: boolean;
     },
     user: SessionUser,
@@ -371,8 +378,12 @@ export class Grc {
   ) {
     await this.permission(user, 'pilotage', 'administrer');
     return this.db.tx(async (c, k) => {
-      const parentId = input.parentId ?? null;
+      const parentId = input.parentId ?? null,
+        entityKind = input.entityKind ?? 'organisation',
+        supplierId = input.supplierId ?? null;
       if (parentId) await this.verifierParent('', parentId, user, c);
+      await this.verifierType('', entityKind, parentId, c);
+      if (supplierId) await this.verifierFiche('', supplierId, entityKind, user, c);
       const row = await k
         .insertInto('grc_smsis')
         .values({
@@ -381,7 +392,8 @@ export class Grc {
           nature: input.nature,
           timezone: input.timezone,
           parent_id: parentId,
-          entity_kind: input.entityKind ?? 'perimetre',
+          entity_kind: entityKind,
+          supplier_id: supplierId,
           inherit_frameworks: parentId ? (input.inheritFrameworks ?? false) : false,
           business_version: versionPolitique(k),
           created_by: user.username,
@@ -408,6 +420,33 @@ export class Grc {
       .execute();
     const refus = refusRattachement(noeuds, id, parentId);
     if (refus) throw new HttpError(422, MESSAGES_REFUS[refus]);
+  }
+  /** Règle de type (amendement de l'ADR 0039) : sous un fournisseur, seulement des fournisseurs. */
+  private async verifierType(id: string, type: TypePerimetre, parentId: string | null, c: Client) {
+    const noeuds = await surConnexion(c)
+      .selectFrom('grc_smsis')
+      .select(['id', 'parent_id as parentId', 'entity_kind as type'])
+      .execute();
+    const refus = refusType(noeuds, id, type, parentId);
+    if (refus) throw new HttpError(422, MESSAGES_REFUS_TYPE[refus]);
+  }
+  /** Fiche du registre reliée à un périmètre fournisseur : droit de lire les fournisseurs, fiche présente dans le registre
+      et reliée à aucun autre périmètre (dont le nom n'est pas révélé : il peut être restreint). */
+  private async verifierFiche(id: string, supplierId: string, type: TypePerimetre, user: SessionUser, c: Client) {
+    if (type !== 'fournisseur')
+      throw new HttpError(
+        422,
+        'Seul un périmètre de type fournisseur se relie à une fiche du registre des fournisseurs.',
+      );
+    await this.permission(user, 'fournisseurs', 'lire');
+    const etat = await this.legacy.recompose(c);
+    const fiches = Array.isArray(etat?.data.suppliers) ? etat.data.suppliers : [];
+    if (!fiches.some((f) => isObject(f) && f.id === supplierId))
+      throw new HttpError(422, 'Fournisseur absent du registre.');
+    let autre = surConnexion(c).selectFrom('grc_smsis').select('id').where('supplier_id', '=', supplierId);
+    if (id) autre = autre.where('id', '<>', id);
+    if (await autre.executeTakeFirst())
+      throw new HttpError(409, 'Cette fiche fournisseur est déjà reliée à un autre périmètre.');
   }
   /** Verrou exclusif de la ligne du périmètre, jusqu'à la fin de la transaction. */
   private async verrouillerPerimetre(c: Client, id: string) {
@@ -473,7 +512,8 @@ export class Grc {
     await this.rapprochements.sync(smsi, c);
     for (const h of await this.heritiers(smsi, c)) await this.rapprochements.sync(h, c);
   }
-  /** Modifie le nom, le texte, la nature et le fuseau d'un périmètre (version attendue ; membres et rattachements inchangés). */
+  /** Modifie le nom, le texte, le fuseau, la place dans l'arbre, le type et la fiche fournisseur reliée d'un périmètre
+      (version attendue ; membres et rattachements de référentiels inchangés). La nature absente reste inchangée. */
   async updateSmsi(id: string, input: SmsiUpdate, expected: number, user: SessionUser, ip: string) {
     await this.permission(user, 'pilotage', 'administrer');
     await this.access(id, user, true);
@@ -485,27 +525,36 @@ export class Grc {
       const parentId = input.parentId === undefined ? current.parentId : input.parentId;
       const entityKind = input.entityKind ?? current.entityKind;
       const inheritFrameworks = parentId ? (input.inheritFrameworks ?? current.inheritFrameworks) : false;
+      const nature = input.nature ?? current.nature;
+      // Fiche absente de la requête : conservée, sauf si le périmètre devient une organisation (elle est alors déliée).
+      const supplierId =
+        input.supplierId !== undefined ? input.supplierId : entityKind === 'fournisseur' ? current.supplierId : null;
       if (parentId !== current.parentId && parentId) await this.verifierParent(id, parentId, user, c);
+      if (parentId !== current.parentId || entityKind !== current.entityKind)
+        await this.verifierType(id, entityKind, parentId, c);
+      if (supplierId && (supplierId !== current.supplierId || entityKind !== 'fournisseur'))
+        await this.verifierFiche(id, supplierId, entityKind, user, c);
       await surConnexion(c)
         .updateTable('grc_smsis')
         .set((eb) => ({
           name: input.name,
           scope: input.scope,
-          nature: input.nature,
+          nature,
           timezone: input.timezone,
           parent_id: parentId,
           entity_kind: entityKind,
+          supplier_id: supplierId,
           inherit_frameworks: inheritFrameworks,
           version: eb('version', '+', 1),
           updated_at: sql<Date>`now()`,
         }))
         .where('id', '=', id)
         .execute();
-      const changed: string[] = (['name', 'scope', 'nature', 'timezone'] as const).filter(
-        (k) => current[k] !== input[k],
-      );
+      const changed: string[] = (['name', 'scope', 'timezone'] as const).filter((k) => current[k] !== input[k]);
+      if (nature !== current.nature) changed.push('nature');
       if (parentId !== current.parentId) changed.push('parentId');
       if (entityKind !== current.entityKind) changed.push('entityKind');
+      if (supplierId !== current.supplierId) changed.push('supplierId');
       if (inheritFrameworks !== current.inheritFrameworks) changed.push('inheritFrameworks');
       await this.db.audit(
         user,

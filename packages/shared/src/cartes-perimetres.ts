@@ -74,6 +74,8 @@ export interface CartePerimetre {
   parentId: string | null;
   nature: string;
   entityKind: string;
+  /** Fiche du registre des fournisseurs reliée (périmètre de type fournisseur). */
+  supplierId: string | null;
   /** Éléments du périmètre lui-même (les siens et ceux des registres qui le portent). */
   compteurs: CarteCompteurs;
   /** Le périmètre et ses sous-périmètres, chaque élément une seule fois : jamais la somme des cartes enfants. Égal à
