@@ -1,3 +1,5 @@
+> 02/11/2026 : [proposition : carrés violet/vert/rouge plus soutenus](propositions/couleurs-soutenues/README.md), nouvelles nuances en attente de validation. La présentation précédente et le centrage des en-têtes sont validés ; leur intégration et leurs contrôles sont autorisés.
+
 > 01/11/2026 : [proposition : contours intérieurs harmonisés](propositions/contours-harmonises/README.md), barres d’en-tête, onglets, boutons, encadrés et séparations plus lisibles. **Validation explicite en attente avant intégration et tests**.
 
 > 01/11/2026 : [proposition : contours Biseau plus foncés et plus visibles](propositions/contours-renforces/README.md), dans les deux vues et les deux thèmes. Intérieur et animations conservés ; **validation explicite en attente avant intégration et tests**.
