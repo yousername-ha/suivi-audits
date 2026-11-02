@@ -77,6 +77,45 @@ function Tendance({ valeur }: { valeur: IndicateurObjectif['tendance'] }) {
   );
 }
 
+function EnteteColonne({
+  type,
+  libelle,
+}: {
+  type: 'indicateur' | 'cible' | 'mesure' | 'etat' | 'source';
+  libelle: string;
+}) {
+  const traces = {
+    indicateur: 'M5 5h12M5 10h12M5 15h8M2 5h.01M2 10h.01M2 15h.01',
+    cible: 'M10 1v3m0 12v3M1 10h3m12 0h3',
+    mesure: 'M3 16h14M5 13V9m5 4V3m5 10V6',
+    etat: 'M10 2 17 5v5c0 4-3 7-7 8-4-1-7-4-7-8V5Zm-3 8 2 2 4-4',
+    source: 'M6 2v4m8-4v4M3 8h14m-10 4h3',
+  };
+  return (
+    <span className="objectifs-entete-colonne" data-type={type}>
+      <svg
+        viewBox="0 0 20 20"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        {type === 'cible' && (
+          <>
+            <circle cx="10" cy="10" r="5.5" />
+            <circle cx="10" cy="10" r="2" />
+          </>
+        )}
+        {type === 'source' && <rect x="3" y="4" width="14" height="13" rx="2" />}
+        <path d={traces[type]} />
+      </svg>
+      <span>{libelle}</span>
+    </span>
+  );
+}
+
 function Avertissement() {
   return (
     <svg
@@ -200,10 +239,18 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
           <Table>
             <Table.Thead>
               <Table.Tr>
-                <Table.Th>Indicateur</Table.Th>
-                <Table.Th className="objectifs-colonne-donnee objectifs-colonne-cible">Cible à atteindre</Table.Th>
-                <Table.Th className="objectifs-colonne-donnee">Valeur mesurée</Table.Th>
-                <Table.Th className="objectifs-colonne-donnee">État</Table.Th>
+                <Table.Th>
+                  <EnteteColonne type="indicateur" libelle="Indicateur" />
+                </Table.Th>
+                <Table.Th className="objectifs-colonne-donnee objectifs-colonne-cible">
+                  <EnteteColonne type="cible" libelle="Cible à atteindre" />
+                </Table.Th>
+                <Table.Th className="objectifs-colonne-donnee">
+                  <EnteteColonne type="mesure" libelle="Valeur mesurée" />
+                </Table.Th>
+                <Table.Th className="objectifs-colonne-donnee">
+                  <EnteteColonne type="etat" libelle="État" />
+                </Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
@@ -588,13 +635,21 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
                     <Table>
                       <Table.Thead>
                         <Table.Tr>
-                          <Table.Th>Indicateur</Table.Th>
-                          <Table.Th className="objectifs-colonne-donnee objectifs-colonne-cible">
-                            Cible à atteindre
+                          <Table.Th>
+                            <EnteteColonne type="indicateur" libelle="Indicateur" />
                           </Table.Th>
-                          <Table.Th className="objectifs-colonne-donnee">Valeur mesurée</Table.Th>
-                          <Table.Th className="objectifs-colonne-donnee">État</Table.Th>
-                          <Table.Th className="objectifs-colonne-source">Relevé / source</Table.Th>
+                          <Table.Th className="objectifs-colonne-donnee objectifs-colonne-cible">
+                            <EnteteColonne type="cible" libelle="Cible à atteindre" />
+                          </Table.Th>
+                          <Table.Th className="objectifs-colonne-donnee">
+                            <EnteteColonne type="mesure" libelle="Valeur mesurée" />
+                          </Table.Th>
+                          <Table.Th className="objectifs-colonne-donnee">
+                            <EnteteColonne type="etat" libelle="État" />
+                          </Table.Th>
+                          <Table.Th className="objectifs-colonne-source">
+                            <EnteteColonne type="source" libelle="Relevé / source" />
+                          </Table.Th>
                         </Table.Tr>
                       </Table.Thead>
                       {objectifs.map((o) => (

@@ -2,7 +2,7 @@
 
 02/11/2026, Europe/Paris. Session : Codex. Référence applicative inchangée : `eaadcf23c412dc9ac3f06003c9d8c34bcf919a6d`.
 
-**Statut : nouvelle proposition indépendante à valider avant intégration de la barre. La version B est déjà intégrée ; son accord n'est pas à redemander. Aucun build ni test applicatif exécuté pour cette proposition.**
+**Statut actualisé le 02/11/2026 : proposition explicitement validée (« Oui je valide »), puis intégrée et contrôlée. [Captures réelles et résultats de l'intégration](../../ENTETES-DASHBOARD.md). Les rendus de cette page conservent la maquette d'origine ; les paragraphes sur l'absence de build/test ci-dessous décrivent sa préparation avant accord.**
 
 Après la proposition Biseau, le demandeur souhaite rester plus proche du Dashboard initial, puis reprendre la DdA une fois ce rendu validé, en limitant le violet.
 
@@ -24,14 +24,11 @@ La vue compacte reprend le même bandeau. Les groupes pictogramme/libellé reste
 
 Douze captures de cette maquette autonome, avec mouvement réduit : deux thèmes, deux vues et deux largeurs 1280/390 px, plus quatre gros plans. Inter et sa licence SIL OFL restent embarqués. Aucune application ni API chargée, aucun fichier de `apps/`, `packages/` ou des tests applicatifs modifié. Aucun build ni test applicatif exécuté pour ce lot.
 
-## Suite demandée
+## Suite après l'accord reçu
 
-1. Attendre la validation explicite de cette version de la barre.
-2. Intégrer la barre validée dans les vues Objectifs/Indicateurs, effectuer les contrôles pertinents et fournir les captures réelles.
-3. Enchaîner ensuite sur une maquette de **DdA — Déclaration d'applicabilité**, avec le même thème Dashboard néon et peu de violet. Point d'entrée existant : `apps/web/src/dda/Dda.tsx`. Conserver données, calculs, applicabilité, niveaux, justifications, incohérences, liens, droits et actions existants.
-4. Présenter la maquette DdA et attendre sa validation avant modification de cette partie de l'application, conformément à la règle générale du demandeur.
+La barre est intégrée aux vues détaillée et compacte. Voir les [contrôles et captures réelles](../../ENTETES-DASHBOARD.md). Ne pas redemander son autorisation d'intégration.
 
-La DdA n'a pas été redessinée ni modifiée dans ce lot ; sa reprise est explicitement conditionnée à la validation du rendu actuel. Ne pas oublier cette demande lors de la prochaine validation et ne pas demander à nouveau si le demandeur souhaite cette reprise.
+Le demandeur précise pour la DdA : **« tu utilise le thème original que j'ai fournis en images au début de la conversation »**. Préparer sa proposition depuis ces références originales, avec peu de violet, et attendre l'accord visuel propre à la DdA avant de modifier son application. Conserver données, calculs, applicabilité, niveaux, justifications, incohérences, liens, droits et actions existants.
 
 [Version B intégrée](../../OBJECTIFS-VERSION-B.md) · [Proposition Biseau précédente](../entetes-biseau/README.md).
 
