@@ -1,3 +1,5 @@
+> 03/11/2026 — **[Proposition claire DdA plus contrastée](propositions/dda-clair-contraste/README.md)** : bleu-gris opaque, fonds et contours soutenus, accents francs. Nouvelle finition à valider avant modification de l’application ; la DdA précédente reste intégrée. Session : Codex.
+
 > 03/11/2026 — **[DdA Neon validée et intégrée](DDA-INTEGREE.md)** (`4a1304b`) : dalles et lignes en clair/sombre, dégradés approuvés et lueur réduite. Tests fonctionnels, lecture seule, dimensions et accessibilité contrôlés ; captures réelles HD disponibles. Aucun accord préalable en attente pour cette intégration. Les entrées suivantes sont historiques. Session : Codex.
 
 > 03/11/2026 : [DdA : lueur des barres atténuée](propositions/dda-mesures-lignes/README.md#lueur-des-barres-légèrement-réduite), clair/sombre et vues HD actualisés. Ajustement de maquette avant intégration.
