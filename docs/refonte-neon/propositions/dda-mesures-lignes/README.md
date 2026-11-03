@@ -4,6 +4,14 @@
 
 **Format en lignes explicitement validé par le demandeur.** Les fonds légèrement plus foncés, l’applicabilité colorée, les champs remplis et les liserés néon sont présentés avant intégration ; ces finitions restent à valider. Le demandeur préfère une lecture en ligne compte tenu du nombre de mesures et écarte la proposition en cartes. Le registre est désormais présenté en lignes compactes ; la synthèse et la fiche de la nouvelle DdA restent la base. Aucun code applicatif modifié, aucun build ni test applicatif exécuté.
 
+## Lueur des barres légèrement réduite
+
+03/11/2026, Europe/Paris. Après le retour « un petit peu moins de blur / lueur » sur la dalle Mesures par niveau, le halo des barres est réduit de 9 px à 5 px et sa couleur à 50 % d’opacité, dans les deux thèmes. Dégradés, chiffres, dimensions, autres éléments et comportements conservés. Seule la règle CSS `.graph .fill` de la maquette évolue ; les scripts et les données sont identiques.
+
+[Détail clair HD](repartition-clair-hd.png) · [Détail sombre HD](repartition-sombre-hd.png) · [Aperçu clair 4K](dda-clair-apercu-4k.png) · [Aperçu sombre 4K](dda-sombre-apercu-4k.png) · [Clair intégral HD](dda-clair-integrale-hd.png) · [Sombre intégral HD](dda-sombre-integrale-hd.png).
+
+Douze rendus autonomes courants et six rendus HD produits, codes 0 ; détails clair/sombre inspectés. Les captures intégrales comprennent toujours les quatre dalles et les 93 mesures. Aucun fichier applicatif modifié, aucun build/test applicatif. **Ajustement présenté pour validation avant intégration ; les accords sur les lignes et la finition claire restent acquis.** Session : Codex.
+
 ## Vues intégrales HD pour validation clair et sombre
 
 03/11/2026, Europe/Paris. Le demandeur accepte la finition claire (« ça me va ») et demande les deux thèmes en images complètes HD pour validation. La maquette `2862f8d` est rendue sans modification graphique ni applicative. Quatre dalles et 93 mesures de l’Annexe A fictive sont présentes dans chaque capture intégrale ; aucun filtre ni découpage de la liste.

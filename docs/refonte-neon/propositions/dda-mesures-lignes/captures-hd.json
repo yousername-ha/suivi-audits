@@ -1,13 +1,22 @@
 {
   "source": "Maquette autonome, données fictives, aucune application ni API chargée.",
   "conception": "2862f8d0b549dd45b3e5b9dafe226af3d3241a6b",
+  "finition": "Halo des barres réduit à 5 px et 50 % de couleur, dans les deux thèmes.",
   "captures": [
+    {
+      "fichier": "repartition-clair-hd.png",
+      "theme": "light",
+      "largeur": 772,
+      "hauteur": 502,
+      "octets": 95279,
+      "vue": "Détail de la répartition par niveau"
+    },
     {
       "fichier": "dda-clair-apercu-4k.png",
       "theme": "light",
       "largeur": 3840,
       "hauteur": 2160,
-      "octets": 1328289,
+      "octets": 1323195,
       "largeurCss": 1920,
       "hauteurCss": 7254,
       "lignes": 93,
@@ -18,18 +27,26 @@
       "theme": "light",
       "largeur": 3840,
       "hauteur": 14508,
-      "octets": 11707490,
+      "octets": 11703372,
       "largeurCss": 1920,
       "hauteurCss": 7254,
       "lignes": 93,
       "dalles": 4
     },
     {
+      "fichier": "repartition-sombre-hd.png",
+      "theme": "dark",
+      "largeur": 772,
+      "hauteur": 502,
+      "octets": 114508,
+      "vue": "Détail de la répartition par niveau"
+    },
+    {
       "fichier": "dda-sombre-apercu-4k.png",
       "theme": "dark",
       "largeur": 3840,
       "hauteur": 2160,
-      "octets": 1345871,
+      "octets": 1339519,
       "largeurCss": 1920,
       "hauteurCss": 7252,
       "lignes": 93,
@@ -40,7 +57,7 @@
       "theme": "dark",
       "largeur": 3840,
       "hauteur": 14504,
-      "octets": 11369763,
+      "octets": 11360745,
       "largeurCss": 1920,
       "hauteurCss": 7252,
       "lignes": 93,
