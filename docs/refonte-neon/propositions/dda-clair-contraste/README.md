@@ -4,9 +4,15 @@
 
 Après intégration de la DdA (`4a1304b`), le demandeur trouve le clair trop blanc, trop clair et trop transparent. Cette nouvelle proposition renforce les fonds et les contours avant validation. **Le code applicatif reste inchangé ; aucun build ou test applicatif n'est exécuté pour cette proposition.** La précédente intégration reste acquise ; cette nouvelle finition claire attend son propre accord.
 
+## Finition : moins de gris et fond en dégradé
+
+03/11/2026. Retour : « Un peu trop gris. Essai aussi un fond en dégradé un peu ». Le fond passe du bleu glacier à une nuance ivoire douce, avec un dégradé fixe visible sur chaque hauteur d’écran. Dalles, registre et en-têtes reçoivent des nuances bleu/eau plus colorées ; les contours soutenus, les dégradés des champs et les accents vert/orange/rouge sont conservés. La lumière reste contenue. Les images ci-dessous sont actualisées ; la version précédente reste dans le commit `fc253cb`.
+
+Maquette autonome uniquement : scripts, données et thème sombre inchangés. Aucune modification, compilation ou vérification applicative. Cette nuance attend la validation du demandeur avant intégration.
+
 ## Proposition
 
-- Fond bleu-gris soutenu et dalles opaques, avec une ombre courte.
+- Fond en dégradé bleu glacier/ivoire et dalles opaques légèrement colorées, avec une ombre courte.
 - Bandeau de colonnes rempli, contours plus nets, textes bleu nuit.
 - Lignes légèrement teintées selon leur niveau et séparations visibles.
 - Dégradés vert/orange/rouge plus francs, filtres actifs remplis et warning rouge.
