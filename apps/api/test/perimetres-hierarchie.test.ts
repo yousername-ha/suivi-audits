@@ -75,17 +75,123 @@ beforeAll(async () => {
 afterAll(() => t.close());
 
 describe('rattachement parent/enfant', () => {
-  it('crée une hiérarchie avec niveau et indicateur d’héritage, restitués par la liste', async () => {
+  it('crée une hiérarchie typée (organisation par défaut) et l’indicateur d’héritage, restitués par la liste', async () => {
     groupe = await creer('Groupe', { entityKind: 'organisation' });
-    hopital = await creer('Hôpital', { parentId: groupe, entityKind: 'entite', inheritFrameworks: true });
+    hopital = await creer('Hôpital', { parentId: groupe, entityKind: 'organisation', inheritFrameworks: true });
     labo = await creer('Laboratoire', { parentId: hopital, inheritFrameworks: true });
-    clinique = await creer('Clinique', { parentId: groupe, entityKind: 'entite' });
+    clinique = await creer('Clinique', { parentId: groupe });
     const liste = (await admin.get('/api/grc/smsis')).json() as Record<string, unknown>[];
     const de = (id: string) => liste.find((x) => x.id === id);
     expect(de(groupe)).toMatchObject({ parentId: null, entityKind: 'organisation', inheritFrameworks: false });
-    expect(de(hopital)).toMatchObject({ parentId: groupe, entityKind: 'entite', inheritFrameworks: true });
-    expect(de(labo)).toMatchObject({ parentId: hopital, entityKind: 'perimetre', inheritFrameworks: true });
+    expect(de(hopital)).toMatchObject({ parentId: groupe, entityKind: 'organisation', inheritFrameworks: true });
+    expect(de(labo)).toMatchObject({ parentId: hopital, entityKind: 'organisation', inheritFrameworks: true });
     expect(de(clinique)).toMatchObject({ inheritFrameworks: false });
+  });
+  it('rattache à une organisation des organisations enfants et un fournisseur', async () => {
+    const a = await creer('Organisation A', {});
+    const b = await creer('Organisation B', { parentId: a });
+    const c = await creer('Organisation C', { parentId: a, entityKind: 'organisation' });
+    const f = await creer('Fournisseur F', { parentId: a, entityKind: 'fournisseur' });
+    const liste = (await admin.get('/api/grc/smsis')).json() as Record<string, unknown>[];
+    const de = (id: string) => liste.find((x) => x.id === id);
+    expect(de(a)).toMatchObject({ parentId: null, entityKind: 'organisation' });
+    expect(de(b)).toMatchObject({ parentId: a, entityKind: 'organisation' });
+    expect(de(c)).toMatchObject({ parentId: a, entityKind: 'organisation' });
+    expect(de(f)).toMatchObject({ parentId: a, entityKind: 'fournisseur' });
+    // Le type se modifie comme le reste, et le changement est journalisé.
+    const r = await modifier(b, { entityKind: 'fournisseur' });
+    expect(r.statusCode, r.body).toBe(200);
+    expect(r.json().entityKind).toBe('fournisseur');
+    const audit = await t.svc.db.one<{ details: { changed: string[] } }>(
+      "SELECT details FROM audit_log WHERE action='grc.smsi.updated' AND target=$1 ORDER BY id DESC LIMIT 1",
+      [b],
+    );
+    expect(audit!.details.changed).toContain('entityKind');
+  });
+  it('sous un fournisseur, seulement des fournisseurs (API et base)', async () => {
+    const a = await creer('Organisation A2', {});
+    const f = await creer('Fournisseur F2', { parentId: a, entityKind: 'fournisseur' });
+    const sousTraitant = await creer('Sous-traitant S2', { parentId: f, entityKind: 'fournisseur' });
+    expect(sousTraitant).toBeTruthy();
+    const refus = await admin.post('/api/grc/smsis', {
+      name: 'Organisation sous fournisseur',
+      scope: '',
+      timezone: 'Europe/Paris',
+      parentId: f,
+    });
+    expect(refus.statusCode, refus.body).toBe(422);
+    expect(refus.json().error ?? refus.body).toMatch(/fournisseur/);
+    const o = await creer('Organisation O2', { parentId: a });
+    expect((await modifier(o, { parentId: f })).statusCode).toBe(422);
+    // Le sous-traitant ne peut pas redevenir une organisation tant qu'il est sous un fournisseur.
+    expect((await modifier(sousTraitant, { entityKind: 'organisation' })).statusCode).toBe(422);
+    // A a des organisations enfants : il ne peut pas devenir un fournisseur.
+    expect((await modifier(a, { entityKind: 'fournisseur' })).statusCode).toBe(422);
+    await expect(t.svc.db.q('UPDATE grc_smsis SET parent_id=$1 WHERE id=$2', [f, o])).rejects.toThrow(/fournisseur/);
+    await expect(t.svc.db.q("UPDATE grc_smsis SET entity_kind='fournisseur' WHERE id=$1", [a])).rejects.toThrow(
+      /fournisseur/,
+    );
+  });
+  it('relie un périmètre fournisseur à sa fiche du registre, une seule fois, et la délie s’il devient une organisation', async () => {
+    const sup = await admin.post('/api/suppliers', { name: 'Fiche fournisseur fictive' });
+    expect(sup.statusCode, sup.body).toBe(200);
+    const fiche = sup.json().id as string;
+    const f = await creer('Fournisseur relié', { entityKind: 'fournisseur', supplierId: fiche });
+    const de = async (id: string) =>
+      ((await admin.get('/api/grc/smsis')).json() as Record<string, unknown>[]).find((x) => x.id === id);
+    expect(await de(f)).toMatchObject({ entityKind: 'fournisseur', supplierId: fiche });
+    // Une fiche n'est reliée qu'à un seul périmètre ; une fiche absente du registre est refusée.
+    const doublon = await admin.post('/api/grc/smsis', {
+      name: 'Doublon',
+      scope: '',
+      timezone: 'Europe/Paris',
+      entityKind: 'fournisseur',
+      supplierId: fiche,
+    });
+    expect(doublon.statusCode, doublon.body).toBe(409);
+    const absente = await admin.post('/api/grc/smsis', {
+      name: 'Absente',
+      scope: '',
+      timezone: 'Europe/Paris',
+      entityKind: 'fournisseur',
+      supplierId: 'SUP-999',
+    });
+    expect(absente.statusCode, absente.body).toBe(422);
+    // Une organisation ne se relie pas à une fiche.
+    const org = await admin.post('/api/grc/smsis', {
+      name: 'Organisation avec fiche',
+      scope: '',
+      timezone: 'Europe/Paris',
+      supplierId: fiche,
+    });
+    expect(org.statusCode, org.body).toBe(422);
+    // Modifier sans préciser la fiche la conserve ; devenir une organisation la délie.
+    expect((await modifier(f, { name: 'Fournisseur relié renommé' })).json().supplierId).toBe(fiche);
+    const r = await modifier(f, { entityKind: 'organisation' });
+    expect(r.statusCode, r.body).toBe(200);
+    expect(r.json()).toMatchObject({ entityKind: 'organisation', supplierId: null });
+    await expect(t.svc.db.q("UPDATE grc_smsis SET supplier_id='SUP-001' WHERE id=$1", [f])).rejects.toThrow(
+      /grc_smsis_fiche_fournisseur/,
+    );
+  });
+  it('garde la nature enregistrée quand la modification ne la précise pas', async () => {
+    const id = await creer('Avec nature', { nature: 'SMQ' });
+    const courant = (await admin.get('/api/grc/smsis')).json().find((x: { id: string }) => x.id === id);
+    const r = await admin.patch(
+      `/api/grc/smsis/${id}`,
+      { name: 'Avec nature renommé', scope: courant.scope, timezone: courant.timezone, confirm: 'ENREGISTRER' },
+      { 'if-match': `"${courant.version}"` },
+    );
+    expect(r.statusCode, r.body).toBe(200);
+    expect(r.json().nature).toBe('SMQ');
+  });
+  it('refuse les anciennes étiquettes « entité » et « périmètre », à l’API comme en base', async () => {
+    for (const entityKind of ['entite', 'perimetre']) {
+      const r = await admin.post('/api/grc/smsis', { name: 'Ancien', scope: '', timezone: 'Europe/Paris', entityKind });
+      expect(r.statusCode, r.body).toBe(422);
+      expect((await modifier(groupe, { entityKind })).statusCode).toBe(422);
+    }
+    await expect(t.svc.db.q("UPDATE grc_smsis SET entity_kind='entite' WHERE id=$1", [groupe])).rejects.toThrow();
   });
   it('ignore l’héritage d’un périmètre sans parent', async () => {
     const seul = await creer('Sans parent', { inheritFrameworks: true });

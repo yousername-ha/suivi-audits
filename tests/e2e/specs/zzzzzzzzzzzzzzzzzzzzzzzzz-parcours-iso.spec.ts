@@ -215,7 +215,7 @@ test('Parcours ISO / HDS : travaux présents retrouvés par périmètre, ouverts
         scope: 'Fixture de recette',
         timezone: 'Europe/Paris',
         parentId: null,
-        entityKind: 'perimetre',
+        entityKind: 'organisation',
         inheritFrameworks: false,
       });
     const a = await creer(avecTravail);
@@ -310,7 +310,7 @@ test('Parcours ISO / HDS : fiche associée à une sous-action, conservée, retir
       scope: 'Fixture de recette',
       timezone: 'Europe/Paris',
       parentId: null,
-      entityKind: 'perimetre',
+      entityKind: 'organisation',
       inheritFrameworks: false,
     });
     await post(page, `/api/grc/${perimetre.id}/objects`, action(titre));

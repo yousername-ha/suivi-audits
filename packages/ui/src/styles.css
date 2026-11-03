@@ -24,6 +24,7 @@
 
 :root {
   --grc-colonne-min: 14.375rem;
+  --grc-boite-min: 21rem; /* boîtes de pilotage par processus : nom complet d’un indicateur lisible */
   --grc-jour-min: 7.5rem;
   --grc-jour-hauteur: 6.875rem;
   --grc-planning-min: 53.125rem;
@@ -2166,7 +2167,8 @@ html[data-style='clair'][data-mantine-color-scheme='light'] {
 }
 
 /* Mode « Modifier la disposition » (ADR 0078) : barre d'outils, cases en pointillé autour des dalles, poignée de
-   glissé (pointeur et clavier). Le glissé réordonne la grille : aucun élément n'est positionné par script. */
+   glissé (pointeur et clavier), bord droit de largeur. Pendant le glissé, la case vide devient une ombre bleue
+   translucide (place d'arrivée) et son contenu suit le pointeur (variables --tdb-dx et --tdb-dy posées par le CSSOM). */
 .tdb-edition-barre {
   display: flex;
   flex-direction: column;
@@ -2216,20 +2218,79 @@ html[data-style='clair'][data-mantine-color-scheme='light'] {
   gap: var(--mantine-spacing-xs);
 }
 .tdb-case {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--mantine-spacing-xs);
   padding: var(--mantine-spacing-xs);
   border-radius: var(--mantine-radius-lg);
   border: var(--suivi-trait-l) dashed var(--mantine-color-default-border);
+  cursor: grab;
 }
-.tdb-case > .tdb-dalle {
+.tdb-case-corps {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--mantine-spacing-xs);
+  min-width: 0;
+}
+.tdb-case-corps > .tdb-dalle {
   flex: 1;
 }
-.tdb-case--glissee {
+.tdb-grille[data-glisse='oui'] {
+  cursor: grabbing;
+  user-select: none;
+}
+/* Place d'arrivée : ombre bleue presque transparente, aux dimensions de la dalle. */
+.tdb-case--glissee,
+.tdb-case--redim {
   border-style: solid;
-  border-color: var(--mantine-primary-color-filled);
-  opacity: 0.7;
+  border-color: color-mix(in srgb, var(--mantine-color-blue-filled) 55%, transparent);
+  background: color-mix(in srgb, var(--mantine-color-blue-filled) 14%, transparent);
+  box-shadow: 0 0 1.5em color-mix(in srgb, var(--mantine-color-blue-filled) 25%, transparent);
+}
+/* La dalle saisie flotte au-dessus des autres et suit le pointeur. */
+.tdb-case--glissee > .tdb-case-corps {
+  position: relative;
+  z-index: 10;
+  transform: translate(var(--tdb-dx, 0), var(--tdb-dy, 0)) rotate(0.6deg) scale(1.02);
+  pointer-events: none;
+  opacity: 0.92;
+  filter: drop-shadow(0 1.25em 1.5em color-mix(in srgb, var(--tdb-ombre) 35%, transparent));
+}
+/* Bord droit : largeur au glisser, aimantée sur les largeurs proposées (grands écrans, où elles s'appliquent). */
+.tdb-redim {
+  display: none;
+  position: absolute;
+  inset-block: var(--mantine-spacing-lg);
+  /* Dans la marge intérieure de la case : jamais hors de la fenêtre, même en pleine largeur. */
+  inset-inline-end: 0;
+  inline-size: var(--mantine-spacing-xs);
+  padding: 0;
+  border: 0;
+  border-radius: var(--mantine-radius-xl);
+  background: transparent;
+  cursor: ew-resize;
+  touch-action: none;
+}
+.tdb-redim::after {
+  content: '';
+  position: absolute;
+  inset-block: 30%;
+  inset-inline-start: 50%;
+  inline-size: 0.25em;
+  translate: -50% 0;
+  border-radius: var(--mantine-radius-xl);
+  background: var(--mantine-color-default-border);
+}
+.tdb-case:hover > .tdb-redim::after,
+.tdb-redim:focus-visible::after,
+.tdb-case--redim > .tdb-redim::after {
+  background: var(--mantine-color-blue-filled);
+}
+@media (min-width: 64em) {
+  .tdb-redim {
+    display: block;
+  }
 }
 .tdb-case-outils {
   display: flex;
@@ -2265,6 +2326,7 @@ html[data-style='clair'][data-mantine-color-scheme='light'] {
   .tdb-case {
     transition:
       border-color 120ms ease,
+      background-color 120ms ease,
       opacity 120ms ease;
   }
 }

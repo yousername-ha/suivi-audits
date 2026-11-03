@@ -6,8 +6,10 @@ import {
   ancetres,
   arbre,
   descendants,
+  parentPermis,
   referentielsEffectifs,
   refusRattachement,
+  refusType,
   type NoeudPerimetre,
 } from '../src/hierarchie-perimetres.js';
 
@@ -18,6 +20,34 @@ const n = (id: string, parentId: string | null, inheritFrameworks = false): Noeu
 });
 // groupe → (hopital, clinique) ; hopital → labo
 const noeuds = [n('groupe', null), n('hopital', 'groupe', true), n('clinique', 'groupe'), n('labo', 'hopital', true)];
+
+describe('types organisation et fournisseur', () => {
+  // A → (B, C organisations ; F fournisseur) ; F → S (sous-traitant)
+  const t = [
+    { id: 'A', parentId: null, type: 'organisation' as const },
+    { id: 'B', parentId: 'A', type: 'organisation' as const },
+    { id: 'C', parentId: 'A', type: 'organisation' as const },
+    { id: 'F', parentId: 'A', type: 'fournisseur' as const },
+    { id: 'S', parentId: 'F', type: 'fournisseur' as const },
+  ];
+  it('une organisation reçoit des organisations et des fournisseurs, un fournisseur seulement des fournisseurs', () => {
+    expect(parentPermis('organisation', 'organisation')).toBe(true);
+    expect(parentPermis('fournisseur', 'organisation')).toBe(true);
+    expect(parentPermis('fournisseur', 'fournisseur')).toBe(true);
+    expect(parentPermis('organisation', 'fournisseur')).toBe(false);
+  });
+  it('refuse une organisation sous un fournisseur, et un fournisseur qui garde des organisations enfants', () => {
+    expect(refusType(t, '', 'organisation', 'A')).toBeNull();
+    expect(refusType(t, '', 'fournisseur', 'A')).toBeNull();
+    expect(refusType(t, '', 'fournisseur', 'F')).toBeNull();
+    expect(refusType(t, '', 'organisation', 'F')).toBe('organisation-sous-fournisseur');
+    expect(refusType(t, 'B', 'organisation', 'S')).toBe('organisation-sous-fournisseur');
+    expect(refusType(t, 'A', 'fournisseur', null)).toBe('fournisseur-avec-organisations');
+    // F n'a que des fournisseurs : il reste fournisseur ; B sans enfant peut devenir fournisseur.
+    expect(refusType(t, 'F', 'fournisseur', 'A')).toBeNull();
+    expect(refusType(t, 'B', 'fournisseur', 'A')).toBeNull();
+  });
+});
 
 describe('arbre parent/enfant', () => {
   it('liste ancêtres et descendants', () => {

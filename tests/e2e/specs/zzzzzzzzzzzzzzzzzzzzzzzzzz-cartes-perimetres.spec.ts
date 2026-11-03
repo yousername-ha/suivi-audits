@@ -28,7 +28,7 @@ test('Graphe des périmètres : compteurs de la carte et création d’un enfant
       scope: 'Fixture de recette',
       timezone: 'Europe/Paris',
       parentId: null,
-      entityKind: 'perimetre',
+      entityKind: 'organisation',
       inheritFrameworks: false,
     });
     await post(page, `/api/grc/${p.id}/objects`, {
@@ -70,7 +70,9 @@ test('Graphe des périmètres : compteurs de la carte et création d’un enfant
 
     // Même périmètre dans la liste, rattaché au parent, et dans les sélecteurs de l'API.
     await page.getByText('Liste', { exact: true }).click();
-    await expect(page.getByRole('row').filter({ hasText: enfant })).toContainText(`de ${parent}`);
+    await expect(page.getByRole('row').filter({ hasText: enfant })).toContainText(
+      `Organisation · rattachée à ${parent}`,
+    );
     const smsis = (await (await page.request.get('/api/grc/smsis')).json()) as {
       id: string;
       name: string;
@@ -101,7 +103,7 @@ test('Graphe des périmètres : modification depuis le graphe, flèches et flux,
       scope: 'Fixture de recette',
       timezone: 'Europe/Paris',
       parentId: null,
-      entityKind: 'perimetre',
+      entityKind: 'organisation',
       inheritFrameworks: false,
     });
     const f = await post(page, '/api/suppliers', { name: fournisseur });
@@ -133,7 +135,7 @@ test('Graphe des périmètres : modification depuis le graphe, flèches et flux,
       scope: '',
       timezone: 'Europe/Paris',
       parentId: p.id,
-      entityKind: 'perimetre',
+      entityKind: 'organisation',
       inheritFrameworks: false,
     });
     await page.reload();
@@ -195,7 +197,7 @@ test('Graphe des périmètres : écarts par classification, compteurs cliquables
       scope: 'Fixture de recette',
       timezone: 'Europe/Paris',
       parentId: null,
-      entityKind: 'perimetre',
+      entityKind: 'organisation',
       inheritFrameworks: false,
     });
     const ecart = (name: string, data: Record<string, unknown>) =>

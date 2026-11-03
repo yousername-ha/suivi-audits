@@ -38,7 +38,7 @@ test('Responsable : fonction créée en administration, désignée sur une actio
       scope: 'Fixture de recette',
       timezone: 'Europe/Paris',
       parentId: null,
-      entityKind: 'perimetre',
+      entityKind: 'organisation',
       inheritFrameworks: false,
     });
     await post(page, `/api/grc/${perimetre.id}/objects`, {

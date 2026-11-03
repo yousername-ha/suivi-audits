@@ -6,7 +6,19 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-Aucune action.
+**Migration automatique `051`** (type des périmètres) : appliquée au démarrage de `app`, durée négligeable ; aucune action sur le serveur. Les périmètres marqués « Entité » ou « Périmètre » deviennent « Organisation » ; aucune donnée supprimée, parents et héritages inchangés. Elle ajoute la colonne facultative de la fiche fournisseur reliée et la règle « sous un fournisseur, seulement des fournisseurs », que les données existantes respectent toutes (elles ne contiennent encore aucun fournisseur). _(Session « Révision gestion des périmètres ».)_
+
+### Modifié
+
+- **Périmètres : une organisation ou un fournisseur** ([ADR 0039 amendée](docs/adr/0039-hierarchie-des-perimetres.md)) : le champ « Niveau » (organisation, entité, périmètre) devient « Type », à deux choix, Organisation ou Fournisseur. Le rattachement ne change pas : une organisation A peut avoir pour enfants les organisations B et C et un fournisseur. La liste indique « Fournisseur · rattaché à A », le graphe dessine la carte d'un fournisseur en tirets. L'API refuse les anciennes valeurs `entite` et `perimetre`. Un fournisseur n'a pour enfants que des fournisseurs (ses sous-traitants) ; il peut être relié à sa fiche du registre des fournisseurs, qui n'apparaît alors plus comme « Fournisseur extérieur » dans le graphe. _(Session « Révision gestion des périmètres ».)_
+- **Édition magnétique du tableau de bord de l'accueil** ([ADR 0078](docs/adr/0078-disposition-et-partage-du-tableau-de-bord.md), lot 2d) : en « Modifier la disposition », une dalle se saisit par sa surface (ou sa poignée) et suit le pointeur ; une ombre bleue presque transparente montre sa place d'arrivée pendant que les autres se poussent. Son bord droit se tire pour changer sa largeur, aimantée sur ¼, ⅓, ½, ⅔ ou toute la largeur (flèches gauche et droite au clavier). Placement magnétique, activé par défaut : au lâcher, une fin de rangée restée libre est comblée par la dalle suivante qui y tient. Au doigt, le glissé reste sur la poignée. Format enregistré inchangé, aucune migration. _(Session « poivre et suites ».)_
+- **Chronologie générée du RETEX ajustée à la fenêtre** : l'écran (bandeau, scène, frise des étapes, commandes) tient dans la hauteur restante de la fenêtre, ou du plein écran, sans défilement vertical ; la scène se réduit en gardant ses proportions, et une fenêtre basse resserre le bandeau, la frise et les commandes. Aucune donnée ni route modifiée. _(Session « poivre et suites ».)_
+- **Périmètres : le graphe s'affiche par défaut** : la page Périmètres s'ouvre sur le graphe (organisations, fournisseurs et leurs compteurs) ; la liste reste accessible d'un clic. _(Session « Révision gestion des périmètres ».)_
+- **Fournisseur critique** : case à cocher dans la fiche du fournisseur (même donnée que la colonne « Critique » du registre). Le périmètre fournisseur relié l'affiche. _(Session « Révision gestion des périmètres ».)_
+
+### Retiré
+
+- **Nature d'un périmètre** (SMSI, SMQ, SMI…) : n'est plus proposée ni affichée sur la page Périmètres et le graphe ; un système de management est l'ensemble de ses éléments, pas une étiquette. La valeur déjà enregistrée reste en base, inchangée. _(Session « Révision gestion des périmètres ».)_
 
 ### Ajouté
 
@@ -14,7 +26,12 @@ Aucune action.
 
 ### Corrigé
 
+- **Tests de bout en bout** (session « Projet audit_suivi Coeur », chantier Playwright) : la capture « liste-fiche » à 390 px échouait à la première tentative puis passait au rejeu. Cause trouvée grâce à la liste des présences jointe aux captures : les fichiers de test précédents laissent des pages ouvertes (par exemple celle de la Rédactrice), qui continuent d'envoyer leur présence toutes les 20 s ; un échec redémarre le worker, les ferme, et le rejeu voit alors une pile propre. `tous-ecrans.spec.ts` ferme maintenant ces pages avant ses captures et attend l'expiration de leur présence (45 s au plus). Aucune capture de référence modifiée.
 - **Documents de pilotage** : le backlog, le registre (`REGISTRES.json`) et l'ADR 0077 citaient la v6.0.0, jamais publiée ; ils désignent maintenant la 6.0.1, première version 6 publiée (addendum à l'ADR 0077). Aucun changement de code. _(Session « Projet audit_suivi Coeur ».)_
+
+### Modifié
+
+- **Boîtes de pilotage** (Pilotage, Objectifs et indicateurs, onglet « Boîtes de pilotage ») : cartes plus lisibles. Le nom complet de chaque indicateur s'affiche sur sa propre ligne (il était tronqué), avec en dessous la valeur, la tendance, la cible et l'état (la valeur et la cible étaient coupées caractère par caractère) ; le titre du processus et le pilote passent en tête, l'état le plus défavorable à droite ; les chiffres du registre (actions ouvertes et en retard, risques liés, séries récurrentes, prochaine échéance) sont regroupés dans un encadré à deux colonnes ; colonnes plus larges (trois cartes par ligne sur un écran de bureau, une sur téléphone) ; toutes les boîtes ont la même taille (hauteur de la plus haute) et leur encadré de chiffres aligné en bas. Affichage seulement : calculs, données et droits inchangés. Aucune migration.
 
 ## [6.1.0] — 2026-10-31
 
