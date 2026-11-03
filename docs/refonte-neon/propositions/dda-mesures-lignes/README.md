@@ -1,3 +1,5 @@
+> 03/11/2026 — **Proposition complète validée et intégrée** après « je valide, tu peux intégrer », y compris la réduction de lueur. Voir [l’application réelle, les tests et les captures HD](../../DDA-INTEGREE.md), commit applicatif `4a1304b`. Les demandes de validation ci-dessous décrivent les étapes historiques de conception. Session : Codex.
+
 # DdA — mesures en lignes compactes
 
 03/11/2026, Europe/Paris. Session : Codex. Branche `codex/refonte-neon-main` ; référence applicative inchangée `aaac67c`.
