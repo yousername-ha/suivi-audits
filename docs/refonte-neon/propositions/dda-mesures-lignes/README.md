@@ -4,6 +4,17 @@
 
 **Format en lignes explicitement validé par le demandeur.** Les fonds légèrement plus foncés, l’applicabilité colorée, les champs remplis et les liserés néon sont présentés avant intégration ; ces finitions restent à valider. Le demandeur préfère une lecture en ligne compte tenu du nombre de mesures et écarte la proposition en cartes. Le registre est désormais présenté en lignes compactes ; la synthèse et la fiche de la nouvelle DdA restent la base. Aucun code applicatif modifié, aucun build ni test applicatif exécuté.
 
+## Vues intégrales HD pour validation clair et sombre
+
+03/11/2026, Europe/Paris. Le demandeur accepte la finition claire (« ça me va ») et demande les deux thèmes en images complètes HD pour validation. La maquette `2862f8d` est rendue sans modification graphique ni applicative. Quatre dalles et 93 mesures de l’Annexe A fictive sont présentes dans chaque capture intégrale ; aucun filtre ni découpage de la liste.
+
+| Thème | Aperçu 4K | Page intégrale HD |
+| --- | --- | --- |
+| Clair | [3 840 × 2 160](dda-clair-apercu-4k.png) | [3 840 × 14 508, 93 lignes](dda-clair-integrale-hd.png) |
+| Sombre | [3 840 × 2 160](dda-sombre-apercu-4k.png) | [3 840 × 14 504, 93 lignes](dda-sombre-integrale-hd.png) |
+
+Captures Chromium directes, fenêtre 1 920 × 1 080 et densité ×2 ; images intégrales avec `fullPage: true`, polices chargées avant capture. Quatre rendus autonomes produits, code 0 ; vues d’ensemble claire et sombre inspectées. [Dimensions et nombres d’éléments](captures-hd.json). Aucun chargement applicatif/API, aucune modification de CSS/HTML/JavaScript pour cette étape, aucun build/test applicatif. **Finition claire acceptée ; validation des vues complètes clair/sombre demandée avant intégration et tests.** Session : Codex.
+
 ## Clair : reprise des deux dernières captures
 
 03/11/2026. Dernière demande : « ça doit ressembler à ça », avec deux images. La proposition reprend les lignes gris bleuté et les colonnes de la première, les dégradés horizontaux turquoise/orange et les libellés blancs de la seconde. Typographie des titres de mesure allégée, séparations gris bleuté et liserés fins ; ombre courte sous les champs, sans large halo. Les flèches de sélecteur restent masquées conformément à la demande antérieure ; clic et contrôle natif conservés. Les quatre dalles au-dessus et le rendu sombre sont conservés.

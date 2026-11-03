@@ -1,0 +1,50 @@
+{
+  "source": "Maquette autonome, données fictives, aucune application ni API chargée.",
+  "conception": "2862f8d0b549dd45b3e5b9dafe226af3d3241a6b",
+  "captures": [
+    {
+      "fichier": "dda-clair-apercu-4k.png",
+      "theme": "light",
+      "largeur": 3840,
+      "hauteur": 2160,
+      "octets": 1328289,
+      "largeurCss": 1920,
+      "hauteurCss": 7254,
+      "lignes": 93,
+      "dalles": 4
+    },
+    {
+      "fichier": "dda-clair-integrale-hd.png",
+      "theme": "light",
+      "largeur": 3840,
+      "hauteur": 14508,
+      "octets": 11707490,
+      "largeurCss": 1920,
+      "hauteurCss": 7254,
+      "lignes": 93,
+      "dalles": 4
+    },
+    {
+      "fichier": "dda-sombre-apercu-4k.png",
+      "theme": "dark",
+      "largeur": 3840,
+      "hauteur": 2160,
+      "octets": 1345871,
+      "largeurCss": 1920,
+      "hauteurCss": 7252,
+      "lignes": 93,
+      "dalles": 4
+    },
+    {
+      "fichier": "dda-sombre-integrale-hd.png",
+      "theme": "dark",
+      "largeur": 3840,
+      "hauteur": 14504,
+      "octets": 11369763,
+      "largeurCss": 1920,
+      "hauteurCss": 7252,
+      "lignes": 93,
+      "dalles": 4
+    }
+  ]
+}
