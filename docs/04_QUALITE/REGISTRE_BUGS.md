@@ -242,3 +242,35 @@ elles ne sont pas ajoutées artificiellement comme trois bugs applicatifs ouvert
 | Fichiers | [apps/api/src/historique/crise.ts](../../apps/api/src/historique/crise.ts) ; [apps/api/test/historique-incidents.test.ts](../../apps/api/test/historique-incidents.test.ts) |
 | Non-régression | `historique-incidents.test.ts` : identifiants `CL-001` à `CL-003` et `schema15Problems` vide ; reprise d'une cellule antérieure (`CL-008`, `CL-007` conservé, `CL-009`, `CL-010`). Les deux tests échouent sans le correctif. |
 | Reste à vérifier | Instance existante : une cellule restée sans nouvelle écriture garde ses entrées sans identifiant jusqu'à la suivante (l'export les numérote toujours). |
+
+## BUG-014 — Captures « liste-fiche » dépendantes de la présence résiduelle et de l'état des données
+
+| Champ | Constat |
+| --- | --- |
+| Fonction, gravité, priorité | Recette automatisée (captures de référence) ; MINEURE ; P2 |
+| Statut | CORRIGÉ (PR #220 et #217, session « Projet audit_suivi Coeur ») |
+| Détection / correction | 2026-11-02 et 2026-11-03, CI des PR #217 et #220 ; correctif dans la PR #220, références remplacées dans la PR #217 avec l'accord du RSSI |
+| Déclencheur | Capture « liste-fiche » (fiche de document ouverte) du test `tous-ecrans`, à toutes les largeurs, en clair et en sombre. |
+| Attendu | Capture identique d'une exécution à l'autre, indépendante des tests précédents. |
+| Observé initialement | Écart de 3 400 à 120 000 pixels selon la largeur : (1) les références contenaient la zone de présence résiduelle (pages laissées ouvertes par des tests précédents, qui continuaient d'envoyer leur présence) ; (2) les références de 1920, 2560 et 3840 px avaient été prises avec un état de données laissé par un test précédent (un nom d'organisation et un menu qui n'étaient plus ceux de l'application, qui affiche « Mon organisation »). |
+| Cause / niveau | CONFIRMÉ : pages et contextes non fermés avant les captures ; références générées dans un état de données qui dépend de l'ordre des tests. |
+| Correctif | `tous-ecrans.spec.ts` ferme les pages laissées ouvertes et attend l'expiration des présences avant les captures ; références liste-fiche (390, 768, 1366, 1920, 2560 et 3840 px, clair et sombre) remplacées par les images propres produites par la CI. |
+| Fichiers | [tests/e2e/specs/tous-ecrans.spec.ts](../../tests/e2e/specs/tous-ecrans.spec.ts) ; [tests/e2e/specs/__captures__/](../../tests/e2e/specs/__captures__/) |
+| Non-régression | CI de la PR #217 : 240 tests réussis, aucun échec, aucun instable. |
+| Reste à vérifier | Les autres captures de grands écrans n'ont pas échoué ; si l'une d'elles dépend aussi d'un état de données laissé par un test précédent, remplacer sa référence de la même façon (après accord du RSSI). |
+
+## BUG-015 — Cascade de refus « 429 Trop de tentatives » après un échec en CI
+
+| Champ | Constat |
+| --- | --- |
+| Fonction, gravité, priorité | Recette automatisée ; MINEURE ; P2 |
+| Statut | OUVERT : cause confirmée, décision du RSSI attendue |
+| Détection / correction | 2026-11-03, CI de la PR #217 (run 41719241607) et déjà relevée le 2026-10-31 |
+| Déclencheur | Un échec de capture dans `tous-ecrans` relance l'environnement, puis les fichiers suivants (`z-fiabilisation`, `zy-updates`, `zz-*`) se reconnectent. |
+| Attendu | Un test en échec n'entraîne pas l'échec des tests suivants. |
+| Observé initialement | 105 tests en échec avec `connexion rssi : 429 {"error":"Trop de tentatives. Réessayez dans quelques minutes."}`. |
+| Cause / niveau | CONFIRMÉ : limiteurs de connexion `loginByIp` (20 par 15 minutes) et `loginByUser` (10 par 15 minutes) dans `apps/api/src/services.ts`. Les reconnexions après l'échec épuisent le quota, et les tentatives refusées comptent aussi : le refus dure jusqu'à la fin de la suite. |
+| Correctif | Non fait. Pistes : réutiliser une session enregistrée dans les specs concernées (`storageState`) ; temporiser sur un 429 dans `apiLogin` (`tests/e2e/helpers.ts`). Ne pas modifier les limites de l'application sans décision du RSSI (sécurité). |
+| Fichiers | [apps/api/src/services.ts](../../apps/api/src/services.ts) ; [tests/e2e/helpers.ts](../../tests/e2e/helpers.ts) |
+| Non-régression | À définir avec le correctif. |
+| Reste à vérifier | Fréquence : une cascade sur les six dernières exécutions avec un échec de capture. |
