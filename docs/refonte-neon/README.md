@@ -1,3 +1,5 @@
+> 03/11/2026 : [DdA : Mise en œuvre sur fond rempli selon le niveau](propositions/dda-mesures-lignes/README.md#mise-en-œuvre-avec-fond-coloré), en clair et sombre. Finition de maquette avant intégration et tests ; format en lignes validé conservé.
+
 > 03/11/2026 : **format en lignes validé**, [essai de fonds légèrement plus foncés](propositions/dda-mesures-lignes/README.md#nuance-légèrement-plus-foncée) en clair/sombre. Validation de la nuance avant intégration et tests applicatifs ; accord de format acquis.
 
 > 03/11/2026 : [DdA : mesures en lignes compactes](propositions/dda-mesures-lignes/README.md), préférées aux cartes pour le volume. Nouvelle maquette à valider avant intégration et tests applicatifs.

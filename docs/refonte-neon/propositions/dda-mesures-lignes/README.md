@@ -2,7 +2,15 @@
 
 03/11/2026, Europe/Paris. Session : Codex. Branche `codex/refonte-neon-main` ; référence applicative inchangée `aaac67c`.
 
-**Format en lignes explicitement validé par le demandeur.** Un nouvel essai de fonds légèrement plus foncés est présenté avant intégration ; seul cet ajustement de luminosité reste à valider. Le demandeur préfère une lecture en ligne compte tenu du nombre de mesures et écarte la proposition en cartes. Le registre est désormais présenté en lignes compactes ; la synthèse et la fiche de la nouvelle DdA restent la base. Aucun code applicatif modifié, aucun build ni test applicatif exécuté.
+**Format en lignes explicitement validé par le demandeur.** Les fonds légèrement plus foncés et le remplissage du champ Mise en œuvre sont présentés avant intégration ; ces ajustements restent à valider. Le demandeur préfère une lecture en ligne compte tenu du nombre de mesures et écarte la proposition en cartes. Le registre est désormais présenté en lignes compactes ; la synthèse et la fiche de la nouvelle DdA restent la base. Aucun code applicatif modifié, aucun build ni test applicatif exécuté.
+
+## Mise en œuvre avec fond coloré
+
+03/11/2026. Demande : « mise en ouvre avec couleur remplit ». Le champ de niveau reçoit un fond plein turquoise pour Total, orange pour Partiel, rouge pour Insuffisant et gris bleuté pour Non renseigné. Le texte devient clair, la bordure et le halo gardent la couleur du niveau. Même présentation en clair/sombre et dans la fiche de maquette ; applicabilité et autres champs conservés. Les fonds légèrement foncés et le format validé sont maintenus.
+
+[Remplissage clair](lignes-light-1440.png) · [Rouge en sombre](alertes-dark-1440.png) · [Remplissage sombre](lignes-dark-1440.png).
+
+Dix rendus autonomes actualisés, code 0. Données et script identiques ; seules les couleurs CSS changent. Aucune application ni API chargée, aucun build/test applicatif, aucune source applicative modifiée. Validation du rendu avant intégration.
 
 ## Nuance légèrement plus foncée
 
@@ -24,6 +32,6 @@ Les six informations existantes et les filtres sont conservés. Aucun score ni m
 
 Après validation, conserver les composants et parcours existants : calculs partagés, droits audit:modifier, enregistrement au fil de l’eau, erreurs et cas vides, liens/documents, extrait req, texte de référence, marqueur Tenacy et champs de fiche. Les contrôles serveur ne sont pas simulés par cette maquette. Aucun fichier de apps/, packages/ ou des tests n’a changé pour ce lot.
 
-**Prochaine action : validation de la nuance plus foncée ; ne pas redemander l’accord sur le format en lignes déjà retenu.** Après accord, intégrer la DdA, effectuer les contrôles pertinents et fournir de nouvelles captures réelles, selon la règle visuel → validation → intégration et tests → nouveau visuel réel.
+**Prochaine action : validation du remplissage et de la nuance plus foncée ; ne pas redemander l’accord sur le format en lignes déjà retenu.** Après accord, intégrer la DdA, effectuer les contrôles pertinents et fournir de nouvelles captures réelles, selon la règle visuel → validation → intégration et tests → nouveau visuel réel.
 
 [Synthèse et fiche de référence](../dda-neon-nouveau/README.md) · [Cartes écartées](../dda-mesures-cartes/README.md).
