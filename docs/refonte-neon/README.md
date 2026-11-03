@@ -1,3 +1,5 @@
+> 03/11/2026 : [Version claire DdA rapprochée du template](propositions/dda-mesures-lignes/README.md#version-claire-rapprochée-du-modèle-fourni), maquette à valider avant intégration.
+
 > 03/11/2026 : [DdA : références et sélecteurs sans flèche](propositions/dda-mesures-lignes/README.md#reprise-des-deux-références--sélecteurs-sans-flèche), dalles conservées, choix au clic. Maquette à valider avant intégration.
 
 > 03/11/2026 : [DdA : applicabilité colorée et lignes plus néon](propositions/dda-mesures-lignes/README.md#applicabilité-colorée-et-lignes-plus-néon). Oui vert / Non rouge, niveaux vert/orange/rouge, finitions à valider avant intégration et tests applicatifs.
