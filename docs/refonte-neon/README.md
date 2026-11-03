@@ -1,3 +1,5 @@
+> 03/11/2026 : [DdA claire : proposition de relief inspiré de Bootstrap](propositions/dda-dashboard/README.md#proposition-actuelle--relief-léger-inspiré-de-bootstrap), carte, en-tête et champs ombrés ; maquette actuelle à valider avant intégration et tests applicatifs.
+
 > 03/11/2026 : [DdA claire : tableau plus contrasté](propositions/dda-dashboard/README.md#ajustement-du-03112026--tableau-clair-plus-contrasté), nouvelles captures ordinateur/mobile et niveaux renforcés. Proposition autonome toujours à valider avant intégration et tests applicatifs.
 
 > 02/11/2026 — **[En-têtes Dashboard validés et intégrés](ENTETES-DASHBOARD.md)** (`aaac67c`), contrôles ciblés et captures réelles terminés. **[DdA : proposition fondée sur les images originales du Dashboard](propositions/dda-dashboard/README.md)**, avec registre, fiche et versions claire/sombre/mobile. Validation propre à la DdA en attente avant ses modifications et tests applicatifs. Les entrées suivantes sont historiques.

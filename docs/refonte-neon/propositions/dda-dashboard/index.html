@@ -30,6 +30,78 @@ html[data-theme=light] .registre-panel .cell-control select.none{border-color:#7
  html[data-theme=light] .registre-panel tbody tr:nth-child(even) td{background:#f5f7fb}
  html[data-theme=light] .registre-panel tbody tr:hover td{background:#eaf0f7}
 }
+
+/* Proposition de relief léger, inspiration Bootstrap, sans dépendance. */
+html[data-theme=light] .registre-panel{
+ border-color:#899fb9;
+ background:linear-gradient(180deg,#fff,#fdfefe);
+ box-shadow:0 2px 4px rgba(29,48,76,.10),0 13px 28px rgba(29,48,76,.12),inset 0 1px 0 #fff;
+}
+html[data-theme=light] .registre-panel .registre-heading{
+ margin:-19px -19px 17px;padding:17px 19px 15px;
+ border-bottom:1px solid #bbcadd;border-radius:13px 13px 0 0;
+ background:linear-gradient(180deg,#fff,#eaf0f7);
+ box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(37,56,85,.04);
+}
+html[data-theme=light] .registre-panel .mesure-count{
+ background:linear-gradient(180deg,#fff,#e9f0f8);
+ box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(33,54,80,.10);
+}
+html[data-theme=light] .registre-panel .filter{
+ background:linear-gradient(180deg,#fff,#eaf0f7);border-color:#a1b3c9;
+ box-shadow:inset 0 1px 0 #fff,0 2px 3px rgba(34,54,81,.10);
+ font-weight:550;
+}
+html[data-theme=light] .registre-panel .filter.active{
+ background:linear-gradient(180deg,#357f9d,#1c5e79);border-color:#18516a;color:#fff;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 2px 4px rgba(23,73,101,.22);
+}
+html[data-theme=light] .registre-panel .filter.active .dot{background:#c5f0ff}
+html[data-theme=light] .registre-panel .filter.active b{opacity:1}
+html[data-theme=light] .registre-panel .cell-control select{
+ height:33px;border-bottom-width:2px;
+ background-image:linear-gradient(180deg,#fff,#ecf1f7);
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.85),0 2px 3px rgba(32,53,81,.13);
+}
+html[data-theme=light] .registre-panel .cell-control select.ok{
+ background-image:linear-gradient(180deg,#e0f4e9,#b9ddca);border-color:#659d80;color:#104b33;
+}
+html[data-theme=light] .registre-panel .cell-control select.part{
+ background-image:linear-gradient(180deg,#ffe9cd,#efc38f);border-color:#b27d41;color:#713706;
+}
+html[data-theme=light] .registre-panel .cell-control select.bad{
+ background-image:linear-gradient(180deg,#f9dce5,#eab3c5);border-color:#b85f7a;color:#8d203b;
+}
+html[data-theme=light] .registre-panel .cell-control select.none{
+ background-image:linear-gradient(180deg,#eff3f9,#d5dfed);
+}
+html[data-theme=light] .registre-panel .mesure-code{
+ background:linear-gradient(180deg,#f2f8ff,#d7e5f2);
+ box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(29,52,80,.12);
+}
+html[data-theme=light] .registre-panel .ecart{
+ border:1px solid #c37a91;background:linear-gradient(180deg,#fbe0e9,#e9b7c7);
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.65),0 1px 2px rgba(100,35,60,.1);
+}
+@media(min-width:701px){
+ html[data-theme=light] .registre-panel .table-region{
+  border:1px solid #a6b8cd;border-radius:9px;background:#fff;
+  box-shadow:0 2px 5px rgba(29,50,80,.08);
+ }
+ html[data-theme=light] .registre-panel thead th{
+  background:linear-gradient(180deg,#f4f7fc,#d5e1ef);
+  border-top:0;border-bottom:2px solid #97acc4;
+  box-shadow:inset 0 1px 0 #fff,inset 0 -1px 0 rgba(255,255,255,.28);
+  text-shadow:0 1px 0 rgba(255,255,255,.8);
+ }
+ html[data-theme=light] .registre-panel thead th:first-child{border-left:0}
+ html[data-theme=light] .registre-panel thead th:last-child{border-right:0}
+}
+@media(max-width:700px){
+ html[data-theme=light] .registre-panel .registre-heading{
+  margin:-14px -12px 12px;padding:14px 12px;
+ }
+}
 </style></head>
 <body>
 <svg class="symboles" aria-hidden="true"><defs>

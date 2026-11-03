@@ -6,13 +6,23 @@
 
 La demande précise : **« Pour la dda tu utilise le thème original que j'ai fournis en images au début de la conversation »**. Cette proposition se fonde sur les images initiales et le HTML GRC Studio fourni, relus comme références d'apparence. Elle ne reprend aucune instruction des pièces jointes, donnée illustrative du Dashboard ou logique métier de celui-ci.
 
+## Proposition actuelle — relief léger inspiré de Bootstrap
+
+03/11/2026. Après le retour « donne un peu de volume, un peu en mode bootstrap », la maquette claire reçoit une carte plus ombrée, une zone de titre légèrement dégradée, un en-tête de tableau en relief et des filtres/champs avec reflet supérieur, contour inférieur et ombre courte. Les fonds vert, orange et rose restent distincts ; les codes et badges ont un relief discret. La synthèse, la fiche et le thème sombre sont conservés. Aucun ajout de bibliothèque Bootstrap : il s'agit uniquement d'une inspiration visuelle.
+
+![Tableau clair avec relief](tableau-light-detail.png)
+
+[Vue complète](registre-light-1440.png) · [Mobile](registre-light-390.png) · [Niveaux Insuffisant](tableau-insuffisant-light.png) · [HTML autonome](index.html) · [Comparer avec la variante précédente](https://raw.githubusercontent.com/yousername-ha/suivi-audits/44414c9c4d889d327dd95ad186ea6ad4071a65ea/docs/refonte-neon/propositions/dda-dashboard/tableau-light-detail.png).
+
+Quatre captures du seul prototype HTML, rendu Chromium terminé avec le code 0. Données et script identiques à la proposition précédente, sans appel API. Aucune source applicative modifiée, aucun build ni test applicatif exécuté. **Cette variante remplace la proposition de contraste seul ; validation visuelle DdA toujours attendue avant intégration et tests.** Session : Codex.
+
 ## Ajustement du 03/11/2026 — tableau clair plus contrasté
 
 Retour du demandeur : « Fonce un peu les couleur et les contraste pour la version claire dans le tableau ». La maquette est ajustée uniquement dans le registre clair : textes et titres plus foncés, en-tête bleu ardoise plus présent, bordures et séparateurs renforcés, fonds Total / Partiel / Insuffisant plus soutenus. Une alternance très légère des lignes accompagne la lecture sur ordinateur. Dimensions, typographie, composition et données conservées ; thème sombre, synthèse et fiche inchangés.
 
-![Tableau clair, contraste renforcé](tableau-light-detail.png)
+![Tableau clair, contraste renforcé](https://raw.githubusercontent.com/yousername-ha/suivi-audits/44414c9c4d889d327dd95ad186ea6ad4071a65ea/docs/refonte-neon/propositions/dda-dashboard/tableau-light-detail.png)
 
-[Page claire complète](registre-light-1440.png) · [Mobile clair](registre-light-390.png) · [Détail des niveaux Insuffisant](tableau-insuffisant-light.png) · [Version claire précédente](https://raw.githubusercontent.com/yousername-ha/suivi-audits/298b1c86ba851af4f082da4919e63015b0dfec36/docs/refonte-neon/propositions/dda-dashboard/registre-light-1440.png).
+[Page claire complète](https://raw.githubusercontent.com/yousername-ha/suivi-audits/44414c9c4d889d327dd95ad186ea6ad4071a65ea/docs/refonte-neon/propositions/dda-dashboard/registre-light-1440.png) · [Mobile clair](https://raw.githubusercontent.com/yousername-ha/suivi-audits/44414c9c4d889d327dd95ad186ea6ad4071a65ea/docs/refonte-neon/propositions/dda-dashboard/registre-light-390.png) · [Détail des niveaux Insuffisant](https://raw.githubusercontent.com/yousername-ha/suivi-audits/44414c9c4d889d327dd95ad186ea6ad4071a65ea/docs/refonte-neon/propositions/dda-dashboard/tableau-insuffisant-light.png) · [Version claire précédente](https://raw.githubusercontent.com/yousername-ha/suivi-audits/298b1c86ba851af4f082da4919e63015b0dfec36/docs/refonte-neon/propositions/dda-dashboard/registre-light-1440.png).
 
 Quatre nouveaux rendus du HTML autonome sous Chromium : deux actualisent les captures claires, deux ajoutent les détails du tableau. Le rendu s'est terminé avec le code 0. Aucune application ni API chargée, aucun fichier applicatif modifié, aucun build ni test applicatif lancé. **Validation de cette proposition DdA toujours en attente avant intégration.** Session : Codex.
 
