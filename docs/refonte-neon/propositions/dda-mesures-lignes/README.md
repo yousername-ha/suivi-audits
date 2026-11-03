@@ -4,6 +4,12 @@
 
 **Format en lignes explicitement validé par le demandeur.** Les fonds légèrement plus foncés, l’applicabilité colorée, les champs remplis et les liserés néon sont présentés avant intégration ; ces finitions restent à valider. Le demandeur préfère une lecture en ligne compte tenu du nombre de mesures et écarte la proposition en cartes. Le registre est désormais présenté en lignes compactes ; la synthèse et la fiche de la nouvelle DdA restent la base. Aucun code applicatif modifié, aucun build ni test applicatif exécuté.
 
+## Clair : halos atténués et dégradés vert/orange
+
+03/11/2026. À la demande du demandeur, les halos du clair sont atténués et les champs verts et orange reçoivent des dégradés. Textes foncés pour la lisibilité, rouge conservé ; structure et version sombre inchangées. Rendus de la maquette autonome uniquement, données et JavaScript identiques ; aucune modification, compilation ni test applicatif. Cette finition reste à valider avant intégration.
+
+[Voir le clair](lignes-light-1440.png) · [Page complète](registre-light-1440.png) · [Mobile](lignes-light-390.png).
+
 ## Version claire rapprochée du modèle fourni
 
 03/11/2026. Le demandeur indique que la version claire précédente ne correspond pas à son modèle. Cette nouvelle proposition reprend sa surface gris très clair, des fonds turquoise et orange plus lumineux et des halos. Les libellés sont foncés pour rester lisibles sur ces fonds ; Insuffisant et Applicable Non restent rouges. Les sélecteurs gardent le choix au clic sans flèche. Dalles de scores et format en lignes conservés, version sombre inchangée.
