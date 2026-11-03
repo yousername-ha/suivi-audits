@@ -4,6 +4,14 @@
 
 **Format en lignes explicitement validé par le demandeur.** Les fonds légèrement plus foncés, l’applicabilité colorée, les champs remplis et les liserés néon sont présentés avant intégration ; ces finitions restent à valider. Le demandeur préfère une lecture en ligne compte tenu du nombre de mesures et écarte la proposition en cartes. Le registre est désormais présenté en lignes compactes ; la synthèse et la fiche de la nouvelle DdA restent la base. Aucun code applicatif modifié, aucun build ni test applicatif exécuté.
 
+## Reprise des deux références — sélecteurs sans flèche
+
+03/11/2026. Reprise des deux exemples fournis : halos colorés et lignes lumineuses, sélecteurs arrondis dans le thème sombre et champs remplis dans le thème clair. Les dalles de scores sont conservées. Les flèches des deux sélecteurs Applicable et Mise en œuvre sont masquées ; les contrôles natifs restent cliquables et utilisables au clavier. Les flèches d’accès à la fiche sont conservées.
+
+[Vue sombre](lignes-dark-1440.png) · [Vue claire](lignes-light-1440.png) · [Page complète](registre-dark-1440.png) · [Exclusions](applicabilite-dark-1440.png) · [Mobile](lignes-dark-390.png).
+
+Douze captures du prototype autonome, code 0. Dans Chromium, les deux champs ont été cliqués et leurs choix modifiés dans la maquette, code 0 ; aucune application ni API chargée. Données et JavaScript identiques, seul le CSS évolue. Aucun fichier applicatif modifié, aucun build/test applicatif lancé. Rendu à valider avant intégration et contrôles réels.
+
 ## Applicabilité colorée et lignes plus néon
 
 03/11/2026. La demande ajoute une distinction Oui/Non et un effet néon plus présent. Applicable Oui reçoit un fond vert, Non un fond rouge ; À déterminer garde le gris bleuté. Les lignes portent un liseré lumineux plus net de 3 px et une légère teinte selon le niveau : Total vert, Partiel orange, Insuffisant rouge. Les champs de niveau conservent leurs fonds pleins avec des halos plus visibles. Les exclusions gardent un liseré neutre pour distinguer une exclusion d’une insuffisance. Dimensions, densité, données, libellés et JavaScript conservés.
