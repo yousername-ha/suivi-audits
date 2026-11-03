@@ -1,3 +1,5 @@
+> 03/11/2026 : cette proposition est remplacée par la [nouvelle DdA reprise depuis zéro](../dda-neon-nouveau/README.md), à valider. Les versions suivantes sont conservées comme historique.
+
 # DdA — proposition dans le thème Dashboard original
 
 02/11/2026, Europe/Paris. Session : Codex. Application de référence : `aaac67cfe8e4edc130cc6e68094be2f670d7b633`, en-têtes Dashboard approuvés et intégrés sur la copie `codex/refonte-neon-main`.

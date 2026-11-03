@@ -1,3 +1,5 @@
+> 03/11/2026 : [DdA reprise depuis zéro selon les nouvelles images](propositions/dda-neon-nouveau/README.md) : maquette néon indépendante, validation avant intégration et tests applicatifs. Elle remplace les propositions DdA précédentes.
+
 > 03/11/2026 : [DdA néon : rouge à la place du rose](propositions/dda-dashboard/README.md#ajustement-demandé--rouge-à-la-place-du-rose) dans la maquette entière, clair/sombre. Nouveau visuel de la nuance avant intégration ; aucun build/test applicatif exécuté.
 
 > 03/11/2026 : [DdA claire : retour à l’effet néon](propositions/dda-dashboard/README.md#proposition-actuelle--retour-au-neon-clair), après refus du relief Bootstrap. Liserés cyan, bandeau bleu nuit et halos colorés ; nouvelle maquette à valider avant intégration et tests applicatifs.
