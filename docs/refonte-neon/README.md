@@ -1,3 +1,5 @@
+> 03/11/2026 : [Clair DdA : reprise des deux dernières captures](propositions/dda-mesures-lignes/README.md#clair--reprise-des-deux-dernières-captures), lignes gris bleuté et dégradés horizontaux avec textes blancs. Maquette à valider avant intégration.
+
 > 03/11/2026 : [Clair DdA : halos réduits et dégradés](propositions/dda-mesures-lignes/README.md#clair--halos-atténués-et-dégradés-vertorange), maquette avant intégration.
 
 > 03/11/2026 : [Version claire DdA rapprochée du template](propositions/dda-mesures-lignes/README.md#version-claire-rapprochée-du-modèle-fourni), maquette à valider avant intégration.

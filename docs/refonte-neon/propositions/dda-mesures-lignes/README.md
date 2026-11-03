@@ -4,6 +4,14 @@
 
 **Format en lignes explicitement validé par le demandeur.** Les fonds légèrement plus foncés, l’applicabilité colorée, les champs remplis et les liserés néon sont présentés avant intégration ; ces finitions restent à valider. Le demandeur préfère une lecture en ligne compte tenu du nombre de mesures et écarte la proposition en cartes. Le registre est désormais présenté en lignes compactes ; la synthèse et la fiche de la nouvelle DdA restent la base. Aucun code applicatif modifié, aucun build ni test applicatif exécuté.
 
+## Clair : reprise des deux dernières captures
+
+03/11/2026. Dernière demande : « ça doit ressembler à ça », avec deux images. La proposition reprend les lignes gris bleuté et les colonnes de la première, les dégradés horizontaux turquoise/orange et les libellés blancs de la seconde. Typographie des titres de mesure allégée, séparations gris bleuté et liserés fins ; ombre courte sous les champs, sans large halo. Les flèches de sélecteur restent masquées conformément à la demande antérieure ; clic et contrôle natif conservés. Les quatre dalles au-dessus et le rendu sombre sont conservés.
+
+[Voir les lignes claires](lignes-light-1440.png) · [Voir la page avec les scores](registre-light-1440.png) · [Exclusions](applicabilite-light-1440.png) · [Alertes](alertes-light-1440.png) · [Mobile](lignes-light-390.png).
+
+Douze rendus Chromium autonomes produits (code 0) ; les six captures sombres sont identiques aux précédentes. Inspection visuelle des lignes et de la page complète claire. Seul le CSS de la maquette évolue : données, scripts et code applicatif inchangés. Aucun build/test applicatif. **Nouvelle finition présentée pour validation ; intégration et tests après accord, puis nouvelles captures réelles.** Session : Codex.
+
 ## Clair : halos atténués et dégradés vert/orange
 
 03/11/2026. À la demande du demandeur, les halos du clair sont atténués et les champs verts et orange reçoivent des dégradés. Textes foncés pour la lisibilité, rouge conservé ; structure et version sombre inchangées. Rendus de la maquette autonome uniquement, données et JavaScript identiques ; aucune modification, compilation ni test applicatif. Cette finition reste à valider avant intégration.
