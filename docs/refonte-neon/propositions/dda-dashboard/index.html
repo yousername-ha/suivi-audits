@@ -13,6 +13,23 @@ main{max-width:1440px;margin:auto;padding:28px 28px 24px}.page-heading{display:f
 @media(max-width:1100px){.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.fiche-grid{grid-template-columns:minmax(0,1fr) 250px}.prototype-label>span:last-child{display:none}}
 @media(max-width:700px){.prototype-bar{align-items:flex-start;padding:10px 14px;gap:9px;flex-wrap:wrap}.prototype-label{font-size:8px}.preview-tools{width:100%;gap:5px}.tool{font-size:9px;padding:5px 8px}.theme-tool{margin-left:auto}main{padding:20px 14px}.page-heading{display:block;margin-bottom:18px}.page-heading h1{font-size:25px}.page-heading p{font-size:10px}.eyebrow{font-size:8px}.scope-pill{display:none}.ref-tabs{gap:3px;margin-bottom:16px;padding-bottom:12px}.ref-tabs button{padding:7px 8px;gap:4px;font-size:10px}.ref-tabs button span{font-size:8px;padding:1px 4px}.stats-grid{gap:10px;margin-bottom:16px}.stat-card{min-height:177px;padding:12px}.stat-card h2{font-size:11px;max-width:95%}.stat-card .corner-i{display:none}.sub{font-size:8px}.grand-chiffre{font-size:32px;margin-top:12px}.grand-chiffre small{display:block;margin:0;font-size:10px}.mini-bar{margin:10px 0}.stats-foot{gap:6px;padding-top:7px}.stats-foot span{font-size:8px}.stats-foot strong{font-size:13px}.donut-line{display:block;margin-top:7px}.donut{width:78px;height:78px;margin:auto}.donut .centre strong{font-size:21px}.donut .centre small{font-size:7px}.donut-caption{text-align:center;font-size:8px;line-height:1.3}.donut-caption strong{display:inline;font-size:12px;margin-right:4px}.donut-caption b{display:none}.niveau-list{gap:11px;margin-top:15px}.niveau{grid-template-columns:58px minmax(0,1fr) 15px;gap:5px;font-size:8px}.niveau b{font-size:9px}.rail{height:5px}.vigilance .grand-chiffre small{font-size:9px}.quiet-note{font-size:8px}.registre-panel{padding:14px 12px 0}.registre-heading{gap:8px;margin-bottom:12px}.section-kicker{font-size:8px}.registre-heading h2{font-size:15px}.mesure-count{font-size:8px;padding:4px 6px}.filters{gap:5px;margin-bottom:7px}.filter{padding:5px 6px;font-size:8px;gap:4px}.filter b{font-size:8px}.filter .dot{width:4px;height:4px}table,tbody{display:block;width:100%}thead{display:none}tbody tr{display:grid;grid-template-columns:1fr 1fr;gap:12px 9px;padding:17px 0;border-bottom:1px solid var(--line)}tbody td{display:block;min-width:0;padding:0;border:0}.mesure-cell,.actions-cell,.document-cell,.ecarts-cell{grid-column:1/-1}.mesure-ouvrir{font-size:11px;gap:7px}.mesure-code{font-size:8px}.cell-control{text-align:left}.cell-control:before,.actions-cell:before,.document-cell:before,.ecarts-cell:before{display:block;content:attr(data-label);margin-bottom:5px;color:var(--muted);font-size:8px;font-weight:600}.cell-control select{max-width:none;font-size:10px}.action-texte,.doc-line{font-size:9px}.actions-cell:has(.vide),.document-cell:has(.vide),.ecarts-cell:has(.vide){display:none}.ecarts-cell{text-align:left}.page-foot{font-size:9px}.fiche-panel{padding:16px}.fiche-heading{gap:10px;padding-bottom:16px;margin-bottom:17px}.fiche-heading h2{font-size:18px}.fiche-grid{grid-template-columns:minmax(0,1fr);gap:16px}.fiche-main{gap:15px}.form-section{padding:13px}.form-section legend{font-size:11px}.form-row{grid-template-columns:minmax(0,1fr);gap:0}.champ>span{font-size:10px}.champ select,.champ input,.champ textarea{font-size:11px}.aside-card{padding:14px}.close{width:28px;height:28px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+
+/* Ajustement demandé le 03/11/2026 : contraste du registre clair uniquement. */
+html[data-theme=light] .registre-panel{
+ --text:#1e2b42;--title:#111f36;--muted:#40536b;
+ --line:#7f96b1;--line-soft:#b3c2d5;--paper:#e1e8f2;
+ --cyan:#145b75;--blue:#285b93;--teal:#14563d;--orange:#794009;--rose:#91263f;--inactive:#50647f;
+ --field-border:#7189a5;--ok-bg:#cbe8da;--part-bg:#f4d6b1;--bad-bg:#efc5d1;--neutral-bg:#dbe4f0;
+}
+html[data-theme=light] .registre-panel thead th{color:#30435f}
+html[data-theme=light] .registre-panel .cell-control select.ok{border-color:#579276}
+html[data-theme=light] .registre-panel .cell-control select.part{border-color:#b08249}
+html[data-theme=light] .registre-panel .cell-control select.bad{border-color:#b3627b}
+html[data-theme=light] .registre-panel .cell-control select.none{border-color:#7f96b1}
+@media(min-width:701px){
+ html[data-theme=light] .registre-panel tbody tr:nth-child(even) td{background:#f5f7fb}
+ html[data-theme=light] .registre-panel tbody tr:hover td{background:#eaf0f7}
+}
 </style></head>
 <body>
 <svg class="symboles" aria-hidden="true"><defs>

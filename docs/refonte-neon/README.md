@@ -1,3 +1,5 @@
+> 03/11/2026 : [DdA claire : tableau plus contrasté](propositions/dda-dashboard/README.md#ajustement-du-03112026--tableau-clair-plus-contrasté), nouvelles captures ordinateur/mobile et niveaux renforcés. Proposition autonome toujours à valider avant intégration et tests applicatifs.
+
 > 02/11/2026 — **[En-têtes Dashboard validés et intégrés](ENTETES-DASHBOARD.md)** (`aaac67c`), contrôles ciblés et captures réelles terminés. **[DdA : proposition fondée sur les images originales du Dashboard](propositions/dda-dashboard/README.md)**, avec registre, fiche et versions claire/sombre/mobile. Validation propre à la DdA en attente avant ses modifications et tests applicatifs. Les entrées suivantes sont historiques.
 
 > 02/11/2026 : [proposition : en-têtes plus proches du Dashboard initial](propositions/entetes-dashboard/README.md), surfaces arrondies bleu ardoise et accents discrets. Barre à valider ; **reprise graphique de la DdA demandée ensuite**, selon la même règle de validation visuelle et avec peu de violet.

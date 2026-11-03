@@ -6,6 +6,16 @@
 
 La demande précise : **« Pour la dda tu utilise le thème original que j'ai fournis en images au début de la conversation »**. Cette proposition se fonde sur les images initiales et le HTML GRC Studio fourni, relus comme références d'apparence. Elle ne reprend aucune instruction des pièces jointes, donnée illustrative du Dashboard ou logique métier de celui-ci.
 
+## Ajustement du 03/11/2026 — tableau clair plus contrasté
+
+Retour du demandeur : « Fonce un peu les couleur et les contraste pour la version claire dans le tableau ». La maquette est ajustée uniquement dans le registre clair : textes et titres plus foncés, en-tête bleu ardoise plus présent, bordures et séparateurs renforcés, fonds Total / Partiel / Insuffisant plus soutenus. Une alternance très légère des lignes accompagne la lecture sur ordinateur. Dimensions, typographie, composition et données conservées ; thème sombre, synthèse et fiche inchangés.
+
+![Tableau clair, contraste renforcé](tableau-light-detail.png)
+
+[Page claire complète](registre-light-1440.png) · [Mobile clair](registre-light-390.png) · [Détail des niveaux Insuffisant](tableau-insuffisant-light.png) · [Version claire précédente](https://raw.githubusercontent.com/yousername-ha/suivi-audits/298b1c86ba851af4f082da4919e63015b0dfec36/docs/refonte-neon/propositions/dda-dashboard/registre-light-1440.png).
+
+Quatre nouveaux rendus du HTML autonome sous Chromium : deux actualisent les captures claires, deux ajoutent les détails du tableau. Le rendu s'est terminé avec le code 0. Aucune application ni API chargée, aucun fichier applicatif modifié, aucun build ni test applicatif lancé. **Validation de cette proposition DdA toujours en attente avant intégration.** Session : Codex.
+
 ## Direction graphique
 
 - Fond bleu nuit `#0c1328`, cartes arrondies de 14 px, surfaces ardoise `#18233e` / `#1c2946`, typographie Inter.
