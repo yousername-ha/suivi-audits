@@ -1,3 +1,5 @@
+> 03/11/2026 : la partie Mesures est reprise dans une [nouvelle proposition en cartes](../dda-mesures-cartes/README.md), à valider. La synthèse et la fiche de cette page restent la base de présentation.
+
 # DdA — nouvelle proposition néon depuis zéro
 
 03/11/2026, Europe/Paris. Session : Codex. Branche `codex/refonte-neon-main` ; référence applicative `aaac67c`.
