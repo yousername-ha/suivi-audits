@@ -46,10 +46,10 @@ test('DdA et évaluation par le clausier : niveaux, fiche, chapitres, points, no
     await page.getByRole('combobox', { name: 'Niveau de A.5.19' }).click();
     await page.getByRole('option', { name: 'Partiel', exact: true }).click();
     await expect(page.getByRole('combobox', { name: 'Niveau de A.5.19' })).toHaveValue('Partiel');
-    await page.getByText('Exclues', { exact: true }).click();
+    await page.getByRole('group', { name: 'Filtre des mesures' }).getByText('Exclues', { exact: true }).click();
     await expect(page.getByText('Mesure fictive 5.2')).toBeVisible();
     await expect(page.getByText('Hors périmètre fictif')).toBeVisible();
-    await page.getByText('Toutes', { exact: true }).click();
+    await page.getByRole('group', { name: 'Filtre des mesures' }).getByText('Toutes', { exact: true }).click();
     await page.getByRole('button', { name: 'A.5.1', exact: true }).click();
     const fiche = page.getByRole('dialog');
     await fiche.getByRole('textbox', { name: 'Commentaire de la revue' }).fill('Revue fictive');

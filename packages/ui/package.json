@@ -22,7 +22,8 @@
     "./neon-analytics.css": "./src/neon-analytics.css",
     "./neon-perimetres.css": "./src/neon-perimetres.css",
     "./neon-fenetres.css": "./src/neon-fenetres.css",
-    "./neon-objectifs.css": "./src/neon-objectifs.css"
+    "./neon-objectifs.css": "./src/neon-objectifs.css",
+    "./neon-dda.css": "./src/neon-dda.css"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
