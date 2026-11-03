@@ -1,3 +1,5 @@
+> 03/11/2026 — **[DdA : champs émeraude/ambre harmonisés](propositions/dda-clair-contraste/README.md#champs-vert-et-orange-accordés-au-nouveau-fond)** avec le fond glacier/ivoire, dégradés et ombres plus doux. Maquette actualisée pour validation ; application inchangée. Session : Codex.
+
 > 03/11/2026 — **[Clair DdA moins gris, fond en dégradé](propositions/dda-clair-contraste/README.md#finition--moins-de-gris-et-fond-en-dégradé)** : bleu glacier/ivoire, nuances bleu/eau et accents conservés. Maquette actualisée pour validation ; application inchangée. Session : Codex.
 
 > 03/11/2026 — **[Proposition claire DdA plus contrastée](propositions/dda-clair-contraste/README.md)** : bleu-gris opaque, fonds et contours soutenus, accents francs. Nouvelle finition à valider avant modification de l’application ; la DdA précédente reste intégrée. Session : Codex.

@@ -4,6 +4,10 @@
 
 Après intégration de la DdA (`4a1304b`), le demandeur trouve le clair trop blanc, trop clair et trop transparent. Cette nouvelle proposition renforce les fonds et les contours avant validation. **Le code applicatif reste inchangé ; aucun build ou test applicatif n'est exécuté pour cette proposition.** La précédente intégration reste acquise ; cette nouvelle finition claire attend son propre accord.
 
+## Champs vert et orange accordés au nouveau fond
+
+03/11/2026. À la demande du demandeur, le fort dégradé sombre-vers-lumineux des champs verts et orange est remplacé par une variation plus courte : émeraude pour Oui/Total, ambre pour Partiel. Les reflets et ombres sont plus discrets ; les libellés blancs restent lisibles. Fond glacier/ivoire, dalles, autres couleurs, dimensions, scripts et données conservés. Les captures ci-dessous sont actualisées. Maquette seulement ; aucune modification ni vérification applicative. Finition à valider avant intégration.
+
 ## Finition : moins de gris et fond en dégradé
 
 03/11/2026. Retour : « Un peu trop gris. Essai aussi un fond en dégradé un peu ». Le fond passe du bleu glacier à une nuance ivoire douce, avec un dégradé fixe visible sur chaque hauteur d’écran. Dalles, registre et en-têtes reçoivent des nuances bleu/eau plus colorées ; les contours soutenus, les dégradés des champs et les accents vert/orange/rouge sont conservés. La lumière reste contenue. Les images ci-dessous sont actualisées ; la version précédente reste dans le commit `fc253cb`.
