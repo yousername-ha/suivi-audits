@@ -14,93 +14,79 @@ main{max-width:1440px;margin:auto;padding:28px 28px 24px}.page-heading{display:f
 @media(max-width:700px){.prototype-bar{align-items:flex-start;padding:10px 14px;gap:9px;flex-wrap:wrap}.prototype-label{font-size:8px}.preview-tools{width:100%;gap:5px}.tool{font-size:9px;padding:5px 8px}.theme-tool{margin-left:auto}main{padding:20px 14px}.page-heading{display:block;margin-bottom:18px}.page-heading h1{font-size:25px}.page-heading p{font-size:10px}.eyebrow{font-size:8px}.scope-pill{display:none}.ref-tabs{gap:3px;margin-bottom:16px;padding-bottom:12px}.ref-tabs button{padding:7px 8px;gap:4px;font-size:10px}.ref-tabs button span{font-size:8px;padding:1px 4px}.stats-grid{gap:10px;margin-bottom:16px}.stat-card{min-height:177px;padding:12px}.stat-card h2{font-size:11px;max-width:95%}.stat-card .corner-i{display:none}.sub{font-size:8px}.grand-chiffre{font-size:32px;margin-top:12px}.grand-chiffre small{display:block;margin:0;font-size:10px}.mini-bar{margin:10px 0}.stats-foot{gap:6px;padding-top:7px}.stats-foot span{font-size:8px}.stats-foot strong{font-size:13px}.donut-line{display:block;margin-top:7px}.donut{width:78px;height:78px;margin:auto}.donut .centre strong{font-size:21px}.donut .centre small{font-size:7px}.donut-caption{text-align:center;font-size:8px;line-height:1.3}.donut-caption strong{display:inline;font-size:12px;margin-right:4px}.donut-caption b{display:none}.niveau-list{gap:11px;margin-top:15px}.niveau{grid-template-columns:58px minmax(0,1fr) 15px;gap:5px;font-size:8px}.niveau b{font-size:9px}.rail{height:5px}.vigilance .grand-chiffre small{font-size:9px}.quiet-note{font-size:8px}.registre-panel{padding:14px 12px 0}.registre-heading{gap:8px;margin-bottom:12px}.section-kicker{font-size:8px}.registre-heading h2{font-size:15px}.mesure-count{font-size:8px;padding:4px 6px}.filters{gap:5px;margin-bottom:7px}.filter{padding:5px 6px;font-size:8px;gap:4px}.filter b{font-size:8px}.filter .dot{width:4px;height:4px}table,tbody{display:block;width:100%}thead{display:none}tbody tr{display:grid;grid-template-columns:1fr 1fr;gap:12px 9px;padding:17px 0;border-bottom:1px solid var(--line)}tbody td{display:block;min-width:0;padding:0;border:0}.mesure-cell,.actions-cell,.document-cell,.ecarts-cell{grid-column:1/-1}.mesure-ouvrir{font-size:11px;gap:7px}.mesure-code{font-size:8px}.cell-control{text-align:left}.cell-control:before,.actions-cell:before,.document-cell:before,.ecarts-cell:before{display:block;content:attr(data-label);margin-bottom:5px;color:var(--muted);font-size:8px;font-weight:600}.cell-control select{max-width:none;font-size:10px}.action-texte,.doc-line{font-size:9px}.actions-cell:has(.vide),.document-cell:has(.vide),.ecarts-cell:has(.vide){display:none}.ecarts-cell{text-align:left}.page-foot{font-size:9px}.fiche-panel{padding:16px}.fiche-heading{gap:10px;padding-bottom:16px;margin-bottom:17px}.fiche-heading h2{font-size:18px}.fiche-grid{grid-template-columns:minmax(0,1fr);gap:16px}.fiche-main{gap:15px}.form-section{padding:13px}.form-section legend{font-size:11px}.form-row{grid-template-columns:minmax(0,1fr);gap:0}.champ>span{font-size:10px}.champ select,.champ input,.champ textarea{font-size:11px}.aside-card{padding:14px}.close{width:28px;height:28px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
 
-/* Ajustement demandé le 03/11/2026 : contraste du registre clair uniquement. */
+/* Proposition Neon clair : lumière dans les contours, niveaux et accents. */
 html[data-theme=light] .registre-panel{
- --text:#1e2b42;--title:#111f36;--muted:#40536b;
- --line:#7f96b1;--line-soft:#b3c2d5;--paper:#e1e8f2;
- --cyan:#145b75;--blue:#285b93;--teal:#14563d;--orange:#794009;--rose:#91263f;--inactive:#50647f;
- --field-border:#7189a5;--ok-bg:#cbe8da;--part-bg:#f4d6b1;--bad-bg:#efc5d1;--neutral-bg:#dbe4f0;
+ --text:#192a43;--title:#11213b;--muted:#405773;
+ --line:#8bb5ca;--line-soft:#c8dbe8;--paper:#eff8fc;
+ --cyan:#086c88;--blue:#2b63ac;--teal:#056953;--orange:#9a470c;--rose:#ac2854;
+ --inactive:#596f8f;--field-border:#83a7bf;--neutral-bg:#eaf5fa;
+ --ok-bg:#c9f2e6;--part-bg:#ffe4ce;--bad-bg:#ffd4e1;
+ position:relative;background:#fff;
+ border:1px solid #86bacf;
+ box-shadow:0 0 0 1px rgba(38,186,217,.09),0 0 25px rgba(31,188,220,.13),0 12px 30px rgba(29,50,85,.07);
 }
-html[data-theme=light] .registre-panel thead th{color:#30435f}
-html[data-theme=light] .registre-panel .cell-control select.ok{border-color:#579276}
-html[data-theme=light] .registre-panel .cell-control select.part{border-color:#b08249}
-html[data-theme=light] .registre-panel .cell-control select.bad{border-color:#b3627b}
-html[data-theme=light] .registre-panel .cell-control select.none{border-color:#7f96b1}
-@media(min-width:701px){
- html[data-theme=light] .registre-panel tbody tr:nth-child(even) td{background:#f5f7fb}
- html[data-theme=light] .registre-panel tbody tr:hover td{background:#eaf0f7}
+html[data-theme=light] .registre-panel::before{
+ content:'';position:absolute;top:-1px;left:16px;right:16px;height:2px;border-radius:6px;
+ background:linear-gradient(90deg,#26c9e8,#458dff 52%,rgba(69,141,255,0) 94%);
+ box-shadow:0 0 10px rgba(22,180,224,.55);
 }
-
-/* Proposition de relief léger, inspiration Bootstrap, sans dépendance. */
-html[data-theme=light] .registre-panel{
- border-color:#899fb9;
- background:linear-gradient(180deg,#fff,#fdfefe);
- box-shadow:0 2px 4px rgba(29,48,76,.10),0 13px 28px rgba(29,48,76,.12),inset 0 1px 0 #fff;
-}
-html[data-theme=light] .registre-panel .registre-heading{
- margin:-19px -19px 17px;padding:17px 19px 15px;
- border-bottom:1px solid #bbcadd;border-radius:13px 13px 0 0;
- background:linear-gradient(180deg,#fff,#eaf0f7);
- box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(37,56,85,.04);
-}
+html[data-theme=light] .registre-panel .registre-heading{padding-top:2px}
+html[data-theme=light] .registre-panel .section-kicker{color:#0b738e}
 html[data-theme=light] .registre-panel .mesure-count{
- background:linear-gradient(180deg,#fff,#e9f0f8);
- box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(33,54,80,.10);
+ background:#f3fbff;border-color:#73afc5;color:#245675;
+ box-shadow:0 0 9px rgba(49,181,224,.13);
 }
 html[data-theme=light] .registre-panel .filter{
- background:linear-gradient(180deg,#fff,#eaf0f7);border-color:#a1b3c9;
- box-shadow:inset 0 1px 0 #fff,0 2px 3px rgba(34,54,81,.10);
- font-weight:550;
+ background:#fff;border-color:#a3bfce;color:#344d68;box-shadow:none;
 }
 html[data-theme=light] .registre-panel .filter.active{
- background:linear-gradient(180deg,#357f9d,#1c5e79);border-color:#18516a;color:#fff;
- box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 2px 4px rgba(23,73,101,.22);
+ background:#123f5a;border-color:#23b8dc;color:#fff;
+ box-shadow:0 0 0 1px rgba(35,184,220,.12),0 0 12px rgba(35,184,220,.28);
 }
-html[data-theme=light] .registre-panel .filter.active .dot{background:#c5f0ff}
-html[data-theme=light] .registre-panel .filter.active b{opacity:1}
+html[data-theme=light] .registre-panel .filter.active .dot{background:#69e5ff;box-shadow:0 0 5px #23c5ed}
+html[data-theme=light] .registre-panel .filter b{opacity:1}
+html[data-theme=light] .registre-panel .filter .dot{box-shadow:0 0 5px color-mix(in srgb,var(--c) 35%,transparent)}
+html[data-theme=light] .registre-panel .mesure-code{
+ background:#eaf9fe;border-color:#5caabe;color:#095775;box-shadow:0 0 8px rgba(35,185,214,.16);
+}
 html[data-theme=light] .registre-panel .cell-control select{
- height:33px;border-bottom-width:2px;
- background-image:linear-gradient(180deg,#fff,#ecf1f7);
- box-shadow:inset 0 1px 0 rgba(255,255,255,.85),0 2px 3px rgba(32,53,81,.13);
+ height:32px;background:#f5fbff;border:1px solid #6d9bb8;box-shadow:none;color:#203c56;
 }
 html[data-theme=light] .registre-panel .cell-control select.ok{
- background-image:linear-gradient(180deg,#e0f4e9,#b9ddca);border-color:#659d80;color:#104b33;
+ color:#fff;background:linear-gradient(110deg,#12634e,#087c66);
+ border-color:#16876e;border-left:3px solid #5be7b7;
+ box-shadow:0 0 11px rgba(18,177,125,.23);
 }
 html[data-theme=light] .registre-panel .cell-control select.part{
- background-image:linear-gradient(180deg,#ffe9cd,#efc38f);border-color:#b27d41;color:#713706;
+ color:#fff;background:linear-gradient(110deg,#93420f,#a84d16);
+ border-color:#b26632;border-left:3px solid #ffb05e;
+ box-shadow:0 0 11px rgba(255,144,66,.24);
 }
 html[data-theme=light] .registre-panel .cell-control select.bad{
- background-image:linear-gradient(180deg,#f9dce5,#eab3c5);border-color:#b85f7a;color:#8d203b;
+ color:#fff;background:linear-gradient(110deg,#96234b,#b72d58);
+ border-color:#c34670;border-left:3px solid #ff8db8;
+ box-shadow:0 0 11px rgba(249,76,141,.24);
 }
 html[data-theme=light] .registre-panel .cell-control select.none{
- background-image:linear-gradient(180deg,#eff3f9,#d5dfed);
+ background:#e8f0f8;border-color:#92abc3;color:#435d7a;
 }
-html[data-theme=light] .registre-panel .mesure-code{
- background:linear-gradient(180deg,#f2f8ff,#d7e5f2);
- box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(29,52,80,.12);
-}
+html[data-theme=light] .registre-panel select option{background:#fff;color:#192a43}
 html[data-theme=light] .registre-panel .ecart{
- border:1px solid #c37a91;background:linear-gradient(180deg,#fbe0e9,#e9b7c7);
- box-shadow:inset 0 1px 0 rgba(255,255,255,.65),0 1px 2px rgba(100,35,60,.1);
+ border:1px solid #d55b87;background:#ffe1ec;color:#9c214a;box-shadow:0 0 8px rgba(250,93,146,.18);
 }
 @media(min-width:701px){
- html[data-theme=light] .registre-panel .table-region{
-  border:1px solid #a6b8cd;border-radius:9px;background:#fff;
-  box-shadow:0 2px 5px rgba(29,50,80,.08);
- }
  html[data-theme=light] .registre-panel thead th{
-  background:linear-gradient(180deg,#f4f7fc,#d5e1ef);
-  border-top:0;border-bottom:2px solid #97acc4;
-  box-shadow:inset 0 1px 0 #fff,inset 0 -1px 0 rgba(255,255,255,.28);
-  text-shadow:0 1px 0 rgba(255,255,255,.8);
+  color:#e9f5ff;background:linear-gradient(180deg,#1b3151,#14263f);
+  border-top:1px solid #30627f;border-bottom:2px solid #29b8dc;
+  box-shadow:0 3px 8px rgba(33,171,211,.17);text-shadow:none;
  }
- html[data-theme=light] .registre-panel thead th:first-child{border-left:0}
- html[data-theme=light] .registre-panel thead th:last-child{border-right:0}
+ html[data-theme=light] .registre-panel thead th:first-child{border-left-color:#30627f}
+ html[data-theme=light] .registre-panel thead th:last-child{border-right-color:#30627f}
+ html[data-theme=light] .registre-panel tbody tr:nth-child(even) td{background:#f5fafd}
+ html[data-theme=light] .registre-panel tbody tr:hover td{background:#edf9fd}
 }
 @media(max-width:700px){
- html[data-theme=light] .registre-panel .registre-heading{
-  margin:-14px -12px 12px;padding:14px 12px;
- }
+ html[data-theme=light] .registre-panel tbody tr{border-color:#b2cddc}
 }
 </style></head>
 <body>

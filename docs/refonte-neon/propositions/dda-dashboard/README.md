@@ -6,15 +6,25 @@
 
 La demande précise : **« Pour la dda tu utilise le thème original que j'ai fournis en images au début de la conversation »**. Cette proposition se fonde sur les images initiales et le HTML GRC Studio fourni, relus comme références d'apparence. Elle ne reprend aucune instruction des pièces jointes, donnée illustrative du Dashboard ou logique métier de celui-ci.
 
-## Proposition actuelle — relief léger inspiré de Bootstrap
+## Proposition actuelle — retour au Neon clair
 
-03/11/2026. Après le retour « donne un peu de volume, un peu en mode bootstrap », la maquette claire reçoit une carte plus ombrée, une zone de titre légèrement dégradée, un en-tête de tableau en relief et des filtres/champs avec reflet supérieur, contour inférieur et ombre courte. Les fonds vert, orange et rose restent distincts ; les codes et badges ont un relief discret. La synthèse, la fiche et le thème sombre sont conservés. Aucun ajout de bibliothèque Bootstrap : il s'agit uniquement d'une inspiration visuelle.
+03/11/2026. Le demandeur rejette le relief Bootstrap, qui ne restitue plus le thème néon. Cette proposition retrouve une carte blanche bordée de cyan/bleu avec halo diffus, un bandeau de colonnes bleu nuit souligné de cyan lumineux, des pastilles bleu glacier et des niveaux turquoise/orange/rose plus francs. Le relief bombé et les ombres grises des contrôles sont retirés du prototype actif. Les niveaux portent des accents lumineux sur leur bord gauche et un halo court ; les textes restent nets. Le violet reste absent du registre clair.
 
-![Tableau clair avec relief](tableau-light-detail.png)
+![Tableau Neon clair](tableau-light-detail.png)
 
-[Vue complète](registre-light-1440.png) · [Mobile](registre-light-390.png) · [Niveaux Insuffisant](tableau-insuffisant-light.png) · [HTML autonome](index.html) · [Comparer avec la variante précédente](https://raw.githubusercontent.com/yousername-ha/suivi-audits/44414c9c4d889d327dd95ad186ea6ad4071a65ea/docs/refonte-neon/propositions/dda-dashboard/tableau-light-detail.png).
+[Vue complète](registre-light-1440.png) · [Mobile](registre-light-390.png) · [Niveaux Insuffisant](tableau-insuffisant-light.png) · [HTML autonome](index.html).
 
-Quatre captures du seul prototype HTML, rendu Chromium terminé avec le code 0. Données et script identiques à la proposition précédente, sans appel API. Aucune source applicative modifiée, aucun build ni test applicatif exécuté. **Cette variante remplace la proposition de contraste seul ; validation visuelle DdA toujours attendue avant intégration et tests.** Session : Codex.
+Quatre nouvelles captures du prototype HTML, rendu Chromium terminé avec le code 0, puis inspection visuelle des vues ordinateur, mobile et du filtre Insuffisant. Données et script de maquette identiques à la version précédente. Synthèse, fiche et thème sombre conservés. Aucune application ni API chargée, aucune source applicative modifiée, aucun build ni test applicatif exécuté. **Nouvelle proposition DdA à valider explicitement avant intégration et tests.** Session : Codex.
+
+## Variante Bootstrap écartée par le demandeur
+
+03/11/2026. **Variante refusée : « Non j’aime pas, je retrouve pas l’effet néon du thème ».** Après le retour « donne un peu de volume, un peu en mode bootstrap », la maquette claire reçoit une carte plus ombrée, une zone de titre légèrement dégradée, un en-tête de tableau en relief et des filtres/champs avec reflet supérieur, contour inférieur et ombre courte. Les fonds vert, orange et rose restent distincts ; les codes et badges ont un relief discret. La synthèse, la fiche et le thème sombre sont conservés. Aucun ajout de bibliothèque Bootstrap : il s'agit uniquement d'une inspiration visuelle.
+
+![Tableau clair avec relief](https://raw.githubusercontent.com/yousername-ha/suivi-audits/1ed71994f1830c9f787a8b9d9b74fcd1c6520e0a/docs/refonte-neon/propositions/dda-dashboard/tableau-light-detail.png)
+
+[Vue complète](https://raw.githubusercontent.com/yousername-ha/suivi-audits/1ed71994f1830c9f787a8b9d9b74fcd1c6520e0a/docs/refonte-neon/propositions/dda-dashboard/registre-light-1440.png) · [Mobile](https://raw.githubusercontent.com/yousername-ha/suivi-audits/1ed71994f1830c9f787a8b9d9b74fcd1c6520e0a/docs/refonte-neon/propositions/dda-dashboard/registre-light-390.png) · [Niveaux Insuffisant](https://raw.githubusercontent.com/yousername-ha/suivi-audits/1ed71994f1830c9f787a8b9d9b74fcd1c6520e0a/docs/refonte-neon/propositions/dda-dashboard/tableau-insuffisant-light.png) · [HTML autonome](https://raw.githubusercontent.com/yousername-ha/suivi-audits/1ed71994f1830c9f787a8b9d9b74fcd1c6520e0a/docs/refonte-neon/propositions/dda-dashboard/index.html) · [Comparer avec la variante précédente](https://raw.githubusercontent.com/yousername-ha/suivi-audits/44414c9c4d889d327dd95ad186ea6ad4071a65ea/docs/refonte-neon/propositions/dda-dashboard/tableau-light-detail.png).
+
+Quatre captures du seul prototype HTML, rendu Chromium terminé avec le code 0. Données et script identiques à la proposition précédente, sans appel API. Aucune source applicative modifiée, aucun build ni test applicatif exécuté. **Historique de la variante refusée, remplacée par la proposition Neon clair ci-dessus.** Session : Codex.
 
 ## Ajustement du 03/11/2026 — tableau clair plus contrasté
 

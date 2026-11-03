@@ -1,3 +1,5 @@
+> 03/11/2026 : [DdA claire : retour à l’effet néon](propositions/dda-dashboard/README.md#proposition-actuelle--retour-au-neon-clair), après refus du relief Bootstrap. Liserés cyan, bandeau bleu nuit et halos colorés ; nouvelle maquette à valider avant intégration et tests applicatifs.
+
 > 03/11/2026 : [DdA claire : proposition de relief inspiré de Bootstrap](propositions/dda-dashboard/README.md#proposition-actuelle--relief-léger-inspiré-de-bootstrap), carte, en-tête et champs ombrés ; maquette actuelle à valider avant intégration et tests applicatifs.
 
 > 03/11/2026 : [DdA claire : tableau plus contrasté](propositions/dda-dashboard/README.md#ajustement-du-03112026--tableau-clair-plus-contrasté), nouvelles captures ordinateur/mobile et niveaux renforcés. Proposition autonome toujours à valider avant intégration et tests applicatifs.
