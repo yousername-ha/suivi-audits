@@ -2,7 +2,17 @@
 
 03/11/2026, Europe/Paris. Session : Codex. Branche `codex/refonte-neon-main` ; référence applicative inchangée `aaac67c`.
 
-**Format en lignes explicitement validé par le demandeur.** Les fonds légèrement plus foncés et le remplissage du champ Mise en œuvre sont présentés avant intégration ; ces ajustements restent à valider. Le demandeur préfère une lecture en ligne compte tenu du nombre de mesures et écarte la proposition en cartes. Le registre est désormais présenté en lignes compactes ; la synthèse et la fiche de la nouvelle DdA restent la base. Aucun code applicatif modifié, aucun build ni test applicatif exécuté.
+**Format en lignes explicitement validé par le demandeur.** Les fonds légèrement plus foncés, l’applicabilité colorée, les champs remplis et les liserés néon sont présentés avant intégration ; ces finitions restent à valider. Le demandeur préfère une lecture en ligne compte tenu du nombre de mesures et écarte la proposition en cartes. Le registre est désormais présenté en lignes compactes ; la synthèse et la fiche de la nouvelle DdA restent la base. Aucun code applicatif modifié, aucun build ni test applicatif exécuté.
+
+## Applicabilité colorée et lignes plus néon
+
+03/11/2026. La demande ajoute une distinction Oui/Non et un effet néon plus présent. Applicable Oui reçoit un fond vert, Non un fond rouge ; À déterminer garde le gris bleuté. Les lignes portent un liseré lumineux plus net de 3 px et une légère teinte selon le niveau : Total vert, Partiel orange, Insuffisant rouge. Les champs de niveau conservent leurs fonds pleins avec des halos plus visibles. Les exclusions gardent un liseré neutre pour distinguer une exclusion d’une insuffisance. Dimensions, densité, données, libellés et JavaScript conservés.
+
+![Applicabilité et niveaux colorés](lignes-light-1440.png)
+
+[Applicable Non en rouge](applicabilite-dark-1440.png) · [Non en clair](applicabilite-light-1440.png) · [Lignes sombres](lignes-dark-1440.png) · [Alertes rouges](alertes-dark-1440.png).
+
+Douze rendus autonomes actualisés, code 0. Les deux vues d’exclusions utilisent les deux véritables mesures exclues du jeu fictif ; aucune valeur n’a été changée pour la capture. Les couleurs des options sont déterminées uniquement en CSS. Aucune application ni API chargée, aucun build/test applicatif, aucune source applicative modifiée. Finitions présentées pour validation avant intégration.
 
 ## Mise en œuvre avec fond coloré
 
@@ -32,6 +42,6 @@ Les six informations existantes et les filtres sont conservés. Aucun score ni m
 
 Après validation, conserver les composants et parcours existants : calculs partagés, droits audit:modifier, enregistrement au fil de l’eau, erreurs et cas vides, liens/documents, extrait req, texte de référence, marqueur Tenacy et champs de fiche. Les contrôles serveur ne sont pas simulés par cette maquette. Aucun fichier de apps/, packages/ ou des tests n’a changé pour ce lot.
 
-**Prochaine action : validation du remplissage et de la nuance plus foncée ; ne pas redemander l’accord sur le format en lignes déjà retenu.** Après accord, intégrer la DdA, effectuer les contrôles pertinents et fournir de nouvelles captures réelles, selon la règle visuel → validation → intégration et tests → nouveau visuel réel.
+**Prochaine action : validation des finitions de couleurs et de lumière ; ne pas redemander l’accord sur le format en lignes déjà retenu.** Après accord, intégrer la DdA, effectuer les contrôles pertinents et fournir de nouvelles captures réelles, selon la règle visuel → validation → intégration et tests → nouveau visuel réel.
 
 [Synthèse et fiche de référence](../dda-neon-nouveau/README.md) · [Cartes écartées](../dda-mesures-cartes/README.md).
