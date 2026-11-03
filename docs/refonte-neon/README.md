@@ -1,3 +1,5 @@
+> 03/11/2026 : **format en lignes validé**, [essai de fonds légèrement plus foncés](propositions/dda-mesures-lignes/README.md#nuance-légèrement-plus-foncée) en clair/sombre. Validation de la nuance avant intégration et tests applicatifs ; accord de format acquis.
+
 > 03/11/2026 : [DdA : mesures en lignes compactes](propositions/dda-mesures-lignes/README.md), préférées aux cartes pour le volume. Nouvelle maquette à valider avant intégration et tests applicatifs.
 
 > 03/11/2026 : [DdA : proposition de mesures en cartes graphiques](propositions/dda-mesures-cartes/README.md), après retour sur la présentation trop proche d’Excel. Synthèse et fiche conservées ; cartes à valider avant intégration et tests applicatifs.
