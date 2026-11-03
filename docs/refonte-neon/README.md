@@ -1,3 +1,5 @@
+> 03/11/2026 : [DdA néon : rouge à la place du rose](propositions/dda-dashboard/README.md#ajustement-demandé--rouge-à-la-place-du-rose) dans la maquette entière, clair/sombre. Nouveau visuel de la nuance avant intégration ; aucun build/test applicatif exécuté.
+
 > 03/11/2026 : [DdA claire : retour à l’effet néon](propositions/dda-dashboard/README.md#proposition-actuelle--retour-au-neon-clair), après refus du relief Bootstrap. Liserés cyan, bandeau bleu nuit et halos colorés ; nouvelle maquette à valider avant intégration et tests applicatifs.
 
 > 03/11/2026 : [DdA claire : proposition de relief inspiré de Bootstrap](propositions/dda-dashboard/README.md#proposition-actuelle--relief-léger-inspiré-de-bootstrap), carte, en-tête et champs ombrés ; maquette actuelle à valider avant intégration et tests applicatifs.

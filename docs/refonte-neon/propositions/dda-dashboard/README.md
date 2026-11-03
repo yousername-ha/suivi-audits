@@ -8,13 +8,24 @@ La demande précise : **« Pour la dda tu utilise le thème original que j'ai fo
 
 ## Proposition actuelle — retour au Neon clair
 
-03/11/2026. Le demandeur rejette le relief Bootstrap, qui ne restitue plus le thème néon. Cette proposition retrouve une carte blanche bordée de cyan/bleu avec halo diffus, un bandeau de colonnes bleu nuit souligné de cyan lumineux, des pastilles bleu glacier et des niveaux turquoise/orange/rose plus francs. Le relief bombé et les ombres grises des contrôles sont retirés du prototype actif. Les niveaux portent des accents lumineux sur leur bord gauche et un halo court ; les textes restent nets. Le violet reste absent du registre clair.
+### Ajustement demandé — rouge à la place du rose
+
+03/11/2026. Retour utilisateur : « Oui c’est mieux […] pas de rose, que du rouge ». La direction néon est conservée. Les niveaux Insuffisant, badges d’écart, pastilles de filtre, barres de synthèse, points de vigilance et repères de fiche utilisent désormais du rouge, en clair comme en sombre. Les halos et liserés d’alerte deviennent eux aussi rouges. Cyan, turquoise, bleu et orange conservés.
+
+![Niveaux Insuffisant en rouge](tableau-insuffisant-light.png)
+
+[Vue claire complète](registre-light-1440.png) · [Synthèse sombre](synthese-dark.png) · [Mobile clair](registre-light-390.png) · [HTML autonome](index.html).
+
+Quatorze rendus autonomes réussis (codes 0), soit douze PNG finaux : registre, fiche, thèmes clair/sombre, ordinateur/mobile et détails. Données et JavaScript identiques ; seules les teintes CSS changent. Aucun fichier applicatif modifié, aucun build ni test applicatif lancé. **Rendu rouge présenté avant intégration : attendre la validation finale de cette nuance pour appliquer la DdA et lancer ses contrôles.** Session : Codex.
+
+
+03/11/2026. Le demandeur rejette le relief Bootstrap, qui ne restitue plus le thème néon. Cette proposition retrouve une carte blanche bordée de cyan/bleu avec halo diffus, un bandeau de colonnes bleu nuit souligné de cyan lumineux, des pastilles bleu glacier et des niveaux turquoise/orange/rouge plus francs. Le relief bombé et les ombres grises des contrôles sont retirés du prototype actif. Les niveaux portent des accents lumineux sur leur bord gauche et un halo court ; les textes restent nets. Le violet reste absent du registre clair.
 
 ![Tableau Neon clair](tableau-light-detail.png)
 
 [Vue complète](registre-light-1440.png) · [Mobile](registre-light-390.png) · [Niveaux Insuffisant](tableau-insuffisant-light.png) · [HTML autonome](index.html).
 
-Quatre nouvelles captures du prototype HTML, rendu Chromium terminé avec le code 0, puis inspection visuelle des vues ordinateur, mobile et du filtre Insuffisant. Données et script de maquette identiques à la version précédente. Synthèse, fiche et thème sombre conservés. Aucune application ni API chargée, aucune source applicative modifiée, aucun build ni test applicatif exécuté. **Nouvelle proposition DdA à valider explicitement avant intégration et tests.** Session : Codex.
+Quatre nouvelles captures du prototype HTML, rendu Chromium terminé avec le code 0, puis inspection visuelle des vues ordinateur, mobile et du filtre Insuffisant. Données et script de maquette identiques à la version précédente. Structure de la synthèse, de la fiche et du thème sombre conservée ; leurs accents d’alerte sont désormais rouges. Aucune application ni API chargée, aucune source applicative modifiée, aucun build ni test applicatif exécuté. **Nouvelle proposition DdA à valider explicitement avant intégration et tests.** Session : Codex.
 
 ## Variante Bootstrap écartée par le demandeur
 
@@ -39,7 +50,7 @@ Quatre nouveaux rendus du HTML autonome sous Chromium : deux actualisent les cap
 ## Direction graphique
 
 - Fond bleu nuit `#0c1328`, cartes arrondies de 14 px, surfaces ardoise `#18233e` / `#1c2946`, typographie Inter.
-- Anneau et barres bleu/turquoise ; orange pour Partiel, rose pour Insuffisant, gris bleuté pour Non renseigné et Exclue. Violet très limité, aucune grande surface violette.
+- Anneau et barres bleu/turquoise ; orange pour Partiel, **rouge pour Insuffisant** (correction demandée le 03/11), gris bleuté pour Non renseigné et Exclue. Violet très limité, aucune grande surface violette.
 - Quatre cartes de synthèse : périmètre, mise en œuvre déclarée, répartition des niveaux et points de vigilance. Les valeurs proviennent du jeu fictif fourni et sont agrégées selon les définitions existantes.
 - Registre sur une grande carte, six colonnes existantes, titres sobres, codes sur petites pastilles, contrôles de niveau teintés et séparations lisibles.
 - Fiche mesure organisée en Déclaration d'applicabilité, Documents et justificatifs, Revue de la mesure ; repères et texte de référence sur le côté, puis sous le formulaire sur téléphone.
