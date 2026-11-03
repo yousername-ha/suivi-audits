@@ -1,3 +1,5 @@
+> 03/11/2026 : [DdA : mesures en lignes compactes](propositions/dda-mesures-lignes/README.md), préférées aux cartes pour le volume. Nouvelle maquette à valider avant intégration et tests applicatifs.
+
 > 03/11/2026 : [DdA : proposition de mesures en cartes graphiques](propositions/dda-mesures-cartes/README.md), après retour sur la présentation trop proche d’Excel. Synthèse et fiche conservées ; cartes à valider avant intégration et tests applicatifs.
 
 > 03/11/2026 : [DdA reprise depuis zéro selon les nouvelles images](propositions/dda-neon-nouveau/README.md) : maquette néon indépendante, validation avant intégration et tests applicatifs. Elle remplace les propositions DdA précédentes.

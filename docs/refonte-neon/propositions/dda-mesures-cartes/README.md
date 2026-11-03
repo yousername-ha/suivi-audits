@@ -1,3 +1,5 @@
+> 03/11/2026 : proposition écartée par le demandeur au profit des [mesures en lignes compactes](../dda-mesures-lignes/README.md), à valider. Cette page reste historique.
+
 # DdA — mesures en cartes graphiques
 
 03/11/2026, Europe/Paris. Session : Codex. Branche `codex/refonte-neon-main`, référence applicative inchangée `aaac67c`.
