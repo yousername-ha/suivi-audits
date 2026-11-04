@@ -2,7 +2,7 @@
    de l'utilisateur activée) : enrôlement depuis Mon compte, double enrôlement refusé, connexion par clé, opération refusée
    (NotAllowedError), facteurs vus par l'administrateur, révocation. Compte fictif créé par ce test. */
 import { expect, test, type BrowserContext, type Page } from '@playwright/test';
-import { apiLogin, csrfOf, markTotpUsed, PASSWORD, sessionAdmin, totp, watchPage } from '../helpers';
+import { csrfOf, PASSWORD, preparerCompte, sessionAdmin, watchPage } from '../helpers';
 
 const COMPTE = 'porteur-cle';
 
@@ -42,24 +42,12 @@ test('clés de sécurité : enrôlement, double enrôlement refusé, connexion p
   const ctx = await browser.newContext({ ignoreHTTPSErrors: true, locale: 'fr-FR' });
   const page = await ctx.newPage();
   const problems = watchPage(page);
-  const rq = ctx.request;
-  await rq.post('/api/auth/login', { data: { username: COMPTE, password: temp } });
-  let csrf = await csrfOf(rq);
-  const begin = await (
-    await rq.post('/api/account/totp/begin', { data: {}, headers: { 'x-csrf-token': csrf } })
-  ).json();
-  await rq.post('/api/account/totp/confirm', { data: { code: totp(begin.secret) }, headers: { 'x-csrf-token': csrf } });
-  markTotpUsed(begin.secret);
-  csrf = await csrfOf(rq);
-  await rq.post('/api/account/password', {
-    data: { current: temp, next: PASSWORD },
-    headers: { 'x-csrf-token': csrf },
-  });
-  await apiLogin(rq, COMPTE, PASSWORD, begin.secret);
+  // La session obtenue à la fin de la préparation est déjà complète : pas de seconde connexion (limite par adresse).
+  await preparerCompte(ctx, COMPTE, temp);
 
   const cle = await authentificateur(ctx, page);
   try {
-    // Enrôlement depuis Mon compte : la connexion vient d'avoir lieu, l'identité est confirmée pour 5 minutes.
+    // Enrôlement depuis Mon compte : la session vient d'être ouverte, l'identité est confirmée pour 5 minutes.
     await page.goto('/account');
     const carte = page.locator('.mantine-Card-root').filter({ hasText: 'Clés de sécurité (FIDO2)' });
     await expect(carte.getByText(/Identité confirmée jusqu’à/)).toBeVisible();
