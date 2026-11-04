@@ -6,7 +6,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { expect, test, type APIRequestContext, type Browser, type Page } from '@playwright/test';
-import { apiLogin, csrfOf, ecrireEtat, markTotpUsed, PASSWORD, sessionAdmin, totp, watchPage } from '../helpers';
+import { ecrireEtat, preparerCompte, sessionAdmin, sessionCompte, watchPage } from '../helpers';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -38,8 +38,18 @@ async function ouvrir(
   h = 1080,
   admin?: Awaited<ReturnType<typeof sessionAdmin>>,
 ): Promise<Session> {
+  // Session enregistrée du compte (ouverte à sa création, voir creerCompte) : une connexion complète n'a lieu que si elle n'est
+  // plus valide. Le serveur refuse le rejeu d'un pas TOTP déjà accepté (par exemple lors d'une exécution précédente) :
+  // on attend alors la fenêtre suivante, pour un nouvel essai unique (chaque connexion compte dans la limite par adresse :
+  // 20 par quart d'heure).
+  const session =
+    admin ??
+    (await sessionCompte(browser, username, secret).catch(async () => {
+      await new Promise((r) => setTimeout(r, 31_000));
+      return sessionCompte(browser, username, secret);
+    }));
   const ctx = await browser.newContext({
-    ...(admin ? { storageState: admin.state } : {}),
+    storageState: session.state,
     ignoreHTTPSErrors: true,
     locale: 'fr-FR',
     timezoneId: 'Europe/Paris',
@@ -50,15 +60,7 @@ async function ouvrir(
   });
   const page = await ctx.newPage();
   const problems = watchPage(page);
-  // Le serveur refuse le rejeu d'un pas TOTP déjà accepté (par exemple lors d'une exécution précédente) :
-  // on attend alors la fenêtre suivante.
-  if (admin) return { page, req: page.request, problems, csrf: admin.csrf, close: () => ctx.close() };
-  const csrf = await apiLogin(page.request, username, PASSWORD, secret).catch(async () => {
-    await page.waitForTimeout(31_000);
-    // Nouvel essai unique (chaque connexion compte dans la limite par adresse : 20 par quart d'heure).
-    return apiLogin(page.request, username, PASSWORD, secret);
-  });
-  return { page, req: page.request, problems, csrf, close: () => ctx.close() };
+  return { page, req: page.request, problems, csrf: session.csrf, close: () => ctx.close() };
 }
 
 /** Compte créé par l'administrateur puis préparé (mot de passe personnel, TOTP) par l'API. */
@@ -71,21 +73,10 @@ async function creerCompte(browser: Browser, username: string, roleId: string) {
   expect(r.status(), await r.text()).toBe(201);
   const temp = (await r.json()).temporaryPassword as string;
   const ctx = await browser.newContext({ ignoreHTTPSErrors: true });
-  const rq = ctx.request;
-  await rq.post('/api/auth/login', { data: { username, password: temp } });
-  let csrf = await csrfOf(rq);
-  const begin = await (
-    await rq.post('/api/account/totp/begin', { data: {}, headers: { 'x-csrf-token': csrf } })
-  ).json();
-  await rq.post('/api/account/totp/confirm', { data: { code: totp(begin.secret) }, headers: { 'x-csrf-token': csrf } });
-  markTotpUsed(begin.secret);
-  csrf = await csrfOf(rq);
-  await rq.post('/api/account/password', {
-    data: { current: temp, next: PASSWORD },
-    headers: { 'x-csrf-token': csrf },
-  });
+  // La session obtenue à la fin de la préparation est complète et enregistrée : `ouvrir` la reprend sans se reconnecter.
+  const { secret } = await preparerCompte(ctx, username, temp);
   await ctx.close();
-  comptes[username] = { secret: begin.secret as string };
+  comptes[username] = { secret };
   writeFileSync(COMPTES, JSON.stringify(comptes), { mode: 0o600 });
 }
 

@@ -4,7 +4,7 @@ import crypto from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import type { APIRequestContext, Browser, BrowserContext, Page } from '@playwright/test';
+import type { APIRequestContext, APIResponse, Browser, BrowserContext, Page } from '@playwright/test';
 
 export const PASSWORD = 'E2e-Mot-de-passe-2026!';
 
@@ -93,25 +93,117 @@ export const saveAdmin = (username: string, secret: string, poivre = '') =>
 export const loadAdmin = (): { username: string; secret: string; poivre: string } =>
   JSON.parse(readFileSync(ADMIN_FILE, 'utf8'));
 
+type EtatSession = Awaited<ReturnType<BrowserContext['storageState']>>;
+export type SessionEnregistree = { state: EtatSession; csrf: string };
+
+/** Relit une session enregistrée dans un fichier temporaire : rendue seulement si le serveur la reconnaît encore comme
+    complète (étape « ok ») et, quand `username` est donné, si elle appartient bien à ce compte. Sinon `null` : l'appelant
+    se reconnecte normalement (session fermée par une déconnexion ou un changement de rôle, expirée, autre serveur). */
+async function sessionEnregistree(
+  browser: Browser,
+  fichier: string,
+  username?: string,
+): Promise<SessionEnregistree | null> {
+  if (!existsSync(fichier)) return null;
+  try {
+    const ctx = await browser.newContext({ ignoreHTTPSErrors: true, storageState: fichier });
+    try {
+      const me = await (await ctx.request.get('/api/auth/me')).json();
+      if (me.stage !== 'ok') return null;
+      if (username && String(me.user?.username ?? '').toLowerCase() !== username.toLowerCase()) return null;
+      return { state: await ctx.storageState(), csrf: me.csrf as string };
+    } finally {
+      await ctx.close();
+    }
+  } catch {
+    return null;
+  }
+}
+
 /** Session administrateur partagée par les fichiers de tests : chaque connexion compte dans la limite par adresse
     (20 par quart d'heure), la suite complète la dépasserait. Rouverte seulement si elle n'est plus valide. */
 const SESSION_FILE = path.join(os.tmpdir(), 'suivi-e2e-admin-session.json');
-export async function sessionAdmin(
-  browser: Browser,
-): Promise<{ state: Awaited<ReturnType<BrowserContext['storageState']>>; csrf: string }> {
-  if (existsSync(SESSION_FILE)) {
-    const ctx = await browser.newContext({ ignoreHTTPSErrors: true, storageState: SESSION_FILE });
-    const me = await (await ctx.request.get('/api/auth/me')).json();
-    const state = await ctx.storageState();
-    await ctx.close();
-    if (me.stage === 'ok') return { state, csrf: me.csrf as string };
-  }
+export async function sessionAdmin(browser: Browser): Promise<SessionEnregistree> {
+  const valide = await sessionEnregistree(browser, SESSION_FILE);
+  if (valide) return valide;
   const admin = loadAdmin();
   const ctx = await browser.newContext({ ignoreHTTPSErrors: true });
-  const csrf = await apiLogin(ctx.request, admin.username, PASSWORD, admin.secret);
-  const state = await ctx.storageState({ path: SESSION_FILE });
-  await ctx.close();
-  return { state, csrf };
+  try {
+    const csrf = await apiLogin(ctx.request, admin.username, PASSWORD, admin.secret);
+    const state = await ctx.storageState({ path: SESSION_FILE });
+    return { state, csrf };
+  } finally {
+    await ctx.close();
+  }
+}
+/** Enregistre la session déjà ouverte par le parcours d'installation (complète : mot de passe et TOTP présentés) : la
+    première utilisation de `sessionAdmin` ne coûte plus de connexion. */
+export const enregistrerSessionAdmin = (ctx: BrowserContext) => ctx.storageState({ path: SESSION_FILE });
+
+/** Session d'un compte créé par les tests (même principe que `sessionAdmin`, un fichier par compte). Rouverte par une
+    connexion complète seulement si la session enregistrée n'est plus valide (rôle modifié, compte recréé, expirée). */
+const fichierSession = (username: string) =>
+  path.join(os.tmpdir(), `suivi-e2e-session-${username.replace(/[^\w.-]/g, '_')}.json`);
+export async function sessionCompte(
+  browser: Browser,
+  username: string,
+  secret: string,
+  password = PASSWORD,
+): Promise<SessionEnregistree> {
+  const fichier = fichierSession(username);
+  const valide = await sessionEnregistree(browser, fichier, username);
+  if (valide) return valide;
+  const ctx = await browser.newContext({ ignoreHTTPSErrors: true });
+  try {
+    const csrf = await apiLogin(ctx.request, username, password, secret);
+    return { state: await ctx.storageState({ path: fichier }), csrf };
+  } finally {
+    await ctx.close();
+  }
+}
+
+/** Prépare, dans le contexte `ctx`, un compte créé par l'administrateur : connexion avec le mot de passe provisoire,
+    enrôlement TOTP, mot de passe personnel. La session obtenue est déjà complète (second facteur présenté à l'enrôlement,
+    mot de passe changé, session courante conservée) : aucune seconde connexion n'est nécessaire, `ctx` reste connecté et la
+    session est enregistrée pour `sessionCompte`. Retombe sur une connexion complète si le serveur ne la juge pas complète. */
+export async function preparerCompte(
+  ctx: BrowserContext,
+  username: string,
+  temp: string,
+): Promise<{ secret: string; csrf: string }> {
+  const rq = ctx.request;
+  const controle = async (r: APIResponse, etape: string) => {
+    if (!r.ok()) throw new Error(`préparation de ${username}, ${etape} : ${r.status()} ${await r.text()}`);
+    return r;
+  };
+  await controle(await rq.post('/api/auth/login', { data: { username, password: temp } }), 'connexion provisoire');
+  let csrf = await csrfOf(rq);
+  const begin = await (
+    await controle(
+      await rq.post('/api/account/totp/begin', { data: {}, headers: { 'x-csrf-token': csrf } }),
+      'début de l’enrôlement TOTP',
+    )
+  ).json();
+  await controle(
+    await rq.post('/api/account/totp/confirm', {
+      data: { code: totp(begin.secret) },
+      headers: { 'x-csrf-token': csrf },
+    }),
+    'confirmation TOTP',
+  );
+  markTotpUsed(begin.secret);
+  csrf = await csrfOf(rq);
+  await controle(
+    await rq.post('/api/account/password', {
+      data: { current: temp, next: PASSWORD },
+      headers: { 'x-csrf-token': csrf },
+    }),
+    'mot de passe personnel',
+  );
+  const me = await (await rq.get('/api/auth/me')).json();
+  csrf = me.stage === 'ok' ? (me.csrf as string) : await apiLogin(rq, username, PASSWORD, begin.secret);
+  await ctx.storageState({ path: fichierSession(username) });
+  return { secret: begin.secret as string, csrf };
 }
 
 /** Crée un écart du périmètre commun (ce que le module Audit et le tableau de bord lisent comme constat). */
