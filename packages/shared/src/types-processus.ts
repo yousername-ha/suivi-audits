@@ -2,6 +2,7 @@
    Le champ « famille » d'un processus référence le `code` d'un type ; le code ne change jamais après création, le libellé,
    la description, la teinte et le rang se modifient. Les trois types de départ reprennent les valeurs historiques. */
 import { z } from 'zod';
+import { sansSoulignesDeBord } from './texte.js';
 
 export const TEINTES_TYPE_PROCESSUS = ['vert', 'bleu', 'violet', 'orange', 'rouge', 'gris'] as const;
 export type TeinteTypeProcessus = (typeof TEINTES_TYPE_PROCESSUS)[number];
@@ -52,12 +53,12 @@ export interface TypeProcessusDto {
 export function codeDepuisLibelle(label: string, existants: Iterable<string>): string {
   const pris = new Set([...existants].map((c) => c.toLowerCase()));
   const base =
-    label
-      .normalize('NFD')
-      .replace(/[̀-ͯ]/g, '')
-      .replace(/[^A-Za-z0-9]+/g, '_')
-      .replace(/^_+|_+$/g, '')
-      .slice(0, 50) || 'type';
+    sansSoulignesDeBord(
+      label
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .replace(/[^A-Za-z0-9]+/g, '_'),
+    ).slice(0, 50) || 'type';
   let code = base;
   for (let n = 2; pris.has(code.toLowerCase()); n++) code = `${base}_${n}`;
   return code;
