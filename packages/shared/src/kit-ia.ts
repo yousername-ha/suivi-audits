@@ -4,6 +4,7 @@
    les contrôles sont des propositions de l'organisation (ADR 0055). */
 import { z } from 'zod';
 import type { LibraryFrameworkDefinition } from './grc.js';
+import { sansSoulignesDeBord } from './texte.js';
 
 const court = (n: number) => z.string().trim().min(1).max(n);
 const facultatif = (n: number) => z.string().trim().max(n).nullish();
@@ -119,12 +120,7 @@ export const KIT_IA_NOM = 'Contrôles IA internes (ISO/IEC 27001 et HDS)';
 const sansAccent = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 /** Clé de domaine : « 01 Gouvernance » → « ia_01_gouvernance ». */
 export const cleDomaine = (domaine: string) =>
-  (
-    'ia_' +
-    sansAccent(domaine)
-      .replace(/[^a-z0-9]+/g, '_')
-      .replace(/^_+|_+$/g, '')
-  ).slice(0, 64);
+  ('ia_' + sansSoulignesDeBord(sansAccent(domaine).replace(/[^a-z0-9]+/g, '_'))).slice(0, 64);
 
 const PORTEE_LIBELLE: Record<'external' | 'business', string> = {
   external: 'usage d’outils d’IA externes',
