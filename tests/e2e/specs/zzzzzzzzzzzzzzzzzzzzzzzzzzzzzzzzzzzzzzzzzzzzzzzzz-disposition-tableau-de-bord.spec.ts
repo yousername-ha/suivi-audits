@@ -67,6 +67,27 @@ test('disposition du tableau de bord : clavier, glisser, largeur, masquer, enreg
     // Largeur, puis masquer et réafficher.
     await page.getByLabel('Largeur de « Prochaines échéances »').selectOption('12');
     await expect(page.locator('[data-dalle="echeances"]')).toHaveClass(/tdb-l12/);
+
+    // Largeur au glisser (lot 2d) : le bord droit tiré jusqu'au milieu de la dalle l'aimante sur « la moitié », annoncée ;
+    // au clavier, deux flèches à droite la rendent à toute la largeur.
+    const echeances = page.locator('[data-dalle="echeances"]');
+    const annonceEdition = page
+      .getByRole('region', { name: 'Modifier la disposition du tableau de bord' })
+      .locator('[aria-live="polite"]');
+    const bord = echeances.getByRole('button', { name: /^Redimensionner « Prochaines échéances »/ });
+    await bord.scrollIntoViewIfNeeded();
+    const [zoneBord, zoneCase] = await Promise.all([bord.boundingBox(), echeances.boundingBox()]);
+    await page.mouse.move(zoneBord!.x + zoneBord!.width / 2, zoneBord!.y + zoneBord!.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(zoneCase!.x + zoneCase!.width / 2, zoneBord!.y + zoneBord!.height / 2, { steps: 10 });
+    await page.mouse.up();
+    await expect(echeances).toHaveClass(/tdb-l6/);
+    await expect(annonceEdition).toHaveText(/« Prochaines échéances » : position \d+ sur \d+, la moitié\./);
+    await bord.focus();
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('ArrowRight');
+    await expect(echeances).toHaveClass(/tdb-l12/);
+    await expect(annonceEdition).toHaveText('« Prochaines échéances » : toute la largeur.');
     await page.getByRole('button', { name: 'Masquer « Écarts »', exact: true }).click();
     await expect(page.locator('[data-dalle="ecarts"]')).toHaveCount(0);
     await page.getByRole('button', { name: 'Afficher « Écarts »' }).click();

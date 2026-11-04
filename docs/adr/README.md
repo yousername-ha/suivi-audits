@@ -42,7 +42,7 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0036](0036-objectifs-boites-contexte-et-revue-de-direction.md) | Objectifs, boîtes de pilotage, contexte et revue de direction (lots M5 à M8) | Acceptée |
 | [0037](0037-standards-verrouilles-jeu-de-test-et-relations.md) | Standards verrouillés, copies personnalisables, jeu de test et contrôle des relations | Acceptée |
 | [0038](0038-socle-de-configuration-grc-transversal.md) | Socle de configuration GRC transversal (échelles, matrices, critères) et méthodes épinglées | Proposée |
-| [0039](0039-hierarchie-des-perimetres.md) | Hiérarchie des périmètres (organisation → entité → périmètre) et héritage explicite des référentiels | Proposée |
+| [0039](0039-hierarchie-des-perimetres.md) | Hiérarchie des périmètres (organisations et fournisseurs, amendée le 01/11/2026) et héritage explicite des référentiels | Proposée |
 | [0040](0040-sortie-du-json-plat-modules-en-tables.md) | Sortie du JSON plat : modules de l'outil de suivi repris en tables, un par un | Proposée |
 | [0041](0041-evaluation-des-exigences-et-couverture.md) | Évaluation des exigences : applicabilité, mise en œuvre, test d'efficacité, validation métier et état de couverture | Proposée |
 | [0042](0042-retrait-de-lecran-legacy.md) | Retrait de l'écran /legacy : lecture par /api/suivi, exports Excel natifs, import conservé | Proposée |
@@ -85,3 +85,4 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0078](0078-disposition-et-partage-du-tableau-de-bord.md) | Tableau de bord de l'accueil : disposition personnelle (déplacer, redimensionner, masquer les dalles), disposition par défaut de l'organisation, partage en lecture de la seule disposition avec des personnes ou des groupes, droit dédié `tableau_de_bord:modifier`, seuils, cible et visualisation par dalle | Acceptée (lots 2a, 2b et 2c) |
 | [0079](0079-authentification-fido2-webauthn.md) | Clés de sécurité FIDO2 / WebAuthn en second facteur : challenge serveur à usage unique, compteur de signature, ré-authentification récente, codes de récupération, obligation des administrateurs avec période de grâce, clés matérielles uniquement (attestation, AAGUID) | Acceptée |
 | [0080](0080-habilitation-deleguee-contribution-retex.md) | Habilitation déléguée sur un objet : contribution à un RETEX (contributeur sans droit de module, routes en accès `auth`, écriture vérifiée sous verrou, lecture filtrée, 404 identiques, notifications `retex_contribution` sans SMSI ni objet) | Acceptée |
+| [0081](0081-configuration-du-pilotage-dans-la-plateforme.md) | « Mes rappels » seul dans le Pilotage ; « Configuration du pilotage » rangée dans la Plateforme (carte, adresse et droit d'origine conservés) | Acceptée |

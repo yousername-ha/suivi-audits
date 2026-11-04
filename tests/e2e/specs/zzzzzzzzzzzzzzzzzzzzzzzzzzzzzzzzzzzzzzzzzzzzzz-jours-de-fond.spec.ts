@@ -36,7 +36,7 @@ test('Jours fériés en fond : bascule séparée, Timeline et Calendrier, action
       scope: 'Fixture de recette',
       timezone: 'Europe/Paris',
       parentId: null,
-      entityKind: 'perimetre',
+      entityKind: 'organisation',
       inheritFrameworks: false,
     });
     // Une action qui couvre toute l'année : la Timeline contient donc des jours fériés.

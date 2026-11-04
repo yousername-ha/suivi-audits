@@ -2,7 +2,7 @@
    (vues « Par processus », « Par objectif » et « Vue compacte », ajout, fiches, mesures, tendance, source de la valeur).
    Les états sont calculés par les fonctions partagées testées en parité (packages/shared/src/tableau-de-bord.ts) ;
    les indicateurs « calculés » sont alimentés par les autres modules, aucune valeur n'est estimée. */
-import { Badge, Button, Card, Group, Progress, Stack, Table, Tabs, Text } from '@mantine/core';
+import { Anchor, Badge, Button, Card, Group, Progress, Stack, Table, Tabs, Text } from '@mantine/core';
 import { useQuery } from '@tanstack/react-query';
 import {
   indicateursSynthese,
@@ -256,7 +256,7 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
                   chiffres aident le pilotage ; ils ne constituent pas un taux de conformité.
                 </Text>
                 <ErrorAlert error={boites.error} />
-                <div className="grc-dashboard-grid">
+                <div className="grc-dashboard-grid boites-pilotage">
                   {rProcessus.map((p) => {
                     const id = texte(p.id);
                     const mesObjectifs = objectifs.filter((o) => o.processus.includes(id));
@@ -274,54 +274,81 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
                     ].filter(garde);
                     const pire = PIRE.find((e) => tous.some((i) => i.etat === e));
                     const b = boites.data?.find((x) => x.ref === `legacy:processes:${id}`);
+                    const chiffres: [string, string, string?][] = [
+                      [
+                        'Actions ouvertes',
+                        String(b?.actionsOuvertes ?? '–'),
+                        b?.actionsEnRetard ? `dont ${b.actionsEnRetard} en retard` : undefined,
+                      ],
+                      ['Risques liés', String(b?.risques ?? '–')],
+                      ['Séries récurrentes', String(b?.series ?? '–')],
+                      ['Prochaine échéance', b?.prochaineEcheance ? jour(b.prochaineEcheance) : '–'],
+                    ];
                     return (
-                      <Card key={id} withBorder aria-label={`Boîte du processus ${id}`}>
-                        <Stack gap="xs">
-                          <Group justify="space-between" wrap="nowrap">
-                            <Button
-                              variant="subtle"
-                              size="compact-sm"
-                              aria-label={`Ouvrir le processus ${id}`}
-                              onClick={() => setOuvert({ type: 'processus', id })}
-                            >
-                              {id} · {texte(p.name)}
-                            </Button>
+                      <Card key={id} withBorder aria-label={`Boîte du processus ${id}`} className="boite-pilotage">
+                        <Stack gap="sm">
+                          <Group justify="space-between" wrap="nowrap" align="flex-start">
+                            <div>
+                              <Anchor
+                                component="button"
+                                type="button"
+                                fw={700}
+                                aria-label={`Ouvrir le processus ${id}`}
+                                onClick={() => setOuvert({ type: 'processus', id })}
+                              >
+                                {id} · {texte(p.name)}
+                              </Anchor>
+                              <Text size="sm" c="dimmed">
+                                Pilote : {texte(p.owner) || 'à définir'}
+                              </Text>
+                            </div>
                             {pire && <StatusChip etat={ETATS[pire][1]}>{ETATS[pire][0]}</StatusChip>}
                           </Group>
-                          <Text size="sm" c="dimmed">
-                            Pilote : {texte(p.owner) || 'à définir'}
-                          </Text>
                           {tous.length ? (
-                            tous.map((i) => (
-                              <Group key={i.id} justify="space-between" wrap="nowrap">
-                                <Button
-                                  variant="subtle"
-                                  size="compact-sm"
-                                  aria-label={`Ouvrir l’indicateur ${i.id}`}
-                                  onClick={() => ouvrirIndicateur(i.id)}
-                                >
-                                  {i.nom}
-                                </Button>
-                                <Text size="sm">
-                                  <b>{i.valeur}</b> {i.tendance} · {i.cible}
-                                </Text>
-                                <StatusChip etat={ETATS[i.etat][1]}>{ETATS[i.etat][0]}</StatusChip>
-                              </Group>
-                            ))
+                            <ul className="boite-indicateurs" aria-label={`Indicateurs du processus ${id}`}>
+                              {tous.map((i) => (
+                                <li key={i.id}>
+                                  <Anchor
+                                    component="button"
+                                    type="button"
+                                    size="sm"
+                                    fw={600}
+                                    aria-label={`Ouvrir l’indicateur ${i.id}`}
+                                    onClick={() => ouvrirIndicateur(i.id)}
+                                  >
+                                    {i.nom}
+                                  </Anchor>
+                                  <Group justify="space-between" gap="xs" wrap="nowrap" align="center">
+                                    <Text size="sm">
+                                      <Text span fw={700}>
+                                        {i.valeur}
+                                      </Text>{' '}
+                                      {i.tendance}{' '}
+                                      <Text span size="xs" c="dimmed">
+                                        cible {i.cible || '–'}
+                                      </Text>
+                                    </Text>
+                                    <StatusChip etat={ETATS[i.etat][1]}>{ETATS[i.etat][0]}</StatusChip>
+                                  </Group>
+                                </li>
+                              ))}
+                            </ul>
                           ) : (
-                            <Text size="sm">Aucun indicateur pour ce processus.</Text>
+                            <Text size="sm" c="dimmed">
+                              Aucun indicateur pour ce processus.
+                            </Text>
                           )}
-                          <Group gap="md">
-                            <Text size="sm">
-                              Actions ouvertes : {b?.actionsOuvertes ?? '–'}
-                              {b?.actionsEnRetard ? ` (dont ${b.actionsEnRetard} en retard)` : ''}
-                            </Text>
-                            <Text size="sm">Risques liés : {b?.risques ?? '–'}</Text>
-                            <Text size="sm">Séries récurrentes : {b?.series ?? '–'}</Text>
-                            <Text size="sm">
-                              Prochaine échéance : {b?.prochaineEcheance ? jour(b.prochaineEcheance) : '–'}
-                            </Text>
-                          </Group>
+                          <dl className="boite-chiffres" aria-label={`Registre du processus ${id}`}>
+                            {chiffres.map(([libelle, valeur, detail]) => (
+                              <div key={libelle}>
+                                <dt>{libelle}</dt>
+                                <dd>
+                                  {valeur}
+                                  {detail && <span className="boite-chiffres-detail"> {detail}</span>}
+                                </dd>
+                              </div>
+                            ))}
+                          </dl>
                         </Stack>
                       </Card>
                     );

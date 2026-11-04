@@ -1,5 +1,5 @@
 /* Administration en deux entrées, chacune une page de cartes (icône, nom, synthèse) : « Plateforme » (organisation,
-   comptes, référentiels, échelles, affichage) et « Configuration système » (exploitation du serveur). Le détail d'une carte
+   comptes, référentiels, échelles, configuration du pilotage, affichage) et « Configuration système » (exploitation du serveur). Le détail d'une carte
    s'ouvre dans une fenêtre centrée à bordure visible ; la fermer ramène à la page de cartes. Les anciennes adresses
    /parametres/… et /admin/… restent valables. Aucune API nouvelle : les panneaux sont ceux des écrans historiques. */
 import { Badge, Card, Group, Modal, Stack, Text, Title } from '@mantine/core';
@@ -105,6 +105,15 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     icone: 'echelles',
     teinte: 'rouge',
     lien: '/parametres/configuration-grc',
+  },
+  {
+    id: 'configuration-pilotage',
+    cote: 'plateforme',
+    titre: 'Configuration du pilotage',
+    resume: 'Méthodes d’appréciation des risques publiées, politique métier et accès aux périmètres existants.',
+    icone: 'reglages',
+    teinte: 'violet',
+    lien: '/pilotage/configuration',
   },
   {
     id: 'utilisateurs',

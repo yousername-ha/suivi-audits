@@ -3,7 +3,7 @@
    le pilote valide la proposition, récupère la main courante de crise, clôt la collecte, génère la chronologie et la
    diffuse au contributeur. Comptes, incident et cellule de crise FICTIFS, posés par l'API. */
 import { expect, test, type BrowserContext, type Page } from '@playwright/test';
-import { apiLogin, csrfOf, ecrireEtat, markTotpUsed, PASSWORD, sessionAdmin, totp, watchPage } from '../helpers';
+import { ecrireEtat, preparerCompte, sessionAdmin, sessionCompte, watchPage } from '../helpers';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -131,24 +131,10 @@ test.beforeAll(async ({ browser }) => {
     expect(r.status(), await r.text()).toBe(201);
     const temp = (await r.json()).temporaryPassword as string;
     const c = await browser.newContext({ ignoreHTTPSErrors: true });
-    await c.request.post('/api/auth/login', { data: { username, password: temp } });
-    let csrf = await csrfOf(c.request);
-    const begin = await (
-      await c.request.post('/api/account/totp/begin', { data: {}, headers: { 'x-csrf-token': csrf } })
-    ).json();
-    await c.request.post('/api/account/totp/confirm', {
-      data: { code: totp(begin.secret) },
-      headers: { 'x-csrf-token': csrf },
-    });
-    markTotpUsed(begin.secret);
-    csrf = await csrfOf(c.request);
-    const mdp = await c.request.post('/api/account/password', {
-      data: { current: temp, next: PASSWORD },
-      headers: { 'x-csrf-token': csrf },
-    });
-    expect(mdp.ok(), await mdp.text()).toBe(true);
+    // Session complète à la fin de la préparation, enregistrée pour les tests (sessionCompte) : pas de seconde connexion.
+    const { secret } = await preparerCompte(c, username, temp);
     await c.close();
-    secrets[username] = begin.secret as string;
+    secrets[username] = secret;
   }
 });
 
@@ -182,10 +168,15 @@ test('Pilote : ouvrir un RETEX et inviter un contributeur d’un autre pôle', a
 });
 
 test('Contributeur : bandeau, proposition, contribution terminée ; compte non invité : 404', async ({ browser }) => {
-  const ctx = await browser.newContext({ ignoreHTTPSErrors: true, locale: 'fr-FR', timezoneId: 'Europe/Paris' });
+  const { state } = await sessionCompte(browser, CONTRIBUTEUR, secrets[CONTRIBUTEUR]!);
+  const ctx = await browser.newContext({
+    storageState: state,
+    ignoreHTTPSErrors: true,
+    locale: 'fr-FR',
+    timezoneId: 'Europe/Paris',
+  });
   const page = await ctx.newPage();
   contributeur = { ctx, page, problems: watchPage(page) };
-  await apiLogin(page.request, CONTRIBUTEUR, PASSWORD, secrets[CONTRIBUTEUR]!);
   await page.goto('/');
 
   // Bandeau d'invitation visible sans aucun droit sur les incidents.
@@ -213,9 +204,10 @@ test('Contributeur : bandeau, proposition, contribution terminée ; compte non i
   await expect(bandeau).toHaveCount(0);
 
   // Compte non invité : même réponse 404 pour ce RETEX et pour un incident inexistant ; aucune demande listée.
-  const tiers = await browser.newContext({ ignoreHTTPSErrors: true });
+  const session = await sessionCompte(browser, TIERS, secrets[TIERS]!);
+  const tiers = await browser.newContext({ storageState: session.state, ignoreHTTPSErrors: true });
   try {
-    const csrf = await apiLogin(tiers.request, TIERS, PASSWORD, secrets[TIERS]!);
+    const csrf = session.csrf;
     const invite = await tiers.request.get(`/api/retex/${INCIDENT}`);
     const absent = await tiers.request.get('/api/retex/INC-1999-999');
     expect(invite.status()).toBe(404);

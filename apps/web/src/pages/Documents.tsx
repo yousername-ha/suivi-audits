@@ -12,6 +12,7 @@ import {
   FileButton,
   Group,
   Modal,
+  MultiSelect,
   SegmentedControl,
   Select,
   Stack,
@@ -22,6 +23,7 @@ import {
   Textarea,
   TextInput,
   Title,
+  UnstyledButton,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import {
@@ -30,6 +32,7 @@ import {
   type DocumentDetailOut,
   type DocumentOut,
   type LinkOut,
+  type TagCount,
 } from '@suivi/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMediaQuery } from '@mantine/hooks';
@@ -53,6 +56,102 @@ function useRefs() {
   const q = useQuery({ queryKey: ['refs'], queryFn: () => get<Ref[]>('/api/refs'), staleTime: 300_000 });
   // Une même référence peut exister dans plusieurs référentiels (ex. « 4.4 ») : liste dédoublonnée.
   return [...new Set((q.data ?? []).map((r) => r.ref))];
+}
+
+/** Étiquettes déjà utilisées avec leur nombre d'emplois : valeurs du filtre et suggestions de saisie. */
+function useEtiquettes(portee: 'documents' | 'liens' | 'tous') {
+  return useQuery({
+    queryKey: ['etiquettes', portee],
+    queryFn: () => get<TagCount[]>(`/api/documents/tags?portee=${portee}`),
+    staleTime: 60_000,
+  });
+}
+const optionsEtiquettes = (t?: TagCount[]) => (t ?? []).map((e) => ({ value: e.tag, label: `${e.tag} (${e.count})` }));
+
+/** Saisie d'étiquettes : une étiquette qui ne diffère d'une étiquette existante que par la casse est refusée
+ *  (« rgpd » si « RGPD » existe) ; un doublon dans la même liste est ignoré. */
+function saisirEtiquettes(existantes: string[], actuelles: string[], proposees: string[]): string[] {
+  const gardees = proposees.filter((t) => actuelles.includes(t));
+  const acceptees: string[] = [];
+  for (const t of proposees.filter((x) => !actuelles.includes(x))) {
+    const existante = existantes.find((e) => e !== t && e.toLowerCase() === t.toLowerCase());
+    if (existante) {
+      notifications.show({
+        color: 'orange',
+        title: 'Étiquette déjà existante',
+        message: `« ${existante} » existe déjà : choisissez-la dans la liste.`,
+      });
+    } else if (![...gardees, ...acceptees].some((g) => g.toLowerCase() === t.toLowerCase())) {
+      acceptees.push(t);
+    }
+  }
+  return [...gardees, ...acceptees];
+}
+
+type CleTri = 'modifie' | 'titre' | 'categorie' | 'classification' | 'taille';
+interface OrdreTri {
+  tri: CleTri;
+  ordre: 'asc' | 'desc';
+}
+const TRI_DEFAUT: OrdreTri = { tri: 'modifie', ordre: 'desc' };
+
+/** En-tête de colonne triable : un second clic inverse le sens ; l'état est annoncé par aria-sort. */
+function EnteteTri({
+  cle,
+  libelle,
+  courant,
+  onChange,
+  className,
+}: {
+  cle: CleTri;
+  libelle: string;
+  courant: OrdreTri;
+  onChange: (o: OrdreTri) => void;
+  className?: string;
+}) {
+  const actif = courant.tri === cle;
+  const suivant = actif
+    ? courant.ordre === 'asc'
+      ? 'desc'
+      : 'asc'
+    : cle === 'modifie' || cle === 'taille'
+      ? 'desc'
+      : 'asc';
+  return (
+    <Table.Th className={className} aria-sort={actif ? (courant.ordre === 'asc' ? 'ascending' : 'descending') : 'none'}>
+      <UnstyledButton type="button" className="entete-tri" onClick={() => onChange({ tri: cle, ordre: suivant })}>
+        {libelle}
+        {actif ? (courant.ordre === 'asc' ? ' ▲' : ' ▼') : ''}
+      </UnstyledButton>
+    </Table.Th>
+  );
+}
+
+/** Pastilles d'étiquettes ; un clic ajoute l'étiquette au filtre de la liste. */
+function Etiquettes({ tags, onChoisir }: { tags: string[]; onChoisir?: (t: string) => void }) {
+  return (
+    <Group gap="2xs">
+      {tags.map((t) =>
+        onChoisir ? (
+          <Badge
+            key={t}
+            component="button"
+            type="button"
+            variant="outline"
+            size="sm"
+            aria-label={`Filtrer sur l’étiquette ${t}`}
+            onClick={() => onChoisir(t)}
+          >
+            {t}
+          </Badge>
+        ) : (
+          <Badge key={t} variant="outline" size="sm">
+            {t}
+          </Badge>
+        ),
+      )}
+    </Group>
+  );
 }
 
 export function DocumentsPage() {
@@ -125,6 +224,7 @@ export function DocumentsPage() {
 const COLONNES_DOCS: Colonne[] = [
   { cle: 'titre', libelle: 'Titre', priorite: 1, fixe: true },
   { cle: 'rattachements', libelle: 'Rattachements', priorite: 1 },
+  { cle: 'etiquettes', libelle: 'Étiquettes', priorite: 2 },
   { cle: 'classification', libelle: 'Classification', priorite: 2 },
   { cle: 'categorie', libelle: 'Catégorie', priorite: 3 },
   { cle: 'taille', libelle: 'Taille et version', priorite: 3 },
@@ -145,8 +245,18 @@ function DocumentList({
   const qc = useQueryClient();
   const [q, setQ] = useState('');
   const [category, setCategory] = useState<string | null>(null);
+  const [tags, setTags] = useState<string[]>([]);
+  const [ordre, setOrdre] = useState<OrdreTri>(TRI_DEFAUT);
   const [trash, setTrash] = useState('0');
-  const params = new URLSearchParams({ ...(q ? { q } : {}), ...(category ? { category } : {}), trash });
+  const params = new URLSearchParams({
+    ...(q ? { q } : {}),
+    ...(category ? { category } : {}),
+    ...(tags.length ? { tags: tags.join(',') } : {}),
+    tri: ordre.tri,
+    ordre: ordre.ordre,
+    trash,
+  });
+  const etiquettes = useEtiquettes('documents');
   const list = useQuery({
     queryKey: ['documents', params.toString()],
     queryFn: () => get<DocumentOut[]>(`/api/documents?${params}`),
@@ -162,12 +272,16 @@ function DocumentList({
           raw: await f.arrayBuffer(),
           headers: {
             'X-File-Name': encodeURIComponent(f.name),
-            'X-Meta': encodeURIComponent(JSON.stringify(category ? { category } : {})),
+            // Un dépôt fait pendant un filtrage reprend la catégorie et les étiquettes filtrées.
+            'X-Meta': encodeURIComponent(
+              JSON.stringify({ ...(category ? { category } : {}), ...(tags.length ? { tags } : {}) }),
+            ),
           },
         });
       }
       notifications.show({ color: 'teal', message: `${files.length} document(s) déposé(s).` });
       await qc.invalidateQueries({ queryKey: ['documents'] });
+      await qc.invalidateQueries({ queryKey: ['etiquettes'] });
     } catch (e) {
       notifications.show({ color: 'red', title: 'Dépôt refusé', message: errorMessage(e) });
     } finally {
@@ -193,6 +307,20 @@ function DocumentList({
           clearable
           className="champ-s"
         />
+        <div className="filtre-etiquettes">
+          <MultiSelect
+            label="Étiquettes"
+            description="Toutes les étiquettes choisies"
+            placeholder={tags.length ? undefined : 'Toutes'}
+            data={optionsEtiquettes(etiquettes.data)}
+            value={tags}
+            onChange={setTags}
+            searchable
+            clearable
+            nothingFoundMessage="Aucune étiquette"
+            className="champ-m"
+          />
+        </div>
         {canDelete && (
           <SegmentedControl
             value={trash}
@@ -220,12 +348,31 @@ function DocumentList({
         <Table highlightOnHover>
           <Table.Thead>
             <Table.Tr>
-              <Table.Th>Titre</Table.Th>
+              <EnteteTri cle="titre" libelle="Titre" courant={ordre} onChange={setOrdre} />
               <Table.Th className={cls('rattachements')}>Rattachements</Table.Th>
-              <Table.Th className={cls('classification')}>Classification</Table.Th>
-              <Table.Th className={cls('categorie')}>Catégorie</Table.Th>
-              <Table.Th className={cls('taille')}>Taille</Table.Th>
-              <Table.Th className={cls('modifie')}>Modifié</Table.Th>
+              <Table.Th className={cls('etiquettes')}>Étiquettes</Table.Th>
+              <EnteteTri
+                cle="classification"
+                libelle="Classification"
+                courant={ordre}
+                onChange={setOrdre}
+                className={cls('classification')}
+              />
+              <EnteteTri
+                cle="categorie"
+                libelle="Catégorie"
+                courant={ordre}
+                onChange={setOrdre}
+                className={cls('categorie')}
+              />
+              <EnteteTri cle="taille" libelle="Taille" courant={ordre} onChange={setOrdre} className={cls('taille')} />
+              <EnteteTri
+                cle="modifie"
+                libelle="Modifié"
+                courant={ordre}
+                onChange={setOrdre}
+                className={cls('modifie')}
+              />
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
@@ -252,6 +399,12 @@ function DocumentList({
                     ))}
                   </Group>
                 </Table.Td>
+                <Table.Td className={cls('etiquettes')}>
+                  <Etiquettes
+                    tags={d.tags.slice(0, 6)}
+                    onChoisir={(t) => setTags((cur) => (cur.includes(t) ? cur : [...cur, t]))}
+                  />
+                </Table.Td>
                 <Table.Td className={cls('classification')}>{CLASSIFICATION_LABELS[d.classification]}</Table.Td>
                 <Table.Td className={cls('categorie')}>{d.category}</Table.Td>
                 <Table.Td className={[cls('taille'), 'nowrap'].filter(Boolean).join(' ')}>
@@ -267,7 +420,7 @@ function DocumentList({
             ))}
             {list.data && !list.data.length && (
               <Table.Tr>
-                <Table.Td colSpan={6}>
+                <Table.Td colSpan={7}>
                   <Text c="dimmed" ta="center" py="md">
                     Aucun document.
                   </Text>
@@ -299,6 +452,7 @@ function DocumentDetail({
   const canDelete = useCan()('documents', 'supprimer');
   const qc = useQueryClient();
   const refs = useRefs();
+  const suggestions = useEtiquettes('tous');
   const q = useQuery({ queryKey: ['document', id], queryFn: () => get<DocumentDetailOut>(`/api/documents/${id}`) });
   const d = q.data;
   const [form, setForm] = useState<{
@@ -341,6 +495,7 @@ function DocumentDetail({
       setForm(null);
       notifications.show({ color: 'teal', message: 'Document enregistré.' });
       await qc.invalidateQueries({ queryKey: ['document', id] });
+      await qc.invalidateQueries({ queryKey: ['etiquettes'] });
     } catch (e) {
       if (e instanceof ApiError && e.status === 412) setConflict((e.data?.current as DocumentOut) ?? null);
       setErr(errorMessage(e));
@@ -446,7 +601,23 @@ function DocumentDetail({
             value={form.refs}
             onChange={(v) => setForm({ ...form, refs: v })}
           />
-          <TagsInput label="Mots-clés" value={form.tags} onChange={(v) => setForm({ ...form, tags: v })} />
+          <TagsInput
+            label="Étiquettes"
+            description="Pour classer et filtrer. Choisissez une étiquette existante ou tapez-en une nouvelle (la casse ne crée pas une autre étiquette)."
+            data={(suggestions.data ?? []).map((e) => e.tag)}
+            limit={30}
+            value={form.tags}
+            onChange={(v) =>
+              setForm({
+                ...form,
+                tags: saisirEtiquettes(
+                  (suggestions.data ?? []).map((e) => e.tag),
+                  form.tags,
+                  v,
+                ),
+              })
+            }
+          />
           <Select
             label="Classification"
             data={classifOptions}
@@ -607,9 +778,18 @@ function LinkList({ canWrite }: { canWrite: boolean }) {
   const qc = useQueryClient();
   const refs = useRefs();
   const [q, setQ] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
+  const [tri, setTri] = useState<'modifie' | 'titre' | 'categorie'>('modifie');
+  const etiquettes = useEtiquettes('liens');
+  const suggestions = useEtiquettes('tous');
+  const params = new URLSearchParams({
+    ...(q ? { q } : {}),
+    ...(tags.length ? { tags: tags.join(',') } : {}),
+    tri,
+  });
   const list = useQuery({
-    queryKey: ['links', q],
-    queryFn: () => get<LinkOut[]>(`/api/links${q ? `?q=${encodeURIComponent(q)}` : ''}`),
+    queryKey: ['links', params.toString()],
+    queryFn: () => get<LinkOut[]>(`/api/links?${params}`),
   });
   const [edit, setEdit] = useState<(Partial<LinkOut> & { refs: string[]; tags: string[] }) | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -631,6 +811,7 @@ function LinkList({ canWrite }: { canWrite: boolean }) {
       else await api('POST', '/api/links', { body });
       setEdit(null);
       await qc.invalidateQueries({ queryKey: ['links'] });
+      await qc.invalidateQueries({ queryKey: ['etiquettes'] });
     } catch (e) {
       setErr(errorMessage(e));
       if (e instanceof ApiError && e.status === 412 && e.data?.current) {
@@ -644,6 +825,30 @@ function LinkList({ canWrite }: { canWrite: boolean }) {
     <Stack>
       <Group align="flex-end">
         <TextInput label="Rechercher" value={q} onChange={(e) => setQ(e.currentTarget.value)} className="champ-m" />
+        <MultiSelect
+          label="Étiquettes"
+          description="Toutes les étiquettes choisies"
+          placeholder={tags.length ? undefined : 'Toutes'}
+          data={optionsEtiquettes(etiquettes.data)}
+          value={tags}
+          onChange={setTags}
+          searchable
+          clearable
+          nothingFoundMessage="Aucune étiquette"
+          className="champ-m"
+        />
+        <Select
+          label="Trier par"
+          data={[
+            { value: 'modifie', label: 'Dernière modification' },
+            { value: 'titre', label: 'Titre' },
+            { value: 'categorie', label: 'Catégorie' },
+          ]}
+          value={tri}
+          onChange={(v) => setTri((v as typeof tri) ?? 'modifie')}
+          allowDeselect={false}
+          className="champ-s"
+        />
         {canWrite && <Button onClick={() => setEdit({ refs: [], tags: [] })}>Ajouter un lien</Button>}
       </Group>
       <ErrorAlert error={list.error} />
@@ -669,6 +874,12 @@ function LinkList({ canWrite }: { canWrite: boolean }) {
                         </Badge>
                       ))}
                     </Group>
+                  </Table.Td>
+                  <Table.Td>
+                    <Etiquettes
+                      tags={l.tags}
+                      onChoisir={(t) => setTags((cur) => (cur.includes(t) ? cur : [...cur, t]))}
+                    />
                   </Table.Td>
                   <Table.Td className="nowrap">
                     {canWrite && (
@@ -739,6 +950,23 @@ function LinkList({ canWrite }: { canWrite: boolean }) {
               data={refs}
               value={edit.refs}
               onChange={(v) => setEdit({ ...edit, refs: v })}
+            />
+            <TagsInput
+              label="Étiquettes"
+              description="Pour classer et filtrer. Choisissez une étiquette existante ou tapez-en une nouvelle (la casse ne crée pas une autre étiquette)."
+              data={(suggestions.data ?? []).map((e) => e.tag)}
+              limit={30}
+              value={edit.tags}
+              onChange={(v) =>
+                setEdit({
+                  ...edit,
+                  tags: saisirEtiquettes(
+                    (suggestions.data ?? []).map((e) => e.tag),
+                    edit.tags,
+                    v,
+                  ),
+                })
+              }
             />
             <Group justify="flex-end">
               <Button variant="default" onClick={() => setEdit(null)}>

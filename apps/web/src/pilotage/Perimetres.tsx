@@ -1,13 +1,14 @@
-/* Page « Périmètres » (ADR 0030, lot M1) : créer et modifier les périmètres de management, leur donner une nature
-   libre (SMSI, SMQ, SMI…) et gérer les accès des périmètres restreints. Création et modification : droit
-   `pilotage:administrer`, comme l'exige l'API. La nature est une simple étiquette, sans règle de comportement. */
+/* Page « Périmètres » (ADR 0030, lot M1) : créer et modifier les périmètres de management et gérer les accès des
+   périmètres restreints. Création et modification : droit `pilotage:administrer`, comme l'exige l'API. Un périmètre est
+   une organisation ou un fournisseur (amendement de l'ADR 0039) ; un fournisseur se relie à sa fiche du registre et n'a
+   pour enfants que des fournisseurs. La nature (SMSI, SMQ…) n'est plus proposée : elle n'a pas de sens pour un périmètre. */
 import {
   Alert,
-  Autocomplete,
   Button,
   Checkbox,
   Group,
   Modal,
+  Radio,
   SegmentedControl,
   Select,
   Stack,
@@ -19,14 +20,14 @@ import {
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import {
-  LIBELLES_NIVEAU,
-  NATURES_PERIMETRE,
-  NIVEAUX_PERIMETRE,
+  LIBELLES_TYPE_PERIMETRE,
+  TYPES_PERIMETRE,
+  parentPermis,
   aplatir,
   arbre,
   descendants,
   type SyntheseCartes,
-  type NiveauPerimetre,
+  type TypePerimetre,
 } from '@suivi/shared';
 import { DataTable, StatusChip } from '@suivi/ui';
 import { api, ApiError, get } from '../api';
@@ -40,9 +41,9 @@ interface Perimetre {
   id: string;
   name: string;
   scope: string;
-  nature: string;
   parentId: string | null;
-  entityKind: NiveauPerimetre;
+  entityKind: TypePerimetre;
+  supplierId: string | null;
   inheritFrameworks: boolean;
   visibility: 'instance' | 'restricted';
   timezone: string;
@@ -50,20 +51,20 @@ interface Perimetre {
 }
 interface Formulaire {
   name: string;
-  nature: string;
   scope: string;
   timezone: string;
   parentId: string | null;
-  entityKind: NiveauPerimetre;
+  entityKind: TypePerimetre;
+  supplierId: string | null;
   inheritFrameworks: boolean;
 }
 const VIDE: Formulaire = {
   name: '',
-  nature: '',
   scope: '',
   timezone: 'Europe/Paris',
   parentId: null,
-  entityKind: 'perimetre',
+  entityKind: 'organisation',
+  supplierId: null,
   inheritFrameworks: false,
 };
 
@@ -74,7 +75,8 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
     [formulaire, setFormulaire] = useState<{ edition: Perimetre | null; valeurs: Formulaire } | null>(null),
     [acces, setAcces] = useState<Perimetre | null>(null),
     [referentiels, setReferentiels] = useState<Perimetre | null>(null),
-    [vue, setVue] = useState<'liste' | 'graphe'>('liste'),
+    // Le graphe est la vue par défaut (demande du RSSI du 02/11/2026) ; la liste reste à un clic.
+    [vue, setVue] = useState<'liste' | 'graphe'>('graphe'),
     [erreur, setErreur] = useState<unknown>(null),
     [envoi, setEnvoi] = useState(false);
   const liste = useQuery({
@@ -90,8 +92,9 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
   const fournisseurs = useQuery({
     queryKey: ['suppliers'],
     queryFn: () => get<FournisseurRattache[]>('/api/suppliers'),
-    enabled: vue === 'graphe' && can('fournisseurs', 'lire'),
+    enabled: can('fournisseurs', 'lire'),
   });
+  const fiche = (id: string | null) => (id ? fournisseurs.data?.find((f) => f.id === id) : undefined);
   const ouvrir = (p: Perimetre | null, parentId: string | null = null) => {
     setErreur(null);
     setFormulaire({
@@ -99,14 +102,19 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
       valeurs: p
         ? {
             name: p.name,
-            nature: p.nature,
             scope: p.scope,
             timezone: p.timezone,
             parentId: p.parentId,
             entityKind: p.entityKind,
+            supplierId: p.supplierId,
             inheritFrameworks: p.inheritFrameworks,
           }
-        : { ...VIDE, parentId },
+        : {
+            ...VIDE,
+            parentId,
+            // Sous un fournisseur, seul un fournisseur (sous-traitant) peut être créé.
+            entityKind: (liste.data ?? []).find((x) => x.id === parentId)?.entityKind ?? 'organisation',
+          },
     });
   };
   const enregistrer = async () => {
@@ -160,12 +168,39 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
     ? new Set([formulaire.edition.id, ...descendants(noeuds, formulaire.edition.id)])
     : new Set<string>();
   const nomParent = (id: string | null) => (liste.data ?? []).find((p) => p.id === id)?.name;
+  const typeDe = (id: string | null) => (liste.data ?? []).find((p) => p.id === id)?.entityKind;
+  // Un périmètre qui a des organisations enfants ne peut pas devenir un fournisseur.
+  const aOrganisationsEnfants =
+    !!formulaire?.edition &&
+    (liste.data ?? []).some((p) => p.parentId === formulaire.edition!.id && p.entityKind === 'organisation');
+  // Fiches déjà reliées à un autre périmètre accessible (l'API refuse aussi celles des périmètres non accessibles).
+  const fichesPrises = new Set(
+    (liste.data ?? [])
+      .filter((p) => p.supplierId && p.id !== formulaire?.edition?.id)
+      .map((p) => p.supplierId as string),
+  );
+  const changerType = (t: TypePerimetre) =>
+    setFormulaire((f) => {
+      if (!f) return f;
+      const parentType = typeDe(f.valeurs.parentId);
+      const garderParent = !parentType || parentPermis(t, parentType);
+      return {
+        ...f,
+        valeurs: {
+          ...f.valeurs,
+          entityKind: t,
+          supplierId: t === 'fournisseur' ? f.valeurs.supplierId : null,
+          parentId: garderParent ? f.valeurs.parentId : null,
+          inheritFrameworks: garderParent ? f.valeurs.inheritFrameworks : false,
+        },
+      };
+    });
   return (
     <Stack>
       <Alert>
-        La nature est un libellé libre (par exemple SMSI, SMQ ou SMI) : elle ne change pas le fonctionnement du
-        périmètre. Méthode de risque, politique métier et référentiels se gèrent dans les rubriques du Pilotage, pour le
-        périmètre affiché.
+        Un périmètre est une organisation ou un fournisseur. Une organisation peut avoir pour enfants des organisations
+        et des fournisseurs ; un fournisseur, seulement des fournisseurs (ses sous-traitants). Méthode de risque,
+        politique métier et référentiels se gèrent dans les rubriques du Pilotage, pour le périmètre affiché.
       </Alert>
       <ErrorAlert error={liste.error} />
       <Group justify="space-between">
@@ -216,7 +251,6 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>Nom</Table.Th>
-                <Table.Th>Nature</Table.Th>
                 <Table.Th>Périmètre</Table.Th>
                 <Table.Th>Accès</Table.Th>
                 <Table.Th>Fuseau</Table.Th>
@@ -229,13 +263,18 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
                   <Table.Td className={`hier-n${Math.min(profondeur, 8)}`}>
                     <Text fw={600}>{p.name}</Text>
                     <Text size="xs">
-                      {LIBELLES_NIVEAU[p.entityKind]}
-                      {p.parentId && nomParent(p.parentId) ? ` de ${nomParent(p.parentId)}` : ''}
+                      {LIBELLES_TYPE_PERIMETRE[p.entityKind] ?? p.entityKind}
+                      {p.parentId && nomParent(p.parentId)
+                        ? ` · ${p.entityKind === 'fournisseur' ? 'rattaché' : 'rattachée'} à ${nomParent(p.parentId)}`
+                        : ''}
                       {p.inheritFrameworks ? ' · hérite des référentiels du parent' : ''}
+                      {fiche(p.supplierId) ? ` · fiche ${fiche(p.supplierId)!.name}` : ''}
                     </Text>
+                    {fiche(p.supplierId)?.critical === 'Oui' && (
+                      <StatusChip etat="erreur">Fournisseur critique</StatusChip>
+                    )}
                     {p.id === affiche && <StatusChip etat="info">Affiché dans le Pilotage</StatusChip>}
                   </Table.Td>
-                  <Table.Td>{p.nature ? <StatusChip etat="neutre">{p.nature}</StatusChip> : 'Non précisée'}</Table.Td>
                   <Table.Td>
                     <Text lineClamp={2}>{p.scope || '—'}</Text>
                   </Table.Td>
@@ -312,29 +351,57 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
               value={formulaire.valeurs.name}
               onChange={(e) => champ('name')(e.currentTarget.value)}
             />
-            <Autocomplete
-              label="Nature"
-              description="Libellé libre ; facultatif."
-              data={[...NATURES_PERIMETRE]}
-              maxLength={60}
-              value={formulaire.valeurs.nature}
-              onChange={champ('nature')}
-            />
-            <Select
-              label="Niveau"
-              description="Organisation, entité ou périmètre : une étiquette de structure."
-              allowDeselect={false}
-              data={NIVEAUX_PERIMETRE.map((n) => ({ value: n, label: LIBELLES_NIVEAU[n] }))}
+            <Radio.Group
+              label="Type"
+              description={
+                aOrganisationsEnfants
+                  ? 'Ce périmètre a des organisations enfants : il reste une organisation.'
+                  : 'Une organisation, ou un fournisseur (qui n’a pour enfants que des fournisseurs).'
+              }
               value={formulaire.valeurs.entityKind}
-              onChange={(v) => v && champ('entityKind')(v as NiveauPerimetre)}
-            />
+              onChange={(v) => changerType(v as TypePerimetre)}
+            >
+              <Group gap="lg" mt="xs">
+                {TYPES_PERIMETRE.map((t) => (
+                  <Radio
+                    key={t}
+                    value={t}
+                    label={LIBELLES_TYPE_PERIMETRE[t]}
+                    disabled={t === 'fournisseur' && aOrganisationsEnfants}
+                  />
+                ))}
+              </Group>
+            </Radio.Group>
+            {formulaire.valeurs.entityKind === 'fournisseur' && can('fournisseurs', 'lire') && (
+              <Select
+                label="Fiche du registre des fournisseurs"
+                description={
+                  fiche(formulaire.valeurs.supplierId)?.critical === 'Oui'
+                    ? 'Fournisseur critique (case cochée dans sa fiche).'
+                    : 'Facultatif. La criticité se coche dans la fiche du fournisseur.'
+                }
+                clearable
+                searchable
+                placeholder="Aucune fiche reliée"
+                data={(fournisseurs.data ?? [])
+                  .filter((f) => !fichesPrises.has(f.id))
+                  .map((f) => ({ value: f.id, label: f.name }))}
+                value={formulaire.valeurs.supplierId}
+                onChange={(v) => champ('supplierId')(v)}
+              />
+            )}
             <Select
               label="Rattaché à"
               description="Parent dans la hiérarchie ; laisser vide pour une racine."
               clearable
               searchable
               placeholder="Aucun parent"
-              data={(liste.data ?? []).filter((p) => !interdits.has(p.id)).map((p) => ({ value: p.id, label: p.name }))}
+              data={(liste.data ?? [])
+                .filter((p) => !interdits.has(p.id) && parentPermis(formulaire.valeurs.entityKind, p.entityKind))
+                .map((p) => ({
+                  value: p.id,
+                  label: `${p.name} (${LIBELLES_TYPE_PERIMETRE[p.entityKind] ?? p.entityKind})`,
+                }))}
               value={formulaire.valeurs.parentId}
               onChange={(v) => {
                 champ('parentId')(v);

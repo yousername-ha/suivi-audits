@@ -53,7 +53,9 @@ test('jeu de test : menu, objectifs, fournisseurs, PESTEL, boîtes, carte des ri
     await expect(page.getByRole('button', { name: 'Ouvrir l’indicateur IND1', exact: true })).toBeVisible();
     await capture(page, '04-vue-compacte');
     await page.getByRole('tab', { name: 'Boîtes de pilotage' }).click();
-    await expect(page.getByLabel('Boîte du processus PR4')).toContainText('Actions ouvertes : 2');
+    const boite = page.getByLabel('Registre du processus PR4');
+    await expect(boite).toContainText(/Actions ouvertes\s*2 dont 1 en retard/);
+    await expect(page.getByLabel('Indicateurs du processus PR4').getByRole('listitem')).not.toHaveCount(0);
     await capture(page, '05-boites');
     await page.getByRole('button', { name: 'Ouvrir l’indicateur IND2', exact: true }).first().click();
     const fiche = page.getByRole('dialog');

@@ -84,8 +84,10 @@ describe('périmètres de management : nature libre', () => {
     expect(SmsiUpdate.safeParse(maj).success).toBe(true);
     expect(SmsiUpdate.safeParse({ ...maj, confirm: 'OK' }).success).toBe(false);
     expect(SmsiUpdate.safeParse({ ...maj, timezone: 'Mars/Phobos' }).success).toBe(false);
+    // La nature n'est plus proposée à l'écran (01/11/2026) : absente, elle reste inchangée.
     expect(
       SmsiUpdate.safeParse({ name: 'Qualité', scope: '', timezone: 'Europe/Paris', confirm: 'ENREGISTRER' }).success,
-    ).toBe(false);
+    ).toBe(true);
+    expect(SmsiUpdate.safeParse({ ...maj, nature: 'x'.repeat(61) }).success).toBe(false);
   });
 });

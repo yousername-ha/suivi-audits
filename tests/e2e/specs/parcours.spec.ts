@@ -2,14 +2,16 @@
    temps réel entre deux navigateurs. Les tests s'enchaînent (état partagé : la pile n'est installée qu'une fois). */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { expect, test, type Browser, type Page } from '@playwright/test';
+import { expect, test, type Browser, type BrowserContextOptions, type Page } from '@playwright/test';
 import {
   apiLogin,
   csrfOf,
+  enregistrerSessionAdmin,
   freshTotp,
   markTotpUsed,
   PASSWORD,
   loadAdmin,
+  preparerCompte,
   saveAdmin,
   sessionAdmin,
   setupToken,
@@ -27,6 +29,18 @@ async function newPage(browser: Browser) {
   const ctx = await browser.newContext({ ignoreHTTPSErrors: true, locale: 'fr-FR' });
   const page = await ctx.newPage();
   return { ctx, page, problems: watchPage(page) };
+}
+
+/** Navigateur de l'administrateur sur la session partagée (`sessionAdmin`) : chaque connexion compte dans la limite par
+    adresse (20 par quart d'heure). Seul le test de connexion ci-dessous passe par l'écran de connexion. */
+async function ouvrirAdmin(browser: Browser, options: BrowserContextOptions = {}) {
+  const { state } = await sessionAdmin(browser);
+  const ctx = await browser.newContext({ storageState: state, ignoreHTTPSErrors: true, locale: 'fr-FR', ...options });
+  const page = await ctx.newPage();
+  const problems = watchPage(page);
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: /^Bonjour/ })).toBeVisible();
+  return { ctx, page, problems };
 }
 
 async function loginUI(page: Page, username: string, password: string, secret: string) {
@@ -108,6 +122,9 @@ test('installation : jeton, création de l’administrateur, activation de la do
   await page.getByRole('button', { name: 'Plus tard' }).click();
   await expect(page.getByRole('heading', { name: /^Bonjour Responsable SSI/ })).toBeVisible();
   saveAdmin(ADMIN, adminSecret, poivre);
+  // La session ouverte par l'installation est complète : les fichiers suivants la partagent (sessionAdmin) au lieu de se
+  // reconnecter.
+  await enregistrerSessionAdmin(page.context());
 
   // Une fois l'administrateur créé, /setup renvoie vers la connexion.
   await page.goto('/setup');
@@ -192,8 +209,7 @@ test('connexion avec double authentification ; code erroné refusé', async ({ b
 });
 
 test('documents : dépôt, fiche, modification, version', async ({ browser }) => {
-  const { page, problems } = await newPage(browser);
-  await loginUI(page, ADMIN, PASSWORD, adminSecret);
+  const { page, problems } = await ouvrirAdmin(browser);
   await page.getByRole('link', { name: 'Documents', exact: true }).filter({ visible: true }).click();
   await page.getByRole('link', { name: 'Documents et liens', exact: true }).filter({ visible: true }).click();
   const chooser = page.waitForEvent('filechooser');
@@ -218,8 +234,7 @@ test('documents : dépôt, fiche, modification, version', async ({ browser }) =>
 });
 
 test('import legacy : simulation, rapport, application, historique', async ({ browser }) => {
-  const { page, problems } = await newPage(browser);
-  await loginUI(page, ADMIN, PASSWORD, adminSecret);
+  const { page, problems } = await ouvrirAdmin(browser);
   await page.goto('/admin/import');
   const chooser = page.waitForEvent('filechooser');
   await page.getByRole('button', { name: 'Choisir le fichier à importer' }).click();
@@ -241,8 +256,7 @@ test('import legacy : simulation, rapport, application, historique', async ({ br
 
 test('temps réel : deux navigateurs, présence et mise à jour sans rechargement', async ({ browser }) => {
   // Compte « redacteur » créé par l'administrateur, puis préparé (mot de passe personnel, TOTP) par l'API.
-  const a = await newPage(browser);
-  await loginUI(a.page, ADMIN, PASSWORD, adminSecret);
+  const a = await ouvrirAdmin(browser);
   const csrfA = await csrfOf(a.page.request);
   const created = await a.page.request.post('/api/admin/users', {
     data: { username: 'redacteur', displayName: 'Rédactrice', roles: [{ roleId: 'contributeur' }] },
@@ -251,23 +265,7 @@ test('temps réel : deux navigateurs, présence et mise à jour sans rechargemen
   const temp = (await created.json()).temporaryPassword as string;
 
   const b = await newPage(browser);
-  const rb = b.page.request;
-  await rb.post('/api/auth/login', { data: { username: 'redacteur', password: temp } });
-  let csrfB = await csrfOf(rb);
-  const begin = await (
-    await rb.post('/api/account/totp/begin', { data: {}, headers: { 'x-csrf-token': csrfB } })
-  ).json();
-  await rb.post('/api/account/totp/confirm', {
-    data: { code: totp(begin.secret) },
-    headers: { 'x-csrf-token': csrfB },
-  });
-  markTotpUsed(begin.secret);
-  csrfB = await csrfOf(rb);
-  await rb.post('/api/account/password', {
-    data: { current: temp, next: PASSWORD },
-    headers: { 'x-csrf-token': csrfB },
-  });
-  await apiLogin(rb, 'redacteur', PASSWORD, begin.secret);
+  await preparerCompte(b.ctx, 'redacteur', temp);
 
   // B consulte les liens ; A les consulte aussi : chacun voit la présence de l'autre.
   await b.page.goto('/documents');
@@ -291,26 +289,12 @@ test('temps réel : deux navigateurs, présence et mise à jour sans rechargemen
 /** Prépare un compte créé par l'administrateur (mot de passe personnel, TOTP) et ouvre sa session. */
 async function prepareAccount(browser: Browser, username: string, temp: string) {
   const b = await newPage(browser);
-  const rb = b.page.request;
-  await rb.post('/api/auth/login', { data: { username, password: temp } });
-  let csrf = await csrfOf(rb);
-  const begin = await (
-    await rb.post('/api/account/totp/begin', { data: {}, headers: { 'x-csrf-token': csrf } })
-  ).json();
-  await rb.post('/api/account/totp/confirm', { data: { code: totp(begin.secret) }, headers: { 'x-csrf-token': csrf } });
-  markTotpUsed(begin.secret);
-  csrf = await csrfOf(rb);
-  await rb.post('/api/account/password', {
-    data: { current: temp, next: PASSWORD },
-    headers: { 'x-csrf-token': csrf },
-  });
-  await apiLogin(rb, username, PASSWORD, begin.secret);
-  return { ...b, secret: begin.secret as string };
+  const { secret } = await preparerCompte(b.ctx, username, temp);
+  return { ...b, secret };
 }
 
 test('droits : groupe, rôle personnalisé, refus puis accord', async ({ browser }) => {
-  const a = await newPage(browser);
-  await loginUI(a.page, ADMIN, PASSWORD, adminSecret);
+  const a = await ouvrirAdmin(browser);
   // Compte sans rôle direct, créé par l'API puis préparé.
   const created = await a.page.request.post('/api/admin/users', {
     data: { username: 'lectrice', displayName: 'Lectrice', roles: [] },
@@ -395,15 +379,11 @@ test('droits : groupe, rôle personnalisé, refus puis accord', async ({ browser
 });
 
 test('interface utilisable au téléphone : menu repliable', async ({ browser }) => {
-  const ctx = await browser.newContext({
-    ignoreHTTPSErrors: true,
+  const { page, problems } = await ouvrirAdmin(browser, {
     viewport: { width: 390, height: 844 },
     isMobile: true,
     hasTouch: true,
   });
-  const page = await ctx.newPage();
-  const problems = watchPage(page);
-  await loginUI(page, ADMIN, PASSWORD, adminSecret);
   await page.getByRole('button', { name: 'Ouvrir le menu' }).click();
   await page.getByRole('link', { name: 'Mon compte' }).click();
   await expect(page.getByRole('heading', { name: 'Mon compte' })).toBeVisible();

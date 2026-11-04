@@ -20,8 +20,12 @@ test('Configuration GRC : modèle adopté, échelle créée et publiée, mêmes 
 
     // Modèle de pertinence : adopté à la demande, jamais livré par défaut.
     await page.getByRole('tab', { name: 'Modèles' }).click();
-    await expect(page.getByText('À valider', { exact: true })).toBeVisible();
-    await page.getByRole('button', { name: 'Adopter ce modèle' }).click();
+    // Modèles publics repris de leurs guides : source citée, adoptés seulement à la demande.
+    await expect(page.getByRole('region', { name: /EBIOS Risk Manager, ANSSI/ })).toContainText('Licence Ouverte');
+    await expect(page.getByRole('region', { name: /MÉHARI 2010, CLUSIF/ })).toContainText('Principes fondamentaux');
+    const pertinence = page.getByRole('region', { name: /Pertinence des couples/ });
+    await expect(pertinence.getByText('À valider', { exact: true })).toBeVisible();
+    await pertinence.getByRole('button', { name: 'Adopter ce modèle' }).click();
     await expect(page.getByText('Aucune différence de niveaux').or(page.getByText('Fermer la fiche'))).toBeVisible();
     await page.getByRole('tab', { name: 'Échelles' }).click();
     await expect(page.getByRole('region', { name: 'Échelles' }).locator('tbody tr')).toHaveCount(3);

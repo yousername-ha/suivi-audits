@@ -1589,7 +1589,7 @@
       "origin": "demande du RSSI du 29/10/2026 (maquette validée)",
       "acceptance": "Panneau unique centré à toutes les tailles ; formulaire dans les trois cartes empilées ; étapes code TOTP, enrôlement et changement de mot de passe dans le même panneau ; sceau, onde (OndeMenu, option connexion) et fond animés décoratifs, absents sous automate de test et à l'impression ; CSP stricte, couleurs par jetons, aucune dépendance nouvelle ; tests purs de la géométrie ; captures clair, sombre et téléphone.",
       "dependencies": "Aucune",
-      "next": "Aucune côté développement : PR #181 fusionnée dans claude-suivi-smsi le 30/10/2026 après CI 7/7, publiée dans la 6.0.0 (décision du RSSI du 30/10/2026). Relecture visuelle du RSSI sur son serveur à faire (TEST-041).",
+      "next": "Aucune côté développement : PR #181 fusionnée dans claude-suivi-smsi le 30/10/2026 après CI 7/7, publiée dans la 6.0.1 (la 6.0.0 n'a jamais été publiée ; décision du RSSI du 30/10/2026). Relecture visuelle du RSSI sur son serveur à faire (TEST-041).",
       "estimation": "NON ESTIMÉE"
     },
     {
@@ -1599,8 +1599,8 @@
       "priority": "P1",
       "origin": "ADR 0079 (demande du RSSI du 30/10/2026)",
       "acceptance": "Liste de contrôle docs/05_RECETTE/CHECKLIST-FIDO2.md déroulée : YubiKey 5 USB-A, USB-C et NFC, Windows Hello, Chrome, Edge, Firefox et Safari ; résultats datés, sans donnée réelle.",
-      "dependencies": "Publication de la v6.0.0 (étiquette posée par le RSSI) ; serveur installé en HTTPS sur un nom de domaine ; clés YubiKey 5",
-      "next": "Après l'étiquette v6.0.0 et l'installation sur le serveur du RSSI : dérouler la liste de contrôle (décision du RSSI du 30/10/2026 : clés livrées dans la 6.0.0).",
+      "dependencies": "Publication de la v6.0.1 (étiquette posée par le RSSI le 30/10/2026) ; serveur installé en HTTPS sur un nom de domaine ; clés YubiKey 5",
+      "next": "Après l'installation de la 6.0.1 sur le serveur du RSSI : dérouler la liste de contrôle (décision du RSSI du 30/10/2026 : clés livrées dans la première version 6 publiée, la 6.0.1).",
       "estimation": "NON ESTIMÉE"
     },
     {
@@ -1634,6 +1634,17 @@
       "acceptance": "Chronologie triée et générée (écran sombre conservé) ; collecte avec invitations et relances notifiées (retex_contribution, migration 049) ; contributeur sans droit de module habilité sur un seul RETEX, écritures vérifiées sous verrou, 404 identiques (ADR 0080) ; file à valider, récupération fiche et main courante, clôture, diffusion ; CSP stricte, couleurs par jetons, aucune dépendance nouvelle ; texte « retex » historique inchangé.",
       "dependencies": "Aucune",
       "next": "ADR 0080 acceptée par le RSSI le 30/10/2026 ; PR #189 fusionnée sur son accord après CI 7/7 ; recette sur son serveur (TEST-041).",
+      "estimation": "NON ESTIMÉE"
+    },
+    {
+      "id": "DEV-011",
+      "title": "Modèles d’échelles et de matrices EBIOS RM et MÉHARI 2010",
+      "status": "PUBLIÉ SUR LA BRANCHE",
+      "priority": "P2",
+      "origin": "demande du RSSI du 02/11/2026 (modèles de base fondés sur des méthodes réelles, sans invention)",
+      "acceptance": "Deux modèles adoptables à la demande dans Configuration GRC : EBIOS RM (guide ANSSI 1.5, gravité G1-G4, vraisemblance V1-V4, niveaux faible/moyen/élevé, matrice 4 × 4 du guide) et MÉHARI 2010 (impact, potentialité, gravité, grille d’acceptabilité, critères D, I, C) ; source, licence et date de vérification affichées ; utilisables avec ISO/IEC 27005 ; catalogue vide à l’installation ; annexe ISO/IEC 27005 payante non reconstruite.",
+      "dependencies": "Aucune",
+      "next": "Relecture du RSSI et fusion de la PR vers claude-suivi-smsi ; recette sur son serveur (TEST-041).",
       "estimation": "NON ESTIMÉE"
     }
   ],

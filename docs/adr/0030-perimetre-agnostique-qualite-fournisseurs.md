@@ -68,3 +68,9 @@ Constats de lecture du code (état `78ba57e`) :
 - Retour arrière par lot : M1 supprime la page sans toucher aux périmètres ; M4 supprime les nouvelles tables et l'adaptateur,
   le registre historique n'ayant pas été copié, aucune donnée de fournisseur n'est à restaurer (les évaluations saisies
   seraient perdues, d'où une sauvegarde avant mise à jour, déjà automatique).
+
+## Note du 01/11/2026
+
+La **nature** d'un périmètre (point 1) n'est plus proposée ni affichée : décision du RSSI du 01/11/2026, un SMSI ou un SMQ
+étant l'ensemble des éléments qui le constituent et non une étiquette. La colonne et les valeurs enregistrées sont
+conservées. Un périmètre est désormais une organisation ou un fournisseur ([ADR 0039, amendement du 01/11/2026](0039-hierarchie-des-perimetres.md)).

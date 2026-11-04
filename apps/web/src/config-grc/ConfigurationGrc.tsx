@@ -3,6 +3,7 @@
    même stockage, mêmes droits. Aucune valeur n'est fournie par défaut ; des modèles peuvent être adoptés à la demande. */
 import {
   Alert,
+  Anchor,
   Badge,
   Button,
   Card,
@@ -498,10 +499,22 @@ function Modeles({ onOpen }: { onOpen: (kind: CfgKind, id: string) => void }) {
       </Text>
       <ErrorAlert error={erreur ?? q.error} />
       {q.data?.map((m) => (
-        <Card withBorder key={m.id}>
+        <Card withBorder key={m.id} component="section" aria-label={m.label}>
           <Stack>
             <Text fw={600}>{m.label}</Text>
             <Text size="sm">{m.description}</Text>
+            {m.source ? (
+              <Text size="sm">
+                Source : {m.source.organisation},{' '}
+                <Anchor href={m.source.url} target="_blank" rel="noopener noreferrer" size="sm">
+                  {m.source.document}
+                </Anchor>{' '}
+                ({m.source.version}) — {m.source.reference} Licence : {m.source.license} Vérifié le{' '}
+                {m.source.verifiedAt.split('-').reverse().join('/')}.
+              </Text>
+            ) : (
+              <Text size="sm">Source : proposition de l’organisation, sans document de référence.</Text>
+            )}
             <Alert color="gray" title="À valider">
               {m.note}
             </Alert>

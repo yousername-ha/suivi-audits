@@ -28,7 +28,7 @@ test('Tâches récurrentes : occurrence validée KO avec compte rendu, puis rouv
       scope: 'Fixture de recette',
       timezone: 'Europe/Paris',
       parentId: null,
-      entityKind: 'perimetre',
+      entityKind: 'organisation',
       inheritFrameworks: false,
     });
     const serie = await post(page, `/api/grc/${p.id}/objects`, {

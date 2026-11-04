@@ -1,7 +1,7 @@
 /* Types, requêtes et petits composants communs de la configuration GRC (ADR 0038). Les mêmes éléments sont lus et écrits
    depuis Paramètres → Configuration GRC et Gestion des risques → Configuration des analyses : un seul stockage, une seule API. */
 import { Select } from '@mantine/core';
-import type { CfgFamily, CfgKind, CfgRef, CfgScope, CfgState, ScaleDiff } from '@suivi/shared';
+import type { CfgFamily, CfgKind, CfgRef, CfgScope, CfgState, CfgTemplateSource, ScaleDiff } from '@suivi/shared';
 import { useQuery } from '@tanstack/react-query';
 import { get } from '../api';
 
@@ -51,6 +51,7 @@ export interface ModeleListe {
   label: string;
   description: string;
   note: string;
+  source: CfgTemplateSource | null;
   items: { ref: string; kind: CfgKind; key: string }[];
 }
 export type Definition = Record<string, unknown>;

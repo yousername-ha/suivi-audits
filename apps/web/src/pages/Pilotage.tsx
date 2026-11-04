@@ -288,6 +288,11 @@ export function PilotagePage() {
             ← Retour à la page précédente
           </Anchor>
         )}
+        {section === 'configuration' && !retour && (
+          <Anchor component={Link} to="/plateforme">
+            ← Plateforme
+          </Anchor>
+        )}
         <ErrorAlert error={scopes.error ?? policy.error} />
         {(scopes.data?.length ?? 0) > 1 && (
           <Select

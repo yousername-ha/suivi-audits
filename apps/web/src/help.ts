@@ -16,12 +16,12 @@ export const HELP_ARTICLES: HelpArticle[] = [
     link: '/pilotage',
     steps: [
       'Ouvrez Pilotage dans le menu. Les rubriques reprennent le contexte, les objectifs, la conformité, les écarts, les preuves et les plans ; aucune création de SMSI n’est nécessaire.',
-      'Publiez vos référentiels et méthodes après simulation. Les modèles EBIOS RM, ISO 27005 et MÉHARI sont des propositions à adapter ; les exigences ISO sous licence doivent être importées avec leurs droits.',
+      'Publiez vos référentiels et méthodes après simulation (les méthodes, la politique métier et l’accès aux périmètres se règlent dans Plateforme > Configuration du pilotage). Les modèles EBIOS RM, ISO 27005 et MÉHARI sont des propositions à adapter ; les exigences ISO sous licence doivent être importées avec leurs droits.',
       'Créez les risques et complétez les étapes de leur méthode. Simulez puis enregistrez explicitement les appréciations brutes et résiduelles ; les décisions sont immuables.',
       'Reliez les fiches à des actifs, exigences, preuves versionnées, audits, contrôles et objectifs existants. Une mesure de traitement génère une action sans recalculer le risque résiduel.',
       'Les actions se synchronisent en liste, Kanban, calendrier, planning et tableau de bord. Les récurrences produisent des occurrences uniques ; les réalisations historiques restent dans leur source.',
       'La cartographie se met à jour depuis le registre. Les couleurs et niveaux appartiennent à chaque méthode ; les versions incompatibles ne produisent pas de comparaison numérique.',
-      'Importez les gabarits JSON ou Excel avec simulation et confirmation. Les propositions de correspondance requièrent une revue humaine. Consultez les rappels et exportez les rapports pour le comité de pilotage.',
+      'Importez les gabarits JSON ou Excel avec simulation et confirmation. Les propositions de correspondance requièrent une revue humaine. Consultez vos rappels (Pilotage > Mes rappels) et exportez les rapports pour le comité de pilotage.',
     ],
   },
   {
@@ -191,6 +191,8 @@ export const HELP_ARTICLES: HelpArticle[] = [
       'Ouvrez Documents et liens pour rechercher une pièce ou consulter sa fiche et ses rattachements.',
       'Si vos droits le permettent, déposez un document, renseignez son titre et ses références, ou ajoutez un lien.',
       'Une nouvelle version conserve les versions précédentes. Vérifiez la version de la pièce utilisée comme preuve.',
+      'Les étiquettes servent à classer : ajoutez-les depuis la fiche d’un document ou d’un lien (celles déjà utilisées sont proposées ; « rgpd » est refusée si « RGPD » existe, la casse ne crée pas une autre étiquette). Dans la liste, filtrez par une ou plusieurs étiquettes (toutes les étiquettes choisies sont exigées) ou cliquez sur une étiquette pour l’ajouter au filtre.',
+      'Cliquez sur l’en-tête d’une colonne (titre, classification, catégorie, taille, date) pour trier ; un second clic inverse l’ordre.',
       'Les téléchargements et les modifications restent soumis à vos droits ; un lien interne ne rend pas le document public.',
     ],
   },

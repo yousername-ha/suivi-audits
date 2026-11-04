@@ -3,7 +3,8 @@
    actif ouvre une bulle d'information : un trait monte du point, puis le titre, son soulignement, les repères et la
    description apparaissent successivement. Navigation au clic (points ou frise), au clavier (flèches, Début, Fin,
    Espace) ou en lecture automatique. SVG, foreignObject et classes CSS uniquement (CSP : aucun style en ligne) ;
-   animations neutralisées si l'utilisateur préfère réduire les mouvements. */
+   animations neutralisées si l'utilisateur préfère réduire les mouvements. L'écran tient dans la hauteur restante de la
+   fenêtre (ou du plein écran) : la scène se réduit, sans défilement vertical. */
 import { Text, VisuallyHidden } from '@mantine/core';
 import {
   GRAVITES_RETEX,
@@ -12,7 +13,7 @@ import {
   type IndicateursRetex,
   type PointChronologie,
 } from '@suivi/shared';
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react';
 
 /** Teinte de la charte associée à chaque type d'événement (classes « graph-<teinte> » et « retex-c-<teinte> »). */
 export const TEINTE_TYPE_RETEX: Record<string, string> = {
@@ -50,6 +51,34 @@ const L = 1200,
   HAUT = 288,
   BAS = 560;
 const DELAI_LECTURE = 4500;
+/** Marge laissée sous l'écran, en pixels, pour que son ombre et le bas de la page restent visibles. */
+const MARGE_BAS = 16;
+
+/** Hauteur restante sous le haut de l'élément, dans la fenêtre ou le plein écran, posée en variable CSS (CSSOM, permis par
+    l'ADR 0006) : la feuille de style en fait la hauteur de l'écran, avec un minimum lisible. */
+function useHauteurRestante() {
+  const cadre = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const el = cadre.current;
+    if (!el) return;
+    const mesurer = () => {
+      // Dans le plein écran (fenêtre fixe), la position est déjà relative à l'écran ; dans la page, à son début.
+      const haut = el.getBoundingClientRect().top + (el.closest('.retex-modal') ? 0 : window.scrollY);
+      el.style.setProperty('--retex-hauteur', `${Math.max(0, window.innerHeight - haut - MARGE_BAS)}px`);
+    };
+    mesurer();
+    window.addEventListener('resize', mesurer);
+    // L'en-tête au-dessus peut changer de hauteur (retour à la ligne, actions) : nouvelle mesure.
+    const parent = el.parentElement;
+    const obs = parent && typeof ResizeObserver !== 'undefined' ? new ResizeObserver(mesurer) : null;
+    if (parent) obs?.observe(parent);
+    return () => {
+      window.removeEventListener('resize', mesurer);
+      obs?.disconnect();
+    };
+  }, []);
+  return cadre;
+}
 
 type XY = readonly [number, number];
 const abscisse = (rang: number, n: number) =>
@@ -105,6 +134,7 @@ export function ChronologieRetex({
   const [sens, setSens] = useState<'avant' | 'arriere'>('avant');
   const [lecture, setLecture] = useState(false);
   const scene = useRef<HTMLDivElement>(null);
+  const cadre = useHauteurRestante();
   const id = useId().replace(/:/g, '');
   const n = points.length;
   const courant = points[Math.min(actif, n - 1)];
@@ -182,7 +212,7 @@ export function ChronologieRetex({
   ];
 
   return (
-    <div className="retex-chronologie">
+    <div ref={cadre} className="retex-chronologie">
       <header className="retex-bandeau">
         <div className="retex-bandeau__titre">
           <span className="retex-bandeau__sur">

@@ -1,6 +1,7 @@
 /* Requêtes des documents (conversion Kysely, ADR 0062) : recherche (rattachement, catégorie, texte dans le titre, le nom
-   de fichier, les rattachements et les étiquettes, jokers pris littéralement), corbeille, catégories des documents et des
-   liens, téléchargement d'une version précise, modification partielle des métadonnées. Données fictives. */
+   de fichier, les rattachements et les étiquettes, jokers pris littéralement), filtre par étiquettes, tri, étiquettes
+   utilisées avec leur nombre d'emplois, corbeille, catégories des documents et des liens, téléchargement d'une version
+   précise, modification partielle des métadonnées. Données fictives. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createTestApp, login, makeUser, type Agent, type TestApp } from './helpers.js';
 
@@ -47,6 +48,102 @@ describe('documents : requêtes', () => {
     expect((await a.del(`/api/documents/${d3.id}`)).statusCode).toBe(204);
     expect(await parmi('')).toEqual([d1.id, d2.id].sort());
     expect(await parmi('?trash=1')).toEqual([d3.id]);
+  });
+
+  it('filtre par étiquettes (toutes exigées), trie la liste et compte les étiquettes utilisées', async () => {
+    const d1 = (
+      await deposer('zz-etq-a.txt', 'a', {
+        title: 'Zèbre',
+        category: 'bbb',
+        classification: 'restreint',
+        tags: ['etq-rgpd', 'etq-rh'],
+      })
+    ).json();
+    const d2 = (
+      await deposer('zz-etq-b.txt', 'bbbbbbbb', {
+        title: 'abeille',
+        category: 'aaa',
+        classification: 'public',
+        tags: ['etq-rgpd'],
+      })
+    ).json();
+    const d3 = (
+      await deposer('zz-etq-c.txt', 'cc', { title: 'Mouton', category: 'ccc', tags: ['etq-rh', 'etq-sec'] })
+    ).json();
+    const tous = [d1.id, d2.id, d3.id];
+    const parmi = async (qs: string) => (await ids(qs)).filter((id) => tous.includes(id));
+    // Toutes les étiquettes demandées doivent être présentes (ET), l'ordre des étiquettes est indifférent.
+    expect((await parmi('?tags=etq-rgpd')).sort()).toEqual([d1.id, d2.id].sort());
+    expect(await parmi('?tags=etq-rgpd,etq-rh')).toEqual([d1.id]);
+    expect(await parmi('?tags=etq-rh,etq-rgpd')).toEqual([d1.id]);
+    expect(await parmi('?tags=etq-rgpd,etq-sec')).toEqual([]);
+    expect(await parmi('?tags=etq-inconnue')).toEqual([]);
+    // La casse est ignorée : « ETQ-RGPD » et « etq-rgpd » sont la même étiquette.
+    expect(await parmi('?tags=ETQ-RGPD,Etq-RH')).toEqual([d1.id]);
+    expect(await parmi('?tags=%20etq-rh%20,')).toHaveLength(2); // espaces et virgules vides ignorés
+    // Tri : titre sans tenir compte de la casse, catégorie, classification (public avant restreint), taille.
+    expect(await parmi('?tri=titre')).toEqual([d2.id, d3.id, d1.id]);
+    expect(await parmi('?tri=titre&ordre=desc')).toEqual([d1.id, d3.id, d2.id]);
+    expect(await parmi('?tri=categorie')).toEqual([d2.id, d1.id, d3.id]);
+    expect((await parmi('?tri=classification')).indexOf(d2.id)).toBeLessThan(
+      (await parmi('?tri=classification')).indexOf(d1.id),
+    );
+    expect(await parmi('?tri=taille')).toEqual([d2.id, d3.id, d1.id]); // plus gros d'abord
+    expect(await parmi('?tri=taille&ordre=asc')).toEqual([d1.id, d3.id, d2.id]);
+    expect(await parmi('')).toEqual([d3.id, d2.id, d1.id]); // défaut : dernière modification d'abord
+    expect((await a.get('/api/documents?tri=inconnu')).statusCode).toBe(422);
+    // Étiquettes utilisées : nombre d'emplois sur les documents, puis avec les liens.
+    await a.post('/api/links', {
+      url: 'https://exemple.invalid/etq',
+      title: 'Lien étiqueté',
+      tags: ['etq-rgpd', 'etq-lien'],
+    });
+    const compte = async (portee: string) =>
+      Object.fromEntries(
+        ((await a.get(`/api/documents/tags?portee=${portee}`)).json() as { tag: string; count: number }[])
+          .filter((x) => x.tag.startsWith('etq-'))
+          .map((x) => [x.tag, x.count]),
+      );
+    expect(await compte('documents')).toEqual({ 'etq-rgpd': 2, 'etq-rh': 2, 'etq-sec': 1 });
+    expect(await compte('liens')).toEqual({ 'etq-rgpd': 1, 'etq-lien': 1 });
+    expect(await compte('tous')).toEqual({ 'etq-rgpd': 3, 'etq-rh': 2, 'etq-sec': 1, 'etq-lien': 1 });
+    // Une étiquette qui ne diffère d'une étiquette existante que par la casse est interdite (dépôt, modification, lien) ;
+    // un doublon de casse dans une même liste est fusionné ; une étiquette déjà portée reste modifiable.
+    const refus = await deposer('zz-etq-d.txt', 'd', { tags: ['ETQ-rgpd'] });
+    expect(refus.statusCode).toBe(422);
+    expect(refus.body).toContain('etq-rgpd');
+    const modif = await a.patch(`/api/documents/${d2.id}`, { tags: ['etq-rgpd', 'ETQ-SEC'] }, { 'if-match': '"1"' });
+    expect(modif.statusCode, modif.body).toBe(422);
+    expect((await a.post('/api/links', { url: 'https://exemple.invalid/x', tags: ['Etq-RH'] })).statusCode).toBe(422);
+    const memeListe = await deposer('zz-etq-e.txt', 'e', { tags: ['etq-nouvelle', 'ETQ-NOUVELLE'] });
+    expect(memeListe.json().tags).toEqual(['etq-nouvelle']);
+    const gardee = await a.patch(`/api/documents/${d2.id}`, { tags: ['etq-rgpd', 'etq-neuve'] }, { 'if-match': '"1"' });
+    expect(gardee.statusCode, gardee.body).toBe(200);
+    // Données anciennes : deux graphies déjà présentes (insérées sans passer par l'API) sont comptées comme une seule
+    // étiquette, sous la graphie la plus employée, et le filtre les trouve toutes les deux.
+    for (const [nom, tag] of [
+      ['zz-etq-v1.txt', 'Etq-Variante'],
+      ['zz-etq-v2.txt', 'etq-variante'],
+      ['zz-etq-v3.txt', 'etq-variante'],
+    ] as const) {
+      const v = (await deposer(nom, nom)).json();
+      await t.svc.db.q('UPDATE documents SET tags = ARRAY[$1]::text[] WHERE id = $2', [tag, v.id]);
+    }
+    const variantes = (
+      (await a.get('/api/documents/tags?portee=documents')).json() as { tag: string; count: number }[]
+    ).filter((x) => x.tag.toLowerCase() === 'etq-variante');
+    expect(variantes).toEqual([{ tag: 'etq-variante', count: 3 }]);
+    expect(await parmi('?tags=ETQ-VARIANTE')).toHaveLength(0); // hors des trois documents suivis plus haut
+    expect(((await a.get('/api/documents?tags=ETQ-Variante')).json() as unknown[]).length).toBe(3);
+    // Un document supprimé ne compte plus.
+    expect((await a.del(`/api/documents/${d3.id}`)).statusCode).toBe(204);
+    expect((await compte('documents'))['etq-sec']).toBeUndefined();
+    // Liens : même filtre, tri par titre.
+    const liens = async (qs: string) =>
+      ((await a.get(`/api/links${qs}`)).json() as { title: string }[]).map((l) => l.title);
+    expect(await liens('?tags=etq-lien')).toEqual(['Lien étiqueté']);
+    expect(await liens('?tags=etq-rh')).toEqual([]);
+    expect((await a.get('/api/links?tri=titre&ordre=asc')).statusCode).toBe(200);
   });
 
   it('télécharge la version demandée, sinon la version courante', async () => {
