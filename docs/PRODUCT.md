@@ -29,7 +29,7 @@ une démarche qualité. Les droits et les modules activés déterminent les rubr
 | Incidents et crise | Registre, qualification, cellule de crise, contacts, scénarios et check-lists |
 | Gestion CRRC | Établissements, offres, sauvegardes, restaurations, alertes, rapports mensuels |
 | Budget | Plan d'investissement |
-| Outils | Rappels, import et rapports, configuration du pilotage |
+| Outils | Mes rappels, import et rapports ; la configuration du pilotage est une carte de la page Plateforme |
 
 À côté : tableau de bord, documents et liens (chiffrés), cartographie du SMSI, évaluations IA, **exports Excel**, écran mural,
 paramètres, administration (comptes, groupes, rôles, sessions, journal, versions, système, import).
