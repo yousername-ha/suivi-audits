@@ -1,0 +1,96 @@
+{
+  "source": "Nouvelle maquette autonome, données fictives. Aucun chargement applicatif ni API.",
+  "date": "2026-11-04",
+  "captures": [
+    {
+      "fichier": "ensemble-1440.png",
+      "largeur": 1440,
+      "hauteur": 1100
+    },
+    {
+      "fichier": "mesures-1440.png",
+      "largeur": 1278,
+      "hauteur": 679
+    },
+    {
+      "fichier": "fiche-1440.png",
+      "largeur": 1440,
+      "hauteur": 1100
+    },
+    {
+      "fichier": "insuffisantes-1440.png",
+      "largeur": 1278,
+      "hauteur": 943
+    },
+    {
+      "fichier": "exclusions-1440.png",
+      "largeur": 1278,
+      "hauteur": 383
+    },
+    {
+      "fichier": "apercu-4k.png",
+      "largeur": 3840,
+      "hauteur": 2400
+    },
+    {
+      "fichier": "registre-integral-hd.png",
+      "largeur": 3372,
+      "hauteur": 16988
+    },
+    {
+      "fichier": "fiche-hd.png",
+      "largeur": 2120,
+      "hauteur": 1976
+    },
+    {
+      "fichier": "ensemble-390.png",
+      "largeur": 390,
+      "hauteur": 1200
+    },
+    {
+      "fichier": "mesures-390.png",
+      "largeur": 390,
+      "hauteur": 1200
+    },
+    {
+      "fichier": "fiche-390.png",
+      "largeur": 390,
+      "hauteur": 1200
+    }
+  ],
+  "dimensions": [
+    {
+      "largeur": 1440,
+      "vue": "Annexe A",
+      "lignes": 93,
+      "debordement": false,
+      "defilementInterne": []
+    },
+    {
+      "largeur": 1440,
+      "vue": "Clauses ISO",
+      "lignes": 33
+    },
+    {
+      "largeur": 1440,
+      "vue": "HDS",
+      "lignes": 31
+    },
+    {
+      "largeur": 1920,
+      "vue": "Annexe A",
+      "lignes": 93,
+      "debordement": false,
+      "defilementInterne": []
+    },
+    {
+      "largeur": 390,
+      "vue": "Annexe A",
+      "lignes": 93,
+      "debordement": false,
+      "defilementInterne": []
+    }
+  ],
+  "erreursJavaScript": [],
+  "appelsReseau": []
+}

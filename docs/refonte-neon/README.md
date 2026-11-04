@@ -1,3 +1,5 @@
+> 04/11/2026 — **[DdA : nouvelle direction à partir des deux nouvelles images](propositions/dda-nouvelle-direction/README.md)**. Maquette reconstruite : blanc, relief, indigo, graphiques menthe/orange ; onze captures dont HD, fiche et mobile. Pistes précédentes écartées par le demandeur. Proposition à valider avant intégration ; application inchangée. Session : Codex.
+
 > 04/11/2026 — **[DdA : blanc cassé et vert sauge](propositions/dda-clair-sauge/README.md)** : nouvelle palette demandée, huit visuels autonomes dont HD. Proposition à valider avant intégration ; application inchangée. Session : Codex.
 
 > 03/11/2026 — **[DdA : champs émeraude/ambre harmonisés](propositions/dda-clair-contraste/README.md#champs-vert-et-orange-accordés-au-nouveau-fond)** avec le fond glacier/ivoire, dégradés et ombres plus doux. Maquette actualisée pour validation ; application inchangée. Session : Codex.
