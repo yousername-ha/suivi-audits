@@ -1,7 +1,9 @@
 /* Navigation de l'application : sept familles (ordre validé le 19/10/2026, Organisation avant Pilotage depuis le 30/10/2026) -> destinations -> rubriques.
    Chaque rubrique garde son adresse et son droit de lecture d'origine : réorganiser le menu ne crée aucune adresse
    et n'ouvre aucun accès. Les rubriques du Pilotage sont décrites dans pilotage-navigation.ts (libellé et module) ;
-   ce fichier ne fait que les regrouper. Le test navigation.test.ts vérifie qu'aucune rubrique n'est perdue ni doublée. */
+   ce fichier ne fait que les regrouper. Le test navigation.test.ts vérifie qu'aucune rubrique n'est perdue ni doublée.
+   Exception : la « Configuration du pilotage » (`/pilotage/configuration`) n'est plus une rubrique du menu Pilotage mais une
+   carte de la page Plateforme (administration-droits.ts, ADR 0081) ; son adresse et son droit restent ceux d'origine. */
 import type { Action, Module, OrdreMenu } from '@suivi/shared';
 import { PILOTAGE_NAV } from './pilotage-navigation';
 
@@ -95,7 +97,7 @@ export const FAMILLES: Famille[] = [
       dest('parcours', 'Parcours guidé', [p('parcours-iso'), p('parcours')]),
       dest('objectifs', 'Objectifs et indicateurs', [p('processus'), p('objectifs'), p('indicateurs')]),
       dest('revues', 'Revues de direction', [p('revues')]),
-      dest('rappels', 'Rappels et configuration', [p('rappels'), p('configuration')]),
+      dest('rappels', 'Mes rappels', [p('rappels')]),
     ],
   },
   {

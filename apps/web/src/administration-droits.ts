@@ -4,6 +4,10 @@
 import type { Action, Module } from '@suivi/shared';
 
 export type Cote = 'plateforme' | 'systeme';
+
+/** Rubriques de la page Pilotage rangées dans l'Administration (ADR 0081) : elles n'ont plus d'entrée dans le menu
+    Pilotage, leur carte est dans « Plateforme ». Adresse (/pilotage/<id>) et droit d'origine inchangés. */
+export const PILOTAGE_DANS_ADMINISTRATION = ['configuration'] as const;
 export type Peut = (m: Module, a: Action) => boolean;
 
 const parametres = (can: Peut) => can('parametres', 'lire');
@@ -14,6 +18,8 @@ export const DROITS_CARTES: readonly { id: string; cote: Cote; peut: (can: Peut)
   { id: 'cycle', cote: 'plateforme', peut: (can) => parametres(can) && can('audit', 'lire') },
   { id: 'referentiels', cote: 'plateforme', peut: (can) => parametres(can) && can('conformite', 'lire') },
   { id: 'echelles', cote: 'plateforme', peut: parametres },
+  // Droit de l'ancienne rubrique du Pilotage « Configuration du pilotage » : lecture du Pilotage, rien de plus.
+  { id: 'configuration-pilotage', cote: 'plateforme', peut: (can) => can('pilotage', 'lire') },
   { id: 'utilisateurs', cote: 'plateforme', peut: administration },
   { id: 'groupes', cote: 'plateforme', peut: administration },
   { id: 'fonctions', cote: 'plateforme', peut: administration },
@@ -44,7 +50,7 @@ export const cartesVisibles = (can: Peut, cote: Cote): string[] =>
 
 /** Adresses historiques (/parametres/…, /admin/…) rattachées à chaque entrée du menu, pour la surbrillance. */
 const COTE_PLATEFORME =
-  /^\/(?:plateforme|admin$|admin\/(?:users|groups|fonctions|roles|murs|import)|parametres(?!\/(?:sauvegardes|securite)))/;
+  /^\/(?:plateforme|admin$|admin\/(?:users|groups|fonctions|roles|murs|import)|parametres(?!\/(?:sauvegardes|securite))|pilotage\/configuration(?:\/|$))/;
 const COTE_SYSTEME =
   /^\/(?:systeme|admin\/(?!users|groups|fonctions|roles|murs|import)|parametres\/(?:sauvegardes|securite))/;
 export const ALIAS_ADMINISTRATION: Record<string, RegExp> = {

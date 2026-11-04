@@ -33,6 +33,7 @@ test('Administration : deux pages à cartes, détail en fenêtre centrée, ancie
       'Groupes',
       'Fonctions',
       'Rôles et droits',
+      'Configuration du pilotage',
       'Apparence',
       'Import et export',
     ])
@@ -66,6 +67,15 @@ test('Administration : deux pages à cartes, détail en fenêtre centrée, ancie
     await page.getByRole('dialog', { name: 'Confirmation' }).getByRole('button', { name: 'Confirmer' }).click();
     await expect(ligne).toBeHidden();
     await page.keyboard.press('Escape');
+    await expect(page).toHaveURL(/\/plateforme$/);
+
+    // « Configuration du pilotage » : carte de la Plateforme (ADR 0081), adresse d'origine conservée, entrée « Plateforme »
+    // en surbrillance, et plus d'entrée dans le menu Pilotage.
+    await page.getByRole('link', { name: /^Configuration du pilotage/ }).click();
+    await expect(page).toHaveURL(/\/pilotage\/configuration$/);
+    await expect(page.getByRole('heading', { name: 'Configuration du pilotage', level: 1 })).toBeVisible();
+    await expect(menu.getByRole('link', { name: 'Plateforme', exact: true })).toHaveAttribute('data-active', 'true');
+    await page.getByRole('link', { name: '← Plateforme' }).click();
     await expect(page).toHaveURL(/\/plateforme$/);
 
     // Page « Configuration système ».
