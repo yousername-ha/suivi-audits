@@ -16,12 +16,12 @@ export const HELP_ARTICLES: HelpArticle[] = [
     link: '/pilotage',
     steps: [
       'Ouvrez Pilotage dans le menu. Les rubriques reprennent le contexte, les objectifs, la conformité, les écarts, les preuves et les plans ; aucune création de SMSI n’est nécessaire.',
-      'Publiez vos référentiels et méthodes après simulation. Les modèles EBIOS RM, ISO 27005 et MÉHARI sont des propositions à adapter ; les exigences ISO sous licence doivent être importées avec leurs droits.',
+      'Publiez vos référentiels et méthodes après simulation (les méthodes, la politique métier et l’accès aux périmètres se règlent dans Plateforme > Configuration du pilotage). Les modèles EBIOS RM, ISO 27005 et MÉHARI sont des propositions à adapter ; les exigences ISO sous licence doivent être importées avec leurs droits.',
       'Créez les risques et complétez les étapes de leur méthode. Simulez puis enregistrez explicitement les appréciations brutes et résiduelles ; les décisions sont immuables.',
       'Reliez les fiches à des actifs, exigences, preuves versionnées, audits, contrôles et objectifs existants. Une mesure de traitement génère une action sans recalculer le risque résiduel.',
       'Les actions se synchronisent en liste, Kanban, calendrier, planning et tableau de bord. Les récurrences produisent des occurrences uniques ; les réalisations historiques restent dans leur source.',
       'La cartographie se met à jour depuis le registre. Les couleurs et niveaux appartiennent à chaque méthode ; les versions incompatibles ne produisent pas de comparaison numérique.',
-      'Importez les gabarits JSON ou Excel avec simulation et confirmation. Les propositions de correspondance requièrent une revue humaine. Consultez les rappels et exportez les rapports pour le comité de pilotage.',
+      'Importez les gabarits JSON ou Excel avec simulation et confirmation. Les propositions de correspondance requièrent une revue humaine. Consultez vos rappels (Pilotage > Mes rappels) et exportez les rapports pour le comité de pilotage.',
     ],
   },
   {

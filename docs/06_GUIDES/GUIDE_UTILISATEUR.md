@@ -392,7 +392,7 @@ Retirée (décision du 25/10/2026, [ADR 0046](../adr/0046-retrait-du-catalogue-e
 Objectif : Nomenclatures, statuts/workflows et adoption explicite versionnée ; raccordement B2 complet non établi.
 
 État : **PARTIEL**, uniquement dans ce périmètre.
-Accès : **/pilotage/configuration**.
+Accès : **/pilotage/configuration** (menu : Plateforme › Configuration du pilotage).
 Profils : Session complète, lecture du domaine pilotage ; opérations soumises aux permissions modifier/exporter/administrer et au périmètre. Une validation peut exiger un rôle de validation distinct.
 Prérequis : module activé, accès au périmètre et données nécessaires disponibles ;
 un environnement de recette autorisé pour les opérations sensibles.

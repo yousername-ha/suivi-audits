@@ -1,6 +1,7 @@
 /* Menu à sept familles : aucune rubrique du Pilotage perdue ni doublée, droits et adresses d'origine conservés. */
 import type { Action, Module } from '@suivi/shared';
 import { describe, expect, it } from 'vitest';
+import { PILOTAGE_DANS_ADMINISTRATION } from '../src/administration-droits';
 import { deplacerDansMenu, FAMILLES, famillesVisibles, localiser, ordonnerMenu, placer } from '../src/navigation';
 import { PILOTAGE_NAV } from '../src/pilotage-navigation';
 
@@ -36,7 +37,6 @@ const INVENTAIRE = [
   'pilotage|objectifs|indicateurs|/pilotage/indicateurs|pilotage|lire',
   'pilotage|revues|revues|/pilotage/revues|pilotage|lire',
   'pilotage|rappels|rappels|/pilotage/rappels|pilotage|lire',
-  'pilotage|rappels|configuration|/pilotage/configuration|pilotage|lire',
   'risques|risques|risques|/pilotage/risques|pilotage|lire',
   'risques|risques|opportunites|/pilotage/opportunites|pilotage|lire',
   'risques|risques|etudes|/pilotage/etudes|pilotage|lire',
@@ -111,8 +111,11 @@ describe('navigation', () => {
       'Documents',
     ]);
   });
-  it('reprend chaque rubrique du Pilotage une seule fois, avec son module', () => {
-    const attendu: { id: string; module: string }[] = PILOTAGE_NAV.flatMap((g) => [...g.items]);
+  it('reprend chaque rubrique du Pilotage une seule fois, avec son module (hors celles rangées dans l’Administration)', () => {
+    const rangees: readonly string[] = PILOTAGE_DANS_ADMINISTRATION;
+    const attendu: { id: string; module: string }[] = PILOTAGE_NAV.flatMap((g) => [...g.items]).filter(
+      (i) => !rangees.includes(i.id),
+    );
     const trouvees = rubriques.filter((r) => r.to.startsWith('/pilotage/'));
     expect(trouvees.map((r) => r.id).sort()).toEqual(attendu.map((i) => i.id).sort());
     for (const i of attendu) expect(trouvees.find((r) => r.id === i.id)?.module).toBe(i.module);
@@ -158,6 +161,36 @@ describe('navigation', () => {
     expect(localiser('/documents/abc')?.destination.id).toBe('documents');
     expect(localiser('/cartographie/risques')?.famille.id).toBe('organisation');
     expect(localiser('/account')).toBeUndefined();
+  });
+  it('« Mes rappels » est une destination du Pilotage ; la configuration du pilotage n’est plus au menu Pilotage', () => {
+    const pilotage = FAMILLES.find((f) => f.id === 'pilotage');
+    const rappels = pilotage?.destinations.find((d) => d.id === 'rappels');
+    expect(rappels).toMatchObject({ label: 'Mes rappels' });
+    expect(rappels?.rubriques.map((r) => [r.id, r.to, r.module, r.action])).toEqual([
+      ['rappels', '/pilotage/rappels', 'pilotage', 'lire'],
+    ]);
+    expect(pilotage?.destinations.map((d) => d.id)).toEqual(['synthese', 'parcours', 'objectifs', 'revues', 'rappels']);
+    expect(rubriques.some((r) => r.id === 'configuration' || r.to === '/pilotage/configuration')).toBe(false);
+    expect(localiser('/pilotage/rappels')).toMatchObject({
+      famille: { id: 'pilotage' },
+      destination: { id: 'rappels', label: 'Mes rappels' },
+    });
+    // Page de l'Administration : hors des familles du menu (la surbrillance passe par « Plateforme »).
+    expect(localiser('/pilotage/configuration')).toBeUndefined();
+    // Le libellé de la page reste celui du Pilotage, et son droit celui d'origine.
+    const items: { id: string; label: string; module: string }[] = PILOTAGE_NAV.flatMap((g) => [...g.items]);
+    expect(items.find((i) => i.id === 'configuration')).toMatchObject({
+      label: 'Configuration du pilotage',
+      module: 'pilotage',
+    });
+  });
+  it('« Mes rappels » reste visible avec la lecture du Pilotage, sans destination « Rappels et configuration »', () => {
+    const seulementPilotage = (module: Module, a: Action) => module === 'pilotage' && a === 'lire';
+    const pilotage = famillesVisibles(seulementPilotage).find((f) => f.famille.id === 'pilotage');
+    expect(pilotage?.destinations.map((d) => d.label)).toContain('Mes rappels');
+    expect(famillesVisibles(tout).flatMap((f) => f.destinations.map((d) => d.label))).not.toContain(
+      'Rappels et configuration',
+    );
   });
   it('les Périmètres sont une destination de l’Organisation, séparée de la Synthèse', () => {
     expect(localiser('/pilotage/perimetres')).toMatchObject({

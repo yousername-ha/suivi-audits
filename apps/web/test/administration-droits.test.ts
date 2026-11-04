@@ -3,7 +3,13 @@
 import type { Action, Module } from '@suivi/shared';
 import { SETTINGS_SECTIONS } from '@suivi/shared';
 import { describe, expect, it } from 'vitest';
-import { ALIAS_ADMINISTRATION, cartesVisibles, DROITS_CARTES } from '../src/administration-droits';
+import {
+  ALIAS_ADMINISTRATION,
+  cartesVisibles,
+  DROITS_CARTES,
+  PILOTAGE_DANS_ADMINISTRATION,
+} from '../src/administration-droits';
+import { PILOTAGE_NAV } from '../src/pilotage-navigation';
 
 const avec =
   (...droits: [Module, Action][]) =>
@@ -101,6 +107,40 @@ describe('cartes de l’Administration : droits', () => {
   });
 });
 
+describe('Configuration du pilotage : carte de la Plateforme, droit d’origine', () => {
+  const items: { id: string; label: string; module: string }[] = PILOTAGE_NAV.flatMap((g) => [...g.items]);
+  const rubrique = items.find((i) => i.id === 'configuration')!;
+  it('reprend exactement le droit de l’ancienne rubrique du Pilotage (lecture du Pilotage)', () => {
+    expect(PILOTAGE_DANS_ADMINISTRATION).toEqual(['configuration']);
+    expect(rubrique.module).toBe('pilotage');
+    const modules: Module[] = ['pilotage', 'parametres', 'administration', 'audit', 'conformite', 'import_export'];
+    const actions: Action[] = ['lire', 'modifier', 'administrer'];
+    // Pour chaque droit pris seul : la carte est visible si et seulement si l'ancienne rubrique l'était.
+    for (const m of modules)
+      for (const a of actions) {
+        const peut = avec([m, a]);
+        expect([m, a, cartesVisibles(peut, 'plateforme').includes('configuration-pilotage')]).toEqual([
+          m,
+          a,
+          peut(rubrique.module as Module, 'lire'),
+        ]);
+      }
+    expect(cartesVisibles(avec(['pilotage', 'lire']), 'plateforme')).toEqual(['configuration-pilotage']);
+    expect(cartesVisibles(avec(['pilotage', 'lire']), 'systeme')).toEqual([]);
+  });
+  it('n’est visible ni sans droit, ni avec les seuls droits de paramétrage ou d’administration', () => {
+    expect(cartesVisibles(rien, 'plateforme')).not.toContain('configuration-pilotage');
+    expect(cartesVisibles(avec(['parametres', 'lire'], ['administration', 'lire']), 'plateforme')).not.toContain(
+      'configuration-pilotage',
+    );
+    expect(cartesVisibles(tout, 'plateforme')).toContain('configuration-pilotage');
+  });
+  it('est rangée à côté des échelles et matrices, sans toucher à l’ordre des autres cartes', () => {
+    const ids = cartesVisibles(tout, 'plateforme');
+    expect(ids.indexOf('configuration-pilotage')).toBe(ids.indexOf('echelles') + 1);
+  });
+});
+
 describe('entrées de menu : anciennes adresses', () => {
   const plateforme = ALIAS_ADMINISTRATION['/plateforme']!;
   const systeme = ALIAS_ADMINISTRATION['/systeme']!;
@@ -114,8 +154,12 @@ describe('entrées de menu : anciennes adresses', () => {
       '/admin/import',
       '/parametres',
       '/parametres/general',
+      '/pilotage/configuration',
     ])
       expect([url, plateforme.test(url), systeme.test(url)]).toEqual([url, true, false]);
+    // La configuration des analyses reste une rubrique du menu Risques, pas de l'Administration.
+    for (const url of ['/pilotage/configuration-analyses', '/pilotage/rappels', '/pilotage/risques'])
+      expect([url, plateforme.test(url), systeme.test(url)]).toEqual([url, false, false]);
     for (const url of [
       '/systeme',
       '/systeme/journal',
