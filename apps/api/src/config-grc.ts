@@ -762,6 +762,7 @@ export class ConfigGrc {
       label: t.label,
       description: t.description,
       note: t.note,
+      source: t.source ?? null,
       items: t.items.map((i) => ({ ref: i.ref, kind: i.kind, key: i.key })),
     }));
   }

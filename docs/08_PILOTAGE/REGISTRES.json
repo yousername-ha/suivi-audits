@@ -1635,6 +1635,17 @@
       "dependencies": "Aucune",
       "next": "ADR 0080 acceptée par le RSSI le 30/10/2026 ; PR #189 fusionnée sur son accord après CI 7/7 ; recette sur son serveur (TEST-041).",
       "estimation": "NON ESTIMÉE"
+    },
+    {
+      "id": "DEV-011",
+      "title": "Modèles d’échelles et de matrices EBIOS RM et MÉHARI 2010",
+      "status": "PUBLIÉ SUR LA BRANCHE",
+      "priority": "P2",
+      "origin": "demande du RSSI du 02/11/2026 (modèles de base fondés sur des méthodes réelles, sans invention)",
+      "acceptance": "Deux modèles adoptables à la demande dans Configuration GRC : EBIOS RM (guide ANSSI 1.5, gravité G1-G4, vraisemblance V1-V4, niveaux faible/moyen/élevé, matrice 4 × 4 du guide) et MÉHARI 2010 (impact, potentialité, gravité, grille d’acceptabilité, critères D, I, C) ; source, licence et date de vérification affichées ; utilisables avec ISO/IEC 27005 ; catalogue vide à l’installation ; annexe ISO/IEC 27005 payante non reconstruite.",
+      "dependencies": "Aucune",
+      "next": "Relecture du RSSI et fusion de la PR vers claude-suivi-smsi ; recette sur son serveur (TEST-041).",
+      "estimation": "NON ESTIMÉE"
     }
   ],
   "test_cases": [

@@ -25,7 +25,8 @@
       "consultedAt": "2026-10-10",
       "sha256": "578da105d1c184e756aadffa9b31f0f5ddc64182c3f92ac329c5afb27e933401",
       "bytes": 3840591,
-      "scope": "Cinq ateliers et concepts vérifiés dans le guide public. La matrice et les échelles livrées sont des propositions organisationnelles, pas des seuils ANSSI obligatoires."
+      "scope": "Cinq ateliers et concepts vérifiés dans le guide public. La matrice et les échelles livrées sont des propositions organisationnelles, pas des seuils ANSSI obligatoires.",
+      "templateUse": "Version 1.5 (septembre 2024, ANSSI-PA-048), Licence Ouverte Etalab V1, vérifiée le 2026-11-02 (même empreinte). Modèle « ebios-rm-gravite-vraisemblance » : échelles p. 27 et 67, acceptabilité p. 74, cartographie p. 75 (axe de gravité de la figure numéroté à l'envers, relu d'après les cotations des p. 50, 51 et 67)."
     },
     {
       "document": "CLUSIF MÉHARI — fondamentaux",
@@ -35,6 +36,15 @@
       "sha256": "7be1c99a81ba0d15f2f026acdfe2bd1b6cce638ecbdfcad4731ff5f5028c084e",
       "bytes": 106658,
       "scope": "Structure méthodologique publique ; aucune base de connaissances, formule propriétaire ni classeur MÉHARI redistribué."
+    },
+    {
+      "document": "CLUSIF MÉHARI 2010 — Principes fondamentaux et spécifications fonctionnelles",
+      "url": "https://clusif.fr/wp-content/uploads/2015/10/mehari-2010-principes-specifications.pdf",
+      "finalUrl": "https://clusif.fr/wp-content/uploads/2015/10/mehari-2010-principes-specifications.pdf",
+      "consultedAt": "2026-11-02",
+      "sha256": "0ecfa76ff5c1e536229ac281041572e825ba1c3bdafad0b760bd73b594526d1a",
+      "bytes": 547236,
+      "scope": "© CLUSIF 2010, MÉHARI marque déposée. Modèle « mehari-2010-impact-potentialite » : libellés des échelles standards d'impact et de potentialité (annexe D, p. 42) en courtes citations (première phrase de chaque niveau), grille d'acceptabilité et trois types de risques (§ 4, p. 28). Aucune base de connaissances ni texte intégral reproduit."
     },
     {
       "document": "CLUSIF MÉHARI — licence",
