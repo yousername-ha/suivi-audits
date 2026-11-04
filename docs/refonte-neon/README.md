@@ -1,3 +1,5 @@
+> 04/11/2026 — **[DdA : blanc cassé et vert sauge](propositions/dda-clair-sauge/README.md)** : nouvelle palette demandée, huit visuels autonomes dont HD. Proposition à valider avant intégration ; application inchangée. Session : Codex.
+
 > 03/11/2026 — **[DdA : champs émeraude/ambre harmonisés](propositions/dda-clair-contraste/README.md#champs-vert-et-orange-accordés-au-nouveau-fond)** avec le fond glacier/ivoire, dégradés et ombres plus doux. Maquette actualisée pour validation ; application inchangée. Session : Codex.
 
 > 03/11/2026 — **[Clair DdA moins gris, fond en dégradé](propositions/dda-clair-contraste/README.md#finition--moins-de-gris-et-fond-en-dégradé)** : bleu glacier/ivoire, nuances bleu/eau et accents conservés. Maquette actualisée pour validation ; application inchangée. Session : Codex.
