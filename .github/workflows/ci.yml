@@ -270,6 +270,13 @@ jobs:
         env:
           E2E_BACKUP_AUTO: '1'
         run: ./tests/e2e/run-in-container.sh
+      - name: Connexions de la recette par tranche de 5 minutes (diagnostic BUG-015, sans effet sur le résultat)
+        if: always() && steps.e2e.outcome != 'skipped'
+        # Les limites de connexion (20 par adresse et 10 par compte, par quart d'heure) se comptent en tentatives, refus
+        # compris : ce relevé montre quand elles sont approchées. Le journal peut avoir été restauré par le test de
+        # sauvegarde : seules les tranches postérieures à la restauration apparaissent.
+        run: |
+          docker compose exec -T -u postgres db psql -d suivi -At -F ' ' -c "SELECT to_char(date_trunc('hour', ts) + floor(extract(minute FROM ts) / 5) * interval '5 minutes', 'HH24:MI') AS tranche, count(*) FILTER (WHERE action = 'auth.login') AS connexions, count(*) FILTER (WHERE action = 'auth.rate_limited') AS refus FROM audit_log WHERE action IN ('auth.login', 'auth.rate_limited') GROUP BY 1 ORDER BY 1" 2>&1 | sed '1i tranche connexions refus' | column -t || true
       - name: Droits des résultats de test
         if: always()
         run: sudo chown -R "$USER" tests/e2e 2>/dev/null || true

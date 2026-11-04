@@ -264,13 +264,13 @@ elles ne sont pas ajoutées artificiellement comme trois bugs applicatifs ouvert
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Recette automatisée ; MINEURE ; P2 |
-| Statut | OUVERT : cause confirmée, décision du RSSI attendue |
+| Statut | EN COURS : cause confirmée, correctif en deux étapes |
 | Détection / correction | 2026-11-03, CI de la PR #217 (run 41719241607) et déjà relevée le 2026-10-31 |
 | Déclencheur | Un échec de capture dans `tous-ecrans` relance l'environnement, puis les fichiers suivants (`z-fiabilisation`, `zy-updates`, `zz-*`) se reconnectent. |
 | Attendu | Un test en échec n'entraîne pas l'échec des tests suivants. |
 | Observé initialement | 105 tests en échec avec `connexion rssi : 429 {"error":"Trop de tentatives. Réessayez dans quelques minutes."}`. |
 | Cause / niveau | CONFIRMÉ : limiteurs de connexion `loginByIp` (20 par 15 minutes) et `loginByUser` (10 par 15 minutes) dans `apps/api/src/services.ts`. Les reconnexions après l'échec épuisent le quota, et les tentatives refusées comptent aussi : le refus dure jusqu'à la fin de la suite. |
-| Correctif | Non fait. Pistes : réutiliser une session enregistrée dans les specs concernées (`storageState`) ; temporiser sur un 429 dans `apiLogin` (`tests/e2e/helpers.ts`). Ne pas modifier les limites de l'application sans décision du RSSI (sécurité). |
+| Correctif | EN COURS. Le compte administrateur réutilise déjà une session enregistrée (`sessionAdmin`) : les connexions restantes viennent des comptes créés par les tests (deux connexions par compte : mot de passe provisoire, puis connexion complète). Étape 1 (cette PR) : relevé des connexions par tranche de 5 minutes dans le journal de la CI, pour mesurer l'approche de la limite avant d'agir. Étape 2 (PR suivante, d'après le relevé) : réutiliser une session enregistrée par compte créé ou réduire les créations. Les limites de l'application ne sont pas modifiées (décision du RSSI du 2026-11-04 : piste « session enregistrée »). |
 | Fichiers | [apps/api/src/services.ts](../../apps/api/src/services.ts) ; [tests/e2e/helpers.ts](../../tests/e2e/helpers.ts) |
 | Non-régression | À définir avec le correctif. |
 | Reste à vérifier | Fréquence : une cascade sur les six dernières exécutions avec un échec de capture. |
