@@ -41,6 +41,24 @@ test.beforeAll(async ({ browser }) => {
   const csrf = session.csrf;
   const ctx = await browser.newContext({ ignoreHTTPSErrors: true, storageState: state });
 
+  // Les fichiers précédents (parcours, recette, système…) laissent des pages ouvertes : elles renvoient leur présence
+  // toutes les 20 s et apparaissent dans les barres de présence des captures (BUG de l'instabilité « liste-fiche »,
+  // chantier Playwright). Un échec redémarre le worker, ce qui les ferme : c'est pourquoi le rejeu passait. On les ferme
+  // donc ici, puis on attend l'expiration de leur présence côté serveur (45 s au plus après la dernière pulsation).
+  for (const c of browser.contexts()) if (c !== ctx) await c.close().catch(() => undefined);
+  const presences = async () => {
+    const r = await ctx.request.get('/api/presence');
+    const liste = (await r.json().catch(() => null)) as { username: string; resource: string }[] | null;
+    return Array.isArray(liste) ? liste.map((e) => `${e.username}@${e.resource}`) : ['(illisible)'];
+  };
+  await expect
+    .poll(presences, { message: 'présences résiduelles des fichiers précédents', timeout: 70_000, intervals: [2000] })
+    .toEqual([])
+    .catch(async () => {
+      // Pas bloquant : les captures joignent déjà la liste des présences ; on garde la trace de ce qui restait.
+      test.info().annotations.push({ type: 'presences-residuelles', description: (await presences()).join(', ') });
+    });
+
   // Données fictives figées : échéances loin dans le passé ou l'avenir, pour que les captures ne dépendent pas
   // de la date du jour.
   await creerEcartCommun(ctx.request, csrf, {

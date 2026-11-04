@@ -24,6 +24,7 @@
 
 :root {
   --grc-colonne-min: 14.375rem;
+  --grc-boite-min: 21rem; /* boîtes de pilotage par processus : nom complet d’un indicateur lisible */
   --grc-jour-min: 7.5rem;
   --grc-jour-hauteur: 6.875rem;
   --grc-planning-min: 53.125rem;

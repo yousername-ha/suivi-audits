@@ -7,6 +7,8 @@ import {
   LinkCreateBody,
   LinkOut,
   LinkPatchBody,
+  TagCount,
+  TagCountQuery,
   Uuid,
 } from '@suivi/shared';
 import { sql, type Selectable } from 'kysely';
@@ -25,6 +27,65 @@ import type { Services } from '../services.js';
 
 const IdParams = z.object({ id: Uuid });
 const like = (q: string) => '%' + q.replace(/[\\%_]/g, '\\$&') + '%';
+
+/** Étiquettes exigées par un filtre : « a, b » donne ['a', 'b'] (au plus 10, toutes doivent être présentes, casse ignorée). */
+const etiquettesDemandees = (brut?: string) =>
+  [
+    ...new Set(
+      (brut ?? '')
+        .split(',')
+        .map((t) => t.trim().slice(0, 40).toLowerCase())
+        .filter(Boolean),
+    ),
+  ].slice(0, 10);
+
+/** Vrai si les étiquettes de la ligne contiennent toutes les étiquettes demandées (en minuscules), casse ignorée. */
+const porteEtiquettes = (colonne: 'd.tags' | 'tags', demandees: string[]) =>
+  colonne === 'd.tags'
+    ? sql<boolean>`(SELECT coalesce(array_agg(lower(t)), '{}') FROM unnest(d.tags) AS t) @> ${demandees}::text[]`
+    : sql<boolean>`(SELECT coalesce(array_agg(lower(t)), '{}') FROM unnest(tags) AS t) @> ${demandees}::text[]`;
+
+/** Refuse une étiquette nouvelle qui ne diffère d'une étiquette déjà utilisée (documents et liens) que par la casse :
+ *  « rgpd » est interdite si « RGPD » existe. Les étiquettes que l'élément porte déjà (`deja`) ne sont pas contrôlées,
+ *  pour qu'un élément ancien reste modifiable même si deux graphies coexistent encore dans les données. */
+async function refuserEtiquettesEnDouble(k: Kdb, tags: string[] | undefined, deja: string[] = []) {
+  const nouvelles = (tags ?? []).filter((t) => !deja.includes(t));
+  if (!nouvelles.length) return;
+  const res = await sql<{ cle: string; tag: string }>`
+    SELECT DISTINCT ON (lower(tag)) lower(tag) AS cle, tag
+    FROM (SELECT unnest(tags) AS tag FROM documents WHERE deleted_at IS NULL
+          UNION ALL SELECT unnest(tags) FROM links WHERE deleted_at IS NULL) x
+    WHERE lower(tag) = ANY(${nouvelles.map((t) => t.toLowerCase())}::text[])
+    GROUP BY lower(tag), tag
+    ORDER BY lower(tag), count(*) DESC, tag`.execute(k);
+  const existantes = new Map(res.rows.map((r) => [r.cle, r.tag]));
+  for (const t of nouvelles) {
+    const existante = existantes.get(t.toLowerCase());
+    if (existante && existante !== t)
+      throw new HttpError(
+        422,
+        `L’étiquette « ${existante} » existe déjà : choisissez-la dans la liste au lieu de « ${t} ».`,
+      );
+  }
+}
+
+type Tri = 'modifie' | 'titre' | 'categorie' | 'classification' | 'taille';
+type Sens = 'asc' | 'desc';
+/** Sens du tri : celui demandé, sinon le plus utile pour la colonne (récent et gros d'abord, texte de A à Z). */
+const sensDuTri = (tri: Tri = 'modifie', ordre?: Sens): Sens =>
+  ordre ?? (tri === 'modifie' || tri === 'taille' ? 'desc' : 'asc');
+/** Clé de tri des documents (expressions fixes : aucune entrée libre n'est insérée dans la requête). */
+const cleTriDocuments = (tri: Tri = 'modifie') =>
+  ({
+    modifie: sql`d.updated_at`,
+    titre: sql`lower(d.title)`,
+    categorie: sql`lower(d.category)`,
+    classification: sql`CASE d.classification WHEN 'public' THEN 0 WHEN 'interne' THEN 1 WHEN 'restreint' THEN 2 ELSE 3 END`,
+    taille: sql`coalesce(v.size, 0)`,
+  })[tri];
+/** Les liens n'ont ni taille ni classification : ces tris retombent sur la date de modification. */
+const cleTriLiens = (tri: Tri = 'modifie') =>
+  tri === 'titre' ? sql`lower(title)` : tri === 'categorie' ? sql`lower(category)` : sql`updated_at`;
 
 /** Document avec sa version courante (fichier, empreinte, analyse antivirale). */
 const documents = (k: Kdb) =>
@@ -225,6 +286,9 @@ export const documentRoutes = [
         .where('d.deleted_at', query.trash === '1' ? 'is not' : 'is', null)
         .$if(!!query.ref, (q) => q.where(sql<boolean>`${query.ref} = ANY(d.refs)`))
         .$if(!!query.category, (q) => q.where('d.category', '=', query.category!))
+        .$if(etiquettesDemandees(query.tags).length > 0, (q) =>
+          q.where(porteEtiquettes('d.tags', etiquettesDemandees(query.tags))),
+        )
         .$if(!!query.q, (q) =>
           q.where((eb) =>
             eb.or([
@@ -236,7 +300,11 @@ export const documentRoutes = [
             ]),
           ),
         )
+        .orderBy(cleTriDocuments(query.tri), (ob) =>
+          sensDuTri(query.tri, query.ordre) === 'asc' ? ob.asc() : ob.desc(),
+        )
         .orderBy('d.updated_at', 'desc')
+        .orderBy('d.id')
         .limit(1000)
         .execute()) as unknown as DocumentLigne[];
     },
@@ -267,6 +335,28 @@ export const documentRoutes = [
       ).map((x) => x.category),
   }),
   route({
+    method: 'GET',
+    url: '/api/documents/tags',
+    summary: 'Étiquettes utilisées avec leur nombre d’emplois (documents, liens ou les deux)',
+    tags: ['Documents'],
+    access: 'documents:lire',
+    query: TagCountQuery,
+    response: z.array(TagCount),
+    handler: async ({ svc, query }) => {
+      const docs = sql`SELECT unnest(tags) AS tag FROM documents WHERE deleted_at IS NULL`;
+      const liens = sql`SELECT unnest(tags) AS tag FROM links WHERE deleted_at IS NULL`;
+      const source =
+        query.portee === 'documents' ? docs : query.portee === 'liens' ? liens : sql`${docs} UNION ALL ${liens}`;
+      // « RGPD » et « rgpd » ne font qu'une étiquette : emplois additionnés, graphie la plus employée affichée.
+      const res = await sql<{ tag: string; count: number }>`
+        SELECT (array_agg(tag ORDER BY n DESC, tag))[1] AS tag, sum(n)::int AS count
+        FROM (SELECT tag, count(*) AS n FROM (${source}) x GROUP BY tag) g
+        GROUP BY lower(tag)
+        ORDER BY count DESC, 1`.execute(svc.db.k);
+      return res.rows;
+    },
+  }),
+  route({
     method: 'POST',
     url: '/api/documents',
     summary: 'Dépôt d’un document (corps binaire, en-têtes X-File-Name et X-Meta)',
@@ -282,6 +372,7 @@ export const documentRoutes = [
       const meta = headerMeta(req.headers['x-meta']);
       const f = await receiveFile(ctx as unknown as Ctx<Buffer>);
       const by = s.user.username;
+      await refuserEtiquettesEnDouble(svc.db.k, meta.tags);
       const doc = await svc.db.tx(async (c, k) => {
         const d = await k
           .insertInto('documents')
@@ -362,6 +453,7 @@ export const documentRoutes = [
         if (!cur || cur.deleted_at) throw new HttpError(404, 'Document introuvable.');
         if (cur.version !== expected) throw conflict(cur);
         if (!keys.length) return cur;
+        await refuserEtiquettesEnDouble(k, body.tags, cur.tags);
         // Champs modifiables : ceux du schéma DocumentMeta (liste fermée), typés par la base ; version attendue liée.
         const r = await k
           .updateTable('documents')
@@ -571,6 +663,8 @@ export const documentRoutes = [
     response: z.array(LinkOut),
     handler: async ({ svc, query }) => {
       let req = svc.db.k.selectFrom('links').selectAll().where('deleted_at', 'is', null);
+      const demandees = etiquettesDemandees(query.tags);
+      if (demandees.length) req = req.where(porteEtiquettes('tags', demandees));
       if (query.ref) req = req.where(sql<boolean>`${query.ref} = ANY(refs)`);
       if (query.category) req = req.where('category', '=', query.category);
       if (query.q) {
@@ -585,7 +679,16 @@ export const documentRoutes = [
           ]),
         );
       }
-      const rows = await req.orderBy('updated_at', 'desc').limit(1000).execute();
+      const sens =
+        query.tri === 'titre' || query.tri === 'categorie'
+          ? sensDuTri(query.tri, query.ordre)
+          : sensDuTri('modifie', query.ordre);
+      const rows = await req
+        .orderBy(cleTriLiens(query.tri), (ob) => (sens === 'asc' ? ob.asc() : ob.desc()))
+        .orderBy('updated_at', 'desc')
+        .orderBy('id')
+        .limit(1000)
+        .execute();
       return rows.map(linkOut);
     },
   }),
@@ -600,6 +703,7 @@ export const documentRoutes = [
     response: LinkOut,
     handler: async ({ svc, s, ip, body, reply }) => {
       const by = (s as Session).user.username;
+      await refuserEtiquettesEnDouble(svc.db.k, body.tags);
       const row = await svc.db.tx(
         (_c, k) =>
           k
@@ -646,6 +750,7 @@ export const documentRoutes = [
         if (!cur) throw new HttpError(404, 'Lien introuvable.');
         if (cur.version !== expected) throw conflict(linkOut(cur));
         if (!fields.length) return cur;
+        await refuserEtiquettesEnDouble(k, body.tags, cur.tags);
         return k
           .updateTable('links')
           .set((eb) => ({

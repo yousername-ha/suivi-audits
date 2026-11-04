@@ -27,6 +27,16 @@ const strList = (maxItems: number, max: number) =>
       .slice(0, maxItems),
   );
 
+/** Liste d'étiquettes : comme strList, mais « RGPD » et « rgpd » sont la même étiquette (la première graphie est gardée). */
+const tagList = (maxItems: number, max: number) =>
+  z.union([z.array(z.string()), z.string()]).transform((v) =>
+    (Array.isArray(v) ? v : v.split(','))
+      .map((x) => x.trim().replace(/\s+/g, ' ').slice(0, max))
+      .filter(Boolean)
+      .filter((x, i, a) => a.findIndex((y) => y.toLowerCase() === x.toLowerCase()) === i)
+      .slice(0, maxItems),
+  );
+
 export const Username = z
   .string()
   .trim()
@@ -235,16 +245,25 @@ export const DocumentMeta = z.object({
   description: text(4000).optional(),
   category: text(80).optional(),
   refs: strList(100, 60).optional(),
-  tags: strList(30, 40).optional(),
+  tags: tagList(30, 40).optional(),
   classification: Classification.optional(),
 });
 export type DocumentMeta = z.infer<typeof DocumentMeta>;
+/** Tris de la liste des documents et des liens (les liens n'ont ni taille ni classification : tri par défaut). */
+export const DOCUMENT_TRIS = ['modifie', 'titre', 'categorie', 'classification', 'taille'] as const;
 export const DocumentQuery = z.object({
   q: z.string().max(200).optional(),
   ref: z.string().max(60).optional(),
   category: z.string().max(80).optional(),
+  /** Étiquettes exigées (toutes), séparées par des virgules. */
+  tags: z.string().max(1200).optional(),
+  tri: z.enum(DOCUMENT_TRIS).optional(),
+  ordre: z.enum(['asc', 'desc']).optional(),
   trash: z.enum(['0', '1']).optional(),
 });
+export const TagCountQuery = z.object({ portee: z.enum(['documents', 'liens', 'tous']).optional() });
+export const TagCount = z.object({ tag: z.string(), count: z.number() });
+export type TagCount = z.infer<typeof TagCount>;
 export const DocumentOut = z.object({
   id: z.string(),
   title: z.string(),
@@ -311,7 +330,7 @@ export const LinkCreateBody = z.object({
   description: text(4000).optional(),
   category: text(80).optional(),
   refs: strList(100, 60).optional(),
-  tags: strList(30, 40).optional(),
+  tags: tagList(30, 40).optional(),
 });
 export const LinkPatchBody = LinkCreateBody.partial();
 export const LinkOut = z.object({

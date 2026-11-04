@@ -75,7 +75,8 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
     [formulaire, setFormulaire] = useState<{ edition: Perimetre | null; valeurs: Formulaire } | null>(null),
     [acces, setAcces] = useState<Perimetre | null>(null),
     [referentiels, setReferentiels] = useState<Perimetre | null>(null),
-    [vue, setVue] = useState<'liste' | 'graphe'>('liste'),
+    // Le graphe est la vue par défaut (demande du RSSI du 02/11/2026) ; la liste reste à un clic.
+    [vue, setVue] = useState<'liste' | 'graphe'>('graphe'),
     [erreur, setErreur] = useState<unknown>(null),
     [envoi, setEnvoi] = useState(false);
   const liste = useQuery({
