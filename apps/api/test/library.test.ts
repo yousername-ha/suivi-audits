@@ -49,7 +49,7 @@ async function publier(def: unknown, id: string | null, expected: number) {
   );
 }
 const attacher = (smsi: string, version: number, agent = a) =>
-  agent.put(`/api/grc/${smsi}/framework-attachments/${libId}`, { version, confirm: 'RATTACHER' });
+  agent.put(`/api/grc/${smsi}/framework-attachments/${libId}`, { version, statut: 'applique', confirm: 'RATTACHER' });
 const lier = (smsi: string, version: number) =>
   a.post(`/api/grc/${smsi}/links`, {
     source: 'object:' + measureId,

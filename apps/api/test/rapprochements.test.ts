@@ -71,7 +71,7 @@ const body = (s: unknown, tg: unknown, type: string, coverage: number) => ({
   sourceUrl: 'https://example.invalid/correspondance',
 });
 const attacher = (smsi: string, fw: string) =>
-  a.put(`/api/grc/${smsi}/framework-attachments/${fw}`, { version: 1, confirm: 'RATTACHER' });
+  a.put(`/api/grc/${smsi}/framework-attachments/${fw}`, { version: 1, statut: 'applique', confirm: 'RATTACHER' });
 const lier = (smsi: string, m: string, target: string) =>
   a.post(`/api/grc/${smsi}/links`, { source: 'object:' + m, target, type: 'implements', note: 'Lien de recette' });
 const proposals = async (smsi: string, status = 'pending') =>

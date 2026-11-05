@@ -139,7 +139,7 @@ test('jeu de test : menu, objectifs, fournisseurs, PESTEL, boîtes, carte des ri
     // Bibliothèque : standards d'emblée, sans alerte rouge.
     await page.goto('/pilotage/bibliotheque');
     await expect(page.getByText('Référentiel fictif de démonstration').first()).toBeVisible();
-    await expect(page.getByText('Version source verrouillée').first()).toBeVisible();
+    await expect(page.getByText('Figé', { exact: true }).first()).toBeVisible();
     await capture(page, '16-bibliotheque');
 
     // Tableau de bord et état du pilotage après le jeu de test.

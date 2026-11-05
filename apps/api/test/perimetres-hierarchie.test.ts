@@ -249,7 +249,11 @@ describe('rattachement parent/enfant', () => {
 
 describe('héritage explicite des référentiels', () => {
   it('un référentiel rattaché au parent apparaît, marqué hérité, chez les seuls enfants qui héritent', async () => {
-    const a = await admin.put(`/api/grc/${groupe}/framework-attachments/${fw}`, { version: 1, confirm: 'RATTACHER' });
+    const a = await admin.put(`/api/grc/${groupe}/framework-attachments/${fw}`, {
+      version: 1,
+      statut: 'applique',
+      confirm: 'RATTACHER',
+    });
     expect(a.statusCode, a.body).toBe(200);
     expect((await effectifs(groupe))[0]).toMatchObject({ inherited: false, originName: null });
     // Hôpital et laboratoire héritent (chaîne ouverte) ; la clinique n'a pas ouvert l'héritage.
@@ -275,14 +279,16 @@ describe('héritage explicite des référentiels', () => {
     expect(JSON.stringify((await admin.get(`/api/grc/${clinique}/couverture`)).json())).not.toContain('HIER-FICTIF');
   });
   it('désactiver localement l’emporte sur le parent et se propage plus bas', async () => {
-    const local = await admin.put(`/api/grc/${hopital}/framework-attachments/${fw}`, {
-      version: 1,
-      confirm: 'RATTACHER',
-    });
+    // « Désactiver ici » (ADR 0082) : une surcharge locale d'activation ; la copie reste celle du groupe.
+    const local = await admin.put(`/api/grc/${hopital}/framework-attachments/${fw}/activation`, { enabled: false });
     expect(local.statusCode, local.body).toBe(200);
-    await admin.put(`/api/grc/${hopital}/framework-attachments/${fw}/activation`, { enabled: false });
-    expect((await effectifs(hopital))[0]).toMatchObject({ inherited: false, enabled: false });
-    expect((await effectifs(labo))[0]).toMatchObject({ inherited: true, enabled: false, originName: 'Hôpital' });
+    expect((await effectifs(hopital))[0]).toMatchObject({
+      inherited: true,
+      overridden: true,
+      enabled: false,
+      originName: 'Groupe',
+    });
+    expect((await effectifs(labo))[0]).toMatchObject({ inherited: true, enabled: false, originName: 'Groupe' });
     const c = await admin.get(`/api/grc/${labo}/couverture`);
     expect(JSON.stringify(c.json())).not.toContain('HIER-FICTIF');
     // Le groupe reste inchangé.

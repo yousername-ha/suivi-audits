@@ -199,8 +199,13 @@ describe('applicabilité HDS (lecture seule)', () => {
     expect(pub.statusCode, pub.body).toBe(200);
     const fw = pub.json().id as string;
     expect(
-      (await admin.put(`/api/grc/${smsi}/framework-attachments/${fw}`, { version: 1, confirm: 'RATTACHER' }))
-        .statusCode,
+      (
+        await admin.put(`/api/grc/${smsi}/framework-attachments/${fw}`, {
+          version: 1,
+          statut: 'applique',
+          confirm: 'RATTACHER',
+        })
+      ).statusCode,
     ).toBe(200);
     const evaluer = (req: string, applicability: string, attendue: number) =>
       admin.post(

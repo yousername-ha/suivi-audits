@@ -81,19 +81,12 @@ export async function sources(g: Grc, smsi: string, user: SessionUser, search: s
             name: r.id + ' · ' + r.title,
             kind: 'requirement',
           });
-    // Référentiels de la bibliothèque rattachés et actifs dans ce périmètre (ADR 0031).
-    const effectifs = (await g.effectiveFrameworks(smsi)).filter((e) => e.enabled);
-    const attached = effectifs.length
-      ? ((await g.db.k
-          .selectFrom('lib_framework_versions')
-          .select(['framework_id', 'version', 'definition'])
-          .where((eb) =>
-            eb.or(
-              effectifs.map((e) => eb.and([eb('framework_id', '=', e.frameworkId), eb('version', '=', e.version)])),
-            ),
-          )
-          .execute()) as Publication[])
-      : [];
+    // Référentiels appliqués et actifs dans ce périmètre (ADR 0031, ADR 0082) : exigences de la copie effective.
+    const attached: Publication[] = [...(await g.copies.effectives(smsi)).values()].map((e) => ({
+      framework_id: e.effectif.frameworkId,
+      version: e.effectif.version,
+      definition: e.definition,
+    }));
     for (const p of attached)
       for (const r of p.definition.requirements)
         if ((r.title + ' ' + r.id).toLowerCase().includes(search.toLowerCase()) && objects.length < 300)

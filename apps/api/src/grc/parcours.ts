@@ -176,7 +176,7 @@ export class GrcParcours {
       aDeterminer: 0,
       nonEvaluee: 0,
     };
-    for (const e of (await this.g.effectiveFrameworks(smsi)).filter((x) => x.enabled)) {
+    for (const e of (await this.g.effectiveFrameworks(smsi)).filter((x) => x.suivi)) {
       const f = await this.g.frameworks.version(smsi, e.frameworkId, e.version, user).then(
         (v) => v,
         () => null,

@@ -55,7 +55,11 @@ beforeAll(async () => {
   smsi = (
     await admin.post('/api/grc/smsis', { name: 'Service fictif', scope: 'Recette', timezone: 'Europe/Paris' })
   ).json().id;
-  await admin.put(`/api/grc/${smsi}/framework-attachments/${fw}`, { version: 1, confirm: 'RATTACHER' });
+  await admin.put(`/api/grc/${smsi}/framework-attachments/${fw}`, {
+    version: 1,
+    statut: 'applique',
+    confirm: 'RATTACHER',
+  });
   await admin.put(`/api/grc/${smsi}/members`, { userId: membre.id, write: false });
   lecteur = await login(t, membre); // après l'ajout : un changement de droits clôt les sessions ouvertes
   etrangerAgent = etranger;

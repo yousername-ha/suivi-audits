@@ -109,8 +109,9 @@ export function AnalyserService({ smsi, onChoisir }: { smsi: string; onChoisir: 
       for (const f of FAMILLES) {
         const r = trouve(f.cle);
         if (!retenus[f.cle] || !r) continue;
+        // Choix explicite de l'assistant (ADR 0082) : la copie du service est créée et appliquée d'emblée.
         await api('PUT', `/api/grc/${cree.id}/framework-attachments/${r.id}`, {
-          body: { version: r.version, confirm: 'RATTACHER' },
+          body: { version: r.version, statut: 'applique', confirm: 'RATTACHER' },
         });
         faits.push(r.name);
       }
@@ -220,7 +221,7 @@ export function AnalyserService({ smsi, onChoisir }: { smsi: string; onChoisir: 
                   />
                   {!r && (
                     <Text size="xs" c="dimmed">
-                      Absent de la bibliothèque : importez-le d’abord (page Bibliothèque), puis rattachez-le au service
+                      Absent de la bibliothèque : importez-le d’abord (page Bibliothèque), puis attribuez-le au service
                       depuis la page Périmètres.
                     </Text>
                   )}
@@ -229,7 +230,7 @@ export function AnalyserService({ smsi, onChoisir }: { smsi: string; onChoisir: 
             })}
             <Group justify="flex-end">
               <Button loading={envoi} onClick={rattacher}>
-                Rattacher les référentiels cochés
+                Appliquer les référentiels cochés
               </Button>
             </Group>
           </Stack>
@@ -238,8 +239,8 @@ export function AnalyserService({ smsi, onChoisir }: { smsi: string; onChoisir: 
           <Stack mt="md">
             <Text size="sm">
               {rattaches.length
-                ? `Rattaché au service : ${rattaches.join(', ')}.`
-                : 'Aucun référentiel n’a été rattaché par l’assistant.'}{' '}
+                ? `Appliqué au service (copie propre au service, modifiable depuis la page Périmètres) : ${rattaches.join(', ')}.`
+                : 'Aucun référentiel n’a été appliqué par l’assistant.'}{' '}
               Ouvrez la Couverture du service pour déclarer, exigence par exigence, l’applicabilité et la mise en œuvre,
               puis utilisez « Créer le plan d’action des écarts ».
             </Text>
