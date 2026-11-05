@@ -42,6 +42,8 @@ export interface SessionUser {
   totpEnabled: boolean;
   /** Clés de sécurité utilisables (ni révoquées ni suspectes), ADR 0079. */
   cles: number;
+  /** Clés enregistrées (non révoquées, suspectes comprises) : une clé suspendue reste un facteur enregistré. */
+  clesEnregistrees: number;
   /** Une clé est exigée (politique des administrateurs échue, ou ré-enrôlement imposé). */
   cleRequise: boolean;
   mustChangePassword: boolean;
@@ -84,14 +86,16 @@ export function accessStage(
   s:
     | (Pick<Session, 'mfaOk'> & {
         user: Pick<SessionUser, 'totpEnabled' | 'mustChangePassword'> &
-          Partial<Pick<SessionUser, 'cles' | 'cleRequise'>>;
+          Partial<Pick<SessionUser, 'cles' | 'clesEnregistrees' | 'cleRequise'>>;
       })
     | null,
   mfaRequired: boolean,
 ): AccessStage {
   if (!s) return 'anon';
   const cles = s.user.cles ?? 0;
-  if ((s.user.totpEnabled || cles > 0) && !s.mfaOk) return 'mfa';
+  // Une clé suspendue est « enregistrée mais inutilisable » : elle n'abaisse jamais l'assurance exigée.
+  const enregistrees = Math.max(cles, s.user.clesEnregistrees ?? 0);
+  if ((s.user.totpEnabled || enregistrees > 0) && !s.mfaOk) return 'mfa';
   if (!s.user.totpEnabled && mfaRequired) return 'enroll';
   if (s.user.cleRequise && cles === 0) return 'enroll_key';
   if (s.user.mustChangePassword) return 'password';
@@ -210,7 +214,9 @@ export class Auth {
 
   sessionToken(req: FastifyRequest): string | null {
     const c = parseCookies(req.headers.cookie);
-    const tok = c.get(COOKIE_SECURE) || c.get(COOKIE_PLAIN);
+    // Seul le nom que cette requête se verrait attribuer à l'émission est lu : sur HTTPS, le cookie non préfixé
+    // (posable depuis un hôte frère ou en clair) n'est jamais accepté.
+    const tok = c.get(this.cookie(req).name);
     return tok && tok.length <= 100 ? tok : null;
   }
 
@@ -248,6 +254,13 @@ export class Auth {
             .where('w.revoked_at', 'is', null)
             .where('w.suspect_at', 'is', null)
             .as('cles'),
+        (eb) =>
+          eb
+            .selectFrom('webauthn_credentials as w')
+            .select(sql<number>`count(*)::int`.as('n'))
+            .whereRef('w.user_id', '=', 'u.id')
+            .where('w.revoked_at', 'is', null)
+            .as('cles_enregistrees'),
       ])
       .where('s.id_hash', '=', h)
       .where('s.expires_at', '>', sql<Date>`now()`)
@@ -279,6 +292,7 @@ export class Auth {
         preferences: PreferencesSchema.safeParse(r.preferences).data ?? DEFAULT_PREFERENCES,
         totpEnabled: r.totp_enabled,
         cles: Number(r.cles ?? 0),
+        clesEnregistrees: Number(r.cles_enregistrees ?? 0),
         cleRequise: this.exigenceCle({
           admin: rights.has('administration:administrer'),
           creeLe: new Date(r.created_at),
@@ -306,6 +320,13 @@ export class Auth {
             .where('w.revoked_at', 'is', null)
             .where('w.suspect_at', 'is', null)
             .as('cles'),
+        (eb) =>
+          eb
+            .selectFrom('webauthn_credentials as w')
+            .select(sql<number>`count(*)::int`.as('n'))
+            .whereRef('w.user_id', '=', 'u.id')
+            .where('w.revoked_at', 'is', null)
+            .as('cles_enregistrees'),
       ])
       .where('u.id', '=', userId)
       .executeTakeFirstOrThrow();
@@ -317,6 +338,7 @@ export class Auth {
           totpEnabled: u.totp_enabled,
           mustChangePassword: u.must_change_password,
           cles: Number(u.cles ?? 0),
+          clesEnregistrees: Number(u.cles_enregistrees ?? 0),
           cleRequise: this.exigenceCle({
             admin: rights.has('administration:administrer'),
             creeLe: new Date(u.created_at),

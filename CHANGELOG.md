@@ -14,6 +14,14 @@ qui suit la copie du parent. Aucune évaluation, aucun lien, aucun rapprochement
 de la sauvegarde d'avant mise à jour. Les intégrations qui rattachent un référentiel par l'API puis l'évaluent doivent
 désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel library management ».)_
 
+### Sécurité
+
+- **Authentification** : une clé de sécurité suspendue reste un facteur enregistré ; elle n'abaisse plus l'assurance exigée
+  à la connexion ni à la ré-authentification (seul un compte sans aucun facteur enregistré reste connectable par mot de
+  passe). Le cookie de session et celui de l'écran mural ne sont lus que sous le nom que le serveur émettrait pour la
+  requête : sur HTTPS, uniquement le nom préfixé `__Host-`. Aucune action sur le serveur. _(Session « Projet audit_suivi
+  Coeur ».)_
+
 ### Modifié
 
 - **Bibliothèque figée, référentiels du périmètre en copie, puis appliqués** ([ADR 0082](docs/adr/0082-referentiels-du-perimetre-copie-et-application.md)) :
