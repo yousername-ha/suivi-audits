@@ -39,7 +39,9 @@ Décisions de cadrage du RSSI (05/11/2026, questions posées dans la session) :
    Les anciennes « copies de l'organisation » déjà publiées restent dans la bibliothèque, figées comme le reste.
 2. **Attribuer = créer une copie propre au périmètre.** `PUT /api/grc/:smsi/framework-attachments/:id` (droit
    `pilotage:administrer`, comme avant) crée la copie, version 1, identique à l'édition choisie, au statut
-   **« en préparation »** (paramètre facultatif `statut`). La copie **garde l'identifiant du référentiel de la bibliothèque**
+   **« en préparation »** (paramètre facultatif `statut`). La copie est nommée **« <référentiel> (PRIVE - <périmètre>) »**
+   (décision du RSSI du 05/11/2026 ; `nomCopiePerimetre`, nom du périmètre limité à 100 caractères, l'ensemble à 200) ;
+   elle reste renommable. La copie **garde l'identifiant du référentiel de la bibliothèque**
    et l'édition dont elle est issue : elle est rangée par (périmètre, référentiel) dans `grc_framework_copy_versions`. Ainsi
    les références d'exigences, les évaluations, les liens, les rapprochements et les correspondances organisationnelles
    restent valables **sans réécriture**, et une exigence ajoutée dans la copie se désigne comme les autres.
@@ -59,10 +61,11 @@ Décisions de cadrage du RSSI (05/11/2026, questions posées dans la session) :
    référentiel chez l'enfant lui donne sa **propre** copie, qui l'emporte ; la détacher rend la copie héritée. Détacher la copie
    d'un ancêtre retire les surcharges des héritiers devenues sans effet.
 6. **Nouvelle édition de la bibliothèque.** « Reprendre l'édition N » (même route d'attribution, avec l'édition voulue)
-   remplace le contenu de la copie par cette édition, statut conservé ; les adaptations restent dans l'historique de la copie.
+   remplace le contenu de la copie par cette édition, statut et nom courant de la copie conservés ; les adaptations restent
+   dans l'historique de la copie.
 7. **Migration `052`** (additive) : colonnes `status`, `status_by`, `status_at`, `copy_version` de `grc_scope_frameworks`, table
    immuable `grc_framework_copy_versions`. **Conversion** : chaque rattachement existant reçoit sa copie (version 1, identique à
-   l'édition rattachée), statut « appliqué » (il était suivi), **sauf** celui qui reprend, à la même édition, le référentiel
+   l'édition rattachée, nommée selon la même règle), statut « appliqué » (il était suivi), **sauf** celui qui reprend, à la même édition, le référentiel
    hérité d'un ancêtre (« Désactiver ici ») : il reste une surcharge qui suit la copie de l'ancêtre. Aucune évaluation, aucun
    lien, aucun rapprochement n'est réécrit.
 8. **Assistant « Analyser un service »** et **jeu de démonstration** : choix explicite d'appliquer ; ils créent la copie
@@ -82,6 +85,8 @@ Décisions de cadrage du RSSI (05/11/2026, questions posées dans la session) :
 - Remise à vide : la table des copies est vidée avec les autres données de travail.
 - Retour arrière : restauration de la sauvegarde d'avant mise à jour. Une version antérieure ignorerait les copies (elle lirait
   l'édition de la bibliothèque) et compterait les copies en préparation comme suivies.
+- Le nom de la copie reprend le nom du périmètre au moment de l'attribution : renommer ensuite le périmètre ne renomme pas
+  ses copies (elles se renomment à la main).
 - Limites : la reprise d'une nouvelle édition **remplace** la copie (aucune fusion automatique des adaptations) ; les
   correspondances de l'organisation restent rédigées entre éditions de la bibliothèque et ne visent pas une exigence ajoutée
   dans une copie ; aucun taux de conformité n'est calculé ni inventé.

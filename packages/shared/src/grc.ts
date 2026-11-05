@@ -285,6 +285,13 @@ export const LibraryFrameworkDefinition = FrameworkDefinition.superRefine((d, c)
     });
 });
 export type LibraryFrameworkDefinition = z.infer<typeof LibraryFrameworkDefinition>;
+/** Nom donné à la copie d'un référentiel attribuée à un périmètre (ADR 0082, décision du RSSI du 05/11/2026) :
+    « <référentiel> (PRIVE - <périmètre>) ». Le nom du périmètre est limité à 100 caractères et celui du référentiel
+    raccourci pour tenir dans les 200 caractères d'un libellé. La migration 052 applique la même règle en SQL. */
+export function nomCopiePerimetre(nomReferentiel: string, nomPerimetre: string): string {
+  const suffixe = ` (PRIVE - ${nomPerimetre.trim().slice(0, 100)})`;
+  return nomReferentiel.trim().slice(0, 200 - suffixe.length) + suffixe;
+}
 /** Ajout ou modification d'une exigence dans la copie d'un périmètre (ADR 0082) : domaine existant, ou nouveau domaine
     par son libellé ; `expectedVersion` : version courante de la copie. */
 export const LibraryRequirementBody = z

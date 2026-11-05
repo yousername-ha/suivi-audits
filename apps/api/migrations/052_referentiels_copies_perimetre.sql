@@ -37,7 +37,8 @@ CREATE TRIGGER grc_framework_copy_versions_no_truncate BEFORE TRUNCATE ON grc_fr
 -- Conversion des rattachements existants (décision du RSSI : convertir en copies, en tenant compte de l'héritage).
 -- Un rattachement qui ne fait que reprendre, à la même édition, le référentiel hérité d'un ancêtre (typiquement
 -- « Désactiver ici ») reste une surcharge : il suit la copie de l'ancêtre. Tout autre rattachement reçoit sa copie,
--- version 1, identique à l'édition rattachée. Les rattachements existants étaient suivis : statut « appliqué ».
+-- version 1, identique à l'édition rattachée, nommée « <référentiel> (PRIVE - <périmètre>) ». Les rattachements
+-- existants étaient suivis : statut « appliqué ».
 WITH RECURSIVE chaine (perimetre, ancetre, profondeur) AS (
   SELECT s.id, s.parent_id, 1 FROM grc_smsis s WHERE s.inherit_frameworks AND s.parent_id IS NOT NULL
   UNION ALL
@@ -51,9 +52,14 @@ herite AS (
   ORDER BY c.perimetre, f.framework_id, c.profondeur
 )
 INSERT INTO grc_framework_copy_versions (smsi_id, framework_id, version, source_version, definition, reason, created_by)
-SELECT s.smsi_id, s.framework_id, 1, s.version, v.definition,
+SELECT s.smsi_id, s.framework_id, 1, s.version,
+       -- Nom de la copie : « <référentiel> (PRIVE - <périmètre>) », même règle que nomCopiePerimetre (packages/shared).
+       jsonb_set(v.definition, '{name}', to_jsonb(
+         left(btrim(v.definition->>'name'), 200 - char_length(' (PRIVE - ' || left(btrim(p.name), 100) || ')'))
+         || ' (PRIVE - ' || left(btrim(p.name), 100) || ')')),
        'Copie créée à la mise à jour (rattachement existant converti).', 'migration 052'
 FROM grc_scope_frameworks s
+JOIN grc_smsis p ON p.id = s.smsi_id
 JOIN lib_framework_versions v ON v.framework_id = s.framework_id AND v.version = s.version
 WHERE NOT EXISTS (
   SELECT 1 FROM herite h WHERE h.perimetre = s.smsi_id AND h.framework_id = s.framework_id AND h.version = s.version

@@ -16,7 +16,8 @@ repris, les exigences se chargent par import avec leurs droits.
 ## Référentiels d'un périmètre : copie, puis application
 
 1. **Attribuer** un référentiel de la bibliothèque à un périmètre (page Périmètres → « Référentiels ») en crée une **copie
-   propre au périmètre**, à l'édition choisie, **en préparation**. La bibliothèque n'est pas modifiée.
+   propre au périmètre**, à l'édition choisie, **en préparation**, nommée « <référentiel> (PRIVE - <périmètre>) ». La
+   bibliothèque n'est pas modifiée.
 2. **Modifier la copie** librement : ajouter, modifier ou retirer des exigences, créer un domaine, renommer. Chaque
    modification est une version immuable de la copie (historique consultable). La copie garde l'identifiant du référentiel :
    évaluations, mesures reliées et rapprochements suivent chaque exigence par son identifiant.

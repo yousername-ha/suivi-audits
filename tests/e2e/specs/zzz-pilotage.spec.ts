@@ -302,12 +302,14 @@ test('Pilotage : bibliothèque de référentiels, import, attribution d’une co
     // Attribuer crée une copie propre au périmètre, en préparation (ADR 0082).
     await choose(page, 'Attribuer un référentiel de la bibliothèque', nom);
     await dialog.getByRole('button', { name: 'Attribuer', exact: true }).click();
-    await expect(dialog.getByText(nom, { exact: true })).toBeVisible();
+    // La copie porte le nom du périmètre : « <référentiel> (PRIVE - <périmètre>) ».
+    const copieNom = `${nom} (PRIVE - Pilotage de l’organisation)`;
+    await expect(dialog.getByText(copieNom, { exact: true })).toBeVisible();
     await expect(dialog.getByText(/édition 1/)).toBeVisible();
     await expect(dialog.getByText('En préparation', { exact: true })).toBeVisible();
     // La copie se modifie librement : ajout d'une exigence dans un nouveau domaine.
-    await dialog.getByRole('button', { name: `Modifier la copie de ${nom}`, exact: true }).click();
-    const editeur = page.getByRole('dialog', { name: `Copie : ${nom}` });
+    await dialog.getByRole('button', { name: `Modifier la copie de ${copieNom}`, exact: true }).click();
+    const editeur = page.getByRole('dialog', { name: `Copie : ${copieNom}` });
     await editeur.getByRole('button', { name: 'Ajouter une exigence', exact: true }).click();
     await editeur.getByLabel('Ou nouveau domaine').fill('Mesures locales');
     await editeur.getByLabel('Identifiant de l’exigence').fill('LOC-1');
@@ -324,7 +326,7 @@ test('Pilotage : bibliothèque de référentiels, import, attribution d’une co
     await page.reload();
     await page.getByText('Liste', { exact: true }).click(); // le graphe est la vue par défaut
     await page.getByRole('button', { name: /^Référentiels rattachés au périmètre Pilotage de l/ }).click();
-    await expect(page.getByRole('dialog').getByText(nom, { exact: true })).toBeVisible();
+    await expect(page.getByRole('dialog').getByText(copieNom, { exact: true })).toBeVisible();
     await expect(page.getByRole('dialog').getByText(/2 exigence\(s\)/)).toBeVisible();
     // La bibliothèque reste intacte : une seule exigence, édition 1.
     const lib = (await (await page.request.get('/api/library/frameworks')).json()) as {

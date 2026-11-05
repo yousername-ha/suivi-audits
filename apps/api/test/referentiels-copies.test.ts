@@ -58,6 +58,7 @@ async function publier(def: FrameworkDefinition, id: string | null, attendue: nu
 interface Attribue {
   frameworkId: string;
   name: string;
+  libraryName: string;
   statut: string;
   suivi: boolean;
   enabled: boolean;
@@ -136,6 +137,9 @@ describe('attribution : une copie en préparation', () => {
       copyVersion: 1,
       requirements: 2,
       inherited: false,
+      // Nom de la copie : « <référentiel> (PRIVE - <périmètre>) » ; la bibliothèque garde le sien.
+      name: 'Référentiel COPIE-A (PRIVE - Parent copies)',
+      libraryName: 'Référentiel COPIE-A',
     });
     expect(await copie(parent, fa)).toMatchObject({ version: 1, sourceVersion: 1, modifiable: true });
     // En préparation : ni couverture, ni évaluation, ni cible de lien.
@@ -289,7 +293,12 @@ describe('héritage : les sous-périmètres suivent la copie du parent', () => {
   it('attribuer chez l’enfant lui donne sa propre copie, qui l’emporte sur celle du parent', async () => {
     const r = await attribuer(enfant, fa);
     expect(r.statusCode, r.body).toBe(200);
-    expect(await de(enfant, fa)).toMatchObject({ inherited: false, statut: 'preparation', requirements: 2 });
+    expect(await de(enfant, fa)).toMatchObject({
+      inherited: false,
+      statut: 'preparation',
+      requirements: 2,
+      name: 'Référentiel COPIE-A (PRIVE - Enfant copies)',
+    });
     expect(await copie(enfant, fa)).toMatchObject({ modifiable: true });
     expect(await de(parent, fa)).toMatchObject({ requirements: 4, statut: 'applique' });
     // Détacher la copie de l'enfant rend la copie héritée du parent.
@@ -304,7 +313,13 @@ describe('édition de la bibliothèque, correspondances et détachement', () => 
     expect(await de(parent, fa)).toMatchObject({ version: 1, latestVersion: 2 });
     const r = await attribuer(parent, fa, 2);
     expect(r.statusCode, r.body).toBe(200);
-    expect(await de(parent, fa)).toMatchObject({ version: 2, statut: 'applique', requirements: 3 });
+    // Le nom courant de la copie (renommée plus haut) est conservé.
+    expect(await de(parent, fa)).toMatchObject({
+      version: 2,
+      statut: 'applique',
+      requirements: 3,
+      name: 'A — version du parent',
+    });
     const c = await copie(parent, fa);
     expect(c.sourceVersion).toBe(2);
     expect(c.historique[0]!.reason).toMatch(/Reprise de l’édition 2/);

@@ -222,7 +222,12 @@ describe('applicabilité HDS (lecture seule)', () => {
     expect((await evaluer('H1', 'applicable', 0)).statusCode).toBe(201);
     expect((await evaluer('H2', 'exclue', 0)).statusCode).toBe(201);
     const r = (await writer.get(root() + '/hds')).json();
-    expect(r.referentiel).toMatchObject({ id: fw, name: 'HDS fictif', version: 1, heritage: false });
+    expect(r.referentiel).toMatchObject({
+      id: fw,
+      name: 'HDS fictif (PRIVE - Périmètre parcours)',
+      version: 1,
+      heritage: false,
+    });
     expect(r).toMatchObject({ total: 3, applicable: 1, exclue: 1, aDeterminer: 0, nonEvaluee: 1 });
     // Un autre périmètre, sans rattachement, ne voit rien.
     expect((await admin.get(root(autre) + '/hds')).json().referentiel).toBeNull();

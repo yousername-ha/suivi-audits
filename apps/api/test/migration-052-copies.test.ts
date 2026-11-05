@@ -6,6 +6,7 @@ import { copyFileSync, mkdtempSync, readdirSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { nomCopiePerimetre } from '@suivi/shared';
 import { MIGRATIONS_DIR } from '../src/db/db.js';
 import { createDatabase } from './pg.js';
 import { createTestApp } from './helpers.js';
@@ -104,12 +105,21 @@ describe('migration 052 : rattachements convertis en copies des périmètres', (
       expect(ligne(hopital)).toMatchObject({ version: 1, copy_version: null });
       expect(ligne(clinique)).toMatchObject({ version: 2, copy_version: 1, status: 'applique' });
       expect(ligne(service)).toMatchObject({ version: 1, copy_version: 1, status: 'applique' });
-      const copies = await t.svc.db.q<{ smsi_id: string; source_version: number; n: number }>(
-        `SELECT smsi_id, source_version, jsonb_array_length(definition->'requirements')::int AS n
+      const copies = await t.svc.db.q<{ smsi_id: string; source_version: number; n: number; nom: string }>(
+        `SELECT smsi_id, source_version, jsonb_array_length(definition->'requirements')::int AS n,
+                definition->>'name' AS nom
          FROM grc_framework_copy_versions ORDER BY smsi_id`,
       );
       expect(copies.rows).toHaveLength(3);
-      expect(copies.rows.find((c) => c.smsi_id === clinique)).toMatchObject({ source_version: 2, n: 3 });
+      expect(copies.rows.find((c) => c.smsi_id === clinique)).toMatchObject({
+        source_version: 2,
+        n: 3,
+        nom: 'Référentiel fictif (PRIVE - Clinique)',
+      });
+      // Même règle de nom qu'à l'attribution (nomCopiePerimetre).
+      expect(copies.rows.find((c) => c.smsi_id === groupe)!.nom).toBe(
+        nomCopiePerimetre('Référentiel fictif', 'Groupe'),
+      );
 
       // Lecture par l'application : héritage de la copie du groupe, surcharge de l'hôpital propagée au laboratoire.
       const eff = async (id: string) => (await t.svc.grc.effectiveFrameworks(id))[0];

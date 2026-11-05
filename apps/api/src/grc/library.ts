@@ -4,7 +4,7 @@
    Les référentiels publiés dans un périmètre (frameworks.ts) restent inchangés ; une promotion explicite, simulée avant
    application, les copie ici. Aucun lien vers une mesure n'est stocké dans la bibliothèque : ces liens sont propres à
    chaque périmètre. */
-import { LibraryFrameworkDefinition, type FrameworkDefinition } from '@suivi/shared';
+import { LibraryFrameworkDefinition, nomCopiePerimetre, type FrameworkDefinition } from '@suivi/shared';
 import { ZodError } from 'zod';
 import type { SessionUser } from '../auth.js';
 import { sql } from 'kysely';
@@ -475,7 +475,7 @@ export class GrcLibrary {
     const source = await this.version(id, version, user);
     await this.g.db.tx(async (c, k) => {
       await this.verrouillerPerimetre(k, smsi);
-      await this.g.access(smsi, user, true, c);
+      const perimetre = await this.g.access(smsi, user, true, c);
       const previous = await k
         .selectFrom('grc_scope_frameworks')
         .select(['version', 'copy_version as copyVersion', 'status'])
@@ -496,13 +496,20 @@ export class GrcLibrary {
         previous?.copyVersion != null
           ? `Reprise de l’édition ${version} de la bibliothèque (remplace le contenu de la copie).`
           : `Copie attribuée depuis la bibliothèque (édition ${version}).`;
+      // Nom de la copie (décision du RSSI du 05/11/2026) : « <référentiel> (PRIVE - <périmètre>) » à la création ; une
+      // reprise d'édition garde le nom courant de la copie, éventuellement renommée.
+      const nom =
+        previous?.copyVersion != null
+          ? ((await this.g.copies.versionCopie(smsi, id, previous.copyVersion, c))?.definition.name ??
+            nomCopiePerimetre(source.definition.name, perimetre.name))
+          : nomCopiePerimetre(source.definition.name, perimetre.name);
       const copyVersion = await this.g.copies.publier(
         c,
         smsi,
         id,
         previous?.copyVersion ?? null,
         version,
-        source.definition,
+        { ...source.definition, name: nom },
         motif,
         user.username,
       );
@@ -766,7 +773,7 @@ export class GrcLibrary {
         libraryId,
         null,
         1,
-        again.definition,
+        { ...again.definition, name: nomCopiePerimetre(again.definition.name, perimetre) },
         `Copie créée à la promotion depuis le périmètre « ${perimetre} ».`,
         user.username,
       );

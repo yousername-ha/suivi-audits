@@ -169,7 +169,7 @@ describe('rapprochements proposés, jamais affirmés', () => {
       coverage: 100,
       mappingType: 'equivalent',
       measure: { name: 'Mesure de S' },
-      source: { requirementId: 'A-1', framework: 'Référentiel RAP-A' },
+      source: { requirementId: 'A-1', framework: 'Référentiel RAP-A (PRIVE - Périmètre S)' },
       target: { requirementId: 'B-1' },
     });
     expect((await a.get(`/api/grc/${scope}/rapprochements/summary`)).json()).toEqual({ pending: 1 });

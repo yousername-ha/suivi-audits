@@ -91,3 +91,19 @@ describe('périmètres de management : nature libre', () => {
     expect(SmsiUpdate.safeParse({ ...maj, nature: 'x'.repeat(61) }).success).toBe(false);
   });
 });
+
+describe('nom de la copie d’un référentiel dans un périmètre (ADR 0082)', () => {
+  it('ajoute « (PRIVE - <périmètre>) » au nom du référentiel', async () => {
+    const { nomCopiePerimetre } = await import('../src/index.js');
+    expect(nomCopiePerimetre('ISO/IEC 27001:2022', 'Hôpital fictif')).toBe(
+      'ISO/IEC 27001:2022 (PRIVE - Hôpital fictif)',
+    );
+    expect(nomCopiePerimetre('  HDS ', ' Clinique ')).toBe('HDS (PRIVE - Clinique)');
+  });
+  it('tient dans un libellé de 200 caractères, même avec des noms très longs', async () => {
+    const { nomCopiePerimetre } = await import('../src/index.js');
+    const nom = nomCopiePerimetre('R'.repeat(200), 'P'.repeat(200));
+    expect(nom).toHaveLength(200);
+    expect(nom.endsWith(` (PRIVE - ${'P'.repeat(100)})`)).toBe(true);
+  });
+});

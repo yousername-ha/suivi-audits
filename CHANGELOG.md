@@ -7,7 +7,8 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 ### Notes de mise à jour
 
 **Aucune action sur le serveur.** **Migration automatique `052`** (référentiels des périmètres) : appliquée au démarrage de
-`app`, durée négligeable. Chaque référentiel déjà rattaché à un périmètre devient la **copie** de ce périmètre, au statut
+`app`, durée négligeable. Chaque référentiel déjà rattaché à un périmètre devient la **copie** de ce périmètre, nommée « <référentiel> (PRIVE -
+<périmètre>) », au statut
 « appliqué » (il reste suivi en conformité comme avant) ; un « Désactiver ici » d'un référentiel hérité reste une surcharge
 qui suit la copie du parent. Aucune évaluation, aucun lien, aucun rapprochement n'est réécrit. Retour arrière : restauration
 de la sauvegarde d'avant mise à jour. Les intégrations qui rattachent un référentiel par l'API puis l'évaluent doivent
@@ -18,7 +19,8 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
 - **Bibliothèque figée, référentiels du périmètre en copie, puis appliqués** ([ADR 0082](docs/adr/0082-referentiels-du-perimetre-copie-et-application.md)) :
   la bibliothèque ne se personnalise plus (« Créer une copie » et « Ajouter une exigence » retirés ; chaque édition est
   immuable, une nouvelle édition reste importable). Attribuer un référentiel à un périmètre (Périmètres → « Référentiels »)
-  en crée une **copie propre au périmètre**, en préparation, que l'on modifie librement : ajout, modification ou retrait
+  en crée une **copie propre au périmètre**, nommée « <référentiel> (PRIVE - <périmètre>) », en préparation, que l'on
+  modifie librement : ajout, modification ou retrait
   d'exigences, nouveau domaine, renommage, historique des versions. **Appliquer** la copie en fait un référentiel suivi en
   conformité (couverture, évaluations, rapprochements, plan d'écarts) ; elle reste modifiable et peut repasser en
   préparation sans perte. Les sous-périmètres qui héritent suivent la copie du parent (désactivable chez eux) ; attribuer chez
