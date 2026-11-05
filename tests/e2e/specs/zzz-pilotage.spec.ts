@@ -314,7 +314,7 @@ test('Pilotage : bibliothèque de référentiels, import, attribution d’une co
     await editeur.getByLabel('Intitulé').fill('Mesure propre au périmètre');
     await editeur.getByRole('button', { name: 'Enregistrer dans la copie', exact: true }).click();
     await expect(editeur.getByText('Mesure propre au périmètre')).toBeVisible();
-    await expect(editeur.getByText(/Version 2 \(courante\)/)).toBeVisible();
+    await expect(editeur.getByLabel('Version de la copie')).toHaveValue(/^Version 2 \(courante\)/);
     await editeur.getByRole('button', { name: 'Fermer la copie', exact: true }).click();
     await expect(editeur).toHaveCount(0);
     // Appliquer : la copie devient un référentiel suivi en conformité.
