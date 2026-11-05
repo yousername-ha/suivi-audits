@@ -25,7 +25,8 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
   conformité (couverture, évaluations, rapprochements, plan d'écarts) ; elle reste modifiable et peut repasser en
   préparation sans perte. Les sous-périmètres qui héritent suivent la copie du parent (désactivable chez eux) ; attribuer chez
   l'enfant lui donne sa propre copie. « Reprendre l'édition N » remplace la copie par une nouvelle édition de la
-  bibliothèque. L'assistant « Analyser un service » applique les référentiels cochés. Nouvelles routes
+  bibliothèque. Renommer un périmètre propose de renommer aussi ses copies « (PRIVE - <ancien nom>) » avec le nouveau nom
+  (option `renommerCopies` de `PATCH /api/grc/smsis/:id`). L'assistant « Analyser un service » applique les référentiels cochés. Nouvelles routes
   `PUT /api/grc/:smsi/framework-attachments/:id/statut`, `GET|PUT /api/grc/:smsi/framework-copies/:id`,
   `POST /api/grc/:smsi/framework-copies/:id/requirements`, `DELETE …/requirements/:requirementId` ; routes
   `POST /api/library/frameworks/:id/copy` et `…/requirements` retirées. Migration `052`. _(Session « Référentiel library management ».)_

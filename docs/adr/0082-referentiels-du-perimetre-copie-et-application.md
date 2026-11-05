@@ -85,8 +85,11 @@ Décisions de cadrage du RSSI (05/11/2026, questions posées dans la session) :
 - Remise à vide : la table des copies est vidée avec les autres données de travail.
 - Retour arrière : restauration de la sauvegarde d'avant mise à jour. Une version antérieure ignorerait les copies (elle lirait
   l'édition de la bibliothèque) et compterait les copies en préparation comme suivies.
-- Le nom de la copie reprend le nom du périmètre au moment de l'attribution : renommer ensuite le périmètre ne renomme pas
-  ses copies (elles se renomment à la main).
+- Renommer un périmètre (décision du RSSI du 05/11/2026) : l'écran demande « Voulez-vous aussi renommer ses référentiels
+  avec le nouveau nom du périmètre ? » quand le périmètre porte des copies nommées « … (PRIVE - <ancien nom>) ». Oui :
+  `PATCH /api/grc/smsis/:id` avec `renommerCopies: true` (droit `conformite:modifier` en plus) renomme ces copies dans la
+  même transaction, chacune en nouvelle version (« Copie renommée avec le nouveau nom du périmètre »), nombre journalisé
+  (`copiesRenommees`). Non : les noms restent. Une copie renommée à la main (sans ce suffixe) n'est jamais touchée.
 - Limites : la reprise d'une nouvelle édition **remplace** la copie (aucune fusion automatique des adaptations) ; les
   correspondances de l'organisation restent rédigées entre éditions de la bibliothèque et ne visent pas une exigence ajoutée
   dans une copie ; aucun taux de conformité n'est calculé ni inventé.

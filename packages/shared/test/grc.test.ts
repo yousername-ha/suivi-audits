@@ -107,3 +107,18 @@ describe('nom de la copie d’un référentiel dans un périmètre (ADR 0082)', 
     expect(nom.endsWith(` (PRIVE - ${'P'.repeat(100)})`)).toBe(true);
   });
 });
+
+describe('copie d’un référentiel quand le périmètre est renommé (ADR 0082)', () => {
+  it('remplace le suffixe « (PRIVE - <ancien nom>) » par le nouveau nom', async () => {
+    const { renommerCopiePerimetre } = await import('../src/index.js');
+    expect(renommerCopiePerimetre('HDS (PRIVE - Clinique)', 'Clinique', 'Clinique du Parc')).toBe(
+      'HDS (PRIVE - Clinique du Parc)',
+    );
+  });
+  it('laisse une copie renommée à la main, ou déjà à jour', async () => {
+    const { renommerCopiePerimetre } = await import('../src/index.js');
+    expect(renommerCopiePerimetre('HDS adapté', 'Clinique', 'Clinique du Parc')).toBeNull();
+    expect(renommerCopiePerimetre('HDS (PRIVE - Autre)', 'Clinique', 'Clinique du Parc')).toBeNull();
+    expect(renommerCopiePerimetre('HDS (PRIVE - Clinique)', 'Clinique', 'Clinique')).toBeNull();
+  });
+});

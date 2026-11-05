@@ -378,3 +378,66 @@ describe('édition de la bibliothèque, correspondances et détachement', () => 
     expect(lignes.rows).toHaveLength(0);
   });
 });
+
+describe('périmètre renommé : renommer aussi ses copies, sur demande', () => {
+  let clinique: string;
+  const renommer = async (name: string, renommerCopies?: boolean) => {
+    const courant = (await a.get('/api/grc/smsis')).json().find((x: { id: string }) => x.id === clinique);
+    return a.patch(
+      `/api/grc/smsis/${clinique}`,
+      {
+        name,
+        scope: courant.scope,
+        timezone: courant.timezone,
+        ...(renommerCopies === undefined ? {} : { renommerCopies }),
+        confirm: 'ENREGISTRER',
+      },
+      { 'if-match': `"${courant.version}"` },
+    );
+  };
+  beforeAll(async () => {
+    clinique = (
+      await a.post('/api/grc/smsis', { name: 'Clinique fictive', scope: 'Recette', timezone: 'Europe/Paris' })
+    ).json().id as string;
+    await attribuer(clinique, fa, 2);
+    await attribuer(clinique, fb);
+    // Une copie renommée à la main ne porte plus le suffixe : elle garde son nom.
+    await a.put(`/api/grc/${clinique}/framework-copies/${fb}`, { name: 'B adapté à la clinique', expectedVersion: 1 });
+  });
+  it('sans demande, les copies gardent leur nom', async () => {
+    const r = await renommer('Clinique du Parc');
+    expect(r.statusCode, r.body).toBe(200);
+    expect((await de(clinique, fa))!.name).toBe('Référentiel COPIE-A (PRIVE - Clinique fictive)');
+  });
+  it('sur demande, seules les copies « (PRIVE - <ancien nom>) » sont renommées, en nouvelle version', async () => {
+    // L'ancien nom « Clinique du Parc » n'apparaît dans aucune copie : rien n'est renommé.
+    expect((await renommer('Clinique fictive', true)).statusCode).toBe(200);
+    expect((await de(clinique, fa))!).toMatchObject({
+      name: 'Référentiel COPIE-A (PRIVE - Clinique fictive)',
+      copyVersion: 1,
+    });
+    const r = await renommer('Clinique des Tilleuls', true);
+    expect(r.statusCode, r.body).toBe(200);
+    expect(r.json().name).toBe('Clinique des Tilleuls');
+    expect((await de(clinique, fa))!).toMatchObject({
+      name: 'Référentiel COPIE-A (PRIVE - Clinique des Tilleuls)',
+      copyVersion: 2,
+    });
+    expect((await de(clinique, fb))!.name).toBe('B adapté à la clinique');
+    const c = await copie(clinique, fa);
+    expect(c.historique[0]!.reason).toBe('Copie renommée avec le nouveau nom du périmètre « Clinique des Tilleuls ».');
+    const journal = await t.svc.db.one<{ details: { copiesRenommees: number } }>(
+      "SELECT details FROM audit_log WHERE action = 'grc.smsi.updated' AND target = $1 ORDER BY id DESC LIMIT 1",
+      [clinique],
+    );
+    expect(journal!.details.copiesRenommees).toBe(1);
+  });
+  it('un compte sans droit de modifier la conformité ne peut pas le demander', async () => {
+    const r = await writer.patch(
+      `/api/grc/smsis/${clinique}`,
+      { name: 'Autre', scope: 'Recette', timezone: 'Europe/Paris', renommerCopies: true, confirm: 'ENREGISTRER' },
+      { 'if-match': '"1"' },
+    );
+    expect(r.statusCode).toBe(403);
+  });
+});

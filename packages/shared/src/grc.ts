@@ -207,6 +207,9 @@ export const SmsiUpdate = z
     /** Absente : inchangée (retirée si le périmètre devient une organisation). `null` délie la fiche. */
     supplierId: ficheFournisseur.nullable().optional(),
     inheritFrameworks: z.boolean().optional(),
+    /** Nom changé : renommer aussi les copies de référentiels du périmètre qui portent « (PRIVE - <ancien nom>) »
+        (ADR 0082, décision du RSSI du 05/11/2026). Absent ou faux : leurs noms restent inchangés. */
+    renommerCopies: z.boolean().optional(),
     confirm: z.literal('ENREGISTRER'),
   })
   .strict();
@@ -291,6 +294,18 @@ export type LibraryFrameworkDefinition = z.infer<typeof LibraryFrameworkDefiniti
 export function nomCopiePerimetre(nomReferentiel: string, nomPerimetre: string): string {
   const suffixe = ` (PRIVE - ${nomPerimetre.trim().slice(0, 100)})`;
   return nomReferentiel.trim().slice(0, 200 - suffixe.length) + suffixe;
+}
+/** Nouveau nom d'une copie quand son périmètre est renommé : seulement si elle porte encore le suffixe
+    « (PRIVE - <ancien nom>) » donné à l'attribution ; `null` pour une copie renommée à la main (elle garde son nom). */
+export function renommerCopiePerimetre(
+  nomCopie: string,
+  ancienPerimetre: string,
+  nouveauPerimetre: string,
+): string | null {
+  const ancien = ` (PRIVE - ${ancienPerimetre.trim().slice(0, 100)})`;
+  if (!nomCopie.endsWith(ancien)) return null;
+  const nom = nomCopiePerimetre(nomCopie.slice(0, -ancien.length), nouveauPerimetre);
+  return nom === nomCopie ? null : nom;
 }
 /** Ajout ou modification d'une exigence dans la copie d'un périmètre (ADR 0082) : domaine existant, ou nouveau domaine
     par son libellé ; `expectedVersion` : version courante de la copie. */

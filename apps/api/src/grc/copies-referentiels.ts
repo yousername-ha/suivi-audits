@@ -4,7 +4,12 @@
    issue : les références d'exigences, les évaluations, les liens et les correspondances suivent l'exigence par son
    identifiant, quelles que soient les modifications. Une exigence retirée garde son historique (évaluations, liens) : elle
    n'est simplement plus comptée. Seul le périmètre qui porte la copie la modifie ; ceux qui en héritent la lisent. */
-import { LibraryFrameworkDefinition, type FrameworkDefinition, type LibraryRequirementBody } from '@suivi/shared';
+import {
+  LibraryFrameworkDefinition,
+  renommerCopiePerimetre,
+  type FrameworkDefinition,
+  type LibraryRequirementBody,
+} from '@suivi/shared';
 import { ZodError } from 'zod';
 import type { SessionUser } from '../auth.js';
 import { sql } from 'kysely';
@@ -294,5 +299,60 @@ export class GrcCopiesReferentiels {
       definition: { ...d, name },
       motif: `Copie renommée « ${name} ».`,
     }));
+  }
+
+  /** Périmètre renommé, sur demande (ADR 0082) : chaque copie qu'il porte et qui a encore le suffixe
+      « (PRIVE - <ancien nom>) » reçoit une nouvelle version au nouveau nom. Dans la transaction de l'appelant ;
+      renvoie le nombre de copies renommées. */
+  async renommerPourPerimetre(
+    c: Client,
+    smsi: string,
+    ancien: string,
+    nouveau: string,
+    user: SessionUser,
+    ip: string,
+  ): Promise<number> {
+    const k = surConnexion(c);
+    const lignes = await k
+      .selectFrom('grc_scope_frameworks')
+      .select(['framework_id as frameworkId', 'version', 'copy_version as copyVersion'])
+      .where('smsi_id', '=', smsi)
+      .where('copy_version', 'is not', null)
+      .forUpdate()
+      .execute();
+    let n = 0;
+    for (const l of lignes) {
+      const copie = await this.versionCopie(smsi, l.frameworkId, l.copyVersion!, c);
+      const nom = copie && renommerCopiePerimetre(copie.definition.name, ancien, nouveau);
+      if (!copie || !nom) continue;
+      const motif = `Copie renommée avec le nouveau nom du périmètre « ${nouveau} ».`;
+      const version = await this.publier(
+        c,
+        smsi,
+        l.frameworkId,
+        l.copyVersion,
+        l.version,
+        { ...copie.definition, name: nom },
+        motif,
+        user.username,
+      );
+      await k
+        .updateTable('grc_scope_frameworks')
+        .set({ copy_version: version })
+        .where('smsi_id', '=', smsi)
+        .where('framework_id', '=', l.frameworkId)
+        .execute();
+      await this.g.db.audit(
+        user,
+        ip,
+        'grc.referentiel.copie.modifiee',
+        smsi,
+        { frameworkId: l.frameworkId, version, previousVersion: l.copyVersion, motif },
+        c,
+      );
+      n++;
+    }
+    if (n) await this.g.notify(c, smsi, 0, smsi, 'conformite', user.username);
+    return n;
   }
 }

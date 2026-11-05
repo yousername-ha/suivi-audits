@@ -330,11 +330,35 @@ test('Pilotage : bibliothèque de référentiels, import, attribution d’une co
     await expect(page.getByRole('dialog').getByText(/2 exigence\(s\)/)).toBeVisible();
     // La bibliothèque reste intacte : une seule exigence, édition 1.
     const lib = (await (await page.request.get('/api/library/frameworks')).json()) as {
+      id: string;
       name: string;
       version: number;
       requirements: number;
     }[];
-    expect(lib.find((f) => f.name === nom)).toMatchObject({ version: 1, requirements: 1 });
+    const fw = lib.find((f) => f.name === nom)!;
+    expect(fw).toMatchObject({ version: 1, requirements: 1 });
+    // Périmètre renommé : la question propose de renommer aussi sa copie « (PRIVE - <ancien nom>) ».
+    const ancien = `QA-Copies-${Date.now()}`,
+      nouveau = `${ancien}-renomme`;
+    const perimetre = await post(page, '/api/grc/smsis', { name: ancien, scope: 'Recette', timezone: 'Europe/Paris' });
+    const attribution = await page.request.put(`/api/grc/${perimetre.id}/framework-attachments/${fw.id}`, {
+      headers: { Origin: new URL(page.url()).origin, 'X-CSRF-Token': await csrfOf(page.request) },
+      data: { version: 1, confirm: 'RATTACHER' },
+    });
+    expect(attribution.ok(), await attribution.text()).toBeTruthy();
+    await page.goto('/pilotage/perimetres');
+    await page.getByText('Liste', { exact: true }).click(); // le graphe est la vue par défaut
+    await page.getByRole('button', { name: `Modifier le périmètre ${ancien}`, exact: true }).click();
+    await page.getByRole('dialog').getByLabel(/^Nom/).fill(nouveau);
+    await page.getByRole('dialog').getByRole('button', { name: 'Enregistrer', exact: true }).click();
+    const question = page.getByRole('dialog', { name: 'Renommer aussi les référentiels ?' });
+    await expect(question.getByText(`${nom} (PRIVE - ${nouveau})`, { exact: false })).toBeVisible();
+    await question.getByRole('button', { name: 'Renommer aussi les référentiels', exact: true }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    const copies = (await (await page.request.get(`/api/grc/${perimetre.id}/framework-attachments`)).json()) as {
+      name: string;
+    }[];
+    expect(copies.map((c) => c.name)).toEqual([`${nom} (PRIVE - ${nouveau})`]);
     expect(problems).toEqual([]);
   } finally {
     await ctx.close();

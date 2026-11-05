@@ -23,7 +23,9 @@ repris, les exigences se chargent par import avec leurs droits.
    évaluations, mesures reliées et rapprochements suivent chaque exigence par son identifiant.
 3. **Appliquer** la copie : elle devient un **référentiel suivi en conformité** (couverture, évaluations, rapprochements, plan
    d'écarts). Elle reste modifiable ; la repasser en préparation la sort du suivi sans rien effacer.
-4. **Reprendre une nouvelle édition** de la bibliothèque remplace le contenu de la copie (statut conservé, adaptations
+4. **Renommer le périmètre** : l'écran demande s'il faut aussi renommer ses copies avec le nouveau nom ; seules celles qui
+   portent encore « (PRIVE - <ancien nom>) » sont concernées.
+5. **Reprendre une nouvelle édition** de la bibliothèque remplace le contenu de la copie (statut conservé, adaptations
    gardées dans l'historique).
 
 ## Périmètres hiérarchiques

@@ -569,6 +569,8 @@ export class Grc {
   async updateSmsi(id: string, input: SmsiUpdate, expected: number, user: SessionUser, ip: string) {
     await this.permission(user, 'pilotage', 'administrer');
     await this.access(id, user, true);
+    // Renommer aussi les copies de référentiels : c'est modifier ces copies (droit de la conformité).
+    if (input.renommerCopies) await this.permission(user, 'conformite', 'modifier');
     return this.db.tx(async (c) => {
       await this.verrouillerPerimetre(c, id);
       const current = await this.access(id, user, true, c);
@@ -608,12 +610,23 @@ export class Grc {
       if (entityKind !== current.entityKind) changed.push('entityKind');
       if (supplierId !== current.supplierId) changed.push('supplierId');
       if (inheritFrameworks !== current.inheritFrameworks) changed.push('inheritFrameworks');
+      // Sur demande : copies « (PRIVE - <ancien nom>) » renommées avec le nouveau nom (ADR 0082).
+      const copiesRenommees =
+        input.renommerCopies && current.name !== input.name
+          ? await this.copies.renommerPourPerimetre(c, id, current.name, input.name, user, ip)
+          : 0;
       await this.db.audit(
         user,
         ip,
         'grc.smsi.updated',
         id,
-        { changed, previousName: current.name, previousNature: current.nature, previousParentId: current.parentId },
+        {
+          changed,
+          previousName: current.name,
+          previousNature: current.nature,
+          previousParentId: current.parentId,
+          copiesRenommees,
+        },
         c,
       );
       if (parentId !== current.parentId || inheritFrameworks !== current.inheritFrameworks)
