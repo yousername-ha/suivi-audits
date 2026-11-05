@@ -195,13 +195,13 @@ export const importRoutes = [
       const rights = (s as Session).user.rights;
       const file = readUpload(body);
       const cles = query.module ? [query.module] : Object.keys(file.data);
-      // Comme l'application : lire les modules concernés, et remplacer exige aussi la suppression.
+      // Comme l'application : module activé, puis lecture des modules concernés ; remplacer exige aussi la suppression.
+      await svc.modules.assertKeys(cles);
       assertLegacyKeys(rights, cles, 'lire');
       if (query.mode === 'replace') svc.auth.requirePermission(s as Session, 'import_export:supprimer');
       const current = (await svc.legacy.recompose())?.data ?? null;
       const { report: complet } = plan(current, file, query.mode, query.module);
       const report = redactReport(complet, rights);
-      await svc.modules.assertKeys(cles);
       return {
         filename: fileName(req),
         size: (body as unknown as Buffer).length,
