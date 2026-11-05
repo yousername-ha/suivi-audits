@@ -484,7 +484,12 @@ export class GrcLibrary {
         .forUpdate()
         .executeTakeFirst();
       if (previous?.copyVersion != null && previous.version === version) {
-        if (statut && statut !== previous.status) await this.ecrireStatut(c, smsi, id, statut, user, ip);
+        // Déjà attribué à cette édition : seul un changement de statut demandé est appliqué.
+        if (statut && statut !== previous.status) {
+          await this.ecrireStatut(c, smsi, id, statut, user, ip);
+          await this.g.notify(c, smsi, 0, smsi, 'conformite', user.username);
+          await this.g.resynchroniser(smsi, c);
+        }
         return;
       }
       const motif =
