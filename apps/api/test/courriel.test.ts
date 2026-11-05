@@ -228,6 +228,9 @@ describe('configuration et file de demandes', () => {
       expediteur: 'suivi@exemple.test',
       contactTechnique: 'technique@exemple.test',
     });
+    // Le relais a changé : le mot de passe enregistré pour l'ancien est supprimé, il est ressaisi pour celui-ci.
+    expect((await admin.get('/api/settings/courriel')).json().info.motDePasseDefini).toBe(false);
+    expect((await admin.put('/api/settings/courriel/mot-de-passe', { password: MOT_DE_PASSE })).statusCode).toBe(204);
     await t.svc.db.q('DELETE FROM backup_worker');
     const sans = await admin.post('/api/settings/courriel/test');
     expect(sans.statusCode).toBe(503);

@@ -183,6 +183,17 @@ export class Settings {
         })
         .where('key', '=', key(s))
         .execute();
+      if (s === 'courriel') {
+        // Le mot de passe scellé ne vaut que pour le relais pour lequel il a été saisi : s'il change (hôte, port, sécurité,
+        // compte ou autorité de certification), il est supprimé et doit être ressaisi.
+        const point = (v: Record<string, unknown>) =>
+          JSON.stringify([v.hote, v.port, v.securite, v.utilisateur, String(v.autoriteCertification ?? '').trim()]);
+        if (point(before) !== point(after)) {
+          const retire = await k.deleteFrom('settings').where('key', '=', 'secret:courriel').executeTakeFirst();
+          if (Number(retire.numDeletedRows) > 0)
+            await this.db.audit(user, '', 'courriel.mot_de_passe_invalide', '', { motif: 'relais modifié' }, c);
+        }
+      }
       return { before, after, version };
     }
     // Cycle et référentiels : écriture des clés correspondantes de l'état legacy (contrôle de version de l'état).

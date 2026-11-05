@@ -246,6 +246,8 @@ function Num({
 /** Courriel : paramètres SMTP/SMTPS, mot de passe scellé (écriture seule) et message de test réel vers le contact technique. */
 function CourrielForm({ p }: { p: P }) {
   const [defini, setDefini] = useState(p.info.motDePasseDefini === true);
+  // Enregistrer un autre relais (serveur, port, chiffrement, compte ou autorité) supprime le mot de passe : on suit le serveur.
+  useEffect(() => setDefini(p.info.motDePasseDefini === true), [p.info.motDePasseDefini]);
   const [mdp, setMdp] = useState('');
   const [envoi, setEnvoi] = useState(false);
   const [test, setTest] = useState<TestCourrielDto | null>(null);
@@ -355,7 +357,9 @@ function CourrielForm({ p }: { p: P }) {
       <Stack gap="xs" role="group" aria-label="Mot de passe du compte SMTP">
         <Text fw={600}>Mot de passe du compte</Text>
         <Text size="sm" c="dimmed">
-          {defini ? 'Un mot de passe est enregistré (scellé, jamais affiché).' : 'Aucun mot de passe enregistré.'}
+          {defini
+            ? 'Un mot de passe est enregistré (scellé, jamais affiché). Il ne vaut que pour ce relais : changer le serveur, le port, le chiffrement, le compte ou l’autorité de certification le supprime, il faut alors le ressaisir.'
+            : 'Aucun mot de passe enregistré.'}
         </Text>
         {!p.ro && (
           <Group align="flex-end">
