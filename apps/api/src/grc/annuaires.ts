@@ -3,7 +3,13 @@
    historique `ownerId` reste la source des rappels. Un responsable n'est jamais une habilitation : désigner ou changer
    un responsable n'écrit dans aucune table de rôles, de groupes ou de droits de ressource. Les rappels d'un groupe ou d'une fonction vont aux
    personnes qui le composent au moment de l'envoi. Accès aux données en Kysely (ADR 0062). */
-import { FonctionBody, type FonctionDto, type ResponsableRef, type ResponsablesProposables } from '@suivi/shared';
+import {
+  BUSINESS_MODULES,
+  FonctionBody,
+  type FonctionDto,
+  type ResponsableRef,
+  type ResponsablesProposables,
+} from '@suivi/shared';
 import type { SessionUser } from '../auth.js';
 import { sql } from 'kysely';
 import { surConnexion, type Client, type Kdb } from '../db/db.js';
@@ -18,8 +24,27 @@ const memeNom = (nom: string) => sql<boolean>`lower(name) = lower(${nom})`;
 export class GrcAnnuaires {
   constructor(private readonly g: Grc) {}
 
-  /** Responsables proposables dans un périmètre : personnes autorisées, groupes et fonctions qui comptent du monde. */
+  /** Responsables proposables dans un périmètre : personnes autorisées, groupes et fonctions qui comptent du monde. Réservé
+      à qui peut désigner un responsable dans ce périmètre : droit de modification d'un module métier, ou rôle de
+      contributeur (ou plus) sur un registre rattaché au périmètre (délégation de l'ADR 0043). */
   async proposables(smsi: string, user: SessionUser): Promise<ResponsablesProposables> {
+    await this.g.access(smsi, user);
+    let peutDesigner = BUSINESS_MODULES.some((m) => user.rights.can(m, 'modifier'));
+    if (!peutDesigner) {
+      const liens = await this.g.db.k
+        .selectFrom('registre_perimetres')
+        .select('registre_id')
+        .where('smsi_id', '=', smsi)
+        .execute();
+      for (const { registre_id } of liens) {
+        const reg = await this.g.registres.brut(registre_id);
+        if (reg && !reg.archived && (await this.g.registres.peut(user, reg, null, 'contribuer'))) {
+          peutDesigner = true;
+          break;
+        }
+      }
+    }
+    if (!peutDesigner) throw new HttpError(403, 'Droits insuffisants pour désigner un responsable dans ce périmètre.');
     const utilisateurs = await this.g.owners(smsi, user);
     const k = this.g.db.k;
     const groupes = await k
