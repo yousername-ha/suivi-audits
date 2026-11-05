@@ -1,10 +1,11 @@
 /* État du suivi en lecture pour la nouvelle interface (recomposé depuis les tables, filtré selon les droits), modules
    repris et référentiels de rattachement. */
-import { legacyKeyModule, RefOut, type Module, type Rights } from '@suivi/shared';
+import { legacyKeyModule, RefOut, type Module } from '@suivi/shared';
 import { isObject, LEGACY_MODULES, type Json, type JsonObject } from '@suivi/shared/legacy';
 import { z } from 'zod';
 import type { Session } from '../auth.js';
 import { HttpError } from '../http/errors.js';
+import { redactLegacy } from '../legacy/redaction.js';
 import { route } from '../http/route.js';
 import type { Services } from '../services.js';
 
@@ -21,28 +22,7 @@ async function legacyState(svc: Services) {
   return r;
 }
 
-const emptyLike = (v: Json): Json =>
-  Array.isArray(v)
-    ? []
-    : isObject(v)
-      ? {}
-      : typeof v === 'string'
-        ? ''
-        : typeof v === 'number'
-          ? 0
-          : typeof v === 'boolean'
-            ? false
-            : null;
-
-/** État vu par un utilisateur : les modules qu'il ne peut pas lire sont remplacés par une valeur vide du même type. */
-export function redactLegacy(data: JsonObject, rights: Rights): JsonObject {
-  return Object.fromEntries(
-    Object.entries(data).map(([k, v]) => {
-      const m = legacyKeyModule(k);
-      return [k, !m || rights.can(m, 'lire') ? v : emptyLike(v)];
-    }),
-  );
-}
+export { redactLegacy };
 
 export const suiviRoutes = [
   route({

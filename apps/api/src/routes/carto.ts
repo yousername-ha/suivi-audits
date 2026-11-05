@@ -29,7 +29,8 @@ import {
   type MapLayout,
 } from '@suivi/shared/carto';
 import { randomBytes } from 'node:crypto';
-import type { JsonObject } from '@suivi/shared/legacy';
+import type { Rights } from '@suivi/shared';
+import { isObject, type Json, type JsonObject } from '@suivi/shared/legacy';
 import { z } from 'zod';
 import type { Session } from '../auth.js';
 import {
@@ -47,18 +48,23 @@ import { surConnexion, type Client, type Kdb } from '../db/db.js';
 import { conflict, requireIfMatch, setEtag } from '../http/concurrency.js';
 import { HttpError } from '../http/errors.js';
 import { route } from '../http/route.js';
+import { redactLayoutJson } from '../legacy/redaction.js';
 import { permissionDenied } from '../rights.js';
 import type { Services } from '../services.js';
 
 const MapParams = z.object({ id: Uuid });
 const VersionParams = z.object({ id: Uuid, v: Uuid });
 
-const toOut = (m: MapRow): MapOut => ({
+/** Carte vue par une personne : les noms d'objets copiés dans la disposition sont vidés pour les modules qu'elle ne peut pas
+    lire, et les « enjeux » du pilotage (settings.issues) exigent pilotage:lire. */
+const toOut = (m: MapRow, rights: Rights): MapOut => ({
   id: m.id,
   view: m.view,
   name: m.name,
-  layout: m.layout as unknown as MapOut['layout'],
-  settings: m.settings as MapOut['settings'],
+  layout: redactLayoutJson(m.layout as unknown as Json, rights) as unknown as MapOut['layout'],
+  settings: (rights.can('pilotage', 'lire') || !isObject(m.settings) || !('issues' in m.settings)
+    ? m.settings
+    : { ...m.settings, issues: [] }) as MapOut['settings'],
   version: m.version,
   created_at: m.created_at.toISOString(),
   created_by: m.created_by,
@@ -263,7 +269,7 @@ export const cartoRoutes = [
     tags: ['Cartographie'],
     access: 'cartographie:lire',
     response: z.array(MapOut),
-    handler: async ({ svc }) => (await listMaps(svc.db.pool)).map(toOut),
+    handler: async ({ svc, s }) => (await listMaps(svc.db.pool)).map((m) => toOut(m, (s as Session).user.rights)),
   }),
   route({
     method: 'GET',
@@ -273,10 +279,10 @@ export const cartoRoutes = [
     access: 'cartographie:lire',
     params: MapParams,
     response: MapOut,
-    handler: async ({ svc, params, reply }) => {
+    handler: async ({ svc, s, params, reply }) => {
       const m = await existing(svc.db.pool, params.id);
       setEtag(reply, m.version);
-      return toOut(m);
+      return toOut(m, (s as Session).user.rights);
     },
   }),
   route({
@@ -329,7 +335,7 @@ export const cartoRoutes = [
         nodes: Object.keys(body.layout.nodes).length,
       });
       setEtag(reply, m.version);
-      return toOut(m);
+      return toOut(m, sess.user.rights);
     },
   }),
   route({
@@ -368,7 +374,7 @@ export const cartoRoutes = [
         edges: body.layout.edges.length,
       });
       setEtag(reply, m.version);
-      return toOut(m);
+      return toOut(m, sess.user.rights);
     },
   }),
   route({
@@ -412,10 +418,13 @@ export const cartoRoutes = [
     access: 'cartographie:lire',
     params: VersionParams,
     response: MapVersionDetailOut,
-    handler: async ({ svc, params }) => {
+    handler: async ({ svc, s, params }) => {
       const v = (await listVersions(svc.db.pool, params.id)).find((x) => x.id === params.v);
       if (!v) throw new HttpError(404, 'Version introuvable.');
-      return { ...versionOut(v), layout: v.layout as unknown as MapLayout };
+      return {
+        ...versionOut(v),
+        layout: redactLayoutJson(v.layout as unknown as Json, (s as Session).user.rights) as unknown as MapLayout,
+      };
     },
   }),
   route({
@@ -483,7 +492,7 @@ export const cartoRoutes = [
         mapVersion: m.version,
       });
       setEtag(reply, m.version);
-      return toOut(m);
+      return toOut(m, sess.user.rights);
     },
   }),
   route({
