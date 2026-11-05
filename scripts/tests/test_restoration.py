@@ -284,6 +284,26 @@ if 'pg_restore' in args and '--list' not in args: Path(os.environ['TEST_RESTORED
         return subprocess.run(['bash', str(self.root / 'scripts/backup.sh'), str(destination)],
                               input='', text=True, capture_output=True, env={**self.env, **(env or {})}, timeout=20)
 
+    def test_backup_refuses_links_in_caddy_data_and_stays_restorable_otherwise(self):
+        """Le dossier caddy/data est modifiable par le frontal : un lien rendrait la sauvegarde non restaurable. Elle est refusée
+        (rien n'est publié) ; avec des fichiers ordinaires seulement, l'archive passe le contrôle de la restauration."""
+        caddy = self.root / 'data/caddy/data'
+        (caddy / 'pki').mkdir(parents=True)
+        (caddy / 'pki/root.crt').write_text('certificat-fictif')
+        (caddy / 'lien').symlink_to('/etc/passwd')
+        destination = self.root / 'archives-caddy'
+        refus = self.sauvegarder(destination)
+        self.assertNotEqual(refus.returncode, 0)
+        self.assertIn('caddy/data', refus.stderr + refus.stdout)
+        self.assertEqual(list(destination.glob('*.tar.age')) if destination.exists() else [], [])
+        (caddy / 'lien').unlink()
+        ok = self.sauvegarder(destination)
+        self.assertEqual(ok.returncode, 0, ok.stderr)
+        archive = next(destination.glob('*.tar.age'))
+        self.events.unlink(missing_ok=True)
+        result = self.run_restore(archive)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_archive_produced_by_backup_script_is_compatible(self):
         destination = self.root / 'archives'
         backup = self.sauvegarder(destination)
