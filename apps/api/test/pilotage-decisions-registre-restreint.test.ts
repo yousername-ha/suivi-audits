@@ -82,7 +82,9 @@ describe('décisions de pilotage et registre restreint', () => {
       createAction: true,
     });
     expect(r.statusCode, r.body).toBe(200);
-    [ecart, actionOuverte] = r.json().generatedRefs as string[];
+    const generees = r.json().generatedRefs as string[];
+    ecart = generees[0]!;
+    actionOuverte = generees[1]!;
     // Une seconde action, d'un registre restreint, liée à l'écart.
     const ac = await admin.post(`${base}/objects`, {
       kind: 'action',

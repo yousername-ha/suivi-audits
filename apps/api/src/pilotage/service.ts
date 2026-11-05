@@ -128,8 +128,29 @@ export class Pilotage {
       nextBefore: rows.length === 50 ? rows.at(-1)!.createdAt : null,
     };
   }
-  async action(c: Client, smsi: string, ref: string, name: string, ownerId: unknown, user: SessionUser, ip: string) {
+  async action(
+    c: Client,
+    smsi: string,
+    ref: string,
+    name: string,
+    ownerId: unknown,
+    user: SessionUser,
+    ip: string,
+    sourceRegistreId: string | null = null,
+    registreId: string | null = null,
+  ) {
     await this.g.permission(user, 'ecarts', 'modifier');
+    // L'action dérivée d'une fiche d'un registre restreint ne retombe pas d'office dans le plan ouvert par défaut, avec le
+    // titre de la fiche : l'auteur choisit un plan qu'il gère.
+    const source = sourceRegistreId ? await this.g.registres.brut(sourceRegistreId, c) : null;
+    if (source?.restricted && !registreId)
+      throw new HttpError(
+        422,
+        'Choisissez le plan d’actions d’accueil : la fiche source appartient à un registre restreint.',
+      );
+    const accueil = registreId
+      ? await this.g.registreDeCreation(c, smsi, 'action', 'plan_actions', registreId, user)
+      : null;
     const policy = (await this.g.policy(smsi, user)).definition;
     const data = await this.g.normalize(
       smsi,
@@ -149,7 +170,7 @@ export class Pilotage {
       user,
       c,
     );
-    const action = await this.g.insert(c, smsi, 'action', name, data, user, ip);
+    const action = await this.g.insert(c, smsi, 'action', name, data, user, ip, accueil);
     await surConnexion(c)
       .insertInto('grc_links')
       .values({
@@ -441,7 +462,17 @@ export class Pilotage {
       }
       if (input.createAction)
         generated.push(
-          await this.action(c, smsi, generated[0] ?? ref, 'Action : ' + source.name, data.ownerId, user, ip),
+          await this.action(
+            c,
+            smsi,
+            generated[0] ?? ref,
+            'Action : ' + source.name,
+            data.ownerId,
+            user,
+            ip,
+            'registreId' in source ? (source.registreId ?? null) : null,
+            input.registreId ?? null,
+          ),
         );
       if (input.operation !== 'step_validation') {
         data.refs = [...new Set([...(Array.isArray(data.refs) ? data.refs : []), ...input.refs])];
