@@ -22,6 +22,13 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
   requête : sur HTTPS, uniquement le nom préfixé `__Host-`. Aucune action sur le serveur. _(Session « Projet audit_suivi
   Coeur ».)_
 
+- **Registres restreints et périmètres** (ADR 0043) : la carte des risques, son graphe et le rapport de comité, les
+  aperçus de déplacement et de périmètres, l'import Tenacy, l'historique et l'export des décisions de pilotage, ainsi que
+  le registre des usages de la configuration GRC ne renvoient plus que ce que la personne peut lire (ce qui ne se lit pas
+  est compté, jamais nommé). Une action issue d'une décision sur une fiche de registre restreint se range dans un plan
+  d'accueil choisi par l'auteur (champ facultatif `registreId` de la décision ; l'écran de décision propose le choix).
+  Une ligne d'import Tenacy visant un écart que la personne ne gère pas est « refusée (droits) ». Aucune action sur le
+  serveur. _(Session « Projet audit_suivi Coeur ».)_
 ### Sécurité
 
 - **Exploitation et chaîne de mise à jour** : le mot de passe SMTP est lié à son relais (changer serveur, port, chiffrement,

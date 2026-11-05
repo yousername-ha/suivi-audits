@@ -62,7 +62,9 @@ export function DeplacerElement({ smsi, object, onDone }: { smsi: string; object
     }
   };
   if (!famille || !options.length) return null;
-  const nomsPerimetres = (l: { name: string }[]) => l.map((p) => p.name).join(', ');
+  const nomsPerimetres = (l: { perimetres: { name: string }[]; autresPerimetres: number }) =>
+    l.perimetres.map((p) => p.name).join(', ') +
+    (l.autresPerimetres ? `${l.perimetres.length ? ' ; ' : ''}${l.autresPerimetres} autre(s) non accessible(s)` : '');
   return (
     <Stack gap="xs" role="group" aria-label="Déplacer vers un autre registre">
       <Text fw={600}>Déplacer vers un autre registre</Text>
@@ -83,16 +85,20 @@ export function DeplacerElement({ smsi, object, onDone }: { smsi: string; object
       {impact && (
         <Alert title="Impact du déplacement">
           <Text size="sm">
-            De « {impact.depuis.name} » ({nomsPerimetres(impact.depuis.perimetres)}) vers « {impact.vers.name} » (
-            {nomsPerimetres(impact.vers.perimetres)}). Éléments déplacés : {impact.elements}.{' '}
+            De « {impact.depuis.name} » ({nomsPerimetres(impact.depuis)}) vers « {impact.vers.name} » (
+            {nomsPerimetres(impact.vers)}). Éléments déplacés : {impact.elements}.{' '}
             {impact.referenceChange
               ? 'Le périmètre de référence change : la politique métier du nouveau périmètre s’applique.'
               : 'Le périmètre de référence ne change pas.'}{' '}
             Liens conservés : {impact.liensConserves}.
           </Text>
-          {impact.liensIncompatibles.length > 0 && (
+          {impact.liensIncompatibles.length + impact.liensMasques > 0 && (
             <Text size="sm" mt="xs">
-              Liens qui ne peuvent pas suivre : {impact.liensIncompatibles.map((l) => l.nom).join(', ')}.
+              Liens qui ne peuvent pas suivre : {impact.liensIncompatibles.map((l) => l.nom).join(', ')}
+              {impact.liensMasques > 0
+                ? `${impact.liensIncompatibles.length ? ' ; ' : ''}${impact.liensMasques} lien(s) vers des éléments que vous ne pouvez pas lire`
+                : ''}
+              .
             </Text>
           )}
           {impact.problemes.map((p) => (
@@ -102,7 +108,7 @@ export function DeplacerElement({ smsi, object, onDone }: { smsi: string; object
           ))}
         </Alert>
       )}
-      {impact && impact.liensIncompatibles.length > 0 && (
+      {impact && impact.liensIncompatibles.length + impact.liensMasques > 0 && (
         <Checkbox
           label="Retirer les liens qui ne peuvent pas suivre"
           checked={retirer}
@@ -129,7 +135,7 @@ export function DeplacerElement({ smsi, object, onDone }: { smsi: string; object
           disabled={
             motif.trim().length < 10 ||
             impact.problemes.length > 0 ||
-            (impact.liensIncompatibles.length > 0 && !retirer)
+            (impact.liensIncompatibles.length + impact.liensMasques > 0 && !retirer)
           }
           onClick={() => void confirmer()}
         >

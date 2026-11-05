@@ -189,6 +189,61 @@ export class ConfigGrc {
     }
   }
 
+  /** Périmètre propriétaire de chaque consommateur d'un élément (null : consommateur d'instance, visible de tous les lecteurs). */
+  private async perimetresDesConsommateurs(rows: { consumer_kind: string; consumer_id: string }[], c?: Client) {
+    const out = new Map<string, string | null>();
+    const ids = (kind: string) => [...new Set(rows.filter((r) => r.consumer_kind === kind).map((r) => r.consumer_id))];
+    const kdb = this.k(c);
+    const versions = ids('cfg_version');
+    if (versions.length)
+      for (const r of await kdb
+        .selectFrom('cfg_items')
+        .select([sql<string>`id::text`.as('id'), 'smsi_id'])
+        .where(sql<string>`id::text`, 'in', versions)
+        .execute())
+        out.set('cfg_version:' + r.id, r.smsi_id);
+    const methodes = ids('method_version');
+    if (methodes.length)
+      for (const r of await kdb
+        .selectFrom('grc_method_versions')
+        .select([sql<string>`id::text`.as('id'), 'smsi_id'])
+        .where(sql<string>`id::text`, 'in', methodes)
+        .execute())
+        out.set('method_version:' + r.id, r.smsi_id);
+    const analyses = ids('analysis');
+    if (analyses.length)
+      for (const r of await kdb
+        .selectFrom('grc_objects')
+        .select([sql<string>`id::text`.as('id'), 'smsi_id'])
+        .where(sql<string>`id::text`, 'in', analyses)
+        .execute())
+        out.set('analysis:' + r.id, r.smsi_id);
+    return out;
+  }
+  /** Ne garde que les consommateurs d'un périmètre que la personne peut consulter (pilotage) : les autres ne sont ni
+      nommés, ni identifiés, ni comptés. */
+  private async consommateursVisibles<T extends { consumer_kind: string; consumer_id: string }>(
+    user: SessionUser,
+    rows: T[],
+    c?: Client,
+  ): Promise<T[]> {
+    if (!rows.length) return rows;
+    const perimetres = await this.perimetresDesConsommateurs(rows, c);
+    const visibles = new Map<string, boolean>();
+    const peutVoir = async (smsi: string | null) => {
+      if (smsi === null) return true;
+      if (!visibles.has(smsi)) visibles.set(smsi, await this.grc.visible(user, smsi, 'pilotage'));
+      return visibles.get(smsi)!;
+    };
+    const out: T[] = [];
+    for (const r of rows) {
+      const smsi = perimetres.get(r.consumer_kind + ':' + r.consumer_id);
+      // Consommateur introuvable (supprimé) : rien à protéger, il reste listé comme avant.
+      if (smsi === undefined || (await peutVoir(smsi))) out.push(r);
+    }
+    return out;
+  }
+
   /* ------------------------------------------------------------ Lecture */
   private async row(id: string, c?: Client, lock = false): Promise<ItemRow> {
     const r = await this.k(c)
@@ -220,21 +275,7 @@ export class ConfigGrc {
           j.onRef('v.item_id', '=', 'i.id').onRef('v.version', '=', 'i.current_version'),
         )
         .select(COLONNES_ELEMENT)
-        .select([
-          'v.definition',
-          (eb) =>
-            eb
-              .selectFrom('cfg_usages as u')
-              .select(consommateurs(false).as('n'))
-              .whereRef('u.item_id', '=', 'i.id')
-              .as('usages'),
-          (eb) =>
-            eb
-              .selectFrom('cfg_items as d')
-              .select(sql<number>`count(*)::int`.as('n'))
-              .whereRef('d.derived_from_id', '=', 'i.id')
-              .as('children'),
-        ])
+        .select(['v.definition'])
         .$if(!!f.kind, (q) => q.where('i.kind', '=', f.kind!))
         .$if(!!f.state, (q) => q.where('i.state', '=', f.state!))
         .$if(!!f.scope, (q) => q.where('i.scope', '=', f.scope!))
@@ -246,21 +287,56 @@ export class ConfigGrc {
     ).map((r) => ({
       ...versLigne(r),
       definition: r.definition as Record<string, unknown> | null,
-      usages: r.usages ?? 0,
-      children: r.children ?? 0,
     }));
     const visible = new Map<string, boolean>();
-    const out = [];
+    const retenus = [];
     for (const r of rows) {
       if (r.scope === 'smsi') {
         if (!visible.has(r.smsiId!)) visible.set(r.smsiId!, await this.grc.visible(user, r.smsiId!));
         if (!visible.get(r.smsiId!)) continue;
       }
+      retenus.push(r);
+    }
+    // Compteurs : seuls comptent les consommateurs et variantes d'un périmètre que la personne peut consulter.
+    const idsRetenus = retenus.map((r) => r.id);
+    const usagesBruts = idsRetenus.length
+      ? await this.db.k
+          .selectFrom('cfg_usages')
+          .select(['item_id', 'consumer_kind', 'consumer_id'])
+          .distinct()
+          .where('item_id', 'in', idsRetenus)
+          .execute()
+      : [];
+    const usagesVisibles = await this.consommateursVisibles(user, usagesBruts);
+    const nbUsages = new Map<string, number>();
+    for (const u of usagesVisibles) nbUsages.set(u.item_id, (nbUsages.get(u.item_id) ?? 0) + 1);
+    const enfants = idsRetenus.length
+      ? await this.db.k
+          .selectFrom('cfg_items')
+          .select(['derived_from_id', 'scope', 'smsi_id'])
+          .where('derived_from_id', 'in', idsRetenus)
+          .execute()
+      : [];
+    const nbEnfants = new Map<string, number>();
+    for (const e of enfants) {
+      if (e.scope === 'smsi') {
+        if (!visible.has(e.smsi_id!)) visible.set(e.smsi_id!, await this.grc.visible(user, e.smsi_id!));
+        if (!visible.get(e.smsi_id!)) continue;
+      }
+      nbEnfants.set(e.derived_from_id!, (nbEnfants.get(e.derived_from_id!) ?? 0) + 1);
+    }
+    const out = [];
+    for (const r of retenus) {
       const meta = metaOf(r.kind, r.definition ?? r.draft);
       if (f.family && !appliesToFamily(meta.appliesTo, f.family)) continue;
       if (f.category && meta.category !== f.category) continue;
       if (f.q && !(meta.name + ' ' + r.key).toLowerCase().includes(f.q.toLowerCase())) continue;
-      out.push({ ...toItem(r), ...meta, usages: r.usages, derivedCount: r.children });
+      out.push({
+        ...toItem(r),
+        ...meta,
+        usages: nbUsages.get(r.id) ?? 0,
+        derivedCount: nbEnfants.get(r.id) ?? 0,
+      });
     }
     return out;
   }
@@ -277,11 +353,13 @@ export class ConfigGrc {
         .execute()
     ).map((v) => ({ ...v, createdAt: v.createdAt.toISOString() }));
     const current = r.currentVersion ? await this.versionDef(id, r.currentVersion) : null;
-    const { n: usages } = await this.db.k
+    const usagesBruts = await this.db.k
       .selectFrom('cfg_usages')
-      .select(consommateurs(false).as('n'))
+      .select(['consumer_kind', 'consumer_id'])
+      .distinct()
       .where('item_id', '=', id)
-      .executeTakeFirstOrThrow();
+      .execute();
+    const usages = (await this.consommateursVisibles(user, usagesBruts)).length;
     return {
       ...toItem(r),
       ...metaOf(r.kind, current?.definition ?? r.draft),
@@ -624,6 +702,8 @@ export class ConfigGrc {
     const rows = await this.db.k
       .selectFrom('cfg_usages as u')
       .select([
+        'u.consumer_kind',
+        'u.consumer_id',
         'u.item_version as itemVersion',
         'u.consumer_kind as consumerKind',
         'u.consumer_id as consumerId',
@@ -639,7 +719,10 @@ export class ConfigGrc {
       .orderBy('u.item_version', 'desc')
       .orderBy('u.created_at', 'desc')
       .execute();
-    return rows.map((u) => ({ ...u, createdAt: u.createdAt.toISOString() }));
+    return (await this.consommateursVisibles(user, rows)).map(({ consumer_kind: _k, consumer_id: _i, ...u }) => ({
+      ...u,
+      createdAt: u.createdAt.toISOString(),
+    }));
   }
 
   /** Étude d'impact d'un passage de la version « from » à la version « to » d'une échelle, sans aucune écriture. */
@@ -649,12 +732,18 @@ export class ConfigGrc {
     if (r.kind !== 'scale') throw new HttpError(422, 'L’étude d’impact structurelle concerne les échelles.');
     const a = ScaleDefinition.parse((await this.versionDef(id, from)).definition);
     const b = ScaleDefinition.parse((await this.versionDef(id, to)).definition);
-    const consumers = await this.db.k
+    const bruts = await this.db.k
       .selectFrom('cfg_usages')
-      .select(['consumer_kind as consumerKind', 'consumer_id as consumerId', 'consumer_version as consumerVersion'])
+      .select(['consumer_kind', 'consumer_id', 'consumer_version'])
       .where('item_id', '=', id)
       .where('item_version', '=', from)
       .execute();
+    // Les consommateurs d'un périmètre illisible ne sont ni identifiés ni comptés.
+    const consumers = (await this.consommateursVisibles(user, bruts)).map((u) => ({
+      consumerKind: u.consumer_kind,
+      consumerId: u.consumer_id,
+      consumerVersion: u.consumer_version,
+    }));
     return { from, to, diff: diffScales(a, b), consumers, consumersCount: consumers.length };
   }
 

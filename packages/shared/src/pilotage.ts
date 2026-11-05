@@ -209,6 +209,8 @@ export const PilotageRecord = z
     step: z.string().max(64).default(''),
     createFinding: z.boolean().default(false),
     createAction: z.boolean().default(false),
+    /** Plan d'actions d'accueil de l'action générée ; exigé quand la fiche source appartient à un registre restreint. */
+    registreId: z.uuid().nullable().optional(),
     /** Échéance d'une acceptation de risque (opération risk_acceptance). */
     until: z
       .string()

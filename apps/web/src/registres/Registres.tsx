@@ -47,6 +47,7 @@ interface Perimetre {
 interface Impact {
   ajoutes: Perimetre[];
   retires: Perimetre[];
+  autresPerimetres: number;
   elements: number;
   series: number;
   liens: number;
@@ -533,7 +534,10 @@ function PerimetresRegistre({ r }: { r: RegistreDto }) {
               <Text size="sm">
                 {impact.ajoutes.length ? `Ajoutés : ${impact.ajoutes.map((p) => p.name).join(', ')}. ` : ''}
                 {impact.retires.length ? `Retirés : ${impact.retires.map((p) => p.name).join(', ')}. ` : ''}
-                {!impact.ajoutes.length && !impact.retires.length ? 'Aucun changement. ' : ''}
+                {impact.autresPerimetres ? `${impact.autresPerimetres} autre(s) périmètre(s) non accessible(s). ` : ''}
+                {!impact.ajoutes.length && !impact.retires.length && !impact.autresPerimetres
+                  ? 'Aucun changement. '
+                  : ''}
                 Éléments concernés : {impact.elements} (dont {impact.series} série(s) de tâches), liens : {impact.liens}
                 , droits attribués au registre : {impact.droits}.
               </Text>
