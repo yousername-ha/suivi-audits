@@ -208,12 +208,26 @@ if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
   arret "des fichiers suivis par git ont été modifiés sur le serveur : les remettre en état (git diff) avant de mettre à jour."
 fi
 git fetch --tags --quiet 2> /dev/null || { [ -n "$CIBLE" ] || arret "dépôt injoignable (git fetch) : indiquer la version voulue."; avertir "dépôt injoignable : versions déjà connues du serveur seulement."; }
+# Canal de publication lié à l'étiquette : le manifeste .github/publication.json doit porter cette version et le canal « stable »
+# (ou « development » si UPDATE_CHANNEL=development est choisi dans .env). Une préversion ne s'installe jamais par défaut.
+canal_publie() {
+  git show "refs/tags/v$1:.github/publication.json" 2> /dev/null \
+    | python3 -c 'import json,sys; d=json.load(sys.stdin); sys.stdout.write(d["channel"] if isinstance(d,dict) and sorted(d)==["channel","version"] and d["version"]==sys.argv[1] else "")' "$1" 2> /dev/null || true
+}
+canal_autorise() {
+  local c
+  c=$(canal_publie "$1")
+  [ "$c" = stable ] || { [ "$c" = development ] && [ "$(valeur_env UPDATE_CHANNEL)" = development ]; }
+}
 if [ -z "$CIBLE" ]; then
-  CIBLE=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' | sed 's/^v//' | sort -V | tail -n 1)
-  [ -n "$CIBLE" ] || arret "aucune version publiée trouvée (git tag)."
+  for v in $(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' | sed 's/^v//' | sort -rV); do
+    if semver "$v" && canal_autorise "$v"; then CIBLE=$v; break; fi
+  done
+  [ -n "$CIBLE" ] || arret "aucune version publiée sur le canal autorisé trouvée (git tag)."
 fi
 semver "$CIBLE" || arret "version cible invalide : « $CIBLE » (attendu : X.Y.Z)."
 git rev-parse -q --verify "refs/tags/v$CIBLE" > /dev/null || arret "version v$CIBLE introuvable (git fetch --tags ; voir la page Releases)."
+canal_autorise "$CIBLE" || arret "v$CIBLE n'est pas une version du canal stable (ou son manifeste de publication est illisible) : pour une préversion de développement, ajouter UPDATE_CHANNEL=development dans .env."
 info "Version en service : $ACTUELLE"
 info "Version cible      : $CIBLE"
 if semver "$ACTUELLE"; then

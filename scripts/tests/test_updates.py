@@ -24,7 +24,7 @@ def attestation(digest_hex, predicate=None, predicate_type='https://cyclonedx.or
     return json.dumps({'payloadType':'application/vnd.in-toto+json','payload':base64.b64encode(json.dumps(statement).encode()).decode(),'signatures':[{'sig':'x'}]})+'\n'
 
 
-def fake_run(revision='b'*40, attest=None, fetch_fail_origin=False, fetched=None):
+def fake_run(revision='b'*40, attest=None, fetch_fail_origin=False, fetched=None, manifest=None):
     """Simule git, docker et cosign pour signatures() ; « attest » remplace la sortie de verify-attestation."""
     def run(args, **kwargs):
         if args[:2]==['git','fetch']:
@@ -32,6 +32,7 @@ def fake_run(revision='b'*40, attest=None, fetch_fail_origin=False, fetched=None
             if fetch_fail_origin and args[3]=='origin': raise m.Failure('ssh')
             return ''
         if args[0]=='git' and args[1]=='rev-parse': return revision
+        if args[0]=='git' and args[1]=='show': return manifest if manifest is not None else json.dumps({'version':'3.1.0','channel':'stable'})
         if args[0]=='docker' and args[1]=='inspect' and 'Labels' in args[3]: return 'b'*40
         if args[0]=='docker' and args[1]=='inspect': return json.dumps([args[-1].split(':')[0]+'@sha256:'+'a'*64])
         if args[:2]==['cosign','verify-attestation']: return attest if attest is not None else attestation('a'*64)
@@ -67,13 +68,27 @@ class Updates(unittest.TestCase):
         self.assertEqual((self.w.public/'status.json').stat().st_mode & 0o777, 0o644)
         self.assertEqual(self.w.private.stat().st_mode & 0o777, 0o700)
 
-    def test_preversion_numerotee_detectee_par_ancien_chemin_depot_prive(self):
-        # GitHub /latest n'expose pas les préversions. Le dépôt privé est déjà lu par la clé Git.
-        tags = 'a\trefs/tags/v3.0.0\nb\trefs/tags/v3.0.1\nc\trefs/tags/v3.0.2-beta\n'
+    def depot_prive(self, extra=''):
+        """Déploiement déclaré privé : clé de déploiement montée (UPDATER_SSH_DIR), le repli sur les étiquettes est permis."""
+        (self.root/'.env').write_text('APP_VERSION=3.0.0\nUPDATER_SSH_DIR=/root/.ssh\n'+extra)
+
+    @staticmethod
+    def git_depot(tags, canaux):
+        """Simule git : liste des étiquettes distantes, manifeste de publication par étiquette (canaux = {version: canal})."""
         def run(args, **kwargs):
-            return tags if args[0] == 'git' else '{}'
+            if args[0]=='git' and args[1]=='ls-remote': return tags
+            if args[0]=='git' and args[1]=='show':
+                v=args[2].split('refs/tags/v',1)[1].split(':',1)[0]
+                return json.dumps({'version':v,'channel':canaux.get(v,'stable')})
+            return '{}'
+        return run
+
+    def test_preversion_numerotee_detectee_par_ancien_chemin_depot_prive(self):
+        # GitHub /latest n'expose pas les préversions. Le dépôt privé est déjà lu par la clé Git ; seul le canal stable est annoncé.
+        self.depot_prive()
+        tags = 'a\trefs/tags/v3.0.0\nb\trefs/tags/v3.0.1\nc\trefs/tags/v3.0.2-beta\n'
         with patch.object(m.urllib.request, 'urlopen', side_effect=urllib.error.HTTPError('url',404,'private',{},None)), \
-                patch.object(self.w,'run',side_effect=run) as commands:
+                patch.object(self.w,'run',side_effect=self.git_depot(tags,{})) as commands:
             self.w.check()
         self.assertEqual(self.w.state['available'],'3.0.1')
         self.assertEqual(self.w.state['notes'],f'https://github.com/{m.REPOSITORY}/releases/tag/v3.0.1')
@@ -81,9 +96,38 @@ class Updates(unittest.TestCase):
         for component in ('api','web','updater'):
             self.assertIn(unittest.mock.call(['docker','manifest','inspect',f'ghcr.io/{m.REPOSITORY}-{component}:3.0.1'],timeout=45),commands.call_args_list)
 
+    def test_la_prerelease_de_developpement_n_est_annoncee_que_sur_le_canal_choisi(self):
+        tags = 'a\trefs/tags/v3.0.1\nb\trefs/tags/v3.0.5\n'
+        canaux = {'3.0.5':'development'}
+        self.depot_prive()
+        with patch.object(m.urllib.request, 'urlopen', side_effect=urllib.error.HTTPError('url',404,'private',{},None)), \
+                patch.object(self.w,'run',side_effect=self.git_depot(tags,canaux)):
+            self.w.check()
+        self.assertEqual(self.w.state['available'],'3.0.1')
+        self.depot_prive('UPDATE_CHANNEL=development\n')
+        with patch.object(m.urllib.request, 'urlopen', side_effect=urllib.error.HTTPError('url',404,'private',{},None)), \
+                patch.object(self.w,'run',side_effect=self.git_depot(tags,canaux)):
+            self.w.check()
+        self.assertEqual(self.w.state['available'],'3.0.5')
+
+    def test_depot_public_limite_de_debit_ou_refus_n_active_pas_le_repli_sur_les_etiquettes(self):
+        """Sans déclaration de dépôt privé, une réponse 403/429/404 de l'API est une erreur de vérification : aucun repli sur
+        git ls-remote, donc aucune préversion de développement annoncée."""
+        tags = 'a\trefs/tags/v3.0.1\nb\trefs/tags/v3.0.5\n'
+        for code in (403,429,404,401):
+            with self.subTest(code=code), \
+                    patch.object(m.urllib.request, 'urlopen', side_effect=urllib.error.HTTPError('url',code,'x',{},None)), \
+                    patch.object(self.w,'run',side_effect=self.git_depot(tags,{'3.0.5':'development'})) as commands:
+                with self.assertRaises(m.Failure): self.w.check()
+            self.assertFalse([c for c in commands.call_args_list if c.args[0][:2]==['git','ls-remote']])
+            self.assertTrue(self.w.state['checkError'])
+
     def test_publication_partielle_nest_pas_annoncee(self):
+        self.depot_prive()
         def run(args, **kwargs):
-            if args[0]=='git': return 'a\trefs/tags/v3.0.1\n'
+            if args[0]=='git' and args[1]=='ls-remote': return 'a\trefs/tags/v3.0.1\n'
+            if args[0]=='git' and args[1]=='show': return json.dumps({'version':'3.0.1','channel':'stable'})
+            if args[0]=='git': return ''
             if args[-1].endswith('-updater:3.0.1'): raise m.Failure('absente')
             return '{}'
         with patch.object(m.urllib.request, 'urlopen', side_effect=urllib.error.HTTPError('url',404,'private',{},None)), \
@@ -91,6 +135,21 @@ class Updates(unittest.TestCase):
             with self.assertRaises(m.Failure): self.w.check()
         self.assertIsNone(self.w.state['available'])
         self.assertTrue(self.w.state['checkError'])
+
+    def test_l_installation_refuse_une_revision_dont_le_canal_n_est_pas_autorise(self):
+        """Le canal est lié à la révision signée : le manifeste de publication de cette révision doit porter la version cible et
+        « stable » (ou « development » si le serveur l'a choisi)."""
+        for manifest in (json.dumps({'version':'3.1.0','channel':'development'}),
+                         json.dumps({'version':'3.2.0','channel':'stable'}),
+                         json.dumps({'version':'3.1.0','channel':'stable','extra':1}),
+                         'pas du json', json.dumps(['x'])):
+            with self.subTest(manifest=manifest), patch.object(self.w,'run',side_effect=fake_run(manifest=manifest)):
+                with self.assertRaises(m.Failure): self.w.signatures('3.1.0')
+        # Canal de développement choisi explicitement : accepté.
+        (self.root/'.env').write_text('APP_VERSION=3.0.0\nUPDATE_CHANNEL=development\n')
+        self.w.job = {'id':self.id,'target':'3.1.0'}
+        with patch.object(self.w,'run',side_effect=fake_run(manifest=json.dumps({'version':'3.1.0','channel':'development'}))):
+            self.w.signatures('3.1.0')
 
     def test_exploitation_automatique_utilise_les_cles_age_du_dossier_des_donnees_et_stockage_prive(self):
         with patch.object(self.w,'run') as run:
