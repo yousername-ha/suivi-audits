@@ -84,7 +84,13 @@ export function libelleDesignation(data: Record<string, unknown>, p: Responsable
   if (!d) return String(data.ownerLabel || 'Non attribué');
   const liste = d.type === 'utilisateur' ? p?.utilisateurs : d.type === 'groupe' ? p?.groupes : p?.fonctions;
   const trouve = liste?.find((x) => x.id === d.id);
-  if (!trouve) return d.type === 'utilisateur' ? String(data.ownerLabel || 'Non attribué') : 'Responsable archivé';
+  if (!trouve)
+    // Annuaire indisponible (lecture seule, droits de désignation absents) : on ne prétend pas que le responsable est archivé.
+    return d.type === 'utilisateur'
+      ? String(data.ownerLabel || 'Non attribué')
+      : p
+        ? 'Responsable archivé'
+        : `${d.type === 'groupe' ? 'Groupe' : 'Fonction'} désigné(e)`;
   const nom = 'name' in trouve ? trouve.name : trouve.displayName || trouve.username;
   return d.type === 'utilisateur' ? nom : `${d.type === 'groupe' ? 'Groupe' : 'Fonction'} ${nom}`;
 }

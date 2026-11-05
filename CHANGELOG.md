@@ -29,6 +29,13 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
   d'accueil choisi par l'auteur (champ facultatif `registreId` de la décision ; l'écran de décision propose le choix).
   Une ligne d'import Tenacy visant un écart que la personne ne gère pas est « refusée (droits) ». Aucune action sur le
   serveur. _(Session « Projet audit_suivi Coeur ».)_
+- **Droits par module** (ADR 0010) : les vues des modules repris ne renvoient plus les clés d'un module que la personne ne
+  peut pas lire (écarts, échéance de clôture, déclaration d'applicabilité) ; écrire la déclaration d'applicabilité exige
+  aussi `pilotage:modifier`. La simulation d'import, le rapport enregistré et le téléchargement du fichier brut se limitent
+  aux modules lisibles ou exportables (un fichier illisible n'est plus servi). Les noms d'objets copiés dans les cartes ne
+  sortent que pour qui lit le module source. L'annuaire des responsables est réservé à qui peut désigner un responsable
+  dans le périmètre (modification d'un module métier ou rôle de registre). Aucune action sur le serveur. _(Session
+  « Projet audit_suivi Coeur ».)_
 
 ### Modifié
 
