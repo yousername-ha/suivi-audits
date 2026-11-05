@@ -11,7 +11,7 @@ import { DEFAULT_SMSI, type Grc } from './grc/core.js';
 import { HttpError } from './http/errors.js';
 import { sha256hex } from './security/crypto.js';
 
-export type ResultatLigne = 'cree' | 'maj' | 'inchange' | 'conserve';
+export type ResultatLigne = 'cree' | 'maj' | 'inchange' | 'conserve' | 'refuse';
 
 export interface LigneRapport {
   ligne: number;
@@ -37,6 +37,8 @@ export interface RapportTenacy {
     miseAJour: number;
     inchanges: number;
     closConserves: number;
+    /** Lignes visant un écart que l'appelant n'est pas autorisé à gérer (registre restreint…) : ignorées, sans détail. */
+    refuses: number;
     actionsACreer: number;
   };
   lignes: LigneRapport[];
@@ -148,6 +150,8 @@ export class ImportTenacy {
     const nom = l.nom;
     const donnees = t.donnees!;
     if (t.existant) {
+      // Même contrôle que le chemin interactif : seul qui gère l'élément (registre restreint compris) l'écrit ou le clôt.
+      if (t.existant.registreId) await this.g.registres.exigerElement(user, t.existant, 'gerer', c);
       const normalisee = await this.g.normalize(
         smsi,
         'nonconformity',
@@ -248,15 +252,24 @@ export class ImportTenacy {
     let actions = 0;
     for (const l of lecture.lignes) {
       const existant = existants.get(l.id) ?? null;
+      // Un écart que l'appelant ne peut pas gérer (registre restreint sans droit attribué) n'est ni lu, ni écrit, ni clos.
+      let refuse = false;
+      if (existant?.registreId)
+        try {
+          await this.g.registres.exigerElement(user, existant, 'gerer', c);
+        } catch (e) {
+          if (!(e instanceof HttpError) || ![403, 404].includes(e.status)) throw e;
+          refuse = true;
+        }
       const pilote = await this.pilote(c, body.perimetre, l.pilote, utilisateurs);
       // Les mesures de l'outil de suivi ne se rattachent que dans le périmètre commun ; ailleurs le code reste sur la fiche.
       const rattachables = body.perimetre === DEFAULT_SMSI ? connues : new Set<string>();
       const refs = l.mesures.filter((m) => rattachables.has(m)).map((m) => 'legacy:items:' + m);
       const inconnues = l.mesures.filter((m) => !rattachables.has(m));
       const deja = existant ? (tachesDe.get('object:' + existant.id) ?? new Set<string>()) : new Set<string>();
-      const taches = l.taches.filter(
-        (t, i, a) => a.findIndex((x) => cleTexte(x) === cleTexte(t)) === i && !deja.has(cleTexte(t)),
-      );
+      const taches = refuse
+        ? []
+        : l.taches.filter((t, i, a) => a.findIndex((x) => cleTexte(x) === cleTexte(t)) === i && !deja.has(cleTexte(t)));
       const description = [l.description, l.action ? `Recommandation : ${l.action}` : ''].filter(Boolean).join('\n\n');
       const champs = {
         description,
@@ -293,6 +306,8 @@ export class ImportTenacy {
           refs,
           tenacy,
         };
+      } else if (refuse) {
+        resultat = 'refuse';
       } else if (existant.data.status === 'closed' || existant.data.effectiveness !== 'pending') {
         resultat = 'conserve';
       } else {
@@ -336,7 +351,7 @@ export class ImportTenacy {
         statut: l.statut,
         changements,
         actionsACreer: taches.length,
-        actionsExistantes: l.taches.length - taches.length,
+        actionsExistantes: refuse ? 0 : l.taches.length - taches.length,
         mesures: refs.map((r) => r.slice('legacy:items:'.length)),
         mesuresInconnues: inconnues,
         pilote: l.pilote,
@@ -371,6 +386,7 @@ export class ImportTenacy {
           miseAJour: nb('maj'),
           inchanges: nb('inchange'),
           closConserves: nb('conserve'),
+          refuses: nb('refuse'),
           actionsACreer: actions,
         },
         lignes,
