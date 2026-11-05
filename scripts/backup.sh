@@ -107,6 +107,9 @@ docker compose exec -T -u postgres db psql -d suivi -Atc "SELECT 'version_donnee
 # L'archive contenant les secrets reste dans le dossier temporaire privé.
 PLAIN="$WORK/complete.tar"
 tar cf "$PLAIN" -C "$WORK" "${membres[@]}"
+# Les membres sont maintenant dans l'archive : les retirer libère l'espace temporaire (limité dans le conteneur
+# d'exécution) avant le contrôle, qui réextrait une copie, et ne laisse pas les secrets en double.
+rm -f "$WORK/suivi.dump" "$WORK/secrets.tgz" "$WORK/caddy.tgz"
 # Une archive déclarée « vérifiée » passe le même contrôle que la restauration : structure, bornes, secrets, INFO.
 python3 "$REPO/scripts/verifier-archive-restauration.py" --nom "$(basename "$OUT")" "$PLAIN" "$WORK/controle" > /dev/null \
   || arret "L'archive ne passerait pas le contrôle de restauration : sauvegarde refusée."

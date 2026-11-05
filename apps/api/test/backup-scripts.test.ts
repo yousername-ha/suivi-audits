@@ -1,5 +1,5 @@
 import { execFile, execFileSync } from 'node:child_process';
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
@@ -82,6 +82,68 @@ describe('exécutant serveur A1a', () => {
     }
     const events = readFileSync(f.events, 'utf8');
     expect(events).toContain('backup-finish');
+  });
+  it('sauvegarde l’autorité de certification interne et produit une archive que le contrôle de restauration accepte', async () => {
+    const f = fixture();
+    mkdirSync(path.join(f.dir, 'data/caddy/data/caddy/pki'), { recursive: true });
+    writeFileSync(path.join(f.dir, 'data/caddy/data/caddy/pki/racine.crt'), 'certificat fictif');
+    await exec('bash', [path.join(f.dir, 'scripts/backup-worker.sh')], { env: f.env });
+    const report = JSON.parse(readFileSync(path.join(f.dir, 'data/etat/sauvegardes/jobs', `${JOB}.json`), 'utf8'));
+    expect(report.resultat).toBe('reussie');
+    const plain = path.join(f.dir, 'relu.tar');
+    await exec('age', ['-d', '-i', f.key, '-o', plain, report.fichier]);
+    expect((await exec('tar', ['-tf', plain])).stdout).toContain('caddy.tgz');
+    // Le contrôle que la restauration applique à l'archive publiée l'accepte, nom compris.
+    await exec('python3', [
+      path.join(REPO, 'scripts/verifier-archive-restauration.py'),
+      '--nom',
+      path.basename(report.fichier),
+      plain,
+      path.join(f.dir, 'relecture'),
+    ]);
+    // Renommée, la même archive est refusée à la restauration.
+    await expect(
+      exec('python3', [
+        path.join(REPO, 'scripts/verifier-archive-restauration.py'),
+        '--nom',
+        'suivi-audits-20200101-000000.tar.age',
+        plain,
+        path.join(f.dir, 'relecture-renommee'),
+      ]),
+    ).rejects.toBeTruthy();
+  });
+  it('refuse de publier une sauvegarde quand le dossier du frontal contient un lien', async () => {
+    const f = fixture();
+    mkdirSync(path.join(f.dir, 'data/caddy/data'), { recursive: true });
+    symlinkSync('/etc/hostname', path.join(f.dir, 'data/caddy/data/lien'));
+    await expect(exec('bash', [path.join(f.dir, 'scripts/backup-worker.sh')], { env: f.env })).rejects.toBeTruthy();
+    expect(readdirSync(path.join(f.dir, 'archives'))).toEqual([]);
+    const report = JSON.parse(readFileSync(path.join(f.dir, 'data/etat/sauvegardes/jobs', `${JOB}.json`), 'utf8'));
+    expect(report.resultat).toBe('echec');
+    expect(report.integriteVerifiee).toBe(false);
+  });
+  it('ne publie pas une archive que le contrôle de restauration refuserait', async () => {
+    const f = fixture();
+    writeFileSync(path.join(f.dir, 'scripts/verifier-archive-restauration.py'), 'import sys\nsys.exit(1)\n');
+    await expect(exec('bash', [path.join(f.dir, 'scripts/backup-worker.sh')], { env: f.env })).rejects.toBeTruthy();
+    expect(readdirSync(path.join(f.dir, 'archives'))).toEqual([]);
+    const report = JSON.parse(readFileSync(path.join(f.dir, 'data/etat/sauvegardes/jobs', `${JOB}.json`), 'utf8'));
+    expect(report.resultat).toBe('echec');
+  });
+  it('libère les copies intermédiaires avant le contrôle, pour ne pas saturer l’espace temporaire du conteneur', async () => {
+    const f = fixture();
+    const sonde = path.join(f.dir, 'sonde.txt');
+    // Le contrôle de remplacement note ce qui reste à côté de l'archive en clair au moment où il s'exécute.
+    writeFileSync(
+      path.join(f.dir, 'scripts/verifier-archive-restauration.py'),
+      `import os, sys\nopen(${JSON.stringify(sonde)}, 'w').write(' '.join(sorted(os.listdir(os.path.dirname(sys.argv[3])))))\n`,
+    );
+    await exec('bash', [path.join(f.dir, 'scripts/backup-worker.sh')], { env: f.env });
+    const restes = readFileSync(sonde, 'utf8').split(' ');
+    expect(restes).toContain('complete.tar');
+    expect(restes).not.toContain('suivi.dump');
+    expect(restes).not.toContain('secrets.tgz');
+    expect(restes).not.toContain('caddy.tgz');
   });
   it('ne crée pas de sauvegarde quand aucune demande n’est en attente', async () => {
     const f = fixture();
