@@ -197,7 +197,7 @@ export const pilotageRoutes = [
           refs.push(o.id);
         }
       }
-      const decisions = refs.length
+      const decisionsBrutes = refs.length
         ? await svc.db.k
             .selectFrom('pilotage_decisions')
             .selectAll()
@@ -206,6 +206,8 @@ export const pilotageRoutes = [
             .limit(1000)
             .execute()
         : [];
+      // Les décisions citent des éléments qui peuvent être illisibles pour ce demandeur : filtrées comme l'historique.
+      const decisions = await new Pilotage(g).pourLecteur(params.smsi, decisionsBrutes, user);
       await svc.db.audit(user, ip, 'pilotage.register.exported', params.smsi, {
         kind: query.kind,
         objects: objects.length + legacy.length,

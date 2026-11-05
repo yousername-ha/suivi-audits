@@ -12,7 +12,7 @@ interface Ligne {
   ligne: number;
   id: string;
   nom: string;
-  resultat: 'cree' | 'maj' | 'inchange' | 'conserve';
+  resultat: 'cree' | 'maj' | 'inchange' | 'conserve' | 'refuse';
   statut: string;
   changements: string[];
   actionsACreer: number;
@@ -29,6 +29,7 @@ interface Rapport {
     miseAJour: number;
     inchanges: number;
     closConserves: number;
+    refuses: number;
     actionsACreer: number;
   };
   lignes: Ligne[];
@@ -40,6 +41,7 @@ const RESULTAT: Record<Ligne['resultat'], [string, string]> = {
   maj: ['mis à jour', 'blue'],
   inchange: ['inchangé', 'gray'],
   conserve: ['conservé (clos)', 'gray'],
+  refuse: ['refusé (droits)', 'red'],
 };
 const STATUT: Record<string, string> = { open: 'Ouvert', progress: 'En cours', closed: 'Clos' };
 
@@ -161,6 +163,7 @@ export function ImportTenacyPanel() {
               <Badge color="blue">{t.miseAJour} mis à jour</Badge>
               <Badge color="gray">{t.inchanges} inchangé(s)</Badge>
               <Badge color="gray">{t.closConserves} clos conservé(s)</Badge>
+              {t.refuses > 0 && <Badge color="red">{t.refuses} ligne(s) refusée(s) (droits)</Badge>}
               <Badge color="violet">{t.actionsACreer} action(s) à créer</Badge>
             </Group>
             {rapport.erreurs.length > 0 && (
