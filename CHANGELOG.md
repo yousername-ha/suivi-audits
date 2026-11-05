@@ -16,6 +16,12 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
 
 ### Sécurité
 
+- **Authentification** : une clé de sécurité suspendue reste un facteur enregistré ; elle n'abaisse plus l'assurance exigée
+  à la connexion ni à la ré-authentification (seul un compte sans aucun facteur enregistré reste connectable par mot de
+  passe). Le cookie de session et celui de l'écran mural ne sont lus que sous le nom que le serveur émettrait pour la
+  requête : sur HTTPS, uniquement le nom préfixé `__Host-`. Aucune action sur le serveur. _(Session « Projet audit_suivi
+  Coeur ».)_
+
 - **Droits par module** (ADR 0010) : les vues des modules repris ne renvoient plus les clés d'un module que la personne ne
   peut pas lire (écarts, échéance de clôture, déclaration d'applicabilité) ; écrire la déclaration d'applicabilité exige
   aussi `pilotage:modifier`. La simulation d'import, le rapport enregistré et le téléchargement du fichier brut se limitent
