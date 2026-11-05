@@ -16,6 +16,12 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
 
 ### Sécurité
 
+- **Authentification** : une clé de sécurité suspendue reste un facteur enregistré ; elle n'abaisse plus l'assurance exigée
+  à la connexion ni à la ré-authentification (seul un compte sans aucun facteur enregistré reste connectable par mot de
+  passe). Le cookie de session et celui de l'écran mural ne sont lus que sous le nom que le serveur émettrait pour la
+  requête : sur HTTPS, uniquement le nom préfixé `__Host-`. Aucune action sur le serveur. _(Session « Projet audit_suivi
+  Coeur ».)_
+
 - **Registres restreints et périmètres** (ADR 0043) : la carte des risques, son graphe et le rapport de comité, les
   aperçus de déplacement et de périmètres, l'import Tenacy, l'historique et l'export des décisions de pilotage, ainsi que
   le registre des usages de la configuration GRC ne renvoient plus que ce que la personne peut lire (ce qui ne se lit pas
