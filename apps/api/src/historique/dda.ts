@@ -57,7 +57,13 @@ export class DeclarationApplicabilite {
     return this.r.modifier(
       user,
       ip,
-      { module: 'audit', action: 'dda.updated', reference: (x: { id: string }) => `legacy:dda:${x.id}` },
+      {
+        module: 'audit',
+        // La clé « dda » relève du pilotage (ADR 0010) : l'écrire exige aussi pilotage:modifier.
+        droits: ['pilotage'],
+        action: 'dda.updated',
+        reference: (x: { id: string }) => `legacy:dda:${x.id}`,
+      },
       (data) => {
         const items = entrees(data, 'items').filter((x) => x.id === id);
         if (items.length > 1)
