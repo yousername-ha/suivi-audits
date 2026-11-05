@@ -46,6 +46,8 @@
    L'ouverture d'une session complète vaut ré-authentification. Le mot de passe seul n'est accepté que pour un compte qui n'a
    encore aucun second facteur (serveur où `MFA_REQUIRED=false`). La première clé enrôlée dans une session sans second facteur
    régénère cette session à l'état « second facteur validé ».
+   Une clé suspendue (compteur anormal) reste un facteur *enregistré* : elle compte pour exiger le second facteur et pour
+   refuser le mot de passe seul ; le compte se débloque par code de récupération ou réinitialisation par un administrateur.
 9. **Dernier facteur fort.** La révocation de sa dernière clé est refusée sans TOTP actif ; la désactivation du TOTP est refusée
    sans clé utilisable ; la dernière clé d'un compte soumis à l'obligation ne peut pas être révoquée par son titulaire.
 10. **Codes de récupération.** Dix codes de 80 bits (base32, quatre groupes), affichés une seule fois, à usage unique ;
