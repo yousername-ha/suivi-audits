@@ -16,7 +16,7 @@ function fixture() {
   dirs.push(dir);
   for (const part of ['scripts', 'bin', 'data/etat', 'data/secrets', 'archives'])
     mkdirSync(path.join(dir, part), { recursive: true, mode: 0o700 });
-  for (const name of ['backup.sh', 'backup-worker.sh', 'lib-commun.sh'])
+  for (const name of ['backup.sh', 'backup-worker.sh', 'lib-commun.sh', 'verifier-archive-restauration.py'])
     copyFileSync(path.join(REPO, 'scripts', name), path.join(dir, 'scripts', name));
   writeFileSync(path.join(dir, '.env'), `DATA_DIR=${dir}/data\nAPP_VERSION=ci\n`);
   const key = path.join(dir, 'cle-serveur');
@@ -25,7 +25,9 @@ function fixture() {
   execFileSync('age-keygen', ['-o', secours], { stdio: 'ignore' });
   const destinataires = path.join(dir, 'destinataires');
   writeFileSync(destinataires, execFileSync('age-keygen', ['-y', secours], { encoding: 'utf8' }), { mode: 0o600 });
-  writeFileSync(path.join(dir, 'data/secrets/doc_key'), 'cle-document-fictive', { mode: 0o600 });
+  // Secrets au format que le contrôle de restauration exige (mot de passe applicatif, clé des documents de 32 octets).
+  writeFileSync(path.join(dir, 'data/secrets/db_app_password'), 'mot-de-passe-fictif', { mode: 0o600 });
+  writeFileSync(path.join(dir, 'data/secrets/doc_master_key'), Buffer.alloc(32, 7).toString('base64'), { mode: 0o600 });
   const events = path.join(dir, 'events.jsonl');
   writeFileSync(
     path.join(dir, 'bin/docker'),
@@ -34,7 +36,7 @@ const fs = require('node:fs');
 const args = process.argv.slice(2);
 fs.appendFileSync(process.env.TEST_EVENTS, JSON.stringify(args) + '\n');
 const cmd = args[args.indexOf('suivi') + 1];
-if (args.includes('pg_dump')) { if (process.env.TEST_FAIL_DUMP) process.exit(7); console.log('dump-fictif'); }
+if (args.includes('pg_dump')) { if (process.env.TEST_FAIL_DUMP) process.exit(7); console.log('PGDMP-fictif'); }
 else if (args.includes('psql')) console.log('006_sauvegardes.sql');
 else if (cmd === 'backup-claim' && !process.env.TEST_EMPTY) console.log('${JOB}');
 `,
@@ -69,7 +71,7 @@ describe('exécutant serveur A1a', () => {
       const plain = path.join(f.dir, 'controle.tar');
       await exec('age', ['-d', '-i', identite, '-o', plain, report.fichier]);
       const dump = await exec('tar', ['-xOf', plain, 'suivi.dump']);
-      expect(dump.stdout).toBe('dump-fictif\n');
+      expect(dump.stdout).toBe('PGDMP-fictif\n');
       const secret = await exec('tar', ['-tf', plain]);
       expect(secret.stdout).toContain('secrets.tgz');
       // L'INFO lie le contenu au nom du fichier et à la demande.
