@@ -369,21 +369,32 @@ if [ "${SUIVI_MAJ_WEB:-}" != 1 ]; then
   sed -i '/^API_IMAGE=/d; /^WEB_IMAGE=/d; /^UPDATER_IMAGE=/d' "$REPO/.env"
   if [ -n "$(valeur_env GATEWAY_VERSION)" ]; then ecrire_env GATEWAY_VERSION "$CIBLE"; fi
 fi
+# Empreinte (RepoDigest) de l'image tirée pour une étiquette : c'est elle qui est vérifiée, épinglée puis démarrée, jamais
+# l'étiquette (qui peut être déplacée sur le registre entre le téléchargement et la vérification).
+empreinte_image() {
+  docker image inspect --format '{{json .RepoDigests}}' "$1:$2" 2> /dev/null \
+    | python3 -c 'import json,re,sys; p=sys.argv[1]+"@sha256:"; d=[x for x in json.load(sys.stdin) if x.startswith(p) and re.fullmatch(r"[a-f0-9]{64}", x[len(p):])]; sys.stdout.write(d[0] if d else "")' "$1" 2> /dev/null || true
+}
 if [ "$LOCALES" = 0 ]; then
   APP_VERSION="$CIBLE" dc pull --quiet
   if command -v cosign > /dev/null; then
+    IDENTITE="https://github.com/yousername-ha/suivi-audits/.github/workflows/release.yml@refs/tags/v$CIBLE"
     for i in $COMPOSANTS; do
-      cosign verify "$DEPOT_IMAGES-$i:$CIBLE" --certificate-identity "https://github.com/yousername-ha/suivi-audits/.github/workflows/release.yml@refs/tags/v$CIBLE" \
+      EMPREINTE=$(empreinte_image "$DEPOT_IMAGES-$i" "$CIBLE")
+      [ -n "$EMPREINTE" ] || retour_arriere "empreinte de l'image $i:$CIBLE introuvable après téléchargement"
+      cosign verify "$EMPREINTE" --certificate-identity "$IDENTITE" \
         --certificate-oidc-issuer https://token.actions.githubusercontent.com > /dev/null \
         || retour_arriere "signature de l'image $i:$CIBLE invalide ou absente"
       # Attestation SBOM signée par la même identité (ADR 0063) : une image publiée hors procédure est refusée.
-      cosign verify-attestation "$DEPOT_IMAGES-$i:$CIBLE" --type cyclonedx \
-        --certificate-identity "https://github.com/yousername-ha/suivi-audits/.github/workflows/release.yml@refs/tags/v$CIBLE" \
+      cosign verify-attestation "$EMPREINTE" --type cyclonedx \
+        --certificate-identity "$IDENTITE" \
         --certificate-oidc-issuer https://token.actions.githubusercontent.com > /dev/null \
         || retour_arriere "attestation SBOM de l'image $i:$CIBLE invalide ou absente"
+      # L'image vérifiée est celle qui démarre : épinglée par son empreinte, comme le fait l'exécutant du menu web.
+      ecrire_env "$(printf '%s_IMAGE' "$i" | tr 'a-z' 'A-Z')" "$EMPREINTE"
     done
-    SIGNATURE='vérifiée (cosign, signature et attestation SBOM)'
-    info "Signature des images vérifiée."
+    SIGNATURE='vérifiée (cosign, signature et attestation SBOM, épinglée par empreinte)'
+    info "Signature des images vérifiée et empreintes épinglées."
   fi
 fi
 ecrire_env APP_VERSION "$CIBLE"

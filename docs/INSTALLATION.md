@@ -838,6 +838,19 @@ sudo docker compose ps -a
 > ```
 > Si la version en service gardait ses données dans des volumes Docker, le script les copie au passage dans le dossier des données (étape 12.5).
 
+#### Vérifier l'authenticité des images avant une première installation (facultatif) et réglages GitHub à contrôler
+
+**Installation neuve.** L'installateur ([ADR 0077](adr/0077-installation-sans-ligne-de-commande.md)) tire les images par leur étiquette de version et ne vérifie pas leur signature : il est volontairement simple, et la vérification cosign reste facultative à ce stade. Les mises à jour, elles, vérifient toujours signature, attestation SBOM, révision et canal, puis épinglent l'empreinte. Pour vérifier une installation neuve avant de la démarrer, après le téléchargement des images (cosign installé, point 0 ci-dessus) :
+
+```text
+docker image inspect --format '{{json .RepoDigests}}' ghcr.io/yousername-ha/suivi-audits-api:<version>
+cosign verify ghcr.io/yousername-ha/suivi-audits-api@sha256:<empreinte> --certificate-identity https://github.com/yousername-ha/suivi-audits/.github/workflows/release.yml@refs/tags/v<version> --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```
+
+À répéter pour `suivi-audits-web` et `suivi-audits-updater`. Une image non signée par ce workflow, pour cette étiquette, est refusée : ne pas démarrer l'installation. Risque résiduel assumé : tant que cette vérification n'est pas faite, le contenu d'une installation neuve repose sur l'intégrité des étiquettes du registre.
+
+**Réglages GitHub à contrôler par le propriétaire du dépôt** (la signature prouve le workflow et l'étiquette, pas qui a approuvé la publication) : (1) *Settings, Rules, Rulesets* : qui peut créer des étiquettes `v*` et la liste complète des contournements ; (2) *Settings, Environments, publication* : relecteurs requis (le RSSI seul) et qui peut modifier l'environnement ; (3) collaborateurs ou équipes en droit *admin* ou *maintain*, applications GitHub avec `contents:write`, clés de déploiement en écriture ; (4) *Packages* `suivi-audits-api`, `-web`, `-updater` : dépôts et personnes autorisés en écriture, immutabilité des étiquettes si l'option existe ; (5) aucun jeton personnel avec `packages:write` en dehors du workflow de publication. Toute personne pouvant créer une étiquette `v*` sans être le relecteur unique de l'environnement `publication` est un écart à corriger.
+
 ### 12.2 Revenir à une version précédente
 
 Le script revient en arrière tout seul en cas d'échec. Pour revenir plus tard à une version précédente (problème découvert après coup), il faut **restaurer la sauvegarde faite avant la mise à jour** : les évolutions de la base ne s'annulent pas. Les données saisies depuis la mise à jour seront perdues : exportez-les ou notez-les avant.

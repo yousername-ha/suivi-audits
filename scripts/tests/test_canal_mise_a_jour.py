@@ -1,7 +1,9 @@
 """Canal de publication lié à l'étiquette (mettre-a-jour.sh) : seule une version dont le manifeste porte la version et le canal
 « stable » est choisie par défaut ou acceptée ; « development » exige UPDATE_CHANNEL=development dans .env."""
 import json
+import os
 import re
+import stat
 import subprocess
 import tempfile
 import unittest
@@ -11,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = (ROOT / 'scripts/mettre-a-jour.sh').read_text()
 # Fonctions du script, extraites telles quelles (aucune copie à maintenir).
 BLOC = SCRIPT[SCRIPT.index('canal_publie() {'):SCRIPT.index('if [ -z "$CIBLE" ]; then\n  for v in')]
+EMPREINTE = SCRIPT[SCRIPT.index('empreinte_image() {'):SCRIPT.index('if [ "$LOCALES" = 0 ]; then\n  APP_VERSION')]
 
 
 def git(repo, *args):
@@ -62,6 +65,33 @@ canal_autorise "{version}" && echo oui || echo non'''
         self.assertIn('canal_autorise "$v"', SCRIPT)
         self.assertIn('canal_autorise "$CIBLE" || arret', SCRIPT)
         self.assertRegex(SCRIPT, re.compile(r"sort -rV"))
+
+
+class EmpreinteEpinglee(unittest.TestCase):
+    """Chemin en ligne de commande : c'est l'empreinte tirée (RepoDigest) qui est vérifiée et épinglée, pas l'étiquette."""
+
+    def lire(self, repo_digests):
+        with tempfile.TemporaryDirectory() as d:
+            docker = Path(d) / 'docker'
+            docker.write_text('#!/bin/sh\nprintf %s "$1_$2" >/dev/null\necho \'' + json.dumps(repo_digests) + '\'\n')
+            docker.chmod(docker.stat().st_mode | stat.S_IEXEC)
+            script = f"""set -u\n{EMPREINTE}\nempreinte_image ghcr.io/yousername-ha/suivi-audits-api 6.2.0"""
+            return subprocess.run(['bash', '-c', script], capture_output=True, text=True,
+                                  env={**os.environ, 'PATH': d + ':' + os.environ['PATH']}).stdout
+
+    def test_retient_l_empreinte_du_bon_depot_et_rien_d_autre(self):
+        bon = 'ghcr.io/yousername-ha/suivi-audits-api@sha256:' + 'a' * 64
+        self.assertEqual(self.lire(['autre.example/x@sha256:' + 'b' * 64, bon]), bon)
+        self.assertEqual(self.lire(['ghcr.io/yousername-ha/suivi-audits-web@sha256:' + 'a' * 64]), '')
+        self.assertEqual(self.lire(['ghcr.io/yousername-ha/suivi-audits-api@sha256:' + 'z' * 64]), '')
+        self.assertEqual(self.lire([]), '')
+
+    def test_le_script_verifie_et_epingle_l_empreinte(self):
+        self.assertIn('cosign verify "$EMPREINTE"', SCRIPT)
+        self.assertIn('cosign verify-attestation "$EMPREINTE"', SCRIPT)
+        self.assertIn('ecrire_env "$(printf \'%s_IMAGE\' "$i" | tr \'a-z\' \'A-Z\')" "$EMPREINTE"', SCRIPT)
+        # L'étiquette n'est plus l'objet des vérifications.
+        self.assertNotIn('cosign verify "$DEPOT_IMAGES-$i:$CIBLE"', SCRIPT)
 
 
 if __name__ == '__main__':
