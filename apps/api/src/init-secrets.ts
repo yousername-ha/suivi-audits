@@ -171,30 +171,26 @@ function attribuerDescripteur(
   for (const nom of fs.readdirSync(base)) {
     crochet?.(chemin, nom);
     const enfant = `${base}/${nom}`;
-    const st = fs.lstatSync(enfant);
-    if (st.isDirectory()) {
-      if (st.dev !== dev) continue; // point de montage : hors de l'arborescence à attribuer
-      let sous: number;
-      try {
-        sous = fs.openSync(enfant, OUVRIR_DOSSIER);
-      } catch (e) {
-        // Remplacé par un lien entre le listage et l'ouverture : il n'est pas suivi.
-        if ((e as NodeJS.ErrnoException).code === 'ELOOP' || (e as NodeJS.ErrnoException).code === 'ENOTDIR') {
-          fs.lchownSync(enfant, uid, uid);
-          n++;
-          continue;
-        }
-        throw e;
-      }
-      try {
-        if (fs.fstatSync(sous).dev !== dev) continue;
-        n += attribuerDescripteur(sous, `${chemin}/${nom}`, uid, dev, crochet);
-      } finally {
-        fs.closeSync(sous);
-      }
-    } else {
+    // Ouverture directe sans suivre de lien (aucun contrôle préalable à contourner) : un répertoire s'ouvre ; un fichier ou un
+    // lien (même substitué entre le listage et l'ouverture) donne ENOTDIR/ELOOP et n'est jamais suivi.
+    let sous: number | null = null;
+    try {
+      sous = fs.openSync(enfant, OUVRIR_DOSSIER);
+    } catch (e) {
+      const code = (e as NodeJS.ErrnoException).code;
+      if (code === 'ENOENT') continue; // retiré entre-temps
+      if (code !== 'ENOTDIR' && code !== 'ELOOP') throw e;
+    }
+    if (sous === null) {
       fs.lchownSync(enfant, uid, uid);
       n++;
+      continue;
+    }
+    try {
+      if (fs.fstatSync(sous).dev !== dev) continue; // point de montage : hors de l'arborescence à attribuer
+      n += attribuerDescripteur(sous, `${chemin}/${nom}`, uid, dev, crochet);
+    } finally {
+      fs.closeSync(sous);
     }
   }
   return n;
