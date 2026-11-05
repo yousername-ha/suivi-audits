@@ -421,6 +421,10 @@ export class GrcRisks {
     await this.g.access(smsi, user);
     await this.g.permission(user, 'pilotage', 'lire');
     await this.g.permission(user, 'cartographie', 'lire');
+    // Les éléments d'un registre restreint ne se lisent qu'avec un droit attribué : le droit du module ne suffit jamais.
+    const masques = new Set(await this.g.registres.inaccessiblesPartout(user));
+    const lisible = (o: { kind: keyof typeof GRC_MODULES; registre_id: string | null }) =>
+      user.rights.can(GRC_MODULES[o.kind], 'lire') && !(o.registre_id && masques.has(o.registre_id));
     const args: unknown[] = [smsi, filters.at ?? new Date().toISOString()];
     const baseRows = filters.at
       ? `(SELECT b.id,b.smsi_id,b.kind,b.legacy_key,b.legacy_id,b.created_by,b.created_at,b.updated_by,b.updated_at,
@@ -445,7 +449,7 @@ export class GrcRisks {
           ? (
               await this.g.db.k
                 .selectFrom('grc_objects')
-                .select(['id', 'kind', 'data'])
+                .select(['id', 'kind', 'data', 'registre_id'])
                 .where('smsi_id', '=', smsi)
                 .where('id', 'in', objectIds)
                 .where('archived', '=', false)
@@ -454,11 +458,10 @@ export class GrcRisks {
               id: o.id,
               kind: o.kind as keyof typeof GRC_MODULES,
               data: o.data as Record<string, unknown>,
+              registre_id: o.registre_id,
             }))
           : [];
-        const allowed = new Map(
-          objects.filter((o) => user.rights.can(GRC_MODULES[o.kind], 'lire')).map((o) => ['object:' + o.id, o]),
-        );
+        const allowed = new Map(objects.filter(lisible).map((o) => ['object:' + o.id, o]));
         const visible: string[] = [],
           forward: string[] = [];
         for (const ref of frontier) {
@@ -603,7 +606,7 @@ export class GrcRisks {
         ? (
             await this.g.db.k
               .selectFrom('grc_objects')
-              .select(['id', 'kind', 'name', 'data', 'version'])
+              .select(['id', 'kind', 'name', 'data', 'version', 'registre_id'])
               .where('smsi_id', '=', smsi)
               .where('id', 'in', candidateIds)
               .execute()
@@ -613,9 +616,7 @@ export class GrcRisks {
             data: o.data as Record<string, unknown>,
           }))
         : [];
-      const objectsById = new Map(
-        candidates.filter((o) => user.rights.can(GRC_MODULES[o.kind], 'lire')).map((o) => [o.id, o]),
-      );
+      const objectsById = new Map(candidates.filter(lisible).map((o) => [o.id, o]));
       for (const l of links.slice(0, 2500)) {
         if (seenEdges.has(l.id)) continue;
         seenEdges.add(l.id);

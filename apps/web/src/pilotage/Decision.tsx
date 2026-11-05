@@ -16,6 +16,7 @@ import { useEffect, useState } from 'react';
 import type { GrcObject, PilotageRecord } from '@suivi/shared';
 import { api, errorMessage, get } from '../api';
 import { ErrorAlert } from '../components/common';
+import { SelecteurRegistre } from '../registres/SelecteurRegistre';
 import type { Source } from './Fields';
 export const OPERATION_LABELS: Record<PilotageRecord['operation'], string> = {
   proof_review: 'Examiner la preuve',
@@ -51,6 +52,7 @@ export function Decision({
     [refs, setRefs] = useState<string[]>([]),
     [finding, setFinding] = useState(false),
     [action, setAction] = useState(false),
+    [planAccueil, setPlanAccueil] = useState<string | null>(null),
     [confirmed, setConfirmed] = useState(false),
     [until, setUntil] = useState(''),
     [liensOuverts, setLiensOuverts] = useState(false),
@@ -135,6 +137,7 @@ export function Decision({
             refs,
             createFinding: finding,
             createAction: action,
+            ...(action && planAccueil ? { registreId: planAccueil } : {}),
             ...(acceptation ? { until } : {}),
             ...(operation === 'close' && liensOuverts ? { openLinksReason: motifLiens } : {}),
             confirm: 'ENREGISTRER',
@@ -224,6 +227,16 @@ export function Decision({
             label="Créer une action corrective suivie"
             checked={action}
             onChange={(e) => setAction(e.currentTarget.checked)}
+          />
+        )}
+        {action && (
+          <SelecteurRegistre
+            smsi={smsi}
+            kind="action"
+            data={{}}
+            object={null}
+            value={planAccueil}
+            onChange={setPlanAccueil}
           />
         )}
         {liensOuverts && (
