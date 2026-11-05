@@ -70,7 +70,8 @@ docker compose run --rm --no-deps -T db pg_restore --list < "$WORK/extrait/suivi
 WORK="$WORK/extrait"
 # Le trap supprime aussi le dossier temporaire parent.
 trap 'rm -rf "$(dirname "$WORK")"' EXIT
-docker compose stop app web
+# Le frontal (gateway) aussi : il écrit dans caddy/data et garderait monté un dossier remplacé pendant la restauration.
+docker compose stop app web gateway
 # 1. Secrets (doivent correspondre aux documents chiffrés de la sauvegarde), puis autorité de certification interne.
 install -d -m 0711 "$DATA_DIR/secrets"
 find "$DATA_DIR/secrets" -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
@@ -107,7 +108,7 @@ DO $$ BEGIN
   END IF;
 END $$;
 EOSQL
-if [ "${SUIVI_MAJ_WEB:-}" = 1 ]; then docker compose up -d db app web; else docker compose up -d; fi
+if [ "${SUIVI_MAJ_WEB:-}" = 1 ]; then docker compose up -d db app web gateway; else docker compose up -d; fi
 attendre_sante "$DELAI" || arret "Application indisponible après restauration ; intervention requise."
 printf '{"date":"%s","archive":%s}\n' "$(horodatage)" "$(json_chaine "$ARCH")" | ecrire_etat "$DATA_DIR/etat/sauvegardes/derniere-restauration.json"
 echo "Restauration terminée."
