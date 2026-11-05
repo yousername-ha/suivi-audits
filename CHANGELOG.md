@@ -6,7 +6,30 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-Aucune action.
+**Aucune action sur le serveur.** **Migration automatique `052`** (référentiels des périmètres) : appliquée au démarrage de
+`app`, durée négligeable. Chaque référentiel déjà rattaché à un périmètre devient la **copie** de ce périmètre, nommée « <référentiel> (PRIVE -
+<périmètre>) », au statut
+« appliqué » (il reste suivi en conformité comme avant) ; un « Désactiver ici » d'un référentiel hérité reste une surcharge
+qui suit la copie du parent. Aucune évaluation, aucun lien, aucun rapprochement n'est réécrit. Retour arrière : restauration
+de la sauvegarde d'avant mise à jour. Les intégrations qui rattachent un référentiel par l'API puis l'évaluent doivent
+désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel library management ».)_
+
+### Modifié
+
+- **Bibliothèque figée, référentiels du périmètre en copie, puis appliqués** ([ADR 0082](docs/adr/0082-referentiels-du-perimetre-copie-et-application.md)) :
+  la bibliothèque ne se personnalise plus (« Créer une copie » et « Ajouter une exigence » retirés ; chaque édition est
+  immuable, une nouvelle édition reste importable). Attribuer un référentiel à un périmètre (Périmètres → « Référentiels »)
+  en crée une **copie propre au périmètre**, nommée « <référentiel> (PRIVE - <périmètre>) », en préparation, que l'on
+  modifie librement : ajout, modification ou retrait
+  d'exigences, nouveau domaine, renommage, historique des versions. **Appliquer** la copie en fait un référentiel suivi en
+  conformité (couverture, évaluations, rapprochements, plan d'écarts) ; elle reste modifiable et peut repasser en
+  préparation sans perte. Les sous-périmètres qui héritent suivent la copie du parent (désactivable chez eux) ; attribuer chez
+  l'enfant lui donne sa propre copie. « Reprendre l'édition N » remplace la copie par une nouvelle édition de la
+  bibliothèque. Renommer un périmètre propose de renommer aussi ses copies « (PRIVE - <ancien nom>) » avec le nouveau nom
+  (option `renommerCopies` de `PATCH /api/grc/smsis/:id`). L'assistant « Analyser un service » applique les référentiels cochés. Nouvelles routes
+  `PUT /api/grc/:smsi/framework-attachments/:id/statut`, `GET|PUT /api/grc/:smsi/framework-copies/:id`,
+  `POST /api/grc/:smsi/framework-copies/:id/requirements`, `DELETE …/requirements/:requirementId` ; routes
+  `POST /api/library/frameworks/:id/copy` et `…/requirements` retirées. Migration `052`. _(Session « Référentiel library management ».)_
 
 ## [6.2.0] — 2026-11-04
 

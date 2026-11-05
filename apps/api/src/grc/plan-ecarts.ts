@@ -32,10 +32,11 @@ export class GrcPlanEcarts {
   private async cible(smsi: string, frameworkId: string, user: SessionUser) {
     await this.g.permission(user, 'conformite', 'lire');
     await this.g.access(smsi, user);
-    const eff = (await this.g.effectiveFrameworks(smsi)).find((e) => e.frameworkId === frameworkId && e.enabled);
-    if (!eff) throw new HttpError(404, 'Référentiel non rattaché à ce périmètre.');
-    const v = await this.g.library.version(frameworkId, eff.version, user);
-    const definition: FrameworkDefinition = v.definition;
+    // Référentiel appliqué et actif (ADR 0082) : exigences de la copie effective du périmètre.
+    const effective = await this.g.copies.effective(smsi, frameworkId);
+    if (!effective) throw new HttpError(404, 'Référentiel non appliqué ou inactif dans ce périmètre.');
+    const eff = effective.effectif;
+    const definition: FrameworkDefinition = effective.definition;
     const evaluations = await this.g.evaluations.courantes(smsi, [frameworkId]);
     const liees = await this.g.db.k
       .selectFrom('grc_links as l')

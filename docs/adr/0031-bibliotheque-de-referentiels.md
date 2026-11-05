@@ -1,6 +1,7 @@
 # ADR 0031 — Bibliothèque de référentiels de l'organisation : déclarer une fois, évaluer sur plusieurs référentiels
 
-**Statut** : proposée le 13/10/2026. Le RSSI en fait le **cœur** du chantier : « s'évaluer sur plusieurs référentiels en même
+**Statut** : proposée le 13/10/2026. Le rattachement (point 2) est précisé par l'[ADR 0082](0082-referentiels-du-perimetre-copie-et-application.md) :
+attribuer crée une copie propre au périmètre, modifiable, suivie en conformité une fois appliquée. Le RSSI en fait le **cœur** du chantier : « s'évaluer sur plusieurs référentiels en même
 temps sans devoir refaire, à chaque référentiel, les mêmes déclarations ». Complète l'[ADR 0030](0030-perimetre-agnostique-qualite-fournisseurs.md)
 et le [cadrage](../unification/CADRAGE-MODULE-QUALITE-9001.md). Aucun code n'est écrit.
 

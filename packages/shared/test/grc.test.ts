@@ -91,3 +91,34 @@ describe('périmètres de management : nature libre', () => {
     expect(SmsiUpdate.safeParse({ ...maj, nature: 'x'.repeat(61) }).success).toBe(false);
   });
 });
+
+describe('nom de la copie d’un référentiel dans un périmètre (ADR 0082)', () => {
+  it('ajoute « (PRIVE - <périmètre>) » au nom du référentiel', async () => {
+    const { nomCopiePerimetre } = await import('../src/index.js');
+    expect(nomCopiePerimetre('ISO/IEC 27001:2022', 'Hôpital fictif')).toBe(
+      'ISO/IEC 27001:2022 (PRIVE - Hôpital fictif)',
+    );
+    expect(nomCopiePerimetre('  HDS ', ' Clinique ')).toBe('HDS (PRIVE - Clinique)');
+  });
+  it('tient dans un libellé de 200 caractères, même avec des noms très longs', async () => {
+    const { nomCopiePerimetre } = await import('../src/index.js');
+    const nom = nomCopiePerimetre('R'.repeat(200), 'P'.repeat(200));
+    expect(nom).toHaveLength(200);
+    expect(nom.endsWith(` (PRIVE - ${'P'.repeat(100)})`)).toBe(true);
+  });
+});
+
+describe('copie d’un référentiel quand le périmètre est renommé (ADR 0082)', () => {
+  it('remplace le suffixe « (PRIVE - <ancien nom>) » par le nouveau nom', async () => {
+    const { renommerCopiePerimetre } = await import('../src/index.js');
+    expect(renommerCopiePerimetre('HDS (PRIVE - Clinique)', 'Clinique', 'Clinique du Parc')).toBe(
+      'HDS (PRIVE - Clinique du Parc)',
+    );
+  });
+  it('laisse une copie renommée à la main, ou déjà à jour', async () => {
+    const { renommerCopiePerimetre } = await import('../src/index.js');
+    expect(renommerCopiePerimetre('HDS adapté', 'Clinique', 'Clinique du Parc')).toBeNull();
+    expect(renommerCopiePerimetre('HDS (PRIVE - Autre)', 'Clinique', 'Clinique du Parc')).toBeNull();
+    expect(renommerCopiePerimetre('HDS (PRIVE - Clinique)', 'Clinique', 'Clinique')).toBeNull();
+  });
+});

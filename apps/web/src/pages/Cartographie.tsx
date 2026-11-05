@@ -150,16 +150,17 @@ function CartographieContenu() {
   const objetsQ = useQuery({ queryKey: ['carto', 'objects'], queryFn: () => get<ObjectsOut>('/api/carto/objects') });
   const cartesQ = useQuery({ queryKey: ['carto', 'maps'], queryFn: () => get<MapOut[]>('/api/carto/maps') });
   const [sante, setSante] = useState(false);
-  // ISO 9001 : le filtre n'apparaît que si un référentiel 9001 est rattaché au périmètre commun (ADR 0013, révision).
+  // ISO 9001 : le filtre n'apparaît que si un référentiel 9001 est appliqué au périmètre commun (ADR 0013, révision ;
+  // ADR 0082 : une copie en préparation ne compte pas).
   const rattaches = useQuery({
     queryKey: ['grc', '00000000-0000-4000-8000-000000000001', 'attachments'],
     queryFn: () =>
-      get<{ identifier: string; name: string; enabled: boolean }[]>(
+      get<{ identifier: string; name: string; suivi: boolean }[]>(
         '/api/grc/00000000-0000-4000-8000-000000000001/framework-attachments',
       ),
     retry: false,
   });
-  const norme9001 = (rattaches.data ?? []).some((r) => r.enabled && /9001/.test(`${r.identifier} ${r.name}`));
+  const norme9001 = (rattaches.data ?? []).some((r) => r.suivi && /9001/.test(`${r.identifier} ${r.name}`));
   const objs = useMemo(
     () =>
       new Map(

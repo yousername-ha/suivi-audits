@@ -63,7 +63,13 @@ beforeAll(async () => {
     [libB, 2],
   ] as const)
     expect(
-      (await a.put(`/api/grc/${scope}/framework-attachments/${lib}`, { version, confirm: 'RATTACHER' })).statusCode,
+      (
+        await a.put(`/api/grc/${scope}/framework-attachments/${lib}`, {
+          version,
+          statut: 'applique',
+          confirm: 'RATTACHER',
+        })
+      ).statusCode,
     ).toBe(200);
   docId = (await t.svc.db.one<{ id: string }>(
     "INSERT INTO documents(title, current_version, created_by, updated_by) VALUES ('Revue documentaire', 2, 'src_admin', 'src_admin') RETURNING id",

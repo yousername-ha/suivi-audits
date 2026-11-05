@@ -199,8 +199,13 @@ describe('applicabilité HDS (lecture seule)', () => {
     expect(pub.statusCode, pub.body).toBe(200);
     const fw = pub.json().id as string;
     expect(
-      (await admin.put(`/api/grc/${smsi}/framework-attachments/${fw}`, { version: 1, confirm: 'RATTACHER' }))
-        .statusCode,
+      (
+        await admin.put(`/api/grc/${smsi}/framework-attachments/${fw}`, {
+          version: 1,
+          statut: 'applique',
+          confirm: 'RATTACHER',
+        })
+      ).statusCode,
     ).toBe(200);
     const evaluer = (req: string, applicability: string, attendue: number) =>
       admin.post(
@@ -217,7 +222,12 @@ describe('applicabilité HDS (lecture seule)', () => {
     expect((await evaluer('H1', 'applicable', 0)).statusCode).toBe(201);
     expect((await evaluer('H2', 'exclue', 0)).statusCode).toBe(201);
     const r = (await writer.get(root() + '/hds')).json();
-    expect(r.referentiel).toMatchObject({ id: fw, name: 'HDS fictif', version: 1, heritage: false });
+    expect(r.referentiel).toMatchObject({
+      id: fw,
+      name: 'HDS fictif (PRIVE - Périmètre parcours)',
+      version: 1,
+      heritage: false,
+    });
     expect(r).toMatchObject({ total: 3, applicable: 1, exclue: 1, aDeterminer: 0, nonEvaluee: 1 });
     // Un autre périmètre, sans rattachement, ne voit rien.
     expect((await admin.get(root(autre) + '/hds')).json().referentiel).toBeNull();

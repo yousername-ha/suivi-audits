@@ -207,6 +207,9 @@ export const SmsiUpdate = z
     /** Absente : inchangée (retirée si le périmètre devient une organisation). `null` délie la fiche. */
     supplierId: ficheFournisseur.nullable().optional(),
     inheritFrameworks: z.boolean().optional(),
+    /** Nom changé : renommer aussi les copies de référentiels du périmètre qui portent « (PRIVE - <ancien nom>) »
+        (ADR 0082, décision du RSSI du 05/11/2026). Absent ou faux : leurs noms restent inchangés. */
+    renommerCopies: z.boolean().optional(),
     confirm: z.literal('ENREGISTRER'),
   })
   .strict();
@@ -230,8 +233,8 @@ export const FrameworkDefinition = z
     name: label,
     identifier: z.string().min(1).max(100),
     source: OfficialSource,
-    /** Présent seulement sur une copie de l'organisation : référentiel d'origine. Une version sans cette marque est une
-        version source, verrouillée : on ne la modifie pas, on en crée une copie. */
+    /** Référentiel d'origine d'une ancienne copie de l'organisation (avant l'ADR 0082, la bibliothèque est désormais
+        figée) ; la personnalisation se fait dans la copie propre à un périmètre. */
     derivedFrom: z
       .object({ identifier: z.string().min(1).max(100), name: label, version: z.number().int().positive() })
       .strict()
@@ -285,12 +288,27 @@ export const LibraryFrameworkDefinition = FrameworkDefinition.superRefine((d, c)
     });
 });
 export type LibraryFrameworkDefinition = z.infer<typeof LibraryFrameworkDefinition>;
-/** Copie personnalisable d'un référentiel de la bibliothèque : nom de la copie, identifiant facultatif. */
-export const LibraryCopyBody = z
-  .object({ name: label, identifier: z.string().trim().min(1).max(100).optional() })
-  .strict();
-export type LibraryCopyBody = z.infer<typeof LibraryCopyBody>;
-/** Ajout ou modification d'une exigence (mesure) dans une copie : domaine existant, ou nouveau domaine par son libellé. */
+/** Nom donné à la copie d'un référentiel attribuée à un périmètre (ADR 0082, décision du RSSI du 05/11/2026) :
+    « <référentiel> (PRIVE - <périmètre>) ». Le nom du périmètre est limité à 100 caractères et celui du référentiel
+    raccourci pour tenir dans les 200 caractères d'un libellé. La migration 052 applique la même règle en SQL. */
+export function nomCopiePerimetre(nomReferentiel: string, nomPerimetre: string): string {
+  const suffixe = ` (PRIVE - ${nomPerimetre.trim().slice(0, 100)})`;
+  return nomReferentiel.trim().slice(0, 200 - suffixe.length) + suffixe;
+}
+/** Nouveau nom d'une copie quand son périmètre est renommé : seulement si elle porte encore le suffixe
+    « (PRIVE - <ancien nom>) » donné à l'attribution ; `null` pour une copie renommée à la main (elle garde son nom). */
+export function renommerCopiePerimetre(
+  nomCopie: string,
+  ancienPerimetre: string,
+  nouveauPerimetre: string,
+): string | null {
+  const ancien = ` (PRIVE - ${ancienPerimetre.trim().slice(0, 100)})`;
+  if (!nomCopie.endsWith(ancien)) return null;
+  const nom = nomCopiePerimetre(nomCopie.slice(0, -ancien.length), nouveauPerimetre);
+  return nom === nomCopie ? null : nom;
+}
+/** Ajout ou modification d'une exigence dans la copie d'un périmètre (ADR 0082) : domaine existant, ou nouveau domaine
+    par son libellé ; `expectedVersion` : version courante de la copie. */
 export const LibraryRequirementBody = z
   .object({
     expectedVersion: z.number().int().positive(),

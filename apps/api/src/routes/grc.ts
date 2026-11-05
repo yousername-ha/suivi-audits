@@ -9,7 +9,6 @@ import {
   SmsiCreate,
   SmsiMember,
   SmsiUpdate,
-  LibraryCopyBody,
   LibraryMappingBody,
   LibraryRequirementBody,
   RapprochementDecision,
@@ -588,27 +587,6 @@ export const grcRoutes = [
   }),
   route({
     ...base,
-    access: 'conformite:modifier' as const,
-    method: 'POST',
-    url: '/api/library/frameworks/:id/copy',
-    summary: 'Créer une copie personnalisable d’un référentiel de la bibliothèque',
-    params: z.object({ id: z.uuid() }),
-    body: LibraryCopyBody,
-    handler: async ({ svc, s, params, body, ip }) => svc.grc.library.copy(params.id, body, (s as Session).user, ip),
-  }),
-  route({
-    ...base,
-    access: 'conformite:modifier' as const,
-    method: 'POST',
-    url: '/api/library/frameworks/:id/requirements',
-    summary: 'Ajouter ou modifier une exigence dans une copie (une version source est verrouillée)',
-    params: z.object({ id: z.uuid() }),
-    body: LibraryRequirementBody,
-    handler: async ({ svc, s, params, body, ip }) =>
-      svc.grc.library.upsertRequirement(params.id, body, (s as Session).user, ip),
-  }),
-  route({
-    ...base,
     access: 'conformite:lire' as const,
     method: 'GET',
     url: '/api/library/frameworks/:id/versions/:version',
@@ -962,7 +940,7 @@ export const grcRoutes = [
     ...base,
     method: 'GET',
     url: '/api/grc/:smsi/framework-attachments',
-    summary: 'Référentiels de la bibliothèque rattachés au périmètre',
+    summary: 'Référentiels du périmètre : copies propres et copies héritées, avec leur statut',
     params: scope,
     handler: async ({ svc, s, params }) => svc.grc.library.attachments(params.smsi, (s as Session).user),
   }),
@@ -970,11 +948,80 @@ export const grcRoutes = [
     ...base,
     method: 'PUT',
     url: '/api/grc/:smsi/framework-attachments/:id',
-    summary: 'Rattacher une version d’un référentiel de la bibliothèque au périmètre',
+    summary:
+      'Attribuer un référentiel de la bibliothèque au périmètre (copie propre au périmètre, en préparation par défaut), ' +
+      'ou reprendre une autre édition de la bibliothèque dans sa copie',
     params: object,
-    body: z.object({ version: z.number().int().positive(), confirm: z.literal('RATTACHER') }).strict(),
+    body: z
+      .object({
+        version: z.number().int().positive(),
+        statut: z.enum(['preparation', 'applique']).optional(),
+        confirm: z.literal('RATTACHER'),
+      })
+      .strict(),
     handler: async ({ svc, s, params, body, ip }) =>
-      svc.grc.library.attach(params.smsi, params.id, body.version, (s as Session).user, ip),
+      svc.grc.library.attach(params.smsi, params.id, body.version, (s as Session).user, ip, body.statut),
+  }),
+  route({
+    ...base,
+    method: 'PUT',
+    url: '/api/grc/:smsi/framework-attachments/:id/statut',
+    summary: 'Appliquer la copie du périmètre (suivi de conformité) ou la repasser en préparation',
+    params: object,
+    body: z.object({ statut: z.enum(['preparation', 'applique']), confirm: z.literal('APPLIQUER') }).strict(),
+    handler: async ({ svc, s, params, body, ip }) =>
+      svc.grc.library.setStatus(params.smsi, params.id, body.statut, (s as Session).user, ip),
+  }),
+  route({
+    ...base,
+    method: 'GET',
+    url: '/api/grc/:smsi/framework-copies/:id',
+    summary: 'Copie du référentiel dans le périmètre : exigences, statut et historique des versions',
+    params: object,
+    query: z.object({ version: z.coerce.number().int().positive().optional() }),
+    handler: async ({ svc, s, params, query }) =>
+      svc.grc.copies.lire(params.smsi, params.id, (s as Session).user, query.version),
+  }),
+  route({
+    ...base,
+    method: 'PUT',
+    url: '/api/grc/:smsi/framework-copies/:id',
+    summary: 'Renommer la copie du référentiel dans le périmètre',
+    params: object,
+    body: z
+      .object({
+        name: z.string().trim().min(1).max(200),
+        expectedVersion: z.number().int().positive(),
+      })
+      .strict(),
+    handler: async ({ svc, s, params, body, ip }) =>
+      svc.grc.copies.renommer(params.smsi, params.id, body.name, body.expectedVersion, (s as Session).user, ip),
+  }),
+  route({
+    ...base,
+    method: 'POST',
+    url: '/api/grc/:smsi/framework-copies/:id/requirements',
+    summary: 'Ajouter ou modifier une exigence dans la copie du référentiel du périmètre',
+    params: object,
+    body: LibraryRequirementBody,
+    handler: async ({ svc, s, params, body, ip }) =>
+      svc.grc.copies.enregistrerExigence(params.smsi, params.id, body, (s as Session).user, ip),
+  }),
+  route({
+    ...base,
+    method: 'DELETE',
+    url: '/api/grc/:smsi/framework-copies/:id/requirements/:requirementId',
+    summary: 'Retirer une exigence de la copie du référentiel du périmètre (version attendue en If-Match)',
+    params: object.extend({ requirementId: z.string().min(1).max(200) }),
+    handler: async ({ svc, s, params, req, ip }) =>
+      svc.grc.copies.retirerExigence(
+        params.smsi,
+        params.id,
+        params.requirementId,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      ),
   }),
   route({
     ...base,

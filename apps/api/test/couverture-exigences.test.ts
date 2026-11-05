@@ -83,8 +83,13 @@ beforeAll(async () => {
       ).toBe(204);
   for (const smsi of [parent])
     expect(
-      (await admin.put(`/api/grc/${smsi}/framework-attachments/${fw}`, { version: 1, confirm: 'RATTACHER' }))
-        .statusCode,
+      (
+        await admin.put(`/api/grc/${smsi}/framework-attachments/${fw}`, {
+          version: 1,
+          statut: 'applique',
+          confirm: 'RATTACHER',
+        })
+      ).statusCode,
     ).toBe(200);
   // Les accès sont attribués avant la connexion des comptes (une modification d'accès referme leurs sessions).
   writer = await login(t, uw);
@@ -206,8 +211,9 @@ describe('périmètres hiérarchiques', () => {
     expect((await detail(parent)).detail[0]).toMatchObject({ etat: 'partiel' });
   });
   it('un référentiel désactivé localement ne peut plus être évalué', async () => {
-    await admin.put(`/api/grc/${enfant}/framework-attachments/${fw}`, { version: 1, confirm: 'RATTACHER' });
-    await admin.put(`/api/grc/${enfant}/framework-attachments/${fw}/activation`, { enabled: false });
+    // « Désactiver ici » (ADR 0082) : une surcharge locale d'activation, sans copie.
+    const r = await admin.put(`/api/grc/${enfant}/framework-attachments/${fw}/activation`, { enabled: false });
+    expect(r.statusCode, r.body).toBe(200);
     expect((await evaluer(enfant, base, 1)).statusCode).toBe(404);
   });
 });

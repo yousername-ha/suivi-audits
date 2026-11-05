@@ -249,7 +249,9 @@ test('Pilotage : page Périmètres, une organisation et son fournisseur rattach�
     await ctx.close();
   }
 });
-test('Pilotage : bibliothèque de référentiels, import puis rattachement à un périmètre', async ({ browser }) => {
+test('Pilotage : bibliothèque de référentiels, import, attribution d’une copie modifiable puis application', async ({
+  browser,
+}) => {
   const ctx = await browser.newContext({ storageState: (await sessionAdmin(browser)).state, ignoreHTTPSErrors: true });
   const page = await ctx.newPage(),
     problems = watchPage(page);
@@ -296,15 +298,67 @@ test('Pilotage : bibliothèque de référentiels, import puis rattachement à un
     await page.goto('/pilotage/perimetres');
     await page.getByText('Liste', { exact: true }).click(); // le graphe est la vue par défaut
     await page.getByRole('button', { name: /^Référentiels rattachés au périmètre Pilotage de l/ }).click();
-    await expect(dialog.getByText('Aucun référentiel de la bibliothèque n’est rattaché à ce périmètre.')).toBeVisible();
-    await choose(page, 'Rattacher un référentiel de la bibliothèque', nom);
-    await dialog.getByRole('button', { name: 'Rattacher', exact: true }).click();
-    await expect(dialog.getByText(nom, { exact: true })).toBeVisible();
-    await expect(dialog.getByText(/Version 1/)).toBeVisible();
+    await expect(dialog.getByText('Aucun référentiel n’est attribué à ce périmètre.')).toBeVisible();
+    // Attribuer crée une copie propre au périmètre, en préparation (ADR 0082).
+    await choose(page, 'Attribuer un référentiel de la bibliothèque', nom);
+    await dialog.getByRole('button', { name: 'Attribuer', exact: true }).click();
+    // La copie porte le nom du périmètre : « <référentiel> (PRIVE - <périmètre>) ».
+    const copieNom = `${nom} (PRIVE - Pilotage de l’organisation)`;
+    await expect(dialog.getByText(copieNom, { exact: true })).toBeVisible();
+    await expect(dialog.getByText(/édition 1/)).toBeVisible();
+    await expect(dialog.getByText('En préparation', { exact: true })).toBeVisible();
+    // La copie se modifie librement : ajout d'une exigence dans un nouveau domaine.
+    await dialog.getByRole('button', { name: `Modifier la copie de ${copieNom}`, exact: true }).click();
+    const editeur = page.getByRole('dialog', { name: `Copie : ${copieNom}` });
+    await editeur.getByRole('button', { name: 'Ajouter une exigence', exact: true }).click();
+    await editeur.getByLabel('Ou nouveau domaine').fill('Mesures locales');
+    await editeur.getByLabel('Identifiant de l’exigence').fill('LOC-1');
+    await editeur.getByLabel('Intitulé').fill('Mesure propre au périmètre');
+    await editeur.getByRole('button', { name: 'Enregistrer dans la copie', exact: true }).click();
+    await expect(editeur.getByText('Mesure propre au périmètre')).toBeVisible();
+    await expect(editeur.getByLabel('Version de la copie')).toHaveValue(/^Version 2 \(courante\)/);
+    await editeur.getByRole('button', { name: 'Fermer la copie', exact: true }).click();
+    await expect(editeur).toHaveCount(0);
+    // Appliquer : la copie devient un référentiel suivi en conformité.
+    await dialog.getByRole('button', { name: 'Appliquer', exact: true }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Confirmer', exact: true }).click();
+    await expect(dialog.getByText('Appliqué : suivi en conformité', { exact: true })).toBeVisible();
     await page.reload();
     await page.getByText('Liste', { exact: true }).click(); // le graphe est la vue par défaut
     await page.getByRole('button', { name: /^Référentiels rattachés au périmètre Pilotage de l/ }).click();
-    await expect(page.getByRole('dialog').getByText(nom, { exact: true })).toBeVisible();
+    await expect(page.getByRole('dialog').getByText(copieNom, { exact: true })).toBeVisible();
+    await expect(page.getByRole('dialog').getByText(/2 exigence\(s\)/)).toBeVisible();
+    // La bibliothèque reste intacte : une seule exigence, édition 1.
+    const lib = (await (await page.request.get('/api/library/frameworks')).json()) as {
+      id: string;
+      name: string;
+      version: number;
+      requirements: number;
+    }[];
+    const fw = lib.find((f) => f.name === nom)!;
+    expect(fw).toMatchObject({ version: 1, requirements: 1 });
+    // Périmètre renommé : la question propose de renommer aussi sa copie « (PRIVE - <ancien nom>) ».
+    const ancien = `QA-Copies-${Date.now()}`,
+      nouveau = `${ancien}-renomme`;
+    const perimetre = await post(page, '/api/grc/smsis', { name: ancien, scope: 'Recette', timezone: 'Europe/Paris' });
+    const attribution = await page.request.put(`/api/grc/${perimetre.id}/framework-attachments/${fw.id}`, {
+      headers: { Origin: new URL(page.url()).origin, 'X-CSRF-Token': await csrfOf(page.request) },
+      data: { version: 1, confirm: 'RATTACHER' },
+    });
+    expect(attribution.ok(), await attribution.text()).toBeTruthy();
+    await page.goto('/pilotage/perimetres');
+    await page.getByText('Liste', { exact: true }).click(); // le graphe est la vue par défaut
+    await page.getByRole('button', { name: `Modifier le périmètre ${ancien}`, exact: true }).click();
+    await page.getByRole('dialog').getByLabel(/^Nom/).fill(nouveau);
+    await page.getByRole('dialog').getByRole('button', { name: 'Enregistrer', exact: true }).click();
+    const question = page.getByRole('dialog', { name: 'Renommer aussi les référentiels ?' });
+    await expect(question.getByText(`${nom} (PRIVE - ${nouveau})`, { exact: false })).toBeVisible();
+    await question.getByRole('button', { name: 'Renommer aussi les référentiels', exact: true }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    const copies = (await (await page.request.get(`/api/grc/${perimetre.id}/framework-attachments`)).json()) as {
+      name: string;
+    }[];
+    expect(copies.map((c) => c.name)).toEqual([`${nom} (PRIVE - ${nouveau})`]);
     expect(problems).toEqual([]);
   } finally {
     await ctx.close();
@@ -485,7 +539,7 @@ test('Pilotage : correspondance validée, rapprochement proposé puis confirmé 
     for (const fw of [a.id, b.id]) {
       const r = await page.request.put(`/api/grc/${perimetre.id}/framework-attachments/${fw}`, {
         headers: { Origin: new URL(page.url()).origin, 'X-CSRF-Token': await csrfOf(page.request) },
-        data: { version: 1, confirm: 'RATTACHER' },
+        data: { version: 1, statut: 'applique', confirm: 'RATTACHER' },
       });
       expect(r.ok(), await r.text()).toBeTruthy();
     }
@@ -631,9 +685,7 @@ test('Pilotage : fournisseur évalué une fois, rattaché à deux périmètres a
   }
 });
 
-test('Pilotage : les standards sont disponibles d’emblée, verrouillés, et se personnalisent par une copie', async ({
-  browser,
-}) => {
+test('Pilotage : les standards sont disponibles d’emblée et figés dans la bibliothèque', async ({ browser }) => {
   const ctx = await browser.newContext({ storageState: (await sessionAdmin(browser)).state, ignoreHTTPSErrors: true });
   const page = await ctx.newPage(),
     problems = watchPage(page);
@@ -665,25 +717,13 @@ test('Pilotage : les standards sont disponibles d’emblée, verrouillés, et se
     ).toHaveCount(0);
     await page.getByRole('button', { name: `Ajouter ${nom} à la bibliothèque`, exact: true }).click();
     const ligne = page.getByRole('row').filter({ hasText: nom });
-    await expect(ligne.getByText('Version source verrouillée')).toBeVisible();
-    // Une version source n'offre pas d'ajout d'exigence : seule la copie se personnalise.
+    await expect(ligne.getByText('Figé', { exact: true })).toBeVisible();
+    // La bibliothèque est figée (ADR 0082) : ni copie ni ajout d'exigence ; la personnalisation se fait dans la copie
+    // attribuée à un périmètre.
     await expect(ligne.getByRole('button', { name: `Ajouter une exigence à ${nom}`, exact: true })).toHaveCount(0);
-    await ligne.getByRole('button', { name: `Créer une copie personnalisable de ${nom}`, exact: true }).click();
-    const dialog = page.getByRole('dialog');
-    await dialog.getByLabel('Nom de la copie').fill(`Copie ${suffixe}`);
-    await dialog.getByRole('button', { name: 'Créer la copie', exact: true }).click();
-    await expect(dialog).toHaveCount(0);
-    const copie = page.getByRole('row').filter({ hasText: `Copie ${suffixe}` });
-    await expect(copie.getByText('Copie de l’organisation')).toBeVisible();
-    await copie.getByRole('button', { name: `Ajouter une exigence à Copie ${suffixe}`, exact: true }).click();
-    const ajout = page.getByRole('dialog');
-    await ajout.getByLabel('Ou nouveau domaine').fill('Mesures locales');
-    await ajout.getByLabel('Identifiant de l’exigence').fill('LOC-1');
-    await ajout.getByLabel('Intitulé').fill('Mesure propre à l’organisation fictive');
-    await ajout.getByRole('button', { name: 'Publier la nouvelle version', exact: true }).click();
-    await expect(ajout).toHaveCount(0);
-    await expect(copie.getByRole('cell', { name: '2', exact: true }).first()).toBeVisible();
-    // L'original reste en version 1 et verrouillé.
+    await expect(
+      ligne.getByRole('button', { name: `Créer une copie personnalisable de ${nom}`, exact: true }),
+    ).toHaveCount(0);
     await expect(ligne.getByRole('cell', { name: '1', exact: true }).first()).toBeVisible();
     expect(problems).toEqual([]);
   } finally {

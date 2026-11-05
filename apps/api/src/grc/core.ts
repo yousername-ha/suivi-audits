@@ -26,7 +26,6 @@ import {
   refusType,
   type TypePerimetre,
   type NoeudPerimetre,
-  type RattachementReferentiel,
   type Permission,
   type GrcKind,
   type GrcObject,
@@ -48,6 +47,7 @@ import { loadGrants } from '../rights.js';
 import { validDate } from '@suivi/shared';
 import { GrcFrameworks } from './frameworks.js';
 import { GrcLibrary } from './library.js';
+import { GrcCopiesReferentiels } from './copies-referentiels.js';
 import { GrcKitIa } from './kit-ia.js';
 import { GrcLibraryMappings } from './library-mappings.js';
 import { GrcEvaluationsExigences } from './evaluations-exigences.js';
@@ -86,6 +86,20 @@ const LECTURE_PILOTAGE: Permission[] = [
   'conformite:lire',
 ];
 /** Ligne d'objet lue en SQL (projection à une date passée de risks.ts, ADR 0062 §5), avant conversion en GrcObject. */
+/** Référentiel effectif d'un périmètre (ADR 0082). `version` : édition de la bibliothèque dont la copie est issue, celle des
+    références d'exigences ; `detenteurId` : périmètre qui porte la copie (lui-même ou un ancêtre) ; `versionCopie` :
+    version courante de cette copie ; `suivi` : actif et appliqué, donc suivi en conformité. */
+export interface ReferentielEffectifPerimetre {
+  frameworkId: string;
+  version: number;
+  enabled: boolean;
+  /** Périmètre qui porte la ligne retenue pour l'activation (le périmètre lui-même ou un ancêtre). */
+  origineId: string;
+  statut: 'preparation' | 'applique';
+  suivi: boolean;
+  detenteurId: string;
+  versionCopie: number;
+}
 export type ObjectRow = Omit<GrcObject, 'createdAt' | 'updatedAt'> & { createdAt: Date; updatedAt: Date };
 export const objectDto = (r: ObjectRow): GrcObject => ({
   ...r,
@@ -212,6 +226,7 @@ export class Grc {
   readonly legacyTasks: LegacyTasks;
   readonly frameworks: GrcFrameworks;
   readonly library: GrcLibrary;
+  readonly copies: GrcCopiesReferentiels;
   readonly libraryMappings: GrcLibraryMappings;
   readonly kitIa: GrcKitIa;
   readonly rapprochements: GrcRapprochements;
@@ -235,6 +250,7 @@ export class Grc {
     this.legacyTasks = new LegacyTasks(this);
     this.frameworks = new GrcFrameworks(this);
     this.library = new GrcLibrary(this);
+    this.copies = new GrcCopiesReferentiels(this);
     this.libraryMappings = new GrcLibraryMappings(this);
     this.kitIa = new GrcKitIa(this);
     this.rapprochements = new GrcRapprochements(this);
@@ -452,10 +468,14 @@ export class Grc {
   private async verrouillerPerimetre(c: Client, id: string) {
     await surConnexion(c).selectFrom('grc_smsis').select('id').where('id', '=', id).forUpdate().execute();
   }
-  /** Référentiels effectifs d'un périmètre : les siens et ceux hérités (chaîne d'héritage explicite), le plus proche l'emporte. */
-  async effectiveFrameworks(smsi: string, c?: Client): Promise<RattachementReferentiel[]> {
-    // Remontée de la chaîne d'héritage (64 niveaux au plus), le plus proche l'emporte (DISTINCT ON + profondeur).
-    return (c ? surConnexion(c) : this.db.k)
+  /** Référentiels effectifs d'un périmètre : les siens et ceux hérités (chaîne d'héritage explicite), le plus proche
+      l'emporte pour l'activation. Le contenu et le statut viennent de la copie la plus proche (ADR 0082) : celle du
+      périmètre, ou celle de l'ancêtre dont il hérite ; une ligne de surcharge sans copie ne règle que l'activation. Une
+      surcharge sans copie au-dessus d'elle (ancêtre détaché) n'est pas effective. `suivi` : actif et appliqué, donc
+      compté dans la conformité. */
+  async effectiveFrameworks(smsi: string, c?: Client): Promise<ReferentielEffectifPerimetre[]> {
+    // Remontée de la chaîne d'héritage (64 niveaux au plus), du plus proche au plus lointain.
+    const lignes = await (c ? surConnexion(c) : this.db.k)
       .withRecursive('chaine(id, parent_id, inherit, profondeur)', (db) =>
         db
           .selectFrom('grc_smsis')
@@ -477,11 +497,43 @@ export class Grc {
       )
       .selectFrom('chaine as ch')
       .innerJoin('grc_scope_frameworks as s', 's.smsi_id', 'ch.id')
-      .distinctOn('s.framework_id')
-      .select(['s.framework_id as frameworkId', 's.version', 's.enabled', 'ch.id as origineId'])
-      .orderBy('s.framework_id')
+      .select([
+        's.framework_id as frameworkId',
+        's.version',
+        's.enabled',
+        's.status',
+        's.copy_version as copyVersion',
+        'ch.id as origineId',
+      ])
       .orderBy('ch.profondeur')
+      .orderBy('s.framework_id')
       .execute();
+    const retenus = new Map<string, ReferentielEffectifPerimetre & { complet: boolean }>();
+    for (const l of lignes) {
+      let r = retenus.get(l.frameworkId);
+      if (!r) {
+        r = {
+          frameworkId: l.frameworkId,
+          version: l.version,
+          enabled: l.enabled,
+          origineId: l.origineId,
+          statut: 'preparation',
+          suivi: false,
+          detenteurId: '',
+          versionCopie: 0,
+          complet: false,
+        };
+        retenus.set(l.frameworkId, r);
+      }
+      if (r.complet || l.copyVersion === null) continue;
+      r.complet = true;
+      r.version = l.version;
+      r.detenteurId = l.origineId;
+      r.versionCopie = l.copyVersion;
+      r.statut = l.status === 'applique' ? 'applique' : 'preparation';
+      r.suivi = r.enabled && r.statut === 'applique';
+    }
+    return [...retenus.values()].filter((r) => r.complet).map(({ complet: _, ...r }) => r);
   }
   /** Périmètres qui héritent (directement ou non) des référentiels de `smsi` : à recalculer quand ils changent. */
   async heritiers(smsi: string, c?: Client): Promise<string[]> {
@@ -517,6 +569,8 @@ export class Grc {
   async updateSmsi(id: string, input: SmsiUpdate, expected: number, user: SessionUser, ip: string) {
     await this.permission(user, 'pilotage', 'administrer');
     await this.access(id, user, true);
+    // Renommer aussi les copies de référentiels : c'est modifier ces copies (droit de la conformité).
+    if (input.renommerCopies) await this.permission(user, 'conformite', 'modifier');
     return this.db.tx(async (c) => {
       await this.verrouillerPerimetre(c, id);
       const current = await this.access(id, user, true, c);
@@ -556,12 +610,23 @@ export class Grc {
       if (entityKind !== current.entityKind) changed.push('entityKind');
       if (supplierId !== current.supplierId) changed.push('supplierId');
       if (inheritFrameworks !== current.inheritFrameworks) changed.push('inheritFrameworks');
+      // Sur demande : copies « (PRIVE - <ancien nom>) » renommées avec le nouveau nom (ADR 0082).
+      const copiesRenommees =
+        input.renommerCopies && current.name !== input.name
+          ? await this.copies.renommerPourPerimetre(c, id, current.name, input.name, user, ip)
+          : 0;
       await this.db.audit(
         user,
         ip,
         'grc.smsi.updated',
         id,
-        { changed, previousName: current.name, previousNature: current.nature, previousParentId: current.parentId },
+        {
+          changed,
+          previousName: current.name,
+          previousNature: current.nature,
+          previousParentId: current.parentId,
+          copiesRenommees,
+        },
         c,
       );
       if (parentId !== current.parentId || inheritFrameworks !== current.inheritFrameworks)

@@ -123,7 +123,7 @@ describe('API d’import', () => {
   });
 });
 
-describe('standards disponibles, versions sources verrouillées et copies', () => {
+describe('standards disponibles, bibliothèque figée et copies des périmètres', () => {
   let t: TestApp, a: Agent, reader: Agent;
   beforeAll(async () => {
     t = await createTestApp();
@@ -147,23 +147,23 @@ describe('standards disponibles, versions sources verrouillées et copies', () =
     const liste = (await a.get('/api/library/frameworks')).json() as { identifier: string; locked: boolean }[];
     expect(liste.find((f) => f.identifier === 'iso-27001-2022')!.locked).toBe(true);
   });
-  it('refuse d’ajouter une exigence à une version source : il faut une copie', async () => {
+  it('la bibliothèque est figée : ni copie ni exigence ajoutée dans la bibliothèque (ADR 0082)', async () => {
     const liste = (await a.get('/api/library/frameworks')).json() as {
       id: string;
       identifier: string;
       version: number;
     }[];
     const iso = liste.find((f) => f.identifier === 'iso-27001-2022')!;
-    const r = await a.post(`/api/library/frameworks/${iso.id}/requirements`, {
+    const ajout = await a.post(`/api/library/frameworks/${iso.id}/requirements`, {
       expectedVersion: iso.version,
       domain: 'clause_4',
       id: 'ORG-1',
       title: 'Exigence de l’organisation',
     });
-    expect(r.statusCode).toBe(422);
-    expect(r.json().error ?? r.body).toMatch(/verrouillée/);
+    expect(ajout.statusCode).toBe(404);
+    expect((await a.post(`/api/library/frameworks/${iso.id}/copy`, { name: 'Copie' })).statusCode).toBe(404);
   });
-  it('crée une copie, y ajoute des exigences (nouvelles versions) et laisse l’original intact', async () => {
+  it('la copie d’un périmètre se personnalise et laisse le standard de la bibliothèque intact', async () => {
     const liste = (await a.get('/api/library/frameworks')).json() as {
       id: string;
       identifier: string;
@@ -171,55 +171,28 @@ describe('standards disponibles, versions sources verrouillées et copies', () =
       requirements: number;
     }[];
     const iso = liste.find((f) => f.identifier === 'iso-27001-2022')!;
-    const copie = await a.post(`/api/library/frameworks/${iso.id}/copy`, {
-      name: 'ISO 27001 — version de l’organisation',
-    });
-    expect(copie.statusCode, copie.body).toBe(200);
-    expect(copie.json()).toMatchObject({ identifier: 'iso-27001-2022-copie', version: 1 });
-    const seconde = await a.post(`/api/library/frameworks/${iso.id}/copy`, { name: 'Autre copie' });
-    expect(seconde.json().identifier).toBe('iso-27001-2022-copie-2');
-    const id = copie.json().id as string;
-    const domaine = (await a.get(`/api/library/frameworks/${id}/versions/1`)).json().definition.domains[0].id as string;
-    const ajout = await a.post(`/api/library/frameworks/${id}/requirements`, {
+    const scope = (
+      await a.post('/api/grc/smsis', { name: 'Périmètre standard', scope: 'Recette', timezone: 'Europe/Paris' })
+    ).json().id as string;
+    const r = await a.put(`/api/grc/${scope}/framework-attachments/${iso.id}`, { version: 1, confirm: 'RATTACHER' });
+    expect(r.statusCode, r.body).toBe(200);
+    const copie = (await a.get(`/api/grc/${scope}/framework-copies/${iso.id}`)).json();
+    expect(copie).toMatchObject({ version: 1, sourceVersion: 1, statut: 'preparation', modifiable: true });
+    const ajout = await a.post(`/api/grc/${scope}/framework-copies/${iso.id}/requirements`, {
       expectedVersion: 1,
-      domain: domaine,
+      domain: copie.definition.domains[0].id,
       id: 'ORG-1',
       title: 'Mesure propre à l’organisation',
       description: 'Fictive',
     });
     expect(ajout.statusCode, ajout.body).toBe(200);
     expect(ajout.json().version).toBe(2);
-    const nouveauDomaine = await a.post(`/api/library/frameworks/${id}/requirements`, {
-      expectedVersion: 2,
-      newDomainLabel: 'Mesures locales',
-      id: 'ORG-2',
-      title: 'Autre mesure',
-    });
-    expect(nouveauDomaine.statusCode, nouveauDomaine.body).toBe(200);
-    const v3 = (await a.get(`/api/library/frameworks/${id}/versions/3`)).json().definition;
-    expect(v3.requirements.map((r: { id: string }) => r.id)).toEqual(expect.arrayContaining(['ORG-1', 'ORG-2']));
-    expect(v3.derivedFrom).toMatchObject({ identifier: 'iso-27001-2022', version: 1 });
-    expect(v3.source.status).toBe('organisation');
-    // Version obsolète et mélange de domaine refusés.
-    expect(
-      (
-        await a.post(`/api/library/frameworks/${id}/requirements`, {
-          expectedVersion: 1,
-          domain: domaine,
-          id: 'X',
-          title: 'x',
-        })
-      ).statusCode,
-    ).toBe(412);
-    expect(
-      (await a.post(`/api/library/frameworks/${id}/requirements`, { expectedVersion: 3, id: 'X', title: 'x' }))
-        .statusCode,
-    ).toBe(422);
     const origine = (await a.get(`/api/library/frameworks/${iso.id}/versions/1`)).json().definition;
     expect(origine.requirements).toHaveLength(iso.requirements);
-    expect((await a.get('/api/library/frameworks')).json().find((f: { id: string }) => f.id === id)).toMatchObject({
-      locked: false,
-      derivedFrom: { identifier: 'iso-27001-2022' },
+    expect((await a.get('/api/library/frameworks')).json().find((f: { id: string }) => f.id === iso.id)).toMatchObject({
+      version: 1,
+      locked: true,
+      scopes: 1,
     });
   });
 });

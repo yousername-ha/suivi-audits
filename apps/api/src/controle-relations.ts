@@ -77,6 +77,16 @@ export async function controleRelations(svc: Services): Promise<ControleRelation
       `${v.framework_id}:${v.version}`,
       new Set(((v.definition as { requirements?: { id: string }[] }).requirements ?? []).map((r) => r.id)),
     );
+  // Copies des périmètres (ADR 0082) : une exigence ajoutée à une copie se désigne avec l'édition dont la copie est issue.
+  for (const v of await k
+    .selectFrom('grc_framework_copy_versions')
+    .select(['framework_id', 'source_version', 'definition'])
+    .execute()) {
+    const cle = `${v.framework_id}:${v.source_version}`;
+    const ids = exigences.get(cle) ?? new Set<string>();
+    for (const r of (v.definition as { requirements?: { id: string }[] }).requirements ?? []) ids.add(r.id);
+    exigences.set(cle, ids);
+  }
   const documents = new Set(
     (await k.selectFrom('document_versions').select(['document_id', 'version']).execute()).map(
       (r) => `${r.document_id}:${r.version}`,

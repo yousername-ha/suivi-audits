@@ -290,6 +290,7 @@ describe('cartes de périmètres', () => {
     ).json().id as string;
     const rattache = await admin.put(`/api/grc/${P}/framework-attachments/${fw}`, {
       version: 1,
+      statut: 'applique',
       confirm: 'RATTACHER',
     });
     expect(rattache.statusCode, rattache.body).toBe(200);

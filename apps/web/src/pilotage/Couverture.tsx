@@ -302,8 +302,8 @@ export function Couverture({ smsi }: { smsi: string }) {
       <ErrorAlert error={q.error} />
       {q.data && !frameworks.length && (
         <Text>
-          Aucun référentiel de la bibliothèque n’est rattaché et actif dans ce périmètre (page Périmètres, bouton «
-          Référentiels »).
+          Aucun référentiel n’est appliqué et actif dans ce périmètre. Attribuez un référentiel de la bibliothèque, puis
+          appliquez sa copie (page Périmètres, bouton « Référentiels ») ; une copie en préparation n’est pas suivie ici.
         </Text>
       )}
       <Stack>

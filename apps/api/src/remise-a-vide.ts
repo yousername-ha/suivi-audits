@@ -73,6 +73,7 @@ export const TABLES_TRAVAIL = [
   'document_versions',
   'documents',
   'droits_ressources',
+  'grc_framework_copy_versions',
   'grc_framework_versions',
   'grc_links',
   'grc_members',

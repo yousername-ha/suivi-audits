@@ -23,6 +23,7 @@ import {
   LIBELLES_TYPE_PERIMETRE,
   TYPES_PERIMETRE,
   parentPermis,
+  renommerCopiePerimetre,
   aplatir,
   arbre,
   descendants,
@@ -78,7 +79,9 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
     // Le graphe est la vue par défaut (demande du RSSI du 02/11/2026) ; la liste reste à un clic.
     [vue, setVue] = useState<'liste' | 'graphe'>('graphe'),
     [erreur, setErreur] = useState<unknown>(null),
-    [envoi, setEnvoi] = useState(false);
+    [envoi, setEnvoi] = useState(false),
+    // Nom du périmètre changé : copies « (PRIVE - <ancien nom>) » à renommer aussi, sur confirmation (ADR 0082).
+    [question, setQuestion] = useState<{ ancien: string; nouveau: string; copies: string[] } | null>(null);
   const liste = useQuery({
     queryKey: ['grc', 'smsis'],
     queryFn: () => get<Perimetre[]>('/api/grc/smsis'),
@@ -117,7 +120,7 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
           },
     });
   };
-  const enregistrer = async () => {
+  const enregistrer = async (renommerCopies?: boolean) => {
     if (!formulaire) return;
     const { edition, valeurs } = formulaire;
     setEnvoi(true);
@@ -125,18 +128,39 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
       setErreur(null);
       if (edition)
         await api('PATCH', `/api/grc/smsis/${edition.id}`, {
-          body: { ...valeurs, confirm: 'ENREGISTRER' },
+          body: { ...valeurs, ...(renommerCopies ? { renommerCopies: true } : {}), confirm: 'ENREGISTRER' },
           ifMatch: edition.version,
         });
       else await api('POST', '/api/grc/smsis', { body: valeurs });
       await qc.invalidateQueries({ queryKey: ['grc', 'smsis'] });
       await qc.invalidateQueries({ queryKey: ['grc', 'perimetres'] });
+      if (renommerCopies && edition) await qc.invalidateQueries({ queryKey: ['grc', edition.id] });
       setFormulaire(null);
     } catch (e) {
       setErreur(e);
     } finally {
       setEnvoi(false);
     }
+  };
+  /** Avant d'enregistrer un nouveau nom : si le périmètre porte des copies de référentiels nommées
+      « (PRIVE - <ancien nom>) », demande s'il faut aussi les renommer. Lecture impossible : enregistrement sans question. */
+  const demanderEnregistrer = async () => {
+    const edition = formulaire?.edition;
+    const nouveau = formulaire?.valeurs.name.trim() ?? '';
+    if (edition && nouveau && nouveau !== edition.name && can('conformite', 'modifier')) {
+      try {
+        const attribues = await get<{ name: string; inherited: boolean; orphan: boolean }[]>(
+          `/api/grc/${edition.id}/framework-attachments`,
+        );
+        const copies = attribues
+          .filter((r) => !r.inherited && !r.orphan && renommerCopiePerimetre(r.name, edition.name, nouveau))
+          .map((r) => r.name);
+        if (copies.length) return setQuestion({ ancien: edition.name, nouveau, copies });
+      } catch {
+        // Sans la liste des référentiels, on enregistre le périmètre seul : leurs noms restent inchangés.
+      }
+    }
+    await enregistrer();
   };
   /** Après un 412 : reprend la version enregistrée par l'autre session, en gardant la saisie en cours. */
   const recharger = async () => {
@@ -434,8 +458,51 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
               <Button variant="default" onClick={() => setFormulaire(null)}>
                 Annuler
               </Button>
-              <Button loading={envoi} disabled={!formulaire.valeurs.name.trim()} onClick={enregistrer}>
+              <Button loading={envoi} disabled={!formulaire.valeurs.name.trim()} onClick={demanderEnregistrer}>
                 {formulaire.edition ? 'Enregistrer' : 'Créer'}
+              </Button>
+            </Group>
+          </Stack>
+        )}
+      </Modal>
+      <Modal opened={!!question} onClose={() => setQuestion(null)} centered title="Renommer aussi les référentiels ?">
+        {question && (
+          <Stack>
+            <Text>
+              Le périmètre « {question.ancien} » devient « {question.nouveau} ». Voulez-vous aussi renommer ses
+              référentiels avec le nouveau nom du périmètre ?
+            </Text>
+            <Stack gap="2xs">
+              {question.copies.map((nom) => (
+                <Text key={nom} size="sm">
+                  {nom} → {renommerCopiePerimetre(nom, question.ancien, question.nouveau)}
+                </Text>
+              ))}
+            </Stack>
+            <Text size="sm" c="dimmed">
+              Seules les copies qui portent encore « (PRIVE - {question.ancien}) » sont concernées ; chaque renommage
+              est une nouvelle version de la copie.
+            </Text>
+            <Group justify="flex-end">
+              <Button variant="default" onClick={() => setQuestion(null)}>
+                Annuler
+              </Button>
+              <Button
+                variant="default"
+                onClick={async () => {
+                  setQuestion(null);
+                  await enregistrer(false);
+                }}
+              >
+                Garder les noms actuels
+              </Button>
+              <Button
+                onClick={async () => {
+                  setQuestion(null);
+                  await enregistrer(true);
+                }}
+              >
+                Renommer aussi les référentiels
               </Button>
             </Group>
           </Stack>

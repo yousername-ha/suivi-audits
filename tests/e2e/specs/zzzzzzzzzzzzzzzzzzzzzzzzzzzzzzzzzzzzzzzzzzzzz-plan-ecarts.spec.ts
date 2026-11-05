@@ -73,7 +73,7 @@ test('Analyser un service : périmètre enfant qualifié, évaluation, plan d’
     await assistant.getByRole('button', { name: 'Suivant' }).click();
     await assistant.getByRole('button', { name: 'Créer le service' }).click();
     await expect(assistant).toContainText(`Service « ${nom} » créé`);
-    await assistant.getByRole('button', { name: 'Rattacher les référentiels cochés' }).click();
+    await assistant.getByRole('button', { name: 'Appliquer les référentiels cochés' }).click();
     await expect(assistant).toContainText('Ouvrez la Couverture du service');
 
     const service = (
@@ -82,6 +82,7 @@ test('Analyser un service : périmètre enfant qualifié, évaluation, plan d’
     expect(service.scope).toContain('Qualification : Données de santé : à préciser');
     await appel(page, 'PUT', `/api/grc/${service.id}/framework-attachments/${fw.id}`, {
       version: 1,
+      statut: 'applique',
       confirm: 'RATTACHER',
     });
     const evaluer = (req: string, corps: Record<string, unknown>) =>

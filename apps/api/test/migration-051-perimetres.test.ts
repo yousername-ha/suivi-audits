@@ -33,7 +33,10 @@ describe('migration 051 : périmètres organisation ou fournisseur', () => {
       const entite = await inserer('Entité fictive', 'entite', groupe, true);
       const service = await inserer('Service fictif', 'perimetre', entite, true);
 
-      expect(await t.svc.db.migrate()).toEqual(['051_perimetres_organisation_fournisseur.sql']);
+      expect(await t.svc.db.migrate()).toEqual([
+        '051_perimetres_organisation_fournisseur.sql',
+        '052_referentiels_copies_perimetre.sql',
+      ]);
       const { rows: lignes } = await t.svc.db.q<{
         id: string;
         entity_kind: string;

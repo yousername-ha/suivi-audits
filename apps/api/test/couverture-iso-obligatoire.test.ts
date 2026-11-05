@@ -60,7 +60,13 @@ beforeAll(async () => {
     })
   ).json().id;
   expect(
-    (await admin.put(`/api/grc/${smsi}/framework-attachments/${fw}`, { version: 1, confirm: 'RATTACHER' })).statusCode,
+    (
+      await admin.put(`/api/grc/${smsi}/framework-attachments/${fw}`, {
+        version: 1,
+        statut: 'applique',
+        confirm: 'RATTACHER',
+      })
+    ).statusCode,
   ).toBe(200);
 });
 afterAll(() => t.close());

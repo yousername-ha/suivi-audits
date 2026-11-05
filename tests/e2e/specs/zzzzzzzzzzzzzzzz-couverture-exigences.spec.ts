@@ -67,7 +67,7 @@ test('Couverture : une exigence passe de non implémentée à testée, avec hist
     expect(publie.ok(), await publie.text()).toBeTruthy();
     const fw = (await publie.json()).id as string;
     const att = await ctx.request.put(`/api/grc/${SOCLE}/framework-attachments/${fw}`, {
-      data: { version: 1, confirm: 'RATTACHER' },
+      data: { version: 1, statut: 'applique', confirm: 'RATTACHER' },
       headers: entetes,
     });
     expect(att.ok(), await att.text()).toBeTruthy();

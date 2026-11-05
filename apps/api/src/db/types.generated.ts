@@ -231,6 +231,17 @@ export interface Fonctions {
   updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
+export interface GrcFrameworkCopyVersions {
+  smsi_id: string;
+  framework_id: string;
+  version: number;
+  source_version: number;
+  definition: ColumnType<JsonValue, string, string>;
+  reason: string;
+  created_by: string;
+  created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
 export interface GrcFrameworkVersions {
   id: Generated<string>;
   framework_id: string;
@@ -387,6 +398,10 @@ export interface GrcScopeFrameworks {
   enabled: Generated<boolean>;
   attached_by: string;
   attached_at: ColumnType<Date, Date | string | undefined, Date | string>;
+  status: Generated<"preparation" | "applique">;
+  status_by: string | null;
+  status_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  copy_version: number | null;
 }
 
 export interface GrcSeries {
@@ -1594,6 +1609,7 @@ export interface DB {
   droits_ressources: DroitsRessources;
   fonction_membres: FonctionMembres;
   fonctions: Fonctions;
+  grc_framework_copy_versions: GrcFrameworkCopyVersions;
   grc_framework_versions: GrcFrameworkVersions;
   grc_links: GrcLinks;
   grc_members: GrcMembers;

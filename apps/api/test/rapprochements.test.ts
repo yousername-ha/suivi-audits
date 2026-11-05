@@ -71,7 +71,7 @@ const body = (s: unknown, tg: unknown, type: string, coverage: number) => ({
   sourceUrl: 'https://example.invalid/correspondance',
 });
 const attacher = (smsi: string, fw: string) =>
-  a.put(`/api/grc/${smsi}/framework-attachments/${fw}`, { version: 1, confirm: 'RATTACHER' });
+  a.put(`/api/grc/${smsi}/framework-attachments/${fw}`, { version: 1, statut: 'applique', confirm: 'RATTACHER' });
 const lier = (smsi: string, m: string, target: string) =>
   a.post(`/api/grc/${smsi}/links`, { source: 'object:' + m, target, type: 'implements', note: 'Lien de recette' });
 const proposals = async (smsi: string, status = 'pending') =>
@@ -169,7 +169,7 @@ describe('rapprochements proposés, jamais affirmés', () => {
       coverage: 100,
       mappingType: 'equivalent',
       measure: { name: 'Mesure de S' },
-      source: { requirementId: 'A-1', framework: 'Référentiel RAP-A' },
+      source: { requirementId: 'A-1', framework: 'Référentiel RAP-A (PRIVE - Périmètre S)' },
       target: { requirementId: 'B-1' },
     });
     expect((await a.get(`/api/grc/${scope}/rapprochements/summary`)).json()).toEqual({ pending: 1 });

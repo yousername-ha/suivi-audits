@@ -21,6 +21,7 @@ import { HttpError } from '../http/errors.js';
 import type { NotificationEmise } from '../notifications-metier.js';
 import { loadGrants } from '../rights.js';
 import type { Grc } from './core.js';
+import type { DefinitionEffective } from './copies-referentiels.js';
 
 type Status = 'pending' | 'confirmed' | 'rejected' | 'withdrawn';
 interface Candidate {
@@ -72,10 +73,11 @@ export class GrcRapprochements {
   /** Recalcule les propositions du périmètre à partir des liens, des rattachements et des correspondances validées.
       Idempotent. Renvoie le nombre de propositions nouvelles (ou rouvertes) et prévient les pilotes, par mesure. */
   async sync(smsi: string, c: Client): Promise<number> {
-    // Référentiels actifs du périmètre : rattachements propres et hérités (hiérarchie des périmètres, lot H1).
-    const attached = new Map(
-      (await this.g.effectiveFrameworks(smsi, c)).filter((a) => a.enabled).map((a) => [a.frameworkId, a.version]),
-    );
+    // Référentiels appliqués et actifs du périmètre : copies propres et héritées (lot H1, ADR 0082). Une exigence retirée
+    // de la copie ne reçoit ni ne donne de proposition.
+    const effectives = await this.g.copies.effectives(smsi, c);
+    const attached = new Map([...effectives.values()].map((e) => [e.effectif.frameworkId, e.effectif.version]));
+    const presente = (fw: string, id: string) => !!effectives.get(fw)?.definition.requirements.some((r) => r.id === id);
     const k = surConnexion(c);
     const candidates = new Map<string, Candidate>();
     if (attached.size) {
@@ -108,7 +110,8 @@ export class GrcRapprochements {
         .execute();
       for (const link of links) {
         const req = parseRequirementRef(link.target_ref);
-        if (!req || attached.get(req.frameworkId) !== req.version) continue;
+        if (!req || attached.get(req.frameworkId) !== req.version || !presente(req.frameworkId, req.requirementId))
+          continue;
         for (const m of mappings) {
           let other: { fw: string; v: number; id: string } | null = null;
           if (
@@ -124,7 +127,7 @@ export class GrcRapprochements {
             m.target_requirement_id === req.requirementId
           )
             other = { fw: m.source_framework_id, v: m.source_version, id: m.source_requirement_id };
-          if (!other || attached.get(other.fw) !== other.v) continue;
+          if (!other || attached.get(other.fw) !== other.v || !presente(other.fw, other.id)) continue;
           const target = requirementRef(other.fw, other.v, other.id);
           if (explicit.has(link.source_ref + '|' + target)) continue;
           candidates.set(`${link.source_ref}|${target}|${m.id}`, {
@@ -264,8 +267,19 @@ export class GrcRapprochements {
     return { pending: r.pending };
   }
 
-  private async definitions(pairs: { frameworkId: string; version: number }[]) {
+  /** Définitions des couples (référentiel, édition) : la copie effective du périmètre pour son édition (ADR 0082), sinon
+      l'édition de la bibliothèque. */
+  private async definitions(
+    pairs: { frameworkId: string; version: number }[],
+    effectives: Map<string, DefinitionEffective> = new Map(),
+  ) {
     const out = new Map<string, { identifier: string; name: string; definition: FrameworkDefinition }>();
+    for (const e of effectives.values())
+      out.set(`${e.effectif.frameworkId}:${e.effectif.version}`, {
+        identifier: e.definition.identifier,
+        name: e.definition.name,
+        definition: e.definition,
+      });
     for (const p of pairs) {
       const key = `${p.frameworkId}:${p.version}`;
       if (out.has(key)) continue;
@@ -318,7 +332,10 @@ export class GrcRapprochements {
     const pairs = rows
       .flatMap((r) => [parseRequirementRef(r.source_ref), parseRequirementRef(r.target_ref)])
       .filter((x) => !!x);
-    const defs = await this.definitions(pairs as { frameworkId: string; version: number }[]);
+    const defs = await this.definitions(
+      pairs as { frameworkId: string; version: number }[],
+      await this.g.copies.effectives(smsi, undefined, false),
+    );
     const mesures = [...new Set(rows.map((r) => r.measure_ref.slice('object:'.length)))];
     const names = new Map(
       (mesures.length
@@ -419,20 +436,28 @@ export class GrcRapprochements {
   async coverage(smsi: string, user: SessionUser, frameworkId?: string) {
     await this.g.permission(user, 'conformite', 'lire');
     await this.g.access(smsi, user);
-    const effectifs = (await this.g.effectiveFrameworks(smsi)).filter((e) => e.enabled);
-    // Version effective de chaque référentiel actif : une seule par référentiel (effectiveFrameworks).
-    const versions = new Map(effectifs.map((e) => [e.frameworkId, e.version]));
-    const attached = effectifs.length
-      ? (
-          await this.g.db.k
-            .selectFrom('lib_frameworks as f')
-            .select(['f.id as framework_id', 'f.name', 'f.identifier'])
-            .where('f.id', 'in', [...versions.keys()])
-            .orderBy('f.name')
-            .orderBy('f.id')
-            .execute()
-        ).map((f) => ({ ...f, version: versions.get(f.framework_id)! }))
-      : [];
+    // Référentiels appliqués et actifs (ADR 0082) : exigences et nom de la copie effective du périmètre.
+    const effectives = await this.g.copies.effectives(smsi);
+    const identifiants = effectives.size
+      ? new Map(
+          (
+            await this.g.db.k
+              .selectFrom('lib_frameworks')
+              .select(['id', 'identifier'])
+              .where('id', 'in', [...effectives.keys()])
+              .execute()
+          ).map((f) => [f.id, f.identifier]),
+        )
+      : new Map<string, string>();
+    const attached = [...effectives.values()]
+      .map((e) => ({
+        framework_id: e.effectif.frameworkId,
+        name: e.definition.name,
+        identifier: identifiants.get(e.effectif.frameworkId) ?? e.definition.identifier,
+        version: e.effectif.version,
+        origineId: e.effectif.detenteurId,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'fr') || a.framework_id.localeCompare(b.framework_id));
     const links = await this.g.db.k
       .selectFrom('grc_links')
       .select(['source_ref', 'target_ref'])
@@ -453,7 +478,7 @@ export class GrcRapprochements {
           .execute()
       ).map((r) => r.target_ref),
     );
-    const defs = await this.definitions(attached.map((a) => ({ frameworkId: a.framework_id, version: a.version })));
+    const defs = await this.definitions([], effectives);
     const measureNames = new Map(
       (
         await this.g.db.k
@@ -492,7 +517,7 @@ export class GrcRapprochements {
         name: a.name,
         version: a.version,
         /** Périmètre qui porte le rattachement (le périmètre lui-même, ou l'ancêtre dont il hérite). */
-        origineId: effectifs.find((e) => e.frameworkId === a.framework_id)?.origineId ?? smsi,
+        origineId: a.origineId,
         requirements: reqs.length,
         covered,
         toValidate: pending,
