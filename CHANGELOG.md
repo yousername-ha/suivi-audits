@@ -31,6 +31,13 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
   Déplacer un élément vers un registre ne donne pas à un contributeur de module une autorité d'attribution qu'il n'avait pas et ne
   le rend pas restreint : le rôle donné automatiquement au créateur d'un registre ne suffit pas (ADR 0067 §1 et §3).
   serveur. _(Session « Projet audit_suivi Coeur ».)_
+- **Droits par module** (ADR 0010) : les vues des modules repris ne renvoient plus les clés d'un module que la personne ne
+  peut pas lire (écarts, échéance de clôture, déclaration d'applicabilité) ; écrire la déclaration d'applicabilité exige
+  aussi `pilotage:modifier`. La simulation d'import, le rapport enregistré et le téléchargement du fichier brut se limitent
+  aux modules lisibles ou exportables (un fichier illisible n'est plus servi). Les noms d'objets copiés dans les cartes ne
+  sortent que pour qui lit le module source. L'annuaire des responsables est réservé à qui peut désigner un responsable
+  dans le périmètre (modification d'un module métier ou rôle de registre). Aucune action sur le serveur. _(Session
+  « Projet audit_suivi Coeur ».)_
 
 ### Modifié
 

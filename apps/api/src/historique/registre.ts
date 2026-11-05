@@ -8,6 +8,7 @@ import type { SessionUser } from '../auth.js';
 import { surConnexion, type Client } from '../db/db.js';
 import { DEFAULT_SMSI, type Grc } from '../grc/core.js';
 import { HttpError } from '../http/errors.js';
+import { redactLegacy } from '../legacy/redaction.js';
 import { verrouillerEtat } from '../legacy/store.js';
 
 export interface EtatHistorique {
@@ -45,11 +46,13 @@ export class RegistreHistorique {
     return e.id;
   }
 
-  /** Lit l'état historique (modules repris compris) après contrôle du droit de lecture. */
+  /** Lit l'état historique (modules repris compris) après contrôle du droit de lecture. Chaque clé relève d'un module :
+      celles d'un module que l'utilisateur ne peut pas lire sont vidées (même règle que l'état du suivi), pour que toutes les
+      vues natives héritent du filtre. */
   async lire(user: SessionUser, module: Module): Promise<EtatHistorique> {
     await this.g.permission(user, module, 'lire');
     const etat = await this.g.legacy.recompose();
-    return etat ?? { version: 0, data: {} };
+    return etat ? { version: etat.version, data: redactLegacy(etat.data, user.rights) } : { version: 0, data: {} };
   }
 
   /** Lecture déléguée (contribution à un RETEX) : aucun droit de module n'est exigé ici, seulement l'activation du module.
