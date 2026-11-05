@@ -14,6 +14,16 @@ qui suit la copie du parent. Aucune évaluation, aucun lien, aucun rapprochement
 de la sauvegarde d'avant mise à jour. Les intégrations qui rattachent un référentiel par l'API puis l'évaluent doivent
 désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel library management ».)_
 
+### Sécurité
+
+- **Droits par module** (ADR 0010) : les vues des modules repris ne renvoient plus les clés d'un module que la personne ne
+  peut pas lire (écarts, échéance de clôture, déclaration d'applicabilité) ; écrire la déclaration d'applicabilité exige
+  aussi `pilotage:modifier`. La simulation d'import, le rapport enregistré et le téléchargement du fichier brut se limitent
+  aux modules lisibles ou exportables (un fichier illisible n'est plus servi). Les noms d'objets copiés dans les cartes ne
+  sortent que pour qui lit le module source. L'annuaire des responsables est réservé à qui peut désigner un responsable
+  dans le périmètre (modification d'un module métier ou rôle de registre). Aucune action sur le serveur. _(Session
+  « Projet audit_suivi Coeur ».)_
+
 ### Modifié
 
 - **Bibliothèque figée, référentiels du périmètre en copie, puis appliqués** ([ADR 0082](docs/adr/0082-referentiels-du-perimetre-copie-et-application.md)) :
