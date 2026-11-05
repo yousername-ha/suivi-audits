@@ -4,9 +4,9 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import os from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { Agent, createTestApp, login, makeUser, type TestApp } from './helpers.js';
+import { Agent, createTestApp, login, makeUser, nextCode, type TestApp, type TestUser } from './helpers.js';
 import { certificateInfo } from '../src/certificates.js';
-let t: TestApp, a: Agent, reader: Agent, dir: string;
+let t: TestApp, a: Agent, reader: Agent, dir: string, admin: TestUser;
 const hash = 'a'.repeat(64),
   archiveId = 'b'.repeat(64);
 const archive = {
@@ -41,12 +41,17 @@ const request = (changes: Record<string, unknown> = {}) =>
     sha256: hash,
     ...changes,
   });
+/** Restauration : la confirmation écrite ET un code de double authentification valide sont exigés. */
+const restaurer = async (changes: Record<string, unknown> = {}) =>
+  request({ kind: 'restore', confirmation: 'RESTAURER', code: await nextCode(t, admin), ...changes });
 let pem: string, key: string;
+beforeEach(() => t?.svc.limits.updateMfaByUser.reset());
 beforeAll(async () => {
   dir = mkdtempSync(path.join(os.tmpdir(), 'suivi-operations-'));
   mkdirSync(path.join(dir, 'exploitation'));
   t = await createTestApp({ ETAT_DIR: dir });
-  a = await login(t, await makeUser(t, 'operation-admin', 'admin'));
+  admin = await makeUser(t, 'operation-admin', 'admin');
+  a = await login(t, admin);
   await t.svc.db.q(
     "INSERT INTO roles(id,name,permissions) VALUES ('operation_reader','Lecture exploitation',ARRAY['administration:lire'])",
   );
@@ -170,13 +175,27 @@ describe('Lot A : pilotage opérationnel', () => {
     expect((await request()).statusCode).toBe(409);
   });
   it('exige vérification préalable de la même empreinte et chiffrement pour restaurer', async () => {
-    expect((await request({ kind: 'restore', confirmation: 'RESTAURER' })).statusCode).toBe(409);
+    expect((await restaurer()).statusCode).toBe(409);
     publish({ jobs: [verified()], archives: [{ ...archive, encrypted: false }] });
-    expect((await request({ kind: 'restore', confirmation: 'RESTAURER' })).statusCode).toBe(422);
+    expect((await restaurer()).statusCode).toBe(422);
     publish({ jobs: [{ ...verified(), sha256: 'c'.repeat(64) }] });
-    expect((await request({ kind: 'restore', confirmation: 'RESTAURER' })).statusCode).toBe(409);
+    expect((await restaurer()).statusCode).toBe(409);
     publish({ jobs: [verified()] });
-    expect((await request({ kind: 'restore', confirmation: 'RESTAURER' })).statusCode).toBe(202);
+    expect((await restaurer()).statusCode).toBe(202);
+  });
+  it('exige un code de double authentification valide pour restaurer, sans rien mettre en file sinon', async () => {
+    publish({ jobs: [verified()] });
+    const avant = (await t.svc.db.one<{ n: number }>('SELECT count(*)::int n FROM operation_jobs'))!.n;
+    expect((await request({ kind: 'restore', confirmation: 'RESTAURER' })).statusCode).toBe(422);
+    const faux = await request({ kind: 'restore', confirmation: 'RESTAURER', code: '000000' });
+    expect(faux.statusCode, faux.body).toBe(401);
+    expect((await t.svc.db.one<{ n: number }>('SELECT count(*)::int n FROM operation_jobs'))!.n).toBe(avant);
+    const code = await nextCode(t, admin);
+    expect((await request({ kind: 'restore', confirmation: 'RESTAURER', code })).statusCode).toBe(202);
+    // Le code est à usage unique : le même code ne rejoue pas la demande.
+    expect((await request({ kind: 'restore', confirmation: 'RESTAURER', code })).statusCode).toBe(401);
+    // La vérification d'une archive n'exige pas de code.
+    expect((await request()).statusCode).toBe(409);
   });
   it('réessais idempotents, auteur et paramètres protégés', async () => {
     const id = randomUUID();
