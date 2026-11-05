@@ -63,7 +63,7 @@ canal_autorise "{version}" && echo oui || echo non'''
 
     def test_le_script_utilise_le_canal_pour_le_choix_par_defaut_et_la_cible_explicite(self):
         self.assertIn('canal_autorise "$v"', SCRIPT)
-        self.assertIn('canal_autorise "$CIBLE" || arret', SCRIPT)
+        self.assertIn('[ "$LOCALES" = 1 ] || canal_autorise "$CIBLE" || arret', SCRIPT)
         self.assertRegex(SCRIPT, re.compile(r"sort -rV"))
 
 

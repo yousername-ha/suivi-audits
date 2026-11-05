@@ -227,7 +227,8 @@ if [ -z "$CIBLE" ]; then
 fi
 semver "$CIBLE" || arret "version cible invalide : « $CIBLE » (attendu : X.Y.Z)."
 git rev-parse -q --verify "refs/tags/v$CIBLE" > /dev/null || arret "version v$CIBLE introuvable (git fetch --tags ; voir la page Releases)."
-canal_autorise "$CIBLE" || arret "v$CIBLE n'est pas une version du canal stable (ou son manifeste de publication est illisible) : pour une préversion de développement, ajouter UPDATE_CHANNEL=development dans .env."
+# --images-locales (recette) n'utilise ni image publiée ni signature : il n'y a alors pas de publication dont vérifier le canal.
+[ "$LOCALES" = 1 ] || canal_autorise "$CIBLE" || arret "v$CIBLE n'est pas une version du canal stable (ou son manifeste de publication est illisible) : pour une préversion de développement, ajouter UPDATE_CHANNEL=development dans .env."
 info "Version en service : $ACTUELLE"
 info "Version cible      : $CIBLE"
 if semver "$ACTUELLE"; then
