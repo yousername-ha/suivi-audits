@@ -270,14 +270,18 @@ export const DeplacementBody = z
   .strict();
 export type DeplacementBody = z.infer<typeof DeplacementBody>;
 export interface ImpactDeplacement {
-  depuis: { id: string; name: string; perimetres: { id: string; name: string }[] };
-  vers: { id: string; name: string; perimetres: { id: string; name: string }[] };
+  /** Périmètres nommés : seuls ceux que l'appelant peut lire ; les autres ne sont que comptés (`autresPerimetres`). */
+  depuis: { id: string; name: string; perimetres: { id: string; name: string }[]; autresPerimetres: number };
+  vers: { id: string; name: string; perimetres: { id: string; name: string }[]; autresPerimetres: number };
   /** Éléments déplacés (la série et ses occurrences comptent chacune). */
   elements: number;
   /** Le périmètre de référence change : politique métier, fuseau et appartenance se lisent désormais dans le nouveau. */
   referenceChange: boolean;
   liensConserves: number;
+  /** Liens qui ne peuvent pas suivre, nommés pour ce que l'appelant peut lire. */
   liensIncompatibles: { ref: string; type: string; nom: string }[];
+  /** Liens qui ne peuvent pas suivre dont l'autre extrémité n'est pas lisible par l'appelant : comptés, jamais nommés. */
+  liensMasques: number;
   /** Obstacles bloquants (état inconnu du workflow cible, responsable non autorisé…). */
   problemes: string[];
 }
