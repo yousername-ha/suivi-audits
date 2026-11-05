@@ -51,6 +51,53 @@ export class Pilotage {
     if (!ref.startsWith('legacy:') || !key) throw new HttpError(422, 'Fiche de pilotage attendue.');
     return (await this.legacy.get(smsi, key, id.join(':'), user, c, write)).object;
   }
+  /** Les décisions sont immuables : ce qui y est cité (références, actions générées, actions restées ouvertes à la clôture)
+      est filtré à la lecture selon les droits du lecteur, comme les liens. Une action qu'il ne peut pas lire, par exemple
+      d'un registre restreint, n'y laisse ni identifiant ni nom : elle n'est que comptée (`actionsMasquees`). */
+  async pourLecteur<T extends Record<string, unknown>>(smsi: string, rows: T[], user: SessionUser): Promise<T[]> {
+    const lisibles = new Map<string, boolean>();
+    const lisible = async (ref: unknown) => {
+      if (typeof ref !== 'string') return false;
+      let ok = lisibles.get(ref);
+      if (ok === undefined) {
+        try {
+          await this.g.resolve(smsi, ref, user);
+          ok = true;
+        } catch (e) {
+          if (!(e instanceof HttpError) || ![403, 404].includes(e.status)) throw e;
+          ok = false;
+        }
+        lisibles.set(ref, ok);
+      }
+      return ok;
+    };
+    const filtrer = async (v: unknown) => {
+      if (!Array.isArray(v)) return v;
+      const out: unknown[] = [];
+      for (const x of v) if (await lisible(x)) out.push(x);
+      return out;
+    };
+    const out: T[] = [];
+    for (const row of rows) {
+      const r: Record<string, unknown> = { ...row };
+      for (const k of ['refs', 'generatedRefs', 'generated_refs']) if (k in r) r[k] = await filtrer(r[k]);
+      const terms = r.terms;
+      if (isObject(terms) && isObject(terms.openLinks) && Array.isArray(terms.openLinks.actions)) {
+        const visibles: unknown[] = [];
+        for (const a of terms.openLinks.actions) if (isObject(a) && (await lisible(a.ref))) visibles.push(a);
+        r.terms = {
+          ...terms,
+          openLinks: {
+            ...terms.openLinks,
+            actions: visibles,
+            actionsMasquees: terms.openLinks.actions.length - visibles.length,
+          },
+        };
+      }
+      out.push(r as T);
+    }
+    return out;
+  }
   async history(smsi: string, ref: string, user: SessionUser, before?: string) {
     await this.source(smsi, ref, user);
     // Le journal des décisions est immuable : après le déplacement d'un élément vers un autre périmètre de référence, ses
@@ -63,7 +110,8 @@ export class Pilotage {
       .orderBy('id', 'desc')
       .limit(50)
       .execute();
-    const refs: string[] = [...new Set(rows.flatMap((r) => (Array.isArray(r.refs) ? (r.refs as string[]) : [])))];
+    const items = await this.pourLecteur(smsi, rows, user);
+    const refs: string[] = [...new Set(items.flatMap((r) => (Array.isArray(r.refs) ? (r.refs as string[]) : [])))];
     const references: Record<string, { name: string; version: number }> = {};
     for (const ref of refs.slice(0, 200)) {
       try {
@@ -74,7 +122,7 @@ export class Pilotage {
       }
     }
     return {
-      items: rows,
+      items,
       references,
       referencesTruncated: refs.length > 200,
       nextBefore: rows.length === 50 ? rows.at(-1)!.createdAt : null,
