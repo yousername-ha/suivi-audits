@@ -28,6 +28,8 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
   est compté, jamais nommé). Une action issue d'une décision sur une fiche de registre restreint se range dans un plan
   d'accueil choisi par l'auteur (champ facultatif `registreId` de la décision ; l'écran de décision propose le choix).
   Une ligne d'import Tenacy visant un écart que la personne ne gère pas est « refusée (droits) ». Aucune action sur le
+  Déplacer un élément vers un registre ne donne pas à un contributeur de module une autorité d'attribution qu'il n'avait pas et ne
+  le rend pas restreint : le rôle donné automatiquement au créateur d'un registre ne suffit pas (ADR 0067 §1 et §3).
   serveur. _(Session « Projet audit_suivi Coeur ».)_
 
 ### Modifié

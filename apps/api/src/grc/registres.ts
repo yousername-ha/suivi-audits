@@ -187,6 +187,44 @@ export class GrcRegistres {
     if (roleSuffit(await this.roleDe(user, reg.id, objetId, c), besoin)) return true;
     return this.parModule(user, reg, besoin, module, action, c);
   }
+  /** Autorité d'attribuer sur un registre qui ne repose pas sur le rôle de gestionnaire donné automatiquement à son créateur :
+      administrateur, droit d'administrer le module, ou rôle de gestionnaire attribué par quelqu'un d'autre. */
+  private async attributionAttribuee(
+    user: SessionUser,
+    reg: RegistreRow,
+    module: Module,
+    c?: Client,
+  ): Promise<boolean> {
+    if (await this.g.isAdmin(user, c)) return true;
+    const attribue = await this.k(c)
+      .selectFrom('droits_ressources as d')
+      .select('d.id')
+      .where('d.resource_type', '=', 'registre')
+      .where('d.resource_id', '=', reg.id)
+      .where('d.role', '=', 'gestionnaire')
+      // Le rôle donné automatiquement au créateur est inscrit par lui-même : un rôle qu'on s'est donné ne compte pas.
+      .where((eb) =>
+        eb.not(
+          eb.and([
+            eb('d.subject_type', '=', 'utilisateur'),
+            eb('d.subject_id', '=', user.id),
+            eb('d.granted_by', '=', user.username),
+          ]),
+        ),
+      )
+      .where((eb) =>
+        eb.or([
+          eb.and([eb('d.subject_type', '=', 'utilisateur'), eb('d.subject_id', '=', user.id)]),
+          eb.and([
+            eb('d.subject_type', '=', 'groupe'),
+            eb('d.subject_id', 'in', eb.selectFrom('user_groups').select('group_id').where('user_id', '=', user.id)),
+          ]),
+        ]),
+      )
+      .executeTakeFirst();
+    if (attribue) return true;
+    return this.parModule(user, reg, 'gerer', module, 'administrer', c);
+  }
   /** 404 si l'utilisateur ne peut même pas lire (aucune fuite d'existence) ; 403 s'il lit mais ne peut pas plus. */
   async exiger(
     user: SessionUser,
@@ -803,6 +841,19 @@ export class GrcRegistres {
       if (cible.archived) throw new HttpError(409, 'Registre cible archivé.');
       if (cible.id === source.id) throw new HttpError(422, 'L’élément est déjà dans ce registre.');
       if (cible.kind !== famille) throw new HttpError(422, 'Le registre cible n’est pas de la même famille.');
+      // ADR 0067 §1/§3 : attribuer des droits ou restreindre un élément exige une attribution réelle. Un déplacement ne doit
+      // pas donner cette autorité à qui ne l'avait pas, ni rendre l'élément restreint : le rôle de gestionnaire donné
+      // automatiquement au créateur d'un registre ne suffit pas pour cela.
+      const module = GRC_MODULES[o.kind];
+      const restreint = cible.restricted && !source.restricted;
+      const attributionSource = await this.peut(user, source, o.id, 'gerer', c, module, 'administrer');
+      const gagneAttribution =
+        !attributionSource && (await this.peut(user, cible, null, 'gerer', c, module, 'administrer'));
+      if ((restreint || gagneAttribution) && !(await this.attributionAttribuee(user, cible, module, c)))
+        throw new HttpError(
+          403,
+          'Déplacement refusé : il étendrait vos droits d’attribution ou rendrait l’élément restreint.',
+        );
       const membres = [o];
       if (o.kind === 'task_series')
         for (const r of await objets(k)
