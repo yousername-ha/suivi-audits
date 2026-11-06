@@ -5,6 +5,7 @@ import { route } from '../http/route.js';
 import { requireIfMatch } from '../http/concurrency.js';
 import { apercuCertificat } from '../certificates.js';
 import { HttpError } from '../http/errors.js';
+import { exigerCode } from './remise-a-vide.js';
 
 export const operationRoutes = [
   route({
@@ -39,6 +40,13 @@ export const operationRoutes = [
     handler: async ({ svc, s, ip, req, body }) => {
       if (body.kind === 'tls_install' && req.protocol !== 'https')
         throw new HttpError(422, 'Une connexion HTTPS est requise pour transmettre une clé privée.');
+      if (body.kind === 'restore') {
+        // Une restauration remplace données et secrets : même exigence que la remise à vide, l'adresse du site ou la clé de secours.
+        if (!body.code) throw new HttpError(422, 'Code de double authentification requis pour restaurer.');
+        await exigerCode(svc, s!.user, ip, body.code, 'exploitation.restauration');
+        const { code: _code, ...sansCode } = body;
+        return svc.operations.request(sansCode, s!.user, ip);
+      }
       return svc.operations.request(body, s!.user, ip);
     },
   }),

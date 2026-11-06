@@ -136,19 +136,83 @@ function dossier(p: string, uid: number, gid: number, mode: number) {
   fs.chmodSync(p, mode);
 }
 
-// lchown ne suit pas les liens symboliques ; le parcours n'utilise que les types renvoyés par readdir.
-function attribuer(dir: string, uid: number): number {
+/** Chemin d'un répertoire déjà ouvert : les composants qui suivent sont résolus à partir de CE répertoire, quoi qu'il advienne
+    de ses ancêtres ou de son nom (le frontal, exposé à Internet, écrit dans ces arborescences pendant que ce service tourne). */
+const viaDescripteur = (fd: number) => `/proc/self/fd/${fd}`;
+const OUVRIR_DOSSIER = fs.constants.O_RDONLY | fs.constants.O_DIRECTORY | fs.constants.O_NOFOLLOW;
+
+/** Rend l'arborescence à `uid` en la parcourant par descripteurs : chaque répertoire est ouvert sans suivre de lien
+    (O_NOFOLLOW) depuis son parent déjà ouvert, jamais par un chemin résolu de nouveau ; un lien (même substitué entre le
+    listage et la descente) n'est jamais suivi, seul le lien lui-même change de propriétaire ; on ne change pas de système de
+    fichiers. `entreListageEtDescente` ne sert qu'aux tests (simule une substitution concurrente). */
+export function attribuer(
+  dir: string,
+  uid: number,
+  entreListageEtDescente?: (parent: string, nom: string) => void,
+): number {
+  const racine = fs.openSync(dir, OUVRIR_DOSSIER);
+  try {
+    return attribuerDescripteur(racine, dir, uid, fs.fstatSync(racine).dev, entreListageEtDescente);
+  } finally {
+    fs.closeSync(racine);
+  }
+}
+
+function attribuerDescripteur(
+  fd: number,
+  chemin: string,
+  uid: number,
+  dev: number,
+  crochet?: (parent: string, nom: string) => void,
+): number {
   let n = 1;
-  fs.lchownSync(dir, uid, uid);
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) n += attribuer(p, uid);
-    else {
-      fs.lchownSync(p, uid, uid);
+  fs.fchownSync(fd, uid, uid);
+  const base = viaDescripteur(fd);
+  for (const nom of fs.readdirSync(base)) {
+    crochet?.(chemin, nom);
+    const enfant = `${base}/${nom}`;
+    // Ouverture directe sans suivre de lien (aucun contrôle préalable à contourner) : un répertoire s'ouvre ; un fichier ou un
+    // lien (même substitué entre le listage et l'ouverture) donne ENOTDIR/ELOOP et n'est jamais suivi.
+    let sous: number | null = null;
+    try {
+      sous = fs.openSync(enfant, OUVRIR_DOSSIER);
+    } catch (e) {
+      const code = (e as NodeJS.ErrnoException).code;
+      if (code === 'ENOENT') continue; // retiré entre-temps
+      if (code !== 'ENOTDIR' && code !== 'ELOOP') throw e;
+    }
+    if (sous === null) {
+      fs.lchownSync(enfant, uid, uid);
       n++;
+      continue;
+    }
+    try {
+      if (fs.fstatSync(sous).dev !== dev) continue; // point de montage : hors de l'arborescence à attribuer
+      n += attribuerDescripteur(sous, `${chemin}/${nom}`, uid, dev, crochet);
+    } finally {
+      fs.closeSync(sous);
     }
   }
   return n;
+}
+
+/** Fichier ordinaire du répertoire donné, attribué et protégé par descripteur (jamais par un lien suivi). */
+function protegerFichier(dir: string, nom: string, uid: number, mode: number) {
+  let fd: number;
+  try {
+    fd = fs.openSync(path.join(dir, nom), fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
+  } catch (e) {
+    const code = (e as NodeJS.ErrnoException).code;
+    if (code === 'ELOOP' || code === 'ENOENT') return;
+    throw e;
+  }
+  try {
+    if (!fs.fstatSync(fd).isFile()) return;
+    fs.fchownSync(fd, uid, uid);
+    fs.fchmodSync(fd, mode);
+  } finally {
+    fs.closeSync(fd);
+  }
 }
 
 function genererSecrets(dir: string): number {
@@ -228,12 +292,7 @@ function main() {
     dossier(path.join(donnees, 'etat', 'sauvegardes'), 0, 0, 0o755);
     const tlsDir = path.join(donnees, 'secrets', 'tls-web');
     dossier(tlsDir, WEB_UID, WEB_UID, 0o700);
-    for (const e of fs.readdirSync(tlsDir, { withFileTypes: true })) {
-      if (e.isFile() && ['cert.pem', 'key.pem', 'mode'].includes(e.name)) {
-        fs.chownSync(path.join(tlsDir, e.name), WEB_UID, WEB_UID);
-        fs.chmodSync(path.join(tlsDir, e.name), 0o400);
-      }
-    }
+    for (const nom of ['cert.pem', 'key.pem', 'mode']) protegerFichier(tlsDir, nom, WEB_UID, 0o400);
     secretsDir = path.join(donnees, 'secrets');
     caddyDirs = [path.join(donnees, 'caddy', 'data'), path.join(donnees, 'caddy', 'config')];
     for (const d of caddyDirs) dossier(d, WEB_UID, WEB_UID, 0o700);

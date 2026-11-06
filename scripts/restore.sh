@@ -70,7 +70,9 @@ docker compose run --rm --no-deps -T db pg_restore --list < "$WORK/extrait/suivi
 WORK="$WORK/extrait"
 # Le trap supprime aussi le dossier temporaire parent.
 trap 'rm -rf "$(dirname "$WORK")"' EXIT
-docker compose stop app web
+# Le frontal (gateway) écrit dans caddy/data et garderait monté un dossier remplacé : il est arrêté aussi, sauf dans le
+# parcours de mise à jour web (SUIVI_MAJ_WEB=1), où il doit rester en service pour afficher la page de maintenance.
+if [ "${SUIVI_MAJ_WEB:-}" = 1 ]; then docker compose stop app web; else docker compose stop app web gateway; fi
 # 1. Secrets (doivent correspondre aux documents chiffrés de la sauvegarde), puis autorité de certification interne.
 install -d -m 0711 "$DATA_DIR/secrets"
 find "$DATA_DIR/secrets" -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
