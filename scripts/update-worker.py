@@ -160,6 +160,17 @@ class Worker:
     def cli(self, *args):
         return self.run(["docker", "compose", "exec", "-T", "app", "suivi", *args])
 
+    def channel_ok(self, ref, target):
+        """Le manifeste de publication de la révision (ou de l'étiquette) indique bien cette version et un canal autorisé :
+        « stable » seul, ou aussi « development » si le serveur l'a choisi (UPDATE_CHANNEL=development dans .env)."""
+        try:
+            manifest = json.loads(self.run(["git", "show", f"{ref}:.github/publication.json"], timeout=30))
+        except (Failure, ValueError):
+            return False
+        allowed = {"stable"} | ({"development"} if self.env().get("UPDATE_CHANNEL") == "development" else set())
+        return (isinstance(manifest, dict) and set(manifest) == {"version", "channel"}
+                and manifest["version"] == target and manifest["channel"] in allowed)
+
     def check(self):
         self.publish(checking=True, checkError=False)
         try:
@@ -172,7 +183,9 @@ class Worker:
                         raise Failure("Réponse trop volumineuse")
                     available, notes = release(json.loads(payload))
             except urllib.error.HTTPError as error:
-                if error.code not in (401, 403, 404):
+                # Repli sur les étiquettes git seulement pour un dépôt déclaré privé (UPDATER_SSH_DIR) et une réponse de refus
+                # ou d'absence : une limite de débit (403/429) ou un dépôt public injoignable est une erreur, jamais un repli.
+                if error.code not in (401, 404) or not self.env().get("UPDATER_SSH_DIR"):
                     raise
                 # Dépôt privé : réutiliser la clé de déploiement et l'authentification au registre du guide.
                 tags = self.run(["git", "ls-remote", "--tags", "--refs", "origin", "v*"], timeout=45)
@@ -180,7 +193,18 @@ class Worker:
                 candidates = [v for v in candidates if VERSION.fullmatch(v)]
                 if not candidates:
                     raise Failure("Aucune version publiée")
-                available = max(candidates, key=version)
+                available = None
+                # La plus récente dont le manifeste signé par la publication porte un canal autorisé.
+                for candidate in sorted(candidates, key=version, reverse=True)[:20]:
+                    try:
+                        self.run(["git", "fetch", "--no-tags", "origin", f"refs/tags/v{candidate}:refs/tags/v{candidate}"], timeout=120)
+                    except Failure:
+                        continue
+                    if self.channel_ok(f"refs/tags/v{candidate}", candidate):
+                        available = candidate
+                        break
+                if not available:
+                    raise Failure("Aucune version publiée sur le canal autorisé")
                 # Ne pas annoncer une publication dont un artefact n'est pas encore disponible.
                 for component in ("api", "web", "updater"):
                     self.run(["docker", "manifest", "inspect", f"ghcr.io/{REPOSITORY}-{component}:{available}"], timeout=45)
@@ -354,6 +378,9 @@ class Worker:
         revision = self.run(["git", "rev-parse", f"refs/tags/v{target}^{{commit}}"]).strip()
         if not re.fullmatch(r"[a-f0-9]{40}", revision):
             raise Failure("Référence de publication invalide")
+        # Le canal est lié à la révision signée : une préversion de développement ne s'installe que si le serveur l'a choisi.
+        if not self.channel_ok(revision, target):
+            raise Failure("Canal de publication non autorisé")
         # Vérifier les trois artefacts avant d'arrêter l'application, sans possibilité de désactiver la signature.
         for component in ("api", "web", "updater"):
             image = f"ghcr.io/{REPOSITORY}-{component}:{target}"

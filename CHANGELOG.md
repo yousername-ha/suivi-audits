@@ -38,6 +38,18 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
   sortent que pour qui lit le module source. L'annuaire des responsables est réservé à qui peut désigner un responsable
   dans le périmètre (modification d'un module métier ou rôle de registre). Aucune action sur le serveur. _(Session
   « Projet audit_suivi Coeur ».)_
+### Sécurité
+
+- **Exploitation et chaîne de mise à jour** : le mot de passe SMTP est lié à son relais (changer serveur, port, chiffrement,
+  compte ou autorité le supprime : il faut le ressaisir) ; une restauration lancée depuis l'interface exige un code de
+  double authentification ; après une restauration, la clé de secours et l'adresse du site en service sur le serveur font foi
+  (réalignement unique, journalisé) ; une sauvegarde déclarée vérifiée passe le contrôle de la restauration et refuse les liens
+  dans `caddy/data` ; le service `init` attribue les dossiers du frontal par descripteurs et `restore.sh` arrête aussi le
+  frontal (sauf pendant une mise à jour web, où il reste en service pour la page de maintenance) ; le canal de publication est lié à la révision signée (stable seul, `UPDATE_CHANNEL=development` pour accepter les
+  préversions, repli sur les étiquettes réservé aux déploiements déclarés privés) ; `mettre-a-jour.sh` vérifie et épingle
+  l'empreinte tirée et non l'étiquette. Le guide décrit la vérification facultative d'une installation neuve et les réglages
+  GitHub à contrôler. **Action sur le serveur : aucune** ; option facultative `UPDATE_CHANNEL` dans `.env`.
+  _(Session « Projet audit_suivi Coeur ».)_
 
 ### Modifié
 

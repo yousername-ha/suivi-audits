@@ -16,6 +16,7 @@
      backup-finish <id> <code>   termine une demande avec le rapport serveur
      backup-secours             clés publiques de secours des sauvegardes (une par ligne)
      site-adresse               adresse du site demandée dans l'application
+     backup-secours-realigner | site-adresse-realigner  après une restauration : réaligne l'application sur l'hôte (JSON sur l'entrée standard)
      mail-claim | mail-finish <id>  courriels : réclame une demande, rapporte l'envoi (JSON sur l'entrée standard)
      ops-policy | ops-sync [date] | ops-claim  protocole hôte (jamais HTTP)
   ops-request | ops-certificate  JSON privé sur entrée standard
@@ -53,6 +54,7 @@ const HELP = `Commandes : docker compose exec app suivi <commande> [arguments]
   backup-finish <id> <code>   termine une demande avec son rapport
   backup-secours             clés publiques de secours des sauvegardes
   site-adresse               adresse du site demandée
+  backup-secours-realigner | site-adresse-realigner  après une restauration : réaligne l'application sur l'hôte (JSON sur l'entrée standard)
   mail-claim | mail-finish <id>  courriels : réclame une demande, rapporte l'envoi (JSON sur l'entrée standard)
   ops-policy | ops-sync [date] | ops-claim  protocole hôte (jamais HTTP)
   ops-request | ops-certificate  JSON privé sur entrée standard
@@ -120,6 +122,25 @@ async function main() {
     case 'backup-secours': {
       // Clés publiques de secours (ADR 0077), une par ligne, pour le fichier de l'exécutant des sauvegardes.
       for (const cle of await svc.cleSecours.publiques()) console.log(cle);
+      break;
+    }
+    case 'backup-secours-realigner': {
+      // Après une restauration, l'hôte fait foi : la clé de secours de l'archive restaurée ne redevient pas destinataire.
+      const { keys } = z
+        .object({ keys: z.array(z.string()).min(1).max(10) })
+        .strict()
+        .parse(JSON.parse(await readStdin()));
+      await svc.cleSecours.inscrire(svc.db.k, keys[0]!, 'restauration');
+      await svc.db.audit(null, '', 'sauvegarde.cle_secours_realignee', '', {});
+      break;
+    }
+    case 'site-adresse-realigner': {
+      const { adresse } = z
+        .object({ adresse: z.string() })
+        .strict()
+        .parse(JSON.parse(await readStdin()));
+      await svc.adresseSite.demander(svc.db.k, adresse, 'restauration');
+      await svc.db.audit(null, '', 'exploitation.adresse_site_realignee', adresse, {});
       break;
     }
     case 'site-adresse': {

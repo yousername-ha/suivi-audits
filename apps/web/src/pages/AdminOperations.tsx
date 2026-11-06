@@ -103,6 +103,7 @@ export function OperationsPanel() {
   const [filter, setFilter] = useState('');
   const [selected, setSelected] = useState<string | null>(null);
   const [confirmation, setConfirmation] = useState('');
+  const [codeRestauration, setCodeRestauration] = useState('');
   const [certificate, setCertificate] = useState<File | null>(null);
   const [key, setKey] = useState<File | null>(null);
   const [apercu, setApercu] = useState<ApercuCertificat | null>(null);
@@ -168,6 +169,7 @@ export function OperationsPanel() {
       ids.current.delete(k);
       setSelected(null);
       setConfirmation('');
+      setCodeRestauration('');
       if (input.kind === 'tls_install') {
         setCertificate(null);
         setKey(null);
@@ -373,6 +375,7 @@ export function OperationsPanel() {
                               onClick={() => {
                                 setSelected(a.id);
                                 setConfirmation('');
+                                setCodeRestauration('');
                               }}
                             >
                               Restaurer
@@ -720,9 +723,25 @@ export function OperationsPanel() {
             disabled={pending}
             onChange={(e) => setConfirmation(e.currentTarget.value)}
           />
+          <TextInput
+            label="Code de double authentification"
+            description="Six chiffres de votre application d’authentification (usage unique)."
+            value={codeRestauration}
+            disabled={pending}
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            maxLength={6}
+            onChange={(e) => setCodeRestauration(e.currentTarget.value.replace(/\D/g, ''))}
+          />
           <Button
             color="red"
-            disabled={disabled || confirmation !== 'RESTAURER' || !archive || !verified(archive.id, archive.sha256)}
+            disabled={
+              disabled ||
+              confirmation !== 'RESTAURER' ||
+              codeRestauration.length !== 6 ||
+              !archive ||
+              !verified(archive.id, archive.sha256)
+            }
             onClick={() =>
               archive &&
               void request({
@@ -730,6 +749,7 @@ export function OperationsPanel() {
                 archiveId: archive.id,
                 sha256: archive.sha256,
                 confirmation: 'RESTAURER',
+                code: codeRestauration,
               })
             }
           >
