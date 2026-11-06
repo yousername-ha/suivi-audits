@@ -4,7 +4,8 @@ Les consignes communes sont dans [AGENTS.md](AGENTS.md). Les lire avant toute
 intervention, puis consulter [HANDOVER.md](HANDOVER.md),
 [PROJECT_STATUS.md](PROJECT_STATUS.md) et [docs/00_INDEX.md](docs/00_INDEX.md).
 Ces fichiers donnent l’état actuel, les preuves de test et les priorités. Commencer par la
-[reprise du 05/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-05.md), la plus récente (référentiels des périmètres en copie,
+[reprise du 06/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-06.md), la plus récente (correctifs d'audit, lots A à D), puis la
+[reprise du 05/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-05.md) (référentiels des périmètres en copie,
 ADR 0082), puis celle du [30/10/2026](docs/01_REPRISE_IA/REPRISE-2026-10-30.md) (qui complète celles du 29/10 et du 27/10).
 
 - Trois branches (décision du RSSI, 11/10/2026) : `main` (version Docker unique, publiée par étiquette
