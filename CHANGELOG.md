@@ -81,6 +81,12 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
   caches écrits sur place. Comportement inchangé pour les droits existants. Les chemins d'écriture sous transaction (déplacement,
   import Tenacy) restent sur les primitives GRC, ce que l'ADR consigne. Aucune action sur le serveur.
   _(Session « Projet audit_suivi Coeur ».)_
+- **Garde-fous d'architecture des accès** ([ADR 0083](docs/adr/0083-porte-de-lecture-autorisee-entre-modules.md), chantier 4) :
+  un test d'architecture refuse toute nouvelle lecture directe des tables GRC partagées ou de l'état historique brut hors d'une
+  liste blanche justifiée (entrées périmées refusées, dette plafonnée) ; le test des droits vérifie que chaque route dont le
+  service décide de l'accès est appelée par un test qui contrôle un refus. Deux routes sans test de refus en ont reçu un
+  (ordre des actions d'un plan, synthèse des périmètres). Aucune modification de comportement. Aucune action sur le serveur.
+  _(Session « Projet audit_suivi Coeur ».)_
 
 ### Modifié
 
