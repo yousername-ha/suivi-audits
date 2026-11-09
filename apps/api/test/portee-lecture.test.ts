@@ -1,11 +1,17 @@
 /* Porte de lecture autorisée (ADR 0083) : la portée calculée pour un lecteur applique droit de module, périmètre, registre
    restreint et rôle attribué, et laisse les administrateurs contourner les masques. Données fictives. */
-import { effectivePermissions, Rights } from '@suivi/shared';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import type { SessionUser } from '../src/auth.js';
 import { PorteeLecture } from '../src/acces/portee.js';
-import { loadGrants } from '../src/rights.js';
-import { createTestApp, login, makeUser, seedState, type Agent, type TestApp, type TestUser } from './helpers.js';
+import {
+  createTestApp,
+  login,
+  makeUser,
+  seedState,
+  sessionUser,
+  type Agent,
+  type TestApp,
+  type TestUser,
+} from './helpers.js';
 
 describe('porte de lecture autorisée', () => {
   let t: TestApp;
@@ -14,15 +20,7 @@ describe('porte de lecture autorisée', () => {
   let publicId: string, secretId: string;
   const u: Record<'admin' | 'membre' | 'attribue' | 'hors' | 'externe' | 'sansDroit', TestUser> = {} as never;
 
-  /** La personne telle que les contrôles la voient : mêmes droits effectifs que dans une requête. */
-  const portee = async (x: TestUser) =>
-    PorteeLecture.pour(t.svc.grc, {
-      id: x.id,
-      username: x.username,
-      displayName: x.username,
-      roles: [],
-      rights: new Rights(effectivePermissions(await loadGrants(t.svc.db.pool, x.id)).keys()),
-    } as unknown as SessionUser);
+  const portee = async (x: TestUser) => PorteeLecture.pour(t.svc.grc, await sessionUser(t, x));
   const noms = async (x: TestUser) => {
     const p = await portee(x);
     const q = await p.filtrerObjets(t.svc.db.k.selectFrom('grc_objects').select('name'));
