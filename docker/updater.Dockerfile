@@ -8,7 +8,7 @@ RUN --mount=type=secret,id=build_ca --mount=type=cache,target=/go/pkg/mod --moun
     export CGO_ENABLED=0 GOTOOLCHAIN=local; \
     essayer() { n=1; until "$@"; do [ "$n" -ge 4 ] && return 1; echo "essai $n échoué : $*" >&2; sleep $((n * 15)); n=$((n + 1)); done; }; \
     mkdir /build-cosign && cd /build-cosign && go mod init suivi-cosign \
-    && go mod edit -require=github.com/sigstore/cosign/v3@v3.1.3 -require=golang.org/x/net@v0.60.0 -require=golang.org/x/mod@v0.40.0 -require=google.golang.org/grpc@v1.83.2 -require=github.com/klauspost/compress@v1.18.7 -require=github.com/go-jose/go-jose/v4@v4.1.6 \
+    && go mod edit -require=github.com/sigstore/cosign/v3@v3.1.3 -require=golang.org/x/net@v0.62.0 -require=golang.org/x/mod@v0.40.0 -require=google.golang.org/grpc@v1.83.2 -require=github.com/klauspost/compress@v1.18.7 -require=github.com/go-jose/go-jose/v4@v4.1.6 \
     && essayer go build -mod=mod -o /go/bin/cosign github.com/sigstore/cosign/v3/cmd/cosign
 FROM alpine:3.24@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a
 RUN --mount=type=secret,id=build_ca \
