@@ -75,6 +75,11 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
   références citées par la porte, au lieu de règles écrites sur place. Comportement inchangé pour les droits existants ; une
   référence dont la résolution est refusée pour une autre raison qu'un droit (module désactivé, par exemple) est masquée au
   lieu de faire échouer la lecture. Aucune action sur le serveur. _(Session « Projet audit_suivi Coeur ».)_
+- **Export Excel et simulation d'import par la porte de lecture** ([ADR 0083](docs/adr/0083-porte-de-lecture-autorisee-entre-modules.md),
+  sous-chantier 2f) : l'export Excel du suivi et la simulation d'import lisent l'état historique rédigé par la porte de lecture ;
+  la simulation compare le fichier à cet état, en plus de la rédaction du rapport. Comportement inchangé pour les droits
+  existants. L'export complet au format historique et l'application d'un import gardent l'état brut (droit d'exporter exigé
+  sur chaque clé, écriture sous verrou). Aucune action sur le serveur. _(Session « Projet audit_suivi Coeur ».)_
 
 ### Modifié
 
