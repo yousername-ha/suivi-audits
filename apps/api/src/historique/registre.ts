@@ -4,11 +4,11 @@
    (ADR 0032) : registre historique + écran natif. */
 import { validDate, type Module } from '@suivi/shared';
 import { isObject, type JsonObject } from '@suivi/shared/legacy';
+import { PorteeLecture } from '../acces/portee.js';
 import type { SessionUser } from '../auth.js';
 import { surConnexion, type Client } from '../db/db.js';
 import { DEFAULT_SMSI, type Grc } from '../grc/core.js';
 import { HttpError } from '../http/errors.js';
-import { redactLegacy } from '../legacy/redaction.js';
 import { verrouillerEtat } from '../legacy/store.js';
 
 export interface EtatHistorique {
@@ -51,8 +51,8 @@ export class RegistreHistorique {
       vues natives héritent du filtre. */
   async lire(user: SessionUser, module: Module): Promise<EtatHistorique> {
     await this.g.permission(user, module, 'lire');
-    const etat = await this.g.legacy.recompose();
-    return etat ? { version: etat.version, data: redactLegacy(etat.data, user.rights) } : { version: 0, data: {} };
+    // L'état rédigé vient de la porte de lecture (ADR 0083) : une seule règle de masquage par clé pour tous les lecteurs.
+    return PorteeLecture.pour(this.g, user).etatHistorique();
   }
 
   /** Lecture déléguée (contribution à un RETEX) : aucun droit de module n'est exigé ici, seulement l'activation du module.

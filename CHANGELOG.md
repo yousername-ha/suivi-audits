@@ -59,6 +59,11 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
   l'empreinte tirée et non l'étiquette. Le guide décrit la vérification facultative d'une installation neuve et les réglages
   GitHub à contrôler. **Action sur le serveur : aucune** ; option facultative `UPDATE_CHANNEL` dans `.env`.
   _(Session « Projet audit_suivi Coeur ».)_
+- **Lecture de l'état historique par la porte** ([ADR 0083](docs/adr/0083-porte-de-lecture-autorisee-entre-modules.md),
+  sous-chantier 2a) : les vues natives des modules repris (audit, DdA, GAP, incidents, plans, CRRC, investissements, crise,
+  évaluations des fournisseurs, revues d'accès) lisent l'état historique rédigé par la porte de lecture, après le contrôle du
+  droit du module. Comportement inchangé (mêmes clés masquées, mêmes refus). Aucune action sur le serveur.
+  _(Session « Projet audit_suivi Coeur ».)_
 
 ### Modifié
 
