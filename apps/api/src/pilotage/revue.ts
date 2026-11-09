@@ -15,7 +15,7 @@ import { sql } from 'kysely';
 import type { SessionUser } from '../auth.js';
 import { DEFAULT_SMSI, type Grc } from '../grc/core.js';
 import { HttpError } from '../http/errors.js';
-import { redactLegacy } from '../routes/suivi.js';
+import { PorteeLecture } from '../acces/portee.js';
 
 const lignes = (v: unknown): JsonObject[] => (Array.isArray(v) ? v.filter(isObject) : []);
 const pluriel = (n: number, un: string, plusieurs: string) => `${n} ${n > 1 ? plusieurs : un}`;
@@ -31,8 +31,8 @@ export class PilotageRevue {
     if (smsi !== DEFAULT_SMSI) throw new HttpError(404, 'Ces données appartiennent au pilotage commun.');
     await this.g.access(smsi, user);
     await this.g.permission(user, GRC_MODULES.management_review, 'lire');
-    const brut = (await this.g.legacy.recompose())?.data ?? {};
-    const etat = redactLegacy(brut as JsonObject, user.rights);
+    const portee = PorteeLecture.pour(this.g, user);
+    const etat = (await portee.etatHistorique()).data;
     const aujourdhui = new Date().toISOString().slice(0, 10);
     const faits = {
       a: [] as string[],
@@ -76,7 +76,7 @@ export class PilotageRevue {
       if (ids.length) {
         const politique = (await this.g.policy(smsi, user)).definition;
         const clos = new Set(politique.statuses.filter((s) => s.terminal).map((s) => s.id));
-        const masques = await this.g.registres.inaccessibles(user, smsi);
+        const masques = await portee.masquesDuPerimetre(smsi);
         // Chemins jsonb fixes ; registres masqués exclus (aucun masque : tout est lisible, comme <> ALL d'un tableau vide).
         const actions = await this.g.db.k
           .selectFrom('grc_objects')

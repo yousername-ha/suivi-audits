@@ -69,6 +69,12 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
   appliquent le droit du module et le masque des registres restreints par la porte de lecture, au lieu de règles écrites sur
   place. Comportement inchangé pour les droits existants ; un objet d'un module désactivé n'apparaît plus dans le graphe,
   comme dans les listes. Aucune action sur le serveur. _(Session « Projet audit_suivi Coeur ».)_
+- **Pilotage par la porte de lecture** ([ADR 0083](docs/adr/0083-porte-de-lecture-autorisee-entre-modules.md), sous-chantier
+  2c) : l'historique des décisions, l'export du registre, les indicateurs d'amélioration, la revue de direction, les boîtes et
+  les cartes de processus obtiennent l'état historique rédigé, les registres restreints masqués et la lisibilité des
+  références citées par la porte, au lieu de règles écrites sur place. Comportement inchangé pour les droits existants ; une
+  référence dont la résolution est refusée pour une autre raison qu'un droit (module désactivé, par exemple) est masquée au
+  lieu de faire échouer la lecture. Aucune action sur le serveur. _(Session « Projet audit_suivi Coeur ».)_
 
 ### Modifié
 

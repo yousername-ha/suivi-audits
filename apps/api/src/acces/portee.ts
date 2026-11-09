@@ -14,6 +14,7 @@ import { GRC_MODULES, type GrcKind, type Module } from '@suivi/shared';
 import type { JsonObject } from '@suivi/shared/legacy';
 import { sql, type SelectQueryBuilder } from 'kysely';
 import type { SessionUser } from '../auth.js';
+import type { Client } from '../db/db.js';
 import type { DB } from '../db/types.generated.js';
 import { HttpError } from '../http/errors.js';
 import type { Grc } from '../grc/core.js';
@@ -32,6 +33,7 @@ export class PorteeLecture {
   private perimetres?: Promise<ReadonlySet<string>>;
   private readonly modulesActifs = new Map<Module, Promise<boolean>>();
   private readonly lisibles = new Map<string, Promise<boolean>>();
+  private readonly masquesParPerimetre = new Map<string, Promise<string[]>>();
 
   private constructor(
     readonly g: Grc,
@@ -118,26 +120,44 @@ export class PorteeLecture {
     return q;
   }
 
+  /** Registres restreints rattachés à ce périmètre que le lecteur ne peut pas lire : leurs éléments sont exclus des listes,
+      des compteurs et des exports de ce périmètre (vide pour un administrateur). Dans une transaction (`c`), le calcul suit la
+      transaction et n'est pas mis en cache. */
+  masquesDuPerimetre(smsi: string, c?: Client): Promise<string[]> {
+    if (c) return this.g.registres.inaccessibles(this.user, smsi, c);
+    let r = this.masquesParPerimetre.get(smsi);
+    if (!r) {
+      r = this.g.registres.inaccessibles(this.user, smsi);
+      this.masquesParPerimetre.set(smsi, r);
+    }
+    return r;
+  }
+
   /** La référence se résout-elle avec les droits du lecteur dans ce périmètre ? Faux si elle est illisible, absente ou
       hors périmètre. Une erreur qui n'est pas un refus d'accès (HttpError) est propagée. */
   refLisible(smsi: string, ref: string): Promise<boolean> {
     const cle = smsi + '\u0000' + ref;
     let r = this.lisibles.get(cle);
     if (!r) {
-      r = this.nomSiLisible(smsi, ref).then((n) => n !== null);
+      r = this.resoudreSiLisible(smsi, ref).then((x) => x !== null);
       this.lisibles.set(cle, r);
     }
     return r;
   }
 
-  /** Nom de l'élément référencé s'il est lisible par le lecteur, `null` sinon (illisible, absent ou supprimé). */
-  async nomSiLisible(smsi: string, ref: string): Promise<string | null> {
+  /** Référence résolue avec les droits du lecteur (nom, version, module…), `null` si elle est illisible, absente ou supprimée. */
+  async resoudreSiLisible(smsi: string, ref: string): Promise<Awaited<ReturnType<Grc['resolve']>> | null> {
     try {
-      return (await this.g.resolve(smsi, ref, this.user)).name;
+      return await this.g.resolve(smsi, ref, this.user);
     } catch (e) {
       if (e instanceof HttpError) return null;
       throw e;
     }
+  }
+
+  /** Nom de l'élément référencé s'il est lisible par le lecteur, `null` sinon (illisible, absent ou supprimé). */
+  async nomSiLisible(smsi: string, ref: string): Promise<string | null> {
+    return (await this.resoudreSiLisible(smsi, ref))?.name ?? null;
   }
 
   /** État historique déjà rédigé pour le lecteur : les clés d'un module qu'il ne peut pas lire sont vidées. */
