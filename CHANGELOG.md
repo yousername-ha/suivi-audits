@@ -38,7 +38,12 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
   sortent que pour qui lit le module source. L'annuaire des responsables est réservé à qui peut désigner un responsable
   dans le périmètre (modification d'un module métier ou rôle de registre). Aucune action sur le serveur. _(Session
   « Projet audit_suivi Coeur ».)_
-### Sécurité
+
+- **Porte de lecture autorisée entre modules** ([ADR 0083](docs/adr/0083-porte-de-lecture-autorisee-entre-modules.md),
+  proposée) : nouvelle portée de lecture (`apps/api/src/acces/portee.ts`) qui applique, avec les droits du lecteur, le droit
+  de module, le périmètre, le registre restreint et le rôle attribué, et sur laquelle les lectures transverses seront
+  branchées une à une. Fondation seule : aucun branchement, aucun changement de comportement, aucune migration. Aucune
+  action sur le serveur. _(Session « Projet audit_suivi Coeur ».)_
 
 - **Exploitation et chaîne de mise à jour** : le mot de passe SMTP est lié à son relais (changer serveur, port, chiffrement,
   compte ou autorité le supprime : il faut le ressaisir) ; une restauration lancée depuis l'interface exige un code de
