@@ -160,9 +160,15 @@ export class PorteeLecture {
     return (await this.resoudreSiLisible(smsi, ref))?.name ?? null;
   }
 
-  /** État historique déjà rédigé pour le lecteur : les clés d'un module qu'il ne peut pas lire sont vidées. */
-  async etatHistorique(): Promise<EtatHistoriqueRedige> {
+  /** État historique déjà rédigé pour le lecteur : les clés d'un module qu'il ne peut pas lire sont vidées. `null` si le
+      registre historique n'existe pas encore. */
+  async etatHistoriqueSiPresent(): Promise<EtatHistoriqueRedige | null> {
     const etat = await this.g.legacy.recompose();
-    return etat ? { version: etat.version, data: redactLegacy(etat.data, this.user.rights) } : { version: 0, data: {} };
+    return etat ? { version: etat.version, data: redactLegacy(etat.data, this.user.rights) } : null;
+  }
+
+  /** Comme `etatHistoriqueSiPresent`, avec un état vide (version 0) quand le registre n'existe pas encore. */
+  async etatHistorique(): Promise<EtatHistoriqueRedige> {
+    return (await this.etatHistoriqueSiPresent()) ?? { version: 0, data: {} };
   }
 }
