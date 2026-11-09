@@ -75,6 +75,11 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
   références citées par la porte, au lieu de règles écrites sur place. Comportement inchangé pour les droits existants ; une
   référence dont la résolution est refusée pour une autre raison qu'un droit (module désactivé, par exemple) est masquée au
   lieu de faire échouer la lecture. Aucune action sur le serveur. _(Session « Projet audit_suivi Coeur ».)_
+- **Tableau de bord par la porte de lecture** ([ADR 0083](docs/adr/0083-porte-de-lecture-autorisee-entre-modules.md),
+  sous-chantier 2g) : la portée des agrégats du tableau de bord (périmètres lisibles, registres restreints masqués) vient de la
+  porte de lecture, comme les listes. Comportement inchangé pour les droits existants. Les opérations système (garde de purge
+  des documents, conservation, contrôle des relations) lisent tout par construction et l'annuaire des responsables est interne
+  au module GRC : ils ne passent pas par la porte. Aucune action sur le serveur. _(Session « Projet audit_suivi Coeur ».)_
 
 ### Modifié
 
