@@ -64,6 +64,11 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
   évaluations des fournisseurs, revues d'accès) lisent l'état historique rédigé par la porte de lecture, après le contrôle du
   droit du module. Comportement inchangé (mêmes clés masquées, mêmes refus). Aucune action sur le serveur.
   _(Session « Projet audit_suivi Coeur ».)_
+- **Carte des risques et rapport de comité par la porte** ([ADR 0083](docs/adr/0083-porte-de-lecture-autorisee-entre-modules.md),
+  sous-chantier 2b) : la carte des risques (projection, graphe, traversée des références liées) et le rapport de comité
+  appliquent le droit du module et le masque des registres restreints par la porte de lecture, au lieu de règles écrites sur
+  place. Comportement inchangé pour les droits existants ; un objet d'un module désactivé n'apparaît plus dans le graphe,
+  comme dans les listes. Aucune action sur le serveur. _(Session « Projet audit_suivi Coeur ».)_
 
 ### Modifié
 
