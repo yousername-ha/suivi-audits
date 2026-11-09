@@ -44,6 +44,10 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
   de module, le périmètre, le registre restreint et le rôle attribué, et sur laquelle les lectures transverses seront
   branchées une à une. Fondation seule : aucun branchement, aucun changement de comportement, aucune migration. Aucune
   action sur le serveur. _(Session « Projet audit_suivi Coeur ».)_
+- **Images `web` et `updater`** : `golang.org/x/net` passe de 0.60.0 à 0.62.0 dans la compilation de Caddy et de cosign (avis
+  publié depuis la dernière version, relevé par l'analyse Trivy de la chaîne de publication). Aucune autre modification des
+  images. Aucune action sur le serveur : les images sont reconstruites à la publication suivante.
+  _(Session « Projet audit_suivi Coeur ».)_
 
 - **Exploitation et chaîne de mise à jour** : le mot de passe SMTP est lié à son relais (changer serveur, port, chiffrement,
   compte ou autorité le supprime : il faut le ressaisir) ; une restauration lancée depuis l'interface exige un code de
