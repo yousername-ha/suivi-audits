@@ -98,14 +98,14 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
   `PUT /api/grc/:smsi/framework-attachments/:id/statut`, `GET|PUT /api/grc/:smsi/framework-copies/:id`,
   `POST /api/grc/:smsi/framework-copies/:id/requirements`, `DELETE …/requirements/:requirementId` ; routes
   `POST /api/library/frameworks/:id/copy` et `…/requirements` retirées. Migration `052`. _(Session « Référentiel library management ».)_
-
-## [6.2.0] — 2026-11-04
-
-Version mineure : une migration SQL additive (`051`), aucune nouvelle dépendance. Elle apporte les étiquettes des documents et des liens, les modèles d'échelles et de matrices EBIOS RM et MÉHARI, la séparation « Mes rappels » / « Configuration du pilotage » du menu, et une recette automatisée plus stable.
 - **Routes GRC découpées par sous-domaine** ([ADR 0083](docs/adr/0083-porte-de-lecture-autorisee-entre-modules.md), chantier 5) :
   `routes/grc.ts` (106 routes) est réparti dans `routes/grc/` (périmètres, objets et tâches, référentiels et bibliothèque,
   fournisseurs, risques et méthodes), sans changement d'URL, de schéma ni de niveau d'accès : le document OpenAPI est identique
   (377 chemins, mêmes opérations). Aucune action sur le serveur. _(Session « Projet audit_suivi Coeur ».)_
+
+## [6.2.0] — 2026-11-04
+
+Version mineure : une migration SQL additive (`051`), aucune nouvelle dépendance. Elle apporte les étiquettes des documents et des liens, les modèles d'échelles et de matrices EBIOS RM et MÉHARI, la séparation « Mes rappels » / « Configuration du pilotage » du menu, et une recette automatisée plus stable.
 
 ### Notes de mise à jour
 
