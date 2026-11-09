@@ -75,6 +75,12 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
   références citées par la porte, au lieu de règles écrites sur place. Comportement inchangé pour les droits existants ; une
   référence dont la résolution est refusée pour une autre raison qu'un droit (module désactivé, par exemple) est masquée au
   lieu de faire échouer la lecture. Aucune action sur le serveur. _(Session « Projet audit_suivi Coeur ».)_
+- **Catalogue de configuration par la porte de lecture** ([ADR 0083](docs/adr/0083-porte-de-lecture-autorisee-entre-modules.md),
+  sous-chantier 2e) : la liste, les compteurs, les usages et l'étude d'impact du catalogue de configuration GRC ne retiennent
+  que les consommateurs et variantes d'un périmètre lisible, par la porte de lecture (cache par périmètre), au lieu de trois
+  caches écrits sur place. Comportement inchangé pour les droits existants. Les chemins d'écriture sous transaction (déplacement,
+  import Tenacy) restent sur les primitives GRC, ce que l'ADR consigne. Aucune action sur le serveur.
+  _(Session « Projet audit_suivi Coeur ».)_
 
 ### Modifié
 
