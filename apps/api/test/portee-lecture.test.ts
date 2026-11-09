@@ -132,6 +132,25 @@ describe('porte de lecture autorisée', () => {
     expect((await predicat(u.externe))(publique)).toBe(false);
     expect((await predicat(u.sansDroit))(publique)).toBe(false);
   });
+  it('masquesDuPerimetre : registres restreints du périmètre illisibles pour le lecteur, mis en cache par périmètre', async () => {
+    const masques = async (x: TestUser) => (await portee(x)).masquesDuPerimetre(A);
+    expect(await masques(u.admin)).toEqual([]);
+    expect(await masques(u.attribue)).toEqual([]);
+    expect(await masques(u.membre)).toEqual([secret]);
+    expect(await masques(u.hors)).toEqual([secret]);
+    const p = await portee(u.membre);
+    expect(p.masquesDuPerimetre(A)).toBe(p.masquesDuPerimetre(A));
+    await p.masquesDuPerimetre(A);
+  });
+
+  it('resoudreSiLisible : nom et version si la référence est lisible, null sinon', async () => {
+    const resolu = async (x: TestUser, id: string) => (await portee(x)).resoudreSiLisible(A, 'object:' + id);
+    expect(await resolu(u.admin, secretId)).toMatchObject({ name: 'Écart secret', kind: 'nonconformity' });
+    expect((await resolu(u.admin, secretId))?.version).toBeGreaterThan(0);
+    expect(await resolu(u.membre, secretId)).toBeNull();
+    expect(await resolu(u.hors, publicId)).toBeNull();
+  });
+
   it('nomSiLisible et refLisible : nom rendu seulement si la référence se résout avec les droits du lecteur', async () => {
     const ref = (id: string) => 'object:' + id;
     const nom = async (x: TestUser, id: string) => (await portee(x)).nomSiLisible(A, ref(id));

@@ -7,6 +7,7 @@ import { PilotageBoites } from '../pilotage/boites.js';
 import { PilotageProcessusCartes } from '../pilotage/processus-cartes.js';
 import { PilotagePestel } from '../pilotage/pestel.js';
 import { PilotageRevue } from '../pilotage/revue.js';
+import { PorteeLecture } from '../acces/portee.js';
 import { horsRegistresMasques } from '../grc/registres.js';
 import { HttpError } from '../http/errors.js';
 import { route } from '../http/route.js';
@@ -170,7 +171,8 @@ export const pilotageRoutes = [
       await g.permission(user, GRC_MODULES[query.kind], 'exporter');
       await g.permission(user, GRC_MODULES[query.kind], 'lire');
       // Les éléments d'un registre restreint que la personne ne peut pas lire ne sortent pas dans l'export.
-      const masques = await g.registres.inaccessibles(user, params.smsi);
+      const portee = PorteeLecture.pour(g, user);
+      const masques = await portee.masquesDuPerimetre(params.smsi);
       const objects = await svc.db.k
         .selectFrom('grc_objects')
         .select(['id', 'name', 'kind', 'data', 'version', 'created_by', 'updated_by', 'created_at', 'updated_at'])
@@ -190,9 +192,9 @@ export const pilotageRoutes = [
         (key !== 'evidences' || user.rights.can('pilotage', 'lire'))
       ) {
         const adapter = new Pilotage(g).legacy;
-        const state = await g.legacy.recompose();
-        for (const row of adapter.rows(state?.data ?? {}, key).slice(0, 1000)) {
-          const o = adapter.dto(params.smsi, key, row, state?.version ?? 0);
+        const state = await portee.etatHistorique();
+        for (const row of adapter.rows(state.data, key).slice(0, 1000)) {
+          const o = adapter.dto(params.smsi, key, row, state.version);
           legacy.push(o);
           refs.push(o.id);
         }

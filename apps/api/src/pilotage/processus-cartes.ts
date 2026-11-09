@@ -13,6 +13,7 @@ import { isObject } from '@suivi/shared/legacy';
 import { sql } from 'kysely';
 import type { SessionUser } from '../auth.js';
 import { DEFAULT_SMSI, type Grc } from '../grc/core.js';
+import { PorteeLecture } from '../acces/portee.js';
 import { horsRegistresMasques } from '../grc/registres.js';
 import { HttpError } from '../http/errors.js';
 
@@ -29,7 +30,8 @@ export class PilotageProcessusCartes {
     if (smsi !== DEFAULT_SMSI) throw new HttpError(404, 'Ces données appartiennent au pilotage commun.');
     await this.g.access(smsi, user);
     await this.g.permission(user, 'pilotage', 'lire');
-    const etat = (await this.g.legacy.recompose())?.data ?? {};
+    const portee = PorteeLecture.pour(this.g, user);
+    const etat = (await portee.etatHistorique()).data;
     const peutFournisseurs = user.rights.can('fournisseurs', 'lire');
 
     const processus = lignes(etat.processes).filter((p) => texte(p.id));
@@ -38,7 +40,7 @@ export class PilotageProcessusCartes {
     const swots = lignes(etat.swots).filter((s) => texte(s.id));
     const fournisseurs = lignes(etat.suppliers).filter((f) => texte(f.id));
 
-    const masques = await this.g.registres.inaccessibles(user, smsi);
+    const masques = await portee.masquesDuPerimetre(smsi);
     const risques = await this.g.db.k
       .selectFrom('grc_objects')
       .select(['id', 'name', sql<unknown>`data->'refs'`.as('refs')])

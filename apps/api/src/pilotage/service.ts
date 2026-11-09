@@ -1,5 +1,6 @@
 import { EBIOS_ATELIERS, GRC_MODULES, JOURNEY_STEPS, PilotageRecord, SeriesData } from '@suivi/shared';
 import { isObject } from '@suivi/shared/legacy';
+import { PorteeLecture } from '../acces/portee.js';
 import type { SessionUser } from '../auth.js';
 import { sql } from 'kysely';
 import { surConnexion, type Client, type Kdb } from '../db/db.js';
@@ -55,22 +56,8 @@ export class Pilotage {
       est filtré à la lecture selon les droits du lecteur, comme les liens. Une action qu'il ne peut pas lire, par exemple
       d'un registre restreint, n'y laisse ni identifiant ni nom : elle n'est que comptée (`actionsMasquees`). */
   async pourLecteur<T extends Record<string, unknown>>(smsi: string, rows: T[], user: SessionUser): Promise<T[]> {
-    const lisibles = new Map<string, boolean>();
-    const lisible = async (ref: unknown) => {
-      if (typeof ref !== 'string') return false;
-      let ok = lisibles.get(ref);
-      if (ok === undefined) {
-        try {
-          await this.g.resolve(smsi, ref, user);
-          ok = true;
-        } catch (e) {
-          if (!(e instanceof HttpError) || ![403, 404].includes(e.status)) throw e;
-          ok = false;
-        }
-        lisibles.set(ref, ok);
-      }
-      return ok;
-    };
+    const portee = PorteeLecture.pour(this.g, user);
+    const lisible = async (ref: unknown) => (typeof ref === 'string' ? portee.refLisible(smsi, ref) : false);
     const filtrer = async (v: unknown) => {
       if (!Array.isArray(v)) return v;
       const out: unknown[] = [];
@@ -113,13 +100,10 @@ export class Pilotage {
     const items = await this.pourLecteur(smsi, rows, user);
     const refs: string[] = [...new Set(items.flatMap((r) => (Array.isArray(r.refs) ? (r.refs as string[]) : [])))];
     const references: Record<string, { name: string; version: number }> = {};
+    const portee = PorteeLecture.pour(this.g, user);
     for (const ref of refs.slice(0, 200)) {
-      try {
-        const r = await this.g.resolve(smsi, ref, user);
-        references[ref] = { name: r.name, version: r.version };
-      } catch (e) {
-        if (!(e instanceof HttpError) || ![403, 404].includes(e.status)) throw e;
-      }
+      const r = await portee.resoudreSiLisible(smsi, ref);
+      if (r) references[ref] = { name: r.name, version: r.version };
     }
     return {
       items,
@@ -304,7 +288,7 @@ export class Pilotage {
           .orderBy('a.id')
           .limit(50)
           .execute();
-        const masques = new Set(await this.g.registres.inaccessibles(user, smsi, c));
+        const masques = new Set(await PorteeLecture.pour(this.g, user).masquesDuPerimetre(smsi, c));
         const tasks = Array.isArray(data.tasks) ? data.tasks : [];
         const tasksOpen = tasks.filter((t) => isObject(t) && t.done !== true).length;
         if (pending.length || tasksOpen) {
@@ -596,7 +580,7 @@ export class Pilotage {
   async indicators(smsi: string, user: SessionUser) {
     await this.g.permission(user, 'ecarts', 'lire');
     const scope = await this.g.access(smsi, user);
-    const masques = await this.g.registres.inaccessibles(user, smsi);
+    const masques = await PorteeLecture.pour(this.g, user).masquesDuPerimetre(smsi);
     // Indicateurs des écarts : expression commune (CTE) avec contrôle de date (pg_input_is_valid) et fuseau du périmètre,
     // gardée en SQL paramétré (ADR 0062 §5).
     const native = (await this.g.db.one<{
