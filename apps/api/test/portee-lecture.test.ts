@@ -120,6 +120,18 @@ describe('porte de lecture autorisée', () => {
     expect((await q.execute()).map((r) => r.name)).toEqual(['Écart secret']);
   });
 
+  it('predicatObjet : module du type lisible et registre non masqué, pour des objets déjà chargés', async () => {
+    const predicat = async (x: TestUser) => (await portee(x)).predicatObjet();
+    const publique = { kind: 'nonconformity' as const, registre_id: null };
+    const secrete = { kind: 'nonconformity' as const, registre_id: secret };
+    expect((await predicat(u.admin))(secrete)).toBe(true);
+    expect((await predicat(u.attribue))(secrete)).toBe(true);
+    expect((await predicat(u.membre))(publique)).toBe(true);
+    expect((await predicat(u.membre))(secrete)).toBe(false);
+    // Le module des écarts n'est pas lisible par l'auditeur externe limité à l'audit, ni par le compte sans droit.
+    expect((await predicat(u.externe))(publique)).toBe(false);
+    expect((await predicat(u.sansDroit))(publique)).toBe(false);
+  });
   it('nomSiLisible et refLisible : nom rendu seulement si la référence se résout avec les droits du lecteur', async () => {
     const ref = (id: string) => 'object:' + id;
     const nom = async (x: TestUser, id: string) => (await portee(x)).nomSiLisible(A, ref(id));

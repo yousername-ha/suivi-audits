@@ -93,6 +93,15 @@ export class PorteeLecture {
     return out;
   }
 
+  /** Prédicat synchrone de lecture d'un objet déjà chargé (module du type lisible, registre non masqué), pour filtrer des
+      objets relus par identifiant sans refaire les calculs à chaque objet. Le périmètre n'est pas contrôlé ici : l'appelant
+      a déjà borné sa requête à un périmètre dont il a vérifié l'accès. */
+  async predicatObjet(): Promise<(o: { kind: GrcKind; registre_id: string | null }) => boolean> {
+    const types = new Set(await this.typesLisibles());
+    const masques = await this.registresMasques();
+    return (o) => types.has(o.kind) && !(o.registre_id && masques.has(o.registre_id));
+  }
+
   /** Ajoute à une requête Kysely sur `grc_objects` les conditions de lecture du lecteur : module du type, périmètre
       lisible, registre non masqué. La requête reste à la charge de l'appelant pour tout le reste (archivage, recherche,
       pagination). Valeurs liées uniquement, aucune expression SQL brute. */
