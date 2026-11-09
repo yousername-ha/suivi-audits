@@ -28,6 +28,7 @@ import {
   type CfgState,
 } from '@suivi/shared';
 import { sql } from 'kysely';
+import { PorteeLecture } from './acces/portee.js';
 import type { SessionUser } from './auth.js';
 import { surConnexion, type Client, type Db, type Kdb } from './db/db.js';
 import { HttpError } from './http/errors.js';
@@ -229,12 +230,9 @@ export class ConfigGrc {
   ): Promise<T[]> {
     if (!rows.length) return rows;
     const perimetres = await this.perimetresDesConsommateurs(rows, c);
-    const visibles = new Map<string, boolean>();
-    const peutVoir = async (smsi: string | null) => {
-      if (smsi === null) return true;
-      if (!visibles.has(smsi)) visibles.set(smsi, await this.grc.visible(user, smsi, 'pilotage'));
-      return visibles.get(smsi)!;
-    };
+    // Périmètre lisible avec le module pilotage : porte de lecture (ADR 0083), mise en cache par périmètre.
+    const portee = PorteeLecture.pour(this.grc, user);
+    const peutVoir = async (smsi: string | null) => smsi === null || portee.perimetreLisible(smsi, 'pilotage');
     const out: T[] = [];
     for (const r of rows) {
       const smsi = perimetres.get(r.consumer_kind + ':' + r.consumer_id);
@@ -288,13 +286,10 @@ export class ConfigGrc {
       ...versLigne(r),
       definition: r.definition as Record<string, unknown> | null,
     }));
-    const visible = new Map<string, boolean>();
+    const portee = PorteeLecture.pour(this.grc, user);
     const retenus = [];
     for (const r of rows) {
-      if (r.scope === 'smsi') {
-        if (!visible.has(r.smsiId!)) visible.set(r.smsiId!, await this.grc.visible(user, r.smsiId!));
-        if (!visible.get(r.smsiId!)) continue;
-      }
+      if (r.scope === 'smsi' && !(await portee.perimetreLisible(r.smsiId!))) continue;
       retenus.push(r);
     }
     // Compteurs : seuls comptent les consommateurs et variantes d'un périmètre que la personne peut consulter.
@@ -319,10 +314,7 @@ export class ConfigGrc {
       : [];
     const nbEnfants = new Map<string, number>();
     for (const e of enfants) {
-      if (e.scope === 'smsi') {
-        if (!visible.has(e.smsi_id!)) visible.set(e.smsi_id!, await this.grc.visible(user, e.smsi_id!));
-        if (!visible.get(e.smsi_id!)) continue;
-      }
+      if (e.scope === 'smsi' && !(await portee.perimetreLisible(e.smsi_id!))) continue;
       nbEnfants.set(e.derived_from_id!, (nbEnfants.get(e.derived_from_id!) ?? 0) + 1);
     }
     const out = [];

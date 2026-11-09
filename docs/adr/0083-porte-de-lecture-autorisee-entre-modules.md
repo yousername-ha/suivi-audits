@@ -68,6 +68,13 @@ Une PR par étape, vers `claude-suivi-smsi`, chacune livrable seule et laissant 
    liste blanche justifiée) et un test d'accès systématique des routes.
 5. Découpage des gros fichiers de routes, sans changement d'URL, de schéma ni de niveau d'accès (document OpenAPI identique).
 
+## Chemins d'écriture sous transaction (sous-chantier 2d)
+
+La porte lit hors transaction : elle ne convient pas aux chemins qui lisent **pour écrire**, sous une transaction et avec des
+verrous de lignes (`forUpdate`, `forShare`). Ces chemins restent sur les primitives du module GRC, avec le contrôle de gestion de
+l'élément (`registres.exigerElement`) : déplacement d'un élément et aperçus d'impact de `grc/registres.ts`, recherche, écriture et
+clôture des écarts de `tenacy.ts`. Le test d'architecture (étape 4) les inscrit en liste blanche, avec cette justification.
+
 ## Hors périmètre
 
 Microservices, découpage de la base ou rôles PostgreSQL par module, sécurité au niveau des lignes (RLS) et changement du
