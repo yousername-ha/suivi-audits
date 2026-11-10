@@ -18,6 +18,7 @@ import {
 } from '@suivi/shared/legacy';
 import type { FastifyRequest } from 'fastify';
 import { z } from 'zod';
+import { PorteeLecture } from '../acces/portee.js';
 import type { Session } from '../auth.js';
 import { sql } from 'kysely';
 import type { Client, Kdb } from '../db/db.js';
@@ -199,7 +200,10 @@ export const importRoutes = [
       await svc.modules.assertKeys(cles);
       assertLegacyKeys(rights, cles, 'lire');
       if (query.mode === 'replace') svc.auth.requirePermission(s as Session, 'import_export:supprimer');
-      const current = (await svc.legacy.recompose())?.data ?? null;
+      // Le plan se calcule sur l'état rédigé pour le lecteur (porte de lecture, ADR 0083) : un module qu'il ne peut pas lire
+      // n'entre pas dans la comparaison, en plus de la rédaction du rapport.
+      const courant = await PorteeLecture.pour(svc.grc, (s as Session).user).etatHistoriqueSiPresent();
+      const current = courant?.data ?? null;
       const { report: complet } = plan(current, file, query.mode, query.module);
       const report = redactReport(complet, rights);
       return {

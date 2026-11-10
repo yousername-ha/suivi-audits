@@ -86,6 +86,11 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
   porte de lecture, comme les listes. Comportement inchangé pour les droits existants. Les opérations système (garde de purge
   des documents, conservation, contrôle des relations) lisent tout par construction et l'annuaire des responsables est interne
   au module GRC : ils ne passent pas par la porte. Aucune action sur le serveur. _(Session « Projet audit_suivi Coeur ».)_
+- **Export Excel et simulation d'import par la porte de lecture** ([ADR 0083](docs/adr/0083-porte-de-lecture-autorisee-entre-modules.md),
+  sous-chantier 2f) : l'export Excel du suivi et la simulation d'import lisent l'état historique rédigé par la porte de lecture ;
+  la simulation compare le fichier à cet état, en plus de la rédaction du rapport. Comportement inchangé pour les droits
+  existants. L'export complet au format historique et l'application d'un import gardent l'état brut (droit d'exporter exigé
+  sur chaque clé, écriture sous verrou). Aucune action sur le serveur. _(Session « Projet audit_suivi Coeur ».)_
 
 ### Modifié
 

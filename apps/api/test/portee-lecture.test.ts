@@ -179,6 +179,14 @@ describe('porte de lecture autorisée', () => {
     expect((ro.suppliers as unknown[]).length).toBe(1);
   });
 
+  it('etatHistoriqueSiPresent : même état rédigé que etatHistorique quand le registre existe', async () => {
+    const p = await portee(u.externe);
+    const present = await p.etatHistoriqueSiPresent();
+    expect(present).not.toBeNull();
+    expect(present).toEqual(await p.etatHistorique());
+    expect(present!.data.suppliers).toEqual([]);
+  });
+
   it('la portée garde ses résultats pendant sa durée de vie (calculés une fois)', async () => {
     const p = await portee(u.membre);
     expect(p.registresMasques()).toBe(p.registresMasques());
