@@ -112,6 +112,11 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
   `routes/grc.ts` (106 routes) est réparti dans `routes/grc/` (périmètres, objets et tâches, référentiels et bibliothèque,
   fournisseurs, risques et méthodes), sans changement d'URL, de schéma ni de niveau d'accès : le document OpenAPI est identique
   (377 chemins, mêmes opérations). Aucune action sur le serveur. _(Session « Projet audit_suivi Coeur ».)_
+- **Routes des modules repris découpées par module** ([ADR 0083](docs/adr/0083-porte-de-lecture-autorisee-entre-modules.md),
+  chantier 5) : `routes/historique.ts` (109 routes) est réparti dans `routes/historique/` (incidents et RETEX, cellule de crise,
+  CRRC, audit et déclaration d'applicabilité, autres modules annexes), sans changement d'URL, de schéma ni de niveau d'accès :
+  le document OpenAPI est identique (377 chemins, mêmes opérations). Aucune action sur le serveur.
+  _(Session « Projet audit_suivi Coeur ».)_
 
 ## [6.2.0] — 2026-11-04
 
