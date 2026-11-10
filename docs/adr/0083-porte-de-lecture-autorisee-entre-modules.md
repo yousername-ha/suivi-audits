@@ -75,6 +75,29 @@ verrous de lignes (`forUpdate`, `forShare`). Ces chemins restent sur les primiti
 l'élément (`registres.exigerElement`) : déplacement d'un élément et aperçus d'impact de `grc/registres.ts`, recherche, écriture et
 clôture des écarts de `tenacy.ts`. Le test d'architecture (étape 4) les inscrit en liste blanche, avec cette justification.
 
+## Copies de libellés (chantier 3)
+
+Les noms ne sont plus recopiés là où une lecture avec les droits du lecteur suffit :
+
+- **Cartes** : les nœuds ne portent que des références de l'état historique (`process`, `pi`, `issue`, `site`, `infra`, `scope`,
+  `sup`, `app`), jamais d'objet de registre. Le libellé copié est vidé à la sérialisation selon le module de la référence
+  (`redactLayoutJson`), pour la carte, ses versions figées et la clé `maps` de l'état. Il n'y a pas de libellé de registre
+  restreint à résoudre.
+- **Décisions de pilotage** : elles sont immuables ; leur base n'est pas réécrite. Les références, actions générées et actions
+  restées ouvertes qu'elles citent sont filtrées à la lecture par `refLisible` (une action illisible n'est que comptée), et le nom
+  d'une action d'un registre illisible pour l'auteur n'est pas recopié dans une nouvelle décision.
+- **Action générée par une décision** : elle est rangée dans un plan d'accueil choisi par l'auteur ; une source de registre
+  restreint sans destination est refusée.
+
+## Garde-fous (chantier 4)
+
+- `apps/api/test/architecture-acces.test.ts` analyse le source : toute lecture directe des tables `grc_objects`, `grc_links`,
+  `registres`, `registre_perimetres` ou de l'état historique brut (`recompose()`) hors du module GRC doit figurer dans une liste
+  blanche, avec sa catégorie et sa raison. Une entrée qui ne correspond plus à un accès est refusée, et les entrées « dette »
+  (lectures gardées par droit de module, à migrer vers la porte) sont plafonnées.
+- `apps/api/test/rbac.test.ts` distingue les routes sans droit métier par construction de celles dont le service décide de
+  l'accès : chaque route de la seconde liste doit être appelée par un test qui contrôle un refus (401, 403 ou 404).
+
 ## Hors périmètre
 
 Microservices, découpage de la base ou rôles PostgreSQL par module, sécurité au niveau des lignes (RLS) et changement du
