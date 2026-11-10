@@ -3,6 +3,7 @@
    restreints qu'elle ne peut pas lire (un écran mural n'a aucun droit par registre : seuls le périmètre commun et les
    registres non restreints sont comptés). Chaque élément n'est compté qu'une fois, même s'il apparaît dans plusieurs
    périmètres par un registre partagé. Chaque bloc exige la lecture de son module et vaut `null` sans ce droit. */
+import { PorteeLecture } from './acces/portee.js';
 import type { Rights, Synthese } from '@suivi/shared';
 import { FINDING_TYPE_LABELS } from '@suivi/shared/audit';
 import type { SessionUser } from './auth.js';
@@ -46,10 +47,9 @@ const DANS_LA_PORTEE = `NOT o.archived
 
 async function portee(g: Grc, user: SessionUser | null) {
   if (user) {
-    return {
-      ids: (await g.listSmsis(user)).map((p) => p.id),
-      masques: await g.registres.inaccessiblesPartout(user),
-    };
+    // Périmètres lisibles et registres restreints masqués : porte de lecture (ADR 0083).
+    const porte = PorteeLecture.pour(g, user);
+    return { ids: [...(await porte.perimetresLisibles())], masques: [...(await porte.registresMasques())] };
   }
   const restreints = await g.db.k.selectFrom('registres').select('id').where('restricted', '=', true).execute();
   return { ids: [DEFAULT_SMSI], masques: restreints.map((r) => r.id) };
