@@ -81,6 +81,16 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
   caches écrits sur place. Comportement inchangé pour les droits existants. Les chemins d'écriture sous transaction (déplacement,
   import Tenacy) restent sur les primitives GRC, ce que l'ADR consigne. Aucune action sur le serveur.
   _(Session « Projet audit_suivi Coeur ».)_
+- **Tableau de bord par la porte de lecture** ([ADR 0083](docs/adr/0083-porte-de-lecture-autorisee-entre-modules.md),
+  sous-chantier 2g) : la portée des agrégats du tableau de bord (périmètres lisibles, registres restreints masqués) vient de la
+  porte de lecture, comme les listes. Comportement inchangé pour les droits existants. Les opérations système (garde de purge
+  des documents, conservation, contrôle des relations) lisent tout par construction et l'annuaire des responsables est interne
+  au module GRC : ils ne passent pas par la porte. Aucune action sur le serveur. _(Session « Projet audit_suivi Coeur ».)_
+- **Export Excel et simulation d'import par la porte de lecture** ([ADR 0083](docs/adr/0083-porte-de-lecture-autorisee-entre-modules.md),
+  sous-chantier 2f) : l'export Excel du suivi et la simulation d'import lisent l'état historique rédigé par la porte de lecture ;
+  la simulation compare le fichier à cet état, en plus de la rédaction du rapport. Comportement inchangé pour les droits
+  existants. L'export complet au format historique et l'application d'un import gardent l'état brut (droit d'exporter exigé
+  sur chaque clé, écriture sous verrou). Aucune action sur le serveur. _(Session « Projet audit_suivi Coeur ».)_
 - **Garde-fous d'architecture des accès** ([ADR 0083](docs/adr/0083-porte-de-lecture-autorisee-entre-modules.md), chantier 4) :
   un test d'architecture refuse toute nouvelle lecture directe des tables GRC partagées ou de l'état historique brut hors d'une
   liste blanche justifiée (entrées périmées refusées, dette plafonnée) ; le test des droits vérifie que chaque route dont le
@@ -104,6 +114,10 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
   `PUT /api/grc/:smsi/framework-attachments/:id/statut`, `GET|PUT /api/grc/:smsi/framework-copies/:id`,
   `POST /api/grc/:smsi/framework-copies/:id/requirements`, `DELETE …/requirements/:requirementId` ; routes
   `POST /api/library/frameworks/:id/copy` et `…/requirements` retirées. Migration `052`. _(Session « Référentiel library management ».)_
+- **Routes GRC découpées par sous-domaine** ([ADR 0083](docs/adr/0083-porte-de-lecture-autorisee-entre-modules.md), chantier 5) :
+  `routes/grc.ts` (106 routes) est réparti dans `routes/grc/` (périmètres, objets et tâches, référentiels et bibliothèque,
+  fournisseurs, risques et méthodes), sans changement d'URL, de schéma ni de niveau d'accès : le document OpenAPI est identique
+  (377 chemins, mêmes opérations). Aucune action sur le serveur. _(Session « Projet audit_suivi Coeur ».)_
 
 ## [6.2.0] — 2026-11-04
 
