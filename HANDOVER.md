@@ -1,7 +1,8 @@
 # Reprendre Suivi des audits
 
-> **Reprise la plus récente : [06/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-06.md)** (correctifs issus d'un audit externe,
-> lots A à D fusionnés dans `claude-suivi-smsi`). Précédente : **[05/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-05.md)** (bibliothèque figée, copie du
+> **Reprise la plus récente : [10/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-10.md)** (porte de lecture autorisée entre
+> modules, [ADR 0083](docs/adr/0083-porte-de-lecture-autorisee-entre-modules.md) proposée, garde-fous d'architecture, routes
+> découpées). Précédente : **[06/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-06.md)** (correctifs issus d'un audit externe, lots A à D) ; avant elle : **[05/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-05.md)** (bibliothèque figée, copie du
 > référentiel propre au périmètre, application pour le suivi de conformité, [ADR 0082](docs/adr/0082-referentiels-du-perimetre-copie-et-application.md)
 > proposée, migration `052`) ; avant elle : **[30/10/2026](docs/01_REPRISE_IA/REPRISE-2026-10-30.md)** (clés de sécurité FIDO2 / WebAuthn,
 > ADR 0079, PR ouverte vers `claude-suivi-smsi` ; § 6 : module RETEX d'incident sur `claude/retex-incidents`,
