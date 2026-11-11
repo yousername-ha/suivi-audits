@@ -312,7 +312,7 @@ migrations_appliquees() {
 # Aucune clé privée n'est jamais affichée. Arrête le script au moindre défaut, avant toute écriture.
 controler_cles_sauvegarde() { # identite secours
   local id="$1" secours="$2" mode ligne n=0
-  command -v age > /dev/null && command -v age-keygen > /dev/null || arret "outil « age » absent : l'installer (sudo apt-get install -y age), voir docs/INSTALLATION.md."
+  command -v age > /dev/null && command -v age-keygen > /dev/null || arret "outil « age » absent : l'installer (Debian ou Ubuntu : sudo apt-get install -y age ; Rocky Linux : sudo dnf install -y epel-release age), voir docs/INSTALLATION.md."
   [ -f "$id" ] && [ ! -L "$id" ] && [ -s "$id" ] || arret "clé de sauvegarde du serveur absente ou vide ($id) : elle est créée par l'exécutant des sauvegardes au démarrage de la pile (ou sudo ./scripts/generer-cles-sauvegarde.sh)."
   mode=$(stat -c %a "$id")
   (( (8#$mode & 077) == 0 )) || arret "droits trop larges sur la clé de sauvegarde ($id) : 0600 requis (chmod 600)."
