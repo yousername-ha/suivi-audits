@@ -453,46 +453,46 @@ Un seul module est repris dans des tables dédiées : la **cartographie** (`maps
 | `$.roles[].refs` | app_state.data | 2 | isms_roles |  |
 | `$.recurring` | app_state.data | 2 | recurring_tasks |  |
 | `$.evidences` | app_state.data | 2 | evidences |  |
-| `$.invest` | app_state.data | 3 | investments |  |
-| `$.invest.baseYear` | app_state.data | 3 | investments |  |
-| `$.invest.lines` | app_state.data | 3 | investments |  |
-| `$.invest.lines[]` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].id` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].createdAt` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].company` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].priority` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].type` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].desc` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].n0` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].n1` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].n2` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].comment` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].alt` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].account` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].perimeter` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].status` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].nature` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].renewal` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].notice` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].supplier` | app_state.data | 3 | investments |  |
-| `$.invest.source` | app_state.data | 3 | investments |  |
-| `$.crrc` | app_state.data | 3 | crrc_* |  |
-| `$.crrc.offers` | app_state.data | 3 | crrc_* |  |
-| `$.crrc.offers[]` | app_state.data | 3 | crrc_* |  |
-| `$.crrc.offers[].id` | app_state.data | 3 | crrc_* |  |
-| `$.crrc.offers[].name` | app_state.data | 3 | crrc_* |  |
-| `$.crrc.offers[].status` | app_state.data | 3 | crrc_* |  |
-| `$.crrc.offers[].partner` | app_state.data | 3 | crrc_* |  |
-| `$.crrc.offers[].desc` | app_state.data | 3 | crrc_* |  |
-| `$.crrc.offers[].perimeters` | app_state.data | 3 | crrc_* |  |
-| `$.crrc.offers[].perimeters[]` | app_state.data | 3 | crrc_* |  |
-| `$.crrc.offers[].perimeters[][]` | app_state.data | 3 | crrc_* |  |
-| `$.crrc.offers[].perimeters[][][]` | app_state.data | 3 | crrc_* |  |
-| `$.crrc.establishments` | app_state.data | 3 | crrc_* |  |
-| `$.crrc.resources` | app_state.data | 3 | crrc_* |  |
-| `$.crrc.runs` | app_state.data | 3 | crrc_* |  |
-| `$.crrc.restores` | app_state.data | 3 | crrc_* |  |
-| `$.crrc.alerts` | app_state.data | 3 | crrc_* |  |
+| `$.invest` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.invest.baseYear` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.invest.lines` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.invest.lines[]` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.invest.lines[].id` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.invest.lines[].createdAt` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.invest.lines[].company` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.invest.lines[].priority` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.invest.lines[].type` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.invest.lines[].desc` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.invest.lines[].n0` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.invest.lines[].n1` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.invest.lines[].n2` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.invest.lines[].comment` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.invest.lines[].alt` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.invest.lines[].account` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.invest.lines[].perimeter` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.invest.lines[].status` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.invest.lines[].nature` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.invest.lines[].renewal` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.invest.lines[].notice` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.invest.lines[].supplier` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.invest.source` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.crrc` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.crrc.offers` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.crrc.offers[]` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.crrc.offers[].id` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.crrc.offers[].name` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.crrc.offers[].status` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.crrc.offers[].partner` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.crrc.offers[].desc` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.crrc.offers[].perimeters` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.crrc.offers[].perimeters[]` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.crrc.offers[].perimeters[][]` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.crrc.offers[].perimeters[][][]` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.crrc.establishments` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.crrc.resources` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.crrc.runs` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.crrc.restores` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
+| `$.crrc.alerts` | ignoré | 3 | — | Module retiré le 11/11/2026 (ADR 0084) : la clé est ignorée à l'import et absente de l'export. |
 | `$.findings[].tasks[].id` | app_state.data | 1 | findings, finding_tasks | Identifiant stable ajouté par le schéma 15 (clé de correspondance legacy_id lors de la reprise). |
 | `$.indicators[].values[].id` | app_state.data | 2 | indicators, indicator_values | Identifiant stable ajouté par le schéma 15 (clé de correspondance legacy_id lors de la reprise). |
 | `$.ai.plan[].id` | app_state.data | 3 | ai_systems, ai_evaluations, ai_actions, ai_policies | Identifiant stable ajouté par le schéma 15 (clé de correspondance legacy_id lors de la reprise). |

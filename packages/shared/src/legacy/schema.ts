@@ -143,8 +143,6 @@ export const LegacyStateSchema = loose({
   roles: z.array(Role).optional(),
   recurring: z.array(z.unknown()).optional(),
   evidences: z.array(z.unknown()).optional(),
-  invest: loose({ baseYear: num.optional(), lines: z.array(idObj()).optional() }).optional(),
-  crrc: loose({}).optional(),
 });
 
 export const EnvelopeSchema = z.object({

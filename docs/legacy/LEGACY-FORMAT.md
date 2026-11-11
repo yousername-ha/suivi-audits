@@ -1,7 +1,7 @@
 # Format de l'outil de suivi « legacy » (schema 14)
 
 Généré automatiquement depuis un export réel, **sans aucune valeur** : uniquement les chemins, les types et les effectifs.
-Sert de contrat pour l'import dans la refonte. La clé `maps` (cartographie, module bêta validé le 08/10/2026, voir `docs/cartographie/reference-beta-legacy/CONTRAT-S-MAPS.md`) a été ajoutée à la main : effectifs indicatifs. Jeu de test associé : `legacy-fixture.json` (anonymisé).
+Sert de contrat pour l'import dans la refonte. La clé `maps` (cartographie, module bêta validé le 08/10/2026, voir `docs/cartographie/reference-beta-legacy/CONTRAT-S-MAPS.md`) a été ajoutée à la main : effectifs indicatifs. Jeu de test associé : `legacy-fixture.json` (anonymisé). Les clés `crrc` et `invest` (modules CRRC et Investissements) sont retirées côté application (ADR 0084) : elles restent décrites ici parce que l'outil historique les produit encore, mais un import les ignore avec un avertissement et l'export ne les produit plus.
 
 ## Modules (clés de premier niveau)
 

@@ -144,6 +144,9 @@ describe('import legacy : application, aller-retour, annulation', () => {
     const attendu = migrateToSchema15(fixture());
     delete attendu.findings;
     delete attendu.findingsRev;
+    // Modules CRRC et Investissements retirés (ADR 0084) : clés ignorées à l'import, absentes de l'export.
+    delete attendu.crrc;
+    delete attendu.invest;
     const exporte = { ...(env.data as JsonObject) };
     expect(exporte.findings).toEqual([]);
     delete exporte.findings;

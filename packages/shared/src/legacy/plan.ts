@@ -197,14 +197,7 @@ export function isEmptyState(s: JsonObject | null): boolean {
   if (USER_LISTS.some((k) => len(s[k]) > 0)) return false;
   if (len(s.dda) > 0) return false;
   const sub = (k: string, c: string) => (isObject(s[k]) ? len((s[k] as JsonObject)[c]) : 0);
-  return (
-    sub('ai', 'register') +
-      sub('ai', 'evals') +
-      sub('invest', 'lines') +
-      sub('crisis', 'cells') +
-      sub('plan', 'slots') ===
-    0
-  );
+  return sub('ai', 'register') + sub('ai', 'evals') + sub('crisis', 'cells') + sub('plan', 'slots') === 0;
 }
 
 /* ---------------------------------------------------------------- Point d'entrée */
@@ -216,7 +209,7 @@ export interface PlanOptions {
 }
 
 /** Modules de l'ancien outil qui n'existent plus : ignorés à l'import. */
-const CLES_RETIREES = ['findings', 'findingsRev'] as const;
+const CLES_RETIREES = ['findings', 'findingsRev', 'crrc', 'invest'] as const;
 
 /** Calcule l'état résultant d'un import et son rapport. Ne modifie ni « current » ni « incoming ». */
 export function planImport(
@@ -232,6 +225,15 @@ export function planImport(
     warnings.push(
       `Les ${inc.findings.length} constat(s) historique(s) du fichier ne sont pas importés : les écarts se saisissent dans le registre des écarts.`,
     );
+  // Les modules CRRC et Investissements sont retirés (ADR 0084) : leurs données ne sont ni importées ni exportées.
+  for (const [cle, nom] of [
+    ['crrc', 'CRRC'],
+    ['invest', 'Investissements'],
+  ] as const)
+    if (cle in inc)
+      warnings.push(
+        `Le module « ${nom} » n’existe plus : les données de la clé « ${cle} » du fichier ne sont pas importées.`,
+      );
   for (const etat of [inc, cur]) if (etat) for (const cle of CLES_RETIREES) delete etat[cle];
   let next: JsonObject;
   const module = opts.module || null;

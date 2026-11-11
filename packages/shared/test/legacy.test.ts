@@ -127,8 +127,13 @@ describe('planification d’un import', () => {
     const attendu = migrateToSchema15(f);
     delete attendu.findings;
     delete attendu.findingsRev;
+    // Les modules CRRC et Investissements sont retirés (ADR 0084) : leurs clés sont ignorées et signalées.
+    delete attendu.crrc;
+    delete attendu.invest;
     expect(canonical(next)).toEqual(canonical(attendu));
     expect(report.warnings.join(' ')).toContain('constat(s) historique(s)');
+    expect(report.warnings.join(' ')).toContain('Le module « CRRC » n’existe plus');
+    expect(report.warnings.join(' ')).toContain('Le module « Investissements » n’existe plus');
     expect(report.totals.created).toBeGreaterThan(0);
     expect(report.unknownPaths).toEqual(['$.suppliers[].MFA-001']);
   });

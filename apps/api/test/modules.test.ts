@@ -134,12 +134,12 @@ describe('B1 configuration des modules', () => {
       (
         await a.put(
           '/api/admin/modules',
-          { intent: intent('crrc', false), previewId: p.previewId, confirm: 'VALIDER' },
+          { intent: intent('incidents', false), previewId: p.previewId, confirm: 'VALIDER' },
           { 'if-match': `"${p.version}"` },
         )
       ).statusCode,
     ).toBe(409);
-    expect((await apply(intent('crrc', false))).statusCode).toBe(200);
+    expect((await apply(intent('incidents', false))).statusCode).toBe(200);
     expect(
       (
         await a.put(
@@ -149,7 +149,7 @@ describe('B1 configuration des modules', () => {
         )
       ).statusCode,
     ).toBe(412);
-    expect((await a.get('/api/modules')).json().disabled).toEqual(['crrc']);
+    expect((await a.get('/api/modules')).json().disabled).toEqual(['incidents']);
   });
   it('refuse les simulations et imports portant sur un module désactivé', async () => {
     expect((await apply(intent('fournisseurs', false))).statusCode).toBe(200);

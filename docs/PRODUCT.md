@@ -27,8 +27,6 @@ une démarche qualité. Les droits et les modules activés déterminent les rubr
 | Preuves et contrôles | Registre des preuves, plan de contrôle |
 | Plans et revues | BIA, continuité, exercices et RETEX, plans de formation et de sensibilisation, audits internes, **revues de direction** |
 | Incidents et crise | Registre, qualification, cellule de crise, contacts, scénarios et check-lists |
-| Gestion CRRC | Établissements, offres, sauvegardes, restaurations, alertes, rapports mensuels |
-| Budget | Plan d'investissement |
 | Outils | Mes rappels, import et rapports ; la configuration du pilotage est une carte de la page Plateforme |
 
 À côté : tableau de bord, documents et liens (chiffrés), cartographie du SMSI, évaluations IA, **exports Excel**, écran mural,

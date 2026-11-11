@@ -1,7 +1,7 @@
 /* Collections de l'outil de suivi en tables (ADR 0040) : correspondances génériques sans perte entre une clé de l'état
    historique et des tables à colonnes typées nullables.
    - liste : clé tableau d'objets (incidents, plans…) → une table ;
-   - groupe : clé objet dont certaines propriétés sont des listes (crrc, crisis, ai) → une table par liste, le reste de
+   - groupe : clé objet dont certaines propriétés sont des listes (crisis, ai) → une table par liste, le reste de
      l'objet dans `suivi_presence.reste` ;
    - carte : clé objet indexé par identifiant (dda) → une table, l'identifiant dans `cle`.
    Une colonne NULL signifie « champ absent » ; `extra` garde les champs inconnus et les valeurs d'un type inattendu ;

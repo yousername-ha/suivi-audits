@@ -866,7 +866,7 @@ export async function chargerJeuDeTest(
       ...couv,
       ...ebios,
     };
-    // 8) Modules annexes : incidents, investissements, revues des accès.
+    // 8) Modules annexes : incidents, revues des accès.
     bilan.annexes = await modulesAnnexes({ appel, exiger, decaler });
     await svc.db.audit({ username: 'jeu-de-test' } as never, '127.0.0.1', 'jeu-de-test.loaded', commun, {
       compte,
