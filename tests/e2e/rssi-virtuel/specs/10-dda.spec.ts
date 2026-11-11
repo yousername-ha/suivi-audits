@@ -2,7 +2,7 @@
    à l'écran : applicabilité, mise en œuvre, justification. Puis il contrôle ce que la page lui affiche contre les données. */
 import { expect, test, type Page } from '@playwright/test';
 import { sessionAdmin, watchPage } from '../../helpers';
-import donnees from '../donnees';
+import donnees, { litteral } from '../donnees';
 import { lireInstantane, tauxMiseEnOeuvreTotale } from '../invariants';
 
 const code = (id: string) => id.replace(/^A-/, 'A.');
@@ -37,9 +37,7 @@ test('le RSSI déclare l’applicabilité de ses mesures par la fiche de chaque 
   for (const l of donnees.dda) {
     await page.getByRole('button', { name: code(l.mesure), exact: true }).click();
     const dialogue = page.getByRole('dialog');
-    await expect(
-      dialogue.getByRole('heading', { name: new RegExp(`^${code(l.mesure).replace(/\./g, '\\.')} — `) }),
-    ).toBeVisible();
+    await expect(dialogue.getByRole('heading', { name: new RegExp(`^${litteral(code(l.mesure))} — `) })).toBeVisible();
     await choisir(page, 'Applicable', l.applicable === 'oui' ? 'Oui' : 'Non');
     if (l.niveau) await choisir(page, 'Mise en œuvre', l.niveau);
     const just = dialogue.getByRole('textbox', { name: 'Justification', exact: true });
@@ -65,9 +63,7 @@ test('le RSSI déclare l’applicabilité de ses mesures par la fiche de chaque 
   // Filtre « Exclues » : la justification de l'exclusion est affichée dans la ligne.
   await page.getByText('Exclues', { exact: true }).click();
   for (const l of donnees.dda.filter((x) => x.applicable === 'non'))
-    await expect(page.getByRole('row', { name: new RegExp(code(l.mesure).replace(/\./g, '\\.')) })).toContainText(
-      l.justification,
-    );
+    await expect(page.getByRole('row', { name: new RegExp(litteral(code(l.mesure))) })).toContainText(l.justification);
   expect(problemes).toEqual([]);
   await ctx.close();
 });

@@ -4,7 +4,7 @@
    tout le reste se lit et se fait à l'écran. */
 import { expect, test, type Page } from '@playwright/test';
 import { creerEcartCommun, sessionAdmin, watchPage } from '../../helpers';
-import donnees from '../donnees';
+import donnees, { litteral } from '../donnees';
 import { lireInstantane, verifier } from '../invariants';
 
 const incoherences = (page: Page) =>
@@ -90,10 +90,10 @@ test('RSSI-04 ouvert : la DdA désigne l’écart par son identifiant technique'
     await page.goto('/pilotage/dda-annexe-a');
     const id = (await lireInstantane(ctx.request)).ecarts.find((x) => x.name === e.titre)?.id;
     expect(id, 'écart du jeu fictif introuvable dans le registre').toBeTruthy();
-    const code = e.mesures[0]!.replace(/^A-/, 'A.').replace(/\./g, '\\.');
+    const code = litteral(e.mesures[0]!.replace(/^A-/, 'A.'));
     const ligne = page.getByRole('row', { name: new RegExp(`^${code} `) });
     // La ligne a chargé ses écarts (identifiant ou intitulé affiché) : seul le libellé reste ensuite en cause.
-    await expect(ligne).toContainText(new RegExp(`${id}|${e.titre.replace(/[()]/g, '\\$&')}`), { timeout: 15_000 });
+    await expect(ligne).toContainText(new RegExp(`${litteral(id!)}|${litteral(e.titre)}`), { timeout: 15_000 });
     await expect(ligne).toContainText(e.titre, { timeout: 2000 });
   } finally {
     await ctx.close();

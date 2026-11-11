@@ -25,3 +25,6 @@ const donnees = JSON.parse(
   readFileSync(path.join(import.meta.dirname, 'donnees', 'gcs-fictif.json'), 'utf8'),
 ) as DonneesFictives;
 export default donnees;
+
+/** Texte rendu littéral dans une expression régulière (tous les caractères spéciaux, barre oblique inverse comprise). */
+export const litteral = (texte: string) => texte.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

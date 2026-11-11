@@ -71,13 +71,12 @@ function totp(secret, decalage = 0) {
 }
 
 async function demarrer() {
-  if (existsSync(ETAT)) {
-    try {
-      await chromium.connectOverCDP(`http://127.0.0.1:${PORT}`, { timeout: 2000 }).then((b) => b.close());
-      return 'Chrome déjà ouvert (arreter pour repartir d’un profil neuf).';
-    } catch {
-      rmSync(ETAT, { force: true });
-    }
+  // Un Chrome répond déjà sur le port : on le garde. Sinon l'état éventuel est périmé et sera réécrit.
+  try {
+    await chromium.connectOverCDP(`http://127.0.0.1:${PORT}`, { timeout: 2000 }).then((b) => b.close());
+    return 'Chrome déjà ouvert (arreter pour repartir d’un profil neuf).';
+  } catch {
+    /* aucun Chrome : démarrage */
   }
   const profil = path.join(DOSSIER, 'profil');
   rmSync(profil, { recursive: true, force: true });
@@ -175,8 +174,13 @@ async function executer(commande, args) {
     case 'demarrer':
       return demarrer();
     case 'arreter': {
-      if (existsSync(ETAT)) {
-        const { pid } = JSON.parse(readFileSync(ETAT, 'utf8'));
+      let pid = 0;
+      try {
+        pid = JSON.parse(readFileSync(ETAT, 'utf8')).pid;
+      } catch {
+        /* aucun état : rien à fermer */
+      }
+      if (pid) {
         try {
           process.kill(-pid);
         } catch {
@@ -186,8 +190,8 @@ async function executer(commande, args) {
             /* déjà fermé */
           }
         }
-        rmSync(ETAT, { force: true });
       }
+      rmSync(ETAT, { force: true });
       return 'Chrome fermé.';
     }
     case 'jeton': {
@@ -201,7 +205,11 @@ async function executer(commande, args) {
       if (!args[0]) throw new Error('usage : totp <secret>');
       return totp(args[0]);
     case 'journal':
-      return existsSync(JOURNAL) ? readFileSync(JOURNAL, 'utf8') : '(journal vide)';
+      try {
+        return readFileSync(JOURNAL, 'utf8');
+      } catch {
+        return '(journal vide)';
+      }
   }
   const { page, erreurs, fermer } = await connecter();
   try {
