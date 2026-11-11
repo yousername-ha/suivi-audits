@@ -52,6 +52,8 @@ trap cleanup EXIT
 if [ ! -w /dev/kvm ]; then
   echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules > /dev/null
   sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+  # La règle est appliquée de façon asynchrone : attendre que les droits soient posés.
+  for _ in $(seq 1 30); do [ -w /dev/kvm ] && break; sleep 1; done
 fi
 if [ ! -w /dev/kvm ]; then
   echo "::group::Diagnostic KVM"
