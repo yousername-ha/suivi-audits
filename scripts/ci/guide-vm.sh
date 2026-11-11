@@ -118,6 +118,13 @@ sleep 20
 for _ in $(seq 1 60); do "${SSH[@]}" true 2> /dev/null && break; sleep 5; done
 "${SSH[@]}" true || arret "La machine virtuelle ne répond plus après le redémarrage."
 "${SSH[@]}" 'uname -r'
+# Le Node du runner (binaire autonome) n'est qu'un outil de la CI pour les gestes « navigateur » du guide rejoués par l'API ; il
+# demande libatomic, absente des images cloud minimales. Cet outil n'est pas une exigence de l'application ni du guide.
+if [ "$SYSTEME" = rocky10 ]; then
+  "${SSH[@]}" 'sudo dnf install -y libatomic > /dev/null'
+else
+  "${SSH[@]}" 'sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq libatomic1 > /dev/null'
+fi
 echo "::endgroup::"
 
 # --- Dépôt, Node (copié du runner : binaire autonome) et guide extrait pour Rocky
