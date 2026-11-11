@@ -1,7 +1,7 @@
 # ADR 0083 — Porte de lecture autorisée entre modules
 
-- Statut : proposée (chantier d'architecture demandé par le RSSI le 09/11/2026). Numéro annoncé et accepté par le RSSI dans la
-  session (règle 5 d'AGENTS) ; l'acceptation de l'ADR reste à prononcer par le RSSI.
+- Statut : **acceptée** par le RSSI le 11/11/2026 (chantier d'architecture demandé le 09/11/2026). Numéro annoncé et accepté par le
+  RSSI dans la session (règle 5 d'AGENTS).
 - Date : 2026-11-09
 - Rédaction : session « Projet audit_suivi Coeur » (`session_01ES6jrfuR1tD6Az1XDgAnS3`)
 - Complète l'[ADR 0010](0010-droits-rbac.md) (droits par module), l'[ADR 0043](0043-registres-perimetres-herites-et-droits-par-ressource.md)
