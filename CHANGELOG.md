@@ -6,6 +6,13 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
+**Aucune action sur le serveur.** **Migration automatique `053`, destructive** (retrait des modules CRRC et Investissements,
+[ADR 0084](docs/adr/0084-retrait-des-modules-crrc-et-investissements.md)) : les établissements, ressources, sauvegardes,
+restaurations, alertes et offres CRRC et le plan d'investissement (Budget) sont **supprimés définitivement** à la mise à jour.
+Exporter avant (Exports Excel de la version précédente) si ces données doivent être conservées ; la sauvegarde automatique d'avant
+mise à jour est le seul retour arrière. Les droits `crrc` et `investissements` disparaissent des rôles et des attributions.
+_(Session « Projet audit_suivi Coeur ».)_
+
 **Aucune action sur le serveur.** **Migration automatique `052`** (référentiels des périmètres) : appliquée au démarrage de
 `app`, durée négligeable. Chaque référentiel déjà rattaché à un périmètre devient la **copie** de ce périmètre, nommée « <référentiel> (PRIVE -
 <périmètre>) », au statut
@@ -123,6 +130,15 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
   CRRC, audit et déclaration d'applicabilité, autres modules annexes), sans changement d'URL, de schéma ni de niveau d'accès :
   le document OpenAPI est identique (377 chemins, mêmes opérations). Aucune action sur le serveur.
   _(Session « Projet audit_suivi Coeur ».)_
+
+### Retiré
+
+- **Modules CRRC (sauvegardes des établissements partenaires) et Investissements (rubrique Budget, « Plan d'investissement »)**,
+  ancien et nouveau code, sur décision du RSSI ([ADR 0084](docs/adr/0084-retrait-des-modules-crrc-et-investissements.md)) :
+  pages et menus, routes `/api/crrc/*` et `/api/investissements/*`, tables (migration `053`), modules de droits, rubriques
+  d'export Excel et données de démonstration. Un fichier de l'outil historique qui contient les clés `crrc` ou `invest` reste
+  importable : ces clés sont écartées sans rien dire, et l'export ne les produit plus (schéma 15 inchangé). _(Session « Projet
+  audit_suivi Coeur ».)_
 
 ## [6.2.0] — 2026-11-04
 

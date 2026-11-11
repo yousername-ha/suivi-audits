@@ -1,4 +1,4 @@
-/* Démonstration, modules annexes : incidents, investissements, revues des accès (puis cellule de crise, CRRC et GAP).
+/* Démonstration, modules annexes : incidents, revues des accès (puis cellule de crise et GAP).
    Même principe que `demo-normes.ts` : tout passe par l'API publique, au nom de l'administrateur créé à l'installation, avec les
    mêmes validations que l'interface. Établissement, fournisseurs et circonstances sont entièrement fictifs et reprennent ceux
    du jeu de démonstration (fournisseurs SUP-001 à SUP-005) ; dates et montants sont des exemples à remplacer par les vôtres. */
@@ -9,10 +9,8 @@ type Annexes = Pick<ContexteDemo, 'appel' | 'exiger' | 'decaler'>;
 
 export interface BilanAnnexes {
   incidents: number;
-  investissements: number;
   revuesAcces: number;
   crise: { contacts: number; scenarios: number; cellules: number };
-  crrc: { etablissements: number; ressources: number; sauvegardes: number; restaurations: number; alertes: number };
   gap: { applications: number; usagesIa: number };
 }
 
@@ -135,105 +133,6 @@ async function incidents({ appel, exiger }: Annexes): Promise<number> {
     n++;
   }
   return n;
-}
-
-/** Investissements : budget sur trois ans, dont deux options comparables pour la supervision de sécurité. */
-async function investissements({ appel, exiger, decaler }: Annexes): Promise<number> {
-  const annee = new Date().getFullYear();
-  await exiger(await appel('PUT', '/api/investissements/annee', { baseYear: annee }), 'Année de référence du budget');
-  const lignes: Json[] = [
-    {
-      company: 'Éditeur de protection des postes fictif',
-      type: 'Protection des postes',
-      desc: 'Détection et réponse sur les postes et serveurs (abonnement annuel).',
-      nature: 'Abonnement',
-      status: 'En place',
-      priority: '1',
-      n0: 18000,
-      n1: 18000,
-      n2: 18500,
-      perimeter: 'Établissement',
-      account: 'Fonctionnement',
-      renewal: decaler(200),
-      notice: 90,
-    },
-    {
-      company: 'Intégrateur de supervision fictif A',
-      type: 'Supervision de sécurité',
-      desc: 'Collecte et corrélation des journaux, supervision par un centre externe en heures ouvrées.',
-      nature: 'Prestation',
-      status: 'Prévisionnel',
-      priority: '2',
-      n0: 22000,
-      n1: 30000,
-      n2: 30000,
-      alt: 'Option B ci-dessous (supervision 24 h sur 24).',
-      perimeter: 'Établissement',
-      account: 'Investissement',
-    },
-    {
-      company: 'Intégrateur de supervision fictif B',
-      type: 'Supervision de sécurité',
-      desc: 'Même périmètre, supervision 24 h sur 24 et 7 jours sur 7.',
-      nature: 'Prestation',
-      status: 'À qualifier',
-      priority: '2',
-      n0: 35000,
-      n1: 42000,
-      n2: 42000,
-      comment: 'Devis à confirmer ; à comparer avec l’option A avant la revue de direction.',
-      perimeter: 'Établissement',
-      account: 'Investissement',
-    },
-    {
-      company: 'Fournisseur de sauvegarde fictif',
-      type: 'Sauvegarde',
-      desc: 'Copie immuable hors site des sauvegardes du dossier patient.',
-      nature: 'Abonnement',
-      status: 'Validé',
-      priority: '1',
-      n0: 9000,
-      n1: 9000,
-      n2: 9000,
-      perimeter: 'Dossier patient',
-      account: 'Fonctionnement',
-      supplier: 'SUP-001',
-    },
-    {
-      company: 'Cabinet d’audit fictif',
-      type: 'Audit de sécurité',
-      desc: 'Test d’intrusion annuel et revue de configuration.',
-      nature: 'Prestation',
-      status: 'Prévisionnel',
-      priority: '3',
-      n0: 12000,
-      n1: 12000,
-      n2: 12000,
-      perimeter: 'Établissement',
-      account: 'Fonctionnement',
-    },
-    {
-      company: 'Revendeur de matériel fictif',
-      type: 'Authentification forte',
-      desc: 'Clés d’authentification physiques pour les comptes d’administration et le personnel soignant.',
-      nature: 'Matériel',
-      status: 'En place',
-      priority: '2',
-      n0: 6500,
-      n1: 0,
-      n2: 0,
-      perimeter: 'Établissement',
-      account: 'Investissement',
-    },
-  ];
-  for (const l of lignes) {
-    const cree = await exiger<{ id: string }>(
-      await appel('POST', '/api/investissements/lignes'),
-      'Création d’une ligne budgétaire',
-    );
-    await exiger(await appel('PATCH', `/api/investissements/lignes/${cree.id}`, l), `Ligne ${cree.id}`);
-  }
-  return lignes.length;
 }
 
 /** Revues des accès : cinq applications, une par état (à jour, à planifier, en retard, jamais réalisée). */
@@ -457,209 +356,6 @@ async function crise({ appel, exiger }: Annexes): Promise<BilanAnnexes['crise']>
   return { contacts: contacts.length + importes.ajoutes, scenarios: scenarios.length, cellules: 1 };
 }
 
-/** CRRC : trois établissements partenaires fictifs (identifiants « 99-FICTIF », volontairement irréels) à des stades de contrat
-    différents, cinq ressources sauvegardées, dix jours de sauvegardes avec un avertissement et un échec récents, deux demandes de
-    restauration et deux alertes. */
-async function crrc({ appel, exiger, decaler }: Annexes): Promise<BilanAnnexes['crrc']> {
-  const partenaires: Json[] = [
-    {
-      name: 'Établissement partenaire fictif A',
-      finess: '99-FICTIF-01',
-      status: 'Actif',
-      signed: decaler(-200),
-      serviceDate: decaler(-170),
-      renewal: decaler(195),
-      adminContact: 'Direction (partenaire A)',
-      adminEmail: 'direction-a@exemple.invalid',
-      techContact: 'Informatique (partenaire A)',
-      techEmail: 'it-a@exemple.invalid',
-      prestataire: 'Prestataire de maintenance fictif',
-      alerts: 'it-a@exemple.invalid',
-      capacityGb: 2000,
-      retentionDays: 90,
-      scopes: { m365: true, windows: true, s3: false, gws: false },
-      notes: 'Contrat de démonstration.',
-    },
-    {
-      name: 'Établissement partenaire fictif B',
-      finess: '99-FICTIF-02',
-      status: 'Déploiement',
-      signed: decaler(-30),
-      serviceDate: '',
-      renewal: decaler(335),
-      adminContact: 'Direction (partenaire B)',
-      adminEmail: 'direction-b@exemple.invalid',
-      techContact: 'Informatique (partenaire B)',
-      techEmail: 'it-b@exemple.invalid',
-      prestataire: '',
-      alerts: 'it-b@exemple.invalid',
-      capacityGb: 500,
-      retentionDays: 30,
-      scopes: { s3: true, windows: false, m365: false, gws: false },
-      notes: 'Agent en cours de déploiement.',
-    },
-    {
-      name: 'Établissement partenaire fictif C',
-      finess: '99-FICTIF-03',
-      status: 'À signer',
-      signed: '',
-      serviceDate: '',
-      renewal: '',
-      adminContact: 'Direction (partenaire C)',
-      adminEmail: 'direction-c@exemple.invalid',
-      techContact: '',
-      techEmail: '',
-      prestataire: '',
-      alerts: '',
-      capacityGb: 0,
-      retentionDays: 0,
-      scopes: {},
-      notes: 'Convention transmise pour signature.',
-    },
-  ];
-  const est: string[] = [];
-  for (const e of partenaires) {
-    const cree = await exiger<{ id: string }>(
-      await appel('POST', '/api/crrc/etablissements'),
-      'Création d’un contrat établissement',
-    );
-    await exiger(await appel('PATCH', `/api/crrc/etablissements/${cree.id}`, e), `Contrat ${cree.id}`);
-    est.push(cree.id);
-  }
-  // Ressource, établissement, technologie, fréquence, dernier état de ses sauvegardes (0 = toutes réussies).
-  const ressources: {
-    nom: string;
-    e: number;
-    tech: string;
-    freq: string;
-    retention: number;
-    fin: 'ok' | 'alerte' | 'echec';
-    gb: number;
-  }[] = [
-    {
-      nom: 'Messagerie et documents du partenaire A',
-      e: 0,
-      tech: 'm365',
-      freq: 'Quotidienne',
-      retention: 90,
-      fin: 'ok',
-      gb: 420,
-    },
-    {
-      nom: 'Serveur de fichiers du partenaire A',
-      e: 0,
-      tech: 'windows',
-      freq: 'Quotidienne',
-      retention: 90,
-      fin: 'alerte',
-      gb: 780,
-    },
-    {
-      nom: 'Serveur d’imagerie du partenaire A',
-      e: 0,
-      tech: 'windows',
-      freq: 'Hebdomadaire',
-      retention: 90,
-      fin: 'echec',
-      gb: 1100,
-    },
-    {
-      nom: 'NAS administratif du partenaire A',
-      e: 0,
-      tech: 's3',
-      freq: 'Quotidienne',
-      retention: 90,
-      fin: 'ok',
-      gb: 150,
-    },
-    { nom: 'NAS du partenaire B', e: 1, tech: 's3', freq: 'Quotidienne', retention: 30, fin: 'ok', gb: 240 },
-  ];
-  const ids: string[] = [];
-  let sauvegardes = 0;
-  for (const r of ressources) {
-    const cree = await exiger<{ id: string }>(
-      await appel('POST', '/api/crrc/ressources', { est: est[r.e], tech: r.tech }),
-      'Création d’une ressource',
-    );
-    await exiger(
-      await appel('PATCH', `/api/crrc/ressources/${cree.id}`, { name: r.nom, freq: r.freq, retention: r.retention }),
-      `Ressource ${cree.id}`,
-    );
-    for (let j = 10; j >= 1; j--) {
-      const dernier = j === 1;
-      const status = dernier ? { ok: 'Réussie', alerte: 'Alerte', echec: 'Échec' }[r.fin] : 'Réussie';
-      await exiger(
-        await appel('POST', `/api/crrc/ressources/${cree.id}/sauvegardes`, {
-          date: heure(-j, '02:00'),
-          type: j % 7 === 0 ? 'Complète' : 'Incrémentale',
-          status,
-          volumeGb: status === 'Échec' ? 0 : Math.round((j % 7 === 0 ? r.gb : r.gb / 20) * 10) / 10,
-          durationMin: status === 'Échec' ? 3 : j % 7 === 0 ? 240 : 25,
-        }),
-        `Sauvegarde ${j} de ${cree.id}`,
-      );
-      sauvegardes++;
-    }
-    ids.push(cree.id);
-  }
-  // Deux demandes de restauration : un test mené à bien, une demande en attente.
-  const test = await exiger<{ id: string }>(
-    await appel('POST', '/api/crrc/restaurations', {
-      res: ids[0],
-      point: heure(-3, '02:00'),
-      scope: 'Boîte de messagerie de test',
-      type: 'Test de restauration',
-      owner: 'Informatique (partenaire A)',
-      dest: 'Emplacement alternatif',
-      path: '/restauration/test',
-      conflict: 'Renommer',
-    }),
-    'Demande de restauration',
-  );
-  await exiger(
-    await appel('PATCH', `/api/crrc/restaurations/${test.id}`, { status: 'Réussie', duration: '35 min' }),
-    'Suivi de la restauration',
-  );
-  await exiger(
-    await appel('POST', '/api/crrc/restaurations', {
-      res: ids[1],
-      point: heure(-2, '02:00'),
-      scope: 'Dossier partagé de la comptabilité',
-      type: 'Demande utilisateur',
-      owner: 'Informatique (partenaire A)',
-      dest: 'Emplacement d’origine',
-      path: '',
-      conflict: 'Ne pas écraser',
-    }),
-    'Demande de restauration',
-  );
-  // Deux alertes : l'échec de la sauvegarde d'imagerie (ouverte) et l'avertissement du serveur de fichiers (résolue).
-  await exiger(
-    await appel('POST', '/api/crrc/alertes', {
-      severity: 'Haute',
-      res: ids[2],
-      message: 'La dernière sauvegarde hebdomadaire du serveur d’imagerie a échoué (agent injoignable).',
-    }),
-    'Alerte',
-  );
-  const avert = await exiger<{ id: string }>(
-    await appel('POST', '/api/crrc/alertes', {
-      severity: 'Moyenne',
-      res: ids[1],
-      message: 'Durée de sauvegarde supérieure à la moyenne sur le serveur de fichiers.',
-    }),
-    'Alerte',
-  );
-  await exiger(await appel('PATCH', `/api/crrc/alertes/${avert.id}`, { status: 'Résolue' }), 'Suivi de l’alerte');
-  return {
-    etablissements: partenaires.length,
-    ressources: ressources.length,
-    sauvegardes,
-    restaurations: 2,
-    alertes: 2,
-  };
-}
-
 /** GAP : un questionnaire guidé d'intégration d'application (avec plan d'actions), un questionnaire guidé des usages de l'IA
     et une application saisie à la main, dont quelques points sont déjà évalués. */
 async function gap({ appel, exiger, decaler }: Annexes): Promise<BilanAnnexes['gap']> {
@@ -755,17 +451,13 @@ async function gap({ appel, exiger, decaler }: Annexes): Promise<BilanAnnexes['g
 export async function modulesAnnexes(ctx: Annexes): Promise<BilanAnnexes> {
   const bilan: BilanAnnexes = {
     incidents: 0,
-    investissements: 0,
     revuesAcces: 0,
     crise: { contacts: 0, scenarios: 0, cellules: 0 },
-    crrc: { etablissements: 0, ressources: 0, sauvegardes: 0, restaurations: 0, alertes: 0 },
     gap: { applications: 0, usagesIa: 0 },
   };
   bilan.incidents = await incidents(ctx);
-  bilan.investissements = await investissements(ctx);
   bilan.revuesAcces = await revuesAcces(ctx);
   bilan.crise = await crise(ctx);
-  bilan.crrc = await crrc(ctx);
   bilan.gap = await gap(ctx);
   return bilan;
 }

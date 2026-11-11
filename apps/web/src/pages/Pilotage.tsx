@@ -58,10 +58,7 @@ import { CelluleCriseVue, ContactsCrise, ScenariosCrise } from '../incidents/Cri
 import { QualifierSignalement, RegistreIncidents } from '../incidents/Incidents';
 import { RetexIncidents } from '../incidents/Retex';
 import { DeclarationApplicabilite } from '../dda/Dda';
-import { EtablissementsCrrc, OffresCrrc, VueEnsembleCrrc } from '../crrc/Contrats';
-import { AlertesCrrc, RapportsCrrc, RessourcesCrrc, RestaurationsCrrc, TableauSauvegardes } from '../crrc/Sauvegardes';
 import { EvaluationsClausier } from '../pilotage/EvaluationsClausier';
-import { Investissements } from '../pilotage/Investissements';
 import { RevuesAcces } from '../pilotage/RevuesAcces';
 import { CouvertureCycle } from '../audit/Couverture';
 import { Organisation } from '../audit/Organisation';
@@ -470,14 +467,6 @@ export function PilotagePage() {
               <AnalyserService smsi={smsi} onChoisir={chooseScope} />
             )}
             {section === 'gap-applications' && can('conformite', 'lire') && <GapApplications />}
-            {section === 'crrc-ensemble' && can('crrc', 'lire') && <VueEnsembleCrrc />}
-            {section === 'crrc-etablissements' && can('crrc', 'lire') && <EtablissementsCrrc />}
-            {section === 'crrc-offres' && can('crrc', 'lire') && <OffresCrrc />}
-            {section === 'crrc-tableau' && can('crrc', 'lire') && <TableauSauvegardes />}
-            {section === 'crrc-ressources' && can('crrc', 'lire') && <RessourcesCrrc />}
-            {section === 'crrc-restaurations' && can('crrc', 'lire') && <RestaurationsCrrc />}
-            {section === 'crrc-alertes' && can('crrc', 'lire') && <AlertesCrrc />}
-            {section === 'crrc-rapports' && can('crrc', 'lire') && <RapportsCrrc />}
             {section === 'dda-iso' && can('audit', 'lire') && <DeclarationApplicabilite reference="ISO" />}
             {section === 'dda-annexe-a' && can('audit', 'lire') && <DeclarationApplicabilite reference="A" />}
             {section === 'dda-hds' && can('audit', 'lire') && <DeclarationApplicabilite reference="HDS" />}
@@ -488,7 +477,6 @@ export function PilotagePage() {
             {section === 'incidents-qualifier' && can('incidents', 'lire') && <QualifierSignalement />}
             {section === 'incidents-retex' && can('incidents', 'lire') && <RetexIncidents />}
             {section === 'evaluations-clausier' && can('fournisseurs', 'lire') && <EvaluationsClausier />}
-            {section === 'investissements' && can('investissements', 'lire') && <Investissements />}
             {section === 'revues-acces' && can('pilotage', 'lire') && <RevuesAcces />}
             {section === 'audit-pronostic' && can('audit', 'lire') && <Pronostic />}
             {section === 'audit-couverture' && can('audit', 'lire') && <CouvertureCycle />}

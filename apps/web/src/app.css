@@ -1530,25 +1530,6 @@ rect.audit-niv-faible {
   border-radius: var(--mantine-radius-xs);
 }
 
-/* Gestion CRRC : activité des établissements par département (pastilles de niveau). */
-.crrc-n-ok {
-  fill: var(--carte-bleu-accent);
-  background: var(--carte-bleu-accent);
-}
-.crrc-n-mid {
-  fill: var(--carte-orange-accent);
-  background: var(--carte-orange-accent);
-}
-.crrc-n-bad {
-  fill: var(--carte-rouge-accent);
-  background: var(--carte-rouge-accent);
-}
-.crrc-n-na,
-.crrc-n-info {
-  fill: var(--carte-gris-accent);
-  background: var(--carte-gris-accent);
-}
-
 /* Cellule de crise : main courante. */
 .crise-log {
   margin: 0;

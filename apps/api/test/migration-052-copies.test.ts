@@ -91,7 +91,10 @@ describe('migration 052 : rattachements convertis en copies des périmètres', (
         [groupe, fw],
       );
 
-      expect(await t.svc.db.migrate()).toEqual(['052_referentiels_copies_perimetre.sql']);
+      expect(await t.svc.db.migrate()).toEqual([
+        '052_referentiels_copies_perimetre.sql',
+        '053_retrait_crrc_investissements.sql',
+      ]);
 
       const { rows } = await t.svc.db.q<{
         smsi_id: string;

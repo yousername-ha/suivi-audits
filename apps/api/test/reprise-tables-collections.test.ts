@@ -108,13 +108,11 @@ describe('migration 024 et correspondance générique', () => {
   });
 
   const CLES = [
-    'invest',
     'incidents',
     'plans',
     'accessReviews',
     'appGaps',
     'supEvals',
-    'crrc',
     'crisis',
     'ai',
     'dda',
@@ -178,8 +176,7 @@ describe('migration 024 et correspondance générique', () => {
         for (const g of GROUPES) await t2.svc.db.tx((c) => ecrireGroupe(c, g, attendu[g.key] as Json | undefined));
         for (const k of CARTES) await t2.svc.db.tx((c) => ecrireCarte(c, k, attendu[k.key] as Json | undefined));
         const etat = (await t2.svc.legacy.recompose())!.data;
-        for (const k of ['crrc', 'crisis', 'ai', 'dda'])
-          if (k in attendu) expect(etat[k], `TS ${k}`).toEqual(attendu[k]);
+        for (const k of ['crisis', 'ai', 'dda']) if (k in attendu) expect(etat[k], `TS ${k}`).toEqual(attendu[k]);
       } finally {
         await t2.close();
       }

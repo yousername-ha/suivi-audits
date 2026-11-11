@@ -124,23 +124,6 @@ export const PILOTAGE_NAV = [
     ],
   },
   {
-    label: 'Gestion CRRC',
-    items: [
-      { id: 'crrc-ensemble', label: 'Vue d’ensemble CRRC', module: 'crrc' },
-      { id: 'crrc-etablissements', label: 'Établissements et contrats', module: 'crrc' },
-      { id: 'crrc-offres', label: 'Catalogue des offres', module: 'crrc' },
-      { id: 'crrc-tableau', label: 'Tableau de bord des sauvegardes', module: 'crrc' },
-      { id: 'crrc-ressources', label: 'Sauvegardes par ressource', module: 'crrc' },
-      { id: 'crrc-restaurations', label: 'Restaurations', module: 'crrc' },
-      { id: 'crrc-alertes', label: 'Alertes de sauvegarde', module: 'crrc' },
-      { id: 'crrc-rapports', label: 'Rapports mensuels', module: 'crrc' },
-    ],
-  },
-  {
-    label: 'Budget',
-    items: [{ id: 'investissements', label: 'Plan d’investissement', module: 'investissements' }],
-  },
-  {
     label: 'Outils',
     items: [
       { id: 'rappels', label: 'Mes rappels', module: 'pilotage' },

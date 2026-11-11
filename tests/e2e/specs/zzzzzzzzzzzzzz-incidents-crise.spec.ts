@@ -1,6 +1,6 @@
 /* Registre des incidents et cellule de crise repris de l'outil de suivi : qualification d'un signalement, fiche,
    obligations, action du registre des écarts, ouverture d'une cellule, main courante, check-list, contacts et
-   scénarios, alerte CRRC → incident. Données fictives posées par l'API. */
+   scénarios. Données fictives posées par l'API. */
 import { expect, test } from '@playwright/test';
 import { sessionAdmin, watchPage, ecrireEtat } from '../helpers';
 
@@ -29,21 +29,6 @@ test('Incidents et cellule de crise : qualification, fiche, cellule, main couran
         contacts: [],
         cells: [],
       },
-      crrc: {
-        establishments: [{ id: 'E1', name: 'Établissement fictif', status: 'Actif' }],
-        resources: [{ id: 'R1', est: 'E1', name: 'NAS fictif', tech: 's3' }],
-        alerts: [
-          {
-            id: 'ALR-1',
-            date: '2026-10-12T03:00',
-            severity: 'Haute',
-            est: 'E1',
-            res: 'R1',
-            message: 'Échec fictif',
-            status: 'Ouverte',
-          },
-        ],
-      },
     });
     await ecrireEtat(ctx.request, csrf, s);
 
@@ -71,13 +56,6 @@ test('Incidents et cellule de crise : qualification, fiche, cellule, main couran
     await expect(fiche.getByText(/Action INC-AC-01/)).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(page.getByRole('button', { name: /^INC-\d{4}-001$/ })).toBeVisible();
-
-    // Alerte CRRC → incident.
-    await page.goto('/pilotage/crrc-alertes');
-    await page.getByRole('button', { name: 'Créer un incident' }).click();
-    // L'alerte passe « En cours » et quitte l'onglet des alertes ouvertes.
-    await page.getByText(/^En cours \(1\)$/).click();
-    await expect(page.getByText(/^INC-\d{4}-002$/)).toBeVisible();
 
     // Cellule de crise : ouverture en exercice, main courante, check-list, échéance, clôture.
     await page.goto('/pilotage/crise-cellule');

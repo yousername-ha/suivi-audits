@@ -9,8 +9,8 @@ Le fonctionnement métier complet reste NON VÉRIFIÉ dans cette mission.
 | ID      | Famille                                 | Clés                 | Action                                                                                                    |
 | ------- | --------------------------------------- | -------------------- | --------------------------------------------------------------------------------------------------------- |
 | FCT-031 | Fournisseurs et évaluations historiques | suppliers / supEvals | Reprendre registre, évaluations, contacts, certifications, fréquence et exports ; maintien legacy requis. |
-| FCT-033 | CRRC, établissements et offres          | crrc                 | CRRC-01 à CRRC-04 au backlog ; offres/statuts/carte/exports attendent cadrage autorisé.                   |
-| FCT-034 | Investissements et prospection          | invest               | Filtres/vues et prospection au backlog ; lot D exclu de la livraison actuelle.                            |
+| FCT-033 | CRRC, établissements et offres          | crrc                 | Abandon décidé le 11/11/2026 : module retiré (ADR 0084). |
+| FCT-034 | Investissements et prospection          | invest               | Abandon décidé le 11/11/2026 : module retiré (ADR 0084). |
 | FCT-035 | Incidents, crise et main courante       | incidents / crisis   | INC-01 à INC-03, déclarations, événements et COMSEC à cadrer ; aucun abandon décidé.                      |
 | FCT-036 | Revues d’accès métier historiques       | accessReviews        | Reprise périodique et preuve de réalisation des revues métier à spécifier.                                |
 | FCT-038 | Plans historiques et sous-sections      | plans                | Inventorier types/champs, identifiants et liens avant migration vers le début E.                          |

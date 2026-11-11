@@ -720,6 +720,10 @@ Le poivre ([ADR 0072](adr/0072-poivre-des-mots-de-passe.md)) est défini à l'é
 
 Retirées par la migration `037_retrait_environnement.sql` (décision du 25/10/2026, [ADR 0046](adr/0046-retrait-du-catalogue-environnement.md)) : les échelles et matrices se publient dans Configuration GRC. La sauvegarde automatique de la mise à jour précède la suppression.
 
+### Modules CRRC et Investissements (retirés)
+
+Retirés par la migration `053_retrait_crrc_investissements.sql` (décision du 11/11/2026, [ADR 0084](adr/0084-retrait-des-modules-crrc-et-investissements.md)) : les établissements, ressources, sauvegardes, restaurations, alertes et offres du module CRRC et le plan d’investissement (rubrique Budget) disparaissent, avec leurs droits. **Suppression définitive des données** : la sauvegarde automatique de la mise à jour précède la migration et reste le seul retour arrière. Si ces données doivent être conservées, les exporter avant la mise à jour (Exports Excel de la version précédente) ; la version qui retire ces modules n’en propose plus d’export. Un fichier de l’outil historique qui contient les clés `crrc` ou `invest` reste importable : ces clés sont écartées sans rien dire.
+
 ### Mise à jour depuis l’application
 
 L’installation Compose normale démarre désormais `gateway` (frontal HTTPS stable), `web` (interface interne), `app`, `db`, `init` et `updater` (exécutant privilégié). Aucun cron ni fichier de configuration supplémentaire n’est nécessaire pour la mise à jour intégrée. Une installation existante reçoit ces services lors de sa première mise à niveau vers une version qui les contient ; la procédure serveur ci-dessous reste disponible pour ce premier passage et pour le dépannage.

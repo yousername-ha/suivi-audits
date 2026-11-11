@@ -4250,8 +4250,6 @@
   },
   "schema": 14,
   "crisis": { "contacts": [], "scenarios": [], "cells": [] },
-  "invest": { "baseYear": 2026, "lines": [] },
-  "crrc": { "offers": [], "establishments": [], "resources": [], "runs": [], "restores": [], "alerts": [] },
   "iso27001Certified": true,
   "accessReviews": [],
   "appGaps": [],

@@ -16,8 +16,6 @@ const optional: Partial<Record<Module, readonly Module[]>> = {
   pilotage: ['audit', 'ecarts', 'fournisseurs', 'documents'],
   fournisseurs: ['pilotage', 'documents'],
   conformite: ['audit', 'documents'],
-  crrc: ['fournisseurs', 'documents'],
-  investissements: ['fournisseurs', 'documents'],
   incidents: ['pilotage', 'documents'],
   cartographie: ['audit', 'ecarts', 'pilotage', 'fournisseurs', 'conformite', 'documents'],
   import_export: [...MODULES.filter((m) => m !== 'import_export' && m !== 'administration' && m !== 'parametres')],

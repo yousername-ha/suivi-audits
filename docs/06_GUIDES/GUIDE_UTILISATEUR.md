@@ -775,53 +775,13 @@ Restriction : Reprise fonctionnelle IA distincte du futur assistant MCP J, exclu
 Fonctions liées : voir la [matrice](../02_FONCTIONNALITES/MATRICE_TRACABILITE.md)
 et le cas TEST-032.
 
-## FCT-033 — CRRC, établissements et offres
+## FCT-033 — CRRC, établissements et offres (retiré)
 
-Objectif : Code historique conservé ; parcours CRRC complet non rejoué.
+Module retiré le 11/11/2026 par décision du RSSI ([ADR 0084](../adr/0084-retrait-des-modules-crrc-et-investissements.md)) : plus de page, de droit ni de donnée.
 
-État : **NON VÉRIFIÉ**, uniquement dans ce périmètre.
-Accès : **Pilotage → CRRC**.
-Profils : Session complète, lecture du domaine crrc ; opérations soumises aux permissions modifier/exporter/administrer et au périmètre. Une validation peut exiger un rôle de validation distinct.
-Prérequis : module activé, accès au périmètre et données nécessaires disponibles ;
-un environnement de recette autorisé pour les opérations sensibles.
+## FCT-034 — Investissements et prospection (retiré)
 
-1. Ouvrir le menu Pilotage et sélectionner la rubrique indiquée.
-2. Consulter les éléments existants selon ses permissions ; conserver un jeu fictif pour toute recette.
-3. Relever les champs, liens, filtres et exports effectivement présents avant de préparer une reprise.
-4. Consigner tout écart : le parcours complet n’a pas été exécuté pendant cet audit.
-
-Champs/paramètres : Champs exacts dans le formulaire courant ou le contrat API ; pour une famille historique, inventaire détaillé restant à recetter.
-Résultat attendu : fiche/décision/rapport dans la source décrite, visible selon
-les droits ; le résultat serveur prime sur l’affichage du bouton.
-Erreurs : voir section commune ci-dessous ; conservation du brouillon en cas
-de conflit, refus de validation si conditions métier manquantes.
-Restriction : CRRC-01 à CRRC-04 au backlog ; offres/statuts/carte/exports attendent cadrage autorisé.
-Fonctions liées : voir la [matrice](../02_FONCTIONNALITES/MATRICE_TRACABILITE.md)
-et le cas TEST-033.
-
-## FCT-034 — Investissements et prospection
-
-Objectif : Registre et code d’export conservés ; INV-01 et INV-02 ne sont pas revendiqués livrés.
-
-État : **NON VÉRIFIÉ**, uniquement dans ce périmètre.
-Accès : **Pilotage → Investissements**.
-Profils : Session complète, lecture du domaine investissements ; opérations soumises aux permissions modifier/exporter/administrer et au périmètre. Une validation peut exiger un rôle de validation distinct.
-Prérequis : module activé, accès au périmètre et données nécessaires disponibles ;
-un environnement de recette autorisé pour les opérations sensibles.
-
-1. Ouvrir le menu Pilotage et sélectionner la rubrique indiquée.
-2. Consulter les éléments existants selon ses permissions ; conserver un jeu fictif pour toute recette.
-3. Relever les champs, liens, filtres et exports effectivement présents avant de préparer une reprise.
-4. Consigner tout écart : le parcours complet n’a pas été exécuté pendant cet audit.
-
-Champs/paramètres : Champs exacts dans le formulaire courant ou le contrat API ; pour une famille historique, inventaire détaillé restant à recetter.
-Résultat attendu : fiche/décision/rapport dans la source décrite, visible selon
-les droits ; le résultat serveur prime sur l’affichage du bouton.
-Erreurs : voir section commune ci-dessous ; conservation du brouillon en cas
-de conflit, refus de validation si conditions métier manquantes.
-Restriction : Filtres/vues et prospection au backlog ; lot D exclu de la livraison actuelle.
-Fonctions liées : voir la [matrice](../02_FONCTIONNALITES/MATRICE_TRACABILITE.md)
-et le cas TEST-034.
+Module « Plan d’investissement » (rubrique Budget) retiré le 11/11/2026 par décision du RSSI ([ADR 0084](../adr/0084-retrait-des-modules-crrc-et-investissements.md)) : plus de page, de droit ni de donnée.
 
 ## FCT-035 — Incidents, crise et main courante
 

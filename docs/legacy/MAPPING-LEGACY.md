@@ -453,46 +453,6 @@ Un seul module est repris dans des tables dédiées : la **cartographie** (`maps
 | `$.roles[].refs` | app_state.data | 2 | isms_roles |  |
 | `$.recurring` | app_state.data | 2 | recurring_tasks |  |
 | `$.evidences` | app_state.data | 2 | evidences |  |
-| `$.invest` | app_state.data | 3 | investments |  |
-| `$.invest.baseYear` | app_state.data | 3 | investments |  |
-| `$.invest.lines` | app_state.data | 3 | investments |  |
-| `$.invest.lines[]` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].id` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].createdAt` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].company` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].priority` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].type` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].desc` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].n0` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].n1` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].n2` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].comment` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].alt` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].account` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].perimeter` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].status` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].nature` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].renewal` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].notice` | app_state.data | 3 | investments |  |
-| `$.invest.lines[].supplier` | app_state.data | 3 | investments |  |
-| `$.invest.source` | app_state.data | 3 | investments |  |
-| `$.crrc` | app_state.data | 3 | crrc_* |  |
-| `$.crrc.offers` | app_state.data | 3 | crrc_* |  |
-| `$.crrc.offers[]` | app_state.data | 3 | crrc_* |  |
-| `$.crrc.offers[].id` | app_state.data | 3 | crrc_* |  |
-| `$.crrc.offers[].name` | app_state.data | 3 | crrc_* |  |
-| `$.crrc.offers[].status` | app_state.data | 3 | crrc_* |  |
-| `$.crrc.offers[].partner` | app_state.data | 3 | crrc_* |  |
-| `$.crrc.offers[].desc` | app_state.data | 3 | crrc_* |  |
-| `$.crrc.offers[].perimeters` | app_state.data | 3 | crrc_* |  |
-| `$.crrc.offers[].perimeters[]` | app_state.data | 3 | crrc_* |  |
-| `$.crrc.offers[].perimeters[][]` | app_state.data | 3 | crrc_* |  |
-| `$.crrc.offers[].perimeters[][][]` | app_state.data | 3 | crrc_* |  |
-| `$.crrc.establishments` | app_state.data | 3 | crrc_* |  |
-| `$.crrc.resources` | app_state.data | 3 | crrc_* |  |
-| `$.crrc.runs` | app_state.data | 3 | crrc_* |  |
-| `$.crrc.restores` | app_state.data | 3 | crrc_* |  |
-| `$.crrc.alerts` | app_state.data | 3 | crrc_* |  |
 | `$.findings[].tasks[].id` | app_state.data | 1 | findings, finding_tasks | Identifiant stable ajouté par le schéma 15 (clé de correspondance legacy_id lors de la reprise). |
 | `$.indicators[].values[].id` | app_state.data | 2 | indicators, indicator_values | Identifiant stable ajouté par le schéma 15 (clé de correspondance legacy_id lors de la reprise). |
 | `$.ai.plan[].id` | app_state.data | 3 | ai_systems, ai_evaluations, ai_actions, ai_policies | Identifiant stable ajouté par le schéma 15 (clé de correspondance legacy_id lors de la reprise). |
