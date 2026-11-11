@@ -781,19 +781,6 @@ export interface StateHistory {
   import_batch_id: number | null;
 }
 
-export interface SuiviAccessReviews {
-  seq: Generated<number>;
-  position: number;
-  id: string | null;
-  app: string | null;
-  supplier: string | null;
-  month: string | null;
-  freq: number | null;
-  source: string | null;
-  comment: string | null;
-  extra: ColumnType<JsonValue, string | undefined, string>;
-}
-
 export interface SuiviAppGaps {
   seq: Generated<number>;
   position: number;
@@ -1528,7 +1515,6 @@ export interface DB {
   sessions: Sessions;
   settings: Settings;
   state_history: StateHistory;
-  suivi_access_reviews: SuiviAccessReviews;
   suivi_app_gaps: SuiviAppGaps;
   suivi_clausier_evals: SuiviClausierEvals;
   suivi_crise_cellules: SuiviCriseCellules;

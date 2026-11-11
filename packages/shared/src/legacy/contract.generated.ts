@@ -1049,42 +1049,6 @@ export const CONTRACT_PATHS: ReadonlyArray<{ path: string; types: string }> = [
     "types": "booléen"
   },
   {
-    "path": "$.accessReviews",
-    "types": "liste"
-  },
-  {
-    "path": "$.accessReviews[]",
-    "types": "objet"
-  },
-  {
-    "path": "$.accessReviews[].id",
-    "types": "texte"
-  },
-  {
-    "path": "$.accessReviews[].app",
-    "types": "texte"
-  },
-  {
-    "path": "$.accessReviews[].month",
-    "types": "texte"
-  },
-  {
-    "path": "$.accessReviews[].supplier",
-    "types": "texte"
-  },
-  {
-    "path": "$.accessReviews[].freq",
-    "types": "entier"
-  },
-  {
-    "path": "$.accessReviews[].source",
-    "types": "texte"
-  },
-  {
-    "path": "$.accessReviews[].comment",
-    "types": "texte"
-  },
-  {
     "path": "$.plan",
     "types": "objet"
   },

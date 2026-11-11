@@ -21,7 +21,7 @@ une démarche qualité. Les droits et les modules activés déterminent les rubr
 | Objectifs et indicateurs | Processus, objectifs, indicateurs (états calculés, valeurs historiques) |
 | Gestion de l'audit | Carte du prochain audit, couverture du cycle, déroulé, planning, participants |
 | Conformité | Référentiels et exigences, bibliothèque, déclaration d'applicabilité (ISO 27001, Annexe A, HDS), mesures, correspondances, rapprochements, **couverture par exigence**, applications à intégrer (GAP), conformité IA |
-| Fournisseurs | Fournisseurs de l'organisation et du périmètre, critères, évaluations par le clausier, revues des accès |
+| Fournisseurs | Fournisseurs de l'organisation et du périmètre, critères, évaluations par le clausier |
 | Risques | Registre, opportunités, études EBIOS RM, cartographie des risques, traitements, scénarios et actifs, configuration des analyses |
 | Écarts et actions | Amélioration continue, plan d'actions, tâches récurrentes |
 | Preuves et contrôles | Registre des preuves, plan de contrôle |

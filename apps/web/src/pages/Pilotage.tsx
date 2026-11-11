@@ -59,7 +59,6 @@ import { QualifierSignalement, RegistreIncidents } from '../incidents/Incidents'
 import { RetexIncidents } from '../incidents/Retex';
 import { DeclarationApplicabilite } from '../dda/Dda';
 import { EvaluationsClausier } from '../pilotage/EvaluationsClausier';
-import { RevuesAcces } from '../pilotage/RevuesAcces';
 import { CouvertureCycle } from '../audit/Couverture';
 import { Organisation } from '../audit/Organisation';
 import { Pronostic } from '../audit/Pronostic';
@@ -477,7 +476,6 @@ export function PilotagePage() {
             {section === 'incidents-qualifier' && can('incidents', 'lire') && <QualifierSignalement />}
             {section === 'incidents-retex' && can('incidents', 'lire') && <RetexIncidents />}
             {section === 'evaluations-clausier' && can('fournisseurs', 'lire') && <EvaluationsClausier />}
-            {section === 'revues-acces' && can('pilotage', 'lire') && <RevuesAcces />}
             {section === 'audit-pronostic' && can('audit', 'lire') && <Pronostic />}
             {section === 'audit-couverture' && can('audit', 'lire') && <CouvertureCycle />}
             {section === 'audit-deroule' && can('plan_audit', 'lire') && <Organisation vue="deroule" />}

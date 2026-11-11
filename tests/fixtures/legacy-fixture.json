@@ -2486,26 +2486,6 @@
  "entityCategory": "",
  "schema": 14,
  "iso27001Certified": true,
- "accessReviews": [
-  {
-   "id": "CONTRO-001",
-   "app": "[app]",
-   "month": "2026-04",
-   "supplier": "[supplier]",
-   "freq": 12,
-   "source": "[source]",
-   "comment": ""
-  },
-  {
-   "id": "CONTRO-002",
-   "app": "[app]",
-   "month": "2026-07",
-   "supplier": "[supplier]",
-   "freq": 12,
-   "source": "[source]",
-   "comment": ""
-  }
- ],
  "plan": {
   "status": "Projet",
   "note": "[note]",
