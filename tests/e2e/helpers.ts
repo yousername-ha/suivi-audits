@@ -288,8 +288,7 @@ export async function ecrireEtat(req: APIRequestContext, csrf: string, souhaite:
   // Plus d'écriture directe : une clé qui n'est portée par aucun module repris ne peut pas être posée par l'aide.
   const { data } = await lire();
   // Les constats historiques n'existent plus comme module (les écarts sont des fiches de registre) : leur clé est ignorée.
-  // Les modules CRRC et Investissements sont retirés (ADR 0084) : leurs clés sont ignorées à l'import.
-  const retirees = ['findings', 'findingsRev', 'crrc', 'invest'];
+  const retirees = ['findings', 'findingsRev'];
   const inecrivables = Object.keys(souhaite).filter(
     (k) =>
       !repris.includes(k) &&

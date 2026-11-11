@@ -722,7 +722,7 @@ Retirées par la migration `037_retrait_environnement.sql` (décision du 25/10/2
 
 ### Modules CRRC et Investissements (retirés)
 
-Retirés par la migration `053_retrait_crrc_investissements.sql` (décision du 11/11/2026, [ADR 0084](adr/0084-retrait-des-modules-crrc-et-investissements.md)) : les établissements, ressources, sauvegardes, restaurations, alertes et offres du module CRRC et le plan d’investissement (rubrique Budget) disparaissent, avec leurs droits. **Suppression définitive des données** : la sauvegarde automatique de la mise à jour précède la migration et reste le seul retour arrière. Si ces données doivent être conservées, les exporter avant la mise à jour (Exports Excel de la version précédente) ; la version qui retire ces modules n’en propose plus d’export. Un fichier de l’outil historique qui contient les clés `crrc` ou `invest` reste importable : ces clés sont ignorées avec un avertissement dans la simulation.
+Retirés par la migration `053_retrait_crrc_investissements.sql` (décision du 11/11/2026, [ADR 0084](adr/0084-retrait-des-modules-crrc-et-investissements.md)) : les établissements, ressources, sauvegardes, restaurations, alertes et offres du module CRRC et le plan d’investissement (rubrique Budget) disparaissent, avec leurs droits. **Suppression définitive des données** : la sauvegarde automatique de la mise à jour précède la migration et reste le seul retour arrière. Si ces données doivent être conservées, les exporter avant la mise à jour (Exports Excel de la version précédente) ; la version qui retire ces modules n’en propose plus d’export. Un fichier de l’outil historique qui contient les clés `crrc` ou `invest` reste importable : ces clés sont écartées sans rien dire.
 
 ### Mise à jour depuis l’application
 

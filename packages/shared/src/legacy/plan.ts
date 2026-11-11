@@ -208,7 +208,7 @@ export interface PlanOptions {
   envelope: boolean;
 }
 
-/** Modules de l'ancien outil qui n'existent plus : ignorés à l'import. */
+/** Modules de l'ancien outil qui n'existent plus (constats, CRRC, investissements : ADR 0084) : ignorés à l'import, sans trace. */
 const CLES_RETIREES = ['findings', 'findingsRev', 'crrc', 'invest'] as const;
 
 /** Calcule l'état résultant d'un import et son rapport. Ne modifie ni « current » ni « incoming ». */
@@ -225,15 +225,6 @@ export function planImport(
     warnings.push(
       `Les ${inc.findings.length} constat(s) historique(s) du fichier ne sont pas importés : les écarts se saisissent dans le registre des écarts.`,
     );
-  // Les modules CRRC et Investissements sont retirés (ADR 0084) : leurs données ne sont ni importées ni exportées.
-  for (const [cle, nom] of [
-    ['crrc', 'CRRC'],
-    ['invest', 'Investissements'],
-  ] as const)
-    if (cle in inc)
-      warnings.push(
-        `Le module « ${nom} » n’existe plus : les données de la clé « ${cle} » du fichier ne sont pas importées.`,
-      );
   for (const etat of [inc, cur]) if (etat) for (const cle of CLES_RETIREES) delete etat[cle];
   let next: JsonObject;
   const module = opts.module || null;

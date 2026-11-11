@@ -28,9 +28,10 @@ vérification dans le menu, le module **Investissements** (« Plan d'investissem
 - **Les modules de droits `crrc` et `investissements` sont retirés** : leurs permissions sortent des rôles personnalisés, leur
   restriction des attributions directes et des écrans muraux, leur activation du réglage des modules (contrainte de liste
   recréée). La matrice passe de 15 à 13 modules (65 permissions).
-- **Format d'échange historique (schéma 15)** : le contrat décrit toujours les clés `crrc` et `invest`, puisque l'outil
-  historique les produit. À l'import, ces clés sont **ignorées avec un avertissement** dans la simulation (comme les constats
-  historiques) ; l'export ne les produit plus. Le schéma reste à 15. Dans `MAPPING-LEGACY.md`, leurs chemins sont « ignoré ».
+- **Format d'échange historique (schéma 15)** : les clés `crrc` et `invest` disparaissent du contrat (`LEGACY-FORMAT.md`), du
+  mapping, du schéma de validation et de la fixture. Un fichier de l'outil historique qui les contient reste importable : elles
+  sont **écartées sans rien dire** (liste des clés retirées de `plan.ts`, avec les constats historiques) ; l'export ne les produit
+  plus. Le schéma reste à 15.
 - **Le plan de l'ADR 0084 proposée est abandonné** pour ces modules ; les Revues d'accès restent un module historique non
   repris (décision ultérieure).
 

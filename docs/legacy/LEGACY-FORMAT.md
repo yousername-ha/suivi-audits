@@ -1,7 +1,7 @@
 # Format de l'outil de suivi « legacy » (schema 14)
 
 Généré automatiquement depuis un export réel, **sans aucune valeur** : uniquement les chemins, les types et les effectifs.
-Sert de contrat pour l'import dans la refonte. La clé `maps` (cartographie, module bêta validé le 08/10/2026, voir `docs/cartographie/reference-beta-legacy/CONTRAT-S-MAPS.md`) a été ajoutée à la main : effectifs indicatifs. Jeu de test associé : `legacy-fixture.json` (anonymisé). Les clés `crrc` et `invest` (modules CRRC et Investissements) sont retirées côté application (ADR 0084) : elles restent décrites ici parce que l'outil historique les produit encore, mais un import les ignore avec un avertissement et l'export ne les produit plus.
+Sert de contrat pour l'import dans la refonte. La clé `maps` (cartographie, module bêta validé le 08/10/2026, voir `docs/cartographie/reference-beta-legacy/CONTRAT-S-MAPS.md`) a été ajoutée à la main : effectifs indicatifs. Jeu de test associé : `legacy-fixture.json` (anonymisé).
 
 ## Modules (clés de premier niveau)
 
@@ -46,8 +46,6 @@ Sert de contrat pour l'import dans la refonte. La clé `maps` (cartographie, mod
 | `roles` | liste | 8 |
 | `recurring` | liste | 0 |
 | `evidences` | liste | 0 |
-| `invest` | objet | 3 |
-| `crrc` | objet | 6 |
 | `maps` | objet | 2 |
 
 ## Listes d'objets sans identifiant stable (à corriger côté legacy)
@@ -506,46 +504,6 @@ Sert de contrat pour l'import dans la refonte. La clé `maps` (cartographie, mod
 | `$.roles[].refs` | texte | 8 |
 | `$.recurring` | liste | 1 |
 | `$.evidences` | liste | 1 |
-| `$.invest` | objet | 1 |
-| `$.invest.baseYear` | entier | 1 |
-| `$.invest.lines` | liste | 1 |
-| `$.invest.lines[]` | objet | 25 |
-| `$.invest.lines[].id` | texte | 25 |
-| `$.invest.lines[].createdAt` | texte | 25 |
-| `$.invest.lines[].company` | texte | 25 |
-| `$.invest.lines[].priority` | texte | 25 |
-| `$.invest.lines[].type` | texte | 25 |
-| `$.invest.lines[].desc` | texte | 25 |
-| `$.invest.lines[].n0` | entier, nombre | 25 |
-| `$.invest.lines[].n1` | entier, nombre | 25 |
-| `$.invest.lines[].n2` | entier, nombre | 25 |
-| `$.invest.lines[].comment` | texte | 25 |
-| `$.invest.lines[].alt` | texte | 25 |
-| `$.invest.lines[].account` | texte | 25 |
-| `$.invest.lines[].perimeter` | texte | 25 |
-| `$.invest.lines[].status` | texte | 25 |
-| `$.invest.lines[].nature` | texte | 25 |
-| `$.invest.lines[].renewal` | texte | 25 |
-| `$.invest.lines[].notice` | entier | 25 |
-| `$.invest.lines[].supplier` | texte | 25 |
-| `$.invest.source` | texte | 1 |
-| `$.crrc` | objet | 1 |
-| `$.crrc.offers` | liste | 1 |
-| `$.crrc.offers[]` | objet | 1 |
-| `$.crrc.offers[].id` | texte | 1 |
-| `$.crrc.offers[].name` | texte | 1 |
-| `$.crrc.offers[].status` | texte | 1 |
-| `$.crrc.offers[].partner` | texte | 1 |
-| `$.crrc.offers[].desc` | texte | 1 |
-| `$.crrc.offers[].perimeters` | liste | 1 |
-| `$.crrc.offers[].perimeters[]` | liste | 5 |
-| `$.crrc.offers[].perimeters[][]` | texte, liste | 20 |
-| `$.crrc.offers[].perimeters[][][]` | texte | 8 |
-| `$.crrc.establishments` | liste | 1 |
-| `$.crrc.resources` | liste | 1 |
-| `$.crrc.runs` | liste | 1 |
-| `$.crrc.restores` | liste | 1 |
-| `$.crrc.alerts` | liste | 1 |
 | `$.maps` | objet | 1 |
 | `$.maps.context` | objet | 1 |
 | `$.maps.context.nodes` | objet (dictionnaire indexé) | 1 |

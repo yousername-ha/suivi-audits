@@ -137,7 +137,7 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
   ancien et nouveau code, sur décision du RSSI ([ADR 0084](docs/adr/0084-retrait-des-modules-crrc-et-investissements.md)) :
   pages et menus, routes `/api/crrc/*` et `/api/investissements/*`, tables (migration `053`), modules de droits, rubriques
   d'export Excel et données de démonstration. Un fichier de l'outil historique qui contient les clés `crrc` ou `invest` reste
-  importable : elles sont ignorées avec un avertissement, et l'export ne les produit plus (schéma 15 inchangé). _(Session « Projet
+  importable : ces clés sont écartées sans rien dire, et l'export ne les produit plus (schéma 15 inchangé). _(Session « Projet
   audit_suivi Coeur ».)_
 
 ## [6.2.0] — 2026-11-04
