@@ -24,6 +24,7 @@ import {
   IconeCompte,
   IconeConformite,
   IconeDocuments,
+  IconeAssistant,
   IconeMur,
   IconeOrganisation,
   IconeParametres,
@@ -32,10 +33,12 @@ import {
   IconeRisques,
   IconeTheme,
 } from '@suivi/ui';
-import { useQueryClient } from '@tanstack/react-query';
+import type { EtatAssistantDto } from '@suivi/shared';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
-import { errorMessage } from '../api';
+import { errorMessage, get } from '../api';
+import { CLE_ETAT_ASSISTANT } from '../assistant/ReglagesAssistant';
 import { ALIAS_ADMINISTRATION, cartesVisibles } from '../administration-droits';
 import { famillesVisibles, localiser, type FamilleId } from '../navigation';
 import { logout as endSession } from '../logout';
@@ -100,11 +103,19 @@ export function Layout({ children }: { children: ReactNode }) {
   if (cartesVisibles(can, 'systeme').length > 0)
     administration.push(['/systeme', 'Configuration système', IconeAdministration]);
   const invitationsRetex = useInvitationsRetex();
+  const assistant = useQuery({
+    queryKey: CLE_ETAT_ASSISTANT,
+    queryFn: () => get<EtatAssistantDto>('/api/assistant/etat'),
+    enabled: can('assistant', 'lire'),
+    staleTime: 5 * 60_000,
+  });
   const outils: Item[] = [['/account', 'Mon compte', IconeCompte]];
   outils.push(['/aide', 'Guide d’utilisation', IconeDocuments]);
   if (canReadBusiness(can)) outils.push(['/mur', 'Écran mural', IconeMur]);
   // Demandes de contribution à un RETEX : visibles pour toute personne invitée, même sans droit sur les incidents.
   if (invitationsRetex.data?.length) outils.push(['/retex', 'Mes contributions RETEX', IconeDocuments]);
+  // Assistant RSSI (ADR 0086) : proposé seulement avec le droit dédié, et une fois activé dans les réglages.
+  if (assistant.data?.actif) outils.push(['/assistant', 'Assistant RSSI', IconeAssistant]);
   const active = (to: string) =>
     to === '/'
       ? loc.pathname === '/'

@@ -148,7 +148,7 @@ describe('assistant : droit dédié et réglages', () => {
 
   it('inactif tant qu’il n’est pas réglé : aucun profil, aucune conversation possible', async () => {
     const e = (await admin.get(`${base}/etat`)).json() as EtatAssistantDto;
-    expect(e).toMatchObject({ pret: false, fournisseur: null, modele: null, profils: [] });
+    expect(e).toMatchObject({ actif: false, pret: false, fournisseur: null, modele: null, profils: [] });
     expect(e.motif).toContain('activé');
     expect((await admin.post(`${base}/conversations`, { profil: 'mise_en_oeuvre' })).statusCode).toBe(409);
     expect((await reglages()).profils.every((p) => !p.actif && p.perimetres.length === 0)).toBe(true);

@@ -6,6 +6,14 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
+**Aucune action sur le serveur.** **Migration automatique `054`** (assistant RSSI, [ADR 0086](docs/adr/0086-assistant-rssi-integre.md)) :
+additive, durée négligeable. L'assistant reste **inactif** après la mise à jour. Pour l'utiliser : démarrer le service facultatif
+`assistant-relais` (`docker compose --profile assistant up -d`), renseigner `ASSISTANT_RELAIS_URL` dans `.env`, puis le régler dans
+Plateforme, « Assistant RSSI » ([guide](docs/INSTALLATION.md)). Une fois activé, la question posée et les extraits lus pour y répondre
+**partent chez le fournisseur du modèle** : ouvrir le flux sortant vers son hôte et n'ouvrir à l'assistant aucun périmètre pouvant
+contenir des données de santé tant que ce fournisseur n'est pas qualifié pour cela. Les rôles personnalisés ne reçoivent pas le nouveau
+droit `assistant` d'office. _(Session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
+
 **Aucune action sur le serveur.** **Migration automatique `053`, destructive** (retrait des modules CRRC et Investissements,
 [ADR 0084](docs/adr/0084-retrait-des-modules-crrc-et-investissements.md)) : les établissements, ressources, sauvegardes,
 restaurations, alertes et offres CRRC et le plan d'investissement (Budget) sont **supprimés définitivement** à la mise à jour.
@@ -106,6 +114,19 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
   _(Session « Projet audit_suivi Coeur ».)_
 
 ### Ajouté
+
+- **Assistant RSSI intégré, premier lot** ([ADR 0086](docs/adr/0086-assistant-rssi-integre.md), acceptée ;
+  [cadrage](docs/unification/CADRAGE-ASSISTANT-RSSI.md)) : page « Assistant RSSI » où l'on dialogue avec un profil (« Mise en
+  œuvre » ou « Audit interne »). L'assistant lit la plateforme **avec les droits de la personne**, dans les seuls périmètres ouverts
+  au profil, par sept outils de lecture (périmètres, synthèse, listes, fiche, historique, actions en retard, couverture des
+  référentiels) ; il **n'écrit rien**. Chaque réponse montre les lectures faites et les éléments lus. Droit dédié `assistant`
+  (utiliser : `lire` ; régler : `administrer`), porté par les seuls rôles Administrateur et RSSI. Réglages dans Plateforme,
+  « Assistant RSSI » : adresse HTTPS d'un service de modèle compatible OpenAI, modèle, clé scellée en écriture seule, profils et
+  périmètres, budget quotidien de jetons, test de connexion. L'API garde zéro accès sortant : un service facultatif
+  `assistant-relais`, sans base ni secret, est seul à joindre le fournisseur. Journal d'audit `assistant.*` sans contenu.
+  Limites de ce lot : pas de propositions, de rappels ni de rondes autonomes (lots A2 et A3) ; contenu des documents non lu
+  (lot A4) ; réponse affichée en une fois ; **aucun appel à un fournisseur réel n'a été essayé** ; captures de référence de
+  l'écran des rôles à régénérer (nouveau module dans la matrice). (session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`))
 
 - **Rocky Linux 10 comme serveur d'installation** ([ADR 0085](docs/adr/0085-support-de-rocky-linux-10.md), acceptée) : le guide
   d'installation donne les variantes `dnf`, `firewalld` et Docker CE pour Rocky Linux 10 (SELinux reste en mode `enforcing`), les

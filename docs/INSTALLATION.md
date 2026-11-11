@@ -65,10 +65,13 @@ Cochez chaque ligne avant de passer à l'étape 1. Les demandes aux autres équi
 | `registry-1.docker.io`, `auth.docker.io`, `production.cloudflare.docker.com` | TCP 443 | Image de la base de données (PostgreSQL) |
 | Serveur de temps (NTP) de votre organisation, ou `ntp.ubuntu.com` / `deb.pool.ntp.org` | UDP 123 | Mise à l'heure (indispensable à la double authentification) |
 | `database.clamav.net` | TCP 443 | Facultatif : signatures de l'antivirus (service `freshclam` seul) |
+| Hôte du fournisseur du modèle (par exemple `api.mistral.ai`) | TCP 443 | Facultatif : assistant RSSI (service `assistant-relais` seul) |
 
 Une fois démarrée, l'application elle-même n'a **aucun accès à Internet** : seuls le système, Docker et l'exécutant d'exploitation en ont besoin, pour l'installation et les mises à jour.
 
 **Antivirus facultatif.** `docker compose --profile antivirus up -d` démarre deux services sans privilège (utilisateur `clamav`, système de fichiers en lecture seule, aucune capacité Linux) : `clamav` (analyse, joint par l'API seule sur le réseau interne `antivirus`, sans accès à la base ni à Internet) et `freshclam` (téléchargement des signatures, seul à sortir vers `database.clamav.net`). `clamav` démarre quand les signatures initiales sont présentes, ce qui prend quelques minutes au premier lancement ; l'analyse reprend les signatures mises à jour dans l'heure qui suit leur téléchargement. Renseigner `CLAMAV_HOST=clamav` dans `.env`. Le dossier `DATA_DIR/clamav` appartient à l'uid 100, préparé par le service `init`.
+
+**Assistant RSSI facultatif** ([ADR 0086](adr/0086-assistant-rssi-integre.md)). `docker compose --profile assistant up -d` démarre `assistant-relais`, un service sans privilège (même image que l'API, système de fichiers en lecture seule, aucune capacité Linux, aucun accès à la base ni aux secrets). Il est le seul à sortir, vers le fournisseur du modèle de langage ; l'API le joint sur le réseau interne `assistant` et garde zéro accès à Internet. Renseigner `ASSISTANT_RELAIS_URL=http://assistant-relais:8787` dans `.env`, puis recréer `app` (`docker compose up -d`). Le reste se règle dans l'interface (Plateforme, « Assistant RSSI ») avec le droit `assistant:administrer` : adresse HTTPS du service de modèle (API compatible OpenAI, par exemple `https://api.mistral.ai/v1`), nom du modèle, clé (scellée, jamais réaffichée), profils et périmètres ouverts, budget quotidien. **Ce qui sort du serveur** : la question posée et les extraits lus pour y répondre. Ouvrir le flux sortant TCP 443 vers l'hôte du fournisseur. Un modèle hébergé sur une adresse privée de l'organisation demande en plus `ASSISTANT_RELAIS_PRIVE=true`. Sans ce service, l'assistant reste inactif et l'interface le dit.
 
 
 ---

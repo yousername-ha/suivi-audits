@@ -86,6 +86,8 @@ export interface ReglagesAssistantDto {
 }
 /** Ce que voit une personne qui peut utiliser l'assistant : rien des réglages sensibles. */
 export interface EtatAssistantDto {
+  /** L'assistant est activé dans les réglages (le menu ne le propose qu'alors). */
+  actif: boolean;
   /** Activé, réglé, clé présente et relais déclaré. */
   pret: boolean;
   /** Raison affichée quand l'assistant n'est pas prêt. */

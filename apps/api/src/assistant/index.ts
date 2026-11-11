@@ -223,6 +223,7 @@ export class Assistant {
     // Seuls les périmètres que la personne peut elle-même ouvrir sont nommés.
     const lisibles = new Map((await this.grc.listSmsis(user)).map((s) => [s.id, s.name]));
     return {
+      actif: r.actif,
       pret: motif === null,
       motif,
       fournisseur: r.adresse ? hote(r.adresse) : null,

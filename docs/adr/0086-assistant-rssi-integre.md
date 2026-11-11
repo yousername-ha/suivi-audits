@@ -174,3 +174,23 @@
    réglages.
 4. Aucune autre session ne travaille sur le code de l'API sur cette branche.
 5. Réglages par défaut (plafond de notifications, délai de relance, budget de jetons) : à arrêter aux lots A2 et A3.
+
+## Addendum du 11/11/2026 — lot A1 réalisé (socle et chat)
+
+Écarts assumés entre la décision et ce premier lot, sur la branche `claude/assistant-rssi` :
+
+- **Module actif, assistant inactif.** Le module `assistant` est activable et désactivable comme les autres et n'est pas
+  désactivé à la migration ; c'est l'assistant lui-même qui reste inactif (`assistant_reglages.actif = false`) tant qu'un
+  administrateur ne l'a pas réglé. L'entrée de menu n'apparaît qu'une fois l'assistant activé.
+- **Droits de la personne.** En chat, chaque outil s'exécute avec la session de la personne et refuse d'abord tout périmètre
+  hors du profil : l'intersection du point 5 est obtenue par construction. La portée propre d'un profil, sans personne,
+  n'existe pas encore : elle viendra avec les rondes autonomes (lot A3).
+- **Réponse en tâche de fond, sans affichage au fil de l'eau.** La requête rend la main tout de suite ; l'interface relit le
+  fil jusqu'à l'arrivée de la réponse. Cela évite de tenir un verrou de module pendant l'appel du modèle.
+- **Sources.** La réponse liste les lectures faites et le nom des éléments lus ; le lien ouvre la synthèse du périmètre, pas
+  encore la fiche de l'élément.
+- **Relais.** Il accepte toute adresse HTTPS publique que lui remet l'API (l'adresse se règle dans l'interface, droit
+  `assistant:administrer`) ; il refuse HTTP, les identifiants dans l'adresse et les adresses privées ou locales, contrôlées
+  à la résolution. Un modèle sur une adresse privée demande `ASSISTANT_RELAIS_PRIVE=true` sur le serveur.
+- **Non vérifié** : aucun appel à Mistral ni à un autre fournisseur réel (tests sur faux fournisseur) ; Docker, Node 26 et
+  PostgreSQL 18 (contrôles locaux sur Node 22 et PostgreSQL 16) ; tests de bout en bout Playwright.

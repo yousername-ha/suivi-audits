@@ -4523,3 +4523,16 @@ tr[data-importe='oui'] {
   text-align: inherit;
   cursor: pointer;
 }
+
+/* Assistant RSSI (ADR 0086) : fil de conversation. Le texte garde ses retours à la ligne ; un message en erreur se
+   distingue par sa bordure. Aucune valeur propre : jetons de la charte uniquement. */
+.assistant-message__texte {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.assistant-message[data-role='utilisateur'] {
+  background: var(--mantine-color-default-hover);
+}
+.assistant-message[data-erreur] {
+  border-color: var(--mantine-color-red-outline);
+}
