@@ -1,6 +1,6 @@
 # Cadrage — assistant RSSI intégré (serveur MCP et agent Hermes)
 
-**Statut** : cadrage du 11/11/2026, à la demande du RSSI, avec ses décisions A1 à A7 de
+**Statut** : cadrage du 11/11/2026, à la demande du RSSI, avec ses décisions A1 à A10 de
 l'[ADR 0086](../adr/0086-assistant-rssi-serveur-mcp-et-agent.md) (**proposée**, à accepter). Aucun code, aucune migration.
 Rédaction : session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`).
 
@@ -43,11 +43,11 @@ sort jamais. L'agent n'a ni base, ni socket Docker, ni fichiers de l'application
 |---|---|---|
 | Lire les données avec des droits | Porte de lecture (`apps/api/src/acces/portee.ts`, ADR 0083), services GRC et historiques, `grc_members`, `droits_ressources` | Portée d'un compte d'assistant ; outils MCP de lecture, paginés |
 | Authentifier l'agent | Hachage SHA-256 des jetons (sessions, écran mural), `REDACT`, limiteurs (`http/security.ts`) | Compte d'assistant, jeton porteur, type d'accès `assistant` dans `route()` |
-| Module et droits | `MODULES`, `MODULE_REGISTRY`, `module_activation`, rôles | Module `assistant` (3 actions) et migration de la contrainte |
+| Module et droits | `MODULES`, `MODULE_REGISTRY`, `module_activation`, rôles, rôles personnalisés | Module `assistant` (3 actions) et migration de la contrainte ; **droit dédié `assistant:lire` pour utiliser l'assistant**, porté seulement par les rôles administrateur et RSSI, attribuable par rôle personnalisé |
 | Proposer sans écrire | Cycle des rapprochements (`grc/rapprochements.ts` : statuts, `decide()`), aperçu puis confirmation | Tables de propositions et de questions ; outils de dépôt |
 | Appliquer une proposition | `Grc.insert`/`Grc.write`, clôtures, évaluations d'exigences, tâches : chacun avec ses versions, son audit, son temps réel | Aiguillage d'une proposition confirmée vers le service de sa cible |
 | Prévenir une personne | Notifications métier (ADR 0058), réglages par groupe, rôle et utilisateur, courriel par l'exécutant | Trois types émis par l'assistant : rappel, question, proposition à décider ; plafond par personne et par jour |
-| Lire le contenu des documents | Circuit de fichiers (`files.ts` : formats, signature, antivirus), chiffrement par le coffre, versions de document | Extraction du texte hors de l'API, isolée ; texte chiffré par version ; outil de lecture et de recherche |
+| Lire le contenu des documents | Circuit de fichiers (`files.ts` : formats, signature, antivirus), chiffrement par le coffre, versions de document | Extraction du texte hors de l'API, isolée ; texte chiffré par version ; index de recherche en texte intégral dans la base (accepté, A9) ; outil de lecture et de recherche |
 | S'améliorer | Décisions tracées (`decided_by`, motif), `grc_object_versions`, validations d'occurrences | Outil « retours » ; taux d'acceptation calculé par la plateforme ; écran de la mémoire (lire, corriger, purger) |
 | Dialoguer | SSE et temps réel existants, `packages/ui` | Fil de conversation par personne et par profil, relais vers l'agent, sources cliquables |
 | Détecter | Rappels de l'automate (`grc/tasks.ts`), couverture (`couverture.ts`), plan d'audit, parcours ISO/HDS | Outil « signaux » qui assemble ces faits, sans nouveau calcul de conformité |
@@ -99,6 +99,7 @@ Un auditeur n'audite pas son propre travail (ISO/IEC 27001, 9.2 ; ISO 19011). D'
 | Agent compromis | Conteneur sans privilège, lecture seule, sans socket Docker ni montage ; image épinglée |
 | Chiffres inventés | Aucun taux calculé par le modèle ; signaux et couvertures viennent des outils ; identifiants cités |
 | Validation à la chaîne sans lecture | Pas de confirmation en lot au départ ; motif exigé au rejet ; mention d'origine conservée sur l'objet créé |
+| Usage par une personne non prévue | Droit dédié `assistant:lire`, attribué explicitement ; refus par l'API, pas seulement menu masqué |
 | Chat qui révèle plus que les droits de la personne | Lectures bornées à l'intersection des périmètres ; à défaut, chat réservé aux personnes qui couvrent le périmètre du profil |
 | Mémoire qui garde ce qui ne doit plus être lu | Mémoire par profil, lisible et purgeable ; purge à la réduction des périmètres |
 | Fichier piégé à l'extraction | Extraction hors de l'API, sans réseau ni privilège, après antivirus, tailles et délais bornés |
@@ -112,7 +113,7 @@ L'assistant est un usage d'IA de l'organisation : GAP IA (ADR 0064) et apprécia
 | Lot | Contenu | Acceptation |
 |---|---|---|
 | A0 | ADR 0086 et ce cadrage | Relus et acceptés par le RSSI |
-| A1 | **Socle MCP en lecture.** Module `assistant` et migration ; comptes d'assistant et jetons ; type d'accès `assistant` ; outils de lecture par la porte de lecture ; outil « signaux » ; audit ; écran d'administration. Essai d'interopérabilité avec Hermes (révision du protocole) avant d'écrire le transport | Refus sans jeton, jeton expiré ou révoqué, module désactivé, hors périmètre, registre restreint. Aucun outil n'écrit (prouvé par test). Jeton jamais relu ni journalisé. `rbac.test.ts` vert. Migration sur base vierge et existante. Utilisable sans aucun modèle, par un client MCP quelconque |
+| A1 | **Socle MCP en lecture.** Module `assistant` et migration ; comptes d'assistant et jetons ; type d'accès `assistant` ; outils de lecture par la porte de lecture ; outil « signaux » ; audit ; écran d'administration. Essai d'interopérabilité avec Hermes (révision du protocole) avant d'écrire le transport | Refus sans le droit dédié (rôles contributeur, lecteur et auditeur externe refusés). Refus sans jeton, jeton expiré ou révoqué, module désactivé, hors périmètre, registre restreint. Aucun outil n'écrit (prouvé par test). Jeton jamais relu ni journalisé. `rbac.test.ts` vert. Migration sur base vierge et existante. Utilisable sans aucun modèle, par un client MCP quelconque |
 | A2 | **Propositions, questions, rappels.** Tables, outils de dépôt, rubrique « Assistant », décision avec droit de la cible, trois types de notification, réponse à une question, outil « retours », taux d'acceptation | Rien n'est écrit dans un registre avant confirmation. Confirmation refusée sans le droit de la cible. Rejet non redéposé à sources inchangées. Objet créé sous l'identité de la personne, origine mentionnée. Rappel refusé vers une personne sans accès à l'objet ; plafond respecté |
 | A3 | **Agent et modèle.** Profil Compose `assistant`, durcissement, configuration Hermes générée (outils natifs désactivés, liste blanche), modèle local, rondes planifiées, guide d'installation, mémoire par profil (lecture, correction, purge, sauvegarde) | Aucune sortie réseau constatée en configuration par défaut. Outils natifs absents (prouvé). Jeu d'évaluation sur organisation fictive : résultats **mesurés et publiés**, y compris les échecs. Mesure de temps de réponse sur le matériel du RSSI |
 | A4 | **Chat.** Relais de l'API vers l'agent, fil par personne et par profil, sources cliquables, réponse aux questions de l'assistant | CSP stricte respectée. Une personne n'obtient par le chat rien qu'elle ne puisse lire (prouvé par test avec deux comptes). Captures clair et sombre |
@@ -123,7 +124,19 @@ L'assistant est un usage d'IA de l'organisation : GAP IA (ADR 0064) et apprécia
 A1 et A2 ont une valeur sans modèle : tout client MCP peut s'y brancher. A3 est le lot à risque (matériel, qualité du
 modèle local) : s'il échoue, le reste n'est pas perdu.
 
-## 8. Non vérifié à ce jour
+## 8. Branche de développement
+
+Décision A10 : tout l'assistant se développe sur **`claude/assistant-rssi`**, créée le 11/11/2026 comme copie de
+`claude-suivi-smsi` avec ce cadrage et l'ADR.
+
+- Avant chaque lot, la branche reprend `claude-suivi-smsi` par fusion, pour ne pas s'en éloigner.
+- Les sessions qui travaillent sur l'assistant partent de cette branche et y reviennent par PR.
+- `claude-suivi-smsi` et `main` ne reçoivent rien de l'assistant avant une PR `claude/assistant-rssi` →
+  `claude-suivi-smsi` décidée par le RSSI, contrôles verts. Aucune version publiée ne contient l'assistant d'ici là.
+- Les migrations de l'assistant prennent leur numéro au moment de cette PR : un numéro pris trop tôt peut être repris
+  entre-temps par `claude-suivi-smsi`.
+
+## 9. Non vérifié à ce jour
 
 - Révision MCP parlée par le client de Hermes 0.23.1 (2025-11-25 ou 2026-07-28).
 - Existence d'un réglage Hermes unique « outils MCP seulement » : les mécanismes existent, la recette n'est pas documentée.

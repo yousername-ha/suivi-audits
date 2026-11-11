@@ -26,6 +26,9 @@
 | A5 | Ce que lit l'assistant | **Tout ce que la plateforme contient** dans ses périmètres : référentiels (ISO/IEC 27001, HDS…), **contenu des documents**, actions, tâches récurrentes et leur historique |
 | A6 | Progression | L'assistant **s'améliore avec l'usage** : mémoire de l'organisation et prise en compte des décisions rendues sur ses propositions |
 | A7 | Échanges | Un **chat** dans l'interface, et des **notifications à l'initiative de l'assistant** (rappel, question, proposition) |
+| A8 | Accès | Un **droit dédié** pour utiliser l'assistant, attribué explicitement, afin d'en limiter l'accès |
+| A9 | Recherche dans les documents | **Index de recherche accepté** : il reste sur le serveur |
+| A10 | Branche | Une **branche dédiée**, copie de `claude-suivi-smsi`, porte tout l'assistant : `claude/assistant-rssi` |
 
 ## Faits vérifiés le 11/11/2026 (sources officielles)
 
@@ -58,8 +61,13 @@
    fait passe par les outils MCP, donc par les droits, les limites et le journal de la plateforme. Un autre client MCP peut
    remplacer Hermes sans changer la plateforme.
 2. **Nouveau module `assistant`** (non métier), désactivé par défaut, avec dépendances facultatives vers les modules qu'il
-   lit. Actions : `assistant:lire` (voir propositions, questions et rapports), `assistant:modifier` (décider d'une
-   proposition, répondre), `assistant:administrer` (comptes d'assistant, jetons, réglages). Décider d'une proposition exige
+   lit. Actions : `assistant:lire` (**utiliser l'assistant** : chat, propositions, questions et rapports),
+   `assistant:modifier` (décider d'une proposition), `assistant:administrer` (comptes d'assistant, jetons, réglages,
+   mémoire). **Ce droit est dédié et ne se déduit d'aucun autre** : sans `assistant:lire`, ni rubrique, ni chat, ni
+   propositions, et l'API refuse. Parmi les rôles prédéfinis, seuls `administrateur` et `rssi` le portent ; `contributeur`,
+   `lecteur` et `auditeur_externe` ne le reçoivent pas. Il s'attribue à d'autres personnes par un rôle personnalisé.
+   Recevoir un rappel ou une question de l'assistant, et y répondre depuis la notification, ne demande pas ce droit : la
+   personne ne voit que l'objet auquel elle a déjà accès. Décider d'une proposition exige
    **en plus** le droit de la cible et l'écriture sur le périmètre : le droit sur le module ne contourne jamais celui de la
    cible. Migration additive qui recrée `module_activation_disabled_connus`, sans réécrire les précédentes.
 3. **Compte d'assistant et jeton.** Un compte d'assistant est un compte non humain, créé par un administrateur, rattaché à
@@ -120,7 +128,8 @@
     contrôle antivirus existant. Ordre : formats texte (txt, md, csv, json, xml), puis PDF et bureautique (docx, xlsx,
     pptx, odt…), dont les bibliothèques d'extraction seront retenues par un addendum (dépendances nouvelles). Les images
     et les PDF numérisés ne sont pas lus au départ (pas de reconnaissance de caractères). Le texte extrait est rattaché à
-    la **version** du document, chiffré comme lui, recalculé quand la version change et supprimé avec elle. Un texte de
+    la **version** du document, chiffré comme lui, recalculé quand la version change et supprimé avec elle. Un **index de recherche en texte intégral** est tenu dans la base, sur le serveur (décision A9) ; il n'est interrogé
+    qu'à travers les droits du document et il est couvert par les sauvegardes chiffrées. Un texte de
     norme n'entre que si l'organisation l'a déposé ou importé elle-même : rien n'est reconstitué.
 16. **Amélioration avec l'usage, sans entraînement de modèle.** Trois sources, toutes sur le serveur :
     - l'**état courant**, relu à chaque ronde par les outils : l'assistant n'a pas de copie périmée des registres ;
@@ -149,6 +158,11 @@
   purge depuis l'administration.
 - L'assistant est lui-même un usage d'IA de l'organisation : il passe par le GAP IA ([ADR 0064](0064-gap-ia-iso-27001-hds.md))
   et par l'appréciation des risques avant sa mise en service.
+- L'index de recherche contient le texte des documents **en clair dans la base**, alors que les fichiers sont chiffrés sur
+  disque : une personne qui accède à la base du serveur lit ce texte. Accepté par le RSSI (A9), la base n'étant pas exposée.
+- **Branche dédiée** (A10) : les lots se développent sur `claude/assistant-rssi`, qui reprend régulièrement
+  `claude-suivi-smsi` par fusion. Rien de l'assistant n'entre dans `claude-suivi-smsi`, donc dans `main` ni dans une
+  version publiée, avant une PR décidée par le RSSI, contrôles verts.
 - **Limites assumées** : pas d'écriture autonome dans les registres ; images et PDF numérisés non lus au départ ; pas
   d'activation du conteneur depuis l'interface ; qualité dépendante du modèle local, **non mesurée** à ce jour ;
   dimensionnement du serveur inconnu (aucune promesse de performance).
@@ -165,6 +179,4 @@
    trop lent pour un usage réel ; la mesure se fait au lot du conteneur.
 3. Périmètres ouverts à chaque profil, et personnes destinataires des questions.
 4. Prévenir les autres sessions avant le premier lot, qui touche `apps/api/src` (`http/route.ts`, `auth.ts`).
-5. Recherche dans les documents : accepter ou non un index de recherche en clair dans la base (les documents restent
-   chiffrés sur disque). Sans index, l'assistant ne retrouve un document que par ses métadonnées et ses liens.
-6. Plafond de notifications par personne et par jour (proposition : 5).
+5. Plafond de notifications par personne et par jour (proposition : 5).
