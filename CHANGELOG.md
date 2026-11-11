@@ -107,6 +107,11 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
 
 ### Ajouté
 
+- **Rocky Linux 10 comme serveur d'installation** ([ADR 0085](docs/adr/0085-support-de-rocky-linux-10.md), proposée) : le guide
+  d'installation donne les variantes `dnf`, `firewalld` et Docker CE pour Rocky Linux 10 (SELinux reste en mode `enforcing`), les
+  messages des scripts indiquent l'installation d'`age` sur les deux familles, et la CI rejoue le guide dans une machine virtuelle
+  Rocky Linux 10 et dans une machine virtuelle Debian 12 (jusque-là non rejouée). Aucune action sur un serveur existant. _(Session « Projet audit_suivi Coeur ».)_
+
 - **RSSI virtuel** (recette, sans effet sur l'application) : sous-agent Claude Code `rssi-virtuel` (persona de RSSI d'un groupement de santé
   certifié ISO/IEC 27001:2022 et HDS, scénario en 17 étapes aligné sur le parcours ISO 27001 / HDS, jeu de données fictif,
   pilote de navigateur sans dépendance ajoutée) et harnais de non-régression sur pile Docker éphémère
@@ -149,6 +154,18 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
   d'export Excel et données de démonstration. Un fichier de l'outil historique qui contient les clés `crrc` ou `invest` reste
   importable : ces clés sont écartées sans rien dire, et l'export ne les produit plus (schéma 15 inchangé). _(Session « Projet
   audit_suivi Coeur ».)_
+
+## [6.2.1] — 2026-11-11
+
+Version de publication : **aucun changement de fonction par rapport à la 6.2.0**. La publication de l'étiquette `v6.2.0` a échoué au scan Trivy (voir « Corrigé ») et une étiquette ne peut ni être déplacée ni supprimée ; la 6.2.1 est la première version 6.2 publiée. Le contenu fonctionnel est celui de la section [6.2.0] ci-dessous. Section rédigée par la session « Projet audit_suivi Coeur ».
+
+### Notes de mise à jour
+
+**Mise à jour depuis la 6.1.0 : aucune action sur le serveur** (depuis l'interface web ou `scripts/mettre-a-jour.sh`), comme indiqué pour la 6.2.0 ci-dessous (migration automatique `051`). La 6.2.0 n'a jamais été publiée : n'installer que la 6.2.1.
+
+### Corrigé
+
+- **Images web et exécutant** : `golang.org/x/net` passe de 0.60.0 à 0.62.0 dans le frontal Caddy et l'exécutant de mises à jour (CVE-2026-78661, déni de service dans l'analyseur HTML, gravité haute, correctif publié en 0.62.0). C'est ce que le scan Trivy de la publication de `v6.2.0` a refusé. _(Session « Projet audit_suivi Coeur ».)_
 
 ## [6.2.0] — 2026-11-04
 
