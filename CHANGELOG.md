@@ -47,7 +47,7 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
   « Projet audit_suivi Coeur ».)_
 
 - **Porte de lecture autorisée entre modules** ([ADR 0083](docs/adr/0083-porte-de-lecture-autorisee-entre-modules.md),
-  proposée) : nouvelle portée de lecture (`apps/api/src/acces/portee.ts`) qui applique, avec les droits du lecteur, le droit
+  acceptée le 11/11/2026) : nouvelle portée de lecture (`apps/api/src/acces/portee.ts`) qui applique, avec les droits du lecteur, le droit
   de module, le périmètre, le registre restreint et le rôle attribué, et sur laquelle les lectures transverses seront
   branchées une à une. Fondation seule : aucun branchement, aucun changement de comportement, aucune migration. Aucune
   action sur le serveur. _(Session « Projet audit_suivi Coeur ».)_
