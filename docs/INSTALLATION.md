@@ -111,6 +111,8 @@ sudo dnf upgrade -y
 ```
 **Résultat attendu** : la commande se termine par `Terminé !` (ou `Complete!`) sans ligne `Error`.
 
+> ⚠️ Si la liste des paquets mis à jour contient `kernel-core`, un **nouveau noyau** a été installé : **redémarrez le serveur maintenant** (`sudo reboot`), puis reconnectez-vous au bout de 2 minutes avant de continuer. Sans ce redémarrage, les modules réseau du noyau en cours ne correspondent plus à ceux installés et **Docker (étape 3) ne démarre pas** (erreur `iptables … RULE_APPEND failed`). Vérification : `sudo dnf needs-restarting -r` répond `No core libraries or services have been updated` (ou `Reboot should not be necessary`) quand aucun redémarrage n'est nécessaire.
+
 > Sur Ubuntu, un écran violet « **Daemons using outdated libraries** » peut s'afficher : appuyez sur **Tab** jusqu'à `<Ok>`, puis **Entrée**.
 
 **2.2 Installer git** (téléchargement de l'application) et les outils de base :
@@ -128,7 +130,7 @@ sudo apt install -y git curl ca-certificates ufw
 
 <!-- ci: rocky-run -->
 ```bash
-sudo dnf install -y git curl ca-certificates firewalld epel-release && sudo dnf install -y age python3
+sudo dnf install -y git curl ca-certificates firewalld kernel-modules-extra epel-release && sudo dnf install -y age python3
 ```
 **Résultat attendu** : la commande se termine sans ligne `Error`. Laissez **SELinux en mode `enforcing`** (état par défaut de Rocky) : Docker CE n'étiquette pas les conteneurs et l'application fonctionne sans l'assouplir (`getenforce` doit répondre `Enforcing`).
 

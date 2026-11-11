@@ -104,6 +104,22 @@ if [ "$SYSTEME" = rocky10 ]; then
   [ "$("${SSH[@]}" getenforce)" = Enforcing ] || arret "SELinux n'est pas en mode enforcing sur l'image : le guide doit être rejoué dans l'état par défaut de Rocky Linux."
 fi
 
+# --- Système à jour, puis redémarrage : l'image cloud est plus ancienne que les dépôts. C'est l'étape 2.1 du guide (mise à jour du
+# système) suivie du redémarrage qu'il demande lorsqu'un nouveau noyau est installé ; sans lui, les modules réseau du noyau en
+# cours ne correspondent plus à ceux installés et Docker ne démarre pas. Le guide rejoué ne refait alors que la mise à jour des index.
+echo "::group::Mise à jour du système ($SYSTEME) puis redémarrage"
+if [ "$SYSTEME" = rocky10 ]; then
+  "${SSH[@]}" 'sudo dnf upgrade -y --refresh > /dev/null'
+else
+  "${SSH[@]}" 'sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq && sudo DEBIAN_FRONTEND=noninteractive apt-get -y -qq full-upgrade > /dev/null'
+fi
+"${SSH[@]}" 'sudo systemctl reboot' || true
+sleep 20
+for _ in $(seq 1 60); do "${SSH[@]}" true 2> /dev/null && break; sleep 5; done
+"${SSH[@]}" true || arret "La machine virtuelle ne répond plus après le redémarrage."
+"${SSH[@]}" 'uname -r'
+echo "::endgroup::"
+
 # --- Dépôt, Node (copié du runner : binaire autonome) et guide extrait pour Rocky
 tar -C "$DEPOT" --exclude=node_modules --exclude='.pnpm-store' -czf - . | "${SSH[@]}" 'mkdir -p ~/work ~/bin ~/tmp && tar -xzf - -C ~/work'
 scp -q -i cle -P "$PORT_SSH" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR "$(command -v node)" "$UTILISATEUR@127.0.0.1:bin/node"
