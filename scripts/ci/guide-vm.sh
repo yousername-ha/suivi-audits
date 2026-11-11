@@ -85,7 +85,7 @@ qemu-system-x86_64 -machine accel=kvm -cpu host -smp 4 -m 10240 \
   -smbios 'type=1,serial=ds=nocloud-net;s=http://10.0.2.2:8000/' \
   -display none -serial file:serial.log -daemonize -pidfile qemu.pid
 
-SSH=(ssh -i cle -p "$PORT_SSH" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -o ConnectTimeout=5 -o ServerAliveInterval=30 $UTILISATEUR@127.0.0.1)
+SSH=(ssh -i cle -p "$PORT_SSH" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -o ConnectTimeout=5 -o ServerAliveInterval=30 "$UTILISATEUR@127.0.0.1")
 echo "Attente de la machine virtuelle (SSH)…"
 for _ in $(seq 1 90); do "${SSH[@]}" true 2> /dev/null && break; sleep 5; done
 "${SSH[@]}" true || arret "La machine virtuelle ne répond pas en SSH après 7 min 30 s."
@@ -96,7 +96,7 @@ fi
 
 # --- Dépôt, Node (copié du runner : binaire autonome) et guide extrait pour Rocky
 tar -C "$DEPOT" --exclude=node_modules --exclude='.pnpm-store' -czf - . | "${SSH[@]}" 'mkdir -p ~/work ~/bin ~/tmp && tar -xzf - -C ~/work'
-scp -q -i cle -P "$PORT_SSH" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR "$(command -v node)" $UTILISATEUR@127.0.0.1:bin/node
+scp -q -i cle -P "$PORT_SSH" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR "$(command -v node)" "$UTILISATEUR@127.0.0.1:bin/node"
 node "$DEPOT/scripts/ci/guide-extraire.mjs" --os="$OS_GUIDE" "$DEPOT/docs/INSTALLATION.md" nom_dns=localhost version=ci > guide.sh
 "${SSH[@]}" 'cat > ~/guide.sh' < guide.sh
 
