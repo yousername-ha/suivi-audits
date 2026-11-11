@@ -107,6 +107,7 @@ Source de référence des chiffres/IDs/états :
 - [Guide administrateur](06_GUIDES/GUIDE_ADMINISTRATEUR.md)
 - [Guide installation](06_GUIDES/GUIDE_INSTALLATION.md)
 - [Guide depannage](06_GUIDES/GUIDE_DEPANNAGE.md)
+- [Connecter l'assistant RSSI à Mistral, pas à pas](06_GUIDES/GUIDE_ASSISTANT_MISTRAL.md) (non rejoué de bout en bout)
 - [Faq](06_GUIDES/FAQ.md)
 
 ## 07_HISTORIQUE
