@@ -105,6 +105,13 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
   (ordre des actions d'un plan, synthèse des périmètres). Aucune modification de comportement. Aucune action sur le serveur.
   _(Session « Projet audit_suivi Coeur ».)_
 
+### Ajouté
+
+- **Rocky Linux 10 comme serveur d'installation** ([ADR 0085](docs/adr/0085-support-de-rocky-linux-10.md), proposée) : le guide
+  d'installation donne les variantes `dnf`, `firewalld` et Docker CE pour Rocky Linux 10 (SELinux reste en mode `enforcing`), les
+  messages des scripts indiquent l'installation d'`age` sur les deux familles, et la CI rejoue le guide dans une machine virtuelle
+  Rocky Linux 10. Aucune action sur un serveur existant. _(Session « Projet audit_suivi Coeur ».)_
+
 ### Modifié
 
 - **Bibliothèque figée, référentiels du périmètre en copie, puis appliqués** ([ADR 0082](docs/adr/0082-referentiels-du-perimetre-copie-et-application.md)) :

@@ -13,7 +13,7 @@ set -euo pipefail
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 . "$REPO/scripts/lib-commun.sh"
 exiger_root "$@"
-command -v age > /dev/null && command -v age-keygen > /dev/null || arret "outil « age » absent : sudo apt-get install -y age (voir docs/INSTALLATION.md)."
+command -v age > /dev/null && command -v age-keygen > /dev/null || arret "outil « age » absent : Debian ou Ubuntu : sudo apt-get install -y age ; Rocky Linux : sudo dnf install -y epel-release age (voir docs/INSTALLATION.md)."
 
 CLE="$(cle_sauvegarde_serveur)"
 SECOURS="$(cles_sauvegarde_secours)"

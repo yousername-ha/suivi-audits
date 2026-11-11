@@ -13,7 +13,7 @@ Ce guide part d'un serveur vide et ne suppose aucune connaissance de Linux ni de
 - Le texte `<comme_ceci>` est à remplacer par votre valeur, **chevrons compris**. Par exemple, `ssh <utilisateur>@<adresse_ip_du_serveur>` devient `ssh admin@10.0.12.40`.
 - ⚠️ signale une action risquée : lisez l'avertissement **avant** de lancer la commande.
 
-Ce guide est **vérifié automatiquement** : à chaque modification de l'application, l'intégration continue rejoue ses commandes sur un serveur Ubuntu vierge, jusqu'à la création de l'administrateur, l'import d'un fichier de l'ancien outil, une sauvegarde et sa restauration. Un guide inexact bloque la publication. Les commentaires `<!-- ci: … -->`, invisibles sur GitHub, servent à ce contrôle.
+Ce guide est **vérifié automatiquement** : à chaque modification de l'application, l'intégration continue rejoue ses commandes sur un serveur Ubuntu vierge et sur une machine virtuelle Rocky Linux 10 vierge (variantes `dnf` du guide, SELinux en mode `enforcing`), jusqu'à la création de l'administrateur, l'import d'un fichier de l'ancien outil, une sauvegarde et sa restauration. Un guide inexact bloque la publication. Les commentaires `<!-- ci: … -->`, invisibles sur GitHub, servent à ce contrôle.
 
 ---
 
@@ -43,7 +43,7 @@ Cochez chaque ligne avant de passer à l'étape 1. Les demandes aux autres équi
 
 | ☐ | Élément | Détail |
 |---|---|---|
-| ☐ | **Un serveur Linux** (machine virtuelle) | **Debian 12** ou **Ubuntu 24.04 LTS**, installation minimale, en 64 bits (x86_64). Demandez à l'équipe infrastructure « une VM Linux pour une application Docker ». |
+| ☐ | **Un serveur Linux** (machine virtuelle) | **Debian 12**, **Ubuntu 24.04 LTS** ou **Rocky Linux 10** ([ADR 0085](adr/0085-support-de-rocky-linux-10.md)), installation minimale, en 64 bits (x86_64). Demandez à l'équipe infrastructure « une VM Linux pour une application Docker ». |
 | ☐ | **Dimensionnement** | 2 processeurs, 4 Go de mémoire, 30 Go de disque, plus la place des sauvegardes (prévoir 10 Go). Avec l'antivirus facultatif (ClamAV) : 8 Go de mémoire. Une mise à jour demande, en espace libre, deux fois la taille de la base plus 2 Go. |
 | ☐ | **Un emplacement pour les données** | Un dossier du serveur, par défaut `/srv/suivi-audits/donnees`. Les sauvegardes chiffrées de l'application sont rangées dans son sous-dossier `sauvegardes/` : demandez à l'équipe infrastructure de les **copier hors du serveur** (sauvegarde externalisée), **sans** le sous-dossier `cles-sauvegarde/` (étape 6.6). |
 | ☐ | **Un compte sur ce serveur** avec droits d'administration (`sudo`) | L'équipe infrastructure vous fournit l'adresse IP, l'identifiant et le mot de passe. |
@@ -57,7 +57,7 @@ Cochez chaque ligne avant de passer à l'étape 1. Les demandes aux autres équi
 
 | Destination | Port | Usage |
 |---|---|---|
-| `deb.debian.org`, `security.debian.org` (Debian) ou `archive.ubuntu.com`, `security.ubuntu.com` (Ubuntu) | TCP 80 et 443 | Mises à jour du système |
+| `deb.debian.org`, `security.debian.org` (Debian), `archive.ubuntu.com`, `security.ubuntu.com` (Ubuntu) ou `mirrors.rockylinux.org` et un miroir Rocky, `dl.fedoraproject.org` (Rocky : dépôt EPEL, pour l'outil `age`) | TCP 80 et 443 | Mises à jour du système |
 | `download.docker.com` | TCP 443 | Installation de Docker |
 | `github.com` | TCP 443 | Téléchargement de l'application et de ses nouvelles versions |
 | `ghcr.io`, `pkg-containers.githubusercontent.com` | TCP 443 | Images de l'application |
@@ -94,21 +94,43 @@ Une fois démarrée, l'application elle-même n'a **aucun accès à Internet** :
 
 **2.1 Mettre à jour le système.** La commande peut prendre plusieurs minutes. Si `sudo` demande votre mot de passe, saisissez-le (il ne s'affiche pas).
 
+**Debian ou Ubuntu :**
+
 <!-- ci: instead: sudo apt-get update -->
+<!-- ci: rocky-skip — Debian et Ubuntu seulement -->
 ```bash
 sudo apt update && sudo apt full-upgrade -y
 ```
 **Résultat attendu** : la commande se termine sans ligne commençant par `E:` (erreur). Les lignes `W:` (avertissements) sont sans gravité.
 
+**Rocky Linux 10 :**
+
+<!-- ci: rocky-instead: sudo dnf makecache -->
+```bash
+sudo dnf upgrade -y
+```
+**Résultat attendu** : la commande se termine par `Terminé !` (ou `Complete!`) sans ligne `Error`.
+
 > Sur Ubuntu, un écran violet « **Daemons using outdated libraries** » peut s'afficher : appuyez sur **Tab** jusqu'à `<Ok>`, puis **Entrée**.
 
 **2.2 Installer git** (téléchargement de l'application) et les outils de base :
 
+**Debian ou Ubuntu :**
+
 <!-- ci: run -->
+<!-- ci: rocky-skip — Debian et Ubuntu seulement -->
 ```bash
 sudo apt install -y git curl ca-certificates ufw
 ```
 **Résultat attendu** : la dernière ligne ne contient pas `E:`.
+
+**Rocky Linux 10** (le dépôt EPEL fournit l'outil `age` des sauvegardes) :
+
+<!-- ci: rocky-run -->
+```bash
+sudo dnf install -y git curl ca-certificates firewalld epel-release && sudo dnf install -y age python3
+```
+**Résultat attendu** : la commande se termine sans ligne `Error`. Laissez **SELinux en mode `enforcing`** (état par défaut de Rocky) : Docker CE n'étiquette pas les conteneurs et l'application fonctionne sans l'assouplir (`getenforce` doit répondre `Enforcing`).
 
 **2.3 L'heure du serveur** est **indispensable** : les codes de double authentification en dépendent. La commande d'installation (étape 5) la vérifie et active la synchronisation si besoin. Pour la contrôler vous-même :
 
@@ -122,23 +144,36 @@ timedatectl
 
 > ⚠️ Autorisez **toujours le port 22 en premier**. Si vous activez le pare-feu sans lui, vous perdez immédiatement la connexion au serveur, et il faudra l'intervention de l'équipe infrastructure.
 
+**Debian ou Ubuntu (`ufw`) :**
+
 <!-- ci: run -->
+<!-- ci: rocky-skip — Debian et Ubuntu seulement -->
 ```bash
 sudo ufw allow 22/tcp
 ```
 **Résultat attendu** : `Rules updated` (et `Rules updated (v6)`).
 
 <!-- ci: run -->
+<!-- ci: rocky-skip — Debian et Ubuntu seulement -->
 ```bash
 sudo ufw allow 80/tcp && sudo ufw allow 443/tcp
 ```
 **Résultat attendu** : `Rules updated`, quatre fois.
 
 <!-- ci: run -->
+<!-- ci: rocky-skip — Debian et Ubuntu seulement -->
 ```bash
 sudo ufw --force enable
 ```
 **Résultat attendu** : `Firewall is active and enabled on system startup`.
+
+**Rocky Linux 10 (`firewalld`) :** le service autorise déjà `ssh` ; ajoutez le web, puis activez-le.
+
+<!-- ci: rocky-run -->
+```bash
+sudo systemctl enable --now firewalld && sudo firewall-cmd --permanent --add-service=ssh --add-service=http --add-service=https && sudo firewall-cmd --reload
+```
+**Résultat attendu** : `success` à chaque commande `firewall-cmd`.
 
 ---
 
@@ -148,13 +183,17 @@ Docker fait tourner l'application dans des « conteneurs » isolés (voir le [gl
 
 **3.1 Ajouter la clé de signature de Docker :**
 
+**Debian ou Ubuntu :**
+
 <!-- ci: run -->
+<!-- ci: rocky-skip — Debian et Ubuntu seulement -->
 ```bash
 sudo install -m 0755 -d /etc/apt/keyrings
 ```
 **Résultat attendu** : aucun message.
 
 <!-- ci: run -->
+<!-- ci: rocky-skip — Debian et Ubuntu seulement -->
 ```bash
 . /etc/os-release && sudo curl -fsSL "https://download.docker.com/linux/$ID/gpg" -o /etc/apt/keyrings/docker.asc && sudo chmod a+r /etc/apt/keyrings/docker.asc
 ```
@@ -163,6 +202,7 @@ sudo install -m 0755 -d /etc/apt/keyrings
 **3.2 Déclarer le dépôt de Docker :**
 
 <!-- ci: run -->
+<!-- ci: rocky-skip — Debian et Ubuntu seulement -->
 ```bash
 . /etc/os-release && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/$ID $VERSION_CODENAME stable" | sudo tee /etc/apt/sources.list.d/docker.list
 ```
@@ -171,10 +211,25 @@ sudo install -m 0755 -d /etc/apt/keyrings
 **3.3 Installer Docker :**
 
 <!-- ci: run -->
+<!-- ci: rocky-skip — Debian et Ubuntu seulement -->
 ```bash
 sudo apt update && sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 ```
 **Résultat attendu** : la dernière ligne ne contient pas `E:`.
+
+**Rocky Linux 10 :** déclarez le dépôt officiel de Docker pour RHEL (sa clé de signature est importée à la première installation), puis installez Docker.
+
+<!-- ci: rocky-run -->
+```bash
+sudo dnf install -y dnf-plugins-core && sudo dnf config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo
+```
+**Résultat attendu** : le dépôt `docker-ce-stable` est ajouté, sans ligne `Error`.
+
+<!-- ci: rocky-run -->
+```bash
+sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
+**Résultat attendu** : la commande se termine sans ligne `Error`. Si `dnf` affiche l'empreinte de la clé de Docker et demande de l'accepter, comparez-la avec celle publiée sur la page d'installation de Docker pour RHEL, puis répondez `y`.
 
 **3.4 Démarrer Docker, et le lancer automatiquement au démarrage du serveur :**
 
@@ -556,10 +611,11 @@ La recherche de nouvelle version est, elle aussi, automatique (au démarrage, pu
 **Sur un autre serveur, avec la clé de secours** (perte du serveur et de sa clé). C'est le seul cas qui demande des commandes : installez l'application sur un serveur neuf (étapes 2 à 8), copiez-y l'archive et son fichier `.sha256`, ainsi que le fichier de la clé de secours sorti du coffre-fort, puis installez les outils de restauration :
 
 <!-- ci: run -->
+<!-- ci: rocky-run -->
 ```bash
-sudo apt install -y age python3
+if command -v apt > /dev/null; then sudo apt install -y age python3; else sudo dnf install -y epel-release && sudo dnf install -y age python3; fi
 ```
-**Résultat attendu** : la dernière ligne ne contient pas `E:`.
+**Résultat attendu** : la dernière ligne ne contient ni `E:` ni `Error`.
 
 Les commandes ci-dessous sont rejouées par la CI sur la sauvegarde faite par le serveur lui-même ; sur un autre serveur, ajoutez `BACKUP_KEY_FILE=<fichier de la clé de secours>` après `sudo`. Faites d'abord une sauvegarde en ligne de commande, dans le dossier de l'étape 11.2 :
 
@@ -866,17 +922,37 @@ Le script revient en arrière tout seul en cas d'échec. Pour revenir plus tard 
 
 Une fois par mois, et dès qu'une faille importante est annoncée :
 
+**Debian ou Ubuntu :**
+
 <!-- ci: instead: sudo apt-get update -->
+<!-- ci: rocky-skip — Debian et Ubuntu seulement -->
 ```bash
 sudo apt update && sudo apt full-upgrade -y
 ```
 **Résultat attendu** : aucune ligne `E:`. Docker est mis à jour par la même occasion.
 
+**Rocky Linux 10 :**
+
+<!-- ci: rocky-instead: sudo dnf makecache -->
+```bash
+sudo dnf upgrade -y
+```
+**Résultat attendu** : aucune ligne `Error`. Docker est mis à jour par la même occasion.
+
 <!-- ci: run -->
+<!-- ci: rocky-skip — Debian et Ubuntu seulement -->
 ```bash
 [ -f /var/run/reboot-required ] && echo "Redémarrage nécessaire" || echo "Pas de redémarrage nécessaire"
 ```
 **Résultat attendu** : l'un des deux messages. Si un redémarrage est nécessaire, prévenez les utilisateurs, puis lancez `sudo reboot`. L'application redémarre toute seule avec le serveur. Reconnectez-vous au bout de 2 minutes et vérifiez les états (étape 7.1).
+
+**Rocky Linux 10 :**
+
+<!-- ci: rocky-run -->
+```bash
+sudo dnf needs-restarting -r && echo "Pas de redémarrage nécessaire" || echo "Redémarrage nécessaire"
+```
+**Résultat attendu** : l'un des deux messages ; même conduite à tenir que ci-dessus.
 
 ### 12.4 Passer d'un serveur v2 à cette version
 
@@ -992,8 +1068,9 @@ Toutes ces commandes se lancent depuis `/opt/suivi-audits`.
 | **Terminal, PowerShell** | La fenêtre où l'on tape les commandes |
 | **sudo** | Préfixe qui exécute une commande avec les droits d'administrateur du serveur |
 | **apt** | L'outil qui installe et met à jour les logiciels sur Debian et Ubuntu |
+| **dnf** | L'outil qui installe et met à jour les logiciels sur Rocky Linux |
 | **nano** | Un éditeur de texte simple, utilisable dans le terminal |
-| **Pare-feu (ufw)** | Filtre qui n'autorise que certaines connexions vers le serveur |
+| **Pare-feu (ufw, firewalld)** | Filtre qui n'autorise que certaines connexions vers le serveur (`ufw` sur Debian et Ubuntu, `firewalld` sur Rocky Linux) |
 | **NTP** | Protocole de mise à l'heure automatique |
 | **Docker** | Logiciel qui fait tourner des applications dans des boîtes isolées |
 | **Image** | Le « modèle » d'une boîte : l'application prête à l'emploi, téléchargée depuis un registre |

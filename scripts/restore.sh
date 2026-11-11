@@ -33,7 +33,7 @@ trap 'rm -rf "$WORK"' EXIT
 cp -- "$ARCH" "$WORK/source"
 python3 "$REPO/scripts/verifier-archive-restauration.py" --checksum "$ARCH" "$WORK/source"
 CLE="$(cle_sauvegarde_serveur)"
-command -v age > /dev/null || arret "outil « age » absent : l'installer (sudo apt-get install -y age)."
+command -v age > /dev/null || arret "outil « age » absent : l'installer (Debian ou Ubuntu : sudo apt-get install -y age ; Rocky Linux : sudo dnf install -y epel-release age)."
 [ -f "$CLE" ] && [ ! -L "$CLE" ] && [ -s "$CLE" ] || arret "clé de déchiffrement absente ou vide ($CLE) : indiquer BACKUP_KEY_FILE (clé du serveur ou clé de secours)."
 (( (8#$(stat -c %a "$CLE") & 077) == 0 )) || arret "droits trop larges sur la clé de déchiffrement ($CLE) : 0600 requis."
 age -d -i "$CLE" -o "$WORK/a.tar" "$WORK/source" 2> /dev/null || { rm -f "$WORK/a.tar"; arret "déchiffrement impossible : archive modifiée ou tronquée, ou clé qui n'est pas un destinataire de cette archive."; }
