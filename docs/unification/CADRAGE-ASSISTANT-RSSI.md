@@ -142,5 +142,7 @@ Décision A10 : tout l'assistant se développe sur **`claude/assistant-rssi`**, 
 - Existence d'un réglage Hermes unique « outils MCP seulement » : les mécanismes existent, la recette n'est pas documentée.
 - Mémoire et savoir-faire appris de Hermes avec ses outils de fichiers désactivés ; bornage des droits par conversation.
 - Bibliothèques d'extraction de texte (PDF, bureautique) : non choisies, à retenir par addendum.
-- Qualité et vitesse d'un modèle local sur ces outils ; matériel du serveur (inconnu dans le DAT).
+- Qualité et vitesse d'un modèle sur ces outils. Le serveur est un VPS OVHcloud sans carte graphique : l'emplacement du
+  modèle est à décider avant le lot A3 (ADR 0086, point ouvert 2) ; périmètre HDS et conditions d'OVHcloud AI Endpoints
+  non vérifiés.
 - Aucun essai n'a été exécuté : ce document repose sur la lecture du code et des documentations officielles du 11/11/2026.

@@ -164,8 +164,8 @@
   `claude-suivi-smsi` par fusion. Rien de l'assistant n'entre dans `claude-suivi-smsi`, donc dans `main` ni dans une
   version publiée, avant une PR décidée par le RSSI, contrôles verts.
 - **Limites assumées** : pas d'écriture autonome dans les registres ; images et PDF numérisés non lus au départ ; pas
-  d'activation du conteneur depuis l'interface ; qualité dépendante du modèle local, **non mesurée** à ce jour ;
-  dimensionnement du serveur inconnu (aucune promesse de performance).
+  d'activation du conteneur depuis l'interface ; qualité dépendante du modèle, **non mesurée** à ce jour ; le serveur est un
+  VPS sans carte graphique : le modèle tournera ailleurs que sur ce VPS (point ouvert 2), aucune promesse de performance.
 - **Alternatives écartées** : boucle d'agent écrite dans l'API (mémoire, planification et dialogue à maintenir, et le
   modèle appelé depuis l'API) ; accès direct de l'agent à la base ; écritures directes par l'agent (contraire à A3 et à
   la règle « ne jamais simuler une validation humaine ») ; un seul profil pour la mise en œuvre et l'audit (un auditeur
@@ -175,8 +175,18 @@
 ## Points ouverts pour le RSSI
 
 1. Accepter cette ADR et confirmer le numéro 0086.
-2. Matériel du serveur : carte graphique ou non. Sans elle, un modèle local tenant 64 000 jetons de contexte peut être
-   trop lent pour un usage réel ; la mesure se fait au lot du conteneur.
+2. **Où tourne le modèle.** Le serveur est un VPS OVHcloud (indication du RSSI du 11/11/2026), donc **sans carte
+   graphique**. Un modèle tenant 64 000 jetons de contexte avec appel d'outils y sera très probablement trop lent pour
+   Hermes ; ce n'est pas mesuré. La décision A1 (point d'accès réglable) reste valable, mais « sur le VPS lui-même » n'est
+   pas un choix réaliste. À décider avant le lot A3 (les lots A1 et A2 n'ont besoin d'aucun modèle) :
+   - **a.** une instance OVHcloud Public Cloud avec carte graphique, dans le compte de l'organisation, qui ne fait tourner
+     que le modèle : rien ne sort du compte ; coût horaire à l'allumage (ordre de grandeur relevé le 11/11/2026 sur des
+     comparateurs : environ 1 $ l'heure pour une carte L4, à vérifier sur la grille officielle) ; liaison privée avec le
+     VPS à vérifier ;
+   - **b.** le service OVHcloud AI Endpoints (API compatible OpenAI, appel d'outils sur certains modèles, facturation à
+     l'usage) : pas de machine à gérer ; **non vérifié** : périmètre HDS du service, engagement de non-réutilisation des
+     données, modèles offrant 64 000 jetons de contexte ;
+   - **c.** déplacer la plateforme sur un serveur doté d'une carte graphique.
 3. Périmètres ouverts à chaque profil, et personnes destinataires des questions.
 4. Prévenir les autres sessions avant le premier lot, qui touche `apps/api/src` (`http/route.ts`, `auth.ts`).
 5. Plafond de notifications par personne et par jour (proposition : 5).
