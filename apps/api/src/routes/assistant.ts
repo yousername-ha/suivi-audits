@@ -1,0 +1,120 @@
+/* Assistant RSSI intégré (ADR 0086, lot A1). Utiliser l'assistant demande le droit dédié « assistant:lire » ; le régler,
+   « assistant:administrer ». Aucune route ne renvoie la clé du modèle. */
+import { CleModeleBody, MessageAssistantBody, NouvelleConversationBody, ReglagesAssistantBody } from '@suivi/shared';
+import { z } from 'zod';
+import type { Session } from '../auth.js';
+import { HttpError } from '../http/errors.js';
+import { route } from '../http/route.js';
+
+const id = z.object({ id: z.uuid() });
+const tags = ['Assistant'];
+
+export const assistantRoutes = [
+  route({
+    method: 'GET',
+    url: '/api/assistant/etat',
+    summary:
+      'État de l’assistant pour la personne : prêt ou non, fournisseur du modèle, profils et périmètres lisibles',
+    tags,
+    access: 'assistant:lire',
+    handler: async ({ svc, s }) => svc.assistant.etat((s as Session).user),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/assistant/reglages',
+    summary: 'Réglages de l’assistant (modèle, profils, périmètres) ; la clé n’est jamais renvoyée',
+    tags,
+    access: 'assistant:administrer',
+    handler: async ({ svc }) => svc.assistant.reglages(),
+  }),
+  route({
+    method: 'PUT',
+    url: '/api/assistant/reglages',
+    summary: 'Enregistrer les réglages de l’assistant (version attendue obligatoire)',
+    tags,
+    access: 'assistant:administrer',
+    body: ReglagesAssistantBody,
+    handler: async ({ svc, s, body, ip }) => svc.assistant.modifierReglages(body, (s as Session).user, ip),
+  }),
+  route({
+    method: 'PUT',
+    url: '/api/assistant/reglages/cle',
+    summary: 'Enregistrer la clé du modèle (scellée, écriture seule)',
+    tags,
+    access: 'assistant:administrer',
+    body: CleModeleBody,
+    handler: async ({ svc, s, body, ip }) => svc.assistant.definirCle(body.cle, (s as Session).user, ip),
+  }),
+  route({
+    method: 'DELETE',
+    url: '/api/assistant/reglages/cle',
+    summary: 'Retirer la clé du modèle',
+    tags,
+    access: 'assistant:administrer',
+    handler: async ({ svc, s, ip }) => svc.assistant.retirerCle((s as Session).user, ip),
+  }),
+  route({
+    method: 'POST',
+    url: '/api/assistant/reglages/test',
+    summary: 'Tester l’appel au modèle réglé (aucune donnée métier envoyée)',
+    tags,
+    access: 'assistant:administrer',
+    handler: async ({ svc, s, ip }) => {
+      const user = (s as Session).user;
+      if (!svc.limits.assistantTestByUser(user.id)) throw new HttpError(429, 'Trop de tests. Réessayez plus tard.');
+      return svc.assistant.tester(user, ip);
+    },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/assistant/conversations',
+    summary: 'Conversations de la personne avec l’assistant',
+    tags,
+    access: 'assistant:lire',
+    handler: async ({ svc, s }) => svc.assistant.conversations((s as Session).user),
+  }),
+  route({
+    method: 'POST',
+    url: '/api/assistant/conversations',
+    summary: 'Ouvrir une conversation avec un profil de l’assistant',
+    tags,
+    access: 'assistant:lire',
+    body: NouvelleConversationBody,
+    status: 201,
+    handler: async ({ svc, s, body }) => svc.assistant.creer(body.profil, (s as Session).user),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/assistant/conversations/:id',
+    summary: 'Messages d’une conversation (celle d’une autre personne est introuvable)',
+    tags,
+    access: 'assistant:lire',
+    params: id,
+    handler: async ({ svc, s, params }) => svc.assistant.detail(params.id, (s as Session).user),
+  }),
+  route({
+    method: 'DELETE',
+    url: '/api/assistant/conversations/:id',
+    summary: 'Supprimer une conversation',
+    tags,
+    access: 'assistant:lire',
+    params: id,
+    handler: async ({ svc, s, params, ip }) => svc.assistant.supprimer(params.id, (s as Session).user, ip),
+  }),
+  route({
+    method: 'POST',
+    url: '/api/assistant/conversations/:id/messages',
+    summary: 'Poser une question : la réponse se prépare en tâche de fond, le fil est rendu « en cours »',
+    tags,
+    access: 'assistant:lire',
+    params: id,
+    body: MessageAssistantBody,
+    status: 202,
+    handler: async ({ svc, s, params, body, ip }) => {
+      const user = (s as Session).user;
+      if (!svc.limits.assistantByUser(user.id))
+        throw new HttpError(429, 'Trop de questions en peu de temps. Réessayez dans quelques minutes.');
+      return svc.assistant.envoyer(params.id, body.texte, user, ip);
+    },
+  }),
+];

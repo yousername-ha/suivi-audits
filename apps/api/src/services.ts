@@ -37,8 +37,10 @@ import { AdresseSiteService } from './adresse-site.js';
 import { NotificationsMetier } from './notifications-metier.js';
 import { TypesProcessus } from './types-processus.js';
 import { Webauthn } from './webauthn.js';
+import { Assistant } from './assistant/index.js';
+import { RelaisModele, type TransportModele } from './assistant/modele.js';
 
-export function createServices(cfg: Config, log: Logger) {
+export function createServices(cfg: Config, log: Logger, options: { modele?: TransportModele } = {}) {
   const db = new Db(cfg.db, log);
   const vault = new Vault(cfg.masterKey);
   const bus = new Bus(cfg.db, log);
@@ -96,6 +98,8 @@ export function createServices(cfg: Config, log: Logger) {
     cleSecours: new CleSecours(db, cfg),
     adresseSite: new AdresseSiteService(db, cfg),
     alertesSecurite,
+    /** Assistant RSSI (ADR 0086) : le transport du modèle est remplaçable (tests sans réseau). */
+    assistant: new Assistant(db, vault, grc, options.modele ?? new RelaisModele(cfg.assistantRelais), log),
     bus,
     presence: new Presence(db, bus),
     legacy,
@@ -119,6 +123,9 @@ export function createServices(cfg: Config, log: Logger) {
       webauthnByUser: limiter(20, 15 * 60e3),
       webauthnGestionByUser: limiter(30, 15 * 60e3),
       codeRecuperationByUser: limiter(5, 15 * 60e3),
+      /* Assistant RSSI (ADR 0086) : questions et tests du modèle, par compte. */
+      assistantByUser: limiter(30, 10 * 60e3),
+      assistantTestByUser: limiter(5, 10 * 60e3),
     },
   };
 }

@@ -13,14 +13,14 @@ import {
 import { LEGACY_MODULES } from '../src/legacy/index.js';
 
 describe('modèle de droits', () => {
-  it('permissions = modules × actions (13 × 5)', () => {
-    expect(ALL_PERMISSIONS).toHaveLength(65);
-    expect(new Set(ALL_PERMISSIONS).size).toBe(65);
+  it('permissions = modules × actions (14 × 5)', () => {
+    expect(ALL_PERMISSIONS).toHaveLength(70);
+    expect(new Set(ALL_PERMISSIONS).size).toBe(70);
   });
 
   it('rôles prédéfinis conformes à la spécification', () => {
     const p = (r: keyof typeof SYSTEM_ROLE_DEFS) => new Set(SYSTEM_ROLE_DEFS[r].permissions);
-    expect(p('administrateur').size).toBe(65);
+    expect(p('administrateur').size).toBe(70);
     expect([...p('rssi')].some((x) => x.startsWith('administration:'))).toBe(false);
     expect(p('rssi').has('parametres:administrer')).toBe(true);
     expect(p('contributeur').has('ecarts:modifier')).toBe(true);
@@ -31,6 +31,10 @@ describe('modèle de droits', () => {
       expect(p(r).has('tableau_de_bord:modifier')).toBe(true);
     for (const r of ['lecteur', 'auditeur_externe'] as const)
       expect([...p(r)].some((x) => x.startsWith('tableau_de_bord:'))).toBe(false);
+    // Assistant RSSI (ADR 0086) : droit dédié, porté par les seuls rôles administrateur et RSSI.
+    for (const r of ['administrateur', 'rssi'] as const) expect(p(r).has('assistant:lire')).toBe(true);
+    for (const r of ['contributeur', 'lecteur', 'auditeur_externe'] as const)
+      expect([...p(r)].some((x) => x.startsWith('assistant:'))).toBe(false);
     // Lecteur : lecture seule, plus l'export des cartes (CARTO-01).
     expect([...p('lecteur')].every((x) => x.endsWith(':lire') || x === 'cartographie:exporter')).toBe(true);
     expect(p('lecteur').has('cartographie:modifier')).toBe(false);

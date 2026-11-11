@@ -14,6 +14,51 @@ export interface AppState {
   import_batch_id: number | null;
 }
 
+export interface AssistantConsommation {
+  jour: ColumnType<Date, Date | string, Date | string>;
+  jetons_entree: Generated<number>;
+  jetons_sortie: Generated<number>;
+  appels: Generated<number>;
+}
+
+export interface AssistantConversations {
+  id: Generated<string>;
+  user_id: string;
+  profil: string;
+  titre: Generated<string>;
+  etat: Generated<"pret" | "en_cours">;
+  created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+  updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface AssistantMessages {
+  id: Generated<string>;
+  conversation_id: string;
+  role: "utilisateur" | "assistant";
+  contenu: string;
+  sources: ColumnType<JsonValue, string | undefined, string>;
+  outils: ColumnType<JsonValue, string | undefined, string>;
+  erreur: Generated<boolean>;
+  created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface AssistantProfils {
+  id: "mise_en_oeuvre" | "audit_interne";
+  actif: Generated<boolean>;
+  perimetres: Generated<string[]>;
+}
+
+export interface AssistantReglages {
+  id: number;
+  actif: Generated<boolean>;
+  adresse: Generated<string>;
+  modele: Generated<string>;
+  budget_jetons_jour: Generated<number>;
+  version: Generated<number>;
+  updated_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  updated_by: Generated<string>;
+}
+
 export interface AuditLog {
   id: Generated<number>;
   ts: ColumnType<Date, Date | string | undefined, Date | string>;
@@ -1465,6 +1510,11 @@ export interface WebauthnCredentials {
 
 export interface DB {
   app_state: AppState;
+  assistant_consommation: AssistantConsommation;
+  assistant_conversations: AssistantConversations;
+  assistant_messages: AssistantMessages;
+  assistant_profils: AssistantProfils;
+  assistant_reglages: AssistantReglages;
   audit_log: AuditLog;
   backup_jobs: BackupJobs;
   backup_policy: BackupPolicy;
