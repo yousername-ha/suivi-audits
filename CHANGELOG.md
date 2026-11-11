@@ -140,6 +140,18 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
   importable : ces clés sont écartées sans rien dire, et l'export ne les produit plus (schéma 15 inchangé). _(Session « Projet
   audit_suivi Coeur ».)_
 
+## [6.2.1] — 2026-11-11
+
+Version de publication : **aucun changement de fonction par rapport à la 6.2.0**. La publication de l'étiquette `v6.2.0` a échoué au scan Trivy (voir « Corrigé ») et une étiquette ne peut ni être déplacée ni supprimée ; la 6.2.1 est la première version 6.2 publiée. Le contenu fonctionnel est celui de la section [6.2.0] ci-dessous. Section rédigée par la session « Projet audit_suivi Coeur ».
+
+### Notes de mise à jour
+
+**Mise à jour depuis la 6.1.0 : aucune action sur le serveur** (depuis l'interface web ou `scripts/mettre-a-jour.sh`), comme indiqué pour la 6.2.0 ci-dessous (migration automatique `051`). La 6.2.0 n'a jamais été publiée : n'installer que la 6.2.1.
+
+### Corrigé
+
+- **Images web et exécutant** : `golang.org/x/net` passe de 0.60.0 à 0.62.0 dans le frontal Caddy et l'exécutant de mises à jour (CVE-2026-78661, déni de service dans l'analyseur HTML, gravité haute, correctif publié en 0.62.0). C'est ce que le scan Trivy de la publication de `v6.2.0` a refusé. _(Session « Projet audit_suivi Coeur ».)_
+
 ## [6.2.0] — 2026-11-04
 
 Version mineure : une migration SQL additive (`051`), aucune nouvelle dépendance. Elle apporte les étiquettes des documents et des liens, les modèles d'échelles et de matrices EBIOS RM et MÉHARI, la séparation « Mes rappels » / « Configuration du pilotage » du menu, et une recette automatisée plus stable.
