@@ -53,7 +53,15 @@ if [ ! -w /dev/kvm ]; then
   echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules > /dev/null
   sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
 fi
-[ -w /dev/kvm ] || arret "KVM indisponible sur ce runner : impossible de démarrer la machine virtuelle Rocky Linux."
+if [ ! -w /dev/kvm ]; then
+  echo "::group::Diagnostic KVM"
+  ls -l /dev/kvm 2>&1 || true
+  echo "processeurs avec virtualisation matérielle (vmx|svm) : $(grep -cE '(vmx|svm)' /proc/cpuinfo || true)"
+  lscpu | grep -iE 'model name|virtualization|hypervisor' || true
+  nproc; free -m | head -2
+  echo "::endgroup::"
+  arret "KVM indisponible sur ce runner : impossible de démarrer la machine virtuelle ($SYSTEME)."
+fi
 command -v qemu-system-x86_64 > /dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq qemu-system-x86 qemu-utils > /dev/null; }
 
 # --- Image officielle, empreinte vérifiée
