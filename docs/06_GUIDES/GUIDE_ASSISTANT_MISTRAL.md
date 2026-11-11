@@ -188,7 +188,7 @@ sudo docker compose -f docker-compose.yml -f docker-compose.build.yml build
 sudo docker compose --profile assistant up -d
 ```
 
-Cette suite de commandes n'a pas été exécutée pendant le développement : faites une sauvegarde avant, et prévenez-moi du
+Cette suite de commandes n'a pas été exécutée pendant le développement : faites une sauvegarde avant, et relevez le
 premier message d'erreur si elle échoue.
 
 ## Sources côté Mistral (relues le 11/11/2026)
