@@ -1,6 +1,6 @@
 # Scénario du RSSI virtuel : mettre en œuvre un SMSI ISO/IEC 27001:2022 + HDS sur une installation neuve
 
-Lu par l'agent [`rssi-virtuel`](../../../.claude/agents/rssi-virtuel.md). Organisation et données : [jeu fictif](donnees/gcs-fictif.json).
+Lu par l'agent [`rssi-virtuel`](../../../.claude/agents/rssi-virtuel.md). Organisation et données : [jeu fictif](donnees/organisation-fictive.json).
 Les étapes 1 à 11 suivent le **parcours ISO 27001 / HDS de l'application** (`/pilotage/parcours-iso`), les étapes 12 à 16 ses
 compléments HDS. L'étape 0 est l'installation, l'étape 17 la vérification croisée. Le parcours ISO de l'application est la porte
 d'entrée de chaque étape : il mène à la bonne rubrique avec le bon périmètre, et **le fait qu'il y mène est lui-même vérifié**.

@@ -1,7 +1,7 @@
 {
   "_avertissement": "Organisation et données entièrement fictives, pour la recette du RSSI virtuel. Aucune personne, aucun établissement ni aucun fournisseur réel.",
   "organisation": {
-    "nom": "GCS Santé Fictif",
+    "nom": "Groupement Santé Fictif",
     "nature": "Groupement de coopération sanitaire, hébergeur de données de santé",
     "certifications": ["ISO/IEC 27001:2022", "HDS v2 (activités 1 à 6)"],
     "cycle": {
@@ -13,13 +13,13 @@
   },
   "perimetres": [
     {
-      "nom": "SMSI GCS Santé Fictif",
+      "nom": "SMSI Groupement Santé Fictif",
       "description": "Plateformes régionales d'échange et de partage de données de santé, hébergement et infogérance",
       "referentiels": ["ISO/IEC 27001:2022", "HDS v2"]
     },
     {
       "nom": "Hébergement HDS",
-      "parent": "SMSI GCS Santé Fictif",
+      "parent": "SMSI Groupement Santé Fictif",
       "description": "Activités d'hébergement de données de santé (infrastructure physique, infogérance, sauvegarde)"
     }
   ],
@@ -28,7 +28,7 @@
     { "identifiant": "dpo.fictif", "nom": "Délégué à la protection des données (fictif)", "role": "Contributeur" },
     { "identifiant": "pilote.infra", "nom": "Pilote du processus infrastructure (fictif)", "role": "Contributeur" },
     { "identifiant": "auditeur.interne", "nom": "Auditeur interne (fictif)", "role": "Lecteur" },
-    { "identifiant": "direction", "nom": "Direction du GCS (fictive)", "role": "Lecteur" }
+    { "identifiant": "direction", "nom": "Direction du groupement (fictive)", "role": "Lecteur" }
   ],
   "documents": [
     { "titre": "Politique de sécurité de l'information (fictive)", "mesures": ["A-5.1"] },

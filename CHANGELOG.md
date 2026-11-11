@@ -107,7 +107,7 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
 
 ### Ajouté
 
-- **RSSI virtuel** (recette, sans effet sur l'application) : sous-agent Claude Code `rssi-virtuel` (persona de RSSI d'un GCS
+- **RSSI virtuel** (recette, sans effet sur l'application) : sous-agent Claude Code `rssi-virtuel` (persona de RSSI d'un groupement de santé
   certifié ISO/IEC 27001:2022 et HDS, scénario en 17 étapes aligné sur le parcours ISO 27001 / HDS, jeu de données fictif,
   pilote de navigateur sans dépendance ajoutée) et harnais de non-régression sur pile Docker éphémère
   (`tests/e2e/rssi-virtuel/lancer.sh` : installation, déclaration d'applicabilité, écarts, huit invariants du SMSI, journal

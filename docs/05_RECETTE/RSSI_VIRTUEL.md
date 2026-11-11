@@ -8,7 +8,7 @@ en la faisant utiliser, sur une installation neuve, par un RSSI qui y met en œu
 
 | Étage | Quoi | Quand | Résultat |
 | --- | --- | --- | --- |
-| Exploratoire (agent) | Sous-agent Claude Code [`rssi-virtuel`](../../.claude/agents/rssi-virtuel.md) : persona de RSSI, [scénario en 17 étapes](../../tests/e2e/rssi-virtuel/scenario.md) aligné sur le parcours ISO 27001 / HDS de l'application, [jeu de données fictif](../../tests/e2e/rssi-virtuel/donnees/gcs-fictif.json), navigateur piloté pas à pas | Après une évolution métier, avant une PR de version | Rapport daté dans [`rssi-virtuel/`](rssi-virtuel/), constats `RSSI-NN`, tests proposés |
+| Exploratoire (agent) | Sous-agent Claude Code [`rssi-virtuel`](../../.claude/agents/rssi-virtuel.md) : persona de RSSI, [scénario en 17 étapes](../../tests/e2e/rssi-virtuel/scenario.md) aligné sur le parcours ISO 27001 / HDS de l'application, [jeu de données fictif](../../tests/e2e/rssi-virtuel/donnees/organisation-fictive.json), navigateur piloté pas à pas | Après une évolution métier, avant une PR de version | Rapport daté dans [`rssi-virtuel/`](rssi-virtuel/), constats `RSSI-NN`, tests proposés |
 | Non-régression (harnais) | Tests Playwright déterministes [`tests/e2e/rssi-virtuel/specs/`](../../tests/e2e/rssi-virtuel/specs/) et [invariants du SMSI](../../tests/e2e/rssi-virtuel/invariants.ts), sur une pile Docker éphémère | Manuel ou hebdomadaire ([workflow « RSSI virtuel »](../../.github/workflows/rssi-virtuel.yml)), hors des 7 contrôles de PR | Vert / rouge ; avertissements en annotations |
 
 L'agent découvre ; le harnais empêche que ce qui a été vérifié régresse. Chaque parcours que l'agent vérifie a vocation à

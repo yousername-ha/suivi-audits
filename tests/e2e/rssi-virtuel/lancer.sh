@@ -60,7 +60,7 @@ demarrer() {
   sed -e "s#^DATA_DIR=.*#DATA_DIR=$DONNEES#" \
     -e 's/^SITE_ADDRESS=.*/SITE_ADDRESS=localhost/' \
     -e "s/^APP_VERSION=.*/APP_VERSION=${VERSION:-local}/" \
-    -e 's/^ORG_NAME=.*/ORG_NAME="GCS Santé Fictif"/' \
+    -e 's/^ORG_NAME=.*/ORG_NAME="Groupement Santé Fictif"/' \
     -e 's/^RATE_LIMIT_PER_MINUTE=.*/RATE_LIMIT_PER_MINUTE=6000/' \
     .env.example >"$ENV_FICHIER"
   chmod 0600 "$ENV_FICHIER"

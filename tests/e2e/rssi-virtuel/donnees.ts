@@ -1,4 +1,4 @@
-/* Jeu de données fictif du RSSI virtuel (donnees/gcs-fictif.json), typé pour les tests. */
+/* Jeu de données fictif du RSSI virtuel (donnees/organisation-fictive.json), typé pour les tests. */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
@@ -22,7 +22,7 @@ export interface DonneesFictives {
 }
 
 const donnees = JSON.parse(
-  readFileSync(path.join(import.meta.dirname, 'donnees', 'gcs-fictif.json'), 'utf8'),
+  readFileSync(path.join(import.meta.dirname, 'donnees', 'organisation-fictive.json'), 'utf8'),
 ) as DonneesFictives;
 export default donnees;
 
