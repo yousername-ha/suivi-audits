@@ -110,7 +110,7 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
 - **Rocky Linux 10 comme serveur d'installation** ([ADR 0085](docs/adr/0085-support-de-rocky-linux-10.md), proposée) : le guide
   d'installation donne les variantes `dnf`, `firewalld` et Docker CE pour Rocky Linux 10 (SELinux reste en mode `enforcing`), les
   messages des scripts indiquent l'installation d'`age` sur les deux familles, et la CI rejoue le guide dans une machine virtuelle
-  Rocky Linux 10. Aucune action sur un serveur existant. _(Session « Projet audit_suivi Coeur ».)_
+  Rocky Linux 10 et dans une machine virtuelle Debian 12 (jusque-là non rejouée). Aucune action sur un serveur existant. _(Session « Projet audit_suivi Coeur ».)_
 
 ### Modifié
 

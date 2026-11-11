@@ -13,7 +13,7 @@ Ce guide part d'un serveur vide et ne suppose aucune connaissance de Linux ni de
 - Le texte `<comme_ceci>` est à remplacer par votre valeur, **chevrons compris**. Par exemple, `ssh <utilisateur>@<adresse_ip_du_serveur>` devient `ssh admin@10.0.12.40`.
 - ⚠️ signale une action risquée : lisez l'avertissement **avant** de lancer la commande.
 
-Ce guide est **vérifié automatiquement** : à chaque modification de l'application, l'intégration continue rejoue ses commandes sur un serveur Ubuntu vierge et sur une machine virtuelle Rocky Linux 10 vierge (variantes `dnf` du guide, SELinux en mode `enforcing`), jusqu'à la création de l'administrateur, l'import d'un fichier de l'ancien outil, une sauvegarde et sa restauration. Un guide inexact bloque la publication. Les commentaires `<!-- ci: … -->`, invisibles sur GitHub, servent à ce contrôle.
+Ce guide est **vérifié automatiquement** : à chaque modification de l'application, l'intégration continue rejoue ses commandes sur un serveur Ubuntu vierge et sur des machines virtuelles vierges Debian 12 et Rocky Linux 10 (variantes `dnf` du guide, SELinux en mode `enforcing`), jusqu'à la création de l'administrateur, l'import d'un fichier de l'ancien outil, une sauvegarde et sa restauration. Un guide inexact bloque la publication. Les commentaires `<!-- ci: … -->`, invisibles sur GitHub, servent à ce contrôle.
 
 ---
 

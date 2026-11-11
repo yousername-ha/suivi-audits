@@ -28,9 +28,10 @@ paquets, pare-feu, dépôt Docker, outil `age`) et quelques messages d'erreur su
   Ubuntu reste celle d'avant (test `scripts/tests/guide-extraire.test.mjs`).
 - **Outil `age`** : paquet `age` du dépôt EPEL 10 (version 1.3.1, l'outil de FiloSottile) ; les messages d'erreur des scripts
   indiquent les deux commandes d'installation.
-- **Preuve en CI** : le job « Guide d'installation (rejoué sur une VM Rocky Linux 10) » démarre l'image officielle
-  `Rocky-10-GenericCloud-Base` (empreinte SHA-256 figée dans `scripts/ci/guide-rocky.sh`) sous QEMU/KVM sur un runner Ubuntu,
-  y rejoue le guide extrait avec `--os=rocky`, puis le « lot A » (restauration, retours arrière, TLS). Un conteneur Rocky avec
+- **Preuve en CI** : le job « Guide d'installation (rejoué sur une VM …) » démarre, sous QEMU/KVM sur un runner Ubuntu, l'image
+  officielle `Rocky-10-GenericCloud-Base` puis l'image `debian-12-genericcloud` (empreintes figées dans
+  `scripts/ci/guide-vm.sh`), y rejoue le guide extrait avec `--os=rocky` ou `--os=debian`, puis le « lot A » (restauration,
+  retours arrière, TLS). Debian 12, annoncé jusque-là sans rejeu dédié, est ainsi prouvé comme Ubuntu 24.04 et Rocky Linux 10. Un conteneur Rocky avec
   systemd est écarté : SELinux, `firewalld` et systemd n'y seraient pas fidèles, donc ce qui diffère d'Ubuntu ne serait pas prouvé.
 
 ## Ce qui n'est pas fait
@@ -42,5 +43,5 @@ paquets, pare-feu, dépôt Docker, outil `age`) et quelques messages d'erreur su
 
 ## Conséquences
 
-Un job de CI de plus (long : 40 à 60 minutes) et l'image Rocky à rafraîchir de temps en temps (version et empreinte). Le guide
+Deux jobs de CI de plus (longs : 40 à 60 minutes, en parallèle) et les images Rocky et Debian à rafraîchir de temps en temps (adresse et empreinte). Le guide
 double certaines étapes ; la table des flux sortants et le glossaire citent `dnf` et `firewalld`.

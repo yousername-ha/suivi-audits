@@ -458,13 +458,22 @@ jobs:
         if: always()
         run: if [ -d /opt/suivi-audits ]; then cd /opt/suivi-audits && sudo docker compose down -v || true; fi
 
-  guide-rocky:
-    name: Guide d'installation (rejoué sur une VM Rocky Linux 10)
-    # ADR 0085 : même guide que ci-dessus, extrait avec --os=rocky et rejoué dans une machine virtuelle Rocky Linux 10
-    # (QEMU/KVM sur le runner) avec dnf, firewalld, SELinux enforcing et Docker CE. Voir scripts/ci/guide-rocky.sh.
+  guide-vm:
+    name: Guide d'installation (rejoué sur une VM ${{ matrix.nom }})
+    # ADR 0085 : même guide que ci-dessus, extrait pour le système de la machine virtuelle (--os=debian ou --os=rocky) et
+    # rejoué dans une machine virtuelle vierge (QEMU/KVM sur le runner) : Debian 12 (apt, ufw) ou Rocky Linux 10 (dnf,
+    # firewalld, SELinux enforcing), avec Docker CE. Voir scripts/ci/guide-vm.sh.
     runs-on: ubuntu-24.04
     needs: [qualite]
     timeout-minutes: 80
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - systeme: rocky10
+            nom: Rocky Linux 10
+          - systeme: debian12
+            nom: Debian 12
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -473,13 +482,13 @@ jobs:
         with:
           node-version: 26
           package-manager-cache: false
-      - name: Rejeu du guide dans la machine virtuelle Rocky Linux 10
-        run: ./scripts/ci/guide-rocky.sh
+      - name: Rejeu du guide dans la machine virtuelle ${{ matrix.nom }}
+        run: ./scripts/ci/guide-vm.sh ${{ matrix.systeme }}
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
-          name: guide-rocky
+          name: guide-vm-${{ matrix.systeme }}
           path: |
-            ${{ runner.temp }}/rocky/guide.sh
-            ${{ runner.temp }}/rocky/serial.log
+            ${{ runner.temp }}/vm-${{ matrix.systeme }}/guide.sh
+            ${{ runner.temp }}/vm-${{ matrix.systeme }}/serial.log
           if-no-files-found: ignore

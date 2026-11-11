@@ -78,7 +78,7 @@ test('le guide réel s’extrait pour Debian et pour Rocky, sans commande apt re
   assert.match(deb, /ufw allow 22\/tcp/);
   assert.doesNotMatch(deb, /firewall-cmd/);
   assert.match(rocky, /firewall-cmd --permanent/);
-  assert.match(rocky, /download\.docker\.com\/linux\/rhel\/docker-ce\.repo/);
+  assert.ok(rocky.includes('https://download.docker.com/linux/rhel/docker-ce.repo'));
   const executees = rocky.split('\n').filter((l) => !l.startsWith('#') && !l.startsWith('echo'));
   for (const l of executees)
     assert.doesNotMatch(l, /^(sudo )?(apt|apt-get|ufw|dpkg)\b/, `commande Debian rejouée sur Rocky : ${l}`);
