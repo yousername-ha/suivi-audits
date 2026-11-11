@@ -1,6 +1,6 @@
 # Cadrage — assistant RSSI intégré (serveur MCP et agent Hermes)
 
-**Statut** : cadrage du 11/11/2026, à la demande du RSSI, avec ses décisions A1 à A4 de
+**Statut** : cadrage du 11/11/2026, à la demande du RSSI, avec ses décisions A1 à A7 de
 l'[ADR 0086](../adr/0086-assistant-rssi-serveur-mcp-et-agent.md) (**proposée**, à accepter). Aucun code, aucune migration.
 Rédaction : session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`).
 
@@ -11,7 +11,10 @@ Un assistant dans la plateforme qui aide à **maintenir la certification ISO/IEC
 - **surveiller** : échéances, retards, preuves manquantes, évaluations anciennes, programme d'audit ;
 - **analyser** : couverture des exigences, cohérence entre écarts, actions, risques et déclaration d'applicabilité ;
 - **demander** : poser une question à la bonne personne, relancer, réclamer une preuve ;
-- tenir deux rôles : aide à la **mise en œuvre** et aide à l'**audit interne**.
+- tenir deux rôles : aide à la **mise en œuvre** et aide à l'**audit interne** ;
+- **se nourrir** de tout ce que la plateforme contient (référentiels, contenu des documents, actions, tâches récurrentes,
+  historique) et **s'améliorer** avec l'usage ;
+- échanger par un **chat** et par des **notifications** qu'il émet lui-même (rappel, question, proposition).
 
 Décisions du RSSI : modèle réglable et local par défaut ; serveur MCP natif avec Hermes Agent à côté ; l'assistant lit et
 propose, une personne valide.
@@ -43,7 +46,10 @@ sort jamais. L'agent n'a ni base, ni socket Docker, ni fichiers de l'application
 | Module et droits | `MODULES`, `MODULE_REGISTRY`, `module_activation`, rôles | Module `assistant` (3 actions) et migration de la contrainte |
 | Proposer sans écrire | Cycle des rapprochements (`grc/rapprochements.ts` : statuts, `decide()`), aperçu puis confirmation | Tables de propositions et de questions ; outils de dépôt |
 | Appliquer une proposition | `Grc.insert`/`Grc.write`, clôtures, évaluations d'exigences, tâches : chacun avec ses versions, son audit, son temps réel | Aiguillage d'une proposition confirmée vers le service de sa cible |
-| Prévenir une personne | Notifications métier (ADR 0058), réglages par groupe, rôle et utilisateur, courriel par l'exécutant | Deux types : proposition à décider, question posée |
+| Prévenir une personne | Notifications métier (ADR 0058), réglages par groupe, rôle et utilisateur, courriel par l'exécutant | Trois types émis par l'assistant : rappel, question, proposition à décider ; plafond par personne et par jour |
+| Lire le contenu des documents | Circuit de fichiers (`files.ts` : formats, signature, antivirus), chiffrement par le coffre, versions de document | Extraction du texte hors de l'API, isolée ; texte chiffré par version ; outil de lecture et de recherche |
+| S'améliorer | Décisions tracées (`decided_by`, motif), `grc_object_versions`, validations d'occurrences | Outil « retours » ; taux d'acceptation calculé par la plateforme ; écran de la mémoire (lire, corriger, purger) |
+| Dialoguer | SSE et temps réel existants, `packages/ui` | Fil de conversation par personne et par profil, relais vers l'agent, sources cliquables |
 | Détecter | Rappels de l'automate (`grc/tasks.ts`), couverture (`couverture.ts`), plan d'audit, parcours ISO/HDS | Outil « signaux » qui assemble ces faits, sans nouveau calcul de conformité |
 | Tracer | `Db.audit`, `audit_log` en ajout seul, acteurs non humains déjà admis | Audits `assistant.*` par appel d'outil |
 | Déployer | Profil Compose facultatif (antivirus), réseaux internes, épinglage par empreinte (ADR 0063), `DATA_DIR` | Profil `assistant` : conteneurs Hermes et modèle, configuration générée |
@@ -55,6 +61,13 @@ sort jamais. L'agent n'a ni base, ni socket Docker, ni fichiers de l'application
 - **Ronde de surveillance (planifiée dans Hermes).** L'agent appelle l'outil « signaux », lit les objets concernés, dépose
   des propositions et des questions, puis un court rapport daté. La personne voit une notification, ouvre la proposition,
   lit les sources citées, confirme, modifie ou rejette avec un motif.
+- **Rappel ou question.** L'agent constate une action en retard ou une preuve manquante : il envoie un rappel ou une
+  question à la personne concernée. Elle répond depuis la notification ou dans le chat ; l'agent relit la réponse à la
+  ronde suivante et la garde en mémoire.
+- **Chat.** Une personne ouvre le chat, choisit le profil et pose sa question ; la réponse cite les objets et documents
+  lus, par des liens. Elle ne contient rien que cette personne ne puisse lire elle-même.
+- **Apprentissage.** Une proposition est rejetée avec le motif « déjà couvert par l'action X » : l'agent lit ce retour, ne
+  la redépose pas et en tient compte pour les suivantes. Le RSSI consulte le taux d'acceptation et ce que l'agent a retenu.
 - **Mise en œuvre.** « Où en est-on sur la clause 9 ? » : l'agent lit couverture, DdA et parcours, répond avec les
   identifiants des exigences, et propose les actions manquantes.
 - **Préparation d'un audit interne.** À partir du programme, du périmètre et des exigences du référentiel attaché, l'agent
@@ -86,6 +99,10 @@ Un auditeur n'audite pas son propre travail (ISO/IEC 27001, 9.2 ; ISO 19011). D'
 | Agent compromis | Conteneur sans privilège, lecture seule, sans socket Docker ni montage ; image épinglée |
 | Chiffres inventés | Aucun taux calculé par le modèle ; signaux et couvertures viennent des outils ; identifiants cités |
 | Validation à la chaîne sans lecture | Pas de confirmation en lot au départ ; motif exigé au rejet ; mention d'origine conservée sur l'objet créé |
+| Chat qui révèle plus que les droits de la personne | Lectures bornées à l'intersection des périmètres ; à défaut, chat réservé aux personnes qui couvrent le périmètre du profil |
+| Mémoire qui garde ce qui ne doit plus être lu | Mémoire par profil, lisible et purgeable ; purge à la réduction des périmètres |
+| Fichier piégé à l'extraction | Extraction hors de l'API, sans réseau ni privilège, après antivirus, tailles et délais bornés |
+| Notifications envahissantes | Plafond par personne et par jour ; pas de réémission à objet inchangé ; réglages personnels respectés |
 | Déni de service par l'agent | Pagination, plafonds, limiteur par jeton, verrou d'une seule ronde à la fois |
 
 L'assistant est un usage d'IA de l'organisation : GAP IA (ADR 0064) et appréciation des risques avant mise en service.
@@ -96,11 +113,12 @@ L'assistant est un usage d'IA de l'organisation : GAP IA (ADR 0064) et apprécia
 |---|---|---|
 | A0 | ADR 0086 et ce cadrage | Relus et acceptés par le RSSI |
 | A1 | **Socle MCP en lecture.** Module `assistant` et migration ; comptes d'assistant et jetons ; type d'accès `assistant` ; outils de lecture par la porte de lecture ; outil « signaux » ; audit ; écran d'administration. Essai d'interopérabilité avec Hermes (révision du protocole) avant d'écrire le transport | Refus sans jeton, jeton expiré ou révoqué, module désactivé, hors périmètre, registre restreint. Aucun outil n'écrit (prouvé par test). Jeton jamais relu ni journalisé. `rbac.test.ts` vert. Migration sur base vierge et existante. Utilisable sans aucun modèle, par un client MCP quelconque |
-| A2 | **Propositions et questions.** Tables, outils de dépôt, rubrique « Assistant », décision avec droit de la cible, notifications | Rien n'est écrit dans un registre avant confirmation. Confirmation refusée sans le droit de la cible. Rejet non redéposé à sources inchangées. Objet créé sous l'identité de la personne, origine mentionnée |
-| A3 | **Agent et modèle.** Profil Compose `assistant`, durcissement, configuration Hermes générée (outils natifs désactivés, liste blanche), modèle local, rondes planifiées, guide d'installation, sauvegarde et purge de la mémoire | Aucune sortie réseau constatée en configuration par défaut. Outils natifs absents (prouvé). Jeu d'évaluation sur organisation fictive : résultats **mesurés et publiés**, y compris les échecs. Mesure de temps de réponse sur le matériel du RSSI |
-| A4 | **Dialogue dans l'interface.** Relais de l'API vers l'agent, fil de conversation, sources cliquables | CSP stricte respectée. Le dialogue n'élargit aucun droit. Captures clair et sombre |
-| A5 | **Audit interne.** Profil dédié, préparation, constats proposés, brouillon de rapport, garde-fou d'indépendance | Aucune action corrective déposée par ce profil. Aucun texte de norme reconstitué. Recette par un auditeur |
-| A6 | **Mise en œuvre.** Parcours ISO/HDS, DdA, couverture, préparation de la revue de direction | Chaque réponse cite ses sources ; aucun taux hors outils |
+| A2 | **Propositions, questions, rappels.** Tables, outils de dépôt, rubrique « Assistant », décision avec droit de la cible, trois types de notification, réponse à une question, outil « retours », taux d'acceptation | Rien n'est écrit dans un registre avant confirmation. Confirmation refusée sans le droit de la cible. Rejet non redéposé à sources inchangées. Objet créé sous l'identité de la personne, origine mentionnée. Rappel refusé vers une personne sans accès à l'objet ; plafond respecté |
+| A3 | **Agent et modèle.** Profil Compose `assistant`, durcissement, configuration Hermes générée (outils natifs désactivés, liste blanche), modèle local, rondes planifiées, guide d'installation, mémoire par profil (lecture, correction, purge, sauvegarde) | Aucune sortie réseau constatée en configuration par défaut. Outils natifs absents (prouvé). Jeu d'évaluation sur organisation fictive : résultats **mesurés et publiés**, y compris les échecs. Mesure de temps de réponse sur le matériel du RSSI |
+| A4 | **Chat.** Relais de l'API vers l'agent, fil par personne et par profil, sources cliquables, réponse aux questions de l'assistant | CSP stricte respectée. Une personne n'obtient par le chat rien qu'elle ne puisse lire (prouvé par test avec deux comptes). Captures clair et sombre |
+| A5 | **Contenu des documents.** Extraction isolée (formats texte, puis PDF et bureautique par addendum), texte chiffré par version, outil de lecture et de recherche | Droits du document respectés. Texte supprimé avec la version. Fichier piégé sans effet sur l'API. Formats non lus signalés, jamais devinés |
+| A6 | **Audit interne.** Profil dédié, préparation, constats proposés, brouillon de rapport, garde-fou d'indépendance | Aucune action corrective déposée par ce profil. Aucun texte de norme reconstitué. Recette par un auditeur |
+| A7 | **Mise en œuvre.** Parcours ISO/HDS, DdA, couverture, préparation de la revue de direction | Chaque réponse cite ses sources ; aucun taux hors outils |
 
 A1 et A2 ont une valeur sans modèle : tout client MCP peut s'y brancher. A3 est le lot à risque (matériel, qualité du
 modèle local) : s'il échoue, le reste n'est pas perdu.
@@ -109,5 +127,7 @@ modèle local) : s'il échoue, le reste n'est pas perdu.
 
 - Révision MCP parlée par le client de Hermes 0.23.1 (2025-11-25 ou 2026-07-28).
 - Existence d'un réglage Hermes unique « outils MCP seulement » : les mécanismes existent, la recette n'est pas documentée.
+- Mémoire et savoir-faire appris de Hermes avec ses outils de fichiers désactivés ; bornage des droits par conversation.
+- Bibliothèques d'extraction de texte (PDF, bureautique) : non choisies, à retenir par addendum.
 - Qualité et vitesse d'un modèle local sur ces outils ; matériel du serveur (inconnu dans le DAT).
 - Aucun essai n'a été exécuté : ce document repose sur la lecture du code et des documentations officielles du 11/11/2026.

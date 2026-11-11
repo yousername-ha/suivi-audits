@@ -23,6 +23,9 @@
 | A2 | Forme de l'agent | **Serveur MCP natif** dans la plateforme ; **Hermes Agent** dans un conteneur optionnel qui s'y connecte |
 | A3 | Autonomie | L'assistant **lit et propose** ; rien n'est écrit dans un registre sans validation d'une personne |
 | A4 | Démarrage | Cadrage et ADR d'abord, sans code |
+| A5 | Ce que lit l'assistant | **Tout ce que la plateforme contient** dans ses périmètres : référentiels (ISO/IEC 27001, HDS…), **contenu des documents**, actions, tâches récurrentes et leur historique |
+| A6 | Progression | L'assistant **s'améliore avec l'usage** : mémoire de l'organisation et prise en compte des décisions rendues sur ses propositions |
+| A7 | Échanges | Un **chat** dans l'interface, et des **notifications à l'initiative de l'assistant** (rappel, question, proposition) |
 
 ## Faits vérifiés le 11/11/2026 (sources officielles)
 
@@ -39,11 +42,14 @@
 - **MCP** : révision courante 2026-07-28 (transport HTTP sans session ni poignée de main, en-têtes `Mcp-Method` et
   `Mcp-Name`) ; précédente 2025-11-25. Source : [journal de la spécification](https://modelcontextprotocol.io/specification/latest/changelog).
 - **Non vérifié** : la révision MCP que parle le client de Hermes 0.23.1 ; une recette documentée « outils MCP seulement »
-  pour Hermes ; le comportement réel d'un modèle local sur ces outils. Ces trois points sont levés par essai au lot concerné.
+  pour Hermes ; le comportement réel d'un modèle local sur ces outils ; le fonctionnement de la mémoire et des savoir-faire
+  appris de Hermes quand ses outils de fichiers sont désactivés ; la possibilité de borner les droits conversation par
+  conversation. Ces points sont levés par essai au lot concerné.
 - **Existant de la plateforme** : une seule authentification nominative (session par cookie) ; aucun jeton d'API ni compte
   de service ; `route()` porte tous les contrôles ; journal `audit_log` en ajout seul avec des acteurs non humains déjà
   admis (`planification`, `Automate SMSI`) ; modèle « proposition puis décision » des rapprochements
-  (`pending | confirmed | rejected | withdrawn`) ; réseaux `edge`, `backend` et `antivirus` internes.
+  (`pending | confirmed | rejected | withdrawn`) ; réseaux `edge`, `backend` et `antivirus` internes ; documents chiffrés,
+  formats admis contrôlés par `files.ts` (PDF, bureautique, images, texte), **aucune extraction de texte existante**.
 
 ## Décision
 
@@ -65,22 +71,24 @@
    des outils (ni ressources, ni invites, ni échantillonnage). `rbac.test.ts` reçoit le nouveau type.
 5. **Outils de lecture par la porte de lecture** (ADR 0083). Chaque outil appelle les services existants avec la portée
    du compte d'assistant : exigences et couverture, déclaration d'applicabilité, écarts et actions, risques, plan et
-   programme d'audit, audits et constats, incidents, fournisseurs, tâches et échéances, parcours ISO/HDS, liste des
-   documents (métadonnées ; le contenu d'un document chiffré n'est pas ouvert dans ce premier temps). Les réponses sont
-   paginées et bornées. Sont exclus par construction : comptes, sessions, secrets, journal technique, configuration
+   programme d'audit, audits et constats, incidents, fournisseurs, tâches récurrentes et leurs occurrences, parcours ISO/HDS, documents (point 15), et l'**historique** des
+   objets (versions, validations d'occurrences) pour suivre les évolutions. Les réponses sont paginées et bornées. Sont exclus par construction : comptes, sessions, secrets, journal technique, configuration
    système, sauvegardes.
 6. **Signaux calculés par la plateforme, pas par le modèle.** Un outil « signaux » rend des faits déterministes :
    actions en retard, exigences sans évaluation ou sans preuve, évaluations anciennes, audits du programme à venir ou non
    tenus, risques à revoir. Le modèle hiérarchise et rédige ; il ne calcule **aucun taux**. Tout chiffre affiché vient d'un
    outil et toute affirmation cite les identifiants des objets lus.
 7. **Propositions puis décision humaine**, sur le modèle des rapprochements. L'assistant dépose, par des outils dédiés, des
-   **propositions** typées (écart, action, tâche, constat d'audit, évaluation d'exigence, relance) et des **questions**
-   adressées à une personne. Table de propositions avec `pending | confirmed | rejected | withdrawn`, `decided_by`,
+   **propositions** typées (écart, action, tâche, constat d'audit, évaluation d'exigence). Table de propositions avec `pending | confirmed | rejected | withdrawn`, `decided_by`,
    `decided_at`, `decision_note`, sources citées. La confirmation écrit par le service existant de la cible, **sous
    l'identité de la personne qui décide**, avec la mention de l'origine. Une proposition rejetée n'est pas redéposée tant
    que ses sources n'ont pas changé (empreinte). L'assistant ne valide, ne clôt et ne publie jamais rien.
-8. **Notifications par le circuit existant** (ADR 0058) : nouveaux types pour une proposition à décider et une question
-   posée. Aucun nouveau canal.
+8. **Notifications à l'initiative de l'assistant**, par le circuit existant (ADR 0058) : trois types, **rappel**,
+   **question** et **proposition à décider**. Un rappel ou une question n'écrit dans aucun registre : l'assistant les émet
+   seul, sans validation préalable, vers des personnes qui ont déjà accès à l'objet cité. L'expéditeur affiché est
+   « Assistant ». Les réglages de chaque personne (application, courriel) s'appliquent ; un plafond par personne et par
+   jour évite l'envahissement, et un même rappel n'est pas réémis tant que l'objet n'a pas changé. La réponse à une
+   question se donne depuis la notification ou dans le chat ; l'assistant la relit par un outil. Aucun nouveau canal.
 9. **Deux profils séparés.** « Mise en œuvre » et « Audit interne » sont deux comptes d'assistant, deux jetons et deux
    profils Hermes sans mémoire commune. Le profil d'audit ne dépose que des constats et des éléments de préparation ; il ne
    dépose aucune action corrective. Un constat qui porte sur un objet issu d'une proposition de l'assistant est signalé
@@ -95,14 +103,35 @@
     un réseau interne. Pointer vers un fournisseur extérieur est un réglage explicite de l'exploitant, qui place alors
     l'agent sur un réseau sortant ; l'interface affiche que des extraits du SMSI quittent le serveur. **L'API de la
     plateforme garde zéro accès sortant** dans les deux cas.
-12. **Dialogue dans l'interface** (lot ultérieur) : l'API relaie vers le serveur d'API de Hermes sur le réseau interne,
-    comme elle parle à l'antivirus. Le dialogue n'ajoute aucun droit : l'agent répond avec son propre compte d'assistant,
-    pas avec les droits de la personne qui écrit.
+12. **Chat dans l'interface** : l'API relaie vers le serveur d'API de Hermes sur le réseau interne, comme elle parle à
+    l'antivirus. Un fil par personne et par profil, conservé par la plateforme, lisible par son seul auteur, purgeable.
+    Chaque réponse cite ses sources par des liens vers les objets. **Le chat ne montre jamais plus que ce que la personne
+    peut lire elle-même** : les lectures faites pendant une conversation sont bornées à l'intersection des périmètres du
+    compte d'assistant et de ceux de la personne. Si Hermes ne permet pas de borner chaque conversation, le chat d'un
+    profil est réservé aux personnes dont les droits couvrent tout le périmètre de ce profil. La même règle protège la
+    mémoire (point 16).
 13. **Traçabilité.** Chaque appel d'outil écrit un audit `assistant.*` (compte d'assistant, outil, périmètre, nombre
     d'éléments rendus), sans contenu métier ni jeton. Le nom du champ du jeton rejoint le masquage `REDACT`.
 14. **Implémentation du protocole.** Sous-ensemble « outils » de MCP écrit dans l'API avec Fastify et zod, **sans
     dépendance nouvelle**, si l'essai d'interopérabilité avec Hermes du premier lot réussit. Sinon, le paquet officiel
     `@modelcontextprotocol/server` est retenu par un addendum à cette ADR, avec sa version et sa licence.
+15. **Contenu des documents.** L'assistant lit le texte des documents de ses périmètres, avec les droits du document.
+    L'extraction du texte se fait **hors de l'API**, dans une étape isolée, sans réseau et sans privilège, après le
+    contrôle antivirus existant. Ordre : formats texte (txt, md, csv, json, xml), puis PDF et bureautique (docx, xlsx,
+    pptx, odt…), dont les bibliothèques d'extraction seront retenues par un addendum (dépendances nouvelles). Les images
+    et les PDF numérisés ne sont pas lus au départ (pas de reconnaissance de caractères). Le texte extrait est rattaché à
+    la **version** du document, chiffré comme lui, recalculé quand la version change et supprimé avec elle. Un texte de
+    norme n'entre que si l'organisation l'a déposé ou importé elle-même : rien n'est reconstitué.
+16. **Amélioration avec l'usage, sans entraînement de modèle.** Trois sources, toutes sur le serveur :
+    - l'**état courant**, relu à chaque ronde par les outils : l'assistant n'a pas de copie périmée des registres ;
+    - la **mémoire** de Hermes, propre à chaque profil : contexte de l'organisation, réponses reçues, préférences ;
+    - les **retours** : un outil rend la décision prise sur chaque proposition (confirmée, modifiée, rejetée, avec le
+      motif). L'assistant en tient compte et ne répète pas ce qui a été refusé.
+
+    La plateforme calcule et affiche le **taux de propositions acceptées** par type et par mois : c'est la mesure de la
+    progression, et elle ne vient pas du modèle. La mémoire est **lisible, corrigeable et purgeable** par le RSSI depuis
+    l'administration ; elle est purgée quand les périmètres d'un compte d'assistant sont réduits. Aucun modèle n'est
+    réentraîné et aucune donnée ne sert à un tiers.
 
 ## Conséquences
 
@@ -114,11 +143,13 @@
   détourner l'agent. Parades retenues : aucun outil d'écriture directe, aucune sortie réseau par défaut, aucun outil sur
   l'hôte, décision humaine avec sources visibles. Le risque résiduel est une proposition trompeuse : la personne qui valide
   reste le contrôle.
+- Le texte extrait des documents double une donnée sensible : il suit les droits, le chiffrement et la suppression du
+  document. L'extraction traite des fichiers non fiables : elle reste hors de l'API, isolée.
 - La **mémoire de l'agent** contient des extraits du SMSI : elle vit dans `DATA_DIR`, suit les sauvegardes chiffrées et se
   purge depuis l'administration.
 - L'assistant est lui-même un usage d'IA de l'organisation : il passe par le GAP IA ([ADR 0064](0064-gap-ia-iso-27001-hds.md))
   et par l'appréciation des risques avant sa mise en service.
-- **Limites assumées** : pas d'écriture autonome ; pas de lecture du contenu des documents chiffrés au départ ; pas
+- **Limites assumées** : pas d'écriture autonome dans les registres ; images et PDF numérisés non lus au départ ; pas
   d'activation du conteneur depuis l'interface ; qualité dépendante du modèle local, **non mesurée** à ce jour ;
   dimensionnement du serveur inconnu (aucune promesse de performance).
 - **Alternatives écartées** : boucle d'agent écrite dans l'API (mémoire, planification et dialogue à maintenir, et le
@@ -134,3 +165,6 @@
    trop lent pour un usage réel ; la mesure se fait au lot du conteneur.
 3. Périmètres ouverts à chaque profil, et personnes destinataires des questions.
 4. Prévenir les autres sessions avant le premier lot, qui touche `apps/api/src` (`http/route.ts`, `auth.ts`).
+5. Recherche dans les documents : accepter ou non un index de recherche en clair dans la base (les documents restent
+   chiffrés sur disque). Sans index, l'assistant ne retrouve un document que par ses métadonnées et ses liens.
+6. Plafond de notifications par personne et par jour (proposition : 5).
