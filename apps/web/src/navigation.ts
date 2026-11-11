@@ -79,7 +79,6 @@ export const FAMILLES: Famille[] = [
         p('fournisseurs-perimetre'),
         p('evaluations-clausier'),
       ]),
-      dest('revues-acces', 'Revues des accès', [p('revues-acces')]),
       dest('plans', 'Plans annuels', [
         p('plans-calendrier'),
         p('plans-planning'),

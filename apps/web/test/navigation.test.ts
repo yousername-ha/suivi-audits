@@ -23,7 +23,6 @@ const INVENTAIRE = [
   'organisation|fournisseurs|criteres-fournisseurs|/pilotage/criteres-fournisseurs|fournisseurs|lire',
   'organisation|fournisseurs|fournisseurs-perimetre|/pilotage/fournisseurs-perimetre|fournisseurs|lire',
   'organisation|fournisseurs|evaluations-clausier|/pilotage/evaluations-clausier|fournisseurs|lire',
-  'organisation|revues-acces|revues-acces|/pilotage/revues-acces|pilotage|lire',
   'organisation|plans|plans-calendrier|/pilotage/plans-calendrier|pilotage|lire',
   'organisation|plans|plans-planning|/pilotage/plans-planning|pilotage|lire',
   'organisation|plans|plans-formation|/pilotage/plans-formation|pilotage|lire',

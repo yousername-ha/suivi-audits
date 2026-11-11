@@ -31,7 +31,6 @@ const ETAT: JsonObject = {
     { title: 'sans identifiant' },
   ],
   plans: [],
-  accessReviews: [{ id: 'RA-1', app: 'App fictive', freq: '12', month: '2026-01', comment: 7 }],
   appGaps: [
     {
       id: 'GAP-1',
@@ -67,16 +66,10 @@ describe('migration 024 et correspondance générique', () => {
       ]);
       expect(await migrerAvant043(t)).toContain('024_collections_suivi_tables.sql');
       const etat = (await t.svc.legacy.recompose())!.data;
-      for (const k of ['incidents', 'plans', 'accessReviews', 'appGaps']) expect(etat[k], k).toEqual(ETAT[k]);
+      for (const k of ['incidents', 'plans', 'appGaps']) expect(etat[k], k).toEqual(ETAT[k]);
       expect('supEvals' in etat).toBe(false);
       // Ordre des entrées conservé, entrée non objet conservée à sa place.
       expect((etat.incidents as Json[])[1]).toBe('entrée atypique');
-      // Valeur de type inattendu conservée dans extra, colonne laissée NULL.
-      const ra = await t.svc.db.one<{ freq: number | null; extra: JsonObject }>(
-        "SELECT freq, extra FROM suivi_access_reviews WHERE id='RA-1'",
-      );
-      expect(ra!.freq).toBeNull();
-      expect(ra!.extra).toEqual({ freq: '12', comment: 7 });
       // Colonnes typées renseignées pour les champs conformes.
       const inc = await t.svc.db.one<{ title: string; answers: unknown }>(
         "SELECT title, answers FROM suivi_incidents WHERE id='INC-001'",
@@ -95,7 +88,7 @@ describe('migration 024 et correspondance générique', () => {
         await t.svc.db.tx((c) => ecrireCollection(c, spec, valeur as Json | undefined));
       }
       const etat = (await t.svc.legacy.recompose())!.data;
-      for (const k of ['incidents', 'plans', 'accessReviews', 'appGaps']) expect(etat[k], k).toEqual(ETAT[k]);
+      for (const k of ['incidents', 'plans', 'appGaps']) expect(etat[k], k).toEqual(ETAT[k]);
       expect('supEvals' in etat).toBe(false);
       const spec = COLLECTIONS.find((s) => s.key === 'incidents')!;
       await t.svc.db.tx((c) => ecrireCollection(c, spec, undefined));
@@ -110,7 +103,6 @@ describe('migration 024 et correspondance générique', () => {
   const CLES = [
     'incidents',
     'plans',
-    'accessReviews',
     'appGaps',
     'supEvals',
     'crisis',

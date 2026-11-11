@@ -6,11 +6,14 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-**Aucune action sur le serveur.** **Migration automatique `053`, destructive** (retrait des modules CRRC et Investissements,
+**Aucune action sur le serveur.** **Migrations automatiques `053` et `054`, destructives** (retrait des modules CRRC et Investissements,
 [ADR 0084](docs/adr/0084-retrait-des-modules-crrc-et-investissements.md)) : les établissements, ressources, sauvegardes,
 restaurations, alertes et offres CRRC et le plan d'investissement (Budget) sont **supprimés définitivement** à la mise à jour.
 Exporter avant (Exports Excel de la version précédente) si ces données doivent être conservées ; la sauvegarde automatique d'avant
 mise à jour est le seul retour arrière. Les droits `crrc` et `investissements` disparaissent des rôles et des attributions.
+Même chose pour la migration `054` (retrait du module « Revues des accès » des applications, [ADR 0087](docs/adr/0087-retrait-du-module-revues-des-acces.md)) :
+la table des revues est **supprimée définitivement** ; les revues d’accès se suivent par une tâche récurrente du Pilotage, et l’export de la revue
+des accès des comptes (Administration) est inchangé.
 _(Session « Projet audit_suivi Coeur ».)_
 
 **Aucune action sur le serveur.** **Migration automatique `052`** (référentiels des périmètres) : appliquée au démarrage de
@@ -148,6 +151,10 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
 
 ### Retiré
 
+- **Module « Revues des accès »** des applications (page Pilotage → Organisation, routes `/api/revues-acces*`, table, rubrique d'export Excel,
+  données de démonstration), sur décision du RSSI ([ADR 0087](docs/adr/0087-retrait-du-module-revues-des-acces.md)) : ces revues se suivent par une
+  tâche récurrente du Pilotage. La clé `accessReviews` d'un fichier de l'outil historique est écartée sans rien dire à l'import. La revue des accès des
+  **comptes** (Administration) est inchangée. _(Session « Projet audit_suivi Coeur ».)_
 - **Modules CRRC (sauvegardes des établissements partenaires) et Investissements (rubrique Budget, « Plan d'investissement »)**,
   ancien et nouveau code, sur décision du RSSI ([ADR 0084](docs/adr/0084-retrait-des-modules-crrc-et-investissements.md)) :
   pages et menus, routes `/api/crrc/*` et `/api/investissements/*`, tables (migration `053`), modules de droits, rubriques

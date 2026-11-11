@@ -277,15 +277,6 @@ Un seul module est repris dans des tables dédiées : la **cartographie** (`maps
 | `$.entityCategory` | app_state.data | 3 | settings |  |
 | `$.schema` | app_state.data | — | — | Version du schéma : portée à 15 par la migration du schéma 15 (import et export). |
 | `$.iso27001Certified` | app_state.data | 1 | settings |  |
-| `$.accessReviews` | app_state.data | 2 | access_reviews |  |
-| `$.accessReviews[]` | app_state.data | 2 | access_reviews |  |
-| `$.accessReviews[].id` | app_state.data | 2 | access_reviews |  |
-| `$.accessReviews[].app` | app_state.data | 2 | access_reviews |  |
-| `$.accessReviews[].month` | app_state.data | 2 | access_reviews |  |
-| `$.accessReviews[].supplier` | app_state.data | 2 | access_reviews |  |
-| `$.accessReviews[].freq` | app_state.data | 2 | access_reviews |  |
-| `$.accessReviews[].source` | app_state.data | 2 | access_reviews |  |
-| `$.accessReviews[].comment` | app_state.data | 2 | access_reviews |  |
 | `$.plan` | app_state.data | 1 | audit_plan_days, audit_plan_slots, audit_plan_people |  |
 | `$.plan.status` | app_state.data | 1 | audit_plan_days, audit_plan_slots, audit_plan_people |  |
 | `$.plan.note` | app_state.data | 1 | audit_plan_days, audit_plan_slots, audit_plan_people |  |

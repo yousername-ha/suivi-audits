@@ -31,7 +31,6 @@ Sert de contrat pour l'import dans la refonte. La clé `maps` (cartographie, mod
 | `entityCategory` | str |  |
 | `schema` | int |  |
 | `iso27001Certified` | bool |  |
-| `accessReviews` | liste | 14 |
 | `plan` | objet | 5 |
 | `appGaps` | liste | 2 |
 | `reviews` | liste | 1 |
@@ -328,15 +327,6 @@ Sert de contrat pour l'import dans la refonte. La clé `maps` (cartographie, mod
 | `$.entityCategory` | texte | 1 |
 | `$.schema` | entier | 1 |
 | `$.iso27001Certified` | booléen | 1 |
-| `$.accessReviews` | liste | 1 |
-| `$.accessReviews[]` | objet | 14 |
-| `$.accessReviews[].id` | texte | 14 |
-| `$.accessReviews[].app` | texte | 14 |
-| `$.accessReviews[].month` | texte | 14 |
-| `$.accessReviews[].supplier` | texte | 14 |
-| `$.accessReviews[].freq` | entier | 14 |
-| `$.accessReviews[].source` | texte | 14 |
-| `$.accessReviews[].comment` | texte | 14 |
 | `$.plan` | objet | 1 |
 | `$.plan.status` | texte | 1 |
 | `$.plan.note` | texte | 1 |

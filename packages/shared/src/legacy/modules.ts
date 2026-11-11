@@ -29,7 +29,6 @@ export const LEGACY_MODULES: readonly LegacyModule[] = [
   { key: 'dda', label: "Déclaration d'applicabilité (DdA)", phase: 2 },
   { key: 'suppliers', label: 'Fournisseurs', phase: 2 },
   { key: 'supEvals', label: 'Évaluations des fournisseurs', phase: 2 },
-  { key: 'accessReviews', label: "Revues d'accès", phase: 2 },
   { key: 'reviews', label: 'Revues de direction et COPIL', phase: 2 },
   { key: 'scope', label: 'Périmètre du SMSI', phase: 2 },
   { key: 'interested', label: 'Parties intéressées', phase: 2 },
