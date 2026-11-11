@@ -1,7 +1,7 @@
 # ADR 0085 — Support de Rocky Linux 10 comme serveur d'installation
 
-- Statut : proposée (demande du RSSI du 11/11/2026 ; numéro annoncé et accepté dans la session). L'acceptation reste à prononcer
-  par le RSSI, une fois le rejeu automatique du guide sur Rocky Linux 10 vert.
+- Statut : acceptée par le RSSI le 11/11/2026, après le rejeu automatique du guide sur Rocky Linux 10 et Debian 12 (PR #254, 9
+  contrôles de CI verts). Demande du RSSI du même jour ; numéro annoncé et accepté dans la session.
 - Date : 2026-11-11
 - Rédaction : session « Projet audit_suivi Coeur » (`session_01ES6jrfuR1tD6Az1XDgAnS3`)
 - Complète l'[ADR 0014](0014-donnees-sur-le-serveur-et-mises-a-jour.md) (données sur le serveur et mises à jour outillées) et
