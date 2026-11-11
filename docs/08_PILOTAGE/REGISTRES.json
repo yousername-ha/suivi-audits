@@ -1657,6 +1657,17 @@
       "dependencies": "Aucune",
       "next": "Relecture du RSSI, acceptation de l’ADR 0082 (numéros 0082 et 052) et fusion de la PR vers claude-suivi-smsi ; recette sur son serveur (TEST-041).",
       "estimation": "NON ESTIMÉE"
+    },
+    {
+      "id": "DEV-013",
+      "title": "RSSI virtuel : agent exploratoire et harnais de non-régression",
+      "status": "PUBLIÉ SUR LA BRANCHE",
+      "priority": "P2",
+      "origin": "demande du RSSI du 11/11/2026 (agent qui se comporte comme un RSSI installant l’application et y mettant en œuvre son ISO 27001 / HDS, pour vérifier cohérence, fonctionnement et non-régression)",
+      "acceptance": "Harnais vert sur pile éphémère (workflow « RSSI virtuel ») ; constats ouverts suivis par des tests test.fail ; étapes du scénario couvertes une à une (docs/05_RECETTE/RSSI_VIRTUEL.md).",
+      "dependencies": "Aucune",
+      "next": "Premier passage du workflow manuel « RSSI virtuel », puis étapes 1-2, 4 et 6, 9 et 12, 11 du scénario ; correction de BUG-016 à BUG-019 par une autre session.",
+      "estimation": "NON ESTIMÉE"
     }
   ],
   "test_cases": [

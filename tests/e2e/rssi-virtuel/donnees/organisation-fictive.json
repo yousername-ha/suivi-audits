@@ -1,0 +1,137 @@
+{
+  "_avertissement": "Organisation et données entièrement fictives, pour la recette du RSSI virtuel. Aucune personne, aucun établissement ni aucun fournisseur réel.",
+  "organisation": {
+    "nom": "Groupement Santé Fictif",
+    "nature": "Groupement de coopération sanitaire, hébergeur de données de santé",
+    "certifications": ["ISO/IEC 27001:2022", "HDS v2 (activités 1 à 6)"],
+    "cycle": {
+      "certification": "2026-03",
+      "surveillance1": "2027-03",
+      "surveillance2": "2028-03",
+      "renouvellement": "2029-03"
+    }
+  },
+  "perimetres": [
+    {
+      "nom": "SMSI Groupement Santé Fictif",
+      "description": "Plateformes régionales d'échange et de partage de données de santé, hébergement et infogérance",
+      "referentiels": ["ISO/IEC 27001:2022", "HDS v2"]
+    },
+    {
+      "nom": "Hébergement HDS",
+      "parent": "SMSI Groupement Santé Fictif",
+      "description": "Activités d'hébergement de données de santé (infrastructure physique, infogérance, sauvegarde)"
+    }
+  ],
+  "comptes": [
+    { "identifiant": "rssi", "nom": "Responsable SSI (fictif)", "role": "Administrateur" },
+    { "identifiant": "dpo.fictif", "nom": "Délégué à la protection des données (fictif)", "role": "Contributeur" },
+    { "identifiant": "pilote.infra", "nom": "Pilote du processus infrastructure (fictif)", "role": "Contributeur" },
+    { "identifiant": "auditeur.interne", "nom": "Auditeur interne (fictif)", "role": "Lecteur" },
+    { "identifiant": "direction", "nom": "Direction du groupement (fictive)", "role": "Lecteur" }
+  ],
+  "documents": [
+    { "titre": "Politique de sécurité de l'information (fictive)", "mesures": ["A-5.1"] },
+    { "titre": "Procédure de gestion des incidents (fictive)", "mesures": ["A-5.24", "A-5.25", "A-5.26"] },
+    { "titre": "Procédure de sauvegarde (fictive)", "mesures": ["A-8.13"] }
+  ],
+  "dda": [
+    {
+      "mesure": "A-5.1",
+      "applicable": "oui",
+      "niveau": "Total",
+      "justification": "Exigence du SMSI et du référentiel HDS"
+    },
+    {
+      "mesure": "A-5.15",
+      "applicable": "oui",
+      "niveau": "Partiel",
+      "justification": "Risque R-02 (accès non autorisé aux données de santé)"
+    },
+    {
+      "mesure": "A-5.24",
+      "applicable": "oui",
+      "niveau": "Total",
+      "justification": "Obligation de déclaration des incidents (HDS)"
+    },
+    {
+      "mesure": "A-7.4",
+      "applicable": "oui",
+      "niveau": "Insuffisant",
+      "justification": "Risque R-03 (intrusion physique en salle d'hébergement)"
+    },
+    {
+      "mesure": "A-8.13",
+      "applicable": "oui",
+      "niveau": "Total",
+      "justification": "Risque R-01 (perte de données hébergées)"
+    },
+    {
+      "mesure": "A-8.30",
+      "applicable": "non",
+      "niveau": "",
+      "justification": "Aucun développement externalisé dans le périmètre (décision de la revue de direction fictive)"
+    }
+  ],
+  "risques": [
+    {
+      "id": "R-01",
+      "scenario": "Perte de données hébergées après défaillance du stockage",
+      "mesures": ["A-8.13", "A-8.14"],
+      "traitement": "réduire"
+    },
+    {
+      "id": "R-02",
+      "scenario": "Accès non autorisé aux données de santé par un compte à privilèges",
+      "mesures": ["A-5.15", "A-8.2", "A-8.5"],
+      "traitement": "réduire"
+    },
+    {
+      "id": "R-03",
+      "scenario": "Intrusion physique en salle d'hébergement",
+      "mesures": ["A-7.1", "A-7.4"],
+      "traitement": "réduire"
+    },
+    {
+      "id": "R-04",
+      "scenario": "Indisponibilité du sous-traitant réseau",
+      "mesures": ["A-5.20"],
+      "traitement": "transférer"
+    }
+  ],
+  "objectifs": [
+    { "libelle": "Revue des comptes à privilèges", "cible": "100 % des comptes revus chaque trimestre" },
+    { "libelle": "Restauration testée", "cible": "1 test de restauration par mois réussi" }
+  ],
+  "ecarts": [
+    {
+      "titre": "Revue trimestrielle des comptes à privilèges non tracée (fictif)",
+      "source": "Interne",
+      "classification": "mineure",
+      "mesures": ["A-5.15"],
+      "action": "Tracer la revue dans l'outil et conserver l'export signé (fictif)"
+    },
+    {
+      "titre": "Politique de sécurité non relue depuis plus d'un an (fictif)",
+      "source": "Interne",
+      "classification": "mineure",
+      "mesures": ["A-5.1"],
+      "action": "Relire et faire approuver la politique en revue de direction (fictif)"
+    }
+  ],
+  "sous_traitants": [
+    { "nom": "Opérateur réseau fictif", "hds": "Non", "activite": "Lien réseau des sites" },
+    { "nom": "Infogérant fictif", "hds": "Oui", "activite": "Infogérance du système d'information hébergé" }
+  ],
+  "incident": {
+    "titre": "Rançongiciel sur un serveur de test (exercice fictif)",
+    "gravite": "majeure",
+    "chronologie": [
+      "détection par le SOC",
+      "isolement du serveur",
+      "activation de la cellule de crise",
+      "restauration",
+      "clôture et RETEX"
+    ]
+  }
+}

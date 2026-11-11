@@ -274,3 +274,53 @@ elles ne sont pas ajoutées artificiellement comme trois bugs applicatifs ouvert
 | Fichiers | [apps/api/src/services.ts](../../apps/api/src/services.ts) (limites, inchangées) ; [tests/e2e/helpers.ts](../../tests/e2e/helpers.ts) ; [tests/e2e/specs/parcours.spec.ts](../../tests/e2e/specs/parcours.spec.ts) ; [tests/e2e/specs/recette-cartographie.spec.ts](../../tests/e2e/specs/recette-cartographie.spec.ts) ; [clés de sécurité](../../tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-cles-securite.spec.ts) ; [RETEX](../../tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-retex.spec.ts) |
 | Non-régression | CI de la PR #224 : 240 tests réussis, aucun échec, aucun instable ; relevé de la CI : 6 connexions complètes sur toute la suite (3, 2 puis 1 par tranche de 5 minutes) et 0 refus, contre 19 avant. Le relevé reste dans le journal de chaque exécution de la CI. |
 | Reste à vérifier | Un rejeu volontaire d'un test instable n'a pas été fait : relire le relevé sur les prochaines PR (nombre de connexions complètes, aucun refus) ; une cascade de refus ou plus de 15 connexions dans une tranche rouvrirait le bug. |
+
+## BUG-016 — Exclusion d'une mesure de la DdA acceptée sans justification (RSSI-01)
+
+| Champ | Constat |
+| --- | --- |
+| Fonction, gravité, priorité | Déclaration d'applicabilité (annexe A, HDS) ; MAJEURE ; P1 |
+| Statut | OUVERT |
+| Détection | 2026-11-11, premier passage du RSSI virtuel (session « Agent RSSI virtuel », `session_01EnWdzi6XW7jw824ozEWpfF`) |
+| Déclencheur | « Applicable » mis à « Non » sur une mesure de l'annexe A, depuis la ligne ou la fiche, sans justification ; ou `PATCH /api/dda/:id` `{ "app": "non", "just": "" }`. |
+| Attendu | ISO/IEC 27001:2022, 6.1.3 d) : chaque exclusion est justifiée. L'exclusion non justifiée est refusée, ou signalée comme une incohérence de la DdA (indicateur et filtre, comme « Total avec écart ouvert »). |
+| Observé | Réponse 200, la mesure passe « Exclue », aucun message, aucun indicateur ; aucun filtre ne retrouve les exclusions sans justification. |
+| Cause / niveau | PROBABLE : `DdaModification` (`packages/shared/src/suivi-dda.ts`) n'a pas de règle entre `app` et `just`, et `incoherente` ne regarde que le niveau « Total ». |
+| Non-régression | `tests/e2e/rssi-virtuel/specs/10-dda.spec.ts`, test « RSSI-01 ouvert » (`test.fail` : rouge quand le défaut sera corrigé) ; invariant INV-03. |
+
+## BUG-017 — Taux de mise en œuvre de la DdA calculé sur les mesures non examinées (RSSI-02)
+
+| Champ | Constat |
+| --- | --- |
+| Fonction, gravité, priorité | Déclaration d'applicabilité, indicateurs ; MAJEURE ; P1 |
+| Statut | OUVERT |
+| Détection | 2026-11-11, RSSI virtuel (même session) |
+| Déclencheur | DdA de l'annexe A dont seules quelques mesures sont examinées (applicabilité décidée). |
+| Attendu | Le taux « en mise en œuvre totale » porte sur les mesures examinées et déclarées applicables ; les mesures non examinées sont comptées à part (« non renseignées »). Un taux affiché ne doit pas laisser croire à un état de la DdA qui n'existe pas (règle « aucun taux inventé » d'AGENTS.md). |
+| Observé | Jeu fictif : 6 mesures examinées dont 5 applicables et 2 « Total » ; l'écran affiche 2 % (2 / 92 mesures non exclues) au lieu de 40 %. À part (cause non analysée) : le tableau de bord d'une installation neuve affiche « 0 % » de conformité moyenne sur trois référentiels alors que rien n'est évalué ; « 0 % » n'y est pas distingué de « non évalué ». |
+| Cause / niveau | CONFIRMÉ : `statsDda` (`packages/shared/src/suivi-dda.ts`) compte comme applicable toute mesure dont `app` n'est pas « non », donc aussi les mesures non examinées (`app` vide). |
+| Non-régression | `10-dda.spec.ts`, test « RSSI-02 ouvert » (`test.fail`), oracle `tauxMiseEnOeuvreTotale` (`tests/e2e/rssi-virtuel/invariants.ts`). |
+
+## BUG-018 — Libellé anglais des boutons d'affichage du mot de passe (RSSI-03)
+
+| Champ | Constat |
+| --- | --- |
+| Fonction, gravité, priorité | Installation (création du compte administrateur), accessibilité ; MINEURE ; P3 |
+| Statut | OUVERT |
+| Détection | 2026-11-11, RSSI virtuel (arbre d'accessibilité de l'écran d'installation) |
+| Déclencheur | Étape 3 sur 3 de l'installation, champs « Mot de passe » et « Confirmation ». |
+| Attendu | Nom accessible en français (ex. « Afficher le mot de passe »). |
+| Observé | Le lecteur d'écran annonce « Toggle password visibility » (libellé par défaut du composant `PasswordInput` de Mantine). Les autres écrans à mot de passe n'ont pas été passés en revue. |
+| Non-régression | `tests/e2e/rssi-virtuel/specs/00-installation.spec.ts`, test « RSSI-03 ouvert » (`test.fail`). |
+
+## BUG-019 — Écart désigné par son identifiant technique dans la DdA (RSSI-04)
+
+| Champ | Constat |
+| --- | --- |
+| Fonction, gravité, priorité | Déclaration d'applicabilité, colonne « Écarts » ; MINEURE ; P2 |
+| Statut | OUVERT |
+| Détection | 2026-11-11, RSSI virtuel |
+| Déclencheur | Écart du registre rattaché à une mesure de l'annexe A. |
+| Attendu | Intitulé ou référence lisible de l'écart, avec un lien vers sa fiche : c'est ce que le RSSI rapproche du rapport d'audit. |
+| Observé | La colonne affiche l'UUID de l'écart (ex. `6bc1501f-…`). Le test `zzzzzzzzzzzzzzz-dda-evaluations.spec.ts` vérifie aujourd'hui la présence de cet identifiant : il faudra l'adapter avec le correctif. |
+| Non-régression | `tests/e2e/rssi-virtuel/specs/20-ecarts.spec.ts`, test « RSSI-04 ouvert » (`test.fail`). |
