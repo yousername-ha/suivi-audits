@@ -105,6 +105,16 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
   (ordre des actions d'un plan, synthèse des périmètres). Aucune modification de comportement. Aucune action sur le serveur.
   _(Session « Projet audit_suivi Coeur ».)_
 
+### Ajouté
+
+- **RSSI virtuel** (recette, sans effet sur l'application) : sous-agent Claude Code `rssi-virtuel` (persona de RSSI d'un GCS
+  certifié ISO/IEC 27001:2022 et HDS, scénario en 17 étapes aligné sur le parcours ISO 27001 / HDS, jeu de données fictif,
+  pilote de navigateur sans dépendance ajoutée) et harnais de non-régression sur pile Docker éphémère
+  (`tests/e2e/rssi-virtuel/lancer.sh` : installation, déclaration d'applicabilité, écarts, huit invariants du SMSI, journal
+  d'audit), lancé à la main ou chaque semaine par le workflow « RSSI virtuel », hors des contrôles exigés pour fusionner.
+  Premier passage : quatre constats ouverts (BUG-016 à BUG-019), suivis par des tests `test.fail`. Guide :
+  `docs/05_RECETTE/RSSI_VIRTUEL.md`. _(Session « Agent RSSI virtuel ».)_
+
 ### Modifié
 
 - **Bibliothèque figée, référentiels du périmètre en copie, puis appliqués** ([ADR 0082](docs/adr/0082-referentiels-du-perimetre-copie-et-application.md)) :
