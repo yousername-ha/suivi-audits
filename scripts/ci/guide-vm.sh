@@ -111,11 +111,17 @@ node "$DEPOT/scripts/ci/guide-extraire.mjs" --os="$OS_GUIDE" "$DEPOT/docs/INSTAL
 "${SSH[@]}" 'cat > ~/guide.sh' < guide.sh
 
 ENV_VM='export GITHUB_WORKSPACE=$HOME/work GITHUB_ACTIONS=true RUNNER_TEMP=$HOME/tmp PATH=$HOME/bin:$PATH'
+# En cas d'échec, l'état de la machine (Docker, noyau, SELinux, pare-feu) explique l'erreur mieux que la console série.
+diagnostic_vm() {
+  echo "::group::Diagnostic de la machine virtuelle ($SYSTEME)"
+  "${SSH[@]}" 'uname -r; rpm -q kernel-core 2> /dev/null || true; (getenforce 2> /dev/null || true); sudo systemctl status docker --no-pager -l 2>&1 | tail -25; echo "--- journal docker"; sudo journalctl -u docker --no-pager 2>&1 | tail -40; echo "--- journal noyau (nftables, iptables, overlay)"; sudo dmesg 2>&1 | grep -iE "nf_tables|iptables|overlay|bridge|audit.*denied" | tail -15; (sudo ausearch -m avc -ts recent 2>&1 | tail -15 || true)' || true
+  echo "::endgroup::"
+}
 echo "::group::Rejeu du guide sur $SYSTEME"
-"${SSH[@]}" "$ENV_VM; bash ~/guide.sh"
+"${SSH[@]}" "$ENV_VM; bash ~/guide.sh" || { echo "::endgroup::"; diagnostic_vm; arret "Le rejeu du guide a échoué sur $SYSTEME."; }
 echo "::endgroup::"
 echo "::group::Lot A — pilotage réel, restauration et retours arrière, TLS"
-"${SSH[@]}" "$ENV_VM; cd /opt/suivi-audits && NODE_EXTRA_CA_CERTS=/opt/suivi-audits/racine-suivi-audits.crt node \$GITHUB_WORKSPACE/scripts/ci/guide-api.mjs lot-a https://localhost"
+"${SSH[@]}" "$ENV_VM; cd /opt/suivi-audits && NODE_EXTRA_CA_CERTS=/opt/suivi-audits/racine-suivi-audits.crt node \$GITHUB_WORKSPACE/scripts/ci/guide-api.mjs lot-a https://localhost" || { echo "::endgroup::"; diagnostic_vm; arret "Le lot A a échoué sur $SYSTEME."; }
 echo "::endgroup::"
 if [ "$SYSTEME" = rocky10 ]; then
   [ "$("${SSH[@]}" getenforce)" = Enforcing ] || arret "SELinux a été modifié pendant le rejeu : refus."
