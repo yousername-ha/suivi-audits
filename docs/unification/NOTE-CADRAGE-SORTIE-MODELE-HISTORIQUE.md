@@ -81,4 +81,8 @@ Chaque module = une ADR courte, une migration additive, un mapper, un test d'all
 3. Les références `legacy:*` : alias durable ou conversion unique à la migration.
 4. La règle d'accès cible par module (par registre et périmètre, ou droit de module conservé).
 
-Rien n'est engagé tant que ces points ne sont pas tranchés.
+## 8. Décisions prises (11/11/2026)
+
+Les quatre décisions sont prises et consignées dans l'[ADR 0084](../adr/0084-reprise-des-modules-historiques-en-objets-natifs.md) :
+module par module ; CRRC, investissements, revues d'accès en premier ; références converties à la migration ; registres restreints par
+défaut (administrateurs seuls à la bascule).
