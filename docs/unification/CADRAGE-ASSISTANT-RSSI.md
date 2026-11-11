@@ -1,7 +1,7 @@
 # Cadrage — assistant RSSI intégré (agent natif, modèle distant)
 
 **Statut** : cadrage du 11/11/2026, à la demande du RSSI, avec ses décisions A1 à A11 de
-l'[ADR 0086](../adr/0086-assistant-rssi-integre.md) (**proposée**, à accepter). Aucun code, aucune migration.
+l'[ADR 0086](../adr/0086-assistant-rssi-integre.md) (**acceptée** le 11/11/2026). Le cadrage lui-même ne contient ni code ni migration.
 Rédaction : session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`).
 
 ## 1. Besoin

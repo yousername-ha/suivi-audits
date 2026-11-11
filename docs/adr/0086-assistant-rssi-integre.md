@@ -1,7 +1,7 @@
 # ADR 0086 — Assistant RSSI intégré : agent natif, modèle distant réglable, autonomie bornée, propositions validées
 
-- Statut : **proposée** le 11/11/2026. Numéro 0086 annoncé au RSSI dans la session ; libre sur toutes les branches du dépôt
-  à cette date. À accepter par le RSSI avant tout développement.
+- Statut : **acceptée** par le RSSI le 11/11/2026, dans la session (numéro 0086 annoncé et confirmé ; libre sur toutes les
+  branches du dépôt à cette date).
 - Date : 2026-11-11
 - Rédaction : session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`)
 - Contexte : le RSSI demande, le 11/11/2026, un **assistant RSSI intégré à la plateforme**, qui surveille, analyse et
@@ -21,7 +21,7 @@
 
 | N° | Question | Décision |
 |---|---|---|
-| A1 | Modèle de langage | Point d'accès **réglable**, compatible OpenAI. Le serveur (VPS OVHcloud VPS-2, sans carte graphique) ne peut pas l'héberger : le modèle est **distant**. Mistral est envisagé comme premier fournisseur, à confirmer |
+| A1 | Modèle de langage | Point d'accès **réglable**, compatible OpenAI. Le serveur (VPS OVHcloud VPS-2, sans carte graphique) ne peut pas l'héberger : le modèle est **distant**. **Mistral** est le premier fournisseur retenu |
 | A2 | Forme de l'agent | **Agent natif**, écrit dans la plateforme, relié directement au modèle. Pas de Hermes. Serveur MCP reporté en lot optionnel |
 | A3 | Écritures | L'assistant **lit et propose** ; rien n'est écrit dans un registre sans validation d'une personne |
 | A4 | Démarrage | Cadrage et ADR d'abord, sans code |
@@ -164,14 +164,13 @@
   et 0049) ; modèle sur le VPS (pas de carte graphique) ; écritures directes par l'agent ; un seul profil pour la mise en
   œuvre et l'audit.
 
-## Points ouverts pour le RSSI
+## Réponses du RSSI aux points ouverts (11/11/2026)
 
-1. Accepter cette ADR et confirmer le numéro 0086.
-2. Fournisseur du modèle : confirmer Mistral (ou OVHcloud AI Endpoints, qui héberge des modèles Mistral), après lecture
-   des conditions et de l'accord de traitement des données.
-3. Périmètres ouverts à chaque profil, et personnes destinataires des questions. Exclure ceux qui peuvent contenir des
-   données de santé.
-4. Dire si une autre session travaille sur `apps/api/src` : le premier lot touche `server.ts`, `http/route.ts` et les
-   modules partagés.
-5. Réglages par défaut : plafond de notifications (proposition : 5 par personne et par jour), délai de relance d'une
-   question (proposition : 5 jours ouvrés), budget quotidien de jetons.
+1. ADR acceptée, numéro 0086 confirmé.
+2. Fournisseur du modèle : **Mistral**. La lecture des conditions et de l'accord de traitement des données reste à faire
+   par l'organisation avant la mise en service.
+3. Périmètres : non arrêtés. **Première version réservée aux rôles administrateur et RSSI** (le droit dédié du point 4
+   n'est porté que par eux). Un profil n'a **aucun périmètre par défaut** : l'administrateur les choisit dans l'écran de
+   réglages.
+4. Aucune autre session ne travaille sur le code de l'API sur cette branche.
+5. Réglages par défaut (plafond de notifications, délai de relance, budget de jetons) : à arrêter aux lots A2 et A3.
