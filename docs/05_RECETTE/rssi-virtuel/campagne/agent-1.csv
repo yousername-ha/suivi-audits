@@ -1,115 +1,115 @@
 cellule;resultat;constat;commentaire
-pilotage/synthese|principal|rssi|vide|bureau;;;
-pilotage/synthese|principal|rssi|rempli|bureau;;;
-pilotage/synthese|principal|rssi|erreur|bureau;;;
-pilotage/synthese|sous-perimetre|rssi|vide|bureau;;;
-pilotage/synthese|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/synthese|sous-perimetre|rssi|erreur|bureau;;;
-pilotage/perimetres|principal|rssi|vide|bureau;;;
-pilotage/perimetres|principal|rssi|rempli|bureau;;;
-pilotage/perimetres|principal|rssi|erreur|bureau;;;
-pilotage/perimetres|sous-perimetre|rssi|vide|bureau;;;
-pilotage/perimetres|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/perimetres|sous-perimetre|rssi|erreur|bureau;;;
-pilotage/parcours-iso|principal|rssi|vide|bureau;;;
-pilotage/parcours-iso|principal|rssi|rempli|bureau;;;
-pilotage/parcours-iso|principal|rssi|erreur|bureau;;;
-pilotage/parcours-iso|sous-perimetre|rssi|vide|bureau;;;
-pilotage/parcours-iso|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/parcours-iso|sous-perimetre|rssi|erreur|bureau;;;
-pilotage/parcours|principal|rssi|vide|bureau;;;
-pilotage/parcours|principal|rssi|rempli|bureau;;;
-pilotage/parcours|principal|rssi|erreur|bureau;;;
-pilotage/parcours|sous-perimetre|rssi|vide|bureau;;;
-pilotage/parcours|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/parcours|sous-perimetre|rssi|erreur|bureau;;;
-pilotage/contexte|principal|rssi|vide|bureau;;;
-pilotage/contexte|principal|rssi|rempli|bureau;;;
-pilotage/contexte|principal|rssi|erreur|bureau;;;
-pilotage/contexte|sous-perimetre|rssi|vide|bureau;;;
-pilotage/contexte|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/contexte|sous-perimetre|rssi|erreur|bureau;;;
-pilotage/processus-cartes|principal|rssi|vide|bureau;;;
-pilotage/processus-cartes|principal|rssi|rempli|bureau;;;
-pilotage/processus-cartes|principal|rssi|erreur|bureau;;;
-pilotage/processus-cartes|sous-perimetre|rssi|vide|bureau;;;
-pilotage/processus-cartes|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/processus-cartes|sous-perimetre|rssi|erreur|bureau;;;
-pilotage/parties|principal|rssi|vide|bureau;;;
-pilotage/parties|principal|rssi|rempli|bureau;;;
-pilotage/parties|principal|rssi|erreur|bureau;;;
-pilotage/parties|sous-perimetre|rssi|vide|bureau;;;
-pilotage/parties|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/parties|sous-perimetre|rssi|erreur|bureau;;;
-pilotage/swot|principal|rssi|vide|bureau;;;
-pilotage/swot|principal|rssi|rempli|bureau;;;
-pilotage/swot|principal|rssi|erreur|bureau;;;
-pilotage/swot|sous-perimetre|rssi|vide|bureau;;;
-pilotage/swot|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/swot|sous-perimetre|rssi|erreur|bureau;;;
-pilotage/pestel|principal|rssi|vide|bureau;;;
-pilotage/pestel|principal|rssi|rempli|bureau;;;
-pilotage/pestel|principal|rssi|erreur|bureau;;;
-pilotage/pestel|sous-perimetre|rssi|vide|bureau;;;
-pilotage/pestel|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/pestel|sous-perimetre|rssi|erreur|bureau;;;
-pilotage/responsabilites|principal|rssi|vide|bureau;;;
-pilotage/responsabilites|principal|rssi|rempli|bureau;;;
-pilotage/responsabilites|principal|rssi|erreur|bureau;;;
-pilotage/responsabilites|sous-perimetre|rssi|vide|bureau;;;
-pilotage/responsabilites|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/responsabilites|sous-perimetre|rssi|erreur|bureau;;;
-pilotage/processus|principal|rssi|vide|bureau;;;
-pilotage/processus|principal|rssi|rempli|bureau;;;
-pilotage/processus|principal|rssi|erreur|bureau;;;
-pilotage/processus|sous-perimetre|rssi|vide|bureau;;;
-pilotage/processus|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/processus|sous-perimetre|rssi|erreur|bureau;;;
-pilotage/objectifs|principal|rssi|vide|bureau;;;
-pilotage/objectifs|principal|rssi|rempli|bureau;;;
-pilotage/objectifs|principal|rssi|erreur|bureau;;;
-pilotage/objectifs|sous-perimetre|rssi|vide|bureau;;;
-pilotage/objectifs|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/objectifs|sous-perimetre|rssi|erreur|bureau;;;
-pilotage/indicateurs|principal|rssi|vide|bureau;;;
-pilotage/indicateurs|principal|rssi|rempli|bureau;;;
-pilotage/indicateurs|principal|rssi|erreur|bureau;;;
-pilotage/indicateurs|sous-perimetre|rssi|vide|bureau;;;
-pilotage/indicateurs|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/indicateurs|sous-perimetre|rssi|erreur|bureau;;;
-pilotage/fournisseurs|principal|rssi|vide|bureau;;;
-pilotage/fournisseurs|principal|rssi|rempli|bureau;;;
-pilotage/fournisseurs|principal|rssi|erreur|bureau;;;
-pilotage/fournisseurs|sous-perimetre|rssi|vide|bureau;;;
-pilotage/fournisseurs|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/fournisseurs|sous-perimetre|rssi|erreur|bureau;;;
-pilotage/criteres-fournisseurs|principal|rssi|vide|bureau;;;
-pilotage/criteres-fournisseurs|principal|rssi|rempli|bureau;;;
-pilotage/criteres-fournisseurs|principal|rssi|erreur|bureau;;;
-pilotage/criteres-fournisseurs|sous-perimetre|rssi|vide|bureau;;;
-pilotage/criteres-fournisseurs|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/criteres-fournisseurs|sous-perimetre|rssi|erreur|bureau;;;
-pilotage/fournisseurs-perimetre|principal|rssi|vide|bureau;;;
-pilotage/fournisseurs-perimetre|principal|rssi|rempli|bureau;;;
-pilotage/fournisseurs-perimetre|principal|rssi|erreur|bureau;;;
-pilotage/fournisseurs-perimetre|sous-perimetre|rssi|vide|bureau;;;
-pilotage/fournisseurs-perimetre|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/fournisseurs-perimetre|sous-perimetre|rssi|erreur|bureau;;;
-pilotage/evaluations-clausier|principal|rssi|vide|bureau;;;
-pilotage/evaluations-clausier|principal|rssi|rempli|bureau;;;
-pilotage/evaluations-clausier|principal|rssi|erreur|bureau;;;
-pilotage/evaluations-clausier|sous-perimetre|rssi|vide|bureau;;;
-pilotage/evaluations-clausier|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/evaluations-clausier|sous-perimetre|rssi|erreur|bureau;;;
-route/|principal|rssi|vide|bureau;;;
-route/|principal|rssi|rempli|bureau;;;
-route/|principal|rssi|erreur|bureau;;;
-route/|sous-perimetre|rssi|vide|bureau;;;
-route/|sous-perimetre|rssi|rempli|bureau;;;
-route/|sous-perimetre|rssi|erreur|bureau;;;
-route/cartographie/:vue?|principal|rssi|vide|bureau;;;
-route/cartographie/:vue?|principal|rssi|rempli|bureau;;;
-route/cartographie/:vue?|principal|rssi|erreur|bureau;;;
-route/cartographie/:vue?|sous-perimetre|rssi|vide|bureau;;;
-route/cartographie/:vue?|sous-perimetre|rssi|rempli|bureau;;;
-route/cartographie/:vue?|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/synthese|principal|rssi|vide|bureau;defaut;C1-11;cartes à 0 cohérentes , tableau Référentiels activés vide sans message alors que ISO 27001 et HDS appliqués
+pilotage/synthese|principal|rssi|rempli|bureau;defaut;C1-11;objectifs 1/2 atteints et 1 écart ouvert = saisies et tableau de bord , tableau Référentiels activés toujours vide
+pilotage/synthese|principal|rssi|erreur|bureau;sans-objet;;écran de lecture sans saisie : aucune valeur à refuser
+pilotage/synthese|sous-perimetre|rssi|vide|bureau;defaut;C1-11;Hébergement HDS : cartes registres à 0 , tableau Référentiels activés vide malgré héritage
+pilotage/synthese|sous-perimetre|rssi|rempli|bureau;defaut;C1-10;aucune carte Objectifs et indicateurs ni écarts sous le sous-périmètre malgré 1 objectif et 1 indicateur saisis , aucune donnée du principal affichée (isolement ok)
+pilotage/synthese|sous-perimetre|rssi|erreur|bureau;sans-objet;;écran de lecture sans saisie : aucune valeur à refuser
+pilotage/perimetres|principal|rssi|vide|bureau;ok;;1 périmètre racine, compteurs à 0, Créer et Ajouter un enfant proposés
+pilotage/perimetres|principal|rssi|rempli|bureau;ok;;racine renommée, ISO 27001 et HDS attribués puis appliqués, sous-périmètre créé avec héritage, total avec 1 sous-périmètre , aucune suppression de périmètre (C1-02)
+pilotage/perimetres|principal|rssi|erreur|bureau;defaut;C1-01;fuseau Mars/Olympus : « timezone : Fuseau inconnu. » (clé technique) , nom vide : Enregistrer grisé sans message
+pilotage/perimetres|sous-perimetre|rssi|vide|bureau;ok;;Hébergement HDS créé : compteurs à 0, héritage des 2 référentiels affiché (Désactiver ici)
+pilotage/perimetres|sous-perimetre|rssi|rempli|bureau;ok;;carte du sous-périmètre, rattachement au parent, Afficher dans le Pilotage , total du parent avec 1 sous-périmètre
+pilotage/perimetres|sous-perimetre|rssi|erreur|bureau;defaut;C1-02;doublon « Hébergement HDS » sous le même parent accepté sans alerte, non supprimable , cycle parent/enfant bien empêché
+pilotage/parcours-iso|principal|rssi|vide|bureau;ok;;toutes les étapes « Aucun travail trouvé » ou « Non compté ici », légende et liens vers les rubriques
+pilotage/parcours-iso|principal|rssi|rempli|bureau;defaut;C1-06;Fixer les objectifs et Mesurer les résultats « Aucun travail trouvé » malgré 2 objectifs et 2 indicateurs , fiche Périmètre de l’organisation non comptée
+pilotage/parcours-iso|principal|rssi|erreur|bureau;defaut;C1-06;Associer grisé sans sélection (ok) , recherche « Revue » : « Aucun élément trouvé » alors que OBJ1 existe
+pilotage/parcours-iso|sous-perimetre|rssi|vide|bureau;ok;;vu sous le sous-périmètre vide « Doublon de test » : aucune étape avec travaux
+pilotage/parcours-iso|sous-perimetre|rssi|rempli|bureau;ok;;Hébergement HDS : Définir le cadre, Engager la direction, Fixer les objectifs, Mesurer les résultats « Travaux présents » = saisies , lien Ouvrir garde le périmètre
+pilotage/parcours-iso|sous-perimetre|rssi|erreur|bureau;ok;;Associer grisé sans sélection , aucune autre saisie
+pilotage/parcours|principal|rssi|vide|bureau;ok;;texte explicatif et bouton Démarrer mon parcours
+pilotage/parcours|principal|rssi|rempli|bureau;defaut;C1-03;parcours créé, modifié (historique v2), étape 1 validée avec justificatif lié , ni archivage ni export du parcours , bouton « Organisation et objectifs » ouvre la fiche (C1-16)
+pilotage/parcours|principal|rssi|erreur|bureau;defaut;C1-09;intitulé vide ou validation sans observations : bouton grisé sans message ni champ marqué obligatoire
+pilotage/parcours|sous-perimetre|rssi|vide|bureau;ok;;Hébergement HDS : Démarrer mon parcours, aucun parcours du principal affiché
+pilotage/parcours|sous-perimetre|rssi|rempli|bureau;ok;;parcours HDS créé (démarche Hébergement de données de santé) , Ouvrir les travaux garde le sous-périmètre
+pilotage/parcours|sous-perimetre|rssi|erreur|bureau;defaut;C1-09;intitulé vide : Enregistrer grisé sans message
+pilotage/contexte|principal|rssi|vide|bureau;ok;;fiche « Périmètre de l’organisation » existante à compléter, bouton Ajouter
+pilotage/contexte|principal|rssi|rempli|bureau;defaut;C1-04;fiche racine complétée et 2e fiche créée, liée à une partie intéressée , export Excel Contexte : feuille Périmètre vide , aucune archive (C1-03)
+pilotage/contexte|principal|rssi|erreur|bureau;defaut;C1-09;intitulé vide : Enregistrer grisé sans message ni champ marqué
+pilotage/contexte|sous-perimetre|rssi|vide|bureau;ok;;0 fiches, message et bouton , aucune fiche du principal
+pilotage/contexte|sous-perimetre|rssi|rempli|bureau;defaut;C1-04;fiche HDS créée, invisible au principal (isolement ok) , export Excel sans notion de périmètre, fiche jamais exportée
+pilotage/contexte|sous-perimetre|rssi|erreur|bureau;defaut;C1-09;intitulé vide : Enregistrer grisé sans message
+pilotage/processus-cartes|principal|rssi|vide|bureau;ok;;message « Aucun processus » et bouton Nouveau processus
+pilotage/processus-cartes|principal|rssi|rempli|bureau;defaut;C1-05;PR1 créé, compteurs objectifs/indicateurs repris , aucun champ de périmètre (BUG-037) , Rattacher : SWOT grisé alors qu’un SWOT existe
+pilotage/processus-cartes|principal|rssi|erreur|bureau;defaut;C1-09;doublon « Hébergement et infogérance » accepté (PR2, supprimé ensuite par Objectifs par processus)
+pilotage/processus-cartes|sous-perimetre|rssi|vide|bureau;defaut;BUG-037;page blanche sous Hébergement HDS
+pilotage/processus-cartes|sous-perimetre|rssi|rempli|bureau;defaut;BUG-037;page blanche , processus HDS créé ailleurs invisible
+pilotage/processus-cartes|sous-perimetre|rssi|erreur|bureau;defaut;BUG-037;page blanche : aucune saisie possible
+pilotage/parties|principal|rssi|vide|bureau;ok;;bandeau à 0, 0 fiches, message et bouton
+pilotage/parties|principal|rssi|rempli|bureau;defaut;BUG-020;2 fiches saisies, bandeau toujours à 0 , liaison bidirectionnelle ok , export Excel vide (C1-04) , aucune archive (C1-03)
+pilotage/parties|principal|rssi|erreur|bureau;defaut;C1-09;intitulé vide : Enregistrer grisé sans message , date native refuse « abc » (ok)
+pilotage/parties|sous-perimetre|rssi|vide|bureau;ok;;0 fiches , pas de bandeau sous le sous-périmètre
+pilotage/parties|sous-perimetre|rssi|rempli|bureau;ok;;fiche Clients hébergés créée, absente du principal et réciproquement , aucun bandeau (non revue depuis 2024 non signalée)
+pilotage/parties|sous-perimetre|rssi|erreur|bureau;defaut;C1-09;intitulé vide : Enregistrer grisé sans message
+pilotage/swot|principal|rssi|vide|bureau;ok;;0 fiches, message , bouton « Ajouter analyse swot » en minuscules (C1-15)
+pilotage/swot|principal|rssi|rempli|bureau;defaut;C1-05;SWOT créé mais ignoré par PESTEL et cartographie, non rattachable au processus , export vide (C1-04)
+pilotage/swot|principal|rssi|erreur|bureau;defaut;C1-09;intitulé vide : Enregistrer grisé sans message
+pilotage/swot|sous-perimetre|rssi|vide|bureau;ok;;0 fiches, message
+pilotage/swot|sous-perimetre|rssi|rempli|bureau;ok;;SWOT HDS créé, isolé du principal
+pilotage/swot|sous-perimetre|rssi|erreur|bureau;defaut;C1-09;intitulé vide : Enregistrer grisé sans message
+pilotage/pestel|principal|rssi|vide|bureau;ok;;facteurs à 0 et explication de la provenance des enjeux
+pilotage/pestel|principal|rssi|rempli|bureau;defaut;C1-05;SWOT et enjeux du contexte ignorés : seul l’enjeu de l’objectif OBJ1 apparaît
+pilotage/pestel|principal|rssi|erreur|bureau;sans-objet;;aucune saisie hors classement d’un enjeu externe : aucun enjeu externe proposé (C1-05)
+pilotage/pestel|sous-perimetre|rssi|vide|bureau;ok;;message « s’appuie sur le contexte du pilotage commun »
+pilotage/pestel|sous-perimetre|rssi|rempli|bureau;defaut;C1-05;le SWOT du sous-périmètre n’est repris dans aucun PESTEL
+pilotage/pestel|sous-perimetre|rssi|erreur|bureau;sans-objet;;aucune saisie possible sous un sous-périmètre
+pilotage/responsabilites|principal|rssi|vide|bureau;ok;;0 fiches, message et bouton
+pilotage/responsabilites|principal|rssi|rempli|bureau;defaut;C1-04;4 rôles (RSSI, DPO, direction, auditeur interne), historique des versions ok , export Excel Rôles vide , titulaire en texte libre
+pilotage/responsabilites|principal|rssi|erreur|bureau;defaut;C1-09;adresse « pas-une-adresse », téléphone « abc » et doublon « Direction du groupement » acceptés, doublon non supprimable
+pilotage/responsabilites|sous-perimetre|rssi|vide|bureau;ok;;0 fiches, message
+pilotage/responsabilites|sous-perimetre|rssi|rempli|bureau;ok;;Référent hébergement HDS créé, isolé du principal
+pilotage/responsabilites|sous-perimetre|rssi|erreur|bureau;defaut;C1-09;intitulé vide : Enregistrer grisé sans message
+pilotage/processus|principal|rssi|vide|bureau;ok;;0/0 indicateurs, boutons Ajouter , Ajouter un indicateur grisé sans objectif
+pilotage/processus|principal|rssi|rempli|bureau;defaut;BUG-028;PR1 → OBJ1, OBJ2 → IND1, IND2 cohérents (1/2 atteints = Synthèse) , cible « 1 » affichée « ≥ 100 % », valeur 1 « 100 % » , suppression de processus ok
+pilotage/processus|principal|rssi|erreur|bureau;defaut;C1-08;valeur « abc » acceptée et comptée Non atteint
+pilotage/processus|sous-perimetre|rssi|vide|bureau;ok;;0 fiches, registre générique
+pilotage/processus|sous-perimetre|rssi|rempli|bureau;defaut;BUG-037;processus HDS créé avec un champ Périmètre en texte libre, absent de la page Processus et de la cartographie
+pilotage/processus|sous-perimetre|rssi|erreur|bureau;defaut;C1-09;intitulé vide : Enregistrer grisé sans message
+pilotage/objectifs|principal|rssi|vide|bureau;ok;;même vue que Objectifs par processus (onglet Par objectif), vue à 0/0 avant saisie
+pilotage/objectifs|principal|rssi|rempli|bureau;ok;;OBJ1 et OBJ2 : échéance, responsable, processus, enjeux, indicateurs , suppression d’un objectif de test ok , export Excel Objectifs ok
+pilotage/objectifs|principal|rssi|erreur|bureau;defaut;C1-21;« Ajouter un objectif » crée OBJ3 « Nouvel objectif » qui subsiste après Fermer sans enregistrer , intitulé vide : Enregistrer grisé
+pilotage/objectifs|sous-perimetre|rssi|vide|bureau;ok;;0 fiches, message
+pilotage/objectifs|sous-perimetre|rssi|rempli|bureau;defaut;C1-10;objectif HDS : formulaire différent (Résultat attendu), ni processus ni indicateur, aucune synthèse , lien Démontre avec l’indicateur ok
+pilotage/objectifs|sous-perimetre|rssi|erreur|bureau;defaut;C1-09;intitulé vide : Enregistrer grisé sans message
+pilotage/indicateurs|principal|rssi|vide|bureau;ok;;même vue (onglet Vue compacte), vue à 0/0 avant saisie
+pilotage/indicateurs|principal|rssi|rempli|bureau;defaut;BUG-028;IND2 cible « 1 » → « ≥ 100 % » sans unité , IND1 85 % / ≥ 100 % Non atteint cohérent , historique de mesures ok
+pilotage/indicateurs|principal|rssi|erreur|bureau;defaut;C1-08;valeur « abc » acceptée, comptée Non atteint
+pilotage/indicateurs|sous-perimetre|rssi|vide|bureau;ok;;0 fiches, message
+pilotage/indicateurs|sous-perimetre|rssi|rempli|bureau;defaut;C1-10;indicateur HDS avec unité mais sans objectif ni historique de mesures, compté nulle part , isolé du principal
+pilotage/indicateurs|sous-perimetre|rssi|erreur|bureau;defaut;C1-08;valeur « abc » effacée silencieusement (null) sans message
+pilotage/fournisseurs|principal|rssi|vide|bureau;defaut;C1-13;« 0 % SaaS avec MFA (0/0) » sur ensemble vide , message Aucun fournisseur
+pilotage/fournisseurs|principal|rssi|rempli|bureau;defaut;C1-07;2 fournisseurs, certificat HDS, contrôles types, rattachements , la page plante en cochant un critère d’évaluation , export Fournisseurs sans évaluations natives (C1-14)
+pilotage/fournisseurs|principal|rssi|erreur|bureau;ok;;doublon « Infogérant fictif » refusé : « Un fournisseur porte déjà ce nom. »
+pilotage/fournisseurs|sous-perimetre|rssi|vide|bureau;sans-objet;;registre de l’organisation, indépendant du périmètre (bandeau) : pas d’état vide propre au sous-périmètre
+pilotage/fournisseurs|sous-perimetre|rssi|rempli|bureau;ok;;même registre affiché sous Hébergement HDS, rattachements visibles
+pilotage/fournisseurs|sous-perimetre|rssi|erreur|bureau;ok;;doublon refusé avec le même message sous le sous-périmètre
+pilotage/criteres-fournisseurs|principal|rssi|vide|bureau;ok;;message « Aucun critère défini »
+pilotage/criteres-fournisseurs|principal|rssi|rempli|bureau;ok;;2 critères (usages, exigence HDS-14), retrait d’un critère de test avec motif, critères retirés affichables
+pilotage/criteres-fournisseurs|principal|rssi|erreur|bureau;ok;;doublon refusé « Un critère actif porte déjà ce libellé. » , motif < 5 caractères : Enregistrer grisé avec aide
+pilotage/criteres-fournisseurs|sous-perimetre|rssi|vide|bureau;sans-objet;;critères de l’organisation, indépendants du périmètre
+pilotage/criteres-fournisseurs|sous-perimetre|rssi|rempli|bureau;ok;;mêmes critères sous Hébergement HDS
+pilotage/criteres-fournisseurs|sous-perimetre|rssi|erreur|bureau;ok;;doublon refusé sous le sous-périmètre
+pilotage/fournisseurs-perimetre|principal|rssi|vide|bureau;ok;;vu vide sous le sous-périmètre « Doublon de test » : 0 rattaché, message , au principal vu après rattachement
+pilotage/fournisseurs-perimetre|principal|rssi|rempli|bureau;ok;;principal : seul Opérateur réseau (rattaché ici), compteurs 1/0/1/0 cohérents
+pilotage/fournisseurs-perimetre|principal|rssi|erreur|bureau;sans-objet;;écran de lecture, rattachement géré dans Fournisseurs de l’organisation
+pilotage/fournisseurs-perimetre|sous-perimetre|rssi|vide|bureau;ok;;sous-périmètre sans rattachement : 0 et « Aucun fournisseur n’est rattaché à ce périmètre. »
+pilotage/fournisseurs-perimetre|sous-perimetre|rssi|rempli|bureau;ok;;Hébergement HDS : seul Infogérant fictif, évalué 1, isolé du principal
+pilotage/fournisseurs-perimetre|sous-perimetre|rssi|erreur|bureau;sans-objet;;écran de lecture sans saisie
+pilotage/evaluations-clausier|principal|rssi|vide|bureau;ok;;« Aucune évaluation. », bouton Nouvelle évaluation, licence
+pilotage/evaluations-clausier|principal|rssi|rempli|bureau;defaut;C1-12;évaluation Infogérant 3/63 points, note C 67 % , « Créer les actions » crée un écart sans responsable ni échéance absent de la DdA (INV-08 en échec)
+pilotage/evaluations-clausier|principal|rssi|erreur|bureau;sans-objet;;registre de l’organisation : saisie erronée testée sous le sous-périmètre (C1-19)
+pilotage/evaluations-clausier|sous-perimetre|rssi|vide|bureau;sans-objet;;évaluations de l’organisation, indépendantes du périmètre
+pilotage/evaluations-clausier|sous-perimetre|rssi|rempli|bureau;ok;;même liste sous Hébergement HDS , création puis suppression d’une évaluation de test confirmée
+pilotage/evaluations-clausier|sous-perimetre|rssi|erreur|bureau;defaut;C1-19;date 01/01/2030 et évaluateur vide acceptés
+route/|principal|rssi|vide|bureau;defaut;BUG-017;« Taux de conformité global 0 % » sur 157 mesures non renseignées , prochain audit « 2027 — Surveillance 2 » tiré d’un cycle par défaut (C1-17)
+route/|principal|rssi|rempli|bureau;ok;;1 écart ouvert, 0 action = Synthèse , aucun encart objectifs
+route/|principal|rssi|erreur|bureau;sans-objet;;écran de lecture sans saisie : aucune valeur à refuser
+route/|sous-perimetre|rssi|vide|bureau;sans-objet;;tableau de bord sans sélecteur de périmètre (« tous périmètres lisibles »)
+route/|sous-perimetre|rssi|rempli|bureau;sans-objet;;tableau de bord sans sélecteur de périmètre : agrège tous les périmètres lisibles
+route/|sous-perimetre|rssi|erreur|bureau;sans-objet;;écran de lecture sans saisie : aucune valeur à refuser
+route/cartographie/:vue?|principal|rssi|vide|bureau;ok;;« Aucune carte de contexte », Construire et Générer proposés
+route/cartographie/:vue?|principal|rssi|rempli|bureau;defaut;BUG-020;génération : Parties intéressées (0) malgré 2 fiches, SWOT absents (C1-05) , carte enregistrée, menu Exporter (PNG, PDF, SVG, JSON) sans erreur, fichier non vérifiable par le pilote
+route/cartographie/:vue?|principal|rssi|erreur|bureau;ok;;fin d’édition avec modifications non enregistrées : confirmation demandée , création par glisser-déposer non pilotable
+route/cartographie/:vue?|sous-perimetre|rssi|vide|bureau;sans-objet;;carte unique de l’organisation, sans sélecteur de périmètre (C1-18)
+route/cartographie/:vue?|sous-perimetre|rssi|rempli|bureau;defaut;BUG-037;Générer la carte des processus : « Processus (1) », le processus du sous-périmètre est absent
+route/cartographie/:vue?|sous-perimetre|rssi|erreur|bureau;sans-objet;;pas de sélecteur de périmètre

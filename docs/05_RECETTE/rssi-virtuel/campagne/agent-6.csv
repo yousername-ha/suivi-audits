@@ -113,21 +113,21 @@ systeme/sauvegardes|principal|rssi|erreur|bureau;defaut;C6-21;Date du dernier te
 systeme/sauvegardes|sous-perimetre|rssi|vide|bureau;;;
 systeme/sauvegardes|sous-perimetre|rssi|rempli|bureau;;;
 systeme/sauvegardes|sous-perimetre|rssi|erreur|bureau;;;
-systeme/courriel|principal|rssi|vide|bureau;;;
-systeme/courriel|principal|rssi|rempli|bureau;;;
-systeme/courriel|principal|rssi|erreur|bureau;;;
+systeme/courriel|principal|rssi|vide|bureau;ok;;Envoi désactivé, champs vides, port 587 STARTTLS, état « Alertes de sécurité non envoyées », explication de l'exécutant d'exploitation
+systeme/courriel|principal|rssi|rempli|bureau;ok;;Serveur, expéditeur et contact technique fictifs (*.example) enregistrés sans activer l'envoi , « Envoyer un message de test » refusé « L'envoi de courriels est désactivé… » (409) , valeurs vidées ensuite. Envoi réel sans objet : service SMTP extérieur à la pile
+systeme/courriel|principal|rssi|erreur|bureau;defaut;C6-01;Nom d'hôte, expéditeur, contact et PEM invalides refusés mais message « hote : … , expediteur : … , contactTechnique : … , autoriteCertification : … » (clés techniques) , port 70000 ramené à 65535 sans message , bouton « Toggle password visibility » (BUG-018)
 systeme/courriel|sous-perimetre|rssi|vide|bureau;;;
 systeme/courriel|sous-perimetre|rssi|rempli|bureau;;;
 systeme/courriel|sous-perimetre|rssi|erreur|bureau;;;
-systeme/mises-a-jour|principal|rssi|vide|bureau;;;
-systeme/mises-a-jour|principal|rssi|rempli|bureau;;;
-systeme/mises-a-jour|principal|rssi|erreur|bureau;;;
+systeme/mises-a-jour|principal|rssi|vide|bureau;ok;;« Version installée : local » , historique des versions de l'outil de suivi avec v1 « Données initiales » par système
+systeme/mises-a-jour|principal|rssi|rempli|bureau;defaut;C6-20;« Le service de mise à jour est indisponible. », « Vérifier les mises à jour » désactivé (même exécutant que les sauvegardes) , versions v2 à v7 créées par les réglages mais toutes vides : GET /api/admin/versions → bytes 5, items 0, même sha256 , GET /api/admin/versions/1, 2, 7 → « {} » (C6-22) , restauration de v4 : confirmation puis Annuler (opération d'exploitation non exécutée sur la pile de recette)
+systeme/mises-a-jour|principal|rssi|erreur|bureau;sans-objet;;Aucun champ saisi , vérification et installation dépendent du service de mise à jour, indisponible sur la pile (C6-20), et des registres d'images extérieurs : refus non testable
 systeme/mises-a-jour|sous-perimetre|rssi|vide|bureau;;;
 systeme/mises-a-jour|sous-perimetre|rssi|rempli|bureau;;;
 systeme/mises-a-jour|sous-perimetre|rssi|erreur|bureau;;;
-systeme/certificats|principal|rssi|vide|bureau;;;
-systeme/certificats|principal|rssi|rempli|bureau;;;
-systeme/certificats|principal|rssi|erreur|bureau;;;
+systeme/certificats|principal|rssi|vide|bureau;ok;;Adresse en service 127.0.0.16, aucune archive, « Aucune opération. », mode TLS « réglage de départ du serveur (.env) »
+systeme/certificats|principal|rssi|rempli|bureau;defaut;C6-20;« Pilotage serveur indisponible », « Métadonnées du certificat indisponibles. Vérifiez la connectivité du frontal. » : aucune opération possible , changement d'adresse et renouvellement non exécutés (opérations d'exploitation non exécutées sur la pile de recette)
+systeme/certificats|principal|rssi|erreur|bureau;defaut;C6-15;Adresse « https://exemple fictif:443 » : « Adresse invalide. » , adresse valide avec code TOTP faux : « Code de double authentification incorrect ou déjà utilisé. » (401, adresse inchangée) , mais Heure UTC 25 → 23 et rétention 0 → 1 jour sans message, avant la confirmation (annulée)
 systeme/certificats|sous-perimetre|rssi|vide|bureau;;;
 systeme/certificats|sous-perimetre|rssi|rempli|bureau;;;
 systeme/certificats|sous-perimetre|rssi|erreur|bureau;;;

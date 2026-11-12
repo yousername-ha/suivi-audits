@@ -1,61 +1,61 @@
 cellule;resultat;constat;commentaire
-pilotage/amelioration|principal|rssi|vide|bureau;;;
-pilotage/amelioration|principal|rssi|rempli|bureau;;;
-pilotage/amelioration|principal|rssi|erreur|bureau;;;
-pilotage/amelioration|sous-perimetre|rssi|vide|bureau;;;
-pilotage/amelioration|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/amelioration|sous-perimetre|rssi|erreur|bureau;;;
-pilotage/actions|principal|rssi|vide|bureau;;;
-pilotage/actions|principal|rssi|rempli|bureau;;;
-pilotage/actions|principal|rssi|erreur|bureau;;;
-pilotage/actions|sous-perimetre|rssi|vide|bureau;;;
-pilotage/actions|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/actions|sous-perimetre|rssi|erreur|bureau;;;
-pilotage/recurrences|principal|rssi|vide|bureau;;;
-pilotage/recurrences|principal|rssi|rempli|bureau;;;
-pilotage/recurrences|principal|rssi|erreur|bureau;;;
-pilotage/recurrences|sous-perimetre|rssi|vide|bureau;;;
-pilotage/recurrences|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/recurrences|sous-perimetre|rssi|erreur|bureau;;;
-pilotage/plans-calendrier|principal|rssi|vide|bureau;;;
-pilotage/plans-calendrier|principal|rssi|rempli|bureau;;;
-pilotage/plans-calendrier|principal|rssi|erreur|bureau;;;
-pilotage/plans-calendrier|sous-perimetre|rssi|vide|bureau;;;
-pilotage/plans-calendrier|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/plans-calendrier|sous-perimetre|rssi|erreur|bureau;;;
-pilotage/plans-planning|principal|rssi|vide|bureau;;;
-pilotage/plans-planning|principal|rssi|rempli|bureau;;;
-pilotage/plans-planning|principal|rssi|erreur|bureau;;;
-pilotage/plans-planning|sous-perimetre|rssi|vide|bureau;;;
-pilotage/plans-planning|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/plans-planning|sous-perimetre|rssi|erreur|bureau;;;
-pilotage/plans-formation|principal|rssi|vide|bureau;;;
-pilotage/plans-formation|principal|rssi|rempli|bureau;;;
-pilotage/plans-formation|principal|rssi|erreur|bureau;;;
-pilotage/plans-formation|sous-perimetre|rssi|vide|bureau;;;
-pilotage/plans-formation|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/plans-formation|sous-perimetre|rssi|erreur|bureau;;;
-pilotage/plans-sensibilisation|principal|rssi|vide|bureau;;;
-pilotage/plans-sensibilisation|principal|rssi|rempli|bureau;;;
-pilotage/plans-sensibilisation|principal|rssi|erreur|bureau;;;
-pilotage/plans-sensibilisation|sous-perimetre|rssi|vide|bureau;;;
-pilotage/plans-sensibilisation|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/plans-sensibilisation|sous-perimetre|rssi|erreur|bureau;;;
-pilotage/revues|principal|rssi|vide|bureau;;;
-pilotage/revues|principal|rssi|rempli|bureau;;;
-pilotage/revues|principal|rssi|erreur|bureau;;;
-pilotage/revues|sous-perimetre|rssi|vide|bureau;;;
-pilotage/revues|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/revues|sous-perimetre|rssi|erreur|bureau;;;
-pilotage/rappels|principal|rssi|vide|bureau;;;
-pilotage/rappels|principal|rssi|rempli|bureau;;;
-pilotage/rappels|principal|rssi|erreur|bureau;;;
-pilotage/rappels|sous-perimetre|rssi|vide|bureau;;;
-pilotage/rappels|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/rappels|sous-perimetre|rssi|erreur|bureau;;;
-route/registres/:id?|principal|rssi|vide|bureau;;;
-route/registres/:id?|principal|rssi|rempli|bureau;;;
-route/registres/:id?|principal|rssi|erreur|bureau;;;
-route/registres/:id?|sous-perimetre|rssi|vide|bureau;;;
-route/registres/:id?|sous-perimetre|rssi|rempli|bureau;;;
-route/registres/:id?|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/amelioration|principal|rssi|vide|bureau;ok;;Compteurs à 0, « Aucune fiche pour le moment », bouton « Ajouter un constat »
+pilotage/amelioration|principal|rssi|rempli|bureau;defaut;BUG-034, BUG-035, C4-08, C4-09;2 écarts du jeu fictif saisis et liés à A.5.15 et A.5.1, chaîne écart > action > efficacité > clôture conforme, repris au tableau de bord et en revue. Action suivie sans intitulé ni échéance (BUG-034), compteur d'actions divergent (BUG-035), pas d'archivage d'un doublon (C4-08), « Non classé » compté « Remarque » au tableau de bord (C4-09)
+pilotage/amelioration|principal|rssi|erreur|bureau;ok;;Intitulé vide ou blanc : Enregistrer désactivé. Clôture sans causes refusée (« Analyser les causes et vérifier une efficacité positive avant clôture. »), efficacité sans causes ni preuve refusée. Doublon accepté sans avertissement (C4-08)
+pilotage/amelioration|sous-perimetre|rssi|vide|bureau;ok;;Hébergement HDS : compteurs à 0, message vide, action de création
+pilotage/amelioration|sous-perimetre|rssi|rempli|bureau;defaut;C4-04, C4-05;Écart majeur HDS saisi, absent du périmètre principal (séparation conforme) mais aucune mesure ni exigence proposée au rattachement (C4-04) et absent des entrées de revue (C4-05)
+pilotage/amelioration|sous-perimetre|rssi|erreur|bureau;ok;;Clôture prématurée refusée avec le même message qu'au périmètre principal (HTTP 409)
+pilotage/actions|principal|rssi|vide|bureau;ok;;« Aucune action dans cette période et ces filtres. », boutons « Ajouter une action » et « Ajouter une tâche récurrente »
+pilotage/actions|principal|rssi|rempli|bureau;defaut;C4-07, BUG-035;Actions créées, modifiées, liées à un écart (Traite), archivées, closes avec justification. Vues Liste, Kanban, Calendrier, Timeline, Tableau de bord cohérentes. Gantt vide pour une action à cheval sur deux mois (C4-07). Pas d'export depuis l'écran (export Excel seulement dans /exports)
+pilotage/actions|principal|rssi|erreur|bureau;defaut;C4-01;Nom vide : « name : Trop petit : chaîne de caractères doit avoir >=1 caractères » (clé technique). Début après échéance : message clair. Clôture sans justification : message clair. Rappel -5 ramené à 0 sans message
+pilotage/actions|sous-perimetre|rssi|vide|bureau;ok;;Hébergement HDS : message vide et boutons de création
+pilotage/actions|sous-perimetre|rssi|rempli|bureau;ok;;Actions HDS séparées du principal, registre partagé avec le principal visible des deux côtés comme annoncé
+pilotage/actions|sous-perimetre|rssi|erreur|bureau;defaut;C4-01;Même message technique « name : Trop petit… » (HTTP 422)
+pilotage/recurrences|principal|rssi|vide|bureau;ok;;Message vide et séries proposées (ISO 9001 seulement, remarque connue)
+pilotage/recurrences|principal|rssi|rempli|bureau;defaut;BUG-029, BUG-035;Série mensuelle créée, modifiée, occurrences générées et validées, série de test archivée. Réglages nommés start, interval, reminderDays… (BUG-029). Occurrence validée OK comptée « ouverte » dans Amélioration continue (BUG-035)
+pilotage/recurrences|principal|rssi|erreur|bureau;defaut;C4-01, BUG-029;Intervalle 0 : « recurrence.interval : Trop petit : nombre doit être >=1 », nom vide : « name : Trop petit… »
+pilotage/recurrences|sous-perimetre|rssi|vide|bureau;ok;;Hébergement HDS : « 0 fiches », message vide, création proposée
+pilotage/recurrences|sous-perimetre|rssi|rempli|bureau;defaut;BUG-029;Série trimestrielle HDS créée, occurrences en retard, séparée du principal. Mêmes libellés techniques
+pilotage/recurrences|sous-perimetre|rssi|erreur|bureau;defaut;C4-01;Intervalle -2 : « recurrence.interval : Trop petit : nombre doit être >=1 »
+pilotage/plans-calendrier|principal|rssi|vide|bureau;ok;;Quatre plans à « 0/0 réalisé(s) », compteurs à 0. Pas de bouton de création sur cet écran mais les rubriques des plans sont en lien
+pilotage/plans-calendrier|principal|rssi|rempli|bureau;defaut;C4-02;Compteurs justes (2 planifiées, 1 réalisée, 1 en retard), années précédente et suivante. Mais les actions affichées sont celles de tous les périmètres (C4-02)
+pilotage/plans-calendrier|principal|rssi|erreur|bureau;sans-objet;;Écran de consultation sans saisie : les erreurs de saisie se testent dans les fiches de plan (formation, sensibilisation)
+pilotage/plans-calendrier|sous-perimetre|rssi|vide|bureau;ok;;Avant toute saisie : quatre plans à 0/0
+pilotage/plans-calendrier|sous-perimetre|rssi|rempli|bureau;defaut;C4-02;Sous Hébergement HDS, le calendrier montre les formations et l'audit interne saisis sous le périmètre principal
+pilotage/plans-calendrier|sous-perimetre|rssi|erreur|bureau;sans-objet;;Écran de consultation sans saisie
+pilotage/plans-planning|principal|rssi|vide|bureau;ok;;« Aucune action sur l'année » par plan, boutons « Ajouter : formation / sensibilisation / audit interne / exercice »
+pilotage/plans-planning|principal|rssi|rempli|bureau;defaut;C4-02;Audit interne ajouté (repris en revue 9.3.2 c 6 : 1 à venir), décalage au clavier (Maj+flèche) enregistré et journalisé. Données non rattachées au périmètre (C4-02)
+pilotage/plans-planning|principal|rssi|erreur|bureau;defaut;C4-03;Mêmes fiches que les plans : dates incohérentes acceptées
+pilotage/plans-planning|sous-perimetre|rssi|vide|bureau;ok;;Avant toute saisie : « Aucune action sur l'année »
+pilotage/plans-planning|sous-perimetre|rssi|rempli|bureau;defaut;C4-02;Sous Hébergement HDS, le planning montre PL-FOR-001, PL-FOR-002 et PL-AUD-001 du périmètre principal
+pilotage/plans-planning|sous-perimetre|rssi|erreur|bureau;defaut;C4-03;Même fiche de plan, mêmes contrôles absents
+pilotage/plans-formation|principal|rssi|vide|bureau;ok;;« Aucune action dans ce plan. », bouton « Ajouter », références 7.2 et A.6.3
+pilotage/plans-formation|principal|rssi|rempli|bureau;defaut;C4-02;Création, modification (réalisé, preuve en lien), suppression avec confirmation, compteurs justes. Plan commun à tous les périmètres (C4-02)
+pilotage/plans-formation|principal|rssi|erreur|bureau;defaut;C4-03;Date de fin avant date prévue, durée -3, présents > prévus, lien de preuve « javascript:alert(1) » acceptés sans message (lien non rendu cliquable)
+pilotage/plans-formation|sous-perimetre|rssi|vide|bureau;ok;;Avant toute saisie : « Aucune action dans ce plan. »
+pilotage/plans-formation|sous-perimetre|rssi|rempli|bureau;defaut;C4-02;Sous Hébergement HDS : PL-FOR-001 du périmètre principal affiché
+pilotage/plans-formation|sous-perimetre|rssi|erreur|bureau;defaut;C4-03;Même fiche, mêmes valeurs incohérentes acceptées
+pilotage/plans-sensibilisation|principal|rssi|vide|bureau;ok;;« Aucune action dans ce plan. », références 7.3 et A.6.3
+pilotage/plans-sensibilisation|principal|rssi|rempli|bureau;defaut;C4-02;PL-SEN-001 saisi sous Hébergement HDS affiché sous le périmètre principal
+pilotage/plans-sensibilisation|principal|rssi|erreur|bureau;defaut;C4-03;Intitulé vide : Enregistrer désactivé (conforme). Valeurs incohérentes acceptées (voir sous-périmètre)
+pilotage/plans-sensibilisation|sous-perimetre|rssi|vide|bureau;ok;;Avant toute saisie : « Aucune action dans ce plan. »
+pilotage/plans-sensibilisation|sous-perimetre|rssi|rempli|bureau;defaut;C4-02;PL-SEN-001 créé et modifié sous Hébergement HDS, non rattaché au périmètre
+pilotage/plans-sensibilisation|sous-perimetre|rssi|erreur|bureau;defaut;C4-03;Date de fin 01/01/2027 avant date prévue 20/01/2027 et taux de participation 150 % enregistrés
+pilotage/revues|principal|rssi|vide|bureau;defaut;BUG-031, C4-11;Préparation affichée (« Dernière revue : Aucune », 12 entrées), message vide et création. Entrées ISO 9001 (BUG-031, non arbitré). « Tous les indicateurs disposent d'une valeur mesurée » sans aucun indicateur (C4-11)
+pilotage/revues|principal|rssi|rempli|bureau;defaut;BUG-021, C4-06;Revue préparée, enregistrée, validée (état Validé, décision conservée). Bandeau et 9.3.2 a restent « Aucune » (BUG-021). Fiche validée affichée « Brouillon », modification après validation la remet « À préparer » (C4-06). Pas d'archivage (C4-08). Export JSON et rapport imprimable proposés
+pilotage/revues|principal|rssi|erreur|bureau;defaut;BUG-032;Validation sans « Décisions et moyens » : « Complétez les informations et justificatifs avant validation. » sans champ désigné
+pilotage/revues|sous-perimetre|rssi|vide|bureau;defaut;C4-05;Sous Hébergement HDS : liste vide et création, mais aucune préparation des entrées 9.3.2 (composant masqué hors périmètre principal)
+pilotage/revues|sous-perimetre|rssi|rempli|bureau;defaut;C4-05;Revue HDS créée (champs 9.3.2 vides, à saisir à la main), séparée du principal. Écart majeur HDS absent des entrées du périmètre principal
+pilotage/revues|sous-perimetre|rssi|erreur|bureau;defaut;BUG-032;Validation refusée avec le même message générique (HTTP 422)
+pilotage/rappels|principal|rssi|vide|bureau;ok;;« Aucun rappel pour le moment. »
+pilotage/rappels|principal|rssi|rempli|bureau;defaut;C4-10;Rappels générés pour les occurrences en retard, « Ouvrir » et « Marquer comme lu » fonctionnent. Cartes sans intitulé ni date, rappel conservé pour une occurrence validée
+pilotage/rappels|principal|rssi|erreur|bureau;sans-objet;;Écran sans saisie (lecture et « Marquer comme lu » seulement)
+pilotage/rappels|sous-perimetre|rssi|vide|bureau;ok;;Hébergement HDS : « Aucun rappel pour le moment. »
+pilotage/rappels|sous-perimetre|rssi|rempli|bureau;defaut;C4-10;Deux rappels HDS séparés du principal, mêmes cartes anonymes
+pilotage/rappels|sous-perimetre|rssi|erreur|bureau;sans-objet;;Écran sans saisie
+route/registres/:id?|principal|rssi|vide|bureau;ok;;Registres par défaut à 0 élément, registre neuf « Aucun élément. », onglets Éléments par périmètre et Vue des accès avec consigne
+route/registres/:id?|principal|rssi|rempli|bureau;ok;;Comptes d'éléments justes, registre créé, renommé, périmètres modifiés avec motif et aperçu d'impact, registre de test archivé, opérations journalisées. Remarques C4-12 (noms en double, « Pilotage commun »)
+route/registres/:id?|principal|rssi|erreur|bureau;defaut;C4-01;Fin avant début : « dateFin : La date de fin ne peut pas précéder la date de début. » (clé technique en tête). Nom vide : Enregistrer désactivé. Nom en double accepté (C4-12)
+route/registres/:id?|sous-perimetre|rssi|vide|bureau;ok;;Registres par défaut d'Hébergement HDS créés à la première saisie, à 0 élément avant
+route/registres/:id?|sous-perimetre|rssi|rempli|bureau;ok;;Éléments par périmètre (HDS) : écart, actions, série et occurrences, action du registre partagé
+route/registres/:id?|sous-perimetre|rssi|erreur|bureau;defaut;C4-01;Registre HDS : même message « dateFin : … » (HTTP 422)
