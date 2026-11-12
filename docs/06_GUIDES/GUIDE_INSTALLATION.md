@@ -71,7 +71,7 @@ node --test scripts/tests/publication.test.mjs
 python3 -m unittest discover -s scripts/tests -p test_updates.py
 ```
 
-Ces commandes supposent Node 24+, pnpm 10.34.6 et un clone de développement.
+Ces commandes supposent Node 26+, pnpm 10.34.6 et un clone de développement.
 L’installation de dépendances accède aux registres externes ; elle n’a pas été
 rejouée pendant l’audit, car les dépendances étaient présentes. Les tests API,
 `pnpm test` et les recettes Docker demandent une base et un environnement
