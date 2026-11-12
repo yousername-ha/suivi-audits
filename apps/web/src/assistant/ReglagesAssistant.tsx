@@ -44,6 +44,8 @@ type Saisie = Pick<
   | 'heureRonde'
   | 'plafondRappelsJour'
   | 'delaiRelanceJours'
+  | 'jourSynthese'
+  | 'rondesSurEvenement'
   | 'contexte'
   | 'profils'
 >;
@@ -56,6 +58,8 @@ const saisieDe = (d: ReglagesAssistantDto): Saisie => ({
   heureRonde: d.heureRonde,
   plafondRappelsJour: d.plafondRappelsJour,
   delaiRelanceJours: d.delaiRelanceJours,
+  jourSynthese: d.jourSynthese,
+  rondesSurEvenement: d.rondesSurEvenement,
   contexte: d.contexte,
   profils: d.profils,
 });
@@ -279,6 +283,30 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
             max={50}
             value={saisie.plafondRappelsJour}
             onChange={(v) => changer({ plafondRappelsJour: typeof v === 'number' ? v : saisie.plafondRappelsJour })}
+          />
+          <Select
+            label="Synthèse de la semaine"
+            description="Ce jour-là, la ronde quotidienne rend un bilan de la semaine au lieu du rapport habituel."
+            data={[
+              { value: '0', label: 'Jamais' },
+              { value: '1', label: 'Le lundi' },
+              { value: '2', label: 'Le mardi' },
+              { value: '3', label: 'Le mercredi' },
+              { value: '4', label: 'Le jeudi' },
+              { value: '5', label: 'Le vendredi' },
+              { value: '6', label: 'Le samedi' },
+              { value: '7', label: 'Le dimanche' },
+            ]}
+            value={String(saisie.jourSynthese)}
+            onChange={(v) => changer({ jourSynthese: Number(v ?? 0) })}
+            allowDeselect={false}
+            comboboxProps={{ withinPortal: true }}
+          />
+          <Switch
+            label="Ronde sur événement"
+            description="Une ronde ciblée part quand une action vient de dépasser son échéance ou qu’un écart est créé, au plus toutes les quatre heures par profil."
+            checked={saisie.rondesSurEvenement}
+            onChange={(e) => changer({ rondesSurEvenement: e.currentTarget.checked })}
           />
           <NumberInput
             label="Délai avant relance d’une question, en jours"

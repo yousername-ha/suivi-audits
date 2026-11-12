@@ -894,3 +894,45 @@ describe('assistant : propositions décidées par une personne', () => {
     expect(mesures[0]).toMatchObject({ propositionsConfirmees: 1, propositionsRejetees: 1 });
   });
 });
+
+describe('assistant : synthèse hebdomadaire et ronde sur événement', () => {
+  /** Lundi 07/12/2026, 07 h 30 à Paris. */
+  const LUNDI = new Date('2026-12-07T06:30:00.000Z');
+  const consigne = () => String(modele.demandes[0]!.messages[0]!.content);
+
+  it('rend la synthèse de la semaine le jour réglé, à la place de la ronde quotidienne', async () => {
+    expect((await regler({ jourSynthese: 1 })).statusCode).toBe(200);
+    modele.script = () => ({ role: 'assistant', content: 'Synthèse fictive de la semaine.' });
+    const id = await tic(LUNDI);
+    expect(id).toBeTruthy();
+    expect((await admin.get(`${base}/rondes/${id}`)).json()).toMatchObject({
+      declencheur: 'synthese',
+      etat: 'terminee',
+    });
+    expect(consigne()).toContain('SYNTHÈSE DE LA SEMAINE');
+    // Pas de ronde quotidienne en plus ce jour-là ; le lendemain, une ronde ordinaire.
+    expect(await tic(new Date('2026-12-07T07:00:00.000Z'))).toBeNull();
+    const mardi = await tic(new Date('2026-12-08T06:30:00.000Z'));
+    expect((await admin.get(`${base}/rondes/${mardi}`)).json()).toMatchObject({ declencheur: 'planifiee' });
+    expect(consigne()).not.toContain('SYNTHÈSE DE LA SEMAINE');
+  });
+
+  it('lance une ronde ciblée quand une action vient de dépasser son échéance, au plus toutes les quatre heures', async () => {
+    const midi = new Date('2026-12-08T12:00:00.000Z');
+    await t.svc.db.q(
+      `UPDATE grc_objects SET data = data || '{"dueAt":"2026-12-08T09:00:00.000Z"}'::jsonb WHERE id = $1`,
+      [sansResponsable],
+    );
+    // Inactif par défaut.
+    expect(await tic(midi)).toBeNull();
+    expect((await regler({ rondesSurEvenement: true })).statusCode).toBe(200);
+    const id = await tic(midi);
+    expect(id).toBeTruthy();
+    expect((await admin.get(`${base}/rondes/${id}`)).json()).toMatchObject({ declencheur: 'evenement' });
+    expect(consigne()).toContain('1 action(s) viennent de dépasser leur échéance, 0 écart(s) ont été créés');
+    // Rien de nouveau, ou trop tôt : pas de nouvelle ronde.
+    expect(await tic(new Date('2026-12-08T13:00:00.000Z'))).toBeNull();
+    expect(await tic(new Date('2026-12-08T17:00:00.000Z'))).toBeNull();
+    expect((await regler({ rondesSurEvenement: false, jourSynthese: 0 })).statusCode).toBe(200);
+  });
+});

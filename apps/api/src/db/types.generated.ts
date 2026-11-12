@@ -137,12 +137,14 @@ export interface AssistantReglages {
   plafond_rappels_jour: Generated<number>;
   contexte: Generated<string>;
   delai_relance_jours: Generated<number>;
+  jour_synthese: Generated<number>;
+  rondes_sur_evenement: Generated<boolean>;
 }
 
 export interface AssistantRondes {
   id: Generated<string>;
   profil: string;
-  declencheur: "planifiee" | "manuelle";
+  declencheur: "planifiee" | "manuelle" | "synthese" | "evenement";
   etat: Generated<"en_cours" | "terminee" | "echec">;
   referent_id: string | null;
   referent: Generated<string>;

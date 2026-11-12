@@ -14,6 +14,7 @@ import {
   type MethodeAssistantDto,
   type MissionAssistantDto,
   PROPOSITION_DESCRIPTION_MAX,
+  RONDE_DECLENCHEUR_LIBELLES,
   PROPOSITION_TITRE_MAX,
   type ProfilAssistant,
   type PropositionAssistantDto,
@@ -198,7 +199,7 @@ export function RondesAssistant({ profils, peutLancer }: { profils: Profils; peu
                     {fmtDate(r.debut)}
                   </Text>
                   <Badge variant="light" color="gray">
-                    {r.declencheur === 'planifiee' ? 'Planifiée' : 'Demandée'}
+                    {RONDE_DECLENCHEUR_LIBELLES[r.declencheur]}
                   </Badge>
                   {r.rappels > 0 && (
                     <Badge variant="light" color="gray">

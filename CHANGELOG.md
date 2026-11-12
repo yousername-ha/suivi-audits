@@ -6,7 +6,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-**Aucune action sur le serveur.** **Migrations automatiques `055` à `060`** (assistant RSSI, [ADR 0086](docs/adr/0086-assistant-rssi-integre.md)) :
+**Aucune action sur le serveur.** **Migrations automatiques `055` à `061`** (assistant RSSI, [ADR 0086](docs/adr/0086-assistant-rssi-integre.md)) :
 additives, durée négligeable. L'assistant reste **inactif** après la mise à jour. Pour l'utiliser : démarrer le service facultatif
 `assistant-relais` (`docker compose --profile assistant up -d`), renseigner `ASSISTANT_RELAIS_URL` dans `.env`, puis le régler dans
 Plateforme, « Assistant RSSI » ([guide](docs/INSTALLATION.md)). Une fois activé, la question posée et les extraits lus pour y répondre
@@ -118,6 +118,9 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
 
 ### Ajouté
 
+- **Assistant RSSI : synthèse hebdomadaire et ronde sur événement** (inactives par défaut) : un bilan de la semaine le jour
+  choisi ; une ronde ciblée quand une action vient de dépasser son échéance ou qu'un écart est créé, au plus toutes les quatre
+  heures par profil. _(Session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
 - **Assistant RSSI : propositions d'action** : quand il estime qu'une action manque, l'assistant la propose au lieu de la créer.
   Une personne autorisée (droit `assistant:modifier`) la corrige, la confirme ou la rejette ; l'action confirmée est créée à
   son nom, avec ses droits. Une proposition rejetée n'est pas redéposée tant que l'élément concerné n'a pas changé.

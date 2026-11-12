@@ -316,3 +316,17 @@ Réalisé sur `claude/assistant-rssi` (migration `060`) :
 
 Reste du point 8 : propositions d'écart, de tâche, d'évaluation d'exigence et de constat d'audit ; notification « proposition
 à décider » (les propositions se lisent pour l'instant sur la page de l'assistant).
+
+## Addendum du 12/11/2026 — synthèse hebdomadaire et ronde sur événement (point 9)
+
+Réalisé sur `claude/assistant-rssi` (migration `061`), **inactifs par défaut** :
+
+- **Synthèse de la semaine** : le jour réglé, la ronde quotidienne de chaque profil rend un bilan de la semaine (avancées,
+  retards qui durent, questions sans réponse, propositions en attente, trois priorités) à la place du rapport habituel.
+- **Ronde sur événement** : le tic de l'API compte, sur les seuls périmètres du profil, les actions qui viennent de dépasser
+  leur échéance et les écarts créés depuis la dernière ronde. S'il y en a, une ronde ciblée part, au plus toutes les quatre
+  heures par profil. Le compte est fait par la plateforme et ne révèle aucun contenu ; la ronde lit ensuite avec les droits du
+  référent. Événements non couverts : nouvelle version d'un document, audit qui approche.
+
+Avec cet addendum, le point 9 (autonomie) est réalisé hors ces deux événements. Vérifié par les tests automatisés ; ni la
+synthèse ni la ronde sur événement n'ont été exécutées par un modèle réel.

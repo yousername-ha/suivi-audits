@@ -45,6 +45,9 @@ export const ReglagesAssistantBody = z
     heureRonde: z.number().int().min(0).max(23).optional(),
     plafondRappelsJour: z.number().int().min(0).max(50).optional(),
     delaiRelanceJours: z.number().int().min(1).max(30).optional(),
+    /** Jour de la synthèse hebdomadaire : 1 = lundi … 7 = dimanche ; 0 = jamais. */
+    jourSynthese: z.number().int().min(0).max(7).optional(),
+    rondesSurEvenement: z.boolean().optional(),
     /** Contexte de l'organisation, relu par l'assistant à chaque ronde et à chaque conversation. */
     contexte: z.string().trim().max(CONTEXTE_ASSISTANT_MAX).optional(),
     profils: z
@@ -106,6 +109,10 @@ export interface ReglagesAssistantDto {
   plafondRappelsJour: number;
   /** Jours sans réponse avant la relance d'une question, puis avant son signalement au référent. */
   delaiRelanceJours: number;
+  /** Jour de la synthèse hebdomadaire (1 = lundi … 7 = dimanche ; 0 = jamais). */
+  jourSynthese: number;
+  /** Une ronde part quand une action vient de dépasser son échéance ou qu'un écart est créé. */
+  rondesSurEvenement: boolean;
   contexte: string;
   profils: ProfilAssistantDto[];
   version: number;
@@ -167,7 +174,13 @@ export interface TestModeleDto {
 }
 
 /* ------------------------------------------------------------------ Autonomie (lot A3) */
-export const RONDE_DECLENCHEURS = ['planifiee', 'manuelle'] as const;
+export const RONDE_DECLENCHEURS = ['planifiee', 'manuelle', 'synthese', 'evenement'] as const;
+export const RONDE_DECLENCHEUR_LIBELLES: Record<(typeof RONDE_DECLENCHEURS)[number], string> = {
+  planifiee: 'Planifiée',
+  manuelle: 'Demandée',
+  synthese: 'Synthèse de la semaine',
+  evenement: 'Sur événement',
+};
 export type RondeDeclencheur = (typeof RONDE_DECLENCHEURS)[number];
 export type RondeEtat = 'en_cours' | 'terminee' | 'echec';
 export interface RondeAssistantDto {

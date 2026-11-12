@@ -54,10 +54,14 @@ export const METHODES_EN_ATTENTE_MAX = 10;
 const RETOURS_RELUS = 8;
 const RONDES_LISTEES = 30;
 const ACTEUR: Actor = { username: 'Assistant RSSI' };
+const PARTICULARITE_SYNTHESE =
+  'Aujourd’hui, votre rapport est la SYNTHÈSE DE LA SEMAINE pour le RSSI : ce qui a avancé et ce qui a reculé depuis vos notes précédentes, les retards qui durent, les questions sans réponse, les propositions en attente de décision, et les trois priorités de la semaine à venir. Vingt-cinq lignes au plus.';
 const TITRE_RAPPEL = 'Rappel de l’assistant RSSI';
 const TITRE_QUESTION = 'Question de l’assistant RSSI';
 export const QUESTIONS_PAR_RONDE_MAX = 10;
 export const PROPOSITIONS_PAR_RONDE_MAX = 5;
+/** Deux rondes sur événement d'un même profil sont séparées d'au moins ce délai. */
+export const EVENEMENT_INTERVALLE_HEURES = 4;
 export const PROPOSITIONS_EN_ATTENTE_MAX = 30;
 
 const PROFILS: Record<ProfilAssistant, string> = {
@@ -76,10 +80,12 @@ function consigneRonde(
   retours: string[],
   suivi: { reponses: string[]; silences: string[] },
   decisions: string[],
+  particularite: string,
 ): string {
   return [
     `Vous êtes l’assistant RSSI de la plateforme de suivi (profil « ${PROFIL_ASSISTANT_LIBELLES[profil]} »). ${PROFILS[profil]}`,
     `Date du jour : ${aujourdHui}. Vous effectuez une RONDE AUTONOME : personne ne vous interroge.`,
+    particularite,
     'Déroulé, dans cet ordre : 1. appelez lister_perimetres ; 2. appelez signaux pour chaque périmètre ; 3. lisez avec lire_element les éléments qui le méritent ; 4. pour chaque action en retard ou risque à revoir qui a un responsable, appelez envoyer_rappel, ou poser_question quand il vous manque une information que seul le responsable peut donner (pas les deux pour le même élément) ; si une action manque pour traiter un constat, appelez proposer_action ; 5. appelez memoriser si un fait durable servira aux rondes suivantes ; 6. seulement ensuite, rédigez le rapport.',
     'Règles :',
     '- N’affirmez rien sans l’avoir lu par un outil pendant cette ronde. Tout chiffre vient tel quel d’un outil ; ne calculez aucun taux.',
@@ -204,13 +210,55 @@ export class RondesAssistant {
         .selectFrom('assistant_rondes')
         .select('id')
         .where('profil', '=', id)
-        .where('declencheur', '=', 'planifiee')
+        .where('declencheur', 'in', ['planifiee', 'synthese'])
         .where(
           sql<boolean>`(debut AT TIME ZONE ${FUSEAU_RONDE})::date = (${maintenant}::timestamptz AT TIME ZONE ${FUSEAU_RONDE})::date`,
         )
         .executeTakeFirst();
       if (deja) continue;
-      return this.demarrer(id, 'planifiee', '', maintenant);
+      // Le jour réglé, la ronde quotidienne est la synthèse de la semaine.
+      const jour =
+        ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].indexOf(
+          new Intl.DateTimeFormat('en-GB', { timeZone: FUSEAU_RONDE, weekday: 'short' }).format(maintenant),
+        ) + 1;
+      return jour === r.jour_synthese
+        ? this.demarrer(id, 'synthese', '', maintenant, PARTICULARITE_SYNTHESE)
+        : this.demarrer(id, 'planifiee', '', maintenant);
+    }
+    if (!r.rondes_sur_evenement) return null;
+    for (const id of PROFILS_ASSISTANT) {
+      const p = profils.get(id);
+      if (!p?.actif || !p.referent_id || !p.perimetres.length) continue;
+      const derniere = await this.db.k
+        .selectFrom('assistant_rondes')
+        .select(sql<Date>`max(debut)`.as('debut'))
+        .where('profil', '=', id)
+        .executeTakeFirst();
+      // Sans ronde précédente, rien à comparer : la première ronde est quotidienne ou demandée.
+      if (!derniere?.debut) continue;
+      const depuis = new Date(derniere.debut);
+      if (maintenant.getTime() - depuis.getTime() < EVENEMENT_INTERVALLE_HEURES * 3_600_000) continue;
+      // Compte fait par la plateforme, sur les seuls périmètres du profil : il ne révèle aucun contenu.
+      const { retards, ecarts } = await this.db.k
+        .selectFrom('grc_objects as o')
+        .select([
+          sql<number>`count(*) FILTER (WHERE o.kind = 'action' AND (o.data->>'dueAt')::timestamptz > ${depuis} AND (o.data->>'dueAt')::timestamptz <= ${maintenant})::int`.as(
+            'retards',
+          ),
+          sql<number>`count(*) FILTER (WHERE o.kind = 'nonconformity' AND o.created_at > ${depuis})::int`.as('ecarts'),
+        ])
+        .where('o.smsi_id', 'in', p.perimetres)
+        .where('o.archived', '=', false)
+        .where('o.kind', 'in', ['action', 'nonconformity'])
+        .executeTakeFirstOrThrow();
+      if (!retards && !ecarts) continue;
+      return this.demarrer(
+        id,
+        'evenement',
+        '',
+        maintenant,
+        `Cette ronde est déclenchée par un événement survenu depuis votre dernière ronde : ${retards} action(s) viennent de dépasser leur échéance, ${ecarts} écart(s) ont été créés. Concentrez-vous sur ces éléments ; ne refaites pas le tour complet.`,
+      );
     }
     return null;
   }
@@ -246,6 +294,7 @@ export class RondesAssistant {
     declencheur: RondeDeclencheur,
     demandeePar: string,
     debut = new Date(),
+    particularite = '',
   ): Promise<string> {
     await this.cloreInterrompues();
     const { profils } = await this.assistant.lire();
@@ -263,7 +312,7 @@ export class RondesAssistant {
       })
       .returning('id')
       .executeTakeFirstOrThrow();
-    const tache = this.executer(l.id, profil, referent, new Set(p.perimetres))
+    const tache = this.executer(l.id, profil, referent, new Set(p.perimetres), particularite)
       .catch((e: unknown) => this.log.error({ err: (e as Error).message }, 'assistant : ronde non consignée'))
       .finally(() => {
         this.enCours = null;
@@ -283,6 +332,7 @@ export class RondesAssistant {
     profil: ProfilAssistant,
     referent: SessionUser | null,
     perimetres: ReadonlySet<string>,
+    particularite: string,
   ): Promise<void> {
     const { r } = await this.assistant.lire();
     let rapport = '';
@@ -342,6 +392,7 @@ export class RondesAssistant {
           ),
           suivi,
           await this.decisionsRecentes(profil),
+          particularite,
         ),
         fil: [{ role: 'utilisateur', contenu: 'Effectuez la ronde et rendez votre rapport.' }],
         outils: [...OUTILS, ...OUTILS_RONDE],
