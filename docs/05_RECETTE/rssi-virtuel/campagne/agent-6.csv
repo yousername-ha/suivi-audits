@@ -131,9 +131,9 @@ systeme/certificats|principal|rssi|erreur|bureau;defaut;C6-15;Adresse « https:/
 systeme/certificats|sous-perimetre|rssi|vide|bureau;;;
 systeme/certificats|sous-perimetre|rssi|rempli|bureau;;;
 systeme/certificats|sous-perimetre|rssi|erreur|bureau;;;
-systeme/securite|principal|rssi|vide|bureau;;;
-systeme/securite|principal|rssi|rempli|bureau;;;
-systeme/securite|principal|rssi|erreur|bureau;;;
+systeme/securite|principal|rssi|vide|bureau;ok;;Valeurs par défaut (12 caractères, 30 min, 10 h, 5 échecs, 15 min), double authentification obligatoire non désactivable, poivre « Défini » (6 empreintes sur 6 protégées), clés WebAuthn non proposées sur une adresse IP (message explicite)
+systeme/securite|principal|rssi|rempli|bureau;ok;;Longueur 14 et créneau de maintenance 22:00-06:00 du lundi au vendredi enregistrés (« Créneau : lundi… de 22:00 à 06:00 (heure de Paris) ») puis valeurs d'origine remises (GET /api/settings/securite) , changement de poivre non exécuté (interdit sur la pile de recette)
+systeme/securite|principal|rssi|erreur|bureau;defaut;C6-15;Longueur 8 → 12 et inactivité 0 → 5 sans message , « Échecs avant verrouillage » 0 affiché à l'enregistrement mais 3 enregistré (« Sécurité : enregistré. ») , bouton « Toggle password visibility » sur « Ancien poivre » (BUG-018)
 systeme/securite|sous-perimetre|rssi|vide|bureau;;;
 systeme/securite|sous-perimetre|rssi|rempli|bureau;;;
 systeme/securite|sous-perimetre|rssi|erreur|bureau;;;
