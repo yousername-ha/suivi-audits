@@ -1,7 +1,7 @@
 /* Jeu de données de test, entièrement fictif et cohérent : une petite organisation avec ses processus, objectifs,
    indicateurs (atteints, non atteints, non mesurés, calculés, satisfaction), parties intéressées, fournisseurs évalués,
    écarts, plans d'audit, une revue de direction, un référentiel de démonstration, une méthode de risque, des risques
-   appréciés, des actions, une série récurrente et des opportunités reliés entre eux. Aucun texte normatif, aucun nom réel.
+   appréciés, des actions, une série récurrente reliés entre eux. Aucun texte normatif, aucun nom réel.
    Chargé uniquement à la demande (`suivi jeu-de-test`), jamais automatiquement, et refusé sur une instance qui contient
    déjà des données de pilotage : les données de départ restent vides. Toutes les écritures passent par l'API publique
    (mêmes validations que l'interface). Les dates sont relatives au jour du chargement : retards et échéances à venir
@@ -447,7 +447,6 @@ export interface BilanChargement {
   actions: number;
   ecarts: number;
   serie: number;
-  opportunites: number;
   liens: number;
   criteres: number;
   evaluations: number;
@@ -523,7 +522,6 @@ export async function chargerJeuDeTest(
       actions: 0,
       ecarts: 0,
       serie: 0,
-      opportunites: 0,
       liens: 0,
       criteres: 0,
       evaluations: 0,
@@ -626,7 +624,7 @@ export async function chargerJeuDeTest(
       );
       bilan.risques++;
     }
-    // 4) Actions, série récurrente, opportunités et liens avec les processus.
+    // 4) Actions, série récurrente et liens avec les processus.
     const action = (nom: string, statut: string, echeance: string, justification = '') => ({
       kind: 'action',
       name: nom,
@@ -725,34 +723,6 @@ export async function chargerJeuDeTest(
       'Série récurrente',
     );
     bilan.serie = serie.id ? 1 : 0;
-    const opportunite = (nom: string, statut: string) => ({
-      kind: 'opportunity',
-      name: nom,
-      data: {
-        description: 'Opportunité fictive.',
-        ownerId: null,
-        refs: [],
-        source: 'Enjeu externe fictif',
-        benefit: 'Bénéfice attendu fictif',
-        status: statut,
-        decision: '',
-        reviewAt: decaler(120),
-        dueAt: '',
-      },
-    });
-    const opps: string[] = [];
-    for (const [nom, st] of [
-      ['Ouverture à la téléconsultation', 'identified'],
-      ['Mutualisation des achats avec un partenaire', 'evaluated'],
-      ['Certification de l’accueil', 'pursued'],
-    ] as const) {
-      const c = await exiger<{ id: string }>(
-        await appel('POST', `/api/grc/${commun}/objects`, opportunite(nom, st)),
-        `Opportunité ${nom}`,
-      );
-      opps.push(c.id);
-      bilan.opportunites++;
-    }
     const lier = async (source: string, cible: string, note: string) => {
       await exiger(
         await appel('POST', `/api/grc/${commun}/links`, { source, target: cible, type: 'related_to', note }),
@@ -764,8 +734,6 @@ export async function chargerJeuDeTest(
     await lier(`object:${actions.A2}`, 'legacy:processes:PR3', 'Action rattachée au processus');
     await lier(`object:${actions.A3}`, 'legacy:processes:PR3', 'Action rattachée au processus');
     await lier(`object:${actions.A4}`, 'legacy:processes:PR4', 'Action rattachée au processus');
-    await lier(`object:${opps[0]}`, 'legacy:processes:PR2', 'Opportunité rattachée au processus');
-    await lier(`object:${opps[1]}`, 'legacy:processes:PR3', 'Opportunité rattachée au processus');
     await lier(`object:${refs.R01}`, 'legacy:processes:PR4', 'Risque rattaché au processus');
     await lier(`object:${refs.R02}`, 'legacy:processes:PR3', 'Risque rattaché au processus');
     // 5) Fournisseurs : critères propres à l'organisme et deux évaluations immuables.
