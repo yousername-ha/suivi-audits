@@ -434,7 +434,7 @@ Demande du RSSI : l'assistant doit avoir une vue globale de la gouvernance. Réa
 ## Addendum du 12/11/2026 — lecture des PDF (point 12, suite du lot A4)
 
 Le RSSI a demandé, le 12/11/2026, de réaliser la lecture des PDF à la suite de la vue d'ensemble et des rubriques
-d'organisation. **Le choix de la bibliothèque est proposé par la session et reste à confirmer par le RSSI** à la relecture.
+d'organisation. Le choix de la bibliothèque, proposé par la session, a été **accepté par le RSSI le 12/11/2026**.
 
 - **Dépendance nouvelle : `pdfjs-dist` 6.5.438** (Mozilla, Apache-2.0, celle de Firefox), dans l'API. Aucune dépendance
   obligatoire ; son module graphique natif facultatif `@napi-rs/canvas` n'est ni résolu ni installé
