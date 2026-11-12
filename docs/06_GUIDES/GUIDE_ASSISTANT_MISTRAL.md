@@ -43,15 +43,22 @@ Avant d'aller plus loin :
 ## Étape 2 — Obtenir une clé chez Mistral
 
 1. Ouvrez `https://console.mistral.ai` et créez un compte avec une adresse professionnelle, pas personnelle.
-2. Activez la facturation : dans l'administration de Mistral (`https://admin.mistral.ai`), rubrique des abonnements et de la
-   facturation, ajoutez un moyen de paiement. **Une clé reste inactive tant qu'aucun moyen de paiement n'est enregistré.**
+2. Activez la facturation : dans l'administration de Mistral (`https://admin.mistral.ai`), rubrique **Subscription**,
+   achetez des crédits (le paiement à l'usage est prépayé) puis activez le paiement à l'usage (« pay-as-you-go »).
+   **Un compte gratuit ne suffit pas** : d'après la documentation de Mistral relue le 12/11/2026, le mode gratuit sert à
+   essayer ses interfaces et « n'inclut pas l'accès à l'API ». Des sites tiers décrivent encore une offre gratuite
+   « Experiment » avec accès à l'API ; ses pages d'aide officielles ne répondent plus. Si votre compte vous laisse créer une
+   clé sans payer, le test de l'étape 5 dira si elle fonctionne, mais n'y envoyez aucune donnée réelle : en mode gratuit,
+   Mistral peut utiliser les questions et les réponses pour entraîner ses modèles.
 3. Au même endroit, fixez un **plafond de dépense** pour l'espace de travail. C'est votre garde-fou côté Mistral.
 4. Revenez dans la console, ouvrez **API Keys**, puis créez une clé (« New key » ou « Create new key » selon l'écran) :
    - nom : par exemple `suivi-audits-assistant` ;
    - date d'expiration : choisissez-en une (un an au plus) et notez-la dans votre calendrier.
 5. **Copiez la clé tout de suite** et gardez-la dans votre coffre de mots de passe. Mistral ne l'affiche qu'une fois.
-6. Cherchez dans votre compte Mistral le réglage sur l'utilisation de vos données pour l'entraînement des modèles et
-   désactivez-le s'il est proposé. Son emplacement exact n'a pas pu être vérifié pour ce guide.
+6. Refusez l'utilisation de vos données pour l'entraînement : dans l'administration de Mistral, menu **Privacy**, section
+   « Anonymous improvement data », désactivez l'interrupteur (emplacement donné par le centre d'aide de Mistral, non essayé
+   pour ce guide). La suppression de toute conservation (« Zero Data Retention ») se demande au support de Mistral, qui
+   l'accorde ou non, et seulement avec le paiement à l'usage.
 
 Ne collez jamais la clé dans un courriel, un ticket ou une conversation.
 
@@ -191,12 +198,22 @@ sudo docker compose --profile assistant up -d
 Cette suite de commandes n'a pas été exécutée pendant le développement : faites une sauvegarde avant, et relevez le
 premier message d'erreur si elle échoue.
 
-## Sources côté Mistral (relues le 11/11/2026)
+## Sources côté Mistral
+
+Relues le 11/11/2026 :
 
 - [Activer la facturation et créer une clé](https://docs.mistral.ai/getting-started/quickstarts/studio/activate-and-generate-api-key)
 - [Espaces de travail et plafonds](https://docs.mistral.ai/getting-started/quickstarts/admin/manage-workspaces)
 - [Appel d'outils et modèles compatibles](https://docs.mistral.ai/capabilities/function_calling/)
 - [Référence de l'API](https://docs.mistral.ai/api/)
 - [Tarifs de l'API](https://docs.mistral.ai/inference/pricing)
-- [Centre d'aide : gouvernance des données](https://help.mistral.ai/en/collections/789667-data-governance) (non lu pour ce guide :
-  conservation, lieu de traitement, entraînement)
+- [Centre d'aide : gouvernance des données](https://help.mistral.ai/en/collections/789667-data-governance) (durée de
+  conservation et lieu de traitement non trouvés)
+
+Relues le 12/11/2026 :
+
+- [Abonnements et paiement à l'usage](https://docs.mistral.ai/admin/billing-usage/subscriptions)
+- [Limites d'usage (le mode gratuit n'inclut pas l'API)](https://docs.mistral.ai/admin/billing-usage/usage-limits)
+- [Refuser l'entraînement sur ses données](https://help.mistral.ai/en/articles/455207-can-i-opt-out-of-my-input-or-output-data-being-used-for-training)
+- [Utilisation des données pour l'entraînement](https://help.mistral.ai/en/articles/347617-do-you-use-my-user-data-to-train-your-artificial-intelligence-models)
+- [Zero Data Retention](https://help.mistral.ai/en/articles/347612-can-i-activate-zero-data-retention-zdr)
