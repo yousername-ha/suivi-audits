@@ -31,6 +31,14 @@ export interface AssistantConversations {
   updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
+export interface AssistantMemoire {
+  id: Generated<string>;
+  profil: string;
+  contenu: string;
+  ronde_id: string | null;
+  created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
 export interface AssistantMessages {
   id: Generated<string>;
   conversation_id: string;
@@ -42,10 +50,23 @@ export interface AssistantMessages {
   created_at: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
+export interface AssistantMissions {
+  id: Generated<string>;
+  profil: string;
+  consigne: string;
+  etat: Generated<"ouverte" | "close">;
+  created_by: Generated<string>;
+  created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+  closed_by: Generated<string>;
+  closed_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
+}
+
 export interface AssistantProfils {
   id: "mise_en_oeuvre" | "audit_interne";
   actif: Generated<boolean>;
   perimetres: Generated<string[]>;
+  ronde_quotidienne: Generated<boolean>;
+  referent_id: string | null;
 }
 
 export interface AssistantReglages {
@@ -57,6 +78,30 @@ export interface AssistantReglages {
   version: Generated<number>;
   updated_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
   updated_by: Generated<string>;
+  en_pause: Generated<boolean>;
+  heure_ronde: Generated<number>;
+  plafond_rappels_jour: Generated<number>;
+}
+
+export interface AssistantRondes {
+  id: Generated<string>;
+  profil: string;
+  declencheur: "planifiee" | "manuelle";
+  etat: Generated<"en_cours" | "terminee" | "echec">;
+  referent_id: string | null;
+  referent: Generated<string>;
+  demandee_par: Generated<string>;
+  debut: ColumnType<Date, Date | string | undefined, Date | string>;
+  fin: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  rapport: Generated<string>;
+  erreur: Generated<string>;
+  sources: ColumnType<JsonValue, string | undefined, string>;
+  outils: ColumnType<JsonValue, string | undefined, string>;
+  rappels: Generated<number>;
+  notes: Generated<number>;
+  jetons_entree: Generated<number>;
+  jetons_sortie: Generated<number>;
+  appels: Generated<number>;
 }
 
 export interface AuditLog {
@@ -1499,9 +1544,12 @@ export interface DB {
   app_state: AppState;
   assistant_consommation: AssistantConsommation;
   assistant_conversations: AssistantConversations;
+  assistant_memoire: AssistantMemoire;
   assistant_messages: AssistantMessages;
+  assistant_missions: AssistantMissions;
   assistant_profils: AssistantProfils;
   assistant_reglages: AssistantReglages;
+  assistant_rondes: AssistantRondes;
   audit_log: AuditLog;
   backup_jobs: BackupJobs;
   backup_policy: BackupPolicy;

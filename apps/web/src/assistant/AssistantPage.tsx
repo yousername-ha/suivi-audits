@@ -17,6 +17,7 @@ import { Link, useNavigate, useParams } from 'react-router';
 import { api, get } from '../api';
 import { ConfirmButton, ErrorAlert, fmtDate } from '../components/common';
 import { useCan } from '../session';
+import { RondesAssistant } from './AutonomieAssistant';
 import { CLE_ETAT_ASSISTANT } from './ReglagesAssistant';
 
 const CLE_FILS = ['assistant', 'conversations'];
@@ -28,6 +29,7 @@ const OUTILS: Record<string, string> = {
   historique_element: 'historique',
   actions_en_retard: 'actions en retard',
   couverture_referentiels: 'couverture',
+  signaux: 'points d’attention',
 };
 
 function Message({ m }: { m: MessageAssistantDto }) {
@@ -263,6 +265,17 @@ export function AssistantPage() {
               ))}
             </Stack>
           </Card>
+        )}
+
+        {!id && e && (
+          <>
+            {e.enPause && (
+              <Alert color="orange" title="Assistant en pause">
+                Aucune ronde ne part tant que la pause est active. Le dialogue reste disponible.
+              </Alert>
+            )}
+            <RondesAssistant profils={profils} peutLancer={can('assistant', 'administrer') && e.pret && !e.enPause} />
+          </>
         )}
 
         {id && (

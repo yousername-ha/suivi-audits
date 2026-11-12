@@ -17,6 +17,7 @@ import {
   type TestModeleDto,
 } from '@suivi/shared';
 import { sql } from 'kysely';
+import type { Kdb } from '../db/db.js';
 import type { Logger } from 'pino';
 import type { SessionUser } from '../auth.js';
 import type { Actor, Db } from '../db/db.js';
@@ -26,6 +27,7 @@ import type { Vault } from '../security/crypto.js';
 import { repondre } from './agent.js';
 import type { TransportModele } from './modele.js';
 import { OUTILS } from './outils.js';
+import type { RondesAssistant } from './rondes.js';
 
 const CLE = 'secret:assistant';
 const AAD = 'assistant:cle-modele';
@@ -45,6 +47,8 @@ const hote = (adresse: string): string | null => {
 export class Assistant {
   /** Réponses en préparation, par conversation (une seule instance d'API : ADR 0086, DAT). */
   private readonly taches = new Map<string, Promise<void>>();
+  /** Rondes autonomes (lot A3) : branchées par les services, elles valident le référent d'un profil. */
+  rondes?: RondesAssistant;
 
   constructor(
     private readonly db: Db,
@@ -55,7 +59,7 @@ export class Assistant {
   ) {}
 
   /* ---------------------------------------------------------------- Réglages (assistant:administrer) */
-  private async lire() {
+  async lire() {
     const r = await this.db.k
       .selectFrom('assistant_reglages')
       .selectAll()
@@ -69,7 +73,7 @@ export class Assistant {
     return !!(await this.db.k.selectFrom('settings').select('key').where('key', '=', CLE).executeTakeFirst());
   }
 
-  private async lireCle(): Promise<string> {
+  async lireCle(): Promise<string> {
     const l = await this.db.k.selectFrom('settings').select('value').where('key', '=', CLE).executeTakeFirst();
     if (!l) return '';
     return this.vault.openSmall(Buffer.from((l.value as { sealed: string }).sealed, 'base64'), AAD).toString('utf8');
@@ -82,11 +86,16 @@ export class Assistant {
       adresse: r.adresse,
       modele: r.modele,
       budgetJetonsJour: r.budget_jetons_jour,
+      enPause: r.en_pause,
+      heureRonde: r.heure_ronde,
+      plafondRappelsJour: r.plafond_rappels_jour,
       profils: PROFILS_ASSISTANT.map((id) => ({
         id,
         libelle: PROFIL_ASSISTANT_LIBELLES[id],
         actif: profils.get(id)?.actif ?? false,
         perimetres: profils.get(id)?.perimetres ?? [],
+        rondeQuotidienne: profils.get(id)?.ronde_quotidienne ?? false,
+        referent: profils.get(id)?.referent_id ?? null,
       })),
       version: r.version,
       cleDefinie: await this.cleDefinie(),
@@ -97,6 +106,7 @@ export class Assistant {
   }
 
   async modifierReglages(b: ReglagesAssistantBody, user: Actor, ip: string): Promise<ReglagesAssistantDto> {
+    for (const p of b.profils) if (p.referent) await this.rondes?.exigerReferent(p.referent);
     await this.db.tx(async (c, k) => {
       const cur = await k
         .selectFrom('assistant_reglages')
@@ -118,18 +128,42 @@ export class Assistant {
           adresse: b.adresse,
           modele: b.modele,
           budget_jetons_jour: b.budgetJetonsJour,
+          ...(b.enPause === undefined ? {} : { en_pause: b.enPause }),
+          ...(b.heureRonde === undefined ? {} : { heure_ronde: b.heureRonde }),
+          ...(b.plafondRappelsJour === undefined ? {} : { plafond_rappels_jour: b.plafondRappelsJour }),
           version: cur.version + 1,
           updated_at: sql`now()`,
           updated_by: user.username,
         })
         .where('id', '=', 1)
         .execute();
-      for (const p of b.profils)
+      for (const p of b.profils) {
+        const avant = await k
+          .selectFrom('assistant_profils')
+          .select(['perimetres', 'ronde_quotidienne', 'referent_id'])
+          .where('id', '=', p.id)
+          .executeTakeFirstOrThrow();
+        const referent = p.referent === undefined ? avant.referent_id : p.referent;
+        const quotidienne = p.rondeQuotidienne ?? avant.ronde_quotidienne;
+        if (quotidienne && !referent)
+          throw new HttpError(422, 'Désignez un référent avant d’activer la ronde quotidienne.');
         await k
           .updateTable('assistant_profils')
-          .set({ actif: p.actif, perimetres: [...new Set(p.perimetres)] })
+          .set({
+            actif: p.actif,
+            perimetres: [...new Set(p.perimetres)],
+            ronde_quotidienne: quotidienne,
+            referent_id: referent,
+          })
           .where('id', '=', p.id)
           .execute();
+        // Un périmètre retiré au profil : sa mémoire peut en garder des éléments, elle est purgée (ADR 0086, point 13).
+        if (avant.perimetres.some((x) => !p.perimetres.includes(x))) {
+          const purge = await k.deleteFrom('assistant_memoire').where('profil', '=', p.id).returning('id').execute();
+          if (purge.length)
+            await this.db.audit(user, ip, 'assistant.memoire_purgee', '', { profil: p.id, notes: purge.length }, c);
+        }
+      }
       // Le journal dit vers quel fournisseur partent les extraits et combien de périmètres sont ouverts : aucun secret.
       await this.db.audit(
         user,
@@ -141,7 +175,13 @@ export class Assistant {
           fournisseur: hote(b.adresse),
           modele: b.modele,
           budgetJetonsJour: b.budgetJetonsJour,
-          profils: b.profils.map((p) => ({ id: p.id, actif: p.actif, perimetres: p.perimetres.length })),
+          ...(b.enPause === undefined ? {} : { enPause: b.enPause }),
+          profils: b.profils.map((p) => ({
+            id: p.id,
+            actif: p.actif,
+            perimetres: p.perimetres.length,
+            ...(p.rondeQuotidienne === undefined ? {} : { rondeQuotidienne: p.rondeQuotidienne }),
+          })),
         },
         c,
       );
@@ -198,7 +238,7 @@ export class Assistant {
   }
 
   /* ---------------------------------------------------------------- État (assistant:lire) */
-  private async jetonsDuJour(): Promise<number> {
+  async jetonsDuJour(): Promise<number> {
     const l = await this.db.k
       .selectFrom('assistant_consommation')
       .select(sql<number>`(jetons_entree + jetons_sortie)::float8`.as('n'))
@@ -208,7 +248,7 @@ export class Assistant {
   }
 
   /** Pourquoi l'assistant ne peut pas répondre, ou null s'il est prêt. */
-  private async empechement(): Promise<string | null> {
+  async empechement(): Promise<string | null> {
     const { r } = await this.lire();
     if (!r.actif) return 'L’assistant n’est pas activé.';
     if (!r.adresse || !r.modele) return 'Le modèle de l’assistant n’est pas réglé.';
@@ -237,7 +277,29 @@ export class Assistant {
       })),
       jetonsDuJour: await this.jetonsDuJour(),
       budgetJetonsJour: r.budget_jetons_jour,
+      enPause: r.en_pause,
     };
+  }
+
+  /** Ajoute à la consommation du jour (UTC), dans la transaction de l'appelant. */
+  async consommer(k: Kdb, jetonsEntree: number, jetonsSortie: number, appels: number): Promise<void> {
+    if (!appels) return;
+    await k
+      .insertInto('assistant_consommation')
+      .values({
+        jour: sql<Date>`(now() AT TIME ZONE 'UTC')::date`,
+        jetons_entree: jetonsEntree,
+        jetons_sortie: jetonsSortie,
+        appels,
+      })
+      .onConflict((oc) =>
+        oc.column('jour').doUpdateSet((eb) => ({
+          jetons_entree: sql<number>`assistant_consommation.jetons_entree + ${eb.ref('excluded.jetons_entree')}`,
+          jetons_sortie: sql<number>`assistant_consommation.jetons_sortie + ${eb.ref('excluded.jetons_sortie')}`,
+          appels: sql<number>`assistant_consommation.appels + ${eb.ref('excluded.appels')}`,
+        })),
+      )
+      .execute();
   }
 
   /* ---------------------------------------------------------------- Conversations (assistant:lire) */
@@ -467,23 +529,7 @@ export class Assistant {
             .where('id', '=', t.id)
             .execute();
         }
-        if (appels)
-          await k
-            .insertInto('assistant_consommation')
-            .values({
-              jour: sql<Date>`(now() AT TIME ZONE 'UTC')::date`,
-              jetons_entree: jetonsEntree,
-              jetons_sortie: jetonsSortie,
-              appels,
-            })
-            .onConflict((oc) =>
-              oc.column('jour').doUpdateSet((eb) => ({
-                jetons_entree: sql<number>`assistant_consommation.jetons_entree + ${eb.ref('excluded.jetons_entree')}`,
-                jetons_sortie: sql<number>`assistant_consommation.jetons_sortie + ${eb.ref('excluded.jetons_sortie')}`,
-                appels: sql<number>`assistant_consommation.appels + ${eb.ref('excluded.appels')}`,
-              })),
-            )
-            .execute();
+        await this.consommer(k, jetonsEntree, jetonsSortie, appels);
         await this.db.audit(
           t.user,
           t.ip,

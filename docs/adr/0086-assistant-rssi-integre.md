@@ -194,3 +194,38 @@
   à la résolution. Un modèle sur une adresse privée demande `ASSISTANT_RELAIS_PRIVE=true` sur le serveur.
 - **Non vérifié** : aucun appel à Mistral ni à un autre fournisseur réel (tests sur faux fournisseur) ; Docker, Node 26 et
   PostgreSQL 18 (contrôles locaux sur Node 22 et PostgreSQL 16) ; tests de bout en bout Playwright.
+
+## Addendum du 12/11/2026 — lot A3, première tranche (rondes autonomes)
+
+Le RSSI a rappelé le 12/11/2026 que l'**autonomie**, la qualité et la confidentialité priment : l'autonomie est donc
+réalisée avant les propositions du lot A2. Un connecteur de chat extérieur (application de chat reliée par MCP) n'est pas
+retenu : il retire à l'assistant ses rondes et fait sortir plus de données.
+
+Réalisé sur `claude/assistant-rssi` (migration `056`) :
+
+- **Rondes** : une ronde quotidienne par profil, à l'heure réglée (heure de Paris), ou à la demande d'un administrateur de
+  l'assistant. Une seule à la fois ; 14 tours et 10 minutes au plus ; budget quotidien de jetons ; **pause** immédiate
+  (aucune ronde ne part, la ronde en cours conclut). Un échec est consigné et n'est pas retenté le même jour ; l'automate
+  des rappels existants n'en dépend pas.
+- **Écart avec le point 5 : le référent.** La « portée du profil » sans personne n'existe pas. Chaque profil a un
+  **référent**, compte actif porteur de `assistant:lire`. La ronde lit **avec les droits de ce compte**, bornés aux
+  périmètres du profil : elle ne lit jamais plus que ce que cette personne peut lire. Le rapport n'est rendu qu'au référent
+  et aux porteurs de `assistant:administrer`. Sans référent valide, la ronde échoue et le dit.
+- **Ce que la ronde émet seule** : un **rappel** (type de notification `assistant_rappel`, circuit de l'ADR 0058, réglages
+  de chaque personne respectés), une **note de mémoire**, un **rapport**. Rien n'est écrit dans un registre.
+- **Rappel** : le destinataire est choisi par la plateforme, jamais par le modèle. C'est le responsable nommé de l'élément,
+  s'il est actif et a accès au périmètre. Un seul rappel par élément tant qu'il n'a pas changé de version ; plafond par
+  personne et par jour (5 par défaut) et par ronde (20). Le titre, repris dans un courriel éventuel, ne porte aucune donnée
+  métier ; le texte rédigé par le modèle n'est visible que dans l'application. Les responsables de type groupe ou fonction
+  ne sont pas encore rappelés.
+- **Missions** par profil, rédigées et closes par un administrateur de l'assistant, relues à chaque ronde.
+- **Mémoire** par profil (200 notes au plus, 5 par ronde), lisible et supprimable, **purgée** quand un périmètre est retiré
+  au profil.
+- **Outil « signaux »** (point 7), disponible aussi en chat : actions en retard, actions sans responsable, risques dont la
+  revue est dépassée, exigences non couvertes ou à valider par référentiel.
+- **Traçabilité** : audits `assistant.ronde`, `assistant.rappel`, `assistant.ronde_demandee`, `assistant.mission_*`,
+  `assistant.memoire_*`, sans contenu métier ; acteur « Assistant RSSI ».
+
+Reste à faire pour l'autonomie : déclenchement sur événement, synthèse hebdomadaire, questions avec réponse, relances,
+propositions (lot A2), jeu d'évaluation mesuré. **Non vérifié** : aucun modèle réel n'a exécuté une ronde ; la qualité des
+rapports et la pertinence des rappels ne sont pas mesurées.

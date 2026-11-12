@@ -26,6 +26,7 @@ avec le rôle Administrateur ou RSSI, et un moyen de paiement pour Mistral.
 | 3 | Serveur | Démarrer le relais et le déclarer |
 | 4 | Plateforme | Régler le modèle, la clé, un profil et un périmètre |
 | 5 | Plateforme | Tester, puis poser une première question |
+| 6 | Plateforme | Facultatif : activer les rondes autonomes |
 
 ## Étape 1 — Décider ce que l'assistant peut lire
 
@@ -141,6 +142,25 @@ faux modèle : ce n'est pas une mesure sur Mistral.
 - Comparez-la à l'écran des actions de la plateforme. Les chiffres doivent être les mêmes.
 - Une réponse marquée « donnée sans lecture de la plateforme » n'est appuyée sur rien : ne vous y fiez pas.
 - L'assistant ne modifie rien. S'il annonce avoir créé ou changé quelque chose, c'est faux.
+
+## Étape 6 — Laisser l'assistant travailler seul (facultatif)
+
+Une fois le dialogue validé, vous pouvez activer les **rondes** : l'assistant relève chaque jour les retards et les manques,
+rappelle les responsables et vous rend un rapport. Il ne modifie toujours aucun registre.
+
+1. Dans **Plateforme > Assistant RSSI**, pour le profil choisi, désignez un **référent** : c'est le compte dont les droits
+   bornent ce que la ronde lit, et qui reçoit les rapports. Prenez le vôtre pour commencer.
+2. Activez **Ronde quotidienne** pour ce profil, réglez l'heure (heure de Paris) et le nombre maximal de rappels par personne
+   et par jour, puis **Enregistrer**.
+3. Facultatif : rédigez une **mission**, par exemple « suivre le plan d'action du dernier audit interne ».
+4. Sans attendre le lendemain, ouvrez la page **Assistant RSSI** et cliquez sur **Lancer une ronde maintenant**. Quand elle
+   est « Terminée », lisez le rapport.
+5. Vérifiez ce que la ronde a fait : les rappels envoyés apparaissent chez leurs destinataires dans **Pilotage > Rappels**,
+   les notes dans **Mémoire de l'assistant**.
+
+Pour tout arrêter d'un geste : interrupteur **Mettre l'assistant en pause**. Chaque personne peut couper les rappels de
+l'assistant dans **Mon compte > Notifications**. Une ronde consomme plus de jetons qu'une question : surveillez la
+consommation du jour les premières fois.
 
 ## En cas de problème
 

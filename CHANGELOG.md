@@ -6,8 +6,8 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-**Aucune action sur le serveur.** **Migration automatique `055`** (assistant RSSI, [ADR 0086](docs/adr/0086-assistant-rssi-integre.md)) :
-additive, durée négligeable. L'assistant reste **inactif** après la mise à jour. Pour l'utiliser : démarrer le service facultatif
+**Aucune action sur le serveur.** **Migrations automatiques `055` et `056`** (assistant RSSI, [ADR 0086](docs/adr/0086-assistant-rssi-integre.md)) :
+additives, durée négligeable. L'assistant reste **inactif** après la mise à jour. Pour l'utiliser : démarrer le service facultatif
 `assistant-relais` (`docker compose --profile assistant up -d`), renseigner `ASSISTANT_RELAIS_URL` dans `.env`, puis le régler dans
 Plateforme, « Assistant RSSI » ([guide](docs/INSTALLATION.md)). Une fois activé, la question posée et les extraits lus pour y répondre
 **partent chez le fournisseur du modèle** : ouvrir le flux sortant vers son hôte et n'ouvrir à l'assistant aucun périmètre pouvant
@@ -118,6 +118,14 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
 
 ### Ajouté
 
+- **Assistant RSSI : rondes autonomes** (ADR 0086, addendum du 12/11/2026) : l'assistant peut travailler sans être interrogé.
+  Chaque jour à l'heure réglée, ou à la demande, il relève les retards et les manques de ses périmètres, envoie un rappel au
+  responsable nommé d'un élément, tient une mémoire et rend un rapport. Il n'écrit dans aucun registre. Une ronde lit avec les
+  droits du **référent** désigné pour le profil ; son rapport lui est réservé, ainsi qu'aux administrateurs de l'assistant.
+  Réglages : pause, heure de la ronde, plafond de rappels, missions, mémoire. Nouveau type de notification « Rappel de
+  l'assistant RSSI », réglable par personne. Aucune ronde ne part tant qu'un référent n'est pas désigné et la ronde
+  quotidienne activée. Non vérifié avec un modèle réel. _(Session « Assistant RSSI intégré plateforme »
+  (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
 - **Assistant RSSI intégré, premier lot** ([ADR 0086](docs/adr/0086-assistant-rssi-integre.md), acceptée ;
   [cadrage](docs/unification/CADRAGE-ASSISTANT-RSSI.md)) : page « Assistant RSSI » où l'on dialogue avec un profil (« Mise en
   œuvre » ou « Audit interne »). L'assistant lit la plateforme **avec les droits de la personne**, dans les seuls périmètres ouverts

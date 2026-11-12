@@ -33,6 +33,15 @@ async function main() {
         await svc.modules.assert('ecarts');
         await svc.grc.tasks.tick();
       })
+      // Rondes de l'assistant (ADR 0086) : après l'automate, qui n'en dépend pas. La ronde tourne en tâche de fond.
+      .then(() =>
+        svc.modules
+          .run(true, async () => {
+            if ((await svc.modules.state()).disabled.includes('assistant')) return;
+            await svc.assistantRondes.tic();
+          })
+          .catch((e: unknown) => log.warn({ err: String(e) }, 'rondes de l’assistant')),
+      )
       .catch((e: unknown) => log.warn({ err: String(e) }, 'task scheduler'))
       .finally(() => {
         working = false;

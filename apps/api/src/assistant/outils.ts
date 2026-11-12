@@ -14,6 +14,13 @@ export interface ContexteOutil {
   user: SessionUser;
   /** Périmètres ouverts au profil de l'assistant. */
   perimetres: ReadonlySet<string>;
+  /** Présent pendant une ronde autonome seulement : ce que l'assistant peut émettre seul (rappel, note de mémoire). */
+  ronde?: ActionsRonde;
+}
+/** Actions d'une ronde : aucune n'écrit dans un registre. Chaque méthode rend un compte rendu remis au modèle. */
+export interface ActionsRonde {
+  rappeler(perimetre: string, objet: string, message: string): Promise<{ envoye: boolean; detail: string }>;
+  memoriser(note: string): Promise<{ enregistre: boolean; detail: string }>;
 }
 export interface ResultatOutil {
   donnees: unknown;
@@ -40,6 +47,32 @@ function exiger(ctx: ContexteOutil, smsi: string) {
   if (!ctx.perimetres.has(smsi)) throw new HttpError(403, 'Ce périmètre n’est pas ouvert à ce profil de l’assistant.');
 }
 const outil = <A>(o: Outil<A>): Outil => o as Outil;
+
+/** Parcourt les actions d'un périmètre (nombre de pages borné) : en retard, et sans responsable nommé. */
+async function parcourirActions(ctx: ContexteOutil, smsi: string) {
+  const terminaux = new Set(
+    (await ctx.g.policy(smsi, ctx.user)).definition.statuses.filter((s) => s.terminal).map((s) => s.id),
+  );
+  const maintenant = new Date().toISOString();
+  const retard: ReturnType<typeof resume>[] = [];
+  const sansResponsable: ReturnType<typeof resume>[] = [];
+  let examinees = 0;
+  let total = 0;
+  let offset: number | null = 0;
+  for (let page = 0; page < PAGES_MAX_RETARD && offset !== null; page++) {
+    const r = await ctx.g.listObjects(smsi, ctx.user, 'action', '', offset);
+    total = r.total;
+    examinees += r.items.length;
+    for (const o of r.items) {
+      if (terminaux.has(String(o.data.status ?? ''))) continue;
+      const echeance = typeof o.data.dueAt === 'string' ? o.data.dueAt : '';
+      if (echeance && echeance < maintenant) retard.push(resume(o));
+      if (!o.data.ownerId && !o.data.responsable) sansResponsable.push(resume(o));
+    }
+    offset = r.nextOffset;
+  }
+  return { retard, sansResponsable, examinees, total };
+}
 
 /** Résumé d'un objet pour une liste : aucun champ libre long, aucun nom de personne. */
 function resume(o: { id: string; kind: GrcKind; name: string; data: Record<string, unknown>; updatedAt: string }) {
@@ -170,24 +203,7 @@ export const OUTILS: readonly Outil[] = [
     parametres: z.object({ perimetre }).strict(),
     async executer(ctx, a) {
       exiger(ctx, a.perimetre);
-      const terminaux = new Set(
-        (await ctx.g.policy(a.perimetre, ctx.user)).definition.statuses.filter((s) => s.terminal).map((s) => s.id),
-      );
-      const maintenant = new Date().toISOString();
-      const retard: ReturnType<typeof resume>[] = [];
-      let examinees = 0;
-      let total = 0;
-      let offset: number | null = 0;
-      for (let page = 0; page < PAGES_MAX_RETARD && offset !== null; page++) {
-        const r = await ctx.g.listObjects(a.perimetre, ctx.user, 'action', '', offset);
-        total = r.total;
-        examinees += r.items.length;
-        for (const o of r.items) {
-          const echeance = typeof o.data.dueAt === 'string' ? o.data.dueAt : '';
-          if (echeance && echeance < maintenant && !terminaux.has(String(o.data.status ?? ''))) retard.push(resume(o));
-        }
-        offset = r.nextOffset;
-      }
+      const { retard, examinees, total } = await parcourirActions(ctx, a.perimetre);
       retard.sort((x, y) => String(x.echeance).localeCompare(String(y.echeance)));
       return {
         donnees: {
@@ -238,6 +254,103 @@ export const OUTILS: readonly Outil[] = [
         elements: detail ? detail.length : c.frameworks.length,
         sources: [{ perimetre: a.perimetre, nom: s.name }],
       };
+    },
+  }),
+  outil({
+    nom: 'signaux',
+    description:
+      'Points d’attention d’un périmètre, calculés par la plateforme : actions en retard, actions sans responsable, risques dont la revue est dépassée, exigences non couvertes ou à valider par référentiel. À appeler en début de ronde ou de bilan.',
+    parametres: z.object({ perimetre }).strict(),
+    async executer(ctx, a) {
+      exiger(ctx, a.perimetre);
+      const s = await ctx.g.access(a.perimetre, ctx.user);
+      const actions = await parcourirActions(ctx, a.perimetre);
+      actions.retard.sort((x, y) => String(x.echeance).localeCompare(String(y.echeance)));
+      const aujourdHui = new Date().toISOString().slice(0, 10);
+      const risques: (ReturnType<typeof resume> & { revue: string })[] = [];
+      let offset: number | null = 0;
+      let risquesExamines = 0;
+      let risquesTotal = 0;
+      for (let page = 0; page < PAGES_MAX_RETARD && offset !== null; page++) {
+        const r = await ctx.g.listObjects(a.perimetre, ctx.user, 'risk', '', offset);
+        risquesTotal = r.total;
+        risquesExamines += r.items.length;
+        for (const o of r.items) {
+          const revue = typeof o.data.reviewAt === 'string' ? o.data.reviewAt.slice(0, 10) : '';
+          if (revue && revue < aujourdHui) risques.push({ ...resume(o), revue });
+        }
+        offset = r.nextOffset;
+      }
+      // La couverture relève du module Conformité : sans ce droit, le signal est simplement absent.
+      let referentiels: unknown[] | null = null;
+      try {
+        referentiels = (await ctx.g.rapprochements.coverage(a.perimetre, ctx.user)).frameworks.map((f) => ({
+          id: f.frameworkId,
+          nom: f.name,
+          exigences: f.requirements,
+          nonCouvertes: f.uncovered,
+          aValider: f.toValidate,
+        }));
+      } catch (e) {
+        if (!(e instanceof HttpError)) throw e;
+      }
+      const cites = [...actions.retard.slice(0, 20), ...actions.sansResponsable.slice(0, 20), ...risques.slice(0, 20)];
+      return {
+        donnees: {
+          perimetre: s.name,
+          // Au-delà de la limite d'examen, les listes sont partielles : à dire tel quel, sans extrapoler.
+          partiel: actions.examinees < actions.total || risquesExamines < risquesTotal,
+          actionsEnRetard: { nombre: actions.retard.length, premieres: actions.retard.slice(0, 20) },
+          actionsSansResponsable: {
+            nombre: actions.sansResponsable.length,
+            premieres: actions.sansResponsable.slice(0, 20),
+          },
+          risquesRevueDepassee: { nombre: risques.length, premiers: risques.slice(0, 20) },
+          ...(referentiels ? { referentiels } : {}),
+        },
+        elements: actions.retard.length + actions.sansResponsable.length + risques.length,
+        sources: [
+          { perimetre: a.perimetre, nom: s.name },
+          ...cites.map((o) => ({ perimetre: a.perimetre, objet: o.id, type: o.type, nom: o.nom })),
+        ],
+      };
+    },
+  }),
+];
+
+/** Message d'un rappel : court, affiché tel quel à son destinataire dans l'application. */
+export const RAPPEL_MAX = 400;
+export const NOTE_MEMOIRE_MAX = 500;
+
+/** Outils réservés aux rondes autonomes : ce que l'assistant émet seul. Aucun n'écrit dans un registre. */
+export const OUTILS_RONDE: readonly Outil[] = [
+  outil({
+    nom: 'envoyer_rappel',
+    description:
+      'Envoie un rappel au responsable nommé d’un élément (action en retard, risque à revoir). La plateforme choisit le destinataire et refuse un second rappel tant que l’élément n’a pas changé. À utiliser avec mesure : seulement pour un retard ou un manque constaté par un outil.',
+    parametres: z
+      .object({
+        perimetre,
+        id: z.uuid().describe('Identifiant de l’élément concerné.'),
+        message: z.string().trim().min(10).max(RAPPEL_MAX).describe('Rappel court, factuel et courtois, en français.'),
+      })
+      .strict(),
+    async executer(ctx, a) {
+      exiger(ctx, a.perimetre);
+      if (!ctx.ronde) throw new HttpError(403, 'Un rappel ne peut être envoyé que pendant une ronde.');
+      const r = await ctx.ronde.rappeler(a.perimetre, a.id, a.message);
+      return { donnees: r, elements: r.envoye ? 1 : 0, sources: [] };
+    },
+  }),
+  outil({
+    nom: 'memoriser',
+    description:
+      'Écrit une note courte dans votre mémoire de profil, relue aux rondes suivantes : contexte durable de l’organisation, constat à suivre. Pas de donnée personnelle ni de copie de fiche.',
+    parametres: z.object({ note: z.string().trim().min(5).max(NOTE_MEMOIRE_MAX) }).strict(),
+    async executer(ctx, a) {
+      if (!ctx.ronde) throw new HttpError(403, 'La mémoire ne s’écrit que pendant une ronde.');
+      const r = await ctx.ronde.memoriser(a.note);
+      return { donnees: r, elements: r.enregistre ? 1 : 0, sources: [] };
     },
   }),
 ];

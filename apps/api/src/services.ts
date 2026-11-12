@@ -38,6 +38,7 @@ import { NotificationsMetier } from './notifications-metier.js';
 import { TypesProcessus } from './types-processus.js';
 import { Webauthn } from './webauthn.js';
 import { Assistant } from './assistant/index.js';
+import { RondesAssistant } from './assistant/rondes.js';
 import { RelaisModele, type TransportModele } from './assistant/modele.js';
 
 export function createServices(cfg: Config, log: Logger, options: { modele?: TransportModele } = {}) {
@@ -70,6 +71,10 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
   const webauthn = new Webauthn(cfg, db, vault);
   auth.exigenceCle = (u) => webauthn.exigence(u);
   webauthn.surAlerte = (e) => alertesSecurite.cleSecurite(e);
+  const modele = options.modele ?? new RelaisModele(cfg.assistantRelais);
+  const assistant = new Assistant(db, vault, grc, modele, log);
+  const assistantRondes = new RondesAssistant(db, grc, assistant, modele, log);
+  assistant.rondes = assistantRondes;
   return {
     cfg,
     log,
@@ -99,7 +104,9 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
     adresseSite: new AdresseSiteService(db, cfg),
     alertesSecurite,
     /** Assistant RSSI (ADR 0086) : le transport du modèle est remplaçable (tests sans réseau). */
-    assistant: new Assistant(db, vault, grc, options.modele ?? new RelaisModele(cfg.assistantRelais), log),
+    assistant,
+    /** Rondes autonomes de l'assistant (lot A3) : lancées par le tic de l'API ou à la demande. */
+    assistantRondes,
     bus,
     presence: new Presence(db, bus),
     legacy,
@@ -126,6 +133,7 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       /* Assistant RSSI (ADR 0086) : questions et tests du modèle, par compte. */
       assistantByUser: limiter(30, 10 * 60e3),
       assistantTestByUser: limiter(5, 10 * 60e3),
+      assistantRondeByUser: limiter(20, 60 * 60e3),
     },
   };
 }

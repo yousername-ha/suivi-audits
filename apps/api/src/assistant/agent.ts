@@ -66,9 +66,13 @@ export async function repondre(p: {
   ctx: ContexteOutil;
   log: Logger;
   toursMax?: number;
+  /** Consigne système propre (ronde autonome) ; par défaut, celle du chat. */
+  consigne?: string;
+  /** Interrogé avant chaque tour : vrai, le modèle doit conclure sans nouvel outil (pause, durée maximale). */
+  doitConclure?: () => Promise<boolean>;
 }): Promise<ResultatAgent> {
   const messages: MessageModele[] = [
-    { role: 'system', content: consigne(p.profil, new Date().toISOString().slice(0, 10)) },
+    { role: 'system', content: p.consigne ?? consigne(p.profil, new Date().toISOString().slice(0, 10)) },
     ...p.fil.map((m): MessageModele => ({ role: m.role === 'utilisateur' ? 'user' : 'assistant', content: m.contenu })),
   ];
   const parNom = new Map(p.outils.map((o) => [o.nom, o]));
@@ -82,7 +86,7 @@ export async function repondre(p: {
 
   for (let tour = 0; tour <= toursMax; tour++) {
     // Au dernier tour, plus d'outils : le modèle doit conclure avec ce qu'il a lu.
-    const dernier = tour === toursMax;
+    const dernier = tour === toursMax || (tour > 0 && !!(await p.doitConclure?.()));
     const demande: DemandeModele = {
       model: p.modele,
       messages,

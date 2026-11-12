@@ -513,7 +513,14 @@ export class GrcTasks {
         (await this.g.visible(
           user,
           r.smsiId,
-          r.kind === 'risk_review' ? 'pilotage' : r.kind === 'rapprochement' ? 'conformite' : 'ecarts',
+          // Un rappel de l'assistant cite un élément de tout type : seul l'accès au périmètre est exigé.
+          r.kind === 'assistant_rappel'
+            ? undefined
+            : r.kind === 'risk_review'
+              ? 'pilotage'
+              : r.kind === 'rapprochement'
+                ? 'conformite'
+                : 'ecarts',
         ))
       )
         visible.push(r);

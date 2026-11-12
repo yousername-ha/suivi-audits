@@ -39,6 +39,10 @@ export const ReglagesAssistantBody = z
       .max(120)
       .regex(/^[A-Za-z0-9._:/-]*$/, 'Nom de modèle invalide.'),
     budgetJetonsJour: z.number().int().min(1000).max(50_000_000),
+    /* Autonomie (lot A3). Un champ absent laisse le réglage inchangé. */
+    enPause: z.boolean().optional(),
+    heureRonde: z.number().int().min(0).max(23).optional(),
+    plafondRappelsJour: z.number().int().min(0).max(50).optional(),
     profils: z
       .array(
         z
@@ -46,6 +50,8 @@ export const ReglagesAssistantBody = z
             id: z.enum(PROFILS_ASSISTANT),
             actif: z.boolean(),
             perimetres: z.array(z.uuid()).max(200),
+            rondeQuotidienne: z.boolean().optional(),
+            referent: z.uuid().nullable().optional(),
           })
           .strict(),
       )
@@ -57,11 +63,20 @@ export const ReglagesAssistantBody = z
   .superRefine((v, ctx) => {
     if (v.actif && (!v.adresse || !v.modele))
       ctx.addIssue({ code: 'custom', message: 'Renseignez l’adresse et le modèle avant d’activer l’assistant.' });
+    for (const p of v.profils)
+      if (p.rondeQuotidienne && p.referent === null)
+        ctx.addIssue({ code: 'custom', message: 'Désignez un référent avant d’activer la ronde quotidienne.' });
   });
 export type ReglagesAssistantBody = z.infer<typeof ReglagesAssistantBody>;
 
 export const CleModeleBody = z.object({ cle: z.string().min(8).max(400) }).strict();
 export const NouvelleConversationBody = z.object({ profil: z.enum(PROFILS_ASSISTANT) }).strict();
+export const LancerRondeBody = z.object({ profil: z.enum(PROFILS_ASSISTANT) }).strict();
+export const MISSION_ASSISTANT_MAX = 2000;
+export const NouvelleMissionBody = z
+  .object({ profil: z.enum(PROFILS_ASSISTANT), consigne: z.string().trim().min(1).max(MISSION_ASSISTANT_MAX) })
+  .strict();
+export const ProfilAssistantQuery = z.object({ profil: z.enum(PROFILS_ASSISTANT).optional() }).strict();
 export const MessageAssistantBody = z.object({ texte: z.string().trim().min(1).max(MESSAGE_ASSISTANT_MAX) }).strict();
 
 export interface ProfilAssistantDto {
@@ -69,12 +84,22 @@ export interface ProfilAssistantDto {
   libelle: string;
   actif: boolean;
   perimetres: string[];
+  /** Une ronde part chaque jour pour ce profil, à l'heure réglée. */
+  rondeQuotidienne: boolean;
+  /** Compte dont les droits bornent ce que la ronde lit, et qui reçoit le rapport. */
+  referent: string | null;
 }
 export interface ReglagesAssistantDto {
   actif: boolean;
   adresse: string;
   modele: string;
   budgetJetonsJour: number;
+  /** Pause : aucune ronde ne part, la ronde en cours conclut ; le chat reste disponible. */
+  enPause: boolean;
+  /** Heure de départ de la ronde quotidienne (heure de Paris). */
+  heureRonde: number;
+  /** Nombre maximal de rappels de l'assistant reçus par une personne en un jour. */
+  plafondRappelsJour: number;
   profils: ProfilAssistantDto[];
   version: number;
   /** Une clé est enregistrée (elle n'est jamais renvoyée). */
@@ -98,6 +123,7 @@ export interface EtatAssistantDto {
   profils: { id: ProfilAssistant; libelle: string; perimetres: { id: string; nom: string }[] }[];
   jetonsDuJour: number;
   budgetJetonsJour: number;
+  enPause: boolean;
 }
 /** Objet ou périmètre lu pour répondre, affiché en lien sous la réponse. */
 export interface SourceAssistant {
@@ -131,4 +157,50 @@ export interface ConversationAssistantDetailDto extends ConversationAssistantDto
 export interface TestModeleDto {
   ok: boolean;
   detail: string;
+}
+
+/* ------------------------------------------------------------------ Autonomie (lot A3) */
+export const RONDE_DECLENCHEURS = ['planifiee', 'manuelle'] as const;
+export type RondeDeclencheur = (typeof RONDE_DECLENCHEURS)[number];
+export type RondeEtat = 'en_cours' | 'terminee' | 'echec';
+export interface RondeAssistantDto {
+  id: string;
+  profil: ProfilAssistant;
+  declencheur: RondeDeclencheur;
+  etat: RondeEtat;
+  /** Nom du référent dont les droits ont borné les lectures. */
+  referent: string;
+  demandeePar: string;
+  debut: string;
+  fin: string | null;
+  erreur: string;
+  /** Rappels envoyés et notes de mémoire écrites pendant la ronde. */
+  rappels: number;
+  notes: number;
+  jetons: number;
+}
+export interface RondeAssistantDetailDto extends RondeAssistantDto {
+  rapport: string;
+  sources: SourceAssistant[];
+  outils: { nom: string; elements: number }[];
+}
+export interface MissionAssistantDto {
+  id: string;
+  profil: ProfilAssistant;
+  consigne: string;
+  etat: 'ouverte' | 'close';
+  createdBy: string;
+  createdAt: string;
+  closedAt: string | null;
+}
+export interface MemoireAssistantDto {
+  id: string;
+  profil: ProfilAssistant;
+  contenu: string;
+  createdAt: string;
+}
+/** Compte qui peut être référent d'un profil : actif et porteur du droit d'utiliser l'assistant. */
+export interface ReferentAssistantDto {
+  id: string;
+  nom: string;
 }

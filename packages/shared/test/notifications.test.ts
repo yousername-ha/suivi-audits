@@ -21,6 +21,7 @@ describe('types et canaux', () => {
       'risk_review',
       'rapprochement',
       'retex_contribution',
+      'assistant_rappel',
     ]);
     expect(NOTIFICATION_CANAUX).toEqual(['application', 'courriel']);
     for (const t of NOTIFICATION_TYPES) {

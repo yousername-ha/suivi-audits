@@ -9,6 +9,7 @@ import {
   MultiSelect,
   NumberInput,
   PasswordInput,
+  Select,
   Stack,
   Switch,
   Text,
@@ -17,16 +18,30 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { StatusChip } from '@suivi/ui';
-import type { ReglagesAssistantDto, TestModeleDto } from '@suivi/shared';
+import type { ReferentAssistantDto, ReglagesAssistantDto, TestModeleDto } from '@suivi/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { api, errorMessage, get } from '../api';
 import { ConfirmButton, ErrorAlert } from '../components/common';
+import { MemoireAssistant, MissionsAssistant } from './AutonomieAssistant';
 
 export const CLE_ETAT_ASSISTANT = ['assistant', 'etat'];
 const CLE_REGLAGES = ['assistant', 'reglages'];
 
-type Saisie = Pick<ReglagesAssistantDto, 'actif' | 'adresse' | 'modele' | 'budgetJetonsJour' | 'profils'>;
+type Saisie = Pick<
+  ReglagesAssistantDto,
+  'actif' | 'adresse' | 'modele' | 'budgetJetonsJour' | 'enPause' | 'heureRonde' | 'plafondRappelsJour' | 'profils'
+>;
+const saisieDe = (d: ReglagesAssistantDto): Saisie => ({
+  actif: d.actif,
+  adresse: d.adresse,
+  modele: d.modele,
+  budgetJetonsJour: d.budgetJetonsJour,
+  enPause: d.enPause,
+  heureRonde: d.heureRonde,
+  plafondRappelsJour: d.plafondRappelsJour,
+  profils: d.profils,
+});
 const hote = (adresse: string) => {
   try {
     return new URL(adresse).host;
@@ -42,6 +57,10 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
     queryKey: ['grc', 'smsis'],
     queryFn: () => get<{ id: string; name: string }[]>('/api/grc/smsis'),
   });
+  const referents = useQuery({
+    queryKey: ['assistant', 'referents'],
+    queryFn: () => get<ReferentAssistantDto[]>('/api/assistant/referents'),
+  });
   const [saisie, setSaisie] = useState<Saisie | null>(null);
   const [cle, setCle] = useState('');
   const [erreur, setErreur] = useState<unknown>(null);
@@ -49,22 +68,9 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
   const [test, setTest] = useState<TestModeleDto | null>(null);
 
   useEffect(() => {
-    if (q.data && !saisie) {
-      const { actif, adresse, modele, budgetJetonsJour, profils } = q.data;
-      setSaisie({ actif, adresse, modele, budgetJetonsJour, profils });
-    }
+    if (q.data && !saisie) setSaisie(saisieDe(q.data));
   }, [q.data, saisie]);
-  const modifie =
-    !!q.data &&
-    !!saisie &&
-    JSON.stringify(saisie) !==
-      JSON.stringify({
-        actif: q.data.actif,
-        adresse: q.data.adresse,
-        modele: q.data.modele,
-        budgetJetonsJour: q.data.budgetJetonsJour,
-        profils: q.data.profils,
-      });
+  const modifie = !!q.data && !!saisie && JSON.stringify(saisie) !== JSON.stringify(saisieDe(q.data));
   useEffect(() => onDirty?.(modifie || cle !== ''), [modifie, cle, onDirty]);
 
   if (q.error) return <ErrorAlert error={q.error} />;
@@ -97,7 +103,13 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
         api('PUT', '/api/assistant/reglages', {
           body: {
             ...saisie,
-            profils: saisie.profils.map(({ id, actif, perimetres: p }) => ({ id, actif, perimetres: p })),
+            profils: saisie.profils.map(({ id, actif, perimetres: p, rondeQuotidienne, referent }) => ({
+              id,
+              actif,
+              perimetres: p,
+              rondeQuotidienne,
+              referent,
+            })),
             version: d.version,
           },
         }),
@@ -116,6 +128,7 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
   };
   const choix = (perimetres.data ?? []).map((p) => ({ value: p.id, label: p.name }));
   const fournisseur = hote(saisie.adresse);
+  const choixReferents = (referents.data ?? []).map((r) => ({ value: r.id, label: r.nom }));
 
   return (
     <Stack>
@@ -197,9 +210,59 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
                   disabled={!p.actif}
                   comboboxProps={{ withinPortal: true }}
                 />
+                <Select
+                  label={`Référent du profil « ${p.libelle} »`}
+                  description="Les rondes lisent avec les droits de ce compte, dans les périmètres ci-dessus. Il reçoit les rapports."
+                  data={choixReferents}
+                  value={p.referent}
+                  onChange={(v) => maj({ referent: v, ...(v ? {} : { rondeQuotidienne: false }) })}
+                  clearable
+                  disabled={!p.actif}
+                  comboboxProps={{ withinPortal: true }}
+                />
+                <Switch
+                  label={`Ronde quotidienne du profil « ${p.libelle} »`}
+                  checked={p.rondeQuotidienne}
+                  onChange={(e) => maj({ rondeQuotidienne: e.currentTarget.checked })}
+                  disabled={!p.actif || !p.referent}
+                />
               </Stack>
             );
           })}
+        </Stack>
+      </Card>
+
+      <Card withBorder>
+        <Stack>
+          <Title order={3} size="h5">
+            Autonomie
+          </Title>
+          <Text size="sm" c="dimmed">
+            Pendant une ronde, l’assistant travaille sans être interrogé : il lit, envoie des rappels aux responsables,
+            tient sa mémoire et rédige un rapport. Il n’écrit dans aucun registre.
+          </Text>
+          <Switch
+            label="Mettre l’assistant en pause"
+            description="Aucune ronde ne part et la ronde en cours conclut. Le dialogue reste disponible."
+            checked={saisie.enPause}
+            onChange={(e) => changer({ enPause: e.currentTarget.checked })}
+          />
+          <NumberInput
+            label="Heure de la ronde quotidienne"
+            description="Heure de Paris, de 0 à 23. La ronde part à la première minute disponible après cette heure."
+            min={0}
+            max={23}
+            value={saisie.heureRonde}
+            onChange={(v) => changer({ heureRonde: typeof v === 'number' ? v : saisie.heureRonde })}
+          />
+          <NumberInput
+            label="Rappels par personne et par jour, au plus"
+            description="Au-delà, l’assistant ne peut plus rappeler cette personne jusqu’au lendemain."
+            min={0}
+            max={50}
+            value={saisie.plafondRappelsJour}
+            onChange={(v) => changer({ plafondRappelsJour: typeof v === 'number' ? v : saisie.plafondRappelsJour })}
+          />
         </Stack>
       </Card>
 
@@ -277,6 +340,9 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
           </Group>
         </Stack>
       </Card>
+
+      <MissionsAssistant profils={d.profils} />
+      <MemoireAssistant profils={d.profils} />
     </Stack>
   );
 }
